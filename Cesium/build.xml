@@ -69,7 +69,6 @@
 	<property name="documentationImagesDirectory" location="../Documentation/Images" />
 	<property name="jsdoc3Directory" location="../Tools/jsdoc3" />
 	<property name="licenseFile" location="../LICENSE" />
-	<property name="readmeFile" location="../Readme.txt" />
 	<property name="proxyFile" location="../proxy.php" />
 
 	<!-- Outputs -->
@@ -399,13 +398,14 @@ writer.close();
 
 	<target name="copyTextFiles">
 		<copy file="${licenseFile}" todir="${buildDirectory}" />
-		<copy file="${readmeFile}" todir="${buildDirectory}" />
 	</target>
 
 	<!-- ********************************************************************** -->
 
 	<target name="copyProxy">
+<!--		
 		<copy file="${proxyFile}" todir="${buildDirectory}" />
+ -->		
 	</target>
 
 	<!-- ********************************************************************** -->
