@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# rhino discards the path to the current script file, so we must add it back
+SOURCE="$0"
+while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
+BASEDIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+java -classpath ${BASEDIR}/lib/js.jar org.mozilla.javascript.tools.shell.Main -modules ${BASEDIR}/node_modules -modules ${BASEDIR}/rhino_modules -modules ${BASEDIR} ${BASEDIR}/jsdoc.js --dirname=${BASEDIR} $@
+
+#java -classpath ${BASEDIR}/lib/js.jar org.mozilla.javascript.tools.debugger.Main -debug -modules ${BASEDIR}/node_modules -modules ${BASEDIR}/rhino_modules  -modules ${BASEDIR} ${BASEDIR}/jsdoc.js --dirname=${BASEDIR} $@

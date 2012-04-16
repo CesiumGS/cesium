@@ -1,0 +1,1 @@
+({"singleSort":"単一ソート","indirectSelectionRadio":"行 ${0}、単一選択、ラジオ・ボックス","ascending":"昇順","indirectSelectionCheckBox":"行 ${0}、複数選択、チェック・ボックス","selectAll":"すべてを選択","descending":"降順","nestedSort":"ネスト・ソート","unsorted":"この列をソートしない","sortingState":"${0} - ${1}"})

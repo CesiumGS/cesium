@@ -1,0 +1,61 @@
+/*global define*/
+define(['../Core/Enumeration'], function(Enumeration) {
+    "use strict";
+
+    /**
+     * DOC_TBA
+     *
+     * @exports RenderbufferFormat
+     */
+    var RenderbufferFormat = {
+        /**
+         * DOC_TBA
+         *
+         * @constant
+         * @type {Enumeration}
+         */
+        RGBA4 : new Enumeration(0x8056, "RGBA4"),
+
+        /**
+         * DOC_TBA
+         *
+         * @constant
+         * @type {Enumeration}
+         */
+        RGB5_A1 : new Enumeration(0x8057, "RGB5_A1"),
+
+        /**
+         * DOC_TBA
+         *
+         * @constant
+         * @type {Enumeration}
+         */
+        RGB565 : new Enumeration(0x8D62, "RGB565"),
+
+        /**
+         * DOC_TBA
+         *
+         * @constant
+         * @type {Enumeration}
+         */
+        DEPTH_COMPONENT16 : new Enumeration(0x81A5, "DEPTH_COMPONENT16"),
+
+        /**
+         * DOC_TBA
+         *
+         * @constant
+         * @type {Enumeration}
+         */
+        STENCIL_INDEX8 : new Enumeration(0x8D48, "STENCIL_INDEX8"),
+
+        /**
+         * DOC_TBA
+         *
+         * @constant
+         * @type {Enumeration}
+         */
+        DEPTH_STENCIL : new Enumeration(0x84F9, "DEPTH_STENCIL")
+    };
+
+    return RenderbufferFormat;
+});

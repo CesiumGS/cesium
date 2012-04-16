@@ -1,0 +1,39 @@
+/*global define*/
+define(['../Core/Enumeration'], function(Enumeration) {
+    "use strict";
+
+    /**
+     * DOC_TBA
+     *
+     * @exports BlendEquation
+     */
+    var BlendEquation = {
+        /**
+         * DOC_TBA
+         *
+         * @constant
+         * @type {Enumeration}
+         */
+        ADD : new Enumeration(0x8006, "ADD"), // FUNC_ADD
+
+        /**
+         * DOC_TBA
+         *
+         * @constant
+         * @type {Enumeration}
+         */
+        SUBTRACT : new Enumeration(0x800A, "SUBTRACT"), // FUNC_SUBTRACT
+
+        /**
+         * DOC_TBA
+         *
+         * @constant
+         * @type {Enumeration}
+         */
+        REVERSE_SUBTRACT : new Enumeration(0x800B, "REVERSE_SUBTRACT") // FUNC_REVERSE_SUBTRACT
+
+        // No min and max like in ColladaFX GLES2 profile
+    };
+
+    return BlendEquation;
+});

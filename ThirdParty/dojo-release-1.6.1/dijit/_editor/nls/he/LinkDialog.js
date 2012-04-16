@@ -1,0 +1,1 @@
+({"text":"תיאור:","insertImageTitle":"תכונות תמונה","set":"הגדרה","newWindow":"חלון חדש","topWindow":"חלון עליון","target":"יעד:","createLinkTitle":"תכונות קישור","parentWindow":"חלון אב","currentWindow":"חלון נוכחי","url":"URL:‏"})

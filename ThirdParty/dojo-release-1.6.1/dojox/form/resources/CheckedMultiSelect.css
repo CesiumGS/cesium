@@ -1,0 +1,87 @@
+
+.dojoxMultiSelectSelect { display: none; }
+.dojoxMultiSelect {
+	border: solid black 1px;
+	margin: 1px 0;
+	overflow: scroll; 
+	overflow-y: scroll; 
+	overflow-x: hidden; 
+	height: 100px;
+}
+.dj_ie .dojoxMultiSelect,
+.dj_webkit .dojoxMultiSelect {
+	
+	padding-right: 15px;
+}
+.dojoxMultiSelectItem {
+	white-space: nowrap;
+	padding:.1em .2em;
+	cursor:default;
+}
+.dojoxMultiSelectDisabled *,
+.dojoxMultiSelectReadOnly * {
+	color:gray !important;
+}
+.dojoxMultiSelectItemLabel {
+	margin-left: .2em;
+}
+.tundra .dojoxMultiSelect {
+	margin: 0em 0.1em;
+}
+.tundra .dojoxMultiSelect {
+	background:#fff url("../../../dijit/themes/tundra/images/validationInputBg.png") repeat-x top left;
+	#background:#fff url('../../../dijit/themes/tundra/images/validationInputBg.gif') repeat-x top left;
+	border:1px solid #b3b3b3;
+	line-height: normal;
+}
+.tundra .dojoxMultiSelectFocused {
+	
+	border-color:#406b9b;
+}
+.soria .dojoxMultiSelect {
+	margin: 0em 0.1em;
+}
+.soria .dojoxMultiSelect {
+	background:#fff url("../../../dijit/themes/soria/images/validationInputBg.png") repeat-x top left;
+	#background:#fff url('../../../dijit/themes/soria/images/validationInputBg.gif') repeat-x top left;
+	border:1px solid #8ba0bd;
+	line-height: normal;
+}
+.soria .dojoxMultiSelectFocused {
+	
+	border-color:#406b9b;
+}
+.nihilo .dojoxMultiSelect {
+	margin: 0em 0.1em;
+}
+.nihilo .dojoxMultiSelect {
+	background:#fff url("../../../dijit/themes/nihilo/images/validationInputBg.png") repeat-x top left;
+	#background:#fff url('../../../dijit/themes/nihilo/images/validationInputBg.gif') repeat-x top left;
+	border:1px solid #d3d3d3;
+	line-height: normal;
+}
+.nihilo .dojoxMultiSelectFocused {
+	
+	border-color:#b3b3b3;
+}
+.claro .dojoxMultiSelect {
+	margin: 0em 0.1em;
+}
+.claro .dojoxMultiSelect {
+	border: 1px solid #b5bcc7;
+	background-color: #f7fcff;
+	line-height: normal;
+	-webkit-transition-property:background-color, border;
+ 	-webkit-transition-duration:.35s;
+}
+.claro .dojoxMultiSelectHover {
+	border-color: #769dc0;
+	background-color: #e9f4fe;
+	background-image: url('../../../dijit/themes/claro/form/images/textBox_back.png');
+	background-repeat: repeat-x;
+	-webkit-transition-duration:.25s;
+}
+.claro .dojoxMultiSelectFocused {
+	border: 1px solid #769dc0;
+	-webkit-transition-duration:.1s;
+}

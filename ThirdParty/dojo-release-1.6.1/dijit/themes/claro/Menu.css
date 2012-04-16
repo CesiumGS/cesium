@@ -1,0 +1,145 @@
+
+.claro .dijitMenuBar {
+  border: 1px solid #b5bcc7;
+  margin: 0;
+  padding: 0;
+  background-color: #efefef;
+  background-image: url("images/commonHighlight.png");
+  background-position: 0 0;
+  background-repeat: repeat-x;
+}
+.dj_ie6 .claro .dijitMenuBar {
+  background-image: none;
+}
+.claro .dijitMenu {
+  background-repeat: repeat-y;
+  background-color: #ffffff;
+  border: 1px solid #769dc0;
+  
+  margin: -1px 0;
+}
+.dj_ie6 .claro .dijitMenu {
+  margin: 0;
+  
+}
+.claro .dijitMenuBar .dijitMenuItem {
+  padding: 6px 10px 7px;
+  background-position: 0 100px;
+  color: #4a4a4a;
+  margin: -1px;
+}
+.claro .dijitMenuItem {
+  background-image: url("images/menuHighlight.png");
+  background-position: 0 -40px;
+  background-repeat: repeat-x;
+}
+.claro .dijitMenuTable {
+  border-collapse: separate;
+  border-spacing: 0 0;
+  padding: 0;
+}
+.claro .dijitMenuItem td {
+  padding: 1px;
+}
+.claro .dijitMenuPassive .dijitMenuItemHover, .claro .dijitMenuPassive .dijitMenuItemSelected {
+  background-color: #abd6ff;
+  border: solid 1px #769dc0;
+  background-position: 0 0;
+  color: #000000;
+  padding: 5px 9px 6px;
+}
+.claro .dijitMenuPassive .dijitMenuItemActive {
+  background-position: 0 -177px;
+}
+.dj_ie6 .claro .dijitMenuItem, .dj_ie6 .claro .dijitMenuPassive .dijitMenuItem {
+  background-image: none;
+}
+.claro .dijitMenuActive .dijitMenuItemHover, .claro .dijitMenuActive .dijitMenuItemSelected {
+  border: solid 1px #769dc0;
+  padding: 5px 9px 6px;
+  background-color: #abd6ff;
+  background-position: 0 0;
+  color: #000000;
+}
+.dj_ie .claro .dijitMenuActive .dijitMenuItemHover,
+.dj_ie .claro .dijitMenuActive .dijitMenuItemSelected,
+.dj_ie .claro .dijitMenuPassive .dijitMenuItemHover,
+.dj_ie .claro .dijitMenuPassive .dijitMenuItemSelected {
+  padding-top: 6px;
+  padding-bottom: 5px;
+  margin-top: -3px;
+}
+.claro .dijitMenuActive .dijitMenuItemActive {
+  background-color: #7dbefa;
+  background-position: 0 -177px;
+}
+.claro .dijitMenuItemActive {
+  background-position: 0 -177px;
+}
+.claro td.dijitMenuItemIconCell {
+  padding: 2px;
+  margin: 0 0 0 4px;
+}
+.claro td.dijitMenuItemLabel {
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+.claro .dijitMenuExpand {
+  width: 7px;
+  height: 7px;
+  background-image: url('images/spriteArrows.png');
+  background-position: -14px 0;
+  margin-right: 3px;
+}
+.claro .dijitMenuItemDisabled .dijitMenuItemIconCell {
+  opacity: 1;
+}
+.claro .dijitMenuSeparatorTop {
+  height: auto;
+  margin-top: 1px;
+  
+  border-bottom: 1px solid #b5bcc7;
+}
+.claro .dijitMenuSeparatorBottom {
+  height: auto;
+  margin-bottom: 1px;
+}
+.claro .dijitCheckedMenuItemIconChar {
+  display: none;
+}
+.claro .dijitCheckedMenuItemIcon {
+  background-image: url('form/images/checkboxRadioButtonStates.png');
+  background-repeat: no-repeat;
+  background-position: -15px 50%;
+  width: 15px;
+  height: 16px;
+}
+.dj_ie6 .claro .dijitCheckedMenuItemIcon {
+  background-image: url('form/images/checkboxAndRadioButtons_IE6.png');
+}
+.claro .dijitCheckedMenuItemChecked .dijitCheckedMenuItemIcon {
+  background-position: 0 50%;
+}
+.claro .dijitComboBoxMenu {
+  margin-left: 0;
+  background-image: none;
+}
+.claro .dijitComboBoxMenu .dijitMenuItem {
+  padding: 2px;
+  border-width: 1px 0 1px 0;
+  border-style: solid;
+  border-color: #ffffff;
+}
+.claro .dijitComboBoxMenu .dijitMenuItemSelected {
+  color: #000000;
+  border-color: #769dc0;
+  background-color: #abd6ff;
+}
+.claro .dijitComboBoxMenuActive .dijitMenuItemSelected {
+  background-position: 0 -177px;
+  background-color: #7dbefa;
+  
+}
+.claro .dijitMenuPreviousButton, .claro .dijitMenuNextButton {
+  font-style: italic;
+}

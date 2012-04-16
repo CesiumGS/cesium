@@ -1,0 +1,1 @@
+({"set":"Einfügen","text":"Beschreibung","insertImageTitle":"Grafik einfügen","invalidMessage":"Ungültiger Grafikdateityp","prePopuTextBrowse":"oder blättern Sie zu einer lokalen Datei.","browse":"Durchsuchen...","prePopuTextUrl":"Geben Sie eine gültige Grafik-URL ein","url":"Grafik"})

@@ -1,0 +1,1 @@
+({"selectContents":"Επιλογή περιεχομένων","deleteElement":"Διαγραφή στοιχείου","moveEnd":"Μετακίνηση δρομέα στο τέλος","deleteContents":"Διαγραφή περιεχομένων","nodeActions":"${nodeName} - Ενέργειες","selectElement":"Επιλογή στοιχείου","moveStart":"Μετακίνηση δρομέα στην αρχή"})

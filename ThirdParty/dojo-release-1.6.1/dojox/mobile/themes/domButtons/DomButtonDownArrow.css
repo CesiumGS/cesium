@@ -1,0 +1,21 @@
+
+.mblDomButtonDownArrow_2 DIV {
+	position: absolute;
+	left: 0px;
+	clip: rect(7px 50px 40px 0px);
+}
+.mblDomButtonDownArrow_2 DIV DIV {
+	top: -10px;
+	left: 4px;
+	width: 25px;
+	height: 25px;
+	margin: 0px;
+	font-size: 1px;
+	background-color: white;
+	border-top: 1px solid #4A5A71;
+	-webkit-transform: scaleX(0.6) rotate(45deg);
+	-moz-transform: scaleX(0.6) rotate(45deg);
+}
+.mblTabPanelHeader .mblDomButtonDownArrow_2 DIV DIV {
+	left: 11px;
+}

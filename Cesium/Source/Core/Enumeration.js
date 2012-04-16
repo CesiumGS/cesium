@@ -1,0 +1,76 @@
+/*global define*/
+define(function() {
+    "use strict";
+
+    /**
+     * Constructs an enumeration that contains both a numeric value and a name.
+     * This is used so the name of the enumeration is available in the debugger.
+     * <br /><br />
+     * When comparing enumeration using exact equality, use their {@link Enumeration.value}
+     * property.
+     * <br /><br />
+     * <code>
+     * if (left.value === right.value) { <br/>
+     * &nbsp;&nbsp;&nbsp;&nbsp;// ... <br/>
+     * }
+     * </code>
+     *
+     * @param {Number} [value=undefined] The numeric value of the enumeration.
+     * @param {String} [name=undefined] The name of the enumeration for debugging purposes.
+     * @param {Object} [properties=undefined] An object containing extra properties to be added to the enumeration.
+     *
+     * @name Enumeration
+     * @constructor
+     * @example
+     * // Create an object with two enumerations.
+     * var filter = {
+     *     NEAREST : new Enumeration(0x2600, "NEAREST"),
+     *     LINEAR : new Enumeration(0x2601, "LINEAR")
+     * };
+     */
+    function Enumeration(value, name, properties) {
+        /**
+         * The numeric value of the enumeration.
+         * @type Number
+         */
+        this.value = value;
+
+        /**
+         * The name of the enumeration for debugging purposes.
+         * @type String
+         */
+        this.name = name;
+
+        if (typeof properties !== 'undefined') {
+            for ( var propertyName in properties) {
+                if (properties.hasOwnProperty(propertyName)) {
+                    this[propertyName] = properties[propertyName];
+                }
+            }
+        }
+    }
+
+    /**
+     * Returns the numeric value of the enumeration.
+     *
+     * @memberof Enumeration
+     *
+     * @return {Number} The numeric value of the enumeration.
+     */
+    Enumeration.prototype.valueOf = function() {
+        return this.value;
+    };
+
+    /**
+     * Returns the name of the enumeration for debugging purposes.
+     *
+     * @memberof Enumeration
+     *
+     * @return {String} The name of the enumeration for debugging purposes.
+     */
+    Enumeration.prototype.toString = function() {
+        return this.name;
+    };
+
+    return Enumeration;
+});

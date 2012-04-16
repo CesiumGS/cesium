@@ -1,0 +1,18 @@
+
+.mblDomButtonPlus_2 DIV { 
+	position: absolute;
+	top: 11px;
+	left: 9px;
+	width: 13px;
+	height: 3px;
+	margin: 0px;
+	font-size: 1px;
+	background-color: white;
+	border-top: 1px solid #4A5A71;
+}
+.mblDomButtonPlus_2 DIV DIV { 
+	top: -6px;
+	left: 5px;
+	width: 3px;
+	height: 13px;
+}

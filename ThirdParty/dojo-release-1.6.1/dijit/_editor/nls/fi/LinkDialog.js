@@ -1,0 +1,1 @@
+({"text":"Kuvaus:","insertImageTitle":"Kuvan ominaisuudet","set":"Aseta","newWindow":"Uusi ikkuna","topWindow":"Päällimmäinen ikkuna","target":"Kohde:","createLinkTitle":"Linkin ominaisuudet","parentWindow":"Pääikkuna","currentWindow":"Nykyinen ikkuna","url":"URL-osoite:"})

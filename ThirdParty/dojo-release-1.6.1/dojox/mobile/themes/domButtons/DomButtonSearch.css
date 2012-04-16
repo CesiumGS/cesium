@@ -1,0 +1,33 @@
+
+.mblDomButtonSearch_2 DIV {
+	position: absolute;
+	top: 5px;
+	left: 6px;
+	width: 10px;
+	height: 10px;
+	margin: 0px;
+	font-size: 1px;
+	border: 2px solid white;
+	-webkit-border-radius: 6px;
+	-moz-border-radius: 6px;
+}
+.mblDomButtonSearch_2 DIV DIV {
+	top: 10px;
+	left: 7px;
+	width: 8px;
+	height: 3px;
+	margin: 0px;
+	font-size: 1px;
+	background-color: white;
+	border: none;
+	-webkit-transform: rotate(45deg);
+	-moz-transform: rotate(45deg);
+	-webkit-border-radius: 0px;
+	-moz-border-radius: 0px;
+}
+.mblTabPanelHeader .mblDomButtonSearch_2 DIV {
+	left: 11px;
+}
+.mblTabPanelHeader .mblDomButtonSearch_2 DIV DIV {
+	left: 7px;
+}

@@ -1,0 +1,37 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+  "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <title>Jasmine Test Runner</title>
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">  <!-- Use Chrome Frame in IE -->
+  <link rel="shortcut icon" type="image/png" href="../Tools/Jasmine/jasmine_favicon.png">
+  <link rel="stylesheet" type="text/css" href="../Tools/Jasmine/jasmine.css">
+  <script type="text/javascript" src="../Tools/Jasmine/jasmine.js"></script>
+  <script type="text/javascript" src="../Tools/Jasmine/jasmine-html.js"></script>
+
+  <script type="text/javascript" src="../Cesium.js"></script>
+</head>
+<body>
+  <script type="text/javascript" src="SpecsConcatenated.js"></script>
+
+  <script type="text/javascript">
+	var isSuiteFocused = jasmine.TrivialReporter.isSuiteFocused,
+		suites = jasmine.getEnv().currentRunner().suites();
+
+	for (var i = 1, insertPoint = 0, len = suites.length; i < len; i++) {
+		var suite = suites[i];
+		if (isSuiteFocused(suite)) {
+			suites.splice(i, 1);
+			suites.splice(insertPoint, 0, suite);
+			insertPoint++;
+			i--;
+		}
+	}
+
+	var reporter = new jasmine.TrivialReporter();
+	jasmine.getEnv().addReporter(reporter);
+	jasmine.getEnv().specFilter = reporter.specFilter;
+	jasmine.getEnv().execute();
+  </script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+.tundra .dijitTabRtl {
+	-moz-box-orient:horizontal;
+	text-align: right;
+}
+.tundra .dijitTabRtl .dijitTabInnerDiv {
+	padding:2px 9px 2px 8px;
+}
+.tundra .tabStrip-disabled .tabStripButtonRtl .dijitTabInnerDiv {
+	
+	padding-bottom: 3px;
+	padding-top: 1px;
+}
+.tundra .tabStripButtonRtl .dijitTabInnerDiv {
+	padding: 3px 2px 4px 2px;
+}
+.tundra .dijitTabPaneWrapper {
+	#zoom: 1;
+}
+.dj_ie-rtl .tundra .dijitTabContainerLeft-tabs {
+	margin-left: 1px !important;
+}
+.dj_ie-rtl .tundra .dijitTabContainerRight-tabs {
+	margin-right: 1px !important;
+}
+.tundra .dijitTabContainerLeft-tabs .dijitTabRtl,
+.tundra .dijitTabContainerRight-tabs .dijitTabRtl {
+	margin-left:0;
+}
+.dj_ie .tundra .dijitTabRtl .dijitTabInnerDiv {
+	
+	width : 0.1% !important;
+}
+.dj_iequirks-rtl .tundra .dijitTabContainerTopNone,
+.dj_iequirks-rtl .tundra .dijitTabContainerBottomNone {
+	
+	border-left: 1px solid #fff;
+	border-right: 1px solid #fff;
+}

@@ -1,0 +1,1 @@
+({"close":"[lukk]","title":"Tittel","authors":"Forfattere","summary":"Sammendrag","content":"Innhold","contributors":"Bidragsytere","updated":"Oppdatert","displayOptions":"[visningsalternativer]","id":"ID"})

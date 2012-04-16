@@ -1,0 +1,1 @@
+({"deleteButton":"[削除]"})

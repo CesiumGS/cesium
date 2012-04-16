@@ -1,0 +1,1 @@
+({"selectContents":"Vybrat obsah","deleteElement":"Odstranit prvek","moveEnd":"Přesunout ukazatel na konec","deleteContents":"Odstranit obsah","nodeActions":"Akce uzlu ${nodeName}","selectElement":"Vybrat prvek","moveStart":"Přesunout ukazatel na začátek"})

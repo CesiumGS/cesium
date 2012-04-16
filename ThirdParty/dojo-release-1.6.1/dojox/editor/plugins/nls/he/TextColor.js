@@ -1,0 +1,1 @@
+({"setButtonText":"הגדרה","cancelButtonText":"ביטול"})

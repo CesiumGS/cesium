@@ -1,0 +1,1 @@
+({"selectContents":"Vælg indhold","deleteElement":"Slet element","moveEnd":"Flyt markør til slut","deleteContents":"Slet indhold","nodeActions":"${nodeName} - handlinger","selectElement":"Vælg element","moveStart":"Flyt markør til start"})

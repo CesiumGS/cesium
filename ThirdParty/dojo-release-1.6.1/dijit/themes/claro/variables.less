@@ -1,0 +1,189 @@
+// General
+@text-color: #000000;				// Text color for enabled widgets
+
+@border-color: #b5bcc7;				// Border color for (enabled, unhovered) TextBox, Slider, Accordion, BorderContainer, TabContainer
+@popup-border-color: #769dc0;		// Border for Dialog, Menu, Tooltip.   Must also update tooltip.png (the arrow image file) to match
+@minor-border-color: #d3d3d3;		// Color of borders inside widgets: horizontal line in Calendar between weeks, around color swatches in ColorPalette, above Dialog action bar
+
+@disabled-border-color: #d3d3d3;	// Border color for disabled/readonly Button, TextBox etc. widgets
+@disabled-background-color: #efefef;// Disabled button, textbox, etc.
+@disabled-text-color: #818181;		// Text color for disabled/readonly widgets
+
+@unselected-background-color: #efefef;// Background color for unselected/unopened tab button, accordion pane, TitlePane, Menu items
+@unselected-text-color: #4a4a4a;	// Text color for unselected/unopened tab button, accordion pane, TitlePane, Menu items
+
+@hovered-border-color: #769dc0;		// Hover of textbox, tab label, BorderContainer splitter, Calendar, etc.
+@hovered-background-color: #abd6ff;	// Background color for hover of Button, MenuBar, Accordion pane, Calendar... anything that has a (non-white) color to start with and gets darker on hover
+@hovered-text-color: @text-color;	// Used for title of select Accordion pane, label of select tab, hovered Menu item, etc.
+
+@pressed-border-color: #769dc0;		// During click on Calendar day, Slider up/down buttons, tab button, etc.
+@pressed-background-color: #7dbefa;	// Background color while clicking on Accordion/TitlePane title bar, tab button, Calendar day, Toolbar button, Tree row.
+
+@selected-border-color: #769dc0;	// Selected AccordionPane, tab of nested TabContainer (but plain TabContainer is special)
+@selected-background-color: #cfe5fa;// Selected Accordion pane, nested tab label, Tree row
+@selected-text-color: @text-color;	// title of selected Accordion pane, label of selected tab, hovered Menu item, etc.
+
+@bar-background-color: #efefef;		// MenuBar, Toolbar, action bar at bottom of dialog
+@pane-background-color: #fff;		// Background color of Accordion panes, Dialogs, etc.
+@popup-background-color: #fff;		// Background for Dialog.   TODO: currently use for ColorPalette, maybe should change.
+
+
+
+// Buttons
+@button-border-color: #769dc0;				// Border for (stand-alone) buttons in normal, hovered, or active state
+@button-background-color: #e9f4fe;			// Background color for (unhovered) buttons
+@button-hovered-background-color: #abd6ff;	// Background color for hovered buttons
+@button-pressed-background-color: #abd6ff;	// Background color for active buttons
+@button-border-radius: 4px;					// Rounded corner radius for buttons (except in toolbar)
+
+// Input widgets
+@focused-border-color: #769dc0;				// Focused textbox, editor, select, etc.
+@error-border-color: #d46464;				// Border for textbox in error state
+@error-focused-border-color: #ce4f4f;		// Border of textbox in error state, and focused
+@erroricon-background-color: #d46464;		// Background color for exclamation point validation icon (for TextBox in error state)
+@textbox-background-color: #fff;			// Default background color of TextBox based widgets
+@textbox-hovered-background-color: #e9f4fe;	// Background color when hovering a unfocused TextBox, Select, Editor, or other input widget
+@textbox-focused-background-color: @textbox-background-color;
+@textbox-error-background-color: @textbox-background-color;
+@textbox-disabled-background-color: @disabled-background-color;
+
+@textbox-padding: 2px;						// Padding for Textbox, Textarea, etc.
+
+// CheckBox, RadioButton
+@focus-outline-color: #4a4a4a;				// Color for artificial focus outline around labels of checkboxes
+
+// TabContainer
+@nestedtab-hovered-background-color: @textbox-hovered-background-color;
+@nestedtab-hovered-border-color: #cfe5fa;
+@nestedtab-selected-border-color: @selected-border-color;
+@nestedtab-selected-background-color: #abd6ff;
+@tab-disabled-background-color: #d3d3d3;		// For disabled tabs of a TabContainer (not officially supported)
+
+// Arrow buttons (stand alone, or inside ComboBox / ComboButton / Spinner / etc.
+@arrowbutton-background-color: #efefef;
+@arrowbutton-hovered-background-color: #abd6ff;	// Color of arrow when hovering ComboBox.   But hovering Spinner doesn't change arrow color (TODO)
+@arrowbutton-pressed-background-color: #abd6ff;
+@arrowbutton-inner-border-color: #fff;			// Typically the arrows have an inner white border (a.k.a. padding) and then an outer black-ish border
+
+// Slider
+// Note: any changes here require corresponding changes in form/images/sliderThumbs.png
+@slider-fullbar-background-color: #cfe5fa;			// Background color for part of slider bar before (to the left or below) the handle
+@slider-remainingbar-background-color: #fff;		// Background color for part of slider bar after (to the right or above) the handle
+@slider-hovered-fullbar-background-color: #abd6ff;	// Background color for part of bar of hovered slider before (to the left or below) the handle
+@slider-hovered-remainingbar-background-color: #fff;// Background color for part of bar of hovered slider after (to the right or above) the handle
+@slider-hoveredButton-background-color: #fff;		// Background color of slider increment/decrement buttons when mouse is over slider but not over the buttons
+@slider-focused-fullbar-background-color: #abd6ff;	// Background color for part of bar of focused slider before (to the left or below) the handle
+@slider-focused-remainingbar-background-color: #fff;// Background color for part of bar of focused slider after (to the right or above) the handle
+@slider-button-hovered-background-color: #cfe5fa;	// Background color of slider increment/decrement buttons when mouse is over the buttons
+@slider-button-pressed-background-color: #abd6ff;	// Background color of slider increment/decrement buttons while button is depressed
+
+// Select, ComboBox
+@select-dropdownitem-background-color: #fff;			// Background color for items in the drop down list of a ComboBox/Select
+@select-dropdownitem-hovered-background-color: #7dbefa;	// Background color for the hovered item in the drop down list of a ComboBox/Select
+@select-matchedtext-background-color: #abd6ff;			// Background color of text in ComboBox drop down that matches typed in phrase
+
+// Menus
+@menu-background-color: @popup-background-color;
+
+// Calendar
+@calendar-background-color: #cfe5fa;
+@calendar-currentmonth-background-color: #fff;		// Background color for days of the current month
+@calendar-adjacentmonth-background-color: #e9f4fe;	// Background color used for days from previous or next month
+@calendar-adjacentmonth-text-color: #769dc0;		// Text color used for days from previous or next month
+@calendar-date-pressed-border-color: #fff;			// For some reason pressing a day of the month (as opposed to hovering it) makes the border go away, is this intentional?
+@calendar-date-pressed-background-color: @pressed-background-color;
+@calendar-date-selected-border-color: @selected-border-color;
+@calendar-date-selected-background-color: #abd6ff;
+@calendar-button-hovered-background-color: #e9f4fe;	// for hover or next/previous year, and month drop down (TODO: border and background are built in to calendarArrows.png, can't control from here)
+@calendar-button-hovered-border-color: #fff;		// for hover or next/previous year, and month drop down
+@calendar-button-pressed-background-color: #cfe5fa;
+@calendar-button-pressed-border-color: @pressed-border-color;
+
+
+// ProgressBar
+@progressbar-border-color: @popup-border-color;	// Border color of progress bar
+@progressbar-full-background-color:#abd6ff;		// Background color for part of progress bar indicating amount completed
+@progressbar-empty-background-color: #fff;		// Background color for part of progress bar indicating amount remaining
+@progressbar-text-color: @text-color;			// Color of progress bar text (ex: "35%").  Must contrast with both empty and full background colors.
+
+// TimePicker
+@timepicker-minorvalue-background-color: #efefef;	// For 3:15, 3:30, 3:45 but not 3:00 or 4:00
+@timepicker-minorvalue-text-color: #818181;
+@timepicker-majorvalue-background-color: #e9f4fe;	// For 3:00, 4:00, 5:00, etc.
+@timepicker-value-hovered-background-color: #7dbefa;
+@timepicker-value-hovered-text-color: @hovered-text-color;
+@timepicker-arrow-hovered-background-color: #abd6ff;
+
+// ColorPalette
+@colorpalette-background-color: #fff;
+@swatch-border-color: @minor-border-color;
+@swatch-hovered-border-color: #000;
+@swatch-selected-border-color: #000;
+
+// Dialog
+@dialog-underlay-color: #fff;			// the thing that grays out the screen when a dialog is shown
+@dialog-titlebar-border-color: #fff;	// Inner border around the title sectionof a Dialog, inside the main border of the Dialog and the border between title and content
+@dialog-titlebar-background-color: #abd6ff;
+
+// BorderContainer
+@splitter-hovered-background-color: #cfe5fa;	// Color of splitter when user hovers it, before mouse down
+@splitter-dragged-background-color: #abd6ff;	// Color of splitter while it's being dragged
+
+// Toolbar
+@toolbar-button-checked-background-color: #fff;								// a toggled-on button in the toolbar
+@toolbar-combobutton-hovered-unhoveredsection-background-color: #f4ffff;	// when user hovers a ComboButton in a Toolbar, the other half of the button turns this color
+@toolbar-button-border-radius: 2px;			// Rounded corner radius for buttons for buttons in toolbar
+
+// DnD
+@dnd-avatar-background-color: #fff;					// Background color of little Dialog-type box indicating dragged items
+@dnd-avatar-header-background-color: #f58383;		// Title bar for dragged items
+@dnd-avatar-candrop-header-background-color: #97e68d;// Title bar for dragged items when they can be dropped
+@dnd-dropseparator-color: #769dc0;					// Color of line indicating that user is about to drop between items A & B
+
+// Document level
+@document-text-color: #131313;									// Text color for document itself (text outside of widgets)
+@document-shadedsection-background-color: @bar-background-color;// background color used for <pre>, <code>, and table header rows
+@document-border-color: #d3d3d3;								// Border for <pre>, <code>, tables, etc.
+
+// Mixins
+
+.border-radius (@radius) {
+	-moz-border-radius: @radius;
+	border-radius: @radius;
+}
+
+.box-shadow (@value) {
+	-webkit-box-shadow: @value;
+	-moz-box-shadow: @value;
+	box-shadow: @value;
+}
+
+.transition-property (@value) {
+	-webkit-transition-property: @value;
+	-moz-transition-property: @value;
+	transition-property: @value;
+}
+
+.transition-property (@value1, @value2) {
+	-webkit-transition-property: @value1, @value2;
+	-moz-transition-property: @value1, @value2;
+	transition-property: @value1, @value2;
+}
+
+.transition-duration (@value) {
+	-webkit-transition-duration: @value;
+	-moz-transition-duration: @value;
+	transition-duration: @value;
+}
+
+.transition-duration (@value1, @value2) {
+	-webkit-transition-duration: @value1, @value2;
+	-moz-transition-duration: @value1, @value2;
+	transition-duration: @value1, @value2;
+}
+
+.transition-timing-function (@value) {
+	-webkit-transition-timing-function: @value;
+	-moz-transition-timing-function: @value;
+	transition-timing-function: @value;
+}

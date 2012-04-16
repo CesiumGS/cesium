@@ -1,0 +1,426 @@
+<project name="Cesium">
+	<target name="Debug" description="A build for developers.">
+		<antcall target="build" />
+	</target>
+
+	<target name="DebugWithCoverage" description="A debug build instrumented for JSCoverage (currently Windows only).">
+		<antcall target="deleteBuild" />
+		<antcall target="build">
+			<param name="build.coverage" value="true" />
+		</antcall>
+	</target>
+
+	<target name="Release" description="A full release build that creates a shippable product, including documentation.">
+		<antcall target="build">
+			<param name="build.minification" value="true" />
+			<param name="build.documentation" value="true" />
+		</antcall>
+	</target>
+
+	<target name="ReleaseWithoutDocumentation" description="A full release build that creates a shippable product (without documentation).">
+		<antcall target="build">
+			<param name="build.minification" value="true" />
+		</antcall>
+	</target>
+
+	<target name="Clean" depends="deleteBuild" description="Cleans the build." />
+
+	<target name="Publish" depends="publishToWebserver" description="Publishes to the webserver's virtual directory." />
+
+	<!-- properties controlling which steps get run -->
+	<property name="build.minification" value="false" />
+	<property name="build.documentation" value="false" />
+	<property name="build.coverage" value="false" />
+
+	<!-- some of these dependent targets may be skipped depending on the build properties -->
+	<target name="build" depends="
+		copyJavaScriptModules,
+		combineJavaScript,
+		instrumentForCoverage,
+		copyExamples,
+		concatenateSandboxExample,
+		buildSpecs,
+		copyIndexHtml,
+		copyTextFiles,
+		copyProxy,
+		generateDocumentation" />
+
+	<target name="enableMinification">
+		<property name="build.minification" value="true" />
+	</target>
+
+	<target name="enableDocumentation">
+		<property name="build.documentation" value="true" />
+	</target>
+
+	<!-- ********************************************************************** -->
+
+	<!-- Inputs -->
+	<property name="sourceDirectory" location="Source" />
+	<property name="shadersDirectory" location="Source/Shaders" />
+	<property name="examplesDirectory" location="Examples" />
+	<property name="specsDirectory" location="Specs" />
+	<property name="imagesDirectory" location="../Images" />
+	<property name="jasmineDirectory" location="../Tools/jasmine-1.1.0" />
+	<property name="aceDirectory" location="../ThirdParty/ace-0.2.0-1" />
+	<property name="dojoDirectory" location="../ThirdParty/dojo-release-1.6.1" />
+	<property name="jsbeautifyDirectory" location="../ThirdParty/js-beautify" />
+	<property name="jscoverage" location="../Tools/jscoverage-0.5.1/jscoverage.exe" />
+	<property name="documentationImagesDirectory" location="../Documentation/Images" />
+	<property name="jsdoc3Directory" location="../Tools/jsdoc3" />
+	<property name="licenseFile" location="../LICENSE" />
+	<property name="readmeFile" location="../Readme.txt" />
+	<property name="proxyFile" location="../proxy.php" />
+
+	<!-- Outputs -->
+	<property name="buildDirectory" location="../Build" />
+	<property name="instrumentedBuildDirectory" location="../Instrumented" />
+	<property name="buildOutputDirectory" location="${buildDirectory}/Cesium" />
+	<property name="buildShadersDirectory" location="${buildOutputDirectory}/Shaders" />
+	<property name="buildSpecsDirectory" location="${buildDirectory}/Specs" />
+	<property name="buildServersDirectory" location="${buildDirectory}/Servers" />
+	<property name="buildDemosDirectory" location="${buildDirectory}/Demos" />
+	<property name="buildExamplesDirectory" location="${buildDirectory}/Examples" />
+	<property name="buildToolsDirectory" location="${buildDirectory}/Tools" />
+	<property name="buildJasmineDirectory" location="${buildToolsDirectory}/Jasmine" />
+	<property name="buildThirdPartyDirectory" location="${buildDirectory}/ThirdParty" />
+	<property name="buildAceDirectory" location="${buildThirdPartyDirectory}/ace" />
+	<property name="buildDojoDirectory" location="${buildThirdPartyDirectory}/dojo" />
+	<property name="buildJsbeautifyDirectory" location="${buildThirdPartyDirectory}/js-beautify" />
+	<property name="buildDocumentationDirectory" location="${buildDirectory}/Documentation" />
+	<property name="buildDocumentationImagesDirectory" location="${buildDocumentationDirectory}/images" />
+
+	<!-- ********************************************************************** -->
+
+	<scriptdef name="glslToJavascript" language="javascript">
+		<!-- Scott Hunter is my hero. - Cozzi -->
+		<attribute name="destination" />
+		<attribute name="stripcomments" />
+		<element name="fileset" type="fileset" />
+		<![CDATA[
+importClass(java.io.File);
+importClass(java.io.FileReader);
+importClass(java.io.FileWriter);
+importClass(java.io.StringReader);
+importClass(Packages.org.apache.tools.ant.util.FileUtils);
+importClass(Packages.org.apache.tools.ant.filters.StripJavaComments);
+
+var stripComments = attributes.get("stripcomments");
+var destination = attributes.get("destination");
+var filesets = elements.get("fileset");
+for (var i = 0; i < filesets.size(); i++) {
+  var fileset = filesets.get(i);
+  var basedir  = fileset.getDir(project);
+  var filenames = fileset.getDirectoryScanner(project).getIncludedFiles();
+
+  for (var j = 0; j < filenames.length; j++) {
+    var filename = filenames[j];
+    var file = new File(basedir, filename);
+
+    var reader = new FileReader(file);
+    var contents = new String(FileUtils.readFully(reader));
+    reader.close();
+
+    contents = contents.replace(/\r\n/gm, '\n');
+
+    var copyrightComments = contents.match(/\/\*\!(?:.|\n)*?\*\//gm) || [];
+
+    if (stripComments) {
+      contents = new String(FileUtils.readFully(new StripJavaComments(new StringReader(contents))));
+      contents = contents.replace(/\s+$/gm, '').replace(/^\s+/gm, '').replace(/\n+/gm, '\n');
+      contents += '\n';
+    }
+
+    contents = contents.split('"').join('\\"').replace(/\n/gm, '\\n" +\n"');
+    contents = copyrightComments.join('\n') + '\n' +
+               '/*global define*/\n' +
+               'define(function() {\n' +
+               '  "use strict";\n' +
+               '  return "' + contents + '";\n' +
+               '});'
+
+    var targetFile = new File(destination, file.getName().replace('.glsl', '.js'));
+    var writer = new FileWriter(targetFile);
+    writer.write(contents);
+    writer.close();
+  }
+}
+    	]]>
+	</scriptdef>
+
+	<scriptdef name="createMainJs" language="javascript">
+		<attribute name="output" />
+		<element name="fileset" type="fileset" />
+		<![CDATA[
+importClass(java.io.File);
+importClass(java.io.FileWriter);
+
+var output = attributes.get("output");
+var filesets = elements.get("fileset");
+var moduleIDs = [], parameters = [], assignments = [];
+for (var i = 0; i < filesets.size(); i++) {
+  var fileset = filesets.get(i);
+  var basedir  = fileset.getDir(project);
+  var filenames = fileset.getDirectoryScanner(project).getIncludedFiles();
+
+  for (var j = 0; j < filenames.length; j++) {
+    var relativePath = filenames[j];
+    var file = new File(basedir, relativePath);
+    var baseName = file.getName();
+    baseName = baseName.substring(0, baseName.lastIndexOf('.'));
+
+    var moduleID = relativePath.replace('\\', '/');
+    moduleID = moduleID.substring(0, moduleID.lastIndexOf('.'));
+
+    var assignmentName = baseName;
+    if (/Shaders\//.test(moduleID)) {
+      assignmentName = '_shaders.' + assignmentName;
+    }
+		
+    var parameterName = moduleID.replace('/', '_');
+
+    moduleIDs.push('"' + moduleID + '"');
+    parameters.push(parameterName);
+    assignments.push('Cesium.' + assignmentName + ' = ' + parameterName + ';');
+  }
+}
+var comments = '/*!\n' +
+               ' * Copyright 2011-2012 Cesium Contributors\n' +
+               ' *\n' +
+		       ' * Licensed under the Apache License, Version 2.0 (the "License");\n' +
+               ' * you may not use this file except in compliance with the License.\n' +
+               ' * You may obtain a copy of the License at\n' +
+               ' *\n' +
+               ' * http://www.apache.org/licenses/LICENSE-2.0\n' +
+               ' *\n' +
+               ' * Unless required by applicable law or agreed to in writing, software\n' +
+               ' * distributed under the License is distributed on an "AS IS" BASIS,\n' +
+               ' * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n' +
+               ' * See the License for the specific language governing permissions and\n' +
+               ' * limitations under the License.\n' +
+               ' *\n' +
+               ' * Columbus View (Pat. Pend.)\n' +
+               ' */';
+		
+var contents = comments + '\n' +
+               'var Cesium = window.Cesium = {_shaders:{}};\n' +
+               'require([' + moduleIDs.join(', ') + '], function (' + parameters.join(', ') + ') {\n' + 
+               assignments.join('\n') + '\n' +
+               '}, undefined, true);';
+			   
+var writer = new FileWriter(output);
+writer.write(contents);
+writer.close();
+    	]]>
+	</scriptdef>
+
+	<!-- ********************************************************************** -->
+
+	<target name="copyJavaScriptModules">
+		<sync todir="${buildOutputDirectory}">
+			<fileset dir="${sourceDirectory}" includes="**/*.js" />
+		</sync>
+
+		<mkdir dir="${buildShadersDirectory}" />
+		<glslToJavascript destination="${buildShadersDirectory}" stripcomments="${build.minification}">
+			<fileset dir="${shadersDirectory}" includes="*.glsl" />
+		</glslToJavascript>
+	</target>
+
+	<target name="combineJavaScript.createMain" depends="copyJavaScriptModules">
+		<createMainJs output="${buildOutputDirectory}/main.js">
+			<fileset dir="${buildOutputDirectory}" includes="**/*.js" excludes="main.js" />
+		</createMainJs>
+	</target>
+
+	<target name="combineJavaScript.setNodePathValue">
+		<condition property="nodePathValue" value="../Tools/nodejs-0.6.14/windows/node.exe">
+			<os family="windows" />
+		</condition>
+
+		<condition property="nodePathValue" value="../Tools/nodejs-0.6.14/mac/node">
+			<os family="mac" />
+		</condition>
+	</target>
+
+	<target name="combineJavaScript.setNodePathLocation" if="nodePathValue">
+		<property name="nodePath" location="${nodePathValue}" />
+	</target>
+
+	<target name="combineJavaScript.setNodePath" depends="combineJavaScript.setNodePathValue,combineJavaScript.setNodePathLocation">
+		<condition property="nodePath" value="node">
+			<not>
+				<isset property="nodePath" />
+			</not>
+		</condition>
+	</target>
+
+	<target name="combineJavaScript.createUnminified" depends="combineJavaScript.setNodePath,combineJavaScript.createMain">
+		<exec executable="${nodePath}" dir="${buildOutputDirectory}">
+			<arg file="./Cesium.build.js" />
+		</exec>
+		<copy file="${buildDirectory}\Cesium.js" tofile="${buildDirectory}\CesiumUnminified.js" />
+	</target>
+
+	<target name="combineJavaScript.minified" if="${build.minification}" depends="combineJavaScript.createMain">
+		<exec executable="${nodePath}" dir="${buildOutputDirectory}">
+			<arg file="./Cesium.build.js" />
+			<arg value="true" />
+		</exec>
+	</target>
+
+	<target name="combineJavaScript" depends="combineJavaScript.createUnminified,combineJavaScript.minified" />
+
+	<!-- ********************************************************************** -->
+
+	<!--
+    The ThirdParty subdirectory in Examples has a lot of files.  Even when they
+    are not copied, checking the timestamp slows down the build.  So, if the
+    ThirdParty directory exists in the Build directory, we don't even try to copy it.
+    
+    This means adding new files to the ThirdParty directory requires a clean build.
+    -->
+
+	<target name="copyExamples.checkForThirdParty">
+		<condition property="thirdPartyDirectory.exists">
+			<available file="${buildThirdPartyDirectory}" type="dir" />
+		</condition>
+	</target>
+
+	<target name="copyExamples.copyThirdParty" depends="copyExamples.checkForThirdParty" unless="thirdPartyDirectory.exists">
+		<copy todir="${buildAceDirectory}">
+			<fileset dir="${aceDirectory}" />
+		</copy>
+		<copy todir="${buildDojoDirectory}">
+			<fileset dir="${dojoDirectory}" />
+		</copy>
+		<copy todir="${buildJsbeautifyDirectory}">
+			<fileset dir="${jsbeautifyDirectory}" />
+		</copy>
+	</target>
+
+	<target name="copyExamples" depends="copyExamples.copyThirdParty">
+		<!-- Sandbox -->
+		<copy todir="${buildExamplesDirectory}/Sandbox">
+			<fileset dir="${examplesDirectory}/Sandbox" />
+		</copy>
+		<copy todir="${buildExamplesDirectory}/Sandbox/Images">
+			<fileset dir="${imagesDirectory}" />
+		</copy>
+		<copy file="${buildDirectory}/Cesium.js" todir="${buildExamplesDirectory}/Sandbox" />
+
+		<!-- Skeleton -->
+		<copy todir="${buildExamplesDirectory}/Skeleton">
+			<fileset dir="${examplesDirectory}/Skeleton" />
+		</copy>
+		<copy todir="${buildExamplesDirectory}/Skeleton/Images">
+			<fileset dir="${imagesDirectory}" />
+		</copy>
+		<copy file="${buildDirectory}/Cesium.js" todir="${buildExamplesDirectory}/Skeleton" />
+
+		<!-- Skeleton2D -->
+		<copy todir="${buildExamplesDirectory}/Skeleton2D">
+			<fileset dir="${examplesDirectory}/Skeleton2D" />
+		</copy>
+		<copy todir="${buildExamplesDirectory}/Skeleton2D/Images">
+			<fileset dir="${imagesDirectory}" />
+		</copy>
+		<copy file="${buildDirectory}/Cesium.js" todir="${buildExamplesDirectory}/Skeleton2D" />
+	</target>
+
+	<target name="concatenateSandboxExample" depends="copyExamples">
+		<concat destfile="${buildExamplesDirectory}/Sandbox/CodeSnippetsConcatenated.js" fixLastLine="true">
+			<fileset dir="${buildExamplesDirectory}/Sandbox/CodeSnippets" includes="**/*.js" />
+		</concat>
+	</target>
+
+	<!-- ********************************************************************** -->
+
+	<target name="buildSpecs" depends="">
+		<copy todir="${buildJasmineDirectory}">
+			<fileset dir="${jasmineDirectory}" />
+		</copy>
+
+		<concat destfile="${buildSpecsDirectory}/SpecsConcatenated.js" fixLastLine="true">
+			<filelist dir="${specsDirectory}" files="Specs.js" />
+			<fileset dir="${specsDirectory}" includes="**/*.js" excludes="Specs.js" />
+		</concat>
+
+		<copy file="${specsDirectory}/SpecRunner.html" todir="${buildSpecsDirectory}" />
+
+		<copy todir="${buildSpecsDirectory}/Data">
+			<fileset dir="${specsDirectory}/Data" />
+		</copy>
+	</target>
+
+	<!-- ********************************************************************** -->
+
+	<target name="instrumentForCoverage" if="${build.coverage}">
+		<exec executable="${jscoverage}">
+			<!-- JSCoverage does not allow the same source and destination directories -->
+			<!-- For speed, exclude directories and files that do not need to be instrumented -->
+			<arg line="--exclude=ThirdParty ${buildDirectory} ${instrumentedBuildDirectory}" />
+		</exec>
+
+		<!-- Rename directory -->
+		<delete dir="${buildDirectory}" />
+		<move file="${instrumentedBuildDirectory}" tofile="${buildDirectory}" />
+	</target>
+
+	<!-- ********************************************************************** -->
+
+	<target name="copyIndexHtml">
+		<copy file="index.html" todir="${buildDirectory}" />
+	</target>
+
+	<target name="generateDocumentation" if="${build.documentation}">
+		<!--
+		These needs to be a relative path because Rhino doesn't work properly with Windows 
+		absolute paths:
+		https://github.com/mozilla/rhino/issues/10  
+		-->
+		<property name="relativeDocOutputDirectory" location="${buildDocumentationDirectory}" relative="true" basedir="${jsdoc3Directory}" />
+		<property name="relativeSourceFilesPath" location="${buildOutputDirectory}" relative="true" basedir="${jsdoc3Directory}" />
+
+		<java jar="${jsdoc3Directory}/lib/js.jar" dir="${jsdoc3Directory}" fork="true">
+			<arg line="-modules node_modules -modules rhino_modules -modules ." />
+			<arg line="jsdoc.js" />
+			<arg line="-r" />
+			<arg line="-d ${relativeDocOutputDirectory}" />
+			<arg line="${relativeSourceFilesPath}" />
+		</java>
+
+		<copy todir="${buildDocumentationImagesDirectory}">
+			<fileset dir="${documentationImagesDirectory}" />
+		</copy>
+	</target>
+
+	<!-- ********************************************************************** -->
+
+	<target name="copyTextFiles">
+		<copy file="${licenseFile}" todir="${buildDirectory}" />
+		<copy file="${readmeFile}" todir="${buildDirectory}" />
+	</target>
+
+	<!-- ********************************************************************** -->
+
+	<target name="copyProxy">
+		<copy file="${proxyFile}" todir="${buildDirectory}" />
+	</target>
+
+	<!-- ********************************************************************** -->
+
+	<target name="deleteBuild">
+		<delete dir="${buildDirectory}" />
+	</target>
+
+	<!-- ********************************************************************** -->
+
+	<target name="publishToWebserver">
+		<delete dir="${webserverDirectory}" />
+		<copy todir="${webserverDirectory}">
+			<fileset dir="${buildDirectory}" />
+		</copy>
+	</target>
+
+</project>

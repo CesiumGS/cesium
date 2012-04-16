@@ -1,0 +1,1 @@
+({"saturationPickerTitle":"محدد درجة التشبع","huePickerTitle":"محدد تدرج اللون","valueLabel":"v","blueLabel":"b","saturationLabel":"s","greenLabel":"g","redLabel":"r","hueLabel":"h","hexLabel":"hex","degLabel":"°"})

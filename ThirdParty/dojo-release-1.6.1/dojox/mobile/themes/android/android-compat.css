@@ -1,0 +1,266 @@
+
+.mblHeading {
+	background-image: url(compat/heading-bg.png);
+}
+.mblArrowButtonHead {
+	position: absolute;
+	top: 0px;
+	left: 8px;
+	width: 19px;
+	height: 29px;
+	border-style: none;
+	background-image: url(compat/arrow-button-head.png);
+}
+.mblArrowButtonBody {
+	padding: 0px 10px 0px 10px;
+	background-image: url(compat/arrow-button-bg.png);
+}
+.mblRoundCorner {
+	background-color: black;
+	height: 1px;
+	font-size: 1px;
+	overflow: hidden;
+	border-style: solid;
+	border-color: #ADAAAD;
+	border-width: 0px 1px;
+}
+.mblRoundRectContainer {
+	padding: 3px 8px;
+	background-color: black;
+	border-style: solid;
+	border-color: #ADAAAD;
+	border-width: 0px 1px;
+}
+.mblRoundRectList .mblRoundRectContainer {
+	margin: 0px;
+	padding: 0px;
+}
+.mblRoundCorner0T {
+	height: 0px;
+}
+.mblRoundCorner1T {
+	background-color: #ADAAAD;
+	margin: 0px 5px;
+}
+.mblRoundCorner2T {
+	margin: 0px 2px;
+	border-width: 0px 3px;
+}
+.mblRoundCorner3T {
+	margin: 0px 1px;
+	border-width: 0px 2px;
+}
+.mblRoundCorner4T {
+	margin: 0px 1px;
+}
+.mblRoundCorner5T {
+	margin: 0px 1px;
+}
+.mblRoundCorner0B {
+	height: 0px;
+}
+.mblRoundCorner1B {
+	margin: 0px 1px;
+}
+.mblRoundCorner2B {
+	margin: 0px 1px;
+}
+.mblRoundCorner3B {
+	margin: 0px 1px;
+	border-width: 0px 2px;
+}
+.mblRoundCorner4B {
+	margin: 0px 2px;
+	border-width: 0px 3px;
+}
+.mblRoundCorner5B {
+	background-color: #ADAAAD;
+	margin: 0px 5px;
+}
+*html li.mblListItem.mblVariableHeight { 
+	height: 0;
+}
+.mblListItem .mblArrow {
+	border-style: none;
+	width: 9px;
+	height: 13px;
+	background-image: url(compat/gray-arrow.png);
+}
+.mblItemSelected .mblArrow {
+	background-image: url(compat/white-arrow.png);
+}
+.dj_ie6 .mblTabBarButtonDiv, .dj_ie7 .mblTabBarButtonDiv {
+	left: auto;
+}
+.mblSwitchInner {
+	width: 100px;
+}
+.mblSwitchBg {
+	border: none;
+}
+.mblSwitchBgLeft {
+	width: 89px;
+	background: none;
+}
+.mblSwitchBgRight {
+	width: 89px;
+	left: 58px;
+	background: none;
+}
+.mblSwitchKnobContainer {
+	position: relative;
+	left: 53px;
+	width: 41px;
+	height: 26px;
+}
+.mblSwitchKnob {
+	position: relative;
+	top: 0px;
+	left: 0px;
+	width: auto;
+	height: 21px;
+	background-image: url(compat/switch-knob-bg.png);
+	border-width: 0px 1px;
+	-moz-border-radius: 0px;
+}
+.mblSwitchCorner {
+	position: relative;
+	height: 1px;
+	font-size: 1px;
+	overflow: hidden;
+	border-style: solid;
+	border-color: #878787;
+}
+.mblSwitchCorner1T {
+	background-color: #848684;
+	margin: 0px 1px;
+	border-width: 0px;
+}
+.mblSwitchCorner2T {
+	background-color: #C0C0C0;
+	margin: 0px 0px;
+	border-width: 0px 1px;
+}
+.mblSwitchCorner3T {
+	background-color: #C6C7C6;
+	margin: 0px 0px;
+	border-width: 0px 1px;
+}
+.mblSwitchCorner1B {
+	background-color: #FBFBFB;
+	margin: 0px 0px;
+	border-width: 0px 1px;
+}
+.mblSwitchCorner2B {
+	background-color: #FBFBFB;
+	margin: 0px 0px;
+	border-width: 0px 1px;
+}
+.mblSwitchCorner3B {
+	background-color: #878787;
+	margin: 0px 1px;
+	border-width: 0px;
+}
+.mblSwitchBgLeft .mblSwitchCorner1T {
+	border-width: 0px 2px;
+	background-color: #00A600;
+}
+.mblSwitchBgLeft .mblSwitchCorner2T {
+	background-color: #00A600;
+}
+.mblSwitchBgLeft .mblSwitchCorner3T {
+	background-color: #00A600;
+}
+.mblSwitchBgLeft .mblSwitchCorner1B {
+	background-color: #00D700;
+}
+.mblSwitchBgLeft .mblSwitchCorner2B {
+	background-color: #00D700;
+}
+.mblSwitchBgLeft .mblSwitchCorner3B {
+	background-color: #00D700;
+}
+.mblSwitchText {
+	height: 21px;
+	line-height: 21px;
+}
+.mblSwitchTextLeft {
+	background-image: url(compat/switch-green-bg.png);
+	border-left: 1px solid #848684;
+}
+.mblSwitchTextRight {
+	background-image: url(compat/switch-gray-bg.png);
+	left: 35px;
+	border-right: 1px solid #848684;
+}
+.mblIconContentHeading {
+	background-image: url(compat/icon-content-heading-bg.png);
+}
+.mblBlueButton {
+	background-image: url(compat/blue-button-bg.png);
+}
+.mblBlueButtonSelected {
+	background-image: url(compat/blue-button-sel-bg.png);
+}
+.mblTabPanelHeader {
+}
+.mblTabButton {
+	background-image: url(compat/tab-button-bg.png);
+}
+.mblTabButtonSelected {
+	background-image: url(compat/tab-sel-button-bg.png);
+}
+*html .mblTabButton { 
+	behavior: expression(
+		(function(el){
+			if(!el.previousSibling)
+				el.style.borderWidth = "1px";
+			el.style.behavior = "none";
+		})(this)
+	);
+}
+.mblProg {
+	position: absolute;
+	top: 0px;
+	width: 4px;
+	font-size: 1px;
+	height: 36px;
+	overflow: hidden;
+	background-color: #C0C0C0;
+}
+.mblProg0 {
+	left: 0px;
+}
+.mblProg1 {
+	left: 8px;
+}
+.mblProg2 {
+	left: 16px;
+}
+.mblProg3 {
+	left: 24px;
+}
+.mblProg4 {
+	left: 32px;
+}
+.mblProg5 {
+	left: 40px;
+}
+.mblProg6 {
+	left: 48px;
+}
+.mblProg7 {
+	left: 56px;
+}
+.mblProg8 {
+	left: 64px;
+}
+.mblProg9 {
+	left: 72px;
+}
+.mblProg10 {
+	left: 80px;
+}
+.mblProg11 {
+	left: 80px;
+}

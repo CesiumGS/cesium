@@ -1,0 +1,208 @@
+.firebug {
+	margin: 0;
+	background:#fff;
+	font-family: Lucida Grande, Tahoma, sans-serif;
+	font-size: 11px;
+	overflow: hidden;
+	border: 1px solid black;
+	position: relative;
+}
+.firebug a {
+	text-decoration: none;
+}
+.firebug a:hover {
+	text-decoration: underline;
+}
+.firebug a:visited{
+	color:#0000FF;
+}
+.firebug #firebugToolbar {
+	height: 18px;
+	line-height:18px;
+	border-top: 1px solid ThreeDHighlight;
+	border-bottom: 1px solid ThreeDShadow;
+	padding: 2px 6px;
+	
+	background:#f0f0f0;
+}
+.firebug #firebugLog, .firebug #objectLog {
+	overflow: auto;
+	position: absolute;
+	left: 0;
+	width: 100%;
+}
+#objectLog{
+	overflow:scroll;
+	height:258px;
+}
+.firebug #firebugCommandLine {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	height: 18px;
+	border: none;
+	border-top: 1px solid ThreeDShadow;
+}
+.firebug .logRow {
+	position: relative;
+	border-bottom: 1px solid #D7D7D7;
+	padding: 2px 4px 1px 6px;
+	background-color: #FFFFFF;
+}
+.firebug .logRow-command {
+	font-family: Monaco, monospace;
+	color: blue;
+}
+.firebug .objectBox-null {
+	padding: 0 2px;
+	border: 1px solid #666666;
+	background-color: #888888;
+	color: #FFFFFF;
+}
+.firebug .objectBox-string {
+	font-family: Monaco, monospace;
+	color: red;
+	white-space: pre;
+}
+.firebug .objectBox-number {
+	color: #000088;
+}
+.firebug .objectBox-function {
+	font-family: Monaco, monospace;
+	color: DarkGreen;
+}
+.firebug .objectBox-object {
+	color: DarkGreen;
+	font-weight: bold;
+}
+.firebug .logRow-info,
+.firebug .logRow-error,
+.firebug .logRow-warning
+ {
+	background: #00FFFF no-repeat 2px 2px;
+	padding-left: 20px;
+	padding-bottom: 3px;
+}
+.firebug .logRow-info {
+	background: #FFF url(infoIcon.png) no-repeat 2px 2px;
+	padding-left: 20px;
+	padding-bottom: 3px;
+}
+.firebug .logRow-warning {
+	
+	background: #00FFFF url(warningIcon.png) no-repeat 2px 2px;
+	padding-left: 20px;
+	padding-bottom: 3px;
+}
+.firebug .logRow-error {
+	background: LightYellow url(errorIcon.png) no-repeat 2px 2px;
+	padding-left: 20px;
+	padding-bottom: 3px;
+}
+.firebug .errorMessage {
+	vertical-align: top;
+	color: #FF0000;
+}
+.firebug .objectBox-sourceLink {
+	position: absolute;
+	right: 4px;
+	top: 2px;
+	padding-left: 8px;
+	font-family: Lucida Grande, sans-serif;
+	font-weight: bold;
+	color: #0000FF;
+}
+.firebug .logRow-group {
+	background: #EEEEEE;
+	border-bottom: none;
+}
+.firebug .logGroup {
+	background: #EEEEEE;
+}
+.firebug .logGroupBox {
+	margin-left: 24px;
+	border-top: 1px solid #D7D7D7;
+	border-left: 1px solid #D7D7D7;
+}
+.firebug .selectorTag,
+.firebug .selectorId,
+.firebug .selectorClass {
+	font-family: Monaco, monospace;
+	font-weight: normal;
+}
+.firebug .selectorTag {
+	color: #0000FF;
+}
+.firebug .selectorId {
+	color: DarkBlue;
+}
+.firebug .selectorClass {
+	color: red;
+}
+.firebug .objectBox-element {
+	font-family: Monaco, monospace;
+	color: #000088;
+}
+.firebug .nodeChildren {
+	margin-left: 16px;
+}
+.firebug .nodeTag {
+	color: blue;
+}
+.firebug .nodeValue {
+	color: #FF0000;
+	font-weight: normal;
+}
+.firebug .nodeText,
+.firebug .nodeComment {
+	margin: 0 2px;
+	vertical-align: top;
+}
+.firebug .nodeText {
+	color: #333333;
+}
+.firebug .nodeComment {
+	color: DarkGreen;
+}
+.firebug .propertyNameCell {
+	vertical-align: top;
+}
+.firebug .propertyName {
+	font-weight: bold;
+}
+#firebugToolbar ul.tabs{
+	margin:0 !important;
+	padding:0;
+}
+#firebugToolbar ul.tabs li{
+	list-style:none;
+	background:transparent url(tab_lft_norm.png) no-repeat left;
+	line-height:18px;
+	float:left;
+	margin-left:5px;
+}
+#firebugToolbar ul.tabs li.right{
+	float:right;
+	margin-right:5px;
+	margin-left:0;
+}
+#firebugToolbar ul.tabs li.gap{
+	margin-left:20px;
+}
+#firebugToolbar .tabs a{
+	text-decoration:none;
+	background:transparent url(tab_rgt_norm.png) no-repeat right;
+	line-height:18px;
+	padding:3px 9px 4px 0px;
+	margin-left:9px;
+	color:#333333;
+}
+#firebugToolbar .tabs li:hover{
+	background:transparent url(tab_lft_over.png) no-repeat left;
+}
+#firebugToolbar .tabs a:hover{
+	text-decoration:none;
+	background:transparent url(tab_rgt_over.png) no-repeat right;
+	color:#FFFFFF;
+}

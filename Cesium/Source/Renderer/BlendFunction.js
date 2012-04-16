@@ -1,0 +1,133 @@
+/*global define*/
+define(['../Core/Enumeration'], function(Enumeration) {
+    "use strict";
+
+    /**
+     * DOC_TBA
+     *
+     * @exports BlendFunction
+     */
+    var BlendFunction = {
+        /**
+         * DOC_TBA
+         *
+         * @constant
+         * @type {Enumeration}
+         */
+        ZERO : new Enumeration(0, "ZERO"), // ZERO
+
+        /**
+         * DOC_TBA
+         *
+         * @constant
+         * @type {Enumeration}
+         */
+        ONE : new Enumeration(1, "ONE"), // ONE
+
+        /**
+         * DOC_TBA
+         *
+         * @constant
+         * @type {Enumeration}
+         */
+        SOURCE_COLOR : new Enumeration(0x0300, "SOURCE_COLOR"), // SRC_COLOR
+
+        /**
+         * DOC_TBA
+         *
+         * @constant
+         * @type {Enumeration}
+         */
+        ONE_MINUS_SOURCE_COLOR : new Enumeration(0x0301, "ONE_MINUS_SOURCE_COLOR"), // ONE_MINUS_SRC_COLOR
+
+        /**
+         * DOC_TBA
+         *
+         * @constant
+         * @type {Enumeration}
+         */
+        DESTINATION_COLOR : new Enumeration(0x0306, "DESTINATION_COLOR"), // DEST_COLOR
+
+        /**
+         * DOC_TBA
+         *
+         * @constant
+         * @type {Enumeration}
+         */
+        ONE_MINUS_DESTINATION_COLOR : new Enumeration(0x0307, "ONE_MINUS_DESTINATION_COLOR"), // ONE_MINUS_DEST_COLOR
+
+        /**
+         * DOC_TBA
+         *
+         * @constant
+         * @type {Enumeration}
+         */
+        SOURCE_ALPHA : new Enumeration(0x0302, "SOURCE_ALPHA"), // SRC_ALPHA
+
+        /**
+         * DOC_TBA
+         *
+         * @constant
+         * @type {Enumeration}
+         */
+        ONE_MINUS_SOURCE_ALPHA : new Enumeration(0x0303, "ONE_MINUS_SOURCE_ALPHA"), // ONE_MINUS_SRC_ALPHA
+
+        /**
+         * DOC_TBA
+         *
+         * @constant
+         * @type {Enumeration}
+         */
+        DESTINATION_ALPHA : new Enumeration(0x0304, "DESTINATION_ALPHA"), // DST_ALPHA
+
+        /**
+         * DOC_TBA
+         *
+         * @constant
+         * @type {Enumeration}
+         */
+        ONE_MINUS_DESTINATION_ALPHA : new Enumeration(0x0305, "ONE_MINUS_DESTINATION_ALPHA"), // ONE_MINUS_DST_ALPHA
+
+        /**
+         * DOC_TBA
+         *
+         * @constant
+         * @type {Enumeration}
+         */
+        CONSTANT_COLOR : new Enumeration(0x8001, "CONSTANT_COLOR"), // CONSTANT_COLOR
+
+        /**
+         * DOC_TBA
+         *
+         * @constant
+         * @type {Enumeration}
+         */
+        ONE_MINUS_CONSTANT_COLOR : new Enumeration(0x8002, "ONE_MINUS_CONSTANT_COLOR"), // ONE_MINUS_CONSTANT_COLOR
+
+        /**
+         * DOC_TBA
+         *
+         * @constant
+         * @type {Enumeration}
+         */
+        CONSTANT_ALPHA : new Enumeration(0x8003, "CONSTANT_ALPHA"), // CONSTANT_ALPHA
+
+        /**
+         * DOC_TBA
+         *
+         * @constant
+         * @type {Enumeration}
+         */
+        ONE_MINUS_CONSTANT_ALPHA : new Enumeration(0x8004, "ONE_MINUS_CONSTANT_ALPHA"), // ONE_MINUS_CONSTANT_ALPHA
+
+        /**
+         * DOC_TBA
+         *
+         * @constant
+         * @type {Enumeration}
+         */
+        SOURCE_ALPHA_SATURATE : new Enumeration(0x0308, "SOURCE_ALPHA_SATURATE") // SRC_ALPHA_SATURATE
+    };
+
+    return BlendFunction;
+});

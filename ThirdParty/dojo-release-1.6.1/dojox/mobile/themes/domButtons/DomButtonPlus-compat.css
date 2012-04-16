@@ -1,0 +1,8 @@
+
+.mblDomButtonPlus_2 {
+	background-image: url(compat/plus-button.png);
+	background-repeat: no-repeat;
+}
+.mblDomButtonPlus_2 DIV {
+	display: none;
+}

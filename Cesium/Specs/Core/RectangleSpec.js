@@ -1,0 +1,51 @@
+(function() {
+    "use strict";
+    /*global Cesium, describe, it, expect*/
+
+    describe("Rectangle", function () {
+
+        it("default constructs", function () {
+            var r = new Cesium.Rectangle();
+            expect(r.x).toEqual(0.0);
+            expect(r.y).toEqual(0.0);
+            expect(r.width).toEqual(0.0);
+            expect(r.height).toEqual(0.0);
+        });
+
+        it("constructs", function () {
+            var r = new Cesium.Rectangle(1.0, 2.0, 3.0, 4.0);
+            expect(r.x).toEqual(1.0);
+            expect(r.y).toEqual(2.0);
+            expect(r.width).toEqual(3.0);
+            expect(r.height).toEqual(4.0);
+        });
+
+        it("clones", function () {
+            var r = new Cesium.Rectangle(1.0, 2.0, 3.0, 4.0);
+            var r2 = r.clone();
+            r.x = 0.0;
+
+            expect(r.x).toEqual(0.0);
+            expect(r2.x).toEqual(1.0);
+        });
+
+        it("equals (1)", function () {
+            expect(new Cesium.Rectangle(1.0, 2.0, 3.0, 4.0).equals(new Cesium.Rectangle(1.0, 2.0, 3.0, 4.0))).toBeTruthy();
+        });
+
+        it("equals (2)", function () {
+            expect(new Cesium.Rectangle(1.0, 2.0, 3.0, 4.0).equals(new Cesium.Rectangle(1.0, 2.0, 3.0, 0.0))).toBeFalsy();
+        });
+
+        it("equalsEpsilon", function () {
+            expect(new Cesium.Rectangle(1.0, 2.0, 3.0, 4.0).equalsEpsilon(new Cesium.Rectangle(1.0, 2.0, 3.0, 4.0), 0.0)).toBeTruthy();
+            expect(new Cesium.Rectangle(1.0, 2.0, 3.0, 4.0).equalsEpsilon(new Cesium.Rectangle(2.0, 2.0, 3.0, 4.0), 1.0)).toBeTruthy();
+            expect(new Cesium.Rectangle(1.0, 2.0, 3.0, 4.0).equalsEpsilon(new Cesium.Rectangle(3.0, 2.0, 3.0, 4.0), 1.0)).toBeFalsy();
+        });
+
+        it("converts to a string", function () {
+            var r = new Cesium.Rectangle(1, 2, 3, 4);
+            expect(r.toString()).toEqual("(1, 2, 3, 4)");
+        });
+    });
+}());

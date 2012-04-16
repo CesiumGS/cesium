@@ -1,0 +1,85 @@
+
+.claro .dijitSelect .dijitButtonText {
+  padding: 2px;
+}
+.claro .dijitSelect {
+  border: 1px solid #b5bcc7;
+  background-color: #ffffff;
+  border-collapse: separate;
+}
+.dj_ie6 .claro .dijitSelect, .dj_ie6 .claro .dijitSelect .dijitButtonNode {
+  background-image: none;
+}
+.claro .dijitSelect .dijitButtonContents {
+  border: 0 solid #b5bcc7;
+  border-right-width: 1px;
+}
+.claro .dijitSelect .dijitArrowButton {
+  padding: 0;
+  border: 1px solid #ffffff;
+  border-top: none;
+  background-color: #efefef;
+  background-image: url("images/formHighlight.png");
+  background-repeat: repeat-x;
+}
+.claro .dijitSelect .dijitArrowButton .dijitArrowButtonInner {
+  background-image: url("images/commonFormArrows.png");
+  background-position: -35px 70%;
+  background-repeat: no-repeat;
+  width: 16px;
+  height: 16px;
+}
+.claro .dijitSelectHover {
+  border: 1px solid #769dc0;
+  background-color: #e9f4fe;
+  background-image: url('images/textBox_back.png');
+  background-repeat: repeat-x;
+}
+.claro .dijitSelectHover .dijitButtonContents {
+  border-color: #769dc0;
+}
+.claro .dijitSelectHover .dijitArrowButton {
+  background-color: #abd6ff;
+}
+.claro .dijitSelectHover .dijitArrowButton .dijitArrowButtonInner {
+  background-position: -70px 70%;
+}
+.claro .dijitSelectFocused {
+  border: 1px solid #769dc0;
+}
+.claro .dijitSelectFocused .dijitButtonContents {
+  border-color: #769dc0;
+}
+.claro .dijitSelectFocused .dijitArrowButton {
+  background-color: #7dbefa;
+  background-position: 0 -177px;
+  border: none;
+  padding: 0 1px;
+}
+.claro .dijitSelectFocused .dijitArrowButton .dijitArrowButtonInner {
+  background-position: -70px 70%;
+  margin-bottom: 1px;
+}
+.claro .dijitSelectDisabled {
+  border: 1px solid #d3d3d3;
+  background-color: #efefef;
+  background-image: none;
+  color: #818181;
+}
+.claro .dijitSelectDisabled .dijitArrowButton {
+  background-color: #efefef;
+}
+.claro .dijitSelectDisabled .dijitArrowButton .dijitArrowButtonInner {
+  background-position: 0 70%;
+}
+.claro .dijitSelectMenu td.dijitMenuItemIconCell, .claro .dijitSelectMenu td.dijitMenuArrowCell {
+  
+  display: none;
+}
+.claro .dijitSelectMenu td.dijitMenuItemLabel {
+  
+  padding: 2px;
+}
+.claro .dijitSelectMenu .dijitMenuSeparatorTop {
+  border-bottom: 1px solid #769dc0;
+}

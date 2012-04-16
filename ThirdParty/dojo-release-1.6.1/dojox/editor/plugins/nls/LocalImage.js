@@ -1,0 +1,1 @@
+({"set":"Insert","text":"Description","insertImageTitle":"Insert Image","invalidMessage":"Invalid image file type","prePopuTextBrowse":" or browse to a local file.","browse":"Browse...","prePopuTextUrl":"Enter an image URL","url":"Image"})

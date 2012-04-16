@@ -1,0 +1,1 @@
+({"set":"Vložiť","text":"Opis","insertImageTitle":"Vložiť obrázok","invalidMessage":"Neplatný typ súboru obrázka","prePopuTextBrowse":"alebo nájdite lokálny súbor.","browse":"Prehľadať...","prePopuTextUrl":"Zadajte adresu URL","url":"Obrázok"})

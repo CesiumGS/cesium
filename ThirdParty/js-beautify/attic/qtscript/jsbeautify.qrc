@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>../beautify.js</file>
+        <alias>beautify.js</alias>
+    </qresource>
+</RCC>

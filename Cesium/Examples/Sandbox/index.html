@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+        <meta http-equiv="X-UA-Compatible" content="chrome=1">  <!-- Use Chrome Frame in IE -->
+        
+        <title>Cesium Sandbox</title>
+        
+        <!-- StyleSheets: Dojo, Dijit, User Defined-->
+        <link rel=StyleSheet href="../../ThirdParty/dojo/dojo/resources/dojo.css" type="text/css">
+        <link rel=Stylesheet href="../../ThirdParty/dojo/dijit/themes/claro/claro.css" type="text/css">
+        <link rel=Stylesheet href="../../ThirdParty/dojo/dojox/layout/resources/ExpandoPane.css" type="text/css">
+        <link rel="stylesheet" href="../../ThirdParty/dojo/dojox/widget/Dialog/Dialog.css" />
+        <link rel=StyleSheet href="all.css" type="text/css">
+        
+        <!-- load Dojo and required modules-->
+        <script src="../../ThirdParty/dojo/dojo/dojo.js" data-dojo-config="isDebug: true, parseOnLoad: true"></script>
+        <script type="text/javascript">
+            /*global dojo*/
+            dojo.require("dojo.parser");
+            dojo.require("dijit.layout.BorderContainer");
+            dojo.require("dijit.layout.ContentPane");
+            dojo.require("dojox.layout.ExpandoPane");
+            dojo.require("dojo.data.ItemFileReadStore");
+            dojo.require("dijit.Tree");
+            dojo.require("dojo.fx");
+            dojo.require("dijit.layout.AccordionContainer");
+            dojo.require("dojox.widget.Dialog");
+            dojo.require("dijit.form.Button");
+            dojo.require("dijit.form.TextBox");
+            dojo.require("dijit.form.DropDownButton");
+            dojo.require("dijit.Menu");
+            dojo.require("dijit.MenuItem");
+            dojo.require("dijit.CheckedMenuItem");
+            dojo.require("dijit.Tooltip");
+        </script>
+        
+        <!-- load Ace editor -->
+        <script src="../../ThirdParty/ace/build/src/ace.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../ThirdParty/ace/build/src/mode-javascript.js" type="text/javascript" charset="utf-8"></script>
+        
+        <script src="../../ThirdParty/js-beautify/beautify.js" type="text/javascript"></script>
+        
+        <!-- Required Cesium Files -->
+        <script type="text/javascript" src="Cesium.js"></script>
+        
+        <!-- Sandbox Files -->
+        <script src="Sandbox.js" type="text/javascript" ></script>
+        <script src="Editor.js" type="text/javascript"></script>
+        <script src="Tree.js" type="text/javascript"></script>
+        <script src="CodeSnippetsConcatenated.js" type="text/javascript"></script>
+        <script src="Overlay.js" type="text/javascript"></script>
+        <script src="TextOverlay.js" type="text/javascript"></script>
+        <script src="OverlayCreator.js" type="text/javascript"></script>
+    </head>
+    <body class="claro">
+        <div id="preloader"></div>
+        <div id="appLayout" class="demoLayout"
+            data-dojo-type="dijit.layout.BorderContainer"
+            data-dojo-props="design: 'headline'">
+            
+            <div id="treeview" class="edgePanel"
+                data-dojo-type="dojox.layout.ExpandoPane"
+                data-dojo-props="splitter: true, region: 'left'">
+                <div data-dojo-type="dijit.layout.AccordionContainer">
+                    <div data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title:'Sandbox Examples'" style="padding:0;">
+		                <div id="sandboxExamples" data-dojo-type="dijit.layout.BorderContainer" data-dojo-props="design: 'headline', gutters: false" style="padding:0;">
+                        	<div id="searchContainer" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="splitter:false, region: 'top'">
+                                <input type="text" id="searchBox" placeholder="Search"/>
+                            </div>
+                            <div id="treeContainer" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="region: 'center'">
+                                <div id="tree"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title:'Help'">
+                        <div id="help"></div>
+                    </div>
+                </div>
+            </div>
+            
+             <div data-dojo-type="dijit.layout.ContentPane" data-dojo-props="region: 'center'" style="padding:0;">
+                <div id="inner" data-dojo-type="dijit.layout.BorderContainer" data-dojo-props="design: 'sidebar'" style="padding:0;">
+                    <div id="sandbox" class="centerPanel"
+                        data-dojo-type="dijit.layout.ContentPane"
+                        data-dojo-props="region: 'center'">
+                             <canvas id="glCanvas" width="900px" height="600px" tabindex="1"></canvas>
+                             <div id="overlayDialog">
+                                 <div id="overlayMenu"></div>
+                                 <div id="overlayId"></div>
+                                 <div id="overlayEditorContainer">
+                                     <div id="overlayEditor"></div>
+                                 </div>
+                                 <div id="createOverlayButton"></div>
+                                 <div id="positionSelect"></div>
+                             </div>
+                             <div id="removeOverlayDialog">
+                                 <div id="removeOverlaysMenu"></div>
+                                 <div id="selectAll"></div>
+                                 <div id="removeOverlayButton"></div>
+                             </div>
+                             <div id="userOverlays" class="overlays"></div>
+                             <div id="textOverlays" class="overlays"></div>
+                             <div id="toolbar">
+                                 <a href="../../../Documentation/index.html" id="docLink" target="_blank"><img id="documentation" src="./icons/documentation.png" alt="documentation"/></a>
+                                 <img id="addOverlay" src="./icons/addOverlay.png" alt="Add or Edit Overlay"/>
+                                 <img id="removeOverlay" src="./icons/removeOverlay.png" alt="Remove Overlays"/>
+                             </div>
+                    </div>
+                    
+                    <div class="edgePanel" id="editorContainer"
+                        data-dojo-type="dijit.layout.ContentPane" 
+                        data-dojo-props="region: 'bottom', splitter: true">
+                        <div id="editor"></div>
+                    </div> 
+                </div>
+            </div>
+        </div>
+        <script src="Controls.js" type="text/javascript"></script>
+        <script src="Main.js" type="text/javascript"></script>    
+    </body> 
+</html>

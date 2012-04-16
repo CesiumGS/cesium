@@ -1,0 +1,54 @@
+
+.claro .dijitTitlePaneTitle {
+  background-color: #efefef;
+  background-image: url("images/titlebar.png");
+  background-repeat: repeat-x;
+  border: 1px solid #b5bcc7;
+  padding: 0 7px 3px 7px;
+  min-height: 17px;
+}
+.dj_ie6 .claro .dijitTitlePaneTitle {
+  background-image: none;
+}
+.claro .dijitTitlePaneTitleHover {
+  background-color: #abd6ff;
+  border-color: #769dc0;
+}
+.claro .dijitTitlePaneTitleActive {
+  background-color: #7dbefa;
+  border-color: #769dc0;
+  background-position: 0 -136px;
+}
+.claro .dijitTitlePaneTitleFocus {
+  margin-top: 3px;
+  padding-bottom: 2px;
+}
+.claro .dijitTitlePane .dijitArrowNode {
+  background-image: url('images/spriteArrows.png');
+  background-repeat: no-repeat;
+  height: 8px;
+  width: 7px;
+}
+.claro .dijitTitlePane .dijitOpen .dijitArrowNode {
+  background-position: 0 0;
+}
+.claro .dijitTitlePane .dijitClosed .dijitArrowNode {
+  background-position: -14px 0;
+}
+.claro .dijitTitlePaneFocused .dijitTitlePaneTextNode {
+  color: #000000;
+  
+}
+.claro .dijitTitlePaneContentOuter {
+  background: #ffffff;
+  border: 1px solid #b5bcc7;
+  border-top: none;
+}
+.claro .dijitTitlePaneContentInner {
+  padding: 10px;
+}
+.claro .dijitTitlePaneTextNode {
+  margin-left: 4px;
+  margin-right: 4px;
+  vertical-align: text-top;
+}
