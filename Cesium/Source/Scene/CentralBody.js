@@ -842,9 +842,7 @@ define([
                 this._enqueueTile(parent, context, sceneState);
             }
 
-            if (mode !== SceneMode.SCENE2D || !parent) {
-                this._processTile(tile);
-            }
+            this._processTile(tile);
         }
     };
 
