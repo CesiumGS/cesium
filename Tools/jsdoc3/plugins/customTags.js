@@ -1,5 +1,5 @@
 /**
-    @overview Define custom tags for Geoscope
+    @overview Define custom tags for Cesium
     @module plugins/customTags
     @author Kristian Calhoun <kristian.calhoun@gmail.com>
  */

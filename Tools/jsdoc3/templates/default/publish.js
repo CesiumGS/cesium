@@ -368,7 +368,7 @@
         }
 
         //if (globals.length) generate('Global', [{kind: 'globalobj'}], 'global.html');
-        generate('Geoscope Documentation', [], 'index.html');
+        generate('Cesium Documentation', [], 'index.html');
         
         function generate(title, docs, filename) {
             var data = {
