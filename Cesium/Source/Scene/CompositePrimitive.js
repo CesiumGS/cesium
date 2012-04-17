@@ -1,10 +1,12 @@
 /*global define*/
 define([
         '../Core/DeveloperError',
-        '../Core/destroyObject'
+        '../Core/destroyObject',
+        '../Core/createGuid'
     ], function(
         DeveloperError,
-        destroyObject) {
+        destroyObject,
+        createGuid) {
     "use strict";
 
     // PERFORMANCE_IDEA: Add hierarchical culling and state sorting.
@@ -35,12 +37,7 @@ define([
     function CompositePrimitive() {
         this._centralBody = null;
         this._primitives = [];
-
-        // http://stackoverflow.com/questions/105034/how-to-create-a-guid-uuid-in-javascript
-        this._guid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-            var r = Math.random()*16|0, v = c === 'x' ? r : (r&0x3|0x8);
-            return v.toString(16);
-        });
+        this._guid = createGuid();
 
         /**
          * DOC_TBA
