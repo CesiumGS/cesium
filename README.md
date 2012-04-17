@@ -1,5 +1,3 @@
-The future home of the Cesium source code.
-
 Demos: http://geoscope.agi.com/
 
 Our mission is to create the leading web-based globe and map for visualizing dynamic data.  We strive for the best possible performance, precision, visual quality, ease of use, platform support, and content.
