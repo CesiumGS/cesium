@@ -731,7 +731,7 @@ define([
      * @see Quaternion.fromAxisAngle
      */
     Matrix3.fromAxisAngle = function(axis, theta) {
-        var a = new Cartesian3(axis.x, axis.y, axis.z);
+        var a = Cartesian3.clone(axis);
         var nAxis = a.normalize();
 
         var cosTheta = Math.cos(theta);

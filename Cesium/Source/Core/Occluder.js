@@ -40,7 +40,7 @@ define([
             throw new DeveloperError("camera position is required.", "cameraPosition");
         }
 
-        var cameraPos = new Cartesian3(cameraPosition.x, cameraPosition.y, cameraPosition.z);
+        var cameraPos = Cartesian3.clone(cameraPosition);
         var occluderPosition = occluderBS.center.clone();
         var occluderRadius = occluderBS.radius;
 
@@ -257,7 +257,7 @@ define([
             throw new DeveloperError("Argument positions must contain at least one element", "positions");
         }
 
-        var occludeePos = new Cartesian3(occludeePosition.x, occludeePosition.y, occludeePosition.z);
+        var occludeePos = Cartesian3.clone(occludeePosition);
         var occluderPosition = occluderBS.center.clone();
         var occluderRadius = occluderBS.radius;
         var numPositions = positions.length;

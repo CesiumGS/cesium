@@ -197,7 +197,7 @@ define([
         desc.ellipsoid = desc.ellipsoid || Ellipsoid.getWgs84();
         desc.granularity = (desc.granularity && desc.granularity > 0.0) ? desc.granularity : 0.1;
         desc.altitude = (desc.altitude && desc.altitude > 0.0) ? desc.altitude : 0.0;
-        desc.relativeToCenter = (desc.relativeToCenter) ? new Cartesian3(desc.relativeToCenter.x, desc.relativeToCenter.y, desc.relativeToCenter.z) : Cartesian3.getZero();
+        desc.relativeToCenter = (desc.relativeToCenter) ? Cartesian3.clone(desc.relativeToCenter) : Cartesian3.getZero();
         desc.boundaryWidth = desc.boundaryWidth || 0; // NOTE: may want to expose in the future.
         desc.interleave = false;
         desc.positionName = desc.positionName || "position";
@@ -343,7 +343,7 @@ define([
         desc.ellipsoid = desc.ellipsoid || Ellipsoid.getWgs84();
         desc.granularity = (typeof desc.granularity !== "undefined" && desc.granularity > 0.0) ? desc.granularity : 0.1;
         desc.altitude = (typeof desc.altitude !== "undefined" && desc.altitude > 0.0) ? desc.altitude : 0.0;
-        desc.relativeToCenter = (desc.relativeToCenter) ? new Cartesian3(desc.relativeToCenter.x, desc.relativeToCenter.y, desc.relativeToCenter.z) : Cartesian3.getZero();
+        desc.relativeToCenter = (desc.relativeToCenter) ? Cartesian3.clone(desc.relativeToCenter) : Cartesian3.getZero();
         desc.boundaryWidth = desc.boundaryWidth || 0; // NOTE: may want to expose in the future.
 
         desc.vertices = [];

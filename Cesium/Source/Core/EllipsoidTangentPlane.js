@@ -24,7 +24,7 @@ define([
      * @param {Cartesian3} origin
      */
     function EllipsoidTangentPlane(ellipsoid, origin) {
-        var o = new Cartesian3(origin.x, origin.y, origin.z);
+        var o = Cartesian3.clone(origin);
         var eastNorthUp = Transforms.eastNorthUpToFixedFrame(o, ellipsoid);
 
         this.origin = o;
@@ -77,7 +77,7 @@ define([
      */
     EllipsoidTangentPlane.prototype.projectPointOntoPlane = function(position) {
         if (position) {
-            var pos = new Cartesian3(position.x, position.y, position.z);
+            var pos = Cartesian3.clone(position);
             var intersectionPoint = IntersectionTests.rayPlane(pos, pos.normalize(), this.normal, this.d);
 
             if (intersectionPoint) {

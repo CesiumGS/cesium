@@ -290,6 +290,7 @@
                 Cesium.Shapes.computeCircleBoundary(ellipsoid, center, 1.0, -1.0);
             }).toThrow();
         });
+
     });
 
 })();

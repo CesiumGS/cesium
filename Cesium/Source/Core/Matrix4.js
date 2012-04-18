@@ -890,7 +890,7 @@ define([
      * @return {Matrix4} The view vector.
      */
     Matrix4.createLookAt = function(eye, target, up) {
-        var t = new Cartesian3(target.x, target.y, target.z);
+        var t = Cartesian3.clone(target);
         var f = t.subtract(eye).normalize();
         var s = f.cross(up).normalize();
         var u = s.cross(f).normalize();

@@ -7,18 +7,18 @@ define(function() {
      * <br/>
      * If either <code>x</code> or <code>y</code> is undefined, then the corresponding
      * component will be initialized to 0.0.
-     * 
+     *
      * @name Cartesian2
      * @constructor
-     * 
+     *
      * @param {Number} x The x-coordinate for the Cartesian type.
      * @param {Number} y The y-coordinate for the Cartesian type.
-     * 
+     *
      * @see Cartesian3
      * @see Cartesian4
      */
       function Cartesian2(x, y) {
-    
+
         /**
          * DOC_TBA
          *
@@ -37,6 +37,16 @@ define(function() {
          */
         this.y = (typeof y !== "undefined") ? y : 0.0;
     }
+
+    /**
+     * Returns a duplicate of a Cartesian2.
+     *
+     * @param {Cartesian2} cartesian The cartesian to clone.
+     * @return {Cartesian2} A new Cartesian2 instance.
+     */
+    Cartesian2.clone = function(cartesian) {
+        return new Cartesian2(cartesian.x, cartesian.y);
+    };
 
     /**
      * Creates a Cartesian2 instance initialized to (0, 0).
@@ -103,7 +113,7 @@ define(function() {
      * Returns the dot (scalar) product of two Cartesians.
      *
      * @memberof Cartesian2
-     * @param {Cartesian2} other The Cartesian to dot with this. 
+     * @param {Cartesian2} other The Cartesian to dot with this.
      * @return {Number} The dot product.
      */
     Cartesian2.prototype.dot = function(other) {
@@ -145,7 +155,7 @@ define(function() {
 
     /**
      * Returns this Cartesian divided by a scalar.
-     * 
+     *
      * @memberof Cartesian2
      * @param {Number} scalar The scalar to use for division.
      * @return {Cartesian2} This Cartesian after division.
@@ -200,7 +210,7 @@ define(function() {
      * within the specified epsilon.
      *
      * @memberof Cartesian2
-     * 
+     *
      * @param {Cartesian2} other The Cartesian to compare for equality.
      * @param {Number} [epsilon=0.0] The epsilon to use for equality testing.
      *

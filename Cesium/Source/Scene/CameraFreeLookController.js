@@ -218,7 +218,7 @@ define([
      * @see CameraFreeLookcontroller#lookRight
      */
     CameraFreeLookController.prototype.rotate = function(axis, angle) {
-        var a = new Cartesian3(axis.x, axis.y, axis.z);
+        var a = Cartesian3.clone(axis);
         var turnAngle = angle || this._moveRate;
         var rotation = Quaternion.fromAxisAngle(a, turnAngle).toRotationMatrix();
         var direction = rotation.multiplyWithVector(this._camera.direction);

@@ -53,7 +53,7 @@ define([
         this._lastTimeIndex = 0;
 
         if (firstTangent) {
-            this._ti = new Cartesian3(firstTangent.x, firstTangent.y, firstTangent.z);
+            this._ti = Cartesian3.clone(firstTangent);
         } else {
             this._ti = controlPoints[1].point
                            .multiplyWithScalar(2.0)
@@ -63,7 +63,7 @@ define([
         }
 
         if (firstTangent) {
-            this._to = new Cartesian3(lastTangent.x, lastTangent.y, lastTangent.z);
+            this._to = Cartesian3.clone(lastTangent);
         } else {
             var n = controlPoints.length - 1;
             this._to = controlPoints[n].point

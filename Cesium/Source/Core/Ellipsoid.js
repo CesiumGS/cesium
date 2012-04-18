@@ -34,7 +34,7 @@ define([
             throw new DeveloperError("All radii components must be greater than or equal to zero.", "radii");
         }
 
-        var radii = new Cartesian3(arguments[0].x, arguments[0].y, arguments[0].z);
+        var radii = Cartesian3.clone(arguments[0]);
         var x = radii.x;
         var y = radii.y;
         var z = radii.z;
@@ -182,7 +182,7 @@ define([
      * @return {Cartesian3} DOC_TBA
      */
     Ellipsoid.geocentricSurfaceNormal = function(positionOnEllipsoid) {
-        var position = new Cartesian3(positionOnEllipsoid.x, positionOnEllipsoid.y, positionOnEllipsoid.z);
+        var position = Cartesian3.clone(positionOnEllipsoid);
         return position.normalize();
     };
 
@@ -196,7 +196,7 @@ define([
      * @return {Cartesian3} DOC_TBA
      */
     Ellipsoid.prototype.geodeticSurfaceNormal = function(positionOnEllipsoid) {
-        var position = new Cartesian3(positionOnEllipsoid.x, positionOnEllipsoid.y, positionOnEllipsoid.z);
+        var position = Cartesian3.clone(positionOnEllipsoid);
         return (position.multiplyComponents(this.getOneOverRadiiSquared())).normalize();
     };
 
@@ -306,7 +306,7 @@ define([
      * @return {Cartographic2} DOC_TBA
      */
     Ellipsoid.prototype.toCartographic2 = function(positionOnSurface) {
-        var p = new Cartesian3(positionOnSurface.x, positionOnSurface.y, positionOnSurface.z);
+        var p = Cartesian3.clone(positionOnSurface);
         var n = this.geodeticSurfaceNormal(p);
         return new Cartographic2(
                 Math.atan2(n.y, n.x),
@@ -322,7 +322,7 @@ define([
      * @return {Cartographic3} DOC_TBA
      */
     Ellipsoid.prototype.toCartographic3 = function(position) {
-        var pos = new Cartesian3(position.x, position.y, position.z);
+        var pos = Cartesian3.clone(position);
         var p = this.scaleToGeodeticSurface(pos);
         var h = position.subtract(p);
         var height = CesiumMath.sign(h.dot(pos)) * h.magnitude();
@@ -357,7 +357,7 @@ define([
      * @return {Cartesian3} DOC_TBA
      */
     Ellipsoid.prototype.scaleToGeodeticSurface = function(position) {
-        var pos = new Cartesian3(position.x, position.y, position.z);
+        var pos = Cartesian3.clone(position);
         var positionX = position.x;
         var positionY = position.y;
         var positionZ = position.z;
@@ -438,7 +438,7 @@ define([
      * @return {Cartesian3} DOC_TBA
      */
     Ellipsoid.prototype.scaleToGeocentricSurface = function(position) {
-        var pos = new Cartesian3(position.x, position.y, position.z);
+        var pos = Cartesian3.clone(position);
         var positionX = position.x;
         var positionY = position.y;
         var positionZ = position.z;

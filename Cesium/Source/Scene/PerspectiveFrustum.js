@@ -157,9 +157,9 @@ define([
             throw new DeveloperError("up is required.", "up");
         }
 
-        var pos = new Cartesian3(position.x, position.y, position.z);
-        var dir = new Cartesian3(direction.x, direction.y, direction.z);
-        var u = new Cartesian3(up.x, up.y, up.z);
+        var pos = Cartesian3.clone(position);
+        var dir = Cartesian3.clone(direction);
+        var u = Cartesian3.clone(up);
 
         var right = dir.cross(u);
 

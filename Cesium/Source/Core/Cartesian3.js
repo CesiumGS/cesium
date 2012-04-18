@@ -51,6 +51,16 @@ define(['./Cartesian2'], function(Cartesian2) {
     }
 
     /**
+     * Returns a duplicate of a Cartesian3.
+     *
+     * @param {Cartesian3} cartesian The cartesian to clone.
+     * @return {Cartesian3} A new Cartesian3 instance.
+     */
+    Cartesian3.clone = function(cartesian) {
+        return new Cartesian3(cartesian.x, cartesian.y, cartesian.z);
+    };
+
+    /**
      * Creates a Cartesian3 instance initialized to (0, 0, 0).
      *
      * @memberof Cartesian3
@@ -163,7 +173,7 @@ define(['./Cartesian2'], function(Cartesian2) {
      *
      * @memberof Cartesian3
      * @param {Cartesian3} other The Cartesian to cross with this.
-     * @return {Number} The cross product.
+     * @return {Cartesian3} The cross product.
      */
     Cartesian3.prototype.cross = function(other) {
         return new Cartesian3(
@@ -286,7 +296,7 @@ define(['./Cartesian2'], function(Cartesian2) {
      * @return {Number} The angle between the two Cartesians.
      */
     Cartesian3.prototype.angleBetween = function(Cartesian) {
-        var c = new Cartesian3(Cartesian.x, Cartesian.y, Cartesian.z);
+        var c = Cartesian3.clone(Cartesian);
         return Math.acos(this.normalize().dot(c.normalize()));
     };
 
@@ -310,7 +320,7 @@ define(['./Cartesian2'], function(Cartesian2) {
         var cosTheta = Math.cos(theta);
         var sinTheta = Math.sin(theta);
 
-        var a = new Cartesian3(axis.x, axis.y, axis.z);
+        var a = Cartesian3.clone(axis);
         var ms = a.magnitudeSquared();
         var m = Math.sqrt(ms);
 

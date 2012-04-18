@@ -73,23 +73,33 @@ define([
     }
 
     /**
-    * Creates a quaternion initialized to <code>(0.0, 0.0, 0.0, 0.0)</code>.
-    *
-    * @memberof Quaternion
-    *
-    * @return {Quaternion} A new quaternion initialized to <code>(0.0, 0.0, 0.0, 0.0)</code>.
-    */
+     * Returns a duplicate of a Quaternion.
+     *
+     * @param {Quaternion} quaternion The Quaternion to clone.
+     * @return {Quaternion} A new Quaternion instance.
+     */
+    Quaternion.clone = function(quaternion) {
+        return new Quaternion(quaternion.x, quaternion.y, quaternion.z, quaternion.w);
+    };
+
+    /**
+     * Creates a quaternion initialized to <code>(0.0, 0.0, 0.0, 0.0)</code>.
+     *
+     * @memberof Quaternion
+     *
+     * @return {Quaternion} A new quaternion initialized to <code>(0.0, 0.0, 0.0, 0.0)</code>.
+     */
     Quaternion.getZero = function() {
         return new Quaternion(0.0, 0.0, 0.0, 0.0);
     };
 
     /**
-    * Creates a quaternion initialized to <code>(0.0, 0.0, 0.0, 1.0)</code>.
-    *
-    * @memberof Quaternion
-    *
-    * @return {Quaternion} A new quaternion initialized to <code>(0.0, 0.0, 0.0, 1.0)</code>.
-    */
+     * Creates a quaternion initialized to <code>(0.0, 0.0, 0.0, 1.0)</code>.
+     *
+     * @memberof Quaternion
+     *
+     * @return {Quaternion} A new quaternion initialized to <code>(0.0, 0.0, 0.0, 1.0)</code>.
+     */
     Quaternion.getIdentity = function() {
         return new Quaternion(0.0, 0.0, 0.0, 1.0);
     };
@@ -159,57 +169,57 @@ define([
     };
 
     /**
-    * Returns the componentwise sum of two quaternions, <code>this</code> + <code>other</code>.
-    *
-    * @memberof Quaternion
-    *
-    * @param {Quaternion} other The quaternion to sum with <code>this</code>.
-    *
-    * @return {Quaternion} The componentwise sum of two quaternions, <code>this</code> + <code>other</code>.
-    *
-    * @see Quaternion#subtract
-    */
+     * Returns the componentwise sum of two quaternions, <code>this</code> + <code>other</code>.
+     *
+     * @memberof Quaternion
+     *
+     * @param {Quaternion} other The quaternion to sum with <code>this</code>.
+     *
+     * @return {Quaternion} The componentwise sum of two quaternions, <code>this</code> + <code>other</code>.
+     *
+     * @see Quaternion#subtract
+     */
     Quaternion.prototype.add = function(other) {
         return new Quaternion(this.x + other.x, this.y + other.y, this.z + other.z, this.w + other.w);
     };
 
     /**
-    * Returns the componentwise difference of two quaternions, <code>this</code> - <code>other</code>.
-    *
-    * @memberof Quaternion
-    *
-    * @param {Quaternion} other The quaternion to subtract from </code>this</code>.
-    *
-    * @return {Quaternion} The componentwise difference of two quaternions, <code>this</code> - <code>other</code>.
-    *
-    * @see Quaternion#add
-    */
+     * Returns the componentwise difference of two quaternions, <code>this</code> - <code>other</code>.
+     *
+     * @memberof Quaternion
+     *
+     * @param {Quaternion} other The quaternion to subtract from </code>this</code>.
+     *
+     * @return {Quaternion} The componentwise difference of two quaternions, <code>this</code> - <code>other</code>.
+     *
+     * @see Quaternion#add
+     */
     Quaternion.prototype.subtract = function(other) {
         return new Quaternion(this.x - other.x, this.y - other.y, this.z - other.z, this.w - other.w);
     };
 
     /**
-    * Returns this quaternion negated.
-    *
-    * @memberof Quaternion
-    *
-    * @return {Quaternion} This quaternion negated.
-    */
+     * Returns this quaternion negated.
+     *
+     * @memberof Quaternion
+     *
+     * @return {Quaternion} This quaternion negated.
+     */
     Quaternion.prototype.negate = function() {
         return new Quaternion(-this.x, -this.y, -this.z, -this.w);
     };
 
     /**
-    * Returns the dot (scalar) product of two quaternions, <code>this</code> dot <code>other</code>.
-    *
-    * @memberof Quaternion
-    *
-    * @param {Quaternion} other The quaternion to dot with <code>this</code>.
-    *
-    * @return {Number} The dot (scalar) product of two quaternions, <code>this</code> dot <code>other</code>.
+     * Returns the dot (scalar) product of two quaternions, <code>this</code> dot <code>other</code>.
+     *
+     * @memberof Quaternion
+     *
+     * @param {Quaternion} other The quaternion to dot with <code>this</code>.
+     *
+     * @return {Number} The dot (scalar) product of two quaternions, <code>this</code> dot <code>other</code>.
      *
      * @see Quaternion#multiply
-    */
+     */
     Quaternion.prototype.dot = function(other) {
         return this.x * other.x + this.y * other.y + this.z * other.z + this.w * other.w;
     };
@@ -234,31 +244,31 @@ define([
     };
 
     /**
-    * Returns this quaternion scaled by a scalar.
-    *
-    * @memberof Quaternion
-    *
-    * @param {Number} scalar The scalar that is multiplied with <code>this</code>.
-    *
-    * @return {Quaternion} This quaternion scaled by a scalar.
-    *
-    * @see Quaternion#divideByScalar
-    */
+     * Returns this quaternion scaled by a scalar.
+     *
+     * @memberof Quaternion
+     *
+     * @param {Number} scalar The scalar that is multiplied with <code>this</code>.
+     *
+     * @return {Quaternion} This quaternion scaled by a scalar.
+     *
+     * @see Quaternion#divideByScalar
+     */
     Quaternion.prototype.multiplyWithScalar = function(scalar) {
         return new Quaternion(this.x * scalar, this.y * scalar, this.z * scalar, this.w * scalar);
     };
 
     /**
-    * Returns this quaternion divided by a scalar.
-    *
-    * @memberof Quaternion
-    *
-    * @param {Number} scalar The scalar to use for division.
-    *
-    * @return {Quaternion} This quaternion divided by a scalar.
-    *
-    * @see Quaternion#multiplyWithScalar
-    */
+     * Returns this quaternion divided by a scalar.
+     *
+     * @memberof Quaternion
+     *
+     * @param {Number} scalar The scalar to use for division.
+     *
+     * @return {Quaternion} This quaternion divided by a scalar.
+     *
+     * @see Quaternion#multiplyWithScalar
+     */
     Quaternion.prototype.divideByScalar = function(scalar) {
         return new Quaternion(this.x / scalar, this.y / scalar, this.z / scalar, this.w / scalar);
     };
@@ -273,7 +283,7 @@ define([
      * @return {Cartesian4} The rotated cartesian.
      */
     Quaternion.prototype.rotate = function(cartesian) {
-        var c = new Cartesian4(cartesian.x, cartesian.y, cartesian.z, cartesian.w);
+        var c = new Cartesian4.clone(cartesian);
         var result = this.multiply(c).multiply(this.conjugate());
         return new Cartesian4(result.x, result.y, result.z, result.w);
     };
@@ -365,7 +375,7 @@ define([
      * @return {Quaternion} The interpolated quaternion between <code>this</code> and <code>q</code>, at <code>t</code>.
      */
     Quaternion.prototype.lerp = function(t, q) {
-        var quaternion = new Quaternion(q.x, q.y, q.z, q.w);
+        var quaternion = Quaternion.clone(q);
         return this.multiplyWithScalar(1.0 - t).add(quaternion.multiplyWithScalar(t));
     };
 
@@ -380,7 +390,7 @@ define([
      * @return {Quaternion} The interpolated quaternion between <code>this</code> and <code>q</code>, at <code>t</code>.
      */
     Quaternion.prototype.slerp = function(t, q) {
-        var quaternion = new Quaternion(q.x, q.y, q.z, q.w);
+        var quaternion = Quaternion.clone(q);
         var dot = this.dot(quaternion);
 
         // The angle between this must be acute. Since q and -q represent
@@ -448,12 +458,12 @@ define([
     };
 
     /**
-    * Returns <code>true</code> if this quaternion equals <code>other</code>, componentwise.
-    *
-    * @param {Quaternion} other The quaternion to test for equality.
-    *
-    * @return {Boolean} <code>true</code> if the quaternions are equal componentwise; otherwise, <code>false</code>.
-    */
+     * Returns <code>true</code> if this quaternion equals <code>other</code>, componentwise.
+     *
+     * @param {Quaternion} other The quaternion to test for equality.
+     *
+     * @return {Boolean} <code>true</code> if the quaternions are equal componentwise; otherwise, <code>false</code>.
+     */
     Quaternion.prototype.equals = function(other) {
         return (this.x === other.x) &&
                (this.y === other.y) &&
@@ -462,15 +472,15 @@ define([
     };
 
     /**
-    * Returns <code>true</code> if this quaternion equals <code>other</code>, componentwise, within the specified epsilon.
-    *
-    * @memberof Quaternion
-    *
-    * @param {Quaternion} other The quaternion to test for equality.
-    * @param {Number} [epsilon=0.0] The epsilon to use for equality testing.
-    *
-    * @return {Boolean} <code>true</code> if the quaternions are equal within the specified epsilon; otherwise, <code>false</code>.
-    */
+     * Returns <code>true</code> if this quaternion equals <code>other</code>, componentwise, within the specified epsilon.
+     *
+     * @memberof Quaternion
+     *
+     * @param {Quaternion} other The quaternion to test for equality.
+     * @param {Number} [epsilon=0.0] The epsilon to use for equality testing.
+     *
+     * @return {Boolean} <code>true</code> if the quaternions are equal within the specified epsilon; otherwise, <code>false</code>.
+     */
     Quaternion.prototype.equalsEpsilon = function(other, epsilon) {
         epsilon = epsilon || 0.0;
         return (Math.abs(this.x - other.x) <= epsilon) &&
@@ -480,12 +490,12 @@ define([
     };
 
     /**
-    * Returns a string representing this quaternion in the format (x, y, z, w).
-    *
-    * @memberof Quaternion
-    *
-    * @return {String} A string representing this Quaternion.
-    */
+     * Returns a string representing this quaternion in the format (x, y, z, w).
+     *
+     * @memberof Quaternion
+     *
+     * @return {String} A string representing this Quaternion.
+     */
     Quaternion.prototype.toString = function() {
         return "(" + this.x + ", " + this.y + ", " + this.z + ", " + this.w + ")";
     };
@@ -505,7 +515,7 @@ define([
      * @see Matrix3.fromAxisAngle
      */
     Quaternion.fromAxisAngle = function(axis, angle) {
-        var a = new Cartesian3(axis.x, axis.y, axis.z);
+        var a = Cartesian3.clone(axis);
         var halfAngle = angle / 2.0;
         var s = Math.sin(halfAngle);
         var c = Math.cos(halfAngle);
@@ -614,7 +624,7 @@ define([
      * @return {Quaternion} The Quaternion representing the exponential.
      */
     Quaternion.exp = function(cartesian) {
-        var c = new Cartesian3(cartesian.x, cartesian.y, cartesian.z);
+        var c = Cartesian3.clone(cartesian);
         var theta = c.magnitude();
         var sinThetaOverTheta = 0.0;
         if (theta > CesiumMath.EPSILON6) {

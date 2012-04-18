@@ -46,9 +46,9 @@ define([
                 throw new DeveloperError("planeD is required.", "planeD");
             }
 
-            var origin = new Cartesian3(rayOrigin.x, rayOrigin.y, rayOrigin.z);
-            var direction = new Cartesian3(rayDirection.x, rayDirection.y, rayDirection.z);
-            var normal = new Cartesian3(planeNormal.x, planeNormal.y, planeNormal.z);
+            var origin = Cartesian3.clone(rayOrigin);
+            var direction = Cartesian3.clone(rayDirection);
+            var normal = Cartesian3.clone(planeNormal);
 
             var denominator = normal.dot(direction);
 

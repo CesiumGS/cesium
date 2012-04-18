@@ -19,17 +19,17 @@ define([
      *
      * @name Cartesian4
      * @constructor
-     * 
+     *
      * @param {Number} x The x-coordinate for the Cartesian type.
      * @param {Number} y The y-coordinate for the Cartesian type.
      * @param {Number} z The z-coordinate for the Cartesian type.
      * @param {Number} w The w-coordinate for the Cartesian type.
-     * 
+     *
      * @see Cartesian2
      * @see Cartesian3
      */
     function Cartesian4(x, y, z, w) {
-        
+
         /**
          * DOC_TBA
          *
@@ -76,6 +76,16 @@ define([
     }
 
     /**
+     * Returns a duplicate of a Cartesian4.
+     *
+     * @param {Cartesian4} cartesian The cartesian to clone.
+     * @return {Cartesian4} A new Cartesian4 instance.
+     */
+    Cartesian4.clone = function(cartesian) {
+        return new Cartesian4(cartesian.x, cartesian.y, cartesian.z, cartesian.w);
+    };
+
+    /**
      * Creates a Cartesian4 instance initialized to (0, 0, 0, 0).
      *
      * @memberof Cartesian4
@@ -117,7 +127,7 @@ define([
 
     /**
      * Creates a Cartesian4 instance initialized to (0, 0, 0, 1).
-     * 
+     *
      * @memberof Cartesian4
      * @return {Cartesian4} A new Cartesian4 instance.
      */
@@ -325,9 +335,9 @@ define([
      * @return {Boolean} <code>true</code> if the Cartesians are equal componentwise; otherwise, <code>false</code>.
      */
     Cartesian4.prototype.equals = function(other) {
-        return (this.x === other.x) && 
-               (this.y === other.y) && 
-               (this.z === other.z) && 
+        return (this.x === other.x) &&
+               (this.y === other.y) &&
+               (this.z === other.z) &&
                (this.w === other.w);
     };
 
@@ -335,7 +345,7 @@ define([
      * Returns <code>true</code> if this Cartesian equals other componentwise within the specified epsilon.
      *
      * @memberof Cartesian4
-     * 
+     *
      * @param {Cartesian4} other The Cartesian to compare for equality.
      * @param {Number} [epsilon=0.0] The epsilon to use for equality testing.
      *
@@ -345,7 +355,7 @@ define([
         epsilon = epsilon || 0.0;
         return (Math.abs(this.x - other.x) <= epsilon) &&
                (Math.abs(this.y - other.y) <= epsilon) &&
-               (Math.abs(this.z - other.z) <= epsilon) && 
+               (Math.abs(this.z - other.z) <= epsilon) &&
                (Math.abs(this.w - other.w) <= epsilon);
     };
 
