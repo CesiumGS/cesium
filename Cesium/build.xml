@@ -240,6 +240,10 @@ writer.close();
 		<condition property="nodePathValue" value="../Tools/nodejs-0.6.14/mac/node">
 			<os family="mac" />
 		</condition>
+
+		<condition property="nodePathValue" value="../Tools/nodejs-0.6.15/linux/node">
+			<os family="unix" />
+		</condition>
 	</target>
 
 	<target name="combineJavaScript.setNodePathLocation" if="nodePathValue">
