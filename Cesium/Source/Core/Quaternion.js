@@ -99,7 +99,7 @@ define([
      *
      * @memberof Quaternion
      *
-     * @return {Quaternion} The The conjugate of this quaternion.
+     * @return {Quaternion} The conjugate of this quaternion.
      */
     Quaternion.prototype.conjugate = function() {
         return new Quaternion(-this.x, -this.y, -this.z, this.w);

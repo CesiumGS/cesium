@@ -3,11 +3,15 @@ define([
         './DeveloperError',
         './Math',
         './Cartesian2',
+        './Cartesian3',
+        './Quaternion',
         './EllipsoidTangentPlane'
     ], function(
         DeveloperError,
         CesiumMath,
         Cartesian2,
+        Cartesian3,
+        Quaternion,
         EllipsoidTangentPlane) {
     "use strict";
 
@@ -51,6 +55,7 @@ define([
          *     new Cartographic2(-75.59777, 40.03883)), 100000.0));
          */
         computeCircleBoundary : function(ellipsoid, center, radius, granularity) {
+
             if (!ellipsoid || !center || !radius) {
                 throw new DeveloperError("ellipsoid, center, and radius are required.");
             }
