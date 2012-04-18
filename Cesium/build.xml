@@ -233,7 +233,7 @@ writer.close();
 	</target>
 
 	<target name="combineJavaScript.setNodePathValue">
-		<condition property="nodePathValue" value="../Tools/nodejs-0.6.14/windows/node.exe">
+		<condition property="nodePathValue" value="../Tools/nodejs-0.6.15/windows/node.exe">
 			<os family="windows" />
 		</condition>
 
