@@ -123,5 +123,20 @@
         it("convertLongitudeRange (3)", function () {
             expect(Cesium.Math.convertLongitudeRange(Math.PI)).toEqualEpsilon(-Math.PI, Cesium.Math.EPSILON16);
         });
+        
+        it("negativePiToPi positive", function(){
+            expect(Cesium.Math.negativePiToPi((Math.PI / 2) * Math.PI)).toEqualEpsilon((Math.PI / 2) * Math.PI - Cesium.Math.TWO_PI, Cesium.Math.EPSILON16);
+            expect(Cesium.Math.negativePiToPi(Math.PI / 0.5)).toEqualEpsilon(0.0, Cesium.Math.EPSILON16);
+        });
+        
+        it("negativePiToPi negative", function(){
+            expect(Cesium.Math.negativePiToPi(-Math.PI / 0.5)).toEqualEpsilon(0.0, Cesium.Math.EPSILON16);
+            expect(Cesium.Math.negativePiToPi(-(Math.PI / 2) * Math.PI)).toEqualEpsilon(-(Math.PI / 2) * Math.PI + Cesium.Math.TWO_PI, Cesium.Math.EPSILON16);
+        });
+        
+        it("negativePiToPi should not change", function(){
+            expect(Cesium.Math.negativePiToPi(Math.PI - 1)).toEqualEpsilon(Math.PI - 1, Cesium.Math.EPSILON16);
+            expect(Cesium.Math.negativePiToPi(-Math.PI + 1)).toEqualEpsilon(-Math.PI + 1, Cesium.Math.EPSILON16);
+        });
     });
 }());
