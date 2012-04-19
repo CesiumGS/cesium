@@ -123,8 +123,6 @@ define([
             var ab = semiMajorAxis * semiMinorAxis;
 
             var value = 1.0 - (bSqr / aSqr);
-
-
             var ecc = Math.sqrt(value);
 
             var surfPos = Cartesian3.clone(center);
