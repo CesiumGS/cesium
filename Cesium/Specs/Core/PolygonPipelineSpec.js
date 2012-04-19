@@ -299,12 +299,11 @@
             expect(positions[0].equals(positions[positions.length - 1])).toBeTruthy();
         });
 
-        it("computeEllipseBoundary throws if semiMajorAxis < semiMinorAxis", function () {
+        it("computeEllipseBoundary can swap the semi major and minor axes", function () {
             var ellipsoid = Cesium.Ellipsoid.getWgs84();
             var center = ellipsoid.toCartesian(Cesium.Cartographic3.getZero());
-            expect( function () {
-                Cesium.Shapes.computeEllipseBoundary(ellipsoid, center, 0.5, 1.0);
-            }).toThrow();
+
+            expect(Cesium.Shapes.computeEllipseBoundary(ellipsoid, center, 1.0, 5.0)).not.toThrow();
         });
 
         it("computeEllipseBoundary throws without an ellipsoid", function () {
