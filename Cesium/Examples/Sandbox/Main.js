@@ -85,6 +85,7 @@
     var cir = tree.addNode("Circle", "", null, "Circle");
     tree.addNode("Outline a circle", [new Sandbox.OutlineCircle(scene, ellipsoid, primitives)], cir, "Circle");
     tree.addNode("Fill a circle", [new Sandbox.FilledCircle(scene, ellipsoid, primitives)], cir, "Circle");
+    tree.addNode("Fill an ellipse", [new Sandbox.FilledEllipse(scene, ellipsoid, primitives)], cir, "Circle");
     tree.addNode("Apply a material to a filled circle", [new Sandbox.FilledCircleMaterial(scene, ellipsoid, primitives)], cir, "Circle");
 
     var bb = tree.addNode("Billboard", "", null, "Billboard");

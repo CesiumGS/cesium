@@ -25,9 +25,7 @@ define([
         /**
          * Computes boundary points for a circle on the ellipsoid.
          * <br /><br />
-         * The <code>radius</code> uses the distance along the plane tangent to the
-         * ellipsoid at the circle's <code>center</code>; this is not the same as
-         * arc-distance.  The <code>granularity</code> determines the number of points
+         * The <code>granularity</code> determines the number of points
          * in the boundary.  A lower granularity results in more points and a more
          * exact circle.
          * <br /><br />
@@ -68,17 +66,156 @@ define([
                 throw new DeveloperError("granularity must be greater than zero.", "granularity");
             }
 
-            var steps = Math.floor(CesiumMath.TWO_PI / granularity);
+            return this.computeEllipseBoundary(ellipsoid, center, radius, radius, 0, granularity);
+        },
 
-            var positions = [];
-            for ( var i = 0; i < steps; ++i) {
-                var theta = (i / steps) * CesiumMath.TWO_PI;
-                positions.push(new Cartesian2(radius * Math.cos(theta), radius * Math.sin(theta)));
+        /**
+         * Computes boundary points for an ellipse on the ellipsoid.
+         * <br /><br />
+         * The <code>granularity</code> determines the number of points
+         * in the boundary.  A lower granularity results in more points and a more
+         * exact circle.
+         * <br /><br />
+         * An outlined ellipse is rendered by passing the result of this function call to
+         * {@link Polyline#setPositions}.  A filled ellipse is rendered by passing
+         * the result to {@link Polygon#setPositions}.
+         *
+         * @param {Ellipsoid} ellipsoid The ellipsoid the ellipse will be on.
+         * @param {Cartesian3} center The ellipse's center point in the fixed frame.
+         * @param {Number} semiMajorAxis The length of the ellipse's semi-major axis in meters.
+         * @param {Number} semiMinorAxis The length of the ellipse's semi-minor axis in meters.
+         * @param {Number} [bearing] The angle from north (counter-clockwise) in radians. The default is zero.
+         * @param {Number} [granularity] The angular distance between points on the circle.
+         *
+         * @return The set of points that form the ellipse's boundary.
+         *
+         * @example
+         * // Create a filled ellipse.
+         * var polygon = new Cesium.Polygon();
+         * polygon.setPositions(Cesium.Shapes.computeEllipseBoundary(
+         *   ellipsoid, ellipsoid.cartographicDegreesToCartesian(
+         *      new Cesium.Cartographic2(-75.59777, 40.03883)), 500000.0, 300000.0));
+         */
+        computeEllipseBoundary : function(ellipsoid, center, semiMajorAxis, semiMinorAxis, bearing, granularity) {
+            if (!ellipsoid || !center || !semiMajorAxis || !semiMinorAxis) {
+                throw new DeveloperError("ellipsoid, center, semiMajorAxis, and semiMinorAxis are required.");
             }
-            positions.push(positions[0].clone()); // Duplicates first and last point for polyline
 
-            var tangentPlane = new EllipsoidTangentPlane(ellipsoid, center);
-            return tangentPlane.projectPointsOntoEllipsoid(positions);
+            if (semiMajorAxis <= 0.0 || semiMinorAxis <= 0.0) {
+                throw new DeveloperError("Semi-major and semi-minor axes must be greater than zero.");
+            }
+
+            bearing = bearing || 0.0;
+            granularity = granularity || CesiumMath.toRadians(1.0);
+
+            if (granularity <= 0.0) {
+                throw new DeveloperError("granularity must be greater than zero.", "granularity");
+            }
+
+            if (semiMajorAxis < semiMinorAxis) {
+                throw new DeveloperError("semiMajorAxis must be >= semiMinorAxis", "semiMajorAxis");
+            }
+
+            var MAX_ANOMALY_LIMIT = 2.31;
+
+            var aSqr = semiMajorAxis * semiMajorAxis;
+            var bSqr = semiMinorAxis * semiMinorAxis;
+            var ab = semiMajorAxis * semiMinorAxis;
+
+            var value = 1.0 - (bSqr / aSqr);
+
+
+            var ecc = Math.sqrt(value);
+
+            var surfPos = Cartesian3.clone(center);
+            var mag = surfPos.magnitude();
+
+            var tempVec = new Cartesian3(0.0, 0.0, 1);
+            var temp = 1.0 / mag;
+
+            var unitPos = surfPos.multiplyWithScalar(temp);
+            var eastVec = tempVec.cross(surfPos).normalize();
+            var northVec = unitPos.cross(eastVec);
+
+            var numQuadrantPts = 1 + Math.ceil(CesiumMath.PI_OVER_TWO / granularity);
+            var deltaTheta = MAX_ANOMALY_LIMIT / (numQuadrantPts - 1);
+            var thetaPts = new Array(3 * numQuadrantPts);
+            var thetaPtsIndex = 0;
+
+            var sampleTheta = 0.0;
+            for (var i = 0; i < numQuadrantPts; i++, sampleTheta += deltaTheta, ++thetaPtsIndex) {
+                thetaPts[thetaPtsIndex] = sampleTheta - ecc * Math.sin(sampleTheta);
+                if (thetaPts[thetaPtsIndex] >= CesiumMath.PI_OVER_TWO) {
+                    thetaPts[thetaPtsIndex] = CesiumMath.PI_OVER_TWO;
+                    numQuadrantPts = i + 1;
+                    break;
+                }
+            }
+
+            var ellipsePts = new Array(4 * (numQuadrantPts - 1) + 1);
+
+            function computeEllipseQuadrant(cb, cbRadius, aSqr, bSqr, ab, ecc, mag, unitPos, eastVec, northVec, bearing,
+                                            thetaPts, thetaPtsIndex, offset, clockDir, ellipsePts, ellipsePtsIndex, numPts) {
+                var angle;
+                var theta;
+                var radius;
+                var azimuth;
+                var temp;
+                var temp2;
+                var rotAxis;
+                var tempVec;
+
+                for (var i = 0; i < numPts; i++, thetaPtsIndex += clockDir, ++ellipsePtsIndex) {
+                    theta = (clockDir > 0) ? (thetaPts[thetaPtsIndex] + offset) : (offset - thetaPts[thetaPtsIndex]);
+
+                    azimuth = theta + bearing;
+
+                    temp = -Math.cos(azimuth);
+
+                    rotAxis = eastVec.multiplyWithScalar(temp);
+
+                    temp = Math.sin(azimuth);
+                    tempVec = northVec.multiplyWithScalar(temp);
+
+                    rotAxis = rotAxis.add(tempVec);
+
+                    temp = Math.cos(theta);
+                    temp = temp * temp;
+
+                    temp2 = Math.sin(theta);
+                    temp2 = temp2 * temp2;
+
+                    radius = ab / Math.sqrt(bSqr * temp + aSqr * temp2);
+                    angle = radius / cbRadius;
+
+                    // Create the quaternion to rotate the position vector to the boundary of the ellipse.
+                    temp = Math.sin(angle / 2.0);
+
+                    var unitQuat = (new Quaternion(rotAxis.x * temp, rotAxis.y * temp, rotAxis.z * temp, Math.cos(angle / 2.0))).normalize();
+                    var rotMtx = unitQuat.toRotationMatrix();
+
+                    var tmpEllipsePts = rotMtx.multiplyWithVector(unitPos);
+                    var unitCart = tmpEllipsePts.normalize();
+                    tmpEllipsePts = unitCart.multiplyWithScalar(mag);
+                    ellipsePts[ellipsePtsIndex] = tmpEllipsePts;
+                }
+            }
+
+            computeEllipseQuadrant(ellipsoid, surfPos.magnitude(), aSqr, bSqr, ab, ecc, mag, unitPos, eastVec, northVec, bearing,
+                                   thetaPts, 0.0, 0.0, 1, ellipsePts, 0, numQuadrantPts - 1);
+
+            computeEllipseQuadrant(ellipsoid, surfPos.magnitude(), aSqr, bSqr, ab, ecc, mag, unitPos, eastVec, northVec, bearing,
+                                   thetaPts, numQuadrantPts - 1, Math.PI, -1, ellipsePts, numQuadrantPts - 1, numQuadrantPts - 1);
+
+            computeEllipseQuadrant(ellipsoid, surfPos.magnitude(), aSqr, bSqr, ab, ecc, mag, unitPos, eastVec, northVec, bearing,
+                                   thetaPts, 0.0, Math.PI, 1, ellipsePts, (2 * numQuadrantPts) - 2, numQuadrantPts - 1);
+
+            computeEllipseQuadrant(ellipsoid, surfPos.magnitude(), aSqr, bSqr, ab, ecc, mag, unitPos, eastVec, northVec, bearing,
+                                   thetaPts, numQuadrantPts - 1, CesiumMath.TWO_PI, -1, ellipsePts, (3 * numQuadrantPts) - 3, numQuadrantPts);
+
+            ellipsePts.push(ellipsePts[0].clone()); // Duplicates first and last point for polyline
+
+            return ellipsePts;
         }
     };
 

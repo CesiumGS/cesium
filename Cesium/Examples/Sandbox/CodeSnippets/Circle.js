@@ -37,4 +37,15 @@
         };
     };
 
+    Sandbox.FilledEllipse = function (scene, ellipsoid, primitives) {
+        this.code = function () {
+            var polygon = new Cesium.Polygon(undefined);
+            polygon.setPositions(Cesium.Shapes.computeEllipseBoundary(
+                ellipsoid, ellipsoid.cartographicDegreesToCartesian(
+                    new Cesium.Cartographic2(-75.59777, 40.03883)), 500000.0, 300000.0));
+
+            primitives.add(polygon);
+        };
+    };
+
 }());

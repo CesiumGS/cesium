@@ -251,7 +251,7 @@
             var center = ellipsoid.toCartesian(Cesium.Cartographic3.getZero());
             var positions = Cesium.Shapes.computeCircleBoundary(ellipsoid, center, 1.0, Cesium.Math.toRadians(60));
 
-            expect(positions.length).toEqual(6 + 1);
+            expect(positions.length).toEqual(10);
         });
 
         it("computeCircleBoundary throws without an ellipsoid", function () {
@@ -288,6 +288,62 @@
             var center = ellipsoid.toCartesian(Cesium.Cartographic3.getZero());
             expect( function () {
                 Cesium.Shapes.computeCircleBoundary(ellipsoid, center, 1.0, -1.0);
+            }).toThrow();
+        });
+
+        it("computeEllipseBoundary computes a closed loop", function () {
+            var ellipsoid = Cesium.Ellipsoid.getWgs84();
+            var center = ellipsoid.toCartesian(Cesium.Cartographic3.getZero());
+            var positions = Cesium.Shapes.computeEllipseBoundary(ellipsoid, center, 5.0, 1.0);
+
+            expect(positions[0].equals(positions[positions.length - 1])).toBeTruthy();
+        });
+
+        it("computeEllipseBoundary throws if semiMajorAxis < semiMinorAxis", function () {
+            var ellipsoid = Cesium.Ellipsoid.getWgs84();
+            var center = ellipsoid.toCartesian(Cesium.Cartographic3.getZero());
+            expect( function () {
+                Cesium.Shapes.computeEllipseBoundary(ellipsoid, center, 0.5, 1.0);
+            }).toThrow();
+        });
+
+        it("computeEllipseBoundary throws without an ellipsoid", function () {
+            expect( function () {
+                Cesium.Shapes.computeEllipseBoundary();
+            }).toThrow();
+        });
+
+        it("computeEllipseBoundary throws without a center", function () {
+            var ellipsoid = Cesium.Ellipsoid.getWgs84();
+            expect( function () {
+                Cesium.Shapes.computeEllipseBoundary(ellipsoid);
+            }).toThrow();
+        });
+
+        it("computeEllipseBoundary throws without a semi-major axis", function () {
+            var ellipsoid = Cesium.Ellipsoid.getWgs84();
+            var center = ellipsoid.toCartesian(Cesium.Cartographic3.getZero());
+            expect( function () {
+                Cesium.Shapes.computeEllipseBoundary(ellipsoid, center, 1.0);
+            }).toThrow();
+        });
+
+        it("computeEllipseBoundary with a negative axis length", function () {
+            var ellipsoid = Cesium.Ellipsoid.getWgs84();
+            var center = ellipsoid.toCartesian(Cesium.Cartographic3.getZero());
+            expect( function () {
+                Cesium.Shapes.computeEllipseBoundary(ellipsoid, center, -1.0, 1.0);
+            }).toThrow();
+            expect( function () {
+                Cesium.Shapes.computeEllipseBoundary(ellipsoid, center, 1.0, -1.0);
+            }).toThrow();
+        });
+
+        it("computeEllipseBoundary throws with a negative granularity", function () {
+            var ellipsoid = Cesium.Ellipsoid.getWgs84();
+            var center = ellipsoid.toCartesian(Cesium.Cartographic3.getZero());
+            expect( function () {
+                Cesium.Shapes.computeEllipseBoundary(ellipsoid, center, 1.0, 1.0, 0, -1.0);
             }).toThrow();
         });
 
