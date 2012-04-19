@@ -49,6 +49,7 @@ What's New
         * Geoscope.CollectionAlgorithms.binarySearch is now Cesium.binarySearch.
         * Geoscope.ContainmentTests.pointInsideTriangle2D is now Cesium.pointInsideTriangle2D.
         * Labels now correctly allow specifying fonts by non-pixel CSS units such as points, ems, etc.
+        * Added Shapes.computeEllipseBoundary and updated Shapes.computeCircleBoundary to compute boundaries using arc-distance.
 
     b4 - 03/01/2012
     ---------------
