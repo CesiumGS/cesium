@@ -441,7 +441,7 @@ define([
     };
 
     CentralBody.prototype._prefetchImages = function() {
-        var limit = Math.max(this._prefetchLimit, this._dayTileProvider.zoomMin);
+        var limit = Math.max(Math.min(this._prefetchLimit, this._dayTileProvider.zoomMax), this._dayTileProvider.zoomMin);
         var stack = [this._rootTile];
         while (stack.length !== 0) {
             var tile = stack.pop();
