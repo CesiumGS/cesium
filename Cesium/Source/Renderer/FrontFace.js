@@ -14,7 +14,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        CLOCKWISE : new Enumeration(0x0900, "CLOCKWISE"), // CW
+        CLOCKWISE : new Enumeration(0x0900, "CW"),
 
         /**
          * DOC_TBA
@@ -22,7 +22,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        COUNTER_CLOCKWISE : new Enumeration(0x0901, "COUNTER_CLOCKWISE") // CCW
+        COUNTER_CLOCKWISE : new Enumeration(0x0901, "CCW")
     };
 
     return FrontFace;
