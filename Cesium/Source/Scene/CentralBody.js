@@ -1417,6 +1417,10 @@ define([
             this._spSky = this._spSkyFromAtmosphere;
         }
 
+        this._throttleImages();
+        this._throttleReprojection();
+        this._throttleTextures(context);
+
         var viewport = context.getViewport();
         width = viewport.width;
         height = viewport.height;
@@ -1454,10 +1458,6 @@ define([
 
         this._mode = mode;
         this._projection = projection;
-
-        this._throttleImages();
-        this._throttleReprojection();
-        this._throttleTextures(context);
     };
 
     /**
