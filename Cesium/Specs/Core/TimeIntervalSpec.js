@@ -7,18 +7,18 @@
             var start = new Cesium.JulianDate(), stop = start.addDays(1), isStartIncluded = false, isStopIncluded = true, data = {};
 
             var interval = new Cesium.TimeInterval(start, stop, isStartIncluded, isStopIncluded, data);
-            expect(interval.Start === start).toBeTruthy();
-            expect(interval.Stop === stop).toBeTruthy();
-            expect(interval.IsStartIncluded === isStartIncluded).toBeTruthy();
-            expect(interval.IsStopIncluded === isStopIncluded).toBeTruthy();
-            expect(interval.Data === data).toBeTruthy();
+            expect(interval.start === start).toBeTruthy();
+            expect(interval.stop === stop).toBeTruthy();
+            expect(interval.isStartIncluded === isStartIncluded).toBeTruthy();
+            expect(interval.isStopIncluded === isStopIncluded).toBeTruthy();
+            expect(interval.data === data).toBeTruthy();
 
             interval = new Cesium.TimeInterval(start, stop);
-            expect(interval.Start === start).toBeTruthy();
-            expect(interval.Stop === stop).toBeTruthy();
-            expect(interval.IsStartIncluded).toBeTruthy();
-            expect(interval.IsStopIncluded).toBeTruthy();
-            expect(interval.Data === undefined).toBeTruthy();
+            expect(interval.start === start).toBeTruthy();
+            expect(interval.stop === stop).toBeTruthy();
+            expect(interval.isStartIncluded).toBeTruthy();
+            expect(interval.isStopIncluded).toBeTruthy();
+            expect(interval.data === undefined).toBeTruthy();
         });
 
         it("Fail with undefined start", function() {
@@ -35,13 +35,13 @@
 
         it("IsEmpty", function() {
             var interval = new Cesium.TimeInterval(new Cesium.JulianDate(1), new Cesium.JulianDate(1));
-            expect(interval.IsEmpty).toBeFalsy();
+            expect(interval.isEmpty).toBeFalsy();
 
             interval = new Cesium.TimeInterval(new Cesium.JulianDate(1), new Cesium.JulianDate(1), false, false);
-            expect(interval.IsEmpty).toBeTruthy();
+            expect(interval.isEmpty).toBeTruthy();
 
             interval = new Cesium.TimeInterval(new Cesium.JulianDate(5), new Cesium.JulianDate(4));
-            expect(interval.IsEmpty).toBeTruthy();
+            expect(interval.isEmpty).toBeTruthy();
         });
 
         it("Contains", function() {
@@ -51,7 +51,7 @@
             expect(interval1.contains(new Cesium.JulianDate(2451546))).toBeTruthy();
             expect(interval1.contains(new Cesium.JulianDate(2451546, 43200))).toBeFalsy();
 
-            var interval2 = new Cesium.TimeInterval(interval1.Start, interval1.Stop, false, false);
+            var interval2 = new Cesium.TimeInterval(interval1.start, interval1.stop, false, false);
             expect(interval2.contains(new Cesium.JulianDate(2451545))).toBeFalsy();
             expect(interval2.contains(new Cesium.JulianDate(2451545, 43200))).toBeTruthy();
             expect(interval2.contains(new Cesium.JulianDate(2451546))).toBeFalsy();

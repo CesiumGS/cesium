@@ -2,12 +2,10 @@
 define(['Core/JulianDate', 'Core/DeveloperError'], function(JulianDate, DeveloperError) {
     "use strict";
 
-    var TimeIntervalCharacteristics = {
-        Closed : 0,
-        StartOpen : 1,
-        StopOpen : 2,
-        Empty : 4
-    };
+    var Characteristics_Closed = 0;
+    var Characteristics_StartOpen = 1;
+    var Characteristics_StopOpen = 2;
+    var Characteristics_Empty = 4;
 
     function TimeInterval(start, stop, isStartIncluded, isStopIncluded, data) {
         if (typeof start === 'undefined') {
@@ -26,80 +24,84 @@ define(['Core/JulianDate', 'Core/DeveloperError'], function(JulianDate, Develope
             isStopIncluded = true;
         }
 
-        this.Start = start;
-        this.Stop = stop;
-        this.Data = data;
+        this.start = start;
+        this.stop = stop;
+        this.data = data;
 
-        this._characteristics = TimeIntervalCharacteristics.Closed;
+        this._characteristics = Characteristics_Closed;
         if (!isStartIncluded)
-            this._characteristics |= TimeIntervalCharacteristics.StartOpen;
+            this._characteristics |= Characteristics_StartOpen;
         if (!isStopIncluded)
-            this._characteristics |= TimeIntervalCharacteristics.StopOpen;
+            this._characteristics |= Characteristics_StopOpen;
 
         var stopComparedToStart = JulianDate.compare(stop, start);
         // if (stop < start ||
         //     stop == start && open on either side
-        if (stopComparedToStart < 0 || stopComparedToStart === 0 && this._characteristics !== TimeIntervalCharacteristics.Closed) {
-            this._characteristics |= TimeIntervalCharacteristics.Empty;
+        if (stopComparedToStart < 0 || stopComparedToStart === 0 && this._characteristics !== Characteristics_Closed) {
+            this._characteristics |= Characteristics_Empty;
         }
 
-        this.IsStartIncluded = (this._characteristics & TimeIntervalCharacteristics.StartOpen) !== TimeIntervalCharacteristics.StartOpen;
-        this.IsStopIncluded = (this._characteristics & TimeIntervalCharacteristics.StopOpen) !== TimeIntervalCharacteristics.StopOpen;
-        this.IsEmpty = (this._characteristics & TimeIntervalCharacteristics.Empty) === TimeIntervalCharacteristics.Empty;
+        this.isStartIncluded = (this._characteristics & Characteristics_StartOpen) !== Characteristics_StartOpen;
+        this.isStopIncluded = (this._characteristics & Characteristics_StopOpen) !== Characteristics_StopOpen;
+        this.isEmpty = (this._characteristics & Characteristics_Empty) === Characteristics_Empty;
     }
 
     TimeInterval.empty = new TimeInterval(new JulianDate(0.0), new JulianDate(0.0), false, false);
 
     TimeInterval.prototype.intersect = function(other) {
+        return this.intersectMergingData(other, undefined);
+    };
+
+    TimeInterval.prototype.intersectMergingData = function(other, mergeCallback) {
         if (typeof other === 'undefined')
             return TimeInterval.empty;
 
-        var isStartIncluded, isStopIncluded;
-        var otherStart = other.Start;
-        var otherStop = other.Stop;
+        var otherStart = other.start, otherStop = other.stop, isStartIncluded, isStopIncluded, outputData;
 
-        if (!otherStart.isBefore(this.Start) && !this.Stop.isBefore(otherStart)) {
-            isStartIncluded = (!otherStart.equals(this.Start) && other.IsStartIncluded) || (this.IsStartIncluded && other.IsStartIncluded);
-            isStopIncluded = this.IsStopIncluded && other.IsStopIncluded;
+        if (!otherStart.isBefore(this.start) && !this.stop.isBefore(otherStart)) {
+            isStartIncluded = (!otherStart.equals(this.start) && other.isStartIncluded) || (this.isStartIncluded && other.isStartIncluded);
+            isStopIncluded = this.isStopIncluded && other.isStopIncluded;
 
-            if (!this.Stop.isBefore(otherStop)) {
-                isStopIncluded = isStopIncluded || !otherStop.equals(this.Stop) && other.IsStopIncluded;
-                return new TimeInterval(otherStart, otherStop, isStartIncluded, isStopIncluded);
+            outputData = typeof mergeCallback !== 'undefined' ? mergeCallback(this.data, other.data) : this.data;
+            if (!this.stop.isBefore(otherStop)) {
+                isStopIncluded = isStopIncluded || (!otherStop.equals(this.stop) && other.isStopIncluded);
+                return new TimeInterval(otherStart, otherStop, isStartIncluded, isStopIncluded, outputData);
             }
 
-            isStopIncluded = isStopIncluded || this.IsStopIncluded;
-            return new TimeInterval(otherStart, this.Stop, isStartIncluded, isStopIncluded);
+            isStopIncluded = isStopIncluded || this.isStopIncluded;
+            return new TimeInterval(otherStart, this.stop, isStartIncluded, isStopIncluded, outputData);
         }
 
-        if (!otherStart.isAfter(this.Start) && !this.Start.isAfter(otherStop)) {
-            isStartIncluded = (!otherStart.equals(this.Start) && this.IsStartIncluded) || (this.IsStartIncluded && other.IsStartIncluded);
-            isStopIncluded = this.IsStopIncluded && other.IsStopIncluded;
+        if (!otherStart.isAfter(this.start) && !this.start.isAfter(otherStop)) {
+            isStartIncluded = (otherStart.equals(this.start) === false && this.isStartIncluded) || (this.isStartIncluded && other.isStartIncluded);
+            isStopIncluded = this.isStopIncluded && other.isStopIncluded;
 
-            if (!this.Stop.isBefore(otherStop)) {
-                isStopIncluded = isStopIncluded || !otherStop.equals(this.Stop) && other.IsStopIncluded;
-                return new TimeInterval(this.Start, otherStop, isStartIncluded, isStopIncluded);
+            outputData = typeof mergeCallback !== 'undefined' ? mergeCallback(this.data, other.data) : this.data;
+            if (!this.stop.isBefore(otherStop)) {
+                isStopIncluded = isStopIncluded || (otherStop.equals(this.stop) === false && other.isStopIncluded);
+                return new TimeInterval(this.start, otherStop, isStartIncluded, isStopIncluded, outputData);
             }
 
-            isStopIncluded = isStopIncluded || this.IsStopIncluded;
-            return new TimeInterval(this.Start, this.Stop, isStartIncluded, isStopIncluded);
+            isStopIncluded = isStopIncluded || this.isStopIncluded;
+            return new TimeInterval(this.start, this.stop, isStartIncluded, isStopIncluded, outputData);
         }
 
         return TimeInterval.empty;
     };
 
     TimeInterval.prototype.contains = function(date) {
-        if (this.IsEmpty)
+        if (this.isEmpty)
             return false;
 
-        var startComparedToDate = JulianDate.compare(this.Start, date);
+        var startComparedToDate = JulianDate.compare(this.start, date);
         // if (start == date)
         if (startComparedToDate === 0)
-            return this.IsStartIncluded;
+            return this.isStartIncluded;
 
-        var dateComparedToStop = JulianDate.compare(date, this.Stop);
+        var dateComparedToStop = JulianDate.compare(date, this.stop);
         // if (date == stop)
         if (dateComparedToStop === 0)
-            return this.IsStopIncluded;
+            return this.isStopIncluded;
 
         // return start < date && date < stop
         return startComparedToDate < 0 && dateComparedToStop < 0;
@@ -108,17 +110,17 @@ define(['Core/JulianDate', 'Core/DeveloperError'], function(JulianDate, Develope
     TimeInterval.prototype.equals = function(other) {
         if (typeof other === 'undefined')
             return false;
-        if (this.IsEmpty && other.IsEmpty)
+        if (this.isEmpty && other.isEmpty)
             return true;
-        return this._characteristics === other._characteristics && this.Start.equals(other.Start) && this.Stop.equals(other.Stop);
+        return this._characteristics === other._characteristics && this.start.equals(other.start) && this.stop.equals(other.stop);
     };
 
     TimeInterval.prototype.equalsEpsilon = function(other, epsilon) {
         if (typeof other === 'undefined')
             return false;
-        if (this.IsEmpty && other.IsEmpty)
+        if (this.isEmpty && other.isEmpty)
             return true;
-        return this._characteristics === other._characteristics && this.Start.equalsEpsilon(other.Start, epsilon) && this.Stop.equalsEpsilon(other.Stop, epsilon);
+        return this._characteristics === other._characteristics && this.start.equalsEpsilon(other.start, epsilon) && this.stop.equalsEpsilon(other.stop, epsilon);
     };
 
     return TimeInterval;
