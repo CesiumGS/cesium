@@ -302,8 +302,8 @@
         it("computeEllipseBoundary can swap the semi major and minor axes", function () {
             var ellipsoid = Cesium.Ellipsoid.getWgs84();
             var center = ellipsoid.toCartesian(Cesium.Cartographic3.getZero());
-
-            expect(Cesium.Shapes.computeEllipseBoundary(ellipsoid, center, 1.0, 5.0)).not.toThrow();
+            var points = Cesium.Shapes.computeEllipseBoundary(ellipsoid, center, 1.0, 5.0);
+            expect(points.length).toBeGreaterThan(0);
         });
 
         it("computeEllipseBoundary throws without an ellipsoid", function () {

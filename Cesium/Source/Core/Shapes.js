@@ -193,7 +193,7 @@ define([
 
             var numQuadrantPts = 1 + Math.ceil(CesiumMath.PI_OVER_TWO / granularity);
             var deltaTheta = MAX_ANOMALY_LIMIT / (numQuadrantPts - 1);
-            var thetaPts = new Array(3 * numQuadrantPts);
+            var thetaPts = [];
             var thetaPtsIndex = 0;
 
             var sampleTheta = 0.0;
@@ -206,7 +206,7 @@ define([
                 }
             }
 
-            var ellipsePts = new Array(4 * (numQuadrantPts - 1) + 1);
+            var ellipsePts = [];
 
             _computeEllipseQuadrant(ellipsoid, surfPos.magnitude(), aSqr, bSqr, ab, ecc, mag, unitPos, eastVec, northVec, bearing,
                                    thetaPts, 0.0, 0.0, 1, ellipsePts, 0, numQuadrantPts - 1);
