@@ -1,6 +1,6 @@
 (function() {
     "use strict";
-    /*global Cesium, Image describe, it, expect, runs, waitsFor, beforeEach, afterEach, Float32Array, Uint8Array*/
+    /*global Cesium, Image describe, it, xit, expect, runs, waitsFor, beforeEach, afterEach, Float32Array, Uint8Array*/
 
     describe("Texture", function () {
         var context;
