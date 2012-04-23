@@ -93,37 +93,37 @@ define([
         return _hermiteCoefficientMatrix;
     };
 
-    HermiteSpline._findIndex = function(time, interpolator) {
+    HermiteSpline.prototype._findIndex = function(time) {
         // Take advantage of temporal coherence by checking current, next and previous intervals
         // for containment of time.
-        var i = interpolator._lastTimeIndex || 0;
-        if (time >= interpolator._points[i].time) {
-            if (i + 1 < interpolator._points.length && time < interpolator._points[i + 1].time) {
+        var i = this._lastTimeIndex || 0;
+        if (time >= this._points[i].time) {
+            if (i + 1 < this._points.length && time < this._points[i + 1].time) {
                 return i;
-            } else if (i + 2 < interpolator._points.length && time < interpolator._points[i + 2].time) {
-                interpolator._lastTimeIndex = i + 1;
-                return interpolator._lastTimeIndex;
+            } else if (i + 2 < this._points.length && time < this._points[i + 2].time) {
+                this._lastTimeIndex = i + 1;
+                return this._lastTimeIndex;
             }
-        } else if (i - 1 >= 0 && time >= interpolator._points[i - 1].time) {
-            interpolator._lastTimeIndex = i - 1;
-            return interpolator._lastTimeIndex;
+        } else if (i - 1 >= 0 && time >= this._points[i - 1].time) {
+            this._lastTimeIndex = i - 1;
+            return this._lastTimeIndex;
         }
 
         // The above failed so do a linear search. For the use cases so far, the
         // length of the list is less than 10. In the future, if there is a bottle neck,
         // it might be here.
-        for (i = 0; i < interpolator._points.length - 1; ++i) {
-            if (time >= interpolator._points[i].time && time < interpolator._points[i + 1].time) {
+        for (i = 0; i < this._points.length - 1; ++i) {
+            if (time >= this._points[i].time && time < this._points[i + 1].time) {
                 break;
             }
         }
 
-        if (i === interpolator._points.length - 1) {
-            i = interpolator._points.length - 2;
+        if (i === this._points.length - 1) {
+            i = this._points.length - 2;
         }
 
-        interpolator._lastTimeIndex = i;
-        return interpolator._lastTimeIndex;
+        this._lastTimeIndex = i;
+        return this._lastTimeIndex;
     };
 
     HermiteSpline.prototype._generateClamped = function() {
@@ -223,7 +223,7 @@ define([
             throw new DeveloperError("time is out of range.", "time");
         }
 
-        var i = HermiteSpline._findIndex(time, this);
+        var i = this._findIndex(time);
         var u = (time - this._points[i].time) / (this._points[i + 1].time - this._points[i].time);
 
         var timeVec = new Cartesian4(0.0, u * u, u, 1.0);
