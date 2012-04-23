@@ -8,6 +8,23 @@ define([
         Quaternion) {
     "use strict";
 
+    /**
+     * Smoothly interpolates orientation, represented by <code>Quaternion</code>s, over time.
+     * For example, this can be used to set a camera's axes along a path.
+     *
+     * @name OrientationInterpolator
+     * @constructor
+     *
+     * @param {Array} controlPoints An array, of at least length 2, of objects with <code>orientation</code> and
+     * <code>time</code> properties.
+     *
+     * @exception {DeveloperError} controlPoints is required.
+     * @exception {DeveloperError} controlPoints must be an array of at least length 2.
+     *
+     * @see Quaternion
+     * @see CatmullRomSpline
+     * @see HermiteSpline
+     */
     function OrientationInterpolator(controlPoints) {
         if (!controlPoints || !(controlPoints instanceof Array) || controlPoints.length < 2) {
             throw new DeveloperError("controlPoints is required. It must be an array with at least a length of 3.", "controlPoints");
@@ -60,6 +77,20 @@ define([
         return this._lastTimeIndex;
     };
 
+    /**
+     * Evaluates the orientation at a given time.
+     *
+     * @memberof OrientationInterpolator
+     *
+     * @param {Number} time The time at which to evaluate the orientation.
+     *
+     * @exception {DeveloperError} time is required.
+     * @exception {DeveloperError} time must be in the range <code>[a<sub>0</sub>, a<sub>n</sub>]</code>,
+     * where <code>a<sub>0</sub></code> and <code>a<sub>n</sub></code> are the time properties of first and
+     * last elements in the array given during construction, respectively.
+     *
+     * @return {Quaternion} The orientation at the given <code>time</code>.
+     */
     OrientationInterpolator.prototype.evaluate = function(time) {
         if (typeof time === "undefined") {
             throw new DeveloperError("time is required.", "time");
