@@ -267,7 +267,8 @@
             expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
         });
 
-        it("generates mipmaps", function () {
+        // Fails on firefox.  Should be fixed soon: https://bugzilla.mozilla.org/show_bug.cgi?id=685156
+        xit("generates mipmaps", function () {
             texture = context.createTexture2D({
                 source : blueImage,
                 pixelFormat : pixelFormat.RGBA

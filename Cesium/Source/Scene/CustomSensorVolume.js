@@ -160,7 +160,7 @@ define([
                 return that.showIntersection;
             },
             u_sensorRadius : function() {
-                return that.radius;
+                return isFinite(that.radius) ? that.radius : FAR;
             },
             u_intersectionColor : function() {
                 return that.intersectionColor;

@@ -214,7 +214,7 @@ define([
                 return that.modelMatrix;
             },
             u_sensorRadius : function() {
-                return that.radius;
+                return isFinite(that.radius) ? that.radius : FAR;
             },
             u_outerHalfAngle : function() {
                 return that.outerHalfAngle;
