@@ -1,8 +1,9 @@
 /**
  * Define a test suite.
- * @param {Array} An array of dependencies, to be passed to require.
- * @param {String} The name of the suite.
- * @param {Function} The test suite.
+ * @param {Array} deps An array of dependencies, to be passed to require.
+ * @param {String|Function} name Either the name of the test suite, or the test suite itself,
+ * in which case the first dependency in the array will be used as the name.
+ * @param {Function} [suite] The test suite.
  */
 var defineSuite;
 
@@ -14,6 +15,11 @@ var defineSuite;
     var createTests;
 
     defineSuite = function(deps, name, suite) {
+        if (typeof name === 'function') {
+            suite = name;
+            name = deps[0];
+        }
+
         var test = {
             name : name
         };

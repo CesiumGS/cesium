@@ -1,5 +1,5 @@
 /*global define*/
-define(['Core/Context'], function(Context) {
+define(['Renderer/Context'], function(Context) {
     "use strict";
     /*global document*/
 

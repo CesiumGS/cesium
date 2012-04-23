@@ -1,4 +1,10 @@
-defineSuite(['Core/shallowEquals'], "shallowEquals", function(shallowEquals) {
+defineSuite([
+         'Core/shallowEquals'
+     ], function(
+         shallowEquals) {
+    "use strict";
+    /*global it,expect*/
+
     it("returns false if left is undefined", function() {
         expect(shallowEquals(undefined, {
             a : 0
