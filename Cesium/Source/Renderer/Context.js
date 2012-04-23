@@ -5,6 +5,7 @@ define([
         '../Core/IndexDatatype',
         '../Core/RuntimeError',
         '../Core/PrimitiveType',
+        '../Core/WindingOrder',
         '../Shaders/BuiltinFunctions',
         './Buffer',
         './BufferUsage',
@@ -14,7 +15,6 @@ define([
         './CullFace',
         './DepthFunction',
         './Framebuffer',
-        './FrontFace',
         './MipmapHint',
         './PixelDatatype',
         './PixelFormat',
@@ -39,6 +39,7 @@ define([
         IndexDatatype,
         RuntimeError,
         PrimitiveType,
+        WindingOrder,
         ShadersBuiltinFunctions,
         Buffer,
         BufferUsage,
@@ -48,7 +49,6 @@ define([
         CullFace,
         DepthFunction,
         Framebuffer,
-        FrontFace,
         MipmapHint,
         PixelDatatype,
         PixelFormat,
@@ -1779,7 +1779,7 @@ define([
         var sampleCoverage = rs.sampleCoverage || {};
 
         var r = {
-            frontFace : (typeof rs.frontFace === "undefined") ? FrontFace.COUNTER_CLOCKWISE : rs.frontFace,
+            frontFace : (typeof rs.frontFace === "undefined") ? WindingOrder.COUNTER_CLOCKWISE : rs.frontFace,
             cull : {
                 enabled : (typeof cull.enabled === "undefined") ? false : cull.enabled,
                 face : (typeof cull.face === "undefined") ? CullFace.BACK : cull.face
@@ -1859,8 +1859,8 @@ define([
 
         // Validate
 
-        if ((r.frontFace !== FrontFace.CLOCKWISE) &&
-            (r.frontFace !== FrontFace.COUNTER_CLOCKWISE)) {
+        if ((r.frontFace !== WindingOrder.CLOCKWISE) &&
+            (r.frontFace !== WindingOrder.COUNTER_CLOCKWISE)) {
             throw new DeveloperError("Invalid renderState.frontFace.", "renderState");
         }
 

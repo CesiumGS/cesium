@@ -1,30 +1,30 @@
 (function() {
     "use strict";
     /*global Cesium, describe, it, expect, beforeEach, afterEach*/
-    
+
     describe("RenderState", function () {
         var context;
-        
+
         beforeEach(function () {
             context = Cesium.Specs.createContext();
         });
-    
+
         afterEach(function () {
             Cesium.Specs.destroyContext(context);
         });
-    
+
         it("creates with defaults", function () {
             var defaultRS = {
-                frontFace : Cesium.FrontFace.COUNTER_CLOCKWISE,
+                frontFace : Cesium.WindingOrder.COUNTER_CLOCKWISE,
                 cull : {
                     enabled : false,
-                    face    : Cesium.CullFace.BACK  
+                    face    : Cesium.CullFace.BACK
                 },
                 lineWidth : 1,
                 polygonOffset : {
                     enabled : false,
                     factor  : 0,
-                    units   : 0 
+                    units   : 0
                 },
                 scissorTest : {
                     enabled : false,
@@ -32,7 +32,7 @@
                 },
                 depthRange : {
                     near : 0,
-                    far : 1                
+                    far : 1
                 },
                 depthTest : {
                     enabled : false,
@@ -57,12 +57,12 @@
                     backFunction   : Cesium.StencilFunction.ALWAYS,
                     reference      :  0,
                     mask           : ~0,
-                    frontOperation : {                
+                    frontOperation : {
                         fail  : Cesium.StencilOperation.KEEP,
                         zFail : Cesium.StencilOperation.KEEP,
                         zPass : Cesium.StencilOperation.KEEP
                     },
-                    backOperation : {                
+                    backOperation : {
                         fail  : Cesium.StencilOperation.KEEP,
                         zFail : Cesium.StencilOperation.KEEP,
                         zPass : Cesium.StencilOperation.KEEP
@@ -73,11 +73,11 @@
                     value   : 1.0,
                     invert  : false
                 },
-                dither : true            
+                dither : true
             };
-                    
+
             var rs = context.createRenderState();
-            
+
             expect(rs.frontFace).toEqual(defaultRS.frontFace);
             expect(rs.cull.enabled).toEqual(defaultRS.cull.enabled);
             expect(rs.cull.face).toEqual(defaultRS.cull.face);
@@ -91,7 +91,7 @@
             expect(rs.scissorTest.rectangle.width).toEqual(defaultRS.scissorTest.rectangle.width);
             expect(rs.scissorTest.rectangle.height).toEqual(defaultRS.scissorTest.rectangle.height);
             expect(rs.depthRange.near).toEqual(defaultRS.depthRange.near);
-            expect(rs.depthRange.far).toEqual(defaultRS.depthRange.far);               
+            expect(rs.depthRange.far).toEqual(defaultRS.depthRange.far);
             expect(rs.depthTest.enabled).toEqual(defaultRS.depthTest.enabled);
             expect(rs.depthTest.func).toEqual(defaultRS.depthTest.func);
             expect(rs.colorMask.red).toEqual(defaultRS.colorMask.red);
@@ -127,19 +127,19 @@
             expect(rs.sampleCoverage.invert).toEqual(defaultRS.sampleCoverage.invert);
             expect(rs.dither).toEqual(defaultRS.dither);
         });
-        
+
         it("creates with all render states", function () {
             var r = {
-                frontFace : Cesium.FrontFace.CLOCKWISE,
+                frontFace : Cesium.WindingOrder.CLOCKWISE,
                 cull : {
                     enabled : true,
-                    face    : Cesium.CullFace.FRONT  
+                    face    : Cesium.CullFace.FRONT
                 },
                 lineWidth : context.getMaximumAliasedLineWidth(),
                 polygonOffset : {
                     enabled : false,
                     factor  : 1,
-                    units   : 1 
+                    units   : 1
                 },
                 scissorTest : {
                     enabled : true,
@@ -147,7 +147,7 @@
                 },
                 depthRange : {
                     near : 0.25,
-                    far : 0.75                
+                    far : 0.75
                 },
                 depthTest : {
                     enabled : true,
@@ -172,12 +172,12 @@
                     backFunction   : Cesium.StencilFunction.NEVER,
                     reference      : 1,
                     mask           : 0,
-                    frontOperation : {                
+                    frontOperation : {
                         fail  : Cesium.StencilOperation.REPLACE,
                         zFail : Cesium.StencilOperation.REPLACE,
                         zPass : Cesium.StencilOperation.REPLACE
                     },
-                    backOperation : {                
+                    backOperation : {
                         fail  : Cesium.StencilOperation.REPLACE,
                         zFail : Cesium.StencilOperation.REPLACE,
                         zPass : Cesium.StencilOperation.REPLACE
@@ -188,11 +188,11 @@
                     value   : 0.5,
                     invert  : true
                 },
-                dither : false            
+                dither : false
             };
-                    
+
             var rs = context.createRenderState(r);
-            
+
             expect(rs.frontFace).toEqual(r.frontFace);
             expect(rs.cull.enabled).toEqual(r.cull.enabled);
             expect(rs.cull.face).toEqual(r.cull.face);
@@ -206,7 +206,7 @@
             expect(rs.scissorTest.rectangle.width).toEqual(r.scissorTest.rectangle.width);
             expect(rs.scissorTest.rectangle.height).toEqual(r.scissorTest.rectangle.height);
             expect(rs.depthRange.near).toEqual(r.depthRange.near);
-            expect(rs.depthRange.far).toEqual(r.depthRange.far);               
+            expect(rs.depthRange.far).toEqual(r.depthRange.far);
             expect(rs.depthTest.enabled).toEqual(r.depthTest.enabled);
             expect(rs.depthTest.func).toEqual(r.depthTest.func);
             expect(rs.colorMask.red).toEqual(r.colorMask.red);
@@ -242,21 +242,21 @@
             expect(rs.sampleCoverage.invert).toEqual(r.sampleCoverage.invert);
             expect(rs.dither).toEqual(r.dither);
         });
-     
+
         it("creates with some render states", function () {
             var r = {
-                frontFace : Cesium.FrontFace.CLOCKWISE,
+                frontFace : Cesium.WindingOrder.CLOCKWISE,
                 depthRange : {
                     near : 0.25,
-                    far : 0.75                
+                    far : 0.75
                 }
             };
-                    
+
             var rs = context.createRenderState(r);
             expect(rs.frontFace).toEqual(r.frontFace);
             expect(rs.depthRange.near).toEqual(r.depthRange.near);
             expect(rs.depthRange.far).toEqual(r.depthRange.far);
-            
+
             var defaultRS = context.createRenderState();
             expect(rs.cull.enabled).toEqual(defaultRS.cull.enabled);
             expect(rs.cull.face).toEqual(defaultRS.cull.face);
@@ -304,162 +304,162 @@
             expect(rs.sampleCoverage.invert).toEqual(defaultRS.sampleCoverage.invert);
             expect(rs.dither).toEqual(defaultRS.dither);
         });
-        
+
         it("fails to create (frontFace)", function () {
             expect(function () {
                 context.createRenderState({ frontFace : "invalid value" });
-            }).toThrow();              
+            }).toThrow();
         });
 
         it("fails to create (cull.face)", function () {
             expect(function () {
                 context.createRenderState({ cull : { face : "invalid value" } });
-            }).toThrow();              
+            }).toThrow();
         });
 
         it("fails to create (small lineWidth)", function () {
             expect(function () {
                 context.createRenderState({ lineWidth : context.getMinimumAliasedLineWidth() - 1 });
-            }).toThrow();              
+            }).toThrow();
         });
 
         it("fails to create (large lineWidth)", function () {
             expect(function () {
                 context.createRenderState({ lineWidth : context.getMaximumAliasedLineWidth() + 1 });
-            }).toThrow();              
+            }).toThrow();
         });
 
         it("fails to create (negative scissorTest.rectangle.width)", function () {
             expect(function () {
                 context.createRenderState({ scissorTest : { rectangle : { x:0, y:0, width:-1, height:0 } } });
-            }).toThrow();              
+            }).toThrow();
         });
-        
+
         it("fails to create (negative scissorTest.rectangle.height)", function () {
             expect(function () {
                 context.createRenderState({ scissorTest : { rectangle : { x:0, y:0, width:0, height:-1 } } });
-            }).toThrow();              
+            }).toThrow();
         });
-        
+
         it("fails to create (near > far)", function () {
             expect(function () {
                 context.createRenderState({ depthRange : { near : 0.75, far : 0.25 } });
-            }).toThrow();              
-        });        
+            }).toThrow();
+        });
 
         it("fails to create (near < 0)", function () {
             expect(function () {
                 context.createRenderState({ depthRange : { near : -1 } });
-            }).toThrow();              
-        });        
-        
+            }).toThrow();
+        });
+
         it("fails to create (far > 1)", function () {
             expect(function () {
                 context.createRenderState({ depthRange : { far : 2 } });
-            }).toThrow();              
+            }).toThrow();
         });
 
         it("fails to create (depthTest.func)", function () {
             expect(function () {
                 context.createRenderState({ depthTest : { func : "invalid value" } });
-            }).toThrow();              
+            }).toThrow();
         });
 
         it("fails to create (blending.color < 0)", function () {
             expect(function () {
                 context.createRenderState({ blending : { color : { red : -1.0, green : 0.0, blue : 0.0, alpha : 0.0 } } });
-            }).toThrow();              
+            }).toThrow();
         });
-        
+
         it("fails to create (blending.color > 1)", function () {
             expect(function () {
                 context.createRenderState({ blending : { color : { red : 0.0, green : 0.0, blue : 0.0, alpha : 2.0 } } });
-            }).toThrow();              
+            }).toThrow();
         });
-        
+
         it("fails to create (blend.equationRgb)", function () {
             expect(function () {
                 context.createRenderState({ blending : { equationRgb : "invalid value" } });
-            }).toThrow();              
-        });        
+            }).toThrow();
+        });
 
         it("fails to create (blend.equationAlpha)", function () {
             expect(function () {
                 context.createRenderState({ blending : { equationAlpha : "invalid value" } });
-            }).toThrow();              
-        });        
+            }).toThrow();
+        });
 
         it("fails to create (blend.functionSourceRgb)", function () {
             expect(function () {
                 context.createRenderState({ blending : { functionSourceRgb : "invalid value" } });
-            }).toThrow();              
-        });        
+            }).toThrow();
+        });
 
         it("fails to create (blend.functionSourceAlpha)", function () {
             expect(function () {
                 context.createRenderState({ blending : { functionSourceAlpha : "invalid value" } });
-            }).toThrow();              
-        });        
+            }).toThrow();
+        });
 
         it("fails to create (blend.functionDestinationRgb)", function () {
             expect(function () {
                 context.createRenderState({ blending : { functionDestinationRgb : "invalid value" } });
-            }).toThrow();              
-        });        
+            }).toThrow();
+        });
 
         it("fails to create (blend.functionDestinationAlpha)", function () {
             expect(function () {
                 context.createRenderState({ blending : { functionDestinationAlpha : "invalid value" } });
-            }).toThrow();              
-        });     
+            }).toThrow();
+        });
 
         it("fails to create (stencilTest.frontFunction)", function () {
             expect(function () {
                 context.createRenderState({ stencilTest : { frontFunction : "invalid value" } });
-            }).toThrow();              
-        });     
+            }).toThrow();
+        });
 
         it("fails to create (stencilTest.backFunction)", function () {
             expect(function () {
                 context.createRenderState({ stencilTest : { backFunction : "invalid value" } });
-            }).toThrow();              
-        });     
+            }).toThrow();
+        });
 
         it("fails to create (stencilTest.frontOperation.fail)", function () {
             expect(function () {
                 context.createRenderState({ stencilTest : { frontOperation : { fail : "invalid value" } } });
-            }).toThrow();              
-        });     
+            }).toThrow();
+        });
 
         it("fails to create (stencilTest.frontOperation.zFail)", function () {
             expect(function () {
                 context.createRenderState({ stencilTest : { frontOperation : { zFail : "invalid value" } } });
-            }).toThrow();              
-        });     
+            }).toThrow();
+        });
 
         it("fails to create (stencilTest.frontOperation.zPass)", function () {
             expect(function () {
                 context.createRenderState({ stencilTest : { frontOperation : { zPass : "invalid value" } } });
-            }).toThrow();              
-        });     
+            }).toThrow();
+        });
 
         it("fails to create (stencilTest.backOperation.fail)", function () {
             expect(function () {
                 context.createRenderState({ stencilTest : { backOperation : { fail : "invalid value" } } });
-            }).toThrow();              
-        });     
+            }).toThrow();
+        });
 
         it("fails to create (stencilTest.backOperation.zFail)", function () {
             expect(function () {
                 context.createRenderState({ stencilTest : { backOperation : { zFail : "invalid value" } } });
-            }).toThrow();              
-        });     
+            }).toThrow();
+        });
 
         it("fails to create (stencilTest.backOperation.zPass)", function () {
             expect(function () {
                 context.createRenderState({ stencilTest : { backOperation : { zPass : "invalid value" } } });
-            }).toThrow();              
-        });     
-        
+            }).toThrow();
+        });
+
     });
 }());

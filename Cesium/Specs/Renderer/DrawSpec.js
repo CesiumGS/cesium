@@ -436,7 +436,7 @@
                 shaderProgram : sp,
                 vertexArray   : va,
                 renderState   : context.createRenderState({
-                    frontFace : Cesium.FrontFace.CLOCKWISE,
+                    frontFace : Cesium.WindingOrder.CLOCKWISE,
                     cull      : {
                         enabled : true,
                         face    : Cesium.CullFace.BACK
@@ -451,7 +451,7 @@
                 shaderProgram : sp,
                 vertexArray   : va,
                 renderState   : context.createRenderState({
-                    frontFace : Cesium.FrontFace.COUNTER_CLOCKWISE,
+                    frontFace : Cesium.WindingOrder.COUNTER_CLOCKWISE,
                     cull      : {
                         enabled : true,
                         face    : Cesium.CullFace.BACK
@@ -725,7 +725,7 @@
             });
 
             var rs = context.createRenderState({
-                    frontFace : Cesium.FrontFace.CLOCKWISE,
+                    frontFace : Cesium.WindingOrder.CLOCKWISE,
                     stencilTest : {
                         enabled       : true,
                         backFunction  : Cesium.StencilFunction.NOT_EQUAL,
@@ -752,7 +752,7 @@
                 shaderProgram : sp,
                 vertexArray   : va,
                 renderState   : context.createRenderState({
-                    frontFace   : Cesium.FrontFace.CLOCKWISE,
+                    frontFace   : Cesium.WindingOrder.CLOCKWISE,
                     colorMask   : { red : false, green : false, blue : false, alpha : false },
                     stencilTest : {
                         enabled        : true,
