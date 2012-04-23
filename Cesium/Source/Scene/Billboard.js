@@ -610,8 +610,8 @@ define([
                (this._position.equals(other._position)) &&
                (this._pixelOffset.equals(other._pixelOffset)) &&
                (this._eyeOffset.equals(other._eyeOffset)) &&
-               (this._horizontalOrigin.value === other._horizontalOrigin.value) &&
-               (this._verticalOrigin.value === other._verticalOrigin.value) &&
+               (this._horizontalOrigin === other._horizontalOrigin) &&
+               (this._verticalOrigin === other._verticalOrigin) &&
                (this._scale === other._scale) &&
                (this._imageIndex === other._imageIndex) &&
                (shallowEquals(this._color, other._color));

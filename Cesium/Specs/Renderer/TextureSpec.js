@@ -188,8 +188,8 @@
             var bytes = new Uint8Array([0, 255, 0, 255]);
 
             texture = context.createTexture2D({
-                pixelFormat : pixelFormat.RGBA,                          // Default
-                glPixelDatatype : Cesium.PixelDatatype.UNSIGNED_BYTE,  // Default
+                pixelFormat : pixelFormat.RGBA,                      // Default
+                pixelDatatype : Cesium.PixelDatatype.UNSIGNED_BYTE,  // Default
                 source : {
                     width : 1,
                     height : 1,
@@ -204,8 +204,8 @@
             texture = context.createTexture2D({
                 width : 1,
                 height : 1,
-                pixelFormat : pixelFormat.RGBA,                         // Default
-                glPixelDatatype : Cesium.PixelDatatype.UNSIGNED_BYTE  // Default
+                pixelFormat : pixelFormat.RGBA,                     // Default
+                pixelDatatype : Cesium.PixelDatatype.UNSIGNED_BYTE  // Default
             });
 
             var bytes = new Uint8Array([255, 0, 255, 0]);

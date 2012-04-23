@@ -89,10 +89,11 @@ define([
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(target, this._texture);
 
+        //Firefox bug: texSubImage2D has overloads and can't resolve our enums, so we use + to explicitly convert to a number.
         if (source.arrayBufferView) {
-            gl.texSubImage2D(targetFace, 0, xOffset, yOffset, width, height, this._pixelFormat.value, this._pixelDatatype.value, source.arrayBufferView);
+            gl.texSubImage2D(targetFace, 0, xOffset, yOffset, width, height, +this._pixelFormat, +this._pixelDatatype, source.arrayBufferView);
         } else {
-            gl.texSubImage2D(targetFace, 0, xOffset, yOffset, this._pixelFormat.value, this._pixelDatatype.value, source);
+            gl.texSubImage2D(targetFace, 0, xOffset, yOffset, +this._pixelFormat, +this._pixelDatatype, source);
         }
 
         gl.bindTexture(target, null);
@@ -330,14 +331,13 @@ define([
         var target = this._textureTarget;
 
         hint = hint || MipmapHint.DONT_CARE;
-        var glHint = hint.value;
-        if ((glHint !== gl.DONT_CARE) &&
-            (glHint !== gl.FASTEST) &&
-            (glHint !== gl.NICEST)) {
+        if ((hint !== MipmapHint.DONT_CARE) &&
+            (hint !== MipmapHint.FASTEST) &&
+            (hint !== MipmapHint.NICEST)) {
             throw new DeveloperError("Invalid hint.", "hint");
         }
 
-        gl.hint(gl.GENERATE_MIPMAP_HINT, glHint);
+        gl.hint(gl.GENERATE_MIPMAP_HINT, hint);
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(target, this._texture);
         gl.generateMipmap(target);

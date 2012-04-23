@@ -1,9 +1,10 @@
 /*global define*/
 define([
         '../Core/DeveloperError',
-        '../Core/RuntimeError',
         '../Core/destroyObject',
         '../Core/IndexDatatype',
+        '../Core/RuntimeError',
+        '../Core/PrimitiveType',
         '../Shaders/BuiltinFunctions',
         './Buffer',
         './BufferUsage',
@@ -34,9 +35,10 @@ define([
         './VertexLayout'
     ], function(
         DeveloperError,
-        RuntimeError,
         destroyObject,
         IndexDatatype,
+        RuntimeError,
+        PrimitiveType,
         ShadersBuiltinFunctions,
         Buffer,
         BufferUsage,
@@ -261,7 +263,7 @@ define([
     };
 
     Context.prototype._applyFrontFace = function(frontFace) {
-        this._gl.frontFace(frontFace.value);
+        this._gl.frontFace(frontFace);
     };
 
     Context.prototype._applyCull = function(cull) {
@@ -271,7 +273,7 @@ define([
         this._enableOrDisable(gl.CULL_FACE, enabled);
 
         if (enabled) {
-            gl.cullFace(cull.face.value);
+            gl.cullFace(cull.face);
         }
     };
 
@@ -315,7 +317,7 @@ define([
         this._enableOrDisable(gl.DEPTH_TEST, enabled);
 
         if (enabled) {
-            gl.depthFunc(depthTest.func.value);
+            gl.depthFunc(depthTest.func);
         }
     };
 
@@ -347,8 +349,8 @@ define([
             var functionDestinationAlpha = blending.functionDestinationAlpha;
 
             gl.blendColor(color.red, color.green, color.blue, color.alpha);
-            gl.blendEquationSeparate(equationRgb.value, equationAlpha.value);
-            gl.blendFuncSeparate(functionSourceRgb.value, functionDestinationRgb.value, functionSourceAlpha.value, functionDestinationAlpha.value);
+            gl.blendEquationSeparate(equationRgb, equationAlpha);
+            gl.blendFuncSeparate(functionSourceRgb, functionDestinationRgb, functionSourceAlpha, functionDestinationAlpha);
         }
     };
 
@@ -367,23 +369,23 @@ define([
             // Section 6.8 of the WebGL spec requires the reference and masks to be the same for
             // front- and back-face tests.  This call prevents invalid operation errors when calling
             // stencilFuncSeparate on Firefox.  Perhaps they should delay validation to avoid requiring this.
-            gl.stencilFunc(stencilTest.frontFunction.value, stencilTest.reference, stencilTest.mask);
-            gl.stencilFuncSeparate(gl.BACK, backFunction.value, reference, mask);
-            gl.stencilFuncSeparate(gl.FRONT, frontFunction.value, reference, mask);
+            gl.stencilFunc(stencilTest.frontFunction, stencilTest.reference, stencilTest.mask);
+            gl.stencilFuncSeparate(gl.BACK, backFunction, reference, mask);
+            gl.stencilFuncSeparate(gl.FRONT, frontFunction, reference, mask);
 
             var frontOperation = stencilTest.frontOperation;
             var frontOperationFail = frontOperation.fail;
             var frontOperationZFail = frontOperation.zFail;
             var frontOperationZPass = frontOperation.zPass;
 
-            gl.stencilOpSeparate(gl.FRONT, frontOperationFail.value, frontOperationZFail.value, frontOperationZPass.value);
+            gl.stencilOpSeparate(gl.FRONT, frontOperationFail, frontOperationZFail, frontOperationZPass);
 
             var backOperation = stencilTest.backOperation;
             var backOperationFail = backOperation.fail;
             var backOperationZFail = backOperation.zFail;
             var backOperationZPass = backOperation.zPass;
 
-            gl.stencilOpSeparate(gl.BACK, backOperationFail.value, backOperationZFail.value, backOperationZPass.value);
+            gl.stencilOpSeparate(gl.BACK, backOperationFail, backOperationZFail, backOperationZPass);
         }
     };
 
@@ -1131,10 +1133,10 @@ define([
             throw new DeveloperError("The size in bytes must be greater than zero.", "arrayViewOrSizeInBytes");
         }
 
-        var glUsage = usage.value;
-        if ((glUsage !== gl.STATIC_DRAW) &&
-            (glUsage !== gl.STREAM_DRAW) &&
-            (glUsage !== gl.DYNAMIC_DRAW)) {
+        var glUsage = usage;
+        if ((glUsage !== BufferUsage.STATIC_DRAW) &&
+            (glUsage !== BufferUsage.STREAM_DRAW) &&
+            (glUsage !== BufferUsage.DYNAMIC_DRAW)) {
             throw new DeveloperError("Invalid usage.", "usage");
         }
 
@@ -1227,10 +1229,9 @@ define([
         var gl = this._gl;
         var bytesPerIndex;
 
-        var glIndexDatatype = indexDatatype.value;
-        if (glIndexDatatype === gl.UNSIGNED_BYTE) {
+        if (indexDatatype === IndexDatatype.UNSIGNED_BYTE) {
             bytesPerIndex = Uint8Array.BYTES_PER_ELEMENT;
-        } else if (glIndexDatatype === gl.UNSIGNED_SHORT) {
+        } else if (indexDatatype === IndexDatatype.UNSIGNED_SHORT) {
             bytesPerIndex = Uint16Array.BYTES_PER_ELEMENT;
         } else {
             throw new DeveloperError("Invalid indexDatatype.", "indexDatatype");
@@ -1397,27 +1398,25 @@ define([
 
         var gl = this._gl;
         var pixelFormat = description.pixelFormat || PixelFormat.RGBA;
-        var glPixelFormat = pixelFormat.value;
-        if ((glPixelFormat !== gl.ALPHA) &&
-            (glPixelFormat !== gl.RGB) &&
-            (glPixelFormat !== gl.RGBA) &&
-            (glPixelFormat !== gl.LUMINANCE) &&
-            (glPixelFormat !== gl.LUMINANCE_ALPHA)) {
+        if ((pixelFormat !== PixelFormat.ALPHA) &&
+            (pixelFormat !== PixelFormat.RGB) &&
+            (pixelFormat !== PixelFormat.RGBA) &&
+            (pixelFormat !== PixelFormat.LUMINANCE) &&
+            (pixelFormat !== PixelFormat.LUMINANCE_ALPHA)) {
             throw new DeveloperError("Invalid description.pixelFormat.", "description");
         }
 
         var pixelDatatype = description.pixelDatatype || PixelDatatype.UNSIGNED_BYTE;
-        var glPixelDatatype = pixelDatatype.value;
-        if ((glPixelDatatype !== gl.UNSIGNED_BYTE) &&
-            (glPixelDatatype !== gl.UNSIGNED_SHORT_5_6_5) &&
-            (glPixelDatatype !== gl.UNSIGNED_SHORT_4_4_4_4) &&
-            (glPixelDatatype !== gl.UNSIGNED_SHORT_5_5_5_1)) {
+        if ((pixelDatatype !== PixelDatatype.UNSIGNED_BYTE) &&
+            (pixelDatatype !== PixelDatatype.UNSIGNED_SHORT_5_6_5) &&
+            (pixelDatatype !== PixelDatatype.UNSIGNED_SHORT_4_4_4_4) &&
+            (pixelDatatype !== PixelDatatype.UNSIGNED_SHORT_5_5_5_1)) {
             throw new DeveloperError("Invalid description.pixelDatatype.", "description");
         }
 
         // Use premultiplied alpha for opaque textures should perform better on Chrome:
         // http://media.tojicode.com/webglCamp4/#20
-        var preMultiplyAlpha = description.preMultiplyAlpha || ((glPixelFormat === gl.RGB) || (glPixelFormat === gl.LUMINANCE));
+        var preMultiplyAlpha = description.preMultiplyAlpha || ((pixelFormat === PixelFormat.RGB) || (pixelFormat === PixelFormat.LUMINANCE));
 
         var textureTarget = gl.TEXTURE_2D;
         var texture = gl.createTexture();
@@ -1431,13 +1430,13 @@ define([
         if (source) {
             if (source.arrayBufferView) {
                 // Source: typed array
-                gl.texImage2D(textureTarget, 0, glPixelFormat, width, height, 0, glPixelFormat, glPixelDatatype, source.arrayBufferView);
+                gl.texImage2D(textureTarget, 0, pixelFormat, width, height, 0, pixelFormat, pixelDatatype, source.arrayBufferView);
             } else {
                 // Source: ImageData, HTMLImageElement, HTMLCanvasElement, or HTMLVideoElement
-                gl.texImage2D(textureTarget, 0, glPixelFormat, glPixelFormat, glPixelDatatype, source);
+                gl.texImage2D(textureTarget, 0, pixelFormat, pixelFormat, pixelDatatype, source);
             }
         } else {
-            gl.texImage2D(textureTarget, 0, glPixelFormat, width, height, 0, glPixelFormat, glPixelDatatype, null);
+            gl.texImage2D(textureTarget, 0, pixelFormat, width, height, 0, pixelFormat, pixelDatatype, null);
         }
         gl.bindTexture(textureTarget, null);
 
@@ -1470,13 +1469,11 @@ define([
     Context.prototype.createTexture2DFromFramebuffer = function(pixelFormat, framebufferXOffset, framebufferYOffset, width, height) {
         var gl = this._gl;
         pixelFormat = pixelFormat || PixelFormat.RGB;
-        var glPixelFormat = pixelFormat.value;
-        if (!glPixelFormat ||
-            (glPixelFormat !== gl.ALPHA) &&
-            (glPixelFormat !== gl.RGB) &&
-            (glPixelFormat !== gl.RGBA) &&
-            (glPixelFormat !== gl.LUMINANCE) &&
-            (glPixelFormat !== gl.LUMINANCE_ALPHA)) {
+        if ((pixelFormat !== PixelFormat.ALPHA) &&
+            (pixelFormat !== PixelFormat.RGB) &&
+            (pixelFormat !== PixelFormat.RGBA) &&
+            (pixelFormat !== PixelFormat.LUMINANCE) &&
+            (pixelFormat !== PixelFormat.LUMINANCE_ALPHA)) {
             throw new DeveloperError("Invalid pixelFormat.", "pixelFormat");
         }
 
@@ -1506,7 +1503,7 @@ define([
 
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(textureTarget, texture);
-        gl.copyTexImage2D(textureTarget, 0, glPixelFormat, framebufferXOffset, framebufferYOffset, width, height, 0);
+        gl.copyTexImage2D(textureTarget, 0, pixelFormat, framebufferXOffset, framebufferYOffset, width, height, 0);
         gl.bindTexture(textureTarget, null);
 
         return new Texture(gl, this._textureFilterAnisotropic, textureTarget, texture, pixelFormat, undefined, width, height);
@@ -1591,27 +1588,25 @@ define([
 
         var gl = this._gl;
         var pixelFormat = description.pixelFormat || PixelFormat.RGBA;
-        var glPixelFormat = pixelFormat.value;
-        if ((glPixelFormat !== gl.ALPHA) &&
-            (glPixelFormat !== gl.RGB) &&
-            (glPixelFormat !== gl.RGBA) &&
-            (glPixelFormat !== gl.LUMINANCE) &&
-            (glPixelFormat !== gl.LUMINANCE_ALPHA)) {
+        if ((pixelFormat !== PixelFormat.ALPHA) &&
+            (pixelFormat !== PixelFormat.RGB) &&
+            (pixelFormat !== PixelFormat.RGBA) &&
+            (pixelFormat !== PixelFormat.LUMINANCE) &&
+            (pixelFormat !== PixelFormat.LUMINANCE_ALPHA)) {
             throw new DeveloperError("Invalid description.pixelFormat.", "description");
         }
 
         var pixelDatatype = description.pixelDatatype || PixelDatatype.UNSIGNED_BYTE;
-        var glPixelDatatype = pixelDatatype.value;
-        if ((glPixelDatatype !== gl.UNSIGNED_BYTE) &&
-            (glPixelDatatype !== gl.UNSIGNED_SHORT_5_6_5) &&
-            (glPixelDatatype !== gl.UNSIGNED_SHORT_4_4_4_4) &&
-            (glPixelDatatype !== gl.UNSIGNED_SHORT_5_5_5_1)) {
+        if ((pixelDatatype !== PixelDatatype.UNSIGNED_BYTE) &&
+            (pixelDatatype !== PixelDatatype.UNSIGNED_SHORT_5_6_5) &&
+            (pixelDatatype !== PixelDatatype.UNSIGNED_SHORT_4_4_4_4) &&
+            (pixelDatatype !== PixelDatatype.UNSIGNED_SHORT_5_5_5_1)) {
             throw new DeveloperError("Invalid description.pixelDatatype.", "description");
         }
 
         // Use premultiplied alpha for opaque textures should perform better on Chrome:
         // http://media.tojicode.com/webglCamp4/#20
-        var preMultiplyAlpha = description.preMultiplyAlpha || ((glPixelFormat === gl.RGB) || (glPixelFormat === gl.LUMINANCE));
+        var preMultiplyAlpha = description.preMultiplyAlpha || ((pixelFormat === PixelFormat.RGB) || (pixelFormat === PixelFormat.LUMINANCE));
 
         var textureTarget = gl.TEXTURE_CUBE_MAP;
         var texture = gl.createTexture();
@@ -1624,9 +1619,9 @@ define([
 
         function createFace(target, sourceFace) {
             if (sourceFace.arrayBufferView) {
-                gl.texImage2D(target, 0, glPixelFormat, size, size, 0, glPixelFormat, glPixelDatatype, sourceFace.arrayBufferView);
+                gl.texImage2D(target, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, sourceFace.arrayBufferView);
             } else {
-                gl.texImage2D(target, 0, glPixelFormat, glPixelFormat, glPixelDatatype, sourceFace);
+                gl.texImage2D(target, 0, pixelFormat, pixelFormat, pixelDatatype, sourceFace);
             }
         }
 
@@ -1638,12 +1633,12 @@ define([
             createFace(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, source.positiveZ);
             createFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, source.negativeZ);
         } else {
-            gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, glPixelFormat, size, size, 0, glPixelFormat, glPixelDatatype, null);
-            gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, glPixelFormat, size, size, 0, glPixelFormat, glPixelDatatype, null);
-            gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, glPixelFormat, size, size, 0, glPixelFormat, glPixelDatatype, null);
-            gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, glPixelFormat, size, size, 0, glPixelFormat, glPixelDatatype, null);
-            gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, glPixelFormat, size, size, 0, glPixelFormat, glPixelDatatype, null);
-            gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, glPixelFormat, size, size, 0, glPixelFormat, glPixelDatatype, null);
+            gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, null);
+            gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, null);
+            gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, null);
+            gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, null);
+            gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, null);
+            gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, null);
         }
         gl.bindTexture(textureTarget, null);
 
@@ -1708,13 +1703,12 @@ define([
         var height = (typeof description.height === "undefined") ? this._canvas.clientHeight : description.height;
 
         var gl = this._gl;
-        var glFormat = format.value;
-        if ((glFormat !== gl.RGBA4) &&
-            (glFormat !== gl.RGB5_A1) &&
-            (glFormat !== gl.RGB565) &&
-            (glFormat !== gl.DEPTH_COMPONENT16) &&
-            (glFormat !== gl.STENCIL_INDEX8) &&
-            (glFormat !== gl.DEPTH_STENCIL)) {
+        if ((format !== RenderbufferFormat.RGBA4) &&
+            (format !== RenderbufferFormat.RGB5_A1) &&
+            (format !== RenderbufferFormat.RGB565) &&
+            (format !== RenderbufferFormat.DEPTH_COMPONENT16) &&
+            (format !== RenderbufferFormat.STENCIL_INDEX8) &&
+            (format !== RenderbufferFormat.DEPTH_STENCIL)) {
             throw new DeveloperError("Invalid format.", "description");
         }
 
@@ -1865,14 +1859,14 @@ define([
 
         // Validate
 
-        if ((r.frontFace.value !== FrontFace.CLOCKWISE.value) &&
-            (r.frontFace.value !== FrontFace.COUNTER_CLOCKWISE.value)) {
+        if ((r.frontFace !== FrontFace.CLOCKWISE) &&
+            (r.frontFace !== FrontFace.COUNTER_CLOCKWISE)) {
             throw new DeveloperError("Invalid renderState.frontFace.", "renderState");
         }
 
-        if ((r.cull.face.value !== CullFace.FRONT.value) &&
-            (r.cull.face.value !== CullFace.BACK.value) &&
-            (r.cull.face.value !== CullFace.FRONT_AND_BACK.value)) {
+        if ((r.cull.face !== CullFace.FRONT) &&
+            (r.cull.face !== CullFace.BACK) &&
+            (r.cull.face !== CullFace.FRONT_AND_BACK)) {
             throw new DeveloperError("Invalid renderState.cull.face.", "renderState");
         }
 
@@ -1901,14 +1895,14 @@ define([
             throw new DeveloperError("renderState.depthRange.far must be less than or equal to one.", "renderState");
         }
 
-        if ((r.depthTest.func.value !== DepthFunction.NEVER.value) &&
-            (r.depthTest.func.value !== DepthFunction.LESS.value) &&
-            (r.depthTest.func.value !== DepthFunction.EQUAL.value) &&
-            (r.depthTest.func.value !== DepthFunction.LESS_OR_EQUAL.value) &&
-            (r.depthTest.func.value !== DepthFunction.GREATER.value) &&
-            (r.depthTest.func.value !== DepthFunction.NOT_EQUAL.value) &&
-            (r.depthTest.func.value !== DepthFunction.GREATER_OR_EQUAL.value) &&
-            (r.depthTest.func.value !== DepthFunction.ALWAYS.value)) {
+        if ((r.depthTest.func !== DepthFunction.NEVER) &&
+            (r.depthTest.func !== DepthFunction.LESS) &&
+            (r.depthTest.func !== DepthFunction.EQUAL) &&
+            (r.depthTest.func !== DepthFunction.LESS_OR_EQUAL) &&
+            (r.depthTest.func !== DepthFunction.GREATER) &&
+            (r.depthTest.func !== DepthFunction.NOT_EQUAL) &&
+            (r.depthTest.func !== DepthFunction.GREATER_OR_EQUAL) &&
+            (r.depthTest.func !== DepthFunction.ALWAYS)) {
             throw new DeveloperError("Invalid renderState.depthTest.func.", "renderState");
         }
 
@@ -1920,104 +1914,104 @@ define([
             throw new DeveloperError("renderState.blending.color components must be greater than or equal to zero and less than or equal to one.", "renderState");
         }
 
-        if ((r.blending.equationRgb.value !== BlendEquation.ADD.value) &&
-            (r.blending.equationRgb.value !== BlendEquation.SUBTRACT.value) &&
-            (r.blending.equationRgb.value !== BlendEquation.REVERSE_SUBTRACT.value)) {
+        if ((r.blending.equationRgb !== BlendEquation.ADD) &&
+            (r.blending.equationRgb !== BlendEquation.SUBTRACT) &&
+            (r.blending.equationRgb !== BlendEquation.REVERSE_SUBTRACT)) {
             throw new DeveloperError("Invalid renderState.blending.equationRgb.", "renderState");
         }
 
-        if ((r.blending.equationAlpha.value !== BlendEquation.ADD.value) &&
-            (r.blending.equationAlpha.value !== BlendEquation.SUBTRACT.value) &&
-            (r.blending.equationAlpha.value !== BlendEquation.REVERSE_SUBTRACT.value)) {
+        if ((r.blending.equationAlpha !== BlendEquation.ADD) &&
+            (r.blending.equationAlpha !== BlendEquation.SUBTRACT) &&
+            (r.blending.equationAlpha !== BlendEquation.REVERSE_SUBTRACT)) {
             throw new DeveloperError("Invalid renderState.blending.equationAlpha.", "renderState");
         }
 
         var functions = {};
-        functions[BlendFunction.ZERO.value] = true;
-        functions[BlendFunction.ONE.value] = true;
-        functions[BlendFunction.SOURCE_COLOR.value] = true;
-        functions[BlendFunction.ONE_MINUS_SOURCE_COLOR.value] = true;
-        functions[BlendFunction.DESTINATION_COLOR.value] = true;
-        functions[BlendFunction.ONE_MINUS_DESTINATION_COLOR.value] = true;
-        functions[BlendFunction.SOURCE_ALPHA.value] = true;
-        functions[BlendFunction.ONE_MINUS_SOURCE_ALPHA.value] = true;
-        functions[BlendFunction.DESTINATION_ALPHA.value] = true;
-        functions[BlendFunction.ONE_MINUS_DESTINATION_ALPHA.value] = true;
-        functions[BlendFunction.CONSTANT_COLOR.value] = true;
-        functions[BlendFunction.ONE_MINUS_CONSTANT_COLOR.value] = true;
-        functions[BlendFunction.CONSTANT_ALPHA.value] = true;
-        functions[BlendFunction.ONE_MINUS_CONSTANT_ALPHA.value] = true;
-        functions[BlendFunction.SOURCE_ALPHA_SATURATE.value] = true;
+        functions[BlendFunction.ZERO] = true;
+        functions[BlendFunction.ONE] = true;
+        functions[BlendFunction.SOURCE_COLOR] = true;
+        functions[BlendFunction.ONE_MINUS_SOURCE_COLOR] = true;
+        functions[BlendFunction.DESTINATION_COLOR] = true;
+        functions[BlendFunction.ONE_MINUS_DESTINATION_COLOR] = true;
+        functions[BlendFunction.SOURCE_ALPHA] = true;
+        functions[BlendFunction.ONE_MINUS_SOURCE_ALPHA] = true;
+        functions[BlendFunction.DESTINATION_ALPHA] = true;
+        functions[BlendFunction.ONE_MINUS_DESTINATION_ALPHA] = true;
+        functions[BlendFunction.CONSTANT_COLOR] = true;
+        functions[BlendFunction.ONE_MINUS_CONSTANT_COLOR] = true;
+        functions[BlendFunction.CONSTANT_ALPHA] = true;
+        functions[BlendFunction.ONE_MINUS_CONSTANT_ALPHA] = true;
+        functions[BlendFunction.SOURCE_ALPHA_SATURATE] = true;
 
-        if (!functions[r.blending.functionSourceRgb.value]) {
+        if (!functions[r.blending.functionSourceRgb]) {
             throw new DeveloperError("Invalid renderState.blending.functionSourceRgb.", "renderState");
         }
 
-        if (!functions[r.blending.functionSourceAlpha.value]) {
+        if (!functions[r.blending.functionSourceAlpha]) {
             throw new DeveloperError("Invalid renderState.blending.functionSourceAlpha.", "renderState");
         }
 
-        if (!functions[r.blending.functionDestinationRgb.value]) {
+        if (!functions[r.blending.functionDestinationRgb]) {
             throw new DeveloperError("Invalid renderState.blending.functionDestinationRgb.", "renderState");
         }
 
-        if (!functions[r.blending.functionDestinationAlpha.value]) {
+        if (!functions[r.blending.functionDestinationAlpha]) {
             throw new DeveloperError("Invalid renderState.blending.functionDestinationAlpha.", "renderState");
         }
 
-        if ((r.stencilTest.frontFunction.value !== StencilFunction.NEVER.value) &&
-            (r.stencilTest.frontFunction.value !== StencilFunction.LESS.value) &&
-            (r.stencilTest.frontFunction.value !== StencilFunction.EQUAL.value) &&
-            (r.stencilTest.frontFunction.value !== StencilFunction.LESS_OR_EQUAL.value) &&
-            (r.stencilTest.frontFunction.value !== StencilFunction.GREATER.value) &&
-            (r.stencilTest.frontFunction.value !== StencilFunction.NOT_EQUAL.value) &&
-            (r.stencilTest.frontFunction.value !== StencilFunction.GREATER_OR_EQUAL.value) &&
-            (r.stencilTest.frontFunction.value !== StencilFunction.ALWAYS.value)) {
+        if ((r.stencilTest.frontFunction !== StencilFunction.NEVER) &&
+            (r.stencilTest.frontFunction !== StencilFunction.LESS) &&
+            (r.stencilTest.frontFunction !== StencilFunction.EQUAL) &&
+            (r.stencilTest.frontFunction !== StencilFunction.LESS_OR_EQUAL) &&
+            (r.stencilTest.frontFunction !== StencilFunction.GREATER) &&
+            (r.stencilTest.frontFunction !== StencilFunction.NOT_EQUAL) &&
+            (r.stencilTest.frontFunction !== StencilFunction.GREATER_OR_EQUAL) &&
+            (r.stencilTest.frontFunction !== StencilFunction.ALWAYS)) {
             throw new DeveloperError("Invalid renderState.stencilTest.frontFunction.", "renderState");
         }
 
-        if ((r.stencilTest.backFunction.value !== StencilFunction.NEVER.value) &&
-            (r.stencilTest.backFunction.value !== StencilFunction.LESS.value) &&
-            (r.stencilTest.backFunction.value !== StencilFunction.EQUAL.value) &&
-            (r.stencilTest.backFunction.value !== StencilFunction.LESS_OR_EQUAL.value) &&
-            (r.stencilTest.backFunction.value !== StencilFunction.GREATER.value) &&
-            (r.stencilTest.backFunction.value !== StencilFunction.NOT_EQUAL.value) &&
-            (r.stencilTest.backFunction.value !== StencilFunction.GREATER_OR_EQUAL.value) &&
-            (r.stencilTest.backFunction.value !== StencilFunction.ALWAYS.value)) {
+        if ((r.stencilTest.backFunction !== StencilFunction.NEVER) &&
+            (r.stencilTest.backFunction !== StencilFunction.LESS) &&
+            (r.stencilTest.backFunction !== StencilFunction.EQUAL) &&
+            (r.stencilTest.backFunction !== StencilFunction.LESS_OR_EQUAL) &&
+            (r.stencilTest.backFunction !== StencilFunction.GREATER) &&
+            (r.stencilTest.backFunction !== StencilFunction.NOT_EQUAL) &&
+            (r.stencilTest.backFunction !== StencilFunction.GREATER_OR_EQUAL) &&
+            (r.stencilTest.backFunction !== StencilFunction.ALWAYS)) {
             throw new DeveloperError("Invalid renderState.stencilTest.backFunction.", "renderState");
         }
 
         var operations = {};
-        operations[StencilOperation.ZERO.value] = true;
-        operations[StencilOperation.KEEP.value] = true;
-        operations[StencilOperation.REPLACE.value] = true;
-        operations[StencilOperation.INCREMENT.value] = true;
-        operations[StencilOperation.DECREMENT.value] = true;
-        operations[StencilOperation.INVERT.value] = true;
-        operations[StencilOperation.INCREMENT_WRAP.value] = true;
-        operations[StencilOperation.DECREMENT_WRAP.value] = true;
+        operations[StencilOperation.ZERO] = true;
+        operations[StencilOperation.KEEP] = true;
+        operations[StencilOperation.REPLACE] = true;
+        operations[StencilOperation.INCREMENT] = true;
+        operations[StencilOperation.DECREMENT] = true;
+        operations[StencilOperation.INVERT] = true;
+        operations[StencilOperation.INCREMENT_WRAP] = true;
+        operations[StencilOperation.DECREMENT_WRAP] = true;
 
-        if (!operations[r.stencilTest.frontOperation.fail.value]) {
+        if (!operations[r.stencilTest.frontOperation.fail]) {
             throw new DeveloperError("Invalid renderState.stencilTest.frontOperation.fail.", "renderState");
         }
 
-        if (!operations[r.stencilTest.frontOperation.zFail.value]) {
+        if (!operations[r.stencilTest.frontOperation.zFail]) {
             throw new DeveloperError("Invalid renderState.stencilTest.frontOperation.zFail.", "renderState");
         }
 
-        if (!operations[r.stencilTest.frontOperation.zPass.value]) {
+        if (!operations[r.stencilTest.frontOperation.zPass]) {
             throw new DeveloperError("Invalid renderState.stencilTest.frontOperation.zPass.", "renderState");
         }
 
-        if (!operations[r.stencilTest.backOperation.fail.value]) {
+        if (!operations[r.stencilTest.backOperation.fail]) {
             throw new DeveloperError("Invalid renderState.stencilTest.backOperation.fail.", "renderState");
         }
 
-        if (!operations[r.stencilTest.backOperation.zFail.value]) {
+        if (!operations[r.stencilTest.backOperation.zFail]) {
             throw new DeveloperError("Invalid renderState.stencilTest.backOperation.zFail.", "renderState");
         }
 
-        if (!operations[r.stencilTest.backOperation.zPass.value]) {
+        if (!operations[r.stencilTest.backOperation.zPass]) {
             throw new DeveloperError("Invalid renderState.stencilTest.backOperation.zPass.", "renderState");
         }
 
@@ -2047,33 +2041,33 @@ define([
         };
 
         var gl = this._gl;
-        var wrapS = s.wrapS.value;
-        if ((wrapS !== gl.CLAMP_TO_EDGE) &&
-            (wrapS !== gl.REPEAT) &&
-            (wrapS !== gl.MIRRORED_REPEAT)) {
+        var wrapS = s.wrapS;
+        if ((wrapS !== TextureWrap.CLAMP) &&
+            (wrapS !== TextureWrap.REPEAT) &&
+            (wrapS !== TextureWrap.MIRRORED_REPEAT)) {
             throw new DeveloperError("Invalid sampler.wrapS.", "sampler");
         }
 
-        var wrapT = s.wrapT.value;
-        if ((wrapT !== gl.CLAMP_TO_EDGE) &&
-            (wrapT !== gl.REPEAT) &&
-            (wrapT !== gl.MIRRORED_REPEAT)) {
+        var wrapT = s.wrapT;
+        if ((wrapT !== TextureWrap.CLAMP) &&
+            (wrapT !== TextureWrap.REPEAT) &&
+            (wrapT !== TextureWrap.MIRRORED_REPEAT)) {
             throw new DeveloperError("Invalid sampler.wrapT.", "sampler");
         }
 
-        var minificationFilter = s.minificationFilter.value;
-        if ((minificationFilter !== gl.NEAREST) &&
-            (minificationFilter !== gl.LINEAR) &&
-            (minificationFilter !== gl.NEAREST_MIPMAP_NEAREST) &&
-            (minificationFilter !== gl.LINEAR_MIPMAP_NEAREST) &&
-            (minificationFilter !== gl.NEAREST_MIPMAP_LINEAR) &&
-            (minificationFilter !== gl.LINEAR_MIPMAP_LINEAR)) {
+        var minificationFilter = s.minificationFilter;
+        if ((minificationFilter !== TextureMinificationFilter.NEAREST) &&
+            (minificationFilter !== TextureMinificationFilter.LINEAR) &&
+            (minificationFilter !== TextureMinificationFilter.NEAREST_MIPMAP_NEAREST) &&
+            (minificationFilter !== TextureMinificationFilter.LINEAR_MIPMAP_NEAREST) &&
+            (minificationFilter !== TextureMinificationFilter.NEAREST_MIPMAP_LINEAR) &&
+            (minificationFilter !== TextureMinificationFilter.LINEAR_MIPMAP_LINEAR)) {
             throw new DeveloperError("Invalid sampler.minificationFilter.", "sampler");
         }
 
-        var magnificationFilter = s.magnificationFilter.value;
-        if ((magnificationFilter !== gl.NEAREST) &&
-            (magnificationFilter !== gl.LINEAR)) {
+        var magnificationFilter = s.magnificationFilter;
+        if ((magnificationFilter !== TextureMagnificationFilter.NEAREST) &&
+            (magnificationFilter !== TextureMagnificationFilter.LINEAR)) {
             throw new DeveloperError("Invalid sampler.magnificationFilter.", "sampler");
         }
 
@@ -2366,14 +2360,13 @@ define([
         }
 
         var gl = this._gl;
-        var glPrimitiveType = primitiveType.value;
-        if ((glPrimitiveType !== gl.POINTS) &&
-            (glPrimitiveType !== gl.LINES) &&
-            (glPrimitiveType !== gl.LINE_LOOP) &&
-            (glPrimitiveType !== gl.LINE_STRIP) &&
-            (glPrimitiveType !== gl.TRIANGLES) &&
-            (glPrimitiveType !== gl.TRIANGLE_STRIP) &&
-            (glPrimitiveType !== gl.TRIANGLE_FAN)) {
+        if ((primitiveType !== PrimitiveType.POINTS) &&
+            (primitiveType !== PrimitiveType.LINES) &&
+            (primitiveType !== PrimitiveType.LINE_LOOP) &&
+            (primitiveType !== PrimitiveType.LINE_STRIP) &&
+            (primitiveType !== PrimitiveType.TRIANGLES) &&
+            (primitiveType !== PrimitiveType.TRIANGLE_STRIP) &&
+            (primitiveType !== PrimitiveType.TRIANGLE_FAN)) {
             throw new DeveloperError("drawArguments.primitiveType is required and must be valid.", "drawArguments");
         }
 
@@ -2406,9 +2399,9 @@ define([
             va._bind();
 
             if (indexBuffer) {
-                gl.drawElements(glPrimitiveType, count, indexBuffer.getIndexDatatype().value, offset);
+                gl.drawElements(primitiveType, count, indexBuffer.getIndexDatatype().value, offset);
             } else {
-                gl.drawArrays(glPrimitiveType, offset, count);
+                gl.drawArrays(primitiveType, offset, count);
             }
 
             va._unBind();
@@ -2594,7 +2587,7 @@ define([
         var mesh = ca.mesh || {};
         var attributeIndices = ca.attributeIndices || {};
         var bufferUsage = ca.bufferUsage || BufferUsage.DYNAMIC_DRAW;
-        var interleave = ca.vertexLayout && (ca.vertexLayout.value === VertexLayout.INTERLEAVED.value);
+        var interleave = ca.vertexLayout && (ca.vertexLayout === VertexLayout.INTERLEAVED);
 
         var name;
         var attribute;

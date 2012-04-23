@@ -333,7 +333,7 @@ define([
             var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions);
 
             var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
-            if (originalWindingOrder.value === WindingOrder.CLOCKWISE.value) {
+            if (originalWindingOrder === WindingOrder.CLOCKWISE) {
                 positions2D.reverse();
                 cleanedPositions.reverse();
             }
@@ -437,7 +437,7 @@ define([
                     (this._ellipsoid !== this.ellipsoid) ||
                     (this._height !== this.height) ||
                     (this._granularity !== granularity) ||
-                    (this._bufferUsage.value !== this.bufferUsage.value) ||
+                    (this._bufferUsage !== this.bufferUsage) ||
                     (Polygon._isModeTransition(this._mode, mode)) ||
                     (this._projection !== projection)) {
                 this._createVertexArray = false;

@@ -341,7 +341,7 @@ define([
             }
 
             // Recreate vertex buffer when directions change
-            if ((this._directionsDirty) || (this._bufferUsage.value !== this.bufferUsage.value)) {
+            if ((this._directionsDirty) || (this._bufferUsage !== this.bufferUsage)) {
                 this._directionsDirty = false;
                 this._bufferUsage = this.bufferUsage;
                 this._va = this._va && this._va.destroy();

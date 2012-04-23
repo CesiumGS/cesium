@@ -72,7 +72,7 @@
         });
 
         it("gets default bufferusage", function() {
-            expect(polyline.bufferUsage).toEqualEnumeration(Cesium.BufferUsage.STATIC_DRAW);
+            expect(polyline.bufferUsage).toEqual(Cesium.BufferUsage.STATIC_DRAW);
         });
 
         it("updates", function() {

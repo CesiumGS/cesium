@@ -123,23 +123,23 @@
             expect(sp.getAllUniforms().u_sampler2D.getName()).toEqual("u_sampler2D");
             expect(sp.getAllUniforms().u_samplerCube.getName()).toEqual("u_samplerCube");
                         
-            expect(sp.getAllUniforms().u_float.getDatatype()).toEqualEnumeration(Cesium.UniformDatatype.FLOAT);
-            expect(sp.getAllUniforms().u_vec2.getDatatype()).toEqualEnumeration(Cesium.UniformDatatype.FLOAT_VECTOR2);
-            expect(sp.getAllUniforms().u_vec3.getDatatype()).toEqualEnumeration(Cesium.UniformDatatype.FLOAT_VECTOR3);
-            expect(sp.getAllUniforms().u_vec4.getDatatype()).toEqualEnumeration(Cesium.UniformDatatype.FLOAT_VECTOR4);
-            expect(sp.getAllUniforms().u_int.getDatatype()).toEqualEnumeration(Cesium.UniformDatatype.INT);
-            expect(sp.getAllUniforms().u_ivec2.getDatatype()).toEqualEnumeration(Cesium.UniformDatatype.INT_VECTOR2);
-            expect(sp.getAllUniforms().u_ivec3.getDatatype()).toEqualEnumeration(Cesium.UniformDatatype.INT_VECTOR3);
-            expect(sp.getAllUniforms().u_ivec4.getDatatype()).toEqualEnumeration(Cesium.UniformDatatype.INT_VECTOR4);
-            expect(sp.getAllUniforms().u_bool.getDatatype()).toEqualEnumeration(Cesium.UniformDatatype.BOOL);
-            expect(sp.getAllUniforms().u_bvec2.getDatatype()).toEqualEnumeration(Cesium.UniformDatatype.BOOL_VECTOR2);
-            expect(sp.getAllUniforms().u_bvec3.getDatatype()).toEqualEnumeration(Cesium.UniformDatatype.BOOL_VECTOR3);
-            expect(sp.getAllUniforms().u_bvec4.getDatatype()).toEqualEnumeration(Cesium.UniformDatatype.BOOL_VECTOR4);
-            expect(sp.getAllUniforms().u_mat2.getDatatype()).toEqualEnumeration(Cesium.UniformDatatype.FLOAT_MATRIX2);
-            expect(sp.getAllUniforms().u_mat3.getDatatype()).toEqualEnumeration(Cesium.UniformDatatype.FLOAT_MATRIX3);
-            expect(sp.getAllUniforms().u_mat4.getDatatype()).toEqualEnumeration(Cesium.UniformDatatype.FLOAT_MATRIX4);
-            expect(sp.getAllUniforms().u_sampler2D.getDatatype()).toEqualEnumeration(Cesium.UniformDatatype.SAMPLER_2D);
-            expect(sp.getAllUniforms().u_samplerCube.getDatatype()).toEqualEnumeration(Cesium.UniformDatatype.SAMPLER_CUBE);
+            expect(sp.getAllUniforms().u_float.getDatatype()).toEqual(Cesium.UniformDatatype.FLOAT);
+            expect(sp.getAllUniforms().u_vec2.getDatatype()).toEqual(Cesium.UniformDatatype.FLOAT_VECTOR2);
+            expect(sp.getAllUniforms().u_vec3.getDatatype()).toEqual(Cesium.UniformDatatype.FLOAT_VECTOR3);
+            expect(sp.getAllUniforms().u_vec4.getDatatype()).toEqual(Cesium.UniformDatatype.FLOAT_VECTOR4);
+            expect(sp.getAllUniforms().u_int.getDatatype()).toEqual(Cesium.UniformDatatype.INT);
+            expect(sp.getAllUniforms().u_ivec2.getDatatype()).toEqual(Cesium.UniformDatatype.INT_VECTOR2);
+            expect(sp.getAllUniforms().u_ivec3.getDatatype()).toEqual(Cesium.UniformDatatype.INT_VECTOR3);
+            expect(sp.getAllUniforms().u_ivec4.getDatatype()).toEqual(Cesium.UniformDatatype.INT_VECTOR4);
+            expect(sp.getAllUniforms().u_bool.getDatatype()).toEqual(Cesium.UniformDatatype.BOOL);
+            expect(sp.getAllUniforms().u_bvec2.getDatatype()).toEqual(Cesium.UniformDatatype.BOOL_VECTOR2);
+            expect(sp.getAllUniforms().u_bvec3.getDatatype()).toEqual(Cesium.UniformDatatype.BOOL_VECTOR3);
+            expect(sp.getAllUniforms().u_bvec4.getDatatype()).toEqual(Cesium.UniformDatatype.BOOL_VECTOR4);
+            expect(sp.getAllUniforms().u_mat2.getDatatype()).toEqual(Cesium.UniformDatatype.FLOAT_MATRIX2);
+            expect(sp.getAllUniforms().u_mat3.getDatatype()).toEqual(Cesium.UniformDatatype.FLOAT_MATRIX3);
+            expect(sp.getAllUniforms().u_mat4.getDatatype()).toEqual(Cesium.UniformDatatype.FLOAT_MATRIX4);
+            expect(sp.getAllUniforms().u_sampler2D.getDatatype()).toEqual(Cesium.UniformDatatype.SAMPLER_2D);
+            expect(sp.getAllUniforms().u_samplerCube.getDatatype()).toEqual(Cesium.UniformDatatype.SAMPLER_CUBE);
         });
                 
         it("has a struct uniform", function () {
@@ -205,23 +205,23 @@
             expect(sp.getAllUniforms().u_sampler2D.getName()).toEqual("u_sampler2D");
             expect(sp.getAllUniforms().u_samplerCube.getName()).toEqual("u_samplerCube");
                         
-            expect(sp.getAllUniforms().u_float.getDatatype()).toEqualEnumeration(Cesium.UniformDatatype.FLOAT);
-            expect(sp.getAllUniforms().u_vec2.getDatatype()).toEqualEnumeration(Cesium.UniformDatatype.FLOAT_VECTOR2);
-            expect(sp.getAllUniforms().u_vec3.getDatatype()).toEqualEnumeration(Cesium.UniformDatatype.FLOAT_VECTOR3);
-            expect(sp.getAllUniforms().u_vec4.getDatatype()).toEqualEnumeration(Cesium.UniformDatatype.FLOAT_VECTOR4);
-            expect(sp.getAllUniforms().u_int.getDatatype()).toEqualEnumeration(Cesium.UniformDatatype.INT);
-            expect(sp.getAllUniforms().u_ivec2.getDatatype()).toEqualEnumeration(Cesium.UniformDatatype.INT_VECTOR2);
-            expect(sp.getAllUniforms().u_ivec3.getDatatype()).toEqualEnumeration(Cesium.UniformDatatype.INT_VECTOR3);
-            expect(sp.getAllUniforms().u_ivec4.getDatatype()).toEqualEnumeration(Cesium.UniformDatatype.INT_VECTOR4);
-            expect(sp.getAllUniforms().u_bool.getDatatype()).toEqualEnumeration(Cesium.UniformDatatype.BOOL);
-            expect(sp.getAllUniforms().u_bvec2.getDatatype()).toEqualEnumeration(Cesium.UniformDatatype.BOOL_VECTOR2);
-            expect(sp.getAllUniforms().u_bvec3.getDatatype()).toEqualEnumeration(Cesium.UniformDatatype.BOOL_VECTOR3);
-            expect(sp.getAllUniforms().u_bvec4.getDatatype()).toEqualEnumeration(Cesium.UniformDatatype.BOOL_VECTOR4);
-            expect(sp.getAllUniforms().u_mat2.getDatatype()).toEqualEnumeration(Cesium.UniformDatatype.FLOAT_MATRIX2);
-            expect(sp.getAllUniforms().u_mat3.getDatatype()).toEqualEnumeration(Cesium.UniformDatatype.FLOAT_MATRIX3);
-            expect(sp.getAllUniforms().u_mat4.getDatatype()).toEqualEnumeration(Cesium.UniformDatatype.FLOAT_MATRIX4);
-            expect(sp.getAllUniforms().u_sampler2D.getDatatype()).toEqualEnumeration(Cesium.UniformDatatype.SAMPLER_2D);
-            expect(sp.getAllUniforms().u_samplerCube.getDatatype()).toEqualEnumeration(Cesium.UniformDatatype.SAMPLER_CUBE);
+            expect(sp.getAllUniforms().u_float.getDatatype()).toEqual(Cesium.UniformDatatype.FLOAT);
+            expect(sp.getAllUniforms().u_vec2.getDatatype()).toEqual(Cesium.UniformDatatype.FLOAT_VECTOR2);
+            expect(sp.getAllUniforms().u_vec3.getDatatype()).toEqual(Cesium.UniformDatatype.FLOAT_VECTOR3);
+            expect(sp.getAllUniforms().u_vec4.getDatatype()).toEqual(Cesium.UniformDatatype.FLOAT_VECTOR4);
+            expect(sp.getAllUniforms().u_int.getDatatype()).toEqual(Cesium.UniformDatatype.INT);
+            expect(sp.getAllUniforms().u_ivec2.getDatatype()).toEqual(Cesium.UniformDatatype.INT_VECTOR2);
+            expect(sp.getAllUniforms().u_ivec3.getDatatype()).toEqual(Cesium.UniformDatatype.INT_VECTOR3);
+            expect(sp.getAllUniforms().u_ivec4.getDatatype()).toEqual(Cesium.UniformDatatype.INT_VECTOR4);
+            expect(sp.getAllUniforms().u_bool.getDatatype()).toEqual(Cesium.UniformDatatype.BOOL);
+            expect(sp.getAllUniforms().u_bvec2.getDatatype()).toEqual(Cesium.UniformDatatype.BOOL_VECTOR2);
+            expect(sp.getAllUniforms().u_bvec3.getDatatype()).toEqual(Cesium.UniformDatatype.BOOL_VECTOR3);
+            expect(sp.getAllUniforms().u_bvec4.getDatatype()).toEqual(Cesium.UniformDatatype.BOOL_VECTOR4);
+            expect(sp.getAllUniforms().u_mat2.getDatatype()).toEqual(Cesium.UniformDatatype.FLOAT_MATRIX2);
+            expect(sp.getAllUniforms().u_mat3.getDatatype()).toEqual(Cesium.UniformDatatype.FLOAT_MATRIX3);
+            expect(sp.getAllUniforms().u_mat4.getDatatype()).toEqual(Cesium.UniformDatatype.FLOAT_MATRIX4);
+            expect(sp.getAllUniforms().u_sampler2D.getDatatype()).toEqual(Cesium.UniformDatatype.SAMPLER_2D);
+            expect(sp.getAllUniforms().u_samplerCube.getDatatype()).toEqual(Cesium.UniformDatatype.SAMPLER_CUBE);
         });
             
         it("sets uniforms", function () {

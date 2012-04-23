@@ -95,10 +95,6 @@
             return Math.abs(this.actual - value) <= epsilon;
         },
 
-        toEqualEnumeration: function(value) {
-            return this.actual.value === value.value;
-        },
-
         toBeGreaterThanOrEqualTo: function(value, epsilon) {
             return this.actual >= value;
         },

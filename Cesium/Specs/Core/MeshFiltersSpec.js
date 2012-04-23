@@ -17,7 +17,7 @@
                 ]
             });
 
-            expect(mesh.indexLists[0].primitiveType).toEqualEnumeration(Cesium.PrimitiveType.LINES);
+            expect(mesh.indexLists[0].primitiveType).toEqual(Cesium.PrimitiveType.LINES);
 
             var v = mesh.indexLists[0].values;
             expect(v.length).toEqual(12);
@@ -47,7 +47,7 @@
                 ]
             });
 
-            expect(mesh.indexLists[0].primitiveType).toEqualEnumeration(Cesium.PrimitiveType.LINES);
+            expect(mesh.indexLists[0].primitiveType).toEqual(Cesium.PrimitiveType.LINES);
 
             var v = mesh.indexLists[0].values;
             expect(v.length).toEqual(12);
@@ -77,7 +77,7 @@
                 ]
             });
 
-            expect(mesh.indexLists[0].primitiveType).toEqualEnumeration(Cesium.PrimitiveType.LINES);
+            expect(mesh.indexLists[0].primitiveType).toEqual(Cesium.PrimitiveType.LINES);
 
             var v = mesh.indexLists[0].values;
             expect(v.length).toEqual(12);

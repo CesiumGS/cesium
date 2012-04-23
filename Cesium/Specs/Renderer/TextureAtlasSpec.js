@@ -69,7 +69,7 @@
 
             expect(atlas.getBorderWidthInPixels()).toEqual(0);
 
-            expect(texture.getPixelFormat()).toEqualEnumeration(Cesium.PixelFormat.RGBA);
+            expect(texture.getPixelFormat()).toEqual(Cesium.PixelFormat.RGBA);
             expect(texture.getWidth()).toEqual(greenImage.width);
             expect(texture.getHeight()).toEqual(greenImage.height);
 

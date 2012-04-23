@@ -14,7 +14,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        CLAMP : new Enumeration(0x812F, "CLAMP"), // CLAMP_TO_EDGE
+        CLAMP : new Enumeration(0x812F, "CLAMP"), // CLAMP
 
         /**
          * DOC_TBA

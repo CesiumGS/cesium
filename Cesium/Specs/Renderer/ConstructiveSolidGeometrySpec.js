@@ -362,7 +362,8 @@
             expect(renderFragment(context, fs)).toEqualArray([255, 255, 255, 255]);
         });
 
-        xit("agi_rayConeIntersectionInterval: half aperture of 90.0 (fails with Angle)", function () {
+        // Fails on AMD with or without ANGLE
+        xit("agi_rayConeIntersectionInterval: half aperture of 90.0", function () {
             var fs =
                 "void main() {" +
                 "agi_ray ray = agi_ray(vec3(1.0, 1.0, -1.0), vec3(0.0, 0.0, 1.0));" +       // origin, direction

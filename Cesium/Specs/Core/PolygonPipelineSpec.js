@@ -129,7 +129,7 @@
                 new Cesium.Cartesian2(0.0, 1.0)
             ]);
 
-            expect(area).toEqualEnumeration(Cesium.WindingOrder.COUNTER_CLOCKWISE);
+            expect(area).toEqual(Cesium.WindingOrder.COUNTER_CLOCKWISE);
         });
 
         it("computeWindingOrder2D computes clockwise", function () {
@@ -140,7 +140,7 @@
                 new Cesium.Cartesian2(1.0, 0.0)
             ]);
 
-            expect(area).toEqualEnumeration(Cesium.WindingOrder.CLOCKWISE);
+            expect(area).toEqual(Cesium.WindingOrder.CLOCKWISE);
         });
 
         it("computeWindingOrder2D throws without positions", function () {
