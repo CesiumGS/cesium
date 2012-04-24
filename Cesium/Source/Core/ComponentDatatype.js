@@ -105,5 +105,16 @@ define(['./Enumeration'], function(Enumeration) {
         return new Float32Array(buffer, byteOffset);
     };
 
+    /**
+     * DOC_TBA
+     */
+    ComponentDatatype.validate = function(componentDatatype) {
+        return ((componentDatatype === ComponentDatatype.BYTE) ||
+                (componentDatatype === ComponentDatatype.UNSIGNED_BYTE) ||
+                (componentDatatype === ComponentDatatype.SHORT) ||
+                (componentDatatype === ComponentDatatype.UNSIGNED_SHORT) ||
+                (componentDatatype === ComponentDatatype.FLOAT));
+    };
+
     return ComponentDatatype;
 });

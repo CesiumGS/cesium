@@ -70,7 +70,25 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        ALWAYS : new Enumeration(0x0207, "ALWAYS")
+        ALWAYS : new Enumeration(0x0207, "ALWAYS"),
+
+        /**
+         * DOC_TBA
+         *
+         * @param stencilFunction
+         *
+         * @returns {Boolean}
+         */
+        validate : function(stencilFunction) {
+            return ((stencilFunction === StencilFunction.NEVER) ||
+                    (stencilFunction === StencilFunction.LESS) ||
+                    (stencilFunction === StencilFunction.EQUAL) ||
+                    (stencilFunction === StencilFunction.LESS_OR_EQUAL) ||
+                    (stencilFunction === StencilFunction.GREATER) ||
+                    (stencilFunction === StencilFunction.NOT_EQUAL) ||
+                    (stencilFunction === StencilFunction.GREATER_OR_EQUAL) ||
+                    (stencilFunction === StencilFunction.ALWAYS));
+        }
     };
 
     return StencilFunction;

@@ -155,18 +155,11 @@ define([
             }
 
             var datatype = attr.componentDatatype;
-            if ((datatype !== ComponentDatatype.BYTE) &&
-                (datatype !== ComponentDatatype.UNSIGNED_BYTE) &&
-                (datatype !== ComponentDatatype.SHORT) &&
-                (datatype !== ComponentDatatype.UNSIGNED_SHORT) &&
-                (datatype !== ComponentDatatype.FLOAT)) {
+            if (!ComponentDatatype.validate(datatype)) {
                 throw new DeveloperError("Attribute must have a valid componentDatatype or not specify it.");
             }
 
-            var usage = attr.usage;
-            if ((usage !== BufferUsage.STATIC_DRAW) &&
-                (usage !== BufferUsage.STREAM_DRAW) &&
-                (usage !== BufferUsage.DYNAMIC_DRAW)) {
+            if (!BufferUsage.validate(attr.usage)) {
                 throw new DeveloperError("Attribute must have a valid usage or not specify it.");
             }
         }

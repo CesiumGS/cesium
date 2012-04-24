@@ -1,5 +1,9 @@
 /*global define*/
-define(['./Cartographic3'], function(Cartographic3) {
+define(['./Cartographic3',
+        './Cartesian3'
+    ], function(
+        Cartographic3,
+        Cartesian3) {
     "use strict";
 
     /**
@@ -18,7 +22,7 @@ define(['./Cartographic3'], function(Cartographic3) {
                 var length = positions.length;
 
                 var currentSegment = [{
-                    cartesian : positions[0].clone(),
+                    cartesian : Cartesian3.clone(positions[0]),
                     cartographic : ellipsoid.toCartographic3(positions[0]),
                     index : 0
                 }];
@@ -51,7 +55,7 @@ define(['./Cartographic3'], function(Cartographic3) {
                     }
 
                     currentSegment.push({
-                        cartesian : positions[i].clone(),
+                        cartesian : Cartesian3.clone(positions[i]),
                         cartographic : ellipsoid.toCartographic3(positions[i]),
                         index : i
                     });
