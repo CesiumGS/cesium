@@ -75,21 +75,18 @@ var defineSuite;
         env.beforeEach(addDefaultMatchers);
 
         createTests = function() {
-            env.currentRunner().suites().sort(function(a, b) {
-                var aFocused = jasmine.TrivialReporter.isSuiteFocused(a);
-                var bFocused = jasmine.TrivialReporter.isSuiteFocused(b);
+            var isSuiteFocused = jasmine.TrivialReporter.isSuiteFocused;
+            var suites = jasmine.getEnv().currentRunner().suites();
 
-                if (aFocused && !bFocused) {
-                    return -1;
+            for ( var i = 1, insertPoint = 0, len = suites.length; i < len; i++) {
+                var suite = suites[i];
+                if (isSuiteFocused(suite)) {
+                    suites.splice(i, 1);
+                    suites.splice(insertPoint, 0, suite);
+                    insertPoint++;
+                    i--;
                 }
-
-                if (bFocused && !aFocused) {
-                    return 1;
-                }
-
-                return a.index - b.index;
-            });
-
+            }
             var reporter = new jasmine.TrivialReporter();
             env.addReporter(reporter);
             env.specFilter = reporter.specFilter;

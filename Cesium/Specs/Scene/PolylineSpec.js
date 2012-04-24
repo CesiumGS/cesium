@@ -1,142 +1,163 @@
-(function() {
+defineSuite([
+         'Scene/Polyline',
+         '../Specs/createContext',
+         '../Specs/destroyContext',
+         '../Specs/sceneState',
+         '../Specs/pick',
+         'Core/Cartesian3',
+         'Core/Matrix4',
+         'Core/Math',
+         'Renderer/BufferUsage'
+     ], function(
+         Polyline,
+         createContext,
+         destroyContext,
+         sceneState,
+         pick,
+         Cartesian3,
+         Matrix4,
+         CesiumMath,
+         BufferUsage) {
     "use strict";
-    /*global Cesium, describe, it, expect, beforeEach, afterEach*/
-    
-    describe("Polyline", function () {
-    
-        var context;
-        var polyline;
-        var us;
-                
-        beforeEach(function () {
-            context = Cesium.Specs.createContext();
-            polyline = new Cesium.Polyline();
-            
-            var camera = {
-                eye    : new Cesium.Cartesian3(-1.0, 0.0, 0.0),
-                target : Cesium.Cartesian3.getZero(),
-                up     : Cesium.Cartesian3.getUnitZ()
-            };
-            us = context.getUniformState();
-            us.setView(Cesium.Matrix4.createLookAt(camera.eye, camera.target, camera.up));
-            us.setProjection(Cesium.Matrix4.createPerspectiveFieldOfView(Cesium.Math.toRadians(60.0), 1.0, 0.01, 10.0));        
-        });
-    
-        afterEach(function () {
-            polyline = polyline && polyline.destroy();
-            us = null;
-            
-            Cesium.Specs.destroyContext(context);
-        });
-        
-        it("gets default show", function() {
-            expect(polyline.show).toBeTruthy();
-        });
-                
-        it("sets positions", function() {
-            var positions = [
-                new Cesium.Cartesian3(1.0, 2.0, 3.0),
-                new Cesium.Cartesian3(4.0, 5.0, 6.0)
-            ];
-            
-            expect(polyline.getPositions()).not.toBeDefined();
-            
-            polyline.setPositions(positions);
-            expect(polyline.getPositions()).toEqualArray(positions);
-        });
+    /*global it,expect,beforeEach,afterEach*/
 
-        it("gets the default width", function() {
-            expect(polyline.width).toEqual(2);
-        });
+    var context;
+    var polyline;
+    var us;
 
-        it("gets the default outline-width", function() {
-            expect(polyline.outlineWidth).toEqual(5);
-        });
+    beforeEach(function() {
+        context = createContext();
+        polyline = new Polyline();
 
-        it("gets the default color", function() {
-            expect(polyline.color).toEqualProperties({
-                red   : 0.0,
-                green : 0.0,
-                blue  : 1.0,
-                alpha : 1.0            
-            });
-        });
+        var camera = {
+            eye : new Cartesian3(-1.0, 0.0, 0.0),
+            target : Cartesian3.getZero(),
+            up : Cartesian3.getUnitZ()
+        };
+        us = context.getUniformState();
+        us.setView(Matrix4.createLookAt(camera.eye, camera.target, camera.up));
+        us.setProjection(Matrix4.createPerspectiveFieldOfView(CesiumMath.toRadians(60.0), 1.0, 0.01, 10.0));
+    });
 
-        it("gets the default outline-color", function() {
-            expect(polyline.outlineColor).toEqualProperties({
-                red   : 1.0,
-                green : 1.0,
-                blue  : 1.0,
-                alpha : 1.0
-            });
-        });
+    afterEach(function() {
+        polyline = polyline && polyline.destroy();
+        us = null;
 
-        it("gets default bufferusage", function() {
-            expect(polyline.bufferUsage).toEqual(Cesium.BufferUsage.STATIC_DRAW);
-        });
+        destroyContext(context);
+    });
 
-        it("updates", function() {
-            polyline.update(context, Cesium.Specs.sceneState);
-        });
+    it("gets default show", function() {
+        expect(polyline.show).toBeTruthy();
+    });
 
-        it("renders", function () {
-            polyline.setPositions([
-                new Cesium.Cartesian3(0.0, -1.0, 0.0),
-                new Cesium.Cartesian3(0.0, 1.0, 0.0)    
-            ]);
-            
-            polyline.color = { red : 1.0, green : 0.0, blue : 0.0, alpha : 1.0 };
-            polyline.outlineColor = { red : 1.0, green : 0.0, blue : 0.0, alpha : 0.0 };
-                
-            context.clear();
-            expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+    it("sets positions", function() {
+        var positions = [new Cartesian3(1.0, 2.0, 3.0), new Cartesian3(4.0, 5.0, 6.0)];
 
-            polyline.update(context, Cesium.Specs.sceneState);
-            polyline.render(context, us);
-            expect(context.readPixels()).not.toEqualArray([0, 0, 0, 0]);            
-        });
+        expect(polyline.getPositions()).not.toBeDefined();
 
-        it("doesn't renders", function () {
-            polyline.setPositions([
-                new Cesium.Cartesian3(0.0, -1.0, 0.0),
-                new Cesium.Cartesian3(0.0, 1.0, 0.0)    
-            ]);
-            
-            polyline.color = { red : 1.0, green : 0.0, blue : 0.0, alpha : 1.0 };
-            polyline.outlineColor = { red : 1.0, green : 0.0, blue : 0.0, alpha : 0.0 };
-            polyline.show = false;
-                
-            context.clear();
-            expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        polyline.setPositions(positions);
+        expect(polyline.getPositions()).toEqualArray(positions);
+    });
 
-            polyline.update(context, Cesium.Specs.sceneState);
-            polyline.render(context, us);
-            expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
-        });
-        
-        it("is picked", function () {
-            polyline.setPositions([
-                new Cesium.Cartesian3(0.0, -1.0, 0.0),
-                new Cesium.Cartesian3(0.0, 1.0, 0.0)    
-            ]);
+    it("gets the default width", function() {
+        expect(polyline.width).toEqual(2);
+    });
 
-            polyline.update(context, Cesium.Specs.sceneState);
+    it("gets the default outline-width", function() {
+        expect(polyline.outlineWidth).toEqual(5);
+    });
 
-            var pickedObject = Cesium.Specs.pick(context, polyline, 0, 0);                        
-            expect(pickedObject).toEqual(polyline);
-        });
-
-        it("is not picked", function () {
-            polyline.setPositions([
-                new Cesium.Cartesian3(0.0, -1.0, 0.0),
-                new Cesium.Cartesian3(0.0, 1.0, 0.0)    
-            ]);
-            polyline.show = false;
-
-            polyline.update(context, Cesium.Specs.sceneState);
-
-            var pickedObject = Cesium.Specs.pick(context, polyline, 0, 0);                        
-            expect(pickedObject).not.toBeDefined();
+    it("gets the default color", function() {
+        expect(polyline.color).toEqualProperties({
+            red : 0.0,
+            green : 0.0,
+            blue : 1.0,
+            alpha : 1.0
         });
     });
-}());
+
+    it("gets the default outline-color", function() {
+        expect(polyline.outlineColor).toEqualProperties({
+            red : 1.0,
+            green : 1.0,
+            blue : 1.0,
+            alpha : 1.0
+        });
+    });
+
+    it("gets default bufferusage", function() {
+        expect(polyline.bufferUsage).toEqual(BufferUsage.STATIC_DRAW);
+    });
+
+    it("updates", function() {
+        polyline.update(context, sceneState);
+    });
+
+    it("renders", function() {
+        polyline.setPositions([new Cartesian3(0.0, -1.0, 0.0), new Cartesian3(0.0, 1.0, 0.0)]);
+
+        polyline.color = {
+            red : 1.0,
+            green : 0.0,
+            blue : 0.0,
+            alpha : 1.0
+        };
+        polyline.outlineColor = {
+            red : 1.0,
+            green : 0.0,
+            blue : 0.0,
+            alpha : 0.0
+        };
+
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polyline.update(context, sceneState);
+        polyline.render(context, us);
+        expect(context.readPixels()).not.toEqualArray([0, 0, 0, 0]);
+    });
+
+    it("doesn't renders", function() {
+        polyline.setPositions([new Cartesian3(0.0, -1.0, 0.0), new Cartesian3(0.0, 1.0, 0.0)]);
+
+        polyline.color = {
+            red : 1.0,
+            green : 0.0,
+            blue : 0.0,
+            alpha : 1.0
+        };
+        polyline.outlineColor = {
+            red : 1.0,
+            green : 0.0,
+            blue : 0.0,
+            alpha : 0.0
+        };
+        polyline.show = false;
+
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polyline.update(context, sceneState);
+        polyline.render(context, us);
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+    });
+
+    it("is picked", function() {
+        polyline.setPositions([new Cartesian3(0.0, -1.0, 0.0), new Cartesian3(0.0, 1.0, 0.0)]);
+
+        polyline.update(context, sceneState);
+
+        var pickedObject = pick(context, polyline, 0, 0);
+        expect(pickedObject).toEqual(polyline);
+    });
+
+    it("is not picked", function() {
+        polyline.setPositions([new Cartesian3(0.0, -1.0, 0.0), new Cartesian3(0.0, 1.0, 0.0)]);
+        polyline.show = false;
+
+        polyline.update(context, sceneState);
+
+        var pickedObject = pick(context, polyline, 0, 0);
+        expect(pickedObject).not.toBeDefined();
+    });
+});

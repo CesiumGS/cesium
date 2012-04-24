@@ -1,238 +1,307 @@
-(function() {
+defineSuite([
+         'Scene/Camera',
+         'Core/AxisAlignedBoundingBox',
+         'Core/BoundingSphere',
+         'Core/Cartesian3',
+         'Core/Intersect',
+         'Core/Matrix4'
+     ], function(
+         Camera,
+         AxisAlignedBoundingBox,
+         BoundingSphere,
+         Cartesian3,
+         Intersect,
+         Matrix4) {
     "use strict";
-    /*global Cesium, document, describe, it, expect, beforeEach*/
+    /*global document,describe,it,expect,beforeEach,afterEach*/
 
-    var AxisAlignedBoundingBox = Cesium.AxisAlignedBoundingBox;
-    var BoundingSphere = Cesium.BoundingSphere;
-    var Camera = Cesium.Camera;
-    var Cartesian3 = Cesium.Cartesian3;
-    var Intersect = Cesium.Intersect;
-    var Matrix4 = Cesium.Matrix4;
+    var camera;
 
-    describe("Camera", function() {
-        var camera;
+    beforeEach(function() {
+        camera = new Camera(document);
+        camera.position = new Cartesian3();
+        camera.up = Cartesian3.getUnitY();
+        camera.direction = Cartesian3.getUnitZ().negate();
+        camera.frustum.near = 1.0;
+        camera.frustum.far = 2.0;
+        camera.frustum.fovy = (Math.PI) / 3;
+        camera.frustum.aspectRatio = 1.0;
+    });
 
-        beforeEach(function () {
-            camera = new Camera(document);
-            camera.position = new Cartesian3();
-            camera.up = Cartesian3.getUnitY();
-            camera.direction = Cartesian3.getUnitZ().negate();
-            camera.frustum.near = 1.0;
-            camera.frustum.far = 2.0;
-            camera.frustum.fovy = (Math.PI) / 3;
-            camera.frustum.aspectRatio = 1.0;
+    it("constructor throws an exception when there is no canvas", function() {
+        expect(function() {
+            return new Camera();
+        }).toThrow();
+    });
+
+    it("lookAt object", function() {
+        var target = Cartesian3.getZero();
+        var newPosition = new Cartesian3(1.0, 1.0, 1.0);
+        var newDirection = target.subtract(newPosition).normalize();
+        var newUp = camera.right.cross(newDirection).normalize();
+        var tempCamera = camera.clone();
+        tempCamera.lookAt({
+            eye : newPosition,
+            up : newUp,
+            target : target
+        });
+        expect(tempCamera.position.equals(newPosition)).toBeTruthy();
+        expect(tempCamera.direction.equals(newDirection)).toBeTruthy();
+        expect(tempCamera.up.equals(newUp)).toBeTruthy();
+    });
+
+    it("lookAt array", function() {
+        var target = Cartesian3.getZero();
+        var newPosition = new Cartesian3(1.0, 1.0, 1.0);
+        var newDirection = target.subtract(newPosition).normalize();
+        var newUp = camera.right.cross(newDirection).normalize();
+        var tempCamera = camera.clone();
+        tempCamera.lookAt(newPosition, target, newUp);
+        expect(tempCamera.position.equals(newPosition)).toBeTruthy();
+        expect(tempCamera.direction.equals(newDirection)).toBeTruthy();
+        expect(tempCamera.up.equals(newUp)).toBeTruthy();
+    });
+
+    it("get view matrix", function() {
+        var viewMatrix = camera.getViewMatrix();
+        var position = camera.position;
+        var up = camera.up;
+        var dir = camera.direction;
+        var right = dir.cross(up);
+        var rotation = new Matrix4(right.x, right.y, right.z, 0.0,
+                                      up.x,    up.y,    up.z, 0.0,
+                                    -dir.x,  -dir.y,  -dir.z, 0.0,
+                                       0.0,     0.0,     0.0, 1.0);
+        var translation = new Matrix4(1.0, 0.0, 0.0, -position.x,
+                                      0.0, 1.0, 0.0, -position.y,
+                                      0.0, 0.0, 1.0, -position.z,
+                                      0.0, 0.0, 0.0,         1.0);
+        var expected = rotation.multiplyWithMatrix(translation);
+        expect(viewMatrix.equals(expected)).toBeTruthy();
+    });
+
+    it("get inverse view matrix", function() {
+        var expected = camera.getViewMatrix().inverse();
+        expect(expected.equals(camera.getInverseViewMatrix())).toBeTruthy();
+    });
+
+    it("get inverse transform", function() {
+        camera.transform = new Matrix4(5.0, 0.0, 0.0, 1.0, 0.0, 5.0, 0.0, 2.0, 0.0, 0.0, 5.0, 3.0, 0.0, 0.0, 0.0, 1.0);
+        var expected = camera.transform.inverseTransformation();
+        expect(expected.equals(camera.getInverseTransform())).toBeTruthy();
+    });
+
+    describe("box intersections", function() {
+
+        it("can contain an axis aligned bounding box", function() {
+            var box1 = new AxisAlignedBoundingBox([
+                                                   new Cartesian3(-0.5, 0, -1.25),
+                                                   new Cartesian3(0.5, 0, -1.25),
+                                                   new Cartesian3(-0.5, 0, -1.75),
+                                                   new Cartesian3(0.5, 0, -1.75)
+                                                  ]);
+            expect(camera.getVisibility(box1, AxisAlignedBoundingBox.planeAABBIntersect)).toEqual(Intersect.INSIDE);
         });
 
-        it("constructor throws an exception when there is no canvas", function() {
-            expect(function () {
-                return new Camera();
-            }).toThrow();
-        });
+        describe("can partially contain an axis aligned bounding box", function() {
 
-        it("lookAt object", function() {
-            var target = Cartesian3.getZero();
-            var newPosition = new Cartesian3(1.0, 1.0, 1.0);
-            var newDirection = target.subtract(newPosition).normalize();
-            var newUp = camera.right.cross(newDirection).normalize();
-            var tempCamera = camera.clone();
-            tempCamera.lookAt({
-                eye: newPosition,
-                up: newUp,
-                target: target
+            it("on the far plane", function() {
+                var box2 = new AxisAlignedBoundingBox([
+                                                       new Cartesian3(-0.5, 0, -1.5),
+                                                       new Cartesian3(0.5, 0, -1.5),
+                                                       new Cartesian3(-0.5, 0, -2.5),
+                                                       new Cartesian3(0.5, 0, -2.5)
+                                                      ]);
+                expect(camera.getVisibility(box2, AxisAlignedBoundingBox.planeAABBIntersect)).toEqual(Intersect.INTERSECTING);
             });
-            expect(tempCamera.position.equals(newPosition)).toBeTruthy();
-            expect(tempCamera.direction.equals(newDirection)).toBeTruthy();
-            expect(tempCamera.up.equals(newUp)).toBeTruthy();
-        });
 
-        it("lookAt array", function() {
-            var target = Cartesian3.getZero();
-            var newPosition = new Cartesian3(1.0, 1.0, 1.0);
-            var newDirection = target.subtract(newPosition).normalize();
-            var newUp = camera.right.cross(newDirection).normalize();
-            var tempCamera = camera.clone();
-            tempCamera.lookAt(newPosition, target, newUp);
-            expect(tempCamera.position.equals(newPosition)).toBeTruthy();
-            expect(tempCamera.direction.equals(newDirection)).toBeTruthy();
-            expect(tempCamera.up.equals(newUp)).toBeTruthy();
-        });
-
-        it("get view matrix", function() {
-            var viewMatrix = camera.getViewMatrix();
-            var position = camera.position;
-            var up = camera.up;
-            var dir = camera.direction;
-            var right = dir.cross(up);
-            var rotation = new Matrix4(right.x, right.y, right.z, 0.0, up.x, up.y, up.z, 0.0, -dir.x, -dir.y, -dir.z, 0.0, 0.0, 0.0, 0.0, 1.0);
-            var translation = new Matrix4(1.0, 0.0, 0.0, -position.x, 0.0, 1.0, 0.0, -position.y, 0.0, 0.0, 1.0, -position.z, 0.0, 0.0, 0.0, 1.0);
-            var expected = rotation.multiplyWithMatrix(translation);
-            expect(viewMatrix.equals(expected)).toBeTruthy();
-        });
-
-        it("get inverse view matrix", function() {
-            var expected = camera.getViewMatrix().inverse();
-            expect(expected.equals(camera.getInverseViewMatrix())).toBeTruthy();
-        });
-
-        it("get inverse transform", function () {
-            camera.transform = new Cesium.Matrix4(
-                5.0, 0.0, 0.0, 1.0,
-                0.0, 5.0, 0.0, 2.0,
-                0.0, 0.0, 5.0, 3.0,
-                0.0, 0.0, 0.0, 1.0
-            );
-            var expected = camera.transform.inverseTransformation();
-            expect(expected.equals(camera.getInverseTransform())).toBeTruthy();
-        });
-
-        describe("box intersections", function() {
-
-            it("can contain an axis aligned bounding box", function() {
-                var box1 = new AxisAlignedBoundingBox([new Cartesian3(-0.5, 0, -1.25), new Cartesian3(0.5, 0, -1.25), new Cartesian3(-0.5, 0, -1.75), new Cartesian3(0.5, 0, -1.75)]);
-                expect(camera.getVisibility(box1, AxisAlignedBoundingBox.planeAABBIntersect)).toEqual(Intersect.INSIDE);
+            it("on the near plane", function() {
+                var box3 = new AxisAlignedBoundingBox([
+                                                       new Cartesian3(-0.5, 0, -0.5),
+                                                       new Cartesian3(0.5, 0, -0.5),
+                                                       new Cartesian3(-0.5, 0, -1.5),
+                                                       new Cartesian3(0.5, 0, -1.5)
+                                                      ]);
+                expect(camera.getVisibility(box3, AxisAlignedBoundingBox.planeAABBIntersect)).toEqual(Intersect.INTERSECTING);
             });
 
-            describe("can partially contain an axis aligned bounding box", function() {
-
-                it("on the far plane", function() {
-                    var box2 = new AxisAlignedBoundingBox([new Cartesian3(-0.5, 0, -1.5), new Cartesian3(0.5, 0, -1.5), new Cartesian3(-0.5, 0, -2.5), new Cartesian3(0.5, 0, -2.5)]);
-                    expect(camera.getVisibility(box2, AxisAlignedBoundingBox.planeAABBIntersect)).toEqual(Intersect.INTERSECTING);
-                });
-
-                it("on the near plane", function() {
-                    var box3 = new AxisAlignedBoundingBox([new Cartesian3(-0.5, 0, -0.5), new Cartesian3(0.5, 0, -0.5), new Cartesian3(-0.5, 0, -1.5), new Cartesian3(0.5, 0, -1.5)]);
-                    expect(camera.getVisibility(box3, AxisAlignedBoundingBox.planeAABBIntersect)).toEqual(Intersect.INTERSECTING);
-                });
-
-                it("on the left plane", function() {
-                    var box4 = new AxisAlignedBoundingBox([new Cartesian3(-1.5, 0, -1.25), new Cartesian3(0, 0, -1.25), new Cartesian3(-1.5, 0, -1.5), new Cartesian3(0, 0, -1.5)]);
-                    expect(camera.getVisibility(box4, AxisAlignedBoundingBox.planeAABBIntersect)).toEqual(Intersect.INTERSECTING);
-                });
-
-                it("on the right plane", function() {
-                    var box5 = new AxisAlignedBoundingBox([new Cartesian3(0, 0, -1.25), new Cartesian3(1.5, 0, -1.25), new Cartesian3(0, 0, -1.5), new Cartesian3(1.5, 0, -1.5)]);
-                    expect(camera.getVisibility(box5, AxisAlignedBoundingBox.planeAABBIntersect)).toEqual(Intersect.INTERSECTING);
-                });
-
-                it("on the top plane", function() {
-                    var box6 = new AxisAlignedBoundingBox([new Cartesian3(-0.5, 0, -1.25), new Cartesian3(0.5, 0, -1.25), new Cartesian3(-0.5, 2.0, -1.75), new Cartesian3(0.5, 2.0, -1.75)]);
-                    expect(camera.getVisibility(box6, AxisAlignedBoundingBox.planeAABBIntersect)).toEqual(Intersect.INTERSECTING);
-                });
-
-                it("on the bottom plane", function() {
-                    var box7 = new AxisAlignedBoundingBox([new Cartesian3(-0.5, -2.0, -1.25), new Cartesian3(0.5, 0, -1.25), new Cartesian3(-0.5, -2.0, -1.5), new Cartesian3(0.5, 0, -1.5)]);
-                    expect(camera.getVisibility(box7, AxisAlignedBoundingBox.planeAABBIntersect)).toEqual(Intersect.INTERSECTING);
-                });
-
+            it("on the left plane", function() {
+                var box4 = new AxisAlignedBoundingBox([
+                                                       new Cartesian3(-1.5, 0, -1.25),
+                                                       new Cartesian3(0, 0, -1.25),
+                                                       new Cartesian3(-1.5, 0, -1.5),
+                                                       new Cartesian3(0, 0, -1.5)
+                                                      ]);
+                expect(camera.getVisibility(box4, AxisAlignedBoundingBox.planeAABBIntersect)).toEqual(Intersect.INTERSECTING);
             });
-            describe("can not contain an axis aligned bounding box", function() {
 
-                it("past the far plane", function() {
-                    var box8 = new AxisAlignedBoundingBox([new Cartesian3(-0.5, 0, -2.25), new Cartesian3(0.5, 0, -2.25), new Cartesian3(-0.5, 0, -2.75), new Cartesian3(0.5, 0, -2.75)]);
-                    expect(camera.getVisibility(box8, AxisAlignedBoundingBox.planeAABBIntersect)).toEqual(Intersect.OUTSIDE);
-                });
+            it("on the right plane", function() {
+                var box5 = new AxisAlignedBoundingBox([
+                                                       new Cartesian3(0, 0, -1.25),
+                                                       new Cartesian3(1.5, 0, -1.25),
+                                                       new Cartesian3(0, 0, -1.5),
+                                                       new Cartesian3(1.5, 0, -1.5)
+                                                      ]);
+                expect(camera.getVisibility(box5, AxisAlignedBoundingBox.planeAABBIntersect)).toEqual(Intersect.INTERSECTING);
+            });
 
-                it("before the near plane", function() {
-                    var box9 = new AxisAlignedBoundingBox([new Cartesian3(-0.5, 0, -0.25), new Cartesian3(0.5, 0, -0.25), new Cartesian3(-0.5, 0, -0.75), new Cartesian3(0.5, 0, -0.75)]);
-                    expect(camera.getVisibility(box9, AxisAlignedBoundingBox.planeAABBIntersect)).toEqual(Intersect.OUTSIDE);
-                });
+            it("on the top plane", function() {
+                var box6 = new AxisAlignedBoundingBox([
+                                                       new Cartesian3(-0.5, 0, -1.25),
+                                                       new Cartesian3(0.5, 0, -1.25),
+                                                       new Cartesian3(-0.5, 2.0, -1.75),
+                                                       new Cartesian3(0.5, 2.0, -1.75)
+                                                      ]);
+                expect(camera.getVisibility(box6, AxisAlignedBoundingBox.planeAABBIntersect)).toEqual(Intersect.INTERSECTING);
+            });
 
-                it("past the left plane", function() {
-                    var box10 = new AxisAlignedBoundingBox([new Cartesian3(-5, 0, -1.25), new Cartesian3(-3, 0, -1.25), new Cartesian3(-5, 0, -1.75), new Cartesian3(-3, 0, -1.75)]);
-                    expect(camera.getVisibility(box10, AxisAlignedBoundingBox.planeAABBIntersect)).toEqual(Intersect.OUTSIDE);
-                });
-
-                it("past the right plane", function() {
-                    var box11 = new AxisAlignedBoundingBox([new Cartesian3(3, 0, -1.25), new Cartesian3(5, 0, -1.25), new Cartesian3(3, 0, -1.75), new Cartesian3(5, 0, -1.75)]);
-                    expect(camera.getVisibility(box11, AxisAlignedBoundingBox.planeAABBIntersect)).toEqual(Intersect.OUTSIDE);
-                });
-
-                it("past the top plane", function() {
-                    var box12 = new AxisAlignedBoundingBox([new Cartesian3(-0.5, 3, -1.25), new Cartesian3(0.5, 3, -1.25), new Cartesian3(-0.5, 5, -1.75), new Cartesian3(0.5, 5, -1.75)]);
-                    expect(camera.getVisibility(box12, AxisAlignedBoundingBox.planeAABBIntersect)).toEqual(Intersect.OUTSIDE);
-                });
-
-                it("past the bottom plane", function() {
-                    var box13 = new AxisAlignedBoundingBox([new Cartesian3(-0.5, -3, -1.25), new Cartesian3(0.5, -3, -1.25), new Cartesian3(-0.5, -5, -1.75), new Cartesian3(0.5, -5, -1.75)]);
-                    expect(camera.getVisibility(box13, AxisAlignedBoundingBox.planeAABBIntersect)).toEqual(Intersect.OUTSIDE);
-                });
-
+            it("on the bottom plane", function() {
+                var box7 = new AxisAlignedBoundingBox([
+                                                       new Cartesian3(-0.5, -2.0, -1.25),
+                                                       new Cartesian3(0.5, 0, -1.25),
+                                                       new Cartesian3(-0.5, -2.0, -1.5),
+                                                       new Cartesian3(0.5, 0, -1.5)
+                                                      ]);
+                expect(camera.getVisibility(box7, AxisAlignedBoundingBox.planeAABBIntersect)).toEqual(Intersect.INTERSECTING);
             });
         });
 
-        describe("sphere intersection", function() {
+        describe("can not contain an axis aligned bounding box", function() {
 
-            it("can contain a sphere", function() {
-                var sphere1 = new BoundingSphere([new Cartesian3(0, 0, -1.25), new Cartesian3(0, 0, -1.75)]);
-                expect(camera.getVisibility(sphere1, BoundingSphere.planeSphereIntersect)).toEqual(Intersect.INSIDE);
+            it("past the far plane", function() {
+                var box8 = new AxisAlignedBoundingBox([
+                                                       new Cartesian3(-0.5, 0, -2.25),
+                                                       new Cartesian3(0.5, 0, -2.25),
+                                                       new Cartesian3(-0.5, 0, -2.75),
+                                                       new Cartesian3(0.5, 0, -2.75)
+                                                      ]);
+                expect(camera.getVisibility(box8, AxisAlignedBoundingBox.planeAABBIntersect)).toEqual(Intersect.OUTSIDE);
             });
 
-            describe("can partially contain a sphere", function() {
-
-                it("on the far plane", function() {
-                    var sphere2 = new BoundingSphere([new Cartesian3(0, 0, -1.5), new Cartesian3(0, 0, -2.5)]);
-                    expect(camera.getVisibility(sphere2, BoundingSphere.planeSphereIntersect)).toEqual(Intersect.INTERSECTING);
-                });
-
-                it("on the near plane", function() {
-                    var sphere3 = new BoundingSphere([new Cartesian3(0, 0, -0.5), new Cartesian3(0, 0, -1.5)]);
-                    expect(camera.getVisibility(sphere3, BoundingSphere.planeSphereIntersect)).toEqual(Intersect.INTERSECTING);
-                });
-
-                it("on the left plane", function() {
-                    var sphere4 = new BoundingSphere([new Cartesian3(-1.0, 0, -1.5), new Cartesian3(0, 0, -1.5)]);
-                    expect(camera.getVisibility(sphere4, BoundingSphere.planeSphereIntersect)).toEqual(Intersect.INTERSECTING);
-                });
-
-                it("on the right plane", function() {
-                    var sphere5 = new BoundingSphere([new Cartesian3(0, 0, -1.5), new Cartesian3(1.0, 0, -1.5)]);
-                    expect(camera.getVisibility(sphere5, BoundingSphere.planeSphereIntersect)).toEqual(Intersect.INTERSECTING);
-                });
-
-                it("on the top plane", function() {
-                    var sphere6 = new BoundingSphere([new Cartesian3(0, 0, -1.5), new Cartesian3(0, 2.0, -1.5)]);
-                    expect(camera.getVisibility(sphere6, BoundingSphere.planeSphereIntersect)).toEqual(Intersect.INTERSECTING);
-                });
-
-                it("on the bottom plane", function() {
-                    var sphere7 = new BoundingSphere([new Cartesian3(0, -2.0, -1.5), new Cartesian3(0, 0, -1.5)]);
-                    expect(camera.getVisibility(sphere7, BoundingSphere.planeSphereIntersect)).toEqual(Intersect.INTERSECTING);
-                });
-
+            it("before the near plane", function() {
+                var box9 = new AxisAlignedBoundingBox([
+                                                       new Cartesian3(-0.5, 0, -0.25),
+                                                       new Cartesian3(0.5, 0, -0.25),
+                                                       new Cartesian3(-0.5, 0, -0.75),
+                                                       new Cartesian3(0.5, 0, -0.75)
+                                                      ]);
+                expect(camera.getVisibility(box9, AxisAlignedBoundingBox.planeAABBIntersect)).toEqual(Intersect.OUTSIDE);
             });
-            describe("can not contain a sphere", function() {
 
-                it("past the far plane", function() {
-                    var sphere8 = new BoundingSphere([new Cartesian3(0, 0, -2.25), new Cartesian3(0, 0, -2.75)]);
-                    expect(camera.getVisibility(sphere8, BoundingSphere.planeSphereIntersect)).toEqual(Intersect.OUTSIDE);
-                });
+            it("past the left plane", function() {
+                var box10 = new AxisAlignedBoundingBox([
+                                                        new Cartesian3(-5, 0, -1.25),
+                                                        new Cartesian3(-3, 0, -1.25),
+                                                        new Cartesian3(-5, 0, -1.75),
+                                                        new Cartesian3(-3, 0, -1.75)
+                                                       ]);
+                expect(camera.getVisibility(box10, AxisAlignedBoundingBox.planeAABBIntersect)).toEqual(Intersect.OUTSIDE);
+            });
 
-                it("before the near plane", function() {
-                    var sphere9 = new BoundingSphere([new Cartesian3(0, 0, -0.25), new Cartesian3(0, 0, -0.5)]);
-                    expect(camera.getVisibility(sphere9, BoundingSphere.planeSphereIntersect)).toEqual(Intersect.OUTSIDE);
-                });
+            it("past the right plane", function() {
+                var box11 = new AxisAlignedBoundingBox([
+                                                        new Cartesian3(3, 0, -1.25),
+                                                        new Cartesian3(5, 0, -1.25),
+                                                        new Cartesian3(3, 0, -1.75),
+                                                        new Cartesian3(5, 0, -1.75)
+                                                       ]);
+                expect(camera.getVisibility(box11, AxisAlignedBoundingBox.planeAABBIntersect)).toEqual(Intersect.OUTSIDE);
+            });
 
-                it("past the left plane", function() {
-                    var sphere10 = new BoundingSphere([new Cartesian3(-5, 0, -1.25), new Cartesian3(-4.5, 0, -1.75)]);
-                    expect(camera.getVisibility(sphere10, BoundingSphere.planeSphereIntersect)).toEqual(Intersect.OUTSIDE);
-                });
+            it("past the top plane", function() {
+                var box12 = new AxisAlignedBoundingBox([
+                                                        new Cartesian3(-0.5, 3, -1.25),
+                                                        new Cartesian3(0.5, 3, -1.25),
+                                                        new Cartesian3(-0.5, 5, -1.75),
+                                                        new Cartesian3(0.5, 5, -1.75)
+                                                       ]);
+                expect(camera.getVisibility(box12, AxisAlignedBoundingBox.planeAABBIntersect)).toEqual(Intersect.OUTSIDE);
+            });
 
-                it("past the right plane", function() {
-                    var sphere11 = new BoundingSphere([new Cartesian3(4.5, 0, -1.25), new Cartesian3(5, 0, -1.75)]);
-                    expect(camera.getVisibility(sphere11, BoundingSphere.planeSphereIntersect)).toEqual(Intersect.OUTSIDE);
-                });
+            it("past the bottom plane", function() {
+                var box13 = new AxisAlignedBoundingBox([
+                                                        new Cartesian3(-0.5, -3, -1.25),
+                                                        new Cartesian3(0.5, -3, -1.25),
+                                                        new Cartesian3(-0.5, -5, -1.75),
+                                                        new Cartesian3(0.5, -5, -1.75)
+                                                       ]);
+                expect(camera.getVisibility(box13, AxisAlignedBoundingBox.planeAABBIntersect)).toEqual(Intersect.OUTSIDE);
+            });
 
-                it("past the top plane", function() {
-                    var sphere12 = new BoundingSphere([new Cartesian3(-0.5, 4.5, -1.25), new Cartesian3(-0.5, 5, -1.25)]);
-                    expect(camera.getVisibility(sphere12, BoundingSphere.planeSphereIntersect)).toEqual(Intersect.OUTSIDE);
-                });
+        });
+    });
 
-                it("past the bottom plane", function() {
-                    var sphere13 = new BoundingSphere([new Cartesian3(-0.5, -4.5, -1.25), new Cartesian3(-0.5, -5, -1.25)]);
-                    expect(camera.getVisibility(sphere13, BoundingSphere.planeSphereIntersect)).toEqual(Intersect.OUTSIDE);
-                });
+    describe("sphere intersection", function() {
 
+        it("can contain a sphere", function() {
+            var sphere1 = new BoundingSphere([new Cartesian3(0, 0, -1.25), new Cartesian3(0, 0, -1.75)]);
+            expect(camera.getVisibility(sphere1, BoundingSphere.planeSphereIntersect)).toEqual(Intersect.INSIDE);
+        });
+
+        describe("can partially contain a sphere", function() {
+
+            it("on the far plane", function() {
+                var sphere2 = new BoundingSphere([new Cartesian3(0, 0, -1.5), new Cartesian3(0, 0, -2.5)]);
+                expect(camera.getVisibility(sphere2, BoundingSphere.planeSphereIntersect)).toEqual(Intersect.INTERSECTING);
+            });
+
+            it("on the near plane", function() {
+                var sphere3 = new BoundingSphere([new Cartesian3(0, 0, -0.5), new Cartesian3(0, 0, -1.5)]);
+                expect(camera.getVisibility(sphere3, BoundingSphere.planeSphereIntersect)).toEqual(Intersect.INTERSECTING);
+            });
+
+            it("on the left plane", function() {
+                var sphere4 = new BoundingSphere([new Cartesian3(-1.0, 0, -1.5), new Cartesian3(0, 0, -1.5)]);
+                expect(camera.getVisibility(sphere4, BoundingSphere.planeSphereIntersect)).toEqual(Intersect.INTERSECTING);
+            });
+
+            it("on the right plane", function() {
+                var sphere5 = new BoundingSphere([new Cartesian3(0, 0, -1.5), new Cartesian3(1.0, 0, -1.5)]);
+                expect(camera.getVisibility(sphere5, BoundingSphere.planeSphereIntersect)).toEqual(Intersect.INTERSECTING);
+            });
+
+            it("on the top plane", function() {
+                var sphere6 = new BoundingSphere([new Cartesian3(0, 0, -1.5), new Cartesian3(0, 2.0, -1.5)]);
+                expect(camera.getVisibility(sphere6, BoundingSphere.planeSphereIntersect)).toEqual(Intersect.INTERSECTING);
+            });
+
+            it("on the bottom plane", function() {
+                var sphere7 = new BoundingSphere([new Cartesian3(0, -2.0, -1.5), new Cartesian3(0, 0, -1.5)]);
+                expect(camera.getVisibility(sphere7, BoundingSphere.planeSphereIntersect)).toEqual(Intersect.INTERSECTING);
+            });
+        });
+
+        describe("can not contain a sphere", function() {
+
+            it("past the far plane", function() {
+                var sphere8 = new BoundingSphere([new Cartesian3(0, 0, -2.25), new Cartesian3(0, 0, -2.75)]);
+                expect(camera.getVisibility(sphere8, BoundingSphere.planeSphereIntersect)).toEqual(Intersect.OUTSIDE);
+            });
+
+            it("before the near plane", function() {
+                var sphere9 = new BoundingSphere([new Cartesian3(0, 0, -0.25), new Cartesian3(0, 0, -0.5)]);
+                expect(camera.getVisibility(sphere9, BoundingSphere.planeSphereIntersect)).toEqual(Intersect.OUTSIDE);
+            });
+
+            it("past the left plane", function() {
+                var sphere10 = new BoundingSphere([new Cartesian3(-5, 0, -1.25), new Cartesian3(-4.5, 0, -1.75)]);
+                expect(camera.getVisibility(sphere10, BoundingSphere.planeSphereIntersect)).toEqual(Intersect.OUTSIDE);
+            });
+
+            it("past the right plane", function() {
+                var sphere11 = new BoundingSphere([new Cartesian3(4.5, 0, -1.25), new Cartesian3(5, 0, -1.75)]);
+                expect(camera.getVisibility(sphere11, BoundingSphere.planeSphereIntersect)).toEqual(Intersect.OUTSIDE);
+            });
+
+            it("past the top plane", function() {
+                var sphere12 = new BoundingSphere([new Cartesian3(-0.5, 4.5, -1.25), new Cartesian3(-0.5, 5, -1.25)]);
+                expect(camera.getVisibility(sphere12, BoundingSphere.planeSphereIntersect)).toEqual(Intersect.OUTSIDE);
+            });
+
+            it("past the bottom plane", function() {
+                var sphere13 = new BoundingSphere([new Cartesian3(-0.5, -4.5, -1.25), new Cartesian3(-0.5, -5, -1.25)]);
+                expect(camera.getVisibility(sphere13, BoundingSphere.planeSphereIntersect)).toEqual(Intersect.OUTSIDE);
             });
         });
     });
-}());
+});
