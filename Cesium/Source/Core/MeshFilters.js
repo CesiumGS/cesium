@@ -102,18 +102,18 @@ define([
                     var indices = indexLists[i];
 
                     switch (indices.primitiveType) {
-                    case PrimitiveType.TRIANGLES:
-                        indices.primitiveType = PrimitiveType.LINES;
-                        indices.values = trianglesToLines(indices.values);
-                        break;
-                    case PrimitiveType.TRIANGLE_STRIP:
-                        indices.primitiveType = PrimitiveType.LINES;
-                        indices.values = triangleStripToLines(indices.values);
-                        break;
-                    case PrimitiveType.TRIANGLE_FAN:
-                        indices.primitiveType = PrimitiveType.LINES;
-                        indices.values = triangleFanToLines(indices.values);
-                        break;
+                        case PrimitiveType.TRIANGLES:
+                            indices.primitiveType = PrimitiveType.LINES;
+                            indices.values = trianglesToLines(indices.values);
+                            break;
+                        case PrimitiveType.TRIANGLE_STRIP:
+                            indices.primitiveType = PrimitiveType.LINES;
+                            indices.values = triangleStripToLines(indices.values);
+                            break;
+                        case PrimitiveType.TRIANGLE_FAN:
+                            indices.primitiveType = PrimitiveType.LINES;
+                            indices.values = triangleFanToLines(indices.values);
+                            break;
                     }
                 }
             }

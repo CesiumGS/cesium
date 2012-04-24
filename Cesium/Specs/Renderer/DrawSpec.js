@@ -818,20 +818,6 @@
             }).toThrow();
         });
 
-        it("fails to draw (missing primitiveType)", function () {
-            expect(function () {
-                context.draw({});
-            }).toThrow();
-        });
-
-        it("fails to draw (primitiveType)", function () {
-            expect(function () {
-                context.draw({
-                    primitiveType : "invalid value"
-                });
-            }).toThrow();
-        });
-
         it("fails to draw (missing shaderProgram)", function () {
             expect(function () {
                 context.draw({
@@ -840,20 +826,53 @@
             }).toThrow();
         });
 
+        it("fails to draw (missing primitiveType)", function () {
+            var vs = "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
+            var fs = "void main() { gl_FragColor = vec4(1.0); }";
+            sp = context.createShaderProgram(vs, fs);
+
+            expect(function () {
+                context.draw({
+                    shaderProgram : sp
+                });
+            }).toThrow();
+        });
+
+        it("fails to draw (primitiveType)", function () {
+            var vs = "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
+            var fs = "void main() { gl_FragColor = vec4(1.0); }";
+            sp = context.createShaderProgram(vs, fs);
+
+            expect(function () {
+                context.draw({
+                    primitiveType : "invalid value",
+                    shaderProgram : sp
+                });
+            }).toThrow();
+        });
+
         it("fails to draw (missing vertexArray)", function () {
+            var vs = "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
+            var fs = "void main() { gl_FragColor = vec4(1.0); }";
+            sp = context.createShaderProgram(vs, fs);
+
             expect(function () {
                 context.draw({
                     primitiveType : Cesium.PrimitiveType.POINTS,
-                    shaderProgram : {}
+                    shaderProgram : sp
                 });
             }).toThrow();
         });
 
         it("fails to draw (negative offset)", function () {
+            var vs = "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
+            var fs = "void main() { gl_FragColor = vec4(1.0); }";
+            sp = context.createShaderProgram(vs, fs);
+
             expect(function () {
                 context.draw({
                     primitiveType : Cesium.PrimitiveType.POINTS,
-                    shaderProgram : {},
+                    shaderProgram : sp,
                     vertexArray   : context.createVertexArray(),
                     offset        : -1,
                     count         : 1

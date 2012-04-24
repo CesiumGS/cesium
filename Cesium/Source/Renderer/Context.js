@@ -2354,19 +2354,7 @@ define([
         }
 
         var primitiveType = drawArguments.primitiveType;
-
-        if (typeof primitiveType === "undefined") {
-            throw new DeveloperError("drawArguments.primitiveType is required and must be valid.", "drawArguments");
-        }
-
-        var gl = this._gl;
-        if ((primitiveType !== PrimitiveType.POINTS) &&
-            (primitiveType !== PrimitiveType.LINES) &&
-            (primitiveType !== PrimitiveType.LINE_LOOP) &&
-            (primitiveType !== PrimitiveType.LINE_STRIP) &&
-            (primitiveType !== PrimitiveType.TRIANGLES) &&
-            (primitiveType !== PrimitiveType.TRIANGLE_STRIP) &&
-            (primitiveType !== PrimitiveType.TRIANGLE_FAN)) {
+        if (!PrimitiveType.validate(primitiveType)) {
             throw new DeveloperError("drawArguments.primitiveType is required and must be valid.", "drawArguments");
         }
 
@@ -2399,9 +2387,9 @@ define([
             va._bind();
 
             if (indexBuffer) {
-                gl.drawElements(primitiveType, count, indexBuffer.getIndexDatatype().value, offset);
+                this._gl.drawElements(primitiveType, count, indexBuffer.getIndexDatatype().value, offset);
             } else {
-                gl.drawArrays(primitiveType, offset, count);
+                this._gl.drawArrays(primitiveType, offset, count);
             }
 
             va._unBind();
