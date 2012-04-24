@@ -142,7 +142,7 @@ defineSuite([
                                                           new Cartesian2(0.0, 1.0)
                                                          ]);
 
-        expect(area).toEqualEnumeration(WindingOrder.COUNTER_CLOCKWISE);
+        expect(area).toEqual(WindingOrder.COUNTER_CLOCKWISE);
     });
 
     it("computeWindingOrder2D computes clockwise", function() {
@@ -153,7 +153,7 @@ defineSuite([
                                                           new Cartesian2(1.0, 0.0)
                                                          ]);
 
-        expect(area).toEqualEnumeration(WindingOrder.CLOCKWISE);
+        expect(area).toEqual(WindingOrder.CLOCKWISE);
     });
 
     it("computeWindingOrder2D throws without positions", function() {

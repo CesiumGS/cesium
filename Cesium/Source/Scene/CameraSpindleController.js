@@ -464,14 +464,11 @@ define([
             p1 = p1.normalize();
             var dot = p0.dot(p1);
             var axis = p0.cross(p1);
-            var angle = 0.0;
 
             if(dot < 1.0 && !axis.equalsEpsilon(Cartesian3.getZero(), CesiumMath.EPSILON14)) { // dot is in [0, 1]
-                angle = -Math.acos(dot);
-            } else { // no rotation
-                axis = Cartesian3.getUnitX();
+                var angle = -Math.acos(dot);
+                this.rotate(axis, angle);
             }
-            this.rotate(axis, angle);
         }
         else {
             var startRho = p0.magnitude();

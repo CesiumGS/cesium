@@ -32,7 +32,7 @@ defineSuite([
         buffer = context.createVertexBuffer(16, BufferUsage.STATIC_DRAW);
 
         expect(buffer.getSizeInBytes()).toEqual(16);
-        expect(buffer.getUsage()).toEqualEnumeration(BufferUsage.STATIC_DRAW);
+        expect(buffer.getUsage()).toEqual(BufferUsage.STATIC_DRAW);
     });
 
     it("copies array to a vertex buffer", function() {
@@ -53,7 +53,7 @@ defineSuite([
         expect(buffer.getSizeInBytes()).toEqual(6);
         expect(buffer.getUsage()).toEqual(BufferUsage.STREAM_DRAW);
 
-        expect(buffer.getIndexDatatype()).toEqualEnumeration(IndexDatatype.UNSIGNED_SHORT);
+        expect(buffer.getIndexDatatype()).toEqual(IndexDatatype.UNSIGNED_SHORT);
         expect(buffer.getBytesPerIndex()).toEqual(2);
         expect(buffer.getNumberOfIndices()).toEqual(3);
     });

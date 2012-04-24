@@ -338,7 +338,7 @@ define([
      * or greater than <code>zoomMax</code>.
      */
     BingMapsTileProvider.prototype.loadTileImage = function(tile, onload, onerror, oninvalid) {
-        if (this.server !== this._server || this.key !== this._key || this.mapStyle.value !== this._mapStyle.value) {
+        if (this.server !== this._server || this.key !== this._key || this.mapStyle !== this._mapStyle) {
             this._url = '';
             this._server = this.server;
             this._key = this.key;

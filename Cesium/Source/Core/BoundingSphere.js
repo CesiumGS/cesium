@@ -25,7 +25,7 @@ define([
      *
      * @name BoundingSphere
      *
-     * @param {Array} positions List of points that the bounding sphere will enclose.  Each point must have a <code>x</code>, <code>y</code>, and <code>z</code> properties.
+     * @param {Array} positions List of points that the bounding sphere will enclose.  Each point must have <code>x</code>, <code>y</code>, and <code>z</code> properties.
      * @param {Number} radius An optional parameter, only to be supplied if <code>positions</code> contains a single point.
      *
      * @exception {DeveloperError} <code>positions</code> is required.
@@ -83,7 +83,7 @@ define([
                 y = currentPos.y;
                 z = currentPos.z;
 
-                // Store points containing the the smallest and largest componenets
+                // Store points containing the the smallest and largest components
                 if (x < xMin.x) {
                     xMin = currentPos;
                 }
@@ -199,10 +199,10 @@ define([
         var distanceToPlane = plane.getXYZ().dot(center) + plane.w;
 
         if (distanceToPlane < -radius) {
-            //center point is OUTSIDE of frustum
+            // The center point is OUTSIDE of the frustum
             return Intersect.OUTSIDE;
         } else if (distanceToPlane < radius) {
-            //center point is within frustum, but radius extends beyond it; partial overlap
+            // The center point is within the frustum, but radius extends beyond it; partial overlap
             return Intersect.INTERSECTING;
         }
         return Intersect.INSIDE;

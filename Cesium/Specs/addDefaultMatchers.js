@@ -70,10 +70,6 @@ define(function() {
                 return this.actual <= value;
             },
 
-            toEqualEnumeration : function(value) {
-                return this.actual.value === value.value;
-            },
-
             toEqualArray : function(expected) {
                 return isArrayEqual(this.actual, expected);
             },

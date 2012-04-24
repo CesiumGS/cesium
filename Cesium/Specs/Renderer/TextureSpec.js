@@ -233,8 +233,8 @@ defineSuite([
         var bytes = new Uint8Array([0, 255, 0, 255]);
 
         texture = context.createTexture2D({
-            pixelFormat :PixelFormat.RGBA, // Default
-            glPixelDatatype : PixelDatatype.UNSIGNED_BYTE, // Default
+            pixelFormat : PixelFormat.RGBA, // Default
+            pixelDatatype : PixelDatatype.UNSIGNED_BYTE, // Default
             source : {
                 width : 1,
                 height : 1,
@@ -249,9 +249,8 @@ defineSuite([
         texture = context.createTexture2D({
             width : 1,
             height : 1,
-            pixelFormat :PixelFormat.RGBA, // Default
-            glPixelDatatype : PixelDatatype.UNSIGNED_BYTE
-        // Default
+            pixelFormat : PixelFormat.RGBA, // Default
+            pixelDatatype : PixelDatatype.UNSIGNED_BYTE // Default
         });
 
         var bytes = new Uint8Array([255, 0, 255, 0]);

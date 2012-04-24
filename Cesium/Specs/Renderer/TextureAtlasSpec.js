@@ -86,7 +86,7 @@ defineSuite([
 
         expect(atlas.getBorderWidthInPixels()).toEqual(0);
 
-        expect(texture.getPixelFormat()).toEqualEnumeration(PixelFormat.RGBA);
+        expect(texture.getPixelFormat()).toEqual(PixelFormat.RGBA);
         expect(texture.getWidth()).toEqual(greenImage.width);
         expect(texture.getHeight()).toEqual(greenImage.height);
 

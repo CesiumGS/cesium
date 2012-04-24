@@ -5,15 +5,6 @@ define(function() {
     /**
      * Constructs an enumeration that contains both a numeric value and a name.
      * This is used so the name of the enumeration is available in the debugger.
-     * <br /><br />
-     * When comparing enumeration using exact equality, use their {@link Enumeration.value}
-     * property.
-     * <br /><br />
-     * <code>
-     * if (left.value === right.value) { <br/>
-     * &nbsp;&nbsp;&nbsp;&nbsp;// ... <br/>
-     * }
-     * </code>
      *
      * @param {Number} [value=undefined] The numeric value of the enumeration.
      * @param {String} [name=undefined] The name of the enumeration for debugging purposes.

@@ -56,7 +56,7 @@
         });
         
         it("gets default buffer usage", function() {
-            expect(polygon.bufferUsage).toEqualEnumeration(Cesium.BufferUsage.STATIC_DRAW);
+            expect(polygon.bufferUsage).toEqual(Cesium.BufferUsage.STATIC_DRAW);
         });
         
         it("has a default ellipsoid", function() {

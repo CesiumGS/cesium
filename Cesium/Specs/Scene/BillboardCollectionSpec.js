@@ -65,8 +65,8 @@
             expect(b.getPosition().equals(Cesium.Cartesian3.getZero())).toBeTruthy();
             expect(b.getPixelOffset().equals(Cesium.Cartesian2.getZero())).toBeTruthy();
             expect(b.getEyeOffset().equals(Cesium.Cartesian3.getZero())).toBeTruthy();
-            expect(b.getHorizontalOrigin()).toEqualEnumeration(Cesium.HorizontalOrigin.CENTER);
-            expect(b.getVerticalOrigin()).toEqualEnumeration(Cesium.VerticalOrigin.CENTER);
+            expect(b.getHorizontalOrigin()).toEqual(Cesium.HorizontalOrigin.CENTER);
+            expect(b.getVerticalOrigin()).toEqual(Cesium.VerticalOrigin.CENTER);
             expect(b.getScale()).toEqual(1.0);
             expect(b.getImageIndex()).toEqual(0);
             expect(b.getColor().red).toEqual(1.0);
@@ -92,8 +92,8 @@
             expect(b.getPosition().equals(new Cesium.Cartesian3(1.0, 2.0, 3.0))).toBeTruthy();
             expect(b.getPixelOffset().equals(new Cesium.Cartesian2(1.0, 2.0))).toBeTruthy();
             expect(b.getEyeOffset().equals(new Cesium.Cartesian3(1.0, 2.0, 3.0))).toBeTruthy();
-            expect(b.getHorizontalOrigin()).toEqualEnumeration(Cesium.HorizontalOrigin.LEFT);
-            expect(b.getVerticalOrigin()).toEqualEnumeration(Cesium.VerticalOrigin.BOTTOM);
+            expect(b.getHorizontalOrigin()).toEqual(Cesium.HorizontalOrigin.LEFT);
+            expect(b.getVerticalOrigin()).toEqual(Cesium.VerticalOrigin.BOTTOM);
             expect(b.getScale()).toEqual(2.0);
             expect(b.getImageIndex()).toEqual(1);
             expect(b.getColor().red).toEqual(1.0);
@@ -118,8 +118,8 @@
             expect(b.getPosition().equals(new Cesium.Cartesian3(1.0, 2.0, 3.0))).toBeTruthy();
             expect(b.getPixelOffset().equals(new Cesium.Cartesian2(1.0, 2.0))).toBeTruthy();
             expect(b.getEyeOffset().equals(new Cesium.Cartesian3(1.0, 2.0, 3.0))).toBeTruthy();
-            expect(b.getHorizontalOrigin()).toEqualEnumeration(Cesium.HorizontalOrigin.LEFT);
-            expect(b.getVerticalOrigin()).toEqualEnumeration(Cesium.VerticalOrigin.BOTTOM);
+            expect(b.getHorizontalOrigin()).toEqual(Cesium.HorizontalOrigin.LEFT);
+            expect(b.getVerticalOrigin()).toEqual(Cesium.VerticalOrigin.BOTTOM);
             expect(b.getScale()).toEqual(2.0);
             expect(b.getImageIndex()).toEqual(1);
             expect(b.getColor().red).toEqual(1.0);

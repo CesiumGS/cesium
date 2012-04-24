@@ -53,14 +53,14 @@ define([
             if (attribute.vertexBuffer) {
                 precreatedAttributes.push(attribute);
             } else {
-                switch (attribute.usage.value) {
-                case BufferUsage.STATIC_DRAW.value:
+                switch (attribute.usage) {
+                case BufferUsage.STATIC_DRAW:
                     staticAttributes.push(attribute);
                     break;
-                case BufferUsage.STREAM_DRAW.value:
+                case BufferUsage.STREAM_DRAW:
                     streamAttributes.push(attribute);
                     break;
-                case BufferUsage.DYNAMIC_DRAW.value:
+                case BufferUsage.DYNAMIC_DRAW:
                     dynamicAttributes.push(attribute);
                     break;
                 }
@@ -154,14 +154,19 @@ define([
                 throw new DeveloperError("attribute.componentsPerAttribute must be in the range [1, 4].");
             }
 
-            var datatype = attr.componentDatatype.value;
-            if ((datatype !== ComponentDatatype.BYTE.value) && (datatype !== ComponentDatatype.UNSIGNED_BYTE.value) && (datatype !== ComponentDatatype.SHORT.value) &&
-                    (datatype !== ComponentDatatype.UNSIGNED_SHORT.value) && (datatype !== ComponentDatatype.FLOAT.value)) {
+            var datatype = attr.componentDatatype;
+            if ((datatype !== ComponentDatatype.BYTE) &&
+                (datatype !== ComponentDatatype.UNSIGNED_BYTE) &&
+                (datatype !== ComponentDatatype.SHORT) &&
+                (datatype !== ComponentDatatype.UNSIGNED_SHORT) &&
+                (datatype !== ComponentDatatype.FLOAT)) {
                 throw new DeveloperError("Attribute must have a valid componentDatatype or not specify it.");
             }
 
-            var usage = attr.usage.value;
-            if ((usage !== BufferUsage.STATIC_DRAW.value) && (usage !== BufferUsage.STREAM_DRAW.value) && (usage !== BufferUsage.DYNAMIC_DRAW.value)) {
+            var usage = attr.usage;
+            if ((usage !== BufferUsage.STATIC_DRAW) &&
+                (usage !== BufferUsage.STREAM_DRAW) &&
+                (usage !== BufferUsage.DYNAMIC_DRAW)) {
                 throw new DeveloperError("Attribute must have a valid usage or not specify it.");
             }
         }

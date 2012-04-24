@@ -94,10 +94,11 @@ define([
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(target, this._texture);
 
+        //Firefox bug: texSubImage2D has overloads and can't resolve our enums, so we use + to explicitly convert to a number.
         if (source.arrayBufferView) {
-            gl.texSubImage2D(target, 0, xOffset, yOffset, width, height, this._pixelFormat.value, this._pixelDatatype.value, source.arrayBufferView);
+            gl.texSubImage2D(target, 0, xOffset, yOffset, width, height, +this._pixelFormat, +this._pixelDatatype, source.arrayBufferView);
         } else {
-            gl.texSubImage2D(target, 0, xOffset, yOffset, this._pixelFormat.value, this._pixelDatatype.value, source);
+            gl.texSubImage2D(target, 0, xOffset, yOffset, this._pixelFormat, this._pixelDatatype, source);
         }
 
         gl.bindTexture(target, null);
@@ -187,14 +188,13 @@ define([
         var target = this._textureTarget;
 
         hint = hint || MipmapHint.DONT_CARE;
-        var glHint = hint.value;
-        if ((glHint !== gl.DONT_CARE) &&
-            (glHint !== gl.FASTEST) &&
-            (glHint !== gl.NICEST)) {
+        if ((hint !== MipmapHint.DONT_CARE) &&
+            (hint !== MipmapHint.FASTEST) &&
+            (hint !== MipmapHint.NICEST)) {
             throw new DeveloperError("Invalid hint.", "hint");
         }
 
-        gl.hint(gl.GENERATE_MIPMAP_HINT, glHint);
+        gl.hint(gl.GENERATE_MIPMAP_HINT, hint);
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(target, this._texture);
         gl.generateMipmap(target);
@@ -224,10 +224,10 @@ define([
 
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(target, this._texture);
-        gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, s.minificationFilter.value);
-        gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, s.magnificationFilter.value);
-        gl.texParameteri(target, gl.TEXTURE_WRAP_S, s.wrapS.value);
-        gl.texParameteri(target, gl.TEXTURE_WRAP_T, s.wrapT.value);
+        gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, s.minificationFilter);
+        gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, s.magnificationFilter);
+        gl.texParameteri(target, gl.TEXTURE_WRAP_S, s.wrapS);
+        gl.texParameteri(target, gl.TEXTURE_WRAP_T, s.wrapT);
         if (this._textureFilterAnisotropic) {
             gl.texParameteri(target, this._textureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, s.maximumAnisotropy);
         }

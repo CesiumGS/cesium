@@ -4,6 +4,7 @@ defineSuite([
          'Core/ComponentDatatype',
          'Core/MeshFilters',
          'Core/PrimitiveType',
+         'Core/IndexDatatype',
          'Renderer/BufferUsage',
          'Renderer/VertexLayout'
      ], "Renderer/VertexArrayFactory", function(
@@ -12,6 +13,7 @@ defineSuite([
          ComponentDatatype,
          MeshFilters,
          PrimitiveType,
+         IndexDatatype,
          BufferUsage,
          VertexLayout) {
     "use strict";
@@ -72,12 +74,12 @@ defineSuite([
 
         var position = mesh.attributes.position;
         expect(va.getAttribute(0).index).toEqual(0);
-        expect(va.getAttribute(0).componentDatatype).toEqualEnumeration(position.componentDatatype);
+        expect(va.getAttribute(0).componentDatatype).toEqual(position.componentDatatype);
         expect(va.getAttribute(0).componentsPerAttribute).toEqual(position.componentsPerAttribute);
         expect(va.getAttribute(0).offsetInBytes).toEqual(0);
         expect(va.getAttribute(0).strideInBytes).toEqual(0); // Tightly packed
 
-        expect(va.getAttribute(0).vertexBuffer.getUsage()).toEqualEnumeration(BufferUsage.DYNAMIC_DRAW); // Default
+        expect(va.getAttribute(0).vertexBuffer.getUsage()).toEqual(BufferUsage.DYNAMIC_DRAW); // Default
     });
 
     it("creates a single-attribute vertex (interleaved)", function() {
@@ -103,12 +105,12 @@ defineSuite([
 
         var position = mesh.attributes.position;
         expect(va.getAttribute(0).index).toEqual(0);
-        expect(va.getAttribute(0).componentDatatype).toEqualEnumeration(position.componentDatatype);
+        expect(va.getAttribute(0).componentDatatype).toEqual(position.componentDatatype);
         expect(va.getAttribute(0).componentsPerAttribute).toEqual(position.componentsPerAttribute);
         expect(va.getAttribute(0).offsetInBytes).toEqual(0);
         expect(va.getAttribute(0).strideInBytes).toEqual(position.componentDatatype.sizeInBytes * position.componentsPerAttribute);
 
-        expect(va.getAttribute(0).vertexBuffer.getUsage()).toEqualEnumeration(BufferUsage.STATIC_DRAW);
+        expect(va.getAttribute(0).vertexBuffer.getUsage()).toEqual(BufferUsage.STATIC_DRAW);
     });
 
     it("creates a homogeneous multiple-attribute vertex (non-interleaved)", function() {
@@ -137,14 +139,14 @@ defineSuite([
 
         var position = mesh.attributes.position;
         expect(va.getAttribute(0).index).toEqual(0);
-        expect(va.getAttribute(0).componentDatatype).toEqualEnumeration(position.componentDatatype);
+        expect(va.getAttribute(0).componentDatatype).toEqual(position.componentDatatype);
         expect(va.getAttribute(0).componentsPerAttribute).toEqual(position.componentsPerAttribute);
         expect(va.getAttribute(0).offsetInBytes).toEqual(0);
         expect(va.getAttribute(0).strideInBytes).toEqual(0); // Tightly packed
 
         var normal = mesh.attributes.position;
         expect(va.getAttribute(1).index).toEqual(1);
-        expect(va.getAttribute(1).componentDatatype).toEqualEnumeration(normal.componentDatatype);
+        expect(va.getAttribute(1).componentDatatype).toEqual(normal.componentDatatype);
         expect(va.getAttribute(1).componentsPerAttribute).toEqual(normal.componentsPerAttribute);
         expect(va.getAttribute(1).offsetInBytes).toEqual(0);
         expect(va.getAttribute(1).strideInBytes).toEqual(0); // Tightly packed
@@ -182,13 +184,13 @@ defineSuite([
         var expectedStride = position.componentDatatype.sizeInBytes * position.componentsPerAttribute + normal.componentDatatype.sizeInBytes * normal.componentsPerAttribute;
 
         expect(va.getAttribute(0).index).toEqual(0);
-        expect(va.getAttribute(0).componentDatatype).toEqualEnumeration(position.componentDatatype);
+        expect(va.getAttribute(0).componentDatatype).toEqual(position.componentDatatype);
         expect(va.getAttribute(0).componentsPerAttribute).toEqual(position.componentsPerAttribute);
         expect(va.getAttribute(0).offsetInBytes).toEqual(0);
         expect(va.getAttribute(0).strideInBytes).toEqual(expectedStride);
 
         expect(va.getAttribute(1).index).toEqual(1);
-        expect(va.getAttribute(1).componentDatatype).toEqualEnumeration(normal.componentDatatype);
+        expect(va.getAttribute(1).componentDatatype).toEqual(normal.componentDatatype);
         expect(va.getAttribute(1).componentsPerAttribute).toEqual(normal.componentsPerAttribute);
         expect(va.getAttribute(1).offsetInBytes).toEqual(position.componentDatatype.sizeInBytes * position.componentsPerAttribute);
         expect(va.getAttribute(1).strideInBytes).toEqual(expectedStride);
@@ -226,13 +228,13 @@ defineSuite([
         var expectedStride = position.componentDatatype.sizeInBytes * position.componentsPerAttribute + colors.componentDatatype.sizeInBytes * colors.componentsPerAttribute;
 
         expect(va.getAttribute(0).index).toEqual(0);
-        expect(va.getAttribute(0).componentDatatype).toEqualEnumeration(position.componentDatatype);
+        expect(va.getAttribute(0).componentDatatype).toEqual(position.componentDatatype);
         expect(va.getAttribute(0).componentsPerAttribute).toEqual(position.componentsPerAttribute);
         expect(va.getAttribute(0).offsetInBytes).toEqual(0);
         expect(va.getAttribute(0).strideInBytes).toEqual(expectedStride);
 
         expect(va.getAttribute(1).index).toEqual(1);
-        expect(va.getAttribute(1).componentDatatype).toEqualEnumeration(colors.componentDatatype);
+        expect(va.getAttribute(1).componentDatatype).toEqual(colors.componentDatatype);
         expect(va.getAttribute(1).componentsPerAttribute).toEqual(colors.componentsPerAttribute);
         expect(va.getAttribute(1).offsetInBytes).toEqual(position.componentDatatype.sizeInBytes * position.componentsPerAttribute);
         expect(va.getAttribute(1).strideInBytes).toEqual(expectedStride);
@@ -551,8 +553,8 @@ defineSuite([
 
         expect(va.getNumberOfAttributes()).toEqual(0);
         expect(va.getIndexBuffer()).toBeDefined();
-        expect(va.getIndexBuffer().getUsage()).toEqualEnumeration(BufferUsage.DYNAMIC_DRAW); // Default
-        expect(va.getIndexBuffer().getIndexDatatype()).toEqualEnumeration(ComponentDatatype.UNSIGNED_SHORT);
+        expect(va.getIndexBuffer().getUsage()).toEqual(BufferUsage.DYNAMIC_DRAW); // Default
+        expect(va.getIndexBuffer().getIndexDatatype()).toEqual(IndexDatatype.UNSIGNED_SHORT);
         expect(va.getIndexBuffer().getNumberOfIndices()).toEqual(mesh.indexLists[0].values.length);
     });
 

@@ -19,7 +19,7 @@ define([
         var _renderbuffer = _gl.createRenderbuffer();
 
         _gl.bindRenderbuffer(_gl.RENDERBUFFER, _renderbuffer);
-        _gl.renderbufferStorage(_gl.RENDERBUFFER, _format.value, _width, _height);
+        _gl.renderbufferStorage(_gl.RENDERBUFFER, _format, _width, _height);
         _gl.bindRenderbuffer(_gl.RENDERBUFFER, null);
 
         /**

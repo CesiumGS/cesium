@@ -17,7 +17,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        USE_CORS : new Enumeration(0, "Use CORS"),
+        USE_CORS : new Enumeration(0, "USE_CORS"),
 
         /**
          * Request all images through the proxy.
@@ -25,7 +25,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        ALWAYS : new Enumeration(1, "Always")
+        ALWAYS : new Enumeration(1, "ALWAYS")
     };
 
     return ProxyUsagePolicy;

@@ -602,7 +602,7 @@ define([
                (this._font === other._font) &&
                (shallowEquals(this._fillColor, other._fillColor)) &&
                (shallowEquals(this._outlineColor, other._outlineColor)) &&
-               (this._style.value === other._style.value);
+               (this._style === other._style);
     };
 
     Label.prototype._destroy = function() {

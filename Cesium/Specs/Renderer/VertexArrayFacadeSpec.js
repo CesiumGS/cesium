@@ -40,9 +40,9 @@ defineSuite([
 
         expect(vaf.va[0].va.getAttribute(0).vertexBuffer).toBeDefined();
         expect(vaf.va[0].va.getAttribute(0).vertexBuffer.getSizeInBytes()).toEqual(1 * 3 * 4);
-        expect(vaf.va[0].va.getAttribute(0).vertexBuffer.getUsage()).toEqualEnumeration(BufferUsage.STATIC_DRAW);
+        expect(vaf.va[0].va.getAttribute(0).vertexBuffer.getUsage()).toEqual(BufferUsage.STATIC_DRAW);
         expect(vaf.va[0].va.getAttribute(0).componentsPerAttribute).toEqual(3);
-        expect(vaf.va[0].va.getAttribute(0).componentDatatype).toEqualEnumeration(ComponentDatatype.FLOAT);
+        expect(vaf.va[0].va.getAttribute(0).componentDatatype).toEqual(ComponentDatatype.FLOAT);
         expect(vaf.va[0].va.getAttribute(0).offsetInBytes).toEqual(0);
         expect(vaf.va[0].va.getAttribute(0).strideInBytes).toEqual(3 * 4);
     });
@@ -67,9 +67,9 @@ defineSuite([
 
         expect(vaf.va[0].va.getAttribute(0).vertexBuffer).toBeDefined();
         expect(vaf.va[0].va.getAttribute(0).vertexBuffer.getSizeInBytes()).toEqual(2 * 3 * 4);
-        expect(vaf.va[0].va.getAttribute(0).vertexBuffer.getUsage()).toEqualEnumeration(BufferUsage.STATIC_DRAW);
+        expect(vaf.va[0].va.getAttribute(0).vertexBuffer.getUsage()).toEqual(BufferUsage.STATIC_DRAW);
         expect(vaf.va[0].va.getAttribute(0).componentsPerAttribute).toEqual(3);
-        expect(vaf.va[0].va.getAttribute(0).componentDatatype).toEqualEnumeration(ComponentDatatype.FLOAT);
+        expect(vaf.va[0].va.getAttribute(0).componentDatatype).toEqual(ComponentDatatype.FLOAT);
         expect(vaf.va[0].va.getAttribute(0).offsetInBytes).toEqual(0);
         expect(vaf.va[0].va.getAttribute(0).strideInBytes).toEqual(3 * 4);
     });
@@ -102,16 +102,16 @@ defineSuite([
         // Position attribute
         expect(vaf.va[0].va.getAttribute(0).vertexBuffer).toBeDefined();
         expect(vaf.va[0].va.getAttribute(0).vertexBuffer.getSizeInBytes()).toEqual(1 * ((3 * 4) + (4 * 1)));
-        expect(vaf.va[0].va.getAttribute(0).vertexBuffer.getUsage()).toEqualEnumeration(BufferUsage.STATIC_DRAW);
+        expect(vaf.va[0].va.getAttribute(0).vertexBuffer.getUsage()).toEqual(BufferUsage.STATIC_DRAW);
         expect(vaf.va[0].va.getAttribute(0).componentsPerAttribute).toEqual(3);
-        expect(vaf.va[0].va.getAttribute(0).componentDatatype).toEqualEnumeration(ComponentDatatype.FLOAT);
+        expect(vaf.va[0].va.getAttribute(0).componentDatatype).toEqual(ComponentDatatype.FLOAT);
         expect(vaf.va[0].va.getAttribute(0).offsetInBytes).toEqual(0);
         expect(vaf.va[0].va.getAttribute(0).strideInBytes).toEqual((3 * 4) + (4 * 1));
 
         // Color attribute
         expect(vaf.va[0].va.getAttribute(1).vertexBuffer).toEqual(vaf.va[0].va.getAttribute(0).vertexBuffer);
         expect(vaf.va[0].va.getAttribute(1).componentsPerAttribute).toEqual(4);
-        expect(vaf.va[0].va.getAttribute(1).componentDatatype).toEqualEnumeration(ComponentDatatype.UNSIGNED_BYTE);
+        expect(vaf.va[0].va.getAttribute(1).componentDatatype).toEqual(ComponentDatatype.UNSIGNED_BYTE);
         expect(vaf.va[0].va.getAttribute(1).offsetInBytes).toEqual(3 * 4);
         expect(vaf.va[0].va.getAttribute(1).strideInBytes).toEqual(vaf.va[0].va.getAttribute(0).strideInBytes);
     });
@@ -145,18 +145,18 @@ defineSuite([
         // Position attribute
         expect(vaf.va[0].va.getAttribute(0).vertexBuffer).toBeDefined();
         expect(vaf.va[0].va.getAttribute(0).vertexBuffer.getSizeInBytes()).toEqual(1 * (3 * 4));
-        expect(vaf.va[0].va.getAttribute(0).vertexBuffer.getUsage()).toEqualEnumeration(BufferUsage.STATIC_DRAW);
+        expect(vaf.va[0].va.getAttribute(0).vertexBuffer.getUsage()).toEqual(BufferUsage.STATIC_DRAW);
         expect(vaf.va[0].va.getAttribute(0).componentsPerAttribute).toEqual(3);
-        expect(vaf.va[0].va.getAttribute(0).componentDatatype).toEqualEnumeration(ComponentDatatype.FLOAT);
+        expect(vaf.va[0].va.getAttribute(0).componentDatatype).toEqual(ComponentDatatype.FLOAT);
         expect(vaf.va[0].va.getAttribute(0).offsetInBytes).toEqual(0);
         expect(vaf.va[0].va.getAttribute(0).strideInBytes).toEqual(3 * 4);
 
         // Texture coordinate attribute
         expect(vaf.va[0].va.getAttribute(1).vertexBuffer).toBeDefined();
         expect(vaf.va[0].va.getAttribute(1).vertexBuffer.getSizeInBytes()).toEqual(1 * (2 * 2));
-        expect(vaf.va[0].va.getAttribute(1).vertexBuffer.getUsage()).toEqualEnumeration(BufferUsage.DYNAMIC_DRAW);
+        expect(vaf.va[0].va.getAttribute(1).vertexBuffer.getUsage()).toEqual(BufferUsage.DYNAMIC_DRAW);
         expect(vaf.va[0].va.getAttribute(1).componentsPerAttribute).toEqual(2);
-        expect(vaf.va[0].va.getAttribute(1).componentDatatype).toEqualEnumeration(ComponentDatatype.UNSIGNED_SHORT);
+        expect(vaf.va[0].va.getAttribute(1).componentDatatype).toEqual(ComponentDatatype.UNSIGNED_SHORT);
         expect(vaf.va[0].va.getAttribute(1).offsetInBytes).toEqual(0);
         expect(vaf.va[0].va.getAttribute(1).strideInBytes).toEqual(2 * 2);
     });
@@ -203,18 +203,18 @@ defineSuite([
         // Position attribute
         expect(vaf.va[0].va.getAttribute(0).vertexBuffer).toBeDefined();
         expect(vaf.va[0].va.getAttribute(0).vertexBuffer.getSizeInBytes()).toEqual(2 * (3 * 4));
-        expect(vaf.va[0].va.getAttribute(0).vertexBuffer.getUsage()).toEqualEnumeration(BufferUsage.STATIC_DRAW);
+        expect(vaf.va[0].va.getAttribute(0).vertexBuffer.getUsage()).toEqual(BufferUsage.STATIC_DRAW);
         expect(vaf.va[0].va.getAttribute(0).componentsPerAttribute).toEqual(3);
-        expect(vaf.va[0].va.getAttribute(0).componentDatatype).toEqualEnumeration(ComponentDatatype.FLOAT);
+        expect(vaf.va[0].va.getAttribute(0).componentDatatype).toEqual(ComponentDatatype.FLOAT);
         expect(vaf.va[0].va.getAttribute(0).offsetInBytes).toEqual(0);
         expect(vaf.va[0].va.getAttribute(0).strideInBytes).toEqual(3 * 4);
 
         // Temperature attribute
         expect(vaf.va[0].va.getAttribute(1).vertexBuffer).toBeDefined();
         expect(vaf.va[0].va.getAttribute(1).vertexBuffer.getSizeInBytes()).toEqual(2 * 4);
-        expect(vaf.va[0].va.getAttribute(1).vertexBuffer.getUsage()).toEqualEnumeration(BufferUsage.STREAM_DRAW);
+        expect(vaf.va[0].va.getAttribute(1).vertexBuffer.getUsage()).toEqual(BufferUsage.STREAM_DRAW);
         expect(vaf.va[0].va.getAttribute(1).componentsPerAttribute).toEqual(1);
-        expect(vaf.va[0].va.getAttribute(1).componentDatatype).toEqualEnumeration(ComponentDatatype.FLOAT);
+        expect(vaf.va[0].va.getAttribute(1).componentDatatype).toEqual(ComponentDatatype.FLOAT);
         expect(vaf.va[0].va.getAttribute(1).offsetInBytes).toEqual(0);
         expect(vaf.va[0].va.getAttribute(1).strideInBytes).toEqual(1 * 4);
     });

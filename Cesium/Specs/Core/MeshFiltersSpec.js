@@ -25,7 +25,7 @@ defineSuite([
             }]
         });
 
-        expect(mesh.indexLists[0].primitiveType).toEqualEnumeration(PrimitiveType.LINES);
+        expect(mesh.indexLists[0].primitiveType).toEqual(PrimitiveType.LINES);
 
         var v = mesh.indexLists[0].values;
         expect(v.length).toEqual(12);
@@ -53,7 +53,7 @@ defineSuite([
             }]
         });
 
-        expect(mesh.indexLists[0].primitiveType).toEqualEnumeration(PrimitiveType.LINES);
+        expect(mesh.indexLists[0].primitiveType).toEqual(PrimitiveType.LINES);
 
         var v = mesh.indexLists[0].values;
         expect(v.length).toEqual(12);
@@ -81,7 +81,7 @@ defineSuite([
             }]
         });
 
-        expect(mesh.indexLists[0].primitiveType).toEqualEnumeration(PrimitiveType.LINES);
+        expect(mesh.indexLists[0].primitiveType).toEqual(PrimitiveType.LINES);
 
         var v = mesh.indexLists[0].values;
         expect(v.length).toEqual(12);

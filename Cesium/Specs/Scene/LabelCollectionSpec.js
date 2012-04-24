@@ -45,11 +45,11 @@
             expect(l.getOutlineColor().green).toEqual(0.0);
             expect(l.getOutlineColor().blue).toEqual(0.0);
             expect(l.getOutlineColor().alpha).toEqual(1.0);
-            expect(l.getStyle()).toEqualEnumeration(Cesium.LabelStyle.FILL);
+            expect(l.getStyle()).toEqual(Cesium.LabelStyle.FILL);
             expect(l.getPixelOffset().equals(Cesium.Cartesian2.getZero())).toBeTruthy();
             expect(l.getEyeOffset().equals(Cesium.Cartesian3.getZero())).toBeTruthy();
-            expect(l.getHorizontalOrigin()).toEqualEnumeration(Cesium.HorizontalOrigin.LEFT);
-            expect(l.getVerticalOrigin()).toEqualEnumeration(Cesium.VerticalOrigin.BOTTOM);
+            expect(l.getHorizontalOrigin()).toEqual(Cesium.HorizontalOrigin.LEFT);
+            expect(l.getVerticalOrigin()).toEqual(Cesium.VerticalOrigin.BOTTOM);
             expect(l.getScale()).toEqual(1.0);
         });
 
@@ -82,11 +82,11 @@
             expect(l.getOutlineColor().green).toEqual(4.0);
             expect(l.getOutlineColor().blue).toEqual(2.0);
             expect(l.getOutlineColor().alpha).toEqual(1.0);
-            expect(l.getStyle()).toEqualEnumeration(Cesium.LabelStyle.FILL_AND_OUTLINE);
+            expect(l.getStyle()).toEqual(Cesium.LabelStyle.FILL_AND_OUTLINE);
             expect(l.getPixelOffset().equals(new Cesium.Cartesian2(1.0, 2.0))).toBeTruthy();
             expect(l.getEyeOffset().equals(new Cesium.Cartesian3(1.0, 2.0, 3.0))).toBeTruthy();
-            expect(l.getHorizontalOrigin()).toEqualEnumeration(Cesium.HorizontalOrigin.LEFT);
-            expect(l.getVerticalOrigin()).toEqualEnumeration(Cesium.VerticalOrigin.BOTTOM);
+            expect(l.getHorizontalOrigin()).toEqual(Cesium.HorizontalOrigin.LEFT);
+            expect(l.getVerticalOrigin()).toEqual(Cesium.VerticalOrigin.BOTTOM);
             expect(l.getScale()).toEqual(2.0);
         });
 
@@ -117,11 +117,11 @@
             expect(l.getOutlineColor().green).toEqual(4.0);
             expect(l.getOutlineColor().blue).toEqual(2.0);
             expect(l.getOutlineColor().alpha).toEqual(1.0);
-            expect(l.getStyle()).toEqualEnumeration(Cesium.LabelStyle.FILL_AND_OUTLINE);
+            expect(l.getStyle()).toEqual(Cesium.LabelStyle.FILL_AND_OUTLINE);
             expect(l.getPixelOffset().equals(new Cesium.Cartesian2(1.0, 2.0))).toBeTruthy();
             expect(l.getEyeOffset().equals(new Cesium.Cartesian3(1.0, 2.0, 3.0))).toBeTruthy();
-            expect(l.getHorizontalOrigin()).toEqualEnumeration(Cesium.HorizontalOrigin.LEFT);
-            expect(l.getVerticalOrigin()).toEqualEnumeration(Cesium.VerticalOrigin.BOTTOM);
+            expect(l.getHorizontalOrigin()).toEqual(Cesium.HorizontalOrigin.LEFT);
+            expect(l.getVerticalOrigin()).toEqual(Cesium.VerticalOrigin.BOTTOM);
             expect(l.getScale()).toEqual(2.0);
         });
 
@@ -265,7 +265,7 @@
         });
 
         it("gets default buffer usage", function () {
-            expect(labels.bufferUsage).toEqualEnumeration(Cesium.BufferUsage.STATIC_DRAW);
+            expect(labels.bufferUsage).toEqual(Cesium.BufferUsage.STATIC_DRAW);
         });
 
         it("doesn't render when constructed", function () {

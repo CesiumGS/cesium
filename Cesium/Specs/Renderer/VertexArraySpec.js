@@ -57,7 +57,7 @@ defineSuite([
         expect(va.getAttribute(0).enabled).toBeTruthy();
         expect(va.getAttribute(0).vertexBuffer).toEqual(positionBuffer);
         expect(va.getAttribute(0).componentsPerAttribute).toEqual(3);
-        expect(va.getAttribute(0).componentDatatype).toEqualEnumeration(ComponentDatatype.FLOAT);
+        expect(va.getAttribute(0).componentDatatype).toEqual(ComponentDatatype.FLOAT);
         expect(va.getAttribute(0).normalize).toBeFalsy();
         expect(va.getAttribute(0).offsetInBytes).toEqual(0);
         expect(va.getAttribute(0).strideInBytes).toEqual(0);
@@ -128,7 +128,7 @@ defineSuite([
         expect(va.getAttribute(0).enabled).toBeTruthy();
         expect(va.getAttribute(0).vertexBuffer).toEqual(positionBuffer);
         expect(va.getAttribute(0).componentsPerAttribute).toEqual(3);
-        expect(va.getAttribute(0).componentDatatype).toEqualEnumeration(ComponentDatatype.FLOAT);
+        expect(va.getAttribute(0).componentDatatype).toEqual(ComponentDatatype.FLOAT);
         expect(va.getAttribute(0).normalize).toBeFalsy();
         expect(va.getAttribute(0).offsetInBytes).toEqual(0);
         expect(va.getAttribute(0).strideInBytes).toEqual(0);

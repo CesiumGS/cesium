@@ -69,12 +69,12 @@ define([
         }
 
         if (attribute.componentDatatype) {
-            var datatype = attribute.componentDatatype.value;
-            if ((datatype !== ComponentDatatype.BYTE.value) &&
-                (datatype !== ComponentDatatype.UNSIGNED_BYTE.value) &&
-                (datatype !== ComponentDatatype.SHORT.value) &&
-                (datatype !== ComponentDatatype.UNSIGNED_SHORT.value) &&
-                (datatype !== ComponentDatatype.FLOAT.value)) {
+            var datatype = attribute.componentDatatype;
+            if ((datatype !== ComponentDatatype.BYTE) &&
+                (datatype !== ComponentDatatype.UNSIGNED_BYTE) &&
+                (datatype !== ComponentDatatype.SHORT) &&
+                (datatype !== ComponentDatatype.UNSIGNED_SHORT) &&
+                (datatype !== ComponentDatatype.FLOAT)) {
                 throw new DeveloperError("attribute must have a valid componentDatatype or not specify it.");
             }
         }
@@ -101,7 +101,7 @@ define([
             // Common case: vertex buffer for per-vertex data
             attr.vertexAttrib = function(gl) {
                 gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer._getBuffer());
-                gl.vertexAttribPointer(this.index, this.componentsPerAttribute, this.componentDatatype.value, this.normalize, this.strideInBytes, this.offsetInBytes);
+                gl.vertexAttribPointer(this.index, this.componentsPerAttribute, this.componentDatatype, this.normalize, this.strideInBytes, this.offsetInBytes);
                 gl.enableVertexAttribArray(this.index);
             };
 
