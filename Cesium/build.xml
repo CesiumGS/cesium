@@ -24,8 +24,6 @@
 
 	<target name="Clean" depends="deleteBuild" description="Cleans the build." />
 
-	<target name="Publish" depends="publishToWebserver" description="Publishes to the webserver's virtual directory." />
-
 	<!-- properties controlling which steps get run -->
 	<property name="build.minification" value="false" />
 	<property name="build.documentation" value="false" />
@@ -412,15 +410,6 @@ writer.close();
 
 	<target name="deleteBuild">
 		<delete dir="${buildDirectory}" />
-	</target>
-
-	<!-- ********************************************************************** -->
-
-	<target name="publishToWebserver">
-		<delete dir="${webserverDirectory}" />
-		<copy todir="${webserverDirectory}">
-			<fileset dir="${buildDirectory}" />
-		</copy>
 	</target>
 
 </project>
