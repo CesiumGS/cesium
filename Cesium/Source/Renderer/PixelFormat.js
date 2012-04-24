@@ -49,7 +49,23 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        LUMINANCE_ALPHA : new Enumeration(0x190A, "LUMINANCE_ALPHA")
+        LUMINANCE_ALPHA : new Enumeration(0x190A, "LUMINANCE_ALPHA"),
+
+        /**
+         * DOC_TBA
+         *
+         * @param pixelFormat
+         *
+         * @returns {Boolean}
+         */
+        validate : function(pixelFormat) {
+            return ((pixelFormat === PixelFormat.DEPTH_COMPONENT) ||
+                    (pixelFormat === PixelFormat.ALPHA) ||
+                    (pixelFormat === PixelFormat.RGB) ||
+                    (pixelFormat === PixelFormat.RGBA) ||
+                    (pixelFormat === PixelFormat.LUMINANCE) ||
+                    (pixelFormat === PixelFormat.LUMINANCE_ALPHA));
+        }
     };
 
     return PixelFormat;

@@ -28,7 +28,20 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        DYNAMIC_DRAW : new Enumeration(0x88E8, "DYNAMIC_DRAW")
+        DYNAMIC_DRAW : new Enumeration(0x88E8, "DYNAMIC_DRAW"),
+
+        /**
+         * DOC_TBA
+         *
+         * @param bufferUsage
+         *
+         * @returns {Boolean}
+         */
+        validate : function(bufferUsage) {
+            return ((bufferUsage === BufferUsage.STREAM_DRAW) ||
+                    (bufferUsage === BufferUsage.STATIC_DRAW) ||
+                    (bufferUsage === BufferUsage.DYNAMIC_DRAW));
+        }
     };
 
     return BufferUsage;
