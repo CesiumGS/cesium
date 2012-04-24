@@ -126,7 +126,32 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        SOURCE_ALPHA_SATURATE : new Enumeration(0x0308, "SOURCE_ALPHA_SATURATE") // WebGL: SRC_ALPHA_SATURATE
+        SOURCE_ALPHA_SATURATE : new Enumeration(0x0308, "SOURCE_ALPHA_SATURATE"), // WebGL: SRC_ALPHA_SATURATE
+
+        /**
+         * DOC_TBA
+         *
+         * @param blendFunction
+         *
+         * @returns {Boolean}
+         */
+        validate : function(blendFunction) {
+            return ((blendFunction === BlendFunction.ZERO) ||
+                    (blendFunction === BlendFunction.ONE) ||
+                    (blendFunction === BlendFunction.SOURCE_COLOR) ||
+                    (blendFunction === BlendFunction.ONE_MINUS_SOURCE_COLOR) ||
+                    (blendFunction === BlendFunction.DESTINATION_COLOR) ||
+                    (blendFunction === BlendFunction.ONE_MINUS_DESTINATION_COLOR) ||
+                    (blendFunction === BlendFunction.SOURCE_ALPHA) ||
+                    (blendFunction === BlendFunction.ONE_MINUS_SOURCE_ALPHA) ||
+                    (blendFunction === BlendFunction.DESTINATION_ALPHA) ||
+                    (blendFunction === BlendFunction.ONE_MINUS_DESTINATION_ALPHA) ||
+                    (blendFunction === BlendFunction.CONSTANT_COLOR) ||
+                    (blendFunction === BlendFunction.ONE_MINUS_CONSTANT_COLOR) ||
+                    (blendFunction === BlendFunction.CONSTANT_ALPHA) ||
+                    (blendFunction === BlendFunction.ONE_MINUS_CONSTANT_ALPHA) ||
+                    (blendFunction === BlendFunction.SOURCE_ALPHA_SATURATE));
+        }
     };
 
     return BlendFunction;

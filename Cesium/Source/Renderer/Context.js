@@ -1133,16 +1133,13 @@ define([
             throw new DeveloperError("The size in bytes must be greater than zero.", "arrayViewOrSizeInBytes");
         }
 
-        var glUsage = usage;
-        if ((glUsage !== BufferUsage.STATIC_DRAW) &&
-            (glUsage !== BufferUsage.STREAM_DRAW) &&
-            (glUsage !== BufferUsage.DYNAMIC_DRAW)) {
+        if (!BufferUsage.validate(usage)) {
             throw new DeveloperError("Invalid usage.", "usage");
         }
 
         var buffer = gl.createBuffer();
         gl.bindBuffer(bufferTarget, buffer);
-        gl.bufferData(bufferTarget, arrayViewOrSizeInBytes, glUsage);
+        gl.bufferData(bufferTarget, arrayViewOrSizeInBytes, usage);
         gl.bindBuffer(bufferTarget, null);
 
         return new Buffer(gl, bufferTarget, sizeInBytes, usage, buffer);
@@ -1396,21 +1393,13 @@ define([
             throw new DeveloperError("Height must be less than or equal to the maximum texture size (" + this._maximumTextureSize + ").  Check getMaximumTextureSize().", "description");
         }
 
-        var gl = this._gl;
         var pixelFormat = description.pixelFormat || PixelFormat.RGBA;
-        if ((pixelFormat !== PixelFormat.ALPHA) &&
-            (pixelFormat !== PixelFormat.RGB) &&
-            (pixelFormat !== PixelFormat.RGBA) &&
-            (pixelFormat !== PixelFormat.LUMINANCE) &&
-            (pixelFormat !== PixelFormat.LUMINANCE_ALPHA)) {
+        if (!PixelFormat.validate(pixelFormat)) {
             throw new DeveloperError("Invalid description.pixelFormat.", "description");
         }
 
         var pixelDatatype = description.pixelDatatype || PixelDatatype.UNSIGNED_BYTE;
-        if ((pixelDatatype !== PixelDatatype.UNSIGNED_BYTE) &&
-            (pixelDatatype !== PixelDatatype.UNSIGNED_SHORT_5_6_5) &&
-            (pixelDatatype !== PixelDatatype.UNSIGNED_SHORT_4_4_4_4) &&
-            (pixelDatatype !== PixelDatatype.UNSIGNED_SHORT_5_5_5_1)) {
+        if (!PixelDatatype.validate(pixelDatatype)) {
             throw new DeveloperError("Invalid description.pixelDatatype.", "description");
         }
 
@@ -1418,6 +1407,7 @@ define([
         // http://media.tojicode.com/webglCamp4/#20
         var preMultiplyAlpha = description.preMultiplyAlpha || ((pixelFormat === PixelFormat.RGB) || (pixelFormat === PixelFormat.LUMINANCE));
 
+        var gl = this._gl;
         var textureTarget = gl.TEXTURE_2D;
         var texture = gl.createTexture();
 
@@ -1467,13 +1457,8 @@ define([
      * @see Context#createSampler
      */
     Context.prototype.createTexture2DFromFramebuffer = function(pixelFormat, framebufferXOffset, framebufferYOffset, width, height) {
-        var gl = this._gl;
         pixelFormat = pixelFormat || PixelFormat.RGB;
-        if ((pixelFormat !== PixelFormat.ALPHA) &&
-            (pixelFormat !== PixelFormat.RGB) &&
-            (pixelFormat !== PixelFormat.RGBA) &&
-            (pixelFormat !== PixelFormat.LUMINANCE) &&
-            (pixelFormat !== PixelFormat.LUMINANCE_ALPHA)) {
+        if (!PixelFormat.validate(pixelFormat)) {
             throw new DeveloperError("Invalid pixelFormat.", "pixelFormat");
         }
 
@@ -1498,6 +1483,7 @@ define([
         width = width || this._canvas.clientWidth;
         height = height || this._canvas.clientHeight;
 
+        var gl = this._gl;
         var textureTarget = gl.TEXTURE_2D;
         var texture = gl.createTexture();
 
@@ -1586,21 +1572,13 @@ define([
             throw new DeveloperError("Width and height must be less than or equal to the maximum cube map size (" + this._maximumCubeMapSize + ").  Check getMaximumCubeMapSize().", "description");
         }
 
-        var gl = this._gl;
         var pixelFormat = description.pixelFormat || PixelFormat.RGBA;
-        if ((pixelFormat !== PixelFormat.ALPHA) &&
-            (pixelFormat !== PixelFormat.RGB) &&
-            (pixelFormat !== PixelFormat.RGBA) &&
-            (pixelFormat !== PixelFormat.LUMINANCE) &&
-            (pixelFormat !== PixelFormat.LUMINANCE_ALPHA)) {
+        if (!PixelFormat.validate(pixelFormat)) {
             throw new DeveloperError("Invalid description.pixelFormat.", "description");
         }
 
         var pixelDatatype = description.pixelDatatype || PixelDatatype.UNSIGNED_BYTE;
-        if ((pixelDatatype !== PixelDatatype.UNSIGNED_BYTE) &&
-            (pixelDatatype !== PixelDatatype.UNSIGNED_SHORT_5_6_5) &&
-            (pixelDatatype !== PixelDatatype.UNSIGNED_SHORT_4_4_4_4) &&
-            (pixelDatatype !== PixelDatatype.UNSIGNED_SHORT_5_5_5_1)) {
+        if (!PixelDatatype.validate(pixelDatatype)) {
             throw new DeveloperError("Invalid description.pixelDatatype.", "description");
         }
 
@@ -1608,6 +1586,7 @@ define([
         // http://media.tojicode.com/webglCamp4/#20
         var preMultiplyAlpha = description.preMultiplyAlpha || ((pixelFormat === PixelFormat.RGB) || (pixelFormat === PixelFormat.LUMINANCE));
 
+        var gl = this._gl;
         var textureTarget = gl.TEXTURE_CUBE_MAP;
         var texture = gl.createTexture();
 
@@ -1702,13 +1681,9 @@ define([
         var width = (typeof description.width === "undefined") ? this._canvas.clientWidth : description.width;
         var height = (typeof description.height === "undefined") ? this._canvas.clientHeight : description.height;
 
+
         var gl = this._gl;
-        if ((format !== RenderbufferFormat.RGBA4) &&
-            (format !== RenderbufferFormat.RGB5_A1) &&
-            (format !== RenderbufferFormat.RGB565) &&
-            (format !== RenderbufferFormat.DEPTH_COMPONENT16) &&
-            (format !== RenderbufferFormat.STENCIL_INDEX8) &&
-            (format !== RenderbufferFormat.DEPTH_STENCIL)) {
+        if (!RenderbufferFormat.validate(format)) {
             throw new DeveloperError("Invalid format.", "description");
         }
 
@@ -1859,14 +1834,11 @@ define([
 
         // Validate
 
-        if ((r.frontFace !== WindingOrder.CLOCKWISE) &&
-            (r.frontFace !== WindingOrder.COUNTER_CLOCKWISE)) {
+        if (!WindingOrder.validate(r.frontFace)) {
             throw new DeveloperError("Invalid renderState.frontFace.", "renderState");
         }
 
-        if ((r.cull.face !== CullFace.FRONT) &&
-            (r.cull.face !== CullFace.BACK) &&
-            (r.cull.face !== CullFace.FRONT_AND_BACK)) {
+        if (!CullFace.validate(r.cull.face)) {
             throw new DeveloperError("Invalid renderState.cull.face.", "renderState");
         }
 
@@ -1895,14 +1867,8 @@ define([
             throw new DeveloperError("renderState.depthRange.far must be less than or equal to one.", "renderState");
         }
 
-        if ((r.depthTest.func !== DepthFunction.NEVER) &&
-            (r.depthTest.func !== DepthFunction.LESS) &&
-            (r.depthTest.func !== DepthFunction.EQUAL) &&
-            (r.depthTest.func !== DepthFunction.LESS_OR_EQUAL) &&
-            (r.depthTest.func !== DepthFunction.GREATER) &&
-            (r.depthTest.func !== DepthFunction.NOT_EQUAL) &&
-            (r.depthTest.func !== DepthFunction.GREATER_OR_EQUAL) &&
-            (r.depthTest.func !== DepthFunction.ALWAYS)) {
+
+        if (!DepthFunction.validate(r.depthTest.func)) {
             throw new DeveloperError("Invalid renderState.depthTest.func.", "renderState");
         }
 
@@ -1914,104 +1880,59 @@ define([
             throw new DeveloperError("renderState.blending.color components must be greater than or equal to zero and less than or equal to one.", "renderState");
         }
 
-        if ((r.blending.equationRgb !== BlendEquation.ADD) &&
-            (r.blending.equationRgb !== BlendEquation.SUBTRACT) &&
-            (r.blending.equationRgb !== BlendEquation.REVERSE_SUBTRACT)) {
+        if (!BlendEquation.validate(r.blending.equationRgb)) {
             throw new DeveloperError("Invalid renderState.blending.equationRgb.", "renderState");
         }
 
-        if ((r.blending.equationAlpha !== BlendEquation.ADD) &&
-            (r.blending.equationAlpha !== BlendEquation.SUBTRACT) &&
-            (r.blending.equationAlpha !== BlendEquation.REVERSE_SUBTRACT)) {
+        if (!BlendEquation.validate(r.blending.equationAlpha)) {
             throw new DeveloperError("Invalid renderState.blending.equationAlpha.", "renderState");
         }
 
-        var functions = {};
-        functions[BlendFunction.ZERO] = true;
-        functions[BlendFunction.ONE] = true;
-        functions[BlendFunction.SOURCE_COLOR] = true;
-        functions[BlendFunction.ONE_MINUS_SOURCE_COLOR] = true;
-        functions[BlendFunction.DESTINATION_COLOR] = true;
-        functions[BlendFunction.ONE_MINUS_DESTINATION_COLOR] = true;
-        functions[BlendFunction.SOURCE_ALPHA] = true;
-        functions[BlendFunction.ONE_MINUS_SOURCE_ALPHA] = true;
-        functions[BlendFunction.DESTINATION_ALPHA] = true;
-        functions[BlendFunction.ONE_MINUS_DESTINATION_ALPHA] = true;
-        functions[BlendFunction.CONSTANT_COLOR] = true;
-        functions[BlendFunction.ONE_MINUS_CONSTANT_COLOR] = true;
-        functions[BlendFunction.CONSTANT_ALPHA] = true;
-        functions[BlendFunction.ONE_MINUS_CONSTANT_ALPHA] = true;
-        functions[BlendFunction.SOURCE_ALPHA_SATURATE] = true;
-
-        if (!functions[r.blending.functionSourceRgb]) {
+        if (!BlendFunction.validate(r.blending.functionSourceRgb)) {
             throw new DeveloperError("Invalid renderState.blending.functionSourceRgb.", "renderState");
         }
 
-        if (!functions[r.blending.functionSourceAlpha]) {
+        if (!BlendFunction.validate(r.blending.functionSourceAlpha)) {
             throw new DeveloperError("Invalid renderState.blending.functionSourceAlpha.", "renderState");
         }
 
-        if (!functions[r.blending.functionDestinationRgb]) {
+        if (!BlendFunction.validate(r.blending.functionDestinationRgb)) {
             throw new DeveloperError("Invalid renderState.blending.functionDestinationRgb.", "renderState");
         }
 
-        if (!functions[r.blending.functionDestinationAlpha]) {
+        if (!BlendFunction.validate(r.blending.functionDestinationAlpha)) {
             throw new DeveloperError("Invalid renderState.blending.functionDestinationAlpha.", "renderState");
         }
 
-        if ((r.stencilTest.frontFunction !== StencilFunction.NEVER) &&
-            (r.stencilTest.frontFunction !== StencilFunction.LESS) &&
-            (r.stencilTest.frontFunction !== StencilFunction.EQUAL) &&
-            (r.stencilTest.frontFunction !== StencilFunction.LESS_OR_EQUAL) &&
-            (r.stencilTest.frontFunction !== StencilFunction.GREATER) &&
-            (r.stencilTest.frontFunction !== StencilFunction.NOT_EQUAL) &&
-            (r.stencilTest.frontFunction !== StencilFunction.GREATER_OR_EQUAL) &&
-            (r.stencilTest.frontFunction !== StencilFunction.ALWAYS)) {
+        if (!StencilFunction.validate(r.stencilTest.frontFunction)) {
             throw new DeveloperError("Invalid renderState.stencilTest.frontFunction.", "renderState");
         }
 
-        if ((r.stencilTest.backFunction !== StencilFunction.NEVER) &&
-            (r.stencilTest.backFunction !== StencilFunction.LESS) &&
-            (r.stencilTest.backFunction !== StencilFunction.EQUAL) &&
-            (r.stencilTest.backFunction !== StencilFunction.LESS_OR_EQUAL) &&
-            (r.stencilTest.backFunction !== StencilFunction.GREATER) &&
-            (r.stencilTest.backFunction !== StencilFunction.NOT_EQUAL) &&
-            (r.stencilTest.backFunction !== StencilFunction.GREATER_OR_EQUAL) &&
-            (r.stencilTest.backFunction !== StencilFunction.ALWAYS)) {
+        if (!StencilFunction.validate(r.stencilTest.backFunction)) {
             throw new DeveloperError("Invalid renderState.stencilTest.backFunction.", "renderState");
         }
 
-        var operations = {};
-        operations[StencilOperation.ZERO] = true;
-        operations[StencilOperation.KEEP] = true;
-        operations[StencilOperation.REPLACE] = true;
-        operations[StencilOperation.INCREMENT] = true;
-        operations[StencilOperation.DECREMENT] = true;
-        operations[StencilOperation.INVERT] = true;
-        operations[StencilOperation.INCREMENT_WRAP] = true;
-        operations[StencilOperation.DECREMENT_WRAP] = true;
-
-        if (!operations[r.stencilTest.frontOperation.fail]) {
+        if (!StencilOperation.validate(r.stencilTest.frontOperation.fail)) {
             throw new DeveloperError("Invalid renderState.stencilTest.frontOperation.fail.", "renderState");
         }
 
-        if (!operations[r.stencilTest.frontOperation.zFail]) {
+        if (!StencilOperation.validate(r.stencilTest.frontOperation.zFail)) {
             throw new DeveloperError("Invalid renderState.stencilTest.frontOperation.zFail.", "renderState");
         }
 
-        if (!operations[r.stencilTest.frontOperation.zPass]) {
+        if (!StencilOperation.validate(r.stencilTest.frontOperation.zPass)) {
             throw new DeveloperError("Invalid renderState.stencilTest.frontOperation.zPass.", "renderState");
         }
 
-        if (!operations[r.stencilTest.backOperation.fail]) {
+        if (!StencilOperation.validate(r.stencilTest.backOperation.fail)) {
             throw new DeveloperError("Invalid renderState.stencilTest.backOperation.fail.", "renderState");
         }
 
-        if (!operations[r.stencilTest.backOperation.zFail]) {
+        if (!StencilOperation.validate(r.stencilTest.backOperation.zFail)) {
             throw new DeveloperError("Invalid renderState.stencilTest.backOperation.zFail.", "renderState");
         }
 
-        if (!operations[r.stencilTest.backOperation.zPass]) {
+        if (!StencilOperation.validate(r.stencilTest.backOperation.zPass)) {
             throw new DeveloperError("Invalid renderState.stencilTest.backOperation.zPass.", "renderState");
         }
 
@@ -2040,34 +1961,19 @@ define([
             maximumAnisotropy : (typeof sampler.maximumAnisotropy !== "undefined") ? sampler.maximumAnisotropy : 1.0
         };
 
-        var gl = this._gl;
-        var wrapS = s.wrapS;
-        if ((wrapS !== TextureWrap.CLAMP) &&
-            (wrapS !== TextureWrap.REPEAT) &&
-            (wrapS !== TextureWrap.MIRRORED_REPEAT)) {
+        if (!TextureWrap.validate(s.wrapS)) {
             throw new DeveloperError("Invalid sampler.wrapS.", "sampler");
         }
 
-        var wrapT = s.wrapT;
-        if ((wrapT !== TextureWrap.CLAMP) &&
-            (wrapT !== TextureWrap.REPEAT) &&
-            (wrapT !== TextureWrap.MIRRORED_REPEAT)) {
+        if (!TextureWrap.validate(s.wrapT)) {
             throw new DeveloperError("Invalid sampler.wrapT.", "sampler");
         }
 
-        var minificationFilter = s.minificationFilter;
-        if ((minificationFilter !== TextureMinificationFilter.NEAREST) &&
-            (minificationFilter !== TextureMinificationFilter.LINEAR) &&
-            (minificationFilter !== TextureMinificationFilter.NEAREST_MIPMAP_NEAREST) &&
-            (minificationFilter !== TextureMinificationFilter.LINEAR_MIPMAP_NEAREST) &&
-            (minificationFilter !== TextureMinificationFilter.NEAREST_MIPMAP_LINEAR) &&
-            (minificationFilter !== TextureMinificationFilter.LINEAR_MIPMAP_LINEAR)) {
+        if (!TextureMinificationFilter.validate(s.minificationFilter)) {
             throw new DeveloperError("Invalid sampler.minificationFilter.", "sampler");
         }
 
-        var magnificationFilter = s.magnificationFilter;
-        if ((magnificationFilter !== TextureMagnificationFilter.NEAREST) &&
-            (magnificationFilter !== TextureMagnificationFilter.LINEAR)) {
+        if (!TextureMagnificationFilter.validate(s.magnificationFilter)) {
             throw new DeveloperError("Invalid sampler.magnificationFilter.", "sampler");
         }
 
@@ -2354,19 +2260,7 @@ define([
         }
 
         var primitiveType = drawArguments.primitiveType;
-
-        if (typeof primitiveType === "undefined") {
-            throw new DeveloperError("drawArguments.primitiveType is required and must be valid.", "drawArguments");
-        }
-
-        var gl = this._gl;
-        if ((primitiveType !== PrimitiveType.POINTS) &&
-            (primitiveType !== PrimitiveType.LINES) &&
-            (primitiveType !== PrimitiveType.LINE_LOOP) &&
-            (primitiveType !== PrimitiveType.LINE_STRIP) &&
-            (primitiveType !== PrimitiveType.TRIANGLES) &&
-            (primitiveType !== PrimitiveType.TRIANGLE_STRIP) &&
-            (primitiveType !== PrimitiveType.TRIANGLE_FAN)) {
+        if (!PrimitiveType.validate(primitiveType)) {
             throw new DeveloperError("drawArguments.primitiveType is required and must be valid.", "drawArguments");
         }
 
@@ -2399,9 +2293,9 @@ define([
             va._bind();
 
             if (indexBuffer) {
-                gl.drawElements(primitiveType, count, indexBuffer.getIndexDatatype().value, offset);
+                this._gl.drawElements(primitiveType, count, indexBuffer.getIndexDatatype().value, offset);
             } else {
-                gl.drawArrays(primitiveType, offset, count);
+                this._gl.drawArrays(primitiveType, offset, count);
             }
 
             va._unBind();

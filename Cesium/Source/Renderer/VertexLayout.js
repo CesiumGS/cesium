@@ -29,7 +29,20 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        INTERLEAVED : new Enumeration(1, "INTERLEAVED")
+        INTERLEAVED : new Enumeration(1, "INTERLEAVED"),
+
+        /**
+         * DOC_TBA
+         *
+         * @param vertexLayout
+         *
+         * @returns {Boolean}
+         */
+        validate : function(vertexLayout) {
+            return ((vertexLayout === VertexLayout.SEPARATE) ||
+                    (vertexLayout === VertexLayout.INTERLEAVED));
+        }
+
     };
 
     return VertexLayout;

@@ -184,15 +184,13 @@ define([
             throw new DeveloperError("This texture's height must be a power of two to call generateMipmap().");
         }
 
-        var gl = this._gl;
-        var target = this._textureTarget;
-
         hint = hint || MipmapHint.DONT_CARE;
-        if ((hint !== MipmapHint.DONT_CARE) &&
-            (hint !== MipmapHint.FASTEST) &&
-            (hint !== MipmapHint.NICEST)) {
+        if (!MipmapHint.validate(hint)) {
             throw new DeveloperError("Invalid hint.", "hint");
         }
+
+        var gl = this._gl;
+        var target = this._textureTarget;
 
         gl.hint(gl.GENERATE_MIPMAP_HINT, hint);
         gl.activeTexture(gl.TEXTURE0);

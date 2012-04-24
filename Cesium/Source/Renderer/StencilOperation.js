@@ -70,7 +70,25 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        DECREMENT_WRAP : new Enumeration(0x8508, "DECREMENT_WRAP") // WebGL: DECR_WRAP
+        DECREMENT_WRAP : new Enumeration(0x8508, "DECREMENT_WRAP"), // WebGL: DECR_WRAP
+
+        /**
+         * DOC_TBA
+         *
+         * @param stencilOperation
+         *
+         * @returns {Boolean}
+         */
+        validate : function(stencilOperation) {
+            return ((stencilOperation === StencilOperation.ZERO) ||
+                    (stencilOperation === StencilOperation.KEEP) ||
+                    (stencilOperation === StencilOperation.REPLACE) ||
+                    (stencilOperation === StencilOperation.INCREMENT) ||
+                    (stencilOperation === StencilOperation.DECREMENT) ||
+                    (stencilOperation === StencilOperation.INVERT) ||
+                    (stencilOperation === StencilOperation.INCREMENT_WRAP) ||
+                    (stencilOperation === StencilOperation.DECREMENT_WRAP));
+        }
     };
 
     return StencilOperation;
