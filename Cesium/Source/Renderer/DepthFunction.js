@@ -70,7 +70,25 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        ALWAYS : new Enumeration(0x0207, "ALWAYS")
+        ALWAYS : new Enumeration(0x0207, "ALWAYS"),
+
+        /**
+         * DOC_TBA
+         *
+         * @param depthFunction
+         *
+         * @returns {Boolean}
+         */
+        validate : function(depthFunction) {
+            return ((depthFunction === DepthFunction.NEVER) ||
+                    (depthFunction === DepthFunction.LESS) ||
+                    (depthFunction === DepthFunction.EQUAL) ||
+                    (depthFunction === DepthFunction.LESS_OR_EQUAL) ||
+                    (depthFunction === DepthFunction.GREATER) ||
+                    (depthFunction === DepthFunction.NOT_EQUAL) ||
+                    (depthFunction === DepthFunction.GREATER_OR_EQUAL) ||
+                    (depthFunction === DepthFunction.ALWAYS));
+        }
     };
 
     return DepthFunction;

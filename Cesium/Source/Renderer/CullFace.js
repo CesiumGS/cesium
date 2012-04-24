@@ -30,7 +30,20 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        FRONT_AND_BACK : new Enumeration(0x0408, "FRONT_AND_BACK")
+        FRONT_AND_BACK : new Enumeration(0x0408, "FRONT_AND_BACK"),
+
+        /**
+         * DOC_TBA
+         *
+         * @param cullFace
+         *
+         * @returns {Boolean}
+         */
+        validate : function(cullFace) {
+            return ((cullFace === CullFace.FRONT) ||
+                    (cullFace === CullFace.BACK) ||
+                    (cullFace === CullFace.FRONT_AND_BACK));
+        }
     };
 
     return CullFace;

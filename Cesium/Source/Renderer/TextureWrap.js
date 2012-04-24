@@ -30,7 +30,20 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        MIRRORED_REPEAT : new Enumeration(0x8370, "MIRRORED_REPEAT")
+        MIRRORED_REPEAT : new Enumeration(0x8370, "MIRRORED_REPEAT"),
+
+        /**
+         * DOC_TBA
+         *
+         * @param textureWrap
+         *
+         * @returns {Boolean}
+         */
+        validate : function(textureWrap) {
+            return ((textureWrap === TextureWrap.CLAMP) ||
+                    (textureWrap === TextureWrap.REPEAT) ||
+                    (textureWrap === TextureWrap.MIRRORED_REPEAT));
+        }
     };
 
     return TextureWrap;

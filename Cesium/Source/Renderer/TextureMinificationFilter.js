@@ -54,7 +54,23 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        LINEAR_MIPMAP_LINEAR : new Enumeration(0x2703, "LINEAR_MIPMAP_LINEAR")
+        LINEAR_MIPMAP_LINEAR : new Enumeration(0x2703, "LINEAR_MIPMAP_LINEAR"),
+
+        /**
+         * DOC_TBA
+         *
+         * @param textureMinificationFilter
+         *
+         * @returns {Boolean}
+         */
+        validate : function(textureMinificationFilter) {
+            return ((textureMinificationFilter === TextureMinificationFilter.NEAREST) ||
+                    (textureMinificationFilter === TextureMinificationFilter.LINEAR) ||
+                    (textureMinificationFilter === TextureMinificationFilter.NEAREST_MIPMAP_NEAREST) ||
+                    (textureMinificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_NEAREST) ||
+                    (textureMinificationFilter === TextureMinificationFilter.NEAREST_MIPMAP_LINEAR) ||
+                    (textureMinificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR));
+        }
     };
 
     return TextureMinificationFilter;

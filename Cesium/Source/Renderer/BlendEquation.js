@@ -30,9 +30,22 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        REVERSE_SUBTRACT : new Enumeration(0x800B, "REVERSE_SUBTRACT") // WebGL: FUNC_REVERSE_SUBTRACT
+        REVERSE_SUBTRACT : new Enumeration(0x800B, "REVERSE_SUBTRACT"), // WebGL: FUNC_REVERSE_SUBTRACT
 
         // No min and max like in ColladaFX GLES2 profile
+
+        /**
+         * DOC_TBA
+         *
+         * @param blendEquation
+         *
+         * @returns {Boolean}
+         */
+        validate : function(blendEquation) {
+            return ((blendEquation === BlendEquation.ADD) ||
+                    (blendEquation === BlendEquation.SUBTRACT) ||
+                    (blendEquation === BlendEquation.REVERSE_SUBTRACT));
+        }
     };
 
     return BlendEquation;
