@@ -98,11 +98,13 @@ define([
         var julianSecondsOfDay;
         var timeStandard;
 
-        date = date || new Date();
+        if (typeof date === 'undefined') {
+            date = new Date();
+        }
 
         if (typeof date === 'number') {
             julianDayNumber = arguments[0];
-            julianSecondsOfDay = arguments[1];
+            julianSecondsOfDay = arguments[1] || 0.0;
             timeStandard = arguments[2];
         } else if (typeof date === 'object') {
             var month = date.getUTCMonth() + 1; // getUTCMonth returns a value 0-11.
@@ -185,7 +187,7 @@ define([
     JulianDate.compare = function(a, b) {
         // If the days aren't even close, don't bother thinking about the time standard.
         var dayDifference = (a._julianDayNumber - b._julianDayNumber) | 0;
-        if (dayDifference > 1 || dayDifference < -1) {
+        if (dayDifference >= 1 || dayDifference <= -1) {
             return dayDifference;
         }
 

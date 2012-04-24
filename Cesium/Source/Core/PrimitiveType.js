@@ -56,7 +56,24 @@ define(['./Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        TRIANGLE_FAN : new Enumeration(0x0006, "TRIANGLE_FAN")
+        TRIANGLE_FAN : new Enumeration(0x0006, "TRIANGLE_FAN"),
+
+        /**
+         * DOC_TBA
+         *
+         * @param primitiveType
+         *
+         * @returns {Boolean}
+         */
+        validate : function(primitiveType) {
+            return ((primitiveType === PrimitiveType.POINTS) ||
+                    (primitiveType === PrimitiveType.LINES) ||
+                    (primitiveType === PrimitiveType.LINE_LOOP) ||
+                    (primitiveType === PrimitiveType.LINE_STRIP) ||
+                    (primitiveType === PrimitiveType.TRIANGLES) ||
+                    (primitiveType === PrimitiveType.TRIANGLE_STRIP) ||
+                    (primitiveType === PrimitiveType.TRIANGLE_FAN));
+        }
     };
 
     return PrimitiveType;
