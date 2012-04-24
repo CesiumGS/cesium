@@ -1,4 +1,4 @@
-<project name="Cesium">
+<project name="Cesium" default="Debug">
 	<target name="Debug" description="A build for developers.">
 		<antcall target="build" />
 	</target>
