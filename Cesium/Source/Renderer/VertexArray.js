@@ -70,11 +70,7 @@ define([
 
         if (attribute.componentDatatype) {
             var datatype = attribute.componentDatatype;
-            if ((datatype !== ComponentDatatype.BYTE) &&
-                (datatype !== ComponentDatatype.UNSIGNED_BYTE) &&
-                (datatype !== ComponentDatatype.SHORT) &&
-                (datatype !== ComponentDatatype.UNSIGNED_SHORT) &&
-                (datatype !== ComponentDatatype.FLOAT)) {
+            if (!ComponentDatatype.validate(datatype)) {
                 throw new DeveloperError("attribute must have a valid componentDatatype or not specify it.");
             }
         }

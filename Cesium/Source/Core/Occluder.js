@@ -349,11 +349,12 @@ define([
     };
 
     Occluder._horizonToPlaneNormalDotProduct = function(occluderBS, occluderPlaneNormal, occluderPlaneD, anyRotationVector, position) {
+        var pos = Cartesian3.clone(position);
         var occluderPosition = occluderBS.center.clone();
         var occluderRadius = occluderBS.radius;
 
         //Verify that the position is outside the occluder
-        var positionToOccluder = occluderPosition.subtract(position);
+        var positionToOccluder = occluderPosition.subtract(pos);
         var occluderToPositionDistanceSquared = positionToOccluder.magnitudeSquared();
         var occluderRadiusSquared = occluderRadius * occluderRadius;
         if (occluderToPositionDistanceSquared < occluderRadiusSquared) {
@@ -368,11 +369,11 @@ define([
         var cosTheta = horizonDistance * invOccluderToPositionDistance;
         var horizonPlaneDistance = cosTheta * horizonDistance;
         positionToOccluder = positionToOccluder.normalize();
-        var horizonPlanePosition = position.add(positionToOccluder.multiplyWithScalar(horizonPlaneDistance));
+        var horizonPlanePosition = pos.add(positionToOccluder.multiplyWithScalar(horizonPlaneDistance));
         var horizonCrossDistance = Math.sqrt(horizonDistanceSquared - (horizonPlaneDistance * horizonPlaneDistance));
 
         //Rotate the position to occluder vector 90 degrees
-        var tempVec = this._rotationVector(occluderPosition, occluderPlaneNormal, occluderPlaneD, position, anyRotationVector);
+        var tempVec = this._rotationVector(occluderPosition, occluderPlaneNormal, occluderPlaneD, pos, anyRotationVector);
         var horizonCrossDirection = new Cartesian3(
                 (tempVec.x * tempVec.x * positionToOccluder.x) + ((tempVec.x * tempVec.y - tempVec.z) * positionToOccluder.y) + ((tempVec.x * tempVec.z + tempVec.y) * positionToOccluder.z),
                 ((tempVec.x * tempVec.y + tempVec.z) * positionToOccluder.x) + (tempVec.y * tempVec.y * positionToOccluder.y) + ((tempVec.y * tempVec.z - tempVec.x) * positionToOccluder.z),

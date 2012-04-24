@@ -54,7 +54,23 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        DEPTH_STENCIL : new Enumeration(0x84F9, "DEPTH_STENCIL")
+        DEPTH_STENCIL : new Enumeration(0x84F9, "DEPTH_STENCIL"),
+
+        /**
+         * DOC_TBA
+         *
+         * @param renderbufferFormat
+         *
+         * @returns {Boolean}
+         */
+        validate : function(renderbufferFormat) {
+            return ((renderbufferFormat === RenderbufferFormat.RGBA4) ||
+                    (renderbufferFormat === RenderbufferFormat.RGB5_A1) ||
+                    (renderbufferFormat === RenderbufferFormat.RGB565) ||
+                    (renderbufferFormat === RenderbufferFormat.DEPTH_COMPONENT16) ||
+                    (renderbufferFormat === RenderbufferFormat.STENCIL_INDEX8) ||
+                    (renderbufferFormat === RenderbufferFormat.DEPTH_STENCIL));
+        }
     };
 
     return RenderbufferFormat;

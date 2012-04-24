@@ -30,7 +30,20 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        NICEST : new Enumeration(0x1102, "NICEST")
+        NICEST : new Enumeration(0x1102, "NICEST"),
+
+        /**
+         * DOC_TBA
+         *
+         * @param mipmapHint
+         *
+         * @returns {Boolean}
+         */
+        validate : function(mipmapHint) {
+            return ((mipmapHint === MipmapHint.DONT_CARE) ||
+                    (mipmapHint === MipmapHint.FASTEST) ||
+                    (mipmapHint === MipmapHint.NICEST));
+        }
     };
 
     return MipmapHint;
