@@ -142,7 +142,7 @@ define([
             tangent,
             target;
 
-        var now = time.isAfter(this._end) ? this._end : time;
+        var now = time.greaterThan(this._end) ? this._end : time;
 
         diff = this._start.getSecondsDifference(now);
         position = this._path.evaluate(diff);
