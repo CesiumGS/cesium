@@ -34,39 +34,39 @@
         });
 
         it("IsEmpty", function() {
-            var interval = new Cesium.TimeInterval(new Cesium.JulianDate(1), new Cesium.JulianDate(1));
+            var interval = new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(1), Cesium.JulianDate.createFromTotalDays(1));
             expect(interval.isEmpty).toBeFalsy();
 
-            interval = new Cesium.TimeInterval(new Cesium.JulianDate(1), new Cesium.JulianDate(1), false, false);
+            interval = new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(1), Cesium.JulianDate.createFromTotalDays(1), false, false);
             expect(interval.isEmpty).toBeTruthy();
 
-            interval = new Cesium.TimeInterval(new Cesium.JulianDate(5), new Cesium.JulianDate(4));
+            interval = new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(5), Cesium.JulianDate.createFromTotalDays(4));
             expect(interval.isEmpty).toBeTruthy();
         });
 
         it("Contains", function() {
-            var interval1 = new Cesium.TimeInterval(new Cesium.JulianDate(2451545), new Cesium.JulianDate(2451546));
-            expect(interval1.contains(new Cesium.JulianDate(2451545))).toBeTruthy();
-            expect(interval1.contains(new Cesium.JulianDate(2451545, 43200))).toBeTruthy();
-            expect(interval1.contains(new Cesium.JulianDate(2451546))).toBeTruthy();
-            expect(interval1.contains(new Cesium.JulianDate(2451546, 43200))).toBeFalsy();
+            var interval1 = new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(2451545), Cesium.JulianDate.createFromTotalDays(2451546));
+            expect(interval1.contains(Cesium.JulianDate.createFromTotalDays(2451545))).toBeTruthy();
+            expect(interval1.contains(Cesium.JulianDate.createFromTotalDays(2451545.5))).toBeTruthy();
+            expect(interval1.contains(Cesium.JulianDate.createFromTotalDays(2451546))).toBeTruthy();
+            expect(interval1.contains(Cesium.JulianDate.createFromTotalDays(2451546.5))).toBeFalsy();
 
             var interval2 = new Cesium.TimeInterval(interval1.start, interval1.stop, false, false);
-            expect(interval2.contains(new Cesium.JulianDate(2451545))).toBeFalsy();
-            expect(interval2.contains(new Cesium.JulianDate(2451545, 43200))).toBeTruthy();
-            expect(interval2.contains(new Cesium.JulianDate(2451546))).toBeFalsy();
-            expect(interval2.contains(new Cesium.JulianDate(2451546, 43200))).toBeFalsy();
+            expect(interval2.contains(Cesium.JulianDate.createFromTotalDays(2451545))).toBeFalsy();
+            expect(interval2.contains(Cesium.JulianDate.createFromTotalDays(2451545.5))).toBeTruthy();
+            expect(interval2.contains(Cesium.JulianDate.createFromTotalDays(2451546))).toBeFalsy();
+            expect(interval2.contains(Cesium.JulianDate.createFromTotalDays(2451546.5))).toBeFalsy();
         });
 
         it("Equality", function() {
-            var interval1 = new Cesium.TimeInterval(new Cesium.JulianDate(1), new Cesium.JulianDate(2));
-            var interval2 = new Cesium.TimeInterval(new Cesium.JulianDate(1), new Cesium.JulianDate(2));
+            var interval1 = new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(1), Cesium.JulianDate.createFromTotalDays(2));
+            var interval2 = new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(1), Cesium.JulianDate.createFromTotalDays(2));
             expect(interval1.equals(interval2)).toBeTruthy();
             expect(interval2.equals(interval1)).toBeTruthy();
             expect(interval1.equalsEpsilon(interval2, 0)).toBeTruthy();
             expect(interval2.equalsEpsilon(interval1, 0)).toBeTruthy();
 
-            interval2 = new Cesium.TimeInterval(new Cesium.JulianDate(1), new Cesium.JulianDate(3));
+            interval2 = new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(1), Cesium.JulianDate.createFromTotalDays(3));
             expect(interval1.equals(interval2)).toBeFalsy();
             expect(interval2.equals(interval1)).toBeFalsy();
             expect(interval1.equalsEpsilon(interval2, 0)).toBeFalsy();
@@ -74,8 +74,8 @@
             expect(interval1.equalsEpsilon(interval2, 86400)).toBeTruthy();
             expect(interval2.equalsEpsilon(interval1, 86400)).toBeTruthy();
 
-            interval1 = new Cesium.TimeInterval(new Cesium.JulianDate(1, 0), new Cesium.JulianDate(1, 0), true, true);
-            interval2 = new Cesium.TimeInterval(new Cesium.JulianDate(1, 0), new Cesium.JulianDate(1, 1), true, false);
+            interval1 = new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(1), Cesium.JulianDate.createFromTotalDays(1), true, true);
+            interval2 = new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(1), new Cesium.JulianDate(1, 1), true, false);
             expect(interval1.equals(interval2)).toBeFalsy();
             expect(interval2.equals(interval1)).toBeFalsy();
             expect(interval1.equalsEpsilon(interval2, 1.1)).toBeFalsy();
@@ -86,30 +86,39 @@
         });
 
         it("Intersect", function() {
-            var testParameters = [new Cesium.TimeInterval(new Cesium.JulianDate(1), new Cesium.JulianDate(2, 43200), true, true),
-                    new Cesium.TimeInterval(new Cesium.JulianDate(1, 43200), new Cesium.JulianDate(2), true, true),
-                    new Cesium.TimeInterval(new Cesium.JulianDate(1, 43200), new Cesium.JulianDate(2), true, true),
-                    new Cesium.TimeInterval(new Cesium.JulianDate(1), new Cesium.JulianDate(2, 43200), true, true),
-                    new Cesium.TimeInterval(new Cesium.JulianDate(3), new Cesium.JulianDate(4), true, true), new Cesium.TimeInterval(new Cesium.JulianDate(0), new Cesium.JulianDate(0), false, false),
-                    new Cesium.TimeInterval(new Cesium.JulianDate(1), new Cesium.JulianDate(2, 43200), true, true),
-                    new Cesium.TimeInterval(new Cesium.JulianDate(2), new Cesium.JulianDate(3), true, true),
-                    new Cesium.TimeInterval(new Cesium.JulianDate(2), new Cesium.JulianDate(2, 43200), true, true),
-                    new Cesium.TimeInterval(new Cesium.JulianDate(1), new Cesium.JulianDate(2), true, true), new Cesium.TimeInterval(new Cesium.JulianDate(1), new Cesium.JulianDate(2), false, false),
-                    new Cesium.TimeInterval(new Cesium.JulianDate(1), new Cesium.JulianDate(2), false, false),
-                    new Cesium.TimeInterval(new Cesium.JulianDate(1), new Cesium.JulianDate(2), true, false), new Cesium.TimeInterval(new Cesium.JulianDate(1), new Cesium.JulianDate(2), false, true),
-                    new Cesium.TimeInterval(new Cesium.JulianDate(1), new Cesium.JulianDate(2), false, false),
-                    new Cesium.TimeInterval(new Cesium.JulianDate(1), new Cesium.JulianDate(2), true, false), new Cesium.TimeInterval(new Cesium.JulianDate(1), new Cesium.JulianDate(2), true, false),
-                    new Cesium.TimeInterval(new Cesium.JulianDate(1), new Cesium.JulianDate(2), true, false),
-                    new Cesium.TimeInterval(new Cesium.JulianDate(1), new Cesium.JulianDate(3), false, false),
-                    new Cesium.TimeInterval(new Cesium.JulianDate(2), new Cesium.JulianDate(4), false, false),
-                    new Cesium.TimeInterval(new Cesium.JulianDate(2), new Cesium.JulianDate(3), false, false),
-                    new Cesium.TimeInterval(new Cesium.JulianDate(1), new Cesium.JulianDate(3), false, false), new Cesium.TimeInterval(new Cesium.JulianDate(2), new Cesium.JulianDate(4), true, true),
-                    new Cesium.TimeInterval(new Cesium.JulianDate(2), new Cesium.JulianDate(3), true, false),
-                    new Cesium.TimeInterval(new Cesium.JulianDate(1), new Cesium.JulianDate(1), false, false), new Cesium.TimeInterval(new Cesium.JulianDate(1), new Cesium.JulianDate(2), true, true),
-                    new Cesium.TimeInterval(new Cesium.JulianDate(0), new Cesium.JulianDate(0), false, false), new Cesium.TimeInterval(new Cesium.JulianDate(1), new Cesium.JulianDate(3), true, true),
-                    new Cesium.TimeInterval(new Cesium.JulianDate(2), new Cesium.JulianDate(3), true, true), new Cesium.TimeInterval(new Cesium.JulianDate(2), new Cesium.JulianDate(3), true, true),
-                    new Cesium.TimeInterval(new Cesium.JulianDate(3), new Cesium.JulianDate(2), true, true), new Cesium.TimeInterval(new Cesium.JulianDate(3), new Cesium.JulianDate(3), true, true),
-                    new Cesium.TimeInterval(new Cesium.JulianDate(0), new Cesium.JulianDate(0), false, false)];
+            var testParameters = [new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(1), Cesium.JulianDate.createFromTotalDays(2.5), true, true),
+                    new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(1.5), Cesium.JulianDate.createFromTotalDays(2), true, true),
+                    new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(1.5), Cesium.JulianDate.createFromTotalDays(2), true, true),
+                    new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(1), Cesium.JulianDate.createFromTotalDays(2.5), true, true),
+                    new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(3), Cesium.JulianDate.createFromTotalDays(4), true, true),
+                    new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(0), Cesium.JulianDate.createFromTotalDays(0), false, false),
+                    new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(1), Cesium.JulianDate.createFromTotalDays(2.5), true, true),
+                    new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(2), Cesium.JulianDate.createFromTotalDays(3), true, true),
+                    new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(2), Cesium.JulianDate.createFromTotalDays(2.5), true, true),
+                    new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(1), Cesium.JulianDate.createFromTotalDays(2), true, true),
+                    new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(1), Cesium.JulianDate.createFromTotalDays(2), false, false),
+                    new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(1), Cesium.JulianDate.createFromTotalDays(2), false, false),
+                    new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(1), Cesium.JulianDate.createFromTotalDays(2), true, false),
+                    new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(1), Cesium.JulianDate.createFromTotalDays(2), false, true),
+                    new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(1), Cesium.JulianDate.createFromTotalDays(2), false, false),
+                    new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(1), Cesium.JulianDate.createFromTotalDays(2), true, false),
+                    new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(1), Cesium.JulianDate.createFromTotalDays(2), true, false),
+                    new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(1), Cesium.JulianDate.createFromTotalDays(2), true, false),
+                    new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(1), Cesium.JulianDate.createFromTotalDays(3), false, false),
+                    new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(2), Cesium.JulianDate.createFromTotalDays(4), false, false),
+                    new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(2), Cesium.JulianDate.createFromTotalDays(3), false, false),
+                    new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(1), Cesium.JulianDate.createFromTotalDays(3), false, false),
+                    new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(2), Cesium.JulianDate.createFromTotalDays(4), true, true),
+                    new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(2), Cesium.JulianDate.createFromTotalDays(3), true, false),
+                    new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(1), Cesium.JulianDate.createFromTotalDays(1), false, false),
+                    new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(1), Cesium.JulianDate.createFromTotalDays(2), true, true),
+                    new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(0), Cesium.JulianDate.createFromTotalDays(0), false, false),
+                    new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(1), Cesium.JulianDate.createFromTotalDays(3), true, true),
+                    new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(2), Cesium.JulianDate.createFromTotalDays(3), true, true),
+                    new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(2), Cesium.JulianDate.createFromTotalDays(3), true, true),
+                    new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(3), Cesium.JulianDate.createFromTotalDays(2), true, true),
+                    new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(3), Cesium.JulianDate.createFromTotalDays(3), true, true),
+                    new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(0), Cesium.JulianDate.createFromTotalDays(0), false, false)];
 
             for ( var i = 0; i < testParameters.length - 2; i = i + 3) {
                 var first = testParameters[i];
@@ -122,7 +131,7 @@
                 expect(expectedResult.equals(intersect1)).toBeTruthy();
             }
 
-            var interval = new Cesium.TimeInterval(new Cesium.JulianDate(1), new Cesium.JulianDate(2));
+            var interval = new Cesium.TimeInterval(Cesium.JulianDate.createFromTotalDays(1), Cesium.JulianDate.createFromTotalDays(2));
             expect(interval.intersect(undefined) === Cesium.TimeInterval.empty).toBeTruthy();
         });
 

@@ -46,7 +46,7 @@ define(['Core/JulianDate', 'Core/DeveloperError'], function(JulianDate, Develope
         this.isEmpty = (this._characteristics & Characteristics_Empty) === Characteristics_Empty;
     }
 
-    TimeInterval.empty = new TimeInterval(new JulianDate(0.0), new JulianDate(0.0), false, false);
+    TimeInterval.empty = new TimeInterval(new JulianDate(0, 0), new JulianDate(0, 0), false, false);
 
     TimeInterval.prototype.intersect = function(other) {
         return this.intersectMergingData(other, undefined);
@@ -58,12 +58,12 @@ define(['Core/JulianDate', 'Core/DeveloperError'], function(JulianDate, Develope
 
         var otherStart = other.start, otherStop = other.stop, isStartIncluded, isStopIncluded, outputData;
 
-        if (!otherStart.isBefore(this.start) && !this.stop.isBefore(otherStart)) {
+        if (otherStart.greaterThanOrEquals(this.start) && this.stop.greaterThanOrEquals(otherStart)) {
             isStartIncluded = (!otherStart.equals(this.start) && other.isStartIncluded) || (this.isStartIncluded && other.isStartIncluded);
             isStopIncluded = this.isStopIncluded && other.isStopIncluded;
 
             outputData = typeof mergeCallback !== 'undefined' ? mergeCallback(this.data, other.data) : this.data;
-            if (!this.stop.isBefore(otherStop)) {
+            if (this.stop.greaterThanOrEquals(otherStop)) {
                 isStopIncluded = isStopIncluded || (!otherStop.equals(this.stop) && other.isStopIncluded);
                 return new TimeInterval(otherStart, otherStop, isStartIncluded, isStopIncluded, outputData);
             }
@@ -72,12 +72,12 @@ define(['Core/JulianDate', 'Core/DeveloperError'], function(JulianDate, Develope
             return new TimeInterval(otherStart, this.stop, isStartIncluded, isStopIncluded, outputData);
         }
 
-        if (!otherStart.isAfter(this.start) && !this.start.isAfter(otherStop)) {
+        if (otherStart.lessThanOrEquals(this.start) && this.start.lessThanOrEquals(otherStop)) {
             isStartIncluded = (otherStart.equals(this.start) === false && this.isStartIncluded) || (this.isStartIncluded && other.isStartIncluded);
             isStopIncluded = this.isStopIncluded && other.isStopIncluded;
 
             outputData = typeof mergeCallback !== 'undefined' ? mergeCallback(this.data, other.data) : this.data;
-            if (!this.stop.isBefore(otherStop)) {
+            if (this.stop.greaterThanOrEquals(otherStop)) {
                 isStopIncluded = isStopIncluded || (otherStop.equals(this.stop) === false && other.isStopIncluded);
                 return new TimeInterval(this.start, otherStop, isStartIncluded, isStopIncluded, outputData);
             }

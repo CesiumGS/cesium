@@ -4,9 +4,9 @@
 
     describe('TimeIntervalCollectionSpec', function() {
         it('TODO', function() {
-            var start = new Cesium.JulianDate(1);
-            var mid = new Cesium.JulianDate(2);
-            var stop = new Cesium.JulianDate(3);
+            var start = Cesium.JulianDate.createFromTotalDays(1);
+            var mid = Cesium.JulianDate.createFromTotalDays(2);
+            var stop = Cesium.JulianDate.createFromTotalDays(3);
 
             var intervals = new Cesium.TimeIntervalCollection();
 

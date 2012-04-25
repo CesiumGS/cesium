@@ -21,11 +21,11 @@ define(['./binarySearch', './TimeInterval', './JulianDate'], function(binarysear
         var otherIntervals = intervals._intervals;
         while (left < that._intervals.length && right < otherIntervals.length)
         {
-            if (that._intervals[left].stop.isBefore(otherIntervals[right].start))
+            if (that._intervals[left].stop.lessThan(otherIntervals[right].start))
             {
                 ++left;
             }
-            else if (otherIntervals[right].stop.isBefore(that._intervals[left].start))
+            else if (otherIntervals[right].stop.lessThan(that._intervals[left].start))
             {
                 ++right;
             }
@@ -42,7 +42,7 @@ define(['./binarySearch', './TimeInterval', './JulianDate'], function(binarysear
                     result.add(intersection, dataComparer);
                 }
 
-                if (that._intervals[left].stop.isBefore(otherIntervals[right].stop) ||
+                if (that._intervals[left].stop.lessThan(otherIntervals[right].stop) ||
                     (that._intervals[left].stop.equals(otherIntervals[right].stop) && !that._intervals[left].isStopIncluded && otherIntervals[right].isStopIncluded))
                 {
                     ++left;
@@ -92,7 +92,7 @@ define(['./binarySearch', './TimeInterval', './JulianDate'], function(binarysear
             var comparison, index;
 
             // Handle the common case quickly: we're adding a new interval which is after all existing intervals.
-            if (this._intervals.length === 0 || interval.start.isAfter(this._intervals[this._intervals.length - 1].stop))
+            if (this._intervals.length === 0 || interval.start.greaterThan(this._intervals[this._intervals.length - 1].stop))
             {
                 this._intervals.push(interval);
                 return;
@@ -141,7 +141,7 @@ define(['./binarySearch', './TimeInterval', './JulianDate'], function(binarysear
                     if (typeof dataComparer !== 'undefined' ? dataComparer(this._intervals[index - 1].data, interval.data) : (this._intervals[index - 1].data === interval.data))
                     {
                         // Overlapping intervals have the same data, so combine them
-                        if (interval.stop.isAfter(this._intervals[index - 1].stop))
+                        if (interval.stop.greaterThan(this._intervals[index - 1].stop))
                         {
                             interval = new TimeInterval(
                                 this._intervals[index - 1].start,
@@ -213,9 +213,9 @@ define(['./binarySearch', './TimeInterval', './JulianDate'], function(binarysear
                         // Overlapping intervals have the same data, so combine them
                         interval = new TimeInterval(
                             interval.start,
-                            this._intervals[index].stop.isAfter(interval.stop) ? this._intervals[index].stop : interval.stop,
+                            this._intervals[index].stop.greaterThan(interval.stop) ? this._intervals[index].stop : interval.stop,
                             interval.isStartIncluded,
-                            this._intervals[index].stop.isAfter(interval.stop) ? this._intervals[index].isStopIncluded : interval.isStopIncluded,
+                            this._intervals[index].stop.greaterThan(interval.stop) ? this._intervals[index].isStopIncluded : interval.isStopIncluded,
                             interval.data);
                         this._intervals.splice(index, 1);
                     }
@@ -298,8 +298,8 @@ define(['./binarySearch', './TimeInterval', './JulianDate'], function(binarysear
     //TODO: See TimeIntervalCollection.infinite
 //    TimeIntervalCollection.prototype.isInfinite = function() {
 //        return this._intervals.length == 1 &&
-//        !this._intervals[0].start.isAfter(JulianDate.minValue) &&
-//        !this._intervals[0].stop.isBefore(JulianDate.maxValue);
+//        !this._intervals[0].start.greaterThan(JulianDate.minValue) &&
+//        !this._intervals[0].stop.lessThan(JulianDate.maxValue);
 //    };
 
     TimeIntervalCollection.prototype.indexOf = function (date) {
@@ -357,12 +357,12 @@ define(['./binarySearch', './TimeInterval', './JulianDate'], function(binarysear
 
         // Check for truncation of the end of the previous interval.
         if (index > 0 &&
-            (this._intervals[index - 1].stop.isAfter(interval.start) ||
+            (this._intervals[index - 1].stop.greaterThan(interval.start) ||
              (this._intervals[index - 1].stop.equals(interval.start) && this._intervals[index - 1].isStopIncluded && interval.isStartIncluded)))
         {
             result = true;
 
-            if (this._intervals[index - 1].stop.isAfter(interval.stop) ||
+            if (this._intervals[index - 1].stop.greaterThan(interval.stop) ||
                 (this._intervals[index - 1].isStopIncluded && !interval.isStopIncluded && this._intervals[index - 1].stop.equals(interval.stop)))
             {
                 // Break the existing interval into two pieces
@@ -400,7 +400,7 @@ define(['./binarySearch', './TimeInterval', './JulianDate'], function(binarysear
         }
 
         // Remove any intervals that are completely overlapped by the input interval.
-        while (index < this._intervals.length && interval.stop.isAfter(this._intervals[index].stop))
+        while (index < this._intervals.length && interval.stop.greaterThan(this._intervals[index].stop))
         {
             result = true;
             this._intervals.splice(index, 1);
@@ -448,7 +448,7 @@ define(['./binarySearch', './TimeInterval', './JulianDate'], function(binarysear
 
         // Truncate any partially-overlapped intervals.
         if (index < this._intervals.length &&
-            (interval.stop.isAfter(this._intervals[index].start) ||
+            (interval.stop.greaterThan(this._intervals[index].start) ||
              (interval.stop.equals(this._intervals[index].start) && interval.isStopIncluded && this._intervals[index].isStartIncluded)))
         {
             result = true;
