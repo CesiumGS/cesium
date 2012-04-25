@@ -10,28 +10,16 @@
        beforeEach(function() {
           points = [
               {
-                  orientation : new Quaternion(0.27116054990302285,-0.885350179519183,0.035188558098451651,0.37601699586666631),
+                  orientation : new Quaternion(0.0, 0.0, 0.0, 1.0),
                   time : 0.0
               },
               {
-                  orientation : new Quaternion(0.26889944029028207,-0.90878407626997149,0.016358190654748833,0.31864871461879546),
+                  orientation : new Quaternion(0.0, 0.0, Math.sin(Cesium.Math.PI_OVER_FOUR), Math.cos(Cesium.Math.PI_OVER_FOUR)),
                   time : 10.0
               },
               {
-                  orientation : new Quaternion(0.26535345397905041,-0.92848386989206388,-0.0020331133700619221,0.25980976552406471),
+                  orientation : new Quaternion(0.0, -1.0, 0.0, Cesium.Math.toRadians(15.0)),
                   time : 20.0
-              },
-              {
-                  orientation : new Quaternion(0.26056952418800283,-0.94435650802614191,-0.019897791724875168,0.19974580520647395),
-                  time : 30.0
-              },
-              {
-                  orientation : new Quaternion(0.25460046885229015,-0.9563253912753481,-0.037152635039526927,0.1387084315096456),
-                  time : 40.0
-              },
-              {
-                  orientation : new Quaternion(0.24750463007148754,-0.964330741391216,-0.053719198440647778,0.076954057852319485),
-                  time : 50.0
               }
           ];
        });
@@ -94,9 +82,9 @@
 
        it("evaluate", function () {
            var oi = new OrientationInterpolator(points);
-           var actual = oi.evaluate((points[1].time + points[2].time) * 0.5);
-           var expected = points[1].orientation.slerp(0.5, points[2].orientation);
-           expect(actual.equals(expected)).toBeTruthy();
+           var actual = oi.evaluate((points[0].time + points[1].time) * 0.5);
+           var expected = new Quaternion(0.0, 0.0, Math.sin(Math.PI / 8.0), Math.cos(Math.PI / 8.0));
+           expect(actual.equalsEpsilon(expected, Cesium.Math.EPSILON15)).toBeTruthy();
        });
    });
 

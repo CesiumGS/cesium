@@ -61,11 +61,11 @@ define([
                 };
             }
 
-            var T = (julianDate.getJulianDate() - 2451545.0) / 36525;
+            var T = (julianDate.getTotalDays() - 2451545.0) / 36525;
             var meanAnomaly = CesiumMath.convertLongitudeRange(CesiumMath.toRadians(357.5277233 + 35999.05034 * T));
             var distanceToSunInAU = 1.000140612 - 0.016708617 * Math.cos(meanAnomaly) - 0.000139589 * Math.cos(2 * meanAnomaly);
 
-            var date = toGregorianDate(julianDate.getJulianDate());
+            var date = toGregorianDate(julianDate.getTotalDays());
             var dayNumber = 0;
             switch (date.month) {
             case 1:

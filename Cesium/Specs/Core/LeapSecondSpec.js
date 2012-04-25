@@ -5,31 +5,31 @@
     describe("LeapSecond", function () {
         it("has the proper default leapSeconds", function () {
             var leapSeconds = Cesium.LeapSecond.getLeapSeconds();
-            expect(leapSeconds[0].julianDate.getJulianDate()).toEqual(2441317.5);
-            expect(leapSeconds[1].julianDate.getJulianDate()).toEqual(2441499.5);
-            expect(leapSeconds[2].julianDate.getJulianDate()).toEqual(2441683.5);
-            expect(leapSeconds[3].julianDate.getJulianDate()).toEqual(2442048.5);
-            expect(leapSeconds[4].julianDate.getJulianDate()).toEqual(2442413.5);
-            expect(leapSeconds[5].julianDate.getJulianDate()).toEqual(2442778.5);
-            expect(leapSeconds[6].julianDate.getJulianDate()).toEqual(2443144.5);
-            expect(leapSeconds[7].julianDate.getJulianDate()).toEqual(2443509.5);
-            expect(leapSeconds[8].julianDate.getJulianDate()).toEqual(2443874.5);
-            expect(leapSeconds[9].julianDate.getJulianDate()).toEqual(2444239.5);
-            expect(leapSeconds[10].julianDate.getJulianDate()).toEqual(2444786.5);
-            expect(leapSeconds[11].julianDate.getJulianDate()).toEqual(2445151.5);
-            expect(leapSeconds[12].julianDate.getJulianDate()).toEqual(2445516.5);
-            expect(leapSeconds[13].julianDate.getJulianDate()).toEqual(2446247.5);
-            expect(leapSeconds[14].julianDate.getJulianDate()).toEqual(2447161.5);
-            expect(leapSeconds[15].julianDate.getJulianDate()).toEqual(2447892.5);
-            expect(leapSeconds[16].julianDate.getJulianDate()).toEqual(2448257.5);
-            expect(leapSeconds[17].julianDate.getJulianDate()).toEqual(2448804.5);
-            expect(leapSeconds[18].julianDate.getJulianDate()).toEqual(2449169.5);
-            expect(leapSeconds[19].julianDate.getJulianDate()).toEqual(2449534.5);
-            expect(leapSeconds[20].julianDate.getJulianDate()).toEqual(2450083.5);
-            expect(leapSeconds[21].julianDate.getJulianDate()).toEqual(2450630.5);
-            expect(leapSeconds[22].julianDate.getJulianDate()).toEqual(2451179.5);
-            expect(leapSeconds[23].julianDate.getJulianDate()).toEqual(2453736.5);
-            expect(leapSeconds[24].julianDate.getJulianDate()).toEqual(2454832.5);
+            expect(leapSeconds[0].julianDate.getTotalDays()).toEqual(2441317.5);
+            expect(leapSeconds[1].julianDate.getTotalDays()).toEqual(2441499.5);
+            expect(leapSeconds[2].julianDate.getTotalDays()).toEqual(2441683.5);
+            expect(leapSeconds[3].julianDate.getTotalDays()).toEqual(2442048.5);
+            expect(leapSeconds[4].julianDate.getTotalDays()).toEqual(2442413.5);
+            expect(leapSeconds[5].julianDate.getTotalDays()).toEqual(2442778.5);
+            expect(leapSeconds[6].julianDate.getTotalDays()).toEqual(2443144.5);
+            expect(leapSeconds[7].julianDate.getTotalDays()).toEqual(2443509.5);
+            expect(leapSeconds[8].julianDate.getTotalDays()).toEqual(2443874.5);
+            expect(leapSeconds[9].julianDate.getTotalDays()).toEqual(2444239.5);
+            expect(leapSeconds[10].julianDate.getTotalDays()).toEqual(2444786.5);
+            expect(leapSeconds[11].julianDate.getTotalDays()).toEqual(2445151.5);
+            expect(leapSeconds[12].julianDate.getTotalDays()).toEqual(2445516.5);
+            expect(leapSeconds[13].julianDate.getTotalDays()).toEqual(2446247.5);
+            expect(leapSeconds[14].julianDate.getTotalDays()).toEqual(2447161.5);
+            expect(leapSeconds[15].julianDate.getTotalDays()).toEqual(2447892.5);
+            expect(leapSeconds[16].julianDate.getTotalDays()).toEqual(2448257.5);
+            expect(leapSeconds[17].julianDate.getTotalDays()).toEqual(2448804.5);
+            expect(leapSeconds[18].julianDate.getTotalDays()).toEqual(2449169.5);
+            expect(leapSeconds[19].julianDate.getTotalDays()).toEqual(2449534.5);
+            expect(leapSeconds[20].julianDate.getTotalDays()).toEqual(2450083.5);
+            expect(leapSeconds[21].julianDate.getTotalDays()).toEqual(2450630.5);
+            expect(leapSeconds[22].julianDate.getTotalDays()).toEqual(2451179.5);
+            expect(leapSeconds[23].julianDate.getTotalDays()).toEqual(2453736.5);
+            expect(leapSeconds[24].julianDate.getTotalDays()).toEqual(2454832.5);
         });
 
         it("throws an exception if constructed without a julian date", function () {
@@ -60,14 +60,14 @@
             var leapSeconds = Cesium.LeapSecond.getLeapSeconds();
             var toFind = new Cesium.LeapSecond("July 1, 1972 00:00:00 UTC", 0.0);
             var index = Cesium.binarySearch(leapSeconds, toFind, Cesium.LeapSecond.compareLeapSecondDate);
-            expect(Cesium.LeapSecond.getLeapSeconds()[index].julianDate.getJulianDate()).toEqual(2441499.5);
+            expect(Cesium.LeapSecond.getLeapSeconds()[index].julianDate.getTotalDays()).toEqual(2441499.5);
         });
 
         it("can check to see if leap seconds are equal", function () {
             var date = new Date("January 1, 1990 00:00:00 UTC");
-            var leapSecond1 = new Cesium.LeapSecond(new Cesium.JulianDate(date), 25.0);
-            var leapSecond2 = new Cesium.LeapSecond(new Cesium.JulianDate(date), 25.0);
-            var leapSecond3 = new Cesium.LeapSecond(new Cesium.JulianDate(date), 26.0);
+            var leapSecond1 = new Cesium.LeapSecond(Cesium.JulianDate.createFromDate(date), 25.0);
+            var leapSecond2 = new Cesium.LeapSecond(Cesium.JulianDate.createFromDate(date), 25.0);
+            var leapSecond3 = new Cesium.LeapSecond(Cesium.JulianDate.createFromDate(date), 26.0);
             expect(leapSecond1.equals(leapSecond2)).toBeTruthy();
             expect(leapSecond1.equals(leapSecond3)).toBeFalsy();
 
@@ -153,7 +153,7 @@
                         }
                       ];
             Cesium.LeapSecond.setLeapSeconds(data);
-            var jd = new Cesium.JulianDate(new Date("July 11, 1994 12:00:00 UTC"));
+            var jd = Cesium.JulianDate.createFromDate(new Date("July 11, 1994 12:00:00 UTC"));
             jd = Cesium.TimeStandard.convertUtcToTai(jd);
             var difference = jd.getTaiMinusUtc();
             expect(difference).toEqual(100);

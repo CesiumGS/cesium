@@ -3,124 +3,269 @@
     /*global Cesium, describe, it, expect*/
 
     var TimeConstants = Cesium.TimeConstants;
-    describe("JulianDate", function () {
+    describe("JulianDate", function() {
         // All exact Julian Dates found using NASA's Time Conversion Tool: http://ssd.jpl.nasa.gov/tc.cgi
 
-        it("correctly computes the Julian Date of a given js Date object (1)", function () {
-            var date = new Date("January 1, 1991 06:00:00 UTC");
-            var julianDate = new Cesium.JulianDate(date);
-            expect(julianDate.getJulianDate()).toEqualEpsilon(2448257.75, Cesium.Math.EPSILON5);
+        it("Construct a default date", function() {
+            // FIXME Default constructing a date uses "now".  Unfortunately,
+            // there's no way to know exactly what that time will be, so we
+            // give ourselves a 5 second epsilon as a hack to avoid possible
+            // race conditions.  In reality, it might be better to just omit
+            // a check in this test, since if this breaks, tons of other stuff
+            // will as well.
+            var defaultDate = new Cesium.JulianDate();
+            var dateNow = Cesium.JulianDate.createFromDate(new Date());
+            expect(defaultDate.equalsEpsilon(dateNow, 5)).toBeTruthy();
         });
 
-        it("correctly computes the Julian Date of a given js Date object (2)", function () {
-            var date = new Date("July 4, 2011 12:00:00 UTC");
-            var julianDate = new Cesium.JulianDate(date);
-            expect(julianDate.getJulianDate()).toEqualEpsilon(2455747.0, Cesium.Math.EPSILON5);
+        it("Construct a date from basic components", function() {
+            var dayNumber = 12;
+            var seconds = 12.5;
+            var timeStandard = Cesium.TimeStandard.TAI;
+            var julianDate = new Cesium.JulianDate(dayNumber, seconds, timeStandard);
+            expect(julianDate.getJulianDayNumber()).toEqual(dayNumber);
+            expect(julianDate.getSecondsOfDay()).toEqual(seconds);
+            expect(julianDate.getTimeStandard()).toEqual(timeStandard);
         });
 
-        it("correctly computes the Julian Date of a given js Date object (3)", function () {
-            var date = new Date("December 31, 2021 18:00:00 UTC");
-            var julianDate = new Cesium.JulianDate(date);
-            expect(julianDate.getJulianDate()).toEqualEpsilon(2459580.25, Cesium.Math.EPSILON5);
+        it("Construct a date from basic components with more seconds than a day", function() {
+            var dayNumber = 12;
+            var seconds = 86401;
+            var timeStandard = Cesium.TimeStandard.UTC;
+            var julianDate = new Cesium.JulianDate(dayNumber, seconds, timeStandard);
+            expect(julianDate.getJulianDayNumber()).toEqual(13);
+            expect(julianDate.getSecondsOfDay()).toEqual(1);
+            expect(julianDate.getTimeStandard()).toEqual(timeStandard);
         });
 
-        it("correctly computes the Julian Date of a given js Date object (4)", function () {
-            var jsDate = new Date("September 1, 2011 12:00:00 UTC");
-            var julianDate = new Cesium.JulianDate(jsDate);
-            expect(julianDate.getJulianDate()).toEqualEpsilon(2455806.0, Cesium.Math.EPSILON5);
+        it("Construct a date from basic components with negative seconds in a day", function() {
+            var dayNumber = 12;
+            var seconds = -1;
+            var timeStandard = Cesium.TimeStandard.UTC;
+            var julianDate = new Cesium.JulianDate(dayNumber, seconds, timeStandard);
+            expect(julianDate.getJulianDayNumber()).toEqual(11);
+            expect(julianDate.getSecondsOfDay()).toEqual(86399);
+            expect(julianDate.getTimeStandard()).toEqual(timeStandard);
         });
 
-        it("can be constructed from a numerical Julian date (1)", function () {
-            var julianDate = Cesium.JulianDate.createJulianDate(2448257.75, Cesium.TimeStandard.UTC);
-            expect(julianDate.equals(new Cesium.JulianDate(new Date("January 1, 1991 06:00:00 UTC")))).toBeTruthy();
+        it("Construct a date from basic components with partial day and seconds in a day", function() {
+            var dayNumber = 12.5;
+            var seconds = -1;
+            var timeStandard = Cesium.TimeStandard.UTC;
+            var julianDate = new Cesium.JulianDate(dayNumber, seconds, timeStandard);
+            expect(julianDate.getJulianDayNumber()).toEqual(12);
+            expect(julianDate.getSecondsOfDay()).toEqual(43199);
+            expect(julianDate.getTimeStandard()).toEqual(timeStandard);
         });
 
-        it("can be constructed from a numerical Julian date (2)", function () {
-            var julianDate = Cesium.JulianDate.createJulianDate(2455747.0, Cesium.TimeStandard.UTC);
-            expect(julianDate.equals(new Cesium.JulianDate(new Date("July 4, 2011 12:00:00 UTC")))).toBeTruthy();
+        it("Construct a date with default time standard", function() {
+            var dayNumber = 12;
+            var seconds = 12.5;
+            var julianDate = new Cesium.JulianDate(dayNumber, seconds);
+            expect(julianDate.getJulianDayNumber()).toEqual(dayNumber);
+            expect(julianDate.getSecondsOfDay()).toEqual(seconds);
+            expect(julianDate.getTimeStandard()).toEqual(Cesium.TimeStandard.UTC);
         });
 
-        it("can be constructed from a numerical Julian date (3)", function () {
-            var julianDate = Cesium.JulianDate.createJulianDate(2459580.25, Cesium.TimeStandard.UTC);
-            expect(julianDate.equals(new Cesium.JulianDate(new Date("December 31, 2021 18:00:00 UTC")))).toBeTruthy();
-        });
-
-        it("can be constructed from a numerical Julian date (4)", function () {
-            var julianDate = Cesium.JulianDate.createJulianDate(2455806.0, Cesium.TimeStandard.UTC);
-            expect(julianDate.equals(new Cesium.JulianDate(new Date("September 1, 2011 12:00:00 UTC")))).toBeTruthy();
-        });
-
-        it("throws an exception if created from a negative numerical Julian date", function () {
-            expect(function () {
-                return Cesium.JulianDate.createJulianDate(-500, Cesium.TimeStandard.UTC);
-            }).toThrow();
-        });
-
-        it("throws an exception if createJulianDate is called with no argument", function () {
+        it("Fail to construct a date with invalid time standard.", function() {
+            var dayNumber = 12;
+            var seconds = 12.5;
+            var timeStandard = "invalid";
             expect(function() {
-                return Cesium.JulianDate.createJulianDate(null);
+                return new Cesium.JulianDate(dayNumber, seconds, timeStandard);
             }).toThrow();
         });
 
-        it("can be constructed from a Julian day number and seconds of day (1)", function () {
-            var julianDate1 = new Cesium.JulianDate(2448257, 64800, Cesium.TimeStandard.UTC);
-            var julianDate2 = new Cesium.JulianDate(new Date("January 1, 1991 06:00:00 UTC"));
-            expect(julianDate1.equals(julianDate2)).toBeTruthy();
+        it("Fail to construct a date with a null time standard.", function() {
+            var dayNumber = 12;
+            var seconds = 12.5;
+            var timeStandard = null;
+            expect(function() {
+                return new Cesium.JulianDate(dayNumber, seconds, timeStandard);
+            }).toThrow();
         });
 
-        it("can be constructed from a Julian day number and seconds of day (2)", function () {
-            var julianDate1 = new Cesium.JulianDate(2448257, 64800 + Cesium.TimeConstants.SECONDS_PER_DAY, Cesium.TimeStandard.UTC);
-            var julianDate2 = new Cesium.JulianDate(new Date("January 2, 1991 06:00:00 UTC"));
-            expect(julianDate1.equals(julianDate2)).toBeTruthy();
+        it("Fail to construct a date with an undefined secondsOfDay.", function() {
+            var dayNumber = 12;
+            var timeStandard = Cesium.TimeStandard.UTC;
+            expect(function() {
+                return new Cesium.JulianDate(dayNumber, undefined, timeStandard);
+            }).toThrow();
         });
 
-        it("can be constructed from a Julian day number and seconds of day (3)", function () {
-            var julianDate1 = new Cesium.JulianDate(2455747, 0, Cesium.TimeStandard.UTC);
-            var julianDate2 = new Cesium.JulianDate(new Date("July 4, 2011 12:00:00 UTC"));
-            expect(julianDate1.equals(julianDate2)).toBeTruthy();
+        it("Fail to construct a date with null secondsOfDay.", function() {
+            var dayNumber = 12;
+            var seconds = null;
+            var timeStandard = Cesium.TimeStandard.UTC;
+            expect(function() {
+                return new Cesium.JulianDate(dayNumber, seconds, timeStandard);
+            }).toThrow();
         });
 
-        it("can be constructed from a Julian day number and seconds of day (4)", function () {
-            var julianDate1 = new Cesium.JulianDate(2459580, 21600, Cesium.TimeStandard.UTC);
-            var julianDate2 = new Cesium.JulianDate(new Date("December 31, 2021 18:00:00 UTC"));
-            expect(julianDate1.equals(julianDate2)).toBeTruthy();
+        it("Fail to construct a date with non-numerical secondsOfDay.", function() {
+            var dayNumber = 12;
+            var seconds = "not a number";
+            var timeStandard = Cesium.TimeStandard.UTC;
+            expect(function() {
+                return new Cesium.JulianDate(dayNumber, seconds, timeStandard);
+            }).toThrow();
         });
 
-        it("can be constructed from a Julian day number and seconds of day (5)", function () {
-            var julianDate1 = new Cesium.JulianDate(2455806, 0, Cesium.TimeStandard.UTC);
-            var julianDate2 = new Cesium.JulianDate(new Date("September 1, 2011 12:00:00 UTC"));
-            expect(julianDate1.equals(julianDate2)).toBeTruthy();
+        it("Fail to construct a date with undefined day number.", function() {
+            var seconds = 12.5;
+            var timeStandard = Cesium.TimeStandard.UTC;
+            expect(function() {
+                return new Cesium.JulianDate(undefined, seconds, timeStandard);
+            }).toThrow();
         });
 
-        it("can get the Julian Day Number", function () {
-            var jsDate = new Date();        // September 1, 2011 @ 18:00 UTC
-            jsDate.setUTCFullYear(2011, 8, 1);
-            jsDate.setUTCHours(18, 0, 0, 0);
-            var julianDate = new Cesium.JulianDate(jsDate);
-            expect(julianDate.getJulianDayNumber()).toEqualEpsilon(2455806, Cesium.Math.EPSILON5);
+        it("Fail to construct a date with null day number.", function() {
+            var dayNumber = null;
+            var seconds = 12.5;
+            var timeStandard = Cesium.TimeStandard.UTC;
+            expect(function() {
+                return new Cesium.JulianDate(dayNumber, seconds, timeStandard);
+            }).toThrow();
         });
 
-        it("can get the Julian time fraction", function () {
-            var jsDate = new Date();        // Current date @ 18:00 UTC
-            jsDate.setUTCHours(18, 0, 0, 0);
-            var julianDate = new Cesium.JulianDate(jsDate);
-            expect(julianDate.getJulianTimeFraction()).toEqualEpsilon(0.25, Cesium.Math.EPSILON5);
+        it("Fail to construct a date with non-numerical day number.", function() {
+            var dayNumber = "not a number";
+            var seconds = 12.5;
+            var timeStandard = Cesium.TimeStandard.UTC;
+            expect(function() {
+                return new Cesium.JulianDate(dayNumber, seconds, timeStandard);
+            }).toThrow();
         });
 
-        it("can return a Javascript Date object when constructed without one", function() {
-            var julianDate = Cesium.JulianDate.createJulianDate(2455770.1437442, Cesium.TimeStandard.UTC);
-            var javascriptDate = julianDate.getDate();
-            expect(javascriptDate.getUTCFullYear()).toEqual(2011);
-            expect(javascriptDate.getUTCMonth()).toEqual(6);
-            expect(javascriptDate.getUTCDate()).toEqual(27);
-            expect(javascriptDate.getUTCHours()).toEqual(15);
-            expect(javascriptDate.getUTCMinutes()).toEqual(26);
-            expect(javascriptDate.getUTCSeconds()).toEqual(59);
-            expect(javascriptDate.getUTCMilliseconds()).toEqualEpsilon(500, 10);
+        it("Construct a date from a JavaScript Date (1).", function() {
+            var date = new Date("January 1, 1991 06:00:00 UTC");
+            var julianDate = Cesium.JulianDate.createFromDate(date);
+            expect(julianDate.getTotalDays()).toEqualEpsilon(2448257.75, Cesium.Math.EPSILON5);
         });
 
-        it("can return a Javascript Date object when constructed without one (2)", function() {
-            var julianDate = Cesium.JulianDate.createJulianDate(2455770.9986087964, Cesium.TimeStandard.UTC);
+        it("Construct a date from a JavaScript Date (2).", function() {
+            var date = new Date("July 4, 2011 12:00:00 UTC");
+            var julianDate = Cesium.JulianDate.createFromDate(date);
+            expect(julianDate.getTotalDays()).toEqualEpsilon(2455747.0, Cesium.Math.EPSILON5);
+        });
+
+        it("Construct a date from a JavaScript Date (3).", function() {
+            var date = new Date("December 31, 2021 18:00:00 UTC");
+            var julianDate = Cesium.JulianDate.createFromDate(date);
+            expect(julianDate.getTotalDays()).toEqualEpsilon(2459580.25, Cesium.Math.EPSILON5);
+        });
+
+        it("Construct a date from a JavaScript Date (4).", function() {
+            var jsDate = new Date("September 1, 2011 12:00:00 UTC");
+            var julianDate = Cesium.JulianDate.createFromDate(jsDate);
+            expect(julianDate.getTotalDays()).toEqualEpsilon(2455806.0, Cesium.Math.EPSILON5);
+        });
+
+        it("Construct a date from a JavaScript Date in different TimeStandard.", function() {
+            var taiDate = new Date("September 1, 2011 12:00:00");
+            var taiJulianDate = Cesium.JulianDate.createFromDate(taiDate, Cesium.TimeStandard.TAI);
+
+            var utcDate = new Date("September 1, 2011 11:59:26");
+            var utcJulianDate = Cesium.JulianDate.createFromDate(utcDate, Cesium.TimeStandard.UTC);
+
+            expect(taiJulianDate.equalsEpsilon(utcJulianDate, Cesium.Math.EPSILON20)).toBeTruthy();
+        });
+
+        it("Fail to construct from an undefined JavaScript Date.", function() {
+            expect(function() {
+                return Cesium.JulianDate.createFromDate(undefined);
+            }).toThrow();
+        });
+
+        it("Fail to construct from a null JavaScript Date.", function() {
+            expect(function() {
+                return Cesium.JulianDate.createFromDate(null);
+            }).toThrow();
+        });
+
+        it("Fail to construct from an invalid JavaScript Date.", function() {
+            expect(function() {
+                return Cesium.JulianDate.createFromDate(new Date(Date.parse("garbage")));
+            }).toThrow();
+        });
+
+        it("Fail to construct from a non-date JavaScript Date.", function() {
+            expect(function() {
+                return Cesium.JulianDate.createFromDate(0);
+            }).toThrow();
+        });
+
+        it("Fail to construct from a JavaScript Date with null time standard.", function() {
+            expect(function() {
+                return Cesium.JulianDate.createFromDate(new Date(), null);
+            }).toThrow();
+        });
+
+        it("Fail to construct from a JavaScript Date with invalid time standard.", function() {
+            expect(function() {
+                return Cesium.JulianDate.createFromDate(new Date(), "invalid");
+            }).toThrow();
+        });
+
+        it("Construct a date from total days (1).", function() {
+            var julianDate = Cesium.JulianDate.createFromTotalDays(2448257.75, Cesium.TimeStandard.UTC);
+            expect(julianDate.equals(Cesium.JulianDate.createFromDate(new Date("January 1, 1991 06:00:00 UTC")))).toBeTruthy();
+        });
+
+        it("Construct a date from total days (2).", function() {
+            var julianDate = Cesium.JulianDate.createFromTotalDays(2455747.0, Cesium.TimeStandard.UTC);
+            expect(julianDate.equals(Cesium.JulianDate.createFromDate(new Date("July 4, 2011 12:00:00 UTC")))).toBeTruthy();
+        });
+
+        it("Construct a date from total days (3).", function() {
+            var julianDate = Cesium.JulianDate.createFromTotalDays(2459580.25, Cesium.TimeStandard.UTC);
+            expect(julianDate.equals(Cesium.JulianDate.createFromDate(new Date("December 31, 2021 18:00:00 UTC")))).toBeTruthy();
+        });
+
+        it("Construct a date from total days with different time standards.", function() {
+            var julianDate = Cesium.JulianDate.createFromTotalDays(2455806, Cesium.TimeStandard.TAI);
+            expect(julianDate.equals(Cesium.JulianDate.createFromDate(new Date("September 1, 2011 12:00:00 UTC"), Cesium.TimeStandard.TAI))).toBeTruthy();
+        });
+
+        it("Fail to construct from non-numeric total days.", function() {
+            expect(function() {
+                return Cesium.JulianDate.createFromTotalDays("not a number", Cesium.TimeStandard.UTC);
+            }).toThrow();
+        });
+
+        it("Fail to construct from null total days.", function() {
+            expect(function() {
+                return Cesium.JulianDate.createFromTotalDays(null, Cesium.TimeStandard.UTC);
+            }).toThrow();
+        });
+
+        it("Fail to construct from undefined total days.", function() {
+            expect(function() {
+                return Cesium.JulianDate.createFromTotalDays(undefined, Cesium.TimeStandard.UTC);
+            }).toThrow();
+        });
+
+        it("Fail to construct from total days with null time standard.", function() {
+            expect(function() {
+                return Cesium.JulianDate.createFromTotalDays(1234, null);
+            }).toThrow();
+        });
+
+        it("Fail to construct from total days with invalid time standard.", function() {
+            expect(function() {
+                return Cesium.JulianDate.createFromTotalDays(1234, "invalid");
+            }).toThrow();
+        });
+
+        it("getJulianTimeFraction works.", function() {
+            var seconds = 12345.678;
+            var fraction = seconds / 86400.0;
+            var julianDate = new Cesium.JulianDate(0, seconds);
+            expect(julianDate.getJulianTimeFraction()).toEqualEpsilon(fraction, Cesium.Math.EPSILON20);
+        });
+
+        it("getDate works when constructed from total days", function() {
+            var julianDate = Cesium.JulianDate.createFromTotalDays(2455770.9986087964, Cesium.TimeStandard.UTC);
             var javascriptDate = julianDate.getDate();
             expect(javascriptDate.getUTCFullYear()).toEqual(2011);
             expect(javascriptDate.getUTCMonth()).toEqual(6);
@@ -131,8 +276,8 @@
             expect(javascriptDate.getUTCMilliseconds()).toEqualEpsilon(800, 10);
         });
 
-        it("can return a Javascript Date object when constructed without one (TAI)", function() {
-            var julianDate = Cesium.JulianDate.createJulianDate(2455927.157772, Cesium.TimeStandard.UTC);
+        it("getDate works when using TAI", function() {
+            var julianDate = Cesium.JulianDate.createFromTotalDays(2455927.157772, Cesium.TimeStandard.UTC);
             var julianDateTai = Cesium.TimeStandard.convertUtcToTai(julianDate);
             var javascriptDate = julianDateTai.getDate();
             expect(javascriptDate.getUTCFullYear()).toEqual(2011);
@@ -144,251 +289,330 @@
             expect(javascriptDate.getUTCMilliseconds()).toEqualEpsilon(500, 10);
         });
 
-        it("can report the number of seconds elapsed into the current day (1)", function () {
-            var jsDate = new Date("July 4, 2011 12:00:00 UTC");
-            var julianDate = new Cesium.JulianDate(jsDate);
-            var totalSeconds = julianDate.getSecondsOfDay();
-            expect(totalSeconds).toEqualEpsilon(0.0, Cesium.Math.EPSILON10);
-        });
-
-        it("can report the number of seconds elapsed into the current day (2)", function () {
-            var jsDate = new Date("July 4, 2011 11:59:59 UTC");
-            var julianDate = new Cesium.JulianDate(jsDate);
-            var totalSeconds = julianDate.getSecondsOfDay();
-            expect(totalSeconds).toEqualEpsilon(Cesium.TimeConstants.SECONDS_PER_DAY - 1.0, Cesium.Math.EPSILON5);
-        });
-
-        it("can find the difference between julian dates in seconds (UTC)", function () {
-            var start = new Cesium.JulianDate(new Date("July 4, 2011 12:00:00 UTC"));
-            var end = new Cesium.JulianDate(new Date("July 5, 2011 12:01:00 UTC"));
+        it("getSecondsDifference works in UTC", function() {
+            var start = Cesium.JulianDate.createFromDate(new Date("July 4, 2011 12:00:00 UTC"));
+            var end = Cesium.JulianDate.createFromDate(new Date("July 5, 2011 12:01:00 UTC"));
             expect(start.getSecondsDifference(end)).toEqualEpsilon(TimeConstants.SECONDS_PER_DAY + TimeConstants.SECONDS_PER_MINUTE, Cesium.Math.EPSILON5);
         });
 
-        it("can find the difference between julian dates in seconds (TAI)", function () {
-            var start = new Cesium.JulianDate(new Date("July 4, 2011 12:00:00 UTC"));
-            var end = new Cesium.JulianDate(new Date("July 5, 2011 12:01:00 UTC"));
+        it("getSecondsDifference works in TAI", function() {
+            var start = Cesium.JulianDate.createFromDate(new Date("July 4, 2011 12:00:00 UTC"));
+            var end = Cesium.JulianDate.createFromDate(new Date("July 5, 2011 12:01:00 UTC"));
             start = Cesium.TimeStandard.convertUtcToTai(start);
             end = Cesium.TimeStandard.convertUtcToTai(end);
             expect(start.getSecondsDifference(end)).toEqualEpsilon(TimeConstants.SECONDS_PER_DAY + TimeConstants.SECONDS_PER_MINUTE, Cesium.Math.EPSILON5);
         });
 
-        it("can find the difference between julian dates in seconds (mixed time standards)", function () {
-            var start = new Cesium.JulianDate(new Date("July 4, 2011 12:00:00 UTC"));
-            var end = new Cesium.JulianDate(new Date("July 5, 2011 12:01:00 UTC"));
+        it("getSecondsDifference works with mixed time standards.", function() {
+            var start = Cesium.JulianDate.createFromDate(new Date("July 4, 2011 12:00:00 UTC"));
+            var end = Cesium.JulianDate.createFromDate(new Date("July 5, 2011 12:01:00 UTC"));
             start = Cesium.TimeStandard.convertUtcToTai(start);
             expect(start.getSecondsDifference(end)).toEqualEpsilon(TimeConstants.SECONDS_PER_DAY + TimeConstants.SECONDS_PER_MINUTE, Cesium.Math.EPSILON5);
         });
 
-        it("can find the difference between julian dates in minutes (UTC)", function () {
-            var start = new Cesium.JulianDate(new Date("July 4, 2011 12:00:00 UTC"));
-            var end = new Cesium.JulianDate(new Date("July 5, 2011 12:01:00 UTC"));
+        it("getMinutesDifference works in UTC", function() {
+            var start = Cesium.JulianDate.createFromDate(new Date("July 4, 2011 12:00:00 UTC"));
+            var end = Cesium.JulianDate.createFromDate(new Date("July 5, 2011 12:01:00 UTC"));
             expect(start.getMinutesDifference(end)).toEqualEpsilon(TimeConstants.MINUTES_PER_DAY + 1.0, Cesium.Math.EPSILON5);
         });
 
-         it("can find the difference between julian dates in minutes (TAI)", function () {
-            var start = new Cesium.JulianDate(new Date("July 4, 2011 12:00:00 UTC"));
-            var end = new Cesium.JulianDate(new Date("July 5, 2011 12:01:00 UTC"));
+        it("getMinutesDifference works in TAI", function() {
+            var start = Cesium.JulianDate.createFromDate(new Date("July 4, 2011 12:00:00 UTC"));
+            var end = Cesium.JulianDate.createFromDate(new Date("July 5, 2011 12:01:00 UTC"));
             start = Cesium.TimeStandard.convertUtcToTai(start);
             end = Cesium.TimeStandard.convertUtcToTai(end);
             expect(start.getMinutesDifference(end)).toEqualEpsilon(TimeConstants.MINUTES_PER_DAY + 1.0, Cesium.Math.EPSILON5);
         });
 
-        it("can find the difference between julian dates in minutes (mixed time standards)", function () {
-            var start = new Cesium.JulianDate(new Date("July 4, 2011 12:00:00 UTC"));
-            var end = new Cesium.JulianDate(new Date("July 5, 2011 12:01:00 UTC"));
+        it("getMinutesDifference works with mixed time standards.", function() {
+            var start = Cesium.JulianDate.createFromDate(new Date("July 4, 2011 12:00:00 UTC"));
+            var end = Cesium.JulianDate.createFromDate(new Date("July 5, 2011 12:01:00 UTC"));
             end = Cesium.TimeStandard.convertUtcToTai(end);
             expect(start.getMinutesDifference(end)).toEqualEpsilon(TimeConstants.MINUTES_PER_DAY + 1.0, Cesium.Math.EPSILON5);
         });
 
-        it("can add seconds", function () {
-            var start = new Cesium.JulianDate(new Date("July 4, 2011 12:00:30 UTC"));
+        it("addSeconds works with whole seconds", function() {
+            var start = Cesium.JulianDate.createFromDate(new Date("July 4, 2011 12:00:30 UTC"));
             var end = start.addSeconds(95);
             expect(end.getDate().getUTCSeconds()).toEqualEpsilon(5, Cesium.Math.EPSILON5);
             expect(end.getDate().getUTCMinutes()).toEqualEpsilon(2, Cesium.Math.EPSILON5);
         });
 
-        it("can add fractions of a second (1)", function () {
-            var start = new Cesium.JulianDate(new Date("July 4, 2011 23:59:59 UTC"));
+        it("addSeconds works with fractions (1)", function() {
+            var start = Cesium.JulianDate.createFromDate(new Date("July 4, 2011 23:59:59 UTC"));
             var end = start.addSeconds(1.5);
-            expect(end.getJulianDate()).toEqualEpsilon(2455747.5000058, Cesium.Math.EPSILON7);
+            expect(end.getTotalDays()).toEqualEpsilon(2455747.5000058, Cesium.Math.EPSILON7);
         });
 
-        it("can add fractions of a second (2)", function () {
-            var start = new Cesium.JulianDate(new Date("August 11 2011 6:00:00 UTC"));
+        it("addSeconds works with fractions (2)", function() {
+            var start = Cesium.JulianDate.createFromDate(new Date("August 11 2011 6:00:00 UTC"));
             var end = start.addSeconds(0.5);
-            expect(end.getJulianDate()).toEqualEpsilon(2455784.7500058, Cesium.Math.EPSILON7);
+            expect(end.getTotalDays()).toEqualEpsilon(2455784.7500058, Cesium.Math.EPSILON7);
         });
 
-        it("can add fractions of a second (3)", function () {
-            var start = new Cesium.JulianDate(new Date("August 11 2011 11:59:59 UTC"));
+        it("addSeconds works with fractions (3)", function() {
+            var start = Cesium.JulianDate.createFromDate(new Date("August 11 2011 11:59:59 UTC"));
             var end = start.addSeconds(1.25);
-            expect(end.getJulianDate()).toEqualEpsilon(2455785.0000029, Cesium.Math.EPSILON7);
+            expect(end.getTotalDays()).toEqualEpsilon(2455785.0000029, Cesium.Math.EPSILON7);
         });
 
-        it("can subtract seconds", function () {
-            var start = new Cesium.JulianDate(new Date("July 4, 2011 12:01:30 UTC"));
+        it("addSeconds works with negative numbers", function() {
+            var start = Cesium.JulianDate.createFromDate(new Date("July 4, 2011 12:01:30 UTC"));
             var end = start.addSeconds(-60);
             expect(end.getDate().getUTCSeconds()).toEqualEpsilon(30, Cesium.Math.EPSILON5);
             expect(end.getDate().getUTCMinutes()).toEqualEpsilon(0, Cesium.Math.EPSILON5);
         });
 
-        it("can add minutes", function () {
-            var start = new Cesium.JulianDate(new Date("July 4, 2011 12:00:00 UTC"));
+        it("addSeconds works with more seconds than in a day.", function() {
+            var start = new Cesium.JulianDate(2448444, 0, Cesium.TimeStandard.UTC);
+            var end = start.addSeconds(TimeConstants.SECONDS_PER_DAY * 7 + 15);
+            expect(end.getJulianDayNumber()).toEqual(2448451);
+            expect(end.getSecondsOfDay()).toEqual(15);
+        });
+
+        it("addSeconds works with negative seconds more than in a day.", function() {
+            var start = new Cesium.JulianDate(2448444, 0, Cesium.TimeStandard.UTC);
+            var end = start.addSeconds(-TimeConstants.SECONDS_PER_DAY * 7 - 15);
+            expect(end.getJulianDayNumber()).toEqual(2448436);
+            expect(end.getSecondsOfDay()).toEqual(TimeConstants.SECONDS_PER_DAY - 15);
+        });
+
+        it("addSeconds fails with non-numeric input.", function() {
+            expect(function() {
+                return new Cesium.JulianDate().addSeconds("banana");
+            }).toThrow();
+        });
+
+        it("addSeconds fails with null input.", function() {
+            expect(function() {
+                return new Cesium.JulianDate().addSeconds(null);
+            }).toThrow();
+        });
+
+        it("addSeconds fails with undefined input.", function() {
+            expect(function() {
+                return new Cesium.JulianDate().addSeconds(undefined);
+            }).toThrow();
+        });
+        it("addMinutes works", function() {
+            var start = Cesium.JulianDate.createFromDate(new Date("July 4, 2011 12:00:00 UTC"));
             var end = start.addMinutes(65);
             expect(end.getDate().getUTCMinutes()).toEqualEpsilon(5, Cesium.Math.EPSILON5);
             expect(end.getDate().getUTCHours()).toEqualEpsilon(13, Cesium.Math.EPSILON5);
         });
 
-        it("can subtract minutes", function () {
-            var start = new Cesium.JulianDate(new Date("July 4, 2011 12:00:00 UTC"));
+        it("addMinutes works with negative numbers", function() {
+            var start = Cesium.JulianDate.createFromDate(new Date("July 4, 2011 12:00:00 UTC"));
             var end = start.addMinutes(-35);
             expect(end.getDate().getUTCMinutes()).toEqualEpsilon(25, Cesium.Math.EPSILON5);
             expect(end.getDate().getUTCHours()).toEqualEpsilon(11, Cesium.Math.EPSILON5);
         });
 
-        it("can add hours", function () {
-            var start = new Cesium.JulianDate(new Date("July 4, 2011 12:00:00 UTC"));
+        it("addMinutes fails with non-numeric input.", function() {
+            expect(function() {
+                return new Cesium.JulianDate().addMinutes("banana");
+            }).toThrow();
+        });
+
+        it("addMinutes fails with null input.", function() {
+            expect(function() {
+                return new Cesium.JulianDate().addMinutes(null);
+            }).toThrow();
+        });
+
+        it("addMinutes fails with undefined input.", function() {
+            expect(function() {
+                return new Cesium.JulianDate().addMinutes(undefined);
+            }).toThrow();
+        });
+
+        it("addHours works.", function() {
+            var start = Cesium.JulianDate.createFromDate(new Date("July 4, 2011 12:00:00 UTC"));
             var end = start.addHours(6);
             expect(end.getDate().getUTCHours()).toEqualEpsilon(18, Cesium.Math.EPSILON5);
         });
 
-        it("can subtract hours", function () {
-            var start = new Cesium.JulianDate(new Date("July 4, 2011 12:00:00 UTC"));
+        it("addHours works with negative numbers.", function() {
+            var start = Cesium.JulianDate.createFromDate(new Date("July 4, 2011 12:00:00 UTC"));
             var end = start.addHours(-6);
             expect(end.getDate().getUTCHours()).toEqualEpsilon(6, Cesium.Math.EPSILON5);
         });
 
-        it("can add seconds more than a day", function () {
-            var start = new Cesium.JulianDate(2448444, 0, Cesium.TimeStandard.UTC);
-            var end = start.addSeconds(TimeConstants.SECONDS_PER_DAY*7 + 15);
-            expect(end.getJulianDayNumber()).toEqual(2448451);
-            expect(end.getSecondsOfDay()).toEqual(15);
+        it("addHours fails with non-numeric input.", function() {
+            expect(function() {
+                return new Cesium.JulianDate().addHours("banana");
+            }).toThrow();
         });
 
-        it("can subtract seconds more than a day", function () {
-            var start = new Cesium.JulianDate(2448444, 0, Cesium.TimeStandard.UTC);
-            var end = start.addSeconds(-TimeConstants.SECONDS_PER_DAY*7 - 15);
-            expect(end.getJulianDayNumber()).toEqual(2448436);
-            expect(end.getSecondsOfDay()).toEqual(TimeConstants.SECONDS_PER_DAY - 15);
+        it("addHours fails with null input.", function() {
+            expect(function() {
+                return new Cesium.JulianDate().addHours(null);
+            }).toThrow();
         });
 
-        it("can add days", function () {
-            var start = new Cesium.JulianDate(new Date("July 4, 2011 12:00:00 UTC"));
+        it("addHours fails with undefined input.", function() {
+            expect(function() {
+                return new Cesium.JulianDate().addHours(undefined);
+            }).toThrow();
+        });
+
+        it("addDays works", function() {
+            var start = Cesium.JulianDate.createFromDate(new Date("July 4, 2011 12:00:00 UTC"));
             var end = start.addDays(32);
             expect(end.getDate().getUTCDate()).toEqualEpsilon(5, Cesium.Math.EPSILON5);
             expect(end.getDate().getUTCMonth()).toEqualEpsilon(7, Cesium.Math.EPSILON5);
         });
 
-        it("can subtract days", function () {
-            var start = new Cesium.JulianDate(new Date("July 4, 2011 12:00:00 UTC"));
+        it("addDays works with negative numbers", function() {
+            var start = Cesium.JulianDate.createFromDate(new Date("July 4, 2011 12:00:00 UTC"));
             var end = start.addDays(-4);
             expect(end.getDate().getUTCDate()).toEqualEpsilon(30, Cesium.Math.EPSILON5);
             expect(end.getDate().getUTCMonth()).toEqualEpsilon(5, Cesium.Math.EPSILON5);
         });
 
-        it("can compute the year fraction (1)", function () {
-            var julianDate = new Cesium.JulianDate(new Date("January 2, 2011 0:00:00 UTC"));
+        it("addDays fails with non-numeric input.", function() {
+            expect(function() {
+                return new Cesium.JulianDate().addDays("banana");
+            }).toThrow();
+        });
+
+        it("addDays fails with null input.", function() {
+            expect(function() {
+                return new Cesium.JulianDate().addDays(null);
+            }).toThrow();
+        });
+
+        it("addDays fails with undefined input.", function() {
+            expect(function() {
+                return new Cesium.JulianDate().addDays(undefined);
+            }).toThrow();
+        });
+
+        it("toYearFraction works (1)", function() {
+            var julianDate = Cesium.JulianDate.createFromDate(new Date("January 2, 2011 0:00:00 UTC"));
             var yearFraction = julianDate.toYearFraction();
-            expect(yearFraction).toEqualEpsilon(1.0/365.0, Cesium.Math.EPSILON10);
+            expect(yearFraction).toEqualEpsilon(1.0 / 365.0, Cesium.Math.EPSILON10);
         });
 
-        it("can compute the year fraction (2)", function () {
-            var julianDate = new Cesium.JulianDate(new Date("January 1, 2011 18:00:00 UTC"));
+        it("toYearFraction works (2)", function() {
+            var julianDate = Cesium.JulianDate.createFromDate(new Date("January 1, 2011 18:00:00 UTC"));
             var yearFraction = julianDate.toYearFraction();
-            expect(yearFraction).toEqualEpsilon(0.75/365.0, Cesium.Math.EPSILON10);
+            expect(yearFraction).toEqualEpsilon(0.75 / 365.0, Cesium.Math.EPSILON10);
         });
 
-        it("can compute the year fraction during a leap year", function () {
-            var julianDate = new Cesium.JulianDate(new Date("January 2, 2012 0:00:00 UTC"));
+        it("toYearFraction works in leap years", function() {
+            var julianDate = Cesium.JulianDate.createFromDate(new Date("January 2, 2012 0:00:00 UTC"));
             var yearFraction = julianDate.toYearFraction();
-            expect(yearFraction).toEqualEpsilon(1.0/366.0, Cesium.Math.EPSILON10);
+            expect(yearFraction).toEqualEpsilon(1.0 / 366.0, Cesium.Math.EPSILON10);
         });
 
-        it("can come before another JulianDate (constructed with a js Date object)", function () {
-            var start = new Cesium.JulianDate(new Date("July 6, 1991 12:00:00"));
-            var end = new Cesium.JulianDate(new Date("July 6, 2011 12:01:00"));
-            expect(start.isBefore(end)).toBeTruthy();
+        it("lessThan works", function() {
+            var start = Cesium.JulianDate.createFromDate(new Date("July 6, 1991 12:00:00"));
+            var end = Cesium.JulianDate.createFromDate(new Date("July 6, 2011 12:01:00"));
+            expect(start.lessThan(end)).toBeTruthy();
         });
 
-        it("can come before another JulianDate", function () {
-            var start = new Cesium.JulianDate(2448444, 0, Cesium.TimeStandard.UTC);
-            var end = new Cesium.JulianDate(2455749, 1, Cesium.TimeStandard.UTC);
-            expect(start.isBefore(end)).toBeTruthy();
+        it("lessThan works with equal values", function() {
+            var start = Cesium.JulianDate.createFromDate(new Date("July 6, 1991 12:00:00"));
+            var end = Cesium.JulianDate.createFromDate(new Date("July 6, 1991 12:00:00"));
+            expect(start.lessThan(end)).toBeFalsy();
+            expect(start.lessThan(end.addSeconds(1))).toBeTruthy();
         });
 
-        it("can not come before another JulianDate (constructed with a js Date object)", function () {
-            var start = new Cesium.JulianDate(new Date("July 6, 1991 12:00:00"));
-            var end = new Cesium.JulianDate(new Date("July 6, 2011 12:01:00"));
-            expect(end.isBefore(start)).toBeFalsy();
+        it("lessThan works with different time standards", function() {
+            var start = Cesium.JulianDate.createFromDate(new Date("July 6, 1991 12:00:00"), Cesium.TimeStandard.UTC);
+            var end = Cesium.JulianDate.createFromDate(new Date("July 6, 2011 12:00:00"), Cesium.TimeStandard.TAI);
+            expect(start.lessThan(end)).toBeTruthy();
         });
 
-        it("can not come before another JulianDate", function () {
-            var start = new Cesium.JulianDate(2448444, 0, Cesium.TimeStandard.UTC);
-            var end = new Cesium.JulianDate(2455749, 1, Cesium.TimeStandard.UTC);
-            expect(end.isBefore(start)).toBeFalsy();
+        it("lessThanOrEquals works", function() {
+            var start = Cesium.JulianDate.createFromDate(new Date("July 6, 1991 12:00:00"));
+            var end = Cesium.JulianDate.createFromDate(new Date("July 6, 1991 12:00:00"));
+            expect(start.lessThanOrEquals(end)).toBeTruthy();
+            expect(start.addSeconds(1).lessThanOrEquals(end)).toBeFalsy();
+            expect(start.addSeconds(-1).lessThanOrEquals(end)).toBeTruthy();
         });
 
-        it("can come after another JulianDate (constructed with a js Date object) ", function () {
-            var start = new Cesium.JulianDate(new Date("July 6, 1991 12:00:00"));
-            var end = new Cesium.JulianDate(new Date("July 6, 2011 12:01:00"));
-            expect(end.isAfter(start)).toBeTruthy();
+        it("lessThanOrEquals works with different time standards", function() {
+            var start = Cesium.JulianDate.createFromDate(new Date("July 6, 1991 12:00:00"), Cesium.TimeStandard.UTC);
+            var end = Cesium.TimeStandard.convertUtcToTai(start);
+            expect(start.lessThanOrEquals(end)).toBeTruthy();
+            expect(start.addSeconds(1).lessThanOrEquals(end)).toBeFalsy();
+            expect(start.addSeconds(-1).lessThanOrEquals(end)).toBeTruthy();
         });
 
-        it("can come after another JulianDate ", function () {
-            var start = new Cesium.JulianDate(2448444, 0, Cesium.TimeStandard.UTC);
-            var end = new Cesium.JulianDate(2455749, 1, Cesium.TimeStandard.UTC);
-            expect(end.isAfter(start)).toBeTruthy();
+        it("greaterThan works", function() {
+            var start = Cesium.JulianDate.createFromDate(new Date("July 6, 2011 12:01:00"));
+            var end = Cesium.JulianDate.createFromDate(new Date("July 6, 1991 12:00:00"));
+            expect(start.greaterThan(end)).toBeTruthy();
         });
 
-        it("can not come after another JulianDate (constructed with a js Date object)", function () {
-            var start = new Cesium.JulianDate(new Date("July 6, 1991 12:00:00"));
-            var end = new Cesium.JulianDate(new Date("July 6, 2011 12:01:00"));
-            expect(start.isAfter(end)).toBeFalsy();
+        it("greaterThan works with equal values", function() {
+            var start = Cesium.JulianDate.createFromDate(new Date("July 6, 1991 12:00:00"));
+            var end = Cesium.JulianDate.createFromDate(new Date("July 6, 1991 12:00:00"));
+            expect(start.greaterThan(end)).toBeFalsy();
+            expect(start.greaterThan(end.addSeconds(-1))).toBeTruthy();
         });
 
-        it("can not come after another JulianDate", function () {
-            var start = new Cesium.JulianDate(2448444, 0, Cesium.TimeStandard.UTC);
-            var end = new Cesium.JulianDate(2455749, 1, Cesium.TimeStandard.UTC);
-            expect(start.isAfter(end)).toBeFalsy();
+        it("greaterThan works with different time standards", function() {
+            var start = Cesium.JulianDate.createFromDate(new Date("July 6, 2011 12:01:00"), Cesium.TimeStandard.TAI);
+            var end = Cesium.JulianDate.createFromDate(new Date("July 6, 1991 12:00:00"), Cesium.TimeStandard.UTC);
+            expect(start.greaterThan(end)).toBeTruthy();
         });
 
-        it("can be equal to another JulianDate (constructed with a js Date object)", function () {
-            var original = new Cesium.JulianDate(new Date("September 7, 2011 12:55:00 UTC"));
-            var clone = new Cesium.JulianDate(new Date("September 7, 2011 12:55:00 UTC"));
-            expect(original.equals(clone)).toBeTruthy();
+        it("greaterThanOrEquals works", function() {
+            var start = Cesium.JulianDate.createFromDate(new Date("July 6, 1991 12:00:00"));
+            var end = Cesium.JulianDate.createFromDate(new Date("July 6, 1991 12:00:00"));
+            expect(start.greaterThanOrEquals(end)).toBeTruthy();
+            expect(start.addSeconds(-1).greaterThanOrEquals(end)).toBeFalsy();
+            expect(start.addSeconds(1).greaterThanOrEquals(end)).toBeTruthy();
+        });
+
+        it("greaterThanOrEquals works with different time standards", function() {
+            var start = Cesium.JulianDate.createFromDate(new Date("July 6, 1991 12:00:00"), Cesium.TimeStandard.UTC);
+            var end = Cesium.TimeStandard.convertUtcToTai(start);
+            expect(start.greaterThanOrEquals(end)).toBeTruthy();
+            expect(start.addSeconds(-1).greaterThanOrEquals(end)).toBeFalsy();
+            expect(start.addSeconds(1).greaterThanOrEquals(end)).toBeTruthy();
         });
 
         it("can be equal to within an epsilon of another JulianDate", function() {
-            var original = new Cesium.JulianDate(new Date("September 7, 2011 12:55:00 UTC"));
-            var clone = new Cesium.JulianDate(new Date("September 7, 2011 12:55:00 UTC"));
+            var original = Cesium.JulianDate.createFromDate(new Date("September 7, 2011 12:55:00 UTC"));
+            var clone = Cesium.JulianDate.createFromDate(new Date("September 7, 2011 12:55:00 UTC"));
             clone = clone.addSeconds(1);
             expect(original.equalsEpsilon(clone, 2)).toBeTruthy();
         });
 
-        it("can be equal to within a fraction of a second of another JulianDate", function() {
+        it("getTotalDays works", function() {
+            var totalDays = 2455784.7500058;
+            var original = Cesium.JulianDate.createFromTotalDays(totalDays);
+            expect(totalDays).toEqual(original.getTotalDays());
+        });
+
+        it("equalsEpsilon works", function() {
             var original = new Cesium.JulianDate();
-            var clone = new Cesium.JulianDate(original.getDate());
+            var clone = Cesium.JulianDate.createFromDate(original.getDate());
             clone = clone.addSeconds(0.01);
             expect(original.equalsEpsilon(clone, Cesium.Math.EPSILON1)).toBeTruthy();
         });
 
-        it("can find the difference between TAI and UTC (1)", function () {
+        it("getTaiMinusUtc works between TAI and UTC (1)", function() {
             var date = new Date("July 11, 2011 12:00:00 UTC");
-            var jd = new Cesium.JulianDate(date, Cesium.TimeStandard.TAI);
+            var jd = Cesium.JulianDate.createFromDate(date, Cesium.TimeStandard.TAI);
             var difference = jd.getTaiMinusUtc();
             expect(difference).toEqual(34);
         });
 
-        it("can find the difference between TAI and UTC (2)", function () {
+        it("getTaiMinusUtc works between TAI and UTC (2)", function() {
             var date = new Date("July 11, 1979 12:00:00 UTC");
-            var jd = new Cesium.JulianDate(date, Cesium.TimeStandard.TAI);
+            var jd = Cesium.JulianDate.createFromDate(date, Cesium.TimeStandard.TAI);
             var difference = jd.getTaiMinusUtc();
             expect(difference).toEqual(18);
         });
 
-        it("can find the difference between TAI and UTC (3)", function () {
+        it("getTaiMinusUtc works between TAI and UTC (3)", function() {
             var date = new Date("July 11, 1970 12:00:00 UTC");
-            var jd = new Cesium.JulianDate(date, Cesium.TimeStandard.TAI);
+            var jd = Cesium.JulianDate.createFromDate(date, Cesium.TimeStandard.TAI);
             var difference = jd.getTaiMinusUtc();
             expect(difference).toEqual(10);
         });

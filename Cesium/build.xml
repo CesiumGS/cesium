@@ -1,4 +1,4 @@
-<project name="Cesium">
+<project name="Cesium" default="Debug">
 	<target name="Debug" description="A build for developers.">
 		<antcall target="build" />
 	</target>
@@ -24,8 +24,6 @@
 	</target>
 
 	<target name="Clean" depends="deleteBuild" description="Cleans the build." />
-
-	<target name="Publish" depends="publishToWebserver" description="Publishes to the webserver's virtual directory." />
 
 	<!-- properties controlling which steps get run -->
 	<property name="build.minification" value="false" />
@@ -416,15 +414,6 @@ writer.close();
 
 	<target name="deleteBuild">
 		<delete dir="${buildDirectory}" />
-	</target>
-
-	<!-- ********************************************************************** -->
-
-	<target name="publishToWebserver">
-		<delete dir="${webserverDirectory}" />
-		<copy todir="${webserverDirectory}">
-			<fileset dir="${buildDirectory}" />
-		</copy>
 	</target>
 
 </project>

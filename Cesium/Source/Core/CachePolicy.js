@@ -88,7 +88,7 @@ define([
         var keys = Object.keys(object);
         for ( var i = 0; i < keys.length; ++i) {
             element = object[keys[i]];
-            if (element.lastHit.isBefore(lruTime)) {
+            if (element.lastHit.lessThan(lruTime)) {
                 lruTime = element.lastHit;
                 index = keys[i];
             }
