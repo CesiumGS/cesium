@@ -1,14 +1,12 @@
 /*global define*/
-define([
-        'require',
+define(['require',
         './DeveloperError',
         './binarySearch',
-        './LeapSecond'
-    ], function(
-        require,
-        DeveloperError,
-        binarySearch,
-        LeapSecond) {
+        './LeapSecond'],
+function(require,
+         DeveloperError,
+         binarySearch,
+         LeapSecond) {
     "use strict";
 
     var JulianDate = function(a, b, c) {
@@ -47,6 +45,18 @@ define([
         TAI : 1,
 
         /**
+         * Determines if the provided value is a valid TimeStandard.
+         *
+         * @param {Object} [timeStandard] The value to be checked.
+         *
+         * @return {Boolean} <code>true</code> if the provided value is a valid <code>TimeStandard</code>.
+         *
+         */
+        isKnownStandard : function(timeStandard) {
+            return (timeStandard === TimeStandard.UTC) || (timeStandard === TimeStandard.TAI);
+        },
+
+        /**
          * If the julian date is already in the UTC time standard, it is returned.
          *
          * @param {JulianDate} julianDate The date, in TAI time standard, to convert to the UTC time standard.
@@ -62,7 +72,7 @@ define([
          *
          * @example
          * // Convert a date representing Jan. 1, 2000 12:00:00 TAI to UTC.
-         * var julianDateTai = JulianDate.createJulianDate(2451545.0, TimeStandard.TAI);
+         * var julianDateTai = JulianDate.createFromTotalDays(2451545.0, TimeStandard.TAI);
          * var julianDateUtc = TimeStandard.convertTaiToUtc(julianDateTai);
          *
          */
@@ -126,7 +136,7 @@ define([
          *
          * @example
          * var date = new Date("July 11, 2011 12:00:00 UTC");
-         * var julianDateUtc = new JulianDate(date, TimeStandard.UTC);
+         * var julianDateUtc = JulianDate.createFromDate(date, TimeStandard.UTC);
          * var julianDateTai = TimeStandard.convertUtcToTai(julianDateUtc);
          */
         convertUtcToTai : function(julianDate) {

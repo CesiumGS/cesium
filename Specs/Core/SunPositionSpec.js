@@ -13,19 +13,19 @@ defineSuite([
 
     var date1 = new Date("June 22, 2011"); // June 22, 2011 at 16:00 UT
     date1.setUTCHours(16, 0, 0, 0); // 2455735.1666667;
-    var julianDate1 = new JulianDate(date1);
+    var julianDate1 = JulianDate.createFromDate(date1);
 
     var date2 = new Date("March 3, 2011"); // March 3, 2011 at 12:00 UT
     date2.setUTCHours(12, 0, 0, 0); // 2455624.0
-    var julianDate2 = new JulianDate(date2);
+    var julianDate2 = JulianDate.createFromDate(date2);
 
     var date3 = new Date("September 22, 2011"); // Sept 22, 2011 at 02:00 UT
     date3.setUTCHours(2, 0, 0, 0); // 2455826.5833333;
-    var julianDate3 = new JulianDate(date3);
+    var julianDate3 = JulianDate.createFromDate(date3);
 
     var date4 = new Date("December 3, 2011"); // Dec. 3, 2011 at 21:00 UT
     date4.setUTCHours(21, 0, 0, 0); // 2455899.375;
-    var julianDate4 = new JulianDate(date4);
+    var julianDate4 = JulianDate.createFromDate(date4);
 
     var AU_TO_METERS = 149597870700.0;
     var earthsRadius = 4.2634965 * CesiumMath.EPSILON5 * AU_TO_METERS;
@@ -91,7 +91,7 @@ defineSuite([
     });
 
     it("can compute the sun's position during a leap year", function() {
-        var julianDate = new JulianDate(new Date("April 1, 2012 16:00:00 UTC"));
+        var julianDate = JulianDate.createFromDate(new Date("April 1, 2012 16:00:00 UTC"));
         var sunPos = SunPosition.compute(julianDate);
         expect(sunPos.distance).toEqualEpsilon(149517419153.09, earthsRadius);
         expect(sunPos.cartographicPosition.longitude).toEqualEpsilon(CesiumMath.toRadians(-59.08), CesiumMath.toRadians(1.0));
@@ -140,7 +140,7 @@ defineSuite([
         for ( var i = 1; i < 25; i++) {
             var date = new Date("July 6, 2011");
             date.setUTCHours(i, 0, 0, 0);
-            timesOfDay.push(new JulianDate(date));
+            timesOfDay.push(JulianDate.createFromDate(date));
         }
         var angles = [];
         for (i = 0; i < 24; i++) {

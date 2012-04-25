@@ -146,7 +146,7 @@ define([
         var keys = Object.keys(object);
         for ( var i = 0; i < keys.length; ++i) {
             element = object[keys[i]];
-            if (element.key._lastHit.isBefore(lruTime) && element.key.zoom > 2) {
+            if (element.key._lastHit.lessThan(lruTime) && element.key.zoom > 2) {
                 lruTime = element.key._lastHit;
                 index = keys[i];
             }
