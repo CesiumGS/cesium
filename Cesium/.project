@@ -17,11 +17,11 @@
 		</buildCommand>
 		<buildCommand>
 			<name>org.eclipse.ui.externaltools.ExternalToolBuilder</name>
-			<triggers>auto,full,incremental,</triggers>
+			<triggers>full,incremental,</triggers>
 			<arguments>
 				<dictionary>
 					<key>LaunchConfigHandle</key>
-					<value>&lt;project&gt;/.externalToolBuilders/Debug.launch</value>
+					<value>&lt;project&gt;/.externalToolBuilders/build.launch</value>
 				</dictionary>
 			</arguments>
 		</buildCommand>
@@ -32,12 +32,66 @@
 	</natures>
 	<filteredResources>
 		<filter>
+			<id>1335302974732</id>
+			<name></name>
+			<type>10</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-Instrumented</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1335302974753</id>
+			<name></name>
+			<type>10</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-Instrumented</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1335302974776</id>
+			<name></name>
+			<type>10</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-Instrumented</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1335299856539</id>
+			<name>Source</name>
+			<type>6</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-main.js</arguments>
+			</matcher>
+		</filter>
+		<filter>
 			<id>1334962530964</id>
 			<name>Specs</name>
 			<type>6</type>
 			<matcher>
 				<id>org.eclipse.ui.ide.multiFilter</id>
 				<arguments>1.0-name-matches-false-false-SpecList.js</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1335301712065</id>
+			<name>Examples/Sandbox</name>
+			<type>6</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-CodeSnippetsConcatenated.js</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1335301712070</id>
+			<name>Examples/Sandbox</name>
+			<type>10</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-Images</arguments>
 			</matcher>
 		</filter>
 		<filter>

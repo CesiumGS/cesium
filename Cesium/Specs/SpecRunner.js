@@ -27,7 +27,7 @@ var defineSuite;
         tests.push(test);
 
         require({
-            baseUrl : '../Source'
+            baseUrl : getQueryParameter('baseUrl') || '../Source'
         }, deps, function() {
             var args = arguments;
 
@@ -40,6 +40,13 @@ var defineSuite;
             createTestsIfReady();
         });
     };
+
+    function getQueryParameter(name) {
+        /*global window,decodeURIComponent*/
+        var match = new RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
+
+        return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
+    }
 
     function createTestsIfReady() {
         if (readyToCreateTests && allTestsReady()) {

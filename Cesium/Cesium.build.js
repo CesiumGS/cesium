@@ -20,7 +20,7 @@ requirejs.optimize({
     baseUrl : ".",
     name: "../../ThirdParty/almond.js",
     include: "main",
-    out: "../Cesium.js",
+    out: "../../Build/Cesium.js",
     wrap: true,
     optimize: optimize ? "uglify" : "none",
     //Usually requirejs.optimize() runs in "silent mode"
