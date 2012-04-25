@@ -35,11 +35,11 @@ require({ baseUrl : '../../Source' }, [
 
     var cb = new CentralBody(scene.getCamera(), ellipsoid);
     cb.dayTileProvider = bing;
-    cb.nightImageSource = "../../../Images/land_ocean_ice_lights_2048.jpg";
-    cb.specularMapSource = "../../../Images/earthspec1k.jpg";
+    cb.nightImageSource = "../../Images/land_ocean_ice_lights_2048.jpg";
+    cb.specularMapSource = "../../Images/earthspec1k.jpg";
     if (scene.getContext().getMaximumTextureSize() > 2048) {
-        cb.cloudsMapSource = "../../../Images/earthcloudmaptrans.jpg";
-        cb.bumpMapSource = "../../../Images/earthbump1k.jpg";
+        cb.cloudsMapSource = "../../Images/earthcloudmaptrans.jpg";
+        cb.bumpMapSource = "../../Images/earthbump1k.jpg";
     }
     cb.showSkyAtmosphere = true;
     cb.showGroundAtmosphere = true;

@@ -17,11 +17,11 @@
 		</buildCommand>
 		<buildCommand>
 			<name>org.eclipse.ui.externaltools.ExternalToolBuilder</name>
-			<triggers>full,incremental,</triggers>
+			<triggers>auto,full,incremental,</triggers>
 			<arguments>
 				<dictionary>
 					<key>LaunchConfigHandle</key>
-					<value>&lt;project&gt;/.externalToolBuilders/build.launch</value>
+					<value>&lt;project&gt;/.externalToolBuilders/automaticBuild.launch</value>
 				</dictionary>
 			</arguments>
 		</buildCommand>
@@ -32,7 +32,16 @@
 	</natures>
 	<filteredResources>
 		<filter>
-			<id>1335302974732</id>
+			<id>1335364040877</id>
+			<name></name>
+			<type>10</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-Build</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1335364040881</id>
 			<name></name>
 			<type>10</type>
 			<matcher>
@@ -41,21 +50,12 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1335302974753</id>
+			<id>1335364040891</id>
 			<name></name>
 			<type>10</type>
 			<matcher>
 				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-Instrumented</arguments>
-			</matcher>
-		</filter>
-		<filter>
-			<id>1335302974776</id>
-			<name></name>
-			<type>10</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-Instrumented</arguments>
+				<arguments>1.0-name-matches-false-false-Tools</arguments>
 			</matcher>
 		</filter>
 		<filter>

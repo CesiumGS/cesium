@@ -34,9 +34,9 @@ require({ baseUrl : '../../Source' }, [
         var primitives = scene.getPrimitives();
         var cb = new CentralBody(scene.getCamera(), ellipsoid);
         cb.dayTileProvider = bing;
-        cb.nightImageSource = "../../../Images/land_ocean_ice_lights_2048.jpg";
-        cb.specularMapSource = "../../../Images/earthspec1k.jpg";
-        cb.bumpMapSource = "../../../Images/earthbump1k.jpg";
+        cb.nightImageSource = "../../Images/land_ocean_ice_lights_2048.jpg";
+        cb.specularMapSource = "../../Images/earthspec1k.jpg";
+        cb.bumpMapSource = "../../Images/earthbump1k.jpg";
         primitives.setCentralBody(cb);
 
         ///////////////////////////////////////////////////////////////////////////

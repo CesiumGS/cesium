@@ -24,8 +24,8 @@
 
 	<target name="clean" description="Cleans the build.">
 		<delete includeEmptyDirs="true" failonerror="false">
-			<fileset dir="${buildDirectory}" />
-			<fileset dir="${instrumentedDirectory}" />
+			<fileset dir="${buildDirectory}" defaultexcludes="false" />
+			<fileset dir="${instrumentedDirectory}" defaultexcludes="false" />
 			<fileset dir="${shadersDirectory}" includes="*.js" />
 			<fileset dir="${specsDirectory}" includes="SpecList.js" />
 		</delete>
@@ -39,15 +39,14 @@
 	<property name="shadersDirectory" location="${sourceDirectory}/Shaders" />
 	<property name="examplesDirectory" location="Examples" />
 	<property name="specsDirectory" location="Specs" />
-	<property name="imagesDirectory" location="../Images" />
-	<property name="jscoverage" location="../Tools/jscoverage-0.5.1/jscoverage.exe" />
-	<property name="documentationImagesDirectory" location="../Documentation/Images" />
-	<property name="jsdoc3Directory" location="../Tools/jsdoc3" />
-	<property name="licenseFile" location="../LICENSE" />
-	<property name="proxyFile" location="../proxy.php" />
+	<property name="imagesDirectory" location="Images" />
+	<property name="toolsDirectory" location="Tools" />
+	<property name="jscoverage" location="${toolsDirectory}/jscoverage-0.5.1/jscoverage.exe" />
+	<property name="documentationImagesDirectory" location="Documentation/Images" />
+	<property name="jsdoc3Directory" location="${toolsDirectory}/jsdoc3" />
 
 	<!-- Outputs -->
-	<property name="buildDirectory" location="../Build" />
+	<property name="buildDirectory" location="Build" />
 	<property name="instrumentedDirectory" location="Instrumented" />
 	<property name="buildOutputDirectory" location="${buildDirectory}/Cesium" />
 	<property name="buildDocumentationDirectory" location="${buildDirectory}/Documentation" />
@@ -207,15 +206,15 @@ writer.close();
 	</target>
 
 	<target name="combineJavaScript.setNodePathValue">
-		<condition property="nodePathValue" value="../Tools/nodejs-0.6.15/windows/node.exe">
+		<condition property="nodePathValue" value="${toolsDirectory}/nodejs-0.6.15/windows/node.exe">
 			<os family="windows" />
 		</condition>
 
-		<condition property="nodePathValue" value="../Tools/nodejs-0.6.15/mac/node">
+		<condition property="nodePathValue" value="${toolsDirectory}/nodejs-0.6.15/mac/node">
 			<os family="mac" />
 		</condition>
 
-		<condition property="nodePathValue" value="../Tools/nodejs-0.6.15/linux/node">
+		<condition property="nodePathValue" value="${toolsDirectory}/nodejs-0.6.15/linux/node">
 			<os family="unix" />
 		</condition>
 	</target>
@@ -281,15 +280,5 @@ writer.close();
 		<copy todir="${buildDocumentationImagesDirectory}">
 			<fileset dir="${documentationImagesDirectory}" />
 		</copy>
-	</target>
-
-	<target name="copyTextFiles">
-		<copy file="${licenseFile}" todir="${buildDirectory}" />
-	</target>
-
-	<target name="copyProxy">
-		<!--
-		<copy file="${proxyFile}" todir="${buildDirectory}" />
-		-->
 	</target>
 </project>
