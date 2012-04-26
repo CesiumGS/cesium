@@ -1,0 +1,121 @@
+defineSuite([
+         'Core/Shapes',
+         'Core/Cartographic3',
+         'Core/Ellipsoid',
+         'Core/Math'
+     ], function(
+         Shapes,
+         Cartographic3,
+         Ellipsoid,
+         CesiumMath) {
+    "use strict";
+    /*global it,expect*/
+
+    it("computeCircleBoundary computes a closed loop", function() {
+        var ellipsoid = Ellipsoid.getWgs84();
+        var center = ellipsoid.toCartesian(Cartographic3.getZero());
+        var positions = Shapes.computeCircleBoundary(ellipsoid, center, 1.0);
+
+        expect(positions[0].equals(positions[positions.length - 1])).toBeTruthy();
+    });
+
+    it("computeCircleBoundary uses custom granularity", function() {
+        var ellipsoid = Ellipsoid.getWgs84();
+        var center = ellipsoid.toCartesian(Cartographic3.getZero());
+        var positions = Shapes.computeCircleBoundary(ellipsoid, center, 1.0, CesiumMath.toRadians(60));
+
+        expect(positions.length).toEqual(10);
+    });
+
+    it("computeCircleBoundary throws without an ellipsoid", function() {
+        expect(function() {
+            Shapes.computeCircleBoundary();
+        }).toThrow();
+    });
+
+    it("computeCircleBoundary throws without a center", function() {
+        var ellipsoid = Ellipsoid.getWgs84();
+        expect(function() {
+            Shapes.computeCircleBoundary(ellipsoid);
+        }).toThrow();
+    });
+
+    it("computeCircleBoundary throws without a radius", function() {
+        var ellipsoid = Ellipsoid.getWgs84();
+        var center = ellipsoid.toCartesian(Cartographic3.getZero());
+        expect(function() {
+            Shapes.computeCircleBoundary(ellipsoid, center);
+        }).toThrow();
+    });
+
+    it("computeCircleBoundary throws with a negative radius", function() {
+        var ellipsoid = Ellipsoid.getWgs84();
+        var center = ellipsoid.toCartesian(Cartographic3.getZero());
+        expect(function() {
+            Shapes.computeCircleBoundary(ellipsoid, center, -1.0);
+        }).toThrow();
+    });
+
+    it("computeCircleBoundary throws with a negative granularity", function() {
+        var ellipsoid = Ellipsoid.getWgs84();
+        var center = ellipsoid.toCartesian(Cartographic3.getZero());
+        expect(function() {
+            Shapes.computeCircleBoundary(ellipsoid, center, 1.0, -1.0);
+        }).toThrow();
+    });
+
+    it("computeEllipseBoundary computes a closed loop", function() {
+        var ellipsoid = Ellipsoid.getWgs84();
+        var center = ellipsoid.toCartesian(Cartographic3.getZero());
+        var positions = Shapes.computeEllipseBoundary(ellipsoid, center, 5.0, 1.0);
+
+        expect(positions[0].equals(positions[positions.length - 1])).toBeTruthy();
+    });
+
+    it("computeEllipseBoundary can swap the semi major and minor axes", function() {
+        var ellipsoid = Ellipsoid.getWgs84();
+        var center = ellipsoid.toCartesian(Cartographic3.getZero());
+        var points = Shapes.computeEllipseBoundary(ellipsoid, center, 1.0, 5.0);
+        expect(points.length).toBeGreaterThan(0);
+    });
+
+    it("computeEllipseBoundary throws without an ellipsoid", function() {
+        expect(function() {
+            Shapes.computeEllipseBoundary();
+        }).toThrow();
+    });
+
+    it("computeEllipseBoundary throws without a center", function() {
+        var ellipsoid = Ellipsoid.getWgs84();
+        expect(function() {
+            Shapes.computeEllipseBoundary(ellipsoid);
+        }).toThrow();
+    });
+
+    it("computeEllipseBoundary throws without a semi-major axis", function() {
+        var ellipsoid = Ellipsoid.getWgs84();
+        var center = ellipsoid.toCartesian(Cartographic3.getZero());
+        expect(function() {
+            Shapes.computeEllipseBoundary(ellipsoid, center, 1.0);
+        }).toThrow();
+    });
+
+    it("computeEllipseBoundary with a negative axis length", function() {
+        var ellipsoid = Ellipsoid.getWgs84();
+        var center = ellipsoid.toCartesian(Cartographic3.getZero());
+        expect(function() {
+            Shapes.computeEllipseBoundary(ellipsoid, center, -1.0, 1.0);
+        }).toThrow();
+        expect(function() {
+            Shapes.computeEllipseBoundary(ellipsoid, center, 1.0, -1.0);
+        }).toThrow();
+    });
+
+    it("computeEllipseBoundary throws with a negative granularity", function() {
+        var ellipsoid = Ellipsoid.getWgs84();
+        var center = ellipsoid.toCartesian(Cartographic3.getZero());
+        expect(function() {
+            Shapes.computeEllipseBoundary(ellipsoid, center, 1.0, 1.0, 0, -1.0);
+        }).toThrow();
+    });
+});

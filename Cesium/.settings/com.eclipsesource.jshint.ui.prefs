@@ -1,5 +1,0 @@
-eclipse.preferences.version=1
-enabled=true
-excluded=Source/ThirdParty/Tween.js\:Source/ThirdParty/Chain.js
-options=eqeqeq\: true, nonew\: true, noarg\: true, newcap\: true, latedef\: true, forin\: true
-projectSpecificOptions=true
