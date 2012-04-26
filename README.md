@@ -24,13 +24,13 @@ Our mission is to create the leading web-based globe and map for visualizing dyn
 
 ### License ###
 
-(Apache 2.0)[http://www.apache.org/licenses/LICENSE-2.0.html].  Cesium is free for both commercial and non-commercial use.
+[Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0.html).  Cesium is free for both commercial and non-commercial use.
 
 ### Developer Community ###
 
-* (Contributor's Guide)[https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor's-Guide] - how to get the code, build, etc.  It's easy.
-* (Roadmap)[https://github.com/AnalyticalGraphicsInc/cesium/wiki/Roadmap] - where we are heading.
-* (Presentations and Publications)[https://github.com/AnalyticalGraphicsInc/cesium/wiki/Presentations-and-Publications] - on Cesium and the underlying technology.
+* [Contributor's Guide](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor's-Guide) - how to get the code, build, etc.  It's easy.
+* [Roadmap](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Roadmap) - where we are heading.
+* [Presentations and Publications](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Presentations-and-Publications) - on Cesium and the underlying technology.
 * Mailing lists
    * Development - https://groups.google.com/d/forum/cesium-dev
    * Announcements - https://groups.google.com/d/forum/cesium-announce
