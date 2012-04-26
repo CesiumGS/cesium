@@ -1,4 +1,4 @@
-<project name="Cesium" default="build">
+<project name="Cesium" default="combine">
 	<target name="build" description="A developer build that runs in-place." depends="convertShadersToJavaScript, buildSpecList" />
 
 	<target name="combine" description="Combines all source files into a single stand-alone script." depends="build, combineJavaScript, concatenateSandboxSnippets" />
