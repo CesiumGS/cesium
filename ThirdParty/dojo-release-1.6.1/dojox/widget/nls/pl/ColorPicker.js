@@ -1,0 +1,1 @@
+({"saturationPickerTitle":"Selektor nasycenia","valueLabel":"jas.","blueLabel":"n","saturationLabel":"nas.","greenLabel":"z","redLabel":"c","hueLabel":"barwa","hexLabel":"szesnastkowe","huePickerTitle":"Selektor barwy","degLabel":"°"})

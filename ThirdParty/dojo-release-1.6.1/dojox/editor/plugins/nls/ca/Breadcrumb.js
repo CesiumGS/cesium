@@ -1,0 +1,1 @@
+({"selectContents":"Selecciona contingut","deleteElement":"Suprimeix element","moveEnd":"Mou el cursor al final","deleteContents":"Suprimeix contingut","nodeActions":"${nodeName} - Accions","selectElement":"Selecciona element","moveStart":"Mou el cursor a l'inici"})

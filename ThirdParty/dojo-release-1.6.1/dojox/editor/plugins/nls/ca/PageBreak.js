@@ -1,0 +1,1 @@
+({"pageBreak":"Salt de pàgina"})

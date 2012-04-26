@@ -1,0 +1,51 @@
+
+.nihilo .dijitInputContainer INPUT,
+.nihilo .dijitTextBox {
+	margin: 0 0.1em;
+}
+.nihilo .dijitTextBox,
+.nihilo .dijitTextArea {
+	
+	background:#fff url("../images/validationInputBg.png") repeat-x top left;
+	#background:#fff url('../images/validationInputBg.gif') repeat-x top left;
+	border:1px solid #d3d3d3;
+}
+.nihilo .dijitComboBox .dijitButtonNode {
+	padding: 0 0.2em !important;
+}
+.nihilo .dijitTextBox .dijitButtonNode {
+	
+	border-color: #d3d3d3;
+}
+.nihilo .dijitTextBoxFocused,
+.nihilo .dijitTextAreaFocused {
+	
+	border-color:#b3b3b3;
+}
+.nihilo .dijitTextBoxFocused .dijitButtonNode,
+.nihilo .dijitSpinner .dijitUpArrowButtonActive,
+.nihilo .dijitSpinner .dijitDownArrowButtonActive {
+	border-left-color:#d3d3d3;
+}
+.nihilo .dijitSpinnerFocused .dijitDownArrowButton,
+.nihilo .dijitSpinner .dijitUpArrowButtonActive,
+.nihilo .dijitSpinner .dijitDownArrowButtonActive {
+	border-top-color:#d3d3d3;
+}
+.nihilo .dijitError {
+	border-color:#b3b3b3;
+	background-color:#f9f7ba;
+	background-image:none;
+}
+.nihilo .dijitErrorFocused {
+	background-color:#ff6;
+	background-image:none;
+}
+.nihilo .dijitValidationIcon {
+	
+	width: 16px;
+	background: transparent url('../images/warning.png') no-repeat center center;
+}
+.nihilo .dijitComboBoxHighlightMatch {
+	background-color:#d3d3d3;
+}

@@ -1,0 +1,37 @@
+<project name="proxy" default="jar">
+	<property name="src.dir" value="src" />
+	<property name="build.dir" value="bin" />
+	<property name="jar.file" value="proxy.jar" />
+
+	<path id="classpath">
+		<fileset dir="jetty" includes="*.jar" />
+		<pathelement location="../apache-ant-1.8.2/lib/ant.jar" />
+	</path>
+
+	<target name="clean">
+		<delete dir="${build.dir}" />
+		<delete file="${jar.file}" />
+	</target>
+
+	<target name="compile">
+		<mkdir dir="${build.dir}" />
+		<javac srcdir="${src.dir}" destdir="${build.dir}" classpathref="classpath" debug="on" includeantruntime="false" />
+	</target>
+
+	<target name="jar" depends="compile">
+		<jar destfile="${jar.file}">
+			<fileset dir="${build.dir}" />
+		</jar>
+	</target>
+
+	<target name="test" depends="jar">
+		<taskdef name="server" classname="com.agi.ServerTask">
+			<classpath>
+				<path refid="classpath" />
+				<pathelement location="${jar.file}" />
+			</classpath>
+		</taskdef>
+
+		<server contextPath="/proxy" allowedHostList="dev.virtualearth.net" port="8080" baseDir="." />
+	</target>
+</project>

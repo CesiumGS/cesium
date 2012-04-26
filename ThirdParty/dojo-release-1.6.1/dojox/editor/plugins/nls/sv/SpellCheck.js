@@ -1,0 +1,1 @@
+({"cancel":"Avbryt","toDic":"Lägg till i ordlistan","skip":"Hoppa över","iMsg":"Inga stavningsförslag","replaceAll":"Ersätt alla","widgetLabel":"Kontrollera stavning","skipAll":"Hoppa över alla","suggestions":"Förslag","iSkipAll":"Hoppa över alla liknande","replaceWith":"Ersätt med","msg":"Inga stavfel hittades","replace":"Ersätt","unfound":"Hittades inte","iSkip":"Hoppa över"})

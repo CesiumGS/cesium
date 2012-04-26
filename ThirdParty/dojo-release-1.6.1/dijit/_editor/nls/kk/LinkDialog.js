@@ -1,0 +1,1 @@
+({"text":"Сипаттама:","insertImageTitle":"Сурет сипаттары","set":"Орнату","newWindow":"Жаңа терезе","topWindow":"Ең жоғарғы терезе","target":"Мақсат:","createLinkTitle":"Сілтеме сипаттары","parentWindow":"Басты терезе","currentWindow":"Ағымдағы терезе","url":"URL мекенжайы:"})

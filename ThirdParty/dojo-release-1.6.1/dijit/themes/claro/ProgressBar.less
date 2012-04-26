@@ -1,0 +1,56 @@
+/* ProgressBar
+ * 
+ * Styling of the ProgressBar consists of the following:
+ * 
+ * 1. the base progress bar
+ *		.dijitProgressBar -	sets margins for the progress bar
+ *
+ * 2. the empty bar
+ *		.dijitProgressBarEmpty  - sets background img and color for bar or parts of bar that are not finished yet
+ *		Also sets border color for whole bar
+ *
+ * 3. tile mode
+ * 		.dijitProgressBarTile
+ *		inner container for finished portion when in 'tile' (image) mode 
+ * 	
+ * 4. full bar mode
+ * 		.dijitProgressBarFull
+ *		adds border to right side of the filled portion of bar
+ *
+ * 5. text for label of  bar
+ *		.dijitProgressBarLabel - sets text color, which must contrast with both the "Empty" and "Full" parts. 
+ * 	
+ * 6. indeterminate mode
+ *		.dijitProgressBarIndeterminate .dijitProgressBarTile 
+ * 		sets animated gif for the progress bar in 'indeterminate' mode
+ */
+ 
+ @import "variables";
+ 
+.claro .dijitProgressBar {
+	margin:2px 0 2px 0;
+}
+.claro .dijitProgressBarEmpty {
+	/* outer container and background of the bar that's not finished yet*/
+	background: @progressbar-empty-background-color url("images/progressBarEmpty.png") repeat-none left;
+	border-color: @progressbar-border-color;
+}
+.claro .dijitProgressBarTile {
+	/* inner container for finished portion when in 'tile' (image) mode */
+	background: @progressbar-full-background-color url("images/progressBarFull.png") repeat-x top;	
+}
+.dj_ie6 .claro .dijitProgressBarTile {
+	background-image: none;
+} 
+.claro .dijitProgressBarFull {
+	border-right:1px solid @progressbar-border-color;
+}
+.claro .dijitProgressBarLabel {
+	/* Set to a color that contrasts with both the "Empty" and "Full" parts. */
+	color: @progressbar-text-color;
+}
+.claro .dijitProgressBarIndeterminate .dijitProgressBarTile {
+	/* use an animated gif for the progress bar in 'indeterminate' mode;
+		background-color won't appear unless user has turned off background images */
+	background: @bar-background-color url("images/progressBarAnim.gif") repeat-x top;
+} 

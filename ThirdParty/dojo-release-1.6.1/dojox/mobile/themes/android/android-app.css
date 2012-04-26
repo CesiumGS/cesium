@@ -1,0 +1,1075 @@
+body {
+	visibility: hidden;
+}
+html.mobile, .mobile body {
+	width: 100%;
+	margin: 0px;
+	padding: 0px;
+}
+.mobile body {
+	overflow-x: hidden;
+	-webkit-text-size-adjust: none;
+	background-color: black;
+	font-family: Helvetica;
+	font-size: 17px;
+}
+.mblView {
+	position: relative;
+	top: 0px;
+	left: 0px;
+	width: 100%;
+	color: white;
+}
+.mblView.out {
+}
+.mblView.in {
+	position: absolute;
+}
+.slide.out {
+	-webkit-animation-duration: .4s;
+	-webkit-animation-name: slideOut;
+	-webkit-animation-timing-function: linear;
+	-webkit-transform: translateX(-100%);
+}
+.slide.in {
+	-webkit-animation-duration: .4s;
+	-webkit-animation-name: slideIn;
+	-webkit-animation-timing-function: linear;
+	-webkit-transform: translateX(0px);
+}
+.slide.out.reverse {
+	-webkit-animation-name: slideOutReverse;
+}
+.slide.in.reverse {
+	-webkit-animation-name: slideInReverse;
+}
+@-webkit-keyframes slideOut {
+	from { -webkit-transform: translateX(0px); }
+	to { -webkit-transform: translateX(-100%); }
+}
+@-webkit-keyframes slideIn {
+	from { -webkit-transform: translateX(100%); }
+	to { -webkit-transform: translateX(0px); }
+}
+@-webkit-keyframes slideOutReverse {
+	from { -webkit-transform: translateX(0px); }
+	to { -webkit-transform: translateX(100%); }
+}
+@-webkit-keyframes slideInReverse {
+	from { -webkit-transform: translateX(-100%); }
+	to { -webkit-transform: translateX(0px); }
+}
+.flip.out {
+	-webkit-animation-duration: .6s;
+	-webkit-animation-name: flipOut;
+	-webkit-animation-timing-function: ease-in;
+	-webkit-transform: rotateY(90deg);
+}
+.flip.in {
+	-webkit-animation-duration: .6s;
+	-webkit-animation-name: flipIn;
+	-webkit-animation-timing-function: ease-out;
+}
+@-webkit-keyframes flipOut {
+	0% { -webkit-transform: rotateY(0deg) scale(1); }
+	50% { -webkit-transform: rotateY(90deg) scale(.8); }
+	100% { -webkit-transform: rotateY(90deg) scale(.8); }
+}
+@-webkit-keyframes flipIn {
+	0% { -webkit-transform: rotateY(90deg) scale(.8); }
+	50% { -webkit-transform: rotateY(90deg) scale(.8); }
+	100% { -webkit-transform: rotateY(0deg) scale(1); }
+}
+.fade.out {
+	-webkit-animation-duration: 1s;
+	-webkit-animation-name: fadeOut;
+	-webkit-animation-timing-function: ease-in;
+}
+.fade.in {
+	-webkit-animation-duration: 1s;
+	-webkit-animation-name: fadeIn;
+	-webkit-animation-timing-function: ease-out;
+}
+@-webkit-keyframes fadeOut {
+	from { opacity: 1; }
+	to { opacity: 0; }
+}
+@-webkit-keyframes fadeIn {
+	from { opacity: 0; }
+	to { opacity: 1; }
+}
+.mblHeading {
+	position: relative;
+	height: 25px;
+	margin: 0px;
+	padding: 0px 0px 0px 4px;
+	background-color: #8C8A8C;
+	background: -webkit-gradient(linear, left top, left bottom, from(#9C9E9C), to(#848284));
+	border-top: 1px solid #CDD5DF;
+	border-bottom: 1px solid #2D3642;
+	font-family: Helvetica;
+	font-size: 14px;
+	color: white;
+	text-align: center;
+	line-height: 23px;
+	text-shadow: rgba(0,0,0,0.6) 0px -1px 0px;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+.mblArrowButton {
+	position: relative;
+	float: left;
+	height: 25px;
+	margin-right: 6px;
+}
+.mblArrowButtonHead {
+	position: absolute;
+	top: 5px;
+	left: 9px;
+	width: 19px;
+	height: 16px;
+	border-width: 1px;
+	border-style: solid;
+	border-color: #3F3E3E;
+	-webkit-transform: scale(.8,1) rotate(45deg);
+	background: -webkit-gradient(linear, left top, left bottom, from(#E5E5E5), to(#7F7F7F), color-stop(0.5, #ADADAD), color-stop(0.5, #909090));
+}
+.mblArrowButtonBody {
+	position: absolute;
+	top: 0px;
+	left: 19px;
+	padding: 0px 10px 0px 3px;
+	height: 23px;
+	border-width: 1px 1px 1px 0px;
+	border-style: inset;
+	border-color: #3F3E3E;
+	font-family: Helvetica;
+	font-size: 13px;
+	color: white;
+	line-height: 23px;
+	cursor: pointer;
+	-webkit-border-radius: 5px;
+	background-color: #ADADAD;
+	background: -webkit-gradient(linear, left top, left bottom, from(#E5E5E5), to(#7F7F7F), color-stop(0.5, #ADADAD), color-stop(0.5, #909090));
+	-webkit-tap-highlight-color: transparent;
+}
+.mblArrowButtonNeck {
+	position: absolute;
+	top: 0px;
+	left: 19px;
+	width: 4px;
+	height: 23px;
+	border-width: 1px 0px 1px 0px;
+	border-style: inset;
+	border-color: #3F3E3E;
+	background: -webkit-gradient(linear, left top, left bottom, from(#E5E5E5), to(#7F7F7F), color-stop(0.5, #ADADAD), color-stop(0.5, #909090));
+}
+.mblArrowButtonSelected .mblArrowButtonHead {
+	background: -webkit-gradient(linear, left top, left bottom, from(#AD7500), to(#FFAA00), color-stop(0.06, #FFB200), color-stop(0.5, #FFC700));
+}
+.mblArrowButtonSelected .mblArrowButtonBody, .mblArrowButtonSelected .mblArrowButtonNeck {
+	background-color: #FFC700;
+	background: -webkit-gradient(linear, left top, left bottom, from(#AD7500), to(#FFAA00), color-stop(0.06, #FFB200), color-stop(0.5, #FFC700));
+}
+.mblToolbarButton {
+	float: left;
+	position: relative;
+	margin: 0px 3px;
+	padding: 0px 10px;
+	height: 23px;
+	border: 1px inset #3F3E3E;
+	font-family: Helvetica;
+	font-size: 13px;
+	font-weight: bold;
+	color: white;
+	line-height: 23px;
+	text-align: center;
+	cursor: pointer;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	-webkit-tap-highlight-color: transparent;
+}
+.mblTabBar {
+	position: relative;
+	height: 48px;
+	width: 100%;
+	margin: 0px;
+	padding: 0px;
+	background-color: #000000;
+	background: -webkit-gradient(linear, left top, left bottom, from(#2D2D2D), to(#000000), color-stop(0.5, #141414), color-stop(0.5, #000000));
+	border-top: 1px solid #000000;
+	color: white;
+	text-align: center;
+	overflow: hidden;
+	white-space: nowrap;
+}
+.mblTabBar .mblTabBarButton {
+	position: relative;
+	list-style-type: none;
+	float: left;
+}
+.mblTabBarButton {
+}
+.mblTabBarButtonAnchor {
+	display: block;
+	text-decoration: none;
+}
+.mblTabBarButtonDiv {
+	position: relative;
+	height: 34px;
+	width: 29px;
+	left: 50%;
+}
+.mblTabButton .mblTabBarButtonDiv {
+	height: 40px;
+}
+.mblTabBarButtonDivInner {
+	left: -50%;
+}
+.mblTabBarButtonIcon {
+	position: absolute;
+	left: 0px;
+	top: 2px;
+}
+.mblTabBar .mblTabBarButton.mblTabButtonSelected {
+	background-color: #404040;
+	background: -webkit-gradient(linear, left top, left bottom, from(#484848), to(#242424), color-stop(0.5, #353535), color-stop(0.5, #242424));
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+}
+.mblTabBarButtonTextBox {
+	color: #979797;
+	font-family: "Helvetica Neue", Helvetica;
+	font-size: 11px;
+}
+.mblTabButtonSelected .mblTabBarButtonTextBox {
+	color: white;
+}
+.mblRoundRect {
+	margin: 7px 9px 16px;
+	padding: 8px;
+	border: 1px solid #ADAAAD;
+	-webkit-border-radius: 8px;
+	-moz-border-radius: 8px;
+	color: white;
+	background-color: black;
+}
+.mblRoundRect.mblShadow {
+	-webkit-box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);
+}
+.mblEdgeToEdgeCategory {
+	position: relative;
+	height: 22px;
+	margin: 0px;
+	padding: 0px 10px;
+	border-bottom: 1px solid #393439;
+	background-color: #212021;
+	font-family: Helvetica;
+	font-size: 16px;
+	color: white;
+	line-height: 22px;
+	text-shadow: rgba(0,0,0,0.6) 0px -1px 0px;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+.mblRoundRectCategory {
+	color: white;
+	margin: 18px 0px 0px 20px;
+	font-family: Helvetica;
+	font-size: 16px;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+.mblRoundRectList {
+	margin: 7px 9px 16px;
+	padding: 0px;
+	border: 1px solid #ADAAAD;
+	-webkit-border-radius: 8px;
+	-moz-border-radius: 8px;
+	background-color: white;
+	position: relative; 
+}
+.mblEdgeToEdgeList {
+	padding: 0px;
+	background-color: black;
+	position: relative; 
+	margin: 0px; 
+}
+.mblListItem {
+	list-style-type: none;
+	height: 64px;
+	border-bottom: solid 1px #313431;
+	line-height: 64px;
+	font-size: 21px;
+	position: relative;
+	color: white;
+	background-color: black;
+	padding-left: 7px;
+}
+.mblListItemIcon {
+	position: absolute;
+	top: 18px;
+}
+.mblListItem.mblVariableHeight {
+	line-height: normal;
+	height: auto;
+	padding: 11px 6px 10px 6px;
+}
+.mblItemSelected {
+	background-color: #FFC700;
+	background: -webkit-gradient(linear, left top, left bottom, from(#AD7500), to(#FFAA00), color-stop(0.06, #FFB200), color-stop(0.5, #FFC700));
+}
+.mblListItemTextBox {
+	padding-right: 28px;
+}
+.mblListItemTextBoxSelected {
+	background-color: #048BF4;
+}
+.mblRoundRectList .mblListItem:first-child {
+	-webkit-border-top-left-radius: 8px;
+	-webkit-border-top-right-radius: 8px;
+	-moz-border-radius-topleft: 8px;
+	-moz-border-radius-topright: 8px;
+}
+.mblRoundRectList .mblListItem:last-child {
+	border-bottom-width: 0px;
+	-webkit-border-bottom-left-radius: 8px;
+	-webkit-border-bottom-right-radius: 8px;
+	-moz-border-radius-bottomleft: 8px;
+	-moz-border-radius-bottomright: 8px;
+}
+.mblEdgeToEdgeList .mblListItem:last-child {
+	border-bottom-color: #313431;
+}
+.mblListItem a.mblListItemAnchor {
+	background-position: 14px 17px;
+	display: block;
+	padding-left: 53px;
+	text-decoration: none;
+	-webkit-tap-highlight-color: transparent;
+}
+.mblListItem a.mblListItemAnchorNoIcon {
+	padding-left: 14px;
+}
+.mblItemSelected a.mblListItemAnchor {
+	color: black;
+}
+.mblListItem a.mblListItemAnchorHasRightButton {
+	padding-right: 50px;
+}
+.mblListItem .mblArrow {
+	position: absolute;
+	top: 26px;
+	right: 12px;
+	width: 6px;
+	height: 6px;
+	font-size: 1px;
+	-webkit-transform: rotate(45deg);
+	border-width: 3px 3px 0px 0px;
+	border-style: solid;
+	border-color: #808080;
+}
+.mblItemSelected .mblArrow {
+	border-color: white;
+}
+.mblVariableHeight div.mblArrow {
+	top: 50%;
+	margin-top: -4px;
+}
+.mblRightText {
+	position: absolute;
+	top: 20px;
+	right: 30px;
+	color: white;
+	line-height: normal;
+}
+.mblListItem .mblRightButtonContainer {
+	position: absolute;
+	top: 50%;
+	right: 12px;
+}
+.mblListItem .mblRightButton {
+	position: absolute;
+	top: -50%;
+}
+.mblListItemSubText {
+	font-size: 14px;
+	color: gray;
+}
+.mblSwitch {
+	position: relative;
+	width: 94px;
+	height: 27px;
+	overflow: hidden;
+}
+.mblItemSwitch {
+	position: absolute;
+	top: 18px;
+	right: 12px;
+}
+.mblSwitchInner {
+	position: absolute;
+	top: 0px;
+	height: 27px;
+}
+.mblSwitchAnimation .mblSwitchInner {
+	-webkit-transition-property: left;
+	-webkit-transition-duration: .3s;
+}
+.mblSwitchOn .mblSwitchInner {
+	left: 0px;
+}
+.mblSwitchOff .mblSwitchInner {
+	left: -53px;
+}
+.mblSwitchBg {
+	position: absolute;
+	top: 0px;
+	height: 27px;
+	border-width: 1px;
+	border-style: inset;
+	border-color: #9CACC0;
+	font-family: Helvetica;
+	font-size: 16px;
+	font-weight: bold;
+	line-height: 29px;
+	-webkit-border-radius: 2px;
+	-moz-border-radius: 2px;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-webkit-tap-highlight-color: transparent;
+}
+.mblSwitchBgLeft {
+	left: 0px;
+	width: 94px;
+	color: white;
+	background-color: #00D300;
+	background: -webkit-gradient(linear, left top, left bottom, from(#00A200), to(#00D300), color-stop(0.2, #00BA00), color-stop(0.2, #00BA00));
+}
+.mblSwitchBgRight {
+	left: 53px;
+	width: 94px;
+	color: #7F7F7F;
+	background-color: #EEEEEE;
+	background: -webkit-gradient(linear, left top, left bottom, from(#BDBEBD), to(#F7F3F7));
+}
+.mblSwitchKnob {
+	position: absolute;
+	top: 1px;
+	left: 53px;
+	width: 41px;
+	height: 26px;
+	font-size: 1px;
+	border-width: 1px;
+	border-style: solid;
+	border-color: #EFEFEF #A5A5A5 #969696 #325E9E;
+	line-height: 29px;
+	background-color: #CCCCCC;
+	background: -webkit-gradient(linear, left top, left bottom, from(#9C9A9C), to(#848284));
+	-webkit-border-radius: 2px;
+	-moz-border-radius: 2px;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+}
+.mblSwitchText {
+	position: relative;
+	top: 0px;
+	width: 53px;
+	height: 27px;
+	padding: 0px;
+	text-align: center;
+}
+.mblSwitchTextLeft {
+	left: 0px;
+}
+.mblSwitchTextRight {
+	left: 40px;
+}
+.mblIconContainer {
+	padding: 0px;
+	margin: 20px 0px 0px 10px;
+	padding: 0px 0px 40px 0px;
+}
+.mblIconItem {
+	list-style-type: none;
+	float: left;
+}
+.mblIconItemTerminator {
+	list-style-type: none;
+	height: 20px;
+	clear: both;
+}
+.mblIconItemSub {
+	list-style-type: none;
+	margin-left: -10px;
+	background-color: white;
+	color: black;
+}
+.mblIconArea {
+	font-family: Helvetica;
+	font-size: 12px;
+	height: 78px;
+	width: 74px;
+	text-align: center;
+	margin-bottom: 10px;
+	color: white;
+}
+.mblIconArea DIV {
+	position: relative;
+	height: 65px;
+}
+.mblIconArea IMG {
+	position: absolute;
+	top: 0px;
+	left: 6px;
+}
+.mblContent {
+	clear: both;
+	padding-bottom: 20px;
+}
+table.mblClose {
+	clear: both;
+	cursor: pointer;
+}
+.mblVibrate{
+	position: relative;
+	-webkit-animation-duration: .5s;
+	-webkit-animation-timing-function: ease-in-out;
+	-webkit-animation-iteration-count: 20;
+	-webkit-animation-name: vibrate;
+	-webkit-transform: rotate(0deg);
+}
+@-webkit-keyframes vibrate{
+	0%{
+		-webkit-transform: rotate(-2deg);
+		bottom: -1px;
+		left: -1px;
+	}
+	25% {
+		-webkit-transform: rotate(1deg);
+		bottom: 2px;
+		left: 1px;
+	}
+	50% {
+		-webkit-transform: rotate(-1deg);
+		bottom: -2px;
+		left: -1px;
+	}
+	75% {
+		-webkit-transform: rotate(2deg);
+		bottom: 2px;
+		left: 1px;
+	}
+	100% {
+		-webkit-transform: rotate(-2deg);
+		bottom: -1px;
+		left: -1px;
+	}
+}
+.mblCloseContent{
+	-webkit-animation-duration: .3s;
+	-webkit-animation-timing-function: ease-in-out;
+	-webkit-animation-name: shrink;
+	-webkit-transform: scale(0.01);
+}
+.mblCloseContent.mblShrink0{
+	-webkit-animation-name: shrink0;
+}
+.mblCloseContent.mblShrink1{
+	-webkit-animation-name: shrink1;
+}
+.mblCloseContent.mblShrink2{
+	-webkit-animation-name: shrink2;
+}
+.mblCloseContent.mblShrink3{
+	-webkit-animation-name: shrink3;
+}
+@-webkit-keyframes shrink{
+	from { -webkit-transform: scale(1); }
+	to { -webkit-transform: scale(0.01); }
+}
+@-webkit-keyframes shrink0{
+	from { -webkit-transform: scale(1); }
+	to { -webkit-transform: translate(-40%,-70%) scale(0.01); }
+}
+@-webkit-keyframes shrink1{
+	from { -webkit-transform: scale(1); }
+	to { -webkit-transform: translate(-14%,-70%) scale(0.01); }
+}
+@-webkit-keyframes shrink2{
+	from { -webkit-transform: scale(1); }
+	to { -webkit-transform: translate(14%,-70%) scale(0.01); }
+}
+@-webkit-keyframes shrink3{
+	from { -webkit-transform: scale(1); }
+	to { -webkit-transform: translate(40%,-70%) scale(0.01); }
+}
+.mblIconContentHeading {
+	position: relative;
+	clear: both;
+	height: 25px;
+	padding-left: 40px;
+	margin-top: 0px;
+	background: -webkit-gradient(linear, left top, left bottom, from(#E0E4E7), to(#B4BEC6), color-stop(0.5, #C4CCD2), color-stop(0.5, #BFC8CE));
+	border-top: 1px solid #F1F3F4;
+	border-bottom: 1px solid #717D85;
+	font-family: Helvetica;
+	font-size: 14px;
+	color: white;
+	line-height: 26px;
+	text-shadow: rgba(0,0,0,0.6) 0px -1px 0px;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+.mblButton {
+	padding: 0px 10px;
+	height: 29px;
+	border-width: 1px 1px 1px 1px;
+	border-style: outset;
+	color: white;
+	font-family: Helvetica;
+	font-size: 13px;
+	line-height: 29px;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	-webkit-tap-highlight-color: transparent;
+}
+.mblBlueButton {
+	border-color: #9CACC0;
+	background-color: #366EDF;
+	background: -webkit-gradient(linear, left top, left bottom, from(#7A9DE9), to(#2362DD), color-stop(0.5, #366EDF), color-stop(0.5, #215FDC));
+	-webkit-tap-highlight-color: transparent;
+}
+.mblBlueButtonSelected {
+	background: -webkit-gradient(linear, left top, left bottom, from(#8EA4C1), to(#4A6C9B), color-stop(0.5, #5877A2), color-stop(0.5, #476999));
+}
+.mblTabContainer {
+}
+.mblTabButton {
+	position: relative;
+	float: left;
+	list-style-type: none;
+	width: 78px;
+	text-align: center;
+	height: 61px;
+	margin-right: 2px;
+	border-width: 0px 1px 0px 1px;
+	border-style: solid;
+	border-color: black #182018 black #393C39;
+	font-family: Helvetica;
+	font-size: 13px;
+	color: white;
+	background-color: #212421;
+	background: -webkit-gradient(linear, left top, left bottom, from(#181818), to(#100C10), color-stop(0.1, #313031));
+	-webkit-tap-highlight-color: transparent;
+}
+.mblTabButtonSelected.mblTabButton {
+	background-color: #8C8E8C;
+	background: -webkit-gradient(linear, left top, left bottom, from(#A59EA5), to(#848284));
+}
+.mblTabButtonHighlighted.mblTabButton {
+	background-color: #FFB600;
+	background: -webkit-gradient(linear, left top, left bottom, from(#FFCB00), to(#FF9A00));
+}
+.mblTabButtonImgDiv {
+	position: relative;
+	margin-left: 24px;
+	height: 40px;
+}
+.mblTabButton IMG {
+	position: absolute;
+	left: 0px;
+	margin-top: 8px;
+}
+.mblTabPanelHeader {
+	position: relative;
+	height: 64px;
+	margin: 0px;
+	padding: 0px 0px 0px 0px;
+	background-color: #000000;
+	border-top: 1px solid #CDD5DF;
+	border-bottom: 2px solid #949694;
+	font-family: Helvetica;
+	font-size: 20px;
+	color: white;
+	text-align: center;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+.mblTabPanelPane {
+}
+.mblTabPane {
+}
+.mblProgContainer {
+	position: absolute;
+	width: 36px;
+	height: 36px;
+	top: 180px;
+	left: 50%;
+	margin: -18px 0px 0px -18px;
+}
+.mblProg {
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	width: 11px;
+	font-size: 1px;
+	height: 4px;
+	overflow: hidden;
+	-webkit-transform-origin: 0 2px;
+	background-color: #C0C0C0;
+	-webkit-border-radius: 2px;
+	-moz-border-radius: 2px;
+}
+.mblProg0 {
+	-webkit-transform: translate(18px,10px) rotate(-90deg);
+}
+.mblProg1 {
+	-webkit-transform: translate(22px,11px) rotate(-60deg);
+}
+.mblProg2 {
+	-webkit-transform: translate(25px,14px) rotate(-30deg);
+}
+.mblProg3 {
+	-webkit-transform: translate(26px,18px) rotate(0deg);
+}
+.mblProg4 {
+	-webkit-transform: translate(25px,22px) rotate(30deg);
+}
+.mblProg5 {
+	-webkit-transform: translate(22px,25px) rotate(60deg);
+}
+.mblProg6 {
+	-webkit-transform: translate(18px,26px) rotate(90deg);
+}
+.mblProg7 {
+	-webkit-transform: translate(14px,25px) rotate(120deg);
+}
+.mblProg8 {
+	-webkit-transform: translate(11px,22px) rotate(150deg);
+}
+.mblProg9 {
+	-webkit-transform: translate(10px,18px) rotate(180deg);
+}
+.mblProg10 {
+	-webkit-transform: translate(11px,14px) rotate(210deg);
+}
+.mblProg11 {
+	-webkit-transform: translate(14px,11px) rotate(240deg);
+}
+.mblColorBlue {
+	background-color: #366EDF;
+	background: -webkit-gradient(linear, left top, left bottom, from(#7A9DE9), to(#2362DD), color-stop(0.5, #366EDF), color-stop(0.5, #215FDC));
+}
+.mblColorDefault { 
+	background-color: #ADADAD;
+	background: -webkit-gradient(linear, left top, left bottom, from(#E5E5E5), to(#7F7F7F), color-stop(0.5, #ADADAD), color-stop(0.5, #909090));
+}
+.mblColorDefaultSel { 
+	background-color: #FFC700;
+	background: -webkit-gradient(linear, left top, left bottom, from(#AD7500), to(#FFAA00), color-stop(0.06, #FFB200), color-stop(0.5, #FFC700));
+}
+.alertDialog {
+	width: 100%;
+	padding-left: 2px;
+	padding-right: 2px;
+	z-index: 1000;
+}
+.alertDialogBody {
+	border: 1px solid #ADAAAD;
+	-webkit-border-radius: 10px;
+	-moz-border-radius: 10px;
+	background-color: white;
+	margin-left: 2px;
+	margin-right: 4px;
+}
+.alertTitle {
+	height: 42px;
+	margin: 0px;
+	padding: 0px;
+	background-color: #889BB3;
+	background: -webkit-gradient(linear, left top, left bottom, from(#B0BCCD), to(#6D84A2), color-stop(0.5, #889BB3), color-stop(0.5, #8195AF));
+	border-top: 1px solid #CDD5DF;
+	border-bottom: 1px solid #2D3642;
+	font-family: Helvetica;
+	font-size: 20px;
+	color: white;
+	text-align: center;
+	line-height: 44px;
+	text-shadow: rgba(0,0,0,0.6) 0px -1px 0px;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	text-align: center;
+}
+.alertText {
+	text-align: center;
+}
+.alertBtns {
+	padding: 5px;
+	text-align: center;
+}
+.alertBtns .mblButton {
+	width: 100%;
+	margin-top: 5px;
+}
+.alertDialog.out {
+	position: absolute;
+}
+.alertDialog.in {
+	position: absolute;
+}
+.slidev.out {
+	-webkit-animation-duration: .4s;
+	-webkit-animation-name: slideOut;
+	-webkit-animation-timing-function: linear;
+	-webkit-transform: translateY(-100%);
+}
+.slidev.in {
+	-webkit-animation-duration: .4s;
+	-webkit-animation-name: slideIn;
+	-webkit-animation-timing-function: linear;
+	-webkit-transform: translateY(0px);
+}
+.slidev.out.reverse {
+	-webkit-animation-name: slideOutReverse;
+}
+.slidev.in.reverse {
+	-webkit-animation-name: slideInReverse;
+}
+.dialogUnderlayWrapper {
+	position: absolute;
+	left: 0;
+	top: 0;
+	z-index: 998;
+	background: transparent !important;
+	visibility: visible;
+	height: 100%;
+	width: 100%;
+}
+.dialogUnderlay {
+	background-color: #eee;
+	opacity: 0.5;
+	width: 100%;
+	height: 100%;
+}
+.list .row {
+	padding: 10px;
+	border-bottom: 1px solid #444;
+	position: relative;
+	background-color: black;
+	z-index: 6; 
+}
+.list .row.mblListItem {
+	padding: 0px;
+}
+.list .row.last {
+	border-bottom: none;
+}
+.list .row.hold {
+	background-color: #444;
+}
+.list .buttons {
+	position: absolute;
+	text-align: center;
+	padding-top: 10px;
+	width: 100%;
+	height: 100%;
+	z-index: 5;
+}
+.list .buttons .mblButton {
+}
+.list .buttons .deleteBtn {
+	background-color: red;
+}
+.list .buttons .cancelBtn {
+	margin-left: 10px;
+	background-color: blue;
+}
+.row.collapsed {
+	-webkit-animation-name: collapse-vert;
+	-webkit-animation-duration: 0.5s;
+	-webkit-animation-timing-function: linear;
+}
+@-webkit-keyframes collapse-vert {
+	from {
+		height: 100%;
+		padding: 10px;
+	}
+	to {
+		height: 0px;
+		padding: 0px;
+	}
+}
+.listSelector {
+	position: absolute;
+	-webkit-border-radius: 10px;
+	-moz-border-radius: 10px;
+	border: 1px solid #666;
+	background-color: #ccc;
+	color: #333;
+	z-index: 1000;
+}
+.listSelectorRow {
+	padding: 10px;
+	border-bottom: 1px solid #666;
+	white-space: nowrap;
+}
+.listSelectorRow-selected {
+	background-color: #666;
+	color: #ccc;
+}
+.listSelectorRow.last {
+ 	border-bottom: none;
+}
+.mblImageView, .mblImageView canvas {
+	width: 100%;
+	height: 100%;
+}
+.mblPillar {
+	display: none;
+}
+input {
+	-webkit-text-size-adjust: 140%;
+}
+.mblImageThumbView {
+	position: relative;
+	-webkit-transition-property: height;
+	-webkit-transition-duration: 0.8s;
+	-webkit-transition-delay: 0;
+}
+.mblImageThumbView .mblThumb {
+	width: 100px;
+	min-height: 100px;
+	display: inline-block;
+	z-index: 2;
+	position: absolute;
+}
+.mblImageThumbView.animated .mblThumb {
+	-webkit-transition-property: -webkit-transform, opacity;
+	-webkit-transition-duration: 1.3s, 1s;
+	-webkit-transition-delay: 0, 0;
+}
+.mblImageThumbView .mblThumb.hidden {
+	z-index: 1;
+	opacity: 0;
+}
+.mblImageThumbView .mblThumbInner {
+	width: 102px;
+	height: 102px;
+	position: relative;
+}
+.mblImageThumbView .mblThumbOverlay {
+	width: 102px;
+	height: 102px;
+	background: url(images/thumb-overlay.png) center top no-repeat;
+	position: absolute;
+	z-index: 20;
+	overflow: hidden;
+}
+.mblImageThumbView .mblThumb.selected .mblThumbOverlay {
+	background-position: center bottom;
+}
+.mblImageThumbView .mblThumbInner .mblThumbMask {
+	width: 90px;
+	height: 90px;
+	overflow: hidden;
+	padding-left: 6px;
+	padding-top: 5px;
+	z-index: 10;
+}
+.mblImageThumbView .mblThumbInner .mblThumbMask img {
+	left: 0px;
+	top: 0px;
+	width: 90px;
+	height: 90px;
+}
+.mblImageThumbView .mblThumbInner .mblThumbMask .mblThumbSrc {
+	left: 6px;
+	top: 5px;
+	background-position: center center;
+	background-repeat: no-repeat;
+	overflow: hidden;
+	position: absolute;
+	-webkit-background-size: 100% 100%;
+	-webkit-border-radius: 5px;
+	width: 90px;
+	height: 90px;
+	z-index: 5;
+}
+.mblImageThumbView .mblThumbMask div {
+	left: 0px;
+	top: 0px;
+	width: 90px;
+	height: 90px;
+	background-repeat: no-repeat;
+}
+.mblImageThumbView .mblThumb:hover,
+.mblImageThumbView .mblThumb.selected {
+	-webkit-transform: scale(1.2);
+	transform: scale(1.2);
+}
+.mblImageThumbView.large .mblThumb {
+	width: 150px;
+	min-height: 150px;
+}
+.mblImageThumbView.large .mblThumbInner{
+	width: 152px;
+	height: 152px;
+}
+.mblImageThumbView.large .mblThumbOverlay {
+	background: url(images/thumb-overlay-large.png) center top no-repeat;
+	width: 152px;
+	height: 152px;
+}
+.mblImageThumbView.large .mblThumbInner .mblThumbMask,
+.mblImageThumbView.large .mblThumbInner .mblThumbMask img,
+.mblImageThumbView.large .mblThumbInner .mblThumbMask .mblThumbSrc,
+.mblImageThumbView.large .mblThumbMask div {
+	width: 133px;
+	height: 133px;
+}
+.mblImageThumbView.large .mblThumbInner .mblThumbMask .mblThumbSrc {
+	left: 9px;
+	top: 7px;
+}
+.mblImageThumbView.small .mblThumb {
+	width: 75px;
+	min-height: 75px;
+}
+.mblImageThumbView.small .mblThumbInner{
+	width: 77px;
+	height: 77px;
+}
+.mblImageThumbView.small .mblThumbOverlay {
+	background: url(images/thumb-overlay-small.png) center top no-repeat;
+	width: 77px;
+	height: 77px;
+}
+.mblImageThumbView.small .mblThumbInner .mblThumbMask,
+.mblImageThumbView.small .mblThumbInner .mblThumbMask img,
+.mblImageThumbView.small .mblThumbInner .mblThumbMask .mblThumbSrc,
+.mblImageThumbView.small .mblThumbMask div {
+	width: 70px;
+	height: 70px;
+}
+.mblImageThumbView.small .mblThumbInner .mblThumbMask .mblThumbSrc {
+	left: 4px;
+	top: 3px;
+}
+.mblImageThumbView .mblThumbLabel {
+	font-size: smaller;
+	overflow: hidden;
+	white-space: nowrap;
+	text-align: center;
+}
+.mblNativeBack .mblArrowButtonHead,
+.mblNativeBack .mblArrowButtonBody,
+.mblNativeBack .mblArrowButtonNeck {
+	display: none;
+}

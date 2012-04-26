@@ -1,0 +1,1 @@
+({"insertEntity":"Szimbólum beszúrása"})

@@ -1,0 +1,68 @@
+
+.claro .dijitBorderContainer {
+  
+  padding: 5px;
+}
+.claro .dijitSplitContainer-child, .claro .dijitBorderContainer-child {
+  
+  border: 1px #b5bcc7 solid;
+}
+.claro .dijitBorderContainer-dijitTabContainerTop,
+.claro .dijitBorderContainer-dijitTabContainerBottom,
+.claro .dijitBorderContainer-dijitTabContainerLeft,
+.claro .dijitBorderContainer-dijitTabContainerRight,
+.claro .dijitBorderContainer-dijitAccordionContainer {
+  
+  border: none;
+}
+.claro .dijitBorderContainer-dijitBorderContainer {
+  
+  border: 0;
+  padding: 0;
+}
+.claro .dijitSplitterH, .claro .dijitGutterH {
+  background: none;
+  border: 0;
+  height: 5px;
+}
+.claro .dijitSplitterH .dijitSplitterThumb {
+  background: #b5bcc7 none;
+  height: 1px;
+  top: 2px;
+  width: 19px;
+}
+.claro .dijitSplitterV, .claro .dijitGutterV {
+  background: none;
+  border: 0;
+  width: 5px;
+  margin: 0;
+}
+.claro .dijitSplitterV .dijitSplitterThumb {
+  background: #b5bcc7 none;
+  height: 19px;
+  left: 2px;
+  width: 1px;
+  margin: 0;
+}
+.claro .dijitSplitterHHover {
+  font-size: 1px;
+  background: url("images/splitterHorizontalHover.png") no-repeat center top;
+}
+.claro .dijitSplitterHHover .dijitSplitterThumb {
+  background: #769dc0 none;
+}
+.claro .dijitSplitterVHover {
+  font-size: 1px;
+  background: url("images/splitterVerticalHover.png") no-repeat center left;
+}
+.claro .dijitSplitterVHover .dijitSplitterThumb {
+  background: #769dc0 none;
+}
+.dj_ie6 .dijitSplitterHHover, .dj_ie6 .claro .dijitSplitterVHover {
+  background-color: #cfe5fa;
+  background-image: none;
+}
+.claro .dijitSplitterHActive, .claro .dijitSplitterVActive {
+  font-size: 1px;
+  background-color: #abd6ff;
+}

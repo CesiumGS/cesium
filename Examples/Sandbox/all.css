@@ -1,0 +1,188 @@
+html, body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    padding: 0;
+    background-color: #CFE5FA;
+}
+
+#preloader {
+    width:100%; 
+    height:100%; 
+    margin:0; 
+    padding:0;
+    background:#fff url('./icons/loading.gif') no-repeat center center;
+    position:absolute;
+    z-index:999;
+}
+
+#appLayout {
+    height: 100%;
+}
+
+#treeview {
+    width: 25%;
+}
+
+#sandbox {
+    background-color: #000000;
+}
+
+#glCanvas {
+    top: 0;
+    left: 0;
+    border: none;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+#toolbar {
+    bottom: 5px;
+    left: 45%;
+    padding: 5px 5px 0px;
+    position: absolute;    
+    border: 2px;
+    border-radius: 10px;
+    background-color: rgba(100, 100, 100, 0.6);
+}
+
+#editorContainer {
+    background-color: #EEEEEE;
+    height: 40%
+}
+
+#editor {
+    background: none repeat scroll 0 0 white;
+    position: relative;
+    height: 100%;
+}
+
+#searchContainer {
+    padding: 3px 8px 5px 3px;
+}
+
+#searchBox {
+    background-color: #EEEEEE;
+    width: 100%;
+}
+
+#treeContainer {
+    padding: 2px;
+}
+
+#userOverlays {
+    visibility: hidden;
+}
+
+#textOverlays {
+    visibility: hidden;
+}
+
+.overlays {
+    padding: 5px 5px;
+    color: #FFFFFF; 
+    border: 2px;
+    border-radius: 10px;
+    background-color: rgba(100, 100, 100, 0.6);
+}
+
+#overlayDialog {
+    padding: 10px;
+}
+
+#overlayEditorContainer {
+    height: 85%;
+    left: 30%;
+    right: 2%;
+    position: absolute;
+}
+
+#overlayEditor {
+    background: none repeat scroll 0 0 white;
+    height: 100%;
+    width: 100%;
+    position: relative;
+}
+
+#overlayMenu {
+    width: 28%;
+    height: 95%;
+    overflow: auto;
+    float: left;
+    position: absolute;
+}
+
+#createOverlayButton {
+    clear: both;
+}
+
+#removeOverlayButton {
+    float: left;
+}
+
+/* This rule prevents Dojo from highlighting entire tree nodes on hover */
+.claro .dijitTreeRowHover {
+    background: none;
+    border:  none;
+    padding: 4px 1px 2px 0;
+    margin: 0 1px;
+}
+
+/* Style rules for all tree icons (see below) */
+.treeIcon {
+    background-repeat: no-repeat;
+    width: 16px;
+    height: 16px;
+}
+
+/* 
+ * Dojo requires that every icon have it's own class.
+ * This is a bad practice but handled here by assigning a 
+ * base class: treeIcon and a icon class containing only the
+ * URL to the icon.
+ */
+.Polyline   { background-image: url('./icons/polyline.png'); }
+.Polygon    { background-image: url('./icons/polygon.png'); }
+.Circle     { background-image: url('./icons/circle.png'); }
+.Billboard  { background-image: url('./icons/billboard.png'); }
+.Label      { background-image: url('./icons/label.png'); }
+.Sensor     { background-image: url('./icons/sensor.png'); }
+.Composite  { background-image: url('./icons/composite.png'); }
+.Camera     { background-image: url('./icons/camera.png'); }
+.Picking    { background-image: url('./icons/picking.png'); }
+.CentralBody{ background-image: url('./icons/centralBody.png'); }
+.Advanced   { background-image: url('./icons/advanced.png'); }
+.Material   { background-image: url('./icons/material.png'); }
+.Animation  { background-image: url('./icons/animation.png'); }
+
+/* These rules draw the box around toggle (On/Off) icons */
+.toggleOn, .toggleOff {
+    border-radius: 3px;
+    padding: 1px;
+    position:absolute;
+    top:0px;
+}
+
+/* These rules fill in the switch's borders and add the On/Off */
+.toggleOn { 
+    border: 1px solid #00FF00;
+    left: 200px;
+    background:url('./icons/toggleOn.png') center no-repeat; 
+}
+
+.toggleOff {
+    border: 1px solid #FF0000;
+    left: 230px;
+    background:url('./icons/toggleOff.png') center no-repeat;
+}
+
+/* Strip the border on hover to make way for pop-out effect */
+a.toggleOn:hover, a.toggleOff:hover {
+    border: none;
+    padding: 3px;
+}
+
+/* "Highlight" the buttons on mouse-over */
+a.toggleOff:hover { -moz-box-shadow: 0 0 5px #FF0000; -webkit-box-shadow: 0 0 5px #FF0000; box-shadow: 0 0 5px #FF0000; }
+a.toggleOn:hover  { -moz-box-shadow: 0 0 5px #00FF00; -webkit-box-shadow: 0 0 5px #00FF00; box-shadow: 0 0 5px #00FF00; }

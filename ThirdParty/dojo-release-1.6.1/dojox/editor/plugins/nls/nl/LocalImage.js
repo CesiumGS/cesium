@@ -1,0 +1,1 @@
+({"set":"Invoegen","text":"Beschrijving","insertImageTitle":"Afbeelding invoegen","invalidMessage":"Ongeldig bestandstype voor afbeelding","prePopuTextBrowse":" of navigeer naar een lokaal bestand.","browse":"Bladeren...","prePopuTextUrl":"Geef een afbeeldings-URL op","url":"Afbeelding"})

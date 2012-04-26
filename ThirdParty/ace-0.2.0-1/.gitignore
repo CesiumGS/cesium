@@ -1,0 +1,23 @@
+# Junk that could exist anywhere:
+.DS_Store
+*.swp
+*.tmp
+
+# Project files that should not be in the repo
+.project
+.settings/
+.settings.xml
+.c9settings.xml
+.settings.xml.old
+.*.gz
+
+# A handy place to put stuff that git should ignore:
+/ignore/
+support/async/
+support/jsdom/
+support/node-htmlparser/
+support/node-o3-xml/
+support/requirejs/
+
+/node_modules
+support/node-o3-xml-v4/

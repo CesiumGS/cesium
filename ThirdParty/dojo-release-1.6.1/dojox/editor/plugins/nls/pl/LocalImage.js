@@ -1,0 +1,1 @@
+({"set":"Wstaw","text":"Opis","insertImageTitle":"Wstaw obraz","invalidMessage":"Niepoprawny typ pliku graficznego","prePopuTextBrowse":" lub wskaż plik lokalny. ","browse":"Przeglądaj...","prePopuTextUrl":"Wprowadź adres URL obrazu","url":"Obraz"})

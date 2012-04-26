@@ -1,0 +1,1 @@
+({"set":"Infoga","text":"Beskrivning","insertImageTitle":"Infoga bild","invalidMessage":"Ogiltigt bildfilformat","prePopuTextBrowse":" eller bläddra efter en lokal fil.","browse":"Bläddra...","prePopuTextUrl":"Ange en bild-URL-adress","url":"Bild"})

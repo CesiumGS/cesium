@@ -1,0 +1,1 @@
+({"setButtonText":"Ayarla","cancelButtonText":"İptal"})

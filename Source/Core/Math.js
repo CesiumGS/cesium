@@ -1,0 +1,491 @@
+/*global define*/
+define([
+        './Cartesian2',
+        './Cartesian3',
+        './Cartographic2',
+        './Cartographic3'
+    ],
+    function(
+        Cartesian2,
+        Cartesian3,
+        Cartographic2,
+        Cartographic3) {
+    "use strict";
+
+    /**
+     * @exports CesiumMath
+     * Math functions.
+     */
+    var CesiumMath = {};
+
+    /**
+     * 0.1
+     * @constant
+     * @type Number
+     */
+    CesiumMath.EPSILON1 = 0.1;
+
+    /**
+     * 0.01
+     * @constant
+     * @type Number
+     */
+    CesiumMath.EPSILON2 = 0.01;
+
+    /**
+     * 0.001
+     * @constant
+     * @type Number
+     */
+    CesiumMath.EPSILON3 = 0.001;
+
+    /**
+     * 0.0001
+     * @constant
+     * @type Number
+     */
+    CesiumMath.EPSILON4 = 0.0001;
+
+    /**
+     * 0.00001
+     * @constant
+     * @type Number
+     */
+    CesiumMath.EPSILON5 = 0.00001;
+
+    /**
+     * 0.000001
+     * @constant
+     * @type Number
+     */
+    CesiumMath.EPSILON6 = 0.000001;
+
+    /**
+     * 0.0000001
+     * @constant
+     * @type Number
+     */
+    CesiumMath.EPSILON7 = 0.0000001;
+
+    /**
+     * 0.00000001
+     * @constant
+     * @type Number
+     */
+    CesiumMath.EPSILON8 = 0.00000001;
+
+    /**
+     * 0.000000001
+     * @constant
+     * @type Number
+     */
+    CesiumMath.EPSILON9 = 0.000000001;
+
+    /**
+     * 0.0000000001
+     * @constant
+     * @type Number
+     */
+    CesiumMath.EPSILON10 = 0.0000000001;
+
+    /**
+     * 0.00000000001
+     * @constant
+     * @type Number
+     */
+    CesiumMath.EPSILON11 = 0.00000000001;
+
+    /**
+     * 0.000000000001
+     * @constant
+     * @type Number
+     */
+    CesiumMath.EPSILON12 = 0.000000000001;
+
+    /**
+     * 0.0000000000001
+     * @constant
+     * @type Number
+     */
+    CesiumMath.EPSILON13 = 0.0000000000001;
+
+    /**
+     * 0.00000000000001
+     * @constant
+     * @type Number
+     */
+    CesiumMath.EPSILON14 = 0.00000000000001;
+
+    /**
+     * 0.000000000000001
+     * @constant
+     * @type Number
+     */
+    CesiumMath.EPSILON15 = 0.000000000000001;
+
+    /**
+     * 0.0000000000000001
+     * @constant
+     * @type Number
+     */
+    CesiumMath.EPSILON16 = 0.0000000000000001;
+
+    /**
+     * 0.00000000000000001
+     * @constant
+     * @type Number
+     */
+    CesiumMath.EPSILON17 = 0.00000000000000001;
+
+    /**
+     * 0.000000000000000001
+     * @constant
+     * @type Number
+     */
+    CesiumMath.EPSILON18 = 0.000000000000000001;
+
+    /**
+     * 0.0000000000000000001
+     * @constant
+     * @type Number
+     */
+    CesiumMath.EPSILON19 = 0.0000000000000000001;
+
+    /**
+     * 0.00000000000000000001
+     * @constant
+     * @type Number
+     */
+    CesiumMath.EPSILON20 = 0.00000000000000000001;
+
+    /**
+     * 3.986004418e14
+     * @constant
+     * @type Number
+     */
+    CesiumMath.GRAVITATIONALPARAMETER = 3.986004418e14;
+
+    /**
+     * Returns the sign of the value; 1 if the value is positive, -1 if the value is
+     * negative, or 0 if the value is 0.
+     *
+     * @param {Number} value The value to return the sign of.
+     *
+     * @return {Number} The sign of value.
+     */
+    CesiumMath.sign = function(value) {
+        if (value > 0) {
+            return 1;
+        } else if (value < 0) {
+            return -1;
+        }
+
+        return 0;
+    };
+
+    /**
+     * DOC_TBA
+     */
+    CesiumMath.angleBetween = function(vector1, vector2) {
+        var v1 = new Cartesian3(vector1.x, vector1.y, vector1.z);
+        var v2 = new Cartesian3(vector2.x, vector2.y, vector2.z);
+
+        var magnitude1 = v1.magnitude();
+        var magnitude2 = v2.magnitude();
+
+        if ((magnitude1 < CesiumMath.EPSILON12) || (magnitude2 < CesiumMath.EPSILON12)) {
+            return 0.0;
+        }
+
+        var cross = v1.cross(v2);
+        var sinTheta = cross.magnitude();
+        var cosTheta = v1.dot(v2);
+
+        return Math.abs(Math.atan2(sinTheta, cosTheta));
+    };
+
+    /**
+     * Returns the hyperbolic sine of a {@code Number}.
+     * The hyperbolic sine of <em>value</em> is defined to be
+     * (<em>e<sup>x</sup>&nbsp;-&nbsp;e<sup>-x</sup></em>)/2.0
+     * where <i>e</i> is Euler's number, approximately 2.71828183.
+     *
+     * <p>Special cases:
+     *   <ul>
+     *     <li>If the argument is NaN, then the result is NaN.</li>
+     *
+     *     <li>If the argument is infinite, then the result is an infinity
+     *     with the same sign as the argument.</li>
+     *
+     *     <li>If the argument is zero, then the result is a zero with the
+     *     same sign as the argument.</li>
+     *   </ul>
+     *</p>
+     *
+     * @param value The number whose hyperbolic sine is to be returned.
+     *
+     * @return The hyperbolic sine of {@code value}.
+     *
+     */
+    CesiumMath.sinh = function(value) {
+        var part1 = Math.pow(Math.E, value);
+        var part2 = Math.pow(Math.E, -1.0 * value);
+
+        return (part1 - part2) * 0.5;
+    };
+
+    /**
+     * Returns the hyperbolic cosine of a {@code Number}.
+     * The hyperbolic cosine of <strong>value</strong> is defined to be
+     * (<em>e<sup>x</sup>&nbsp;+&nbsp;e<sup>-x</sup></em>)/2.0
+     * where <i>e</i> is Euler's number, approximately 2.71828183.
+     *
+     * <p>Special cases:
+     *   <ul>
+     *     <li>If the argument is NaN, then the result is NaN.</li>
+     *
+     *     <li>If the argument is infinite, then the result is positive infinity.</li>
+     *
+     *     <li>If the argument is zero, then the result is {@code 1.0}.</li>
+     *   </ul>
+     *</p>
+     *
+     * @param value The number whose hyperbolic cosine is to be returned.
+     *
+     * @return The hyperbolic cosine of {@code value}.
+     */
+    CesiumMath.cosh = function(value) {
+        var part1 = Math.pow(Math.E, value);
+        var part2 = Math.pow(Math.E, -1.0 * value);
+
+        return (part1 + part2) * 0.5;
+    };
+
+    /**
+     * DOC_TBA
+     */
+    CesiumMath.lerp = function(p, q, time) {
+        return ((1.0 - time) * p) + (time * q);
+    };
+
+    /**
+     * 1/pi
+     *
+     * @constant
+     * @type {Number}
+     * @see agi_pi
+     */
+    CesiumMath.PI = Math.PI;
+
+    /**
+     * 1/pi
+     *
+     * @constant
+     * @type {Number}
+     * @see agi_oneOverPi
+     */
+    CesiumMath.ONE_OVER_PI = 1.0 / Math.PI;
+
+    /**
+     * pi/2
+     *
+     * @constant
+     * @type {Number}
+     * @see agi_piOverTwo
+     */
+    CesiumMath.PI_OVER_TWO = Math.PI * 0.5;
+
+    /**
+     * pi/3
+     * <br /><br />
+     *
+     * @constant
+     * @type {Number}
+     * @see agi_piOverThree
+     */
+    CesiumMath.PI_OVER_THREE = Math.PI / 3.0;
+
+    /**
+     * pi/4
+     *
+     * @constant
+     * @type {Number}
+     * @see agi_piOverFour
+     */
+    CesiumMath.PI_OVER_FOUR = Math.PI / 4.0;
+
+    /**
+     * pi/6
+     *
+     * @constant
+     * @type {Number}
+     * @see agi_piOverSix
+     */
+    CesiumMath.PI_OVER_SIX = Math.PI / 6.0;
+
+    /**
+     * 3pi/2
+     *
+     * @constant
+     * @type {Number}
+     * @see agi_threePiOver2
+     */
+    CesiumMath.THREE_PI_OVER_TWO = (3.0 * Math.PI) * 0.5;
+
+    /**
+     * 2pi
+     *
+     * @constant
+     * @type {Number}
+     * @see agi_twoPi
+     */
+    CesiumMath.TWO_PI = 2.0 * Math.PI;
+
+    /**
+     * 1/2pi
+     *
+     * @constant
+     * @type {Number}
+     * @see agi_oneOverTwoPi
+     */
+    CesiumMath.ONE_OVER_TWO_PI = 1.0 / (2.0 * Math.PI);
+
+    /**
+     * The number of radians in a degree.
+     *
+     * @constant
+     * @type {Number}
+     * @see agi_radiansPerDegree
+     */
+    CesiumMath.RADIANS_PER_DEGREE = Math.PI / 180.0;
+
+    /**
+     * The number of degrees in a radian.
+     *
+     * @constant
+     * @type {Number}
+     * @see agi_degreesPerRadian
+     */
+    CesiumMath.DEGREES_PER_RADIAN = 180.0 / Math.PI;
+
+    /**
+     * Converts degrees to radians.
+     * @param {Number} degrees The angle to convert in degrees.
+     * @return {Number} The corresponding angle in radians.
+     */
+    CesiumMath.toRadians = function(degrees) {
+        return degrees * CesiumMath.RADIANS_PER_DEGREE;
+    };
+
+    /**
+     * Converts the longitude and latitude of a {@link Cartographic3} from degrees to radians.  The height is not changed.
+     * @param {Cartographic3} cartographic The cartographic position to convert in degrees.
+     * @return {Cartographic3} The corresponding cartographic position with longitude and latitude in radians.
+     */
+    CesiumMath.cartographic3ToRadians = function(cartographic) {
+        return new Cartographic3(
+                CesiumMath.toRadians(cartographic.longitude),
+                CesiumMath.toRadians(cartographic.latitude),
+                cartographic.height);
+    };
+
+    /**
+     * Converts the longitude and latitude of a {@link Cartographic2} from degrees to radians.
+     * @param {Cartographic2} cartographic The cartographic position to convert in degrees.
+     * @return {Cartographic2} The corresponding cartographic position in radians.
+     */
+    CesiumMath.cartographic2ToRadians = function(cartographic) {
+        return new Cartographic2(
+                CesiumMath.toRadians(cartographic.longitude),
+                CesiumMath.toRadians(cartographic.latitude));
+    };
+
+    /**
+     * Converts radians to degrees.
+     * @param {Number} radians The angle to convert in radians.
+     * @return {Number} The corresponding angle in degrees.
+     */
+    CesiumMath.toDegrees = function(radians) {
+        return radians * CesiumMath.DEGREES_PER_RADIAN;
+    };
+
+    /**
+     * Converts the longitude and latitude of a {@link Cartographic3} from radians to degrees.  The height is not changed.
+     * @param {Cartographic3} cartographic The cartographic position to convert in radians.
+     * @return {Cartographic3} The corresponding cartographic position with longitude and latitude in degrees.
+     */
+    CesiumMath.cartographic3ToDegrees = function(cartographic) {
+        return new Cartographic3(
+                CesiumMath.toDegrees(cartographic.longitude),
+                CesiumMath.toDegrees(cartographic.latitude),
+                cartographic.height);
+    };
+
+    /**
+     * Converts the longitude and latitude of a {@link Cartographic2} from radians to degrees.
+     * @param {Cartographic2} cartographic The cartographic position to convert in radians.
+     * @return {Cartographic2} The corresponding cartographic position in degrees.
+     */
+    CesiumMath.cartographic2ToDegrees = function(cartographic) {
+        return new Cartographic2(
+                CesiumMath.toDegrees(cartographic.longitude),
+                CesiumMath.toDegrees(cartographic.latitude));
+    };
+
+    /**
+     * Converts a longitude value, in radians, to the range [<code>-Math.PI</code>, <code>Math.PI</code>).
+     *
+     * @param {Number} angle The longitude value, in radians, to convert to the range [<code>-Math.PI</code>, <code>Math.PI</code>).
+     *
+     * @return {Number} The equivalent longitude value in the range [<code>-Math.PI</code>, <code>Math.PI</code>).
+     *
+     * @example
+     * // Convert 270 degrees to -90 degrees longitude
+     * var longitude = CesiumMath.convertLongitudeRange(CesiumMath.toRadians(270.0));
+     */
+    CesiumMath.convertLongitudeRange = function(angle) {
+        var twoPi = CesiumMath.TWO_PI;
+
+        var simplified = angle - Math.floor(angle / twoPi) * twoPi;
+        if (simplified < -Math.PI) {
+            simplified += twoPi;
+        } else if (simplified >= Math.PI) {
+            simplified -= twoPi;
+        }
+        return simplified;
+    };
+
+    /**
+     * Alters the value of input x such that <code>-CesiumMath.PI</code> <= x <= <code>CesiumMath.PI</code>
+     * @param {Number} angle in radians
+     * @return {Number} The angle in the range ()<code>-CesiumMath.PI</code>, <code>CesiumMath.PI</code>).
+    */
+    CesiumMath.negativePiToPi = function(x){
+        var epsilon10 = CesiumMath.EPSILON10;
+        var pi = CesiumMath.PI;
+        var two_pi = CesiumMath.TWO_PI;
+        while(x < -(pi+ epsilon10)){
+            x += two_pi;
+        }
+        if(x < -pi){
+            x = -pi;
+        }
+        while(x > pi + epsilon10){
+            x-=two_pi;
+        }
+        if(x > pi){
+            x = pi;
+        }
+        return x;
+    };
+
+    /**
+     * DOC_TBA
+     */
+    CesiumMath.equalsEpsilon = function(left, right, epsilon) {
+        epsilon = epsilon || 0.0;
+        return Math.abs(left - right) <= epsilon;
+    };
+
+    return CesiumMath;
+});

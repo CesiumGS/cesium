@@ -1,0 +1,1 @@
+({"selectContents":"Мазмұнын таңдау","deleteElement":"Элементті жою","moveEnd":"Жүгіргіні аяғына жылжыту","deleteContents":"Мазмұнын жою","nodeActions":"${nodeName} Әрекеттер","selectElement":"Элементті таңдау","moveStart":"Жүгіргіні басына жылжыту"})

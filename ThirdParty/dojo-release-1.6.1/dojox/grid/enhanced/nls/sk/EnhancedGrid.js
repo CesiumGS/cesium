@@ -1,0 +1,1 @@
+({"descending":"Zostupne ","ascending":"Vzostupne ","nestedSort":"Vnorené triedenie ","unsorted":"Netriediť tento stĺpec ","singleSort":"Jednoduché triedenie ","indirectSelectionRadio":"Row ${0}, single selection, radio box","indirectSelectionCheckBox":"Row ${0}, multiple selection, check box","selectAll":"Select all","sortingState":"${0} - ${1}"})

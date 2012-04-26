@@ -1,0 +1,1 @@
+({"selectContents":"Inhoud selecteren","deleteElement":"Element wissen","moveEnd":"Cursor verplaatsen naar eind","deleteContents":"Inhoud wissen","nodeActions":"${nodeName} Acties","selectElement":"Element selecteren","moveStart":"Cursor verplaatsen naar start"})

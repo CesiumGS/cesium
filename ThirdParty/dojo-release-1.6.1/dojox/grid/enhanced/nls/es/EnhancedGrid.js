@@ -1,0 +1,1 @@
+({"singleSort":"Orden único","indirectSelectionRadio":"Fila ${0}, selección única, botón de selección","ascending":"Ascendente","indirectSelectionCheckBox":"Fila ${0}, selección múltiple, recuadro de selección","selectAll":"Seleccionar todo","descending":"Descendente","nestedSort":"Orden anidado","unsorted":"No ordenar esta columna","sortingState":"${0} - ${1}"})

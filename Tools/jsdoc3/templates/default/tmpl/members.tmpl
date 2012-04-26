@@ -1,0 +1,23 @@
+
+<dt>
+    <h4 class="name" id="<?js= id ?>"><?js= data.attribs + name + data.signature ?></h4>
+    
+    <?js if (data.summary) { ?>
+    <p class="summary"><?js= summary ?></p>
+    <?js } ?>
+</dt>
+<dd>
+    <?js if (data.description) { ?>
+    <p class="description">
+        <?js= data.description ?>
+    </p>
+    <?js } ?>
+        
+    <?js if (data.examples && examples.length) { ?>
+        <h5>Example<?js= examples.length > 1? 's':'' ?></h5>
+        <?js= this.partial('examples.tmpl', examples) ?>
+    <?js } ?>
+	
+	<?js= this.partial('details.tmpl', data) ?>
+	<div class="hr"></div>
+</dd>

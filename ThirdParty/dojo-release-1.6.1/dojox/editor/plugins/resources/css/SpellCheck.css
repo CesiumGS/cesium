@@ -1,0 +1,43 @@
+.dijitEditorSpellCheckIcon {
+	background-image: url(../icons/spellcheck.gif);
+	background-repeat: no-repeat;
+	background-position: center center;
+	width: 18px;
+	height: 18px;
+}
+.dijitEditorSpellCheckBusyIcon {
+	background-image: url(../images/checking.gif);
+	background-repeat: no-repeat;
+	background-position: center center;
+	display: inline-block;
+	zoom: 1;
+	*display: inline;
+	width: 16px;
+	height: 16px;
+	margin: 0em 0.5em 0em 0.5em;
+}
+.dijitEditorSpellCheckTable .dijitEditorSpellCheckBox {
+	width: 15em;
+}
+.dijitEditorSpellCheckTable .listHeight {
+	height: 5em;
+}
+.dijitEditorSpellCheckTable,
+.dijitEditorSpellCheckTable td {
+	border: none;
+	border-width: 0px;
+	vertical-align: top;
+}
+.dijitEditorSpellCheckTable .alignBottom {
+	vertical-align: bottom;
+}
+.dijitEditorSpellCheckTable .blockButton,
+.dijitEditorSpellCheckTable .dijitButtonNode {
+	display: block;
+}
+.dijitEditorSpellCheckTable .topMargin {
+	margin-top: 0.56em;
+}
+.dijitEditorSpellCheckTable .hidden {
+	display: none;
+}

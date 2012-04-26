@@ -1,0 +1,1 @@
+({"saturationPickerTitle":"Doygunluk Seçici","valueLabel":"d","blueLabel":"m","saturationLabel":"d","greenLabel":"y","redLabel":"k","hueLabel":"t","hexLabel":"onaltılı","huePickerTitle":"Ton Seçici","degLabel":"°"})

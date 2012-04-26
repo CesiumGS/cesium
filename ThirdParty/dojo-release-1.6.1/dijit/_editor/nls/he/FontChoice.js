@@ -1,0 +1,1 @@
+({"noFormat":"ללא ","1":"קטן ביות","2":"קטן מאוד","formatBlock":"עיצוב","3":"קטן","4":"בינוני","5":"גדול","6":"גדול מאוד","7":"גדול ביותר","fantasy":"fantasy","serif":"serif","p":"פיסקה","pre":"מעוצב מראש","sans-serif":"sans-serif","fontName":"גופן","h1":"כותרת","h2":"תת-כותרת","h3":"תת-תת-כותרת","monospace":"monospace","fontSize":"גודל","cursive":"cursive"})

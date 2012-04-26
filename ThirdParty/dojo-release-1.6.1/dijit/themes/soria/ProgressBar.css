@@ -1,0 +1,24 @@
+
+.soria .dijitProgressBar {
+	margin:2px 0 2px 0;
+}
+.soria .dijitProgressBarEmpty{
+	
+	background:#fff url("images/progressBarEmpty.png") repeat-x center center;
+	border-color: #8ba0bd;
+}
+.soria .dijitProgressBarTile{
+	
+	background:#f0f0f0 url("images/progressBarFull.png") repeat-x center center;
+}
+.soria .dijitProgressBarFull {
+	border-right:1px solid #8ba0bd;
+}
+.soria .dijitProgressBarLabel {
+	
+	color:#293a4b;
+}
+.soria .dijitProgressBarIndeterminate .dijitProgressBarTile {
+	
+	background:#cad2de url("images/progressBarAnim.gif") repeat-x center center;
+}
