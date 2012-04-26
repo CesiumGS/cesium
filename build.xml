@@ -17,7 +17,7 @@
 	</target>
 
 	<target name="instrumentForCoverage" description="A debug build instrumented for JSCoverage (currently Windows only)." depends="build">
-		<exec executable="${jscoverage}">
+		<exec executable="${jscoveragePath}">
 			<arg line="${sourceDirectory} ${instrumentedDirectory}" />
 		</exec>
 	</target>
@@ -41,7 +41,10 @@
 	<property name="specsDirectory" location="Specs" />
 	<property name="imagesDirectory" location="Images" />
 	<property name="toolsDirectory" location="Tools" />
-	<property name="jscoverage" location="${toolsDirectory}/jscoverage-0.5.1/jscoverage.exe" />
+	<property name="thirdPartyDirectory" location="ThirdParty" />
+	<property name="rjsPath" location="${thirdPartyDirectory}/requirejs-1.0.8/r.js" />
+	<property name="almondPath" location="${thirdPartyDirectory}/almond-0.0.3/almond.js" />
+	<property name="jscoveragePath" location="${toolsDirectory}/jscoverage-0.5.1/jscoverage.exe" />
 	<property name="documentationImagesDirectory" location="Documentation/Images" />
 	<property name="jsdoc3Directory" location="${toolsDirectory}/jsdoc3" />
 	<property name="webProxyDirectory" location="${toolsDirectory}/proxy" />
@@ -52,6 +55,7 @@
 	<property name="buildOutputDirectory" location="${buildDirectory}/Cesium" />
 	<property name="buildDocumentationDirectory" location="${buildDirectory}/Documentation" />
 	<property name="buildDocumentationImagesDirectory" location="${buildDocumentationDirectory}/images" />
+	<property name="builtCesiumFile" location="${buildDirectory}/Cesium.js" />
 
 	<!-- ********************************************************************** -->
 
@@ -232,21 +236,30 @@ writer.close();
 		</condition>
 	</target>
 
+	<target name="combineJavaScript.runrjs">
+		<!-- create relative paths because r.js can't handle full Windows paths -->
+		<property name="relativeAlmondPath" location="${almondPath}" relative="true" basedir="${sourceDirectory}" />
+		<property name="relativeCesiumFilePath" location="${builtCesiumFile}" relative="true" basedir="${sourceDirectory}" />
+
+		<exec executable="${nodePath}" dir="${sourceDirectory}">
+			<arg line="${rjsPath} -o optimize=${optimize} wrap=true baseUrl=. name=${relativeAlmondPath} include=main out=${relativeCesiumFilePath}" />
+		</exec>
+	</target>
+
 	<target name="combineJavaScript.createUnminified" depends="combineJavaScript.setNodePath,combineJavaScript.createMain">
-		<exec executable="${nodePath}" dir="${sourceDirectory}">
-			<arg file="./Cesium.build.js" />
-		</exec>
-		<copy file="${buildDirectory}/Cesium.js" tofile="${buildDirectory}/CesiumUnminified.js" />
+		<antcall target="combineJavaScript.runrjs">
+			<param name="optimize" value="none" />
+		</antcall>
+		<copy file="${builtCesiumFile}" tofile="${buildDirectory}/CesiumUnminified.js" />
 	</target>
 
-	<target name="combineJavaScript.minified" if="${build.minification}" depends="combineJavaScript.createMain">
-		<exec executable="${nodePath}" dir="${sourceDirectory}">
-			<arg file="./Cesium.build.js" />
-			<arg value="true" />
-		</exec>
+	<target name="combineJavaScript.createMinified" if="${build.minification}" depends="combineJavaScript.createMain">
+		<antcall target="combineJavaScript.runrjs">
+			<param name="optimize" value="uglify" />
+		</antcall>
 	</target>
 
-	<target name="combineJavaScript" depends="combineJavaScript.createUnminified,combineJavaScript.minified" />
+	<target name="combineJavaScript" depends="combineJavaScript.createUnminified,combineJavaScript.createMinified" />
 
 	<target name="concatenateSandboxSnippets">
 		<concat destfile="${examplesDirectory}/Sandbox/CodeSnippetsConcatenated.js" fixLastLine="true">
