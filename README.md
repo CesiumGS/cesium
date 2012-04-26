@@ -5,11 +5,6 @@ Cesium
 
 Our mission is to create the leading web-based globe and map for visualizing dynamic data.  We strive for the best possible performance, precision, visual quality, ease of use, platform support, and content.
 
-### Mailing lists ###
-
-* Development - https://groups.google.com/d/forum/cesium-dev
-* Announcements - https://groups.google.com/d/forum/cesium-announce
-
 ### Demos ###
 
 * Main website - http://cesium.agi.com/
@@ -26,3 +21,17 @@ Our mission is to create the leading web-based globe and map for visualizing dyn
 <a href="http://cesium.agi.com/Sandbox/Examples/Sandbox/" title="Live-coding sandbox"><img src="http://cesium.agi.com/t-Sandbox.jpg" width="176" height="99" alt="Live-coding sandbox"></a>
 <a href="http://cesium.agi.com/Documentation/" title="Documentation"><img src="http://cesium.agi.com/t-CesiumDoc.jpg" width="176" height="99" alt="Documentation"></a>
 <a href="http://cesium.agi.com/CesiumViewer/" title="Cesium Viewer (empty)"><img src="http://cesium.agi.com/t-CesiumViewer.jpg" width="176" height="99" alt="Cesium Viewer (empty)"></a>
+
+### License ###
+
+(Apache 2.0)[http://www.apache.org/licenses/LICENSE-2.0.html].  Cesium is free for both commercial and non-commercial use.
+
+### Developer Community ###
+
+* (Contributor's Guide)[https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor's-Guide] - how to get the code, build, etc.  It's easy.
+* (Roadmap)[https://github.com/AnalyticalGraphicsInc/cesium/wiki/Roadmap] - where we are heading.
+* (Presentations and Publications)[https://github.com/AnalyticalGraphicsInc/cesium/wiki/Presentations-and-Publications] - on Cesium and the underlying technology.
+* Mailing lists
+   * Development - https://groups.google.com/d/forum/cesium-dev
+   * Announcements - https://groups.google.com/d/forum/cesium-announce
+
