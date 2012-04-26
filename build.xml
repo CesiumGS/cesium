@@ -44,6 +44,7 @@
 	<property name="jscoverage" location="${toolsDirectory}/jscoverage-0.5.1/jscoverage.exe" />
 	<property name="documentationImagesDirectory" location="Documentation/Images" />
 	<property name="jsdoc3Directory" location="${toolsDirectory}/jsdoc3" />
+	<property name="webProxyDirectory" location="${toolsDirectory}/proxy" />
 
 	<!-- Outputs -->
 	<property name="buildDirectory" location="Build" />
@@ -235,7 +236,7 @@ writer.close();
 		<exec executable="${nodePath}" dir="${sourceDirectory}">
 			<arg file="./Cesium.build.js" />
 		</exec>
-		<copy file="${buildDirectory}\Cesium.js" tofile="${buildDirectory}\CesiumUnminified.js" />
+		<copy file="${buildDirectory}/Cesium.js" tofile="${buildDirectory}/CesiumUnminified.js" />
 	</target>
 
 	<target name="combineJavaScript.minified" if="${build.minification}" depends="combineJavaScript.createMain">
@@ -280,5 +281,15 @@ writer.close();
 		<copy todir="${buildDocumentationImagesDirectory}">
 			<fileset dir="${documentationImagesDirectory}" />
 		</copy>
+	</target>
+
+	<target name="runServer">
+		<taskdef name="server" classname="com.agi.ServerTask">
+			<classpath>
+				<fileset dir="${webProxyDirectory}" includes="**/*.jar" />
+			</classpath>
+		</taskdef>
+
+		<server proxyContextPath="/proxy" allowedHostList="server.arcgisonline.com,tile.openstreetmap.org,otile1.mqcdn.com,oatile1.mqcdn.com,dev.virtualearth.net" port="8080" baseDir="${basedir}" />
 	</target>
 </project>
