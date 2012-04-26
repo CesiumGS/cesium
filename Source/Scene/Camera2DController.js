@@ -377,9 +377,11 @@ define([
      * @example
      * controller = controller && controller.destroy();
      */
-    Camera2DController.prototype.destroy = function () {
+    Camera2DController.prototype.destroy = function() {
         this._translateHandler = this._translateHandler && this._translateHandler.destroy();
         this._zoomHandler = this._zoomHandler && this._zoomHandler.destroy();
+        this._zoomWheel = this._zoomWheel && this._zoomWheel.destroy();
+        this._twistHandler = this._twistHandler && this._twistHandler.destroy();
         return destroyObject(this);
     };
 

@@ -23,7 +23,7 @@ defineSuite([
     var frustum;
     var moverate;
     var rotaterate;
-    var csc;
+    var csc, csc2;
 
     beforeEach(function() {
         moverate = 3.0;
@@ -48,6 +48,11 @@ defineSuite([
 
         csc = new CameraSpindleController(document, camera, Ellipsoid.getWgs84());
         csc.constrainedZAxis = false;
+    });
+
+    afterEach(function() {
+        csc = csc && csc.destroy();
+        csc2 = csc2 && csc2.destroy();
     });
 
     it("move up", function() {
@@ -108,7 +113,7 @@ defineSuite([
         camera2.right = right;
         camera2.frustum = frustum;
 
-        var csc2 = new CameraSpindleController(document, camera2, Ellipsoid.getWgs84());
+        csc2 = new CameraSpindleController(document, camera2, Ellipsoid.getWgs84());
         var angle = CesiumMath.PI_OVER_TWO;
 
         csc.rotate(new Cartesian3(Math.cos(CesiumMath.PI_OVER_FOUR), Math.sin(CesiumMath.PI_OVER_FOUR), 0.0), angle);

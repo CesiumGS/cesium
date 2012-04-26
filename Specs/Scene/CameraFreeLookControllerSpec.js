@@ -47,6 +47,10 @@ defineSuite([
         cflc = new CameraFreeLookController(document, camera);
     });
 
+    afterEach(function() {
+        cflc = cflc.destroy();
+    });
+
     it("move forward", function() {
         cflc.moveForward(moverate);
         expect(camera.position.equals(new Cartesian3(0.0, 0.0, -moverate))).toBeTruthy();

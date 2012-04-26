@@ -534,9 +534,10 @@ define([
      * @example
      * controller = controller && controller.destroy();
      */
-    CameraSpindleController.prototype.destroy = function () {
+    CameraSpindleController.prototype.destroy = function() {
         this._spinHandler = this._spinHandler && this._spinHandler.destroy();
         this._zoomHandler = this._zoomHandler && this._zoomHandler.destroy();
+        this._zoomWheel = this._zoomWheel && this._zoomWheel.destroy();
         return destroyObject(this);
     };
 
