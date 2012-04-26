@@ -61,7 +61,7 @@ defineSuite([
         blueImage.src = "./Data/Images/Blue.png";
 
         blueAlphaImage = new Image();
-        blueAlphaImage.src = "./Data/Images/blueAlpha.png";
+        blueAlphaImage.src = "./Data/Images/BlueAlpha.png";
 
         blueOverRedImage = new Image();
         blueOverRedImage.src = "./Data/Images/BlueOverRed.png";
