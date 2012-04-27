@@ -1,9 +1,4 @@
-defineSuite([
-         'Core/TimeStandard',
-         'Core/JulianDate'
-     ], function(
-         TimeStandard,
-         JulianDate) {
+defineSuite(['Core/TimeStandard', 'Core/JulianDate'], function(TimeStandard, JulianDate) {
     "use strict";
     /*global it,expect*/
 
@@ -24,7 +19,6 @@ defineSuite([
         var julianDateUtc2 = TimeStandard.convertTaiToUtc(julianDateTai);
 
         expect(julianDateUtc2.equals(julianDateUtc)).toBeTruthy();
-
         expect(julianDateUtc2.getJulianDayNumber()).toEqual(julianDateTai.getJulianDayNumber());
         expect(julianDateUtc2.getSecondsOfDay()).toEqual(julianDateTai.getSecondsOfDay() - 34);
     });
@@ -39,6 +33,12 @@ defineSuite([
         var julianDate = JulianDate.createFromDate(new Date(), TimeStandard.UTC);
         var julianDateUtc = TimeStandard.convertTaiToUtc(julianDate);
         expect(julianDate.equals(julianDateUtc)).toBeTruthy();
+    });
+
+    it("converting from a TAI leap second is undefined", function() {
+        var julianDate = new JulianDate(2454832, 43233, TimeStandard.TAI);
+        var julianDateTai = TimeStandard.convertTaiToUtc(julianDate);
+        expect(julianDateTai).toEqual(undefined);
     });
 
     it("throws an exception when converting from UTC to TAI with undefined JulianDate", function() {
