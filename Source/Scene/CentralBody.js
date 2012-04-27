@@ -1138,10 +1138,6 @@ define([
                  SkyAtmosphereVS;
 
             fs = "#line 0\n" +
-                 ShadersRay +
-                 "#line 0\n" +
-                 ShadersConstructiveSolidGeometry +
-                 "#line 0\n" +
                  SkyAtmosphereFS;
 
             this._spSkyFromSpace = context.getShaderCache().getShaderProgram(vs, fs);
@@ -1250,10 +1246,6 @@ define([
         if (!this._spDepth) {
             this._spDepth = context.getShaderCache().getShaderProgram(
                     CentralBodyVSDepth,
-                    "#line 0\n" +
-                    ShadersRay +
-                    "#line 0\n" +
-                    ShadersConstructiveSolidGeometry +
                     "#line 0\n" +
                     CentralBodyFSDepth, {
                         position : 0

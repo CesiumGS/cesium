@@ -405,3 +405,283 @@ vec4 agi_columbusViewMorph(vec3 position2D, vec3 position3D, float time)
     vec3 p = mix(position2D, position3D, time);
     return vec4(p, 1.0);
 } 
+
+///////////////////////////////////////////////////////////////////////////////
+
+/**
+ * DOC_TBA
+ *
+ * @name agi_ray
+ * @glslStruct
+ */
+struct agi_ray
+{
+    vec3 origin;
+    vec3 direction;
+};
+
+/**
+ * Computes the point along a ray at the given time.  <code>time</code> can be positive, negative, or zero.
+ *
+ * @name agi_pointAlongRay
+ * @glslFunction
+ *
+ * @param {agi_ray} ray The ray to compute the point along.
+ * @param {float} time The time along the ray.
+ * 
+ * @returns {vec3} The point along the ray at the given time.
+ * 
+ * @example
+ * agi_ray ray = agi_ray(vec3(0.0), vec3(1.0, 0.0, 0.0)); // origin, direction
+ * vec3 v = agi_pointAlongRay(ray, 2.0); // (2.0, 0.0, 0.0)
+ */
+vec3 agi_pointAlongRay(agi_ray ray, float time)
+{
+    return ray.origin + (time * ray.direction);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+/**
+ * DOC_TBA
+ *
+ * @name agi_raySegment
+ * @glslStruct
+ */
+struct agi_raySegment
+{
+    float start;
+    float stop;
+};
+
+/**
+ * DOC_TBA
+ *
+ * @name agi_emptyRaySegment
+ * @glslConstant 
+ */
+const agi_raySegment agi_emptyRaySegment = agi_raySegment(-agi_infinity, -agi_infinity);
+
+/**
+ * DOC_TBA
+ *
+ * @name agi_emptyRaySegment
+ * @glslConstant 
+ */
+const agi_raySegment agi_fullRaySegment = agi_raySegment(0.0, agi_infinity);
+
+/**
+ * Determines if a time interval is empty.
+ *
+ * @name agi_isEmpty
+ * @glslFunction 
+ * 
+ * @param {agi_raySegment} interval The interval to test.
+ * 
+ * @returns {bool} <code>true</code> if the time interval is empty; otherwise, <code>false</code>.
+ *
+ * @example
+ * bool b0 = agi_isEmpty(agi_emptyRaySegment);      // true
+ * bool b1 = agi_isEmpty(agi_raySegment(0.0, 1.0)); // false
+ * bool b2 = agi_isEmpty(agi_raySegment(1.0, 1.0)); // false, contains 1.0.
+ */
+bool agi_isEmpty(agi_raySegment interval)
+{
+    return (interval.stop < 0.0);
+}
+
+/**
+ * Determines if a time interval is empty.
+ *
+ * @name agi_isFull
+ * @glslFunction 
+ * 
+ * @param {agi_raySegment} interval The interval to test.
+ * 
+ * @returns {bool} <code>true</code> if the time interval is empty; otherwise, <code>false</code>.
+ *
+ * @example
+ * bool b0 = agi_isEmpty(agi_emptyRaySegment);      // true
+ * bool b1 = agi_isEmpty(agi_raySegment(0.0, 1.0)); // false
+ * bool b2 = agi_isEmpty(agi_raySegment(1.0, 1.0)); // false, contains 1.0.
+ */
+bool agi_isFull(agi_raySegment interval)
+{
+    return (interval.start == 0.0 && interval.stop == agi_infinity);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+/**
+ * DOC_TBA
+ *
+ * @name agi_ellipsoid
+ * @glslStruct
+ */
+struct agi_ellipsoid
+{
+    vec3 center;
+    vec3 radii;
+    vec3 inverseRadii;
+    vec3 inverseRadiiSquared;
+};
+
+/**
+ * DOC_TBA
+ *
+ * @name agi_ellipsoidNew
+ * @glslFunction
+ *
+ */
+agi_ellipsoid agi_ellipsoidNew(vec3 center, vec3 radii)
+{
+    vec3 inverseRadii = vec3(1.0 / radii.x, 1.0 / radii.y, 1.0 / radii.z);
+    vec3 inverseRadiiSquared = inverseRadii * inverseRadii;
+    agi_ellipsoid temp = agi_ellipsoid(center, radii, inverseRadii, inverseRadiiSquared);
+    return temp;
+}
+
+/**
+ * DOC_TBA
+ *
+ * @name agi_ellipsoidContainsPoint
+ * @glslFunction
+ *
+ */
+bool agi_ellipsoidContainsPoint(agi_ellipsoid ellipsoid, vec3 point)
+{
+    vec3 scaled = ellipsoid.inverseRadii * (agi_inverseView * vec4(point, 1.0)).xyz;
+    return (dot(scaled, scaled) <= 1.0);
+}
+
+/**
+ * DOC_TBA
+ *
+ * @name agi_ellipsoidNormal
+ * @glslFunction
+ *
+ */
+vec3 agi_ellipsoidNormal(agi_ellipsoid ellipsoid, vec3 pointOnEllipsoid)
+{
+    vec3 n = ellipsoid.inverseRadiiSquared * (agi_inverseView * vec4(pointOnEllipsoid, 1.0)).xyz;
+    vec3 rotated = (agi_view * vec4(n, 0.0)).xyz;
+    return normalize(rotated);
+}
+
+/**
+ * DOC_TBA
+ *
+ *
+ * @name agi_rayEllipsoidIntersectionInterval
+ * @glslFunction
+ */
+agi_raySegment agi_rayEllipsoidIntersectionInterval(agi_ray ray, agi_ellipsoid ellipsoid)
+{
+    vec3 q = ellipsoid.inverseRadii * (agi_inverseView * vec4(ray.origin, 1.0)).xyz;
+    vec3 w = ellipsoid.inverseRadii * (agi_inverseView * vec4(ray.direction, 0.0)).xyz;
+   
+    float q2 = dot(q, q);
+    float qw = dot(q, w);
+    
+    if (q2 > 1.0) // Outside ellipsoid.
+    {
+        if (qw >= 0.0) // Looking outward or tangent (0 intersections).
+        {
+            return agi_emptyRaySegment;
+        }
+        else // qw < 0.0.
+        {
+            float qw2 = qw * qw;
+            float difference = q2 - 1.0; // Positively valued.
+            float w2 = dot(w, w);
+            float product = w2 * difference;
+            
+            if (qw2 < product) // Imaginary roots (0 intersections).
+            {
+                return agi_emptyRaySegment;     
+            }   
+            else if (qw2 > product) // Distinct roots (2 intersections).
+            {
+                float discriminant = qw * qw - product;
+                float temp = -qw + sqrt(discriminant); // Avoid cancellation.
+                float root0 = temp / w2;
+                float root1 = difference / temp;
+                if (root0 < root1)
+                {
+                    agi_raySegment i = agi_raySegment(root0, root1);
+                    return i;
+                }
+                else
+                {
+                    agi_raySegment i = agi_raySegment(root1, root0);
+                    return i;
+                }
+            }
+            else // qw2 == product.  Repeated roots (2 intersections).
+            {
+                float root = sqrt(difference / w2);
+                agi_raySegment i = agi_raySegment(root, root);
+                return i;
+            }
+        }
+    }
+    else if (q2 < 1.0) // Inside ellipsoid (2 intersections).
+    {
+        float difference = q2 - 1.0; // Negatively valued.
+        float w2 = dot(w, w);
+        float product = w2 * difference; // Negatively valued.
+        if (qw < 0.0) // Looking inward.
+        {
+            float discriminant = qw * qw - product;
+            float temp = qw - sqrt(discriminant); // Avoid cancellation.  Negatively valued.
+            agi_raySegment i = agi_raySegment(0.0, difference / temp);
+            return i;
+        }
+        else if (qw > 0.0) // Looking outward.
+        {
+            float discriminant = qw * qw - product;
+            float temp = qw + sqrt(discriminant); // Avoid cancellation. Positively valued.
+            agi_raySegment i = agi_raySegment(0.0, temp / w2);
+            return i;
+        }
+        else // qw == 0.0 // Looking tangent.
+        {
+            float temp = sqrt(-product);
+            agi_raySegment i = agi_raySegment(0.0, temp / w2);
+            return i;
+        }
+    }
+    else // q2 == 1.0. On ellipsoid.
+    {
+        if (qw < 0.0) // Looking inward.
+        {
+            float w2 = dot(w, w);
+            agi_raySegment i = agi_raySegment(0.0, -qw / w2);
+            return i;
+        }
+        else // qw >= 0.0.  Looking outward or tangent.
+        {
+            return agi_emptyRaySegment;
+        }
+    }
+}
+
+/**
+ * Returns the WGS84 ellipsoid, with its center at the origin of world coordinates, in eye coordinates.
+ *
+ * @name agi_getWgs84EllipsoidEC
+ * @glslFunction
+ *
+ * @returns {agi_ellipsoid} The WGS84 ellipsoid, with its center at the origin of world coordinates, in eye coordinates.
+ *
+ * @see Ellipsoid.getWgs84
+ *
+ * @example
+ * agi_ellipsoid ellipsoid = agi_getWgs84EllipsoidEC();
+ */
+agi_ellipsoid agi_getWgs84EllipsoidEC()
+{
+    return agi_ellipsoidNew(
+        vec3(agi_view[3].x, agi_view[3].y, agi_view[3].z),              // center
+        vec3(6378137.0, 6378137.0, 6356752.314245));                    // radii
+}
