@@ -168,7 +168,8 @@ define([
                      new LeapSecond("July 1, 1997 00:00:00 UTC", 31),
                      new LeapSecond("January 1, 1999 00:00:00 UTC", 32),
                      new LeapSecond("January 1, 2006 00:00:00 UTC", 33),
-                     new LeapSecond("January 1, 2009 00:00:00 UTC", 34)
+                     new LeapSecond("January 1, 2009 00:00:00 UTC", 34),
+                     new LeapSecond("July 1, 2012 00:00:00 UTC", 35)
                  ];
         }
         return LeapSecond._leapSeconds;
