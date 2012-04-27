@@ -1,15 +1,6 @@
-defineSuite([
-         'Core/JulianDate',
-         'Core/TimeStandard',
-         'Core/TimeConstants',
-         'Core/Math'
-     ], function(
-         JulianDate,
-         TimeStandard,
-         TimeConstants,
-         CesiumMath) {
+defineSuite(['Core/JulianDate', 'Core/TimeStandard', 'Core/TimeConstants', 'Core/Math'], function(JulianDate, TimeStandard, TimeConstants, CesiumMath) {
     "use strict";
-    /*global it,expect*/
+    /*global it, xit, expect*/
 
     // All exact Julian Dates found using NASA's Time Conversion Tool: http://ssd.jpl.nasa.gov/tc.cgi
     it("Construct a default date", function() {
@@ -263,6 +254,17 @@ defineSuite([
         }).toThrow();
     });
 
+    it("Construct a date from ISO8601.", function() {
+        var julianDate = JulianDate.createFromIso8601("2009-01-01T00:00:00Z");
+        expect(julianDate.equals(new JulianDate(2454832, 43234, TimeStandard.TAI))).toBeTruthy();
+    });
+
+    //FIXME JulianDate.createFromIso8601 does not currently work for leap seconds.
+    xit("Construct a date from ISO8601 on a leap second.", function() {
+        var julianDate = JulianDate.createFromIso8601("2008-12-31T23:59:60Z");
+        expect(julianDate.equals(new JulianDate(2454832, 43233, TimeStandard.TAI))).toBeTruthy();
+    });
+
     it("getJulianTimeFraction works.", function() {
         var seconds = 12345.678;
         var fraction = seconds / 86400.0;
@@ -293,6 +295,11 @@ defineSuite([
         expect(javascriptDate.getUTCMinutes()).toEqual(47);
         expect(javascriptDate.getUTCSeconds()).toEqual(11);
         expect(javascriptDate.getUTCMilliseconds()).toEqualEpsilon(500, 10);
+    });
+
+    it("getDate works on a leap second", function() {
+        var date = new JulianDate(2454832, 43233, TimeStandard.TAI).getDate();
+        expect(date).toEqual(new Date("1/1/2009 12:00:00 AM UTC"));
     });
 
     it("getSecondsDifference works in UTC", function() {

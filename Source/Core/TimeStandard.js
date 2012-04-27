@@ -1,12 +1,5 @@
 /*global define*/
-define(['require',
-        './DeveloperError',
-        './binarySearch',
-        './LeapSecond'],
-function(require,
-         DeveloperError,
-         binarySearch,
-         LeapSecond) {
+define(['require', './DeveloperError', './binarySearch', './LeapSecond'], function(require, DeveloperError, binarySearch, LeapSecond) {
     "use strict";
 
     var JulianDate = function(a, b, c) {
@@ -64,8 +57,8 @@ function(require,
          * @exception {DeveloperError} <code>julianDate</code> is required.
          * @exception {DeveloperError} <code>julianDate</code> is not in the TAI time standard.
          *
-         * @return {JulianDate} A Julian date representing the input date in the UTC time standard.
-         * @return {Boolean} <code>false</code> if the requested date is during the moment of a leap second.
+         * @return {JulianDate} A Julian date representing the input date in the UTC time standard,
+         *                      or <code>undefined</code> if the requested date is during the moment of a leap second.
          *
          * @performance Expected <code>O(log n)</code>, where <code>n</code> is the number of elements
          * in the list of existing leap seconds returned by {@link LeapSecond.getLeapSeconds}.
@@ -108,7 +101,7 @@ function(require,
                     var secondsSinceLeapSecond = julianDate.getSecondsOfDay() - leapSecondDate.getSecondsOfDay();
                     if (secondsSinceLeapSecond >= mostRecentOffset - 1 && secondsSinceLeapSecond < mostRecentOffset) {
                         // if the requested date is during the moment of a leap second, then we cannot convert to UTC
-                        return false;
+                        return undefined;
                     }
 
                     if (secondsSinceLeapSecond < mostRecentOffset) {

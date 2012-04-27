@@ -36,22 +36,21 @@ define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond',
     }
 
     /**
-     * Constructs an immutable JulianDate instance from a Julian day number and the number of seconds elapsed
+     * <p>Constructs an immutable JulianDate instance from a Julian day number and the number of seconds elapsed
      * into that day as arguments (along with an optional time standard).  Passing no parameters will
-     * construct a JulianDate that represents the current system time.
-     * <br/>
-     * An astronomical Julian Date is the number of days since noon on January 1, -4712 (4713 BC).
+     * construct a JulianDate that represents the current system time.</p>
+     *
+     * <p>An astronomical Julian Date is the number of days since noon on January 1, -4712 (4713 BC).
      * For increased precision, this class stores the whole number part of the date and the seconds
-     * part of the date in separate components.
-     * <br/>
-     * This type assumes that days always have TimeConstants.SECONDS_PER_DAY (86400.0) seconds.
+     * part of the date in separate components.</p>
+     *
+     * <p>This type assumes that days always have TimeConstants.SECONDS_PER_DAY (86400.0) seconds.
      * When using a JulianDate with the (UTC) time standard, a day with a leap second actually
      * has 86401.0 seconds.  The end result is that JulianDate cannot represent the moment of a
      * leap second with the UTC time standard. However, it can represent the moment of a leap second in the
      * International Atomic Time standard {@link TimeStandard.TAI}.  Also, subtracting
      * two UTC dates that are on opposite sides of a leap second will correctly take the leap second into
-     * account.
-     * <br/>
+     * account.</p>
      *
      * @name JulianDate
      * @constructor
@@ -191,8 +190,9 @@ define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond',
      * var julianDate = JulianDate.createFromIso8601("2012-04-24T18:08Z");
      */
     JulianDate.createFromIso8601 = function(iso8601String, timeStandard) {
-        //TODO We may be able to optimized this by parsing the date ourself.
-        //If so, make sure we micro-benchmark to be sure it actually helps.
+        //FIXME Date.parse is only accurate to the millisecond and fails
+        //completely on leap seconds.  We should parse the string directly.
+
         var totalMilliseconds = Date.parse(iso8601String);
         if (totalMilliseconds === null || isNaN(totalMilliseconds)) {
             throw new DeveloperError("Valid ISO 8601 date string required.", "iso8601String");
@@ -253,6 +253,8 @@ define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond',
             b = TimeStandard.convertUtcToTai(b);
         }
 
+        //Recompute dayDifference after changing time standards.
+        dayDifference = (a._julianDayNumber - b._julianDayNumber);
         if (dayDifference !== 0) {
             return dayDifference;
         }
@@ -336,7 +338,7 @@ define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond',
 
     /**
      * Returns a JavaScript Date object equivalent to the Julian date
-     * (accurate to the nearest second in the UTC time standard).
+     * (accurate to the nearest millisecond in the UTC time standard).
      *
      * @memberof JulianDate
      *
@@ -348,6 +350,12 @@ define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond',
             var secondsOfDay = this._secondsOfDay;
             if (this._timeStandard === TimeStandard.TAI) {
                 var julianDateTai = TimeStandard.convertTaiToUtc(this);
+
+                //If julianDateTai is null, we are at a leap second, which can't be represented in UTC.
+                //Since JavaScript has no concept of leap seconds, we add a second to match how Date would represent it.
+                if (typeof julianDateTai === 'undefined') {
+                    julianDateTai = TimeStandard.convertTaiToUtc(this.addSeconds(1));
+                }
                 julianDayNumber = julianDateTai._julianDayNumber;
                 secondsOfDay = julianDateTai._secondsOfDay;
             }
@@ -693,7 +701,9 @@ define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond',
      *
      * @return {Boolean} <code>true</code> if this JulianDate is chronologically earlier than <code>other</code>; otherwise, <code>false</code>.
      *
+     * @see JulianDate#lessThanOrEquals
      * @see JulianDate#greaterThan
+     * @see JulianDate#greaterThanOrEquals
      *
      * @example
      * var start = JulianDate.createFromDate(new Date("July 6, 1991 12:00:00"));
@@ -704,6 +714,24 @@ define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond',
         return JulianDate.compare(this, other) < 0;
     };
 
+    /**
+     * Returns true if <code>other</code> occurs at or after this Julian date.
+     *
+     * @memberof JulianDate
+     *
+     * @param {JulianDate} other The Julian date to be compared.
+     *
+     * @return {Boolean} <code>true</code> if this JulianDate is chronologically less than or equal to<code>other</code>; otherwise, <code>false</code>.
+     *
+     * @see JulianDate#lessThan
+     * @see JulianDate#greaterThan
+     * @see JulianDate#greaterThanOrEquals
+     *
+     * @example
+     * var start = JulianDate.createFromDate(new Date("July 6, 1991 12:00:00"));
+     * var end = JulianDate.createFromDate(new Date("July 6, 2011 12:00:00"));
+     * start.lessThanOrEquals(end);     // true
+     */
     JulianDate.prototype.lessThanOrEquals = function(other) {
         return JulianDate.compare(this, other) <= 0;
     };
@@ -718,6 +746,8 @@ define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond',
      * @return {Boolean} <code>true</code> if this JulianDate is chronologically later than <code>other</code>; otherwise, <code>false</code>.
      *
      * @see JulianDate#lessThan
+     * @see JulianDate#lessThanOrEquals
+     * @see JulianDate#greaterThanOrEquals
      *
      * @example
      * var start = JulianDate.createFromDate(new Date("July 6, 1991 12:00:00"));
@@ -728,6 +758,24 @@ define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond',
         return JulianDate.compare(this, other) > 0;
     };
 
+    /**
+     * Returns true if <code>other</code> occurs at or before this Julian date.
+     *
+     * @memberof JulianDate
+     *
+     * @param {JulianDate} other The Julian date to be compared.
+     *
+     * @return {Boolean} <code>true</code> if this JulianDate is chronologically later than or equal to <code>other</code>; otherwise, <code>false</code>.
+     *
+     * @see JulianDate#lessThan
+     * @see JulianDate#lessThanOrEquals
+     * @see JulianDate#greaterThan
+     *
+     * @example
+     * var start = JulianDate.createFromDate(new Date("July 6, 1991 12:00:00"));
+     * var end = JulianDate.createFromDate(new Date("July 6, 2011 12:00:00"));
+     * end.greaterThanOrEquals(start);      // true
+     */
     JulianDate.prototype.greaterThanOrEquals = function(other) {
         return JulianDate.compare(this, other) >= 0;
     };
