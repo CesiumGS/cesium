@@ -82,19 +82,11 @@ define([
         }
     }
 
-    //TODO: Assign the matrix to _coefsMat when the build process takes into
-    //      account dependencies between files.
-    var _catmullRomCoefficientMatrix = null;
-    CatmullRomSpline.catmullRomCoefficientMatrix = function() {
-        if (!_catmullRomCoefficientMatrix) {
-            _catmullRomCoefficientMatrix = new Matrix4(
-                   -0.5,  1.0, -0.5,  0.0,
-                    1.5, -2.5,  0.0,  1.0,
-                   -1.5,  2.0,  0.5,  0.0,
-                    0.5, -0.5,  0.0,  0.0);
-        }
-        return _catmullRomCoefficientMatrix;
-    };
+    CatmullRomSpline.catmullRomCoefficientMatrix = new Matrix4(
+            -0.5,  1.0, -0.5,  0.0,
+             1.5, -2.5,  0.0,  1.0,
+            -1.5,  2.0,  0.5,  0.0,
+             0.5, -0.5,  0.0,  0.0);
 
     /**
      * Returns the array of control points.
@@ -214,19 +206,19 @@ define([
             p1 = this._points[1].point;
             p2 = this._ti;
             p3 = this._points[2].point.subtract(p0).multiplyWithScalar(0.5);
-            coefs = HermiteSpline.hermiteCoefficientMatrix().multiplyWithVector(timeVec);
+            coefs = HermiteSpline.hermiteCoefficientMatrix.multiplyWithVector(timeVec);
         } else if (i === this._points.length - 2) {
             p0 = this._points[i].point;
             p1 = this._points[i + 1].point;
             p2 = p1.subtract(this._points[i - 1].point).multiplyWithScalar(0.5);
             p3 = this._to;
-            coefs = HermiteSpline.hermiteCoefficientMatrix().multiplyWithVector(timeVec);
+            coefs = HermiteSpline.hermiteCoefficientMatrix.multiplyWithVector(timeVec);
         } else {
             p0 = this._points[i - 1].point;
             p1 = this._points[i].point;
             p2 = this._points[i + 1].point;
             p3 = this._points[i + 2].point;
-            coefs = CatmullRomSpline.catmullRomCoefficientMatrix().multiplyWithVector(timeVec);
+            coefs = CatmullRomSpline.catmullRomCoefficientMatrix.multiplyWithVector(timeVec);
         }
         p0 = p0.multiplyWithScalar(coefs.x);
         p1 = p1.multiplyWithScalar(coefs.y);
