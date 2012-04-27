@@ -79,19 +79,11 @@ define([
         }
     }
 
-    //TODO: Assign the matrix to _coefsMat when the build process takes into
-    //      account dependencies between files.
-    var _hermiteCoefficientMatrix = null;
-    HermiteSpline.hermiteCoefficientMatrix = function() {
-        if (!_hermiteCoefficientMatrix) {
-            _hermiteCoefficientMatrix = new Matrix4(
-                    2.0, -3.0,  0.0,  1.0,
-                   -2.0,  3.0,  0.0,  0.0,
-                    1.0, -2.0,  1.0,  0.0,
-                    1.0, -1.0,  0.0,  0.0);
-        }
-        return _hermiteCoefficientMatrix;
-    };
+    HermiteSpline.hermiteCoefficientMatrix = new Matrix4(
+             2.0, -3.0,  0.0,  1.0,
+            -2.0,  3.0,  0.0,  0.0,
+             1.0, -2.0,  1.0,  0.0,
+             1.0, -1.0,  0.0,  0.0);
 
     HermiteSpline.prototype._findIndex = function(time) {
         // Take advantage of temporal coherence by checking current, next and previous intervals
@@ -229,7 +221,7 @@ define([
         var timeVec = new Cartesian4(0.0, u * u, u, 1.0);
         timeVec.x = timeVec.y * u;
 
-        var coefs = HermiteSpline.hermiteCoefficientMatrix().multiplyWithVector(timeVec);
+        var coefs = HermiteSpline.hermiteCoefficientMatrix.multiplyWithVector(timeVec);
         var p0 = this._points[i].point.multiplyWithScalar(coefs.x);
         var p1 = this._points[i + 1].point.multiplyWithScalar(coefs.y);
         var p2 = this._points[i].tangent.multiplyWithScalar(coefs.z);
