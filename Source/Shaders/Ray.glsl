@@ -136,8 +136,8 @@ struct agi_raySegmentCollection
  */
 agi_raySegmentCollection agi_raySegmentCollectionNew()
 {
-    agi_raySegment intervals[agi_raySegmentCollectionCapacity];
-    agi_raySegmentCollection i = agi_raySegmentCollection(intervals, 0);
+    agi_raySegmentCollection i;
+    i.count = 0;
     return i;
 }
 
@@ -150,9 +150,9 @@ agi_raySegmentCollection agi_raySegmentCollectionNew()
  */
 agi_raySegmentCollection agi_raySegmentCollectionNew(agi_raySegment segment)
 {
-    agi_raySegment intervals[agi_raySegmentCollectionCapacity];
-    intervals[0] = segment;
-    agi_raySegmentCollection i = agi_raySegmentCollection(intervals, 1);
+    agi_raySegmentCollection i;
+    i.intervals[0] = segment;
+    i.count = 1;
     return i;
 }
 
@@ -165,10 +165,10 @@ agi_raySegmentCollection agi_raySegmentCollectionNew(agi_raySegment segment)
  */
 agi_raySegmentCollection agi_raySegmentCollectionNew(agi_raySegment first, agi_raySegment second)
 {
-    agi_raySegment intervals[agi_raySegmentCollectionCapacity];
-    intervals[0] = first;
-    intervals[1] = second;
-    agi_raySegmentCollection i = agi_raySegmentCollection(intervals, 2);
+    agi_raySegmentCollection i;
+    i.intervals[0] = first;
+    i.intervals[1] = second;
+    i.count = 2;
     return i;
 }
 
