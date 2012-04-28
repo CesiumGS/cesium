@@ -8,11 +8,11 @@ define([
     "use strict";
 
     var JulianDate = {};
-    JulianDate.createFromDate = function(a, b) {
+    JulianDate.fromDate = function(a, b) {
         //because of the circular reference between JulianDate and TimeStandard,
         //we need to require JulianDate later and replace our reference
         JulianDate = require('./JulianDate');
-        return JulianDate.createFromDate(a, b);
+        return JulianDate.fromDate(a, b);
     };
 
     /**
@@ -37,7 +37,7 @@ define([
      * @example
      * // Example 1. Construct a LeapSecond using a JulianDate
      * var date = new Date("January 1, 1990 00:00:00 UTC");
-     * var leapSecond = new LeapSecond(JulianDate.createFromDate(date), 25.0);
+     * var leapSecond = new LeapSecond(JulianDate.fromDate(date), 25.0);
      * var offset = leapSecond.offset;    // 25.0
      *
      * //////////////////////////////////////////////////////////////////
@@ -61,7 +61,7 @@ define([
             julianDate = date;
             totalTaiOffsetFromUtc = offset;
         } else if (typeof date === 'string') {
-            julianDate = JulianDate.createFromDate(new Date(date));
+            julianDate = JulianDate.fromDate(new Date(date));
             totalTaiOffsetFromUtc = offset;
         }
 
@@ -186,8 +186,8 @@ define([
      *
      * @example
      * var date = new Date("January 1, 1990 00:00:00 UTC");
-     * var leapSecond1 = new LeapSecond(JulianDate.createFromDate(date), 25.0);
-     * var leapSecond2 = new LeapSecond(JulianDate.createFromDate(date), 25.0);
+     * var leapSecond1 = new LeapSecond(JulianDate.fromDate(date), 25.0);
+     * var leapSecond2 = new LeapSecond(JulianDate.fromDate(date), 25.0);
      * leapSecond1.equals(leapSecond2);     // true
      */
     LeapSecond.prototype.equals = function(other) {
@@ -212,8 +212,8 @@ define([
      *
      * @example
      * var date = new Date("January 1, 2006 00:00:00 UTC");
-     * var leapSecond1 = new LeapSecond(JulianDate.createFromDate(date), 33.0);
-     * var leapSecond2 = new LeapSecond(JulianDate.createFromDate(date), 34.0);
+     * var leapSecond1 = new LeapSecond(JulianDate.fromDate(date), 33.0);
+     * var leapSecond2 = new LeapSecond(JulianDate.fromDate(date), 34.0);
      * LeapSecond.compareLeapSecondDate(leapSecond1, leapSecond2);    // returns 0
      */
     LeapSecond.compareLeapSecondDate = function(leapSecond1, leapSecond2) {

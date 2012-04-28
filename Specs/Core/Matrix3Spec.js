@@ -73,7 +73,7 @@ defineSuite([
                       4, 5, 6,
                       7, 8, 9];
 
-        var m = Matrix3.createFromColumnMajorArray(values);
+        var m = Matrix3.fromColumnMajorArray(values);
         expect(m.getColumn0Row0()).toEqual(1);
         expect(m.getColumn0Row1()).toEqual(2);
         expect(m.getColumn0Row2()).toEqual(3);
@@ -86,7 +86,7 @@ defineSuite([
     });
 
     it("creates from a column major array 2", function() {
-        expect(Matrix3.createFromColumnMajorArray().equals(new Matrix3())).toBeTruthy();
+        expect(Matrix3.fromColumnMajorArray().equals(new Matrix3())).toBeTruthy();
     });
 
     it("getIdentity", function() {
@@ -339,7 +339,7 @@ defineSuite([
                       7, 8];
 
         expect(function() {
-            return Matrix3.createFromColumnMajorArray(values);
+            return Matrix3.fromColumnMajorArray(values);
         }).toThrow();
     });
 

@@ -23,7 +23,7 @@ define([
      * @constructor
      * @immutable
      *
-     * @see Matrix3.createFromColumnMajorArray
+     * @see Matrix3.fromColumnMajorArray
      * @see Matrix2
      * @see Matrix4
      * @see Quaternion
@@ -453,7 +453,7 @@ define([
      *
      * @exception {DeveloperError} columnMajorValues must have 9 elements.
      */
-    Matrix3.createFromColumnMajorArray = function(columnMajorValues) {
+    Matrix3.fromColumnMajorArray = function(columnMajorValues) {
         if (columnMajorValues) {
             if (columnMajorValues.length === numberOfElements) {
                 return new Matrix3(
