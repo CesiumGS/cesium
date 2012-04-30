@@ -211,6 +211,9 @@ define([
         this._imageThrottleLimit = 15;
 
         this._prefetchLimit = 1;
+        this._perTileMaxFailCount = 3;
+        this._maxTileFailCount = 50;
+        this._tileFailCount = 0;
 
         this._spWithoutAtmosphere = undefined;
         this._spGroundFromSpace = undefined;
@@ -513,10 +516,13 @@ define([
     };
 
     CentralBody.prototype._fetchImage = function(tile) {
+        var that = this;
         var onload = function() {
             tile.state = TileState.IMAGE_LOADED;
         };
         var onerror = function() {
+            tile._failCount = (tile._failCount) ? tile._failCount + 1 : 1;
+            ++that._tileFailCount;
             tile.state = TileState.IMAGE_FAILED;
         };
         var oninvalid = function() {
@@ -652,10 +658,14 @@ define([
 
     CentralBody.prototype._processTile = function(tile) {
         // check if tile needs to load image
+        var maxFailed = this._tileFailCount > this._maxTileFailCount;
+        var requestFailed = tile.state === TileState.IMAGE_FAILED &&
+                            tile._failCount < this._maxTileFailCount;
+
         if ((!tile.state ||
              tile.state === TileState.READY ||
-             tile.state === TileState.IMAGE_FAILED) &&
-            this._imageQueue.indexOf(tile) === -1) {
+             requestFailed) && !maxFailed &&
+             this._imageQueue.indexOf(tile) === -1) {
             this._imageQueue.push(tile);
             tile.state = TileState.IMAGE_LOADING;
         }
