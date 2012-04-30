@@ -60,9 +60,9 @@ define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond',
      * @param {Number} julianSecondsOfDay The number of seconds into the current Julian Day Number.
      * @param {TimeStandard} [timeStandard = TimeStandard.UTC] Indicates the time standard in which this Julian date is represented.
      *
-     * @see JulianDate.createFromDate
-     * @see JulianDate.createFromTotalDays
-     * @see JulianDate.createFromIso8601
+     * @see JulianDate.fromDate
+     * @see JulianDate.fromTotalDays
+     * @see JulianDate.fromIso8601
      * @see TimeStandard
      * @see LeapSecond
      *
@@ -140,8 +140,8 @@ define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond',
      * @exception {DeveloperError} Valid JavaScript Date required.
      *
      * @see JulianDate
-     * @see JulianDate.createFromTotalDays
-     * @see JulianDate.createFromIso8601
+     * @see JulianDate.fromTotalDays
+     * @see JulianDate.fromIso8601
      * @see TimeStandard
      * @see LeapSecond
      * @see <a href="http://www.w3schools.com/js/js_obj_date.asp">JavaScript Date Object on w3schools</a>.
@@ -150,9 +150,9 @@ define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond',
      * @example
      * // Construct a Julian date specifying the UTC time standard
      * var date = new Date("January 1, 2011 12:00:00 EST");
-     * var julianDate = JulianDate.createFromDate(date, TimeStandard.UTC);
+     * var julianDate = JulianDate.fromDate(date, TimeStandard.UTC);
      */
-    JulianDate.createFromDate = function(date, timeStandard) {
+    JulianDate.fromDate = function(date, timeStandard) {
         if (typeof date === 'undefined' || date === null || isNaN(date.getTime())) {
             throw new DeveloperError("Valid JavaScript Date required.", "date");
         }
@@ -179,17 +179,17 @@ define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond',
      * @exception {DeveloperError} Valid ISO 8601 date string required.
      *
      * @see JulianDate
-     * @see JulianDate.createFromTotalDays
-     * @see JulianDate.createFromDate
+     * @see JulianDate.fromTotalDays
+     * @see JulianDate.fromDate
      * @see TimeStandard
      * @see LeapSecond
      * @see <a href="http://en.wikipedia.org/wiki/ISO_8601">ISO 8601 on Wikipedia</a>.
      *
      * @example
      * // Example 1. Construct a Julian date using the default UTC TimeStandard.
-     * var julianDate = JulianDate.createFromIso8601("2012-04-24T18:08Z");
+     * var julianDate = JulianDate.fromIso8601("2012-04-24T18:08Z");
      */
-    JulianDate.createFromIso8601 = function(iso8601String, timeStandard) {
+    JulianDate.fromIso8601 = function(iso8601String, timeStandard) {
         //FIXME Date.parse is only accurate to the millisecond and fails
         //completely on leap seconds.  We should parse the string directly.
 
@@ -197,7 +197,7 @@ define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond',
         if (totalMilliseconds === null || isNaN(totalMilliseconds)) {
             throw new DeveloperError("Valid ISO 8601 date string required.", "iso8601String");
         }
-        return JulianDate.createFromDate(new Date(totalMilliseconds), timeStandard);
+        return JulianDate.fromDate(new Date(totalMilliseconds), timeStandard);
     };
 
     /**
@@ -213,16 +213,16 @@ define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond',
      * @exception {DeveloperError} Number required.
      *
      * @see JulianDate
-     * @see JulianDate.createFromDate
-     * @see JulianDate.createFromIso8601
+     * @see JulianDate.fromDate
+     * @see JulianDate.fromIso8601
      * @see TimeStandard
      * @see LeapSecond
      *
      * @example
      * // Construct a date which corresponds to January 1, 1991 06:00:00 UTC.
-     * var julianDate = JulianDate.createFromTotalDays(2448257.75, TimeStandard.UTC);
+     * var julianDate = JulianDate.fromTotalDays(2448257.75, TimeStandard.UTC);
      */
-    JulianDate.createFromTotalDays = function(totalDays, timeStandard) {
+    JulianDate.fromTotalDays = function(totalDays, timeStandard) {
         if (totalDays === null || isNaN(totalDays)) {
             throw new DeveloperError("Number required", "totalDays");
         }
@@ -337,14 +337,14 @@ define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond',
     };
 
     /**
-     * Returns a JavaScript Date object equivalent to the Julian date
+     * Creates a new JavaScript Date object equivalent to the Julian date
      * (accurate to the nearest millisecond in the UTC time standard).
      *
      * @memberof JulianDate
      *
-     * @return {Date} The JavaScript Date equivalent to this Julian date.
+     * @return {Date} A new JavaScript Date equivalent to this Julian date.
      */
-    JulianDate.prototype.getDate = function() {
+    JulianDate.prototype.toDate = function() {
         if (typeof this._date === 'undefined') {
             var julianDayNumber = this._julianDayNumber;
             var secondsOfDay = this._secondsOfDay;
@@ -393,7 +393,7 @@ define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond',
 
             this._date = new Date(Date.UTC(year, month, day, hours, minutes, seconds, milliseconds));
         }
-        return this._date;
+        return new Date(this._date.getTime());
     };
 
     /**
@@ -409,8 +409,8 @@ define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond',
      * @see JulianDate#getMinutesDifference
      *
      * @example
-     * var start = JulianDate.createFromDate(new Date("July 4, 2011 12:00:00"));
-     * var end = JulianDate.createFromDate(new Date("July 5, 2011 12:01:00"));
+     * var start = JulianDate.fromDate(new Date("July 4, 2011 12:00:00"));
+     * var end = JulianDate.fromDate(new Date("July 5, 2011 12:01:00"));
      * var difference = start.getSecondsDifference(end);    // 86460.0 seconds
      */
     JulianDate.prototype.getSecondsDifference = function(other) {
@@ -441,8 +441,8 @@ define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond',
      * @see JulianDate#getSecondsDifference
      *
      * @example
-     * var start = JulianDate.createFromDate(new Date("July 4, 2011 12:00:00"));
-     * var end = JulianDate.createFromDate(new Date("July 5, 2011 12:01:00"));
+     * var start = JulianDate.fromDate(new Date("July 4, 2011 12:00:00"));
+     * var end = JulianDate.fromDate(new Date("July 5, 2011 12:01:00"));
      * var difference = start.getMinutesDifference(end);    // 1441.0 minutes
      */
     JulianDate.prototype.getMinutesDifference = function(other) {
@@ -477,7 +477,7 @@ define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond',
      *
      * @example
      * var date = new Date("July 11, 2011 12:00:00 UTC");
-     * var julianDate = JulianDate.createFromDate(date, TimeStandard.TAI);
+     * var julianDate = JulianDate.fromDate(date, TimeStandard.TAI);
      * var difference = julianDate.getTaiMinusUtc();    // 34
      */
     JulianDate.prototype.getTaiMinusUtc = function() {
@@ -499,7 +499,7 @@ define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond',
             if (index < 0 || index >= leapSeconds.length) {
                 // Corresponds to a the Julian Date 0.0
                 var beginning = new Date(Date.UTC(-4712, 0, -37, 12, 0, 0, 0));
-                lastDate = JulianDate.createFromDate(beginning, TimeStandard.UTC);
+                lastDate = JulianDate.fromDate(beginning, TimeStandard.UTC);
                 indexOffset = 10.0;
             } else {
                 lastDate = leapSeconds[index].julianDate;
@@ -538,7 +538,7 @@ define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond',
      * var date = new Date();
      * date.setUTCFullYear(2011, 6, 4);     // July 4, 2011 @ 12:00:00 UTC
      * date.setUTCHours(12, 0, 00, 0);
-     * var start = JulianDate.createFromDate(date);
+     * var start = JulianDate.fromDate(date);
      * var end = start.addSeconds(95);      // July 4, 2011 @ 12:01:35 UTC
      */
     JulianDate.prototype.addSeconds = function(duration) {
@@ -569,7 +569,7 @@ define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond',
      * var date = new Date();
      * date.setUTCFullYear(2011, 6, 4);     // July 4, 2011 @ 12:00 UTC
      * date.setUTCHours(12, 0, 0, 0);
-     * var start = JulianDate.createFromDate(date);
+     * var start = JulianDate.fromDate(date);
      * var end = start.addMinutes(65);      // July 4, 2011 @ 13:05 UTC
      */
     JulianDate.prototype.addMinutes = function(duration) {
@@ -600,7 +600,7 @@ define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond',
      * var date = new Date();
      * date.setUTCFullYear(2011, 6, 4);     // July 4, 2011 @ 12:00 UTC
      * date.setUTCHours(12, 0, 0, 0);
-     * var start = JulianDate.createFromDate(date);
+     * var start = JulianDate.fromDate(date);
      * var end = start.addHours(6);         // July 4, 2011 @ 18:00 UTC
      */
     JulianDate.prototype.addHours = function(duration) {
@@ -631,7 +631,7 @@ define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond',
      * var date = new Date();
      * date.setUTCFullYear(2011, 6, 4);     // July 4, 2011 @ 12:00 UTC
      * date.setUTCHours(12, 0, 0, 0);
-     * var start = JulianDate.createFromDate(date);
+     * var start = JulianDate.fromDate(date);
      * var end = start.addDays(5);         // July 9, 2011 @ 12:00 UTC
      */
     JulianDate.prototype.addDays = function(duration) {
@@ -653,7 +653,7 @@ define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond',
      * @example
      * var date = new Date(2011, 0, 2); // January 2, 2011 @ 0:00
      * date.setUTCHours(0, 0, 0, 0);
-     * var julianDate = JulianDate.createFromDate(date);
+     * var julianDate = JulianDate.fromDate(date);
      * var yearFraction = julianDate.toYearFraction(); //1.0/365.0
      */
     JulianDate.prototype.toYearFraction = function() {
@@ -675,7 +675,7 @@ define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond',
             return day + commonYearCumulativeMonthTable[month];
         }
 
-        var date = this.getDate();
+        var date = this.toDate();
         if (this._secondsOfDay / TimeConstants.SECONDS_PER_DAY < 0.5) {
             dayInYear = dayOfYear(date) - 1;
             fractionOfDay = (this._secondsOfDay / TimeConstants.SECONDS_PER_DAY) + 0.5;
@@ -706,8 +706,8 @@ define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond',
      * @see JulianDate#greaterThanOrEquals
      *
      * @example
-     * var start = JulianDate.createFromDate(new Date("July 6, 1991 12:00:00"));
-     * var end = JulianDate.createFromDate(new Date("July 6, 2011 12:01:00"));
+     * var start = JulianDate.fromDate(new Date("July 6, 1991 12:00:00"));
+     * var end = JulianDate.fromDate(new Date("July 6, 2011 12:01:00"));
      * start.lessThan(end);     // true
      */
     JulianDate.prototype.lessThan = function(other) {
@@ -728,8 +728,8 @@ define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond',
      * @see JulianDate#greaterThanOrEquals
      *
      * @example
-     * var start = JulianDate.createFromDate(new Date("July 6, 1991 12:00:00"));
-     * var end = JulianDate.createFromDate(new Date("July 6, 2011 12:00:00"));
+     * var start = JulianDate.fromDate(new Date("July 6, 1991 12:00:00"));
+     * var end = JulianDate.fromDate(new Date("July 6, 2011 12:00:00"));
      * start.lessThanOrEquals(end);     // true
      */
     JulianDate.prototype.lessThanOrEquals = function(other) {
@@ -750,8 +750,8 @@ define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond',
      * @see JulianDate#greaterThanOrEquals
      *
      * @example
-     * var start = JulianDate.createFromDate(new Date("July 6, 1991 12:00:00"));
-     * var end = JulianDate.createFromDate(new Date("July 6, 2011 12:01:00"));
+     * var start = JulianDate.fromDate(new Date("July 6, 1991 12:00:00"));
+     * var end = JulianDate.fromDate(new Date("July 6, 2011 12:01:00"));
      * end.greaterThan(start);      // true
      */
     JulianDate.prototype.greaterThan = function(other) {
@@ -772,8 +772,8 @@ define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond',
      * @see JulianDate#greaterThan
      *
      * @example
-     * var start = JulianDate.createFromDate(new Date("July 6, 1991 12:00:00"));
-     * var end = JulianDate.createFromDate(new Date("July 6, 2011 12:00:00"));
+     * var start = JulianDate.fromDate(new Date("July 6, 1991 12:00:00"));
+     * var end = JulianDate.fromDate(new Date("July 6, 2011 12:00:00"));
      * end.greaterThanOrEquals(start);      // true
      */
     JulianDate.prototype.greaterThanOrEquals = function(other) {
@@ -793,8 +793,8 @@ define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond',
      * @see JulianDate#equalsEpsilon
      *
      * @example
-     * var original = JulianDate.createFromDate(new Date("July 4, 2011 12:00:00"));
-     * var clone = JulianDate.createFromDate(new Date("July 4, 2011 12:00:00"));
+     * var original = JulianDate.fromDate(new Date("July 4, 2011 12:00:00"));
+     * var clone = JulianDate.fromDate(new Date("July 4, 2011 12:00:00"));
      * original.equals(clone);      // true
      */
     JulianDate.prototype.equals = function(other) {
@@ -819,8 +819,8 @@ define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond',
      * @see JulianDate#equals
      *
      * @example
-     * var original = JulianDate.createFromDate(new Date("July 4, 2011 12:00:00"));
-     * var clone = JulianDate.createFromDate(new Date("July 4, 2011 12:00:01"));
+     * var original = JulianDate.fromDate(new Date("July 4, 2011 12:00:00"));
+     * var clone = JulianDate.fromDate(new Date("July 4, 2011 12:00:01"));
      * original.equalsEpsilon(clone, 2);    // true
      */
     JulianDate.prototype.equalsEpsilon = function(other, epsilon) {

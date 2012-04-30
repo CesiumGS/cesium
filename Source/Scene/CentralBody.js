@@ -45,8 +45,6 @@ define([
         '../Shaders/CentralBodyFSDepth',
         '../Shaders/CentralBodyVSFilter',
         '../Shaders/CentralBodyFSFilter',
-        '../Shaders/Ray',
-        '../Shaders/ConstructiveSolidGeometry',
         '../Shaders/SkyAtmosphereFS',
         '../Shaders/SkyAtmosphereVS'
     ], function(
@@ -95,8 +93,6 @@ define([
         CentralBodyFSDepth,
         CentralBodyVSFilter,
         CentralBodyFSFilter,
-        ShadersRay,
-        ShadersConstructiveSolidGeometry,
         SkyAtmosphereFS,
         SkyAtmosphereVS) {
     "use strict";

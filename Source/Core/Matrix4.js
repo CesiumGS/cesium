@@ -32,7 +32,7 @@ define([
      * @constructor
      * @immutable
      *
-     * @see Matrix4.createFromColumnMajorArray
+     * @see Matrix4.fromColumnMajorArray
      * @see Matrix2
      * @see Matrix3
      */
@@ -620,7 +620,7 @@ define([
      *
      * @exception {DeveloperError} columnMajorValues must have 16 elements.
      */
-    Matrix4.createFromColumnMajorArray = function(columnMajorValues) {
+    Matrix4.fromColumnMajorArray = function(columnMajorValues) {
         if (columnMajorValues) {
             if (columnMajorValues.length === numberOfElements) {
                 return new Matrix4(

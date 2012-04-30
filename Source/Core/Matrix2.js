@@ -308,7 +308,7 @@ define([
      *
      * @exception {DeveloperError} columnMajorValues must have 4 elements.
      */
-    Matrix2.createFromColumnMajorArray = function(columnMajorValues) {
+    Matrix2.fromColumnMajorArray = function(columnMajorValues) {
         if (columnMajorValues) {
             if (columnMajorValues.length === numberOfElements) {
                 return new Matrix2(
