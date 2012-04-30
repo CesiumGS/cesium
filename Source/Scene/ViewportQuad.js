@@ -5,6 +5,8 @@ define([
         '../Core/ComponentDatatype',
         '../Core/PrimitiveType',
         '../Renderer/BufferUsage',
+        '../Renderer/BlendEquation',
+        '../Renderer/BlendFunction',
         '../Shaders/ViewportQuadVS',
         '../Shaders/ViewportQuadFS'
     ], function(
@@ -13,6 +15,8 @@ define([
         ComponentDatatype,
         PrimitiveType,
         BufferUsage,
+        BlendEquation,
+        BlendFunction,
         ViewportQuadVS,
         ViewportQuadFS) {
     "use strict";
@@ -39,6 +43,8 @@ define([
 
         this._rectangle = rectangle; // TODO: copy?
         this._dirtyRectangle = true;
+
+        this._enableBlending = false;
 
         var that = this;
         this.uniforms = {
@@ -141,6 +147,34 @@ define([
     };
 
     /**
+     * Returns true if alpha blending is enabled; otherwise, false.
+     *
+     * @memberof ViewportQuad
+     *
+     * @return {Boolean} True if alpha blending is enabled; otherwise, false.
+     *
+     * @see ViewportQuad#setBlendingEnabled
+     */
+    ViewportQuad.prototype.getBlendingEnabled = function() {
+        return this._enableBlending;
+    };
+
+    /**
+     * Set alpha-blending mode for this quad.  If true, fractional alpha values represent translucent
+     * areas in the quad.  If false, any non-zero alpha is fully opaque.
+     *
+     * @memberof ViewportQuad
+     *
+     * @return {null}
+     *
+     * @see ViewportQuad#getBlendingEnabled
+     */
+    ViewportQuad.prototype.setBlendingEnabled = function(value) {
+        this._enableBlending = value;
+        this.renderState = null;
+    };
+
+    /**
      * DOC_TBA
      * @memberof ViewportQuad
      */
@@ -199,7 +233,27 @@ define([
      */
     ViewportQuad.prototype.update = function(context, sceneState) {
         this._sp = context.getShaderCache().getShaderProgram(this.vertexShader, this.fragmentShader, ViewportQuad._getAttributeIndices());
-        this.renderState = context.createRenderState();
+        if (!this.renderState) {
+            if (this._enableBlending) {
+                this.renderState = context.createRenderState({
+                    blending : {
+                        enabled : true,
+                        equationRgb : BlendEquation.ADD,
+                        equationAlpha : BlendEquation.ADD,
+                        functionSourceRgb : BlendFunction.SOURCE_ALPHA,
+                        functionSourceAlpha : BlendFunction.SOURCE_ALPHA,
+                        functionDestinationRgb : BlendFunction.ONE_MINUS_SOURCE_ALPHA,
+                        functionDestinationAlpha : BlendFunction.ONE_MINUS_SOURCE_ALPHA
+                    },
+                    depthTest : {
+                        enabled : false
+                    },
+                    depthMask : false
+                });
+            } else {
+                this.renderState = context.createRenderState();
+            }
+        }
 
         this._update(context, sceneState);
         this.update = this._update;
