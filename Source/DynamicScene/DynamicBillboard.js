@@ -2,7 +2,7 @@
 define(function() {
     "use strict";
 
-    function DynamicBillboard(color, eyeOffset, horizontalOrigin, image, pixelOffset, rotation, scale, show, verticalOrigin) {
+    function DynamicBillboard(image, color, horizontalOrigin, verticalOrigin, eyeOffset, pixelOffset, rotation, scale, show) {
         this.color = color;
         this.eyeOffset = eyeOffset;
         this.horizontalOrigin = horizontalOrigin;

@@ -17,40 +17,38 @@ function(DynamicBillboard,
         createOrUpdateProperty) {
     "use strict";
     return function(dynamicObject, data, buffer, sourceUri) {
-        //TODO EDSL Should we be validating all parameters here?
 
-        var czmlBillboard = data.billboard;
-        if (typeof czmlBillboard !== 'undefined') {
-            var billboard;
-            if (dynamicObject.hasOwnProperty('billboard')) {
-                //Update existing billboard.
-                billboard = dynamicObject.billboard;
-            } else if (czmlBillboard.hasOwnProperty('image') ||
-                       czmlBillboard.hasOwnProperty('show') ||
-                       czmlBillboard.hasOwnProperty('scale') ||
-                       czmlBillboard.hasOwnProperty('color') ||
-                       czmlBillboard.hasOwnProperty('horizontalOrigin') ||
-                       czmlBillboard.hasOwnProperty('verticalOrigin') ||
-                       czmlBillboard.hasOwnProperty('rotation') ||
-                       czmlBillboard.hasOwnProperty('pixelOffset') ||
-                       czmlBillboard.hasOwnProperty('eyeOffset')) {
-                //Create a new billboard.
+        //See if there's any actual data to process.
+        var billboardData = data.billboard, billboard;
+        if (typeof billboardData !== 'undefined' &&
+            (typeof billboardData.image !== 'undefined' ||
+             typeof billboardData.show !== 'undefined' ||
+             typeof billboardData.scale !== 'undefined' ||
+             typeof billboardData.color !== 'undefined' ||
+             typeof billboardData.horizontalOrigin !== 'undefined' ||
+             typeof billboardData.verticalOrigin !== 'undefined' ||
+             typeof billboardData.rotation !== 'undefined' ||
+             typeof billboardData.pixelOffset !== 'undefined' ||
+             typeof billboardData.eyeOffset !== 'undefined')) {
+
+            billboard = dynamicObject.billboard;
+
+            //Create a new billboard if we don't have one yet.
+            if (typeof billboard === 'undefined') {
                 billboard = new DynamicBillboard();
                 dynamicObject.billboard = billboard;
-            } else {
-                //No properties to process
-                return;
             }
 
-            billboard.color = createOrUpdateProperty(ColorDataHandler, czmlBillboard.color, buffer, sourceUri, billboard.color);
-            billboard.eyeOffset = createOrUpdateProperty(Cartesian3DataHandler, czmlBillboard.eyeOffset, buffer, sourceUri, billboard.eyeOffset);
-            billboard.horizontalOrigin = createOrUpdateProperty(StringDataHandler, czmlBillboard.horizontalOrigin, buffer, sourceUri, billboard.horizontalOrigin);
-            billboard.image = createOrUpdateProperty(StringDataHandler, czmlBillboard.image, buffer, sourceUri, billboard.image);
-            billboard.pixelOffset = createOrUpdateProperty(Cartesian2DataHandler, czmlBillboard.pixelOffset, buffer, sourceUri, billboard.pixelOffset);
-            billboard.rotation = createOrUpdateProperty(NumberDataHandler, czmlBillboard.rotation, buffer, sourceUri, billboard.rotation);
-            billboard.scale = createOrUpdateProperty(NumberDataHandler, czmlBillboard.scale, buffer, sourceUri, billboard.scale);
-            billboard.show = createOrUpdateProperty(BooleanDataHandler, czmlBillboard.show, buffer, sourceUri, billboard.show);
-            billboard.verticalOrigin = createOrUpdateProperty(StringDataHandler, czmlBillboard.verticalOrigin, buffer, sourceUri, billboard.verticalOrigin);
+            //Create or update each of the properties.
+            billboard.color = createOrUpdateProperty(ColorDataHandler, billboardData.color, buffer, sourceUri, billboard.color);
+            billboard.eyeOffset = createOrUpdateProperty(Cartesian3DataHandler, billboardData.eyeOffset, buffer, sourceUri, billboard.eyeOffset);
+            billboard.horizontalOrigin = createOrUpdateProperty(StringDataHandler, billboardData.horizontalOrigin, buffer, sourceUri, billboard.horizontalOrigin);
+            billboard.image = createOrUpdateProperty(StringDataHandler, billboardData.image, buffer, sourceUri, billboard.image);
+            billboard.pixelOffset = createOrUpdateProperty(Cartesian2DataHandler, billboardData.pixelOffset, buffer, sourceUri, billboard.pixelOffset);
+            billboard.rotation = createOrUpdateProperty(NumberDataHandler, billboardData.rotation, buffer, sourceUri, billboard.rotation);
+            billboard.scale = createOrUpdateProperty(NumberDataHandler, billboardData.scale, buffer, sourceUri, billboard.scale);
+            billboard.show = createOrUpdateProperty(BooleanDataHandler, billboardData.show, buffer, sourceUri, billboard.show);
+            billboard.verticalOrigin = createOrUpdateProperty(StringDataHandler, billboardData.verticalOrigin, buffer, sourceUri, billboard.verticalOrigin);
         }
     };
 });

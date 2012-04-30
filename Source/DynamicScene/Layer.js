@@ -1,5 +1,5 @@
 /*global define*/
-define(['./DynamicObject'], function(DynamicObject) {
+define(['./DynamicObject', 'Core/createGuid'], function(DynamicObject, createGuid) {
     "use strict";
     //TODO Make sure Layer throws the proper events in all cases.
     function Layer(name, id, propertyBuilders) {
@@ -14,7 +14,12 @@ define(['./DynamicObject'], function(DynamicObject) {
     }
 
     function addDatum(layer, data, sourceUri) {
-        var object = layer.getOrCreateObject(data.id);
+        var objectId = data.id;
+        if (typeof objectId === 'undefined') {
+            objectId = createGuid();
+            data.id = objectId;
+        }
+        var object = layer.getOrCreateObject(objectId);
         for ( var i = 0, len = layer._propertyBuilders.length; i < len; i++) {
             layer._propertyBuilders[i](object, data, layer, sourceUri);
         }
@@ -22,7 +27,6 @@ define(['./DynamicObject'], function(DynamicObject) {
 
     Layer.prototype.getOrCreateObject = function(id) {
         var obj = this._hash[id];
-
         if (!obj) {
             obj = new DynamicObject(id, this);
             this._hash[id] = obj;
