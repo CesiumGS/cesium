@@ -14,8 +14,6 @@ define([
         '../Renderer/BlendFunction',
         './ColorMaterial',
         '../Shaders/Noise',
-        '../Shaders/Ray',
-        '../Shaders/ConstructiveSolidGeometry',
         '../Shaders/SensorVolume',
         '../Shaders/CustomSensorVolumeVS',
         '../Shaders/CustomSensorVolumeFS'
@@ -34,8 +32,6 @@ define([
         BlendFunction,
         ColorMaterial,
         ShadersNoise,
-        ShadersRay,
-        ShadersConstructiveSolidGeometry,
         ShadersSensorVolume,
         CustomSensorVolumeVS,
         CustomSensorVolumeFS) {
@@ -324,10 +320,6 @@ define([
                     "#line 0\n" +
                     ShadersNoise +
                     "#line 0\n" +
-                    ShadersRay +
-                    "#line 0\n" +
-                    ShadersConstructiveSolidGeometry +
-                    "#line 0\n" +
                     ShadersSensorVolume +
                     "#line 0\n" +
                     this.material._getShaderSource() +
@@ -379,10 +371,6 @@ define([
             // Since this ignores all other materials, if a material does discard, the sensor will still be picked.
             var fsSource =
                 "#define RENDER_FOR_PICK 1\n" +
-                "#line 0\n" +
-                ShadersRay +
-                "#line 0\n" +
-                ShadersConstructiveSolidGeometry +
                 "#line 0\n" +
                 ShadersSensorVolume +
                 "#line 0\n" +
