@@ -106,7 +106,7 @@ defineSuite([
                        9, 10, 11, 12,
                       13, 14, 15, 16];
 
-        var m = Matrix4.createFromColumnMajorArray(values);
+        var m = Matrix4.fromColumnMajorArray(values);
         expect(m.getColumn0Row0()).toEqual(1);
         expect(m.getColumn0Row1()).toEqual(2);
         expect(m.getColumn0Row2()).toEqual(3);
@@ -126,7 +126,7 @@ defineSuite([
     });
 
     it("creates from a column major array 2", function() {
-        expect(Matrix4.createFromColumnMajorArray().equals(new Matrix4())).toBeTruthy();
+        expect(Matrix4.fromColumnMajorArray().equals(new Matrix4())).toBeTruthy();
     });
 
     it("creates a non-uniform scale matrix", function() {
@@ -588,7 +588,7 @@ defineSuite([
                       13, 14, 15];
 
         expect(function() {
-            return Matrix4.createFromColumnMajorArray(values);
+            return Matrix4.fromColumnMajorArray(values);
         }).toThrow();
     });
 

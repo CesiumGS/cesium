@@ -4,7 +4,7 @@ defineSuite(['Core/TimeStandard', 'Core/JulianDate'], function(TimeStandard, Jul
 
     it("can convert from UTC to TAI", function() {
         var date = new Date("July 11, 2011 12:00:00 UTC");
-        var julianDateUtc = JulianDate.createFromDate(date, TimeStandard.UTC);
+        var julianDateUtc = JulianDate.fromDate(date, TimeStandard.UTC);
         var julianDateTai = TimeStandard.convertUtcToTai(julianDateUtc);
 
         expect(julianDateTai.getJulianDayNumber()).toEqual(julianDateUtc.getJulianDayNumber());
@@ -14,7 +14,7 @@ defineSuite(['Core/TimeStandard', 'Core/JulianDate'], function(TimeStandard, Jul
 
     it("can convert from TAI to UTC", function() {
         var date = new Date("July 11, 2011 12:00:00 UTC");
-        var julianDateUtc = JulianDate.createFromDate(date, TimeStandard.UTC);
+        var julianDateUtc = JulianDate.fromDate(date, TimeStandard.UTC);
         var julianDateTai = TimeStandard.convertUtcToTai(julianDateUtc);
         var julianDateUtc2 = TimeStandard.convertTaiToUtc(julianDateTai);
 
@@ -24,13 +24,13 @@ defineSuite(['Core/TimeStandard', 'Core/JulianDate'], function(TimeStandard, Jul
     });
 
     it("returns the TAI date if convertUtcToTai is passed a TAI date", function() {
-        var julianDate = JulianDate.createFromDate(new Date(), TimeStandard.TAI);
+        var julianDate = JulianDate.fromDate(new Date(), TimeStandard.TAI);
         var julianDateTai = TimeStandard.convertUtcToTai(julianDate);
         expect(julianDate.equals(julianDateTai)).toBeTruthy();
     });
 
     it("returns the UTC date if convertTaiToUtc is passed a UTC date", function() {
-        var julianDate = JulianDate.createFromDate(new Date(), TimeStandard.UTC);
+        var julianDate = JulianDate.fromDate(new Date(), TimeStandard.UTC);
         var julianDateUtc = TimeStandard.convertTaiToUtc(julianDate);
         expect(julianDate.equals(julianDateUtc)).toBeTruthy();
     });

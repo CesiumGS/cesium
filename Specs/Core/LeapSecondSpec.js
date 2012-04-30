@@ -73,9 +73,9 @@ defineSuite([
 
     it("can check to see if leap seconds are equal", function() {
         var date = new Date("January 1, 1990 00:00:00 UTC");
-        var leapSecond1 = new LeapSecond(JulianDate.createFromDate(date), 25.0);
-        var leapSecond2 = new LeapSecond(JulianDate.createFromDate(date), 25.0);
-        var leapSecond3 = new LeapSecond(JulianDate.createFromDate(date), 26.0);
+        var leapSecond1 = new LeapSecond(JulianDate.fromDate(date), 25.0);
+        var leapSecond2 = new LeapSecond(JulianDate.fromDate(date), 25.0);
+        var leapSecond3 = new LeapSecond(JulianDate.fromDate(date), 26.0);
         expect(leapSecond1.equals(leapSecond2)).toBeTruthy();
         expect(leapSecond1.equals(leapSecond3)).toBeFalsy();
 
@@ -159,7 +159,7 @@ defineSuite([
             offset : 34
         }];
         LeapSecond.setLeapSeconds(data);
-        var jd = JulianDate.createFromDate(new Date("July 11, 1994 12:00:00 UTC"));
+        var jd = JulianDate.fromDate(new Date("July 11, 1994 12:00:00 UTC"));
         jd = TimeStandard.convertUtcToTai(jd);
         var difference = jd.getTaiMinusUtc();
         expect(difference).toEqual(100);

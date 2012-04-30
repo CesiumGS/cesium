@@ -65,7 +65,7 @@ define(['require', './DeveloperError', './binarySearch', './LeapSecond'], functi
          *
          * @example
          * // Convert a date representing Jan. 1, 2000 12:00:00 TAI to UTC.
-         * var julianDateTai = JulianDate.createFromTotalDays(2451545.0, TimeStandard.TAI);
+         * var julianDateTai = JulianDate.fromTotalDays(2451545.0, TimeStandard.TAI);
          * var julianDateUtc = TimeStandard.convertTaiToUtc(julianDateTai);
          *
          */
@@ -129,7 +129,7 @@ define(['require', './DeveloperError', './binarySearch', './LeapSecond'], functi
          *
          * @example
          * var date = new Date("July 11, 2011 12:00:00 UTC");
-         * var julianDateUtc = JulianDate.createFromDate(date, TimeStandard.UTC);
+         * var julianDateUtc = JulianDate.fromDate(date, TimeStandard.UTC);
          * var julianDateTai = TimeStandard.convertUtcToTai(julianDateUtc);
          */
         convertUtcToTai : function(julianDate) {

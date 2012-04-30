@@ -50,7 +50,26 @@ What's New
         * Geoscope.ContainmentTests.pointInsideTriangle2D is now Cesium.pointInsideTriangle2D.
         * Labels now correctly allow specifying fonts by non-pixel CSS units such as points, ems, etc.
         * Added Shapes.computeEllipseBoundary and updated Shapes.computeCircleBoundary to compute boundaries using arc-distance.
+        * Static constructor methods prefixed with "createFrom", now simply start with "from":
 
+          Matrix2.createfromColumnMajorArray 
+          
+          becomes
+          
+          Matrix2.fromColumnMajorArray
+
+        * The JulianDate constructor no longer takes a Date object, use the new from methods instead:
+        
+          new JulianDate(new Date());
+          
+          becomes
+          
+          JulianDate.fromDate(new Date("January 1, 2011 12:00:00 EST"));
+          JulianDate.fromIso8601("2012-04-24T18:08Z");
+          JulianDate.fromTotalDays(23452.23);
+
+        * JulianDate.getDate is now JulianDate.toDate() and returns a new instance each time.
+        
     b4 - 03/01/2012
     ---------------
     * Breaking changes:
