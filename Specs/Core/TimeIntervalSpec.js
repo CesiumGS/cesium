@@ -33,39 +33,39 @@ defineSuite(['Core/TimeInterval', 'Core/JulianDate'], function(TimeInterval, Jul
     });
 
     it("IsEmpty", function() {
-        var interval = new TimeInterval(JulianDate.createFromTotalDays(1), JulianDate.createFromTotalDays(1));
+        var interval = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(1));
         expect(interval.isEmpty).toBeFalsy();
 
-        interval = new TimeInterval(JulianDate.createFromTotalDays(1), JulianDate.createFromTotalDays(1), false, false);
+        interval = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(1), false, false);
         expect(interval.isEmpty).toBeTruthy();
 
-        interval = new TimeInterval(JulianDate.createFromTotalDays(5), JulianDate.createFromTotalDays(4));
+        interval = new TimeInterval(JulianDate.fromTotalDays(5), JulianDate.fromTotalDays(4));
         expect(interval.isEmpty).toBeTruthy();
     });
 
     it("Contains", function() {
-        var interval1 = new TimeInterval(JulianDate.createFromTotalDays(2451545), JulianDate.createFromTotalDays(2451546));
-        expect(interval1.contains(JulianDate.createFromTotalDays(2451545))).toBeTruthy();
-        expect(interval1.contains(JulianDate.createFromTotalDays(2451545.5))).toBeTruthy();
-        expect(interval1.contains(JulianDate.createFromTotalDays(2451546))).toBeTruthy();
-        expect(interval1.contains(JulianDate.createFromTotalDays(2451546.5))).toBeFalsy();
+        var interval1 = new TimeInterval(JulianDate.fromTotalDays(2451545), JulianDate.fromTotalDays(2451546));
+        expect(interval1.contains(JulianDate.fromTotalDays(2451545))).toBeTruthy();
+        expect(interval1.contains(JulianDate.fromTotalDays(2451545.5))).toBeTruthy();
+        expect(interval1.contains(JulianDate.fromTotalDays(2451546))).toBeTruthy();
+        expect(interval1.contains(JulianDate.fromTotalDays(2451546.5))).toBeFalsy();
 
         var interval2 = new TimeInterval(interval1.start, interval1.stop, false, false);
-        expect(interval2.contains(JulianDate.createFromTotalDays(2451545))).toBeFalsy();
-        expect(interval2.contains(JulianDate.createFromTotalDays(2451545.5))).toBeTruthy();
-        expect(interval2.contains(JulianDate.createFromTotalDays(2451546))).toBeFalsy();
-        expect(interval2.contains(JulianDate.createFromTotalDays(2451546.5))).toBeFalsy();
+        expect(interval2.contains(JulianDate.fromTotalDays(2451545))).toBeFalsy();
+        expect(interval2.contains(JulianDate.fromTotalDays(2451545.5))).toBeTruthy();
+        expect(interval2.contains(JulianDate.fromTotalDays(2451546))).toBeFalsy();
+        expect(interval2.contains(JulianDate.fromTotalDays(2451546.5))).toBeFalsy();
     });
 
     it("Equality", function() {
-        var interval1 = new TimeInterval(JulianDate.createFromTotalDays(1), JulianDate.createFromTotalDays(2));
-        var interval2 = new TimeInterval(JulianDate.createFromTotalDays(1), JulianDate.createFromTotalDays(2));
+        var interval1 = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2));
+        var interval2 = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2));
         expect(interval1.equals(interval2)).toBeTruthy();
         expect(interval2.equals(interval1)).toBeTruthy();
         expect(interval1.equalsEpsilon(interval2, 0)).toBeTruthy();
         expect(interval2.equalsEpsilon(interval1, 0)).toBeTruthy();
 
-        interval2 = new TimeInterval(JulianDate.createFromTotalDays(1), JulianDate.createFromTotalDays(3));
+        interval2 = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(3));
         expect(interval1.equals(interval2)).toBeFalsy();
         expect(interval2.equals(interval1)).toBeFalsy();
         expect(interval1.equalsEpsilon(interval2, 0)).toBeFalsy();
@@ -73,8 +73,8 @@ defineSuite(['Core/TimeInterval', 'Core/JulianDate'], function(TimeInterval, Jul
         expect(interval1.equalsEpsilon(interval2, 86400)).toBeTruthy();
         expect(interval2.equalsEpsilon(interval1, 86400)).toBeTruthy();
 
-        interval1 = new TimeInterval(JulianDate.createFromTotalDays(1), JulianDate.createFromTotalDays(1), true, true);
-        interval2 = new TimeInterval(JulianDate.createFromTotalDays(1), new JulianDate(1, 1), true, false);
+        interval1 = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(1), true, true);
+        interval2 = new TimeInterval(JulianDate.fromTotalDays(1), new JulianDate(1, 1), true, false);
         expect(interval1.equals(interval2)).toBeFalsy();
         expect(interval2.equals(interval1)).toBeFalsy();
         expect(interval1.equalsEpsilon(interval2, 1.1)).toBeFalsy();
@@ -85,39 +85,39 @@ defineSuite(['Core/TimeInterval', 'Core/JulianDate'], function(TimeInterval, Jul
     });
 
     it("Intersect", function() {
-        var testParameters = [new TimeInterval(JulianDate.createFromTotalDays(1), JulianDate.createFromTotalDays(2.5), true, true),
-                new TimeInterval(JulianDate.createFromTotalDays(1.5), JulianDate.createFromTotalDays(2), true, true),
-                new TimeInterval(JulianDate.createFromTotalDays(1.5), JulianDate.createFromTotalDays(2), true, true),
-                new TimeInterval(JulianDate.createFromTotalDays(1), JulianDate.createFromTotalDays(2.5), true, true),
-                new TimeInterval(JulianDate.createFromTotalDays(3), JulianDate.createFromTotalDays(4), true, true),
-                new TimeInterval(JulianDate.createFromTotalDays(0), JulianDate.createFromTotalDays(0), false, false),
-                new TimeInterval(JulianDate.createFromTotalDays(1), JulianDate.createFromTotalDays(2.5), true, true),
-                new TimeInterval(JulianDate.createFromTotalDays(2), JulianDate.createFromTotalDays(3), true, true),
-                new TimeInterval(JulianDate.createFromTotalDays(2), JulianDate.createFromTotalDays(2.5), true, true),
-                new TimeInterval(JulianDate.createFromTotalDays(1), JulianDate.createFromTotalDays(2), true, true),
-                new TimeInterval(JulianDate.createFromTotalDays(1), JulianDate.createFromTotalDays(2), false, false),
-                new TimeInterval(JulianDate.createFromTotalDays(1), JulianDate.createFromTotalDays(2), false, false),
-                new TimeInterval(JulianDate.createFromTotalDays(1), JulianDate.createFromTotalDays(2), true, false),
-                new TimeInterval(JulianDate.createFromTotalDays(1), JulianDate.createFromTotalDays(2), false, true),
-                new TimeInterval(JulianDate.createFromTotalDays(1), JulianDate.createFromTotalDays(2), false, false),
-                new TimeInterval(JulianDate.createFromTotalDays(1), JulianDate.createFromTotalDays(2), true, false),
-                new TimeInterval(JulianDate.createFromTotalDays(1), JulianDate.createFromTotalDays(2), true, false),
-                new TimeInterval(JulianDate.createFromTotalDays(1), JulianDate.createFromTotalDays(2), true, false),
-                new TimeInterval(JulianDate.createFromTotalDays(1), JulianDate.createFromTotalDays(3), false, false),
-                new TimeInterval(JulianDate.createFromTotalDays(2), JulianDate.createFromTotalDays(4), false, false),
-                new TimeInterval(JulianDate.createFromTotalDays(2), JulianDate.createFromTotalDays(3), false, false),
-                new TimeInterval(JulianDate.createFromTotalDays(1), JulianDate.createFromTotalDays(3), false, false),
-                new TimeInterval(JulianDate.createFromTotalDays(2), JulianDate.createFromTotalDays(4), true, true),
-                new TimeInterval(JulianDate.createFromTotalDays(2), JulianDate.createFromTotalDays(3), true, false),
-                new TimeInterval(JulianDate.createFromTotalDays(1), JulianDate.createFromTotalDays(1), false, false),
-                new TimeInterval(JulianDate.createFromTotalDays(1), JulianDate.createFromTotalDays(2), true, true),
-                new TimeInterval(JulianDate.createFromTotalDays(0), JulianDate.createFromTotalDays(0), false, false),
-                new TimeInterval(JulianDate.createFromTotalDays(1), JulianDate.createFromTotalDays(3), true, true),
-                new TimeInterval(JulianDate.createFromTotalDays(2), JulianDate.createFromTotalDays(3), true, true),
-                new TimeInterval(JulianDate.createFromTotalDays(2), JulianDate.createFromTotalDays(3), true, true),
-                new TimeInterval(JulianDate.createFromTotalDays(3), JulianDate.createFromTotalDays(2), true, true),
-                new TimeInterval(JulianDate.createFromTotalDays(3), JulianDate.createFromTotalDays(3), true, true),
-                new TimeInterval(JulianDate.createFromTotalDays(0), JulianDate.createFromTotalDays(0), false, false)];
+        var testParameters = [new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2.5), true, true),
+                new TimeInterval(JulianDate.fromTotalDays(1.5), JulianDate.fromTotalDays(2), true, true),
+                new TimeInterval(JulianDate.fromTotalDays(1.5), JulianDate.fromTotalDays(2), true, true),
+                new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2.5), true, true),
+                new TimeInterval(JulianDate.fromTotalDays(3), JulianDate.fromTotalDays(4), true, true),
+                new TimeInterval(JulianDate.fromTotalDays(0), JulianDate.fromTotalDays(0), false, false),
+                new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2.5), true, true),
+                new TimeInterval(JulianDate.fromTotalDays(2), JulianDate.fromTotalDays(3), true, true),
+                new TimeInterval(JulianDate.fromTotalDays(2), JulianDate.fromTotalDays(2.5), true, true),
+                new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2), true, true),
+                new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2), false, false),
+                new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2), false, false),
+                new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2), true, false),
+                new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2), false, true),
+                new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2), false, false),
+                new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2), true, false),
+                new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2), true, false),
+                new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2), true, false),
+                new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(3), false, false),
+                new TimeInterval(JulianDate.fromTotalDays(2), JulianDate.fromTotalDays(4), false, false),
+                new TimeInterval(JulianDate.fromTotalDays(2), JulianDate.fromTotalDays(3), false, false),
+                new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(3), false, false),
+                new TimeInterval(JulianDate.fromTotalDays(2), JulianDate.fromTotalDays(4), true, true),
+                new TimeInterval(JulianDate.fromTotalDays(2), JulianDate.fromTotalDays(3), true, false),
+                new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(1), false, false),
+                new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2), true, true),
+                new TimeInterval(JulianDate.fromTotalDays(0), JulianDate.fromTotalDays(0), false, false),
+                new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(3), true, true),
+                new TimeInterval(JulianDate.fromTotalDays(2), JulianDate.fromTotalDays(3), true, true),
+                new TimeInterval(JulianDate.fromTotalDays(2), JulianDate.fromTotalDays(3), true, true),
+                new TimeInterval(JulianDate.fromTotalDays(3), JulianDate.fromTotalDays(2), true, true),
+                new TimeInterval(JulianDate.fromTotalDays(3), JulianDate.fromTotalDays(3), true, true),
+                new TimeInterval(JulianDate.fromTotalDays(0), JulianDate.fromTotalDays(0), false, false)];
 
         for ( var i = 0; i < testParameters.length - 2; i = i + 3) {
             var first = testParameters[i];
@@ -130,7 +130,7 @@ defineSuite(['Core/TimeInterval', 'Core/JulianDate'], function(TimeInterval, Jul
             expect(expectedResult.equals(intersect1)).toBeTruthy();
         }
 
-        var interval = new TimeInterval(JulianDate.createFromTotalDays(1), JulianDate.createFromTotalDays(2));
+        var interval = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2));
         expect(interval.intersect(undefined) === TimeInterval.empty).toBeTruthy();
     });
 });

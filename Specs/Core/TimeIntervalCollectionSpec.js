@@ -2,9 +2,9 @@ defineSuite(['Core/TimeIntervalCollection', 'Core/JulianDate', 'Core/TimeInterva
     "use strict";
     /*global it,expect*/
     it('TODO', function() {
-        var start = JulianDate.createFromTotalDays(1);
-        var mid = JulianDate.createFromTotalDays(2);
-        var stop = JulianDate.createFromTotalDays(3);
+        var start = JulianDate.fromTotalDays(1);
+        var mid = JulianDate.fromTotalDays(2);
+        var stop = JulianDate.fromTotalDays(3);
 
         var intervals = new TimeIntervalCollection();
 

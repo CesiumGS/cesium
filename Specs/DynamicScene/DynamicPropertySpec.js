@@ -33,21 +33,21 @@ defineSuite(['DynamicScene/DynamicProperty', 'Core/JulianDate', 'DynamicScene/Bo
         expect(dynamicProperty.getValue(new JulianDate())).toBeFalsy();
 
         dynamicProperty.addData(booleanInterval);
-        expect(dynamicProperty.getValue(JulianDate.createFromIso8601('2012-04-18T15:59:00Z')) === false).toBeTruthy();
-        expect(dynamicProperty.getValue(JulianDate.createFromIso8601('2012-04-18T16:00:00Z')) === true).toBeTruthy();
-        expect(dynamicProperty.getValue(JulianDate.createFromIso8601('2012-04-19T16:00:00Z')) === true).toBeTruthy();
-        expect(dynamicProperty.getValue(JulianDate.createFromIso8601('2012-04-19T16:01:00Z')) === false).toBeTruthy();
+        expect(dynamicProperty.getValue(JulianDate.fromIso8601('2012-04-18T15:59:00Z')) === false).toBeTruthy();
+        expect(dynamicProperty.getValue(JulianDate.fromIso8601('2012-04-18T16:00:00Z')) === true).toBeTruthy();
+        expect(dynamicProperty.getValue(JulianDate.fromIso8601('2012-04-19T16:00:00Z')) === true).toBeTruthy();
+        expect(dynamicProperty.getValue(JulianDate.fromIso8601('2012-04-19T16:01:00Z')) === false).toBeTruthy();
 
         dynamicProperty.addData(booleanIntervalArray);
         dynamicProperty.addData(booleanVerbose);
-        expect(dynamicProperty.getValue(JulianDate.createFromIso8601('2012-04-18T16:00:00Z'))).toBeFalsy();
-        expect(dynamicProperty.getValue(JulianDate.createFromIso8601('2012-04-18T17:30:00Z'))).toBeFalsy();
-        expect(dynamicProperty.getValue(JulianDate.createFromIso8601('2012-04-18T16:06:00Z'))).toBeFalsy();
+        expect(dynamicProperty.getValue(JulianDate.fromIso8601('2012-04-18T16:00:00Z'))).toBeFalsy();
+        expect(dynamicProperty.getValue(JulianDate.fromIso8601('2012-04-18T17:30:00Z'))).toBeFalsy();
+        expect(dynamicProperty.getValue(JulianDate.fromIso8601('2012-04-18T16:06:00Z'))).toBeFalsy();
     });
 
     it("Works with interpolatable values (default linear interpolator).", function() {
         var iso8601Epoch = '2012-04-18T15:59:00Z';
-        var epoch = JulianDate.createFromIso8601(iso8601Epoch);
+        var epoch = JulianDate.fromIso8601(iso8601Epoch);
 
         var property = new DynamicProperty(NumberDataHandler);
         var packet = {
@@ -62,7 +62,7 @@ defineSuite(['DynamicScene/DynamicProperty', 'Core/JulianDate', 'DynamicScene/Bo
 
     it("Works with interpolatable values (specified linear interpolator).", function() {
         var iso8601Epoch = '2012-04-18T15:59:00Z';
-        var epoch = JulianDate.createFromIso8601(iso8601Epoch);
+        var epoch = JulianDate.fromIso8601(iso8601Epoch);
 
         var property = new DynamicProperty(NumberDataHandler);
         var packet = {
@@ -79,7 +79,7 @@ defineSuite(['DynamicScene/DynamicProperty', 'Core/JulianDate', 'DynamicScene/Bo
 
     it("Works with Cartesian3 interpolatable values (specified linear interpolator).", function() {
         var iso8601Epoch = '2012-04-18T15:59:00Z';
-        var epoch = JulianDate.createFromIso8601(iso8601Epoch);
+        var epoch = JulianDate.fromIso8601(iso8601Epoch);
 
         var property = new DynamicProperty(Cartesian3DataHandler);
         var packet = {
@@ -103,7 +103,7 @@ defineSuite(['DynamicScene/DynamicProperty', 'Core/JulianDate', 'DynamicScene/Bo
 
     it("Works with static Cartesian3 values.", function() {
         var iso8601Epoch = '2012-04-18T15:59:00Z';
-        var epoch = JulianDate.createFromIso8601(iso8601Epoch);
+        var epoch = JulianDate.fromIso8601(iso8601Epoch);
 
         var property = new DynamicProperty(Cartesian3DataHandler);
         var packet = {
@@ -119,7 +119,7 @@ defineSuite(['DynamicScene/DynamicProperty', 'Core/JulianDate', 'DynamicScene/Bo
 
     it("Works with static Quaternion values.", function() {
         var iso8601Epoch = '2012-04-18T15:59:00Z';
-        var epoch = JulianDate.createFromIso8601(iso8601Epoch);
+        var epoch = JulianDate.fromIso8601(iso8601Epoch);
 
         var property = new DynamicProperty(QuaternionDataHandler);
         var packet = {
@@ -136,7 +136,7 @@ defineSuite(['DynamicScene/DynamicProperty', 'Core/JulianDate', 'DynamicScene/Bo
 
     it("Works with Cartesian2 interpolatable values (specified linear interpolator).", function() {
         var iso8601Epoch = '2012-04-18T15:59:00Z';
-        var epoch = JulianDate.createFromIso8601(iso8601Epoch);
+        var epoch = JulianDate.fromIso8601(iso8601Epoch);
 
         var property = new DynamicProperty(Cartesian2DataHandler);
         var packet = {
@@ -158,7 +158,7 @@ defineSuite(['DynamicScene/DynamicProperty', 'Core/JulianDate', 'DynamicScene/Bo
 
     it("Works with static Cartesian2 values.", function() {
         var iso8601Epoch = '2012-04-18T15:59:00Z';
-        var epoch = JulianDate.createFromIso8601(iso8601Epoch);
+        var epoch = JulianDate.fromIso8601(iso8601Epoch);
 
         var property = new DynamicProperty(Cartesian2DataHandler);
         var packet = {
@@ -173,7 +173,7 @@ defineSuite(['DynamicScene/DynamicProperty', 'Core/JulianDate', 'DynamicScene/Bo
 
     it("Works with Quaternion interpolatable values (specified linear interpolator).", function() {
         var iso8601Epoch = '2012-04-18T15:59:00Z';
-        var epoch = JulianDate.createFromIso8601(iso8601Epoch);
+        var epoch = JulianDate.fromIso8601(iso8601Epoch);
 
         var property = new DynamicProperty(QuaternionDataHandler);
 

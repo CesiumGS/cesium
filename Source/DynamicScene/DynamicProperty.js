@@ -17,7 +17,7 @@ define(['Core/JulianDate', 'Core/TimeInterval', 'Core/TimeIntervalCollection', '
 
     function convertDate(date, epoch) {
         if (typeof date === 'string') {
-            return JulianDate.createFromIso601(date);
+            return JulianDate.fromIso601(date);
         }
         return epoch.addSeconds(date);
     }
@@ -73,7 +73,7 @@ define(['Core/JulianDate', 'Core/TimeInterval', 'Core/TimeIntervalCollection', '
         var packetData = this_dataHandler.getPacketData(packet);
         var iso8601Interval = packet.interval || "0000-01-01/9999-12-31"; //FIXME We need a real infinite interval to use.
         iso8601Interval = iso8601Interval.split('/');
-        var packetInterval = new TimeInterval(JulianDate.createFromIso8601(iso8601Interval[0]), JulianDate.createFromIso8601(iso8601Interval[1]), true, true);
+        var packetInterval = new TimeInterval(JulianDate.fromIso8601(iso8601Interval[0]), JulianDate.fromIso8601(iso8601Interval[1]), true, true);
         var existingInterval = this_intervals.findInterval(packetInterval);
         var intervalData;
 
@@ -112,7 +112,7 @@ define(['Core/JulianDate', 'Core/TimeInterval', 'Core/TimeIntervalCollection', '
             }
             var epoch = packet.epoch;
             if (typeof epoch !== 'undefined') {
-                epoch = JulianDate.createFromIso8601(epoch);
+                epoch = JulianDate.fromIso8601(epoch);
             }
             DynamicProperty._mergeNewSamples(epoch, intervalData.times, intervalData.values, packetData, this_dataHandler.elementsPerItem, JulianDate.compare);
         } else {
