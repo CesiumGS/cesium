@@ -32,7 +32,9 @@ define(function() {
         for ( var i = 0; i < a.length; i++) {
             args[0] = a[i];
             args[1] = b[i];
-            return f.apply(null, args);
+            if (!f.apply(null, args)) {
+                return false;
+            }
         }
 
         return true;
