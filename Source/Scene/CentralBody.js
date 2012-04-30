@@ -1052,7 +1052,7 @@ define([
             });
             this._quadLogo = new ViewportQuad(new Rectangle(this.logoOffsetX, this.logoOffsetY, this._textureLogo.getWidth(), this._textureLogo.getHeight()));
             this._quadLogo.setTexture(this._textureLogo);
-            this._quadLogo.setBlendingEnabled(true);
+            this._quadLogo.enableBlending = true;
         }
 
         if (!this._textureCache || this._textureCache.isDestroyed()) {
