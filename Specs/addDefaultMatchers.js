@@ -11,6 +11,10 @@ define(function() {
     }
 
     function isEqualEpsilon(a, b, epsilon) {
+        if (typeof a !== "undefined" && typeof a.equalsEpsilon !== "undefined") {
+            return a.equalsEpsilon(b, epsilon);
+        }
+
         return Math.abs(a - b) <= epsilon;
     }
 
@@ -28,9 +32,7 @@ define(function() {
         for ( var i = 0; i < a.length; i++) {
             args[0] = a[i];
             args[1] = b[i];
-            if (!f.apply(null, args)) {
-                return false;
-            }
+            return f.apply(null, args);
         }
 
         return true;

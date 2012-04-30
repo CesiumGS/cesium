@@ -13,21 +13,11 @@ define(['Core/Color'], function(Color) {
 
         extractValueAt : function(index, data) {
             index = index * ColorDataHandler.elementsPerItem;
-            return {
-                r : data[index],
-                g : data[index + 1],
-                b : data[index + 2],
-                a : data[index + 3]
-            };
+            return new Color(data[index], data[index + 1], data[index + 2], data[index + 3]);
         },
 
         extractValue : function(data) {
-            return {
-                r : data[0],
-                g : data[1],
-                b : data[2],
-                a : data[3]
-            };
+            return new Color(data[0], data[1], data[2], data[3]);
         },
 
         getPacketData : function(packet) {
@@ -43,7 +33,7 @@ define(['Core/Color'], function(Color) {
         },
 
         interpretInterpolationResult : function(result) {
-            return new Color(result[0], result[1], result[2]);
+            return new Color(result[0], result[1], result[2], result[3]);
         }
     };
     return ColorDataHandler;

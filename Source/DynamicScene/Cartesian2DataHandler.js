@@ -13,17 +13,11 @@ define(['Core/Cartesian2'], function(Cartesian2) {
 
         extractValueAt : function(index, data) {
             index = index * Cartesian2DataHandler.elementsPerItem;
-            return {
-                x : data[index],
-                y : data[index + 1]
-            };
+            return new Cartesian2(data[index], data[index + 1]);
         },
 
         extractValue : function(data) {
-            return {
-                x : data[0],
-                y : data[1]
-            };
+            return new Cartesian2(data[0], data[1]);
         },
 
         getPacketData : function(packet) {

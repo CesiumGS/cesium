@@ -14,7 +14,7 @@ define(function() {
 
         getPacketData : function(packet) {
             var result = packet.string;
-            return typeof result === 'undefined' ? packet : result;
+            return typeof result === 'undefined' ? String(packet) : String(result);
         }
     };
 

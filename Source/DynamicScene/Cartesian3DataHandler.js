@@ -13,19 +13,11 @@ define(['Core/Cartesian3'], function(Cartesian3) {
 
         extractValueAt : function(index, data) {
             index = index * Cartesian3DataHandler.elementsPerItem;
-            return {
-                x : data[index],
-                y : data[index + 1],
-                z : data[index + 2]
-            };
+            return new Cartesian3(data[index], data[index + 1], data[index + 2]);
         },
 
         extractValue : function(data) {
-            return {
-                x : data[0],
-                y : data[1],
-                z : data[2]
-            };
+            return new Cartesian3(data[0], data[1], data[2]);
         },
 
         getPacketData : function(packet) {

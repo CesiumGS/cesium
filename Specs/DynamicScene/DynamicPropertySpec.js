@@ -27,22 +27,22 @@ defineSuite(['DynamicScene/DynamicProperty', 'Core/JulianDate', 'DynamicScene/Bo
         }];
 
         dynamicProperty.addData(booleanConstant);
-        expect(dynamicProperty.getValue(new JulianDate())).toBeTruthy();
+        expect(dynamicProperty.getValue(new JulianDate())).toEqual(true);
 
         dynamicProperty.addData(booleanVerbose);
-        expect(dynamicProperty.getValue(new JulianDate())).toBeFalsy();
+        expect(dynamicProperty.getValue(new JulianDate())).toEqual(false);
 
         dynamicProperty.addData(booleanInterval);
-        expect(dynamicProperty.getValue(JulianDate.fromIso8601('2012-04-18T15:59:00Z')) === false).toBeTruthy();
-        expect(dynamicProperty.getValue(JulianDate.fromIso8601('2012-04-18T16:00:00Z')) === true).toBeTruthy();
-        expect(dynamicProperty.getValue(JulianDate.fromIso8601('2012-04-19T16:00:00Z')) === true).toBeTruthy();
-        expect(dynamicProperty.getValue(JulianDate.fromIso8601('2012-04-19T16:01:00Z')) === false).toBeTruthy();
+        expect(dynamicProperty.getValue(JulianDate.fromIso8601('2012-04-18T15:59:00Z'))).toEqual(false);
+        expect(dynamicProperty.getValue(JulianDate.fromIso8601('2012-04-18T16:00:00Z'))).toEqual(true);
+        expect(dynamicProperty.getValue(JulianDate.fromIso8601('2012-04-19T16:00:00Z'))).toEqual(true);
+        expect(dynamicProperty.getValue(JulianDate.fromIso8601('2012-04-19T16:01:00Z'))).toEqual(false);
 
         dynamicProperty.addData(booleanIntervalArray);
         dynamicProperty.addData(booleanVerbose);
-        expect(dynamicProperty.getValue(JulianDate.fromIso8601('2012-04-18T16:00:00Z'))).toBeFalsy();
-        expect(dynamicProperty.getValue(JulianDate.fromIso8601('2012-04-18T17:30:00Z'))).toBeFalsy();
-        expect(dynamicProperty.getValue(JulianDate.fromIso8601('2012-04-18T16:06:00Z'))).toBeFalsy();
+        expect(dynamicProperty.getValue(JulianDate.fromIso8601('2012-04-18T16:00:00Z'))).toEqual(false);
+        expect(dynamicProperty.getValue(JulianDate.fromIso8601('2012-04-18T17:30:00Z'))).toEqual(false);
+        expect(dynamicProperty.getValue(JulianDate.fromIso8601('2012-04-18T16:06:00Z'))).toEqual(false);
     });
 
     it("Works with interpolatable values (default linear interpolator).", function() {
@@ -193,7 +193,7 @@ defineSuite(['DynamicScene/DynamicProperty', 'Core/JulianDate', 'DynamicScene/Bo
 
         result = property.getValue(epoch.addSeconds(5));
         var expected = new Quaternion(0.707106781186547, 0.707106781186547, 0, 0);
-        expect(expected.equalsEpsilon(new Quaternion(result.x, result.y, result.z, result.w), CesiumMath.EPSILON15)).toBeTruthy();
+        expect(new Quaternion(result.x, result.y, result.z, result.w)).toEqualEpsilon(expected, CesiumMath.EPSILON15);
 
         result = property.getValue(epoch.addSeconds(10));
         expect(result.x).toEqual(0);
@@ -201,30 +201,6 @@ defineSuite(['DynamicScene/DynamicProperty', 'Core/JulianDate', 'DynamicScene/Bo
         expect(result.z).toEqual(0);
         expect(result.w).toEqual(0);
     });
-
-    function compareTimeArrays(a, b) {
-        if (a.length !== b.length)
-            return false;
-
-        for ( var i = 0; i < a.length; i++) {
-            if (JulianDate.compare(a[i], b[i]) !== 0) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    function compareArrays(a, b) {
-        if (a.length !== b.length)
-            return false;
-
-        for ( var i = 0; i < a.length; i++) {
-            if (a[i] !== b[i]) {
-                return false;
-            }
-        }
-        return true;
-    }
 
     it("_mergeNewSamples works for sorted non-inersecting data.", function() {
         var times = [];
@@ -240,8 +216,8 @@ defineSuite(['DynamicScene/DynamicProperty', 'Core/JulianDate', 'DynamicScene/Bo
         DynamicProperty._mergeNewSamples(epoch, times, values, newData, 1);
         DynamicProperty._mergeNewSamples(epoch, times, values, newData2, 1);
 
-        expect(compareTimeArrays(expectedTimes, times)).toBeTruthy();
-        expect(compareArrays(expectedValues, values)).toBeTruthy();
+        expect(times).toEqualArray(expectedTimes, JulianDate.compare);
+        expect(values).toEqualArray(expectedValues);
     });
 
     it("_mergeNewSamples works for elements of size 2.", function() {
@@ -258,8 +234,8 @@ defineSuite(['DynamicScene/DynamicProperty', 'Core/JulianDate', 'DynamicScene/Bo
         DynamicProperty._mergeNewSamples(epoch, times, values, newData, 2);
         DynamicProperty._mergeNewSamples(epoch, times, values, newData2, 2);
 
-        expect(compareTimeArrays(expectedTimes, times)).toBeTruthy();
-        expect(compareArrays(expectedValues, values)).toBeTruthy();
+        expect(times).toEqualArray(expectedTimes, JulianDate.compare);
+        expect(values).toEqualArray(expectedValues);
     });
 
     it("_mergeNewSamples works for unsorted inersecting data.", function() {
@@ -276,8 +252,8 @@ defineSuite(['DynamicScene/DynamicProperty', 'Core/JulianDate', 'DynamicScene/Bo
         DynamicProperty._mergeNewSamples(epoch, times, values, newData, 1);
         DynamicProperty._mergeNewSamples(epoch, times, values, newData2, 1);
 
-        expect(compareTimeArrays(expectedTimes, times)).toBeTruthy();
-        expect(compareArrays(expectedValues, values)).toBeTruthy();
+        expect(times).toEqualArray(expectedTimes, JulianDate.compare);
+        expect(values).toEqualArray(expectedValues);
     });
 
     it("_mergeNewSamples works for data with repeated values.", function() {
@@ -290,7 +266,7 @@ defineSuite(['DynamicScene/DynamicProperty', 'Core/JulianDate', 'DynamicScene/Bo
         var expectedValues = ['d', 'c', 'e', 'f'];
         DynamicProperty._mergeNewSamples(epoch, times, values, newData, 1);
 
-        expect(compareTimeArrays(expectedTimes, times)).toBeTruthy();
-        expect(compareArrays(expectedValues, values)).toBeTruthy();
+        expect(times).toEqualArray(expectedTimes, JulianDate.compare);
+        expect(values).toEqualArray(expectedValues);
     });
 });

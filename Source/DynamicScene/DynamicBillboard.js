@@ -14,23 +14,5 @@ define(function() {
         this.verticalOrigin = verticalOrigin;
     }
 
-    DynamicBillboard.prototype.show = undefined;
-
-    DynamicBillboard.prototype.color = undefined;
-
-    DynamicBillboard.prototype.eyeOffset = undefined;
-
-    DynamicBillboard.prototype.horizontalOrigin = undefined;
-
-    DynamicBillboard.prototype.image = undefined;
-
-    DynamicBillboard.prototype.pixelOffset = undefined;
-
-    DynamicBillboard.prototype.rotation = undefined;
-
-    DynamicBillboard.prototype.scale = undefined;
-
-    DynamicBillboard.prototype.verticalOrigin = undefined;
-
     return DynamicBillboard;
 });

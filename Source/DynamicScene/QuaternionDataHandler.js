@@ -22,12 +22,7 @@ define(['Core/Quaternion', 'Core/Cartesian3'],
                 },
 
                 extractValue : function(data) {
-                    return {
-                        x : data[0],
-                        y : data[1],
-                        z : data[2],
-                        w : data[3]
-                    };
+                    return new Quaternion(data[0], data[1], data[2], data[3]);
                 },
 
                 getPacketData : function(packet) {
@@ -61,17 +56,15 @@ define(['Core/Quaternion', 'Core/Cartesian3'],
 
                 interpretInterpolationResult : function(result, valuesArray, firstIndex, lastIndex) {
                     var rotationVector = new Cartesian3(result[0], result[1], result[2]);
-                    var magnitudeSquared = rotationVector.magnitudeSquared();
+                    var magnitude = rotationVector.magnitude();
+
                     var quaternion0 = QuaternionDataHandler.extractValueAt(lastIndex, valuesArray);
                     var difference;
 
-                    if (magnitudeSquared === 0) {
+                    if (magnitude === 0) {
                         difference = new Quaternion(0, 0, 0, 1);
                     } else {
-                        var magnitude = Math.sqrt(magnitudeSquared), angle = magnitude / 2.0, axisX = rotationVector.x / magnitude, axisY = rotationVector.y / magnitude, axisZ = rotationVector.z /
-                                magnitude, c = Math.cos(angle), s = Math.sin(angle);
-
-                        difference = new Quaternion(s * axisX, s * axisY, s * axisZ, c);
+                        difference = Quaternion.fromAxisAngle(rotationVector, magnitude);
                     }
 
                     return difference.multiply(quaternion0);
