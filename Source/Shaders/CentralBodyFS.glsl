@@ -37,7 +37,11 @@
 #endif    
 
 uniform sampler2D u_dayTexture;
+
+#ifdef SHOW_NIGHT
 uniform sampler2D u_nightTexture;
+#endif
+
 uniform sampler2D u_specularMap;
 uniform sampler2D u_cloudMap;
 uniform sampler2D u_bumpMap;
@@ -210,10 +214,12 @@ vec3 dayColor(vec3 normalEC, vec2 txCoord, float cloudCover)
     return earthUnderCloudColor;
 }
 
+#ifdef SHOW_NIGHT
 vec3 nightColor(vec2 txCoord, float cloudCover)
 {
     return u_nightIntensity * texture2D(u_nightTexture, txCoord).rgb * (1.0 - cloudCover);
 }
+#endif
 
 void main()
 {
