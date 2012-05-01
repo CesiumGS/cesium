@@ -235,6 +235,7 @@ define([
 
         this._textureLogo = undefined;
         this.logoOffset = Cartesian2.getZero();
+        this._logoOffset = this.logoOffset;
         this._quadLogo = undefined;
 
         this._dayTileProvider = undefined;
@@ -1053,6 +1054,9 @@ define([
             this._quadLogo = new ViewportQuad(new Rectangle(this.logoOffset.x, this.logoOffset.y, this._textureLogo.getWidth(), this._textureLogo.getHeight()));
             this._quadLogo.setTexture(this._textureLogo);
             this._quadLogo.enableBlending = true;
+        } else if (this._quadLogo && this._textureLogo && !this.logoOffset.equals(this._logoOffset)) {
+            this._quadLogo.setRectangle(new Rectangle(this.logoOffset.x, this.logoOffset.y, this._textureLogo.getWidth(), this._textureLogo.getHeight()));
+            this._logoOffset = this.logoOffset;
         }
 
         if (!this._textureCache || this._textureCache.isDestroyed()) {
