@@ -69,6 +69,7 @@ What's New
           JulianDate.fromTotalDays(23452.23);
 
         * JulianDate.getDate is now JulianDate.toDate() and returns a new instance each time.
+        * CentralBody.logoOffsetX and logoOffsetY have been replaced with CentralBody.logoOffset, a Cartesian2.
         
     b4 - 03/01/2012
     ---------------
