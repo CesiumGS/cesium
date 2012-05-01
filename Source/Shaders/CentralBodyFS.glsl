@@ -38,6 +38,9 @@
 
 uniform sampler2D u_dayTexture;
 
+// This #ifdef is required due to a bug in Mac OS X 10.6.  It doesn't realize that
+// the uniform is unused when SHOW_NIGHT is not defined, and so it doesn't get
+// optimized out.
 #ifdef SHOW_NIGHT
 uniform sampler2D u_nightTexture;
 #endif
