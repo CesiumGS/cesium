@@ -66,4 +66,22 @@
         };
     };
 
+    Sandbox.CompositeTiler = function (scene, ellipsoid, primitives) {
+        this.code = function () {
+            // Bing Maps
+            var bing = new Cesium.BingMapsTileProvider({
+                server : "dev.virtualearth.net",
+                mapStyle : Cesium.BingMapsStyle.AERIAL
+            });
+            // Single texture
+            var single = new Cesium.SingleTileProvider("Images/NE2_50M_SR_W_4096.jpg");
+            // Composite tile provider
+            var composite = new Cesium.CompositeTileProvider([
+                { provider : single, height : 1000000 },
+                { provider : bing, height : 0}
+            ], scene.getCamera(), ellipsoid);
+            primitives.getCentralBody().dayTileProvider = composite;
+        };
+    };
+
 }());
