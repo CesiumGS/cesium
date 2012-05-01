@@ -17,7 +17,7 @@ define([
      * @constructor
      *
      * @param {String} description.url The OpenStreetMap url.
-     * @param {String} description.proxy A proxy URL to send image requests through. This URL will have the desired image URL appended as a query parameter.
+     * @param {Object} description.proxy A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
      *
      * @see SingleTileProvider
      * @see BingMapsTileProvider
@@ -39,8 +39,8 @@ define([
         this._url = desc.url || 'http://tile.openstreetmap.org/';
 
         /**
-         * A proxy URL to send image requests through. This URL will have the desired image URL appended as a query parameter.
-         * @type {String}
+         * A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
+         * @type {Object}
          */
         this.proxy = desc.proxy;
 
@@ -99,12 +99,10 @@ define([
     }
 
     OpenStreetMapTileProvider.prototype._getUrl = function(tile) {
-        var url = '';
+        var url = this._url + tile.zoom + '/' + tile.x + '/' + tile.y + '.png';
         if (this.proxy) {
-            url += this.proxy + '?';
+            url = this.proxy.getURL(url);
         }
-        url += this._url + tile.zoom + '/' + tile.x + '/' + tile.y + '.png';
-
         return url;
     };
 
