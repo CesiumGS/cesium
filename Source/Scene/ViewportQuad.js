@@ -5,6 +5,7 @@ define([
         '../Core/ComponentDatatype',
         '../Core/PrimitiveType',
         '../Renderer/BufferUsage',
+        '../Renderer/BlendingState',
         '../Shaders/ViewportQuadVS',
         '../Shaders/ViewportQuadFS'
     ], function(
@@ -13,6 +14,7 @@ define([
         ComponentDatatype,
         PrimitiveType,
         BufferUsage,
+        BlendingState,
         ViewportQuadVS,
         ViewportQuadFS) {
     "use strict";
@@ -39,6 +41,8 @@ define([
 
         this._rectangle = rectangle; // TODO: copy?
         this._dirtyRectangle = true;
+
+        this.enableBlending = false;
 
         var that = this;
         this.uniforms = {
@@ -186,6 +190,7 @@ define([
                 }
             };
 
+            this.renderState.blending.enabled = this.enableBlending;
             this._va = context.createVertexArrayFromMesh({
                 mesh : mesh,
                 attributeIndices : ViewportQuad._getAttributeIndices(),
@@ -199,7 +204,7 @@ define([
      */
     ViewportQuad.prototype.update = function(context, sceneState) {
         this._sp = context.getShaderCache().getShaderProgram(this.vertexShader, this.fragmentShader, ViewportQuad._getAttributeIndices());
-        this.renderState = context.createRenderState();
+        this.renderState = context.createRenderState({ blending : BlendingState.ALPHA_BLEND });
 
         this._update(context, sceneState);
         this.update = this._update;
