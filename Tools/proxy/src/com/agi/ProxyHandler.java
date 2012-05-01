@@ -61,19 +61,23 @@ public final class ProxyHandler extends AbstractHandler {
 	}
 
 	public void handle(String target, Request baseRequest, final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
-		String queryString = request.getQueryString();
-		if (queryString == null)
+		Enumeration<?> parameterNames = request.getParameterNames();
+		if (!parameterNames.hasMoreElements()) {
+			response.sendError(400, "No url specified.");
 			return;
+		}
 
 		URI uri;
 		try {
-			uri = new URI(queryString);
+			uri = new URI((String) parameterNames.nextElement());
 		} catch (Exception e) {
 			throw new ServletException(e);
 		}
 
-		if (!allowedHosts.contains(uri.getHost()))
+		if (!allowedHosts.contains(uri.getHost())) {
+			response.sendError(400, "Host not in list of allowed hosts.");
 			return;
+		}
 
 		baseRequest.setHandled(true);
 

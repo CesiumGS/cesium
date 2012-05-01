@@ -69,6 +69,9 @@ What's New
           JulianDate.fromTotalDays(23452.23);
 
         * JulianDate.getDate is now JulianDate.toDate() and returns a new instance each time.
+        * CentralBody.logoOffsetX and logoOffsetY have been replaced with CentralBody.logoOffset, a Cartesian2.
+        * TileProviders now take a proxy object instead of a string, to allow more control over how proxy
+          URLs are built.  Construct a DefaultProxy, passing the previous proxy URL, to get the previous behavior.
         
     b4 - 03/01/2012
     ---------------

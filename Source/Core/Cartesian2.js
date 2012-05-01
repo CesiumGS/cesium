@@ -17,7 +17,7 @@ define(function() {
      * @see Cartesian3
      * @see Cartesian4
      */
-      function Cartesian2(x, y) {
+    function Cartesian2(x, y) {
 
         /**
          * DOC_TBA

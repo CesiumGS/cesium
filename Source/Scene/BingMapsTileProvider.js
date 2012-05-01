@@ -95,8 +95,8 @@ define([
      * @param {String} description.server The name of the Bing Maps server hosting the imagery.
      * @param {String} description.key An optional Bing Maps key, which can be created at <a href="https://www.bingmapsportal.com/">https://www.bingmapsportal.com/</a>.
      * @param {Enumeration} description.mapStyle The type of Bing Maps imagery to load.
-     * @param {String} description.proxy A proxy URL to send image requests through. This URL will have the desired image URL appended as a query parameter.
-     * @param {Enumeration} description.proxyUsagePolicy Specify whether to use the supplied proxy for all images, or only those that don't support cross-origin requests.  By default, cross-origin will be used.
+     * @param {Object} description.proxy A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
+     * @param {Enumeration} description.proxyUsagePolicy Specify whether to use the supplied proxy for all data, or only those that don't support cross-origin requests.  By default, cross-origin will be used.
      *
      * @exception {DeveloperError} <code>description.server</code> is required.
      *
@@ -139,20 +139,20 @@ define([
         this._key = key;
 
         /**
-         * The type of Bing Maps imagery to load.'
+         * The type of Bing Maps imagery to load.
          * @type {Enumeration}
          */
         this.mapStyle = mapStyle;
         this._mapStyle = mapStyle;
 
         /**
-         * A proxy URL to send image requests through. This URL will have the desired image URL appended as a query parameter.
-         * @type {String}
+         * A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
+         * @type {Object}
          */
         this.proxy = desc.proxy;
 
         /**
-         * Specify whether to use the supplied proxy for all images, or only those that don't support cross-origin requests.  By default, cross-origin will be used.
+         * Specify whether to use the supplied proxy for all data, or only those that don't support cross-origin requests.  By default, cross-origin will be used.
          * @type {Enumeration}
          */
         this.proxyUsagePolicy = desc.proxyUsagePolicy || ProxyUsagePolicy.USE_CORS;
@@ -278,22 +278,20 @@ define([
     };
 
     BingMapsTileProvider.prototype._getMetadataUrl = function() {
-        var url = '';
+        var url = 'http://' + this.server + '/REST/v1/Imagery/Metadata/' + this.mapStyle.name;
         if (this.proxyUsagePolicy === ProxyUsagePolicy.ALWAYS && this.proxy) {
-            url += this.proxy + '?';
+            url = this.proxy.getURL(url);
         }
-        url += 'http://' + this.server + '/REST/v1/Imagery/Metadata/' + this.mapStyle.name;
         return url;
     };
 
     BingMapsTileProvider.prototype._getTileUrl = function(tile) {
         tile.quadkey = BingMapsTileProvider.tileXYToQuadKey(tile.x, tile.y, tile.zoom);
 
-        var url = '';
+        var url = this._url.replace('{quadkey}', tile.quadkey);
         if (this.proxyUsagePolicy === ProxyUsagePolicy.ALWAYS && this.proxy) {
-            url += this.proxy + '?';
+            url = this.proxy.getURL(url);
         }
-        url += this._url.replace('{quadkey}', tile.quadkey);
 
         return url;
     };

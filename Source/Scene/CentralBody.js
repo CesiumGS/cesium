@@ -234,7 +234,7 @@ define([
         this._fb = undefined;
 
         this._textureLogo = undefined;
-        this.logoOffsetX = this.logoOffsetY = 0;
+        this.logoOffset = Cartesian2.getZero();
         this._quadLogo = undefined;
 
         this._dayTileProvider = undefined;
@@ -1050,7 +1050,7 @@ define([
                 source : this._dayTileProvider.getLogo(),
                 pixelFormat : PixelFormat.RGBA
             });
-            this._quadLogo = new ViewportQuad(new Rectangle(this.logoOffsetX, this.logoOffsetY, this._textureLogo.getWidth(), this._textureLogo.getHeight()));
+            this._quadLogo = new ViewportQuad(new Rectangle(this.logoOffset.x, this.logoOffset.y, this._textureLogo.getWidth(), this._textureLogo.getHeight()));
             this._quadLogo.setTexture(this._textureLogo);
             this._quadLogo.enableBlending = true;
         }

@@ -20,7 +20,7 @@
                 host : 'server.arcgisonline.com',
                 root : 'ArcGIS/rest',
                 service : 'World_Street_Map',
-                proxy : '/CesiumViewer/Proxy.ashx'
+                proxy : new Cesium.DefaultProxy('/CesiumViewer/Proxy.ashx')
             });
             primitives.getCentralBody().dayTileProvider = arcgis;
         };
@@ -30,7 +30,7 @@
         this.code = function () {
             // OpenStreetMaps
             var osm = new Cesium.OpenStreetMapTileProvider({
-                proxy : '/CesiumViewer/Proxy.ashx'
+                proxy : new Cesium.DefaultProxy('/CesiumViewer/Proxy.ashx')
             });
             primitives.getCentralBody().dayTileProvider = osm;
         };
@@ -41,7 +41,7 @@
             // MapQuest OpenStreetMaps
             var mqOsm = new Cesium.OpenStreetMapTileProvider({
                 url : 'http://otile1.mqcdn.com/tiles/1.0.0/osm/',
-                proxy : '/CesiumViewer/Proxy.ashx'
+                proxy : new Cesium.DefaultProxy('/CesiumViewer/Proxy.ashx')
             });
             primitives.getCentralBody().dayTileProvider = mqOsm;
         };
@@ -52,7 +52,7 @@
             // MapQuest Aerial OpenStreetMaps
             var mqAerialOsm = new Cesium.OpenStreetMapTileProvider({
                 url : 'http://oatile1.mqcdn.com/naip/',
-                proxy : '/CesiumViewer/Proxy.ashx'
+                proxy : new Cesium.DefaultProxy('/CesiumViewer/Proxy.ashx')
             });
             primitives.getCentralBody().dayTileProvider = mqAerialOsm;
         };

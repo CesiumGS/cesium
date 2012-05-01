@@ -134,7 +134,7 @@
      */
     Sandbox.Overlay.prototype.setPosition = function(positions) {
         if (!positions) {
-            throw new Cesium.DeveloperError("positions is requried", "positions");
+            throw new Cesium.DeveloperError("positions is required", "positions");
         }
         // Clear old position so the overlay does not stretch
         this._overlay.style.left = null;
