@@ -211,9 +211,12 @@ define([
         this._imageThrottleLimit = 15;
 
         this._prefetchLimit = 1;
-        this._perTileMaxFailCount = 3;
-        this._maxTileFailCount = 50;
+        this.perTileMaxFailCount = 3;
+        this.maxTileFailCount = 30;
         this._tileFailCount = 0;
+        this.failedTileRetryTime = 30.0;
+        this._lastFailedTime = undefined;
+
 
         this._spWithoutAtmosphere = undefined;
         this._spGroundFromSpace = undefined;
@@ -523,6 +526,7 @@ define([
         var onerror = function() {
             tile._failCount = (tile._failCount) ? tile._failCount + 1 : 1;
             ++that._tileFailCount;
+            that._lastFailedTime = new JulianDate();
             tile.state = TileState.IMAGE_FAILED;
         };
         var oninvalid = function() {
@@ -659,12 +663,11 @@ define([
     CentralBody.prototype._processTile = function(tile) {
         // check if tile needs to load image
         var maxFailed = this._tileFailCount > this._maxTileFailCount;
-        var requestFailed = tile.state === TileState.IMAGE_FAILED &&
-                            tile._failCount < this._maxTileFailCount;
+        var requestFailed = tile.state === TileState.IMAGE_FAILED && tile._failCount < this._maxTileFailCount;
+        var maxTimePassed = this._lastFailedTime && this._lastFailedTime.getSecondsDifference(new JulianDate()) >= this.failedTileRetryTime;
+        var retry = maxTimePassed || (requestFailed && !maxFailed);
 
-        if ((!tile.state ||
-             tile.state === TileState.READY ||
-             requestFailed) && !maxFailed &&
+        if ((!tile.state || tile.state === TileState.READY || retry) &&
              this._imageQueue.indexOf(tile) === -1) {
             this._imageQueue.push(tile);
             tile.state = TileState.IMAGE_LOADING;
