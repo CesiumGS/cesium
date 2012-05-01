@@ -636,7 +636,7 @@ define([
         for (; i < this._textureQueue.length && j < this._textureThrottleLimit; ++i) {
             var tile = this._textureQueue[i];
 
-            if (this._frustumCull(tile, this._mode, this._projection)) {
+            if (this._frustumCull(tile, this._mode, this._projection) || !tile.image) {
                 tile.image = undefined;
                 tile.state = TileState.READY;
                 continue;
@@ -661,14 +661,13 @@ define([
     };
 
     CentralBody.prototype._processTile = function(tile) {
-        // check if tile needs to load image
         var maxFailed = this._tileFailCount > this._maxTileFailCount;
         var requestFailed = tile.state === TileState.IMAGE_FAILED && tile._failCount < this._maxTileFailCount;
         var maxTimePassed = this._lastFailedTime && this._lastFailedTime.getSecondsDifference(new JulianDate()) >= this.failedTileRetryTime;
         var retry = maxTimePassed || (requestFailed && !maxFailed);
 
-        if ((!tile.state || tile.state === TileState.READY || retry) &&
-             this._imageQueue.indexOf(tile) === -1) {
+        // check if tile needs to load image
+        if ((!tile.state || tile.state === TileState.READY) && this._imageQueue.indexOf(tile) === -1) {
             this._imageQueue.push(tile);
             tile.state = TileState.IMAGE_LOADING;
         }
@@ -681,6 +680,15 @@ define([
         else if (tile.state === TileState.REPROJECTED && this._textureQueue.indexOf(tile) === -1) {
             this._textureQueue.push(tile);
             tile.state = TileState.TEXTURE_LOADING;
+        }
+        // or retry a failed image
+        else if (retry && this._imageQueue.indexOf(tile) === -1) {
+            if (maxTimePassed) {
+                tile._failCount = 0;
+                this._tileFailCount = 0;
+            }
+            this._imageQueue.push(tile);
+            tile.state = TileState.IMAGE_LOADING;
         }
         // or release invalid image if there is one
         else if (tile.state === TileState.IMAGE_INVALID && tile.image) {
