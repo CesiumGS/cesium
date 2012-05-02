@@ -2,8 +2,8 @@
 define(['./DynamicProperty'], function(DynamicProperty) {
     "use strict";
 
-    return function(valueType, packet, buffer, sourceUri, existingProperty) {
-        if (typeof packet === 'undefined') {
+    return function(valueType, czmlIntervals, buffer, sourceUri, existingProperty) {
+        if (typeof czmlIntervals === 'undefined') {
             return existingProperty;
         }
 
@@ -11,7 +11,7 @@ define(['./DynamicProperty'], function(DynamicProperty) {
         if (typeof existingProperty === 'undefined') {
             existingProperty = new DynamicProperty(valueType);
         }
-        existingProperty.addData(packet, buffer, sourceUri);
+        existingProperty.addIntervals(czmlIntervals, buffer, sourceUri);
         return existingProperty;
     };
 });

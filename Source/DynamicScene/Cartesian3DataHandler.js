@@ -4,35 +4,34 @@ define(['Core/Cartesian3'], function(Cartesian3) {
 
     var Cartesian3DataHandler = {
 
-        elementsPerItem : 3,
-        elementsPerInterpolationItem : 3,
+        doublesPerValue : 3,
+        doublesPerInterpolationValue : 3,
 
-        isSampled : function(packetData) {
-            return Array.isArray(packetData) && packetData.length > Cartesian3DataHandler.elementsPerItem;
+        isSampled : function(czmlIntervalData) {
+            return Array.isArray(czmlIntervalData) && czmlIntervalData.length > Cartesian3DataHandler.doublesPerValue;
         },
 
-        extractValueAt : function(index, data) {
-            index = index * Cartesian3DataHandler.elementsPerItem;
-            return new Cartesian3(data[index], data[index + 1], data[index + 2]);
+        createValueFromArray : function(data, startingIndex) {
+            return new Cartesian3(data[startingIndex], data[startingIndex + 1], data[startingIndex + 2]);
         },
 
-        extractValue : function(data) {
+        createValue : function(data) {
             return new Cartesian3(data[0], data[1], data[2]);
         },
 
-        getPacketData : function(packet) {
-            return packet.cartesian;
+        getCzmlIntervalValue : function(czmlInterval) {
+            return czmlInterval.cartesian;
         },
 
-        extractInterpolationTable : function(valuesArray, destinationArray, firstIndex, lastIndex) {
-            var sourceIndex = firstIndex * Cartesian3DataHandler.elementsPerItem, destinationIndex = 0, stop = (lastIndex + 1) * Cartesian3DataHandler.elementsPerItem;
+        packValuesForInterpolation : function(valuesArray, destinationArray, firstIndex, lastIndex) {
+            var sourceIndex = firstIndex * Cartesian3DataHandler.doublesPerValue, destinationIndex = 0, stop = (lastIndex + 1) * Cartesian3DataHandler.doublesPerValue;
 
             for (; sourceIndex < stop; sourceIndex++, destinationIndex++) {
                 destinationArray[destinationIndex] = valuesArray[sourceIndex];
             }
         },
 
-        interpretInterpolationResult : function(result) {
+        createValueFromInterpolationResult : function(result) {
             return new Cartesian3(result[0], result[1], result[2]);
         }
     };

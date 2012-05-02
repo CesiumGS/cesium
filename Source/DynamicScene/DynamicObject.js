@@ -7,7 +7,5 @@ define(function() {
         this.id = id;
     }
 
-    DynamicObject.prototype.id = undefined;
-
     return DynamicObject;
 });

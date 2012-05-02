@@ -254,10 +254,14 @@ define(
                 return this.indexOf(date) >= 0;
             };
 
-            TimeIntervalCollection.prototype.findInterval = function(interval) {
-                var thisIntervals = this._intervals;
-                for ( var i = 0; i < thisIntervals.length; i++) {
-                    if (thisIntervals[i].equals(interval)) {
+            TimeIntervalCollection.prototype.findInterval = function(start, stop, isStartIncluded, isStopIncluded) {
+                var thisIntervals = this._intervals, interval;
+                for ( var i = 0, len = thisIntervals.length; i < len; i++) {
+                    interval = thisIntervals[i];
+                    if ((typeof start === 'undefined' || interval.start.equals(start)) &&
+                        (typeof stop === 'undefined' || interval.stop.equals(start)) &&
+                        (typeof isStartIncluded === 'undefined' || interval.isStartIncluded === isStartIncluded) &&
+                        (typeof start === 'undefined' || interval.isStopIncluded === isStopIncluded)) {
                         return thisIntervals[i];
                     }
                 }

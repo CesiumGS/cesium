@@ -5,39 +5,39 @@ define(['./DynamicProperty', 'Core/JulianDate', 'Core/binarySearch', 'Core/inter
 
     var NumberDataHandler = {
 
-        elementsPerItem : 1,
+        doublesPerValue : 1,
 
-        elementsPerInterpolationItem : 1,
+        doublesPerInterpolationValue : 1,
 
-        isSampled : function(packetData) {
-            return Array.isArray(packetData);
+        isSampled : function(czmlIntervalData) {
+            return Array.isArray(czmlIntervalData);
         },
 
-        extractValueAt : function(index, data) {
-            return data[index];
+        createValueFromArray : function(data, startingIndex) {
+            return data[startingIndex];
         },
 
-        extractValue : function(data) {
+        createValue : function(data) {
             if (Array.isArray(data)) {
                 return data[0];
             }
             return data;
         },
 
-        getPacketData : function(packet) {
-            var result = packet.number;
-            return typeof result === 'undefined' ? packet : result;
+        getCzmlIntervalValue : function(czmlInterval) {
+            var result = czmlInterval.number;
+            return typeof result === 'undefined' ? +czmlInterval : result;
         },
 
-        extractInterpolationTable : function(valuesArray, destinationArray, firstIndex, lastIndex) {
-            var sourceIndex = firstIndex * NumberDataHandler.elementsPerItem, destinationIndex = 0, stop = (lastIndex + 1) * NumberDataHandler.elementsPerItem;
+        packValuesForInterpolation : function(valuesArray, destinationArray, firstIndex, lastIndex) {
+            var sourceIndex = firstIndex * NumberDataHandler.doublesPerValue, destinationIndex = 0, stop = (lastIndex + 1) * NumberDataHandler.doublesPerValue;
 
             for (; sourceIndex < stop; sourceIndex++, destinationIndex++) {
                 destinationArray[destinationIndex] = valuesArray[sourceIndex];
             }
         },
 
-        interpretInterpolationResult : function(result) {
+        createValueFromInterpolationResult : function(result) {
             return result[0];
         }
     };

@@ -26,20 +26,20 @@ defineSuite(['DynamicScene/DynamicProperty', 'Core/JulianDate', 'DynamicScene/Bo
             boolean : true
         }];
 
-        dynamicProperty.addData(booleanConstant);
+        dynamicProperty.addIntervals(booleanConstant);
         expect(dynamicProperty.getValue(new JulianDate())).toEqual(true);
 
-        dynamicProperty.addData(booleanVerbose);
+        dynamicProperty.addIntervals(booleanVerbose);
         expect(dynamicProperty.getValue(new JulianDate())).toEqual(false);
 
-        dynamicProperty.addData(booleanInterval);
+        dynamicProperty.addIntervals(booleanInterval);
         expect(dynamicProperty.getValue(JulianDate.fromIso8601('2012-04-18T15:59:00Z'))).toEqual(false);
         expect(dynamicProperty.getValue(JulianDate.fromIso8601('2012-04-18T16:00:00Z'))).toEqual(true);
         expect(dynamicProperty.getValue(JulianDate.fromIso8601('2012-04-19T16:00:00Z'))).toEqual(true);
         expect(dynamicProperty.getValue(JulianDate.fromIso8601('2012-04-19T16:01:00Z'))).toEqual(false);
 
-        dynamicProperty.addData(booleanIntervalArray);
-        dynamicProperty.addData(booleanVerbose);
+        dynamicProperty.addIntervals(booleanIntervalArray);
+        dynamicProperty.addIntervals(booleanVerbose);
         expect(dynamicProperty.getValue(JulianDate.fromIso8601('2012-04-18T16:00:00Z'))).toEqual(false);
         expect(dynamicProperty.getValue(JulianDate.fromIso8601('2012-04-18T17:30:00Z'))).toEqual(false);
         expect(dynamicProperty.getValue(JulianDate.fromIso8601('2012-04-18T16:06:00Z'))).toEqual(false);
@@ -50,11 +50,11 @@ defineSuite(['DynamicScene/DynamicProperty', 'Core/JulianDate', 'DynamicScene/Bo
         var epoch = JulianDate.fromIso8601(iso8601Epoch);
 
         var property = new DynamicProperty(NumberDataHandler);
-        var packet = {
+        var czmlInterval = {
             epoch : iso8601Epoch,
             number : [0, 0, 10, 10, 20, 20]
         };
-        property.addData(packet);
+        property.addIntervals(czmlInterval);
 
         expect(property.getValue(epoch)).toEqual(0);
         expect(property.getValue(epoch.addSeconds(4))).toEqual(4);
@@ -65,13 +65,13 @@ defineSuite(['DynamicScene/DynamicProperty', 'Core/JulianDate', 'DynamicScene/Bo
         var epoch = JulianDate.fromIso8601(iso8601Epoch);
 
         var property = new DynamicProperty(NumberDataHandler);
-        var packet = {
+        var czmlInterval = {
             epoch : iso8601Epoch,
             number : [0, 0, 10, 10, 20, 20],
             interpolationAlgorithm : "LINEAR",
             interpolationDegree : 1
         };
-        property.addData(packet);
+        property.addIntervals(czmlInterval);
 
         expect(property.getValue(epoch)).toEqual(0);
         expect(property.getValue(epoch.addSeconds(4))).toEqual(4);
@@ -82,13 +82,13 @@ defineSuite(['DynamicScene/DynamicProperty', 'Core/JulianDate', 'DynamicScene/Bo
         var epoch = JulianDate.fromIso8601(iso8601Epoch);
 
         var property = new DynamicProperty(Cartesian3DataHandler);
-        var packet = {
+        var czmlInterval = {
             epoch : iso8601Epoch,
             cartesian : [0, 0, 1, 2, 10, 10, 11, 12, 20, 21, 22, 23],
             interpolationAlgorithm : "LINEAR",
             interpolationDegree : 1
         };
-        property.addData(packet);
+        property.addIntervals(czmlInterval);
 
         var result = property.getValue(epoch);
         expect(result.x).toEqual(0);
@@ -106,10 +106,10 @@ defineSuite(['DynamicScene/DynamicProperty', 'Core/JulianDate', 'DynamicScene/Bo
         var epoch = JulianDate.fromIso8601(iso8601Epoch);
 
         var property = new DynamicProperty(Cartesian3DataHandler);
-        var packet = {
+        var czmlInterval = {
             cartesian : [0, 1, 2]
         };
-        property.addData(packet);
+        property.addIntervals(czmlInterval);
 
         var result = property.getValue(epoch);
         expect(result.x).toEqual(0);
@@ -122,10 +122,10 @@ defineSuite(['DynamicScene/DynamicProperty', 'Core/JulianDate', 'DynamicScene/Bo
         var epoch = JulianDate.fromIso8601(iso8601Epoch);
 
         var property = new DynamicProperty(QuaternionDataHandler);
-        var packet = {
+        var czmlInterval = {
             quaternion : [0, 1, 2, 3]
         };
-        property.addData(packet);
+        property.addIntervals(czmlInterval);
 
         var result = property.getValue(epoch);
         expect(result.x).toEqual(0);
@@ -139,13 +139,13 @@ defineSuite(['DynamicScene/DynamicProperty', 'Core/JulianDate', 'DynamicScene/Bo
         var epoch = JulianDate.fromIso8601(iso8601Epoch);
 
         var property = new DynamicProperty(Cartesian2DataHandler);
-        var packet = {
+        var czmlInterval = {
             epoch : iso8601Epoch,
             cartesian : [0, 0, 1, 10, 10, 11, 12, 21, 22],
             interpolationAlgorithm : "LINEAR",
             interpolationDegree : 1
         };
-        property.addData(packet);
+        property.addIntervals(czmlInterval);
 
         var result = property.getValue(epoch);
         expect(result.x).toEqual(0);
@@ -161,10 +161,10 @@ defineSuite(['DynamicScene/DynamicProperty', 'Core/JulianDate', 'DynamicScene/Bo
         var epoch = JulianDate.fromIso8601(iso8601Epoch);
 
         var property = new DynamicProperty(Cartesian2DataHandler);
-        var packet = {
+        var czmlInterval = {
             cartesian : [0, 1]
         };
-        property.addData(packet);
+        property.addIntervals(czmlInterval);
 
         var result = property.getValue(epoch);
         expect(result.x).toEqual(0);
@@ -177,13 +177,13 @@ defineSuite(['DynamicScene/DynamicProperty', 'Core/JulianDate', 'DynamicScene/Bo
 
         var property = new DynamicProperty(QuaternionDataHandler);
 
-        var packet = {
+        var czmlInterval = {
             epoch : iso8601Epoch,
             quaternion : [0, 1, 0, 0, 0, 10, 0, 1, 0, 0],
             interpolationAlgorithm : "LINEAR",
             interpolationDegree : 1
         };
-        property.addData(packet);
+        property.addIntervals(czmlInterval);
 
         var result = property.getValue(epoch);
         expect(result.x).toEqual(1);
@@ -192,7 +192,7 @@ defineSuite(['DynamicScene/DynamicProperty', 'Core/JulianDate', 'DynamicScene/Bo
         expect(result.w).toEqual(0);
 
         result = property.getValue(epoch.addSeconds(5));
-        var expected = new Quaternion(0.707106781186547, 0.707106781186547, 0, 0);
+        var expected = new Quaternion(0.707106781186547, 0.707106781186548, 0, 0);
         expect(new Quaternion(result.x, result.y, result.z, result.w)).toEqualEpsilon(expected, CesiumMath.EPSILON15);
 
         result = property.getValue(epoch.addSeconds(10));

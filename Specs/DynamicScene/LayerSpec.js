@@ -1,10 +1,26 @@
-defineSuite(['DynamicScene/Layer', 'Core/JulianDate', 'DynamicScene/createOrUpdateDynamicBillboard'], function(Layer, JulianDate, createOrUpdateDynamicBillboard) {
+defineSuite(['DynamicScene/Layer',
+             'Core/JulianDate',
+             'DynamicScene/createOrUpdatePosition',
+             'DynamicScene/createOrUpdateOrientation',
+             'DynamicScene/createOrUpdateDynamicBillboard',
+             'DynamicScene/createOrUpdateDynamicLabel'],
+function(Layer,
+        JulianDate,
+        createOrUpdatePosition,
+        createOrUpdateOrientation,
+        createOrUpdateDynamicBillboard,
+        createOrUpdateDynamicLabel) {
     "use strict";
     /*global it,expect*/
 
     it("TODO", function() {
-        var layer = new Layer("testLayer", "testId", [createOrUpdateDynamicBillboard]);
+        var propertyFunctionsMap = [];
+        propertyFunctionsMap.position = createOrUpdatePosition;
+        propertyFunctionsMap.orientation = createOrUpdateOrientation;
+        propertyFunctionsMap.billboard = createOrUpdateDynamicBillboard;
+        propertyFunctionsMap.label = createOrUpdateDynamicLabel;
 
+        var layer = new Layer("testLayer", "testId", propertyFunctionsMap);
         expect(typeof layer.getObject("TestFacility") === 'undefined').toBeTruthy();
 
         var czml = {
@@ -27,7 +43,7 @@ defineSuite(['DynamicScene/Layer', 'Core/JulianDate', 'DynamicScene/createOrUpda
             }
         };
 
-        layer.addData(czml);
+        layer.addPacket(czml);
 
         var testFacility = layer.getObject(czml.id);
         expect(typeof testFacility !== undefined).toBeTruthy();

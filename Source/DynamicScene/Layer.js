@@ -2,10 +2,10 @@
 define(['./DynamicObject', 'Core/createGuid'], function(DynamicObject, createGuid) {
     "use strict";
     //TODO Make sure Layer throws the proper events in all cases.
-    function Layer(name, id, propertyBuilders) {
+    function Layer(name, id, propertyFunctionsMap) {
         this.name = name;
         this.id = id;
-        this._propertyBuilders = propertyBuilders;
+        this._propertyFunctionsMap = propertyFunctionsMap;
         this._hash = {};
         this._array = [];
         this._newObjectListeners = [];
@@ -13,17 +13,43 @@ define(['./DynamicObject', 'Core/createGuid'], function(DynamicObject, createGui
         this._changedPropertyListeners = [];
     }
 
-    function addDatum(layer, data, sourceUri) {
-        var objectId = data.id;
+    Layer.prototype.addPacket = function(packet, sourceUri) {
+        var objectId = packet.id;
+        var this_propertyFunctionsMap = this._propertyFunctionsMap;
         if (typeof objectId === 'undefined') {
             objectId = createGuid();
-            data.id = objectId;
         }
-        var object = layer.getOrCreateObject(objectId);
-        for ( var i = 0, len = layer._propertyBuilders.length; i < len; i++) {
-            layer._propertyBuilders[i](object, data, layer, sourceUri);
+
+        var object = this.getOrCreateObject(objectId);
+        for ( var prop in packet) {
+            if (typeof prop !== 'undefined') {
+                var propertyFunc = this_propertyFunctionsMap[prop];
+                if (propertyFunc !== 'undefined') {
+                    propertyFunc(object, packet, this, sourceUri);
+                }
+            }
         }
-    }
+
+        packet.id = objectId;
+    };
+
+    Layer.prototype.addPackets = function(packets, sourceUri) {
+        if (Array.isArray(packets)) {
+            for ( var i = 0, len = packets.length; i < len; i++) {
+                this.addPacket(this, packets[i], sourceUri);
+            }
+        } else {
+            this.addPacket(this, packets, sourceUri);
+        }
+    };
+
+    Layer.prototype.getObject = function(id) {
+        return this._hash[id];
+    };
+
+    Layer.prototype.getObjects = function() {
+        return this._array;
+    };
 
     Layer.prototype.getOrCreateObject = function(id) {
         var obj = this._hash[id];
@@ -35,6 +61,11 @@ define(['./DynamicObject', 'Core/createGuid'], function(DynamicObject, createGui
         }
 
         return obj;
+    };
+
+    Layer.prototype.clear = function() {
+        this._hash = {};
+        this._array = [];
     };
 
     Layer.prototype.addNewObjectListener = function(listener) {
@@ -67,38 +98,6 @@ define(['./DynamicObject', 'Core/createGuid'], function(DynamicObject, createGui
         var listeners = this._changedPropertyListeners;
         for ( var i = 0, len = listeners.length; i < len; i++) {
             listeners[i](object, name, newProperty, oldProperty);
-        }
-    };
-
-    Layer.prototype.getObjects = function() {
-        return this._array;
-    };
-
-    Layer.prototype.getObject = function(id) {
-        return this._hash[id];
-    };
-
-    Layer.prototype.addData = function(data, sourceUri) {
-        if (Array.isArray(data)) {
-            for ( var i = 0, len = data.length; i < len; i++) {
-                addDatum(this, data[i], sourceUri);
-            }
-        } else {
-            addDatum(this, data, sourceUri);
-        }
-    };
-
-    Layer.prototype.deleteData = function() {
-        this._hash = {};
-        this._array = [];
-    };
-
-    Layer.prototype.deleteDataBefore = function(time) {
-        for ( var i = 0, len = this._array.length; i < len; i++) {
-            var obj = this._array[i];
-            if (obj && obj.deleteDataBefore) {
-                obj.deleteDataBefore(time);
-            }
         }
     };
 

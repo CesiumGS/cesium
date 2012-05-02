@@ -4,35 +4,34 @@ define(['Core/Cartesian2'], function(Cartesian2) {
 
     var Cartesian2DataHandler = {
 
-        elementsPerItem : 2,
-        elementsPerInterpolationItem : 2,
+        doublesPerValue : 2,
+        doublesPerInterpolationValue : 2,
 
-        isSampled : function(packetData) {
-            return Array.isArray(packetData) && packetData.length > Cartesian2DataHandler.elementsPerItem;
+        isSampled : function(czmlIntervalData) {
+            return Array.isArray(czmlIntervalData) && czmlIntervalData.length > Cartesian2DataHandler.doublesPerValue;
         },
 
-        extractValueAt : function(index, data) {
-            index = index * Cartesian2DataHandler.elementsPerItem;
-            return new Cartesian2(data[index], data[index + 1]);
+        createValueFromArray : function(data, startingIndex) {
+            return new Cartesian2(data[startingIndex], data[startingIndex + 1]);
         },
 
-        extractValue : function(data) {
+        createValue : function(data) {
             return new Cartesian2(data[0], data[1]);
         },
 
-        getPacketData : function(packet) {
-            return packet.cartesian;
+        getCzmlIntervalValue : function(czmlInterval) {
+            return czmlInterval.cartesian;
         },
 
-        extractInterpolationTable : function(valuesArray, destinationArray, firstIndex, lastIndex) {
-            var sourceIndex = firstIndex * Cartesian2DataHandler.elementsPerItem, destinationIndex = 0, stop = (lastIndex + 1) * Cartesian2DataHandler.elementsPerItem;
+        packValuesForInterpolation : function(valuesArray, destinationArray, firstIndex, lastIndex) {
+            var sourceIndex = firstIndex * Cartesian2DataHandler.doublesPerValue, destinationIndex = 0, stop = (lastIndex + 1) * Cartesian2DataHandler.doublesPerValue;
 
             for (; sourceIndex < stop; sourceIndex++, destinationIndex++) {
                 destinationArray[destinationIndex] = valuesArray[sourceIndex];
             }
         },
 
-        interpretInterpolationResult : function(result) {
+        createValueFromInterpolationResult : function(result) {
             return new Cartesian2(result[0], result[1]);
         }
     };

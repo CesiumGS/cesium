@@ -16,10 +16,10 @@ function(DynamicBillboard,
         ColorDataHandler,
         createOrUpdateProperty) {
     "use strict";
-    return function(dynamicObject, data, buffer, sourceUri) {
+    return function(dynamicObject, packet, buffer, sourceUri) {
 
         //See if there's any actual data to process.
-        var billboardData = data.billboard, billboard;
+        var billboardData = packet.billboard, billboard;
         if (typeof billboardData !== 'undefined' &&
             (typeof billboardData.image !== 'undefined' ||
              typeof billboardData.show !== 'undefined' ||

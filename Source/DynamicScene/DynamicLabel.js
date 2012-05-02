@@ -2,16 +2,19 @@
 define(function() {
     "use strict";
 
-    function DynamicBillboard() {
-        this.image = undefined;
-        this.scale = undefined;
+    function DynamicLabel() {
+        this.text = undefined;
+        this.font = undefined;
+        this.style = undefined;
+        this.fillColor = undefined;
+        this.outlineColor = undefined;
         this.horizontalOrigin = undefined;
         this.verticalOrigin = undefined;
-        this.color = undefined;
         this.eyeOffset = undefined;
         this.pixelOffset = undefined;
+        this.scale = undefined;
         this.show = undefined;
     }
 
-    return DynamicBillboard;
+    return DynamicLabel;
 });

@@ -8,13 +8,13 @@ define(function() {
             return false;
         },
 
-        extractValue : function(data) {
+        createValue : function(data) {
             return data;
         },
 
-        getPacketData : function(packet) {
-            var result = packet.string;
-            return typeof result === 'undefined' ? String(packet) : String(result);
+        getCzmlIntervalValue : function(czmlInterval) {
+            var result = czmlInterval.string;
+            return typeof result === 'undefined' ? String(czmlInterval) : String(result);
         }
     };
 

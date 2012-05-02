@@ -4,35 +4,34 @@ define(['Core/Color'], function(Color) {
 
     var ColorDataHandler = {
 
-        elementsPerItem : 4,
-        elementsPerInterpolationItem : 4,
+        doublesPerValue : 4,
+        doublesPerInterpolationValue : 4,
 
-        isSampled : function(packetData) {
-            return Array.isArray(packetData) && packetData.length > ColorDataHandler.elementsPerItem;
+        isSampled : function(czmlIntervalData) {
+            return Array.isArray(czmlIntervalData) && czmlIntervalData.length > ColorDataHandler.doublesPerValue;
         },
 
-        extractValueAt : function(index, data) {
-            index = index * ColorDataHandler.elementsPerItem;
-            return new Color(data[index], data[index + 1], data[index + 2], data[index + 3]);
+        createValueFromArray : function(data, startingIndex) {
+            return new Color(data[startingIndex], data[startingIndex + 1], data[startingIndex + 2], data[startingIndex + 3]);
         },
 
-        extractValue : function(data) {
+        createValue : function(data) {
             return new Color(data[0], data[1], data[2], data[3]);
         },
 
-        getPacketData : function(packet) {
-            return packet.rgba;
+        getCzmlIntervalValue : function(czmlInterval) {
+            return czmlInterval.rgba;
         },
 
-        extractInterpolationTable : function(valuesArray, destinationArray, firstIndex, lastIndex) {
-            var sourceIndex = firstIndex * ColorDataHandler.elementsPerItem, destinationIndex = 0, stop = (lastIndex + 1) * ColorDataHandler.elementsPerItem;
+        packValuesForInterpolation : function(valuesArray, destinationArray, firstIndex, lastIndex) {
+            var sourceIndex = firstIndex * ColorDataHandler.doublesPerValue, destinationIndex = 0, stop = (lastIndex + 1) * ColorDataHandler.doublesPerValue;
 
             for (; sourceIndex < stop; sourceIndex++, destinationIndex++) {
                 destinationArray[destinationIndex] = valuesArray[sourceIndex];
             }
         },
 
-        interpretInterpolationResult : function(result) {
+        createValueFromInterpolationResult : function(result) {
             return new Color(result[0], result[1], result[2], result[3]);
         }
     };

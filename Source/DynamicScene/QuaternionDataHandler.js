@@ -8,32 +8,32 @@ define(['Core/Quaternion', 'Core/Cartesian3'],
 
             var QuaternionDataHandler = {
 
-                elementsPerItem : doublesPerQuaternion,
+                doublesPerValue : doublesPerQuaternion,
 
-                elementsPerInterpolationItem : doublesPerCartesian,
+                doublesPerInterpolationValue : doublesPerCartesian,
 
-                isSampled : function(packetData) {
-                    return Array.isArray(packetData) && packetData.length > doublesPerQuaternion;
+                isSampled : function(czmlIntervalData) {
+                    return Array.isArray(czmlIntervalData) && czmlIntervalData.length > doublesPerQuaternion;
                 },
 
-                extractValueAt : function(index, data) {
-                    index = index * QuaternionDataHandler.elementsPerItem;
-                    return new Quaternion(data[index], data[index + 1], data[index + 2], data[index + 3]);
+                createValueFromArray : function(data, startingIndex) {
+                    return new Quaternion(data[startingIndex], data[startingIndex + 1], data[startingIndex + 2], data[startingIndex + 3]);
                 },
 
-                extractValue : function(data) {
+                createValue : function(data) {
                     return new Quaternion(data[0], data[1], data[2], data[3]);
                 },
 
-                getPacketData : function(packet) {
-                    return packet.quaternion;
+                getCzmlIntervalValue : function(czmlInterval) {
+                    return czmlInterval.quaternion;
                 },
 
-                extractInterpolationTable : function(valuesArray, destinationArray, firstIndex, lastIndex) {
-                    var quaternion0Conjugate = QuaternionDataHandler.extractValueAt(lastIndex, valuesArray).conjugate();
+                packValuesForInterpolation : function(valuesArray, destinationArray, firstIndex, lastIndex) {
+                    var quaternion0Conjugate = QuaternionDataHandler.createValueFromArray(valuesArray, lastIndex * doublesPerQuaternion).conjugate();
 
                     for ( var i = 0, len = lastIndex - firstIndex + 1; i < len; i++) {
-                        var offset = i * doublesPerCartesian, value = QuaternionDataHandler.extractValueAt(firstIndex + i, valuesArray), difference = value.multiply(quaternion0Conjugate);
+                        var offset = i * doublesPerCartesian, value = QuaternionDataHandler.createValueFromArray(valuesArray, (firstIndex + i) * doublesPerQuaternion), difference = value
+                                .multiply(quaternion0Conjugate);
 
                         if (difference.w < 0) {
                             difference = difference.negate();
@@ -54,11 +54,11 @@ define(['Core/Quaternion', 'Core/Cartesian3'],
                     }
                 },
 
-                interpretInterpolationResult : function(result, valuesArray, firstIndex, lastIndex) {
+                createValueFromInterpolationResult : function(result, valuesArray, firstIndex, lastIndex) {
                     var rotationVector = new Cartesian3(result[0], result[1], result[2]);
                     var magnitude = rotationVector.magnitude();
 
-                    var quaternion0 = QuaternionDataHandler.extractValueAt(lastIndex, valuesArray);
+                    var quaternion0 = QuaternionDataHandler.createValueFromArray(valuesArray, lastIndex * doublesPerQuaternion);
                     var difference;
 
                     if (magnitude === 0) {
