@@ -59,6 +59,7 @@ define([
 
         this._list = list;
         this._list.sort(CompositeTileProvider._compare);
+        this._currentProviderIndex = 0;
 
         /**
          * The cartographic extent of the base tile, with north, south, east and
@@ -120,6 +121,28 @@ define([
         return b.height - a.height;
     };
 
+    CompositeTileProvider.prototype._findIndex = function(currentIndex, height) {
+        var i = currentIndex;
+        if (this._list[i].height < height) {
+            // search backwards
+            for (i = i - 1; i >= 0; --i) {
+                if (this._list[i].height > height) {
+                    break;
+                }
+            }
+
+            return (i === 0 && this._list[i].height < height) ? i : i + 1;
+        }
+
+        // search forwards
+        for (i = i + 1; i < this._list.length; ++i) {
+            if (this._list[i].height < height) {
+                break;
+            }
+        }
+        return i;
+    };
+
     /**
      * Loads the top-level tile.
      *
@@ -139,15 +162,9 @@ define([
         }
 
         var height = this._camera.position.magnitude() - this._radius;
-        var provider = null;
+        this._currentProviderIndex = this._findIndex(this._currentProviderIndex, height);
+        var provider = this._list[this._currentProviderIndex].provider;
         var image = null;
-        for ( var i = 0; i < this._list.length; ++i) {
-            var val = this._list[i];
-            provider = val.provider;
-            if (val.height < height) {
-                break;
-            }
-        }
 
         if (tile.zoom >= provider.zoomMin && tile.zoom <= provider.zoomMax) {
             image = provider.loadTileImage(tile, onload, onerror, oninvalid);
@@ -159,6 +176,17 @@ define([
         }
 
         return image;
+    };
+
+    /**
+     * DOC_TBA
+     * @memberof CompositeTileProvider
+     */
+    CompositeTileProvider.prototype.getLogo = function() {
+        var height = this._camera.position.magnitude() - this._radius;
+        this._currentProviderIndex = this._findIndex(this._currentProviderIndex, height);
+        var provider = this._list[this._currentProviderIndex].provider;
+        return (provider && provider.getLogo) ? provider.getLogo() : undefined;
     };
 
     return CompositeTileProvider;

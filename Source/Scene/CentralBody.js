@@ -239,7 +239,7 @@ define([
 
         this._fb = undefined;
 
-        this._textureLogo = undefined;
+        this._imageLogo = undefined;
         this.logoOffsetX = this.logoOffsetY = 0;
         this._quadLogo = undefined;
 
@@ -1065,15 +1065,23 @@ define([
             this._prefetchImages();
         }
 
-        var createLogo = (!this._textureLogo || !this._quadLogo || this._quadLogo.isDestroyed()) && this._dayTileProvider && this._dayTileProvider.getLogo && this._dayTileProvider.getLogo();
-        if (createLogo) {
-            this._textureLogo = context.createTexture2D({
-                source : this._dayTileProvider.getLogo(),
-                pixelFormat : PixelFormat.RGBA
-            });
-            this._quadLogo = new ViewportQuad(new Rectangle(this.logoOffsetX, this.logoOffsetY, this._textureLogo.getWidth(), this._textureLogo.getHeight()));
-            this._quadLogo.setTexture(this._textureLogo);
-            this._quadLogo.enableBlending = true;
+        var hasLogo = this._dayTileProvider && this._dayTileProvider.getLogo;
+        var imageLogo =  (hasLogo) ? this._dayTileProvider.getLogo() : undefined;
+        var createLogo = !this._quadLogo || this._quadLogo.isDestroyed();
+        var updateLogo = hasLogo && (createLogo || this._imageLogo !== imageLogo);
+        if (updateLogo) {
+            if (typeof imageLogo === 'undefined') {
+                this._quadLogo = this._quadLogo && this._quadLogo.destroy();
+            }
+            else {
+                this._quadLogo = new ViewportQuad(new Rectangle(this.logoOffsetX, this.logoOffsetY, imageLogo.width, imageLogo.height));
+                this._quadLogo.setTexture(context.createTexture2D({
+                    source : imageLogo,
+                    pixelFormat : PixelFormat.RGBA
+                }));
+                this._quadLogo.enableBlending = true;
+            }
+            this._imageLogo = imageLogo;
         }
 
         if (!this._textureCache || this._textureCache.isDestroyed()) {
