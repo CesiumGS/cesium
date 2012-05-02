@@ -150,6 +150,16 @@ defineSuite([
         expect(Matrix2.getNumberOfElements()).toEqual(4);
     });
 
+    it("transpose", function() {
+        var m = new Matrix2(1, 2,
+                            3, 4);
+        var mT = new Matrix2(1, 3,
+                             2, 4);
+
+        expect(m.transpose().equals(mT)).toBeTruthy();
+        expect(m.transpose().transpose().equals(m)).toBeTruthy();
+    });
+
     it("equals0", function() {
         var m = new Matrix2(1, 2,
                             3, 4);
