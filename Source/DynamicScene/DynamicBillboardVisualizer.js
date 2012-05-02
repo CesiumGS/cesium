@@ -1,5 +1,5 @@
 /*global define*/
-define(['DynamicScene/DynamicTextureAtlas',
+define(['./DynamicTextureAtlas',
         'Scene/BillboardCollection',
         'Scene/HorizontalOrigin',
         'Scene/VerticalOrigin'],

@@ -1,6 +1,6 @@
 /*global define*/
-define(['DynamicScene/Cartesian3DataHandler',
-        'DynamicScene/createOrUpdateProperty'],
+define(['./Cartesian3DataHandler',
+        './createOrUpdateProperty'],
 function(Cartesian3DataHandler,
          createOrUpdateProperty) {
     "use strict";

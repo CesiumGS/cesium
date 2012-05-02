@@ -1,6 +1,6 @@
 /*global define*/
-define(['DynamicScene/QuaternionDataHandler',
-        'DynamicScene/createOrUpdateProperty'],
+define(['./QuaternionDataHandler',
+        './createOrUpdateProperty'],
 function(QuaternionDataHandler,
          createOrUpdateProperty) {
     "use strict";
