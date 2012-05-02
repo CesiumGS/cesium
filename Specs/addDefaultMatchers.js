@@ -11,10 +11,6 @@ define(function() {
     }
 
     function isEqualEpsilon(a, b, epsilon) {
-        if (typeof a !== "undefined" && typeof a.equalsEpsilon !== "undefined") {
-            return a.equalsEpsilon(b, epsilon);
-        }
-
         return Math.abs(a - b) <= epsilon;
     }
 

@@ -18,6 +18,7 @@ package com.agi;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -25,6 +26,7 @@ import java.util.HashSet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpUtils;
 
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.HttpExchange;
@@ -60,20 +62,25 @@ public final class ProxyHandler extends AbstractHandler {
 		client.start();
 	}
 
-	public void handle(String target, Request baseRequest, final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
-		String queryString = request.getQueryString();
-		if (queryString == null)
+	public void handle(String target, Request baseRequest, final HttpServletRequest request, final HttpServletResponse response) throws IOException,
+			ServletException {
+		Enumeration<?> parameterNames = request.getParameterNames();
+		if (!parameterNames.hasMoreElements()) {
+			response.sendError(400, "No url specified.");
 			return;
+		}
 
 		URI uri;
 		try {
-			uri = new URI(queryString);
+			uri = new URI((String) parameterNames.nextElement());
 		} catch (Exception e) {
 			throw new ServletException(e);
 		}
 
-		if (!allowedHosts.contains(uri.getHost()))
+		if (!allowedHosts.contains(uri.getHost())) {
+			response.sendError(400, "Host not in list of allowed hosts.");
 			return;
+		}
 
 		baseRequest.setHandled(true);
 
@@ -98,9 +105,19 @@ public final class ProxyHandler extends AbstractHandler {
 			}
 
 			protected void onResponseHeader(Buffer name, Buffer value) throws IOException {
-				String s = name.toString().toLowerCase();
-				if (!dontProxyHeaders.contains(s)) {
-					response.addHeader(name.toString(), value.toString());
+				String nameStr = name.toString();
+				String valueStr = value.toString();
+				String nameLower = nameStr.toLowerCase();
+
+				if ("location".equals(nameLower)) {
+					StringBuffer url = request.getRequestURL();
+					url.append("?");
+					url.append(URLEncoder.encode(valueStr, "UTF-8"));
+					valueStr = url.toString();
+				}
+
+				if (!dontProxyHeaders.contains(nameLower)) {
+					response.addHeader(nameStr, valueStr);
 				}
 			}
 
