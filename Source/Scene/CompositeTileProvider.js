@@ -131,7 +131,11 @@ define([
                 }
             }
 
-            return (i === 0 && this._list[i].height < height) ? i : i + 1;
+            if (i === 0 && this._list[i].height < height) {
+                return i;
+            }
+
+            return (i + 1 >= this._list.length) ? i : i + 1;
         }
 
         // search forwards
@@ -140,7 +144,7 @@ define([
                 break;
             }
         }
-        return i;
+        return (i >= this._list.length) ? this._list.length - 1 : i;
     };
 
     /**
