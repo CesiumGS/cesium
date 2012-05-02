@@ -240,7 +240,8 @@ define([
         this._fb = undefined;
 
         this._imageLogo = undefined;
-        this.logoOffsetX = this.logoOffsetY = 0;
+        this.logoOffset = Cartesian2.getZero();
+        this._logoOffset = this.logoOffset;
         this._quadLogo = undefined;
 
         this._dayTileProvider = undefined;
@@ -1074,7 +1075,7 @@ define([
                 this._quadLogo = this._quadLogo && this._quadLogo.destroy();
             }
             else {
-                this._quadLogo = new ViewportQuad(new Rectangle(this.logoOffsetX, this.logoOffsetY, imageLogo.width, imageLogo.height));
+                this._quadLogo = new ViewportQuad(new Rectangle(this.logoOffset.x, this.logoOffset.y, imageLogo.width, imageLogo.height));
                 this._quadLogo.setTexture(context.createTexture2D({
                     source : imageLogo,
                     pixelFormat : PixelFormat.RGBA
@@ -1082,6 +1083,9 @@ define([
                 this._quadLogo.enableBlending = true;
             }
             this._imageLogo = imageLogo;
+        } else if (this._quadLogo && this._imageLogo && !this.logoOffset.equals(this._logoOffset)) {
+            this._quadLogo.setRectangle(new Rectangle(this.logoOffset.x, this.logoOffset.y, this._imageLogo.width, this._imageLogo.height));
+            this._logoOffset = this.logoOffset;
         }
 
         if (!this._textureCache || this._textureCache.isDestroyed()) {

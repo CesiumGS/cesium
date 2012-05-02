@@ -3,12 +3,14 @@ define([
         '../Core/DeveloperError',
         '../Core/Math',
         '../ThirdParty/jsonp',
-        './Projections'
+        './Projections',
+        './ProxyUsagePolicy'
     ], function(
         DeveloperError,
         CesiumMath,
         jsonp,
-        Projections) {
+        Projections,
+        ProxyUsagePolicy) {
     "use strict";
     /*global document,Image*/
 
@@ -22,7 +24,8 @@ define([
      * @param {String} description.instance The instance name. The default value is "/arcgis/rest".
      * @param {String} description.folder The folder where the service is located.
      * @param {String} description.service The service name.
-     * @param {String} description.proxy A proxy URL to send image requests through. This URL will have the desired image URL appended as a query parameter.
+     * @param {Object} description.proxy A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
+     * @param {Enumeration} description.proxyUsagePolicy Specify whether to use the supplied proxy for all data, or only those that don't support cross-origin requests.  By default, cross-origin will be used.
      *
      * @exception {DeveloperError} <code>description.host</code> is required.
      * @exception {DeveloperError} <code>description.service</code> is required.
@@ -54,14 +57,12 @@ define([
             throw new DeveloperError("description.service is required.", "description.service");
         }
 
-        this._url = '';
-        if (desc.proxy) {
-            this._url += desc.proxy + '?';
-        }
-        this._url += 'http://' + desc.host + '/' + instance + '/services/';
+        this._url = 'http://' + desc.host + '/' + instance + '/services/';
+
         if (desc.folder) {
             this._url += desc.folder + '/';
         }
+
         this._url += desc.service + '/MapServer';
 
         /**
@@ -89,10 +90,16 @@ define([
         this.service = desc.service;
 
         /**
-         * A proxy URL to send image requests through. This URL will have the desired image URL appended as a query parameter.
-         * @type {String}
+         * A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
+         * @type {Object}
          */
         this.proxy = desc.proxy;
+
+        /**
+         * Specify whether to use the supplied proxy for all data, or only those that don't support cross-origin requests.  By default, cross-origin will be used.
+         * @type {Enumeration}
+         */
+        this.proxyUsagePolicy = desc.proxyUsagePolicy || ProxyUsagePolicy.USE_CORS;
 
         // TODO: Get this information from the server
 
@@ -149,7 +156,14 @@ define([
         this._logoLoaded = false;
 
         var that = this;
-        var callback = function(data) {
+        var url = this._url;
+        if (this.proxyUsagePolicy === ProxyUsagePolicy.ALWAYS && this.proxy) {
+            url = this.proxy.getURL(url);
+        }
+
+        jsonp(url, {
+            f : 'json'
+        }, function(data) {
             var credit = data.copyrightText;
 
             var canvas = document.createElement("canvas");
@@ -164,15 +178,8 @@ define([
 
             that._logo = canvas;
             that._logoLoaded = true;
-        };
-        jsonp(this._url, {
-            f : 'json'
-        }, callback);
+        });
     }
-
-    ArcGISTileProvider.prototype._getUrl = function(tile) {
-        return this._url + '/tile/' + tile.zoom + '/' + tile.y + '/' + tile.x;
-    };
 
     /**
      * Loads the image for <code>tile</code>.
@@ -203,7 +210,13 @@ define([
             };
         }
         image.crossOrigin = '';
-        image.src = this._getUrl(tile);
+
+        var url = this._url + '/tile/' + tile.zoom + '/' + tile.y + '/' + tile.x;
+        if (this.proxy) {
+            url = this.proxy.getURL(url);
+        }
+
+        image.src = url;
 
         return image;
     };
