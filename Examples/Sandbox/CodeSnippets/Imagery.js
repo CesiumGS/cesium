@@ -66,4 +66,20 @@
         };
     };
 
+    Sandbox.WMS = function (scene, ellipsoid, primitives) {
+        this.code = function () {
+            // WMS
+            var wms = new Cesium.WebMapServiceCapabilities({
+                url : 'http://wms1.agr.gc.ca/cgi-bin/mapplant1967_f',
+                proxy : '/proxy/'
+            });
+            wms.getCapabilities(function(b) {
+                if( b ) {
+
+                }
+            });
+            //primitives.getCentralBody().dayTileProvider = bing;
+        };
+    };
+
 }());
