@@ -1,4 +1,4 @@
-/*global define*/
+/*global define XMLHttpRequest*/
 define([
         '../Core/DeveloperError',
         '../Core/clone',
@@ -14,7 +14,6 @@ define([
         ProxyUsagePolicy,
         WebMapServiceLayer) {
     "use strict";
-    /*global Image*/
 
     /**
      * Uses the WMS API to get the capabilities of the WMS server
@@ -173,7 +172,7 @@ define([
         if( newLayer.projections.indexOf(Projections.WGS84) === -1 ) {
             var srs = xmlLayer.getElementsByTagName("SRS");
             for(i=0;i<srs.length;++i) {
-                if(srs[i].textContent.indexOf("EPSG:4326") !== -1) {
+                if( (srs[i].parentNode === xmlLayer) && (srs[i].textContent.indexOf("EPSG:4326") !== -1) ) {
                     newLayer.projections.push(Projections.WGS84);
                     break;
                 }
@@ -181,7 +180,7 @@ define([
         }
 
         var latLonBB = xmlLayer.getElementsByTagName("LatLonBoundingBox");
-        if( latLonBB.length ) {
+        if( latLonBB.length && (latLonBB[0].parentNode === xmlLayer) ) {
             newLayer.extent.north = CesiumMath.toRadians(parseFloat(latLonBB[0].attributes.getNamedItem("maxy").value));
             newLayer.extent.south = CesiumMath.toRadians(parseFloat(latLonBB[0].attributes.getNamedItem("miny").value));
             newLayer.extent.east  = CesiumMath.toRadians(parseFloat(latLonBB[0].attributes.getNamedItem("maxx").value));
@@ -205,7 +204,9 @@ define([
 
         var newChildLayers = xmlLayer.getElementsByTagName("Layer");
         for(i=0;i<newChildLayers.length;++i) {
-            newLayer.children.push(this._parseLayer(newChildLayers[i], newLayer));
+            if(newChildLayers[i].parentNode === xmlLayer) {
+                newLayer.children.push(this._parseLayer(newChildLayers[i], newLayer));
+            }
         }
 
         return newLayer;
