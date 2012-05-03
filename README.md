@@ -26,8 +26,13 @@ Our mission is to create the leading web-based globe and map for visualizing dyn
 
 [Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0.html).  Cesium is free for both commercial and non-commercial use.
 
+### Cesium Language (CZML) ###
+
+[CZML](http://cesium.agi.com/czml.html) is a JSON-based language for describing time-varying values.  It powers most of the above Cesium demos.  Check out the [CZML Guide](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Cesium-Language-%28CZML%29-Guide) and the [czml-writer library](https://github.com/AnalyticalGraphicsInc/czml-writer).
+
 ### Developer Community ###
 
+* [Cesium Wiki](https://github.com/AnalyticalGraphicsInc/cesium/wiki) - Assorted Cesium information, including the following:
 * [Contributor's Guide](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor's-Guide) - how to get the code, build, etc.  It's easy.
 * [Roadmap](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Roadmap) - where we are heading.
 * [Presentations and Publications](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Presentations-and-Publications) - on Cesium and the underlying technology.
