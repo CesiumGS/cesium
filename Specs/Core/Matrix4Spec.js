@@ -171,6 +171,26 @@ defineSuite([
         expect(m.getColumn3Row3()).toEqual(1);
     });
 
+    it("creates a translation matrix without arguments", function() {
+       var m = Matrix4.createTranslation();
+       expect(m.getColumn0Row0()).toEqual(0);
+       expect(m.getColumn0Row1()).toEqual(0);
+       expect(m.getColumn0Row2()).toEqual(0);
+       expect(m.getColumn0Row3()).toEqual(0);
+       expect(m.getColumn1Row0()).toEqual(0);
+       expect(m.getColumn1Row1()).toEqual(0);
+       expect(m.getColumn1Row2()).toEqual(0);
+       expect(m.getColumn1Row3()).toEqual(0);
+       expect(m.getColumn2Row0()).toEqual(0);
+       expect(m.getColumn2Row1()).toEqual(0);
+       expect(m.getColumn2Row2()).toEqual(0);
+       expect(m.getColumn2Row3()).toEqual(0);
+       expect(m.getColumn3Row0()).toEqual(0);
+       expect(m.getColumn3Row1()).toEqual(0);
+       expect(m.getColumn3Row2()).toEqual(0);
+       expect(m.getColumn3Row3()).toEqual(0);
+    });
+
     it("getIdentity", function() {
         expect(Matrix4.getIdentity().equals(new Matrix4(1))).toBeTruthy();
     });
@@ -545,6 +565,26 @@ defineSuite([
                                     0, 0, -1.22, -2.22,
                                     0, 0,    -1,     0);
         var m = Matrix4.createPerspectiveFieldOfView(CesiumMath.PI_OVER_TWO, 1, 1, 10);
+
+        expect(mExpected.equalsEpsilon(m, CesiumMath.EPSILON2)).toBeTruthy();
+    });
+
+    it("createPerspectiveOffCenter", function() {
+        var mExpected = new Matrix4(2, 0,  3,  0,
+                                    0, 2,  5,  0,
+                                    0, 0, -3, -4,
+                                    0, 0, -1,  0);
+        var m = Matrix4.createPerspectiveOffCenter(1, 2, 2, 3, 1, 2);
+
+        expect(mExpected.equalsEpsilon(m, CesiumMath.EPSILON2)).toBeTruthy();
+    });
+
+    it("createInfinitePerspectiveOffCenter", function() {
+        var mExpected = new Matrix4(2, 0,  3,  0,
+                                    0, 2,  5,  0,
+                                    0, 0, -1, -2,
+                                    0, 0, -1,  0);
+        var m = Matrix4.createInfinitePerspectiveOffCenter(1, 2, 2, 3, 1);
 
         expect(mExpected.equalsEpsilon(m, CesiumMath.EPSILON2)).toBeTruthy();
     });
