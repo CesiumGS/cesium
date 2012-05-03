@@ -28,7 +28,9 @@ Our mission is to create the leading web-based globe and map for visualizing dyn
 
 ### Cesium Language (CZML) ###
 
-[CZML](http://cesium.agi.com/czml.html) is a JSON-based language for describing time-varying values.  It powers most of the above Cesium demos.  Check out the [CZML Guide](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Cesium-Language-%28CZML%29-Guide) and the [czml-writer library](https://github.com/AnalyticalGraphicsInc/czml-writer).
+[CZML](http://cesium.agi.com/czml.html) is a JSON-based language for describing time-varying values.  It powers most of the above Cesium demos.
+
+Check out the [CZML Guide](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Cesium-Language-%28CZML%29-Guide) and the [czml-writer library](https://github.com/AnalyticalGraphicsInc/czml-writer).
 
 ### Developer Community ###
 
