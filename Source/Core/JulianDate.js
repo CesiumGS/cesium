@@ -1,24 +1,18 @@
 /*global define*/
-define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond', './TimeStandard'], function(DeveloperError, binarySearch, TimeConstants, LeapSecond, TimeStandard) {
+define(['Core/DeveloperError', 'Core/binarySearch', 'Core/TimeConstants', 'Core/LeapSecond', 'Core/TimeStandard', 'Core/isLeapYear'],
+function(DeveloperError, binarySearch, TimeConstants, LeapSecond, TimeStandard, isLeapYear) {
     "use strict";
 
-    function computeJulianDateComponents(date) {
+    var daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    var daysInLeapFeburary = 29;
+
+    function computeJulianDateComponents(year, month, day, hour, minute, second, millisecond) {
         // Algorithm from page 604 of the Explanatory Supplement to the
         // Astronomical Almanac (Seidelmann 1992).
 
-        var month = date.getUTCMonth() + 1; // getUTCMonth returns a value 0-11.
-        var day = date.getUTCDate();
-        var year = date.getUTCFullYear();
-
         var a = ((month - 14) / 12) | 0;
         var b = (year + 4800 + a) | 0;
-
         var dayNumber = ((((1461 * b) / 4) | 0) + (((367 * (month - 2 - 12 * a)) / 12) | 0) - (((3 * ((b + 100) / 100)) / 4) | 0) + day - 32075) | 0;
-
-        var hour = date.getUTCHours();
-        var minute = date.getUTCMinutes();
-        var second = date.getUTCSeconds();
-        var millisecond = date.getUTCMilliseconds();
 
         // JulianDates are noon-based
         hour = hour - 12;
@@ -34,6 +28,32 @@ define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond',
 
         return [dayNumber, secondsOfDay];
     }
+
+    function computeJulianDateComponentsFromDate(date) {
+        return computeJulianDateComponents(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds(), date
+                .getUTCMilliseconds());
+    }
+
+    //Regular expressions used for ISO8601 date parsing.
+
+    //YYYY
+    var matchCalendarYear = /^(\d{4})$/;
+    //YYYY-MM (YYYYMM is invalid)
+    var matchCalendarMonth = /^(\d{4})-(\d{2})$/;
+    //YYYY-DDD or YYYYDDD
+    var matchOrdinalDate = /^(\d{4})-*(\d{3})$/;
+    //YYYY-Www or YYYYWww or YYYY-Www-D or YYYYWwwD
+    var matchWeekDate = /^(\d{4})-*W(\d{2})-*(\d{1})*$/;
+    //YYYY-MM-DD or YYYYMMDD
+    var matchCalendarDate = /^(\d{4})-*(\d{2})-*(\d{2})$/;
+    // Match utc offset
+    var utcOffset = /([Z+\-])*(\d{2})*:*(\d{2})*$/;
+    // Match hours HH or HH.xxxxx
+    var matchHours = /^(\d{2})(\.\d+)*/.source + utcOffset.source;
+    // Match hours/minutes HH:MM HHMM.xxxxx
+    var matchHoursMinutes = /^(\d{2}):*(\d{2})(\.\d+)*/.source + utcOffset.source;
+    // Match hours/minutes HH:MM:SS HHMMSS.xxxxx
+    var matchHoursMinutesSeconds = /^(\d{2}):*(\d{2}):*(\d{2})(\.\d+)*/.source + utcOffset.source;
 
     /**
      * <p>Constructs an immutable JulianDate instance from a Julian day number and the number of seconds elapsed
@@ -102,7 +122,7 @@ define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond',
         } else {
             //Create a new date from the current time.
             var date = new Date();
-            var components = computeJulianDateComponents(date);
+            var components = computeJulianDateComponentsFromDate(date);
             wholeDays = components[0];
             secondsOfDay = components[1];
             timeStandard = TimeStandard.UTC;
@@ -157,22 +177,22 @@ define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond',
             throw new DeveloperError("Valid JavaScript Date required.", "date");
         }
 
-        var components = computeJulianDateComponents(date);
-        var wholeDays = components[0];
-        var secondsOfDay = components[1];
-        var result = new JulianDate(wholeDays, secondsOfDay, timeStandard);
+        var components = computeJulianDateComponentsFromDate(date);
+        var result = new JulianDate(components[0], components[1], timeStandard);
         result._date = date;
         return result;
     };
 
     /**
-     * Creates an immutable JulianDate instance from a ISO 8601 date string.
-     * <br/>
+     * <p>
+     * Creates an immutable JulianDate instance from an ISO 8601 date string.  Unlike Date.parse,
+     * this method will properly account for all valid formats defined by the ISO 8601
+     * specification.  It will also properly handle leap seconds and sub-millisecond times.
+     * <p/>
      *
      * @memberof JulianDate
      *
      * @param {String} iso8601String The ISO 8601 date string representing the time to be converted to a Julian date.
-     * @param {TimeStandard} [timeStandard = TimeStandard.UTC] Indicates the time standard in which this Julian date is represented.
      *
      * @return {JulianDate} The new {@Link JulianDate} instance.
      *
@@ -181,23 +201,212 @@ define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond',
      * @see JulianDate
      * @see JulianDate.fromTotalDays
      * @see JulianDate.fromDate
-     * @see TimeStandard
      * @see LeapSecond
      * @see <a href="http://en.wikipedia.org/wiki/ISO_8601">ISO 8601 on Wikipedia</a>.
      *
      * @example
-     * // Example 1. Construct a Julian date using the default UTC TimeStandard.
+     * // Example 1. Construct a Julian date in UTC at April 24th, 2012 6:08PM UTC
      * var julianDate = JulianDate.fromIso8601("2012-04-24T18:08Z");
+     * // Example 2. Construct a Julian date in local time April 24th, 2012 12:00 AM
+     * var localDay = JulianDate.fromIso8601("2012-04-24");
+     * // Example 3. Construct a Julian date 5 hours behind UTC April 24th, 2012 5:00 pm UTC
+     * var localDay = JulianDate.fromIso8601("2012-04-24T12:00-05:00");
      */
-    JulianDate.fromIso8601 = function(iso8601String, timeStandard) {
-        //FIXME Date.parse is only accurate to the millisecond and fails
-        //completely on leap seconds.  We should parse the string directly.
-
-        var totalMilliseconds = Date.parse(iso8601String);
-        if (totalMilliseconds === null || isNaN(totalMilliseconds)) {
+    JulianDate.fromIso8601 = function(iso8601String) {
+        if (typeof iso8601String !== 'string') {
             throw new DeveloperError("Valid ISO 8601 date string required.", "iso8601String");
         }
-        return JulianDate.fromDate(new Date(totalMilliseconds), timeStandard);
+
+        //Comma and decimal point both indicate a fractional number according to ISO 8601,
+        //start out by blanket replacing , with . which is the only valid such symbol in JS.
+        iso8601String = iso8601String.replace(',', '.');
+
+        //Split the string into it's date and time components, denoted by a mandatory T
+        var tokens = iso8601String.split('T'), year, month = 1, day = 1, hours = 0, minutes = 0, seconds = 0, milliseconds = 0;
+
+        //Lacking a time is okay, but a missing date is illegal.
+        if (typeof tokens[0] === 'undefined') {
+            throw new DeveloperError("Valid ISO 8601 date string required.", "iso8601String");
+        }
+
+        var date = tokens[0];
+        var time = tokens[1];
+        var leapYear;
+        if (typeof date === 'undefined') {
+            throw new DeveloperError("Valid ISO 8601 date string required.", "iso8601String");
+        }
+
+        tokens = date.match(matchCalendarDate);
+        if (tokens !== null) {
+            year = +tokens[1];
+            month = +tokens[2];
+            day = +tokens[3];
+        } else {
+            tokens = date.match(matchCalendarMonth);
+            if (tokens !== null) {
+                year = +tokens[1];
+                month = +tokens[2];
+            } else {
+                tokens = date.match(matchCalendarYear);
+                if (tokens !== null) {
+                    year = +tokens[1];
+                } else {
+                    tokens = date.match(matchOrdinalDate);
+                    if (tokens !== null) {
+                        year = +tokens[1];
+                        var dayOfYear = +tokens[2];
+                        leapYear = isLeapYear(year);
+
+                        if (dayOfYear < 1 || (leapYear && dayOfYear > 366) || (!leapYear && dayOfYear > 365)) {
+                            throw new DeveloperError("Valid ISO 8601 date string required.", "iso8601String");
+                        }
+
+                        var jsDate = new Date(Date.UTC(year, 0, 1));
+                        jsDate.setUTCDate(dayOfYear);
+                        month = jsDate.getUTCMonth() + 1;
+                        day = jsDate.getUTCDate();
+                    } else {
+                        tokens = date.match(matchWeekDate);
+                        if (tokens !== null) {
+                            year = +tokens[1];
+                            var weekNumber = +tokens[2];
+                            var dayOfWeek = +tokens[3] || 0;
+
+                            var january4 = new Date(Date.UTC(year, 0, 4));
+                            var utcDay = january4.getUTCDay();
+                            var ordinalDate = (weekNumber * 7) + dayOfWeek - utcDay - 3;
+
+                            var sdf = new Date(Date.UTC(year, 0, 1));
+                            sdf.setUTCDate(ordinalDate);
+                            month = sdf.getUTCMonth() + 1;
+                            day = sdf.getUTCDate();
+                        } else {
+                            throw new DeveloperError("Valid ISO 8601 date string required.", "iso8601String");
+                        }
+                    }
+                }
+            }
+        }
+
+        leapYear = isLeapYear(year);
+        if (month < 1 || month > 12 || day < 1 || ((month !== 2 || !leapYear) && day > daysInMonth[month - 1]) || (leapYear && month === 2 && day > daysInLeapFeburary)) {
+            throw new DeveloperError("Valid ISO 8601 date string required.", "iso8601String");
+        }
+
+        var offsetIndex;
+        if (typeof time !== 'undefined') {
+            tokens = time.match(matchHoursMinutesSeconds);
+            if (tokens !== null) {
+                hours = +tokens[1];
+                minutes = +tokens[2];
+                seconds = +tokens[3];
+                milliseconds = +(tokens[4] || 0) * 1000.0;
+                offsetIndex = 5;
+            } else {
+                tokens = time.match(matchHoursMinutes);
+                if (tokens !== null) {
+                    hours = +tokens[1];
+                    minutes = +tokens[2];
+                    seconds = +(tokens[3] || 0) * 60.0;
+                    offsetIndex = 4;
+                } else {
+                    tokens = time.match(matchHours);
+                    if (tokens !== null) {
+                        hours = +tokens[1];
+                        minutes = +(tokens[2] || 0) * 60.0;
+                        offsetIndex = 3;
+                    } else {
+                        throw new DeveloperError("Valid ISO 8601 date string required.", "iso8601String");
+                    }
+                }
+            }
+
+            if (minutes >= 60 || seconds > 60 || hours > 24 || (hours === 24 && (minutes > 0 || seconds > 0 || milliseconds > 0))) {
+                throw new DeveloperError("Valid ISO 8601 date string required.", "iso8601String");
+            }
+
+            var offset = tokens[offsetIndex];
+            var offsetHours = +(tokens[offsetIndex + 1]);
+            var offsetMinutes = +(tokens[offsetIndex + 2] || 0);
+            switch (offset) {
+            case '+':
+                hours = hours - offsetHours;
+                minutes = minutes - offsetMinutes;
+                break;
+            case '-':
+                hours = hours + offsetHours;
+                minutes = minutes + offsetMinutes;
+                break;
+            case 'Z':
+                break;
+            default:
+                minutes = minutes + new Date(Date.UTC(year, month - 1, day, hours, minutes)).getTimezoneOffset();
+                break;
+            }
+        } else {
+            //If no time is specified, we it is considered the beginning of the day, local time.
+            minutes = minutes + new Date(Date.UTC(year, month - 1, day)).getTimezoneOffset();
+        }
+
+        //ISO8601 denotes a leap second by any time having a seconds component of exactly 60 seconds.
+        //If that's the case, we need to temporarily subtract a second in order to build a UTC date.
+        //Then we add it back in after converting to TAI.
+        var isLeapSecond = seconds === 60;
+        if (isLeapSecond) {
+            seconds--;
+        }
+
+        //Even if we successfully parsed the string into it's components, after applying UTC offset or
+        //special cases like 24:00:00 denoting midnight, we need to normalize the data appropriately.
+
+        //milliseconds can never be greater than 1000, so we start with seconds
+        while (seconds >= 60) {
+            seconds -= 60;
+            hours++;
+        }
+        while (hours >= 24) {
+            hours -= 24;
+            day++;
+        }
+        if (leapYear && month === 2) {
+            while (day >= daysInLeapFeburary) {
+                day -= daysInLeapFeburary;
+                month++;
+            }
+        } else {
+            var monthCount = daysInMonth[month - 1];
+            while (day >= monthCount) {
+                day -= monthCount;
+                month++;
+            }
+        }
+        while (month >= 12) {
+            month -= 12;
+            year++;
+        }
+
+        //If UTC offset is at the beginning/end of the day, hours can be negative.
+        while (hours < 0) {
+            hours += 24;
+            day--;
+        }
+        while (day < 0) {
+            day += daysInMonth[month - 1];
+            month--;
+        }
+        while (month < 0) {
+            month += 12;
+            year--;
+        }
+
+        var components = computeJulianDateComponents(year, month, day, hours, minutes, seconds, milliseconds);
+        var result = new JulianDate(components[0], components[1], TimeStandard.UTC);
+
+        if (isLeapSecond) {
+            result = TimeStandard.convertUtcToTai(result).addSeconds(1);
+        }
+
+        return result;
     };
 
     /**
@@ -640,56 +849,6 @@ define(['./DeveloperError', './binarySearch', './TimeConstants', './LeapSecond',
         }
         var newJulianDayNumber = this._julianDayNumber + duration;
         return new JulianDate(newJulianDayNumber, this._secondsOfDay, this._timeStandard);
-    };
-
-    /**
-     * Computes the fraction of the year corresponding to this Julian date. Leap years
-     * are taken into account.
-     *
-     * @memberof JulianDate
-     *
-     * @return {Number} The fraction of the current year that has passed.
-     *
-     * @example
-     * var date = new Date(2011, 0, 2); // January 2, 2011 @ 0:00
-     * date.setUTCHours(0, 0, 0, 0);
-     * var julianDate = JulianDate.fromDate(date);
-     * var yearFraction = julianDate.toYearFraction(); //1.0/365.0
-     */
-    JulianDate.prototype.toYearFraction = function() {
-        var commonYearCumulativeMonthTable = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
-        var leapYearCumulativeMonthTable = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335];
-        var dayInYear;
-        var fractionOfDay;
-
-        function isLeapYear(year) {
-            return ((year % 4 === 0) && (year % 100 !== 0)) || (year % 400 === 0);
-        }
-
-        function dayOfYear(date) {
-            var day = date.getDate();
-            var month = date.getMonth();
-            if (isLeapYear(date.getFullYear())) {
-                return day + leapYearCumulativeMonthTable[month];
-            }
-            return day + commonYearCumulativeMonthTable[month];
-        }
-
-        var date = this.toDate();
-        if (this._secondsOfDay / TimeConstants.SECONDS_PER_DAY < 0.5) {
-            dayInYear = dayOfYear(date) - 1;
-            fractionOfDay = (this._secondsOfDay / TimeConstants.SECONDS_PER_DAY) + 0.5;
-        } else {
-            date.setDate(date.getDate() + 1);
-            dayInYear = dayOfYear(date) - 1;
-            fractionOfDay = (this._secondsOfDay / TimeConstants.SECONDS_PER_DAY) - 0.5;
-        }
-
-        if (isLeapYear(date.getFullYear())) {
-            return (dayInYear + fractionOfDay) / 366.0;
-        }
-
-        return (dayInYear + fractionOfDay) / 365.0;
     };
 
     /**
