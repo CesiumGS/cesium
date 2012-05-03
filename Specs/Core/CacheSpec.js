@@ -129,7 +129,7 @@ defineSuite([
 
     it("destroy", function() {
         cache = cache && cache.destroy();
-        expect(cache).toEqual(null);
+        expect(cache).toBeUndefined();
     });
 
     it("isDestroyed returns false", function() {
