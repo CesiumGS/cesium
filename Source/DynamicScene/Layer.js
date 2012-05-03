@@ -24,7 +24,7 @@ define(['./DynamicObject', 'Core/createGuid'], function(DynamicObject, createGui
         for ( var prop in packet) {
             if (typeof prop !== 'undefined') {
                 var propertyFunc = this_propertyFunctionsMap[prop];
-                if (propertyFunc !== 'undefined') {
+                if (typeof propertyFunc !== 'undefined') {
                     propertyFunc(object, packet, this, sourceUri);
                 }
             }
@@ -36,10 +36,10 @@ define(['./DynamicObject', 'Core/createGuid'], function(DynamicObject, createGui
     Layer.prototype.addPackets = function(packets, sourceUri) {
         if (Array.isArray(packets)) {
             for ( var i = 0, len = packets.length; i < len; i++) {
-                this.addPacket(this, packets[i], sourceUri);
+                this.addPacket(packets[i], sourceUri);
             }
         } else {
-            this.addPacket(this, packets, sourceUri);
+            this.addPacket(packets, sourceUri);
         }
     };
 

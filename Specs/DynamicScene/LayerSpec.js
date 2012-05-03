@@ -43,7 +43,7 @@ function(Layer,
             }
         };
 
-        layer.addPacket(czml);
+        layer.addPackets(czml);
 
         var testFacility = layer.getObject(czml.id);
         expect(typeof testFacility !== undefined).toBeTruthy();

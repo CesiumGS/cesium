@@ -72,10 +72,18 @@ define(['Core/JulianDate', 'Core/TimeInterval', 'Core/TimeIntervalCollection', '
         var this_dataHandler = this._dataHandler;
         var czmlIntervalValue = this_dataHandler.getCzmlIntervalValue(czmlInterval);
 
-        var iso8601Interval = czmlInterval.interval || "0000-01-01/9999-12-31"; //FIXME We need a real infinite interval to use.
-        iso8601Interval = iso8601Interval.split('/');
-        var intervalStart = JulianDate.fromIso8601(iso8601Interval[0]);
-        var intervalStop = JulianDate.fromIso8601(iso8601Interval[1]);
+        var iso8601Interval = czmlInterval.interval;
+        var intervalStart;
+        var intervalStop;
+        if (typeof iso8601Interval === 'undefined') {
+            //FIXME, figure out how to properly handle "infinite" intervals.
+            intervalStart = JulianDate.fromIso8601("0000-01-01T00:00Z");
+            intervalStop = JulianDate.fromIso8601("+010000-01-01T00:00Z");
+        } else {
+            iso8601Interval = iso8601Interval.split('/');
+            intervalStart = JulianDate.fromIso8601(iso8601Interval[0]);
+            intervalStop = JulianDate.fromIso8601(iso8601Interval[1]);
+        }
 
         var existingInterval = this_intervals.findInterval(intervalStart, intervalStop);
 
