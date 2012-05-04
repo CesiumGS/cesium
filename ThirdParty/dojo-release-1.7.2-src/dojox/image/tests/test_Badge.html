@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+	<title>dojox.image.Badge Tests | The Dojo Toolkit</title>
+
+	<!-- required: a default theme file, and project css: -->
+	<link rel="stylesheet" id="themeStyles" href="../../../dijit/themes/claro/claro.css" />
+	<link rel="stylesheet" href="../resources/image.css" />
+	
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css"; 
+		body, html { width:100%; height:100%; margin:0; padding:0; } 
+
+		.fixed { 
+			position:fixed;
+			font:32pt Arial,sans-serif;
+			color:#777;
+			text-align:center;
+			line-height:42px;
+		}
+		.dj_ie .fixed {
+			display:none;
+		}
+		img.thing { width:50px; height:50px; }
+		.noBorderWrapper .dojoxBadge {
+			border:none;
+		}
+		
+		.b1 { background:url('images/square.jpg') !important; }
+		.b2 { background-image:url('images/imageHoriz.jpg') !important; }
+		.b3 { background-image:url('images/imageVert.jpg') !important; }
+		.b4 { background-image:url('images/imageHoriz2.jpg') !important; }
+	</style>
+	
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad:true"></script>
+
+	<!-- do not use! only for testing dynamic themes -->
+	<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+	<script>
+    	require(["dojo/parser", "dojox/image/Badge", "dojox/data/FlickrStore", "dojo/domReady!"]);
+	</script>
+
+	<!--script type="text/javascript">
+		// programatic flickrstore implementation [basic]
+		function onComplete(items,request){
+			if (items.length>0){
+				dojo.forEach(items,function(item){
+					var part = {
+						title: flickrStore.getValue(item,"title"),
+						href: flickrStore.getValue(item,"imageUrl")
+					};
+					// FIXME: make addImage more accessible, or do this internally
+					// _attachedDialog is dijit.byId("dojoxLightboxDialog"), and the
+					// is only one per page.
+					dijit.byId('fromStore')._attachedDialog.addImage(part,"flickrStore");
+				});
+				dojo.byId('flickrButton').disabled = false; 
+			}
+		}
+
+		function onError(error,request){
+			console.warn(error,request);
+		}
+
+		function init(){
+			var flickrRequest = {
+				query: {},
+				onComplete: onComplete,
+				onError: onError,
+				userid: "jetstreet",
+				tags: "jetstreet",
+				count: 10
+			};
+			flickrStore.fetch(flickrRequest);
+		}
+		dojo.addOnLoad(init);
+	</script-->
+
+
+</head>
+<body class="claro">
+
+	<div style="padding:20px;">
+		
+		<h1 class="testTitle">a Dojo based Badge thingr:</h1>
+		
+			<h3>[2x2] From IMG</h3>
+			<div dojoType="dojox.image.Badge" rows="2" cols="2" children="img.thing">
+				<img src="images/square.jpg" class="thing" alt="thingr" />
+				<img src="images/square.jpg" class="thing" alt="thingr" />
+				<img src="images/square.jpg" class="thing" alt="thingr" />
+				<img src="images/square.jpg" class="thing" alt="thingr" />
+			</div>
+		
+			<h3>[4x3]</h3>	
+			<div dojoType="dojox.image.Badge" rows="3" cols="4" cellSize="50">
+				<div class="dojoxBadgeImage"></div>
+				<div class="dojoxBadgeImage"></div>
+				<div class="dojoxBadgeImage"></div>
+				<div class="dojoxBadgeImage"></div>
+			
+				<div class="dojoxBadgeImage"></div>
+				<div class="dojoxBadgeImage"></div>
+				<div class="dojoxBadgeImage"></div>
+				<div class="dojoxBadgeImage"></div>
+			
+				<div class="dojoxBadgeImage"></div>
+				<div class="dojoxBadgeImage"></div>
+				<div class="dojoxBadgeImage"></div>
+				<div class="dojoxBadgeImage"></div>
+			</div>
+
+
+		<h3>[3x4] Grid, delay:2500</h3>
+
+		<div dojoType="dojox.image.Badge" delay="4000" rows="4" cols="3" style="width:150px; height:200px">
+			<div class="dojoxBadgeImage"></div>
+			<div class="dojoxBadgeImage"></div>
+			<div class="dojoxBadgeImage"></div>
+			<div class="dojoxBadgeImage"></div>
+			
+			<div class="dojoxBadgeImage"></div>
+			<div class="dojoxBadgeImage"></div>
+			<div class="dojoxBadgeImage"></div>
+			<div class="dojoxBadgeImage"></div>
+			
+			<div class="dojoxBadgeImage"></div>
+			<div class="dojoxBadgeImage"></div>
+			<div class="dojoxBadgeImage"></div>
+			<div class="dojoxBadgeImage"></div>
+		</div>
+
+		<div style="position:absolute; top:100px; left:275px">
+			<h2>[6x2] Picker, in absolute node</h2>
+			<div dojoType="dojox.image.Badge" rows="2" cols="6">
+				<div class="dojoxBadgeImage"></div>
+				<div class="dojoxBadgeImage"></div>
+				<div class="dojoxBadgeImage"></div>
+				<div class="dojoxBadgeImage"></div>
+			
+				<div class="dojoxBadgeImage"></div>
+				<div class="dojoxBadgeImage"></div>
+				<div class="dojoxBadgeImage"></div>
+				<div class="dojoxBadgeImage"></div>
+			
+				<div class="dojoxBadgeImage"></div>
+				<div class="dojoxBadgeImage"></div>
+				<div class="dojoxBadgeImage"></div>
+				<div class="dojoxBadgeImage"></div>
+			</div>
+			
+			<h2>[3x2] But only 3 images</h2>
+			<div class="noBorderWrapper">
+				<div dojoType="dojox.image.Badge" cellSize="150" rows="2" cols="3">
+					<div class="dojoxBadgeImage b1"></div>
+					<div class="dojoxBadgeImage b2"></div>
+					<div class="dojoxBadgeImage b3"></div>
+				</div>
+			</div>
+			
+		</div>
+
+		<h3>position:fixed;</h3>
+		<ul>
+			<li>Does not work in IE6. At all. There are docType hacks if you choose. </li>
+		</ul>
+		<div dojoType="dojox.image.Badge" children="div" rows="6" cols="2" class="fixed" style="top:0; right:0">
+			<div>a</div>
+			<div>b</div>
+			<div>c</div>
+			<div>d</div>
+		        
+			<div>e</div>
+			<div>f</div>
+			<div>g</div>
+			<div>h</div>
+		        
+			<div>i</div>
+			<div>j</div>
+			<div>k</div>
+			<div>l</div>
+		</div>
+
+		<h2>[6x6] threads:3</h2>
+		<div class="noBorderWrapper">
+			<div dojoType="dojox.image.Badge" threads="2" rows="6" cols="6">
+				<div class="dojoxBadgeImage"></div><div class="dojoxBadgeImage"></div><div class="dojoxBadgeImage"></div><div class="dojoxBadgeImage"></div><div class="dojoxBadgeImage"></div><div class="dojoxBadgeImage"></div>
+				<div class="dojoxBadgeImage"></div><div class="dojoxBadgeImage"></div><div class="dojoxBadgeImage"></div><div class="dojoxBadgeImage"></div><div class="dojoxBadgeImage"></div><div class="dojoxBadgeImage"></div>
+				<div class="dojoxBadgeImage"></div><div class="dojoxBadgeImage"></div><div class="dojoxBadgeImage"></div><div class="dojoxBadgeImage"></div><div class="dojoxBadgeImage"></div><div class="dojoxBadgeImage"></div>
+				<div class="dojoxBadgeImage"></div><div class="dojoxBadgeImage"></div><div class="dojoxBadgeImage"></div><div class="dojoxBadgeImage"></div><div class="dojoxBadgeImage"></div><div class="dojoxBadgeImage"></div>
+				<div class="dojoxBadgeImage"></div><div class="dojoxBadgeImage"></div><div class="dojoxBadgeImage"></div><div class="dojoxBadgeImage"></div><div class="dojoxBadgeImage"></div><div class="dojoxBadgeImage"></div>
+				<div class="dojoxBadgeImage"></div><div class="dojoxBadgeImage"></div><div class="dojoxBadgeImage"></div><div class="dojoxBadgeImage"></div><div class="dojoxBadgeImage"></div><div class="dojoxBadgeImage"></div>
+			</div>
+		</div>
+		
+		<div id="prog"></div>
+		<!--div dojoType="dojox.image.Badge">
+
+			<a href="images/imageVert.jpg" dojoType="dojox.image.Lightbox" title="More Guatemala...">tall</a>
+			<a href="images/imageHoriz.jpg" dojoType="dojox.image.Lightbox" title="Antigua, Guatemala">4:3 image</a>
+			<a href="images/broken.jpg" dojoType="dojox.image.Lightbox" title="broken href example">Broken link</a>
+
+			<a href="images/huuuge.png" dojoType="dojox.image.Lightbox" title="a large image">large than viewport?</a>
+			<a href="images/imageHoriz2.jpg" dojoType="dojox.image.Lightbox" group="group1" title="Amsterdam Train Depot">wide image</a>
+			<a href="images/square.jpg" dojoType="dojox.image.Lightbox" group="group1" title="1:1 aspect">square</a>
+
+			<a href="images/extraWide.jpg" dojoType="dojox.image.Lightbox" group="group1" title="Greeneville, TN">wide image</a>
+			<a href="images/broken.jpg" dojoType="dojox.image.Lightbox" group="group1" title="broken href example">Broken link</a>
+			<a href="images/imageHoriz2.jpg" dojoType="dojox.image.Lightbox" group="group2" title="Amsterdam Train Depot">wide image</a>
+
+			<a href="images/square.jpg" dojoType="dojox.image.Lightbox" group="group2" title="1:1 aspect">square</a>
+			<a href="images/imageHoriz.jpg" dojoType="dojox.image.Lightbox" group="group2" title="Antigua, Guatemala">4:3 image</a>
+			<a href="images/imageVert.jpg" dojoType="dojox.image.Lightbox" group="group2" title="More Guatemala...">tall</a>
+
+		</div-->
+
+		<!--h3>From dojox.data.FlickrStore:</h3>
+
+		<div dojoType="dojox.data.FlickrStore" jsId="flickrStore" label="title"></div>
+		<div id="fromStore" dojoType="dojox.image.Lightbox" store="flickrStore" group="flickrStore"></div>
+
+		<input id="flickrButton" type="button" onclick="dijit.byId('fromStore').show()" value="show flickr lightbox" disabled="disabled" -->
+	
+	</div>
+
+</body>
+</html>

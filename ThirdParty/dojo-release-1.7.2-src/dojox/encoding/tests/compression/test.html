@@ -1,0 +1,61 @@
+﻿<html>
+	<head>
+		<title>Test colors</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<style type="text/css">
+			@import "../../../../dojo/resources/dojo.css";
+			@import "../../../../dijit/tests/css/dijitTests.css";
+			
+			.pane { margin-top: 2em; }
+		</style>
+		<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+		<script type="text/javascript" src="colors2.js"></script>
+		<script type="text/javascript">
+			dojo.require("dojox.encoding.tests.compression.colors");
+			//dojo.require("dojox.encoding.tests.compression.colors2");
+			dojo.require("dojox.encoding.tests.compression.colors3");
+			var dct = dojox.encoding.tests.compression;
+			
+			var test = function(c1, c2, result){
+				var empty = {};
+				for(var i in c1){
+					if(i in empty){ continue; }
+					if(!(i in c2)){
+						result.push("<div>" + i + " is missing.</div>");
+						continue;
+					}
+					var v1 = c1[i], v2 = c2[i];
+					if(v1[0] != v2[0] || v1[1] != v2[1] || v1[2] != v2[2]){
+						result.push("<div>" + i + " doesn't match.</div>");
+						continue;
+					}
+					result.push("<div style='color: green'>" + i + " is ok.</div>");
+				}
+			};
+			
+			var run = function(){
+				var result = [];
+				result.push("<p><strong>Comparing colors to colors3.</strong></p>");
+				test(dct.colors, dct.colors3, result);
+				result.push("<p><strong>Comparing colors3 to colors.</strong></p>");
+				test(dct.colors3, dct.colors, result);
+				/*
+				result.push("<p><strong>Comparing colors to colors2.</strong></p>");
+				test(dct.colors, dct.colors2, result);
+				result.push("<p><strong>Comparing colors2 to colors.</strong></p>");
+				test(dct.colors2, dct.colors, result);
+				*/
+				dojo.byId("status").innerHTML = result.join("\n");
+			};			
+			
+			dojo.addOnLoad(function(){
+				dojo.connect(dojo.byId("run"), "onclick", run);
+			});
+		</script>
+	</head>
+	<body>
+		<h1>Test colors</h1>
+		<p><button id="run">Run</button></p>
+		<div id="status" class="pane"><em>No status yet.</em></div>
+	</body>
+</html>

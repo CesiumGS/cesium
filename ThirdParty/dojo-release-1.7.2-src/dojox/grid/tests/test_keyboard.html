@@ -1,0 +1,84 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>Test dojox.grid.Grid Basic</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+	<style type="text/css">
+		@import "../resources/Grid.css";
+		@import "../resources/tundraGrid.css";
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/themes/tundra/tundra.css";
+		body {
+			font-size: 0.9em;
+			font-family: Geneva, Arial, Helvetica, sans-serif;
+			margin-left:5em;
+		}
+		.heading {
+			font-weight: bold;
+			padding-bottom: 0.25em;
+		}
+				
+		#grid { 
+			border: 1px solid #333;
+			width: 35em;
+			height: 30em;
+		}
+	</style>
+	<script type="text/javascript" src="../../../dojo/dojo.js" 
+		djConfig="isDebug:true, parseOnLoad: true"></script>
+	<script type="text/javascript">
+		dojo.require("dijit.dijit");
+		dojo.require("dojox.grid.DataGrid");
+		dojo.require("dojo.data.ItemFileWriteStore");
+		dojo.require("dojo.parser");
+	</script>
+	<script type="text/javascript" src="support/test_data.js"></script>
+	<script type="text/javascript">
+		var layout = [
+			{name: 'Column 1', field: 'col1'},
+			{name: 'Column 2', field: 'col2'},
+			{name: 'Column 3', field: 'col3'},
+			{name: 'Column 4', field: 'col4', width: "150px"},
+			{name: 'Column 5', field: 'col5'},
+			{name: 'Column 6', field: 'col6'},
+			{name: 'Column 7', field: 'col7'},
+			{name: 'Column 8'},
+			{name: 'Column 9', field: 'col3'},
+			{name: 'Column 10', field: 'col1'},
+			{name: 'Column 11', field: 'col2'},
+			{name: 'Column 12', field: 'col3'},
+			{name: 'Column 13', field: 'col4', width: "150px"},
+			{name: 'Column 14', field: 'col5'},
+			{name: 'Column 15', field: 'col6'},
+			{name: 'Column 16', field: 'col7'},
+			{name: 'Column 17'},
+			{name: 'Column 18', field: 'col3'}
+		];
+
+		function keyDown(e) {
+			switch(e.keyCode){
+				case dojo.keys.LEFT_ARROW:
+					console.log('left arrow!');
+					break;
+				case dojo.keys.RIGHT_ARROW:
+					console.log('right arrow!');
+					break;
+				case dojo.keys.ENTER:
+					console.log('enter!');
+					break;
+			}
+		}
+	</script>
+</head>
+<body class="tundra">
+	<div class="heading" tabindex="0">dojox.grid.Grid Basic Test</div>
+	<div id="grid" jsid="grid" dojoType="dojox.grid.DataGrid" 
+		store="test_store" structure="layout">
+		<script type="dojo/connect" event="onKeyDown" args="e">
+			keyDown(e);
+		</script>
+	</div>
+	<p id="p-after-grid" tabindex="0">Tab-focusable paragraph below the grid</p>
+</body>
+</html>

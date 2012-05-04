@@ -1,0 +1,185 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+	<head>
+		<title>dojox.grid.EnhancedGrid Leak Test Programmatic</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+		<link rel=stylesheet href="support/common.css"/>
+		<style type="text/css">
+			body {
+				font-size: 0.9em;
+				font-family: Geneva, Arial, Helvetica, sans-serif;
+				padding: 0.5em;
+			}
+			.title {
+				text-align:center;
+			}
+			
+	 		#grid {
+	 			border: 1px solid #333;
+				width: 85.2em;
+				height: 50em;
+			}
+	
+		</style>
+		<script type="text/javascript" src="../../../../dojo/dojo.js" 
+			djConfig="isDebug:true, parseOnLoad: true"></script>
+		<script type="text/javascript">
+			dojo.require("dijit.dijit"); // optimize: load dijit layer
+			dojo.require("dojox.grid.EnhancedGrid");
+			dojo.require("dojo.data.ItemFileWriteStore");
+			dojo.require("dojo.parser");
+			dojo.require("dojox.grid.enhanced.plugins.Filter");
+			dojo.require("dojox.grid.enhanced.plugins.exporter.CSVWriter");
+			dojo.require("dojox.grid.enhanced.plugins.Printer");
+			dojo.require("dojox.grid.enhanced.plugins.Cookie");
+			dojo.require("dojox.grid.enhanced.plugins.IndirectSelection");
+			dojo.require("dojox.grid.enhanced.plugins.NestedSorting");
+			dojo.require("dojox.grid.enhanced.plugins.Selector");
+			dojo.require("dojox.grid.enhanced.plugins.Menu");
+			dojo.require("dojox.grid.enhanced.plugins.DnD");
+			dojo.require("dojox.grid.enhanced.plugins.Search");
+			dojo.require("dojox.grid.enhanced.plugins.CellMerge");
+			dojo.require("dojox.grid.enhanced.plugins.Pagination");
+			dojo.require('doh.runner');
+		</script>
+		<script type="text/javascript" src="../support/test_data.js"></script>
+		<script type="text/javascript">
+			var grid = null,
+				connecter = [];
+			var gridArgs = {
+			};
+			var plugins = {
+				"nestedSorting": {},
+				"indirectSelection": {
+					headerSelector: true,
+					name: "Selection", 
+					width:"70px", 
+					styles:"text-align: center;"
+				},
+				"menus": {
+				},
+				"exporter": {},
+				"printer": {},
+				"filter": {
+					closeFilterbarButton: true,
+					ruleCount: 0
+				},
+				"cookie": {},
+				"selector": {
+				},
+				"dnd": {
+					copyOnly: false
+				},
+				"cellMerge": {
+					"mergedCells": [
+						{row: "3", start: 1, end: 10, major: 3}
+					]
+				},
+				"search": {},
+				"pagination":
+				{
+					pageSizes: ["5", "10", "20", "50", "All"],	// Array, custom the items per page button
+					// itemTitle: "entrys", 	// String, custom the item' title of description
+					description: true,	// boolean, custom weather or not the discription will be displayed
+					sizeSwitch: true,	// boolean, custom weather or not the page size switch will be displayed
+					pageStepper: true,	// boolean, custom weather or not the page step will be displayed
+					gotoButton: true,
+					maxPageStep: 10,		// Integer, custom how many page step will be displayed
+					position: "bottom"		// String, custom the position of the paginator bar
+											// there're three options: top, bottom, both
+					// ,descTemplate: "${1} ${0}" // A template of the current position description.
+				}
+			};
+			
+			var layout = [[
+				{name: 'Column 1', field: 'col1'},
+				{name: 'Column 2', field: 'col2'},
+				{name: 'Column 3', field: 'col3'},
+				{name: 'Column 4', field: 'col4', width: "150px"},
+				{name: 'Column 5', field: 'col5'},
+				{name: 'Column 6', field: 'col6'},
+				{name: 'Column 7', field: 'col7'},
+				{name: 'Column 8', field: 'col5'}
+			]];
+			
+			dojo.addOnLoad(function() {
+				dojo.connect(dojo._listener, "add", function(obj, event, context, method){
+					connecter.push([obj, event, context, method]); // Handle
+				});
+			});
+
+			function toggleGrid() {
+				if (grid){
+					grid.destroy();
+					grid = null;
+					
+					doh.register("leak_programmatic", [
+						{
+							name: 'widget_destroy',
+							runTest: function(t){
+								for(var name in dijit.registry._hash){
+									t.assertEqual(dijit.registry._hash[name], undefined);
+								}
+							}
+						}, 
+						{
+							name: "connecter_destroy",
+							runTest: function(t){
+								dojo.forEach(connecter, function(conn){
+									var f = (conn[0] || dojo.global)[conn[1]];
+									if(f && f._listeners){
+										dojo.forEach(f._listeners, function(l){
+											t.assertEqual(l, undefined);
+										});
+									}
+								});
+							}
+						}, 
+						{
+							name: "topics_destroy",
+							runTest: function(t){
+									
+								for(var name in dojo._topics){
+									if(name === "dijit.Editor.getPlugin"){continue;}
+									var topic = dojo._topics[name];
+									dojo.forEach(topic._listeners, function(l){
+										t.assertEqual(l, undefined);
+									});
+								}
+							}
+						}
+					]);
+					
+					doh.run();
+				}
+				else {
+					grid = new dojox.grid.EnhancedGrid(dojo.mixin({
+						id: "grid",
+						store: test_store,
+						structure: layout,
+						plugins : plugins
+					}, gridArgs));
+
+					dojo.byId("gridContainer").appendChild(grid.domNode);
+					grid.startup();
+				}
+			}
+			
+			function leakTest(){
+				toggleGrid();
+			}
+		</script>
+	</head>
+	<body class="claro">
+		<div class="heading">dojox.grid.EnhancedGrid Leak Test Programmatic</div>
+		<div>
+		<p>Please follow below two steps and see the doh test output in console: ( TEST SUMMARY )</p>
+			<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1> click "Toggle Grid Programmatic" button, wait until grid created.</p>
+			<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2> click "Toggle Grid Programmatic" button again to destroy Grid,
+				all event connections, topics, and checkbox widgets should be destroyed, please check with debugging console, if there are no failures, means no leak. If there are one or more failures, means leak exist.</p>
+		</div>
+		<button id="leakTest" onClick="leakTest();">Toggle Grid Programmatic</button>
+		<div id="gridContainer"></div>
+	</body>
+</html>

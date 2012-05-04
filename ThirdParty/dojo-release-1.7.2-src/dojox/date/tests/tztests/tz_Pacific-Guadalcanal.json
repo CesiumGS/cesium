@@ -1,0 +1,14 @@
+({
+	name: "date.timezone.Pacific-Guadalcanal",
+	runTest: function(t){
+		var tz = "Pacific/Guadalcanal";
+		doh.checkDate({tzOffset: -639.8, tzAbbr: "LMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: -639.8, tzAbbr: "LMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: -639.8, tzAbbr: "LMT"}, -1806748789000, tz, 1);
+		doh.checkDate({tzOffset: -660, tzAbbr: "SBT"}, -1806748788000, tz, 1);
+		doh.checkDate({tzOffset: -660, tzAbbr: "SBT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: -660, tzAbbr: "SBT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: -660, tzAbbr: "SBT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: -660, tzAbbr: "SBT"}, 1246789800000, tz, 0);
+	}
+})

@@ -1,0 +1,172 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+	<title>Testing the ThumbnailPicker</title>
+	
+	<!-- required: a default theme file -->
+	<link rel="stylesheet" id="themeStyles" href="../../../dijit/themes/tundra/tundra.css">
+	<link rel="stylesheet" href="../resources/image.css">
+	
+	<style type="text/css">
+		@import "../../../dijit/tests/css/dijitTests.css";
+	</style>
+	
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: false"></script>
+
+	<!-- do not use! only for testing dynamic themes -->
+	<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+
+	<!-- for debugging: -->
+	<script type="text/javascript" src="../ThumbnailPicker.js"></script>
+	
+	<script type="text/javascript">
+		dojo.require("dojox.image.ThumbnailPicker");
+		dojo.require("dojox.data.FlickrRestStore"); 
+		dojo.require("dojo.data.ItemFileReadStore"); 
+		dojo.require("dojo.parser");
+		
+		/*
+			Initializes the ThumbnailPicker with a data store that
+			reads from the Flickr REST APIs.
+		*/
+		function initFlickrGallery() {
+			var flickrRestStore = new dojox.data.FlickrRestStore();
+			var req = {
+				query: {
+					userid: "44153025@N00",//The Flickr user id to use
+					apikey: "8c6803164dbc395fb7131c9d54843627",//An API key is required.
+					sort: [
+						   {
+							descending: true //Use descending sort order, ascending is default.
+							}
+						   ],
+					tags: ["superhorse", "redbones", "beachvolleyball","dublin","croatia"],
+					tag_mode: "any" //Match any of the tags
+				},
+				count: 20
+			};
+			
+			//Set the flickr data store on two of the dojox.image.ThumbnailPicker widgets
+			dijit.byId('thumbPicker1').setDataStore(flickrRestStore, req);
+			dijit.byId('thumbPicker3').setDataStore(flickrRestStore, req);
+		}
+		
+		/*
+			Initializes the second ThumbnailPicker widget with a data store that
+			reads information from a JSON URL.  This also tells the ThumbnailPicker
+			the name of the JSON attributes to read from each data item retrieved
+			from the JSON URL.
+		*/
+		function initItemStoreGallery(){
+			var itemRequest = {
+				query: {},
+				count: 20
+			};
+			var itemNameMap = {
+				imageThumbAttr: "thumb",
+				imageLargeAttr: "large"
+			};
+			
+			//Set the dojo.data.ItemFileReadStore on two of the dojox.image.ThumbnailPicker widgets
+			//Note the use of the 'itemNameMap', which tells the widget what attributes to
+			//read from the store.  Look in the 'images.json' file in the same folder as this
+			//file to see the data being read by the widget.
+			dijit.byId('thumbPicker2').setDataStore(imageItemStore, itemRequest, itemNameMap);
+			dijit.byId('thumbPicker4').setDataStore(imageItemStore, itemRequest, itemNameMap);
+		}
+		
+		//Subscribe to clicks on the thumbnails, and print out the information provided
+		function doSubscribe(){
+			function updateDiv(packet){
+				dojo.byId('PublishedData').innerHTML = "You selected the thumbnail:"
+						+ "<br/><b>Index:</b> " + packet.index
+						+ "<br/><b>Url:</b> " + packet.url
+						+ "<br/><b>Large Url:</b> " + packet.largeUrl
+						+ "<br/><b>Title:</b> " + packet.title
+						+ "<br/><b>Link:</b> " + packet.link
+						;
+			};
+			
+			//When an image in the ThumbnailPicker is clicked on, it publishes
+			//information on the image to a topic, whose name is found by calling
+			//the 'getTopicName' function on the widget.
+			dojo.subscribe(dijit.byId('thumbPicker1').getClickTopicName(), updateDiv);
+			dojo.subscribe(dijit.byId('thumbPicker2').getClickTopicName(), updateDiv);
+		}
+		
+		dojo.addOnLoad(function(){
+			dojo.parser.parse();
+			initFlickrGallery();
+			initItemStoreGallery();
+			doSubscribe();
+		});
+
+		function changeStore(){
+			var flickrRestStore = new dojox.data.FlickrRestStore();
+			var req = {
+				query: {
+					userid: "44153025@N00",
+					apikey: "8c6803164dbc395fb7131c9d54843627",
+					sort: [
+						   {
+							attribute: "interestingness",
+							descending: true
+							}
+						   ],
+					tag_mode: "any"
+				},
+				count: 20
+			};
+			dijit.byId('thumbPicker2').setDataStore(flickrRestStore, req, {
+			  imageThumbAttr: "imageUrlThumb",
+			  imageLargeAttr: "imageUrl",
+			  titleAttr: "title"
+			  
+			});				
+		}
+
+	</script>
+</head>
+<body>
+	<h1 class="testTitle">dojox.image.ThumbnailPicker</h1>
+
+	<div id="PublishedData" style="background-color:light-grey">
+		When you click on a thumbnail image, it's information is placed here
+	</div>
+
+	<h2>From FlickrRestStore:</h2>
+	This ThumbnailPicker should have 8 thumbnails, with each of them linking
+	to a URL when clicked on.  The cursor should also change when over an image.
+	<div id="thumbPicker1" dojoType="dojox.image.ThumbnailPicker" size="500"
+			useHyperlink="true" ></div>
+
+    <h2>From ItemFileReadStore:</h2>
+	This ThumbnailPicker should have 5 thumbnails. Clicking on a thumbnail should NOT
+	open a URL, and the cursor should not change when over an image that is not an arrow.
+	
+	
+	<button onclick="changeStore()">Change Datastore</button>
+    <div id="thumbPicker2" dojoType="dojox.image.ThumbnailPicker" size="400"
+		isClickable="false"></div>
+	<div jsId="imageItemStore" dojoType="dojo.data.ItemFileReadStore" url="images.json"></div>
+	
+	<h2>From FlickrRestStore:</h2>
+	This ThumbnailPicker should have 6 thumbnails, with each of them linking
+	to a URL when clicked on.  The cursor should also change when over an image.
+	Unlike the ThumbnailPicker above, when these links are clicked on, this page
+	changes, instead of a popup window.
+	
+	<div id="thumbPicker3" dojoType="dojox.image.ThumbnailPicker" size="600"
+		useHyperLink="true" hyperlinkTarget="this"></div>
+
+	<h2>From ItemFileReadStore, and vertical:</h2>
+	This ThumbnailPicker should have 5 thumbnails. Clicking on a thumbnail should NOT
+	open a URL, and the cursor should not change when over an image that is not an arrow.
+	The thumbnails should also be aligned vertically.
+    <div id="thumbPicker4" dojoType="dojox.image.ThumbnailPicker" size="300"
+		isClickable="false" isHorizontal="false"></div>
+
+</body>
+</html>

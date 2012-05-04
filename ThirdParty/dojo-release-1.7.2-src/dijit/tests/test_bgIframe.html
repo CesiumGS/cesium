@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+
+	<title>Dojo Toolkit - Background Iframe test</title>
+	<style type="text/css">
+		@import "../themes/claro/document.css";
+		@import "css/dijitTests.css";
+	</style>
+
+	<!-- required: a default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../dijit/themes/claro/claro.css"/>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../dojo/dojo.js"
+		data-dojo-config="parseOnLoad: true, isDebug: true"></script>
+
+	<!-- not needed, for testing alternate themes -->
+	<script type="text/javascript" src="_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dijit.Dialog");
+		dojo.require("dijit.form.DateTextBox");
+		dojo.require("dijit.form.Button");
+		dojo.require("dijit.Tooltip");
+		dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+	</script>
+
+</head>
+<body class="claro">
+	<span data-dojo-type="dijit.Tooltip" data-dojo-props='connectId:["one_applet"]'>
+		This is one tooltip.
+	</span>
+	<span data-dojo-type="dijit.Tooltip" data-dojo-props='connectId:["two_applet"]'>
+		This is another tooltip.  A little longer...
+	</span>
+	<span data-dojo-type="dijit.Tooltip" data-dojo-props='connectId:["one_xapp"]'>
+		This is one tooltip.
+	</span>
+	<span data-dojo-type="dijit.Tooltip" data-dojo-props='connectId:["two_xapp"]'>
+		This is another tooltip.  A little longer...
+	</span>
+	<button id="showDialog" data-dojo-type="dijit.form.Button">
+		Show Dialog
+		<script type="dojo/connect" data-dojo-event="onClick">
+			dialog.show();
+		</script>
+	</button>
+	<table>
+			<tr>
+				<td></td>
+				<td>
+					<input id="dateText_applet" data-dojo-type="dijit.form.DateTextBox" data-dojo-props='type:"text" '/>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<div style="width: 200px;">
+						This &lt;select&gt; will disappear on IE6
+						when the dialog is displayed.
+						But the dialog's iframe shouldn't make it disappear because they shouldn't overlap.
+					</div>
+					<select id="dropDown_applet">
+						<option>cat</option>
+						<option>dog</option>
+						<option>mouse</option>
+					</select>
+					<br><br>
+
+					<div id="one_applet">Mouse over this to see the tooltip</div>
+					<br>
+					<div id="two_applet">Mouse over this to see a different tooltip</div>
+				</td>
+				<td id="applet_td">
+					<!-- TODO: remove the applet tag which is deprecated -->
+					<applet id="applet" width="400" height="300" code="javax.swing.JApplet">
+						<param name="mayscript" value="false">
+						<param name="scriptable" value="false">
+						<param name="initial_focus" value="false">
+					</applet>
+				</td>
+			</tr>
+	</table>
+	<table>
+			<tr>
+				<td></td>
+				<td>
+					<input id="dateText_xapp" data-dojo-type="dijit.form.DateTextBox" data-dojo-props='type:"text" '/>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<div style="width: 200px;">
+						This select will disappear on IE6
+						when the dialog is displayed.
+						But the dialog's iframe shouldn't make it disappear because they shouldn't overlap.
+					</div>
+					<select id="dropDown_xapp">
+						<option>cat</option>
+						<option>dog</option>
+						<option>mouse</option>
+					</select>
+					<br><br>
+
+					<div id="one_xapp">Mouse over this to see the tooltip</div>
+					<br>
+					<div id="two_xapp">Mouse over this to see a different tooltip</div>
+				</td>
+				<td>
+					<embed id="xapp" src="../../dojox/av/resources/video.swf" width="400" height="300" />
+				</td>
+			</tr>
+	</table>
+	<div id="dialog" data-dojo-id="dialog" data-dojo-type="dijit.Dialog">
+		Hello!
+	</div>
+</body>
+</html>

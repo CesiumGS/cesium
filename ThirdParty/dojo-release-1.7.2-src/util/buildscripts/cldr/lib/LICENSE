@@ -1,0 +1,10 @@
+This directory contains third-party libraries available under the following licenses:
+
+Apache Software License Version 2.0
+* ant-apache-bsf.jar
+* bsf.jar
+* commons-logging-1.1.1.jar
+* resolver.jar
+
+Mozilla Public License 1.0 (MPL), available at http://www.mozilla.org/MPL/MPL-1.0.html
+* saxon9.jar

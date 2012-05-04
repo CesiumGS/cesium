@@ -1,0 +1,76 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>dojox.layout.ToggleSplitter Test</title>
+
+	<!-- required: a default theme file -->
+	<link rel="stylesheet" id="themeStyles" href="../../../dijit/themes/claro/claro.css">
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: true"></script>
+
+	<!-- do not use! only for testing dynamic themes -->
+	<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+		@import "../resources/ToggleSplitter.css";
+		body, html { width:100%; height:100%; margin-left:10px; padding:0; overflow:hidden; }
+	</style>
+	
+	<script type="text/javascript">
+		dojo.require("dojo.parser");
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dijit.layout.AccordionContainer");
+		dojo.require("dijit.layout.BorderContainer");
+		dojo.require("dijit.layout.ContentPane");
+		dojo.require("dojox.layout.ToggleSplitter");
+		
+		function watchSplitters(bc){
+			var spl = bc.getSplitter("bottom");
+			dojo.connect(spl, "onOpen", function(pane){
+				dojo.style(pane.domNode, "backgroundColor", "#f6f6f6");
+			});
+			dojo.connect(spl, "onCollapsed", function(pane){
+				dojo.style(pane.domNode, "backgroundColor", "#e2effc");
+			});
+		}
+		
+		dojo.addOnLoad(function() {
+			watchSplitters(dijit.byId("border1"));
+		})
+	</script>
+</head>
+<body class="claro" id="testpage">
+
+	<h2 class="testTitle">dojox.layout.ToggleSplitter tests</h2>
+	<p>Click the splitters to toggle them <b>open/collapsed(optional)/closed</b>. If <b>toggleSplitterCollapsedSize</b> is set on the content pane, the pane has the optional collapsed state. Or it only has two states.</p>
+
+	<div id="border1" dojoType="dijit.layout.BorderContainer" style="width: 90%; height: 80%; background: #ffffff; border: 1px solid #b5bcc7; ">
+		<script type="dojo/method">
+			this._splitterClass = "dojox.layout.ToggleSplitter";
+		</script>
+		<div dojoType="dijit.layout.ContentPane" region="top" style="background-color: #f6f6f6; border: 1px solid #b5bcc7; height: 50px;" splitter="true" toggleSplitterCollapsedSize="30px">
+			Resizable top bar with three states (open/collapsed/closed). The toggleSplitterCollapsedSize is "20px" here.
+		</div>
+		<div dojoType="dijit.layout.AccordionContainer" minSize="20" style="width: 300px;" id="leftAccordion" region="leading" splitter="true">
+			<div dojoType="dijit.layout.ContentPane" title="Popups and Alerts"></div>
+			<div dojoType="dijit.layout.ContentPane" title="Dojo Tree from Store"></div>
+			<div dojoType="dijit.layout.ContentPane" title="Calendar" selected="true"></div>
+			<div dojoType="dijit.layout.ContentPane" title="Color Picker">
+			</div>
+		</div><!-- end AccordionContainer -->
+		<div dojoType="dijit.layout.ContentPane" region="center" style="background-color: #ffffff; padding: 5px;">
+			Main panel with <a href="http://www.dojotoolkit.org/">a link</a>.<br />
+			(to check we're copying children around properly).<br />
+		</div>
+		<div dojoType="dijit.layout.ContentPane" region="right" toggleSplitterState="closed" style="background-color: #f6f6f6; width: 100px;" splitter="true" toggleSplitterCollapsedSize="30px">
+			Initialized closed
+		</div>
+		<div dojoType="dijit.layout.ContentPane" region="bottom" style="background-color: #f6f6f6; height: 50px;" splitter="true" toggleSplitterCollapsedSize="20px">
+			Resizable bottom bar which background color is changed when the toggle button is clicked.
+		</div>
+	</div>
+</body>
+</html>

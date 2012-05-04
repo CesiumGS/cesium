@@ -1,0 +1,14 @@
+({
+	name: "date.timezone.Africa-Brazzaville",
+	runTest: function(t){
+		var tz = "Africa/Brazzaville";
+		doh.checkDate({tzOffset: -61.1333333333333, tzAbbr: "LMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: -61.1333333333333, tzAbbr: "LMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: -61.1333333333333, tzAbbr: "LMT"}, -1830387669000, tz, 1);
+		doh.checkDate({tzOffset: -60, tzAbbr: "WAT"}, -1830387668000, tz, 1);
+		doh.checkDate({tzOffset: -60, tzAbbr: "WAT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: -60, tzAbbr: "WAT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: -60, tzAbbr: "WAT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: -60, tzAbbr: "WAT"}, 1246789800000, tz, 0);
+	}
+})

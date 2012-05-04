@@ -1,0 +1,42 @@
+<html>
+	<head>
+			<title>Demo using dojox.dtl._Templated</title>
+	    <script type="text/javascript" src="../../../dojo/dojo.js"
+				data-dojo-config="isDebug: true, parseOnLoad: true, async:true"></script>
+	    <script type="text/javascript">
+			require(["dijit/_WidgetBase",
+					 "dojox/dtl/_Templated",
+					 "dojo/_base/array",
+					 "dojo/_base/declare",
+					 "dojo/query",
+					 "dojo/keys",					 
+					 "dojo/parser",
+					 "dojox/dtl/tag/logic"], 
+					 function(_WidgetBase, _Templated, array, declare, query, keys){
+
+						declare("Fruit", [_WidgetBase, _Templated], {
+							oldRepl: "Fruit: ",
+							_dijitTemplateCompat: true,
+							items: ["apple", "banana", "orange"],
+							keyUp: function(e){
+								if(e.keyCode == keys.ENTER){
+									var i = array.indexOf(this.items, e.target.value);
+									if(i != -1){
+										this.items.splice(i, 1);
+									}else{
+										this.items.push(e.target.value);
+									}
+									e.target.value = "";
+									this.render();
+									query("input", this.domNode).forEach("item.focus();");
+								}
+							},
+							templateString: '<div><input dojoAttachEvent="onkeyup: keyUp"><ul>{% for item in items %}<li>${oldRepl} {{ item }}</li>{% endfor %}</ul></div>'
+						});
+			});
+	    </script>
+	</head>
+	<body>
+		<div data-dojo-type="Fruit"></div>
+	</body>
+</html>

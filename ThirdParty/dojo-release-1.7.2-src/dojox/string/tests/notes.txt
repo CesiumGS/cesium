@@ -1,0 +1,153 @@
+notes:
+reference:
+Run with 100 words, 1000 iterations and overhead of 2
+    62 - concatOnce
+    73 - joinExisting
+    241 - plusForAlias
+    261 - plusFor
+    360 - concatFor
+    391 - joinForAlias
+    398 - concatForAlias
+    408 - joinFor
+    636 - plusForEach
+    763 - concatForEach
+    851 - joinForEach
+    4188 - builderReusedFor
+    4319 - builderFor
+    5155 - builderForEach
+    
+switch to for loop in append and ditch arraylike for array(r9607)
+Run with 100 words, 1000 iterations and overhead of 3
+    62 - concatOnce
+    72 - joinExisting
+    235 - concatForAlias
+    242 - plusForAlias
+    263 - plusFor
+    361 - concatFor
+    394 - joinForAlias
+    414 - joinFor
+    635 - plusForEach
+    757 - concatForEach
+    855 - joinForEach
+    2005 - builderReusedFor
+    2073 - builderFor
+    2830 - builderForEach
+    
+    
+inline append for array, remove string check
+Run with 100 words, 1000 iterations and overhead of 4
+    55 - concatOnce
+    75 - joinExisting
+    243 - plusForAlias
+    263 - plusFor
+    363 - concatFor
+    382 - concatForAlias
+    398 - joinForAlias
+    410 - joinFor
+    629 - plusForEach
+    754 - concatForEach
+    857 - joinForEach
+    1854 - builderReusedFor
+    1922 - builderFor
+    2714 - builderForEach
+    
+add string check back in using typeof
+Run with 100 words, 1000 iterations and overhead of 3
+    63 - concatOnce
+    72 - joinExisting
+    242 - plusForAlias
+    262 - plusFor
+    363 - concatFor
+    381 - concatForAlias
+    394 - joinForAlias
+    410 - joinFor
+    633 - plusForEach
+    773 - concatForEach
+    862 - joinForEach
+    1870 - builderReusedFor
+    1937 - builderFor
+    2702 - builderForEach
+    
+first cut less complex isArray
+Run with 100 words, 1000 iterations and overhead of 3
+    63 - concatOnce
+    73 - joinExisting
+    184 - plusFor
+    251 - plusForAlias
+    282 - concatFor
+    381 - concatForAlias
+    395 - joinForAlias
+    412 - joinFor
+    629 - plusForEach
+    770 - concatForEach
+    851 - joinForEach
+    2027 - builderReusedFor
+    2129 - builderFor
+    2898 - builderForEach
+    
+switch to typeof for array, put string check back in using typeof (r9610)
+Run with 100 words, 1000 iterations and overhead of 2
+    63 - concatOnce
+    77 - joinExisting
+    251 - plusForAlias
+    272 - plusFor
+    282 - concatFor
+    364 - concatForAlias
+    404 - joinForAlias
+    415 - joinFor
+    630 - plusForEach
+    766 - concatForEach
+    850 - joinForEach
+    1274 - builderReusedFor
+    1510 - builderFor
+    2108 - builderForEach
+
+remove arguments-style array support. only support an explicit array.    
+Run with 100 words, 1000 iterations and overhead of 2
+    63 - concatOnce
+    75 - joinExisting
+    186 - plusFor
+    207 - builderReusedOnce
+    255 - plusForAlias
+    283 - concatFor
+    306 - builderOnce
+    367 - concatForAlias
+    408 - joinForAlias
+    419 - joinFor
+    639 - plusForEach
+    767 - concatForEach
+    817 - builderReusedFor
+    865 - joinForEach
+    975 - builderFor
+    1562 - builderForEach
+    
+just running for tests
+Run with 100 words, 1000 iterations and overhead of 3
+    63 - concatOnce
+    203 - plusFor
+    204 - builderReusedOnce
+    303 - builderOnce
+    330 - joinFor
+    385 - concatFor
+    748 - builderFor
+    748 - builderReusedFor
+    
+remove array support in append
+Run with 1000 words, 1000 iterations and overhead of 2
+    382 - concatOnce
+    1951 - plusFor
+    2779 - builderFor
+    2883 - builderReusedFor
+    3038 - concatFor
+    3549 - joinFor
+
+add in appendArray support to match once, use += for append    
+Run with 1000 words, 1000 iterations and overhead of 3
+    379 - concatOnce
+    381 - builderReusedOnce
+    393 - builderOnce
+    2022 - plusFor
+    2862 - builderFor
+    2973 - builderReusedFor
+    3128 - concatFor
+    3548 - joinFor

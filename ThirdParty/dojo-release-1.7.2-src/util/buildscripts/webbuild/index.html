@@ -1,0 +1,60 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>Dojo Web Builder</title>
+	<link rel="stylesheet" type="text/css" href="http://ajax.googleapis.com/ajax/libs/dojo/1.3/dojo/resources/dojo.css"/>
+	<link rel="stylesheet" type="text/css" href="http://ajax.googleapis.com/ajax/libs/dojo/1.3/dijit/themes/tundra/tundra.css"/>
+	<style type="text/css">
+		#serverFrame {
+			width: 1px;
+			height: 1px;
+			visibility: hidden;
+		}
+	</style>
+	<script type="text/javascript">
+		djConfig = {
+			
+		};
+	</script>
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/dojo/1.3/dojo/dojo.xd.js"></script>
+</head>
+<body class="tundra">
+<h1>Dojo Web Builder</h1>
+
+<form action="http://localhost:8080/dojoweb" method="POST" target="serverFrame">
+	<div class="formSection">
+		<label for="version">Version:</label>
+		<select id="version" name="version">
+			<option value="1.3.2" selected="selected">1.3.2</option>
+		</select>
+	</div>
+	<div class="formSection">
+		<label for="cdn">CDN preference:</label>
+		<select id="cdn" name="cdn">
+			<option value="google">Google</option>
+			<option value="aol">AOL</option>
+		</select>
+	</div>
+	<div class="formSection">
+		<label for="optimize">Optimization:</label>
+		<select id="optimize" name="optimize">
+			<option value="shrinksafe">ShrinkSafe minification without line returns</option>
+			<option value="shrinksafe.keepLines">ShrinkSafe minification with line returns</option>
+			<option value="comments">Comment removal only</option>
+			<option value="none">None (keeps comments and line returns)</option>
+		</select>
+	</div>
+	<div class="formSection">
+		<label for="dependencies">Dependencies:</label>
+		<textarea id="dependencies" name="dependencies" cols="60" rows="20"></textarea>
+	</div>
+	<div class="formSection">
+		<button name="submit">Build It!</button>
+	</div>
+
+</form>
+
+<iframe id="serverFrame" name="serverFrame" src="http://ajax.googleapis.com/ajax/libs/dojo/1.3/dojo/resources/blank.html"></iframe>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>ContentPane</title>
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			//dojo.require("dojo.parser"); // Use the lightweight parser.
+			dojo.require("dojox.mobile");			// This is a mobile app.
+			dojo.require("dojox.mobile.parser");	// This mobile app supports running on desktop browsers
+			dojo.require("dojox.mobile.compat");	// This mobile app uses declarative programming with fast mobile parser
+			dojo.require("dojox.mobile.deviceTheme");
+			dojo.require("dojox.mobile.ContentPane");
+			dojo.ready(function(){
+				dijit.byId("pane3").set("content", "<div dojoType='dojox.mobile.RoundRect' shadow='true'>Thank you!</div>");
+				dijit.byId("pane4").set("href", "fragment1.html");
+				var dom = dojo.create("DIV", {
+					dojoType: "dojox.mobile.RoundRect",
+					shadow: true
+				});
+				dom.innerHTML = "DOM Tree";
+				dijit.byId("pane5").set("content", dom);
+			});
+		</script>
+	</head>
+	<body style="visibility:hidden;">
+		<div id="foo" dojoType="dojox.mobile.View" selected="true">
+			<h1 dojoType="dojox.mobile.Heading">ContentPane</h1>
+
+			<h2 dojoType="dojox.mobile.RoundRectCategory">Pane1</h2>
+			<div id="pane1" dojoType="dojox.mobile.ContentPane"
+			     content="&lt;div dojoType='dojox.mobile.RoundRect' shadow='true'&gt;Thank you!&lt;/div&gt;"></div>
+
+			<h2 dojoType="dojox.mobile.RoundRectCategory">Pane2</h2>
+			<div id="pane2" dojoType="dojox.mobile.ContentPane"
+			     href="fragment1.html"></div>
+
+			<h2 dojoType="dojox.mobile.RoundRectCategory">Pane3</h2>
+			<div id="pane3" dojoType="dojox.mobile.ContentPane"></div>
+
+			<h2 dojoType="dojox.mobile.RoundRectCategory">Pane4</h2>
+			<div id="pane4" dojoType="dojox.mobile.ContentPane"></div>
+
+			<h2 dojoType="dojox.mobile.RoundRectCategory">Pane5</h2>
+			<div id="pane5" dojoType="dojox.mobile.ContentPane"></div>
+		</div>
+	</body>
+</html>

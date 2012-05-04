@@ -1,0 +1,73 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>Anchor Label</title>
+		<link href="../themes/iphone/base.css" rel="stylesheet">
+
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			dojo.require("dojox.mobile");			// This is a mobile app.
+			dojo.require("dojox.mobile.parser");	// This mobile app supports running on desktop browsers
+			dojo.require("dojox.mobile.compat");	// This mobile app uses declarative programming with fast mobile parser
+
+			dojo.declare(
+				"dojox.mobile.ListItemEx",
+				dojox.mobile.ListItem,
+			{
+				onAnchorLabelClicked: function(e){
+					if(this.id == "item1" || this.id == "item2"){
+						// go to a different html page
+						var href = "test_iPhone-Icon.html";
+						this.transitionTo(null, href);
+					}else if(this.id == "item3" || this.id == "item4"){
+						// load an external view into the current html page
+						var url = "view2.html";
+						this.transitionTo(null, null, url);
+					}
+				}
+			});
+		</script>
+	</head>
+	<body style="visibility:hidden;">
+		<div id="foo" dojoType="dojox.mobile.View" selected="true">
+			<h1 dojoType="dojox.mobile.Heading">Anchor Label</h1>
+			<h2 dojoType="dojox.mobile.RoundRectCategory">Items</h2>
+			<ul dojoType="dojox.mobile.RoundRectList">
+				<li id="item1" dojoType="dojox.mobile.ListItemEx" icon="images/i-icon-1.png" moveTo="bar" anchorLabel="true">
+					Different page
+				</li>
+				<li id="item2" dojoType="dojox.mobile.ListItemEx" icon="images/i-icon-2.png" moveTo="bar" anchorLabel="true">
+					Different page
+				</li>
+				<li id="item3" dojoType="dojox.mobile.ListItemEx" icon="images/i-icon-3.png" moveTo="bar" anchorLabel="true">
+					External view
+				</li>
+				<li id="item4" dojoType="dojox.mobile.ListItemEx" icon="images/i-icon-4.png" moveTo="bar" anchorLabel="true">
+					External view
+				</li>
+			</ul>
+			<div dojoType="dojox.mobile.RoundRect">
+				Tapping on an item label text opens a different page (test_iPhone-Icon.html) or loads an external view (view2.html), while tapping on right-hand side of the label text shows another view in the same page.
+			</div>
+		</div>
+
+		<div id="bar" dojoType="dojox.mobile.View">
+			<h1 dojoType="dojox.mobile.Heading" back="Spaces" moveTo="foo">u1space</h1>
+			<h2 dojoType="dojox.mobile.RoundRectCategory">Applications</h2>
+			<ul dojoType="dojox.mobile.RoundRectList">
+				<li dojoType="dojox.mobile.ListItem" rightText="Off">
+					Video
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-1.png" rightText="VPN">
+					Maps
+				</li>
+				<li dojoType="dojox.mobile.ListItem" rightText="Off">
+					Phone Number
+				</li>
+			</ul>
+		</div>
+	</body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>Analog Gauge Widget Orientation</title>
+		<style>
+			@import "../_Gauge.css";
+			@import "../../../dojo/resources/dojo.css";
+			@import "../../../dijit/themes/tundra/tundra.css";
+		</style>
+		<script type="text/javascript">
+			djConfig = {
+				parseOnLoad: true,
+				isDebug: true
+			};
+		</script>
+		<script type="text/javascript" src="../../../dojo/dojo.js">
+		</script>
+		<script language="JavaScript" type="text/javascript">
+			dojo.require('dojox.gauges.AnalogGauge');
+			dojo.require('dojox.gauges.AnalogNeedleIndicator');
+			dojo.require('dijit.form.Button');
+			dojo.require('dojo.parser');
+			
+			dojo.addOnLoad(init);
+			
+			
+			function init(){
+			
+			
+				var gauge = new dojox.gauges.AnalogGauge({
+					id: "gauge",
+					
+					startAngle: 30,
+					endAngle: 30,
+					background: 'white',
+					width: 200,
+					height: 200,
+					cx: 100,
+					cy: 100,
+					radius: 100,
+					ranges: [{
+						low: 1,
+						high: 13,
+						color: [200, 200, 200]
+					}],
+					
+					majorTicks: {
+						offset: 80,
+						interval: 1,
+						length: 5,
+						color: 'white',
+						labelPlacement: 'inside'
+					},
+					
+					indicators: [new dojox.gauges.AnalogNeedleIndicator({
+						interactionMode: "gauge",
+						value: 12,
+						width: 5,
+						length: 50,
+						strokeColor: [100, 100, 100],
+						color: 'white'
+					
+					})]
+				}, dojo.byId("gauge"));
+				
+				gauge.startup();
+				
+				dojo.connect(dijit.byId('btn'), 'onClick', function(){
+					var o = gauge.majorTicks;
+					if (o.labelPlacement == 'outside') {
+						o.labelPlacement = 'inside';
+						o.offset = 80;
+					} else {
+						o.labelPlacement = 'outside';
+						o.offset = 60;
+					}
+					gauge.setMajorTicks(o);
+				});
+				
+			}
+		</script>
+	</head>
+	<body class="tundra">
+		<h1>Analog Gauge Widget Scale Label Placement</h1>
+		<div id="gauge">
+		</div>
+		<button id="btn" dojoType='dijit.form.Button'>
+			Change label placement
+		</button>
+	</body>
+</html>

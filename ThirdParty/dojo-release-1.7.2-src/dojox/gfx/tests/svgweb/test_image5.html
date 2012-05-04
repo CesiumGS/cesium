@@ -1,0 +1,67 @@
+<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" >
+<head>
+<title>Testing image 5</title>
+<style type="text/css">
+	@import "../../../../dojo/resources/dojo.css";
+	@import "../../../../dijit/tests/css/dijitTests.css";
+</style>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!-- SVGWEB { -->
+<meta name="svg.render.forceflash" content="true"/>
+<script src="svgweb/src/svg.js" data-path="svgweb/src"></script>
+<script src="../../../../dojo/dojo.js" djConfig="isDebug:true,forceGfxRenderer:'svg'" type="text/javascript"></script>
+<!-- } -->
+<script type="text/javascript">
+dojo.require("dojox.gfx");
+dojo.require("dojox.gfx.move");
+dojo.require("dojo.colors");
+
+makeShapes = function(){
+    var g = dojox.gfx, m = g.matrix;
+    
+	var grid_size = 800, grid_step = 50,
+        surface = g.createSurface("test", 800, 600)
+	/* SVGWEB { */
+	surface.whenLoaded(function() {
+	for(var i = 0; i <= grid_size; i += grid_step){
+		surface.createLine({x1: 0, x2: grid_size, y1: i, y2: i}).setStroke("grey");
+		surface.createLine({y1: 0, y2: grid_size, x1: i, x2: i}).setStroke("grey");
+	}
+    
+    var rect1 = surface.createRect({x: 0, y: 0, width: 300, height: 200, r: 5}).setFill("red").setStroke("black");
+    var img1  = surface.createImage({width: 300, height: 200, src: "../images/eugene-sm.jpg"}).setTransform({dx: 50, dy: 50});
+    var rect2 = surface.createRect({x: 100, y: 100, width: 300, height: 200, r: 5}).setFill("yellow").setStroke("black");
+    var img2  = surface.createImage({width: 300, height: 200, src: "../images/eugene-sm.gif"}).setTransform({dx: 150, dy: 150});
+    var rect3 = surface.createRect({x: 200, y: 200, width: 300, height: 200, r: 5}).setFill("green").setStroke("black");
+    var img3  = surface.createImage({width: 300, height: 200, src: "../images/eugene-sm.png"}).setTransform({dx: 250, dy: 250});
+    var rect4 = surface.createRect({x: 300, y: 300, width: 300, height: 200, r: 5}).setFill("blue").setStroke("black");
+    
+	new g.Moveable(rect1);
+	new g.Moveable(rect2);
+	new g.Moveable(rect3);
+	new g.Moveable(rect4);
+
+	new g.Moveable(img1);
+	new g.Moveable(img2);
+	new g.Moveable(img3);
+	});
+	/* } */
+};
+
+dojo.addOnLoad(makeShapes);
+
+</script>
+</head>
+<body>
+<h1>dojox.gfx Image opacity and move tests</h1>
+<p>Note: Silverlight doesn't allow downloading images when run from a file system. This demo should be run from a server.</p>
+<div id="test"></div>
+<p>That's how images should look like (light yellow background):</p>
+<p style="background-color: #ffe; padding: 1em; border: 1px solid black;">
+    <img src="../images/eugene-sm.jpg">
+    <img src="../images/eugene-sm.gif">
+    <img src="../images/eugene-sm.png">
+</p>
+<p>That's all Folks!</p>
+</body>
+</html>

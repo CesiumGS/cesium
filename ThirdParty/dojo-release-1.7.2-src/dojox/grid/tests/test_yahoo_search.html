@@ -1,0 +1,131 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>dojox.grid.Grid - Yahoo Search Test</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+	<style>
+		@import "../resources/Grid.css";
+		body {
+			font-size: 0.9em;
+			font-family: Geneva, Arial, Helvetica, sans-serif;
+		}
+		.grid {
+			height: 30em;
+		}
+		
+		#info {
+			width: 700px;
+		}
+	</style>
+	<script type="text/javascript" src="../../../dojo/dojo.js" 
+		djConfig="isDebug:false, parseOnLoad: true"></script>
+	<script type="text/javascript">
+		dojo.require("dijit.dijit");
+		dojo.require("dojox.grid.DataGrid");
+		dojo.require("dojo.io.script");
+		dojo.require("dojox.rpc.Service");
+		dojo.require("dojox.data.ServiceStore");
+		dojo.require("dojo.parser");
+	</script>
+	<script type="text/javascript" src="yahooSearch.js"></script>
+	<script type="text/javascript">
+		var service = new dojox.rpc.Service(dojo.moduleUrl("dojox.rpc.SMDLibrary", "yahoo.smd"));
+		var store = new YahooStore({ service: service.webSearch });
+
+		var webLayout = [ 
+			{
+				noscroll: true,
+				cells: [
+					new dojox.grid.cells.RowIndex({ width: 3, styles: 'text-align: center;' })
+				]
+			},
+			[
+				[
+					{ name: 'Site', width: 30, field: 'ClickUrl', get: getLink, formatter: formatLink },
+					{ name: 'Date', width: 10, field: 'ModificationDate', formatter: formatDate}
+				],[
+					{ name: 'Display Url', width: 30, field: 'Url', styles: 'color: green; size: small;' },
+					{ name: 'Type', width: 10, field: 'MimeType', styles: ' font-style: italic; color: gray; size: small;'}
+				],[
+					{ name: 'Summary',  width: 40, colSpan: 2, field: 'Summary' }
+				]
+			]
+		];
+		
+		// remove the height from the header image cell / row cells have a
+		// default height so there's less adjustment when thumb comes in.
+		beforeImageRow = function(inRowIndex, inSubRow) {
+			inSubRow[0][0].cellStyles = (inRowIndex == -1 ? '' : 'height: 100px;');
+			inSubRow[1][0].cellStyles = (inRowIndex == -1 ? '' : 'vertical-align: top; height: 75px;');
+		}
+		
+		var imageLayout = [ 
+			{
+				noscroll: true,
+				cells: [
+					new dojox.grid.cells.RowIndex({ width: 3, styles: 'text-align: center;' })
+				]
+			},
+			{
+				onBeforeRow: beforeImageRow,
+				cells: [
+					[
+						{ name: 'Image', cellStyles: "height: 100px;", styles: "text-align: center;", width: 13, rowSpan: 2, field: 'Url', get: getImage },
+						{ name: 'Title', cellStyles: "height: 10px;", width: 14, field: 'Title', get: getLink }, 
+						{ name: 'Size', width: 8, field: 'FileSize', styles: "font-style: italic; text-align: center;" },
+						{ name: 'Dimensions', width: 8, styles: "text-align: center;", get: getDimensions }
+					],
+					[
+						{ name: 'Summary',  cellStyles: "vertical-align: top; height: 75px;", colSpan: 3, field: 'Summary' }
+					]
+				]
+			}
+		];
+		
+		// execute search
+		var lastLayoutType = webLayout;
+		doSearch = function(){
+			var value = dojo.byId("searchInput").value;
+			var web = dojo.byId('webRb').checked;
+			store.service = (web ? service.webSearch : service.imageSearch);
+			if(lastLayoutType != (web ? webLayout : imageLayout)){
+				grid.set('structure', web ? webLayout : imageLayout);
+			}
+			grid.filter({ query: value }, true);
+		}
+		
+		dojo.addOnLoad(function(){
+			dojo.byId('webRb').checked = "checked";
+			dojo.query("#searchInput").onkeypress(function(e){
+				if(e.keyCode == dojo.keys.ENTER){ doSearch(); }
+			});
+		});
+
+	</script>
+</head>
+<body>
+	<div style="font-weight: bold; padding-bottom: 0.25em;">dojox.grid.Grid - Yahoo Search Test</div>
+	<div style="padding-bottom: 3px;">
+		<label><input id="webRb" type="radio" name="searchType" checked>Web</label>&nbsp;&nbsp;
+		<label><input id="imageRb" type="radio" name="searchType">Images</label>
+	</div>	
+	<input id="searchInput" type="text" value="apple">&nbsp;&nbsp;
+	<button onclick="doSearch()">Search</button><br><br>
+	<div dojoType="dojox.grid.DataGrid" 
+		jsId="grid" class="grid" id="grid"
+		autoWidth="true" structure="webLayout" 
+		store="store" elasticView="1" 
+		query="{ query: 'apple' }" 
+		rowSelector="20px">
+	</div>
+	<br>
+	<div id="info">
+		<div id="rowCount" style="float: left"></div>
+		<div style="float: right">
+			<div id="sendInfo" style="text-align: right"></div>
+			<div id="receiveInfo" style="text-align: right"></div>
+		</div>
+	</div>
+</body>
+</html>

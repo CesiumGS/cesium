@@ -1,0 +1,505 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+  "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <title>Builder Perf Arguments Tests</title>
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+    <script type="text/javascript" src="../Builder.js"></script>
+    <script type="text/javascript" src="lipsum.js"></script>
+    <script type="text/javascript">
+
+    dojo.addOnLoad(function(){
+      dojo.byId("run").disabled="";
+      dojo.connect(dojo.byId("run"), 
+                   "onclick", 
+                   function(evt) { 
+                     setTimeout(function() { 
+                       var words = parseInt(dojo.byId("numWords").value) || 10;
+                       var iters = parseInt(dojo.byId("numIters").value) || 1000;
+                       var dict = eval(dojo.byId("dict").value);
+                       buildAndRunSet(words, dict, iters); 
+                      }, 0); 
+                    });
+    });
+    
+    function element(tag, textOrChildOrArray) {
+      var e = document.createElement(tag);
+      function append(n) {
+        if(dojo.isString(n)){
+          n = document.createTextNode(n);
+        } 
+        e.appendChild(n);
+      }
+      if(dojo.isArray(textOrChildOrArray)) {
+        dojo.forEach(textOrChildOrArray, append);
+      }else{
+        append(textOrChildOrArray);
+      }
+      return e;
+    }
+    
+    function log(t) {
+      dojo.byId("mess").innerHTML = t;
+      console.log(t);
+    }
+    
+    function reportRun(results){
+      var runs = results.runs
+      var report = element("dl",
+                     element("dt", 
+                             "Run with " + results.words + " words, " + 
+                                           results.iterations + " iterations, for loop overhead of " + 
+                                           results.overhead + ", average phrase of " +
+                                           results.wordSize + " characters"));
+                          
+  //    runs.sort(function(a,b) { return a.time - b.time; });
+      dojo.forEach(runs, function(r) {
+        report.appendChild(element("dd", r.time + " - " + r.name));
+      });
+      
+      dojo.body().appendChild(report);
+    }
+    
+    function runTest(test, iterations, expected) {
+      var i;
+      if(expected != test()) throw new Error("Test failed expecting " + expected + ", got " + test());
+      var start = new Date().getTime(), end;
+      for(i=0; i < iterations; i++){
+        test();
+      }
+      end = new Date().getTime();
+      return end-start;
+    }
+    
+    function runSet(set, iterations){
+      
+      function averagePhraseLen(words) {
+        var sizes = dojo.map(words, function(w) { return w.length; });
+        var total = 0;
+        dojo.forEach(sizes, function(s) { total += s; });
+        return total / sizes.length;
+      }
+      
+      var tests = set.tests.concat(); //copy tests
+      var resultSet = {};
+      resultSet.words = set.words.length;
+      resultSet.overhead = runTest(set.overhead, iterations);
+      resultSet.iterations = iterations;
+      resultSet.wordSize = averagePhraseLen(set.words);
+      var runs = [];
+      
+      function _run() {
+        var t = tests.pop();
+        try {
+          log("Running " + t.name);
+          if(t) runs.push({ name: t.name, time: runTest(t.test, iterations, set.expected)});
+        } catch(e) {
+          console.error("Error running " + t.name);
+          console.error(e);
+        }
+        if(tests.length > 0) {
+          setTimeout(_run, 0);
+        }
+        else {
+          log("Done!");
+          resultSet.runs = runs;
+          reportRun(resultSet);
+          dojo.publish("perf/run/done");
+        }
+      }
+      setTimeout(_run, 25);
+    }
+    
+    function buildTestSet(numWords, dict) {
+      var words = [], i, dl = dict.length;
+      for(i = numWords; i > 0; i-=dl) { 
+        if(i >= dl) { words = words.concat(dict); }
+        else { words = words.concat(dict.slice(-i)); } 
+      }
+      if(words.length != numWords) throw new Error("wrong number of words, got " + words.length + ", expected " + numWords);
+      
+      var expected = words.join("");
+      
+      var _builder = new dojox.string.Builder();
+      
+      return { 
+        tests: [
+          /*
+          {
+            name: "concatFor",
+            test: function() {
+              var s = "";
+              for(var i = 0; i < words.length; i++) {
+                s = s.concat(words[i]);
+              }
+              return s;
+            }
+          },
+          {
+            name: "concatForAlias",
+            test: function() {
+              var s = "", w = words, l = w.length;
+              for(var i = 0; i < l; i++) {
+                s = s.concat(w[i]);
+              }
+              return s;
+            }
+          },
+          {
+            name: "concatForEach",
+            test: function() {
+              var s = "";
+              dojo.forEach(words, function(w) {
+                s = s.concat(w);
+              });
+              return s;
+            }
+          },
+          {
+            name: "concatOnce",
+            test: function() {
+              var s = "";
+              s = String.prototype.concat.apply(s, words);
+              return s;
+            }
+          },
+          */
+          {
+            name: "builderFor",
+            test: function() {
+              var b = new dojox.string.Builder();
+              for(var i = 0; i < words.length; i++) {
+                b.append(words[i]);
+              }
+              return b.toString();
+            }
+          },
+          {
+            name: "builderFor2Args",
+            test: function() {
+				var b = new dojox.string.Builder(), l=words.length, r=words.length%2;
+              for(var i = 0; i < words.length; i+=2) {
+				  b.append(words[i], words[i+1]);
+              }
+			  for(i=l-r; i<l; i++){
+				  b.append(words[i]);
+			  }
+              return b.toString();
+            }
+          },
+          {
+            name: "builderFor3Args",
+            test: function() {
+				var b = new dojox.string.Builder(), l=words.length, r=words.length%3;
+              for(var i = 0; i < l-r; i+=3) {
+				  b.append(words[i], words[i+1], words[i+2]);
+			  }
+			  for(i=l-r; i<l; i++){
+				  b.append(words[i]);
+			  }
+              return b.toString();
+            }
+          },
+          {
+            name: "builderFor4Args",
+            test: function() {
+				var b = new dojox.string.Builder(), l=words.length, r=words.length%4;
+              for(var i = 0; i < l-r; i+=4) {
+				  b.append(words[i], words[i+1], words[i+2], words[i+3]);
+              }
+			  for(i=l-r; i<l; i++){
+				  b.append(words[i]);
+			  }
+              return b.toString();
+            }
+          },
+          {
+            name: "builderFor5Args",
+            test: function() {
+				var b = new dojox.string.Builder(), l=words.length, r=words.length%5;
+              for(var i = 0; i < l-r; i+=5) {
+				  b.append(words[i], words[i+1], words[i+2], words[i+3], words[i+4]);
+              }
+			  for(i=l-r; i<l; i++){
+				  b.append(words[i]);
+			  }
+              return b.toString();
+            }
+          },
+          {
+            name: "builderFor6Args",
+            test: function() {
+				var b = new dojox.string.Builder(), l=words.length, r=words.length%6;
+              for(var i = 0; i < l-r; i+=6) {
+				  b.append(words[i], words[i+1], words[i+2], words[i+3], words[i+4], words[i+5]);
+              }
+			  for(i=l-r; i<l; i++){
+				  b.append(words[i]);
+			  }
+              return b.toString();
+            }
+          },
+          {
+            name: "builderFor7Args",
+            test: function() {
+				var b = new dojox.string.Builder(), l=words.length, r=words.length%7;
+              for(var i = 0; i < l-r; i+=7) {
+				  b.append(words[i], words[i+1], words[i+2], words[i+3], words[i+4], words[i+5], words[i+6]);
+              }
+			  for(i=l-r; i<l; i++){
+				  b.append(words[i]);
+			  }
+              return b.toString();
+            }
+          },
+          {
+            name: "builderFor8Args",
+            test: function() {
+				var b = new dojox.string.Builder(), l=words.length, r=words.length%8;
+              for(var i = 0; i < l-r; i+=8) {
+				  b.append(words[i], words[i+1], words[i+2], words[i+3], words[i+4], words[i+5], words[i+6], words[i+7]);
+              }
+			  for(i=l-r; i<l; i++){
+				  b.append(words[i]);
+			  }
+              return b.toString();
+            }
+          },
+          {
+            name: "builderFor9Args",
+            test: function() {
+				var b = new dojox.string.Builder(), l=words.length, r=words.length%9;
+              for(var i = 0; i < l-r; i+=9) {
+				  b.append(words[i], words[i+1], words[i+2], words[i+3], words[i+4], words[i+5], words[i+6], words[i+7], words[i+8]);
+              }
+			  for(i=l-r; i<l; i++){
+				  b.append(words[i]);
+			  }
+              return b.toString();
+            }
+          } /*,
+          {
+            name: "builderForEach",
+            test: function() {
+              var b = new dojox.string.Builder();
+              dojo.forEach(words, function(w) {
+                b.append(w);
+              });
+              return b.toString();
+            }
+          },
+          
+          {
+            name: "builderReusedFor",
+            test: function() {
+              _builder.clear();
+              for(var i = 0; i < words.length; i++) {
+                _builder.append(words[i]);
+              }
+              return _builder.toString();
+            }
+		},		
+          {
+            name: "builderOnce",
+            test: function() {
+              var b = new dojox.string.Builder();
+              b.appendArray(words);
+              return b.toString();
+            }
+          },
+          {
+            name: "builderReusedOnce",
+            test: function() {
+              _builder.clear();
+              _builder.appendArray(words);
+              return _builder.toString();
+            }
+          },
+          {
+            name: "plusFor",
+            test: function() {
+              var s = "";
+              for(var i = 0; i < words.length; i++) {
+                s += words[i];
+              }
+              return s;
+            }
+          },
+          {
+            name: "plusForAlias",
+            test: function() {
+              var s = "", w = words, l = w.length;
+              for(var i = 0; i < l; i++) {
+                s += w[i];
+              }
+              return s;
+            }
+          },
+          {
+            name: "plusForEach",
+            test: function() {
+              var s = "";
+              dojo.forEach(words, function(w) { s += w; });
+              return s;
+            }
+          },
+          {
+            name: "joinOnce",
+            test: function() {
+              return words.join("");
+            }
+          },
+          {
+            name: "joinFor",
+            test: function() {
+              var a = [];
+              for(var i = 0; i < words.length; i++) {
+                a.push(words[i]);
+              }
+              return a.join("");
+            }
+		},
+          {
+            name: "joinForAlias",
+            test: function() {
+              var a = [], w = words, l = w.length;
+              for(var i = 0; i <l; i++) {
+                a.push(w[i]);
+              }
+              return a.join("");
+            }
+          },
+          {
+            name: "joinForEach",
+            test: function() {
+              var a = [];
+              dojo.forEach(words, function(w) { a.push(w); });
+              return a.join("");
+            }
+          }
+          */
+        ],
+        words: words,
+        expected: expected,
+        overhead: function() { 
+          var w = words; 
+          var l = w.length; 
+          for(var i=0; i < l; i++) { 
+            ident(w[i]); 
+          } 
+        }
+      };
+    }
+    
+    function buildAndRunSet(words, dict, times) {
+      runSet(buildTestSet(words, dict), times);
+    }
+    
+    function runSuite() {
+      var suite = [
+        {
+          words: 2,
+          times: 10000
+        },
+        {
+          words: 4,
+          times: 10000
+        },
+        {
+          words: 8,
+          times: 10000
+        },
+        {
+          words: 16,
+          times: 10000
+        },
+        {
+          words: 32,
+          times: 10000
+        },
+        {
+          words: 64,
+          times: 10000
+        },
+        {
+          words: 128,
+          times: 1000
+        },
+        {
+          words: 256,
+          times: 1000
+        },
+        {
+          words: 512,
+          times: 1000
+        },
+        {
+          words: 1024,
+          times: 1000
+        },
+        {
+          words: 2048,
+          times: 1000
+        },
+        {
+          words: 4096,
+          times: 100
+        },
+        {
+          words: 8192,
+          times: 100
+        }
+      ];
+      
+      var totalSuite = dojo.map(suite, function(s) { var n = {}; dojo.mixin(n,s); n.dict = lipsum; return n; });
+      totalSuite = totalSuite.concat(dojo.map(suite, function(s) { var n = {}; dojo.mixin(n,s); n.dict = lipsumLong; return n; }));
+      console.log(totalSuite);
+      
+      var handle = dojo.subscribe("perf/run/done", _run);
+      dojo.subscribe("perf/run/done", function(){ console.log("perf run done"); });
+      
+      function _run() {
+        var t = totalSuite.shift();
+        if(t) buildAndRunSet(t.words, t.dict, t.times);
+        if(totalSuite.length == 0) dojo.unsubscribe(handle);
+      }
+      
+      _run();
+    }
+    
+    function ident(i) { return i; }
+    </script>
+    <style type="text/css">
+    html { 
+      font-family: Lucida Grande, Tahoma;
+    }
+    div { margin-bottom: 1em; }
+    #results {
+      border: 1px solid #999;
+      border-collapse: collapse;
+    }
+    #results caption {
+      font-size: medium;
+      font-weight: bold;
+    }
+    #results td, #results th {
+      text-align: right;
+      width: 10em;
+      font-size: small;
+      white-space: nowrap;
+    }
+    #wordsCol { background: yellow; }
+    td.max { color: red; font-weight: bold; }
+    td.min { color: green; font-weight: bold; }
+    </style>
+  </head>
+  <body>
+    <table>
+      <tr><td><label for="numWords">Words</label></td><td><input type="text" id="numWords" value="100"/></td></tr>
+      <tr><td><label for="numIters">Iterations</label></td><td><input type="text" id="numIters" value="1000"/></td></tr>
+      <tr><td><label for="dict">Dictionary</label></td><td><input type="text" id="dict" value="lipsum"></td></tr>
+      <tr><td></td><td><button id="run" disabled>Run Tests!</button></td></tr>
+    </table>
+    <div id="mess"></div>    
+  </body>
+</html>

@@ -1,0 +1,32 @@
+/* dojox.mobile.ToolBarButton */
+.mblToolBarButton {
+  float: left;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
+  margin: 8px;
+  height: 30px;
+  border: 1px inset #b5bcc7;
+  -webkit-border-radius: 2px;
+  font-size: 14px;
+  font-family: Helvetica;
+  font-weight: normal;
+  text-shadow: none;
+  color: #131313;
+  line-height: 30px;
+  text-align: center;
+}
+.mblToolBarButton.mblArrowButtonText {
+  margin: 6px 8px;
+}
+.mblToolBarButtonIcon {
+  position: relative;
+  top: 2px;
+}
+.mblToolBarButtonSpriteIcon {
+  position: absolute;
+}
+.mblToolBarButtonText {
+  padding: 0px 10px;
+}

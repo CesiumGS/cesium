@@ -1,0 +1,42 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>Button</title>
+		<link href="../themes/iphone/base.css" rel="stylesheet">
+		<link href="../themes/iphone/Button.css" rel="stylesheet">
+		<style>
+		button.redButton {
+			border-color: #cc3333;
+			background-image: url(images/red-button-bg.png);
+			background: -webkit-gradient(linear, left top, left bottom, from(#D3656D), to(#BC1320), color-stop(0.5, #C9404B), color-stop(0.5, #BC1421));
+		}
+		button.redButtonSelected {
+			background-image: url(images/red-button-sel-bg.png);
+			background: -webkit-gradient(linear, left top, left bottom, from(#AF333C), to(#880E17), color-stop(0.5, #952B33), color-stop(0.5, #870F18));
+		}
+		</style>
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			dojo.require("dojox.mobile");			// This is a mobile app.
+			dojo.require("dojox.mobile.parser");	// This mobile app supports running on desktop browsers
+			dojo.require("dojox.mobile.compat");	// This mobile app uses declarative programming with fast mobile parser
+			dojo.require("dojox.mobile.Button");
+
+			dojo.ready(function(){
+				var btnWidget = dijit.byId("btn1");
+				dojo.connect(btnWidget.domNode, "onclick", onBtnClicked);
+				function onBtnClicked(e){
+					// do something
+				}
+			});
+		</script>
+	</head>
+	<body style="padding: 20px;visibility:visible">
+		<button id="btn1" dojoType="dojox.mobile.Button" class="mblBlueButton" style="width:120px">Default Button</button>
+		<p></p>
+		<button id="btn2" dojoType="dojox.mobile.Button" class="redButton" style="width:120px">Custom Button</button>
+	</body>
+</html>

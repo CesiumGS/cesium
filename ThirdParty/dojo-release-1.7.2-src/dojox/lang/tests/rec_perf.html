@@ -1,0 +1,484 @@
+<html>
+	<head>
+		<title>Clocking recursion combinators</title>
+		<style type="text/css">
+			@import "../../../dojo/resources/dojo.css";
+		</style>
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true"></script>
+		<script type="text/javascript" src="../functional.js"></script>
+		<script type="text/javascript" src="../functional/linrec.js"></script>
+		<script type="text/javascript" src="../functional/tailrec.js"></script>
+		<script type="text/javascript" src="../functional/numrec.js"></script>
+		<script type="text/javascript" src="../functional/binrec.js"></script>
+		<script type="text/javascript" src="../functional/multirec.js"></script>
+		<script type="text/javascript" src="../functional/sequence.js"></script>
+		<script type="text/javascript">
+			// reference implementations
+			
+			var linrec1 = function(cond, then, before, after){
+				var cond   = df.lambda(cond),
+					then   = df.lambda(then),
+					before = df.lambda(before),
+					after  = df.lambda(after);
+				return function(){
+					if(cond.apply(this, arguments)){
+						return then.apply(this, arguments);
+					}
+					var args = before.apply(this, arguments);
+					var ret  = arguments.callee.apply(this, args);
+					return after.call(this, ret, arguments);
+				};
+			};
+			
+			var linrec2 = function(cond, then, before, after){
+				var cond   = df.lambda(cond),
+					then   = df.lambda(then),
+					before = df.lambda(before),
+					after  = df.lambda(after);
+				return function(){
+					var args = arguments, top, ret;
+					// 1st part
+					for(; !cond.apply(this, args); args = before.apply(this, args)){
+						top = {prev: top, args: args};
+					}
+					ret = then.apply(this, args);
+					//2nd part
+					for(; top; top = top.prev){
+						ret = after.call(this, ret, top.args);
+					}
+					return ret;
+				};
+			};
+
+			var tailrec1 = function(cond, then, before){
+				var cond   = df.lambda(cond),
+					then   = df.lambda(then),
+					before = df.lambda(before);
+				return function(){
+					if(cond.apply(this, arguments)){
+						return then.apply(this, arguments);
+					}
+					var args = before.apply(this, arguments);
+					return arguments.callee.apply(this, args);
+				};
+			};
+			
+			var tailrec2 = function(cond, then, before){
+				var cond   = df.lambda(cond),
+					then   = df.lambda(then),
+					before = df.lambda(before);
+				return function(){
+					var args = arguments;
+					for(; !cond.apply(this, args); args = before.apply(this, args));
+					return then.apply(this, args);
+				};
+			};
+			
+			var numrec1 = function(then, after){
+				var after = df.lambda(after);
+				return function(x){
+					return x ? after.call(this, arguments.callee.call(this, x - 1), x) : then;
+				};
+			};
+			
+			var numrec2 = function(then, after){
+				var after = df.lambda(after);
+				return function(x){
+					var ret = then, i;
+					for(i = 1; i <= x; ++i){
+						ret = after.call(this, ret, i);
+					}
+					return ret;
+				};
+			};
+			
+			var binrec1 = function(cond, then, before, after){
+				var cond   = df.lambda(cond),
+					then   = df.lambda(then),
+					before = df.lambda(before),
+					after  = df.lambda(after);
+				return function(){
+					if(cond.apply(this, arguments)){
+						return then.apply(this, arguments);
+					}
+					var args = before.apply(this, arguments);
+					var ret1 = arguments.callee.apply(this, args[0]);
+					var ret2 = arguments.callee.apply(this, args[1]);
+					return after.call(this, ret1, ret2, arguments);
+				};
+			};
+			
+			var binrec2 = function(cond, then, before, after){
+				var cond   = df.lambda(cond),
+					then   = df.lambda(then),
+					before = df.lambda(before),
+					after  = df.lambda(after);
+				return function(){
+					var top1, top2, ret, args = arguments;
+					// first part: start the pump
+					while(!cond.apply(this, args)){
+						ret = before.apply(this, args);
+						top1 = {prev: top1, args: ret[1]};
+						top2 = {prev: top2, args: args};
+						args = ret[0];
+					}
+					for(;;){
+						// second part: mop up
+						do{
+							ret = then.apply(this, args);
+							if(!top2){
+								return ret;
+							}
+							while("ret" in top2){
+								ret = after.call(this, top2.ret, ret, top2.args);
+								if(!(top2 = top2.prev)){
+									return ret;
+								}
+							}
+							top2.ret = ret;
+							args = top1.args;
+							top1 = top1.prev;
+						}while(cond.apply(this, args));
+						// first part (encore)
+						do{
+							ret = before.apply(this, args);
+							top1 = {prev: top1, args: ret[1]};
+							top2 = {prev: top2, args: args};
+							args = ret[0];
+						}while(!cond.apply(this, args));
+					}
+				};
+			};
+
+			var multirec1 = function(cond, then, before, after){
+				var cond   = df.lambda(cond),
+					then   = df.lambda(then),
+					before = df.lambda(before),
+					after  = df.lambda(after);
+				return function(){
+					if(cond.apply(this, arguments)){
+						return then.apply(this, arguments);
+					}
+					var args = before.apply(this, arguments),
+						ret  = new Array(args.length);
+					for(var i = 0; i < args.length; ++i){
+						ret[i] = arguments.callee.apply(this, args[i]);
+					}
+					return after.call(this, ret, arguments);
+				};
+			};
+			
+			var multirec2 = function(cond, then, before, after){
+				var cond   = df.lambda(cond),
+					then   = df.lambda(then),
+					before = df.lambda(before),
+					after  = df.lambda(after);
+				return function(){
+					var top = {args: arguments}, args, ret, parent, i;
+					for(;;){
+						for(;;){
+							if(top.old){
+								ret = after.call(this, top.ret, top.old);
+								break;
+							}
+							args = top.args;
+							if(cond.apply(this, args)){
+								ret = then.apply(this, args);
+								break;
+							}
+							top.old = args;
+							args = before.apply(this, args);
+							top.ret = [];
+							parent = top;
+							for(i = args.length - 1; i >= 0; --i){
+								top = {prev: top, args: args[i], parent: parent};
+							}
+						}
+						if(!(parent = top.parent)){
+							return ret;
+						}
+						parent.ret.push(ret);
+						top = top.prev;
+					}
+				};
+			};
+
+			// tests
+
+			var clock = function(body){
+				var b = new Date();
+				body();
+				var e = new Date();
+				return e.getTime() - b.getTime();	// in ms
+			};
+			
+			var log = function(name, body){
+				var ms = clock(body);
+				console.log(name + ":", ms);
+			};
+
+			var LEN1 = 15, LEN2 = 10, ITER = 1000, tests = {},
+				df = dojox.lang.functional,
+				sample1 = df.repeat(LEN1, "+1", 0),
+				sample2 = df.repeat(LEN2, "+1", 0);
+				
+			var fact1 = function(n){
+				var ret = 1;
+				for(var i = 2; i <= n; ++i){
+					ret *= i;
+				}
+				return ret;
+			};
+			tests["factorial: raw iterative"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					df.forEach(sample1, fact1);
+				}
+			};
+			
+			var fact2 = function(n){ return n ? n * arguments.callee.call(this, n - 1) : 1; };
+			tests["factorial: raw recursion"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					df.forEach(sample1, fact2);
+				}
+			};
+			
+			var fact3_1 = linrec1("<= 1", "1", "[n - 1]", "a * b[0]");
+			tests["factorial: linrec1 (recursive reference)"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					df.forEach(sample1, fact3_1);
+				}
+			};
+			
+			var fact3_2 = linrec2("<= 1", "1", "[n - 1]", "a * b[0]");
+			tests["factorial: linrec2 (iterative reference)"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					df.forEach(sample1, fact3_2);
+				}
+			};
+			
+			var fact3 = df.linrec("<= 1", "1", "[n - 1]", "a * b[0]");
+			tests["factorial: linrec"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					df.forEach(sample1, fact3);
+				}
+			};
+			
+			var fact4_1 = numrec1(1, "*");
+			tests["factorial: numrec1 (recursive reference)"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					df.forEach(sample1, fact4_1);
+				}
+			};
+			
+			var fact4_2 = numrec2(1, "*");
+			tests["factorial: numrec2 (iterative reference)"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					df.forEach(sample1, fact4_2);
+				}
+			};
+			
+			var fact4 = df.numrec(1, "*");
+			tests["factorial: numrec"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					df.forEach(sample1, fact4);
+				}
+			};
+			
+			var fact5_1a = tailrec1("<= 1", "a, b -> b", "[n - 1, n * acc]");
+			var fact5_1 = function(n){ return fact5_1a(n, 1); };
+			tests["factorial: tailrec1 (recursive reference)"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					df.forEach(sample1, fact5_1);
+				}
+			};
+
+			var fact5_2a = tailrec2("<= 1", "a, b -> b", "[n - 1, n * acc]");
+			var fact5_2 = function(n){ return fact5_2a(n, 1); };
+			tests["factorial: tailrec2 (iterative reference)"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					df.forEach(sample1, fact5_2);
+				}
+			};
+
+			var fact5a = df.tailrec("<= 1", "a, b -> b", "[n - 1, n * acc]");
+			var fact5 = function(n){ return fact5a(n, 1); };
+			tests["factorial: tailrec"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					df.forEach(sample1, fact5);
+				}
+			};
+			
+			var fact6_1 = multirec1("<= 0", "1", "[[n - 1]]", "a[0] * b[0]");
+			tests["factorial: multirec1 (recursive reference)"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					df.forEach(sample1, fact6_1);
+				}
+			};
+			
+			var fact6_2 = multirec2("<= 0", "1", "[[n - 1]]", "a[0] * b[0]");
+			tests["factorial: multirec2 (iterative reference)"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					df.forEach(sample1, fact6_2);
+				}
+			};
+			
+			var fact6 = df.multirec("<= 0", "1", "[[n - 1]]", "a[0] * b[0]");
+			tests["factorial: multirec"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					df.forEach(sample1, fact6);
+				}
+			};
+			
+			var fib1 = function(n){
+				var a = 1, b = 1;
+				for(var i = 2; i <= n; ++i){
+					var c = a + b;
+					b = a;
+					a = c;
+				}
+				return a;
+			};
+			tests["fibonacci: raw iterative"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					df.forEach(sample2, fib1);
+				}
+			};
+			
+			var fib2 = function(n){ return n <= 1 ? 1 : arguments.callee.call(this, n - 1) + arguments.callee.call(this, n - 2); };
+			tests["fibonacci: raw recursion"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					df.forEach(sample2, fib2);
+				}
+			};
+			
+			var fib3a = function(n, next, result){ return n <= 0 ? result : arguments.callee.call(this, n - 1, next + result, next); };
+			var fib3  = function(n){ return fib3a(n, 1, 1); };
+			tests["fibonacci: raw tail recursion"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					df.forEach(sample2, fib3);
+				}
+			};
+
+			var fib4_1 = binrec1("<= 1", "1", "[[n - 1], [n - 2]]", "+");
+			tests["fibonacci: binrec1 (recursive reference)"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					df.forEach(sample2, fib4_1);
+				}
+			};
+
+			var fib4_2 = binrec2("<= 1", "1", "[[n - 1], [n - 2]]", "+");
+			tests["fibonacci: binrec2 (iterative reference)"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					df.forEach(sample2, fib4_2);
+				}
+			};
+
+			var fib4 = df.binrec("<= 1", "1", "[[n - 1], [n - 2]]", "+");
+			tests["fibonacci: binrec"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					df.forEach(sample2, fib4);
+				}
+			};
+			
+			var fib5_1a = tailrec1("<= 0", "a, b, c -> c", "[n - 1, next + result, next]");
+			var fib5_1  = function(n){ return fib5_1a(n, 1, 1); };
+			tests["fibonacci: tailrec1 (recursive reference)"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					df.forEach(sample2, fib5_1);
+				}
+			};
+
+			var fib5_2a = tailrec2("<= 0", "a, b, c -> c", "[n - 1, next + result, next]");
+			var fib5_2  = function(n){ return fib5_2a(n, 1, 1); };
+			tests["fibonacci: tailrec2 (iterative reference)"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					df.forEach(sample2, fib5_2);
+				}
+			};
+
+			var fib5a = df.tailrec("<= 0", "a, b, c -> c", "[n - 1, next + result, next]");
+			var fib5  = function(n){ return fib5a(n, 1, 1); };
+			tests["fibonacci: tailrec"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					df.forEach(sample2, fib5);
+				}
+			};
+			
+			var fib6_1 = multirec1("<= 1", "1", "[[n - 1], [n - 2]]", "a[0] + a[1]");
+			tests["fibonacci: multirec1 (recursive reference)"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					df.forEach(sample2, fib6_1);
+				}
+			};
+			
+			var fib6_2 = multirec2("<= 1", "1", "[[n - 1], [n - 2]]", "a[0] + a[1]");
+			tests["fibonacci: multirec2 (iterative reference)"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					df.forEach(sample2, fib6_2);
+				}
+			};
+			
+			var fib6 = df.multirec("<= 1", "1", "[[n - 1], [n - 2]]", "a[0] + a[1]");
+			tests["fibonacci: multirec"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					df.forEach(sample2, fib6);
+				}
+			};
+			
+			var keys = df.keys(tests), i = 0;
+			
+			var doTest = function(){
+				log(keys[i], tests[keys[i]]);
+				++i;
+				if(i < keys.length){
+					setTimeout(doTest, 20);
+				}else{
+					console.log("that's all");
+				}
+			};
+			
+			var test = function(){
+				i = 0;
+				setTimeout(doTest, 20);
+			};
+				
+			dojo.addOnLoad(function(){
+				// sanity check
+
+				console.assert(fact1(5)   == 120, "fact1");
+				console.assert(fact2(5)   == 120, "fact2");
+				console.assert(fact3_1(5) == 120, "fact3_1");
+				console.assert(fact3_2(5) == 120, "fact3_2");
+				console.assert(fact3(5)   == 120, "fact3");
+				console.assert(fact4_1(5) == 120, "fact4_1");
+				console.assert(fact4_2(5) == 120, "fact4_2");
+				console.assert(fact4(5)   == 120, "fact4");
+				console.assert(fact5_1(5) == 120, "fact5_1");
+				console.assert(fact5_2(5) == 120, "fact5_2");
+				console.assert(fact5(5)   == 120, "fact5");
+				console.assert(fact6_1(5) == 120, "fact6_1");
+				console.assert(fact6_2(5) == 120, "fact6_2");
+				console.assert(fact6(5)   == 120, "fact6");
+
+				console.assert(fib1(5)   == 8, "fib1");
+				console.assert(fib2(5)   == 8, "fib2");
+				console.assert(fib3(5)   == 8, "fib3");
+				console.assert(fib4_1(5) == 8, "fib4_1");
+				console.assert(fib4_2(5) == 8, "fib4_2");
+				console.assert(fib4(5)   == 8, "fib4");
+				console.assert(fib5_1(5) == 8, "fib5_1");
+				console.assert(fib5_2(5) == 8, "fib5_2");
+				console.assert(fib5(5)   == 8, "fib5");
+				console.assert(fib6_1(5) == 8, "fib6_1");
+				console.assert(fib6_2(5) == 8, "fib6_2");
+				console.assert(fib6(5)   == 8, "fib6");
+				
+				console.log("sanity check finished");
+			});
+		</script>
+	</head>
+	<body>
+		<p>This test is meant to run with Firebug. Open the console to see the output.</p>
+		<p><button onclick="test()">Start</button></p>
+	</body>
+</html>

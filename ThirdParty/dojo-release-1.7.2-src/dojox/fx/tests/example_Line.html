@@ -1,0 +1,80 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>using a dojo._Line and dojo.Animation</title>
+	<style type="text/css">
+	        @import "../../../dojo/resources/dojo.css";
+	        @import "../../../dijit/themes/tundra/tundra.css";
+		@import "../../../dijit/tests/css/dijitTests.css"; 
+		#node {
+			position:absolute;
+			top:100px; left:100px; 
+			width:400px;
+			height:400px; 
+			padding:12px;
+			-moz-border-radius:5pt;
+			overflow:hidden;
+			border:1px solid #333; 
+		}
+	</style>
+	<script type="text/javascript"
+	        djConfig="parseOnLoad: true, isDebug:false"
+	        src="../../../dojo/dojo.js"></script>
+	<script type="text/javascript">
+		dojo.require("dojo.parser");
+		dojo.require("dojo.fx.easing");
+		dojo.require("dojox.gfx");
+
+		var surface, shape, line, node; 
+		dojo.addOnLoad(function(){
+			// dojo._Line is just a simple class to hold some numbers, and return a given point
+			// on the line as a percentage, essentially
+			var _line = new dojo._Line(20,75); // a holder for the numbers 20 .. 75
+			node = dojo.byId('node');
+
+			surface = dojox.gfx.createSurface(node,400,400);
+			shape = surface.createCircle({ cx: 200, cy: 200, r: 20 })
+				.setFill([0,0,255])
+				.setStroke({ color:[128,128,128], width: 1});
+			
+			// so we just make a raw Animation
+			var _anim = new dojo.Animation({
+				// the id of the shape	
+				node: node,
+				// some easing options
+				easing: dojo.fx.easing.easeInOut,
+				// our radius start and end values
+				curve:_line,
+				// call transform on the shape with the values
+				onAnimate: function(){
+					shape.setShape({ r: arguments[0] });
+				},
+				duration:1200 // ms
+				// rate:100 // ms, so duration/rate iterations
+			});
+
+
+			dojo.connect(_anim,"onEnd",function(){
+				dojo.animateProperty({
+					node: node,
+					duration:1000,
+					properties: {
+						left:300
+					},
+					onEnd: function(){
+						dojo.fadeOut({ node: node, duration:3000 }).play();
+					}	
+				}).play(500);
+			});
+			_anim.play(2000);
+		});
+	</script>
+</head>
+<body class="tundra">
+	
+	<h1>an "animateProperty" for dojox.gfx</h1>
+	<div id="node"></div>
+
+</body>
+</html>

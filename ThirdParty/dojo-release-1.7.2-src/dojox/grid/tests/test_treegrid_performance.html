@@ -1,0 +1,205 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>dojox.grid.TreeGrid Performance Tests</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../resources/Grid.css";
+		@import "../resources/tundraGrid.css";
+		.grid {
+			width: 70em;
+			height: 15em;
+		}
+	</style>
+	<script type="text/javascript" src="../../../dojo/dojo.js" 
+		djConfig="isDebug:false, parseOnLoad: false"></script>
+	<script type="text/javascript">
+		dojo.require("dojox.grid.DataGrid");
+		dojo.require("dojox.grid.TreeGrid");
+		dojo.require("dojo.data.ItemFileWriteStore");
+		dojo.require("dojo.parser");
+
+		// Set to true in order to kick off profiling startup and resizes in
+		// firebug
+		var doProfiling = false;
+		var profileTime = 100;
+
+		var resizeAndProfile = function(grid){
+			var d = new dojo.Deferred();
+			if(doProfiling){
+				console.profile("Resize " + grid.id);
+				window.profiling = true;
+				window.profid = grid.id;
+			}
+			grid.resize();
+			if(doProfiling){
+				window.setTimeout(function(){
+					console.profileEnd();
+					delete window.profiling;
+					d.callback(true);
+				}, profileTime);
+			}else{
+				d.callback(true);
+			}
+			return d;
+		}
+		
+		var parseAndProfile = function(parseContainer, idx){
+			var d = new dojo.Deferred();
+			if(doProfiling){
+				console.profile("Startup/Creation " + idx);
+				window.profiling = true;
+				window.profid = "idx_"+idx;
+			}
+			dojo.parser.parse(parseContainer);
+			if(doProfiling){
+				window.setTimeout(function(){
+					console.profileEnd();
+					delete window.profiling;
+					d.callback(true);
+				}, profileTime);
+			}else{
+				d.callback(true);
+			}
+			return d;			
+		}
+		
+		dojo.addOnLoad(function(){
+			dojo.parser.parse(dojo.query(".testTitle")[0]);
+			dijit._TemplatedMixin.getCachedTemplate(dojo.moduleUrl("dojox.grid","resources/_Grid.html"));
+			dijit._TemplatedMixin.getCachedTemplate(dojo.moduleUrl("dojox.grid", "resources/Expando.html"));
+			dijit._TemplatedMixin.getCachedTemplate(dojo.moduleUrl("dojox.grid","resources/View.html"));
+			jsonStore.fetch({onComplete: function(){
+				doProfiling = dojo.isMoz && doProfiling;
+				dojo.connect(window, "onresize", function(){
+					var grids = dojo.filter(dojo.query(".grid").map(dijit.byNode), function(w){ return w && w.resize; });
+					var i = 0;
+					var cb = function(){
+						var g = grids[i];
+						i++;
+						if(g){
+							d = resizeAndProfile(g);
+							d.addCallback(cb);
+						}
+					};
+					cb();
+				});
+				var containers = dojo.query(".parseContainer");
+				var idx = 0;
+				var pcb = function(){
+					var cont = containers[idx];
+					idx++;
+					if(cont){
+						d = parseAndProfile(cont, idx - 1);
+						d.addCallback(pcb);
+					}
+				};
+				pcb();
+			}});
+		});
+
+		function formatTime(value, rowIdx){
+			var hrs = Math.floor(value / 60) + "";
+			var mins = (value % 60) + "";
+			while (hrs.length < 2){
+				hrs = "0" + hrs;
+			}
+			while (mins.length < 2){
+				mins = "0" + mins;
+			}
+			return hrs + ":" + mins;
+		}
+		
+		function summaryFormatter(value, rowIdx, cell, sing, plur){
+			var str;
+			if(rowIdx >= 0){
+				return value;
+			}
+			if(rowIdx == -1){
+				str = "Total (${numItems} ${displayName}):";
+			}else{
+				str = "${numItems} ${displayName}";
+			}
+			return dojo.string.substitute(str, {numItems: value, 
+						displayName: (value == 1) ? sing : plur});			
+		}
+		function quarterSummary(value, rowIdx){
+			return summaryFormatter(value, rowIdx, this, "Quarter", "Quarters");
+		}
+		function gameSummary(value, rowIdx){
+			return summaryFormatter(value, rowIdx, this, "Game", "Games");
+		}
+		function seasonSummary(value, rowIdx){
+			return summaryFormatter(value, rowIdx, this, "Season", "Seasons");
+		}
+	</script>
+</head>
+<body class="tundra">
+	<h1 class="testTitle">
+		Test: dojox.tests.grid.TreeGrid Performance
+		<span dojoType="dojo.data.ItemFileWriteStore" 
+			jsId="jsonStore" url="support/gamedata.json">
+		</span>
+	</h1>
+
+	<h4 class="testSubtitle">dojox.grid.DataGrid (For reference)</h4>
+	<div class="parseContainer">
+		<table dojoType="dojox.grid.DataGrid" class="grid" style="height: 15em;width: 100%;"
+			store="jsonStore" rowsPerPage="50" query="{label:'Quarter *'}" queryOptions="{deep: true}" rowSelector="false">
+			<thead>
+				<tr>
+					<th field="label" relWidth="2" formatter="quarterSummary">Quarter</th>
+					<th field="pts" relWidth="1">Points</th>
+					<th field="reb" relWidth="1">Rebounds</th>
+					<th field="ast" relWidth="1">Assists</th>
+					<th field="tp" relWidth="1" formatter="formatTime">Time Played</th>
+				</tr>
+			</thead>
+		</table>
+	</div>
+	<h4 class="testSubtitle">dojox.grid.TreeGrid Large 4-Level</h4>
+	<div class="parseContainer">
+		<table dojoType="dojox.grid.TreeGrid" class="grid" style="height: 15em;width: 100%;"
+			store="jsonStore" rowsPerPage="20" rowSelector="false">
+			<thead>
+				<tr>
+					<th field="label" relWidth="2">Player</th>
+					<th field="seasns" aggregate="sum" itemAggregates="numSeasons">
+						<table>
+							<thead>
+								<tr>
+									<th field="label" relWidth="2" formatter="seasonSummary">Season</th>
+									<th field="games" aggregate="sum" itemAggregates="numGames">
+										<table>
+											<thead>
+												<tr>
+													<th field="label" relWidth="2" formatter="gameSummary">Game</th>
+													<th field="qtrs" aggregate="sum" itemAggregates="numQtrs,totPts,totReb,totAst,totTP">
+														<table>
+															<thead>
+																<tr>
+																	<th field="label" relWidth="2" formatter="quarterSummary">Quarter</th>
+																	<th field="pts" relWidth="1">Points</th>
+																	<th field="reb" relWidth="1">Rebounds</th>
+																	<th field="ast" relWidth="1">Assists</th>
+																	<th field="tp" relWidth="1" formatter="formatTime">Time Played</th>
+																</tr>
+															</thead>
+														</table>
+													</th>
+												</tr>
+											</thead>
+										</table>
+									</th>
+								</tr>
+							</thead>
+						</table>
+					</th>
+				</tr>
+			</thead>
+		</table>
+	</div>
+</body>
+</html>
+

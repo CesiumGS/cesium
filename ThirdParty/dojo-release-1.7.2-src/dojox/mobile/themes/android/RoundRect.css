@@ -1,0 +1,13 @@
+/* dojox.mobile.RoundRect */
+.mblRoundRect {
+  margin: 7px 9px 16px;
+  padding: 8px;
+  border: 1px solid #ADAAAD;
+  -webkit-border-radius: 8px;
+  -moz-border-radius: 8px;
+  color: white;
+  background-color: black;
+}
+.mblRoundRect.mblShadow {
+  -webkit-box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);
+}

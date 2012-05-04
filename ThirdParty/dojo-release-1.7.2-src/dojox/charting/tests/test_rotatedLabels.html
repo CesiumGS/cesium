@@ -1,0 +1,101 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Chart 2D rotated labels</title>
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+	@import "../../../dijit/themes/tundra/tundra.css";
+</style>
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+<script type="text/javascript">
+
+dojo.require("dijit.form.Button");
+dojo.require("dijit.form.NumberSpinner");
+
+dojo.require("dojox.charting.Chart");
+dojo.require("dojox.charting.axis2d.Default");
+dojo.require("dojox.charting.plot2d.Default");
+dojo.require("dojox.charting.themes.PrimaryColors");
+
+dojo.require("dojo.parser");
+
+var chart;
+
+makeObjects = function(){
+	chart = new dojox.charting.Chart("test1").
+        setTheme(dojox.charting.themes.PrimaryColors).
+        addPlot("default").
+        addSeries("Series A", [1, 3, 2, 5, 4]).
+        addPlot("default2", {hAxis: "x2", vAxis: "y2"}).
+        addSeries("Series B", [5, 3, 4, 1, 2], {plot: "default2"});
+    updateAxes();
+};
+
+dojo.addOnLoad(makeObjects);
+
+updateAxes = function(){
+    var rotation = dijit.byId("rotation").get("value");
+	chart.
+        addAxis("x", {
+            htmlLabels: false, fixLower: "major", fixUpper: "major", min: 0, max: 6,
+            labels: [
+                {value: 0, text: "zero"},
+                {value: 1, text: "one"},
+                {value: 2, text: "two"},
+                {value: 3, text: "three"},
+                {value: 4, text: "four"},
+                {value: 5, text: "five"},
+                {value: 6, text: "six"}
+            ],
+            rotation: rotation
+        }).
+        addAxis("y", {
+            htmlLabels: false, vertical: true, fixLower: "major", fixUpper: "major", natural: true,  min: 0, max: 6,
+            labels: [{value: 0, text: ""},
+                {value: 1, text: "January"}, {value: 2, text: "February"},
+                {value: 3, text: "March"}, {value: 4, text: "April"},
+                {value: 5, text: "May"}, {value: 6, text: "June"}
+            ],
+            rotation: rotation
+        }).
+        addAxis("x2", {
+            htmlLabels: false, fixLower: "major", fixUpper: "major", min: 0, max: 6, leftBottom: false,
+            rotation: rotation
+        }).
+        addAxis("y2", {
+            htmlLabels: false, vertical: true, fixLower: "major", fixUpper: "major", min: 0, max: 6, leftBottom: false,
+            rotation: rotation
+        }).
+        render();
+}
+
+</script>
+</head>
+<body class="tundra">
+<h1>Chart 2D rotated labels</h1>
+<!--<p><button onclick="makeObjects();">Go</button></p>-->
+<p>
+    Rotation:&nbsp;
+    <input dojoType="dijit.form.NumberSpinner" id="rotation" value="0" constraints="{min: 0, max: 360, fractional: false}" style="width: 8em;">
+    &nbsp;
+    <button dojoType="dijit.form.Button" onClick="updateAxes()">Apply</button>
+</p>
+<div id="test1" style="width: 600px; height: 400px;"></div>
+<p>That's all Folks!</p>
+</body>
+</html>

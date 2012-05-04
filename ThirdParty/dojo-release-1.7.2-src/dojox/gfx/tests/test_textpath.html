@@ -1,0 +1,78 @@
+﻿<html>
+<head>
+<title>Testing textpath</title>
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+</style>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+<!--
+<script type="text/javascript" src="../common.js"></script>
+<script type="text/javascript" src="../shape.js"></script>
+<script type="text/javascript" src="../path.js"></script>
+-->
+<!--<script type="text/javascript" src="../vml.js"></script>-->
+<!--<script type="text/javascript" src="../svg.js"></script>-->
+<script type="text/javascript">
+dojo.require("dojox.gfx");
+
+var CPD = 30;
+
+var surface = null;
+
+var makeText = function(surface, text, font, fill, stroke){
+	var t = surface.createText(text);
+	if(font)   t.setFont(font);
+	if(fill)   t.setFill(fill);
+	if(stroke) t.setStroke(stroke);
+	placeAnchor(surface, text.x, text.y);
+	return t;
+};
+
+createSurface = function(){
+	surface = dojox.gfx.createSurface("test", 500, 500);
+	surface.whenLoaded(makeShapes);
+};
+
+makeShapes = function(){
+	var p = surface.createPath({})
+		.setStroke("green")
+		.moveTo(0, 100)
+		.setAbsoluteMode(false)
+		.curveTo(CPD, 0, 100 - CPD,  300, 100,  300)
+		.curveTo(CPD, 0, 100 - CPD, -300, 100, -300)
+		.curveTo(CPD, 0, 100 - CPD,  300, 100,  300)
+		.curveTo(CPD, 0, 100 - CPD, -300, 100, -300)
+		.curveTo(CPD, 0, 100 - CPD,  300, 100,  300)
+		;
+	var t = surface.createTextPath({
+			text: "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Praesent erat. " + 
+					"In malesuada ultricies velit. Vestibulum tempor odio vitae diam. " + 
+					"Morbi arcu lectus, laoreet eget, nonummy at, elementum a, quam."
+			, align: "middle"
+			//, rotated: true
+		})
+		//.setShape(p.shape)
+		.moveTo(0, 100)
+		.setAbsoluteMode(false)
+		.curveTo(CPD, 0, 100 - CPD,  300, 100,  300)
+		.curveTo(CPD, 0, 100 - CPD, -300, 100, -300)
+		.curveTo(CPD, 0, 100 - CPD,  300, 100,  300)
+		.curveTo(CPD, 0, 100 - CPD, -300, 100, -300)
+		.curveTo(CPD, 0, 100 - CPD,  300, 100,  300)
+		.setFont({family: "times", size: "12pt"})
+		.setFill("blue")
+		;
+};
+
+dojo.addOnLoad(createSurface);
+
+</script>
+</head>
+<body>
+	<h1>dojox.gfx Text on a Path test</h1>
+	<div id="test" style="width: 500px; height: 500px;"></div>
+	<p>That's all Folks!</p>
+</body>
+</html>

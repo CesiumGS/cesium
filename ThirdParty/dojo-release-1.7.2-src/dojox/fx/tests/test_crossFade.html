@@ -1,0 +1,145 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>dojox.fx - animation sets to use!</title>
+		
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: true" ></script>
+	<script type="text/javascript" src="../_base.js"></script>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/themes/dijit.css";
+		@import "../../../dijit/themes/tundra/tundra.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+	
+		#crossfade {
+			position:absolute;
+			top:0;
+			left:300px; 
+			border:2px solid #ededed; 
+			width:50px; height:50px; 
+			background:#fff; 
+			text-align:center; 
+		}
+	
+		table tr { padding:5px; margin:5px; border:1px solid #ccc; }
+
+		.box { 
+			width:75px; height:75px; float:left;
+			border:1px solid #ededed;
+			padding:20px;
+			background-color:#fee; 
+		}
+		.two { background-color:#c7bedd; } 
+		.nopad { padding:0 !important;
+			width:100px; height:100px; border:0;
+		 } 
+		.hidden {
+			opacity:0;
+		}
+	</style>
+	<script type="text/javascript">
+		dojo.require("dijit.form.Button");
+		dojo.require("dijit.TitlePane");
+	
+		function basicXfade(){
+			dojox.fx.crossFade({
+				nodes: [dojo.byId('node1'),dojo.byId('node2')],
+				duration: 1000
+			}).play();
+		};
+
+		function absoluteXfade(){
+			dojox.fx.crossFade({
+				nodes: ["node3","node4"],
+				duration:1000
+			}).play();
+		};
+
+		var _anim; 
+		function simpleLoop(){
+			dojo.byId('button').disabled = "disabled"; 
+			_anim = dojox.fx.crossFade({
+				nodes: ["node5","node6"],
+				duration:1000
+			});
+			dojo.connect(_anim,"onEnd","simpleLoop");
+			_anim.play(500);
+		};
+		function stopLoop(){ _anim.stop(); }
+
+		function buttonExample(){
+			dojox.fx.crossFade({
+				nodes: [
+					// FIXME: fails in ie6?!?
+					dijit.byId('node7').domNode, 
+					dijit.byId('node8').domNode
+					],
+				duration: 350
+			}).play();
+		}
+
+		dojo.addOnLoad(function(){
+			// this is a hack to make nodes with class="hidden" hidden
+			// because ie6 is a horrible wretched beast
+			dojo.query(".hidden").forEach(function(node){
+				dojo.style(node,"opacity","0"); 
+			});
+
+
+		});
+
+	</script>
+</head>
+<body class="tundra">
+	<h1 class="testTitle">dojox.fx.crossFade test</h1>
+
+	
+	<h3>a simple demonstration of two nodes fading simultaneously</h3>
+	<div>
+	<input type="button" onclick="basicXfade()" value="run" />
+	<div style="padding:20px">
+		<div id="node1" style="display:inline;" class="box hidden">box1</div>
+		<div id="node2" class="box">box2</div>
+	</div>
+	<br style="clear:both">
+	</div>
+
+	<h3>two nodes with position:relative in a container with position:absolute, crossfading together.</h3>
+	<input type="button" onclick="absoluteXfade()" value="run" />
+	<div>
+		<div style="width:100px; height:100px; position:relative; border:1px solid #666; ">
+			<div id="node3" style="position:absolute; top:0; left:0;" class="box nopad hidden">box one</div>
+			<div id="node4" style="position:absolute; top:0; left:0;" class="box two nopad">box two</div>
+		</div>
+	<br style="clear:both">
+	</div>
+
+	<h3>simple looping crossfade</h3>
+	<input type="button" onclick="simpleLoop()" value="run" id="button" />
+	<div>
+	<div style="padding:20px;">
+			<div id="node5" class="box nopad">box one</div>
+			<div id="node6" class="box two nopad hidden">box two</div>
+	</div>
+	<br style="clear:both">
+	</div>
+
+	<!-- FIXME: acting oddly, only in IE though 
+	<h3>An example of cross-fading a dijit.form.Button</h3>
+	<input type="button" onclick="buttonExample()" value="run" id="button" />
+	<div>
+	<div style="position:relative;">
+		<div dojoType="dijit.TitlePane" id="node7" 
+			style="position:absolute; top:0; left:0;">Lorem content two</div>
+		<div dojoTYpe="dijit.TitlePane" id="node8" class="hidden"
+			style="position:absolute; top:0; left:0;">Lorem content one</div>
+	</div>
+	<br style="clear:both;">
+	</div>
+	-->
+
+	<h3>that's all, folks...</h3>
+
+</body>
+</html>

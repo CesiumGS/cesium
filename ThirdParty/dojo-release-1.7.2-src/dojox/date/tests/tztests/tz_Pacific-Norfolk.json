@@ -1,0 +1,14 @@
+({
+	name: "date.timezone.Pacific-Norfolk",
+	runTest: function(t){
+		var tz = "Pacific/Norfolk";
+		doh.checkDate({tzOffset: -672, tzAbbr: "NMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: -672, tzAbbr: "NMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: -672, tzAbbr: "NMT"}, -599656321000, tz, 1);
+		doh.checkDate({tzOffset: -690, tzAbbr: "NFT"}, -599656320000, tz, 1);
+		doh.checkDate({tzOffset: -690, tzAbbr: "NFT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: -690, tzAbbr: "NFT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: -690, tzAbbr: "NFT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: -690, tzAbbr: "NFT"}, 1246789800000, tz, 0);
+	}
+})

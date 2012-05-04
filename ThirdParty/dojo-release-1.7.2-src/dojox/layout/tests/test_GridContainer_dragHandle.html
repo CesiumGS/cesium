@@ -1,0 +1,107 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+		<title>GridContainer - dragHandleClass</title>
+
+		<link rel="stylesheet" href="../resources/GridContainer.css">
+
+		<style type="text/css" title="text/css">
+			@import "../../../dojo/resources/dojo.css";
+			@import "../../../dijit/themes/tundra/tundra.css";
+			
+			html, body{
+				margin:0;
+				padding:1%;
+			}
+
+			.cpane{
+				border:1px solid #666;
+				font:bold 12px Arial;
+				color:#666;
+				background:#FFF;
+				padding:10px;
+				height:50px
+			}
+			
+			#GC1 .gridContainerZone {
+				border-collapse:collapse;
+				border : 1px solid #ededed;
+			}
+			
+			.dj_ie6 .dropIndicator, .dj_ie6 .dijitContentpane, .dj_ie6 .dijitCalendar{
+				margin: 10px;
+			}
+			.gridContainerZone > *{
+				margin: 10px !important;
+			}
+			
+		</style>
+		
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+		
+		<script type="text/javascript">
+			dojo.require("dojo.parser");
+			dojo.require("dijit.TitlePane");
+			dojo.require("dijit.layout.ContentPane");
+			dojo.require("dojox.widget.Portlet");
+			dojo.require("dojox.layout.GridContainer");
+			dojo.require("dijit.form.CheckBox");
+		</script>
+
+	</head>
+
+	<body class="tundra">
+		
+		<h1 class="testTitle">Grid Container</h1>
+		
+		<h2>Specify dragHandle CSS class</h2>
+		<h3>dragHandleClass="dijitTitlePaneTitle"</h3>
+		<div>
+		  Rather than dragging by clicking anywhere on a widget, it is also possible to specify
+		  particular parts of the widget that are draggable, for example a title bar.
+		  To do this, set the 'dragHandleClass' to the CSS class on that draggable node.
+		  Note that below, you can only drag the title panes by dragging their title bar, not the body
+		  of the widget.
+		</div>
+		
+		<div id="GC1" dojoType="dojox.layout.GridContainer" 
+			nbZones="3"
+			hasResizableColumns="false"
+			doLayout="false" 
+			dragHandleClass="dijitTitlePaneTitle">
+				<div dojoType="dijit.layout.ContentPane" class="cpane" label="Content Pane" dndType="ContentPane" >Content Pane n°1 !</div>
+				<div dojoType="dijit.TitlePane" title="Ergo" >
+					Non ergo erunt homines deliciis diffluentes audiendi, si quando de amicitia, quam nec usu nec ratione habent cognitam, disputabunt. Nam quis est, pro deorum fidem atque hominum! qui velit, ut neque diligat quemquam nec ipse ab ullo diligatur, circumfluere omnibus copiis atque in omnium rerum abundantia vivere? Haec enim est tyrannorum vita nimirum, in qua nulla fides, nulla caritas, nulla stabilis benevolentiae potest esse fiducia, omnia semper suspecta atque sollicita, nullus locus amicitiae.
+				</div>
+				<div dojoType="dijit.layout.ContentPane" class="cpane" label="Content Pane">Content Pane n°2 !</div>
+				<div dojoType="dijit.layout.ContentPane" class="cpane" label="Content Pane">Content Pane n°3 !</div>
+				<div dojoType="dojox.widget.Portlet" title="Portlet with Dialog Settings" id="portlet2">
+				<div dojoType="dojox.widget.PortletDialogSettings" title="Settings in a Dialog">
+					Use Bold Text: <div dojoType="dijit.form.CheckBox">
+						<script type="dojo/connect" event="onClick">
+						  dojo.style(dijit.byId('portlet2').containerNode, "fontWeight", this.checked ? "bold" : "normal");
+						</script>
+					</div>
+				</div>
+				<div>
+					Lorem ipsum dolor sit amet, consectetuer adipiscing elit. 
+					Nam facilisis enim. Pellentesque in elit et lacus euismod dignissim.
+					Aliquam dolor pede, convallis eget, dictum a, blandit ac, urna. 
+					Pellentesque sed nunc ut justo volutpat egestas. Class aptent taciti
+					sociosqu ad litora torquent per conubia nostra, per inceptos hymenaeos. 
+					In erat. Suspendisse potenti. Fusce faucibus nibh sed nisi. Phasellus 
+					faucibus, dui a cursus dapibus, mauris nulla euismod velit, a lobortis turpis 
+					arcu vel dui. Pellentesque fermentum ultrices pede. Donec auctor lectus eu arcu. 
+					Curabitur non orci eget est porta gravida. Aliquam pretium orci id nisi. Duis faucibus,
+					mi non adipiscing venenatis, erat urna aliquet elit, eu fringilla lacus tellus quis erat. 
+					Nam tempus ornare lorem. Nullam feugiat.
+				</div>
+			</div>
+				<div dojoType="dijit.layout.ContentPane" class="cpane" label="Content Pane">Content Pane n°4 !</div>
+		</div>
+		
+	</body>
+</html>

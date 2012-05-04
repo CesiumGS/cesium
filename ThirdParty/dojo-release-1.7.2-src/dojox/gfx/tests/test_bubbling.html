@@ -1,0 +1,61 @@
+<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" >
+<head>
+<title>Testing Bubbling events</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+</style>
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true, gfxRenderer:'canvas'"></script>
+<script type="text/javascript">
+dojo.require("dojox.gfx");
+
+createSurface = function(){
+	var surface = dojox.gfx.createSurface("test", 500, 500);
+	surface.whenLoaded(makeShapes);
+};
+
+log = function(msg) {
+	var elt = document.createTextNode(msg);
+	var div = dojo.byId('log');
+	div.insertBefore(elt, div.firstChild);
+	div.insertBefore(document.createElement('br'), elt.nextSibling);
+};
+
+makeShapes = function(surface){
+	var g   = surface.createGroup();
+	var rect = g.createRect().setFill('red');
+	rect.id='rect1';
+	surface.connect('onmousemove', function(e){
+		log('onmousemove received by surface. gfxTarget:'+(e.gfxTarget ? e.gfxTarget.id : 'null'));
+	});
+	if (dojox.gfx.renderer !== 'silverlight')
+		surface.connect('touchstart', function(e){
+			log('touchstart received by surface. gfxTarget:'+(e.gfxTarget ? e.gfxTarget.id : 'null'));
+		});
+	rect.connect('onmousedown', function(e){
+		log('onmousedown received on rect1. gfxTarget:'+e.gfxTarget.id);
+		
+	});
+	if (dojox.gfx.renderer !== 'silverlight')
+		rect.connect('touchstart', function(e){
+			log('touchstart received on rect1. gfxTarget:'+e.gfxTarget.id);
+			
+		});
+	g.connect('onmouseup',function(e){
+		log('onmouseup received on g1. gfxTarget:'+e.gfxTarget.id);
+	});
+	
+};
+
+dojo.addOnLoad(createSurface);
+
+</script>
+</head>
+<body>
+	<h1>Testing fill rule</h1>
+	<div id="test" style="width: 500px; height: 300px;"></div>
+	<div id="log" style="width: 500px; height: 100px;overflow:scroll;"></div>
+	<p>That's all Folks!</p>
+</body>
+</html>

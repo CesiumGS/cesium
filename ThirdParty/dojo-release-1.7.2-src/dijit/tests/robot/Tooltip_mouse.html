@@ -1,0 +1,157 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot Tooltip Mouse Test</title>
+
+		<style>
+			@import "../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../dojo/dojo.js"
+			djConfig="isDebug: true"></script>
+
+		<!-- functions to help test -->
+		<script type="text/javascript" src="../helpers.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../test_Tooltip.html');
+
+				// Pointer to master tooltip.  This gets set in the first test when the
+				// first tooltip is shown
+				var masterTT;
+
+				doh.register("dijit.Tooltip mouse tests", [
+					{
+						name: "show on mouse over",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred(),
+								around = dojo.byId("four");
+
+							doh.robot.mouseMoveAt("four", 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								// At this point the master tooltip should have been created, so save in
+								// global variable
+								masterTT = dojo.global.dijit._masterTT;
+
+								doh.t(masterTT && isVisible(masterTT.domNode), "tooltip shown");
+							}), 2000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "hide on unhover",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Move off of the "button w/tooltip" to node which doesn't have a tooltip
+							doh.robot.mouseMoveAt(dojo.query("h1")[0], 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(masterTT && isHidden(masterTT.domNode), "tooltip hidden");
+							}), 2000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "click to focus, then mouse away",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.mouseMoveAt("id1", 500);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.sequence(d.getTestErrback(function(){
+								doh.t(masterTT && isVisible(masterTT.domNode), "tooltip shown");
+								doh.is("id1", dijit._curFocus && dijit._curFocus.id, "node is focused");
+							}), 2000);
+
+							// Move off of the focused node to node which doesn't have a tooltip
+							doh.robot.mouseMoveAt(dojo.query("h1")[0], 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(masterTT && isHidden(masterTT.domNode), "tooltip hidden");
+							}), 2000);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.register("Tooltip on Menu", [
+					{
+						name: "show tooltip on MenuItem",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Click the DropDownButton to open the Menu
+							doh.robot.mouseMoveAt("ddb", 500);
+							doh.robot.mouseClick({left: true}, 500);
+
+							// Move over the MenuItem to show the tooltip
+							doh.robot.mouseMoveAt("copy", 2000);
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(masterTT && isVisible(masterTT.domNode), "tooltip shown");
+								doh.is("tooltip for copy", dojo.trim(innerText(masterTT.domNode)), "tooltip text");
+							}), 750);
+
+							return d;
+						}
+					},
+
+					{
+						name: "hide Tooltip on Menu close",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Click the MenuItem to close the menu
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isHidden(dijit.byId("ddm").domNode), "menu hidden");
+								doh.t(masterTT && isHidden(masterTT.domNode), "tooltip hidden");
+							}), 500);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.register("Tooltip in TitlePane", [
+					{
+						name: "show tooltip on span in TitlePane",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.mouseMoveAt("tpTooltipTarget", 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(masterTT && isVisible(masterTT.domNode), "tooltip shown");
+								doh.is("tooltip on TitlePane span", dojo.trim(innerText(masterTT.domNode)), "tooltip text");
+							}), 500);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+	<head>
+		<title>Test dojox.grid.DataGrid Programmatic Instantiation</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+		<style type="text/css">
+			@import "../../../dojo/resources/dojo.css";
+			@import "../resources/Grid.css";
+			@import "../resources/tundraGrid.css";
+
+			.heading {
+				font-weight: bold;
+				padding-bottom: 0.25em;
+			}
+					
+			#grid { 
+				border: 1px solid #333;
+				width: 50em;
+				height: 30em;
+			}
+		</style>
+		<script type="text/javascript" src="../../../dojo/dojo.js" 
+			djConfig="isDebug:false, debugAtAllCosts: false, parseOnLoad: true"></script>
+		<script type="text/javascript">
+			dojo.require("dijit.dijit"); // optimize: load dijit layer
+			dojo.require("dojox.grid.DataGrid");
+			dojo.require("dojo.data.ItemFileWriteStore");
+			dojo.require("dojo.parser");
+		</script>
+		<script type="text/javascript" src="support/test_data.js"></script>
+		<script type="text/javascript">
+			var grid = null;
+			var layout = [[
+				{name: 'Column 1', field: 'col1'},
+				{name: 'Column 2', field: 'col2'},
+				{name: 'Column 3', field: 'col3'},
+				{name: 'Column 4', field: 'col4', width: "150px"},
+				{name: 'Column 5', field: 'col5'}
+			],[
+				{name: 'Column 6', field: 'col6'},
+				{name: 'Column 7', field: 'col7'},
+				{name: 'Column 8'},
+				{name: 'Column 9', field: 'col3', colSpan: 2}
+			]];
+
+			function toggleGrid() {
+				if (grid) {
+					grid.destroy();
+					grid = null;
+					dojo.byId("toggleGridButton").innerHTML = "Create grid";
+				}
+				else {
+					grid = new dojox.grid.DataGrid({
+						id: "grid",
+						store: test_store,
+						structure: layout
+					});
+
+					dojo.byId("toggleGridButton").innerHTML = "Destroy grid";
+
+					dojo.byId("gridContainer").appendChild(grid.domNode);
+					grid.startup();
+				}
+			}
+		</script>
+	</head>
+	<body class="tundra">
+		<div class="heading">dojox.grid.DataGrid Programmatic Instantiation Test</div>
+		<button id="toggleGridButton" onClick="toggleGrid();">Create grid</button>
+		<div id="gridContainer"></div>
+	</body>
+</html>

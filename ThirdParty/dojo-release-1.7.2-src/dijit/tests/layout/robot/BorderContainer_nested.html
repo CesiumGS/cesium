@@ -1,0 +1,148 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot BorderContainer nested Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"
+			djConfig="isDebug: true"></script>
+
+		<!-- functions to help test -->
+		<script type="text/javascript" src="../../helpers.js"></script>
+		<script type="text/javascript" src="./borderContainerTestFunctions.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");
+
+			function checkLayoutPriorityBC(){
+				checkAbove("top bar above second top bar", "top1", "top2");
+				checkAbove("second top bar above inner top bar", "top2", "top3");
+				checkLeft("outer left vs. inner left", "left1", "left2");
+				checkLeft("inner left vs. inner top", "left2", "top3");
+				checkLeft("inner left vs. inner bottom", "left2", "bottom3");
+				checkAbove("inner top vs. center", "top3", "center");
+				checkAbove("center vs. inner bottom", "center", "bottom3");
+				checkLeft("inner right vs. inner top", "top3", "right2");
+				checkLeft("inner right vs. center", "center", "right2");
+				checkAbove("inner bottom bar above second bottom bar", "bottom3", "bottom2");
+				checkAbove("second bottom bar above bottom bar", "bottom2", "bottom1");
+			}
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../test_BorderContainer_nested.html');
+
+				doh.register("initial layout", [
+					function nestedBC(){
+						checkBCpanes(dijit.byId("nbc"));
+						doh.t(isVisible(dijit.byId("nbc")));
+						checkInside("nbc", "tc");
+					},
+					function layoutPriorityBC(){
+						dijit.byId("tc").selectChild(dijit.byId("pbc"));	
+						doh.t(isVisible(dijit.byId("pbc")), "second pane visible");
+
+						// Check layout of BorderContainer panes relative to each other
+						checkLayoutPriorityBC();
+
+						// Check that all panes within BC borders
+						var children = dijit.byId("pbc").getChildren();
+						doh.is(11, children.length, "# of children");
+						dojo.forEach(children, function(child){
+							checkInside(child, dijit.byId("pbc"));
+						});
+					}							
+				]);
+
+				// Verify that tab stops are as per original markup (i.e., children are still in the
+				// logical order specified in the original markup)
+				doh.register("tabIndex", function tabstops(){
+					var tabstops = tabOrder(dijit.byId("pbc").domNode);
+					doh.is(21, tabstops.length);
+					doh.is("tabstop #1", tabstops[0].value);
+					doh.is("tabstop #3", tabstops[2].value);
+					doh.is("tabstop #5", tabstops[4].value);
+					doh.is("tabstop #7", tabstops[6].value);
+					doh.is("tabstop #9", tabstops[8].value);
+					doh.is("tabstop #11", tabstops[10].value);
+					doh.is("tabstop #12", tabstops[11].value);
+					doh.is("tabstop #14", tabstops[13].value);
+					doh.is("tabstop #16", tabstops[15].value);
+					doh.is("tabstop #18", tabstops[17].value);
+					doh.is("tabstop #20", tabstops[19].value);
+				});
+
+				doh.register("keyboard", [
+					{
+						name: "top1",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var top1Size, centerSize;
+
+							doh.robot.sequence(function(){
+								dojo.byId("top1_splitter").focus();
+								
+								top1Size = dojo.position("top1");
+								centerSize = dojo.position("center");
+							}, 500, 500);
+
+							doh.robot.keyPress(dojo.keys.DOWN_ARROW, 500, {});
+							doh.robot.keyPress(dojo.keys.DOWN_ARROW, 500, {});
+							doh.robot.keyPress(dojo.keys.DOWN_ARROW, 500, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(within(top1Size.h + 3, dojo.position("top1").h, 0.5), "top size increased");
+								doh.t(within(centerSize.h - 3, dojo.position("center").h, 0.5), "center size decreased");
+							}), 500);
+
+							return d;
+						}
+					},
+					{
+						name: "right1",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							var right1Size, centerSize, top2Size, bottom1Size;
+
+							doh.robot.sequence(function(){
+								dojo.byId("right1_splitter").focus();
+								
+								right1Size = dojo.position("right1");
+								centerSize = dojo.position("center");
+								top2Size = dojo.position("top2");
+								bottom1Size = dojo.position("bottom1");
+							}, 500, 500);
+
+							doh.robot.keyPress(dojo.keys.LEFT_ARROW, 500, {});
+							doh.robot.keyPress(dojo.keys.LEFT_ARROW, 500, {});
+							doh.robot.keyPress(dojo.keys.LEFT_ARROW, 500, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(within(right1Size.w + 3, dojo.position("right1").w, 0.5), "right size increased");
+								doh.t(within(centerSize.w - 3, dojo.position("center").w, 0.5), "center size decreased");
+								doh.t(within(centerSize.w - 3, dojo.position("top3").w, 0.5), "inner top size decreased");
+								doh.t(within(centerSize.w - 3, dojo.position("bottom3").w, 0.5), "inner bottom size decreased");
+								doh.t(within(top2Size.h, dojo.position("top2").h, 0.5), "top2 height unchanged");
+								doh.t(within(top2Size.w, dojo.position("top2").w, 0.5), "top2 width unchanged");
+								doh.t(within(bottom1Size.h, dojo.position("bottom1").h, 0.5), "bottom1 height unchanged");
+								doh.t(within(bottom1Size.w, dojo.position("bottom1").w, 0.5), "bottom1 width unchanged");
+							}), 500);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

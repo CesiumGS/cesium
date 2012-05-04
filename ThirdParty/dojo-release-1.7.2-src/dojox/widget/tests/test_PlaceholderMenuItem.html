@@ -1,0 +1,147 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+
+	<title>PlaceholderMenuItem Test</title>
+
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+	</style>
+
+	<!-- required: a default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/tundra/tundra.css">
+	
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		djConfig="parseOnLoad: true, isDebug: true"></script>
+	
+	<!-- not needed, for testing alternate themes -->
+	<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+
+	<script language="JavaScript" type="text/javascript">
+		dojo.require("doh.runner");
+		dojo.require("dojox.widget.PlaceholderMenuItem");
+		dojo.require("dijit.ColorPalette");
+		dojo.require("dijit.Calendar");
+		dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+	</script>
+    
+    <script language="Javascript" type="text/javascript">
+		dojo.addOnLoad(function(){
+			doh.register("tests",
+				[
+					function test_getPlaceholder(t){
+						var m = dijit.byId("submenu1");
+						t.is(3, m.getPlaceholders().length);
+						t.is(2, m.getPlaceholders("PHCopyPaste").length);
+						t.is(1, m.getPlaceholders("PH2").length);
+						t.is(0, m.getPlaceholders("None").length);
+					},
+					function test_replace(t){
+						var m = dijit.byId("submenu1"), m3 = dijit.byId("submenu3");
+						t.is(6, m.getChildren().length); // Placeholder counts as one
+						t.is(1, m3.getChildren().length); // Placeholder counts as one
+						dojo.forEach(m.getPlaceholders("PHCopyPaste"), function(ph){
+							ph.replace([
+								new dijit.MenuItem({iconClass: "dijitEditorIcon dijitEditorIconCut",
+													onClick: function(){alert('not actually cutting')},
+													label: "Cut"}),
+								new dijit.MenuItem({iconClass: "dijitEditorIcon dijitEditorIconCopy",
+													onClick: function(){alert('not actually copying')},
+													label: "Copy"}),
+								new dijit.MenuItem({iconClass: "dijitEditorIcon dijitEditorIconPaste",
+													onClick: function(){alert('not actually pasting')},
+													label: "Paste"})
+							]);
+						});
+						t.is(9, m.getChildren().length); // Placeholder is still there
+						t.is(4, m3.getChildren().length); // Placeholder is still there
+					},
+					function test_unReplace(t){
+						var m = dijit.byId("submenu1"), m2 = dijit.byId("submenu2");
+						t.is(3, m2.getChildren().length); // Placeholder counts as one
+						var ph = m.getPlaceholders("PH2")[0];
+						t.f(ph._replaced);
+						ph.replace([
+							new dijit.MenuItem({label: "Added 1"}),
+							new dijit.MenuItem({label: "Added 2"})
+						]);
+						t.t(ph._replaced);
+						t.is(5, m2.getChildren().length); // Placeholder is still there
+						t.is(2, ph.unReplace(true).length);
+						t.f(ph._replaced);
+						t.is(3, m2.getChildren().length);
+						ph = m.getPlaceholders("PH2")[0];
+						ph.replace([
+							new dijit.MenuItem({label: "Added Submenu Item"})
+						]);
+						t.t(ph._replaced);
+						t.is(4, m2.getChildren().length);
+					},
+					function test_destroyRecursive(t){
+						var menu = new dijit.Menu(),
+							ph = new dojox.widget.PlaceholderMenuItem(),
+							subMenu = new dijit.Menu();
+						menu.addChild(ph);
+						t.f(ph._replaced, "ph._replaced 1");
+						ph.replace([
+							new dijit.PopupMenuItem({label: "Popup 1", popup: subMenu})
+						]);
+						t.t(ph._replaced, "ph._replaced 2");
+						ph.unReplace(true);
+						t.f(ph._replaced, "ph._replaced 3");
+						// subMenu is destroyed iff the Placeholder called
+						// destroyRecursive on the PopupMenuItem instead of just
+						// destroy.
+						t.t(subMenu._destroyed, "subMenu._destroyed");
+					} 
+				]
+			);
+			doh.run();
+		});
+    </script>
+</head>
+<body class="tundra">
+
+	<div dojoType="dijit.Menu" id="submenu1" contextMenuForWindow="true" style="display: none;">
+		<div dojoType="dijit.MenuItem">First Item</div>
+		<div dojoType="dijit.MenuItem" disabled="true">Disabled Item</div>
+		<div dojoType="dijit.MenuSeparator"></div>
+		<div dojoType="dojox.widget.PlaceholderMenuItem">PHCopyPaste</div>
+<!--
+		<div dojoType="dijit.MenuItem" iconClass="dijitEditorIcon dijitEditorIconCut"
+			onClick="alert('not actually cutting anything, just a test!')">Cut</div>
+		<div dojoType="dijit.MenuItem" iconClass="dijitEditorIcon dijitEditorIconCopy"
+			onClick="alert('not actually copying anything, just a test!')">Copy</div>
+		<div dojoType="dijit.MenuItem" iconClass="dijitEditorIcon dijitEditorIconPaste"
+			onClick="alert('not actually pasting anything, just a test!')">Paste</div>
+-->
+		<div dojoType="dijit.MenuSeparator"></div>
+		<div dojoType="dijit.PopupMenuItem">
+			<span>Enabled Submenu</span>
+			<div dojoType="dijit.Menu" id="submenu2">
+				<div dojoType="dijit.MenuItem" onClick="alert('Submenu 1!')">Submenu Item One</div>
+				<div dojoType="dojox.widget.PlaceholderMenuItem">PH2</div>
+<!--
+				<div dojoType="dijit.MenuItem" onClick="alert('Submenu 2!')">Submenu Item Two</div>
+-->
+				<div dojoType="dijit.PopupMenuItem">
+					<span>Deeper Submenu</span>
+					<div dojoType="dijit.Menu" id="submenu3"">
+						<div dojoType="dojox.widget.PlaceholderMenuItem">PHCopyPaste</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div style="padding: 1em">
+		
+		<h1 class="testTitle">PlaceholderMenuItem Test</h1>
+		left click to open the menu
+		
+	</div>
+</body>
+</html>

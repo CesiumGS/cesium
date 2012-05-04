@@ -1,0 +1,6 @@
+{ 
+	name:'Sudan', 
+	type:'country',
+	children:{stub:'Khartoum'} 
+}
+

@@ -1,0 +1,216 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+		<title>Chart 2D -- Sparklines Edition</title>
+		<style type="text/css">
+			@import "../../../dojo/resources/dojo.css";
+			@import "../../../dijit/tests/css/dijitTests.css";
+			.volume { color: #666666; }
+
+			.label { 
+				text-align: right;
+				line-height: 1.5em;
+			}
+		</style>
+		<script type="text/javascript" src="../../../dojo/dojo.js" 
+			djConfig="isDebug: false, parseOnLoad: true"></script>
+		<script type="text/javascript">
+            dojo.require("dojox.charting.plot2d.Lines");
+            dojo.require("dojox.charting.plot2d.Areas");
+			dojo.require("dojox.charting.widget.Sparkline");
+			dojo.require("dojox.charting.themes.Tufte");
+			dojo.require("dojox.data.HtmlStore");
+			dojo.require("dojox.data.CsvStore");
+			dojo.require("dojo.parser");
+		</script>
+
+	</head>
+	<body>
+		<h1>Chart 2D</h1>
+		<p>Sparkline-style charts using dojox.charting</p>
+		<p><em>This is a particularly brutal example with <strong>lots and lots</strong> of data. 
+			It may cause laggyness in lesser browsers.</em></p>
+		
+		<div dojoType="dojox.data.HtmlStore" dataId="tableExample" jsId="tableStore"></div>
+		<table id="tableExample" style="display: none;">
+			<thead>
+				<tr><th>value</th></tr>
+			</thead>
+			<tbody>
+				<tr><td>6.3</td></tr>
+				<tr><td>1.8</td></tr>
+				<tr><td>3  </td></tr>
+				<tr><td>0.5</td></tr>
+				<tr><td>4.4</td></tr>
+				<tr><td>2.7</td></tr>
+				<tr><td>2  </td></tr>
+			</tbody>
+		</table>
+
+		<table cellpadding="0" cellspacing="3" border="0">
+			<tr>
+				<td class="label">
+					Simple Sparkline:
+				</td>
+				<td>
+					<div dojoType="dojox.charting.widget.Chart" 
+						theme="dojox.charting.themes.Tufte" 
+						margins="{ l: 0, r: 0, t: 0, b: 0 }"
+						style="width: 100px; height: 15px;">
+						<div class="plot" name="default" type="Lines"></div>
+						<div class="series" name="Series A" store="tableStore" valueFn="Number(x)"></div>
+					</div>
+				</td>
+				<td>
+					7 arbitrary data points
+				</td>
+			</tr>
+			<tr>
+				<td class="label">
+					<a href="http://finance.google.com/finance?q=Google">Google </a> Closing Price &amp; <span class="volume">Volume</span>:
+				</td>
+				<td>
+
+					<div dojoType="dojox.data.CsvStore" jsId="googStore" 
+						url="data/goog_prices.csv"></div>
+					<div dojoType="dojox.charting.widget.Chart" 
+						theme="dojox.charting.themes.Tufte" 
+						margins="{ l: 0, r: 0, t: 0, b: 0 }"
+						style="width: 100px; height: 15px;">
+						<div class="plot" name="default" type="Lines"></div>
+						<div class="series" 
+							name="Closing Price" 
+							plot="default"
+							store="googStore" 
+							count="Infinity"
+							field="Close"
+							sort="[{ attribute: 'Date', descending: false }]"
+							valueFn="Number(x)"></div>
+						<div class="plot" name="volume" type="Areas"></div>
+						<div class="series" 
+							name="Volume" 
+							plot="volume"
+							store="googStore" 
+							count="Infinity"
+							field="Volume"
+							sort="[{ attribute: 'Date', descending: false }]"
+							stroke="{ color: '#666666', width: 0 }"
+							fill="'#b3b3b3'"
+							valueFn="Number(x/100000)"></div>
+					</div>
+					
+				</td>
+				<td>
+					~1400 data points, all trading days since Jan '05
+				</td>
+			</tr>
+			<tr>
+				<td class="label">
+					<a href="http://finance.google.com/finance?q=Yahoo">Yahoo</a> Closing Price &amp; <span class="volume">Volume</span>:
+				</td>
+				<td>
+
+					<div dojoType="dojox.data.CsvStore" jsId="yahooStore" 
+						url="data/yahoo_prices.csv"></div>
+					<div dojoType="dojox.charting.widget.Chart" 
+						theme="dojox.charting.themes.Tufte" 
+						margins="{ l: 0, r: 0, t: 0, b: 0 }"
+						style="width: 100px; height: 15px;">
+						<div class="plot" name="default" type="Lines"></div>
+						<div class="series" 
+							name="Closing Price" 
+							plot="default"
+							store="yahooStore" 
+							count="Infinity"
+							field="Close"
+							sort="[{ attribute: 'Date', descending: false }]"
+							valueFn="Number(x)"></div>
+						<div class="plot" name="volume" type="Areas"></div>
+						<div class="series" 
+							name="Volume" 
+							plot="volume"
+							store="yahooStore" 
+							count="Infinity"
+							field="Volume"
+							sort="[{ attribute: 'Date', descending: false }]"
+							stroke="{ color: '#666666', width: 0 }"
+							fill="'#b3b3b3'"
+							valueFn="Number(x/100000)"></div>
+					</div>
+					
+				</td>
+				<td>
+				</td>
+			</tr>
+			<tr>
+				<td class="label">
+					<a href="http://finance.google.com/finance?q=Microsoft">Microsoft</a> Closing Price &amp; <span class="volume">Volume</span>:
+				</td>
+				<td>
+					<div dojoType="dojox.data.CsvStore" jsId="msftStore" 
+						url="data/msft_prices.csv"></div>
+					<div dojoType="dojox.charting.widget.Chart" 
+						theme="dojox.charting.themes.Tufte" 
+						margins="{ l: 0, r: 0, t: 0, b: 0 }"
+						style="width: 100px; height: 15px;">
+						<div class="plot" name="default" type="Lines"></div>
+						<div class="series" 
+							name="Closing Price" 
+							plot="default"
+							store="msftStore" 
+							count="Infinity"
+							field="Close"
+							sort="[{ attribute: 'Date', descending: false }]"
+							valueFn="Number(x)"></div>
+						<div class="plot" name="volume" type="Areas"></div>
+						<div class="series" 
+							name="Volume" 
+							plot="volume"
+							store="msftStore" 
+							count="Infinity"
+							field="Volume"
+							sort="[{ attribute: 'Date', descending: false }]"
+							stroke="{ color: '#666666', width: 0 }"
+							fill="'#b3b3b3'"
+							valueFn="Number(x/100000)"></div>
+					</div>
+					
+				</td>
+				<td>
+				</td>
+			</tr>
+			<tr>
+				<td class="label">
+					<a href="http://finance.google.com/finance?q=Microsoft">Microsoft</a> Closing Price:
+				</td>
+				<td>
+					<div dojoType="dojox.charting.widget.Sparkline" 
+						style="width: 100px; height: 15px;"
+						store="msftStore"
+						field="Close"
+						count="100"
+						sort="[{ attribute: 'Date', descending: false }]"
+						valueFn="Number(x)"
+					></div>
+				</td>
+				<td>
+					100 points using Sparkline widget
+				</td>
+			</tr>
+
+		</table>
+	</body>
+</html>

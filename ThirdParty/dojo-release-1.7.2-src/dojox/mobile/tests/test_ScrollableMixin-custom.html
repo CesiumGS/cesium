@@ -1,0 +1,103 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>ScrollableMixin-custom</title>
+		<style>
+		html, body{
+			height: 100%;
+			overflow: hidden;
+			width: 100%;
+			margin: 0px;
+			padding: 0px;
+		}
+		#foo {
+			position: relative;
+			height: 100%;
+			overflow: hidden;
+		}
+		#header1 {
+			position: relative;
+			margin: 0px;
+			width: 100%;
+			top: 0px;
+			background-color: cyan;
+			z-index: 1;
+		}
+			
+		</style>
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true, mblAlwaysHideAddressBar: true"></script>
+		<script language="JavaScript" type="text/javascript">
+			dojo.require("dojox.mobile");			// This is a mobile app.
+			dojo.require("dojox.mobile.parser");	// This mobile app supports running on desktop browsers
+			dojo.require("dojox.mobile.compat");	// This mobile app uses declarative programming with fast mobile parser
+			dojo.require("dojox.mobile._ScrollableMixin");
+			dojo.declare("dojox.mobile.ScrollablePane",
+				[dijit._WidgetBase, dojox.mobile._ScrollableMixin, dijit._Container, dijit._Contained],{
+				buildRendering: function(){
+					this.inherited(arguments);
+					this.containerNode = dojo.doc.createElement("DIV");
+					this.containerNode.className = "mblScrollableViewContainer";
+					this.containerNode.style.backgroundColor = "yellow";
+					this.containerNode.style.border = "1px solid red";
+					this.containerNode.style.position = "absolute";
+					this.containerNode.style.width = "100%";
+					for(var i = 0, idx = 0, len = this.srcNodeRef.childNodes.length; i < len; i++){
+						var c = this.srcNodeRef.childNodes[idx];
+						this.containerNode.appendChild(this.srcNodeRef.removeChild(c));
+					}
+					this.domNode.appendChild(this.containerNode);
+				}
+			});
+			
+		</script>
+	</head>
+	<body style="visibility:hidden;">
+		<h1 id="header1">Fixed Header</h1>
+		<div id="foo" dojoType="dojox.mobile.ScrollablePane">
+			<ol>
+				<li>Item</li>
+				<li>Item</li>
+				<li>Item</li>
+				<li>Item</li>
+				<li>Item</li>
+				<li>Item</li>
+				<li>Item</li>
+				<li>Item</li>
+				<li>Item</li>
+				<li>Item</li>
+				<li>Item</li>
+				<li>Item</li>
+				<li>Item</li>
+				<li>Item</li>
+				<li>Item</li>
+				<li>Item</li>
+				<li>Item</li>
+				<li>Item</li>
+				<li>Item</li>
+				<li>Item</li>
+				<li>Item</li>
+				<li>Item</li>
+				<li>Item</li>
+				<li>Item</li>
+				<li>Item</li>
+				<li>Item</li>
+				<li>Item</li>
+				<li>Item</li>
+				<li>Item</li>
+				<li>Item</li>
+				<li>Item</li>
+				<li>Item</li>
+				<li>Item</li>
+				<li>Item</li>
+				<li>Item</li>
+				<li>Item</li>
+				<li>Item</li>
+				<li>Item</li>
+				<li>Item</li>
+				<li>Item</li>
+			</ol>
+		</div>
+	</body>
+</html>

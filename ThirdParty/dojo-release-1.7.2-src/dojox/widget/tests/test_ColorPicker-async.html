@@ -1,0 +1,79 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	
+	<title>Dojox ColorPicker Test</title>
+	
+	<!-- required: a default theme file, and ColorPicker css -->
+	<link rel="stylesheet" id="themeStyles" href="../../../dijit/themes/tundra/tundra.css">
+	<link rel="stylesheet" href="../ColorPicker/ColorPicker.css">
+
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css"; 
+		#absolutey {
+			position:absolute;
+			top: 62px;
+			left: 362px;
+		}
+	</style>
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad:1,isDebug:1,async:1"></script>
+	<script type="text/javascript">
+		require([
+				"dojo",
+				"dijit",
+				"dijit/form/Button",
+				"dojox/widget/ColorPicker",
+				"dojo/parser"], function(dojo,dijit){
+			dojo.ready(function(){
+				dojo.connect(dijit.byId("testFocusButton"), "onClick", function(){
+					dijit.byId("picker").focus();
+				});
+			});
+		});
+		var handler = function(val,id){
+			dojo.byId(id).value = val;
+		};
+	</script>
+</head>
+<body class="tundra">
+
+	<h1 class="testTitle">Dojox ColorPicker test</h1>
+
+	<h3>defaults:</h3>
+	<div id="picker" dojoType="dojox.widget.ColorPicker"
+		value="#9ebf6c"
+		onChange="handler(arguments[0],'onchangeOne')"
+	></div>
+	<p>Current value: <input readonly="true" id="onchangeOne" value="???" /></p>
+	
+	<h3>no animation, no hsv, no rgb, no webSafe info:</h3>
+	<div id="pickerToo" dojoType="dojox.widget.ColorPicker"
+		animatePoint="false"
+		showHsv="false"
+		showRgb="false"	
+		webSafe="false"
+		onChange="handler(arguments[0],'onchangeTwo')"
+	></div>
+	<p>Current value: <input readonly="true" id="onchangeTwo" value="???" /></p>
+	
+	<h3>Fires onChange a lot:</h3>
+	<div id="pickerLive" dojoType="dojox.widget.ColorPicker"
+		webSafe="false"
+		liveUpdate="true"
+		onChange="handler(arguments[0],'onchangeThree')"
+	></div>
+	<p>Current value: <input readonly="true" id="onchangeThree" value="???" /></p>
+	
+	<div id="absolutey">
+		<h3>To See how it positions in an absolute node (editor plugin, input popup)</h3>
+		<input dojoType="dojox.widget.ColorPicker" value="#ededed">
+	</div>
+
+	<button id="testFocusButton" type="button" dojoType="dijit.form.Button">Click to focus first widget</button>
+	
+	<p>that's all folks!</p>
+	
+</body>
+</html>

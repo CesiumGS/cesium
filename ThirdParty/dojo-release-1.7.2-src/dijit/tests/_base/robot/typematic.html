@@ -1,0 +1,79 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>typematic DOH Robot test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../test_typematic.html');
+
+				doh.register("press and hold test", [
+					{
+						name: "keyboard",
+						timeout: 9000,
+						runTest: function(){
+							var
+								d = new doh.Deferred(),
+								input = dojo.byId("typematicInput"),
+								v;
+							input.value = "";
+							input.focus();
+
+							doh.robot.keyDown(dojo.keys.CTRL, 1000);
+							doh.robot.keyDown(dojo.keys.F11, 200);
+							doh.robot.sequence(function(){
+								v = input.value; // get value before releasing key to reduce timing dependence on the robot
+							}, 2000);
+							doh.robot.keyUp(dojo.keys.F11, 100);
+							doh.robot.keyUp(dojo.keys.CTRL, 100);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								// allow off by 1
+								doh.t(v=="aaaaaaaaa"||v=="aaaaaaaaaa"||v=="aaaaaaaaaaa", "a letters typed " + v);
+							}), 100);
+
+							return d;
+						}
+					},
+					{
+						name: "mouse",
+						timeout: 5000,
+						runTest: function(){
+							var
+								d = new doh.Deferred(),
+								input = dojo.byId("typematicInput"),
+								v;
+							input.value = "";
+
+							doh.robot.mouseMoveAt("typematicButton", 500, 1);
+							doh.robot.mousePress({left: true}, 500);
+							doh.robot.sequence(function(){
+								v = input.value; // get value before releasing button to reduce timing dependence on the robot
+							}, 1000);
+							doh.robot.mouseRelease({left: true}, 100);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								// allow off by 1
+								doh.t(v=="bbbbbb"||v=="bbbbbbb"||v=="bbbbbbbb", "b letters typed " + v);
+							}), 100);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

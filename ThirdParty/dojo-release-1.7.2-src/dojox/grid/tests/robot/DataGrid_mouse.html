@@ -1,0 +1,550 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>doh.robot DataGrid tests</title>
+
+	<style>
+		@import "../../../../util/doh/robot/robot.css";
+	</style>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../../dojo/dojo.js"
+		djConfig="isDebug: true"></script>
+	<script type="text/javascript">
+		dojo.require("dijit.robotx");
+
+		dojo.addOnLoad(function(){
+
+			doh.robot.initRobot('_DataGrid.html');
+
+			doh.register("dojo.data integration",
+			[
+				{
+					name: "set the store of a new DataGrid",
+					grid: null,
+					timeout:5000,
+					setUp: function(){
+						var params = new dojo.global.Object();
+						params.id = 'prog_grid_1';
+						params.structure = dojo.global.structure1;
+						this.grid = new dojo.global.dojox.grid.DataGrid(params, dojo.byId('prog_grid_1'));
+						this.grid.startup();
+					},
+					runTest: function(){
+						// need async test or tearDown will not fire on failure (assertion failed == don't tear down)
+						var d = new doh.Deferred();
+						var _this=this;
+						doh.robot.sequence(d.getTestCallback(function(){
+							// assuming exception == doh error
+							console.log("Setting store, if there is an error then it failed.");
+							_this.grid.setStore(dojo.global.structure1_store1, {}, {});
+							console.log("Done setting store and rendering.");
+							// last row should have something
+							doh.t(_this.grid.getItem(0),"0th row should have been not null");
+						}),500);
+						return d;
+					},
+					tearDown: function(){
+						var node = dojo.create('div',{id:this.grid.domNode.id, rowSelector:"20px"});
+						dojo.style(node,{width: "100%",height:"100px"});
+						var parent = this.grid.domNode.parentNode;
+						this.grid.destroyRecursive();
+						parent.appendChild(node);
+						this.grid = null;
+					}
+				},
+				{
+					name: "set the query of a new DataGrid",
+					grid: null,
+					timeout:5000,
+					setUp: function(){
+						var params = new dojo.global.Object();
+						params.id = 'prog_grid_1';
+						params.structure = dojo.global.structure1;
+						params.store = dojo.global.structure1_store1;
+						this.grid = new dojo.global.dojox.grid.DataGrid(params, dojo.byId('prog_grid_1'));
+						this.grid.startup();
+					},
+					runTest: function(){
+						// need async test or tearDown will not fire on failure (assertion failed == don't tear down)
+						var d = new doh.Deferred();
+						var _this=this;
+						doh.robot.sequence(d.getTestCallback(function(){
+							// assuming exception == doh error
+							console.log("Setting query, if there is an error then it failed.");
+							_this.grid.setQuery({ id: '1' },{});
+							console.log("Done setting query and rendering.");
+							// 0th row should have something
+							var item = _this.grid.getItem(0);
+							doh.t(item,"0th row should have been not null");
+							// 1st row should not
+							doh.f(_this.grid.getItem(1),"1st row should have been null");
+						}),500);
+						return d;
+					},
+					tearDown: function(){
+						var node = dojo.create('div',{id:this.grid.domNode.id, rowSelector:"20px"});
+						dojo.style(node,{width: "100%",height:"100px"});
+						var parent = this.grid.domNode.parentNode;
+						this.grid.destroyRecursive();
+						parent.appendChild(node);
+						this.grid = null;
+					}
+				},
+				{
+					name: "set sortFields",
+					grid: null,
+					changedItem: null,
+					timeout:5000,
+					setUp: function(){
+						this.grid = dijit.byId('markup_grid_1');
+					},
+					runTest: function(){
+						var d = new doh.Deferred();
+						var _this=this;
+						doh.robot.sequence(d.getTestCallback(function(){
+							_this.grid.set("sortFields",[{attribute:"col3",descending:true},{attribute:"id",descending:true}]);
+							dojo.global.structure1_store1.setValue(dojo.global.structure1_store1._getItemByIdentity(1),"col3","read");
+							// must force refresh to resort
+							_this.grid.render();
+							var item=_this.grid.getItem(0);
+							doh.is("read",item.col3,"first item should have had status==read after sort");
+							doh.is(1,item.id,"first item should have had id==1");
+							item=_this.grid.getItem(1);
+							doh.is("new",item.col3,"second item should have had status==new after sort");
+							doh.is(99,item.id,"second item should have had id==99");
+						}),500);
+						return d;
+					},
+					tearDown: function(){
+						this.grid.set("sortFields",[{attribute:"id",descending:false}]);
+						dojo.global.structure1_store1.setValue(dojo.global.structure1_store1._getItemByIdentity(1),"col3","new");
+						this.grid.render();
+						this.grid = null;
+					}
+				},
+				{
+					name: "onNew,onSet,onDelete",
+					grid: null,
+					timeout:5000,
+					connects: [],
+					onNew: null,
+					onSet: null,
+					onDelete: null,
+					setUp: function(){
+						this.grid = dijit.byId('markup_grid_2');
+						var _this=this;
+						this.connects.push(dojo.connect(this.grid,"_onNew",this,function(item){
+							_this.onNew = arguments;
+						}));
+						this.connects.push(dojo.connect(this.grid,"_onSet",this,function(item,attribute,oldvalue,newvalue){
+							_this.onSet = arguments;
+						}));
+						this.connects.push(dojo.connect(this.grid,"_onDelete",this,function(item){
+							_this.onDelete = arguments;
+						}));
+					},
+					runTest: function(){
+						var d = new doh.Deferred();
+						var _this=this;
+						doh.robot.mouseMoveAt('mainTabContainer_tablist_dijit_layout_ContentPane_1',500);
+						doh.robot.mouseClick({left:true},500);
+						doh.robot.sequence(d.getTestCallback(function(){
+							// onNew
+							var item = dojo.global.structure1_store2.newItem({
+								id: 100,
+								col1: 'note',
+								col2: true,
+								col3: 'read',
+								col4: 'New text',
+								col5: 1,
+								col6: 2,
+								col7: false,
+								col8: new Date()
+							});
+							doh.isNot(null,_this.onNew,"onNew did not fire");
+							doh.is(item,_this.onNew[0],"unexpected item passed to onNew");
+							// onSet
+							var attribute = "col5";
+							var oldvalue = item[attribute];
+							var newvalue = 30;
+							dojo.global.structure1_store2.setValue(item,attribute,newvalue);
+							doh.isNot(null,_this.onSet,"onSet did not fire");
+							doh.is(attribute,_this.onSet[1],"unexpected attribute set");
+							doh.is(oldvalue,_this.onSet[2],"unexpected old value");
+							doh.is(newvalue,_this.onSet[3],"wrong new value");
+							// onDelete
+							var success = dojo.global.structure1_store2.deleteItem(item);
+							doh.isNot(null,_this.onDelete,"onDelete did not fire");
+							doh.t(success,"item not deleted");
+						}),500);
+						return d;
+					},
+					tearDown: function(){
+						dojo.forEach(this.connects, function(c){
+							dojo.disconnect(c);
+						});
+						this.onNew = null;
+						this.onSet = null;
+						this.onDelete = null;
+						this.grid = null;
+					}
+				},
+				{
+					name: "user sort",
+					grid: null,
+					timeout:15000,
+					setUp: function(){
+						var params = new dojo.global.Object();
+						params.id = 'prog_grid_1';
+						params.structure = dojo.global.structure1;
+						params.store = dojo.global.structure1_store1;
+						params.query = { id: '*' };
+						this.grid = new dojo.global.dojox.grid.DataGrid(params,dojo.byId('prog_grid_1'));
+						this.grid.startup();
+					},
+					runTest: function(){
+						var d = new doh.Deferred();
+						var _this=this;
+						var columns = dojo.query('div.dojoxGridSortNode',_this.grid.domNode);
+						doh.robot.mouseMoveAt(columns[0]);
+						doh.robot.mouseClick({left:true},500);
+						doh.robot.mouseClick({left:true},500);
+						doh.robot.sequence(d.getTestCallback(function(){
+							var item=_this.grid.getItem(0);
+							doh.is(99,item.id,"first item should have had id==99 due to reverse sort");
+						}),7000);
+						return d;
+					},
+					tearDown: function(){
+						var node = dojo.create('div',{id:this.grid.domNode.id, rowSelector:"20px"});
+						dojo.style(node,{width: "100%",height:"100px"});
+						var parent = this.grid.domNode.parentNode;
+						//this.grid.destroyRecursive();
+						//parent.appendChild(node);
+						this.grid = null;
+					}
+				}
+			]);
+			doh.register("UI verification",[
+				{
+					name: "identical grids",
+					timeout:10000,
+					runTest: function(){
+						var d = new doh.Deferred();
+						// these grids are identical except for y position, their components should have the same styles when rendered
+						var grids=[dijit.byId('markup_grid_1'),dijit.byId('markup_grid_2'),dijit.byId('markup_grid_3'),dijit.byId('markup_grid_markup_structure')];
+						// render all grids and collect widths from them
+						var gridData=[];
+						for(var i=0; i<grids.length; i++){
+							gridData.push({});
+							doh.robot.mouseMoveAt('mainTabContainer_tablist_dijit_layout_ContentPane_'+i,500);
+							doh.robot.mouseClick({left:true},500);
+							// i == gridData.length when the following sequence executes so use dojo.hitch to pass i along
+							doh.robot.sequence(dojo.hitch(this,function(i){
+								// copy style data from the now visible grid
+								gridData[i].cellBoxes=[];
+								var cells=dojo.query("td.dojoxGridCell",grids[i].views.views[1].scrollboxNode);
+								for(var j=0; j<dojo.global.structure1[0].rows.length; j++){
+									var box = dojo.marginBox(cells[j]);
+									gridData[i].cellBoxes[j]={w:box.w,h:box.h};
+								}
+								gridData[i].height = dojo.marginBox(grids[i].domNode).h;
+								gridData[i].rowSelectorWidth = dojo.marginBox(dojo.query("* td.dojoxGridRowbarInner",grids[i].domNode)[0]).w;
+								gridData[i].scrollBoxWidth = dojo.marginBox(grids[i].views.views[1].scrollboxNode).w;
+							},i),500);
+						}
+						doh.robot.sequence(d.getTestCallback(function(){
+							for(var i=1; i<grids.length; i++){
+								// compare the dimensions of each cell
+								for(var j=0; j<gridData[i].cellBoxes.length; j++){
+									doh.is(gridData[0].cellBoxes[j],gridData[i].cellBoxes[j],dojo.global.structure1[0].rows[j].name+" cell in "+grids[i].id+" should be the same as "+grids[0].id);
+								}
+								// compare the width of the initially visible (correct) grid to the grids in the other tabs
+								doh.is(gridData[0].rowSelectorWidth,gridData[i].rowSelectorWidth,grids[i].id+" row selector width should be the same as "+grids[0].id);
+								// compare the scrollBox width (determines whether the user can scroll the grid with the vertical scrollbar)
+								doh.is(gridData[0].scrollBoxWidth, gridData[i].scrollBoxWidth, grids[i].id+" scrollboxWidth should be the same as "+grids[0].id);
+								// compare heights of all of these identical grids (since they have the same amount of data, they should be the same height right?)
+								doh.is(gridData[0].height, gridData[i].height, grids[i].id+" height should be the same as "+grids[0].id);
+							}
+						}),500);
+						return d;
+					}
+				},
+				{
+					name: "update() grids",
+					timeout:20000,
+					runTest: function(){
+						var d = new doh.Deferred();
+						var grid1=dijit.byId('markup_grid_1'); // visible
+						var grid2=dijit.byId('markup_grid_2'); // hidden in tab
+						doh.robot.mouseMoveAt('mainTabContainer_tablist_dijit_layout_ContentPane_0',500);
+						doh.robot.mouseClick({left:true},500);
+						doh.robot.sequence(function(){
+							// sizes before update
+							var boxBefore1 = dojo.marginBox(grid1.domNode);
+							var boxBefore2 = dojo.marginBox(grid2.domNode);
+							grid1.update(); // slow
+							grid2.update(); // slow
+							doh.robot.sequence(d.getTestCallback(function(){
+								// sizes after update
+								var boxAfter1 = dojo.marginBox(grid1.domNode);
+								var boxAfter2 = dojo.marginBox(grid2.domNode);
+								doh.is(boxBefore1.w,boxAfter1.w,"width of visible grid should not have changed after update()");
+								doh.is(boxBefore1.h,boxBefore1.h,"height of visible grid should not have changed after update()");
+								doh.is(boxBefore2.w,boxAfter2.w,"width of hidden grid should not have changed after update()");
+								doh.is(boxBefore2.h,boxAfter2.h,"height of hidden grid should not have changed after update()");
+							}),5000);
+						},500);
+						return d;
+					}
+				},
+				{
+					name: "column resizing",
+					timeout:20000,
+					grid: null,
+					setUp: function(){
+						this.grid = dijit.byId('markup_grid_1');
+						this.grid.sortInfo=0;
+					},
+					runTest: function(){
+						var d = new doh.Deferred();
+						var grid=this.grid;
+						doh.robot.mouseMoveAt('mainTabContainer_tablist_dijit_layout_ContentPane_0',500);
+						doh.robot.mouseClick({left:true},500);
+						doh.robot.sequence(function(){
+							grid.domNode.scrollTop = 0;
+							// try to size column headers
+							// Id width changes
+							var columns = dojo.query('div.dojoxGridSortNode',grid.domNode).map(function(e){
+								return e.parentNode;
+							});;
+							var box = dojo.position(columns[0].firstChild);
+							doh.robot.mouseMoveAt(columns[1],500,100,0,box.h/2);
+							doh.robot.mousePress({left:true},500);
+							doh.robot.mouseMoveAt(columns[1],500,100,-box.w/2,0);
+							doh.robot.mouseRelease({left:true},500); // this takes a long time
+							doh.robot.sequence(function(){
+								try{
+									columns = dojo.query('div.dojoxGridSortNode',grid.domNode);
+									var box2 = dojo.position(columns[0]);
+									doh.t(Math.abs(box.w/2-box2.w)<1, "ID column width did not shrink as expected.");
+									// Message (col4) should be unsizeable
+									box = dojo.position(columns[5]);
+									doh.robot.mouseMoveAt(columns[6],500,100,0,box.h/2);
+									doh.robot.mousePress({left:true},500);
+									doh.robot.mouseMoveAt(columns[6],500,100,-box.w/2,box.h/2);
+									doh.robot.mouseRelease({left:true},500);  // this takes a long time
+									doh.robot.sequence(d.getTestCallback(function(){
+										columns = dojo.query('div.dojoxGridSortNode',grid.domNode);
+										box2 = dojo.position(columns[5]);
+										doh.is(box.w, box2.w, "Message column width should not have changed.");
+										doh.is(0,grid.sortInfo,"Attempting to resize a non-resizable column should not set the sort order.");
+									}),5000);
+								}catch(e){
+									d.callback(e);
+								}
+							},5000);
+						},500);
+						return d;
+					},
+					tearDown: function(){
+						this.grid = null;
+					}
+				},
+				{
+					name: "edit columns",
+					timeout:60000,
+					grid: null,
+					setUp:function(){
+						this.grid = dijit.byId('markup_grid_1');
+					},
+					runTest: function(){
+						// see also "edit reordered columns" test below
+						var d = new doh.Deferred();
+						var grid=this.grid;
+						doh.robot.mouseMoveAt('mainTabContainer_tablist_dijit_layout_ContentPane_0',500);
+						doh.robot.mouseClick({left:true},500);
+						// precondition: cells still arranged to id date priority mark status message amount amount
+						var editorids=[null,'dijit_form_DateTextBox_0','dijit_form_ComboBox_0','dijit_form_CheckBox_0',null,'dijit_Editor_0','dijit_form_CurrencyTextBox_0','dijit_form_HorizontalSlider_0'];
+						function nextTest(i){
+							if(i==editorids.length){
+								d.callback(true);
+								return;
+							}
+							if(!editorids[i]){
+								nextTest(i+1);
+								return;
+							}
+							doh.robot.sequence(function(){
+								var cells=dojo.query("td.dojoxGridCell",grid.views.views[1].scrollboxNode);
+								doh.robot.mouseMoveAt(cells[i],500);
+								doh.robot.mouseClick({left:true},500);
+								doh.robot.mouseClick({left:true},1);
+								doh.robot.sequence(function(){
+									try{
+										// this better have opened the expected editor or something very bad happened
+										doh.isNot(undefined,dijit.byId(editorids[i]),"Editing the "+i+" field of the 1st row did not open the expected editor.");
+										doh.t(dijit.byId(editorids[i]).focused);
+										grid.edit.cancel();
+										nextTest(i+1);
+									}catch(e){
+										d.callback(e);
+									}
+								},2000);
+							},500);
+						}
+						nextTest(0);
+						return d;
+					},
+					tearDown:function(){
+						// done editing
+						
+						this.grid.edit.cancel();
+						this.grid = null;
+					}
+				},
+				{
+					name: "column reordering",
+					timeout:10000,
+					runTest: function(){
+						var d = new doh.Deferred();
+						// FIXME: choose one of the other grids with filler text on the top so IE scrollIntoView doesn't freak out
+						var grid=dijit.byId('markup_grid_1');
+						doh.robot.mouseMoveAt('mainTabContainer_tablist_dijit_layout_ContentPane_0',500);
+						doh.robot.mouseClick({left:true},500);
+						// try to reorder column headers:
+						//		Id (fixed width)
+						//		Message (auto width)
+						doh.robot.sequence(function(){
+							grid.domNode.scrollTop = 0;
+							var columns = dojo.query('div.dojoxGridSortNode',grid.domNode);
+							var id=columns[0];
+							var priority=columns[2];
+							var expectedtext=[id.innerHTML,priority.innerHTML];
+							doh.robot.mouseMoveAt(id,500);
+							doh.robot.mousePress({left:true},500);
+							// position id left of priority
+							doh.robot.mouseMoveAt(priority,500,1000,0,0);
+							doh.robot.mouseRelease({left:true},500);
+							doh.robot.sequence(function(){
+								try{
+									var newColumns = dojo.query('div.dojoxGridSortNode',grid.domNode);
+									var newId = newColumns[1];
+									var newPriority = newColumns[2];
+									// the original nodes get orphaned so direct comparison is impossible
+									doh.is(expectedtext[0],newId.innerHTML,"2nd column should have been Id after dnd");
+									doh.is(expectedtext[1],newPriority.innerHTML,"3rd column should have been Priority after dnd");
+									// position message left of status
+									columns = newColumns;
+									var status=columns[4];
+									var message=columns[5];
+									expectedtext=[message.innerHTML,status.innerHTML,];
+									doh.robot.mouseMoveAt(message,500);
+									doh.robot.mousePress({left:true},500);
+									doh.robot.mouseMoveAt(status,500,1000,0,0);
+									doh.robot.mouseRelease({left:true},500);
+									doh.robot.sequence(d.getTestCallback(function(){
+										newColumns = dojo.query('div.dojoxGridSortNode',grid.domNode);
+										var newMessage = newColumns[4];
+										var newStatus = newColumns[5];
+										doh.is(expectedtext[0],newMessage.innerHTML,"5th column should have been Message after dnd");
+										doh.is(expectedtext[1],newStatus.innerHTML,"6th column should have been Status after dnd");
+									}),500);
+								}catch(e){
+									d.callback(e);
+								}
+							},500);
+						},500);
+						// also, should not be able to drag columns to other dojo.dnd targets
+						return d;
+					}
+				},
+				{
+					name: "edit reordered columns",
+					timeout:60000,
+					grid: null,
+					setUp:function(){
+						this.grid = dijit.byId('markup_grid_1');
+					},
+					runTest: function(){
+						// same test as the previous edit test, but on next row (since cell editors persist)
+						// assumes previous dnd test rearranged the cells successfully
+						var d = new doh.Deferred();
+						var grid=this.grid;
+						doh.robot.mouseMoveAt('mainTabContainer_tablist_dijit_layout_ContentPane_0',500);
+						doh.robot.mouseClick({left:true},500);
+						// precondition: cells rearranged to date id priority mark message status amount amount
+						var editorids=['dijit_form_DateTextBox_1',null,'dijit_form_ComboBox_1','dijit_form_CheckBox_1','dijit_Editor_1',null,'dijit_form_CurrencyTextBox_1','dijit_form_HorizontalSlider_1'];
+						function nextTest(i){
+							if(i==(editorids.length*2)){
+								d.callback(true);
+								return;
+							}
+							if(!editorids[i-editorids.length]){
+								nextTest(i+1);
+								return;
+							}
+							doh.robot.sequence(function(){
+								var cells=dojo.query("td.dojoxGridCell",grid.views.views[1].scrollboxNode);
+								doh.robot.mouseMoveAt(cells[i],500);
+								doh.robot.mouseClick({left:true},500);
+								doh.robot.mouseClick({left:true},1);
+								doh.robot.sequence(function(){
+									try{
+										// this better have opened the expected editor or something very bad happened
+										doh.isNot(undefined,dijit.byId(editorids[i]),"Editing the "+(i-editorids.length)+" field of the 2nd row after column drag and drop did not open the expected editor.");
+										doh.t(dijit.byId(editorids[i]).focused);
+										grid.edit.cancel();
+										nextTest(i+1);
+									}catch(e){
+										d.callback(e);
+									}
+								},2000);
+							},500);
+						}
+						nextTest(editorids.length);
+						return d;
+					},
+					tearDown:function(){
+						// done editing
+						this.grid.edit.cancel();
+						this.grid = null;
+					}
+				},
+				{
+					name: "column 1px move should not reorder",
+					timeout:10000,
+					runTest: function(){
+						var d = new doh.Deferred();
+						var grid=dijit.byId('markup_grid_1');
+						doh.robot.mouseMoveAt('mainTabContainer_tablist_dijit_layout_ContentPane_0',500,1);
+						doh.robot.mouseClick({left:true},500);
+						doh.robot.sequence(function(){
+							grid.domNode.scrollTop = 0;
+							var columns = dojo.query('div.dojoxGridSortNode',grid.domNode);
+							var prevHTML = columns[1].innerHTML;
+							var priority = columns[2];
+							doh.robot.mouseMoveAt(priority,500,500,10,5);
+							doh.robot.mousePress({left:true},100);
+							// drag priority column 1px
+							doh.robot.mouseMoveAt(priority,500,1,9,5);
+							doh.robot.mouseRelease({left:true},100);
+							doh.robot.sequence(d.getTestCallback(function(){
+								var newColumns = dojo.query('div.dojoxGridSortNode',grid.domNode);
+								var newHTML = newColumns[1].innerHTML;
+								// the original nodes get orphaned so direct comparison is impossible
+								doh.is(prevHTML,newHTML,"1st column should still be id after nop dnd " + ' old = ['+prevHTML+'] new = [' + newHTML + ']');
+							}),2000);
+						},1);
+						// also, should not be able to drag columns to other dojo.dnd targets
+						return d;
+					}
+				}
+			]);
+			doh.run();
+		});
+	</script>
+</head>
+</html>

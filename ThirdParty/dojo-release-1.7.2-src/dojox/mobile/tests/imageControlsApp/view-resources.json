@@ -1,0 +1,14 @@
+[
+	{
+		scene: "flickr-image-thumb-view",
+		module: "dojo.io.script"
+	},
+	{
+		scene: "flickr-image-view",
+		module: "dojo.io.script"
+	},
+	{
+		scene: "flickr-search-group",
+		module: "dojo.io.script"
+	}
+]

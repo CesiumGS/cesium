@@ -1,0 +1,57 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>Dynamic View</title>
+		<link href="../themes/iphone/base.css" rel="stylesheet">
+		<style>
+		.lnk {
+			font-size: 14px;
+			color: #0B5199;
+			text-decoration: none;
+		}
+		</style>
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			dojo.require("dojox.mobile");			// This is a mobile app.
+			dojo.require("dojox.mobile.parser");	// This mobile app supports running on desktop browsers
+			dojo.require("dojox.mobile.compat");	// This mobile app uses declarative programming with fast mobile parser
+
+			dojo.ready(function(){
+				var view1 = new dojox.mobile.View({
+					id: "foo",
+					selected: true
+				}, "view1");
+				view1.startup();
+
+				var heading1 = new dojox.mobile.Heading({
+					label: "Dynamic View"
+				});
+				view1.addChild(heading1);
+
+				var categ1 = new dojox.mobile.RoundRectCategory({
+					label: "Documents"
+				});
+				view1.addChild(categ1);
+
+				var list1 = new dojox.mobile.RoundRectList();
+				view1.addChild(list1);
+
+				var counter = 4;
+				for(var i = 1; i <= 3; i++){
+					var item1 = new dojox.mobile.ListItem({
+						icon: "images/i-icon-"+i+".png",
+						label: "Document 000"+counter
+					});
+					list1.addChild(item1);
+					counter++;
+				}
+			});
+		</script>
+	</head>
+	<body style="visibility:hidden;">
+		<div id="view1"></div>
+	</body>
+</html>

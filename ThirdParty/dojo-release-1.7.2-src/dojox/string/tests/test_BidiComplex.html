@@ -1,0 +1,60 @@
+<html>
+	<head>
+		<title></title>
+		<meta name="vs_snapToGrid" content="True">
+		<meta name="vs_showGrid" content="True">
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true, isDebug: true"></script>
+		<script language="javascript" type="text/javascript">
+			dojo.require("dojox.string.BidiComplex");
+			
+			function change(select){
+			dojox.string.BidiComplex.attachInput(document.getElementById("ctext"), select.value);
+			}
+		</script>
+	</head>
+	<body>
+		<DIV ms_positioning="FlowLayout" id="DIV1">
+			<TABLE border="0" cellSpacing="0" cellPadding="0" width="100" height="100" ms_1d_layout="TRUE">
+				<TR>
+					<TD>
+						<TABLE border="0" cellSpacing="0" cellPadding="1" width="608" height="192">
+							<TR>
+								<td width="197">
+									Complex Expression Pattern
+								</td>
+								<TD>
+									<SELECT ID="Type" NAME="Type" onchange="change(this)">
+										<OPTION selected value="FILE_PATH">FILE_PATH</OPTION>
+										<OPTION value="URL">URL</OPTION>
+										<OPTION value="EMAIL">EMAIL</OPTION>
+										<OPTION value="XPATH">XPATH</OPTION>
+									</SELECT>
+								</TD>
+							</TR>
+							<TR>
+								<TD width="197">
+									Original Complex Bidi Text Display
+								</TD>
+								<TD>
+									<INPUT id="nText" name='nText' cols="21" rows="1"> </INPUT>
+								</TD>
+							<TR>
+								<TD width="197">
+									Fixed Complex Bidi Text Display
+								</TD>
+								<td>
+									<INPUT id="ctext" name='nText' cols="21" rows="1"> </INPUT>
+								</td>
+							</TR>
+						</TABLE>
+					</TD>
+				</TR>
+			</TABLE>
+		</DIV>
+		<script type="text/javascript">
+			//var co = new dojox.string.BidiComplex();
+			
+			dojox.string.BidiComplex.attachInput(document.getElementById("ctext"), "FILE_PATH");
+		</script>
+	</body>
+</html>

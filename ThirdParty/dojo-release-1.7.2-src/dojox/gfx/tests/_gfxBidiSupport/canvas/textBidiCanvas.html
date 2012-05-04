@@ -1,0 +1,67 @@
+<html>
+	<head>
+		<title>Testing text</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<style type="text/css">
+			@import "../../../../../dojo/resources/dojo.css";
+			@import "../../../../../dijit/tests/css/dijitTests.css";
+		</style>
+		<script type="text/javascript" src="../../../../../dojo/dojo.js" djConfig="isDebug: true, gfxRenderer:'canvas'"></script>
+
+		<script type="text/javascript">
+			dojo.require("dojox.gfx");
+			dojo.require("dojox.gfx._gfxBidiSupport");
+
+			var surface = null, t1, t2, t3, t4, t5;
+
+			var placeAnchor = function(surface, x, y){
+				surface.createLine({x1: x - 2, y1: y, x2: x + 2, y2: y});
+				surface.createLine({x1: x, y1: y - 2, x2: x, y2: y + 2});
+			};
+
+			var makeText = function(surface, text, font, fill, stroke){
+				var t = surface.createText(text);
+				if(font)   t.setFont(font);
+				if(fill)   t.setFill(fill);
+				if(stroke) t.setStroke(stroke);
+				placeAnchor(surface, text.x, text.y);
+				return t;
+			};
+
+			makeShapes = function(){
+				surface = dojox.gfx.createSurface("test", 500, 500);
+				var m = dojox.gfx.matrix;
+				//surface.createLine({x1: 250, y1: 0, x2: 250, y2: 500}).setStroke("green");
+				t1 = makeText(surface, {id: "t1",x: 250, y: 50, text: "1.) \u05d4\u05ea\u05d7\u05dc\u05d4 end!", textDir:"ltr"}, 
+					{family: "Times", size: "24pt"}, "black", "red")
+					.setTransform(m.rotategAt(0, 250, 50));
+				
+				t2 = makeText(surface, {x: 250, y: 100, text: "1.) Beginning \u05e1\u05d5\u05e3!", textDir:"ltr"}, 
+					{family: "Times", size: "24pt"}, "black", "red")
+					.setTransform(m.rotategAt(0, 250, 100));
+
+				t3 = makeText(surface, {x: 250, y: 150, text: "1.) \u05d4\u05ea\u05d7\u05dc\u05d4 end!", textDir:"rtl"}, 
+					{family: "Times", size: "24pt"}, "red", "black")
+					.setTransform(m.rotategAt(0, 250, 150));
+				t4 = makeText(surface, {x: 250, y: 200, text: "1.) Beginning \u05e1\u05d5\u05e3!",  kerning: true,textDir:"rtl"}, 
+					{family: "Times", size: "24pt"}, "red", "black")
+					.setTransform(m.rotategAt(0, 250, 200));
+				t5 = makeText(surface, {x: 250, y: 250, text: "1.) \u05e9\u05dc\u05d5\u05dd AUTO!", kerning: false,textDir:"auto"}, 
+					{family: "Times", size: "24pt"}, "red", "black")
+					.setTransform(m.rotategAt(0, 250, 250));
+				t6 = makeText(surface, {x: 250, y: 300, text: "1.) Beginning \u05e1\u05d5\u05e3!", kerning: false,textDir:"auto"}, 
+					{family: "Times", size: "24pt"}, "black", "red")
+					.setTransform(m.rotategAt(0, 250, 300));		
+			};
+
+			dojo.addOnLoad(makeShapes);
+
+		</script>
+	</head>
+	<body>
+		<h1>dojox.gfx Text test</h1>
+		<div id="test" style="width: 500px; height: 500px;"></div>
+
+
+	</body>
+</html>

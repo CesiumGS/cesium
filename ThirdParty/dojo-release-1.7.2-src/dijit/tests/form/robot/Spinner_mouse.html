@@ -1,0 +1,387 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot Spinner Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");
+
+			dojo.ready(function(){
+				var spin1;
+				var spin2;
+				var spin3;
+				var delta=1; // redefine with doh.robot.mouseWheelSize when it is available
+				doh.robot.initRobot('../test_Spinner.html');
+
+				doh.register("setUp",{
+					name: "setUp",
+					timeout: 15000,
+					setUp:function(){
+						spin1=dijit.byId('integerspinner1');
+						spin2=dijit.byId('integerspinner2');
+						spin3=dijit.byId('realspinner1');
+					},
+					runTest: function(){
+						// assert onChange not fired
+						doh.is("not fired yet!", dojo.byId('oc1').value);
+
+						// make sure initial values are what we expect
+						doh.is(1, spin1.smallDelta);
+						doh.is(900, spin1.get('value'), "integerspinner1");
+						doh.is(1000, spin2.get('value'), "integerspinner2");
+						doh.is(1.0, spin3.get('value'), "realspinner1");
+					}
+				});
+
+				doh.register("setvaluetest", [
+					{
+						name: "valid",
+						runTest:function(){
+							spin1.set('value', 400);
+							doh.is(400, spin1.focusNode.value);
+							doh.is(true, spin1.isValid());
+
+						}
+					},
+
+					{
+						name: "null_notrequired",
+						runTest:function(){
+							spin1.set('value', null);
+							spin1.set('required',false);
+							doh.is('', spin1.focusNode.value);
+							doh.is(true, spin1.isValid());
+							doh.is(true, isNaN(spin1.get('value')));
+						},
+						tearDown:function(){
+							spin1.set('required',true);
+							spin1.set('value', 900);
+						}
+					},
+
+					{
+						name: "null_required",
+						runTest:function(){
+							spin1.set('value', null);
+							doh.is('', spin1.focusNode.value);
+							doh.is(false, spin1.isValid());
+							doh.is(true, isNaN(spin1.get('value')));
+						}
+					},
+
+					{
+						name: "spinner1_invalid",
+						timeout: 15000,
+						runTest: function(){
+							// assert invalid works
+							var d=new doh.Deferred();
+							doh.robot.mouseMoveAt(spin1.focusNode, 1, 0);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.sequence(function(){
+								spin1.focusNode.value="";
+							}, 500);
+							doh.robot.typeKeys("0.5", 500, 600);
+							doh.robot.sequence(function(){
+								try{
+								// test before user clicks away
+								doh.f(spin1.isValid(), "spin1 is marked as error");
+								doh.robot.keyPress(dojo.keys.TAB, 500);
+								doh.robot.sequence(d.getTestCallback(function(){
+									// also test after user clicks away
+									doh.f(spin1.isValid(), "spin1 is marked as error");
+								}), 500);
+								}catch(e){d.callback(e);}
+							}, 500);
+							return d;
+						},
+						tearDown:function(){
+							spin1.set('value', 1);
+						}
+					},
+
+					{
+						name: "spinner3_invalid",
+						timeout: 15000,
+						runTest: function(){
+							// assert invalid works
+							var d=new doh.Deferred();
+							doh.robot.mouseMoveAt(spin3.focusNode, 1, 0);
+							doh.robot.mouseClick({left:true}, 500);
+							doh.robot.sequence(function(){
+								spin3.focusNode.value="";
+							}, 500);
+							doh.robot.typeKeys("0.a", 500, 600); // vs 0.5 in spinner1_invalid, spin3 would accept that
+							doh.robot.sequence(function(){
+								try{
+								// test before user clicks away
+								doh.f(spin3.isValid(), "spin3 is marked as error");
+								doh.robot.keyPress(dojo.keys.TAB, 500);
+								doh.robot.sequence(d.getTestCallback(function(){
+									// also test after user clicks away
+									doh.f(spin3.isValid(), "spin3 is marked as error");
+								}), 500);
+								}catch(e){d.callback(e);}
+							}, 500);
+							return d;
+						},
+						tearDown:function(){
+							spin3.set('value', 1);
+						}
+					}
+				]);
+
+				doh.register("arrowButton", [
+					{
+						name: "spinner1_typematic",
+						timeout: 20000,
+						setUp:function(){
+							spin1.set('value', 900);
+						},
+						runTest: function(){
+							// test typematic
+							var d=new doh.Deferred();
+							doh.robot.mouseMoveAt(spin1.focusNode, 1, 0); // scroll both buttons into view
+							doh.robot.mouseMoveAt(spin1.downArrowNode, 1, 0);
+							doh.robot.mousePress({left:true,  middle:false,  right:false}, 1000);
+							doh.robot.mouseRelease({left:true,  middle:false,  right:false}, 5000); // going too fast overwhelms the CPU and starves the robot thread
+							doh.robot.mousePress({left:true,  middle:false,  right:false}, 500);
+							doh.robot.mouseRelease({left:true,  middle:false,  right:false}, 5000);
+							doh.robot.sequence(d.getTestCallback(function(){
+								var v = spin1.get('value');
+								// also test after user clicks away
+								doh.t(v <= 875, "Error in typematic test. Expected <= 875, got " + v);
+							}), 500);
+							return d;
+						}
+					},
+
+					{
+						name: "spinner1_max",
+						timeout: 15000,
+						setUp:function(){
+							spin1.set('value', 1549);
+						},
+						runTest: function(){
+							// test max with arrow button
+							var d=new doh.Deferred();
+							// press once: should move up
+							doh.robot.mouseMoveAt(spin1.focusNode, 1, 0); // scroll both buttons into view
+							doh.robot.mouseMoveAt(spin1.upArrowNode, 1, 0);
+							doh.robot.mouseClick({left:true,  middle:false,  right:false}, 500);
+							doh.robot.mouseMoveAt('sv1_4', 1, 0);
+							doh.robot.mouseClick({left:true,  middle:false,  right:false}, 500);
+							doh.robot.sequence(d.getTestErrback(function(){
+								doh.is(1550, spin1.get('value'));
+								doh.is("1,550", spin1.focusNode.value);
+								doh.is("1550", dojo.byId('oc1').value);
+								doh.is(true, spin1.isValid());
+								// press again: shouldn't move
+								doh.robot.mouseMoveAt(spin1.upArrowNode, 1, 0);
+								doh.robot.mouseClick({left:true,  middle:false,  right:false}, 500);
+								doh.robot.mouseMoveAt('sv1_4', 1, 0);
+								doh.robot.mouseClick({left:true,  middle:false,  right:false}, 500);
+								doh.robot.sequence(d.getTestCallback(function(){
+									doh.is(1550, spin1.get('value'));
+									doh.is("1,550", spin1.focusNode.value);
+									doh.is("1550", dojo.byId('oc1').value);
+									doh.is(true, spin1.isValid());
+								}), 500);
+							}), 500);
+
+							return d;
+						}
+					},
+
+					{
+						name: "spinner1_min",
+						timeout: 15000,
+						setUp:function(){
+							spin1.set('value', 1);
+						},
+						runTest: function(){
+							// test min with arrow button
+							var d=new doh.Deferred();
+							// press once: should move up
+							doh.robot.mouseMoveAt(spin1.focusNode, 1, 0); // scroll both buttons into view
+							doh.robot.mouseMoveAt(spin1.downArrowNode, 1, 0);
+							doh.robot.mouseClick({left:true,  middle:false,  right:false}, 500);
+							doh.robot.mouseMoveAt('sv1_4', 1, 0);
+							doh.robot.mouseClick({left:true,  middle:false,  right:false}, 500);
+							doh.robot.sequence(d.getTestErrback(function(){
+								doh.is(0, spin1.get('value'));
+								doh.is("0", spin1.focusNode.value);
+								doh.is("0", dojo.byId('oc1').value);
+								doh.is(true, spin1.isValid());
+								// press again: can move since no min
+								doh.robot.mouseMoveAt(spin1.downArrowNode, 1, 0);
+								doh.robot.mouseClick({left:true,  middle:false,  right:false}, 500);
+								doh.robot.mouseMoveAt('sv1_4', 1, 0);
+								doh.robot.mouseClick({left:true,  middle:false,  right:false}, 500);
+								doh.robot.sequence(d.getTestCallback(function(){
+									doh.is(-1, spin1.get('value'));
+									doh.is("-1", spin1.focusNode.value);
+									doh.is("-1", dojo.byId('oc1').value);
+									doh.is(true, spin1.isValid());
+								}), 500);
+							}), 500);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.register("mouseWheel", [
+					{
+						name:"spinner1",
+						timeout:5500,
+						setUp:function(){
+							spin1.set('value', 900);
+						},
+						runTest:function(){
+							// get the mouse's delta
+							// note that Spinner spins backwards!
+							delta=-doh.robot.mouseWheelSize;
+							var d=new doh.Deferred();
+							doh.robot.mouseMoveAt(spin1.domNode, 1, 0);
+							doh.robot.mouseClick({left:true}, 500);
+							// wheel up 10 times
+							// this should increase the value by 10
+							// takes 100ms/click
+							doh.robot.mouseWheel(-10, 1000, 1000);
+							doh.robot.sequence(d.getTestCallback(function(){
+								var v=spin1.get('value');
+								doh.is(v, (900+10*delta), "spinner 1: wrong value, expected "+(900+10*delta)+", got "+v);
+							}), 1000);
+							return d;
+						}
+					},
+
+					{
+						name:"spinner2",
+						timeout:5500,
+						setUp:function(){
+							spin2.set('value', 1000);
+						},
+						runTest:function(){
+							// test custom delta with mouse wheel
+							// it should increment 10 per mouse wheel
+							var d=new doh.Deferred();
+							doh.robot.mouseMoveAt(spin2.domNode, 1, 0);
+							doh.robot.mouseClick({left:true}, 500);
+							// wheel down 9 times
+							// this should decrease the value by 90
+							// takes 100ms/click
+							doh.robot.mouseWheel(9, 1000, 900);
+							doh.robot.sequence(d.getTestCallback(function(){
+								var v = spin2.get('value');
+								doh.is(v, (1000-90*delta), "spinner 2: wrong value, expected "+(1000-90*delta)+", got "+v);
+							}), 1000);
+							return d;
+						}
+					},
+
+					{
+						name:"spinner3",
+						timeout:5500,
+						setUp:function(){
+							spin3.set('value', 1.0);
+						},
+						runTest:function(){
+							// test real number spinner with mouse wheel
+							// it should increment 0.1 per mouse wheel
+							var d=new doh.Deferred();
+							doh.robot.mouseMoveAt(spin3.domNode, 1, 0);
+							doh.robot.mouseClick({left:true}, 500);
+							// wheel up 10
+							// this should increase the value by 1.0
+							// takes 100ms/click
+							doh.robot.mouseWheel(-10, 1000, 1000);
+							doh.robot.sequence(d.getTestCallback(function(){
+								var v = spin3.get('value');
+								doh.is(v, (1.0+delta), "spinner 3: wrong value, expected "+(1.0+delta)+", got "+v);
+							}), 1000);
+							return d;
+						}
+					},
+
+					{
+						name: "spinner3_max",
+						timeout: 15000,
+						setUp:function(){
+							spin3.set('value', 155-0.1*delta);
+						},
+						runTest: function(){
+							// test max with arrow key
+							var d=new doh.Deferred();
+							// press once: should move up
+							doh.robot.mouseMoveAt(spin3.focusNode, 1, 0);
+							doh.robot.mouseClick({left:true,  middle:false,  right:false}, 500);
+							// wheel up 1; this will increase the value by delta
+							doh.robot.mouseWheel(-1, 500, 1);
+							doh.robot.sequence(d.getTestErrback(function(){
+								doh.is(155.0, spin3.get('value'));
+								doh.is("155.0", spin3.focusNode.value);
+								doh.is(true, spin3.isValid());
+								// press again: shouldn't move
+								doh.robot.mouseMoveAt(spin3.focusNode, 1, 0);
+								doh.robot.mouseClick({left:true,  middle:false,  right:false}, 500);
+								// wheel up 1; this will increase the value by delta
+								doh.robot.mouseWheel(-1, 500, 1);
+								doh.robot.sequence(d.getTestCallback(function(){
+									doh.is(155.0, spin3.get('value'));
+									doh.is("155.0", spin3.focusNode.value);
+									doh.is(true, spin3.isValid());
+								}), 500);
+							}), 500);
+
+							return d;
+						}
+					},
+
+					{
+						name: "spinner3_min",
+						timeout: 15000,
+						setUp:function(){
+							spin3.set('value', -10.9+0.1*delta);
+						},
+						runTest: function(){
+							// test min with arrow key
+							var d=new doh.Deferred();
+							// press once: should move up
+							doh.robot.mouseMoveAt(spin3.focusNode, 1, 0);
+							doh.robot.mouseClick({left:true,  middle:false,  right:false}, 500);
+							doh.robot.keyPress(dojo.keys.DOWN_ARROW, 500);
+							doh.robot.mouseWheel(1, 500, 1);
+							doh.robot.sequence(d.getTestErrback(function(){
+								doh.is(-10.9, spin3.get('value'));
+								doh.is("-10.9", spin3.focusNode.value);
+								doh.is(true, spin3.isValid());
+								// press again: shouldn't move
+								doh.robot.mouseMoveAt(spin3.focusNode, 1, 0);
+								doh.robot.mouseClick({left:true,  middle:false,  right:false}, 500);
+								doh.robot.mouseWheel(1, 500, 1);
+								doh.robot.sequence(d.getTestCallback(function(){
+									doh.is(-10.9, spin3.get('value'));
+									doh.is("-10.9", spin3.focusNode.value);
+									doh.is(true, spin3.isValid());
+								}), 500);
+							}), 500);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

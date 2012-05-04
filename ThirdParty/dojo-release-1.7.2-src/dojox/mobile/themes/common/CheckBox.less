@@ -1,0 +1,25 @@
+/* dojox.mobile.CheckBox */
+.mblCheckBox {
+	position: relative;
+	cursor: pointer;
+	outline: none;
+	-webkit-appearance: none;
+	-webkit-tap-highlight-color: rgba(255,255,255,0);
+	.mblCheckBox-styles;
+}
+.mblCheckBoxSelected {
+	.mblCheckBoxSelected-styles;
+}
+.mblCheckBoxChecked,
+.mblCheckBox:checked {
+	.mblCheckBoxChecked-styles;
+	&::after {
+		.mblCheckBoxChecked-after-styles;
+	}
+	&.mblCheckBoxSelected {
+		.mblCheckBoxChecked-mblCheckBoxSelected-styles;
+		&::after {
+			.mblCheckBoxChecked-mblCheckBoxSelected-after-styles;
+		}
+	}
+}

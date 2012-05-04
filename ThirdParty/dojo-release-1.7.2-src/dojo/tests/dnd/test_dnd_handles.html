@@ -1,0 +1,65 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>Dojo DnD with handles test</title>
+	<style type="text/css">
+		@import "../../resources/dojo.css";
+		@import "../../resources/dnd.css";
+		@import "dndDefault.css";
+
+		body { padding: 1em; background: #ededed; }
+
+		.container { width: 100px; display: block; }
+		.container.handles .dojoDndHandle { background: #fee; }
+		.clear { clear: both; }
+	</style>
+
+	<script type="text/javascript" src="../../dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+<!--
+	<script type="text/javascript" src="../../dnd/Container.js"></script>
+	<script type="text/javascript" src="../../dnd/Selector.js"></script>
+	<script type="text/javascript" src="../../dnd/Source.js"></script>
+	<script type="text/javascript" src="../../dnd/Avatar.js"></script>
+	<script type="text/javascript" src="../../dnd/Manager.js"></script>
+-->
+	<script type="text/javascript">
+		dojo.require("dojo.parser");
+		dojo.require("dojo.dnd.Source");
+	</script>
+</head>
+<body>
+	<h1 class="testTitle">Dojo DnD with handles test</h1>
+
+	<p>Following selection modes are supported by default:</p>
+	<ul>
+		<li>Simple click &mdash; selects a single element, all other elements will be unselected.</li>
+		<li>Ctrl+click &mdash; toggles a selection state of an element (use Meta key on Mac).</li>
+		<li>Shift+click &mdash; selects a range of element from the previous anchor to the current element.</li>
+		<li>Ctrl+Shift+click &mdash; adds a range of element from the previous anchor to the current element (use Meta key on Mac).</li>
+	</ul>
+	<p>Following drop modes are supported by default:</p>
+	<ul>
+		<li>Simple drop &mdash; moves elements to the valid target removing them from the source. It can be used to reorganize elements within a single source/target.</li>
+		<li>Ctrl+drop &mdash; copies elements to the valid target (use Meta key on Mac).</li>
+	</ul>
+	
+	<p>Source with handles. Items should be draggable by the "em" of the word "Item" (and also see a 'move' cursor on it).</p>
+	<div dojoType="dojo.dnd.Source" jsId="c1" withHandles="true" class="container handles">
+		<div class="dojoDndItem"><span class="dojoDndHandle"><span class="dojoDndIgnore">It</span>em</span> <strong>Alpha</strong></div>
+		<div class="dojoDndItem"><span class="dojoDndHandle"><span class="dojoDndIgnore">It</span>em</span> <strong>Beta</strong></div>
+		<div class="dojoDndItem"><span class="dojoDndHandle"><span class="dojoDndIgnore">It</span>em</span> <strong>Gamma</strong></div>
+		<div class="dojoDndItem"><span class="dojoDndHandle"><span class="dojoDndIgnore">It</span>em</span> <strong>Delta</strong></div>
+	</div>
+
+	<p>Source without handles.</p>
+	<div dojoType="dojo.dnd.Source" jsId="c2" class="container">
+		<div class="dojoDndItem"><span class="dojoDndHandle">Item</span> <strong>Epsilon</strong></div>
+		<div class="dojoDndItem"><span class="dojoDndHandle">Item</span> <strong>Zeta</strong></div>
+		<div class="dojoDndItem"><span class="dojoDndHandle">Item</span> <strong>Eta</strong></div>
+		<div class="dojoDndItem"><span class="dojoDndHandle">Item</span> <strong>Theta</strong></div>
+	</div>
+
+	<p>HTML after</p>
+
+</body>
+</html>

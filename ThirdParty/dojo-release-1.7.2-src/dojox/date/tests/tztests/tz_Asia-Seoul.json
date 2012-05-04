@@ -1,0 +1,36 @@
+({
+	name: "date.timezone.Asia-Seoul",
+	runTest: function(t){
+		var tz = "Asia/Seoul";
+		doh.checkDate({tzOffset: -510, tzAbbr: "KST"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: -510, tzAbbr: "KST"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: -510, tzAbbr: "KST"}, -2053931401000, tz, 1);
+		doh.checkDate({tzOffset: -540, tzAbbr: "KST"}, -2053931400000, tz, 1);
+		doh.checkDate({tzOffset: -540, tzAbbr: "KST"}, -1325494801000, tz, 1);
+		doh.checkDate({tzOffset: -510, tzAbbr: "KST"}, -1325494800000, tz, 1);
+		doh.checkDate({tzOffset: -510, tzAbbr: "KST"}, -1199262601000, tz, 1);
+		doh.checkDate({tzOffset: -540, tzAbbr: "KST"}, -1199262600000, tz, 1);
+		doh.checkDate({tzOffset: -540, tzAbbr: "KST"}, -498128401000, tz, 1);
+		doh.checkDate({tzOffset: -480, tzAbbr: "KST"}, -498128400000, tz, 1);
+		doh.checkDate({tzOffset: -480, tzAbbr: "KST"}, -303984001000, tz, 1);
+		doh.checkDate({tzOffset: -540, tzAbbr: "KDT"}, -303984000000, tz, 1);
+		doh.checkDate({tzOffset: -540, tzAbbr: "KDT"}, -293533201000, tz, 1);
+		doh.checkDate({tzOffset: -480, tzAbbr: "KST"}, -293533200000, tz, 1);
+		doh.checkDate({tzOffset: -480, tzAbbr: "KST"}, -264931201000, tz, 1);
+		doh.checkDate({tzOffset: -510, tzAbbr: "KST"}, -264931200000, tz, 1);
+		doh.checkDate({tzOffset: -510, tzAbbr: "KST"}, -39515401000, tz, 1);
+		doh.checkDate({tzOffset: -540, tzAbbr: "KST"}, -39515400000, tz, 1);
+		doh.checkDate({tzOffset: -540, tzAbbr: "KST"}, 547570799000, tz, 1);
+		doh.checkDate({tzOffset: -600, tzAbbr: "KDT"}, 547570800000, tz, 1);
+		doh.checkDate({tzOffset: -600, tzAbbr: "KDT"}, 560872799000, tz, 1);
+		doh.checkDate({tzOffset: -540, tzAbbr: "KST"}, 560872800000, tz, 1);
+		doh.checkDate({tzOffset: -540, tzAbbr: "KST"}, 579020399000, tz, 1);
+		doh.checkDate({tzOffset: -600, tzAbbr: "KDT"}, 579020400000, tz, 1);
+		doh.checkDate({tzOffset: -600, tzAbbr: "KDT"}, 592322399000, tz, 1);
+		doh.checkDate({tzOffset: -540, tzAbbr: "KST"}, 592322400000, tz, 1);
+		doh.checkDate({tzOffset: -540, tzAbbr: "KST"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: -540, tzAbbr: "KST"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: -540, tzAbbr: "KST"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: -540, tzAbbr: "KST"}, 1246789800000, tz, 0);
+	}
+})

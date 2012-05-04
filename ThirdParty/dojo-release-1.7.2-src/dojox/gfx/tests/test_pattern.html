@@ -1,0 +1,45 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<title>Testing pattern</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+</style>
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+<!--<script type="text/javascript" src="../matrix.js"></script>-->
+<!--<script type="text/javascript" src="../vml.js"></script>-->
+<!--<script type="text/javascript" src="../svg.js"></script>-->
+<!--<script type="text/javascript" src="../silverlight.js"></script>-->
+<!--<script type="text/javascript" src="../canvas.js"></script>-->
+<script type="text/javascript">
+dojo.require("dojox.gfx");
+
+createSurface = function(){
+	var surface = dojox.gfx.createSurface("test", 800, 600);
+	surface.whenLoaded(makeShapes);
+};
+
+makeShapes = function(surface){
+    var pattern = {
+        type: "pattern",
+        x: 30, y: 20, width: 75, height: 60,
+        src: "images/eugene-sm.jpg"
+    };
+	var ellipse = {cx: 400, cy: 200, rx: 350, ry: 150};
+	surface.createEllipse(ellipse)
+        .setStroke({color: "blue", width: 1 })
+        .setFill(pattern);
+};
+
+dojo.addOnLoad(createSurface);
+
+</script>
+</head>
+<body>
+	<h1>dojox.gfx Pattern test</h1>
+<div id="test"></div>
+<p>That's all Folks!</p>
+</body>
+</html>

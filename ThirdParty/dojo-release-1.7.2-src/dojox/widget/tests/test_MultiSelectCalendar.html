@@ -1,0 +1,31 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Multi select calendar test </title>
+<style type="text/css">
+		@import "../../../dijit/themes/claro/claro.css";
+</style>
+    <script type="text/javascript" src="../../../dojo/dojo.js"  djConfig="parseOnLoad: true"></script>
+    <script type="text/javascript">
+       dojo.require("dojo.parser");
+		dojo.require('dojox.widget.MultiSelectCalendar');
+    </script>
+</head>
+
+
+<body class="claro">
+<div>Calendar #1: No date selected dijit.byId('MSC1').get('value') should return an empty array. Add some dates and check again. You can select/unselect single dates or ranges from right to left or left to right. Use your mouse or keyboard</div>
+<div dojoType="dojox.widget.MultiSelectCalendar" id="MSC1" value="[]" style="display:inline-block"></div>
+</br>
+<div style="margin-top: 2em;">Calendar #2: a few date selected upon instantiation dijit.byId('MSC2').get('value') should return those selected dates. Since returnIsoRanges is by default set to false, it will return all the dates individually</div>
+<div dojoType="dojox.widget.MultiSelectCalendar" value=['2011-05-07','2011-05-08','2011-05-09','2011-05-23'] id="MSC2" style="display:inline-block"></div>
+
+<div style="margin-top: 2em;">Calendar #3: same dates selected as #2 but with returnIsoRanges=true. dijit.byId('MSC3').get('value') should return all selected dates individually</div>
+<div dojoType="dojox.widget.MultiSelectCalendar" returnIsoRanges=true value=['2011-05-07','2011-05-08','2011-05-09','2011-05-23'] id="MSC3" style="display:inline-block"></div>
+
+<div style="margin-top: 2em;">Calendar #4: We instantiate calendar with a range (with the two dates in the wrong order,) with returnIsoRanges=false dijit.byId('MSC4').get('value') should return all the dates in the month of may. Do the following: dijit.byId('MSC4').set('returnIsoRanges',true)  and then re-poll the value, you should have it returned as an iso range</div>
+<div dojoType="dojox.widget.MultiSelectCalendar" value=['2011-05-31/2011-05-01'] id="MSC4" style="display:inline-block"></div>
+</body>
+</html>
+ 

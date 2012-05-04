@@ -1,0 +1,24 @@
+({
+	name: "date.timezone.America-Atikokan",
+	runTest: function(t){
+		var tz = "America/Atikokan";
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, -1632067201000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "CDT"}, -1632067200000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "CDT"}, -1614790801000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, -1614790800000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, -923248801000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "CDT"}, -923248800000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "CDT"}, -880214401000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "CWT"}, -880214400000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "CWT"}, -769395601000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "CPT"}, -769395600000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "CPT"}, -765392401000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "EST"}, -765392400000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "EST"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "EST"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "EST"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: 300, tzAbbr: "EST"}, 1246789800000, tz, 0);
+	}
+})

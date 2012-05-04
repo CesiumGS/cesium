@@ -1,0 +1,156 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Chart 2D labels shortening</title>
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+	@import "../../../dijit/themes/claro/claro.css";
+</style>
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+<script type="text/javascript">
+
+dojo.require("dojox.charting.Chart");
+dojo.require("dojox.charting.axis2d.Default");
+dojo.require("dojox.charting.plot2d.Bars");
+dojo.require("dojox.charting.plot2d.Columns");
+dojo.require("dojox.charting.plot2d.Lines");
+dojo.require("dojox.charting.plot2d.Areas");
+
+makeObjects = function(){
+
+	var chart1 = new dojox.charting.Chart("test1").
+			addAxis("x", {
+				fixLower: "major", fixUpper: "major", includeZero: true, 
+				labels: [
+					{value: 0, text: "first start point"},
+					{value: 2, text: "two"},
+					{value: 5, text: "last end point"}
+				],
+				maxLabelSize: 20,
+				trailingSymbol: "."
+			}).
+			addAxis("y", {
+				vertical: true, fixLower: "major", fixUpper: "major", natural: true,
+				labels: [{value: 0, text: ""},
+					{value: 1, text: "January"}, {value: 2, text: "February"},
+					{value: 3, text: "March"}, {value: 4, text: "April"},
+					{value: 5, text: "May"}, {value: 6, text: "June"}
+				],
+				maxLabelSize: 20
+			}).
+			addPlot("default", {type: "Bars"}).
+			addSeries("Series A", [1, 2, 3, 4, 5], {stroke: {color: "red"}, fill: "lightpink"}).
+			addSeries("Series B", [5, 4, 3, 2, 1], {stroke: {color: "blue"}, fill: "lightblue"}).
+			render();
+
+	var chart2 = new dojox.charting.Chart("test2").
+			addAxis("x", {
+				fixLower: "major", fixUpper: "major", includeZero: true, 
+				labels: [
+					{value: 0, text: "first start point"},
+					{value: 2, text: "two"},
+					{value: 5, text: "last end point"}
+				],
+				rotation: 180,
+				maxLabelSize: 30
+			}).
+			addAxis("y", {
+				vertical: true, fixLower: "major", fixUpper: "major", natural: true, majorTickStep: 2,
+				labels: [{value: 0, text: ""},
+					{value: 1, text: "January"}, {value: 2, text: "February"},
+					{value: 3, text: "March"}, {value: 4, text: "April"},
+					{value: 5, text: "May"}, {value: 6, text: "June"}
+				],
+				rotation: -30,
+				maxLabelSize: 20
+			}).
+			addPlot("default", {type: "Columns"}).
+			addSeries("Series A", [1, 2, 3, 4, 5], {stroke: {color: "red"}, fill: "lightpink"}).
+			addSeries("Series B", [5, 4, 3, 2, 1], {stroke: {color: "blue"}, fill: "lightblue"}).
+			render();
+			
+	var chart3 = new dojox.charting.Chart("test3").
+			addAxis("x", {
+				fixLower: "major", fixUpper: "major", includeZero: true, 
+				labels: [
+					{value: 0, text: "first start point"},
+					{value: 2, text: "two"},
+					{value: 5, text: "last end point"}
+				],
+				maxLabelCharCount: 5
+			}).
+			addAxis("y", {
+				vertical: true, fixLower: "major", fixUpper: "major", natural: true, majorTickStep: 2,
+				labels: [{value: 0, text: ""},
+					{value: 1, text: "January"}, {value: 2, text: "February"},
+					{value: 3, text: "March"}, {value: 4, text: "April"},
+					{value: 5, text: "May"}, {value: 6, text: "June"}
+				],
+				maxLabelCharCount: 2,
+				trailingSymbol: "__"
+			}).
+			addPlot("default", {type: "Lines"}).
+			addSeries("Series A", [1, 2, 3, 4, 5], {stroke: {color: "red"}, fill: "lightpink"}).
+			addSeries("Series B", [5, 4, 3, 2, 1], {stroke: {color: "blue"}, fill: "lightblue"}).
+			render();
+			
+	var chart4 = new dojox.charting.Chart("test4").
+			addAxis("x", {
+				fixLower: "major", fixUpper: "major", includeZero: true, 
+				labels: [
+					{value: 0, text: "first start point"},
+					{value: 2, text: "second middle point"},
+					{value: 5, text: "last end point"}
+				],
+				maxLabelCharCount: 20,
+				maxLabelSize: 30
+			}).
+			addAxis("y", {
+				vertical: true, fixLower: "major", fixUpper: "major", natural: true, majorTickStep: 2,
+				labels: [{value: 0, text: ""},
+					{value: 1, text: "January"}, {value: 2, text: "February"},
+					{value: 3, text: "March"}, {value: 4, text: "April"},
+					{value: 5, text: "May"}, {value: 6, text: "June"}
+				],
+				maxLabelCharCount: 2,
+				maxLabelSize: 40
+			}).
+			addPlot("default", {type: "Areas"}).
+			addSeries("Series A", [1, 2, 3, 4, 5], {stroke: {color: "red"}, fill: "lightpink"}).
+			addSeries("Series B", [5, 4, 3, 2, 1], {stroke: {color: "blue"}, fill: "lightblue"}).
+			render();
+};
+
+dojo.addOnLoad(makeObjects);
+
+</script>
+</head>
+<body class="claro">
+<h1>Chart 2D labels shortening</h1>
+<p>Hover on the truncated label(end with default trailing Symbol: "..." or your customized trailing symbols) you will see the whole label on tooltip</p>
+<p>1: Label shortening.(x axis customized trailing Symbol)</p>
+<div id="test1" style="width: 300px; height: 200px;"></div>
+<p>2: Label shortening with rotation.</p>
+<div id="test2" style="width: 300px; height: 200px;"></div>
+<p>3: Label shortening with limited character.(y axis customized trailing Symbol)</p>
+<div id="test3" style="width: 300px; height: 200px;"></div>
+<p>4: Label shortening with both limited character and limited length in px.</p>
+<div id="test4" style="width: 300px; height: 200px;"></div>
+<p>That's all Folks!</p>
+</body>
+</html>
