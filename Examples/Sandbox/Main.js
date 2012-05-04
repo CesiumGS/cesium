@@ -161,6 +161,7 @@
     tree.addNode("Use MapQuest OpenStreetMaps imagery", [new Sandbox.MQOSM(scene, ellipsoid, primitives)], imagery, "Imagery");
     tree.addNode("Use MapQuest Aerial OpenStreetMaps imagery", [new Sandbox.MQAerialOSM(scene, ellipsoid, primitives)], imagery, "Imagery");
     tree.addNode("Use a single texture", [new Sandbox.Single(scene, ellipsoid, primitives)], imagery, "Imagery");
+    tree.addNode("Use a composite imagery", [new Sandbox.CompositeTiler(scene, ellipsoid, primitives)], imagery, "Imagery");
 
     var adv = tree.addNode("Advanced", "", null, "Advanced");
     tree.addNode("Draw a box using custom rendering", [new Sandbox.CustomRendering(scene, ellipsoid, primitives)], adv, "Advanced");
