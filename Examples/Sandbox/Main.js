@@ -160,6 +160,8 @@
     tree.addNode("Use OpenStreetMaps imagery", [new Sandbox.OSM(scene, ellipsoid, primitives)], imagery, "Imagery");
     tree.addNode("Use MapQuest OpenStreetMaps imagery", [new Sandbox.MQOSM(scene, ellipsoid, primitives)], imagery, "Imagery");
     tree.addNode("Use MapQuest Aerial OpenStreetMaps imagery", [new Sandbox.MQAerialOSM(scene, ellipsoid, primitives)], imagery, "Imagery");
+    tree.addNode("Use Stamen maps", [new Sandbox.Stamen(scene, ellipsoid, primitives)], imagery, "Imagery");
+
     tree.addNode("Use a single texture", [new Sandbox.Single(scene, ellipsoid, primitives)], imagery, "Imagery");
     tree.addNode("Use a composite imagery", [new Sandbox.CompositeTiler(scene, ellipsoid, primitives)], imagery, "Imagery");
 

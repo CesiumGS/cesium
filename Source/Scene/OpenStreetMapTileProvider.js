@@ -17,7 +17,8 @@ define([
      * @constructor
      *
      * @param {String} description.url The OpenStreetMap url.
-     * @param {Object} description.proxy A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
+     * @param {Object} [description.proxy=undefined] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
+     * @param {String} [description.credit='MapQuest, Open Street Map and contributors, CC-BY-SA'] A string crediting the data source, which is displayed on the canvas.
      *
      * @see SingleTileProvider
      * @see BingMapsTileProvider
@@ -43,6 +44,8 @@ define([
          * @type {Object}
          */
         this.proxy = desc.proxy;
+
+        this._credit = desc.credit || 'MapQuest, Open Street Map and contributors, CC-BY-SA';
 
         // TODO: should not hard-code, get from server?
 
@@ -146,7 +149,6 @@ define([
      */
     OpenStreetMapTileProvider.prototype.getLogo = function() {
         if (!this._logo) {
-            var credit = "MapQuest, Open Street Map and contributors, CC-BY-SA";
             var canvas = document.createElement("canvas");
             canvas.width = 800.0;
             canvas.height = 20.0;
@@ -155,7 +157,7 @@ define([
             context.fillStyle = "#fff";
             context.font = '12px sans-serif';
             context.textBaseline = 'top';
-            context.fillText(credit, 0, 0);
+            context.fillText(this._credit, 0, 0);
 
             this._logo = canvas;
         }
