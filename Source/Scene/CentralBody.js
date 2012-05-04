@@ -793,6 +793,9 @@ define([
                     },
                     u_dayIntensity : function() {
                         return intensity;
+                    },
+                    u_mode : function() {
+                        return tile.mode;
                     }
                 };
                 tile._drawUniforms = combine(drawUniforms, this._drawUniforms);
@@ -1483,11 +1486,14 @@ define([
                 var rtc;
                 if (this.morphTime === 1.0) {
                     rtc = tile._drawUniforms.u_center3D();
+                    tile.mode = 0;
                 } else if (this.morphTime === 0.0) {
                     var center = tile._drawUniforms.u_center2D();
                     rtc = new Cartesian3(0.0, center.x, center.y);
+                    tile.mode = 1;
                 } else {
                     rtc = Cartesian3.getZero();
+                    tile.mode = 2;
                 }
                 var centerEye = mv.multiplyWithVector(new Cartesian4(rtc.x, rtc.y, rtc.z, 1.0));
                 var mvrtc = mv.clone();

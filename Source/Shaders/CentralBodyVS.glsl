@@ -40,6 +40,7 @@ attribute vec2 textureCoordinates;
 attribute vec2 position2D;
 
 uniform float u_morphTime;
+uniform int u_mode;
 
 uniform vec3 v3InvWavelength;   // 1 / pow(wavelength, 4) for the red, green, and blue channels
 uniform float fCameraHeight;    // The camera's current height
@@ -164,11 +165,11 @@ AtmosphereColor computeGroundAtmosphereFromSpace(vec3 v3Pos)
 void main() 
 {
     vec3 position3DWC = position3D + u_center3D;
-    if (u_morphTime == 1.0) {
+    if (u_mode == 0) {
         v_positionEC = (u_modifiedModelView * vec4(position3D, 1.0)).xyz;  // position in eye coordinates
         gl_Position = agi_projection * (u_modifiedModelView * vec4(position3D, 1.0));
     }
-    else if (u_morphTime == 0.0) {
+    if (u_mode == 1) {
         v_positionEC = (agi_modelView * vec4(position3DWC, 1.0)).xyz;  // position in eye coordinates
         gl_Position = agi_projection * (u_modifiedModelView * vec4(0.0, position2D.x, position2D.y, 1.0));
     }
