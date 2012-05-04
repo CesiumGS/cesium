@@ -229,7 +229,7 @@ function(DeveloperError, binarySearch, TimeConstants, LeapSecond, TimeStandard, 
         //Lacking a time is okay, but a missing date is illegal.
         var date = tokens[0];
         var time = tokens[1];
-        var tmp, inLeapYear, dayOfYear;
+        var tmp, inLeapYear;
         if (typeof date === 'undefined') {
             throw new DeveloperError(iso8601ErrorMessage, "iso8601String");
         }
@@ -251,6 +251,7 @@ function(DeveloperError, binarySearch, TimeConstants, LeapSecond, TimeStandard, 
                     year = +tokens[1];
                 } else {
                     //Not a year/month/day so it must be an ordinal date.
+                    var dayOfYear;
                     tokens = date.match(matchOrdinalDate);
                     if (tokens !== null) {
                         year = +tokens[1];
@@ -366,23 +367,20 @@ function(DeveloperError, binarySearch, TimeConstants, LeapSecond, TimeStandard, 
             seconds -= 60;
             hours++;
         }
+
         while (hours >= 24) {
             hours -= 24;
             day++;
         }
-        if (inLeapYear && month === 2) {
-            while (day >= daysInLeapFeburary) {
-                day -= daysInLeapFeburary;
-                month++;
-            }
-        } else {
-            var monthCount = daysInMonth[month - 1];
-            while (day >= monthCount) {
-                day -= monthCount;
-                month++;
-            }
+
+        tmp = (inLeapYear && month === 2) ? daysInLeapFeburary : daysInMonth[month - 1];
+        while (day > tmp) {
+            day -= tmp;
+            month++;
+            tmp = (inLeapYear && month === 2) ? daysInLeapFeburary : daysInMonth[month - 1];
         }
-        while (month >= 12) {
+
+        while (month > 12) {
             month -= 12;
             year++;
         }
@@ -392,11 +390,14 @@ function(DeveloperError, binarySearch, TimeConstants, LeapSecond, TimeStandard, 
             hours += 24;
             day--;
         }
-        while (day < 0) {
-            day += daysInMonth[month - 1];
+
+        while (day < 1) {
+            tmp = (inLeapYear && month === 2) ? daysInLeapFeburary : daysInMonth[month - 1];
+            day += tmp;
             month--;
         }
-        while (month < 0) {
+
+        while (month < 1) {
             month += 12;
             year--;
         }
