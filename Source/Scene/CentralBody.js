@@ -640,19 +640,16 @@ define([
         if ((!tile.state || tile.state === TileState.READY || tile.state === TileState.IMAGE_FAILED) && !this._imageQueue.contains(tile)) {
             this._imageQueue.enqueue(tile);
             tile.state = TileState.IMAGE_LOADING;
-        }
-        // or re-project the image
-        else if (tile.state === TileState.IMAGE_LOADED && !this._reprojectQueue.contains(tile)) {
+        } else if (tile.state === TileState.IMAGE_LOADED && !this._reprojectQueue.contains(tile)) {
+            // or re-project the image
             this._reprojectQueue.enqueue(tile);
             tile.state = TileState.REPROJECTING;
-        }
-        // or copy to a texture
-        else if (tile.state === TileState.REPROJECTED && !this._textureQueue.contains(tile)) {
+        } else if (tile.state === TileState.REPROJECTED && !this._textureQueue.contains(tile)) {
+            // or copy to a texture
             this._textureQueue.enqueue(tile);
             tile.state = TileState.TEXTURE_LOADING;
-        }
-        // or release invalid image if there is one
-        else if (tile.state === TileState.IMAGE_INVALID && tile.image) {
+        } else if (tile.state === TileState.IMAGE_INVALID && tile.image) {
+            // or release invalid image if there is one
             tile.image = undefined;
         }
     };
@@ -812,9 +809,8 @@ define([
                     }
                 }
             }
-        }
-        // tile isn't ready, find a parent to render and start processing the tile.
-        else {
+        } else {
+            // tile isn't ready, find a parent to render and start processing the tile.
             var parent = tile.parent;
             if (parent && !this._renderQueue.contains(parent)) {
                 this._enqueueTile(parent, context, sceneState);

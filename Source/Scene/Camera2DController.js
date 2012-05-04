@@ -255,8 +255,7 @@ define([
 
         if (rightZooming) {
             this._zoom(rightZoom.getMovement());
-        }
-        else if (wheelZooming) {
+        } else if (wheelZooming) {
             this._zoom(wheelZoom.getMovement());
         }
 
