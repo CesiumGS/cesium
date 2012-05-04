@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>TabContainer doLayout=false Demo</title>
+
+	<style type="text/css">
+		@import "../../themes/claro/document.css";
+		@import "../css/dijitTests.css";
+
+		body {
+			font-family : sans-serif;
+			margin:20px;
+		}
+
+		/* add padding to each contentpane inside the tab container, and scrollbar if necessary */
+		.dojoTabPane {
+			padding : 10px 10px 10px 10px;
+			overflow: auto;
+		}
+	</style>
+
+	<!-- required: the default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		data-dojo-config="isDebug: true, parseOnLoad: true"></script>
+
+	<!-- only needed for alternate theme testing: do NOT use in your code! -->
+	<script type="text/javascript" src="../_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dijit.layout.ContentPane");
+		dojo.require("dijit.layout.TabContainer");
+		dojo.require("dijit.Tooltip");
+		dojo.require("dijit.form.Button");
+		dojo.require("dijit.layout.LinkPane");
+		dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+
+		function testClose(pane,tab){
+		  return confirm("Please confirm that you want tab "+tab.title+" closed");
+		}
+
+		var tab = 6;
+
+        function addTab(){
+			cp = new dijit.layout.ContentPane({id: 'newTab' + tab, title: 'Tab' + tab, closable: true});
+			cp.domNode.innerHTML = "Contents of Tab " + tab++;
+			dijit.byId("plainTabContainer").addChild(cp);
+        }
+	</script>
+</head>
+<body class="claro">
+
+	<h1 class="testTitle">Dijit layout.TabContainer doLayout=false tests</h1>
+
+	<p>
+		This tests tabs in doLayout=false mode, in which case the tab container's height ==
+		the height of the currently selected tab.
+	</p>
+	<p>
+		With doLayout=false mode tabs only (the default) tabPosition=top is supported.
+	</p>
+
+	<button id="addTab" onclick="addTab();">add tab</button>
+	<button id="destroyTabContainer" onclick="dijit.byId('plainTabContainer').destroyRecursive();">destroy tab container</button>
+
+	<div id="plainTabContainer" data-dojo-type="dijit.layout.TabContainer" data-dojo-props='doLayout:false, style:"width: 700px;"'>
+
+		<div id="tab1" data-dojo-type="dijit.layout.ContentPane" data-dojo-props='href:"tab1.html", title:"Tab 1"'></div>
+
+		<div id="tab2" data-dojo-type="dijit.layout.ContentPane" data-dojo-props='href:"tab2.html", refreshOnShow:true, title:"Tab 2", selected:true'></div>
+
+		<div id="tab3" data-dojo-type="dijit.layout.ContentPane" data-dojo-props='title:"Tab 3"'>
+			<h1 id="h3">I am tab 3</h1>
+			<p id="p3">And I was already part of the page! That's cool, no?</p>
+			<span id="foo">tooltip on this span</span>
+			<div data-dojo-type="dijit.Tooltip" data-dojo-props='connectId:["foo"]'>I'm a tooltip!</div>
+			<button id="b3" data-dojo-type="dijit.form.Button">I'm a button </button>
+			<br>
+			<button id="b4" data-dojo-type="dijit.form.Button">So am I!</button>
+			<p id="p4">
+			Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean
+			semper sagittis velit. Cras in mi. Duis porta mauris ut ligula. Proin
+			porta rutrum lacus. Etiam consequat scelerisque quam. Nulla facilisi.
+			Maecenas luctus venenatis nulla. In sit amet dui non mi semper iaculis.
+			Sed molestie tortor at ipsum. Morbi dictum rutrum magna. Sed vitae
+			risus.
+			</p>
+			<p id="p5">Aliquam vitae enim. Duis scelerisque metus auctor est venenatis
+			imperdiet. Fusce dignissim porta augue. Nulla vestibulum. Integer lorem
+			nunc, ullamcorper a, commodo ac, malesuada sed, dolor. Aenean id mi in
+			massa bibendum suscipit. Integer eros. Nullam suscipit mauris. In
+			pellentesque. Mauris ipsum est, pharetra semper, pharetra in, viverra
+			quis, tellus. Etiam purus. Quisque egestas, tortor ac cursus lacinia,
+			felis leo adipiscing nisi, et rhoncus elit dolor eget eros. Fusce ut
+			quam. Suspendisse eleifend leo vitae ligula. Nulla facilisi. Nulla
+			rutrum, erat vitae lacinia dictum, pede purus imperdiet lacus, ut
+			semper velit ante id metus. Praesent massa dolor, porttitor sed,
+			pulvinar in, consequat ut, leo. Nullam nec est. Aenean id risus blandit
+			tortor pharetra congue. Suspendisse pulvinar.
+			</p>
+		</div>
+
+		<div id="tab4" data-dojo-type="dijit.layout.TabContainer" data-dojo-props='title:"Tab 4", doLayout:false, nested:true'>
+			<a data-dojo-type="dijit.layout.LinkPane" data-dojo-props='href:"tab1.html"'>SubTab 1</a>
+			<a data-dojo-type="dijit.layout.LinkPane" data-dojo-props='href:"tab2.html", selected:true'>SubTab 2</a>
+		</div>
+
+		<a id="tab5" data-dojo-type="dijit.layout.LinkPane" data-dojo-props='href:"tab3_noLayout.html", doLayout:false'>Tab 5</a>
+	</div>
+
+	<p id="textAfterTabContainer1">
+		Some text here.  This should appear directly below the TabContainer,
+		and the position will change based on the current height of the TabContainer.
+	</p>
+
+	<p>No width specified but inside a table w/width=400px:</p>
+	<table>
+		<tr>
+			<td style="width:400px; max-width:400px; border:1px solid red">
+				<div id="tableTabContainer" data-dojo-type="dijit.layout.TabContainer" data-dojo-props='doLayout:false'>
+			
+					<div id="atab1" data-dojo-type="dijit.layout.ContentPane" data-dojo-props='href:"tab1.html", title:"Tab 1"'></div>
+			
+					<div id="atab2" data-dojo-type="dijit.layout.ContentPane" data-dojo-props='href:"tab2.html", refreshOnShow:true, title:"Tab 2", selected:true'></div>
+			
+					<div id="atab3" data-dojo-type="dijit.layout.ContentPane" data-dojo-props='title:"Tab 3"'>
+						<h1 id="h4">I am tab 3</h1>
+						<p id="p6">And I was already part of the page! That's cool, no?</p>
+						<span id="foo2">tooltip on this span</span>
+						<div data-dojo-type="dijit.Tooltip" data-dojo-props='connectId:["foo2"]'>I'm a tooltip!</div>
+						<button id="b5" data-dojo-type="dijit.form.Button">I'm a button </button>
+						<br>
+						<button id="b6" data-dojo-type="dijit.form.Button">So am I!</button>
+						<p id="p7">
+						Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean
+						semper sagittis velit. Cras in mi. Duis porta mauris ut ligula. Proin
+						porta rutrum lacus. Etiam consequat scelerisque quam. Nulla facilisi.
+						Maecenas luctus venenatis nulla. In sit amet dui non mi semper iaculis.
+						Sed molestie tortor at ipsum. Morbi dictum rutrum magna. Sed vitae
+						risus.
+						</p>
+						<p id="p8">Aliquam vitae enim. Duis scelerisque metus auctor est venenatis
+						imperdiet. Fusce dignissim porta augue. Nulla vestibulum. Integer lorem
+						nunc, ullamcorper a, commodo ac, malesuada sed, dolor. Aenean id mi in
+						massa bibendum suscipit. Integer eros. Nullam suscipit mauris. In
+						pellentesque. Mauris ipsum est, pharetra semper, pharetra in, viverra
+						quis, tellus. Etiam purus. Quisque egestas, tortor ac cursus lacinia,
+						felis leo adipiscing nisi, et rhoncus elit dolor eget eros. Fusce ut
+						quam. Suspendisse eleifend leo vitae ligula. Nulla facilisi. Nulla
+						rutrum, erat vitae lacinia dictum, pede purus imperdiet lacus, ut
+						semper velit ante id metus. Praesent massa dolor, porttitor sed,
+						pulvinar in, consequat ut, leo. Nullam nec est. Aenean id risus blandit
+						tortor pharetra congue. Suspendisse pulvinar.
+						</p>
+					</div>
+			
+					<div id="atab4" data-dojo-type="dijit.layout.TabContainer" data-dojo-props='title:"Tab 4", nested:true, doLayout:false'>
+						<a data-dojo-type="dijit.layout.LinkPane" data-dojo-props='href:"tab1.html"'>SubTab 1</a>
+						<a data-dojo-type="dijit.layout.LinkPane" data-dojo-props='href:"tab2.html", selected:true'>SubTab 2</a>
+					</div>
+			
+					<a id="atab5" data-dojo-type="dijit.layout.LinkPane" data-dojo-props='href:"tab3_noLayout.html", doLayout:false'>Tab 5</a>
+				</div>
+			</td>
+			</tr>
+	</table>
+	
+	<p id="textAfterTabContainer2">
+		Some text here.  This should appear directly below the TabContainer,
+		and the position will change based on the current height of the TabContainer.
+	</p>
+
+</body>
+</html>

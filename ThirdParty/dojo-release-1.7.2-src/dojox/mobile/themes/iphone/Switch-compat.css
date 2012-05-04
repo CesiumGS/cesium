@@ -1,0 +1,70 @@
+/* Switch - default */
+.mblSwitchBg {
+	border: none;
+}
+.mblSwitchBgLeft {
+	background: none;
+	background-image: url(compat/switch-default-l.gif);
+	background-repeat: no-repeat;
+}
+.mblSwitchBgRight {
+	background: none;
+	background-image: url(compat/switch-default-r.gif);
+	background-repeat: no-repeat;
+}
+.mblSwitchKnob {
+	top: 0px;
+	height: 27px;
+	background: none;
+	background-image: url(compat/switch-default-k.gif);
+	background-repeat: no-repeat;
+	border: none;
+}
+/* Switch - Round Shape1 */
+.mblSwRoundShape1 .mblSwitchBgLeft {
+	background-image: url(compat/switch-round-l.gif);
+}
+.mblSwRoundShape1 .mblSwitchBgRight {
+	background-image: url(compat/switch-round-r.gif);
+}
+.mblSwRoundShape1 .mblSwitchKnob {
+	top: 1px;
+	height: 26px;
+	background-image: url(compat/switch-round1-k.gif);
+}
+/* Switch - Round Shape2 */
+.mblSwRoundShape2 .mblSwitchBgLeft {
+	background-image: url(compat/switch-round-l.gif);
+}
+.mblSwRoundShape2 .mblSwitchBgRight {
+	background-image: url(compat/switch-round-r.gif);
+}
+.mblSwRoundShape2 .mblSwitchKnob {
+	top: 1px;
+	height: 26px;
+	background-image: url(compat/switch-round2-k.gif);
+}
+/* Switch - Arc Shape1 */
+.mblSwArcShape1 .mblSwitchBgLeft {
+	background-image: url(compat/switch-arc-l.gif);
+}
+.mblSwArcShape1 .mblSwitchBgRight {
+	background-image: url(compat/switch-arc-r.gif);
+}
+.mblSwArcShape1 .mblSwitchKnob {
+	top: 1px;
+	height: 26px;
+	background-image: url(compat/switch-arc1-k.gif);
+}
+/* Switch - Arc Shape2 */
+.mblSwArcShape2 .mblSwitchBgLeft {
+	background-image: url(compat/switch-arc-l.gif);
+}
+.mblSwArcShape2 .mblSwitchBgRight {
+	background-image: url(compat/switch-arc-r.gif);
+}
+.mblSwArcShape2 .mblSwitchKnob {
+	top: 1px;
+	height: 26px;
+	background-image: url(compat/switch-arc2-k.gif);
+}

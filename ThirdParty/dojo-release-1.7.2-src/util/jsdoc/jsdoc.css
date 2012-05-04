@@ -1,0 +1,24 @@
+/* GeSHi (c) Nigel McNie 2004 (http://qbnz.com/highlighter) */
+.javascript .de1, .javascript .de2 {font-weight:normal;background:transparent;color:#000; padding-left: 5px;}
+.javascript .kw1 {color: #a1a100;}
+.javascript .kw2 {color: #000; font-weight: bold;}
+.javascript .kw3 {color: #000066;}
+.javascript .kw4 {color: #f63333;}
+.javascript .co1, .javascript .co2, .javascript .coMULTI {color: #808080;}
+.javascript .es0 {color: #000033; font-weight: bold;}
+.javascript .br0 {color: #66cc66;}
+.javascript .st0 {color: #ff0000;}
+.javascript .nu0 {color: #ff33ff;}
+.javascript .me0 {color: #006600;}
+
+.html4strict .de1, .html4strict .de2 {font-weight:normal;background:transparent;color:#000; padding-left: 5px;}
+.html4strict .kw1 {color: #a1a100;}
+.html4strict .kw2 {color: #000; font-weight: bold;}
+.html4strict .kw3 {color: #000066;}
+.html4strict .kw4 {color: #f63333;}
+.html4strict .co1, .html4strict .co2, .html4strict .coMULTI {color: #808080;}
+.html4strict .es0 {color: #000033; font-weight: bold;}
+.html4strict .br0 {color: #66cc66;}
+.html4strict .st0 {color: #ff0000;}
+.html4strict .nu0 {color: #ff33ff;}
+.html4strict .me0 {color: #006600;}

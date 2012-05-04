@@ -1,0 +1,125 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>SplitContainer Widget Demo</title>
+
+	<style type="text/css">
+		@import "../../themes/claro/document.css";
+		@import "../css/dijitTests.css";
+		.dojoContentPane {
+			padding:1em;
+		}
+	</style>
+
+	<!-- required: the default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		djConfig="isDebug: true, parseOnLoad: true"></script>
+
+	<!-- only needed for alternate theme testing: do NOT use in your code! -->
+	<script type="text/javascript" src="../_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dijit.layout.SplitContainer");
+		dojo.require("dijit.layout.ContentPane");
+
+		// these exist inside our href splitcontainer
+		dojo.require("dijit.form.Button");
+		dojo.require("dijit.form.ComboBox");
+		var programaticExample = function(){
+
+			var rootNode = dojo.byId("holderNode");
+			// add two children
+			var pane1 = rootNode.appendChild(document.createElement('div'));
+			var pane2 = rootNode.appendChild(document.createElement('div'));
+			var pane3 = rootNode.appendChild(document.createElement('div'));
+
+			// set the content. can use xhrGet, also
+			pane1.innerHTML = "Pane one test"; pane2.innerHTML = "Pane two test";
+
+			// should use css, but this works:
+			dojo.style(rootNode,"height","150px");
+			dojo.style(rootNode,"border","1px solid #333");
+
+			// make them contentpanes
+			var cp1 = new dijit.layout.ContentPane({ sizeShare:20 },pane1);
+			var cp2 = new dijit.layout.ContentPane({ sizeShare:30 },pane2);
+			var cp3 = new dijit.layout.ContentPane({
+				href: "doc0.html",
+				sizeShare:30
+			},pane3).startup();
+
+			// init the splitcontainer
+			var split = new dijit.layout.SplitContainer({
+				orientation:"horizontal",
+				sizerWidth:7
+			},rootNode).startup();
+
+		};
+		dojo.ready(programaticExample);
+
+	</script>
+</head>
+<body>
+	<h1 class="testTitle">Dijit Split Container Test - DEPRECATED!</h1>
+	<p><strong>dijit.layout.SplitContainer is deprecated use
+	BorderContainer with splitter instead -- will be removed in version: 2</strong></p>
+	<p>HTML before</p>
+
+	<div dojoType="dijit.layout.SplitContainer"
+		orientation="vertical"
+		sizerWidth="7"
+		activeSizing="false"
+		style="border: 1px solid #bfbfbf; float: left; margin-right: 30px;  width: 400px; height: 300px;"
+	>
+		<div dojoType="dijit.layout.ContentPane" sizeMin="10" sizeShare="50">
+			this box has three split panes
+		</div>
+		<div dojoType="dijit.layout.ContentPane" sizeMin="20" sizeShare="50"
+			style="background-color: yellow; border: 3px solid purple;">
+			in vertical mode
+		</div>
+		<div dojoType="dijit.layout.ContentPane" sizeMin="10" sizeShare="50">
+			without active resizing
+		</div>
+	</div>
+
+	<div dojoType="dijit.layout.SplitContainer"
+		orientation="horizontal"
+		sizerWidth="7"
+		activeSizing="true"
+		style="border: 1px solid #bfbfbf; float: left; width: 400px; height: 300px;">
+		<div dojoType="dijit.layout.ContentPane" sizeMin="20" sizeShare="20">
+			this box has two horizontal panes
+		</div>
+		<div dojoType="dijit.layout.ContentPane" sizeMin="50" sizeShare="50">
+			with active resizing, a smaller sizer, different starting sizes and minimum sizes
+		</div>
+	</div>
+
+	<p style="clear: both;">HTML after</p>
+
+the following splitter contains two iframes, see whether the resizer works ok in this situation
+<div dojoType="dijit.layout.SplitContainer"
+	orientation="horizontal"
+	sizerWidth="5"
+	activeSizing="false"
+	style="border: 2px solid black; float: left; width: 100%; height: 300px;"
+>
+	<div dojoType="dijit.layout.ContentPane" sizeMin="20" sizeShare="20">
+		<iframe style="width: 100%; height: 100%"></iframe>
+	</div>
+	<div dojoType="dijit.layout.ContentPane" sizeMin="50" sizeShare="50">
+		<iframe style="width: 100%; height: 100%"></iframe>
+	</div>
+</div>
+
+<h3>Programatic Example:</h3>
+<div id="holderNode"></div>
+
+</body>
+</html>

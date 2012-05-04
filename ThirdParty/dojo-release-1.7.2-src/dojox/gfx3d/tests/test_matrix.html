@@ -1,0 +1,89 @@
+﻿<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" >
+<head>
+<title>Dojo 3D Matrix</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+</style>
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+<script type="text/javascript">
+
+dojo.require("dojox.gfx3d");
+
+mdebug = function(matrix){
+	var m = dojox.gfx3d.matrix.normalize(matrix);
+	console.debug("xx: " + m.xx + ", xy: " + m.xy + " | xz:" + m.xz + " | dx:" + m.dx);
+	console.debug("yx: " + m.yx + ", yy: " + m.yy + " | yz:" + m.yz + " | dy:" + m.dy);
+	console.debug("zx: " + m.zx + ", zy: " + m.zy + " | zz:" + m.zz + " | dz:" + m.dz);
+};
+
+pdebug = function(point){
+	console.debug("x: " + point.x + ", y: " + point.y + ", z: " + point.z);
+};
+
+dojo.addOnLoad(function(){
+	var m = dojox.gfx3d.matrix;
+	var a = new m.Matrix3D();
+	console.debug("identity");	
+	mdebug(a);
+	a = m.rotateXg(30);
+	console.debug("rotateXg(30);");	
+	mdebug(a);
+	a = m.rotateYg(45);
+	console.debug("rotateYg(45);");	
+	mdebug(a);
+	a = m.rotateZg(90);
+	console.debug("rotateZg(90);");	
+	mdebug(a);
+	a = [new m.Matrix3D(), new m.Matrix3D(), new m.Matrix3D()];
+	console.debug("identity");	
+	mdebug(a);
+	a = [m.rotateXg(30), m.rotateXg(-30)];
+	console.debug("identity");	
+	mdebug(a);
+	var b = m.multiplyPoint(a, 10, 10, 10);
+	pdebug(b);
+	b = m.multiplyPoint(a, 10, 5, 10);
+	pdebug(b);
+	b = m.multiplyPoint(a, 10, 15, 5);
+	pdebug(b);
+
+	a = [m.scale(1,1,2), m.rotateXg(45)];
+	console.debug("a = [m.scale(1,1,2), m.rotateXg(45)];");
+	mdebug(a);
+	a = [m.rotateXg(45), m.scale(1,1,2)];
+	console.debug("a = [m.rotateXg(45), m.scale(1,1,2)];");
+	mdebug(a);
+
+	a = [m.scale(2,1,2), m.rotateYg(45)];
+	console.debug("a = [m.scale(2,1,2), m.rotateYg(45)];");
+	mdebug(a);
+	a = [m.rotateYg(45), m.scale(2,1,2)];
+	console.debug("a = [m.rotateYg(45), m.scale(2,1,2)];");
+	mdebug(a);
+
+	a = [m.scale(1,2,1), m.invert(m.rotateZg(45))];
+	console.debug("[m.scale(1,2,1), m.invert(m.rotateZg(45))];");
+	mdebug(a);
+	a = [m.invert(m.rotateZg(45)), m.scale(1,2,1)];
+	console.debug("a = [m.invert(m.rotateZg(45)), m.scale(1,2,1)];");
+	mdebug(a);
+
+	a = [a, m.invert(a)];
+	console.debug("identity");	
+	mdebug(a);
+
+	a = 5;
+	mdebug(a);
+	a = [2, m.scale(2,1,3)];
+	mdebug(a);
+});
+
+</script>
+</head>
+<body>
+	<h1>dojox.gfx3d.matrix test</h1>
+	<p>Please check the debug console for test results.</p>
+</body>
+</html>

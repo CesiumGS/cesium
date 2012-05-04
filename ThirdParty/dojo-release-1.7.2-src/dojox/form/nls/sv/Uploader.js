@@ -1,0 +1,5 @@
+define(
+({
+	label: "Välj filer..."
+})
+);

@@ -1,0 +1,18 @@
+({
+	name: "date.timezone.Africa-Niamey",
+	runTest: function(t){
+		var tz = "Africa/Niamey";
+		doh.checkDate({tzOffset: -8.46666666666667, tzAbbr: "LMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: -8.46666666666667, tzAbbr: "LMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: -8.46666666666667, tzAbbr: "LMT"}, -1830384509000, tz, 1);
+		doh.checkDate({tzOffset: 60, tzAbbr: "WAT"}, -1830384508000, tz, 1);
+		doh.checkDate({tzOffset: 60, tzAbbr: "WAT"}, -1131231601000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "GMT"}, -1131231600000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "GMT"}, -315619201000, tz, 1);
+		doh.checkDate({tzOffset: -60, tzAbbr: "WAT"}, -315619200000, tz, 1);
+		doh.checkDate({tzOffset: -60, tzAbbr: "WAT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: -60, tzAbbr: "WAT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: -60, tzAbbr: "WAT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: -60, tzAbbr: "WAT"}, 1246789800000, tz, 0);
+	}
+})

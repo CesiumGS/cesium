@@ -1,0 +1,48 @@
+({
+	name: "date.timezone.Australia-Eucla",
+	runTest: function(t){
+		var tz = "Australia/Eucla";
+		doh.checkDate({tzOffset: -525, tzAbbr: "CWST"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: -525, tzAbbr: "CWST"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: -525, tzAbbr: "CWST"}, -1672562641000, tz, 1);
+		doh.checkDate({tzOffset: -585, tzAbbr: "CWST"}, -1672562640000, tz, 1);
+		doh.checkDate({tzOffset: -585, tzAbbr: "CWST"}, -1665387901000, tz, 1);
+		doh.checkDate({tzOffset: -525, tzAbbr: "CWST"}, -1665387900000, tz, 1);
+		doh.checkDate({tzOffset: -525, tzAbbr: "CWST"}, -883637101000, tz, 1);
+		doh.checkDate({tzOffset: -585, tzAbbr: "CWST"}, -883637100000, tz, 1);
+		doh.checkDate({tzOffset: -585, tzAbbr: "CWST"}, -876123901000, tz, 1);
+		doh.checkDate({tzOffset: -525, tzAbbr: "CWST"}, -876123900000, tz, 1);
+		doh.checkDate({tzOffset: -525, tzAbbr: "CWST"}, -860395501000, tz, 1);
+		doh.checkDate({tzOffset: -585, tzAbbr: "CWST"}, -860395500000, tz, 1);
+		doh.checkDate({tzOffset: -585, tzAbbr: "CWST"}, -844674301000, tz, 1);
+		doh.checkDate({tzOffset: -525, tzAbbr: "CWST"}, -844674300000, tz, 1);
+		doh.checkDate({tzOffset: -525, tzAbbr: "CWST"}, 152039699000, tz, 1);
+		doh.checkDate({tzOffset: -585, tzAbbr: "CWST"}, 152039700000, tz, 1);
+		doh.checkDate({tzOffset: -585, tzAbbr: "CWST"}, 162926099000, tz, 1);
+		doh.checkDate({tzOffset: -525, tzAbbr: "CWST"}, 162926100000, tz, 1);
+		doh.checkDate({tzOffset: -525, tzAbbr: "CWST"}, 436295699000, tz, 1);
+		doh.checkDate({tzOffset: -585, tzAbbr: "CWST"}, 436295700000, tz, 1);
+		doh.checkDate({tzOffset: -585, tzAbbr: "CWST"}, 447182099000, tz, 1);
+		doh.checkDate({tzOffset: -525, tzAbbr: "CWST"}, 447182100000, tz, 1);
+		doh.checkDate({tzOffset: -525, tzAbbr: "CWST"}, 690311699000, tz, 1);
+		doh.checkDate({tzOffset: -585, tzAbbr: "CWST"}, 690311700000, tz, 1);
+		doh.checkDate({tzOffset: -585, tzAbbr: "CWST"}, 699383699000, tz, 1);
+		doh.checkDate({tzOffset: -525, tzAbbr: "CWST"}, 699383700000, tz, 1);
+		doh.checkDate({tzOffset: -525, tzAbbr: "CWST"}, 1165079699000, tz, 1);
+		doh.checkDate({tzOffset: -585, tzAbbr: "CWST"}, 1165079700000, tz, 1);
+		doh.checkDate({tzOffset: -585, tzAbbr: "CWST"}, 1174756499000, tz, 1);
+		doh.checkDate({tzOffset: -525, tzAbbr: "CWST"}, 1174756500000, tz, 1);
+		doh.checkDate({tzOffset: -525, tzAbbr: "CWST"}, 1193505299000, tz, 1);
+		doh.checkDate({tzOffset: -585, tzAbbr: "CWST"}, 1193505300000, tz, 1);
+		doh.checkDate({tzOffset: -585, tzAbbr: "CWST"}, 1206810899000, tz, 1);
+		doh.checkDate({tzOffset: -525, tzAbbr: "CWST"}, 1206810900000, tz, 1);
+		doh.checkDate({tzOffset: -525, tzAbbr: "CWST"}, 1224954899000, tz, 1);
+		doh.checkDate({tzOffset: -585, tzAbbr: "CWST"}, 1224954900000, tz, 1);
+		doh.checkDate({tzOffset: -585, tzAbbr: "CWST"}, 1238260499000, tz, 1);
+		doh.checkDate({tzOffset: -525, tzAbbr: "CWST"}, 1238260500000, tz, 1);
+		doh.checkDate({tzOffset: -525, tzAbbr: "CWST"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: -525, tzAbbr: "CWST"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: -585, tzAbbr: "CWST"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: -525, tzAbbr: "CWST"}, 1246789800000, tz, 0);
+	}
+})

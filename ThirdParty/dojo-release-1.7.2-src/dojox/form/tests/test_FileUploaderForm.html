@@ -1,0 +1,299 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html lang="en">
+<head>
+    <title>Test dojox.form.FileUploader - Form</title>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/themes/dijit.css";
+		@import "../../../dijit/themes/tundra/form/Button.css";
+		@import "../../../dijit/themes/tundra/ProgressBar.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+		@import "../resources/FileUploader.css";
+	</style>
+	<script>
+        djConfig = {
+            isDebug: true,
+			popup:true,
+            parseOnLoad: true
+        }
+    </script>
+    <script src="../../../dojo/dojo.js"></script>
+    <script>
+		dojo.require("dojo.parser");
+        dojo.require("dojox.form.FileUploader");
+        dojo.require("dijit.form.Button");
+		dojo.require("dijit.ProgressBar");
+
+		addThumb = function(d, id){
+			console.log("THUMB:", d);
+			var fileRoot = dojo.moduleUrl("dojox.form", "tests").toString();
+			var img = '<img src='+fileRoot+"/"+escape(d.file)+
+			(d.width>d.height ?
+			' width="50"/>' :
+			' height="50"/>');
+			console.log("IMG:", img)
+			var str = '<div id="file_'+d.name+'" class="thumb"><div class="thumbPic">'+img+'</div>';
+			str += '<div class="thumbText">';
+			if(d.fGroup || d.hGroup){
+				str += 'Group: '+(d.fGroup || d.hGroup)+'<br/>';
+			}
+			str += 'Title: '+d.name+'<br/>';
+			if(d.author){
+				str += 'Author: '+ d.author+'<br/>';
+			}
+			if(d.date){
+				str += d.date+' ';
+			}
+			str += Math.ceil(d.size*.001)+'kb</div></div>';
+			dojo.byId(id).innerHTML += str;
+		}
+        dojo.addOnLoad(function(){
+
+			var props = {
+				isDebug:true,
+				devmode:true,
+				hoverClass:"uploadHover",
+				activeClass:"uploadPress",
+				disabledClass:"uploadDisabled",
+				uploadUrl:dojo.moduleUrl("dojox.form", "tests/UploadFile.php"),
+				fileMask:[
+					["Jpeg File", 	"*.jpg;*.jpeg"],
+					["GIF File", 	"*.gif"],
+					["PNG File", 	"*.png"],
+					["All Images", 	"*.jpg;*.jpeg;*.gif;*.png"]
+				]
+			}
+
+			if(dojo.byId("btnF")){
+				dojo.byId("fFiles").value = "";
+				var f = new dojox.form.FileUploader(dojo.mixin({
+					progressWidgetId:"progressBar",
+					showProgress:true,
+					fileListId:"fFiles",
+					tabIndex:5,
+					selectMultipleFiles:true,
+					//uploadOnChange:true,
+					deferredUploading:false
+				},props), "btnF");
+				f.set("disabled", dojo.byId("fGroup").value=="");
+				dojo.connect(dojo.byId("fGroup"), "keyup", function(){
+					f.set("disabled", dojo.byId("fGroup").value=="");
+				});
+				dojo.connect(dijit.byId("fSubmit"), "onClick", function(){
+					f.submit(dojo.byId("formF"));
+				});
+				dojo.connect(f, "onChange", function(dataArray){
+					console.log("onChange.data:", dataArray);
+				});
+				dojo.connect(f, "onComplete", function(dataArray){
+					console.log("onComplete Data:", dataArray)
+					dojo.forEach(dataArray, function(d){
+						addThumb(d, "fThumbs");
+					});
+				});
+			}
+
+
+			if(dojo.byId("btnH")){
+				dojo.byId("hFiles").value = "";
+				var h = new dojox.form.FileUploader(dojo.mixin({
+					force:"html",
+					showProgress:true,
+					progressWidgetId:"progressBarHtml",
+					selectMultipleFiles:true,
+					//uploadOnChange:true,
+					fileListId:"hFiles",
+					tabIndex:11,
+					devMode:true
+				}, props), "btnH");
+
+				h.set("disabled", dojo.byId("hGroup").value=="");
+				dojo.connect(dojo.byId("hGroup"), "keyup", function(){
+					h.set("disabled", dojo.byId("hGroup").value=="");
+				});
+				dojo.connect(dijit.byId("hSubmit"), "onClick", function(evt){
+					h.submit(dojo.byId("formH"));
+					dojo.stopEvent(evt);
+				});
+				dojo.connect(h, "onComplete", function(dataArray){
+					console.warn("html onComplete", dataArray)
+					dojo.forEach(dataArray, function(d){
+						addThumb(d, "hThumbs");
+					});
+				});
+				dojo.connect(h, "onError", function(err){
+					console.error("html error", err)
+				});
+			}
+			if(dijit.byId("btnD")){
+				var d = new FlashHTML.widget(dojo.mixin({button:dijit.byId("btnD")}, props));
+				d.set("disabled", dojo.byId("dTitle").value=="");
+				dojo.connect(dojo.byId("dTitle"), "keyup", function(){
+					d.set("disabled", dojo.byId("dTitle").value=="");
+				});
+				dojo.connect(dijit.byId("fSubmit"), "onClick", function(evt){
+					f.submit(dojo.byId("formF"));
+					dojo.stopEvent(evt);
+				});
+			}
+
+
+		});
+
+
+    </script>
+    <style>
+       html, body{
+		font-family:sans-serif;
+		font-size:12px;
+	   }
+		.uploadBtn{
+			border:1px solid #333333;
+			background:url(../../../dijit/themes/soria/images/buttonEnabled.png) #d0d0d0 repeat-x scroll 0px top;
+			font-size:14px;
+			font-family:Arial;
+			width:201px;
+			height:30px;
+			line-height:50px;
+			vertical-align:middle; /* emulates a <button> */
+			text-align:center;
+		}
+		.uploadHover{
+			background-image:url(../../../dijit/themes/soria/images/buttonHover.png);
+			cursor:pointer;
+			font-weight:bold;
+			font-style:italic;
+			font-family:serif;
+		}
+		.uploadPress{
+			background-image:url(../../../dijit/themes/soria/images/buttonActive.png);
+		}
+		.uploadDisabled{
+			background-image:none;
+			background-color:#666;
+			color:#999;
+			border:1px solid #999;
+			font-family:serif;
+			font-style:italic;
+		}
+		.progBar{
+			width:294px;
+			display:none;
+		}
+		.form{
+			width:300px;
+			border:1px solid #ccc;
+			margin:5px;
+			padding:3px;
+			position:relative;
+		}
+		.form, .thumbList{
+			float:left;
+		}
+		.thumbList{
+			width:300px;
+			border:1px solid #ccc;
+			min-height:100px;
+			margin:5px;
+			padding:3px;
+		}
+		#fFiles, #hFiles{
+			width:200px;
+			height:75px;
+			overflow-x:hidden;
+			overflow-y:auto;
+			border:1px solid #ccc;
+		}
+		.form .field{
+			width:197px;
+		}
+		.tbl{
+			width:100%;
+		}
+		.tbl td{
+			width:50%;
+			vertical-align:top;
+		}
+		.form label{
+			position:absolute;
+			width:80px;
+			text-align:right;
+			left:0px;
+		}
+		.form .field, .form .btn{
+			margin-left:85px;
+			margin-bottom:5px;
+		}
+		h3{
+			width:600px;
+			font-weight:normal;
+			font-size:14px;
+		}
+		ul{
+			font-size:12px;
+			width:600px;
+		}
+    </style>
+</head>
+<body class="tundra">
+  <h1>FileUploader Widget Form Test</h1>
+	<p style="font-size:14px; width:480px; border:2px solid #ff0000; padding:3px;">
+		<strong>NOTE:</strong> This test does upload,
+		but the server scripts are renamed to <em>tests/UploadFile.php.<strong>disabled</strong></em> and
+		<em>tests/cLOG.php.<strong>disabled</strong></em> to prevent security attacks on hosted servers.
+		You should rename these files (removing <em>.disabled</em>) in your local copy to conduct tests.
+	</p>
+	<h3>Both forms on this page are the same except one is for testing the Flash Uploader and one
+	is for the HTML Uploader. The following features are being tested:</h3>
+	<ul>
+		<li>Disabled: The Uploaders are disabled unless the Group field is populated.</li>
+		<li>Submit: The Submit buttons actually submit to the uploaders, and they post the data.</li>
+		<li>Post Data: Post data is tested. The field data should be in the thumbnails.</li>
+		<li>Selected List: If passing the ID of a container, the Uploaders will populate it with
+		the selected files.</li>
+		<li>Deleting Files: You can now delete pending files.</li>
+		<li>Progress Built in: showProgress:true will change the button to a progress bar on upload.</li>
+		<li>Progress Attach: Passing progressWidgetId will tell the Uploader of a progress widget.
+		If the Progress widget is initially hidden, it will change to visible and then restored after
+		upload.</li>
+		<li>A11Y: The Flash button can be accessed with the TAB key. (The HTML cannot due to browser
+		limtations)</li>
+	</ul>
+	<table class="tbl">
+		<tr>
+			<td>
+			<form id="formF" class="form">
+				<label>Group Name:</label>
+				<input class="field" tabIndex="1" type="text" value="" id="fGroup" name='fGroup' /><br/>
+				<label>Date:</label>
+				<input class="field" tabIndex="2" type="text" value="" id="fDate" name='date' /><br/>
+				<label>Author:</label>
+				<input class="field" tabIndex="3" type="text" value="" id="fAuthor" name='author' /><br/>
+				<label>Files:</label>
+				<div id="fFiles" class="field"></div>
+				<div tabIndex="5" id="btnF" class="uploadBtn btn">Flash Select Files</div>
+				<button tabIndex="6" id="fSubmit" class="btn" dojoType="dijit.form.Button" onclick="return false;">Submit</button>
+				<div indeterminate="false" id="progressBar" class="progBar" dojoType="dijit.ProgressBar"></div>
+			</form>
+			<div id="fThumbs" class="thumbList"></div>
+		</td>
+		<td>
+			<form id="formH" class="form">
+				<label>Group Name:</label>
+				<input class="field" tabIndex="7" type="text" value="" id="hGroup" name='hGroup' /><br/>
+				<label>Date:</label>
+				<input class="field" tabIndex="8" type="text" value="" id="hDate" name='date' /><br/>
+				<label>Author:</label>
+				<input class="field" tabIndex="9" type="text" value="" id="hAuthor" name='author' /><br/>
+				<label>Files:</label>
+				<div  class="field" id="hFiles"></div>
+				<div tabIndex="11"  id="btnH" class="uploadBtn btn">HTML Select Files</div>
+				<button tabIndex="12"  class="btn" id="hSubmit" class="" onclick="return false;" dojoType="dijit.form.Button">Submit</button>
+				<div indeterminate="false" id="progressBarHtml" class="progBar" dojoType="dijit.ProgressBar"></div>
+			</form>
+			<div id="hThumbs" class="thumbList"></div>
+		</td>
+		</tr>
+	</table>
+</body>
+</html>

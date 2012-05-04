@@ -1,0 +1,84 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>Test dojox.Grid Basic</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+	<style type="text/css">       
+		@import "../../../dojo/resources/dojo.css";
+		@import "../resources/Grid.css";
+		@import "../resources/tundraGrid.css";
+		body {
+			font-size: 0.9em;
+			font-family: Geneva, Arial, Helvetica, sans-serif;
+		}
+		.heading {
+			font-weight: bold;
+			padding-bottom: 0.25em;
+		}
+					   
+		#grid, #gridColspan {
+			width: 45em;
+			height: 25em;
+			border: 1px solid #333;
+		}
+	</style>
+	<script type="text/javascript" src="../../../dojo/dojo.js" 
+		djConfig="debugAtAllCosts: false, isDebug: false, parseOnLoad: true"></script>
+	<script type="text/javascript">
+		dojo.require("dijit.dijit");
+		dojo.require("dojo.data.ItemFileReadStore");
+		dojo.require("dojox.grid.DataGrid");
+		dojo.require("dojo.parser");
+
+		var columnView =
+		{
+			cells: [
+				[  // column header row 1
+					{ name: 'Row 0 / Column 0',     field: "r0c0",   width: "80px" }, 
+					{ name: 'Row 0 / Column 1',     field: "r0c1",   width: "80px" }, 
+					{ name: 'Row 0 / Column 2',     field: "r0c2",   width: "80px" },
+					{ name: 'Row 0 / Column 3',     field: "r0c3",   width: "80px" }
+				],
+
+				[  // column header row 2
+					{ name: 'Row 1 / Column 0',     field: "r1c0",   width: "80px" },
+					{ name: 'Row 1 / Column 1',     field: "r1c1",   width: "80px" },
+					{ name: 'Row 1 / Column 2',     field: "r1c2",   width: "80px" },
+					{ name: 'Row 1 / Column 3',     field: "r1c3",   width: "80px" }
+				]
+			] 
+		};                
+		var layout = [ columnView ];
+		var columnViewColspan =
+		{
+			cells: [
+				[  // column header row 1
+					{ name: 'Row 0 / Column 0',     field: "r0c0",   width: "80px" }, 
+					{ name: 'Row 0 / Column 1',     field: "r0c1",   width: "80px" }, 
+					{ name: 'Row 0 / Column 2',     field: "r0c2",   width: "80px" },
+					{ name: 'Row 0 / Column 3',     field: "r0c3",   width: "80px" }
+				],
+
+				[  // column header row 2
+					{ name: 'Row 1 / Column 0/1',   field: "r1c0",   width: "80px", colSpan: "2" },
+					{ name: 'Row 1 / Column 2',     field: "r1c2",   width: "80px" },
+					{ name: 'Row 1 / Column 3',     field: "r1c3",   width: "80px" }
+				]
+			] 
+		};                
+		var layoutColspan = [ columnViewColspan ];
+	</script>
+</head>
+<body class="tundra">
+	<div dojoType="dojo.data.ItemFileReadStore"
+		jsId="jsonStore" url="support/test_resize_data.json">
+	</div>
+	<div class="heading">No Colspan</div>
+	<div id="grid" dojoType="dojox.grid.DataGrid" 
+		store="jsonStore" structure="layout"></div>
+	<div class="heading">Colspan</div>
+	<div id="gridColspan" dojoType="dojox.grid.DataGrid" 
+		store="jsonStore" structure="layoutColspan"></div>
+</body>
+</html>

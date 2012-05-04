@@ -1,0 +1,70 @@
+﻿<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" >
+<head>
+<title>Dojo Unified 2D Graphics</title>
+<style type="text/css">
+	@import "../../../../dojo/resources/dojo.css";
+	@import "../../../../dijit/tests/css/dijitTests.css";
+</style>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!-- SVGWEB { -->
+<meta name="svg.render.forceflash" content="true"/>
+<script src="svgweb/src/svg.js" data-path="svgweb/src"></script>
+<script src="../../../../dojo/dojo.js" djConfig="isDebug:true,forceGfxRenderer:'svg'" type="text/javascript"></script>
+<!-- } -->
+<script type="text/javascript">
+dojo.require("dojox.gfx");
+
+var surface = null;
+var g1 = null;
+var g2 = null;
+var r1 = null;
+
+makeShapes = function(){
+	surface = dojox.gfx.createSurface(document.getElementById("test"), 500, 500);
+	/* SVGWEB { */
+	surface.whenLoaded(function() {
+	// make a checkerboard
+	for(var i = 0; i < 500; i += 100){
+		for(var j = 0; j < 500; j += 100){
+			if(i % 200 == j % 200) {
+				surface.createRect({ x: i, y: j }).setFill([255, 0, 0, 0.1]);
+			}
+		}
+	}
+	// create groups and shapes
+	g1 = surface.createGroup();
+	g2 = surface.createGroup();
+	r1 = surface.createRect({x: 200, y: 200}).setFill("green").setStroke({});
+	g1.setTransform({dy: -100});
+	//g2.setTransform(dojox.gfx.matrix.rotateAt(-45, 250, 250));
+	g2.setTransform({dx: 100, dy: -100});
+	});
+	/* } */
+};
+
+switchRect = function(){
+	var radio = document.getElementsByName("switch");
+	if(radio[0].checked){
+		surface.add(r1);
+	}else if(radio[1].checked){
+		g1.add(r1);
+	}else if(radio[2].checked){
+		g2.add(r1);
+	}
+};
+
+dojo.addOnLoad(makeShapes);
+
+</script>
+</head>
+<body>
+<h1>dojox.gfx Group tests</h1>
+<p>
+<input type="radio" name="switch" id="r1_s" checked="checked" onclick="switchRect()" /><label for="r1_s">Rectangle belongs to the surface</label><br />
+<input type="radio" name="switch" id="r1_g1" onclick="switchRect()" /><label for="r1_g1">Rectangle belongs to the group #1</label><br />
+<input type="radio" name="switch" id="r1_g2" onclick="switchRect()" /><label for="r1_g2">Rectangle belongs to the group #2</label>
+</p>
+<div id="test"></div>
+<p>That's all Folks!</p>
+</body>
+</html>

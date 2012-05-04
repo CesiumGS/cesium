@@ -1,0 +1,22 @@
+<html>
+	<head>
+		<!-- Commented out as a test that the load code for content pane does NOT include it
+			 as script content.
+		<SCRIPT>
+			var div = document.createElement("div");
+			document.body.appendChild(div);
+			div.innerHTML = "<div id=\"should_not_be_here\"></div>";
+		</SCRIPT>
+		-->
+		<!-- test that entity characters are properly processed in a src url by the ContentPane code. -->
+		<script type="text/javascript" src="remote/getResponse.php?mode=entityChars&amp;entityEscaped=true"></script>
+		<script>
+			//This sets a flag to indicate that the page has loaded and is checked
+			//in the testcase.
+			window.__remotePaneLoaded = true;
+		</script>
+	</head>
+	<body>  
+		Some simple content.
+	</body>
+</html>

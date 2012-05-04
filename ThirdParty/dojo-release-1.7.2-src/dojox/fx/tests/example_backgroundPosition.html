@@ -1,0 +1,57 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>Animated background position example | The Dojo Toolkit</title>
+		
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: true" ></script>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/themes/dijit.css";
+		@import "../../../dijit/themes/tundra/tundra.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+
+		#theNode {
+			background:#dedede url('images/longBg.png') 0px 0px;
+			padding:3px 10px 3px 10px; 
+			border:1px solid #b7b7b7;
+			color:#666;
+			cursor:pointer; 
+		}
+	
+	</style>
+	<script type="text/javascript">
+		dojo.require("dojo.fx");
+		var anim = null; 
+		var init = function(){
+			var node = dojo.byId('theNode');
+			anim = new dojo.Animation({
+				curve: new dojo._Line(0,-500),
+				duration: 3000,
+				onEnd: (function(){ anim.play(); }), // loop indefinately
+				onAnimate: function(){
+					var str = Math.floor(parseInt(arguments[0]))+"px 0px";
+					dojo.style(node,"backgroundPosition",str);
+				}
+			});
+
+			// dojo.query "magic"
+			dojo.query("#theNode")
+				.connect("onmouseenter",anim,"play")
+				.connect("onmouseout",anim,"pause")
+				.connect("onclick",function(){
+					alert('clicked the button');
+				});
+		};
+		dojo.addOnLoad(init);
+
+	</script>
+</head>
+<body class="tundra">
+
+	<h1 class="testTitle">dojo.Animation test:</h1>
+
+	<div class="dijitInline" id="theNode">Test</div>
+
+</body>
+</html>

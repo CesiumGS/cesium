@@ -1,0 +1,207 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot popup/BackgroundIFrame Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"
+			djConfig="isDebug: true"></script>
+
+		<!-- functions to help test -->
+		<script type="text/javascript" src="../../helpers.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../test_popup.html');
+
+				doh.register("API", [
+						function repeatMoveOffScreen(){
+							// Previously, calling moveOffScreen twice would cause an exception
+							dijit.popup.moveOffScreen(dijit.byId("spw"));
+							dijit.popup.moveOffScreen(dijit.byId("spw"));
+
+							// Deprecated API where moveOffScreen() takes a DOMNode
+							dijit.popup.moveOffScreen(dojo.byId("sdn"));
+							dijit.popup.moveOffScreen(dojo.byId("sdn"));
+						}
+				]);
+
+				doh.register("simple open and close", [
+					function initialConditions(t){
+						// If the popup code has cached any iframes, make sure they are hidden
+						dojo.query("iframe").forEach(function(node){
+							console.log("found iframe", node);
+							doh.is("none", node.style.display, "background iframe is hidden");
+						});
+					},
+
+					// Create popup on the edge of another widget
+					function openAround(){
+						var d = new doh.Deferred();
+
+						var around = dojo.global.choiceDropDownButton,
+							popup = dojo.global.choiceDropDown;
+
+						around.openPopup();
+
+						doh.robot.sequence(d.getTestCallback(function(){
+							doh.t(isVisible(popup.domNode), "popup is visible");
+
+							if(dojo.isIE <= 6){
+								// Test the BackgroundIFrame
+								var iframes = dojo.query("iframe");
+								doh.is(1, iframes.length, "one background iframe on IE6");
+
+								var popupCoords = dojo.position(popup.domNode),
+									iframeCoords = dojo.position(iframes[0]);
+								doh.is(popupCoords.x, iframeCoords.x, "x is same: " + popupCoords.x);
+								doh.is(popupCoords.y, iframeCoords.y, "y is same: " + popupCoords.y);
+								doh.is(popupCoords.w, iframeCoords.w, "w is same: " + popupCoords.w);
+								doh.is(popupCoords.h, iframeCoords.h, "h is same: " + popupCoords.h);
+								doh.is("", iframes[0].style.display, "not display:none");
+							}
+							// TODO: test stack
+						}), 500);
+
+						return d;
+					},
+
+					function closeAround(){
+						// Close the popup
+						var around = dojo.global.choiceDropDownButton,
+							popup = dojo.global.choiceDropDown;
+
+						around.closePopup();
+
+						// Make sure the popup is hidden
+						doh.is("none", popup.domNode.parentNode.style.display, "popup is hidden");
+					}
+				]);
+
+				doh.register("nested open and close", [
+					// Open first level
+					function openAround(){
+						var d = new doh.Deferred();
+
+						var around = dojo.global.nestedDropDownButton,
+							popup = dojo.global.nestedOpener,
+							nestedPopup = dojo.global.nestedChoice1;
+
+						around.openPopup();
+
+						doh.robot.sequence(d.getTestCallback(function(){
+							doh.t(isVisible(popup.domNode), "popup is visible");
+
+							if(dojo.isIE <= 6){
+								// Test the BackgroundIFrame
+								var iframes = dojo.query("iframe", popup.domNode.parentNode);
+								doh.is(1, iframes.length, "one background iframe on IE6");
+
+								var popupCoords = dojo.position(popup.domNode),
+									iframeCoords = dojo.position(iframes[0]);
+								doh.is(popupCoords.x, iframeCoords.x, "x is same: " + popupCoords.x);
+								doh.is(popupCoords.y, iframeCoords.y, "y is same: " + popupCoords.y);
+								doh.is(popupCoords.w, iframeCoords.w, "w is same: " + popupCoords.w);
+								doh.is(popupCoords.h, iframeCoords.h, "h is same: " + popupCoords.h);
+								doh.is("", iframes[0].style.display, "not display:none");
+							}
+							// TODO: test stack
+						}), 500);
+
+						return d;
+					},
+
+					function openNested(){
+						var d = new doh.Deferred();
+
+						var around = dojo.global.nestedDropDownButton,
+							popup = dojo.global.nestedOpener,
+							nestedPopup = dojo.global.nestedChoice1;
+
+						popup.openPopup(nestedPopup);
+
+						doh.robot.sequence(d.getTestCallback(function(){
+							doh.t(isVisible(nestedPopup.domNode), "nested popup is visible");
+
+							if(dojo.isIE <= 6){
+								// Test the BackgroundIFrame
+								var iframes = dojo.query("iframe", popup.domNode.parentNode);
+								doh.is(1, iframes.length, "one background iframe for popup");
+
+								iframes = dojo.query("iframe", nestedPopup.domNode.parentNode);
+								doh.is(1, iframes.length, "another background iframe for nested popup");
+
+								var popupCoords = dojo.position(nestedPopup.domNode),
+									iframeCoords = dojo.position(iframes[0]);
+								doh.is(popupCoords.x, iframeCoords.x, "x is same: " + popupCoords.x);
+								doh.is(popupCoords.y, iframeCoords.y, "y is same: " + popupCoords.y);
+								doh.is(popupCoords.w, iframeCoords.w, "w is same: " + popupCoords.w);
+								doh.is(popupCoords.h, iframeCoords.h, "h is same: " + popupCoords.h);
+								doh.is("", iframes[0].style.display, "not display:none");
+							}
+							// TODO: test stack
+						}), 500);
+
+						return d;
+					},
+
+					function closeAround(){
+						// Close the layer of popups
+						var around = dojo.global.nestedDropDownButton,
+							popup = dojo.global.nestedOpener,
+							nestedPopup = dojo.global.nestedChoice1;
+
+						around.closePopup();
+
+						// Make sure the popups are both hidden
+						// (in a future release this might change to display:none etc but currently it's visibility:hidden)
+						doh.is("none", popup.domNode.parentNode.style.display, "popup is hidden");
+						doh.is("none", nestedPopup.domNode.parentNode.style.display, "nested popup is hidden");
+					}
+				]);
+
+				// Make sure there are no hidden tab stops when popups are closed.
+				// This test doesn't work on safari (due to safari bugs) although there aren't any hidden tab stops.
+				doh.register("no hidden tab stops", function hiddenTabStops(){
+					var tabbable = tabOrder();
+					doh.is("inputAtStart", tabbable[0].id, "first tabbable node");
+					doh.is("inputAtEnd", tabbable[tabbable.length - 1].id, "last tabbable node");
+				});
+
+				// TODO: test x/y placement
+
+				// Test that onCancel goes back one level.
+				// Call nestedChoice2.onCancel() and that should trigger nestedChoice2 to close
+				// but nestedOpener stays open.
+				// (TODO)
+
+				// Test that onChange/onExecute goes back to top of popup chain.
+				// Call dialogNestedChoice2.onChange() and that should trigger dialogNestedChoice2
+				// and dialogNestedPopupOpener to close, but not dialogWithNestedPopup.
+				// (TODO)
+
+				// ---------------------
+				// a11y tests
+
+				// Test that ESC key closes one level of a popup chain.
+				// Focus nestedChoice2 and type ESC, and that should trigger nestedChoice2 to close
+				// but nestedOpener stays open.
+				// (TODO)
+
+				// Test that TAB key cancels back to top of popup chain.
+				// Focus nestedChoice2 and type TAB, and that should trigger dialogNestedChoice2
+				// and dialogNestedPopupOpener to close, but not dialogWithNestedPopup.
+				// (TODO)
+
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

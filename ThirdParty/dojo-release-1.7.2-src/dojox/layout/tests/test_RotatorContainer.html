@@ -1,0 +1,99 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>RotatorContainer layout widget Test</title>
+	<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/themes/tundra/tundra.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+	@import "../resources/RotatorContainer.css";
+
+	#pane4 {
+		background:url(../../image/tests/images/imageHoriz2.jpg) no-repeat 0 0;
+		color:#FFF;
+	}
+
+	#pane4 h1, #pane4 p {
+		background-color:#000;
+		opacity:0.8;
+	}
+	
+	#myRotator {
+		width:350px; height:275px;
+	}
+	</style>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad:true, isDebug:true"></script>
+	<script type="text/javascript">
+		dojo.require("dojo.parser");
+		dojo.require("dijit.form.Button");
+		dojo.require("dijit.form.ToggleButton");
+		dojo.require("dojox.layout.RotatorContainer");
+		dojo.require("dijit.layout.ContentPane");
+		dojo.require("dijit.form.ComboBox");
+	</script>
+</head>
+<body class="tundra">
+
+	<h1 class="testTitle">dojox.layout.RotatorContainer</h1>
+
+	<p>This RotatorContainer will auto-start and cycle every 2.5 seconds through each pane and stop when it gets back to the first pane.
+	You can suspend the animation by hovering over the rotator, but as soon as you mouse off, it will resume.</p>
+
+	<div style="float:left;padding:0 20px 20px 0;">
+
+		<div dojoType="dojox.layout.RotatorContainer" id="myRotator" showTabs="true" cycles="4" suspendOnHover="true" autoStart="true" transitionDelay="2500" transition="fade">
+
+			<div dojoType="dojox.layout.RotatorPager">
+				<button dojoType="dijit.form.Button" dojoAttachPoint="previous">Prev</button>
+				<span dojoAttachPoint="current"></span> / <span dojoAttachPoint="total"></span>
+				<button dojoType="dijit.form.Button" dojoAttachPoint="next">Next</button>
+				<button dojoType="dijit.form.ToggleButton" dojoAttachPoint="playPause"></button>
+			</div>
+
+			<div id="pane1" dojoType="dijit.layout.ContentPane" title="1">
+				<h1>Welcome!</h1>
+				<p>It cycles through ContentPanes and even has transitions!</p>
+			</div>
+
+			<div id="pane2" dojoType="dijit.layout.ContentPane" title="2" transitionDelay="5000">
+				<h1>This is the 2nd pane</h1>
+				<p>Then next pane will be lazy loaded in 5 seconds!</p>
+			</div>
+
+			<div id="pane3" dojoType="dijit.layout.ContentPane" href="doc0.html" title="3"></div>
+
+			<div id="pane4" dojoType="dijit.layout.ContentPane" title="4">
+				<h1>Background pictures!</h1>
+				<p>You can put virtually anything here.</p>
+			</div>
+
+		</div>
+
+	</div>
+
+	<div>
+
+		<h3>Remote pager without a play/pause button</h3>
+
+		<div dojoType="dojox.layout.RotatorPager" rotatorId="myRotator">
+			<button dojoType="dijit.form.Button" dojoAttachPoint="previous">Prev</button>
+			<button dojoType="dijit.form.Button" dojoAttachPoint="next">Next</button>
+			<span dojoAttachPoint="current"></span> / <span dojoAttachPoint="total"></span>
+		</div>
+
+		<h3>Remote pager with styled buttons</h3>
+
+		<div dojoType="dojox.layout.RotatorPager" class="rotatorIcons" rotatorId="myRotator">
+			<button dojoType="dijit.form.Button" iconClass="previous" dojoAttachPoint="previous">Prev</button>
+			<button dojoType="dijit.form.ToggleButton" iconClass="playPause" dojoAttachPoint="playPause"></button>
+			<button dojoType="dijit.form.Button" iconClass="next" dojoAttachPoint="next">Next</button>
+			<span dojoAttachPoint="current"></span> / <span dojoAttachPoint="total"></span>
+		</div>
+
+	</div>
+
+	<div style="clear:both;"></div>
+
+</body>
+</html>

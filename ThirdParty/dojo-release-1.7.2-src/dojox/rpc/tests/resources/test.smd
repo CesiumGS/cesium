@@ -1,0 +1,207 @@
+(window["http://localhost/dojox/rpc/tests/resources/test.smd"]||function(val){return val}) (
+{
+	transport: "POST",
+	envelope: "URL",
+	strictParameters: false,
+	parameters: {
+                appId: {},
+                outputType: {
+                        "default": "json"
+                },
+
+                ignoreErrors: {
+                        optional: true
+                }
+        },
+
+        services: {
+                postEcho: {
+                        target: "echo.php",
+                        parameters: [
+                                {name: "message", type: "string", optional: true}
+                        ]
+                },
+
+                getEcho: {
+					transport: "GET",
+                        target: "echo.php",
+
+                        parameters: [
+                                {name: "message", type: "string", optional: true}
+                        ]
+                },
+	            "namespace.getEcho": {
+					transport: "GET",
+                        target: "echo.php",
+
+                        parameters: [
+                                {name: "message", type: "string", optional: true}
+                        ]
+                },
+                getEchoJson: {
+			transport: "GET",
+                        target: "echoJson.php",
+			contentType:"application/json",
+                        parameters: [
+                                {name: "message", type: "string", optional: true}
+                        ]
+                },
+                getPathEcho: {
+			transport: "GET",
+			envelope: "PATH",
+			target: "echo.php?message=",
+
+			parameters: [
+                                {name: "message", type: "string", optional: true}
+                        ]
+                },
+		restStore: {
+			transport: "REST",
+			contentType:"text/plain",
+			preventCache: true,
+			target: "fakestore.php", 
+                        parameters: [
+                                {name: "location", type: "string", optional: true}
+                        ]
+                },
+		jsonRestStore: {
+				transport: "REST",
+                        target: "fakestore.php",
+						contentType:"application/json",
+                        parameters: [
+                                {name: "location", type: "string", optional: true}
+                        ],
+                        returns: {
+                        	properties:{
+	                        	name:{
+	                        		type:"string",
+	                        		minLength:3
+	                    		}
+                    		}
+                        }
+                },
+
+
+
+                postJsonEcho: {
+			transport: "POST",
+			envelope: "JSON",
+                        target: "rawEcho.php",
+
+                        parameters: [
+                                {name: "message", type: "string", optional: true}
+                        ]
+                },
+
+                jsonpEcho: {
+			transport: "JSONP",
+                        target: "jsonpEcho.php",
+			callbackParamName: "testCallbackParam",
+
+                        parameters: [
+                                {name: "message", type: "string", optional: true}
+                        ]
+                },
+
+                postJsonRpc10Echo: {
+			transport: "POST",
+			envelope: "JSON-RPC-1.0",
+			target: "jsonRpc10.php",
+
+                        parameters: [
+                                {type: "string", optional: true}
+                        ]
+                },
+
+                postJsonRpc10EchoNamed: {
+			transport: "POST",
+			envelope: "JSON-RPC-1.0",
+			target: "jsonRpc10.php",
+
+                        parameters: [
+                                {type: "string", optional: true}
+                        ]
+                },
+
+                jsonpJsonRpc12Echo: {
+			transport: "JSONP",
+			envelope: "JSON-RPC-2.0",
+			target: "jsonpJsonRpcEcho.php",
+
+                        parameters: [
+                                {type: "string", optional: true}
+                        ]
+                },
+
+                jsonpJsonRpc12EchoNamed: {
+			transport: "JSONP",
+			envelope: "JSON-RPC-2.0",
+			target: "jsonpJsonRpcEcho.php",
+
+                        parameters: [
+                                {name: "message", type: "string", optional: true}
+                        ]
+                },
+
+                postJsonRpc10ForcedError: {
+			envelope: "JSON-RPC-1.0",
+			transport: "POST",
+			target: "jsonRpc10.php",
+
+                        parameters: [
+                                {type: "string", optional: true}
+                        ]
+                },
+
+                postJsonRpc12Echo: {
+			transport: "POST",
+			envelope: "JSON-RPC-2.0",
+			target: "jsonRpc12.php",
+
+                        parameters: [
+                                {name: "message", type: "string", optional: true}
+                        ]
+                },
+
+                getJsonRpc12Echo: {
+			transport: "GET",
+			envelope: "JSON-RPC-2.0",
+			target: "jsonRpcPostGetEcho.php",
+
+                        parameters: [
+                                {type: "string", optional: true}
+                        ]
+                },
+
+                postJsonRpc12EchoNamed: {
+			transport: "POST",
+			envelope: "JSON-RPC-2.0",
+			target: "jsonRpcPostGetEcho.php",
+
+                        parameters: [
+                                {type: "string", optional: true}
+                        ]
+                },
+
+                getJsonRpc12EchoNamed: {
+			transport: "GET",
+			envelope: "JSON-RPC-2.0",
+			target: "jsonRpcPostGetEcho.php",
+
+                        parameters: [
+                                {type: "string", optional: true}
+                        ]
+                },
+
+
+                postJsonRpc12ForcedError: {
+			envelope: "JSON-RPC-2.0",
+			transport: "POST",
+			target: "jsonRpc12.php",
+
+                        parameters: [
+                                {type: "string", optional: true}
+                        ]
+                }
+	}	
+})

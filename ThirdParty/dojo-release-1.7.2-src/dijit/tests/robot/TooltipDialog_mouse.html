@@ -1,0 +1,388 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot TooltipDialog Mouse Test</title>
+
+		<style>
+			@import "../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../dojo/dojo.js"
+			djConfig="isDebug: true"></script>
+
+		<!-- functions to help test -->
+		<script type="text/javascript" src="../helpers.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../test_TooltipDialog.html');
+
+				doh.register("Select", [
+					{
+						name: "open TooltipDialog",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							doh.robot.mouseMoveAt("tooltipDlgButton", 1000);
+							doh.robot.mouseClick({left: true}, 1000);
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isVisible("tooltipDlg"), "TooltipDialog visible");
+								doh.is("inline", dojo.global.dijit.focus.curNode.id, "focus on InlineEditBox (first field in TooltipDialog)")
+							}), 1000);
+						}
+					},
+
+					{
+						name: "pick option from Select drop down",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred(),
+								select = dijit.byId("select");
+							
+							// open Select
+							doh.robot.mouseMoveAt("select", 0);
+							doh.robot.mouseClick({left: true}, 1000);
+							doh.robot.sequence(d.getTestErrback(function(){
+								doh.t(isVisible("tooltipDlg"), "TooltipDialog should still be showing");
+								doh.t(isVisible("select_menu"), "Select Menu showing too");
+							}), 1000);
+							
+							// pick second option
+							doh.robot.mouseMoveAt(function(){
+								return dojo.query("tr", dojo.byId("select_menu"))[1];
+							}, 0);
+							doh.robot.mouseClick({left: true}, 1000);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isHidden("select_menu"), "Select Menu closed");
+								doh.t(isVisible("tooltipDlg"), "TooltipDialog should still still be showing");
+								doh.is("peppers", select.get("value"), "selected peppers");
+							}), 1000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "close Select by clicking TooltipDialog",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred(),
+								select = dijit.byId("select");
+							
+							// open Select
+							doh.robot.mouseMoveAt("select", 0);
+							doh.robot.mouseClick({left: true}, 1000);
+							doh.robot.sequence(d.getTestErrback(function(){
+								doh.t(isVisible("tooltipDlg"), "TooltipDialog should still be showing");
+								doh.t(isVisible("select_menu"), "Select Menu showing too");
+							}), 1000);
+							
+							// click unfocusable area of TooltipDialog to get select to close
+							// (but TooltipDialog itself should remain open)
+							doh.robot.mouseMoveAt(function(){
+								return dojo.query("label[for='select']", dojo.byId("tooltipDlg"))[0];
+							}, 0);
+							doh.robot.mouseClick({left: true}, 1000);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isHidden("select_menu"), "Select Menu closed");
+								doh.t(isVisible("tooltipDlg"), "TooltipDialog should still still be showing");
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "close select by clicking another control",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred(),
+								select = dijit.byId("select");
+							
+							// open Select
+							doh.robot.mouseMoveAt("select", 0);
+							doh.robot.mouseClick({left: true}, 1000);
+							doh.robot.sequence(d.getTestErrback(function(){
+								doh.t(isVisible("tooltipDlg"), "TooltipDialog should still be showing");
+								doh.t(isVisible("select_menu"), "Select Menu showing too");
+							}), 1000);
+							
+							// click TextBox to get select to close
+							doh.robot.mouseMoveAt("text", 0);
+							doh.robot.mouseClick({left: true}, 1000);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isHidden("select_menu"), "Select Menu closed");
+								doh.t(isVisible("tooltipDlg"), "TooltipDialog should still still be showing");
+								doh.is("text", dijit.focus.curNode && dijit.focus.curNode.id, "focused on textbox")
+							}), 1000);
+						}
+					},
+
+					{
+						name: "close TooltipDialog",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.mouseMove(10, 10, 0);
+							doh.robot.mouseClick({left: true}, 1000);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isHidden("tooltipDlg"), "Tooltip dialog closed");
+							}), 500);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.register("InlineEditBox", [
+					{
+						name: "auto-save",
+						timeout: 20000,
+						runTest: function(){
+							var d = new doh.Deferred(),
+								inlineEditBox = dijit.byId("inline");
+							
+							// open TooltipDialog
+							doh.robot.mouseMoveAt("tooltipDlgButton", 500);
+							doh.robot.mouseClick({left: true}, 1000);
+							doh.robot.sequence(d.getTestErrback(function(){
+								doh.t(isVisible("tooltipDlg"), "TooltipDialog visible");
+							}), 1000);
+
+							// start editing InlineEditBox
+							doh.robot.mouseMoveAt("inline", 0, 500, 10, 5);
+							doh.robot.mouseClick({left: true}, 1000);
+							doh.robot.sequence(d.getTestErrback(function(){
+								doh.t(isVisible("tooltipDlg"), "TooltipDialog should still be showing");
+								doh.t(inlineEditBox.editing, "InlineEditBox in edit mode");
+							}), 1000);
+							
+							// type something
+							doh.robot.typeKeys("changed", 0, 600);
+
+							// close InlineEditBox by clicking on blank area of TooltipDialog
+							doh.robot.mouseMoveAt("tooltipDlg", 0, 500, 10, 20);
+							doh.robot.mouseClick({left: true}, 1000);
+							doh.robot.sequence(d.getTestErrback(function(){
+								doh.f(inlineEditBox.editing, "InlineEditBox no longer in edit mode");
+								doh.t(isVisible("tooltipDlg"), "TooltipDialog should still still be showing");
+								doh.is("changed", inlineEditBox.get("value"), "value changed to changed");
+							}), 1000);
+
+							// close TooltipDialog
+							doh.robot.mouseMove(10, 10, 0);
+							doh.robot.mouseClick({left: true}, 1000);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isHidden("tooltipDlg"), "Tooltip dialog closed");
+							}), 500);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.register("DateTextBox", [
+					{
+						name: "open TooltipDialog",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.mouseMoveAt("tooltipDlgButton", 1000);
+							doh.robot.mouseClick({left: true}, 1000);
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isVisible("tooltipDlg"), "TooltipDialog visible");
+								doh.is("inline", dojo.global.dijit.focus.curNode.id, "focus on InlineEditBox (first field in TooltipDialog)")
+							}), 1000);
+						}
+					},
+
+					{
+						name: "open DateTextBox by clicking arrow",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred(),
+								date = dijit.byId("date2");
+
+							// click arrow to open
+							doh.robot.mouseMoveAt(function(){
+								return dojo.query(".dijitArrowButton", date.domNode)[0];
+							}, 0);
+							doh.robot.mouseClick({left: true}, 1000);
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isVisible("tooltipDlg"), "TooltipDialog should still be showing");
+								doh.t(isVisible("date2_popup"), "Calendar showing too");
+							}), 1000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "close DateTextBox by clicking arrow",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred(),
+								date = dijit.byId("date2");
+
+							// click arrow to open
+							doh.robot.mouseMoveAt(function(){
+								return dojo.query(".dijitArrowButton", date.domNode)[0];
+							}, 0);
+							doh.robot.mouseClick({left: true}, 1000);
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isVisible("tooltipDlg"), "TooltipDialog should still be showing");
+								doh.f(isVisible("date_popup"), "calendar closed");
+							}), 1000);
+						}
+					},
+
+					{
+						name: "close TooltipDialog",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.mouseMove(10, 10, 0);
+							doh.robot.mouseClick({left: true}, 1000);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isHidden("tooltipDlg"), "Tooltip dialog closed");
+							}), 500);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.register("Menu", [
+					{
+						name: "open outer TooltipDialog",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							doh.robot.mouseMoveAt("outerDdBtn", 1000);
+							doh.robot.mouseClick({left: true}, 1000);
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isVisible("outerTtDialog"), "Outer TooltipDialog visible");
+							}), 1000);
+						}
+					},
+					{
+						name: "open inner TooltipDialog",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							doh.robot.mouseMoveAt("innerDdBtn", 1000);
+							doh.robot.mouseClick({left: true}, 1000);
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isVisible("innerTtDialog"), "Inner TooltipDialog visible");
+							}), 1000);
+						}
+					},
+
+					{
+						name: "open submenu",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							doh.robot.mouseMoveAt("popupMenuItem", 0);
+							doh.robot.mouseClick({left: true}, 1000);
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isVisible("innerTtDialog"), "inner TooltipDialog should still be showing");
+								doh.t(isVisible("submenu"), "nested Menu showing too");
+							}), 1000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "close submenu by clicking inner TooltipDialog",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							doh.robot.mouseMoveAt("plaintext", 0);
+							doh.robot.mouseClick({left: true}, 1000);
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isVisible("innerTtDialog"), "Inner TooltipDialog should still be showing");
+								doh.t(isHidden("submenu"), "SubMenu was closed");
+							}), 1000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "open submenu again",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							doh.robot.mouseMoveAt("popupMenuItem", 0);
+							doh.robot.mouseClick({left: true}, 1000);
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isVisible("innerTtDialog"), "inner TooltipDialog should still be showing");
+								doh.t(isVisible("submenu"), "nested Menu showing too");
+							}), 1000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "close submenu by clicking another control",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							// click TextBox to get submenu to close
+							doh.robot.mouseMoveAt("name", 0);
+							doh.robot.mouseClick({left: true}, 1000);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isHidden("submenuu"), "submenu closed");
+								doh.t(isVisible("innerTtDialog"), "TooltipDialog should still still be showing");
+								doh.is("name", dijit.focus.curNode && dijit.focus.curNode.id, "focused on textbox")
+							}), 1000);
+						}
+					},
+
+					{
+						name: "close both TooltipDialogs",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.mouseMove(10, 10, 0);
+							doh.robot.mouseClick({left: true}, 1000);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(isHidden("innerTtDialog"), "inner Tooltip dialog closed");
+								doh.t(isHidden("outerTtDialog"), "inner Tooltip dialog closed");
+							}), 500);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

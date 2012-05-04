@@ -1,0 +1,144 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>FisheyeList Widget Dojo Tests</title>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/themes/tundra/tundra.css";
+		@import "../../../dijit/themes/dijit.css";
+		@import "../../../dijit/tests/css/dijitTests.css"; 
+		@import "../FisheyeList/FisheyeList.css";
+	</style>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: true"></script>
+	<script type="text/javascript" src="../FisheyeList.js"></script>
+	<script type="text/javascript">
+		//dojo.require("dojox.widget.FisheyeList");
+		dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+
+		dojo.addOnLoad(function(){
+			fish1 = dijit.byId("fisheye1");
+			fish2 = dijit.byId("fisheye2");
+		});
+		var counter = 1;
+		function addToFirstList(){
+			var item = new dojox.widget.FisheyeListItem();
+			item.label = "Dynamically Added "+counter;
+			item.iconSrc = "images/fisheye_"+counter+".png"
+			item.postCreate();
+			counter++;
+			if(counter>4){counter=1;}
+			fish1.addChild(item);
+			fish1.startup();
+			item.startup();
+		}
+	</script>
+</head>
+<body class="tundra">
+	<h1>dojox.widget.FisheyeList test</h1>
+<p>HTML before</p>
+<button onclick="addToFirstList();">Add a new item to the first list</button>
+<p>HTML before</p>
+<p>HTML before</p>
+<p>Liberal trigger: move the mouse anywhere near the menu and it will start to expand:</p>
+<div dojoType="dojox.widget.FisheyeList"
+	itemWidth="40" itemHeight="40"
+	itemMaxWidth="150" itemMaxHeight="150"
+	orientation="horizontal"
+	effectUnits="2"
+	itemPadding="10"
+	attachEdge="center"
+	labelEdge="bottom"
+	id="fisheye1"
+>
+
+	<div dojoType="dojox.widget.FisheyeListItem"
+		id="item1"
+		onclick="alert('click on ' + this.label + '(from widget id ' + this.widgetId + ')!');"
+		label="Item 1"
+		iconSrc="images/fisheye_1.png">
+	</div>
+
+	<div dojoType="dojox.widget.FisheyeListItem"
+		label="Item 2"
+		iconSrc="images/fisheye_2.png">
+	</div>
+
+	<div dojoType="dojox.widget.FisheyeListItem"
+		label="Item 3"
+		iconSrc="images/fisheye_3.png">
+	</div>
+
+	<div dojoType="dojox.widget.FisheyeListItem"
+		iconSrc="images/fisheye_4.png">
+	</div>
+
+	<div dojoType="dojox.widget.FisheyeListItem"
+		label="Really Long Item Label"
+		iconSrc="images/fisheye_3.png">
+	</div>
+
+	<div dojoType="dojox.widget.FisheyeListItem"
+		iconSrc="images/fisheye_2.png">
+	</div>
+
+	<div dojoType="dojox.widget.FisheyeListItem"
+		iconSrc="images/fisheye_1.png">
+	</div>
+</div>
+
+<p>HTML after</p>
+<p>HTML after</p>
+<p>HTML after</p>
+<p>This one has strict triggering, so you actually have to mouse over the menu to make it start moving:</p>
+<div dojoType="dojox.widget.FisheyeList"
+	itemWidth="40" itemHeight="40"
+	itemMaxWidth="150" itemMaxHeight="150"
+	orientation="horizontal"
+	effectUnits="2"
+	itemPadding="10"
+	attachEdge="center"
+	labelEdge="bottom"
+	conservativeTrigger="true"
+	id="fisheye2"
+>
+
+	<div dojoType="dojox.widget.FisheyeListItem"
+		id="item1b"
+		onclick="alert('click on ' + this.label + '(from widget id ' + this.widgetId + ')!');"
+		label="Item 1"
+		iconSrc="images/fisheye_1.png">
+	</div>
+
+	<div dojoType="dojox.widget.FisheyeListItem"
+		label="Item 2"
+		iconSrc="images/fisheye_2.png">
+	</div>
+
+	<div dojoType="dojox.widget.FisheyeListItem"
+		label="Item 3"
+		iconSrc="images/fisheye_3.png">
+	</div>
+
+	<div dojoType="dojox.widget.FisheyeListItem"
+		iconSrc="images/fisheye_4.png">
+	</div>
+
+	<div dojoType="dojox.widget.FisheyeListItem"
+		label="Really Long Item Label"
+		iconSrc="images/fisheye_3.png">
+	</div>
+
+	<div dojoType="dojox.widget.FisheyeListItem"
+		iconSrc="images/fisheye_2.png">
+	</div>
+
+	<div dojoType="dojox.widget.FisheyeListItem"
+		iconSrc="images/fisheye_1.png">
+	</div>
+</div>
+
+
+</body>
+</html>

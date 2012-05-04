@@ -1,0 +1,16 @@
+({
+	name: "date.timezone.Pacific-Niue",
+	runTest: function(t){
+		var tz = "Pacific/Niue";
+		doh.checkDate({tzOffset: 680, tzAbbr: "NUT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: 680, tzAbbr: "NUT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: 680, tzAbbr: "NUT"}, -599575201000, tz, 1);
+		doh.checkDate({tzOffset: 690, tzAbbr: "NUT"}, -599575200000, tz, 1);
+		doh.checkDate({tzOffset: 690, tzAbbr: "NUT"}, 276089399000, tz, 1);
+		doh.checkDate({tzOffset: 660, tzAbbr: "NUT"}, 276089400000, tz, 1);
+		doh.checkDate({tzOffset: 660, tzAbbr: "NUT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: 660, tzAbbr: "NUT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: 660, tzAbbr: "NUT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: 660, tzAbbr: "NUT"}, 1246789800000, tz, 0);
+	}
+})

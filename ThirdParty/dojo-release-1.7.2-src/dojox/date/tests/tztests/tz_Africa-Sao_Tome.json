@@ -1,0 +1,14 @@
+({
+	name: "date.timezone.Africa-Sao_Tome",
+	runTest: function(t){
+		var tz = "Africa/Sao_Tome";
+		doh.checkDate({tzOffset: 36.5333333333333, tzAbbr: "LMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: 36.5333333333333, tzAbbr: "LMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: 36.5333333333333, tzAbbr: "LMT"}, -1830381809000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "GMT"}, -1830381808000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "GMT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "GMT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "GMT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: 0, tzAbbr: "GMT"}, 1246789800000, tz, 0);
+	}
+})

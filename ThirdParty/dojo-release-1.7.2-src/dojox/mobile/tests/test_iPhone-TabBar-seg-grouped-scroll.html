@@ -1,0 +1,182 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>TabBar - Segmented Control</title>
+		<link href="../themes/iphone/base.css" rel="stylesheet">
+		<link href="../themes/iphone/TabBar.css" rel="stylesheet">
+
+		<style>
+			html,body{
+				height: 100%;
+				overflow: hidden;
+			}
+			#list1 li{
+				border-style: solid;
+				border-width: 1px 0px 1px 0px;
+				border-top-color: #BABABC;
+				border-bottom-color: #89898C;
+				background-color: #ACACAF;
+				line-height: 0px;
+			}
+			#list1 li table{
+				line-height: normal;
+			}
+			#list1 li:nth-child(even){
+				background-color: #97979B;
+			}
+			.lnk {
+				font-size: 17px;
+				color: #0B5199;
+				text-decoration: none;
+			}
+		</style>
+
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true, mblAlwaysHideAddressBar: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			dojo.require("dojox.mobile");			// This is a mobile app.
+			dojo.require("dojox.mobile.parser");	// This mobile app supports running on desktop browsers
+			dojo.require("dojox.mobile.compat");	// This mobile app uses declarative programming with fast mobile parser
+			dojo.require("dojox.mobile.ScrollableView");
+			dojo.require("dojox.mobile.TabBar");
+		</script>
+	</head>
+	<body style="visibility:hidden;">
+		<div id="group1" dojoType="dojox.mobile.View" selected="true">
+			<ul dojoType="dojox.mobile.TabBar" barType="segmentedControl" fixed="top">
+				<li dojoType="dojox.mobile.TabBarButton" icon1="images/tab-icon-16.png" icon2="images/tab-icon-16h.png" moveTo="view1" selected="true">New</li>
+				<li dojoType="dojox.mobile.TabBarButton" icon1="images/tab-icon-15.png" icon2="images/tab-icon-15h.png" moveTo="view2">What's Hot</li>
+				<li dojoType="dojox.mobile.TabBarButton" icon1="images/tab-icon-10.png" icon2="images/tab-icon-10h.png" moveTo="view3">Genius</li>
+			</ul>
+
+			<div id="view1" dojoType="dojox.mobile.ScrollableView" selected="true">
+				<ul dojoType="dojox.mobile.EdgeToEdgeList" id="list1">
+					<li class="mblVariableHeight" dojoType="dojox.mobile.ListItem" style="font-size: 10px;">
+						<table>
+							<tbody>
+								<tr>
+									<td>
+										<img src="images/icon-1.png">
+									</td>
+									<td>
+										<a class="lnk" href="#">Dojo: Traditional Karate-do Spirit</a><br>
+										Sarah Connor Hardcover<br>
+										Eligible for FREE Super Saver Shipping
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</li>
+					<li class="mblVariableHeight" dojoType="dojox.mobile.ListItem" style="font-size: 10px;">
+						<table>
+							<tbody>
+								<tr>
+									<td>
+										<img src="images/icon-1.png">
+									</td>
+									<td>
+										<a class="lnk" href="#">Japanese Martial Arts Dojo</a><br>
+										Martin Parker Hardcover<br>
+										Eligible for FREE Super Saver Shipping<br>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</li>
+					<li class="mblVariableHeight" dojoType="dojox.mobile.ListItem" style="font-size: 10px;">
+						<table>
+							<tbody>
+								<tr>
+									<td>
+										<img src="images/icon-1.png">
+									</td>
+									<td>
+										<a class="lnk" href="#">Total Solar Eclipse</a><br>
+										Steven Young Hardcover<br>
+										Eligible for FREE Super Saver Shipping<br>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</li>
+					<li class="mblVariableHeight" dojoType="dojox.mobile.ListItem" style="font-size: 10px;">
+						<table>
+							<tbody>
+								<tr>
+									<td>
+										<img src="images/icon-1.png">
+									</td>
+									<td>
+										<a class="lnk" href="#">The History of Java Coffee</a><br>
+										Marco Rodriguez Hardcover<br>
+										Eligible for FREE Super Saver Shipping<br>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</li>
+					<li class="mblVariableHeight" dojoType="dojox.mobile.ListItem" style="font-size: 10px;">
+						<table>
+							<tbody>
+								<tr>
+									<td>
+										<img src="images/icon-1.png">
+									</td>
+									<td>
+										<a class="lnk" href="#">The Principles of Spider's Web</a><br>
+										Melissa Morgan Hardcover<br>
+										Eligible for FREE Super Saver Shipping<br>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</li>
+				</ul>
+			</div>
+
+			<div id="view2" dojoType="dojox.mobile.ScrollableView">
+				<ul dojoType="dojox.mobile.RoundRectList">
+					<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-1.png" moveTo="hello">
+						Sounds
+					</li>
+					<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-2.png" moveTo="hello">
+						Brightness
+					</li>
+					<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-3.png" moveTo="hello">
+						Wallpaper
+					</li>
+				</ul>
+			</div>
+
+			<div id="view3" dojoType="dojox.mobile.ScrollableView">
+				<ul dojoType="dojox.mobile.RoundRectList">
+					<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-4.png" moveTo="hello">
+						General
+					</li>
+					<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-5.png" moveTo="hello">
+						Mail, Contacts, Calendars
+					</li>
+					<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-6.png" moveTo="hello">
+						Phone
+					</li>
+				</ul>
+			</div>
+		</div>
+
+		<div dojoType="dojox.mobile.ScrollableView" id="hello">
+			<h1 dojoType="dojox.mobile.Heading">
+				Hello
+			</h1>
+			<ul dojoType="dojox.mobile.EdgeToEdgeList">
+				<li dojoType="dojox.mobile.ListItem" moveTo="group1">
+					Hello
+				</li>
+				<li dojoType="dojox.mobile.ListItem" moveTo="group1">
+					Carrier
+				</li>
+			</ul>
+		</div>
+	</body>
+</html>

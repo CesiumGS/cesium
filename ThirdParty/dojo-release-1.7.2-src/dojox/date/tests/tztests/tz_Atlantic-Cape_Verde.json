@@ -1,0 +1,20 @@
+({
+	name: "date.timezone.Atlantic-Cape_Verde",
+	runTest: function(t){
+		var tz = "Atlantic/Cape_Verde";
+		doh.checkDate({tzOffset: 94.0666666666667, tzAbbr: "LMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: 94.0666666666667, tzAbbr: "LMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: 94.0666666666667, tzAbbr: "LMT"}, -1988144757000, tz, 1);
+		doh.checkDate({tzOffset: 120, tzAbbr: "CVT"}, -1988144756000, tz, 1);
+		doh.checkDate({tzOffset: 120, tzAbbr: "CVT"}, -862610401000, tz, 1);
+		doh.checkDate({tzOffset: 60, tzAbbr: "CVST"}, -862610400000, tz, 1);
+		doh.checkDate({tzOffset: 60, tzAbbr: "CVST"}, -764118001000, tz, 1);
+		doh.checkDate({tzOffset: 120, tzAbbr: "CVT"}, -764118000000, tz, 1);
+		doh.checkDate({tzOffset: 120, tzAbbr: "CVT"}, 186119999000, tz, 1);
+		doh.checkDate({tzOffset: 60, tzAbbr: "CVT"}, 186120000000, tz, 1);
+		doh.checkDate({tzOffset: 60, tzAbbr: "CVT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: 60, tzAbbr: "CVT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: 60, tzAbbr: "CVT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: 60, tzAbbr: "CVT"}, 1246789800000, tz, 0);
+	}
+})

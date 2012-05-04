@@ -1,0 +1,18 @@
+({
+	name: "date.timezone.America-Bogota",
+	runTest: function(t){
+		var tz = "America/Bogota";
+		doh.checkDate({tzOffset: 296.333333333333, tzAbbr: "BMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: 296.333333333333, tzAbbr: "BMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: 296.333333333333, tzAbbr: "BMT"}, -1739041421000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "COT"}, -1739041420000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "COT"}, 704869199000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "COST"}, 704869200000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "COST"}, 733895999000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "COT"}, 733896000000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "COT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "COT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "COT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: 300, tzAbbr: "COT"}, 1246789800000, tz, 0);
+	}
+})

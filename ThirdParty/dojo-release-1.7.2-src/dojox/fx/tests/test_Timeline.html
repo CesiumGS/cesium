@@ -1,0 +1,173 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+    "http://www.w3.org/TR/html4/strict.dtd"
+    >
+<html lang="en">
+<head>
+    <title>Test dojox.fx.Timeline</title>
+	<style>
+		@import "../../../dijit/tests/css/dijitTests.css";
+		body{
+			font-family:sans-serif;
+		}
+		p{
+			width:700px;
+			font-size:12px;
+		}
+		.wrap{
+			
+		}
+		.lft{
+			width:500px;
+			height:400px;
+			border:1px solid #666;
+			position:relative;
+			float:left;
+		}
+		.rgt{
+			width:300px;
+			height:400px;
+			border:1px solid #666;
+			position:relative;
+			float:left;
+			margin-left:10px;
+		}
+		
+		#ball{
+			width:50px;
+			height:50px;
+			position:relative;
+			border:1px solid #000;
+			background:#0000ff;
+		}
+		
+		#text{
+			font-family:sans-serif;
+			font-size:16px;
+			position:absolute;
+			bottom:90%;
+			left:0%;
+		}
+	</style>
+
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: true" ></script>
+		<script>
+			dojo.require("dojox.fx.ext-dojo.reverse");
+			dojo.require("dojox.fx.Timeline");
+
+			var keys = [
+				{
+					width:"50px",
+					height:"50px",
+					marginTop:"0px",
+					borderWidth:"10px",
+					borderColor:"#ffff00",
+					left:"0px",
+					ease:"quadIn"
+				},
+				{
+					height:"250px",
+					marginTop:"50px",
+					left:"300px",
+					ease:"quadOut"
+				},
+				{
+					width:"250px",
+					height:"50px",
+					borderWidth:"20px",
+					borderColor:"#ff0000",
+					left:"0px"
+				},
+				{
+					width:"50px",
+					height:"50px"
+				},
+				{
+					marginTop:"300px",
+					left:"0px",
+					ease:"bounceOut"
+				},
+				{
+					left:"300px"
+				}
+			];
+			
+			var keys2 = [
+				{
+					step:"0%",
+					bottom:"90%",
+					ease:"quadIn"
+				},
+				{
+					step:"1%",
+					left:"0%",
+					fontSize:"36px",
+					
+				},
+				
+				{
+					step:"20%",
+					bottom:"0%",
+					ease:"quadOut"
+				},
+				{
+					step:"40%",
+					bottom:"70%",
+					ease:"quadIn"
+				},
+				{
+					step:"60%",
+					bottom:"0%",
+					ease:"quadOut"
+				},
+				{
+					step:"80%",
+					bottom:"30%",
+					ease:"quadIn"
+				},
+				
+				
+				
+				{
+					step:"99%",
+					fontSize:"2px",
+					left:"90%"
+				},{
+					step:"100%",
+					bottom:"0%"
+				}
+			];
+			
+			var ani, ani2;
+			reverse = function(){
+				ani.reverse();
+				ani2.reverse();
+			}
+			dojo.addOnLoad(function(){
+				ani = dojox.fx.animateTimeline({keys:keys, duration:4000}, "ball").play();
+				ani2 = dojox.fx.animateTimeline({keys:keys2, duration:2000}, "text").play();
+			});
+			
+		</script>
+</head>
+<body>
+    <h1>Test Timeline</h1>
+	<p>
+		This is a test for the dojo.Animation extension, dojox.fx.Timeline.
+		This works by replacing <em>dojo._Line</em> with <em>dojox.fx._Timeline</em>. The keyframes
+		are an array of object properties. Properties can skip steps, so <em>width</em> will still
+		transition if it is in key #1 and key #5.
+	</p>
+	<p>
+		This is reversable as well, using <em>dojox.fx.ext-dojo.reverse</em>. Note the Reverse button.
+	</p>
+	<button onclick="reverse();">Reverse</button>
+	<div class="wrap">
+		<div class="lft">
+			<div id="ball"></div>
+		</div>
+		<div class="rgt">
+			<div id="text">Dojo</div>
+		</div>
+	</div>
+</body>
+</html>

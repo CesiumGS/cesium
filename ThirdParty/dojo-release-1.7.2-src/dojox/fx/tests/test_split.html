@@ -1,0 +1,442 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>Gruppler's Effect Demos</title>
+
+	<link rel="stylesheet" href="../../../dijit/tests/css/dijitTests.css" />
+
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad:true, isDebug:false"></script>
+		
+	<script type="text/javascript">
+		dojo.require("dojox.fx.split");
+
+		var intro1, intro2;
+		var currentAnimation;
+		var originalText;
+
+		var init = function(){
+			
+			// Intro //
+			dojo.style("header1", { "opacity":0, "visibility":"visible" });
+			intro1 = dojox.fx.build({
+				node: "header1",
+				duration: 2000,
+				rows: 8,
+				columns: 1,
+				interval: 125
+			});
+
+			intro1.play();
+			// Split Effects //
+			dojo.connect(dojo.byId("box_blockfade_1"), "onclick", null,
+				function(){
+					var node = dojo.byId("box_blockfade_1");
+					if(parseFloat(node.style.opacity) < 1){
+						return false;
+					}
+					var properties = {
+						node: node,
+						rows: 1,
+						columns: 10
+					};
+					properties.onEnd = function(){
+						currentAnimation = dojox.fx.blockFadeIn(dojo.mixin(properties, {onEnd: undefined}));
+						currentAnimation.play();
+					};
+					currentAnimation = dojox.fx.blockFadeOut(properties);
+					currentAnimation.play();
+
+					/*
+					// This is how we /should/ be able to do it...
+					dojo.fx.chain([
+						dojox.fx.blockFadeOut(properties),
+						dojox.fx.blockFadeIn(properties)
+					]).play();
+					*/
+				}
+			);
+			dojo.connect(dojo.byId("box_blockfade_2"), "onclick", null,
+				function(){
+					var node = dojo.byId("box_blockfade_2");
+					if(parseFloat(dojo.style(node,"opacity")) < 1){
+						return false;
+					}
+					var properties = {
+						node: node,
+						random: 0.25,
+						reverseOrder: true
+					};
+					properties.onEnd = function(){
+						currentAnimation = dojox.fx.blockFadeIn(dojo.mixin(properties, {onEnd: undefined}));
+						currentAnimation.play();
+					};
+					currentAnimation = dojox.fx.blockFadeOut(properties);
+					currentAnimation.play();
+				}
+			);
+
+			dojo.connect(dojo.byId("box_disintegrate_1"), "onclick", null,
+				function(){
+					var node = dojo.byId("box_disintegrate_1");
+					if(parseFloat(dojo.style(node,"opacity")) < 1){
+						return false;
+					}
+					var properties = {
+						node: node,
+						distance: 1,
+						crop: true,
+						fade: false
+					};
+					properties.onEnd = function(){
+						currentAnimation = dojox.fx.build(dojo.mixin(properties, {onEnd: undefined}));
+						currentAnimation.play();
+					};
+					currentAnimation = dojox.fx.disintegrate(properties);
+					currentAnimation.play();
+				}
+			);
+
+			dojo.connect(dojo.byId("box_disintegrate_2"), "onclick", null,
+				function(){
+					var node = dojo.byId("box_disintegrate_2");
+					if(parseFloat(dojo.style(node,"opacity")) < 1){
+						return false;
+					}
+					var properties = {
+						node: node,
+						random: 0.5,
+						distance: 2.5
+					};
+					properties.onEnd = function(){
+						currentAnimation = dojox.fx.build(dojo.mixin(properties, {onEnd: undefined}));
+						currentAnimation.play();
+					};
+					currentAnimation = dojox.fx.disintegrate(properties);
+					currentAnimation.play();
+				}
+			);
+
+			dojo.connect(dojo.byId("box_explode_1"), "onclick", null,
+				function(){
+					var node = dojo.byId("box_explode_1");
+					if(parseFloat(dojo.style(node,"opacity")) < 1){
+						return false;
+					}
+					var properties = {
+						node: node,
+						rows: 2,
+						columns: 2,
+						distance: 0.75,
+						easing: dojo.fx.easing.elasticOut,
+						fade: false,
+						crop: true
+					};
+					properties.onEnd = function(){
+						currentAnimation = dojox.fx.converge(dojo.mixin(properties,
+						{
+							onEnd: undefined,
+							easing: dojo.fx.easing.bounceOut
+						}));
+						currentAnimation.play()
+					};
+					currentAnimation = dojox.fx.explode(properties);
+					currentAnimation.play();
+				}
+			);
+
+			dojo.connect(dojo.byId("box_explode_2"), "onclick", null,
+				function(){
+					var node = dojo.byId("box_explode_2");
+					if(parseFloat(dojo.style(node,"opacity")) < 1){
+						return false;
+					}
+					var properties = {
+						node: node,
+						rows: 5,
+						columns: 5,
+						distance: 1.5,
+						duration: 1500,
+						random: 0.75
+					};
+					properties.onEnd = function(){
+						currentAnimation = dojox.fx.converge(dojo.mixin(properties, {onEnd: undefined}));
+						currentAnimation.play();
+					};
+					currentAnimation = dojox.fx.explode(properties);
+					currentAnimation.play();
+				}
+			);
+
+			dojo.connect(dojo.byId("box_shear_1"), "onclick", null,
+				function(){
+					var node = dojo.byId("box_shear_1");
+					if(parseFloat(dojo.style(node,"opacity")) < 1){
+						return false;
+					}
+					var properties = {
+						node: node,
+						interval: 50,
+						distance: 0.95,
+						rows: 10,
+						columns: 1,
+						fade: false,
+						crop: true,
+						reverseOrder: true
+					};
+					properties.onEnd = function(){
+						currentAnimation = dojox.fx.unShear(dojo.mixin(properties, {onEnd: undefined}));
+						currentAnimation.play();
+					};
+					currentAnimation = dojox.fx.shear(properties);
+					currentAnimation.play();
+				}
+			);
+
+			dojo.connect(dojo.byId("box_shear_2"), "onclick", null,
+				function(){
+					var node = dojo.byId("box_shear_2");
+					if(parseFloat(dojo.style(node,"opacity")) < 1){
+						return false;
+					}
+					var properties = {
+						node: node,
+						random: 1
+					};
+					properties.onEnd = function(){
+						currentAnimation = dojox.fx.unShear(dojo.mixin(properties, {onEnd: undefined}));
+						currentAnimation.play();
+					};
+					currentAnimation = dojox.fx.shear(properties);
+					currentAnimation.play();
+				}
+			);
+
+			dojo.connect(dojo.byId("box_pinwheel_1"), "onclick", null,
+				function(){
+					var node = dojo.byId("box_pinwheel_1");
+					if(parseFloat(dojo.style(node,"opacity")) < 1){
+						return false;
+					}
+					var properties = {
+						node: node,
+						fade: false
+					};
+					properties.onEnd = function(){
+						currentAnimation = dojox.fx.unPinwheel(dojo.mixin(properties, {onEnd: undefined}));
+						currentAnimation.play();
+					};
+					currentAnimation = dojox.fx.pinwheel(properties);
+					currentAnimation.play();
+				}
+			);
+
+			dojo.connect(dojo.byId("box_pinwheel_2"), "onclick", null,
+				function(){
+					var node = dojo.byId("box_pinwheel_2");
+					if(parseFloat(dojo.style(node,"opacity")) < 1){
+						return false;
+					}
+					var properties = {
+						node: node,
+						random: 1,
+						rows: 5,
+						columns: 5
+					};
+					properties.onEnd = function(){
+						currentAnimation = dojox.fx.unPinwheel(dojo.mixin(properties, {onEnd: undefined}));
+						currentAnimation.play();
+					};
+					currentAnimation = dojox.fx.pinwheel(properties);
+					currentAnimation.play();
+				}
+			);
+		} // end init
+		dojo.addOnLoad(init);
+	</script>
+
+	<style type="text/css">
+		h1 {
+			margin: 0;
+	  	}
+
+		hr {
+		}
+
+	  hr.thick {
+	  }
+
+	  .box {
+		height: 100px;
+		width: 100px;
+		overflow: visible;
+	  }
+
+	  .box {
+		color: #292929;
+		border: 1px solid #999;
+		background-color: #ddd;
+		cursor: pointer;
+		overflow: hidden;
+		margin: 0;
+		padding: 0;
+	  }
+
+
+	  .textBox p {
+		width: 100px;
+		height: 100px;
+	  }
+
+	  .box p, .box code {
+		margin: 0;
+		text-align: left;
+	  }
+
+	  .effectList {
+		list-style: none;
+		padding: 0;
+		font-size: 10px;
+		margin: 0;
+	  }
+
+	  .effectList li {
+		float: left;
+		display:block;
+		padding: 1em;
+	  }
+
+	  .vl, .vr {
+		border: 0px dotted #999;
+	  }
+
+	  .vl {
+		border-left-width: 4px;
+	  }
+
+	  .vr {
+		border-right-width: 4px;
+	  }
+	</style>
+</head>
+<body>
+	<h1 id="header1">dojox.fx.split</h1>
+	Each effect is highly configurable.	 Here is a general list of the options available in each effect:
+	<ul>
+		<li>The number of rows and columns in which to split the element</li>
+		<li>The distance the pieces travel (as a multiple of the element's respective dimensions)</li>
+		<li>Whether or not to fade the pieces in/out</li>
+		<li>How much the effect should be randomized (a percentage)</li>
+		<li>Whether or not the pieces should appear outside the element's boundries</li>
+	</ul>
+	<p style="font-weight: bold">
+		Just click each box to play its animation!
+	</p>
+	<hr />
+	<ul class="effectList">
+	  <li>BlockFadeOut,<br />BlockFadeIn uniformly
+		<div id='box_blockfade_1' class="box">
+		  <code>
+			rows: 1<br />
+			columns: 10
+		  </code><hr />
+		  <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Morbi nibh. Maecenas metus nisi, tempus sed.</p>
+		</div>
+	  </li>
+	  <li class="vr">BlockFadeOut,<br />BlockFadeIn randomly
+		<div id='box_blockfade_2' class="box">
+		  <code>
+			random: 0.25<br />
+			reverseOrder: true
+		  </code><hr />
+		  <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Morbi nibh. Maecenas metus nisi, tempus sed.</p>
+		</div>
+	  </li>
+	  <li>Disintegrate, Build<br />uniformly (cropped)
+		<div id='box_disintegrate_1' class="box">
+		  <code>
+			distance: 1<br />
+			crop: true<br />
+			fade: false
+		  </code><hr />
+		  <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Morbi nibh. Maecenas metus nisi, tempus sed.</p>
+		</div>
+	  </li>
+	  <li class="vr">Disintegrate, Build<br />randomly
+		<div id='box_disintegrate_2' class="box">
+		  <code>
+			random: 0.5<br />
+			distance: 2.5
+		  </code><hr />
+		  <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Morbi nibh. Maecenas metus nisi, tempus sed.</p>
+		</div>
+	  </li>
+	  <li>Explode, Converge<br />uniformly (cropped)
+		<div id='box_explode_1' class="box">
+		  <code>
+			rows: 2<br />
+			columns: 2<br />
+			distance: 0.75<br />
+			fade: false<br />
+			crop: true<br />
+			(custom easing)
+		  </code><hr />
+		  <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Morbi nibh. Maecenas metus nisi, tempus sed.</p>
+		</div>
+	  </li>
+	  <li class="vr">Explode, Converge<br />randomly
+		<div id='box_explode_2' class="box">
+		  <code>
+			rows: 5<br />
+			columns: 5<br />
+			distance: 1.5<br />
+			duration: 1500<br />
+			random: 0.75
+		  </code><hr />
+		  <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Morbi nibh. Maecenas metus nisi, tempus sed.</p>
+		</div>
+	  </li>
+	  <li>Shear, UnShear<br />rows (cropped)
+		<div id='box_shear_1' class="box">
+		  <code>
+			interval: 50<br />
+			distance: 0.95<br />
+			rows: 10<br />
+			columns: 1<br />
+			fade: false<br />
+			crop: true<br />
+			reverseOrder: true
+		  </code><hr />
+		  <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Morbi nibh. Maecenas metus nisi, tempus sed.</p>
+		</div>
+	  </li>
+	  <li class="vr">Shear, UnShear<br />rows and columns
+		<div id='box_shear_2' class="box">
+		  <code>
+			random: 1
+		  </code><hr />
+		  <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Morbi nibh. Maecenas metus nisi, tempus sed.</p>
+		</div>
+	  </li>
+	  <li>Pinwheel, UnPinwheel<br />uniformly
+		<div id='box_pinwheel_1' class="box">
+		  <code>
+			fade: false
+		  </code><hr />
+		  <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Morbi nibh. Maecenas metus nisi, tempus sed.</p>
+		</div>
+	  </li>
+		<li>Pinwheel, UnPinwheel<br />randomly
+		<div id='box_pinwheel_2' class="box">
+		  <code>
+			random: 1<br />
+			rows: 5<br />
+			columns: 5
+		  </code><hr />
+		  <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Morbi nibh. Maecenas metus nisi, tempus sed.</p>
+		</div>
+		</li>
+	</ul>
+	<div style="height:400px"></div>
+</body>
+</html>

@@ -1,0 +1,373 @@
+<html>
+<head>
+	
+	<title>dojox.fx Text Effect Tests | The Dojo Toolkit</title>
+
+	<link rel="stylesheet" href="../../../dijit/tests/css/dijitTests.css" />
+
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		djConfig="parseOnLoad:true, isDebug:false"></script>
+		
+	<script type="text/javascript">
+		dojo.require("dojox.fx.text");
+		dojo.require("dojo.fx.easing");
+
+		var intro1, intro2;
+		var text_blockfade_1, text_blockfade_2;
+		var text_disintegrate_1, text_disintegrate_2
+		var text_explode_1, text_explode_2;
+		var text_backspace_1, text_backspace_2;
+
+		var currentAnimation;
+
+		var originalText;
+		var originalReplacementText = replacementText = "<center><u>This </u><br>is " +
+			"a <br><i>little </i>bit <br>of <br><b>replacement text</b>...</center>";
+
+		var init = function(){
+
+			originalText = dojo.byId("text_blockfade_1").innerHTML;
+			dojo.byId("replacementText").value = replacementText;
+
+			// Intro //
+			intro2 = dojox.fx.text.build({
+				node: "header2",
+				duration: 2500,
+				interval: 80,
+				reverseOrder: true,
+				distance: 3,
+				easing:dojo.fx.easing.backOut, 
+				onPlay: function(){ dojo.style("header2","opacity", 1); }
+			}).play();
+			
+
+			// Text Effects //
+
+			text_blockfade_1 = function(node){
+				if(node.style.height){
+					return false;
+				}
+				var properties = {
+					node: node,
+					words: true
+				};
+				properties.onEnd = function(){
+					currentAnimation = dojox.fx.text.blockFadeIn(dojo.mixin(properties, {
+						onEnd: undefined,
+						text: (replacementText && node.innerHTML != replacementText) ?
+							replacementText :
+							originalText
+					}));
+					currentAnimation.play()
+				};
+				currentAnimation = dojox.fx.text.blockFadeOut(properties);
+				currentAnimation.play();
+			};
+			text_blockfade_2 = function(node){
+				if(node.style.height){
+					return false;
+				}
+				var properties = {
+					node: node,
+					duration: 1500,
+					random: 0.3,
+					reverseOrder: true
+				};
+				properties.onEnd = function(){
+					currentAnimation = dojox.fx.text.blockFadeIn(dojo.mixin(properties, {
+						onEnd: undefined,
+						text: (replacementText && node.innerHTML != replacementText) ?
+							replacementText :
+							originalText
+					}));
+					currentAnimation.play();
+				};
+				currentAnimation = dojox.fx.text.blockFadeOut(properties);
+				currentAnimation.play();
+			};
+
+			text_disintegrate_1 = function(node){
+				if(node.style.height){
+					return false;
+				}
+				var properties = {
+					node: node,
+					words: true,
+					crop: true,
+					distance: 1
+				};
+				properties.onEnd = function(){
+					currentAnimation = dojox.fx.text.build(dojo.mixin(properties, {
+						onEnd: undefined,
+						text: (replacementText && node.innerHTML != replacementText) ?
+							replacementText :
+							originalText
+					}));
+					currentAnimation.play();
+				};
+				currentAnimation = dojox.fx.text.disintegrate(properties);
+				currentAnimation.play();
+			};
+			text_disintegrate_2 = function(node){
+				if(node.style.height){
+					return false;
+				}
+				var properties = {
+					node: node,
+					random: 0.5,
+					distance: 2.5,
+					reverseOrder: true
+				};
+				properties.onEnd = function(){
+					currentAnimation = dojox.fx.text.build(dojo.mixin(properties, {
+						onEnd: undefined,
+						text: (replacementText && node.innerHTML != replacementText) ?
+							replacementText :
+							originalText
+					}));
+					currentAnimation.play();
+				};
+				currentAnimation = dojox.fx.text.disintegrate(properties);
+				currentAnimation.play();
+			};
+
+			text_explode_1 = function(node){
+				if(node.style.height){
+					return false;
+				}
+				var properties = {
+					node: node,
+					distance: 0.5
+				};
+				properties.onEnd = function(){
+					currentAnimation = dojox.fx.text.converge(dojo.mixin(properties,
+					{
+						onEnd: undefined,
+						text: (replacementText && node.innerHTML != replacementText) ?
+							replacementText :
+							originalText
+					}));
+					currentAnimation.play();
+				};
+				currentAnimation = dojox.fx.text.explode(properties);
+				currentAnimation.play();
+			};
+			text_explode_2 = function(node){
+				if(node.style.height){
+					return false;
+				}
+				var properties = {
+					node: node,
+					words: true,
+					distance: 1.5,
+					duration: 1500,
+					random: 0.5,
+					//crop: true
+				};
+				properties.onEnd = function(){
+					currentAnimation = dojox.fx.text.converge(dojo.mixin(properties,{
+						onEnd: undefined,
+						text: (replacementText && node.innerHTML != replacementText) ?
+							replacementText :
+							originalText
+					}));
+					currentAnimation.play();
+				};
+				currentAnimation = dojox.fx.text.explode(properties).play();
+			};
+
+			text_backspace_1 = function(node){
+				if(node.style.height){
+					return false;
+				}
+				var properties = {
+					node: node,
+					duration: 2500,
+					wordDelay: 0,
+					fixed: true
+				};
+				properties.onEnd = function(){
+					currentAnimation = dojox.fx.text.type(dojo.mixin(properties,{
+						onEnd: undefined,
+						text: (replacementText && node.innerHTML != replacementText) ?
+							replacementText :
+							originalText
+					}));
+					currentAnimation.play();
+				};
+				currentAnimation = dojox.fx.text.backspace(properties);
+				currentAnimation.play();
+			};
+			text_backspace_2 = function(node){
+				if(node.style.height){
+					return false;
+				}
+				var properties = {
+					node: node,
+					interval: 40,
+					random: 0.75
+				};
+				properties.onEnd = function(){
+					currentAnimation = dojox.fx.text.type(dojo.mixin(properties,
+					{
+						onEnd: undefined,
+						interval: 200,
+						text: (replacementText && node.innerHTML != replacementText) ?
+							replacementText :
+							originalText
+					}));
+					currentAnimation.play();
+				};
+				currentAnimation = dojox.fx.text.backspace(properties).play();
+			};
+		};
+		dojo.addOnLoad(init);
+	</script>
+	<style type="text/css">
+	  body {
+		font-family: verdana, arial;
+	  }
+
+	  h1 {
+		margin: 0;
+	  }
+
+	  hr {
+		clear: both;
+		border: 0px solid #999;
+		border-top-width: 1px;
+		margin: 0;
+	  }
+
+	  hr.thick {
+		border-top-width: 5px;
+	  }
+
+	  .box, .boxContainer {
+		height: 100px;
+		width: 100px;
+		overflow: visible;
+	  }
+
+	  .box {
+		color: #292929;
+		border: 1px solid #999;
+		background-color: #ddd;
+		cursor: pointer;
+		overflow: hidden;
+		margin: 0;
+		padding: 0;
+	  }
+
+
+	  .textBox p {
+		width: 100px;
+		height: 100px;
+	  }
+
+	  .box p, .box code {
+		margin: 0;
+		text-align: left;
+	  }
+
+	  .effectList {
+		list-style: none;
+		padding: 0;
+		font-size: 10px;
+		margin: 0;
+	  }
+
+	  .effectList li {
+		float: left;
+		padding: 1em;
+	  }
+
+	  .vl, .vr {
+		border: 0px dotted #999;
+	  }
+
+	  .vl {
+		border-left-width: 4px;
+	  }
+
+	  .vr {
+		border-right-width: 4px;
+	  }
+	</style>
+</head>
+<body>
+
+	<h1 id="header2" style="opacity:0">dojox.fx.text</h1>
+
+	<div style="float:right;">
+
+		<label for="replacementText">Replacement Text:</label>
+		<input type="button" value="Clear" onclick="dojo.byId('replacementText').value = replacementText = '';">
+		<input type="button" value="Reset" onclick="dojo.byId('replacementText').value = replacementText = originalReplacementText;"><br />
+		<textarea id="replacementText" rows=8 cols=30 onkeyup="replacementText = this.value"></textarea>
+	</div>
+
+	<p>
+		The following effects are very similar to the previous; rather than separating an element into 
+		rectangular blocks, these separate the text inside the element into either words or characters, preserving any HTML.
+	</p>
+	
+	Each effect is highly configurable.	Here is a general list of the options available in each effect:
+	<ul>
+		<li>Whether or not the text should be split into words rather than characers</li>
+		<li>Text to use instead of the element's innerHTML</li>
+		<li>The distance the pieces travel (as a multiple of the element's respective dimensions)</li>
+		<li>Whether or not to fade the pieces in/out</li>
+		<li>How much the effect should be randomized (a percentage)</li>
+		<li>Whether or not the pieces should appear outside the element's boundries</li>
+	</ul>
+	<p style="font-weight: bold">
+		Just click each block of text to play its animation!<br />
+		(Some of these are very cpu-hungry)
+	</p>
+	<hr />
+	<ul class="effectList">
+	  <li>BlockFadeOut,<br />BlockFadeIn uniformly<br />(by word)
+		<div class="box textBox">
+		  <p id="text_blockfade_1" onclick="text_blockfade_1(this)">Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Morbi nibh. Maecenas metus nisi, tempus sed.</p>
+		</div>
+	  </li>
+	  <li class="vr">BlockFadeOut,<br />BlockFadeIn randomly<br />(by character)
+		<div class="box textBox">
+		  <p id="text_blockfade_2" onclick="text_blockfade_2(this)">Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Morbi nibh. Maecenas metus nisi, tempus sed.</p>
+		</div>
+	  </li>
+	  <li>Disintegrate, Build<br />uniformly<br />(by word, cropped)
+		<div class="box textBox">
+		  <p id="text_disintegrate_1" onclick="text_disintegrate_1(this)">Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Morbi nibh. Maecenas metus nisi, tempus sed.</p>
+		</div>
+	  </li>
+	  <li class="vr">Disintegrate, Build<br />randomly<br />(by character)
+		<div class="box textBox">
+		  <p id="text_disintegrate_2" onclick="text_disintegrate_2(this)">Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Morbi nibh. Maecenas metus nisi, tempus sed.</p>
+		</div>
+	  </li>
+	  <li>Explode, Converge<br />uniformly<br />(by character)
+		<div class="box textBox">
+		  <p id="text_explode_1" onclick="text_explode_1(this)">Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Morbi nibh. Maecenas metus nisi, tempus sed.</p>
+		</div>
+	  </li>
+	  <li class="vr">Explode, Converge<br />randomly<br />(by word)
+		<div class="box textBox">
+		  <p id="text_explode_2" onclick="text_explode_2(this)">Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Morbi nibh. Maecenas metus nisi, tempus sed.</p>
+		</div>
+	  </li>
+	  <li>Backspace, Type<br />uniformly<br />(by duration, fixed)
+		<div class="box textBox">
+		  <p id="text_backspace_1" onclick="text_backspace_1(this)">Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Morbi nibh. Maecenas metus nisi, tempus sed.</p>
+		</div>
+	  </li>
+	  <li>Backspace, Type<br />randomly<br />(by interval)
+		<div class="box textBox">
+		  <p id="text_backspace_2" onclick="text_backspace_2(this)">Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Morbi nibh. Maecenas metus nisi, tempus sed.</p>
+		</div>
+	  </li>
+	</ul>
+	<div style="height:400px"></div>
+  </body>
+</html>

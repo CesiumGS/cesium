@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>dijit.layout.BorderContainer Test - complex layout</title>
+
+	<!-- only needed for test files: -->
+	<style type="text/css">
+		@import "../../themes/claro/document.css";
+		@import "../css/dijitTests.css";
+	</style>
+
+	<!-- required: the default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		data-dojo-config="isDebug: true, parseOnLoad: true"></script>
+
+	<!-- only needed for alternate theme testing: -->
+	<script type="text/javascript" src="../_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dijit.Editor");
+		dojo.require("dijit.layout.AccordionContainer");
+		dojo.require("dijit.layout.TabContainer");
+		dojo.require("dijit.layout.LinkPane");
+		dojo.require("dijit.Tooltip");
+		dojo.require("dijit.layout.BorderContainer");
+		dojo.require("dijit.layout.SplitContainer");
+		dojo.require("dijit.layout.ContentPane");
+		dojo.require("dijit.form.FilteringSelect");
+	</script>
+</head>
+<body class="claro">
+
+	<h1 class="testTitle">dijit.layout.BorderContainer complex layout test</h1>
+
+	<div id="border1" data-dojo-type="dijit.layout.BorderContainer"
+		data-dojo-props='style:"border: 2px solid black; width: 90%; height: 500px; padding: 10px;" '>
+		<div id="ac1" data-dojo-type="dijit.layout.AccordionContainer"
+			data-dojo-props='region:"left", style:"background-color: #acb386; width: 400px;", splitter:true'>
+			<div id="ap1" data-dojo-type="dijit.layout.ContentPane" data-dojo-props='title:"a"'>
+				left bar
+			</div>
+			<div id="ap2" data-dojo-type="dijit.layout.ContentPane" data-dojo-props='title:"b"'>
+				<p>
+					Nunc consequat nisi vitae quam. Suspendisse sed nunc. Proin
+					suscipit porta magna. Duis accumsan nunc in velit. Nam et nibh.
+					Nulla facilisi. Cras venenatis urna et magna. Aenean magna mauris,
+					bibendum sit amet, semper quis, aliquet nec, sapien.  Aliquam
+					aliquam odio quis erat. Etiam est nisi, condimentum non, lacinia
+					ac, vehicula laoreet, elit. Sed interdum augue sit amet quam
+					dapibus semper. Nulla facilisi. Pellentesque lobortis erat nec
+					quam.
+				</p>
+				<p>
+					Sed arcu magna, molestie at, fringilla in, sodales eu, elit.
+					Curabitur mattis lorem et est. Quisque et tortor. Integer bibendum
+					vulputate odio. Nam nec ipsum. Vestibulum mollis eros feugiat
+					augue. Integer fermentum odio lobortis odio. Nullam mollis nisl non
+					metus. Maecenas nec nunc eget pede ultrices blandit. Ut non purus
+					ut elit convallis eleifend. Fusce tincidunt, justo quis tempus
+					euismod, magna nulla viverra libero, sit amet lacinia odio diam id
+					risus. Ut varius viverra turpis. Morbi urna elit, imperdiet eu,
+					porta ac, pharetra sed, nisi. Etiam ante libero, ultrices ac,
+					faucibus ac, cursus sodales, nisl. Praesent nisl sem, fermentum eu,
+					consequat quis, varius interdum, nulla. Donec neque tortor,
+					sollicitudin sed, consequat nec, facilisis sit amet, orci. Aenean
+					ut eros sit amet ante pharetra interdum.
+				</p>
+			</div>
+			<div id="ap3" data-dojo-type="dijit.layout.ContentPane" data-dojo-props='title:"c"'>
+				<p>The quick brown fox jumps over the lazy dog.  The quick brown fox jumps over the lazy dog.  The quick brown fox jumps over the lazy dog.</p>
+			</div>
+		</div>
+
+		<div data-dojo-type="dijit.layout.AccordionContainer"
+			data-dojo-props='region:"right", style:"background-color: #acb386; width: 80px;"'>
+			<div data-dojo-type="dijit.layout.ContentPane" data-dojo-props='title:"a"'>
+				right bar
+			</div>
+			<div data-dojo-type="dijit.layout.ContentPane" data-dojo-props='title:"b"'>
+				<p>
+					Nunc consequat nisi vitae quam. Suspendisse sed nunc. Proin
+					suscipit porta magna. Duis accumsan nunc in velit. Nam et nibh.
+					Nulla facilisi. Cras venenatis urna et magna. Aenean magna mauris,
+					bibendum sit amet, semper quis, aliquet nec, sapien.  Aliquam
+					aliquam odio quis erat. Etiam est nisi, condimentum non, lacinia
+					ac, vehicula laoreet, elit. Sed interdum augue sit amet quam
+					dapibus semper. Nulla facilisi. Pellentesque lobortis erat nec
+					quam.
+				</p>
+				<p>
+					Sed arcu magna, molestie at, fringilla in, sodales eu, elit.
+					Curabitur mattis lorem et est. Quisque et tortor. Integer bibendum
+					vulputate odio. Nam nec ipsum. Vestibulum mollis eros feugiat
+					augue. Integer fermentum odio lobortis odio. Nullam mollis nisl non
+					metus. Maecenas nec nunc eget pede ultrices blandit. Ut non purus
+					ut elit convallis eleifend. Fusce tincidunt, justo quis tempus
+					euismod, magna nulla viverra libero, sit amet lacinia odio diam id
+					risus. Ut varius viverra turpis. Morbi urna elit, imperdiet eu,
+					porta ac, pharetra sed, nisi. Etiam ante libero, ultrices ac,
+					faucibus ac, cursus sodales, nisl. Praesent nisl sem, fermentum eu,
+					consequat quis, varius interdum, nulla. Donec neque tortor,
+					sollicitudin sed, consequat nec, facilisis sit amet, orci. Aenean
+					ut eros sit amet ante pharetra interdum.
+				</p>
+			</div>
+			<div data-dojo-type="dijit.layout.ContentPane" data-dojo-props='title:"c"'>
+				<p>The quick brown fox jumps over the lazy dog.  The quick brown fox jumps over the lazy dog.  The quick brown fox jumps over the lazy dog.</p>
+			</div>
+		</div>
+		<div data-dojo-type="dijit.layout.ContentPane" data-dojo-props='region:"top", style:"background-color: #b39b86; height: 150px;", splitter:true'>
+
+			<div id="mainTabContainer" data-dojo-type="dijit.layout.TabContainer" data-dojo-props='style:"width: 100%; height: 20em;"'>
+
+				<div id="tab1" data-dojo-type="dijit.layout.ContentPane" data-dojo-props='href:"../../../dijit/tests/layout/tab1.html", title:"Tab 1"'></div>
+
+				<div id="tab2" data-dojo-type="dijit.layout.ContentPane" data-dojo-props='href:"../../../dijit/tests/layout/tab2.html", refreshOnShow:true, title:"Tab 2", selected:true'></div>
+
+				<div id="tab3" data-dojo-type="dijit.layout.ContentPane" data-dojo-props='title:"Tab 3"'>
+					<h1>I am tab 3</h1>
+					<p>And I was already part of the page! That's cool, no?</p>
+					<p id="foo">tooltip on this paragraph</p>
+					<div data-dojo-type="dijit.Tooltip" data-dojo-props='connectId:["foo"]'>I'm a tooltip!</div>
+					<button data-dojo-type="dijit.form.Button">I'm a button </button>
+					<br>
+					<button data-dojo-type="dijit.form.Button">So am I!</button>
+					<p>
+					Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean
+					semper sagittis velit. Cras in mi. Duis porta mauris ut ligula. Proin
+					porta rutrum lacus. Etiam consequat scelerisque quam. Nulla facilisi.
+					Maecenas luctus venenatis nulla. In sit amet dui non mi semper iaculis.
+					Sed molestie tortor at ipsum. Morbi dictum rutrum magna. Sed vitae
+					risus.
+					</p>
+					<p>Aliquam vitae enim. Duis scelerisque metus auctor est venenatis
+					imperdiet. Fusce dignissim porta augue. Nulla vestibulum. Integer lorem
+					nunc, ullamcorper a, commodo ac, malesuada sed, dolor. Aenean id mi in
+					massa bibendum suscipit. Integer eros. Nullam suscipit mauris. In
+					pellentesque. Mauris ipsum est, pharetra semper, pharetra in, viverra
+					quis, tellus. Etiam purus. Quisque egestas, tortor ac cursus lacinia,
+					felis leo adipiscing nisi, et rhoncus elit dolor eget eros. Fusce ut
+					quam. Suspendisse eleifend leo vitae ligula. Nulla facilisi. Nulla
+					rutrum, erat vitae lacinia dictum, pede purus imperdiet lacus, ut
+					semper velit ante id metus. Praesent massa dolor, porttitor sed,
+					pulvinar in, consequat ut, leo. Nullam nec est. Aenean id risus blandit
+					tortor pharetra congue. Suspendisse pulvinar.
+					</p>
+				</div>
+
+				<div id="tab4" data-dojo-type="dijit.layout.TabContainer" data-dojo-props='title:"Inlined Sub TabContainer"'>
+					<a data-dojo-type="dijit.layout.LinkPane" data-dojo-props='href:"../../../dijit/tests/layout/tab1.html"'>SubTab 1</a>
+					<a data-dojo-type="dijit.layout.LinkPane" data-dojo-props='href:"../../../dijit/tests/layout/tab2.html", selected:true'>SubTab 2</a>
+				</div>
+
+				<a id="tab5" data-dojo-type="dijit.layout.LinkPane" data-dojo-props='href:"../../../dijit/tests/layout/tab3.html"'>Sub TabContainer from href</a>
+
+				<a id="tab6" data-dojo-type="dijit.layout.LinkPane" data-dojo-props='href:"../../../dijit/tests/layout/tab4.html"'>SplitContainer from href</a>
+
+			</div>
+		</div>
+		<div data-dojo-type="dijit.layout.ContentPane" data-dojo-props='region:"bottom", style:"background-color: #b39b86; height: 150px;"'>
+			<div style="border: 1px solid black;">
+				<div id="editor1" data-dojo-type="dijit.Editor" ><p>bottom bar (edit me)</p></div>
+			</div>
+		</div>
+		<div id="mainCP" data-dojo-type="dijit.layout.ContentPane" data-dojo-props='region:"center", style:"background-color: #f5ffbf; padding: 10px;"'>
+			main panel with <a href="http://www.dojotoolkit.org/">a link</a>.<br />
+			(to check we're copying children around properly).<br />
+			<select id="filteringSelect" data-dojo-type="dijit.form.FilteringSelect" data-dojo-props='style:"width:4em;"'>
+				<option value="1">foo</option>
+				<option value="2">bar</option>
+				<option value="3">baz</option>
+			</select>
+			Here's some text that comes AFTER the combo box.
+		</div>
+	</div>
+
+</body>
+</html>

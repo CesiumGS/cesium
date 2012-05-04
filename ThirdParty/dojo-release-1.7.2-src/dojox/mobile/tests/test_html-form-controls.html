@@ -1,0 +1,67 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>HTML Form Controls</title>
+		<link href="../themes/iphone/base.css" rel="stylesheet">
+		<style>
+		html,body{
+			height: 100%;
+			overflow: hidden;
+		}
+		</style>
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true, mblAlwaysHideAddressBar: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			dojo.require("dojox.mobile");			// This is a mobile app.
+			dojo.require("dojox.mobile.parser");	// This mobile app supports running on desktop browsers
+			dojo.require("dojox.mobile.ScrollableView");
+			dojo.require("dojox.mobile.compat");	// This mobile app uses declarative programming with fast mobile parser
+		</script>
+	</head>
+	<body style="visibility:hidden;">
+		<div id="foo" dojoType="dojox.mobile.ScrollableView">
+			<h1 dojoType="dojox.mobile.Heading">HTML</h1>
+			<h2 dojoType="dojox.mobile.RoundRectCategory">HTML Form Controls</h2>
+			<ul dojoType="dojox.mobile.RoundRectList">
+				<li dojoType="dojox.mobile.ListItem">
+					<button style="line-height:normal">Button Element</button>
+				</li>
+				<li dojoType="dojox.mobile.ListItem">
+					<input type="button" value="Input Button">
+				</li>
+				<li dojoType="dojox.mobile.ListItem">
+					<input type="submit" value="Submit Button">
+				</li>
+				<li dojoType="dojox.mobile.ListItem">
+					<input type="reset" value="Reset Button">
+				</li>
+				<li dojoType="dojox.mobile.ListItem">
+					<input type="text"> text
+				</li>
+				<li dojoType="dojox.mobile.ListItem">
+					<input type="password"> password
+				</li>
+				<li dojoType="dojox.mobile.ListItem">
+					<input type="checkbox"> checkbox
+				</li>
+				<li dojoType="dojox.mobile.ListItem">
+					<input type="radio" name="chk1" checked="checked">
+					<input type="radio" name="chk1"> radio
+				</li>
+				<li dojoType="dojox.mobile.ListItem">
+					<select>
+						<option>Option 1</option>
+						<option>Option 2</option>
+						<option>Option 3</option>
+						<option>Option 4</option>
+						<option>Option 5</option>
+						<option>Option 6</option>
+					</select>
+				</li>
+			</ul>
+			<textarea style="margin-left:10px"></textarea>
+		</div>
+	</body>
+</html>

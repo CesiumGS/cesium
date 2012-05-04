@@ -1,0 +1,59 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>Edge to Edge List</title>
+		<link href="../themes/blackberry/base.css" rel="stylesheet">
+
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			dojo.require("dojox.mobile");			// This is a mobile app.
+			dojo.require("dojox.mobile.parser");	// This mobile app supports running on desktop browsers
+			dojo.require("dojox.mobile.compat");	// This mobile app uses declarative programming with fast mobile parser
+		</script>
+	</head>
+	<body style="visibility:hidden;">
+		<div id="settings" dojoType="dojox.mobile.View" selected="true">
+			<h1 dojoType="dojox.mobile.Heading">Options</h1>
+			<h2 dojoType="dojox.mobile.EdgeToEdgeCategory">Network</h2>
+			<ul dojoType="dojox.mobile.EdgeToEdgeList">
+				<li dojoType="dojox.mobile.ListItem" icon="images/b-icon-6.png">
+					Airplane Mode
+					<div class="mblItemSwitch" dojoType="dojox.mobile.Switch"></div>
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="images/b-icon-3.png">
+					Wi-Fi
+					<div style="position:absolute;top:6px;right:12px;">
+						<select>
+							<option selected>ON</option>
+							<option>OFF</option>
+						</select>
+					</div>
+				</li>
+			</ul>
+			<h2 dojoType="dojox.mobile.EdgeToEdgeCategory">Sound</h2>
+			<ul dojoType="dojox.mobile.EdgeToEdgeList">
+				<li dojoType="dojox.mobile.ListItem" icon="images/b-icon-2.png">
+					Alarm
+					<div style="position:absolute;top:6px;right:12px;">
+						<input type="radio" name="alarm" checked>ON
+						<input type="radio" name="alarm">OFF<br>
+					</div>
+				</li>
+			</ul>
+			<h2 dojoType="dojox.mobile.EdgeToEdgeCategory">Display</h2>
+			<ul dojoType="dojox.mobile.EdgeToEdgeList">
+				<li dojoType="dojox.mobile.ListItem" icon="images/b-icon-1.png">
+					Font
+					<div style="position:absolute;top:6px;right:12px;">
+						<input type="checkbox" checked>Bold
+						<input type="checkbox">Italic<br>
+					</div>
+				</li>
+			</ul>
+		</div>
+	</body>
+</html>

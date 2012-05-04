@@ -1,0 +1,160 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot mouse events tests</title>
+
+		<style>
+			@import "../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../dojo/dojo.js"
+			djConfig="isDebug: true"></script>
+			
+		<script type="text/javascript">
+			dojo.require("dojo.robotx");
+
+			dojo.addOnLoad(function(){
+				doh.robot.initRobot('eventMouse.html');
+
+				var moveEvents, clickEvents;
+				var outer = dojo.byId("outer"),
+					middle = dojo.byId("middle");
+
+				doh.register("mouseenter/mouseleave", [
+					{
+						name: "setup",
+						timeout: 5000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.mouseMoveAt("header", 500, 500);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+							}), 250);
+
+							return d;
+						}
+					},
+					{
+						name: "enter middle",
+						timeout: 5000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							moveEvents = dojo.global.moveEvents = [];
+
+							doh.robot.mouseMoveAt("middleLabel", 500, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is(1, moveEvents.length, "one event");
+								doh.is("mouseenter", moveEvents[0].event);
+								doh.is("outer", moveEvents[0].target);
+							}), 500);
+
+							return d;
+						}
+					},
+					{
+						name: "enter inner1",
+						timeout: 5000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							moveEvents = dojo.global.moveEvents = [];
+
+							doh.robot.mouseMoveAt("inner1", 500, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is(0, moveEvents.length, "no events");
+							}), 500);
+
+							return d;
+						}
+					},
+					{
+						name: "after outer",
+						timeout: 5000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							moveEvents = dojo.global.moveEvents = [];
+
+							doh.robot.mouseMoveAt("afterOuter", 500, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is(1, moveEvents.length, "one event");
+								doh.is("mouseleave", moveEvents[0].event);
+								doh.is("outer", moveEvents[0].target);
+							}), 500);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.register("mousedown, stopEvent", [
+					{
+						name: "mousedown inner1 div",
+						timeout: 5000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							downEvents = dojo.global.downEvents = [];
+
+							doh.robot.mouseMoveAt("inner1", 500, 500);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is(2, downEvents.length, "two mousedown events");
+								doh.is("mousedown", downEvents[0].event, "downEvents[0].event");
+								doh.is("inner1", downEvents[0].target, "downEvents[0].target");
+								doh.t(downEvents[0].isLeft, "downEvents[0].isLeft");
+								doh.f(downEvents[0].isRight, "downEvents[0].isRight");
+
+								doh.is("mousedown", downEvents[1].event, "downEvents[1].event");
+								doh.is("middle", downEvents[1].currentTarget, "downEvents[1].currentTarget");
+								doh.is("inner1", downEvents[1].target, "downEvents[1].target");
+								doh.t(downEvents[1].isLeft, "downEvents[1].isLeft");
+								doh.f(downEvents[1].isRight, "downEvents[1].isRight");
+
+								// mousedown event shouldn't reach outer because of middle's stopEvent()
+							}), 500);
+
+							return d;
+						}
+					},
+					{
+						name: "mousedown outer div",
+						timeout: 5000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							downEvents = dojo.global.downEvents = [];
+
+							doh.robot.mouseMoveAt("outerLabel", 500, 500);
+							doh.robot.mouseClick({middle: true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is(1, downEvents.length, "one event");
+								doh.is("mousedown", downEvents[0].event);
+								doh.is("outerLabel", downEvents[0].target);
+								doh.is("outer", downEvents[0].currentTarget);
+								doh.f(downEvents[0].isLeft, "downEvents[0].isLeft");
+								doh.t(downEvents[0].isMiddle, "downEvents[0].isMiddle");
+							}), 500);
+
+							return d;
+						}
+					}
+				]);
+
+				// TODO: evt.relatedTarget
+				// TODO: evt.pageX, evt.pageY
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

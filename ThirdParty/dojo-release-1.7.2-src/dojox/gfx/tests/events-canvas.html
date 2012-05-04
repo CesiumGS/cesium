@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>dojox.gfx: Canvas events bug</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true, gfxRenderer:'canvas'">
+		</script>
+		<script type="text/javascript">
+			
+			require([
+				"dojo/ready",
+				"dojo/dom",
+				"dojox/gfx",
+				"dojox/gfx/matrix"
+				],function(ready, dom, gfx, matrix){
+					var container = null, surface = null;
+					
+					ready(function(){
+						container = dom.byId("gfx_holder");
+						surface = gfx.createSurface(container, 600, 100);
+						
+						var g1 = surface.createGroup(), g2 = surface.createGroup();
+						
+						g1.setTransform(matrix.translate({x: 0,y: 0}));
+						g1.createRect({x: 0,y: 0,width: 220,height: 56,r: 12}).setFill("#212833");
+						g1.createImage({x: 0,y: 0,width: 215,height: 53,src: 'http://static.jquery.com/files/rocker/images/logo_jquery_215x53.gif'});
+						g1.connect("onclick", null, function(){alert('Thank you for choosing jQuery')});
+						
+						g2.setTransform(matrix.translate({x: 300,y: 0}));
+						g2.createPath("M0 -10l16 0").setStroke({color: 'red',width: 4});
+						g2.createRect({x: 0,y: 0,width: 220,height: 56,r: 12}).setFill("#212833");
+						g2.createImage({x: 0,y: 0,width: 123,height: 56,src: 'http://dojotoolkit.org/images/logo.png'});
+						g2.connect("onclick", null, function(){alert('Thank you for choosing dojo')});
+						
+					});
+				});
+		</script>
+	</head>
+	<body>
+		<h1>dojox.gfx: Canvas events bug (Canvas version)</h1>
+		<p>
+			Click on one of the image below. An alert should pop up displaying the chosen framework name.
+		</p>
+		<div id="gfx_holder" style="width: 600px; height: 100px;">
+		</div>
+	</body>
+</html>

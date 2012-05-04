@@ -1,0 +1,78 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>DojoX Portlet In a GridContainer: Using specific columns test</title>
+
+	<!-- required: a default theme file -->
+	<link rel="stylesheet" id="themeStyles" href="../../../dijit/themes/soria/soria.css">
+
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+		
+		@import "../Portlet/Portlet.css";
+		@import "../../layout/resources/GridContainer.css";
+		
+		.dj_ie6 .dropIndicator, .dj_ie6 .dojoxPortlet{
+			margin: 5px;
+		}
+		.gridContainerZone > *{
+			margin: 5px !important;
+		}
+	</style>		
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:false, parseOnLoad: true"></script>
+
+	<!-- do not use! only for testing dynamic themes -->
+	<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+	
+	<script type="text/javascript">
+		dojo.require("dojox.layout.GridContainer");
+		dojo.require("dojox.widget.Portlet");
+	</script>
+</head>
+<body class="soria">
+	<h1>Test inserting Portlets in specific GridContainer columns</h1>
+	<div>
+		This page tests the inserting of Portlets into specific columns of the GridContainer.
+		To do this, each Portlet must be assigned a "column" attribute, and the "isAutoOrganized"
+		attribute of the GridContainer must be set to false.
+	</div>
+	<div dojoType="dojox.layout.GridContainer"
+			id="gridContainer"
+			isAutoOrganized="false"
+			hasResizableColumns="false"
+			nbZones="3"
+			dragHandleClass="dijitTitlePaneTitle"
+			style="width:100%;"
+			doLayout="false"
+	>
+		<div dojoType="dojox.widget.Portlet" title="First Col, top" column="1">
+			This Portlet is placed in Column 1
+		</div>
+		
+		<div dojoType="dojox.widget.Portlet" title="First Col, middle" column="1">
+			This Portlet is placed in Column 1
+		</div>
+		
+		<div dojoType="dojox.widget.Portlet" title="First Col, bottom" column="1">
+			This Portlet is placed in Column 1
+		</div>
+		
+		<div dojoType="dojox.widget.Portlet" title="Second Col, top" column="2">
+			This Portlet is placed in Column 2
+		</div>
+		
+		<div dojoType="dojox.widget.Portlet" title="Third Col, top" column="3">
+			This Portlet is placed in Column 3
+		</div>
+		
+		<div dojoType="dojox.widget.Portlet" title="Third Col, bottom" column="3">
+			This Portlet is placed in Column 3
+		</div>
+
+	</div>
+</body>
+</html>

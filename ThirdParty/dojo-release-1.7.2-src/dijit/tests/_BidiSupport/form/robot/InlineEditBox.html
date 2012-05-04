@@ -1,0 +1,264 @@
+﻿<!DOCTYPE html>
+
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>doh.robot InlineEditBox textDir Tests</title>
+	
+		<style>
+			@import "../../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../../dojo/dojo.js">
+		</script>		
+			
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");
+
+			dojo.addOnLoad(function(){
+				doh.robot.initRobot('../test_InlineEditBox.html');
+				var textbox;
+				var inlineBox;
+				
+				function moveAndClick(node){
+					doh.robot.mouseMoveAt(node, 500, 1);
+					doh.robot.mouseClick({left: true}, 500);
+				}
+	
+				doh.register("InlineEditBox with TextBox", [
+					{
+						name: "write in English in 'ltrInlineEditBox'",
+						timeout: 10000,
+						
+						runTest: function(){
+							var d = new doh.Deferred();
+                            inlineBox = dijit.byId("P0");
+							moveAndClick(inlineBox.domNode);
+							doh.robot.typeKeys("Hello!!!", 1000, 1200);
+								
+							doh.robot.sequence(d.getTestCallback(function(){
+								textBox = inlineBox.wrapperWidget.editWidget;
+								doh.is('ltr', textBox.get("textDir"), "direction of :" + inlineBox.id);
+								doh.is('ltr', textBox.focusNode.dir, "direction of :" + inlineBox.id);
+								inlineBox.save(true);
+							}), 800);							
+							return d;
+						}
+					},
+					{
+						name: "paste Hebrew in 'rtlInlineEditBox'",
+						timeout:10000,
+
+						runTest: function(){
+							var d = new doh.Deferred();
+                            inlineBox = dijit.byId("P1");
+						    moveAndClick(inlineBox.domNode);						
+						    doh.robot.setClipboard("\u05d5\u05e2\u05db\u05e9\u05d9\u05d5!",'text/html');
+                            var modifier = dojo.isMac ? {meta: true} : {ctrl: true};
+							doh.robot.keyPress("a", 400, modifier);
+							doh.robot.keyPress(dojo.keys.DELETE, 100, {});
+                            doh.robot.keyPress("v", 400, modifier);
+                            
+							doh.robot.sequence(d.getTestCallback(function(){
+							    textBox = inlineBox.wrapperWidget.editWidget;
+							    doh.is('rtl', textBox.get("textDir"), "direction of :" + inlineBox.id);
+							    doh.is('rtl', textBox.focusNode.dir, "direction of :" + inlineBox.id);
+							    inlineBox.save(true);
+						    }), 800);					
+							return d;
+						}
+					},
+                    {
+						name: "initial text direction in 'autoInlineEditBox'",
+						timeout: 10000,
+						
+						runTest: function(){
+						    inlineBox = dijit.byId("P2");
+						    doh.is('ltr', inlineBox.displayNode.dir, "direction of :" + inlineBox.id);
+						}  
+						
+					},					
+					{
+						name: "change Value in 'autoInlineEditBox'",
+						timeout: 10000,
+
+						runTest: function(){
+							var d = new doh.Deferred();
+                            inlineBox = dijit.byId("P2");
+                          
+					        doh.robot.mouseMoveAt(function(){ return dojo.byId('button'); }, 500, 1000);
+						    doh.robot.mouseClick({left: true}, 500);
+						    moveAndClick(inlineBox.domNode);
+							doh.robot.sequence(d.getTestCallback(function(){
+							    textBox = inlineBox.wrapperWidget.editWidget;
+							    doh.is('auto', textBox.get("textDir"), "direction of :" + inlineBox.id);
+							    doh.is('rtl', textBox.focusNode.dir, "direction of :" + inlineBox.id);
+							    inlineBox.save(true);
+						    }), 800);					
+							return d;
+						}
+					}				
+				]);				
+				
+				doh.register("InlineEditBox with TextArea", [
+						{
+						name: "write in English in 'ltrInlineEditBox'",
+						timeout: 10000,
+						
+						runTest: function(){
+							var d = new doh.Deferred();
+                            inlineBox = dijit.byId("P3");
+							moveAndClick(inlineBox.domNode);
+							doh.robot.typeKeys("Hello!!!", 1000, 1200);
+								
+							doh.robot.sequence(d.getTestCallback(function(){
+								textBox = inlineBox.wrapperWidget.editWidget;
+								doh.is('ltr', textBox.get("textDir"), "direction of :" + inlineBox.id);
+								doh.is('ltr', textBox.focusNode.dir, "direction of :" + inlineBox.id);
+								inlineBox.save(true);
+							}), 800);							
+							return d;
+						}
+					},
+					{
+						name: "paste Hebrew in 'rtlInlineEditBox'",
+						timeout: 10000,
+
+						runTest: function(){
+							var d = new doh.Deferred();
+                            inlineBox = dijit.byId("P4");
+						    moveAndClick(inlineBox.domNode);						
+						    doh.robot.setClipboard("\u05d5\u05e2\u05db\u05e9\u05d9\u05d5!",'text/html');
+                            var modifier = dojo.isMac ? {meta: true} : {ctrl: true};
+							doh.robot.keyPress("a", 400, modifier);
+							doh.robot.keyPress(dojo.keys.DELETE, 100, {});
+							doh.robot.keyPress("v", 400, modifier);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+							    textBox = inlineBox.wrapperWidget.editWidget;
+							    doh.is('rtl', textBox.get("textDir"), "direction of :" + inlineBox.id);
+							    doh.is('rtl', textBox.focusNode.dir, "direction of :" + inlineBox.id);
+							    inlineBox.save(true);
+						    }), 800);					
+							return d;
+						}
+					},
+                    {
+						name: "initial text direction in 'autoInlineEditBox'",
+						timeout: 10000,
+						
+						runTest: function(){
+						    var inlineBox = dijit.byId("P5");
+						    doh.is('ltr', inlineBox.domNode.dir, "direction of :" + inlineBox.id);
+						}  
+						
+					},					
+					{
+						name: "change Value in 'autoInlineEditBox'",
+						timeout: 10000,
+
+						runTest: function(){
+							var d = new doh.Deferred();
+                            var inlineBox = dijit.byId("P5");
+						    doh.robot.mouseMoveAt(function(){ return dojo.byId('Button1'); }, 500, 1000);
+
+						    doh.robot.mouseClick({left: true}, 500);
+						    moveAndClick(inlineBox.domNode);
+							doh.robot.sequence(d.getTestCallback(function(){
+							    textBox = inlineBox.wrapperWidget.editWidget;
+							    doh.is('auto', textBox.get("textDir"), "direction of :" + inlineBox.id);
+							    doh.is('rtl', textBox.focusNode.dir, "direction of :" + inlineBox.id);
+							    inlineBox.save(true);
+						    }), 800);					
+							return d;
+						}
+					}					
+				]);	
+				
+				doh.register("InlineEditBox with ComboBox", [
+						{
+						name: "test LTR ComboBox",
+						timeout: 10000,
+						
+						runTest: function(){
+							var d = new doh.Deferred();
+                            inlineBox = dijit.byId("combo1");
+                            moveAndClick(inlineBox.domNode);
+							doh.robot.keyPress(dojo.keys.DOWN_ARROW, 300);
+							doh.robot.keyPress(dojo.keys.UP_ARROW, 300);
+						    doh.robot.keyPress(dojo.keys.UP_ARROW, 300);
+						    doh.robot.keyPress(dojo.keys.UP_ARROW, 300);
+								
+							doh.robot.sequence(d.getTestCallback(function(){
+								var combo = inlineBox.wrapperWidget.editWidget;
+								doh.is('ltr', combo.get("textDir"), "direction of :" + inlineBox.id);
+								dojo.forEach(combo.dropDown.domNode.childNodes, function(node){
+									if(node.item){
+										doh.is("ltr", node.dir, node.textContent);
+									}
+								});
+								inlineBox.save(true);
+							}), 900);							
+							return d;
+						}
+					},
+					{
+						name: "test RTL ComboBox",
+						timeout: 10000,
+
+						runTest: function(){
+						    var d = new doh.Deferred();
+                            inlineBox = dijit.byId("combo2");
+						    moveAndClick(inlineBox.domNode);
+						    doh.robot.keyPress(dojo.keys.DOWN_ARROW, 300);
+						    doh.robot.keyPress(dojo.keys.UP_ARROW, 300);
+						    doh.robot.keyPress(dojo.keys.UP_ARROW, 300);
+						    doh.robot.keyPress(dojo.keys.UP_ARROW, 300);
+								
+						    doh.robot.sequence(d.getTestCallback(function(){
+							    var combo = inlineBox.wrapperWidget.editWidget;
+							    doh.is('rtl', combo.get("textDir"), "direction of :" + inlineBox.id);
+							    dojo.forEach(combo.dropDown.domNode.childNodes, function(node){
+								    if(node.item){
+									    doh.is("rtl", node.dir, node.textContent);
+								    }
+							    });
+							    inlineBox.save(true);
+						    }), 900);						
+							return d;
+						}
+					},
+                    {
+						name: "test AUTO ComboBox",
+						timeout: 10000,
+
+						runTest: function(){
+							    var d = new doh.Deferred();
+                                inlineBox = dijit.byId("combo3");
+							    moveAndClick(inlineBox.domNode);
+							    doh.robot.keyPress(dojo.keys.DOWN_ARROW, 300);
+							    doh.robot.keyPress(dojo.keys.UP_ARROW, 300);
+							    doh.robot.keyPress(dojo.keys.UP_ARROW, 300);
+							    doh.robot.keyPress(dojo.keys.UP_ARROW, 300);
+    								
+							    doh.robot.sequence(d.getTestCallback(function(){
+								    var combo = inlineBox.wrapperWidget.editWidget;
+								    doh.is('auto', combo.get("textDir"), "direction of :" + inlineBox.id);
+								    dojo.forEach(combo.dropDown.domNode.childNodes, function(node){
+									    if(node.item){
+										    var contextualDir = combo.getTextDir(node.innerText || node.textContent || "");
+										    doh.is(contextualDir, node.dir, node.innerText || node.textContent || "");
+									    }	
+								    });
+								    inlineBox.save(true);
+							    }), 900);				
+							return d;
+						}
+					}					
+				]);	
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

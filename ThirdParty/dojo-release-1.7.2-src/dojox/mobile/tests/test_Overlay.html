@@ -1,0 +1,86 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>test Overlay</title>
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+		<style>
+		#spin1 {
+			width: 304px;
+			margin: 10px auto;
+ 		}
+		#pt {
+			width: 20px;
+			background-color: #C4C9DB;
+			opacity: 0.2;
+		}
+		#txt {
+			width: 10px;
+			margin-left: -15px;
+			padding-top: 85px;
+			font-size: 24px;
+			font-weight: bold;
+			border: none;
+		}
+		</style>
+
+		<script language="JavaScript" type="text/javascript">
+			dojo.require("dojox.mobile.deviceTheme");
+		</script>
+
+		<script language="JavaScript" type="text/javascript">
+			dojo.require("dojox.mobile");			// This is a mobile app.
+			dojo.require("dojox.mobile.parser");	// This mobile app supports running on desktop browsers
+			dojo.require("dojox.mobile.compat");	// This mobile app uses declarative programming with fast mobile parser
+			dojo.require("dojox.mobile.Overlay");
+			dojo.require("dojox.mobile.SpinWheel");
+			dojo.require("dojox.mobile.SpinWheelSlot");
+		</script>
+	</head>
+	<body style="visibility:hidden;">
+		<br>
+		<button onclick="dijit.byId('customPicker').show()">pop up</button>
+		<button onclick="dijit.byId('customPicker').hide()">pop down</button>
+		<div id="customPicker" dojoType="dojox.mobile.Overlay">
+			<h1 dojoType="dojox.mobile.Heading" label="Custom Picker">
+				<div dojoType="dojox.mobile.ToolBarButton" label="Done" class="mblColorBlue" style="width:45px;float:right;" onClick="dijit.byId('customPicker').hide()"></div>
+			</h1>
+			<div id="spin1" dojoType="dojox.mobile.SpinWheel">
+				<div dojoType="dojox.mobile.SpinWheelSlot"
+					labels="['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']"
+					style="text-align:center;width:40px;"></div>
+				<div dojoType="dojox.mobile.SpinWheelSlot"
+					labelFrom="3000" labelTo="3100"
+					style="width:70px;"></div>
+				<div id="pt" class="mblSpinWheelSlot"></div>
+				<div id="txt" class="mblSpinWheelSlot">.</div>
+				<div dojoType="dojox.mobile.SpinWheelSlot"
+					labelFrom="0" labelTo="9"
+					style="width:30px;"></div>
+				<div dojoType="dojox.mobile.SpinWheelSlot"
+					labels="['pt','px','cm']"
+					style="width:50px;"></div>
+				<div dojoType="dojox.mobile.SpinWheelSlot"
+					labels="[
+						'<img src=images/i-icon-1.png>',
+						'<img src=images/i-icon-2.png>',
+						'<img src=images/i-icon-3.png>',
+						'<img src=images/i-icon-4.png>',
+						'<img src=images/i-icon-5.png>',
+						'<img src=images/i-icon-6.png>',
+						'<img src=images/i-icon-7.png>',
+						'<img src=images/i-icon-8.png>',
+						'<img src=images/i-icon-9.png>',
+						'<img src=images/i-icon-10.png>'
+					]"
+					style="width:70px;text-align: center;"></div>
+			</div>
+		</div>
+		<div style="height:2500px;border:0px solid red;"></div>
+		<button onclick="dijit.byId('customPicker').show()">pop up</button>
+		<button onclick="dijit.byId('customPicker').hide()">pop down</button>
+		<br>
+		<br>
+	</body>
+</html>

@@ -1,0 +1,17 @@
+//>>includeStart("foo", kwArgs.loader == "xdomain");
+This content is included if kwArgs.loader == "xdomain"
+//>>includeEnd("foo");
+
+//This is an exclusion test
+//>>excludeStart("test2", kwArgs.loader == "xdomain");
+This content is excluded if kwArgs.loader == "xdomain"
+//>>excludeEnd("test2");
+
+
+//This is a nested test.
+//>>includeStart("outerMatch", kwArgs.shouldInclude);
+This content is included if kwArgs.shouldInclude evals to true.
+	//>>includeStart("innerMatch", kwArgs.nesting == 1);
+	This is a nested include if kwArgs.nesting == 1
+	//>>includeEnd("innerMatch");
+//>>includeEnd("outerMatch");

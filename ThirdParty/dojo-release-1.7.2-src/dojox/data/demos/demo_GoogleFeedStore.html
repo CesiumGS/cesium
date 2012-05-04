@@ -1,0 +1,113 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/themes/tundra/tundra.css";
+		@import "../../../dijit/themes/tundra/tundra_rtl.css";
+		
+		#output {
+			width: 400px;
+			position: absolute;
+			top: 50px;
+		}
+		#entryContent {
+			margin-left: 450px;
+			position: absolute;
+			top: 50px;
+			background-color: #eee;
+			height: 800px;
+			padding: 2px;
+		}		
+		.search-result {
+			width: 100%;
+			border: 2px dashed;
+			padding: 4px;
+		}
+		#entryContent h2 {
+			text-decoration: underline;
+		}
+		.summary {
+			font-weight: bolder;
+		}
+		.tags {
+			background-color: lightGrey;
+		}
+	</style>
+
+	<title>Google Feed Store</title>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+	<script type="text/javascript">
+		dojo.require("dijit.form.ComboBox");
+		dojo.require("dijit.form.FilteringSelect");
+		dojo.require("dojox.dtl");
+		dojo.require("dojox.dtl.ext-dojo.NodeList");
+		dojo.require("dojox.data.GoogleSearchStore");
+		dojo.require("dojox.data.GoogleFeedStore");
+		
+		dojo.addOnLoad(function(){
+			dojo.connect(dojo.byId("output"), "onclick", function(evt) {
+				if(evt.target.tagName != "A"){return true;}
+				dojo.stopEvent(evt);
+				
+				dojo.byId("entryContent").innerHTML = dojo.query(".content", evt.target.parentNode)[0].innerHTML;
+				
+				return false;
+			})
+			
+		});
+
+		function doSearch() {					    
+			var query = {
+				url: dojo.byId("searchText").value
+			};
+			var request = {query:query};
+			
+			var itemBuffer = [];
+			var maxBufSize = 8;
+			var outNode = dojo.byId("output");
+			outNode.innerHTML = "Searching...";	
+			var count = 0;
+			var template = "GoogleFeedTemplate.html";
+			testStore = new dojox.data.GoogleFeedStore();
+			function doAppend(items){
+				var node = document.createElement("div");
+				node.id = "res" + (count++);
+				outNode.appendChild(node);
+				dojo.query("#"+node.id).dtl(template, { items: items , store: testStore});
+			}
+			
+			request.onBegin = function(numItems){
+				outNode.innerHTML += ".. found " + numItems + " results";
+			};
+			
+			request.onComplete = doAppend;
+
+			var count = dojo.byId("count").value;
+			request.count = count ? Number(count) : 8;			
+			
+			testStore.fetch(request);
+		}
+	</script>
+</head>
+<body class="tundra" style="margin:20px;">
+	<form>
+		Text: <select id="searchText" >
+				<option value="http://shaneosullivan.wordpress.com/feed/">http://shaneosullivan.wordpress.com/feed/</option>
+				<option value="http://dojocampus.org/content/category/dojo-cookies/feed/">http://dojocampus.org/content/category/dojo-cookies/feed/</option>
+				<option value="http://www.dojotoolkit.org/aggregator/rss">http://www.dojotoolkit.org/aggregator/rss</option>
+			</select>
+		Count: <input id="count" type="text" value="10" width=20/>
+		<input id="searchButton" type="button" value="store.fetch()" onclick="doSearch()" />
+		
+		<div id="output">
+			
+		</div>
+		<div id="entryContent">
+			
+		</div>
+	</form>
+</body>
+</html>

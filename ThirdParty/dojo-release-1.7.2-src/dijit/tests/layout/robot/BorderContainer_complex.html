@@ -1,0 +1,313 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot BorderContainer complex Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"
+			djConfig="isDebug: true"></script>
+
+		<!-- functions to help test -->
+		<script type="text/javascript" src="../../helpers.js"></script>
+		<script type="text/javascript" src="./borderContainerTestFunctions.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../test_BorderContainer_complex.html');
+
+				doh.register("API", [
+					function initialConditions(){
+						checkBCpanes(dijit.byId("border1"));
+					}
+				]);
+
+				//test some basic functionality of the complex widgets to get a feel for whether they work inside the border container
+				doh.register("tabContainer", [
+					{
+						name: "tab2Selected",
+						runTest: function(t){
+							doh.t(dijit.byId("tab2").selected, "tab2 was not selected");
+							doh.f(dijit.byId("tab1").selected, "tab1 was selected");
+							doh.f(dijit.byId("tab3").selected, "tab3 was selected");
+							doh.f(dijit.byId("tab4").selected, "tab4 was selected");
+							doh.f(dijit.byId("tab5").selected, "tab5 was selected");
+							doh.f(dijit.byId("tab6").selected, "tab6 was selected");
+						}
+					},
+					{
+						name: "tabsCanBeShownWhenSelected_tab1",
+						timeout: 3000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							doh.robot.mouseMoveAt("mainTabContainer_tablist_tab1", 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("mainTabContainer_tablist_tab1", dojo.global.dijit.focus.curNode.id, "current focus was not tab1");
+								doh.is("tab1", dijit.byId("mainTabContainer").selectedChildWidget.id, "Tab1 pane is not the selected pane");
+								doh.t(isVisible(dijit.byId("tab1")), "Tab1 is hidden");
+								doh.t(isHidden(dijit.byId("tab2")), "Tab2 is visible");
+							}), 1000);
+							
+							return d;
+						}
+					},
+					{
+						name: "tabsCanBeShownWhenSelected_tab2",
+						timeout: 3000,
+						runTest: function(t){
+							var d = new doh.Deferred();		
+							doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 1000, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("mainTabContainer_tablist_tab2", dojo.global.dijit.focus.curNode.id, "current focus was not tab2");
+								doh.is("tab2", dijit.byId("mainTabContainer").selectedChildWidget.id, "Tab2 pane is not the selected pane");
+								doh.t(isVisible(dijit.byId("tab2")), "Tab2 is hidden");
+								doh.t(isHidden(dijit.byId("tab1")), "Tab1 is visible");
+							}), 1000);
+							
+							return d;
+						}
+					},
+					{
+						name: "tabsCanBeShownWhenSelected_tab3",
+						timeout: 3000,
+						runTest: function(t){
+							var d = new doh.Deferred();		
+							doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 1000, {});
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("mainTabContainer_tablist_tab3", dojo.global.dijit.focus.curNode.id, "current focus was not tab3");
+								doh.is("tab3", dijit.byId("mainTabContainer").selectedChildWidget.id, "Tab3 pane is not the selected pane");
+								doh.t(isVisible(dijit.byId("tab3")), "Tab3 is hidden");
+								doh.t(isHidden(dijit.byId("tab2")), "Tab2 is visible");
+							}), 1000);
+							
+							return d;
+						}
+					},
+					{
+						name: "tabsCanBeShownWhenSelected_tab4",
+						timeout: 3000,
+						runTest: function(t){
+							var d = new doh.Deferred();		
+							doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 1000, {});
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("mainTabContainer_tablist_tab4", dojo.global.dijit.focus.curNode.id, "current focus was not tab4");
+								doh.is("tab4", dijit.byId("mainTabContainer").selectedChildWidget.id, "Tab4 pane is not the selected pane");
+								doh.t(isVisible(dijit.byId("tab4")), "Tab4 is hidden");
+								doh.t(isHidden(dijit.byId("tab3")), "Tab3 is visible");
+							}), 1000);
+							
+							return d;
+						}
+					},
+					{
+						name: "tabsCanBeShownWhenSelected_tab5",
+						timeout: 3000,
+						runTest: function(t){
+							var d = new doh.Deferred();		
+							doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 1000, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("mainTabContainer_tablist_tab5", dojo.global.dijit.focus.curNode.id, "current focus was not tab5");
+								doh.is("tab5", dijit.byId("mainTabContainer").selectedChildWidget.id, "Tab5 pane is not the selected pane");
+								doh.t(isVisible(dijit.byId("tab5")), "Tab5 is hidden");
+								doh.t(isHidden(dijit.byId("tab4")), "Tab4 is visible");
+							}), 1000);
+							
+							return d;
+						}
+					},
+					{
+						name: "tabsCanBeShownWhenSelected_tab6",
+						timeout: 3000,
+						runTest: function(t){
+							var d = new doh.Deferred();		
+							doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 1000, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("mainTabContainer_tablist_tab6", dojo.global.dijit.focus.curNode.id, "current focus was not tab6");
+								doh.is("tab6", dijit.byId("mainTabContainer").selectedChildWidget.id, "Tab6 pane is not the selected pane");
+								doh.t(isVisible(dijit.byId("tab6")), "Tab6 is hidden");
+								doh.t(isHidden(dijit.byId("tab5")), "Tab5 is visible");
+							}), 1000);
+							
+							return d;
+						}
+					}					
+				]);
+				
+				doh.register("AccordionContainer", [
+					{
+						name: "pane1Selected",
+						runTest: function(t){
+							doh.t(dijit.byId("ap1").selected, "ap1 selected");
+							doh.f(dijit.byId("ap2").selected, "ap2 not selected");
+							doh.f(dijit.byId("ap3").selected, "ap3 not selected");
+							doh.t(isVisible(dijit.byId("ap1")), "ap1 is visible");
+							doh.t(isHidden(dijit.byId("ap2")), "ap2 is hidden");
+							doh.t(isHidden(dijit.byId("ap3")), "ap3 is hidden");
+						}
+					},
+					{
+						name: "focus ap1 title bar",
+						runTest: function(t){
+							dijit.byId("ap1_button").focusNode.focus();
+						}
+					},
+					{
+						name: "select ap2",
+						timeout: 3000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+
+							// Connect to _hideChild() as a trick to tell when animation is finished
+							handle = dojo.connect(dijit.byId("ac1"), "_hideChild", function(){
+								setTimeout(d.getTestCallback(function(){
+									doh.is("ap2_button", dojo.global.dijit.focus.curNode.parentNode.id, "current focus was not ap2");
+									doh.is("ap2", dijit.byId("ac1").selectedChildWidget.id, "ap2 is not the selected pane");
+									doh.t(isVisible(dijit.byId("ap2")), "ap2 is visible");
+									doh.t(isHidden(dijit.byId("ap1")), "ap1 is hidden");
+								}), 0);
+							});
+							
+							doh.robot.keyPress(dojo.keys.DOWN_ARROW, 1000, {});
+
+							return d;
+						},
+						tearDown: function(){
+							dojo.disconnect(handle);
+						}
+					},
+					{
+						name: "select ap3",
+						timeout: 3000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+
+							// Connect to _hideChild() as a trick to tell when animation is finished
+							handle = dojo.connect(dijit.byId("ac1"), "_hideChild", function(){
+								setTimeout(d.getTestCallback(function(){
+									doh.is("ap3_button", dojo.global.dijit.focus.curNode.parentNode.id, "current focus was not ap3");
+									doh.is("ap3", dijit.byId("ac1").selectedChildWidget.id, "ap3 is not the selected pane");
+									doh.t(isVisible(dijit.byId("ap3")), "ap3 is visible");
+									doh.t(isHidden(dijit.byId("ap2")), "ap2 is hidden");
+								}), 0);
+							});
+							
+							doh.robot.keyPress(dojo.keys.DOWN_ARROW, 1000, {});
+
+							return d;
+						},
+						tearDown: function(){
+							dojo.disconnect(handle);
+						}
+					},
+					{
+						name: "resize accordion",
+						timeout: 6000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+
+							var accordion = dojo.position(dojo.byId("ac1"));
+							var centerPane = dojo.position(dojo.byId("mainCP"));
+							var centerPaneRight = centerPane.x + centerPane.w;
+							var filteringSelectWidth = dojo.position(dijit.byId("filteringSelect").domNode).w;
+							var move = filteringSelectWidth - centerPane.w + 30;
+
+							// Drag slider to shrink pane 
+							var size = dojo.position("ac1_splitter");
+							doh.robot.mouseMoveAt("ac1_splitter", 0, 1);
+							doh.robot.mousePress({left: true}, 500);
+							doh.robot.mouseMoveAt("ac1_splitter", 500, 1, size.w/2-move, size.h/2);
+							doh.robot.sequence(function(){
+								var newCenterPane = dojo.position(dojo.byId("mainCP"));
+								var newCenterPaneRight = newCenterPane.x + newCenterPane.w;
+								// center could overlap right pane
+								var move2 = centerPaneRight - newCenterPaneRight;
+								doh.robot.mouseMoveAt("ac1_splitter", 500, 1, size.w/2-move2, size.h/2);
+								move += move2;
+							
+								doh.robot.mouseRelease({left: true}, 500);
+								doh.robot.sequence(d.getTestCallback(function(){
+									// test that the margin box for the accordion pane grows the same size as the splitter moved
+									var newAccordion = dojo.position(dojo.byId("ac1"));
+									doh.is(newAccordion.w, accordion.w-move, 'old accordion w = ' + accordion.w + ', new w = ' + newAccordion.w);
+									
+									// test that the center content got smaller by the same size that the splitter moved
+									var newCenterPane = dojo.position(dojo.byId("mainCP"));
+									var newCenterPaneRight = newCenterPane.x + newCenterPane.w;
+									doh.is(newCenterPane.w, centerPane.w+move-centerPaneRight+newCenterPaneRight, 'old center pane w = ' + centerPane.w + ', new w = ' + newCenterPane.w);
+								}), 500);
+							}, 500);
+
+							return d;
+						}
+					}
+				]);
+				
+				var filteringSelect, handler;
+				doh.register("filteringSelect", [
+					{
+						name: "changeValue",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							filteringSelect = dijit.byId("filteringSelect");
+							handler = filteringSelect.connect(filteringSelect, "onChange", function(e){
+								d.callback(true);
+							});
+							
+							filteringSelect.focus();
+							doh.robot.keyPress(dojo.keys.DOWN_ARROW, 1000, {});
+							doh.robot.keyPress(dojo.keys.DOWN_ARROW, 1000, {});
+							doh.robot.keyPress(dojo.keys.DOWN_ARROW, 500, {});
+							doh.robot.keyPress(dojo.keys.ENTER, 500, {});
+							
+							return d;
+						},
+						tearDown: function(t){
+							filteringSelect.disconnect(handler);
+						}
+					}
+				]); 
+				
+				doh.register("editor", [
+					{
+						name: "changeValue",
+						timeout: 3000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+														
+							doh.robot.sequence(function(){
+								var editor = dijit.byId("editor1");
+								editor.setValue("<div id='myDiv'>This is my new text</div>");
+							}, 1000); 
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								var myDiv = dijit.byId("editor1").editNode.childNodes[0];
+								doh.is("myDiv", myDiv.id, "myDiv was not the first child node as expectd");
+								doh.t(isVisible(myDiv), "myDiv is visible");
+							}), 1000);
+							
+							return d;
+						}
+					}
+				]);
+				
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+	<title>Firebug Lite Tests</title>
+	<script type="text/javascript">
+		// enable Lite in Firefox:
+		console = null;
+		var djConfig = {
+			isDebug: true,
+			debugHeight: 100,
+			popup:true // who knew?
+		};
+	</script>
+
+	<script type="text/javascript" src="../dojo.js"></script>
+	<script type="text/javascript">
+		obj = { // a long object to test scrolling in object inspector
+			mobby:{d:"objectify", e:"erroroneous", f:"functastic", obby:{lilOb:"moOb"}},
+			a:"Dojo",
+			b:2,
+			c:[0,8],
+			id:"MyCoolObject",
+			extra:{d:"objectify2", e:"erroroneous2", f:"functastic2", obby:{lilOb:"moOb2"}},
+			aaa:"Dojo",
+			bbb:22,
+			ccc:[10,18],
+			idDeedYee:"MyCoolObjectie"
+		};
+		
+		obj2 = {
+			a:"Dojo",
+			b:2,
+			c:[0,8],
+			id:"MyCoolObject"
+		};
+		
+		obj3 = {
+			a:"Dojo",
+			b:2,
+			c:[0,8]
+		};
+		
+		outputText = function(){
+			for(var i = 0; i < 20; i++){
+				console.log(i + ":: foo");
+			}
+		};
+		doStuff = function(){
+			console.log("FOO! More FOO! Gotta have some FOO MAN!")
+		};
+		
+		doStuffLots = function(){
+			for(var i = 0; i < 5; i++){
+				console.log("xxxxxxxx")
+				doStuff();
+			}
+		};
+		dojo.addOnLoad(function(){
+			console.time("foo time")
+			// test objects
+			console.log(obj3, "::", [1,2,3,4,5,6,7,8,9,0]);
+			console.log("Dojo was here", obj, "object over", obj2);
+
+			// test that tracing dom node does not break (due to lack of support)
+			console.log(dojo.byId("foo"))
+
+			// test error functionality
+			console.error(new Error("There was a dummy error"));
+
+			//throws exception:
+			//console.assert(true == false)
+
+			console.group("myGroup");
+			console.log("group me 1");
+			console.log("group me 2");
+			console.log("group me 3");
+			console.groupEnd();
+
+			// testing log styling
+			console.log("foo");
+			console.debug("foo");
+			console.info("foo");
+			console.warn("foo");
+			console.error("foo");
+			//timer end
+			console.timeEnd("foo time")
+		});
+		
+		function doCon(){
+		}
+	</script>
+</head>
+<body>
+	<h1>test Firebug popup window</h1>
+	<div id="foo" font="Arial" style="display:none;">Dojo was here</div>
+		<button onclick="doStuff()">Do Foo Stuff</button>
+		<button onclick="doStuffLots()">Do Stuff Lots</button>
+		<div id="trc"></div>
+	</body>
+</html>

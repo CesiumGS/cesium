@@ -1,0 +1,75 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+	<head>
+		<title>Test dojox.grid.Grid Programmatic Instantiation</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+		<style type="text/css">
+			@import "../resources/Grid.css";
+			@import "../resources/tundraGrid.css";
+			@import "../../../dojo/resources/dojo.css";
+			@import "../../../dijit/themes/tundra/tundra.css";
+			@import "../../../dijit/tests/css/dijitTests.css";
+			.heading {
+				font-weight: bold;
+				padding-bottom: 0.25em;
+			}
+					
+			#grid { 
+				width: 100%;
+				height: 100%;
+			}
+		</style>
+		<script type="text/javascript" src="../../../dojo/dojo.js" 
+			djConfig="isDebug:false, debugAtAllCosts: false, parseOnLoad: true"></script>
+		<script type="text/javascript">
+			dojo.require("dijit.dijit"); // optimize: load dijit layer
+			dojo.require("dijit.layout.TabContainer");
+			dojo.require("dijit.layout.ContentPane");
+			dojo.require("dojox.grid.DataGrid");
+			dojo.require("dojo.data.ItemFileWriteStore");
+			dojo.require("dojo.parser");
+		</script>
+		<script type="text/javascript" src="support/test_data.js"></script>
+		<script type="text/javascript">
+			dojo.addOnLoad(function(){
+
+				var tc = new dijit.layout.TabContainer({
+					style:"height: 300px; width: 100%;"
+				}, "mainTabContainer");
+				var cp = new dijit.layout.ContentPane({ title:"Tab 2" }, "cp");
+				tc.addChild(cp);
+				tc.startup();
+				
+				var layout = [[
+					{name: 'Column 1', field: 'col1'},
+					{name: 'Column 2', field: 'col2'},
+					{name: 'Column 3', field: 'col3'},
+					{name: 'Column 4', field: 'col4', width: "150px"},
+					{name: 'Column 5', field: 'col5'}
+				],[
+					{name: 'Column 6', field: 'col6'},
+					{name: 'Column 7', field: 'col7'},
+					{name: 'Column 8'},
+					{name: 'Column 9', field: 'col3', colSpan: 2}
+				]];
+
+				var grid = new dojox.grid.DataGrid({
+					title: "tab 1",
+					id: "grid",
+					store: test_store,
+					structure: layout
+				});
+				tc.addChild(grid, 0);
+			});
+		</script>
+	</head>
+	<body class="tundra">
+		<div class="heading">dojox.grid.Grid Programmatic Instantiation Test</div>
+		<div id="mainTabContainer">
+			<div id="cp">
+				... stuff ...
+			</div>
+		</div>
+	</body>
+</html>

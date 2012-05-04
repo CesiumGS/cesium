@@ -1,0 +1,131 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<title>Test the Feed Viewer (using ATOM)</title>
+<style type="text/css">
+	@import "../../../../dojo/resources/dojo.css";
+	@import "../../../../dijit/themes/tundra/tundra.css";
+	@import "../../widget/templates/css/EntryHeader.css";
+	@import "../../widget/templates/css/HtmlFeedViewer.css";
+	@import "../../widget/templates/css/HtmlFeedViewerGrouping.css";
+	@import "../../widget/templates/css/HtmlFeedViewerEntry.css";
+	@import "../../widget/templates/css/HtmlFeedEntryViewer.css";
+</style>
+<script type="text/javascript">
+  var djConfig = {isDebug: true, parseOnLoad: true};
+</script>
+<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+<script language="JavaScript" type="text/javascript">
+	dojo.require("dojox.atom.widget.FeedViewer");
+	dojo.require("dojox.atom.widget.FeedEntryViewer");
+	dojo.require("dojox.atom.widget.FeedEntryEditor");
+	dojo.require("dijit.layout.ContentPane");
+	dojo.require("dijit.layout.SplitContainer");
+	dojo.require("dojo.parser");
+	
+</script>
+<style>
+	html, body, #main {	  
+			width: 100%;	
+			height: 100%;
+			/*overflow: hidden;*/
+			padding: 0 0 0 0;
+			margin: 0 0 0 0;
+			font-family: Myriad,Tahoma,Verdana,sans-serif;
+			font-size:  small;
+			background: #FFF;
+	}
+
+	#ViewPane{
+			overflow: auto;
+			overflow-x: auto;
+			overflow-y: auto;
+			padding: 5px;
+			font-family: Myriad,Tahoma,Verdana,sans-serif;
+			font-size:  small;
+			/*background: lightgrey;*/
+			background:#FFF;
+			word-wrap: normal;
+	}
+	
+	#EditorPane {
+			overflow: auto;	   /* We want scrolling*/
+			overflow-x: auto;
+			overflow-y: auto;
+			padding: 0px;
+			background: #FFF;
+	}
+	
+	#ActionContainer {
+		height: 1024px;
+	}
+	
+</style>
+</head>
+<body class="tundra">
+
+<!-- Actual layout and display section -->
+<div id="ActionContainer"
+	 dojoType="dijit.layout.SplitContainer"
+	 orientation="horizontal"
+	 sizerWidth="1"
+	 activeSizing="false"
+>
+		<div dojoType="dijit.layout.ContentPane"
+			 id="ViewPaneID"
+			 executeScripts="true" 
+		>
+			<div dojoType="dojox.atom.widget.FeedViewer" 
+				 id="fv1"
+				 url="samplefeed.xml"
+				 entrySelectionTopic="atomfeed.entry.topic">
+			</div>
+		</div>
+
+		<div dojoType="dijit.layout.ContentPane"
+			 id="ViewPaneID2"
+			 executeScripts="true" 
+		>
+			<div dojoType="dojox.atom.widget.FeedViewer" 
+				 id="fv2"
+				 xmethod="true"
+				 localSaveOnly="true"
+				 url="samplefeedEdit.xml"
+				 entrySelectionTopic="atomfeed2.entry.topic">
+			</div>
+		</div>
+		
+		<div dojoType="dijit.layout.ContentPane"
+			 id="EditorPaneID2"
+			 executeScripts="true" 
+		>
+			<div dojoType="dojox.atom.widget.FeedEntryEditor" 
+				 id="feedEditor2"
+				 enableMenu="true"
+				 enableMenuFade="true"
+				 enableEdit="true"
+				 displayEntrySections="title,authors,summary,content,id"
+				 entrySelectionTopic="atomfeed2.entry.topic">
+			</div>
+		</div>
+
+
+		<div dojoType="dijit.layout.ContentPane"
+			 id="EditorPaneID"
+			 executeScripts="true" 
+		>
+			<div dojoType="dojox.atom.widget.FeedEntryViewer" 
+				 id="feedEditor"
+				 enableMenu="true"
+				 enableMenuFade="true"
+				 enableEdit="true"
+				 displayEntrySections="title,authors,summary,content"
+				 entrySelectionTopic="atomfeed.entry.topic">
+			</div>
+		</div>
+		
+</div>
+
+	
+</body>
+</html>

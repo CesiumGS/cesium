@@ -1,0 +1,37 @@
+<html>
+<head>
+	<script>
+		var dojoConfig= {
+			modulePaths: {
+				"foo":"../foo/bar",
+				"abs":"http://myHost/myPath",
+				"some.multiSegment.path":"../someOther/path"
+			}
+		};
+	</script>
+	<script type="text/javascript" src="../../../dojo.js"></script>
+	<script type="text/javascript">
+		// TODO: make these DOH tests and add to unit test modules
+		require(["dojo"], function(dojo) {
+			console.log(dojo.moduleUrl("notFoo")+"");
+			console.log(dojo.moduleUrl("notFoo/someModule")+"");
+			console.log(dojo.moduleUrl("foo")+"");
+			console.log(dojo.moduleUrl("foo/someModule")+"");
+			console.log(dojo.moduleUrl("abs")+"");
+			console.log(dojo.moduleUrl("abs/someModule")+"");
+			console.log(dojo.moduleUrl("some/multiSegment/notPath")+"");
+			console.log(dojo.moduleUrl("some/multiSegment/path")+"");
+			console.log(dojo.moduleUrl("some/multiSegment/path/someModule")+"");
+
+			dojo.registerModulePath("foo", "./foo2/bar");
+			dojo.registerModulePath("yet/another/foo", "./yetAnotherFoo");
+			console.log(dojo.moduleUrl("foo")+"");
+			console.log(dojo.moduleUrl("foo/someModule")+"");
+			console.log(dojo.moduleUrl("yet/another/foo")+"");
+			console.log(dojo.moduleUrl("yet/another/foo/someModule")+"");
+		});
+	</script>
+</head>
+<body>
+</body>
+</html>
