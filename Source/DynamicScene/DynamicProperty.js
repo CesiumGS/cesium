@@ -78,7 +78,7 @@ define(['Core/JulianDate', 'Core/TimeInterval', 'Core/TimeIntervalCollection', '
         if (typeof iso8601Interval === 'undefined') {
             //FIXME, figure out how to properly handle "infinite" intervals.
             intervalStart = JulianDate.fromIso8601("0000-01-01T00:00Z");
-            intervalStop = JulianDate.fromIso8601("+010000-01-01T00:00Z");
+            intervalStop = JulianDate.fromIso8601("9999-12-31T24:00Z");
         } else {
             iso8601Interval = iso8601Interval.split('/');
             intervalStart = JulianDate.fromIso8601(iso8601Interval[0]);
