@@ -69,16 +69,13 @@
     Sandbox.WMS = function (scene, ellipsoid, primitives) {
         this.code = function () {
             // WMS
-            var wms = new Cesium.WebMapServiceCapabilities({
-                url : 'http://wms1.agr.gc.ca/cgi-bin/mapplant1967_f',
-                proxy : '/proxy/'
+            var wms = new Cesium.WebMapServiceTileProvider({
+                url : 'http://www2.demis.nl/wms/wms.asp',
+                proxy : new Cesium.DefaultProxy('/proxy/'),
+                proxyUsagePolicy: Cesium.ProxyUsagePolicy.ALWAYS,
+                layer : 'Countries'
             });
-            wms.getCapabilities(function(b) {
-                if( b ) {
-
-                }
-            });
-            //primitives.getCentralBody().dayTileProvider = bing;
+            primitives.getCentralBody().dayTileProvider = wms;
         };
     };
 

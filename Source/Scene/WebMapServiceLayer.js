@@ -6,10 +6,9 @@ define([
         DeveloperError,
         CesiumMath) {
     "use strict";
-    /*global Image*/
 
     /**
-     * Uses the WMS API to get the capabilities of the WMS server
+     * Contains information about a WMS layer.
      *
      * @name WebMapServiceLayer
      * @constructor
@@ -43,7 +42,6 @@ define([
      */
     function WebMapServiceLayer(description) {
         var desc = description || {};
-        var i;
 
         if (!desc.name) {
             throw new DeveloperError("description.name is required.", "description.name");
@@ -69,12 +67,7 @@ define([
          * The projections that are available for this WMS layer.
          * @type {Object[]}
          */
-        this.projections = [];
-        if( desc.projections ) {
-            for(i=0;i<desc.projections.length;++i) {
-                this.projections.push(desc.projections[i]);
-            }
-        }
+        this.projections = typeof desc.projections === 'undefined' ? [] : desc.projections.slice();
 
         /**
          * The extent of the WMS layer.
@@ -101,12 +94,7 @@ define([
          * The styles that are available for this WMS layer.
          * @type {String[]}
          */
-        this.styles = [];
-        if( desc.styles ) {
-            for(i=0;i<desc.styles.length;++i) {
-                this.styles.push(desc.styles[i]);
-            }
-        }
+        this.styles = typeof desc.styles === 'undefined' ? [] : desc.styles.slice();
 
         /**
          * The child layers of this WMS layer.
@@ -114,6 +102,29 @@ define([
          */
         this.children = [];
     }
+
+    WebMapServiceLayer.prototype.findLayer = function(layerName) {
+        if( this.name === layerName ) {
+            return this;
+        }
+
+        var result;
+        for(var i=0;i<this.children.length;++i) {
+            result = this.children[i].findLayer(layerName);
+            if( result ) {
+                break;
+            }
+        }
+
+        return result;
+    };
+
+    WebMapServiceLayer.prototype.findStyle = function(styleName) {
+        var i = this.styles.indexOf(styleName);
+
+        return (i===-1) ? null : this.styles[i];
+    };
+
 
     return WebMapServiceLayer;
 });
