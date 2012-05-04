@@ -1069,7 +1069,7 @@ define([
         var hasLogo = this._dayTileProvider && this._dayTileProvider.getLogo;
         var imageLogo =  (hasLogo) ? this._dayTileProvider.getLogo() : undefined;
         var createLogo = !this._quadLogo || this._quadLogo.isDestroyed();
-        var updateLogo = hasLogo && (createLogo || this._imageLogo !== imageLogo);
+        var updateLogo = createLogo || this._imageLogo !== imageLogo;
         if (updateLogo) {
             if (typeof imageLogo === 'undefined') {
                 this._quadLogo = this._quadLogo && this._quadLogo.destroy();

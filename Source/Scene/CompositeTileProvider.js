@@ -118,6 +118,13 @@ define([
     }
 
     CompositeTileProvider._compare = function(a, b) {
+        // if height isn't provided, default to 0.0
+        if (typeof a.height === "undefined") {
+            a.height = 0.0;
+        }
+        if (typeof b.height === "undefined") {
+            b.height = 0.0;
+        }
         return b.height - a.height;
     };
 
