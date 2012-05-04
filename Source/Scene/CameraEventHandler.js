@@ -198,9 +198,7 @@ define([
     CameraEventHandler.prototype.getButtonReleaseTime = function() {
         if (this._eventReleaseTimeFunc) {
             return this._eventReleaseTimeFunc.call(this._eventHandler);
-        }
-
-        else if (this._wheelEnd) {
+        } else if (this._wheelEnd) {
             return this._wheelEnd;
         }
         return null;
