@@ -121,4 +121,18 @@ defineSuite([
             key : "14"
         })).toBeFalsy();
     });
+
+    it("remove returns false with no key", function() {
+        var result = cache.remove();
+        expect(result).toBeFalsy();
+     });
+
+    it("destroy", function() {
+        cache = cache && cache.destroy();
+        expect(cache).toBeUndefined();
+    });
+
+    it("isDestroyed returns false", function() {
+       expect(cache.isDestroyed()).toBeFalsy();
+    });
 });

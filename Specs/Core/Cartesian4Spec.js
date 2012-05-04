@@ -174,8 +174,8 @@ defineSuite([
     });
 
     it("abs", function() {
-        var v = new Cartesian2(-1, -2, -3, -4).abs();
-        expect(v.equals(new Cartesian2(1, 2, 3, 4))).toBeTruthy();
+        var v = new Cartesian4(-1, -2, -3, -4).abs();
+        expect(v.equals(new Cartesian4(1, 2, 3, 4))).toBeTruthy();
     });
 
     it("subtract", function() {

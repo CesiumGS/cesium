@@ -29,6 +29,12 @@ defineSuite([
         expect(v.equals(w)).toBeTruthy();
     });
 
+    it("non-prototypal clone", function () {
+        var v = new Cartesian2(1, 2);
+        var w = Cartesian2.clone(v);
+        expect(v.equals(w)).toBeTruthy();
+    });
+
     it("getZero", function() {
         var v = new Cartesian2.getZero();
         expect(v.x).toEqual(0);

@@ -4,7 +4,6 @@ define([
         '../Core/RuntimeError',
         '../Core/combine',
         '../Core/destroyObject',
-        '../Core/splice',
         '../Core/Math',
         '../Core/Intersect',
         '../Core/Occluder',
@@ -17,6 +16,7 @@ define([
         '../Core/Cartesian4',
         '../Core/Cartographic2',
         '../Core/Matrix3',
+        '../Core/Queue',
         '../Core/ComponentDatatype',
         '../Core/IndexDatatype',
         '../Core/MeshFilters',
@@ -52,7 +52,6 @@ define([
         RuntimeError,
         combine,
         destroyObject,
-        splice,
         CesiumMath,
         Intersect,
         Occluder,
@@ -65,6 +64,7 @@ define([
         Cartesian4,
         Cartographic2,
         Matrix3,
+        Queue,
         ComponentDatatype,
         IndexDatatype,
         MeshFilters,
@@ -196,10 +196,10 @@ define([
             ellipsoid : ellipsoid
         });
 
-        this._renderQueue = [];
-        this._imageQueue = [];
-        this._textureQueue = [];
-        this._reprojectQueue = [];
+        this._renderQueue = new Queue();
+        this._imageQueue = new Queue();
+        this._textureQueue = new Queue();
+        this._reprojectQueue = new Queue();
 
         this._texturePool = undefined;
         this._textureCache = undefined;
@@ -573,9 +573,8 @@ define([
     };
 
     CentralBody.prototype._throttleImages = function() {
-        var j = 0;
-        for ( var i = 0; i < this._imageQueue.length && j < this._imageThrottleLimit; ++i) {
-            var tile = this._imageQueue[i];
+        for ( var i = 0, len = this._imageQueue.length; i < len && i < this._imageThrottleLimit; ++i) {
+            var tile = this._imageQueue.dequeue();
 
             if (this._frustumCull(tile, this._mode, this._projection)) {
                 tile.state = TileState.READY;
@@ -592,11 +591,7 @@ define([
                     tile.projection = this._dayTileProvider.projection;
                 }
             }
-
-            ++j;
         }
-
-        splice(this._imageQueue, 0, i);
     };
 
     CentralBody.prototype._createBaseTile = function() {
@@ -610,10 +605,8 @@ define([
     };
 
     CentralBody.prototype._throttleReprojection = function() {
-        var i = 0;
-        var j = 0;
-        for (; i < this._reprojectQueue.length && j < this._reprojectThrottleLimit; ++i) {
-            var tile = this._reprojectQueue[i];
+        for ( var i = 0, len = this._reprojectQueue.length; i < len && i < this._reprojectThrottleLimit; ++i) {
+            var tile = this._reprojectQueue.dequeue();
 
             if (this._frustumCull(tile, this._mode, this._projection)) {
                 tile.image = undefined;
@@ -624,18 +617,12 @@ define([
             tile.image = tile.projection.toWgs84(tile.extent, tile.image);
             tile.state = TileState.REPROJECTED;
             tile.projection = Projections.WGS84;
-
-            ++j;
         }
-
-        splice(this._reprojectQueue, 0, i);
     };
 
     CentralBody.prototype._throttleTextures = function(context) {
-        var i = 0;
-        var j = 0;
-        for (; i < this._textureQueue.length && j < this._textureThrottleLimit; ++i) {
-            var tile = this._textureQueue[i];
+        for ( var i = 0, len = this._textureQueue.length; i < len && i < this._textureThrottleLimit; ++i) {
+            var tile = this._textureQueue.dequeue();
 
             if (this._frustumCull(tile, this._mode, this._projection) || !tile.image) {
                 tile.image = undefined;
@@ -655,10 +642,7 @@ define([
             });
             tile.state = TileState.TEXTURE_LOADED;
             tile.image = undefined;
-            ++j;
         }
-
-        splice(this._textureQueue, 0, i);
     };
 
     CentralBody.prototype._processTile = function(tile) {
@@ -671,28 +655,24 @@ define([
         if ((!tile.state || tile.state === TileState.READY) && this._imageQueue.indexOf(tile) === -1) {
             this._imageQueue.push(tile);
             tile.state = TileState.IMAGE_LOADING;
-        }
-        // or re-project the image
-        else if (tile.state === TileState.IMAGE_LOADED && this._reprojectQueue.indexOf(tile) === -1) {
-            this._reprojectQueue.push(tile);
+        } else if (tile.state === TileState.IMAGE_LOADED && !this._reprojectQueue.contains(tile)) {
+            // or re-project the image
+            this._reprojectQueue.enqueue(tile);
             tile.state = TileState.REPROJECTING;
-        }
-        // or copy to a texture
-        else if (tile.state === TileState.REPROJECTED && this._textureQueue.indexOf(tile) === -1) {
-            this._textureQueue.push(tile);
+        } else if (tile.state === TileState.REPROJECTED && !this._textureQueue.contains(tile)) {
+            // or copy to a texture
+            this._textureQueue.enqueue(tile);
             tile.state = TileState.TEXTURE_LOADING;
-        }
-        // or retry a failed image
-        else if (retry && this._imageQueue.indexOf(tile) === -1) {
+        } else if (retry && this._imageQueue.indexOf(tile) === -1) {
+            // or retry a failed image
             if (maxTimePassed) {
                 tile._failCount = 0;
                 this._tileFailCount = 0;
             }
             this._imageQueue.push(tile);
             tile.state = TileState.IMAGE_LOADING;
-        }
-        // or release invalid image if there is one
-        else if (tile.state === TileState.IMAGE_INVALID && tile.image) {
+        } else if (tile.state === TileState.IMAGE_INVALID && tile.image) {
+            // or release invalid image if there is one
             tile.image = undefined;
         }
     };
@@ -836,13 +816,16 @@ define([
                     },
                     u_dayIntensity : function() {
                         return intensity;
+                    },
+                    u_mode : function() {
+                        return tile.mode;
                     }
                 };
                 tile._drawUniforms = combine(drawUniforms, this._drawUniforms);
 
                 tile._mode = mode;
             }
-            this._renderQueue.push(tile);
+            this._renderQueue.enqueue(tile);
 
             if (mode === SceneMode.SCENE2D) {
                 if (tile.zoom + 1 <= this._dayTileProvider.zoomMax) {
@@ -852,11 +835,10 @@ define([
                     }
                 }
             }
-        }
-        // tile isn't ready, find a parent to render and start processing the tile.
-        else {
+        } else {
+            // tile isn't ready, find a parent to render and start processing the tile.
             var parent = tile.parent;
-            if (parent && this._renderQueue.indexOf(parent) === -1) {
+            if (parent && !this._renderQueue.contains(parent)) {
                 this._enqueueTile(parent, context, sceneState);
             }
 
@@ -1045,9 +1027,9 @@ define([
             this._quadLogo = this._quadLogo && this._quadLogo.destroy();
 
             // stop loading everything
-            this._imageQueue = [];
-            this._textureQueue = [];
-            this._reprojectQueue = [];
+            this._imageQueue.clear();
+            this._textureQueue.clear();
+            this._reprojectQueue.clear();
 
             // destroy tiles
             this._destroyTileTree();
@@ -1510,10 +1492,10 @@ define([
                 });
             }
 
-            var numberOfTiles = this._renderQueue.length;
-            if (numberOfTiles === 0) {
+            if (this._renderQueue.length === 0) {
                 return;
             }
+
             var uniformState = context.getUniformState();
             var mv = uniformState.getModelView();
 
@@ -1529,17 +1511,20 @@ define([
             });
 
             // render tiles to FBO
-            for ( var i = 0; i < numberOfTiles; ++i) {
-                var tile = this._renderQueue[i];
+            while (this._renderQueue.length > 0) {
+                var tile = this._renderQueue.dequeue();
 
                 var rtc;
                 if (this.morphTime === 1.0) {
                     rtc = tile._drawUniforms.u_center3D();
+                    tile.mode = 0;
                 } else if (this.morphTime === 0.0) {
                     var center = tile._drawUniforms.u_center2D();
                     rtc = new Cartesian3(0.0, center.x, center.y);
+                    tile.mode = 1;
                 } else {
                     rtc = Cartesian3.getZero();
+                    tile.mode = 2;
                 }
                 var centerEye = mv.multiplyWithVector(new Cartesian4(rtc.x, rtc.y, rtc.z, 1.0));
                 var mvrtc = mv.clone();
@@ -1574,8 +1559,6 @@ define([
             if (this._quadLogo && !this._quadLogo.isDestroyed()) {
                 this._quadLogo.render(context);
             }
-
-            this._renderQueue.length = 0;
         }
     };
 
@@ -1653,11 +1636,11 @@ define([
      * <br /><br />
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>null</code>) to the object as done in the example.
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
      * @memberof CentralBody
      *
-     * @return {null}
+     * @return {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
