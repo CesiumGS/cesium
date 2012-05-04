@@ -1,6 +1,16 @@
 /*global define*/
-define(['Core/DeveloperError', 'Core/binarySearch', 'Core/TimeConstants', 'Core/LeapSecond', 'Core/TimeStandard', 'Core/isLeapYear'],
-function(DeveloperError, binarySearch, TimeConstants, LeapSecond, TimeStandard, isLeapYear) {
+define(['Core/DeveloperError',
+        'Core/binarySearch',
+        'Core/TimeConstants',
+        'Core/LeapSecond',
+        'Core/TimeStandard',
+        'Core/isLeapYear'],
+function(DeveloperError,
+         binarySearch,
+         TimeConstants,
+         LeapSecond,
+         TimeStandard,
+         isLeapYear) {
     "use strict";
 
     var daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
@@ -11,8 +21,8 @@ function(DeveloperError, binarySearch, TimeConstants, LeapSecond, TimeStandard, 
         // Astronomical Almanac (Seidelmann 1992).
 
         var a = ((month - 14) / 12) | 0;
-        var b = (year + 4800 + a) | 0;
-        var dayNumber = ((((1461 * b) / 4) | 0) + (((367 * (month - 2 - 12 * a)) / 12) | 0) - (((3 * ((b + 100) / 100)) / 4) | 0) + day - 32075) | 0;
+        var b = year + 4800 + a;
+        var dayNumber = (((1461 * b) / 4) | 0) + (((367 * (month - 2 - 12 * a)) / 12) | 0) - (((3 * ((b + 100) / 100)) / 4) | 0) + day - 32075;
 
         // JulianDates are noon-based
         hour = hour - 12;
@@ -41,19 +51,19 @@ function(DeveloperError, binarySearch, TimeConstants, LeapSecond, TimeStandard, 
     //YYYY-MM (YYYYMM is invalid)
     var matchCalendarMonth = /^(\d{4})-(\d{2})$/;
     //YYYY-DDD or YYYYDDD
-    var matchOrdinalDate = /^(\d{4})-*(\d{3})$/;
+    var matchOrdinalDate = /^(\d{4})-?(\d{3})$/;
     //YYYY-Www or YYYYWww or YYYY-Www-D or YYYYWwwD
-    var matchWeekDate = /^(\d{4})-*W(\d{2})-*(\d{1})*$/;
+    var matchWeekDate = /^(\d{4})-?W(\d{2})-?(\d{1})?$/;
     //YYYY-MM-DD or YYYYMMDD
-    var matchCalendarDate = /^(\d{4})-*(\d{2})-*(\d{2})$/;
+    var matchCalendarDate = /^(\d{4})-?(\d{2})-?(\d{2})$/;
     // Match utc offset
-    var utcOffset = /([Z+\-])*(\d{2})*:*(\d{2})*$/;
+    var utcOffset = /([Z+\-])?(\d{2})?:?(\d{2})?$/;
     // Match hours HH or HH.xxxxx
-    var matchHours = /^(\d{2})(\.\d+)*/.source + utcOffset.source;
+    var matchHours = /^(\d{2})(\.\d+)?/.source + utcOffset.source;
     // Match hours/minutes HH:MM HHMM.xxxxx
-    var matchHoursMinutes = /^(\d{2}):*(\d{2})(\.\d+)*/.source + utcOffset.source;
+    var matchHoursMinutes = /^(\d{2}):?(\d{2})(\.\d+)?/.source + utcOffset.source;
     // Match hours/minutes HH:MM:SS HHMMSS.xxxxx
-    var matchHoursMinutesSeconds = /^(\d{2}):*(\d{2}):*(\d{2})(\.\d+)*/.source + utcOffset.source;
+    var matchHoursMinutesSeconds = /^(\d{2}):?(\d{2}):?(\d{2})(\.\d+)?/.source + utcOffset.source;
 
     var iso8601ErrorMessage = "Valid ISO 8601 date string required.";
 
@@ -188,8 +198,8 @@ function(DeveloperError, binarySearch, TimeConstants, LeapSecond, TimeStandard, 
     /**
      * <p>
      * Creates an immutable JulianDate instance from an ISO 8601 date string.  Unlike Date.parse,
-     * this method will properly account for all valid formats defined by the ISO 8601
-     * specification.  It will also properly handle leap seconds and sub-millisecond times.
+     * this method properly accounts for all valid formats defined by the ISO 8601
+     * specification.  It also properly handles leap seconds and sub-millisecond times.
      * <p/>
      *
      * @memberof JulianDate
@@ -223,7 +233,7 @@ function(DeveloperError, binarySearch, TimeConstants, LeapSecond, TimeStandard, 
         //start out by blanket replacing , with . which is the only valid such symbol in JS.
         iso8601String = iso8601String.replace(',', '.');
 
-        //Split the string into it's date and time components, denoted by a mandatory T
+        //Split the string into its date and time components, denoted by a mandatory T
         var tokens = iso8601String.split('T'), year, month = 1, day = 1, hours = 0, minutes = 0, seconds = 0, milliseconds = 0;
 
         //Lacking a time is okay, but a missing date is illegal.
@@ -234,9 +244,15 @@ function(DeveloperError, binarySearch, TimeConstants, LeapSecond, TimeStandard, 
             throw new DeveloperError(iso8601ErrorMessage, "iso8601String");
         }
 
+        var dashCount;
+
         //First match the date against possible regular expressions.
         tokens = date.match(matchCalendarDate);
         if (tokens !== null) {
+            dashCount = date.split('-').length - 1;
+            if (dashCount > 0 && dashCount !== 2) {
+                throw new DeveloperError(iso8601ErrorMessage, "iso8601String");
+            }
             year = +tokens[1];
             month = +tokens[2];
             day = +tokens[3];
@@ -254,6 +270,7 @@ function(DeveloperError, binarySearch, TimeConstants, LeapSecond, TimeStandard, 
                     var dayOfYear;
                     tokens = date.match(matchOrdinalDate);
                     if (tokens !== null) {
+
                         year = +tokens[1];
                         dayOfYear = +tokens[2];
                         inLeapYear = isLeapYear(year);
@@ -270,6 +287,14 @@ function(DeveloperError, binarySearch, TimeConstants, LeapSecond, TimeStandard, 
                             year = +tokens[1];
                             var weekNumber = +tokens[2];
                             var dayOfWeek = +tokens[3] || 0;
+
+                            dashCount = date.split('-').length - 1;
+                            if (dashCount > 0 &&
+                               ((typeof tokens[3] === 'undefined' && dashCount !== 1) ||
+                               (typeof tokens[3] !== 'undefined' && dashCount !== 2))) {
+                                throw new DeveloperError(iso8601ErrorMessage, "iso8601String");
+                            }
+
                             var january4 = new Date(Date.UTC(year, 0, 4));
                             dayOfYear = (weekNumber * 7) + dayOfWeek - january4.getUTCDay() - 3;
                         } else {
@@ -297,6 +322,11 @@ function(DeveloperError, binarySearch, TimeConstants, LeapSecond, TimeStandard, 
         if (typeof time !== 'undefined') {
             tokens = time.match(matchHoursMinutesSeconds);
             if (tokens !== null) {
+                dashCount = time.split(':').length - 1;
+                if (dashCount > 0 && dashCount !== 2) {
+                    throw new DeveloperError(iso8601ErrorMessage, "iso8601String");
+                }
+
                 hours = +tokens[1];
                 minutes = +tokens[2];
                 seconds = +tokens[3];
@@ -305,6 +335,11 @@ function(DeveloperError, binarySearch, TimeConstants, LeapSecond, TimeStandard, 
             } else {
                 tokens = time.match(matchHoursMinutes);
                 if (tokens !== null) {
+                    dashCount = time.split(':').length - 1;
+                    if (dashCount > 0 && dashCount !== 1) {
+                        throw new DeveloperError(iso8601ErrorMessage, "iso8601String");
+                    }
+
                     hours = +tokens[1];
                     minutes = +tokens[2];
                     seconds = +(tokens[3] || 0) * 60.0;
@@ -321,8 +356,8 @@ function(DeveloperError, binarySearch, TimeConstants, LeapSecond, TimeStandard, 
                 }
             }
 
-            //Validate that all values are in proper range.  Minutes and hours have special cases at 24 and 60.
-            if (minutes >= 60 || seconds > 60 || hours > 24 || (hours === 24 && (minutes > 0 || seconds > 0 || milliseconds > 0))) {
+            //Validate that all values are in proper range.  Minutes and hours have special cases at 60 and 24.
+            if (minutes >= 60 || seconds >= 61 || hours > 24 || (hours === 24 && (minutes > 0 || seconds > 0 || milliseconds > 0))) {
                 throw new DeveloperError(iso8601ErrorMessage, "iso8601String");
             }
 
@@ -351,7 +386,7 @@ function(DeveloperError, binarySearch, TimeConstants, LeapSecond, TimeStandard, 
             minutes = minutes + new Date(Date.UTC(year, month - 1, day)).getTimezoneOffset();
         }
 
-        //ISO8601 denotes a leap second by any time having a seconds component of exactly 60 seconds.
+        //ISO8601 denotes a leap second by any time having a seconds component of 60 seconds.
         //If that's the case, we need to temporarily subtract a second in order to build a UTC date.
         //Then we add it back in after converting to TAI.
         var isLeapSecond = seconds === 60;
@@ -359,12 +394,12 @@ function(DeveloperError, binarySearch, TimeConstants, LeapSecond, TimeStandard, 
             seconds--;
         }
 
-        //Even if we successfully parsed the string into it's components, after applying UTC offset or
+        //Even if we successfully parsed the string into its components, after applying UTC offset or
         //special cases like 24:00:00 denoting midnight, we need to normalize the data appropriately.
 
-        //milliseconds can never be greater than 1000, so we start with seconds
-        while (seconds >= 60) {
-            seconds -= 60;
+        //milliseconds can never be greater than 1000, and seconds can't be above 60, so we start with minutes
+        while (minutes >= 60) {
+            minutes -= 60;
             hours++;
         }
 
@@ -377,15 +412,21 @@ function(DeveloperError, binarySearch, TimeConstants, LeapSecond, TimeStandard, 
         while (day > tmp) {
             day -= tmp;
             month++;
+
+            if (month > 12) {
+                month -= 12;
+                year++;
+            }
+
             tmp = (inLeapYear && month === 2) ? daysInLeapFeburary : daysInMonth[month - 1];
         }
 
-        while (month > 12) {
-            month -= 12;
-            year++;
+        //If UTC offset is at the beginning/end of the day, minutes can be negative.
+        while (minutes < 0) {
+            minutes += 60;
+            hours--;
         }
 
-        //If UTC offset is at the beginning/end of the day, hours can be negative.
         while (hours < 0) {
             hours += 24;
             day--;
@@ -395,11 +436,11 @@ function(DeveloperError, binarySearch, TimeConstants, LeapSecond, TimeStandard, 
             tmp = (inLeapYear && month === 2) ? daysInLeapFeburary : daysInMonth[month - 1];
             day += tmp;
             month--;
-        }
 
-        while (month < 1) {
-            month += 12;
-            year--;
+            if (month < 1) {
+                month += 12;
+                year--;
+            }
         }
 
         //Now create the JulianDate components from the Gregorian date and actually create our instance.

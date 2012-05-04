@@ -1,10 +1,17 @@
-defineSuite(['Core/JulianDate', 'Core/TimeStandard', 'Core/TimeConstants', 'Core/Math'], function(JulianDate, TimeStandard, TimeConstants, CesiumMath) {
+defineSuite(['Core/JulianDate',
+             'Core/TimeStandard',
+             'Core/TimeConstants',
+             'Core/Math'],
+function(JulianDate,
+         TimeStandard,
+         TimeConstants,
+         CesiumMath) {
     "use strict";
-    /*global it, xit, expect*/
+    /*global it, expect*/
 
     // All exact Julian Dates found using NASA's Time Conversion Tool: http://ssd.jpl.nasa.gov/tc.cgi
     it("Construct a default date", function() {
-        // FIXME Default constructing a date uses "now".  Unfortunately,
+        // Default constructing a date uses "now".  Unfortunately,
         // there's no way to know exactly what that time will be, so we
         // give ourselves a 5 second epsilon as a hack to avoid possible
         // race conditions.  In reality, it might be better to just omit
@@ -479,6 +486,18 @@ defineSuite(['Core/JulianDate', 'Core/TimeStandard', 'Core/TimeConstants', 'Core
         expect(computedDate.equals(expectedDate)).toBeTruthy();
     });
 
+    it("Construct from an ISO8601 local calendar date with UTC offset that crosses into next year", function() {
+        var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2008, 11, 31, 23, 0, 0)));
+        var julianDate = JulianDate.fromIso8601("2009-01-01T01:00:00+02");
+        expect(julianDate.equals(expectedDate)).toBeTruthy();
+    });
+
+    it("Construct from an ISO8601 local calendar date with UTC offset that crosses into previous year", function() {
+        var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2009, 0, 1, 1, 0, 0)));
+        var julianDate = JulianDate.fromIso8601("2008-12-31T23:00:00-02");
+        expect(julianDate.equals(expectedDate)).toBeTruthy();
+    });
+
     it("Fails to construct an ISO8601 ordinal date with day less than 1", function() {
         expect(function() {
             return JulianDate.fromIso8601("2009-000");
@@ -662,6 +681,66 @@ defineSuite(['Core/JulianDate', 'Core/TimeStandard', 'Core/TimeConstants', 'Core
     it("Fails to construct from an ISO8601 with less than 1 day", function() {
         expect(function() {
             return JulianDate.fromIso8601("2009-01-00");
+        }).toThrow();
+    });
+
+    it("Fails to construct from an ISO8601 with too many dashes", function() {
+        expect(function() {
+            return JulianDate.fromIso8601("2009--01-01");
+        }).toThrow();
+    });
+
+    it("Fails to construct from an ISO8601 with garbage offset", function() {
+        expect(function() {
+            return JulianDate.fromIso8601("2000-12-15T12:59:23ZZ+-050708::1234");
+        }).toThrow();
+    });
+
+    it("Fails to construct an ISO8601 date with more than one decimal place", function() {
+        expect(function() {
+            return JulianDate.fromIso8601("2000-12-15T12:59:22..2");
+        }).toThrow();
+    });
+
+    it("Fails to construct an ISO8601 calendar date mixing basic and extended format", function() {
+        expect(function() {
+            return JulianDate.fromIso8601("200108-01");
+        }).toThrow();
+    });
+
+    it("Fails to construct an ISO8601 calendar date mixing basic and extended format", function() {
+        expect(function() {
+            return JulianDate.fromIso8601("2001-0801");
+        }).toThrow();
+    });
+
+    it("Fails to construct an ISO8601 calendar week mixing basic and extended format", function() {
+        expect(function() {
+            return JulianDate.fromIso8601("2008-W396");
+        }).toThrow();
+    });
+
+    it("Fails to construct an ISO8601 calendar week mixing basic and extended format", function() {
+        expect(function() {
+            return JulianDate.fromIso8601("2008W39-6");
+        }).toThrow();
+    });
+
+    it("Fails to construct an ISO8601 date with trailing -", function() {
+        expect(function() {
+            return JulianDate.fromIso8601("2001-");
+        }).toThrow();
+    });
+
+    it("Fails to construct an ISO8601 time mixing basic and extended format", function() {
+        expect(function() {
+            return JulianDate.fromIso8601("2000-12-15T22:0100");
+        }).toThrow();
+    });
+
+    it("Fails to construct an ISO8601 time mixing basic and extended format", function() {
+        expect(function() {
+            return JulianDate.fromIso8601("2000-12-15T2201:00");
         }).toThrow();
     });
 
