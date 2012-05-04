@@ -211,6 +211,12 @@ define([
         this._imageThrottleLimit = 15;
 
         this._prefetchLimit = 1;
+        this.perTileMaxFailCount = 3;
+        this.maxTileFailCount = 30;
+        this._tileFailCount = 0;
+        this.failedTileRetryTime = 30.0;
+        this._lastFailedTime = undefined;
+
 
         this._spWithoutAtmosphere = undefined;
         this._spGroundFromSpace = undefined;
@@ -233,7 +239,7 @@ define([
 
         this._fb = undefined;
 
-        this._textureLogo = undefined;
+        this._imageLogo = undefined;
         this.logoOffset = Cartesian2.getZero();
         this._logoOffset = this.logoOffset;
         this._quadLogo = undefined;
@@ -514,10 +520,14 @@ define([
     };
 
     CentralBody.prototype._fetchImage = function(tile) {
+        var that = this;
         var onload = function() {
             tile.state = TileState.IMAGE_LOADED;
         };
         var onerror = function() {
+            tile._failCount = (tile._failCount) ? tile._failCount + 1 : 1;
+            ++that._tileFailCount;
+            that._lastFailedTime = new JulianDate();
             tile.state = TileState.IMAGE_FAILED;
         };
         var oninvalid = function() {
@@ -614,7 +624,7 @@ define([
         for ( var i = 0, len = this._textureQueue.length; i < len && i < this._textureThrottleLimit; ++i) {
             var tile = this._textureQueue.dequeue();
 
-            if (this._frustumCull(tile, this._mode, this._projection)) {
+            if (this._frustumCull(tile, this._mode, this._projection) || !tile.image) {
                 tile.image = undefined;
                 tile.state = TileState.READY;
                 continue;
@@ -636,9 +646,14 @@ define([
     };
 
     CentralBody.prototype._processTile = function(tile) {
+        var maxFailed = this._tileFailCount > this._maxTileFailCount;
+        var requestFailed = tile.state === TileState.IMAGE_FAILED && tile._failCount < this._maxTileFailCount;
+        var maxTimePassed = this._lastFailedTime && this._lastFailedTime.getSecondsDifference(new JulianDate()) >= this.failedTileRetryTime;
+        var retry = maxTimePassed || (requestFailed && !maxFailed);
+
         // check if tile needs to load image
-        if ((!tile.state || tile.state === TileState.READY || tile.state === TileState.IMAGE_FAILED) && !this._imageQueue.contains(tile)) {
-            this._imageQueue.enqueue(tile);
+        if ((!tile.state || tile.state === TileState.READY) && this._imageQueue.indexOf(tile) === -1) {
+            this._imageQueue.push(tile);
             tile.state = TileState.IMAGE_LOADING;
         } else if (tile.state === TileState.IMAGE_LOADED && !this._reprojectQueue.contains(tile)) {
             // or re-project the image
@@ -648,6 +663,14 @@ define([
             // or copy to a texture
             this._textureQueue.enqueue(tile);
             tile.state = TileState.TEXTURE_LOADING;
+        } else if (retry && this._imageQueue.indexOf(tile) === -1) {
+            // or retry a failed image
+            if (maxTimePassed) {
+                tile._failCount = 0;
+                this._tileFailCount = 0;
+            }
+            this._imageQueue.push(tile);
+            tile.state = TileState.IMAGE_LOADING;
         } else if (tile.state === TileState.IMAGE_INVALID && tile.image) {
             // or release invalid image if there is one
             tile.image = undefined;
@@ -1025,17 +1048,25 @@ define([
             this._prefetchImages();
         }
 
-        var createLogo = (!this._textureLogo || !this._quadLogo || this._quadLogo.isDestroyed()) && this._dayTileProvider && this._dayTileProvider.getLogo && this._dayTileProvider.getLogo();
-        if (createLogo) {
-            this._textureLogo = context.createTexture2D({
-                source : this._dayTileProvider.getLogo(),
-                pixelFormat : PixelFormat.RGBA
-            });
-            this._quadLogo = new ViewportQuad(new Rectangle(this.logoOffset.x, this.logoOffset.y, this._textureLogo.getWidth(), this._textureLogo.getHeight()));
-            this._quadLogo.setTexture(this._textureLogo);
-            this._quadLogo.enableBlending = true;
-        } else if (this._quadLogo && this._textureLogo && !this.logoOffset.equals(this._logoOffset)) {
-            this._quadLogo.setRectangle(new Rectangle(this.logoOffset.x, this.logoOffset.y, this._textureLogo.getWidth(), this._textureLogo.getHeight()));
+        var hasLogo = this._dayTileProvider && this._dayTileProvider.getLogo;
+        var imageLogo =  (hasLogo) ? this._dayTileProvider.getLogo() : undefined;
+        var createLogo = !this._quadLogo || this._quadLogo.isDestroyed();
+        var updateLogo = createLogo || this._imageLogo !== imageLogo;
+        if (updateLogo) {
+            if (typeof imageLogo === 'undefined') {
+                this._quadLogo = this._quadLogo && this._quadLogo.destroy();
+            }
+            else {
+                this._quadLogo = new ViewportQuad(new Rectangle(this.logoOffset.x, this.logoOffset.y, imageLogo.width, imageLogo.height));
+                this._quadLogo.setTexture(context.createTexture2D({
+                    source : imageLogo,
+                    pixelFormat : PixelFormat.RGBA
+                }));
+                this._quadLogo.enableBlending = true;
+            }
+            this._imageLogo = imageLogo;
+        } else if (this._quadLogo && this._imageLogo && !this.logoOffset.equals(this._logoOffset)) {
+            this._quadLogo.setRectangle(new Rectangle(this.logoOffset.x, this.logoOffset.y, this._imageLogo.width, this._imageLogo.height));
             this._logoOffset = this.logoOffset;
         }
 
