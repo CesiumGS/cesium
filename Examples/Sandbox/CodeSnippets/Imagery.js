@@ -58,6 +58,21 @@
         };
     };
 
+    Sandbox.Stamen = function (scene, ellipsoid, primitives) {
+        this.code = function () {
+            // Stamen maps: http://maps.stamen.com
+            // Other map urls:
+            // * http://tile.stamen.com/watercolor/
+            // * http://tile.stamen.com/terrain/
+            var layer = new Cesium.OpenStreetMapTileProvider({
+                url : 'http://tile.stamen.com/toner/',
+                proxy : new Cesium.DefaultProxy('/proxy/'),
+                credit : 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'
+            });
+            primitives.getCentralBody().dayTileProvider = layer;
+        };
+    };
+
     Sandbox.Single = function (scene, ellipsoid, primitives) {
         this.code = function () {
             // Single texture

@@ -93,10 +93,10 @@ define([
      * @constructor
      *
      * @param {String} description.server The name of the Bing Maps server hosting the imagery.
-     * @param {String} description.key An optional Bing Maps key, which can be created at <a href="https://www.bingmapsportal.com/">https://www.bingmapsportal.com/</a>.
-     * @param {Enumeration} description.mapStyle The type of Bing Maps imagery to load.
-     * @param {Object} description.proxy A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
-     * @param {Enumeration} description.proxyUsagePolicy Specify whether to use the supplied proxy for all data, or only those that don't support cross-origin requests.  By default, cross-origin will be used.
+     * @param {String} [description.key] An optional Bing Maps key, which can be created at <a href="https://www.bingmapsportal.com/">https://www.bingmapsportal.com/</a>.
+     * @param {Enumeration} [description.mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps imagery to load.
+     * @param {Object} [description.proxy=undefined] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
+     * @param {Enumeration} [description.proxyUsagePolicy=ProxyUsagePolicy.USE_CORS] Specify whether to use the supplied proxy for all data, or only those that don't support cross-origin requests.
      *
      * @exception {DeveloperError} <code>description.server</code> is required.
      *
