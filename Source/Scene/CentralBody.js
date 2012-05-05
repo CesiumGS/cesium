@@ -652,8 +652,8 @@ define([
         var retry = maxTimePassed || (requestFailed && !maxFailed);
 
         // check if tile needs to load image
-        if ((!tile.state || tile.state === TileState.READY) && this._imageQueue.indexOf(tile) === -1) {
-            this._imageQueue.push(tile);
+        if ((!tile.state || tile.state === TileState.READY) && !this._imageQueue.contains(tile)) {
+            this._imageQueue.enqueue(tile);
             tile.state = TileState.IMAGE_LOADING;
         } else if (tile.state === TileState.IMAGE_LOADED && !this._reprojectQueue.contains(tile)) {
             // or re-project the image
