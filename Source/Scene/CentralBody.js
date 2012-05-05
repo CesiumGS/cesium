@@ -663,7 +663,7 @@ define([
             // or copy to a texture
             this._textureQueue.enqueue(tile);
             tile.state = TileState.TEXTURE_LOADING;
-        } else if (retry && this._imageQueue.indexOf(tile) === -1) {
+        } else if (retry && this._imageQueue.contains(tile) === -1) {
             // or retry a failed image
             if (maxTimePassed) {
                 tile._failCount = 0;
