@@ -169,7 +169,7 @@ void main()
         v_positionEC = (u_modifiedModelView * vec4(position3D, 1.0)).xyz;  // position in eye coordinates
         gl_Position = agi_projection * (u_modifiedModelView * vec4(position3D, 1.0));
     }
-    if (u_mode == 1) {
+    else if (u_mode == 1) {
         v_positionEC = (agi_modelView * vec4(position3DWC, 1.0)).xyz;  // position in eye coordinates
         gl_Position = agi_projection * (u_modifiedModelView * vec4(0.0, position2D.x, position2D.y, 1.0));
     }
