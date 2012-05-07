@@ -72,7 +72,6 @@
             var wms = new Cesium.WebMapServiceTileProvider({
                 url : 'http://www2.demis.nl/wms/wms.asp',
                 proxy : new Cesium.DefaultProxy('/proxy/'),
-                proxyUsagePolicy: Cesium.ProxyUsagePolicy.ALWAYS,
                 layer : 'Countries'
             });
             primitives.getCentralBody().dayTileProvider = wms;

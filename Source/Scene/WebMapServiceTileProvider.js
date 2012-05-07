@@ -5,7 +5,6 @@ define([
         '../Core/clone',
         '../Core/Math',
         './Projections',
-        './ProxyUsagePolicy',
         './WebMapServiceLayer'
     ], function(
         DeveloperError,
@@ -13,7 +12,6 @@ define([
         clone,
         CesiumMath,
         Projections,
-        ProxyUsagePolicy,
         WebMapServiceLayer) {
     "use strict";
     /*global Image*/
@@ -28,7 +26,6 @@ define([
      * @param {String|String[]} description.layer The name(s) of the layer in the WMS imagery service.
      * @param {String|String[]} description.style The name(s) of the style of the layer in the WMS imagery service.
      * @param {Object} description.proxy A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
-     * @param {Enumeration} description.proxyUsagePolicy Specify whether to use the supplied proxy for all data, or only those that don't support cross-origin requests.  By default, cross-origin will be used.
      *
      * @exception {DeveloperError} <code>description.server</code> is required.
      *
@@ -90,12 +87,6 @@ define([
         this.proxy = desc.proxy;
 
         /**
-         * Specify whether to use the supplied proxy for all data, or only those that don't support cross-origin requests.  By default, cross-origin will be used.
-         * @type {Enumeration}
-         */
-        this.proxyUsagePolicy = desc.proxyUsagePolicy || ProxyUsagePolicy.USE_CORS;
-
-        /**
          * The cartographic extent of the base tile, with north, south, east and
          * west properties in radians.
          *
@@ -154,7 +145,7 @@ define([
     WebMapServiceTileProvider.prototype._getTileUrl = function(tile) {
         var url = this._tileUrl + CesiumMath.toDegrees(tile.extent.west) + "," + CesiumMath.toDegrees(tile.extent.south) + "," +
                     CesiumMath.toDegrees(tile.extent.east) + "," + CesiumMath.toDegrees(tile.extent.north);
-        if (this.proxyUsagePolicy === ProxyUsagePolicy.ALWAYS && this.proxy) {
+        if (this.proxy) {
             url = this.proxy.getURL(url);
         }
 
