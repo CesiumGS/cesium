@@ -192,15 +192,15 @@ writer.close();
 	</target>
 
 	<target name="combineJavaScript.setNodePathValue">
-		<condition property="nodePathValue" value="${toolsDirectory}/nodejs-0.6.15/windows/node.exe">
+		<condition property="nodePathValue" value="${toolsDirectory}/nodejs-0.6.17/windows/node.exe">
 			<os family="windows" />
 		</condition>
 
-		<condition property="nodePathValue" value="${toolsDirectory}/nodejs-0.6.15/mac/node">
+		<condition property="nodePathValue" value="${toolsDirectory}/nodejs-0.6.17/mac/node">
 			<os family="mac" />
 		</condition>
 
-		<condition property="nodePathValue" value="${toolsDirectory}/nodejs-0.6.15/linux/node">
+		<condition property="nodePathValue" value="${toolsDirectory}/nodejs-0.6.17/linux/node">
 			<os family="unix" />
 		</condition>
 	</target>
