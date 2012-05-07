@@ -73,7 +73,7 @@ define(['./DynamicTextureAtlas',
                         return;
                     }
 
-                    var textureProperty = dynamicBillboard.texture;
+                    var textureProperty = dynamicBillboard.image;
                     if (typeof textureProperty === 'undefined') {
                         return;
                     }
