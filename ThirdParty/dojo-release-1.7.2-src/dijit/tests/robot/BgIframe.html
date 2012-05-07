@@ -1,0 +1,141 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot bgIframe Test</title>
+
+		<style>
+			@import "../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../dojo/dojo.js"></script>
+			
+		<script type="text/javascript" src="../helpers.js"></script>
+			
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../test_bgIframe.html');
+	
+				dojo.forEach(["applet", "xapp"], function(xId){
+					doh.register(xId, [
+					{
+						name: "dialog_" + xId,
+						timeout: 15000,
+						runTest: function(){
+							if(dojo.isWebKit){ return; }  // TODO: Remove skip-test for non-WebKit after #11822 is fixed
+							var d = new doh.Deferred();
+
+							var wasClicked = false;
+							var connection;
+							
+							//Show the dialog
+							doh.robot.mouseMoveAt("showDialog", 500,  1);
+							doh.robot.mouseClick({left:true}, 500);
+							
+							//drag the dialog on top of the applet
+							doh.robot.mouseMoveAt(dijit.byId("dialog").titleNode, 2000,  1);
+							doh.robot.mousePress({left:true}, 500);
+							doh.robot.mouseMoveAt(xId, 500,  1000);
+							doh.robot.mouseRelease({left:true}, 500);
+							
+							doh.robot.sequence(function(){
+								connection = dojo.connect(dijit.byId("dialog").containerNode, "onclick", function(e){ wasClicked = true; });
+							}, 500); 
+							
+							//Click on the dialog
+							doh.robot.mouseMoveAt(dijit.byId("dialog").containerNode, 1, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								dojo.disconnect(connection);
+								//verify the native select did not disappear
+								doh.t(isVisible(dojo.byId("dropDown_" + xId)), "The native select is not visible");
+								
+								dijit.byId("dialog").hide();
+								
+								doh.t(wasClicked, "Dialog was not visible because the onclick did not fire.");
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "tooltip_" + xId,
+						timeout: 8000,
+						runTest: function(){
+							if(!dojo.isIE){ return; }  // TODO: Remove skip-test for non-IE after #11822 is fixed
+							var d = new doh.Deferred();
+
+							var tooltipWasClicked = false;
+							var connection, oldHide;
+							
+							//Show the tooltip
+							doh.robot.mouseMoveAt("two_" + xId, 500, 1);
+							
+							doh.robot.sequence(function(){ 
+								var tooltip = dijit.byId("dijit__MasterTooltip_0");
+								oldHide = tooltip.hide;
+								tooltip.hide = function(aroundNode){
+									//don't allow the tooltip to be hidden							
+								};
+								connection = dojo.connect(tooltip.domNode, "onclick",
+									function(e){
+										tooltipWasClicked = true;
+										tooltip.hide = oldHide;
+										tooltip.hide(tooltip.aroundNode);
+									}
+								);
+							}, 2000); 
+							
+							//Click on the tooltip
+							doh.robot.mouseMoveAt("dijit__MasterTooltip_0", 1, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								dojo.disconnect(connection);
+								doh.t(tooltipWasClicked, "The tooltip is not visible because the onclick event was not fired.");
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "dateTextBox_" + xId,
+						timeout: 7000,
+						runTest: function(){
+							if(!dojo.isIE){ return; }  // TODO: Remove skip-test for non-IE after #11822 is fixed
+							var d = new doh.Deferred();
+
+							var wasClicked = false;
+							var connection;
+							
+							//Show the popup
+							doh.robot.mouseMoveAt("dateText_" + xId, 500, 1);
+							doh.robot.mouseClick({left:true}, 500);
+							
+							doh.robot.sequence(function(){
+								connection = dojo.connect(dijit.byId("dateText_"+xId+"_popup").domNode, "onclick", function(e){ wasClicked = true; });
+							}, 2000); 
+							
+							//Click on the popup
+							doh.robot.mouseMoveAt("dateText_"+xId+"_popup", 1, 1, 10, 10);
+							doh.robot.mouseClick({left:true}, 500);
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								dojo.disconnect(connection);
+								doh.t(wasClicked);
+							}), 1000);
+
+							return d;
+						}
+					}
+					]);
+				});
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

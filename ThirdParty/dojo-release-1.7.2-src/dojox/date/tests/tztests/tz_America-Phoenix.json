@@ -1,0 +1,32 @@
+({
+	name: "date.timezone.America-Phoenix",
+	runTest: function(t){
+		var tz = "America/Phoenix";
+		doh.checkDate({tzOffset: 420, tzAbbr: "MST"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: 420, tzAbbr: "MST"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: 420, tzAbbr: "MST"}, -1633273201000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "MDT"}, -1633273200000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "MDT"}, -1615132801000, tz, 1);
+		doh.checkDate({tzOffset: 420, tzAbbr: "MST"}, -1615132800000, tz, 1);
+		doh.checkDate({tzOffset: 420, tzAbbr: "MST"}, -1601823601000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "MDT"}, -1601823600000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "MDT"}, -1583683201000, tz, 1);
+		doh.checkDate({tzOffset: 420, tzAbbr: "MST"}, -1583683200000, tz, 1);
+		doh.checkDate({tzOffset: 420, tzAbbr: "MST"}, -880210801000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "MWT"}, -880210800000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "MWT"}, -820519141000, tz, 1);
+		doh.checkDate({tzOffset: 420, tzAbbr: "MST"}, -820519140000, tz, 1);
+		doh.checkDate({tzOffset: 420, tzAbbr: "MST"}, -812653141000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "MWT"}, -812653140000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "MWT"}, -796845541000, tz, 1);
+		doh.checkDate({tzOffset: 420, tzAbbr: "MST"}, -796845540000, tz, 1);
+		doh.checkDate({tzOffset: 420, tzAbbr: "MST"}, -84380401000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "MDT"}, -84380400000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "MDT"}, -68659201000, tz, 1);
+		doh.checkDate({tzOffset: 420, tzAbbr: "MST"}, -68659200000, tz, 1);
+		doh.checkDate({tzOffset: 420, tzAbbr: "MST"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: 420, tzAbbr: "MST"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: 420, tzAbbr: "MST"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: 420, tzAbbr: "MST"}, 1246789800000, tz, 0);
+	}
+})

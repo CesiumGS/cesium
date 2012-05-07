@@ -1,0 +1,85 @@
+/* dojox.mobile.Heading */
+.mblHeading {
+  position: relative;
+  margin: 0px;
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  z-index: 1;
+  padding: 0;
+  height: 40px;
+  background-color: #5cb0ff;
+  background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0, #ffffff), color-stop(2.5%, #ffffff), color-stop(2.5%, rgba(255, 255, 255, 0.14)), color-stop(5%, rgba(255, 255, 255, 0.14)), color-stop(5%, rgba(255, 255, 255, 0.52)), color-stop(7.5%, rgba(255, 255, 255, 0.52)), color-stop(7.5%, rgba(255, 255, 255, 0.68)), color-stop(10%, rgba(255, 255, 255, 0.68)), color-stop(1, rgba(255, 255, 255, 0)));
+  border-bottom: 1px solid #769dc0;
+  color: #131313;
+  font-size: 18px;
+  font-family: Helvetica;
+  font-weight: normal;
+  text-shadow: rgba(0, 0, 0, 0.2) 0px 1px 2px;
+  text-align: center;
+  line-height: 42px;
+}
+.mblHeading * {
+  z-index: 2;
+}
+.mblHeadingDivTitle {
+  position: absolute;
+  width: 100%;
+  display: none;
+  left: 0px;
+  z-index: 1;
+}
+.mblHeadingCenterTitle .mblHeadingDivTitle {
+  display: block;
+}
+.mblHeadingCenterTitle .mblHeadingSpanTitle {
+  display: none;
+}
+/* Heading Arrow Button */
+.mblArrowButton {
+  position: relative;
+  float: left;
+  height: 30px;
+  margin: 0px 8px;
+}
+.mblArrowButtonHead {
+  position: absolute;
+  top: 5px;
+  left: 17px;
+  width: 21px;
+  height: 21px;
+  border: 1px solid #b5bcc7;
+  -webkit-transform-origin: left top;
+  -webkit-transform: scale(0.9, 0.99) rotate(45deg);
+  background-color: #5cb0ff;
+  background-image: -webkit-gradient(linear, left top, right bottom, color-stop(0, #ffffff), color-stop(3.3333333333333335%, rgba(255, 255, 255, 0.1)), color-stop(0.5, rgba(255, 255, 255, 0.6)), color-stop(1, rgba(255, 255, 255, 0.3)));
+}
+.dj_chrome .mblArrowButtonHead {
+  border-style: inset;
+}
+.mblArrowButtonBody {
+  position: absolute;
+  cursor: pointer;
+  -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
+  top: 5px;
+  left: 17px;
+  padding: 0px 10px 0px 3px;
+  height: 30px;
+  border-width: 1px 1px 1px 0px;
+  border-style: inset;
+  border-color: #b5bcc7;
+  font-size: 14px;
+  font-family: Helvetica;
+  font-weight: normal;
+  text-shadow: none;
+  color: #131313;
+  line-height: 30px;
+  -webkit-border-top-right-radius: 2px;
+  -webkit-border-bottom-right-radius: 2px;
+  background-color: #5cb0ff;
+  background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0, #ffffff), color-stop(3.3333333333333335%, rgba(255, 255, 255, 0.1)), color-stop(0.5, rgba(255, 255, 255, 0.6)), color-stop(1, rgba(255, 255, 255, 0.3)));
+}
+.mblArrowButtonSelected .mblArrowButtonHead, .mblArrowButtonSelected .mblArrowButtonBody {
+  background-color: #0064c2;
+}

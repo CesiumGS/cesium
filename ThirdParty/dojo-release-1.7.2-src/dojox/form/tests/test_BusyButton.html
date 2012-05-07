@@ -1,0 +1,110 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>BusyButton Test</title>
+
+		<!-- for tests -->
+		<style type="text/css">
+			@import url(../../../dojo/resources/dojo.css);
+			@import url(../../../dijit/themes/tundra/tundra.css);
+			@import url(../../../dijit/tests/css/dijitTests.css);
+			
+			@import url(../resources/BusyButton.css);
+		</style>
+		
+		<!-- required: a default dijit theme: -->
+		<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/tundra/tundra.css">
+		
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../dojo/dojo.js"
+			djConfig="parseOnLoad: true, isDebug: true"></script>
+		<script type="text/javascript">
+			dojo.require("dojox.form.BusyButton");
+			dojo.require("dojo.parser");
+			dojo.require("dijit.Menu");
+			dojo.addOnLoad(function(){
+				dojo.connect(dijit.byId("buttonCancel"), "onClick", function(){
+					dijit.byId("button_noTimeout").cancel();
+				});
+				dojo.connect(dijit.byId("buttonCancel2"), "onClick", function(){
+					dijit.byId("button_noTimeout2").set("label", "Chargeback failed...", 1000);
+				});
+				dojo.connect(dijit.byId("button_noTimeout3"), "_onClick", function(){
+					dijit.byId("button_noTimeout3").set("label", "Creating account...");
+					dijit.byId("button_noTimeout3").resetTimeout();
+				});
+			});
+			function makeBusy(id){
+				var widget = dijit.byId(id);
+				if(widget && !widget.isBusy){
+					widget.makeBusy();
+				}
+			}
+		</script>
+	</head>
+	<body class="tundra">
+		<h1 class="testTitle">Test: dojox.form.BusyButton</h1>
+		<p>
+		Normal busy button, 5000 miliseconds timeout<br />
+		<button dojoType="dojox.form.BusyButton" timeout="5000" >
+			<script type="dojo/connect" data-dojo-event="onClick" data-dojo-args="evt">
+				console.log("dojox.form.BusyButton clicked");
+			</script>
+			Click
+		</button>
+		</p>
+	
+		<p>
+		Busy button, no timeout, custom label<br />
+		<button dojoType="dojox.form.BusyButton" id="button_noTimeout" busyLabel="Charging creditcard..." >Pay now</button> <button dojoType="dijit.form.Button" id="buttonCancel">Cancel button</button>
+		</p>
+		<p>
+		Busy button, no initial timeout, changing state and setting timeout on button press<br />
+		<button dojoType="dojox.form.BusyButton" id="button_noTimeout2" busyLabel="Canceling payment...">Cancel payment</button> <button dojoType="dijit.form.Button" id="buttonCancel2">Change state</button>
+		</p>
+		<p>
+		Busy button, initially busy with 10 sec timeout<br />
+		<button dojoType="dojox.form.BusyButton" id="button_noTimeout3" isBusy="true" busyLabel="Please read the agreement..." timeout="10000">I Agree</button>
+		</p>
+		<p>
+		Combo and DropDown Buttons (5000 ms timeout)<br />
+			<button dojoType="dojox.form.BusyComboButton" id="comboBusy" timeout="5000" optionsTitle='save options' onClick='console.log("clicked combo save")'
+					iconClass="plusIcon">
+				<span>Create</span>
+				<div dojoType="dijit.Menu" id="createMenu" style="display: none;">
+					<div dojoType="dijit.MenuItem"  iconClass="dijitEditorIcon dijitEditorIconSave"
+						onClick="makeBusy('comboBusy'); console.log('not actually saving anything, just a test!')">Create blank</div>
+					<div dojoType="dijit.MenuItem"
+						onClick="makeBusy('comboBusy'); console.log('not actually saving anything, just a test!')">Create from template</div>
+				</div>
+			</button>
+			<button dojoType="dojox.form.BusyDropDownButton" id="dropDownBusy" timeout="5000" iconClass="noteIcon">
+				<span>Edit<b>!</b></span>
+				<div dojoType="dijit.Menu">
+					<div dojoType="dijit.MenuItem"  iconClass="dijitEditorIcon dijitEditorIconCut"
+						onClick="makeBusy('dropDownBusy'); console.log('not actually cutting anything, just a test!')">Cut</div>
+					<div dojoType="dijit.MenuItem"  iconClass="dijitEditorIcon dijitEditorIconCopy"
+						onClick="makeBusy('dropDownBusy'); console.log('not actually copying anything, just a test!')">Copy</div>
+					<div dojoType="dijit.MenuItem"  iconClass="dijitEditorIcon dijitEditorIconPaste"
+						onClick="makeBusy('dropDownBusy'); console.log('not actually pasting anything, just a test!')">Paste</div>
+					<div dojoType="dijit.MenuSeparator"></div>
+					<div dojoType="dijit.PopupMenuItem">
+						<span>Submenu</span>
+						<div dojoType="dijit.Menu" id="submenu2">
+							<div dojoType="dijit.MenuItem" onClick="makeBusy('dropDownBusy'); console.log('Submenu 1!')">Submenu Item One</div>
+							<div dojoType="dijit.MenuItem" onClick="makeBusy('dropDownBusy'); console.log('Submenu 2!')">Submenu Item Two</div>
+							<div dojoType="dijit.PopupMenuItem">
+								<span>Deeper Submenu</span>
+								<div dojoType="dijit.Menu" id="submenu4">
+									<div dojoType="dijit.MenuItem" onClick="makeBusy('dropDownBusy'); console.log('Sub-submenu 1!')">Sub-sub-menu Item One</div>
+									<div dojoType="dijit.MenuItem" onClick="makeBusy('dropDownBusy'); console.log('Sub-submenu 2!')">Sub-sub-menu Item Two</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</button>
+		</p>
+	</body>
+</html>

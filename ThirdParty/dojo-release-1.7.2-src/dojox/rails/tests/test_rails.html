@@ -1,0 +1,320 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>dojox.rails test</title>
+	<style type="text/css">
+		body {
+			font-family: helvetica;
+		}
+		
+		.test-container {
+			width: 800px;
+			margin-bottom: 20px;
+		}
+		
+		.test-container:after {
+			clear: both;
+		}
+		
+		.test-container div {
+			float: left;
+			margin-right: 20px;
+		}
+		
+		.description {
+			width: 400px;
+			border: 1px solid #ccc;
+			-moz-border-radius: 5px;
+			-webkit-border-radius: 5px;
+			padding: 10px;
+		}
+		
+		span.clb {
+			display: block;
+			clear: both;
+		}
+	</style>
+	
+	<script src='../../../dojo/dojo.js' djConfig='isDebug:true, parseOnLoad:true'></script>
+	<script type="text/javascript">
+    // dojo.registerModulePath('dojox.rails.tests.plugd', '../dojox/rails/tests/plugd'); 
+		dojo.require('doh.runner');
+		dojo.require('dojox.rails');
+    dojo.require('dojox.rails.tests.plugd.trigger');
+		dojo.require('dojo.NodeList-manipulate');
+
+    var subscriptions = [];
+		
+		function createDom(){
+			var q = dojo.query;
+			q('#data-confirm-link-container').append('<a href="/foo/url" data-confirm="Are you sure?">click me!</a>');
+			q('#data-confirm-input-container').append('<input data-confirm="Are you sure?" name="commit" type="submit" value="Post" />');
+			q('#data-remote-success-link-container').append('<a href="success_response.html" data-type="text" data-remote="true">click me to load!</a>');
+			q('#data-remote-failure-link-container').append('<a href="failure_response.html" data-remote="true">click me to fail!</a>');
+		}
+
+    function listenForEvents(expectedNode, events){
+      for (var k in events){
+        var s = dojo.subscribe(k, (function(k){
+          return function(el, response, ioArgs){
+            if (el == expectedNode){ events[k] = true; }
+          };
+        })(k));
+        subscriptions.push(s);
+      }
+    }
+
+    function assertEvents(deferred, timeout, events){
+      setTimeout(function(){
+        for (var k in events){
+					console.debug("assertEvents: ", k, events[k]);
+          if (!events[k]){
+            deferred.errback(new Error(k + ' event was not dispatched'));
+            return;
+          }
+        }
+        deferred.callback(true);
+      }, timeout);
+    }
+
+    function unsubscribe(){
+      dojo.forEach(subscriptions, function(s){
+        dojo.unsubscribe(s);
+      });
+    }
+		
+		dojo.addOnLoad(function(){
+			createDom();
+      doh.register('data-remote', [
+        {
+          name: 'success events',
+          timeout: 3000,
+          tearDown: unsubscribe,
+          runTest: function() {
+            var d = new doh.Deferred();
+            var snl = dojo.query('#data-remote-success-link-container a');
+            var successEvents = { 'ajax:success': false, 'ajax:complete': false, 'ajax:after': false };
+            listenForEvents(snl[0], successEvents);
+            snl.trigger('click');
+            assertEvents(d, 300, successEvents);
+            return d;
+          }
+        },
+        {
+          name: 'failure events',
+          timeout: 3000,
+          tearDown: unsubscribe,
+          runTest: function() {
+            var d = new doh.Deferred();
+            var fnl = dojo.query('#data-remote-failure-link-container a');
+            var failureEvents = { 'ajax:failure': false, 'ajax:complete': false, 'ajax:after': false };
+            listenForEvents(fnl[0], failureEvents);
+            fnl.trigger('click');
+            assertEvents(d, 300, failureEvents);
+            return d;
+          }
+        },
+        {
+          name: 'forms',
+          runTest: function(t) {
+            var method, ioArgs;
+            var xhr = dojo.xhr;
+            dojo.xhr = function(m, io){
+              method = m;
+              ioArgs = io;
+            }
+
+            dojo.query('#data-remote-get-form-container form').trigger('submit');
+
+            t.assertEqual('get', method);
+            
+            var expectedArgs = {
+              url: '/posts',
+              content: {
+                'post[title]': 'Some title',
+                'post[body]': 'Some body'
+              }
+            }
+
+            t.is(expectedArgs.url, ioArgs.url);
+            t.is(expectedArgs.content['post[title]'], ioArgs.content['post[title]']);
+            t.is(expectedArgs.content['post[body]'], ioArgs.content['post[body]']);
+
+            dojo.xhr = xhr;
+          }
+        }
+      ]);
+
+      doh.register("data-disable-with", [
+        {
+          name: 'disabling form elements on submit',
+          runTest: function(t){
+            // var container = dojo.query('#data-disable-with-on-parent-container');
+            // var button = container.query('button');
+            // var input = container.query('input');
+            // var form = container.query('form');
+
+            // t.is('My Button', button.html());
+            // t.is('My Submit', input.val());
+            // 
+            // input.trigger('submit');
+
+            // t.is('Disable button...', button.html());
+            // t.is('Please wait...', input.val());
+
+            // t.t(button.attr('disabled'));
+            // t.t(input.attr('disabled'));
+          }
+        },
+        {
+          name: 're-enabling an element after an ajax event has completed',
+          tearDown: unsubscribe,
+          runTest: function(t){
+            var container = dojo.query('#data-disable-with-on-ajax-container');
+            var button = container.query('button');
+            var input = container.query('input');
+            var form = container.query('form');
+
+            t.is('My Button', button.html());
+            t.is('My Submit', input.val());
+            
+            var d = new doh.Deferred();
+            var failureHandlerCalled = false;
+
+            var s1 = dojo.subscribe("ajax:failure", function(){
+              failureHandlerCalled = true; 
+              t.is('Disable button...', button.html());
+              t.is('Please wait...', input.val());
+              t.t(button.attr('disabled'));
+              t.t(input.attr('disabled'));
+            });
+
+            var s2 = dojo.subscribe("ajax:complete", function(){
+              console.debug("-----------> ajax:complete: ");
+              t.is('My Button', button.html());
+              t.is('My Submit', input.val());
+              t.f(button.attr('disabled')[0]);
+              t.f(input.attr('disabled')[0]);
+
+              if (failureHandlerCalled){
+                d.callback(true);
+              }else{
+                d.errback("failureHandler was never called");
+              }
+              d.callback(true);
+            });
+
+            subscriptions.push(s1);
+            subscriptions.push(s2);
+
+            form.trigger('submit');
+            return d;
+          }
+        }
+      ]);
+
+			doh.run();
+		});
+	</script>
+</head>
+<body class='tundra'>
+
+<h1>Manual Tests</h1>
+
+<h3>Confirm</h3>
+
+<div class="test-container">
+	<div class="description">This is a dynamically created <em>link</em>.  When the confirm dialog is cancelled, it should stop processing.  When the confirm dialog is confirmed, it should proceed to the href url.</div>
+	<div id="data-confirm-link-container"></div>
+	<span class="clb"></div>
+</div>
+
+<div class="test-container">
+	<div class="description">This is a dynamically created <em>submit button</em>.  When the confirm dialog is cancelled, it should stop processing.  When the confirm dialog is confirmed, it should proceed to the form action url.</div>
+  <div id="data-confirm-input-container">
+		<form action="/posts" id="data-confirm-input-container" method="post"><input name="authenticity_token" type="hidden" value="Hfm4VBZJeCde+5evpma9Rq4eGtCq+/n7fZr0XVDalLw=" />
+			Title: <input id="post_title" name="post[title]" value="Some title" type="text" /><br />
+			Body: <input id="post_body" name="post[body]" value="Some body" type="text" />
+      <!-- submit button is created dynamically -->
+		</form>
+	</div>
+	<span class="clb"></div>
+</div>
+
+
+<h1>Automated Tests</h1>
+
+<h3>Remote</h3>
+<div class="test-container">
+	<div class="description">This is a dynamically created <em>link</em>.  When the link is clicked it should successfully make an ajax request.</div>
+	<div id="data-remote-success-link-container"></div>
+	<span class="clb"></div>
+</div>
+
+<div class="test-container">
+	<div class="description">This is a dynamically created <em>link</em>.  When the link is clicked it should fail when making an ajax request.</div>
+  <div id="data-remote-failure-link-container"></div>
+	<span class="clb"></div>
+</div>
+
+<div class="test-container">
+	<div class="description">This is a form created with markup.  When submit is clicked it should send a get request to <em>/posts</em></div>
+  <div id="data-remote-get-form-container">
+		<form action="/posts" data-remote="true" method="get">
+			Title: <input id="post_title" name="post[title]" value="Some title" type="text" /><br />
+			Body: <input id="post_body" name="post[body]" value="Some body" type="text" />
+      <input type="submit" value="submit" />
+      <input name="authenticity_token" type="hidden" value="Hfm4VBZJeCde+5evpma9Rq4eGtCq+/n7fZr0XVDalLw=" />
+		</form>
+  </div>
+	<span class="clb"></div>
+</div>
+
+
+
+<h3>Disable With</h3>
+<div class="test-container">
+	<div class="description">This is a regular form with <em>child elements</em> to disable.  All disable-with elements should be disabled when the form is submitted.</div>
+  <div id="data-disable-with-on-parent-container">
+    <form action="fail.html">
+      <button data-disable-with="Disable button..." name="cmd" type="button" value="value">My Button</button>
+      <input data-disable-with="Please wait..." name="commit" type="submit" value="My Submit" />
+    </form>
+  </div>
+	<span class="clb"></div>
+</div>
+
+<div class="test-container">
+	<div class="description">This is a ajax form that should have it's <em>elements reenabled</em> when the ajax request has completed.</div>
+  <div id="data-disable-with-on-ajax-container">
+    <form action="failure-url.html" data-remote="true" >
+      <button data-disable-with="Disable button..." name="cmd" type="button" value="value">My Button</button>
+      <input data-disable-with="Please wait..." name="commit" type="submit" value="My Submit" />
+    </form>
+  </div>
+	<span class="clb"></div>
+</div>
+
+
+<p>
+	Form (Ajaxy)<form action="/posts" class="new_post" data-remote="true" id="new_post" method="post"><input name="authenticity_token" type="hidden" value="Hfm4VBZJeCde+5evpma9Rq4eGtCq+/n7fZr0XVDalLw=" />
+		Title: <input id="post_title" name="post[title]" type="text" /><br />
+		Body: <input id="post_body" name="post[body]" type="text" />
+		<input data-disable-with="Please wait..." name="commit" type="submit" value="Post" />
+	</form>
+</p>
+
+<p>
+	Form (Normal):<br/>
+	<form action="/posts" class="new_post" id="new_post" method="post"><div style="margin:0;padding:0;display:inline"><input name="authenticity_token" type="hidden" value="Hfm4VBZJeCde+5evpma9Rq4eGtCq+/n7fZr0XVDalLw=" /></div>
+		Title: <input id="post_title" name="post[title]" size="30" type="text" /><br />
+		Body: <input id="post_body" name="post[body]" size="30" type="text" />
+		<input data-disable-with="Please wait..." name="commit" type="submit" value="Post" />
+	</form>
+</p>
+
+
+
+</body>
+</html>

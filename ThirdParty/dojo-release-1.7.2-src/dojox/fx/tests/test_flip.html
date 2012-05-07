@@ -1,0 +1,530 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>dojox.fx.flip | experimental fx add-ons for the Dojo Toolkit</title>
+		
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: true" ></script>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/themes/tundra/tundra.css";
+		.testBox {
+			overflow:hidden;
+			font: 20px arial, sans-serif;
+			line-height:200px;
+			text-align:center;
+			width:300px;
+			height:200px;
+		}
+		.pageContainer{
+			position:relative;
+			border:1px solid #999;
+		}
+		.page{
+			padding:13px;
+			width:200px;
+			height:360px;
+			background:#f0ecec;
+			color:#333;
+			font:11px arial, sans-serif;
+		}
+		table.demoContainer{
+			border-collapse: collapse;
+			margin-top:20px;
+		}
+		table.demoContainer thead th{
+			font: 20px arial, sans-serif;
+			border-bottom:1px solid #999;
+			text-align:center;
+			color: #666;
+		}
+		table.demoContainer thead th.view{
+			border-right:1px solid #999;			
+		}
+		table.demoContainer td.view{
+			border-right: 1px solid #999;
+			width:400px;
+			padding:10px 0px 30px 100px;
+			text-align:center;
+		}
+		div.controls{
+			width:300px;
+			height:200px;
+			margin: 40px 20px 0 20px;
+		}
+		div.topBottom{
+			width:100%;
+			text-align:center;
+		}
+		div.middle{
+			margin:40px 0;
+			width:100%;
+			height:40px;
+			line-height:40px;
+			text-align:center;
+			position:relative;
+		}
+		input.button{
+			border:1px solid #999;
+			color: #333;
+			background: #ddd;
+			padding:5px;
+		}
+	</style>
+	<script type="text/javascript">
+		dojo.require("dojox.fx.flip");
+
+
+		// fx.flip example:
+		var flipinit = function(){
+			dojo.connect(dojo.byId("flipTop"), "onclick", function(e){
+				var anim = dojox.fx.flip({ 
+					node: "flip1",
+					dir: "top",
+					depth: .5,
+					endColor: "#666",
+					duration:400
+				});
+				dojo.connect(anim, "onEnd", this, function(){ 
+					var n = dojo.byId("flip1");
+					n.innerHTML = "TOP";
+					dojo.style(n, {
+						color: "#ddd",
+						background: "#666"
+					});
+				})
+				anim.play(); 
+			});
+			dojo.connect(dojo.byId("flipRight"), "onclick", function(e){
+				var anim = dojox.fx.flip({ 
+					node: "flip1",
+					dir: "right",
+					depth: .5,
+					endColor: "yellow",
+					duration:400
+				})											  
+				dojo.connect(anim, "onEnd", this, function(){ 
+					var n = dojo.byId("flip1");
+					n.innerHTML = "RIGHT";
+					dojo.style(n, {
+						color: "red",
+						background: "yellow"
+					});
+				})
+				anim.play(); 
+			});
+			dojo.connect(dojo.byId("flipBottom"), "onclick", function(e){
+				var anim = dojox.fx.flip({ 
+					node: "flip1",
+					dir: "bottom",
+					depth: .5,
+					endColor: "red",
+					duration: 400
+				})											  
+				dojo.connect(anim, "onEnd", this, function(){ 
+					var n = dojo.byId("flip1");
+					n.innerHTML = "BOTTOM";
+					dojo.style(n, {
+						color: "yellow",
+						background: "red"
+					});
+				})
+				anim.play(); 
+			});
+
+			dojo.connect(dojo.byId("flipLeft"), "onclick", function(e){
+				var anim = dojox.fx.flip({ 
+					node: "flip1",
+					dir: "left",
+					depth: .5,
+					endColor: "blue",
+					duration:400
+				});		
+													  
+				dojo.connect(anim, "onEnd", this, function(){ 
+					var n = dojo.byId("flip1");
+					n.innerHTML = "LEFT";
+					dojo.style(n, {
+						color: "white",
+						background: "blue"
+					});
+				});
+				anim.play(); 
+			});
+		};
+
+		// fx.flip, half flip example:
+		var halfflipinit = function(){
+			dojo.connect(dojo.byId("halfflipreset"), "onclick", function(){
+				dojo.style(dojo.byId("hflip1"), {
+					visibility: "hidden"
+				});
+			});
+			dojo.connect(dojo.byId("halfflip"), "onclick", function(e){
+				var anim = dojox.fx.flip({
+					node: "hflip1",
+					dir: "top",
+					shift: -150,
+					whichAnim: "last",
+					depth: .5,
+					endColor: "#666",
+					duration: 1000
+				})
+				dojo.connect(anim, "onEnd", this, function(){
+					var n = dojo.byId("hflip1");
+				})
+				anim.play();
+			});
+		};
+
+		// fx.flipCube example:
+		var cubeinit = function(){
+			dojo.connect(dojo.byId("cflipTop"), "onclick", function(e){
+				var anim = dojox.fx.flipCube({ 
+					node: dojo.byId("cflip1"),
+					dir: "top",
+					endColor: "#666666",
+					duration:500
+				});
+				dojo.connect(anim, "onEnd", this, function(){
+					var n = dojo.byId("cflip1");
+					n.innerHTML = "TOP";
+					dojo.style(n, {
+						color: "#ddd",
+						background: "#666"
+					});
+				});											  
+				anim.play(); 
+			});
+			dojo.connect(dojo.byId("cflipRight"), "onclick", function(e){
+				var anim = dojox.fx.flipCube({ 
+					node: dojo.byId("cflip1"),
+					dir: "right",
+					endColor: "yellow",
+					duration:500
+				});											  
+				dojo.connect(anim, "onEnd", this, function(){ 
+					var n = dojo.byId("cflip1");
+					n.innerHTML = "RIGHT";
+					dojo.style(n, {
+						color: "red",
+						background: "yellow"
+					});
+				});											  
+				anim.play(); 
+			});
+			dojo.connect(dojo.byId("cflipBottom"), "onclick", function(e){
+				var anim = dojox.fx.flipCube({ 
+					node: dojo.byId("cflip1"),
+					dir: "bottom",
+					endColor: "red",
+					duration: 500
+				});											  
+				dojo.connect(anim, "onEnd", this, function(){ 
+					var n = dojo.byId("cflip1");
+					n.innerHTML = "BOTTOM";
+					dojo.style(n, {
+						color: "yellow",
+						background: "red"
+					});
+				});											  
+				anim.play(); 
+			});
+			dojo.connect(dojo.byId("cflipLeft"), "onclick", function(e){
+				var anim = dojox.fx.flipCube({ 
+					node: "cflip1",
+					dir: "left",
+					endColor: "blue",
+					duration: 500
+				});											  
+				dojo.connect(anim, "onEnd", this, function(){ 
+					var n = dojo.byId("cflip1");
+					n.innerHTML = "LEFT";
+					dojo.style(n, {
+						color: "white",
+						background: "blue"
+					});
+				});
+				anim.play(); 
+			});
+		};
+
+		// fx.flipGrid example:
+		var gridinit = function(){
+			dojo.connect(dojo.byId("reset"), "onclick", function(e){
+				dojo.byId("flipGrid").disabled = "";
+				dojo.style(dojo.byId("gflip1"), {
+					visibility: "visible"
+				});
+			});
+			dojo.connect(dojo.byId("flipGrid"), "onclick", function(e){
+				var anim = dojox.fx.flipGrid({
+					node: dojo.byId("gflip1"),
+					dir: "right",
+					cols: 7,
+					rows: 5,
+					duration:900
+				});
+				dojo.connect(anim, "play", this, function(){
+					dojo.byId("flipGrid").disabled = "disabled";
+				});
+				anim.play();
+			});
+		};
+
+		// fx.flipPage example:
+		var currentPage = 0,
+			pages = 4
+		;
+		var pageinit = function(){
+			dojo.connect(dojo.byId("flipPageRight"), "onclick", function(e){
+				var anim = dojox.fx.flipPage({
+					node: dojo.byId("page" + (currentPage + 1)),
+					dir: "left",
+					endColor: "yellow",
+					depth: .3,
+					duration:3000
+				});
+				dojo.connect(anim, "play", this, function(){
+					dojo.byId("page" + (currentPage + 1)).style.display = "none";
+					dojo.byId("page" + ((currentPage + 3) % pages)).style.display = "block";
+				});
+				dojo.connect(anim, "onEnd", this, function(){
+					dojo.byId("page" + currentPage).style.display = "none";
+					dojo.byId("page" + (currentPage + 1)).style.display = "none";
+					currentPage = (currentPage + 2) % pages;
+					dojo.byId("page" + currentPage).style.display = "block";
+					dojo.byId("page" + (currentPage + 1)).style.display = "block";
+				});
+				anim.play();
+			});
+			dojo.connect(dojo.byId("flipPageLeft"), "onclick", function(e){
+				var anim = dojox.fx.flipPage({
+					node: dojo.byId("page" + currentPage),
+					dir: "right",
+					endColor: "blue",
+					depth: .3,
+					duration:3000
+				});
+				dojo.connect(anim, "play", this, function(){
+					dojo.byId("page" + (currentPage) % pages).style.display = "none";
+					dojo.byId("page" + ((currentPage + 2) % pages)).style.display = "block";
+				});
+				dojo.connect(anim, "onEnd", this, function(){
+					dojo.byId("page" + currentPage).style.display = "none";
+					dojo.byId("page" + (currentPage + 1)).style.display = "none";
+					currentPage = (currentPage + 2) % pages;
+					dojo.byId("page" + currentPage).style.display = "block";
+					dojo.byId("page" + (currentPage + 1)).style.display = "block";
+				});
+				anim.play();
+			});
+		};
+
+		dojo.ready(flipinit);
+		dojo.ready(halfflipinit);
+		dojo.ready(cubeinit);
+		dojo.ready(gridinit);
+		dojo.ready(pageinit);
+	</script>
+</head>
+<body class="tundra">
+		<table class="demoContainer">
+			<thead>
+				<tr><th class="view">dojox.fx.flip test</th><th></th></tr>
+			</thead>
+			<tbody>
+			<tr>
+				<td class="view">
+					<div style="width:300px;height:200px;background:#666;color:#ddd;" id="flip1" class="testBox">
+						dojox.fx.flip
+					</div>
+				</td>
+				<td>
+					<div class="controls">
+						<div class="topBottom"><input type="button" class="button" style="margin:auto" id="flipTop" value="flip top" /></div>
+						<div class="middle">
+							<div style="position:absolute;margin:auto;right:0;top:0"><input type="button" class="button" id="flipRight" value="flip right" /></div>
+							controls
+							<div style="position:absolute;margin:auto;left:0;top:0"><input type="button" class="button" id="flipLeft" value="flip left" /></div>
+						</div>
+						<div class="topBottom"><input type="button" class="button" id="flipBottom" value="flip bottom" /></div>
+					</div>
+				</td>
+			</tr>
+			</tbody>
+			<thead>
+				<tr><th class="view">dojox.fx.flip test - half flip</th><th></th></tr>
+			</thead>
+			<tbody>
+			<tr>
+				<td class="view">
+					<div style="width:300px;height:200px;background:#666;color:#ddd;visibility:hidden" id="hflip1" class="testBox">
+						WOOT!
+					</div>
+				</td>
+				<td>
+					<div class="controls">
+						<div class="middle">
+							<div style="position:absolute;left:60px;top:0"><input type="button" class="button" id="halfflip" value="half flip" /></div>
+							<div style="position:absolute;right:60px;top:0"><input type="button" class="button" id="halfflipreset" value="reset" /></div>
+						</div>
+					</div>
+				</td>
+			</tr>
+			</tbody>
+			<thead>
+				<tr><th class="view">dojox.fx.flipCube test</th><th></th></tr>
+			</thead>
+			<tbody>
+			<tr>
+				<td class="view">
+					<div style="width:300px;height:200px;background:#666;color:#ddd" id="cflip1" class="testBox">
+						dojox.fx.flipCube
+					</div>
+				</td>
+				<td>
+					<div class="controls">
+						<div class="topBottom"><input type="button" class="button" style="margin:auto" id="cflipTop" value="flip top" /></div>
+						<div class="middle">
+							<div style="position:absolute;margin:auto;right:0;top:0"><input type="button" class="button" id="cflipRight" value="flip right" /></div>
+							controls
+							<div style="position:absolute;margin:auto;left:0;top:0"><input type="button" class="button" id="cflipLeft" value="flip left" /></div>
+						</div>
+						<div class="topBottom"><input type="button" class="button" id="cflipBottom" value="flip bottom" /></div>
+					</div>
+				</td>
+			</tr>
+			</tbody>
+			<thead>
+				<tr><th class="view">dojox.fx.flipGrid test</th><th></th></tr>
+			</thead>
+			<tbody>
+			<tr>
+				<td class="view">
+					<div style="width:300px;height:200px;background:#666;color:#ddd" id="gflip1" class="testBox">
+						dojox.fx.flipGrid
+					</div>
+				<td>
+				<div class="controls">
+					<div class="middle">
+						<div style="position:absolute;left:60px;top:0"><input type="button" class="button" id="flipGrid" value="flip grid" /></div>
+						<div style="position:absolute;right:60px;top:0"><input type="button" class="button" id="reset" value="reset" /></div>
+					</div>
+				</div>
+				</td>
+			</tr>
+			</tbody>
+			<thead>
+				<tr><th class="view">dojox.fx.flipPage test</th><th></th></tr>
+			</thead>
+			<tbody>
+			<tr>
+				<td class="view" style="padding-left:20px">
+					<table style="height:300px; width:400px; border-collapse:collapse">
+						<tbody>
+							<tr>
+								<td>
+									<div id="pageContainer0" class="pageContainer">
+										<div style="display:none" id="page2" class="page">
+											Ed una lupa, che di tutte brame
+											sembiava carca ne la sua magrezza,
+											e molte genti f&eacute; gi&agrave; viver grame,
+											questa mi porse tanto di gravezza
+											con la paura ch'uscia di sua vista,
+											ch'io perdei la speranza de l'altezza.
+											E qual &egrave; quei che volontieri acquista,
+											e giugne 'l tempo che perder lo face,
+											che 'n tutt'i suoi pensier piange e s'attrista;
+											tal mi fece la bestia sanza pace,
+											che, venendomi 'ncontro, a poco a poco
+											mi ripigneva l&agrave; dove 'l sol tace.
+											Mentre ch'i' rovinava in basso loco,
+											dinanzi a li occhi mi si fu offerto
+											chi per lungo silenzio parea fioco.
+											Quando vidi costui nel gran diserto,
+											&laquo;Miserere di me&raquo;, gridai a lui,
+											&laquo;qual che tu sii, od ombra od omo certo!&raquo;.
+											Rispuosemi: &laquo;Non omo, omo gi&agrave; fui,
+											e li parenti miei furon lombardi,
+											mantoani per patria ambedui.
+											Nacqui sub Iulio, ancor che fosse tardi,
+											e vissi a Roma sotto 'l buono Augusto
+											nel tempo de li d&egrave;i falsi e bugiardi.
+											Poeta fui, e cantai di quel giusto [...]
+										</div>
+										<div class="page" id="page0">
+											Nel mezzo del cammin di nostra vita
+											mi ritrovai per una selva oscura
+											ch&eacute; la diritta via era smarrita.
+											Ahi quanto a dir qual era &egrave; cosa dura
+											esta selva selvaggia e aspra e forte
+											che nel pensier rinova la paura!
+											Tant'&egrave; amara che poco &egrave; pi&ugrave; morte;
+											ma per trattar del ben ch'i' vi trovai,
+											dir&ograve; de l'altre cose ch'i' v'ho scorte.
+											Io non so ben ridir com'i' v'intrai,
+											tant'era pien di sonno a quel punto
+											che la verace via abbandonai.
+											Ma poi ch'i' fui al pi&egrave; d'un colle giunto,
+											l&agrave; dove terminava quella valle
+											che m'avea di paura il cor compunto,
+											guardai in alto, e vidi le sue spalle
+											vestite gi&agrave; de' raggi del pianeta
+											che mena dritto altrui per ogne calle.
+											Allor fu la paura un poco queta
+											che nel lago del cor m'era durata
+											la notte ch'i' passai con tanta pieta.
+											E come quei che con lena affannata
+											uscito fuor del pelago a la riva
+											si volge a l'acqua perigliosa e guata,
+											cos&igrave; l'animo mio, ch'ancor fuggiva,
+										</div>
+									</div>
+								</td>
+								<td>
+									<div id="pageContainer1" class="pageContainer">
+										<div style="display:none;" id="page3" class="page"></div>
+										<div id="page1" class="page">
+											si volse a retro a rimirar lo passo
+											che non lasci&ograve; gi&agrave; mai persona viva.
+											Poi ch'&egrave;i posato un poco il corpo lasso,
+											ripresi via per la piaggia diserta,
+											s&igrave; che 'l pi&egrave; fermo sempre era 'l pi&ugrave; basso.
+											Ed ecco, quasi al cominciar de l'erta,
+											una lonza leggera e presta molto,
+											che di pel macolato era coverta;
+											e non mi si partia dinanzi al volto,
+											anzi 'mpediva tanto il mio cammino,
+											ch'i' fui per ritornar pi&ugrave; volte v&ograve;lto.
+											Temp'era dal principio del mattino,
+											e 'l sol montava 'n s&ugrave; con quelle stelle
+											ch'eran con lui quando l'amor divino
+											mosse di prima quelle cose belle;
+											s&igrave; ch'a bene sperar m'era cagione
+											di quella fiera a la gaetta pelle
+											l'ora del tempo e la dolce stagione;
+											ma non s&igrave; che paura non mi desse
+											la vista che m'apparve d'un leone.
+											Questi parea che contra me venisse
+											con la test'alta e con rabbiosa fame,
+											s&igrave; che parea che l'aere ne tremesse.
+										</div>
+									</div>
+								</td>
+							</tr>
+					</tbody>
+					</table>
+				</td>
+				<td>
+					<div class="middle">
+						<div style="position:absolute;left:30px;top:0"><input type="button" class="button" value="previous page" id="flipPageLeft" /></div>
+						<div style="position:absolute;right:30px;top:0"><input type="button" class="button" id="flipPageRight" value="next page" /></div>
+					</div>
+				</td>
+			</tr>
+			</tbody>
+		</table>
+
+</body>
+</html>

@@ -1,0 +1,216 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>dojox.secure.sandbox Test Page</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		textarea { 
+			width:100%; 
+			height:250px;
+			font-size:0.8em; 
+		}
+		#container {
+			position: absolute;
+			z-index:100000;
+			top: 400px;
+			right: 40px;
+			background-color:blue;
+			color:white;
+		}
+		#sandbox {
+			background-color:white;
+			color:black;
+			border: 1px solid blue;
+			width: 400px;
+			height: 300px;
+			overflow:auto;
+		}
+		#instructions {
+			margin-right:450px;
+		}
+	</style>
+	<script type="text/javascript" src="../../../dojo/dojo.js"></script>
+	<script type="text/javascript" src="../capability.js"></script>
+	<script type="text/javascript">
+		dojo.require("dojox.io.xhrPlugins");
+		dojo.require("dojox.secure.sandbox");
+		dojox.io.xhrPlugins.addProxy("proxy.php?url=");
+		dojo.addOnLoad(function() {
+			var sandbox = dojox.secure.sandbox(document.getElementById("sandbox"));
+			dojo.byId("execute").onclick= function () {
+				var input = document.getElementById("input").value;
+				try{
+					sandbox.evaluate(input);
+				}catch(e){
+					alert(e.message || e);
+				}
+			}
+			dojo.byId("executeJs").onclick= function () {
+				var input = document.getElementById("jsFile").value;
+				sandbox.loadJS(input).addErrback(function(result){
+					alert(result);
+				});
+			}
+			dojo.byId("executeHtml").onclick= function () {
+				var input = document.getElementById("htmlFile").value;
+				sandbox.loadHTML(input).addErrback(function(result){
+					alert(result);
+				});
+			}
+		});
+	</script>
+</head>
+<body class="tundra">
+	<h5>dojox.secure.sandbox Tester</h5>
+	<p>
+	This a test page for dojox.secure.sandbox. dojox.secure.sandbox is intended to safely execute 
+	untrusted scripts, and allow the scripts to access only a certain sub-tree of the DOM. 
+	Eventually, this can be used to safely load ads and untrusted widgets. 
+	All attempts to subvert the security of this system
+	are greatly appreciated. If you find any holes, any ways that you can access the DOM or the 
+	JavaScript environment outside of the sandbox, please add a comment to the 
+	<a href="http://trac.dojotoolkit.org/ticket/6348">enhancement</a> ticket. To test secure load,
+	simply enter JavaScript in the text box below and click execute. The JavaScript should only
+	have access to the DOM within the floating div below. The sandbox element is available
+	as the <em>element</em> variable from within the sandboxed JavaScript. Please see below 
+	for more detailed instructions on what facilities are available within the sandbox. 
+	</p>
+	<div id="container">Sandboxed div:<div id="sandbox"></div></div>
+	<textarea id="input">
+element.innerHTML = "<p class='intro'>Hi there, element is the <b>sandboxed element</b>, which you can access and manipulate</p>";
+document.write("<p id='more'>You can use <em>document.write</em> for your sandbox area. However, the following limitations apply:</p>");
+query("em").style("color","blue"); // you can use query to find and modify
+//query(".intro").style("opacity",0).fadeIn().play();
+style(byId("more"),"color","red");
+var limitations = ["No access to |this| keyword",
+	"The [] index operator is only allowed if in the opening bracket is followed by a +",
+	"Global variables are not allowed except element and document",
+	"You can not access most of the relationship properties on elements (parentNode, firstSibling, nextSibling, etc.)"];
+// you can also use other standard DOM features as well
+var ul = document.createElement("ul");
+element.appendChild(ul);
+forEach(limitations,function(limitation) {
+  var li = document.createElement("li");
+  ul.appendChild(li);
+  li.innerHTML = limitation;
+});
+element.appendChild(document.createElement("p")).innerHTML = 
+	"Because " + get(limitations,1) + " you may use " +
+	"get(obj,property), set(obj,property,value), and forEach(array) instead";
+// here is an example of creating a class (where |this| can be used):
+var Flicker = Class({
+  constructor : function(element) {
+    this.element = element;
+    connect(element,"onmouseenter",this,"enter");
+    connect(element,"onmouseout",this,"exit");
+  },
+  enter: function(event) {
+    style(this.element,"color","green");
+  },
+  exit: function(event) {
+    style(this.element,"color","orange");
+  } 
+});
+new Flicker(ul);
+// you can also access other dojo functions:
+var copy = mixin({},limitations);
+
+</textarea><br/>
+	Note that these require a proxy file in order to load:
+	<button id="execute">Execute</button><br/>
+	<input type='text' id="jsFile" value="http://www.sitepen.com/labs/code/secure/dojox/secure/tests/good.js"></input>
+	<button id="executeJs">Load and execute JavaScript</button><br/>
+	<input type='text' id="htmlFile" value="http://www.sitepen.com/labs/code/secure/dojox/secure/tests/good.html"></input><button id="executeHtml">Load and show HTML</button><br/>
+	<div id="instructions">
+		<p>The JavaScript in the sandbox generally follows the rules of ADsafe:</p>
+		<ul>
+		<li>Use of <em>eval</em>, <em>with</em>, ==, and != are not allowed.</li>
+		<li>the subscript operator [] may only be used be used if the opening bracket is followed by a +.</li>
+		 
+		<li>Limited access to <em>this</em> and global variables.</li>
+		<li>These properties may not be used: apply arguments call callee caller constructor eval prototype 
+				this unwatch valueOf watch and anything beginning or ending with __.</li>
+		</ul>
+		<p>The following global variables are accessible:
+		<ul>
+		<li>element - This the root element of the sandbox. Sandboxed elements do not have 
+		access to relational properties (parentNode, firstSibling, nextSibling, etc.). You can still
+		use DOM methods and string properties like innerHTML. The style object can also be
+		used (accessed and modified) as well.</li>
+		<li>document - This is a sandboxed document object that provides node creation 
+		and basic element searching facilities. The sandboxed document provides the following 
+		methods: getElementById, createElement, createTextNode, and write.
+		</li>
+		</ul>
+		<p>
+		The following standard JavaScript/DOM functions/constructors and (their child functions when applicable)
+		may be called. They may only be used in call position, they may not be accessed 
+		in any other way. They generally behave as the standard JavaScript function, unless otherwise noted:
+		</p>
+		<ul>
+<li>isNaN</li><li>isFinite</li><li>parseInt</li><li>parseFloat</li><li>escape</li><li>unescape</li>
+										<li>encodeURI</li><li>encodeURIComponent</li><li>decodeURI</li><li>decodeURIComponent</li>
+										<li>alert</li><li>confirm</li><li>prompt</li>
+										<li>Date</li><li>RegExp</li><li>Error</li><li>Number</li><li>Math</li>
+										<li>setTimeout - This will only accept a function (not a string)</li><li>setInterval - This will only accept a function (not a string)</li><li>clearTimeout</li><li>clearInterval</li>
+		</ul>
+		The following special functions are available to compensate for the JavaScript syntax limitations imposed by the sandbox:
+		<ul>
+										<li>get(obj,prop) - This is a special function to handle accessing properties in lieu of the [] operator. Calling get(obj,prop) is equivalent to obj[prop].</li>
+										<li>set(obj,prop,value) - This is a special function to handle modifying properties in lieu of the [] operator. Calling set(obj,prop,value) is equivalent to obj[prop]=value.</li>
+										<li>forEach(obj,func) - This is a special function to iterate through all the properties in an object, or items in an array. 
+											For each item, the func function will be called with the item as the first argument, the index as the second,
+											and the obj as the third</li>
+										<li>Class(superclass..., properties, classProperties) - 
+		The <em>this</em> operator may only be used in class definitions. secure.sandbox provides <em>Class</em> as a 
+		class constructor. The following argument are accepted:
+		<ul>
+			<li>superclass: 
+			 		There may be zero or more superclass arguments. The constructed class 
+			 		will inherit from any provided superclasses, protypically from the first, 
+			 		via mixin for the subsequent. Later arguments
+			 		will override properties/methods from earlier arguments 
+			 </li>
+			 <li>
+			 properties: 
+			 		The constructed
+			 		"class" will also have the methods/properties defined in this argument.
+			 		These methods may utilize the <em>this</em> operator, and they
+			 		are only the code that has access to <em>this</em>. Inner functions 
+			 		are also prohibited from using <em>this</em>. 
+			 		If no superclasses are provided, this object will be the prototype of the 
+			 		constructed class (no copying
+			 		will be done). Consequently you can "beget" by calling new (Class(obj)).
+			 		All methods are "bound", each call results in |this| safety checking call.
+			</li>
+			<li>
+			 classProperties: 
+			 		This properties will be copied to the new class function.
+			
+		 	</li>
+	 	</ul> 
+			 		Note that neither dojo.declare nor dojo.extend are acceptable class constructors as
+			 		they are unsecure. This class constructor is conceptually based on declare
+			 		but also somewhat influenced by base2, prototype, YUI, resig's patterns, etc.
+		</li>
+		</ul>
+		The following functions for DOM manipulation and extra language features are
+		provided by the Dojo library. This represents a safe subset of Dojo. All Dojo library 
+		functions are provided as top level functions,
+		namespacing is unnecessary because scripts do have access to modify the global object,
+		and can't define global variables. Thus, you can call Dojo functions directly, for example you 
+		can call mixin(obj,mixinObj). You may also use the traditional syntax (dojox.mixin(...)).
+		Here are a list of available functions:
+		<ul>
+			<li>mixin</li><li>require</li><li>isString</li><li>isArray</li><li>isFunction</li>
+			<li>isObject</li><li>isArrayLike</li><li>isAlien</li><li>hitch</li><li>delegate</li>
+			<li>partial</li><li>trim</li><li>connect</li><li>disconnect</li><li>subscribe</li>
+			<li>unsubscribe</li><li>Deferred</li><li>toJson</li><li>fromJson</li><li>style</li><li>attr</li>	 
+			<li>query - This will only search within the sandbox.</li><li>byId</li><li>body - This returns the root element of the sandbox</li>
+			
+		</ul>
+	</div>
+	<iframe src="../../../dojo/resources/blank.html"></iframe>
+</body>
+</html>

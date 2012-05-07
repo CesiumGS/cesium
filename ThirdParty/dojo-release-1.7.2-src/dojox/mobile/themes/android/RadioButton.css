@@ -1,0 +1,41 @@
+/* dojox.mobile.RadioButton */
+.mblRadioButton {
+  position: relative;
+  cursor: pointer;
+  outline: none;
+  -webkit-appearance: none;
+  -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
+  margin: -0.5em 3px 0.3em 4px;
+  width: 1em;
+  height: 1em;
+  border: #9CACC0 1px outset;
+  -webkit-border-radius: 0.5em;
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#fdfdfd), to(#cecece), color-stop(0.5, #f8f8f8), color-stop(0.5, #eeeeee));
+  font: inherit;
+  -webkit-transform: translatey(0.45em);
+}
+.mblRadioButtonChecked, .mblRadioButton:checked {
+  border-color: #9CACC0;
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#00a200), to(#00d300), color-stop(0.2, #00ba00), color-stop(0.2, #00ba00));
+}
+.mblRadioButtonChecked::after, .mblRadioButton:checked::after {
+  position: absolute;
+  content: "";
+  width: 0.3em;
+  height: 0.6em;
+  top: 0;
+  left: 0.25em;
+  border-color: white;
+  border-width: 0.15em;
+  border-style: none solid solid none;
+  border-color: white;
+  -webkit-transform: rotate(45deg);
+  -webkit-transform-origin: 50% 50%;
+}
+.mblRadioButtonChecked.mblRadioButtonSelected, .mblRadioButton:checked.mblRadioButtonSelected {
+  border-color: #9CACC0;
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#ad7500), to(#ffaa00), color-stop(0.06, #ffb200), color-stop(0.5, #ffc700));
+}
+.mblRadioButtonChecked.mblRadioButtonSelected::after, .mblRadioButton:checked.mblRadioButtonSelected::after {
+  border-color: white;
+}

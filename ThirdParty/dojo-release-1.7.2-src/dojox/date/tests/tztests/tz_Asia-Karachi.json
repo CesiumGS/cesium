@@ -1,0 +1,34 @@
+({
+	name: "date.timezone.Asia-Karachi",
+	runTest: function(t){
+		var tz = "Asia/Karachi";
+		doh.checkDate({tzOffset: -268.2, tzAbbr: "LMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: -268.2, tzAbbr: "LMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: -268.2, tzAbbr: "LMT"}, -1988166493000, tz, 1);
+		doh.checkDate({tzOffset: -330, tzAbbr: "IST"}, -1988166492000, tz, 1);
+		doh.checkDate({tzOffset: -330, tzAbbr: "IST"}, -862637401000, tz, 1);
+		doh.checkDate({tzOffset: -390, tzAbbr: "IST"}, -862637400000, tz, 1);
+		doh.checkDate({tzOffset: -390, tzAbbr: "IST"}, -764145001000, tz, 1);
+		doh.checkDate({tzOffset: -330, tzAbbr: "IST"}, -764145000000, tz, 1);
+		doh.checkDate({tzOffset: -330, tzAbbr: "IST"}, -576135001000, tz, 1);
+		doh.checkDate({tzOffset: -300, tzAbbr: "KART"}, -576135000000, tz, 1);
+		doh.checkDate({tzOffset: -300, tzAbbr: "KART"}, 38775599000, tz, 1);
+		doh.checkDate({tzOffset: -300, tzAbbr: "PKT"}, 38775600000, tz, 1);
+		doh.checkDate({tzOffset: -300, tzAbbr: "PKT"}, 1018119659000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "PKST"}, 1018119660000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "PKST"}, 1033840859000, tz, 1);
+		doh.checkDate({tzOffset: -300, tzAbbr: "PKT"}, 1033840860000, tz, 1);
+		doh.checkDate({tzOffset: -300, tzAbbr: "PKT"}, 1212260399000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "PKST"}, 1212260400000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "PKST"}, 1225475999000, tz, 1);
+		doh.checkDate({tzOffset: -300, tzAbbr: "PKT"}, 1225476000000, tz, 1);
+		doh.checkDate({tzOffset: -300, tzAbbr: "PKT"}, 1239735599000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "PKST"}, 1239735600000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "PKST"}, 1257011999000, tz, 1);
+		doh.checkDate({tzOffset: -300, tzAbbr: "PKT"}, 1257012000000, tz, 1);
+		doh.checkDate({tzOffset: -300, tzAbbr: "PKT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: -300, tzAbbr: "PKT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: -300, tzAbbr: "PKT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: -360, tzAbbr: "PKST"}, 1246789800000, tz, 0);
+	}
+})

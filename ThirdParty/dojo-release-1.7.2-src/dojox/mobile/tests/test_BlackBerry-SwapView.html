@@ -1,0 +1,92 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>SwapView</title>
+		<link href="../themes/blackberry/base.css" rel="stylesheet">
+		<link href="../themes/blackberry/IconContainer.css" rel="stylesheet">
+		<style>
+		.lnk {
+			font-size: 14px;
+			color: #0B5199;
+			text-decoration: none;
+		}
+		html,body{
+			height: 100%;
+			overflow: hidden;
+			margin: 0px;
+		}
+		.mobile body {
+			background-color: black;
+		}
+		.mblIconArea {
+			height: 90px;
+			width: 90px;
+			color: white;
+		}
+		</style>
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true, mblAlwaysHideAddressBar: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			dojo.require("dojox.mobile");			// This is a mobile app.
+			dojo.require("dojox.mobile.parser");	// This mobile app supports running on desktop browsers
+			dojo.require("dojox.mobile.compat");	// This mobile app uses declarative programming with fast mobile parser
+			dojo.require("dojox.mobile.IconContainer");
+			dojo.require("dojox.mobile.SwapView");
+		</script>
+	</head>
+	<body style="visibility:hidden;">
+		<div id="foo" dojoType="dojox.mobile.SwapView" selected="true">
+			<h2 dojoType="dojox.mobile.RoundRectCategory">Page flipping demo</h2>
+			<ul dojoType="dojox.mobile.RoundRectList">
+				<li class="mblVariableHeight" dojoType="dojox.mobile.ListItem" style="font-size:10px">
+				Swipe the screen left or right to flip between the views.
+				There are 4 views in this demo.
+				Vertical scrolling and page indicator are not supported.
+			</ul>
+		</div>
+
+		<div id="icon1" dojoType="dojox.mobile.SwapView">
+			<h1 dojoType="dojox.mobile.Heading">Icon Container 1</h1>
+			<ul dojoType="dojox.mobile.IconContainer">
+				<li dojoType="dojox.mobile.IconItem" label="Messages" icon="images/b-app-icon-1.png" moveTo="about" transition="fade"></li>
+				<li dojoType="dojox.mobile.IconItem" label="Text Messages" icon="images/b-app-icon-2.png" moveTo="about" transition="fade"></li>
+				<li dojoType="dojox.mobile.IconItem" label="Contacts" icon="images/b-app-icon-3.png" moveTo="about" transition="fade"></li>
+				<li dojoType="dojox.mobile.IconItem" label="Browser" icon="images/b-app-icon-4.png" moveTo="about" transition="fade"></li>
+				<li dojoType="dojox.mobile.IconItem" label="Media" icon="images/b-app-icon-5.png" moveTo="about" transition="fade"></li>
+				<li dojoType="dojox.mobile.IconItem" label="Calendar" icon="images/b-app-icon-6.png" moveTo="about" transition="fade"></li>
+				<li dojoType="dojox.mobile.IconItem" label="Phone" icon="images/b-app-icon-7.png" moveTo="about" transition="fade"></li>
+				<li dojoType="dojox.mobile.IconItem" label="Social Feeds" icon="images/b-app-icon-8.png" moveTo="about" transition="fade"></li>
+				<li dojoType="dojox.mobile.IconItem" label="App World" icon="images/b-app-icon-1.png" moveTo="about" transition="fade"></li>
+				<li dojoType="dojox.mobile.IconItem" label="Maps" icon="images/b-app-icon-2.png" moveTo="about" transition="fade"></li>
+				<li dojoType="dojox.mobile.IconItem" label="Camera" icon="images/b-app-icon-3.png" moveTo="about" transition="fade"></li>
+				<li dojoType="dojox.mobile.IconItem" label="Clock" icon="images/b-app-icon-4.png" moveTo="about" transition="fade"></li>
+			</ul>
+		</div>
+
+		<div id="icon2" dojoType="dojox.mobile.SwapView">
+			<h1 dojoType="dojox.mobile.Heading">Icon Container 2</h1>
+			<ul dojoType="dojox.mobile.IconContainer">
+				<li dojoType="dojox.mobile.IconItem" label="Media" icon="images/b-app-icon-5.png" moveTo="about" transition="fade"></li>
+				<li dojoType="dojox.mobile.IconItem" label="Calendar" icon="images/b-app-icon-6.png" moveTo="about" transition="fade"></li>
+				<li dojoType="dojox.mobile.IconItem" label="Phone" icon="images/b-app-icon-7.png" moveTo="about" transition="fade"></li>
+				<li dojoType="dojox.mobile.IconItem" label="Social Feeds" icon="images/b-app-icon-8.png" moveTo="about" transition="fade"></li>
+				<li dojoType="dojox.mobile.IconItem" label="App World" icon="images/b-app-icon-1.png" moveTo="about" transition="fade"></li>
+				<li dojoType="dojox.mobile.IconItem" label="Maps" icon="images/b-app-icon-2.png" moveTo="about" transition="fade"></li>
+				<li dojoType="dojox.mobile.IconItem" label="Camera" icon="images/b-app-icon-3.png" moveTo="about" transition="fade"></li>
+				<li dojoType="dojox.mobile.IconItem" label="Clock" icon="images/b-app-icon-4.png" moveTo="about" transition="fade"></li>
+			</ul>
+		</div>
+
+		<div id="icon3" dojoType="dojox.mobile.SwapView">
+			<h1 dojoType="dojox.mobile.Heading">Icon Container 3</h1>
+			<ul dojoType="dojox.mobile.IconContainer">
+				<li dojoType="dojox.mobile.IconItem" label="App World" icon="images/b-app-icon-1.png" moveTo="about" transition="fade"></li>
+				<li dojoType="dojox.mobile.IconItem" label="Maps" icon="images/b-app-icon-2.png" moveTo="about" transition="fade"></li>
+				<li dojoType="dojox.mobile.IconItem" label="Camera" icon="images/b-app-icon-3.png" moveTo="about" transition="fade"></li>
+				<li dojoType="dojox.mobile.IconItem" label="Clock" icon="images/b-app-icon-4.png" moveTo="about" transition="fade"></li>
+			</ul>
+		</div>
+	</body>
+</html>

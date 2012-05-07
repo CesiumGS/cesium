@@ -1,0 +1,129 @@
+<html>
+	<head>
+	    <script type="text/javascript" 
+	        src="../../../dojo/dojo.js"
+	        djConfig="isDebug: true, parseOnLoad: true">
+	    </script>
+	    <script type="text/javascript">
+			dojo.require("doh.runner");
+			dojo.require("dojox.form.DropDownStack");
+			dojo.require("dojox.form.RadioStack");
+			dojo.require("dijit.form.Button");
+			dojo.require("dijit.form.Form");
+			dojo.require("dijit.layout.StackContainer");
+			dojo.require("dijit.layout.ContentPane");
+			dojo.require("dijit.form.TextBox");
+	        dojo.require("dojo.parser");
+			
+			dojo.addOnLoad(function(){
+				doh.register("tests",
+					[
+						function test_getValues(t){
+							t.is({
+								dropDown: "first",
+								dropDownFirstBox: "First Value",
+								radio: "second",
+								radioSecondBox2: "Radio Another Value",
+								dual: "second",
+								dualSecondBox: "Dual First Value on Second (RO)",
+								dualSecondBox2: "Dual Another Value"
+								}, form.get("value"));
+						},
+						function test_setValues(t){
+							form.set("value", {
+								dropDown: "first",
+								dropDownSecondBox: "Changed First Value",
+								radio: "first",
+								radioFirstBox: "Changed Radio Value",
+								radioSecondBox: "Changed disabled value",
+								dual: "first",
+								dualFirstBox: "Changed Dual (DIS)",
+								dualSecondBox: "Changed read only value",
+								dualSecondBox: "Changed me too"
+							});
+							t.is({
+								dropDown: "first",
+								dropDownFirstBox: "First Value",
+								radio: "first",
+								radioFirstBox: "Changed Radio Value",
+								dual: "first"
+							}, form.get("value"));
+							form.set("value", {
+								dropDown: "second",
+								radio: "second",
+								dual: "second"});
+							t.is({
+								dropDown: "second",
+								dropDownSecondBox: "Changed First Value",
+								dropDownSecondBox2: "Another Value",
+								radio: "second",
+								radioSecondBox2: "Radio Another Value",
+								dual: "second",
+								dualSecondBox: "Changed me too",
+								dualSecondBox2: "Dual Another Value"
+								}, form.get("value"));
+						}
+					]
+				);
+				doh.run();
+			});
+		</script>
+		<style>
+			@import url(../../../dojo/resources/dojo.css);
+			@import url(../../../dijit/themes/tundra/tundra.css);
+			@import url(../resources/DropDownSelect.css);
+			@import url(../resources/CheckedMultiSelect.css);
+			@import url(../../../dijit/tests/css/dijitTests.css);
+		</style>
+	</head>	
+	<body class="tundra">
+		<h1 class="testTitle">Test: dojox.form.SelectStack</h1>
+		<form dojoType="dijit.form.Form" jsId="form">
+			<h4 class="testSubtitle">DropDown-based Select</h4>
+			<select dojoType="dojox.form.DropDownStack" name="dropDown" 
+				stackId="dropDownStack"></select>
+			<div dojoType="dijit.layout.StackContainer" class="dijitInline" doLayout="false" id="dropDownStack">
+				<div title="First" id="first" dojoType="dijit.layout.ContentPane">
+					Options for "First": <input dojoType="dijit.form.TextBox" name="dropDownFirstBox" value="First Value" />
+				</div>
+				<div title="Second" id="second" dojoType="dijit.layout.ContentPane">
+					Options for "Second": <input dojoType="dijit.form.TextBox" name="dropDownSecondBox" value="First Value on Second" /><br>
+					More Options for "Second": <input dojoType="dijit.form.TextBox" name="dropDownSecondBox2" value="Another Value" />
+				</div>
+			</div>
+		<hr>
+			<h4 class="testSubtitle">Radio-based Select</h4>
+			<select dojoType="dojox.form.RadioStack" name="radio" 
+				stackId="radioStack" stackPrefix="radio_" value="second"></select>
+			<div dojoType="dijit.layout.StackContainer" class="dijitInline" doLayout="false" id="radioStack">
+				<div title="First" id="radio_first" dojoType="dijit.layout.ContentPane">
+					Options for "First": <input dojoType="dijit.form.TextBox" name="radioFirstBox" value="Radio First Value" />
+				</div>
+				<div title="Second" id="radio_second" dojoType="dijit.layout.ContentPane">
+					Options for "Second": <input dojoType="dijit.form.TextBox" disabled="disabled" name="radioSecondBox" value="Radio First Value on Second (DIS)" /><br>
+					More Options for "Second": <input dojoType="dijit.form.TextBox" name="radioSecondBox2" value="Radio Another Value" />
+				</div>
+			</div>
+		<hr>
+			<h4 class="testSubtitle">*Two* controllers</h4>
+			<select dojoType="dojox.form.DropDownStack" stackId="dualStack" stackPrefix="dual_"></select><br>
+			<div dojoType="dijit.layout.StackContainer" doLayout="false" id="dualStack">
+				<div title="First" id="dual_first" dojoType="dijit.layout.ContentPane">
+					Options for "First": <input dojoType="dijit.form.TextBox" disabled="disabled" name="dualFirstBox" value="Dual First Value (DIS)" />
+				</div>
+				<div title="Second" selected="true" id="dual_second" dojoType="dijit.layout.ContentPane">
+					Options for "Second": <input dojoType="dijit.form.TextBox" readOnly="readOnly" name="dualSecondBox" value="Dual First Value on Second (RO)" /><br>
+					More Options for "Second": <input dojoType="dijit.form.TextBox" name="dualSecondBox2" value="Dual Another Value" />
+				</div>
+			</div>
+			<select dojoType="dojox.form.DropDownStack" name="dual" stackId="dualStack" stackPrefix="dual_"></select><br>
+		<hr>
+			<button dojoType="dijit.form.Button">
+				<script type="dojo/method" event="onClick">
+					console.dir(form.get("value"));
+				</script>
+				Get Values
+			</button>
+		</form>
+	</body>
+</html>

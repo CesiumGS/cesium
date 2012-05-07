@@ -1,0 +1,20 @@
+{
+	"series": [{
+		name: "Low sales state(0~$3.0M)",
+		min: "0.0",
+		max: "3.0",
+		color: "#FFCE52"
+	},
+	{
+		name: "Normal sales state($3.0M~$6.0M)",
+		min: "3.0",
+		max: "6.0",
+		color: "#63A584"
+	},
+	{
+		name: "High sales state($6.0M~$10.0M)",
+		min: "6.0",
+		max: "9.0",
+		color: "#CE6342"
+	}]
+}

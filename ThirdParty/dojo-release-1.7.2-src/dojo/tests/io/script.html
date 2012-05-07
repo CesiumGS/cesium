@@ -1,0 +1,110 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>Testing dojo.io.script</title>
+		<style type="text/css">
+			@import "../../resources/dojo.css";
+		</style>
+		<script type="text/javascript" src="../../dojo.js" data-dojo-config="isDebug:true"></script>
+		<script type="text/javascript">
+			require(["dojo", "doh", "dojo/io/script"], function(dojo, doh){
+				doh.register("t", [
+					function ioScriptLoad(t){
+						//t.is("undefined", typeof(scriptLoad));
+						var d = new doh.Deferred();
+						var td = dojo.io.script.get({
+							url: "scriptLoad.js"
+						});
+						td.addBoth(function(res){
+							if(typeof(scriptLoad) != "undefined"
+								&& t.is("loaded", scriptLoad)){
+								d.callback(true);
+							}else{
+								d.errback(false);
+							}
+						});
+						return d;
+					},
+					function ioScriptSimple(t){
+						var d = new doh.Deferred();
+						var td = dojo.io.script.get({
+							url: "scriptSimple.js",
+							checkString: "myTasks"
+						});
+						td.addBoth(function(res){
+							if(typeof(myTasks) != "undefined"
+								&& t.is("Do dishes.", myTasks[1])){
+								d.callback(true);
+							}else{
+								d.errback(false);
+							}
+						});
+						return d;
+					},
+					function ioScriptJsonp(t){
+						var d = new doh.Deferred();
+						var td = dojo.io.script.get({
+							url: "scriptJsonp.js",
+							content: { foo: "bar" },
+							jsonp: "callback"
+						});
+						td.addBoth(function(res){
+							if(!(res instanceof Error) && 
+								t.is("mammal", res.animalType)){
+								d.callback(true);
+							}else{
+								d.errback(false);
+							}
+						});
+						return d;							
+					},
+					function ioScriptJsonpTimeout(t){
+						var d = new doh.Deferred();
+						var td = dojo.io.script.get({
+							url: "../_base/timeout.php",
+							callbackParamName: "callback",
+							content: {Foo: 'Bar'},
+							timeout: 500,
+							handleAs: "json",
+							preventCache: true,
+							handle: function(response, ioArgs){
+								if(response instanceof Error && response.dojoType == "timeout"){
+									console.debug("FOO OK TEST");
+									d.callback(true);
+								}else{
+									console.debug("FOO FAIL TEST");
+									d.errback(false);
+								}
+							}
+						});
+						return d;
+					}
+				]);
+				doh.runOnLoad();
+/*
+				// for watching in the debugger...
+				dojo.addOnLoad(function(){
+					td = dojo.io.script.get({
+						url: "scriptSimple.js",
+						checkString: "myTasks"
+					});
+					td.addCallback(function(res){
+						alert(myTasks);
+						alert(myTasks[1]);
+						if(typeof(myTasks) != "undefined"
+							&& "Do dishes." == myTasks[1]){
+							alert("yeah");
+						}else{
+							alert("boo");
+						}
+					});
+				});
+*/
+			});
+		</script>
+	</head>
+	<body>
+		<h1>dojo.io.script test</h1>
+	</body>
+</html>

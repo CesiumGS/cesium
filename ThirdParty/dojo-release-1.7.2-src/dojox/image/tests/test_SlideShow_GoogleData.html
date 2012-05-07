@@ -1,0 +1,51 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+	<title>Testing the Image Gallery</title>
+
+	<!-- required: a default theme file -->
+	<link rel="stylesheet" id="themeStyles" href="../../../dijit/themes/tundra/tundra.css">
+	<link rel="stylesheet" href="../resources/image.css">
+	
+	<style type="text/css">
+		@import "../../../dijit/tests/css/dijitTests.css";
+	</style>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: true"></script>
+
+	<!-- do not use! only for testing dynamic themes -->
+	<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+
+	<!-- for debugging: -->
+	<script type="text/javascript" src="../ThumbnailPicker.js"></script>
+	<script type="text/javascript" src="../SlideShow.js"></script>
+	<script type="text/javascript" src="../Gallery.js"></script>
+	<script type="text/javascript" src="../../data/GoogleSearchStore.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("dojox.data.GoogleSearchStore");
+		dojo.require("dojo.parser");	// find widgets
+
+		dojo.addOnLoad(function(){
+			var googleImageStore = new dojox.data.GoogleImageSearchStore();
+			var req = {
+				query: {
+					text: "badminton"
+				},
+				count: 32
+			};
+			dijit.byId('slideshow1').setDataStore(googleImageStore, req);
+		});
+	</script>
+</head>
+<body class="tundra">
+	<h1 class="testTitle">dojox.image.SlideShow</h1>
+
+	<h2>From GoogleImageSearchStore:</h2>
+	<div id="slideshow1" dojoType="dojox.image.SlideShow" imageWidth="700" imageHeight="500" 
+		imageThumbAttr="tbUrl" imageLargeAttr="unescapedUrl" titleAttr="titleNoFormatting"></div>
+
+</body>
+</html>

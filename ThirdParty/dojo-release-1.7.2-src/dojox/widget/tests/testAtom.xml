@@ -1,0 +1,662 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en" xml:base="http://www.dojocampus.org/explorer">
+	<title type="text">DojoCampus Feature Explorer: Latest Demos</title>
+	<subtitle type="text">The latest demos from the Dojo toolkit</subtitle>
+	<generator uri="http://dojocampus.org/" version="MU">DojoCampus</generator>
+	<link rel="alternate" type="text/html" href="http://dojocampus.org/explorer" />
+	<id>http://www.dojocampus.org/explorer/featureexplorer/latestDemos.xml</id>
+	<link rel="self" type="application/atom+xml" href="http://www.dojocampus.org/explorer/featureexplorer/latestDemos.xml" />
+
+	<updated>2008-06-11T17:33:29+02:00</updated>
+	<entry>
+		<author>
+			<name>The Dojo Community</name>
+			<uri>http://www.dojocampus.org</uri>
+		</author>
+		<title type="text">Dojox / Widgets / Iterator / Data Store</title>
+
+		<link rel="alternate" type="text/html" href="http://www.dojocampus.org/explorer#Dojox_Widgets_Iterator_Data%20Store"/>
+		<id>http://www.dojocampus.org/explorer#Dojox_Widgets_Iterator_Data%20Store</id>
+		<updated>2008-06-11T17:33:29+02:00</updated>
+		<published>2008-06-11T17:33:29+02:00</published>
+		<summary type="html"><![CDATA[This example shows how to create a dojox.widget.Iterator widget and feed it 
+data from a simple data store.  Note how the <b>jsId</b> attribute of the 
+data store is identical to the <b>store</b> attribute of the Iterator widget. 
+A <b>query</b> attribute can also be specified to select a subset of the data
+in the data store.
+]]>
+		</summary>
+		<content type="html"><![CDATA[<script type="text/javascript">
+	dojo.require("dojo.data.ItemFileReadStore");
+	dojo.require("dojox.widget.Iterator");
+	dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+</script>
+<div dojoType="dojo.data.ItemFileReadStore"
+	url="/dojotoolkit/dijit/tests/_data/countries.json"
+	jsId="stateStore"></div>
+
+<h3>Data store backed Iterator</h3>
+<ul>
+	<li>before</li>
+	<li dojoType="dojox.widget.Iterator"
+		query="{ name: 'A*' }"
+		store="stateStore">
+		${name}
+	</li>
+	<li>after</li>
+</ul>
+]]>
+
+		</content>
+	</entry>
+	<entry>
+		<author>
+			<name>The Dojo Community</name>
+			<uri>http://www.dojocampus.org</uri>
+		</author>
+		<title type="text">Dojox / Widgets / SortList / From Data Store</title>
+
+		<link rel="alternate" type="text/html" href="http://www.dojocampus.org/explorer#Dojox_Widgets_SortList_From%20Data%20Store"/>
+		<id>http://www.dojocampus.org/explorer#Dojox_Widgets_SortList_From%20Data%20Store</id>
+		<updated>2008-06-11T17:33:29+02:00</updated>
+		<published>2008-06-11T17:33:29+02:00</published>
+		<summary type="html"><![CDATA[This example shows how to create a dojox.widget.SortList widget, and 
+populate it with data from a data store.
+]]>
+		</summary>
+		<content type="html"><![CDATA[<style type="text/css">
+	@import "/dojotoolkit/dojox/widget/SortList/SortList.css";
+</style>
+
+<script type="text/javascript">
+	dojo.require("dojox.widget.SortList");
+	dojo.require("dojo.data.ItemFileReadStore");
+	dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+</script>
+
+<div dojoType="dojo.data.ItemFileReadStore"
+	url="/dojotoolkit/dijit/tests/_data/countries.json"
+	jsId="stateStore"></div>
+
+<h3>Simple sortable example</h3>
+<ul dojoType="dojox.widget.SortList" store="stateStore"
+	title="sortable List" style="width:200px; height:200px;"></ul>
+]]>
+
+		</content>
+	</entry>
+	<entry>
+		<author>
+			<name>The Dojo Community</name>
+			<uri>http://www.dojocampus.org</uri>
+		</author>
+		<title type="text">Dojox / Widgets / SortList / From Markup</title>
+
+		<link rel="alternate" type="text/html" href="http://www.dojocampus.org/explorer#Dojox_Widgets_SortList_From%20Markup"/>
+		<id>http://www.dojocampus.org/explorer#Dojox_Widgets_SortList_From%20Markup</id>
+		<updated>2008-06-11T17:33:29+02:00</updated>
+		<published>2008-06-11T17:33:29+02:00</published>
+		<summary type="html"><![CDATA[This example shows how to create a simple dojox.widget.SortList widget, which
+sorts the HTML elements already present in the UL list.
+]]>
+		</summary>
+		<content type="html"><![CDATA[<style type="text/css">
+	@import "/dojotoolkit/dojox/widget/SortList/SortList.css";
+</style>
+
+<script type="text/javascript">
+	dojo.require("dojox.widget.SortList");
+	dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+</script>	
+
+<ul dojoType="dojox.widget.SortList" title="SortList From Markup" 
+	sortable="true" style="width:200px; height:200px;">
+	<li>one</li>
+	<li>two</li>
+	<li>three</li>
+	<li>four</li>
+	<li>five</li>
+	<li>six</li>
+	<li>four</li>
+	<li>five</li>
+	<li>six</li>
+	<li>four</li>
+	<li>five</li>
+	<li>six</li>
+	<li>four</li>
+	<li>five</li>
+	<li>six</li>
+</ul>
+]]>
+
+		</content>
+	</entry>
+	<entry>
+		<author>
+			<name>The Dojo Community</name>
+			<uri>http://www.dojocampus.org</uri>
+		</author>
+		<title type="text">Dojox / Widgets / SortList / Custom Sort</title>
+
+		<link rel="alternate" type="text/html" href="http://www.dojocampus.org/explorer#Dojox_Widgets_SortList_Custom%20Sort"/>
+		<id>http://www.dojocampus.org/explorer#Dojox_Widgets_SortList_Custom%20Sort</id>
+		<updated>2008-06-11T17:33:29+02:00</updated>
+		<published>2008-06-11T17:33:29+02:00</published>
+		<summary type="html"><![CDATA[This example shows how to create a simple dojox.widget.SortList widget, which
+sorts the HTML elements already present in the UL list. It also shows how to 
+add a customized sorting method to the widget, in this case to sort the 
+numbers based on their numerical value rather than their alphabetical value.
+]]>
+		</summary>
+		<content type="html"><![CDATA[<style type="text/css">
+	@import "/dojotoolkit/dojox/widget/SortList/SortList.css";
+</style>
+
+<script type="text/javascript">
+	dojo.require("dojox.widget.SortList");
+	dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+	var numberTranslations = {
+			"one":1,
+			"two":2,
+			"three":3,
+			"four":4,
+			"five":5,
+			"six":6
+		};
+	
+</script>	
+
+<ul dojoType="dojox.widget.SortList" title="SortList From Markup" 
+	sortable="true" style="width:200px; height:200px;">
+	<script type="dojo/method" event="_sorter", args="a,b">
+		//This is a custom sort method.
+		var aNum = numberTranslations[a.innerHTML];
+		var bNum = numberTranslations[b.innerHTML];
+		if(aNum>bNum){ return 1; }
+		if(aNum<bNum){ return -1; }
+		return 0;		
+	</script>
+	<li>one</li>
+	<li>two</li>
+	<li>three</li>
+	<li>four</li>
+	<li>five</li>
+	<li>six</li>
+	<li>four</li>
+	<li>five</li>
+	<li>six</li>
+	<li>four</li>
+	<li>five</li>
+	<li>six</li>
+	<li>four</li>
+	<li>five</li>
+	<li>six</li>
+</ul>
+]]>
+
+		</content>
+	</entry>
+	<entry>
+		<author>
+			<name>The Dojo Community</name>
+			<uri>http://www.dojocampus.org</uri>
+		</author>
+		<title type="text">Dojox / Layout / Resize Handle / Animated</title>
+
+		<link rel="alternate" type="text/html" href="http://www.dojocampus.org/explorer#Dojox_Layout_Resize%20Handle_Animated"/>
+		<id>http://www.dojocampus.org/explorer#Dojox_Layout_Resize%20Handle_Animated</id>
+		<updated>2008-06-11T17:33:28+02:00</updated>
+		<published>2008-06-11T17:33:28+02:00</published>
+		<summary type="html"><![CDATA[]]>
+		</summary>
+		<content type="html"><![CDATA[<style type="text/css">
+	@import "/dojotoolkit/dojox/layout/resources/ResizeHandle.css";
+</style>
+<script language="JavaScript" type="text/javascript">
+	dojo.require("dojox.layout.ResizeHandle"); 
+	dojo.require("dijit.layout.ContentPane"); 
+	dojo.require("dojo.parser");
+</script>
+<style type="text/css">
+	#testWindow {
+		margin:8px; 
+		padding:15px; 
+		float:left; 
+		width: 300px; 
+		height: 200px; 
+		border: solid red 5px; 
+		position: relative; 
+		background: white;
+	}
+	
+	.handle {
+		bottom: 2px; 
+		right: 2px; 
+		position: absolute;
+	}
+</style>
+<div dojoType="dijit.layout.ContentPane"
+	title="Test window"
+	id="testWindow"
+>
+	Content Pane w/a resize handle.Lorem ipsum dolor sit amet, consectetuer adipiscing elit. 
+	Nam facilisis enim. Pellentesque in elit et lacus euismod dignissim. Aliquam dolor pede, convallis eget, 
+	dictum a, blandit ac, urna. Pellentesque sed nunc ut justo volutpat egestas. Class aptent taciti sociosqu ad 
+	litora torquent per conubia nostra, per inceptos hymenaeos. In erat. Suspendisse potenti. Fusce faucibus nibh 
+	sed nisi. Phasellus faucibus, dui a cursus dapibus, mauris nulla euismod velit, a lobortis turpis arcu vel dui. 
+	Pellentesque fermentum ultrices pede. Donec auctor lectus eu arcu. Curabitur non orci eget est porta gravida.
+	<div dojoType="dojox.layout.ResizeHandle" targetId="testWindow" 
+		resizeAxis="xy" animateMethod="combine" class="handle"></div>
+</div>
+
+<br/><br/>
+
+	<p>Sed arcu magna, molestie at, fringilla in, sodales eu, elit. Curabitur mattis lorem et est. Quisque et tortor. Integer bibendum vulputate odio. Nam nec ipsum. Vestibulum mollis eros feugiat augue. Integer fermentum odio lobortis odio. Nullam mollis nisl non metus. Maecenas nec nunc eget pede ultrices blandit. Ut non purus ut elit convallis eleifend. Fusce tincidunt, justo quis tempus euismod, magna nulla viverra libero, sit amet lacinia odio diam id risus. Ut varius viverra turpis. Morbi urna elit, imperdiet eu, porta ac, pharetra sed, nisi. Etiam ante libero, ultrices ac, faucibus ac, cursus sodales, nisl. Praesent nisl sem, fermentum eu, consequat quis, varius interdum, nulla. Donec neque tortor, sollicitudin sed, consequat nec, facilisis sit amet, orci. Aenean ut eros sit amet ante pharetra interdum.</p>
+
+	<p>Fusce rutrum pede eget quam. Praesent purus. Aenean at elit in sem volutpat facilisis. Nunc est augue, commodo at, pretium a, fermentum at, quam. Nam sit amet enim. Suspendisse potenti. Cras hendrerit rhoncus justo. Integer libero. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Aliquam erat volutpat. Sed adipiscing mi vel ipsum.</p>
+
+	<p>Sed aliquam, quam consectetuer condimentum bibendum, neque libero commodo metus, non consectetuer magna risus 
+	vitae eros. Pellentesque mollis augue id libero. Morbi nonummy hendrerit dui. Morbi nisi felis, fringilla ac, 
+	euismod vitae, dictum mollis, pede. Integer suscipit, est sed posuere ullamcorper, ipsum lectus interdum nunc, 
+	quis blandit erat eros hendrerit pede. Vestibulum varius, elit id mattis mattis, nulla est feugiat ante, eget 
+	vestibulum augue eros ut odio. Maecenas euismod purus quis felis. Ut hendrerit tincidunt est. Fusce euismod, 
+	nunc eu tempus tempor, purus ligula volutpat tellus, nec lacinia sapien enim id risus. Aliquam orci turpis, 
+	condimentum sed, sollicitudin vel, placerat in, purus. Proin tortor nisl, blandit quis, imperdiet quis, 
+	scelerisque at, nisl. Maecenas suscipit fringilla erat. Curabitur consequat, dui blandit suscipit dictum, 
+	felis lectus imperdiet tellus, sit amet ornare risus mauris non ipsum. 
+	Fusce a purus. Vestibulum sodales. Sed porta ultrices nibh. Vestibulum metus.</p>
+]]>
+
+		</content>
+	</entry>
+	<entry>
+		<author>
+			<name>The Dojo Community</name>
+			<uri>http://www.dojocampus.org</uri>
+		</author>
+		<title type="text">Dojox / Layout / ScrollPane / Programmatic</title>
+
+		<link rel="alternate" type="text/html" href="http://www.dojocampus.org/explorer#Dojox_Layout_ScrollPane_Programmatic"/>
+		<id>http://www.dojocampus.org/explorer#Dojox_Layout_ScrollPane_Programmatic</id>
+		<updated>2008-06-11T17:33:28+02:00</updated>
+		<published>2008-06-11T17:33:28+02:00</published>
+		<summary type="html"><![CDATA[This example shows how to construct a horizontal 
+<b>dojox.layout.ScrollPane</b> progammatically.  
+Note that you must
+specify the dimensions of the widget, done here 
+using the style attribute.
+]]>
+		</summary>
+		<content type="html"><![CDATA[<script language="JavaScript" type="text/javascript">
+	dojo.require("dojox.layout.ScrollPane");
+	dojo.require("dijit.form.Button");
+
+	function makeScrollPane() {
+		// programatic example:
+		var widget = new dojox.layout.ScrollPane({
+			orientation: "horizontal",
+			style:"width:600px; height:125px; border:1px solid #b7b7b7"
+		},"scrollPane1");
+		widget.startup();
+	}
+
+</script>
+<link href="/dojotoolkit/dojox/layout/resources/ScrollPane.css"
+	type="text/css" rel="stylesheet"></link>
+<style type="text/css">
+	table.fooBar td {
+		width:50px;
+		border-right:2px solid #000;
+		padding:20px;
+	}
+	.foo { float:left; }
+</style>
+
+<div dojoType="dijit.form.Button" onclick="makeScrollPane()">
+	Make Widget
+</div>
+
+<div id="scrollPane1">
+	<table class="fooBar">
+		<tr>
+			<td style="padding-left:20px;">On Raglan</td>
+			<td>Road On An</td>
+			<td>autumn day</td>
+			<td>I saw her</td>
+			<td>first and</td>
+			<td>knew, that</td>
+			<td>her dark hair</td>
+			<td>would weave</td>
+			<td>a snare that</td>
+			<td>I might one</td>
+			<td>day rue.</td>
+			<td>I saw the</td>
+			<td>danger yet I</td>
+			<td>walked, along</td>
+			<td>the enchanted</td>
+			<td>way. And I</td>
+			<td>said let grief</td>
+			<td>be a falling</td>
+			<td>leaf at the</td>
+			<td>dawning of</td>
+			<td>the Day.</td>
+
+			<td>On Grafton</td>
+			<td>Street in</td>
+			<td>November, we</td>
+			<td>tripped lightly</td>
+			<td>along the ledge,</td>
+			<td>Of the deep ravine</td>
+			<td>where can be</td>
+			<td>seen, the worth</td>
+			<td>of passions</td>
+			<td>pledge. The</td>
+			<td>Queen of hearts</td>
+			<td>still baking</td>
+			<td>tarts, and I</td>
+			<td>not making hay,</td>
+			<td>Oh I loved</td>
+			<td>too much, and</td>
+			<td>by such and such</td>
+			<td>is happiness</td>
+			<td>thrown away.</td>
+
+			<td>I gave her</td>
+			<td>gifts of the</td>
+			<td>mind, I gave</td>
+			<td>her the secret</td>
+			<td>sign, that's</td>
+			<td>known to the</td>
+			<td>artists who have</td>
+			<td>known, the true</td>
+			<td>gods of sound</td>
+			<td>and time. With</td>
+			<td>word and tint</td>
+			<td>I did not</td>
+			<td>stint, for I gave</td>
+			<td>her poems to </td>
+			<td>say, With her</td>
+			<td>own name there</td>
+			<td>and her own dark</td>
+			<td>hair, Like clouds</td>
+			<td>over fields of May</td>
+
+			<td>On a quiet</td>
+			<td>street, where old</td>
+			<td>ghosts meet, I</td>
+			<td>see her walking</td>
+			<td>now. Away from me</td>
+			<td>so hurriedly, my</td>
+			<td>reason must allow,</td>
+			<td>that I have</td>
+			<td>loved not as I</td>
+			<td>should, a creature</td>
+			<td>made of clay.</td>
+			<td>When the angel</td>
+			<td>woos the clay</td>
+			<td>he'll lost his</td>
+			<td>wings, at the</td>
+			<td>dawn of day.</td>
+			<td>&nbsp;</td>
+			<td>For Pat & Luke</td>
+		</tr>
+	</table>
+</div>
+]]>
+
+		</content>
+	</entry>
+	<entry>
+		<author>
+			<name>The Dojo Community</name>
+			<uri>http://www.dojocampus.org</uri>
+		</author>
+		<title type="text">Dojox / Layout / Resize Handle / X Axis</title>
+
+		<link rel="alternate" type="text/html" href="http://www.dojocampus.org/explorer#Dojox_Layout_Resize%20Handle_X%20Axis"/>
+		<id>http://www.dojocampus.org/explorer#Dojox_Layout_Resize%20Handle_X%20Axis</id>
+		<updated>2008-06-11T17:33:28+02:00</updated>
+		<published>2008-06-11T17:33:28+02:00</published>
+		<summary type="html"><![CDATA[This example to shows how to put a resize handle on a Dojo Layout widget,
+with resizing only on the X Axis.
+]]>
+		</summary>
+		<content type="html"><![CDATA[<style type="text/css">
+	@import "/dojotoolkit/dojox/layout/resources/ResizeHandle.css";
+</style>
+
+
+<script language="JavaScript" type="text/javascript">
+	dojo.require("dojox.layout.ResizeHandle"); 
+	dojo.require("dijit.layout.ContentPane"); 
+	dojo.require("dojo.parser");
+</script>
+<style type="text/css">
+	#testWindow {
+		width: 300px; 
+		height: 200px; 
+		padding:10px; 
+		border: 1px 
+		solid #dedede; 
+		position: relative; 
+		background: white;
+	}
+</style>
+<div dojoType="dijit.layout.ContentPane"
+	title="Test window"
+	id="testWindow"
+>
+	Content Pane w/a resize handle.Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Nam facilisis enim. Pellentesque in elit et lacus euismod dignissim. Aliquam dolor pede, convallis eget, dictum a, blandit ac, urna. Pellentesque sed nunc ut justo volutpat egestas. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos hymenaeos. In erat. Suspendisse potenti. Fusce faucibus nibh sed nisi. Phasellus faucibus, dui a cursus dapibus, mauris nulla euismod velit, a lobortis turpis arcu vel dui. Pellentesque fermentum ultrices pede. Donec auctor lectus eu arcu. Curabitur non orci eget est porta gravida.
+	<div dojoType="dojox.layout.ResizeHandle" targetId="testWindow" resizeAxis="x" activeResize="true"></div>
+</div>
+]]>
+
+		</content>
+	</entry>
+	<entry>
+		<author>
+			<name>The Dojo Community</name>
+			<uri>http://www.dojocampus.org</uri>
+		</author>
+		<title type="text">Dojox / Widgets / Color Picker / Basic</title>
+
+		<link rel="alternate" type="text/html" href="http://www.dojocampus.org/explorer#Dojox_Widgets_Color%20Picker_Basic"/>
+		<id>http://www.dojocampus.org/explorer#Dojox_Widgets_Color%20Picker_Basic</id>
+		<updated>2008-06-11T17:33:28+02:00</updated>
+		<published>2008-06-11T17:33:28+02:00</published>
+		<summary type="html"><![CDATA[This example shows how to put a dojox.widget.ColorPicker widget on the page,
+and how to attach an event to be notified of the selected color.
+]]>
+		</summary>
+		<content type="html"><![CDATA[<style type="text/css">
+	@import "/dojotoolkit/dojox/widget/ColorPicker/ColorPicker.css";
+</style>
+
+<script type="text/javascript">
+	dojo.require("dojox.widget.ColorPicker");
+	dojo.require("dojo.parser"); // scan page for widgets and instantiate them
+	
+	function printColor(val){
+		dojo.byId("colorOutput").innerHTML = "Color is "+val;
+	}
+</script>
+<div id="colorOutput">
+	Color is 
+</div>
+<div id="picker1" dojoType="dojox.widget.ColorPicker"
+	onChange="printColor(this.value)"
+></div>
+
+
+]]>
+
+		</content>
+	</entry>
+	<entry>
+		<author>
+			<name>The Dojo Community</name>
+			<uri>http://www.dojocampus.org</uri>
+		</author>
+		<title type="text">Dojox / Layout / ScrollPane / Vertical</title>
+
+		<link rel="alternate" type="text/html" href="http://www.dojocampus.org/explorer#Dojox_Layout_ScrollPane_Vertical"/>
+		<id>http://www.dojocampus.org/explorer#Dojox_Layout_ScrollPane_Vertical</id>
+		<updated>2008-06-11T17:33:28+02:00</updated>
+		<published>2008-06-11T17:33:28+02:00</published>
+		<summary type="html"><![CDATA[This example shows how to construct a vertical 
+<b>dojox.layout.ScrollPane</b>.  Note that you must
+specify the dimensions of the widget, done here 
+using the style attribute.
+]]>
+		</summary>
+		<content type="html"><![CDATA[<script language="JavaScript" type="text/javascript">
+	dojo.require("dojox.layout.ScrollPane");
+</script>
+<link href="/dojotoolkit/dojox/layout/resources/ScrollPane.css"
+	type="text/css" rel="stylesheet"></link>
+<style type="text/css">
+	table.fooBar td {
+		width:50px;
+		border-right:2px solid #000;
+		padding:20px;
+	}
+	.foo { float:left; }
+</style>
+<div dojoType="dojox.layout.ScrollPane"
+	orientation="vertical"
+	style="width:200px; height:250px; border:1px solid #b7b7b7">
+	<ul class="fooBar">
+		<li>On Raglan</li>
+		<li>Road On An</li>
+		<li>autumn day</li>
+		<li>I saw her</li>
+		<li>first and</li>
+		<li>knew, that</li>
+		<li>her dark hair</li>
+		<li>would weave</li>
+		<li>a snare that</li>
+		<li>I might one</li>
+		<li>day rue.</li>
+		<li>I saw the</li>
+		<li>danger yet I</li>
+		<li>walked, along</li>
+		<li>the enchanted</li>
+		<li>way. And I</li>
+		<li>said let grief</li>
+		<li>be a falling</li>
+		<li>leaf at the</li>
+		<li>dawning of</li>
+		<li>the Day.</li>
+
+		<li>On Grafton</li>
+		<li>Street in</li>
+		<li>November, we</li>
+		<li>tripped lightly</li>
+		<li>along the ledge,</li>
+		<li>Of the deep ravine</li>
+		<li>where can be</li>
+		<li>seen, the worth</li>
+		<li>of passions</li>
+		<li>pledge. The</li>
+		<li>Queen of hearts</li>
+		<li>still baking</li>
+		<li>tarts, and I</li>
+		<li>not making hay,</li>
+		<li>Oh I loved</li>
+		<li>too much, and</li>
+		<li>by such and such</li>
+		<li>is happiness</li>
+		<li>thrown away.</li>
+
+		<li>I gave her</li>
+		<li>gifts of the</li>
+		<li>mind, I gave</li>
+		<li>her the secret</li>
+		<li>sign, that's</li>
+		<li>known to the</li>
+		<li>artists who have</li>
+		<li>known, the true</li>
+		<li>gods of sound</li>
+		<li>and time. With</li>
+		<li>word and tint</li>
+		<li>I did not</li>
+		<li>stint, for I gave</li>
+		<li>her poems to </li>
+		<li>say, With her</li>
+		<li>own name there</li>
+		<li>and her own dark</li>
+		<li>hair, Like clouds</li>
+		<li>over fields of May</li>
+
+		<li>On a quiet</li>
+		<li>street, where old</li>
+		<li>ghosts meet, I</li>
+		<li>see her walking</li>
+		<li>now. Away from me</li>
+		<li>so hurriedly, my</li>
+		<li>reason must allow,</li>
+		<li>that I have</li>
+		<li>loved not as I</li>
+		<li>should, a creature</li>
+		<li>made of clay.</li>
+		<li>When the angel</li>
+		<li>woos the clay</li>
+		<li>he'll lost his</li>
+		<li>wings, at the</li>
+		<li>dawn of day.</li>
+		<li>&nbsp;</li>
+		<li>For Pat & Luke</li>
+
+	</ul>
+</div>
+]]>
+
+		</content>
+	</entry>
+	<entry>
+		<author>
+			<name>The Dojo Community</name>
+			<uri>http://www.dojocampus.org</uri>
+		</author>
+		<title type="text">Dojox / Widgets / Color Picker / Customized</title>
+
+		<link rel="alternate" type="text/html" href="http://www.dojocampus.org/explorer#Dojox_Widgets_Color%20Picker_Customized"/>
+		<id>http://www.dojocampus.org/explorer#Dojox_Widgets_Color%20Picker_Customized</id>
+		<updated>2008-06-11T17:33:28+02:00</updated>
+		<published>2008-06-11T17:33:28+02:00</published>
+		<summary type="html"><![CDATA[This example shows how to put a dojox.widget.ColorPicker on the page, and how
+to customize it to not animate the pointer, disable the display of the
+RGB and HSV values, and to not restrict it to web safe values. Also shown
+is how to attach an event to be notified of the selected color.
+]]>
+		</summary>
+		<content type="html"><![CDATA[<style type="text/css">
+	@import "/dojotoolkit/dojox/widget/ColorPicker/ColorPicker.css";
+</style>
+
+
+<script type="text/javascript">
+	dojo.require("dojox.widget.ColorPicker");
+	dojo.require("dojo.parser"); // scan page for widgets and instantiate them
+	
+	function printColor(val){
+		dojo.byId("colorOutput").innerHTML = "Color is "+val;
+	}
+</script>
+
+<div id="colorOutput">
+	Color is 
+</div>
+
+<div id="pickerToo" dojoType="dojox.widget.ColorPicker"
+	animatePoint="false"
+	showHsv="false"
+	showRgb="false"	
+	webSafe="false"
+	onChange="printColor(this.value)"
+></div>
+]]>
+
+		</content>
+	</entry>
+</feed>

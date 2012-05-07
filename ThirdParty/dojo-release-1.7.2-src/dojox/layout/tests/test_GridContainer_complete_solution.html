@@ -1,0 +1,103 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="fr">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<meta http-equiv="pragma" content="no-cache" />
+	<meta http-equiv="expires" content="-1" />
+	
+	<title>Drag and Drop - Complete Solution</title>
+	
+	<link rel="stylesheet" href="resources/set_complete_dnd.css" type="text/css" />	
+	<link rel="stylesheet" href="../../../dijit/themes/tundra/tundra.css" type="text/css" />	
+	<link rel="stylesheet" href="../../../dojo/resources/dojo.css" type="text/css" />
+	
+	<link rel="stylesheet" href="../../../dojox/mdnd/resources/dnd.css" type="text/css" />
+	
+	<link rel="stylesheet" href="../resources/GridContainer.css" type="text/css" />
+	<link rel="stylesheet" href="../../../dijit/tests/css/dijitTests.css" type="text/css"/>
+	
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true,  parseOnLoad: true"></script>
+	
+	<script type="text/javascript">
+		dojo.require("dojox.layout.GridContainerLite");
+		dojo.require("dojox.widget.Portlet");
+		dojo.require("dijit.TitlePane");
+		dojo.require("dijit.layout.ContentPane");
+		dojo.require("dojox.mdnd.PureSource");
+		dojo.require("dojox.mdnd.adapter.DndFromDojo");
+		dojo.require("dojox.mdnd.adapter.DndToDojo");
+		dojo.require("dojo.dnd.Source");
+		dojo.require("dijit.layout.TabContainer");
+	</script>
+	
+	<script type="text/javascript" src="resources/script_dnd.js"></script>
+</head>
+<body class="tundra">
+	<div style="position:absolute;width:200px;left:5px;top:50px;">
+		<H2>Pure Source Dojo</H2>
+		<div dojoType="dojox.mdnd.PureSource" jsId="c1" class="container" >
+			<div class="dojoDndItem" dndType="ContentPane"><strong>ContentPane</strong></div>
+			<div class="dojoDndItem" dndType="Portlet"><strong>Portlet</strong></div>
+			<div class="dojoDndItem" dndType="TitlePane"><strong>TitlePane</strong></div>
+		</div>
+	</div>
+	<div style="position:absolute;width:200px;left:5px;top:220px;">
+		<H2>Source/Target Dojo</H2>
+		<div dojoType="dojo.dnd.Source" accept="rss, TitlePane, News" jsId="c2" class="container">
+			<div class="dojoDndItem" dndType="rss">RSS <strong>1</strong></div>
+			<div class="dojoDndItem" dndType="TitlePane"><strong>TitlePane</strong></div>
+			<div class="dojoDndItem" dndType="ContentPane"><strong>ContentPane</strong></div>
+		</div>
+		<p><b>accept :</b><br><i>Rss, TitlePane, News</i></p>
+	</div>
+	<div id="tb1" dojoType="dijit.layout.TabContainer" style="position:absolute;left:250px;top:50px;margin:10px; width:800px;height:500px">
+    	<div id="GC1" 
+			dojoType="dojox.layout.GridContainerLite" 
+			nbZones="3" 
+			isAutoOrganized="true" 
+			acceptTypes="Portlet, text, ContentPane, News"
+			title="onglet 1"
+			>
+			<div dojoType="dijit.layout.ContentPane" class="cpane" dndType="ContentPane">
+		   		Content Pane 1!!!
+		  	</div>
+		  	<div dojoType="dijit.layout.ContentPane" class="cpane" dndType="ContentPane">
+		   		Content Pane 2!!!
+		  	</div>
+			<div dojoType="dojox.widget.Portlet" 
+				id="ptl"
+				title = "News Draggable"
+				style="height:150px;"
+				dndType="Portlet" >
+				<b>Source/Target OAF (drop only rss)</b><br>
+				<div dojoType="dojo.dnd.Source" jsId="cp1" accept="rss">
+					<div class="dojoDndItem" dndType="News">News <strong>1</strong></div>
+					<div class="dojoDndItem" dndType="News">News <strong>2</strong></div>
+					<div class="dojoDndItem" dndType="News">News <strong>3</strong></div>
+					<div class="dojoDndItem" dndType="rss">RSS <strong>2</strong></div>
+				</div>
+			</div>
+			<div dojoType="dijit.TitlePane" title="titlePane1" dndType="TitlePane">
+		   		Title Pane 1!!!
+		  	</div>
+		</div>			
+        <div id="GC2" 
+			dojoType="dojox.layout.GridContainerLite" 
+			nbZones="3" 
+			isAutoOrganized="true" 
+			acceptTypes="text, Portlet, ContentPane, TitlePane"
+			style="min-height:350px"
+			title="onglet 2" 
+			closable="true"
+			>
+			<div dojoType="dijit.layout.ContentPane" dndType="ContentPane" class="cpane">
+		   		Content Pane 3!!!
+		  	</div>
+		  	<div dojoType="dijit.TitlePane" dndType="TitlePane" title="titlePane 2">
+		   		Title Pane 2!!!
+		  	</div>
+		</div>  
+	</div>
+	
+</body>
+</html>

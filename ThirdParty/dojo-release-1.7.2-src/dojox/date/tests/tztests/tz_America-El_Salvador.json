@@ -1,0 +1,22 @@
+({
+	name: "date.timezone.America-El_Salvador",
+	runTest: function(t){
+		var tz = "America/El_Salvador";
+		doh.checkDate({tzOffset: 356.8, tzAbbr: "LMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: 356.8, tzAbbr: "LMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: 356.8, tzAbbr: "LMT"}, -1546279393000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, -1546279392000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, 547019999000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "CDT"}, 547020000000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "CDT"}, 559717199000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, 559717200000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, 578469599000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "CDT"}, 578469600000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "CDT"}, 591166799000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, 591166800000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, 1246789800000, tz, 0);
+	}
+})

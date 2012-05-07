@@ -1,0 +1,96 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Testing Axes</title>
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+</style>
+<script src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+<script>
+
+dojo.require("dojox.charting.Chart");
+dojo.require("dojox.charting.axis2d.Invisible");
+dojo.require("dojox.charting.axis2d.Default");
+dojo.require("dojox.charting.plot2d.Markers");
+dojo.require("dojox.charting.themes.ThreeD");
+
+makeObjects = function(){
+    dojo.query("button").style("disabled", true);
+    
+    var customTheme = dojox.charting.themes.ThreeD.clone();
+    customTheme.plotarea.fill = "#fed";
+
+	var chart1 = new dojox.charting.Chart("test1").
+            setTheme(customTheme).
+            addAxis("x", {fixLower: "major", fixUpper: "major", natural: true, includeZero: true}).
+            addAxis("y", {vertical: true, fixLower: "major", fixUpper: "major", natural: true, includeZero: true}).
+            addPlot("default", {type: "Markers"}).
+            addSeries("Series A", [{x: 1, y: 1}, {x: 2, y: 2}, {x: 3, y: 1}]).
+            addSeries("Series B", [{x: 3, y: 2}, {x: 4, y: 3}, {x: 5, y: 2}]).
+            addSeries("Series C", [{x: 5, y: 3}, {x: 6, y: 4}, {x: 7, y: 3}]).
+            render();
+
+	var chart2 = new dojox.charting.Chart("test2").
+            setTheme(customTheme).
+            addAxis("x", {fixLower: "major", fixUpper: "major", natural: true, includeZero: true}).
+            addAxis("y", {vertical: true, fixLower: "major", fixUpper: "major", natural: true, includeZero: true}).
+            addPlot("p1", {type: "Markers"}).
+            addPlot("p2", {type: "Markers"}).
+            addPlot("p3", {type: "Markers"}).
+            addSeries("Series A", [{x: 1, y: 1}, {x: 2, y: 2}, {x: 3, y: 1}], {plot: "p1"}).
+            addSeries("Series B", [{x: 3, y: 2}, {x: 4, y: 3}, {x: 5, y: 2}], {plot: "p2"}).
+            addSeries("Series C", [{x: 5, y: 3}, {x: 6, y: 4}, {x: 7, y: 3}], {plot: "p3"}).
+            render();
+
+	var chart3 = new dojox.charting.Chart("test3").
+            setTheme(customTheme).
+            addAxis("x", {type: "Invisible", fixLower: "major", fixUpper: "major", natural: true, includeZero: true}).
+            addAxis("y", {type: "Invisible",vertical: true, fixLower: "major", fixUpper: "major", natural: true, includeZero: true}).
+            addPlot("default", {type: "Markers"}).
+            addSeries("Series A", [{x: 1, y: 1}, {x: 2, y: 2}, {x: 3, y: 1}]).
+            addSeries("Series B", [{x: 3, y: 2}, {x: 4, y: 3}, {x: 5, y: 2}]).
+            addSeries("Series C", [{x: 5, y: 3}, {x: 6, y: 4}, {x: 7, y: 3}]).
+            render();
+
+	var chart4 = new dojox.charting.Chart("test4").
+            setTheme(customTheme).
+            addPlot("default", {type: "Markers"}).
+            addSeries("Series A", [{x: 1, y: 1}, {x: 2, y: 2}, {x: 3, y: 1}]).
+            addSeries("Series B", [{x: 3, y: 2}, {x: 4, y: 3}, {x: 5, y: 2}]).
+            addSeries("Series C", [{x: 5, y: 3}, {x: 6, y: 4}, {x: 7, y: 3}]).
+            render();
+};
+
+dojo.ready(makeObjects);
+
+</script>
+</head>
+<body>
+<h1>Testing Axes</h1>
+<!--<p><button onclick="makeObjects();">Go</button></p>-->
+<p>1: Shared axes and three series</p>
+<div id="test1" style="width: 200px; height: 200px;"></div>
+<p>2: Shared axes and three plots.</p>
+<div id="test2" style="width: 200px; height: 200px;"></div>
+<p>3: Like #1 but invisible axes.</p>
+<div id="test3" style="width: 200px; height: 200px;"></div>
+<p>4: Like #1 but no axes.</p>
+<div id="test4" style="width: 200px; height: 200px;"></div>
+<p>That's all Folks!</p>
+</body>
+</html>

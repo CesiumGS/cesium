@@ -1,0 +1,249 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>Event 2D</title>
+		<style type="text/css">
+			@import "../../../../dojo/resources/dojo.css";
+			@import "../../../../dijit/tests/css/dijitTests.css";
+		</style>
+		<!-- required for Tooltip: a default dijit theme: -->
+		<link rel="stylesheet" href="../../../../dijit/themes/claro/claro.css">
+		<style>
+			.dojoxLegendNode {border: 1px solid #ccc; margin: 5px 10px 5px 10px; padding: 3px}
+			.dojoxLegendText {vertical-align: text-top; padding-right: 10px}
+		</style>
+		<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+			<script type="text/javascript">
+			dojo.require("dojo.parser");
+			dojo.require("doh.runner");
+
+			dojo.require("dojox.charting.Chart");
+			dojo.require("dojox.charting.axis2d.Default");
+			dojo.require("dojox.charting.plot2d.Default");
+			dojo.require("dojox.charting.plot2d.Columns");
+			dojo.require("dojox.charting.plot2d.ClusteredColumns");
+			dojo.require("dojox.charting.plot2d.Bars");
+			dojo.require("dojox.charting.plot2d.Bubble");
+			dojo.require("dojox.charting.plot2d.Grid");
+			dojo.require("dojox.charting.plot2d.Pie");
+
+			dojo.require("dojox.charting.themes.PlotKit.green");
+
+			dojo.require("dojox.charting.action2d.Highlight");
+			dojo.require("dojox.charting.action2d.Magnify");
+			dojo.require("dojox.charting.action2d.MoveSlice");
+			dojo.require("dojox.charting.action2d.Shake");
+			dojo.require("dojox.charting.action2d.Tooltip");
+
+			dojo.require("dojox.charting.widget.Legend");
+
+			dojo.require("dojo.colors");
+			dojo.require("dojo.fx.easing");
+
+			dojo.require("dojox.charting.BidiSupport");
+			dojo.require("dojox.charting.widget.BidiSupport");
+			
+			var dc = dojox.charting;
+
+			var dur = 450;
+
+			var chart1, legend1, chart3, legend3, chart6, legend6, chart9, legend9,
+				chart10, legend10;
+			
+			makeObjects = function(){
+				chart1 = new dc.Chart("test1",{textDir:"rtl", title:"\u05d6\u05d4\u05d5\u0020\u05ea\u05e8\u05e9\u05d9\u05dd\u0020\u05de\u05d4\u05de\u05dd."});
+				chart1.setTheme(dc.themes.PlotKit.green);
+				chart1.addPlot("default", {type: "Default", lines: true, markers: true, tension:2});
+				chart1.addAxis("x", {min: 0, max: 6, majorTick: {stroke: "black", length: 3}, minorTick: {stroke: "gray", length: 3}
+					, labels: [
+						//{value: 0, text: "zero"},
+						{value: 2, text: "\u05e9\u05ea\u05d9\u05d9\u05dd."},
+						{value: 4, text: "four."}
+					]
+					, title:"\u05e6\u05d9\u05e8 x."
+					, titleGap: 20
+					, titleFont: "normal normal normal 10pt Arial"
+					, titleOrientation: "away"
+				});
+				chart1.addAxis("y", {vertical: true, min: 0, max: 10, majorTick: {stroke: "black", length: 3}, minorTick: {stroke: "gray", length: 3}, title:"\u05e6\u05d9\u05e8 y."});
+				chart1.addSeries("\u05e1\u05d3\u05e8\u05d4\u0020\u05d0\u0027.", [{x: 0.5,value:"Name." ,y: 5, tooltip:"My name is \u05e8\u05d1\u05e7\u05d4\u0020\u05d1\u05ea\u0020\u05de\u05e9\u05d4."}, {x: 1.5, y: 1.5, tooltip:"\u05e7\u05d5\u05e8\u05d0\u05d9\u05dd\u0020\u05dc\u05d9 Dvora."}, {x: 2, y: 9, tooltip:"My name is \u05e8\u05d1\u05e7\u05d4\u0020\u05d1\u05ea\u0020\u05de\u05e9\u05d4."}, {x: 5, y: 0.3, tooltip:"\u05e7\u05d5\u05e8\u05d0\u05d9\u05dd\u0020\u05dc\u05d9 Dvora."}]);
+				chart1.addSeries("Series B.", [{x: 0.3, y: 8, tooltip:"My name is \u05e8\u05d1\u05e7\u05d4\u0020\u05d1\u05ea\u0020\u05de\u05e9\u05d4."}, {x: 4, y: 6, tooltip: "Custom tooltip"}, {x: 5.5, y: 2, tooltip:"\u05e7\u05d5\u05e8\u05d0\u05d9\u05dd\u0020\u05dc\u05d9 Dvora."}]);
+				var anim1a = new dc.action2d.Magnify(chart1, "default");
+				var anim1b = new dc.action2d.Tooltip(chart1, "default");
+				chart1.render();
+				legend1 = new dojox.charting.widget.Legend({chart: chart1, horizontal: false}, "legend1");
+
+				chart3 = new dc.Chart("test3",{textDir:"auto", title:"\u05d6\u05d4\u05d5\u0020\u05ea\u05e8\u05e9\u05d9\u05dd\u0020\u05de\u05d4\u05de\u05dd."});
+				chart3.setTheme(dc.themes.PlotKit.green);
+				chart3.addAxis("y", {vertical: true, fixLower: "major", fixUpper: "major",
+					labels: [
+						{value: 1, text: "one."},
+						{value: 2, text: "\u05e9\u05ea\u05d9\u05d9\u05dd."},
+						{value: 4, text: "\u05d4\u05ea\u05d7\u05dc\u05d4 end."}
+					]	
+				});
+				chart3.addPlot("default", {type: "Columns", gap: 2, htmlLabels:false});
+				chart3.addSeries("\u05e1\u05d3\u05e8\u05d4\u0020\u05d0\u0027.", [1, 2, 3, 4, 5], {stroke: {color: "black"}, fill: "red"});
+				chart3.addSeries("Series B.", [{y:5, tooltip:"My name is \u05e8\u05d1\u05e7\u05d4\u0020\u05d1\u05ea\u0020\u05de\u05e9\u05d4."}, {y:4, tooltip:"My name is \u05e8\u05d1\u05e7\u05d4\u0020\u05d1\u05ea\u0020\u05de\u05e9\u05d4."}, {y:3, tooltip:"My name is \u05e8\u05d1\u05e7\u05d4\u0020\u05d1\u05ea\u0020\u05de\u05e9\u05d4."}, {y:2, tooltip:"My name is \u05e8\u05d1\u05e7\u05d4\u0020\u05d1\u05ea\u0020\u05de\u05e9\u05d4."}, {y:1, tooltip:"My name is \u05e8\u05d1\u05e7\u05d4\u0020\u05d1\u05ea\u0020\u05de\u05e9\u05d4."}], {stroke: {color: "black"}, fill: "blue"});
+				var anim3a = new dc.action2d.Highlight(chart3, "default");
+				var anim3b = new dc.action2d.Tooltip(chart3, "default");
+				chart3.render();
+				legend3 = new dojox.charting.widget.Legend({chart: chart3, horizontal: false}, "legend3");
+
+				chart6 = new dc.Chart("test6",{title:"\u05d6\u05d4\u05d5\u0020\u05ea\u05e8\u05e9\u05d9\u05dd\u0020\u05de\u05d4\u05de\u05dd.",textDir:"auto"});
+				chart6.setTheme(dc.themes.PlotKit.green);
+				chart6.addAxis("x",{
+					labels: [
+						//{value: 0, text: "zero"},
+						{value: 2, text: "\u05e9\u05ea\u05d9\u05d9\u05dd."},
+						{value: 4, text: "four."}
+					]
+					, title:"\u05e6\u05d9\u05e8 x."
+					, titleGap: 20
+					, titleFont: "normal normal normal 10pt Arial"
+					, titleOrientation: "away"
+			});
+				chart6.addAxis("y", {vertical: true,
+					labels: [
+						{value: 1, text: "one."},
+						{value: 2, text: "\u05e9\u05ea\u05d9\u05d9\u05dd."},
+						{value: 4, text: "\u05d4\u05ea\u05d7\u05dc\u05d4 end."}
+					],
+					title:"\u05e6\u05d9\u05e8 y."
+
+				
+			});
+				chart6.addPlot("default", {type: "ClusteredColumns", gap: 10});
+				chart6.addPlot("grid", {type: "Grid"});
+				chart6.addSeries("\u05e1\u05d3\u05e8\u05d4\u0020\u05d0\u0027.", [{y:2, tooltip:"I work at \u05d9\u05d1\u05de in Israel."}, {y:1, tooltip:"I work at \u05d9\u05d1\u05de in Israel."}, {y:0.5, tooltip:"I work at \u05d9\u05d1\u05de in Israel."},{y: -1, tooltip:"I work at \u05d9\u05d1\u05de in Israel."},{y: -2,tooltip:"\u05d0\u05e0\u05d9\u0020\u05e2\u05d5\u05d1\u05d3\u05ea\u0020\u05d1\u002d IBM \u05d9\u05e9\u05e8\u05d0\u05dc."}], {stroke: {color: "black"}, fill: "red"});
+				chart6.addSeries("Series B.", [{y: -2,tooltip:"\u05d0\u05e0\u05d9\u0020\u05e2\u05d5\u05d1\u05d3\u05ea\u0020\u05d1\u002d IBM \u05d9\u05e9\u05e8\u05d0\u05dc."}, {y:-1,tooltip:"\u05d0\u05e0\u05d9\u0020\u05e2\u05d5\u05d1\u05d3\u05ea\u0020\u05d1\u002d IBM \u05d9\u05e9\u05e8\u05d0\u05dc."}, {y:-0.5,tooltip:"\u05d0\u05e0\u05d9\u0020\u05e2\u05d5\u05d1\u05d3\u05ea\u0020\u05d1\u002d IBM \u05d9\u05e9\u05e8\u05d0\u05dc."}, {y:1,tooltip:"\u05d0\u05e0\u05d9\u0020\u05e2\u05d5\u05d1\u05d3\u05ea\u0020\u05d1\u002d IBM \u05d9\u05e9\u05e8\u05d0\u05dc."}, {y:2,tooltip:"\u05d0\u05e0\u05d9\u0020\u05e2\u05d5\u05d1\u05d3\u05ea\u0020\u05d1\u002d IBM \u05d9\u05e9\u05e8\u05d0\u05dc."}], {stroke: {color: "black"}, fill: "blue"});
+				chart6.addSeries("Series C", [1, 0.5, -1, -2, -3], {stroke: {color: "black"}, fill: "green"});
+				var anim6a = new dc.action2d.Highlight(chart6, "default", {
+					duration: dur,
+					easing:   dojo.fx.easing.sineOut
+				});
+				var anim6b = new dc.action2d.Shake(chart6, "default");
+				var anim6c = new dc.action2d.Tooltip(chart6, "default");
+				chart6.render();
+				legend6 = new dojox.charting.widget.Legend({chart: chart6}, "legend6");
+
+				chart9 = new dc.Chart("test9", {textDir:"", title:"This is some \u05ea\u05e8\u05e9\u05d9\u05dd."});
+				chart9.setTheme(dc.themes.PlotKit.green);
+				chart9.addPlot("default", {type: "Bubble", shadows: {dx: 2, dy: 2, dw: 2}});
+				chart9.addAxis("x", {min: 0, max: 6, majorTick: {stroke: "black", length: 3}, minorTick: {stroke: "gray", length: 3},
+					labels: [
+						{value: 1, text: "one."},
+						{value: 2, text: "\u05e9\u05ea\u05d9\u05d9\u05dd."},
+						{value: 4, text: "\u05d4\u05ea\u05d7\u05dc\u05d4 end."}
+					]	});
+				chart9.addAxis("y", {vertical: true, min: 0, max: 10, majorTick: {stroke: "black", length: 3}, minorTick: {stroke: "gray", length: 3},
+					labels: [
+						{value: 1, text: "one."},
+						{value: 2, text: "\u05e9\u05ea\u05d9\u05d9\u05dd."},
+						{value: 4, text: "\u05d4\u05ea\u05d7\u05dc\u05d4 end."}
+					]	});
+				chart9.addSeries("\u05e1\u05d3\u05e8\u05d4\u0020\u05d0\u0027.", [{x: 0.5, y: 5, size: 1.4}, {x: 1.5, y: 1.5, size:4.5}, {x: 2, y: 9, size:1.5}, {x: 5, y: 0.3, size:0.8}],
+					{stroke: {color: "black"}, fill: "red"});
+				chart9.addSeries("Series B.", [{x: 0.3, y: 8, size: 2.5, tooltip:"My name is \u05e8\u05d1\u05e7\u05d4\u0020\u05d1\u05ea\u0020\u05de\u05e9\u05d4."}, {x: 4, y: 6, size:1.1, tooltip:"\u05d0\u05e0\u05d9\u0020\u05e2\u05d5\u05d1\u05d3\u05ea\u0020\u05d1\u002d IBM \u05d9\u05e9\u05e8\u05d0\u05dc."}, {x: 5.5, y: 2, size: 3.2, tooltip:"I work at \u05d9\u05d1\u05de in Israel."}],
+					{stroke: {color: "black"}, fill: "blue"});
+				var anim9a = new dc.action2d.Magnify(chart9, "default", {
+					scale: 1.1
+				});
+				var anim9b = new dc.action2d.Highlight(chart9, "default");
+				var anim9c = new dc.action2d.Tooltip(chart9, "default");
+				chart9.render();
+				legend9 = new dojox.charting.widget.Legend({chart: chart9, horizontal: false}, "legend9");
+
+				chart10 = new dc.Chart("test10", {title:"Pie.",textDir:"rtl"});
+				chart10.setTheme(dc.themes.PlotKit.green);
+				chart10.addPlot("default", {
+					type: "Pie", 
+					font: "normal normal 11pt Tahoma", 
+					fontColor: "black", 
+					labelOffset: -30,
+					radius: 150,
+					startAngle: 45
+				});
+				chart10.addSeries("\u05e1\u05d3\u05e8\u05d4\u0020\u05d0\u0027.", [
+					{y: 4, text: "My color is - \u05d0\u05d3\u05d5\u05dd.",   color: "red",   stroke: "black", tooltip: "\u05d4\u05e6\u05d1\u05e2\u0020\u05e9\u05dc\u05d9\u0020\u05d4\u05d5\u05d0: red, \u05d5\u05d0\u05e0\u05d9\u0020\u05ea\u05d5\u05e4\u05e1 50% \u05de\u05d4\u05e2\u05d5\u05d2\u05d4!!!"},
+					{y: 2, text: "\u05d4\u05e6\u05d1\u05e2\u0020\u05e9\u05dc\u05d9\u0020\u05d4\u05d5\u05d0: green.", color: "green", stroke: "black", tooltip: "Green is \u05d4\u05e6\u05d1\u05e2\u0020\u05d4\u05d0\u05d4\u05d5\u05d1\u0020\u05e2\u05dc\u05d9, because that's the color of my team!!"},
+					{y: 1, text: "Blue.",  color: "blue",  stroke: "black", tooltip: "I am feeling Blue!"},
+					{y: 1, text: "Other.", color: "white", stroke: "black", tooltip: "Mighty <strong>\u05d7\u05d6\u05e7</strong><br>With two lines!"}
+				]);
+				var anim10a = new dc.action2d.MoveSlice(chart10, "default");
+				var anim10b = new dc.action2d.Highlight(chart10, "default");
+				var anim10c = new dc.action2d.Tooltip(chart10, "default");
+				chart10.render();
+				legend10 = new dojox.charting.widget.Legend({chart: chart10}, "legend10");
+			};
+
+			dojo.addOnLoad(function(){
+				makeObjects();
+
+				doh.register("parse", function(){
+					dojo.parser.parse();
+				});
+
+				doh.register("test textDir", [
+					{
+						name: "initial.",
+
+						runTest: function(){
+							doh.is("rtl", chart1.textDir, "textDir of : chart1");
+							doh.is("rtl", legend1.textDir, "textDir of : legend1");
+							
+							doh.is("auto", chart3.textDir, "textDir of : chart3");
+							doh.is("auto", legend3.textDir, "textDir of : legend3");
+							
+							doh.is("auto", chart6.textDir, "textDir of : chart6");
+							doh.is("auto", legend6.textDir, "textDir of : legend6");
+							
+							doh.is("ltr", chart9.textDir, "textDir of : chart9");
+							doh.is("ltr", legend9.textDir, "textDir of : legend9");
+							
+							doh.is("rtl", chart10.textDir, "textDir of : chart10");
+							doh.is("rtl", legend10.textDir, "textDir of : legend10");
+						}
+					}	
+				]);						
+				doh.run();
+			});
+
+		</script>
+	</head>
+	<body class="claro">
+	<h1>Event 2D</h1>
+	<!--<p><button onclick="makeObjects();">Go</button></p>-->
+	<p>Hover over markers, bars, columns, slices, and so on.</p>
+	<h2>1: textDir = "rtl"</h2>
+	<div id="test1" style="width: 500px; height: 300px;"></div>
+	<div id="legend1"></div>
+	<h2>2: textDir = "auto"</h2>
+	<div id="test3" style="width: 500px; height: 300px;"></div>
+	<div id="legend3"></div>
+	<h2>3: textDir = "auto"</h2>
+	<div id="test6" style="width: 500px; height: 300px;"></div>
+	<div id="legend6"></div>
+	<h2>4: textDir inherited from UI</h2>
+	<div id="test9" style="width: 500px; height: 300px;"></div>
+	<div id="legend9"></div>
+	<h2>5: textDir = "rtl"</h2>
+	<div id="test10" style="width: 500px; height: 500px;"></div>
+	<div id="legend10"></div>
+	<p>That's all Folks!</p>
+	</body>
+</html>

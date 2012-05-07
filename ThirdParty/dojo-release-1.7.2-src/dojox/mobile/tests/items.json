@@ -1,0 +1,7 @@
+{
+  items: [
+	{ title:'Top 10 news stories', href:'http://dojotoolkit.org/' },
+	{ title:'Web applications with GFX', href:'http://dojotoolkit.org/' },
+	{ title:'Explores advanced topics', href:'http://dojotoolkit.org/' }
+  ]
+}

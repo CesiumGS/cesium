@@ -1,0 +1,463 @@
+<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+<title>dojox.gfx: Career Aptitude Test</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+</style>
+<script type="text/javascript" src="../../../dojo/dojo.js"></script>
+
+<!--
+<script type="text/javascript" src="../Mover.js"></script>
+<script type="text/javascript" src="../Moveable.js"></script>
+<script type="text/javascript" src="../move.js"></script>
+<script type="text/javascript" src="../fx.js"></script>
+<script type="text/javascript" src="../shape.js"></script>
+-->
+
+<script type="text/javascript">
+
+dojo.require("dojox.gfx");
+dojo.require("dojox.gfx.move");
+dojo.require("dojox.gfx.fx");
+dojo.require("dojo.colors");
+dojo.require("dojo.fx");
+
+var g = dojox.gfx, m = g.matrix;
+
+var container, surface, surface_size,
+	vat, freezer, broiler, score, startTime, endTime;
+
+var totalItems = 10, goodItems = 0, badItems = 0;
+
+var radius = 30,		// pixels
+	slowRate = 10,		// speed in ms per pixel
+	fastRate = 2,		// speed in ms per pixel
+	freezeTime = 5000,	// ms
+	frostTime = 2000,	// ms
+	broilTime = 5000,	// ms
+	burnTime = 2000,	// ms
+	pulseTime = 200;	// ms
+	
+function getRand(from, to){
+	return Math.random() * (to - from) + from;
+}
+
+function inRect(rect, crd){
+	return	rect.x <= crd.x && crd.x < rect.x + rect.width &&
+			rect.y <= crd.y && crd.y < rect.y + rect.height;
+}
+
+function getCenter(circle){
+	var shape = circle.getShape(), matrix = circle.getTransform();
+	return m.multiplyPoint(matrix ? matrix : m.identity, shape.cx, shape.cy);
+}
+
+function getDuration(x1, y1, x2, y2, rate){
+	return Math.floor(Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)) * rate);
+}
+
+function updateScore(){
+	var shape = score.getShape();
+	endTime = (new Date()).getTime();
+	shape.text = goodItems + " item" + (goodItems != 1 ? "s" : "") + 
+		" in " + ((endTime - startTime) / 1000) + "s"
+	score.setShape(shape);
+	
+	if(goodItems + badItems != totalItems){ return; }
+	
+	var rating = goodItems / (endTime - startTime) * 60000 * (40 - radius) / 10;
+	dojo.byId("result_pass").style.display = badItems || rating < 5 ? "none" : "";
+	dojo.byId("result_dollar").innerHTML = rating.toFixed(2);
+	dojo.byId("result_but").style.display = badItems ? "" : "none";
+	dojo.byId("result_waste").innerHTML = (badItems * 5).toFixed(2);
+	dojo.byId("result_and").style.display = badItems ? "none" : "";
+	dojo.byId("result_fail").style.display = badItems ? "" : "none";
+	if(!badItems){
+		var pos;
+		if(rating < 1){
+			pos = "Junior Speciment Flipper";
+		}else if(rating < 2){
+			pos = "Senior Speciment Flipper";
+		}else if(rating < 4){
+			pos = "Shift Supervisor";
+		}else if(rating < 6){
+			pos = "Joint Manager";
+		}else if(rating < 8){
+			pos = "Night Director";
+		}else if(rating < 10){
+			pos = "Morning Director";
+		}else if(rating < 12){
+			pos = "Vice President";
+		}else if(rating < 14){
+			pos = "Senior Vice President";
+		}else if(rating < 16){
+			pos = "Chief of Something";
+		}else{
+			pos = "Nominal President";
+		}
+		dojo.byId("result_pos").innerHTML = pos;
+	}
+	var anim1 = dojo.fx.wipeOut({
+			node: "gfx_holder",
+			duration: 500,
+			delay: 1000
+		}),
+		anim2 = dojo.fx.wipeIn({
+			node: "result",
+			duration: 500,
+			delay: 1000
+		});
+	anim1.play();
+	anim2.play();
+}
+
+function showStatus(circle, text){
+	var c = getCenter(circle),
+		status = surface.createText({});
+	status.moveToBack().setFill(new dojo.Color([0, 0, 0, 0.5]))
+		.setFont({family: "serif", variant: "small-caps", weight: "bold"})
+		.setShape({x: c.x, y: c.y, text: text, align: "middle"});
+	var anim = dojo.fx.combine([
+		g.fx.animateFill({
+			shape:		status,
+			duration:	3000,
+			color:		{end: "transparent"}
+		}),
+		g.fx.animateTransform({
+			shape:		status,
+			duration:	3000,
+			transform:	[
+				{name: "translate", start: [0, 0], end: [0, 300]},
+				{name: "original"}
+			]
+		})
+	]);
+	dojo.connect(anim, "onEnd", function(){ status.removeShape(); });
+	anim.play();
+}
+
+function moveToPile(shape, bad){
+	if(shape.moveable){
+		shape.moveable.destroy();
+		delete shape.moveable;
+	}
+	
+	var oldColor = shape.getFill(), c = getCenter(shape),
+		newX = 80 + (bad ? badItems++ : goodItems++) * 2.25 * 10,
+		newY = bad ? 445 : 415,
+		duration = getDuration(newX, newY, c.x, c.y, fastRate),
+		anim = dojo.fx.chain([
+			g.fx.animateFill({
+				shape: shape,
+				duration: 250,
+				color: {end: "transparent"}
+			}),
+			g.fx.animateTransform({
+				shape: shape,
+				duration: duration,
+				transform:	[
+					{name: "translate", start: [0, 0], end: [newX - c.x, newY - c.y]},
+					{name: "original"}
+				]
+			}),
+			g.fx.animateFill({
+				shape: shape,
+				duration: 250,
+				color: {end: oldColor}
+			}),
+			g.fx.animateTransform({
+				shape: shape,
+				duration: duration,
+				transform:	[
+					{name: "scaleAt", start: [1, newX, newY], end: [10 / radius, newX, newY]},
+					{name: "original"}
+				]
+			})
+		]);
+	dojo.connect(anim, "onEnd", updateScore);
+	anim.play();
+}
+
+function repeatMove(){
+	var rect = vat.getShape(), c = getCenter(this),
+		x = getRand(rect.x + radius, rect.x + rect.width - radius),
+		y = getRand(rect.y + radius, rect.y + rect.height - radius),
+		duration = getDuration(x, y, c.x, c.y, slowRate);
+	this.anim = g.fx.animateTransform({
+		duration:	duration,
+		shape: 		this,
+		transform:	[
+			{name: "translate", start: [0, 0], end: [x - c.x, y - c.y]},
+			{name: "original"}
+		]
+	});
+	dojo.connect(this.anim, "onEnd", this, repeatMove);
+	this.anim.play();
+}
+
+function repeatFrost(){
+	this.status = "frozen";
+	this.setStroke({color: "orange", width: 3});
+	showStatus(this, "Ready");
+	this.anim = g.fx.animateFill({
+		duration:	frostTime,
+		shape:		this,
+		color:		{end: "white"}
+	});
+	// calculate a shift
+	var dx = getRand(-radius, radius) / 2, dy = getRand(-radius, radius) / 2, sign = 1;
+	this.applyLeftTransform({dx: -dx / 2, dy: -dy / 2});
+	dojo.connect(this.anim, "onAnimate", this, function(){
+		this.applyLeftTransform({dx: sign * dx, dy: sign * dy});
+		sign = -sign;
+	});
+	dojo.connect(this.anim, "onEnd", this, function(){
+		showStatus(this, "Frozen");
+		moveToPile(this, true);
+	});
+	this.anim.play();
+}
+
+function repeatFreeze(){
+	this.status = "freezing";
+	this.setStroke({color: "black", width: 3});
+	this.anim = g.fx.animateFill({
+		duration:	freezeTime,
+		shape:		this,
+		color:		{end: "blue"}
+	});
+	// calculate a shift
+	var dx = getRand(-radius, radius) / 2, dy = getRand(-radius, radius) / 2, sign = 1;
+	this.applyLeftTransform({dx: -dx / 2, dy: -dy / 2});
+	dojo.connect(this.anim, "onAnimate", this, function(){
+		this.applyLeftTransform({dx: sign * dx, dy: sign * dy});
+		sign = -sign;
+	});
+	dojo.connect(this.anim, "onEnd", this, repeatFrost);
+	this.anim.play();
+}
+
+function repeatBurn(){
+	this.status = "burnt";
+	this.setStroke({color: "orange", width: 3});
+	showStatus(this, "Done");
+	var anim1 = g.fx.animateFill({
+		duration:	burnTime,
+		shape:		this,
+		color:		{end: "black"}
+	});
+	var anim2 = new dojo.Animation({
+		duration:	freezeTime,
+		curve:		[0, freezeTime]
+	});
+	var matrix = this.getTransform(), c = getCenter(this);
+	dojo.connect(anim2, "onAnimate", this, function(val){
+		var scale = (val % pulseTime) / pulseTime / 4 + 1;
+		this.setTransform([m.scaleAt(scale, c), matrix]);
+	});
+	this.anim = dojo.fx.combine([anim1, anim2]);
+	dojo.connect(this.anim, "onEnd", this, function(){
+		showStatus(this, "Burnt");
+		moveToPile(this, true);
+	});
+	this.anim.play();
+}
+
+function repeatBroil(){
+	this.status = "broiling";
+	this.setStroke({color: "black", width: 3});
+	var anim1 = g.fx.animateFill({
+		duration:	broilTime,
+		shape:		this,
+		color:		{end: "red"}
+	});
+	var anim2 = new dojo.Animation({
+		duration:	freezeTime,
+		curve:		[0, freezeTime]
+	});
+	var matrix = this.getTransform(), c = getCenter(this);
+	dojo.connect(anim2, "onAnimate", this, function(val){
+		var scale = (val % pulseTime) / pulseTime / 4 + 1;
+		this.setTransform([m.scaleAt(scale, c), matrix]);
+	});
+	this.anim = dojo.fx.combine([anim1, anim2]);
+	dojo.connect(this.anim, "onEnd", this, repeatBurn);
+	this.anim.play();
+}
+
+function drag(mover){
+	var shape = mover.shape;
+	shape.anim.stop();
+	shape.anim = null;
+}
+
+function drop(mover){
+	var c = getCenter(mover.shape);
+	do{	// break block
+		if(inRect(vat.getShape(), c)){
+			if(mover.shape.status == "fresh"){
+				repeatMove.call(mover.shape);
+				return;
+			}
+			break;
+		}
+		if(inRect(freezer.getShape(), c)){
+			if(mover.shape.status == "fresh"){
+				repeatFreeze.call(mover.shape);
+				return;
+			}
+			break;
+		}
+		if(inRect(broiler.getShape(), c)){
+			if(mover.shape.status == "frozen"){
+				repeatBroil.call(mover.shape);
+				return;
+			}
+			break;
+		}
+		if(mover.shape.status == "burnt"){
+			moveToPile(mover.shape, false);	// good
+			return;
+		}
+	}while(false);
+	moveToPile(mover.shape, true);	// bad
+}
+
+function makePatties(n){
+	var rect = vat.getShape();
+	for(var i = 0; i < n; ++i){
+		var cx = getRand(rect.x + radius, rect.x + rect.width - radius),
+			cy = getRand(rect.y + radius, rect.y + rect.height - radius),
+			patty = surface.createCircle({
+				cx: cx, cy: cy, r: radius
+			}).setFill("green").setStroke({
+				color: "black",
+				width: 3
+			});
+		patty.status = "fresh";
+		patty.moveable = new g.Moveable(patty);
+		repeatMove.call(patty);
+	}
+}
+
+function initGfx(){
+	container = dojo.byId("gfx_holder");
+	surface = g.createSurface(container, 500, 500);
+	surface_size = {width: 500, height: 500};
+	
+	vat = surface.createRect({x: 10, y: 210, width: 480, height: 180})
+		.setStroke({color: "black", width: 7, join: "round"});
+	surface.createText({x: 15, y: 230, text: "Ye Olde Vat v3.2"})
+		.setFill("black");
+			
+	freezer = surface.createRect({x: 10, y: 10, width: 230, height: 180})
+		.setStroke({color: "blue", width: 7, join: "round"});
+	surface.createText({x: 15, y: 30, text: "Deep Freeze 7000"})
+		.setFill("blue");
+			
+	broiler = surface.createRect({x: 260, y: 10, width: 230, height: 180})
+		.setStroke({color: "red", width: 7, join: "round"});
+	surface.createText({x: 265, y: 30, text: "Hellfire Broiler A4"})
+		.setFill("red");
+			
+	surface.createText({x: 15, y: 420, text: "Good:"})
+		.setFont({weight: "bold"}).setFill("green");
+	surface.createText({x: 15, y: 450, text: "Bad:"})
+		.setFont({weight: "bold"}).setFill("red");
+	surface.createText({x: 15, y: 480, text: "Total:"})
+		.setFont({weight: "bold"}).setFill("black");
+	score = surface.createText({x: 80, y: 485, text: "0"})
+		.setFont({weight: "bold", size: "24pt"}).setFill("black");
+	surface.createText({x: 120, y: 460, text: "DROP HERE!"})
+		.setFont({size: "50px"})
+		.setFill(new dojo.Color([0, 0, 0, 0.1])).moveToBack();
+
+	dojo.subscribe("/gfx/move/start", drag);
+	dojo.subscribe("/gfx/move/stop",  drop);
+	makePatties(totalItems);
+	
+	startTime = (new Date()).getTime();
+
+	// cancel text selection and text dragging
+	dojo.connect(container, "ondragstart",   dojo, "stopEvent");
+	dojo.connect(container, "onselectstart", dojo, "stopEvent");
+}
+
+//dojo.addOnLoad(initGfx);
+
+function startTest(level){
+	radius = level;
+	var anim = dojo.fx.wipeOut({
+		node: "explanation",
+		duration: 500
+	});
+	dojo.connect(anim, "onEnd", function(){
+		dojo.byId("gfx_holder").style.display = "";
+		initGfx();
+	});
+	anim.play();
+}
+
+</script>
+
+<style type="text/css">
+.movable { cursor: pointer; }
+</style>
+
+</head>
+<body>
+<h1>dojox.gfx: Career Aptitude Test</h1>
+<p>Warning: Canvas renderer doesn't implement event handling.</p>
+
+<div id="explanation">
+<p>Thank you for your interest in <em>"I can't believe it's manure" Eateries&trade;</em> 
+and for submitting your resume for our review. While this is an automated response, 
+please be assured that every resume is reviewed by us, and forwarded to the hiring
+managers if the skills fit our needs.</p>
+<p>In order order to evaluate your skills we ask you to take a career aptitude test. 
+You will have an exciting chance to operate one of our state-of-the-art workstations 
+remotely. Don't forget:
+</p>
+<ol>
+	<li>Fish out a live speciment of <em>dung-42</em> from the container.</li>
+	<li>Freeze it until you see an orange glow to kill the elements and make it less green.</li>
+	<li>Broil it until you see the orange glow again, and drop it on the table below.</li>
+	<li>You have to process all items without wasting resources and in minimal time.</li>
+</ol>
+<p>Warnings: don't overfreeze, don't overheat, don't drop the speciment, don't change the sequence, 
+don't touch the speciment in heating and freezing chambers until it is's ready.</p>
+<p>Use your head and your mouse!</p>
+<p>Please select the desired position:</p>
+<table>
+	<tr>
+		<td>Workstation Supervisor&nbsp;</td>
+		<td><button onclick="startTest(30);">Apply</button></td>
+	</tr>
+	<tr>
+		<td>Shift Director&nbsp;</td>
+		<td><button onclick="startTest(20);">Apply</button></td>
+	</tr>
+	<tr>
+		<td>Vice President #49653&nbsp;</td>
+		<td><button onclick="startTest(10);">Apply</button></td>
+	</tr>
+</table>
+</div>
+
+<div id="gfx_holder" style="width: 500px; height: 500px; display: none;"></div>
+
+<div id="result" style="display: none;">
+<p id="result_pass"><strong>Impressive! Please contact us immediately.</strong></p>
+<p>You have made $<span id="result_dollar"></span> per minute for us.
+<span id="result_but">But you wasted $<span id="result_waste"></span> in materials.</span>
+<span id="result_and">It qualifies you to be a <em id="result_pos"></em>.</span>
+</p>
+<p id="result_fail">Should our hiring managers have an interest in your skills and
+capabilities, they will contact you directly. In addition, we will keep
+your resume on file for one year.</p>
+</div>
+
+</body>
+</html>

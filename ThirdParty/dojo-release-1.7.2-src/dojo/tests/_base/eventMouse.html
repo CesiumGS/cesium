@@ -1,0 +1,114 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+
+<html>
+<head>
+	<title>mouse events test</title>
+	<style type="text/css">
+		@import "../../resources/dojo.css";
+
+		div {
+			margin: 10px;
+			padding: 10px;
+			border: medium inset gray;
+		}
+
+		/* highlight on hover so it's clear where robot has moved the mouse */
+		div, h1 {
+			background-color: white;
+     	}
+		div:hover, h1:hover {
+			background-color: cyan;
+		}
+
+		/* apply width to top level nodes, not using body > * since it doesn't work on IE6 */
+		.top {
+			width: 500px;
+		}
+	</style>
+	
+	<script type="text/javascript" djConfig="isDebug: true" src="../../dojo.js"></script>
+	
+	<script type="text/javascript">
+		dojo.addOnLoad(function() {
+			// Log of events, used by automated test harness
+			moveEvents = [];
+			clickEvents = [];
+			downEvents = [];
+
+			dojo.connect(dojo.byId("outer"), "onmouseenter", function(evt){
+				moveEvents.push({target: evt.target.id, event: "mouseenter"});
+				console.log(dojo.toJson(moveEvents[moveEvents.length-1]));
+			});
+			dojo.connect(dojo.byId("outer"), "onmouseleave", function(evt){
+				moveEvents.push({target: evt.target.id, event: "mouseleave"});
+				console.log(dojo.toJson(moveEvents[moveEvents.length-1]));
+			});
+
+			handles = dojo.map(["outer", "middle", "inner1", "inner2"], function(id){
+				var node = dojo.byId(id);
+				return [
+					dojo.connect(node, "onclick", function(evt){
+						clickEvents.push({
+							target: evt.target.id,
+							currentTarget: evt.currentTarget.id,
+							event: "click"
+						});
+						console.log(dojo.toJson(clickEvents[clickEvents.length-1]));
+						if(evt.currentTarget.id == "middle" || evt.currentTarget.id == "outer"){
+							dojo.stopEvent(evt);
+						}
+					}),						/*
+
+					dojo.connect(node, "onclick", function(evt){
+						// repeated click event just to make sure that 2 events work
+						clickEvents.push({
+							target: evt.target.id,
+							currentTarget: evt.currentTarget.id,
+							event: "click"
+						});
+						console.log("repeated click event: " + dojo.toJson(clickEvents[clickEvents.length-1]));
+						if(evt.currentTarget.id == "middle" || evt.currentTarget.id == "outer"){
+							dojo.stopEvent(evt);
+						}
+					}),
+					*/
+					dojo.connect(node, "onmousedown", function(evt){
+						if(evt.type == "unload"){
+							console.error("onmousedown handler got onunload event");
+							debugger;
+							return;
+						}
+						downEvents.push({
+							target: evt.target.id,
+							currentTarget: evt.currentTarget.id,
+							event: "mousedown",
+							isLeft: dojo.mouseButtons.isLeft(evt),
+							isMiddle: dojo.mouseButtons.isMiddle(evt),
+							isRight: dojo.mouseButtons.isRight(evt)
+						});
+						console.log(dojo.toJson(downEvents[downEvents.length-1]));
+						if(evt.currentTarget.id == "middle" || evt.currentTarget.id == "outer"){
+							dojo.stopEvent(evt);
+						}
+					})
+				];
+			});
+		});
+	</script>
+</head>
+<body>
+	<h1 id="header" class="top">mouse events test</h1>
+
+	<div id="outer" class="top">
+		<span id="outerLabel">outer</span>
+		<div id="middle">
+			<span id="middleLabel">middle</span>
+			<div id="inner1">inner 1</div>
+			<div id="labelBetweenInners">between inner 1 and inner 2</div>
+			<div id="inner2">inner 2</div>
+		</div>
+	</div>
+
+	<div id="afterOuter" class="top">after outer</div>
+</body>
+</html>

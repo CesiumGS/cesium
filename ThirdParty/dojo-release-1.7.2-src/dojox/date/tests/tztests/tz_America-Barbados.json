@@ -1,0 +1,32 @@
+({
+	name: "date.timezone.America-Barbados",
+	runTest: function(t){
+		var tz = "America/Barbados";
+		doh.checkDate({tzOffset: 238.466666666667, tzAbbr: "LMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: 238.466666666667, tzAbbr: "LMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: 238.466666666667, tzAbbr: "LMT"}, -1451678493000, tz, 1);
+		doh.checkDate({tzOffset: 238.466666666667, tzAbbr: "BMT"}, -1451678492000, tz, 1);
+		doh.checkDate({tzOffset: 238.466666666667, tzAbbr: "BMT"}, -1199217693000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "AST"}, -1199217692000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "AST"}, 234943199000, tz, 1);
+		doh.checkDate({tzOffset: 180, tzAbbr: "ADT"}, 234943200000, tz, 1);
+		doh.checkDate({tzOffset: 180, tzAbbr: "ADT"}, 244616399000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "AST"}, 244616400000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "AST"}, 261554399000, tz, 1);
+		doh.checkDate({tzOffset: 180, tzAbbr: "ADT"}, 261554400000, tz, 1);
+		doh.checkDate({tzOffset: 180, tzAbbr: "ADT"}, 276065999000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "AST"}, 276066000000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "AST"}, 293003999000, tz, 1);
+		doh.checkDate({tzOffset: 180, tzAbbr: "ADT"}, 293004000000, tz, 1);
+		doh.checkDate({tzOffset: 180, tzAbbr: "ADT"}, 307515599000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "AST"}, 307515600000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "AST"}, 325058399000, tz, 1);
+		doh.checkDate({tzOffset: 180, tzAbbr: "ADT"}, 325058400000, tz, 1);
+		doh.checkDate({tzOffset: 180, tzAbbr: "ADT"}, 338705999000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "AST"}, 338706000000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "AST"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "AST"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "AST"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: 240, tzAbbr: "AST"}, 1246789800000, tz, 0);
+	}
+})

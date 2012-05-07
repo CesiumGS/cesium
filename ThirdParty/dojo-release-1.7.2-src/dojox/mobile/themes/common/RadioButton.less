@@ -1,0 +1,23 @@
+/* dojox.mobile.RadioButton */
+.mblRadioButton {
+	position: relative;
+	cursor: pointer;
+	outline: none;
+	-webkit-appearance: none;
+	-webkit-tap-highlight-color: rgba(255,255,255,0);
+	.mblRadioButton-styles;
+}
+.mblRadioButtonChecked,
+.mblRadioButton:checked {
+	.mblRadioButtonChecked-styles;
+	&::after {
+		position: absolute;
+		.mblRadioButtonChecked-after-styles;
+	}
+	&.mblRadioButtonSelected {
+		.mblRadioButtonChecked-Selected-styles;
+		&::after {
+			.mblRadioButtonChecked-Selected-after-styles;
+		}
+	}	
+}

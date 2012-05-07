@@ -1,0 +1,45 @@
+﻿<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" >
+<head>
+<title>Dojo Unified 2D Graphics</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+</style>
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+<!--<script type="text/javascript" src="../_base.js"></script>-->
+<!--<script type="text/javascript" src="../shape.js"></script>-->
+<!--<script type="text/javascript" src="../path.js"></script>-->
+<!--<script type="text/javascript" src="../vml.js"></script>-->
+<!--<script type="text/javascript" src="../svg.js"></script>-->
+<!--<script type="text/javascript" src="../silverlight.js"></script>-->
+<script type="text/javascript">
+dojo.require("dojox.gfx");
+
+createSurface = function(){
+	var surface = dojox.gfx.createSurface("test", 500, 500);
+	surface.whenLoaded(makeShapes);
+};
+
+makeShapes = function(surface){
+	var styles = ["none", "Solid", "ShortDash", "ShortDot", "ShortDashDot", "ShortDashDotDot", 
+		"Dot", "Dash", "LongDash", "DashDot", "LongDashDot", "LongDashDotDot"];
+	var font = "normal normal normal 10pt Arial";	// CSS font style
+	var y_offset = dojox.gfx.normalizedLength("4pt");
+	for(var i = 0; i < styles.length; ++i){
+		var y = 20 + i * 20;
+		surface.createText({x: 140, y: y + y_offset, text: styles[i], align: "end"}).setFont(font).setFill("black");
+		surface.createLine({x1: 150, y1: y, x2: 490, y2: y}).setStroke({style: styles[i], width: 3, cap: "round"});
+	}
+};
+
+dojo.addOnLoad(createSurface);
+
+</script>
+</head>
+<body>
+	<h1>dojox.gfx: Line style test</h1>
+<div id="test"></div>
+<p>That's all Folks!</p>
+</body>
+</html>

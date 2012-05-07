@@ -1,0 +1,31 @@
+{
+  "dojox.mobile.View": {
+    "dojox.mobile.Heading": {
+      "@back": "Home",
+      "@label": "view2.json",
+      "@moveTo": "foo"
+    },
+    "dojox.mobile.RoundRectCategory": {
+      "@label": "Transition Effects"
+    },
+    "dojox.mobile.RoundRectList": {
+      "dojox.mobile.ListItem": [{
+        "@icon": "images/i-icon-1.png",
+        "@label": "Slide",
+        "@moveTo": "foo",
+        "@transition": "slide"
+      }, {
+        "@icon": "images/i-icon-2.png",
+        "@label": "Flip",
+        "@moveTo": "foo",
+        "@transition": "flip"
+      }, {
+        "@icon": "images/i-icon-3.png",
+        "@label": "Fade",
+        "@moveTo": "foo",
+        "@transition": "fade"
+      }]
+    }
+  }
+}
+

@@ -1,0 +1,30 @@
+({
+	name: "date.timezone.Asia-Tokyo",
+	runTest: function(t){
+		var tz = "Asia/Tokyo";
+		doh.checkDate({tzOffset: -540, tzAbbr: "CJT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: -540, tzAbbr: "CJT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: -540, tzAbbr: "CJT"}, -1009875601000, tz, 1);
+		doh.checkDate({tzOffset: -540, tzAbbr: "JST"}, -1009875600000, tz, 1);
+		doh.checkDate({tzOffset: -540, tzAbbr: "JST"}, -683794801000, tz, 1);
+		doh.checkDate({tzOffset: -600, tzAbbr: "JDT"}, -683794800000, tz, 1);
+		doh.checkDate({tzOffset: -600, tzAbbr: "JDT"}, -672393601000, tz, 1);
+		doh.checkDate({tzOffset: -540, tzAbbr: "JST"}, -672393600000, tz, 1);
+		doh.checkDate({tzOffset: -540, tzAbbr: "JST"}, -654764401000, tz, 1);
+		doh.checkDate({tzOffset: -600, tzAbbr: "JDT"}, -654764400000, tz, 1);
+		doh.checkDate({tzOffset: -600, tzAbbr: "JDT"}, -640944001000, tz, 1);
+		doh.checkDate({tzOffset: -540, tzAbbr: "JST"}, -640944000000, tz, 1);
+		doh.checkDate({tzOffset: -540, tzAbbr: "JST"}, -620290801000, tz, 1);
+		doh.checkDate({tzOffset: -600, tzAbbr: "JDT"}, -620290800000, tz, 1);
+		doh.checkDate({tzOffset: -600, tzAbbr: "JDT"}, -609494401000, tz, 1);
+		doh.checkDate({tzOffset: -540, tzAbbr: "JST"}, -609494400000, tz, 1);
+		doh.checkDate({tzOffset: -540, tzAbbr: "JST"}, -588841201000, tz, 1);
+		doh.checkDate({tzOffset: -600, tzAbbr: "JDT"}, -588841200000, tz, 1);
+		doh.checkDate({tzOffset: -600, tzAbbr: "JDT"}, -578044801000, tz, 1);
+		doh.checkDate({tzOffset: -540, tzAbbr: "JST"}, -578044800000, tz, 1);
+		doh.checkDate({tzOffset: -540, tzAbbr: "JST"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: -540, tzAbbr: "JST"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: -540, tzAbbr: "JST"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: -540, tzAbbr: "JST"}, 1246789800000, tz, 0);
+	}
+})

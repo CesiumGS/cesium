@@ -1,0 +1,109 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>Test dojox.grid.Grid Expand Rows</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+	<style type="text/css">
+		@import "../resources/Grid.css";
+		body {
+			font-size: 0.9em;
+			font-family: Geneva, Arial, Helvetica, sans-serif;
+		}
+		.heading {
+			font-weight: bold;
+			padding-bottom: 0.25em;
+		}
+		
+		.bigHello {
+			height: 110px;
+			line-height: 110px;
+			text-align: center;
+			font-weight: bold;
+			font-size: 30px;
+		}	
+				
+		#grid { 
+			border: 1px solid #333;
+			height: 30em;
+		}
+	</style>
+	<script type="text/javascript" src="../../../dojo/dojo.js" 
+		djConfig="isDebug:false, parseOnLoad: true"></script>
+	<script type="text/javascript">
+		dojo.require("dijit.dijit");
+		dojo.require("dojox.grid.DataGrid");
+		dojo.require("dojo.parser");
+	</script>
+	<script type="text/javascript">
+		// inRow is an array of subRows. we hide the summary subRow except for every nth row
+		function onBeforeRow(inDataIndex, inRow) {
+			inRow[1].hidden = (!this.grid || !this.grid.expandedRows || !this.grid.expandedRows[inDataIndex]);
+		}
+		
+		var structure = {
+			onBeforeRow: onBeforeRow,
+			cells: [
+				[
+					{ name: 'Whatever', width: 4.5, get: getCheck, formatter: formatCheck, styles: 'text-align: center;' },
+					{name: 'Column 0', get: get},
+					{name: 'Column 1', get: get},
+					{name: 'Column 2', get: get},
+					{name: 'Column 3', get: get},
+					{name: 'Column 4', get: get}
+				],
+				[ { name: 'Detail', colSpan: 6, get: getDetail, formatter: formatDetail } ]
+			]
+		};
+		
+		// get can return data for each cell of the grid
+		function get(inRowIndex) {
+			return [this.index, inRowIndex].join(', ');
+		}
+		
+		function getDetail(inRowIndex) {
+			if (this.grid.expandedRows[inRowIndex]) {
+				return 'Hello World!';
+			} else {
+				return '';
+			}
+		}
+		
+		function formatDetail(value, inRowIndex){
+			if(value){
+				var n = (inRowIndex % 2);
+				switch (n) {
+					case 0:
+						return value;
+					default:
+						return '<div class="bigHello">' + value + '</div>';
+				}			
+			}
+			return value;
+		}
+		
+		function toggle(inIndex, inShow) {
+			grid.expandedRows[inIndex] = inShow;
+			grid.updateRow(inIndex);
+		}
+		
+		function getCheck(inRowIndex) {
+			if (!this.grid.expandedRows)
+				this.grid.expandedRows = [ ];
+			return {image: (this.grid.expandedRows[inRowIndex] ? 'open.gif' : 'closed.gif'),
+					show: (this.grid.expandedRows[inRowIndex] ? 'false' : 'true')};
+		}
+		
+		function formatCheck(value, inRowIndex){
+			return '<img src="images/' + value.image + '" onclick="toggle(' + inRowIndex + ', ' + value.show + ')" height="11" width="11">';
+		}
+	</script>
+</head>
+<body>
+	<div class="heading">dojox.grid.Grid Expand Row Example</div>
+
+	<div id="grid" jsid="grid" dojoType="dojox.grid._Grid"
+		structure="structure" rowCount="100000" autoWidth="true" rowSelector="20px"></div>
+
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot Tooltip Mouse Quirks Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"
+			djConfig="isDebug: true"></script>
+
+		<!-- functions to help test -->
+		<!-- script type="text/javascript" src="../helpers.js"></script -->
+
+		<script type="text/javascript">
+			dojo.require("dojo.parser");
+			dojo.require("dijit.robotx");
+			dojo.require("dojox.mobile");
+			dojo.require("dojox.mobile.IconContainer");
+	        dojo.require("doh.runner");
+
+			dojo.addOnLoad(function(){
+				doh.robot.initRobot("../test_iPad-Settings.html");
+
+				doh.register("dojox.mobile.Settings mouse tests", [
+					{
+						name: "Settings mouse tests",
+						timeout: 40000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							doh.robot.mouseMoveAt(dojo.query(".mblListItemAnchor", dijit.byId("dojox_mobile_ListItem_20").domNode)[0], 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dojo.query(".mblArrowButtonBody", dijit.byId("dojox_mobile_Heading_2").domNode)[0], 1000);
+							doh.robot.mouseClick({left: true}, 500);
+							
+							doh.robot.mouseMoveAt(dojo.query(".mblListItemAnchor", dijit.byId("dojox_mobile_ListItem_19").domNode)[0], 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dojo.query(".mblArrowButtonBody", dijit.byId("dojox_mobile_Heading_2").domNode)[0], 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dojo.query(".mblListItemAnchor", dijit.byId("dojox_mobile_ListItem_21").domNode)[0], 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dojo.query(".mblArrowButtonBody", dijit.byId("dojox_mobile_Heading_2").domNode)[0], 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dojo.query(".mblListItemAnchor", dijit.byId("dojox_mobile_ListItem_22").domNode)[0], 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dojo.query(".mblArrowButtonBody", dijit.byId("dojox_mobile_Heading_2").domNode)[0], 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dojo.query(".mblListItemAnchor", dijit.byId("dojox_mobile_ListItem_23").domNode)[0], 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dojo.query(".mblArrowButtonBody", dijit.byId("dojox_mobile_Heading_2").domNode)[0], 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dojo.query(".mblListItemAnchor", dijit.byId("dojox_mobile_ListItem_24").domNode)[0], 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dojo.query(".mblArrowButtonBody", dijit.byId("dojox_mobile_Heading_2").domNode)[0], 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dojo.query(".mblListItemAnchor", dijit.byId("dojox_mobile_ListItem_25").domNode)[0], 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dojo.query(".mblArrowButtonBody", dijit.byId("dojox_mobile_Heading_2").domNode)[0], 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dojo.query(".mblListItemAnchor", dijit.byId("dojox_mobile_ListItem_26").domNode)[0], 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dojo.query(".mblArrowButtonBody", dijit.byId("dojox_mobile_Heading_2").domNode)[0], 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dojo.query(".mblListItemAnchor", dijit.byId("dojox_mobile_ListItem_27").domNode)[0], 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dojo.query(".mblArrowButtonBody", dijit.byId("dojox_mobile_Heading_2").domNode)[0], 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dojo.query(".mblListItemAnchor", dijit.byId("dojox_mobile_ListItem_28").domNode)[0], 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dojo.query(".mblArrowButtonBody", dijit.byId("dojox_mobile_Heading_2").domNode)[0], 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dojo.query(".mblListItemAnchor", dijit.byId("dojox_mobile_ListItem_29").domNode)[0], 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dojo.query(".mblArrowButtonBody", dijit.byId("dojox_mobile_Heading_2").domNode)[0], 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dojo.query(".mblListItemAnchor", dijit.byId("dojox_mobile_ListItem_30").domNode)[0], 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt(dojo.query(".mblArrowButtonBody", dijit.byId("dojox_mobile_Heading_2").domNode)[0], 1000);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.assertEqual("General",  dijit.byId("dojox_mobile_Heading_1").get("label"));
+							}), 500);
+							return d;
+						}
+					}
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

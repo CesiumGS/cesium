@@ -1,0 +1,14 @@
+({
+	name: "date.timezone.Pacific-Marquesas",
+	runTest: function(t){
+		var tz = "Pacific/Marquesas";
+		doh.checkDate({tzOffset: 558, tzAbbr: "LMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: 558, tzAbbr: "LMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: 558, tzAbbr: "LMT"}, -1806676921000, tz, 1);
+		doh.checkDate({tzOffset: 570, tzAbbr: "MART"}, -1806676920000, tz, 1);
+		doh.checkDate({tzOffset: 570, tzAbbr: "MART"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: 570, tzAbbr: "MART"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: 570, tzAbbr: "MART"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: 570, tzAbbr: "MART"}, 1246789800000, tz, 0);
+	}
+})

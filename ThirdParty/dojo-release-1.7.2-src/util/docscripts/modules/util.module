@@ -1,0 +1,28 @@
+<?php
+
+function util_code_location() {
+  return '../../util/';
+}
+
+function util_project_name() {
+  return 'util';
+}
+
+function util_resource_name($namespace, $file) {
+  return $file;
+}
+
+function util_package_name($namespace, $file) {
+  //return;
+  $parts = explode('/', $file);
+  if ($parts[0] == '_base') {
+    return $namespace;
+  }
+  $file_parts = explode('.', array_pop($parts));
+  array_pop($file_parts);
+  array_push($parts, implode('.', $file_parts));
+  array_unshift($parts, $namespace);
+  return implode('.', $parts);
+}
+
+?>

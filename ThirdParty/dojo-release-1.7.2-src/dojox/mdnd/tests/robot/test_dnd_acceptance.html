@@ -1,0 +1,141 @@
+<html>
+	<head>
+		<title>Robot - Acceptance</title>
+		
+		<script type="text/javascript" 
+			src="../../../../dojo/dojo.js" 
+			djConfig="isDebug: true">
+		</script>
+		
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");	
+
+			dojo.addOnLoad(function(){			
+				
+				doh.robot.initRobot('../functionalTests/test_dnd_acceptance.html');
+				doh.register("test_dnd_acceptance", 
+					[
+						{
+							name: "dropAccepted",
+							timeout:10000,
+							runTest: function(){
+
+								// Tries to drag and drop an item between two dnd 
+								// area :
+								// 		- Item's type : 1
+								//		- Drop area accept types : 1 & 2
+								// -> In this case, drop is accepted
+
+								var d = new doh.Deferred();
+
+								var areaType1 = dojo.query('.dndArea[accept=type1]')[0];
+								var areaTypeAll = dojo.query('.dndArea[accept*=type1][accept*=type2]')[0];
+
+								var itemType1 =	dojo.query('.dndItem[dndType=type1] > .dragHandle')[0];
+								var itemTypeAll = dojo.query('.dndItem[dndType*=type1][dndType*=type2] > .dragHandle')[0];
+								
+								var sizeA = areaType1.childNodes.length;
+	                			var sizeB = areaTypeAll.childNodes.length;
+	                			
+	                			doh.robot.mouseMoveAt(itemType1,200);
+	                			doh.robot.mousePress({left:true}, 200);
+	                			doh.robot.mouseMoveAt(areaTypeAll,200);
+	                			doh.robot.mouseRelease({left:true}, 200);
+	                			
+	                			doh.robot.sequence(function(){
+	                				try{
+	                					doh.assertEqual(areaTypeAll.childNodes.length, sizeB + 1, "An item should be drop on third area.");
+	                					doh.assertEqual(areaType1.childNodes.length, sizeA - 1, "An item should be remove from first area");
+	                					d.callback(true);
+	                				}
+	                				catch(e){
+	                					d.errback(e);
+	                				}
+	               				}, 200);
+	               				return d;
+							}
+						},
+						{
+							name: "dropAccepted2",
+							timeout:10000,
+							runTest: function(){
+
+								// Tries to drag and drop an item between two dnd area.
+								// 		- Item's type : 1 & 2
+								//		- Drop area accept type : 2
+								// -> In this case, drop is accepted
+
+								var d = new doh.Deferred();
+
+								var areaType2 = dojo.query('.dndArea[accept=type2]')[0];
+								var areaTypeAll = dojo.query('.dndArea[accept*=type1][accept*=type2]')[0];
+
+								var itemTypeAll = dojo.query('.dndItem[dndType*=type1][dndType*=type2] > .dragHandle')[0];
+
+	                			var sizeA = areaTypeAll.childNodes.length;
+								var sizeB = areaType2.childNodes.length;
+	                			
+	                			doh.robot.mouseMoveAt(itemTypeAll, 200);
+	                			doh.robot.mousePress({left:true}, 200);
+	                			doh.robot.mouseMoveAt(areaType2, 200);
+	                			doh.robot.mouseRelease({left:true}, 200);
+	                			
+	                			doh.robot.sequence(function(){
+	                				try{
+		                				doh.assertEqual(areaType2.childNodes.length, sizeB + 1, "An item should be drop on second area.");
+		                				doh.assertEqual(areaTypeAll.childNodes.length, sizeA - 1, "An item should be remove from third area.");
+		                      			d.callback(true);
+		                      		}catch(e){
+		                      			d.errback(e);
+		                      		}
+	               				}, 200);
+	               				return d;
+							}
+						},
+						{
+							name: "refused",
+							timeout:10000,
+							runTest: function(){
+
+								// Tries to drag and drop an item between two dnd area.
+								// 		- Item's type : 1
+								//		- Drop area accept type : 2
+								// -> In this case, drop is refused
+
+								var d = new doh.Deferred();
+
+								var areaType2 = dojo.query('.dndArea[accept=type2]')[0];
+								var areaTypeAll = dojo.query('.dndArea[accept*=type1][accept*=type2]')[0];
+
+								var itemType1 = dojo.query('.dndItem[dndType=type1] > .dragHandle')[0];
+								
+								var sizeA = areaType2.childNodes.length;
+	                			var sizeB = areaTypeAll.childNodes.length;
+	                			
+	                			doh.robot.mouseMoveAt(itemType1, 200);
+	                			doh.robot.mousePress({left:true}, 200);
+	                			doh.robot.mouseMoveAt(areaType2, 200);
+	                			doh.robot.mouseRelease({left:true}, 200);
+	                			
+	                			doh.robot.sequence(function(){
+	                				try{
+		                				doh.assertEqual(areaType2.childNodes.length, sizeA, "No change !");
+		                				doh.assertEqual(areaTypeAll.childNodes.length, sizeB, "No change !");
+		                      			d.callback(true);
+		                      		}catch(e){
+		                      			d.errback(e);
+		                      		}
+	               				 }, 200);
+	               				 return d;
+							}
+						}
+					]
+				);
+				doh.run();
+			});
+		</script>
+		<style type="text/css"></style>
+	</head>
+	<body>
+	</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>dojox.fx.scroll</title>
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true"></script>
+	<style type="text/css">
+		@import "../../../dijit/themes/tundra.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+	</style>
+	<!-- <script type="text/javascript" src="../scroll.js"></script> -->
+	<script type="text/javascript">	
+		dojo.require("dojo.fx.easing"); 
+		dojo.require("dojox.fx.scroll");
+
+		function gotoName(name){
+			// summary; searches for a <a name=""></a> attrib, and scrolls to it
+			dojo.query('a[name="'+name+'"]').forEach(function(node){
+				// first one wins
+				var anim = dojox.fx.smoothScroll({
+					node: node,
+					win:window,
+					duration:300
+				}).play();
+				return;
+			});
+		}
+
+		dojo.addOnLoad(function(){
+			/*dojo.connect(dojo.byId("goToHeader0"), "onclick", function (e) {
+				var h2s = dojo.html.iframeContentDocument(dojo.byId("embed0")).getElementsByTagName('h2');
+				var h2 = h2s[h2s.length-1];
+				var anm = new dojo.lfx.smoothScroll(h2,dojo.html.iframeContentWindow(dojo.byId("embed0")),null,500);
+				anm.play();
+			});
+			*/
+
+			dojo.connect(dojo.byId("goToHeader"), "onclick", function (e) {
+				var node = dojo.byId('targetHeader3');
+				var anim0 = dojox.fx.smoothScroll({ node: node, win: window, duration:500});
+				anim0.play();
+			});
+
+			dojo.connect(dojo.byId("goToHeader1"), "onclick", function(/* Event */e){
+				var node = dojo.byId('targetHeader1');
+				var anim0 = dojox.fx.smoothScroll({ node: node, win: window, duration:1000});
+				anim0.play();
+			});
+		}); 
+	</script>
+</head>
+<body class="tundra">
+
+	<a name="top"></a>
+	<h1 class="testTitle">dojox.fx.scroll tests</h1>
+
+	<div id="targetHeader3" style="position:absolute; left:0px; top:3000px; padding:100px;" ><h3>YOU FOUND ME!</h3>
+	<p>neat.</p>
+	</div>
+
+	<p>dojox.fx.scroll provides:</p>
+	<ul>
+	   <li>dojox.fx.smoothScroll()</li>
+	</ul>
+	<p>
+	which will create and return a dojo.Animation to scroll 
+	a window to a desired offset. (or a node that has overflow:auto/hidden, if you pass the domNode as the win: argument)
+	</p> 
+	
+	
+	<h2><code>getScroll</code></h2>
+	<p>
+	Scroll top: <span id="scrollTop">0</span><br>
+	Scroll left: <span id="scrollLeft">0</span>
+	</p>
+
+	<table style="position:fixed;top:20px;right:20px;">
+	<tr><td>
+		<!-- <input type="button" id="goToHeader0" value="scroll only the iframe (to a node in iframe)"><br> -->
+		<input type="button" id="goToHeader" value="scroll to to far node"><br>
+		<input type="button" id="goToHeader1" value="scroll to a node in top window">
+	</td></tr>
+	</table>
+
+	<p style="font:10pt Arial,sans-serif; color:#666;">Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean semper sagittis velit. Cras in mi. Duis porta mauris ut ligula. Proin porta rutrum lacus. Etiam consequat scelerisque quam. Nulla facilisi.Maecenas luctus venenatis nulla. In sit amet dui non mi semper iaculis. Sed molestie tortor at ipsum. Morbi dictum rutrum magna. Sed vitaerisus.</p><p style="font:10pt Arial,sans-serif; color:#666;">Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean semper sagittis velit. Cras in mi. Duis porta mauris ut ligula. Proin porta rutrum lacus. Etiam consequat scelerisque quam. Nulla facilisi.Maecenas luctus venenatis nulla. In sit amet dui non mi semper iaculis. Sed molestie tortor at ipsum. Morbi dictum rutrum magna. Sed vitaerisus.</p><p style="font:10pt Arial,sans-serif; color:#666;">Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean semper sagittis velit. Cras in mi. Duis porta mauris ut ligula. Proin porta rutrum lacus. Etiam consequat scelerisque quam. Nulla facilisi.Maecenas luctus venenatis nulla. In sit amet dui non mi semper iaculis. Sed molestie tortor at ipsum. Morbi dictum rutrum magna. Sed vitaerisus.</p><p style="font:10pt Arial,sans-serif; color:#666;">Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean semper sagittis velit. Cras in mi. Duis porta mauris ut ligula. Proin porta rutrum lacus. Etiam consequat scelerisque quam. Nulla facilisi.Maecenas luctus venenatis nulla. In sit amet dui non mi semper iaculis. Sed molestie tortor at ipsum. Morbi dictum rutrum magna. Sed vitaerisus.</p><p style="font:10pt Arial,sans-serif; color:#666;">Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean semper sagittis velit. Cras in mi. Duis porta mauris ut ligula. Proin porta rutrum lacus. Etiam consequat scelerisque quam. Nulla facilisi.Maecenas luctus venenatis nulla. In sit amet dui non mi semper iaculis. Sed molestie tortor at ipsum. Morbi dictum rutrum magna. Sed vitaerisus.</p>
+
+
+	<h2 id='targetHeader1'><code>getElementsByClass</code></h2>
+
+	<p style="font:10pt Arial,sans-serif; color:#666;">Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean semper sagittis velit. Cras in mi. Duis porta mauris ut ligula. Proin porta rutrum lacus. Etiam consequat scelerisque quam. Nulla facilisi.Maecenas luctus venenatis nulla. In sit amet dui non mi semper iaculis. Sed molestie tortor at ipsum. Morbi dictum rutrum magna. Sed vitaerisus.</p><p style="font:10pt Arial,sans-serif; color:#666;">Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean semper sagittis velit. Cras in mi. Duis porta mauris ut ligula. Proin porta rutrum lacus. Etiam consequat scelerisque quam. Nulla facilisi.Maecenas luctus venenatis nulla. In sit amet dui non mi semper iaculis. Sed molestie tortor at ipsum. Morbi dictum rutrum magna. Sed vitaerisus.</p><p style="font:10pt Arial,sans-serif; color:#666;">Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean semper sagittis velit. Cras in mi. Duis porta mauris ut ligula. Proin porta rutrum lacus. Etiam consequat scelerisque quam. Nulla facilisi.Maecenas luctus venenatis nulla. In sit amet dui non mi semper iaculis. Sed molestie tortor at ipsum. Morbi dictum rutrum magna. Sed vitaerisus.</p><p style="font:10pt Arial,sans-serif; color:#666;">Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean semper sagittis velit. Cras in mi. Duis porta mauris ut ligula. Proin porta rutrum lacus. Etiam consequat scelerisque quam. Nulla facilisi.Maecenas luctus venenatis nulla. In sit amet dui non mi semper iaculis. Sed molestie tortor at ipsum. Morbi dictum rutrum magna. Sed vitaerisus.</p><p style="font:10pt Arial,sans-serif; color:#666;">Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean semper sagittis velit. Cras in mi. Duis porta mauris ut ligula. Proin porta rutrum lacus. Etiam consequat scelerisque quam. Nulla facilisi.Maecenas luctus venenatis nulla. In sit amet dui non mi semper iaculis. Sed molestie tortor at ipsum. Morbi dictum rutrum magna. Sed vitaerisus.</p>
+
+	<h3 id='targetHeader2'>ContainsAny</h3>
+	<input type="button" onclick="gotoName('top');" value="back to top">
+	<p style="font:10pt Arial,sans-serif; color:#666;">Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean semper sagittis velit. Cras in mi. Duis porta mauris ut ligula. Proin porta rutrum lacus. Etiam consequat scelerisque quam. Nulla facilisi.Maecenas luctus venenatis nulla. In sit amet dui non mi semper iaculis. Sed molestie tortor at ipsum. Morbi dictum rutrum magna. Sed vitaerisus.</p><p style="font:10pt Arial,sans-serif; color:#666;">Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean semper sagittis velit. Cras in mi. Duis porta mauris ut ligula. Proin porta rutrum lacus. Etiam consequat scelerisque quam. Nulla facilisi.Maecenas luctus venenatis nulla. In sit amet dui non mi semper iaculis. Sed molestie tortor at ipsum. Morbi dictum rutrum magna. Sed vitaerisus.</p><p style="font:10pt Arial,sans-serif; color:#666;">Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean semper sagittis velit. Cras in mi. Duis porta mauris ut ligula. Proin porta rutrum lacus. Etiam consequat scelerisque quam. Nulla facilisi.Maecenas luctus venenatis nulla. In sit amet dui non mi semper iaculis. Sed molestie tortor at ipsum. Morbi dictum rutrum magna. Sed vitaerisus.</p><p style="font:10pt Arial,sans-serif; color:#666;">Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean semper sagittis velit. Cras in mi. Duis porta mauris ut ligula. Proin porta rutrum lacus. Etiam consequat scelerisque quam. Nulla facilisi.Maecenas luctus venenatis nulla. In sit amet dui non mi semper iaculis. Sed molestie tortor at ipsum. Morbi dictum rutrum magna. Sed vitaerisus.</p><p style="font:10pt Arial,sans-serif; color:#666;">Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean semper sagittis velit. Cras in mi. Duis porta mauris ut ligula. Proin porta rutrum lacus. Etiam consequat scelerisque quam. Nulla facilisi.Maecenas luctus venenatis nulla. In sit amet dui non mi semper iaculis. Sed molestie tortor at ipsum. Morbi dictum rutrum magna. Sed vitaerisus.</p>
+
+
+</body></html>

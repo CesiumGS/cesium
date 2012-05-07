@@ -1,0 +1,61 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>Dojox Analytics Test</title>
+
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+	</style>
+	
+	<!-- required: a default theme file -->
+	<link rel="stylesheet" id="themeStyles" href="../../../dijit/themes/tundra/tundra.css" />
+	
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		djConfig="parseOnLoad: true, isDebug: true, usePlainJson: true, sendMethod: 'script', sendInterval: 5000, analyticsUrl: 'http://dojotoolkit.org/~dmachi/dojo-1.0/dojox/analytics/logger/dojoxAnalytics.php'"></script>
+
+	<!-- do not use: only for testing alternate themes -->
+	<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+
+	<script language="JavaScript" type="text/javascript">
+		// include the analytics system
+		dojo.require("dojox.analytics.Urchin");
+		var tracker = null; 
+
+//	can run onLoad, too: 
+//		dojo.addOnLoad(function(){
+		var createTracker = function(){	
+			if(tracker) return;
+			// create and initialize Urchin after onLoad. You need a _real_ UA number
+			// available from http://google.com/analytics
+			tracker = new dojox.analytics.Urchin({ 
+				acct:"UA-123456-7",
+				GAonLoad: function(){
+					this.inherited("GAonLoad", arguments);
+					dojo.attr("lazy", "disabled", false);
+				}
+			});
+//		});
+		}
+		
+		var trackRandom = function(){
+			// FIXME: there is a small window (10ms to 'however long it took to load')
+			//	that trackPageView is unavailable. use tracker.GAonLoad function to 
+			// 	reliably know when the tracker is available.
+			tracker.trackPageView("/some-ajax-taggr");
+		}
+	</script>
+
+</head>
+<body class="tundra">
+
+	<h1>Simple Lazy loading of Google Analytics Code</h1>
+	
+	<button id="galoader" onclick="createTracker()">Create Tracker</button>
+	
+	<button id="lazy" onclick="trackRandom()" disabled="disabled">Track something</button>
+	
+</body>
+</html>

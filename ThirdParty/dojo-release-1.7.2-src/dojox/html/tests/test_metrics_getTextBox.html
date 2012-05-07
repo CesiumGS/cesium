@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<!--
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+-->
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <style type="text/css">
+            @import "../../../dojo/resources/dojo.css";
+            @import "../../../dijit/tests/css/dijitTests.css";
+            .test { font-family: Times, Times New Roman, serif; font-weight: bold; font-size: 12pt; }
+            .sample { clear: both; float: left; background-color: #ffd; border: 1px black solid; margin: 0; padding: 0; overflow: hidden; } 
+        </style>
+        <script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+        <script type="text/javascript">
+            dojo.require("dojox.html.metrics");
+
+            dojo.addOnLoad(function(){
+                dojo.connect(dojo.byId("submit"), "onclick", function(){
+                    var t = dojo.byId("input").value.replace(/\r?\n/g, "<br>");
+                    var r = dojox.html.metrics.getTextBox(t, null, "test");
+                    dojo.byId("output").innerHTML = dojo.toJson(r, true).
+                            replace(/\r?\n/g, "<br>").replace(/\t/g, "&nbsp;&nbsp;&nbsp;&nbsp;").replace(/\s/g, "&nbsp;");
+                    dojo.attr("sample", {
+                        innerHTML: t,
+                        style: {
+                            width:  r.w + "px",
+                            height: r.h + "px"
+                        }
+                    });
+                });
+            });
+        </script>
+    </head>
+    <body>
+        <h1>Testing dojox.html.metrics.getTextBox()</h1>
+        <h2>Input</h2>
+        <div>
+            <textarea id="input" cols="40" rows="5"></textarea><br>
+            <button id="submit">Run</button>
+        </div>
+        <h2>Result as JSON</h2>
+        <p id="output"></p>
+        <h2>Sample output clipped</h2>
+        <div id="sample" class="sample test"></div>
+    </body>
+</html>

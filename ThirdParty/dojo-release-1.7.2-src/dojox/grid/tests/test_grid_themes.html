@@ -1,0 +1,126 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>dojox.grid.Grid themes</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../resources/Grid.css";
+		@import "../resources/tundraGrid.css";
+		@import "../resources/soriaGrid.css";
+		@import "../resources/nihiloGrid.css";
+		@import "../resources/claroGrid.css";
+		
+		#grid, #grid2, #grid3 {
+			width: 65em;
+			height: 25em;
+			padding: 1px;
+		}
+	</style>
+	<script type="text/javascript" src="../../../dojo/dojo.js" 
+		djConfig="isDebug: true, debugAtAllCosts: false, parseOnLoad: true"></script>
+	<script type="text/javascript">
+		dojo.require("dijit.dijit");
+		dojo.require("dojox.grid.DataGrid");
+		dojo.require("dojox.grid.EnhancedGrid");
+		dojo.require("dojo.data.ItemFileReadStore");
+		dojo.require("dojox.data.CsvStore");
+		dojo.require("dojo.parser");
+	</script>
+
+</head>
+<body>
+	<h5>dojox.grid.Grid structure from markup (tundra theme)</h5>
+	<span dojoType="dojox.data.CsvStore" 
+		jsId="csvStore" url="support/movies.csv">
+	</span>
+
+	<table class="tundra" dojoType="dojox.grid.DataGrid"
+		store="csvStore"
+		query="{ Title: '*' }"
+		style="width: 800px; height: 300px;">
+		<thead>
+			<tr>
+				<th width="300px" field="Title">Title of Movie</th>
+
+				<th width="5em" field="Year">Year</th>
+			</tr>
+			<tr>
+				<th colspan="2" field="Producer">Producer</th>
+			</tr>
+		</thead>
+	</table>
+
+	<span dojoType="dojo.data.ItemFileReadStore" 
+		jsId="jsonStore" url="../../../dijit/tests/_data/countries.json">
+	</span>
+	<h5>Locked views specified with tables and colgroups (soria theme)</h5>
+
+	<table class="soria" dojoType="dojox.grid.DataGrid"
+		store="jsonStore"
+		rowsPerPage="20"
+		query="{ name: '*' }"
+		style="width: 600px; height: 300px;">
+		<colgroup span="1" noscroll="true" width="300px"></colgroup>
+		<colgroup span="4"></colgroup>
+		<thead>
+
+			<tr>
+				<th field="name" width="auto">Country/Continent Name</th>
+				<th width="100px" field="population">Population</th>
+				<th width="100px" field="area">Land Mass</th>
+				<th width="100px" field="timezone">Time Zone</th>
+				<th width="5em" field="type">Type</th>
+
+			</tr>
+		</thead>
+	</table>
+	
+	<h5>Simple Claro DataGrid(currently an EnhancedGrid without any feature plugins)</h5>
+	<script type="text/javascript">
+		var layout = [{
+			defaultCell: { width: 8, editable: false, type: dojox.grid.cells._Widget },
+			rows:
+			[
+				{ field: "Genre", width: '6'},
+				{ field: "Artist", width: '10'},
+				{ field: "Year", width: '6'},
+				{ field: "Album", width: '12'},
+				{ field: "Name", width: '17'},
+				{ field: "Length", width: '6'},
+				{ field: "Track", width: '6'},
+				{ field: "Composer", width: '15'}				
+			]}
+		];
+		var csvStore1 = new dojox.data.CsvStore({id:'csvStore1', url:"enhanced/support/music-for-demo.part.csv"});
+	</script>
+	<div class="claro" id="grid3" dojoType="dojox.grid.EnhancedGrid" query="{ Track: '*' }" rowsPerPage="30"
+		 store="csvStore1" structure="layout" rowSelector="0px">
+	</div>
+	
+
+	<script type="text/javascript">
+		var layoutCountries = [
+			// view 1
+			{
+				noscroll: true,
+				cells: [ new dojox.grid.cells.RowIndex({width: 5}) ]
+			},
+			// view 2
+			{
+				cells: [
+					{ name: 'Country/Continent Name', field: 'name', width: 'auto' },
+					{ name: 'Type', field: 'type', width: 8 }
+				]
+			}
+		];
+	</script>
+
+	<h5>A "regular" Grid from markup (no table defintion, nihilo theme)</h5>
+	<div class="nihilo" id="grid2" dojoType="dojox.grid.DataGrid" elasticView="2" 
+		store="jsonStore" query="{ name: '*' }" rowSelector="20px" rowsPerPage="20" structure="layoutCountries">
+	</div>
+
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	
+	<title>Dojox TitleGroup Test</title>
+	
+	<!-- required: a default theme file, and ColorPicker css -->
+	<link rel="stylesheet" id="themeStyles" href="../../../dijit/themes/claro/claro.css">
+	<link rel="stylesheet" href="../TitleGroup/TitleGroup.css">
+
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css"; 
+		
+		#bar, #bar2 { 
+			width:300px;
+			float:left;
+			margin-right:15px;
+		}
+		
+		.clear {
+			clear:both;
+		}
+	</style>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: true"></script>
+
+	<!-- do not use! only for testing dynamic themes -->
+	<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+	
+	<script type="text/javascript">
+		dojo.require("dojox.widget.TitleGroup");
+		dojo.require("dijit.form.Button");
+		dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+
+		dojo.ready(function(){
+
+			var tg = new dojox.widget.TitleGroup({
+				style:"width:500px;"
+			}).placeAt("holder");
+
+			tg.addChild(new dijit.TitlePane({ title:"Woot.", open:true }));
+			tg.addChild(new dijit.TitlePane({ title:"Second", open:false }));
+			new dijit.TitlePane({ title:"Testing placeAt", open:false }).placeAt(tg);
+			new dijit.TitlePane({ title:"Removed", open:false, id:"killer" }).placeAt(tg);
+
+			tg.startup();
+
+			setTimeout(function(){
+				tg.removeChild(dijit.byId("killer")).placeAt("graveyard");
+			}, 3000);
+
+		});
+
+	</script>
+</head>
+<body class="claro">
+
+	<h1 class="testTitle">Dojox TitleGroup test</h1>
+
+	<div id="bar" dojoType="dojox.widget.TitleGroup">
+		<div dojoType="dijit.TitlePane" open="true" title="Title 1">Yellow.</div>
+		<div dojoType="dijit.TitlePane" open="false" title="Title b">Heeeeee<br><br>hawwwww</div>
+		<div dojoType="dijit.TitlePane" open="false" title="Title 3"><p style="font-size:27pt">WOW</p></div>
+		<div dojoType="dijit.TitlePane" open="false" title="Title d"><p>a button.</p>
+			<button dojoType="dijit.form.Button">Label</button>
+		</div>
+		<div dojoType="dijit.TitlePane" open="false" title="Title 4 (href)" href="get_time.php"></div>
+	</div>
+
+	<div id="bar2" dojoType="dojox.widget.TitleGroup">
+		<div dojoType="dijit.TitlePane" open="false" title="Title 1" open="open">Yellow.</div>
+		<div dojoType="dijit.TitlePane" open="true" title="Title b">Heeeeee<br><br>hawwwww</div>
+		<div dojoType="dijit.TitlePane" open="false" title="Title 3"><p style="font-size:27pt">WOW</p></div>
+		<div dojoType="dijit.TitlePane" open="false" title="Title d (embedded TitlePanes)">
+			<h3>See:</h3>
+			<div dojoType="dijit.TitlePane" title="I should open fine">
+				<h3>See:</h3>
+				<div dojoType="dijit.TitlePane" title="I should open fine too">
+					<p>Did i?</p>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="clear"></div>
+
+	<h2>A TitlePane for good measure:</h2>
+
+	<div dojoType="dijit.TitlePane" title="Basic, for Sanity" style="width:300px">
+		<p>Lorem, ipsum <a href="#">dolor</a></p>
+	</div>
+
+	<h2>Programattic</h2>
+
+	<div id="holder"></div>
+
+	<h2>Once removed, will show up here:</h2>
+	<div id="graveyard"></div>
+
+</body>
+</html>

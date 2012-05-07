@@ -1,0 +1,8 @@
+<div>
+	<input dojotAttachPoint="search" dojoAttachEvent="onkeyup: onSearch">
+	<ul>
+	{% for result in results %}
+		<li>{% if result.type %}<i>{{ result.type }}</i> {% endif %}{% ifequal result.type "Function" %}{% if not result.resources %}function {% endif %}{% endifequal %}{{ result.name }}{% ifequal result.type "Function" %}{% if not result.resources %}({% for parameter in result.parameters %}{% if not forloop.first %}, {% endif %}{% if parameter.types %}<i>{% for type in parameter.types %}{% if not forloop.first %}|{% endif %}{{ type.title }}{% endfor %}{% if parameter.optional %}?{% endif %}{% if parameter.repeating %}...{% endif %}</i> {% endif %}{{ parameter.name }}{% endfor %}{% endif %}{% endifequal %}{% ifequal result.type "Function" %}{% if not result.resources %}){% endif %}{% endifequal %}</li>
+	{% endfor %}
+	</ul>
+</div>

@@ -1,0 +1,537 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot TabContainer No Layout Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"
+			djConfig="isDebug: true"></script>
+
+		<!-- functions to help test -->
+		<script type="text/javascript" src="../../helpers.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");
+			
+			function checkInside(childDomNode, parentDomNode){
+				var cp = dojo.position(childDomNode, true),
+					pp = dojo.position(parentDomNode, true);
+
+				doh.t(
+					cp.y > pp.y && cp.y+cp.h < pp.y+pp.h &&
+					cp.x > pp.x && cp.x+cp.w < pp.x+pp.w,
+					childDomNode.id + "child not inside " + parentDomNode.id + dojo.toJson(cp) + dojo.toJson(pp)
+				);
+			}
+
+			var oldPos, tab, handler;
+			
+			dojo.ready(function(){
+				doh.robot.initRobot('../test_TabContainer_noLayout.html');
+				doh.register("plain TabContainer",[
+					{
+						name: "tab1",
+						timeout: 4000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							tab = dijit.byId('tab1');
+							handler = tab.connect(tab, 'onDownloadEnd', function(){
+								setTimeout(d.getTestCallback(function(){
+									var h1 = dojo.query('h1', dojo.byId('tab1'))[0];
+									var p1 = dojo.query('p', dojo.byId('tab1'))[0];
+									var div1 = dojo.query('div', dojo.byId('tab1'))[0];
+								
+									checkInside(h1, dijit.byId("plainTabContainer").domNode);
+									checkInside(p1, dijit.byId("plainTabContainer").domNode);
+									checkInside(div1, dijit.byId("plainTabContainer").domNode);
+								
+									oldPos = dojo.position(dojo.byId("textAfterTabContainer1"), true);
+								}), 500);
+							});
+							
+							doh.robot.mouseMoveAt('plainTabContainer_tablist_tab1', 0, 1);
+							doh.robot.mouseClick({left: true}, 500);
+							
+							return d;
+						},
+						tearDown: function(t){
+							tab.disconnect(handler);
+						}
+					},
+					{
+						name: "tab2",
+						timeout: 4000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							tab = dijit.byId('tab2');
+							handler = tab.connect(tab, 'onDownloadEnd', function(){
+								setTimeout(d.getTestCallback(function(){
+									var h2 = dojo.query('h1', dojo.byId('tab2'))[0];
+									var p2 = dojo.query('p', dojo.byId('tab2'))[0];
+								
+									checkInside(h2, dijit.byId("plainTabContainer").domNode);
+									checkInside(p2, dijit.byId("plainTabContainer").domNode);
+								
+									var newPos = dojo.position(dojo.byId("textAfterTabContainer1"), true);
+									doh.f(oldPos.y == newPos.y);
+									oldPos = newPos;
+								}), 1000);
+							});
+							
+							doh.robot.mouseMoveAt('plainTabContainer_tablist_tab2', 0, 1);
+							doh.robot.mouseClick({left: true}, 500);
+							
+							return d;
+						},
+						tearDown: function(t){
+							tab.disconnect(handler);
+						}
+					},
+					{
+						name: "tab3",
+						timeout: 4000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							tab = dijit.byId('tab3');
+							handler = tab.connect(tab, '_onShow', function(){
+								setTimeout(d.getTestCallback(function(){
+									checkInside(dojo.byId("h3"), dijit.byId("plainTabContainer").domNode);
+									checkInside(dojo.byId("p3"), dijit.byId("plainTabContainer").domNode);
+									checkInside(dojo.byId("p4"), dijit.byId("plainTabContainer").domNode);
+									checkInside(dojo.byId("p5"), dijit.byId("plainTabContainer").domNode);
+									checkInside(dojo.byId("b3"), dijit.byId("plainTabContainer").domNode);
+									checkInside(dojo.byId("b4"), dijit.byId("plainTabContainer").domNode);
+									checkInside(dojo.byId("foo"), dijit.byId("plainTabContainer").domNode);
+								
+									var newPos = dojo.position(dojo.byId("textAfterTabContainer1"), true);
+									doh.f(oldPos.y == newPos.y);
+									oldPos = newPos;
+								}), 1000);
+							});
+							
+							doh.robot.mouseMoveAt('plainTabContainer_tablist_tab3', 0, 1);
+							doh.robot.mouseClick({left: true}, 500);
+							
+							return d;
+						},
+						tearDown: function(t){
+							tab.disconnect(handler);
+						}
+					},
+					{
+						name: "tab4_innerTab1",
+						timeout: 6000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							tab = dijit.byId('tab4');
+							handler = tab.connect(tab, '_onShow', function(){
+								tab.disconnect(handler);
+								setTimeout(function(){
+									tab = dijit.byId('dijit_layout_LinkPane_0');
+									handler = tab.connect(tab, '_onShow', function(){
+										setTimeout(d.getTestCallback(function(){
+											var h1 = dojo.query('h1', dojo.byId('dijit_layout_LinkPane_0'))[0];
+											var p1 = dojo.query('p', dojo.byId('dijit_layout_LinkPane_0'))[0];
+											var div1 = dojo.query('div', dojo.byId('dijit_layout_LinkPane_0'))[0];
+								
+											checkInside(h1, dijit.byId("plainTabContainer").domNode);
+											checkInside(p1, dijit.byId("plainTabContainer").domNode);
+											checkInside(div1, dijit.byId("plainTabContainer").domNode);
+								
+											var newPos = dojo.position(dojo.byId("textAfterTabContainer1"), true);
+											doh.f(oldPos.y == newPos.y);
+											oldPos = newPos;
+										}), 1000);
+									});
+									doh.robot.mouseMoveAt('tab4_tablist_dijit_layout_LinkPane_0', 0, 1);
+									doh.robot.mouseClick({left: true}, 500);
+								}, 1000);
+							});
+
+							doh.robot.mouseMoveAt('plainTabContainer_tablist_tab4', 0, 1);
+							doh.robot.mouseClick({left: true}, 500);
+							
+							return d;
+						},
+						tearDown: function(t){
+							tab.disconnect(handler);
+						}
+					},
+					{
+						name: "tab4_innerTab2",
+						timeout: 4000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							tab = dijit.byId('dijit_layout_LinkPane_1');
+							handler = tab.connect(tab, '_onShow', function(){
+								setTimeout(d.getTestCallback(function(){
+									var h2 = dojo.query('h1', dojo.byId('dijit_layout_LinkPane_1'))[0];
+									var p2 = dojo.query('p', dojo.byId('dijit_layout_LinkPane_1'))[0];
+
+									checkInside(h2, dijit.byId("plainTabContainer").domNode);
+									checkInside(p2, dijit.byId("plainTabContainer").domNode);
+								
+									var newPos = dojo.position(dojo.byId("textAfterTabContainer1"), true);
+									doh.f(oldPos.y == newPos.y);
+									oldPos = newPos;
+								}), 1000);
+							});
+							
+							doh.robot.mouseMoveAt('tab4_tablist_dijit_layout_LinkPane_1', 0, 1);
+							doh.robot.mouseClick({left: true}, 500);
+							
+							return d;
+						},
+						tearDown: function(t){
+							tab.disconnect(handler);
+						}
+					},
+					{
+						name: "tab5_innerTab1",
+						timeout: 7000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							tab = dijit.byId('tab5');
+							handler = tab.connect(tab, 'onDownloadEnd', function(){
+								doh.robot.mouseMoveAt('dijit_layout_TabContainer_0_tablist_dijit_layout_ContentPane_0', 1000, 1);
+								doh.robot.mouseClick({left: true}, 500);
+								doh.robot.sequence(d.getTestCallback(function(){
+									var p = dojo.query("p", dojo.byId('dijit_layout_ContentPane_0'))[0];
+									checkInside(p, dijit.byId("plainTabContainer").domNode);
+
+									var newPos = dojo.position(dojo.byId("textAfterTabContainer1"), true);
+									doh.f(oldPos.y == newPos.y);
+									oldPos = newPos;
+								}), 1000);
+							});
+							doh.robot.mouseMoveAt('plainTabContainer_tablist_tab5', 0, 1);
+							doh.robot.mouseClick({left: true}, 500);
+							
+							return d;
+						},
+						tearDown: function(t){
+							tab.disconnect(handler);
+						}
+					},
+					{
+						name: "tab5_innerTab2",
+						timeout: 4000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							tab = dijit.byId('dijit_layout_ContentPane_1');
+							handler = tab.connect(tab, '_onShow', function(){
+								setTimeout(d.getTestCallback(function(){
+									var p1 = dojo.query("p", dojo.byId('dijit_layout_ContentPane_1'))[0];
+									var p2 = dojo.query("p", dojo.byId('dijit_layout_ContentPane_1'))[1];
+									var p3 = dojo.query("p", dojo.byId('dijit_layout_ContentPane_1'))[2];
+									checkInside(p1, dijit.byId("plainTabContainer").domNode);
+									checkInside(p2, dijit.byId("plainTabContainer").domNode);
+									checkInside(p3, dijit.byId("plainTabContainer").domNode);
+								
+									var newPos = dojo.position(dojo.byId("textAfterTabContainer1"), true);
+									doh.f(oldPos.y == newPos.y);
+									oldPos = newPos;
+								}), 1000);
+							});
+							
+							doh.robot.mouseMoveAt('dijit_layout_TabContainer_0_tablist_dijit_layout_ContentPane_1', 0, 1);
+							doh.robot.mouseClick({left: true}, 500);
+							
+							return d;
+						},
+						tearDown: function(t){
+							tab.disconnect(handler);
+						}
+					},
+					{
+						name: "addTab",
+						timeout: 8000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							tab = dijit.byId('plainTabContainer');
+							handler = tab.connect(tab, 'addChild', function(){
+								setTimeout(function(){
+									doh.robot.mouseMoveAt('plainTabContainer_tablist_newTab6', 0, 1);
+									doh.robot.mouseClick({left: true}, 500);
+									doh.robot.sequence(d.getTestCallback(function(){
+										var newTab = dojo.byId("newTab6");
+										doh.is("Contents of Tab 6", newTab.innerHTML);
+										checkInside(newTab, dijit.byId("plainTabContainer").domNode);
+
+										var newPos = dojo.position(dojo.byId("textAfterTabContainer1"), true);
+										doh.f(oldPos.y == newPos.y);
+									}), 1000);
+								}, 1000)
+							});
+							doh.robot.mouseMoveAt('addTab', 0, 1);
+							doh.robot.mouseClick({left: true}, 500);
+							
+							return d;
+						},
+						tearDown: function(t){
+							tab.disconnect(handler);
+						}
+					},
+					{
+						timeout: 4000,
+						name: "destroy",
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							doh.robot.mouseMoveAt('destroyTabContainer', 0, 1);
+							doh.robot.mouseClick({left: true}, 500);
+								
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is(undefined, dojo.byId("plainTabContainer"), 'widget was not removed');
+							}), 2000);
+							return d;
+						}
+					}
+				]);
+				
+				doh.register("TabContainer in table",[
+					function width(){
+						// Make sure the scrolling tabs don't make the width of the table explode to 50,0000px
+						doh.is(400, dojo.position(dojo.byId("tableTabContainer")).w);
+					},
+					{
+						name: "tab1_t2",
+						timeout: 4000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							tab = dijit.byId('atab1');
+							handler = tab.connect(tab, 'onDownloadEnd', function(){
+								setTimeout(d.getTestCallback(function(){
+									var h1 = dojo.query('h1', dojo.byId('atab1'))[0];
+									var p1 = dojo.query('p', dojo.byId('atab1'))[0];
+									var div1 = dojo.query('div', dojo.byId('atab1'))[0];
+								
+									checkInside(h1, dijit.byId("tableTabContainer").domNode);
+									checkInside(p1, dijit.byId("tableTabContainer").domNode);
+									checkInside(div1, dijit.byId("tableTabContainer").domNode);
+								
+									oldPos = dojo.position(dojo.byId("textAfterTabContainer2"), true);
+								}), 500);
+							});
+							
+							doh.robot.mouseMoveAt('tableTabContainer_tablist_atab1', 0, 1);
+							doh.robot.mouseClick({left: true}, 500);
+							
+							return d;
+						},
+						tearDown: function(t){
+							tab.disconnect(handler);
+						}
+					},
+					{
+						name: "tab2_t2",
+						timeout: 4000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							tab = dijit.byId('atab2');
+							handler = tab.connect(tab, 'onDownloadEnd', function(){
+								setTimeout(d.getTestCallback(function(){
+									var h2 = dojo.query('h1', dojo.byId('atab2'))[0];
+									var p2 = dojo.query('p', dojo.byId('atab2'))[0];
+								
+									checkInside(h2, dijit.byId("tableTabContainer").domNode);
+									checkInside(p2, dijit.byId("tableTabContainer").domNode);
+								
+									var newPos = dojo.position(dojo.byId("textAfterTabContainer2"), true);
+									doh.f(oldPos.y == newPos.y);
+									oldPos = newPos;
+								}), 1000);
+							});
+							
+							doh.robot.mouseMoveAt('tableTabContainer_tablist_atab2', 0, 1);
+							doh.robot.mouseClick({left: true}, 500);
+							
+							return d;
+						},
+						tearDown: function(t){
+							tab.disconnect(handler);
+						}
+					},
+					{
+						name: "tab3_t2",
+						timeout: 4000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							tab = dijit.byId('atab3');
+							handler = tab.connect(tab, '_onShow', function(){
+								setTimeout(d.getTestCallback(function(){
+									checkInside(dojo.byId("h4"), dijit.byId("tableTabContainer").domNode);
+									checkInside(dojo.byId("p6"), dijit.byId("tableTabContainer").domNode);
+									checkInside(dojo.byId("p7"), dijit.byId("tableTabContainer").domNode);
+									checkInside(dojo.byId("p8"), dijit.byId("tableTabContainer").domNode);
+									checkInside(dojo.byId("b5"), dijit.byId("tableTabContainer").domNode);
+									checkInside(dojo.byId("b6"), dijit.byId("tableTabContainer").domNode);
+									checkInside(dojo.byId("foo2"), dijit.byId("tableTabContainer").domNode);
+								
+									var newPos = dojo.position(dojo.byId("textAfterTabContainer2"), true);
+									doh.f(oldPos.y == newPos.y);
+									oldPos = newPos;
+								}), 1000);
+							});
+							
+							doh.robot.mouseMoveAt('tableTabContainer_tablist_atab3', 0, 1);
+							doh.robot.mouseClick({left: true}, 500);
+							
+							return d;
+						},
+						tearDown: function(t){
+							tab.disconnect(handler);
+						}
+					},
+					{
+						name: "tab4_innerTab1_t2",
+						timeout: 6000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							tab = dijit.byId('atab4');
+							handler = tab.connect(tab, '_onShow', function(){
+								tab.disconnect(handler);
+								setTimeout(function(){
+									tab = dijit.byId('dijit_layout_LinkPane_2');
+									handler = tab.connect(tab, '_onShow', function(){
+										setTimeout(d.getTestCallback(function(){
+											var h1 = dojo.query('h1', dojo.byId('dijit_layout_LinkPane_2'))[0];
+											var p1 = dojo.query('p', dojo.byId('dijit_layout_LinkPane_2'))[0];
+											var div1 = dojo.query('div', dojo.byId('dijit_layout_LinkPane_2'))[0];
+								
+											checkInside(h1, dijit.byId("tableTabContainer").domNode);
+											checkInside(p1, dijit.byId("tableTabContainer").domNode);
+											checkInside(div1, dijit.byId("tableTabContainer").domNode);
+								
+											var newPos = dojo.position(dojo.byId("textAfterTabContainer2"), true);
+											doh.f(oldPos.y == newPos.y);
+											oldPos = newPos;
+										}), 1000);
+									});
+									doh.robot.mouseMoveAt('atab4_tablist_dijit_layout_LinkPane_2', 0, 1);
+									doh.robot.mouseClick({left: true}, 500);
+								}, 1000);
+							});
+
+							doh.robot.mouseMoveAt('tableTabContainer_tablist_atab4', 0, 1);
+							doh.robot.mouseClick({left: true}, 500);
+							
+							return d;
+						},
+						tearDown: function(t){
+							tab.disconnect(handler);
+						}
+					},
+					{
+						name: "tab4_innerTab2_t2",
+						timeout: 4000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							tab = dijit.byId('dijit_layout_LinkPane_3');
+							handler = tab.connect(tab, '_onShow', function(){
+								setTimeout(d.getTestCallback(function(){
+									var h2 = dojo.query('h1', dojo.byId('dijit_layout_LinkPane_3'))[0];
+									var p2 = dojo.query('p', dojo.byId('dijit_layout_LinkPane_3'))[0];
+
+									checkInside(h2, dijit.byId("tableTabContainer").domNode);
+									checkInside(p2, dijit.byId("tableTabContainer").domNode);
+								
+									var newPos = dojo.position(dojo.byId("textAfterTabContainer2"), true);
+									doh.f(oldPos.y == newPos.y);
+									oldPos = newPos;
+								}), 1000);
+							});
+							
+							doh.robot.mouseMoveAt('atab4_tablist_dijit_layout_LinkPane_3', 0, 1);
+							doh.robot.mouseClick({left: true}, 500);
+							
+							return d;
+						},
+						tearDown: function(t){
+							tab.disconnect(handler);
+						}
+					},
+					{
+						name: "tab5_innerTab1_t2",
+						timeout: 7000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							tab = dijit.byId('atab5');
+							handler = tab.connect(tab, 'onDownloadEnd', function(){
+								doh.robot.mouseMoveAt('dijit_layout_TabContainer_1_tablist_dijit_layout_ContentPane_2', 1000, 1);
+								doh.robot.mouseClick({left: true}, 500);
+								doh.robot.sequence(d.getTestCallback(function(){
+									var p = dojo.query("p", dojo.byId('dijit_layout_ContentPane_2'))[0];
+									checkInside(p, dijit.byId("tableTabContainer").domNode);
+
+									var newPos = dojo.position(dojo.byId("textAfterTabContainer2"), true);
+									doh.f(oldPos.y == newPos.y);
+									oldPos = newPos;
+								}), 1000);
+							});
+							doh.robot.mouseMoveAt('tableTabContainer_tablist_atab5', 0, 1);
+							doh.robot.mouseClick({left: true}, 500);
+							
+							return d;
+						},
+						tearDown: function(t){
+							tab.disconnect(handler);
+						}
+					},
+					{
+						name: "tab5_innerTab2_t2",
+						timeout: 4000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							tab = dijit.byId('dijit_layout_ContentPane_3');
+							handler = tab.connect(tab, '_onShow', function(){
+								setTimeout(d.getTestCallback(function(){
+									var p1 = dojo.query("p", dojo.byId('dijit_layout_ContentPane_3'))[0];
+									var p2 = dojo.query("p", dojo.byId('dijit_layout_ContentPane_3'))[1];
+									var p3 = dojo.query("p", dojo.byId('dijit_layout_ContentPane_3'))[2];
+									checkInside(p1, dijit.byId("tableTabContainer").domNode);
+									checkInside(p2, dijit.byId("tableTabContainer").domNode);
+									checkInside(p3, dijit.byId("tableTabContainer").domNode);
+								
+									var newPos = dojo.position(dojo.byId("textAfterTabContainer2"), true);
+									doh.f(oldPos.y == newPos.y);
+									oldPos = newPos;
+								}), 1000);
+							});
+							
+							doh.robot.mouseMoveAt('dijit_layout_TabContainer_1_tablist_dijit_layout_ContentPane_3', 0, 1);
+							doh.robot.mouseClick({left: true}, 500);
+							
+							return d;
+						},
+						tearDown: function(t){
+							tab.disconnect(handler);
+						}
+					}
+				]);
+				
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

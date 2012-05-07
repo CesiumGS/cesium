@@ -1,0 +1,87 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+    "http://www.w3.org/TR/html4/strict.dtd"
+    >
+<html lang="en">
+<head>
+    <title>Test dojox.fx.ext-dojo.complex</title>
+	<style>
+		@import "../../../dijit/tests/css/dijitTests.css";
+		body{
+			font-family:sans-serif;
+			font-size:14px;
+		}
+		#cnt{
+			width:300px;
+			height:300px;
+			border:1px solid #666;
+			position:relative;
+		}
+		#words{
+			width:300px;
+			height:300px;
+			margin:0px;
+			padding:5px;
+			top:0px;
+			position:absolute;
+			border:1px solid #000;
+			background:#0000ff;
+			clip:rect(10px 30px 30px 10px);
+		}
+		code{
+			font-family:monospace;
+			font-size:11px;
+			white-space:nowrap;
+		}
+	</style>
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: true" ></script>
+		<script>
+			dojo.require("dojox.fx.ext-dojo.complex");
+			
+			dojo.addOnLoad(function(){
+				var ani = dojo.animateProperty({
+					node:dojo.byId("words"),
+					duration:800,
+					properties:{
+						clip:{start:'rect(150px 150px 150px 150px)', end:'rect(0px 300px 300px 0px)'}
+					}
+				}).play();
+			});
+			
+		</script>
+</head>
+<body>
+	<h1>Test dojox.fx.ext-dojo.complex</h1>
+	<p>
+		The <em>dojox.fx.ext-dojo.complex</em> class is an extension of dojo.animateProperty which adds functionality
+		that animates a "complex property". The primary example is the
+		clip style: <code>rect(10px&nbsp;30px&nbsp;10px&nbsp;50px)</code>.
+	</p>
+	<p>
+		Frankly, the clip style is not very useful nor exciting. But the <em>dojox.fx.ext-dojo.complex</em> class
+		will animate any property contained within parenthesis. So it can also be used with (and is actually intended for)
+		CSS3 properties, such as transform:
+		<code>transform:&nbsp;rotate(10deg)&nbsp;translateX(0px)</code>
+		or even gradients (it would only affect the properties within the color-stops):
+		<code>background-image: -webkit-gradient(linear, right top, left top, color-stop(0, #ff0000),color-stop(1.0, #0000FF));</code>
+	</p>
+	<p>
+		A few notes on the clip:rect() property. IE only accepts no commas - Firefox & Safari accepts both. So.... don't use commas!
+		Also, the node must be set to position:absolute to work.
+	</p>
+	<div id="cnt">
+		<div id="words">
+			<p>
+				Dojo saves you time, performs better, and scales to meet your needs.
+				It's the toolkit that experienced designers and developers turn to for building great experiences. 
+				<br/><br/>
+				Dojo is a set of integrated libraries that accelerate development from simple pages to the most sophisticated web applications.
+				Great resources are available to help you take advantage of all that power.
+				<br/><br/>
+				Dojo Campus hosts the official documentation wiki, short how-to articles, and a rich set of examples
+				to help you leverage the power and depth of Dojo.
+			</p>
+		</div>
+	</div>
+	
+</body>
+</html>

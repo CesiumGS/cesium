@@ -1,0 +1,21 @@
+/* dojox.mobile.ToggleButton */
+.mblToggleButton {
+	background-image: url(compat/ui-widget-bg.png);
+	-moz-border-radius: 5px;
+	-o-border-radius: 5px;
+	-ms-border-radius: 5px;
+	border-radius: 5px;
+}
+.mblToggleButton.mblToggleButtonChecked::after {
+	-moz-transform: translate(-25px,0px) rotate(45deg) skew(10deg);
+	-o-transform: rotate(45deg) skew(10deg);
+	-ms-transform: rotate(45deg) skew(10deg);
+	transform: rotate(45deg) skew(10deg);
+	-moz-transform-origin: 50% 50%;
+	-o-transform-origin: 50% 50%;
+	-ms-transform-origin: 50% 50%;
+	transform-origin: 50% 50%;
+}
+.dj_ff3 .mblToggleButton.mblToggleButtonChecked::after {
+	-moz-transform: translate(-25px,-6px) rotate(45deg) skew(10deg);
+}

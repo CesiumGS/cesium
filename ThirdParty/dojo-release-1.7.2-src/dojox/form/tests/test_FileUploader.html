@@ -1,0 +1,275 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>dojox.form.FileUploader</title>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/themes/dijit.css";
+		@import "../../../dijit/themes/tundra/form/Button.css";
+		/*@import "../../../dijit/tests/css/dijitTests.css";
+		@import "../resources/FileUploader.css";*/
+	</style>
+	<script>
+		passthrough = function(msg){
+			//for catching messages from Flash
+			if(window.console){
+				console.log(msg);
+			}
+		}
+		forceNoFlash = false;
+		selectMultipleFiles = false;
+		var qs = window.location.href.split("?");
+		if(qs.length>1){
+			qs = qs[1];
+			if(qs.indexOf("forceNoFlash")>-1){
+				forceNoFlash = true;
+			}
+			if(qs.indexOf("multiMode")>-1){
+				selectMultipleFiles = true;
+			}
+		 }
+
+		 setLoc = function(href){
+		 	window.location.href = window.location.href.split("?")[0] + href;
+		 }
+		 showWithFlash = function(){
+		 	if(forceNoFlash){
+				setLoc("");
+			}
+		 }
+		 showWithoutFlash = function(){
+		 	if(!forceNoFlash){
+				setLoc((selectMultipleFiles) ? "?forceNoFlash&multiMode" : "?forceNoFlash");
+			}
+		 }
+		 showMulti = function(){
+		 	if(!selectMultipleFiles){
+				setLoc((forceNoFlash) ? "?forceNoFlash&multiMode" : "?multiMode");
+			}
+		 }
+		 showSingle = function(){
+		 	if(selectMultipleFiles){
+				setLoc((forceNoFlash) ? "?forceNoFlash" : "");
+			}
+		 }
+    </script>
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+    	djConfig="isDebug:true, parseOnLoad: true, debugAtAllCosts:false"></script>
+	<script type="text/javascript">
+		dojo.require("dojox.form.FileUploader");
+		dojo.require("dijit.form.Button");
+		dojo.require("dojo.parser");
+
+		//using this early for the forceNoFlash test:
+		dojo.require("dojox.embed.Flash");
+
+		var uploadUrl = "../tests/UploadFile.php";
+
+		var rmFiles = "";
+		var fileMask = [
+			["Jpeg File", 	"*.jpg;*.jpeg"],
+			["GIF File", 	"*.gif"],
+			["PNG File", 	"*.png"],
+			["All Images", 	"*.jpg;*.jpeg;*.gif;*.png"]
+		];
+		// For testing 1D array masks:
+		// var fileMask = 	["All Images", 	"*.jpg;*.jpeg;*.gif;*.png"];
+		// var fileMask = 	["PNG File", 	"*.png"];
+
+		dojo.addOnLoad(function(){
+			if(forceNoFlash){
+				dojox.embed.Flash.available = 0;
+				dojo.byId("hasFlash").style.display = "none";
+				dojo.byId("fTypes").style.display = "none";
+			}else{
+				dojo.byId("noFlash").style.display = "none";
+				if(dojo.isArray(fileMask[0])){
+					dojo.byId("fTypes").innerHTML+=fileMask[fileMask.length-1][1];
+				}else{
+					dojo.byId("fTypes").innerHTML+=fileMask[1];
+				}
+			}
+
+			if(selectMultipleFiles){
+				dojo.byId("fmode").innerHTML = dojo.byId("hmode").innerHTML = "Multi-File Mode";
+				dojo.byId("fSingle").style.display = "none";
+				dojo.byId("hSingle").style.display = "none";
+				dijit.byId("fbm").domNode.style.display = "none";
+				dijit.byId("hbm").domNode.style.display = "none";
+			}else{
+				dojo.byId("fmode").innerHTML = dojo.byId("hmode").innerHTML = "Single-File Mode";
+				dojo.byId("fMulti").style.display = "none";
+				dojo.byId("hMulti").style.display = "none";
+				dijit.byId("fbs").domNode.style.display = "none";
+				dijit.byId("hbs").domNode.style.display = "none";
+			}
+			dojo.byId("uploadedFiles").value = "";
+			dojo.byId("fileToUpload").value = "";
+
+
+			var f0 = new dojox.form.FileUploader({
+				degradable:true,
+				uploadUrl:uploadUrl,
+				uploadOnChange:false,
+				selectMultipleFiles:selectMultipleFiles,
+				fileMask:fileMask,
+				isDebug:true,
+				devMode:true
+			}, "selectBtn");
+
+			doUpload = function(){
+				dojo.byId("fileToUpload").innerHTML = "uploading...";
+				f0.upload();
+			}
+			dojo.connect(f0, "onChange", function(data){
+				console.log("DATA:", data);
+				dojo.forEach(data, function(d){
+					//file.type no workie from flash selection (Mac?)
+					if(selectMultipleFiles){
+						dojo.byId("fileToUpload").value += d.name+" "+Math.ceil(d.size*.001)+"kb \n";
+					}else{
+						dojo.byId("fileToUpload").value = d.name+" "+Math.ceil(d.size*.001)+"kb \n";
+					}
+				});
+			});
+			dojo.connect(f0, "onProgress", function(data){
+				dojo.byId("fileToUpload").value = "";
+				dojo.forEach(data, function(d){
+					dojo.byId("fileToUpload").value += "("+d.percent+"%) "+d.name+" \n";
+
+				});
+			});
+			dojo.connect(f0, "onComplete", function(data){
+				dojo.forEach(data, function(d){
+					dojo.byId("uploadedFiles").value += d.file+" \n";
+					dojo.byId("rgtCol").innerHTML += '<img src="'+d.file+'" />';
+					rmFiles+=d.file+";";
+				});
+			});
+			dojo.connect(f0, "onCancel", function(data){
+				dojo.byId("fileToUpload").value = "file selection cancelled by user.";
+			});
+
+			Destroy = function(){
+				f0.destroyAll();
+			}
+
+		});
+
+		cleanUp = function(){
+			dojo.byId("rgtCol").innerHTML = "";
+			dojo.byId("uploadedFiles").value = "";
+			dojo.xhrGet({
+				url:uploadUrl,
+				handleAs:"text",
+				content:{
+					rmFiles:rmFiles
+				}
+			});
+			rmFiles = "";
+
+		}
+		dojo.addOnUnload(function(){
+			console.log("You're leaving the page");
+			cleanUp();
+		});
+
+
+	</script>
+    <style>
+		body{
+			font-size:100%;
+		}
+		#wrapper{
+			width:100%;
+		}
+		#fileToUpload{
+			border:#CCCCCC 1px solid;
+			overflow-y:auto;
+			overflow-x:hidden;
+		}
+		.uploadedFilesLabel{
+
+		}
+		#uploadedFiles{
+			border:#CCCC00 1px solid;
+			background:#FFFFCC;
+		}
+		.leftCol{
+			width:500px;
+			padding:5px;
+			vertical-align:top;
+		}
+		.rgtCol{
+			vertical-align:top;
+		}
+		textarea{
+			display:block;
+		}
+		#noFlash button, #hasFlash button{
+			font-size:9px;
+		}
+	</style>
+</head>
+<body class="tundra">
+	<p style="font-size:14px; width:480px; border:2px solid #ff0000; padding:3px;">
+		<strong>NOTE:</strong> This test does upload,
+		but the server scripts are renamed to <em>tests/UploadFile.php.<strong>disabled</strong></em> and
+		<em>tests/cLOG.php.<strong>disabled</strong></em> to prevent security attacks on hosted servers.
+		You should rename these files (removing <em>.disabled</em>) in your local copy to conduct tests.
+	</p>
+
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+  <tr>
+    <td class="leftCol">
+
+    	<div id="hasFlash">
+            <h1>
+            	dojox.form.FileUploader - FileInputFlash Test
+            	<br/> Flash Mode - <span id="fmode"></span>
+            </h1>
+            <div onClick="showWithoutFlash()" dojoType="dijit.form.Button">Emulate No Flash Plugin</div>
+            <div id="fbm" onClick="showMulti()" dojoType="dijit.form.Button">Switch to Multi-File mode</div>
+            <div id="fbs" onClick="showSingle()" dojoType="dijit.form.Button">Switch to Single-File mode</div>
+
+            <p>The following is an example of FileUploader trigger FileInputFlash act's with the same APIs as FileInputOverlay, so you can build your own file input. <em>For the file to actually upload, you'll need to have PHP enabled. </em></p>
+            <p id="fMulti">Multiple-file mode. You may choose multiple files from the System Dialog.</p>
+            <p id="fSingle">Single-file mode. You may choose only one from the System Dialog.</p>
+        </div>
+
+        <div id="noFlash">
+            <h1>
+            	dojox.form.FileUploader - Degraded to FileInputOverlay
+            	<br/>HTML Mode - <span id="hmode"></span>
+			</h1>
+            <div onClick="showWithFlash()" dojoType="dijit.form.Button">Normal Flash Plugin Mode</div>
+            <div id="hbm" onClick="showMulti()" dojoType="dijit.form.Button">Switch to Multi-File mode</div>
+            <div id="hbs" onClick="showSingle()" dojoType="dijit.form.Button">Switch to Single-File mode</div>
+
+            <p>The following is an example of the user not having the Flash plugin installed, and the FileUploader degrading to the FileInputOverlay, except in Opera, which does not support the HTML file input overlay.</p>
+            <p id="hMulti">Multiple-file mode. You may upload multiple files by adding files to the upload list, one at a time.</p>
+            <p id="hSingle">Single-file mode. You may choose only one from the System Dialog.</p>
+        </div>
+
+
+		<span id="selectBtn">Select Images...</span>
+
+		<span id="fTypes">Choose from these types:</span>
+
+        <textarea cols="50" rows="6" id="fileToUpload"></textarea>
+
+        <div id="uploadBtn" class="uploadBtn" onClick="doUpload();" dojoType="dijit.form.Button">Upload</div>
+
+        <div class="uploadedFilesLabel">Uploaded Files:</div>
+
+        <textarea cols="50" rows="4" id="uploadedFiles"></textarea>
+
+        <div onClick="cleanUp()" dojoType="dijit.form.Button">Remove Files</div>
+        <!-- Test destroy: <div onClick="Destroy()" dojoType="dijit.form.Button">Destroy()</div> -->
+    </td>
+    <td id="rgtCol">&nbsp;</td>
+  </tr>
+</table>
+</body>
+</html>

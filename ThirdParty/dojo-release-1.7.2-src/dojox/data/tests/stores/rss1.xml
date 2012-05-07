@@ -1,0 +1,436 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:date="http://exslt.org/dates-and-times" version="2.0">
+  <channel><language>en</language><description><![CDATA[..where the wave finally broke, and rolled back.. Shane O'Sullivan's technical blog]]></description>
+	<title><![CDATA[SOS]]></title>
+	
+
+	<pubDate>Tue, 22 Jan 2008 14:32:09 GMT
+</pubDate>
+	
+
+	<link>http://shaneosullivan.wordpress.com</link>
+	
+	<!-- source: http://shaneosullivan.wordpress.com/feed/atom/ -->
+
+			<item><description>The Dojo Ajax Toolkit is kindly hosted by AOL for the consumption of anyone at all.  This has the advantage of
+
+Reducing the load on your own server
+Speeding up the delivery, as a Content Delivery Network (CDN) is used to ensure that the server is as close as possible to the client, and
+The more people [...] (...)</description>
+		<managingEditor>
+	 (Shane O'Sullivan)
+</managingEditor>
+		<title>Using AOL hosted Dojo with your custom code</title>
+		<link>http://shaneosullivan.wordpress.com/2008/01/22/using-aol-hosted-dojo-with-your-custom-code/</link>
+		<guid>http://shaneosullivan.wordpress.com/2008/01/22/using-aol-hosted-dojo-with-your-custom-code/</guid>
+
+		
+		<pubDate>Tue, 22 Jan 2008 14:32:09 GMT
+</pubDate>
+		<category domain="http://shaneosullivan.wordpress.com">Ajax</category>
+		<category domain="http://shaneosullivan.wordpress.com">Dojo</category>
+		<category domain="http://shaneosullivan.wordpress.com">Javascript</category>
+		<category domain="http://shaneosullivan.wordpress.com">Technical</category>
+		<category domain="http://shaneosullivan.wordpress.com">aol</category>
+
+		<category domain="http://shaneosullivan.wordpress.com">cross domain</category>
+		<category domain="http://shaneosullivan.wordpress.com">open source</category>		
+		
+		
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2008/01/22/using-aol-hosted-dojo-with-your-custom-code/#comments" thr:count="1"/>
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2008/01/22/using-aol-hosted-dojo-with-your-custom-code/feed/atom/" thr:count="1"/>
+		<!--Unknown element total--><thr:total xmlns:thr="http://purl.org/syndication/thread/1.0">1</thr:total>
+	<source url="http://shaneosullivan.wordpress.com/feed/atom/">SOS</source></item>
+		<item><description>A short while ago I posted about the demo engine I&amp;#8217;m writing for the Dojo Ajax Toolkit. Click here to read that post or go to http://www.skynet.ie/~sos/js/demo/dojo/dojoc/demos/featureexplorer.html to see it in action.
+Features
+Since that post, quite a lot of work has gone into both the features and the content of the demo engine, and the development [...] (...)</description>
+
+		<managingEditor>
+	 (Shane O'Sullivan)
+</managingEditor>
+		<title>Dojo Demo Engine Update</title>
+		<link>http://shaneosullivan.wordpress.com/2008/01/07/dojo-demo-engine-update/</link>
+		<guid>http://shaneosullivan.wordpress.com/2008/01/07/dojo-demo-engine-update/</guid>
+		
+		<pubDate>Mon, 07 Jan 2008 01:02:43 GMT
+</pubDate>
+
+		<category domain="http://shaneosullivan.wordpress.com">Ajax</category><category domain="http://shaneosullivan.wordpress.com">Demo Engine</category><category domain="http://shaneosullivan.wordpress.com">Dojo</category><category domain="http://shaneosullivan.wordpress.com">Javascript</category><category domain="http://shaneosullivan.wordpress.com">demo</category><category domain="http://shaneosullivan.wordpress.com">dijit</category><category domain="http://shaneosullivan.wordpress.com">documentation</category><category domain="http://shaneosullivan.wordpress.com">dojo.query</category><category domain="http://shaneosullivan.wordpress.com">dojox</category><category domain="http://shaneosullivan.wordpress.com">json</category><category domain="http://shaneosullivan.wordpress.com">open source</category>		
+		
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2008/01/07/dojo-demo-engine-update/#comments" thr:count="3"/>
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2008/01/07/dojo-demo-engine-update/feed/atom/" thr:count="3"/>
+		<!--Unknown element total--><thr:total xmlns:thr="http://purl.org/syndication/thread/1.0">3</thr:total>
+
+	<source url="http://shaneosullivan.wordpress.com/feed/atom/">SOS</source></item>
+		<item><description>Internet Explorer has a nice feature where a new window can be opened modally using the window.showModalDialog function, meaning that the page that opened it cannot be accessed until the new window is closed.  This can be useful in many situations.
+However, the main limitation of IE Modal Dialogs (other than being non-standard), is that [...] (...)</description>
+		<managingEditor>
+	 (Shane O'Sullivan)
+</managingEditor>
+		<title>Navigating in an IE Modal Dialog</title>
+		<link>http://shaneosullivan.wordpress.com/2007/12/31/navigating-in-an-ie-modal-dialog/</link>
+
+		<guid>http://shaneosullivan.wordpress.com/2007/12/31/navigating-in-an-ie-modal-dialog/</guid>
+		
+		<pubDate>Mon, 31 Dec 2007 16:36:21 GMT
+</pubDate>
+		<category domain="http://shaneosullivan.wordpress.com">Dojo</category><category domain="http://shaneosullivan.wordpress.com">Internet Explorer</category><category domain="http://shaneosullivan.wordpress.com">Javascript</category><category domain="http://shaneosullivan.wordpress.com">Technical</category><category domain="http://shaneosullivan.wordpress.com">modal</category>		
+		
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2007/12/31/navigating-in-an-ie-modal-dialog/#comments" thr:count="1"/>
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2007/12/31/navigating-in-an-ie-modal-dialog/feed/atom/" thr:count="1"/>
+		<!--Unknown element total--><thr:total xmlns:thr="http://purl.org/syndication/thread/1.0">1</thr:total>
+
+	<source url="http://shaneosullivan.wordpress.com/feed/atom/">SOS</source></item>
+		<item><description>A couple of weeks ago I saw a cool demo framework for an Ajax toolkit just released as open source.  It&amp;#8217;s a very slick implementation, with a tree listing all the various demos, and a tabbed area showing the implementation, and the widget in practice.
+So, I think to myself, this is exactly what the [...] (...)</description>
+		<managingEditor>
+	 (Shane O'Sullivan)
+</managingEditor>
+		<title>A new Demo engine for Dojo</title>
+		<link>http://shaneosullivan.wordpress.com/2007/12/04/a-new-demo-engine-for-dojo/</link>
+
+		<guid>http://shaneosullivan.wordpress.com/2007/12/04/a-new-demo-engine-for-dojo/</guid>
+		
+		<pubDate>Tue, 04 Dec 2007 09:29:16 GMT
+</pubDate>
+		<category domain="http://shaneosullivan.wordpress.com">Ajax</category><category domain="http://shaneosullivan.wordpress.com">Dojo</category><category domain="http://shaneosullivan.wordpress.com">Javascript</category><category domain="http://shaneosullivan.wordpress.com">demo</category><category domain="http://shaneosullivan.wordpress.com">dijit</category><category domain="http://shaneosullivan.wordpress.com">documentation</category><category domain="http://shaneosullivan.wordpress.com">dojox.image</category><category domain="http://shaneosullivan.wordpress.com">json</category><category domain="http://shaneosullivan.wordpress.com">open source</category>		
+		
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2007/12/04/a-new-demo-engine-for-dojo/#comments" thr:count="3"/>
+
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2007/12/04/a-new-demo-engine-for-dojo/feed/atom/" thr:count="3"/>
+		<!--Unknown element total--><thr:total xmlns:thr="http://purl.org/syndication/thread/1.0">3</thr:total>
+	<source url="http://shaneosullivan.wordpress.com/feed/atom/">SOS</source></item>
+		<item><description>Today I&amp;#8217;ve begun the process of upgrading my Ubuntu installation of version 7.04 to version 7.10.  To see my previous tutorial of getting Ubuntu installed on my IBM Thinkpad X41, see http://shaneosullivan.wordpress.com/2007/02/16/installing-ubuntu-edgy-on-a-thinkpad-x41-tablet/.
+This post lists whatever issues I found when upgrading, and my solutions to them.  For the official instructions, see https://help.ubuntu.com/community/GutsyUpgrades.
+Third Party software [...] (...)</description>
+		<managingEditor>
+	 (Shane O'Sullivan)
+</managingEditor>
+
+		<title>Upgrading Ubuntu Feisty Fawn (7.04) to Gutsy Gibbon (7.10)</title>
+		<link>http://shaneosullivan.wordpress.com/2007/10/18/upgrading-ubuntu-feisty-fawn-704-to-gutsy-gibbon-710/</link>
+		<guid>http://shaneosullivan.wordpress.com/2007/10/18/upgrading-ubuntu-feisty-fawn-704-to-gutsy-gibbon-710/</guid>
+		
+		<pubDate>Thu, 18 Oct 2007 16:11:37 GMT
+</pubDate>
+		<category domain="http://shaneosullivan.wordpress.com">Gutsy Gibbon</category><category domain="http://shaneosullivan.wordpress.com">Ubuntu</category><category domain="http://shaneosullivan.wordpress.com">open source</category>		
+		
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2007/10/18/upgrading-ubuntu-feisty-fawn-704-to-gutsy-gibbon-710/#comments" thr:count="25"/>
+
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2007/10/18/upgrading-ubuntu-feisty-fawn-704-to-gutsy-gibbon-710/feed/atom/" thr:count="25"/>
+		<!--Unknown element total--><thr:total xmlns:thr="http://purl.org/syndication/thread/1.0">25</thr:total>
+	<source url="http://shaneosullivan.wordpress.com/feed/atom/">SOS</source></item>
+		<item><description>In previous posts (here for the Dojo 0.4.3 version, here and here), I wrote how I wrote an image gallery for version 0.4.3 of the Dojo Ajax Toolkit, and how I was translating it for the latest version of the toolkit, version 1.0.
+Well, that work is now, finally, complete, and I have to say, I&amp;#8217;m [...] (...)</description>
+		<managingEditor>
+	 (Shane O'Sullivan)
+</managingEditor>
+
+		<title>Introducing the new Dojo Image Widgets</title>
+		<link>http://shaneosullivan.wordpress.com/2007/10/13/introducing-the-new-dojo-image-widgets/</link>
+		<guid>http://shaneosullivan.wordpress.com/2007/10/13/introducing-the-new-dojo-image-widgets/</guid>
+		
+		<pubDate>Sat, 13 Oct 2007 11:09:13 GMT
+</pubDate>
+		<category domain="http://shaneosullivan.wordpress.com">Ajax</category>
+		<category domain="http://shaneosullivan.wordpress.com">Dojo</category>
+
+		<category domain="http://shaneosullivan.wordpress.com">Flickr</category>
+		<category domain="http://shaneosullivan.wordpress.com">Image Gallery</category>
+		<category domain="http://shaneosullivan.wordpress.com">Javascript</category>
+		<category domain="http://shaneosullivan.wordpress.com">Technical</category>
+		<category domain="http://shaneosullivan.wordpress.com">aol</category>
+		<category domain="http://shaneosullivan.wordpress.com">cross domain</category>
+
+		<category domain="http://shaneosullivan.wordpress.com">dijit</category>
+		<category domain="http://shaneosullivan.wordpress.com">dojo.data</category>
+		<category domain="http://shaneosullivan.wordpress.com">dojox</category>
+		<category domain="http://shaneosullivan.wordpress.com">dojox.data</category>
+		<category domain="http://shaneosullivan.wordpress.com">dojox.image</category>
+		<category domain="http://shaneosullivan.wordpress.com">json</category>
+
+		<category domain="http://shaneosullivan.wordpress.com">open source</category>
+				
+		
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2007/10/13/introducing-the-new-dojo-image-widgets/#comments" thr:count="46"/>
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2007/10/13/introducing-the-new-dojo-image-widgets/feed/atom/" thr:count="46"/>
+		<!--Unknown element total--><thr:total xmlns:thr="http://purl.org/syndication/thread/1.0">46</thr:total>
+	<source url="http://shaneosullivan.wordpress.com/feed/atom/">SOS</source></item>
+		<item><description>The previously  announced Dojo Grid has landed in source control, and is in the nightly builds.  It has all sorts of fancy functionality, like support for lazy loading huge data sets, individual styling of rows and columns, inline editing etc.
+Check it out at http://archive.dojotoolkit.org/nightly/checkout/dojox/grid/tests/
+Very cool stuff!
+Update: The Sitepen guys have recently blogged about [...] (...)</description>
+		<managingEditor>
+
+	 (Shane O'Sullivan)
+</managingEditor>
+		<title>Dojo Grid has landed</title>
+		<link>http://shaneosullivan.wordpress.com/2007/10/05/dojo-grid-has-landed/</link>
+		<guid>http://shaneosullivan.wordpress.com/2007/10/05/dojo-grid-has-landed/</guid>
+		
+		<pubDate>Fri, 05 Oct 2007 13:23:17 GMT
+</pubDate>
+		<category domain="http://shaneosullivan.wordpress.com">Ajax</category><category domain="http://shaneosullivan.wordpress.com">Dojo</category><category domain="http://shaneosullivan.wordpress.com">grid</category><category domain="http://shaneosullivan.wordpress.com">open source</category>		
+		
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2007/10/05/dojo-grid-has-landed/#comments" thr:count="0"/>
+
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2007/10/05/dojo-grid-has-landed/feed/atom/" thr:count="0"/>
+		<!--Unknown element total--><thr:total xmlns:thr="http://purl.org/syndication/thread/1.0">0</thr:total>
+	<source url="http://shaneosullivan.wordpress.com/feed/atom/">SOS</source></item>
+		<item><description>I work on a number of open source projects, and many of them use the Subversion version control system to manage their code.  Before my switch from Windows XP to Ubuntu Linux (which I am still ecstatically happy with btw), I became a big fan of TortoiseSVN, an extremely useful Subversion client that integrates itself [...] (...)</description>
+		<managingEditor>
+	 (Shane O'Sullivan)
+</managingEditor>
+		<title>A TortoiseSVN replacement for Ubuntu</title>
+
+		<link>http://shaneosullivan.wordpress.com/2007/10/04/a-tortoisesvn-replacement-for-ubuntu/</link>
+		<guid>http://shaneosullivan.wordpress.com/2007/10/04/a-tortoisesvn-replacement-for-ubuntu/</guid>
+		
+		<pubDate>Thu, 04 Oct 2007 15:50:50 GMT
+</pubDate>
+		<category domain="http://shaneosullivan.wordpress.com">Linux</category><category domain="http://shaneosullivan.wordpress.com">Nautilus</category><category domain="http://shaneosullivan.wordpress.com">Subversion</category><category domain="http://shaneosullivan.wordpress.com">Technical</category><category domain="http://shaneosullivan.wordpress.com">TortoiseSVN</category><category domain="http://shaneosullivan.wordpress.com">Ubuntu</category><category domain="http://shaneosullivan.wordpress.com">open source</category>		
+		
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2007/10/04/a-tortoisesvn-replacement-for-ubuntu/#comments" thr:count="3"/>
+
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2007/10/04/a-tortoisesvn-replacement-for-ubuntu/feed/atom/" thr:count="3"/>
+		<!--Unknown element total--><thr:total xmlns:thr="http://purl.org/syndication/thread/1.0">3</thr:total>
+	<source url="http://shaneosullivan.wordpress.com/feed/atom/">SOS</source></item>
+		<item><description>I&amp;#8217;ve recently submitted a new data store for the Dojo Ajax Toolkit that makes it very simple to query Flickr for your and other peoples images.  For those not familiar with Flickr, it is a photo sharing website, one of the most popular on the net.  However, what makes it quite special is [...] (...)</description>
+		<managingEditor>
+	 (Shane O'Sullivan)
+</managingEditor>
+
+		<title>Querying Flickr with Dojo!</title>
+		<link>http://shaneosullivan.wordpress.com/2007/09/22/querying-flickr-with-dojo/</link>
+		<guid>http://shaneosullivan.wordpress.com/2007/09/22/querying-flickr-with-dojo/</guid>
+		
+		<pubDate>Sat, 22 Sep 2007 16:10:05 GMT
+</pubDate>
+		<category domain="http://shaneosullivan.wordpress.com">Ajax</category><category domain="http://shaneosullivan.wordpress.com">Dojo</category><category domain="http://shaneosullivan.wordpress.com">Flickr</category><category domain="http://shaneosullivan.wordpress.com">Image Gallery</category><category domain="http://shaneosullivan.wordpress.com">Javascript</category><category domain="http://shaneosullivan.wordpress.com">Technical</category><category domain="http://shaneosullivan.wordpress.com">dojo.data</category><category domain="http://shaneosullivan.wordpress.com">dojox.data</category><category domain="http://shaneosullivan.wordpress.com">dojox.image</category><category domain="http://shaneosullivan.wordpress.com">json</category><category domain="http://shaneosullivan.wordpress.com">open source</category>		
+		
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2007/09/22/querying-flickr-with-dojo/#comments" thr:count="3"/>
+
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2007/09/22/querying-flickr-with-dojo/feed/atom/" thr:count="3"/>
+		<!--Unknown element total--><thr:total xmlns:thr="http://purl.org/syndication/thread/1.0">3</thr:total>
+	<source url="http://shaneosullivan.wordpress.com/feed/atom/">SOS</source></item>
+		<item><description>Flickr is a photo sharing website that has a very flexible set of APIs that other applications and websites can use to access the photos it stores. This post shows you how to specify a callback function that Flickr can call to pass your web application information on photos it stores.
+Quite a while ago I [...] (...)</description>
+		<managingEditor>
+	 (Shane O'Sullivan)
+</managingEditor>
+		<title>Specifying the callback function with the Flickr JSON APIs</title>
+
+		<link>http://shaneosullivan.wordpress.com/2007/09/13/specifying-the-callback-function-with-the-flickr-json-apis/</link>
+		<guid>http://shaneosullivan.wordpress.com/2007/09/13/specifying-the-callback-function-with-the-flickr-json-apis/</guid>
+		
+		<pubDate>Thu, 13 Sep 2007 09:31:30 GMT
+</pubDate>
+		<category domain="http://shaneosullivan.wordpress.com">Ajax</category><category domain="http://shaneosullivan.wordpress.com">Dojo</category><category domain="http://shaneosullivan.wordpress.com">Flickr</category><category domain="http://shaneosullivan.wordpress.com">Image Gallery</category><category domain="http://shaneosullivan.wordpress.com">Javascript</category><category domain="http://shaneosullivan.wordpress.com">Technical</category><category domain="http://shaneosullivan.wordpress.com">dojox</category><category domain="http://shaneosullivan.wordpress.com">dojox.data</category><category domain="http://shaneosullivan.wordpress.com">dojox.image</category><category domain="http://shaneosullivan.wordpress.com">open source</category>		
+		
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2007/09/13/specifying-the-callback-function-with-the-flickr-json-apis/#comments" thr:count="0"/>
+
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2007/09/13/specifying-the-callback-function-with-the-flickr-json-apis/feed/atom/" thr:count="0"/>
+		<!--Unknown element total--><thr:total xmlns:thr="http://purl.org/syndication/thread/1.0">0</thr:total>
+	<source url="http://shaneosullivan.wordpress.com/feed/atom/">SOS</source></item>
+		<item><description>In a previous post (see here)  I spoke about how I&amp;#8217;d written an Image Gallery widget that worked with Dojo Ajax Toolkit version 0.4.2 and 0.4.3.  I contacted the good folks at Dojo about updating it for the latest release, 0.9, and adding it to the toolkit.
+They were very receptive to the idea, [...] (...)</description>
+		<managingEditor>
+	 (Shane O'Sullivan)
+</managingEditor>
+
+		<title>Image Gallery, Slideshow, and Flickr data source for Dojo 0.9</title>
+		<link>http://shaneosullivan.wordpress.com/2007/09/04/image-gallery-slideshow-and-flickr-data-source-for-dojo-09/</link>
+		<guid>http://shaneosullivan.wordpress.com/2007/09/04/image-gallery-slideshow-and-flickr-data-source-for-dojo-09/</guid>
+		
+		<pubDate>Tue, 04 Sep 2007 23:32:51 GMT
+</pubDate>
+		<category domain="http://shaneosullivan.wordpress.com">Ajax</category><category domain="http://shaneosullivan.wordpress.com">Dojo</category><category domain="http://shaneosullivan.wordpress.com">Image Gallery</category><category domain="http://shaneosullivan.wordpress.com">Javascript</category><category domain="http://shaneosullivan.wordpress.com">Technical</category><category domain="http://shaneosullivan.wordpress.com">dijit</category><category domain="http://shaneosullivan.wordpress.com">dojo.image</category><category domain="http://shaneosullivan.wordpress.com">dojox</category><category domain="http://shaneosullivan.wordpress.com">open source</category>		
+		
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2007/09/04/image-gallery-slideshow-and-flickr-data-source-for-dojo-09/#comments" thr:count="1"/>
+
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2007/09/04/image-gallery-slideshow-and-flickr-data-source-for-dojo-09/feed/atom/" thr:count="1"/>
+		<!--Unknown element total--><thr:total xmlns:thr="http://purl.org/syndication/thread/1.0">1</thr:total>
+	<source url="http://shaneosullivan.wordpress.com/feed/atom/">SOS</source></item>
+		<item><description>When working with the Dojo Ajax Toolkit and using it&amp;#8217;s dojo.event package to listen to DOM and custom events, the two most common approaches are:
+
+Listen for an event (or function call) to be triggered on  an object, and when it is to run a custom function, e.g.
+    var alertFn = function() [...] (...)</description>
+		<managingEditor>
+	 (Shane O'Sullivan)
+</managingEditor>
+
+		<title>Dojo event performance tip</title>
+		<link>http://shaneosullivan.wordpress.com/2007/08/23/dojo-event-performance-tip/</link>
+		<guid>http://shaneosullivan.wordpress.com/2007/08/23/dojo-event-performance-tip/</guid>
+		
+		<pubDate>Thu, 23 Aug 2007 12:29:08 GMT
+</pubDate>
+		<category domain="http://shaneosullivan.wordpress.com">Ajax</category><category domain="http://shaneosullivan.wordpress.com">Dojo</category><category domain="http://shaneosullivan.wordpress.com">Javascript</category><category domain="http://shaneosullivan.wordpress.com">Technical</category><category domain="http://shaneosullivan.wordpress.com">dojo.event</category><category domain="http://shaneosullivan.wordpress.com">open source</category><category domain="http://shaneosullivan.wordpress.com">performance</category>		
+		
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2007/08/23/dojo-event-performance-tip/#comments" thr:count="0"/>
+
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2007/08/23/dojo-event-performance-tip/feed/atom/" thr:count="0"/>
+		<!--Unknown element total--><thr:total xmlns:thr="http://purl.org/syndication/thread/1.0">0</thr:total>
+	<source url="http://shaneosullivan.wordpress.com/feed/atom/">SOS</source></item>
+		<item><description>The latest  version of the Dojo Ajax Toolkit has just been released into the wild.  Version 0.9 is a very streamlined progression of the toolkit, with many of the less essential features pushed out to another project, DojoX, and the Dojo widgets given their own project, Dijit.
+Another big change is the the main [...] (...)</description>
+		<managingEditor>
+	 (Shane O'Sullivan)
+</managingEditor>
+		<title>Dojo 0.9 released</title>
+
+		<link>http://shaneosullivan.wordpress.com/2007/08/22/dojo-09-released/</link>
+		<guid>http://shaneosullivan.wordpress.com/2007/08/22/dojo-09-released/</guid>
+		
+		<pubDate>Wed, 22 Aug 2007 10:24:51 GMT
+</pubDate>
+		<category domain="http://shaneosullivan.wordpress.com">Ajax</category><category domain="http://shaneosullivan.wordpress.com">Dojo</category><category domain="http://shaneosullivan.wordpress.com">Javascript</category><category domain="http://shaneosullivan.wordpress.com">Technical</category><category domain="http://shaneosullivan.wordpress.com">dijit</category><category domain="http://shaneosullivan.wordpress.com">open source</category>		
+		
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2007/08/22/dojo-09-released/#comments" thr:count="2"/>
+
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2007/08/22/dojo-09-released/feed/atom/" thr:count="2"/>
+		<!--Unknown element total--><thr:total xmlns:thr="http://purl.org/syndication/thread/1.0">2</thr:total>
+	<source url="http://shaneosullivan.wordpress.com/feed/atom/">SOS</source></item>
+		<item><description>The Dojo/Dijit (Dojo&amp;#8217;s widget project) toolkit has created a page where you can view many of their widgets using the four CSS themes written so far for Dojo.  This is cool for a couple of reasons.
+Firstly, it showcases the excellent work the Dijit developers have put into new themeing skins.  There are four [...] (...)</description>
+		<managingEditor>
+	 (Shane O'Sullivan)
+</managingEditor>
+
+		<title>Dojo theme browser shows off Dijit widgets</title>
+		<link>http://shaneosullivan.wordpress.com/2007/08/17/dojo-theme-browser-shows-off-dijit-widgets/</link>
+		<guid>http://shaneosullivan.wordpress.com/2007/08/17/dojo-theme-browser-shows-off-dijit-widgets/</guid>
+		
+		<pubDate>Fri, 17 Aug 2007 12:18:57 GMT
+</pubDate>
+		<category domain="http://shaneosullivan.wordpress.com">Ajax</category><category domain="http://shaneosullivan.wordpress.com">Dojo</category><category domain="http://shaneosullivan.wordpress.com">Javascript</category><category domain="http://shaneosullivan.wordpress.com">Rich Text</category><category domain="http://shaneosullivan.wordpress.com">Technical</category><category domain="http://shaneosullivan.wordpress.com">dijit</category><category domain="http://shaneosullivan.wordpress.com">open source</category>		
+		
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2007/08/17/dojo-theme-browser-shows-off-dijit-widgets/#comments" thr:count="2"/>
+
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2007/08/17/dojo-theme-browser-shows-off-dijit-widgets/feed/atom/" thr:count="2"/>
+		<!--Unknown element total--><thr:total xmlns:thr="http://purl.org/syndication/thread/1.0">2</thr:total>
+	<source url="http://shaneosullivan.wordpress.com/feed/atom/">SOS</source></item>
+		<item><description>Yahoo have released a very useful extension for Firebug, which is itself an extension for Firefox, which can be used to analyze a web page&amp;#8217;s performance.  The extension, called YSlow, appears as a separate pane in Firebug, and gives you a whole load of statistics about your page.
+However, in addition to the bare numbers, [...] (...)</description>
+		<managingEditor>
+	 (Shane O'Sullivan)
+</managingEditor>
+
+		<title>Why is my web page slow? YSlow for Firebug can tell you.</title>
+		<link>http://shaneosullivan.wordpress.com/2007/07/25/why-is-my-web-page-slow-yslow-for-firebug-can-tell-you/</link>
+		<guid>http://shaneosullivan.wordpress.com/2007/07/25/why-is-my-web-page-slow-yslow-for-firebug-can-tell-you/</guid>
+		
+		<pubDate>Wed, 25 Jul 2007 15:08:30 GMT
+</pubDate>
+		<category domain="http://shaneosullivan.wordpress.com">Ajax</category><category domain="http://shaneosullivan.wordpress.com">Firebug</category><category domain="http://shaneosullivan.wordpress.com">Firefox</category><category domain="http://shaneosullivan.wordpress.com">Javascript</category><category domain="http://shaneosullivan.wordpress.com">Technical</category><category domain="http://shaneosullivan.wordpress.com">tools</category>		
+		
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2007/07/25/why-is-my-web-page-slow-yslow-for-firebug-can-tell-you/#comments" thr:count="1"/>
+
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2007/07/25/why-is-my-web-page-slow-yslow-for-firebug-can-tell-you/feed/atom/" thr:count="1"/>
+		<!--Unknown element total--><thr:total xmlns:thr="http://purl.org/syndication/thread/1.0">1</thr:total>
+	<source url="http://shaneosullivan.wordpress.com/feed/atom/">SOS</source></item>
+		<item><description>I have created an Image Gallery widget built on Dojo 0.4.3 that integrates nicely with Flickr.  The widget it written entirely using JavaScript and CSS as a standalone Dojo widget, and is released under the same open source license as Dojo, the Academic Free License.
+For more information, including the code and examples, see http://www.skynet.ie/~sos/ajax/imagegallery.php.
+Some [...] (...)</description>
+		<managingEditor>
+	 (Shane O'Sullivan)
+</managingEditor>
+		<title>Flickr and Dojo Image Gallery</title>
+
+		<link>http://shaneosullivan.wordpress.com/2007/07/03/flickr-and-dojo-image-gallery/</link>
+		<guid>http://shaneosullivan.wordpress.com/2007/07/03/flickr-and-dojo-image-gallery/</guid>
+		
+		<pubDate>Tue, 03 Jul 2007 15:53:33 GMT
+</pubDate>
+		<category domain="http://shaneosullivan.wordpress.com">Ajax</category><category domain="http://shaneosullivan.wordpress.com">Dojo</category><category domain="http://shaneosullivan.wordpress.com">Flickr</category><category domain="http://shaneosullivan.wordpress.com">Image Gallery</category><category domain="http://shaneosullivan.wordpress.com">Javascript</category><category domain="http://shaneosullivan.wordpress.com">Technical</category><category domain="http://shaneosullivan.wordpress.com">json</category>		
+		
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2007/07/03/flickr-and-dojo-image-gallery/#comments" thr:count="7"/>
+
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2007/07/03/flickr-and-dojo-image-gallery/feed/atom/" thr:count="7"/>
+		<!--Unknown element total--><thr:total xmlns:thr="http://purl.org/syndication/thread/1.0">7</thr:total>
+	<source url="http://shaneosullivan.wordpress.com/feed/atom/">SOS</source></item>
+		<item><description>The two main areas of interest for me over the last year or two, blog-wise that is, have been the Dojo Ajax toolkit, one of the more popular open source JavaScript toolkits, and Ubuntu Linux, the very popular operating system that is seen by many as the best chance Linux has of succeeding on the [...] (...)</description>
+		<managingEditor>
+	 (Shane O'Sullivan)
+</managingEditor>
+		<title>Is Dojo being ignored by developers?</title>
+
+		<link>http://shaneosullivan.wordpress.com/2007/06/19/is-dojo-being-ignored-by-developers/</link>
+		<guid>http://shaneosullivan.wordpress.com/2007/06/19/is-dojo-being-ignored-by-developers/</guid>
+		
+		<pubDate>Tue, 19 Jun 2007 10:36:49 GMT
+</pubDate>
+		<category domain="http://shaneosullivan.wordpress.com">Ajax</category><category domain="http://shaneosullivan.wordpress.com">Dojo</category><category domain="http://shaneosullivan.wordpress.com">Javascript</category><category domain="http://shaneosullivan.wordpress.com">Technical</category><category domain="http://shaneosullivan.wordpress.com">open source</category>		
+		
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2007/06/19/is-dojo-being-ignored-by-developers/#comments" thr:count="5"/>
+
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2007/06/19/is-dojo-being-ignored-by-developers/feed/atom/" thr:count="5"/>
+		<!--Unknown element total--><thr:total xmlns:thr="http://purl.org/syndication/thread/1.0">5</thr:total>
+	<source url="http://shaneosullivan.wordpress.com/feed/atom/">SOS</source></item>
+		<item><description>I&amp;#8217;ve created an example usage of the Dojo Charting engine, which you can find at http://www.skynet.ie/~sos/pageStats.php.  View the source to see how it works.
+It&amp;#8217;s a modified version of the unit test available with the Dojo toolkit, but used in a specific scenario - in this case, to graph the page impressions for my personal [...] (...)</description>
+		<managingEditor>
+	 (Shane O'Sullivan)
+
+</managingEditor>
+		<title>Dojo Charting example to show website statistics</title>
+		<link>http://shaneosullivan.wordpress.com/2007/06/15/dojo-charting-example-to-show-website-statistics-2/</link>
+		<guid>http://shaneosullivan.wordpress.com/2007/06/15/dojo-charting-example-to-show-website-statistics-2/</guid>
+		
+		<pubDate>Fri, 15 Jun 2007 12:35:35 GMT
+</pubDate>
+		<category domain="http://shaneosullivan.wordpress.com">Ajax</category><category domain="http://shaneosullivan.wordpress.com">Dojo</category><category domain="http://shaneosullivan.wordpress.com">Javascript</category><category domain="http://shaneosullivan.wordpress.com">Technical</category><category domain="http://shaneosullivan.wordpress.com">chart</category><category domain="http://shaneosullivan.wordpress.com">charting</category><category domain="http://shaneosullivan.wordpress.com">dojo.charting</category><category domain="http://shaneosullivan.wordpress.com">json</category><category domain="http://shaneosullivan.wordpress.com">open source</category><category domain="http://shaneosullivan.wordpress.com">php</category>		
+		
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2007/06/15/dojo-charting-example-to-show-website-statistics-2/#comments" thr:count="4"/>
+
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2007/06/15/dojo-charting-example-to-show-website-statistics-2/feed/atom/" thr:count="4"/>
+		<!--Unknown element total--><thr:total xmlns:thr="http://purl.org/syndication/thread/1.0">4</thr:total>
+	<source url="http://shaneosullivan.wordpress.com/feed/atom/">SOS</source></item>
+		<item><description>I decided today that I wanted to put links at the bottom of each of my blog posts that would allow people to  perform actions on the post, e.g:
+
+Digg it
+Kick it
+Mail it
+Bookmark it on del.icio.us
+Bookmark it on reddit.com
+Bookmark it on live.com
+
+My blog is on Wordpress.com which doesn&amp;#8217;t seem to have a plugin that will [...] (...)</description>
+		<managingEditor>
+	 (Shane O'Sullivan)
+</managingEditor>
+
+		<title>GreaseMonkey script to add Digg-like links to posts</title>
+		<link>http://shaneosullivan.wordpress.com/2007/05/22/greasemonkey-script-to-add-digg-like-links-to-posts/</link>
+		<guid>http://shaneosullivan.wordpress.com/2007/05/22/greasemonkey-script-to-add-digg-like-links-to-posts/</guid>
+		
+		<pubDate>Tue, 22 May 2007 16:57:02 GMT
+</pubDate>
+		<category domain="http://shaneosullivan.wordpress.com">Ajax</category><category domain="http://shaneosullivan.wordpress.com">Firefox</category><category domain="http://shaneosullivan.wordpress.com">Javascript</category><category domain="http://shaneosullivan.wordpress.com">greasemonkey</category>		
+		
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2007/05/22/greasemonkey-script-to-add-digg-like-links-to-posts/#comments" thr:count="8"/>
+
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2007/05/22/greasemonkey-script-to-add-digg-like-links-to-posts/feed/atom/" thr:count="8"/>
+		<!--Unknown element total--><thr:total xmlns:thr="http://purl.org/syndication/thread/1.0">8</thr:total>
+	<source url="http://shaneosullivan.wordpress.com/feed/atom/">SOS</source></item>
+		<item><description>Bill Higgins of IBM has written a very well thought out article of why web applications should look and act like web applications, and not the desktop variety.  Well worth a read - http://billhiggins.us/weblog/2007/05/17/the-uncanny-valley-of-user-interface-design
+        (...)</description>
+		<managingEditor>
+	 (Shane O'Sullivan)
+</managingEditor>
+		<title>Article on the square pegs and round holes of desktop and web applications</title>
+
+		<link>http://shaneosullivan.wordpress.com/2007/05/22/article-on-the-square-pegs-and-round-holes-of-desktop-and-web-applications/</link>
+		<guid>http://shaneosullivan.wordpress.com/2007/05/22/article-on-the-square-pegs-and-round-holes-of-desktop-and-web-applications/</guid>
+		
+		<pubDate>Tue, 22 May 2007 08:49:00 GMT
+</pubDate>
+		<category domain="http://shaneosullivan.wordpress.com">Ajax</category><category domain="http://shaneosullivan.wordpress.com">Javascript</category><category domain="http://shaneosullivan.wordpress.com">Zimbra</category>		
+		
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2007/05/22/article-on-the-square-pegs-and-round-holes-of-desktop-and-web-applications/#comments" thr:count="0"/>
+		<!--Unknown element link--><link xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2007/05/22/article-on-the-square-pegs-and-round-holes-of-desktop-and-web-applications/feed/atom/" thr:count="0"/>
+
+		<!--Unknown element total--><thr:total xmlns:thr="http://purl.org/syndication/thread/1.0">0</thr:total>
+	<source url="http://shaneosullivan.wordpress.com/feed/atom/">SOS</source></item>
+	<generator>WordPress vMU (http://wordpress.org/) + Atom 1.0 XSLT Transform v1 (http://atom.geekhood.net/)</generator></channel>
+</rss>

@@ -1,0 +1,84 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+
+<html>
+<head>
+	<style type="text/css">
+		@import "../../resources/dojo.css";
+	</style>
+	
+	<script type="text/javascript" djConfig="isDebug: true" src="../../dojo.js"></script>
+	
+	<script type="text/javascript">
+		dojo.addOnLoad(function() {
+			// Log of events on typer <input>, used by automated test harness
+			events = [];
+
+			kp1 = dojo.connect(dojo.byId("typer"), "onkeypress", function(evt){
+
+				// Keep log of events on <input>, skipping pressing of the control/shift/meta, since that's
+				// browser dependent
+				if(evt.keyCode == dojo.keys.CTRL || evt.keyCode == dojo.keys.SHIFT || evt.keyCode == dojo.keys.META){
+					return;
+				}
+				events.push(evt);
+
+				console.log("1 onkeypress triggered: charOrCode: " + evt.charOrCode + ", keyChar: " + evt.keyChar + ", keyCode:" + evt.keyCode + ", charCode: " + evt.charCode +
+				(evt.ctrlKey ? " ctrl" : "") + (evt.shiftKey ? " shift" : ""));
+
+				// Use this because many keystrokes, like CTRL-B or F5, make the browser do things like refreshing the page
+				dojo.stopEvent(evt);
+			});
+
+			kp2 = dojo.connect(dojo.byId("typer"), "onkeypress", function(evt){
+				console.log("2 onkeypress triggered: keyCode: " + evt.keyCode + ", charCode: " + evt.charCode + " return: " + evt.returnValue);
+			});
+
+			kd1 = dojo.connect(dojo.byId("typer"), "onkeydown", function(evt){
+				console.log("onkeydown: charOrCode: " + evt.charOrCode + ", keyChar: " + evt.keyChar + ", keyCode: " + evt.keyCode + ", charCode: " + evt.charCode);
+			});
+
+			ku1 = dojo.connect(dojo.byId("typer"), "onkeyup", function(evt){
+				console.log("onkeyup: charOrCode: " + evt.charOrCode + ", keyChar: " + evt.keyChar + ", keyCode: " + evt.keyCode + ", charCode: " + evt.charCode);
+			});
+
+			m1 = dojo.connect(dojo.byId("typer"), "onmouseenter", function(evt){
+				console.log("mousentered");
+			});
+
+			m2 = dojo.connect(dojo.byId("typer"), "onmouseleave", function(evt){
+				console.log("onmouseleave");
+			});
+
+			c1 = dojo.connect(dojo.byId("typer"), "onclick", function(evt){
+				console.log("onclick");
+			});
+
+		});
+	</script>
+</head>
+<body class="tundra">
+<h1>onkeypress and disconnect test</h1>
+
+<p>This page tests the operation of keypress in a text input. Safari 3.1 changed its key model.
+Look in the console for log message about getting keypress events.</p>
+
+<p>This page also tests that we can dojo.disconnect correctly. Clicking on the Disconnect buttons
+should turn off the console logs associated with the matching connect calls.</p>
+
+<p>The input <input name="typer" type="text" id="typer" /></p>
+
+<p><button onclick="dojo.disconnect(kp1)">Disconnect first keypress</button>
+<button onclick="dojo.disconnect(kp2)">Disconnect second keypress</button></p>
+
+<p><button onclick="dojo.disconnect(kd1)">Disconnect keydown</button>
+<button onclick="dojo.disconnect(ku1)">Disconnect keyup</button></p>
+
+
+<p><button onclick="dojo.disconnect(m1)">Disconnect mouseentered</button>
+<button onclick="dojo.disconnect(m2)">Disconnect mouseleave</button></p>
+
+<p><button onclick="dojo.disconnect(c1)">Disconnect click</button></p>
+
+
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+	<title>Multi-input ComboBox widget</title>
+		<style type="text/css">
+			@import "../../../dijit/themes/claro/claro.css";
+			@import "../../../dijit/tests/css/dijitTests.css";
+			@import "../../../dojo/resources/dojo.css";
+
+			body { margin:20px; } 
+			#widget_frogin,
+			#widget_frogin2 
+			{ width: 30em; height:1.2em; }
+
+		</style>
+		<script type="text/javascript" src="../../../dojo/dojo.js"
+			djConfig="isDebug: true, parseOnLoad: true"></script>
+		<script type="text/javascript">
+			dojo.require("dojo.parser");
+			dojo.require("dojox.form.MultiComboBox");
+			dojo.require("dojo.data.ItemFileReadStore");
+			dojo.require("dijit.form.Button"); 
+		</script>
+	</head>
+	<body class="claro">
+		
+		<h1 class="testTitle">dojox.form.MultiComboBox</h1>
+		<p>
+		This widget is an extension to ComboBox to allow "tag" style input using a datastore. Start typing
+		into the box, and your options will be presented. The default delimiter is a comma, which can be over-ridden
+		by the delimiter="" attrbute.
+		</p>
+
+		<div dojoType="dojo.data.ItemFileReadStore" jsId="memberTagStore"
+			url="_tags.json"></div>
+		
+		<h3>Default:</h3>		
+		<input dojoType="dojox.form.MultiComboBox" id="frogin"
+			store="memberTagStore"
+			value=""
+			searchAttr="tag"
+			name="tags" />
+
+		<h3>Alternate delimiter (:)</h3>
+		<input dojoType="dojox.form.MultiComboBox" id="frogin2"
+			store="memberTagStore"
+			value=""
+			delimiter=":"
+			searchAttr="tag"
+			name="tags2" />
+
+		<h3>From code:</h3>
+		<button dojoType="dijit.form.Button">
+			Make it.
+			<script type="dojo/method" event="onClick">
+				var widget = new dojox.form.MultiComboBox({
+					store:memberTagStore,
+					searchAttr:"tag"
+				},"frogin3");
+				widget.startup();
+				// only make it once. 
+				this.set('disabled', true); 
+			</script>
+		</button><br>
+
+		<input id="frogin3" name="tags3" value="" />
+		
+
+	</body>
+</html>

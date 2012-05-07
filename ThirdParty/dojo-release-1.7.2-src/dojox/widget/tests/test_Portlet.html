@@ -1,0 +1,94 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>DojoX Portlet example</title>
+
+	<!-- required: a default theme file -->
+	<link rel="stylesheet" id="themeStyles" href="../../../dijit/themes/tundra/tundra.css">
+	<link rel="stylesheet" href="../Dialog/Dialog.css">
+
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+		
+		@import "../Portlet/Portlet.css";
+
+	</style>		
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: true"></script>
+
+	<!-- do not use! only for testing dynamic themes -->
+	<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+	
+	<script type="text/javascript">
+		dojo.require("dojox.widget.Portlet");
+		dojo.require("dijit.form.CheckBox");
+	</script>
+</head>
+<body class="tundra">
+
+	<h1 class="testTitle">dojox.widget.Portlet tests</h1>
+	
+	<p>This is a Portlet widget, which is similar to a dijit.TitlePane, but is designed
+	   to be used with the dojox.layout.GridContainer widget.  Each widget can be extended
+		 with a number of different plug in widgets, with each plug in specifying
+		 an icon to display in the title bar.
+	</p>
+	<p>
+		Two settings widgets are currently defined, <b>dojox.widget.PortletSettings</b>
+		and <b>dojox.widget.PortletDialogSettings</b>
+	</p>
+
+	<div id='testholder' class="tests" style="width: 400px;">
+		<div dojoType="dojox.widget.Portlet" title="Test Title 1" id="portlet1">
+			<div dojoType="dojox.widget.PortletSettings">
+				Use Bold Text: <div dojoType="dijit.form.CheckBox">
+					<script type="dojo/connect" event="onClick">
+						var portlet = dijit.byId("portlet1");
+					  dojo.style(portlet.containerNode, "fontWeight", this.checked ? "bold" : "normal");
+					</script>
+				</div>
+			</div>
+			<div>
+				Lorem ipsum dolor sit amet, consectetuer adipiscing elit. 
+			  Nam facilisis enim. Pellentesque in elit et lacus euismod dignissim.
+			  Aliquam dolor pede, convallis eget, dictum a, blandit ac, urna. 
+			  Pellentesque sed nunc ut justo volutpat egestas. Class aptent taciti
+			  sociosqu ad litora torquent per conubia nostra, per inceptos hymenaeos. 
+				In erat. Suspendisse potenti. Fusce faucibus nibh sed nisi. Phasellus 
+				faucibus, dui a cursus dapibus, mauris nulla euismod velit, a lobortis turpis 
+				arcu vel dui. Pellentesque fermentum ultrices pede. Donec auctor lectus eu arcu. 
+				Curabitur non orci eget est porta gravida. Aliquam pretium orci id nisi. Duis faucibus,
+				mi non adipiscing venenatis, erat urna aliquet elit, eu fringilla lacus tellus quis erat. 
+				Nam tempus ornare lorem. Nullam feugiat.
+			</div>
+		</div>
+		
+		<div dojoType="dojox.widget.Portlet" title="Portlet with Dialog Settings" id="portlet2">
+			<div dojoType="dojox.widget.PortletDialogSettings" title="Settings in a Dialog">
+				Use Bold Text: <div dojoType="dijit.form.CheckBox">
+					<script type="dojo/connect" event="onClick">
+					  dojo.style(dijit.byId('portlet2').containerNode, "fontWeight", this.checked ? "bold" : "normal");
+					</script>
+				</div>
+			</div>
+			<div>
+				Lorem ipsum dolor sit amet, consectetuer adipiscing elit. 
+			  Nam facilisis enim. Pellentesque in elit et lacus euismod dignissim.
+			  Aliquam dolor pede, convallis eget, dictum a, blandit ac, urna. 
+			  Pellentesque sed nunc ut justo volutpat egestas. Class aptent taciti
+			  sociosqu ad litora torquent per conubia nostra, per inceptos hymenaeos. 
+				In erat. Suspendisse potenti. Fusce faucibus nibh sed nisi. Phasellus 
+				faucibus, dui a cursus dapibus, mauris nulla euismod velit, a lobortis turpis 
+				arcu vel dui. Pellentesque fermentum ultrices pede. Donec auctor lectus eu arcu. 
+				Curabitur non orci eget est porta gravida. Aliquam pretium orci id nisi. Duis faucibus,
+				mi non adipiscing venenatis, erat urna aliquet elit, eu fringilla lacus tellus quis erat. 
+				Nam tempus ornare lorem. Nullam feugiat.
+			</div>
+		</div>		
+	</div>
+</body>
+</html>
+

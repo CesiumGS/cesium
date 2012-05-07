@@ -1,0 +1,23 @@
+<?php
+
+function jsdoc_install() {
+  switch ($GLOBALS['db_type']) {
+  case 'mysql':
+  case 'mysqli':
+      db_query("CREATE TABLE {jsdoc_variables} (
+        sid INTEGER NOT NULL PRIMARY KEY,
+        variable VARCHAR(255) NOT NULL UNIQUE,
+        private BOOLEAN NOT NULL
+      ) /*!40100 DEFAULT CHARACTER SET UTF8 */ ");
+
+      db_query("CREATE TABLE {jsdoc_objects} (
+        nid INTEGER NOT NULL PRIMARY KEY REFERENCES {node} (nid), -- node-type: jsdoc_object
+        did INTEGER NOT NULL REFERENCES {node} (nid), -- node-type: jsdoc_doc
+        json LONGTEXT NOT NULL,
+        INDEX (did)
+      ) /*!40100 DEFAULT CHARACTER SET UTF8 */ ");
+    break;
+  case 'pgsql':
+    break;
+  }
+}

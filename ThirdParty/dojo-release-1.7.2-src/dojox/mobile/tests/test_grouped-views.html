@@ -1,0 +1,61 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>Grouped Views</title>
+		<link href="../themes/iphone/base.css" rel="stylesheet">
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			dojo.require("dojox.mobile");			// This is a mobile app.
+			dojo.require("dojox.mobile.parser");	// This mobile app supports running on desktop browsers
+			dojo.require("dojox.mobile.compat");	// This mobile app uses declarative programming with fast mobile parser
+		</script>
+	</head>
+	<body style="visibility:hidden;">
+		<div id="view1" dojoType="dojox.mobile.View" selected="true">
+			<div id="view11" dojoType="dojox.mobile.View" selected="true">
+				<h1 dojoType="dojox.mobile.Heading">View 1-1</h1>
+				<h2 dojoType="dojox.mobile.RoundRectCategory">Grouped View Example</h2>
+				<div dojoType="dojox.mobile.RoundRect" shadow="true">
+					<pre style="font-size:12px">
+ - View 1 (container)
+     |
+     *-- View 1-1
+         View 1-2
+ - View 2</pre>
+				</div>
+				<ul dojoType="dojox.mobile.RoundRectList">
+					<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-1.png" moveTo="view12" transition="slide">
+						View 1-2
+					</li>
+					<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-3.png" moveTo="view2" transition="slide">
+						View 2
+					</li>
+				</ul>
+			</div>
+
+			<div id="view12" dojoType="dojox.mobile.View">
+				<h1 dojoType="dojox.mobile.Heading">View 1-2</h1>
+				<ul dojoType="dojox.mobile.RoundRectList">
+					<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-1.png" moveTo="view11" transition="slide" transitionDir="-1">
+						View 1-1
+					</li>
+					<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-3.png" moveTo="view2" transition="slide">
+						View 2
+					</li>
+				</ul>
+			</div>
+		</div>
+
+		<div id="view2" dojoType="dojox.mobile.View">
+			<h1 dojoType="dojox.mobile.Heading">View 2</h1>
+			<ul dojoType="dojox.mobile.RoundRectList">
+				<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-1.png" moveTo="view1" transition="slide" transitionDir="-1">
+					View 1
+				</li>
+			</ul>
+		</div>
+	</body>
+</html>

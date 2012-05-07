@@ -1,0 +1,119 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<title>Test dojox.grid.DataGrid Editing</title>
+		<style type="text/css">
+			@import "../resources/Grid.css";
+			@import "../resources/tundraGrid.css";
+			@import "../../../dojo/resources/dojo.css";
+			@import "../../../dijit/themes/tundra/tundra.css";
+			@import "../../../dijit/tests/css/dijitTests.css";
+
+			.dojoxGridRowEditing td {
+				background-color: #F4FFF4;
+			}
+			.dojoxGrid input, .dojoxGrid select, .dojoxGrid textarea {
+				margin: 0;
+				padding: 0;
+				border-style: none;
+				width: 100%;
+				font-size: 100%;
+				font-family: inherit;
+			}
+			.dojoxGrid input { }
+			.dojoxGrid select { }
+			.dojoxGrid textarea { }
+
+			#controls {
+				padding: 6px 0;
+			}
+			#controls button {
+				margin-left: 10px;
+			}
+			.myGrid {
+				width: 850px;
+				height: 350px;
+				border: 1px solid silver;
+			}
+		</style>
+		<script type="text/javascript" src="../../../dojo/dojo.js"
+			djConfig="isDebug:false, parseOnLoad: true"></script>
+		<script type="text/javascript">
+			dojo.require("dijit.dijit");
+			dojo.require("dojox.grid.DataGrid");
+			dojo.require("dojo.data.ItemFileWriteStore");
+			dojo.require("dojo.parser");
+		</script>
+		<script type="text/javascript" src="support/test_data.js"></script>
+		<script type="text/javascript">
+			// ==========================================================================
+			// Custom formatter
+			// ==========================================================================
+			formatMoney = function(inDatum){
+				return isNaN(inDatum) ? '...' : '$' + parseFloat(inDatum).toFixed(2);
+			}
+
+			// ==========================================================================
+			// Grid structure
+			// ==========================================================================
+			selectCell = {
+				styles: 'text-align: center;',
+				type: dojox.grid.cells.Select
+			};
+
+			gridLayout = {
+				defaultCell: { width: 8, editable: true, styles: 'text-align: right;'  },
+				rows: [
+					[
+						{ name: 'Id', width: 3, field: 'id' },
+						dojo.mixin({}, selectCell, {
+							name: 'Priority', field: 'col1', options: [ 'normal', 'note', 'important' ]
+						}),
+						{ name: 'Mark', width: 3, field: 'col2', styles: 'text-align: center;', type: dojox.grid.cells.Bool },
+						dojo.mixin({}, selectCell, {
+							name: 'Status', field: 'col3', options: [ 'new', 'read', 'replied' ]
+						}),
+						{ name: 'Message', field: 'col4', styles: '', width: '100%' },
+						{ name: 'Amount', field: 'col5', formatter: formatMoney }
+					]
+				]
+			};
+			// ==========================================================================
+			// UI Action
+			// ==========================================================================
+			addRow = function() {
+				test_store.newItem({
+					id: grid.rowCount,
+					col1: 'normal',
+					col2: false,
+					col3: 'new',
+					col4: 'Now is the time for all good men to come to the aid of their party.',
+					col5: 99.99,
+					col6: 9.99,
+					col7: false
+				});
+			}
+		</script>
+	</head>
+	<body class="tundra">
+		<h1>dojox.grid.DataGrid Basic Editing test</h1>
+		<br />
+		<div id="controls">
+			<button onclick="grid.render()">Refresh</button>
+			<button onclick="grid.edit.focusEditor()">Focus Editor</button>
+			<button onclick="grid.focus.next()">Next Focus</button>
+			<button onclick="addRow()">Add Row</button>
+			<button onclick="grid.removeSelectedRows()">Remove</button>
+			<button onclick="grid.edit.apply()">Apply</button>
+			<button onclick="grid.edit.cancel()">Cancel</button>
+			<button onclick="grid.singleClickEdit = !grid.singleClickEdit">Toggle singleClickEdit</button>
+		</div>
+		<br />
+		<div jsId="grid" class="myGrid" 
+			dojoType="dojox.grid.DataGrid" store="test_store" 
+			structure="gridLayout" rowSelector="20px"></div>
+		<br />
+		<div id="rowCount"></div>
+	</body>
+</html>

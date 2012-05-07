@@ -1,0 +1,346 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>dojox.widget.rotator.Controller Test</title>
+	<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+
+	.rotator{
+		background-color:#fff;
+		border:solid 1px #e5e5e5;
+		width:384px;
+		height:90px;
+		overflow:hidden;
+	}
+	.pane{
+		background-color:#fff;
+		width:384px;
+		height:90px;
+		overflow:hidden;
+	}
+	td{
+		padding-right:15px;
+		vertical-align:top;
+	}
+	
+	/* test 1 styles */
+	.test1 .dojoxRotatorSelected{
+		background-color:#e5e5e5;
+		font-weight:bold;
+	}
+	
+	/* test 2 styles */
+	.test2 .rotatorContainer{
+		width:384px;
+		height:110px;
+		position:relative;
+	}
+	.test2 .rotator{
+		background-color:#e5e5e5;
+		border:solid 1px #ccc;
+		position:relative;
+		top:20px;
+		left:0;
+		z-index:10;
+	}
+	.test2 .pane{
+		background-color:#e5e5e5;
+	}
+	
+	.test2 .tabs{
+		position:absolute;
+		top:0;
+		left:0;
+		z-index:20;
+	}
+	.test2 .tabs ul{
+		margin:0;
+		padding:0;
+	}
+	.test2 .tabs li{
+		float:left;
+		list-style:none;
+		margin:0 5px 0 0;
+		padding:0;
+	}
+	.test2 .tabs li a{
+		background-color:#fff;
+		border-top-left-radius:5px;
+		border-top-right-radius:5px;
+		-moz-border-radius-topleft:5px;
+		-moz-border-radius-topright:5px;
+		border:solid 1px #ccc;
+		border-bottom:0;
+		color:#666;
+		display:block;
+		font-size:10px;
+		height:20px;
+		padding:0 4px;
+		text-decoration:none;
+	}
+	.test2 .tabs li.dojoxRotatorSelected a{
+		background-color:#e5e5e5;
+		color:#000;
+	}
+	
+	.test2 .dots{
+		position:absolute;
+		right:5px;
+		top:25px;
+		z-index:20;
+	}
+	.test2 .dots ul{
+		margin:0;
+		padding:0;
+	}
+	.test2 .dots li{
+		float:left;
+		list-style:none;
+		margin:0;
+		padding:0;
+	}
+	.test2 .dots a span{
+		display:none;
+	}
+	.test2 .dots .dojoxRotatorNumber a{
+		display:block;
+		width:10px;
+		height:10px;
+		background:url(images/rotator_dots.png) no-repeat 0 0;
+	}
+	.test2 .dots .dojoxRotatorSelected a{
+		background:url(images/rotator_dots.png) no-repeat 0 -10px;
+	}
+	
+	.test2 .pager1{
+		background:url(images/rotator_bg.gif) no-repeat 0 0;
+		bottom:5px;
+		padding:3px 0 0 12px;
+		position:absolute;
+		left:5px;
+		z-index:20;
+	}
+	.test2 .pager1 ul{
+		height:16px;
+		margin:0;
+		padding:0;
+		width:97px;
+	}
+	.test2 .pager1 li{
+		float:left;
+		line-height:12px;
+		list-style:none;
+		margin:0;
+		padding:0;
+	}
+	.test2 .pager1 a{
+		color:#fff;
+		font-size:10px;
+		text-decoration:none;
+	}
+	.test2 .pager1 li.dojoxRotatorIcon a{
+		display:block;
+		width:14px;
+		height:14px;
+	}
+	.test2 .pager1 li.dojoxRotatorPrev a{
+		background:url(images/rotator_icons.gif) no-repeat 0 0;
+	}
+	.test2 .pager1 li.dojoxRotatorPrev a span,
+	.test2 .pager1 li.dojoxRotatorNext a span{
+		display:none;
+	}
+	.test2 .pager1 li.dojoxRotatorNext a{
+		background:url(images/rotator_icons.gif) no-repeat -14px 0;
+	}
+	.test2 .pager1 li.dojoxRotatorNumber a{
+		color:#ccc;
+		padding:0 4px;
+	}
+	.test2 .pager1 li.dojoxRotatorSelected a{
+		color:#fff;
+		font-weight:bold;
+	}
+	
+	.test2 .pager2{
+		background:url(images/rotator_bg.gif) no-repeat 0 0;
+		bottom:5px;
+		padding:3px 0 0 12px;
+		position:absolute;
+		right:5px;
+		z-index:20;
+	}
+	.test2 .pager2 ul{
+		height:16px;
+		margin:0;
+		padding:0;
+		width:97px;
+	}
+	.test2 .pager2 li{
+		float:left;
+		list-style:none;
+		margin:0;
+		padding:0;
+	}
+	.test2 .pager2 li.dojoxRotatorIcon a{
+		display:block;
+		width:14px;
+		height:14px;
+	}
+	.test2 .pager2 li.dojoxRotatorPrev a{
+		background:url(images/rotator_icons.gif) no-repeat 0 0;
+	}
+	.test2 .pager2 li.dojoxRotatorPlay a{
+		background:url(images/rotator_icons.gif) no-repeat -28px 0;
+	}
+	.test2 .pager2 li.dojoxRotatorPause a{
+		background:url(images/rotator_icons.gif) no-repeat -42px 0;
+	}
+	.test2 .pager2 li.dojoxRotatorNext a{
+		background:url(images/rotator_icons.gif) no-repeat -14px 0;
+	}
+	.test2 .pager2 li.dojoxRotatorInfo{
+		color:#e5e5e5;
+		font-size:10px;
+		line-height:12px;
+		padding:0 4px 0 7px;
+		width:32px;
+	}
+	.test2 .pager2 li a span{
+		display:none;
+	}
+	</style>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad:true, isDebug:true"></script>
+	<script type="text/javascript">
+	dojo.require("dojo.parser");
+	dojo.require("dojox.widget.AutoRotator");
+	dojo.require("dojox.widget.rotator.Controller");
+	dojo.require("dojox.widget.rotator.Fade");
+	dojo.require("dojox.widget.rotator.Pan");
+	</script>
+</head>
+<body>
+
+	<h1 class="testTitle">dojox.widget.rotator.Controller Test</h1>
+	
+	<h2>Controller Commands Test</h2>
+	
+	<div class="test1">
+		
+		<div dojoType="dojox.widget.AutoRotator" class="rotator" jsId="myRotator" duration="1000" transition="dojox.widget.rotator.crossFade">
+			<div class="pane" title="Nexaweb/Renkoo">
+				<a href="http://www.nexaweb.com" target="_new"><img src="images/rotator_nexaweb.png" width="130" alt="Nexaweb"/></a>
+				<a href="http://www.renkoo.com" target="_new"><img src="images/rotator_renkoo.png" width="130" alt="Renkoo"/></a>
+			</div>
+			<div class="pane" title="Sitepen/Tibco">
+				<a href="http://www.sitepen.com" target="_new"><img src="images/rotator_sitepen.png" width="130" alt="Sitepen"/></a>
+				<a href="http://www.tibco.com" target="_new"><img src="images/rotator_tibco.png" width="130" alt="Tibco"/></a>
+			</div>
+			<div class="pane" title="Webtide/OpenLaszlo">
+				<a href="http://www.webtide.com/" target="_new"><img src="images/rotator_webtide.png" width="130" alt="Webtide"/></a>
+				<a href="http://www.openlaszlo.com" target="_new"><img src="images/rotator_openlaszlo.png" width="150" alt="OpenLaszlo"/></a>
+			</div>
+			<div class="pane" title="Sun/Google">
+				<a href="http://www.sun.com" target="_new"><img src="images/rotator_sun.png" width="130" alt="Sun"/></a>
+				<a href="http://www.google.com" target="_new"><img src="images/rotator_google.png" width="130" alt="Google"/></a>
+			</div>
+			<div class="pane" title="Aptana/AOL">
+				<a href="http://www.aptana.com" target="_new"><img src="images/rotator_aptana.png" width="130" alt="Aptana"/></a>
+				<a href="http://www.aol.com" target="_new"><img src="images/rotator_aol.png" width="130" alt="AOL"/></a>
+			</div>
+			<div class="pane" title="IBM/Zend">
+				<a href="http://www.ibm.com" target="_new"><img src="images/rotator_ibm.png" width="100" alt="IBM"/></a>
+				<a href="http://www.zend.com/" target="_new"><img src="images/rotator_zend.png" width="130" alt="Zend"/></a>
+			</div>
+			<div class="pane" title="BEA/Uxebu">
+				<a href="http://www.bea.com" target="_new"><img src="images/rotator_bea.png" width="80" alt="BEA"/></a>
+				<a href="http://www.uxebu.com" target="_new"><img src="images/rotator_uxebu.png" width="120" alt="Uxebu"/></a>
+			</div>
+			<div class="pane"> <!-- no title for testing -->
+				<a href="http://www.wavemaker.com" target="_new"><img src="images/rotator_wavemaker.png" width="130" alt="WaveMaker"/></a>
+				<a href="http://www.aptana.com" target="_new"><img src="images/rotator_aptana.png" width="130" alt="Aptana"/></a>
+			</div>
+		</div>
+
+		<table>
+			<tr>
+				<td>
+					<h3>Default</h3>
+					<div dojoType="dojox.widget.rotator.Controller" rotator="myRotator"></div>
+				</td>
+				<td>
+					<h3>Prev, Next</h3>
+					<div dojoType="dojox.widget.rotator.Controller" rotator="myRotator" commands="prev,next"></div>
+				</td>
+				<td>
+					<h3>Prev, Play/Pause, Next</h3>
+					<div dojoType="dojox.widget.rotator.Controller" rotator="myRotator" commands="prev,play/pause,next"></div>
+				</td>
+				<td>
+					<h3>Prev, Numbers, Next</h3>
+					<div dojoType="dojox.widget.rotator.Controller" rotator="myRotator" commands="prev,#,next"></div>
+				</td>
+				<td>
+					<h3>Titles</h3>
+					<div dojoType="dojox.widget.rotator.Controller" rotator="myRotator" commands="titles"></div>
+					<div>Note: Last pane has no title and<br>uses default.</div>
+				</td>
+				<td>
+					<h3>Play/Pause, Info</h3>
+					<div dojoType="dojox.widget.rotator.Controller" rotator="myRotator" commands="play/pause,info"></div>
+				</td>
+				<td>
+					<h3>Numbers, Info</h3>
+					<div dojoType="dojox.widget.rotator.Controller" rotator="myRotator" commands="#,info"></div>
+				</td>
+				<td>
+					<h3>Info</h3>
+					<div dojoType="dojox.widget.rotator.Controller" rotator="myRotator" commands="info"></div>
+				</td>
+			</tr>
+		</table>
+		
+	</div>
+	
+	<h2>Styled Controllers</h2>
+	
+	<div class="test2">
+	
+		<div class="rotatorContainer">
+			
+			<div dojoType="dojox.widget.AutoRotator" class="rotator" jsId="myRotator2" duration="1000" transition="dojox.widget.rotator.pan"
+					transitionParams="quick:true,continuous:true" pauseOnManualChange="true" suspendOnHover="true">
+				<div class="pane" title="Nexaweb/Renkoo">
+					<a href="http://www.nexaweb.com" target="_new"><img src="images/rotator_nexaweb.png" width="130" alt="Nexaweb"/></a>
+					<a href="http://www.renkoo.com" target="_new"><img src="images/rotator_renkoo.png" width="130" alt="Renkoo"/></a>
+				</div>
+				<div class="pane" title="Sitepen/Tibco">
+					<a href="http://www.sitepen.com" target="_new"><img src="images/rotator_sitepen.png" width="130" alt="Sitepen"/></a>
+					<a href="http://www.tibco.com" target="_new"><img src="images/rotator_tibco.png" width="130" alt="Tibco"/></a>
+				</div>
+				<div class="pane" title="Webtide/OpenLaszlo">
+					<a href="http://www.webtide.com/" target="_new"><img src="images/rotator_webtide.png" width="130" alt="Webtide"/></a>
+					<a href="http://www.openlaszlo.com" target="_new"><img src="images/rotator_openlaszlo.png" width="150" alt="OpenLaszlo"/></a>
+				</div>
+				<div class="pane" title="Sun/Google">
+					<a href="http://www.sun.com" target="_new"><img src="images/rotator_sun.png" width="130" alt="Sun"/></a>
+					<a href="http://www.google.com" target="_new"><img src="images/rotator_google.png" width="130" alt="Google"/></a>
+				</div>
+			</div>
+			
+			<div dojoType="dojox.widget.rotator.Controller" class="tabs" rotator="myRotator2" commands="titles"></div>
+			
+			<div dojoType="dojox.widget.rotator.Controller" class="dots" rotator="myRotator2" commands="#"></div>
+			
+			<div dojoType="dojox.widget.rotator.Controller" class="pager1" rotator="myRotator2" commands="prev,#,next"></div>
+			
+			<div dojoType="dojox.widget.rotator.Controller" class="pager2" rotator="myRotator2" commands="prev,play/pause,info,next"></div>
+			
+		</div>
+		
+	</div>
+	
+</body>
+</html>

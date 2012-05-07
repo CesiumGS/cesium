@@ -1,0 +1,10 @@
+{ 
+	name:'Mexico', 
+	type:'country',  
+	population:'108 million', 
+	area:'1,972,550 sq km',
+	children:[
+		{stub:'Mexico City'}, 
+		{stub:'Guadalajara'}
+	] 
+}

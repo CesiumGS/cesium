@@ -1,0 +1,210 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+    "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+    <title>Test dojox.fx.ext-dojo.complex (fx using transform)</title>
+	<style type="text/css">
+		@import "../../../dijit/tests/css/dijitTests.css";
+		html,body{
+			font-family:sans-serif;
+			font-size:14px;
+			padding:0;
+			margin:0;
+		}
+		code{
+			font-family:monospace;
+			font-size:15px;
+			white-space:pre;
+		}
+		.box{
+			border:1px solid #999;
+			padding:0;
+			position:absolute;
+			width:1024px;
+			height:190px;
+			overflow:hidden;
+			left:40px;
+		}
+		.message{
+			width:100%;
+			background: #999;
+			color: #ddd;
+			margin:0;
+			padding:3px 0;
+		}
+		.message span{
+			padding: 0 3px;
+			color:#009;
+			cursor:pointer;
+			text-decoration:underline;
+		}
+		#rotate{
+			top:100px;
+		}
+		#skewX{
+			top:300px;
+		}
+		#skewY{
+			top:500px;
+		}
+		#skew{
+			top:700px;
+		}
+		#scaleX{
+			top:900px;
+		}
+		#scaleY{
+			top:1100px;
+		}
+		#scale{
+			top:1300px;
+		}
+	</style>
+</head>
+<body>
+	<h1>Test dojox.fx.ext-dojo.complex using css3 transforms</h1>
+	<div>
+		<div class="box" id="rotate">
+			<div class="message"><span id="rotateLabel">rotate - click me!</span></div>
+			<code>
+			dojo.animateProperty({
+				node:"rotate",
+				duration: 1000,
+				properties:{
+					transform:{start:'rotate(0deg)', end:'rotate(360deg)'}
+				}
+			}).play();
+			</code>
+		</div>
+	</div>
+	<div class="box" id="skewX">
+		<div class="message"><span id="skewXLabel">skewX - click me!</span></div>
+		<code>
+		dojo.animateProperty({
+			node:"skewX",
+			duration: 1000,
+			properties:{
+				transform:{start:'skewX(0deg)', end:'skewX(20deg)'}
+			}
+		}).play();
+		</code>
+	</div>
+	<div class="box" id="skewY">
+		<div class="message"><span id="skewYLabel">skewY - click me!</span></div>
+		<code>
+		dojo.animateProperty({
+			node:"skewY",
+			duration: 1000,
+			properties:{
+				transform:{start:'skewY(0deg)', end:'skewY(10deg)'}
+			}
+		}).play();
+		</code>
+	</div>
+	<div class="box" id="skew">
+		<div class="message"><span id="skewLabel">skew - click me!</span></div>
+		<code>
+		dojo.animateProperty({
+			node:"skew",
+			duration: 1000,
+			properties:{
+				transform:{start:'skew(0deg,0deg)', end:'skew(20deg,10deg)'}
+			}
+		}).play();
+		</code>
+	</div>
+	<div class="box" id="scaleX">
+		<div class="message"><span id="scaleXLabel">scaleX - click me!</span></div>
+		<code>
+			dojo.animateProperty({
+				node: "scaleX",
+				properties:{
+					transform:{start:'scaleX(1)', end:'scaleX(2)'}
+				}
+			}).play()
+		</code>
+	</div>
+	<div class="box" id="scaleY">
+		<div class="message"><span id="scaleYLabel">scaleY - click me!</span></div>
+		<code>
+			dojo.animateProperty({
+				node: "scaleY",
+				properties:{
+					transform:{start:'scaleY(1)', end:'scaleY(.5)'}
+				}
+			}).play()
+		</code>
+	</div>
+	<div class="box" id="scale">
+		<div class="message"><span id="scaleLabel">scale - click me!</span></div>
+		<code>
+			dojo.animateProperty({
+				node: "scaleY",
+				properties:{
+					transform:{start:'scale(1,1)', end:'scale(2,.5)'}
+				}
+			}).play()
+		</code>
+	</div>
+	<script type="text/javascript" src="../../../dojo/dojo.js"></script>
+	<script type="text/javascript">
+		dojo.require("dojox.html.ext-dojo.style");
+		dojo.require("dojox.fx.ext-dojo.complex");
+
+		dojo.ready(function(){
+			var animations = {
+				rotate: dojo.animateProperty({
+					node: "rotate",
+					duration: 1000,
+					properties:{
+						transform:{start:'rotate(0deg)', end:'rotate(360deg)'}
+					}
+				}),
+				skew: dojo.animateProperty({
+					node: "skew",
+					properties:{
+						transform:{start:'skew(0deg,0deg)', end:'skew(20deg,10deg)'}
+					}
+				}),
+				skewX: dojo.animateProperty({
+					node: "skewX",
+					properties:{
+						transform:{start:'skewX(0deg)', end:'skewX(20deg)'}
+					}
+				}),
+				skewY: dojo.animateProperty({
+					node: "skewY",
+					properties:{
+						transform:{start:'skewY(0deg)', end:'skewY(10deg)'}
+					}
+				}),
+				scaleX: dojo.animateProperty({
+					node: "scaleX",
+					properties:{
+						transform:{start:'scaleX(1)', end:'scaleX(2)'}
+					}
+				}),
+				scaleY: dojo.animateProperty({
+					node: "scaleY",
+					properties:{
+						transform:{start:'scaleY(1)', end:'scaleY(.5)'}
+					}
+				}),
+				scale: dojo.animateProperty({
+					node: "scale",
+					properties:{
+						transform:{start:'scale(1,1)', end:'scale(2,.5)'}
+					}
+				})
+
+			};
+			dojo.forEach(["rotate", "skewX", "skewY", "skew", "scaleX", "scaleY", "scale"], function(i){
+				dojo.connect(dojo.byId(i + "Label"), "onclick", function(){
+					animations[i].play();
+				});
+			})
+		});
+
+	</script>
+</body>
+</html>

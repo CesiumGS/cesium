@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Focus Issue Child</title>
+	<script>
+	// open the parent, if user tries to open the child directly
+	if (parent == window)
+		location.href = './test_UIWindowIssue_main.html';
+	</script>
+	<script type="text/javascript" src="../../dojo/dojo.js"
+		data-dojo-config="parseOnLoad:false, isDebug:true"></script>
+	<script type="text/javascript">
+		dojo.require("dojo.parser");
+		dojo.require("dijit.Menu");
+		dojo.require("dijit.MenuItem");
+		dojo.require("dijit.PopupMenuItem");
+		dojo.require("dijit.CheckedMenuItem");
+		dojo.require("dijit.MenuSeparator");
+
+		// set objects in parent
+		for (var v in {'dijit':true, 'dojo':true, 'dojox':true})
+			parent[v] = window[v];
+
+		// set context
+		dojo.setContext(window, parent.document);
+		
+		// fix focus issue
+		dojo.ready(function(){
+			var handle = dijit.registerWin(dojo.doc.parentWindow || dojo.doc.defaultView);
+			if(dojo.isIE){
+				dojo.addOnWindowUnload(function(){
+					dijit.unregisterWin(handle);
+					handle = null;
+				})
+			}
+		});
+
+		// parse the UI frame
+		dojo.parser.parse();
+
+	</script>
+</head>
+<body bgcolor="#e0e0e0">
+	this frame is for loading script only
+</body>
+</html>

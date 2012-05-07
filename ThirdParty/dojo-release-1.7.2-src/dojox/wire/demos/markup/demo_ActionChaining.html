@@ -1,0 +1,112 @@
+<!--
+	This file demonstrates how the dojox.wire code can be used to do declarative
+	wiring of events.  Specifically, it shows how you can chain actions together
+	in a sequence.  In this case the setting of a value on one textbox triggers a 
+	copy over to another textbox.  That in turn triggers yet another copy to another
+	text box.
+-->
+<html>
+<head>
+	<title>Sample Action Chaining</title>
+	<style type="text/css">
+
+		@import "../../../../dijit/themes/tundra/tundra.css";
+		@import "../../../../dojo/resources/dojo.css";
+		@import "../../../../dijit/tests/css/dijitTests.css";
+		@import "../TableContainer.css";
+
+		.splitView {
+			width: 90%;
+			height: 90%;
+			border: 1px solid #bfbfbf;
+			border-collapse: separate;
+		}
+	</style>
+
+	<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+	<script type="text/javascript">
+		dojo.require("dojo.parser");
+		dojo.require("dojox.wire");
+		dojo.require("dojox.wire.ml.Invocation");
+		dojo.require("dojox.wire.ml.DataStore");
+		dojo.require("dojox.wire.ml.Transfer");
+		dojo.require("dojox.wire.ml.Data");
+		dojo.require("dijit.form.TextBox");
+	</script>
+</head>
+
+<body class="tundra">
+
+	<!-- Layout -->
+	<font size="3"><b>Demo of Chaining Actions:</b></font><br/><br/>
+	This demo shows how you can chain actions together to fire in a sequence.  
+	Such as the completion of setting one value on a widget triggers the setting of another value on the widget
+	<br/>
+	<br/>
+	<table>
+		<tr>
+			<td>
+				<div dojoType="dijit.form.TextBox" id="inputField" value="" size="50" intermediateChanges="true"></div>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<div dojoType="dijit.form.TextBox" id="targetField1" value="" disabled="true" size="50"></div>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<div dojoType="dijit.form.TextBox" id="targetField2" value="" disabled="true" size="50"></div>
+			</td>
+		</tr>
+	</table>
+
+
+	<!-------------------------------- Using dojox.wire, declaratively wire up the widgets. --------------------------->
+
+	<!--
+		This is an example of using the declarative data value definition.
+		These are effectively declarative variables to act as placeholders
+		for data values.
+	-->
+	<div dojoType="dojox.wire.ml.Data"
+		id="data">
+		<div dojoType="dojox.wire.ml.DataProperty"
+			name="tempData"
+			value="">
+		</div>
+		<div dojoType="dojox.wire.ml.DataProperty"
+			name="value"
+			value="value">
+		</div>
+	</div>
+
+	<!-- 
+		Whenever a key is entered into the textbox, copy the value somewhere, then invoke a method on another widget, in this case
+		on just another text box.
+	-->
+	<div dojoType="dojox.wire.ml.Action"
+		id="action1"
+		trigger="inputField"
+		triggerEvent="onChange">
+		<div dojoType="dojox.wire.ml.Transfer" source="inputField.value" target="data.tempData"></div>
+		<div dojoType="dojox.wire.ml.Invocation" id="targetCopy" object="targetField1"  method="set" parameters="data.value, data.tempData"></div>
+	</div>    
+
+	<!-- 
+		Whenever the primary cloning invocation completes, invoke a secondary cloning action.
+	-->
+	<div dojoType="dojox.wire.ml.Action"
+		id="action2"
+		trigger="targetCopy"
+		triggerEvent="onComplete">
+		<!--
+			Note that this uses the basic 'property' form of copying the property over and setting it.  The Wire
+			code supports both getX and setX functions of setting a property as well as direct access.  It first looks
+			for the getX/setX functions and if present, uses them.  If missing, it will just do direct access.  Because
+			of the standard getValue/setValue API of dijit form widgets, these transfers work really well and are very compact.   
+		-->
+		<div dojoType="dojox.wire.ml.Transfer" source="targetField1.value" target="targetField2.value"></div>
+	</div>    
+</body>
+</html>

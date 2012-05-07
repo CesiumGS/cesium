@@ -1,0 +1,63 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>Dojo DnD optional parameters test</title>
+	<style type="text/css">
+		@import "../../resources/dojo.css";
+
+		body {
+			padding: 1em;
+		}
+
+		.moveable {
+			background: #FFFFBF;
+			border: 1px solid black;
+			width: 300px;
+			padding: 10px 20px;
+			cursor: pointer;
+		}
+	</style>
+	<script type="text/javascript" src="../../dojo.js" djConfig="isDebug: true"></script>
+	<!--
+	<script type="text/javascript" src="../../dnd/move.js"></script>
+	-->
+	<script type="text/javascript">
+		dojo.require("dojo.dnd.move");
+		var m1, m2, m3, m4;
+		var init = function(){
+			m1 = new dojo.dnd.Moveable("moveable1");
+			m2 = new dojo.dnd.Moveable("moveable2", {delay: 10});
+			m3 = new dojo.dnd.Moveable("moveable3");
+			m4 = new dojo.dnd.Moveable("moveable4", {skip: true});
+		};
+		dojo.addOnLoad(init);
+	</script>
+</head>
+<body>
+	<h1>Dojo DnD optional parameters test</h1>
+	<p class="moveable" id="moveable1"><strong>Normal paragraph:</strong> Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Mauris augue augue, condimentum nec, viverra et, porttitor sit amet, ligula. Cras malesuada sollicitudin risus. Praesent tincidunt nunc ut enim. Aliquam sit amet libero ac lorem ornare vulputate. Nulla a mauris cursus erat rutrum condimentum. Vivamus sit amet pede in felis sodales adipiscing. Curabitur arcu turpis, pharetra ac, porttitor ac, ultrices nec, quam. Donec feugiat purus eu nulla. Aenean mattis tellus vel nulla. Pellentesque vitae quam. Vestibulum scelerisque, eros nec imperdiet interdum, sapien quam accumsan libero, at vestibulum risus purus ut quam. Nam mattis, lorem vel rhoncus pulvinar, augue nibh rhoncus felis, et elementum felis dolor vitae justo. Nullam felis augue, ultricies ac, laoreet sed, lobortis in, neque. Vivamus nunc quam, dictum at, egestas et, fringilla non, magna.</p>
+	<p class="moveable" id="moveable2"><strong>Delayed move by 10px:</strong> Quisque at urna. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos hymenaeos. Pellentesque ante sem, ullamcorper in, ornare vitae, placerat id, velit. Ut ut tortor vitae lectus dignissim fringilla. Praesent urna enim, laoreet in, lobortis eget, porttitor eget, lacus. Suspendisse et enim. Duis semper nulla a felis. Duis dolor odio, ultrices et, lobortis sed, posuere eu, dolor. Duis est. Nam laoreet. Sed vehicula augue aliquam tortor.</p>
+	<p class="moveable" id="moveable3"><strong>With form elements:</strong> 
+		<a href="http://dojotoolkit.org">dojotoolkit</a><br />
+		<input type="button" value="Button" />
+		<input type="text" value="abc" />
+		<input type="checkbox" checked />
+		<input type="radio" />
+		<select>
+			<option value="1">one</option>
+			<option value="2">two</option>
+		</select>
+	</p>
+	<p class="moveable" id="moveable4"><strong>With form elements and skip setting:</strong>
+		<a href="http://dojotoolkit.org">dojotoolkit</a>
+		<input type="button" value="Button" />
+		<input type="text" value="abc" />
+		<input type="checkbox" checked />
+		<input type="radio" />
+		<select>
+			<option value="1">one</option>
+			<option value="2">two</option>
+		</select>
+	</p>
+</body>
+</html>

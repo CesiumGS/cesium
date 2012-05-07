@@ -1,0 +1,8 @@
+/* === Silver Circle Gray Button ==*/
+.mblDomButtonSilverCircleGrayButton {
+	background-image: url(compat/mblDomButtonSilverCircleGrayButton.png);
+	background-repeat: no-repeat;
+}
+.mblDomButtonSilverCircleGrayButton > div {
+	display: none;
+}

@@ -1,0 +1,43 @@
+﻿<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" >
+<head>
+<title>Testing pattern</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+	@import "../../../../dojo/resources/dojo.css";
+	@import "../../../../dijit/tests/css/dijitTests.css";
+</style>
+<!-- SVGWEB { -->
+<meta name="svg.render.forceflash" content="true"/>
+<script src="svgweb/src/svg.js" data-path="svgweb/src"></script>
+<script src="../../../../dojo/dojo.js" djConfig="isDebug:true,forceGfxRenderer:'svg'" type="text/javascript"></script>
+<!-- } -->
+<script type="text/javascript">
+dojo.require("dojox.gfx");
+
+makeShapes = function(){
+    var pattern = {
+        type: "pattern",
+        x: 0, y: 0, width: 75, height: 50,
+        src: "../images/eugene-sm.jpg"
+    };
+	var ellipse = {cx: 400, cy: 200, rx: 350, ry: 150};
+	var surface = dojox.gfx.createSurface("test", 800, 600);
+	/* SVGWEB { */
+	surface.whenLoaded(function() {
+	surface.createEllipse(ellipse)
+        .setStroke({color: "blue", width: 1 })
+        .setFill(pattern);
+	});
+	/* } */
+};
+
+dojo.addOnLoad(makeShapes);
+
+</script>
+</head>
+<body>
+	<h1>dojox.gfx Pattern test</h1>
+<div id="test"></div>
+<p>That's all Folks!</p>
+</body>
+</html>

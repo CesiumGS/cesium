@@ -1,0 +1,61 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <title>Gauge</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+    </head>
+    <style>    
+        html {
+            height: 100%;
+        }
+        
+        body {
+            margin: 0;
+            background-repeat: no-repeat;
+            background: #003366;
+            /* gecko based browsers */
+            background: -moz-linear-gradient(top,  #003366, #000000);
+                                
+            /* webkit based browsers */
+            background: -webkit-gradient(linear, left top, left bottom, from(#003366), to(#000000));
+        }
+                   
+        .footer {
+           position:absolute;
+           bottom:0;
+        }
+            
+    </style>
+ <script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="parseOnLoad: 1,  async:1"></script>
+	<script language="JavaScript" type="text/javascript">
+		require(['dojox/gauges/GlossyCircularGauge', 
+		         'dojox/gauges/GlossySemiCircularGauge', 'dojox/gauges/GlossyHorizontalGauge', 
+				 'dojo/parser'], function(){
+		})
+    </script>
+
+    <body>
+        <h2 align='center' style='color:gray;'>Glossy Gauges</h2>
+        <table style='height:100%; width:100%'>
+            <tr>
+                <td align='center'>
+                    <div id="CircularGauge" background='{color : "rgba(0,0,0,0)"}'useTooltip='false'  data-dojo-type='dojox.gauges.GlossyCircularGauge' width='200' height='200' value='20'>
+                    </div>
+                </td>
+                <td align='center'>
+                    <div id="CircularGauge2" background='{color : "rgba(0,0,0,0)"}' useTooltip='false'  data-dojo-type='dojox.gauges.GlossySemiCircularGauge' value='60' width='250' height='200'>
+                </td>
+            </tr>
+            <tr >
+                <td valign='middle' align='center' colspan='2'>
+                    <div id="HGauge3" style='margin:30px 0px 0px 0px' useTooltip='false' background='{color : "rgba(0,0,0,0)"}' data-dojo-type='dojox.gauges.GlossyHorizontalGauge' width='400' height='60' value='20'>
+                    </div>
+                </td>
+            </tr>
+        </table>
+        <div class='footer'>
+            <p style='color:gray; font-size:'xx-small'>Click a gauge to change its value.</p>
+        </div>
+        </div>
+    </body>
+</html>

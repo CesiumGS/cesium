@@ -1,0 +1,97 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+	<title>Testing the ThumbnailPicker + Lightbox</title>
+	
+	<!-- required: a default theme file -->
+	<link rel="stylesheet" id="themeStyles" href="../../../dijit/themes/tundra/tundra.css">
+	<link rel="stylesheet" href="../resources/image.css">
+	
+	<style type="text/css">
+		@import "../../../dijit/tests/css/dijitTests.css";
+	</style>
+	
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js"></script>
+
+	<!-- do not use! only for testing dynamic themes -->
+	<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+
+	<!-- for debugging: -->
+	<script type="text/javascript" src="../ThumbnailPicker.js"></script>
+	
+	<script type="text/javascript">
+		dojo.require("dojox.image.Lightbox");
+		dojo.require("dojox.image.ThumbnailPicker");
+		dojo.require("dojo.data.ItemFileReadStore"); 
+		/*
+			Initializes the second ThumbnailPicker widget with a data store that
+			reads information from a JSON URL.  This also tells the ThumbnailPicker
+			the name of the JSON attributes to read from each data item retrieved
+			from the JSON URL.
+		*/
+		function initItemStoreGallery(){
+			var itemRequest = {
+				query: {},
+				count: 20
+			};
+			var itemNameMap = {
+				imageThumbAttr: "thumb",
+				imageLargeAttr: "large"
+			};
+			
+			//Set the dojo.data.ItemFileReadStore on two of the dojox.image.ThumbnailPicker widgets
+			//Note the use of the 'itemNameMap', which tells the widget what attributes to
+			//read from the store.  Look in the 'images.json' file in the same folder as this
+			//file to see the data being read by the widget.
+			dijit.byId('thumbPicker2').setDataStore(imageItemStore, itemRequest, itemNameMap);
+
+		}
+		
+		//Subscribe to clicks on the thumbnails, and print out the information provided
+
+			function lightboxShow(packet){
+
+				// you can just "show" this image
+				lightbox.show({
+					href: packet.largeUrl,
+					title: packet.title
+				});
+				
+			};
+			
+			//When an image in the ThumbnailPicker is clicked on, it publishes
+			//information on the image to a topic, whose name is found by calling
+			//the 'getTopicName' function on the widget.
+		
+		var lightbox;
+		dojo.addOnLoad(function(){
+			dojo.parser.parse();
+
+			initItemStoreGallery();
+			// WARNING: LightboxDialog might be the _only_ widget with "return this;" coming out of .startup()
+			lightbox = new dojox.image.LightboxDialog().startup();
+			
+			dojo.subscribe(dijit.byId('thumbPicker2').getClickTopicName(), lightboxShow);
+
+		});
+
+	</script>
+</head>
+<body class="tundra">
+	<h1 class="testTitle">dojox.image.ThumbnailPicker + Lightbox</h1>
+
+	<div id="PublishedData" style="background-color:light-grey">
+	</div>
+
+    <h2>From ItemFileReadStore:</h2>
+	This ThumbnailPicker should have 5 thumbnails. Clicking on a thumbnail should NOT
+	open a URL, but rather open in a dojox.image.Lightbox. 
+	
+    <div id="thumbPicker2" dojoType="dojox.image.ThumbnailPicker" size="400"
+		isClickable="false"></div>
+	<div jsId="imageItemStore" dojoType="dojo.data.ItemFileReadStore" url="images.json"></div>
+
+</body>
+</html>

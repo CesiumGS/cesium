@@ -1,0 +1,60 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>XHR IFrame Proxy Tests</title>
+	<style type="text/css">
+		@import "../../../../dojo/resources/dojo.css";
+		@import "../../../../dijit/themes/tundra/tundra.css";
+		@import "../../../../dijit/themes/dijit.css";
+	</style>
+
+	<script type="text/javascript" src="../../../../dojo/dojo.js"
+		djConfig="isDebug:true"></script>
+	<script type="text/javascript">
+		var testXmlGet;
+		require(['dojo/_base/kernel', 'dojox/io/proxy/xip', 'dojo/_base/xhr', 'dojo/_base/html'], function(dojo, xip){
+
+			testXmlGet = function(){
+	/*
+				//Normal xhrGet call.
+				dojo.xhrGet({
+					url: "frag.xml",
+					handleAs: "xml",
+					load: function(result, ioArgs){
+						var foo = result.getElementsByTagName("foo").item(0);
+
+						dojo.byId("xmlGetOut").innerHTML = "Success: First foobar value is: " + foo.firstChild.nodeValue;
+					}
+				});
+	*/
+
+				//xip xhrGet call.
+				dojo.xhrGet({
+					iframeProxyUrl: "../xip_server.html",
+					url: "tests/frag.xml",
+					handleAs: "xml",
+					load: function(result, ioArgs){
+						var foo = result.getElementsByTagName("foo").item(0);
+
+						dojo.byId("xmlGetOut").innerHTML = "Success: First foobar value is: " + foo.firstChild.nodeValue;
+					}
+				});
+
+			}
+		});
+
+	</script>
+</head>
+<body class="tundra">
+
+<h1>XHR IFrame Proxy Tests</h1>
+<p>Run this test from a web server, not from local disk.</p>
+
+<p>
+<button onclick="testXmlGet()">Test XML GET</button>
+</p>
+<div id="xmlGetOut"></div>
+
+</body>
+</html>
