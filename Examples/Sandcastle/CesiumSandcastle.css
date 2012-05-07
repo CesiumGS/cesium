@@ -1,0 +1,23 @@
+@import url('../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css');
+
+/* @import url('../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/darker/darker.css');
+
+@import url('../../ThirdParty/dojo-release-1.7.2-src/dojox/mobile/themes/darker/Slider.css'); */
+
+html, body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    padding: 0;
+	-moz-user-select: none;
+	-webkit-user-select: none;
+}
+
+#appLayout {
+    width: 100%;
+    height: 100%;
+}
+
+#codeContainer {
+	width: 40%;
+}
