@@ -34,10 +34,8 @@ Check out the [CZML Guide](https://github.com/AnalyticalGraphicsInc/cesium/wiki/
 
 ### Developer Community ###
 
-* [Cesium Wiki](https://github.com/AnalyticalGraphicsInc/cesium/wiki) - Assorted Cesium information, including the following:
-* [Contributor's Guide](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor's-Guide) - how to get the code, build, etc.  It's easy.
-* [Roadmap](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Roadmap) - where we are heading.
-* [Presentations and Publications](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Presentations-and-Publications) - on Cesium and the underlying technology.
-* Mailing lists
-   * Development - https://groups.google.com/d/forum/cesium-dev
-   * Announcements - https://groups.google.com/d/forum/cesium-announce
+The [wiki](https://github.com/AnalyticalGraphicsInc/cesium/wiki) has everything you need to get started with Cesium including the [contributor's guide](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor's-Guide), [architecture](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Architecture), and [roadmap](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Roadmap).
+
+Also join our mailing lists:
+* [Development](https://groups.google.com/d/forum/cesium-dev)
+* [Announcements](https://groups.google.com/d/forum/cesium-announce)
