@@ -1,5 +1,6 @@
 /*global define*/
-define(['Core/Cartesian3'], function(Cartesian3) {
+define(['Core/Cartesian3'],
+function(Cartesian3) {
     "use strict";
 
     var Cartesian3DataHandler = {

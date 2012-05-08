@@ -1,5 +1,6 @@
 /*global define Image*/
-define(['Renderer/TextureAtlas'], function(TextureAtlas) {
+define(['Renderer/TextureAtlas'],
+function(TextureAtlas) {
     "use strict";
 
     function DynamicTextureAtlas(context, textureAtlasChanged) {

@@ -1,5 +1,6 @@
 /*global define*/
-define(['./DynamicProperty'], function(DynamicProperty) {
+define(['./DynamicProperty'],
+function(DynamicProperty) {
     "use strict";
 
     return function(valueType, czmlIntervals, buffer, sourceUri, existingProperty) {

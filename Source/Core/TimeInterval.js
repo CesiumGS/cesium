@@ -1,5 +1,8 @@
 /*global define*/
-define(['Core/JulianDate', 'Core/DeveloperError'], function(JulianDate, DeveloperError) {
+define(['Core/JulianDate',
+        'Core/DeveloperError'],
+function(JulianDate,
+         DeveloperError) {
     "use strict";
 
     var Characteristics_Closed = 0;
