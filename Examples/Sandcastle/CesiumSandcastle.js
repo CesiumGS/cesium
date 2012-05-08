@@ -8,6 +8,7 @@ require({
         'dojo/parser',
         'dojo/dom-class',
         'dojo/dom-construct',
+        'dojo/_base/fx',
         'dojo/_base/window',
         'dijit/form/Button',
         'dijit/form/DropDownButton',
@@ -28,7 +29,9 @@ require({
         'dijit/Toolbar',
         'dijit/ToolbarSeparator',
         'dojo/domReady!'],
-    function (parser, domClass, domConstruct, win) {
+    function (parser, domClass, domConstruct, fx, win) {
         parser.parse();
-        domConstruct.destroy('loading');
+        fx.fadeOut({ node: 'loading', onEnd: function () {
+            domConstruct.destroy('loading');
+        }}).play();
     });
