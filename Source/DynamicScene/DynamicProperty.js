@@ -24,6 +24,7 @@ function(JulianDate,
     function DynamicProperty(dataHandler) {
         this._dataHandler = dataHandler;
         this._intervals = new TimeIntervalCollection();
+        this.cacheable = true;
     }
 
     function convertDate(date, epoch) {
@@ -127,10 +128,10 @@ function(JulianDate,
         }
 
         if (this_dataHandler.isSampled(czmlIntervalValue)) {
-            if (!intervalData.isSampled) {
+            if (this.cacheable) {
                 intervalData.times = [];
                 intervalData.values = [];
-                intervalData.isSampled = true;
+                this.cacheable = false;
             }
             var epoch = czmlInterval.epoch;
             if (typeof epoch !== 'undefined') {
@@ -141,7 +142,7 @@ function(JulianDate,
             //Packet itself is a constant value
             intervalData.times = undefined;
             intervalData.values = czmlIntervalValue;
-            intervalData.isSampled = false;
+            this.cacheable = true;
         }
     };
 
@@ -163,7 +164,7 @@ function(JulianDate,
             var intervalData = interval.data;
             var times = intervalData.times;
             var values = intervalData.values;
-            if (intervalData.isSampled && times.length >= 0 && values.length > 0) {
+            if (!this.cacheable && times.length >= 0 && values.length > 0) {
                 var index = binarySearch(times, time, JulianDate.compare);
 
                 if (index < 0) {
