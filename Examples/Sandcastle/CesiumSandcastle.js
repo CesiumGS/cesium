@@ -5,19 +5,20 @@ require({
 			'dijit',
 			'dojox']
 	}, [
-		'dojo/parser',
-		'dojo/dom-class',
-		'dojo/_base/window',
-		'dijit/form/Button',
+        'dojo/parser',
+        'dojo/dom-class',
+        'dojo/dom-construct',
+        'dojo/_base/window',
+        'dijit/form/Button',
         'dijit/form/DropDownButton',
-		'dijit/form/ToggleButton',
-		'dijit/form/DropDownButton',
-		'dijit/TooltipDialog',
-		'dijit/Menu',
-		'dijit/MenuBar',
-		'dijit/PopupMenuBarItem',
-		'dijit/MenuItem',
-		'dojox/mobile/Slider',
+        'dijit/form/ToggleButton',
+        'dijit/form/DropDownButton',
+        'dijit/TooltipDialog',
+        'dijit/Menu',
+        'dijit/MenuBar',
+        'dijit/PopupMenuBarItem',
+        'dijit/MenuItem',
+        'dojox/mobile/Slider',
 
         'dijit/layout/AccordionContainer',
         'dijit/layout/BorderContainer',
@@ -25,8 +26,8 @@ require({
         'dijit/layout/TabContainer',
         'dijit/Toolbar',
         'dijit/ToolbarSeparator',
-		'dojo/domReady!'],
-	function (parser, domClass, win) {
-		parser.parse();
-		domClass.remove(win.body(), 'loading');
-	});
+        'dojo/domReady!'],
+    function (parser, domClass, domConstruct, win) {
+        parser.parse();
+        domConstruct.destroy('loading');
+    });
