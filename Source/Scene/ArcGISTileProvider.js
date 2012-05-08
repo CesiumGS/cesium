@@ -21,11 +21,11 @@ define([
      * @constructor
      *
      * @param {String} description.host The ArcGIS Server host name.
-     * @param {String} description.instance The instance name. The default value is "/arcgis/rest".
-     * @param {String} description.folder The folder where the service is located.
+     * @param {String} [description.instance='/arcgis/rest'] The instance name.
+     * @param {String} [description.folder=undefined] The folder where the service is located.
      * @param {String} description.service The service name.
-     * @param {Object} description.proxy A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
-     * @param {Enumeration} description.proxyUsagePolicy Specify whether to use the supplied proxy for all data, or only those that don't support cross-origin requests.  By default, cross-origin will be used.
+     * @param {Object} [description.proxy=undefined] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
+     * @param {Enumeration} [description.proxyUsagePolicy=ProxyUsagePolicy.USE_CORS] Specify whether to use the supplied proxy for all data, or only those that don't support cross-origin requests.  By default, cross-origin will be used.
      *
      * @exception {DeveloperError} <code>description.host</code> is required.
      * @exception {DeveloperError} <code>description.service</code> is required.

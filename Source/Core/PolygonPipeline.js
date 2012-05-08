@@ -6,7 +6,7 @@ define([
         './pointInsideTriangle2D',
         './ComponentDatatype',
         './PrimitiveType',
-        '../ThirdParty/Queue',
+        './Queue',
         './WindingOrder'
     ], function(
         DeveloperError,
@@ -298,7 +298,7 @@ define([
             // Used to make sure shared edges are not split more than once.
             var edges = {};
 
-            while (!triangles.isEmpty()) {
+            while (triangles.length > 0) {
                 var triangle = triangles.dequeue();
 
                 var v0 = subdividedPositions[triangle.i0];

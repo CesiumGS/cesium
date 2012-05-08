@@ -255,8 +255,7 @@ define([
 
         if (rightZooming) {
             this._zoom(rightZoom.getMovement());
-        }
-        else if (wheelZooming) {
+        } else if (wheelZooming) {
             this._zoom(wheelZoom.getMovement());
         }
 
@@ -364,11 +363,11 @@ define([
      * <br /><br />
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>null</code>) to the object as done in the example.
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
      * @memberof Camera2DController
      *
-     * @return {null}
+     * @return {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
