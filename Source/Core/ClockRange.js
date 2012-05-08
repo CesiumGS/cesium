@@ -1,6 +1,5 @@
 /*global define*/
-define(['Core/Enumeration'],
-function(Enumeration) {
+define(['./Enumeration'], function(Enumeration) {
     "use strict";
 
     var ClockRange = {

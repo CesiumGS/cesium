@@ -1,4 +1,4 @@
-define(['Core/binarySearch'], function(binarySearch) {
+define(['./binarySearch'], function(binarySearch) {
     "use strict";
 
     function sampleComparison(a, b) {

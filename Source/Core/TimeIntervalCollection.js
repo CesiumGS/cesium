@@ -2,7 +2,7 @@
 define(['./binarySearch',
         './TimeInterval',
         './JulianDate'],
-function(binarysearch,
+function(binarySearch,
          TimeInterval,
          JulianDate) {
     "use strict";
@@ -89,7 +89,7 @@ function(binarysearch,
             }
 
             // Keep the list sorted by the start date
-            index = binarysearch(this._intervals, interval, compareIntervalStartTimes);
+            index = binarySearch(this._intervals, interval, compareIntervalStartTimes);
             if (index < 0) {
                 index = ~index;
             } else {
@@ -228,7 +228,7 @@ function(binarysearch,
 
     TimeIntervalCollection.prototype.indexOf = function(date) {
         var interval = new TimeInterval(date, date, true, true);
-        var index = binarysearch(this._intervals, interval, compareIntervalStartTimes);
+        var index = binarySearch(this._intervals, interval, compareIntervalStartTimes);
         if (index >= 0) {
             if (this._intervals[index].isStartIncluded) {
                 return index;
@@ -274,7 +274,7 @@ function(binarysearch,
             return false;
         }
 
-        var index = binarysearch(this._intervals, interval, compareIntervalStartTimes);
+        var index = binarySearch(this._intervals, interval, compareIntervalStartTimes);
         if (index < 0) {
             index = ~index;
         }

@@ -1,8 +1,10 @@
 /*global define*/
-define(['Core/JulianDate',
-        'Core/ClockStep',
-        'Core/ClockRange'],
-function(JulianDate,
+define([
+        './JulianDate',
+        './ClockStep',
+        './ClockRange'
+    ], function(
+        JulianDate,
         ClockStep,
         ClockRange) {
     "use strict";
@@ -36,7 +38,7 @@ function(JulianDate,
         //this tick indicates the user time is now
         //the current time.
         if (this._lastCurrentTime === currentTime) {
-            if (this.clockStep === ClockStep.FRAME_DEPENDANT) {
+            if (this.clockStep === ClockStep.FRAME_DEPENDENT) {
                 currentTime = currentTime.addSeconds(this.multiplier);
             } else {
                 var milliseconds = currentCpuTime - this._lastCpuTime;
