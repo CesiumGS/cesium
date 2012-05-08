@@ -13,6 +13,7 @@ require({
         'dijit/form/DropDownButton',
         'dijit/form/ToggleButton',
         'dijit/form/DropDownButton',
+        'dijit/form/TextBox',
         'dijit/TooltipDialog',
         'dijit/Menu',
         'dijit/MenuBar',

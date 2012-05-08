@@ -38,3 +38,7 @@ html, body {
 #codeContainer {
     width: 40%;
 }
+
+.claro .dijitTabContainerBottom-tabs .dijitTabChecked .dijitTabContent {
+	background-position: 0 -115px;
+}
