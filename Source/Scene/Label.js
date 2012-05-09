@@ -239,7 +239,9 @@ define([
      * @see Label#setFont
      */
     Label.prototype.setFillColor = function(value) {
-        if ((typeof value !== "undefined") && (this._fillColor !== value)) {
+        var c = this._fillColor;
+        if ((typeof value !== "undefined") &&
+            (c.red !== value.red || c.green !== value.green || c.blue !== value.blue || c.alpha !== value.alpha)) {
             this._fillColor = value;
             this._createBillboards();
         }
@@ -268,7 +270,9 @@ define([
      * @see Label#setFont
      */
     Label.prototype.setOutlineColor = function(value) {
-        if ((typeof value !== "undefined") && (this._outlineColor !== value)) {
+        var c = this._outlineColor;
+        if ((typeof value !== "undefined") &&
+            (c.red !== value.red || c.green !== value.green || c.blue !== value.blue || c.alpha !== value.alpha)) {
             this._outlineColor = value;
             this._createBillboards();
         }
