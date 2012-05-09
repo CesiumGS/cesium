@@ -646,30 +646,34 @@ define([
     };
 
     CentralBody.prototype._processTile = function(tile) {
+        if (this._imageQueue.contains(tile) || this._reprojectQueue.contains(tile) || this._textureQueue.contains(tile)) {
+            return;
+        }
+
         var maxFailed = this._tileFailCount > this._maxTileFailCount;
         var requestFailed = tile.state === TileState.IMAGE_FAILED && tile._failCount < this._maxTileFailCount;
         var maxTimePassed = this._lastFailedTime && this._lastFailedTime.getSecondsDifference(new JulianDate()) >= this.failedTileRetryTime;
         var retry = maxTimePassed || (requestFailed && !maxFailed);
 
         // check if tile needs to load image
-        if ((!tile.state || tile.state === TileState.READY) && !this._imageQueue.contains(tile)) {
+        if (!tile.state || tile.state === TileState.READY) {
             this._imageQueue.enqueue(tile);
             tile.state = TileState.IMAGE_LOADING;
-        } else if (tile.state === TileState.IMAGE_LOADED && !this._reprojectQueue.contains(tile)) {
+        } else if (tile.state === TileState.IMAGE_LOADED) {
             // or re-project the image
             this._reprojectQueue.enqueue(tile);
             tile.state = TileState.REPROJECTING;
-        } else if (tile.state === TileState.REPROJECTED && !this._textureQueue.contains(tile)) {
+        } else if (tile.state === TileState.REPROJECTED) {
             // or copy to a texture
             this._textureQueue.enqueue(tile);
             tile.state = TileState.TEXTURE_LOADING;
-        } else if (retry && this._imageQueue.contains(tile) === -1) {
+        } else if (retry) {
             // or retry a failed image
             if (maxTimePassed) {
                 tile._failCount = 0;
                 this._tileFailCount = 0;
             }
-            this._imageQueue.push(tile);
+            this._imageQueue.enqueue(tile);
             tile.state = TileState.IMAGE_LOADING;
         } else if (tile.state === TileState.IMAGE_INVALID && tile.image) {
             // or release invalid image if there is one
@@ -886,7 +890,7 @@ define([
         var toSphere = toCenter.normalize().multiplyWithScalar(toCenter.magnitude() - boundingVolume.radius);
         var distance = direction.multiplyWithScalar(direction.dot(toSphere)).magnitude();
 
-        if (distance < dmin) {
+        if (distance > 0.0 && distance < dmin) {
             return true;
         }
 
