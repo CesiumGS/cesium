@@ -74,15 +74,13 @@ define([
         '../Core/Math',
         '../ThirdParty/jsonp',
         './BingMapsStyle',
-        './Projections',
-        './ProxyUsagePolicy'
+        './Projections'
     ], function(
         DeveloperError,
         CesiumMath,
         jsonp,
         BingMapsStyle,
-        Projections,
-        ProxyUsagePolicy) {
+        Projections) {
     "use strict";
     /*global Image*/
 
@@ -95,8 +93,7 @@ define([
      * @param {String} description.server The name of the Bing Maps server hosting the imagery.
      * @param {String} [description.key] An optional Bing Maps key, which can be created at <a href="https://www.bingmapsportal.com/">https://www.bingmapsportal.com/</a>.
      * @param {Enumeration} [description.mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps imagery to load.
-     * @param {Object} [description.proxy=undefined] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
-     * @param {Enumeration} [description.proxyUsagePolicy=ProxyUsagePolicy.USE_CORS] Specify whether to use the supplied proxy for all data, or only those that don't support cross-origin requests.
+     * @param {Object} [description.proxy=undefined] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
      *
      * @exception {DeveloperError} <code>description.server</code> is required.
      *
@@ -120,7 +117,7 @@ define([
         var key = desc.key || "AquXz3981-1ND5jGs8qQn7R7YUP8qkWi77yZSVM7o3nIvzb-Mg0W2Ta57xuUyywX";
         var mapStyle = desc.mapStyle || BingMapsStyle.AERIAL;
 
-        if (!desc.server) {
+        if (typeof desc.server === 'undefined') {
             throw new DeveloperError("description.server is required.", "description.server");
         }
 
@@ -146,16 +143,11 @@ define([
         this._mapStyle = mapStyle;
 
         /**
-         * A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
+         * A proxy to use for requests. This object is expected to have a getURL
+         * function which returns the proxied URL, if needed.
          * @type {Object}
          */
         this.proxy = desc.proxy;
-
-        /**
-         * Specify whether to use the supplied proxy for all data, or only those that don't support cross-origin requests.  By default, cross-origin will be used.
-         * @type {Enumeration}
-         */
-        this.proxyUsagePolicy = desc.proxyUsagePolicy || ProxyUsagePolicy.USE_CORS;
 
         // TODO: The following 5 properties should be set in _requestTemplate.
         //       The may be needed before the response so for now set the default values.
@@ -279,7 +271,7 @@ define([
 
     BingMapsTileProvider.prototype._getMetadataUrl = function() {
         var url = 'http://' + this.server + '/REST/v1/Imagery/Metadata/' + this.mapStyle.name;
-        if (this.proxyUsagePolicy === ProxyUsagePolicy.ALWAYS && this.proxy) {
+        if (typeof this.proxy !== 'undefined') {
             url = this.proxy.getURL(url);
         }
         return url;
@@ -289,7 +281,7 @@ define([
         tile.quadkey = BingMapsTileProvider.tileXYToQuadKey(tile.x, tile.y, tile.zoom);
 
         var url = this._url.replace('{quadkey}', tile.quadkey);
-        if (this.proxyUsagePolicy === ProxyUsagePolicy.ALWAYS && this.proxy) {
+        if (typeof this.proxy !== 'undefined') {
             url = this.proxy.getURL(url);
         }
 
