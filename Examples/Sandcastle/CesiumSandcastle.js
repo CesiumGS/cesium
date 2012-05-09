@@ -56,11 +56,12 @@ require({
         // TODO: remove debugging
         window.editor = editor;
 
-        //registry.byId('pane3D').on("resize", function () {
-        //    console.log('ed - resize');
-        //});
+        //var canvas = document.getElementById("glCanvas");
 
-        //window.pane = dijit.byId('pane3D');
-        //window.oldRe = window.pane.resize;
-        //window.pane.resize = function(changeSize, resultSize) { console.log('re'); window.oldRe(changeSize, resultSize); };
+        var pane3D = registry.byId('pane3D');
+        pane3D.originalResize = pane3D.resize;
+        pane3D.resize = function(changeSize, resultSize) {
+            console.log('3d - resize');
+            pane3D.originalResize(changeSize, resultSize);
+        };
     });
