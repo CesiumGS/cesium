@@ -1,6 +1,5 @@
 /*global define*/
-define(['./DynamicProperty'],
-function(DynamicProperty) {
+define(['./DynamicProperty'], function(DynamicProperty) {
     "use strict";
 
     return function(valueType, czmlIntervals, buffer, sourceUri, existingProperty) {
@@ -12,7 +11,9 @@ function(DynamicProperty) {
         if (typeof existingProperty === 'undefined') {
             existingProperty = new DynamicProperty(valueType);
         }
+
         existingProperty.addIntervals(czmlIntervals, buffer, sourceUri);
+
         return existingProperty;
     };
 });

@@ -1,12 +1,14 @@
 /*global define*/
-define(['Core/JulianDate',
-        'Core/TimeInterval',
-        'Core/TimeIntervalCollection',
-        'Core/binarySearch',
-        'Core/HermitePolynomialApproximation',
-        'Core/LinearApproximation',
-        'Core/LagrangePolynomialApproximation'],
-function(JulianDate,
+define([
+        '../Core/JulianDate',
+        '../Core/TimeInterval',
+        '../Core/TimeIntervalCollection',
+        '../Core/binarySearch',
+        '../Core/HermitePolynomialApproximation',
+        '../Core/LinearApproximation',
+        '../Core/LagrangePolynomialApproximation'
+    ], function(
+        JulianDate,
         TimeInterval,
         TimeIntervalCollection,
         binarySearch,

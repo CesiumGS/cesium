@@ -1,3 +1,4 @@
+/*global define*/
 define(['./interpolateWithDegree'], function(interpolateWithDegree) {
     "use strict";
 

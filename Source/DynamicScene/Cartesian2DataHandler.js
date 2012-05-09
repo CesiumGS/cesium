@@ -1,14 +1,11 @@
 /*global define*/
-define(['Core/Cartesian2'],
-function(Cartesian2) {
+define(['../Core/Cartesian2'], function(Cartesian2) {
     "use strict";
 
     var doublesPerValue = 2;
 
     var Cartesian2DataHandler = {
-
         doublesPerValue : doublesPerValue,
-
         doublesPerInterpolationValue : doublesPerValue,
 
         unwrapCzmlInterval : function(czmlInterval) {
@@ -20,10 +17,14 @@ function(Cartesian2) {
         },
 
         packValuesForInterpolation : function(valuesArray, destinationArray, firstIndex, lastIndex) {
-            var sourceIndex = firstIndex * doublesPerValue, destinationIndex = 0, stop = (lastIndex + 1) * doublesPerValue;
+            var sourceIndex = firstIndex * doublesPerValue;
+            var destinationIndex = 0;
+            var stop = (lastIndex + 1) * doublesPerValue;
 
-            for (; sourceIndex < stop; sourceIndex++, destinationIndex++) {
+            while (sourceIndex < stop) {
                 destinationArray[destinationIndex] = valuesArray[sourceIndex];
+                sourceIndex++;
+                destinationIndex++;
             }
         },
 

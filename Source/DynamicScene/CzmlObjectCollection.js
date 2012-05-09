@@ -1,8 +1,12 @@
 /*global define*/
-define(['./DynamicObject',
-        'Core/createGuid'],
-function(DynamicObject, createGuid) {
+define([
+        './DynamicObject',
+        '../Core/createGuid'
+    ], function(
+        DynamicObject,
+        createGuid) {
     "use strict";
+
     //TODO Make sure we throw the proper events in all cases.
     function CzmlObjectCollection(name, id, propertyFunctionsMap) {
         this.name = name;

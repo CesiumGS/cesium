@@ -1,21 +1,12 @@
 /*global define*/
-define(['./DynamicProperty',
-        'Core/JulianDate',
-        'Core/binarySearch',
-        'Core/interpolateWithDegree',
-        'Core/LinearApproximation'],
-function(DynamicProperty,
-        JulianDate,
-        binarySearch,
-        interpolateWithDegree,
-        LinearApproximation) {
+define(function() {
     "use strict";
 
+    var doublesPerValue = 1;
+
     var NumberDataHandler = {
-
-        doublesPerValue : 1,
-
-        doublesPerInterpolationValue : 1,
+        doublesPerValue : doublesPerValue,
+        doublesPerInterpolationValue : doublesPerValue,
 
         unwrapCzmlInterval : function(czmlInterval) {
             var result = czmlInterval.number;
@@ -27,10 +18,14 @@ function(DynamicProperty,
         },
 
         packValuesForInterpolation : function(valuesArray, destinationArray, firstIndex, lastIndex) {
-            var sourceIndex = firstIndex, destinationIndex = 0, stop = (lastIndex + 1);
+            var sourceIndex = firstIndex;
+            var destinationIndex = 0;
+            var stop = (lastIndex + 1);
 
-            for (; sourceIndex < stop; sourceIndex++, destinationIndex++) {
+            while (sourceIndex < stop) {
                 destinationArray[destinationIndex] = valuesArray[sourceIndex];
+                sourceIndex++;
+                destinationIndex++;
             }
         },
 
