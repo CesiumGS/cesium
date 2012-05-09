@@ -9,47 +9,13 @@ function(DynamicTextureAtlas,
          VerticalOrigin) {
     "use strict";
 
-    function CachedBillboard(id, visualizer) {
-        this.visualizer = visualizer;
-        this.positionProperty = undefined;
-        this.colorProperty = undefined;
-        this.eyeOffsetProperty = undefined;
-        this.pixelOffsetProperty = undefined;
-        this.scaleProperty = undefined;
-        this.horizontalOriginProperty = undefined;
-        this.verticalOriginProperty = undefined;
-        this.textureProperty = undefined;
-        this.textureAvailable = false;
-        this.show = true;
-        this.billboard = visualizer._billboardCollection.add();
-
-        // Provide the ID, so picking the billboard can identify the object.
-        this.billboard.id = id;
-    }
-
-    CachedBillboard.prototype.setShow = function(value) {
-        this.show = value;
-        this.billboard.setShow(value && this.textureAvailable);
-    };
-
-    CachedBillboard.prototype.setTexture = function(value) {
-        if (typeof value !== 'undefined' && this.texture !== value) {
-            this.texture = value;
-            this.textureAvailable = false;
-            this.billboard.setShow(false);
-
-            var self = this;
-            this.visualizer._textureAtlas.addTextureFromUrl(value, function(imageIndex) {
-                self.textureAvailable = true;
-                self.billboard.setImageIndex(imageIndex);
-                self.billboard.setShow(self.show);
-            });
-        }
-    };
+    //FIXME This class currently relies on storing data onto each CZML object
+    //These objects may be transient and therefore storing data on them is bad.
+    //We may need a slower "fallback" layer of storage in case the data doesn't exist.
 
     function BillboardVisualizer(scene) {
         this._scene = scene;
-        this._billboards = {};
+        this._unusedIndexes = [];
 
         var billboardCollection = this._billboardCollection = new BillboardCollection();
         scene.getPrimitives().add(billboardCollection);
@@ -81,79 +47,104 @@ function(DynamicTextureAtlas,
             return;
         }
 
+        var billboard;
+        var objectId = czmlObject.id;
         var showProperty = dynamicBillboard.show;
-        if (typeof showProperty === 'undefined') {
-            return;
-        }
-
-        var availability = czmlObject.availability, show = showProperty.getValue(time) === true && (typeof availability === 'undefined' || availability.getValue(time) === true), objectId = czmlObject.id, billboard = this._billboards[objectId], property;
-
-        if (typeof billboard !== 'undefined') {
-            billboard.setShow(show);
-        }
+        var billboardVisualizerIndex = czmlObject.billboardVisualizerIndex;
+        var show = typeof showProperty === 'undefined' || showProperty.getValue(time);
 
         if (!show) {
             //don't bother creating or updating anything else
+            if (typeof billboardVisualizerIndex !== 'undefined') {
+                billboard = this._billboardCollection.get(billboardVisualizerIndex);
+                billboard.setShow(false);
+                billboard.vizTexture = undefined;
+                billboard.vizTextureAvailable = false;
+                czmlObject.billboardVisualizerIndex = undefined;
+                this._unusedIndexes.push(billboardVisualizerIndex);
+            }
             return;
         }
 
-        if (typeof billboard === 'undefined') {
-            billboard = this._billboards[objectId] = new CachedBillboard(objectId, this, property, time);
-        }
-
-        if (!positionProperty.cacheable || billboard.positionProperty !== positionProperty) {
-            billboard.positionProperty = positionProperty;
-            var position = positionProperty.getValue(time);
-            if (typeof position !== 'undefined') {
-                billboard.billboard.setPosition(position);
+        if (typeof billboardVisualizerIndex === 'undefined') {
+            var objectPool = this._unusedIndexes;
+            var length = objectPool.length;
+            if (length > 0) {
+                billboardVisualizerIndex = objectPool.pop();
+                billboard = this._billboardCollection.get(billboardVisualizerIndex);
+            } else {
+                billboardVisualizerIndex = this._billboardCollection.getLength();
+                billboard = this._billboardCollection.add();
             }
+            czmlObject.billboardVisualizerIndex = billboardVisualizerIndex;
+            billboard.id = objectId;
+            billboard.vizTexture = undefined;
+            billboard.vizTextureAvailable = false;
+        } else {
+            billboard = this._billboardCollection.get(billboardVisualizerIndex);
         }
 
-        if (!textureProperty.cacheable || billboard.textureProperty !== textureProperty) {
-            billboard.textureProperty = textureProperty;
-            billboard.setTexture(textureProperty.getValue(time));
+        var textureValue = textureProperty.getValue(time);
+        if (textureValue !== billboard.vizTexture) {
+            billboard.vizTexture = textureValue;
+            billboard.vizTextureAvailable = false;
+            var that = this;
+            this._textureAtlas.addTextureFromUrl(textureValue, function(imageIndex) {
+                //By the time the texture was loaded, the billboard might already be gone.
+                var currentIndex = czmlObject.billboardVisualizerIndex;
+                if (typeof currentIndex !== 'undefined') {
+                    var cbBillboard = that._billboardCollection.get(currentIndex);
+                    cbBillboard.vizTextureAvailable = true;
+                    cbBillboard.setImageIndex(imageIndex);
+                }
+            });
         }
 
-        property = dynamicBillboard.color;
-        if (typeof property !== 'undefined' && (!property.cacheable || billboard.colorProperty !== property)) {
-            billboard.colorProperty = property;
-            billboard.billboard.setColor(property.getValue(time));
+        billboard.setShow(show && billboard.vizTextureAvailable);
+        if (!billboard.vizTextureAvailable) {
+            return;
+        }
+
+        billboard.setPosition(positionProperty.getValue(time));
+
+        var property = dynamicBillboard.color;
+        if (typeof property !== 'undefined') {
+            billboard.setColor(property.getValue(time));
         }
 
         property = dynamicBillboard.eyeOffset;
-        if (typeof property !== 'undefined' && (!property.cacheable || billboard.eyeOffsetProperty !== property)) {
-            billboard.eyeOffsetProperty = property;
-            billboard.billboard.setEyeOffset(property.getValue(time));
+        if (typeof property !== 'undefined') {
+            billboard.setEyeOffset(property.getValue(time));
         }
 
         property = dynamicBillboard.pixelOffset;
-        if (typeof property !== 'undefined' && (!property.cacheable || billboard.pixelOffsetProperty !== property)) {
-            billboard.pixelOffsetProperty = property;
-            billboard.billboard.setPixelOffset(property.getValue(time));
+        if (typeof property !== 'undefined') {
+            billboard.setPixelOffset(property.getValue(time));
         }
 
         property = dynamicBillboard.scale;
-        if (typeof property !== 'undefined' && (!property.cacheable || billboard.scaleProperty !== property)) {
-            billboard.scaleProperty = property;
-            billboard.billboard.setScale(property.getValue(time));
+        if (typeof property !== 'undefined') {
+            billboard.setScale(property.getValue(time));
         }
 
         property = dynamicBillboard.horizontalOrigin;
-        if (typeof property !== 'undefined' && (!property.cacheable || billboard.horizontalOriginProperty !== property)) {
-            billboard.horizontalOriginProperty = property;
-            billboard.billboard.setHorizontalOrigin(HorizontalOrigin[property.getValue(time)]);
+        if (typeof property !== 'undefined') {
+            billboard.setHorizontalOrigin(HorizontalOrigin[property.getValue(time)]);
         }
 
         property = dynamicBillboard.verticalOrigin;
-        if (typeof property !== 'undefined' && (!property.cacheable || billboard.verticalOriginProperty !== property)) {
-            billboard.verticalOriginProperty = property;
-            billboard.billboard.setVerticalOrigin(VerticalOrigin[property.getValue(time)]);
+        if (typeof property !== 'undefined') {
+            billboard.setVerticalOrigin(VerticalOrigin[property.getValue(time)]);
         }
     };
 
-    BillboardVisualizer.prototype.remove = function() {
+    BillboardVisualizer.prototype.removeAll = function(czmlObjects) {
+        this._unusedIndexes = [];
         this._billboardCollection.removeAll();
-        this._billboards = {};
+
+        for ( var i = 0, len = czmlObjects.length; i < len; i++) {
+            czmlObjects.billboardVisualizerIndex = undefined;
+        }
     };
 
     return BillboardVisualizer;

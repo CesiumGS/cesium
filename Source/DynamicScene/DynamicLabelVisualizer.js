@@ -8,28 +8,14 @@ function(LabelCollection,
          HorizontalOrigin,
          VerticalOrigin) {
     "use strict";
-    function Label(id, visualizer) {
-        this.visualizer = visualizer;
-        this.positionProperty = undefined;
-        this.eyeOffsetProperty = undefined;
-        this.pixelOffsetProperty = undefined;
-        this.scaleProperty = undefined;
-        this.horizontalOriginProperty = undefined;
-        this.verticalOriginProperty = undefined;
-        this.textProperty = undefined;
-        this.fillColorProperty = undefined;
-        this.fontProperty = undefined;
-        this.outlineColorProperty = undefined;
-        this.styleProperty = undefined;
-        this.label = visualizer._labelCollection.add();
 
-        // Provide the ID, so picking the label can identify the object.
-        this.label.id = id;
-    }
+    //FIXME This class currently relies on storing data onto each CZML object
+    //These objects may be transient and therefore storing data on them is bad.
+    //We may need a slower "fallback" layer of storage in case the data doesn't exist.
 
     function LabelVisualizer(scene) {
         this._scene = scene;
-        this._labels = {};
+        this._unusedIndexes = [];
 
         var labelCollection = this._labelCollection = new LabelCollection();
         scene.getPrimitives().add(labelCollection);
@@ -42,12 +28,12 @@ function(LabelCollection,
     };
 
     LabelVisualizer.prototype.updateObject = function(time, czmlObject) {
-        var czmlLabel = czmlObject.label;
-        if (typeof czmlLabel === 'undefined') {
+        var dynamicLabel = czmlObject.label;
+        if (typeof dynamicLabel === 'undefined') {
             return;
         }
 
-        var textProperty = czmlLabel.text;
+        var textProperty = dynamicLabel.text;
         if (typeof textProperty === 'undefined') {
             return;
         }
@@ -57,97 +43,96 @@ function(LabelCollection,
             return;
         }
 
-        var showProperty = czmlLabel.show;
-        if (typeof showProperty === 'undefined') {
-            return;
-        }
-
-        var availability = czmlObject.availability, show = showProperty.getValue(time) === true && (typeof availability === 'undefined' || availability.getValue(time) === true), objectId = czmlObject.id, label = this._labels[objectId], property;
-
-        if (typeof label !== 'undefined') {
-            label.label.setShow(show);
-        }
+        var label;
+        var objectId = czmlObject.id;
+        var showProperty = dynamicLabel.show;
+        var labelVisualizerIndex = czmlObject.labelVisualizerIndex;
+        var show = typeof showProperty === 'undefined' || showProperty.getValue(time);
 
         if (!show) {
             //don't bother creating or updating anything else
+            if (typeof labelVisualizerIndex !== 'undefined') {
+                label = this._labelCollection.get(labelVisualizerIndex);
+                label.setShow(false);
+                this._unusedIndexes.push(labelVisualizerIndex);
+                czmlObject.labelVisualizerIndex = undefined;
+            }
             return;
         }
 
-        if (typeof label === 'undefined') {
-            label = this._labels[objectId] = new Label(objectId, this, time);
-        }
-
-        if (!textProperty.cacheable || label.textProperty !== textProperty) {
-            label.textProperty = textProperty;
-            label.label.setText(textProperty.getValue(time));
-        }
-
-        if (!positionProperty.cacheable || label.positionProperty !== positionProperty) {
-            label.positionProperty = positionProperty;
-            var position = positionProperty.getValue(time);
-            if (typeof position !== 'undefined') {
-                label.label.setPosition(position);
+        if (typeof labelVisualizerIndex === 'undefined') {
+            var objectPool = this._unusedIndexes;
+            var length = objectPool.length;
+            if (length > 0) {
+                labelVisualizerIndex = objectPool.pop();
+                label = this._labelCollection.get(labelVisualizerIndex);
+            } else {
+                labelVisualizerIndex = this._labelCollection.getLength();
+                label = this._labelCollection.add();
             }
+            czmlObject.labelVisualizerIndex = labelVisualizerIndex;
+            label.id = objectId;
+        } else {
+            label = this._labelCollection.get(labelVisualizerIndex);
         }
 
-        property = czmlLabel.scale;
-        if (typeof property !== 'undefined' && (!property.cacheable || label.scaleProperty !== property)) {
-            label.scaleProperty = property;
-            label.label.setScale(property.getValue(time));
+        label.setShow(show);
+        label.setText(textProperty.getValue(time));
+        label.setPosition(positionProperty.getValue(time));
+
+        var property = dynamicLabel.scale;
+        if (typeof property !== 'undefined') {
+            label.setScale(property.getValue(time));
         }
 
-        property = czmlLabel.font;
-        if (typeof property !== 'undefined' && (!property.cacheable || label.fontProperty !== property)) {
-            label.fontProperty = property;
-            label.label.setFont(property.getValue(time));
+        property = dynamicLabel.font;
+        if (typeof property !== 'undefined') {
+            label.setFont(property.getValue(time));
         }
 
-        property = czmlLabel.fillColor;
-        if (typeof property !== 'undefined' && (!property.cacheable || label.fillColorProperty !== property)) {
-            label.fillColorProperty = property;
-            label.label.setFillColor(property.getValue(time));
+        property = dynamicLabel.fillColor;
+        if (typeof property !== 'undefined') {
+            label.setFillColor(property.getValue(time));
         }
 
-        property = czmlLabel.outlineColor;
-        if (typeof property !== 'undefined' && (!property.cacheable || label.outlineColorProperty !== property)) {
-            label.outlineColorProperty = property;
-            label.label.setOutlineColor(property.getValue(time));
+        property = dynamicLabel.outlineColor;
+        if (typeof property !== 'undefined') {
+            label.setOutlineColor(property.getValue(time));
         }
 
-        property = czmlLabel.style;
-        if (typeof property !== 'undefined' && (!property.cacheable || label.styleProperty !== property)) {
-            label.styleProperty = property;
-            label.label.setStyle(LabelStyle[property.getValue(time)]);
+        property = dynamicLabel.style;
+        if (typeof property !== 'undefined') {
+            label.setStyle(LabelStyle[property.getValue(time)]);
         }
 
-        property = czmlLabel.pixelOffset;
-        if (typeof property !== 'undefined' && (!property.cacheable || label.pixelOffsetProperty !== property)) {
-            label.pixelOffsetProperty = property;
-            label.label.setPixelOffset(property.getValue(time));
+        property = dynamicLabel.pixelOffset;
+        if (typeof property !== 'undefined') {
+            label.setPixelOffset(property.getValue(time));
         }
 
-        property = czmlLabel.eyeOffset;
-        if (typeof property !== 'undefined' && (!property.cacheable || label.eyeOffsetProperty !== property)) {
-            label.eyeOffsetProperty = property;
-            label.label.seteyeOffset(property.getValue(time));
+        property = dynamicLabel.eyeOffset;
+        if (typeof property !== 'undefined') {
+            label.setEyeOffset(property.getValue(time));
         }
 
-        property = czmlLabel.horizontalOrigin;
-        if (typeof property !== 'undefined' && (!property.cacheable || label.horizontalOriginProperty !== property)) {
-            label.horizontalOriginProperty = property;
-            label.label.setHorizontalOrigin(HorizontalOrigin[property.getValue(time)]);
+        property = dynamicLabel.horizontalOrigin;
+        if (typeof property !== 'undefined') {
+            label.setHorizontalOrigin(HorizontalOrigin[property.getValue(time)]);
         }
 
-        property = czmlLabel.verticalOrigin;
-        if (typeof property !== 'undefined' && (!property.cacheable || label.verticalOriginProperty !== property)) {
-            label.verticalOriginProperty = property;
-            label.label.setVerticalOrigin(VerticalOrigin[property.getValue(time)]);
+        property = dynamicLabel.verticalOrigin;
+        if (typeof property !== 'undefined') {
+            label.setVerticalOrigin(VerticalOrigin[property.getValue(time)]);
         }
     };
 
-    LabelVisualizer.prototype.remove = function() {
+    LabelVisualizer.prototype.removeAll = function(czmlObjects) {
+        this._unusedIndexes = [];
         this._labelCollection.removeAll();
-        this._labels = {};
+
+        for ( var i = 0, len = czmlObjects.length; i < len; i++) {
+            czmlObjects.labelVisualizerIndex = undefined;
+        }
     };
 
     return LabelVisualizer;
