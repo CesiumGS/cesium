@@ -34,4 +34,11 @@ require({
         fx.fadeOut({ node: 'loading', onEnd: function () {
             domConstruct.destroy('loading');
         }}).play();
+
+        var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+            lineNumbers: true,
+            matchBrackets: true
+          });
+        // TODO: remove debugging
+        window.editor = editor;
     });
