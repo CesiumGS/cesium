@@ -3,8 +3,8 @@ define(['./DynamicObject',
         'Core/createGuid'],
 function(DynamicObject, createGuid) {
     "use strict";
-    //TODO Make sure Layer throws the proper events in all cases.
-    function Layer(name, id, propertyFunctionsMap) {
+    //TODO Make sure we throw the proper events in all cases.
+    function CzmlObjectCollection(name, id, propertyFunctionsMap) {
         this.name = name;
         this.id = id;
         this._propertyFunctionsMap = propertyFunctionsMap;
@@ -15,7 +15,7 @@ function(DynamicObject, createGuid) {
         this._changedPropertyListeners = [];
     }
 
-    Layer.prototype.addPacket = function(packet, sourceUri) {
+    CzmlObjectCollection.prototype._processCzmlPacket = function(packet, sourceUri) {
         var objectId = packet.id;
         var this_propertyFunctionsMap = this._propertyFunctionsMap;
         if (typeof objectId === 'undefined') {
@@ -35,25 +35,25 @@ function(DynamicObject, createGuid) {
         packet.id = objectId;
     };
 
-    Layer.prototype.addPackets = function(packets, sourceUri) {
+    CzmlObjectCollection.prototype.processCzml = function(packets, sourceUri) {
         if (Array.isArray(packets)) {
             for ( var i = 0, len = packets.length; i < len; i++) {
-                this.addPacket(packets[i], sourceUri);
+                this._processCzmlPacket(packets[i], sourceUri);
             }
         } else {
-            this.addPacket(packets, sourceUri);
+            this._processCzmlPacket(packets, sourceUri);
         }
     };
 
-    Layer.prototype.getObject = function(id) {
+    CzmlObjectCollection.prototype.getObject = function(id) {
         return this._hash[id];
     };
 
-    Layer.prototype.getObjects = function() {
+    CzmlObjectCollection.prototype.getObjects = function() {
         return this._array;
     };
 
-    Layer.prototype.getOrCreateObject = function(id) {
+    CzmlObjectCollection.prototype.getOrCreateObject = function(id) {
         var obj = this._hash[id];
         if (!obj) {
             obj = new DynamicObject(id, this);
@@ -65,43 +65,43 @@ function(DynamicObject, createGuid) {
         return obj;
     };
 
-    Layer.prototype.clear = function() {
+    CzmlObjectCollection.prototype.clear = function() {
         this._hash = {};
         this._array = [];
     };
 
-    Layer.prototype.addNewObjectListener = function(listener) {
+    CzmlObjectCollection.prototype.addNewObjectListener = function(listener) {
         this._newObjectListeners.push(listener);
     };
 
-    Layer.prototype.onNewObject = function(object) {
+    CzmlObjectCollection.prototype.onNewObject = function(object) {
         var listeners = this._newObjectListeners;
         for ( var i = 0, len = listeners.length; i < len; i++) {
             listeners[i](object);
         }
     };
 
-    Layer.prototype.addNewPropertyListener = function(listener) {
+    CzmlObjectCollection.prototype.addNewPropertyListener = function(listener) {
         this._newPropertyListeners.push(listener);
     };
 
-    Layer.prototype.onNewProperty = function(object, name, property) {
+    CzmlObjectCollection.prototype.onNewProperty = function(object, name, property) {
         var listeners = this._newPropertyListeners;
         for ( var i = 0, len = listeners.length; i < len; i++) {
             listeners[i](object, name, property);
         }
     };
 
-    Layer.prototype.addChangedPropertyListener = function(listener) {
+    CzmlObjectCollection.prototype.addChangedPropertyListener = function(listener) {
         this._changedPropertyListeners.push(listener);
     };
 
-    Layer.prototype.onChangedProperty = function(object, name, newProperty, oldProperty) {
+    CzmlObjectCollection.prototype.onChangedProperty = function(object, name, newProperty, oldProperty) {
         var listeners = this._changedPropertyListeners;
         for ( var i = 0, len = listeners.length; i < len; i++) {
             listeners[i](object, name, newProperty, oldProperty);
         }
     };
 
-    return Layer;
+    return CzmlObjectCollection;
 });

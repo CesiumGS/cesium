@@ -1,10 +1,10 @@
-defineSuite(['DynamicScene/Layer',
+defineSuite(['DynamicScene/CzmlObjectCollection',
              'Core/JulianDate',
              'DynamicScene/createOrUpdatePosition',
              'DynamicScene/createOrUpdateOrientation',
              'DynamicScene/createOrUpdateDynamicBillboard',
              'DynamicScene/createOrUpdateDynamicLabel'],
-function(Layer,
+function(CzmlObjectCollection,
          JulianDate,
          createOrUpdatePosition,
          createOrUpdateOrientation,
@@ -20,8 +20,8 @@ function(Layer,
         propertyFunctionsMap.billboard = createOrUpdateDynamicBillboard;
         propertyFunctionsMap.label = createOrUpdateDynamicLabel;
 
-        var layer = new Layer("testLayer", "testId", propertyFunctionsMap);
-        expect(typeof layer.getObject("TestFacility") === 'undefined').toBeTruthy();
+        var czmlObjectCollection = new CzmlObjectCollection("testCzmlObjectCollection", "testId", propertyFunctionsMap);
+        expect(typeof czmlObjectCollection.getObject("TestFacility") === 'undefined').toBeTruthy();
 
         var czml = {
             "billboard" : {
@@ -43,9 +43,9 @@ function(Layer,
             }
         };
 
-        layer.addPackets(czml);
+        czmlObjectCollection.processCzml(czml);
 
-        var testFacility = layer.getObject(czml.id);
+        var testFacility = czmlObjectCollection.getObject(czml.id);
         expect(typeof testFacility !== undefined).toBeTruthy();
         expect(typeof testFacility.billboard !== undefined).toBeTruthy();
         expect(typeof testFacility.billboard.pixelOffset !== undefined).toBeTruthy();

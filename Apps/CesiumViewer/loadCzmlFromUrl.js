@@ -1,7 +1,7 @@
 define(['dojo/_base/xhr'], function(xhr) {
     "use strict";
 
-    function fillBuffer(buffer, url, doneCallback) {
+    function loadCzmlFromUrl(czmlObjectCollection, url, doneCallback) {
 
         var deferred = xhr.get({
             url : url,
@@ -12,7 +12,7 @@ define(['dojo/_base/xhr'], function(xhr) {
         }).then(function(value) {
             return JSON.parse(value);
         }).then(function(data) {
-            buffer.addPackets(data, url);
+            czmlObjectCollection.processCzml(data, url);
             if (typeof doneCallback !== 'undefined') {
                 doneCallback();
             }
@@ -23,5 +23,5 @@ define(['dojo/_base/xhr'], function(xhr) {
         };
     }
 
-    return fillBuffer;
+    return loadCzmlFromUrl;
 });

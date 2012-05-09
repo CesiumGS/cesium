@@ -10,11 +10,11 @@ define(['dojo/dom',
         'DynamicScene/createOrUpdateOrientation',
         'DynamicScene/createOrUpdateDynamicBillboard',
         'DynamicScene/createOrUpdateDynamicLabel',
-        'DynamicScene/Layer',
+        'DynamicScene/CzmlObjectCollection',
         'DynamicScene/DynamicBillboardVisualizer',
         'DynamicScene/DynamicLabelVisualizer',
         'DynamicScene/VisualizerCollection',
-        'CesiumViewer/fillBuffer'],
+        'CesiumViewer/loadCzmlFromUrl'],
 function(dom,
          on,
          CesiumWidget,
@@ -27,23 +27,23 @@ function(dom,
          createOrUpdateOrientation,
          createOrUpdateDynamicBillboard,
          createOrUpdateDynamicLabel,
-         Layer,
+         CzmlObjectCollection,
          DynamicBillboardVisualizer,
          DynamicLabelVisualizer,
          VisualizerCollection,
-         fillBuffer) {
+         loadCzmlFromUrl) {
 
     var visualizers;
     var clock = new Clock(JulianDate.fromIso8601("2012-03-15T10:00:00Z"), JulianDate.fromIso8601("2012-03-15T20:00:00Z"), JulianDate.fromIso8601("2012-03-15T10:00:00Z"), ClockStep.SYSTEM_CLOCK,
             ClockRange.LOOP, 300);
 
-    var _buffer = new Layer("root", "root", {
+    var _buffer = new CzmlObjectCollection("root", "root", {
         position : createOrUpdatePosition,
         orientation : createOrUpdateOrientation,
         billboard : createOrUpdateDynamicBillboard,
         label : createOrUpdateDynamicLabel
     });
-    fillBuffer(_buffer, 'Gallery/simple.czm');
+    loadCzmlFromUrl(_buffer, 'Gallery/simple.czm');
 
     var cesium = new CesiumWidget({
         proxy : new DefaultProxy('/proxy/'),
