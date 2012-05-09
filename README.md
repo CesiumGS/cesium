@@ -1,6 +1,8 @@
 Cesium
 ======
 
+Cesium is a WebGL-based 3D globe and 2D map engine, capable of visualizing time-dynamic data and entities.
+
 ### Mission ###
 
 Our mission is to create the leading web-based globe and map for visualizing dynamic data.  We strive for the best possible performance, precision, visual quality, ease of use, platform support, and content.
