@@ -1,6 +1,17 @@
 /*global define*/
-define(['Core/JulianDate', 'Core/TimeInterval', 'Core/TimeIntervalCollection', 'Core/binarySearch', 'Core/HermitePolynomialApproximation', 'Core/LinearApproximation',
-        'Core/LagrangePolynomialApproximation'], function(JulianDate, TimeInterval, TimeIntervalCollection, binarySearch, HermitePolynomialApproximation, LinearApproximation,
+define(['Core/JulianDate',
+        'Core/TimeInterval',
+        'Core/TimeIntervalCollection',
+        'Core/binarySearch',
+        'Core/HermitePolynomialApproximation',
+        'Core/LinearApproximation',
+        'Core/LagrangePolynomialApproximation'],
+function(JulianDate,
+        TimeInterval,
+        TimeIntervalCollection,
+        binarySearch,
+        HermitePolynomialApproximation,
+        LinearApproximation,
         LagrangePolynomialApproximation) {
     "use strict";
 
@@ -13,6 +24,7 @@ define(['Core/JulianDate', 'Core/TimeInterval', 'Core/TimeIntervalCollection', '
     function DynamicProperty(dataHandler) {
         this._dataHandler = dataHandler;
         this._intervals = new TimeIntervalCollection();
+        this.cacheable = true;
     }
 
     function convertDate(date, epoch) {
@@ -116,10 +128,10 @@ define(['Core/JulianDate', 'Core/TimeInterval', 'Core/TimeIntervalCollection', '
         }
 
         if (this_dataHandler.isSampled(czmlIntervalValue)) {
-            if (!intervalData.isSampled) {
+            if (this.cacheable) {
                 intervalData.times = [];
                 intervalData.values = [];
-                intervalData.isSampled = true;
+                this.cacheable = false;
             }
             var epoch = czmlInterval.epoch;
             if (typeof epoch !== 'undefined') {
@@ -130,7 +142,7 @@ define(['Core/JulianDate', 'Core/TimeInterval', 'Core/TimeIntervalCollection', '
             //Packet itself is a constant value
             intervalData.times = undefined;
             intervalData.values = czmlIntervalValue;
-            intervalData.isSampled = false;
+            this.cacheable = true;
         }
     };
 
@@ -152,7 +164,7 @@ define(['Core/JulianDate', 'Core/TimeInterval', 'Core/TimeIntervalCollection', '
             var intervalData = interval.data;
             var times = intervalData.times;
             var values = intervalData.values;
-            if (intervalData.isSampled && times.length >= 0 && values.length > 0) {
+            if (!this.cacheable && times.length >= 0 && values.length > 0) {
                 var index = binarySearch(times, time, JulianDate.compare);
 
                 if (index < 0) {

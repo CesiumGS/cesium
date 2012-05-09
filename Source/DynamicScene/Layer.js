@@ -1,5 +1,7 @@
 /*global define*/
-define(['./DynamicObject', 'Core/createGuid'], function(DynamicObject, createGuid) {
+define(['./DynamicObject',
+        'Core/createGuid'],
+function(DynamicObject, createGuid) {
     "use strict";
     //TODO Make sure Layer throws the proper events in all cases.
     function Layer(name, id, propertyFunctionsMap) {

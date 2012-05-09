@@ -1,6 +1,14 @@
 /*global define*/
-define(['./DynamicProperty', 'Core/JulianDate', 'Core/binarySearch', 'Core/interpolateWithDegree', 'Core/LinearApproximation'], function(DynamicProperty, JulianDate, binarySearch,
-        interpolateWithDegree, LinearApproximation) {
+define(['./DynamicProperty',
+        'Core/JulianDate',
+        'Core/binarySearch',
+        'Core/interpolateWithDegree',
+        'Core/LinearApproximation'],
+function(DynamicProperty,
+        JulianDate,
+        binarySearch,
+        interpolateWithDegree,
+        LinearApproximation) {
     "use strict";
 
     var NumberDataHandler = {

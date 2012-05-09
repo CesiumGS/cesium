@@ -1,5 +1,6 @@
 /*global define*/
-define(['Core/Color'], function(Color) {
+define(['Core/Color'],
+function(Color) {
     "use strict";
 
     var ColorDataHandler = {

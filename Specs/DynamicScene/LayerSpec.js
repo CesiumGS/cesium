@@ -5,11 +5,11 @@ defineSuite(['DynamicScene/Layer',
              'DynamicScene/createOrUpdateDynamicBillboard',
              'DynamicScene/createOrUpdateDynamicLabel'],
 function(Layer,
-        JulianDate,
-        createOrUpdatePosition,
-        createOrUpdateOrientation,
-        createOrUpdateDynamicBillboard,
-        createOrUpdateDynamicLabel) {
+         JulianDate,
+         createOrUpdatePosition,
+         createOrUpdateOrientation,
+         createOrUpdateDynamicBillboard,
+         createOrUpdateDynamicLabel) {
     "use strict";
     /*global it,expect*/
 

@@ -1,6 +1,21 @@
-defineSuite(['DynamicScene/DynamicProperty', 'Core/JulianDate', 'DynamicScene/BooleanDataHandler', 'DynamicScene/NumberDataHandler', 'DynamicScene/Cartesian3DataHandler',
-        'DynamicScene/QuaternionDataHandler', 'Core/Quaternion', 'Core/Math', 'DynamicScene/Cartesian2DataHandler'], function(DynamicProperty, JulianDate, BooleanDataHandler, NumberDataHandler,
-        Cartesian3DataHandler, QuaternionDataHandler, Quaternion, CesiumMath, Cartesian2DataHandler) {
+defineSuite(['DynamicScene/DynamicProperty',
+             'Core/JulianDate',
+             'DynamicScene/BooleanDataHandler',
+             'DynamicScene/NumberDataHandler',
+             'DynamicScene/Cartesian3DataHandler',
+             'DynamicScene/QuaternionDataHandler',
+             'Core/Quaternion',
+             'Core/Math',
+             'DynamicScene/Cartesian2DataHandler'],
+ function(DynamicProperty,
+          JulianDate,
+          BooleanDataHandler,
+          NumberDataHandler,
+          Cartesian3DataHandler,
+          QuaternionDataHandler,
+          Quaternion,
+          CesiumMath,
+          Cartesian2DataHandler) {
     "use strict";
     /*global it,expect*/
 
