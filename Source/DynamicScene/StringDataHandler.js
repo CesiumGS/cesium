@@ -4,17 +4,17 @@ define(function() {
 
     var StringDataHandler = {
 
+        unwrapCzmlInterval : function(czmlInterval) {
+            var result = czmlInterval.string;
+            return typeof result === 'undefined' ? String(czmlInterval) : String(result);
+        },
+
         isSampled : function() {
             return false;
         },
 
         createValue : function(data) {
             return data;
-        },
-
-        getCzmlIntervalValue : function(czmlInterval) {
-            var result = czmlInterval.string;
-            return typeof result === 'undefined' ? String(czmlInterval) : String(result);
         }
     };
 

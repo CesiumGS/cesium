@@ -24,7 +24,7 @@ function(JulianDate,
     function DynamicProperty(dataHandler) {
         this._dataHandler = dataHandler;
         this._intervals = new TimeIntervalCollection();
-        this.cacheable = true;
+        this._isSampled = false;
     }
 
     function convertDate(date, epoch) {
@@ -34,8 +34,7 @@ function(JulianDate,
         return epoch.addSeconds(date);
     }
 
-    DynamicProperty._mergeNewSamples = function(epoch, times, values, newData, doublesPerValue) {
-        ///TODO This method can be further optimized.
+    DynamicProperty._mergeNewSamples = function(epoch, times, values, newData, doublesPerValue, dataHandler) {
         var newDataIndex = 0, i, prevItem, timesInsertionPoint, valuesInsertionPoint, timesSpliceArgs, valuesSpliceArgs, currentTime, nextTime;
         while (newDataIndex < newData.length) {
             currentTime = convertDate(newData[newDataIndex], epoch);
@@ -53,8 +52,10 @@ function(JulianDate,
                 while (newDataIndex < newData.length) {
                     currentTime = convertDate(newData[newDataIndex], epoch);
 
-                    //TODO We can further optimize by dealing with the special cases of === here, rather than bailing.
-                    if ((typeof prevItem !== 'undefined' && JulianDate.compare(prevItem, currentTime) >= 0) || (typeof nextTime !== 'undefined' && JulianDate.compare(currentTime, nextTime) >= 0)) {
+                    //TODO We can probably further optimize here by dealing with the special cases of ===,
+                    //rather than bailing, though the case probably happens so infrequently, that not checking may be faster
+                    if ((typeof prevItem !== 'undefined' && JulianDate.compare(prevItem, currentTime) >= 0) ||
+                        (typeof nextTime !== 'undefined' && JulianDate.compare(currentTime, nextTime) >= 0)) {
                         break;
                     }
                     timesSpliceArgs.push(currentTime);
@@ -80,10 +81,6 @@ function(JulianDate,
     };
 
     DynamicProperty.prototype.addInterval = function(czmlInterval, buffer, sourceUri) {
-        var this_intervals = this._intervals;
-        var this_dataHandler = this._dataHandler;
-        var czmlIntervalValue = this_dataHandler.getCzmlIntervalValue(czmlInterval);
-
         var iso8601Interval = czmlInterval.interval;
         var intervalStart;
         var intervalStop;
@@ -97,6 +94,7 @@ function(JulianDate,
             intervalStop = JulianDate.fromIso8601(iso8601Interval[1]);
         }
 
+        var this_intervals = this._intervals;
         var existingInterval = this_intervals.findInterval(intervalStart, intervalStop);
 
         var intervalData;
@@ -113,36 +111,38 @@ function(JulianDate,
             intervalData = existingInterval.data;
         }
 
-        var interpolationAlgorithm;
-        var interpolationAlgorithmType = czmlInterval.interpolationAlgorithm;
-        if (interpolationAlgorithmType) {
-            interpolationAlgorithm = interpolators[interpolationAlgorithmType];
-            intervalData.interpolationAlgorithm = interpolationAlgorithm;
-        }
-        var interpolationDegree = czmlInterval.interpolationDegree;
-        if (interpolationAlgorithm && interpolationDegree) {
-            intervalData.interpolationDegree = interpolationDegree;
-            intervalData.numberOfPoints = interpolationAlgorithm.getRequiredDataPoints(interpolationDegree, 0);
-            intervalData.xTable = undefined;
-            intervalData.yTable = undefined;
-        }
-
+        var this_dataHandler = this._dataHandler;
+        var czmlIntervalValue = this_dataHandler.unwrapCzmlInterval(czmlInterval);
         if (this_dataHandler.isSampled(czmlIntervalValue)) {
-            if (this.cacheable) {
+            var interpolationAlgorithm;
+            var interpolationAlgorithmType = czmlInterval.interpolationAlgorithm;
+            if (interpolationAlgorithmType) {
+                interpolationAlgorithm = interpolators[interpolationAlgorithmType];
+                intervalData.interpolationAlgorithm = interpolationAlgorithm;
+            }
+            var interpolationDegree = czmlInterval.interpolationDegree;
+            if (interpolationAlgorithm && interpolationDegree) {
+                intervalData.interpolationDegree = interpolationDegree;
+                intervalData.numberOfPoints = interpolationAlgorithm.getRequiredDataPoints(interpolationDegree, 0);
+                intervalData.xTable = undefined;
+                intervalData.yTable = undefined;
+            }
+
+            if (!this._isSampled) {
                 intervalData.times = [];
                 intervalData.values = [];
-                this.cacheable = false;
+                this._isSampled = true;
             }
             var epoch = czmlInterval.epoch;
             if (typeof epoch !== 'undefined') {
                 epoch = JulianDate.fromIso8601(epoch);
             }
-            DynamicProperty._mergeNewSamples(epoch, intervalData.times, intervalData.values, czmlIntervalValue, this_dataHandler.doublesPerValue, JulianDate.compare);
+            DynamicProperty._mergeNewSamples(epoch, intervalData.times, intervalData.values, czmlIntervalValue, this_dataHandler.doublesPerValue, this_dataHandler);
         } else {
             //Packet itself is a constant value
             intervalData.times = undefined;
-            intervalData.values = czmlIntervalValue;
-            this.cacheable = true;
+            intervalData.values = this_dataHandler.createValue(czmlIntervalValue);
+            this._isSampled = false;
         }
     };
 
@@ -164,7 +164,7 @@ function(JulianDate,
             var intervalData = interval.data;
             var times = intervalData.times;
             var values = intervalData.values;
-            if (!this.cacheable && times.length >= 0 && values.length > 0) {
+            if (this._isSampled && times.length >= 0 && values.length > 0) {
                 var index = binarySearch(times, time, JulianDate.compare);
 
                 if (index < 0) {
@@ -224,7 +224,7 @@ function(JulianDate,
                 }
                 return this_dataHandler.createValueFromArray(intervalData.values, index * this_dataHandler.doublesPerValue);
             }
-            return this_dataHandler.createValue(intervalData.values);
+            return intervalData.values;
         }
         return undefined;
     };
