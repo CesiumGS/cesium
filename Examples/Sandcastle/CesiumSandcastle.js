@@ -58,10 +58,10 @@ require({
 
         //var canvas = document.getElementById("glCanvas");
 
-        var pane3D = registry.byId('pane3D');
-        pane3D.originalResize = pane3D.resize;
-        pane3D.resize = function(changeSize, resultSize) {
-            console.log('3d - resize');
-            pane3D.originalResize(changeSize, resultSize);
-        };
+        //var pane3D = registry.byId('pane3D');
+        //pane3D.originalResize = pane3D.resize;
+        //pane3D.resize = function(changeSize, resultSize) {
+        //    console.log('3d - resize');
+        //    pane3D.originalResize(changeSize, resultSize);
+        //};
     });

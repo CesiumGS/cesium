@@ -39,15 +39,21 @@ html, body {
     width: 40%;
 }
 
+.cesiumFrame {
+    border: none;
+    width: 100%;
+    height: 100%;
+}
+
 .CodeMirror, .CodeMirror-scroll {
-	height: 100%;
+    height: 100%;
 }
 
 .claro .dijitTabContainerBottom-tabs .dijitTabChecked .dijitTabContent {
-	background-position: 0 -115px;
+    background-position: 0 -115px;
 }
 
 .claro .dijitTabContainerBottom-dijitContentPane {
-	padding: 0;
-	overflow: hidden;
+    padding: 0;
+    overflow: hidden;
 }

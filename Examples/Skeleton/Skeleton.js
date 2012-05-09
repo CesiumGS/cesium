@@ -85,4 +85,29 @@ require({ baseUrl : '../../Source' }, [
     document.oncontextmenu = function() {
         return false;
     };
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Example resize handler
+
+    window.onresize = function () {
+        var width = canvas.clientWidth,
+            height = canvas.clientHeight;
+
+        if (canvas.width === width && canvas.height === height) {
+            return;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        scene.getContext().setViewport({
+            x: 0,
+            y: 0,
+            width: width,
+            height: height
+        });
+
+        scene.getCamera().frustum.aspectRatio = width / height;
+    };
+    window.onresize();
 });
