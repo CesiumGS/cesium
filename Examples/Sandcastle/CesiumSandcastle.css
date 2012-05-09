@@ -49,4 +49,5 @@ html, body {
 
 .claro .dijitTabContainerBottom-dijitContentPane {
 	padding: 0;
+	overflow: hidden;
 }
