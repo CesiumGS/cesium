@@ -173,6 +173,7 @@ require({ baseUrl : '../../Source' }, [
         scene.getCamera().frustum.aspectRatio = width / height;
     };
     window.onresize();
+    console.log('Cesium started...');
 });
 </textarea>
             </div>
@@ -182,12 +183,13 @@ require({ baseUrl : '../../Source' }, [
             </div>
         </div>
         <div id="cesiumContainer" data-dojo-type="dijit.layout.TabContainer" data-dojo-props="region: 'center', tabPosition: 'bottom'">
-            <div id="pane3D" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: '3D Globe'">
+            <div id="resultPane" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: 'Cesium Result'">
                 <iframe id="bucketFrame" src="bucket.html" class="cesiumFrame"></iframe>
             </div>
-            <div data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: '2D Map'">
-            </div>
-            <div data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: 'Columbus View'">
+            <div data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: 'Console log'">
+                <div class="logContainer">
+                    <div id="logOutput"></div>
+                </div>
             </div>
         </div>
         <div id="bottomBar" class="edgePanel" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="region: 'bottom', splitter: true">

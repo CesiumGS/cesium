@@ -58,24 +58,28 @@ require({
 
         //var canvas = document.getElementById("glCanvas");
 
-        //var pane3D = registry.byId('pane3D');
+        //var pane3D = registry.byId('resultPane');
         //pane3D.originalResize = pane3D.resize;
         //pane3D.resize = function(changeSize, resultSize) {
         //    console.log('3d - resize');
         //    pane3D.originalResize(changeSize, resultSize);
         //};
 
-        var bucketFrame = document.getElementById('bucketFrame');
+        var bucketFrame = document.getElementById('bucketFrame'),
+            logOutput = document.getElementById('logOutput');
 
         // The iframe (bucket.html) sends this message on load.
         // This triggers the code to be injected into the iframe.
         window.addEventListener('message', function (e) {
             if (e.data === 'reload') {
+                logOutput.innerHTML = "";
                 var bucketDoc = bucketFrame.contentDocument;
                 var sc = bucketDoc.createElement('script');
                 sc.type = 'text/javascript';
                 sc.textContent = editor.getValue();
                 bucketDoc.body.appendChild(sc);
+            } else if (typeof e.data.log !== 'undefined') {
+                logOutput.textContent += e.data.log + "\n";
             }
         }, true);
 

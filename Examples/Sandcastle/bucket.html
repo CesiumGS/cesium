@@ -30,6 +30,12 @@
 
     <script type="text/javascript">
     window.parent.postMessage("reload", "*");
+
+    console.originalLog = console.log;
+    console.log = function (d1, d2, d3, d4) {
+        console.originalLog(d1, d2, d3, d4);
+        window.parent.postMessage({ 'log': d1.toString() }, "*");
+    };
     </script>
 </body>
 </html>
