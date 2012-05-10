@@ -16,6 +16,7 @@ define([
      * @constructor
      *
      * @param {String} description.url The OpenStreetMap url.
+     * @param {String} [description.fileExtension='png'] The file extension for images on the server.
      * @param {Object} [description.proxy=undefined] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
      * @param {String} [description.credit='MapQuest, Open Street Map and contributors, CC-BY-SA'] A string crediting the data source, which is displayed on the canvas.
      *
@@ -37,6 +38,7 @@ define([
         var desc = description || {};
 
         this._url = desc.url || 'http://tile.openstreetmap.org/';
+        this._fileExtension = desc.fileExtension || 'png';
 
         /**
          * A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
@@ -101,7 +103,7 @@ define([
     }
 
     OpenStreetMapTileProvider.prototype._getUrl = function(tile) {
-        var url = this._url + tile.zoom + '/' + tile.x + '/' + tile.y + '.png';
+        var url = this._url + tile.zoom + '/' + tile.x + '/' + tile.y + '.' + this._fileExtension;
         if (this.proxy) {
             url = this.proxy.getURL(url);
         }
