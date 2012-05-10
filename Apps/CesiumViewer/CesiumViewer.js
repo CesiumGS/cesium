@@ -1,3 +1,4 @@
+/*global define*/
 define(['dojo/dom',
         'dojo/on',
         'DojoWidgets/CesiumWidget',
@@ -36,6 +37,8 @@ function(dom,
          DynamicPointVisualizer,
          VisualizerCollection,
          loadCzmlFromUrl) {
+    "use strict";
+    /*global console*/
 
     var visualizers;
     var clock = new Clock(JulianDate.fromIso8601("2012-03-15T10:00:00Z"), JulianDate.fromIso8601("2012-03-15T20:00:00Z"), JulianDate.fromIso8601("2012-03-15T10:00:00Z"), ClockStep.SYSTEM_CLOCK,

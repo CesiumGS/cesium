@@ -1,9 +1,9 @@
-defineSuite(['DynamicScene/ColorDataHandler'],
-function(ColorDataHandler) {
+/*global defineSuite*/
+defineSuite(['DynamicScene/ColorDataHandler'], function(ColorDataHandler) {
     "use strict";
     /*global it,expect*/
 
-    it("IsSampled works.", function() {
+    it("isSampled works.", function() {
         var constantRgba = [0, 0, 0, 0];
         expect(ColorDataHandler.isSampled(constantRgba)).toEqual(false);
 

@@ -1,7 +1,7 @@
+/*global require*/
 require({
     baseUrl : '../..',
-    packages : [
-    {
+    packages : [{
         name : 'dojo',
         location : 'ThirdParty/dojo-release-1.7.2-src/dojo'
     }, {
@@ -35,12 +35,18 @@ require({
         name : 'CesiumViewer',
         location : 'Apps/CesiumViewer'
     }]
-}, ['dojo/parser',
+}, [
+    'dojo/parser',
     'dojo/dom-class',
     'dojo/_base/window',
     'CesiumViewer/CesiumViewer',
-    'dojo/domReady!'],
-function(parser, domClass, win) {
+    'dojo/domReady!'
+], function(
+    parser,
+    domClass,
+    win) {
+    "use strict";
+
     parser.parse();
     domClass.remove(win.body(), 'loading');
 });

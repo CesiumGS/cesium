@@ -1,10 +1,13 @@
-defineSuite(['DynamicScene/CzmlObjectCollection',
-             'Core/JulianDate',
-             'DynamicScene/createOrUpdatePosition',
-             'DynamicScene/createOrUpdateOrientation',
-             'DynamicScene/createOrUpdateDynamicBillboard',
-             'DynamicScene/createOrUpdateDynamicLabel'],
-function(CzmlObjectCollection,
+/*global defineSuite*/
+defineSuite([
+         'DynamicScene/CzmlObjectCollection',
+         'Core/JulianDate',
+         'DynamicScene/createOrUpdatePosition',
+         'DynamicScene/createOrUpdateOrientation',
+         'DynamicScene/createOrUpdateDynamicBillboard',
+         'DynamicScene/createOrUpdateDynamicLabel'
+     ], function(
+         CzmlObjectCollection,
          JulianDate,
          createOrUpdatePosition,
          createOrUpdateOrientation,

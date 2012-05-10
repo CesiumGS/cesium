@@ -1,6 +1,15 @@
-defineSuite(['Core/TimeIntervalCollection', 'Core/JulianDate', 'Core/TimeInterval'], function(TimeIntervalCollection, JulianDate, TimeInterval) {
+/*global defineSuite*/
+defineSuite([
+         'Core/TimeIntervalCollection',
+         'Core/JulianDate',
+         'Core/TimeInterval'
+     ], function(
+         TimeIntervalCollection,
+         JulianDate,
+         TimeInterval) {
     "use strict";
     /*global it,expect*/
+
     it('TODO', function() {
         var start = JulianDate.fromTotalDays(1);
         var mid = JulianDate.fromTotalDays(2);

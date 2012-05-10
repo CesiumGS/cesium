@@ -1,3 +1,4 @@
+/*global define*/
 define([
         'require',
         'dojo/_base/declare',
@@ -12,6 +13,7 @@ define([
         'Core/EventHandler',
         'Core/MouseEventType',
         'Core/requestAnimationFrame',
+        'Core/Cartesian2',
         'Core/JulianDate',
         'Core/DefaultProxy',
         'Scene/Scene',
@@ -20,37 +22,40 @@ define([
         'Scene/BingMapsStyle',
         'Scene/SingleTileProvider',
         'dojo/text!./templates/CesiumWidget.html'
-    ], function (require, declare, ready, lang, event, on, _WidgetBase, _TemplatedMixin, Ellipsoid,
-            SunPosition,
-            EventHandler,
-            MouseEventType,
-            requestAnimationFrame,
-            JulianDate,
-            DefaultProxy,
-            Scene,
-            CentralBody,
-            BingMapsTileProvider,
-            BingMapsStyle,
-            SingleTileProvider,
-            template) {
-        return declare('DojoWidgets.CesiumWidget', [_WidgetBase, _TemplatedMixin], {
+    ], function (
+        require,
+        declare,
+        ready,
+        lang,
+        event,
+        on,
+        _WidgetBase,
+        _TemplatedMixin,
+        Ellipsoid,
+        SunPosition,
+        EventHandler,
+        MouseEventType,
+        requestAnimationFrame,
+        Cartesian2,
+        JulianDate,
+        DefaultProxy,
+        Scene,
+        CentralBody,
+        BingMapsTileProvider,
+        BingMapsStyle,
+        SingleTileProvider,
+        template) {
+    "use strict";
 
+    return declare('DojoWidgets.CesiumWidget', [_WidgetBase, _TemplatedMixin], {
         templateString : template,
-
         clock : undefined,
-
         preRender : undefined,
-
         postSetup : undefined,
-
         useStreamingImagery : true,
-
         proxy : undefined,
-
         mapStyle : BingMapsStyle.AERIAL,
-
         defaultCamera : undefined,
-
         lockSunPositionToCamera : false,
 
         constructor : function() {
@@ -82,23 +87,14 @@ define([
         },
 
         onObjectSelected : undefined,
-
         onObjectRightClickSelected : undefined,
-
         onObjectMousedOver : undefined,
-
         onLeftMouseDown : undefined,
-
         onLeftMouseUp : undefined,
-
         onRightMouseDown : undefined,
-
         onRightMouseUp : undefined,
-
         onLeftDrag : undefined,
-
         onZoom : undefined,
-
         onCameraToggled : undefined,
 
         _handleLeftClick : function(e) {
@@ -231,18 +227,18 @@ define([
                 this.postSetup(this);
             }
 
-            defaultCamera = camera.clone();
+            this.defaultCamera = camera.clone();
 
             this.render();
         },
 
         viewHome : function() {
             var camera = this.scene.getCamera();
-            camera.position = defaultCamera.position;
-            camera.direction = defaultCamera.direction;
-            camera.up = defaultCamera.up;
-            camera.transform = defaultCamera.transform;
-            camera.frustum = defaultCamera.frustum.clone();
+            camera.position = this.defaultCamera.position;
+            camera.direction = this.defaultCamera.direction;
+            camera.up = this.defaultCamera.up;
+            camera.transform = this.defaultCamera.transform;
+            camera.frustum = this.defaultCamera.frustum.clone();
 
             var controllers = camera.getControllers();
             controllers.removeAll();
@@ -301,7 +297,7 @@ define([
                 time = new JulianDate();
             }
 
-            scene = this.scene;
+            var scene = this.scene;
             if (this.lockSunPositionToCamera) {
                 scene.setSunPosition(scene.getCamera().position);
             } else {

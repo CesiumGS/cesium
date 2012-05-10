@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite(['Core/HermitePolynomialApproximation'], function(HermitePolynomialApproximation) {
     "use strict";
     /*global it,expect*/

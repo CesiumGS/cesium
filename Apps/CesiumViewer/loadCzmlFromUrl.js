@@ -1,8 +1,8 @@
+/*global define*/
 define(['dojo/_base/xhr'], function(xhr) {
     "use strict";
 
     function loadCzmlFromUrl(czmlObjectCollection, url, doneCallback) {
-
         var deferred = xhr.get({
             url : url,
             headers : {

@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite(['Core/LagrangePolynomialApproximation'], function(LagrangePolynomialApproximation) {
     "use strict";
     /*global it,expect*/
