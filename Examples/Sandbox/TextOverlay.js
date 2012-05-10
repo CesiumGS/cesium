@@ -1,6 +1,6 @@
 (function() {
     "use strict";
-    /*global document, Cesium, Sandbox, dojo, dijit*/
+    /*global Cesium,Sandbox*/
 
     /**
      * Creates a simple overlay containing formatted HTML.

@@ -1,6 +1,6 @@
 (function() {
     "use strict";
-    /*global Image, Cesium, Sandbox*/
+    /*global Cesium,Sandbox*/
 
     Sandbox.PickingCartographicMouseOver = function (scene, ellipsoid, primitives) {
         var handler;

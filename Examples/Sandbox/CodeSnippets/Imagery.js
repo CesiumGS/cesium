@@ -1,6 +1,6 @@
 (function () {
     "use strict";
-    /*global Cesium, Sandbox*/
+    /*global Cesium,Sandbox*/
 
     Sandbox.BingMaps = function (scene, ellipsoid, primitives) {
         this.code = function () {

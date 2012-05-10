@@ -20,7 +20,6 @@ require({ baseUrl : '../../Source' }, [
         BingMapsTileProvider,
         BingMapsStyle) {
     "use strict";
-    /*global document*/
 
     var canvas = document.getElementById("glCanvas");
     var ellipsoid = Ellipsoid.getWgs84(); // Used in many Sandbox examples

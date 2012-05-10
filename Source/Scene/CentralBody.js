@@ -96,7 +96,6 @@ define([
         SkyAtmosphereFS,
         SkyAtmosphereVS) {
     "use strict";
-    /*global document,Image,Uint16Array*/
 
     function TileTextureCachePolicy(description) {
         var desc = description || {};

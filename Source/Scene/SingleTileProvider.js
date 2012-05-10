@@ -8,7 +8,6 @@ define([
         CesiumMath,
         Projections) {
     "use strict";
-    /*global Image*/
 
     /**
      * Provides a single, top-level tile.
