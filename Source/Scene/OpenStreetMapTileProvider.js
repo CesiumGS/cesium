@@ -44,7 +44,7 @@ define([
          * A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
          * @type {Object}
          */
-        this.proxy = desc.proxy;
+        this._proxy = desc.proxy;
 
         this._credit = desc.credit || 'MapQuest, Open Street Map and contributors, CC-BY-SA';
 
@@ -102,14 +102,6 @@ define([
         this._logo = undefined;
     }
 
-    OpenStreetMapTileProvider.prototype._getUrl = function(tile) {
-        var url = this._url + tile.zoom + '/' + tile.x + '/' + tile.y + '.' + this._fileExtension;
-        if (this.proxy) {
-            url = this.proxy.getURL(url);
-        }
-        return url;
-    };
-
     /**
      * Loads the image for <code>tile</code>.
      *
@@ -128,18 +120,16 @@ define([
         }
 
         var image = new Image();
-        if (onload && typeof onload === "function") {
-            image.onload = function() {
-                onload();
-            };
-        }
-        if (onerror && typeof onerror === "function") {
-            image.onerror = function() {
-                onerror();
-            };
-        }
+        image.onload = onload;
+        image.onerror = onerror;
         image.crossOrigin = '';
-        image.src = this._getUrl(tile);
+
+        var url = this._url + tile.zoom + '/' + tile.x + '/' + tile.y + '.' + this._fileExtension;
+        if (typeof this._proxy !== 'undefined') {
+            url = this._proxy.getURL(url);
+        }
+
+        image.src = url;
 
         return image;
     };
