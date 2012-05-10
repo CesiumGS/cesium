@@ -44,6 +44,8 @@ What's New
         * Renamed Tipsify.CalculateACMR to Tipsify.calculateACMR.
         * Renamed LeapSecond.CompareLeapSecondDate to LeapSecond.compareLeapSecondDate.
         * Geoscope.JSONP.get is now Cesium.jsonp.
+           * Cesium.jsonp now takes a url, a callback function, and an options object.  The
+             previous 2nd and 4th parameters are now specified using the options object.
         * TWEEN is no longer globally defined, and is instead available as Cesium.Tween.
         * Chain.js functions such as run are now moved to Cesium.Chain.run, etc.
         * Geoscope.CollectionAlgorithms.binarySearch is now Cesium.binarySearch.
