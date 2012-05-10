@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Core/pointInsideTriangle2D',
          'Core/Cartesian2'

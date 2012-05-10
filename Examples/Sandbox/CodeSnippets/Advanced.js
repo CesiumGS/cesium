@@ -1,6 +1,6 @@
 (function() {
     "use strict";
-    /*global Cesium, Sandbox, Float32Array*/
+    /*global Cesium,Sandbox*/
 
     Sandbox.CustomRendering = function (scene, ellipsoid, primitives) {
         this.code = function () {

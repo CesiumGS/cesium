@@ -18,7 +18,6 @@ require({ baseUrl : '../../Source' }, [
         BingMapsStyle,
         SceneTransitioner) {
     "use strict";
-    /*global document*/
 
     var ellipsoid = Ellipsoid.getWgs84();
 

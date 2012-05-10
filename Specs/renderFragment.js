@@ -6,7 +6,7 @@ define([
         PrimitiveType,
         BufferUsage) {
     "use strict";
-    /*global Float32Array,expect*/
+    /*global expect*/
 
     function renderFragment(context, fs) {
         var vs = "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";

@@ -1,7 +1,5 @@
-defineSuite([
-         'Core/Rectangle'
-     ], function(
-         Rectangle) {
+/*global defineSuite*/
+defineSuite(['Core/Rectangle'], function(Rectangle) {
     "use strict";
     /*global it,expect*/
 

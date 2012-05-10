@@ -1,7 +1,6 @@
 (function() {
     "use strict";
-    /*global window, document, Cesium, Sandbox, dojo, dijit*/
-    /*jslint evil : true */
+    /*global Cesium,Sandbox*/
 
     /**
      * Creates a mutable content area positioned over the Sandbox example.
@@ -72,6 +71,7 @@
         this._content = content;
 
         this._interval = window.setInterval(function() {
+            /*jslint evil : true*/
             var tempFunc = new Function("ellipsoid", "primitives", "cb", "sb", "display", content);
             overlay.innerHTML = content;
             tempFunc(ellipsoid, primitives, cb, sandbox, function display(content) {

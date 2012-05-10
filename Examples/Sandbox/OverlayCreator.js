@@ -1,6 +1,6 @@
 function initializeOverlayCreator(sb) {
     "use strict";
-    /*global Sandbox, dojo, dijit, dojox, display*/
+    /*global Sandbox,dojo,dijit,display*/
 
     dojo.addOnLoad(function() {
         var userOverlays = [];
@@ -157,7 +157,8 @@ function initializeOverlayCreator(sb) {
         }
 
         // Create the overlay and update the dialog menus
-        var createOverlayButton = new dijit.form.Button({
+        /*jslint nonew : false*/
+        new dijit.form.Button({
             label : "Submit Overlay",
             style : "right: 10px; top: 90%; position: absolute;",
             onClick : function() {
@@ -213,7 +214,7 @@ function initializeOverlayCreator(sb) {
         }, "createOverlayButton");
 
         // Remove Overlay Dialog Features
-        var selectAll = new dijit.form.Button({
+        new dijit.form.Button({
             label : "Select All",
             style : "padding-left: 35px;",
             onClick : function() {
@@ -227,7 +228,7 @@ function initializeOverlayCreator(sb) {
             }
         }, "selectAll");
 
-        var removeOverlayButton = new dijit.form.Button({
+        new dijit.form.Button({
             label : "Remove Overlay(s)",
             onClick : function() {
                 var removeMenuItems = removeOverlaysMenu.getChildren();

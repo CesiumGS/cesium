@@ -1,6 +1,6 @@
 (function () {
     "use strict";
-    /*global Cesium, Sandbox*/
+    /*global Cesium,Sandbox*/
 
     Sandbox.BingMaps = function (scene, ellipsoid, primitives) {
         this.code = function () {
@@ -66,6 +66,7 @@
             // * http://tile.stamen.com/terrain/
             var layer = new Cesium.OpenStreetMapTileProvider({
                 url : 'http://tile.stamen.com/toner/',
+                fileExtension : 'jpg',
                 proxy : new Cesium.DefaultProxy('/proxy/'),
                 credit : 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'
             });

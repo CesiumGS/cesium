@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite(['Core/isLeapYear'], function(isLeapYear) {
     "use strict";
     /*global it,expect*/

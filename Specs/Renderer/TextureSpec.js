@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          '../Specs/createContext',
          '../Specs/destroyContext',
@@ -21,7 +22,7 @@ defineSuite([
          TextureMinificationFilter,
          TextureMagnificationFilter) {
     "use strict";
-    /*global Uint8Array,Float32Array,Image,xit,it,expect,beforeEach,afterEach,waitsFor*/
+    /*global xit,it,expect,beforeEach,afterEach,waitsFor*/
 
     var context;
     var sp;

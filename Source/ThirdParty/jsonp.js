@@ -6,11 +6,11 @@
 
 /*global define*/
 define(function() {
-    /*global document,window*/
+    "use strict";
 
 /*
 * Usage:
-* 
+*
 * JSONP.get( 'someUrl.php', {param1:'123', param2:'456'}, function(data){
 *   //do something with data, which is the JSON object you should retrieve from someUrl.php
 * });
@@ -22,7 +22,7 @@ var JSONP = (function(){
 			done = false;
 		script.src = url;
 		script.async = true;
- 
+
 		script.onload = script.onreadystatechange = function() {
 			if ( !done && (!this.readyState || this.readyState === "loaded" || this.readyState === "complete") ) {
 				done = true;
@@ -54,7 +54,7 @@ var JSONP = (function(){
 			} catch (e) {}
 			window[ uniqueName ] = null;
 		};
- 
+
 		load(url + query + callbackParameterName + "=" + uniqueName);
 		return uniqueName;
 	}

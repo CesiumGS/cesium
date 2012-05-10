@@ -1,7 +1,5 @@
-defineSuite([
-         'Core/Cartesian2'
-     ], function(
-         Cartesian2) {
+/*global defineSuite*/
+defineSuite(['Core/Cartesian2'], function(Cartesian2) {
     "use strict";
     /*global it,expect*/
 
@@ -29,7 +27,7 @@ defineSuite([
         expect(v.equals(w)).toBeTruthy();
     });
 
-    it("non-prototypal clone", function () {
+    it("non-prototypal clone", function() {
         var v = new Cartesian2(1, 2);
         var w = Cartesian2.clone(v);
         expect(v.equals(w)).toBeTruthy();

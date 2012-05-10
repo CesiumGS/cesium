@@ -1,6 +1,6 @@
 (function() {
     "use strict";
-    /*global document, Sandbox, ace, require, define*/
+    /*global Sandbox,ace,require,define*/
 
     /**
      * Constructs an instance of a Javascript Ace editor.

@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          '../Specs/createContext',
          '../Specs/destroyContext',
@@ -11,7 +12,7 @@ defineSuite([
          IndexDatatype,
          BufferUsage) {
     "use strict";
-    /*global Float32Array,Uint16Array,ArrayBuffer,it,expect,beforeEach,afterEach*/
+    /*global it,expect,beforeEach,afterEach*/
 
     var context;
     var buffer;

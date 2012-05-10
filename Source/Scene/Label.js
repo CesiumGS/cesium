@@ -18,7 +18,6 @@ define([
         HorizontalOrigin,
         VerticalOrigin) {
     "use strict";
-    /*global document*/
 
     /**
      * DOC_TBA

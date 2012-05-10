@@ -10,7 +10,6 @@ define([
         jsonp,
         Projections) {
     "use strict";
-    /*global document,Image*/
 
     /**
      * Provides tile images hosted by an ArcGIS Server.
