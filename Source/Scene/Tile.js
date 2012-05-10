@@ -227,6 +227,58 @@ define([
         return this.children;
     };
 
+    Tile.prototype.computeMorphBounds = function(morphTime, projection) {
+        var positions = [];
+
+        var lla = new Cartographic3(this.extent.west, this.extent.north, 0.0);
+        var twod = projection.project(lla);
+        twod = new Cartesian3(0.0, twod.x, twod.y);
+        positions.push(twod.lerp(this.ellipsoid.toCartesian(lla), morphTime));
+        lla.longitude = this.extent.east;
+        twod = projection.project(lla);
+        twod = new Cartesian3(0.0, twod.x, twod.y);
+        positions.push(twod.lerp(this.ellipsoid.toCartesian(lla), morphTime));
+        lla.latitude = this.extent.south;
+        twod = projection.project(lla);
+        twod = new Cartesian3(0.0, twod.x, twod.y);
+        positions.push(twod.lerp(this.ellipsoid.toCartesian(lla), morphTime));
+        lla.longitude = this.extent.west;
+        twod = projection.project(lla);
+        twod = new Cartesian3(0.0, twod.x, twod.y);
+        positions.push(twod.lerp(this.ellipsoid.toCartesian(lla), morphTime));
+
+        if (this.extent.north < 0.0) {
+            lla.latitude = this.extent.north;
+        } else if (this.extent.south > 0.0) {
+            lla.latitude = this.extent.south;
+        } else {
+            lla.latitude = 0.0;
+        }
+
+        for ( var i = 1; i < 8; ++i) {
+            var temp = -Math.PI + i * CesiumMath.PI_OVER_TWO;
+            if (this.extent.west < temp && temp < this.extent.east) {
+                lla.longitude = temp;
+                twod = projection.project(lla);
+                twod = new Cartesian3(0.0, twod.x, twod.y);
+                positions.push(twod.lerp(this.ellipsoid.toCartesian(lla), morphTime));
+            }
+        }
+
+        if (lla.latitude === 0.0) {
+            lla.longitude = this.extent.west;
+            twod = projection.project(lla);
+            twod = new Cartesian3(0.0, twod.x, twod.y);
+            positions.push(twod.lerp(this.ellipsoid.toCartesian(lla), morphTime));
+            lla.longitude = this.extent.east;
+            twod = projection.project(lla);
+            twod = new Cartesian3(0.0, twod.x, twod.y);
+            positions.push(twod.lerp(this.ellipsoid.toCartesian(lla), morphTime));
+        }
+
+        return new BoundingSphere(positions);
+    };
+
     Tile.prototype._compute3DBounds = function() {
         var positions = [];
 

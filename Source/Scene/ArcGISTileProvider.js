@@ -3,14 +3,12 @@ define([
         '../Core/DeveloperError',
         '../Core/Math',
         '../ThirdParty/jsonp',
-        './Projections',
-        './ProxyUsagePolicy'
+        './Projections'
     ], function(
         DeveloperError,
         CesiumMath,
         jsonp,
-        Projections,
-        ProxyUsagePolicy) {
+        Projections) {
     "use strict";
     /*global document,Image*/
 
@@ -24,8 +22,7 @@ define([
      * @param {String} [description.instance='/arcgis/rest'] The instance name.
      * @param {String} [description.folder=undefined] The folder where the service is located.
      * @param {String} description.service The service name.
-     * @param {Object} [description.proxy=undefined] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
-     * @param {Enumeration} [description.proxyUsagePolicy=ProxyUsagePolicy.USE_CORS] Specify whether to use the supplied proxy for all data, or only those that don't support cross-origin requests.  By default, cross-origin will be used.
+     * @param {Object} [description.proxy=undefined] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
      *
      * @exception {DeveloperError} <code>description.host</code> is required.
      * @exception {DeveloperError} <code>description.service</code> is required.
@@ -90,16 +87,11 @@ define([
         this.service = desc.service;
 
         /**
-         * A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
+         * A proxy to use for requests. This object is expected to have a getURL
+         * function which returns the proxied URL, if needed.
          * @type {Object}
          */
         this.proxy = desc.proxy;
-
-        /**
-         * Specify whether to use the supplied proxy for all data, or only those that don't support cross-origin requests.  By default, cross-origin will be used.
-         * @type {Enumeration}
-         */
-        this.proxyUsagePolicy = desc.proxyUsagePolicy || ProxyUsagePolicy.USE_CORS;
 
         // TODO: Get this information from the server
 
@@ -157,7 +149,7 @@ define([
 
         var that = this;
         var url = this._url;
-        if (this.proxyUsagePolicy === ProxyUsagePolicy.ALWAYS && this.proxy) {
+        if (typeof this.proxy !== 'undefined') {
             url = this.proxy.getURL(url);
         }
 
@@ -212,7 +204,7 @@ define([
         image.crossOrigin = '';
 
         var url = this._url + '/tile/' + tile.zoom + '/' + tile.y + '/' + tile.x;
-        if (this.proxy) {
+        if (typeof this.proxy !== 'undefined') {
             url = this.proxy.getURL(url);
         }
 
