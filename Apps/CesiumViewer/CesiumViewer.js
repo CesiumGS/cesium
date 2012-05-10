@@ -55,8 +55,6 @@ function(dom,
     loadCzmlFromUrl(_buffer, 'Gallery/simple.czm');
 
     var cesium = new CesiumWidget({
-        proxy : new DefaultProxy('/proxy/'),
-
         clock : clock,
 
         preRender : function(widget) {

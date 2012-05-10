@@ -53,7 +53,6 @@ define([
         preRender : undefined,
         postSetup : undefined,
         useStreamingImagery : true,
-        proxy : undefined,
         mapStyle : BingMapsStyle.AERIAL,
         defaultCamera : undefined,
         lockSunPositionToCamera : false,
@@ -320,8 +319,7 @@ define([
             if (this.useStreamingImagery) {
                 centralBody.dayTileProvider = new BingMapsTileProvider({
                     server : "dev.virtualearth.net",
-                    mapStyle : this.mapStyle,
-                    proxy : new DefaultProxy('/proxy/')
+                    mapStyle : this.mapStyle
                 });
             } else {
                 centralBody.dayTileProvider = new SingleTileProvider(this.dayImageUrl);

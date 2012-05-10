@@ -10,27 +10,25 @@ define(['../Core/Color'], function(Color) {
 
         unwrapCzmlInterval : function(czmlInterval) {
             var rgbaf = czmlInterval.rgbaf;
-            if (typeof rgbaf !== 'undefined') {
-                return rgbaf;
-            }
-
-            var rgba = czmlInterval.rgba;
-            if (typeof rgba !== 'undefined') {
-                if (this.isSampled(rgba)) {
-                    rgbaf = [];
-                    for ( var i = 0, len = rgba.length; i < len; i += 5) {
-                        rgbaf[i] = rgba[i];
-                        rgbaf[i + 1] = rgba[i + 1] / 255.0;
-                        rgbaf[i + 2] = rgba[i + 2] / 255.0;
-                        rgbaf[i + 3] = rgba[i + 3] / 255.0;
-                        rgbaf[i + 4] = rgba[i + 4] / 255.0;
+            if (typeof rgbaf === 'undefined') {
+                var rgba = czmlInterval.rgba;
+                if (typeof rgba !== 'undefined') {
+                    if (this.isSampled(rgba)) {
+                        rgbaf = [];
+                        for ( var i = 0, len = rgba.length; i < len; i += 5) {
+                            rgbaf[i] = rgba[i];
+                            rgbaf[i + 1] = rgba[i + 1] / 255.0;
+                            rgbaf[i + 2] = rgba[i + 2] / 255.0;
+                            rgbaf[i + 3] = rgba[i + 3] / 255.0;
+                            rgbaf[i + 4] = rgba[i + 4] / 255.0;
+                        }
+                    } else {
+                        rgbaf = [rgba[0] / 255.0, rgba[1] / 255.0, rgba[2] / 255.0, rgba[3] / 255.0];
                     }
-                } else {
-                    rgbaf = [rgba[0] / 255.0, rgba[1] / 255.0, rgba[2] / 255.0, rgba[3] / 255.0];
                 }
             }
 
-            return undefined;
+            return rgbaf;
         },
 
         isSampled : function(czmlIntervalData) {
