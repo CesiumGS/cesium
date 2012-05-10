@@ -61,53 +61,119 @@
         <div id="codeContainer" data-dojo-type="dijit.layout.TabContainer" data-dojo-props="region: 'leading', splitter: true, tabPosition: 'bottom'">
             <div data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: 'JavaScript code'">
             <textarea id="code" name="code">
-// Demo code (the actual new parser character stream implementation)
+/*global require*/
+require({ baseUrl : '../../Source' }, [
+        'Core/Ellipsoid',
+        'Core/SunPosition',
+        'Core/EventHandler',
+        'Core/MouseEventType',
+        'Core/requestAnimationFrame',
+        'Scene/Scene',
+        'Scene/CentralBody',
+        'Scene/BingMapsTileProvider',
+        'Scene/BingMapsStyle'
+    ], function(
+        Ellipsoid,
+        SunPosition,
+        EventHandler,
+        MouseEventType,
+        requestAnimationFrame,
+        Scene,
+        CentralBody,
+        BingMapsTileProvider,
+        BingMapsStyle) {
+    "use strict";
+    /*global document*/
 
-function StringStream(string) {
-  this.pos = 0;
-  this.string = string;
-}
+    var canvas = document.getElementById("glCanvas");
+    var ellipsoid = Ellipsoid.getWgs84(); // Used in many Sandbox examples
+    var scene = new Scene(canvas);
+    var primitives = scene.getPrimitives();
 
-StringStream.prototype = {
-  done: function() {return this.pos >= this.string.length;},
-  peek: function() {return this.string.charAt(this.pos);},
-  next: function() {
-    if (this.pos &lt; this.string.length)
-      return this.string.charAt(this.pos++);
-  },
-  eat: function(match) {
-    var ch = this.string.charAt(this.pos);
-    if (typeof match == "string") var ok = ch == match;
-    else var ok = ch &amp;&amp; match.test ? match.test(ch) : match(ch);
-    if (ok) {this.pos++; return ch;}
-  },
-  eatWhile: function(match) {
-    var start = this.pos;
-    while (this.eat(match));
-    if (this.pos > start) return this.string.slice(start, this.pos);
-  },
-  backUp: function(n) {this.pos -= n;},
-  column: function() {return this.pos;},
-  eatSpace: function() {
-    var start = this.pos;
-    while (/\s/.test(this.string.charAt(this.pos))) this.pos++;
-    return this.pos - start;
-  },
-  match: function(pattern, consume, caseInsensitive) {
-    if (typeof pattern == "string") {
-      function cased(str) {return caseInsensitive ? str.toLowerCase() : str;}
-      if (cased(this.string).indexOf(cased(pattern), this.pos) == this.pos) {
-        if (consume !== false) this.pos += str.length;
-        return true;
-      }
+    // Bing Maps
+    var bing = new BingMapsTileProvider({
+        server : "dev.virtualearth.net",
+        mapStyle : BingMapsStyle.AERIAL
+    });
+
+    var cb = new CentralBody(scene.getCamera(), ellipsoid);
+    cb.dayTileProvider = bing;
+    cb.nightImageSource = "../../Images/land_ocean_ice_lights_2048.jpg";
+    cb.specularMapSource = "../../Images/earthspec1k.jpg";
+    if (scene.getContext().getMaximumTextureSize() > 2048) {
+        cb.cloudsMapSource = "../../Images/earthcloudmaptrans.jpg";
+        cb.bumpMapSource = "../../Images/earthbump1k.jpg";
     }
-    else {
-      var match = this.string.slice(this.pos).match(pattern);
-      if (match &amp;&amp; consume !== false) this.pos += match[0].length;
-      return match;
-    }
-  }
-};
+    cb.showSkyAtmosphere = true;
+    cb.showGroundAtmosphere = true;
+    primitives.setCentralBody(cb);
+
+    scene.getCamera().frustum.near = 1.0;
+
+    scene.getCamera().getControllers().addSpindle();
+    scene.getCamera().getControllers().addFreeLook();
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Add examples from the Sandbox here:
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    scene.setAnimation(function() {
+        //scene.setSunPosition(scene.getCamera().position);
+        scene.setSunPosition(SunPosition.compute().position);
+
+        // Add code here to update primitives based on changes to animation time, camera parameters, etc.
+    });
+
+    (function tick() {
+        scene.render();
+        requestAnimationFrame(tick);
+    }());
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Example keyboard and Mouse handlers
+
+    var handler = new EventHandler(canvas);
+
+    handler.setKeyAction(function() {
+        /* ... */
+        // Handler for key press
+    }, "1");
+
+    handler.setMouseAction(function(movement) {
+        /* ... */
+        // Use movement.startX, movement.startY, movement.endX, movement.endY
+    }, MouseEventType.MOVE);
+
+    document.oncontextmenu = function() {
+        return false;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Example resize handler
+
+    window.onresize = function () {
+        var width = canvas.clientWidth,
+            height = canvas.clientHeight;
+
+        if (canvas.width === width &amp;&amp; canvas.height === height) {
+            return;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        scene.getContext().setViewport({
+            x: 0,
+            y: 0,
+            width: width,
+            height: height
+        });
+
+        scene.getCamera().frustum.aspectRatio = width / height;
+    };
+    window.onresize();
+});
 </textarea>
             </div>
             <div data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: 'Vertex shader'">
@@ -117,7 +183,7 @@ StringStream.prototype = {
         </div>
         <div id="cesiumContainer" data-dojo-type="dijit.layout.TabContainer" data-dojo-props="region: 'center', tabPosition: 'bottom'">
             <div id="pane3D" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: '3D Globe'">
-                <iframe src="bucket.html" class="cesiumFrame"></iframe>
+                <iframe id="bucketFrame" src="bucket.html" class="cesiumFrame"></iframe>
             </div>
             <div data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: '2D Map'">
             </div>

@@ -64,4 +64,23 @@ require({
         //    console.log('3d - resize');
         //    pane3D.originalResize(changeSize, resultSize);
         //};
+
+        var bucketFrame = document.getElementById('bucketFrame');
+
+        // The iframe (bucket.html) sends this message on load.
+        // This triggers the code to be injected into the iframe.
+        window.addEventListener('message', function (e) {
+            if (e.data === 'reload') {
+                var bucketDoc = bucketFrame.contentDocument;
+                var sc = bucketDoc.createElement('script');
+                sc.type = 'text/javascript';
+                sc.textContent = editor.getValue();
+                bucketDoc.body.appendChild(sc);
+            }
+        }, true);
+
+        // Clicking the 'Run' button simply reloads the iframe.
+        registry.byId('buttonRun').on('click', function () {
+            bucketFrame.contentWindow.location.reload();
+        });
     });
