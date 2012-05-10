@@ -3,7 +3,6 @@ define(function() {
     "use strict";
 
     var BooleanDataHandler = {
-
         unwrapCzmlInterval : function(czmlInterval) {
             var result = czmlInterval.boolean;
             return typeof result === 'undefined' ? Boolean(czmlInterval) : Boolean(result);

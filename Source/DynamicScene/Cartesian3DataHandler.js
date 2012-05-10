@@ -1,14 +1,11 @@
 /*global define*/
-define(['Core/Cartesian3'],
-function(Cartesian3) {
+define(['../Core/Cartesian3'], function(Cartesian3) {
     "use strict";
 
     var doublesPerValue = 3;
 
     var Cartesian3DataHandler = {
-
         doublesPerValue : doublesPerValue,
-
         doublesPerInterpolationValue : doublesPerValue,
 
         unwrapCzmlInterval : function(czmlInterval) {
@@ -20,10 +17,14 @@ function(Cartesian3) {
         },
 
         packValuesForInterpolation : function(valuesArray, destinationArray, firstIndex, lastIndex) {
-            var sourceIndex = firstIndex * doublesPerValue, destinationIndex = 0, stop = (lastIndex + 1) * doublesPerValue;
+            var sourceIndex = firstIndex * doublesPerValue;
+            var destinationIndex = 0;
+            var stop = (lastIndex + 1) * doublesPerValue;
 
-            for (; sourceIndex < stop; sourceIndex++, destinationIndex++) {
+            while (sourceIndex < stop) {
                 destinationArray[destinationIndex] = valuesArray[sourceIndex];
+                sourceIndex++;
+                destinationIndex++;
             }
         },
 

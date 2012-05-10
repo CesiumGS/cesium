@@ -1,12 +1,14 @@
 /*global define*/
-define(['./DynamicTextureAtlas',
-        'Scene/BillboardCollection',
-        'Scene/HorizontalOrigin',
-        'Scene/VerticalOrigin'],
-function(DynamicTextureAtlas,
-         BillboardCollection,
-         HorizontalOrigin,
-         VerticalOrigin) {
+define([
+        './DynamicTextureAtlas',
+        '../Scene/BillboardCollection',
+        '../Scene/HorizontalOrigin',
+        '../Scene/VerticalOrigin'
+    ], function(
+        DynamicTextureAtlas,
+        BillboardCollection,
+        HorizontalOrigin,
+        VerticalOrigin) {
     "use strict";
 
     //FIXME This class currently relies on storing data onto each CZML object

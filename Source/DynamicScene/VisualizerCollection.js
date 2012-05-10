@@ -1,4 +1,5 @@
-define(function(ValueTypes) {
+/*global define*/
+define(function() {
     "use strict";
 
     function VisualizerCollection(visualizers, buffer) {

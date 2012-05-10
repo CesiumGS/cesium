@@ -1,12 +1,14 @@
 /*global define*/
-define(['Scene/LabelCollection',
-        'Scene/LabelStyle',
-        'Scene/HorizontalOrigin',
-        'Scene/VerticalOrigin'],
-function(LabelCollection,
-         LabelStyle,
-         HorizontalOrigin,
-         VerticalOrigin) {
+define([
+        '../Scene/LabelCollection',
+        '../Scene/LabelStyle',
+        '../Scene/HorizontalOrigin',
+        '../Scene/VerticalOrigin'
+    ], function(
+        LabelCollection,
+        LabelStyle,
+        HorizontalOrigin,
+        VerticalOrigin) {
     "use strict";
 
     //FIXME This class currently relies on storing data onto each CZML object

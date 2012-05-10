@@ -1,9 +1,12 @@
 /*global define*/
-define(['./QuaternionDataHandler',
-        './createOrUpdateProperty'],
-function(QuaternionDataHandler,
-         createOrUpdateProperty) {
+define([
+        './QuaternionDataHandler',
+        './createOrUpdateProperty'
+    ], function(
+        QuaternionDataHandler,
+        createOrUpdateProperty) {
     "use strict";
+
     return function(dynamicObject, packet, buffer, sourceUri) {
         var orientationData = packet.orientation;
         if (typeof orientationData !== 'undefined') {
