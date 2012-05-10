@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Scene/CompositePrimitive',
          '../Specs/createContext',
@@ -31,7 +32,7 @@ defineSuite([
          VerticalOrigin,
          Polygon) {
     "use strict";
-    /*global document,describe,it,expect,beforeEach,afterEach*/
+    /*global describe,it,expect,beforeEach,afterEach*/
 
     var context;
     var primitives;

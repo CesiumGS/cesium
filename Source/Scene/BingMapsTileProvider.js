@@ -82,7 +82,6 @@ define([
         BingMapsStyle,
         Projections) {
     "use strict";
-    /*global Image*/
 
     /**
      * Uses the Bing Map imagery API to load images for tiles.

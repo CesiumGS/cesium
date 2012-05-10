@@ -50,7 +50,6 @@ define([
         PolygonVSPick,
         PolygonFSPick) {
     "use strict";
-    /*global Float32Array*/
 
     var attributeIndices = {
         position2D : 0,

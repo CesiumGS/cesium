@@ -68,7 +68,6 @@ define([
         VertexArray,
         VertexLayout) {
     "use strict";
-    /*global window,Uint8Array,Uint16Array,ArrayBuffer*/
 
     function _errorToString(gl, error) {
         var message = "OpenGL Error:  ";

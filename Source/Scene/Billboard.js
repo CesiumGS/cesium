@@ -86,7 +86,7 @@ define([
     var SCALE_INDEX = Billboard.SCALE_INDEX = 6;
     var IMAGE_INDEX_INDEX = Billboard.IMAGE_INDEX_INDEX = 7;
     var COLOR_INDEX = Billboard.COLOR_INDEX = 8;
-    var NUMBER_OF_PROPERTIES = Billboard.NUMBER_OF_PROPERTIES = 9;
+    Billboard.NUMBER_OF_PROPERTIES = 9;
 
     Billboard.prototype._isDirty = function() {
         return this._dirty;

@@ -1,7 +1,6 @@
 /*global define*/
 define(function() {
     "use strict";
-    /*global window*/
 
     /**
      * A browser-independent function to request a new animation frame.  This is used to create

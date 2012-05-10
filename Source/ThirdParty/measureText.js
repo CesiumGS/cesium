@@ -35,7 +35,7 @@
 */
 /*global define*/
 define(function() {
-  /*global document*/
+    "use strict";
 //  var NAME = "FontMetrics Library";
 //  var VERSION = "1-2012.0121.1300";
 

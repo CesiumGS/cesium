@@ -6,7 +6,6 @@ define([
         DeveloperError,
         Cartesian3) {
     "use strict";
-    /*global Float64Array*/
 
     // TODO:  This file belongs in Core, not here.
     // TODO:  Cloth simulation abstraction built on top of particle system
