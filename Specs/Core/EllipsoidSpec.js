@@ -22,6 +22,27 @@ defineSuite([
         expect(e.getOneOverRadiiSquared().equals(new Cartesian3(1 / (1 * 1), 1 / (2 * 2), 1 / (3 * 3)))).toBeTruthy();
     });
 
+    it("throws with no arguments", function() {
+        expect(function() {
+            return new Ellipsoid();
+        }).toThrow();
+    });
+
+    it("throws with negative radii componenets", function() {
+        expect(function() {
+            return new Ellipsoid({
+                "x": -1,
+                "y": 0,
+                "z": 0
+            });
+        }).toThrow();
+    });
+
+    it("getScaledWgs84", function() {
+        var e = Ellipsoid.getScaledWgs84();
+        expect(e.getRadii().equals(new Cartesian3(1.0, 1.0, 6356752.314245 / 6378137.0))).toEqual(true);
+    });
+
     it("getMinimumRadius", function() {
         expect(new Ellipsoid(new Cartesian3(1, 2, 3)).getMinimumRadius()).toEqual(1);
     });

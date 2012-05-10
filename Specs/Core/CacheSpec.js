@@ -125,9 +125,24 @@ defineSuite([
     it("remove returns false with no key", function() {
         var result = cache.remove();
         expect(result).toBeFalsy();
-     });
+    });
+
+    it("remove returns false with null key", function() {
+        var result = cache.remove({"key": null});
+        expect(result).toBeFalsy();
+    });
 
     it("destroy", function() {
+        cache = cache && cache.destroy();
+        expect(cache).toBeUndefined();
+    });
+
+    it("destroys cache with keys", function() {
+        var tenth = {
+            n : 10,
+            key : "10"
+        };
+        cache.find(tenth);
         cache = cache && cache.destroy();
         expect(cache).toBeUndefined();
     });

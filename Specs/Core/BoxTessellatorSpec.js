@@ -23,4 +23,13 @@ defineSuite([
         expect(m.attributes.position.values.length).toEqual(8 * 3);
         expect(m.indexLists[0].values.length).toEqual(12 * 3);
     });
+
+    it("compute2", function() {
+        expect(function() {
+            return BoxTessellator.compute({
+                minimumCorner : new Cartesian3(0, 0, 0),
+                maximumCorner : new Cartesian3(1, 1, 1)
+            });
+        }).not.toThrow();
+    });
 });
