@@ -16,8 +16,9 @@ function(Color) {
             if (typeof rgbaf === 'undefined') {
                 var rgba = czmlInterval.rgba;
                 if (typeof rgba !== 'undefined') {
+                    rgbaf = [];
                     if (this.isSampled(rgba)) {
-                        for ( var i = 0, len = 0; len < rgba.length; i += 5) {
+                        for ( var i = 0, len = rgba.length; i < len; i += 5) {
                             rgbaf[i] = rgba[i];
                             rgbaf[i + 1] = rgba[i + 1] / 255.0;
                             rgbaf[i + 2] = rgba[i + 2] / 255.0;

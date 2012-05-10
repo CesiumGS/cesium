@@ -6,13 +6,15 @@ define(['dojo/dom',
         'Core/Clock',
         'Core/ClockStep',
         'Core/ClockRange',
-        'DynamicScene/createOrUpdatePosition',
-        'DynamicScene/createOrUpdateOrientation',
         'DynamicScene/createOrUpdateDynamicBillboard',
         'DynamicScene/createOrUpdateDynamicLabel',
+        'DynamicScene/createOrUpdateDynamicPoint',
+        'DynamicScene/createOrUpdatePosition',
+        'DynamicScene/createOrUpdateOrientation',
         'DynamicScene/CzmlObjectCollection',
         'DynamicScene/DynamicBillboardVisualizer',
         'DynamicScene/DynamicLabelVisualizer',
+        'DynamicScene/DynamicPointVisualizer',
         'DynamicScene/VisualizerCollection',
         'CesiumViewer/loadCzmlFromUrl'],
 function(dom,
@@ -23,13 +25,15 @@ function(dom,
          Clock,
          ClockStep,
          ClockRange,
-         createOrUpdatePosition,
-         createOrUpdateOrientation,
          createOrUpdateDynamicBillboard,
          createOrUpdateDynamicLabel,
+         createOrUpdateDynamicPoint,
+         createOrUpdatePosition,
+         createOrUpdateOrientation,
          CzmlObjectCollection,
          DynamicBillboardVisualizer,
          DynamicLabelVisualizer,
+         DynamicPointVisualizer,
          VisualizerCollection,
          loadCzmlFromUrl) {
 
@@ -38,11 +42,13 @@ function(dom,
             ClockRange.LOOP, 300);
 
     var _buffer = new CzmlObjectCollection("root", "root", {
-        position : createOrUpdatePosition,
-        orientation : createOrUpdateOrientation,
         billboard : createOrUpdateDynamicBillboard,
-        label : createOrUpdateDynamicLabel
+        label : createOrUpdateDynamicLabel,
+        point : createOrUpdateDynamicPoint,
+        orientation : createOrUpdateOrientation,
+        position : createOrUpdatePosition
     });
+
     loadCzmlFromUrl(_buffer, 'Gallery/simple.czm');
 
     var cesium = new CesiumWidget({
@@ -57,7 +63,7 @@ function(dom,
 
         postSetup : function(widget) {
             var scene = widget.scene;
-            visualizers = new VisualizerCollection([new DynamicBillboardVisualizer(scene), new DynamicLabelVisualizer(scene)]);
+            visualizers = new VisualizerCollection([new DynamicBillboardVisualizer(scene), new DynamicLabelVisualizer(scene), new DynamicPointVisualizer(scene)]);
         },
 
         onSetupError : function(widget, error) {

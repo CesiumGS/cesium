@@ -13,7 +13,7 @@ function(DynamicTextureAtlas,
     //These objects may be transient and therefore storing data on them is bad.
     //We may need a slower "fallback" layer of storage in case the data doesn't exist.
 
-    function BillboardVisualizer(scene) {
+    function DynamicBillboardVisualizer(scene) {
         this._scene = scene;
         this._unusedIndexes = [];
 
@@ -25,13 +25,13 @@ function(DynamicTextureAtlas,
         });
     }
 
-    BillboardVisualizer.prototype.update = function(time, czmlObjects) {
+    DynamicBillboardVisualizer.prototype.update = function(time, czmlObjects) {
         for ( var i = 0, len = czmlObjects.length; i < len; i++) {
             this.updateObject(time, czmlObjects[i]);
         }
     };
 
-    BillboardVisualizer.prototype.updateObject = function(time, czmlObject) {
+    DynamicBillboardVisualizer.prototype.updateObject = function(time, czmlObject) {
         var dynamicBillboard = czmlObject.billboard;
         if (typeof dynamicBillboard === 'undefined') {
             return;
@@ -67,10 +67,10 @@ function(DynamicTextureAtlas,
         }
 
         if (typeof billboardVisualizerIndex === 'undefined') {
-            var objectPool = this._unusedIndexes;
-            var length = objectPool.length;
+            var unusedIndexes = this._unusedIndexes;
+            var length = unusedIndexes.length;
             if (length > 0) {
-                billboardVisualizerIndex = objectPool.pop();
+                billboardVisualizerIndex = unusedIndexes.pop();
                 billboard = this._billboardCollection.get(billboardVisualizerIndex);
             } else {
                 billboardVisualizerIndex = this._billboardCollection.getLength();
@@ -100,45 +100,67 @@ function(DynamicTextureAtlas,
             });
         }
 
-        billboard.setShow(show && billboard.vizTextureAvailable);
+        billboard.setShow(billboard.vizTextureAvailable);
         if (!billboard.vizTextureAvailable) {
             return;
         }
 
-        billboard.setPosition(positionProperty.getValue(time));
+        var value = positionProperty.getValue(time);
+        if (value !== 'undefined') {
+            billboard.setPosition(value);
+        }
 
         var property = dynamicBillboard.color;
+
         if (typeof property !== 'undefined') {
-            billboard.setColor(property.getValue(time));
+            value = property.getValue(time);
+            if (typeof value !== 'undefined') {
+                billboard.setColor(value);
+            }
         }
 
         property = dynamicBillboard.eyeOffset;
         if (typeof property !== 'undefined') {
-            billboard.setEyeOffset(property.getValue(time));
+            value = property.getValue(time);
+            if (typeof value !== 'undefined') {
+                billboard.setEyeOffset(value);
+            }
         }
 
         property = dynamicBillboard.pixelOffset;
         if (typeof property !== 'undefined') {
-            billboard.setPixelOffset(property.getValue(time));
+            value = property.getValue(time);
+            if (typeof value !== 'undefined') {
+                billboard.setPixelOffset(value);
+            }
         }
 
         property = dynamicBillboard.scale;
         if (typeof property !== 'undefined') {
-            billboard.setScale(property.getValue(time));
+            value = property.getValue(time);
+            if (typeof value !== 'undefined') {
+                billboard.setScale(value);
+            }
         }
 
         property = dynamicBillboard.horizontalOrigin;
         if (typeof property !== 'undefined') {
-            billboard.setHorizontalOrigin(HorizontalOrigin[property.getValue(time)]);
+            value = HorizontalOrigin[property.getValue(time)];
+            if (typeof value !== 'undefined') {
+                billboard.setHorizontalOrigin(value);
+            }
         }
 
         property = dynamicBillboard.verticalOrigin;
         if (typeof property !== 'undefined') {
-            billboard.setVerticalOrigin(VerticalOrigin[property.getValue(time)]);
+            value = VerticalOrigin[property.getValue(time)];
+            if (typeof value !== 'undefined') {
+                billboard.setVerticalOrigin(value);
+            }
         }
     };
 
-    BillboardVisualizer.prototype.removeAll = function(czmlObjects) {
+    DynamicBillboardVisualizer.prototype.removeAll = function(czmlObjects) {
         this._unusedIndexes = [];
         this._billboardCollection.removeAll();
 
@@ -147,5 +169,5 @@ function(DynamicTextureAtlas,
         }
     };
 
-    return BillboardVisualizer;
+    return DynamicBillboardVisualizer;
 });
