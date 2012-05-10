@@ -72,7 +72,7 @@
 define([
         '../Core/DeveloperError',
         '../Core/Math',
-        '../ThirdParty/jsonp',
+        '../Core/jsonp',
         './BingMapsStyle',
         './Projections'
     ], function(
@@ -141,12 +141,7 @@ define([
         this.mapStyle = mapStyle;
         this._mapStyle = mapStyle;
 
-        /**
-         * A proxy to use for requests. This object is expected to have a getURL
-         * function which returns the proxied URL, if needed.
-         * @type {Object}
-         */
-        this.proxy = desc.proxy;
+        this._proxy = desc.proxy;
 
         // TODO: The following 5 properties should be set in _requestTemplate.
         //       The may be needed before the response so for now set the default values.
@@ -200,9 +195,19 @@ define([
          */
         this.projection = Projections.MERCATOR;
 
-        this._url = "";
+        this._url = undefined;
         this._deferredQueue = [];
         this._requestTemplate();
+    }
+
+    function deferredQueueContains(deferredQueue, tile) {
+        for ( var i = 0, len = deferredQueue.length; i < len; ++i) {
+            var t = deferredQueue[i].tile;
+            if (t.zoom === tile.zoom && t.x === tile.x && t.y === tile.y) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -269,34 +274,18 @@ define([
     };
 
     BingMapsTileProvider.prototype._getMetadataUrl = function() {
-        var url = 'http://' + this.server + '/REST/v1/Imagery/Metadata/' + this.mapStyle.name;
-        if (typeof this.proxy !== 'undefined') {
-            url = this.proxy.getURL(url);
-        }
-        return url;
-    };
-
-    BingMapsTileProvider.prototype._getTileUrl = function(tile) {
-        tile.quadkey = BingMapsTileProvider.tileXYToQuadKey(tile.x, tile.y, tile.zoom);
-
-        var url = this._url.replace('{quadkey}', tile.quadkey);
-        if (typeof this.proxy !== 'undefined') {
-            url = this.proxy.getURL(url);
-        }
-
-        return url;
+        return 'http://' + this.server + '/REST/v1/Imagery/Metadata/' + this.mapStyle.name + '?key=' + this.key;
     };
 
     BingMapsTileProvider.prototype._requestTemplate = function() {
-        var url = this._getMetadataUrl();
-
         var that = this;
-
-        var callback = function(data) {
+        jsonp(this._getMetadataUrl(), function(data) {
             var resource = data.resourceSets[0].resources[0];
-            that._url = resource.imageUrl;
-            that._url = that._url.replace('{subdomain}', resource.imageUrlSubdomains[0]);
-            that._url = that._url.replace('{culture}', "");
+
+            var url = resource.imageUrl;
+            url = url.replace('{subdomain}', resource.imageUrlSubdomains[0]);
+            url = url.replace('{culture}', "");
+            that._url = url;
 
             that.tileWidth = resource.imageWidth;
             that.tileHeight = resource.imageHeight;
@@ -304,13 +293,13 @@ define([
             that.zoomMax = resource.zoomMax;
 
             that._deferredQueue.forEach(function(element) {
-                this._loadImage(element);
-            }, that);
+                that._loadImage(element);
+            });
             that._deferredQueue = [];
-        };
-        jsonp(url, {
-            key : this.key
-        }, callback, "jsonp");
+        }, {
+            callbackParameterName : "jsonp",
+            proxy: this._proxy
+        });
     };
 
     /**
@@ -328,11 +317,11 @@ define([
      */
     BingMapsTileProvider.prototype.loadTileImage = function(tile, onload, onerror, oninvalid) {
         if (this.server !== this._server || this.key !== this._key || this.mapStyle !== this._mapStyle) {
-            this._url = '';
             this._server = this.server;
             this._key = this.key;
             this._mapStyle = this.mapStyle;
 
+            this._url = undefined;
             this._requestTemplate();
         }
 
@@ -341,38 +330,23 @@ define([
         }
 
         var image = new Image();
-
-        if (!this._url) {
-            if (!this._deferredQueue.contains) {
-                this._deferredQueue.contains = function(tile) {
-                    for ( var i = 0; i < this.length; ++i) {
-                        var t = this[i].tile;
-                        if (t.zoom === tile.zoom && t.x === tile.x && t.y === tile.y) {
-                            return true;
-                        }
-                    }
-                    return false;
-                };
-            }
-
-            if (!this._deferredQueue.contains(tile)) {
-                this._deferredQueue.push({
-                    tile : tile,
-                    onload : onload,
-                    onerror : onerror,
-                    image : image
-                });
-            }
-            return image;
-        }
-
-        this._loadImage({
+        var element = {
             tile : tile,
             onload : onload,
             onerror : onerror,
             oninvalid : oninvalid,
             image : image
-        });
+        };
+
+        if (typeof this._url === 'undefined') {
+            if (!deferredQueueContains(this._deferredQueue, tile)) {
+                this._deferredQueue.push(element);
+            }
+
+            return image;
+        }
+
+        this._loadImage(element);
         return image;
     };
 
@@ -384,49 +358,51 @@ define([
         var validZoom = false;
         var loaded = false;
 
-        element.onload = (element.onload && typeof element.onload === "function") ? element.onload : function() {
-        };
-        element.onerror = (element.onerror && typeof element.onerror === "function") ? element.onerror : function() {
-        };
-        element.oninvalid = (element.oninvalid && typeof element.oninvalid === "function") ? element.oninvalid : function() {
-        };
-
-        var url = this._getMetadataUrl();
-
-        jsonp(url, {
-            centerPoint : lat + ',' + lon,
-            zoomLevel : tile.zoom,
-            key : this.key
-        }, function(data) {
-            if (typeof data.resourceSets[0] === "undefined") {
-                element.onerror();
+        jsonp(this._getMetadataUrl(), function(data) {
+            if (typeof data.resourceSets[0] === 'undefined') {
+                if (typeof element.onerror === 'function') {
+                    element.onerror();
+                }
                 return;
             }
 
             var resource = data.resourceSets[0].resources[0];
-            if (!resource.vintageStart && !resource.vintageEnd) {
-                element.oninvalid();
-            } else {
+            if (resource.vintageStart && resource.vintageEnd) {
                 validZoom = true;
-                if (loaded) {
+                if (loaded && typeof element.onload === 'function') {
                     element.onload();
                 }
+            } else if (typeof element.oninvalid === 'function') {
+                element.oninvalid();
             }
-            zoomResponse = true;
-        }, "jsonp");
 
-        var img = element.image;
-        img.onload = function() {
-            if (zoomResponse && validZoom) {
+            zoomResponse = true;
+        }, {
+            parameters : {
+                centerPoint : lat + ',' + lon,
+                zoomLevel : tile.zoom
+            },
+            callbackParameterName : "jsonp",
+            proxy : this._proxy
+        });
+
+        var image = element.image;
+        image.onload = function() {
+            if (zoomResponse && validZoom && typeof element.onload === 'function') {
                 element.onload();
             }
             loaded = true;
         };
-        img.onerror = function() {
-            element.onerror();
-        };
-        img.crossOrigin = '';
-        img.src = this._getTileUrl(element.tile);
+        image.onerror = element.onerror;
+        image.crossOrigin = '';
+
+        var quadkey = BingMapsTileProvider.tileXYToQuadKey(tile.x, tile.y, tile.zoom);
+        var url = this._url.replace('{quadkey}', quadkey);
+        if (typeof this._proxy !== 'undefined') {
+            url = this._proxy.getURL(url);
+        }
+
+        image.src = url;
     };
 
     /**
@@ -445,7 +421,7 @@ define([
      * @memberof BingMapsTileProvider
      */
     BingMapsTileProvider.prototype.getLogo = function() {
-        if (typeof BingMapsTileProvider._logo === "undefined") {
+        if (typeof BingMapsTileProvider._logo === 'undefined') {
             var image = new Image();
             image.loaded = false;
             image.onload = function() {
