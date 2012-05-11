@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite(['Core/Queue'], function(Queue) {
     "use strict";
     /*global it,expect,beforeEach*/

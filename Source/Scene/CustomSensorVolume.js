@@ -36,7 +36,6 @@ define([
         CustomSensorVolumeVS,
         CustomSensorVolumeFS) {
     "use strict";
-    /*global Float32Array*/
 
     var attributeIndices = {
         position : 0,

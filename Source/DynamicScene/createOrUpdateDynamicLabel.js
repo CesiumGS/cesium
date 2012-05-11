@@ -1,13 +1,15 @@
 /*global define*/
-define(['./DynamicLabel',
+define([
+        './DynamicLabel',
         './BooleanDataHandler',
         './Cartesian2DataHandler',
         './Cartesian3DataHandler',
         './NumberDataHandler',
         './StringDataHandler',
         './ColorDataHandler',
-        './createOrUpdateProperty'],
-function(DynamicLabel,
+        './createOrUpdateProperty'
+    ], function(
+        DynamicLabel,
         BooleanDataHandler,
         Cartesian2DataHandler,
         Cartesian3DataHandler,
@@ -16,10 +18,10 @@ function(DynamicLabel,
         ColorDataHandler,
         createOrUpdateProperty) {
     "use strict";
-    return function(dynamicObject, packet, buffer, sourceUri) {
 
+    return function(dynamicObject, packet, buffer, sourceUri) {
         //See if there's any actual data to process.
-        var labelData = packet.label, label;
+        var labelData = packet.label;
         if (typeof labelData !== 'undefined' &&
             (typeof labelData.text !== 'undefined' ||
              typeof labelData.font !== 'undefined' ||
@@ -33,7 +35,7 @@ function(DynamicLabel,
              typeof labelData.pixelOffset !== 'undefined' ||
              typeof labelData.eyeOffset !== 'undefined')) {
 
-            label = dynamicObject.label;
+            var label = dynamicObject.label;
 
             //Create a new label if we don't have one yet.
             if (typeof label === 'undefined') {

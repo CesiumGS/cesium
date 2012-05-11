@@ -1,48 +1,40 @@
 /*global define*/
-define(['./DynamicProperty',
-        'Core/JulianDate',
-        'Core/binarySearch',
-        'Core/interpolateWithDegree',
-        'Core/LinearApproximation'],
-function(DynamicProperty,
-        JulianDate,
-        binarySearch,
-        interpolateWithDegree,
-        LinearApproximation) {
+define(function() {
     "use strict";
 
+    var doublesPerValue = 1;
+
     var NumberDataHandler = {
+        doublesPerValue : doublesPerValue,
+        doublesPerInterpolationValue : doublesPerValue,
 
-        doublesPerValue : 1,
-
-        doublesPerInterpolationValue : 1,
-
-        isSampled : function(czmlIntervalData) {
-            return Array.isArray(czmlIntervalData);
-        },
-
-        createValueFromArray : function(data, startingIndex) {
-            return data[startingIndex];
-        },
-
-        createValue : function(data) {
-            if (Array.isArray(data)) {
-                return data[0];
-            }
-            return data;
-        },
-
-        getCzmlIntervalValue : function(czmlInterval) {
+        unwrapCzmlInterval : function(czmlInterval) {
             var result = czmlInterval.number;
             return typeof result === 'undefined' ? +czmlInterval : result;
         },
 
-        packValuesForInterpolation : function(valuesArray, destinationArray, firstIndex, lastIndex) {
-            var sourceIndex = firstIndex * NumberDataHandler.doublesPerValue, destinationIndex = 0, stop = (lastIndex + 1) * NumberDataHandler.doublesPerValue;
+        isSampled : function(czmlIntervalValue) {
+            return Array.isArray(czmlIntervalValue);
+        },
 
-            for (; sourceIndex < stop; sourceIndex++, destinationIndex++) {
+        packValuesForInterpolation : function(valuesArray, destinationArray, firstIndex, lastIndex) {
+            var sourceIndex = firstIndex;
+            var destinationIndex = 0;
+            var stop = (lastIndex + 1);
+
+            while (sourceIndex < stop) {
                 destinationArray[destinationIndex] = valuesArray[sourceIndex];
+                sourceIndex++;
+                destinationIndex++;
             }
+        },
+
+        createValue : function(data) {
+            return data;
+        },
+
+        createValueFromArray : function(data, startingIndex) {
+            return data[startingIndex];
         },
 
         createValueFromInterpolationResult : function(result) {

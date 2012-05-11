@@ -1,4 +1,10 @@
-defineSuite(['Core/TimeInterval', 'Core/JulianDate'], function(TimeInterval, JulianDate) {
+/*global defineSuite*/
+defineSuite([
+         'Core/TimeInterval',
+         'Core/JulianDate'
+     ], function(
+         TimeInterval,
+         JulianDate) {
     "use strict";
     /*global it,expect*/
 

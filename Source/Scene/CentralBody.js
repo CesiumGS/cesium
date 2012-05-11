@@ -96,7 +96,6 @@ define([
         SkyAtmosphereFS,
         SkyAtmosphereVS) {
     "use strict";
-    /*global document,Image,Uint16Array*/
 
     function TileTextureCachePolicy(description) {
         var desc = description || {};
@@ -211,11 +210,29 @@ define([
         this._imageThrottleLimit = 15;
 
         this._prefetchLimit = 1;
-        this.perTileMaxFailCount = 3;
-        this.maxTileFailCount = 30;
         this._tileFailCount = 0;
-        this.failedTileRetryTime = 30.0;
         this._lastFailedTime = undefined;
+
+        /**
+         * DOC_TBA
+         *
+         * @type {Number}
+         */
+        this.perTileMaxFailCount = 3;
+
+        /**
+         * DOC_TBA
+         *
+         * @type {Number}
+         */
+        this.maxTileFailCount = 30;
+
+        /**
+         * DOC_TBA
+         *
+         * @type {Number}
+         */
+        this.failedTileRetryTime = 30.0;
 
 
         this._spWithoutAtmosphere = undefined;
@@ -239,9 +256,15 @@ define([
 
         this._fb = undefined;
 
-        this._imageLogo = undefined;
+        /**
+         * DOC_TBA
+         *
+         * @type {Cartesian2}
+         */
         this.logoOffset = Cartesian2.getZero();
+
         this._logoOffset = this.logoOffset;
+        this._imageLogo = undefined;
         this._quadLogo = undefined;
 
         this._dayTileProvider = undefined;
@@ -261,30 +284,318 @@ define([
         this._showBumps = false;
         this._showTerminator = false;
 
+        /**
+         * DOC_TBA
+         *
+         * @type {Function}
+         */
         this.refineFunc = this.refine;
+
+        /**
+         * DOC_TBA
+         *
+         * @type {Number}
+         */
         this.pixelError3D = 5.0;
+
+        /**
+         * DOC_TBA
+         *
+         * @type {Number}
+         */
         this.pixelError2D = 2.0;
 
+        /**
+         * Determines if the central body will be shown.
+         *
+         * @type {Boolean}
+         */
         this.show = true;
+
+        /**
+         * DOC_TBA
+         *
+         * @type {Boolean}
+         */
         this.showGroundAtmosphere = false;
+
+        /**
+         * DOC_TBA
+         *
+         * @type {Boolean}
+         */
         this.showSkyAtmosphere = false;
 
+        /**
+         * DOC_TBA
+         */
         this.dayTileProvider = undefined;
+
+        /**
+         * The URL of the image to use as a night texture.  An asynchronous
+         * request is made for the image at the next call to {@link CentralBody#update}.
+         * The night texture is shown once the image is loaded and {@link CentralBody#showNight}
+         * is <code>true</code>.
+         * <br /><br />
+         * Example day image:
+         * <div align="center">
+         * <img src="../images/CentralBody.nightImageSource.jpg" width="512" height="256" />
+         * <a href="http://visibleearth.nasa.gov/view_rec.php?id=1438">NASA Visible Earth</a>.
+         * Data courtesy Marc Imhoff of NASA GSFC and Christopher Elvidge of
+         * NOAA NGDC. Image by Craig Mayhew and Robert Simmon, NASA GSFC.
+         * </div>
+         *
+         * @type {String}
+         *
+         * @see CentralBody#showNight
+         */
         this.nightImageSource = undefined;
+
+        /**
+         * The URL of the image to use as a specular map; a single-channel image where zero indicates
+         * land cover, and 255 indicates water.  An asynchronous request is made for the image
+         * at the next call to {@link CentralBody#update}. The specular map is used once the
+         * image is loaded and {@link CentralBody#showSpecular} is <code>true</code>.
+         * <br /><br />
+         * Example specular map:
+         * <div align="center">
+         * <img src="../images/CentralBody.specularMapSource.jpg" width="512" height="256" />
+         * <a href="http://planetpixelemporium.com/earth.html">Planet Texture Maps</a>
+         * </div>
+         *
+         * @type {String}
+         *
+         * @see CentralBody#showSpecular
+         */
         this.specularImageSource = undefined;
+
+        /**
+         * The URL of the image to use as a cloud map; a single-channel image where 255 indicates
+         * cloud cover, and zero indicates no clouds.  An asynchronous request is made for the image
+         * at the next call to {@link CentralBody#update}. The cloud map is shown once the
+         * image is loaded and {@link CentralBody#showClouds} is <code>true</code>.
+         * <br /><br />
+         * Example cloud map:
+         * <div align="center">
+         * <img src="../images/CentralBody.cloudsMapSource.jpg" width="512" height="256" />
+         * <a href="http://planetpixelemporium.com/earth.html">Planet Texture Maps</a>
+         * </div>
+         *
+         * @type {String}
+         *
+         * @see CentralBody#showClouds
+         */
         this.cloudsImageSource = undefined;
+
+        /**
+         * The URL of the image to use as a bump map; a single-channel image where zero indicates
+         * sea level, and 255 indicates maximum height.  An asynchronous request is made for the image
+         * at the next call to {@link CentralBody#update}. The bump map is used once the
+         * image is loaded and {@link CentralBody#showBumps} is <code>true</code>.
+         * <br /><br />
+         * Example bump map:
+         * <div align="center">
+         * <img src="../images/CentralBody.bumpMapSource.jpg" width="512" height="256" />
+         * <a href="http://planetpixelemporium.com/earth.html">Planet Texture Maps</a>
+         * </div>
+         *
+         * @type {String}
+         *
+         * @see CentralBody#showBumps
+         */
         this.bumpImageSource = undefined;
+
+        /**
+         * When <code>true</code>, textures from the <code>dayProvider</code> are shown on the central body.
+         * <br /><br />
+         * <div align="center">
+         * <img src="../images/CentralBody.showDay.jpg" width="400" height="300" />
+         * </div>
+         *
+         * @type {Boolean}
+         *
+         * @see CentralBody#dayProvider
+         * @see CentralBody#showNight
+         */
         this.showDay = true;
+
+        /**
+         * When <code>true</code>, the night texture is shown on the side of the central body not illuminated by the sun.
+         * The day and night textures are blended across the terminator using {@link CentralBody#dayNightBlendDelta}.
+         * When <code>false</code>, the day textures are shown on the entire globe (if enabled).
+         * <div align="center">
+         * <img src="../images/CentralBody.showNight.jpg" width="400" height="300" />
+         * </div>
+         *
+         * @type {Boolean}
+         *
+         * @see CentralBody#nightImageSource
+         * @see CentralBody#showDay
+         * @see CentralBody#dayNightBlendDelta
+         *
+         * @example
+         * cb.showNight = true;
+         * cb.nightImageSource = "night.jpg";
+         */
         this.showNight = true;
+
+        /**
+         * When <code>true</code>, diffuse-lit clouds are shown on the central body.  When {@link CentralBody#showNight}
+         * is also true, clouds on the dark side of the globe will fully or partially occlude the night texture.
+         * <div align="center">
+         * <img src="../images/CentralBody.showClouds.jpg" width="400" height="300" />
+         * </div>
+         *
+         * @type {Boolean}
+         *
+         * @see CentralBody#cloudsMapSource
+         * @see CentralBody#showCloudShadows
+         * @see CentralBody#showNight
+         *
+         * @example
+         * cb.showClouds = true;
+         * cb.cloudsMapSource = "clouds.jpg";
+         */
         this.showClouds = true;
+
+        /**
+         * When <code>true</code>, clouds on the daytime side of the globe cast approximate shadows.  The
+         * shadows can be shown with or without the clouds themselves, which are controlled with
+         * {@link CentralBody#showClouds}.
+         * <div align="center">
+         * <table border="0" cellpadding="5"><tr>
+         * <td align="center"><code>true</code><br/><img src="../images/CentralBody.showCloudShadows.true.jpg" width="250" height="188" /></td>
+         * <td align="center"><code>false</code><br/><img src="../images/CentralBody.showCloudShadows.false.jpg" width="250" height="188" /></td>
+         * </tr></table>
+         * </div>
+         *
+         * @type {Boolean}
+         *
+         * @see CentralBody#cloudsMapSource
+         * @see CentralBody#showClouds
+         *
+         * @example
+         * cb.showClouds = true;
+         * cb.showCloudShadows = true;
+         * cb.cloudsMapSource = "clouds.jpg";
+         */
         this.showCloudShadows = true;
+
+        /**
+         * When <code>true</code>, a specular map (also called a gloss map) is used so only the ocean receives specular light.
+         * <div align="center">
+         * <table border="0" cellpadding="5"><tr>
+         * <td align="center"><code>true</code><br/><img src="../images/CentralBody.showSpecular.true.jpg" width="250" height="188" /></td>
+         * <td align="center"><code>false</code><br/><img src="../images/CentralBody.showSpecular.false.jpg" width="250" height="188" /></td>
+         * </tr></table>
+         * </div>
+         *
+         * @type {Boolean}
+         *
+         * @see CentralBody#specularMapSource
+         *
+         * @example
+         * cb.showSpecular = true;
+         * cb.specularMapSource = "specular.jpg";
+         */
         this.showSpecular = true;
+
+        /**
+         * When <code>true</code>, a bump map is used to add lighting detail to the mountainous areas of the central body.
+         * This gives the appearance of extra geometric complexity even though the central body is still a smooth ellipsoid.
+         * The apparent steepness of the mountains is controlled by {@link CentralBody#bumpMapNormalZ}.
+         * <div align="center">
+         * <table border="0" cellpadding="5"><tr>
+         * <td align="center"><code>true</code><br/><img src="../images/CentralBody.showBumps.true.jpg" width="250" height="188" /></td>
+         * <td align="center"><code>false</code><br/><img src="../images/CentralBody.showBumps.false.jpg" width="250" height="188" /></td>
+         * </tr></table>
+         * </div>
+         *
+         * @type {Boolean}
+         *
+         * @see CentralBody#bumpMapSource
+         * @see CentralBody#bumpMapNormalZ
+         *
+         * @example
+         * cb.showBumps = true;
+         * cb.bumpMapSource = "bump.jpg";
+         */
         this.showBumps = true;
 
-        this.bumpMapNormalZ = 0.5;
-        this.dayNightBlendDelta = 0.05;
+        /**
+         * When <code>true</code>, shows a line on the central body where day meets night.
+         * <div align="center">
+         * <img src="../images/CentralBody.showTerminator.jpg" width="400" height="300" />
+         * </div>
+         *
+         * @type {Boolean}
+         *
+         * @see CentralBody#showNight
+         * @see CentralBody#dayNightBlendDelta
+         */
         this.showTerminator = false;
+
+        /**
+         * When {@link CentralBody#showBumps} is <code>true</code>, <code>bumpMapNormalZ</code> controls the
+         * apparent steepness of the mountains.  A value less than one over-exaggerates the steepness; a value greater
+         * than one under-exaggerates, making mountains less noticeable.
+         * <div align="center">
+         * <table border="0" cellpadding="5"><tr>
+         * <td align="center"><code>0.25</code><br/><img src="../images/Centralbody.bumpMapNormalZ.025.jpg" width="250" height="188" /></td>
+         * <td align="center"><code>1.25</code><br/><img src="../images/Centralbody.bumpMapNormalZ.125.jpg" width="250" height="188" /></td>
+         * </tr></table>
+         * </div>
+         *
+         * @type {Number}
+         *
+         * @see CentralBody#showBumps
+         *
+         * @example
+         * cb.showBumps = true;
+         * cb.bumpMapSource = "bump.jpg";
+         * cb.bumpMapNormalZ = 1.0;
+         */
+        this.bumpMapNormalZ = 0.5;
+
+        /**
+         * When {@link CentralBody#showDay} and {@link CentralBody#showNight} are both <code>true</code>,
+         * <code>dayNightBlendDelta</code> determines the size of the blend region surrounding the terminator (where day
+         * meets night).  A value of zero indicates a sharp transition without blending; a larger value creates a linearly
+         * blended region based on the diffuse lighting component:  <code>-dayNightBlendDelta &lt; diffuse &lt; dayNightBlendDelta</code>.
+         * <div align="center">
+         * <table border="0" cellpadding="5"><tr>
+         * <td align="center"><code>0.0</code><br/><img src="../images/Centralbody.dayNightBlendDelta.0.jpg" width="250" height="188" /></td>
+         * <td align="center"><code>0.05</code><br/><img src="../images/Centralbody.dayNightBlendDelta.05.jpg" width="250" height="188" /></td>
+         * </tr></table>
+         * </div>
+         *
+         * @type {Number}
+         *
+         * @see CentralBody#showDay
+         * @see CentralBody#showNight
+         * @see CentralBody#showTerminator
+         *
+         * @example
+         * cb.showDay = true;
+         * cb.dayImageSource = "day.jpg";
+         * cb.showNight = true;
+         * cb.nightImageSource = "night.jpg";
+         * cb.dayNightBlendDelta = 0.0;  // Sharp transition
+         */
+        this.dayNightBlendDelta = 0.05;
+
+        /**
+         * DOC_TBA
+         *
+         * @type {Number}
+         */
         this.nightIntensity = 2.0;
+
+        /**
+         * DOC_TBA
+         *
+         * @type {Number}
+         */
         this.morphTime = 1.0;
 
         this._mode = SceneMode.SCENE3D;
@@ -544,11 +855,7 @@ define([
             boundingVolume = tile.get2DBoundingSphere(projection).clone();
             boundingVolume.center = new Cartesian3(0.0, boundingVolume.center.x, boundingVolume.center.y);
         } else {
-            var bv3D = tile.get3DBoundingSphere();
-            var bv2D = tile.get2DBoundingSphere(projection);
-            boundingVolume = new BoundingSphere(
-                    bv2D.center.lerp(bv3D, this.morphTime),
-                    Math.max(bv2D.radius, bv3D.radius));
+            boundingVolume = tile.computeMorphBounds(this.morphTime, projection);
         }
         return boundingVolume;
     };

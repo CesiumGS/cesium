@@ -1,7 +1,7 @@
-/*global define Image*/
-define(['Renderer/TextureAtlas'],
-function(TextureAtlas) {
+/*global define*/
+define(['../Renderer/TextureAtlas'], function(TextureAtlas) {
     "use strict";
+    /*global Image*/
 
     function DynamicTextureAtlas(context, textureAtlasChanged) {
         this._context = context;
@@ -17,9 +17,11 @@ function(TextureAtlas) {
             image.onload = function() {
                 loadedCallback(image);
             };
+
             if (url.lastIndexOf("data:", 0) !== 0) {
                 image.crossOrigin = '';
             }
+
             image.src = url;
         }, textureAvailable);
     };

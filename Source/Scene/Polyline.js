@@ -34,7 +34,6 @@ define([
         PolylineVS,
         PolylineFS) {
     "use strict";
-    /*global Float32Array,Uint16Array*/
 
     var attributeIndices = {
         position2D : 0,

@@ -3,7 +3,7 @@
  */
 (function() {
     "use strict";
-    /*global document, Cesium, Sandbox, dojo, dijit, SandboxTree, SandboxTreeNode*/
+    /*global Cesium,Sandbox,dojo,dijit,SandboxTree,SandboxTreeNode*/
 
     dojo.declare("SandboxTree", [dijit.Tree], { // Extend dojo's tree display
 

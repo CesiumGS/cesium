@@ -1,13 +1,15 @@
 /*global define*/
-define(['./DynamicBillboard',
+define([
+        './DynamicBillboard',
         './BooleanDataHandler',
         './Cartesian2DataHandler',
         './Cartesian3DataHandler',
         './NumberDataHandler',
         './StringDataHandler',
         './ColorDataHandler',
-        './createOrUpdateProperty'],
-function(DynamicBillboard,
+        './createOrUpdateProperty'
+    ], function(
+        DynamicBillboard,
         BooleanDataHandler,
         Cartesian2DataHandler,
         Cartesian3DataHandler,
@@ -16,10 +18,10 @@ function(DynamicBillboard,
         ColorDataHandler,
         createOrUpdateProperty) {
     "use strict";
-    return function(dynamicObject, packet, buffer, sourceUri) {
 
+    return function(dynamicObject, packet, buffer, sourceUri) {
         //See if there's any actual data to process.
-        var billboardData = packet.billboard, billboard;
+        var billboardData = packet.billboard;
         if (typeof billboardData !== 'undefined' &&
             (typeof billboardData.image !== 'undefined' ||
              typeof billboardData.show !== 'undefined' ||
@@ -31,7 +33,7 @@ function(DynamicBillboard,
              typeof billboardData.pixelOffset !== 'undefined' ||
              typeof billboardData.eyeOffset !== 'undefined')) {
 
-            billboard = dynamicObject.billboard;
+            var billboard = dynamicObject.billboard;
 
             //Create a new billboard if we don't have one yet.
             if (typeof billboard === 'undefined') {

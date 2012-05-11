@@ -1,21 +1,24 @@
-defineSuite(['DynamicScene/DynamicProperty',
-             'Core/JulianDate',
-             'DynamicScene/BooleanDataHandler',
-             'DynamicScene/NumberDataHandler',
-             'DynamicScene/Cartesian3DataHandler',
-             'DynamicScene/QuaternionDataHandler',
-             'Core/Quaternion',
-             'Core/Math',
-             'DynamicScene/Cartesian2DataHandler'],
- function(DynamicProperty,
-          JulianDate,
-          BooleanDataHandler,
-          NumberDataHandler,
-          Cartesian3DataHandler,
-          QuaternionDataHandler,
-          Quaternion,
-          CesiumMath,
-          Cartesian2DataHandler) {
+/*global defineSuite*/
+defineSuite([
+         'DynamicScene/DynamicProperty',
+         'Core/JulianDate',
+         'DynamicScene/BooleanDataHandler',
+         'DynamicScene/NumberDataHandler',
+         'DynamicScene/Cartesian3DataHandler',
+         'DynamicScene/QuaternionDataHandler',
+         'Core/Quaternion',
+         'Core/Math',
+         'DynamicScene/Cartesian2DataHandler'
+     ], function(
+         DynamicProperty,
+         JulianDate,
+         BooleanDataHandler,
+         NumberDataHandler,
+         Cartesian3DataHandler,
+         QuaternionDataHandler,
+         Quaternion,
+         CesiumMath,
+         Cartesian2DataHandler) {
     "use strict";
     /*global it,expect*/
 
@@ -130,6 +133,8 @@ defineSuite(['DynamicScene/DynamicProperty',
         expect(result.x).toEqual(0);
         expect(result.y).toEqual(1);
         expect(result.z).toEqual(2);
+
+        expect(result === property.getValue(epoch)).toEqual(true);
     });
 
     it("Works with static Quaternion values.", function() {

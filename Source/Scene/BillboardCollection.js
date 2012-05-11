@@ -36,7 +36,6 @@ define([
         BillboardCollectionVS,
         BillboardCollectionFS) {
     "use strict";
-    /*global Uint8Array,Uint16Array,Uint32Array*/
 
     var SHOW_INDEX = Billboard.SHOW_INDEX;
     var POSITION_INDEX = Billboard.POSITION_INDEX;

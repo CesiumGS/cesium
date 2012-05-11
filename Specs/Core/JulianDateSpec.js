@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite(['Core/JulianDate',
              'Core/TimeStandard',
              'Core/TimeConstants',

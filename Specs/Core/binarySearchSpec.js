@@ -1,7 +1,5 @@
-defineSuite([
-         'Core/binarySearch'
-     ], function(
-         binarySearch) {
+/*global defineSuite*/
+defineSuite(['Core/binarySearch'], function(binarySearch) {
     "use strict";
     /*global it,expect*/
 

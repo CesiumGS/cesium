@@ -1,3 +1,4 @@
+/*global define*/
 define(['dojo/dom',
         'dojo/on',
         'DojoWidgets/CesiumWidget',
@@ -6,15 +7,17 @@ define(['dojo/dom',
         'Core/Clock',
         'Core/ClockStep',
         'Core/ClockRange',
-        'DynamicScene/createOrUpdatePosition',
-        'DynamicScene/createOrUpdateOrientation',
         'DynamicScene/createOrUpdateDynamicBillboard',
         'DynamicScene/createOrUpdateDynamicLabel',
-        'DynamicScene/Layer',
+        'DynamicScene/createOrUpdateDynamicPoint',
+        'DynamicScene/createOrUpdatePosition',
+        'DynamicScene/createOrUpdateOrientation',
+        'DynamicScene/CzmlObjectCollection',
         'DynamicScene/DynamicBillboardVisualizer',
         'DynamicScene/DynamicLabelVisualizer',
+        'DynamicScene/DynamicPointVisualizer',
         'DynamicScene/VisualizerCollection',
-        'CesiumViewer/fillBuffer'],
+        'CesiumViewer/loadCzmlFromUrl'],
 function(dom,
          on,
          CesiumWidget,
@@ -23,31 +26,35 @@ function(dom,
          Clock,
          ClockStep,
          ClockRange,
-         createOrUpdatePosition,
-         createOrUpdateOrientation,
          createOrUpdateDynamicBillboard,
          createOrUpdateDynamicLabel,
-         Layer,
+         createOrUpdateDynamicPoint,
+         createOrUpdatePosition,
+         createOrUpdateOrientation,
+         CzmlObjectCollection,
          DynamicBillboardVisualizer,
          DynamicLabelVisualizer,
+         DynamicPointVisualizer,
          VisualizerCollection,
-         fillBuffer) {
+         loadCzmlFromUrl) {
+    "use strict";
+    /*global console*/
 
     var visualizers;
     var clock = new Clock(JulianDate.fromIso8601("2012-03-15T10:00:00Z"), JulianDate.fromIso8601("2012-03-15T20:00:00Z"), JulianDate.fromIso8601("2012-03-15T10:00:00Z"), ClockStep.SYSTEM_CLOCK,
             ClockRange.LOOP, 300);
 
-    var _buffer = new Layer("root", "root", {
-        position : createOrUpdatePosition,
-        orientation : createOrUpdateOrientation,
+    var _buffer = new CzmlObjectCollection("root", "root", {
         billboard : createOrUpdateDynamicBillboard,
-        label : createOrUpdateDynamicLabel
+        label : createOrUpdateDynamicLabel,
+        point : createOrUpdateDynamicPoint,
+        orientation : createOrUpdateOrientation,
+        position : createOrUpdatePosition
     });
-    fillBuffer(_buffer, 'Gallery/simple.czm');
+
+    loadCzmlFromUrl(_buffer, 'Gallery/simple.czm');
 
     var cesium = new CesiumWidget({
-        proxy : new DefaultProxy('/proxy/'),
-
         clock : clock,
 
         preRender : function(widget) {
@@ -57,7 +64,7 @@ function(dom,
 
         postSetup : function(widget) {
             var scene = widget.scene;
-            visualizers = new VisualizerCollection([new DynamicBillboardVisualizer(scene), new DynamicLabelVisualizer(scene)]);
+            visualizers = new VisualizerCollection([new DynamicBillboardVisualizer(scene), new DynamicLabelVisualizer(scene), new DynamicPointVisualizer(scene)]);
         },
 
         onSetupError : function(widget, error) {
