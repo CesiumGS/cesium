@@ -558,7 +558,7 @@ define([
         positionWC.x += po.x;
         positionWC.y += po.y;
 
-        return new Cartesian2(positionWC.x, positionWC.y);
+        return new Cartesian2(positionWC.x, Math.floor(positionWC.y));
     };
 
     /**
