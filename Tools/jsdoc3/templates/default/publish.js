@@ -237,10 +237,10 @@
         var nav = '',
             seen = {};
         
-		var classNames = find({kind: 'class'});
+        nav += '<ul id="ClassList"><div id="classItems">';	// Start single class list, begin JavaScript div
+        var classNames = find({kind: 'class'});
         if (classNames.length) {
             //nav += '<h3>Classes</h3><ul>';
-			nav += '<ul id="ClassList"><div id="classItems">';	// Start single class list, being JavaScript div
             classNames.forEach(function(c) {
                 var moduleSameName = find({kind: 'module', longname: c.longname});
                 if (moduleSameName.length) {
@@ -284,15 +284,15 @@
             //nav += '</ul>';
         }
 		
-		var glslNames = find({kind: 'glsl'});
-		nav += '</div><div id="glslItems">';	// Start GLSL div
+        var glslNames = find({kind: 'glsl'});
+        nav += '</div><div id="glslItems">';	// End classItems div, start GLSL div
         if (glslNames.length) {
             glslNames.forEach(function(g) {
                 if ( !seen.hasOwnProperty(g.longname) ) nav += '<li>'+linkto(g.longname, g.name)+'</li>';
                 seen[g.longname] = true;
             });    
-            nav += '</div></ul>';	// End GLSL div, end Class list
         }
+        nav += '</div></ul>';	// End GLSL div, end Class list
         
 //         var constantNames = find({kind: 'constants'});
 //         if (constantNames.length) {
@@ -327,7 +327,7 @@
         
         var globalNames = find({kind: ['members', 'function', 'constant', 'typedef'], 'memberof': {'isUndefined': true}});
         if (globalNames.length) {
-            //nav += '<h3>Global</h3><ul>';
+            nav += '<h3>Global</h3><ul>';
             globalNames.forEach(function(g) {
                 if ( g.kind !== 'typedef' && !seen.hasOwnProperty(g.longname) ) nav += '<li>'+linkto(g.longname, g.name)+'</li>';
                 seen[g.longname] = true;
@@ -369,6 +369,12 @@
 
         //if (globals.length) generate('Global', [{kind: 'globalobj'}], 'global.html');
         generate('Cesium Documentation', [], 'index.html');
+        
+        var types = [];
+        for (var type in seen) {
+        	types.push(type);
+        }
+        fs.writeFileSync(outdir+'/types.json', JSON.stringify(types));
         
         function generate(title, docs, filename) {
             var data = {
