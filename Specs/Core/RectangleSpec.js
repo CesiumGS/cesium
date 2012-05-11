@@ -48,4 +48,12 @@ defineSuite([
         var r = new Rectangle(1, 2, 3, 4);
         expect(r.toString()).toEqual("(1, 2, 3, 4)");
     });
+
+    it("rectangleRectangleIntersect", function() {
+        var rect1 = new Rectangle(0, 0, 4, 4);
+        var rect2 = new Rectangle(2, 2, 4, 4);
+        var rect3 = new Rectangle(5, 5, 4, 4);
+        expect(Rectangle.rectangleRectangleIntersect(rect1, rect2)).toBeTruthy();
+        expect(Rectangle.rectangleRectangleIntersect(rect1, rect3)).toBeFalsy();
+    });
 });

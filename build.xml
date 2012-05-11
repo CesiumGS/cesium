@@ -19,6 +19,7 @@
 	<target name="instrumentForCoverage" description="A debug build instrumented for JSCoverage (currently Windows only)." depends="build">
 		<exec executable="${jscoveragePath}">
 			<arg line="${sourceDirectory} ${instrumentedDirectory}" />
+			<arg line="--no-instrument=./ThirdParty" />
 		</exec>
 	</target>
 

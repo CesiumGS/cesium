@@ -86,6 +86,17 @@ defineSuite([
         expect(new Cartesian3(0, 0, 1.7).equalsEpsilon(ellipsoid.toCartesian(new Cartographic3(0, CesiumMath.toRadians(90), 1)), CesiumMath.EPSILON10)).toBeTruthy();
     });
 
+    it("toCartesians", function() {
+        var ellipsoid = new Ellipsoid(new Cartesian3(1, 1, 0.7));
+        var cartographics = [new Cartographic3(0, 0, 1),
+                             new Cartographic3(CesiumMath.toRadians(90), 0, 1),
+                             new Cartographic3(0, CesiumMath.toRadians(90), 1)];
+        var cartesians = ellipsoid.toCartesians(cartographics);
+        expect(cartesians[0].equalsEpsilon(new Cartesian3(2, 0, 0), CesiumMath.EPSILON10)).toBeTruthy();
+        expect(cartesians[1].equalsEpsilon(new Cartesian3(0, 2, 0), CesiumMath.EPSILON10)).toBeTruthy();
+        expect(cartesians[2].equalsEpsilon(new Cartesian3(0, 0, 1.7), CesiumMath.EPSILON10)).toBeTruthy();
+    });
+
     it("toCartographic3", function() {
         var ellipsoid = Ellipsoid.getWgs84();
 
@@ -96,6 +107,20 @@ defineSuite([
 
         var p2 = new Cartographic3(CesiumMath.toRadians(-97.3), CesiumMath.toRadians(71.2), 1188.7);
         expect(p2.equalsEpsilon(ellipsoid.toCartographic3(ellipsoid.toCartesian(p2)), CesiumMath.EPSILON3)).toBeTruthy();
+    });
+
+    it("toCartographic3s", function() {
+        var ellipsoid = Ellipsoid.getWgs84();
+        var p1 = Cartographic3.getZero();
+        var p2 = new Cartographic3(CesiumMath.toRadians(45), CesiumMath.toRadians(-60), -123.4);
+        var p3 = new Cartographic3(CesiumMath.toRadians(-97.3), CesiumMath.toRadians(71.2), 1188.7);
+        var cartesians = [ellipsoid.toCartesian(p1),
+                          ellipsoid.toCartesian(p2),
+                          ellipsoid.toCartesian(p3)];
+        var cartographics = ellipsoid.toCartographic3s(cartesians);
+        expect(cartographics[0].equalsEpsilon(p1, CesiumMath.EPSILON9)).toBeTruthy();
+        expect(cartographics[1].equalsEpsilon(p2, CesiumMath.EPSILON9)).toBeTruthy();
+        expect(cartographics[2].equalsEpsilon(p3, CesiumMath.EPSILON9)).toBeTruthy();
     });
 
     it("toCartographic2", function() {

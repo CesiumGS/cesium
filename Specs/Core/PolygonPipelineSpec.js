@@ -210,4 +210,65 @@ defineSuite([
             PolygonPipeline.earClip2D([Cartesian2.getZero(), Cartesian2.getZero()]);
         }).toThrow();
     });
+
+    ///////////////////////////////////////////////////////////////////////
+
+    it("computeSubdivision throws without positions", function() {
+        expect(function() {
+            PolygonPipeline.computeSubdivision();
+        }).toThrow();
+    });
+
+    it("computeSubdivision throws without indices", function() {
+        expect(function() {
+            PolygonPipeline.computeSubdivision([]);
+        }).toThrow();
+    });
+
+    it("computeSubdivision throws with less than 3 indices", function() {
+        expect(function() {
+            PolygonPipeline.computeSubdivision([], [1, 2]);
+        }).toThrow();
+    });
+
+    it("computeSubdivision throws without a multiple of 3 indices", function() {
+        expect(function() {
+            PolygonPipeline.computeSubdivision([], [1, 2, 3, 4]);
+        }).toThrow();
+    });
+
+    it("computeSubdivision throws with negative granularity", function() {
+        expect(function() {
+            PolygonPipeline.computeSubdivision([], [1, 2, 3], -1.0);
+        }).toThrow();
+    });
+
+    it("computeSubdivision", function() {
+        var positions = [
+                         new Cartesian3(0.0, 1.0, 2.0),
+                         new Cartesian3(3.0, 4.0, 5.0),
+                         new Cartesian3(6.0, 7.0, 8.0)
+                        ];
+        var indices = [0, 1, 2];
+        var subdivision = PolygonPipeline.computeSubdivision(positions, indices, 1);
+        expect(subdivision.attributes.position.values[0]).toEqual(0);
+        expect(subdivision.attributes.position.values[1]).toEqual(1);
+        expect(subdivision.attributes.position.values[2]).toEqual(2);
+        expect(subdivision.attributes.position.values[3]).toEqual(3);
+        expect(subdivision.attributes.position.values[4]).toEqual(4);
+        expect(subdivision.attributes.position.values[5]).toEqual(5);
+        expect(subdivision.attributes.position.values[6]).toEqual(6);
+        expect(subdivision.attributes.position.values[7]).toEqual(7);
+        expect(subdivision.attributes.position.values[8]).toEqual(8);
+
+        expect(subdivision.indexLists[0].values[0]).toEqual(0);
+        expect(subdivision.indexLists[0].values[1]).toEqual(1);
+        expect(subdivision.indexLists[0].values[2]).toEqual(2);
+    });
+
+    it("scaleToGeodeticHeight throws without ellipsoid", function() {
+        expect(function() {
+            PolygonPipeline.scaleToGeodeticHeight();
+        }).toThrow();
+    });
 });

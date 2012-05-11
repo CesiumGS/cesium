@@ -64,4 +64,20 @@ defineSuite(['Core/TimeStandard', 'Core/JulianDate'], function(TimeStandard, Jul
             return TimeStandard.convertTaiToUtc(null);
         }).toThrow();
     });
+
+    it("convertUtcToTai throws an exception if time standard is not UTC", function() {
+        expect(function() {
+            var julianDate = new JulianDate(2454832, 43233);
+            julianDate._timeStandard = 404;
+            return TimeStandard.convertUtcToTai(julianDate);
+        }).toThrow();
+    });
+
+    it("convertTaiToUtc throws an exception if time standard is not TAI", function() {
+        expect(function() {
+            var julianDate = new JulianDate(2454832, 43233);
+            julianDate._timeStandard = 404;
+            return TimeStandard.convertTaiToUtc(julianDate);
+        }).toThrow();
+    });
 });

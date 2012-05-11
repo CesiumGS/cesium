@@ -199,6 +199,14 @@ defineSuite([
         expect(q.slerp(0.5, r).equalsEpsilon(s, CesiumMath.EPSILON15)).toBeTruthy();
     });
 
+    it("slerp (2)", function() {
+        var q = new Quaternion(0.0, 0.0, 0.0, -1.0).normalize();
+        var cartesian1 = new Cartesian3(0.0, 0.0, Math.sin(CesiumMath.PI_OVER_FOUR));
+        var r = new Quaternion(cartesian1.x, cartesian1.y, cartesian1.z, Math.cos(CesiumMath.PI_OVER_FOUR));
+        expect(q.slerp(0.0, r).equals(q)).toBeTruthy();
+        expect(q.slerp(1.0, r).equalsEpsilon(new Quaternion(0.0, 0.0, -Math.sqrt(2) / 2.0, -Math.sqrt(2) / 2.0), CesiumMath.EPSILON10)).toBeTruthy();
+    });
+
     it("log", function() {
         var s = Math.sin(CesiumMath.PI_OVER_FOUR);
         var c = Math.cos(CesiumMath.PI_OVER_FOUR);
@@ -295,7 +303,7 @@ defineSuite([
         expect(Quaternion.fromRotationMatrix(xRotation).equalsEpsilon(q, CesiumMath.EPSILON15)).toBeTruthy();
     });
 
-    it("fromRotationMatrix", function() {
+    it("fromRotationMatrix (4)", function() {
         var theta = CesiumMath.PI_OVER_TWO;
 
         var sHalfTheta = Math.sin(theta / 2.0);
@@ -327,6 +335,14 @@ defineSuite([
                                     0.0, cTheta, -sTheta,
                                     0.0, sTheta,  cTheta);
         expect(Quaternion.fromRotationMatrix(xRotation).equalsEpsilon(q, CesiumMath.EPSILON15)).toBeTruthy();
+    });
+
+    it("fromRotationMatrix (5)", function() {
+        var rotation = new Matrix3(1.0, 0.0, 0.0,
+                                   0.0, 1.0, 0.0,
+                                   0.0, 0.0, 1.0);
+        var q = new Quaternion(0.0, 0.0, 0.0, Math.sqrt(2.0) / 2.0);
+        expect(Quaternion.fromRotationMatrix(rotation).equalsEpsilon(q, CesiumMath.EPSILON15)).toBeTruthy();
     });
 
     it("exp", function() {

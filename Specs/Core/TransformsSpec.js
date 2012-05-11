@@ -106,4 +106,10 @@ defineSuite([
             Transforms.eastNorthUpToFixedFrame();
         }).toThrow();
     });
+
+    it("creates an north-east-down-to-fixed-fram matrix without a position throws", function() {
+        expect(function() {
+            Transforms.northEastDownToFixedFrame();
+        }).toThrow();
+    });
 });
