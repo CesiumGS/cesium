@@ -374,7 +374,7 @@
         for (var type in seen) {
         	types.push(type);
         }
-        fs.writeFileSync(outdir+'/types.json', JSON.stringify(types));
+        fs.writeFileSync(outdir+'/types.txt', JSON.stringify(types));
         
         function generate(title, docs, filename) {
             var data = {
