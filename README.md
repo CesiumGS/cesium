@@ -1,7 +1,8 @@
-Cesium
-======
+<p align="center">
+<img src="https://github.com/AnalyticalGraphicsInc/cesium/wiki/logos/Cesium_Logo_Color.jpg" width="50%" />
+</p>
 
-Cesium is a WebGL-based 3D globe and 2D map engine, capable of visualizing time-dynamic data and entities.
+Cesium is a WebGL virtual globe and map engine.
 
 ### Mission ###
 
@@ -38,6 +39,6 @@ Check out the [CZML Guide](https://github.com/AnalyticalGraphicsInc/cesium/wiki/
 
 The [wiki](https://github.com/AnalyticalGraphicsInc/cesium/wiki) has everything you need to get started with Cesium including the [contributor's guide](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor's-Guide), [architecture](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Architecture), and [roadmap](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Roadmap).
 
-Also join our mailing lists:
+Join our mailing lists:
 * [Development](https://groups.google.com/d/forum/cesium-dev)
 * [Announcements](https://groups.google.com/d/forum/cesium-announce)
