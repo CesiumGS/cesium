@@ -1,10 +1,12 @@
 defineSuite([
+         'Renderer/TextureAtlas',
          '../Specs/createContext',
          '../Specs/destroyContext',
          'Core/PrimitiveType',
          'Renderer/BufferUsage',
          'Renderer/PixelFormat'
-     ], "Renderer/TextureAtlas", function(
+     ], function(
+         TextureAtlas,
          createContext,
          destroyContext,
          PrimitiveType,
@@ -28,7 +30,7 @@ defineSuite([
         destroyContext(context);
     });
 
-    it("initializem suite", function() {
+    it("initialize suite", function() {
         greenImage = new Image();
         greenImage.src = "./Data/Images/Green.png";
 
@@ -218,7 +220,19 @@ defineSuite([
 
     it("throws with a negative borderWidthInPixels", function() {
         expect(function() {
-            atlas = context.createTextureAtlas([], PixelFormat.RGBA, -1);
+            atlas = context.createTextureAtlas([greenImage, blueImage], PixelFormat.RGBA, -1);
         }).toThrow();
+    });
+
+    it("throws without context", function() {
+        expect(function() {
+            return new TextureAtlas();
+        }).toThrow();
+    });
+
+    it("getContext", function() {
+        atlas = context.createTextureAtlas([greenImage, blueImage], PixelFormat.RGBA, 1);
+        var c = atlas.getContext();
+        expect(c).toBe(context);
     });
 });
