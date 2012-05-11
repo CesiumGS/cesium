@@ -16,6 +16,7 @@ require({
         'dojo/dom-construct',
         'dojo/_base/fx',
         'dojo/_base/window',
+        'dojo/_base/xhr',
         'dijit/registry',
         'dijit/form/Button',
         'dijit/form/DropDownButton',
@@ -27,9 +28,6 @@ require({
         'dijit/MenuBar',
         'dijit/PopupMenuBarItem',
         'dijit/MenuItem',
-        'dojox/mobile/Slider',
-
-        'dijit/layout/AccordionContainer',
         'dijit/layout/BorderContainer',
         'dijit/layout/ContentPane',
         'dijit/layout/TabContainer',
@@ -42,12 +40,22 @@ require({
             domConstruct,
             fx,
             win,
+            xhr,
             registry
     ) {
         parser.parse();
         fx.fadeOut({ node: 'loading', onEnd: function () {
             domConstruct.destroy('loading');
         }}).play();
+
+        var types = [];
+        xhr.get({
+            url: '../../Build/Documentation/types.txt',
+            handleAs: 'json'
+        }).then(function (value) {
+            types = value;
+            console.log(types);
+        });
 
         var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
             lineNumbers: true,
