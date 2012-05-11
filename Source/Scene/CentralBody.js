@@ -1151,8 +1151,8 @@ define([
         var provider = this._dayTileProvider;
         var extent = tile.extent;
 
-        if (tile.zoom < provider.zoomMin) {
-            return true;
+        if (typeof provider === "undefined" || tile.zoom < provider.zoomMin) {
+            return false;
         }
 
         var texturePixelError = (pixelError > 0.0) ? pixelError : 1.0;
