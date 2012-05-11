@@ -989,172 +989,156 @@ define([
     };
 
     CentralBody.prototype._enqueueTile = function(tile, context, sceneState) {
+        if (this._renderQueue.contains(tile)) {
+            return;
+        }
+
         var mode = sceneState.mode;
         var projection = sceneState.scene2D.projection;
 
-        // tile is ready for rendering
-        if (!this._dayTileProvider || (tile.state === TileState.TEXTURE_LOADED && tile.texture && !tile.texture.isDestroyed())) {
-            // create vertex array the first time it is needed or when morphing
-            if (!tile._extentVA ||
-                tile._extentVA.isDestroyed() ||
-                CentralBody._isModeTransition(this._mode, mode) ||
-                tile._mode !== mode ||
-                this._projection !== projection) {
-                tile._extentVA = tile._extentVA && tile._extentVA.destroy();
+        // create vertex array the first time it is needed or when morphing
+        if (!tile._extentVA ||
+            tile._extentVA.isDestroyed() ||
+            CentralBody._isModeTransition(this._mode, mode) ||
+            tile._mode !== mode ||
+            this._projection !== projection) {
+            tile._extentVA = tile._extentVA && tile._extentVA.destroy();
 
-                var ellipsoid = this._ellipsoid;
-                var rtc = tile.get3DBoundingSphere().center;
-                var projectedRTC = tile.get2DBoundingSphere(projection).center.clone();
+            var ellipsoid = this._ellipsoid;
+            var rtc = tile.get3DBoundingSphere().center;
+            var projectedRTC = tile.get2DBoundingSphere(projection).center.clone();
 
-                var gran = (tile.zoom > 0) ? 0.05 * (1 / tile.zoom * 2) : 0.05; // seems like a good value after testing it for what looks good
+            var gran = (tile.zoom > 0) ? 0.05 * (1 / tile.zoom * 2) : 0.05; // seems like a good value after testing it for what looks good
 
-                var typedArray, buffer, stride, attributes, indexBuffer;
-                var datatype = ComponentDatatype.FLOAT;
-                var usage = BufferUsage.STATIC_DRAW;
+            var typedArray, buffer, stride, attributes, indexBuffer;
+            var datatype = ComponentDatatype.FLOAT;
+            var usage = BufferUsage.STATIC_DRAW;
 
-                if (mode === SceneMode.SCENE3D) {
-                    var buffers = ExtentTessellator.computeBuffers({
-                        ellipsoid : ellipsoid,
-                        extent : tile.extent,
-                        granularity : gran,
-                        generateTextureCoords : true,
-                        interleave : true,
-                        relativeToCenter : rtc
-                    });
+            if (mode === SceneMode.SCENE3D) {
+                var buffers = ExtentTessellator.computeBuffers({
+                    ellipsoid : ellipsoid,
+                    extent : tile.extent,
+                    granularity : gran,
+                    generateTextureCoords : true,
+                    interleave : true,
+                    relativeToCenter : rtc
+                });
 
-                    typedArray = datatype.toTypedArray(buffers.vertices);
-                    buffer = context.createVertexBuffer(typedArray, usage);
-                    stride = 5 * datatype.sizeInBytes;
-                    attributes = [{
-                        index : attributeIndices.position3D,
-                        vertexBuffer : buffer,
-                        componentDatatype : datatype,
-                        componentsPerAttribute : 3,
-                        normalize : false,
-                        offsetInBytes : 0,
-                        strideInBytes : stride
-                    }, {
-                        index : attributeIndices.textureCoordinates,
-                        vertexBuffer : buffer,
-                        componentDatatype : datatype,
-                        componentsPerAttribute : 2,
-                        normalize : false,
-                        offsetInBytes : 3 * datatype.sizeInBytes,
-                        strideInBytes : stride
-                    }, {
-                        index : attributeIndices.position2D,
-                        value : [0.0, 0.0]
-                    }];
-                    indexBuffer = context.createIndexBuffer(new Uint16Array(buffers.indices), usage, IndexDatatype.UNSIGNED_SHORT);
-                } else {
-                    var vertices = [];
-                    var width = tile.extent.east - tile.extent.west;
-                    var height = tile.extent.north - tile.extent.south;
-                    var lonScalar = 1.0 / width;
-                    var latScalar = 1.0 / height;
+                typedArray = datatype.toTypedArray(buffers.vertices);
+                buffer = context.createVertexBuffer(typedArray, usage);
+                stride = 5 * datatype.sizeInBytes;
+                attributes = [{
+                    index : attributeIndices.position3D,
+                    vertexBuffer : buffer,
+                    componentDatatype : datatype,
+                    componentsPerAttribute : 3,
+                    normalize : false,
+                    offsetInBytes : 0,
+                    strideInBytes : stride
+                }, {
+                    index : attributeIndices.textureCoordinates,
+                    vertexBuffer : buffer,
+                    componentDatatype : datatype,
+                    componentsPerAttribute : 2,
+                    normalize : false,
+                    offsetInBytes : 3 * datatype.sizeInBytes,
+                    strideInBytes : stride
+                }, {
+                    index : attributeIndices.position2D,
+                    value : [0.0, 0.0]
+                }];
+                indexBuffer = context.createIndexBuffer(new Uint16Array(buffers.indices), usage, IndexDatatype.UNSIGNED_SHORT);
+            } else {
+                var vertices = [];
+                var width = tile.extent.east - tile.extent.west;
+                var height = tile.extent.north - tile.extent.south;
+                var lonScalar = 1.0 / width;
+                var latScalar = 1.0 / height;
 
-                    var mesh = PlaneTessellator.compute({
-                        resolution : {
-                            x : Math.max(Math.ceil(width / gran), 2.0),
-                            y : Math.max(Math.ceil(height / gran), 2.0)
-                        },
-                        onInterpolation : function(time) {
-                            var lonLat = new Cartographic2(
-                                    CesiumMath.lerp(tile.extent.west, tile.extent.east, time.x),
-                                    CesiumMath.lerp(tile.extent.south, tile.extent.north, time.y));
-
-                            var p = ellipsoid.toCartesian(lonLat).subtract(rtc);
-                            vertices.push(p.x, p.y, p.z);
-
-                            var u = (lonLat.longitude - tile.extent.west) * lonScalar;
-                            var v = (lonLat.latitude - tile.extent.south) * latScalar;
-                            vertices.push(u, v);
-
-                            // TODO: This will not work if the projection's ellipsoid is different
-                            // than the central body's ellipsoid.  Throw an exception?
-                            var projectedLonLat = projection.project(lonLat).subtract(projectedRTC);
-                            vertices.push(projectedLonLat.x, projectedLonLat.y);
-                        }
-                    });
-
-                    typedArray = datatype.toTypedArray(vertices);
-                    buffer = context.createVertexBuffer(typedArray, usage);
-                    stride = 7 * datatype.sizeInBytes;
-                    attributes = [{
-                        index : attributeIndices.position3D,
-                        vertexBuffer : buffer,
-                        componentDatatype : datatype,
-                        componentsPerAttribute : 3,
-                        normalize : false,
-                        offsetInBytes : 0,
-                        strideInBytes : stride
-                    }, {
-                        index : attributeIndices.textureCoordinates,
-                        vertexBuffer : buffer,
-                        componentDatatype : datatype,
-                        componentsPerAttribute : 2,
-                        normalize : false,
-                        offsetInBytes : 3 * datatype.sizeInBytes,
-                        strideInBytes : stride
-                    }, {
-                        index : attributeIndices.position2D,
-                        vertexBuffer : buffer,
-                        componentDatatype : datatype,
-                        componentsPerAttribute : 2,
-                        normalize : false,
-                        offsetInBytes : 5 * datatype.sizeInBytes,
-                        strideInBytes : stride
-                    }];
-
-                    indexBuffer = context.createIndexBuffer(new Uint16Array(mesh.indexLists[0].values), usage, IndexDatatype.UNSIGNED_SHORT);
-                }
-
-                tile._extentVA = context.createVertexArray(attributes, indexBuffer);
-
-                var intensity = (this._dayTileProvider && this._dayTileProvider.getIntensity && this._dayTileProvider.getIntensity(tile)) || 0.0;
-                var drawUniforms = {
-                    u_dayTexture : function() {
-                        return tile.texture;
+                var mesh = PlaneTessellator.compute({
+                    resolution : {
+                        x : Math.max(Math.ceil(width / gran), 2.0),
+                        y : Math.max(Math.ceil(height / gran), 2.0)
                     },
-                    u_center3D : function() {
-                        return rtc;
-                    },
-                    u_center2D : function() {
-                        return (projectedRTC) ? projectedRTC.getXY() : Cartesian2.getZero();
-                    },
-                    u_modifiedModelView : function() {
-                        return tile.modelView;
-                    },
-                    u_dayIntensity : function() {
-                        return intensity;
-                    },
-                    u_mode : function() {
-                        return tile.mode;
+                    onInterpolation : function(time) {
+                        var lonLat = new Cartographic2(
+                                CesiumMath.lerp(tile.extent.west, tile.extent.east, time.x),
+                                CesiumMath.lerp(tile.extent.south, tile.extent.north, time.y));
+
+                        var p = ellipsoid.toCartesian(lonLat).subtract(rtc);
+                        vertices.push(p.x, p.y, p.z);
+
+                        var u = (lonLat.longitude - tile.extent.west) * lonScalar;
+                        var v = (lonLat.latitude - tile.extent.south) * latScalar;
+                        vertices.push(u, v);
+
+                        // TODO: This will not work if the projection's ellipsoid is different
+                        // than the central body's ellipsoid.  Throw an exception?
+                        var projectedLonLat = projection.project(lonLat).subtract(projectedRTC);
+                        vertices.push(projectedLonLat.x, projectedLonLat.y);
                     }
-                };
-                tile._drawUniforms = combine(drawUniforms, this._drawUniforms);
+                });
 
-                tile._mode = mode;
+                typedArray = datatype.toTypedArray(vertices);
+                buffer = context.createVertexBuffer(typedArray, usage);
+                stride = 7 * datatype.sizeInBytes;
+                attributes = [{
+                    index : attributeIndices.position3D,
+                    vertexBuffer : buffer,
+                    componentDatatype : datatype,
+                    componentsPerAttribute : 3,
+                    normalize : false,
+                    offsetInBytes : 0,
+                    strideInBytes : stride
+                }, {
+                    index : attributeIndices.textureCoordinates,
+                    vertexBuffer : buffer,
+                    componentDatatype : datatype,
+                    componentsPerAttribute : 2,
+                    normalize : false,
+                    offsetInBytes : 3 * datatype.sizeInBytes,
+                    strideInBytes : stride
+                }, {
+                    index : attributeIndices.position2D,
+                    vertexBuffer : buffer,
+                    componentDatatype : datatype,
+                    componentsPerAttribute : 2,
+                    normalize : false,
+                    offsetInBytes : 5 * datatype.sizeInBytes,
+                    strideInBytes : stride
+                }];
+
+                indexBuffer = context.createIndexBuffer(new Uint16Array(mesh.indexLists[0].values), usage, IndexDatatype.UNSIGNED_SHORT);
             }
-            this._renderQueue.enqueue(tile);
 
-            if (mode === SceneMode.SCENE2D) {
-                if (tile.zoom + 1 <= this._dayTileProvider.zoomMax) {
-                    var children = tile.getChildren();
-                    for ( var i = 0; i < children.length; ++i) {
-                        this._processTile(children[i]);
-                    }
+            tile._extentVA = context.createVertexArray(attributes, indexBuffer);
+
+            var intensity = (this._dayTileProvider && this._dayTileProvider.getIntensity && this._dayTileProvider.getIntensity(tile)) || 0.0;
+            var drawUniforms = {
+                u_dayTexture : function() {
+                    return tile.texture;
+                },
+                u_center3D : function() {
+                    return rtc;
+                },
+                u_center2D : function() {
+                    return (projectedRTC) ? projectedRTC.getXY() : Cartesian2.getZero();
+                },
+                u_modifiedModelView : function() {
+                    return tile.modelView;
+                },
+                u_dayIntensity : function() {
+                    return intensity;
+                },
+                u_mode : function() {
+                    return tile.mode;
                 }
-            }
-        } else {
-            // tile isn't ready, find a parent to render and start processing the tile.
-            var parent = tile.parent;
-            if (parent && !this._renderQueue.contains(parent)) {
-                this._enqueueTile(parent, context, sceneState);
-            }
+            };
+            tile._drawUniforms = combine(drawUniforms, this._drawUniforms);
 
-            this._processTile(tile);
+            tile._mode = mode;
         }
+        this._renderQueue.enqueue(tile);
     };
 
     CentralBody.prototype._refine3D = function(tile, viewportWidth, viewportHeight, mode, projection) {
@@ -1763,11 +1747,23 @@ define([
                 }
             }
 
-            if (!this._dayTileProvider || tile.zoom + 1 > this._dayTileProvider.zoomMax || !this.refineFunc(tile, width, height, mode, projection)) {
-                this._enqueueTile(tile, context, sceneState);
+            if (!this._dayTileProvider || (tile.state === TileState.TEXTURE_LOADED && tile.texture && !tile.texture.isDestroyed())) {
+                if (!this.refineFunc(tile, width, height, mode, projection)) {
+                    this._enqueueTile(tile, context, sceneState);
+                } else {
+                    var children = tile.getChildren();
+                    for (var i = 0; i < children.length; ++i) {
+                        var child = children[i];
+                        if ((child.state === TileState.TEXTURE_LOADED && child.texture && !child.texture.isDestroyed())) {
+                            stack.push(child);
+                        } else {
+                            this._enqueueTile(tile, context, sceneState);
+                            this._processTile(child);
+                        }
+                    }
+                }
             } else {
-                var children = tile.getChildren();
-                stack = stack.concat(children);
+                this._processTile(tile);
             }
         }
 
