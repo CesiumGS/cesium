@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Scene/CameraFreeLookController',
          'Core/Cartesian3',
@@ -11,7 +12,7 @@ defineSuite([
          Camera,
          PerspectiveFrustum) {
     "use strict";
-    /*global document,it,expect,beforeEach,afterEach*/
+    /*global it,expect,beforeEach,afterEach*/
 
     var position;
     var up;

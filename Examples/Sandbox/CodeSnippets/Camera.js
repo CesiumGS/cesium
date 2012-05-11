@@ -1,6 +1,6 @@
 (function() {
     "use strict";
-    /*global Cesium, Sandbox*/
+    /*global Cesium,Sandbox*/
 
     Sandbox.CameraFlyToLosAngeles = function (scene, ellipsoid, primitives) {
         var flight = null;

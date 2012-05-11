@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Core/Cartographic2',
          'Core/Cartographic3'

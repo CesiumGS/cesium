@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Scene/CameraSpindleController',
          'Core/Ellipsoid',
@@ -13,7 +14,7 @@ defineSuite([
          Camera,
          PerspectiveFrustum) {
     "use strict";
-    /*global document,it,expect,beforeEach,afterEach*/
+    /*global it,expect,beforeEach,afterEach*/
 
     var position;
     var up;

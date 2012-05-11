@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          '../Specs/createContext',
          '../Specs/destroyContext',
@@ -11,7 +12,7 @@ defineSuite([
          BufferUsage,
          PixelFormat) {
     "use strict";
-    /*global Float32Array,Image,it,expect,beforeEach,afterEach,waitsFor*/
+    /*global it,expect,beforeEach,afterEach,waitsFor*/
 
     var context;
     var atlas;

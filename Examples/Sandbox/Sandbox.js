@@ -1,7 +1,7 @@
 var Sandbox = Sandbox || {};
 (function() {
     "use strict";
-    /*global document, Cesium, console*/
+    /*global Cesium,console*/
 
     /**
      * @constructor
