@@ -107,7 +107,7 @@ define([
             return;
         }
 
-        var value = positionProperty.getValue(time);
+        var value = positionProperty.getValueCartesian(time);
         if (value !== 'undefined') {
             billboard.setPosition(value);
         }

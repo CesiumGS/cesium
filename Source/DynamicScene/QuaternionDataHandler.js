@@ -15,7 +15,7 @@ define([
         doublesPerInterpolationValue : doublesPerCartesian,
 
         unwrapCzmlInterval : function(czmlInterval) {
-            return czmlInterval.quaternion;
+            return czmlInterval.unitQuaternion || czmlInterval.quaternion;
         },
 
         isSampled : function(czmlIntervalData) {

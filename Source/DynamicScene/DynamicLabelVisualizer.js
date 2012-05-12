@@ -85,7 +85,7 @@ define([
             label.setText(value);
         }
 
-        value = positionProperty.getValue(time);
+        value = positionProperty.getValueCartesian(time);
         if (typeof value !== 'undefined') {
             label.setPosition(value);
         }

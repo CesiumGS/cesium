@@ -1,21 +1,16 @@
 /*global define*/
 define(['./DynamicPoint',
         './BooleanDataHandler',
-        './Cartesian2DataHandler',
-        './Cartesian3DataHandler',
         './NumberDataHandler',
-        './StringDataHandler',
         './ColorDataHandler',
         './createOrUpdateProperty'],
 function(DynamicPoint,
         BooleanDataHandler,
-        Cartesian2DataHandler,
-        Cartesian3DataHandler,
         NumberDataHandler,
-        StringDataHandler,
         ColorDataHandler,
         createOrUpdateProperty) {
     "use strict";
+
     return function(dynamicObject, packet, buffer, sourceUri) {
 
         //See if there's any actual data to process.

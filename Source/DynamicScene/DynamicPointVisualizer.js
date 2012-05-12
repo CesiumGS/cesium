@@ -81,7 +81,7 @@ function(DynamicTextureAtlas,
 
         billboard.setShow(true);
 
-        var position = positionProperty.getValue(time);
+        var position = positionProperty.getValueCartesian(time);
         if (position !== 'undefined') {
             billboard.setPosition(position);
         }

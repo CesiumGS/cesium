@@ -1,5 +1,7 @@
 /*global define*/
-define(['../Core/Cartesian3'], function(Cartesian3) {
+define(['../Core/Cartesian3',
+        '../Core/Ellipsoid'],
+function(Cartesian3, Ellipsoid) {
     "use strict";
 
     var doublesPerValue = 3;
@@ -38,6 +40,14 @@ define(['../Core/Cartesian3'], function(Cartesian3) {
 
         createValueFromInterpolationResult : function(result) {
             return new Cartesian3(result[0], result[1], result[2]);
+        },
+
+        convertToCartographic : function(data) {
+            return Ellipsoid.getWgs84().toCartographic3(data);
+        },
+
+        convertToCartesian : function(data) {
+            return data;
         }
     };
 
