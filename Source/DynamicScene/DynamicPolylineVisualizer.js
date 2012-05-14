@@ -72,8 +72,9 @@ define([
         polyline.show = true;
 
         var value = vertexPositionsProperty.getValueCartesian(time);
-        if (typeof value !== 'undefined') {
+        if (typeof value !== 'undefined' && polyline.last_position !== value) {
             polyline.setPositions(value);
+            polyline.last_position = value;
         }
 
         var property = dynamicPolyline.color;
