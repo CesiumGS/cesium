@@ -22,9 +22,9 @@ defineSuite([
     });
 
     it("projectPointsOntoEllipsoid throws without positions", function () {
+        var ellipsoid = Ellipsoid.getUnitSphere();
+        var tangentPlane = new EllipsoidTangentPlane(ellipsoid, new Cartesian3(1, 0, 0));
         expect(function() {
-            var ellipsoid = Ellipsoid.getUnitSphere();
-            var tangentPlane = new EllipsoidTangentPlane(ellipsoid, new Cartesian3(1, 0, 0));
             tangentPlane.projectPointsOntoEllipsoid();
         }).toThrow();
     });

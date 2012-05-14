@@ -31,9 +31,9 @@ defineSuite([
     it("throws with negative radii componenets", function() {
         expect(function() {
             return new Ellipsoid({
-                "x": -1,
-                "y": 0,
-                "z": 0
+                x: -1,
+                y: 0,
+                z: 0
             });
         }).toThrow();
     });
