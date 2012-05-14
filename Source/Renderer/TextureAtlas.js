@@ -176,14 +176,6 @@ define([
      * DOC_TBA
      * @memberof TextureAtlas
      */
-    TextureAtlas.prototype.getContext = function() {
-        return this._context;
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof TextureAtlas
-     */
     TextureAtlas.prototype.getBorderWidthInPixels = function() {
         return this._borderWidthInPixels;
     };
