@@ -54,10 +54,10 @@ define([
             }
         } else if (this.clockRange === ClockRange.LOOP) {
             while (currentTime.lessThan(startTime)) {
-                currentTime = stopTime.addSeconds(startTime.secondsDifference(currentTime));
+                currentTime = stopTime.addSeconds(startTime.getSecondsDifference(currentTime));
             }
             while (currentTime.greaterThan(stopTime)) {
-                currentTime = startTime.addSeconds(stopTime.secondsDifference(currentTime));
+                currentTime = startTime.addSeconds(stopTime.getSecondsDifference(currentTime));
             }
         }
 
