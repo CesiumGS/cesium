@@ -133,4 +133,26 @@ defineSuite([
         var expected = Matrix4.createInfinitePerspectiveOffCenter(left, right, bottom, top, near);
         expect(expected.equals(frustum.getInfiniteProjectionMatrix())).toBeTruthy();
     });
+
+    it("equals", function() {
+        var frustum2 = new PerspectiveFrustum();
+        frustum2.near = 1.0;
+        frustum2.far = 2.0;
+        frustum2.fovy = (Math.PI) / 3;
+        frustum2.aspectRatio = 1.0;
+        expect(frustum.equals(frustum2)).toEqual(true);
+    });
+
+    it("destroys", function() {
+        expect(frustum.isDestroyed()).toEqual(false);
+        frustum.destroy();
+        expect(frustum.isDestroyed()).toEqual(true);
+    });
+
+    it("throws with null frustum parameters", function() {
+        var frustum = new PerspectiveFrustum();
+        expect(function() {
+            return frustum.getInfiniteProjectionMatrix();
+        }).toThrow();
+    });
 });

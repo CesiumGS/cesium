@@ -98,6 +98,11 @@ defineSuite([
         expect(primitives.show).toBeTruthy();
     });
 
+    it("get throws if index is undefined", function() {
+        var n;
+        expect(primitives.get(n)).toThrow();
+    });
+
     it("has zero primitives when constructed", function() {
         expect(primitives.getLength()).toEqual(0);
     });

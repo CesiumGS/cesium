@@ -119,4 +119,22 @@ defineSuite([
         var expected = Matrix4.createOrthographicOffCenter(frustum.left, frustum.right, frustum.top, frustum.bottm, frustum.near, frustum.far);
         expect(projectionMatrix.equalsEpsilon(expected, CesiumMath.EPSILON6)).toBeTruthy();
     });
+
+    it("clone", function() {
+        var clone = frustum.clone();
+        expect(clone.equals(frustum)).toBeTruthy();
+    });
+
+    it("destroys", function() {
+        expect(frustum.isDestroyed()).toEqual(false);
+        frustum.destroy();
+        expect(frustum.isDestroyed()).toEqual(true);
+    });
+
+    it("throws with null plane(s)", function() {
+        var frustum = new OrthographicFrustum();
+        expect(function() {
+            frustum.getProjectionMatrix();
+        }).toThrow();
+    });
 });
