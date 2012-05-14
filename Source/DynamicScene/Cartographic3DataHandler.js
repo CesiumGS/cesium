@@ -7,6 +7,7 @@ function(Cartographic3,
          CesiumMath) {
     "use strict";
 
+    var wgs84 = Ellipsoid.getWgs84();
     var doublesPerValue = 3;
 
     var Cartographic3DataHandler = {
@@ -68,7 +69,7 @@ function(Cartographic3,
         },
 
         convertToCartesian : function(data) {
-            return Ellipsoid.getWgs84().toCartesian(data);
+            return wgs84.toCartesian(data);
         }
     };
 

@@ -2,28 +2,33 @@
 defineSuite([
          'DynamicScene/CzmlObjectCollection',
          'Core/JulianDate',
-         'DynamicScene/createOrUpdatePosition',
-         'DynamicScene/createOrUpdateOrientation',
-         'DynamicScene/createOrUpdateDynamicBillboard',
-         'DynamicScene/createOrUpdateDynamicLabel'
+         'DynamicScene/DynamicObject',
+         'DynamicScene/DynamicBillboard',
+         'DynamicScene/DynamicPoint',
+         'DynamicScene/DynamicPolyline',
+         'DynamicScene/DynamicLabel'
      ], function(
          CzmlObjectCollection,
          JulianDate,
-         createOrUpdatePosition,
-         createOrUpdateOrientation,
-         createOrUpdateDynamicBillboard,
-         createOrUpdateDynamicLabel) {
+         DynamicObject,
+         DynamicBillboard,
+         DynamicPoint,
+         DynamicPolyline,
+         DynamicLabel) {
     "use strict";
     /*global it,expect*/
 
     it("TODO", function() {
-        var propertyFunctionsMap = [];
-        propertyFunctionsMap.position = createOrUpdatePosition;
-        propertyFunctionsMap.orientation = createOrUpdateOrientation;
-        propertyFunctionsMap.billboard = createOrUpdateDynamicBillboard;
-        propertyFunctionsMap.label = createOrUpdateDynamicLabel;
+        var czmlObjectCollection = new CzmlObjectCollection("testCzmlObjectCollection", "testId", {
+            billboard : DynamicBillboard.createOrUpdate,
+            label : DynamicLabel.createOrUpdate,
+            orientation : DynamicObject.createOrUpdateOrientation,
+            point : DynamicPoint.createOrUpdate,
+            polyline : DynamicPolyline.createOrUpdate,
+            position : DynamicObject.createOrUpdatePosition,
+            vertexPositions : DynamicObject.createOrUpdateVertexPositions
+        });
 
-        var czmlObjectCollection = new CzmlObjectCollection("testCzmlObjectCollection", "testId", propertyFunctionsMap);
         expect(typeof czmlObjectCollection.getObject("TestFacility") === 'undefined').toBeTruthy();
 
         var czml = {

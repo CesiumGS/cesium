@@ -21,6 +21,21 @@ define([
         this._potentialDataHandlers = [Cartesian3DataHandler, Cartographic3DataHandler];
     }
 
+    DynamicPositionProperty.createOrUpdate = function(czmlIntervals, buffer, sourceUri, existingProperty) {
+        if (typeof czmlIntervals === 'undefined') {
+            return existingProperty;
+        }
+
+        //At this point we will definitely have a value, so if one doesn't exist, create it.
+        if (typeof existingProperty === 'undefined') {
+            existingProperty = new DynamicPositionProperty();
+        }
+
+        existingProperty.addIntervals(czmlIntervals, buffer, sourceUri);
+
+        return existingProperty;
+    };
+
     DynamicPositionProperty.prototype.addIntervals = function(czmlIntervals, buffer, sourceUri) {
         if (Array.isArray(czmlIntervals)) {
             for ( var i = 0, len = czmlIntervals.length; i < len; i++) {

@@ -23,11 +23,6 @@ define([
         LINEAR : LinearApproximation
     };
 
-    function DynamicProperty(dataHandler) {
-        this.dataHandler = dataHandler;
-        this._intervals = new TimeIntervalCollection();
-        this._isSampled = false;
-    }
 
     function convertDate(date, epoch) {
         if (typeof date === 'string') {
@@ -35,6 +30,27 @@ define([
         }
         return epoch.addSeconds(date);
     }
+
+    function DynamicProperty(dataHandler) {
+        this.dataHandler = dataHandler;
+        this._intervals = new TimeIntervalCollection();
+        this._isSampled = false;
+    }
+
+    DynamicProperty.createOrUpdate = function(valueType, czmlIntervals, buffer, sourceUri, existingProperty) {
+        if (typeof czmlIntervals === 'undefined') {
+            return existingProperty;
+        }
+
+        //At this point we will definitely have a value, so if one doesn't exist, create it.
+        if (typeof existingProperty === 'undefined') {
+            existingProperty = new DynamicProperty(valueType);
+        }
+
+        existingProperty.addIntervals(czmlIntervals, buffer, sourceUri);
+
+        return existingProperty;
+    };
 
     DynamicProperty._mergeNewSamples = function(epoch, times, values, newData, doublesPerValue, dataHandler) {
         var newDataIndex = 0, i, prevItem, timesInsertionPoint, valuesInsertionPoint, timesSpliceArgs, valuesSpliceArgs, currentTime, nextTime;

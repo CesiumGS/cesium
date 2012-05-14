@@ -5,6 +5,7 @@ function(Cartesian3, Ellipsoid) {
     "use strict";
 
     var doublesPerValue = 3;
+    var wgs84 = Ellipsoid.getWgs84();
 
     var Cartesian3DataHandler = {
         doublesPerValue : doublesPerValue,
@@ -43,7 +44,7 @@ function(Cartesian3, Ellipsoid) {
         },
 
         convertToCartographic : function(data) {
-            return Ellipsoid.getWgs84().toCartographic3(data);
+            return wgs84.toCartographic3(data);
         },
 
         convertToCartesian : function(data) {
