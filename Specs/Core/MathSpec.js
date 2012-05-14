@@ -46,7 +46,7 @@ defineSuite([
     });
 
     it("cosh NaN", function() {
-        expect(isNaN(CesiumMath.cosh(NaN))).toBeTruthy();
+        expect(isNaN(CesiumMath.cosh(NaN))).toEqual(true);
     });
 
     it("cosh infinity", function() {
@@ -61,7 +61,7 @@ defineSuite([
     });
 
     it("sinh NaN", function() {
-        expect(isNaN(CesiumMath.sinh(NaN))).toBeTruthy();
+        expect(isNaN(CesiumMath.sinh(NaN))).toEqual(true);
     });
 
     it("sinh infinity", function() {

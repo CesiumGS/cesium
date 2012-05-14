@@ -57,52 +57,52 @@ defineSuite([
 
     it("move up", function() {
         csc.moveUp(rotaterate);
-        expect(camera.up.equalsEpsilon(dir.negate(), CesiumMath.EPSILON15)).toBeTruthy();
-        expect(camera.direction.equalsEpsilon(up, CesiumMath.EPSILON15)).toBeTruthy();
-        expect(camera.right.equalsEpsilon(right, CesiumMath.EPSILON15)).toBeTruthy();
-        expect(camera.position.equalsEpsilon(Cartesian3.getUnitY().negate(), CesiumMath.EPSILON15)).toBeTruthy();
+        expect(camera.up.equalsEpsilon(dir.negate(), CesiumMath.EPSILON15)).toEqual(true);
+        expect(camera.direction.equalsEpsilon(up, CesiumMath.EPSILON15)).toEqual(true);
+        expect(camera.right.equalsEpsilon(right, CesiumMath.EPSILON15)).toEqual(true);
+        expect(camera.position.equalsEpsilon(Cartesian3.getUnitY().negate(), CesiumMath.EPSILON15)).toEqual(true);
     });
 
     it("move down", function() {
         csc.moveDown(rotaterate);
-        expect(camera.up.equalsEpsilon(dir, CesiumMath.EPSILON15)).toBeTruthy();
-        expect(camera.direction.equalsEpsilon(up.negate(), CesiumMath.EPSILON15)).toBeTruthy();
-        expect(camera.right.equalsEpsilon(right, CesiumMath.EPSILON15)).toBeTruthy();
-        expect(camera.position.equalsEpsilon(Cartesian3.getUnitY(), CesiumMath.EPSILON15)).toBeTruthy();
+        expect(camera.up.equalsEpsilon(dir, CesiumMath.EPSILON15)).toEqual(true);
+        expect(camera.direction.equalsEpsilon(up.negate(), CesiumMath.EPSILON15)).toEqual(true);
+        expect(camera.right.equalsEpsilon(right, CesiumMath.EPSILON15)).toEqual(true);
+        expect(camera.position.equalsEpsilon(Cartesian3.getUnitY(), CesiumMath.EPSILON15)).toEqual(true);
     });
 
     it("move left", function() {
         csc.moveLeft(rotaterate);
-        expect(camera.up.equalsEpsilon(up, CesiumMath.EPSILON15)).toBeTruthy();
-        expect(camera.direction.equalsEpsilon(right, CesiumMath.EPSILON15)).toBeTruthy();
-        expect(camera.right.equalsEpsilon(dir.negate(), CesiumMath.EPSILON15)).toBeTruthy();
-        expect(camera.position.equalsEpsilon(Cartesian3.getUnitX().negate(), CesiumMath.EPSILON15)).toBeTruthy();
+        expect(camera.up.equalsEpsilon(up, CesiumMath.EPSILON15)).toEqual(true);
+        expect(camera.direction.equalsEpsilon(right, CesiumMath.EPSILON15)).toEqual(true);
+        expect(camera.right.equalsEpsilon(dir.negate(), CesiumMath.EPSILON15)).toEqual(true);
+        expect(camera.position.equalsEpsilon(Cartesian3.getUnitX().negate(), CesiumMath.EPSILON15)).toEqual(true);
     });
 
     it("move right", function() {
         csc.moveRight(rotaterate);
-        expect(camera.up.equalsEpsilon(up, CesiumMath.EPSILON15)).toBeTruthy();
-        expect(camera.direction.equalsEpsilon(right.negate(), CesiumMath.EPSILON15)).toBeTruthy();
-        expect(camera.right.equalsEpsilon(dir, CesiumMath.EPSILON15)).toBeTruthy();
-        expect(camera.position.equalsEpsilon(Cartesian3.getUnitX(), CesiumMath.EPSILON15)).toBeTruthy();
+        expect(camera.up.equalsEpsilon(up, CesiumMath.EPSILON15)).toEqual(true);
+        expect(camera.direction.equalsEpsilon(right.negate(), CesiumMath.EPSILON15)).toEqual(true);
+        expect(camera.right.equalsEpsilon(dir, CesiumMath.EPSILON15)).toEqual(true);
+        expect(camera.position.equalsEpsilon(Cartesian3.getUnitX(), CesiumMath.EPSILON15)).toEqual(true);
     });
 
     it("zoom in", function() {
         camera.position = new Cartesian3();
         csc.zoomIn(moverate);
-        expect(camera.position.equals(new Cartesian3(0.0, 0.0, -moverate))).toBeTruthy();
-        expect(camera.up.equals(up)).toBeTruthy();
-        expect(camera.direction.equals(dir)).toBeTruthy();
-        expect(camera.right.equals(right)).toBeTruthy();
+        expect(camera.position.equals(new Cartesian3(0.0, 0.0, -moverate))).toEqual(true);
+        expect(camera.up.equals(up)).toEqual(true);
+        expect(camera.direction.equals(dir)).toEqual(true);
+        expect(camera.right.equals(right)).toEqual(true);
     });
 
     it("zoom out", function() {
         camera.position = new Cartesian3();
         csc.zoomOut(moverate);
-        expect(camera.position.equals(new Cartesian3(0.0, 0.0, moverate))).toBeTruthy();
-        expect(camera.up.equals(up)).toBeTruthy();
-        expect(camera.direction.equals(dir)).toBeTruthy();
-        expect(camera.right.equals(right)).toBeTruthy();
+        expect(camera.position.equals(new Cartesian3(0.0, 0.0, moverate))).toEqual(true);
+        expect(camera.up.equals(up)).toEqual(true);
+        expect(camera.direction.equals(dir)).toEqual(true);
+        expect(camera.right.equals(right)).toEqual(true);
     });
 
     it("rotate", function() {

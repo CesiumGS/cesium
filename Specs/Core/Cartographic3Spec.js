@@ -45,16 +45,16 @@ defineSuite([
     it("clones itself", function() {
         var c = new Cartographic3(0, 1, 2);
         var c2 = c.clone();
-        expect(c.equals(c2)).toBeTruthy();
+        expect(c.equals(c2)).toEqual(true);
 
         ++c2.height;
-        expect(c.equals(c2)).toBeFalsy();
+        expect(c.equals(c2)).toEqual(false);
     });
 
     it("equalsEpsilon", function() {
-        expect(new Cartographic3(0, 2, 1).equalsEpsilon(new Cartographic3(0, 2, 1), 0)).toBeTruthy();
-        expect(new Cartographic3(0, 2, 1).equalsEpsilon(new Cartographic3(0, 2, 2), 1)).toBeTruthy();
-        expect(new Cartographic3(0, 2, 1).equalsEpsilon(new Cartographic3(0, 2, 3), 1)).toBeFalsy();
+        expect(new Cartographic3(0, 2, 1).equalsEpsilon(new Cartographic3(0, 2, 1), 0)).toEqual(true);
+        expect(new Cartographic3(0, 2, 1).equalsEpsilon(new Cartographic3(0, 2, 2), 1)).toEqual(true);
+        expect(new Cartographic3(0, 2, 1).equalsEpsilon(new Cartographic3(0, 2, 3), 1)).toEqual(false);
     });
 
     it("toString", function() {

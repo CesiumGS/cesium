@@ -128,20 +128,20 @@ defineSuite([
     });
 
     it("hasAvailable", function() {
-        expect(pool.hasAvailable()).toBeFalsy();
+        expect(pool.hasAvailable()).toEqual(false);
 
         var mockTexture = new MockTexture();
         pool.add(mockTexture, true);
-        expect(pool.hasAvailable()).toBeTruthy();
+        expect(pool.hasAvailable()).toEqual(true);
 
         var texture = pool.getTexture();
         expect(texture).toEqual(mockTexture);
-        expect(pool.hasAvailable()).toBeFalsy();
+        expect(pool.hasAvailable()).toEqual(false);
     });
 
     it("getTexture", function() {
         var texture = pool.getTexture();
-        expect(texture === null).toBeTruthy();
+        expect(texture === null).toEqual(true);
 
         var length = 8;
 
@@ -155,7 +155,7 @@ defineSuite([
         for ( var j = 0; j < length; ++j) {
             texture = pool.getTexture();
 
-            expect(texture !== null).toBeTruthy();
+            expect(texture !== null).toEqual(true);
             expect(pool.size()).toEqual(length);
             expect(pool.getNumInUse()).toEqual(j + 1);
         }
@@ -169,12 +169,12 @@ defineSuite([
             pool.add(texture);
         }
 
-        expect(pool.isDestroyed()).toBeFalsy();
+        expect(pool.isDestroyed()).toEqual(false);
         pool.destroy();
-        expect(pool.isDestroyed()).toBeTruthy();
+        expect(pool.isDestroyed()).toEqual(true);
 
         for ( var j = 0; j < textures.length; ++j) {
-            expect(textures[j].isDestroyed()).toBeTruthy();
+            expect(textures[j].isDestroyed()).toEqual(true);
         }
     });
 });

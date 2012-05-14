@@ -110,26 +110,26 @@ defineSuite([
             n : 13,
             key : "13"
         };
-        expect(cache.remove(thirteenth)).toBeFalsy();
+        expect(cache.remove(thirteenth)).toEqual(false);
 
         expect(cache.find(thirteenth).fibonacciNumber).toEqual(233);
         expect(cache.find(thirteenth).timesHit).toEqual(1);
-        expect(cache.remove(thirteenth)).toBeTruthy();
+        expect(cache.remove(thirteenth)).toEqual(true);
         expect(cache.find(thirteenth).timesHit).toBeFalsy();
         expect(cache.remove({
             n : 14,
             key : "14"
-        })).toBeFalsy();
+        })).toEqual(false);
     });
 
     it("remove returns false with no key", function() {
         var result = cache.remove();
-        expect(result).toBeFalsy();
+        expect(result).toEqual(false);
     });
 
     it("remove returns false with null key", function() {
         var result = cache.remove({"key": null});
-        expect(result).toBeFalsy();
+        expect(result).toEqual(false);
     });
 
     it("destroy", function() {
@@ -148,6 +148,6 @@ defineSuite([
     });
 
     it("isDestroyed returns false", function() {
-       expect(cache.isDestroyed()).toBeFalsy();
+       expect(cache.isDestroyed()).toEqual(false);
     });
 });

@@ -29,14 +29,14 @@ defineSuite([
 
     it("can be constructed using a point and a radius", function() {
         var sphere = new BoundingSphere(new Cartesian3(0, 0, 0), 1);
-        expect(sphere.center.equals(Cartesian3.getZero())).toBeTruthy();
+        expect(sphere.center.equals(Cartesian3.getZero())).toEqual(true);
         expect(sphere.radius).toEqual(1);
     });
 
     it("has a center", function() {
         var sphere = new BoundingSphere(getPositions());
         var center = sphere.center;
-        expect(center.equalsEpsilon(Cartesian3.getZero(), CesiumMath.EPSILON14)).toBeTruthy();
+        expect(center.equalsEpsilon(Cartesian3.getZero(), CesiumMath.EPSILON14)).toEqual(true);
     });
 
     it("has a radius", function() {
@@ -58,9 +58,9 @@ defineSuite([
         var numPositions = positions.length;
         for ( var i = 0; i < numPositions; i++) {
             var currentPos = positions[i];
-            expect(currentPos.x <= max.x && currentPos.x >= min.x).toBeTruthy();
-            expect(currentPos.y <= max.y && currentPos.y >= min.y).toBeTruthy();
-            expect(currentPos.z <= max.z && currentPos.z >= min.z).toBeTruthy();
+            expect(currentPos.x <= max.x && currentPos.x >= min.x).toEqual(true);
+            expect(currentPos.y <= max.y && currentPos.y >= min.y).toEqual(true);
+            expect(currentPos.z <= max.z && currentPos.z >= min.z).toEqual(true);
         }
     });
 
@@ -78,9 +78,9 @@ defineSuite([
         var numPositions = positions.length;
         for ( var i = 0; i < numPositions; i++) {
             var currentPos = positions[i];
-            expect(currentPos.x <= max.x && currentPos.x >= min.x).toBeTruthy();
-            expect(currentPos.y <= max.y && currentPos.y >= min.y).toBeTruthy();
-            expect(currentPos.z <= max.z && currentPos.z >= min.z).toBeTruthy();
+            expect(currentPos.x <= max.x && currentPos.x >= min.x).toEqual(true);
+            expect(currentPos.y <= max.y && currentPos.y >= min.y).toEqual(true);
+            expect(currentPos.z <= max.z && currentPos.z >= min.z).toEqual(true);
         }
     });
 });

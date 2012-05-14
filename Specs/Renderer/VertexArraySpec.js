@@ -54,11 +54,11 @@ defineSuite([
 
         expect(va.getNumberOfAttributes()).toEqual(1);
         expect(va.getAttribute(0).index).toEqual(0);
-        expect(va.getAttribute(0).enabled).toBeTruthy();
+        expect(va.getAttribute(0).enabled).toEqual(true);
         expect(va.getAttribute(0).vertexBuffer).toEqual(positionBuffer);
         expect(va.getAttribute(0).componentsPerAttribute).toEqual(3);
         expect(va.getAttribute(0).componentDatatype).toEqual(ComponentDatatype.FLOAT);
-        expect(va.getAttribute(0).normalize).toBeFalsy();
+        expect(va.getAttribute(0).normalize).toEqual(false);
         expect(va.getAttribute(0).offsetInBytes).toEqual(0);
         expect(va.getAttribute(0).strideInBytes).toEqual(0);
 
@@ -125,11 +125,11 @@ defineSuite([
 
         expect(va.getNumberOfAttributes()).toEqual(1);
         expect(va.getAttribute(0).index).toEqual(0);
-        expect(va.getAttribute(0).enabled).toBeTruthy();
+        expect(va.getAttribute(0).enabled).toEqual(true);
         expect(va.getAttribute(0).vertexBuffer).toEqual(positionBuffer);
         expect(va.getAttribute(0).componentsPerAttribute).toEqual(3);
         expect(va.getAttribute(0).componentDatatype).toEqual(ComponentDatatype.FLOAT);
-        expect(va.getAttribute(0).normalize).toBeFalsy();
+        expect(va.getAttribute(0).normalize).toEqual(false);
         expect(va.getAttribute(0).offsetInBytes).toEqual(0);
         expect(va.getAttribute(0).strideInBytes).toEqual(0);
 
@@ -145,10 +145,10 @@ defineSuite([
         }];
         var va = context.createVertexArray(attributes);
         expect(va.getNumberOfAttributes()).toEqual(1);
-        expect(va.getAttribute(0).enabled).toBeTruthy();
+        expect(va.getAttribute(0).enabled).toEqual(true);
 
         va.getAttribute(0).enabled = false;
-        expect(va.getAttribute(0).enabled).toBeFalsy();
+        expect(va.getAttribute(0).enabled).toEqual(false);
 
         va._bind();
         va = va.destroy();
@@ -178,24 +178,24 @@ defineSuite([
 
         expect(va.removeAttribute({
             index : 1
-        })).toBeTruthy();
+        })).toEqual(true);
         expect(va.getNumberOfAttributes()).toEqual(2);
         expect(va.getAttribute(0).componentsPerAttribute).toEqual(1);
         expect(va.getAttribute(1).componentsPerAttribute).toEqual(3);
 
         expect(va.removeAttribute({
             index : 0
-        })).toBeTruthy();
+        })).toEqual(true);
         expect(va.getNumberOfAttributes()).toEqual(1);
         expect(va.getAttribute(0).componentsPerAttribute).toEqual(3);
 
         expect(va.removeAttribute({
             index : 2
-        })).toBeTruthy();
+        })).toEqual(true);
         expect(va.getNumberOfAttributes()).toEqual(0);
         expect(va.removeAttribute({
             index : 2
-        })).toBeFalsy();
+        })).toEqual(false);
     });
 
     it("renders with a one-component constant value", function() {

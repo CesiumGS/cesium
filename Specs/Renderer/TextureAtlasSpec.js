@@ -206,7 +206,7 @@ defineSuite([
             x : (greenCoords.x0 + greenCoords.x1) * 0.5,
             y : (greenCoords.y0 + greenCoords.y1) * 0.5
         }]);
-        expect((pixels[0] === 0) || (pixels[0] === 1)).toBeTruthy(); // Workaround:  Firefox on Windows
+        expect((pixels[0] === 0) || (pixels[0] === 1)).toEqual(true); // Workaround:  Firefox on Windows
         expect(pixels[1]).toEqual(255);
         expect(pixels[2]).toEqual(0);
         expect(pixels[3]).toEqual(255);

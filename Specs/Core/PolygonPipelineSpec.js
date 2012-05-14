@@ -69,7 +69,7 @@ defineSuite([
         var projectedP = tangentPlane.projectPointsOntoPlane([p]);
 
         expect(projectedP.length).toEqual(1);
-        expect(projectedP[0].equals(Cartesian2.getZero())).toBeTruthy();
+        expect(projectedP[0].equals(Cartesian2.getZero())).toEqual(true);
     });
 
     it("EllipsoidTangentPlane throws without ellipsoid", function() {

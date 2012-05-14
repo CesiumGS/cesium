@@ -58,8 +58,8 @@ defineSuite([
 
     it("default constructs a label", function() {
         var l = labels.add();
-        expect(l.getShow()).toBeTruthy();
-        expect(l.getPosition().equals(Cartesian3.getZero())).toBeTruthy();
+        expect(l.getShow()).toEqual(true);
+        expect(l.getPosition().equals(Cartesian3.getZero())).toEqual(true);
         expect(l.getText()).toEqual("");
         expect(l.getFont()).toEqual("30px sans-serif");
         expect(l.getFillColor().red).toEqual(1.0);
@@ -71,8 +71,8 @@ defineSuite([
         expect(l.getOutlineColor().blue).toEqual(0.0);
         expect(l.getOutlineColor().alpha).toEqual(1.0);
         expect(l.getStyle()).toEqual(LabelStyle.FILL);
-        expect(l.getPixelOffset().equals(Cartesian2.getZero())).toBeTruthy();
-        expect(l.getEyeOffset().equals(Cartesian3.getZero())).toBeTruthy();
+        expect(l.getPixelOffset().equals(Cartesian2.getZero())).toEqual(true);
+        expect(l.getEyeOffset().equals(Cartesian3.getZero())).toEqual(true);
         expect(l.getHorizontalOrigin()).toEqual(HorizontalOrigin.LEFT);
         expect(l.getVerticalOrigin()).toEqual(VerticalOrigin.BOTTOM);
         expect(l.getScale()).toEqual(1.0);
@@ -110,8 +110,8 @@ defineSuite([
             }
         });
 
-        expect(l.getShow()).toBeFalsy();
-        expect(l.getPosition().equals(new Cartesian3(1.0, 2.0, 3.0))).toBeTruthy();
+        expect(l.getShow()).toEqual(false);
+        expect(l.getPosition().equals(new Cartesian3(1.0, 2.0, 3.0))).toEqual(true);
         expect(l.getText()).toEqual("abc");
         expect(l.getFont()).toEqual("24px Helvetica");
         expect(l.getFillColor().red).toEqual(2.0);
@@ -123,8 +123,8 @@ defineSuite([
         expect(l.getOutlineColor().blue).toEqual(2.0);
         expect(l.getOutlineColor().alpha).toEqual(1.0);
         expect(l.getStyle()).toEqual(LabelStyle.FILL_AND_OUTLINE);
-        expect(l.getPixelOffset().equals(new Cartesian2(1.0, 2.0))).toBeTruthy();
-        expect(l.getEyeOffset().equals(new Cartesian3(1.0, 2.0, 3.0))).toBeTruthy();
+        expect(l.getPixelOffset().equals(new Cartesian2(1.0, 2.0))).toEqual(true);
+        expect(l.getEyeOffset().equals(new Cartesian3(1.0, 2.0, 3.0))).toEqual(true);
         expect(l.getHorizontalOrigin()).toEqual(HorizontalOrigin.LEFT);
         expect(l.getVerticalOrigin()).toEqual(VerticalOrigin.BOTTOM);
         expect(l.getScale()).toEqual(2.0);
@@ -155,8 +155,8 @@ defineSuite([
         l.setVerticalOrigin(VerticalOrigin.BOTTOM);
         l.setScale(2.0);
 
-        expect(l.getShow()).toBeFalsy();
-        expect(l.getPosition().equals(new Cartesian3(1.0, 2.0, 3.0))).toBeTruthy();
+        expect(l.getShow()).toEqual(false);
+        expect(l.getPosition().equals(new Cartesian3(1.0, 2.0, 3.0))).toEqual(true);
         expect(l.getText()).toEqual("abc");
         expect(l.getFont()).toEqual("24px Helvetica");
         expect(l.getFillColor().red).toEqual(2.0);
@@ -168,8 +168,8 @@ defineSuite([
         expect(l.getOutlineColor().blue).toEqual(2.0);
         expect(l.getOutlineColor().alpha).toEqual(1.0);
         expect(l.getStyle()).toEqual(LabelStyle.FILL_AND_OUTLINE);
-        expect(l.getPixelOffset().equals(new Cartesian2(1.0, 2.0))).toBeTruthy();
-        expect(l.getEyeOffset().equals(new Cartesian3(1.0, 2.0, 3.0))).toBeTruthy();
+        expect(l.getPixelOffset().equals(new Cartesian2(1.0, 2.0))).toEqual(true);
+        expect(l.getEyeOffset().equals(new Cartesian3(1.0, 2.0, 3.0))).toEqual(true);
         expect(l.getHorizontalOrigin()).toEqual(HorizontalOrigin.LEFT);
         expect(l.getVerticalOrigin()).toEqual(VerticalOrigin.BOTTOM);
         expect(l.getScale()).toEqual(2.0);
@@ -188,7 +188,7 @@ defineSuite([
         var l = labels.add();
         labels.remove(l);
         l.setShow(false);
-        expect(l.getShow()).toBeFalsy();
+        expect(l.getShow()).toEqual(false);
     });
 
     it("has zero labels when constructed", function() {
@@ -205,7 +205,7 @@ defineSuite([
         });
 
         expect(labels.getLength()).toEqual(1);
-        expect(labels.get(0).equals(l)).toBeTruthy();
+        expect(labels.get(0).equals(l)).toEqual(true);
     });
 
     it("removes the first label", function() {
@@ -226,10 +226,10 @@ defineSuite([
 
         expect(labels.getLength()).toEqual(2);
 
-        expect(labels.remove(one)).toBeTruthy();
+        expect(labels.remove(one)).toEqual(true);
 
         expect(labels.getLength()).toEqual(1);
-        expect(labels.get(0).equals(two)).toBeTruthy();
+        expect(labels.get(0).equals(two)).toEqual(true);
     });
 
     it("removes the last label", function() {
@@ -250,10 +250,10 @@ defineSuite([
 
         expect(labels.getLength()).toEqual(2);
 
-        expect(labels.remove(two)).toBeTruthy();
+        expect(labels.remove(two)).toEqual(true);
 
         expect(labels.getLength()).toEqual(1);
-        expect(labels.get(0).equals(one)).toBeTruthy();
+        expect(labels.get(0).equals(one)).toEqual(true);
     });
 
     it("removes the same label twice", function() {
@@ -266,10 +266,10 @@ defineSuite([
         });
         expect(labels.getLength()).toEqual(1);
 
-        expect(labels.remove(l)).toBeTruthy();
+        expect(labels.remove(l)).toEqual(true);
         expect(labels.getLength()).toEqual(0);
 
-        expect(labels.remove(l)).toBeFalsy();
+        expect(labels.remove(l)).toEqual(false);
         expect(labels.getLength()).toEqual(0);
     });
 
@@ -283,7 +283,7 @@ defineSuite([
         });
         expect(labels.getLength()).toEqual(1);
 
-        expect(labels.remove(null)).toBeFalsy();
+        expect(labels.remove(null)).toEqual(false);
         expect(labels.getLength()).toEqual(1);
     });
 
@@ -303,10 +303,10 @@ defineSuite([
             }
         });
         expect(labels.getLength()).toEqual(2);
-        expect(labels.get(0).equals(one)).toBeTruthy();
-        expect(labels.get(1).equals(two)).toBeTruthy();
+        expect(labels.get(0).equals(one)).toEqual(true);
+        expect(labels.get(1).equals(two)).toEqual(true);
 
-        expect(labels.remove(two)).toBeTruthy();
+        expect(labels.remove(two)).toEqual(true);
         var three = labels.add({
             position : {
                 x : 7.0,
@@ -315,8 +315,8 @@ defineSuite([
             }
         });
         expect(labels.getLength()).toEqual(2);
-        expect(labels.get(0).equals(one)).toBeTruthy();
-        expect(labels.get(1).equals(three)).toBeTruthy();
+        expect(labels.get(0).equals(one)).toEqual(true);
+        expect(labels.get(1).equals(three)).toEqual(true);
     });
 
     it("removes all labels", function() {
@@ -344,7 +344,7 @@ defineSuite([
         var l = labels.add();
         labels.add(l);
 
-        expect(labels.contains(l)).toBeTruthy();
+        expect(labels.contains(l)).toEqual(true);
     });
 
     it("doesn't contain a label", function() {
@@ -355,11 +355,11 @@ defineSuite([
         labels.add(l1);
         labels.remove(l0);
 
-        expect(labels.contains(l0)).toBeFalsy();
+        expect(labels.contains(l0)).toEqual(false);
     });
 
     it("doesn't contain undefined", function() {
-        expect(labels.contains()).toBeFalsy();
+        expect(labels.contains()).toEqual(false);
     });
 
     it("gets default buffer usage", function() {
@@ -416,7 +416,7 @@ defineSuite([
         expect(p[0]).toEqual(0);
         expect(p[1]).toEqual(0);
         expect(p[2]).toEqual(0);
-        expect((p[3] === 0) || (p[3] === 255)).toBeTruthy(); // ANGLE Workaround:  Blending or texture alpha channel is buggy
+        expect((p[3] === 0) || (p[3] === 255)).toEqual(true); // ANGLE Workaround:  Blending or texture alpha channel is buggy
     });
 
     it("renders a label", function() {
@@ -829,7 +829,7 @@ defineSuite([
             text : "equals"
         });
 
-        expect(l.equals(l2)).toBeTruthy();
+        expect(l.equals(l2)).toEqual(true);
     });
 
     it("doesn't equal another label", function() {
@@ -848,7 +848,7 @@ defineSuite([
             }
         });
 
-        expect(l.equals(l2)).toBeFalsy();
+        expect(l.equals(l2)).toEqual(false);
     });
 
     it("doesn't equal null", function() {

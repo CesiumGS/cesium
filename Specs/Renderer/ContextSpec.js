@@ -180,34 +180,34 @@ defineSuite([
 
     it("sets shader program validation", function() {
         context.setValidateShaderProgram(false);
-        expect(context.getValidateShaderProgram()).toBeFalsy();
+        expect(context.getValidateShaderProgram()).toEqual(false);
 
         context.setValidateShaderProgram(true);
-        expect(context.getValidateShaderProgram()).toBeTruthy();
+        expect(context.getValidateShaderProgram()).toEqual(true);
     });
 
     it("sets framebuffer validation", function() {
         context.setValidateFramebuffer(false);
-        expect(context.getValidateFramebuffer()).toBeFalsy();
+        expect(context.getValidateFramebuffer()).toEqual(false);
 
         context.setValidateFramebuffer(true);
-        expect(context.getValidateFramebuffer()).toBeTruthy();
+        expect(context.getValidateFramebuffer()).toEqual(true);
     });
 
     it("sets logging shader compilation", function() {
         context.setLogShaderCompilation(false);
-        expect(context.getLogShaderCompilation()).toBeFalsy();
+        expect(context.getLogShaderCompilation()).toEqual(false);
 
         context.setLogShaderCompilation(true);
-        expect(context.getLogShaderCompilation()).toBeTruthy();
+        expect(context.getLogShaderCompilation()).toEqual(true);
     });
 
     it("sets throws on WebGL errors", function() {
         context.setThrowOnWebGLError(false);
-        expect(context.getThrowOnWebGLError()).toBeFalsy();
+        expect(context.getThrowOnWebGLError()).toEqual(false);
 
         context.setThrowOnWebGLError(true);
-        expect(context.getThrowOnWebGLError()).toBeTruthy();
+        expect(context.getThrowOnWebGLError()).toEqual(true);
     });
 
     it("fails to set the viewport (negative width)", function() {

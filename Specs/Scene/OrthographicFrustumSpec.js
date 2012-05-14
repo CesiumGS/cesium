@@ -81,48 +81,48 @@ defineSuite([
     it("get frustum left plane", function() {
         var leftPlane = planes[0];
         var expectedResult = new Cartesian4(1.0, 0.0, 0.0, 1.0);
-        expect(leftPlane.equalsEpsilon(expectedResult, CesiumMath.EPSILON4)).toBeTruthy();
+        expect(leftPlane.equalsEpsilon(expectedResult, CesiumMath.EPSILON4)).toEqual(true);
     });
 
     it("get frustum right plane", function() {
         var rightPlane = planes[1];
         var expectedResult = new Cartesian4(-1.0, 0.0, 0.0, 1.0);
-        expect(rightPlane.equalsEpsilon(expectedResult, CesiumMath.EPSILON4)).toBeTruthy();
+        expect(rightPlane.equalsEpsilon(expectedResult, CesiumMath.EPSILON4)).toEqual(true);
     });
 
     it("get frustum bottom plane", function() {
         var bottomPlane = planes[2];
         var expectedResult = new Cartesian4(0.0, 1.0, 0.0, 1.0);
-        expect(bottomPlane.equalsEpsilon(expectedResult, CesiumMath.EPSILON4)).toBeTruthy();
+        expect(bottomPlane.equalsEpsilon(expectedResult, CesiumMath.EPSILON4)).toEqual(true);
     });
 
     it("get frustum top plane", function() {
         var topPlane = planes[3];
         var expectedResult = new Cartesian4(0.0, -1.0, 0.0, 1.0);
-        expect(topPlane.equalsEpsilon(expectedResult, CesiumMath.EPSILON4)).toBeTruthy();
+        expect(topPlane.equalsEpsilon(expectedResult, CesiumMath.EPSILON4)).toEqual(true);
     });
 
     it("get frustum near plane", function() {
         var nearPlane = planes[4];
         var expectedResult = new Cartesian4(0.0, 0.0, -1.0, -1.0);
-        expect(nearPlane.equalsEpsilon(expectedResult, CesiumMath.EPSILON4)).toBeTruthy();
+        expect(nearPlane.equalsEpsilon(expectedResult, CesiumMath.EPSILON4)).toEqual(true);
     });
 
     it("get frustum far plane", function() {
         var farPlane = planes[5];
         var expectedResult = new Cartesian4(0.0, 0.0, 1.0, 3.0);
-        expect(farPlane.equalsEpsilon(expectedResult, CesiumMath.EPSILON4)).toBeTruthy();
+        expect(farPlane.equalsEpsilon(expectedResult, CesiumMath.EPSILON4)).toEqual(true);
     });
 
     it("get orthographic projection matrix", function() {
         var projectionMatrix = frustum.getProjectionMatrix();
         var expected = Matrix4.createOrthographicOffCenter(frustum.left, frustum.right, frustum.top, frustum.bottm, frustum.near, frustum.far);
-        expect(projectionMatrix.equalsEpsilon(expected, CesiumMath.EPSILON6)).toBeTruthy();
+        expect(projectionMatrix.equalsEpsilon(expected, CesiumMath.EPSILON6)).toEqual(true);
     });
 
     it("clone", function() {
         var clone = frustum.clone();
-        expect(clone.equals(frustum)).toBeTruthy();
+        expect(clone.equals(frustum)).toEqual(true);
     });
 
     it("destroys", function() {

@@ -17,8 +17,8 @@ defineSuite([
         var positions = [new Cartesian3(2, -2, 0),
                          new Cartesian3(2, 2, 0)];
         var results = tangentPlane.projectPointsOntoEllipsoid(positions);
-        expect(results[0].equalsEpsilon(new Cartesian3(1/3, 2/3, -2/3), CesiumMath.EPSILON10)).toBeTruthy();
-        expect(results[1].equalsEpsilon(new Cartesian3(1/3, 2/3,  2/3), CesiumMath.EPSILON10)).toBeTruthy();
+        expect(results[0].equalsEpsilon(new Cartesian3(1/3, 2/3, -2/3), CesiumMath.EPSILON10)).toEqual(true);
+        expect(results[1].equalsEpsilon(new Cartesian3(1/3, 2/3,  2/3), CesiumMath.EPSILON10)).toEqual(true);
     });
 
     it("projectPointsOntoEllipsoid throws without positions", function () {

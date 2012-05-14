@@ -47,7 +47,7 @@ defineSuite([
     });
 
     it("gets default show", function() {
-        expect(polyline.show).toBeTruthy();
+        expect(polyline.show).toEqual(true);
     });
 
     it("sets positions", function() {

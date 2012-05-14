@@ -19,7 +19,7 @@ defineSuite([
 
         var intersectionPoint = IntersectionTests.rayPlane(rayOrigin, rayDirection, planeNormal, planeD);
 
-        expect(intersectionPoint.equals(new Cartesian3(1.0, 0.0, 0.0))).toBeTruthy();
+        expect(intersectionPoint.equals(new Cartesian3(1.0, 0.0, 0.0))).toEqual(true);
     });
 
     it("rayPlane misses", function() {
@@ -120,13 +120,13 @@ defineSuite([
         expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
 
         intersections = IntersectionTests.rayEllipsoid(new Cartesian3(-2.0, 0.0, 0.0), new Cartesian3(-1.0, 0.0, 0.0), unitSphere);
-        expect(typeof intersections === "undefined").toBeTruthy();
+        expect(typeof intersections === "undefined").toEqual(true);
 
         intersections = IntersectionTests.rayEllipsoid(new Cartesian3(0.0, -2.0, 0.0), new Cartesian3(0.0, -1.0, 0.0), unitSphere);
-        expect(typeof intersections === "undefined").toBeTruthy();
+        expect(typeof intersections === "undefined").toEqual(true);
 
         intersections = IntersectionTests.rayEllipsoid(new Cartesian3(0.0, 0.0, -2.0), new Cartesian3(0.0, 0.0, -1.0), unitSphere);
-        expect(typeof intersections === "undefined").toBeTruthy();
+        expect(typeof intersections === "undefined").toEqual(true);
     });
 
     it("rayEllipsoid inside intersection", function() {

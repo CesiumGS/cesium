@@ -40,7 +40,7 @@ defineSuite([
     it("clone", function() {
         var v = new Cartesian3(1, 2, 3);
         var w = v.clone();
-        expect(v.equals(w)).toBeTruthy();
+        expect(v.equals(w)).toEqual(true);
     });
 
     it("getZero", function() {
@@ -73,7 +73,7 @@ defineSuite([
 
     it("getXY", function() {
         var v = new Cartesian3(1, 2, 3);
-        expect(v.getXY().equals(new Cartesian2(1, 2))).toBeTruthy();
+        expect(v.getXY().equals(new Cartesian2(1, 2))).toEqual(true);
         expect(v.z).toEqual(3);
     });
 
@@ -96,7 +96,7 @@ defineSuite([
 
     it("cross", function() {
         var c = new Cartesian3(1, 0, 0).cross(new Cartesian3(0, 1, 0));
-        expect(c.equals(new Cartesian3(0, 0, 1))).toBeTruthy();
+        expect(c.equals(new Cartesian3(0, 0, 1))).toEqual(true);
     });
 
     it("dot", function() {
@@ -106,22 +106,22 @@ defineSuite([
 
     it("add", function() {
         var v = new Cartesian3(1, 2, 3).add(new Cartesian3(4, 5, 6));
-        expect(v.equals(new Cartesian3(5, 7, 9))).toBeTruthy();
+        expect(v.equals(new Cartesian3(5, 7, 9))).toEqual(true);
     });
 
     it("multiplyWithScalar", function() {
         var v = new Cartesian3(1, 2, 3).multiplyWithScalar(2);
-        expect(v.equals(new Cartesian3(2, 4, 6))).toBeTruthy();
+        expect(v.equals(new Cartesian3(2, 4, 6))).toEqual(true);
     });
 
     it("multiplyComponents", function() {
         var v = new Cartesian3(1, 2, 3).multiplyComponents(new Cartesian3(4, 5, 6));
-        expect(v.equals(new Cartesian3(4, 10, 18))).toBeTruthy();
+        expect(v.equals(new Cartesian3(4, 10, 18))).toEqual(true);
     });
 
     it("divideByScalar", function() {
         var v = new Cartesian3(2, 4, 6).divideByScalar(2);
-        expect(v.equals(new Cartesian3(1, 2, 3))).toBeTruthy();
+        expect(v.equals(new Cartesian3(1, 2, 3))).toEqual(true);
     });
 
     it("getMinimumComponent", function() {
@@ -135,9 +135,9 @@ defineSuite([
     });
 
     it("mostOrthogonalAxis", function() {
-        expect(new Cartesian3(1, 2, 3).mostOrthogonalAxis().equals(Cartesian3.getUnitX())).toBeTruthy();
-        expect(new Cartesian3(3, 1, 2).mostOrthogonalAxis().equals(Cartesian3.getUnitY())).toBeTruthy();
-        expect(new Cartesian3(2, 3, 1).mostOrthogonalAxis().equals(Cartesian3.getUnitZ())).toBeTruthy();
+        expect(new Cartesian3(1, 2, 3).mostOrthogonalAxis().equals(Cartesian3.getUnitX())).toEqual(true);
+        expect(new Cartesian3(3, 1, 2).mostOrthogonalAxis().equals(Cartesian3.getUnitY())).toEqual(true);
+        expect(new Cartesian3(2, 3, 1).mostOrthogonalAxis().equals(Cartesian3.getUnitZ())).toEqual(true);
     });
 
     it("angleBetween", function() {
@@ -150,34 +150,34 @@ defineSuite([
     it("rotateAroundAxis", function() {
         var x = Cartesian3.getUnitX();
         var z = Cartesian3.getUnitZ();
-        expect(x.rotateAroundAxis(z, CesiumMath.PI_OVER_TWO).equalsEpsilon(Cartesian3.getUnitY(), CesiumMath.EPSILON14)).toBeTruthy();
-        expect(x.rotateAroundAxis(z, Math.PI).equalsEpsilon(x.negate(), CesiumMath.EPSILON14)).toBeTruthy();
+        expect(x.rotateAroundAxis(z, CesiumMath.PI_OVER_TWO).equalsEpsilon(Cartesian3.getUnitY(), CesiumMath.EPSILON14)).toEqual(true);
+        expect(x.rotateAroundAxis(z, Math.PI).equalsEpsilon(x.negate(), CesiumMath.EPSILON14)).toEqual(true);
     });
 
     it("negate", function() {
         var v = new Cartesian3(1, 2, 3).negate();
-        expect(v.equals(new Cartesian3(-1, -2, -3))).toBeTruthy();
+        expect(v.equals(new Cartesian3(-1, -2, -3))).toEqual(true);
     });
 
     it("abs", function() {
         var v = new Cartesian2(-1, -2, -3).abs();
-        expect(v.equals(new Cartesian2(1, 2, 3))).toBeTruthy();
+        expect(v.equals(new Cartesian2(1, 2, 3))).toEqual(true);
     });
 
     it("subtract", function() {
         var v = new Cartesian3(3, 4, 5).subtract(new Cartesian3(3, 2, 1));
-        expect(v.equals(new Cartesian3(0, 2, 4))).toBeTruthy();
+        expect(v.equals(new Cartesian3(0, 2, 4))).toEqual(true);
     });
 
     it("lerp", function() {
         var v = new Cartesian3(4, 8, 12).lerp(new Cartesian3(8, 20, 16), 0.25);
-        expect(v.equals(new Cartesian3(5, 11, 13))).toBeTruthy();
+        expect(v.equals(new Cartesian3(5, 11, 13))).toEqual(true);
     });
 
     it("equalsEpsilon", function() {
-        expect(new Cartesian3(1, 2, 1).equalsEpsilon(new Cartesian3(1, 2, 1), 0)).toBeTruthy();
-        expect(new Cartesian3(1, 2, 1).equalsEpsilon(new Cartesian3(1, 2, 2), 1)).toBeTruthy();
-        expect(new Cartesian3(1, 2, 1).equalsEpsilon(new Cartesian3(1, 2, 3), 1)).toBeFalsy();
+        expect(new Cartesian3(1, 2, 1).equalsEpsilon(new Cartesian3(1, 2, 1), 0)).toEqual(true);
+        expect(new Cartesian3(1, 2, 1).equalsEpsilon(new Cartesian3(1, 2, 2), 1)).toEqual(true);
+        expect(new Cartesian3(1, 2, 1).equalsEpsilon(new Cartesian3(1, 2, 3), 1)).toEqual(false);
     });
 
     it("toString", function() {

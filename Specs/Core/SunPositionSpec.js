@@ -256,7 +256,7 @@ defineSuite([
         var position = sunPos.position.normalize();
         var cartographicPos = sunPos.cartographicPosition;
         var cartesianPos = ellipsoid.toCartesian(cartographicPos).normalize();
-        expect((cartesianPos).equalsEpsilon(position, CesiumMath.EPSILON2)).toBeTruthy();
+        expect((cartesianPos).equalsEpsilon(position, CesiumMath.EPSILON2)).toEqual(true);
     });
 
     it("has matching cartographic and cartesian positions (2)", function() {
@@ -265,7 +265,7 @@ defineSuite([
         var position = sunPos.position.normalize();
         var cartographicPos = sunPos.cartographicPosition;
         var cartesianPos = ellipsoid.toCartesian(cartographicPos).normalize();
-        expect((cartesianPos).equalsEpsilon(position, CesiumMath.EPSILON2)).toBeTruthy();
+        expect((cartesianPos).equalsEpsilon(position, CesiumMath.EPSILON2)).toEqual(true);
     });
 
     it("has matching cartographic and cartesian positions (3)", function() {
@@ -274,7 +274,7 @@ defineSuite([
         var position = sunPos.position.normalize();
         var cartographicPos = sunPos.cartographicPosition;
         var cartesianPos = ellipsoid.toCartesian(cartographicPos).normalize();
-        expect((cartesianPos).equalsEpsilon(position, CesiumMath.EPSILON2)).toBeTruthy();
+        expect((cartesianPos).equalsEpsilon(position, CesiumMath.EPSILON2)).toEqual(true);
     });
 
     it("has matching cartographic and cartesian positions (4)", function() {
@@ -283,7 +283,7 @@ defineSuite([
         var position = sunPos.position.normalize();
         var cartographicPos = sunPos.cartographicPosition;
         var cartesianPos = ellipsoid.toCartesian(cartographicPos).normalize();
-        expect((cartesianPos).equalsEpsilon(position, CesiumMath.EPSILON2)).toBeTruthy();
+        expect((cartesianPos).equalsEpsilon(position, CesiumMath.EPSILON2)).toEqual(true);
     });
 
     it("has the sun rising in the east and setting in the west", function() {

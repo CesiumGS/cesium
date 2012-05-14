@@ -64,32 +64,32 @@ defineSuite([
     it("evaluate can jump around in time", function() {
         var oi = new OrientationInterpolator(points);
 
-        expect(oi.evaluate(points[0].time).equalsEpsilon(points[0].orientation, CesiumMath.EPSILON12)).toBeTruthy();
+        expect(oi.evaluate(points[0].time).equalsEpsilon(points[0].orientation, CesiumMath.EPSILON12)).toEqual(true);
 
         // jump forward
-        expect(oi.evaluate(points[1].time).equalsEpsilon(points[1].orientation, CesiumMath.EPSILON12)).toBeTruthy();
+        expect(oi.evaluate(points[1].time).equalsEpsilon(points[1].orientation, CesiumMath.EPSILON12)).toEqual(true);
 
         // jump backward
-        expect(oi.evaluate(points[0].time).equalsEpsilon(points[0].orientation, CesiumMath.EPSILON12)).toBeTruthy();
+        expect(oi.evaluate(points[0].time).equalsEpsilon(points[0].orientation, CesiumMath.EPSILON12)).toEqual(true);
 
         // jump far forward
-        expect(oi.evaluate(points[points.length - 2].time).equalsEpsilon(points[points.length - 2].orientation, CesiumMath.EPSILON12)).toBeTruthy();
+        expect(oi.evaluate(points[points.length - 2].time).equalsEpsilon(points[points.length - 2].orientation, CesiumMath.EPSILON12)).toEqual(true);
 
         // jump far back
-        expect(oi.evaluate(points[0].time).equalsEpsilon(points[0].orientation, CesiumMath.EPSILON12)).toBeTruthy();
+        expect(oi.evaluate(points[0].time).equalsEpsilon(points[0].orientation, CesiumMath.EPSILON12)).toEqual(true);
     });
 
     it("evaluate (1)", function() {
         var oi = new OrientationInterpolator(points);
         var actual = oi.evaluate((points[0].time + points[1].time) * 0.5);
         var expected = new Quaternion(0.0, 0.0, Math.sin(Math.PI / 8.0), Math.cos(Math.PI / 8.0));
-        expect(actual.equalsEpsilon(expected, CesiumMath.EPSILON15)).toBeTruthy();
+        expect(actual.equalsEpsilon(expected, CesiumMath.EPSILON15)).toEqual(true);
     });
 
     it("evaluate (2)", function() {
         var oi = new OrientationInterpolator(points);
         var actual = oi.evaluate(points[2].time);
         var expected = new Quaternion(0.0, -1.0, 0.0, CesiumMath.toRadians(15.0));
-        expect(actual.equalsEpsilon(expected, CesiumMath.EPSILON15)).toBeTruthy();
+        expect(actual.equalsEpsilon(expected, CesiumMath.EPSILON15)).toEqual(true);
     });
 });

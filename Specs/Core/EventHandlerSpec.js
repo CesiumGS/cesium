@@ -165,16 +165,16 @@ defineSuite([
         element.fireEvents("keydown", {
             keyCode : 'a'.charCodeAt(0)
         });
-        expect(keyPressed).toBeTruthy();
+        expect(keyPressed).toEqual(true);
 
-        expect(handler.getKeyAction('a') === keyPressedFunction).toBeTruthy();
+        expect(handler.getKeyAction('a') === keyPressedFunction).toEqual(true);
 
         handler.removeKeyAction('a');
         element.fireEvents("keyDown", {
             keyCode : 'a'.charCodeAt(0)
         });
 
-        expect(keyPressed).toBeTruthy();
+        expect(keyPressed).toEqual(true);
     });
 
     it("modified key events", function() {
@@ -189,9 +189,9 @@ defineSuite([
             keyCode : 'b'.charCodeAt(0),
             ctrlKey : true
         });
-        expect(modifiedKeyPressed).toBeTruthy();
+        expect(modifiedKeyPressed).toEqual(true);
 
-        expect(handler.getKeyAction('b', EventModifier.CTRL) === modfiedKeyPressedFunction).toBeTruthy();
+        expect(handler.getKeyAction('b', EventModifier.CTRL) === modfiedKeyPressedFunction).toEqual(true);
 
         handler.removeKeyAction('b', EventModifier.CTRL);
         element.fireEvents("keyDown", {
@@ -199,7 +199,7 @@ defineSuite([
             ctrlKey : true
         });
 
-        expect(modifiedKeyPressed).toBeTruthy();
+        expect(modifiedKeyPressed).toEqual(true);
     });
 
     it("mouse right down", function() {
@@ -218,7 +218,7 @@ defineSuite([
         });
         expect(actualCoords).toEqual(expectedCoords);
 
-        expect(handler.getMouseAction(MouseEventType.RIGHT_DOWN) === mouseDown).toBeTruthy();
+        expect(handler.getMouseAction(MouseEventType.RIGHT_DOWN) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.RIGHT_DOWN);
         element.fireEvents("mousedown", {
@@ -246,7 +246,7 @@ defineSuite([
         });
         expect(actualCoords).toEqual(expectedCoords);
 
-        expect(handler.getMouseAction(MouseEventType.RIGHT_UP) === mouseDown).toBeTruthy();
+        expect(handler.getMouseAction(MouseEventType.RIGHT_UP) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.RIGHT_UP);
         element.fireEvents("mousedown", {
@@ -279,7 +279,7 @@ defineSuite([
         });
         expect(actualCoords).toEqual(expectedCoords);
 
-        expect(handler.getMouseAction(MouseEventType.RIGHT_CLICK) === mouseDown).toBeTruthy();
+        expect(handler.getMouseAction(MouseEventType.RIGHT_CLICK) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.RIGHT_CLICK);
         element.fireEvents("mousedown", {
@@ -312,7 +312,7 @@ defineSuite([
         });
         expect(actualCoords).toEqual(expectedCoords);
 
-        expect(handler.getMouseAction(MouseEventType.LEFT_DOWN) === mouseDown).toBeTruthy();
+        expect(handler.getMouseAction(MouseEventType.LEFT_DOWN) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.LEFT_DOWN);
         element.fireEvents("mousedown", {
@@ -340,7 +340,7 @@ defineSuite([
         });
         expect(actualCoords).toEqual(expectedCoords);
 
-        expect(handler.getMouseAction(MouseEventType.LEFT_UP) === mouseDown).toBeTruthy();
+        expect(handler.getMouseAction(MouseEventType.LEFT_UP) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.LEFT_UP);
         element.fireEvents("mousedown", {
@@ -373,7 +373,7 @@ defineSuite([
         });
         expect(actualCoords).toEqual(expectedCoords);
 
-        expect(handler.getMouseAction(MouseEventType.LEFT_CLICK) === mouseDown).toBeTruthy();
+        expect(handler.getMouseAction(MouseEventType.LEFT_CLICK) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.LEFT_CLICK);
         element.fireEvents("mousedown", {
@@ -406,7 +406,7 @@ defineSuite([
         });
         expect(actualCoords).toEqual(expectedCoords);
 
-        expect(handler.getMouseAction(MouseEventType.MIDDLE_DOWN) === mouseDown).toBeTruthy();
+        expect(handler.getMouseAction(MouseEventType.MIDDLE_DOWN) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.MIDDLE_DOWN);
         element.fireEvents("mousedown", {
@@ -434,7 +434,7 @@ defineSuite([
         });
         expect(actualCoords).toEqual(expectedCoords);
 
-        expect(handler.getMouseAction(MouseEventType.MIDDLE_UP) === mouseDown).toBeTruthy();
+        expect(handler.getMouseAction(MouseEventType.MIDDLE_UP) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.MIDDLE_UP);
         element.fireEvents("mousedown", {
@@ -467,7 +467,7 @@ defineSuite([
         });
         expect(actualCoords).toEqual(expectedCoords);
 
-        expect(handler.getMouseAction(MouseEventType.MIDDLE_CLICK) === mouseDown).toBeTruthy();
+        expect(handler.getMouseAction(MouseEventType.MIDDLE_CLICK) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.MIDDLE_CLICK);
         element.fireEvents("mousedown", {
@@ -500,7 +500,7 @@ defineSuite([
         });
         expect(actualCoords).toEqual(expectedCoords);
 
-        expect(handler.getMouseAction(MouseEventType.LEFT_DOUBLE_CLICK) === mouseDown).toBeTruthy();
+        expect(handler.getMouseAction(MouseEventType.LEFT_DOUBLE_CLICK) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.LEFT_DOUBLE_CLICK);
         element.fireEvents("dblclick", {
@@ -528,7 +528,7 @@ defineSuite([
         });
         expect(actualCoords).toEqual(expectedCoords);
 
-        expect(handler.getMouseAction(MouseEventType.RIGHT_DOUBLE_CLICK) === mouseDown).toBeTruthy();
+        expect(handler.getMouseAction(MouseEventType.RIGHT_DOUBLE_CLICK) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.RIGHT_DOUBLE_CLICK);
         element.fireEvents("dblclick", {
@@ -556,7 +556,7 @@ defineSuite([
         });
         expect(actualCoords).toEqual(expectedCoords);
 
-        expect(handler.getMouseAction(MouseEventType.MIDDLE_DOUBLE_CLICK) === mouseDown).toBeTruthy();
+        expect(handler.getMouseAction(MouseEventType.MIDDLE_DOUBLE_CLICK) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.MIDDLE_DOUBLE_CLICK);
         element.fireEvents("dblclick", {
@@ -596,7 +596,7 @@ defineSuite([
         });
         expect(actualMove).toEqual(expectedMove);
 
-        expect(handler.getMouseAction(MouseEventType.MOVE) === mouseMove).toBeTruthy();
+        expect(handler.getMouseAction(MouseEventType.MOVE) === mouseMove).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.MOVE);
         element.fireEvents("mousemove", {
@@ -627,7 +627,7 @@ defineSuite([
         });
         expect(actualDelta).toEqual(expectedDelta);
 
-        expect(handler.getMouseAction(MouseEventType.WHEEL) === mouseWheel).toBeTruthy();
+        expect(handler.getMouseAction(MouseEventType.WHEEL) === mouseWheel).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.WHEEL);
         element.fireEvents("mousewheel", {
@@ -654,7 +654,7 @@ defineSuite([
         });
         expect(actualCoords).toEqual(expectedCoords);
 
-        expect(handler.getMouseAction(MouseEventType.RIGHT_DOWN, EventModifier.SHIFT) === mouseDown).toBeTruthy();
+        expect(handler.getMouseAction(MouseEventType.RIGHT_DOWN, EventModifier.SHIFT) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.RIGHT_DOWN, EventModifier.SHIFT);
         element.fireEvents("mousedown", {
@@ -684,7 +684,7 @@ defineSuite([
         });
         expect(actualCoords).toEqual(expectedCoords);
 
-        expect(handler.getMouseAction(MouseEventType.RIGHT_UP, EventModifier.SHIFT) === mouseDown).toBeTruthy();
+        expect(handler.getMouseAction(MouseEventType.RIGHT_UP, EventModifier.SHIFT) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.RIGHT_UP, EventModifier.SHIFT);
         element.fireEvents("mousedown", {
@@ -720,7 +720,7 @@ defineSuite([
         });
         expect(actualCoords).toEqual(expectedCoords);
 
-        expect(handler.getMouseAction(MouseEventType.RIGHT_CLICK, EventModifier.SHIFT) === mouseDown).toBeTruthy();
+        expect(handler.getMouseAction(MouseEventType.RIGHT_CLICK, EventModifier.SHIFT) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.RIGHT_CLICK, EventModifier.SHIFT);
         element.fireEvents("mousedown", {
@@ -756,7 +756,7 @@ defineSuite([
         });
         expect(actualCoords).toEqual(expectedCoords);
 
-        expect(handler.getMouseAction(MouseEventType.LEFT_DOWN, EventModifier.ALT) === mouseDown).toBeTruthy();
+        expect(handler.getMouseAction(MouseEventType.LEFT_DOWN, EventModifier.ALT) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.LEFT_DOWN, EventModifier.ALT);
         element.fireEvents("mousedown", {
@@ -786,7 +786,7 @@ defineSuite([
         });
         expect(actualCoords).toEqual(expectedCoords);
 
-        expect(handler.getMouseAction(MouseEventType.LEFT_UP, EventModifier.ALT) === mouseDown).toBeTruthy();
+        expect(handler.getMouseAction(MouseEventType.LEFT_UP, EventModifier.ALT) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.LEFT_UP, EventModifier.ALT);
         element.fireEvents("mousedown", {
@@ -822,7 +822,7 @@ defineSuite([
         });
         expect(actualCoords).toEqual(expectedCoords);
 
-        expect(handler.getMouseAction(MouseEventType.LEFT_CLICK, EventModifier.ALT) === mouseDown).toBeTruthy();
+        expect(handler.getMouseAction(MouseEventType.LEFT_CLICK, EventModifier.ALT) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.LEFT_CLICK, EventModifier.ALT);
         element.fireEvents("mousedown", {
@@ -858,7 +858,7 @@ defineSuite([
         });
         expect(actualCoords).toEqual(expectedCoords);
 
-        expect(handler.getMouseAction(MouseEventType.MIDDLE_DOWN, EventModifier.CTRL) === mouseDown).toBeTruthy();
+        expect(handler.getMouseAction(MouseEventType.MIDDLE_DOWN, EventModifier.CTRL) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.MIDDLE_DOWN, EventModifier.CTRL);
         element.fireEvents("mousedown", {
@@ -888,7 +888,7 @@ defineSuite([
         });
         expect(actualCoords).toEqual(expectedCoords);
 
-        expect(handler.getMouseAction(MouseEventType.MIDDLE_UP, EventModifier.CTRL) === mouseDown).toBeTruthy();
+        expect(handler.getMouseAction(MouseEventType.MIDDLE_UP, EventModifier.CTRL) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.MIDDLE_UP, EventModifier.CTRL);
         element.fireEvents("mousedown", {
@@ -924,7 +924,7 @@ defineSuite([
         });
         expect(actualCoords).toEqual(expectedCoords);
 
-        expect(handler.getMouseAction(MouseEventType.MIDDLE_CLICK, EventModifier.CTRL) === mouseDown).toBeTruthy();
+        expect(handler.getMouseAction(MouseEventType.MIDDLE_CLICK, EventModifier.CTRL) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.MIDDLE_CLICK, EventModifier.CTRL);
         element.fireEvents("mousedown", {
@@ -960,7 +960,7 @@ defineSuite([
         });
         expect(actualCoords).toEqual(expectedCoords);
 
-        expect(handler.getMouseAction(MouseEventType.LEFT_DOUBLE_CLICK, EventModifier.CTRL) === mouseDown).toBeTruthy();
+        expect(handler.getMouseAction(MouseEventType.LEFT_DOUBLE_CLICK, EventModifier.CTRL) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.LEFT_DOUBLE_CLICK, EventModifier.CTRL);
         element.fireEvents("dblclick", {
@@ -990,7 +990,7 @@ defineSuite([
         });
         expect(actualCoords).toEqual(expectedCoords);
 
-        expect(handler.getMouseAction(MouseEventType.RIGHT_DOUBLE_CLICK, EventModifier.CTRL) === mouseDown).toBeTruthy();
+        expect(handler.getMouseAction(MouseEventType.RIGHT_DOUBLE_CLICK, EventModifier.CTRL) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.RIGHT_DOUBLE_CLICK, EventModifier.CTRL);
         element.fireEvents("dblclick", {
@@ -1020,7 +1020,7 @@ defineSuite([
         });
         expect(actualCoords).toEqual(expectedCoords);
 
-        expect(handler.getMouseAction(MouseEventType.MIDDLE_DOUBLE_CLICK, EventModifier.CTRL) === mouseDown).toBeTruthy();
+        expect(handler.getMouseAction(MouseEventType.MIDDLE_DOUBLE_CLICK, EventModifier.CTRL) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.MIDDLE_DOUBLE_CLICK, EventModifier.CTRL);
         element.fireEvents("dblclick", {
@@ -1063,7 +1063,7 @@ defineSuite([
         });
         expect(actualMove).toEqual(expectedMove);
 
-        expect(handler.getMouseAction(MouseEventType.MOVE, EventModifier.CTRL) === mouseMove).toBeTruthy();
+        expect(handler.getMouseAction(MouseEventType.MOVE, EventModifier.CTRL) === mouseMove).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.MOVE, EventModifier.CTRL);
         element.fireEvents("mousemove", {
@@ -1097,7 +1097,7 @@ defineSuite([
         });
         expect(actualDelta).toEqual(expectedDelta);
 
-        expect(handler.getMouseAction(MouseEventType.WHEEL, EventModifier.CTRL) === mouseWheel).toBeTruthy();
+        expect(handler.getMouseAction(MouseEventType.WHEEL, EventModifier.CTRL) === mouseWheel).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.WHEEL, EventModifier.CTRL);
         element.fireEvents("mousewheel", {
@@ -1109,7 +1109,7 @@ defineSuite([
     });
 
     it("destroy event handler", function() {
-        expect(element.getNumRegistered() !== 0).toBeTruthy();
+        expect(element.getNumRegistered() !== 0).toEqual(true);
         handler._unregister();
         expect(element.getNumRegistered()).toEqual(0);
     });

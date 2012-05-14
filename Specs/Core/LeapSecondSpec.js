@@ -76,8 +76,8 @@ defineSuite([
         var leapSecond1 = new LeapSecond(JulianDate.fromDate(date), 25.0);
         var leapSecond2 = new LeapSecond(JulianDate.fromDate(date), 25.0);
         var leapSecond3 = new LeapSecond(JulianDate.fromDate(date), 26.0);
-        expect(leapSecond1.equals(leapSecond2)).toBeTruthy();
-        expect(leapSecond1.equals(leapSecond3)).toBeFalsy();
+        expect(leapSecond1.equals(leapSecond2)).toEqual(true);
+        expect(leapSecond1.equals(leapSecond3)).toEqual(false);
 
     });
 

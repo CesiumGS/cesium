@@ -45,9 +45,9 @@ defineSuite([
             up : newUp,
             target : target
         });
-        expect(tempCamera.position.equals(newPosition)).toBeTruthy();
-        expect(tempCamera.direction.equals(newDirection)).toBeTruthy();
-        expect(tempCamera.up.equals(newUp)).toBeTruthy();
+        expect(tempCamera.position.equals(newPosition)).toEqual(true);
+        expect(tempCamera.direction.equals(newDirection)).toEqual(true);
+        expect(tempCamera.up.equals(newUp)).toEqual(true);
     });
 
     it("lookAt array", function() {
@@ -57,9 +57,9 @@ defineSuite([
         var newUp = camera.right.cross(newDirection).normalize();
         var tempCamera = camera.clone();
         tempCamera.lookAt(newPosition, target, newUp);
-        expect(tempCamera.position.equals(newPosition)).toBeTruthy();
-        expect(tempCamera.direction.equals(newDirection)).toBeTruthy();
-        expect(tempCamera.up.equals(newUp)).toBeTruthy();
+        expect(tempCamera.position.equals(newPosition)).toEqual(true);
+        expect(tempCamera.direction.equals(newDirection)).toEqual(true);
+        expect(tempCamera.up.equals(newUp)).toEqual(true);
     });
 
     it("get view matrix", function() {
@@ -77,18 +77,18 @@ defineSuite([
                                       0.0, 0.0, 1.0, -position.z,
                                       0.0, 0.0, 0.0,         1.0);
         var expected = rotation.multiplyWithMatrix(translation);
-        expect(viewMatrix.equals(expected)).toBeTruthy();
+        expect(viewMatrix.equals(expected)).toEqual(true);
     });
 
     it("get inverse view matrix", function() {
         var expected = camera.getViewMatrix().inverse();
-        expect(expected.equals(camera.getInverseViewMatrix())).toBeTruthy();
+        expect(expected.equals(camera.getInverseViewMatrix())).toEqual(true);
     });
 
     it("get inverse transform", function() {
         camera.transform = new Matrix4(5.0, 0.0, 0.0, 1.0, 0.0, 5.0, 0.0, 2.0, 0.0, 0.0, 5.0, 3.0, 0.0, 0.0, 0.0, 1.0);
         var expected = camera.transform.inverseTransformation();
-        expect(expected.equals(camera.getInverseTransform())).toBeTruthy();
+        expect(expected.equals(camera.getInverseTransform())).toEqual(true);
     });
 
     describe("box intersections", function() {
