@@ -99,8 +99,9 @@ defineSuite([
     });
 
     it("get throws if index is undefined", function() {
-        var n;
-        expect(primitives.get(n)).toThrow();
+        expect(function() {
+            primitives.get(undefined);
+        }).toThrow();
     });
 
     it("has zero primitives when constructed", function() {
