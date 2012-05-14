@@ -1,10 +1,8 @@
 /*global define*/
 define([
-        '../Scene/Polyline',
-        '../Core/Cartesian3'
+        '../Scene/Polyline'
     ], function(
-         Polyline,
-         Cartesian3) {
+         Polyline) {
     "use strict";
 
     //FIXME This class currently relies on storing data onto each CZML object

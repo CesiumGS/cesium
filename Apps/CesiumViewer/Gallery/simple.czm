@@ -1256,7 +1256,7 @@
       ]
     },
     "polygon":{
-      "show":false,
+      "show":true,
       "material":{
         "solidColor":{
           "color":{

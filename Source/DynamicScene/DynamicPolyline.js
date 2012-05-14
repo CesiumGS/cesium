@@ -35,7 +35,7 @@ function(BooleanDataHandler,
             polyline.outlineColor = DynamicProperty.createOrUpdate(ColorDataHandler, polylineData.outlineColor, buffer, sourceUri, polyline.outlineColor);
             polyline.outlineWidth = DynamicProperty.createOrUpdate(NumberDataHandler, polylineData.outlineWidth, buffer, sourceUri, polyline.outlineWidth);
             polyline.show = DynamicProperty.createOrUpdate(BooleanDataHandler, polylineData.show, buffer, sourceUri, polyline.show);
-            polyline.width = DynamicProperty.createOrUpdate(NumberDataHandler, polylineData.pixelSize, buffer, sourceUri, polyline.wudth);
+            polyline.width = DynamicProperty.createOrUpdate(NumberDataHandler, polylineData.width, buffer, sourceUri, polyline.width);
         }
     };
 
