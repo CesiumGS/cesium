@@ -6,6 +6,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Spherical',
         '../Core/Math',
+        './ReferenceProperty',
         './DynamicPositionProperty'
     ], function(
         JulianDate,
@@ -14,6 +15,7 @@ define([
         Cartesian3,
         Spherical,
         CesiumMath,
+        ReferenceProperty,
         DynamicPositionProperty) {
     "use strict";
 
@@ -122,27 +124,9 @@ define([
             var properties = [];
             properties.buffer = buffer;
             for ( var i = 0, len = objects.length; i < len; i++) {
-                properties.push(objects[i]);
+                properties.push(ReferenceProperty.fromString(buffer, objects[i]));
             }
             existingInterval.data = properties;
-        }
-    };
-
-    //FIXME Both getValueSpherical and getValueCartesian that the linked property
-    //is never completely replaced.  This will cause problems when we have a composite
-    //CZML collection of several different CZML files.
-
-    var resolveReference = function(referenceString, buffer) {
-        var parts = referenceString.split(".");
-        if (parts.length === 2) {
-            var objectId = parts[0].slice(1);
-            var property = parts[1];
-            if (typeof objectId !== 'undefined' && typeof property !== 'undefined') {
-                var object = buffer.getObject(objectId);
-                if (typeof object !== 'undefined') {
-                    return object[property];
-                }
-            }
         }
     };
 
@@ -153,27 +137,18 @@ define([
         }
         var interval_data = interval.data;
         if (Array.isArray(interval_data)) {
-            var buffer = interval_data.buffer, result = [];
+            var result = [];
             for ( var i = 0, len = interval_data.length; i < len; i++) {
-                var item = interval_data[i];
-                if (typeof item === 'string') {
-                    var property = resolveReference(item, buffer);
-                    if (typeof property !== 'undefined') {
-                        item = property;
-                        interval_data[i] = item;
-                    }
-                }
-                if (typeof item !== 'undefined') {
-                    var value = item.getValue(time);
-                    if (typeof value !== 'undefined') {
-                        result.push(value);
-                    }
+                var value = interval_data[i].getValueSpherical(time);
+                if (typeof value !== 'undefined') {
+                    result.push(value);
                 }
             }
             return result;
         }
 
         return interval_data.getValueSpherical();
+
     };
 
     DynamicDirectionsProperty.prototype.getValueCartesian = function(time) {
@@ -183,21 +158,11 @@ define([
         }
         var interval_data = interval.data;
         if (Array.isArray(interval_data)) {
-            var buffer = interval_data.buffer, result = [];
+            var result = [];
             for ( var i = 0, len = interval_data.length; i < len; i++) {
-                var item = interval_data[i];
-                if (typeof item === 'string') {
-                    var property = resolveReference(item, buffer);
-                    if (typeof property !== 'undefined') {
-                        item = property;
-                        interval_data[i] = item;
-                    }
-                }
-                if (typeof item !== 'undefined') {
-                    var value = item.getValueCartesian(time);
-                    if (typeof value !== 'undefined') {
-                        result.push(value);
-                    }
+                var value = interval_data[i].getValueCartesian(time);
+                if (typeof value !== 'undefined') {
+                    result.push(value);
                 }
             }
             return result;
