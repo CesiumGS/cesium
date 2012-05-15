@@ -121,7 +121,7 @@ require({ baseUrl : '../../Source' }, [
         //scene.setSunPosition(scene.getCamera().position);
         scene.setSunPosition(SunPosition.compute().position);
 
-        // Add code here to update primitives based on changes to animation time, camera parameters, etc.
+        // INSERT CODE HERE to update primitives based on changes to animation time, camera parameters, etc.
     });
 
     (function tick() {
@@ -130,20 +130,22 @@ require({ baseUrl : '../../Source' }, [
     }());
 
     ///////////////////////////////////////////////////////////////////////////
-    // Example keyboard and Mouse handlers
+    // Example mouse handler
 
     var handler = new EventHandler(canvas);
 
-    handler.setKeyAction(function() {
-        /* ... */
-        // Handler for key press
-    }, "1");
+    handler.setMouseAction(function(movement) {
+        // INSERT CODE HERE: Handler for left-click
+        // ...
+    }, MouseEventType.LEFT_CLICK);
 
     handler.setMouseAction(function(movement) {
-        /* ... */
+        // INSERT CODE HERE: Handler for mouse move
         // Use movement.startX, movement.startY, movement.endX, movement.endY
+        // ...
     }, MouseEventType.MOVE);
 
+    // Prevent right-click from opening a context menu.
     document.oncontextmenu = function() {
         return false;
     };
