@@ -15,7 +15,7 @@ define([
         doublesPerInterpolationValue : doublesPerCartesian,
 
         unwrapCzmlInterval : function(czmlInterval) {
-            return czmlInterval.quaternion;
+            return czmlInterval.unitQuaternion || czmlInterval.quaternion;
         },
 
         isSampled : function(czmlIntervalData) {
@@ -28,13 +28,13 @@ define([
             for ( var i = 0, len = lastIndex - firstIndex + 1; i < len; i++) {
                 var offset = i * doublesPerCartesian;
                 var value = QuaternionDataHandler.createValueFromArray(valuesArray, (firstIndex + i) * doublesPerQuaternion);
-                var difference = value.multiply(quaternion0Conjugate);
+                var difference = value.multiply(quaternion0Conjugate).normalize();
 
                 if (difference.w < 0) {
                     difference = difference.negate();
                 }
 
-                if (difference.w === 1 && difference.x === 0 && difference.y === 0 && difference.z === 0) {
+                if (difference.x === 0 && difference.y === 0 && difference.z === 0) {
                     destinationArray[offset] = 0;
                     destinationArray[offset + 1] = 0;
                     destinationArray[offset + 2] = 0;
@@ -54,11 +54,11 @@ define([
         },
 
         createValue : function(data) {
-            return new Quaternion(data[0], data[1], data[2], data[3]);
+            return new Quaternion(data[1], data[2], data[3], data[0]);
         },
 
         createValueFromArray : function(data, startingIndex) {
-            return new Quaternion(data[startingIndex], data[startingIndex + 1], data[startingIndex + 2], data[startingIndex + 3]);
+            return new Quaternion(data[startingIndex + 1], data[startingIndex + 2], data[startingIndex + 3], data[startingIndex]);
         },
 
         createValueFromInterpolationResult : function(result, valuesArray, firstIndex, lastIndex) {
@@ -74,7 +74,7 @@ define([
                 difference = Quaternion.fromAxisAngle(rotationVector, magnitude);
             }
 
-            return difference.multiply(quaternion0);
+            return difference.multiply(quaternion0).normalize();
         }
     };
 

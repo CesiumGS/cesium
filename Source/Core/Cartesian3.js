@@ -1,5 +1,10 @@
 /*global define*/
-define(['./Cartesian2'], function(Cartesian2) {
+define([
+        './Cartesian2',
+        './Spherical'
+       ], function(
+         Cartesian2,
+         Spherical) {
     "use strict";
 
     /**
@@ -49,6 +54,37 @@ define(['./Cartesian2'], function(Cartesian2) {
          */
         this.z = (typeof z !== "undefined") ? z : 0.0;
     }
+
+    /**
+     * DOC_TBA
+     *
+     */
+    Cartesian3.fromSpherical = function(spherical) {
+        var clock = spherical.clock;
+        var cone = spherical.cone;
+        var magnitude = spherical.magnitude;
+        var radial = magnitude * Math.sin(cone);
+        var x = radial * Math.cos(clock);
+        var y = radial * Math.sin(clock);
+        var z = magnitude * Math.cos(cone);
+        return new Cartesian3(x, y, z);
+    };
+
+    /**
+     * DOC_TBA
+     *
+     */
+    Cartesian3.toSpherical = function(cartesian3) {
+        return Spherical.fromCartesian3(cartesian3);
+    };
+
+    /**
+     * DOC_TBA
+     *
+     */
+    Cartesian3.prototype.toSpherical = function() {
+        return Spherical.fromCartesian3(this);
+    };
 
     /**
      * Returns a duplicate of a Cartesian3.

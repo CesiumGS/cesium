@@ -23,11 +23,6 @@ define([
         LINEAR : LinearApproximation
     };
 
-    function DynamicProperty(dataHandler) {
-        this._dataHandler = dataHandler;
-        this._intervals = new TimeIntervalCollection();
-        this._isSampled = false;
-    }
 
     function convertDate(date, epoch) {
         if (typeof date === 'string') {
@@ -35,6 +30,27 @@ define([
         }
         return epoch.addSeconds(date);
     }
+
+    function DynamicProperty(dataHandler) {
+        this.dataHandler = dataHandler;
+        this._intervals = new TimeIntervalCollection();
+        this._isSampled = false;
+    }
+
+    DynamicProperty.createOrUpdate = function(valueType, czmlIntervals, buffer, sourceUri, existingProperty) {
+        if (typeof czmlIntervals === 'undefined') {
+            return existingProperty;
+        }
+
+        //At this point we will definitely have a value, so if one doesn't exist, create it.
+        if (typeof existingProperty === 'undefined') {
+            existingProperty = new DynamicProperty(valueType);
+        }
+
+        existingProperty.addIntervals(czmlIntervals, buffer, sourceUri);
+
+        return existingProperty;
+    };
 
     DynamicProperty._mergeNewSamples = function(epoch, times, values, newData, doublesPerValue, dataHandler) {
         var newDataIndex = 0, i, prevItem, timesInsertionPoint, valuesInsertionPoint, timesSpliceArgs, valuesSpliceArgs, currentTime, nextTime;
@@ -96,11 +112,16 @@ define([
             intervalStop = JulianDate.fromIso8601(iso8601Interval[1]);
         }
 
+        var unwrappedInterval = this.dataHandler.unwrapCzmlInterval(czmlInterval);
+        this.addIntervalUnwrapped(intervalStart, intervalStop, czmlInterval, unwrappedInterval, buffer, sourceUri);
+    };
+
+    DynamicProperty.prototype.addIntervalUnwrapped = function(intervalStart, intervalStop, czmlInterval, unwrappedInterval, buffer, sourceUri) {
         var this_intervals = this._intervals;
         var existingInterval = this_intervals.findInterval(intervalStart, intervalStop);
 
         var intervalData;
-        if (existingInterval === null) {
+        if (typeof existingInterval === 'undefined') {
             intervalData = {
                 interpolationAlgorithm : LinearApproximation,
                 numberOfPoints : LinearApproximation.getRequiredDataPoints(1)
@@ -113,9 +134,8 @@ define([
             intervalData = existingInterval.data;
         }
 
-        var this_dataHandler = this._dataHandler;
-        var czmlIntervalValue = this_dataHandler.unwrapCzmlInterval(czmlInterval);
-        if (this_dataHandler.isSampled(czmlIntervalValue)) {
+        var this_dataHandler = this.dataHandler;
+        if (this_dataHandler.isSampled(unwrappedInterval)) {
             var interpolationAlgorithm;
             var interpolationAlgorithmType = czmlInterval.interpolationAlgorithm;
             if (interpolationAlgorithmType) {
@@ -139,11 +159,11 @@ define([
             if (typeof epoch !== 'undefined') {
                 epoch = JulianDate.fromIso8601(epoch);
             }
-            DynamicProperty._mergeNewSamples(epoch, intervalData.times, intervalData.values, czmlIntervalValue, this_dataHandler.doublesPerValue, this_dataHandler);
+            DynamicProperty._mergeNewSamples(epoch, intervalData.times, intervalData.values, unwrappedInterval, this_dataHandler.doublesPerValue, this_dataHandler);
         } else {
             //Packet itself is a constant value
             intervalData.times = undefined;
-            intervalData.values = this_dataHandler.createValue(czmlIntervalValue);
+            intervalData.values = this_dataHandler.createValue(unwrappedInterval);
             this._isSampled = false;
         }
     };
@@ -159,10 +179,10 @@ define([
     };
 
     DynamicProperty.prototype.getValue = function(time) {
-        var this_dataHandler = this._dataHandler;
+        var this_dataHandler = this.dataHandler;
         var interval = this._intervals.findIntervalContainingDate(time);
 
-        if (interval !== null) {
+        if (typeof interval !== 'undefined') {
             var intervalData = interval.data;
             var times = intervalData.times;
             var values = intervalData.values;

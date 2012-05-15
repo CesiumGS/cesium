@@ -266,7 +266,7 @@ function(binarySearch,
                 return thisIntervals[i];
             }
         }
-        return null;
+        return undefined;
     };
 
     TimeIntervalCollection.prototype.removeInterval = function(interval) {

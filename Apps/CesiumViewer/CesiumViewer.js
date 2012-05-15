@@ -7,15 +7,20 @@ define(['dojo/dom',
         'Core/Clock',
         'Core/ClockStep',
         'Core/ClockRange',
-        'DynamicScene/createOrUpdateDynamicBillboard',
-        'DynamicScene/createOrUpdateDynamicLabel',
-        'DynamicScene/createOrUpdateDynamicPoint',
-        'DynamicScene/createOrUpdatePosition',
-        'DynamicScene/createOrUpdateOrientation',
+        'DynamicScene/DynamicBillboard',
+        'DynamicScene/DynamicLabel',
+        'DynamicScene/DynamicObject',
+        'DynamicScene/DynamicPoint',
+        'DynamicScene/DynamicPolygon',
+        'DynamicScene/DynamicPolyline',
+        'DynamicScene/DynamicPyramid',
         'DynamicScene/CzmlObjectCollection',
         'DynamicScene/DynamicBillboardVisualizer',
         'DynamicScene/DynamicLabelVisualizer',
         'DynamicScene/DynamicPointVisualizer',
+        'DynamicScene/DynamicPolygonVisualizer',
+        'DynamicScene/DynamicPolylineVisualizer',
+        'DynamicScene/DynamicPyramidVisualizer',
         'DynamicScene/VisualizerCollection',
         'CesiumViewer/loadCzmlFromUrl'],
 function(dom,
@@ -26,15 +31,20 @@ function(dom,
          Clock,
          ClockStep,
          ClockRange,
-         createOrUpdateDynamicBillboard,
-         createOrUpdateDynamicLabel,
-         createOrUpdateDynamicPoint,
-         createOrUpdatePosition,
-         createOrUpdateOrientation,
+         DynamicBillboard,
+         DynamicLabel,
+         DynamicObject,
+         DynamicPoint,
+         DynamicPolygon,
+         DynamicPolyline,
+         DynamicPyramid,
          CzmlObjectCollection,
          DynamicBillboardVisualizer,
          DynamicLabelVisualizer,
          DynamicPointVisualizer,
+         DynamicPolygonVisualizer,
+         DynamicPolylineVisualizer,
+         DynamicPyramidVisualizer,
          VisualizerCollection,
          loadCzmlFromUrl) {
     "use strict";
@@ -45,11 +55,15 @@ function(dom,
             ClockRange.LOOP, 300);
 
     var _buffer = new CzmlObjectCollection("root", "root", {
-        billboard : createOrUpdateDynamicBillboard,
-        label : createOrUpdateDynamicLabel,
-        point : createOrUpdateDynamicPoint,
-        orientation : createOrUpdateOrientation,
-        position : createOrUpdatePosition
+        billboard : DynamicBillboard.createOrUpdate,
+        label : DynamicLabel.createOrUpdate,
+        orientation : DynamicObject.createOrUpdateOrientation,
+        point : DynamicPoint.createOrUpdate,
+        polygon : DynamicPolygon.createOrUpdate,
+        polyline : DynamicPolyline.createOrUpdate,
+        position : DynamicObject.createOrUpdatePosition,
+        pyramid : DynamicPyramid.createOrUpdate,
+        vertexPositions : DynamicObject.createOrUpdateVertexPositions
     });
 
     loadCzmlFromUrl(_buffer, 'Gallery/simple.czm');
@@ -64,7 +78,12 @@ function(dom,
 
         postSetup : function(widget) {
             var scene = widget.scene;
-            visualizers = new VisualizerCollection([new DynamicBillboardVisualizer(scene), new DynamicLabelVisualizer(scene), new DynamicPointVisualizer(scene)]);
+            visualizers = new VisualizerCollection([new DynamicBillboardVisualizer(scene),
+                                                    new DynamicLabelVisualizer(scene),
+                                                    new DynamicPointVisualizer(scene),
+                                                    new DynamicPolygonVisualizer(scene),
+                                                    new DynamicPolylineVisualizer(scene),
+                                                    new DynamicPyramidVisualizer(scene)]);
         },
 
         onSetupError : function(widget, error) {

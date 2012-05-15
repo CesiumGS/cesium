@@ -1,18 +1,18 @@
 /*global define*/
-define(['../Core/Cartesian3',
-        '../Core/Ellipsoid'],
-function(Cartesian3, Ellipsoid) {
+define([
+        '../Core/Spherical'
+       ], function(
+         Spherical) {
     "use strict";
 
-    var doublesPerValue = 3;
-    var wgs84 = Ellipsoid.getWgs84();
+    var doublesPerValue = 2;
 
-    var Cartesian3DataHandler = {
+    var UnitSphericalDataHandler = {
         doublesPerValue : doublesPerValue,
         doublesPerInterpolationValue : doublesPerValue,
 
         unwrapCzmlInterval : function(czmlInterval) {
-            return czmlInterval.cartesian;
+            return czmlInterval.spherical || czmlInterval.unitSpherical;
         },
 
         isSampled : function(czmlIntervalValue) {
@@ -32,25 +32,17 @@ function(Cartesian3, Ellipsoid) {
         },
 
         createValue : function(data) {
-            return new Cartesian3(data[0], data[1], data[2]);
+            return new Spherical(data[0], data[1], 1.0);
         },
 
         createValueFromArray : function(data, startingIndex) {
-            return new Cartesian3(data[startingIndex], data[startingIndex + 1], data[startingIndex + 2]);
+            return new Spherical(data[startingIndex], data[startingIndex + 1], 1.0);
         },
 
         createValueFromInterpolationResult : function(result) {
-            return new Cartesian3(result[0], result[1], result[2]);
-        },
-
-        convertToCartographic : function(data) {
-            return wgs84.toCartographic3(data);
-        },
-
-        convertToCartesian : function(data) {
-            return data;
+            return new Spherical(result[0], result[1], 1.0);
         }
     };
 
-    return Cartesian3DataHandler;
+    return UnitSphericalDataHandler;
 });
