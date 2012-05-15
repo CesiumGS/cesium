@@ -1,12 +1,10 @@
 /*global define*/
 define(['./BooleanDataHandler',
         './DynamicProperty',
-        './DynamicMaterialProperty',
-        './DynamicColorMaterial'],
+        './DynamicMaterialProperty'],
 function(BooleanDataHandler,
          DynamicProperty,
-         DynamicMaterialProperty,
-         DynamicColorMaterial) {
+         DynamicMaterialProperty) {
     "use strict";
 
     function DynamicPolygon() {
@@ -29,7 +27,7 @@ function(BooleanDataHandler,
 
             //Create or update each of the properties.
             polygon.show = DynamicProperty.createOrUpdate(BooleanDataHandler, polygonData.show, buffer, sourceUri, polygon.show);
-            polygon.material = DynamicMaterialProperty.createOrUpdate(polygonData.material, [DynamicColorMaterial], buffer, sourceUri, polygon.material);
+            polygon.material = DynamicMaterialProperty.createOrUpdate(polygonData.material, buffer, sourceUri, polygon.material);
         }
     };
 

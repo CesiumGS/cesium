@@ -13,12 +13,14 @@ define(['dojo/dom',
         'DynamicScene/DynamicPoint',
         'DynamicScene/DynamicPolygon',
         'DynamicScene/DynamicPolyline',
+        'DynamicScene/DynamicPyramid',
         'DynamicScene/CzmlObjectCollection',
         'DynamicScene/DynamicBillboardVisualizer',
         'DynamicScene/DynamicLabelVisualizer',
         'DynamicScene/DynamicPointVisualizer',
         'DynamicScene/DynamicPolygonVisualizer',
         'DynamicScene/DynamicPolylineVisualizer',
+        'DynamicScene/DynamicPyramidVisualizer',
         'DynamicScene/VisualizerCollection',
         'CesiumViewer/loadCzmlFromUrl'],
 function(dom,
@@ -35,12 +37,14 @@ function(dom,
          DynamicPoint,
          DynamicPolygon,
          DynamicPolyline,
+         DynamicPyramid,
          CzmlObjectCollection,
          DynamicBillboardVisualizer,
          DynamicLabelVisualizer,
          DynamicPointVisualizer,
          DynamicPolygonVisualizer,
          DynamicPolylineVisualizer,
+         DynamicPyramidVisualizer,
          VisualizerCollection,
          loadCzmlFromUrl) {
     "use strict";
@@ -58,6 +62,7 @@ function(dom,
         polygon : DynamicPolygon.createOrUpdate,
         polyline : DynamicPolyline.createOrUpdate,
         position : DynamicObject.createOrUpdatePosition,
+        pyramid : DynamicPyramid.createOrUpdate,
         vertexPositions : DynamicObject.createOrUpdateVertexPositions
     });
 
@@ -77,7 +82,8 @@ function(dom,
                                                     new DynamicLabelVisualizer(scene),
                                                     new DynamicPointVisualizer(scene),
                                                     new DynamicPolygonVisualizer(scene),
-                                                    new DynamicPolylineVisualizer(scene)]);
+                                                    new DynamicPolylineVisualizer(scene),
+                                                    new DynamicPyramidVisualizer(scene)]);
         },
 
         onSetupError : function(widget, error) {

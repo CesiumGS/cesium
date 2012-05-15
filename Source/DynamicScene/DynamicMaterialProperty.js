@@ -2,26 +2,28 @@
 define([
         '../Core/JulianDate',
         '../Core/TimeInterval',
-        '../Core/TimeIntervalCollection'
+        '../Core/TimeIntervalCollection',
+        './DynamicColorMaterial'
     ], function(
         JulianDate,
         TimeInterval,
-        TimeIntervalCollection) {
+        TimeIntervalCollection,
+        DynamicColorMaterial) {
     "use strict";
 
-    function DynamicMaterialProperty(potentialMaterials) {
+    function DynamicMaterialProperty() {
         this._intervals = new TimeIntervalCollection();
-        this._potentialMaterials = potentialMaterials;
+        this._potentialMaterials = [DynamicColorMaterial];
     }
 
-    DynamicMaterialProperty.createOrUpdate = function(czmlIntervals, potentialMaterials, buffer, sourceUri, existingProperty) {
+    DynamicMaterialProperty.createOrUpdate = function(czmlIntervals, buffer, sourceUri, existingProperty) {
         if (typeof czmlIntervals === 'undefined') {
             return existingProperty;
         }
 
         //At this point we will definitely have a value, so if one doesn't exist, create it.
         if (typeof existingProperty === 'undefined') {
-            existingProperty = new DynamicMaterialProperty(potentialMaterials);
+            existingProperty = new DynamicMaterialProperty();
         }
 
         existingProperty.addIntervals(czmlIntervals, buffer, sourceUri);
@@ -30,7 +32,7 @@ define([
     };
 
     DynamicMaterialProperty.prototype.getValue = function(time) {
-        return this._intervals.findIntervalContainingDate(time);
+        return this._intervals.findIntervalContainingDate(time).data;
     };
 
     DynamicMaterialProperty.prototype.addIntervals = function(czmlIntervals, buffer, sourceUri) {
@@ -92,7 +94,7 @@ define([
             }
         }
 
-        //We could handle the data, add it to the propery.
+        //We could handle the data, add it to the property.
         if (foundMaterial) {
             existingInterval.data = material.createOrUpdate(czmlInterval, buffer, sourceUri, existingInterval.data);
         }
