@@ -53,6 +53,10 @@ html, body {
 	font-family: monospace;
 }
 
+.consoleError {
+	color: #f00;
+}
+
 .cesiumFrame {
     border: none;
     width: 100%;

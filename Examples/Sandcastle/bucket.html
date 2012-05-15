@@ -32,10 +32,20 @@
     window.parent.postMessage("reload", "*");
 
     console.originalLog = console.log;
-    console.log = function (d1, d2, d3, d4) {
-        console.originalLog(d1, d2, d3, d4);
+    console.log = function (d1) {
+        console.originalLog.apply(console, arguments);
         window.parent.postMessage({ 'log': d1.toString() }, "*");
     };
+
+    console.originalError = console.error;
+    console.error = function (d1) {
+        console.originalError.apply(console, arguments);
+        window.parent.postMessage({ 'error': d1.toString() }, "*");
+    };
+
+    window.onerror = function (error) {
+        console.error(error);
+    }
     </script>
 </body>
 </html>

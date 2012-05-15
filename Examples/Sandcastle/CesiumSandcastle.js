@@ -87,7 +87,14 @@ require({
                 sc.textContent = editor.getValue();
                 bucketDoc.body.appendChild(sc);
             } else if (typeof e.data.log !== 'undefined') {
-                logOutput.textContent += e.data.log + "\n";
+                var ele = document.createElement('span');
+                ele.textContent = e.data.log + "\n";
+                logOutput.appendChild(ele);
+            } else if (typeof e.data.error !== 'undefined') {
+                var ele = document.createElement('span');
+                ele.className = 'consoleError';
+                ele.textContent = e.data.error + "\n";
+                logOutput.appendChild(ele);
             }
         }, true);
 
