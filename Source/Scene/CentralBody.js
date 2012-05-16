@@ -284,15 +284,7 @@ define([
         this._showBumps = false;
         this._showTerminator = false;
 
-        this._obliqueAngle = Math.cos(CesiumMath.PI_OVER_THREE);
-        this._obliquePixelError = 200;
-
-        /**
-         * DOC_TBA
-         *
-         * @type {Function}
-         */
-        this.refineFunc = this.refine;
+        this._minTileDistance = undefined;
 
         /**
          * DOC_TBA
@@ -1154,17 +1146,32 @@ define([
         this._renderQueue.enqueue(tile);
     };
 
-    CentralBody.prototype._refine3D = function(tile, state) {
-        var viewport = state.context.getViewport();
-        var width = viewport.width;
-        var height = viewport.height;
-
-        var pixelError = this.pixelError3D;
-        var camera = this._camera;
-        var frustum = camera.frustum;
+    CentralBody.prototype._createTileDistanceFunction = function(width, height) {
+        var frustum = this._camera.frustum;
         var provider = this._dayTileProvider;
-        var extent = tile.extent;
+        var extent = provider.maxExtent;
 
+        var pixelSizePerDistance = 2.0 * Math.tan(frustum.fovy * 0.5);
+        if (height > width * frustum.aspectRatio) {
+            pixelSizePerDistance /= height;
+        } else {
+            pixelSizePerDistance /= width;
+        }
+
+        var invPixelSizePerDistance = 1.0 / pixelSizePerDistance;
+        var texelHeight = (extent.north - extent.south) / provider.tileHeight;
+        var texelWidth = (extent.east - extent.west) / provider.tileWidth;
+        var texelSize = (texelWidth > texelHeight) ? texelWidth : texelHeight;
+        var dmin = texelSize * invPixelSizePerDistance;
+        dmin *= this._ellipsoid.getMaximumRadius();
+
+        return function(zoom, pixelError) {
+            return (dmin / pixelError) * Math.exp(-0.693147181 * zoom);
+        };
+    };
+
+    CentralBody.prototype._refine3D = function(tile, state) {
+        var provider = this._dayTileProvider;
         if (typeof provider === "undefined") {
             return false;
         }
@@ -1177,53 +1184,14 @@ define([
         var cameraPosition = state.camera.position;
         var direction = state.camera.direction;
 
-        if (state.viewAngle < this._obliqueAngle) {
-            var toCenter = cameraPosition.subtract(boundingVolume.center);
-            if (toCenter.magnitude() > boundingVolume.radius) {
-                var closestPoint = toCenter.normalize().multiplyWithScalar(boundingVolume.radius);
-                closestPoint = this._ellipsoid.toCartographic2(boundingVolume.center.add(closestPoint));
-                closestPoint = this._ellipsoid.toCartesian(closestPoint);
-                closestPoint = closestPoint.subtract(boundingVolume.center).normalize().multiplyWithScalar(boundingVolume.radius);
-                var farthestPoint = closestPoint.negate();
+        var texturePixelError = (this.pixelError3D !== "undefined" && this.pixelError3D > 0.0) ? this.pixelError3D : 1.0;
 
-                closestPoint = closestPoint.add(boundingVolume.center);
-                farthestPoint = farthestPoint.add(boundingVolume.center);
-
-                var viewProj = state.context.getUniformState().getViewProjection();
-                var viewportTrans = state.context.getUniformState().getViewportTransformation();
-
-                closestPoint = viewProj.multiplyWithVector(new Cartesian4(closestPoint.x, closestPoint.y, closestPoint.z, 1.0));
-                closestPoint = closestPoint.multiplyWithScalar(1.0 / closestPoint.w);
-                closestPoint = viewportTrans.multiplyWithVector(new Cartesian4(closestPoint.x, closestPoint.y, closestPoint.z, 1.0)).getXY();
-
-                farthestPoint = viewProj.multiplyWithVector(new Cartesian4(farthestPoint.x, farthestPoint.y, farthestPoint.z, 1.0));
-                farthestPoint = farthestPoint.multiplyWithScalar(1.0 / farthestPoint.w);
-                farthestPoint = viewportTrans.multiplyWithVector(new Cartesian4(farthestPoint.x, farthestPoint.y, farthestPoint.z, 1.0)).getXY();
-
-                var numPixels = closestPoint.subtract(farthestPoint).magnitude();
-                if (closestPoint.x > 0 && closestPoint.y > 0 && closestPoint.x < width && closestPoint.y < height &&
-                    farthestPoint.x > 0 && farthestPoint.y > 0 && farthestPoint.x < width && farthestPoint.y < height &&
-                    numPixels < this._obliquePixelError) {
-                    return false;
-                }
-            }
+        var dot = Math.abs(boundingVolume.center.normalize().negate().dot(direction));
+        if (tile.zoom > 2) {
+            texturePixelError *= Math.exp(1.0 - Math.abs(dot));
         }
 
-        var texturePixelError = (pixelError > 0.0) ? pixelError : 1.0;
-        var pixelSizePerDistance = 2.0 * Math.tan(frustum.fovy * 0.5);
-
-        if (height > width * frustum.aspectRatio) {
-            pixelSizePerDistance /= height;
-        } else {
-            pixelSizePerDistance /= width;
-        }
-
-        var invPixelSizePerDistance = 1.0 / (texturePixelError * pixelSizePerDistance);
-        var texelHeight = (extent.north - extent.south) / provider.tileHeight;
-        var texelWidth = (extent.east - extent.west) / provider.tileWidth;
-        var texelSize = (texelWidth > texelHeight) ? texelWidth : texelHeight;
-        var dmin = texelSize * invPixelSizePerDistance;
-        dmin *= this._ellipsoid.getMaximumRadius();
+        var dmin = this._minTileDistance(tile.zoom, texturePixelError);
 
         var toCenter = boundingVolume.center.subtract(cameraPosition);
         var toSphere = toCenter.normalize().multiplyWithScalar(toCenter.magnitude() - boundingVolume.radius);
@@ -1370,8 +1338,6 @@ define([
 
         this._syncMorphTime(mode);
 
-        var width, height;
-
         if (this._dayTileProvider !== this.dayTileProvider) {
             this._dayTileProvider = this.dayTileProvider;
 
@@ -1398,6 +1364,9 @@ define([
             });
 
             this._prefetchImages();
+
+            var viewport = context.getViewport();
+            this._minTileDistance = this._createTileDistanceFunction(viewport.width, viewport.height);
         }
 
         var hasLogo = this._dayTileProvider && this._dayTileProvider.getLogo;
@@ -1426,8 +1395,8 @@ define([
             this._createTextureCache(context);
         }
 
-        width = context.getCanvas().clientWidth;
-        height = context.getCanvas().clientHeight;
+        var width = context.getCanvas().clientWidth;
+        var height = context.getCanvas().clientHeight;
 
         var createFBO = !this._fb || this._fb.isDestroyed();
         var fboDimensionsChanged = this._fb && (this._fb.getColorTexture().getWidth() !== width || this._fb.getColorTexture().getHeight() !== height);
@@ -1780,7 +1749,6 @@ define([
                     position : cameraPosition,
                     direction : cameraDirection
                 },
-                viewAngle : cameraPosition.normalize().negate().dot(cameraDirection), // TODO: use ellipsoid center
                 occluder : new Occluder(new BoundingSphere(Cartesian3.getZero(), this._ellipsoid.getMinimumRadius()), cameraPosition),
                 mode : mode,
                 projection : projection
@@ -1799,7 +1767,7 @@ define([
             }
 
             if (!this._dayTileProvider || (tile.state === TileState.TEXTURE_LOADED && tile.texture && !tile.texture.isDestroyed())) {
-                if (tile.zoom + 1 > this._dayTileProvider.zoomMax || !this.refineFunc(tile, state)) {
+                if (tile.zoom + 1 > this._dayTileProvider.zoomMax || !this.refine(tile, state)) {
                     this._enqueueTile(tile, state);
                 } else {
                     var children = tile.getChildren();
