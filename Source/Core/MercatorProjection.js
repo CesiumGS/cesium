@@ -17,7 +17,7 @@ define([
      * @immutable
      */
     function MercatorProjection(ellipsoid) {
-        ellipsoid = ellipsoid || Ellipsoid.getWgs84();
+        ellipsoid = ellipsoid || Ellipsoid.WGS84;
 
         var radii = ellipsoid.getRadii();
 

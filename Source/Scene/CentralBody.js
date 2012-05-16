@@ -179,7 +179,7 @@ define([
             throw new DeveloperError("camera is required.", "camera");
         }
 
-        ellipsoid = ellipsoid || Ellipsoid.getWgs84();
+        ellipsoid = ellipsoid || Ellipsoid.WGS84;
 
         this._ellipsoid = ellipsoid;
         this._maxExtent = {
@@ -261,7 +261,7 @@ define([
          *
          * @type {Cartesian2}
          */
-        this.logoOffset = Cartesian2.getZero();
+        this.logoOffset = Cartesian2.ZERO;
 
         this._logoOffset = this.logoOffset;
         this._imageLogo = undefined;
@@ -1116,7 +1116,7 @@ define([
                         return rtc;
                     },
                     u_center2D : function() {
-                        return (projectedRTC) ? projectedRTC.getXY() : Cartesian2.getZero();
+                        return (projectedRTC) ? projectedRTC.getXY() : Cartesian2.ZERO;
                     },
                     u_modifiedModelView : function() {
                         return tile.modelView;
@@ -1296,7 +1296,7 @@ define([
         var qUnit = q.normalize();
 
         // Determine the east and north directions at q.
-        var eUnit = Cartesian3.getUnitZ().cross(q).normalize();
+        var eUnit = Cartesian3.UNIT_Z.cross(q).normalize();
         var nUnit = qUnit.cross(eUnit).normalize();
 
         // Determine the radius of the "limb" of the ellipsoid.
@@ -1736,7 +1736,7 @@ define([
         width = viewport.width;
         height = viewport.height;
 
-        var occluder = new Occluder(new BoundingSphere(Cartesian3.getZero(), this._ellipsoid.getMinimumRadius()), cameraPosition);
+        var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, this._ellipsoid.getMinimumRadius()), cameraPosition);
 
         var stack = [this._rootTile];
         while (stack.length !== 0) {
@@ -1830,7 +1830,7 @@ define([
                     rtc = new Cartesian3(0.0, center.x, center.y);
                     tile.mode = 1;
                 } else {
-                    rtc = Cartesian3.getZero();
+                    rtc = Cartesian3.ZERO;
                     tile.mode = 2;
                 }
                 var centerEye = mv.multiplyWithVector(new Cartesian4(rtc.x, rtc.y, rtc.z, 1.0));

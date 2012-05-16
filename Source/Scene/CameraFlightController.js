@@ -146,9 +146,9 @@ define([
 
         diff = this._start.getSecondsDifference(now);
         position = this._path.evaluate(diff);
-        normal = Cartesian3.getUnitZ().cross(position).normalize();
+        normal = Cartesian3.UNIT_Z.cross(position).normalize();
         tangent = position.cross(normal).normalize();
-        target = Cartesian3.getZero();
+        target = Cartesian3.ZERO;
         this._camera.lookAt(position, target, tangent);
 
         var isComplete = (now === this._end) || this._canceled;

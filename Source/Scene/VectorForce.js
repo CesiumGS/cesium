@@ -14,7 +14,7 @@ define([
      */
     function VectorForce(template) {
         template = template || {};
-        template.vector = template.vector || Cartesian3.getUnitZ().negate();
+        template.vector = template.vector || Cartesian3.UNIT_Z.negate();
 
         if (!template.particle) {
             throw new DeveloperError("template.particle is required.", "template");

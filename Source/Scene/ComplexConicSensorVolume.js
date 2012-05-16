@@ -104,7 +104,7 @@ define([
          * var center = ellipsoid.cartographicDegreesToCartesian(new Cartographic2(-75.59777, 40.03883));
          * sensor.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
          */
-        this.modelMatrix = t.modelMatrix || Matrix4.getIdentity();
+        this.modelMatrix = t.modelMatrix || Matrix4.IDENTITY;
 
         /**
          * DOC_TBA
