@@ -1323,7 +1323,7 @@ define([
         var width = context.getCanvas().clientWidth;
         var height = context.getCanvas().clientHeight;
 
-        if (width === 0 && height === 0) {
+        if (width === 0 || height === 0) {
             return;
         }
 
