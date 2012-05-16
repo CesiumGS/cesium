@@ -30,7 +30,7 @@ defineSuite([
         expect(result.y).toEqual(100001);
         expect(result.z).toEqual(100002);
 
-        var resultCartographic = Ellipsoid.getWgs84().toCartographic3(result);
+        var resultCartographic = Ellipsoid.WGS84.toCartographic3(result);
         result = property.getValueCartographic(epoch);
         expect(result.longitude).toEqual(resultCartographic.longitude);
         expect(result.latitude).toEqual(resultCartographic.latitude);
@@ -41,7 +41,7 @@ defineSuite([
         expect(result.y).toEqual(100005);
         expect(result.z).toEqual(100006);
 
-        resultCartographic = Ellipsoid.getWgs84().toCartographic3(result);
+        resultCartographic = Ellipsoid.WGS84.toCartographic3(result);
         result = property.getValueCartographic(epoch.addSeconds(4));
         expect(result.longitude).toEqual(resultCartographic.longitude);
         expect(result.latitude).toEqual(resultCartographic.latitude);
@@ -64,7 +64,7 @@ defineSuite([
         expect(result.z).toEqual(9101112);
         expect(result === property.getValueCartesian(epoch)).toEqual(true);
 
-        var resultCartographic = Ellipsoid.getWgs84().toCartographic3(result);
+        var resultCartographic = Ellipsoid.WGS84.toCartographic3(result);
         result = property.getValueCartographic(epoch);
         expect(result.longitude).toEqual(resultCartographic.longitude);
         expect(result.latitude).toEqual(resultCartographic.latitude);
@@ -94,7 +94,7 @@ defineSuite([
         expect(result.z).toEqual(9101112);
         expect(result === property.getValueCartesian(epoch)).toEqual(true);
 
-        var resultCartographic = Ellipsoid.getWgs84().toCartographic3(result);
+        var resultCartographic = Ellipsoid.WGS84.toCartographic3(result);
         result = property.getValueCartographic(epoch);
         expect(result.longitude).toEqual(resultCartographic.longitude);
         expect(result.latitude).toEqual(resultCartographic.latitude);

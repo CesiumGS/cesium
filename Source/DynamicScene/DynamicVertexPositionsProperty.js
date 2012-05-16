@@ -21,7 +21,7 @@ define([
         DynamicPositionProperty) {
     "use strict";
 
-    var wgs84 = Ellipsoid.getWgs84();
+    var wgs84 = Ellipsoid.WGS84;
 
     function PositionHolder(czmlInterval) {
         var i, len, values = [], tmp;
