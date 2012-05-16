@@ -91,6 +91,18 @@ defineSuite([
         expect(viewMatrix.equals(expected)).toEqual(true);
     });
 
+    it("viewExtent", function() {
+        var west = -CesiumMath.PI_OVER_TWO,
+            south = -CesiumMath.PI_OVER_TWO,
+            east = CesiumMath.PI_OVER_TWO,
+            north = CesiumMath.PI_OVER_TWO;
+        camera.viewExtent(Ellipsoid.getWgs84(), west, south, east, north);
+        expect(camera.position.equalsEpsilon(new Cartesian3(24078036.74383515, 0, 0.0), CesiumMath.EPSILON10));
+        expect(camera.direction.equalsEpsilon(new Cartesian3(-1.0, 0.0, 0.0), CesiumMath.EPSILON10));
+        expect(camera.up.equalsEpsilon(new Cartesian3(0.0, 0.0, 1.0), CesiumMath.EPSILON10));
+        expect(camera.right.equalsEpsilon(new Cartesian3(0.0, 1.0, 0.0), CesiumMath.EPSILON10));
+    });
+
     it("get inverse view matrix", function() {
         var expected = camera.getViewMatrix().inverse();
         expect(expected.equals(camera.getInverseViewMatrix())).toEqual(true);
