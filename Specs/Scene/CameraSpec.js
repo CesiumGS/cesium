@@ -3,15 +3,21 @@ defineSuite([
          'Core/AxisAlignedBoundingBox',
          'Core/BoundingSphere',
          'Core/Cartesian3',
+         'Core/Ellipsoid',
          'Core/Intersect',
-         'Core/Matrix4'
+         'Core/Math',
+         'Core/Matrix4',
+         'Scene/CameraControllerCollection'
      ], function(
          Camera,
          AxisAlignedBoundingBox,
          BoundingSphere,
          Cartesian3,
+         Ellipsoid,
          Intersect,
-         Matrix4) {
+         CesiumMath,
+         Matrix4,
+         CameraControllerCollection) {
     "use strict";
     /*global document,describe,it,expect,beforeEach,afterEach*/
 
@@ -32,6 +38,11 @@ defineSuite([
         expect(function() {
             return new Camera();
         }).toThrow();
+    });
+
+    it("getControllers", function() {
+        var controllers = camera.getControllers();
+        expect(controllers).toEqual(new CameraControllerCollection(camera, document));
     });
 
     it("lookAt object", function() {
@@ -89,6 +100,12 @@ defineSuite([
         camera.transform = new Matrix4(5.0, 0.0, 0.0, 1.0, 0.0, 5.0, 0.0, 2.0, 0.0, 0.0, 5.0, 3.0, 0.0, 0.0, 0.0, 1.0);
         var expected = camera.transform.inverseTransformation();
         expect(expected.equals(camera.getInverseTransform())).toEqual(true);
+    });
+
+    it("isDestroyed", function() {
+        expect(camera.isDestroyed()).toEqual(false);
+        camera.destroy();
+        expect(camera.isDestroyed()).toEqual(true);
     });
 
     describe("box intersections", function() {

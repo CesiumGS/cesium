@@ -48,7 +48,9 @@ defineSuite([
     });
 
     afterEach(function() {
-        cflc = cflc.destroy();
+        try {
+            cflc = cflc && cflc.destroy();
+        } catch(e) {}
     });
 
     it("move forward", function() {
@@ -129,5 +131,19 @@ defineSuite([
         expect(camera.right.equals(right)).toEqual(true);
         expect(camera.direction.equalsEpsilon(up.negate(), CesiumMath.EPSILON15)).toEqual(true);
         expect(camera.up.equalsEpsilon(dir, CesiumMath.EPSILON15)).toEqual(true);
+    });
+
+    it("rotate", function() {
+        cflc.rotate(Cartesian3.getUnitX(), CesiumMath.PI);
+        expect(camera.position.equals(position)).toEqual(true);
+        expect(camera.right.equals(right)).toEqual(true);
+        expect(camera.up.equalsEpsilon(Cartesian3.getUnitY().negate(), CesiumMath.EPSILON10)).toEqual(true);
+        expect(camera.direction.equalsEpsilon(Cartesian3.getUnitZ(), CesiumMath.EPSILON10)).toEqual(true);
+    });
+
+    it("isDestroyed", function() {
+        expect(cflc.isDestroyed()).toEqual(false);
+        cflc.destroy();
+        expect(cflc.isDestroyed()).toEqual(true);
     });
 });

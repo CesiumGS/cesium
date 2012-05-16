@@ -245,21 +245,22 @@ defineSuite([
 
     it("computeSubdivision", function() {
         var positions = [
-                         new Cartesian3(0.0, 1.0, 2.0),
-                         new Cartesian3(3.0, 4.0, 5.0),
-                         new Cartesian3(6.0, 7.0, 8.0)
+                         new Cartesian3(0.0, 0.0, 90.0),
+                         new Cartesian3(0.0, 90.0, 0.0),
+                         new Cartesian3(90.0, 0.0, 0.0)
                         ];
         var indices = [0, 1, 2];
-        var subdivision = PolygonPipeline.computeSubdivision(positions, indices, 1);
-        expect(subdivision.attributes.position.values[0]).toEqual(0);
-        expect(subdivision.attributes.position.values[1]).toEqual(1);
-        expect(subdivision.attributes.position.values[2]).toEqual(2);
-        expect(subdivision.attributes.position.values[3]).toEqual(3);
-        expect(subdivision.attributes.position.values[4]).toEqual(4);
-        expect(subdivision.attributes.position.values[5]).toEqual(5);
-        expect(subdivision.attributes.position.values[6]).toEqual(6);
-        expect(subdivision.attributes.position.values[7]).toEqual(7);
-        expect(subdivision.attributes.position.values[8]).toEqual(8);
+        var subdivision = PolygonPipeline.computeSubdivision(positions, indices, 60.0);
+
+        expect(subdivision.attributes.position.values[0]).toEqual(0.0);
+        expect(subdivision.attributes.position.values[1]).toEqual(0.0);
+        expect(subdivision.attributes.position.values[2]).toEqual(90.0);
+        expect(subdivision.attributes.position.values[3]).toEqual(0.0);
+        expect(subdivision.attributes.position.values[4]).toEqual(90.0);
+        expect(subdivision.attributes.position.values[5]).toEqual(0.0);
+        expect(subdivision.attributes.position.values[6]).toEqual(90.0);
+        expect(subdivision.attributes.position.values[7]).toEqual(0.0);
+        expect(subdivision.attributes.position.values[8]).toEqual(0.0);
 
         expect(subdivision.indexLists[0].values[0]).toEqual(0);
         expect(subdivision.indexLists[0].values[1]).toEqual(1);
