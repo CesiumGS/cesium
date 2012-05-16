@@ -63,7 +63,7 @@ define([
          *
          * @type Ellipsoid
          */
-        this.ellipsoid = description.ellipsoid || Ellipsoid.getWgs84();
+        this.ellipsoid = description.ellipsoid || Ellipsoid.WGS84;
 
         /**
          * The cartographic extent of the tile, with north, south, east and
@@ -317,7 +317,7 @@ define([
         this._boundingSphere3D = new BoundingSphere(positions);
 
         // TODO: get correct ellipsoid center
-        var ellipsoidCenter = Cartesian3.getZero();
+        var ellipsoidCenter = Cartesian3.ZERO;
         if (!ellipsoidCenter.equals(this._boundingSphere3D.center)) {
             this._occludeePoint = Occluder.getOccludeePoint(new BoundingSphere(ellipsoidCenter, this.ellipsoid.getMinimumRadius()), this._boundingSphere3D.center, positions);
         } else {

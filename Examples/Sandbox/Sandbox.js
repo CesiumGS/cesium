@@ -10,7 +10,7 @@ var Sandbox = Sandbox || {};
         var canvas = document.getElementById("glCanvas");
         var scene = new Cesium.Scene(canvas);
         var primitives = scene.getPrimitives();
-        var ellipsoid = Cesium.Ellipsoid.getWgs84();
+        var ellipsoid = Cesium.Ellipsoid.WGS84;
 
         // TODO: make multiple tile providers available
         var bing = new Cesium.BingMapsTileProvider({
