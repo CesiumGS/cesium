@@ -18,9 +18,9 @@ define([
      * @name PerformanceDisplay
      * @constructor
      *
-     * @param {String} [description.fpsColor] The CSS color of the FPS graph.
-     * @param {String} [description.frameTimeColor] The CSS color of the frame time graph.
-     * @param {String} [description.backgroundColor] The CSS color of the background of the display.
+     * @param {Color} [description.fpsColor] The color of the FPS graph.
+     * @param {Color} [description.frameTimeColor] The color of the frame time graph.
+     * @param {Color} [description.backgroundColor] The color of the background of the display.
      * @param {String} [description.font] The CSS font of the text in the display.
      * @param {Rectangle} [description.rectangle] The position and size of the display, relative to the top left corner.
      *
@@ -32,9 +32,9 @@ define([
             description = {};
         }
 
-        this._fpsColor = typeof description.fpsColor !== 'undefined' ? description.fpsColor : '#e52';
-        this._frameTimeColor = typeof description.frameTimeColor !== 'undefined' ? description.frameTimeColor : '#de3';
-        this._backgroundColor = typeof description.backgroundColor !== 'undefined' ? description.backgroundColor : 'rgba(0, 0, 30, 0.9)';
+        this._fpsColor = typeof description.fpsColor !== 'undefined' ? description.fpsColor.toCSSColor() : '#e52';
+        this._frameTimeColor = typeof description.frameTimeColor !== 'undefined' ? description.frameTimeColor.toCSSColor() : '#de3';
+        this._backgroundColor = typeof description.backgroundColor !== 'undefined' ? description.backgroundColor.toCSSColor() : 'rgba(0, 0, 30, 0.9)';
         this._font = typeof description.font !== 'undefined' ? description.font : 'bold 10px Helvetica,Arial,sans-serif';
         this._rectangle = typeof description.rectangle !== 'undefined' ? description.rectangle : new Rectangle(0, 0, 80, 40);
 
@@ -112,11 +112,13 @@ define([
 
         if (typeof fps !== 'undefined') {
             ctx.fillStyle = this._fpsColor;
-            ctx.fillText(fps + ' FPS', 2, 10);
+            ctx.textAlign = 'left';
+            ctx.fillText(fps + ' FPS', 1, 10);
         }
 
         ctx.fillStyle = this._frameTimeColor;
-        ctx.fillText(frameTime + ' MS', 42, 10);
+        ctx.textAlign = 'right';
+        ctx.fillText(frameTime + ' MS', canvasWidth - 1, 10);
 
         for ( var i = 0; i < this._bufferLength; i++) {
             fps = this._fpsSamples[(i + this._fpsIndex) % this._bufferLength];
