@@ -18,7 +18,9 @@ defineSuite([
     });
 
     afterEach(function() {
-        destroyContext(context);
+        try {
+            destroyContext(context);
+        } catch(e) {}
     });
 
     it("getCanvas", function() {
@@ -178,6 +180,10 @@ defineSuite([
         expect(context.getTextureFilterAnisotropic()).toBeDefined();
     });
 
+    it("gets maximum texture filter anisotropy", function() {
+        expect(context.getMaximumTextureFilterAnisotropy()).toBeDefined();
+    });
+
     it("sets shader program validation", function() {
         context.setValidateShaderProgram(false);
         expect(context.getValidateShaderProgram()).toEqual(false);
@@ -208,6 +214,15 @@ defineSuite([
 
         context.setThrowOnWebGLError(true);
         expect(context.getThrowOnWebGLError()).toEqual(true);
+    });
+
+    it("fails to set the viewport (undefined viewport properties)", function() {
+        expect(function() {
+            context.setViewport({
+                x : 0,
+                y : 0
+            });
+        }).toThrow();
     });
 
     it("fails to set the viewport (negative width)", function() {
@@ -258,5 +273,17 @@ defineSuite([
         expect(function() {
             return new Context();
         }).toThrow();
+    });
+
+    it("continueDraw throws without arguments", function() {
+        expect(function() {
+            context.continueDraw(undefined);
+        }).toThrow();
+    });
+
+    it("isDestroyed", function() {
+        expect(context.isDestroyed()).toEqual(false);
+        context.destroy();
+        expect(context.isDestroyed()).toEqual(true);
     });
 });
