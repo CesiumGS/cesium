@@ -1013,9 +1013,13 @@ define([
             var rtc = tile.get3DBoundingSphere().center;
             var projectedRTC = tile.get2DBoundingSphere(projection).center.clone();
 
-            var gran = (tile.zoom > 0) ? 0.05 * (1 / tile.zoom * 2) : 0.05; // seems like a good value after testing it for what looks good
+            var gran = (tile.zoom > 0) ? 0.05 * (1.0 / tile.zoom * 2.0) : 0.05; // seems like a good value after testing it for what looks good
 
-            var typedArray, buffer, stride, attributes, indexBuffer;
+            var typedArray;
+            var buffer;
+            var stride;
+            var attributes;
+            var indexBuffer;
             var datatype = ComponentDatatype.FLOAT;
             var usage = BufferUsage.STATIC_DRAW;
 
@@ -1037,7 +1041,6 @@ define([
                     vertexBuffer : buffer,
                     componentDatatype : datatype,
                     componentsPerAttribute : 3,
-                    normalize : false,
                     offsetInBytes : 0,
                     strideInBytes : stride
                 }, {
@@ -1045,7 +1048,6 @@ define([
                     vertexBuffer : buffer,
                     componentDatatype : datatype,
                     componentsPerAttribute : 2,
-                    normalize : false,
                     offsetInBytes : 3 * datatype.sizeInBytes,
                     strideInBytes : stride
                 }, {
@@ -1092,7 +1094,6 @@ define([
                     vertexBuffer : buffer,
                     componentDatatype : datatype,
                     componentsPerAttribute : 3,
-                    normalize : false,
                     offsetInBytes : 0,
                     strideInBytes : stride
                 }, {
@@ -1100,7 +1101,6 @@ define([
                     vertexBuffer : buffer,
                     componentDatatype : datatype,
                     componentsPerAttribute : 2,
-                    normalize : false,
                     offsetInBytes : 3 * datatype.sizeInBytes,
                     strideInBytes : stride
                 }, {
@@ -1108,7 +1108,6 @@ define([
                     vertexBuffer : buffer,
                     componentDatatype : datatype,
                     componentsPerAttribute : 2,
-                    normalize : false,
                     offsetInBytes : 5 * datatype.sizeInBytes,
                     strideInBytes : stride
                 }];

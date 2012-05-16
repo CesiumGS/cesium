@@ -11,7 +11,7 @@ define([
 
     /**
      * Provides tile images with a different solid color for each zoom level.
-     * Useful for debugging or testing different <code>CentralBody</code> options.
+     * Useful for debugging or testing different {@link CentralBody} options.
      *
      * @name SolidColorTileProvider
      * @constructor
@@ -30,11 +30,25 @@ define([
 
         this._images = [];
         for (var i = 0; i <= maxZoom; ++i) {
-            var color = {
-                    r : Math.floor(Math.random() * 256),
-                    g : Math.floor(Math.random() * 256),
-                    b : Math.floor(Math.random() * 256)
-            };
+            var color = { r : 0, g : 0, b : 0 };
+            var x = i / maxZoom;
+            if (i < 0.25 * maxZoom) {
+                // blue to cyan
+                color.g = Math.floor(255.0 * 4.0 * x);
+                color.b = 255;
+            } else if (i < 0.5 * maxZoom) {
+                // cyan to green
+                color.g = 255;
+                color.b = Math.floor(256.0 - 4.0 * x);
+            } else if ( i < 0.75 * maxZoom) {
+                // green to yellow
+                color.r = Math.floor(255.0 * 4.0 * x - 255.0 * 2.0);
+                color.g = 255;
+            } else {
+                // yellow to red
+                color.r = 255;
+                color.g = Math.floor(255.0 * 4.0 * (1.0 - x));
+            }
             this._images.push(this._createImage(color, width, height));
         }
 
@@ -70,7 +84,7 @@ define([
          *
          * @type {Number}
          */
-        this.zoomMax = this._images.length - 1;
+        this.zoomMax = maxZoom;
 
         /**
          * The minimum zoom level that can be requested.
@@ -109,12 +123,11 @@ define([
      * @param {Function} onload A function that will be called when the image is finished loading.
      * @param {Function} onerror A function that will be called if there is an error loading the image.
      *
-     * @exception {DeveloperError} <code>tile.zoom</code> is less than <code>zoomMin</code>
-     * or greater than <code>zoomMax</code>.
+     * @exception {DeveloperError} <code>tile.zoom</code> must be in [<code>zoomMin</code>, <code>zoomMax</code>].
      */
     SolidColorTileProvider.prototype.loadTileImage = function(tile, onload, onerror) {
         if (tile.zoom < this.zoomMin || tile.zoom > this.zoomMax) {
-            throw new DeveloperError("The zoom must be between in [zoomMin, zoomMax].", "tile.zoom");
+            throw new DeveloperError("tile.zoom must be in [zoomMin, zoomMax].", "tile.zoom");
         }
 
         if (typeof onload === "function") {
