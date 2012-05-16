@@ -1320,12 +1320,17 @@ define([
      * @private
      */
     CentralBody.prototype.update = function(context, sceneState) {
+        var width = context.getCanvas().clientWidth;
+        var height = context.getCanvas().clientHeight;
+
+        if (width === 0 || height === 0) {
+            return;
+        }
+
         var mode = sceneState.mode;
         var projection = sceneState.scene2D.projection;
 
         this._syncMorphTime(mode);
-
-        var width, height;
 
         if (this._dayTileProvider !== this.dayTileProvider) {
             this._dayTileProvider = this.dayTileProvider;
@@ -1380,9 +1385,6 @@ define([
         if (!this._textureCache || this._textureCache.isDestroyed()) {
             this._createTextureCache(context);
         }
-
-        width = context.getCanvas().clientWidth;
-        height = context.getCanvas().clientHeight;
 
         var createFBO = !this._fb || this._fb.isDestroyed();
         var fboDimensionsChanged = this._fb && (this._fb.getColorTexture().getWidth() !== width || this._fb.getColorTexture().getHeight() !== height);

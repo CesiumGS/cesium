@@ -15,26 +15,26 @@ define([
      * Draws a display in the top left corner of the scene displaying FPS (frames per second),
      * averaged over 1 second intervals, as well as unaveraged frame time.
      *
-     * @name StatisticsDisplay
+     * @name PerformanceDisplay
      * @constructor
      *
-     * @param {String} [description.fpsColor] The CSS color of the FPS graph.
-     * @param {String} [description.frameTimeColor] The CSS color of the frame time graph.
-     * @param {String} [description.backgroundColor] The CSS color of the background of the display.
+     * @param {Color} [description.fpsColor] The color of the FPS graph.
+     * @param {Color} [description.frameTimeColor] The color of the frame time graph.
+     * @param {Color} [description.backgroundColor] The color of the background of the display.
      * @param {String} [description.font] The CSS font of the text in the display.
      * @param {Rectangle} [description.rectangle] The position and size of the display, relative to the top left corner.
      *
      * @example
-     * scene.getPrimitives().add(new StatisticsDisplay());
+     * scene.getPrimitives().add(new PerformanceDisplay());
      */
-    function StatisticsDisplay(description) {
+    function PerformanceDisplay(description) {
         if (typeof description === 'undefined') {
             description = {};
         }
 
-        this._fpsColor = typeof description.fpsColor !== 'undefined' ? description.fpsColor : '#e52';
-        this._frameTimeColor = typeof description.frameTimeColor !== 'undefined' ? description.frameTimeColor : '#de3';
-        this._backgroundColor = typeof description.backgroundColor !== 'undefined' ? description.backgroundColor : 'rgba(0, 0, 30, 0.9)';
+        this._fpsColor = typeof description.fpsColor !== 'undefined' ? description.fpsColor.toCSSColor() : '#e52';
+        this._frameTimeColor = typeof description.frameTimeColor !== 'undefined' ? description.frameTimeColor.toCSSColor() : '#de3';
+        this._backgroundColor = typeof description.backgroundColor !== 'undefined' ? description.backgroundColor.toCSSColor() : 'rgba(0, 0, 30, 0.9)';
         this._font = typeof description.font !== 'undefined' ? description.font : 'bold 10px Helvetica,Arial,sans-serif';
         this._rectangle = typeof description.rectangle !== 'undefined' ? description.rectangle : new Rectangle(0, 0, 80, 40);
 
@@ -71,7 +71,7 @@ define([
      * Update the display.  This function should only be called once per frame, because
      * each call records a frame in the internal buffer and redraws the display.
      */
-    StatisticsDisplay.prototype.update = function(context, sceneState) {
+    PerformanceDisplay.prototype.update = function(context, sceneState) {
         if (typeof this._time === 'undefined') {
             //first update
             this._lastFpsSampleTime = this._time = Date.now();
@@ -112,11 +112,13 @@ define([
 
         if (typeof fps !== 'undefined') {
             ctx.fillStyle = this._fpsColor;
-            ctx.fillText(fps + ' FPS', 2, 10);
+            ctx.textAlign = 'left';
+            ctx.fillText(fps + ' FPS', 1, 10);
         }
 
         ctx.fillStyle = this._frameTimeColor;
-        ctx.fillText(frameTime + ' MS', 42, 10);
+        ctx.textAlign = 'right';
+        ctx.fillText(frameTime + ' MS', canvasWidth - 1, 10);
 
         for ( var i = 0; i < this._bufferLength; i++) {
             fps = this._fpsSamples[(i + this._fpsIndex) % this._bufferLength];
@@ -149,7 +151,7 @@ define([
         this._quad.update(context, sceneState);
     };
 
-    StatisticsDisplay.prototype._drawLine = function(style, x, valuePercent) {
+    PerformanceDisplay.prototype._drawLine = function(style, x, valuePercent) {
         var ctx = this._canvasContext;
         var canvasHeight = this._rectangle.height;
         var maxGraphHeight = canvasHeight - 10;
@@ -172,17 +174,17 @@ define([
     /**
      * Renders the display.
      */
-    StatisticsDisplay.prototype.render = function(context) {
+    PerformanceDisplay.prototype.render = function(context) {
         this._quad.render(context);
     };
 
     /**
      * Destroys the WebGL resources held by this object.
      */
-    StatisticsDisplay.prototype.destroy = function() {
+    PerformanceDisplay.prototype.destroy = function() {
         this._quad = this._quad.destroy();
         return destroyObject(this);
     };
 
-    return StatisticsDisplay;
+    return PerformanceDisplay;
 });
