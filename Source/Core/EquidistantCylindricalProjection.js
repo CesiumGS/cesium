@@ -17,7 +17,7 @@ define([
      * @immutable
      */
     function EquidistantCylindricalProjection(ellipsoid) {
-        ellipsoid = ellipsoid || Ellipsoid.getWgs84();
+        ellipsoid = ellipsoid || Ellipsoid.WGS84;
 
         var radii = ellipsoid.getRadii();
 

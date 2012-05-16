@@ -65,6 +65,20 @@ Beta Releases
     * `JulianDate.getDate` is now `JulianDate.toDate()` and returns a new instance each time.
     * `CentralBody.logoOffsetX` and `logoOffsetY` have been replaced with `CentralBody.logoOffset`, a `Cartesian2`.
     * TileProviders now take a proxy object instead of a string, to allow more control over how proxy URLs are built.  Construct a DefaultProxy, passing the previous proxy URL, to get the previous behavior.
+    * `Ellipsoid.getScaledWgs84()` has been removed since it is not needed.
+    * `getXXX()` methods which returned a new instance of what should really be a constant are now exposed as frozen properties instead.  This should improve performance and memory pressure.
+
+        * `Cartsian2/3/4.getUnitX()` -> `Cartsian2/3/4.UNIT_X`
+        * `Cartsian2/3/4.getUnitY()` -> `Cartsian2/3/4.UNIT_Y`
+        * `Cartsian2/3/4.getUnitZ()` -> `Cartsian3/4.UNIT_Z`
+        * `Cartsian2/3/4.getUnitW()` -> `Cartsian4.UNIT_W`
+        * `Matrix/2/3/4.getIdentity()` -> `Matrix/2/3/4.IDENTITY`
+        * `Quaternion.getIdentity()` -> `Quaternion.IDENTITY`
+        * `Ellipsoid.getWgs84()` -> `Ellipsoid.WGS84`
+        * `Ellipsoid.getUnitSphere()` -> `Ellipsoid.UNIT_SPHERE`
+        * `Cartesian2/3/4/Cartographic.getZero()` -> `Cartesian2/3/4/Cartographic.ZERO`
+
+* Added PerformanceDisplay which can be added to a scene to display frames per second (FPS).
 * Labels now correctly allow specifying fonts by non-pixel CSS units such as points, ems, etc.
 * Added `Shapes.computeEllipseBoundary` and updated `Shapes.computeCircleBoundary` to compute boundaries using arc-distance.
 * Added `fileExtension` and `credit` properties to `OpenStreetMapTileProvider` construction.

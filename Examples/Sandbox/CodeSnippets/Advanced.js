@@ -5,7 +5,7 @@
     Sandbox.CustomRendering = function (scene, ellipsoid, primitives) {
         this.code = function () {
             Sandbox.ExamplePrimitive = function(position) {
-                var ellipsoid = Cesium.Ellipsoid.getWgs84();
+                var ellipsoid = Cesium.Ellipsoid.WGS84;
 
                 this._ellipsoid = ellipsoid;
                 this._va = undefined;
