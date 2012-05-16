@@ -83,26 +83,18 @@ define([
     };
 
     /**
-     * Creates a quaternion initialized to <code>(0.0, 0.0, 0.0, 0.0)</code>.
+     * An immutable Quaternion instance initialized to (0.0, 0.0, 0.0, 0.0).
      *
      * @memberof Quaternion
-     *
-     * @return {Quaternion} A new quaternion initialized to <code>(0.0, 0.0, 0.0, 0.0)</code>.
      */
-    Quaternion.getZero = function() {
-        return new Quaternion(0.0, 0.0, 0.0, 0.0);
-    };
+    Quaternion.ZERO = new Quaternion(0.0, 0.0, 0.0, 0.0);
 
     /**
-     * Creates a quaternion initialized to <code>(0.0, 0.0, 0.0, 1.0)</code>.
+     * An immutable Quaternion instance initialized to (0.0, 0.0, 0.0, 1.0).
      *
      * @memberof Quaternion
-     *
-     * @return {Quaternion} A new quaternion initialized to <code>(0.0, 0.0, 0.0, 1.0)</code>.
      */
-    Quaternion.getIdentity = function() {
-        return new Quaternion(0.0, 0.0, 0.0, 1.0);
-    };
+    Quaternion.IDENTITY = new Quaternion(0.0, 0.0, 0.0, 1.0);
 
     /**
      * Returns the conjugate of this quaternion.
@@ -300,7 +292,7 @@ define([
      */
     Quaternion.prototype.getAxis = function() {
         if (Math.abs(this.w - 1.0) < CesiumMath.EPSILON6) {
-            return Cartesian3.getZero();
+            return Cartesian3.ZERO;
         }
 
         var scalar = 1.0 / Math.sqrt(1.0 - (this.w * this.w));

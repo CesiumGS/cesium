@@ -27,7 +27,7 @@ defineSuite([
     });
 
     it("getZero", function() {
-        var c = new Cartographic2.getZero();
+        var c = Cartographic2.ZERO;
         expect(c.longitude).toEqual(0);
         expect(c.latitude).toEqual(0);
     });

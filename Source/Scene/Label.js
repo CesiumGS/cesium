@@ -53,10 +53,10 @@ define([
         this._style = l.style || LabelStyle.FILL;
         this._verticalOrigin = l.verticalOrigin || VerticalOrigin.BOTTOM;
         this._horizontalOrigin = l.horizontalOrigin || HorizontalOrigin.LEFT;
-        this._pixelOffset = l.pixelOffset ? new Cartesian2(l.pixelOffset.x, l.pixelOffset.y) : Cartesian2.getZero();
-        this._eyeOffset = l.eyeOffset ? new Cartesian3(l.eyeOffset.x, l.eyeOffset.y, l.eyeOffset.z) : Cartesian3.getZero();
+        this._pixelOffset = l.pixelOffset ? new Cartesian2(l.pixelOffset.x, l.pixelOffset.y) : Cartesian2.ZERO;
+        this._eyeOffset = l.eyeOffset ? new Cartesian3(l.eyeOffset.x, l.eyeOffset.y, l.eyeOffset.z) : Cartesian3.ZERO;
 
-        this._position = l.position ? new Cartesian3(l.position.x, l.position.y, l.position.z) : Cartesian3.getZero();
+        this._position = l.position ? new Cartesian3(l.position.x, l.position.y, l.position.z) : Cartesian3.ZERO;
         this._scale = (typeof l.scale === "undefined") ? 1.0 : l.scale;
         this._show = show;
 
@@ -147,10 +147,7 @@ define([
 
         if ((typeof value !== "undefined") &&
             ((p.x !== value.x) || (p.y !== value.y) || (p.z !== value.z))) {
-
-            p.x = value.x;
-            p.y = value.y;
-            p.z = value.z;
+            this._position = new Cartesian3(value.x, value.y, value.z);
 
             var billboards = this._billboards;
             var length = this._billboards ? this._billboards.length : 0;
@@ -348,8 +345,7 @@ define([
     Label.prototype.setPixelOffset = function(value) {
         var p = this._pixelOffset;
         if ((typeof value !== "undefined") && ((p.x !== value.x) || (p.y !== value.y))) {
-            p.x = value.x;
-            p.y = value.y;
+            this._pixelOffset = new Cartesian2(value.x, value.y);
             this._setPixelOffsets();
         }
     };
@@ -403,9 +399,8 @@ define([
 
         if ((typeof value !== "undefined") &&
             ((e.x !== value.x) || (e.y !== value.y) || (e.z !== value.z))) {
-            e.x = value.x;
-            e.y = value.y;
-            e.z = value.z;
+            this._eyeOffset = new Cartesian3(value.x, value.y, value.z);
+
             var billboards = this._billboards;
             var length = this._billboards ? this._billboards.length : 0;
             for ( var i = 0; i < length; i++) {

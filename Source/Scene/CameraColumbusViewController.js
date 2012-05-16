@@ -51,14 +51,14 @@ define([
 
         this._translateHandler = new CameraEventHandler(canvas, CameraEventType.LEFT_DRAG);
 
-        this._spindleController = new CameraSpindleController(canvas, camera, Ellipsoid.getUnitSphere());
+        this._spindleController = new CameraSpindleController(canvas, camera, Ellipsoid.UNIT_SPHERE);
 
         // TODO: Shouldn't change private variables like this, need to be able to change event modifiers
         //       on controllers.
         this._spindleController._spinHandler = this._spindleController._spinHandler && this._spindleController._spinHandler.destroy();
 
         this._freeLookController = new CameraFreeLookController(canvas, camera);
-        this._freeLookController.horizontalRotationAxis = Cartesian3.getUnitZ();
+        this._freeLookController.horizontalRotationAxis = Cartesian3.UNIT_Z;
 
         this._transform = this._camera.transform.clone();
 

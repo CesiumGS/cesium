@@ -311,7 +311,7 @@ define([
      * @see Matrix4#setColumn0
      *
      * @example
-     * var m = Matrix4.getIdentity();
+     * var m = Matrix4.IDENTITY;
      * var c = m.getColumn0(); // (x, y, z, w) == (1.0, 0.0, 0.0, 0.0)
      */
     Matrix4.prototype.getColumn0 = function() {
@@ -350,7 +350,7 @@ define([
      * @see Matrix4#setColumn1
      *
      * @example
-     * var m = Matrix4.getIdentity();
+     * var m = Matrix4.IDENTITY;
      * var c = m.getColumn1(); // (x, y, z, w) == (0.0, 1.0, 0.0, 0.0)
      */
     Matrix4.prototype.getColumn1 = function() {
@@ -389,7 +389,7 @@ define([
      * @see Matrix4#setColumn2
      *
      * @example
-     * var m = Matrix4.getIdentity();
+     * var m = Matrix4.IDENTITY;
      * var c = m.getColumn2(); // (x, y, z, w) == (0.0, 0.0, 1.0, 0.0)
      */
     Matrix4.prototype.getColumn2 = function() {
@@ -428,7 +428,7 @@ define([
      * @see Matrix4#setColumn3
      *
      * @example
-     * var m = Matrix4.getIdentity();
+     * var m = Matrix4.IDENTITY;
      * var c = m.getColumn3(); // (x, y, z, w) == (0.0, 0.0, 0.0, 1.0)
      */
     Matrix4.prototype.getColumn3 = function() {
@@ -467,7 +467,7 @@ define([
      * @see Matrix4#setRow0
      *
      * @example
-     * var m = Matrix4.getIdentity();
+     * var m = Matrix4.IDENTITY;
      * var c = m.getRow0(); // (x, y, z, w) == (1.0, 0.0, 0.0, 0.0)
      */
     Matrix4.prototype.getRow0 = function() {
@@ -506,7 +506,7 @@ define([
      * @see Matrix4#setRow1
      *
      * @example
-     * var m = Matrix4.getIdentity();
+     * var m = Matrix4.IDENTITY;
      * var c = m.getRow1(); // (x, y, z, w) == (0.0, 1.0, 0.0, 0.0)
      */
     Matrix4.prototype.getRow1 = function() {
@@ -545,7 +545,7 @@ define([
      * @see Matrix4#setRow2
      *
      * @example
-     * var m = Matrix4.getIdentity();
+     * var m = Matrix4.IDENTITY;
      * var c = m.getRow2(); // (x, y, z, w) == (0.0, 0.0, 1.0, 0.0)
      */
     Matrix4.prototype.getRow2 = function() {
@@ -584,7 +584,7 @@ define([
      * @see Matrix4#setRow3
      *
      * @example
-     * var m = Matrix4.getIdentity();
+     * var m = Matrix4.IDENTITY;
      * var c = m.getRow3(); // (x, y, z, w) == (0.0, 0.0, 0.0, 1.0)
      */
     Matrix4.prototype.getRow3 = function() {
@@ -909,15 +909,11 @@ define([
     };
 
     /**
-     * Creates a Matrix4 instance initialized to the identity matrix.
+     * An immutable Matrix4 instance initialized to the identity matrix.
      *
      * @memberof Matrix4
-     *
-     * @return {Matrix4} A new Matrix4 instance initialized to the identity matrix.
      */
-    Matrix4.getIdentity = function() {
-        return new Matrix4(1);
-    };
+    Matrix4.IDENTITY = new Matrix4(1);
 
     /**
      * Returns 16, the number of elements in a Matrix4.

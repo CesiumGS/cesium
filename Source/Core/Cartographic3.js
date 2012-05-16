@@ -60,14 +60,11 @@ define(function() {
     }
 
     /**
-     * Creates a Cartographic3 instance initialized to (0.0, 0.0, 0.0).
+     * An immutable Cartographic3 instance initialized to (0.0, 0.0, 0.0).
      *
      * @memberof Cartographic3
-     * @return {Cartographic3} A new Cartographic3 instance.
      */
-    Cartographic3.getZero = function() {
-        return new Cartographic3(0.0, 0.0, 0.0);
-    };
+    Cartographic3.ZERO = new Cartographic3(0.0, 0.0, 0.0);
 
     /**
      * Returns a duplicate of a Cartographic3 instance.
@@ -83,7 +80,7 @@ define(function() {
      * Returns <code>true</code> if this instance equals other.
      *
      * @memberof Cartographic3
-     * 
+     *
      * @param {Cartographic3} other The cartographic position to compare for equality.
      *
      * @return {Boolean} <code>true</code> if the positions are equal; otherwise, false.
@@ -96,7 +93,7 @@ define(function() {
      * Returns <code>true</code> if this instance equals other within the specified epsilon.
      *
      * @memberof Cartographic3
-     * 
+     *
      * @param {Cartographic3} other The cartographic position to compare for equality.
      * @param {Number} [epsilon=0.0] The epsilon to use for equality testing.
      *
@@ -104,7 +101,7 @@ define(function() {
      */
     Cartographic3.prototype.equalsEpsilon = function(other, epsilon) {
         epsilon = epsilon || 0.0;
-        return (Math.abs(this.longitude - other.longitude) <= epsilon) && 
+        return (Math.abs(this.longitude - other.longitude) <= epsilon) &&
                (Math.abs(this.latitude - other.latitude) <= epsilon) &&
                (Math.abs(this.height - other.height) <= epsilon);
     };
@@ -113,7 +110,7 @@ define(function() {
      * Returns a string representing this instance in the format (longitude, latitude, height).
      *
      * @memberof Cartographic3
-     * 
+     *
      * @return {String} Returns a string representing this instance.
      */
     Cartographic3.prototype.toString = function() {

@@ -61,44 +61,32 @@ define(['./Cartesian2'], function(Cartesian2) {
     };
 
     /**
-     * Creates a Cartesian3 instance initialized to (0, 0, 0).
+     * An immutable Cartesian3 instance initialized to (0, 0, 0).
      *
      * @memberof Cartesian3
-     * @return {Cartesian3} A new Cartesian3 instance.
      */
-    Cartesian3.getZero = function() {
-        return new Cartesian3(0, 0, 0);
-    };
+    Cartesian3.ZERO = new Cartesian3(0, 0, 0);
 
     /**
-     * Creates a Cartesian3 instance initialized to (1, 0, 0).
+     * An immutable Cartesian3 instance initialized to (1, 0, 0).
      *
      * @memberof Cartesian3v
-     * @return {Cartesian3} A new Cartesian3 instance.
      */
-    Cartesian3.getUnitX = function() {
-        return new Cartesian3(1, 0, 0);
-    };
+    Cartesian3.UNIT_X = new Cartesian3(1, 0, 0);
 
     /**
-     * Creates a Cartesian3 instance initialized to (0, 1, 0).
+     * An immutable Cartesian3 instance initialized to (0, 1, 0).
      *
      * @memberof Cartesian3
-     * @return {Cartesian3} A new Cartesian3 instance.
      */
-    Cartesian3.getUnitY = function() {
-        return new Cartesian3(0, 1, 0);
-    };
+    Cartesian3.UNIT_Y = new Cartesian3(0, 1, 0);
 
     /**
-     * Creates a Cartesian3 instance initialized to (0, 0, 1).
+     * An immutable Cartesian3 instance initialized to (0, 0, 1).
      *
      * @memberof Cartesian3
-     * @return {Cartesian3} A new Cartesian3 instance.
      */
-    Cartesian3.getUnitZ = function() {
-        return new Cartesian3(0, 0, 1);
-    };
+    Cartesian3.UNIT_Z = new Cartesian3(0, 0, 1);
 
     /**
      * Returns a new array, where each {@link Cartesian3}
@@ -280,11 +268,11 @@ define(['./Cartesian2'], function(Cartesian2) {
         var z = Math.abs(this.z);
 
         if ((x < y) && (x < z)) {
-            return Cartesian3.getUnitX();
+            return Cartesian3.UNIT_X;
         } else if ((y < x) && (y < z)) {
-            return Cartesian3.getUnitY();
+            return Cartesian3.UNIT_Y;
         } else {
-            return Cartesian3.getUnitZ();
+            return Cartesian3.UNIT_Z;
         }
     };
 

@@ -46,14 +46,11 @@ define(function() {
     }
 
     /**
-     * Creates a Cartographic2 instance initialized to (0.0, 0.0).
+     * An immutable Cartographic2 instance initialized to (0.0, 0.0).
      *
      * @memberof Cartographic2
-     * @return {Cartographic2} A new Cartographic2 instance.
      */
-    Cartographic2.getZero = function() {
-        return new Cartographic2(0.0, 0.0);
-    };
+    Cartographic2.ZERO = new Cartographic2(0.0, 0.0);
 
     /**
      * Returns a duplicate of a Cartographic2 instance.
@@ -69,7 +66,7 @@ define(function() {
      * Returns <code>true</code> if this instance equals other.
      *
      * @memberof Cartographic2
-     * 
+     *
      * @param {Cartographic2} other The cartographic position to compare for equality.
      *
      * @return {Boolean} <code>true</code> if the positions are equal; otherwise, false.
@@ -82,7 +79,7 @@ define(function() {
      * Returns <code>true</code> if this instance equals other within the specified epsilon.
      *
      * @memberof Cartographic2
-     * 
+     *
      * @param {Cartographic2} other The cartographic position to compare for equality.
      * @param {Number} [epsilon=0.0] The epsilon to use for equality testing.
      *

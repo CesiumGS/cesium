@@ -53,13 +53,13 @@ define([
             alpha : 1.0
         };
 
-        var position = b.position ? new Cartesian3(b.position.x, b.position.y, b.position.z) : Cartesian3.getZero();
+        var position = b.position ? new Cartesian3(b.position.x, b.position.y, b.position.z) : Cartesian3.ZERO;
 
         this._show = (typeof b.show === "undefined") ? true : b.show;
         this._position = position;
         this._actualPosition = position.clone(); // For columbus view and 2D
-        this._pixelOffset = b.pixelOffset ? new Cartesian2(b.pixelOffset.x, b.pixelOffset.y) : Cartesian2.getZero();
-        this._eyeOffset = b.eyeOffset ? new Cartesian3(b.eyeOffset.x, b.eyeOffset.y, b.eyeOffset.z) : Cartesian3.getZero();
+        this._pixelOffset = b.pixelOffset ? new Cartesian2(b.pixelOffset.x, b.pixelOffset.y) : Cartesian2.ZERO;
+        this._eyeOffset = b.eyeOffset ? new Cartesian3(b.eyeOffset.x, b.eyeOffset.y, b.eyeOffset.z) : Cartesian3.ZERO;
         this._horizontalOrigin = b.horizontalOrigin || HorizontalOrigin.CENTER;
         this._verticalOrigin = b.verticalOrigin || VerticalOrigin.CENTER;
         this._scale = (typeof b.scale === "undefined") ? 1.0 : b.scale;
@@ -187,15 +187,9 @@ define([
         var p = this._position;
 
         if ((typeof value !== "undefined") && ((p.x !== value.x) || (p.y !== value.y) || (p.z !== value.z))) {
-            p.x = value.x;
-            p.y = value.y;
-            p.z = value.z;
-
-            var actualP = this._actualPosition;
-            actualP.x = value.x;
-            actualP.y = value.y;
-            actualP.z = value.z;
-
+            p = new Cartesian3(value.x, value.y, value.z);
+            this._position = p;
+            this._actualPosition = p;
             this._makeDirty(POSITION_INDEX);
         }
     };
@@ -205,11 +199,7 @@ define([
     };
 
     Billboard.prototype._setActualPosition = function(value) {
-        var actualP = this._actualPosition;
-        actualP.x = value.x;
-        actualP.y = value.y;
-        actualP.z = value.z;
-
+        this._actualPosition = new Cartesian3(value.x, value.y, value.z);
         this._makeDirty(POSITION_INDEX);
     };
 
@@ -256,8 +246,7 @@ define([
         var p = this._pixelOffset;
 
         if ((typeof value !== "undefined") && ((p.x !== value.x) || (p.y !== value.y))) {
-            p.x = value.x;
-            p.y = value.y;
+            this._pixelOffset = new Cartesian2(value.x, value.y);
             this._makeDirty(PIXEL_OFFSET_INDEX);
         }
     };
@@ -310,9 +299,7 @@ define([
         var e = this._eyeOffset;
 
         if ((typeof value !== "undefined") && ((e.x !== value.x) || (e.y !== value.y) || (e.z !== value.z))) {
-            e.x = value.x;
-            e.y = value.y;
-            e.z = value.z;
+            this._eyeOffset = new Cartesian3(value.x, value.y, value.z);
             this._makeDirty(EYE_OFFSET_INDEX);
         }
     };

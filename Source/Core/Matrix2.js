@@ -163,7 +163,7 @@ define([
      * @see Matrix2#setColumn0
      *
      * @example
-     * var m = Matrix2.getIdentity();
+     * var m = Matrix2.IDENTITY;
      * var c = m.getColumn0(); // (x, y) == (1.0, 0.0)
      */
     Matrix2.prototype.getColumn0 = function() {
@@ -200,7 +200,7 @@ define([
      * @see Matrix2#setColumn1
      *
      * @example
-     * var m = Matrix2.getIdentity();
+     * var m = Matrix2.IDENTITY;
      * var c = m.getColumn1(); // (x, y) == (0.0, 1.0)
      */
     Matrix2.prototype.getColumn1 = function() {
@@ -237,7 +237,7 @@ define([
      * @see Matrix2#setRow0
      *
      * @example
-     * var m = Matrix2.getIdentity();
+     * var m = Matrix2.IDENTITY;
      * var c = m.getRow0(); // (x, y) == (1.0, 0.0)
      */
     Matrix2.prototype.getRow0 = function() {
@@ -274,7 +274,7 @@ define([
      * @see Matrix2#setRow1
      *
      * @example
-     * var m = Matrix2.getIdentity();
+     * var m = Matrix2.IDENTITY;
      * var c = m.getRow1(); // (x, y) == (0.0, 1.0)
      */
     Matrix2.prototype.getRow1 = function() {
@@ -322,15 +322,11 @@ define([
     };
 
     /**
-     * Creates a Matrix2 instance initialized to the identity matrix.
+     * An immutable Matrix2 instance initialized to the identity matrix.
      *
      * @memberof Matrix2
-     *
-     * @return {Matrix2} A new Matrix2 instance initialized to the identity matrix.
      */
-    Matrix2.getIdentity = function() {
-        return new Matrix2(1);
-    };
+    Matrix2.IDENTITY = new Matrix2(1);
 
     /**
      * Returns 4, the number of elements in a Matrix2.
