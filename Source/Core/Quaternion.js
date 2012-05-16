@@ -87,14 +87,14 @@ define([
      *
      * @memberof Quaternion
      */
-    Quaternion.ZERO = new Quaternion(0.0, 0.0, 0.0, 0.0);
+    Quaternion.ZERO = Object.freeze(new Quaternion(0.0, 0.0, 0.0, 0.0));
 
     /**
      * An immutable Quaternion instance initialized to (0.0, 0.0, 0.0, 1.0).
      *
      * @memberof Quaternion
      */
-    Quaternion.IDENTITY = new Quaternion(0.0, 0.0, 0.0, 1.0);
+    Quaternion.IDENTITY = Object.freeze(new Quaternion(0.0, 0.0, 0.0, 1.0));
 
     /**
      * Returns the conjugate of this quaternion.

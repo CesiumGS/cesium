@@ -64,7 +64,7 @@ define(function() {
      *
      * @memberof Cartographic3
      */
-    Cartographic3.ZERO = new Cartographic3(0.0, 0.0, 0.0);
+    Cartographic3.ZERO = Object.freeze(new Cartographic3(0.0, 0.0, 0.0));
 
     /**
      * Returns a duplicate of a Cartographic3 instance.

@@ -326,7 +326,7 @@ define([
      *
      * @memberof Matrix2
      */
-    Matrix2.IDENTITY = new Matrix2(1);
+    Matrix2.IDENTITY = Object.freeze(new Matrix2(1));
 
     /**
      * Returns 4, the number of elements in a Matrix2.

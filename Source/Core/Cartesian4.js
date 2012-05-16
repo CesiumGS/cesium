@@ -90,35 +90,35 @@ define([
      *
      * @memberof Cartesian4
      */
-    Cartesian4.ZERO = new Cartesian4(0, 0, 0, 0);
+    Cartesian4.ZERO = Object.freeze(new Cartesian4(0, 0, 0, 0));
 
     /**
      * An immutable Cartesian4 instance initialized to (1, 0, 0, 0).
      *
      * @memberof Cartesian4
      */
-    Cartesian4.UNIT_X = new Cartesian4(1, 0, 0, 0);
+    Cartesian4.UNIT_X = Object.freeze(new Cartesian4(1, 0, 0, 0));
 
     /**
      * An immutable Cartesian4 instance initialized to (0, 1, 0, 0).
      *
      * @memberof Cartesian4
      */
-    Cartesian4.UNIT_Y = new Cartesian4(0, 1, 0, 0);
+    Cartesian4.UNIT_Y = Object.freeze(new Cartesian4(0, 1, 0, 0));
 
     /**
      * An immutable Cartesian4 instance initialized to (0, 0, 1, 0).
      *
      * @memberof Cartesian4
      */
-    Cartesian4.UNIT_Z = new Cartesian4(0, 0, 1, 0);
+    Cartesian4.UNIT_Z = Object.freeze(new Cartesian4(0, 0, 1, 0));
 
     /**
      * An immutable Cartesian4 instance initialized to (0, 0, 0, 1).
      *
      * @memberof Cartesian4
      */
-    Cartesian4.UNIT_W = new Cartesian4(0, 0, 0, 1);
+    Cartesian4.UNIT_W = Object.freeze(new Cartesian4(0, 0, 0, 1));
 
     /**
      * Returns the Cartesian's x and y components as a Cartesian2.

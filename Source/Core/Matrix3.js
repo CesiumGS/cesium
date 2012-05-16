@@ -472,7 +472,7 @@ define([
      *
      * @memberof Matrix3
      */
-    Matrix3.IDENTITY = new Matrix3(1);
+    Matrix3.IDENTITY = Object.freeze(new Matrix3(1));
 
     /**
      * Returns 9, the number of elements in a Matrix3.

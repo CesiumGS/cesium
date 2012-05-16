@@ -913,7 +913,7 @@ define([
      *
      * @memberof Matrix4
      */
-    Matrix4.IDENTITY = new Matrix4(1);
+    Matrix4.IDENTITY = Object.freeze(new Matrix4(1));
 
     /**
      * Returns 16, the number of elements in a Matrix4.

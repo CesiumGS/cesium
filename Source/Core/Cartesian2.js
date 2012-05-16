@@ -53,21 +53,21 @@ define(function() {
      *
      * @memberof Cartesian2
      */
-    Cartesian2.ZERO = new Cartesian2(0, 0);
+    Cartesian2.ZERO = Object.freeze(new Cartesian2(0, 0));
 
     /**
      * An immutable Cartesian2 instance initialized to (1, 0).
      *
      * @memberof Cartesian2
      */
-    Cartesian2.UNIT_X = new Cartesian2(1, 0);
+    Cartesian2.UNIT_X = Object.freeze(new Cartesian2(1, 0));
 
     /**
      * An immutable Cartesian2 instance initialized to (0, 1).
      *
      * @memberof Cartesian2
      */
-    Cartesian2.UNIT_Y = new Cartesian2(0, 1);
+    Cartesian2.UNIT_Y = Object.freeze(new Cartesian2(0, 1));
 
     /**
      * Returns the Cartesian's squared magnitude (length).

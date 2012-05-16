@@ -50,7 +50,7 @@ define(function() {
      *
      * @memberof Cartographic2
      */
-    Cartographic2.ZERO = new Cartographic2(0.0, 0.0);
+    Cartographic2.ZERO = Object.freeze(new Cartographic2(0.0, 0.0));
 
     /**
      * Returns a duplicate of a Cartographic2 instance.
