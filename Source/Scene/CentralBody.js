@@ -1185,12 +1185,6 @@ define([
         var direction = state.camera.direction;
 
         var texturePixelError = (this.pixelError3D !== "undefined" && this.pixelError3D > 0.0) ? this.pixelError3D : 1.0;
-
-        var dot = Math.abs(boundingVolume.center.normalize().negate().dot(direction));
-        if (tile.zoom > 2) {
-            texturePixelError *= Math.exp(1.0 - Math.abs(dot));
-        }
-
         var dmin = this._minTileDistance(tile.zoom, texturePixelError);
 
         var toCenter = boundingVolume.center.subtract(cameraPosition);
