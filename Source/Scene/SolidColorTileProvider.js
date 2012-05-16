@@ -32,15 +32,15 @@ define([
         for (var i = 0; i <= maxZoom; ++i) {
             var color = { r : 0, g : 0, b : 0 };
             var x = i / maxZoom;
-            if (i < 0.25 * maxZoom) {
+            if (x < 0.25) {
                 // blue to cyan
                 color.g = Math.floor(255.0 * 4.0 * x);
                 color.b = 255;
-            } else if (i < 0.5 * maxZoom) {
+            } else if (x < 0.5) {
                 // cyan to green
                 color.g = 255;
                 color.b = Math.floor(256.0 - 4.0 * x);
-            } else if ( i < 0.75 * maxZoom) {
+            } else if (x < 0.75) {
                 // green to yellow
                 color.r = Math.floor(255.0 * 4.0 * x - 255.0 * 2.0);
                 color.g = 255;
