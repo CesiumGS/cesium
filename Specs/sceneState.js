@@ -13,7 +13,7 @@ define([
     var sceneState = {
         mode : SceneMode.SCENE3D,
         scene2D : {
-            projection : new EquidistantCylindricalProjection(Ellipsoid.getWgs84())
+            projection : new EquidistantCylindricalProjection(Ellipsoid.WGS84)
         }
     };
 

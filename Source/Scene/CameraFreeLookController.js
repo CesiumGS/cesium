@@ -286,10 +286,10 @@ define([
         dot = startY.dot(endY);
         angle = 0.0;
         axis = startY.cross(endY);
-        if (dot < 1.0 && !axis.equalsEpsilon(Cartesian3.getZero(), CesiumMath.EPSILON14)) { // dot is in [0, 1]
+        if (dot < 1.0 && !axis.equalsEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON14)) { // dot is in [0, 1]
             angle = -Math.acos(dot);
         } else { // no rotation
-            axis = Cartesian3.getUnitX();
+            axis = Cartesian3.UNIT_X;
         }
         rotation = Quaternion.fromAxisAngle(axis, angle).toRotationMatrix();
 

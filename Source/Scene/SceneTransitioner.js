@@ -37,14 +37,14 @@ define([
      */
     function SceneTransitioner(scene, ellipsoid) {
         this._scene = scene;
-        this._ellipsoid = ellipsoid || Ellipsoid.getWgs84();
+        this._ellipsoid = ellipsoid || Ellipsoid.WGS84;
         var canvas = scene.getCanvas();
 
         // Position camera and size frustum so the entire 2D map is visible
         var maxRadii = this._ellipsoid.getMaximumRadius();
         var position = new Cartesian3(0.0, 0.0, 2.0 * maxRadii);
         var direction = position.negate().normalize();
-        var up = Cartesian3.getUnitY();
+        var up = Cartesian3.UNIT_Y;
 
         var frustum = new OrthographicFrustum();
         frustum.right = maxRadii * Math.PI;
@@ -69,8 +69,8 @@ define([
         };
 
         position = new Cartesian3(0.0, -1.0, 1.0).normalize().multiplyWithScalar(5.0 * maxRadii);
-        direction = Cartesian3.getZero().subtract(position).normalize();
-        var right = direction.cross(Cartesian3.getUnitZ()).normalize();
+        direction = Cartesian3.ZERO.subtract(position).normalize();
+        var right = direction.cross(Cartesian3.UNIT_Z).normalize();
         up = right.cross(direction);
 
         frustum = new PerspectiveFrustum();
@@ -88,8 +88,8 @@ define([
         };
 
         position = new Cartesian3(0.0, -2.0, 1.0).normalize().multiplyWithScalar(2.0 * maxRadii);
-        direction = Cartesian3.getZero().subtract(position).normalize();
-        right = direction.cross(Cartesian3.getUnitZ()).normalize();
+        direction = Cartesian3.ZERO.subtract(position).normalize();
+        right = direction.cross(Cartesian3.UNIT_Z).normalize();
         up = right.cross(direction);
 
         this._camera3D = {
@@ -208,7 +208,7 @@ define([
             controllers.addFreeLook();
 
             camera.frustum = this._camera3D.frustum.clone();
-            camera.transform = Matrix4.getIdentity();
+            camera.transform = Matrix4.IDENTITY;
 
             if (previousMode !== SceneMode.MORPHING || this._morphCancelled) {
                 this._morphCancelled = false;
@@ -590,7 +590,7 @@ define([
         var that = this;
 
         var camera = scene.getCamera();
-        this._changeCameraTransform(camera, Matrix4.getIdentity());
+        this._changeCameraTransform(camera, Matrix4.IDENTITY);
 
         var startPos = camera.position;
         var startDir = camera.direction;
@@ -599,8 +599,8 @@ define([
         var maxRadii = this._ellipsoid.getMaximumRadius();
         var endPos = this._ellipsoid.toCartesian(new Cartographic3(0.0, 0.0, 10.0));
         endPos = endPos.normalize().multiplyWithScalar(2.0 * maxRadii);
-        var endDir = Cartesian3.getZero().subtract(endPos).normalize();
-        var endRight = endDir.cross(Cartesian3.getUnitZ()).normalize();
+        var endDir = Cartesian3.ZERO.subtract(endPos).normalize();
+        var endRight = endDir.cross(Cartesian3.UNIT_Z).normalize();
         var endUp = endRight.cross(endDir);
 
         var update = function(value) {

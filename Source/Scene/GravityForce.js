@@ -10,7 +10,7 @@ define(['../Core/Ellipsoid'], function(Ellipsoid) {
      */
     function GravityForce(template) {
         template = template || {};
-        this.ellipsoid = template.ellipsoid || Ellipsoid.getWgs84();
+        this.ellipsoid = template.ellipsoid || Ellipsoid.WGS84;
         this.gravitationalConstant = template.gravitationalConstant || 1.0;
     }
 
