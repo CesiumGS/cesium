@@ -28,7 +28,7 @@ define([
      *
      * @example
      * // Construct an occluder one unit away from the origin with a radius of one.
-     * var cameraPosition = new Cartesian3.getZero();
+     * var cameraPosition = new Cartesian3.ZERO;
      * var occluderBS = new BoundingSphere(new Cartesian3(0, 0, -1), 1);
      * var occluder = new Occluder(occluderBS, cameraPosition);
      */
@@ -316,17 +316,17 @@ define([
             tempVec0.x = occluderPosition.x;
             tempVec0.y = occluderPosition.y + 1.0;
             tempVec0.z = occluderPosition.z + 1.0;
-            tempVec1 = Cartesian3.getUnitX();
+            tempVec1 = Cartesian3.UNIT_X;
         } else if (majorAxis === 1) {
             tempVec0.x = occluderPosition.x + 1.0;
             tempVec0.y = occluderPosition.y;
             tempVec0.z = occluderPosition.z + 1.0;
-            tempVec1 = Cartesian3.getUnitY();
+            tempVec1 = Cartesian3.UNIT_Y;
         } else {
             tempVec0.x = occluderPosition.x + 1.0;
             tempVec0.y = occluderPosition.y + 1.0;
             tempVec0.z = occluderPosition.z;
-            tempVec1 = Cartesian3.getUnitZ();
+            tempVec1 = Cartesian3.UNIT_Z;
         }
         var u = ((occluderPlaneNormal.dot(tempVec0)) + occluderPlaneD) / -(occluderPlaneNormal.dot(tempVec1));
         return ((tempVec0.add(tempVec1.multiplyWithScalar(u))).subtract(occluderPosition)).normalize();

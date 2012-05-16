@@ -47,8 +47,8 @@ define([
          *
          * @example
          * // Get the transform from local east-north-up at cartographic (0.0, 0.0) to Earth's fixed frame.
-         * var ellipsoid = Ellipsoid.getWgs84();
-         * var center = ellipsoid.cartographicDegreesToCartesian(Cartographic2.getZero());
+         * var ellipsoid = Ellipsoid.WGS84;
+         * var center = ellipsoid.cartographicDegreesToCartesian(Cartographic2.ZERO);
          * var transform = Transforms.eastNorthUpToFixedFrame(center);
          */
         eastNorthUpToFixedFrame : function(position, ellipsoid) {
@@ -56,7 +56,7 @@ define([
                 throw new DeveloperError("position is required.", "position");
             }
 
-            ellipsoid = ellipsoid || Ellipsoid.getWgs84();
+            ellipsoid = ellipsoid || Ellipsoid.WGS84;
 
             if (CesiumMath.equalsEpsilon(position.x, 0.0, CesiumMath.EPSILON14) &&
                     CesiumMath.equalsEpsilon(position.y, 0.0, CesiumMath.EPSILON14)) {
@@ -101,8 +101,8 @@ define([
          *
          * @example
          * // Get the transform from local north-east-down at cartographic (0.0, 0.0) to Earth's fixed frame.
-         * var ellipsoid = Ellipsoid.getWgs84();
-         * var center = ellipsoid.cartographicDegreesToCartesian(Cartographic2.getZero());
+         * var ellipsoid = Ellipsoid.WGS84;
+         * var center = ellipsoid.cartographicDegreesToCartesian(Cartographic2.ZERO);
          * var transform = Transforms.northEastDownToFixedFrame(center);
          */
         northEastDownToFixedFrame : function(position, ellipsoid) {
@@ -110,7 +110,7 @@ define([
                 throw new DeveloperError("position is required.", "position");
             }
 
-            ellipsoid = ellipsoid || Ellipsoid.getWgs84();
+            ellipsoid = ellipsoid || Ellipsoid.WGS84;
 
             if (CesiumMath.equalsEpsilon(position.x, 0.0, CesiumMath.EPSILON14) &&
                     CesiumMath.equalsEpsilon(position.y, 0.0, CesiumMath.EPSILON14)) {

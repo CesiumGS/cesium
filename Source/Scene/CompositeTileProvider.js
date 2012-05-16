@@ -54,7 +54,7 @@ define([
 
         this._camera = camera;
 
-        ellipsoid = ellipsoid || Ellipsoid.getWgs84();
+        ellipsoid = ellipsoid || Ellipsoid.WGS84;
         this._radius = ellipsoid.getMaximumRadius();
 
         this._list = list;

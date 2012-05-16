@@ -36,8 +36,8 @@ defineSuite([
 
         var camera = {
             eye : new Cartesian3(1.02, 0.0, 0.0),
-            target : Cartesian3.getZero(),
-            up : Cartesian3.getUnitZ()
+            target : Cartesian3.ZERO,
+            up : Cartesian3.UNIT_Z
         };
         us = context.getUniformState();
         us.setView(Matrix4.createLookAt(camera.eye, camera.target, camera.up));
@@ -82,7 +82,7 @@ defineSuite([
     });
 
     it("has a default ellipsoid", function() {
-        expect(polygon.ellipsoid).toEqual(Ellipsoid.getWgs84());
+        expect(polygon.ellipsoid).toEqual(Ellipsoid.WGS84);
     });
 
     it("gets the default granularity", function() {
@@ -92,7 +92,7 @@ defineSuite([
     it("renders", function() {
         // This test fails in Chrome if a breakpoint is set inside this function.  Strange.
 
-        var ellipsoid = Ellipsoid.getUnitSphere();
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
         polygon.ellipsoid = ellipsoid;
         polygon.granularity = CesiumMath.toRadians(20.0);
         polygon.setPositions([
@@ -117,7 +117,7 @@ defineSuite([
     });
 
     it("doesn't renders", function() {
-        var ellipsoid = Ellipsoid.getUnitSphere();
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
         polygon.ellipsoid = ellipsoid;
         polygon.granularity = CesiumMath.toRadians(20.0);
         polygon.setPositions([
@@ -143,7 +143,7 @@ defineSuite([
     });
 
     it("is picked", function() {
-        var ellipsoid = Ellipsoid.getUnitSphere();
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
         polygon.ellipsoid = ellipsoid;
         polygon.granularity = CesiumMath.toRadians(20.0);
         polygon.setPositions([
@@ -160,7 +160,7 @@ defineSuite([
     });
 
     it("is not picked", function() {
-        var ellipsoid = Ellipsoid.getUnitSphere();
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
         polygon.ellipsoid = ellipsoid;
         polygon.granularity = CesiumMath.toRadians(20.0);
         polygon.setPositions([

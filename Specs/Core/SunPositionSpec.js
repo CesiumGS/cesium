@@ -100,7 +100,7 @@ defineSuite([
     });
 
     it("has matching cartographic and cartesian positions (1)", function() {
-        var ellipsoid = Ellipsoid.getWgs84();
+        var ellipsoid = Ellipsoid.WGS84;
         var sunPos = SunPosition.compute(julianDate1);
         var position = sunPos.position.normalize();
         var cartographicPos = sunPos.cartographicPosition;
@@ -109,7 +109,7 @@ defineSuite([
     });
 
     it("has matching cartographic and cartesian positions (2)", function() {
-        var ellipsoid = Ellipsoid.getWgs84();
+        var ellipsoid = Ellipsoid.WGS84;
         var sunPos = SunPosition.compute(julianDate2);
         var position = sunPos.position.normalize();
         var cartographicPos = sunPos.cartographicPosition;
@@ -118,7 +118,7 @@ defineSuite([
     });
 
     it("has matching cartographic and cartesian positions (3)", function() {
-        var ellipsoid = Ellipsoid.getWgs84();
+        var ellipsoid = Ellipsoid.WGS84;
         var sunPos = SunPosition.compute(julianDate3);
         var position = sunPos.position.normalize();
         var cartographicPos = sunPos.cartographicPosition;
@@ -127,7 +127,7 @@ defineSuite([
     });
 
     it("has matching cartographic and cartesian positions (4)", function() {
-        var ellipsoid = Ellipsoid.getWgs84();
+        var ellipsoid = Ellipsoid.WGS84;
         var sunPos = SunPosition.compute(julianDate4);
         var position = sunPos.position.normalize();
         var cartographicPos = sunPos.cartographicPosition;
