@@ -15,7 +15,7 @@ define([
      * Draws a display in the top left corner of the scene displaying FPS (frames per second),
      * averaged over 1 second intervals, as well as unaveraged frame time.
      *
-     * @name StatisticsDisplay
+     * @name PerformanceDisplay
      * @constructor
      *
      * @param {String} [description.fpsColor] The CSS color of the FPS graph.
@@ -25,9 +25,9 @@ define([
      * @param {Rectangle} [description.rectangle] The position and size of the display, relative to the top left corner.
      *
      * @example
-     * scene.getPrimitives().add(new StatisticsDisplay());
+     * scene.getPrimitives().add(new PerformanceDisplay());
      */
-    function StatisticsDisplay(description) {
+    function PerformanceDisplay(description) {
         if (typeof description === 'undefined') {
             description = {};
         }
@@ -71,7 +71,7 @@ define([
      * Update the display.  This function should only be called once per frame, because
      * each call records a frame in the internal buffer and redraws the display.
      */
-    StatisticsDisplay.prototype.update = function(context, sceneState) {
+    PerformanceDisplay.prototype.update = function(context, sceneState) {
         if (typeof this._time === 'undefined') {
             //first update
             this._lastFpsSampleTime = this._time = Date.now();
@@ -149,7 +149,7 @@ define([
         this._quad.update(context, sceneState);
     };
 
-    StatisticsDisplay.prototype._drawLine = function(style, x, valuePercent) {
+    PerformanceDisplay.prototype._drawLine = function(style, x, valuePercent) {
         var ctx = this._canvasContext;
         var canvasHeight = this._rectangle.height;
         var maxGraphHeight = canvasHeight - 10;
@@ -172,17 +172,17 @@ define([
     /**
      * Renders the display.
      */
-    StatisticsDisplay.prototype.render = function(context) {
+    PerformanceDisplay.prototype.render = function(context) {
         this._quad.render(context);
     };
 
     /**
      * Destroys the WebGL resources held by this object.
      */
-    StatisticsDisplay.prototype.destroy = function() {
+    PerformanceDisplay.prototype.destroy = function() {
         this._quad = this._quad.destroy();
         return destroyObject(this);
     };
 
-    return StatisticsDisplay;
+    return PerformanceDisplay;
 });
