@@ -60,7 +60,7 @@ define([
             /**
              * DOC_TBA
              */
-            projection : new EquidistantCylindricalProjection(Ellipsoid.getWgs84())
+            projection : new EquidistantCylindricalProjection(Ellipsoid.WGS84)
         };
     }
 
