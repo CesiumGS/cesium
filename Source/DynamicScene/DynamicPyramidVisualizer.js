@@ -133,6 +133,14 @@ define([
                 pyramid.intersectionColor = value;
             }
         }
+
+        property = dynamicPyramid.radius;
+        if (typeof property !== 'undefined') {
+            value = property.getValue(time);
+            if (typeof value !== 'undefined') {
+                pyramid.radius = value;
+            }
+        }
     };
 
     DynamicPyramidVisualizer.prototype.removeAll = function(czmlObjects) {
