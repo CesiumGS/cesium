@@ -200,14 +200,16 @@ define([
         this._requestTemplate();
     }
 
-    function deferredQueueContains(deferredQueue, tile) {
+    //for a given tile, if we have an element with the same tile in the queue, return the element.
+    function findInDeferredQueue(deferredQueue, tile) {
         for ( var i = 0, len = deferredQueue.length; i < len; ++i) {
-            var t = deferredQueue[i].tile;
+            var element = deferredQueue[i];
+            var t = element.tile;
             if (t.zoom === tile.zoom && t.x === tile.x && t.y === tile.y) {
-                return true;
+                return element;
             }
         }
-        return false;
+        return undefined;
     }
 
     /**
@@ -339,16 +341,38 @@ define([
         };
 
         if (typeof this._url === 'undefined') {
-            if (!deferredQueueContains(this._deferredQueue, tile)) {
+            var existingElement = findInDeferredQueue(this._deferredQueue, tile);
+            if (typeof existingElement === 'undefined') {
                 this._deferredQueue.push(element);
+                return image;
             }
 
-            return image;
+            //add the callbacks to the existing element so both are called
+            existingElement.onload = combineFunctions(existingElement.onload, onload);
+            existingElement.onerror = combineFunctions(existingElement.onerror, onerror);
+            existingElement.oninvalid = combineFunctions(existingElement.oninvalid, oninvalid);
+            return existingElement.image;
         }
 
         this._loadImage(element);
         return image;
     };
+
+    function combineFunctions(a, b) {
+        if (typeof a !== 'function' && typeof b !== 'function') {
+            return undefined;
+        }
+        if (typeof a !== 'function' && typeof b === 'function') {
+            return b;
+        }
+        if (typeof a === 'function' && typeof b !== 'function') {
+            return a;
+        }
+        return function() {
+            a();
+            b();
+        };
+    }
 
     BingMapsTileProvider.prototype._loadImage = function(element) {
         var tile = element.tile;
