@@ -1,15 +1,21 @@
 defineSuite([
          'Scene/CameraSpindleController',
          'Core/Ellipsoid',
+         'Core/Cartographic2',
+         'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/Math',
+         'Core/Transforms',
          'Scene/Camera',
          'Scene/PerspectiveFrustum'
      ], function(
          CameraSpindleController,
          Ellipsoid,
+         Cartographic2,
+         Cartesian2,
          Cartesian3,
          CesiumMath,
+         Transforms,
          Camera,
          PerspectiveFrustum) {
     "use strict";
@@ -51,8 +57,23 @@ defineSuite([
     });
 
     afterEach(function() {
-        csc = csc && csc.destroy();
-        csc2 = csc2 && csc2.destroy();
+        try {
+            csc = csc && csc.destroy();
+            csc2 = csc2 && csc2.destroy();
+        } catch(e) {}
+    });
+
+    it("setEllipsoid", function() {
+        expect(csc.getEllipsoid()).toEqual(Ellipsoid.getWgs84());
+        csc.setEllipsoid(Ellipsoid.getUnitSphere());
+        expect(csc.getEllipsoid()).toEqual(Ellipsoid.getUnitSphere());
+    });
+
+    it("setReferenceFrame", function() {
+        var transform = Transforms.eastNorthUpToFixedFrame(Ellipsoid.getUnitSphere().cartographicDegreesToCartesian(new Cartographic2(-76.0, 40.0)));
+        csc.setReferenceFrame(transform, Ellipsoid.getUnitSphere());
+        expect(csc.getEllipsoid()).toEqual(Ellipsoid.getUnitSphere());
+        expect(camera.transform.equals(transform)).toEqual(true);
     });
 
     it("move up", function() {
@@ -63,12 +84,28 @@ defineSuite([
         expect(camera.position.equalsEpsilon(Cartesian3.getUnitY().negate(), CesiumMath.EPSILON15)).toEqual(true);
     });
 
+    it("move up with constrained Z", function() {
+        csc.moveUpWithConstrainedZ(rotaterate);
+        expect(camera.up.equalsEpsilon(up, CesiumMath.EPSILON15)).toEqual(true);
+        expect(camera.direction.equalsEpsilon(dir, CesiumMath.EPSILON15)).toEqual(true);
+        expect(camera.right.equalsEpsilon(right, CesiumMath.EPSILON15)).toEqual(true);
+        expect(camera.position.equalsEpsilon(position, CesiumMath.EPSILON15)).toEqual(true);
+    });
+
     it("move down", function() {
         csc.moveDown(rotaterate);
         expect(camera.up.equalsEpsilon(dir, CesiumMath.EPSILON15)).toEqual(true);
         expect(camera.direction.equalsEpsilon(up.negate(), CesiumMath.EPSILON15)).toEqual(true);
         expect(camera.right.equalsEpsilon(right, CesiumMath.EPSILON15)).toEqual(true);
         expect(camera.position.equalsEpsilon(Cartesian3.getUnitY(), CesiumMath.EPSILON15)).toEqual(true);
+    });
+
+    it("move down with constrained Z", function() {
+        csc.moveDownWithConstrainedZ(-rotaterate);
+        expect(camera.up.equalsEpsilon(up, CesiumMath.EPSILON15)).toEqual(true);
+        expect(camera.direction.equalsEpsilon(dir, CesiumMath.EPSILON15)).toEqual(true);
+        expect(camera.right.equalsEpsilon(right, CesiumMath.EPSILON15)).toEqual(true);
+        expect(camera.position.equalsEpsilon(position, CesiumMath.EPSILON15)).toEqual(true);
     });
 
     it("move left", function() {
@@ -79,12 +116,28 @@ defineSuite([
         expect(camera.position.equalsEpsilon(Cartesian3.getUnitX().negate(), CesiumMath.EPSILON15)).toEqual(true);
     });
 
+    it("move left with contrained Z", function() {
+        csc.moveLeftWithConstrainedZ(rotaterate);
+        expect(camera.up.equalsEpsilon(Cartesian3.getUnitX(), CesiumMath.EPSILON15)).toEqual(true);
+        expect(camera.direction.equalsEpsilon(Cartesian3.getUnitZ().negate(), CesiumMath.EPSILON15)).toEqual(true);
+        expect(camera.right.equalsEpsilon(Cartesian3.getUnitY().negate(), CesiumMath.EPSILON15)).toEqual(true);
+        expect(camera.position.equalsEpsilon(Cartesian3.getUnitZ(), CesiumMath.EPSILON15)).toEqual(true);
+    });
+
     it("move right", function() {
         csc.moveRight(rotaterate);
         expect(camera.up.equalsEpsilon(up, CesiumMath.EPSILON15)).toEqual(true);
         expect(camera.direction.equalsEpsilon(right.negate(), CesiumMath.EPSILON15)).toEqual(true);
         expect(camera.right.equalsEpsilon(dir, CesiumMath.EPSILON15)).toEqual(true);
         expect(camera.position.equalsEpsilon(Cartesian3.getUnitX(), CesiumMath.EPSILON15)).toEqual(true);
+    });
+
+    it("move right with contrained Z", function() {
+        csc.moveRightWithConstrainedZ(rotaterate);
+        expect(camera.up.equalsEpsilon(Cartesian3.getUnitX().negate(), CesiumMath.EPSILON15)).toEqual(true);
+        expect(camera.direction.equalsEpsilon(Cartesian3.getUnitZ().negate(), CesiumMath.EPSILON15)).toEqual(true);
+        expect(camera.right.equalsEpsilon(Cartesian3.getUnitY(), CesiumMath.EPSILON15)).toEqual(true);
+        expect(camera.position.equalsEpsilon(Cartesian3.getUnitZ(), CesiumMath.EPSILON15)).toEqual(true);
     });
 
     it("zoom in", function() {
@@ -125,5 +178,11 @@ defineSuite([
         expect(camera.direction.equalsEpsilon(camera2.direction, CesiumMath.EPSILON15));
         expect(camera.up.equalsEpsilon(camera2.up, CesiumMath.EPSILON15));
         expect(camera.right.equalsEpsilon(camera2.right, CesiumMath.EPSILON15));
+    });
+
+    it("isDestroyed", function() {
+        expect(csc.isDestroyed()).toEqual(false);
+        csc.destroy();
+        expect(csc.isDestroyed()).toEqual(true);
     });
 });

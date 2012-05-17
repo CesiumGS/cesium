@@ -1,9 +1,13 @@
 defineSuite([
          'Scene/CameraColumbusViewController',
-         'Scene/Camera'
+         'Scene/Camera',
+         'Core/Cartesian3',
+         'Core/Math'
      ], function(
          CameraColumbusViewController,
-         Camera) {
+         Camera,
+         Cartesian3,
+         CesiumMath) {
     "use strict";
     /*global document,describe,it,expect,beforeEach,afterEach*/
 
@@ -12,6 +16,10 @@ defineSuite([
 
     beforeEach(function() {
         camera = new Camera(document);
+        camera.position = new Cartesian3();
+        camera.up = Cartesian3.getUnitY();
+        camera.direction = Cartesian3.getUnitZ().negate();
+
         controller = new CameraColumbusViewController(document, camera);
     });
 
@@ -19,6 +27,11 @@ defineSuite([
         try {
             controller = controller && controller.destroy();
         } catch(e) {}
+    });
+
+    it("updateReferenceFrame", function() {
+        controller._updateReferenceFrame();
+        expect(camera.position.equalsEpsilon(new Cartesian3(), CesiumMath.EPSILON10)).toEqual(true);
     });
 
     it("isDestroyed", function() {

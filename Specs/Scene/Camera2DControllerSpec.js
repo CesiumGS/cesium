@@ -3,6 +3,7 @@ defineSuite([
          'Scene/Camera',
          'Scene/OrthographicFrustum',
          'Core/Cartographic2',
+         'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/Ellipsoid',
          'Core/Math',
@@ -12,6 +13,7 @@ defineSuite([
          Camera,
          OrthographicFrustum,
          Cartographic2,
+         Cartesian2,
          Cartesian3,
          Ellipsoid,
          CesiumMath,
@@ -95,6 +97,27 @@ defineSuite([
     it("moveLeft", function() {
         controller.moveLeft(moverate);
         expect(camera.position.equalsEpsilon(new Cartesian3(-moverate, 0, 0), CesiumMath.EPSILON10)).toEqual(true);
+    });
+
+    it("translate", function() {
+        controller._translate({
+            startPosition : new Cartesian2(0.0, 0.0),
+            endPosition : new Cartesian2(10.0, 10.0)
+        });
+        expect(camera.position.equalsEpsilon(new Cartesian3(100000.0, 100000.0, 0.0))).toEqual(true);
+    });
+
+    it("zoom", function() {
+        var offset = 0.5 * Math.max(camera.frustum.right - camera.frustum.left, camera.frustum.top - camera.frustum.bottom);
+        var ratio = frustum.top / frustum.right;
+        controller._zoom({
+            startPosition : new Cartesian2(0.0, 0.0),
+            endPosition : new Cartesian2(0.0, 1.0)
+        });
+        expect(frustum.right).toEqualEpsilon(controller._zoomRate + offset, CesiumMath.EPSILON10);
+        expect(frustum.left).toEqual(-(controller._zoomRate + offset), CesiumMath.EPSILON10);
+        expect(frustum.top).toEqual(ratio * (controller._zoomRate + offset), CesiumMath.EPSILON10);
+        expect(frustum.bottom).toEqual(-ratio * (controller._zoomRate + offset), CesiumMath.EPSILON10);
     });
 
     it("zoomOut", function() {

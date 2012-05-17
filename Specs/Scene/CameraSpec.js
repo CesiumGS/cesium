@@ -73,6 +73,18 @@ defineSuite([
         expect(tempCamera.up.equals(newUp)).toEqual(true);
     });
 
+    it("lookAt returns without proper arguments", function() {
+        var eye = new Cartesian3(1, 1, 1);
+
+        camera.lookAt(eye);
+        expect(camera.position.equals(eye)).toEqual(false);
+
+        camera.lookAt({
+            eye : eye
+        });
+        expect(camera.position.equals(eye)).toEqual(false);
+    });
+
     it("get view matrix", function() {
         var viewMatrix = camera.getViewMatrix();
         var position = camera.position;
