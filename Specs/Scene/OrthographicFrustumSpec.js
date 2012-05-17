@@ -25,7 +25,7 @@ defineSuite([
         frustum.top = 1.0;
         frustum.bottom = -1.0;
 
-        planes = frustum.getPlanes(new Cartesian3(), Cartesian3.getUnitZ().negate(), Cartesian3.getUnitY());
+        planes = frustum.getPlanes(new Cartesian3(), Cartesian3.UNIT_Z.negate(), Cartesian3.UNIT_Y);
     });
 
     it("left greater than right causes an exception", function() {

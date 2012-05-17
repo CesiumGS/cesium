@@ -179,7 +179,7 @@ define([
             throw new DeveloperError("camera is required.", "camera");
         }
 
-        ellipsoid = ellipsoid || Ellipsoid.getWgs84();
+        ellipsoid = ellipsoid || Ellipsoid.WGS84;
 
         this._ellipsoid = ellipsoid;
         this._maxExtent = {
@@ -261,7 +261,7 @@ define([
          *
          * @type {Cartesian2}
          */
-        this.logoOffset = Cartesian2.getZero();
+        this.logoOffset = Cartesian2.ZERO;
 
         this._logoOffset = this.logoOffset;
         this._imageLogo = undefined;
@@ -284,12 +284,7 @@ define([
         this._showBumps = false;
         this._showTerminator = false;
 
-        /**
-         * DOC_TBA
-         *
-         * @type {Function}
-         */
-        this.refineFunc = this.refine;
+        this._minTileDistance = undefined;
 
         /**
          * DOC_TBA
@@ -847,22 +842,22 @@ define([
         return this._dayTileProvider.loadTileImage(tile, onload, onerror, oninvalid);
     };
 
-    CentralBody.prototype._getTileBoundingSphere = function (tile, mode, projection) {
+    CentralBody.prototype._getTileBoundingSphere = function (tile, state) {
         var boundingVolume;
-        if (mode === SceneMode.SCENE3D) {
+        if (state.mode === SceneMode.SCENE3D) {
             boundingVolume = tile.get3DBoundingSphere().clone();
-        } else if (mode === SceneMode.COLUMBUS_VIEW){
-            boundingVolume = tile.get2DBoundingSphere(projection).clone();
+        } else if (state.mode === SceneMode.COLUMBUS_VIEW){
+            boundingVolume = tile.get2DBoundingSphere(state.projection).clone();
             boundingVolume.center = new Cartesian3(0.0, boundingVolume.center.x, boundingVolume.center.y);
         } else {
-            boundingVolume = tile.computeMorphBounds(this.morphTime, projection);
+            boundingVolume = tile.computeMorphBounds(this.morphTime, state.projection);
         }
         return boundingVolume;
     };
 
-    CentralBody.prototype._frustumCull = function(tile, mode, projection) {
-        if (mode === SceneMode.SCENE2D) {
-            var bRect = tile.get2DBoundingRectangle(projection);
+    CentralBody.prototype._cull = function(tile, state) {
+        if (state.mode === SceneMode.SCENE2D) {
+            var bRect = tile.get2DBoundingRectangle(state.projection);
 
             var frustum = this._camera.frustum;
             var position = this._camera.position;
@@ -875,15 +870,24 @@ define([
             return !Rectangle.rectangleRectangleIntersect(bRect, fRect);
         }
 
-        var boundingVolume = this._getTileBoundingSphere(tile, mode, projection);
-        return this._camera.getVisibility(boundingVolume, BoundingSphere.planeSphereIntersect) === Intersect.OUTSIDE;
+        var boundingVolume = this._getTileBoundingSphere(tile, state);
+        if (this._camera.getVisibility(boundingVolume, BoundingSphere.planeSphereIntersect) === Intersect.OUTSIDE) {
+            return true;
+        }
+
+        if (state.mode === SceneMode.SCENE3D) {
+            var occludeePoint = tile.getOccludeePoint();
+            return (occludeePoint && !state.occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !state.occluder.isVisible(boundingVolume);
+        }
+
+        return false;
     };
 
-    CentralBody.prototype._throttleImages = function() {
+    CentralBody.prototype._throttleImages = function(state) {
         for ( var i = 0, len = this._imageQueue.length; i < len && i < this._imageThrottleLimit; ++i) {
             var tile = this._imageQueue.dequeue();
 
-            if (this._frustumCull(tile, this._mode, this._projection)) {
+            if (this._cull(tile, state)) {
                 tile.state = TileState.READY;
                 continue;
             }
@@ -911,11 +915,11 @@ define([
         return canvas;
     };
 
-    CentralBody.prototype._throttleReprojection = function() {
+    CentralBody.prototype._throttleReprojection = function(state) {
         for ( var i = 0, len = this._reprojectQueue.length; i < len && i < this._reprojectThrottleLimit; ++i) {
             var tile = this._reprojectQueue.dequeue();
 
-            if (this._frustumCull(tile, this._mode, this._projection)) {
+            if (this._cull(tile, state)) {
                 tile.image = undefined;
                 tile.state = TileState.READY;
                 continue;
@@ -927,11 +931,11 @@ define([
         }
     };
 
-    CentralBody.prototype._throttleTextures = function(context) {
+    CentralBody.prototype._throttleTextures = function(state) {
         for ( var i = 0, len = this._textureQueue.length; i < len && i < this._textureThrottleLimit; ++i) {
             var tile = this._textureQueue.dequeue();
 
-            if (this._frustumCull(tile, this._mode, this._projection) || !tile.image) {
+            if (this._cull(tile, state) || !tile.image) {
                 tile.image = undefined;
                 tile.state = TileState.READY;
                 continue;
@@ -945,7 +949,7 @@ define([
                 wrapT : TextureWrap.CLAMP,
                 minificationFilter : TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
                 magnificationFilter : TextureMagnificationFilter.LINEAR,
-                maximumAnisotropy : context.getMaximumTextureFilterAnisotropy() || 8 // TODO: Remove Chrome work around
+                maximumAnisotropy : state.context.getMaximumTextureFilterAnisotropy() || 8 // TODO: Remove Chrome work around
             });
             tile.state = TileState.TEXTURE_LOADED;
             tile.image = undefined;
@@ -953,30 +957,34 @@ define([
     };
 
     CentralBody.prototype._processTile = function(tile) {
+        if (this._imageQueue.contains(tile) || this._reprojectQueue.contains(tile) || this._textureQueue.contains(tile)) {
+            return;
+        }
+
         var maxFailed = this._tileFailCount > this._maxTileFailCount;
         var requestFailed = tile.state === TileState.IMAGE_FAILED && tile._failCount < this._maxTileFailCount;
         var maxTimePassed = this._lastFailedTime && this._lastFailedTime.getSecondsDifference(new JulianDate()) >= this.failedTileRetryTime;
         var retry = maxTimePassed || (requestFailed && !maxFailed);
 
         // check if tile needs to load image
-        if ((!tile.state || tile.state === TileState.READY) && !this._imageQueue.contains(tile)) {
+        if (!tile.state || tile.state === TileState.READY) {
             this._imageQueue.enqueue(tile);
             tile.state = TileState.IMAGE_LOADING;
-        } else if (tile.state === TileState.IMAGE_LOADED && !this._reprojectQueue.contains(tile)) {
+        } else if (tile.state === TileState.IMAGE_LOADED) {
             // or re-project the image
             this._reprojectQueue.enqueue(tile);
             tile.state = TileState.REPROJECTING;
-        } else if (tile.state === TileState.REPROJECTED && !this._textureQueue.contains(tile)) {
+        } else if (tile.state === TileState.REPROJECTED) {
             // or copy to a texture
             this._textureQueue.enqueue(tile);
             tile.state = TileState.TEXTURE_LOADING;
-        } else if (retry && this._imageQueue.contains(tile) === -1) {
+        } else if (retry) {
             // or retry a failed image
             if (maxTimePassed) {
                 tile._failCount = 0;
                 this._tileFailCount = 0;
             }
-            this._imageQueue.push(tile);
+            this._imageQueue.enqueue(tile);
             tile.state = TileState.IMAGE_LOADING;
         } else if (tile.state === TileState.IMAGE_INVALID && tile.image) {
             // or release invalid image if there is one
@@ -984,227 +992,225 @@ define([
         }
     };
 
-    CentralBody.prototype._enqueueTile = function(tile, context, sceneState) {
-        var mode = sceneState.mode;
-        var projection = sceneState.scene2D.projection;
-
-        // tile is ready for rendering
-        if (!this._dayTileProvider || (tile.state === TileState.TEXTURE_LOADED && tile.texture && !tile.texture.isDestroyed())) {
-            // create vertex array the first time it is needed or when morphing
-            if (!tile._extentVA ||
-                tile._extentVA.isDestroyed() ||
-                CentralBody._isModeTransition(this._mode, mode) ||
-                tile._mode !== mode ||
-                this._projection !== projection) {
-                tile._extentVA = tile._extentVA && tile._extentVA.destroy();
-
-                var ellipsoid = this._ellipsoid;
-                var rtc = tile.get3DBoundingSphere().center;
-                var projectedRTC = tile.get2DBoundingSphere(projection).center.clone();
-
-                var gran = (tile.zoom > 0) ? 0.05 * (1 / tile.zoom * 2) : 0.05; // seems like a good value after testing it for what looks good
-
-                var typedArray, buffer, stride, attributes, indexBuffer;
-                var datatype = ComponentDatatype.FLOAT;
-                var usage = BufferUsage.STATIC_DRAW;
-
-                if (mode === SceneMode.SCENE3D) {
-                    var buffers = ExtentTessellator.computeBuffers({
-                        ellipsoid : ellipsoid,
-                        extent : tile.extent,
-                        granularity : gran,
-                        generateTextureCoords : true,
-                        interleave : true,
-                        relativeToCenter : rtc
-                    });
-
-                    typedArray = datatype.toTypedArray(buffers.vertices);
-                    buffer = context.createVertexBuffer(typedArray, usage);
-                    stride = 5 * datatype.sizeInBytes;
-                    attributes = [{
-                        index : attributeIndices.position3D,
-                        vertexBuffer : buffer,
-                        componentDatatype : datatype,
-                        componentsPerAttribute : 3,
-                        normalize : false,
-                        offsetInBytes : 0,
-                        strideInBytes : stride
-                    }, {
-                        index : attributeIndices.textureCoordinates,
-                        vertexBuffer : buffer,
-                        componentDatatype : datatype,
-                        componentsPerAttribute : 2,
-                        normalize : false,
-                        offsetInBytes : 3 * datatype.sizeInBytes,
-                        strideInBytes : stride
-                    }, {
-                        index : attributeIndices.position2D,
-                        value : [0.0, 0.0]
-                    }];
-                    indexBuffer = context.createIndexBuffer(new Uint16Array(buffers.indices), usage, IndexDatatype.UNSIGNED_SHORT);
-                } else {
-                    var vertices = [];
-                    var width = tile.extent.east - tile.extent.west;
-                    var height = tile.extent.north - tile.extent.south;
-                    var lonScalar = 1.0 / width;
-                    var latScalar = 1.0 / height;
-
-                    var mesh = PlaneTessellator.compute({
-                        resolution : {
-                            x : Math.max(Math.ceil(width / gran), 2.0),
-                            y : Math.max(Math.ceil(height / gran), 2.0)
-                        },
-                        onInterpolation : function(time) {
-                            var lonLat = new Cartographic2(
-                                    CesiumMath.lerp(tile.extent.west, tile.extent.east, time.x),
-                                    CesiumMath.lerp(tile.extent.south, tile.extent.north, time.y));
-
-                            var p = ellipsoid.toCartesian(lonLat).subtract(rtc);
-                            vertices.push(p.x, p.y, p.z);
-
-                            var u = (lonLat.longitude - tile.extent.west) * lonScalar;
-                            var v = (lonLat.latitude - tile.extent.south) * latScalar;
-                            vertices.push(u, v);
-
-                            // TODO: This will not work if the projection's ellipsoid is different
-                            // than the central body's ellipsoid.  Throw an exception?
-                            var projectedLonLat = projection.project(lonLat).subtract(projectedRTC);
-                            vertices.push(projectedLonLat.x, projectedLonLat.y);
-                        }
-                    });
-
-                    typedArray = datatype.toTypedArray(vertices);
-                    buffer = context.createVertexBuffer(typedArray, usage);
-                    stride = 7 * datatype.sizeInBytes;
-                    attributes = [{
-                        index : attributeIndices.position3D,
-                        vertexBuffer : buffer,
-                        componentDatatype : datatype,
-                        componentsPerAttribute : 3,
-                        normalize : false,
-                        offsetInBytes : 0,
-                        strideInBytes : stride
-                    }, {
-                        index : attributeIndices.textureCoordinates,
-                        vertexBuffer : buffer,
-                        componentDatatype : datatype,
-                        componentsPerAttribute : 2,
-                        normalize : false,
-                        offsetInBytes : 3 * datatype.sizeInBytes,
-                        strideInBytes : stride
-                    }, {
-                        index : attributeIndices.position2D,
-                        vertexBuffer : buffer,
-                        componentDatatype : datatype,
-                        componentsPerAttribute : 2,
-                        normalize : false,
-                        offsetInBytes : 5 * datatype.sizeInBytes,
-                        strideInBytes : stride
-                    }];
-
-                    indexBuffer = context.createIndexBuffer(new Uint16Array(mesh.indexLists[0].values), usage, IndexDatatype.UNSIGNED_SHORT);
-                }
-
-                tile._extentVA = context.createVertexArray(attributes, indexBuffer);
-
-                var intensity = (this._dayTileProvider && this._dayTileProvider.getIntensity && this._dayTileProvider.getIntensity(tile)) || 0.0;
-                var drawUniforms = {
-                    u_dayTexture : function() {
-                        return tile.texture;
-                    },
-                    u_center3D : function() {
-                        return rtc;
-                    },
-                    u_center2D : function() {
-                        return (projectedRTC) ? projectedRTC.getXY() : Cartesian2.getZero();
-                    },
-                    u_modifiedModelView : function() {
-                        return tile.modelView;
-                    },
-                    u_dayIntensity : function() {
-                        return intensity;
-                    },
-                    u_mode : function() {
-                        return tile.mode;
-                    }
-                };
-                tile._drawUniforms = combine(drawUniforms, this._drawUniforms);
-
-                tile._mode = mode;
-            }
-            this._renderQueue.enqueue(tile);
-
-            if (mode === SceneMode.SCENE2D) {
-                if (tile.zoom + 1 <= this._dayTileProvider.zoomMax) {
-                    var children = tile.getChildren();
-                    for ( var i = 0; i < children.length; ++i) {
-                        this._processTile(children[i]);
-                    }
-                }
-            }
-        } else {
-            // tile isn't ready, find a parent to render and start processing the tile.
-            var parent = tile.parent;
-            if (parent && !this._renderQueue.contains(parent)) {
-                this._enqueueTile(parent, context, sceneState);
-            }
-
-            this._processTile(tile);
+    CentralBody.prototype._enqueueTile = function(tile, state) {
+        if (this._renderQueue.contains(tile)) {
+            return;
         }
+
+        var mode = state.mode;
+        var projection = state.projection;
+        var context = state.context;
+
+        // create vertex array the first time it is needed or when morphing
+        if (!tile._extentVA ||
+            tile._extentVA.isDestroyed() ||
+            CentralBody._isModeTransition(this._mode, mode) ||
+            tile._mode !== mode ||
+            this._projection !== projection) {
+            tile._extentVA = tile._extentVA && tile._extentVA.destroy();
+
+            var ellipsoid = this._ellipsoid;
+            var rtc = tile.get3DBoundingSphere().center;
+            var projectedRTC = tile.get2DBoundingSphere(projection).center.clone();
+
+            var gran = (tile.zoom > 0) ? 0.05 * (1.0 / tile.zoom * 2.0) : 0.05; // seems like a good value after testing it for what looks good
+
+            var typedArray;
+            var buffer;
+            var stride;
+            var attributes;
+            var indexBuffer;
+            var datatype = ComponentDatatype.FLOAT;
+            var usage = BufferUsage.STATIC_DRAW;
+
+            if (mode === SceneMode.SCENE3D) {
+                var buffers = ExtentTessellator.computeBuffers({
+                    ellipsoid : ellipsoid,
+                    extent : tile.extent,
+                    granularity : gran,
+                    generateTextureCoords : true,
+                    interleave : true,
+                    relativeToCenter : rtc
+                });
+
+                typedArray = datatype.toTypedArray(buffers.vertices);
+                buffer = context.createVertexBuffer(typedArray, usage);
+                stride = 5 * datatype.sizeInBytes;
+                attributes = [{
+                    index : attributeIndices.position3D,
+                    vertexBuffer : buffer,
+                    componentDatatype : datatype,
+                    componentsPerAttribute : 3,
+                    offsetInBytes : 0,
+                    strideInBytes : stride
+                }, {
+                    index : attributeIndices.textureCoordinates,
+                    vertexBuffer : buffer,
+                    componentDatatype : datatype,
+                    componentsPerAttribute : 2,
+                    offsetInBytes : 3 * datatype.sizeInBytes,
+                    strideInBytes : stride
+                }, {
+                    index : attributeIndices.position2D,
+                    value : [0.0, 0.0]
+                }];
+                indexBuffer = context.createIndexBuffer(new Uint16Array(buffers.indices), usage, IndexDatatype.UNSIGNED_SHORT);
+            } else {
+                var vertices = [];
+                var width = tile.extent.east - tile.extent.west;
+                var height = tile.extent.north - tile.extent.south;
+                var lonScalar = 1.0 / width;
+                var latScalar = 1.0 / height;
+
+                var mesh = PlaneTessellator.compute({
+                    resolution : {
+                        x : Math.max(Math.ceil(width / gran), 2.0),
+                        y : Math.max(Math.ceil(height / gran), 2.0)
+                    },
+                    onInterpolation : function(time) {
+                        var lonLat = new Cartographic2(
+                                CesiumMath.lerp(tile.extent.west, tile.extent.east, time.x),
+                                CesiumMath.lerp(tile.extent.south, tile.extent.north, time.y));
+
+                        var p = ellipsoid.toCartesian(lonLat).subtract(rtc);
+                        vertices.push(p.x, p.y, p.z);
+
+                        var u = (lonLat.longitude - tile.extent.west) * lonScalar;
+                        var v = (lonLat.latitude - tile.extent.south) * latScalar;
+                        vertices.push(u, v);
+
+                        // TODO: This will not work if the projection's ellipsoid is different
+                        // than the central body's ellipsoid.  Throw an exception?
+                        var projectedLonLat = projection.project(lonLat).subtract(projectedRTC);
+                        vertices.push(projectedLonLat.x, projectedLonLat.y);
+                    }
+                });
+
+                typedArray = datatype.toTypedArray(vertices);
+                buffer = context.createVertexBuffer(typedArray, usage);
+                stride = 7 * datatype.sizeInBytes;
+                attributes = [{
+                    index : attributeIndices.position3D,
+                    vertexBuffer : buffer,
+                    componentDatatype : datatype,
+                    componentsPerAttribute : 3,
+                    offsetInBytes : 0,
+                    strideInBytes : stride
+                }, {
+                    index : attributeIndices.textureCoordinates,
+                    vertexBuffer : buffer,
+                    componentDatatype : datatype,
+                    componentsPerAttribute : 2,
+                    offsetInBytes : 3 * datatype.sizeInBytes,
+                    strideInBytes : stride
+                }, {
+                    index : attributeIndices.position2D,
+                    vertexBuffer : buffer,
+                    componentDatatype : datatype,
+                    componentsPerAttribute : 2,
+                    offsetInBytes : 5 * datatype.sizeInBytes,
+                    strideInBytes : stride
+                }];
+
+                indexBuffer = context.createIndexBuffer(new Uint16Array(mesh.indexLists[0].values), usage, IndexDatatype.UNSIGNED_SHORT);
+            }
+
+            tile._extentVA = context.createVertexArray(attributes, indexBuffer);
+
+            var intensity = (this._dayTileProvider && this._dayTileProvider.getIntensity && this._dayTileProvider.getIntensity(tile)) || 0.0;
+            var drawUniforms = {
+                u_dayTexture : function() {
+                    return tile.texture;
+                },
+                u_center3D : function() {
+                    return rtc;
+                },
+                u_center2D : function() {
+                    return (projectedRTC) ? projectedRTC.getXY() : Cartesian2.ZERO;
+                },
+                u_modifiedModelView : function() {
+                    return tile.modelView;
+                },
+                u_dayIntensity : function() {
+                    return intensity;
+                },
+                u_mode : function() {
+                    return tile.mode;
+                }
+            };
+            tile._drawUniforms = combine(drawUniforms, this._drawUniforms);
+
+            tile._mode = mode;
+        }
+        this._renderQueue.enqueue(tile);
     };
 
-    CentralBody.prototype._refine3D = function(tile, viewportWidth, viewportHeight, mode, projection) {
-        var width = viewportWidth;
-        var height = viewportHeight;
-
-        var pixelError = this.pixelError3D;
-        var camera = this._camera;
-        var frustum = camera.frustum;
+    CentralBody.prototype._createTileDistanceFunction = function(width, height) {
+        var frustum = this._camera.frustum;
         var provider = this._dayTileProvider;
-        var extent = tile.extent;
+        var extent = provider.maxExtent;
 
-        if (tile.zoom < provider.zoomMin) {
-            return true;
-        }
-
-        var texturePixelError = (pixelError > 0.0) ? pixelError : 1.0;
         var pixelSizePerDistance = 2.0 * Math.tan(frustum.fovy * 0.5);
-
         if (height > width * frustum.aspectRatio) {
             pixelSizePerDistance /= height;
         } else {
             pixelSizePerDistance /= width;
         }
 
-        var invPixelSizePerDistance = 1.0 / (texturePixelError * pixelSizePerDistance);
-
+        var invPixelSizePerDistance = 1.0 / pixelSizePerDistance;
         var texelHeight = (extent.north - extent.south) / provider.tileHeight;
         var texelWidth = (extent.east - extent.west) / provider.tileWidth;
         var texelSize = (texelWidth > texelHeight) ? texelWidth : texelHeight;
         var dmin = texelSize * invPixelSizePerDistance;
         dmin *= this._ellipsoid.getMaximumRadius();
 
-        var boundingVolume = this._getTileBoundingSphere(tile, mode, projection);
+        return function(zoom, pixelError) {
+            return (dmin / pixelError) * Math.exp(-0.693147181 * zoom);
+        };
+    };
 
-        var cameraPosition = camera.transform.multiplyWithVector(new Cartesian4(camera.position.x, camera.position.y, camera.position.z, 1.0)).getXYZ();
-        var direction = camera.transform.multiplyWithVector(new Cartesian4(camera.direction.x, camera.direction.y, camera.direction.z, 0.0)).getXYZ();
+    CentralBody.prototype._refine3D = function(tile, state) {
+        var provider = this._dayTileProvider;
+        if (typeof provider === "undefined") {
+            return false;
+        }
+
+        if (tile.zoom < provider.zoomMin) {
+            return true;
+        }
+
+        var boundingVolume = this._getTileBoundingSphere(tile, state);
+        var cameraPosition = state.camera.position;
+        var direction = state.camera.direction;
+
+        var texturePixelError = (this.pixelError3D !== "undefined" && this.pixelError3D > 0.0) ? this.pixelError3D : 1.0;
+        var dmin = this._minTileDistance(tile.zoom, texturePixelError);
 
         var toCenter = boundingVolume.center.subtract(cameraPosition);
         var toSphere = toCenter.normalize().multiplyWithScalar(toCenter.magnitude() - boundingVolume.radius);
         var distance = direction.multiplyWithScalar(direction.dot(toSphere)).magnitude();
 
-        if (distance < dmin) {
+        if (distance > 0.0 && distance < dmin) {
             return true;
         }
 
         return false;
     };
 
-    CentralBody.prototype._refine2D = function(tile, viewportWidth, viewportHeight, projection) {
+    CentralBody.prototype._refine2D = function(tile, state) {
         var camera = this._camera;
         var frustum = camera.frustum;
         var pixelError = this.pixelError2D;
         var provider = this._dayTileProvider;
+
+        var projection = state.projection;
+        var viewport = state.context.getViewport();
+        var viewportWidth = viewport.width;
+        var viewportHeight = viewport.height;
+
+        if (typeof provider === "undefined") {
+            return false;
+        }
 
         if (tile.zoom < provider.zoomMin) {
             return true;
@@ -1244,12 +1250,12 @@ define([
      *
      * @return {Boolean} <code>true</code> if a higher resolution tile should be displayed or <code>false</code> if a higher resolution tile is not needed.
      */
-    CentralBody.prototype.refine = function(tile, viewportWidth, viewportHeight, mode, projection) {
-        if (mode === SceneMode.SCENE2D) {
-            return this._refine2D(tile, viewportWidth, viewportHeight, projection);
+    CentralBody.prototype.refine = function(tile, state) {
+        if (state.mode === SceneMode.SCENE2D) {
+            return this._refine2D(tile, state);
         }
 
-        return this._refine3D(tile, viewportWidth, viewportHeight, mode, projection);
+        return this._refine3D(tile, state);
     };
 
     CentralBody.prototype._createScissorRectangle = function(description) {
@@ -1296,7 +1302,7 @@ define([
         var qUnit = q.normalize();
 
         // Determine the east and north directions at q.
-        var eUnit = Cartesian3.getUnitZ().cross(q).normalize();
+        var eUnit = Cartesian3.UNIT_Z.cross(q).normalize();
         var nUnit = qUnit.cross(eUnit).normalize();
 
         // Determine the radius of the "limb" of the ellipsoid.
@@ -1320,12 +1326,17 @@ define([
      * @private
      */
     CentralBody.prototype.update = function(context, sceneState) {
+        var width = context.getCanvas().clientWidth;
+        var height = context.getCanvas().clientHeight;
+
+        if (width === 0 || height === 0) {
+            return;
+        }
+
         var mode = sceneState.mode;
         var projection = sceneState.scene2D.projection;
 
         this._syncMorphTime(mode);
-
-        var width, height;
 
         if (this._dayTileProvider !== this.dayTileProvider) {
             this._dayTileProvider = this.dayTileProvider;
@@ -1353,6 +1364,9 @@ define([
             });
 
             this._prefetchImages();
+
+            var viewport = context.getViewport();
+            this._minTileDistance = this._createTileDistanceFunction(viewport.width, viewport.height);
         }
 
         var hasLogo = this._dayTileProvider && this._dayTileProvider.getLogo;
@@ -1380,9 +1394,6 @@ define([
         if (!this._textureCache || this._textureCache.isDestroyed()) {
             this._createTextureCache(context);
         }
-
-        width = context.getCanvas().clientWidth;
-        height = context.getCanvas().clientHeight;
 
         var createFBO = !this._fb || this._fb.isDestroyed();
         var fboDimensionsChanged = this._fb && (this._fb.getColorTexture().getWidth() !== width || this._fb.getColorTexture().getHeight() !== height);
@@ -1708,8 +1719,9 @@ define([
         }
 
         var camera = this._camera;
-        var cameraPosition = new Cartesian4(camera.position.x, camera.position.y, camera.position.z, 1.0);
-        cameraPosition = camera.transform.multiplyWithVector(cameraPosition).getXYZ();
+        var cameraPosition = camera.transform.multiplyWithVector(new Cartesian4(camera.position.x, camera.position.y, camera.position.z, 1.0)).getXYZ();
+        var cameraDirection = camera.transform.multiplyWithVector(new Cartesian4(camera.direction.x, camera.direction.y, camera.direction.z, 0.0)).getXYZ();
+
         this._fCameraHeight2 = cameraPosition.magnitudeSquared();
         this._fCameraHeight = Math.sqrt(this._fCameraHeight2);
 
@@ -1728,42 +1740,46 @@ define([
             this._spSky = this._spSkyFromAtmosphere;
         }
 
-        this._throttleImages();
-        this._throttleReprojection();
-        this._throttleTextures(context);
+        var state = {
+                context : context,
+                camera : {
+                    position : cameraPosition,
+                    direction : cameraDirection
+                },
+                occluder : new Occluder(new BoundingSphere(Cartesian3.ZERO, this._ellipsoid.getMinimumRadius()), cameraPosition),
+                mode : mode,
+                projection : projection
+        };
 
-        var viewport = context.getViewport();
-        width = viewport.width;
-        height = viewport.height;
-
-        var occluder = new Occluder(new BoundingSphere(Cartesian3.getZero(), this._ellipsoid.getMinimumRadius()), cameraPosition);
+        this._throttleImages(state);
+        this._throttleReprojection(state);
+        this._throttleTextures(state);
 
         var stack = [this._rootTile];
         while (stack.length !== 0) {
             var tile = stack.pop();
 
-            if (this._frustumCull(tile, mode, projection)) {
+            if (this._cull(tile, state)) {
                 continue;
             }
 
-            var boundingVolume;
-            if (mode === SceneMode.SCENE3D) {
-                boundingVolume = tile.get3DBoundingSphere();
-                var occludeePoint = tile.getOccludeePoint();
-
-                // occlusion culling
-                if (occludeePoint && !occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) {
-                    continue;
-                } else if (!occluder.isVisible(boundingVolume)) {
-                    continue;
+            if (!this._dayTileProvider || (tile.state === TileState.TEXTURE_LOADED && tile.texture && !tile.texture.isDestroyed())) {
+                if (tile.zoom + 1 > this._dayTileProvider.zoomMax || !this.refine(tile, state)) {
+                    this._enqueueTile(tile, state);
+                } else {
+                    var children = tile.getChildren();
+                    for (var i = 0; i < children.length; ++i) {
+                        var child = children[i];
+                        if ((child.state === TileState.TEXTURE_LOADED && child.texture && !child.texture.isDestroyed())) {
+                            stack.push(child);
+                        } else {
+                            this._enqueueTile(tile, state);
+                            this._processTile(child);
+                        }
+                    }
                 }
-            }
-
-            if (!this._dayTileProvider || tile.zoom + 1 > this._dayTileProvider.zoomMax || !this.refineFunc(tile, width, height, mode, projection)) {
-                this._enqueueTile(tile, context, sceneState);
             } else {
-                var children = tile.getChildren();
-                stack = stack.concat(children);
+                this._processTile(tile);
             }
         }
 
@@ -1830,7 +1846,7 @@ define([
                     rtc = new Cartesian3(0.0, center.x, center.y);
                     tile.mode = 1;
                 } else {
-                    rtc = Cartesian3.getZero();
+                    rtc = Cartesian3.ZERO;
                     tile.mode = 2;
                 }
                 var centerEye = mv.multiplyWithVector(new Cartesian4(rtc.x, rtc.y, rtc.z, 1.0));

@@ -228,7 +228,7 @@ define([
      * @see Matrix3#setColumn0
      *
      * @example
-     * var m = Matrix3.getIdentity();
+     * var m = Matrix3.IDENTITY;
      * var c = m.getColumn0(); // (x, y, z) == (1.0, 0.0, 0.0)
      */
     Matrix3.prototype.getColumn0 = function() {
@@ -266,7 +266,7 @@ define([
      * @see Matrix3#setColumn1
      *
      * @example
-     * var m = Matrix3.getIdentity();
+     * var m = Matrix3.IDENTITY;
      * var c = m.getColumn1(); // (x, y, z) == (0.0, 1.0, 0.0)
      */
     Matrix3.prototype.getColumn1 = function() {
@@ -304,7 +304,7 @@ define([
      * @see Matrix3#setColumn2
      *
      * @example
-     * var m = Matrix3.getIdentity();
+     * var m = Matrix3.IDENTITY;
      * var c = m.getColumn2(); // (x, y, z) == (0.0, 0.0, 1.0)
      */
     Matrix3.prototype.getColumn2 = function() {
@@ -342,7 +342,7 @@ define([
      * @see Matrix3#setRow0
      *
      * @example
-     * var m = Matrix3.getIdentity();
+     * var m = Matrix3.IDENTITY;
      * var c = m.getRow0(); // (x, y, z) == (1.0, 0.0, 0.0)
      */
     Matrix3.prototype.getRow0 = function() {
@@ -380,7 +380,7 @@ define([
      * @see Matrix3#setRow1
      *
      * @example
-     * var m = Matrix3.getIdentity();
+     * var m = Matrix3.IDENTITY;
      * var c = m.getRow1(); // (x, y, z) == (0.0, 1.0, 0.0)
      */
     Matrix3.prototype.getRow1 = function() {
@@ -418,7 +418,7 @@ define([
      * @see Matrix3#setRow2
      *
      * @example
-     * var m = Matrix3.getIdentity();
+     * var m = Matrix3.IDENTITY;
      * var c = m.getRow2(); // (x, y, z) == (0.0, 0.0, 1.0)
      */
     Matrix3.prototype.getRow2 = function() {
@@ -468,15 +468,11 @@ define([
     };
 
     /**
-     * Creates a Matrix3 instance initialized to the identity matrix.
+     * An immutable Matrix3 instance initialized to the identity matrix.
      *
      * @memberof Matrix3
-     *
-     * @return {Matrix3} A new Matrix3 instance initialized to the identity matrix.
      */
-    Matrix3.getIdentity = function() {
-        return new Matrix3(1);
-    };
+    Matrix3.IDENTITY = Object.freeze(new Matrix3(1));
 
     /**
      * Returns 9, the number of elements in a Matrix3.

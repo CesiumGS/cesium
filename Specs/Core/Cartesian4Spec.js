@@ -57,39 +57,39 @@ defineSuite([
     });
 
     it("getZero", function() {
-        var v = new Cartesian4.getZero();
+        var v = Cartesian4.ZERO;
         expect(v.x).toEqual(0);
         expect(v.y).toEqual(0);
         expect(v.z).toEqual(0);
         expect(v.w).toEqual(0);
     });
 
-    it("getUnitX", function() {
-        var v = new Cartesian4.getUnitX();
+    it("UNIT_X", function() {
+        var v = Cartesian4.UNIT_X;
         expect(v.x).toEqual(1);
         expect(v.y).toEqual(0);
         expect(v.z).toEqual(0);
         expect(v.w).toEqual(0);
     });
 
-    it("getUnitY", function() {
-        var v = new Cartesian4.getUnitY();
+    it("UNIT_Y", function() {
+        var v = Cartesian4.UNIT_Y;
         expect(v.x).toEqual(0);
         expect(v.y).toEqual(1);
         expect(v.z).toEqual(0);
         expect(v.w).toEqual(0);
     });
 
-    it("getUnitZ", function() {
-        var v = new Cartesian4.getUnitZ();
+    it("UNIT_Z", function() {
+        var v = Cartesian4.UNIT_Z;
         expect(v.x).toEqual(0);
         expect(v.y).toEqual(0);
         expect(v.z).toEqual(1);
         expect(v.w).toEqual(0);
     });
 
-    it("getUnitW", function() {
-        var v = new Cartesian4.getUnitW();
+    it("UNIT_W", function() {
+        var v = Cartesian4.UNIT_W;
         expect(v.x).toEqual(0);
         expect(v.y).toEqual(0);
         expect(v.z).toEqual(0);
@@ -163,10 +163,10 @@ defineSuite([
     });
 
     it("mostOrthogonalAxis", function() {
-        expect(new Cartesian4(1, 2, 3, 4).mostOrthogonalAxis().equals(Cartesian4.getUnitX())).toEqual(true);
-        expect(new Cartesian4(4, 1, 2, 3).mostOrthogonalAxis().equals(Cartesian4.getUnitY())).toEqual(true);
-        expect(new Cartesian4(3, 4, 1, 2).mostOrthogonalAxis().equals(Cartesian4.getUnitZ())).toEqual(true);
-        expect(new Cartesian4(2, 3, 4, 1).mostOrthogonalAxis().equals(Cartesian4.getUnitW())).toEqual(true);
+        expect(new Cartesian4(1, 2, 3, 4).mostOrthogonalAxis().equals(Cartesian4.getUNIT_X())).toEqual(true);
+        expect(new Cartesian4(4, 1, 2, 3).mostOrthogonalAxis().equals(Cartesian4.getUNIT_Y())).toEqual(true);
+        expect(new Cartesian4(3, 4, 1, 2).mostOrthogonalAxis().equals(Cartesian4.getUNIT_Z())).toEqual(true);
+        expect(new Cartesian4(2, 3, 4, 1).mostOrthogonalAxis().equals(Cartesian4.getUNIT_W())).toEqual(true);
     });
 
     it("negate", function() {

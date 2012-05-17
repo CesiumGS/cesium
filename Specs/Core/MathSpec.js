@@ -27,15 +27,15 @@ defineSuite([
     ///////////////////////////////////////////////////////////////////////
 
     it("angleBetween between orthogonal vectors", function() {
-        expect(CesiumMath.angleBetween(Cartesian3.getUnitX(), Cartesian3.getUnitY())).toEqual(CesiumMath.PI_OVER_TWO);
+        expect(CesiumMath.angleBetween(Cartesian3.UNIT_X, Cartesian3.UNIT_Y)).toEqual(CesiumMath.PI_OVER_TWO);
     });
 
     it("angleBetween between colinear vectors", function() {
-        expect(CesiumMath.angleBetween(Cartesian3.getUnitX(), Cartesian3.getUnitX())).toEqual(0.0);
+        expect(CesiumMath.angleBetween(Cartesian3.UNIT_X, Cartesian3.UNIT_X)).toEqual(0.0);
     });
 
     it("angleBetween between zero vector", function() {
-        expect(CesiumMath.angleBetween(Cartesian3.getUnitX(), Cartesian3.getZero())).toEqual(0.0);
+        expect(CesiumMath.angleBetween(Cartesian3.UNIT_X, Cartesian3.ZERO)).toEqual(0.0);
     });
 
     //////////////////////////////////////////////////////////////////////

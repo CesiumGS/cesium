@@ -28,7 +28,7 @@ define([
         var particles = this.particles;
         var length = particles.length;
         for ( var i = 0; i < length; ++i) {
-            particles[i].force = Cartesian3.getZero();
+            particles[i].force = Cartesian3.ZERO;
         }
     };
 

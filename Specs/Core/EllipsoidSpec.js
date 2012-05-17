@@ -58,21 +58,21 @@ defineSuite([
     });
 
     it("geodeticSurfaceNormal", function() {
-        expect(Cartesian3.getUnitX().equals(Ellipsoid.getUnitSphere().geodeticSurfaceNormal(Cartesian3.getUnitX()))).toEqual(true);
-        expect(Cartesian3.getUnitZ().equals(Ellipsoid.getUnitSphere().geodeticSurfaceNormal(Cartesian3.getUnitZ()))).toEqual(true);
+        expect(Cartesian3.UNIT_X.equals(Ellipsoid.UNIT_SPHERE.geodeticSurfaceNormal(Cartesian3.UNIT_X))).toEqual(true);
+        expect(Cartesian3.UNIT_Z.equals(Ellipsoid.UNIT_SPHERE.geodeticSurfaceNormal(Cartesian3.UNIT_Y))).toEqual(true);
     });
 
     it("geodeticSurfaceNormalc", function() {
-        expect(Cartesian3.getUnitX().equalsEpsilon(Ellipsoid.getUnitSphere().geodeticSurfaceNormalc(Cartographic3.getZero()), CesiumMath.EPSILON10)).toEqual(true);
-        expect(Cartesian3.getUnitZ().equalsEpsilon(Ellipsoid.getUnitSphere().geodeticSurfaceNormalc(new Cartographic3(0, CesiumMath.PI_OVER_TWO, 0)), CesiumMath.EPSILON10)).toEqual(true);
+        expect(Cartesian3.UNIT_X.equalsEpsilon(Ellipsoid.UNIT_SPHERE.geodeticSurfaceNormalc(Cartographic3.ZERO), CesiumMath.EPSILON10)).toEqual(true);
+        expect(Cartesian3.UNIT_Z.equalsEpsilon(Ellipsoid.UNIT_SPHERE.geodeticSurfaceNormalc(new Cartographic3(0, CesiumMath.PI_OVER_TWO, 0)), CesiumMath.EPSILON10)).toEqual(true);
     });
 
     it("toCartesian", function() {
         var ellipsoid = new Ellipsoid(new Cartesian3(1, 1, 0.7));
 
-        expect(Cartesian3.getUnitX().equalsEpsilon(ellipsoid.toCartesian(new Cartographic2(0, 0)), CesiumMath.EPSILON10)).toEqual(true);
+        expect(Cartesian3.UNIT_X.equalsEpsilon(ellipsoid.toCartesian(new Cartographic2(0, 0)), CesiumMath.EPSILON10)).toEqual(true);
 
-        expect(Cartesian3.getUnitY().equalsEpsilon(ellipsoid.toCartesian(new Cartographic2(CesiumMath.toRadians(90), 0)), CesiumMath.EPSILON10)).toEqual(true);
+        expect(Cartesian3.UNIT_Y.equalsEpsilon(ellipsoid.toCartesian(new Cartographic2(CesiumMath.toRadians(90), 0)), CesiumMath.EPSILON10)).toEqual(true);
 
         expect(new Cartesian3(0, 0, 0.7).equalsEpsilon(ellipsoid.toCartesian(new Cartographic2(0, CesiumMath.toRadians(90))), CesiumMath.EPSILON10)).toEqual(true);
     });
@@ -99,9 +99,9 @@ defineSuite([
     });
 
     it("toCartographic3", function() {
-        var ellipsoid = Ellipsoid.getWgs84();
+        var ellipsoid = Ellipsoid.WGS84;
 
-        expect(Cartographic3.getZero().equalsEpsilon(ellipsoid.toCartographic3(ellipsoid.toCartesian(Cartographic3.getZero())), CesiumMath.EPSILON8)).toEqual(true);
+        expect(Cartographic3.ZERO.equalsEpsilon(ellipsoid.toCartographic3(ellipsoid.toCartesian(Cartographic3.ZERO)), CesiumMath.EPSILON8)).toEqual(true);
 
         var p = new Cartographic3(CesiumMath.toRadians(45), CesiumMath.toRadians(-60), -123.4);
         expect(p.equalsEpsilon(ellipsoid.toCartographic3(ellipsoid.toCartesian(p)), CesiumMath.EPSILON3)).toEqual(true);
@@ -125,15 +125,15 @@ defineSuite([
     });
 
     it("toCartographic2", function() {
-        var unitSphere = Ellipsoid.getUnitSphere();
+        var unitSphere = Ellipsoid.UNIT_SPHERE;
 
-        expect(Cartographic2.getZero().equalsEpsilon(unitSphere.toCartographic2(Cartesian3.getUnitX()), CesiumMath.EPSILON8)).toEqual(true);
+        expect(Cartographic2.ZERO.equalsEpsilon(unitSphere.toCartographic2(Cartesian3.UNIT_X), CesiumMath.EPSILON8)).toEqual(true);
 
-        expect(new Cartographic2(0, CesiumMath.PI_OVER_TWO).equalsEpsilon(unitSphere.toCartographic2(Cartesian3.getUnitZ()), CesiumMath.EPSILON8)).toEqual(true);
+        expect(new Cartographic2(0, CesiumMath.PI_OVER_TWO).equalsEpsilon(unitSphere.toCartographic2(Cartesian3.UNIT_Z), CesiumMath.EPSILON8)).toEqual(true);
     });
 
     it("can convert cartographicDegrees to Cartesian", function() {
-        var ellipsoid = Ellipsoid.getWgs84();
+        var ellipsoid = Ellipsoid.WGS84;
 
         var lon = 45, lat = -60, height = 123.4;
         var expected = ellipsoid.toCartesian(new Cartographic3(CesiumMath.toRadians(lon), CesiumMath.toRadians(lat), height));
@@ -147,17 +147,17 @@ defineSuite([
     });
 
     it("scaleToGeocentricSurface", function() {
-        var unitSphere = Ellipsoid.getUnitSphere();
+        var unitSphere = Ellipsoid.UNIT_SPHERE;
 
-        expect(Cartesian3.getUnitX().equalsEpsilon(unitSphere.scaleToGeocentricSurface(new Cartesian3(0.5, 0, 0)), CesiumMath.EPSILON8)).toEqual(true);
+        expect(Cartesian3.UNIT_X.equalsEpsilon(unitSphere.scaleToGeocentricSurface(new Cartesian3(0.5, 0, 0)), CesiumMath.EPSILON8)).toEqual(true);
     });
 
     it("scaleToGeodeticSurface", function() {
-        var unitSphere = Ellipsoid.getUnitSphere();
+        var unitSphere = Ellipsoid.UNIT_SPHERE;
 
-        expect(Cartesian3.getUnitX().equalsEpsilon(unitSphere.scaleToGeodeticSurface(new Cartesian3(0.5, 0, 0)), CesiumMath.EPSILON8)).toEqual(true);
+        expect(Cartesian3.UNIT_X.equalsEpsilon(unitSphere.scaleToGeodeticSurface(new Cartesian3(0.5, 0, 0)), CesiumMath.EPSILON8)).toEqual(true);
 
-        expect(Cartesian3.getUnitX().equalsEpsilon(unitSphere.scaleToGeodeticSurface(new Cartesian3(3, 0, 0)), CesiumMath.EPSILON8)).toEqual(true);
+        expect(Cartesian3.UNIT_X.equalsEpsilon(unitSphere.scaleToGeodeticSurface(new Cartesian3(3, 0, 0)), CesiumMath.EPSILON8)).toEqual(true);
     });
 
     it("equals another ellipsoid", function() {

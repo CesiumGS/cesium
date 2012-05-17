@@ -41,7 +41,7 @@ define([
      * @internalConstructor
      */
     function CameraSpindleController(canvas, camera, ellipsoid) {
-        ellipsoid = ellipsoid || Ellipsoid.getWgs84();
+        ellipsoid = ellipsoid || Ellipsoid.WGS84;
 
         this._canvas = canvas;
         this._camera = camera;
@@ -86,7 +86,7 @@ define([
          */
         this.mode = CameraSpindleControllerMode.AUTO;
 
-        this._zAxis = Cartesian3.getUnitZ();
+        this._zAxis = Cartesian3.UNIT_Z;
 
         var radius = this._ellipsoid.getRadii().getMaximumComponent();
         this._zoomFactor = 5.0;
@@ -120,11 +120,11 @@ define([
      * // Set the spindle controller's ellipsoid to a unit sphere for easy rotation around that point.
      * var center = ellipsoid.cartographicDegreesToCartesian(new Cartographic2(-75.59777, 40.03883));
      * var transform = Transforms.eastNorthUpToFixedFrame(center);
-     * scene.getCamera().getControllers().get(0).setReferenceFrame(transform, Ellipsoid.getUnitSphere());
+     * scene.getCamera().getControllers().get(0).setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
      *
      * // Example 2.
      * // Reset to the defaults.
-     * scene.getCamera().getControllers().get(0).setReferenceFrame(Matrix4.getIdentity());
+     * scene.getCamera().getControllers().get(0).setReferenceFrame(Matrix4.IDENTITY);
      *
      */
     CameraSpindleController.prototype.setReferenceFrame = function (transform, ellipsoid) {
@@ -155,7 +155,7 @@ define([
      * @see CameraSpindleController#getEllipsoid
      */
     CameraSpindleController.prototype.setEllipsoid = function(ellipsoid) {
-        ellipsoid = ellipsoid || Ellipsoid.getWgs84();
+        ellipsoid = ellipsoid || Ellipsoid.WGS84;
 
         var radius = ellipsoid.getRadii().getMaximumComponent();
         this._ellipsoid = ellipsoid;
@@ -459,7 +459,7 @@ define([
             var dot = p0.dot(p1);
             var axis = p0.cross(p1);
 
-            if (dot < 1.0 && !axis.equalsEpsilon(Cartesian3.getZero(), CesiumMath.EPSILON14)) { // dot is in [0, 1]
+            if (dot < 1.0 && !axis.equalsEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON14)) { // dot is in [0, 1]
                 var angle = -Math.acos(dot);
                 this.rotate(axis, angle);
             }

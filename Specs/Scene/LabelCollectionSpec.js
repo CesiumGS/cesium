@@ -42,8 +42,8 @@ defineSuite([
 
         var camera = {
             eye : new Cartesian3(-1.0, 0.0, 0.0),
-            target : Cartesian3.getZero(),
-            up : Cartesian3.getUnitZ()
+            target : Cartesian3.ZERO,
+            up : Cartesian3.UNIT_Z
         };
         us = context.getUniformState();
         us.setView(Matrix4.createLookAt(camera.eye, camera.target, camera.up));
@@ -60,7 +60,7 @@ defineSuite([
     it("default constructs a label", function() {
         var l = labels.add();
         expect(l.getShow()).toEqual(true);
-        expect(l.getPosition().equals(Cartesian3.getZero())).toEqual(true);
+        expect(l.getPosition().equals(Cartesian3.ZERO)).toEqual(true);
         expect(l.getText()).toEqual("");
         expect(l.getFont()).toEqual("30px sans-serif");
         expect(l.getFillColor().red).toEqual(1.0);
@@ -72,8 +72,8 @@ defineSuite([
         expect(l.getOutlineColor().blue).toEqual(0.0);
         expect(l.getOutlineColor().alpha).toEqual(1.0);
         expect(l.getStyle()).toEqual(LabelStyle.FILL);
-        expect(l.getPixelOffset().equals(Cartesian2.getZero())).toEqual(true);
-        expect(l.getEyeOffset().equals(Cartesian3.getZero())).toEqual(true);
+        expect(l.getPixelOffset().equals(Cartesian2.ZERO)).toEqual(true);
+        expect(l.getEyeOffset().equals(Cartesian3.ZERO)).toEqual(true);
         expect(l.getHorizontalOrigin()).toEqual(HorizontalOrigin.LEFT);
         expect(l.getVerticalOrigin()).toEqual(VerticalOrigin.BOTTOM);
         expect(l.getScale()).toEqual(1.0);

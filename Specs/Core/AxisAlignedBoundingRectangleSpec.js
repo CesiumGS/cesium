@@ -30,7 +30,7 @@ defineSuite([
 
     it("computes the center", function() {
         var rectangle = new AxisAlignedBoundingRectangle(positions);
-        expect(rectangle.center.equalsEpsilon(Cartesian2.getZero(), Math.EPSILON14)).toEqual(true);
+        expect(rectangle.center.equalsEpsilon(Cartesian2.ZERO, Math.EPSILON14)).toEqual(true);
     });
 
     it("computes the bounding rectangle for a single position", function() {

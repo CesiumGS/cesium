@@ -30,14 +30,14 @@ defineSuite([
 
     it("can be constructed using a point and a radius", function() {
         var sphere = new BoundingSphere(new Cartesian3(0, 0, 0), 1);
-        expect(sphere.center.equals(Cartesian3.getZero())).toEqual(true);
+        expect(sphere.center.equals(Cartesian3.ZERO)).toEqual(true);
         expect(sphere.radius).toEqual(1);
     });
 
     it("has a center", function() {
         var sphere = new BoundingSphere(getPositions());
         var center = sphere.center;
-        expect(center.equalsEpsilon(Cartesian3.getZero(), CesiumMath.EPSILON14)).toEqual(true);
+        expect(center.equalsEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON14)).toEqual(true);
     });
 
     it("has a radius", function() {

@@ -45,15 +45,15 @@ defineSuite([
     });
 
     it("getZero", function() {
-        var q = Quaternion.getZero();
+        var q = Quaternion.ZERO;
         expect(q.x).toEqual(0.0);
         expect(q.y).toEqual(0.0);
         expect(q.z).toEqual(0.0);
         expect(q.w).toEqual(0.0);
     });
 
-    it("getIdentity", function() {
-        var q = Quaternion.getIdentity();
+    it("IDENTITY", function() {
+        var q = Quaternion.IDENTITY;
         expect(q.x).toEqual(0.0);
         expect(q.y).toEqual(0.0);
         expect(q.z).toEqual(0.0);
@@ -154,7 +154,7 @@ defineSuite([
         var q = new Quaternion(cartesian.x, cartesian.y, cartesian.z, c);
         expect(q.getAxis().equals(new Cartesian3(0.0, 0.0, 1.0))).toEqual(true);
         q = new Quaternion(4.0, 3.0, 2.0, 1.0);
-        expect(q.getAxis().equals(Cartesian3.getZero())).toEqual(true);
+        expect(q.getAxis().equals(Cartesian3.ZERO)).toEqual(true);
     });
 
     it("getAngle", function() {

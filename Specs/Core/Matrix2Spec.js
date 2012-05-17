@@ -66,8 +66,8 @@ defineSuite([
         expect(Matrix2.fromColumnMajorArray().equals(new Matrix2())).toEqual(true);
     });
 
-    it("getIdentity", function() {
-        expect(Matrix2.getIdentity().equals(new Matrix2(1))).toEqual(true);
+    it("IDENTITY", function() {
+        expect(Matrix2.IDENTITY.equals(new Matrix2(1))).toEqual(true);
     });
 
     it("getColumnMajorValue0", function() {
@@ -100,8 +100,8 @@ defineSuite([
     });
 
     it("gets individual columns 2", function() {
-        expect(Matrix2.getIdentity().getColumn0().equals(Cartesian2.getUnitX())).toEqual(true);
-        expect(Matrix2.getIdentity().getColumn1().equals(Cartesian2.getUnitY())).toEqual(true);
+        expect(Matrix2.IDENTITY.getColumn0().equals(Cartesian2.UNIT_X)).toEqual(true);
+        expect(Matrix2.IDENTITY.getColumn1().equals(Cartesian2.UNIT_Y)).toEqual(true);
     });
 
     it("sets individual columns", function() {
@@ -128,8 +128,8 @@ defineSuite([
     });
 
     it("gets individual rows 2", function() {
-        expect(Matrix2.getIdentity().getRow0().equals(Cartesian2.getUnitX())).toEqual(true);
-        expect(Matrix2.getIdentity().getRow1().equals(Cartesian2.getUnitY())).toEqual(true);
+        expect(Matrix2.IDENTITY.getRow0().equals(Cartesian2.UNIT_X)).toEqual(true);
+        expect(Matrix2.IDENTITY.getRow1().equals(Cartesian2.UNIT_Y)).toEqual(true);
     });
 
     it("sets individual rows", function() {
