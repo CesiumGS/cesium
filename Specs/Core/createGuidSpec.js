@@ -1,7 +1,5 @@
-defineSuite([
-         'Core/createGuid'
-     ], function(
-         createGuid) {
+/*global defineSuite*/
+defineSuite(['Core/createGuid'], function(createGuid) {
     "use strict";
     /*global it,expect*/
 

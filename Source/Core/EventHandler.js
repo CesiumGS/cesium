@@ -14,7 +14,6 @@ define([
         MouseEventType,
         EventModifier) {
     "use strict";
-    /*global document*/
 
     /**
      * Handles user input events. Custom functions can be added to be executed on

@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Scene/BillboardCollection',
          '../Specs/createContext',
@@ -27,7 +28,7 @@ defineSuite([
          HorizontalOrigin,
          VerticalOrigin) {
     "use strict";
-    /*global Image,it,expect,beforeEach,afterEach,waitsFor*/
+    /*global it,expect,beforeEach,afterEach,waitsFor*/
 
     var context;
     var billboards;

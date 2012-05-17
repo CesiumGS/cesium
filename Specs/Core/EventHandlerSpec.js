@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Core/EventHandler',
          'Core/EventModifier',

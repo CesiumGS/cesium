@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Core/AxisAlignedBoundingBox',
          'Core/Cartesian3'
@@ -5,7 +6,7 @@ defineSuite([
          AxisAlignedBoundingBox,
          Cartesian3) {
     "use strict";
-    /*global it,expect*/
+    /*global it,expect,describe*/
 
     var positions = [
                      new Cartesian3(3, -1, -3),

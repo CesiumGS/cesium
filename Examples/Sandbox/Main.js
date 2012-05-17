@@ -3,8 +3,7 @@
  */
 (function() {
     "use strict";
-    /*global window, document, XMLHttpRequest, Cesium, Sandbox, dojo, dijit, dojox, js_beautify, initializeOverlayCreator*/
-    /*jslint evil : true */
+    /*global Cesium,Sandbox,dojo,dijit,js_beautify,initializeOverlayCreator*/
 
     Sandbox.beautify = function(code) {
         var beautifiedCode = js_beautify(code);
@@ -214,6 +213,7 @@
     };
 
     function recompile() {
+        /*jslint evil : true*/
         var func = new Function("scene", "ellipsoid", "primitives", "cb", editor.getValue());
 
         Sandbox.reset();

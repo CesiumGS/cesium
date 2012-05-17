@@ -10,7 +10,6 @@ define([
         ComponentDatatype,
         BufferUsage) {
     "use strict";
-    /*global Uint8Array,ArrayBuffer*/
 
     /**
      * DOC_TBA

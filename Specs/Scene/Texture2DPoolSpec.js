@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Scene/Texture2DPool',
          'Core/destroyObject'

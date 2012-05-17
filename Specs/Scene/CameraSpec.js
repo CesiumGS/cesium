@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Scene/Camera',
          'Core/AxisAlignedBoundingBox',
@@ -19,7 +20,7 @@ defineSuite([
          Matrix4,
          CameraControllerCollection) {
     "use strict";
-    /*global document,describe,it,expect,beforeEach,afterEach*/
+    /*global describe,it,expect,beforeEach,afterEach*/
 
     var camera;
 

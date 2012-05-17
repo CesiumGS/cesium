@@ -8,7 +8,6 @@ define([
         CesiumMath,
         Projections) {
     "use strict";
-    /*global Image*/
 
     /**
      * Provides a single, top-level tile.
@@ -17,6 +16,7 @@ define([
      * @constructor
      *
      * @param {String} url The url for the tile.
+     * @param {Object} [proxy=undefined] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
      *
      * @exception {DeveloperError} url is required.
      *
@@ -25,12 +25,13 @@ define([
      * @see OpenStreetMapTileProvider
      * @see CompositeTileProvider
      */
-    function SingleTileProvider(url) {
-        if (!url) {
+    function SingleTileProvider(url, proxy) {
+        if (typeof url === 'undefined') {
             throw new DeveloperError("url is required.", "url");
         }
 
         this._url = url;
+        this._proxy = proxy;
 
         /**
          * The cartographic extent of the base tile, with north, south, east and
@@ -89,19 +90,15 @@ define([
         }
 
         var image = new Image();
-
-        if (onload && typeof onload === "function") {
-            image.onload = function() {
-                onload();
-            };
-        }
-        if (onerror && typeof onerror === "function") {
-            image.onerror = function() {
-                onerror();
-            };
-        }
+        image.onload = onload;
+        image.onerror = onerror;
         image.crossOrigin = '';
-        image.src = this._url;
+
+        var url = this._url;
+        if (typeof this._proxy !== 'undefined') {
+            url = this._proxy.getURL(url);
+        }
+        image.src = url;
 
         return image;
     };

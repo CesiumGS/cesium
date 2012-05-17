@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          '../Specs/createContext',
          '../Specs/destroyContext',
@@ -25,7 +26,7 @@ defineSuite([
          StencilFunction,
          StencilOperation) {
     "use strict";
-    /*global Uint16Array,Float32Array,it,expect,beforeEach,afterEach*/
+    /*global it,expect,beforeEach,afterEach*/
 
     var context;
     var sp;

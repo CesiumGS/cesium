@@ -1,6 +1,6 @@
 (function() {
     "use strict";
-    /*global Sandbox*/
+    /*global Cesium,Sandbox*/
 
     Sandbox.CentralBodyShowClouds = function (cb) {
         this.code = function () {

@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Scene/LabelCollection',
          '../Specs/createContext',

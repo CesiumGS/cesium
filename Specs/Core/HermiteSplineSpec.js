@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Core/HermiteSpline',
          'Core/Cartesian3',

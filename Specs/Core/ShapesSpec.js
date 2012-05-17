@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Core/Shapes',
          'Core/Cartographic3',

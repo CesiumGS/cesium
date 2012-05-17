@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Renderer/TextureAtlas',
          '../Specs/createContext',
@@ -13,7 +14,7 @@ defineSuite([
          BufferUsage,
          PixelFormat) {
     "use strict";
-    /*global Float32Array,Image,it,expect,beforeEach,afterEach,waitsFor*/
+    /*global it,expect,beforeEach,afterEach,waitsFor*/
 
     var context;
     var atlas;
