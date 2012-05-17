@@ -84,6 +84,7 @@ function(dom,
                                                     new DynamicPolygonVisualizer(scene),
                                                     new DynamicPolylineVisualizer(scene),
                                                     new DynamicPyramidVisualizer(scene)]);
+            widget.enableStatistics(true);
         },
 
         onSetupError : function(widget, error) {

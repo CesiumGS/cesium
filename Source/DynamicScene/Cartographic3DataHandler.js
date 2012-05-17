@@ -7,7 +7,7 @@ function(Cartographic3,
          CesiumMath) {
     "use strict";
 
-    var wgs84 = Ellipsoid.getWgs84();
+    var wgs84 = Ellipsoid.WGS84;
     var doublesPerValue = 3;
 
     var Cartographic3DataHandler = {

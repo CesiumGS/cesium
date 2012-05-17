@@ -21,6 +21,7 @@ define([
         'Scene/BingMapsTileProvider',
         'Scene/BingMapsStyle',
         'Scene/SingleTileProvider',
+        'Scene/PerformanceDisplay',
         'dojo/text!./templates/CesiumWidget.html'
     ], function (
         require,
@@ -44,6 +45,7 @@ define([
         BingMapsTileProvider,
         BingMapsStyle,
         SingleTileProvider,
+        PerformanceDisplay,
         template) {
     "use strict";
 
@@ -58,7 +60,7 @@ define([
         lockSunPositionToCamera : false,
 
         constructor : function() {
-            this.ellipsoid = Ellipsoid.getWgs84();
+            this.ellipsoid = Ellipsoid.WGS84;
         },
 
         postCreate : function() {
@@ -254,6 +256,16 @@ define([
             if (this.areCloudsAvailable()) {
                 this.centralBody.showClouds = useClouds;
                 this.centralBody.showCloudShadows = useClouds;
+            }
+        },
+
+        enableStatistics : function(showStatistics) {
+            if (typeof this._performanceDisplay === 'undefined' && showStatistics) {
+                this._performanceDisplay = new PerformanceDisplay();
+                this.scene.getPrimitives().add(this._performanceDisplay);
+            } else if (typeof this._performanceDisplay !== 'undefined' && !showStatistics) {
+                this._performanceDisplay = undefined;
+                this.scene.getPrimitives().remove(this._performanceDisplay);
             }
         },
 

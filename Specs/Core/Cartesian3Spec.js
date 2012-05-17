@@ -47,28 +47,28 @@ defineSuite([
     });
 
     it("getZero", function() {
-        var v = new Cartesian3.getZero();
+        var v = Cartesian3.ZERO;
         expect(v.x).toEqual(0);
         expect(v.y).toEqual(0);
         expect(v.z).toEqual(0);
     });
 
-    it("getUnitX", function() {
-        var v = new Cartesian3.getUnitX();
+    it("UNIT_X", function() {
+        var v = Cartesian3.UNIT_X;
         expect(v.x).toEqual(1);
         expect(v.y).toEqual(0);
         expect(v.z).toEqual(0);
     });
 
-    it("getUnitY", function() {
-        var v = new Cartesian3.getUnitY();
+    it("UNIT_Y", function() {
+        var v = Cartesian3.UNIT_Y;
         expect(v.x).toEqual(0);
         expect(v.y).toEqual(1);
         expect(v.z).toEqual(0);
     });
 
-    it("getUnitZ", function() {
-        var v = new Cartesian3.getUnitZ();
+    it("UNIT_Z", function() {
+        var v = Cartesian3.UNIT_Z;
         expect(v.x).toEqual(0);
         expect(v.y).toEqual(0);
         expect(v.z).toEqual(1);
@@ -138,22 +138,22 @@ defineSuite([
     });
 
     it("mostOrthogonalAxis", function() {
-        expect(new Cartesian3(1, 2, 3).mostOrthogonalAxis().equals(Cartesian3.getUnitX())).toBeTruthy();
-        expect(new Cartesian3(3, 1, 2).mostOrthogonalAxis().equals(Cartesian3.getUnitY())).toBeTruthy();
-        expect(new Cartesian3(2, 3, 1).mostOrthogonalAxis().equals(Cartesian3.getUnitZ())).toBeTruthy();
+        expect(new Cartesian3(1, 2, 3).mostOrthogonalAxis().equals(Cartesian3.UNIT_X)).toBeTruthy();
+        expect(new Cartesian3(3, 1, 2).mostOrthogonalAxis().equals(Cartesian3.UNIT_Y)).toBeTruthy();
+        expect(new Cartesian3(2, 3, 1).mostOrthogonalAxis().equals(Cartesian3.UNIT_Z)).toBeTruthy();
     });
 
     it("angleBetween", function() {
-        var x = Cartesian3.getUnitX();
-        var y = Cartesian3.getUnitY();
+        var x = Cartesian3.UNIT_X;
+        var y = Cartesian3.UNIT_Y;
         expect(x.angleBetween(x)).toEqual(0);
         expect(x.angleBetween(y)).toEqual(CesiumMath.PI_OVER_TWO);
     });
 
     it("rotateAroundAxis", function() {
-        var x = Cartesian3.getUnitX();
-        var z = Cartesian3.getUnitZ();
-        expect(x.rotateAroundAxis(z, CesiumMath.PI_OVER_TWO).equalsEpsilon(Cartesian3.getUnitY(), CesiumMath.EPSILON14)).toBeTruthy();
+        var x = Cartesian3.UNIT_X;
+        var z = Cartesian3.UNIT_Z;
+        expect(x.rotateAroundAxis(z, CesiumMath.PI_OVER_TWO).equalsEpsilon(Cartesian3.UNIT_Y, CesiumMath.EPSILON14)).toBeTruthy();
         expect(x.rotateAroundAxis(z, Math.PI).equalsEpsilon(x.negate(), CesiumMath.EPSILON14)).toBeTruthy();
     });
 

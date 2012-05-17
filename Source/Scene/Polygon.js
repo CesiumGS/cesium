@@ -142,7 +142,7 @@ define([
         /**
          * DOC_TBA
          */
-        this.ellipsoid = Ellipsoid.getWgs84();
+        this.ellipsoid = Ellipsoid.WGS84;
         this._ellipsoid = undefined;
 
         /**

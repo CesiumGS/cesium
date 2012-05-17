@@ -131,7 +131,7 @@ define([
          *   text     : "Up"
          * });
          */
-        this.modelMatrix = Matrix4.getIdentity();
+        this.modelMatrix = Matrix4.IDENTITY;
 
         /**
          * DOC_TBA
@@ -189,14 +189,14 @@ define([
      * // Example 1:  Add a label, specifying all the default values.
      * var l = labels.add({
      *   show : true,
-     *   position : Cartesian3.getZero(),
+     *   position : Cartesian3.ZERO,
      *   text : "",
      *   font : "30px sans-serif",
      *   fillColor : "white",
      *   outlineColor : "white",
      *   style : LabelStyle.FILL,
-     *   pixelOffset : Cartesian2.getZero(),
-     *   eyeOffset : Cartesian3.getZero(),
+     *   pixelOffset : Cartesian2.ZERO,
+     *   eyeOffset : Cartesian3.ZERO,
      *   horizontalOrigin : HorizontalOrigin.LEFT,
      *   verticalOrigin : VerticalOrigin.BOTTOM,
      *   scale : 1.0,

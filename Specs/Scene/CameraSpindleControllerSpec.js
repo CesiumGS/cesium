@@ -29,9 +29,9 @@ defineSuite([
     beforeEach(function() {
         moverate = 3.0;
         rotaterate = CesiumMath.PI_OVER_TWO;
-        position = Cartesian3.getUnitZ();
-        up = Cartesian3.getUnitY();
-        dir = Cartesian3.getUnitZ().negate();
+        position = Cartesian3.UNIT_Z;
+        up = Cartesian3.UNIT_Y;
+        dir = Cartesian3.UNIT_Z.negate();
         right = dir.cross(up);
 
         frustum = new PerspectiveFrustum();
@@ -47,7 +47,7 @@ defineSuite([
         camera.right = right;
         camera.frustum = frustum;
 
-        csc = new CameraSpindleController(document, camera, Ellipsoid.getWgs84());
+        csc = new CameraSpindleController(document, camera, Ellipsoid.WGS84);
         csc.constrainedZAxis = false;
     });
 
@@ -61,7 +61,7 @@ defineSuite([
         expect(camera.up.equalsEpsilon(dir.negate(), CesiumMath.EPSILON15)).toBeTruthy();
         expect(camera.direction.equalsEpsilon(up, CesiumMath.EPSILON15)).toBeTruthy();
         expect(camera.right.equalsEpsilon(right, CesiumMath.EPSILON15)).toBeTruthy();
-        expect(camera.position.equalsEpsilon(Cartesian3.getUnitY().negate(), CesiumMath.EPSILON15)).toBeTruthy();
+        expect(camera.position.equalsEpsilon(Cartesian3.UNIT_Y.negate(), CesiumMath.EPSILON15)).toBeTruthy();
     });
 
     it("move down", function() {
@@ -69,7 +69,7 @@ defineSuite([
         expect(camera.up.equalsEpsilon(dir, CesiumMath.EPSILON15)).toBeTruthy();
         expect(camera.direction.equalsEpsilon(up.negate(), CesiumMath.EPSILON15)).toBeTruthy();
         expect(camera.right.equalsEpsilon(right, CesiumMath.EPSILON15)).toBeTruthy();
-        expect(camera.position.equalsEpsilon(Cartesian3.getUnitY(), CesiumMath.EPSILON15)).toBeTruthy();
+        expect(camera.position.equalsEpsilon(Cartesian3.UNIT_Y, CesiumMath.EPSILON15)).toBeTruthy();
     });
 
     it("move left", function() {
@@ -77,7 +77,7 @@ defineSuite([
         expect(camera.up.equalsEpsilon(up, CesiumMath.EPSILON15)).toBeTruthy();
         expect(camera.direction.equalsEpsilon(right, CesiumMath.EPSILON15)).toBeTruthy();
         expect(camera.right.equalsEpsilon(dir.negate(), CesiumMath.EPSILON15)).toBeTruthy();
-        expect(camera.position.equalsEpsilon(Cartesian3.getUnitX().negate(), CesiumMath.EPSILON15)).toBeTruthy();
+        expect(camera.position.equalsEpsilon(Cartesian3.UNIT_X.negate(), CesiumMath.EPSILON15)).toBeTruthy();
     });
 
     it("move right", function() {
@@ -85,7 +85,7 @@ defineSuite([
         expect(camera.up.equalsEpsilon(up, CesiumMath.EPSILON15)).toBeTruthy();
         expect(camera.direction.equalsEpsilon(right.negate(), CesiumMath.EPSILON15)).toBeTruthy();
         expect(camera.right.equalsEpsilon(dir, CesiumMath.EPSILON15)).toBeTruthy();
-        expect(camera.position.equalsEpsilon(Cartesian3.getUnitX(), CesiumMath.EPSILON15)).toBeTruthy();
+        expect(camera.position.equalsEpsilon(Cartesian3.UNIT_X, CesiumMath.EPSILON15)).toBeTruthy();
     });
 
     it("zoom in", function() {
@@ -114,7 +114,7 @@ defineSuite([
         camera2.right = right;
         camera2.frustum = frustum;
 
-        csc2 = new CameraSpindleController(document, camera2, Ellipsoid.getWgs84());
+        csc2 = new CameraSpindleController(document, camera2, Ellipsoid.WGS84);
         var angle = CesiumMath.PI_OVER_TWO;
 
         csc.rotate(new Cartesian3(Math.cos(CesiumMath.PI_OVER_FOUR), Math.sin(CesiumMath.PI_OVER_FOUR), 0.0), angle);

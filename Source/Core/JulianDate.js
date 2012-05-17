@@ -445,11 +445,11 @@ function(DeveloperError,
 
         //Now create the JulianDate components from the Gregorian date and actually create our instance.
         var components = computeJulianDateComponents(year, month, day, hours, minutes, seconds, milliseconds);
-        var result = new JulianDate(components[0], components[1], TimeStandard.UTC);
+        var result = TimeStandard.convertUtcToTai(new JulianDate(components[0], components[1], TimeStandard.UTC));
 
         //If we were on a leap second, add it back.
         if (isLeapSecond) {
-            result = TimeStandard.convertUtcToTai(result).addSeconds(1);
+            result = result.addSeconds(1);
         }
 
         return result;
@@ -516,6 +516,11 @@ function(DeveloperError,
 
         return a._secondsOfDay - b._secondsOfDay;
     };
+
+    //TODO Determine the true minimum and maximum values we can support.
+    JulianDate.MINIMUM_VALUE = Object.freeze(JulianDate.fromDate(new Date(Date.UTC(-1, 0, 1, 0, 0, 0))), TimeStandard.TAI);
+
+    JulianDate.MAXIMUM_VALUE = Object.freeze(JulianDate.fromDate(new Date(Date.UTC(10000, 0, 0, 0, 0, 0))), TimeStandard.TAI);
 
     /**
      * Returns the time standard used to construct this JulianDate.
