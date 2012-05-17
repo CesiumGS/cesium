@@ -85,4 +85,12 @@ defineSuite([
         var acmrAfter = Tipsify.calculateACMR(result, maximumIndex, 6);
         expect(acmrAfter).toBeLessThan(acmrBefore);
     });
+
+    it("can Tipsify without knowing the maximum index", function() {
+        var indices = [0, 1, 7, 1, 7, 8, 1, 2, 8, 2, 8, 9, 2, 3, 9, 3, 9, 10, 3, 4, 10, 4, 10, 11, 4, 5, 11, 5, 11, 12, 6, 13, 14, 6, 7, 14, 7, 14, 15, 7, 8, 15, 8, 15, 16, 8, 9, 16, 9, 16, 17, 9,
+                       10, 17, 10, 17, 18, 10, 11, 18, 11, 18, 19, 11, 12, 19, 12, 19, 20, 13, 21, 22, 13, 14, 22, 14, 22, 23, 14, 15, 23, 15, 23, 24, 15, 16, 24, 16, 24, 25, 16, 17, 25, 17, 25, 26, 17, 18,
+                       26, 18, 26, 27, 18, 19, 27, 19, 27, 28, 19, 20, 28];
+        var maximumIndex = 28;
+        expect(Tipsify.tipsify(indices, -1, 6)).toEqual(Tipsify.tipsify(indices, maximumIndex, 6));
+    });
 });

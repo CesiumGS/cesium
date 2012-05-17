@@ -150,7 +150,7 @@ define(['./DeveloperError'], function(DeveloperError) {
         if ((numIndices < 3) || (numIndices % 3 !== 0)) {
             throw new DeveloperError("indices length must be a multiple of three.", "indices");
         }
-        if (maximumIndex <= 0) {
+        if ((maximumIndex <= 0) && (maximumIndex !== -1)) {
             throw new DeveloperError("maximumIndex must be greater than zero.", "maximumIndex");
         }
         if (cacheSize < 3) {
