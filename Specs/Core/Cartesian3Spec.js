@@ -137,8 +137,8 @@ defineSuite([
 
     it("mostOrthogonalAxis", function() {
         expect(new Cartesian3(1, 2, 3).mostOrthogonalAxis().equals(Cartesian3.UNIT_X)).toEqual(true);
-        expect(new Cartesian3(3, 1, 2).mostOrthogonalAxis().equals(Cartesian3.UNIT_Y())).toEqual(true);
-        expect(new Cartesian3(2, 3, 1).mostOrthogonalAxis().equals(Cartesian3.UNIT_Z())).toEqual(true);
+        expect(new Cartesian3(3, 1, 2).mostOrthogonalAxis().equals(Cartesian3.UNIT_Y)).toEqual(true);
+        expect(new Cartesian3(2, 3, 1).mostOrthogonalAxis().equals(Cartesian3.UNIT_Z)).toEqual(true);
     });
 
     it("angleBetween", function() {
@@ -149,9 +149,9 @@ defineSuite([
     });
 
     it("rotateAroundAxis", function() {
-        var x = Cartesian3.getUnitX();
-        var z = Cartesian3.getUnitZ();
-        expect(x.rotateAroundAxis(z, CesiumMath.PI_OVER_TWO).equalsEpsilon(Cartesian3.UNIT_Y(), CesiumMath.EPSILON14)).toEqual(true);
+        var x = Cartesian3.UNIT_X;
+        var z = Cartesian3.UNIT_Z;
+        expect(x.rotateAroundAxis(z, CesiumMath.PI_OVER_TWO).equalsEpsilon(Cartesian3.UNIT_Y, CesiumMath.EPSILON14)).toEqual(true);
         expect(x.rotateAroundAxis(z, Math.PI).equalsEpsilon(x.negate(), CesiumMath.EPSILON14)).toEqual(true);
     });
 

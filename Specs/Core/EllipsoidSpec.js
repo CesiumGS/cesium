@@ -40,7 +40,7 @@ defineSuite([
     });
 
     it("getScaledWgs84", function() {
-        var e = Ellipsoid.getScaledWgs84();
+        var e = Ellipsoid.SCALED_WGS84;
         expect(e.getRadii().equals(new Cartesian3(1.0, 1.0, 6356752.314245 / 6378137.0))).toEqual(true);
     });
 
@@ -59,7 +59,7 @@ defineSuite([
 
     it("geodeticSurfaceNormal", function() {
         expect(Cartesian3.UNIT_X.equals(Ellipsoid.UNIT_SPHERE.geodeticSurfaceNormal(Cartesian3.UNIT_X))).toEqual(true);
-        expect(Cartesian3.UNIT_Z.equals(Ellipsoid.UNIT_SPHERE.geodeticSurfaceNormal(Cartesian3.UNIT_Y))).toEqual(true);
+        expect(Cartesian3.UNIT_Z.equals(Ellipsoid.UNIT_SPHERE.geodeticSurfaceNormal(Cartesian3.UNIT_Z))).toEqual(true);
     });
 
     it("geodeticSurfaceNormalc", function() {
@@ -111,8 +111,8 @@ defineSuite([
     });
 
     it("toCartographic3s", function() {
-        var ellipsoid = Ellipsoid.getWgs84();
-        var p1 = Cartographic3.getZero();
+        var ellipsoid = Ellipsoid.WGS84;
+        var p1 = Cartographic3.ZERO;
         var p2 = new Cartographic3(CesiumMath.toRadians(45), CesiumMath.toRadians(-60), -123.4);
         var p3 = new Cartographic3(CesiumMath.toRadians(-97.3), CesiumMath.toRadians(71.2), 1188.7);
         var cartesians = [ellipsoid.toCartesian(p1),

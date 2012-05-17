@@ -27,7 +27,7 @@ defineSuite([
         expect(m.getColumn0().equals(Cartesian4.UNIT_Y)).toEqual(true); // east
         expect(m.getColumn1().equals(Cartesian4.UNIT_Z)).toEqual(true); // north
         expect(m.getColumn2().equals(Cartesian4.UNIT_X)).toEqual(true); // up
-        expect(m.getColumn3().equals(new Cartesian4(2.0, 0.0, 0.0, 1.0))).toEqual(true)); // translation
+        expect(m.getColumn3().equals(new Cartesian4(2.0, 0.0, 0.0, 1.0))).toEqual(true); // translation
     });
 
     it("creates an east-north-up-to-fixed-frame matrix 2", function() {

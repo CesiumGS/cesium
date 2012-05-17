@@ -33,14 +33,14 @@ defineSuite([
     var ellipsoid;
 
     beforeEach(function() {
-        ellipsoid = Ellipsoid.getWgs84();
+        ellipsoid = Ellipsoid.WGS84;
         camera = new Camera(document);
 
         moverate = 3.0;
         zoomrate = 1.0;
         position = new Cartesian3();
-        up = Cartesian3.getUnitY();
-        dir = Cartesian3.getUnitZ().negate();
+        up = Cartesian3.UNIT_Y;
+        dir = Cartesian3.UNIT_Z.negate();
         right = dir.cross(up);
 
         frustum = new OrthographicFrustum();
@@ -75,8 +75,8 @@ defineSuite([
     });
 
     it("setEllipsoid", function() {
-        controller.setEllipsoid(Ellipsoid.getUnitSphere());
-        expect(controller.getEllipsoid().equals(Ellipsoid.getUnitSphere())).toEqual(true);
+        controller.setEllipsoid(Ellipsoid.UNIT_SPHERE);
+        expect(controller.getEllipsoid().equals(Ellipsoid.UNIT_SPHERE)).toEqual(true);
     });
 
     it("moveUp", function() {

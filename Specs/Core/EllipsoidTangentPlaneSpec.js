@@ -12,7 +12,7 @@ defineSuite([
     /*global it,expect*/
 
     it("projectPointsOntoEllipsoid", function () {
-        var ellipsoid = Ellipsoid.getUnitSphere();
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
         var tangentPlane = new EllipsoidTangentPlane(ellipsoid, new Cartesian3(1, 0, 0));
         var positions = [new Cartesian3(2, -2, 0),
                          new Cartesian3(2, 2, 0)];
@@ -22,7 +22,7 @@ defineSuite([
     });
 
     it("projectPointsOntoEllipsoid throws without positions", function () {
-        var ellipsoid = Ellipsoid.getUnitSphere();
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
         var tangentPlane = new EllipsoidTangentPlane(ellipsoid, new Cartesian3(1, 0, 0));
         expect(function() {
             tangentPlane.projectPointsOntoEllipsoid();

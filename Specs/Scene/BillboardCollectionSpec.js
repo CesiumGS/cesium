@@ -69,7 +69,7 @@ defineSuite([
         destroyContext(context);
     });
 
-    it("initializem suite", function() {
+    it("initialize suite", function() {
         greenImage = new Image();
         greenImage.src = "./Data/Images/Green.png";
 

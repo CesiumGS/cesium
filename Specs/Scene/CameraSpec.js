@@ -20,7 +20,7 @@ defineSuite([
          Matrix4,
          CameraControllerCollection) {
     "use strict";
-    /*global describe,it,expect,beforeEach,afterEach*/
+    /*global describe,it,expect,document,beforeEach,afterEach*/
 
     var camera;
 
@@ -109,7 +109,7 @@ defineSuite([
             south = -CesiumMath.PI_OVER_TWO,
             east = CesiumMath.PI_OVER_TWO,
             north = CesiumMath.PI_OVER_TWO;
-        camera.viewExtent(Ellipsoid.getWgs84(), west, south, east, north);
+        camera.viewExtent(Ellipsoid.WGS84, west, south, east, north);
         expect(camera.position.equalsEpsilon(new Cartesian3(24078036.74383515, 0, 0.0), CesiumMath.EPSILON10));
         expect(camera.direction.equalsEpsilon(new Cartesian3(-1.0, 0.0, 0.0), CesiumMath.EPSILON10));
         expect(camera.up.equalsEpsilon(new Cartesian3(0.0, 0.0, 1.0), CesiumMath.EPSILON10));

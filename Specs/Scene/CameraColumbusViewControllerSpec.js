@@ -17,8 +17,8 @@ defineSuite([
     beforeEach(function() {
         camera = new Camera(document);
         camera.position = new Cartesian3();
-        camera.up = Cartesian3.getUnitY();
-        camera.direction = Cartesian3.getUnitZ().negate();
+        camera.up = Cartesian3.UNIT_Y;
+        camera.direction = Cartesian3.UNIT_Z.negate();
 
         controller = new CameraColumbusViewController(document, camera);
     });

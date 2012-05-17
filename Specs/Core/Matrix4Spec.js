@@ -445,7 +445,7 @@ defineSuite([
                              0.00,  0.00, 0.00,  1.00);
         var mInverse = m.inverse();
 
-        expect(Matrix4.IDENTITY.equalsEpsilon(mInverse.multiplyWithMatrix(m), CesiumMath.EPSILON10)).toEqual(true)v;
+        expect(Matrix4.IDENTITY.equalsEpsilon(mInverse.multiplyWithMatrix(m), CesiumMath.EPSILON10)).toEqual(true);
     });
 
     it("inverse3", function() {

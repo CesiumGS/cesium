@@ -406,7 +406,7 @@ defineSuite([
 
         mesh = MeshFilters.projectTo2D(mesh);
 
-        var ellipsoid = Ellipsoid.getWgs84();
+        var ellipsoid = Ellipsoid.WGS84;
         var projection = new EquidistantCylindricalProjection();
         var projectedP1 = projection.project(ellipsoid.toCartographic2(p1));
         var projectedP2 = projection.project(ellipsoid.toCartographic2(p2));

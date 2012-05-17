@@ -12,7 +12,7 @@ defineSuite([
          Camera,
          PerspectiveFrustum) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach*/
+    /*global it,expect,document,beforeEach,afterEach*/
 
     var position;
     var up;
@@ -135,11 +135,11 @@ defineSuite([
     });
 
     it("rotate", function() {
-        cflc.rotate(Cartesian3.getUnitX(), CesiumMath.PI);
+        cflc.rotate(Cartesian3.UNIT_X, CesiumMath.PI);
         expect(camera.position.equals(position)).toEqual(true);
         expect(camera.right.equals(right)).toEqual(true);
-        expect(camera.up.equalsEpsilon(Cartesian3.getUnitY().negate(), CesiumMath.EPSILON10)).toEqual(true);
-        expect(camera.direction.equalsEpsilon(Cartesian3.getUnitZ(), CesiumMath.EPSILON10)).toEqual(true);
+        expect(camera.up.equalsEpsilon(Cartesian3.UNIT_Y.negate(), CesiumMath.EPSILON10)).toEqual(true);
+        expect(camera.direction.equalsEpsilon(Cartesian3.UNIT_Z, CesiumMath.EPSILON10)).toEqual(true);
     });
 
     it("isDestroyed", function() {
