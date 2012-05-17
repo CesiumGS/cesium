@@ -53,7 +53,20 @@ define([
         this.isEmpty = (this._characteristics & Characteristics_Empty) === Characteristics_Empty;
     }
 
-    TimeInterval.empty = new TimeInterval(new JulianDate(0, 0), new JulianDate(0, 0), false, false);
+    TimeInterval.fromIso8601 = function(iso8601String) {
+        var iso8601Interval = iso8601String.split('/');
+        var intervalStart = JulianDate.fromIso8601(iso8601Interval[0]);
+        var intervalStop = JulianDate.fromIso8601(iso8601Interval[1]);
+        return new TimeInterval(intervalStart, intervalStop, true, true);
+    };
+
+    TimeInterval.EMPTY = Object.freeze(new TimeInterval(new JulianDate(0, 0), new JulianDate(0, 0), false, false));
+
+    TimeInterval.INFINITE = Object.freeze(new TimeInterval(JulianDate.MINIMUM_VALUE, JulianDate.MAXIMUM_VALUE, true, true));
+
+    TimeInterval.prototype.clone = function() {
+        return new TimeInterval(this.start, this.stop, this.isStartIncluded, this.isStopIncluded);
+    };
 
     TimeInterval.prototype.intersect = function(other) {
         return this.intersectMergingData(other, undefined);
@@ -61,7 +74,7 @@ define([
 
     TimeInterval.prototype.intersectMergingData = function(other, mergeCallback) {
         if (typeof other === 'undefined') {
-            return TimeInterval.empty;
+            return TimeInterval.EMPTY;
         }
 
         var otherStart = other.start, otherStop = other.stop, isStartIncluded, isStopIncluded, outputData;
@@ -94,7 +107,7 @@ define([
             return new TimeInterval(this.start, this.stop, isStartIncluded, isStopIncluded, outputData);
         }
 
-        return TimeInterval.empty;
+        return TimeInterval.EMPTY;
     };
 
     TimeInterval.prototype.contains = function(date) {

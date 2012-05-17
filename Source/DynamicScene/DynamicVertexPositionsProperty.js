@@ -95,25 +95,20 @@ define([
     };
 
     DynamicVertexPositionsProperty.prototype.addInterval = function(czmlInterval, buffer, sourceUri) {
-        //Parse the interval
-        var iso8601Interval = czmlInterval.interval, intervalStart, intervalStop;
+        var iso8601Interval = czmlInterval.interval;
         if (typeof iso8601Interval === 'undefined') {
-            //FIXME, figure out how to properly handle "infinite" intervals.
-            intervalStart = JulianDate.fromIso8601("0000-01-01T00:00Z");
-            intervalStop = JulianDate.fromIso8601("9999-12-31T24:00Z");
+            iso8601Interval = TimeInterval.INFINITE.clone();
         } else {
-            iso8601Interval = iso8601Interval.split('/');
-            intervalStart = JulianDate.fromIso8601(iso8601Interval[0]);
-            intervalStop = JulianDate.fromIso8601(iso8601Interval[1]);
+            iso8601Interval = TimeInterval.fromIso8601(iso8601Interval);
         }
 
         //See if we already have data at that interval.
         var this_intervals = this._propertyIntervals;
-        var existingInterval = this_intervals.findInterval(intervalStart, intervalStop);
+        var existingInterval = this_intervals.findInterval(iso8601Interval.start, iso8601Interval.stop);
 
         //If not, create it.
         if (typeof existingInterval === 'undefined') {
-            existingInterval = new TimeInterval(intervalStart, intervalStop, true, true);
+            existingInterval = iso8601Interval;
             this_intervals.addInterval(existingInterval);
         }
 

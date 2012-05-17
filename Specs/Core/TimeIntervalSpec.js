@@ -137,6 +137,6 @@ defineSuite([
         }
 
         var interval = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2));
-        expect(interval.intersect(undefined) === TimeInterval.empty).toBeTruthy();
+        expect(interval.intersect(undefined)).toEqual(TimeInterval.EMPTY);
     });
 });

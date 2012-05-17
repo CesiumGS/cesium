@@ -100,25 +100,19 @@ define([
 
     DynamicProperty.prototype.addInterval = function(czmlInterval, buffer, sourceUri) {
         var iso8601Interval = czmlInterval.interval;
-        var intervalStart;
-        var intervalStop;
         if (typeof iso8601Interval === 'undefined') {
-            //FIXME, figure out how to properly handle "infinite" intervals.
-            intervalStart = JulianDate.fromIso8601("0000-01-01T00:00Z");
-            intervalStop = JulianDate.fromIso8601("9999-12-31T24:00Z");
+            iso8601Interval = TimeInterval.INFINITE;
         } else {
-            iso8601Interval = iso8601Interval.split('/');
-            intervalStart = JulianDate.fromIso8601(iso8601Interval[0]);
-            intervalStop = JulianDate.fromIso8601(iso8601Interval[1]);
+            iso8601Interval = TimeInterval.fromIso8601(iso8601Interval);
         }
 
         var unwrappedInterval = this.dataHandler.unwrapCzmlInterval(czmlInterval);
-        this.addIntervalUnwrapped(intervalStart, intervalStop, czmlInterval, unwrappedInterval, buffer, sourceUri);
+        this.addIntervalUnwrapped(iso8601Interval.start, iso8601Interval.stop, czmlInterval, unwrappedInterval, buffer, sourceUri);
     };
 
-    DynamicProperty.prototype.addIntervalUnwrapped = function(intervalStart, intervalStop, czmlInterval, unwrappedInterval, buffer, sourceUri) {
+    DynamicProperty.prototype.addIntervalUnwrapped = function(start, stop, czmlInterval, unwrappedInterval, buffer, sourceUri) {
         var this_intervals = this._intervals;
-        var existingInterval = this_intervals.findInterval(intervalStart, intervalStop);
+        var existingInterval = this_intervals.findInterval(start, stop);
 
         var intervalData;
         if (typeof existingInterval === 'undefined') {
@@ -127,7 +121,7 @@ define([
                 numberOfPoints : LinearApproximation.getRequiredDataPoints(1)
             };
 
-            existingInterval = new TimeInterval(intervalStart, intervalStop, true, true);
+            existingInterval = new TimeInterval(start, stop, true, true);
             existingInterval.data = intervalData;
             this_intervals.addInterval(existingInterval);
         } else {

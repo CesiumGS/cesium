@@ -21,7 +21,7 @@ define([
         'Scene/BingMapsTileProvider',
         'Scene/BingMapsStyle',
         'Scene/SingleTileProvider',
-        'Scene/StatisticsDisplay',
+        'Scene/PerformanceDisplay',
         'dojo/text!./templates/CesiumWidget.html'
     ], function (
         require,
@@ -45,7 +45,7 @@ define([
         BingMapsTileProvider,
         BingMapsStyle,
         SingleTileProvider,
-        StatisticsDisplay,
+        PerformanceDisplay,
         template) {
     "use strict";
 
@@ -260,12 +260,12 @@ define([
         },
 
         enableStatistics : function(showStatistics) {
-            if (typeof this._statisticsDisplay === 'undefined' && showStatistics) {
-                this._statisticsDisplay = new StatisticsDisplay();
-                this.scene.getPrimitives().add(this._statisticsDisplay);
-            } else if (typeof this._statisticsDisplay !== 'undefined' && !showStatistics) {
-                this._statisticsDisplay = undefined;
-                this.scene.getPrimitives().remove(this._statisticsDisplay);
+            if (typeof this._performanceDisplay === 'undefined' && showStatistics) {
+                this._performanceDisplay = new PerformanceDisplay();
+                this.scene.getPrimitives().add(this._performanceDisplay);
+            } else if (typeof this._performanceDisplay !== 'undefined' && !showStatistics) {
+                this._performanceDisplay = undefined;
+                this.scene.getPrimitives().remove(this._performanceDisplay);
             }
         },
 

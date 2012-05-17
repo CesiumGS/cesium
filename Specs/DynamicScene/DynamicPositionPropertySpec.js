@@ -70,34 +70,4 @@ defineSuite([
         expect(result.latitude).toEqual(resultCartographic.latitude);
         expect(result.height).toEqual(resultCartographic.height);
     });
-
-    it("Works with mixes values.", function() {
-        var iso8601Epoch = '2012-04-18T15:59:00Z';
-        var epoch = JulianDate.fromIso8601(iso8601Epoch);
-
-        var property = new DynamicPositionProperty();
-        var czmlInterval = {
-            cartesian : [1234, 5678, 9101112]
-        };
-        property.addIntervals(czmlInterval);
-
-        czmlInterval = {
-                interval : '2012-04-18T15:59:00Z/2012-04-18T15:59:00Z',
-                cartographic : [0, 0, 0]
-            };
-
-        property.addIntervals(czmlInterval);
-
-        var result = property.getValueCartesian(epoch);
-        expect(result.x).toEqual(1234);
-        expect(result.y).toEqual(5678);
-        expect(result.z).toEqual(9101112);
-        expect(result === property.getValueCartesian(epoch)).toEqual(true);
-
-        var resultCartographic = Ellipsoid.WGS84.toCartographic3(result);
-        result = property.getValueCartographic(epoch);
-        expect(result.longitude).toEqual(resultCartographic.longitude);
-        expect(result.latitude).toEqual(resultCartographic.latitude);
-        expect(result.height).toEqual(resultCartographic.height);
-    });
 });
