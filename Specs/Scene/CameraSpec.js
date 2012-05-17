@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Scene/Camera',
          'Core/AxisAlignedBoundingBox',
@@ -13,15 +14,15 @@ defineSuite([
          Intersect,
          Matrix4) {
     "use strict";
-    /*global document,describe,it,expect,beforeEach,afterEach*/
+    /*global describe,it,expect,beforeEach,afterEach*/
 
     var camera;
 
     beforeEach(function() {
         camera = new Camera(document);
         camera.position = new Cartesian3();
-        camera.up = Cartesian3.getUnitY();
-        camera.direction = Cartesian3.getUnitZ().negate();
+        camera.up = Cartesian3.UNIT_Y;
+        camera.direction = Cartesian3.UNIT_Z.negate();
         camera.frustum.near = 1.0;
         camera.frustum.far = 2.0;
         camera.frustum.fovy = (Math.PI) / 3;
@@ -35,7 +36,7 @@ defineSuite([
     });
 
     it("lookAt object", function() {
-        var target = Cartesian3.getZero();
+        var target = Cartesian3.ZERO;
         var newPosition = new Cartesian3(1.0, 1.0, 1.0);
         var newDirection = target.subtract(newPosition).normalize();
         var newUp = camera.right.cross(newDirection).normalize();
@@ -51,7 +52,7 @@ defineSuite([
     });
 
     it("lookAt array", function() {
-        var target = Cartesian3.getZero();
+        var target = Cartesian3.ZERO;
         var newPosition = new Cartesian3(1.0, 1.0, 1.0);
         var newDirection = target.subtract(newPosition).normalize();
         var newUp = camera.right.cross(newDirection).normalize();

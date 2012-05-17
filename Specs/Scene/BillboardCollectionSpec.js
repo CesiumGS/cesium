@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Scene/BillboardCollection',
          '../Specs/createContext',
@@ -27,7 +28,7 @@ defineSuite([
          HorizontalOrigin,
          VerticalOrigin) {
     "use strict";
-    /*global Image,it,expect,beforeEach,afterEach,waitsFor*/
+    /*global it,expect,beforeEach,afterEach,waitsFor*/
 
     var context;
     var billboards;
@@ -55,8 +56,8 @@ defineSuite([
 
         var camera = {
             eye : new Cartesian3(-1.0, 0.0, 0.0),
-            target : Cartesian3.getZero(),
-            up : Cartesian3.getUnitZ()
+            target : Cartesian3.ZERO,
+            up : Cartesian3.UNIT_Z
         };
         us = context.getUniformState();
         us.setView(Matrix4.createLookAt(camera.eye, camera.target, camera.up));
@@ -86,9 +87,9 @@ defineSuite([
     it("default constructs a billboard", function() {
         var b = billboards.add();
         expect(b.getShow()).toBeTruthy();
-        expect(b.getPosition().equals(Cartesian3.getZero())).toBeTruthy();
-        expect(b.getPixelOffset().equals(Cartesian2.getZero())).toBeTruthy();
-        expect(b.getEyeOffset().equals(Cartesian3.getZero())).toBeTruthy();
+        expect(b.getPosition().equals(Cartesian3.ZERO)).toBeTruthy();
+        expect(b.getPixelOffset().equals(Cartesian2.ZERO)).toBeTruthy();
+        expect(b.getEyeOffset().equals(Cartesian3.ZERO)).toBeTruthy();
         expect(b.getHorizontalOrigin()).toEqual(HorizontalOrigin.CENTER);
         expect(b.getVerticalOrigin()).toEqual(VerticalOrigin.CENTER);
         expect(b.getScale()).toEqual(1.0);

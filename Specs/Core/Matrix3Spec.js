@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Core/Matrix3',
          'Core/Cartesian3'
@@ -89,8 +90,8 @@ defineSuite([
         expect(Matrix3.fromColumnMajorArray().equals(new Matrix3())).toBeTruthy();
     });
 
-    it("getIdentity", function() {
-        expect(Matrix3.getIdentity().equals(new Matrix3(1))).toBeTruthy();
+    it("IDENTITY", function() {
+        expect(Matrix3.IDENTITY.equals(new Matrix3(1))).toBeTruthy();
     });
 
     it("getColumnMajorValue0", function() {
@@ -131,9 +132,9 @@ defineSuite([
     });
 
     it("gets individual columns 2", function() {
-        expect(Matrix3.getIdentity().getColumn0().equals(Cartesian3.getUnitX())).toBeTruthy();
-        expect(Matrix3.getIdentity().getColumn1().equals(Cartesian3.getUnitY())).toBeTruthy();
-        expect(Matrix3.getIdentity().getColumn2().equals(Cartesian3.getUnitZ())).toBeTruthy();
+        expect(Matrix3.IDENTITY.getColumn0().equals(Cartesian3.UNIT_X)).toBeTruthy();
+        expect(Matrix3.IDENTITY.getColumn1().equals(Cartesian3.UNIT_Y)).toBeTruthy();
+        expect(Matrix3.IDENTITY.getColumn2().equals(Cartesian3.UNIT_Z)).toBeTruthy();
     });
 
     it("sets individual columns", function() {
@@ -166,9 +167,9 @@ defineSuite([
     });
 
     it("gets individual rows 2", function() {
-        expect(Matrix3.getIdentity().getRow0().equals(Cartesian3.getUnitX())).toBeTruthy();
-        expect(Matrix3.getIdentity().getRow1().equals(Cartesian3.getUnitY())).toBeTruthy();
-        expect(Matrix3.getIdentity().getRow2().equals(Cartesian3.getUnitZ())).toBeTruthy();
+        expect(Matrix3.IDENTITY.getRow0().equals(Cartesian3.UNIT_X)).toBeTruthy();
+        expect(Matrix3.IDENTITY.getRow1().equals(Cartesian3.UNIT_Y)).toBeTruthy();
+        expect(Matrix3.IDENTITY.getRow2().equals(Cartesian3.UNIT_Z)).toBeTruthy();
     });
 
     it("sets individual rows", function() {

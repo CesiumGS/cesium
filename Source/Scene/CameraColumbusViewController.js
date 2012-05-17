@@ -51,14 +51,14 @@ define([
 
         this._translateHandler = new CameraEventHandler(canvas, CameraEventType.LEFT_DRAG);
 
-        this._spindleController = new CameraSpindleController(canvas, camera, Ellipsoid.getUnitSphere());
+        this._spindleController = new CameraSpindleController(canvas, camera, Ellipsoid.UNIT_SPHERE);
 
         // TODO: Shouldn't change private variables like this, need to be able to change event modifiers
         //       on controllers.
         this._spindleController._spinHandler = this._spindleController._spinHandler && this._spindleController._spinHandler.destroy();
 
         this._freeLookController = new CameraFreeLookController(canvas, camera);
-        this._freeLookController.horizontalRotationAxis = Cartesian3.getUnitZ();
+        this._freeLookController.horizontalRotationAxis = Cartesian3.UNIT_Z;
 
         this._transform = this._camera.transform.clone();
 
@@ -142,11 +142,11 @@ define([
      * <br /><br />
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>null</code>) to the object as done in the example.
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
      * @memberof CameraColumbusViewController
      *
-     * @return {null}
+     * @return {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

@@ -1,3 +1,4 @@
-.metadata
-Build
-Instrumented
+/.metadata
+/Build
+/Instrumented
+/Cesium-*.zip

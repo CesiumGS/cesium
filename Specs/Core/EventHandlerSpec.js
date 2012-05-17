@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Core/EventHandler',
          'Core/EventModifier',
@@ -9,7 +10,7 @@ defineSuite([
          MouseEventType,
          Cartesian2) {
     "use strict";
-    /*global it,expect,beforeEach*/
+    /*global it,expect,beforeEach,afterEach*/
 
     // create a mock document object to add events to so they are callable.
     var MockDoc = function() {
@@ -100,61 +101,57 @@ defineSuite([
         handler = new EventHandler(element);
     });
 
+    afterEach(function() {
+        handler = handler.destroy();
+    });
+
     it("setting key events require an action", function() {
-        var eventHandler = new EventHandler();
         expect(function() {
-            eventHandler.setKeyAction();
+            handler.setKeyAction();
         }).toThrow();
     });
 
     it("setting key events require a key", function() {
-        var eventHandler = new EventHandler();
         expect(function() {
-            eventHandler.setKeyAction(function() {
+            handler.setKeyAction(function() {
             });
         }).toThrow();
     });
 
     it("getting key events require a key", function() {
-        var eventHandler = new EventHandler();
         expect(function() {
-            eventHandler.getKeyAction();
+            handler.getKeyAction();
         }).toThrow();
     });
 
     it("removing key events require a key", function() {
-        var eventHandler = new EventHandler();
         expect(function() {
-            eventHandler.removeKeyAction();
+            handler.removeKeyAction();
         }).toThrow();
     });
 
     it("setting mouse events require an action", function() {
-        var eventHandler = new EventHandler();
         expect(function() {
-            eventHandler.setMouseAction();
+            handler.setMouseAction();
         }).toThrow();
     });
 
     it("setting mouse events require a type", function() {
-        var eventHandler = new EventHandler();
         expect(function() {
-            eventHandler.setMouseAction(function() {
+            handler.setMouseAction(function() {
             });
         }).toThrow();
     });
 
     it("getting mouse events require a type", function() {
-        var eventHandler = new EventHandler();
         expect(function() {
-            eventHandler.getMouseAction();
+            handler.getMouseAction();
         }).toThrow();
     });
 
     it("removing mouse events require a type", function() {
-        var eventHandler = new EventHandler();
         expect(function() {
-            eventHandler.removeMouseAction();
+            handler.removeMouseAction();
         }).toThrow();
     });
 

@@ -50,7 +50,6 @@ define([
         PolygonVSPick,
         PolygonFSPick) {
     "use strict";
-    /*global Float32Array*/
 
     var attributeIndices = {
         position2D : 0,
@@ -143,7 +142,7 @@ define([
         /**
          * DOC_TBA
          */
-        this.ellipsoid = Ellipsoid.getWgs84();
+        this.ellipsoid = Ellipsoid.WGS84;
         this._ellipsoid = undefined;
 
         /**
@@ -594,11 +593,11 @@ define([
      * <br /><br />
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>null</code>) to the object as done in the example.
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
      * @memberof Polygon
      *
-     * @return {null}
+     * @return {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

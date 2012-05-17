@@ -1,6 +1,6 @@
 (function() {
     "use strict";
-    /*global Cesium, Sandbox*/
+    /*global Cesium,Sandbox*/
 
     Sandbox.CompositeLayering = function (scene, ellipsoid, primitives) {
         var handler;

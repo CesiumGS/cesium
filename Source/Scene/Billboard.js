@@ -53,13 +53,13 @@ define([
             alpha : 1.0
         };
 
-        var position = b.position ? new Cartesian3(b.position.x, b.position.y, b.position.z) : Cartesian3.getZero();
+        var position = b.position ? new Cartesian3(b.position.x, b.position.y, b.position.z) : Cartesian3.ZERO.clone();
 
         this._show = (typeof b.show === "undefined") ? true : b.show;
         this._position = position;
         this._actualPosition = position.clone(); // For columbus view and 2D
-        this._pixelOffset = b.pixelOffset ? new Cartesian2(b.pixelOffset.x, b.pixelOffset.y) : Cartesian2.getZero();
-        this._eyeOffset = b.eyeOffset ? new Cartesian3(b.eyeOffset.x, b.eyeOffset.y, b.eyeOffset.z) : Cartesian3.getZero();
+        this._pixelOffset = b.pixelOffset ? new Cartesian2(b.pixelOffset.x, b.pixelOffset.y) : Cartesian2.ZERO.clone();
+        this._eyeOffset = b.eyeOffset ? new Cartesian3(b.eyeOffset.x, b.eyeOffset.y, b.eyeOffset.z) : Cartesian3.ZERO.clone();
         this._horizontalOrigin = b.horizontalOrigin || HorizontalOrigin.CENTER;
         this._verticalOrigin = b.verticalOrigin || VerticalOrigin.CENTER;
         this._scale = (typeof b.scale === "undefined") ? 1.0 : b.scale;
@@ -86,7 +86,7 @@ define([
     var SCALE_INDEX = Billboard.SCALE_INDEX = 6;
     var IMAGE_INDEX_INDEX = Billboard.IMAGE_INDEX_INDEX = 7;
     var COLOR_INDEX = Billboard.COLOR_INDEX = 8;
-    var NUMBER_OF_PROPERTIES = Billboard.NUMBER_OF_PROPERTIES = 9;
+    Billboard.NUMBER_OF_PROPERTIES = 9;
 
     Billboard.prototype._isDirty = function() {
         return this._dirty;
@@ -558,7 +558,7 @@ define([
         positionWC.x += po.x;
         positionWC.y += po.y;
 
-        return new Cartesian2(positionWC.x, positionWC.y);
+        return new Cartesian2(positionWC.x, Math.floor(positionWC.y));
     };
 
     /**

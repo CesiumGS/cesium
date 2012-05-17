@@ -211,7 +211,7 @@ define([
      * var mvp = sp.getAllUniforms().u_mvp;
      * console.log(mvp.getName());           // "u_mvp"
      * console.log(mvp.getDatatype().name);  // "FLOAT_MATRIX4"
-     * mvp.value = Matrix4.getIdentity();
+     * mvp.value = Matrix4.IDENTITY;
      *
      * //////////////////////////////////////////////////////////////////////
      *
@@ -221,8 +221,8 @@ define([
      *
      * // GLSL:  uniform vec4 u_vec4[2];
      * sp.getAllUniforms().u_vec4.value = [
-     *   Cartesian4.getUnitX(),
-     *   Cartesian4.getUnitY()
+     *   Cartesian4.UNIT_X,
+     *   Cartesian4.UNIT_Y
      * ];
      *
      * //////////////////////////////////////////////////////////////////////
@@ -248,13 +248,13 @@ define([
          * sp.getAllUniforms().u_float.value = 1.0;
          *
          * // GLSL:  uniform vec4 u_vec4;
-         * sp.getAllUniforms().u_vec4.value = Cartesian4.getZero();
+         * sp.getAllUniforms().u_vec4.value = Cartesian4.ZERO;
          *
          * // GLSL:  uniform bvec4 u_bvec4;
          * sp.getAllUniforms().u_bvec4.value = new Cartesian4(true, true, true, true);
          *
          * // GLSL:  uniform mat4 u_mat4;
-         * sp.getAllUniforms().u_mat4.value = Matrix4.getIdentity();
+         * sp.getAllUniforms().u_mat4.value = Matrix4.IDENTITY;
          *
          * // GLSL:  uniform sampler2D u_texture;
          * sp.getAllUniforms().u_texture.value = context.createTexture2D(...);
@@ -1930,7 +1930,7 @@ define([
             var i;
 
             if (uniformMap) {
-                uniformState.setModel(uniformMap.u_model ? uniformMap.u_model() : Matrix4.getIdentity());
+                uniformState.setModel(uniformMap.u_model ? uniformMap.u_model() : Matrix4.IDENTITY);
 
                 for ( var uniform in _manualUniforms) {
                     if (_manualUniforms.hasOwnProperty(uniform)) {
@@ -1988,9 +1988,9 @@ define([
          * <br /><br />
          * Once an object is destroyed, it should not be used; calling any function other than
          * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-         * assign the return value (<code>null</code>) to the object as done in the example.
+         * assign the return value (<code>undefined</code>) to the object as done in the example.
          *
-         * @return {null}
+         * @return {undefined}
          *
          * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
          *

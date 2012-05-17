@@ -41,7 +41,7 @@ define([
      * @internalConstructor
      */
     function CameraSpindleController(canvas, camera, ellipsoid) {
-        ellipsoid = ellipsoid || Ellipsoid.getWgs84();
+        ellipsoid = ellipsoid || Ellipsoid.WGS84;
 
         this._canvas = canvas;
         this._camera = camera;
@@ -86,7 +86,7 @@ define([
          */
         this.mode = CameraSpindleControllerMode.AUTO;
 
-        this._zAxis = Cartesian3.getUnitZ();
+        this._zAxis = Cartesian3.UNIT_Z;
 
         var radius = this._ellipsoid.getRadii().getMaximumComponent();
         this._zoomFactor = 5.0;
@@ -120,11 +120,11 @@ define([
      * // Set the spindle controller's ellipsoid to a unit sphere for easy rotation around that point.
      * var center = ellipsoid.cartographicDegreesToCartesian(new Cartographic2(-75.59777, 40.03883));
      * var transform = Transforms.eastNorthUpToFixedFrame(center);
-     * scene.getCamera().getControllers().get(0).setReferenceFrame(transform, Ellipsoid.getUnitSphere());
+     * scene.getCamera().getControllers().get(0).setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
      *
      * // Example 2.
      * // Reset to the defaults.
-     * scene.getCamera().getControllers().get(0).setReferenceFrame(Matrix4.getIdentity());
+     * scene.getCamera().getControllers().get(0).setReferenceFrame(Matrix4.IDENTITY);
      *
      */
     CameraSpindleController.prototype.setReferenceFrame = function (transform, ellipsoid) {
@@ -155,7 +155,7 @@ define([
      * @see CameraSpindleController#getEllipsoid
      */
     CameraSpindleController.prototype.setEllipsoid = function(ellipsoid) {
-        ellipsoid = ellipsoid || Ellipsoid.getWgs84();
+        ellipsoid = ellipsoid || Ellipsoid.WGS84;
 
         var radius = ellipsoid.getRadii().getMaximumComponent();
         this._ellipsoid = ellipsoid;
@@ -252,7 +252,7 @@ define([
         this._moveVertical(angle, true);
     };
 
-    CameraSpindleController.prototype._moveVertical = function (angle, constrainedZ) {
+    CameraSpindleController.prototype._moveVertical = function(angle, constrainedZ) {
         var direction = (angle > 0) ? 1.0 : -1.0;
         if (constrainedZ) {
             var p = this._camera.position.normalize();
@@ -261,8 +261,7 @@ define([
             }
 
             this.rotate(p.cross(this._zAxis), angle);
-        }
-        else {
+        } else {
             this.rotate(this._camera.right, angle);
         }
     };
@@ -332,8 +331,7 @@ define([
     CameraSpindleController.prototype._moveHorizontal = function(angle, constrainedZ) {
         if (constrainedZ) {
             this.rotate(this._zAxis, angle);
-        }
-        else {
+        } else {
             this.rotate(this._camera.up, angle);
         }
     };
@@ -386,8 +384,7 @@ define([
 
         if (rightZooming) {
             this._zoom(rightZoom.getMovement());
-        }
-        else if (wheelZooming) {
+        } else if (wheelZooming) {
             this._zoom(wheelZoom.getMovement());
         }
 
@@ -402,25 +399,22 @@ define([
         return true;
     };
 
-    CameraSpindleController.prototype._spin = function (movement) {
+    CameraSpindleController.prototype._spin = function(movement) {
         if (this.mode === CameraSpindleControllerMode.AUTO) {
             var point = this._camera.pickEllipsoid(this._ellipsoid, movement.startPosition);
             if (point) {
                 this._pan(movement);
-            }
-            else {
+            } else {
                 this._rotate(movement);
             }
-        }
-        else if (this.mode === CameraSpindleControllerMode.ROTATE) {
+        } else if (this.mode === CameraSpindleControllerMode.ROTATE) {
             this._rotate(movement);
-        }
-        else {
+        } else {
             this._pan(movement);
         }
     };
 
-    CameraSpindleController.prototype._rotate = function (movement) {
+    CameraSpindleController.prototype._rotate = function(movement) {
         var position = this._camera.position;
         var rho = position.magnitude();
         var theta = Math.acos(position.z / rho);
@@ -450,7 +444,7 @@ define([
         this._moveVertical(deltaTheta);
     };
 
-    CameraSpindleController.prototype._pan = function (movement) {
+    CameraSpindleController.prototype._pan = function(movement) {
         var camera = this._camera;
         var p0 = camera.pickEllipsoid(this._ellipsoid, movement.startPosition);
         var p1 = camera.pickEllipsoid(this._ellipsoid, movement.endPosition);
@@ -465,12 +459,11 @@ define([
             var dot = p0.dot(p1);
             var axis = p0.cross(p1);
 
-            if(dot < 1.0 && !axis.equalsEpsilon(Cartesian3.getZero(), CesiumMath.EPSILON14)) { // dot is in [0, 1]
+            if (dot < 1.0 && !axis.equalsEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON14)) { // dot is in [0, 1]
                 var angle = -Math.acos(dot);
                 this.rotate(axis, angle);
             }
-        }
-        else {
+        } else {
             var startRho = p0.magnitude();
             var startPhi = Math.atan2(p0.y, p0.x);
             var startTheta = Math.acos(p0.z / startRho);
@@ -496,9 +489,9 @@ define([
         }
     };
 
-   CameraSpindleController.prototype._zoom = function(movement) {
-       handleZoom(this, movement, this._ellipsoid.toCartographic3(this._camera.position).height);
-   };
+    CameraSpindleController.prototype._zoom = function(movement) {
+        handleZoom(this, movement, this._ellipsoid.toCartographic3(this._camera.position).height);
+    };
 
    /**
      * Returns true if this object was destroyed; otherwise, false.
@@ -521,11 +514,11 @@ define([
      * <br /><br />
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>null</code>) to the object as done in the example.
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
      * @memberof CameraSpindleController
      *
-     * @return {null}
+     * @return {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

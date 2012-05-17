@@ -2,17 +2,14 @@
 define([
         '../Core/DeveloperError',
         '../Core/Math',
-        '../ThirdParty/jsonp',
-        './Projections',
-        './ProxyUsagePolicy'
+        '../Core/jsonp',
+        './Projections'
     ], function(
         DeveloperError,
         CesiumMath,
         jsonp,
-        Projections,
-        ProxyUsagePolicy) {
+        Projections) {
     "use strict";
-    /*global document,Image*/
 
     /**
      * Provides tile images hosted by an ArcGIS Server.
@@ -21,11 +18,10 @@ define([
      * @constructor
      *
      * @param {String} description.host The ArcGIS Server host name.
-     * @param {String} description.instance The instance name. The default value is "/arcgis/rest".
-     * @param {String} description.folder The folder where the service is located.
+     * @param {String} [description.instance='/arcgis/rest'] The instance name.
+     * @param {String} [description.folder=undefined] The folder where the service is located.
      * @param {String} description.service The service name.
-     * @param {Object} description.proxy A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
-     * @param {Enumeration} description.proxyUsagePolicy Specify whether to use the supplied proxy for all data, or only those that don't support cross-origin requests.  By default, cross-origin will be used.
+     * @param {Object} [description.proxy=undefined] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
      *
      * @exception {DeveloperError} <code>description.host</code> is required.
      * @exception {DeveloperError} <code>description.service</code> is required.
@@ -89,17 +85,7 @@ define([
          */
         this.service = desc.service;
 
-        /**
-         * A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
-         * @type {Object}
-         */
-        this.proxy = desc.proxy;
-
-        /**
-         * Specify whether to use the supplied proxy for all data, or only those that don't support cross-origin requests.  By default, cross-origin will be used.
-         * @type {Enumeration}
-         */
-        this.proxyUsagePolicy = desc.proxyUsagePolicy || ProxyUsagePolicy.USE_CORS;
+        this._proxy = desc.proxy;
 
         // TODO: Get this information from the server
 
@@ -156,14 +142,7 @@ define([
         this._logoLoaded = false;
 
         var that = this;
-        var url = this._url;
-        if (this.proxyUsagePolicy === ProxyUsagePolicy.ALWAYS && this.proxy) {
-            url = this.proxy.getURL(url);
-        }
-
-        jsonp(url, {
-            f : 'json'
-        }, function(data) {
+        jsonp(this._url, function(data) {
             var credit = data.copyrightText;
 
             var canvas = document.createElement("canvas");
@@ -178,6 +157,11 @@ define([
 
             that._logo = canvas;
             that._logoLoaded = true;
+        }, {
+            parameters : {
+                f : 'json'
+            },
+            proxy : this._proxy
         });
     }
 
@@ -199,21 +183,13 @@ define([
         }
 
         var image = new Image();
-        if (onload && typeof onload === "function") {
-            image.onload = function() {
-                onload();
-            };
-        }
-        if (onerror && typeof onerror === "function") {
-            image.onerror = function() {
-                onerror();
-            };
-        }
+        image.onload = onload;
+        image.onerror = onerror;
         image.crossOrigin = '';
 
         var url = this._url + '/tile/' + tile.zoom + '/' + tile.y + '/' + tile.x;
-        if (this.proxy) {
-            url = this.proxy.getURL(url);
+        if (typeof this._proxy !== 'undefined') {
+            url = this._proxy.getURL(url);
         }
 
         image.src = url;

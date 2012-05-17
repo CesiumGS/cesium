@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Core/Matrix2',
          'Core/Cartesian2'
@@ -65,8 +66,8 @@ defineSuite([
         expect(Matrix2.fromColumnMajorArray().equals(new Matrix2())).toBeTruthy();
     });
 
-    it("getIdentity", function() {
-        expect(Matrix2.getIdentity().equals(new Matrix2(1))).toBeTruthy();
+    it("IDENTITY", function() {
+        expect(Matrix2.IDENTITY.equals(new Matrix2(1))).toBeTruthy();
     });
 
     it("getColumnMajorValue0", function() {
@@ -99,8 +100,8 @@ defineSuite([
     });
 
     it("gets individual columns 2", function() {
-        expect(Matrix2.getIdentity().getColumn0().equals(Cartesian2.getUnitX())).toBeTruthy();
-        expect(Matrix2.getIdentity().getColumn1().equals(Cartesian2.getUnitY())).toBeTruthy();
+        expect(Matrix2.IDENTITY.getColumn0().equals(Cartesian2.UNIT_X)).toBeTruthy();
+        expect(Matrix2.IDENTITY.getColumn1().equals(Cartesian2.UNIT_Y)).toBeTruthy();
     });
 
     it("sets individual columns", function() {
@@ -127,8 +128,8 @@ defineSuite([
     });
 
     it("gets individual rows 2", function() {
-        expect(Matrix2.getIdentity().getRow0().equals(Cartesian2.getUnitX())).toBeTruthy();
-        expect(Matrix2.getIdentity().getRow1().equals(Cartesian2.getUnitY())).toBeTruthy();
+        expect(Matrix2.IDENTITY.getRow0().equals(Cartesian2.UNIT_X)).toBeTruthy();
+        expect(Matrix2.IDENTITY.getRow1().equals(Cartesian2.UNIT_Y)).toBeTruthy();
     });
 
     it("sets individual rows", function() {
@@ -148,6 +149,16 @@ defineSuite([
 
     it("getNumberOfElements0", function() {
         expect(Matrix2.getNumberOfElements()).toEqual(4);
+    });
+
+    it("transpose", function() {
+        var m = new Matrix2(1, 2,
+                            3, 4);
+        var mT = new Matrix2(1, 3,
+                             2, 4);
+
+        expect(m.transpose().equals(mT)).toBeTruthy();
+        expect(m.transpose().transpose().equals(m)).toBeTruthy();
     });
 
     it("equals0", function() {

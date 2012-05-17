@@ -14,7 +14,6 @@ define([
         MouseEventType,
         EventModifier) {
     "use strict";
-    /*global document*/
 
     /**
      * Handles user input events. Custom functions can be added to be executed on
@@ -237,9 +236,9 @@ define([
      * // Set the camera to a "home" position when 'h' is pressed.
      * customHandler.setKeyAction(
      *    function() {
-     *        var position = new Cartesian3(2.0 * Ellipsoid.getWgs84().getRadii().getMaximumComponent(), 0.0, 0.0);
-     *        var dir = Cartesian3.getZero().subtract(position).normalize();
-     *        var up = Cartesian3.getUnitZ();
+     *        var position = new Cartesian3(2.0 * Ellipsoid.WGS84.getRadii().getMaximumComponent(), 0.0, 0.0);
+     *        var dir = Cartesian3.ZERO.subtract(position).normalize();
+     *        var up = Cartesian3.UNIT_Z;
      *        camera.position = position;
      *        camera.direction = dir;
      *        camera.up = up;
@@ -828,11 +827,11 @@ define([
      * <br /><br />
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>null</code>) to the object as done in the example.
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
      * @memberof EventHandler
      *
-     * @return {null}
+     * @return {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

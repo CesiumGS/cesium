@@ -36,7 +36,6 @@ define([
         BillboardCollectionVS,
         BillboardCollectionFS) {
     "use strict";
-    /*global Uint8Array,Uint16Array,Uint32Array*/
 
     var SHOW_INDEX = Billboard.SHOW_INDEX;
     var POSITION_INDEX = Billboard.POSITION_INDEX;
@@ -140,8 +139,8 @@ define([
          * billboards.add({ position : new Cartesian3(0.0, 0.0, 1000000.0) }); // up
          * ]);
          */
-        this.modelMatrix = Matrix4.getIdentity();
-        this._modelMatrix = Matrix4.getIdentity();
+        this.modelMatrix = Matrix4.IDENTITY;
+        this._modelMatrix = Matrix4.IDENTITY;
 
         /**
          * DOC_TBA
@@ -183,7 +182,7 @@ define([
         });
         this._uniforms2D = combine(uniforms, {
             u_model : function() {
-                return Matrix4.getIdentity();
+                return Matrix4.IDENTITY;
             }
         });
         this._uniforms = undefined;
@@ -1075,11 +1074,11 @@ define([
      * <br /><br />
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>null</code>) to the object as done in the example.
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
      * @memberof BillboardCollection
      *
-     * @return {null}
+     * @return {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

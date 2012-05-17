@@ -1,7 +1,5 @@
-defineSuite([
-         'Core/PlaneTessellator'
-     ], function(
-         PlaneTessellator) {
+/*global defineSuite*/
+defineSuite(['Core/PlaneTessellator'], function(PlaneTessellator) {
     "use strict";
     /*global it,expect*/
 

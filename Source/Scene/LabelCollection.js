@@ -131,7 +131,7 @@ define([
          *   text     : "Up"
          * });
          */
-        this.modelMatrix = Matrix4.getIdentity();
+        this.modelMatrix = Matrix4.IDENTITY;
 
         /**
          * DOC_TBA
@@ -189,14 +189,14 @@ define([
      * // Example 1:  Add a label, specifying all the default values.
      * var l = labels.add({
      *   show : true,
-     *   position : Cartesian3.getZero(),
+     *   position : Cartesian3.ZERO,
      *   text : "",
      *   font : "30px sans-serif",
      *   fillColor : "white",
      *   outlineColor : "white",
      *   style : LabelStyle.FILL,
-     *   pixelOffset : Cartesian2.getZero(),
-     *   eyeOffset : Cartesian3.getZero(),
+     *   pixelOffset : Cartesian2.ZERO,
+     *   eyeOffset : Cartesian3.ZERO,
      *   horizontalOrigin : HorizontalOrigin.LEFT,
      *   verticalOrigin : VerticalOrigin.BOTTOM,
      *   scale : 1.0,
@@ -470,11 +470,11 @@ define([
      * <br /><br />
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>null</code>) to the object as done in the example.
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
      * @memberof LabelCollection
      *
-     * @return {null}
+     * @return {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

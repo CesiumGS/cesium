@@ -1,7 +1,5 @@
-defineSuite([
-         'Core/shallowEquals'
-     ], function(
-         shallowEquals) {
+/*global defineSuite*/
+defineSuite(['Core/shallowEquals'], function(shallowEquals) {
     "use strict";
     /*global it,expect*/
 

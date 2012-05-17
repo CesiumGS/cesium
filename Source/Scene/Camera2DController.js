@@ -41,7 +41,7 @@ define([
      * @internalConstructor
      */
     function Camera2DController(canvas, camera, ellipsoid) {
-        ellipsoid = ellipsoid || Ellipsoid.getWgs84();
+        ellipsoid = ellipsoid || Ellipsoid.WGS84;
 
         this._canvas = canvas;
         this._camera = camera;
@@ -96,11 +96,11 @@ define([
      * // Set the 2D controller's ellipsoid to a unit sphere for easy rotation around that point.
      * var center = ellipsoid.cartographicDegreesToCartesian(new Cartographic2(-75.59777, 40.03883));
      * var transform = Transforms.eastNorthUpToFixedFrame(center);
-     * scene.getCamera().getControllers().get(0).setReferenceFrame(transform, Ellipsoid.getUnitSphere());
+     * scene.getCamera().getControllers().get(0).setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
      *
      * // Example 2.
      * // Reset to the defaults.
-     * scene.getCamera().getControllers().get(0).setReferenceFrame(Matrix4.getIdentity());
+     * scene.getCamera().getControllers().get(0).setReferenceFrame(Matrix4.IDENTITY);
      *
      */
     Camera2DController.prototype.setReferenceFrame = function (transform, ellipsoid) {
@@ -131,7 +131,7 @@ define([
      * @see Camera2DController#getEllipsoid
      */
     Camera2DController.prototype.setEllipsoid = function(ellipsoid) {
-        ellipsoid = ellipsoid || Ellipsoid.getWgs84();
+        ellipsoid = ellipsoid || Ellipsoid.WGS84;
 
         var radius = ellipsoid.getRadii().getMaximumComponent();
         this._ellipsoid = ellipsoid;
@@ -255,8 +255,7 @@ define([
 
         if (rightZooming) {
             this._zoom(rightZoom.getMovement());
-        }
-        else if (wheelZooming) {
+        } else if (wheelZooming) {
             this._zoom(wheelZoom.getMovement());
         }
 
@@ -364,11 +363,11 @@ define([
      * <br /><br />
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>null</code>) to the object as done in the example.
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
      * @memberof Camera2DController
      *
-     * @return {null}
+     * @return {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

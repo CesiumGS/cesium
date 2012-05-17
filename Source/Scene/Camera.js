@@ -48,8 +48,8 @@ define([
      * // with a field of view of 60 degrees, and 1:1 aspect ratio.
      * var camera = new Camera(canvas);
      * camera.position = new Cartesian3();
-     * camera.direction = Cartesian3.getUnitZ().negate();
-     * camera.up = Cartesian3.getUnitY();
+     * camera.direction = Cartesian3.UNIT_Z.negate();
+     * camera.up = Cartesian3.UNIT_Y;
      * camera.fovy = CesiumMath.PI_OVER_THREE;
      * camera.near = 1.0;
      * camera.far = 2.0;
@@ -59,20 +59,20 @@ define([
             throw new DeveloperError("canvas is required.", "canvas");
         }
 
-        var maxRadii = Ellipsoid.getWgs84().getRadii().getMaximumComponent();
+        var maxRadii = Ellipsoid.WGS84.getRadii().getMaximumComponent();
 
         /**
          * DOC_TBA
          *
          * @type {Matrix4}
          */
-        this.transform = Matrix4.getIdentity();
+        this.transform = Matrix4.IDENTITY;
         this._transform = this.transform.clone();
-        this._invTransform = Matrix4.getIdentity();
+        this._invTransform = Matrix4.IDENTITY;
 
         var position = new Cartesian3(0.0, -2.0, 1.0).normalize().multiplyWithScalar(2.0 * maxRadii);
-        var direction = Cartesian3.getZero().subtract(position).normalize();
-        var right = direction.cross(Cartesian3.getUnitZ()).normalize();
+        var direction = Cartesian3.ZERO.subtract(position).normalize();
+        var right = direction.cross(Cartesian3.UNIT_Z).normalize();
         var up = right.cross(direction);
 
         /**
@@ -225,8 +225,8 @@ define([
         lla.height += Math.max(screenViewDistanceX, screenViewDistanceY);
 
         this.position = ellipsoid.toCartesian(lla);
-        this.direction = Cartesian3.getZero().subtract(centerVector).normalize();
-        this.right = this.direction.cross(Cartesian3.getUnitZ()).normalize();
+        this.direction = Cartesian3.ZERO.subtract(centerVector).normalize();
+        this.right = this.direction.cross(Cartesian3.UNIT_Z).normalize();
         this.up = this.right.cross(this.direction);
     };
 
@@ -438,11 +438,11 @@ define([
      * <br /><br />
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>null</code>) to the object as done in the example.
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
      * @memberof Camera
      *
-     * @return {null}
+     * @return {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

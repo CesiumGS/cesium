@@ -111,8 +111,8 @@ define([
      */
     CameraControllerCollection.prototype.addFlight = function(template) {
         var t = template || {};
-        var ellipsoid = t.ellipsoid || Ellipsoid.getWgs84();
-        var destination = t.destination || Ellipsoid.getWgs84().cartographicDegreesToCartesian(new Cartographic3(0.0, 0.0, 0.0));
+        var ellipsoid = t.ellipsoid || Ellipsoid.WGS84;
+        var destination = t.destination || Ellipsoid.WGS84.cartographicDegreesToCartesian(new Cartographic3(0.0, 0.0, 0.0));
         var duration = t.duration || 4.0;
         var complete = template.complete;
 		var flightController = new CameraFlightController(this._canvas, this._camera, ellipsoid, destination, duration, complete);

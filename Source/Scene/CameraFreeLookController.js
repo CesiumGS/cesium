@@ -286,10 +286,10 @@ define([
         dot = startY.dot(endY);
         angle = 0.0;
         axis = startY.cross(endY);
-        if (dot < 1.0 && !axis.equalsEpsilon(Cartesian3.getZero(), CesiumMath.EPSILON14)) { // dot is in [0, 1]
+        if (dot < 1.0 && !axis.equalsEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON14)) { // dot is in [0, 1]
             angle = -Math.acos(dot);
         } else { // no rotation
-            axis = Cartesian3.getUnitX();
+            axis = Cartesian3.UNIT_X;
         }
         rotation = Quaternion.fromAxisAngle(axis, angle).toRotationMatrix();
 
@@ -325,11 +325,11 @@ define([
      * <br /><br />
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>null</code>) to the object as done in the example.
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
      * @memberof CameraFreeLookController
      *
-     * @return {null}
+     * @return {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

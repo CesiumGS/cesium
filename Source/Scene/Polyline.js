@@ -34,7 +34,6 @@ define([
         PolylineVS,
         PolylineFS) {
     "use strict";
-    /*global Float32Array,Uint16Array*/
 
     var attributeIndices = {
         position2D : 0,
@@ -350,22 +349,22 @@ define([
 
         this._drawUniformsOne2D = combine(drawUniformsOne, {
             u_model : function() {
-                return Matrix4.getIdentity();
+                return Matrix4.IDENTITY;
             }
         });
         this._drawUniformsTwo2D = combine(drawUniformsTwo, {
             u_model : function() {
-                return Matrix4.getIdentity();
+                return Matrix4.IDENTITY;
             }
         });
         this._drawUniformsThree2D = combine(drawUniformsThree, {
             u_model : function() {
-                return Matrix4.getIdentity();
+                return Matrix4.IDENTITY;
             }
         });
         this._pickUniforms2D = combine(pickUniforms, {
             u_model : function() {
-                return Matrix4.getIdentity();
+                return Matrix4.IDENTITY;
             }
         });
 
@@ -476,8 +475,8 @@ define([
          *   new Cartesian3(1000000.0, 0.0, 0.0)
          * ]);
          */
-        this.modelMatrix = Matrix4.getIdentity();
-        this._modelMatrix = Matrix4.getIdentity();
+        this.modelMatrix = Matrix4.IDENTITY;
+        this._modelMatrix = Matrix4.IDENTITY;
 
         /**
          * The usage hint for the polyline's vertex buffer.
@@ -594,7 +593,7 @@ define([
             return this.scene2D.modelMatrix || this.modelMatrix;
 
         case SceneMode.MORPHING:
-            return Matrix4.getIdentity();
+            return Matrix4.IDENTITY;
         }
     };
 
@@ -996,11 +995,11 @@ define([
      * <br /><br />
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>null</code>) to the object as done in the example.
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
      * @memberof Polyline
      *
-     * @return {null}
+     * @return {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

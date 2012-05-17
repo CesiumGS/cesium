@@ -28,17 +28,17 @@ define([
             width : 0,
             height : 0
         };
-        this._viewportOrthographicMatrix = Matrix4.getIdentity();
-        this._viewportTransformation = Matrix4.getIdentity();
+        this._viewportOrthographicMatrix = Matrix4.IDENTITY;
+        this._viewportTransformation = Matrix4.IDENTITY;
 
-        this._model = Matrix4.getIdentity();
-        this._view = Matrix4.getIdentity();
-        this._projection = Matrix4.getIdentity();
+        this._model = Matrix4.IDENTITY;
+        this._view = Matrix4.IDENTITY;
+        this._projection = Matrix4.IDENTITY;
 
-        this._infiniteProjection = Matrix4.getIdentity();
+        this._infiniteProjection = Matrix4.IDENTITY;
 
         // Arbitrary.  The user will explicitly set this later.
-        this._sunPosition = new Cartesian3(2.0 * Ellipsoid.getWgs84().getRadii().x, 0.0, 0.0);
+        this._sunPosition = new Cartesian3(2.0 * Ellipsoid.WGS84.getRadii().x, 0.0, 0.0);
 
         // Derived members
         this._inverseViewDirty = true;
@@ -114,7 +114,7 @@ define([
      * @see agi_model
      */
     UniformState.prototype.setModel = function(matrix) {
-        matrix = matrix || Matrix4.getIdentity();
+        matrix = matrix || Matrix4.IDENTITY;
 
         this._model = matrix;
         this._modelViewDirty = true;
@@ -151,7 +151,7 @@ define([
      * @see agi_view
      */
     UniformState.prototype.setView = function(matrix) {
-        matrix = matrix || Matrix4.getIdentity();
+        matrix = matrix || Matrix4.IDENTITY;
 
         this._view = matrix;
         this._inverseViewDirty = true;
@@ -213,7 +213,7 @@ define([
      * @see agi_projection
      */
     UniformState.prototype.setProjection = function(matrix) {
-        matrix = matrix || Matrix4.getIdentity();
+        matrix = matrix || Matrix4.IDENTITY;
 
         this._projection = matrix;
         this._viewProjectionDirty = true;
@@ -245,7 +245,7 @@ define([
      * @see agi_infiniteProjection
      */
     UniformState.prototype.setInfiniteProjection = function(matrix) {
-        matrix = matrix || Matrix4.getIdentity();
+        matrix = matrix || Matrix4.IDENTITY;
 
         this._infiniteProjection = matrix;
         this._modelViewInfiniteProjectionDirty = true;

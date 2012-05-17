@@ -20,10 +20,9 @@ require({ baseUrl : '../../Source' }, [
         BingMapsTileProvider,
         BingMapsStyle) {
     "use strict";
-    /*global document*/
 
     var canvas = document.getElementById("glCanvas");
-    var ellipsoid = Ellipsoid.getWgs84(); // Used in many Sandbox examples
+    var ellipsoid = Ellipsoid.WGS84; // Used in many Sandbox examples
     var scene = new Scene(canvas);
     var primitives = scene.getPrimitives();
 

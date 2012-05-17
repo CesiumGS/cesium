@@ -8,7 +8,8 @@
 var defineSuite;
 
 (function() {
-    /*global require*/
+    "use strict";
+    /*global require,describe,specs,jasmine*/
 
     var tests = [];
     var readyToCreateTests = false;
@@ -42,10 +43,11 @@ var defineSuite;
     };
 
     function getQueryParameter(name) {
-        /*global window,decodeURIComponent*/
         var match = new RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
 
-        return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
+        if (match) {
+            return decodeURIComponent(match[1].replace(/\+/g, ' '));
+        }
     }
 
     function createTestsIfReady() {
@@ -72,7 +74,6 @@ var defineSuite;
         });
     }
 
-    /*global specs*/
     //specs is an array defined by SpecList.js
     require({
         baseUrl : '.'

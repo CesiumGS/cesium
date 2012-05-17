@@ -146,9 +146,9 @@ define([
 
         diff = this._start.getSecondsDifference(now);
         position = this._path.evaluate(diff);
-        normal = Cartesian3.getUnitZ().cross(position).normalize();
+        normal = Cartesian3.UNIT_Z.cross(position).normalize();
         tangent = position.cross(normal).normalize();
-        target = Cartesian3.getZero();
+        target = Cartesian3.ZERO;
         this._camera.lookAt(position, target, tangent);
 
         var isComplete = (now === this._end) || this._canceled;
@@ -179,11 +179,11 @@ define([
      * <br /><br />
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>null</code>) to the object as done in the example.
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
      * @memberof CameraFlightController
      *
-     * @return {null}
+     * @return {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

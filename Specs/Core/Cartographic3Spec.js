@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Core/Cartographic3',
          'Core/Cartographic2'
@@ -36,7 +37,7 @@ defineSuite([
     });
 
     it("getZero", function() {
-        var c = new Cartographic3.getZero();
+        var c = Cartographic3.ZERO;
         expect(c.longitude).toEqual(0);
         expect(c.latitude).toEqual(0);
         expect(c.height).toEqual(0);

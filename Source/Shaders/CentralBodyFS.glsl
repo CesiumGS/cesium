@@ -37,7 +37,14 @@
 #endif    
 
 uniform sampler2D u_dayTexture;
+
+// This #ifdef is required due to a bug in Mac OS X 10.6.  It doesn't realize that
+// the uniform is unused when SHOW_NIGHT is not defined, and so it doesn't get
+// optimized out.
+#ifdef SHOW_NIGHT
 uniform sampler2D u_nightTexture;
+#endif
+
 uniform sampler2D u_specularMap;
 uniform sampler2D u_cloudMap;
 uniform sampler2D u_bumpMap;
@@ -210,10 +217,12 @@ vec3 dayColor(vec3 normalEC, vec2 txCoord, float cloudCover)
     return earthUnderCloudColor;
 }
 
+#ifdef SHOW_NIGHT
 vec3 nightColor(vec2 txCoord, float cloudCover)
 {
     return u_nightIntensity * texture2D(u_nightTexture, txCoord).rgb * (1.0 - cloudCover);
 }
+#endif
 
 void main()
 {
@@ -248,36 +257,29 @@ void main()
     float cloudCover = 0.0;     // No clouds
 #endif
 
-    vec3 rgb;
+    vec3 rgb = dayColor(normalEC, txCoord, cloudCover);
     
+#ifdef SHOW_GROUND_ATMOSPHERE
+    const float fExposure = 2.0;
+    vec3 color = v_mieColor + rgb * v_rayleighColor;
+    rgb = vec3(1.0) - exp(-fExposure * color);
+#endif
+
 #ifdef SHOW_NIGHT
-    if (diffuse > u_dayNightBlendDelta)
-    {
-        // Day time
-        rgb = dayColor(normalEC, txCoord, cloudCover);
-    }
-    else if (diffuse < -u_dayNightBlendDelta)
+    if (diffuse < -u_dayNightBlendDelta)
     {
         // Night time
         rgb = nightColor(txCoord, cloudCover);
     }
-    else
+    else if (diffuse <= u_dayNightBlendDelta)
     {
         // Dusk/dawn
         rgb = mix(
             nightColor(txCoord, cloudCover), 
-            dayColor(normalEC, txCoord, cloudCover), 
+            rgb,
             (diffuse + u_dayNightBlendDelta) / (2.0 * u_dayNightBlendDelta));
     }
-#else
-    rgb = dayColor(normalEC, txCoord, cloudCover);
 #endif
 
-#ifdef SHOW_GROUND_ATMOSPHERE
-    const float fExposure = 2.0;
-    vec3 color = v_mieColor + rgb * v_rayleighColor;
-    gl_FragColor = vec4(vec3(1.0) - exp(-fExposure * color), 1.0);
-#else
     gl_FragColor = vec4(rgb, 1.0);
-#endif
 }
