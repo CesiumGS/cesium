@@ -2,6 +2,7 @@
 define(['dojo/dom',
         'dojo/on',
         'dojo/_base/event',
+        'dojo/io-query',
         'DojoWidgets/CesiumWidget',
         'Core/DefaultProxy',
         'Core/JulianDate',
@@ -29,6 +30,7 @@ define(['dojo/dom',
 function(dom,
          on,
          event,
+         ioQuery,
          CesiumWidget,
          DefaultProxy,
          JulianDate,
@@ -90,6 +92,17 @@ function(dom,
                                                     new DynamicPolylineVisualizer(scene),
                                                     new DynamicPyramidVisualizer(scene)]);
             widget.enableStatistics(true);
+
+            var queryObject = {};
+            if (window.location.search) {
+                queryObject = ioQuery.queryToObject(window.location.search.substring(1));
+            }
+
+            if (typeof queryObject.source !== 'undefined') {
+                visualizers.clear(_buffer);
+                _buffer.clear();
+                loadCzmlFromUrl(_buffer, queryObject.source, setTimeFromBuffer);
+            }
         },
 
         onSetupError : function(widget, error) {
