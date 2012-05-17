@@ -15,11 +15,12 @@ define(function() {
         }
     };
 
-    VisualizerCollection.prototype.clear = function() {
+    VisualizerCollection.prototype.clear = function(buffer) {
         var visualizers = this._visualizers;
+        var czmlObjects = buffer.getObjects();
 
         for ( var i = 0, len = visualizers.length; i < len; i++) {
-            visualizers[i].clear();
+            visualizers[i].removeAll(czmlObjects);
         }
     };
 

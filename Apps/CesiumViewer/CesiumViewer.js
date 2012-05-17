@@ -1,6 +1,7 @@
 /*global define*/
 define(['dojo/dom',
         'dojo/on',
+        'dojo/_base/event',
         'DojoWidgets/CesiumWidget',
         'Core/DefaultProxy',
         'Core/JulianDate',
@@ -25,6 +26,7 @@ define(['dojo/dom',
         'CesiumViewer/loadCzmlFromUrl'],
 function(dom,
          on,
+         event,
          CesiumWidget,
          DefaultProxy,
          JulianDate,
@@ -51,8 +53,7 @@ function(dom,
     /*global console*/
 
     var visualizers;
-    var clock = new Clock(JulianDate.fromIso8601("2012-03-15T10:00:00Z"), JulianDate.fromIso8601("2012-03-15T20:00:00Z"), JulianDate.fromIso8601("2012-03-15T10:00:00Z"), ClockStep.SYSTEM_CLOCK,
-            ClockRange.LOOP, 300);
+    var clock = new Clock(new JulianDate(), undefined, undefined, ClockStep.SYSTEM_CLOCK, ClockRange.LOOP, 300);
 
     var _buffer = new CzmlObjectCollection("root", "root", {
         billboard : DynamicBillboard.createOrUpdate,
@@ -65,8 +66,6 @@ function(dom,
         pyramid : DynamicPyramid.createOrUpdate,
         vertexPositions : DynamicObject.createOrUpdateVertexPositions
     });
-
-    loadCzmlFromUrl(_buffer, 'Gallery/simple.czm');
 
     var cesium = new CesiumWidget({
         clock : clock,
@@ -91,6 +90,48 @@ function(dom,
             console.log(error);
         }
     });
+
+    //This function is a total HACK and only temporary.
+    function setTimeFromBuffer() {
+        var czmlObjects = _buffer.getObjects();
+        for ( var i = 0, len = czmlObjects.length; i < len; i++) {
+            var object = czmlObjects[i];
+            if (typeof object.position !== 'undefined') {
+                var intervals = object.position._propertyIntervals;
+                if (typeof intervals !== 'undefined' && intervals._intervals[0].data._isSampled) {
+                    var firstTime = intervals._intervals[0].data._intervals._intervals[0].data.times[0];
+                    if (typeof firstTime !== 'undefined') {
+                        clock.startTime = firstTime;
+                        clock.stopTime = firstTime.addDays(1);
+                        clock.currentTime = firstTime;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    function handleDrop(e) {
+        e.stopPropagation(); // Stops some browsers from redirecting.
+        e.preventDefault();
+
+        var files = e.dataTransfer.files;
+        var f = files[0];
+        var reader = new FileReader();
+        reader.onload = function(evt) {
+            visualizers.clear(_buffer);
+            _buffer.clear();
+            _buffer.processCzml(JSON.parse(evt.target.result), f.name);
+            setTimeFromBuffer();
+        };
+        reader.readAsText(f);
+    }
+
+    var dropBox = dom.byId("cesiumContainer");
+    on(dropBox, 'drop', handleDrop);
+    on(dropBox, 'dragenter', event.stop);
+    on(dropBox, 'dragover', event.stop);
+    on(dropBox, 'dragexit', event.stop);
 
     cesium.placeAt(dom.byId("cesiumContainer"));
 
