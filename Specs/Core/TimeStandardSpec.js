@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite(['Core/TimeStandard', 'Core/JulianDate'], function(TimeStandard, JulianDate) {
     "use strict";
     /*global it,expect*/

@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Core/AxisAlignedBoundingBox',
          'Core/Cartesian3'
@@ -5,7 +6,7 @@ defineSuite([
          AxisAlignedBoundingBox,
          Cartesian3) {
     "use strict";
-    /*global it,expect*/
+    /*global it,expect,describe*/
 
     var positions = [
                      new Cartesian3(3, -1, -3),
@@ -29,7 +30,7 @@ defineSuite([
 
     it("computes a center", function() {
         var box = new AxisAlignedBoundingBox(positions);
-        expect(box.center.equalsEpsilon(Cartesian3.getZero(), Math.EPSILON14)).toBeTruthy();
+        expect(box.center.equalsEpsilon(Cartesian3.ZERO, Math.EPSILON14)).toBeTruthy();
     });
 
     it("computes the bounding box for a single position", function() {

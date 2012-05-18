@@ -3,8 +3,7 @@
  */
 (function() {
     "use strict";
-    /*global window, document, XMLHttpRequest, Cesium, Sandbox, dojo, dijit, dojox, js_beautify, initializeOverlayCreator*/
-    /*jslint evil : true */
+    /*global Cesium,Sandbox,dojo,dijit,js_beautify,initializeOverlayCreator*/
 
     Sandbox.beautify = function(code) {
         var beautifiedCode = js_beautify(code);
@@ -196,7 +195,7 @@
 
                 scene.getCamera().lookAt(currentCodeSnippet.camera || {
                     eye : new Cesium.Cartesian3(2203128.2853925996, -7504680.128731707, 5615591.201449535),
-                    target : Cesium.Cartesian3.getZero(),
+                    target : Cesium.Cartesian3.ZERO,
                     up : new Cesium.Cartesian3(-0.1642824655609347, 0.5596076102188919, 0.8123118822806428)
                 });
             } else {
@@ -214,6 +213,7 @@
     };
 
     function recompile() {
+        /*jslint evil : true*/
         var func = new Function("scene", "ellipsoid", "primitives", "cb", editor.getValue());
 
         Sandbox.reset();

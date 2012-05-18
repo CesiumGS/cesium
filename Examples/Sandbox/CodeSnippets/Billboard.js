@@ -1,6 +1,6 @@
 (function() {
     "use strict";
-    /*global document, Image, Cesium, Sandbox*/
+    /*global Cesium,Sandbox*/
 
     Sandbox.Billboard = function (scene, ellipsoid, primitives) {
         this.code = function () {

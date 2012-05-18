@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Scene/PerspectiveFrustum',
          'Core/Cartesian3',
@@ -22,7 +23,7 @@ defineSuite([
         frustum.fovy = (Math.PI) / 3;
         frustum.aspectRatio = 1.0;
 
-        planes = frustum.getPlanes(new Cartesian3(), Cartesian3.getUnitZ().negate(), Cartesian3.getUnitY());
+        planes = frustum.getPlanes(new Cartesian3(), Cartesian3.UNIT_Z.negate(), Cartesian3.UNIT_Y);
     });
 
     it("out of range fov causes an exception", function() {

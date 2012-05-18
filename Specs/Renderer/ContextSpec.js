@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Renderer/Context',
          '../Specs/createContext',

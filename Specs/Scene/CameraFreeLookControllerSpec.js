@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Scene/CameraFreeLookController',
          'Core/Cartesian3',
@@ -11,7 +12,7 @@ defineSuite([
          Camera,
          PerspectiveFrustum) {
     "use strict";
-    /*global document,it,expect,beforeEach,afterEach*/
+    /*global it,expect,beforeEach,afterEach*/
 
     var position;
     var up;
@@ -27,8 +28,8 @@ defineSuite([
         moverate = 3.0;
         turnrate = CesiumMath.PI_OVER_TWO;
         position = new Cartesian3();
-        up = Cartesian3.getUnitY();
-        dir = Cartesian3.getUnitZ().negate();
+        up = Cartesian3.UNIT_Y;
+        dir = Cartesian3.UNIT_Z.negate();
         right = dir.cross(up);
 
         frustum = new PerspectiveFrustum();

@@ -6,7 +6,6 @@ define([
         DeveloperError,
         Cartesian3) {
     "use strict";
-    /*global Float64Array*/
 
     // TODO:  This file belongs in Core, not here.
     // TODO:  Cloth simulation abstraction built on top of particle system
@@ -29,7 +28,7 @@ define([
         var particles = this.particles;
         var length = particles.length;
         for ( var i = 0; i < length; ++i) {
-            particles[i].force = Cartesian3.getZero();
+            particles[i].force = Cartesian3.ZERO;
         }
     };
 

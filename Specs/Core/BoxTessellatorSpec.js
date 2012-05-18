@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Core/BoxTessellator',
          'Core/Cartesian3'
@@ -7,7 +8,7 @@ defineSuite([
     "use strict";
     /*global it,expect*/
 
-   it("compute0", function() {
+    it("compute0", function() {
         expect(function() {
             return BoxTessellator.compute({
                 dimensions : new Cartesian3(1, 2, -1)

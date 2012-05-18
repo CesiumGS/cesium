@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Scene/Polyline',
          '../Specs/createContext',
@@ -31,8 +32,8 @@ defineSuite([
 
         var camera = {
             eye : new Cartesian3(-1.0, 0.0, 0.0),
-            target : Cartesian3.getZero(),
-            up : Cartesian3.getUnitZ()
+            target : Cartesian3.ZERO,
+            up : Cartesian3.UNIT_Z
         };
         us = context.getUniformState();
         us.setView(Matrix4.createLookAt(camera.eye, camera.target, camera.up));

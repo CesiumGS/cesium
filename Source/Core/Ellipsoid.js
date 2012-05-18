@@ -67,9 +67,7 @@ define([
      *
      * @see agi_getWgs84EllipsoidEC
      */
-    Ellipsoid.getWgs84 = function() {
-        return new Ellipsoid(new Cartesian3(6378137.0, 6378137.0, 6356752.314245));
-    };
+    Ellipsoid.WGS84 = Object.freeze(new Ellipsoid(new Cartesian3(6378137.0, 6378137.0, 6356752.314245)));
 
     /**
      * DOC_TBA
@@ -78,20 +76,7 @@ define([
      *
      * @return {Ellipsoid} DOC_TBA
      */
-    Ellipsoid.getScaledWgs84 = function() {
-        return new Ellipsoid(new Cartesian3(1.0, 1.0, 6356752.314245 / 6378137.0));
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof Ellipsoid
-     *
-     * @return {Ellipsoid} DOC_TBA
-     */
-    Ellipsoid.getUnitSphere = function() {
-        return new Ellipsoid(new Cartesian3(1.0, 1.0, 1.0));
-    };
+    Ellipsoid.UNIT_SPHERE = Object.freeze(new Ellipsoid(new Cartesian3(1.0, 1.0, 1.0)));
 
     /**
      * DOC_TBA

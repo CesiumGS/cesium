@@ -1,7 +1,5 @@
-defineSuite([
-         'Core/Cartesian2'
-     ], function(
-         Cartesian2) {
+/*global defineSuite*/
+defineSuite(['Core/Cartesian2'], function(Cartesian2) {
     "use strict";
     /*global it,expect*/
 
@@ -29,26 +27,26 @@ defineSuite([
         expect(v.equals(w)).toBeTruthy();
     });
 
-    it("non-prototypal clone", function () {
+    it("non-prototypal clone", function() {
         var v = new Cartesian2(1, 2);
         var w = Cartesian2.clone(v);
         expect(v.equals(w)).toBeTruthy();
     });
 
     it("getZero", function() {
-        var v = new Cartesian2.getZero();
+        var v = Cartesian2.ZERO;
         expect(v.x).toEqual(0);
         expect(v.y).toEqual(0);
     });
 
-    it("getUnitX", function() {
-        var v = new Cartesian2.getUnitX();
+    it("UNIT_X", function() {
+        var v = Cartesian2.UNIT_X;
         expect(v.x).toEqual(1);
         expect(v.y).toEqual(0);
     });
 
-    it("getUnitY", function() {
-        var v = new Cartesian2.getUnitY();
+    it("UNIT_Y", function() {
+        var v = Cartesian2.UNIT_Y;
         expect(v.x).toEqual(0);
         expect(v.y).toEqual(1);
     });

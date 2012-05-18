@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Scene/CompositePrimitive',
          '../Specs/createContext',
@@ -31,7 +32,7 @@ defineSuite([
          VerticalOrigin,
          Polygon) {
     "use strict";
-    /*global document,describe,it,expect,beforeEach,afterEach*/
+    /*global describe,it,expect,beforeEach,afterEach*/
 
     var context;
     var primitives;
@@ -44,7 +45,7 @@ defineSuite([
 
         camera = new Camera(context.getCanvas());
         camera.position = new Cartesian3(1.02, 0.0, 0.0);
-        camera.up = Cartesian3.getUnitZ();
+        camera.up = Cartesian3.UNIT_Z;
         camera.direction = camera.position.negate();
         camera.frustum.near = 0.01;
         camera.frustum.far = 10.0;
@@ -81,7 +82,7 @@ defineSuite([
     }
 
     function createPolygon() {
-        var ellipsoid = Ellipsoid.getUnitSphere();
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
         var polygon = new Polygon();
         polygon.ellipsoid = ellipsoid;
         polygon.granularity = CesiumMath.toRadians(20.0);
@@ -233,7 +234,7 @@ defineSuite([
     });
 
     it("setting a central body", function() {
-        var ellipsoid = Ellipsoid.getUnitSphere();
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
         var cb = new CentralBody(camera, ellipsoid);
         primitives.setCentralBody(cb);
 
@@ -244,7 +245,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
 
-        var cb = new CentralBody(camera, Ellipsoid.getUnitSphere());
+        var cb = new CentralBody(camera, Ellipsoid.UNIT_SPHERE);
         primitives.setCentralBody(cb);
 
         primitives.update(context, sceneState);
@@ -532,7 +533,7 @@ defineSuite([
     });
 
     it("destroys primitive on setCentralBody", function() {
-        var cb = new CentralBody(camera, Ellipsoid.getUnitSphere());
+        var cb = new CentralBody(camera, Ellipsoid.UNIT_SPHERE);
 
         primitives.setCentralBody(cb);
         expect(cb.isDestroyed()).toBeFalsy();
@@ -584,7 +585,7 @@ defineSuite([
     });
 
     it("doesn't destroy primitive on setCentralBody", function() {
-        var cb = new CentralBody(camera, Ellipsoid.getUnitSphere());
+        var cb = new CentralBody(camera, Ellipsoid.UNIT_SPHERE);
 
         primitives.destroyPrimitives = false;
         primitives.setCentralBody(cb);

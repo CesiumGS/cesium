@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Core/BoundingSphere',
          'Core/Cartesian3',
@@ -29,14 +30,14 @@ defineSuite([
 
     it("can be constructed using a point and a radius", function() {
         var sphere = new BoundingSphere(new Cartesian3(0, 0, 0), 1);
-        expect(sphere.center.equals(Cartesian3.getZero())).toBeTruthy();
+        expect(sphere.center.equals(Cartesian3.ZERO)).toBeTruthy();
         expect(sphere.radius).toEqual(1);
     });
 
     it("has a center", function() {
         var sphere = new BoundingSphere(getPositions());
         var center = sphere.center;
-        expect(center.equalsEpsilon(Cartesian3.getZero(), CesiumMath.EPSILON14)).toBeTruthy();
+        expect(center.equalsEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON14)).toBeTruthy();
     });
 
     it("has a radius", function() {

@@ -6,7 +6,6 @@ define([
         DeveloperError,
         Enumeration) {
     "use strict";
-    /*global document*/
 
     /**
      * DOC_TBA

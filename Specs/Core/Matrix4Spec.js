@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Core/Matrix4',
          'Core/Matrix3',
@@ -191,8 +192,8 @@ defineSuite([
        expect(m.getColumn3Row3()).toEqual(0);
     });
 
-    it("getIdentity", function() {
-        expect(Matrix4.getIdentity().equals(new Matrix4(1))).toBeTruthy();
+    it("IDENTITY", function() {
+        expect(Matrix4.IDENTITY.equals(new Matrix4(1))).toBeTruthy();
     });
 
     it("getColumnMajorValue0", function() {
@@ -244,10 +245,10 @@ defineSuite([
     });
 
     it("gets individual columns 2", function() {
-        expect(Matrix4.getIdentity().getColumn0().equals(Cartesian4.getUnitX())).toBeTruthy();
-        expect(Matrix4.getIdentity().getColumn1().equals(Cartesian4.getUnitY())).toBeTruthy();
-        expect(Matrix4.getIdentity().getColumn2().equals(Cartesian4.getUnitZ())).toBeTruthy();
-        expect(Matrix4.getIdentity().getColumn3().equals(Cartesian4.getUnitW())).toBeTruthy();
+        expect(Matrix4.IDENTITY.getColumn0().equals(Cartesian4.UNIT_X)).toBeTruthy();
+        expect(Matrix4.IDENTITY.getColumn1().equals(Cartesian4.UNIT_Y)).toBeTruthy();
+        expect(Matrix4.IDENTITY.getColumn2().equals(Cartesian4.UNIT_Z)).toBeTruthy();
+        expect(Matrix4.IDENTITY.getColumn3().equals(Cartesian4.UNIT_W)).toBeTruthy();
     });
 
     it("sets individual columns", function() {
@@ -286,10 +287,10 @@ defineSuite([
     });
 
     it("gets individual rows 2", function() {
-        expect(Matrix4.getIdentity().getRow0().equals(Cartesian4.getUnitX())).toBeTruthy();
-        expect(Matrix4.getIdentity().getRow1().equals(Cartesian4.getUnitY())).toBeTruthy();
-        expect(Matrix4.getIdentity().getRow2().equals(Cartesian4.getUnitZ())).toBeTruthy();
-        expect(Matrix4.getIdentity().getRow3().equals(Cartesian4.getUnitW())).toBeTruthy();
+        expect(Matrix4.IDENTITY.getRow0().equals(Cartesian4.UNIT_X)).toBeTruthy();
+        expect(Matrix4.IDENTITY.getRow1().equals(Cartesian4.UNIT_Y)).toBeTruthy();
+        expect(Matrix4.IDENTITY.getRow2().equals(Cartesian4.UNIT_Z)).toBeTruthy();
+        expect(Matrix4.IDENTITY.getRow3().equals(Cartesian4.UNIT_W)).toBeTruthy();
     });
 
     it("sets individual rows", function() {
@@ -385,7 +386,7 @@ defineSuite([
     });
 
     it("inverseTransformation0", function() {
-        var m = new Matrix4(Matrix3.getIdentity(), Cartesian3.getZero());
+        var m = new Matrix4(Matrix3.IDENTITY, Cartesian3.ZERO);
         var mInverse = m.inverseTransformation();
 
         var v = new Cartesian4(1, 2, 3, 1);
@@ -420,21 +421,21 @@ defineSuite([
         var m = new Matrix4(rotation, translation);
         var mInverse = m.inverseTransformation();
 
-        expect(Matrix4.getIdentity().equals(mInverse.multiplyWithMatrix(m))).toBeTruthy();
+        expect(Matrix4.IDENTITY.equals(mInverse.multiplyWithMatrix(m))).toBeTruthy();
     });
 
     it("inverse0", function() {
-        var m = new Matrix4(Matrix3.getIdentity(), Cartesian3.getZero());
+        var m = new Matrix4(Matrix3.IDENTITY, Cartesian3.ZERO);
         var mInverse = m.inverse();
 
-        expect(Matrix4.getIdentity().equals(mInverse.multiplyWithMatrix(m))).toBeTruthy();
+        expect(Matrix4.IDENTITY.equals(mInverse.multiplyWithMatrix(m))).toBeTruthy();
     });
 
     it("inverse1", function() {
-        var m = new Matrix4(Matrix3.getIdentity(), new Cartesian3(1, 2, 3));
+        var m = new Matrix4(Matrix3.IDENTITY, new Cartesian3(1, 2, 3));
         var mInverse = m.inverse();
 
-        expect(Matrix4.getIdentity().equals(mInverse.multiplyWithMatrix(m))).toBeTruthy();
+        expect(Matrix4.IDENTITY.equals(mInverse.multiplyWithMatrix(m))).toBeTruthy();
     });
 
     it("inverse2", function() {
@@ -444,7 +445,7 @@ defineSuite([
                              0.00,  0.00, 0.00,  1.00);
         var mInverse = m.inverse();
 
-        expect(Matrix4.getIdentity().equalsEpsilon(mInverse.multiplyWithMatrix(m), CesiumMath.EPSILON10)).toBeTruthy();
+        expect(Matrix4.IDENTITY.equalsEpsilon(mInverse.multiplyWithMatrix(m), CesiumMath.EPSILON10)).toBeTruthy();
     });
 
     it("inverse3", function() {
@@ -501,7 +502,7 @@ defineSuite([
     });
 
     it("multiplyWithMatrix1", function() {
-        var i = Matrix4.getIdentity();
+        var i = Matrix4.IDENTITY;
         var m = new Matrix4( 1,  2,  3,  4,
                              5,  6,  7,  8,
                              9, 10, 11, 12,
@@ -616,7 +617,7 @@ defineSuite([
 
     it("createLookAt", function() {
         var mExpected = new Matrix4(1);
-        var m = Matrix4.createLookAt(Cartesian3.getZero(), Cartesian3.getUnitZ().negate(), Cartesian3.getUnitY());
+        var m = Matrix4.createLookAt(Cartesian3.ZERO, Cartesian3.UNIT_Z.negate(), Cartesian3.UNIT_Y);
 
         expect(mExpected.equals(m)).toBeTruthy();
     });

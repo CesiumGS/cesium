@@ -1,7 +1,6 @@
 /*global define*/
 define(function() {
     "use strict";
-    /*global encodeURIComponent*/
 
     /**
      * A simple proxy that appends the desired resource as the sole query parameter

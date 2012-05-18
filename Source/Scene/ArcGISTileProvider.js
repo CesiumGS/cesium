@@ -2,7 +2,7 @@
 define([
         '../Core/DeveloperError',
         '../Core/Math',
-        '../ThirdParty/jsonp',
+        '../Core/jsonp',
         './Projections'
     ], function(
         DeveloperError,
@@ -10,7 +10,6 @@ define([
         jsonp,
         Projections) {
     "use strict";
-    /*global document,Image*/
 
     /**
      * Provides tile images hosted by an ArcGIS Server.
@@ -86,12 +85,7 @@ define([
          */
         this.service = desc.service;
 
-        /**
-         * A proxy to use for requests. This object is expected to have a getURL
-         * function which returns the proxied URL, if needed.
-         * @type {Object}
-         */
-        this.proxy = desc.proxy;
+        this._proxy = desc.proxy;
 
         // TODO: Get this information from the server
 
@@ -148,14 +142,7 @@ define([
         this._logoLoaded = false;
 
         var that = this;
-        var url = this._url;
-        if (typeof this.proxy !== 'undefined') {
-            url = this.proxy.getURL(url);
-        }
-
-        jsonp(url, {
-            f : 'json'
-        }, function(data) {
+        jsonp(this._url, function(data) {
             var credit = data.copyrightText;
 
             var canvas = document.createElement("canvas");
@@ -170,6 +157,11 @@ define([
 
             that._logo = canvas;
             that._logoLoaded = true;
+        }, {
+            parameters : {
+                f : 'json'
+            },
+            proxy : this._proxy
         });
     }
 
@@ -191,21 +183,13 @@ define([
         }
 
         var image = new Image();
-        if (onload && typeof onload === "function") {
-            image.onload = function() {
-                onload();
-            };
-        }
-        if (onerror && typeof onerror === "function") {
-            image.onerror = function() {
-                onerror();
-            };
-        }
+        image.onload = onload;
+        image.onerror = onerror;
         image.crossOrigin = '';
 
         var url = this._url + '/tile/' + tile.zoom + '/' + tile.y + '/' + tile.x;
-        if (typeof this.proxy !== 'undefined') {
-            url = this.proxy.getURL(url);
+        if (typeof this._proxy !== 'undefined') {
+            url = this._proxy.getURL(url);
         }
 
         image.src = url;

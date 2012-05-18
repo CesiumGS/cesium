@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Core/IntersectionTests',
          'Core/Cartesian3',
@@ -87,7 +88,7 @@ defineSuite([
     });
 
     it("rayEllipsoid outside intersections", function() {
-        var unitSphere = Ellipsoid.getUnitSphere();
+        var unitSphere = Ellipsoid.UNIT_SPHERE;
 
         var intersections = IntersectionTests.rayEllipsoid(new Cartesian3(2.0, 0.0, 0.0), new Cartesian3(-1.0, 0.0, 0.0), unitSphere);
         expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
@@ -130,22 +131,22 @@ defineSuite([
     });
 
     it("rayEllipsoid inside intersection", function() {
-        var unitSphere = Ellipsoid.getUnitSphere();
+        var unitSphere = Ellipsoid.UNIT_SPHERE;
 
-        var intersections = IntersectionTests.rayEllipsoid(Cartesian3.getZero(), new Cartesian3(0.0, 0.0, 1.0), unitSphere);
+        var intersections = IntersectionTests.rayEllipsoid(Cartesian3.ZERO, new Cartesian3(0.0, 0.0, 1.0), unitSphere);
         expect(intersections.start).toEqualEpsilon(0.0, CesiumMath.EPSILON14);
         expect(intersections.stop).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
     });
 
     it("rayEllipsoid tangent intersections", function() {
-        var unitSphere = Ellipsoid.getUnitSphere();
+        var unitSphere = Ellipsoid.UNIT_SPHERE;
 
-        var intersections = IntersectionTests.rayEllipsoid(Cartesian3.getUnitX(), Cartesian3.getUnitZ(), unitSphere);
+        var intersections = IntersectionTests.rayEllipsoid(Cartesian3.UNIT_X, Cartesian3.UNIT_Z, unitSphere);
         expect(intersections).not.toBeDefined();
     });
 
     it("rayEllipsoid no intersections", function() {
-        var unitSphere = Ellipsoid.getUnitSphere();
+        var unitSphere = Ellipsoid.UNIT_SPHERE;
 
         var intersections = IntersectionTests.rayEllipsoid(new Cartesian3(2.0, 0.0, 0.0), new Cartesian3(0.0, 0.0, 1.0), unitSphere);
         expect(intersections).not.toBeDefined();

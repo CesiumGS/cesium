@@ -1,7 +1,6 @@
 /*global define*/
 define(['./Enumeration'], function(Enumeration) {
     "use strict";
-    /*global Int8Array,Uint8Array,Int16Array,Uint16Array,Float32Array*/
 
     // Earlier versions of IE do not support typed arrays, and as a result,
     // using them below will cause the setup function itself to fail, causing

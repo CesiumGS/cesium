@@ -1,6 +1,6 @@
 (function() {
     "use strict";
-    /*global dojo, dijit, dojox*/
+    /*global dojo,dijit,dojox*/
 
     dojo.addOnLoad(function() {
         // Entry animations
@@ -31,19 +31,20 @@
 
         // Tool tips
         dijit.Tooltip.defaultPosition = ["above"];
-        var addOverlayToolTip = new dijit.Tooltip({
+        /*jslint nonew : false*/
+        new dijit.Tooltip({
             connectId : ["addOverlay"],
             label : "Add or Edit an Overlay",
             showDelay : 750
         });
 
-        var removeOverlayToolTip = new dijit.Tooltip({
+        new dijit.Tooltip({
             connectId : ["removeOverlay"],
             label : "Remove Overlay(s)",
             showDelay : 750
         });
 
-        var documentationTooltip = new dijit.Tooltip({
+        new dijit.Tooltip({
             connectId : ["documentation"],
             label : "Open documentation for selected text in new window",
             showDelay : 750
