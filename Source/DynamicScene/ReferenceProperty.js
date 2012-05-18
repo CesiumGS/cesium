@@ -16,7 +16,7 @@ define(function() {
     ReferenceProperty.fromString = function(buffer, referenceString) {
         var parts = referenceString.split(".");
         if (parts.length === 2) {
-            var objectId = parts[0].slice(1);
+            var objectId = parts[0];
             var property = parts[1];
             return new ReferenceProperty(buffer, objectId, property);
         }
