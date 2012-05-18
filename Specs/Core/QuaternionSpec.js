@@ -44,7 +44,7 @@ defineSuite([
         expect(q.equals(r)).toEqual(true);
     });
 
-    it("getZero", function() {
+    it("ZERO", function() {
         var q = Quaternion.ZERO;
         expect(q.x).toEqual(0.0);
         expect(q.y).toEqual(0.0);

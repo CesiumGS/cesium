@@ -56,7 +56,7 @@ defineSuite([
         expect(v.equals(w)).toEqual(true);
     });
 
-    it("getZero", function() {
+    it("ZERO", function() {
         var v = Cartesian4.ZERO;
         expect(v.x).toEqual(0);
         expect(v.y).toEqual(0);
