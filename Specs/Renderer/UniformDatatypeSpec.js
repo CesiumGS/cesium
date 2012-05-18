@@ -1,5 +1,6 @@
+/*global defineSuite*/
 defineSuite([
-         'Renderer/UniformDataType'
+         'Renderer/UniformDatatype'
      ], function(
          UniformDatatype) {
     "use strict";
