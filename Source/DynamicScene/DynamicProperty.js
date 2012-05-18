@@ -37,7 +37,7 @@ define([
         this._isSampled = false;
     }
 
-    DynamicProperty.createOrUpdate = function(valueType, czmlIntervals, buffer, sourceUri, existingProperty) {
+    DynamicProperty.createOrUpdate = function(valueType, czmlIntervals, buffer, sourceUri, existingProperty, constrainedInterval) {
         if (typeof czmlIntervals === 'undefined') {
             return existingProperty;
         }
@@ -47,7 +47,7 @@ define([
             existingProperty = new DynamicProperty(valueType);
         }
 
-        existingProperty.addIntervals(czmlIntervals, buffer, sourceUri);
+        existingProperty.addIntervals(czmlIntervals, buffer, sourceUri, constrainedInterval);
 
         return existingProperty;
     };
@@ -98,12 +98,26 @@ define([
         }
     };
 
-    DynamicProperty.prototype.addInterval = function(czmlInterval, buffer, sourceUri) {
+    DynamicProperty.prototype.addIntervals = function(czmlIntervals, buffer, sourceUri, constrainedInterval) {
+        if (Array.isArray(czmlIntervals)) {
+            for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
+                this.addInterval(czmlIntervals[i], buffer, sourceUri, constrainedInterval);
+            }
+        } else {
+            this.addInterval(czmlIntervals, buffer, sourceUri, constrainedInterval);
+        }
+    };
+
+    DynamicProperty.prototype.addInterval = function(czmlInterval, buffer, sourceUri, constrainedInterval) {
         var iso8601Interval = czmlInterval.interval;
         if (typeof iso8601Interval === 'undefined') {
             iso8601Interval = TimeInterval.INFINITE;
         } else {
             iso8601Interval = TimeInterval.fromIso8601(iso8601Interval);
+        }
+
+        if (typeof constrainedInterval !== 'undefined') {
+            iso8601Interval = iso8601Interval.insersect(constrainedInterval);
         }
 
         var unwrappedInterval = this.dataHandler.unwrapCzmlInterval(czmlInterval);
@@ -159,16 +173,6 @@ define([
             intervalData.times = undefined;
             intervalData.values = this_dataHandler.createValue(unwrappedInterval);
             this._isSampled = false;
-        }
-    };
-
-    DynamicProperty.prototype.addIntervals = function(czmlIntervals, buffer, sourceUri) {
-        if (Array.isArray(czmlIntervals)) {
-            for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
-                this.addInterval(czmlIntervals[i], buffer, sourceUri);
-            }
-        } else {
-            this.addInterval(czmlIntervals, buffer, sourceUri);
         }
     };
 

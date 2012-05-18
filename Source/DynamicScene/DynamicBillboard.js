@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/TimeInterval',
         './BooleanDataHandler',
         './Cartesian2DataHandler',
         './Cartesian3DataHandler',
@@ -8,6 +9,7 @@ define([
         './ColorDataHandler',
         './DynamicProperty'
     ], function(
+        TimeInterval,
         BooleanDataHandler,
         Cartesian2DataHandler,
         Cartesian3DataHandler,
@@ -50,16 +52,21 @@ define([
                 dynamicObject.billboard = billboard;
             }
 
+            var interval = billboardData.interval;
+            if (typeof interval !== 'undefined') {
+                interval = TimeInterval.fromIso8601(interval);
+            }
+
             //Create or update each of the properties.
-            billboard.color = DynamicProperty.createOrUpdate(ColorDataHandler, billboardData.color, buffer, sourceUri, billboard.color);
-            billboard.eyeOffset = DynamicProperty.createOrUpdate(Cartesian3DataHandler, billboardData.eyeOffset, buffer, sourceUri, billboard.eyeOffset);
-            billboard.horizontalOrigin = DynamicProperty.createOrUpdate(StringDataHandler, billboardData.horizontalOrigin, buffer, sourceUri, billboard.horizontalOrigin);
-            billboard.image = DynamicProperty.createOrUpdate(StringDataHandler, billboardData.image, buffer, sourceUri, billboard.image);
-            billboard.pixelOffset = DynamicProperty.createOrUpdate(Cartesian2DataHandler, billboardData.pixelOffset, buffer, sourceUri, billboard.pixelOffset);
-            billboard.rotation = DynamicProperty.createOrUpdate(NumberDataHandler, billboardData.rotation, buffer, sourceUri, billboard.rotation);
-            billboard.scale = DynamicProperty.createOrUpdate(NumberDataHandler, billboardData.scale, buffer, sourceUri, billboard.scale);
-            billboard.show = DynamicProperty.createOrUpdate(BooleanDataHandler, billboardData.show, buffer, sourceUri, billboard.show);
-            billboard.verticalOrigin = DynamicProperty.createOrUpdate(StringDataHandler, billboardData.verticalOrigin, buffer, sourceUri, billboard.verticalOrigin);
+            billboard.color = DynamicProperty.createOrUpdate(ColorDataHandler, billboardData.color, buffer, sourceUri, billboard.color, interval);
+            billboard.eyeOffset = DynamicProperty.createOrUpdate(Cartesian3DataHandler, billboardData.eyeOffset, buffer, sourceUri, billboard.eyeOffset, interval);
+            billboard.horizontalOrigin = DynamicProperty.createOrUpdate(StringDataHandler, billboardData.horizontalOrigin, buffer, sourceUri, billboard.horizontalOrigin, interval);
+            billboard.image = DynamicProperty.createOrUpdate(StringDataHandler, billboardData.image, buffer, sourceUri, billboard.image, interval);
+            billboard.pixelOffset = DynamicProperty.createOrUpdate(Cartesian2DataHandler, billboardData.pixelOffset, buffer, sourceUri, billboard.pixelOffset, interval);
+            billboard.rotation = DynamicProperty.createOrUpdate(NumberDataHandler, billboardData.rotation, buffer, sourceUri, billboard.rotation, interval);
+            billboard.scale = DynamicProperty.createOrUpdate(NumberDataHandler, billboardData.scale, buffer, sourceUri, billboard.scale, interval);
+            billboard.show = DynamicProperty.createOrUpdate(BooleanDataHandler, billboardData.show, buffer, sourceUri, billboard.show, interval);
+            billboard.verticalOrigin = DynamicProperty.createOrUpdate(StringDataHandler, billboardData.verticalOrigin, buffer, sourceUri, billboard.verticalOrigin, interval);
         }
     };
 

@@ -1,8 +1,12 @@
 /*global define*/
-define(['./BooleanDataHandler',
+define([
+        '../Core/TimeInterval',
+        './BooleanDataHandler',
         './DynamicProperty',
-        './DynamicMaterialProperty'],
-function(BooleanDataHandler,
+        './DynamicMaterialProperty'
+    ], function(
+         TimeInterval,
+         BooleanDataHandler,
          DynamicProperty,
          DynamicMaterialProperty) {
     "use strict";
@@ -25,9 +29,14 @@ function(BooleanDataHandler,
                 dynamicObject.polygon = polygon;
             }
 
+            var interval = polygonData.interval;
+            if (typeof interval !== 'undefined') {
+                interval = TimeInterval.fromIso8601(interval);
+            }
+
             //Create or update each of the properties.
-            polygon.show = DynamicProperty.createOrUpdate(BooleanDataHandler, polygonData.show, buffer, sourceUri, polygon.show);
-            polygon.material = DynamicMaterialProperty.createOrUpdate(polygonData.material, buffer, sourceUri, polygon.material);
+            polygon.show = DynamicProperty.createOrUpdate(BooleanDataHandler, polygonData.show, buffer, sourceUri, polygon.show, interval);
+            polygon.material = DynamicMaterialProperty.createOrUpdate(polygonData.material, buffer, sourceUri, polygon.material, interval);
         }
     };
 

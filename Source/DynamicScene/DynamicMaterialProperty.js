@@ -16,7 +16,7 @@ define([
         this._potentialMaterials = [DynamicColorMaterial];
     }
 
-    DynamicMaterialProperty.createOrUpdate = function(czmlIntervals, buffer, sourceUri, existingProperty) {
+    DynamicMaterialProperty.createOrUpdate = function(czmlIntervals, buffer, sourceUri, existingProperty, constrainedInterval) {
         if (typeof czmlIntervals === 'undefined') {
             return existingProperty;
         }
@@ -26,7 +26,7 @@ define([
             existingProperty = new DynamicMaterialProperty();
         }
 
-        existingProperty.addIntervals(czmlIntervals, buffer, sourceUri);
+        existingProperty.addIntervals(czmlIntervals, buffer, sourceUri, constrainedInterval);
 
         return existingProperty;
     };
@@ -35,13 +35,13 @@ define([
         return this._intervals.findIntervalContainingDate(time).data;
     };
 
-    DynamicMaterialProperty.prototype.addIntervals = function(czmlIntervals, buffer, sourceUri) {
+    DynamicMaterialProperty.prototype.addIntervals = function(czmlIntervals, buffer, sourceUri, constrainedInterval) {
         if (Array.isArray(czmlIntervals)) {
             for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
-                this.addInterval(czmlIntervals[i], buffer, sourceUri);
+                this.addInterval(czmlIntervals[i], buffer, sourceUri, constrainedInterval);
             }
         } else {
-            this.addInterval(czmlIntervals, buffer, sourceUri);
+            this.addInterval(czmlIntervals, buffer, sourceUri, constrainedInterval);
         }
     };
 
@@ -52,12 +52,16 @@ define([
         }
     };
 
-    DynamicMaterialProperty.prototype.addInterval = function(czmlInterval, buffer, sourceUri) {
+    DynamicMaterialProperty.prototype.addInterval = function(czmlInterval, buffer, sourceUri, constrainedInterval) {
         var iso8601Interval = czmlInterval.interval, property, material;
         if (typeof iso8601Interval === 'undefined') {
             iso8601Interval = TimeInterval.INFINITE.clone();
         } else {
             iso8601Interval = TimeInterval.fromIso8601(iso8601Interval);
+        }
+
+        if (typeof constrainedInterval !== 'undefined') {
+            iso8601Interval = iso8601Interval.insersect(constrainedInterval);
         }
 
         //See if we already have data at that interval.

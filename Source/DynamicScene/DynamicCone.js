@@ -1,10 +1,14 @@
 /*global define*/
-define(['./BooleanDataHandler',
+define([
+        '../Core/TimeInterval',
+        './BooleanDataHandler',
         './NumberDataHandler',
         './ColorDataHandler',
         './DynamicProperty',
-        './DynamicMaterialProperty'],
-function(BooleanDataHandler,
+        './DynamicMaterialProperty'
+       ], function(
+         TimeInterval,
+         BooleanDataHandler,
          NumberDataHandler,
          ColorDataHandler,
          DynamicProperty,
@@ -39,19 +43,24 @@ function(BooleanDataHandler,
                 dynamicObject.cone = cone;
             }
 
+            var interval = coneData.interval;
+            if (typeof interval !== 'undefined') {
+                interval = TimeInterval.fromIso8601(interval);
+            }
+
             //Create or update each of the properties.
-            cone.show = DynamicProperty.createOrUpdate(BooleanDataHandler, coneData.show, buffer, sourceUri, cone.show);
-            cone.innerHalfAngle = DynamicProperty.createOrUpdate(NumberDataHandler, coneData.innerHalfAngle, buffer, sourceUri, cone.innerHalfAngle);
-            cone.outerHalfAngle = DynamicProperty.createOrUpdate(NumberDataHandler, coneData.outerHalfAngle, buffer, sourceUri, cone.outerHalfAngle);
-            cone.minimumClockAngle = DynamicProperty.createOrUpdate(NumberDataHandler, coneData.minimumClockAngle, buffer, sourceUri, cone.minimumClockAngle);
-            cone.maximumClockAngle = DynamicProperty.createOrUpdate(NumberDataHandler, coneData.maximumClockAngle, buffer, sourceUri, cone.maximumClockAngle);
-            cone.radius = DynamicProperty.createOrUpdate(NumberDataHandler, coneData.radius, buffer, sourceUri, cone.radius);
-            cone.showIntersection = DynamicProperty.createOrUpdate(BooleanDataHandler, coneData.showIntersection, buffer, sourceUri, cone.showIntersection);
-            cone.intersectionColor = DynamicProperty.createOrUpdate(ColorDataHandler, coneData.intersectionColor, buffer, sourceUri, cone.intersectionColor);
-            cone.capMaterial = DynamicMaterialProperty.createOrUpdate(coneData.capMaterial, buffer, sourceUri, cone.capMaterial);
-            cone.innerMaterial = DynamicMaterialProperty.createOrUpdate(coneData.innerMaterial, buffer, sourceUri, cone.innerMaterial);
-            cone.outerMaterial = DynamicMaterialProperty.createOrUpdate(coneData.outerMaterial, buffer, sourceUri, cone.outerMaterial);
-            cone.silhouetteMaterial = DynamicMaterialProperty.createOrUpdate(coneData.silhouetteMaterial, buffer, sourceUri, cone.silhouetteMaterial);
+            cone.show = DynamicProperty.createOrUpdate(BooleanDataHandler, coneData.show, buffer, sourceUri, cone.show, interval);
+            cone.innerHalfAngle = DynamicProperty.createOrUpdate(NumberDataHandler, coneData.innerHalfAngle, buffer, sourceUri, cone.innerHalfAngle, interval);
+            cone.outerHalfAngle = DynamicProperty.createOrUpdate(NumberDataHandler, coneData.outerHalfAngle, buffer, sourceUri, cone.outerHalfAngle, interval);
+            cone.minimumClockAngle = DynamicProperty.createOrUpdate(NumberDataHandler, coneData.minimumClockAngle, buffer, sourceUri, cone.minimumClockAngle, interval);
+            cone.maximumClockAngle = DynamicProperty.createOrUpdate(NumberDataHandler, coneData.maximumClockAngle, buffer, sourceUri, cone.maximumClockAngle, interval);
+            cone.radius = DynamicProperty.createOrUpdate(NumberDataHandler, coneData.radius, buffer, sourceUri, cone.radius, interval);
+            cone.showIntersection = DynamicProperty.createOrUpdate(BooleanDataHandler, coneData.showIntersection, buffer, sourceUri, cone.showIntersection, interval);
+            cone.intersectionColor = DynamicProperty.createOrUpdate(ColorDataHandler, coneData.intersectionColor, buffer, sourceUri, cone.intersectionColor, interval);
+            cone.capMaterial = DynamicMaterialProperty.createOrUpdate(coneData.capMaterial, buffer, sourceUri, cone.capMaterial, interval);
+            cone.innerMaterial = DynamicMaterialProperty.createOrUpdate(coneData.innerMaterial, buffer, sourceUri, cone.innerMaterial, interval);
+            cone.outerMaterial = DynamicMaterialProperty.createOrUpdate(coneData.outerMaterial, buffer, sourceUri, cone.outerMaterial, interval);
+            cone.silhouetteMaterial = DynamicMaterialProperty.createOrUpdate(coneData.silhouetteMaterial, buffer, sourceUri, cone.silhouetteMaterial, interval);
         }
     };
 

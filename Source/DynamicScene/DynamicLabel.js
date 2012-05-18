@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/TimeInterval',
         './BooleanDataHandler',
         './Cartesian2DataHandler',
         './Cartesian3DataHandler',
@@ -8,6 +9,7 @@ define([
         './ColorDataHandler',
         './DynamicProperty'
     ], function(
+        TimeInterval,
         BooleanDataHandler,
         Cartesian2DataHandler,
         Cartesian3DataHandler,
@@ -55,18 +57,23 @@ define([
                 dynamicObject.label = label;
             }
 
+            var interval = labelData.interval;
+            if (typeof interval !== 'undefined') {
+                interval = TimeInterval.fromIso8601(interval);
+            }
+
             //Create or update each of the properties.
-            label.text = DynamicProperty.createOrUpdate(StringDataHandler, labelData.text, buffer, sourceUri, label.text);
-            label.font = DynamicProperty.createOrUpdate(StringDataHandler, labelData.font, buffer, sourceUri, label.font);
-            label.show = DynamicProperty.createOrUpdate(BooleanDataHandler, labelData.show, buffer, sourceUri, label.show);
-            label.style = DynamicProperty.createOrUpdate(StringDataHandler, labelData.style, buffer, sourceUri, label.style);
-            label.fillColor = DynamicProperty.createOrUpdate(ColorDataHandler, labelData.fillColor, buffer, sourceUri, label.fillColor);
-            label.outlineColor = DynamicProperty.createOrUpdate(ColorDataHandler, labelData.outlineColor, buffer, sourceUri, label.outlineColor);
-            label.scale = DynamicProperty.createOrUpdate(NumberDataHandler, labelData.scale, buffer, sourceUri, label.scale);
-            label.horizontalOrigin = DynamicProperty.createOrUpdate(StringDataHandler, labelData.horizontalOrigin, buffer, sourceUri, label.horizontalOrigin);
-            label.verticalOrigin = DynamicProperty.createOrUpdate(StringDataHandler, labelData.verticalOrigin, buffer, sourceUri, label.verticalOrigin);
-            label.eyeOffset = DynamicProperty.createOrUpdate(Cartesian3DataHandler, labelData.eyeOffset, buffer, sourceUri, label.eyeOffset);
-            label.pixelOffset = DynamicProperty.createOrUpdate(Cartesian2DataHandler, labelData.pixelOffset, buffer, sourceUri, label.pixelOffset);
+            label.text = DynamicProperty.createOrUpdate(StringDataHandler, labelData.text, buffer, sourceUri, label.text, interval);
+            label.font = DynamicProperty.createOrUpdate(StringDataHandler, labelData.font, buffer, sourceUri, label.font, interval);
+            label.show = DynamicProperty.createOrUpdate(BooleanDataHandler, labelData.show, buffer, sourceUri, label.show, interval);
+            label.style = DynamicProperty.createOrUpdate(StringDataHandler, labelData.style, buffer, sourceUri, label.style, interval);
+            label.fillColor = DynamicProperty.createOrUpdate(ColorDataHandler, labelData.fillColor, buffer, sourceUri, label.fillColor, interval);
+            label.outlineColor = DynamicProperty.createOrUpdate(ColorDataHandler, labelData.outlineColor, buffer, sourceUri, label.outlineColor, interval);
+            label.scale = DynamicProperty.createOrUpdate(NumberDataHandler, labelData.scale, buffer, sourceUri, label.scale, interval);
+            label.horizontalOrigin = DynamicProperty.createOrUpdate(StringDataHandler, labelData.horizontalOrigin, buffer, sourceUri, label.horizontalOrigin, interval);
+            label.verticalOrigin = DynamicProperty.createOrUpdate(StringDataHandler, labelData.verticalOrigin, buffer, sourceUri, label.verticalOrigin, interval);
+            label.eyeOffset = DynamicProperty.createOrUpdate(Cartesian3DataHandler, labelData.eyeOffset, buffer, sourceUri, label.eyeOffset, interval);
+            label.pixelOffset = DynamicProperty.createOrUpdate(Cartesian2DataHandler, labelData.pixelOffset, buffer, sourceUri, label.pixelOffset, interval);
         }
     };
 

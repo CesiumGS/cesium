@@ -1,12 +1,16 @@
 /*global define*/
-define(['./BooleanDataHandler',
+define([
+        '../Core/TimeInterval',
+        './BooleanDataHandler',
         './NumberDataHandler',
         './ColorDataHandler',
         './DynamicProperty'],
-function(BooleanDataHandler,
-         NumberDataHandler,
-         ColorDataHandler,
-         DynamicProperty) {
+function(
+        TimeInterval,
+        BooleanDataHandler,
+        NumberDataHandler,
+        ColorDataHandler,
+        DynamicProperty) {
     "use strict";
 
     function DynamicPolyline() {
@@ -30,12 +34,17 @@ function(BooleanDataHandler,
                 dynamicObject.polyline = polyline;
             }
 
+            var interval = polylineData.interval;
+            if (typeof interval !== 'undefined') {
+                interval = TimeInterval.fromIso8601(interval);
+            }
+
             //Create or update each of the properties.
-            polyline.color = DynamicProperty.createOrUpdate(ColorDataHandler, polylineData.color, buffer, sourceUri, polyline.color);
-            polyline.outlineColor = DynamicProperty.createOrUpdate(ColorDataHandler, polylineData.outlineColor, buffer, sourceUri, polyline.outlineColor);
-            polyline.outlineWidth = DynamicProperty.createOrUpdate(NumberDataHandler, polylineData.outlineWidth, buffer, sourceUri, polyline.outlineWidth);
-            polyline.show = DynamicProperty.createOrUpdate(BooleanDataHandler, polylineData.show, buffer, sourceUri, polyline.show);
-            polyline.width = DynamicProperty.createOrUpdate(NumberDataHandler, polylineData.width, buffer, sourceUri, polyline.width);
+            polyline.color = DynamicProperty.createOrUpdate(ColorDataHandler, polylineData.color, buffer, sourceUri, polyline.color, interval);
+            polyline.outlineColor = DynamicProperty.createOrUpdate(ColorDataHandler, polylineData.outlineColor, buffer, sourceUri, polyline.outlineColor, interval);
+            polyline.outlineWidth = DynamicProperty.createOrUpdate(NumberDataHandler, polylineData.outlineWidth, buffer, sourceUri, polyline.outlineWidth, interval);
+            polyline.show = DynamicProperty.createOrUpdate(BooleanDataHandler, polylineData.show, buffer, sourceUri, polyline.show, interval);
+            polyline.width = DynamicProperty.createOrUpdate(NumberDataHandler, polylineData.width, buffer, sourceUri, polyline.width, interval);
         }
     };
 

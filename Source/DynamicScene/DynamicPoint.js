@@ -1,9 +1,13 @@
 /*global define*/
-define(['./BooleanDataHandler',
+define([
+        '../Core/TimeInterval',
+        './BooleanDataHandler',
         './NumberDataHandler',
         './ColorDataHandler',
-        './DynamicProperty'],
-function(BooleanDataHandler,
+        './DynamicProperty'
+    ], function(
+         TimeInterval,
+         BooleanDataHandler,
          NumberDataHandler,
          ColorDataHandler,
          DynamicProperty) {
@@ -30,12 +34,17 @@ function(BooleanDataHandler,
                 dynamicObject.point = point;
             }
 
+            var interval = pointData.interval;
+            if (typeof interval !== 'undefined') {
+                interval = TimeInterval.fromIso8601(interval);
+            }
+
             //Create or update each of the properties.
-            point.color = DynamicProperty.createOrUpdate(ColorDataHandler, pointData.color, buffer, sourceUri, point.color);
-            point.pixelSize = DynamicProperty.createOrUpdate(NumberDataHandler, pointData.pixelSize, buffer, sourceUri, point.pixelSize);
-            point.outlineColor = DynamicProperty.createOrUpdate(ColorDataHandler, pointData.outlineColor, buffer, sourceUri, point.outlineColor);
-            point.outlineWidth = DynamicProperty.createOrUpdate(NumberDataHandler, pointData.outlineWidth, buffer, sourceUri, point.outlineWidth);
-            point.show = DynamicProperty.createOrUpdate(BooleanDataHandler, pointData.show, buffer, sourceUri, point.show);
+            point.color = DynamicProperty.createOrUpdate(ColorDataHandler, pointData.color, buffer, sourceUri, point.color, interval);
+            point.pixelSize = DynamicProperty.createOrUpdate(NumberDataHandler, pointData.pixelSize, buffer, sourceUri, point.pixelSize, interval);
+            point.outlineColor = DynamicProperty.createOrUpdate(ColorDataHandler, pointData.outlineColor, buffer, sourceUri, point.outlineColor, interval);
+            point.outlineWidth = DynamicProperty.createOrUpdate(NumberDataHandler, pointData.outlineWidth, buffer, sourceUri, point.outlineWidth, interval);
+            point.show = DynamicProperty.createOrUpdate(BooleanDataHandler, pointData.show, buffer, sourceUri, point.show, interval);
         }
     };
 

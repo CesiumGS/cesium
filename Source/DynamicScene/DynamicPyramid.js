@@ -1,16 +1,20 @@
 /*global define*/
-define(['./BooleanDataHandler',
+define([
+        '../Core/TimeInterval',
+        './BooleanDataHandler',
         './NumberDataHandler',
         './ColorDataHandler',
         './DynamicProperty',
         './DynamicDirectionsProperty',
-        './DynamicMaterialProperty'],
-function(BooleanDataHandler,
-         NumberDataHandler,
-         ColorDataHandler,
-         DynamicProperty,
-         DynamicDirectionsProperty,
-         DynamicMaterialProperty) {
+        './DynamicMaterialProperty'
+    ], function(
+        TimeInterval,
+        BooleanDataHandler,
+        NumberDataHandler,
+        ColorDataHandler,
+        DynamicProperty,
+        DynamicDirectionsProperty,
+        DynamicMaterialProperty) {
     "use strict";
 
     function DynamicPyramid() {
@@ -36,14 +40,19 @@ function(BooleanDataHandler,
                 dynamicObject.pyramid = pyramid;
             }
 
+            var interval = pyramidData.interval;
+            if (typeof interval !== 'undefined') {
+                interval = TimeInterval.fromIso8601(interval);
+            }
+
             //Create or update each of the properties.
-            pyramid.show = DynamicProperty.createOrUpdate(BooleanDataHandler, pyramidData.show, buffer, sourceUri, pyramid.show);
-            pyramid.directions = DynamicDirectionsProperty.createOrUpdate(pyramidData.directions, buffer, sourceUri, pyramid.directions);
-            pyramid.radius = DynamicProperty.createOrUpdate(NumberDataHandler, pyramidData.radius, buffer, sourceUri, pyramid.radius);
-            pyramid.showIntersection = DynamicProperty.createOrUpdate(BooleanDataHandler, pyramidData.showIntersection, buffer, sourceUri, pyramid.showIntersection);
-            pyramid.intersectionColor = DynamicProperty.createOrUpdate(ColorDataHandler, pyramidData.intersectionColor, buffer, sourceUri, pyramid.intersectionColor);
-            pyramid.erosion = DynamicProperty.createOrUpdate(NumberDataHandler, pyramidData.erosion, buffer, sourceUri, pyramid.erosion);
-            pyramid.material = DynamicMaterialProperty.createOrUpdate(pyramidData.material, buffer, sourceUri, pyramid.material);
+            pyramid.show = DynamicProperty.createOrUpdate(BooleanDataHandler, pyramidData.show, buffer, sourceUri, pyramid.show, interval);
+            pyramid.directions = DynamicDirectionsProperty.createOrUpdate(pyramidData.directions, buffer, sourceUri, pyramid.directions, interval);
+            pyramid.radius = DynamicProperty.createOrUpdate(NumberDataHandler, pyramidData.radius, buffer, sourceUri, pyramid.radius, interval);
+            pyramid.showIntersection = DynamicProperty.createOrUpdate(BooleanDataHandler, pyramidData.showIntersection, buffer, sourceUri, pyramid.showIntersection, interval);
+            pyramid.intersectionColor = DynamicProperty.createOrUpdate(ColorDataHandler, pyramidData.intersectionColor, buffer, sourceUri, pyramid.intersectionColor, interval);
+            pyramid.erosion = DynamicProperty.createOrUpdate(NumberDataHandler, pyramidData.erosion, buffer, sourceUri, pyramid.erosion, interval);
+            pyramid.material = DynamicMaterialProperty.createOrUpdate(pyramidData.material, buffer, sourceUri, pyramid.material, interval);
         }
     };
 
