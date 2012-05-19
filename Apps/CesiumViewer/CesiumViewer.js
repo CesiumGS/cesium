@@ -3,6 +3,7 @@ define(['dojo/dom',
         'dojo/on',
         'dojo/_base/event',
         'dojo/io-query',
+        'dijit/registry',
         'DojoWidgets/CesiumWidget',
         'Core/DefaultProxy',
         'Core/JulianDate',
@@ -31,6 +32,7 @@ function(dom,
          on,
          event,
          ioQuery,
+         registry,
          CesiumWidget,
          DefaultProxy,
          JulianDate,
@@ -60,6 +62,7 @@ function(dom,
 
     var visualizers;
     var clock = new Clock(new JulianDate(), undefined, undefined, ClockStep.SYSTEM_CLOCK, ClockRange.LOOP, 300);
+    var timeline;
 
     var _buffer = new CzmlObjectCollection("root", "root", {
         billboard : DynamicBillboard.createOrUpdate,
@@ -79,6 +82,9 @@ function(dom,
 
         preRender : function(widget) {
             clock.tick();
+            if (typeof timeline !== 'undefined') {
+                timeline.updateFromClock();
+            }
             visualizers.update(clock.currentTime, _buffer);
         },
 
@@ -103,6 +109,13 @@ function(dom,
                 _buffer.clear();
                 loadCzmlFromUrl(_buffer, queryObject.source, setTimeFromBuffer);
             }
+
+            var timelineWidget = registry.byId("mainTimeline");
+            timelineWidget.clock = clock;
+            timelineWidget.setupCallback = function (t) {
+                timeline = t;
+                timeline.zoomTo(clock.startTime, clock.stopTime);
+            };
         },
 
         onSetupError : function(widget, error) {
@@ -123,6 +136,7 @@ function(dom,
                         clock.startTime = firstTime;
                         clock.stopTime = firstTime.addDays(1);
                         clock.currentTime = firstTime;
+                        timeline.zoomTo(clock.startTime, clock.stopTime);
                         break;
                     }
                 }

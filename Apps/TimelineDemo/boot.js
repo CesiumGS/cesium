@@ -35,15 +35,18 @@ require({
         name : 'DojoWidgets',
         location : 'Apps/DojoWidgets'
     }, {
-        name : 'CesiumViewer',
-        location : 'Apps/CesiumViewer'
+        name : 'TimelineDemo',
+        location : 'Apps/TimelineDemo'
     }]
 }, [
     'dojo/parser',
     'dojo/dom-class',
     'dojo/_base/window',
-    'DojoWidgets/TimelineWidget',
-    'CesiumViewer/CesiumViewer',
+    "dojo/date/stamp",
+    "dijit/form/Button",
+    "dijit/Calendar",
+    "dijit/form/TimeTextBox",
+    'TimelineDemo/TimelineDemo',
     'dojo/domReady!'
 ], function(
     parser,
