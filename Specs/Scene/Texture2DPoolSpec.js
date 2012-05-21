@@ -39,7 +39,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("creates textures using the context", function() {
+    it("creates textures from the context on demand", function() {
         var description = {
             width : 1,
             height : 1

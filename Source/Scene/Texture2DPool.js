@@ -60,7 +60,8 @@ define([
 
     /**
      * Create a texture.  This function takes the same arguments as {@link Context#createTexture2D},
-     * but may return a pooled texture if there are any available.
+     * but may return a pooled texture if there are any available.  If a pooled texture is re-used,
+     * and no source is provided, the new texture will still retain its old contents.
      *
      * @memberof Texture2DPool
      *
@@ -76,9 +77,10 @@ define([
         var source = description.source;
         var width = typeof source !== 'undefined' ? source.width : description.width;
         var height = typeof source !== 'undefined' ? source.height : description.height;
-        var pixelFormat = (description.pixelFormat || PixelFormat.RGBA).value;
-        var pixelDatatype = (description.pixelDatatype || PixelDatatype.UNSIGNED_BYTE).value;
-        var preMultiplyAlpha = description.preMultiplyAlpha || pixelFormat === PixelFormat.RGB || pixelFormat === PixelFormat.LUMINANCE;
+        //coerce values to primitive numbers to make textureTypeKey smaller.
+        var pixelFormat = +(description.pixelFormat || PixelFormat.RGBA);
+        var pixelDatatype = +(description.pixelDatatype || PixelDatatype.UNSIGNED_BYTE);
+        var preMultiplyAlpha = +(description.preMultiplyAlpha || pixelFormat === PixelFormat.RGB || pixelFormat === PixelFormat.LUMINANCE);
 
         var textureTypeKey = JSON.stringify([width, height, pixelFormat, pixelDatatype, preMultiplyAlpha]);
 
