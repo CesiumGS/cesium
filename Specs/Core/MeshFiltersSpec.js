@@ -239,11 +239,15 @@ defineSuite([
                 maximumIndex = indices[i];
             }
         }
-        var ACMRbefore = Tipsify.calculateACMR(indices, maximumIndex, 24);
+        var ACMRbefore = Tipsify.calculateACMR({indices : indices,
+                                                maximumIndex : maximumIndex,
+                                                cacheSize : 24});
         expect(ACMRbefore).toBeGreaterThan(1.00);
         mesh = MeshFilters.reorderForPostVertexCache(mesh);
         indices = mesh.indexLists[0].values;
-        var ACMRafter = Tipsify.calculateACMR(indices, maximumIndex, 24);
+        var ACMRafter = Tipsify.calculateACMR({indices : indices,
+                                               maximumIndex : maximumIndex,
+                                               cacheSize : 24});
         expect(ACMRafter).toBeLessThan(0.70);
     });
 
