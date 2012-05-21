@@ -21,17 +21,19 @@ function(
         this.width = undefined;
     }
 
-    DynamicPolyline.createOrUpdate = function(dynamicObject, packet, buffer, sourceUri) {
+    DynamicPolyline.createOrUpdate = function(dynamicObject, packet, czmlObjectCollection) {
         //See if there's any actual data to process.
         var polylineData = packet.polyline, polyline;
         if (typeof polylineData !== 'undefined') {
 
             polyline = dynamicObject.polyline;
+            var polylineUpdated = false;
 
             //Create a new polyline if we don't have one yet.
             if (typeof polyline === 'undefined') {
                 polyline = new DynamicPolyline();
                 dynamicObject.polyline = polyline;
+                polylineUpdated = true;
             }
 
             var interval = polylineData.interval;
@@ -40,12 +42,36 @@ function(
             }
 
             //Create or update each of the properties.
-            polyline.color = DynamicProperty.createOrUpdate(ColorDataHandler, polylineData.color, buffer, sourceUri, polyline.color, interval);
-            polyline.outlineColor = DynamicProperty.createOrUpdate(ColorDataHandler, polylineData.outlineColor, buffer, sourceUri, polyline.outlineColor, interval);
-            polyline.outlineWidth = DynamicProperty.createOrUpdate(NumberDataHandler, polylineData.outlineWidth, buffer, sourceUri, polyline.outlineWidth, interval);
-            polyline.show = DynamicProperty.createOrUpdate(BooleanDataHandler, polylineData.show, buffer, sourceUri, polyline.show, interval);
-            polyline.width = DynamicProperty.createOrUpdate(NumberDataHandler, polylineData.width, buffer, sourceUri, polyline.width, interval);
+            polylineUpdated = DynamicProperty.createOrUpdate(polyline, "color", ColorDataHandler, polylineData.color, interval, czmlObjectCollection) || polylineUpdated;
+            polylineUpdated = DynamicProperty.createOrUpdate(polyline, "outlineColor", ColorDataHandler, polylineData.outlineColor, interval, czmlObjectCollection) || polylineUpdated;
+            polylineUpdated = DynamicProperty.createOrUpdate(polyline, "outlineWidth", NumberDataHandler, polylineData.outlineWidth, interval, czmlObjectCollection) || polylineUpdated;
+            polylineUpdated = DynamicProperty.createOrUpdate(polyline, "show", BooleanDataHandler, polylineData.show, interval, czmlObjectCollection) || polylineUpdated;
+            polylineUpdated = DynamicProperty.createOrUpdate(polyline, "width", NumberDataHandler, polylineData.width, interval, czmlObjectCollection) || polylineUpdated;
+
+            return polylineUpdated;
         }
+    };
+
+    DynamicPolyline.mergeProperties = function(existingObject, objectToMerge)
+    {
+        var polylineToMerge = objectToMerge.polyline;
+        if (typeof polylineToMerge !== 'undefined') {
+            var target = existingObject.polyline;
+            if (typeof target === 'undefined') {
+                target = new DynamicPolyline();
+                existingObject.polyline = target;
+            }
+            target.color = target.color || polylineToMerge.color;
+            target.pixelSize = target.pixelSize || polylineToMerge.pixelSize;
+            target.outlineColor = target.outlineColor || polylineToMerge.outlineColor;
+            target.outlineWidth = target.outlineWidth || polylineToMerge.outlineWidth;
+            target.show = target.show || polylineToMerge.show;
+        }
+    };
+
+    DynamicPolyline.deleteProperties = function(existingObject)
+    {
+        existingObject.polyline = undefined;
     };
 
     return DynamicPolyline;

@@ -16,7 +16,9 @@ define([
         this._potentialMaterials = [DynamicColorMaterial];
     }
 
-    DynamicMaterialProperty.createOrUpdate = function(czmlIntervals, buffer, sourceUri, existingProperty, constrainedInterval) {
+    DynamicMaterialProperty.createOrUpdate = function(parentObject, propertyName, czmlIntervals, constrainedInterval, czmlObjectCollection) {
+        var newProperty = false;
+        var existingProperty = parentObject[propertyName];
         if (typeof czmlIntervals === 'undefined') {
             return existingProperty;
         }
@@ -24,11 +26,13 @@ define([
         //At this point we will definitely have a value, so if one doesn't exist, create it.
         if (typeof existingProperty === 'undefined') {
             existingProperty = new DynamicMaterialProperty();
+            parentObject[propertyName] = existingProperty;
+            newProperty = true;
         }
 
-        existingProperty.addIntervals(czmlIntervals, buffer, sourceUri, constrainedInterval);
+        existingProperty.addIntervals(czmlIntervals, czmlObjectCollection, constrainedInterval);
 
-        return existingProperty;
+        return newProperty;
     };
 
     DynamicMaterialProperty.prototype.getValue = function(time) {
@@ -61,7 +65,7 @@ define([
         }
 
         if (typeof constrainedInterval !== 'undefined') {
-            iso8601Interval = iso8601Interval.insersect(constrainedInterval);
+            iso8601Interval = iso8601Interval.intersect(constrainedInterval);
         }
 
         //See if we already have data at that interval.
@@ -95,7 +99,7 @@ define([
 
         //We could handle the data, add it to the property.
         if (foundMaterial) {
-            existingInterval.data = material.createOrUpdate(czmlInterval, buffer, sourceUri, existingInterval.data);
+            existingInterval.data = material.createOrUpdate(czmlInterval, buffer, existingInterval.data);
         }
     };
 

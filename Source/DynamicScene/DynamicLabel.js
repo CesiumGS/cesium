@@ -33,7 +33,7 @@ define([
         this.show = undefined;
     }
 
-    DynamicLabel.createOrUpdate = function(dynamicObject, packet, buffer, sourceUri) {
+    DynamicLabel.createOrUpdate = function(dynamicObject, packet, czmlObjectCollection, sourceUri) {
         //See if there's any actual data to process.
         var labelData = packet.label;
         if (typeof labelData !== 'undefined' &&
@@ -50,11 +50,13 @@ define([
              typeof labelData.eyeOffset !== 'undefined')) {
 
             var label = dynamicObject.label;
+            var labelUpdated = false;
 
             //Create a new label if we don't have one yet.
             if (typeof label === 'undefined') {
                 label = new DynamicLabel();
                 dynamicObject.label = label;
+                labelUpdated = true;
             }
 
             var interval = labelData.interval;
@@ -63,18 +65,47 @@ define([
             }
 
             //Create or update each of the properties.
-            label.text = DynamicProperty.createOrUpdate(StringDataHandler, labelData.text, buffer, sourceUri, label.text, interval);
-            label.font = DynamicProperty.createOrUpdate(StringDataHandler, labelData.font, buffer, sourceUri, label.font, interval);
-            label.show = DynamicProperty.createOrUpdate(BooleanDataHandler, labelData.show, buffer, sourceUri, label.show, interval);
-            label.style = DynamicProperty.createOrUpdate(StringDataHandler, labelData.style, buffer, sourceUri, label.style, interval);
-            label.fillColor = DynamicProperty.createOrUpdate(ColorDataHandler, labelData.fillColor, buffer, sourceUri, label.fillColor, interval);
-            label.outlineColor = DynamicProperty.createOrUpdate(ColorDataHandler, labelData.outlineColor, buffer, sourceUri, label.outlineColor, interval);
-            label.scale = DynamicProperty.createOrUpdate(NumberDataHandler, labelData.scale, buffer, sourceUri, label.scale, interval);
-            label.horizontalOrigin = DynamicProperty.createOrUpdate(StringDataHandler, labelData.horizontalOrigin, buffer, sourceUri, label.horizontalOrigin, interval);
-            label.verticalOrigin = DynamicProperty.createOrUpdate(StringDataHandler, labelData.verticalOrigin, buffer, sourceUri, label.verticalOrigin, interval);
-            label.eyeOffset = DynamicProperty.createOrUpdate(Cartesian3DataHandler, labelData.eyeOffset, buffer, sourceUri, label.eyeOffset, interval);
-            label.pixelOffset = DynamicProperty.createOrUpdate(Cartesian2DataHandler, labelData.pixelOffset, buffer, sourceUri, label.pixelOffset, interval);
+            labelUpdated = DynamicProperty.createOrUpdate(label, "text", StringDataHandler, labelData.text, interval, czmlObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.createOrUpdate(label, "font", StringDataHandler, labelData.font, interval, czmlObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.createOrUpdate(label, "show", BooleanDataHandler, labelData.show, interval, czmlObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.createOrUpdate(label, "style", StringDataHandler, labelData.style, interval, czmlObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.createOrUpdate(label, "fillColor", ColorDataHandler, labelData.fillColor, interval, czmlObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.createOrUpdate(label, "outlineColor", ColorDataHandler, labelData.outlineColor, interval, czmlObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.createOrUpdate(label, "scale", NumberDataHandler, labelData.scale, interval, czmlObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.createOrUpdate(label, "horizontalOrigin", StringDataHandler, labelData.horizontalOrigin, interval, czmlObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.createOrUpdate(label, "verticalOrigin", StringDataHandler, labelData.verticalOrigin, interval, czmlObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.createOrUpdate(label, "eyeOffset", Cartesian3DataHandler, labelData.eyeOffset, interval, czmlObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.createOrUpdate(label, "pixelOffset", Cartesian2DataHandler, labelData.pixelOffset, interval, czmlObjectCollection) || labelUpdated;
+            return labelUpdated;
         }
+    };
+
+    DynamicLabel.mergeProperties = function(existingObject, objectToMerge)
+    {
+        var labelToMerge = objectToMerge.label;
+        if (typeof labelToMerge !== 'undefined') {
+            var target = existingObject.label;
+            if (typeof target === 'undefined') {
+                target = new DynamicLabel();
+                existingObject.label = target;
+            }
+            target.text = target.text || labelToMerge.text;
+            target.font = target.font || labelToMerge.font;
+            target.show = target.show || labelToMerge.show;
+            target.style = target.style || labelToMerge.style;
+            target.fillColor = target.fillColor || labelToMerge.fillColor;
+            target.outlineColor = target.outlineColor || labelToMerge.outlineColor;
+            target.scale = target.scale || labelToMerge.scale;
+            target.horizontalOrigin = target.horizontalOrigin || labelToMerge.horizontalOrigin;
+            target.verticalOrigin = target.verticalOrigin || labelToMerge.verticalOrigin;
+            target.eyeOffset = target.eyeOffset || labelToMerge.eyeOffset;
+            target.pixelOffset = target.pixelOffset || labelToMerge.pixelOffset;
+        }
+    };
+
+    DynamicLabel.deleteProperties = function(existingObject)
+    {
+        existingObject.label = undefined;
     };
 
     return DynamicLabel;

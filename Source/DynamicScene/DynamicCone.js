@@ -30,17 +30,19 @@ define([
         this.silhouetteMaterial = undefined;
     }
 
-    DynamicCone.createOrUpdate = function(dynamicObject, packet, buffer, sourceUri) {
+    DynamicCone.createOrUpdate = function(dynamicObject, packet, czmlObjectCollection, sourceUri) {
         //See if there's any actual data to process.
         var coneData = packet.cone, cone;
         if (typeof coneData !== 'undefined') {
 
+            var coneUpdated = false;
             cone = dynamicObject.cone;
 
             //Create a new cone if we don't have one yet.
             if (typeof cone === 'undefined') {
                 cone = new DynamicCone();
                 dynamicObject.cone = cone;
+                coneUpdated = true;
             }
 
             var interval = coneData.interval;
@@ -49,19 +51,46 @@ define([
             }
 
             //Create or update each of the properties.
-            cone.show = DynamicProperty.createOrUpdate(BooleanDataHandler, coneData.show, buffer, sourceUri, cone.show, interval);
-            cone.innerHalfAngle = DynamicProperty.createOrUpdate(NumberDataHandler, coneData.innerHalfAngle, buffer, sourceUri, cone.innerHalfAngle, interval);
-            cone.outerHalfAngle = DynamicProperty.createOrUpdate(NumberDataHandler, coneData.outerHalfAngle, buffer, sourceUri, cone.outerHalfAngle, interval);
-            cone.minimumClockAngle = DynamicProperty.createOrUpdate(NumberDataHandler, coneData.minimumClockAngle, buffer, sourceUri, cone.minimumClockAngle, interval);
-            cone.maximumClockAngle = DynamicProperty.createOrUpdate(NumberDataHandler, coneData.maximumClockAngle, buffer, sourceUri, cone.maximumClockAngle, interval);
-            cone.radius = DynamicProperty.createOrUpdate(NumberDataHandler, coneData.radius, buffer, sourceUri, cone.radius, interval);
-            cone.showIntersection = DynamicProperty.createOrUpdate(BooleanDataHandler, coneData.showIntersection, buffer, sourceUri, cone.showIntersection, interval);
-            cone.intersectionColor = DynamicProperty.createOrUpdate(ColorDataHandler, coneData.intersectionColor, buffer, sourceUri, cone.intersectionColor, interval);
-            cone.capMaterial = DynamicMaterialProperty.createOrUpdate(coneData.capMaterial, buffer, sourceUri, cone.capMaterial, interval);
-            cone.innerMaterial = DynamicMaterialProperty.createOrUpdate(coneData.innerMaterial, buffer, sourceUri, cone.innerMaterial, interval);
-            cone.outerMaterial = DynamicMaterialProperty.createOrUpdate(coneData.outerMaterial, buffer, sourceUri, cone.outerMaterial, interval);
-            cone.silhouetteMaterial = DynamicMaterialProperty.createOrUpdate(coneData.silhouetteMaterial, buffer, sourceUri, cone.silhouetteMaterial, interval);
+            coneUpdated = DynamicProperty.createOrUpdate(cone, "show", BooleanDataHandler, coneData.show, interval, czmlObjectCollection) || coneUpdated;
+            coneUpdated = DynamicProperty.createOrUpdate(cone, "innerHalfAngle", NumberDataHandler, coneData.innerHalfAngle, interval, czmlObjectCollection) || coneUpdated;
+            coneUpdated = DynamicProperty.createOrUpdate(cone, "outerHalfAngle", NumberDataHandler, coneData.outerHalfAngle, interval, czmlObjectCollection) || coneUpdated;
+            coneUpdated = DynamicProperty.createOrUpdate(cone, "minimumClockAngle", NumberDataHandler, coneData.minimumClockAngle, interval, czmlObjectCollection) || coneUpdated;
+            coneUpdated = DynamicProperty.createOrUpdate(cone, "maximumClockAngle", NumberDataHandler, coneData.maximumClockAngle, interval, czmlObjectCollection) || coneUpdated;
+            coneUpdated = DynamicProperty.createOrUpdate(cone, "radius", NumberDataHandler, coneData.radius, interval, czmlObjectCollection) || coneUpdated;
+            coneUpdated = DynamicProperty.createOrUpdate(cone, "showIntersection", BooleanDataHandler, coneData.showIntersection, interval, czmlObjectCollection) || coneUpdated;
+            coneUpdated = DynamicProperty.createOrUpdate(cone, "intersectionColor", ColorDataHandler, coneData.intersectionColor, interval, czmlObjectCollection) || coneUpdated;
+            coneUpdated = DynamicMaterialProperty.createOrUpdate(cone, "capMaterial", coneData.capMaterial, interval, czmlObjectCollection) || coneUpdated;
+            coneUpdated = DynamicMaterialProperty.createOrUpdate(cone, "innerMaterial", coneData.innerMaterial, interval, czmlObjectCollection) || coneUpdated;
+            coneUpdated = DynamicMaterialProperty.createOrUpdate(cone, "outerMaterial", coneData.outerMaterial, interval, czmlObjectCollection) || coneUpdated;
+            coneUpdated = DynamicMaterialProperty.createOrUpdate(cone, "silhouetteMaterial", coneData.silhouetteMaterial, interval, czmlObjectCollection) || coneUpdated;
         }
+    };
+
+    DynamicCone.mergeProperties = function(existingObject, objectToMerge) {
+        var coneToMerge = objectToMerge.cone;
+        if (typeof coneToMerge !== 'undefined') {
+            var target = existingObject.cone;
+            if (typeof target === 'undefined') {
+                target = new DynamicCone();
+                existingObject.conde = target;
+            }
+            target.show = target.show || coneToMerge.show;
+            target.innerHalfAngle = target.innerHalfAngle || coneToMerge.innerHalfAngle;
+            target.outerHalfAngle = target.outerHalfAngle || coneToMerge.outerHalfAngle;
+            target.minimumClockAngle = target.minimumClockAngle || coneToMerge.minimumClockAngle;
+            target.maximumClockAngle = target.maximumClockAngle || coneToMerge.maximumClockAngle;
+            target.radius = target.radius || coneToMerge.radius;
+            target.showIntersection = target.showIntersection || coneToMerge.showIntersection;
+            target.intersectionColor = target.intersectionColor || coneToMerge.intersectionColor;
+            target.capMaterial = target.capMaterial || coneToMerge.capMaterial;
+            target.innerMaterial = target.innerMaterial || coneToMerge.innerMaterial;
+            target.outerMaterial = target.outerMaterial || coneToMerge.outerMaterial;
+            target.silhouetteMaterial = target.silhouetteMaterial || coneToMerge.silhouetteMaterial;
+        }
+    };
+
+    DynamicCone.deleteProperties = function(existingObject) {
+        existingObject.cone = undefined;
     };
 
     return DynamicCone;

@@ -17,15 +17,14 @@ define([
         return typeof czmlInterval.solidColor !== 'undefined';
     };
 
-    DynamicColorMaterial.createOrUpdate = function(czmlInterval, buffer, sourceUri, existingMaterial) {
+    DynamicColorMaterial.createOrUpdate = function(czmlInterval, czmlObjectCollection, existingMaterial) {
         var materialData = czmlInterval.solidColor;
         if (typeof materialData !== 'undefined') {
             if (typeof existingMaterial === 'undefined') {
                 existingMaterial = new DynamicColorMaterial();
             }
-            existingMaterial.color = DynamicProperty.createOrUpdate(ColorDataHandler, materialData.color, buffer, sourceUri, existingMaterial.color);
+            DynamicProperty.createOrUpdate(existingMaterial, "color", ColorDataHandler, materialData.color, undefined, czmlObjectCollection);
         }
-
         return existingMaterial;
     };
 
