@@ -19,9 +19,7 @@ defineSuite([
     });
 
     afterEach(function() {
-        try {
-            destroyContext(context);
-        } catch(e) {}
+        context = !context.isDestroyed() && destroyContext(context);
     });
 
     it("getCanvas", function() {

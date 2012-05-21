@@ -58,10 +58,8 @@ defineSuite([
     });
 
     afterEach(function() {
-        try {
-        csc = csc && csc.destroy();
-        csc2 = csc2 && csc2.destroy();
-        } catch(e) {}
+        csc = csc && !csc.isDestroyed() && csc.destroy();
+        csc2 = csc2 && !csc2.isDestroyed() && csc2.destroy();
     });
 
     it("setEllipsoid", function() {

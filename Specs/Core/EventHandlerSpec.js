@@ -102,9 +102,7 @@ defineSuite([
     });
 
     afterEach(function() {
-        try {
-            handler = handler.destroy();
-        } catch(e) {}
+        handler = !handler.isDestroyed() && handler.destroy();
     });
 
     it("setting key events require an action", function() {

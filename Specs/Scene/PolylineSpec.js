@@ -41,11 +41,9 @@ defineSuite([
     });
 
     afterEach(function() {
+        polyline = polyline && !polyline.isDestroyed() && polyline.destroy();
         us = null;
         destroyContext(context);
-        try {
-            polyline = polyline && polyline.destroy();
-        } catch(e) {}
     });
 
     it("gets default show", function() {

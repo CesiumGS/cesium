@@ -63,9 +63,7 @@ defineSuite([
     });
 
     afterEach(function() {
-        try {
-            controller = controller && controller.destroy();
-        } catch(e) {}
+        controller = controller && !controller.isDestroyed() && controller.destroy();
     });
 
     it("setReferenceFrame", function() {

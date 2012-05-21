@@ -27,9 +27,7 @@ defineSuite([
     });
 
     afterEach(function() {
-        try {
-            collection = collection && collection.destroy();
-        } catch(e) {}
+        collection = collection && !collection.isDestroyed() && collection.destroy();
     });
 
     it("add2D", function() {

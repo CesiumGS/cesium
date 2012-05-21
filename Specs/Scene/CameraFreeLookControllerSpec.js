@@ -49,9 +49,7 @@ defineSuite([
     });
 
     afterEach(function() {
-        try {
-            cflc = cflc && cflc.destroy();
-        } catch(e) {}
+        cflc = cflc && !cflc.isDestroyed() && cflc.destroy();
     });
 
     it("move forward", function() {
