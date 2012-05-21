@@ -1,0 +1,237 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>DataSeries Test</title>
+
+		<style>
+			@import "../../../../dojo/resources/dojo.css";
+			@import "../../../../dijit/tests/css/dijitTests.css";
+			@import "../../../../dijit/themes/dijit.css";
+			@import "../../../../dijit/themes/tundra/tundra.css";
+			
+			#spinners{
+				clear:both;
+			}
+			#spinners label{
+				width:60px;
+				line-height:30px;
+				margin-top:10px;
+			}
+			.tundra #spinners .dijitSpinner	{
+				width:70px !important;
+				margin:5px !important;
+			}
+			.tundra #spinners .dijitSpinner{
+				width:80px !important;
+			}
+			.dijitSpinner{
+				padding:0px !important;
+			}
+			#spinners .dijitSpinnerButtonContainer{
+				line-height:23px;
+			}
+			.dj_ie #spinners .dijitSpinnerButtonContainer{
+				height:25px;
+			}
+			.dijitInputLayoutContainer .dijitInputField input{
+				padding:5px 0px 0px 5px;
+			}
+			.dj_webkit .dijitInputLayoutContainer .dijitInputField input{
+				padding:10px 0px 0px 5px;
+			}
+
+			.dojoxLegendNode {border: 1px solid #ccc; margin: 5px 10px 5px 10px; padding: 3px;}
+			.dojoxLegendText {vertical-align: text-top; padding-right: 10px}
+			
+			#charts {
+				clear: both;
+				margin-bottom: 50px;
+			}
+			.chart-area {
+				float: left;
+				border: 1px solid #ccc;
+				width:  450px;
+				height: 350px;
+				margin: 3px;
+			}
+			.chart {
+				width:  450px;
+				height: 300px;
+			}
+		</style>
+
+		<script src="../../../../dojo/dojo.js" djConfig="isDebug: false, parseOnLoad: true"></script>
+
+		<script>
+			dojo.require("dojo.parser");
+			dojo.require("doh.runner");
+			
+			dojo.require("dojox.charting.Chart2D");
+			dojo.require("dojox.charting.DataSeries");
+			dojo.require("dojox.charting.themes.ThreeD");
+			dojo.require("dojox.charting.widget.Legend");
+			
+			dojo.require("dojox.charting.plot2d.Markers");
+			dojo.require("dojox.charting.plot2d.Columns");
+			dojo.require("dojox.charting.plot2d.Pie");
+			
+			dojo.require("dojox.charting.action2d.Tooltip");
+			dojo.require("dojox.charting.action2d.MoveSlice");
+			dojo.require("dojox.charting.action2d.Magnify");
+			dojo.require("dojox.charting.action2d.Shake");
+
+			dojo.require("dojo.data.ItemFileWriteStore");
+
+			dojo.require("dijit.form.NumberSpinner");
+			
+			dojo.require("dojox.charting.BidiSupport");	
+			dojo.require("dojox.charting.widget.BidiSupport");
+		
+			var store = new dojo.data.ItemFileWriteStore({url: "stockHebrew.json"});
+			
+			function addLegend(chart, node){
+				var legend = new dojox.charting.widget.Legend({chart: chart}, node);
+				dojo.connect(chart, "render", legend, "refresh");
+			}
+			
+			var templates = {
+				low:   "<strong>{0}</strong>: <strong>low {1}</strong> &ndash; {2} &ndash; {3}",
+				price: "<span dir='ltr'><strong>{0}</strong>: {1} &ndash; <strong>price {2}</strong> &ndash; {3}</span>",
+				high:  "<strong>{0}</strong>: {1} &ndash; {2} &ndash; <strong>high {3}</strong>"
+			};
+			
+			function valTrans(value, store, item){
+				return {
+					y: store.getValue(item, value),
+					tooltip: dojo.replace(
+						templates[value],
+						dojo.map(["symbol", "low", "price", "high"], function(field){
+							return store.getValue(item, field);
+						})
+					)
+				};
+			}
+			
+			var chartL, chartC, chartP;
+			
+			makeCharts = function(){
+				chartL = new dojox.charting.Chart2D("lines",{textDir:"auto", dir:"rtl"}).
+						setTheme(dojox.charting.themes.ThreeD).
+						addAxis("x", {fixLower: "major", fixUpper: "major", natural: true, majorTickStep: 5}).
+						addAxis("y", {vertical: true, fixLower: "major", fixUpper: "major", includeZero: true}).
+						addPlot("default", {type: dojox.charting.plot2d.Markers}).
+						addSeries("Price.", new dojox.charting.DataSeries(
+							store, {query: {symbol: "*"}}, "price")).
+						render();
+				addLegend(chartL, "lines_legend");
+				new dojox.charting.action2d.Magnify(chartL);
+				new dojox.charting.action2d.Tooltip(chartL);
+
+				chartC = new dojox.charting.Chart2D("cols",{textDir:"rtl"}).
+						setTheme(dojox.charting.themes.ThreeD).
+						addAxis("x", {natural: true}).
+						addAxis("y", {vertical: true, fixLower: "major", fixUpper: "major", includeZero: true}).
+						addPlot("default", {type: dojox.charting.plot2d.Columns}).
+						addSeries("Low.", new dojox.charting.DataSeries(
+							store, {query: {symbol: "*"}}, dojo.hitch(null, valTrans, "low"))).
+						addSeries("\u05de\u05d7\u05d9\u05e8.", new dojox.charting.DataSeries(
+							store, {query: {symbol: "*"}}, dojo.hitch(null, valTrans, "price"))).
+						addSeries("High.", new dojox.charting.DataSeries(
+							store, {query: {symbol: "*"}}, dojo.hitch(null, valTrans, "high"))).
+						render();
+				addLegend(chartC, "cols_legend");
+				new dojox.charting.action2d.Shake(chartC, "default", {shiftY: 0});
+				new dojox.charting.action2d.Tooltip(chartC);
+				
+				chartP = new dojox.charting.Chart2D("pie",{textDir:"auto",htmlLabels:true}).
+						setTheme(dojox.charting.themes.ThreeD).
+						addPlot("default", {type: dojox.charting.plot2d.Pie, radius: 125}).
+						addSeries("Price", new dojox.charting.DataSeries(
+							store, {query: {symbol: "*"}}, {y: "price", text: "symbol", tooltip: "price"})).
+						render();
+				addLegend(chartP, "pie_legend");
+				new dojox.charting.action2d.Tooltip(chartP);
+				new dojox.charting.action2d.MoveSlice(chartP);
+			};
+
+			makeSpinners = function(items){
+				dojo.forEach(items, function(m){
+					var nm = store.getLabel(m);
+					var num = store.getValue(m, "price");
+					console.log(nm, num);
+					var w = new dijit.form.NumberSpinner({
+						onChange: function(val){
+							val = val===0 ? 0.01 : val; //HACKS the no label-when-zero bug
+							console.log("OC:", nm, val);
+							store.setValue(m, "price", val);
+							//store.setValues(m, "historicPrice", store.getValues("historicPrice").push(val));
+							console.log("OC:", nm, val);
+						},
+						value: num,
+						constraints: {min:0, max:10,places:2},
+						className: "myField",
+						intermediateChanges: true
+					});
+					dojo.place('<label>'+nm+'</label>', dojo.byId("spinners"), "last")
+					dojo.place(w.domNode, "spinners", "last")
+				});
+				
+				var labels = dojo.map(items, function(item, index){
+						return {
+							value: index + 1,
+							text:  store.getLabel(item)
+						}
+					});
+				chartC.addAxis("x", {natural: true, labels: labels}).render();
+			}
+
+			dojo.addOnLoad(function(){
+				makeCharts();
+				store.fetch({query:{symbol:"*"}, onComplete: makeSpinners, onError:function(err){console.error(err)}})
+
+				doh.register("parse", function(){
+					dojo.parser.parse();
+				});
+
+				doh.run();
+			});
+		</script>
+
+	</head>
+
+	<body class="tundra" dir ="ltr">
+		<h1>DataSeries Test</h1>
+		<p>
+			Use the spinner fields at the bottom to change the data. The charts listen to store changes an update automatically.
+		</p>
+		<div id="charts">
+			<div class="chart-area">
+				<div id="lines_legend"></div>
+				<div id="lines" class="chart" dir="rtl"></div>
+			</div>
+			<div class="chart-area" data-dojo-textdir="rtl">
+				<div id="cols_legend"></div>
+				<div id="cols" class="chart"></div>
+			</div>	
+			<div class="chart-area">
+				<div id="pie_legend"></div>
+				<div id="pie" class="chart"></div>
+			</div>
+		</div>
+		<div id="spinners"></div>
+	</body>
+</html>

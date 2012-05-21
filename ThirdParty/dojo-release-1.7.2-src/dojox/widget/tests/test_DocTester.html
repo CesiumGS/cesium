@@ -1,0 +1,47 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>Dojox DocTester Test</title>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/themes/tundra/tundra.css";
+		@import "../../../dijit/themes/dijit.css";
+		@import "../../../dijit/tests/css/dijitTests.css"; 
+		@import "../DocTester/DocTester.css"; 
+	</style>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: true"></script>
+	<script type="text/javascript" src="../DocTester.js"></script>
+</head>
+<body class="tundra">
+
+	<h1 class="testTitle">Dojox DocTester test</h1>
+
+	<h2>Default Usage</h2>
+	You can just "throw" your doctests inside a node and give it the <code>dojoType="dojox.widget.DocTester"</code>, and you will get the box below.
+	Including the buttons and the summary below the box.
+	
+	<div id="t1" dojoType="dojox.widget.DocTester">
+		>>> 1+1
+		2
+		>>> "one" + "two"
+		"three"
+		>>> (new dojo._Url("http://localhost/?a=1&b=2")).query
+		"a=1&b=2"
+		>>> dojo.trim(" 123 ")
+		"123"
+		>>> var one = 1
+		>>> "two" + one
+		"two1"
+		
+		>>> var one = 1
+		>>> 2 + one
+		"21"
+		
+		>>> var l = [1,5,8,9,0];
+		>>> dojo.indexOf(l, 8);
+		2
+	</div>
+
+</body>
+</html>

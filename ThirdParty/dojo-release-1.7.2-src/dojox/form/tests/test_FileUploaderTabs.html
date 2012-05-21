@@ -1,0 +1,148 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html lang="en">
+<head>
+    <title>FileUploader TabContainer Test</title>
+    <link href="../../../dijit/themes/dijit.css" rel="stylesheet" />
+	<link href="../../../dijit/themes/dijit.css" rel="stylesheet" />
+    <link href="../../../dijit/themes/tundra/form/Button.css" rel="stylesheet" />
+	<link href="../../../dijit/themes/tundra/Dialog.css" rel="stylesheet" />
+	<link href="../../../dijit/themes/tundra/layout/TabContainer.css" rel="stylesheet" />
+    <link href="../resources/FileUploader.css" rel="stylesheet" />
+	<script>
+        djConfig = {
+            isDebug: true,
+			popup:true,
+            parseOnLoad: true
+        }
+    </script>
+    <script src="../../../dojo/dojo.js"></script>
+    <script>
+		dojo.require("dojo.parser");
+        dojo.require("dojox.form.FileUploader");
+        dojo.require("dijit.form.Button");
+		dojo.require("dijit.Dialog");
+		dojo.require("dijit.form.Form");
+		dojo.require("dijit.layout.ContentPane");
+		dojo.require("dijit.layout.TabContainer");
+		
+		var fakeTab;
+		showFake = function(){
+			dojo.style(fakeTab, "left", "0px");
+		}
+		hideFake = function(){
+			dojo.style(fakeTab, "left",  "-2000px");
+		}
+        dojo.addOnLoad(function(){
+			var tab = dijit.byId("tab3");
+			fakeTab = dojo.byId("fakeTab");
+			hideFake();
+			dojo.connect(tab, "onShow", showFake);
+			dojo.connect(tab, "onHide", hideFake);
+		});
+        
+        
+    </script>
+    <style>
+		html{
+			height:100%;
+		}
+		body{
+			font-family:sans-serif;
+			font-size:12px;
+			height:100%;
+		}
+		#tabs{
+			width:60%;
+			height:250px;
+			margin:0px 20%;
+		}
+		.dijitContentPane{
+			padding:10px;
+		}
+		table td{
+			width:33%;
+			vertical-align:top;
+		}
+		.scrolls{
+			width:100%;
+			height:75px;
+			overflow-y:scroll;
+			position:relative;
+		}
+		.note{
+			font-size:11px;
+			font-family:sans-serif;
+			color:#666;
+			width:400px;
+			margin-top:15px;
+		}
+		.note.nw{
+			width:auto !important;
+		}
+		h3{
+			width:600px;
+			font-weight:normal;
+			font-size:14px;
+		}
+		.formContent{
+			width:300px;
+			height:150px;
+		}
+		
+		#myDialog #dialogContentPane{
+			width:400px;
+			height:200px;
+			
+		}
+		#fakeTab{
+			position:absolute;
+			left:0px;
+			top:125px;
+			width:60%;
+			height:250px;
+			margin:0px 20%;
+			padding:15px;
+		}
+    </style>
+	
+	
+</head>
+<body class="tundra">
+	<h1>FileUploader TabContainer Test</h1>
+	<h3>
+		Testing that FileUploader works in Tabs initially shown and initially hidden.
+		<strong>See important node below</strong>
+	</h3>
+	
+	 <div id="tabs" dojoType="dijit.layout.TabContainer" persist="false" tabStrip="true">
+		<div id="tab1" dojoType="dijit.layout.ContentPane" title="Tab 1">
+			<button isDebug="false" devMode="false" dojoType="dojox.form.FileUploader">Tab #1 Flash</button>
+			<button isDebug="false" devMode="false" force="html" dojoType="dojox.form.FileUploader">Tab #1 HTML</button>
+		</div>
+		<div id="tab2" dojoType="dijit.layout.ContentPane" title="Tab 2">			
+			<button isDebug="false" devMode="false" dojoType="dojox.form.FileUploader">Tab #2 Flash</button>
+			<button isDebug="false" devMode="false" force="html" dojoType="dojox.form.FileUploader">Tab #2 HTML</button>
+		</div>
+		<div id="tab3" dojoType="dijit.layout.ContentPane" title="Tab 3">			
+		</div>
+	</div>
+	 
+	<div id="fakeTab">
+			<button isDebug="false" devMode="false" dojoType="dojox.form.FileUploader">Tab #3 Flash</button>
+			<button isDebug="false" devMode="false" force="html" dojoType="dojox.form.FileUploader">Tab #3 HTML</button>
+	</div>
+	
+	<p style="font-size:12px; border:2px solid #ff0000; padding:3px;">
+		<strong>NOTE:</strong> This test shows FileUploader successfully being created in TabContainers, <strong>BUT</strong>
+		there is a serious limitation in the Flash version for Firefox and Safari. When a node in those browsers is hidden
+		(or essentially repainted which can mean other style applications) the SWF is reloaded. This means that if you browse
+		for a file but don't upload upload it, change the tab and return, the files will no longer be in the FileUploader.
+		This problem can be seen when tabbing between Tab 1 and Tab 2 and observing the console logs and you will see the
+		SWF reinitializes. This problem does not exist in Internet Explorer. The HTML version of the Uploader should also
+		work fine.
+		<br/><br/>
+		This test also shows work around for the problem. View source of this test and see that in Tab 3, the FileUploader
+		is in a seperate div floating over the TabContainer. When Tab #3 is shown and hidden, the div is moved off and on screen.
+	</p>
+</body>
+</html>

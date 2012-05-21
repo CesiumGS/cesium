@@ -1,0 +1,52 @@
+﻿<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" >
+<head>
+<title>Testing image</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!-- SVGWEB { -->
+<meta name="svg.render.forceflash" content="true"/>
+<script src="svgweb/src/svg.js" data-path="svgweb/src"></script>
+<script src="../../../../dojo/dojo.js" djConfig="isDebug:true,forceGfxRenderer:'svg'" type="text/javascript"></script>
+<!-- } -->
+<script type="text/javascript">
+dojo.require("dojox.gfx");
+
+var grid_size = 500, grid_step = 50;
+var main = null, g = null, image = null, rect = null;
+
+makeShapes = function(){
+	var s = dojox.gfx.createSurface("test", 800, 600);
+	/* SVGWEB { */
+	s.whenLoaded(function() {
+	for(var i = 0; i <= grid_size; i += grid_step){
+		s.createLine({x1: 0, x2: grid_size, y1: i, y2: i}).setStroke("black");
+		s.createLine({y1: 0, y2: grid_size, x1: i, x2: i}).setStroke("black");
+	}
+
+	main = s.createGroup();
+	rect = main.createRect({x: 0, y: 0, width: 200, height: 200}).setStroke("black").setFill(new dojo.Color([255, 0, 255, 0.5]));
+	rect.connect("onclick", function(){ alert("rect"); })
+    
+	image = s.createImage({width: 150, height: 100, src: "../images/eugene-sm.jpg"});
+	image.connect("onclick", function(){ alert("image"); })
+	
+	main.add(image);
+	});
+	/* } */
+};
+
+trans = function(){
+	var x = 1;
+	main.setTransform([dojox.gfx.matrix.rotategAt(45, 200, 200), {dx: 200, dy: 200}]);
+};
+
+dojo.addOnLoad(makeShapes);
+
+</script>
+</head>
+<body>
+<p>Testing image:<br /><button onclick="trans();">Trans</button></p>
+<p>Note: Silverlight doesn't allow downloading images when run from a file system. This demo should be run from a server.</p>
+<div id="test"></div>
+<p>That's all Folks!</p>
+</body>
+</html>

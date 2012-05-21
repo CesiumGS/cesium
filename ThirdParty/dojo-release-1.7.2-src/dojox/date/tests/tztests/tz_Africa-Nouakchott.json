@@ -1,0 +1,18 @@
+({
+	name: "date.timezone.Africa-Nouakchott",
+	runTest: function(t){
+		var tz = "Africa/Nouakchott";
+		doh.checkDate({tzOffset: 63.8, tzAbbr: "LMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: 63.8, tzAbbr: "LMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: 63.8, tzAbbr: "LMT"}, -1830380173000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "GMT"}, -1830380172000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "GMT"}, -1131235201000, tz, 1);
+		doh.checkDate({tzOffset: 60, tzAbbr: "WAT"}, -1131235200000, tz, 1);
+		doh.checkDate({tzOffset: 60, tzAbbr: "WAT"}, -286930801000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "GMT"}, -286930800000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "GMT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "GMT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "GMT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: 0, tzAbbr: "GMT"}, 1246789800000, tz, 0);
+	}
+})

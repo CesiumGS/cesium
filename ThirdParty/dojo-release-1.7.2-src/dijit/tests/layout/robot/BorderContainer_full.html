@@ -1,0 +1,110 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot BorderContainer full Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"
+			djConfig="isDebug: true"></script>
+
+		<!-- functions to help test -->
+		<script type="text/javascript" src="../../helpers.js"></script>
+		<script type="text/javascript" src="./borderContainerTestFunctions.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../test_BorderContainer_full.html');
+
+				doh.register("API", [
+					function initialConditions(){
+						var bc = dijit.byId("main");
+						checkBCpanes(bc);
+						doh.t(bc.getChildren().length==5);
+					},
+					
+					function testFullScreen(){
+						var borderContainerPos = dojo.position(dojo.byId("main"));
+						var view = dojo.window.getBox();
+						doh.t( borderContainerPos.h-view.h < 3);
+						doh.t( borderContainerPos.w-view.w < 3);
+					}
+				]);
+
+				doh.register("mouse", [
+					{
+						name: "expand right pane",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+
+							var oTop = dojo.position(dojo.byId("main-top")),
+								oCenter = dojo.position(dojo.byId("main-center")),
+								oRight = dojo.position(dojo.byId("main-trailing")),
+								oBottom = dojo.position(dojo.byId("main-bottom"));
+
+							// Drag slider to expand pane 
+							var size = dojo.position("main-trailing_splitter");
+							doh.robot.mouseMoveAt("main-trailing_splitter", 500);
+							doh.robot.mousePress({left: true}, 500);
+							doh.robot.mouseMoveAt("main-trailing_splitter", 500, 100,
+								size.w/2 + (dojo._isBodyLtr() ? -100 : 100), size.h/2);
+							doh.robot.mouseRelease({left: true}, 500);
+							doh.robot.sequence(d.getTestCallback(function(){
+								var nTop = dojo.position(dojo.byId("main-top")),
+									nCenter = dojo.position(dojo.byId("main-center")),
+									nRight = dojo.position(dojo.byId("main-trailing")),
+									nBottom = dojo.position(dojo.byId("main-bottom"));
+					
+								doh.t(within(oRight.w + 100, nRight.w, 10), "right width went from " + oRight.w + " to " + nRight.w);
+								doh.t(within(oTop.w - 100, nTop.w, 10), "top width went from " + oTop.w + " to " + nTop.w);
+								doh.t(within(oCenter.w - 100, nCenter.w, 10), "center width went from " + oCenter.w + " to " + nCenter.w);
+								doh.t(within(oBottom.w - 100, nBottom.w, 10), "bottom width went from " + nBottom.w + " to " + nBottom.w);
+							}), 500);
+
+							return d;
+						}
+					},
+					{
+						name: "shrink bottom pane",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+
+							var oTop = dojo.position(dojo.byId("main-top")),
+								oCenter = dojo.position(dojo.byId("main-center")),
+								oRight = dojo.position(dojo.byId("main-trailing")),
+								oBottom = dojo.position(dojo.byId("main-bottom"));
+
+							// Drag slider to shrink pane 
+							var size = dojo.position("main-bottom_splitter");
+							doh.robot.mouseMoveAt("main-bottom_splitter", 500);
+							doh.robot.mousePress({left: true}, 500);
+							doh.robot.mouseMoveAt("main-bottom_splitter", 500, 100, size.w/2, size.h/2 + 10);
+							doh.robot.mouseRelease({left: true}, 500);
+							doh.robot.sequence(d.getTestCallback(function(){
+								var nTop = dojo.position(dojo.byId("main-top")),
+									nCenter = dojo.position(dojo.byId("main-center")),
+									nRight = dojo.position(dojo.byId("main-trailing")),
+									nBottom = dojo.position(dojo.byId("main-bottom"));
+					
+								doh.t(within(oBottom.h - 10, nBottom.h, 10), "bottom height went from " + oBottom.h + " to " + nBottom.h);
+								doh.t(within(oCenter.h + 10, nCenter.h, 10), "center height went from " + oCenter.h + " to " + nCenter.h);
+							}), 500);
+
+							return d;
+						}
+					}
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

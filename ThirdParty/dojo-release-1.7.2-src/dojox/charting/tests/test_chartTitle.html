@@ -1,0 +1,106 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Chart2D Title</title>
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+	@import "../../../dijit/themes/tundra/tundra.css";
+</style>
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+<script type="text/javascript">
+
+dojo.require("dojox.charting.Chart");
+dojo.require("dojox.charting.axis2d.Default");
+dojo.require("dojox.charting.plot2d.Lines");
+dojo.require("dojox.charting.plot2d.Columns");
+dojo.require("dojox.charting.themes.PlotKit.blue");
+dojo.require("dojox.charting.themes.PlotKit.cyan");
+dojo.require("dojox.charting.themes.PlotKit.green");
+dojo.require("dojox.charting.themes.PlotKit.orange");
+dojo.require("dojox.charting.themes.PlotKit.purple");
+dojo.require("dojox.charting.themes.PlotKit.red");
+dojo.require("dijit.form.Button");
+dojo.require("dijit.form.NumberSpinner");
+dojo.require("dojo.parser");
+
+var chart1;
+
+updateTitleGap = function(){
+	chart1.titleGap = dijit.byId("titleGap").get("value");
+	chart1.fullRender();
+}
+
+makeObjects = function(){
+	chart1 = new dojox.charting.Chart("test1", {title: "Production(ton)"}).
+			addAxis("x", {
+				includeZero: true, natural: true, fixLower: "major", fixUpper: "major",
+				labels: [
+					{value: 0, text: ""},{value: 1, text: "Jan"},{value: 2, text: "Feb"},
+					{value: 3, text: "Mar"},{value: 4, text: "Aprl"},{value: 5, text: "May"}
+				]
+			}).
+			addAxis("y", {
+				vertical: true, includeZero: true, natural: true, fixLower: "major", fixUpper: "major", majorTickStep: 2
+			}).
+			addPlot("default", {type: "Columns"}).
+			addSeries("Series A", [2, 6, 14, 3, 3], {stroke: {color: "orange"}, fill: "yellow"}).
+			addSeries("Series B", [2, 8, 8, 8, 6], {stroke: {color: "green"}, fill: "lightgreen"}).
+			render();
+
+	var chart2 = new dojox.charting.Chart("test2", {
+				title: "Production(Quantity)", 
+				titlePos: "bottom", 
+				titleGap: 25,
+				titleFont: "normal normal normal 15pt Arial",
+				titleFontColor: "orange"
+			}).
+			addAxis("x", {
+				includeZero: true, natural: true, fixLower: "major", fixUpper: "major",
+				labels: [
+					{value: 0, text: ""},{value: 1, text: "Jan"},{value: 2, text: "Feb"},
+					{value: 3, text: "Mar"},{value: 4, text: "Aprl"},{value: 5, text: "May"}
+				]
+			}).
+			addAxis("y", {
+				vertical: true, includeZero: true, natural: true, fixLower: "major", fixUpper: "major", majorTickStep: 200
+			}).
+			addPlot("default", {type: "Lines"}).
+			addSeries("Series A", [400, 800, 200, 600, 600], {stroke: {color: "red"}, fill: "lightpink"}).
+			addSeries("Series B", [200, 300, 500, 700, 800], {stroke: {color: "blue"}, fill: "lightblue"}).
+			render();
+};
+
+dojo.addOnLoad(makeObjects);
+
+</script>
+</head>
+<body class="tundra">
+<h1>Chart2D Title</h1>
+<p>Column chart with chart title</p>
+<p>
+    Title Gap:&nbsp;
+    <input dojoType="dijit.form.NumberSpinner" id="titleGap" value="20" constraints="{min: 0, max: 100, fractional: false}" style="width: 8em;">
+    &nbsp;
+    <button dojoType="dijit.form.Button" onClick="updateTitleGap()">Apply</button>
+</p>
+<div id="test1" style="width: 400px; height: 300px;"></div>
+<p>Line chart with customized chart title</p>
+<div id="test2" style="width: 400px; height: 300px;"></div>
+
+</body>
+</html>

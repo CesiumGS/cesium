@@ -1,0 +1,52 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<title>Test the Feed Viewer (using ATOM)</title>
+<style type="text/css">
+	@import "../../widget/templates/css/EntryHeader.css";
+	@import "../../widget/templates/css/HtmlFeedViewer.css";
+	@import "../../widget/templates/css/HtmlFeedViewerGrouping.css";
+	@import "../../widget/templates/css/HtmlFeedViewerEntry.css";
+	@import "../../widget/templates/css/HtmlFeedEntryViewer.css";
+</style>
+<script type="text/javascript">
+  var djConfig = {isDebug: true, parseOnLoad: true};
+</script>
+<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+<script language="JavaScript" type="text/javascript">
+	dojo.require("dojox.atom.widget.FeedViewer");
+	dojo.require("dijit.layout.ContentPane");
+	dojo.require("dijit.layout.SplitContainer");
+	var feedViewer = null;
+	var feedPane = null;
+	var feedTitle = null;
+	var feedURI = "../widget/samplefeed.xml";
+	function init(){
+		feedViewer = dijit.byId("fv1");
+		feedPane = dijit.byId("feedPane");
+		feedTitle = dojo.byId("feedTitle");
+		dojo.connect(feedViewer,"onEntrySelected",function (entry){
+			feedTitle.textContent = entry.title.value;
+			if (entry.content)
+				feedPane.setContent(entry.content.toString());
+			else if(entry.summary)
+				feedPane.setContent(entry.summary.toString());
+		});
+	}
+	function feedHandler(feed,domNode){
+		feedViewer = dijit.byId("fv1");
+		feedViewer.setFeed(feed);
+	}
+	dojo.addOnLoad(init);
+</script>
+</head>
+<body>
+	<div> 
+		<div dojoType="dojox.atom.widget.FeedViewer" id="fv1" url="samplefeed.xml"></div>
+	</div>  
+	<div>  
+		<div id="feedTitle" style="font-size: large;font-weight: bold;"></div>  
+		<div dojoType="dijit.layout.ContentPane" id="feedPane"></div>
+	</div>
+</body>
+</html>

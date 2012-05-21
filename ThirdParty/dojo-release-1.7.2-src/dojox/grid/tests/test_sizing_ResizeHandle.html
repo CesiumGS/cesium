@@ -1,0 +1,108 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>dojox.grid.DataGrid Sizing Example</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+		@import "../resources/Grid.css";
+		@import "../resources/tundraGrid.css";
+		@import "../../layout/resources/ResizeHandle.css";
+
+		.heading {
+			font-weight: bold;
+			padding-bottom: 0.25em;
+		}
+		
+		#bar, #container {
+			width: 400px;
+			height: 200px;
+			border: 4px double #333; 
+		}
+				
+		#grid { 
+			border: 1px solid #333;
+		}
+		#grid .dojoxGridScrollbox,
+		#grid1 .dojoxGridScrollbox {
+			overflow: scroll;
+		}
+	</style>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js" 
+		djConfig="isDebug:false, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		dojo.require("dojox.grid.DataGrid");
+		dojo.require("dojo.data.ItemFileWriteStore");
+		dojo.require("dojo.parser");
+		dojo.require("dojox.layout.ResizeHandle");
+	</script>
+	<script type="text/javascript" src="support/test_data.js"></script>
+	<script type="text/javascript">
+		var structure = [
+			{
+				noscroll: false,
+				cells: [
+					{name: 'Column 1', field: 'col1'},
+					{name: 'Column 2', field: 'col2'}
+				]
+			},
+			[
+				{name: 'Column 3', field: 'col3'},
+				{name: 'Column 4', field: 'col4'},
+				{name: 'Column 5', field: 'col5'},
+				{name: 'Column 6', field: 'col6'},
+				{name: 'Column 7', field: 'col7'}
+			]
+		];
+		
+		// get can return data for each cell of the grid
+		function get(inRowIndex) {
+			return [this.index, inRowIndex].join(', ');
+		}
+
+		dojo.addOnLoad(function(){
+			var hand = new dojox.layout.ResizeHandle({
+				targetContainer: dojo.byId("bar"),
+				animateSizing: false,
+				onResize: function(e){
+					setTimeout(dojo.hitch(aGrid,"update",e),25);
+				}
+			},"hand0");
+		});
+	</script>
+</head>
+<body class="tundra">
+	<div class="heading">
+		dojox.grid.DataGrid Sizing Test w/ the experimental dojox.layout.ResizeHandle
+	</div>
+	<p>While this test should work, dojox.layout.ResizeHandle is experimental.</p>
+	
+	<div id="bar" style="position:relative">
+		<div jsId="aGrid" id="grid" dojoType="dojox.grid.DataGrid" 
+			store="test_store" rowSelector="20px" 
+			structure="structure" elasticView="2"></div>
+		<div id="hand0"></div>
+	</div>
+	
+	<p>Grid fits to a sized container by default:</p>
+	<div id="container" style="position:relative">
+		<div jsId="theGrid" id="grid1" dojoType="dojox.grid._Grid" 
+			get="get" rowSelector="20px" structure="structure" 
+			rowCount="75" elasticView="2"></div>
+		<div id="hand1" dojoType="dojox.layout.ResizeHandle" 
+			targetId="container" onResize="setTimeout(dojo.hitch(theGrid,'update'),50)" 
+			animateSizing="false"></div>
+	</div>
+	
+	<p>I am here to take up</p>
+
+	<p>space</p>
+
+	<p>as much as needed.</p>
+		
+</body>
+</html>

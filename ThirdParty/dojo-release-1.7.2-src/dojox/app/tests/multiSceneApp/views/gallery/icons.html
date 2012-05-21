@@ -1,0 +1,18 @@
+<div >
+	<ul dojoType="dojox.mobile.IconContainer">
+		<li dojoType="dojox.mobile.IconItem" label="Expand" icon="images/icon-1.png" lazy="true">
+			<div class="box">
+				Click the close icon on the left top corner to close this box.
+			</div>
+		</li>
+		<li dojoType="dojox.mobile.IconItem" label="moveTo" icon="images/icon-1.png" moveTo="icons-moveTo" transition="slide"></li> 
+		<li dojoType="dojox.mobile.IconItem" label="url" icon="images/icon-1.png" url="icons-url.html" transition="slide"></li>
+	</ul>
+</div>
+<div id="icons-moveTo" dojoType="dojox.mobile.View"> 
+	<h1 dojoType="dojox.mobile.Heading" back="Icons" moveTo="icons">Move To</h1> 
+	<h2 dojoType="dojox.mobile.RoundRectCategory">About</h2> 
+	<pre>
+	You can click "Icons" back button to go back to "Icons" view. 
+	</pre> 
+</div>

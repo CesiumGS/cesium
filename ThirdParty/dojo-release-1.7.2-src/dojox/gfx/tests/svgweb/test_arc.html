@@ -1,0 +1,66 @@
+﻿<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" >
+<head>
+<title>Testing arc</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+	@import "../../../../dojo/resources/dojo.css";
+	@import "../../../../dijit/tests/css/dijitTests.css";
+</style>
+<!-- SVGWEB { -->
+<meta name="svg.render.forceflash" content="true"/>
+<script src="svgweb/src/svg.js" data-path="svgweb/src"></script>
+<script src="../../../../dojo/dojo.js" djConfig="isDebug:true,forceGfxRenderer:'svg'" type="text/javascript"></script>
+<!-- } -->
+<script type="text/javascript">
+dojo.require("dojox.gfx");
+
+createSurface = function(){
+	var surface = dojox.gfx.createSurface("test", 500, 500);
+	surface.whenLoaded(makeShapes);
+};
+
+makeShapes = function(surface){
+	var m = dojox.gfx.matrix;
+    var g1 = surface.createGroup();
+    var g2 = g1.createGroup();
+
+	var rx = 100, ry = 60, xRotg = -30;
+    var startPoint = m.multiplyPoint(m.rotateg(xRotg), {x: -rx, y: 0  });
+    var endPoint   = m.multiplyPoint(m.rotateg(xRotg), {x: 0,   y: -ry});
+    
+    var re1 = g1.createPath()
+		.moveTo(startPoint)
+		.arcTo(rx, ry, xRotg, true, false, endPoint)
+		.setStroke({color: "red", width: 3})
+		;
+    var ge1 = g1.createPath()
+		.moveTo(re1.getLastPosition())
+		.arcTo(rx, ry, xRotg, false, false, startPoint)
+		.setStroke({color: "black"})
+		;
+    var re2 = g2.createPath()
+		.moveTo(startPoint)
+		.arcTo(rx, ry, xRotg, false, true, endPoint)
+		.setStroke({color: "green", width: 3})
+		;
+    var ge2 = g2.createPath()
+		.moveTo(re2.getLastPosition())
+		.arcTo(rx, ry, xRotg, true, true, startPoint)
+		.setStroke({color: "black"})
+		;
+		
+	g1.setTransform({dx: 200, dy: 200});
+	g2.setTransform({dx: 10,  dy: 10});
+};
+
+dojo.addOnLoad(createSurface);
+
+</script>
+</head>
+<body>
+<h1>Testing arc</h1>
+<!--<p><button onclick="createSurface();">Go</button></p>-->
+<div id="test" style="width: 500px; height: 500px;"></div>
+<p>That's all Folks!</p>
+</body>
+</html>

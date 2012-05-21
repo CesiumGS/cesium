@@ -1,0 +1,152 @@
+<?php
+	require("PorterStemmer.php");
+	
+	class Word{
+		public $text;
+		public $suggestion;
+	}
+	
+	class SpellDic{
+		// $fileName [String]
+		//		The dictionary file name
+		private $fileName = "wordlist.txt";
+		
+		// $_lang [String]
+		//		The target language
+		private $_lang;
+		
+		// $_encoding [String]
+		//		The encoding
+		private $_encoding;
+		
+		// $_words [Array<Word>]
+		//		The word list to be checked
+		private $_words;
+		
+		// $_dic [Array]
+		//		The array that mimic the dictionary. It can be more
+		//		sophisticated. However, this is only a demo.
+		private $_dic;
+		
+		// SIMI [Number]
+		//		The threshold of  the similarity
+		const SIMI = 0.6;
+		
+		public function __construct(){
+			$this->_dic = explode("\n", file_get_contents($this->fileName));
+		}
+		
+		public function setLanguage($lang){
+			$this->_lang = $lang;
+		}
+		
+		public function setEncoding($encoding){
+			$this->_encoding = $encoding;
+		}
+		
+		public function setWords($words){
+			$this->_words = $words;
+		}
+		
+		public function add($word){
+			$handle = fopen($this->fileName, 'a');
+			fwrite($handle, "$word\n");
+			fclose($handle);
+			return "{response:[]}";
+		}
+		
+		public function check(){
+			// summary:
+			//		Check the spelling and return a HTML page with a JSON string like
+			//			{response: [
+			//				{ 
+			//					text :"teest", 
+			//					suggestion:["test","treat"]
+			//				}
+			//			]}
+			if($this->_lang == "EN"){
+				$len = count($this->_words);
+				for($i = 0; $i < $len; $i++){
+					$this->_words[$i]->suggestion = $this->lookup($this->_words[$i]->text);
+				}
+				$temp = array();
+				for($i = 0; $i < $len; $i++){
+					if($this->_words[$i]->suggestion !== NULL){
+						array_push($temp, $this->_words[$i]);
+					}
+				}
+				return "{response:" . json_encode($temp). "}";
+			}else{
+				// This is only a demo, so keep the text as-is
+				// if the encoding is not UTF-8 or the language is
+				// not English
+				return "{response:[]}"; // No spelling error found
+			}
+		}
+		
+		private function lookup($word){
+			// summary:
+			//		Look for the given word. If it is not found, a suggestion list
+			//		will be returned, else an empty list will be returned.
+			$len = count($this->_dic);
+			$lst = array();
+			for($i = 0; $i < $len; $i++){
+				if($word == $this->_dic[$i] || PorterStemmer::getStem($word) == $this->_dic[$i]){
+					return NULL;
+				}else{
+					// Compare the two words to get the similarity.
+					$num = $this->_lcs($word, $this->_dic[$i]);
+					if($num / strlen($word) > self::SIMI && $num / strlen($this->_dic[$i]) > self::SIMI){
+						array_push($lst, $this->_dic[$i]);
+					}
+				}
+			}
+			return $lst;
+		}
+		
+		private function _lcs($word1, $word2){
+			// summary:
+			//		Longest Common Subsequence
+			/* $f[$i][$j] = max(f[$i-1][$j-1] + same($i, $j), f[$i-1][$j], f[$i][$j-1];*/
+			$len1 = strlen($word1);
+			$len2 = strlen($word2);
+			for($i = 0; $i <= $len1; $i++){ $f[$i][0] = 0; }
+			for($j = 0; $j <= $len2; $j++){ $f[0][$j] = 0; }
+			for($i = 1; $i <= $len1; $i++){
+				for($j = 1; $j <= $len2; $j++){
+					$f[$i][$j] = max($f[$i - 1][$j - 1] + ($word1[$i - 1] == $word2[$j - 1] ? 1 : 0),
+										max($f[$i - 1][$j], $f[$i][$j - 1]));
+				}
+			}
+			return $f[$i - 1][$j - 1];
+		}
+	}
+	
+	function text2Words($text){
+		$result = array();
+		$words = explode (" ", $text);
+		$len = count($words);
+		for($i = 0; $i < $len; $i++){
+			$word = new Word();
+			$word->text = $words[$i];
+			array_push($result, $word);
+		}
+		return $result;
+	}
+	
+	header('Content-Type: text/html; charset=UTF-8');
+	
+	$sourceText = array_key_exists("content", $_REQUEST) ? $_REQUEST["content"] : "";
+	$lang = array_key_exists("lang", $_REQUEST) ? $_REQUEST["lang"] : "EN";
+	$action = array_key_exists("action", $_REQUEST) ? $_REQUEST["action"] : "query";
+	$callback = array_key_exists("callback", $_REQUEST) ? $_REQUEST["callback"] : "callback";
+	
+	$dic = new SpellDic();
+	$dic->setLanguage($lang);
+	if($action == "query"){
+		$dic->setWords(text2Words(trim($sourceText)));
+		echo "$callback(" . $dic->check() . ");"; // JSONP Specification
+	}else if ($action == "update"){
+		echo "$callback(" . $dic->add($sourceText) . ");";
+	}
+?>

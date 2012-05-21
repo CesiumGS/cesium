@@ -1,0 +1,157 @@
+<html>
+<head>
+<title>Test Transfer</title>
+<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+<script type="text/javascript">
+dojo.provide("dojox.wire.ml.tests.markup.Transfer");
+
+dojo.require("dojo.parser");
+dojo.require("doh.runner");
+dojo.require("dojox.xml.parser");
+dojo.require("dojox.data.XmlStore");
+dojo.require("dojox.wire.ml.Action");
+dojo.require("dojox.wire.ml.Transfer");
+
+dojox.wire.ml.tests.markup.Transfer = {
+	source: {a: "A", b: "B", c: [
+		{d: "D1", e: "E1"},
+		{d: "D2", e: "E2"}
+	]}
+};
+
+dojo.addOnLoad(function(){
+	doh.register("dojox.wire.ml.tests.markup.Transfer", [
+
+		function test_Transfer_attribute(t){
+			dojox.wire.ml.tests.markup.Transfer.store = new dojox.data.XmlStore();
+			dojox.wire.ml.tests.markup.Transfer.item = dojox.wire.ml.tests.markup.Transfer.store.newItem({tagName: "x"});
+			dojox.wire.ml.tests.markup.Transfer.target = {};
+			dojo.publish("transferData");
+			t.assertEqual(dojox.wire.ml.tests.markup.Transfer.source.a, dojox.wire.ml.tests.markup.Transfer.target.a);
+		},
+
+		function test_Transfer_path(t){
+			dojox.wire.ml.tests.markup.Transfer.element = dojox.xml.parser.parse().createElement("x");
+			dojox.wire.ml.tests.markup.Transfer.target = {};
+			dojo.publish("transferXml");
+			t.assertEqual(dojox.wire.ml.tests.markup.Transfer.source.a, dojox.wire.ml.tests.markup.Transfer.target.a);
+		},
+
+		function test_ChildWire(t){
+			dojox.wire.ml.tests.markup.Transfer.target = {};
+			dojo.publish("transferComposite");
+			t.assertEqual(dojox.wire.ml.tests.markup.Transfer.source.a, dojox.wire.ml.tests.markup.Transfer.target.c);
+			t.assertEqual(dojox.wire.ml.tests.markup.Transfer.source.b, dojox.wire.ml.tests.markup.Transfer.target.d);
+		},
+
+		function test_ColumnWire(t){
+			dojox.wire.ml.tests.markup.Transfer.target = {};
+			dojo.publish("transferTable");
+			t.assertEqual(dojox.wire.ml.tests.markup.Transfer.source.c[0].d, dojox.wire.ml.tests.markup.Transfer.target.a[0].b);
+			t.assertEqual(dojox.wire.ml.tests.markup.Transfer.source.c[1].e, dojox.wire.ml.tests.markup.Transfer.target.a[1].c);
+		},
+
+		function test_NodeWire(t){
+			dojox.wire.ml.tests.markup.Transfer.target = {};
+			dojo.publish("transferTree");
+			t.assertEqual(dojox.wire.ml.tests.markup.Transfer.source.c[0].d, dojox.wire.ml.tests.markup.Transfer.target.a[0].title);
+			t.assertEqual(dojox.wire.ml.tests.markup.Transfer.source.c[1].e, dojox.wire.ml.tests.markup.Transfer.target.a[1].children[0].title);
+		},
+
+		function test_SegimentWire(t){
+			dojox.wire.ml.tests.markup.Transfer.target = {};
+			dojo.publish("transferText");
+			t.assertEqual("A/B", dojox.wire.ml.tests.markup.Transfer.target.c);
+		}
+
+	]);
+	doh.run();
+});
+</script>
+</head>
+<body>
+<div dojoType="dojox.wire.ml.Action"
+	triggerTopic="transferData">
+	<div dojoType="dojox.wire.ml.Transfer"
+		source="dojox.wire.ml.tests.markup.Transfer.source.a"
+		target="dojox.wire.ml.tests.markup.Transfer.item"
+		targetStore="dojox.wire.ml.tests.markup.Transfer.store"
+		targetAttribute="y"></div>
+	<div dojoType="dojox.wire.ml.Transfer"
+		source="dojox.wire.ml.tests.markup.Transfer.item"
+		sourceStore="dojox.wire.ml.tests.markup.Transfer.store"
+		sourceAttribute="y"
+		target="dojox.wire.ml.tests.markup.Transfer.target.a"></div>
+</div>
+<div dojoType="dojox.wire.ml.Action"
+	triggerTopic="transferXml">
+	<div dojoType="dojox.wire.ml.Transfer"
+		source="dojox.wire.ml.tests.markup.Transfer.source.a"
+		target="dojox.wire.ml.tests.markup.Transfer.element"
+		targetPath="y/text()"></div>
+	<div dojoType="dojox.wire.ml.Transfer"
+		source="dojox.wire.ml.tests.markup.Transfer.element"
+		sourcePath="y/text()"
+		target="dojox.wire.ml.tests.markup.Transfer.target.a"></div>
+	<div dojoType="dojox.wire.ml.Transfer"
+		source="dojox.wire.ml.tests.markup.Transfer.source.b"
+		target="dojox.wire.ml.tests.markup.Transfer.element"
+		targetPath="y/@z"></div>
+	<div dojoType="dojox.wire.ml.Transfer"
+		source="dojox.wire.ml.tests.markup.Transfer.element"
+		sourcePath="y/@z"
+		target="dojox.wire.ml.tests.markup.Transfer.target.b"></div>
+</div>
+<div dojoType="dojox.wire.ml.Transfer"
+	triggerTopic="transferComposite"
+	source="dojox.wire.ml.tests.markup.Transfer.source"
+	target="dojox.wire.ml.tests.markup.Transfer.target">
+	<div dojoType="dojox.wire.ml.ChildWire"
+		name="x"
+		property="a"></div>
+	<div dojoType="dojox.wire.ml.ChildWire"
+		which="source"
+		name="y"
+		property="b"></div>
+	<div dojoType="dojox.wire.ml.ChildWire"
+		which="target"
+		name="x"
+		property="c"></div>
+	<div dojoType="dojox.wire.ml.ChildWire"
+		which="target"
+		name="y"
+		property="d"></div>
+</div>
+<div dojoType="dojox.wire.ml.Transfer"
+	triggerTopic="transferTable"
+	source="dojox.wire.ml.tests.markup.Transfer.source.c"
+	target="dojox.wire.ml.tests.markup.Transfer.target.a">
+	<div dojoType="dojox.wire.ml.ColumnWire"
+		column="b"
+		property="d"></div>
+	<div dojoType="dojox.wire.ml.ColumnWire"
+		column="c"
+		property="e"></div>
+</div>
+<div dojoType="dojox.wire.ml.Transfer"
+	triggerTopic="transferTree"
+	source="dojox.wire.ml.tests.markup.Transfer.source.c"
+	target="dojox.wire.ml.tests.markup.Transfer.target.a">
+	<div dojoType="dojox.wire.ml.NodeWire"
+		titleProperty="d">
+		<div dojoType="dojox.wire.ml.NodeWire"
+			titleProperty="e"></div>
+	</div>
+</div>
+<div dojoType="dojox.wire.ml.Transfer"
+	triggerTopic="transferText"
+	source="dojox.wire.ml.tests.markup.Transfer.source"
+	delimiter="/"
+	target="dojox.wire.ml.tests.markup.Transfer.target.c">
+	<div dojoType="dojox.wire.ml.SegmentWire"
+		property="a"></div>
+	<div dojoType="dojox.wire.ml.SegmentWire"
+		property="b"></div>
+</div>
+</body>
+</html>

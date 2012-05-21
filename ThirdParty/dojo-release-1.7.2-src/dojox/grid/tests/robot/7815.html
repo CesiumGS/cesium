@@ -1,0 +1,57 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>doh.robot #7815 regression test</title>
+
+	<style>
+		@import "../../../../util/doh/robot/robot.css";
+	</style>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../../dojo/dojo.js"
+		djConfig="isDebug: true"></script>
+	<script type="text/javascript">
+		dojo.require("dijit.robotx");
+
+		dojo.addOnLoad(function(){
+
+			doh.robot.initRobot('_DataGrid.html');
+
+			doh.register("#7815",[
+				{
+					name: "editor toolbar displays",
+					timeout:60000,
+					runTest: function(){
+						// see also "edit reordered columns" test below
+						var d = new doh.Deferred();
+						var grid=dijit.byId('markup_grid_1');
+						doh.robot.sequence(function(){
+							var initialFocus = dojo.byId('initialfocus');
+							initialFocus.focus();
+						});
+						// now move focus to first ID cell of markup grid
+						var tabCount = dojo.isIE? 3:(dojo.isFF?4:6);
+						for(var i=0; i<tabCount; i++){
+							doh.robot.keyPress(dojo.keys.TAB,500);
+						}
+						// precondition: cells still arranged to id date priority mark status message amount amount
+						for(var i=0; i<5; i++){
+							doh.robot.keyPress(dojo.keys.RIGHT_ARROW,500);
+						}
+						doh.robot.keyPress(dojo.keys.ENTER,500);
+						doh.robot.sequence(d.getTestCallback(function(){
+							doh.isNot(undefined,dijit.byId('dijit_Editor_0'),"Editing the 6th field of the 1st row did not open the expected dijit.Editor.");
+							doh.t(dijit.byId('dijit_Editor_0').focused);
+							doh.isNot(undefined,dijit.byId('dijit_Toolbar_0'),"Editor toolbar should have been created.");
+							doh.isNot(undefined,dijit.byId('dijit_Toolbar_0').domNode.parentNode,"Editor toolbar should have been attached to the DOM");
+						}),500);
+						return d;
+					}
+				}
+			]);
+			doh.run();
+		});
+	</script>
+</head>
+</html>

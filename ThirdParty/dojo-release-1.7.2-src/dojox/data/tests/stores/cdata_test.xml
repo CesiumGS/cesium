@@ -1,0 +1,12 @@
+<problems>
+	<problem>
+		<ids>{68d3c190-4b83-11dd-c204-000000000001}17</ids>
+		<title><![CDATA[ <b>First</b> 3]]></title>
+		<referencename>Problem</referencename>
+	</problem>
+	<problem>
+		<ids>{78d3c190-4b83-11dd-c204-000000000000}17</ids>
+		<title><![CDATA[ <b>Second</b> 3]]></title>
+		<referencename>Problem</referencename>
+	</problem>
+</problems>

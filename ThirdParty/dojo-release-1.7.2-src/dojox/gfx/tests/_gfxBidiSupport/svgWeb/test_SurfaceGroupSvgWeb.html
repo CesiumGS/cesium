@@ -1,0 +1,274 @@
+<html dir="rtl">
+	<head>
+		<title>Testing textpath</title>
+		<style type="text/css">
+			@import "../../../../../dojo/resources/dojo.css";
+			@import "../../../../../dijit/tests/css/dijitTests.css";
+		</style>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<!-- SVGWEB { -->
+		<meta name="svg.render.forceflash" content="true"/>
+		<script src="../../svgweb/svgweb/src/svg.js" data-path="../../svgweb/svgweb/src"></script>
+		<script src="../../../../../dojo/dojo.js" djConfig="isDebug:true,forceGfxRenderer:'svg'" type="text/javascript"></script>
+		<!-- } -->
+		<script type="text/javascript">
+
+			dojo.require("dojox.gfx");
+			dojo.require("dojox.gfx._gfxBidiSupport");
+			dojo.require("doh.runner");
+
+			var CPD = 30, tp1, tp2, tp3, tp4, tp5, tp6, t1, t2, t3, t4, t5, t6;
+			var g1 = null, g2 = null, g3, g4;
+
+			var surfaceLTR = null, surfaceRTL = null, surfaceAUTO = null;
+			
+			var placeAnchor = function(surface, x, y){
+				surface.createLine({x1: x - 2, y1: y, x2: x + 2, y2: y});
+				surface.createLine({x1: x, y1: y - 2, x2: x, y2: y + 2});
+			};			
+
+			var makeText = function(surface, text, font, fill, stroke){
+				var t = surface.createText(text);
+				if(font)   t.setFont(font);
+				if(fill)   t.setFill(fill);
+				if(stroke) t.setStroke(stroke);
+				placeAnchor(surface, text.x, text.y);
+				return t;
+			};
+
+			var makeShapes = function(){
+				var m = dojox.gfx.matrix;
+				surfaceLTR = dojox.gfx.createSurface("testLTR", 500, 170, "ltr");
+				console.debug("surfaceLTR created");
+				
+				surfaceLTR.whenLoaded(function() {
+					var p = surfaceLTR.createPath({})
+						.moveTo(0, 15)
+						.setAbsoluteMode(false)
+						.curveTo(CPD, 0, 0,  0, 50,  0)
+						;
+					console.debug("p created");
+					tp1 = surfaceLTR.createTextPath({
+							text: "\u05d4\u05ea\u05d7\u05dc\u05d4 end."
+							, align: "start"
+						})
+						.moveTo(0, 15)
+						.setAbsoluteMode(false)
+						.curveTo(CPD, 0, 0,  0, 100,  0)
+						.setFont({family: "times", size: "12pt"})
+						.setFill("blue")
+						;
+					console.debug("tp1 created");
+					tp2 = surfaceLTR.createTextPath({
+							text: "Beginning \u05e1\u05d5\u05e3."
+							, align: "start"
+							
+						})
+						.moveTo(0, 50)
+						.setAbsoluteMode(false)
+						.curveTo(CPD, 0, 0,  0, 100,  0)
+						.setFont({family: "times", size: "12pt"})
+						.setFill("blue")
+						;
+					console.debug("tp2 created");
+
+					g1 = surfaceLTR.createGroup();
+					g1.setTextDir("rtl");
+
+					t1 = makeText(g1, {id: "t1",x: 0, y: 100, text: "\u05d4\u05ea\u05d7\u05dc\u05d4 end."}, 
+						{family: "Times", size: "18pt"}, "black", "blue")
+						.setTransform(m.rotategAt(0, 250, 150));
+
+					t2 = makeText(surfaceLTR, {x: 0, y: 140, text: "Beginning \u05e1\u05d5\u05e3."}, 
+						{family: "Times", size: "18pt"}, "black", "blue")
+						.setTransform(m.rotategAt(0, 250, 100));
+
+					surfaceRTL = dojox.gfx.createSurface("testRTL", 500, 170);
+					console.debug("surfaceRTL created");
+
+					surfaceRTL.whenLoaded(function(){
+						var p2 = surfaceRTL.createPath({})
+							.moveTo(0, 15)
+							.setAbsoluteMode(false)
+							.curveTo(CPD, 0, 0,  0, 100,  0)
+							;
+						console.debug("p2 created");
+						tp3 = surfaceRTL.createTextPath({
+								text: "\u05d4\u05ea\u05d7\u05dc\u05d4 end. "
+								, align: "start"
+								//, rotated: true
+							})
+							.moveTo(0, 15)
+							.setAbsoluteMode(false)
+							.curveTo(CPD, 0, 100 - CPD,  0, 100,  0)
+							.setFont({family: "times", size: "12pt"})
+							.setFill("red")
+							;
+						g2 = surfaceRTL.createGroup();
+						g2.add(tp3);
+						g2.setTextDir("ltr");
+						  
+						g3 = g2.createGroup("rtl");
+						
+						g4 = surfaceRTL.createGroup("auto");
+						console.debug("tp3 created");
+						tp4 = surfaceRTL.createTextPath({
+								text: "Beginning \u05e1\u05d5\u05e3."
+								, align: "start"
+								
+								//, rotated: true
+							})
+							//.setShape(p.shape)
+							.moveTo(0, 50)
+							.setAbsoluteMode(false)
+							.curveTo(CPD, 0, 100 - CPD,  0, 100,  0)
+							.setFont({family: "times", size: "12pt"})
+							.setFill("red")
+							;				
+						console.debug("tp4 created");
+
+						t3 = makeText(g3, {id: "t1",x: 0, y: 100, text: "\u05d4\u05ea\u05d7\u05dc\u05d4 end."}, 
+							{family: "Times", size: "18pt"}, "black", "red")
+							.setTransform(m.rotategAt(0, 250, 150));
+
+						t4 = makeText(surfaceRTL, {x: 0, y: 140, text: "Beginning \u05e1\u05d5\u05e3."}, 
+							{family: "Times", size: "18pt"}, "black", "red")
+							.setTransform(m.rotategAt(0, 250, 100));
+							
+						surfaceAUTO = dojox.gfx.createSurface("testAUTO", 500, 170,"auto");
+						console.debug("surfaceAUTO created");
+						
+						surfaceAUTO.whenLoaded(function() {
+							var p3 = surfaceAUTO.createPath({})
+								.moveTo(0, 15)
+								.setAbsoluteMode(false)
+								.curveTo(CPD, 0, 0,  0, 100,  0)
+								;
+							console.debug("p3 created");
+
+							tp5 = surfaceAUTO.createTextPath({
+									text: "\u05d4\u05ea\u05d7\u05dc\u05d4 end. "
+									, align: "start"
+									
+									//, rotated: true
+								})
+								//.setShape(p.shape)
+								.moveTo(0, 15)
+								.setAbsoluteMode(false)
+								.curveTo(CPD, 0, 100 - CPD,  0, 100,  0)
+
+								.setFont({family: "times", size: "12pt"})
+								.setFill("red")
+								;
+							console.debug("tp5 created");
+							tp6 = surfaceAUTO.createTextPath({
+									text: "Beginning \u05e1\u05d5\u05e3."
+									, align: "start"
+									
+									//, rotated: true
+								})
+								//.setShape(p.shape)
+								.moveTo(0, 50)
+								.setAbsoluteMode(false)
+								.curveTo(CPD, 0, 100 - CPD,  0, 100,  0)
+								.setFont({family: "times", size: "12pt"})
+								.setFill("blue")
+								;				
+							console.debug("tp6 created");
+
+							t5 = makeText(surfaceAUTO, {id: "t1",x: 0, y: 100, text: "\u05d4\u05ea\u05d7\u05dc\u05d4 end."}, 
+								{family: "Times", size: "18pt"}, "black", "red")
+								.setTransform(m.rotategAt(0, 250, 150));
+
+							t6 = makeText(surfaceAUTO, {x: 0, y: 140, text: "Beginning \u05e1\u05d5\u05e3."}, 
+								{family: "Times", size: "18pt"}, "black", "blue")
+								.setTransform(m.rotategAt(0, 250, 100));
+							
+							runTests();
+						});	
+					});
+				});
+			};
+				
+			function runTests(){
+				doh.register("Test inheritance", [
+					function surfaces_TextDir(){
+						doh.is("ltr", surfaceLTR.getTextDir(), "surfaceLTR.getTextDir"); 
+						doh.is("rtl", surfaceRTL.getTextDir(), "surfaceRTL.getTextDir"); 
+						doh.is("auto", surfaceAUTO.getTextDir(), "surfaceAUTO.getTextDir"); 
+					},
+					function groups_TextDir(){
+						doh.is("rtl", g1.getTextDir(), "g1.getTextDir"); 
+						doh.is("ltr", g2.getTextDir(), "g2.getTextDir"); 
+						doh.is("rtl", g3.getTextDir(), "g3.getTextDir"); 
+						doh.is("auto", g4.getTextDir(), "g4.getTextDir"); 
+					},
+					function gfxText_TextDir(){
+						doh.is("rtl", t1.textDir, "t1.getTextDir"); 
+						doh.is("ltr", t2.textDir, "t2.getTextDir"); 
+						doh.is("rtl", t3.textDir, "t3.getTextDir"); 
+						doh.is("rtl", t4.textDir, "t4.getTextDir"); 
+						doh.is("auto", t5.textDir, "t5.getTextDir"); 
+						doh.is("auto", t6.textDir, "t6h.getTextDir"); 
+					},
+					function gfxTextPath_TextDir(){
+						doh.is("ltr", tp1.textDir, "tp1.getTextDir"); 
+						doh.is("ltr", tp2.textDir, "tp2.getTextDir"); 
+						doh.is("ltr", tp3.textDir, "tp3.getTextDir"); 
+						doh.is("rtl", tp4.textDir, "tp4.getTextDir"); 
+						doh.is("auto", tp5.textDir, "tp5.getTextDir"); 
+						doh.is("auto", tp6.textDir, "tp6.getTextDir"); 
+					},
+					function changeSurfaceRTLextDir(){
+						surfaceRTL.setTextDir("ltr");
+						
+						doh.is("ltr", surfaceRTL.getTextDir(), "surfaceRTL.getTextDir"); 
+
+						doh.is("ltr", g2.getTextDir(), "g2.getTextDir"); 
+						doh.is("ltr", g3.getTextDir(), "g3.getTextDir"); 
+						doh.is("ltr", g4.getTextDir(), "g4.getTextDir"); 
+						
+						
+						doh.is("ltr", t3.textDir, "t3.getTextDir"); 
+						doh.is("ltr", t4.textDir, "t4.getTextDir"); 
+						
+						doh.is("ltr", tp3.textDir, "tp3.getTextDir"); 
+						doh.is("ltr", tp4.textDir, "tp4.getTextDir"); 
+					},
+					function changeGroupTextDir(){
+					
+						g3.add(tp5);
+						g3.add(t2);
+						
+						g2.setTextDir("rtl");
+
+						doh.is("rtl", g2.getTextDir(), "g2.getTextDir"); 
+						// son of g2
+						doh.is("rtl", g3.getTextDir(), "g3.getTextDir"); 
+						
+						doh.is("rtl", t2.textDir, "t2.getTextDir"); 
+						doh.is("rtl", t3.textDir, "t3.getTextDir"); 
+						
+						doh.is("rtl", tp5.textDir, "tp3.getTextDir"); 
+					}
+				]);
+
+				doh.run();
+			}				
+
+			dojo.addOnLoad(makeShapes);	
+
+		</script>
+	</head>
+	<body>
+		<h1>dojox.gfx Text on a Path test</h1>
+		<h2>LTR TextPath and Text first two are TextPath and two others are Text</h2>
+		<div id="testLTR" style="width: 500px;"></div>
+		<h2>RTL Text Path and Text first two are TextPath and two others are Text</h2>
+		<div id="testRTL" style="width: 500px;"></div>
+		<h2>AUTO Text Path and Text first two are TextPath and two others are Text</h2>
+		<div id="testAUTO" style="width: 500px;"></div>
+
+	<p>That's all Folks!</p>
+	</body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>Custom Sort Test - dojox.grid.Grid</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+	<style type="text/css">
+		@import "../resources/Grid.css";
+		body {
+			font-size: 0.9em;
+			font-family: Geneva, Arial, Helvetica, sans-serif;
+		}
+		.heading {
+			font-weight: bold;
+			padding-bottom: 0.25em;
+		}
+				
+		#grid {
+			border: 1px solid #333;
+			width: 35em;
+			height: 30em;
+		}
+	</style>
+	<script type="text/javascript" src="../../../dojo/dojo.js" 
+		djConfig="isDebug:false, parseOnLoad: true"></script>
+	<script type="text/javascript">
+		dojo.require("dijit.dijit");
+		dojo.require("dojox.grid.DataGrid");
+		dojo.require("dojo.data.ItemFileWriteStore");
+		dojo.require("dojo.parser");
+	</script>
+	<script type="text/javascript" src="support/test_data.js"></script>
+	<script type="text/javascript">
+		test_store.comparatorMap = {};
+		test_store.comparatorMap["col1"] = function(a, b){
+			var ret = 0;
+			// We want to map these by what the priority of these items are, not by alphabetical.
+			// So, custom comparator.
+			var enumMap = { "important": 0, "normal": 1, "note": 2 };
+			if (enumMap[a] > enumMap[b]) {
+				ret = 1;
+			}
+			if (enumMap[a] < enumMap[b]) {
+				ret = -1;
+			}
+			return ret;
+		}
+		var layout = [[
+			{name: 'Column 1', field: 'col1'},
+			{name: 'Column 2', field: 'col2'},
+			{name: 'Column 3', field: 'col3'},
+			{name: 'Column 4', field: 'col4', width: "150px"},
+			{name: 'Column 5', field: 'col5'}
+		],[
+			{name: 'Column 6', field: 'col6'},
+			{name: 'Column 7', field: 'col7'},
+			{name: 'Column 8'},
+			{name: 'Column 9', field: 'col3', colSpan: 2}
+		]];
+</script>
+</head>
+<body>
+<div class="heading">dojox.grid.Grid Custom Sort Test</div>
+<br />
+<b>Column 1</b>'s data field has a custom sorter that sorts by the status level rather than alphebetically
+<br /><br />
+<div id="grid" jsid="grid" dojoType="dojox.grid.DataGrid" store="test_store" structure="layout"></div>
+</body>
+</html>

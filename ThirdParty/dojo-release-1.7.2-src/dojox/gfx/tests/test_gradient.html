@@ -1,0 +1,70 @@
+﻿<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" >
+<head>
+<title>Dojo Unified 2D Graphics</title>
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+</style>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+<!--<script type="text/javascript" src="../vml.js"></script>-->
+<!--<script type="text/javascript" src="../svg.js"></script>-->
+<!--<script type="text/javascript" src="../silverlight.js"></script>-->
+<script type="text/javascript">
+dojo.require("dojox.gfx");
+dojo.require("dojo.colors"); // pull in CSS3 color names
+
+createSurface = function(){
+	var surface = dojox.gfx.createSurface("grad", 300, 300);
+	surface.whenLoaded(makeShapes);
+};
+
+makeShapes = function(surface){
+	var SIDE = 10;
+	var fillObj = {
+		colors: [
+			{ offset: 0,   color: [255, 255, 0, 0] },
+			{ offset: 0.5, color: "orange" },
+			{ offset: 1,   color: [255, 255, 0, 0] }
+		]
+	};
+	// create a background
+	for(var i = 0; i < 300; i += SIDE){
+		for(var j = 0; j < 300; j += SIDE){
+			surface.
+				createRect({x: j, y: i, width: 10, height: 10}).
+				setFill((Math.floor(i / SIDE) + Math.floor(j / SIDE)) % 2 ? "lightgrey" : "white");
+		}
+	}
+	// create a rect
+	surface.createRect({ 
+		width:  300,
+		height: 100
+	}).setFill(dojo.mixin({
+		type: "linear",
+		x1: 0, y1: 0,
+		x2: 300, y2: 0
+	}, fillObj));
+	// create a circle
+	surface.createEllipse({
+		cx: 150,
+		cy: 200,
+		rx: 100,
+		ry: 100
+	}).setFill(dojo.mixin({
+		type: "radial",
+		cx: 150,
+		cy: 200
+	}, fillObj));
+};
+dojo.addOnLoad(createSurface);
+</script>
+<style type="text/css">
+#grad { width: 300px; height: 300px; }
+</style>
+</head>
+<body>
+<h1>dojox.gfx Alpha gradient test</h1>
+<div id="grad"></div>
+</body>
+</html>

@@ -1,0 +1,227 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>List with domButtons</title>
+		<link href="../themes/common/domButtons.css" rel="stylesheet">
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			dojo.require("dojox.mobile");			// This is a mobile app.
+			dojo.require("dojox.mobile.parser");	// This mobile app supports running on desktop browsers
+			dojo.require("dojox.mobile.compat");	// This mobile app uses declarative programming with fast mobile parser
+			dojo.require("dojox.mobile.deviceTheme");
+			function setRightIcon2Value(id, val){
+				var txt = dojo.doc.createTextNode(val);
+				dijit.byId(id).rightIcon2Node.firstChild.firstChild.appendChild(txt);
+			}
+			function setIconValue(id, val){
+				var txt = dojo.doc.createTextNode(val);
+				dijit.byId(id).iconNode.firstChild.firstChild.firstChild.firstChild.appendChild(txt);
+			}
+			dojo.ready(function(){
+				setRightIcon2Value("item1", "32");
+				setRightIcon2Value("item2", "5");
+				setRightIcon2Value("item3", "108");
+				setIconValue("item42", "3");
+				dojo.forEach(dijit.byId("list1").getChildren(), function(w){
+					dojo.connect(w.iconNode, "onclick", w, function(e){
+						console.log(this);
+						dijit.byId("list1").removeChild(this);
+					});
+				});
+				dojo.forEach(dijit.byId("list5").getChildren(), function(w){
+					dojo.connect(w.iconNode, "onclick", w, function(e){
+						console.log(this);
+						dijit.byId("list5").removeChild(this);
+					});
+				});
+			});
+		</script>
+		<style>
+		#item1, #item2, #item3 {
+			font-weight: normal;
+			font-size: 12px;
+		}
+		.subject {
+			font: bold 16px Helvetica;
+		}
+		
+		/* Note: The class name of DOM buttons must start with "mblDomButton". */
+		
+		/* === My Custom Button1 ==*/
+		.mblDomButtonMyCustomButton1 {
+			position: relative;
+			width: 30px;
+			height: 30px;
+			border-width: 1px;
+			border-style: outset;
+			border-color: #A5A2A5;
+			color: white;
+			-webkit-border-radius: 3px;
+			background-color: #D6D3D6;
+			background: -webkit-gradient(linear, left top, left bottom, from(#EFF3EF), to(#BDBEBD));
+		}
+		.mblDomButtonMyCustomButton1 > DIV {
+			position: absolute;
+			top: 13px;
+			left: 5px;
+			width: 20px;
+			height: 4px;
+			margin: 0px;
+			font-size: 1px;
+			background-color: red;
+			-webkit-border-radius: 2px;
+			-webkit-transform: rotate(45deg);
+		}
+		.mblDomButtonMyCustomButton1 > DIV > DIV {
+			position: absolute;
+			top: -8px;
+			left: 8px;
+			width: 4px;
+			height: 20px;
+			margin: 0px;
+			font-size: 1px;
+			background-color: red;
+			-webkit-border-radius: 2px;
+		}
+		
+		/* === My Custom Button2 ==*/
+		.mblDomButtonMyCustomButton2 {
+			position: relative;
+			width: 29px;
+			height: 29px;
+		}
+		
+		.mblDomButtonMyCustomButton2 > DIV {
+			position: relative;
+			top: 2px;
+			left: 2px;
+			width: 22px;
+			height: 22px;
+			border: 1px solid #B5B6B5;
+			-webkit-border-radius: 12px;
+			-webkit-box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.5);
+		}
+		.mblDomButtonMyCustomButton2 > DIV > DIV {
+			position: relative;
+			top: 2px;
+			left: 2px;
+			width: 18px;
+			height: 18px;
+			-webkit-border-radius: 9px;
+			background-color: green;
+		}
+		.mblDomButtonMyCustomButton2 > DIV > DIV > DIV {
+			position: relative;
+			color: white;
+			text-align: center;
+			line-height: 17px;
+			font-size: 14px;
+		}
+		.mblDomButtonMyCustomButton2 > DIV > DIV > DIV > DIV {
+			display: none;
+		}
+		</style>
+	</head>
+	<body style="visibility:hidden;">
+		<div id="view1" dojoType="dojox.mobile.View" selected="true">
+			<h1 dojoType="dojox.mobile.Heading">View 1</h1>
+			<h2 dojoType="dojox.mobile.RoundRectCategory">RoundRectList</h2>
+			<ul id="list1" dojoType="dojox.mobile.RoundRectList">
+				<li dojoType="dojox.mobile.ListItem" icon="mblDomButtonRedCircleMinus"
+				    moveTo="view2" arrowClass="mblDomButtonSilverCircleDownArrow">
+					Slide
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="mblDomButtonRedCircleMinus"
+				    moveTo="view2" arrowClass="mblDomButtonSilverCircleGreenButton">
+					Flip
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="mblDomButtonRedCircleMinus"
+				    moveTo="view2" arrowClass="mblDomButtonSilverCircleRedCross">
+					Fade
+				</li>
+			</ul>
+		</div>
+
+		<div id="view2" dojoType="dojox.mobile.View">
+			<h1 dojoType="dojox.mobile.Heading" back="Back" moveTo="view1">View 2</h1>
+			<h2 dojoType="dojox.mobile.RoundRectCategory">Dom Button with Text</h2>
+			<ul id="list2" dojoType="dojox.mobile.RoundRectList">
+				<li id="item1" class="mblVariableHeight" dojoType="dojox.mobile.ListItem"
+				    icon="mblDomButtonBlueBall" moveTo="view3" btnClass2="mblDomButtonGrayRoundRect">
+					<div class="subject">Dojo: Traditional Karate-do Spirit</div>
+					Sarah Connor Hardcover<br>
+					Eligible for FREE Super Saver Shipping<br>
+					<font color="red">$14.50 (50%)</font> In Stock
+				</li>
+				<li id="item2" class="mblVariableHeight" dojoType="dojox.mobile.ListItem"
+				    icon="mblDomButtonTransparent19" moveTo="view3" btnClass2="mblDomButtonGrayRoundRect">
+					<div class="subject">Japanese Martial Arts Dojo</div>
+					Martin Parker Hardcover<br>
+					<font color="red">$14.00 (60%)</font> In Stock
+				</li>
+				<li id="item3" class="mblVariableHeight" dojoType="dojox.mobile.ListItem"
+				    icon="mblDomButtonGreenBall" moveTo="view3" btnClass2="mblDomButtonGrayRoundRect">
+					<div class="subject">Total Solar Eclipse</div>
+					Steven Young Hardcover<br>
+					Get it by Mar. 2 if you order in the next <font color="green"><b>16 hours</b></font><br>
+					Eligible for FREE Super Saver Shipping<br>
+					<font color="red">$9.50 (62%)</font> In Stock
+				</li>
+			</ul>
+		</div>
+
+		<div id="view3" dojoType="dojox.mobile.View">
+			<h1 dojoType="dojox.mobile.Heading" back="Back" moveTo="view2">View 3</h1>
+			<h2 dojoType="dojox.mobile.RoundRectCategory">Variable Height List</h2>
+			<ul id="list3" dojoType="dojox.mobile.RoundRectList">
+				<li class="mblVariableHeight" dojoType="dojox.mobile.ListItem"
+				    moveTo="view4" arrowClass="mblDomButtonBlueCircleArrow">
+					Top 10 news stories of the decade
+				</li>
+				<li class="mblVariableHeight" dojoType="dojox.mobile.ListItem"
+				    moveTo="view4" arrowClass="mblDomButtonBlueCircleArrow">
+					Create client-side diagrammatic interaction in Web applications with GFX
+				</li>
+				<li class="mblVariableHeight" dojoType="dojox.mobile.ListItem"
+				    moveTo="view4" arrowClass="mblDomButtonBlueCircleArrow">
+					Explores advanced topics in the new Java framework for implementing and consuming REST-based Web services, Part 3
+				</li>
+			</ul>
+		</div>
+
+		<div id="view4" dojoType="dojox.mobile.View">
+			<h1 dojoType="dojox.mobile.Heading" back="Back" moveTo="view3">View 4</h1>
+			<h2 dojoType="dojox.mobile.RoundRectCategory">Custom DOM Buttons</h2>
+			<ul id="list4" dojoType="dojox.mobile.RoundRectList">
+				<li id="item41" dojoType="dojox.mobile.ListItem" icon="mblDomButtonMyCustomButton1"
+				    moveTo="view5">
+					My Custom Button 1
+				</li>
+				<li id="item42" dojoType="dojox.mobile.ListItem" icon="mblDomButtonMyCustomButton2"
+				    moveTo="view5">
+					My Custom Button 2
+				</li>
+			</ul>
+		</div>
+
+		<div id="view5" dojoType="dojox.mobile.View">
+			<h1 dojoType="dojox.mobile.Heading" back="Back" moveTo="view4">View 5</h1>
+			<h2 dojoType="dojox.mobile.EdgeToEdgeCategory">EdgeToEdgeList</h2>
+			<ul id="list5" dojoType="dojox.mobile.EdgeToEdgeList">
+				<li dojoType="dojox.mobile.ListItem" icon="mblDomButtonRedCircleMinus">
+					Airplane Mode
+					<div class="mblItemSwitch" dojoType="dojox.mobile.Switch"></div>
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="mblDomButtonRedCircleMinus" rightText="mac" moveTo="view1">
+					Wi-Fi
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="mblDomButtonRedCircleMinus" rightText="AcmePhone" moveTo="view1">
+					Carrier
+				</li>
+			</ul>
+		</div>
+	</body>
+</html>

@@ -1,0 +1,480 @@
+<html>
+	<head>
+		<title>OO/decl benchmark</title>
+		<style type="text/css">
+			@import "../../../dojo/resources/dojo.css";
+
+            .stats th, .stats td { padding: 3pt; }
+            .stats th, .name { font-weight: bold; }
+            table.stats, .stats th, .stats td { border: 1px solid lightgray; }
+            .median { color: navy; font-weight: bold; }
+            .fastest { background-color: #ccf; }
+            .stablest { background-color: #ffc; }
+            .fastest.stablest { background-color: #cfc; }
+		</style>
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true"></script>
+		<script type="text/javascript">
+			dojo.require("dojox.lang.tests.declare-old");
+
+			var d = dojo, oo = dojox.lang.oo, nothing = function(){};
+
+            // test harness
+
+            var DELAY = 20,     // pause in ms between tests
+                LIMIT = 50,     // the lower limit of a test
+                COUNT = 50;     // how many times to repeat the test
+
+            // the basic unit to run a test with timing
+            var runTest = function(f, n){
+                var start = new Date();
+                for(var i = 0; i < n; ++i){
+                    f();
+                }
+                var end = new Date();
+                return end.getTime() - start.getTime();
+            };
+
+            // find the threshold number of tests just exceeding the limit
+            var findThreshold = function(f, limit){
+                // very simplistic search probing only powers of two
+                var n = 1;
+                while(runTest(f, n) + runTest(nothing, n) < limit) n <<= 1;
+                return n;
+            };
+
+            var _runUnitTest = function(a, f, n, k, m, next){
+                a[k++] = runTest(f, n) - runTest(nothing, n);
+                if(k < m){
+                    setTimeout(d.hitch(null, _runUnitTest, a, f, n, k, m, next), DELAY);
+                }else{
+                    next(a);
+                }
+            };
+
+            var runTests = function(f, n, m, next){
+                var a = new Array(m);
+                _runUnitTest(a, f, n, 0, m, next);
+            };
+
+            // statistics
+
+            var statNames = ["minimum", "firstDecile", "lowerQuartile", "median", "upperQuartile", "lastDecile", "maximum", "average"];
+
+            var statAbbr = {
+                minimum:        "min",
+                maximum:        "max",
+                median:         "med",
+                lowerQuartile:  "25%",
+                upperQuartile:  "75%",
+                firstDecile:    "10%",
+                lastDecile:     "90%",
+                average:        "avg"
+            };
+
+            var getWeightedValue = function(a, pos){
+                var p = pos * (a.length - 1), t = Math.ceil(p), f = t - 1;
+                if(f <= 0){ return a[0]; }
+                if(t >= a.length){ return a[a.length - 1]; }
+                return a[f] * (t - p) + a[t] * (p - f);
+            };
+
+            var getStats = function(a, n){
+                var t = a.slice(0);
+                t.sort(function(a, b){ return a - b; });
+                var result = {
+                    // the five-number summary
+                    minimum:        t[0],
+                    maximum:        t[t.length - 1],
+                    median:         getWeightedValue(t, 0.5),
+                    lowerQuartile:  getWeightedValue(t, 0.25),
+                    upperQuartile:  getWeightedValue(t, 0.75),
+                    // extended to the Bowley's seven-figure summary
+                    firstDecile:    getWeightedValue(t, 0.1),
+                    lastDecile:     getWeightedValue(t, 0.9)
+                };
+                // add the average
+                for(var i = 0, sum = 0; i < t.length; sum += t[i++]);
+                result.average = sum / t.length;
+                d.forEach(statNames, function(name){
+                    if(result.hasOwnProperty(name) && typeof result[name] == "number"){
+                        result[name] /= n;
+                    }
+                });
+                return result;
+            };
+			
+			var testGroups = [];
+
+            // run a group of tests, prepare statistics and show results
+
+            var registerGroup = function(fs, bi, m, node, title){
+                var n = findThreshold(fs[bi].fun, LIMIT),
+                    x = {
+                        functions:  fs,
+                        stats:      [],
+                        process: function(a){
+                            if(a){
+                                this.stats.push(getStats(a, n));
+                                console.log("test #" + this.stats.length + " is completed: " + this.functions[this.stats.length - 1].name);
+                            }
+                            if(this.stats.length < this.functions.length){
+                                //setTimeout(d.hitch(null, runTests, this.functions[this.stats.length].fun, n, m, d.hitch(this, "process")), DELAY);
+                                var f = d.hitch(null, runTests, this.functions[this.stats.length].fun, n, m, d.hitch(this, "process"));
+                                f();
+                                return;
+                            }
+                            var diff = Math.max.apply(Math, d.map(this.stats, function(s){ return s.upperQuartile - s.lowerQuartile; })),
+                                prec = 1 - Math.floor(Math.log(diff) / Math.LN10), fastest = 0, stablest = 0;
+                            d.forEach(this.stats, function(s, i){
+                                if(i){
+                                    if(s.median < this.stats[fastest].median){
+                                        fastest = i;
+                                    }
+                                    if(s.upperQuartile - s.lowerQuartile < this.stats[i].upperQuartile - this.stats[i].lowerQuartile){
+                                        stablest = i;
+                                    }
+                                }
+                            }, this);
+                            // add the table
+                            var tab = ["<table class='stats'><thead><tr><th>Test</th>"];
+							tab.push(d.map(this.functions, function(f, i){
+								return "<th class='" + (i == fastest ? "fastest" : "") + " " + (i == stablest ? "stablest" : "") + "'>" + f.name + "</th>";
+							}).join(""));
+                            tab.push("</tr></thead><tbody>");
+							d.forEach(statNames, function(n){
+								tab.push("<tr class='name " + n + "'><td>" + n + "</td>");
+								d.forEach(this.stats, function(s, i){
+									tab.push("<td class='" + (i == fastest ? "fastest" : "") + " " + (i == stablest ? "stablest" : "") + "'>" + s[n].toFixed(prec) + "</td>");
+								}, this);
+								tab.push("</tr>");
+							}, this);
+                            tab.push("</tbody></table>");
+                            d.place(tab.join(""), node);
+							// next
+							run();
+                        }
+                    };
+				testGroups.push(function(){
+					console.log("all tests will be repeated " + n + " times in " + m + " series");
+					d.place("<h1>" + title + "</h1>", node);
+					x.process();
+				});
+            };
+			
+			function run(){
+				if(testGroups.length){
+					testGroups.shift()();
+				}else{
+					setTimeout(function(){
+						console.log("Done!");
+						alert("Done!");
+					}, DELAY);
+				}
+			}
+
+            // actual benchmarks
+
+            var decl0 = dojox.lang.tests.declareOld, declx = d.declare;
+
+            var benchmarkClassCreation = function(){
+                var a0 = decl0("temp.A0", null, {m1: function(){}, m2: function(){}, m3: function(){}}),
+                    b0 = decl0("temp.B0", a0, {m1: function(){}, m2: function(){}, m3: function(){}}),
+                    c0 = decl0("temp.C0", b0, {m1: function(){}, m2: function(){}, m3: function(){}}),
+
+                    ax = declx("temp.Ax", null, {m1: function(){}, m2: function(){}, m3: function(){}}),
+                    bx = declx("temp.Bx", ax, {m1: function(){}, m2: function(){}, m3: function(){}}),
+                    cx = declx("temp.Cx", bx, {m1: function(){}, m2: function(){}, m3: function(){}}),
+
+                    group = [
+                        {
+                            name: "old/A",
+                            fun:  function(){ decl0("temp.test.A", null, {m1: function(){}, m2: function(){}, m3: function(){}}); }
+                        },
+                        {
+                            name: "new/A",
+                            fun:  function(){ declx("temp.test.A", null, {m1: function(){}, m2: function(){}, m3: function(){}}); }
+                        },
+                        {
+                            name: "old/B",
+                            fun:  function(){ decl0("temp.test.B", temp.A0, {m1: function(){}, m2: function(){}, m3: function(){}}); }
+                        },
+                        {
+                            name: "new/B",
+                            fun:  function(){ declx("temp.test.B", temp.Ax, {m1: function(){}, m2: function(){}, m3: function(){}}); }
+                        },
+                        {
+                            name: "old/C",
+                            fun:  function(){ decl0("temp.test.C", temp.B0, {m1: function(){}, m2: function(){}, m3: function(){}}); }
+                        },
+                        {
+                            name: "new/C",
+                            fun:  function(){ declx("temp.test.C", temp.Bx, {m1: function(){}, m2: function(){}, m3: function(){}}); }
+                        },
+                        {
+                            name: "old/D",
+                            fun:  function(){ decl0("temp.test.D", temp.C0, {m1: function(){}, m2: function(){}, m3: function(){}}); }
+                        },
+                        {
+                            name: "new/D",
+                            fun:  function(){ declx("temp.test.D", temp.Cx, {m1: function(){}, m2: function(){}, m3: function(){}}); }
+                        }
+                    ];
+                registerGroup(group, 0, COUNT, "result", "Create a class (single inheritance)");
+            };
+
+            var benchmarkClassMixing = function(){
+                var a0 = decl0("temp.A0", null, {m1: function(){}, m2: function(){}, m3: function(){}}),
+                    b0 = decl0("temp.B0", null, {m1: function(){}, m2: function(){}, m3: function(){}}),
+                    c0 = decl0("temp.C0", null, {m1: function(){}, m2: function(){}, m3: function(){}}),
+
+                    ax = declx("temp.Ax", null, {m1: function(){}, m2: function(){}, m3: function(){}}),
+                    bx = declx("temp.Bx", null, {m1: function(){}, m2: function(){}, m3: function(){}}),
+                    cx = declx("temp.Cx", null, {m1: function(){}, m2: function(){}, m3: function(){}}),
+
+                    group = [
+                        {
+                            name: "old/A",
+                            fun:  function(){ decl0("temp.test.A", temp.A0, {m1: function(){}, m2: function(){}, m3: function(){}}); }
+                        },
+                        {
+                            name: "new/A",
+                            fun:  function(){ declx("temp.test.A", temp.Ax, {m1: function(){}, m2: function(){}, m3: function(){}}); }
+                        },
+                        {
+                            name: "old/A,B",
+                            fun:  function(){ decl0("temp.test.B", [temp.A0, temp.B0], {m1: function(){}, m2: function(){}, m3: function(){}}); }
+                        },
+                        {
+                            name: "new/A,B",
+                            fun:  function(){ declx("temp.test.B", [temp.Ax, temp.Bx], {m1: function(){}, m2: function(){}, m3: function(){}}); }
+                        },
+                        {
+                            name: "old/A,B,C",
+                            fun:  function(){ decl0("temp.test.C", [temp.A0, temp.B0, temp.C0], {m1: function(){}, m2: function(){}, m3: function(){}}); }
+                        },
+                        {
+                            name: "new/A,B,C",
+                            fun:  function(){ declx("temp.test.C", [temp.Ax, temp.Bx, temp.Cx], {m1: function(){}, m2: function(){}, m3: function(){}}); }
+                        }
+                    ];
+                registerGroup(group, 0, COUNT, "result", "Create a class with mixins");
+            };
+
+            var benchmarkConstructor = function(){
+                var A0 = decl0("temp.A0", null, {constructor: function(a){ this.a = a; }}),
+                    B0 = decl0("temp.B0", A0, {constructor: function(a, b){ this.b = b; }}),
+                    C0 = decl0("temp.C0", B0, {constructor: function(a, b, c){ this.c = c; }}),
+                    D0 = decl0("temp.D0", C0, {constructor: function(a, b, c, d){ this.d = d; }}),
+
+                    Ax = declx("temp.Ax", null, {constructor: function(a){ this.a = a; }}),
+                    Bx = declx("temp.Bx", Ax, {constructor: function(a, b){ this.b = b; }}),
+                    Cx = declx("temp.Cx", Bx, {constructor: function(a, b, c){ this.c = c; }}),
+                    Dx = declx("temp.Dx", Cx, {constructor: function(a, b, c, d){ this.d = d; }}),
+
+                    group = [
+                        {
+                            name: "old/A",
+                            fun:  function(){ var t = new A0("a"); }
+                        },
+                        {
+                            name: "new/A",
+                            fun:  function(){ var t = new Ax("a"); }
+                        },
+                        {
+                            name: "old/B",
+                            fun:  function(){ var t = new B0("a", "b"); }
+                        },
+                        {
+                            name: "new/B",
+                            fun:  function(){ var t = new Bx("a", "b"); }
+                        },
+                        {
+                            name: "old/C",
+                            fun:  function(){ var t = new C0("a", "b", "c"); }
+                        },
+                        {
+                            name: "new/C",
+                            fun:  function(){ var t = new Cx("a", "b", "c"); }
+                        },
+                        {
+                            name: "old/D",
+                            fun:  function(){ var t = new D0("a", "b", "c", "d"); }
+                        },
+                        {
+                            name: "new/D",
+                            fun:  function(){ var t = new Dx("a", "b", "c", "d"); }
+                        }
+                    ];
+                registerGroup(group, 0, COUNT, "result", "Create an instance");
+            };
+
+            var benchmarkRegularCalls = function(){
+                var A0 = decl0("temp.A0", null, {ma: function(a){ return this.a = a; }}),
+                    B0 = decl0("temp.B0", A0, {mb: function(b){ return this.b = b; }}),
+                    C0 = decl0("temp.C0", B0, {mc: function(c){ return this.c = c; }}),
+                    D0 = decl0("temp.D0", C0, {md: function(d){ return this.d = d; }}),
+
+                    Ax = declx("temp.Ax", null, {ma: function(a){ return this.a = a; }}),
+                    Bx = declx("temp.Bx", Ax, {mb: function(b){ return this.b = b; }}),
+                    Cx = declx("temp.Cx", Bx, {mc: function(c){ return this.c = c; }}),
+                    Dx = declx("temp.Dx", Cx, {md: function(d){ return this.d = d; }}),
+
+                    d0 = new D0,
+					dx = new Dx,
+
+                    group = [
+                        {
+                            name: "old/A",
+                            fun:  function(){ d0.ma("x"); }
+                        },
+                        {
+                            name: "new/A",
+                            fun:  function(){ dx.ma("x"); }
+                        },
+                        {
+                            name: "old/B",
+                            fun:  function(){ d0.mb("x"); }
+                        },
+                        {
+                            name: "new/B",
+                            fun:  function(){ dx.mb("x"); }
+                        },
+                        {
+                            name: "old/C",
+                            fun:  function(){ d0.mc("x"); }
+                        },
+                        {
+                            name: "new/C",
+                            fun:  function(){ dx.mc("x"); }
+                        },
+                        {
+                            name: "old/D",
+                            fun:  function(){ d0.md("x"); }
+                        },
+                        {
+                            name: "new/D",
+                            fun:  function(){ dx.md("x"); }
+                        }
+                    ];
+                registerGroup(group, 0, COUNT, "result", "Call a method");
+            };
+
+            var benchmarkInheritedCalls = function(){
+                var A0 = decl0("temp.A0", null, {m: function(a){ return this.a = a; }}),
+                    B0 = decl0("temp.B0", A0, {m: function(b){ return this.b = this.inherited(arguments); }}),
+                    C0 = decl0("temp.C0", B0, {m: function(c){ return this.c = this.inherited(arguments); }}),
+                    D0 = decl0("temp.D0", C0, {m: function(d){ return this.d = this.inherited(arguments); }}),
+
+                    Ax = declx("temp.Ax", null, {m: function(a){ return this.a = a; }}),
+                    Bx = declx("temp.Bx", Ax, {m: function(b){ return this.b = this.inherited(arguments); }}),
+                    Cx = declx("temp.Cx", Bx, {m: function(c){ return this.c = this.inherited(arguments); }}),
+                    Dx = declx("temp.Dx", Cx, {m: function(d){ return this.d = this.inherited(arguments); }}),
+
+                    b0 = new B0,
+                    bx = new Bx,
+
+                    c0 = new C0,
+                    cx = new Cx,
+
+                    d0 = new D0,
+                    dx = new Dx,
+
+                    group = [
+                        {
+                            name: "old/B",
+                            fun:  function(){ b0.m("x"); }
+                        },
+                        {
+                            name: "new/B",
+                            fun:  function(){ bx.m("x"); }
+                        },
+                        {
+                            name: "old/C",
+                            fun:  function(){ c0.m("x"); }
+                        },
+                        {
+                            name: "new/C",
+                            fun:  function(){ cx.m("x"); }
+                        },
+                        {
+                            name: "old/D",
+                            fun:  function(){ d0.m("x"); }
+                        },
+                        {
+                            name: "new/D",
+                            fun:  function(){ dx.m("x"); }
+                        }
+                    ];
+                registerGroup(group, 0, COUNT, "result", "Call an inherited method");
+            };
+
+            var benchmarkChains = function(){
+                var	A0 = decl0("temp.A0", null, {m: function(a){ this.a = a; }}),
+                    B0 = decl0("temp.B0", A0, {m: function(b){ this.inherited(arguments); this.b = b; }}),
+                    C0 = decl0("temp.C0", B0, {m: function(c){ this.inherited(arguments); this.c = c; }}),
+                    D0 = decl0("temp.D0", C0, {m: function(d){ this.inherited(arguments); this.d = d; }}),
+
+                    Ax = declx("temp.Ax", null, {m: function(a){ this.a = a; }, "-chains-": {m: "after"}}),
+                    Bx = declx("temp.Bx", Ax, {m: function(b){ this.b = b; }}),
+                    Cx = declx("temp.Cx", Bx, {m: function(c){ this.c = c; }}),
+                    Dx = declx("temp.Dx", Cx, {m: function(d){ this.d = d; }}),
+
+                    b0 = new B0,
+                    bx = new Bx,
+
+                    c0 = new C0,
+                    cx = new Cx,
+
+                    d0 = new D0,
+                    dx = new Dx,
+
+                    group = [
+                        {
+                            name: "old/B",
+                            fun:  function(){ b0.m("x"); }
+                        },
+                        {
+                            name: "new/B",
+                            fun:  function(){ bx.m("x"); }
+                        },
+                        {
+                            name: "old/C",
+                            fun:  function(){ c0.m("x"); }
+                        },
+                        {
+                            name: "new/C",
+                            fun:  function(){ cx.m("x"); }
+                        },
+                        {
+                            name: "old/D",
+                            fun:  function(){ d0.m("x"); }
+                        },
+                        {
+                            name: "new/D",
+                            fun:  function(){ dx.m("x"); }
+                        }
+                    ];
+                registerGroup(group, 0, COUNT, "result", "Call a chain");
+            };
+
+            var startBenchmarks = function(){
+                console.log("Used parameters: count=" + COUNT + " limit=" + LIMIT + "ms delay=" + DELAY + "ms");
+                benchmarkClassCreation();
+                benchmarkClassMixing();
+                benchmarkConstructor();
+                //benchmarkRegularCalls();
+                benchmarkInheritedCalls();
+                benchmarkChains();
+				run();
+            };
+
+			//dojo.addOnLoad(startBenchmarks);
+		</script>
+	</head>
+	<body>
+		<p>Warning: the benchmark takes several minutes, wait for a dialog box.</p>
+		<p>Color legend: <span class="fastest">the fastest</span>, <span class="stablest">the most stable</span>, <span class="fastest stablest">the fastest and the most stable</span></p>
+		<p><button onclick="startBenchmarks()">Start</button></p>
+        <div id="result"></div>
+	</body>
+</html>

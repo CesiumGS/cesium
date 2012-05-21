@@ -1,0 +1,100 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+    "http://www.w3.org/TR/html4/strict.dtd"
+    >
+<html lang="en">
+<head>
+    <title>Test dojox.fx.ext-dojo.reverse</title>
+	<style>
+		@import "../../../dijit/tests/css/dijitTests.css";
+		body{
+			font-family:sans-serif;
+		}
+		p{
+			width:700px;
+			font-size:12px;
+		}
+		.wrap{
+			
+		}
+		.lft{
+			width:300px;
+			height:300px;
+			border:1px solid #666;
+			position:relative;
+			float:left;
+		}
+		#ball{
+			width:50px;
+			height:50px;
+			margin:0px auto;
+			top:125px;
+			position:relative;
+			border:1px solid #000;
+			background:#0000ff;
+		}
+		
+	</style>
+
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: true" ></script>
+		<script>
+			dojo.require("dojox.fx.ext-dojo.reverse");
+			dojo.addOnLoad(function(){
+				var ani = dojo.animateProperty({
+					node:dojo.byId("ball"),
+					duration:1000,
+					easing:dojo.fx.easing.bounceOut,
+					properties:{
+						width:{
+							start:50,
+							end:150,
+							units:"px"
+						},
+						height:{
+							start:50,
+							end:150,
+							units:"px"
+						},
+						top:{
+							start:125,
+							end:75,
+							units:"px"
+						},
+						opacity:{
+							start:1,
+							end:.2
+						},
+						backgroundColor:{
+							start:"#0000ff",
+							end:"#ff0000"
+						}
+					}
+				});
+				ani.play();
+				
+				dojo.connect(dojo.byId("btn"), "click", function(){
+					ani.reverse();
+				})
+			});
+			
+		</script>
+</head>
+<body>
+    <h1>Test dojo.fx.reverse</h1>
+	<p>
+		This is a test for the dojo.Animation extension, dojox.fx.ext-dojo.reverse.
+		To use, simply require <em>dojox.fx.ext-dojo.reverse</em> and a reverse() method
+		will be added to all dojo.Animations.
+	</p>
+	<p>
+		dojox.fx.ext-dojo.reverse can be used at any time during the animation. It does not
+		need to be called when it ends. It also reverses the easing &mdash; if dojo.fx.easing.quadIn
+		is used, dojo.fx.easing.quadOut will be used when animating backwards.
+	</p>
+	<button id="btn">Reverse</button>
+	<div class="wrap">
+		<div class="lft">
+			<div id="ball"></div>
+		</div>
+	</div>
+</body>
+</html>

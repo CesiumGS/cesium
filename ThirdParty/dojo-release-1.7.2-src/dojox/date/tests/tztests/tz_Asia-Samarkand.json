@@ -1,0 +1,62 @@
+({
+	name: "date.timezone.Asia-Samarkand",
+	runTest: function(t){
+		var tz = "Asia/Samarkand";
+		doh.checkDate({tzOffset: -267.2, tzAbbr: "LMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: -267.2, tzAbbr: "LMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: -267.2, tzAbbr: "LMT"}, -1441168033000, tz, 1);
+		doh.checkDate({tzOffset: -240, tzAbbr: "SAMT"}, -1441168032000, tz, 1);
+		doh.checkDate({tzOffset: -240, tzAbbr: "SAMT"}, -1247544001000, tz, 1);
+		doh.checkDate({tzOffset: -300, tzAbbr: "SAMT"}, -1247544000000, tz, 1);
+		doh.checkDate({tzOffset: -300, tzAbbr: "SAMT"}, 354913199000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "SAMST"}, 354913200000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "SAMST"}, 370720799000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "TAST"}, 370720800000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "TAST"}, 386445599000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "SAMST"}, 386445600000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "SAMST"}, 402256799000, tz, 1);
+		doh.checkDate({tzOffset: -300, tzAbbr: "SAMT"}, 402256800000, tz, 1);
+		doh.checkDate({tzOffset: -300, tzAbbr: "SAMT"}, 417985199000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "SAMST"}, 417985200000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "SAMST"}, 433792799000, tz, 1);
+		doh.checkDate({tzOffset: -300, tzAbbr: "SAMT"}, 433792800000, tz, 1);
+		doh.checkDate({tzOffset: -300, tzAbbr: "SAMT"}, 449607599000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "SAMST"}, 449607600000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "SAMST"}, 465339599000, tz, 1);
+		doh.checkDate({tzOffset: -300, tzAbbr: "SAMT"}, 465339600000, tz, 1);
+		doh.checkDate({tzOffset: -300, tzAbbr: "SAMT"}, 481064399000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "SAMST"}, 481064400000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "SAMST"}, 496789199000, tz, 1);
+		doh.checkDate({tzOffset: -300, tzAbbr: "SAMT"}, 496789200000, tz, 1);
+		doh.checkDate({tzOffset: -300, tzAbbr: "SAMT"}, 512513999000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "SAMST"}, 512514000000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "SAMST"}, 528238799000, tz, 1);
+		doh.checkDate({tzOffset: -300, tzAbbr: "SAMT"}, 528238800000, tz, 1);
+		doh.checkDate({tzOffset: -300, tzAbbr: "SAMT"}, 543963599000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "SAMST"}, 543963600000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "SAMST"}, 559688399000, tz, 1);
+		doh.checkDate({tzOffset: -300, tzAbbr: "SAMT"}, 559688400000, tz, 1);
+		doh.checkDate({tzOffset: -300, tzAbbr: "SAMT"}, 575413199000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "SAMST"}, 575413200000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "SAMST"}, 591137999000, tz, 1);
+		doh.checkDate({tzOffset: -300, tzAbbr: "SAMT"}, 591138000000, tz, 1);
+		doh.checkDate({tzOffset: -300, tzAbbr: "SAMT"}, 606862799000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "SAMST"}, 606862800000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "SAMST"}, 622587599000, tz, 1);
+		doh.checkDate({tzOffset: -300, tzAbbr: "SAMT"}, 622587600000, tz, 1);
+		doh.checkDate({tzOffset: -300, tzAbbr: "SAMT"}, 638312399000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "SAMST"}, 638312400000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "SAMST"}, 654641999000, tz, 1);
+		doh.checkDate({tzOffset: -300, tzAbbr: "SAMT"}, 654642000000, tz, 1);
+		doh.checkDate({tzOffset: -300, tzAbbr: "SAMT"}, 670366799000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "SAMST"}, 670366800000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "SAMST"}, 683661599000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "UZST"}, 683661600000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "UZST"}, 686091599000, tz, 1);
+		doh.checkDate({tzOffset: -300, tzAbbr: "UZT"}, 686091600000, tz, 1);
+		doh.checkDate({tzOffset: -300, tzAbbr: "UZT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: -300, tzAbbr: "UZT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: -300, tzAbbr: "UZT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: -300, tzAbbr: "UZT"}, 1246789800000, tz, 0);
+	}
+})

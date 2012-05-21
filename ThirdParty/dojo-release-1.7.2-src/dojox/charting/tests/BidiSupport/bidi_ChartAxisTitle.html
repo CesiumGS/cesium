@@ -1,0 +1,192 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>Chart2D Title</title>
+		<style type="text/css">
+			@import "../../../../dojo/resources/dojo.css";
+			@import "../../../../dijit/tests/css/dijitTests.css";
+			@import "../../../../dijit/themes/tundra/tundra.css";
+			
+			.axisTitleRotation90 {
+				transform: rotate(90deg);
+				-o-transform: rotate(90deg);
+				-webkit-transform: rotate(90deg);
+				-moz-transform: rotate(90deg);
+			}
+			.axisTitleRotation180 {
+				transform: rotate(180deg);
+				-o-transform: rotate(180deg);
+				-webkit-transform: rotate(180deg);
+				-moz-transform: rotate(180deg);
+			}
+			.axisTitleRotation270 {
+				transform: rotate(-90deg);
+				-o-transform: rotate(-90deg);
+				-webkit-transform: rotate(-90deg);
+				-moz-transform: rotate(-90deg);
+			}
+		</style>
+		<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+			<script type="text/javascript">
+			dojo.require("dojo.parser");
+			dojo.require("doh.runner");
+
+			dojo.require("dojox.charting.Chart");
+			dojo.require("dojox.charting.axis2d.Default");
+			dojo.require("dojox.charting.plot2d.Lines");
+			dojo.require("dojox.charting.plot2d.Markers");
+			dojo.require("dojox.charting.plot2d.Columns");
+			dojo.require("dojox.charting.themes.PlotKit.blue");
+			dojo.require("dojox.charting.themes.PlotKit.cyan");
+			dojo.require("dojox.charting.themes.PlotKit.green");
+			dojo.require("dojox.charting.themes.PlotKit.orange");
+			dojo.require("dojox.charting.themes.PlotKit.purple");
+			dojo.require("dojox.charting.themes.PlotKit.red");
+			dojo.require("dijit.form.Button");
+			dojo.require("dijit.form.NumberSpinner");
+
+			dojo.require("dojox.charting.BidiSupport");
+
+			var chart1;
+
+			var updateAxis = function(){
+				var gap = dijit.byId("axisTitleGap").get("value"),
+					rotation = dijit.byId("rotation").get("value"),
+					orientation = dojo.byId("orientation").value || "axis";
+				chart1.addAxis("x", {
+							title: "Quarter \u05dc\u05e9\u05e0\u05ea 2010.",
+							titleGap: gap, 
+							titleFontColor: "orange",
+							titleOrientation: orientation,
+							rotation: rotation,
+							includeZero: true, natural: true, fixLower: "major", fixUpper: "major", 
+							labels: [
+								{value: 0, text: ""},{value: 1, text: "1 Qtr"},{value: 2, text: "2 Qtr"},
+								{value: 3, text: "3 Qtr."},{value: 4, text: "\u05e8\u05d1\u05e2\u05d5\u05df 4."},{value: 5, text: "End."}
+							]
+						}).
+						addAxis("y", {
+							title: "\u05ea\u05e9\u05d5\u05d0\u05d4 \u0028\u05d1\u05de\u05dc\u05d9\u05d5\u05e0\u05d9\u05dd\u0029.", 
+							titleGap: gap, 
+							titleFontColor: "orange",
+							titleOrientation: orientation,
+							rotation: rotation,
+							vertical: true, includeZero: true, natural: true, fixLower: "major", fixUpper: "major", majorTickStep: 2,
+							labels: [
+								{value: 0, text: ""},{value: 1, text: "One."},{value: 2, text: "\u05e9\u05ea\u05d9\u05d9\u05dd."},
+								{value: 3, text: "My name: \u05d8\u05dc."},{value: 4, text: "\u05e7\u05d5\u05e8\u05d0\u05d9\u05dd\u0020\u05dc\u05d9: Tal."},{value: 5, text: "Five"},{value: 6, text: "Six"}
+							]
+						}).
+						addAxis("x2", {
+							title: "\u05e8\u05d1\u05e2\u05d5\u05df of 2010.",
+							titleGap: gap, 
+							titleFontColor: "blue",
+							titleOrientation: orientation,
+							rotation: rotation,
+							leftBottom: false,
+							includeZero: true, natural: true, fixLower: "major", fixUpper: "major"
+						}).
+						addAxis("y2", {
+							title: "Quantity(ton).", 
+							titleGap: gap, 
+							titleFontColor: "blue",
+							titleOrientation: orientation,
+							rotation: rotation,
+							leftBottom: false,
+							vertical: true, includeZero: true, natural: true, fixLower: "major", fixUpper: "major", majorTickStep: 2
+						}).
+						render();
+			};
+
+			makeObjects = function(){
+				chart1 = new dojox.charting.Chart("test1",{textDir:"auto",title:"\u05d0\u05e0\u05d9\u0020\u05db\u05d5\u05ea\u05e8\u05ea of the chart."
+					, titleFontColor: "blue"}).
+					addPlot("default", {type: "Lines"}).
+					addSeries("Series A", [3, 5, 3, 4, 2], {stroke: {color: "orange"}, fill: "yellow"}).
+					addPlot("default2", {type: "Columns", gap: 15, hAxis: "x2", vAxis: "y2"}).
+					addSeries("Series B", [12, 8, 15, 20], {plot: "default2", stroke: {color: "blue"}, fill: "lightblue"});
+				updateAxis();
+
+				var chart2 = new dojox.charting.Chart("test2",{title:"\u05d0\u05e0\u05d9\u0020\u05db\u05d5\u05ea\u05e8\u05ea of the chart."
+					, titleFontColor: "blue"
+					, titlePos: "bottom"
+					, titleFont: "normal normal normal 15pt Arial"
+				}).
+					addAxis("x", {
+						title: "\u05d7\u05d5\u05d3\u05e9 of 2010.", 
+						titleGap: 20, 
+						titleFont: "normal normal normal 10pt Arial",
+						titleFontColor: "green",
+						titleOrientation: "away",
+						rotation: 30,
+						includeZero: true, natural: true, fixLower: "major", fixUpper: "major", 
+						labels: [
+							{value: 0, text: ""},{value: 1, text: "\u05d9\u05e0\u05d5\u05d0\u05e8."},{value: 2, text: "Feb."},
+							{value: 3, text: "\u05de\u05e8\u05e5."},{value: 4, text: "Aprl."},{value: 5, text: "May."}
+						]
+					}).
+					addAxis("y", {
+						title: "Production(Quantity).", 
+						titleGap: 15, 
+						titleFont: "normal normal normal 10pt Arial",
+						titleFontColor: "orange",
+						titleOrientation: "axis",
+						vertical: true, includeZero: true, natural: true,
+						fixLower: "major", fixUpper: "major", majorTickStep: 30000
+					}).
+					addPlot("default", {type: "Markers"}).
+					addSeries("Series A", [200000, 80000, 120000, 140000, 150000], {stroke: {color: "red"}, fill: "lightpink"}).
+					addSeries("Series B", [30000, 60000, 90000, 120000, 200000], {stroke: {color: "blue"}, fill: "lightblue"}).
+					render();
+			};
+
+			dojo.addOnLoad(function(){
+				makeObjects();
+
+				doh.register("parse", function(){
+					dojo.parser.parse();
+				});
+	
+				doh.run();
+			});
+
+		</script>
+	</head>
+	<body class="tundra">
+	<h1>Chart2D Titles</h1>
+	<p>Column chart with axis title</p>
+	<p>
+		Axis Title Gap:&nbsp;
+		<input dojoType="dijit.form.NumberSpinner" id="axisTitleGap" value="15" constraints="{min: 0, max: 50, fractional: false}" style="width: 8em;">
+		&nbsp;&nbsp;
+		Axis Rotation
+		<input dojoType="dijit.form.NumberSpinner" id="rotation" value="0" constraints="{min: 0, max: 360, fractional: false}" style="width: 8em;">
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		<select id="orientation">
+			<option value="axis">axis title facing the axis</option>
+			<option value="away">axis title facing away</option>
+		</select>
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		<button dojoType="dijit.form.Button" onClick="updateAxis()">Apply</button>
+	</p>
+	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<h2>Line chart, textDir = auto</h2>
+	<div id="test1" style="width: 500px; height: 400px;"></div>
+	<h2>Line chart, default textDir (inherited from UI)</h2>
+	<div id="test2" style="width: 500px; height: 400px;"></div>
+	</body>
+</html>

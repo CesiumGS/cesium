@@ -1,0 +1,166 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>Testing dojo.fx extensions to dojo.NodeList</title>
+		<style type="text/css">
+			@import "../resources/dojo.css";
+		</style>
+		<script type="text/javascript" src="../dojo.js" data-dojo-config="isDebug: true, popup: true"></script>
+		<script type="text/javascript">
+			require(["dojo", "doh", "dojo/NodeList-fx", "dojo/domReady!"], function(dojo, doh){
+				doh.register("NodeList-fx", 
+					[
+						function fadeOut(){
+							dojo.query("p").style("opacity", 1);
+							var anim = dojo.query("p").fadeOut();
+							var d = new doh.Deferred();
+							dojo.connect(anim, "onEnd", d.getTestCallback(function(){
+								dojo.query("p").forEach(function(item){ 
+									doh.is(0, dojo.style(item, "opacity"), "opacity for " + item);
+								});
+							}));
+							anim.play();
+							return d;
+						},
+						function fadeIn(){
+							dojo.query("p").style("opacity", 0);
+							var anim = dojo.query("p").fadeIn();
+							var d = new doh.Deferred();
+							dojo.connect(anim, "onEnd", d.getTestCallback(function(){
+								dojo.query("p").forEach(function(item){ 
+									doh.is(1, dojo.style(item, "opacity"), "opacity for " + item);
+								});
+							}));
+							anim.play();
+							return d;
+						},
+						function wipeOut(){
+							dojo.query("p").style("height", "");
+							var anim = dojo.query("p").wipeOut();
+							var d = new doh.Deferred();
+							dojo.connect(anim, "onEnd", d.getTestCallback(function(){
+								dojo.query("p").forEach(function(item){ 
+									doh.is(0, dojo.style(item, "height"), "height for " + item);
+								});
+							}));
+							anim.play();
+							return d;
+						},
+						function wipeIn(){
+							dojo.query("p").style("height", 0);
+							var anim = dojo.query("p").wipeIn();
+							var d = new doh.Deferred();
+							dojo.connect(anim, "onEnd", d.getTestCallback(function(){
+								dojo.query("p").forEach(function(item){ 
+									// FIXME: need a more robust test for "have wiped all the way in"
+									doh.isNot(0, dojo.style(item, "height"), "height for " + item);
+								});
+							}));
+							anim.play();
+							return d;
+						},
+						function slideTo(){
+							var anim = dojo.query("p").slideTo({
+								left: 500
+							});
+							var d = new doh.Deferred();
+							dojo.connect(anim, "onEnd", d.getTestCallback(function(){
+								dojo.query("p").forEach(function(item){ 
+									// FIXME: need a more robust test for "have wiped all the way in"
+									doh.is(500, dojo.style(item, "left"), "left for " + item);
+								});
+							}));
+							anim.play();
+							return d;
+						},
+						function anim(){
+							dojo.query("p").style("position", "");
+							dojo.query("p").style("left", "");
+							var anim = dojo.query("p").anim({
+								width: 500
+							});
+							console.debug(anim);
+							var d = new doh.Deferred();
+							dojo.connect(anim, "onEnd", d.getTestCallback(function(){
+								/*
+								dojo.query("p").forEach(function(item){ 
+									// FIXME: need a more robust test for "have wiped all the way in"
+									doh.is(500, dojo.style(item, "width"), "width for" + item);
+								}));
+								*/
+							}));
+							return d;
+						},
+						
+						function auto(){
+							
+							var d = new doh.Deferred(), x = 0;
+							var nl = dojo.query("p")
+								.fadeOut({ 
+									auto:true,
+									onEnd:function(){
+										if(!x){
+											// onend fires foreach in the list. only dfd once.
+											x++; d.callback(true);
+										}
+									}
+								})
+								// past here we're expecting a NodeList back, not an Animation
+								.at(0)
+								.forEach(d.getTestErrback(function(n){
+									// TODO: this test is meaningless
+									doh.t(true); // it worked.
+								}))
+							;
+							
+							doh.t(nl.length, "dojo.query() found some nodes"); // ensure we actually will do _something_ 
+							
+							return d;
+						}
+					]
+				);
+				doh.run();
+			});
+		</script>
+	</head>
+	<body>
+		<p>
+		Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean semper
+		sagittis velit. Cras in mi. Duis porta mauris ut ligula.  Proin porta
+		rutrum lacus. Etiam consequat scelerisque quam. Nulla facilisi.
+		Maecenas luctus venenatis nulla. In sit amet dui non mi semper iaculis.
+		Sed molestie tortor at ipsum. Morbi dictum rutrum magna. Sed vitae
+		risus.
+		</p>
+		<p>
+		Aliquam vitae enim. Duis scelerisque metus auctor est venenatis
+		imperdiet. Fusce dignissim porta augue. Nulla vestibulum. Integer lorem
+		nunc, ullamcorper a, commodo ac, malesuada sed, dolor. Aenean id mi in
+		massa bibendum suscipit. Integer eros. Nullam suscipit mauris. In
+		pellentesque. Mauris ipsum est, pharetra semper, pharetra in, viverra
+		quis, tellus. Etiam purus. Quisque egestas, tortor ac cursus lacinia,
+		felis leo adipiscing nisi, et rhoncus elit dolor eget eros. Fusce ut
+		quam. Suspendisse eleifend leo vitae ligula. Nulla facilisi. Nulla
+		rutrum, erat vitae lacinia dictum, pede purus imperdiet lacus, ut
+		semper velit ante id metus. Praesent massa dolor, porttitor sed,
+		pulvinar in, consequat ut, leo. Nullam nec est. Aenean id risus blandit
+		tortor pharetra congue.	 Suspendisse pulvinar.
+		</p>
+		<p>
+		Aliquam vitae enim. Duis scelerisque metus auctor est venenatis
+		imperdiet. Fusce dignissim porta augue. Nulla vestibulum. Integer lorem
+		nunc, ullamcorper a, commodo ac, malesuada sed, dolor. Aenean id mi in
+		massa bibendum suscipit. Integer eros. Nullam suscipit mauris. In
+		pellentesque. Mauris ipsum est, pharetra semper, pharetra in, viverra
+		quis, tellus. Etiam purus. Quisque egestas, tortor ac cursus lacinia,
+		felis leo adipiscing nisi, et rhoncus elit dolor eget eros. Fusce ut
+		quam. Suspendisse eleifend leo vitae ligula. Nulla facilisi. Nulla
+		rutrum, erat vitae lacinia dictum, pede purus imperdiet lacus, ut
+		semper velit ante id metus. Praesent massa dolor, porttitor sed,
+		pulvinar in, consequat ut, leo. Nullam nec est. Aenean id risus blandit
+		tortor pharetra congue.	 Suspendisse pulvinar.
+		</p>
+	</body>
+</html>
+

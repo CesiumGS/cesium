@@ -1,0 +1,14 @@
+({
+	name: "date.timezone.America-Guadeloupe",
+	runTest: function(t){
+		var tz = "America/Guadeloupe";
+		doh.checkDate({tzOffset: 246.133333333333, tzAbbr: "LMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: 246.133333333333, tzAbbr: "LMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: 246.133333333333, tzAbbr: "LMT"}, -1848254033000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "AST"}, -1848254032000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "AST"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "AST"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "AST"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: 240, tzAbbr: "AST"}, 1246789800000, tz, 0);
+	}
+})

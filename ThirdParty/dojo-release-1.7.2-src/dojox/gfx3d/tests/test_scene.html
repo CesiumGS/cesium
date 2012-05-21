@@ -1,0 +1,66 @@
+﻿<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" >
+<head>
+<title>Scene test of dojox.gfx3d.</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+</style>
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+<script type="text/javascript">
+
+dojo.require("dojox.gfx3d");
+
+var view = null;
+
+makeObjects = function(){
+	var surface = dojox.gfx.createSurface("test", 500, 500);
+	view = surface.createViewport();
+	var c = {bottom: {x: 0, y: 0, z: 0}, top: {x: 100, y: 100, z: 100}};
+	var m = dojox.gfx3d.matrix;
+
+	var sc1 = view.createScene();
+	sc1.createCube(c).setStroke({color: "blue", width: 1});
+
+	var sc2 = view.createScene();
+	sc2.createCube(c).setStroke({color: "red", width: 1}).setFill("lime");
+
+	var poly = [{x: 0, y: 0, z: 0}, {x: 0, y: 100, z: 0}, {x: 100, y: 100, z: 0}, {x: 100, y: 0, z: 0}];
+	sc2.createPolygon(poly)
+		.setStroke({color: "blue", width: 1})
+		.setTransform(dojox.gfx3d.matrix.translate(50, 20, 30))
+		.setFill("yellow");
+
+	sc2.setTransform(dojox.gfx3d.matrix.translate(100, 200, 30))
+	 
+	var camera = dojox.gfx3d.matrix.normalize([
+		m.cameraRotateXg(30), 
+		m.cameraRotateYg(60),
+		m.cameraTranslate(0, 0, 0)
+	]);
+
+	view.applyCameraTransform(camera);
+	view.render();
+
+	// set up the click handlers.
+	dojo.connect(dojo.byId("rotate"), "onclick", rotate);
+};
+
+rotate = function() {
+	view.applyCameraTransform(dojox.gfx3d.matrix.rotateXg(10));
+	view.invalidate();
+	view.render();
+};
+
+dojo.addOnLoad(makeObjects);
+
+</script>
+</head>
+<body>
+<h1>Scene Test</h1>
+<p>Test the setTransform of the Scene. the lime cube and yellow polygon are grouped in one Scene, and they are moved in one shot.</p>
+<p>Test Viewport.invalidate with Scene. <input id="rotate" type="button" value="Rotate around Z-Axis"/></p>
+<div id="test" style="width: 500px; height: 500px;"></div>
+<p>That's all Folks!</p>
+</body>
+</html>

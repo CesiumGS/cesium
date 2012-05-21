@@ -1,0 +1,16 @@
+({
+	name: "date.timezone.America-La_Paz",
+	runTest: function(t){
+		var tz = "America/La_Paz";
+		doh.checkDate({tzOffset: 272.6, tzAbbr: "CMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: 272.6, tzAbbr: "CMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: 272.6, tzAbbr: "CMT"}, -1205954845000, tz, 1);
+		doh.checkDate({tzOffset: 212.6, tzAbbr: "BOST"}, -1205954844000, tz, 1);
+		doh.checkDate({tzOffset: 212.6, tzAbbr: "BOST"}, -1192307245000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "BOT"}, -1192307244000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "BOT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "BOT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "BOT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: 240, tzAbbr: "BOT"}, 1246789800000, tz, 0);
+	}
+})

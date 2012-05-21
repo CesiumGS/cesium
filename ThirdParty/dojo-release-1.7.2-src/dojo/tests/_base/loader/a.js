@@ -1,0 +1,3 @@
+define({
+	number: 42
+});

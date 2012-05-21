@@ -1,0 +1,28 @@
+({
+	name: "date.timezone.Australia-Darwin",
+	runTest: function(t){
+		var tz = "Australia/Darwin";
+		doh.checkDate({tzOffset: -570, tzAbbr: "CST"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: -570, tzAbbr: "CST"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: -570, tzAbbr: "CST"}, -1672565341000, tz, 1);
+		doh.checkDate({tzOffset: -630, tzAbbr: "CST"}, -1672565340000, tz, 1);
+		doh.checkDate({tzOffset: -630, tzAbbr: "CST"}, -1665390601000, tz, 1);
+		doh.checkDate({tzOffset: -570, tzAbbr: "CST"}, -1665390600000, tz, 1);
+		doh.checkDate({tzOffset: -570, tzAbbr: "CST"}, -883639801000, tz, 1);
+		doh.checkDate({tzOffset: -630, tzAbbr: "CST"}, -883639800000, tz, 1);
+		doh.checkDate({tzOffset: -630, tzAbbr: "CST"}, -876126601000, tz, 1);
+		doh.checkDate({tzOffset: -570, tzAbbr: "CST"}, -876126600000, tz, 1);
+		doh.checkDate({tzOffset: -570, tzAbbr: "CST"}, -860398201000, tz, 1);
+		doh.checkDate({tzOffset: -630, tzAbbr: "CST"}, -860398200000, tz, 1);
+		doh.checkDate({tzOffset: -630, tzAbbr: "CST"}, -844677001000, tz, 1);
+		doh.checkDate({tzOffset: -570, tzAbbr: "CST"}, -844677000000, tz, 1);
+		doh.checkDate({tzOffset: -570, tzAbbr: "CST"}, -828343801000, tz, 1);
+		doh.checkDate({tzOffset: -630, tzAbbr: "CST"}, -828343800000, tz, 1);
+		doh.checkDate({tzOffset: -630, tzAbbr: "CST"}, -813227401000, tz, 1);
+		doh.checkDate({tzOffset: -570, tzAbbr: "CST"}, -813227400000, tz, 1);
+		doh.checkDate({tzOffset: -570, tzAbbr: "CST"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: -570, tzAbbr: "CST"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: -570, tzAbbr: "CST"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: -570, tzAbbr: "CST"}, 1246789800000, tz, 0);
+	}
+})

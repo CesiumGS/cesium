@@ -1,0 +1,12 @@
+({
+	name: "date.timezone.Pacific-Wallis",
+	runTest: function(t){
+		var tz = "Pacific/Wallis";
+		doh.checkDate({tzOffset: -720, tzAbbr: "WFT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: -720, tzAbbr: "WFT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: -720, tzAbbr: "WFT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: -720, tzAbbr: "WFT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: -720, tzAbbr: "WFT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: -720, tzAbbr: "WFT"}, 1246789800000, tz, 0);
+	}
+})

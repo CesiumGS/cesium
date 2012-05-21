@@ -1,0 +1,215 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>dojox.form.Manager (test #1)</title>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/themes/dijit.css";
+		@import "../../../dijit/themes/tundra/tundra.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+
+		fieldset		{ border: 1px solid; margin: 1em; padding: 1em; }
+		legend 			{ font-weight: bolder; font-size: larger; }
+
+		#result			{ background-color: white; }
+		#result th		{ font-weight: bolder; }
+		#result .hilite	{ background-color: #fd8; }
+
+		.makeYellow		{ background-color: #ffa; }
+	</style>
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+	<!--
+	<script type="text/javascript" src="../manager/_Mixin.js"></script>
+	<script type="text/javascript" src="../manager/_FormMixin.js"></script>
+	<script type="text/javascript" src="../manager/_ValueMixin.js"></script>
+	<script type="text/javascript" src="../manager/_EnableMixin.js"></script>
+	<script type="text/javascript" src="../manager/_DisplayMixin.js"></script>
+	<script type="text/javascript" src="../manager/_ClassMixin.js"></script>
+	<script type="text/javascript" src="../Manager.js"></script>
+	-->
+	<script type="text/javascript">
+		dojo.require("dojox.form.Manager");
+
+		dojo.require("dijit.dijit");			// optimize: load dijit layer
+		dojo.require("dijit.form.Button");
+		dojo.require("dijit.form.RadioButton");
+		dojo.require("dijit.form.TextBox");
+		dojo.require("dijit.form.ComboBox");
+		dojo.require("dijit.form.SimpleTextarea");
+		dojo.require("dijit.form.Select");
+
+		dojo.require("dijit.layout.BorderContainer");
+		dojo.require("dijit.layout.ContentPane");
+
+		dojo.require("dojo.parser");
+
+		dojo.addOnLoad(function(){
+			// show values the first time
+			dijit.byId("form").showValues();
+		});
+	</script>
+</head>
+<body class="tundra">
+
+	<div dojoType="dijit.layout.BorderContainer" design="sidebar" gutters="false" liveSplitters="false" style="height: 50em;">
+		<div dojoType="dijit.layout.ContentPane" region="left" splitter="true" style="width: 15em;">
+			<table id="result" border="1">
+				<thead>
+					<th>Name</th>
+					<th>Value</th>
+				</thead>
+				<tbody id="table"></tbody>
+			</table>
+		</div>
+		<div dojoType="dijit.layout.ContentPane" region="center" splitter="true" style="width: 50em;">
+			<form dojoType="dojox.form.Manager" id="form">
+				<fieldset dojoAttachPoint="part1">
+					<legend>HTML form elements</legend>
+					<div>
+						<input type="checkbox" id="e01" name="e01" value="e01" observer="showValues, logRadio">
+						&nbsp;<label for="e01">e01 input/checkbox</label>
+					</div>
+					<div>
+						<input type="radio" id="e021" name="e02" value="e02-1" observer="showValues">
+						&nbsp;<label for="e021">e02-1 input/radio</label>
+						&nbsp;
+						<input type="radio" id="e022" name="e02" value="e02-2" checked="checked">
+						&nbsp;<label for="e022">e02-2 input/radio</label>
+					</div>
+					<div>
+						<input type="text" id="e03" name="e03" value="e03" observer="showValues">
+						&nbsp;<label for="e03">e03 input/text</label>
+					</div>
+					<div>
+						<input type="password" id="e04" name="e04" value="e04" observer="showValues">
+						&nbsp;<label for="e04">e04 input/password</label>
+					</div>
+					<div>
+						<input type="hidden" id="e05" name="e05" value="e05" observer="showValues">
+						&nbsp;<label for="e05">e05 input/hidden</label>
+					</div>
+					<div>
+						<select id="e06" name="e06" observer="showValues">
+							<option value="e06-1">e06-1 first</option>
+							<option value="e06-2" selected="selected">e06-2 second</option>
+						</select>
+						&nbsp;<label for="e06">e06 select</label>
+					</div>
+					<div>
+						<label for="e07">e07 textarea</label><br>
+						<textarea id="e07" name="e07" observer="showValues"
+							rows="3" cols="15" style="width: 15em;">e07</textarea>
+					</div>
+					<div>
+						<button name="e08" observer="showValues">e08 button</button>&nbsp;
+						<input type="button" name="e09" value="e09 input/button" observer="showValues">&nbsp;
+						<input type="reset" name="e10" value="e10 input/reset" observer="showValues">&nbsp;
+						<input type="submit" name="e11" value="e11 input/submit" observer="showValues">
+					</div>
+				</fieldset>
+				<fieldset dojoAttachPoint="part2">
+					<legend>Dijit form widgets</legend>
+					<div>
+						<input type="checkbox" dojoType="dijit.form.CheckBox" id="w01" name="w01" value="w01" observer="showValues">
+						&nbsp;<label for="w01">w01 input/checkbox dijit.form.CheckBox</label>
+					</div>
+					<div>
+						<input type="radio" dojoType="dijit.form.RadioButton" id="w021" name="w02" value="w02-1" observer="showValues">
+						&nbsp;<label for="w021">w02-1 input/radio dijit.form.RadioButton</label>
+						&nbsp;
+						<input type="radio" dojoType="dijit.form.RadioButton" id="w022" name="w02" value="w02-2" checked="checked" observer="logRadio">
+						&nbsp;<label for="w022">w02-2 input/radio dijit.form.RadioButton</label>
+					</div>
+					<div>
+						<input type="text" dojoType="dijit.form.TextBox" id="w03" name="w03" value="w03" observer="showValues" intermediateChanges="true">
+						&nbsp;<label for="w03">w03 input/text dijit.form.TextBox with intermediateChanges="true"</label>
+					</div>
+					<div>
+						<input type="password" dojoType="dijit.form.TextBox" id="w04" name="w04" value="w04" observer="showValues">
+						&nbsp;<label for="w04">w04 input/password dijit.form.TextBox</label>
+					</div>
+					<div>
+						<select dojoType="dijit.form.Select" id="w06" name="w06" observer="showValues">
+							<option value="w06-1">w06-1 first</option>
+							<option value="w06-2" selected="selected">w06-2 second</option>
+						</select>
+						&nbsp;<label for="w06">w06 select dijit.form.Select</label>
+					</div>
+					<div>
+						<label for="w07">w07 textarea dijit.form.SimpleTextarea with intermediateChanges="true"</label><br>
+						<textarea dojoType="dijit.form.SimpleTextarea" id="w07" name="w07" observer="showValues"
+							rows="3" cols="15" style="width: 15em;" intermediateChanges="true">w07</textarea>
+					</div>
+					<div>
+						<button dojoType="dijit.form.Button" name="w08" observer="showValues">w08 button</button>&nbsp;
+						<button type="button" dojoType="dijit.form.Button" name="w09" observer="showValues">w09 type=button</button>&nbsp;
+						<button type="reset" dojoType="dijit.form.Button" name="w10" observer="showValues">w10 type=reset</button>&nbsp;
+						<button type="submit" dojoType="dijit.form.Button" name="w11" observer="showValues">w11 typesubmit</button>
+					</div>
+				</fieldset>
+				<script type="dojo/method" event="onSubmit">
+					// do not submit this form
+					return false;
+				</script>
+				<script type="dojo/method" event="logRadio">
+					// sample observer: logs radio buttons by name
+					var values = this.gatherFormValues(["e02", "w02"]);
+					console.log("e02: " + values.e02 + ", w02: " + values.w02);
+				</script>
+				<script type="dojo/method" event="showValues" args="value,name">
+					if(name){
+						// first time this method is called with no parameters
+						// show the name and the value otherwise
+						console.log("name = ", name, " value = ", value);
+					}
+					var values = this.gatherFormValues(),
+						table = dojo.byId("table"), names = [];
+					// clear the table
+					while(table.lastChild){
+						dojo.destroy(table.lastChild);
+					}
+					// show gathered values
+					for(var name in values){
+						if(values.hasOwnProperty(name)){
+							names.push(name);
+						}
+					}
+					names.sort();
+					dojo.forEach(names, function(name){
+						var tr  = dojo.doc.createElement("tr"),
+							tdn = dojo.doc.createElement("td"),
+							tdv = dojo.doc.createElement("td");
+						tdn.innerHTML = name;
+						tdv.innerHTML = "" + values[name];
+						if(this._oldValues && this._oldValues[name] != values[name]){
+							dojo.addClass(tr, "hilite");
+						}
+						tr.appendChild(tdn);
+						tr.appendChild(tdv);
+						table.appendChild(tr);
+					}, this);
+					this._oldValues = values;
+				</script>
+			</form>
+		</div>
+	</div>
+
+	<p>
+		<input type="checkbox" id="c01" name="c01" value="c01" checked="checked"
+			onclick="dijit.byId('form')[this.checked ? 'enable' : 'disable']()">
+		&nbsp;<label for="c01">enable the form elements and widgets</label>
+		<br>
+		<input type="checkbox" id="c02" name="c02" value="c02"
+			onclick="dijit.byId('form')[this.checked ? 'addClass' : 'removeClass']('makeYellow', ['part1', 'part2'])">
+		&nbsp;<label for="c02">add/remove yellow background</label>
+		<br>
+		<input type="checkbox" id="c03" name="c03" value="c03" checked="checked"
+			onclick="dijit.byId('form')[this.checked ? 'show' : 'hide'](['part1'])">
+		&nbsp;<label for="c03">show form elements</label>
+		<br>
+		<input type="checkbox" id="c04" name="c04" value="c04" checked="checked"
+			onclick="dijit.byId('form')[this.checked ? 'show' : 'hide'](['part2'])">
+		&nbsp;<label for="c04">show form widgets</label>
+	</p>
+</body>
+</html>

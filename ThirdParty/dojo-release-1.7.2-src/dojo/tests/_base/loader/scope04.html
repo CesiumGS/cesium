@@ -1,0 +1,80 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>Multiversion Dojo: 0.4.3 and 1.0</title>
+
+		<link rel="stylesheet" type="text/css" href="../../../resources/dojo.css"/>
+		<link rel="stylesheet" type="text/css" href="../../../../dijit/tests/css/dijitTests.css"/>
+		<link rel="stylesheet" type="text/css" href="../../../../dijit/themes/tundra/tundra.css"/>
+		
+		<script type="text/javascript">
+			//djConfig for 0.4.3 setup.
+			djConfig = {
+				isDebug: true
+			};
+		</script>
+		<script type="text/javascript" src="http://o.aolcdn.com/dojo/0.4.3/dojo.js"></script>
+		
+		<script type="text/javascript">
+			//Need scope map defined in a script block. It will not work as part of the
+			//djConfig attribute on the script that loads Dojo.
+			//Also, just adding properties instead of redefining djConfig, since that
+			//will wipe out djConfig values set up by the 0.4.3 dojo.
+			djConfig.parseOnLoad = true;
+			djConfig.baseUrl = "../../../";
+			djConfig.scopeMap = [
+				["dojo", "dojo10"],
+				["dijit", "dijit10"],
+				["dojox", "dojox10"]					
+			];
+		</script>
+		<script type="text/javascript" src="../../../dojo.js"></script>
+		<script type="text/javascript">
+			dojo.require("dojo.widget.DropdownDatePicker");
+			dojo10.require("dijit.Calendar");
+			dojo10.require("dojo.date.locale");
+			dojo10.require("dojo.parser"); // scan page for widgets
+
+			dojo.addOnLoad(function(){
+				dojo.byId("output043").innerHTML = dojo.version.toString();
+			});
+			dojo10.addOnLoad(function(){
+				dojo.byId("output10").innerHTML = dojo10.version.toString();
+			});
+
+			function myHandler(id,newValue){
+				console.debug("onChange for id = " + id + ", value: " + newValue);
+			}
+			
+			function foobar(){
+				dojo.byId("typeOut").innerHTML = (typeof dojo.addClass);
+			}
+			setTimeout(foobar, 2000);
+
+		</script>
+	</head>
+	<body>
+		<h1>Multiversion Dojo: 0.4.3 and 1.0</h1>
+	
+		<p><b>NOTE: This test only works with a built version of Dojo</b></p>
+
+		<p>This page loads Dojo 0.4.3 and Dojo 1.0.</p>
+		
+		<p>Dojo 0.4.3 version: <span id="output043"></span></p>
+		
+		<p>Dojo 1.0 version: <span id="output10"></span></p>
+		
+		<p><b>dojo.addClass should be undefined:</b> <span id="typeOut"></span></p>
+		
+		<p>
+			<input dojoType="dropdowndatepicker" value="2006-10-31" containerToggle="wipe" containerToggleDuration="300" >
+		</p>
+		
+		<p class="tundra">
+			<input id="calendar1" dojo10Type="dijit.Calendar" onChange="myHandler(this.id,arguments[0])">
+		</p>
+		
+	</body>
+</html>
+

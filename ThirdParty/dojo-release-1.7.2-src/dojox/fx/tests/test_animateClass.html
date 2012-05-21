@@ -1,0 +1,217 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>dojox.fx.style - animatated CSS functions | The Dojo Toolkit</title>
+
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/themes/dijit.css";
+		@import "../../../dijit/themes/tundra/tundra.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+		@import "_animation.css"; /* external stylesheets to enhance readability in this test */
+	</style>
+		
+	<script type="text/javascript" src="../../../dojo/dojo.js" 
+		djConfig="isDebug:true, parseOnLoad: true" ></script>
+			
+	<script type="text/javascript">
+		dojo.require("dojo.parser");
+		dojo.require("dijit.form.Button"); 
+		dojo.require("dojox.fx.style");
+		dojo.require("dojox.fx.ext-dojo.NodeList-style");
+	</script>
+</head>
+<body class="tundra">
+
+	<h1 class="testTitle">dojox.fx.style tests</h1>
+
+	<p id="fontTest">
+		dojox.fx.style provides a few methods to animate the changes that would occur
+		when adding or removing a class from a domNode.
+	</p>
+	<ul class="testUl" id="test1">
+			<li class="baseFont">dojox.fx.addClass(node, className, animargs); // Returns dojo.Animation</li>
+			<li class="baseFont">dojox.fx.removeClass(node, className, animargs); // Returns dojo.Animation</li>
+			<li class="baseFont">dojox.fx.toggleClass(node, className, force, animargs)</li>
+	</ul>
+
+	<button dojoType="dijit.form.Button">
+			spacing test
+			<script type="dojo/method" event="onClick">
+				dojo.query("li.baseFont").toggleClassFx("spacedHorizontal").play(5);
+			</script>
+	</button>
+
+	<button dojoType="dijit.form.Button">
+			line-height test
+			<script type="dojo/method" event="onClick">
+				dojo.query("li.baseFont").toggleClassFx("spacedVertical").play(5);
+			</script>
+	</button>
+
+	<button dojoType="dijit.form.Button">
+			font-size test
+			<script type="dojo/method" event="onClick">
+				dojo.query("li.baseFont").toggleClassFx("fontSizeTest").play(5);
+			</script>
+	</button>
+
+	<h2>testing sizes</h2>
+
+	<button dojoType="dijit.form.Button" id="addTall">
+		add .tall
+		<script type="dojo/method" event="onClick">
+				var delay = 500;
+				var _anims = [];
+				dojo.query("#colorTest > .testBox").forEach(function(n){
+					_anims.push(dojox.fx.addClass(n, "tall", {
+						delay: delay
+					}));
+					delay += 200;
+				});
+				this.set('disabled',true);
+				dijit.byId('removeTall').set('disabled',false);
+				dojo.fx.combine(_anims).play();
+		</script>
+	</button>
+	<button dojoType="dijit.form.Button" id="removeTall" disabled="true">
+		remove .tall
+		<script type="dojo/method" event="onClick">
+				var delay = 500;
+				var _anims = [];
+				dojo.query("#colorTest > .testBox").forEach(function(n){
+						_anims.push(dojox.fx.removeClass(n, "tall", {
+								delay: delay
+						}));
+						delay += 200;
+				});
+				this.set('disabled', true);
+				dijit.byId('addTall').set('disabled',false);
+				dojo.fx.combine(_anims).play();
+		</script>
+	</button>		 
+	<button dojoType="dijit.form.Button" id="addWide">
+		add .wide
+		<script type="dojo/method" event="onClick">
+				var delay = 500;
+				var _anims = [];
+				dojo.query("#colorTest > .testBox").forEach(function(n){
+						_anims.push(dojox.fx.addClass(n, "wide", {
+								delay: delay
+						}));
+						delay += 200;
+				});
+				this.set('disabled',true);
+				dijit.byId('removeWide').set('disabled',false);
+				dojo.fx.combine(_anims).play();
+		</script>
+	</button>
+	<button dojoType="dijit.form.Button" id="removeWide" disabled="true">
+		remove .wide
+		<script type="dojo/method" event="onClick">
+				var delay = 500;
+				var _anims = [];
+				dojo.query("#colorTest > .testBox").forEach(function(n){
+					_anims.push(dojox.fx.removeClass(n, "wide", {
+						delay: delay
+					}));
+					delay += 200;
+				});
+				this.set('disabled',true);
+				dijit.byId('addWide').set('disabled',false);
+				dojo.fx.combine(_anims).play();
+		</script>
+	</button>
+	<button dojoType="dijit.form.Button">
+		toggle .tiny
+		<script type="dojo/method" event="onClick">
+				var _anims = [];
+				// until dojox.fx.NodeList-fx is ready:
+				dojo.query("#colorTest > .testBox").forEach(function(node){
+					_anims.push(dojox.fx.toggleClass(node, "tiny"));
+				})
+				dojo.fx.combine(_anims).play(5);
+		</script>
+	</button>
+
+	<button dojoType="dijit.form.Button">
+		query add tall
+		<script type="dojo/method" event="onClick">
+			dojo.query("#colorTest > .testBox").addClassFx("tall").play();
+		</script>		
+	</button>
+	<button dojoType="dijit.form.Button">
+		query remove tall
+		<script type="dojo/method" event="onClick">
+			dojo.query("#colorTest > .testBox").removeClassFx("tall").play();
+		</script>
+	</button>
+	
+	
+
+	<div id="colorTest">
+		<div id="colorTest1" class="floating testBox white"></div>
+		<div id="colorTest2" class="floating testBox black"></div>
+		<div id="colorTest3" class="floating testBox green"></div>
+	</div>		  
+
+	<br style="clear:both">
+		   
+	<h2>testing position</h2>
+	<p>This is a div position:relative with a position:absolute div inside. testing various t/l/b/r combos.
+	normal css inheritance rules apply, so setting .foo .bar if .foo was defined last in the css text, .bar
+	will take precedent. the below position test shows the results of this:
+	</p>
+	
+	<button dojoType="dijit.form.Button">
+		.offsetSome
+		<script type="dojo/method" event="onClick">
+				dojox.fx.toggleClass("positionTest","offsetSome").play();		 
+		</script>
+	</button>
+	<button dojoType="dijit.form.Button">
+		.topLeft
+		<script type="dojo/method" event="onClick">
+				dojox.fx.toggleClass("positionTest","topLeft").play();		  
+		</script>
+	</button>
+	<button dojoType="dijit.form.Button">
+		.bottomRight
+		<script type="dojo/method" event="onClick">
+				dojox.fx.toggleClass("positionTest","bottomRight").play();		  
+		</script>
+	</button>
+	
+	<div style="position:relative; height:175px; width:500px; border:1px solid #666;" id="positionBlock">
+		<div class="testBox absolutely" id="positionTest"></div>
+	</div>
+			
+	<button dojoType="dijit.form.Button">
+		toggle .green
+		<script type="dojo/method" event="onClick">
+				dojox.fx.toggleClass("positionTest","green").play();
+		</script>
+	</button>
+	<button dojoType="dijit.form.Button">
+		toggle .black
+		<script type="dojo/method" event="onClick">
+				dojox.fx.toggleClass("positionTest","black").play();
+		</script>
+	</button>
+	<button dojoType="dijit.form.Button">
+		toggle .blue
+		<script type="dojo/method" event="onClick">
+				dojox.fx.toggleClass("positionTest","blue").play();
+		</script>
+	</button>
+
+	<p>Some properties
+	cannot be modified (fontFace, and so on), so to ensure the results at the end
+	of the animation are applied correctly and fully, the class name is set on the node
+	via dojo.add/removeClass().
+	</p>
+
+</body>
+</html>
+

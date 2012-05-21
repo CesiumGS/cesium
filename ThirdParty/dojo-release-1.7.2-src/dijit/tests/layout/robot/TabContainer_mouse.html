@@ -1,0 +1,187 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot TabContainer Mouse Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"
+			djConfig="isDebug: true"></script>
+
+		<!-- functions to help test -->
+		<script type="text/javascript" src="../../helpers.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../test_TabContainer.html');
+				doh.register("mouse tests",[
+					
+					{
+						name: "tab hover state",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							// workaround DOH robot bug where iframe overlay not removed
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.mouseMoveAt('mainTabContainer_tablist_tab3', 500);
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								var tabHover = dojo.query(".dijitTabHover #mainTabContainer_tablist_tab3");
+								doh.is(1, tabHover.length);
+							}), 500);
+							
+							return d;
+						}
+					},
+					{
+						name: "click on a tab",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							doh.robot.mouseMoveAt('mainTabContainer_tablist_tab3', 500);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.mouseClick({left: true}, 500);
+							
+							var tc = dijit.byId("mainTabContainer");
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								// verify tab button is selected
+								doh.is('mainTabContainer_tablist_tab3', dojo.global.dijit.focus.curNode.id, "verify chosen tab is in its chosen state and focused");
+
+								// verify pane is shown
+								doh.is("tab3", tc.selectedChildWidget.id, "verify that the appropiate contentpane is displayed");
+								doh.t(isVisible(dijit.byId("tab3")), "tab3 shown");
+								doh.t(isHidden(dijit.byId("tab2")), "tab2 hidden");
+							}), 500);
+							
+							return d;
+						}
+					},
+					{
+						name: "scrolling",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+
+							// save original position of one of the tab labels
+							var pos0 = dojo.position("mainTabContainer_tablist_tab2").x,
+								pos1,
+								pos2;
+
+							// Initially scrolled all the way to the left, so left scroll button
+							// should be disabled
+							doh.t(dijit.byId("mainTabContainer_tablist_leftBtn").get("disabled"), "left scroll button disabled");
+							doh.f(dijit.byId("mainTabContainer_tablist_rightBtn").get("disabled"), "right scroll button enabled");
+
+							// Scroll to the right
+							doh.robot.mouseMoveAt('mainTabContainer_tablist_rightBtn', 500);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.sequence(d.getTestErrback(function(){
+								pos1 = dojo.position("mainTabContainer_tablist_tab2").x;
+								doh.t(pos1 < pos0, "scrolled to the right: " + pos1 + " < " + pos0);
+								doh.f(dijit.byId("mainTabContainer_tablist_leftBtn").get("disabled"), "left scroll button enabled");
+							}), 500);
+							
+							// And then scroll back to the left
+							doh.robot.mouseMoveAt('mainTabContainer_tablist_leftBtn', 500);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.sequence(d.getTestCallback(function(){
+								pos2 = dojo.position("mainTabContainer_tablist_tab2").x;
+								doh.t(pos2 > pos1, "scrolled to the left: " + pos2 + " > " + pos1);
+							}), 500);
+							
+							return d;
+						}
+					},
+					{
+						name: "close button hover state",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.mouseMoveAt(dojo.query('#mainTabContainer_tablist_tab3 span.dijitTabCloseButton')[0], 500);
+							
+							// verify the close button is in its hover state
+							doh.robot.sequence(d.getTestCallback(function(){
+								var closeHover = dojo.query("#mainTabContainer_tablist_tab3 .dijitTabCloseButtonHover");
+								doh.is(1, closeHover.length);
+							}), 500);
+							
+							return d;
+						}
+					},
+					{
+						name: "close a tab",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							doh.robot.mouseMoveAt(dojo.query('#mainTabContainer_tablist_tab3 span.dijitTabCloseButton')[0], 500);
+							doh.robot.mouseClick({left: true}, 500);
+							
+							var tc = dijit.byId("mainTabContainer");
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is(6, tc.getChildren().length);
+							}), 500);
+							
+							return d;
+						}
+					},
+					{
+						name: "choose a tab from TabContainer's menu",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							doh.robot.mouseMoveAt("mainTabContainer_tablist_menuBtn", 500);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.mouseMoveAt("tab4href_stcMi", 500);
+							doh.robot.mouseClick({left: true}, 1000);
+							
+							// verify SplitContainer tab is displayed (but it doesn't get focus, see #10727)
+							doh.robot.sequence(d.getTestCallback(function(){
+								// Check that tab button is scrolled correctly into view
+								// TODO: this check won't work in RTL mode
+								var tc = dijit.byId("mainTabContainer");
+
+								var leftButton = dojo.byId("mainTabContainer_tablist_leftBtn");
+								var tablistLeft = dojo.position(leftButton).x + dojo.position(leftButton).w;
+	
+								var rightButton = dojo.byId("mainTabContainer_tablist_rightBtn");
+								var tablistRight = dojo.position(rightButton).x;
+	
+								var tab = dijit.byId("mainTabContainer_tablist_tab4href");
+	
+								var tabLeft = dojo.position(tab.domNode).x;
+								var tabRight = dojo.position(tab.domNode).x + dojo.position(tab.domNode).w;
+	
+								var isTabVisible = (tablistLeft < tabLeft && tablistRight > tabRight);
+
+								doh.t(isTabVisible, "verify tab is in display area");
+								
+								// And verify that pane is shown
+								doh.is("tab4href", tc.selectedChildWidget.id, "verify that the appropiate contentpane is displayed");
+								doh.t(isVisible(dijit.byId("tab4href")), "tab4 shown");
+								doh.t(isHidden(dijit.byId("tab1")), "tab1 hidden");
+							}), 1000);
+							
+							return d;
+						}
+					}
+				]);
+				
+				
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

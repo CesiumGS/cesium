@@ -1,0 +1,84 @@
+<html>
+	<head>
+		<title>Testing text</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<style type="text/css">
+			@import "../../../../../dojo/resources/dojo.css";
+			@import "../../../../../dijit/tests/css/dijitTests.css";
+		</style>
+		<script type="text/javascript" src="../../../../../dojo/dojo.js" djConfig="isDebug: true, gfxRenderer:'silverlight'"></script>
+
+		<script type="text/javascript">
+			dojo.require("dojox.gfx");
+			dojo.require("dojox.gfx._gfxBidiSupport");
+
+			var ROTATION = 30;
+
+			var surface = null, t1;
+
+			var placeAnchor = function(surface, x, y){
+				surface.createLine({x1: x - 2, y1: y, x2: x + 2, y2: y});
+				surface.createLine({x1: x, y1: y - 2, x2: x, y2: y + 2});
+			};
+
+			var makeText = function(surface, text, font, fill, stroke){
+				var t = surface.createText(text);
+				if(font)   t.setFont(font);
+				if(fill)   t.setFill(fill);
+				if(stroke) t.setStroke(stroke);
+				placeAnchor(surface, text.x, text.y);
+				return t;
+			};
+
+			makeShapes = function(){
+				surface = dojox.gfx.createSurface("test", 500, 200);
+				var m = dojox.gfx.matrix;
+				//surface.createLine({x1: 250, y1: 0, x2: 250, y2: 500}).setStroke("green");
+				t1 = makeText(surface, {id: "t1",x: 250, y: 50, text:"Hello!", textDir:"ltr"}, 
+					{family: "Times", size: "24pt"}, "black", "red")
+					.setTransform(m.rotategAt(0, 250, 50));
+			
+		
+			}
+
+			dojo.addOnLoad(makeShapes);
+
+		</script>
+	</head>
+	<body>
+		<h1>dojox.gfx Text test</h1>
+		<div id="test" style="width: 500px; height: 200px;"></div>
+
+		<label>write inside to test dojox.gfx.Text with BidiEngine</label>
+		<br>
+		<textarea id="inputF" 
+       		onkeyup="dealInput();"
+ 		>write in me to test dojox.gfx.Text with BidiEngine</textarea>
+		
+		<script>
+			function dealInput(){
+				var  v = inputF.value ? inputF.value : ""; 
+				t1.setShape({text: v});
+			}
+		</script>
+		
+		<br>
+		<input id="SHALOM" type="button" value="click on me to write a Hebrew word!"
+			onclick="t1.setShape({text:'\u05e9\u05dc\u05d5\u05dd!'}); inputF.value = '\u05e9\u05dc\u05d5\u05dd!'"
+		/>	
+
+		<br>
+		<br>
+
+		<input id="textDirLTR" type="button" value="change textDir to 'LTR'"
+			onclick="t1.setShape({textDir:'ltr'});"
+		/>		
+		<input id="textDirRTL" type="button" value="change textDir to 'RTL'"
+			onclick="t1.setShape({textDir:'rtl'});"
+		/>		
+		<input id="textDirAUTO" type="button" value="change textDir to 'AUTO'"
+			onclick="t1.setShape({textDir:'auto'});"
+		/>	
+
+	</body>
+</html>

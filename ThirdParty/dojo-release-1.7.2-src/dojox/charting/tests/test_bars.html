@@ -1,0 +1,72 @@
+﻿<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Bar chart</title>
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+</style>
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+<script type="text/javascript">
+
+dojo.require("dojox.charting.Chart3D");
+dojo.require("dojox.charting.plot3d.Bars");
+
+makeObjects = function(){
+	var m = dojox.gfx3d.matrix;
+	var chart = new dojox.charting.Chart3D("test", 
+		{
+			lights:   [{direction: {x: 5, y: 5, z: -5}, color: "white"}],
+			ambient:  {color:"white", intensity: 2},
+			specular: "white"
+		},
+		[m.cameraRotateXg(10), m.cameraRotateYg(-10), m.scale(0.8), m.cameraTranslate(-50, -50, 0)]
+	);
+	
+	var plot1 = new dojox.charting.plot3d.Bars(500, 500, {gap: 10, material: "yellow"});
+	plot1.setData([1,2,3,2,1,2,3,4,5]);
+	chart.addPlot(plot1);
+	
+	var plot2 = new dojox.charting.plot3d.Bars(500, 500, {gap: 10, material: "red"});
+	plot2.setData([2,3,4,3,2,3,4,5,5]);
+	chart.addPlot(plot2);
+	
+	var plot3 = new dojox.charting.plot3d.Bars(500, 500, {gap: 10, material: "blue"});
+	plot3.setData([3,4,5,4,3,4,5,5,5]);
+	chart.addPlot(plot3);
+	
+	chart.generate().render();
+	
+	//dojo.byId("out1").value = dojo.byId("test").innerHTML;
+	//dojo.byId("out2").value = dojox.gfx.utils.toJson(surface, true);
+};
+
+dojo.addOnLoad(makeObjects);
+
+</script>
+</head>
+<body>
+<h1>Bar chart</h1>
+<div id="test" style="width: 500px; height: 500px;"></div>
+<!--
+<p><button onclick="makeObjects();">Go</button></p>
+<p><textarea id="out1" cols="40" rows="5"></textarea></p>
+<p><textarea id="out2" cols="40" rows="5"></textarea></p>
+-->
+<p>That's all Folks!</p>
+</body>
+</html>

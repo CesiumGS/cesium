@@ -1,0 +1,53 @@
+<html>
+	<head>
+		<title>Testing dojox.dtl using animation to change attributes</title>
+		<script src="../../../dojo/dojo.js" data-dojo-config="parseOnLoad: true, usePlainJson: true, async:true"></script>
+		<script>
+			require(["dojo/_base/lang",
+					"dojo/_base/declare",
+					"dijit/_WidgetBase", 
+					"dojox/dtl/_DomTemplated",
+					"dojo/text!./templates/animation.html",
+					"dojo/aspect",
+					"dojo/_base/fx",
+					"dojo/dom-style",
+					'dojo/domReady!',
+					"dojo/parser",
+					"dojox/dtl/contrib/dom"], // the dtl deps used in animation.html. require it here so that it is loaded when dtl is processed.
+					function(lang, declare, _WidgetBase, _DomTemplated, template, aspect, fx, domstyle){
+			
+				declare("demo.Animation", [_WidgetBase, _DomTemplated], {
+					buffer: 0, // Note: Sensitivity is 0 by default, but this is to emphasize we're not doing any buffering
+					templateString: template,
+					constructor: function(props, node){
+						this.x = 0;
+						this.y = 0;
+					},
+					postCreate: function(){
+						var anim = new fx.Animation({
+							curve: [0, 300],
+							rate: 10,
+							duration: 5000,
+							easing: fx._defaultEasing
+						});
+						aspect.after(anim, "onAnimate", lang.hitch(this, this._reDraw), true);
+						anim.play();
+					},
+					_reDraw: function(obj){
+						this.x = obj;
+						this.y = Math.sqrt(obj) * 10;
+	
+						domstyle.set(this.blue, "left", this.x);
+						domstyle.set(this.blue, "top", this.y + 10);
+	
+						this.render();
+					}
+				});
+			});
+
+		</script>
+	</head>
+	<body>
+		<div data-dojo-type="demo.Animation" ></div>
+	</body>
+</html>

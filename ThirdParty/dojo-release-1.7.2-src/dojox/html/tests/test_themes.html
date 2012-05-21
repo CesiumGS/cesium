@@ -1,0 +1,124 @@
+<html>
+<head>
+<title>dojox.html.style Dynamic Style Sheets Test</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+</style>
+<link id="themeStyles" title="tundra" rel="stylesheet" href="../../../dijit/themes/tundra/tundra.css">
+<link id="themeStyles" title="nihilo" rel="alternate stylesheet" href="../../../dijit/themes/nihilo/nihilo.css">
+<link id="themeStyles" title="soria" rel="alternate stylesheet" href="../../../dijit/themes/soria/soria.css">
+<link id="themeStyles" title="claro" rel="stylesheet" href="../../../dijit/themes/claro/claro.css">
+
+
+<script type="text/javascript">
+var djConfig = {
+	isDebug: false,
+	parseOnLoad: true,
+	debugAtAllCosts:false
+	//popup:true,
+	//forceFirebugLite:true
+};
+</script>
+
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true, fontSizeWatch: true"></script>
+
+<script type="text/javascript">
+
+dojo.require("dojox.html.styles");
+dojo.require("dijit.Menu");
+dojo.require("dijit.Calendar");
+dojo.require("dijit.form.Button");
+dojo.require("dijit.form.DropDownButton");
+dojo.require("dijit.form.ComboButton");
+dojo.require("dijit.form.ToggleButton");
+dojo.require("dijit.Calendar");
+changeStyle = function(title){
+	dojox.html.activeStyleSheet(title);
+}
+
+dojo.addOnLoad(function(){
+	console.log(dojo.version.toString());
+	var sheets = dojox.html.getToggledStyleSheets();	
+	
+	var holder = dojo.byId("sheetSwitches");
+	dojo.forEach(sheets, function(s){
+		holder.innerHTML += '<button onclick="changeStyle(\''+s.title+'\');">'+s.title+'</button>';
+	});
+	
+});
+
+</script>
+<style>
+#sheetSwitches{
+margin-bottom:15px;
+}
+
+</style>
+
+
+</head>
+
+<body class="tundra nihilo soria claro">
+<h1>dojox.html.style Dynamic Style Sheets</h1>
+<p>The Theme buttons are dymanically generated based on the the link (or style) tag's title attribute. <em>rel="stylesheet"</em> is the preferred, enabled style sheet, and all style sheets with <em>rel="alternate stylesheet"</em> are disabled. Clicking the buttons toggles which style sheet is enabled. Any style sheet without a title attribute is persistent (always enabled). This is based on the W3C spec: http://www.w3.org/TR/html401/present/styles.html#h-14.3.2</p>
+<div id="sheetSwitches"><strong>Switch me:&nbsp;&nbsp;</strong></div>
+
+<button dojoType="dijit.form.Button" iconClass="plusIcon" onClick='console.debug("clicked simple")'>
+    Simple
+</button>
+
+<button dojoType="dijit.form.DropDownButton" iconClass="noteIcon">
+    <span>Drop Down</span>
+    <div dojoType="dijit.Menu" id="editMenu1" style="display: none;">
+        <div dojoType="dijit.MenuItem"
+            iconClass="dijitEditorIcon dijitEditorIconCut"
+            onClick="console.debug('not actually cutting anything, just a test!')">
+            Cut
+        </div>
+
+        <div dojoType="dijit.MenuItem"
+             iconClass="dijitEditorIcon dijitEditorIconCopy"
+            onClick="console.debug('not actually copying anything, just a test!')">
+            Copy
+        </div>
+
+        <div dojoType="dijit.MenuItem"
+             iconClass="dijitEditorIcon dijitEditorIconPaste"
+            onClick="console.debug('not actually pasting anything, just a test!')">
+            Paste
+        </div>
+    </div>
+</button>
+
+<button dojoType="dijit.form.ComboButton" iconClass="noteIcon"
+    optionsTitle='save options'
+    onClick='console.debug("clicked combo save")'>
+    <span>Combo</span>
+    <div dojoType="dijit.Menu" id="saveMenu1" style="display: none;">
+        <div dojoType="dijit.MenuItem"
+             iconClass="dijitEditorIcon dijitEditorIconSave"
+            onClick="console.debug('not actually saving anything, just a test!')">
+            Save
+        </div>
+        <div dojoType="dijit.MenuItem"
+            onClick="console.debug('not actually saving anything, just a test!')">
+            Save As
+        </div>
+    </div>
+</button>
+
+<button dojoType="dijit.form.ToggleButton" checked onChange="console.log('toggled button checked='+arguments[0]);" iconClass="dijitCheckBoxIcon">
+    Toggle
+</button> 
+     
+<div dojoType="dijit.Calendar"></div>
+    
+<p>
+    This form of style switching is more effective than changing an attribute in the body tag. It makes coding CSS easier, because less emphasis is placed on targeting through the body tag class, and all CSS theme's could theoretically have the exact same selector names.  
+</p>
+    	
+</body>
+</html>

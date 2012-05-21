@@ -1,0 +1,41 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>Testing repeat dojox.io.scriptFrame calls</title>
+		<style type="text/css">
+			@import "../../../dojo/resources/dojo.css";
+		</style>
+		<script type="text/javascript" 
+			src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+		<script type="text/javascript">
+			require(['dojo/io/script', 'dojox/io/scriptFrame'], function(script, scriptFrame){
+				function repeatCall(){
+					var td = script.get({
+						//Note that this URL path is relative to the URL of the iframe document
+						//(dojo.moduleUrl("dojo.resources", "blank.html")
+						url: "../tests/io/scriptJsonp.js",
+						content: { foo: "bar" },
+						callbackParamName: "callback",
+						frameDoc: "testFrame",
+						timeout: 3000
+					});
+					td.addBoth(function(res){
+						if(!(res instanceof Error) && "mammal" == res.animalType){
+							console.log("success");
+						}else{
+							console.error(res);
+						}
+						return res;
+					});
+				};
+
+				setInterval(repeatCall, 2000);
+			});
+		</script>
+	</head>
+	<body>
+		<p>This page tests repeat usage of dojo.io.script.get() with the dojox.io.scriptFrame extensions.</p>
+		<p>Inspect the iframe created by dojox.io.scriptFrame to see if it is performing correctly.</p>
+	</body>
+</html>

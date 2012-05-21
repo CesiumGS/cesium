@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>GraphPro Calculator Test</title>
+
+	<style>
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+		@import "../../../dijit/themes/claro/claro.css";
+		@import "../../../dojox/layout/resources/FloatingPane.css";
+		@import "../../../dojox/calc/resources/GraphPro.css";
+	</style>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		//TODO make the graphing window textboxes respond to the input buttons on the layout
+		require([
+			"dojox/calc/GraphPro",
+			"dojo/ready",
+			"dojo/store/Memory",
+			"dojox/calc/toFrac", // optional add-ons
+			"dojox/calc/FuncGen", // optional add-ons
+			"dojo/parser"
+		]);
+	</script>
+</head>
+<body class=claro>
+	<div id="calculator" data-dojo-type="dojox.calc.GraphPro" data-dojo-props='
+		readStore: new dojo.store.Memory({ idProperty: "name", data: [
+			{ name: "test2", args: "a, b", body: "return a/b;"}
+		]}),
+		writeStore: new dojo.store.Memory({ idProperty: "name", data: [
+			{ name: "test", args: "a, b", body: "return a/b;" },
+			{ name: "newFunc", args: "", body: "var a,b; return test(b=8,a=4);" },
+			{ name: "exampleFunction", args:"x", body:"return 2*x;" }
+		]})'
+	>
+	</div>
+</body>
+</html>

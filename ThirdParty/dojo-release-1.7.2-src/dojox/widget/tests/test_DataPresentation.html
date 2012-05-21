@@ -1,0 +1,160 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html style="height: 100%;">
+<head>
+
+	<title>DataPresentation widget example</title>
+	
+	<style type="text/css"> 
+		@import "../../../dijit/themes/tundra/tundra.css";
+		@import "../../../dojox/grid/resources/tundraGrid.css";
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+	</style>
+	
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+	<script type="text/javascript">
+
+		dojo.require("dojox.widget.DataPresentation");
+		dojo.require("dojox.charting.themes.Minty");
+	
+		var jsondata0 = {
+				"title"	 : "Softdrink Sales (2007)",
+				"footer" : "North America only",
+				"range"	 : [ "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" ],
+				"series" : [							
+					{ "legend" : "Cola", "line" : true, "values" : [ "35", "37", "44", "41", "43", "57", "62", "69", "74", "86", "101", "124" ] },
+					{ "legend" : "Lemonade", "values" : [ "122", "99", "111", "98", "82", "77", "76", "67", "72", "75", "66", "67" ] },
+					{ "legend" : "Dandelion and burdock", "values" : [ "99", "98", "98", "99", "97", "102", "100", "99", "102", "97", "95", "98" ] },
+					{ "legend" : "Ginger ale", "values" : [ "54", "59", "76", "84", "98", "110", "126", "121", "115", "109", "104", "99" ] },
+					{ "legend" : "Creme soda", "values" : [ "44", "58", "44", "36", "48", "54", "34", "38", "24", "56", "48", "34" ] },
+					{ "legend" : "Orangeade", "values" : [ "45", "25", "45", "31", "42", "33", "49", "34", "46", "25", "44", "37" ] },
+					{ "legend" : "Diet lemonade", "values" : [ "34", "17", "38", "13", "33", "14", "22", "39", "26", "17", "35", "21" ] },
+					{ "legend" : "Shandy", "values" : [ "14", "23", "16", "32", "12", "24", "18", "25", "13", "33", "15", "25" ] }
+				]
+		};
+
+		// shake things up a bit, just for fun
+		setInterval(function() {
+			var series = Math.floor(jsondata0.series.length * Math.random());
+			var value = Math.floor(jsondata0.series[series].values.length * Math.random());
+			var newvalue = parseInt(jsondata0.series[series].values[value]) + Math.floor(11 * Math.random()) - 5;
+			jsondata0.series[series].values[value] = "" + newvalue;	 
+		}, 100);
+
+		var jsondata1 = {
+			"title"	 : "Softdrink Sales (2007)",
+			"footer" : "North America only",
+			"sales"	 : [
+				{ "month": "Jan", "cola": "84", "lemonade": "75", "dandelionandburdock": "64", "gingerale": "54" },
+				{ "month": "Feb", "cola": "108", "lemonade": "65", "dandelionandburdock": "47", "gingerale": "43" },
+				{ "month": "Mar", "cola": "24", "lemonade": "85", "dandelionandburdock": "68", "gingerale": "76" },
+				{ "month": "Apr", "cola": "56", "lemonade": "75", "dandelionandburdock": "73", "gingerale": "92" },
+				{ "month": "May", "cola": "78", "lemonade": "82", "dandelionandburdock": "43", "gingerale": "32" },
+				{ "month": "Jun", "cola": "124", "lemonade": "43", "dandelionandburdock": "34", "gingerale": "54" },
+				{ "month": "Jul", "cola": "84", "lemonade": "59", "dandelionandburdock": "42", "gingerale": "78" },
+				{ "month": "Aug", "cola": "108", "lemonade": "34", "dandelionandburdock": "69", "gingerale": "65" },
+				{ "month": "Sep", "cola": "24", "lemonade": "76", "dandelionandburdock": "86", "gingerale": "43" },
+				{ "month": "Oct", "cola": "56", "lemonade": "65", "dandelionandburdock": "77", "gingerale": "43" },
+				{ "month": "Nov", "cola": "78", "lemonade": "34", "dandelionandburdock": "65", "gingerale": "45" },
+				{ "month": "Dec", "cola": "124", "lemonade": "67", "dandelionandburdock": "41", "gingerale": "65" }
+			]
+		};
+
+		var salesnumbers = function(value, index){
+			var ivalue = parseInt(value);
+		  
+			if (ivalue > 100){
+				return '<div style="text-align: right; background-color: #ddffcc; width: ' + (((ivalue * 80) / 130) + 20) + '%;">' + value + '</div>';
+			}else{
+				return '<div style="text-align: right; background-color: #ffddcc; width: ' + (((ivalue * 80) / 130) + 20) + '%;">' + value + '</div>';
+			}
+		}
+
+		var makeseries = function(data){
+			if(!data.sales){
+				return [ 
+					{ datapoints: "range", name: "Month", type: "range", chart: false },
+					{ datapoints: "series[0].values", namefield: "series[0].legend", gridformatter: salesnumbers },
+					{ datapoints: "series[1].values", name: "Lemonade (fizzy)", charttype: "line", gridformatter: salesnumbers },
+					{ datapoints: "series[2].values", namefield: "series[2].legend", gridformatter: salesnumbers },
+					{ datapoints: "series[3].values", namefield: "series[3].legend", gridformatter: salesnumbers }
+				];
+			}else{
+				return [ 
+					{ datapoints: "sales", field: "month", name: "Month", type: "range", chart: false },
+					{ datapoints: "sales", field: "lemonade", name: "Lemonade (fizzy)" },
+					{ datapoints: "sales", field: "dandelionandburdock", name: "Dandelion and burdock" },
+					{ datapoints: "sales", field: "cola", name: "Cola" },
+					{ datapoints: "sales", field: "gingerale", name: "Ginger ale" }
+			   ];
+			}
+		}
+	  
+		var dp;
+
+		dojo.addOnLoad(function() {
+
+			  var jsondata = jsondata0;	  // (or jsondata1)
+
+			  dp = new dojox.widget.DataPresentation("chartdiv", {
+				  type: "chart",
+				  chartType: "Hybrid",
+				  data: jsondata,
+				  refreshInterval: 3000,
+				  series: makeseries(jsondata),
+				  legendNode: "legenddiv",
+				  legendHorizontal: 2,
+				  //labelMod: 2,  // display every other x-axis label
+				  //labelMod: 0,  // suppress x-axis labels
+				  gridNode: "griddiv",
+				  titleNode: "title",
+				  footerNode: "footer",
+				  theme: "dojox.charting.themes.Minty",
+				  labelMod: 2,
+				  tooltip: "The value for this {0} for '{1}' in {2} is <b>{3}</b>"
+			  });
+
+		});
+	</script>
+</head>
+<body style="font-family: arial; font-size: 12px; height: 100%;" class="tundra">
+
+	<h1>An example of DataPresentation widget</h1>
+
+	<p>This example shows automatic refresh (every 3 seconds), although this is
+		most useful in conjunction with a URL where the data may change each time. 
+		To make something visible, some background code is tweaking the values randomly
+		so that the automatic refresh always pulls changed data.
+	</p>
+
+	<p>To see how the widget can cope with different data shapes, switch from 
+		jsondata0 to jsondata1 as the input data. jsondata0 is structured as complete
+		'series' of values, gathered into an array with series titles. jsondata1 is
+		structures as 'data points', each containing multiple sales values.
+	</p>
+
+	<p>Note that the widget is driving its own DOM node (the chart, in this case, 
+		although it could be any of the components) and is also driving other nodes
+		containing the grid, legend, etc.
+	</p>
+
+	<div style="width:400px; text-align: center;">
+		<h2 id="title" style="margin-bottom: 0;"></h2>
+		<p id="footer" style="color: gray; font-size: 0.85em; margin-top: 0.2em;"></p>
+	</div>
+	
+	<div style="width: 450px; position: relative;">
+		<div id="chartdiv" style="width: 400px; height: 300px;"></div>
+		<div style="position: absolute; top: 40px; right: 0px; padding: 0.2em 0.5em; border: 1px solid gray; background-color: rgba(255, 255, 221, 0.8);">
+			<div id="legenddiv" style="z-index: 1;"></div>
+		</div>
+	</div>
+	  
+	<p>Now here is the same data displayed in a grid (also driven by the same DataPresentation widget):</p>
+	
+	<div style="width:400px; height:240px;">
+		<div id="griddiv"></div>
+	</div>
+	
+</body>
+</html>

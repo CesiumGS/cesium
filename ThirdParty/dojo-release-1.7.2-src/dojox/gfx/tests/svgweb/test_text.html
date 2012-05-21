@@ -1,0 +1,80 @@
+﻿<html>
+<head>
+<title>Testing text</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+	@import "../../../../dojo/resources/dojo.css";
+	@import "../../../../dijit/tests/css/dijitTests.css";
+</style>
+<!-- SVGWEB { -->
+<meta name="svg.render.forceflash" content="true"/>
+<script src="svgweb/src/svg.js" data-path="svgweb/src"></script>
+<script src="../../../../dojo/dojo.js" djConfig="isDebug:true,forceGfxRenderer:'svg'" type="text/javascript"></script>
+<!-- } -->
+<script type="text/javascript">
+dojo.require("dojox.gfx");
+
+var ROTATION = 30;
+
+var surface = null, t1, t2, t3, t4, t5;
+
+var placeAnchor = function(surface, x, y){
+	surface.createLine({x1: x - 2, y1: y, x2: x + 2, y2: y}).setStroke("blue");
+	surface.createLine({x1: x, y1: y - 2, x2: x, y2: y + 2}).setStroke("blue");
+};
+
+var makeText = function(surface, text, font, fill, stroke){
+	var t = surface.createText(text);
+	if(font)   t.setFont(font);
+	if(fill)   t.setFill(fill);
+	if(stroke) t.setStroke(stroke);
+	placeAnchor(surface, text.x, text.y);
+	return t;
+};
+
+makeShapes = function(){
+	surface = dojox.gfx.createSurface("test", 500, 500);
+	/* SVGWEB { */
+	surface.whenLoaded(function() {
+	var m = dojox.gfx.matrix;
+	surface.createLine({x1: 250, y1: 0, x2: 250, y2: 500}).setStroke("green");
+	t1 = makeText(surface, {x: 250, y: 50, text: "Start", align: "start"}, 
+		{family: "Times", size: "36pt", weight: "bold"}, "black", "red")
+		.setTransform(m.rotategAt(ROTATION, 250, 50));
+	t2 = makeText(surface, {x: 250, y: 100, text: "Middle", align: "middle"}, 
+		{family: "Symbol", size: "24pt"}, "red", "black")
+		.setTransform(m.rotategAt(ROTATION, 250, 100));
+	t3 = makeText(surface, {x: 250, y: 150, text: "End", align: "end"}, 
+		{family: "Helvetica", style: "italic", size: "18pt", rotated: true}, "#FF8000")
+		.setTransform(m.rotategAt(ROTATION, 250, 150));
+	t4 = makeText(surface, {x: 250, y: 200, text: "Define Shuffle Tiff", align: "middle", kerning: true}, 
+		{family: "serif", size: "36pt"}, "black")
+		.setTransform(m.rotategAt(0, 250, 200));
+	t5 = makeText(surface, {x: 250, y: 250, text: "Define Shuffle Tiff", align: "middle", kerning: false}, 
+		{family: "serif", size: "36pt"}, "black")
+		.setTransform(m.rotategAt(0, 250, 250));
+	});
+	/* } */
+};
+
+getSizes = function(){
+	var t = [];
+	dojo.forEach(["t1", "t2", "t3", "t4", "t5"], function(name){
+		var node = eval("(" + name + ")");
+		t.push(node.getShape().text + " = " + node.getTextWidth());
+	});
+	dojo.byId("sizes").innerHTML = t.join("<br/>");
+};
+
+dojo.addOnLoad(makeShapes);
+
+</script>
+</head>
+<body>
+	<h1>dojox.gfx Text test</h1>
+<div id="test" style="width: 500px; height: 500px;"></div>
+<div><button onclick="surface.clear();">Clear</button>&nbsp;<button onclick="getSizes();">Get sizes</button></div>
+<p id="sizes">&nbsp;</p>
+<p>That's all Folks!</p>
+</body>
+</html>

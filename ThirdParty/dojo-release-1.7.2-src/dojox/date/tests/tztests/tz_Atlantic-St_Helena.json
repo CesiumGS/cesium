@@ -1,0 +1,14 @@
+({
+	name: "date.timezone.Atlantic-St_Helena",
+	runTest: function(t){
+		var tz = "Atlantic/St_Helena";
+		doh.checkDate({tzOffset: 22.8, tzAbbr: "JMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: 22.8, tzAbbr: "JMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: 22.8, tzAbbr: "JMT"}, -599614633000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "GMT"}, -599614632000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "GMT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "GMT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "GMT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: 0, tzAbbr: "GMT"}, 1246789800000, tz, 0);
+	}
+})

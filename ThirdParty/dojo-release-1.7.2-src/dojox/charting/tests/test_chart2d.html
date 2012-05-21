@@ -1,0 +1,848 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+	<title>Chart 2D</title>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+	</style>
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+	<script type="text/javascript">
+        dojo.require("dojox.charting.Chart");
+        dojo.require("dojox.charting.axis2d.Default");
+        dojo.require("dojox.charting.plot2d.Default");
+        dojo.require("dojox.charting.plot2d.Areas");
+        dojo.require("dojox.charting.plot2d.Markers");
+        dojo.require("dojox.charting.plot2d.MarkersOnly");
+        dojo.require("dojox.charting.plot2d.StackedLines");
+        dojo.require("dojox.charting.plot2d.StackedAreas");
+        dojo.require("dojox.charting.plot2d.Bars");
+        dojo.require("dojox.charting.plot2d.ClusteredBars");
+        dojo.require("dojox.charting.plot2d.StackedBars");
+        dojo.require("dojox.charting.plot2d.ClusteredColumns");
+        dojo.require("dojox.charting.plot2d.StackedColumns");
+        dojo.require("dojox.charting.plot2d.Bubble");
+        dojo.require("dojox.charting.plot2d.Grid");
+        dojo.require("dojox.charting.plot2d.Candlesticks");
+        dojo.require("dojox.charting.plot2d.OHLC");
+        dojo.require("dojox.charting.plot2d.Scatter");
+
+		dojo.require("dojox.charting.themes.Shrooms");
+		dojo.require("dojox.charting.themes.PlotKit.blue");
+		dojo.require("dojox.charting.themes.PlotKit.cyan");
+		dojo.require("dojox.charting.themes.PlotKit.green");
+		dojo.require("dojox.charting.themes.Ireland");
+		dojo.require("dojox.charting.themes.SageToLime");
+		dojo.require("dojox.charting.themes.Minty");
+		dojo.require("dojox.charting.themes.Tufte");
+
+		dojo.require("dojox.dtl");
+		dojo.require("dojox.dtl.Context");
+		charts = [
+			{
+				description: "Clustered columns with positive and negative values, readable theme.",
+				makeChart: function(node){
+					(new dojox.charting.Chart(node)).
+						setTheme(dojox.charting.themes.Tufte).
+						addAxis("x", { fixLower: "minor", fixUpper: "minor", natural: true }).
+						addAxis("y", { vertical: true, fixLower: "major", fixUpper: "major", includeZero: true }).
+						addPlot("default", { type: "ClusteredColumns", gap: 10 }).
+						addSeries("Series A", [ 2, 1, 0.5, -1, -2 ] ).
+						addSeries("Series B", [ -2, -1, -0.5, 1, 2 ] ).
+						addSeries("Series C", [ 1, 0.5, -1, -2, -3 ] ).
+						addSeries("Series D", [ 0.7, 1.5, -1.2, -1.25, 3 ] ).
+						render();
+				}
+			},
+			{
+				description: "Bubble chart, green theme.",
+				makeChart: function(node){
+					(new dojox.charting.Chart(node)).
+						setTheme(dojox.charting.themes.SageToLime).
+						addPlot("default", { type: "Bubble", shadow:  {dx: 1, dy: 1, width: 2, color: [0, 0, 0, 0.3]} }).
+						addAxis("x", {
+							min: 0,
+							max: 6,
+							majorTick: { stroke: "black", length: 3 },
+							minorTick: { stroke: "gray", length: 3 }
+						}).
+						addAxis("y", {
+							vertical: true,
+							min: 0,
+							max: 10,
+							majorTick: { stroke: "black", length: 3 },
+							minorTick: { stroke: "gray", length: 3 }
+						}).
+						addSeries("Series A", [
+							{ x: 0.5, y: 5, size: 1.4 },
+							{ x: 1.5, y: 1.5, size: 4.5 },
+							{ x: 2, y: 9, size:1.5 },
+							{ x: 5, y: 0.3, size:0.8 }
+						]).
+						addSeries("Series B", [
+							{ x: 0.3, y: 8, size: 2.5 },
+							{ x: 4, y: 6, size:1.1 },
+							{ x: 5.5, y: 2, size: 3.2 }
+						]).
+						render();
+				}
+			},
+			{
+				description: "Lines, calculated labels",
+				makeChart: function(node){
+					(new dojox.charting.Chart(node)).
+						addAxis("x", {
+							majorLabels: true, 
+							minorLabels: true, 
+							includeZero: true, 
+							minorTicks: false, 
+							microTicks: false,
+							majorTickStep: 2,
+							htmlLabels: true,                                                                    
+							labelFunc: function(value){
+								return value + " s";
+							},
+							maxLabelSize: 30,
+							fixUpper: "major", fixLower: "major",                                                
+							majorTick: { length: 3 }
+						}).
+						addAxis("y", {
+							labelFunc: function(value){
+								return value + " thingers";
+							},
+							maxLabelSize: 50,
+							vertical: true,
+							// htmlLabels: false,
+							microTicks: true,
+							minorTicks: true, 
+							majorTick: { stroke: "black", length: 3 }
+						}).
+						addSeries("Series A", [ 1, 2, 1, 2, 1, 2, 1 ]).
+						addSeries("Series B", [ 2, 1, 2, 1, 2, 1, 2 ]).
+						render();
+				}
+			},
+			{
+				description: "Lines, pre-computed labels",
+				makeChart: function(node){
+					(new dojox.charting.Chart(node)).
+						addAxis("x", {
+							majorLabels: true, 
+							minorLabels: true, 
+							includeZero: true, 
+							minorTicks: false, 
+							microTicks: false,
+							majorTickStep: 2,
+							labels: [
+								{ value: 0, text: "nada" },
+								{ value: 2, text: "2 units" },
+								{ value: 4, text: "4 units" },
+								{ value: 8, text: "2*4 units" }
+							],
+							htmlLabels: true,                                                                    
+							fixUpper: "major", fixLower: "major",                                                
+							majorTick: { length: 3 }
+						}).
+						addAxis("y", {
+							labels: [
+								{ value: 0, text: "nada" },
+								{ value: 1.1, text: "hrmm" },
+								{ value: 1.2, text: "?" },
+								{ value: 2, text: "2!" }
+							],
+							vertical: true,
+							// htmlLabels: false,
+							microTicks: true,
+							minorTicks: true, 
+							majorTick: { stroke: "black", length: 3 }
+						}).
+						addSeries("Series A", [ 1, 2, 1, 2, 1, 2, 1 ]).
+						addSeries("Series B", [ 2, 1, 2, 1, 2, 1, 2 ]).
+						render();
+				}
+			},
+			{
+				description: "Defaults: lines, no axes.",
+				makeChart: function(node){
+					(new dojox.charting.Chart(node)).
+						addSeries("Series A", [ 1, 2, 1, 2, 1, 2, 1 ]).
+						addSeries("Series B", [ 2, 1, 2, 1, 2, 1, 2 ]).
+						render();
+				}
+			},
+			{
+				description: "Defaults: lines, no axes, and custom strokes.",
+				makeChart: function(node){
+					(new dojox.charting.Chart(node)).
+						addSeries("Series A", [ 1, 2, 1, 2, 1, 2, 1 ], {stroke: "red"}).
+						addSeries("Series B", [ 2, 1, 2, 1, 2, 1, 2 ], {stroke: "blue"}).
+						render();
+				}
+			},
+			{
+				description: "Areas, Happy theme, no axes.",
+				makeChart: function(node){
+					(new dojox.charting.Chart(node)).
+						addPlot("default", {type: "Areas", tension:"X"}).
+						setTheme(dojox.charting.themes.Shrooms).
+						addSeries("Series A", [1, 2, 0.5, 1.5, 1, 2.8, 0.4]).
+						addSeries("Series B", [2.6, 1.8, 2, 1, 1.4, 0.7, 2]).
+						addSeries("Series C", [6.3, 1.8, 3, 0.5, 4.4, 2.7, 2]).
+						render();
+				}
+			},
+			{
+				description: "Areas, no axes, custom strokes and fills.",
+				makeChart: function(node){
+					(new dojox.charting.Chart(node)).
+						addPlot("default", {type: "Areas"}).
+						addSeries("Series A",
+							[1, 2, 1, 2, 1, 2, 1],
+							{
+								stroke: {color: "red", width: 2 },
+								fill: "lightpink"
+							}
+						).
+						addSeries("Series B",
+							[ 2, 1, 2, 1, 2, 1, 2 ],
+							{
+								stroke: { color: "blue", width: 2 },
+								fill: "lightblue"
+							}
+						).
+						render();
+				}
+			},
+			{
+				description: "Lines, axes, blue theme.",
+				makeChart: function(node){
+					(new dojox.charting.Chart(node)).
+						setTheme(dojox.charting.themes.PlotKit.blue).
+						addAxis("x").
+						addAxis("y", {vertical: true}).
+						addSeries("Series A", [1, 2, 1, 2, 1, 2, 1]).
+						addSeries("Series B", [2, 1, 2, 1, 2, 1, 2]).
+						render();
+				}
+			},
+			{
+				description: "Lines, axes (aligned on minor ticks), cyan theme.",
+				makeChart: function(node){
+					(new dojox.charting.Chart(node)).
+						setTheme(dojox.charting.themes.PlotKit.cyan).
+						addAxis("x", {
+							fixLower: "minor", fixUpper: "minor"
+						}).
+						addAxis("y", {
+							vertical: true, fixLower: "minor", fixUpper: "minor"
+						}).
+						addSeries("Series A", [1, 2, 1, 2, 1, 2, 1]).
+						addSeries("Series B", [2, 1, 2, 1, 2, 1, 2]).
+						render();
+				}
+			},
+			{
+				description: "Lines, axes (aligned on major ticks), green theme.",
+				makeChart: function(node){
+					(new dojox.charting.Chart(node)).
+						setTheme(dojox.charting.themes.PlotKit.green).
+						addAxis("x", {
+							fixLower: "major", fixUpper: "major"
+						}).
+						addAxis("y", {
+							vertical: true, fixLower: "major", fixUpper: "major"
+						}).
+						addSeries("Series A", [1, 2, 1, 2, 1, 2, 1]).
+						addSeries("Series B", [2, 1, 2, 1, 2, 1, 2]).
+						render();
+				}
+			},
+			{
+				description: "Lines and markers, no axes, purple theme, custom min/max.",
+				makeChart: function(node){
+					(new dojox.charting.Chart(node)).
+						setTheme(dojox.charting.themes.SageToLime).
+						addPlot("default", {type: "Markers"}).
+						addSeries("Series A", [1, 2, 1, 2, 1, 2, 1], {min: 0, max: 3}).
+						addSeries("Series B", [2, 1, 2, 1, 2, 1, 2]).
+						render();
+				}
+			},
+			{
+				description: "Markers only, no axes, custom theme, custom markers, custom min/max.",
+				makeChart: function(node){
+					(new dojox.charting.Chart(node)).
+						addPlot("default", { type: "MarkersOnly" }).
+						addSeries("Series A",
+							[ 1, 2, 1, 2, 1, 2, 1 ],
+							{
+								min: 0,
+								max: 3,
+								stroke: {color: "red", width: 2},
+								fill:   "red",
+								marker: "m-3,0 c0,-4 6,-4 6,0 m-6,0 c0,4 6,4 6,0"
+							}
+						).
+						addSeries("Series B",
+							[ 2, 1, 2, 1, 2, 1, 2 ],
+							{
+								stroke: {color: "blue", width: 2},
+								fill:   "blue",
+								marker: "m-3,-3 l0,6 6,0 0,-6 z"
+							}
+						).
+						render();
+				}
+			},
+			{
+				description: "Lines and markers, shadows, no axes, custom theme, custom markers, custom min/max.",
+				makeChart: function(node){
+					(new dojox.charting.Chart(node)).
+						addPlot("default", {
+							type: "Markers", shadow:  {dx: 1, dy: 1, width: 2, color: [0, 0, 0, 0.3]}
+						}).
+						addSeries("Series A",
+							[ 1, 2, 1, 2, 1, 2, 1 ],
+							{
+								min: 0,
+								max: 3,
+								stroke: {color: "red", width: 2, join: "round"},
+								fill:   "red",
+								marker: "m-3,0 c0,-4 6,-4 6,0 m-6,0 c0,4 6,4 6,0"
+							}
+						).
+						addSeries("Series B",
+							[ 2, 1, 2, 1, 2, 1, 2 ],
+							{
+								stroke: {color: "blue", width: 2, join: "round"},
+								fill:   "blue",
+								marker: "m-3,-3 l0,6 6,0 0,-6 z"
+							}
+						).
+						render();
+				}
+			},
+			{
+				description: "Stacked lines, markers, shadows, no axes, custom strokes, fills, and markers.",
+				makeChart: function(node){
+					(new dojox.charting.Chart(node)).
+						addPlot("default", {
+							type: "StackedLines",
+							markers: true,
+							tension:"S",
+							shadow:  {dx: 1, dy: 1, width: 2, color: [0, 0, 0, 0.3]}
+						}).
+						addSeries("Series A",
+							[ 1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6 ],
+							{
+								stroke: { color: "red", width: 2 },
+								fill: "lightpink",
+								marker: "m-3,-3 l0,6 6,0 0,-6 z"
+							}
+						).
+						addSeries("Series B",
+							[ 1, 1.6, 1.3, 1.4, 1.1, 1.5, 1.1 ],
+							{
+								stroke: { color: "blue", width: 2 },
+								fill: "lightblue",
+								marker: "m-3,0 c0,-4 6,-4 6,0 m-6,0 c0,4 6,4 6,0"
+							}
+						).
+						addSeries("Series C",
+							[ 1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6 ],
+							{
+								stroke: { color: "green", width: 2 },
+								fill: "lightgreen",
+								marker: "m0,-3 l3,3 -3,3 -3,-3 z"
+							}
+						).
+						render();
+				}
+			},
+			{
+				description: "Stacked areas, axes (aligned on major ticks), custom strokes and fills.",
+				makeChart: function(node){
+					(new dojox.charting.Chart(node)).
+						addAxis("x", {fixLower: "major", fixUpper: "major"}).
+						addAxis("y", {vertical: true, fixLower: "major", fixUpper: "major", min: 0}).
+						addPlot("default", { type: "StackedAreas", tension:"S" }).
+						addSeries("Series A",
+							[ -2, 1.1, 1.2, 1.3, 1.4, 1.5, -1.6 ],
+							{ stroke: {color: "red", width: 2}, fill: "lightpink" }
+						).
+						addSeries("Series B",
+							[ 1, 1.6, 1.3, 1.4, 1.1, 1.5, 1.1 ],
+							{ stroke: {color: "blue", width: 2}, fill: "lightblue" }
+						).
+						addSeries("Series C",
+							[ 1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6 ],
+							{ stroke: {color: "green", width: 2}, fill: "lightgreen" }
+						).
+						render();
+				}
+			},
+			{
+				description: "Candlesticks with gaps, custom strokes and fills, optional mid points.",
+				makeChart: function(node){
+					(new dojox.charting.Chart(node)).
+						addPlot("default", {type: "Candlesticks", gap: 1}).
+						addAxis("x", {fixLower: "major", fixUpper: "major", includeZero: true}).
+						addAxis("y", {vertical: true, fixLower: "major", fixUpper: "major", natural: true}).
+						addSeries("Series A", [
+								{ open: 20, close: 16, high: 22, low: 8 },
+								{ open: 16, close: 22, high: 26, low: 6, mid: 18 },
+								{ open: 22, close: 18, high: 22, low: 11, mid: 21 },
+								{ open: 18, close: 29, high: 32, low: 14, mid: 27 },
+								{ open: 29, close: 24, high: 29, low: 13, mid: 27 },
+								{ open: 24, close: 8, high: 24, low: 5 },
+								{ open: 8, close: 16, high: 22, low: 2 },
+								{ open: 16, close: 12, high: 19, low: 7 },
+								{ open: 12, close: 20, high: 22, low: 8 },
+								{ open: 20, close: 16, high: 22, low: 8 },
+								{ open: 16, close: 22, high: 26, low: 6, mid: 18 },
+								{ open: 22, close: 18, high: 22, low: 11, mid: 21 },
+								{ open: 18, close: 29, high: 32, low: 14, mid: 27 },
+								{ open: 29, close: 24, high: 29, low: 13, mid: 27 },
+								{ open: 24, close: 8, high: 24, low: 5 },
+								{ open: 8, close: 16, high: 22, low: 2 },
+								{ open: 16, close: 12, high: 19, low: 7 },
+								{ open: 12, close: 20, high: 22, low: 8 },
+								{ open: 20, close: 16, high: 22, low: 8 },
+								{ open: 16, close: 22, high: 26, low: 6 },
+								{ open: 22, close: 18, high: 22, low: 11 },
+								{ open: 18, close: 29, high: 32, low: 14 },
+								{ open: 29, close: 24, high: 29, low: 13 },
+								{ open: 24, close: 8, high: 24, low: 5 },
+								{ open: 8, close: 16, high: 22, low: 2 },
+								{ open: 16, close: 12, high: 19, low: 7 },
+								{ open: 12, close: 20, high: 22, low: 8 },
+								{ open: 20, close: 16, high: 22, low: 8 }
+							],
+							{ stroke: { color: "green" }, fill: "lightgreen" }
+						).
+						render();
+				}
+			},
+			{
+				description: "Open/High/Low/Close with gaps, custom strokes and fills.",
+				makeChart: function(node){
+					(new dojox.charting.Chart(node)).
+						addPlot("default", {type: "OHLC", gap: 2}).
+						addAxis("x", {fixLower: "major", fixUpper: "major", includeZero: true}).
+						addAxis("y", {vertical: true, fixLower: "major", fixUpper: "major", natural: true}).
+						addSeries("Series A", [
+								{ open: 20, close: 16, high: 22, low: 8 },
+								{ open: 16, close: 22, high: 26, low: 6 },
+								{ open: 22, close: 18, high: 22, low: 11 },
+								{ open: 18, close: 29, high: 32, low: 14 },
+								{ open: 29, close: 24, high: 29, low: 13 },
+								{ open: 24, close: 8, high: 24, low: 5 },
+								{ open: 8, close: 16, high: 22, low: 2 },
+								{ open: 16, close: 12, high: 19, low: 7 },
+								{ open: 12, close: 20, high: 22, low: 8 },
+								{ open: 20, close: 16, high: 22, low: 8 },
+								{ open: 16, close: 22, high: 26, low: 6 },
+								{ open: 22, close: 18, high: 22, low: 11 },
+								{ open: 18, close: 29, high: 32, low: 14 },
+								{ open: 29, close: 24, high: 29, low: 13 },
+								{ open: 24, close: 8, high: 24, low: 5 },
+								{ open: 8, close: 16, high: 22, low: 2 },
+								{ open: 16, close: 12, high: 19, low: 7 },
+								{ open: 12, close: 20, high: 22, low: 8 },
+								{ open: 20, close: 16, high: 22, low: 8 },
+								{ open: 16, close: 22, high: 26, low: 6 },
+								{ open: 22, close: 18, high: 22, low: 11 },
+								{ open: 18, close: 29, high: 32, low: 14 },
+								{ open: 29, close: 24, high: 29, low: 13 },
+								{ open: 24, close: 8, high: 24, low: 5 },
+								{ open: 8, close: 16, high: 22, low: 2 },
+								{ open: 16, close: 12, high: 19, low: 7 },
+								{ open: 12, close: 20, high: 22, low: 8 },
+								{ open: 20, close: 16, high: 22, low: 8 }
+							],
+							{ stroke: { color: "blue" }, fill: "blue" }
+						).
+						render();
+				}
+			},
+			{
+				description: "Columns, no axes, custom strokes and fills.",
+				makeChart: function(node){
+					(new dojox.charting.Chart(node)).
+						addPlot("default", {type: "Columns"}).
+						addSeries("Series A", [ 1, 2, 3, 4, 5 ], { stroke: { color: "red" }, fill: "lightpink" }).
+						addSeries("Series B", [ 5, 4, 3, 2, 1 ], { stroke: {color: "blue"}, fill: "lightblue" }).
+						render();
+				}
+			},
+			{
+				description: "Columns with gaps beetwen them, vertical axis aligned on major ticks, custom strokes, fills.",
+				makeChart: function(node){
+					(new dojox.charting.Chart(node)).
+						addAxis("y", {vertical: true, fixLower: "major", fixUpper: "major"}).
+						addPlot("default", {type: "Columns", gap: 2}).
+						addSeries("Series A", [ 1, 2, 3, 4, 5 ], { stroke: {color: "red"}, fill: "lightpink" }).
+						addSeries("Series B", [ 5, 4, 3, 2, 1 ], { stroke: {color: "blue"}, fill: "lightblue" }).
+						render();
+				}
+			},
+			{
+				description: "Stacked columns, no axes, custom strokes and fills.",
+				makeChart: function(node){
+					(new dojox.charting.Chart(node)).
+						addPlot("default", {type: "StackedColumns"}).
+						addSeries("Series A", [ 1, 2, 3, 4, 5 ], {stroke: { color: "red" }, fill: "lightpink" }).
+						addSeries("Series B", [ 2, 1, 2, 1, 2 ], {stroke: { color: "blue" }, fill: "lightblue" }).
+						render();
+				}
+			},
+			{
+				description: "Bars, axes aligned on major ticks, no minor ticks, custom strokes and fills.",
+				makeChart: function(node){
+					(new dojox.charting.Chart(node)).
+						addAxis("x", {fixLower: "major", fixUpper: "major", includeZero: true}).
+						addAxis("y", {vertical: true, fixLower: "major", fixUpper: "major", natural: true}).
+						addPlot("default", {type: "Bars"}).
+						addSeries("Series A",
+							[1, 2, 3, 4, 5],
+							{ stroke: {color: "red"}, fill: "lightpink" }
+						).
+						addSeries("Series B",
+							[5, 4, 3, 2, 1],
+							{ stroke: {color: "blue"}, fill: "lightblue" }
+						).
+						render();
+				}
+			},
+			{
+				description: "Stacked bars, no axes, custom strokes and fills.",
+				makeChart: function(node){
+					(new dojox.charting.Chart(node)).
+						addPlot("default", {type: "StackedBars"}).
+						addSeries("Series A", [ 1, 2, 3, 4, 5 ], { stroke: { color: "red" }, fill: "lightpink" }).
+						addSeries("Series B", [ 2, 1, 2, 1, 2 ], { stroke: { color: "blue" }, fill: "lightblue" }).
+						render();
+				}
+			},
+			{
+				description: "Clustered columns, custom axes, custom strokes, fills, and gap.",
+				makeChart: function(node){
+					(new dojox.charting.Chart(node)).
+						addAxis("x", {
+							fixLower: "minor", fixUpper: "minor", natural: true
+						}).
+						addAxis("y", {
+							vertical: true, fixLower: "major", fixUpper: "major", includeZero: true
+						}).
+						addPlot("default", {type: "ClusteredColumns", gap: 10}).
+						addSeries("Series A",
+							[ 1, 2, 3, 4, 5 ],
+							{ stroke: {color: "red"}, fill: "lightpink" }
+						).
+						addSeries("Series B", [5, 4, 3, 2, 1], {stroke: {color: "blue"}, fill: "lightblue"}).
+						render();
+				}
+			},
+			{
+				description: "Clustered bars, custom axes, custom strokes, fills, and gap.",
+				makeChart: function(node){
+					(new dojox.charting.Chart(node)).
+						addAxis("x", {fixLower: "major", fixUpper: "major", includeZero: true}).
+						addAxis("y", {vertical: true, fixLower: "minor", fixUpper: "minor", natural: true}).
+						addPlot("default", { type: "ClusteredBars", gap: 5 }).
+						addSeries("Series A", [ 1, 2, 3, 4, 5 ], { stroke: { color: "red" }, fill: "lightpink" }).
+						addSeries("Series B", [ 2, 1, 2, 1, 2 ], { stroke: { color: "blue" }, fill: "lightblue" }).
+						render();
+				}
+			},
+			{
+				description: "Columns with gaps beetwen them, grids, custom strokes, fills, axes.",
+				makeChart: function(node){
+					(new dojox.charting.Chart(node)).
+						addAxis("x", { fixLower: "minor", fixUpper: "minor", natural: true }).
+						addAxis("y", {
+							vertical: true,
+							fixLower: "major",
+							fixUpper: "major",
+							minorTicks: false,
+							includeZero: true
+						}).
+						addPlot("front_grid", { type: "Grid", hMajorLines: true, vMajorLines: false }).
+						addPlot("default", { type: "Columns", gap: 10 }).
+						addPlot("back_grid", { type: "Grid", hMajorLines: false, vMajorLines: true }).
+						addSeries("Series A",
+							[ 1, 2, 3, 4, 5 ],
+							{ stroke: { color: "red" }, fill: "lightpink" }
+						).
+						addSeries("Series B",
+							[ 5, 4, 3, 2, 1 ],
+							{ stroke: { color: "blue" }, fill: "lightblue" }
+						).
+						render();
+				}
+			},
+			{
+				description: "Columns with gaps beetwen them, grids, custom strokes, fills, axes, with min=0, max=8, and manually specified ticks on the vertical axis.",
+				makeChart: function(node){
+					(new dojox.charting.Chart(node)).
+						addAxis("x", {fixLower: "minor", fixUpper: "minor", natural: true}).
+						addAxis("y", {
+							vertical: true, fixLower: "major", fixUpper: "major",
+							includeZero: true, min: 0, max: 8, minorLabels: false,
+							majorTicks: true, minorTicks: true, microTicks: false,
+							majorTickStep: 2, minorTickStep: 1, microTickStep: 0.5
+						}).
+						addPlot("front_grid", {
+							type: "Grid", hMajorLines: true, vMajorLines: false
+						}).
+						addPlot("default", {type: "Columns", gap: 10}).
+						addPlot("back_grid", {
+							type: "Grid", hMajorLines: false, vMajorLines: true
+						}).
+						addSeries("Series A",
+							[ 1, 2, 3, 4, 5 ],
+							{ stroke: {color: "red"}, fill: "lightpink" }
+						).
+						addSeries("Series B",
+							[ 5, 4, 3, 2, 1 ],
+							{ stroke: {color: "blue"}, fill: "lightblue" }
+						).
+						render();
+				}
+			},
+			{
+				description: "Columns with positive and negative values, axes, and grid.",
+				makeChart: function(node){
+					(new dojox.charting.Chart(node)).
+						addAxis("x").
+						addAxis("y", { vertical: true }).
+						addPlot("default", { type: "Columns", gap: 10 }).
+						addPlot("grid", { type: "Grid" }).
+						addSeries("Series A",
+							[ 2, 1, 0.5, -1, -2 ],
+							{ stroke: {color: "red"}, fill: "lightpink" }
+						).
+						addSeries("Series B",
+							[ -2, -1, -0.5, 1, 2 ],
+							{ stroke: {color: "blue"}, fill: "lightblue" }
+						).
+						render();
+				}
+			},
+			{
+				description: "Clustered columns with positive and negative values, axes, and grid.",
+				makeChart: function(node){
+					(new dojox.charting.Chart(node)).
+						addAxis("x").
+						addAxis("y", { vertical: true }).
+						addPlot("default", { type: "ClusteredColumns", gap: 10 }).
+						addPlot("grid", { type: "Grid" }).
+						addSeries("Series A",
+							[ 2, 1, 0.5, -1, -2 ],
+							{ stroke: {color: "red"}, fill: "lightpink" }
+						).
+						addSeries("Series B",
+							[ -2, -1, -0.5, 1, 2 ],
+							{ stroke: {color: "blue"}, fill: "lightblue" }
+						).
+						addSeries("Series C",
+							[ 1, 0.5, -1, -2, -3 ],
+							{ stroke: {color: "green"}, fill: "lightgreen" }
+						).
+						render();
+				}
+			},
+			{
+				description: "Bars with positive and negative values, axes, and grid.",
+				makeChart: function(node){
+					(new dojox.charting.Chart(node)).
+						addAxis("x").
+						addAxis("y", { vertical: true }).
+						addPlot("default", { type: "Bars", gap: 10 }).
+						addPlot("grid", { type: "Grid" }).
+						addSeries("Series A",
+							[ 2, 1, 0.5, -1, -2 ],
+							{ stroke: {color: "red"}, fill: "lightpink" }
+						).
+						addSeries("Series B",
+							[ -2, -1, -0.5, 1, 2 ],
+							{ stroke: {color: "blue"}, fill: "lightblue" }
+						).
+						render();
+				}
+			},
+			{
+				description: "Clustered bars with positive and negative values, axes, and grid.",
+				makeChart: function(node){
+					(new dojox.charting.Chart(node)).
+						addAxis("x").
+						addAxis("y", { vertical: true }).
+						addPlot("default", { type: "ClusteredBars", gap: 10 }).
+						addPlot("grid", { type: "Grid" }).
+						addSeries("Series A",
+							[ 2, 1, 0.5, -1, -2 ],
+							{ stroke: { color: "red" }, fill: "lightpink" }
+						).
+						addSeries("Series B",
+							[ -2, -1, -0.5, 1, 2 ],
+							{ stroke: { color: "blue" }, fill: "lightblue" }
+						).
+						addSeries("Series C",
+							[ 1, 0.5, -1, -2, -3 ],
+							{ stroke: { color: "green" }, fill: "lightgreen" }
+						).
+						render();
+				}
+			},
+			{
+				description: "Default lines with 2D data, custom axis, red theme.",
+				makeChart: function(node){
+					(new dojox.charting.Chart(node)).
+						setTheme(dojox.charting.themes.Minty).
+						addAxis("x", {
+							min: 0,
+							max: 6,
+							majorTick: { stroke: "black", length: 3 },
+							minorTick: { stroke: "gray", length: 3 }
+						}).
+						addAxis("y", {
+							vertical: true,
+							min: 0,
+							max: 10,
+							majorTick: { stroke: "black", length: 3 },
+							minorTick: { stroke: "gray", length: 3 }
+						}).
+						addSeries("Series A", [
+							{ x: 0.5, y: 5 },
+							{ x: 1.5, y: 1.5 },
+							{ x: 2, y: 9 },
+							{ x: 5, y: 0.3 }
+						]).
+						addSeries("Series B", [
+							{ x: 0.3, y: 8 },
+							{ x: 4, y: 6 },
+							{ x: 5.5, y: 2 }
+						]).
+						render();
+				}
+			},
+			{
+				description: "Scatter chart, custom axis, purple theme.",
+				makeChart: function(node){
+					(new dojox.charting.Chart(node)).
+						setTheme(dojox.charting.themes.Ireland).
+						addPlot("default", {type: "Scatter"}).
+						addAxis("x", {
+							min: 0,
+							max: 6,
+							majorTick: { stroke: "black", length: 3 },
+							minorTick: { stroke: "gray", length: 3 }
+						}).
+						addAxis("y", {
+							vertical: true,
+							min: 0,
+							max: 10,
+							majorTick: { stroke: "black", length: 3 },
+							minorTick: { stroke: "gray", length: 3 }
+						}).
+						addSeries("Series A", [
+							{ x: 0.5, y: 5 },
+							{ x: 1.5, y: 1.5 },
+							{ x: 2, y: 9 },
+							{ x: 5, y: 0.3 }
+						]).
+						addSeries("Series B", [
+							{ x: 0.3, y: 8 },
+							{ x: 4, y: 6 },
+							{ x: 5.5, y: 2 }
+						]).
+						render();
+				}
+			},
+			{
+				description: "Markers, lines, 2D data, custom axis, blue theme.",
+				makeChart: function(node){
+					(new dojox.charting.Chart(node)).
+						setTheme(dojox.charting.themes.PlotKit.blue).
+						addPlot("default", {
+							type: "Default",
+							lines: true,
+							markers: true,
+							tension: 2
+						}).
+						addAxis("x", {
+							min: 0,
+							max: 6,
+							majorTick: { stroke: "black", length: 3 },
+							minorTick: { stroke: "gray", length: 3 }
+						}).
+						addAxis("y", {
+							vertical: true,
+							min: 0,
+							max: 10,
+							majorTick: { stroke: "black", length: 3 },
+							minorTick: { stroke: "gray", length: 3 }
+						}).
+						addSeries("Series A", [
+							{ x: 0.5, y: 5 },
+							{ x: 1.5, y: 1.5 },
+							{ x: 2, y: 9 },
+							{ x: 5, y: 0.3 }
+						]).
+						addSeries("Series B", [
+							{ x: 0.3, y: 8 },
+							{ x: 4, y: 6 },
+							{ x: 5.5, y: 2 }
+						]).
+						render();
+				}
+			}
+		];
+		var now = function(){
+			return (new Date()).getTime();
+		};
+
+
+		dojo.addOnLoad(function(){
+			var defaultStyle = { width: "400px", height: "200px" };
+			var tmpl = new dojox.dtl.Template(dojo.byId("template").value);
+			var context = new dojox.dtl.Context({ charts: charts });
+			dojo.byId("charts").innerHTML = tmpl.render(context);
+
+			dojo.forEach(charts, function(item, idx){
+				var start = now();
+				var n = dojo.byId("chart_"+idx);
+				dojo.style(n, item.style||defaultStyle);
+				item.makeChart(n);
+				console.debug((now()-start), "ms to create:", (idx+1)+":", item.description);
+			});
+		});
+
+	</script>
+</head>
+<body>
+	<textarea id="template" style="display: none;">
+		{% for item in charts %}
+			<p>{{ forloop.counter }}: {{ item.description }}</p>
+			<div id="chart_{{ forloop.counter0 }}"></div>
+		{% endfor %}
+	</textarea>
+
+	<h1>Chart 2D</h1>
+
+	<div id="charts"></div>
+</body>
+</html>

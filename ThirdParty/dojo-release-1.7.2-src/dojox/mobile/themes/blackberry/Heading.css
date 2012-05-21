@@ -1,0 +1,83 @@
+/* dojox.mobile.Heading */
+.mblHeading {
+  position: relative;
+  margin: 0px;
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  z-index: 1;
+  padding: 0px;
+  height: 38px;
+  background-color: #424142;
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#4a4d52), to(#292c31));
+  border-top: 1px solid #63696B;
+  border-bottom: 1px solid #292C31;
+  color: white;
+  font-family: Helvetica;
+  font-size: 18px;
+  font-weight: normal;
+  text-align: center;
+  line-height: 40px;
+}
+.mblHeading * {
+  z-index: 2;
+}
+.mblHeadingDivTitle {
+  position: absolute;
+  width: 100%;
+  display: none;
+  left: 0px;
+  z-index: 1;
+}
+.mblHeadingCenterTitle .mblHeadingDivTitle {
+  display: block;
+}
+.mblHeadingCenterTitle .mblHeadingSpanTitle {
+  display: none;
+}
+/* Heading Arrow Button */
+.mblArrowButton {
+  position: relative;
+  float: left;
+  height: 28px;
+  margin: 4px 3px 0px 0px;
+}
+.mblArrowButtonHead {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 19px;
+  height: 19px;
+  border: 1px solid #39454A;
+  -webkit-transform: scale(0.8, 1) rotate(45deg);
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#f7fbf7), to(#cecfd6), color-stop(0.5, #ced3ce));
+}
+.dj_chrome .mblArrowButtonHead {
+  height: 20px;
+  border: 1px inset #39454A;
+  -webkit-transform: scale(0.7, 1) rotate(45deg);
+}
+.mblArrowButtonBody {
+  position: absolute;
+  cursor: pointer;
+  -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
+  top: 1px;
+  left: 15px;
+  padding: 0px 10px 0px 5px;
+  height: 28px;
+  border: none;
+  font-family: Helvetica;
+  font-size: 14px;
+  font-weight: bold;
+  color: black;
+  line-height: 30px;
+  -webkit-border-top-right-radius: 6px;
+  -webkit-border-bottom-right-radius: 6px;
+  background-color: #CED3CE;
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#f7fbf7), to(#cecfd6), color-stop(0.5, #ced3ce));
+}
+.mblArrowButtonSelected .mblArrowButtonHead, .mblArrowButtonSelected .mblArrowButtonBody {
+  color: white;
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#088eef), to(#0851ad), color-stop(0.5, #0869c6));
+}

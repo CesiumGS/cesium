@@ -1,0 +1,175 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+	<head>
+		<title>Scorll Leak</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+		<link rel=stylesheet href="support/common.css"/>
+		<style type="text/css">
+			body {
+				font-size: 0.9em;
+				font-family: Geneva, Arial, Helvetica, sans-serif;
+				padding: 0.5em;
+			}
+			.title {
+				text-align:center;
+			}
+	 		#grid {
+	 			border: 1px solid #333;
+				width: 80em;
+				height: 45em;
+			}
+	
+		</style>
+		<script type="text/javascript" src="../../../../dojo/dojo.js" 
+			djConfig="isDebug:false, parseOnLoad: true"></script>
+		<script type="text/javascript">
+			dojo.require("dijit.dijit"); // optimize: load dijit layer
+			dojo.require("dojox.grid.EnhancedGrid");
+			dojo.require("dojo.data.ItemFileWriteStore");
+			dojo.require("dojo.parser");
+			dojo.require("dojox.grid.enhanced.plugins.Filter");
+			dojo.require("dojox.grid.enhanced.plugins.exporter.CSVWriter");
+			dojo.require("dojox.grid.enhanced.plugins.Printer");
+			dojo.require("dojox.grid.enhanced.plugins.Cookie");
+			dojo.require("dojox.grid.enhanced.plugins.IndirectSelection");
+			dojo.require("dojox.grid.enhanced.plugins.NestedSorting");
+			dojo.require("dojox.grid.enhanced.plugins.Selector");
+			dojo.require("dojox.grid.enhanced.plugins.Menu");
+			dojo.require("dojox.grid.enhanced.plugins.DnD");
+			dojo.require("dojox.grid.enhanced.plugins.Search");
+			dojo.require("dojox.grid.enhanced.plugins.CellMerge");
+			dojo.require("dojox.grid.enhanced.plugins.Pagination");
+			dojo.require("dojox.grid.enhanced.plugins.GridSource");
+		</script>
+		<script type="text/javascript" src="../support/test_data.js"></script>
+		<script type="text/javascript">
+			//init data
+			var data = {
+				identifier: 'id',
+				label: 'id',
+				items: []
+			};
+			var data_list = [ 
+				{ col1: "normal", col2: false, col3: "new", col4: 'But are not followed by two hexadecimal', col5: 29.91, col6: 10, col7: false },
+				{ col1: "important", col2: false, col3: "new", col4: 'Because a % sign always indicates', col5: 9.33, col6: -5, col7: false },
+				{ col1: "important", col2: false, col3: "read", col4: 'Signs can be selectively', col5: 19.34, col6: 0, col7: true },
+				{ col1: "note", col2: false, col3: "read", col4: 'However the reserved characters', col5: 15.63, col6: 0, col7: true },
+				{ col1: "normal", col2: false, col3: "replied", col4: 'It is therefore necessary', col5: 24.22, col6: 5.50, col7: true },
+				{ col1: "important", col2: false, col3: "replied", col4: 'To problems of corruption by', col5: 9.12, col6: -3, col7: true },
+				{ col1: "note", col2: false, col3: "replied", col4: 'Which would simply be awkward in', col5: 12.15, col6: -4, col7: false }
+			];
+			var rows = 500;
+			for(var i=0, l=data_list.length; i<rows; i++){
+				data.items.push(dojo.mixin({ id: i }, data_list[i%l]));
+			}
+		
+			// global var "test_store"
+			test_store = new dojo.data.ItemFileWriteStore({data: data});
+			
+			
+			var grid = null, delta = 1000, interval = 6000;
+			var plugins = {
+				"nestedSorting": {},
+				"indirectSelection": {
+					headerSelector: true,
+					name: "Selection", 
+					width:"70px", 
+					styles:"text-align: center;"
+				},
+				"menus": {
+					headerMenu: "headerMenu", 
+					rowMenu: "rowMenu", 
+					cellMenu: "cellMenu", 
+					selectedRegionMenu: "selectedRegionMenu"
+				},
+				"exporter": {},
+				"printer": {},
+				"filter": {
+					closeFilterbarButton: true,
+					ruleCount: 0
+				},
+				"cookie": {},
+				"selector": {},
+				"dnd": {
+					copyOnly: false
+				},
+				"cellMerge": {
+					"mergedCells": [
+						{row: "3", start: 1, end: 10, major: 3}
+					]
+				},
+//				"pagination":
+//				{
+//					pageSizes: ["5", "10", "20", "50", "All"],	// Array, custom the items per page button
+//					// itemTitle: "entrys", 	// String, custom the item' title of description
+//					description: true,	// boolean, custom weather or not the discription will be displayed
+//					sizeSwitch: true,	// boolean, custom weather or not the page size switch will be displayed
+//					pageStepper: true,	// boolean, custom weather or not the page step will be displayed
+//					gotoButton: true,
+//					maxPageStep: 10,		// Integer, custom how many page step will be displayed
+//					position: "bottom"		// String, custom the position of the paginator bar
+//											// there're three options: top, bottom, both
+//					// ,descTemplate: "${1} ${0}" // A template of the current position description.
+//				},
+				"search": {}
+			};
+			var gridArgs = {
+			};
+			var layout = [[
+				{name: 'Column 1', field: 'col1'},
+				{name: 'Column 2', field: 'col2'},
+				{name: 'Column 3', field: 'col3'},
+				{name: 'Column 4', field: 'col4', width: "150px"},
+				{name: 'Column 5', field: 'col5'},
+				{name: 'Column 6', field: 'col6'},
+				{name: 'Column 7', field: 'col7'},
+				{name: 'Column 8', field: 'col5'}
+			]];
+			
+			dojo.addOnLoad(function() {
+				grid = new dojox.grid.EnhancedGrid(dojo.mixin({
+					id: "grid",
+					store: test_store,
+					structure: layout,
+					rowsPerPage: 25,
+					keepRows: 75,
+					plugins : plugins
+				}, gridArgs));
+
+				dojo.byId("gridContainer").appendChild(grid.domNode);
+				grid.startup();
+			});
+
+			function scrollGrid() {
+				setTimeout(function(){
+					grid.scrollToRow(50);
+					setTimeout(function(){
+						grid.scrollToRow(100);
+						setTimeout(function(){
+							grid.scrollToRow(300);
+							setTimeout(function(){
+								grid.scrollToRow(400);
+								setTimeout(function(){
+									grid.scrollToRow(0);
+								}, delta);
+							}, delta);
+						}, delta);
+					}, delta);
+				}, delta);
+			}
+			
+			function leakTest(){
+				scrollGrid();
+				setInterval(function(){
+					scrollGrid();
+				}, interval);
+			}
+		</script>
+	</head>
+	<body class="claro">
+		<div class="heading">dojox.grid.EnhancedGrid Scorll Leak Test</div>
+		<button id="leakTest" onClick="leakTest();">EnhancedGrid Scorll Leak</button>
+		<div id="gridContainer"></div>
+	</body>
+</html>

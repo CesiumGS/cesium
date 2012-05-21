@@ -1,0 +1,166 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>dojox.image.LightboxNano Tests | The Dojo Toolkit</title>
+
+	<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+	@import "../../../dijit/themes/tundra/tundra.css";
+	.wrapper{width:800px;}
+	img{border:#666 solid 2px;}
+	.pic1{float:right;margin:0 0 10px 10px;}
+	.pic2{float:left;margin:0 10px 10px 0;}
+	.pic3{margin:0 auto;width:240px;}
+	a:hover .dojoxEnlarge{display:block !important;}
+	.dojoxEnlarge{background:url(images/enlarge.png) no-repeat 0 0;top:-5px;left:-5px;width:16px;height:16px;}
+	.dojoxLoading{
+		background:#333 url(images/loading-dark.gif) no-repeat center center;
+		border-radius:5px;
+		-moz-border-radius:5px;
+		-webkit-border-radius:5px;
+		border:2px solid #000;
+		height:24px;
+		filter:alpha(opacity=80);
+		opacity:0.8;
+		padding:6px;
+		width:24px;
+	}
+	</style>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		djConfig="isDebug:true, parseOnLoad:true"></script>
+
+	<script type="text/javascript">
+	dojo.require("dojo.parser");
+	dojo.require("dojox.image.LightboxNano");
+	
+	dojo.addOnLoad(function(){
+		
+		// programmatic example
+		var w = new dojox.image.LightboxNano({
+			href: "images/chris3_lg.jpg"
+		}, "pic3");
+		
+		// a dynamic, singletonish Nano
+		var n = new dojox.image.LightboxNano();
+		dojo.query(".progButton1").onclick(function(e){
+			e.preventDefault();
+			n.show({ href:"images/chris3_lg.jpg", origin: e.target });
+		});
+		
+		dojo.query(".progButton2").onclick(function(e){
+			e.preventDefault();
+			n.show({ href:"images/chris3_lg.jpg" });
+		});
+	});
+	</script>
+</head>
+<body class="tundra">
+
+<h1>LightboxNano Test</h1>
+
+<div class="wrapper">
+
+	<p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Sed eu orci. Phasellus luctus placerat
+	tellus. Nulla tempus tincidunt erat. Pellentesque habitant morbi tristique senectus et netus et
+	malesuada fames ac turpis egestas. Proin eros. Integer nisl orci, auctor a, facilisis ut,
+	adipiscing id, libero. Pellentesque lacus. Curabitur lobortis sapien eget est. Cras non urna ut
+	justo gravida accumsan. Vestibulum ac leo. Integer a est non risus feugiat pellentesque. Aliquam
+	neque. Fusce ligula purus, pharetra non, placerat vitae, pellentesque vitae, metus. Fusce laoreet.
+	Nullam placerat sem nec nisi aliquet volutpat.</p>
+
+	<h2>Declarative example on a &lt;img&gt; tag.</h2>
+
+	<p><img class="pic1" dojoType="dojox.image.LightboxNano" src="images/chris1_sm.jpg" href="images/chris1_lg.jpg">
+	In est magna, rutrum ut, consectetuer eget, iaculis sit amet, augue. Aliquam sagittis, felis sit
+	amet pharetra gravida, nunc lacus placerat sem, ac vulputate massa leo ut sapien. Nulla eget augue.
+	Nunc magna urna, vehicula eu, luctus eu, gravida at, velit. Phasellus enim. Integer placerat
+	tincidunt sapien. Nulla euismod augue quis lectus. In vehicula aliquet orci. Nulla euismod. Nam
+	feugiat elit a risus. Suspendisse cursus congue urna.</p>
+
+	<p>Aenean bibendum, orci non placerat varius, risus odio interdum lacus, a consectetuer lorem arcu
+	vitae odio. Aliquam erat volutpat. Sed quis urna ut sapien interdum dapibus. Vivamus eu nisi vel
+	justo faucibus consectetuer. Maecenas nibh. Mauris orci nibh, pharetra ut, mollis quis, congue
+	volutpat, neque. Vivamus malesuada sapien in nibh. Suspendisse orci felis, malesuada quis, dignissim
+	id, dapibus id, elit. Aliquam bibendum. Phasellus imperdiet purus sit amet enim vestibulum
+	adipiscing. Proin interdum, nunc eu euismod lacinia, mi tortor elementum arcu, ut iaculis risus
+	purus eu felis. Etiam enim nunc, vehicula in, laoreet quis, tincidunt eget, leo. Vestibulum enim
+	purus, posuere et, eleifend ac, tempus non, purus. Suspendisse rutrum elit at erat. Aenean interdum
+	risus sit amet lorem. Ut dignissim libero ac sapien. Aenean fermentum urna. Maecenas leo urna,
+	lobortis nec, ultrices at, rhoncus eget, tortor. Nunc sem. Mauris purus nisl, sodales ac, malesuada
+	at, pellentesque vel, leo.</p>
+
+	<h2>Declarative example on a &lt;a&gt; tag.</h2>
+
+	<p><a class="pic2" jsId="lightboxNano2" dojoType="dojox.image.LightboxNano" href="images/chris2_lg.jpg"><img src="images/chris2_sm.jpg"></a>
+	Nullam velit justo, aliquam sit amet, euismod sit amet, fermentum nec, pede. Proin sit amet
+	turpis tincidunt turpis posuere posuere. Donec ante. Donec ipsum. Morbi non lectus. Nullam rhoncus,
+	est in facilisis tincidunt, elit tortor aliquet velit, ut posuere nulla ipsum at tellus. Quisque
+	eget dolor vitae erat sollicitudin dignissim. Nulla at mi blandit lacus aliquam dignissim. Nunc
+	pretium. Nulla vitae enim vitae tortor iaculis ultrices. Vivamus suscipit urna ac ligula. Morbi
+	fringilla vestibulum sapien. Cras ante. Donec pulvinar sodales neque.</p>
+
+	<button onclick="lightboxNano2.destroy()">&lt;-- Delete this LightboxNano</button>
+
+	<p>Nam accumsan justo ac nibh. Ut ut tortor nec magna tincidunt pulvinar. Duis at ligula ut urna
+	adipiscing dapibus. Cras dolor. Sed a lectus sit amet quam gravida lobortis. In faucibus iaculis
+	ligula. Sed scelerisque, arcu vel egestas tristique, urna odio adipiscing magna, ac lacinia urna
+	turpis eu nulla. Sed aliquet nunc ut tortor. Suspendisse ut lacus et odio lobortis molestie.
+	Suspendisse et mi sed leo cursus dictum. Nulla cursus ornare neque. Praesent pede.</p>
+
+	<p>Aliquam erat volutpat. Sed adipiscing, pede sit amet varius elementum, libero nibh molestie nunc,
+	vitae mattis odio velit et leo. Aliquam nulla diam, ultricies at, bibendum vitae, posuere ac, nisi.
+	Quisque mi odio, aliquam malesuada, congue nec, porttitor eu, tellus. Cum sociis natoque penatibus et
+	magnis dis parturient montes, nascetur ridiculus mus. Fusce a sapien. Sed at augue ut diam malesuada
+	venenatis. Fusce eu dui eget velit bibendum posuere. Pellentesque est turpis, vestibulum ut,
+	imperdiet fringilla, pretium at, neque. Integer imperdiet ullamcorper tellus. Etiam feugiat, nibh in
+	sodales molestie, nunc mauris dignissim tellus, id dapibus dui ante nec orci. Sed at mi. Aenean sed
+	erat ut nulla luctus condimentum.</p>
+
+	<h2>Programmatic example</h2>
+
+	<div class="pic3"><img id="pic3" src="images/chris3_sm.jpg"></div>
+
+	<p>Ut gravida ante vitae lectus. Donec in lacus. Vivamus fringilla quam ac pede. Aenean feugiat risus.
+	Donec tincidunt est et massa. Proin imperdiet bibendum pede. Vivamus vel dolor vitae dui posuere
+	lobortis. Aliquam erat volutpat. Sed id metus. Class aptent taciti sociosqu ad litora torquent per
+	conubia nostra, per inceptos himenaeos. Vestibulum porta nunc vel leo. Mauris auctor, justo eu porta
+	vulputate, lectus eros lobortis ipsum, ut eleifend est odio nec lacus. Nam vitae neque id neque
+	bibendum semper. Integer ut nunc.</p>
+
+	<h2>Singleton like example</h2>
+
+	<p>Ut gravida ante vitae lectus. Donec in lacus. Vivamus fringilla quam ac pede. Aenean feugiat risus.
+	Donec tincidunt est et massa. Proin imperdiet bibendum pede. Vivamus vel dolor vitae dui posuere
+	lobortis. Aliquam erat volutpat. Sed id metus. Class aptent taciti sociosqu ad litora torquent per
+	conubia nostra, per inceptos himenaeos. Vestibulum porta nunc vel leo. Mauris auctor, justo eu porta
+	vulputate, lectus eros lobortis ipsum, ut eleifend est odio nec lacus. Nam vitae neque id neque
+	bibendum semper. Integer ut nunc.</p>
+
+	<button class="progButton1">
+		Show Arbitrary Image from here
+	</button>
+
+	<p>Ut gravida ante vitae lectus. Donec in lacus. Vivamus fringilla quam ac pede. Aenean feugiat risus.
+	Donec tincidunt est et massa. Proin imperdiet bibendum pede. Vivamus vel dolor vitae dui posuere
+	lobortis. Aliquam erat volutpat. Sed id metus. Class aptent taciti sociosqu ad litora torquent per
+	conubia nostra, per inceptos himenaeos. Vestibulum porta nunc vel leo. Mauris auctor, justo eu porta
+	vulputate, lectus eros lobortis ipsum, ut eleifend est odio nec lacus. Nam vitae neque id neque
+	bibendum semper. Integer ut nunc.</p>
+
+	<button class="progButton2">
+		Show Arbitrary Image with no origin
+	</button>
+
+	<p>Ut gravida ante vitae lectus. Donec in lacus. Vivamus fringilla quam ac pede. Aenean feugiat risus.
+	Donec tincidunt est et massa. Proin imperdiet bibendum pede. Vivamus vel dolor vitae dui posuere
+	lobortis. Aliquam erat volutpat. Sed id metus. Class aptent taciti sociosqu ad litora torquent per
+	conubia nostra, per inceptos himenaeos. Vestibulum porta nunc vel leo. Mauris auctor, justo eu porta
+	vulputate, lectus eros lobortis ipsum, ut eleifend est odio nec lacus. Nam vitae neque id neque
+	bibendum semper. Integer ut nunc.</p>
+
+</div>
+
+</body>
+</html>

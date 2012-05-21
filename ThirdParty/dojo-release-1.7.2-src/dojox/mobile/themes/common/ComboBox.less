@@ -1,0 +1,40 @@
+/* dojox.mobile.ComboBox */
+.dijitPopup {
+	// Popup items have a wrapper div (dijitPopup)
+	// with the real popup inside, and maybe an iframe too
+	margin: 0;
+	padding: 0;
+	position: absolute;
+	border: 0;
+	background-color: transparent;
+	.dijitPopup-styles;
+}
+.mblReset {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	line-height: normal;
+	font: inherit;
+	color: inherit;
+}
+.mblComboBoxMenu {
+	overflow-y: hidden !important;
+	position: relative;
+	overflow: hidden;
+	.mblComboBoxMenu-styles;
+}
+.mblComboBoxMenuItem {
+	white-space: nowrap;
+	.mblComboBoxMenuItem-styles;
+}
+.mblComboBoxMenuItemSelected {
+	// dijitMenuItemHover refers to actual mouse over
+	// dijitMenuItemSelected is used after a menu has been "activated" by
+	// clicking it, tabbing into it, or being opened from a parent menu,
+	// and denotes that the menu item has focus or that focus is on a child menu
+	.mblComboBoxMenuItemSelected-styles;
+}
+.mblComboBoxMenuPreviousButton,
+.mblComboBoxMenuNextButton {
+	.mblComboBoxMenuPreviousButton-styles;
+}

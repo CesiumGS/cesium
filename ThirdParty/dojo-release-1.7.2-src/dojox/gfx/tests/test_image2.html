@@ -1,0 +1,59 @@
+﻿<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" >
+<head>
+<title>Testing image</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+<!--<script type="text/javascript" src="../vml.js"></script>-->
+<!--<script type="text/javascript" src="../svg.js"></script>-->
+<!--<script type="text/javascript" src="../silverlight.js"></script>-->
+<script type="text/javascript">
+dojo.require("dojox.gfx");
+
+var grid_size = 500, grid_step = 50;
+var main = null, g = null, image = null, rect = null;
+
+createSurface = function(){
+	var surface = dojox.gfx.createSurface("test", 800, 600);
+	surface.whenLoaded(makeShapes);
+};
+
+makeShapes = function(s){
+	for(var i = 0; i <= grid_size; i += grid_step){
+		s.createLine({x1: 0, x2: grid_size, y1: i, y2: i}).setStroke("black");
+		s.createLine({y1: 0, y2: grid_size, x1: i, x2: i}).setStroke("black");
+	}
+
+	main = s.createGroup();
+	rect = main.createRect({x: 0, y: 0, width: 200, height: 200}).setStroke("black").setFill(new dojo.Color([255, 0, 255, 0.5]));
+	rect.connect("onclick", function(){ alert("rect"); })
+    
+	image = s.createImage({width: 150, height: 100, src: "images/eugene-sm.jpg"});
+	image.connect("onclick", function(){ alert("image"); })
+	
+	main.add(image);
+	
+	// static images to see how the size
+
+	s.createImage({x: 0,   y: 200, width: 150, height: 100, src: "images/eugene-sm.jpg"});
+	s.createImage({x: 0,   y: 300, width: 300, height: 100, src: "images/eugene-sm.jpg"});
+	s.createImage({x: 300, y: 200, width: 150, height: 200, src: "images/eugene-sm.jpg"});
+	
+	main.moveToFront();
+};
+
+trans = function(){
+	var x = 1;
+	main.setTransform([dojox.gfx.matrix.rotategAt(45, 200, 200), {dx: 200, dy: 200}]);
+};
+
+dojo.addOnLoad(createSurface);
+
+</script>
+</head>
+<body>
+<p>Testing image:<br /><button onclick="trans();">Trans</button></p>
+<p>Note: Silverlight doesn't allow downloading images when run from a file system. This demo should be run from a server.</p>
+<div id="test"></div>
+<p>That's all Folks!</p>
+</body>
+</html>

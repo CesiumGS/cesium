@@ -1,0 +1,92 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>Editor Smiley Test</title>
+
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+		@import "../../../dijit/themes/tundra/tundra.css";
+		@import "../plugins/resources/css/Smiley.css";
+	</style>
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true, isDebug: true"></script>
+
+	<script type="text/javascript">
+		dojo.require("dijit.Editor");
+		dojo.require("dojo.parser");
+        dojo.require("dojox.editor.plugins._SmileyPalette");
+        dojo.require("dojox.editor.plugins.Smiley");
+		dojo.require("dijit._editor.plugins.ViewSource");
+	</script>
+</head>
+<body class="tundra">
+	<br>
+	<h1 class="testTitle">Editor + Smiley Plugin</h1>
+	<div dojoType="dijit.Editor" id="editor" extraPlugins="['smiley', 'viewsource']">
+		<p>
+			This editor is created with the 'smiley' plugin and 'viewsource' plugin.
+			Viewsource should convert the smiley images into ascii text, and vice-versa (on returning from view source to normal editing mode).
+			Also, the smiley plugin should be disabled while in view source mode.
+		</p>
+		<div>
+			<center>[:-)] Smiley Plugin is Ready !!! &nbsp;[:-)]</center>
+		</div>
+        <ul>
+        <li>
+		emoticonSmile: "[:-)]",
+        </li>
+        <li>
+		emoticonLaughing: "[lol]",
+        </li>
+        <li>
+		emoticonWink: "[;-)]",
+        </li>
+        <li>
+		emoticonGrin: "[:-D]",
+        </li>
+        <li>
+		emoticonCool: "[8-)]",
+        </li>
+        <li>        
+		emoticonAngry: "[:-@]",
+        </li>
+        <li>
+		emoticonHalf: "[:-/]",
+        </li>
+        <li>
+		emoticonEyebrow: "[/:)]",
+        </li>
+        <li>
+		emoticonFrown: "[:-(]",
+        </li>
+        <li>
+		emoticonShy: "[:-$]",
+        </li>
+        <li>
+		emoticonGoofy: "[:-S]",
+        </li>
+        <li>
+		emoticonOops: "[:-O]",
+        </li>
+        <li>
+		emoticonTongue: "[:-P]",
+        </li>
+        <li>
+		emoticonIdea: "[(i)]",
+        </li>
+        <li>
+		emoticonYes: "[(y)]",
+        </li>
+        <li>
+		emoticonNo: "[(n)]",
+        </li>
+        <li>
+		emoticonAngel: "[0:-)]",
+        </li>
+        <li>
+		emoticonCrying: "[:'(]"
+         </li>
+	</ul>
+</body>
+</html>

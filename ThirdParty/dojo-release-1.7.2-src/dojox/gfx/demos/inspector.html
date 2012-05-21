@@ -1,0 +1,161 @@
+﻿<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" >
+<head>
+<title>Inspect DojoX GFX JSON</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+	td.cell { padding: 1em 1em 0em 0em; }
+	td.note { font-size: 80%; }
+</style>
+<script type="text/javascript" src="../../../dojo/dojo.js"></script>
+<script type="text/javascript">
+dojo.require("dojox.gfx");
+dojo.require("dojox.gfx.move");
+dojo.require("dojox.gfx.utils");
+
+surface = null;
+container_pos = null;
+mover = null;
+
+init = function(){
+	// initialize graphics
+	var container = dojo.byId("gfx");
+	surface = dojox.gfx.createSurface(container, 500, 500);
+	container_pos = dojo.coords(container, true);
+	// wire UI
+	dojo.connect(dojo.byId("load"), "onclick", onLoad);
+	dojo.connect(dojo.byId("add"),  "onclick", onAdd);
+	// handle moves
+	dojo.subscribe("/gfx/move/start", function(m){ mover = m; });
+	dojo.subscribe("/gfx/move/stop", function(){ mover = null; });
+	// handle shape operations
+	dojo.connect(document, "onkeydown", onKeyDown);
+	// cancel text selection and text dragging
+	dojo.connect(container, "ondragstart",   dojo, "stopEvent");
+	dojo.connect(container, "onselectstart", dojo, "stopEvent");
+};
+
+onLoad = function(){
+	var s = dojo.byId("source");
+	if(!s.value){
+		alert("Name of the file is required.");
+		return;
+	}
+	dojo.xhrGet({
+		url:			s.value,
+		preventCache:	true,
+		handleAs:		"json",
+		load:			loadObjects,
+		error:			function(r){ alert("Error: " + r); }
+	});
+};
+
+mainObject = null;
+names = [];
+
+loadObjects = function(r){
+	if(!r){
+		alert("Wrong JSON object. Did you type the file name correctly?");
+		return;
+	}
+	mainObject = r;
+	// clear old object names
+	names = [];
+	var s = dojo.byId("names"), ni = dojo.byId("names_info");
+	ni.innerHTML = "";
+	while(s.childNodes.length){ s.removeChild(s.lastChild); }
+	// find new names
+	findNames(s, dojo.byId("named").checked, "", mainObject);
+	ni.innerHTML = " (" + names.length + ")";
+};
+
+findNames = function(selector, named_only, prefix, o){
+	if(o instanceof Array){
+		for(var i = 0; i < o.length; ++i){
+			findNames(selector, named_only, prefix, o[i]);
+		}
+		return;
+	}
+	if(named_only && !("name" in o)) return;
+	var name = ("name" in o) ? o.name : "*",
+		full = prefix ? prefix + "/" + name : name,
+		opt  = document.createElement("option");
+	opt.value = names.length;
+	opt.innerHTML = full;
+	names.push(o);
+	selector.appendChild(opt);
+	if("children" in o){
+		findNames(selector, named_only, full, o.children);
+	}
+};
+
+onAdd = function(){
+	var s = dojo.byId("names");
+	for(var i = 0; i < s.options.length; ++i){
+		var opt = s.options[i];
+		if(!opt.selected) continue;
+		var object = names[Number(opt.value)];
+		var group = surface.createGroup();
+		dojox.gfx.utils.deserialize(group, object);
+		new dojox.gfx.Moveable(group); // make it moveable as whole
+	}
+};
+
+// event handling
+
+onKeyDown = function(e){
+	if(!mover) return;
+	switch(e.keyCode){
+		case "f".charCodeAt(0): case "F".charCodeAt(0):
+			mover.shape.moveToFront();
+			break;
+		case "b".charCodeAt(0): case "B".charCodeAt(0):
+			mover.shape.moveToBack();
+			break;
+		case "q".charCodeAt(0): case "Q".charCodeAt(0):
+			mover.shape.applyLeftTransform(dojox.gfx.matrix.rotategAt(-15, mover.lastX - container_pos.x, mover.lastY - container_pos.y));
+			break;
+		case "w".charCodeAt(0): case "W".charCodeAt(0):
+			mover.shape.applyLeftTransform(dojox.gfx.matrix.rotategAt(15, mover.lastX - container_pos.x, mover.lastY - container_pos.y));
+			break;
+		case "d".charCodeAt(0): case "D".charCodeAt(0):
+			mover.shape.parent.remove(mover.shape);
+			mover.shape.rawNode = null;
+			mover.destroy();
+			break;
+	}
+	dojo.stopEvent(e);
+};
+
+dojo.addOnLoad(init);
+</script>
+</head>
+<body>
+	<h1>Inspect DojoX GFX JSON</h1>
+	<p>Help: load a file, select an object, and add it, move it around, or apply operations to selected items:<br />
+	F &mdash; bring to front, B &mdash; bring to back, Q &mdash; rotate CCW, W &mdash; rotate CW, D &mdash; delete.<br />
+	(all operations work on currently dragged item).</p>
+	<p><strong>VML note:</strong> VML doesn't process PNG images with opacity correctly.</p>
+	<table><tr>
+		<td align="left" valign="top" class="cell"><div id="gfx" style="width: 500px; height: 500px; border: solid 1px black;"></div></td>
+		<td align="left" valign="top" class="cell"><table>
+			<tr><td>Source:</td></tr>
+			<tr><td><input type="text" id="source" value="data/Lars.json" size="30" />&nbsp;<button id="load">Load</button><br />
+			<input type="checkbox" id="named" checked="checked" />&nbsp;<label for="named">Load only named objects</label></td></tr>
+			<tr><td class="note"><em>Available sources:</em></td></tr>
+			<tr><td class="note"><em>data/Lars.json &mdash; vectors from SVG</em></td></tr>
+			<tr><td class="note"><em>data/Nils.json &mdash; vectors from SVG</em></td></tr>
+			<tr><td class="note"><em>data/LarsDreaming.json &mdash; vectors from SVG</em></td></tr>
+			<tr><td class="note"><em>data/buratino.json &mdash; images</em></td></tr>
+			<tr><td class="note"><em>data/transform.json &mdash; from dojox.gfx</em></td></tr>
+			<tr><td>&nbsp;</td></tr>
+			<tr><td>Objects<span id="names_info"></span>:</td></tr>
+			<tr><td><select id="names" multiple="multiple" size="10" style="width: 300px;"></select></td></tr>
+			<tr><td><button id="add">Add Selected</button></td></tr>
+			<tr><td class="note"><div  style="width: 300px;">Object names are hierarchical and separated by "/". Adding a selected object creates a group for this object. 
+			A higher-level object (a group) always includes lower-level objects as children.</div></td></tr>
+		</table></td>
+	</tr></table>
+</body>
+</html>

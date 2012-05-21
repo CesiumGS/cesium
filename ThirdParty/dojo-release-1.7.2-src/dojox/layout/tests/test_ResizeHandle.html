@@ -1,0 +1,195 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+
+	<title>Resize Widget Test</title>
+
+	<script type="text/javascript">var djConfig = {isDebug: true, parseOnLoad: true };</script>
+	<script type="text/javascript" src="../../../dojo/dojo.js"></script>
+	<script language="JavaScript" type="text/javascript">
+		dojo.require("dojo.parser"); 
+		dojo.require("dijit.layout.ContentPane");
+		dojo.require("dijit.form.Button");
+		dojo.require("dojox.layout.ResizeHandle");
+	
+		function makeNewSizer(){
+			var handle = document.createElement('div');
+			dojo.byId("programatic").appendChild(handle);
+			var resizer = new dojox.layout.ResizeHandle({
+				targetId: "programatic",
+				activeResize: true
+			},handle);
+			resizer.startup();
+		}
+		dojo.addOnLoad(makeNewSizer);
+		
+		// HOWTO use the resize topics
+		dojo.subscribe("/dojo/resize/start", function(inst){
+			// inst is the resizehandle instance. Lookup any members about 
+			// which node/widget/etc that way.
+			dojo.byId("status").innerHTML = "Resizing: " + inst;
+		});
+		var timer;
+		dojo.subscribe("/dojo/resize/stop", function(inst){
+			dojo.byId("status").innerHTML = "Finished: " + inst;
+			timer && clearTimeout(timer);
+			timer = setTimeout(function(){
+				dojo.fadeOut({
+					node: "status",
+					onEnd: function(n){
+						n.innerHTML = "Waiting.";
+						dojo.anim(n, { opacity: 1});
+					}
+				}).play();
+			}, 300);
+		});
+
+	</script>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/themes/dijit.css";
+		@import "../../../dijit/themes/tundra/tundra.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+		@import "../resources/ResizeHandle.css"; 
+		#programatic {
+			width:100px;
+			height:100px;
+			border:2px solid #333; 
+			position:relative;
+		}
+		
+		#handler, #handler2, #minMax {
+			position:relative; float:left;
+		}
+	</style>
+
+</head>
+<body class="tundra">
+
+	<h1 class="testTitle">dojox.layout.ResizeHandle test</h1>
+
+	<div id="status">Status Node</div>
+	
+	<p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Nam facilisis enim. 
+	Pellentesque in elit et lacus euismod dignissim. Aliquam dolor pede, convallis eget, 
+	dictum a, blandit ac, urna. Pellentesque sed nunc ut justo volutpat egestas. Class 
+	aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos hymenaeos.
+	In erat. Suspendisse potenti. Fusce faucibus nibh sed nisi. Phasellus faucibus, dui 
+	a cursus dapibus, mauris nulla euismod velit, a lobortis turpis arcu vel dui. Pellentesque 
+	fermentum ultrices pede. Donec auctor lectus eu arcu. Curabitur non orci eget est porta gravida.
+	Aliquam pretium orci id nisi. Duis faucibus, mi non adipiscing venenatis, erat urna aliquet elit,
+	eu fringilla lacus tellus quis erat. Nam tempus ornare lorem. Nullam feugiat.</p>
+
+	<p>Sed congue. Aenean blandit sollicitudin mi. Maecenas pellentesque. Vivamus ac urna. Nunc consequat nisi vitae quam. Suspendisse sed nunc. Proin suscipit porta magna. Duis accumsan nunc in velit. Nam et nibh. Nulla facilisi. Cras venenatis urna et magna. Aenean magna mauris, bibendum sit amet, semper quis, aliquet nec, sapien. Aliquam aliquam odio quis erat. Etiam est nisi, condimentum non, lacinia ac, vehicula laoreet, elit. Sed interdum augue sit amet quam dapibus semper. Nulla facilisi. Pellentesque lobortis erat nec quam.</p>
+
+	<!-- TODO: figure out a way to attach to non-containers, or make ResizeContainter
+	<div style="position:relative; height:188px; width:125px; margin:0; padding:0; " id="logo"><img src="images/dojoLogo.png" style="width:100%; height:100%">
+	<div dojoType="dojox.layout.ResizeHandle" activeSizing="true" targetId="logo"></div>
+	</div>
+	-->
+
+	<div id="programatic"> This is text!</div>
+	<br><br>
+	<div dojoType="dijit.layout.ContentPane"
+		title="Test window"
+		style="width: 300px; height: 200px; padding:10px; border: 1px solid #dedede; position: relative; background: white;"
+		id="testWindow"
+	>
+		
+		<button dojoType='dijit.form.Button'>
+			kill handle
+			<script type="dojo/method" event="onClick">
+				dijit.byId("hand1").destroy();
+			</script>
+		</button>
+		Content Pane w/a resize handle. activeResize'ing only on layout Widgets? FIXME: :)
+		<div id="hand1" dojoType="dojox.layout.ResizeHandle" targetId="testWindow"></div>
+	</div>
+
+	<br>
+
+	<div id="plainDiv"
+		style="width: 300px; padding:3px; height: 200px; border:1px solid #666; position: relative; background: white;"
+	>
+		<button dojoType='dijit.form.Button'>
+			kill handle
+			<script type="dojo/method" event="onClick">
+				dijit.byId("hand2").destroy();
+			</script>
+		</button>
+		Plain div w/a resize handle. All Default settings.
+		<div id="hand2" dojoType="dojox.layout.ResizeHandle" targetId="plainDiv"></div>
+	</div>
+
+	<br><br>	
+
+	<div id="plainDiv3" 
+		style="margin:8px; float:left; width: 300px; height: 200px; border: solid red 5px; position: relative; background: white;"
+	>
+		Plain div w/a resize handle but resizeAxis="y", and activeResize="true"
+		<div dojoType="dojox.layout.ResizeHandle" resizeAxis="y" activeResize="true" targetId="plainDiv3" style="bottom: 0; right: 0; position: absolute;"></div>
+	</div>
+
+
+	<div id="plainDiv2" 
+		style="margin:8px; float:left; width: 300px; height: 200px; border: solid red 5px; position: relative; background: white;"
+	>
+		Plain div w/a resize handle but resizeAxis="x" with animated sizing.
+		<div dojoType="dojox.layout.ResizeHandle" resizeAxis="x" targetId="plainDiv2" style="bottom: 2px; right: 2px; position: absolute;"></div>
+	</div>
+
+	<br><br>
+	
+	<div id="plainDiv22" 
+		style="margin:8px; padding:15px; float:left; width: 300px; height: 200px; border: solid red 5px; position: relative; background: white;"
+	>
+		Plain div w/a resize handle but resizeAxis="xy" with animated sizing (combine).
+		<div dojoType="dojox.layout.ResizeHandle" resizeAxis="xy" animateMethod="combine" targetId="plainDiv22" style="bottom: 2px; right: 2px; position: absolute;"></div>
+	</div>
+
+	<br><br>
+
+	<p>Sed arcu magna, molestie at, fringilla in, sodales eu, elit. Curabitur mattis lorem et est. Quisque et tortor. Integer bibendum vulputate odio. Nam nec ipsum. Vestibulum mollis eros feugiat augue. Integer fermentum odio lobortis odio. Nullam mollis nisl non metus. Maecenas nec nunc eget pede ultrices blandit. Ut non purus ut elit convallis eleifend. Fusce tincidunt, justo quis tempus euismod, magna nulla viverra libero, sit amet lacinia odio diam id risus. Ut varius viverra turpis. Morbi urna elit, imperdiet eu, porta ac, pharetra sed, nisi. Etiam ante libero, ultrices ac, faucibus ac, cursus sodales, nisl. Praesent nisl sem, fermentum eu, consequat quis, varius interdum, nulla. Donec neque tortor, sollicitudin sed, consequat nec, facilisis sit amet, orci. Aenean ut eros sit amet ante pharetra interdum.</p>
+
+	<p>Fusce rutrum pede eget quam. Praesent purus. Aenean at elit in sem volutpat facilisis. Nunc est augue, commodo at, pretium a, fermentum at, quam. Nam sit amet enim. Suspendisse potenti. Cras hendrerit rhoncus justo. Integer libero. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Aliquam erat volutpat. Sed adipiscing mi vel ipsum.</p>
+
+	<br style="clear:both;">
+	
+	<h2>Experimental Settings:</h2>
+
+	<div id="handler" style="height:200px; width:200px; border:2px solid #ededed">
+		<p>Plain div with fixed aspect and 1:1</p>
+		<div dojoType="dojox.layout.ResizeHandle" targetId="handler" fixedAspect="true" style="bottom: 2px; right: 2px; position: absolute;"></div>
+	</div>
+
+	<p>known issue: fixed aspect only works with 1:1 aspect ratio</p>
+	<div id="handler2" style="height:100px; width:300px; border:red">
+		<p>Plain div with fixed aspect and 4:3</p>
+		<div dojoType="dojox.layout.ResizeHandle" targetId="handler2" fixedAspect="true" style="bottom: 2px; right: 2px; position: absolute;"></div>
+	</div>
+
+	<div id="minMax" style="width:150px; height:150px; border:1px solid #000">
+		<p>Min/Max set to 25x25 and 200x200, constrainMax = true</p>
+		<div dojoType="dojox.layout.ResizeHandle" targetId="minMax"
+			constrainMax="true" maxWidth="200" maxHeight="200"
+			minWidth="25" minHeight="25" style="bottom: 2px; right: 2px; position: absolute;"
+		></div>
+	</div>
+
+	<div id="minMax2" style="width:150px; float:left; position:relative; height:150px; border:1px solid #000">
+		<p>Min/Max set to 25x25 and 200x200, constrainMax = true, fixed 1:1 aspect</p>
+		<div dojoType="dojox.layout.ResizeHandle" targetId="minMax2"
+			constrainMax="true" maxWidth="200" maxHeight="200" fixedAspect="true"
+			minWidth="25" minHeight="25" style="bottom: 2px; right: 2px; position: absolute;"
+		></div>
+	</div>
+
+	<br style="clear:both;">
+
+	<p>Sed aliquam, quam consectetuer condimentum bibendum, neque libero commodo metus, non consectetuer magna risus vitae eros. Pellentesque mollis augue id libero. Morbi nonummy hendrerit dui. Morbi nisi felis, fringilla ac, euismod vitae, dictum mollis, pede. Integer suscipit, est sed posuere ullamcorper, ipsum lectus interdum nunc, quis blandit erat eros hendrerit pede. Vestibulum varius, elit id mattis mattis, nulla est feugiat ante, eget vestibulum augue eros ut odio. Maecenas euismod purus quis felis. Ut hendrerit tincidunt est. Fusce euismod, nunc eu tempus tempor, purus ligula volutpat tellus, nec lacinia sapien enim id risus. Aliquam orci turpis, condimentum sed, sollicitudin vel, placerat in, purus. Proin tortor nisl, blandit quis, imperdiet quis, scelerisque at, nisl. Maecenas suscipit fringilla erat. Curabitur consequat, dui blandit suscipit dictum, felis lectus imperdiet tellus, sit amet ornare risus mauris non ipsum. Fusce a purus. Vestibulum sodales. Sed porta ultrices nibh. Vestibulum metus.</p>
+
+	<p>Sed aliquam, quam consectetuer condimentum bibendum, neque libero commodo metus, non consectetuer magna risus vitae eros. Pellentesque mollis augue id libero. Morbi nonummy hendrerit dui. Morbi nisi felis, fringilla ac, euismod vitae, dictum mollis, pede. Integer suscipit, est sed posuere ullamcorper, ipsum lectus interdum nunc, quis blandit erat eros hendrerit pede. Vestibulum varius, elit id mattis mattis, nulla est feugiat ante, eget vestibulum augue eros ut odio. Maecenas euismod purus quis felis. Ut hendrerit tincidunt est. Fusce euismod, nunc eu tempus tempor, purus ligula volutpat tellus, nec lacinia sapien enim id risus. Aliquam orci turpis, condimentum sed, sollicitudin vel, placerat in, purus. Proin tortor nisl, blandit quis, imperdiet quis, scelerisque at, nisl. Maecenas suscipit fringilla erat. Curabitur consequat, dui blandit suscipit dictum, felis lectus imperdiet tellus, sit amet ornare risus mauris non ipsum. Fusce a purus. Vestibulum sodales. Sed porta ultrices nibh. Vestibulum metus.</p>
+
+
+</body>
+</html>

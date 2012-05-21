@@ -1,0 +1,234 @@
+<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+	<title>A Sample ToolTip using dijit and dojox.gfx</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+		@import "../../../dijit/themes/tundra/tundra.css";
+		.tooltipBody {
+			color:#fff;
+		}
+	</style>
+	<script type="text/javascript" djConfig="parseOnLoad:true, isDebug:true" src="../../../dojo/dojo.js"></script>
+	<script type="text/javascript">
+		dojo.require("dijit.form.Button");
+	
+		dojo.require("dojox.gfx");
+		dojo.require("dojox.gfx.move");
+		dojo.require("dijit._Widget"); dojo.require("dijit._Templated");
+		
+		dojo.declare("demo.Tooltip",[dijit._Widget,dijit._Templated],{
+			
+			// attachId: String|DomNode?
+			// 		the Id or domNode to attach this tooltip to
+			attachId:"",
+
+			// attachHover: Boolean
+			// 		disable hover behavior for the target
+			attachHover:true,
+
+			// attachParent: Boolean
+			//		automatically attach to our parentnode rather than byId or query
+			attachParent:false,
+
+			// attachQuery: String?
+			//		an optional selector query to attach this tooltip to
+			attachQuery:"",
+
+			// attachScope: String|DomNode?
+			//		and optional scope to run the query against, passed as the
+			//		second arg to dojo.query()
+			queryScope:"",
+
+			// hideDelay: Int
+			// 		time in my to delay automatically closing the node
+			hideDelay: 123, // ms
+
+			// persists: Boolean
+			//		if true, the node will stay visible until explicitly closed
+			//		via _hide() or click on closeIcon
+			persists:false,
+			
+			templateString:
+				'<div class="foo">'
+					+'<div style="position:relative;">'
+						+'<div dojoAttachPoint="surfaceNode"></div>'
+						+'<div class="tooltipBody" dojoAttachPoint="containerNode"></div>'
+					+'</div>'
+				+'</div>',
+			
+			postCreate:function(){
+				// call _Widget postCreate first
+				this.inherited(arguments);
+				// gfx version of "_Templated" idea:
+				this._initSurface();
+				
+				if(this.attachParent){
+					// over-ride and reuse attachId as domNode from now on
+					this.attachId = this.domNode.parentNode;
+				}
+				if(this.attachId){
+					// domNode again. setup connections
+					this.attachId = dojo.byId(this.attachId);
+					if(this.attachHover){
+						this.connect(this.attachId,"onmouseenter","_show");
+					}
+					if(!this.persists){
+						this.connect(this.attachId,"onmouseleave","_initHide");
+					}
+				}else if(this.attachQuery){
+					// setup connections via dojo.query for multi-tooltips
+					var nl = dojo.query(this.attachQuery,this.queryScope);
+					if(this.attachHover){ nl.connect("onmouseenter",this,"_show") }
+					if(!this.persists){ nl.connect("onmouseleave",this,"_initHide") }
+				}
+				// place the tooltip			
+				dojo.body().appendChild(this.domNode);
+				dojo.style(this.domNode,{
+					position:"absolute"
+				});
+				// could do this in css:
+				dojo.style(this.containerNode,{
+					position:"absolute",
+					top:"15px",
+					left:"12px",
+					height:"83px",
+					width:"190px"
+				});
+				// setup our animations
+				this._hideAnim = dojo.fadeOut({ node:this.domNode, duration:150 });
+				this._showAnim = dojo.fadeIn({ node:this.domNode, duration:75 });
+				this.connect(this._hideAnim,"onEnd","_postHide");
+				if(!this.persists){
+					this.connect(this.domNode,"onmouseleave","_initHide");
+				}
+				// hide quickly
+				this._postHide();
+			},
+			
+			_initHide: function(e){
+				// summary: start the timer for the hideDelay
+				if(!this.persists && this.hideDelay){
+					this._delay = setTimeout(dojo.hitch(this,"_hide",e||null),this.hideDelay);
+				}
+			},
+			
+			_clearDelay: function(){
+				// summary: clear our hide delay timeout
+				if(this._delay){ clearTimeout(this._delay); }
+			},
+			
+			_show: function(e){
+				// summary: show the widget
+				this._clearDelay();
+				var pos = dojo.coords(e.target || this.attachId,true)
+				// we need to more accurately position the domNode:
+				dojo.style(this.domNode,{
+					top: pos.y - (pos.h / 2) - 50,
+					left: pos.x + pos.w - 25,
+					display:"block"
+				});
+				dojo.fadeIn({ node: this.domNode, duration:75 }).play();
+			},
+			
+			_hide: function(e){
+				// summary: hide the tooltip
+				this._hideAnim.play();
+			},
+			
+			_postHide: function(){
+				// summary: after hide animation cleanup
+				dojo.style(this.domNode,"display","none");
+			},
+			
+			_initSurface:function(){
+				// made generally from an SVG file:
+				this.surface = dojox.gfx.createSurface(this.surfaceNode,220,120);
+				this.tooltip = this.surface.createGroup();
+				this.tooltip.createPath("M213,101.072c0,6.675-5.411,12.086-12.086,12.086H13.586 c-6.675,0-12.086-5.411-12.086-12.086V21.004c0-6.675,5.411-12.086,12.086-12.086h187.328c6.675,0,12.086,5.411,12.086,12.086 V101.072z")
+					.setFill("rgba(0,0,0,0.25)");
+				
+				this.tooltip.createPath("M211.5,97.418c0,6.627-5.373,12-12,12 h-186c-6.627,0-12-5.373-12-12v-79.5c0-6.627,5.373-12,12-12h186c6.627,0,12,5.373,12,12V97.418z")
+					.setStroke({ width:2, color:"#FFF" })
+					.setFill("rgba(0,0,0,0.5)")
+					.connect("onmouseover",dojo.hitch(this,"_clearDelay"));
+				
+				if(this.persists){
+					// make the close icon
+					this._toolButton = this.surface.createGroup();
+					this._toolButton.createEllipse({ cx:207.25, cy:12.32, rx: 7.866, ry: 7.099 })
+						.setFill("#ededed");
+					this._toolButton.createCircle({ cx:207.25, cy: 9.25, r:8.25 })
+						.setStroke({ width:2, color:"#FFF" })
+						.setFill("#000")
+					;
+					this._toolButton.connect("onclick",dojo.hitch(this,"_hide"));	
+					// the X	
+					this._toolButton.createLine({ x1:203.618, y1:5.04, x2: 210.89, y2:12.979 })
+						.setStroke({ width:2, color:"#d6d6d6" });
+					this._toolButton.createLine({ x1:203.539, y1:12.979, x2: 210.89, y2:5.04 })
+						.setStroke({ width:2, color:"#d6d6d6" });
+				}
+			}	
+		});
+	</script>
+	
+</head>
+<body class="tundra">
+
+	<h1>dojox.gfx: A Sample tooltip</h1>
+
+	<ul style="width:150px; border:2px solid #ededed; cursor:pointer">
+		
+	
+		<!-- you can put any content you want in there -->
+		<li id="warn2">
+			Tooltip + Button
+			<div attachId="warn2" id="warn2tt" dojoType="demo.Tooltip"><p style="margin-top:0">Canvas renderer doesn't implement event handling.
+				<button dojoType="dijit.form.Button">
+					Button
+					<script type="dojo/method" event="onClick">
+						alert(" woo hoo! ");
+						dijit.byId("warn2tt")._hide();
+					</script>
+				</button>
+			</p></div>
+		</li>
+
+		<!-- a simple tooltip -->
+		<li id="warn1">
+			Hover trigger / persists
+			<div persists="true" attachId="warn1" dojoType="demo.Tooltip">Canvas renderer doesn't implement event handling.</div>
+		</li>
+
+		<!-- these get the same tooltip from the attachQuery=".multitip" below -->
+		<li class="multitip">MultiTip trigger 1</li>
+		<li>I do nothing</li>
+		<li class="multitip">Trigger two</li>
+
+		<li><a href="#" onclick="dijit.byId('nohover')._show(arguments[0])">show this way
+			<label dojoType="demo.Tooltip" attachParent="true" attachHover="false" id="nohover">some text</label>
+			</a>	
+		</li>
+
+		<!-- attachParent makes the tooltip look for domNode.parentNode before moving to body() -->
+		<li>
+			Parent Attached Tooltip
+			<div attachParent="true" persists="true" dojoType="demo.Tooltip">
+				<form id="fooForm">
+					<p style="margin-top:0;">
+					Name:<br> <input type="text" name="username" style="border:1px solid #ededed" /><br>
+					Pass:<br> <input type="password" name="password" style="border:1px solid #ededed" />
+					</p>
+				</form>
+			</div>
+		</li>
+
+	</ul>
+
+	<!-- attach a single tooltip message to a number of nodes at once -->
+	<div attachQuery=".multitip" dojoType="demo.Tooltip">Canvas renderer doesn't implement event handling. (shared tooltip)</div>
+
+</body>
+</html>

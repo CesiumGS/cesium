@@ -1,0 +1,19 @@
+<h1 dojoType="dojox.mobile.Heading" back="Back" id="searchHeader">
+	Search Flickr
+</h1>
+<input 
+	dojoType="dojox.mobile.TextBox"
+	value="kinsale"
+	class="fullWidthInput"
+	placeholder="Enter Search Text"
+	intermediateChanges="true"
+	id="searchTextInput">
+	
+<div dojoType="dojox.mobile.RoundRect" shadow="true">
+  <div id="searchList" 
+  	  dojoType="dojox.mobile.app.List" 
+      class="iconList"
+      enableDelete="false"
+      itemTemplate="app/views/flickr-search-group/rowTemplate.html"
+      emptyTemplate="app/views/flickr-search-group/emptyTemplate.html"></div>
+</div>

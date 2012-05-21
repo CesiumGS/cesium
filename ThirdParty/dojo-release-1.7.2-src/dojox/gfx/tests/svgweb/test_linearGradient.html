@@ -1,0 +1,75 @@
+﻿<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" >
+<head>
+<title>Dojo Unified 2D Graphics</title>
+<style type="text/css">
+	@import "../../../../dojo/resources/dojo.css";
+	@import "../../../../dijit/tests/css/dijitTests.css";
+</style>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!-- SVGWEB { -->
+<meta name="svg.render.forceflash" content="true"/>
+<script src="svgweb/src/svg.js" data-path="svgweb/src"></script>
+<script src="../../../../dojo/dojo.js" djConfig="isDebug:true,forceGfxRenderer:'svg'" type="text/javascript"></script>
+<!-- } -->
+<script type="text/javascript">
+dojo.require("dojox.gfx");
+dojo.require("dojo.colors");
+
+makeShapes = function(){
+	var lg1 = {
+		type: "linear",
+		x1: 0, y1: 0,
+		x2: 300, y2: 0,
+		colors: [
+			{ offset: 0,   color: [0, 0, 0, 0] },
+			{ offset: 0.1, color: "#000000" },
+			{ offset: 0.2, color: "red" },
+			{ offset: 0.3, color: "rgb(0,255,0)" },
+			{ offset: 0.4, color: "blue" },
+			{ offset: 0.5, color: "#ff0" },
+			{ offset: 0.6, color: [128] },
+			{ offset: 0.7, color: [128, 128, 64] },
+			{ offset: 1,   color: [0, 255, 0, 0] }
+		]
+	};
+	var lg2 = {
+		type: "linear",
+		x1: 0, y1: 0,
+		x2: 300, y2: 0,
+		colors: [
+			{ offset: 0.2, color: "red" },
+			{ offset: 0.3, color: "yellow" }
+		]
+	};
+	var surface = dojox.gfx.createSurface(dojo.byId("grad"), 300, 300);
+	/* SVGWEB { */
+	surface.whenLoaded(function() {
+	var group = surface.createGroup();
+	var rect1 = surface.createRect({ 
+		width:  300,
+		height: 100
+	});
+	rect1.setFill(lg1);
+	var rect2 = surface.createRect({ 
+		y: 150,
+		width:  300,
+		height: 100
+	});
+	rect2.setFill(lg2);
+	group.add(rect1);
+	group.add(rect2);
+	});
+	/* } */
+};
+dojo.addOnLoad(makeShapes);
+</script>
+<style>
+v:group { text-align: left; }
+#grad { width: 300px; height: 300px; }
+</style>
+</head>
+<body>
+<h1>dojox.gfx Linear Gradient test</h1>
+<div id="grad"></div>
+</body>
+</html>

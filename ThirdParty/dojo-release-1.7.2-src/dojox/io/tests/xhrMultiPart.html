@@ -1,0 +1,85 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>XHR MultiPart Tests</title>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+	</style>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true"></script>
+	<script type="text/javascript" src="../xhrMultiPart.js"></script>
+	<script type="text/javascript">
+		var testXhrMulti, testXhrMultiForm, testXhrMultiFormWithFile;
+
+		require(['dojox/io/xhrMultiPart'], function(xhrMultiPart){
+			var content = [
+				{ name: "foo", content: "FOObarbaz", filename: "foo.txt" },
+				{ name: "bar", content: "fooBARbaz", filename: "bar.txt" },
+				{ name: "baz", content: "foobarBAZ", filename: "baz.txt" }
+			];
+
+			testXhrMulti = function(){
+				xhrMultiPart({
+					url: "result.txt",
+					file: content,
+					load: function(data){ console.log("Test with file: ", data); }
+				});
+
+				//	should be the same.
+				xhrMultiPart({
+					url: "result.txt",
+					content: content,
+					load: function(data){ console.log("Test with content: ", data); }
+				});
+			}
+
+			testXhrMultiForm = function(){
+				xhrMultiPart({
+					url: "result.txt",
+					form: dojo.byId("formTest"),
+					load: function(data){ console.log("Test with form: ", data); }
+				});
+				return false;	//	stop the submission
+			}
+
+			testXhrMultiFormWithFile = function(){
+				try {
+					xhrMultiPart({
+						url: "result.txt",
+						form: dojo.byId("formTestWithFile"),
+						load: function(data){ console.log("Test with form: ", data); }
+					});
+				} catch(e){
+					console.warn("xhrMultiPart failed because the form contains a FILE element!");
+				}
+				return false;	//	stop the submission
+			}
+		});
+	</script>
+</head>
+<body class="tundra">
+	<h1>XHR MultiParts Tests</h1>
+	<p>Run this test from a web server, not from local disk.</p>
+	<p>
+		<button onclick="testXhrMulti()">Test xhrMultiPart</button>
+	</p>
+	<div>
+		<form id="formTest" onsubmit="return testXhrMultiForm()">
+			<input type="hidden" name="foo" value="FOObarbaz" />
+			<input type="hidden" name="bar" value="fooBARbaz" />
+			<input type="hidden" name="baz" value="foobarBAZ" />
+			<input type="submit" value="Test xhrMultiPart with form values" />
+		</form>
+	</div>
+	<div>
+		<form id="formTestWithFile" onsubmit="return testXhrMultiFormWithFile()">
+			<input type="hidden" name="foo" value="FOObarbaz" />
+			<input type="hidden" name="bar" value="fooBARbaz" />
+			<input type="hidden" name="baz" value="foobarBAZ" />
+			<input type="file" name="fileTest" value="" />
+			<input type="submit" value="Test xhrMultiPart (prevent file upload)" />
+		</form>
+	</div>
+</body>
+</html>

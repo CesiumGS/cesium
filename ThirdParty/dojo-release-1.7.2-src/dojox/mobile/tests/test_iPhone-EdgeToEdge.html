@@ -1,0 +1,49 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>Edge to Edge</title>
+		<link href="../themes/iphone/base.css" rel="stylesheet">
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			dojo.require("dojox.mobile");			// This is a mobile app.
+			dojo.require("dojox.mobile.parser");	// This mobile app supports running on desktop browsers
+			dojo.require("dojox.mobile.compat");	// This mobile app uses declarative programming with fast mobile parser
+			dojo.require("dojox.mobile.View");
+			dojo.require("dojox.mobile.Heading");
+			dojo.require("dojox.mobile.EdgeToEdgeList");
+			dojo.require("dojox.mobile.ListItem");
+		</script>
+	</head>
+	<body style="visibility:hidden;">
+		<div id="settings" dojoType="dojox.mobile.View" selected="true">
+			<h1 dojoType="dojox.mobile.Heading">Settings</h1>
+			<ul dojoType="dojox.mobile.EdgeToEdgeList">
+				<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-1.png">
+					Airplane Mode
+					<div class="mblItemSwitch" dojoType="dojox.mobile.Switch"></div>
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-2.png" rightText="mac" moveTo="hello">
+					Wi-Fi
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-3.png" rightText="AcmePhone" moveTo="hello">
+					Carrier
+				</li>
+			</ul>
+		</div>
+
+		<div id="hello" dojoType="dojox.mobile.View">
+			<h1 dojoType="dojox.mobile.Heading">Hello</h1>
+			<ul dojoType="dojox.mobile.EdgeToEdgeList">
+				<li dojoType="dojox.mobile.ListItem" moveTo="settings">
+					Hello
+				</li>
+				<li dojoType="dojox.mobile.ListItem" moveTo="settings">
+					Carrier
+				</li>
+			</ul>
+		</div>
+	</body>
+</html>

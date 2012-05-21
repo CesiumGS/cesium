@@ -1,0 +1,3 @@
+<ui xmlns="dijit">
+	<form.Button label="a button from another file" onclick="alert('clicked');"/>
+</ui>

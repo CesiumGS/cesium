@@ -1,0 +1,79 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+    "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <title>dojox dnd BoundingBoxController</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <style type="text/css">
+            @import "../../../dojo/resources/dojo.css";
+            @import "../../../dojo/tests/dnd/dndDefault.css";
+            body { padding: 20px; }
+            #boundingBox {
+                background:#999;
+                border:1px solid #2B2B2B;
+                opacity:0.6;
+                position:absolute;
+				z-index:19999;
+			}
+		</style>
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+		<script type="text/javascript">
+			dojo.require("dojox.dnd.BoundingBoxController");
+			dojo.require("dojox.dnd.Selector");
+			dojo.require("doh.runner");
+			mockEvent = function(args) {
+				var evt = {
+					stopPropagation: function() {},
+					preventDefault: function() {},
+					button: 0
+				};
+				dojo.mixin(evt, args);
+				return evt;
+			};
+			dojo.addOnLoad(function(){
+				source = new dojox.dnd.Selector(dojo.byId("source"));
+				doh.register("dojox.dnd.BoundingBoxController",
+					[
+						{ 
+							name: "testMouseDownUp",
+							timeout: 1000, 
+							setUp: function() {
+								source.conservative = false;
+								bbc = new dojox.dnd.BoundingBoxController([source], dojo.byId("boundingBox"));
+							},
+							runTest: function() {
+								var def = new doh.Deferred(), res = false,
+								s = dojo.subscribe("/dojox/dnd/bounding", function() {
+									dojo.unsubscribe(s);
+									res = true;
+								});
+								bbc._onMouseDown(mockEvent({clientX: 1, clientY: 1}));
+								bbc._onMouseMove(mockEvent({clientX: 1000, clientY: 1000}));
+								doh.assertTrue(dojo.style(dojo.byId("boundingBox"), "display") !== "none");
+								bbc._onMouseUp(mockEvent());
+								doh.assertTrue(source.getSelectedNodes().length === 3);
+								setTimeout(function() {
+									res && dojo.style(dojo.byId("boundingBox"), "display") === "none" ? def.callback(true) : def.errback(false);
+								}, 500);
+								return def;
+							},
+							tearDown: function() {
+								
+							}
+						}
+					]
+				);
+				doh.run();
+			});
+		</script>
+	</head>
+	<body>
+		<h1 id="header">Dojox DnD BoundingBoxController test</h1>
+		<div id="source" class="container">
+			<div id="blonde" class="dojoDndItem">Blonde on Blonde</div>
+			<div id="highway" class="dojoDndItem">Highway 61 Revisited</div>
+			<div id="tracks" class="dojoDndItem">Blood on the Tracks</div>
+		</div>
+		<div id="boundingBox"></div>
+	</body>
+</html>

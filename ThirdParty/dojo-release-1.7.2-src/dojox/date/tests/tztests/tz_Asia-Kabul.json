@@ -1,0 +1,14 @@
+({
+	name: "date.timezone.Asia-Kabul",
+	runTest: function(t){
+		var tz = "Asia/Kabul";
+		doh.checkDate({tzOffset: -240, tzAbbr: "AFT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: -240, tzAbbr: "AFT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: -240, tzAbbr: "AFT"}, -788932801000, tz, 1);
+		doh.checkDate({tzOffset: -270, tzAbbr: "AFT"}, -788932800000, tz, 1);
+		doh.checkDate({tzOffset: -270, tzAbbr: "AFT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: -270, tzAbbr: "AFT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: -270, tzAbbr: "AFT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: -270, tzAbbr: "AFT"}, 1246789800000, tz, 0);
+	}
+})
