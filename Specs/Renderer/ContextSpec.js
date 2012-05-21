@@ -183,7 +183,7 @@ defineSuite([
 
     it("gets maximum texture filter anisotropy", function() {
         if(context.getTextureFilterAnisotropic()) {
-            expect(context.getMaximumTextureFilterAnisotropy()).toBeGreaterThan(1.0);
+            expect(context.getMaximumTextureFilterAnisotropy() >= 2.0).toEqual(true);
         } else {
             expect(context.getMaximumTextureFilterAnisotropy()).toEqual(1.0);
         }
