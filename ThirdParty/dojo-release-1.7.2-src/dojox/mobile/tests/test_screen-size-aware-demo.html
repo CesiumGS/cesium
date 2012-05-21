@@ -1,0 +1,175 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>Screen Size Aware Demo</title>
+		<style>
+		@import "../themes/iphone/base.css";
+		@import "../themes/iphone/ipad.css";
+		@import "../themes/common/FixedSplitter.css";
+		html, body{
+			height: 100%;
+			overflow: hidden;
+			position: relative;
+		}
+		.dj_tablet .leftPane {
+			width:300px;
+		}
+		.dj_phone .leftPane {
+			width: 0px;
+		}
+		</style>
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true, mblAlwaysHideAddressBar: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			dojo.require("dojo.data.ItemFileWriteStore");
+			dojo.require("dojox.mobile");
+			dojo.require("dojox.mobile.parser");
+			dojo.require("dojox.mobile.compat");
+			dojo.require("dojox.mobile.FixedSplitter");
+			dojo.require("dojox.mobile.FixedSplitterPane");
+			dojo.require("dojox.mobile.ScrollableView");
+			dojo.require("dojox.mobile.EdgeToEdgeDataList");
+
+			var viewCache = {};
+			function isPhone(){
+				return dojo.hasClass(dojo.doc.documentElement, "dj_phone");
+			}
+			function getShowingView(){
+				var rightPane = dijit.byId("rightPane");
+				var firstView =
+					dojo.filter(rightPane.getChildren(), function(c){ return c instanceof dojox.mobile.View; })[0];
+				if(!firstView){ return null; }
+				return firstView.getShowingView() ||
+					dojo.filter(rightPane.getChildren(), function(c){ return c.selected; })[0] ||
+					firstView;
+			}
+
+			function updateStateful(){
+				dijit.byId("list1").set("stateful", !isPhone());
+			}
+			function updateBackButton(){
+				dojo.forEach(dijit.byId("list1").getChildren(), function(item){
+					var view = dijit.byId(viewCache[item.data]);
+					if(view){
+						var heading = dojo.filter(view.getChildren(), function(c){ return (c instanceof dojox.mobile.Heading); })[0];
+						heading.backBtnNode.style.display = isPhone() ? "" : "none";
+					}
+				});
+			}
+			function updateTransition(){
+				var transition = isPhone() ? "slide" : "none";
+				dojo.forEach(dijit.byId("list1").getChildren(), function(item){
+					item.set("transition", transition);
+				});
+			}
+			function moveList(){
+				var to = isPhone() ? "right" : "left";
+				dojo.byId(to + "Pane").appendChild(dojo.byId("view1"));
+			}
+			function showLeftView(){
+				dijit.byId("view1").show();
+			}
+			function showRightView(){
+				if(isPhone()){ return; }
+				var view = getShowingView();
+				if(view){
+					view.show();
+				}else{
+					leftItemSelected();
+				}					
+			}
+			function updateSelectedItem(){
+				var id;
+				var view = getShowingView();
+				if(view && !isPhone()){
+					id = view.id;
+				}
+				var list1 = dijit.byId("list1");
+				if(id){
+					var items = dojo.filter(list1.getChildren(), function(c){ return viewCache[c.data] === id; });
+					if(items && items.length > 0){
+						items[0].select();
+					}
+				}else{
+					list1.deselectAll();
+				}
+			}
+			function leftItemSelected(e){
+				var item = e ? dijit.getEnclosingWidget(e.target) : dijit.byId("list1").getChildren()[0];
+				if(!item){ return; }
+				var id = viewCache[item.data];
+				if(!id){
+					// Dynamically creates a new view
+					id = item.id ? item.id + "View" : undefined;
+					var view = new dojox.mobile.ScrollableView({
+						id: id,
+						selected: true
+					}, dojo.create("DIV", null, "rightPane"));
+					view.startup();
+					id = viewCache[item.data] = view.id;
+
+					var heading = new dojox.mobile.Heading({
+						label: item.label,
+						back: "Home",
+						moveTo: "view1",
+						fixed: "top"
+					});
+					view.addChild(heading);
+
+					var store = new dojo.data.ItemFileWriteStore({url: item.data});
+					var list = new dojox.mobile.EdgeToEdgeDataList({
+						store: store
+					});
+					view.addChild(list);
+					updateBackButton();
+					updateTransition();
+
+					view.resize();
+				}
+				item.transitionTo(id);
+			}
+			function leftItemsLoaded(){
+				if(!isPhone()){
+					leftItemSelected();
+					updateSelectedItem();
+				}
+			}
+			function transformUI(){
+				updateStateful();
+				updateBackButton();
+				updateTransition();
+				moveList();
+				showLeftView();
+				showRightView();
+				updateSelectedItem();
+			}
+
+			dojo.subscribe("/dojox/mobile/screenSize/tablet", function(dim){
+				transformUI();
+			});
+			dojo.subscribe("/dojox/mobile/screenSize/phone", function(dim){
+				transformUI();
+			});
+
+			dojo.ready(function(){
+				dojo.connect(dijit.byId("list1").domNode, "onclick", null, leftItemSelected);
+				dojo.connect(dijit.byId("list1"), "onComplete", null, leftItemsLoaded);
+			});
+			var store1 = new dojo.data.ItemFileWriteStore({url: "insurance.json"});
+		</script>
+	</head>
+	<body style="visibility:hidden;background-color:white;">
+		<div dojoType="dojox.mobile.FixedSplitter" orientation="H">
+			<div id="leftPane" class="leftPane" dojoType="dojox.mobile.FixedSplitterPane" style="border-right:1px solid black;">
+				<div id="view1" dojoType="dojox.mobile.ScrollableView" selected="true">
+					<h1 dojoType="dojox.mobile.Heading" fixed="top">Insurance</h1>
+					<ul dojoType="dojox.mobile.EdgeToEdgeDataList" id="list1" store="store1" query="{label: '*'}" stateful="true"></ul>
+				</div>
+			</div>
+
+			<div id="rightPane" class="rightPane" dojoType="dojox.mobile.FixedSplitterPane"></div>
+		</div>
+	</body>
+</html>

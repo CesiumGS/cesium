@@ -1,0 +1,269 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot Tree_v1 Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+
+		<script type="text/javascript" src="../../helpers.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../test_Tree_v1.html');
+
+				doh.register("setup",{
+					name: "setup",
+					timeout:20000,
+					runTest:function(){
+						var d = new doh.Deferred();
+						var store = dojo.global.dijit.byId('mytree').get('store');
+						store.fetch({query:{id:'*'}, onComplete:function(){
+							d.callback(true);
+						}});
+						return d;
+					}
+				});
+							
+				doh.register("Test tree 1", [
+					{
+						name: "expand first child",
+						timeout: 7000,
+						runTest: function(){
+							var d = new doh.Deferred();
+														
+							var myTree = dijit.byId("mytree");
+							var children = myTree.rootNode.getChildren();
+								
+							doh.robot.mouseMoveAt(children[0].contentNode, 500, 1);
+							doh.robot.mouseClick({left: true}, 500);
+							doh.robot.mouseMoveAt(children[4].contentNode, 1000, 1);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.t(children[0].isExpanded, "failed to expand africa child node");
+								doh.t(children[4].isExpanded, "failed to expand north america child node");
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "click Africa's first child",
+						timeout: 7000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							var myTree = dijit.byId("mytree");
+							var rootChildren = myTree.rootNode.getChildren();
+							var africaChildren = rootChildren[0].getChildren();
+							var naChildren = rootChildren[4].getChildren();
+							doh.robot.mouseMoveAt(naChildren[0].contentNode, 500, 1);
+							doh.robot.mouseClick({left: true}, 500);
+							
+							doh.robot.mouseMoveAt(africaChildren[0].contentNode, 1000, 1);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("Egypt was clicked", africaChildren[0].labelNode.innerHTML);
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "click Mexico's first child",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							var myTree = dijit.byId("mytree");
+							var rootChildren = myTree.rootNode.getChildren();
+							var naChildren = rootChildren[4].getChildren();
+							var mexicoChildren = naChildren[0].getChildren();
+							
+							doh.robot.mouseMoveAt(mexicoChildren[0].contentNode, 500, 1);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("Mexico City was clicked", mexicoChildren[0].labelNode.innerHTML);
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "close tree nodes",
+						timeout: 7000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							var myTree = dijit.byId("mytree");
+							var rootChildren = myTree.rootNode.getChildren();
+							var naChildren = rootChildren[4].getChildren();
+							
+							doh.robot.mouseMoveAt(naChildren[0].contentNode, 500, 1);
+							doh.robot.mouseClick({left: true}, 500);
+							
+							doh.robot.mouseMoveAt(rootChildren[4].contentNode, 500, 1);
+							doh.robot.mouseClick({left: true}, 500);
+							
+							doh.robot.mouseMoveAt(rootChildren[0].contentNode, 500, 1);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.f(naChildren[0].isExpanded, "failed to close Mexico child node");
+								doh.f(rootChildren[0].isExpanded, "failed to close Africa child node");
+								doh.f(rootChildren[4].isExpanded, "failed to close North America child node");
+							}), 500);
+							return d;
+						}
+					},
+					{
+						name: "Destroy tree",
+						timeout: 4000,
+						runTest: function(){
+							dijit.byId("mytree").destroy();
+
+							doh.is(undefined, dijit.byId("mytree"), "tree was not destroyed");
+							doh.is(undefined, dojo.byId("mytree"), 'widget was removed');
+						}
+					}
+				]);
+				
+				doh.register("Test tree 2", [
+					{
+						name: "expand first node",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							var myTree = dijit.byId("tree2");
+							var children = myTree.rootNode.getChildren();
+							
+							var ex = children[0].expandoNode;
+							doh.robot.mouseMoveAt(children[0].expandoNode, 500, 1);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.f(isVisible(myTree.rootNode.labelNode), "root node is visible");
+								doh.t(children[0].isExpanded, "failed to expand first node");
+								
+								var style = dojo.getComputedStyle(children[0].iconNode);
+								doh.t(style.backgroundImage.indexOf("folderIcons.")>0, "custom icon was not used");
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "click Africa",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							var myTree = dijit.byId("tree2");
+							var rootChildren = myTree.rootNode.getChildren();
+														
+							doh.robot.mouseMoveAt(rootChildren[0].contentNode, 500, 1);
+							doh.robot.mouseClick({left: true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("Africa (population: 900 million)", rootChildren[0].labelNode.innerHTML);
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "open context menu",
+						timeout: 4000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							var myTree = dijit.byId("tree2");
+							var children = myTree.rootNode.getChildren();
+							
+							doh.robot.mouseMoveAt(children[1].expandoNode, 500, 1);
+							doh.robot.mouseClick({right: true}, 500);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								var menu = dijit.byId("tree_menu");
+								doh.t(isVisible(menu.domNode), "Menu is not visible");
+								
+								menu = dijit.byId("submenu2");
+								doh.t(isHidden(menu.domNode), "Sub menu is not visible");
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "open sub menu 1",
+						timeout: 3000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							doh.robot.mouseMoveAt("popupSubMenu", 500, 1);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								var menu = dijit.byId("tree_menu");
+								doh.t(isVisible(menu.domNode), "Menu is not visible");
+								menu = dijit.byId("submenu2");
+								doh.t(isVisible(menu.domNode), "Sub menu is not visible");
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "open deeper sub menu",
+						timeout: 3000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							doh.robot.mouseMoveAt("deeperSubmenu", 500, 1);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								var menu = dijit.byId("tree_menu");
+								doh.t(isVisible(menu.domNode), "Menu is not visible");
+								menu = dijit.byId("submenu2");
+								doh.t(isVisible(menu.domNode), "Sub menu is not visible");
+								menu = dijit.byId("submenu4");
+								doh.t(isVisible(menu.domNode), "Deeper menu is not visible");
+							}), 1000);
+							return d;
+						}
+					},
+					{
+						name: "close tree nodes",
+						timeout: 9000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							var myTree = dijit.byId("tree2");
+							var children = myTree.rootNode.getChildren();
+
+							// close deeper submenu, then submenu, then context menu
+							doh.robot.keyPress(dojo.keys.ESCAPE, 1000, {}, true);
+							doh.robot.keyPress(dojo.keys.ESCAPE, 1000, {}, true);
+							doh.robot.keyPress(dojo.keys.ESCAPE, 1000, {}, true);
+
+							// close africa node.   (2 mouse moves to work around robot bugs)
+							doh.robot.mouseMoveAt(children[0].expandoNode, 1000, 100);
+							doh.robot.mouseMoveAt(children[0].expandoNode, 1000, 1);
+							doh.robot.mouseClick({left: true}, 1000);
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.f(children[0].isExpanded, "failed to close first node");
+							}), 1000);
+							return d;
+						}
+					}					
+				]);
+				
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

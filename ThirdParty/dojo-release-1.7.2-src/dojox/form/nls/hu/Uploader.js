@@ -1,0 +1,5 @@
+define(
+({
+	label: "Fájlok kiválasztása..."
+})
+);

@@ -1,0 +1,61 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>Window Name Test</title>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+	</style>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true"></script>
+	<script type="text/javascript">
+		var test, testPost;
+		require(['dojox/io/windowName'], function(windowName){
+	//dojox.io.xhrWindowNamePlugin("http://localhost");
+			test = function(auth) {
+				var authTarget = auth && document.getElementById("authTarget");
+				var dfd = windowName.send("GET",{
+							url: prompt("Enter an address to retrieve data from",
+									auth ? "http://sitepen.com:80/labs/code/secure/dojox/io/tests/testResource.html" : "http://persevere.sitepen.com/Customer/550"),
+							handleAs:"text",
+							authElement: authTarget,
+							onAuthLoad: auth && function(){
+								authTarget.style.display='block';
+							}});
+				dfd.addBoth(function(result){
+					auth && (authTarget.style.display='none');
+					alert(result)
+				});
+			};
+			testPost = function(auth) {
+				var authTarget = auth && document.getElementById("authTarget");
+				var dfd = windowName.send("POST",{
+							url: prompt("Enter an address to post data to",
+									"http://persevere.sitepen.com/Customer/"),
+							content:{foo:"bar"},
+							authElement: authTarget,
+							onAuthLoad: auth && function(){
+								authTarget.style.display='block';
+							}});
+				dfd.addBoth(function(result){
+					auth && (authTarget.style.display='none');
+					alert(result)
+				});
+			}
+		});
+	</script>
+</head>
+<body class="tundra">
+	<h1>Window Name Test</h1>
+	<div id="authTarget" style="display:none; border: 3px solid blue; width: 300px; height:200px;"></div>
+	<p>This page allows you try getting and posting data cross-site and get the response using the window.name protocol.
+	There are two forms of the window.name protocol, the simple direct access protocol, where the resource simply
+	has to set the window.name property. There is also window.name with authorization. In this second variant,
+	the resource page must redirect to the return URL after setting the window.name property. This example page
+	lets you try out both protocols using GET or POST.</p>
+	<button onclick="test()">get data direct</button>
+	<button onclick="testPost()">post data direct</button>
+	<button onclick="test(true)">get data with authorization</button>
+	<button onclick="testPost(true)">post data with authorization</button>
+	</body>
+</html>

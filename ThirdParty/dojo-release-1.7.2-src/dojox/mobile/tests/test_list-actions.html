@@ -1,0 +1,225 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>ListItem Actions</title>
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			dojo.require("dojox.mobile.deviceTheme");
+		</script>
+		<script language="JavaScript" type="text/javascript">
+			dojo.require("dojo.data.ItemFileReadStore");
+			dojo.require("dojox.mobile");			// This is a mobile app.
+			dojo.require("dojox.mobile.parser");	// This mobile app supports running on desktop browsers
+			dojo.require("dojox.mobile.compat");	// This mobile app uses declarative programming with fast mobile parser
+			dojo.require("dojox.mobile.RoundRectDataList");
+			dojo.require("dojox.mobile.ScrollableView");
+			dojo.require("dojox.mobile.ContentPane");
+
+			var static_data = { 
+				items: [ 
+					{label: "Apple", moveTo: "home", icon: "images/i-icon-1.png"},
+					{label: "Banana", moveTo: "home", icon: "images/i-icon-2.png"},
+					{label: "Cherry", moveTo: "home", icon: "images/i-icon-3.png"},
+					{label: "Grape", moveTo: "home", icon: "images/i-icon-4.png"},
+					{label: "Kiwi", moveTo: "home", icon: "images/i-icon-5.png"},
+					{label: "Lemon", moveTo: "home", icon: "images/i-icon-6.png"},
+					{label: "Melon", moveTo: "home", icon: "images/i-icon-7.png"},
+					{label: "Orange", moveTo: "home", icon: "images/i-icon-8.png"},
+					{label: "Peach", moveTo: "home", icon: "images/i-icon-9.png"}
+				]
+			};
+
+			// Update existing view content and make transition
+			function myAction1(li){
+				var rect = dijit.byId("rect1");
+				rect.containerNode.innerHTML = new Date();
+				dijit.byNode(li).transitionTo("view1");
+			}
+
+			// Load content into existing view and make transition
+			function myAction2(li){
+				var view2 = dijit.byId("view2"); // destination view
+				var listItem = dijit.byNode(li);
+				var prog = dojox.mobile.ProgressIndicator.getInstance();
+				dojo.body().appendChild(prog.domNode);
+				prog.start();
+				view2.destroyDescendants();
+
+				/*
+				var url = "http://..."; // or var url = listItem.url;
+				dojo.xhrGet({
+					url: url,
+					handleAs: "text",
+					load: function(response, ioArgs){
+						var container = view2.containerNode;
+						container.innerHTML = response;
+						dojo.parser.parse(container);
+						prog.stop();
+						listItem.transitionTo("view2");
+					}
+				});
+				*/
+				setTimeout(function(){ // network latency simulation
+					var markup = '<h1 dojoType="dojox.mobile.Heading" back="Home" moveTo="home">Loaded View 1</h1>' +
+						'<div dojoType="dojox.mobile.RoundRect" shadow="true">Thank you!</div>';
+					var container = view2.containerNode;
+					container.innerHTML = markup;
+					dojo.parser.parse(container);
+					prog.stop();
+					listItem.transitionTo("view2");
+				}, 5000);
+			}
+
+			// Make transition and load content into existing view
+			function myAction3(li){
+				var view3 = dijit.byId("view3"); // destination view
+				var listItem = dijit.byNode(li);
+				var prog = dojox.mobile.ProgressIndicator.getInstance();
+				dojo.body().appendChild(prog.domNode);
+				prog.start();
+				view3.destroyDescendants();
+				listItem.transitionTo("view3");
+
+				/*
+				var url = "http://..."; // or var url = listItem.url;
+				dojo.xhrGet({
+					url: url,
+					handleAs: "text",
+					load: function(response, ioArgs){
+						var container = view3.containerNode;
+						container.innerHTML = response;
+						dojo.parser.parse(container);
+						prog.stop();
+					}
+				});
+				*/
+				setTimeout(function(){ // network latency simulation
+					var markup = '<h1 dojoType="dojox.mobile.Heading" back="Home" moveTo="home">Loaded View 2</h1>' +
+						'<div dojoType="dojox.mobile.RoundRect" shadow="true">Gracias!</div>';
+					var container = view3.containerNode;
+					container.innerHTML = markup;
+					dojo.parser.parse(container);
+					prog.stop();
+				}, 5000);
+			}
+
+			// Create a new view and make transition
+			function myAction4(li){
+				if(!dijit.byId("view4")){
+					var view4 = new dojox.mobile.View({
+						id: "view4",
+						selected: true
+					}, dojo.create("DIV", null, dojo.body()));
+					view4.startup();
+
+					var heading1 = new dojox.mobile.Heading({
+						label: "Dynamic View",
+						back: "Home",
+						moveTo: "home"
+					});
+					view4.addChild(heading1);
+
+					var categ1 = new dojox.mobile.RoundRectCategory({
+						label: "Documents"
+					});
+					view4.addChild(categ1);
+
+					var list1 = new dojox.mobile.RoundRectList();
+					view4.addChild(list1);
+
+					var counter = 4;
+					for(var i = 1; i <= 3; i++){
+						var item1 = new dojox.mobile.ListItem({
+							icon: "images/i-icon-"+i+".png",
+							label: "Document 000"+counter
+						});
+						list1.addChild(item1);
+						counter++;
+					}
+				}
+				dijit.byNode(li).transitionTo("view4");
+			}
+
+			// Update DataList
+			function myAction5(li){
+				var list1 = dijit.byId("list1");
+				if(!list1.store){
+					var store1 = new dojo.data.ItemFileReadStore({data: static_data});
+					list1.setStore(store1, {label: '*e'}); // items whose label ends with 'e'
+				}
+				dijit.byNode(li).transitionTo("view5");
+			}
+
+			// Partial Update using dojox.mobile.ContentPane
+			function myAction6(li){
+				var pane1 = dijit.byId("pane1");
+				if(!pane1.domNode.innerHTML){ // nothing has been loaded yet
+					dojo.connect(pane1, "onLoad", null, function(){
+						// onLoad fires when the content is ready
+						dijit.byNode(li).transitionTo("view6");
+					});
+					pane1.set("href", "fragment1.html");
+				}else{
+					dijit.byNode(li).transitionTo("view6");
+				}
+			}
+		</script>
+	</head>
+	<body style="visibility:hidden;">
+		<div id="home" dojoType="dojox.mobile.View" selected="true">
+			<h1 dojoType="dojox.mobile.Heading">Action and Transition</h1>
+			<h2 dojoType="dojox.mobile.RoundRectCategory">ListItem Actions</h2>
+			<ul dojoType="dojox.mobile.RoundRectList">
+				<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-1.png" moveTo="#" transition="slide" onclick="myAction1(this)">
+					Update View
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-2.png" moveTo="#" transition="slide" onclick="myAction2(this)">
+					Load and Move (async)
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-3.png" moveTo="#" transition="slide" onclick="myAction3(this)">
+					Move and Load (async)
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-4.png" moveTo="#" transition="slide" onclick="myAction4(this)">
+					Create View
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-5.png" moveTo="#" transition="slide" onclick="myAction5(this)">
+					Data List
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-6.png" moveTo="#" transition="slide" onclick="myAction6(this)">
+					Partial Update (async)
+				</li>
+			</ul>
+		</div>
+
+		<div id="view1" dojoType="dojox.mobile.View">
+			<h1 dojoType="dojox.mobile.Heading" back="Home" moveTo="home">Current Status</h1>
+			Local Time:
+			<div id="rect1" dojoType="dojox.mobile.RoundRect" shadow="true"></div>
+		</div>
+
+		<div id="view2" dojoType="dojox.mobile.View">
+		</div>
+
+		<div id="view3" dojoType="dojox.mobile.View">
+		</div>
+
+		<div id="view5" dojoType="dojox.mobile.View">
+			<h1 dojoType="dojox.mobile.Heading">RoundRectDataList</h1>
+			<ul id="list1" dojoType="dojox.mobile.RoundRectDataList"></ul>
+		</div>
+
+		<div id="view6" dojoType="dojox.mobile.ScrollableView">
+			<h1 dojoType="dojox.mobile.Heading" back="Home" moveTo="home" fixed="top">Partial Update</h1>
+			Dynamic Content:
+			<div id="pane1" dojoType="dojox.mobile.ContentPane"></div>
+			<ul dojoType="dojox.mobile.RoundRectList">
+				<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-1.png" moveTo="home" transitionDir="-1">
+					Home
+				</li>
+			</ul>
+		</div>
+	</body>
+</html>

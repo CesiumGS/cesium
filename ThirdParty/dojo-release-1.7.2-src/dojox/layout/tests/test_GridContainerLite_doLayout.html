@@ -1,0 +1,112 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>GridContainerLite - doLayout</title>
+
+	<!-- Specific CSS -->
+	<style type="text/css" title="text/css">
+		/* <![CDATA[ */
+			@import "../../../dojo/resources/dojo.css";
+			@import "../../../dijit/themes/tundra/tundra.css";
+
+			body{
+				padding-left:10px;
+			}
+			.cpane{
+				border:1px solid #666;
+				font:bold 12px Arial;
+				color:#666;
+				background:#FFF;
+				padding:5px;
+				height:100px;
+			}
+			
+			.gridContainerZone > div{
+				margin: 5px;
+			}
+			
+			.dj_ie6 .dropIndicator, .dj_ie6 .cpane{
+				margin: 10px;
+			}
+		/* ]]> */
+	</style>
+	
+	<link rel="stylesheet" href="../resources/GridContainer.css">
+	
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript" language="javascript">
+		dojo.require("dojox.layout.GridContainerLite");
+		dojo.require("dijit.layout.ContentPane");
+	</script>
+</head>
+
+<body class="orange">
+	<h1>GridContainerLite - doLayout</h1>
+		
+		<div style="position:absolute;top:50px;left:50px;width:400px;">
+			<h3>doLayout = false</h3>
+			<p>GridContainer has a fixed no fixed height.</p>
+			<div id="GC1" 
+				dojoType="dojox.layout.GridContainerLite" 
+				nbZones="3" 
+				isAutoOrganized="true"
+				doLayout="false">
+				<div dojoType="dijit.layout.ContentPane" class="cpane">
+		   			Content Pane 1
+			  	</div>
+			  	<div dojoType="dijit.layout.ContentPane"class="cpane" >
+			   		Content Pane 2
+			  	</div>
+			  	<div dojoType="dijit.layout.ContentPane" class="cpane">
+			   		Content Pane 3
+			  	</div>
+			  	<div dojoType="dijit.layout.ContentPane" class="cpane">
+			   		Content Pane 4
+			  	</div>
+			  	<div dojoType="dijit.layout.ContentPane" class="cpane">
+		   			Content Pane 5
+			  	</div>
+			  	<div dojoType="dijit.layout.ContentPane" class="cpane">
+			   		Content Pane 6
+			  	</div>
+			  	
+			</div>
+		</div>
+		<div style="position:absolute;top:50px;left:500px;width:600px;">
+			<h3>doLayout = true (default)</h3>
+			<p>GridContainer has a fixed height.</p>
+			<div id="GC2" 
+				dojoType="dojox.layout.GridContainerLite" 
+				nbZones="4" 
+				isAutoOrganized="true"
+				style="height:400px">
+				<div dojoType="dijit.layout.ContentPane" class="cpane">
+		   			Content Pane 7
+			  	</div>
+			  	<div dojoType="dijit.layout.ContentPane" class="cpane">
+			   		Content Pane 8
+			  	</div>
+			  	<div dojoType="dijit.layout.ContentPane" class="cpane">
+			   		Content Pane 9
+			  	</div>
+			  	<div dojoType="dijit.layout.ContentPane" class="cpane">
+		   			Content Pane 10
+			  	</div>
+			  	<div dojoType="dijit.layout.ContentPane" class="cpane">
+			   		Content Pane 11
+			  	</div>
+			  	<div dojoType="dijit.layout.ContentPane" class="cpane">
+			   		Content Pane 12
+			  	</div>
+			  	<div dojoType="dijit.layout.ContentPane" class="cpane">
+			   		Content Pane 13
+			  	</div>
+			  	<div dojoType="dijit.layout.ContentPane" class="cpane">
+			   		Content Pane 14
+			  	</div>
+			</div>
+		</div>
+</body>
+</html>

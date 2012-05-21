@@ -1,0 +1,78 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<title>Test dojox.grid.Grid layout in a BorderContainer</title>
+		<style>
+			@import "../resources/Grid.css";
+			@import "../resources/tundraGrid.css";
+			@import "../../../dojo/resources/dojo.css";
+			@import "../../../dijit/themes/tundra/tundra.css";
+			@import "../../../dijit/tests/css/dijitTests.css";
+
+			html, body {
+				width: 100%;	/* make the body expand to fill the visible window */
+				height: 100%;
+				overflow: hidden;	/* erase window level scrollbars */
+				padding: 0 0 0 0;
+				margin: 0 0 0 0;
+			}
+		</style>
+		<script type="text/javascript" src="../../../dojo/dojo.js"
+			djConfig="isDebug: false, parseOnLoad: true"></script>
+
+		<script type="text/javascript">
+			dojo.require("dijit.dijit"); // optimize: load dijit layer
+			dojo.require("dojox.grid.DataGrid");
+			dojo.require("dojo.data.ItemFileWriteStore");
+			dojo.require("dijit.layout.BorderContainer");
+			dojo.require("dijit.layout.ContentPane");
+			dojo.require("dojo.parser");
+
+
+			// ==========================================================================
+			// Grid structure
+			// ==========================================================================
+			gridLayout = {
+				defaultCell: { width: 8, editable: true, styles: 'text-align: right;'  },
+				cells: [
+					{ name: 'Id', width: 3, field: 'id' },
+					{ name: 'Priority', field: 'col1', styles: 'text-align: center;', type: dojox.grid.cells.Select, options: ["normal", "note", "important"]},
+					{ name: 'Mark', field: 'col2', width: 3, styles: 'text-align: center;', type: dojox.grid.cells.Bool },
+					{ name: 'Status', field: 'col3', styles: 'text-align: center;', type: dojox.grid.cells.Select, options: [ "new", "read", "replied" ]},
+					{ name: 'Message', field: 'col4', styles: '', width: '100%' },
+					{ name: 'Amount', field: 'col5'}
+				]
+			};
+		</script>
+		<script type="text/javascript" src="support/test_data.js"></script>
+	</head>
+	<body class="tundra">
+		<div dojoType="dijit.layout.BorderContainer" liveSplitters="false" persist="true"
+		          id="verticalSplitParam" design="headline" style="width: 100%; height: 100%;">
+
+		  <div dojoType="dijit.layout.ContentPane" id="mybuttons"
+		             region="top" splitter="false">  
+		     <button onclick="grid.render()">Refresh</button>
+		     <button onclick="grid.edit.focusEditor()">Focus Editor</button>
+		     <button onclick="grid.focus.next()">Next Focus</button>
+		     <button onclick="addRow()">Add Row</button>
+		     <button onclick="grid.removeSelectedRows()">Remove</button>
+		     <button onclick="grid.edit.apply()">Apply</button>
+		     <button onclick="grid.edit.cancel()">Cancel</button>
+		     <button onclick="grid.singleClickEdit = !grid.singleClickEdit">Toggle singleClickEdit</button>
+		  </div>
+		
+		  <div jsId="grid" class="myGrid" dojoType="dojox.grid.DataGrid" store="test_store" structure="gridLayout"
+		  	region="center">
+		  </div>
+
+		  <div jsId="gridBottom" class="myGrid"	dojoType="dojox.grid.DataGrid" store="test_store" structure="gridLayout"
+		  	region="bottom" splitter="true" style="height: 100px;">
+		  </div>
+		   
+		</div>
+
+	</body>
+</html>

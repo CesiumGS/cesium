@@ -1,0 +1,14 @@
+({
+	name: "date.timezone.Indian-Comoro",
+	runTest: function(t){
+		var tz = "Indian/Comoro";
+		doh.checkDate({tzOffset: -173.066666666667, tzAbbr: "LMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: -173.066666666667, tzAbbr: "LMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: -173.066666666667, tzAbbr: "LMT"}, -1846291985000, tz, 1);
+		doh.checkDate({tzOffset: -180, tzAbbr: "EAT"}, -1846291984000, tz, 1);
+		doh.checkDate({tzOffset: -180, tzAbbr: "EAT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: -180, tzAbbr: "EAT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: -180, tzAbbr: "EAT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: -180, tzAbbr: "EAT"}, 1246789800000, tz, 0);
+	}
+})

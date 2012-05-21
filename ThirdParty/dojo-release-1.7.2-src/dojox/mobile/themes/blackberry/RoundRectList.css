@@ -1,0 +1,39 @@
+/* dojox.mobile.RoundRectList */
+.mblRoundRectList {
+  position: relative;
+  /* IE needs this */
+
+  margin: 3px 9px;
+  padding: 0px;
+  border: 1px solid #ADAAAD;
+  -webkit-border-radius: 6px;
+  -moz-border-radius: 6px;
+  background-color: white;
+}
+.mblRoundRectList .mblListItem:first-child {
+  border-top-width: 0px;
+  -webkit-border-top-left-radius: 6px;
+  -webkit-border-top-right-radius: 6px;
+  -moz-border-radius-topleft: 6px;
+  -moz-border-radius-topright: 6px;
+}
+.mblRoundRectList .mblListItem:last-child {
+  border-bottom-width: 0px;
+  -webkit-border-bottom-left-radius: 6px;
+  -webkit-border-bottom-right-radius: 6px;
+  -moz-border-radius-bottomleft: 6px;
+  -moz-border-radius-bottomright: 6px;
+}
+.mblRoundRectCategory + .mblRoundRectList {
+  margin-top: 0;
+  -webkit-border-top-left-radius: 0px;
+  -webkit-border-top-right-radius: 0px;
+  -moz-border-radius-topleft: 0px;
+  -moz-border-radius-topright: 0px;
+}
+.mblRoundRectCategory + .mblRoundRectList .mblListItem:first-child {
+  -webkit-border-top-left-radius: 0px;
+  -webkit-border-top-right-radius: 0px;
+  -moz-border-radius-topleft: 0px;
+  -moz-border-radius-topright: 0px;
+}

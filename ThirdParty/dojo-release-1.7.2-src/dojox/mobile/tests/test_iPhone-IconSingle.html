@@ -1,0 +1,36 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>Icon Container (Single App)</title>
+		<link href="../themes/iphone/base.css" rel="stylesheet">
+		<link href="../themes/iphone/IconContainer.css" rel="stylesheet">
+		<link href="../themes/common/dijit/dijit.css" rel="stylesheet">
+
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			dojo.require("dojox.mobile");			// This is a mobile app.
+			dojo.require("dojox.mobile.parser");	// This mobile app supports running on desktop browsers
+			dojo.require("dojox.mobile.compat");	// This mobile app uses declarative programming with fast mobile parser
+			dojo.require("dojox.mobile.IconContainer");
+		</script>
+	</head>
+	<body class="tundra" style="visibility:hidden;background-color:white">
+		<div id="foo" dojoType="dojox.mobile.View" selected="true">
+			<h1 dojoType="dojox.mobile.Heading">Icon Container (Single App)</h1>
+			<ul dojoType="dojox.mobile.IconContainer" transition="flip" single="true">
+				<li dojoType="dojox.mobile.IconItem" label="Calendar" icon="images/icon-1.png" lazy="true">
+					<div dojoType='dijit.CalendarLite'></div>
+				</li>
+				<li dojoType="dojox.mobile.IconItem" label="Color Palette" icon="images/icon-1.png" lazy="true">
+					<div dojoType='dijit.ColorPalette'></div>
+				</li>
+				<li dojoType="dojox.mobile.IconItem" label="Progress Bar" icon="images/icon-1.png" lazy="true">
+					<div dojoType='dijit.ProgressBar'></div>
+				</li>
+			</ul>
+		</div>
+	</body>
+</html>

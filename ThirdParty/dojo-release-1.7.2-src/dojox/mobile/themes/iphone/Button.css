@@ -1,0 +1,45 @@
+/* dojox.mobile.Button */
+.mblButton {
+  cursor: pointer;
+  outline: none;
+  -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
+  padding: 0px 10px;
+  height: 29px;
+  border: #9CACC0 1px outset;
+  -webkit-border-radius: 5px;
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#fdfdfd), to(#cecece), color-stop(0.5, #f8f8f8), color-stop(0.5, #eeeeee));
+  color: black;
+  font-family: Helvetica;
+  font-size: 13px;
+  line-height: 29px;
+}
+.mblButton.mblBlueButton {
+  -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
+  border-color: #9CACC0;
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#7a9de9), to(#2362dd), color-stop(0.5, #366edf), color-stop(0.5, #215fdc));
+  color: white;
+}
+.mblButton.mblBlueButtonSelected {
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#8ea4c1), to(#4a6c9b), color-stop(0.5, #5877a2), color-stop(0.5, #476999));
+  color: white;
+}
+.mblButton.mblRedButton {
+  -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
+  border-color: #9CACC0;
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#fa9d58), to(#ee4115), color-stop(0.5, #ff4d25), color-stop(0.5, #ed4d15));
+  color: white;
+}
+.mblButton.mblRedButtonSelected {
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#c1a48e), to(#9b6c4a), color-stop(0.5, #a27758), color-stop(0.5, #996947));
+  color: white;
+}
+.mblButtonSelected {
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#f0f0f0), to(#bfbfbf), color-stop(0.5, #ebebeb), color-stop(0.5, #dedede));
+  color: black;
+}
+.mblButtonDisabled, .mblButton:disabled {
+  cursor: default;
+  border-color: grey;
+  background-image: none;
+  color: grey;
+}

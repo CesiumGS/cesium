@@ -1,0 +1,2 @@
+Even though it's written for Dojo, these files are a general-purpose solution for analyzing JavaScript source code.
+It doesn't create a tree, but instead provides an API for looking through source code.

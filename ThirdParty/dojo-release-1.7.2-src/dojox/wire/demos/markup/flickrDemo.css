@@ -1,0 +1,35 @@
+.flickrView {
+	padding: 3 3 3 3;
+	border-width: 1px;
+	border-style: solid;
+	border-color: #000000;
+	border-collapse: separate;
+        width: 100%;
+}
+
+.flickrView th {
+	text-align: left;
+} 
+
+.flickrView tr {
+	padding: 3 3 3 3;
+	border-width: 1px;
+	border-style: solid;
+	border-color: #000000;
+}
+
+.flickrView tr td {
+	padding: 3 3 3 3;
+	border-width: 1px;
+	border-style: solid;
+	border-color: #000000;
+}
+
+.flickrView {
+	background-color: #EFEFEF;
+}
+
+.flickrTitle {
+	background-color: #CCCCCC;
+}
+

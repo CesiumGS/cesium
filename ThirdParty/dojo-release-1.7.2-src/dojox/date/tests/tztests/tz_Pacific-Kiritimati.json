@@ -1,0 +1,16 @@
+({
+	name: "date.timezone.Pacific-Kiritimati",
+	runTest: function(t){
+		var tz = "Pacific/Kiritimati";
+		doh.checkDate({tzOffset: 640, tzAbbr: "LINT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: 640, tzAbbr: "LINT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: 640, tzAbbr: "LINT"}, 307622399000, tz, 1);
+		doh.checkDate({tzOffset: 600, tzAbbr: "LINT"}, 307622400000, tz, 1);
+		doh.checkDate({tzOffset: 600, tzAbbr: "LINT"}, 788954399000, tz, 1);
+		doh.checkDate({tzOffset: -840, tzAbbr: "LINT"}, 788954400000, tz, 1);
+		doh.checkDate({tzOffset: -840, tzAbbr: "LINT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: -840, tzAbbr: "LINT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: -840, tzAbbr: "LINT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: -840, tzAbbr: "LINT"}, 1246789800000, tz, 0);
+	}
+})

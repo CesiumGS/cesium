@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data jsxassignids="1" jsxid="jsxroot">
+  <record name="myA" jsxtext="A" jsxid="1" a1="v1" a2="v2" a3="v3"/>
+  <record name="myB" jsxtext="B" jsxid="2"/>
+  <record name="myC" jsxtext="C"/>
+  <record name="myD" jsxtext="D" jsxid="4" a1="{prop1}" a2="{prop2}" jsxtip="{prop3}" a4="{prop4"/>
+  <record name="myE" jsxtext="E"/>
+  <group  name="myGroup" jsxid="group">
+	  <record name="myGE" jsxtext="GE" jsxid="5"/>
+	  <record name="myGF" jsxtext="GF" jsxid="6"/>
+  </group>
+  <group  name="mySecondGroup" jsxid="group2">
+	  <record name="myGG" jsxtext="GG" jsxid="7"/>
+	  <record name="myGH" jsxtext="GH" jsxid="8"/>
+  </group>
+</data>

@@ -1,0 +1,44 @@
+﻿<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" >
+<head>
+<title>Polygon test of dojox.gfx3d.</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+</style>
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+<script type="text/javascript">
+
+dojo.require("dojox.gfx3d");
+
+makeObjects = function(){
+	var surface = dojox.gfx.createSurface("test", 500, 500);
+	var view = surface.createViewport();
+	var poly = [{x: 0, y: 0, z: 0}, {x: 0, y: 100, z: 0}, {x: 100, y: 100, z: 0}, {x: 100, y: 0, z: 0}];
+		
+	var m = dojox.gfx3d.matrix;
+	t = view.createPolygon(poly)
+		.setStroke({color: "blue", width: 1})
+		.setFill("#cc0");
+	
+	var camera = dojox.gfx3d.matrix.normalize([
+		m.cameraRotateXg(30), 
+		m.cameraRotateYg(30),
+		//m.cameraRotateZg(15),
+		m.cameraTranslate(-0, 0, 0)
+	]);
+
+	view.applyCameraTransform(camera);
+	view.render();
+};
+
+dojo.addOnLoad(makeObjects);
+
+</script>
+</head>
+<body>
+<h1>Polygon Test</h1>
+<div id="test" style="width: 500px; height: 500px;"></div>
+<p>That's all Folks!</p>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>Editor Test: Local Image Insert Dialog Plugin</title>
+	
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+		@import "../../../dijit/themes/claro/claro.css";
+		@import "../../form/resources/FileUploader.css"; 
+		@import "../plugins/resources/css/LocalImage.css";
+	</style>
+	
+	<script type="text/javascript" src="../../../dojo/dojo.js"	djConfig="parseOnLoad: true, isDebug: true"></script>
+
+	<script type="text/javascript">
+		dojo.require("dijit.Editor");
+		dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+		dojo.require("dojox.editor.plugins.LocalImage");
+		dojo.require("dijit._editor.plugins.ViewSource");
+	</script>
+</head>
+<body class="claro">
+	<h1>Editor + Insert Image with file uploading</h1>
+	<br/>
+	<div dojoType="dijit.Editor" id="editor1" 
+		extraPlugins="[{name: 'LocalImage', uploadable: true, uploadUrl: '../../form/tests/UploadFile.php', baseImageUrl: '../../form/tests/'}, 'viewSource']">
+		<ol>
+			<li>The LocalImagePluginplugin is an 'example' style plugin that shows how to insert 
+			image tags.</li>
+			<li>You need a php server to test this plugin. Please enable <b>dojox\form\tests\cLOG.php</b> and 
+			<b>dojox\form\tests\UploadFile.php</b> first.</li>
+		</ol>
+		<br>
+		<div><a href="http://www.example.com/example.html" target="_top" id="exampleLink">This is an example link in the page.</a></div>
+		<br>
+		<br>
+		<div><img src="./sample.jpg" alt="Sample Image" id="exampleImage" /></div>
+		<br>
+		<br>
+	</div>
+	<br/>
+	<h1>Editor + Insert Image without file uploading</h1>
+	<br/>
+	<div dojoType="dijit.Editor" id="editor2" 
+		extraPlugins="[{name: 'LocalImage'}, 'viewSource']">
+		<ol>
+			<li>The LocalImagePlugin is an 'example' style plugin that shows how to insert 
+			image tags.</li>
+		</ol>
+		<br>
+		<div><a href="http://www.example.com/example.html" target="_top" id="exampleLink">This is an example link in the page.</a></div>
+		<br>
+		<br>
+		<div><img src="./sample.jpg" alt="Sample Image" id="exampleImage" /></div>
+		<br>
+		<br>
+	</div>
+</body>
+</html>

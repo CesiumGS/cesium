@@ -1,0 +1,101 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+		<title>Axis Zoom Control</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<style type="text/css">
+			@import "../../../dojo/resources/dojo.css";
+			@import "../../../dijit/themes/tundra/tundra.css";
+			@import "../../../dijit/tests/css/dijitTests.css";
+			@import "../../form/resources/RangeSlider.css";
+			#hrXAxisSlider .dijitSliderProgressBar{
+				height: 12px;
+				overflow: visible;
+				margin-top: -5px;
+			}
+		</style>
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+		<script type="text/javascript">
+			dojo.require("dojo.parser");
+			dojo.require("dojox.charting.Chart");
+            dojo.require("dojox.charting.axis2d.Default");
+            dojo.require("dojox.charting.plot2d.Lines");
+            dojo.require("dojox.charting.plot2d.Grid");
+			dojo.require("dojox.charting.themes.PlotKit.orange");
+			dojo.require("dojox.charting.action2d.Tooltip");
+			dojo.require("dojox.charting.action2d.Magnify");
+			dojo.require("dojox.form.RangeSlider");
+			dojo.require("dijit.form.HorizontalRuleLabels");
+			dojo.require("dijit.form.HorizontalRule");
+			
+			var chart;
+			makeObjects = function(){
+				chart = new dojox.charting.Chart("chart");
+				chart.setTheme(dojox.charting.themes.PlotKit.orange);
+				chart.addAxis("x", {fixLower: "minor", natural: true, stroke: "grey",
+					majorTick: {stroke: "black", length: 4}, minorTick: {stroke: "gray", length: 2}});
+				chart.addAxis("y", {vertical: true, min: 0, max: 100, majorTickStep: 5, minorTickStep: 1, stroke: "grey",
+					majorTick: {stroke: "black", length: 4}, minorTick: {stroke: "gray", length: 2}});
+				chart.addPlot("default", {type: "Lines",markers: true});
+				chart.addSeries("Series A", [
+					 8,  7,  3,  2,  5,  7,  9, 10,  2, 10,
+					14, 16, 18, 13, 16, 15, 20, 19, 15, 12,
+					24, 20, 20, 26, 28, 26, 28, 29, 24, 29,
+					31, 35, 37, 31, 35, 37, 37, 36, 31, 30,
+					50, 49, 42, 46, 44, 40, 47, 43, 48, 47,
+					51, 52, 52, 51, 54, 57, 58, 50, 54, 51,
+					62, 68, 67, 62, 62, 65, 61, 66, 65, 62,
+					74, 78, 78, 77, 74, 74, 72, 74, 70, 78,
+					84, 83, 85, 86, 86, 89, 89, 85, 86, 86,
+					98, 97, 93, 91, 92, 92, 99, 93, 94, 92
+				]);
+				chart.addPlot("grid", {type:"Grid", hMinorLines:true});
+				new dojox.charting.action2d.Tooltip(chart, "default");
+				new dojox.charting.action2d.Magnify(chart,"default");
+				chart.render();
+			};
+			zoomXAxis = function(){
+				chart.zoomIn("x",arguments[0]);
+				dojo.byId('minValue').value = arguments[0][0];
+				dojo.byId('maxValue').value = arguments[0][1];
+			}
+			dojo.addOnLoad(makeObjects);
+		</script>
+	</head>
+	<body class="tundra">
+		<h1>Axis Zoom Control</h1>
+		 Try to drag the slider endpoints and the bar to zoom X axis of the chart.
+		<div style="margin:20px">
+			<div id="chart" style="width: 800px; height: 400px;"></div>
+			<div id="hrXAxisSlider"
+				discreteValues="21"
+				onChange="zoomXAxis"
+				intermediateChanges="false"
+				dojoType="dojox.form.HorizontalRangeSlider"
+				showButtons="false"
+				style="width:748px;margin-left:40px"
+				value="0,100">
+				<ol dojoType="dijit.form.HorizontalRuleLabels" container="topDecoration" style="height:1.2em;font-size:75%;color:gray;" count="11">
+					<li>0</li><li>10</li><li>20</li><li>30</li><li>40</li><li>50</li><li>60</li><li>70</li><li>80</li><li>90</li><li>100</li>
+				</ol>
+				<div dojoType="dijit.form.HorizontalRule" container="topDecoration" count=11 style="height:10px;"></div>
+			</div>
+		</div>
+		<p>X Axis Lower Value:&nbsp;<input readonly id="minValue" size="10" value="0"/></p>
+		<p>X Axis Upper Value:&nbsp;<input readonly id="maxValue" size="10" value="100"/></p>
+		<p>That's all Folks!</p>
+	</body>
+</html>

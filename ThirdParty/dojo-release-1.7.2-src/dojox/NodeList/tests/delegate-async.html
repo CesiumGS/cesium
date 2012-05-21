@@ -1,0 +1,72 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html id="html">
+	<head>
+		<title>NodeList.delegate() test</title>
+		<style type="text/css">
+			@import "../../../dojo/resources/dojo.css";
+		</style>
+		<script type="text/javascript" 
+			src="../../../dojo/dojo.js" data-dojo-config="async: true, isDebug: true, popup: true"></script>
+		<script type="text/javascript">
+            require(
+                ["dojo/query", "dojo/dom-class", "dojo/dom-construct", "dojo/dom-style", "dojox/NodeList/delegate", "dojo/domReady!"],
+
+                function (query, domClass, domConstruct, domStyle) {
+                // Monitor onclick events on div.blue nodes, or that bubble up to div.blue nodes
+				query("div.delegator").delegate("div.blue", "onclick", function(evt){
+					// "this" points to the div.blue node
+					domStyle.set(this, "backgroundColor", "#aaf");
+				});
+
+				query("div.delegator").delegate("input", "onfocus", function(evt){
+					// "this" points to the input node
+					console.log("bubbled input event");
+					domStyle.set(this, "backgroundColor", "black");
+				});
+
+				// Generate div.blue nodes inside each wrapper div.
+				// Runs after the delegate() call to demonstrate that delegate() catches events on "future nodes"
+				query("div.wrapper").forEach(function(div){
+					for(var i=0; i<4; i++){
+						domConstruct.place(
+							"<div class=" + (i%2?"blue":"red") + ">" +
+								(i%2 && domClass.contains(div, "delegator") ? "click me to turn me blue" : "click will have no effect" )+
+								"<span>" + (i%2  && domClass.contains(div, "delegator") ? "or click me to turn parent blue" : "nor will a click here") + "</span>"+
+								"focus input to turn it black (not working yet): <input />" +
+							"</div>",
+							div
+						);
+					}
+				});
+            });
+		</script>
+		<style>
+			div, a { padding: 5px; margin: 5px; display: block; }
+			div.blue { border: blue solid 2px; }
+			div.red { border: red solid 2px; }
+			div.wrapper { border: solid gray 4px; background: #eee; }
+			div.delegator { background: #ccc; }
+			span { display: block; border: yellow solid 2px; }
+		</style>
+	</head>
+	<body id="body" class="classy">
+		<h1>Test of NodeList.delegate() method</h1>
+		<div class=blue style="border: 2px dotted black;">
+			<h3>
+				This DIV has class=blue but it shouldn't matter because the delegate() connections are on
+			sub node inside of me.
+			</h3>
+			<div class="wrapper delegator">
+				<h3>This div has a delegate handler on it so clicking the blue DIV's below will have an effect.</h3>
+			</div>
+			<div class="wrapper delegator">
+				<h3>This div has a delegate handler on it so clicking the blue DIV's below will have an effect.</h3>
+			</div>
+			<div class="wrapper">
+				<h3>This div doesn't have a delegate handler on it so clicking the blue DIV's below will have no effect.</h3>
+			</div>
+		</div>
+	</body>
+</html>
+

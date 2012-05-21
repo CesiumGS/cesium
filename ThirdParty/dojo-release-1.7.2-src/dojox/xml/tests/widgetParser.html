@@ -1,0 +1,108 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>Accordion Widget Demo</title>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/themes/tundra/tundra.css";
+	</style>
+
+
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		djConfig="isDebug: true, parseOnLoad: true"></script>
+		
+	<script type="text/javascript">
+		require([
+			'dijit/form/Button',
+			'dijit/layout/AccordionContainer',
+			'dijit/layout/AccordionPane',
+			'dijit/form/TextBox',
+			'dojox/xml/widgetParser',
+			'dojox/xml/Script'
+		]);
+	</script>
+
+		
+</head>
+
+<body style="padding: 50px;" class="tundra">
+
+<h1 class="testTitle">AccordionContainer Tests</h1>
+
+<script type="text/xml" dojoType="dojox.xml.Script">
+<ui xmlns:dijit="dijit" xmlns:html="html">
+<html:h2>Accordion from markup:</html:h2>
+	<html:p>HTML before</html:p>
+	<dijit:form.Button label="Hello, World!">
+		<html:script type="dojo/method" event="onClick"><![CDATA[
+		    alert(true && true);
+		]]></html:script>
+	</dijit:form.Button>
+	<html:p>HTML before</html:p>
+	
+	<html:table>
+	<html:tbody>
+    <html:tr>
+            <html:td>
+                        <html:label style="width:160px;height:60px">HTML Label</html:label>
+            </html:td>
+    </html:tr>
+    </html:tbody>
+    </html:table>
+
+	
+
+	<dijit:layout.AccordionContainer duration="200"
+		style="float: left; margin-right: 30px;  width: 400px; height: 300px; overflow: hidden">
+	
+		<dijit:layout.AccordionPane title="a">
+			Hello World
+		</dijit:layout.AccordionPane>
+		<dijit:layout.AccordionPane title="b">
+			<html:p>
+				Nunc consequat nisi vitae quam. Suspendisse sed nunc. Proin
+				suscipit porta magna. Duis accumsan nunc in velit. Nam et nibh.
+				Nulla facilisi. Cras venenatis urna et magna. Aenean magna mauris,
+				bibendum sit amet, semper quis, aliquet nec, sapien.  Aliquam
+				aliquam odio quis erat. Etiam est nisi, condimentum non, lacinia
+				ac, vehicula laoreet, elit. Sed interdum augue sit amet quam
+				dapibus semper. Nulla facilisi. Pellentesque lobortis erat nec
+				quam.
+			</html:p>
+			<html:p>
+				Sed arcu magna, molestie at, fringilla in, sodales eu, elit.
+				Curabitur mattis lorem et est. Quisque et tortor. Integer bibendum
+				vulputate odio. Nam nec ipsum. Vestibulum mollis eros feugiat
+				augue. Integer fermentum odio lobortis odio. Nullam mollis nisl non
+				metus. Maecenas nec nunc eget pede ultrices blandit. Ut non purus
+				ut elit convallis eleifend. Fusce tincidunt, justo quis tempus
+				euismod, magna nulla viverra libero, sit amet lacinia odio diam id
+				risus. Ut varius viverra turpis. Morbi urna elit, imperdiet eu,
+				porta ac, pharetra sed, nisi. Etiam ante libero, ultrices ac,
+				faucibus ac, cursus sodales, nisl. Praesent nisl sem, fermentum eu,
+				consequat quis, varius interdum, nulla. Donec neque tortor,
+				sollicitudin sed, consequat nec, facilisis sit amet, orci. Aenean
+				ut eros sit amet ante pharetra interdum.
+			</html:p>			
+		</dijit:layout.AccordionPane>
+	</dijit:layout.AccordionContainer>
+</ui>
+</script>
+
+<div style="clear: both;">
+<p>This should appear after the accordion</p>
+</div>
+
+<script type="text/xml" 
+	dojoType="dojox.xml.Script"
+	src="myPage.xml">
+</script>
+
+<div>
+<p>This should appear after the accordion</p>
+</div>
+</body>
+
+
+</html>

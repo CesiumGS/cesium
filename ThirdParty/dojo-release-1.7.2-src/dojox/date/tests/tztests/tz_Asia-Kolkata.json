@@ -1,0 +1,20 @@
+({
+	name: "date.timezone.Asia-Kolkata",
+	runTest: function(t){
+		var tz = "Asia/Kolkata";
+		doh.checkDate({tzOffset: -353.333333333333, tzAbbr: "HMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: -353.333333333333, tzAbbr: "HMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: -353.333333333333, tzAbbr: "HMT"}, -891582801000, tz, 1);
+		doh.checkDate({tzOffset: -390, tzAbbr: "BURT"}, -891582800000, tz, 1);
+		doh.checkDate({tzOffset: -390, tzAbbr: "BURT"}, -872058601000, tz, 1);
+		doh.checkDate({tzOffset: -330, tzAbbr: "IST"}, -872058600000, tz, 1);
+		doh.checkDate({tzOffset: -330, tzAbbr: "IST"}, -862637401000, tz, 1);
+		doh.checkDate({tzOffset: -390, tzAbbr: "IST"}, -862637400000, tz, 1);
+		doh.checkDate({tzOffset: -390, tzAbbr: "IST"}, -764145001000, tz, 1);
+		doh.checkDate({tzOffset: -330, tzAbbr: "IST"}, -764145000000, tz, 1);
+		doh.checkDate({tzOffset: -330, tzAbbr: "IST"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: -330, tzAbbr: "IST"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: -330, tzAbbr: "IST"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: -330, tzAbbr: "IST"}, 1246789800000, tz, 0);
+	}
+})

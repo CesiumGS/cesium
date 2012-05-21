@@ -1,0 +1,69 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>Dojo DnD markup container test</title>
+	<style type="text/css">
+		@import "../../resources/dojo.css";
+		@import "dndDefault.css"; 
+
+		body {
+			padding: 20px;
+		}
+
+	</style>
+	<script type="text/javascript" src="../../dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+	<!--
+	<script type="text/javascript" src="../../dnd/Container.js"></script>
+	-->
+	<script type="text/javascript">
+		dojo.require("dojo.parser");
+		dojo.require("dojo.dnd.Container");
+	</script>
+</head>
+<body>
+	<h1>Dojo DnD markup container test</h1>
+	<p>This example is functionally equivalent to <a href="test_container.html">test_container.html</a> example but is done using the Dojo markup.</p>
+	<p>Containers have a notion of a "current container", and one element can be "current".</p>
+	<p>See <a href="dndDefault.css">dndDefault.css</a> for example styling</p>
+	<h2>DIV container</h2>
+	<div dojoType="dojo.dnd.Container" jsId="c1" class="container">
+		<div class="dojoDndItem">Item 1</div>
+		<div class="dojoDndItem">Item 2</div>
+		<div class="dojoDndItem">Item 3</div>
+	</div>
+	<h2>UL container</h2>
+	<ul dojoType="dojo.dnd.Container" jsId="c2" class="container">
+		<li class="dojoDndItem">Item 1</li>
+		<li class="dojoDndItem">Item 2</li>
+		<li class="dojoDndItem">Item 3</li>
+	</ul>
+	<h2>OL container</h2>
+	<ol dojoType="dojo.dnd.Container" jsId="c3" class="container">
+		<li class="dojoDndItem">Item 1</li>
+		<li class="dojoDndItem">Item 2</li>
+		<li class="dojoDndItem">Item 3</li>
+	</ol>
+	<h2>TABLE container</h2>
+	<table dojoType="dojo.dnd.Container" jsId="c4" class="container" border="1px solid black">
+		<tr class="dojoDndItem">
+			<td>A</td>
+			<td>row 1</td>
+		</tr>
+		<tr class="dojoDndItem">
+			<td>B</td>
+			<td>row 2</td>
+		</tr>
+		<tr class="dojoDndItem">
+			<td>C</td>
+			<td>row 3</td>
+		</tr>
+	</table>
+	<h2>P container with SPAN elements</h2>
+	<p>Elements of this container are layed out horizontally.</p>
+	<p dojoType="dojo.dnd.Container" jsId="c5" class="container">
+		<span class="dojoDndItem">&nbsp;Item 1&nbsp;</span>
+		<span class="dojoDndItem">&nbsp;Item 2&nbsp;</span>
+		<span class="dojoDndItem">&nbsp;Item 3&nbsp;</span>
+	</p>
+</body>
+</html>

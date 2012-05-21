@@ -1,0 +1,282 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>dojo.NodeList-fx and dojox.fx.ext-dojo.Nodelist | fx add-ons to dojo.query()</title>
+		
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad:true, isDebug:true"></script>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/themes/dijit.css";
+		@import "../../../dijit/themes/tundra/tundra.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+
+		.testBoxContainer {
+			position:relative;
+			width:418px;
+			height:240px;
+			margin-left:50px; 
+			border-top:1px dashed #b7b7b7;
+			border-bottom:1px dashed #b7b7b7;
+		}
+
+		.testBox {
+			position:absolute;
+			top:0; left:0;
+			width:50px;
+			height:50px;
+			background:#ededed;
+			border:1px solid #b7b7b7;
+			-moz-border-radius:6pt;
+			-webkit-border-radius:5pt;
+			overflow:hidden; 
+		}
+		.rowOne { top:0; }
+		.rowTwo { top:60px; }
+		.rowThree { top:120px; }
+		.rowFour { top:180px; }
+		
+		.iOne { left:0; }
+		.iTwo { left:60px; }
+		.iThree { left:120px; }
+		.iFour { left:180px; }
+		.iFive { left:240px; }
+		.iSix { left:300px; }
+		.iSeven { left:360px; }
+		
+	</style>
+	<script type="text/javascript">
+
+	dojo.require("dojox.fx.ext-dojo.NodeList"); 
+	dojo.require("dijit.form.Button");
+	dojo.require("dijit.form.RadioButton");
+
+	// its funny...
+	var dQuery = dojo.query;
+	var d$ = dQuery;
+	
+	var anim2 = null;
+
+	var init = function(){
+		var anim = d$(".rowOne").highlight({
+			duration:700,
+			onEnd: function(){
+				d$(".rowTwo").fadeTo({ end: 0.5, 
+					duration:700,
+					onEnd: function(){
+						
+						anim2 = d$(".rowThree").fadeOut({
+							top:20, left:20,
+							duration:500
+						}).play(700);
+					}
+				}).play(300);	
+			}
+		});
+
+		dojo.connect(anim,"onEnd",function(){
+
+			var q1v = true;
+			var q1 = ".iSix"; // colum six 
+			// this will setup a connection on each of the nodes to toggle their fade state
+			d$(q1).connect("onclick",function(){
+				d$(q1)[(q1v ? "fadeOut" : "fadeIn")]().play();
+				q1v = !q1v;
+			});
+
+			// this highlights all the nodes via a mouseenter event, which automatically
+			// 
+			d$(".testBox").connect("onmouseenter",function(e){
+				dojox.fx.highlight({ node: e.target, duration:250 }).play(); 
+			});
+
+
+			var q3 = ".rowOne.iSeven"; // top right node
+			d$(q3).connect("onclick",function(){
+				d$(q3).sizeTo({ 
+					width:300, height:300, duration:300, 
+					onEnd: function(){
+						// FIXME: sizeTo isn't calculating it's start value properly
+						d$(q3).sizeTo({ width: 50, height:50, duration:115, delay:1000, method:"combine" }).play(); 	
+					}
+				}).play(); 
+			});
+
+			
+
+		});
+		// main animation
+		anim.play(700); 
+	};
+	// start the code
+	dojo.addOnLoad(init);
+	
+	// for our dojo.query() form, some animations take different params which would be kind of difficult
+	// to make both dynamic and robust and easy to explain. see each function individually in the API
+	// for the breakdown. just going to hard-code some values in for somet things:
+	var animArgs = {
+		// dojo.NodeList-fx ones:
+		animateProperty: {
+			properties: {
+				borderWidth:5,
+				marginTop:8 
+			}
+	
+		},
+		
+		slideTo: { top:0, left: 0 },
+		
+		// dojox extension ones:
+		sizeTo: {
+			width: 75, height:75
+		},
+		fadeTo: {
+			end: 0.35
+		},
+		slideBy: {
+			top:55, left: 55
+		},
+		
+		// mix these into every 'custom query animation'
+		defaultArgs: {
+			// duration: 500 //,
+			// onEnd: function(){ console.log('ended animation') }
+		}
+	};
+	
+	
+
+	</script>
+</head>
+<body class="tundra">
+
+        <h1 class="testTitle">NodeList and dojo.query "magic"</h1>
+
+	<div style="width:200px; float:right; padding:10px">
+		<h4>stuff going on:</h4>
+		<ul>
+			<li>watch the startup cycle</li>
+			<li>click col 6</li>
+			<li>click top right box</li>	
+			<li>hover to highlight() node</li>
+		</ul> 
+	</div>
+
+	<div style="width:200px; float:right; padding:10px">
+		<h4>custom query:</h4>
+		<form id="whichAnim">
+		<p>
+			dojo.query("<input type="text" name="str" id="customStr" value=".noIdHere" size="10" />");	
+			<br>(dojo:)<br>
+			<input type="radio" name="g2" id="g2rb1" value="fadeIn" dojoType="dijit.form.RadioButton" checked="checked"/>
+			<label for="g2rb1">.fadeIn</label><br>
+
+			<input type="radio" name="g2" id="g2rb2" value="fadeOut" dojoType="dijit.form.RadioButton"/>
+			<label for="g2rb2">.fadeOut</label><br>
+
+			<input type="radio" name="g2" id="g2rb3" value="wipeOut" dojoType="dijit.form.RadioButton"/>
+			<label for="g2rb3">.wipeOut</label><br>
+
+			<input type="radio" name="g2" id="g2rb4" value="wipeIn" dojoType="dijit.form.RadioButton"/>
+			<label for="g2rb4">.wipeIn</label><br>
+
+			<input type="radio" name="g2" id="g2rb0" value="slideTo" dojoType="dijit.form.RadioButton"/>
+			<label for="g2rb0">.slideTo</label> (x: 0, y:0)<br>
+
+			<br>(dojox:)<br>
+		
+			<input type="radio" name="g2" id="g2rb5" value="highlight" dojoType="dijit.form.RadioButton"/>
+			<label for="g2rb5">.highlight</label><br>
+
+			<input type="radio" name="g2" id="g2rb6" value="sizeTo" dojoType="dijit.form.RadioButton"/>
+			<label for="g2rb6">.sizeTo (a fixed size)</label><br>
+
+			<input type="radio" name="g2" id="g2rb7" value="slideBy" dojoType="dijit.form.RadioButton"/>
+			<label for="g2rb7">.slideBy (top: left: offset fixed)</label><br>
+
+			<input type="radio" name="g2" id="g2rb8" value="fadeTo" dojoType="dijit.form.RadioButton"/>
+			<label for="g2rb8">.fadeTo (35% opacity)</label><br>
+
+		</p>
+		<script type="dojo/method" event="onSubmit">
+			// it's like cheating, but we don't event want this form to submit. you can type
+			// a query(), use the arrows to select a method, and hit enter. (or should be able to)
+			return false; 
+		</script>
+
+		<button dojoType="dijit.form.Button" type="submit" id="runnerButton" >
+			Run
+			<script type="dojo/method" event="onClick">
+				// our runner / submit button				
+				var str = dojo.byId("customStr").value;
+				var animType;
+				dojo.query('.dijitRadioChecked').forEach(function(n){
+					animType = dijit.byNode(n).attr("value");
+				});
+				if(str && animType){
+					var theseArgs = animArgs[animType] || {};
+					// combine our base args with 'theseArgs' if they exist
+					var args = dojo.mixin(theseArgs,animArgs.defaultArgs)
+					//var nodelist = dojo.query(str); 
+					dojo.query(str)[(animType)](args).play();
+				}
+				return false; 
+			</script>
+		</button>
+
+		</form>
+	</div>
+
+        <div class="testBoxContainer">        
+                <div id="node1" class="testBox rowOne iOne">1</div>
+                <div id="node2" class="testBox rowOne iTwo">2</div>
+                <div class="testBox noIdHere rowOne iThree">3</div>
+		<div class="testBox noIdHere rowOne iFour">4</div>
+		<div class="testBox noIdHere rowOne iFive">5</div>
+		<div class="testBox noIdHere rowOne iSix">6</div>
+		<div class="testBox noIdHere rowOne iSeven">7</div>
+
+                <div id="node4" class="testBox rowTwo iOne">2</div>
+                <div class="testBox noIdHere rowTwo iTwo"></div>
+                <div id="node6" class="testBox rowTwo iThree"></div>
+		<div class="testBox noIdHere rowTwo iFour"></div>
+		<div class="testBox noIdHere rowTwo iFive"></div>
+		<div class="testBox noIdHere rowTwo iSix"></div>
+		<div class="testBox noIdHere rowTwo iSeven"></div>
+
+                <div id="node7" class="testBox rowThree iOne">3</div>
+                <div class="testBox noIdHere rowThree iTwo"></div>
+                <div id="node9" class="testBox rowThree iThree"></div>
+		<div class="testBox noIdHere rowThree iFour"></div>
+		<div class="testBox noIdHere rowThree iFive"></div>
+		<div class="testBox noIdHere rowThree iSix"></div>
+		<div id="aNode" class="testBox rowThree iSeven"></div>
+
+                <div id="node7" class="testBox rowFour iOne">4</div>
+                <div class="testBox noIdHere rowFour iTwo"></div>
+                <div id="node9" class="testBox rowFour iThree"></div>
+		<div class="testBox noIdHere rowFour iFour"></div>
+		<div class="testBox noIdHere rowFour iFive"></div>
+		<div id="randomNode" class="testBox rowFour iSix"></div>
+		<div class="testBox noIdHere rowFour iSeven"></div>
+
+        </div>
+
+        <br style="clear:both;">
+	HTML AFTER
+	<br>
+		
+	<h3>classes available to play with:</h3>
+	
+	<pre><code style="border:0px;"
+>	.testBox
+	.noIdHere
+	each row: .rowOne .rowTwo .rowThree .rowFour
+	each col: .iOne .iTwo .. iSeven
+	#randomNode, #node9, #node7, #aNode, #node1, #node2, #node4, #node6</code
+	></pre>
+
+	<p>the dojo.query() isn't limited to the testDiv, it parses the body. try: dojo.query("fieldset") and slideBy animation</p>
+
+</body>
+</html>

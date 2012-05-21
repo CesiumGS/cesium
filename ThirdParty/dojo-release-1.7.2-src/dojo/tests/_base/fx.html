@@ -1,0 +1,559 @@
+<html>
+	<head>
+		<title>testing Core FX</title>
+		<style type="text/css">
+			@import "../../resources/dojo.css";
+		</style>
+		<script type="text/javascript" src="../../dojo.js"></script>
+		<script type="text/javascript">
+			require(["dojo", "doh", "dojo/domReady!"], function(dojo, doh){
+				var duration = 500;
+				var timeout = 750;
+				doh.register("t", [
+					{
+						name: "fadeOut",
+						timeout: timeout,
+						runTest: function(){
+							var opacity = dojo.style('foo', 'opacity');
+							doh.is(1, opacity);
+							var anim = dojo.fadeOut({ node: 'foo', duration: duration });
+							var d = new doh.Deferred();
+							dojo.connect(anim, "onEnd", d.getTestCallback(function(){
+								var opacity = dojo.style('foo', 'opacity');
+								var elapsed = (new Date()) - anim._start;
+								doh.is(0, opacity);
+								doh.t(elapsed >= duration);
+							}));
+							anim._start = new Date();
+							anim.play();
+							return d;
+						}
+					},
+					{
+						name: "fadeIn",
+						timeout: timeout,
+						runTest: function(){
+							var opacity = dojo.style('foo', 'opacity');
+							doh.is(0, opacity);
+							var anim = dojo.fadeIn({ node: 'foo', duration: duration });
+							var d = new doh.Deferred();
+							dojo.connect(anim, "onEnd", d.getTestCallback(function(){
+								var opacity = dojo.style('foo', 'opacity');
+								var elapsed = (new Date()) - anim._start;
+								doh.is(1, opacity);
+								doh.t(elapsed >= duration);
+							}));
+							anim._start = new Date();
+							anim.play();
+							return d;
+						}
+					},
+					{
+						name: "animateColor",
+						timeout: timeout,
+						runTest: function(){
+							var d = new doh.Deferred();
+							var anim = dojo.animateProperty({ 
+								node: "foo", 
+								duration: duration,
+								properties: { 
+									color: 				{ start: "black", end: "white" },
+									backgroundColor: 	{ start: "white", end: "black" } 
+								} 
+							});
+							dojo.connect(anim, "onEnd", anim, function(){
+								d.callback(true);
+							});
+							anim.play();
+							return d;
+						}
+					},
+					{
+						name: "animateColorBack",
+						timeout: timeout,
+						runTest: function(){
+							var d = new doh.Deferred();
+							var anim = dojo.animateProperty({ 
+								node: "foo", 
+								duration: duration,
+								properties: { 
+									color: 				{ end: "black" },
+									backgroundColor: 	{ end: "#5d81b4" }, 
+									letterSpacing: 		{ start: 0, end: 10 } 
+								} 
+							});
+							dojo.connect(anim, "onEnd", anim, function(){
+								d.callback(true);
+							});
+							anim.play();
+							return d;
+						}
+					},
+					{
+						name: "animateHeight",
+						timeout: timeout,
+						runTest: function(t){
+							dojo.byId("foo").style.height = "";
+							var startHeight = dojo.marginBox("foo").h; 
+							var endHeight = Math.round(startHeight / 2);
+							
+							var anim = dojo.animateProperty({
+								node: "foo",
+								properties: { height: { end: endHeight } },
+								duration: duration
+							});
+
+							var d = new doh.Deferred();
+
+							dojo.connect(anim, "onEnd", anim, d.getTestCallback(function(){
+								var elapsed = (new Date().valueOf()) - anim._startTime;
+								doh.t(elapsed >= duration);
+								var height = dojo.marginBox("foo").h; 
+								doh.is(height, endHeight);
+							}));
+							
+							anim.play();
+							return d;
+						}
+					},
+					{
+						name: "animateHeight_defaults_syntax",
+						timeout: timeout,
+						runTest: function(){
+							dojo.byId("foo").style.height = "";
+							var startHeight = dojo.marginBox("foo").h; 
+							var endHeight = Math.round(startHeight / 2);
+							
+							var anim = dojo.animateProperty({
+								node: "foo",
+								properties: { height: endHeight },
+								duration: duration
+							});
+
+							var d = new doh.Deferred();
+
+							dojo.connect(anim, "onEnd", anim, d.getTestCallback(function(){
+								var elapsed = (new Date().valueOf()) - anim._startTime;
+								doh.t(elapsed >= duration);
+								var height = dojo.marginBox("foo").h; 
+								doh.is(height, endHeight);
+							}));
+							
+							anim.play();
+							return d;
+						}
+					},
+					{
+						name: "inlineWidth",
+						timeout: timeout,
+						runTest: function(){
+							dojo.style("foo", "display", "none");
+							dojo.style("bar", "display", "");
+							var startWidth = dojo.marginBox("bar").w; 
+							var endWidth = Math.round(startWidth / 2);
+							
+							var anim = dojo.animateProperty({
+								node: "bar",
+								properties: { width: endWidth },
+								duration: duration
+							});
+
+							var d = new doh.Deferred();
+
+							dojo.connect(anim, "onEnd", anim, d.getTestCallback(function(){
+								var elapsed = (new Date().valueOf()) - anim._startTime;
+								doh.t(elapsed >= duration);
+								doh.is(dojo.marginBox("bar").w, endWidth);
+							}));
+							
+							anim.play();
+							return d;
+						}
+					},
+					{
+						name: "anim",
+						timeout: timeout+500,
+						runTest: function(){
+							var id = "baz";
+							dojo.style("bar", "display", "none");
+							dojo.style(id, "display", "");
+							var kickoff = new Date().valueOf();
+							var startWidth = dojo.marginBox(id).w; 
+							var endWidth = Math.round(startWidth / 2);
+
+							var d = new doh.Deferred();
+							var anim = dojo.anim(
+								id, 
+								{ 
+									width: endWidth,
+									opacity: 0
+								}, 
+								duration, 
+								null, 
+								d.getTestCallback(function(){
+									var curTime = (new Date().valueOf()),
+										elapsed = curTime - anim._startTime;
+									doh.t(elapsed >= duration, "test elapsed " + elapsed + " > duration " + duration);
+									
+									// -5 because on FF a setTimeout(foo, x) may fire a little before x
+									doh.t(curTime >= (kickoff+duration+500-5),
+										"curTime >= (kickoff+duration+500-5): " + curTime + " >= (" + kickoff + "+" + duration + "+500-5)");
+
+									doh.is(dojo.marginBox(id).w, endWidth, 
+										"width matches endWidth ");
+
+									doh.is(0, dojo.style(id, "opacity"), "opacity");
+								}),
+								500
+							);
+							return d;
+						}
+					},
+					{
+						name: "anim_defaults",
+						timeout: 1000,
+						runTest: function(){
+							var id = "thud";
+							dojo.style("baz", "display", "none");
+							dojo.style(id, "display", "");
+							var startWidth = dojo.marginBox(id).w; 
+							var endWidth = Math.round(startWidth / 2);
+
+							var d = new doh.Deferred();
+							var anim = dojo.anim(id, { width: endWidth });
+							dojo.connect(anim, "onEnd", d.getTestCallback(function(){
+								var elapsed = (new Date().valueOf()) - anim._startTime;
+								doh.t(elapsed >= dojo.Animation.prototype.duration); // the default
+								doh.is(dojo.marginBox(id).w, endWidth);
+							}));
+							anim.play();
+							return d;
+						}
+					},
+					{
+						// basic testing of a function for a property
+						name:"anim-fn-property",
+						timeout:1000,
+						runTest: function(){
+							
+							var d = new doh.Deferred();
+							dojo.animateProperty({
+								node: "thud",
+								properties:{
+									// also testing node passed to property function
+									padding: function(node){
+										d.getTestErrback(function(){
+											doh.is("thud", node.id);
+										});
+										return { end:15, start:22 };
+									}
+								},
+								duration:350,
+								onEnd: d.getTestCallback(function(){})
+							}).play();
+							return d;	
+						}
+					},
+					{
+						// just testing a property function which returns two other functions
+						name:"anim-fn-property-return-fn",
+						timeout:1000,
+						runTest: function(){
+							
+							var d = new doh.Deferred();
+							dojo.animateProperty({
+								node: "thud",
+								properties:{
+									// also testing node passed to property function
+									height: function(node){
+										d.getTestErrback(function(){
+											doh.is("thud", node.id);
+										});
+										return {
+											start: function(){ return 50; },
+											end: function(){ return 100; }
+										};
+									}
+								},
+								duration:350,
+								onEnd: d.getTestCallback(function(){})
+							}).play();
+							return d;	
+						}
+					},
+					{
+						// ensuring the end property can be a function
+						name:"anim-fn-prop-end",
+						timeout:1000,
+						runTest: function(){
+							
+							var d = new doh.Deferred();
+							dojo.animateProperty({
+								node: "thud",
+								properties:{
+									width: { 
+										// also testing node passed to end function
+										end: function(node){
+											d.getTestErrback(function(){
+												doh.is("thud", node.id);
+											});
+											return 100;
+										}
+									}
+								},
+								duration:50,
+								onEnd: d.getTestCallback(function(){})
+							}).play();
+							
+							return d;	
+						}
+					},
+					{
+						// ensuring the start property can be a function
+						name:"anim-fn-prop-start",
+						timeout:1000,
+						runTest: function(){
+							
+							var d = new doh.Deferred();
+							dojo.animateProperty({
+								node: "thud",
+								properties:{
+									width: { 
+										// also testing node passed to start function
+										start: function(node){
+											d.getTestErrback(function(){
+												doh.is("thud", node.id);
+											});
+											return 100;
+										},
+										end: 200
+									}
+								},
+								duration:50,
+								onEnd: d.getTestCallback(function(){})
+							}).play();
+							
+							return d;
+						}
+					},
+					{
+						// ensuring our node ref is passed onEnd:
+						name:"anim-onend-node",
+						timeout:1000,
+						runTest: function(){
+							
+							var d = new doh.Deferred();
+							dojo.animateProperty({
+								node: "thud",
+								properties:{
+									width: 200
+								},
+								duration:150,
+								onEnd:d.getTestCallback(function(node){
+									if(node){
+										doh.is("thud", node.id);
+									}
+								})
+							}).play();
+							
+							return d;	
+						}
+					},
+					{
+						// ensuring our node ref is passed to beforeBegin:
+						name:"anim-beforebegin-node",
+						timeout:1000,
+						runTest: function(){
+
+							var d = new doh.Deferred();
+							dojo.animateProperty({
+								node: "thud",
+								properties:{
+									width: 200
+								},
+								duration:50,
+								beforeBegin:d.getTestErrback(function(node){
+									doh.is("thud", node.id);
+								}),
+								onEnd:d.getTestCallback(function(node){})
+							}).play();
+
+							return d;	
+						}
+					},
+					{
+						name:"anim-onend-scope",
+						timeout:1000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							dojo.declare("fx.Thinger", null, {
+								constructor: function(a){
+									this.bar = 10;
+								},
+								method: function(e){
+									d.callback(true);
+								}
+							});
+							
+							dojo.declare("fx.ThingerToo", fx.Thinger, {
+								method: function(){
+									var a = arguments;
+									dojo.fadeIn({
+										node:"thud",
+										onEnd: dojo.hitch(this, function(){
+											// to call inherited in a callback, stash the orig 'arguments'
+											this.inherited(a);
+										}),
+										duration:100
+									}).play()
+								}
+							});
+							
+							var x = new fx.ThingerToo();
+							x.method();
+							
+							return d;
+						}
+					},
+					{
+						name:"anim-onend-scope-natural",
+						timeout:1000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// testing vanilla inheritance
+							fx.NThinger = function(args){
+								dojo.mixin(this, args);
+							};
+							fx.NThinger.prototype.method = function(){
+								d.callback(true);
+							};
+							
+							
+							dojo.declare("fx.ThingerThree", fx.NThinger, {
+								method: function(){
+									var x = dojo.fadeOut({
+										node:"thud",
+										duration:100
+									});
+									
+									// to use with connect, pass a newArgs (arguements again) to override any 
+									// possible references passed from the orig function.
+									dojo.connect(x, "onEnd", dojo.hitch(this, "inherited", arguments, arguments));
+									
+									x.play();
+								}
+							});
+							
+							var x = new fx.ThingerThree();
+							x.method();
+							
+							return d;
+						}
+					}
+				]);
+
+				doh.run();
+			});
+		</script>
+		<style type="text/css">
+			body {
+				margin: 1em;
+				background-color: #DEDEDE;
+			}
+
+			.box {
+				color: #292929;
+				/* color: #424242; */
+				/* text-align: left; */
+				width: 300px;
+				border: 1px solid #BABABA;
+				background-color: white;
+				padding-left: 10px;
+				padding-right: 10px;
+				margin-left: 10px;
+				-o-border-radius: 10px;
+				-moz-border-radius: 12px;
+				-webkit-border-radius: 10px;
+				/* -opera-border-radius: 10px; */
+				border-radius: 10px;
+				-moz-box-sizing: border-box;
+				-opera-sizing: border-box;
+				-webkit-box-sizing: border-box;
+				-khtml-box-sizing: border-box;
+				box-sizing: border-box;
+				overflow: hidden;
+				/* position: absolute; */
+			}
+		</style>
+	</head>
+	<body>
+		<h1>testing Core FX</h1>
+		<form name="testForm">
+		<input type="button" onClick="dojo.fadeOut({ node: 'foo', duration: 1000 }).play()" value="fade out"/>
+		<input type="button" onClick="dojo.fadeIn({ node: 'foo', duration: 1000 }).play()" value="fade in"/>
+		</form>
+		<div id="foo" class="box" style="float: left;">
+			<p>
+			Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean
+			semper sagittis velit. Cras in mi. Duis porta mauris ut ligula.
+			Proin porta rutrum lacus. Etiam consequat scelerisque quam. Nulla
+			facilisi.  Maecenas luctus venenatis nulla. In sit amet dui non mi
+			semper iaculis.  Sed molestie tortor at ipsum. Morbi dictum rutrum
+			magna. Sed vitae risus.
+			</p>
+			<p>
+			Aliquam vitae enim. Duis scelerisque metus auctor est venenatis
+			imperdiet. Fusce dignissim porta augue. Nulla vestibulum. Integer
+			lorem nunc, ullamcorper a, commodo ac, malesuada sed, dolor. Aenean
+			id mi in massa bibendum suscipit. Integer eros. Nullam suscipit
+			mauris. In pellentesque. Mauris ipsum est, pharetra semper,
+			pharetra in, viverra quis, tellus. Etiam purus. Quisque egestas,
+			tortor ac cursus lacinia, felis leo adipiscing nisi, et rhoncus
+			elit dolor eget eros. Fusce ut quam. Suspendisse eleifend leo vitae
+			ligula. Nulla facilisi. Nulla rutrum, erat vitae lacinia dictum,
+			pede purus imperdiet lacus, ut semper velit ante id metus. Praesent
+			massa dolor, porttitor sed, pulvinar in, consequat ut, leo. Nullam
+			nec est. Aenean id risus blandit tortor pharetra congue.
+			Suspendisse pulvinar.
+			</p>
+		</div>
+		<p id="bar" style="display: none;">
+		Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean semper
+		sagittis velit. Cras in mi. Duis porta mauris ut ligula.  Proin porta
+		rutrum lacus. Etiam consequat scelerisque quam. Nulla facilisi.
+		Maecenas luctus venenatis nulla. In sit amet dui non mi semper iaculis.
+		Sed molestie tortor at ipsum. Morbi dictum rutrum magna. Sed vitae
+		risus.
+		</p>
+		<p id="baz" style="display: none;">
+		Aliquam vitae enim. Duis scelerisque metus auctor est venenatis
+		imperdiet. Fusce dignissim porta augue. Nulla vestibulum. Integer lorem
+		nunc, ullamcorper a, commodo ac, malesuada sed, dolor. Aenean id mi in
+		massa bibendum suscipit. Integer eros. Nullam suscipit mauris. In
+		pellentesque. Mauris ipsum est, pharetra semper, pharetra in, viverra
+		quis, tellus. Etiam purus. Quisque egestas, tortor ac cursus lacinia,
+		felis leo adipiscing nisi, et rhoncus elit dolor eget eros. Fusce ut
+		quam. Suspendisse eleifend leo vitae ligula. Nulla facilisi. Nulla
+		rutrum, erat vitae lacinia dictum, pede purus imperdiet lacus, ut
+		semper velit ante id metus. Praesent massa dolor, porttitor sed,
+		pulvinar in, consequat ut, leo. Nullam nec est. Aenean id risus blandit
+		tortor pharetra congue.  Suspendisse pulvinar.
+		</p>
+		<p id="thud" style="display: none;">
+		Aliquam vitae enim. Duis scelerisque metus auctor est venenatis
+		imperdiet. Fusce dignissim porta augue. Nulla vestibulum. Integer lorem
+		nunc, ullamcorper a, commodo ac, malesuada sed, dolor. Aenean id mi in
+		massa bibendum suscipit. Integer eros. Nullam suscipit mauris. In
+		pellentesque. Mauris ipsum est, pharetra semper, pharetra in, viverra
+		quis, tellus. Etiam purus. Quisque egestas, tortor ac cursus lacinia,
+		felis leo adipiscing nisi, et rhoncus elit dolor eget eros. Fusce ut
+		quam. Suspendisse eleifend leo vitae ligula. Nulla facilisi. Nulla
+		rutrum, erat vitae lacinia dictum, pede purus imperdiet lacus, ut
+		semper velit ante id metus. Praesent massa dolor, porttitor sed,
+		pulvinar in, consequat ut, leo. Nullam nec est. Aenean id risus blandit
+		tortor pharetra congue.  Suspendisse pulvinar.
+		</p>
+	</body>
+</html>
+

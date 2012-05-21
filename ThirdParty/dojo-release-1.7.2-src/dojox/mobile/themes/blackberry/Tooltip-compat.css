@@ -1,0 +1,47 @@
+/* dojox.mobile.Tooltip */
+.mblTooltip {
+	-moz-border-radius: 8px;
+	-o-border-radius: 8px;
+	-ms-border-radius: 8px;
+	border-radius: 8px;
+	background-image: none;
+}
+.mblTooltipBefore .mblTooltipArrow {
+	*right: 0; /* IE 7 quirks */
+}
+.mblTooltipAbove .mblTooltipArrow {
+	*bottom: 0px; /* IE 7 quirks */
+}
+.mblTooltipBefore .mblTooltipInnerArrow {
+	*right: -1px; /* IE 7 quirks */
+}
+.mblTooltipAbove .mblTooltipInnerArrow {
+	*bottom: -1px;  /* IE 7 quirks */
+}
+.mblTooltipBefore .mblTooltipInnerArrow {
+	border-right-color: #424142;
+}
+.mblTooltipAfter .mblTooltipInnerArrow {
+	border-left-color: #424142;
+}
+.mblTooltipAbove .mblTooltipInnerArrow {
+	border-bottom-color: #424142;
+}
+.mblTooltipBelow .mblTooltipInnerArrow {
+	border-top-color: #424142;
+}
+.mblTooltip .mblHeading {
+	*padding: 0 9px 12px;
+	*border-top: 1px solid #424142;
+	*border-bottom: 1px solid #424142;
+	*width: auto;
+	*height: auto;
+	*overflow: visible;
+	*line-height: normal;
+}
+.dj_ie9 .mblTooltip .mblHeading {
+	width: auto;
+}
+.mblTooltip .mblHeading .mblToolBarButton {
+	*margin: auto 6px;
+}

@@ -1,0 +1,14 @@
+({
+	name: "date.timezone.Antarctica-Mawson",
+	runTest: function(t){
+		var tz = "Antarctica/Mawson";
+		doh.checkDate({tzOffset: 0, tzAbbr: "zzz"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "zzz"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "zzz"}, -501206401000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "MAWT"}, -501206400000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "MAWT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "MAWT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "MAWT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: -360, tzAbbr: "MAWT"}, 1246789800000, tz, 0);
+	}
+})

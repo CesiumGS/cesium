@@ -1,0 +1,76 @@
+﻿<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" >
+<head>
+<title>Testing image</title>
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+</style>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+<script type="text/javascript">
+dojo.require("dojox.gfx");
+
+var image = null, grid_size = 500, grid_step = 50,
+	m = dojox.gfx.matrix;
+
+createSurface = function(){
+	var surface = dojox.gfx.createSurface("test", 800, 600);
+	surface.whenLoaded(makeShapes);
+};
+
+makeShapes = function(surface){
+	for(var i = 0; i <= grid_size; i += grid_step){
+		surface.createLine({x1: 0, x2: grid_size, y1: i, y2: i}).setStroke("black");
+		surface.createLine({y1: 0, y2: grid_size, x1: i, x2: i}).setStroke("black");
+	}
+    image = surface.createImage({width: 150, height: 100, src: "images/eugene-sm.jpg"});
+    image.connect("onclick", function(){ alert("You didn't expect a download, did you?"); });
+};
+
+transformImage = function(){
+	var radio = document.getElementsByName("switch");
+	if(radio[0].checked){
+        image.setTransform({});
+	}else if(radio[1].checked){
+        image.setTransform({dx: 100, dy: 50});
+	}else if(radio[2].checked){
+        image.setTransform(m.rotateg(15));
+	}else if(radio[3].checked){
+        image.setTransform([{dx: 70, dy: 90}, {xx: 1.5, yy: 0.5}]);
+	}else if(radio[4].checked){
+        image.setTransform([m.rotateg(15), m.skewXg(30)]);
+	}
+	var shift = document.getElementsByName("shift");
+	if(shift[0].checked){
+		image.setShape({x: 0, y: 0});
+	}else if(shift[1].checked){
+		image.setShape({x: 100, y: 50});
+	}else if(shift[2].checked){
+		image.setShape({x: 0, y: 0});
+		image.applyRightTransform({dx: 100, dy: 50});
+	}
+};
+
+dojo.addOnLoad(createSurface);
+
+</script>
+</head>
+<body>
+<h1>dojox.gfx Image tests</h1>
+<p>Note: Silverlight doesn't allow downloading images when run from a file system. This demo should be run from a server.</p>
+<p>
+<input type="radio" name="switch" id="r1_reset" checked onclick="transformImage()" /><label for="r1_reset">Reset Image</label><br />
+<input type="radio" name="switch" id="r1_move" onclick="transformImage()" /><label for="r1_move">Move Image</label><br />
+<input type="radio" name="switch" id="r1_rotate" onclick="transformImage()" /><label for="r1_rotate">Rotate Image</label><br />
+<input type="radio" name="switch" id="r1_scale" onclick="transformImage()" /><label for="r1_scale">Scale Image</label><br />
+<input type="radio" name="switch" id="r1_skew" onclick="transformImage()" /><label for="r1_skew">Skew Image</label><br />
+</p>
+<p>
+<input type="radio" name="shift" id="r2_none" checked onclick="transformImage()" /><label for="r2_none">Place image at (0, 0)</label><br />
+<input type="radio" name="shift" id="r2_origin" onclick="transformImage()" /><label for="r2_origin">Place image at (100, 50)</label><br />
+<input type="radio" name="shift" id="r2_shift" onclick="transformImage()" /><label for="r2_shift">Shift image by (100, 50)</label>
+</p>
+<div id="test"></div>
+<p>That's all Folks!</p>
+</body>
+</html>

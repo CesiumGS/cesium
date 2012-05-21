@@ -1,0 +1,16 @@
+({
+	name: "date.timezone.Africa-Dakar",
+	runTest: function(t){
+		var tz = "Africa/Dakar";
+		doh.checkDate({tzOffset: 69.7333333333333, tzAbbr: "LMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: 69.7333333333333, tzAbbr: "LMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: 69.7333333333333, tzAbbr: "LMT"}, -1830379817000, tz, 1);
+		doh.checkDate({tzOffset: 60, tzAbbr: "WAT"}, -1830379816000, tz, 1);
+		doh.checkDate({tzOffset: 60, tzAbbr: "WAT"}, -902098801000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "GMT"}, -902098800000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "GMT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "GMT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "GMT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: 0, tzAbbr: "GMT"}, 1246789800000, tz, 0);
+	}
+})

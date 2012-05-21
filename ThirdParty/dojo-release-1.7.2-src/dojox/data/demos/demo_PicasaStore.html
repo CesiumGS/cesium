@@ -1,0 +1,190 @@
+<!--
+  This file is a demo of the PicasaStore, a simple wrapper to the public feed service
+  of Picasa.  This just does very basic queries against Picasa and loads the results
+  into a list viewing widget.
+-->
+<html>
+<head>
+	<title>Demo of PicasaStore</title>
+	<style type="text/css">
+
+		@import "../../../dijit/themes/tundra/tundra.css";
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+		@import "./picasaDemo.css";
+	</style>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+	<script type="text/javascript">
+		dojo.require("dojo.parser");
+		dojo.require("dijit.form.TextBox");
+		dojo.require("dijit.form.Button");
+		dojo.require("dijit.form.ComboBox");
+		dojo.require("dijit.form.NumberSpinner");
+		dojo.require("dijit.Tree");
+		dojo.require("dojox.data.PicasaStore");
+		dojo.require("dojox.data.demos.widgets.PicasaViewList");
+		dojo.require("dojox.data.demos.widgets.PicasaView");
+		
+		function init(){
+			var fViewWidgets = [];
+
+			//Set up an onComplete handler for picasaData
+			function onComplete(items, request){
+				picasaViewsWidget.clearList();
+				if(items.length > 0){
+					for(var i = 0; i < items.length; i++){
+						var picasaData = {
+							title: picasaStore.getValue(items[i],"title"),
+							author: picasaStore.getValue(items[i],"author"),
+							description: picasaStore.getValue(items[i],"description"),
+							iconUrl: picasaStore.getValue(items[i],"imageUrlSmall"),
+							imageUrl: picasaStore.getValue(items[i],"imageUrl")
+						}
+						picasaViewsWidget.addView(picasaData);
+					}
+				}
+				statusWidget.attr("value", "PROCESSING COMPLETE.");
+
+			}
+			//What to do if a search fails...
+			function onError(error, request){
+                console.debug(error);
+				picasaViewsWidget.clearList();
+				statusWidget.attr("value", "PROCESSING ERROR.");
+			}
+
+			//Function to invoke the search of the PicasaStore
+			function invokeSearch(){
+				var request = {
+					query: {},
+					onComplete: onComplete,
+					onError: onError
+				};
+
+				if(idWidget){
+					var userid = idWidget.attr("value");
+					if(userid && userid !== ""){
+						request.query.userid = userid;
+					}
+				}
+				if(tagsWidget){
+					var tags = tagsWidget.attr("value");
+					if(tags && tags !== ""){
+						var tagsArray = tags.split(" ");
+						tags = "";
+						for(var i = 0; i < tagsArray.length; i++){
+							tags = tags + tagsArray[i];
+							if(i < (tagsArray.length - 1)){
+								tags += ","
+							}
+						}
+						request.query.tags = tags;
+					}
+				}
+				if(countWidget){
+					request.count = countWidget.attr("value");
+				}
+
+				if(startWidget){
+					request.query.start = startWidget.attr("value");
+				}
+
+				if(statusWidget){
+					statusWidget.attr("value","PROCESSING REQUEST");
+				}
+
+				picasaStore.fetch(request);
+			}
+
+			//Lastly, link up the search event.
+			var button = dijit.byId("searchButton");
+			dojo.connect(button, "onClick", invokeSearch);
+		}
+		dojo.addOnLoad(init);
+	</script>
+</head>
+
+<body class="tundra">
+	<h1>
+		DEMO:  PicasaStore Search
+	</h1>
+	<hr>
+	<h3>
+		Description:
+	</h3>
+	<p>
+		This simple demo shows how services, such as Picasa, can be wrapped by the datastore API.  In this demo, you can search public Picasa images through a simple PicasaStore by specifying a series of tags (separated by spaces) to search on.  The results will be displayed below the search box.
+	</p>
+	<p>
+		For fun, search on the 3dny tag!
+	</p>
+
+	<blockquote>
+
+	<!--
+		The store instance used by this demo.
+	-->
+	<table>
+		<tbody>
+			<tr>
+				<td>
+					<b>Status:</b>
+				</td>
+				<td>
+					<div dojoType="dijit.form.TextBox" size="50" id="status" jsId="statusWidget" disabled="true"></div>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<b>ID:</b>
+				</td>
+				<td>
+					<div dojoType="dijit.form.TextBox" size="50" id="userid" jsId="idWidget"></div>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<b>Query:</b>
+				</td>
+				<td>
+					<div dojoType="dijit.form.TextBox" size="50" id="tags" jsId="tagsWidget" value="flower"></div>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<b>Number of Pictures:</b>
+				</td>
+				<td>
+					<div   
+						id="start"
+						jsId="startWidget"
+						dojoType="dijit.form.NumberSpinner"
+						value="1"
+						constraints="{min:1,places:0}" 
+					></div>
+					<div   
+						id="count"
+						jsId="countWidget"
+						dojoType="dijit.form.NumberSpinner"
+						value="20"
+						constraints="{min:1,max:100,places:0}" 
+					></div>
+				</td>
+			</tr>
+			<tr>
+				<td>
+				</td>
+				<td>
+					<div dojoType="dijit.form.Button" label="Search" id="searchButton" jsId="searchButtonWidget"></div>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+	<hr/>
+	</blockquote>
+	<div dojoType="dojox.data.PicasaStore" jsId="picasaStore" label="title"></div>
+	<div dojoType="dojox.data.demos.widgets.PicasaViewList" id="picasaViews" jsId="picasaViewsWidget"></div>
+
+</body>
+</html>

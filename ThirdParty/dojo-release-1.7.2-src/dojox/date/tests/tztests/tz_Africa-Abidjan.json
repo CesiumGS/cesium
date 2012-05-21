@@ -1,0 +1,14 @@
+({
+	name: "date.timezone.Africa-Abidjan",
+	runTest: function(t){
+		var tz = "Africa/Abidjan";
+		doh.checkDate({tzOffset: 16.1333333333333, tzAbbr: "LMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: 16.1333333333333, tzAbbr: "LMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: 16.1333333333333, tzAbbr: "LMT"}, -1830383033000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "GMT"}, -1830383032000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "GMT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "GMT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "GMT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: 0, tzAbbr: "GMT"}, 1246789800000, tz, 0);
+	}
+})

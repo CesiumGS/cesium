@@ -1,0 +1,203 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>Dojox Rolling List Test</title>
+
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+	</style>
+
+	<!-- required: a default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/tundra/tundra.css">
+	
+	<!-- the additional styles for the widget -->
+	<link id="widgetStyle" rel="stylesheet" href="../RollingList/RollingList.css">
+	
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		djConfig="parseOnLoad: true, isDebug: true"></script>
+	
+	<!-- not needed, for testing alternate themes -->
+	<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+
+	<script language="JavaScript" type="text/javascript">
+		dojo.require("dojo.data.ItemFileWriteStore");
+		dojo.require("dojox.widget.RollingList");
+		dojo.require("dijit.form.Button");
+		dojo.require("dijit.form.TextBox");
+		dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+		
+		dojo.declare("dojox.widget.RollingStore", dojo.data.ItemFileWriteStore, {
+			getLabel: function(item){
+				return this.inherited(arguments) + " (" + this.getValue(item, "type") + ")";
+			}
+		});
+
+		addedT = false;
+		addedD = false;
+		addedA = false;
+		removedC = false;
+		removedE = false;
+		changedD = false;
+		isBig = true;
+		
+		addTijuana = function(){
+			if(addedT){ 
+				console.log("Tijuana is already added");
+				return; 
+			}
+			addedT = true;
+			continentStore.fetchItemByIdentity({identity: "MX", onItem: function(i){
+				continentStore.newItem({id: "Tijuana", name: "Tijuana", type: "city"}, 
+										{parent: i, attribute: "children"});
+				continentStore.save();
+			}});
+		}
+		addDC = function(){
+			if(addedD){ 
+				console.log("Washington DC is already added");
+				return; 
+			}			
+			addedD = true;
+			continentStore.fetchItemByIdentity({identity: "US", onItem: function(i){
+				continentStore.newItem({id: "Washington DC", name: "Washington DC", type: "city"}, 
+										{parent: i, attribute: "children"});
+				continentStore.save();
+			}});
+		}
+		addAntarctica = function(){
+			if(addedA){ 
+				console.log("Antarctica is already added");
+				return; 
+			}
+			continentStore.newItem({id: "Antarctica", name: "Antarctica", type: "continent"});
+			addedA = true;
+		}
+		removeTijuana = function(){
+			if(!addedT){ 
+				console.log("Tijuana is not yet added");
+				return; 
+			}
+			addedT = false;
+			continentStore.fetchItemByIdentity({identity: "Tijuana", onItem: function(i){
+				continentStore.deleteItem(i);
+				continentStore.save();
+			}});
+		}
+		removeCanada = function(){
+			if(removedC){ 
+				console.log("Canada is already removed");
+				return; 
+			}			
+			removedC = true;
+			continentStore.fetchItemByIdentity({identity: "CA", onItem: function(i){
+				continentStore.deleteItem(i);
+			}});
+		}
+		removeEurope = function(){
+			if(removedE){ 
+				console.log("Europe is already removed");
+				return; 
+			}			
+			removedE = true;
+			continentStore.fetchItemByIdentity({identity: "EU", onItem: function(i){
+				continentStore.deleteItem(i);
+			}});
+		}
+		changeDC = function(){
+			if(!addedD){ 
+				console.log("Washington DC is not yet added");
+				return; 
+			}			
+			if(changedD){ 
+				console.log("Washington DC is already changed");
+				return; 
+			}			
+			changedD = true;
+			continentStore.fetchItemByIdentity({identity: "Washington DC", onItem: function(i){
+				continentStore.setValue(i, "type", "district");
+			}});
+		}
+		removeDC = function(){
+			if(!addedD){
+				console.log("Washington DC is not yet added");
+				return;
+			}
+			changedD = false;
+			addedD = false;
+			continentStore.fetchItemByIdentity({identity: "Washington DC", onItem: function(i){
+				continentStore.deleteItem(i);
+				continentStore.save();
+			}});
+			
+		}
+		doResize = function(){
+			var newSize = isBig ? {w: 340, h: 100} : {w: 500, h: 300};
+			myList.resize(newSize);
+			isBig = !isBig;
+		}
+		setValue = function(id){
+			if(id){
+				continentStore.fetchItemByIdentity({identity: id, onItem: function(i){
+					myList.attr("value", i);
+				}});
+			}else{
+				myList.attr("value", null);
+			}
+		}
+	</script>
+
+</head>
+<body class="tundra">
+
+	<h1 class="testTitle">Dojox Rolling List Test</h1>
+
+	<div dojoType="dojox.widget.RollingStore" jsId="continentStore" 
+		url="../../../dijit/tests/_data/countries.json">
+	</div>
+	
+	<h3>Rolling List - <input dojoType="dijit.form.TextBox" type="text" id="clickWatch" disabled value="None Selected..."></h3>
+	<div dojoType="dojox.widget.RollingList" jsId="myList" id="myList" store="continentStore"
+		query="{type:'continent'}">
+		<script type="dojo/method" event="onChange" args="value">
+			console.debug("Set Value:", value);
+			if(value){
+				dijit.byId("clickWatch").attr("value", this.store.getIdentity(value));
+			}else{
+				dijit.byId("clickWatch").attr("value", "None Selected...");
+			}
+		</script>
+		<script type="dojo/method" event="getPaneForItem" args="item,parentPane,children">
+			var ret = dojox.widget.RollingList.prototype.getPaneForItem.apply(this, arguments);
+
+			if(!ret){
+				ret = new dojox.widget._RollingListPane({
+									onItems: function(){
+										if(this.items.length){
+											this._setContentAndScroll("Details for " + this.store.getLabel(this.items[0]).replace(/</,"&lt;"));
+										}
+									}});
+			}
+			return ret;
+		</script>
+	</div>
+	<hr>
+	<button dojoType="dijit.form.Button" onClick="doResize()">Resize widget</button>
+	<hr>
+	<button dojoType="dijit.form.Button" onClick="setValue('Guadalajara')">Set Value to Guadalajara</button>
+	<button dojoType="dijit.form.Button" onClick="setValue('AF')">Set Value to Africa</button>
+	<button dojoType="dijit.form.Button" onClick="setValue('Toronto')">Set Value to Toronto</button>
+	<button dojoType="dijit.form.Button" onClick="setValue('')">Set No Value</button>
+	<hr>
+	<button dojoType="dijit.form.Button" onClick="addTijuana()">Add Item To Mexico (Tijuana)</button>
+	<button dojoType="dijit.form.Button" onClick="removeTijuana()">Remove Tijuana</button><br>
+	<button dojoType="dijit.form.Button" onClick="addDC()">Add Item To USA (Washington DC)</button>
+	<button dojoType="dijit.form.Button" onClick="changeDC()">Change Washington DC</button>
+	<button dojoType="dijit.form.Button" onClick="removeDC()">Remove Washington DC</button><br>
+	<button dojoType="dijit.form.Button" onClick="addAntarctica()">Add Item To Top-level (Antarctica)</button><br>
+	<button dojoType="dijit.form.Button" onClick="removeCanada()">Remove Canada</button>
+	<button dojoType="dijit.form.Button" onClick="removeEurope()">Remove Europe</button>
+</body>
+</html>

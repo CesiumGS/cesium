@@ -1,0 +1,274 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>Spider 2D</title>
+		<style type="text/css">
+			@import "../../../../dojo/resources/dojo.css";
+			@import "../../../../dijit/tests/css/dijitTests.css";
+			@import "../../../../dijit/themes/claro/claro.css";
+			@import "../../resources/Legend.css";
+			
+			.dojoxLegendItem{
+				padding: 3px 5px 2px 5px;
+			}
+			.dojoxLegendItem .dojoxLegendText{
+				float: right;
+				margin-top: 2px;
+			}
+			.dojoxLegendItem .dojoxLegendIcon{
+				float: left;
+			}
+			.dojoxLegendItemRtl{
+				padding: 3px 5px 2px 5px;
+			}
+			.dojoxLegendItemRtl .dojoxLegendText{
+				float: left;
+				margin-top: 2px;
+			}
+			.dojoxLegendItemRtl .dojoxLegendIcon{
+				float: right;
+			}
+			.dojoxLegendHover{
+				background-color: #afd9ff;
+				cursor: pointer;
+				padding: 3px 5px 2px 5px;
+			}
+			.dojoxLegendActive{
+				cursor: pointer;
+				border: 2px solid #7dbefa;
+				padding: 1px 3px 0 3px;
+			}
+		</style>
+		<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+		<script type="text/javascript">
+			dojo.require("dojo.parser");
+			dojo.require("doh.runner");
+
+			dojo.require("dojox.charting.Chart");
+			dojo.require("dojox.charting.plot2d.Spider");
+			dojo.require("dojox.charting.themes.PlotKit.blue");
+			dojo.require("dijit.form.CheckBox");
+			dojo.require("dijit.form.RadioButton");
+			dojo.require("dijit.form.Form");
+			dojo.require("dojo.fx.easing");
+			dojo.require("dojox.gfx.fx");
+			dojo.require("dojox.charting.widget.SelectableLegend");
+
+			dojo.require("dojox.charting.BidiSupport");
+			dojo.require("dojox.charting.widget.BidiSupport");
+			
+			var dc = dojox.charting,
+				divisions = 7,
+				stype = "polygon",
+				easing = dojo.fx.easing.backOut;
+			var empty = {};
+			var populateSelect = function(from, select){
+				var module = dojo.getObject(from);
+				for(var name in module){
+					if(name in empty){ continue; }
+					var fun = module[name];
+					if(dojo.isFunction(fun)){
+						dojo.create("option", {
+							value:     from + "." + name,
+							selected:  name == "backOut",
+							innerHTML: from + "." + name
+						}, select);
+					}
+				}
+			};
+			
+			var chart1, legend1;
+			makeObjects = function(){
+				chart1 = new dojox.charting.Chart("test1",{textDir:"rtl"});
+				chart1.setTheme(dojox.charting.themes.PlotKit.blue);
+				chart1.addPlot("default", {
+					type: "Spider",
+					labelOffset: -10,
+					divisions: divisions,
+					axisColor:      "lightgray",
+					spiderColor:    "silver",
+					seriesFillAlpha: 0.2,
+					spiderOrigin:	 0.16,
+					markerSize:  	 3,
+					precision:		 0,
+					spiderType:	 	 stype
+				});
+				chart1.addSeries("China.", {data: {"GDP.": 2,"area.": 6,"\u05d0\u05d5\u05db\u05dc\u05d5\u05e1\u05d9\u05d4.": 2000,"inflation.": 15,"growth.": 12}}, { fill: "blue" });
+				chart1.addSeries("\u05e6\u05e8\u05e4\u05ea.", {data: {"GDP.": 6,"area.": 15,"\u05d0\u05d5\u05db\u05dc\u05d5\u05e1\u05d9\u05d4.": 500,"inflation.": 5,"growth.": 6}}, { fill: "red" });
+				chart1.addSeries("USA.", {data: {"GDP.": 3,"area.": 20,"\u05d0\u05d5\u05db\u05dc\u05d5\u05e1\u05d9\u05d4.": 1500,"inflation.": 10,"growth.": 3}}, { fill: "green" });
+				chart1.addSeries("Start \u05e1\u05d5\u05e3.", {data: {"GDP.": 4,"area.": 2,"\u05d0\u05d5\u05db\u05dc\u05d5\u05e1\u05d9\u05d4.": 1000,"inflation.": 20,"growth.": 2}}, { fill: "yellow" });
+				chart1.addSeries("\u05d4\u05ea\u05d7\u05dc\u05d4 end.", {data: {"GDP.": 10,"area.": 10,"\u05d0\u05d5\u05db\u05dc\u05d5\u05e1\u05d9\u05d4.": 800,"inflation.": 2,"growth.": 18}}, { fill: "orange" });
+				chart1.addSeries("Canada.", {data: {"GDP.": 1,"area.": 18,"\u05d0\u05d5\u05db\u05dc\u05d5\u05e1\u05d9\u05d4.": 300,"inflation.": 3,"growth.": 15}}, { fill: "purple" });
+				chart1.render();
+				
+				legend1 = new dc.widget.SelectableLegend({chart: chart1, horizontal: true}, "legend1");
+				
+				// prepare and enable controls
+				populateSelect("dojo.fx.easing", "easing");
+			};
+			
+			dojo.addOnLoad(function(){
+				makeObjects();
+
+				doh.register("parse", function(){
+					dojo.parser.parse();
+				});
+
+				doh.register("test textDir", [
+					{
+						name: "Spider chart and legend.",
+
+						runTest: function(){
+							doh.is("rtl", chart1.textDir, "textDir of : chart1");
+							doh.is("rtl", legend1.textDir, "textDir of : legend1");
+
+						}
+					}	
+				]);		
+
+				doh.run();
+				
+			});
+
+		</script>
+
+		<script type="text/javascript">
+			function switchData(val){
+				if(val == "b1"){
+					chart1.updateSeries("China", {data: {"GDP.": 2,"area.": 6,"\u05d0\u05d5\u05db\u05dc\u05d5\u05e1\u05d9\u05d4.": 2000,"inflation.": 15,"growth.": 12}}, { fill: "blue" });
+					chart1.updateSeries("\u05e6\u05e8\u05e4\u05ea.", {data: {"GDP.": 6,"area.": 15,"\u05d0\u05d5\u05db\u05dc\u05d5\u05e1\u05d9\u05d4.": 500,"inflation.": 5,"growth.": 6}}, { fill: "red" });
+					chart1.updateSeries("USA.", {data: {"GDP.": 3,"area.": 20,"\u05d0\u05d5\u05db\u05dc\u05d5\u05e1\u05d9\u05d4.": 1500,"inflation.": 10,"growth.": 3}}, { fill: "green" });
+					chart1.updateSeries("Start \u05e1\u05d5\u05e3.", {data: {"GDP.": 4,"area.": 2,"\u05d0\u05d5\u05db\u05dc\u05d5\u05e1\u05d9\u05d4.": 1000,"inflation.": 20,"growth.": 2}}, { fill: "yellow" });
+					chart1.updateSeries("\u05d4\u05ea\u05d7\u05dc\u05d4 end.", {data: {"GDP.": 10,"area.": 10,"\u05d0\u05d5\u05db\u05dc\u05d5\u05e1\u05d9\u05d4.": 800,"inflation.": 2,"growth.": 18}}, { fill: "orange" });
+					chart1.updateSeries("Canada.", {data: {"GDP.": 1,"area.": 18,"\u05d0\u05d5\u05db\u05dc\u05d5\u05e1\u05d9\u05d4.": 300,"inflation.": 3,"growth.": 15}}, { fill: "purple" });
+				}else{
+					chart1.updateSeries("China", {data: {"GDP.": 8,"area.": 2,"\u05d0\u05d5\u05db\u05dc\u05d5\u05e1\u05d9\u05d4.": 500,"inflation.": 2,"growth.": 18}}, { fill: "blue" });
+					chart1.updateSeries("\u05e6\u05e8\u05e4\u05ea.", {data: {"GDP.": 10,"area.": 6,"\u05d0\u05d5\u05db\u05dc\u05d5\u05e1\u05d9\u05d4.": 1000,"inflation.": 20,"growth.": 12}}, { fill: "red" });
+					chart1.updateSeries("USA.", {data: {"GDP.": 2,"area.": 5,"\u05d0\u05d5\u05db\u05dc\u05d5\u05e1\u05d9\u05d4.": 1500,"inflation.": 12,"growth.": 6}}, { fill: "green" });
+					chart1.updateSeries("Start \u05e1\u05d5\u05e3.", {data: {"GDP.": 1,"area.": 20,"\u05d0\u05d5\u05db\u05dc\u05d5\u05e1\u05d9\u05d4.": 500,"inflation.": 5,"growth.": 11}}, { fill: "yellow" });
+					chart1.updateSeries("\u05d4\u05ea\u05d7\u05dc\u05d4 end.", {data: {"GDP.": 4,"area.": 2,"\u05d0\u05d5\u05db\u05dc\u05d5\u05e1\u05d9\u05d4.": 2000,"inflation.": 16,"growth.": 8}}, { fill: "orange" });
+					chart1.updateSeries("Canada.", {data: {"GDP.": 6,"area.": 10,"\u05d0\u05d5\u05db\u05dc\u05d5\u05e1\u05d9\u05d4.": 300,"inflation.": 3,"growth.": 2}}, { fill: "purple" });
+				}
+				chart1.render();
+				legend1 && legend1.refresh && legend1.refresh();
+			}
+
+		</script>
+
+		<script type="text/javascript">
+			function switchSpider(val){
+				stype = document.getElementById("b11").checked ? "polygon" : "circle";
+				if(val == "b11"){
+					chart1.addPlot("default", {
+						type: "Spider",
+						divisions: 		divisions,
+						spiderType: 	stype
+					});
+				}else{
+					chart1.addPlot("default", {
+						type: "Spider",
+						divisions: 		divisions,
+						spiderType: 	stype
+					});
+				}
+				chart1.render();
+				legend1 && legend1.refresh && legend1.refresh();
+			}
+
+		</script>
+
+		<script type="text/javascript">
+			function switchDivisions(val){
+				if(val == "b111"){
+					divisions = 7;
+					chart1.addPlot("default", {
+						type: "Spider",
+						divisions: 		divisions,
+						spiderType: 	stype
+					});
+				}else{
+					divisions = 3;
+					chart1.addPlot("default", {
+						type: "Spider",
+						divisions: 		divisions,
+						spiderType: 	stype
+					});
+				}
+				chart1.render();
+				legend1 && legend1.refresh && legend1.refresh();
+			}
+
+		</script>
+		<script type="text/javascript">
+			function switchAnimation(val){
+				easing = dojo.getObject(dojo.byId("easing").value);
+				chart1.addPlot("default", {
+					type: "Spider",
+					divisions: 		divisions,
+					spiderType: 	stype,
+					animationType:	easing
+				});
+				chart1.render();
+				legend1 && legend1.refresh && legend1.refresh();
+			}
+
+		</script>
+
+	</head>
+	<body class="claro">
+	<h1>Spider 2D</h1>
+
+	<h2>
+	Spider 2D Demo:
+	</h2>
+	<p>
+	<span>
+		<span>Switch Year:</span>
+		<span>
+			<input dojoType="dijit.form.RadioButton" type=radio checked="checked" onClick="switchData(this.id)" name='a1' id='b1' value="1"/><label for='b1'> Figures in 2008 </label>
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input dojoType="dijit.form.RadioButton" type=radio name='a1' onClick="switchData(this.id)" id='b2' value="2"/><label for='b2'> Figures in 2009 </label>
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			<span><label>Animation Type:&nbsp;</label><select id="easing" onchange="switchAnimation()"></select></span>&nbsp;
+		</span>
+	</span>
+	</p>
+	<p>
+	<span>
+		<span>Switch Spider Type:</span>
+		<span>
+			<input dojoType="dijit.form.RadioButton" type=radio checked="checked" onClick="switchSpider(this.id)" name='a11' id='b11' value="polygon"/><label for='b11'> Polygon </label>
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input dojoType="dijit.form.RadioButton" type=radio name='a11' onClick="switchSpider(this.id)" id='b22' value="circle"/><label for='b22'> Circle </label>
+		</span>
+	</span>
+	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<span>
+		<span>Switch Divisions:</span>
+		<span>
+			<input dojoType="dijit.form.RadioButton" type=radio checked="checked" onClick="switchDivisions(this.id)" name='a111' id='b111' value="1"/><label for='b111'> Divisions = 7 </label>
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input dojoType="dijit.form.RadioButton" type=radio name='a111' onClick="switchDivisions(this.id)" id='b222' value="2"/><label for='b222'> Divisions = 3 </label>
+		</span>
+	</span>
+	</p>
+	<h5>
+		The following legends are selectable:
+	</h5>
+	<div id="legend1"></div>
+	<p/>
+	<div id="test1" style="width: 500px; height: 500px;"></div>
+	<p/>
+	</body>
+</html>

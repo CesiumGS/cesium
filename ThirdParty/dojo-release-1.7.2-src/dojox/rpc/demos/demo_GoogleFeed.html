@@ -1,0 +1,97 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<title>Demo of Google SMD Feed Service</title>
+<style type="text/css">
+th {
+	text-align:left;
+}
+table {
+	border-collapse:collapse;
+}
+th, td {
+	border:1px solid #ddd;
+}
+</style>
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+<script type="text/javascript">
+	dojo.require("dojox.rpc.Service");
+	dojo.require("dojo.io.script");
+
+	function init(){
+		var google = new dojox.rpc.Service(dojo.moduleUrl("dojox.rpc","SMDLibrary/google.smd")); 
+		dojo.connect(dojo.byId("go"),"onclick", function(e){
+
+			var resultsNode = dojo.byId("feedData");
+			resultsNode.innnerHTML = "Loading...";
+			
+			var url = dojo.byId("feedUrl").value;
+			google.getFeed({
+				q: url
+			}).addCallback(function(response){
+				console.log(response);
+				var feed = response.responseData.feed;
+
+				dojo.byId("feedTitleNode").innerHTML = feed.title;
+				dojo.byId("feedAuthorNode").innerHTML = feed.author;
+				dojo.byId("feedLinkNode").innerHTML = feed.link;
+				dojo.byId("feedTypeNode").innerHTML = feed.type;
+				dojo.byId("feedDescriptionNode").innerHTML = feed.description;
+
+				var feedEntriesNode = dojo.byId("feedEntriesNode");
+				dojo.forEach(feed.entries, function(entry){
+					var entryNode = document.createElement("li");
+					entryNode.innerHTML = entry.title + ", <i>" + entry.link + "</i>";
+					feedEntriesNode.appendChild(entryNode);
+				});
+
+			}).addErrback(function(err){
+				console.error("Error getting feed from " + url, err);
+			});
+		});
+
+	}
+	dojo.addOnLoad(init);
+
+</script>
+</head>
+
+<body>
+	<h2>Google API SMD - Feed Reader</h2>
+
+	<input id="feedUrl" name="feedUrl" type="text" size="60" value="http://dojotoolkit.org/aggregator/rss">
+	<button id="go" type="submit" value="Read Feed">Read Feed</button>
+
+	<p>Click the Read Feed button to load the feed data.</p>
+
+	<div id="feedData">
+		<table>
+			<tr>
+				<th>Title</th>
+				<td id="feedTitleNode"><i>none yet</i></td>
+			</tr>
+			<tr>
+				<th>Author</th>
+				<td id="feedAuthorNode"><i>none yet</i></td>
+			</tr>
+			<tr>
+				<th>Link</th>
+				<td id="feedLinkNode"><i>none yet</i></td>
+			</tr>
+			<tr>
+				<th>Type</th>
+				<td id="feedTypeNode"><i>none yet</i></td>
+			</tr>
+			<tr>
+				<th>Description</th>
+				<td id="feedDescriptionNode"><i>none yet</i></td>
+			</tr>
+		</table>
+
+		<p><b>Entries:</b></p>
+
+		<ul id="feedEntriesNode">
+		</ul>
+	</div>
+</body>
+</html>

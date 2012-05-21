@@ -1,0 +1,124 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+
+	<title>AreaManager</title>
+	<script type="text/javascript" src="../../../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		dojo.require("doh.runner");		
+		dojo.require("dojo.parser");
+		dojo.require("dojox.mdnd.AreaManager");
+		dojo.require("dojox.mdnd.DropIndicator");
+		dojo.require("dojox.mdnd.dropMode.VerticalDropMode");
+
+		dojo.declare("AreaManagerTestFixture", null, {
+			constructor:function(testName, test) {
+				this.name = testName;
+				this.runTest = test;
+			},
+			setUp:function() {
+				
+				this.mgr = new dojox.mdnd.AreaManager();
+				this.mgr._dropMode = new dojox.mdnd.dropMode.VerticalDropMode(this.mgr);
+				this.mgr._dropIndicator = new dojox.mdnd.DropIndicator();
+				
+				this.area1 = dojo.byId("area1");
+				this.area2 = dojo.byId("area2");
+				this.area3 = dojo.byId("area3");
+			},
+			tearDown:function() {
+				delete this.mgr;
+				delete this.area1;
+				delete this.area2;
+				delete this.area3;
+			}
+		});
+		//--------------------------------------
+		dojo.addOnLoad(function(){
+			doh.register("AreaManagerRegistering",
+				[
+					new AreaManagerTestFixture("registerByNodeNull",function(){
+						this.mgr.registerByNode(null);
+						doh.assertEqual(0, this.mgr._areaList.length, 'No area should be register.');
+					}),
+
+					new AreaManagerTestFixture("registerByNodeArea",function(){
+						this.mgr.registerByNode(this.area2);
+						this.mgr.registerByNode(this.area1);
+						doh.assertEqual(2, this.mgr._areaList.length, 'Two areas should be register.');
+						doh.assertEqual(this.area1, this.mgr._areaList[0].node);
+						doh.assertEqual(this.area2, this.mgr._areaList[1].node);
+					}),
+
+					new AreaManagerTestFixture("unregisterArea",function(){
+						this.mgr.registerByNode(this.area1);
+						this.mgr.unregister(this.area1);
+						doh.assertEqual(0, this.mgr._areaList.length, 'Area1 should be unregister.');
+					}),
+					
+					new AreaManagerTestFixture("registerByNodeRegisteredArea",function(){
+						this.mgr.registerByNode(this.area2);
+						this.mgr.registerByNode(this.area2);
+						doh.assertEqual(1, this.mgr._areaList.length, 'One area should be register.');
+						doh.assertEqual(this.area2, this.mgr._areaList[0].node, 'Area1 should be register once.');
+					}),
+					
+					new AreaManagerTestFixture("registerByNodeAreaWithChildren",function(){
+						this.mgr.registerByNode(this.area3);
+						doh.assertEqual(this.area3, this.mgr._areaList[0].node, 'Area3 should be register.');
+						var areaItem = this.mgr._areaList[0];
+						doh.assertEqual(1, areaItem.items.length, 'One item should be register.');
+					}),
+
+					new AreaManagerTestFixture("registerByClassArea",function(){
+						this.mgr.registerByClass();
+						doh.assertEqual(2, this.mgr._areaList.length, '2 area should be register.');
+					}),
+					
+					new AreaManagerTestFixture("registerByClassRegisteredArea",function(){
+						this.mgr.registerByClass();
+						this.mgr.registerByNode(this.area1);
+						doh.assertEqual(2, this.mgr._areaList.length);
+					})
+				]
+			);
+			doh.run();
+		});
+		//--------------------------------------
+	</script>
+		<style type="text/css">
+			.area{
+				position:absolute;
+				top:10px;
+				border:5px solid #AAA;
+				background-color:#DDD;
+				margin-left:0;
+				padding:0px;
+				height: 400px;
+			}
+			#area1{
+				left:10px;
+				width : 300px;
+			}
+			#area2{
+				left:330px;
+				width : 100px;
+			}
+			#area3{
+				left:450px;
+				width : 200px;
+			}
+		</style>
+	</head>
+	<body class="tundra">
+		<div id="area2" class="dojoxDndArea area"></div>
+		<div id="area1" class="dojoxDndArea area"></div>
+		<div id="area3" class="area">
+			<div class="item">
+				Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Donec ante eros, dignissim quis, facilisis nec, euismod vitae, metus. Nunc dolor sapien, euismod eget, consectetuer id, egestas ut, neque.
+			</div>
+		</div>
+	</body>
+</html>

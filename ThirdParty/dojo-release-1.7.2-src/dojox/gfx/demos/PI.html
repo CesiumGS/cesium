@@ -1,0 +1,75 @@
+﻿<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" >
+<head>
+<title>Pi calculation</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+</style>
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+<script type="text/javascript">
+dojo.require("dojox.gfx");
+
+var iterations = 0, inCounter = 0, totalCounter = 0,
+	interval, surface;
+
+var compute = function(){
+	var x = Math.random();
+	var y = Math.random();
+	var pointX = Math.round(x * 300);
+	var pointY = Math.round(y * 300);
+
+	var pointColor = "red";
+	if(x*x + y*y < 1){
+		inCounter++;
+		pointColor = "green";
+	}
+	
+	surface.createCircle({cx: pointX, cy: pointY, r: 3}).
+		setFill(pointColor).setStroke({color: pointColor, width: 2});
+
+	totalCounter++;
+	
+	if(totalCounter % 100 == 0 || totalCounter == iterations){
+		var PI = parseFloat(inCounter / totalCounter) * 4;
+		var error = (PI - Math.PI) / Math.PI * 100;	// in %
+		dojo.byId("result").innerHTML = PI + " (error = " + error.toFixed(2) + 
+			"%) after " + totalCounter + " points";
+	}
+
+	if(totalCounter == iterations){
+		clearInterval(interval);
+		dojo.byId("startButton").disabled = false;
+	}
+};
+
+var go = function(){
+	dojo.byId("startButton").disabled = true;
+	dojo.byId("result").innerHTML = "&nbsp;";
+	inCounter = totalCounter = 0;
+	iterations = parseInt(0 + parseInt(dojo.byId("iterations").value), 10);
+	interval = setInterval(compute, 20);
+};
+
+var init = function(){
+	surface = dojox.gfx.createSurface("test", 300, 300);
+	dojo.connect(dojo.byId("startButton"), "onclick", this, go);
+};
+
+dojo.addOnLoad(init);
+
+</script>
+</head>
+<body>
+<h1>PI demo</h1>
+<p>Visualization of calculating PI using the Monte Carlo method.</p>
+<p>
+<label>Iterations:</label> <input type="text" name="iterations" value="500" id="iterations"/>
+<input type="button" name="start" value="start" id="startButton" />
+</p>
+<p><span style="color:green">Green</span>: x^2 + y^2 &lt;= 1, <span style="color:red">Red</span>: x^2 + y^2 &gt; 1</p>
+<p>Estimated value for PI: <span id="result" style="font-weight: bold"></span></p>
+<div id="test" style="width: 300px; height: 300px;border:1px solid black"></div>
+<p>That's all Folks!</p>
+</body>
+</html>

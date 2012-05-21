@@ -1,0 +1,60 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot Editor Smiley Plugin Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"
+			djConfig="isDebug: true, parseOnLoad: true"></script>
+
+		<!-- functions to help test -->
+		<script type="text/javascript" src="../../../../dijit/tests/helpers.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");
+
+			dojo.addOnLoad(function(){
+				doh.robot.initRobot('../editorSmileyPlugin.html');
+
+				var editor;
+				var value;
+
+				doh.register("SmileyPlugin_tests", [
+					{
+                        //
+						name: "Smiley preFilter test",
+						timeout: 20000,
+						setUp: function(){
+                            editor = dijit.byId("editor");
+                            value = editor.attr("value");
+						},
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							try{
+								doh.robot.sequence(d.getTestCallback(function(){
+									//
+                                    // check smiley icon count
+                                    var nodes = dojo.query("img ", editor.editNode);
+                                    doh.assertEqual(20, nodes.length, editor.editNode.innerHTML);
+								}), 1000);                                
+							}catch(e){
+								d.errback(e);
+							}
+							return d;
+						},
+						tearDown: function(){
+							if(editor){editor.attr("value", value);}
+						}
+					}
+				]);
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

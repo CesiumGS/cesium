@@ -1,0 +1,110 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>Area Manager - Unit Tests</title>
+	
+	<style type="text/css">
+			.item{
+				border:1px solid black;
+				background-color:#fff;
+				margin:5px 2px;
+			}
+			
+			.area{
+				position:absolute;
+				top:10px;
+				border:5px solid #AAA;
+				background-color:#DDD;
+				margin-left:0;
+				padding:0px;
+			}
+			#area1{
+				left:130px;
+				width : 300px;
+				height: 1250px;
+			}
+			#area2{
+				left:10px;
+				width : 100px;
+				height: 1250px;
+			}
+			#area3{
+				left:450px;
+				width : 200px;
+				height: 1250px;
+			}
+	
+	</style>
+	<script type="text/javascript" src="../../../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+	
+	
+	<script type="text/javascript">
+	
+		dojo.require("doh.runner");
+		dojo.require("dojox.mdnd.AreaManager");
+		dojo.require("dojox.mdnd.dropMode.VerticalDropMode");
+		dojo.require("dojox.mdnd.DropIndicator");
+		dojo.require("dojox.mdnd.AutoScroll");
+		dojo.require("dojo.parser");
+		
+	
+		
+		
+		dojo.addOnLoad(function(){
+			// initialize the singleton areaManager
+			var mgr = dojox.mdnd.areaManager();
+			mgr.init();
+			
+			var area1,area2,area3;
+			area1 =  dojo.byId("area1");
+			area2 =  dojo.byId("area2");
+			area3 =  dojo.byId("area3");
+			
+			
+			doh.register("AreaManagerCoverPresence",
+				[
+					{
+						// move the item 2_1 to verify cover presence
+						name : "testCoverPresence",
+						runTest : function(t){
+							// get Coords of item_2_1
+							var item = dojo.byId("item_2_1");
+							var coord ={x:item.offsetLeft,y:item.offsetTop};
+							var size ={h:item.offsetHeight, w:item.offsetWidth};
+							mgr.onDragStart(item,coord,size);
+							
+							// Check 2 covers presence into body
+							var listCover = dojo.query(".dndCover");
+							doh.assertEqual(2,listCover.length);
+							// Check cover2 presence
+							doh.assertEqual(1,dojo.query(".dndCover2").length);
+							// check covers height
+							var dndCover =  listCover[0];
+							var dndCover2 = listCover[1];
+							
+							
+							//var height = (dojo.isWebKit)? document.body.scrollHeight : document.body.parentNode.scrollHeight;
+							
+							doh.assertFalse(0,dndCover.offsetHeight);
+							doh.assertFalse(0,dndCover2.offsetHeight);
+							
+							// drop the item to his initial position
+							mgr.onDrop(item);
+						}
+					}
+					
+				]
+			);
+			doh.run();
+		});
+
+	</script>
+</head>
+<body class="tundra">
+	<div id="area2" class="dojoxDndArea area">
+		<div id="item_2_1" class="item">Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Donec ante eros, dignissim quis, facilisis nec, euismod vitae, metus. Nunc dolor sapien, euismod eget, consectetuer id, egestas ut, neque.</div>
+	</div>
+	<div id="area1" class="dojoxDndArea area"></div>
+	<div id="area3" class="dojoxDndArea area"></div>
+</body>
+</html>

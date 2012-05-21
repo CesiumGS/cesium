@@ -1,0 +1,83 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta http-equiv="X-UA-Compatible" content="chrome=1"/> 
+		<title>DojoX Charting Theme Previewer</title>
+		<style type="text/css">
+			@import "../../../dojo/resources/dojo.css";
+			body {
+				padding: 1.5em;
+			}
+			div.container {
+				position: relative;
+				width: 180px;
+				height: 200px;
+				float: left;
+				border: 1px solid #ccc;
+				margin: 12px;
+			}
+			div.container div.chart {
+				width: 180px;
+				height: 180px;
+			}
+			div.container div.title {
+				position: absolute;
+				bottom: 4px;
+				font-size: 11px;
+				width: 180px;
+				text-align: center;
+			}
+			div.container div.title a { text-decoration: none; }
+			div.container div.title a:hover { text-decoration: underline; }
+		</style>
+<script src="../../../dojo/dojo.js" djConfig="isDebug: false, gfxRenderer: 'svg,silverlight,vml,canvas'"></script>
+<script type="text/javascript">
+    dojo.require("dojox.charting.Chart");
+    dojo.require("dojox.charting.plot2d.Pie");
+
+	var themes = [
+		"Julie", "ThreeD", "Chris", "Tom", "Claro", "PrimaryColors", "Electric", "Charged", "Renkoo",
+		"Adobebricks", "Algae", "Bahamation", "BlueDusk", "CubanShirts", "Desert", "Distinctive", "Dollar",
+		"Grasshopper", "Grasslands", "GreySkies", "Harmony", "IndigoNation", "Ireland", "MiamiNice",
+		"Minty", "PurpleRain", "RoyalPurples", "SageToLime", "Shrooms", "Tufte", "WatersEdge", "Wetland",
+		"PlotKit.blue", "PlotKit.cyan", "PlotKit.green", "PlotKit.orange", "PlotKit.purple", "PlotKit.red"
+	];
+
+	dojo.forEach(themes, function(theme){ dojo.require("dojox.charting.themes." + theme); })
+
+	dojo.ready(function(){
+		dojo.forEach(themes, function(theme){
+			var container = dojo.create("div", { className: "container" }, "main");
+			var chart = dojo.create("div", { className: "chart" }, container);
+			var title = dojo.create("div", { 
+				className: "title", 
+				innerHTML: 'See more of "<a href="test_themes.html?' + theme + '">' + theme + '</a>"' 
+			}, container);
+			var c = new dojox.charting.Chart(chart).
+				setTheme(dojo.getObject("dojox.charting.themes." + theme)).
+				addPlot("default", {type: "Pie", radius: 60, labelOffset: -20, radGrad: dojox.gfx.renderer == "vml" ? "fan" : "native"}).
+				addSeries("Series A", [0.35, 0.25, 0.42, 0.53, 0.69]).
+				render();
+		});
+	});
+</script>
+</head>
+<body>
+	<h1>DojoX Charting Theme Preview</h1>
+	<div id="main"></div>
+</body>
+</html>

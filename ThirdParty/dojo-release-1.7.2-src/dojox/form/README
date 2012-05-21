@@ -1,0 +1,73 @@
+-------------------------------------------------------------------------------
+dojox.form Collection
+-------------------------------------------------------------------------------
+Version 1.0
+Release date: 02/26/2008
+-------------------------------------------------------------------------------
+Project state:
+experimental
+-------------------------------------------------------------------------------
+Credits
+	Nathan Toone (toonetown)
+	Peter Higgins (dante)
+	Wolfram Kriesing (wolfram)
+	Mike Wilcox (mwilcox)
+-------------------------------------------------------------------------------
+Project description
+
+	This is a collection of additional widgets that can be used in forms.
+-------------------------------------------------------------------------------
+Dependencies:
+
+	Depends on dojo core and dijit
+	
+	dojo.form.FileUploader depends on dojox.embed, and uses Flash movies created
+	in the deft project using Flex OSS 3.  You do not need any of the deft code; 
+	compiled movies are included with dojox.form in the resources folder.  
+	If you want to modify the actual movies, you can look in the deft project 
+	(under the package deft.av).
+-------------------------------------------------------------------------------
+Documentation
+
+-------------------------------------------------------------------------------
+Installation instructions
+
+	Install into /dojox/form
+-------------------------------------------------------------------------------
+Additional Notes (Brief widget list):
+
+	* CheckedMultiSelect - an extension to dijit.form.MultiSelect which
+						uses check boxes instead of ctrl-click
+
+	* DropDownSelect - an extension to dijit.form.DropDownButton which is
+						meant to mirror the html <select> drop down
+
+	* DropDownStack/RadioStack - a widget that can toggle parts of a form as
+						"on" or "off" - to allow for different options based on 
+						the value selected.
+
+	* FileInput - experimental dijit-like input type="file"
+
+	* FileInputAuto/Blind - extension to FileInput for 
+						added flair/automation
+						
+	* FilePickerTextBox - a validating text box that can browser server-side
+						files using a dojox.data.FileStore
+	* FileUploader - Allows for Multi-file uploads and file masking. Uses a SWF
+						file created with Deft. Compatible with Flash Player
+						versions 8-10. Degradeable to a multi-file HTML uploader.
+	
+	* ListInput - A text-box widget that allows inputting multiple items (similar
+						to the "to" field on many email clients)
+						
+    * MultiComboBox - an experimental ComboBox that allows
+						multiple entries bases on a separator character.
+
+	* PasswordValidator - a widget which simplifies the common "old/new/verify" 
+						mechanism of specifying passwords
+
+	* Rating - a star-based rating widget
+ 	
+    * TimeSpinner - a number spinner that revolves through
+						time constrainsts
+

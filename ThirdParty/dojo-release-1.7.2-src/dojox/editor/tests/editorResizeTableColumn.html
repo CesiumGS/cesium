@@ -1,0 +1,84 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+		<title>Editor Resize Table Column</title>
+		<style type="text/css">
+			@import "../../../dojo/resources/dojo.css";
+			@import "../../../dijit/themes/claro/claro.css";
+			@import "../../../dijit/themes/dijit.css";
+		</style>
+
+		<link href="../plugins/resources/editorPlugins.css" type="text/css" rel="stylesheet" />
+
+		<script type="text/javascript">
+			var djConfig = {
+				isDebug: true,
+				parseOnLoad: true,
+				popup:true
+				//forceFirebugLite:true
+			};
+		</script>
+
+		<script type="text/javascript" src="../../../dojo/dojo.js"></script>
+		
+		<!-- only needed for alternate theme testing: -->
+		<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+		
+		<script>
+			dojo.require("dojo.parser");
+			dojo.require("dijit.Editor");
+			dojo.require("dijit.form.Button");
+			dojo.require("dojox.editor.plugins.ResizeTableColumn");
+			dojo.require("dijit._editor.plugins.ViewSource");
+			dojo.addOnLoad(function(){
+				console.log(dojo.version.toString());
+			});
+
+			dojo.addOnLoad(function(){
+				var editor = dijit.byId("editor");
+				var button = dijit.byId("removeButton");
+				var c = dojo.connect(button, "onClick", function(){
+					dojo.disconnect(c);
+					editor.close();
+					editor.destroy();
+				});
+			});
+		</script>
+		<style>
+			#main{
+				width:auto;
+				margin:20px 100px;
+			}
+		</style>
+	</head>
+	<body class="claro">
+		<div id="main">
+			<div id="editor" dojoType="dijit.Editor" height="200px" plugins="[
+				'undo', 'redo', 'bold','italic','|',
+				{name: 'dojox.editor.plugins.TablePlugins', command: 'resizeTableColumn'}, 'viewsource'
+			]">
+				Dojo Rocks with a fox in socks. Red socks. In a box.
+				<br/><br/>
+			        <table width="500" border="2" cellpadding="2" cellspacing="2" bordercolor="#00FFFF" bgcolor="#FF0000" id="myTable">
+					<tr>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+					</tr>
+					<tr>
+						<td>&nbsp;</td>
+						<td id="myCell">&nbsp;</td>
+						<td>&nbsp;</td>
+					</tr>
+					<tr>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td bgcolor="#00FFFF">Text</td>
+					</tr>
+				</table> 
+			</div>
+		</div>
+		<button id="removeButton" dojoType="dijit.form.Button">Remove Editor</button>
+	</body>
+</html>

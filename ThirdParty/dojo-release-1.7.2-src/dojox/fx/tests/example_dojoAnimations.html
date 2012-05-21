@@ -1,0 +1,440 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+   <head>
+
+	<title>skeleton page | The Dojo Toolkit</title>
+
+	<style type="text/css">		
+		@import "../../../dijit/themes/tundra/tundra.css";
+		body, html {
+			width:100%;
+			margin:0;
+			padding:0;
+			font:11pt Arial,sans-serif;
+			color:#666; 
+		}
+		
+		#container {
+			width:760px;
+			margin:0 auto;
+		}
+		
+		div.testBox {
+			border:2px solid #ededed;
+			background:#fefefe;
+			height:200px;
+			margin:0 auto;
+			position:relative;
+		}
+		
+		div.testItem {
+			position:absolute;
+			background:#fff url('images/averycutedog.jpg') no-repeat center center;
+			border:2px solid #f0f0f0;
+			margin:0;
+			padding:0;
+			height:175px;
+			width:175px;
+			top:10px;
+			left:10px;
+		}
+		
+		.altItem {
+			position:absolute;
+			top:10px;
+			left:295px;
+		}
+		
+		.pad {
+			padding:4px;
+		}
+		
+		.trick {
+			height:175px;
+			width:175px;
+			visibility:hidden;
+		}
+		.odd,
+		.even { margin-left:1px; }
+		
+		#lorem {
+			position:absolute;
+			top:10px;
+			left:15px;
+			font:8pt Arial,sans-serif;
+			width:175px;
+			padding:4px;
+			background:#ededed;
+		}
+		
+		#fisheyeList {
+			width:95px;
+			background:#666;
+			padding:7px;
+		}
+		#fisheyeList li {
+			color:#fff;
+		}
+	</style>
+	
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		djConfig="parseOnLoad:true, isDebug:true"></script>
+
+	<script type="text/javascript">
+		dojo.require("dojo.parser");
+		dojo.require("dijit.form.Button"); // for the tests
+		
+		// core animations:
+		dojo.require("dojo.fx");
+		
+		// provides dojo.query() animations:
+		dojo.require("dojo.NodeList-fx");
+		dojo.require("dojox.fx.ext-dojo.NodeList");
+		
+		// core dojox package:
+		dojo.require("dojox.fx");
+		dojo.require("dojox.fx._core"); // _Line
+		
+		// addons:
+		dojo.require("dojox.fx.style");
+		dojo.require("dojo.fx.easing");
+		
+		// examples inline:
+		dojo.require("dojox.widget.FisheyeLite");
+	</script>
+	
+</head>
+<body class="tundra">
+	<div id="container">
+
+	<h2>Dojo FX: base animations</h2>
+	
+	<button dojoType="dijit.form.Button">
+		Fade In/Out
+		<script type="dojo/method" event="onClick">
+			dojo.fadeOut({ node:"testSlide",
+				onEnd:function(){
+					dojo.fadeIn({ node:"testSlide", delay:300 }).play();	
+				}
+			}).play();
+		</script>
+	</button>
+	
+	<button dojoType="dijit.form.Button">
+		animateProperty: height
+		<script type="dojo/method" event="onClick">
+			dojo.animateProperty({
+				node:"testSlide",
+				properties:{ height:{ end:1 } },
+				onEnd:function(){
+					dojo.animateProperty({
+						node:"testSlide",
+						delay:300,
+						properties:{ height:175 }
+					}).play();	
+				}
+			}).play();
+		</script>
+	</button>
+	
+	<button dojoType="dijit.form.Button">
+		animateProperty: width
+		<script type="dojo/method" event="onClick">
+			dojo.animateProperty({
+				node:"testSlide",
+				properties:{ width:1 },
+				onEnd:function(){
+					dojo.animateProperty({
+						node:"testSlide",
+						delay:300,
+						properties:{ width:175 }
+					}).play();	
+				}
+			}).play();
+		</script>
+	</button>
+
+	<div class="testBox" id="testSlideWrapper">
+		<div class="testItem" id="testSlide">
+			<div class="trick">&nbsp;</div>	
+		</div>
+	</div>
+
+
+	<h2>Animate CSS Properties:</h2>
+	
+	<button dojoType="dijit.form.Button">
+		marginLeft
+		<script type="dojo/method" event="onClick">
+			dojo.animateProperty({
+				node:"lorem",
+				properties:{
+					marginLeft:{ end:322, start:1 }
+				},
+				onEnd: function(){
+					dojo.animateProperty({
+						node:"lorem",
+						properties:{
+							marginLeft:{ end:1, start:322 }
+						},
+						delay:300
+					}).play();
+				}
+			}).play();
+		</script>
+	</button>
+	
+	<button dojoType="dijit.form.Button">
+		left / paddingTop
+		<script type="dojo/method" event="onClick">
+			dojo.animateProperty({
+				node:"lorem",
+				properties:{
+					left: {
+						end: dojo.marginBox("cssNodeWrap").w - 195,
+						units:"px"
+					},
+					paddingTop:{ end:17, start:4 }
+				},
+				onEnd: function(){
+					dojo.animateProperty({
+						node:"lorem",
+						properties:{
+							paddingTop:{ end:4, start:17 },
+							left:10
+						},
+						delay:300
+					}).play();
+				}
+			}).play();
+		</script>
+	</button>
+	
+	<button dojoType="dijit.form.Button">
+		fontSize / width
+		<script type="dojo/method" event="onClick">
+			dojo.animateProperty({
+				node:"lorem",
+				properties:{
+					width: { end:700, start:175 },
+					fontSize:{ end:21, units:"pt", start:11 }
+				},
+				onEnd: function(){
+					dojo.animateProperty({
+						node:"lorem",
+						properties:{
+							width:175, 
+							fontSize:{ end:11, start:21, units:"pt" }
+						},
+						delay:700
+					}).play();
+				}
+			}).play();
+		</script>
+	</button>
+	
+	<div class="testBox" id="cssNodeWrap">
+		<div id="cssNode">
+			<p id="lorem">Lorem ipsum dolor sit amet, consectetuer adipiscing elit.
+			Nam facilisis enim. Pellentesque in elit et lacus euismod dignissim.
+			Aliquam dolor pede, convallis eget, dictum a, blandit ac, urna.
+			Pellentesque sed nunc ut justo volutpat egestas. Class aptent taciti
+			sociosqu ad litora torquent per conubia nostra, per inceptos hymenaeos.
+			In erat.
+			</p>
+		</div>
+	</div>
+
+	<h2>dojo.fx - Core animations</h2>
+
+	<button dojoType="dijit.form.Button">
+		Slide
+		<script type="dojo/method" event="onClick">
+			// we're 175px, slide to containerWidth - 195
+			var left = dojo.marginBox("testSlideWrapper").w - 195;
+			// make and play the animation
+			dojo.fx.slideTo({
+				top:10,
+				left:left,
+				node:"testSlideToo",
+				onEnd: function(){
+					// slide'er back:
+					dojo.fx.slideTo({ top:10, left:10, node:"testSlideToo" }).play();
+				}
+			}).play()
+		</script>
+	</button>
+
+	<button dojoType="dijit.form.Button">
+		Combine Slide / Fade
+		<script type="dojo/method" event="onClick">
+			var anim1 = dojo.fx.slideTo({
+				top: 10,
+				left: dojo.marginBox("testSlideWrapper").w - 195,
+				node: "testSlideToo",
+				onEnd: function(){
+					// slide'er back:
+					dojo.fx.slideTo({ top:10, left:10, node:"testSlideToo" }).play();
+				}
+			});
+			var anim2 = dojo.fadeOut({
+				node: "testSlideToo",
+				onEnd: function(){
+					// we could switch out the backgroundImage property here.
+					dojo.fadeIn({ node:"testSlideToo" }).play();
+				}
+			});
+			var combined = dojo.fx.combine([anim1,anim2]);
+			combined.play();
+		</script>
+	</button>
+	
+	<button dojoType="dijit.form.Button">
+		Chain (4)
+		<script type="dojo/method" event="onClick">
+			var anim1 = dojo.fadeOut({ node:"testSlideToo",
+				// so anim1 is over, making this onEnd and anim2 basically
+				// a combine() (depending on the duration: )
+				onEnd:function(){
+					var delay = 125;
+					dojo.fadeIn({ node:'testSlideToo' }).play(delay);	
+				}
+			});
+
+			var anim2 = dojo.animateProperty({
+				node:"testSlideToo",
+				properties:{
+					left: dojo.marginBox("testSlideTooWrap").w - 195
+				},
+				onEnd: function(){
+					dojo.fx.slideTo({ node:"testSlideToo", top:10, left:10 }).play(123);
+				}
+			});
+			dojo.fx.chain([anim1,anim2]).play();
+		</script>
+	</button>
+
+	<div class="testBox" id="testSlideTooWrap">
+		<div class="testItem" id="testSlideToo">
+			<div class="trick"></div>
+		</div>
+	</div>
+
+	<h2>dojo.query FX</h2>
+	
+	<button dojoType="dijit.form.Button">
+		fade .even
+		<script type="dojo/method" event="onClick">
+			dojo.query(".even","queryUl").fadeOut({
+				onEnd:function(){
+					dojo.query(".even","queryUl").fadeIn({ delay: 300 }).play();	
+				}
+			}).play();
+		</script>
+	</button>	
+
+	<button dojoType="dijit.form.Button">
+		fade .odd
+		<script type="dojo/method" event="onClick">
+			dojo.query(".odd","queryUl").fadeOut({
+				onEnd:function(){
+					dojo.query(".odd","queryUl").fadeIn({ delay: 300 }).play();	
+				}
+			}).play();
+		</script>
+	</button>	
+	
+	<button dojoType="dijit.form.Button">
+		shift .odd
+		<script type="dojo/method" event="onClick">
+			dojo.query(".odd","queryUl").animateProperty({
+				properties:{
+					marginLeft:34
+				},
+				duration:300,
+				onEnd:function(){
+					dojo.query(".odd","queryUl").animateProperty({
+						delay: 300,
+						properties:{
+							marginLeft:1
+						}
+					}).play();	
+				}
+			}).play();
+		</script>
+	</button>	
+
+	<button dojoType="dijit.form.Button">
+		mmm, easing
+		<script type="dojo/method" event="onClick">
+			dojo.query(".odd","queryUl").animateProperty({
+				easing:dojo.fx.easing.backOut,
+				properties:{
+					marginLeft:34
+				},
+				duration:600,
+				onEnd:function(){
+					dojo.query(".odd","queryUl").animateProperty({
+						delay: 300,
+						duration:1300,
+						easing:dojo.fx.easing.bounceOut,
+						properties:{
+							marginLeft:1
+						}
+					}).play();	
+				}
+			}).play();
+		</script>
+	</button>	
+	
+	<button dojoType="dijit.form.Button">
+		Setup FisheyeList
+		<script type="dojo/method" event="onClick">
+			this.setAttribute("disabled",true);
+			dojo.query("li","fisheyeList").forEach(function(n){
+				new dojox.widget.FisheyeLite({
+					properties:{
+						marginLeft:17,
+						width:1.175
+					},
+					onClick:function(){
+						dojo.byId("clickAlert").innerHTML = "clicked: " + this.id;
+					},
+					easeIn:dojo.fx.easing.elasticOut,
+					durationIn:1700
+				},n).startup();
+			}).style("cursor","pointer");
+		</script>
+	</button>
+	
+	<div class="testBox" id="queryParent">
+		<ul id="queryUl">
+			<li class="odd">odd row</li>
+			<li class="even">even row</li>
+			<li class="odd">odd row</li>
+			<li class="even">even row</li>
+			<li class="odd">odd row</li>
+			<li class="even">even row</li>
+			<li class="odd">odd row</li>
+			<li class="even">even row</li>
+			<li class="odd">odd row</li>
+		</ul>
+		<div class="altItem">
+			<p>(FisheyeLite makes this easy. be creative:)</p>
+			<ul id="fisheyeList">
+				<li class="odd">odd row</li>
+				<li class="even">even row</li>
+				<li class="odd">odd row</li>
+				<li class="even">even row</li>
+				<li class="odd">odd row</li>
+				<li class="even" id="testIdFish">with id</li>
+				<li class="odd">odd row</li>
+			</ul>
+			<p id="clickAlert"></p>
+		</div>
+	</div>
+
+	</div>
+</body>
+</html>

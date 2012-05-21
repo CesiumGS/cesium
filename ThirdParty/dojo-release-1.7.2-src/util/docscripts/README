@@ -1,0 +1,12 @@
+A Collection of Documentation Utilities
+---------------------------------------
+
+_browse.php - A real time doc parser viewer. Requires PHP5, and an uncompressed -src release.
+api.xml - a generated API in XML format 
+cheat.php - A Single page which renders the Base Dojo API's. To use, make a file `cheat.html`
+	writable by the webserver. View the cheat.php page in a modern browser, and press ctrl+esc to save.
+generate.php - runner for api.xml generation
+makeCix.php - Generator for ActiveState Komodo Editor .cix API completion.
+
+modules/ - The modules for the namespaces to check for documentation.
+lib/ - the Dojo Documentation Parser source

@@ -1,0 +1,16 @@
+/*
+	This is the master CSS file for the dojox.image project, and provides all
+	needed definitions for the DojoX Image Project
+
+	Before build, the files are individual. You can use image.css as a cacheable
+	single-file rollup, or link only the individual css you need (based on componenet
+	name)
+
+*/
+@import "Lightbox.css";
+@import "SlideShow.css";
+@import "ThumbnailPicker.css";
+@import "Gallery.css";
+@import "Badge.css";
+@import "Magnifier.css";
+

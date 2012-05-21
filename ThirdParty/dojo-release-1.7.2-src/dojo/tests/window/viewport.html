@@ -1,0 +1,75 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+    "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>dojo.window.getBox() test</title>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		html, body { margin: 0px; padding: 0px; }
+	</style>
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="isDebug:true"></script>
+
+	<script type="text/javascript">
+		require(["dojo", "doh", "dojo/window", "dojo/domReady!"], function(dojo, doh){
+			function compute(){
+				var d = dojo.marginBox(dojo.byId("documentBorder")),
+					v = dojo.window.getBox();
+				dojo.byId("results").innerHTML +=
+					"Document is " + d.w + "px x " + d.h + "px" +
+					", viewport is " + v.w + "px x " + v.h + "px" +
+					", with scroll offset of (" + v.l + ", " + v.t + ")<br>";
+			}
+ 
+			function addText(){
+				dojo.byId("results").innerHTML += "Adding text...<br><br>";
+				var text=[];
+				for(var i=0;i<100;i++){
+					text.push("<span style='white-space: nowrap'>");
+					for(var j=0;j<3;j++){ text.push("Now is the time for all good men to come to the aid of their country."); }
+					text.push("</span><br>");
+				}
+				dojo.byId("documentBorder").innerHTML += text.join("\n");
+			}
+
+			doh.register("dojo.window.viewport", [
+					function initial(t){
+						console.log("calling compute");
+						compute();
+						console.log("called compute");
+						var d = dojo.marginBox(dojo.byId("documentBorder")),
+							v = dojo.window.getBox();
+						doh.t(v.h > d.h, "test that viewport is bigger than document");
+						console.log("v.h is " + v.h + " and d.h is " + d.h);
+					},
+					function expand(t){
+						var v = dojo.window.getBox();
+						console.log("calling addText");
+						addText();
+						compute();
+						var v2 = dojo.window.getBox();
+						doh.t(v2.h <= v.h, "test that viewport didn't increase in size due to text added to document");
+						doh.t(v2.h+20 >= v.h, "test that viewport didn't shrink, except for space taken by scrollbars");
+						console.log("end");
+					}
+			]);
+			doh.run();
+		});
+	</script>
+</head>
+<body>
+	<div id="documentBorder" style="border: solid red 2px;">
+		<h1>dojo.window.getBox() test</h1>
+		<div style="padding: 10px; border: solid blue 1px;">padding div</div>
+		<button onclick="addText(); compute();">add text and compute size</button>
+		<button onclick="compute();">recompute size</button>
+		<ol>
+			<li>check results div below to see that before adding text, document is smaller than viewport
+			<li>after adding text, document should be bigger than viewport,and check that viewport size hasn't changed,
+				except maybe being a little bit smaller (about 15px) because of the size of the scrollbars
+			<li>resize browser window and click the "recompute size" button; reported viewport size should change
+			<li>scroll the window and click "recompute size" to see that the scroll position is taken into effect
+		</ol>
+		<div id=results style="border: 5px solid blue;"></div>
+	</div>
+</body>
+</html>

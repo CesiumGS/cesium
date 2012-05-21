@@ -1,0 +1,103 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>Performance Test: dojox.grid.DataGrid dojo.data Notification</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+	<style type="text/css">
+		@import "../../../../dojo/resources/dojo.css";
+		@import "../../resources/Grid.css";
+		@import "../../resources/tundraGrid.css";
+
+		.heading {
+			font-weight: bold;
+			padding-bottom: 0.25em;
+		}
+	</style>
+	<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+	<script type="text/javascript">
+		dojo.require("doh.runner");
+		dojo.require("dojox.grid.tests.performance._gridPerfFramework");
+		dojo.require("dojox.grid.DataGrid");
+
+		dojo.addOnLoad(function(){
+			var p = searchParamsAsObj(true);
+			var s = getStore(p.rows);
+			var g = new dojox.grid.DataGrid({
+				store: s,
+				structure: getLayout(p.layout),
+				rowSelector: p.rowSelector
+			}, dojo.create("div", null, dojo.body()));
+			g.startup();
+			var cnt = p.rows + 1;
+			
+			var cb = function(items){
+				console.debug("HAVE ITEMS!", items.length);
+				doh.register(searchParamsAsObj(true).rows + " rows - change column", 
+					getRLSTests(function(rows, layout, rowSelector, doProfiling, isPerf){
+						return function(t){
+							if(doProfiling){
+								console.profile("changeColumn()");
+							}
+							dojo.forEach(items, function(i){
+								s.setValue(i, "col2", !s.getValue(i, "col2"));
+							});
+							if(doProfiling){
+								console.profileEnd();
+							}
+						};
+					}));
+				doh.register(searchParamsAsObj(true).rows + " rows - change row", 
+					getRLSTests(function(rows, layout, rowSelector, doProfiling, isPerf){
+						return function(t){
+							if(doProfiling){
+								console.profile("changeRow()");
+							}
+							var i = items[0];
+							s.setValue(i, "col1", s.getValue(i, "col1") == "normal" ? "important" : "normal");
+							s.setValue(i, "col2", !s.getValue(i, "col2"));
+							s.setValue(i, "col3", s.getValue(i, "col3") == "new" ? "read" : "new");
+							s.setValue(i, "col4", s.getValue(i, "col4") == "hex" ? "But are not followed by two hexadecimal" : "hex");
+							s.setValue(i, "col5", -(s.getValue(i, "col5")));
+							s.setValue(i, "col6", -(s.getValue(i, "col6")));
+							s.setValue(i, "col7", !s.getValue(i, "col7"));
+							if(doProfiling){
+								console.profileEnd();
+							}
+						};
+					}));
+				doh.register(searchParamsAsObj(true).rows + " rows - new/delete", 
+					getRLSTests(function(rows, layout, rowSelector, doProfiling, isPerf){
+						return function(t){
+							if(doProfiling){
+								console.profile("newItem()");
+							}
+							var i = s.newItem({id: cnt, 
+												col1: "normal", 
+												col2: false, 
+												col3: "new", 
+												col4: 'But are not followed by two hexadecimal', 
+												col5: 29.91, 
+												col6: 10, 
+												col7: false });
+							cnt++;
+							if(doProfiling){
+								console.profileEnd();
+								console.profile("deleteItem()");
+							}
+							s.deleteItem(i);
+							if(doProfiling){
+								console.profileEnd();
+							}
+						};
+					}));
+				doh.run();
+			};
+			s.fetch({onComplete: cb});
+		});
+	</script>
+</head>
+<body class="tundra">
+	<div class="heading">Performance Test: dojox.grid.DataGrid dojo.data Notification</div>
+</body>
+</html>

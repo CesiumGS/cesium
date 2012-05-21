@@ -1,0 +1,22 @@
+({
+	name: "date.timezone.Pacific-Fiji",
+	runTest: function(t){
+		var tz = "Pacific/Fiji";
+		doh.checkDate({tzOffset: -713.666666666667, tzAbbr: "LMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: -713.666666666667, tzAbbr: "LMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: -713.666666666667, tzAbbr: "LMT"}, -1709985221000, tz, 1);
+		doh.checkDate({tzOffset: -720, tzAbbr: "FJT"}, -1709985220000, tz, 1);
+		doh.checkDate({tzOffset: -720, tzAbbr: "FJT"}, 909842399000, tz, 1);
+		doh.checkDate({tzOffset: -780, tzAbbr: "FJST"}, 909842400000, tz, 1);
+		doh.checkDate({tzOffset: -780, tzAbbr: "FJST"}, 920123999000, tz, 1);
+		doh.checkDate({tzOffset: -720, tzAbbr: "FJT"}, 920124000000, tz, 1);
+		doh.checkDate({tzOffset: -720, tzAbbr: "FJT"}, 941896799000, tz, 1);
+		doh.checkDate({tzOffset: -780, tzAbbr: "FJST"}, 941896800000, tz, 1);
+		doh.checkDate({tzOffset: -780, tzAbbr: "FJST"}, 951573599000, tz, 1);
+		doh.checkDate({tzOffset: -720, tzAbbr: "FJT"}, 951573600000, tz, 1);
+		doh.checkDate({tzOffset: -720, tzAbbr: "FJT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: -720, tzAbbr: "FJT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: -720, tzAbbr: "FJT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: -720, tzAbbr: "FJT"}, 1246789800000, tz, 0);
+	}
+})

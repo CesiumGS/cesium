@@ -1,0 +1,93 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>dojox.fx.Shadow - Drop Shadows for DomNodes | The Dojo Toolkit</title>
+		
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: true" ></script>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/themes/dijit.css";
+		@import "../../../dijit/themes/tundra/tundra.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+	</style>
+	<script type="text/javascript">
+		dojo.require("dojo.dnd.Moveable");
+		dojo.require("dojox.layout.FloatingPane");
+		dojo.require("dijit.Calendar"); 
+		dojo.require("dojox.fx.Shadow");
+		var enabled = true, randInt=0;
+		dojo.addOnLoad(function(){
+			
+			dojo.query(".hasShadow").forEach(function(n){
+				var foo = new dojox.fx.Shadow({ node:n });
+				foo.startup();
+
+				if(++randInt%2===0){
+					var tmp = new dojo.dnd.Moveable(n);
+				}
+				
+				setTimeout(dojo.hitch(foo,"resize"),4000);
+				//setTimeout(dojo.hitch(foo,"setOpacity","0.6",{ duration: 500 }),2000);
+				dojo.connect(n,"onmouseover",dojo.hitch(foo,function(){
+					this.setOpacity(1);
+				}));
+				dojo.connect(n,"onmouseout",dojo.hitch(foo,function(){
+					if(!dojo.isIE){
+						this.setOpacity(0.5);
+					}
+				}));
+				dojo.connect(n,"onclick",dojo.hitch(foo,function(){
+					this.setDisabled(!this.disabled);
+				}));
+
+			});
+
+			/*
+			var div = document.createElement('div');
+			var testNode = document.createElement('div'); 
+
+			testNode.appendChild(div);
+			div.innerHTML = "Lorem Ipsum";
+			dojo.body().appendChild(testNode);
+
+			//dojo.addClass(testNode,"dijitInline"); 
+
+			var aDijit = new dijit.Calendar({},div);
+			aDijit.startup();
+
+			var testShadow = new dojox.fx.Shadow({ node: aDijit.domNode }); 
+			testShadow.startup(); 
+			testShadow.resize();
+				*/
+		});
+
+
+	</script>
+</head>
+<body class="tundra">
+
+	<h1 class="testTitle">dojox.fx.Shadow tests</h1>
+
+	<div>
+		<h2>with margin:</h2>
+		<div class="hasShadow" style="background:#fff; border:1px solid #a0a0a0; width:100px; height:100px; margin:20px;"> <p>Lorem</p> </div>
+
+		<h2>with padding:</h2>
+		<div class="hasShadow" style="background:#fff; border:1px solid #a0a0a0; width:100px; height:100px; padding:10px; "> <p>Lorem</p> </div>
+
+		<h2>no padding:</h2>
+		<div class="hasShadow" style="background:#fff; border:1px solid #a0a0a0; width:100px; height:100px;"> <p>Lorem</p> </div>
+
+		<h2>position:absolute</h2>
+		<div class="hasShadow" style="background:#fff; border:1px solid #a0a0a0; width:100px; height:100px; position:absolute; top:0px; left:200px; "> <p>Lorem</p> </div>
+
+		<br style="clear:both;">
+	</div>
+
+	
+	<br><br>
+
+
+</body>
+</html>

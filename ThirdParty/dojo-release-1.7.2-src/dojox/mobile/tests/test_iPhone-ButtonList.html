@@ -1,0 +1,48 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>Button List</title>
+		<link href="../themes/iphone/base.css" rel="stylesheet">
+		<link href="../themes/common/domButtons/DomButtonColorButtons.css" rel="stylesheet">
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			dojo.require("dojox.mobile");			// This is a mobile app.
+			dojo.require("dojox.mobile.parser");	// This mobile app supports running on desktop browsers
+			dojo.require("dojox.mobile.compat");	// This mobile app uses declarative programming with fast mobile parser
+			dojo.ready(function(){
+				var ul = dojo.byId("list");
+				for(var i = 0, len = ul.childNodes.length; i < len; i++){
+					var li = ul.childNodes[i];
+					if(li.nodeType != 1 || li.tagName != "LI"){ continue; }
+					var w = dijit.byNode(li);
+					dojo.connect(w.rightIconNode, "onclick", btnClicked);
+				}
+			});
+			function btnClicked(e){
+				var listItem = dijit.getEnclosingWidget(e.currentTarget);
+				var btnDiv = listItem.rightIconNode.firstChild;
+				if(dojo.hasClass(btnDiv, "mblDomButtonBluePlus")){
+					listItem.set("btnClass", "mblDomButtonRedMinus");
+				}else if(dojo.hasClass(btnDiv, "mblDomButtonRedMinus")){
+					listItem.set("btnClass", "mblDomButtonBluePlus");
+				}
+			}
+		</script>
+	</head>
+	<body style="visibility:hidden;">
+		<div id="mashups" dojoType="dojox.mobile.View" selected="true">
+			<h1 dojoType="dojox.mobile.Heading">Mashups</h1>
+			<ul id="list" dojoType="dojox.mobile.EdgeToEdgeList">
+				<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-1.png" btnClass="mblDomButtonBluePlus">
+					XX Widget
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-2.png" btnClass="mblDomButtonRedMinus">
+					YY Widget
+				</li>
+			</ul>
+		</div>
+	</body>
+</html>

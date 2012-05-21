@@ -1,0 +1,88 @@
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="../../../../../dijit/themes/dijit.css">
+<link rel="stylesheet" type="text/css" href="../../../../../dijit/themes/tundra/tundra.css">
+<title>Dojo Ecr</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+<script type="text/javascript" src="http://openlayers.org/api/2.10/OpenLayers.js"></script>
+
+<script type="text/javascript">
+	var djConfig = {
+		parseOnLoad : true
+	};
+</script>
+<script type="text/javascript" src="../../../../../dojo/dojo.js"></script>
+
+<script type="text/javascript">
+	var _ecr = null;
+
+	require(["dojo/ready", "dojox/geo/openlayers/tests/ecr/Ecr", "dojo/parser"], function(ready, Ecr){
+
+		ready(function(){
+			_ecr = new Ecr();
+		});
+	})
+</script>
+
+<style type="text/css">
+.menuItem {
+	border-color: grey;
+	border-style: solid;
+	padding: 1;
+	vertcal-align: middle;
+	border-width: 1;
+}
+
+.menuBar {
+	border-color: #deadbeef;
+	border-style: solid;
+	padding: 1;
+	vertcal-align: middle;
+	border-width: 1;
+	background-color: #e0e0e0;
+}
+</style>
+</head>
+<body class="tundra">
+
+	<table class="menuBar">
+
+		<tr valign="top" align="left">
+
+			<td class="menuItem">
+
+				<button onClick="_ecr.setDataSet('dataChooser')">Data Set:</button> <select id="dataChooser"
+				onChange="_ecr.setDataSet('dataChooser')">
+					<option value="data/ecr.json">Two Points and a Line</option>
+					<option value="data/ecr2.json">Some Points</option>
+					<option value="data/ecr3.json">More Points and Lines</option>
+					<option value="data/mapDataFixed.json">Lot of Points and Lines</option>
+			</select>
+			</td>
+
+			<td class="menuItem">
+
+				<button id="clearEcr" onClick="_ecr.clearEcr('clearEcr')">Clear</button>
+			</td>
+
+			<td class="menuItem">
+				<button id="clearEcr" onClick="_ecr.portChange('portChooser')">Go To:</button> <select
+				id="portChooser" onChange="_ecr.portChange('portChooser')" />
+			</td>
+
+			<td class="menuItem">Show<input type="checkbox" id="ports" checked
+				onChange="_ecr.toggleLayerVisibility('ports')"> Ports </input>
+			</td>
+
+			<td class="menuItem">Show<input type="checkbox" id="legs" checked
+				onChange="_ecr.toggleLayerVisibility('legs')">Legs </input>
+			</td>
+
+		</tr>
+	</table>
+
+	<div id="map" style="background-color: #b5d0d0;"></div>
+
+</body>
+</html>

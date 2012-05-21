@@ -1,0 +1,310 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+		"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title></title>
+	<style type="text/css">
+		@import "../../../dijit/themes/nihilo/nihilo.css";
+	</style>
+	<style type="text/css">
+		body, html{
+			padding:0;
+			margin:0;
+			background:#666;
+			text-align:center;
+		}
+		.box{
+			background:#fff;
+			color:#666;
+			font:11px monospace;
+			width:250px;
+			height:200px;
+			margin:40px auto;
+			padding:0;
+		}
+		.toWrapper{
+			position:relative;
+			width:100%;
+			height:100%;
+		}
+		.box .transformOrigin{
+			position:absolute;
+			font-size:0;
+			background:red;
+			width:3px;
+			height:3px;
+			margin:0;
+			border:none;
+			padding:0;
+			top:100px;
+			left:125px;	
+		}
+		.boxContainer{
+			color:white;
+			background:black;
+			height:300px;
+			width:100%;
+			text-align:center;
+			overflow:hidden;
+			position:relative;
+			padding:0;
+		}
+		div.controls{
+			background:#ddd;
+			color:#333;
+			font:bold 11px monospace;
+			margin:0 0 20px 0;
+			border-bottom:1px solid #ccc;
+		}
+		.transformName{
+			font: 18px/200px bold arial, helvetica;
+			color: #bbb;
+		}
+		.mainContainer{
+			width:800px;
+			border-right:1px solid #ccc;
+			text-align:left;
+			margin:auto;
+		}
+	</style>
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: false, parseOnLoad: true"></script>
+	<script type="text/javascript">
+	dojo.require("dojo.fx");
+	dojo.require("dojox.html.ext-dojo.style");
+	dojo.require("dijit.form.HorizontalSlider");
+		var toX = 125,
+			toY = 100,
+			rotation = 0,
+			translateX = 0,
+			translateY = 0,
+			skewX = 0,
+			skewY = 0,
+			scaleX = 1,
+			scaleY = 1
+		;
+		dojo.addOnLoad(function(){
+			var rotateToX = dijit.byId("rotateToX"),
+				rotateTransformOrigin = dojo.byId("transformOriginNode"),
+				rotateToY = dijit.byId("rotateToY"),
+				rotateControl = dijit.byId("rotateControl"),
+				skewXControl = dijit.byId("skewXControl"),
+				skewYControl = dijit.byId("skewYControl"),
+				scaleXControl = dijit.byId("scaleXControl"),
+				scaleYControl = dijit.byId("scaleYControl"),
+				translateXControl = dijit.byId("translateXControl"),
+				translateYControl = dijit.byId("translateYControl"),
+				transforms = {
+					rotate: "",
+					translateX: "",
+					translateY: "",
+					skewX: "",
+					skewY: "",
+					scaleX: "",
+					scaleY: ""
+				},
+				applyTransforms = function(transforms){
+					var tString = "";
+					for(var i in transforms){
+						tString += transforms[i] + " "; 
+					}
+					dojo.style("targetDiv", "transform", tString);
+				}
+			;
+
+			// rotate
+			rotateToX.connect(rotateToX, "onChange", function(){
+				toX = parseInt(this.value);
+				dojo.style(rotateTransformOrigin, "left", toX + "px");
+				dojo.style("targetDiv", "transformOrigin", toX + "px " + toY + "px");
+			});
+			rotateToY.connect(rotateToY, "onChange", function(){
+				toY = parseInt(this.value);
+				dojo.style(rotateTransformOrigin, "top", toY + "px");
+				dojo.style("targetDiv", "transformOrigin", toX + "px " + toY + "px");
+			});
+			rotateControl.connect(rotateControl, "onChange", function(){
+				rotation = this.value;
+				transforms.rotate = "rotate(" + rotation + "deg)";
+				applyTransforms(transforms);
+			});
+
+			// skewX
+			skewXControl.connect(skewXControl, "onChange", function(){
+				skewX = this.value;
+				transforms.skewX = "skewX(" + skewX + "deg)";
+				applyTransforms(transforms);
+			});
+			
+			// skewY
+			skewYControl.connect(skewYControl, "onChange", function(){
+				skewY = this.value;
+				transforms.skewY = "skewY(" + skewY + "deg)";
+				applyTransforms(transforms);
+			});
+
+			// scaleX
+			scaleXControl.connect(scaleXControl, "onChange", function(){
+				scaleX = this.value;
+				transforms.scaleX = "scaleX(" + scaleX + ")";
+				applyTransforms(transforms);
+			});
+
+			// scaleY
+			scaleYControl.connect(scaleYControl, "onChange", function(){
+				scaleY = this.value;
+				transforms.scaleY = "scaleY(" + scaleY + ")";
+				applyTransforms(transforms);
+			});
+
+			// translateX
+			translateXControl.connect(translateXControl, "onChange", function(){
+				translateX = this.value;
+				transforms.translateX = "translateX(" + translateX + "px)";
+				applyTransforms(transforms);
+			});
+
+			// translateY
+			translateYControl.connect(translateYControl, "onChange", function(){
+				translateY = this.value;
+				transforms.translateY = "translateY(" + translateY + "px)";
+				applyTransforms(transforms);
+			});
+
+		});
+	</script>
+	</head>
+	<body class="nihilo">
+	<div class="mainContainer">
+		<div class="boxContainer">
+			<div id="targetDiv" class="box">
+				<div class="toWrapper">
+					<div class="transformName">Transform</div>
+					<div id="transformOriginNode" class="transformOrigin">
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="controls">
+			<table>
+				<tr>
+					<td>Transform Origin - x</td>
+					<td>
+						<div>
+							<div style="width:200px" dojoType="dijit.form.HorizontalSlider"
+								minimum="0"
+								maximum="250"
+								discreteValues="251"
+								value="125"
+								id="rotateToX"></div>
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td>Transform Origin - y</td>
+					<td>
+						<div>
+							<div style="width:200px" dojoType="dijit.form.HorizontalSlider"
+								minimum="0"
+								maximum="200"
+								discreteValues="361"
+								value="100"
+								id="rotateToY"></div>
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td>Rotation angle</td>
+					<td>
+						<div>
+							<div style="width:200px" dojoType="dijit.form.HorizontalSlider"
+								minimum="0"
+								maximum="360"
+								discreteValues="361"
+								value="0"
+								id="rotateControl"></div>
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td>Skew X</td>
+					<td>
+						<div>
+							<div style="width:200px" dojoType="dijit.form.HorizontalSlider"
+								minimum="0"
+								maximum="360"
+								discreteValues="361"
+								value="0"
+								id="skewXControl"></div>
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td>Skew Y</td>
+					<td>
+						<div>
+							<div style="width:200px" dojoType="dijit.form.HorizontalSlider"
+								minimum="0"
+								maximum="360"
+								discreteValues="361"
+								value="0"
+								id="skewYControl"></div>
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td>Scale X</td>
+					<td>
+						<div>
+							<div style="width:200px" dojoType="dijit.form.HorizontalSlider"
+								minimum=".1"
+								maximum="4"
+								discreteValues="41"
+								value="1"
+								id="scaleXControl"></div>
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td>Scale Y</td>
+					<td>
+						<div>
+							<div style="width:200px" dojoType="dijit.form.HorizontalSlider"
+								minimum=".1"
+								maximum="4"
+								discreteValues="41"
+								value="1"
+								id="scaleYControl"></div>
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td>Translate X</td>
+					<td>
+						<div>
+							<div style="width:200px" dojoType="dijit.form.HorizontalSlider"
+								minimum="0"
+								maximum="200"
+								discreteValues="201"
+								value="0"
+								id="translateXControl"></div>
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td>Translate Y</td>
+					<td>
+						<div>
+							<div style="width:200px" dojoType="dijit.form.HorizontalSlider"
+								minimum="0"
+								maximum="200"
+								discreteValues="201"
+								value="0"
+								id="translateYControl"></div>
+						</div>
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+</body>
+</html>

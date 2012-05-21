@@ -1,0 +1,209 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>widget.get()/set() unit test</title>
+	<style type="text/css">
+		@import "../themes/claro/document.css";
+		@import "css/dijitTests.css";
+	</style>
+	<script type="text/javascript" src="../../dojo/dojo.js"
+		djConfig="isDebug: true"></script>
+	<script type="text/javascript" src="_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("doh.runner");
+
+		dojo.require("dijit._Widget");
+		dojo.require("dijit._TemplatedMixin");
+
+		dojo.ready(function(){
+			doh.register("attribute set/get",
+				[
+					// Test attributes mapped to DOMNodes
+					function domMapping(){
+						var IndividualMaps = dojo.declare([dijit._Widget, dijit._TemplatedMixin], {
+							// Mapping foo to this.domNode.foo
+							foo:"",
+							_setFooAttr: "",
+			
+							// Mapping bar to this.buttonNode.bar
+							bar: "",
+							_setBarAttr: "buttonNode",
+			
+							// Mapping plainText to this.plainTextNode.innerHTML
+							plainText: "",
+							_setPlainTextAttr: {node: "plainTextNode", type: "innerText"},
+	
+							templateString: "<div class='class1' style='border: 1px solid red; width: 456px'>" +
+												"<button data-dojo-attach-point='buttonNode,focusNode'>hi</button>" +
+												'<span><input data-dojo-attach-point="inputNode" value="input"></span>' +
+												"<span data-dojo-attach-point='containerNode'></span>" +
+												"<span data-dojo-attach-point='plainTextNode'>original plain text</span>" +
+											"</div>"
+						});
+
+						var widget = new IndividualMaps({
+							foo:"value1",
+							bar:"value2",
+							"class":"class2",
+							style:"height: 123px",
+							plainText: "hello world <>&;",
+							"name-with-dashes": "name with dashes"
+						}).placeAt(dojo.byId("wrapper"));
+
+						// test attributes specified to constructor were copied over to DOM
+						doh.is("value1", widget.domNode.getAttribute("foo"), "widget.domNode.getAttribute('foo')");
+						doh.is("value2", widget.buttonNode.getAttribute("bar"), "widget.domNode.getAttribute('bar')");
+						doh.t(dojo.hasClass(widget.domNode, "class1"), "class1");
+						doh.t(dojo.hasClass(widget.domNode, "class2"), "class2");
+						doh.is("123px", dojo.style(widget.domNode).height, "height");
+						doh.is("456px", dojo.style(widget.domNode).width, "width");
+						doh.is("hello world &lt;&gt;&amp;;", widget.plainTextNode.innerHTML, "innerHTML");
+					},
+
+					// Test that certain attributes are automatically applied to focusNode or domNode.
+					// These are attributes that aren't mentioned at all in _Widget.
+					function autoDomMapping(){
+						// Mapping to this.domNode
+						var w = new dijit._Widget({
+							title: "dom title",
+							"aria-labelledby": "foo",
+							role: "button"
+						});
+						doh.is("dom title", dojo.attr(w.domNode, "title"), "domNode title");
+						doh.is("foo", w.domNode.getAttribute("aria-labelledby", "domNode labelledby"));
+						doh.is("button", dojo.attr(w.domNode, "role"), "domNode role");
+
+						// Mapping to this.focusNode
+						var fw = (new dojo.declare([dijit._WidgetBase, dijit._TemplatedMixin], {
+							templateString: "<div><input data-dojo-attach-point='focusNode'/></div>"
+						}))({
+							title: "my title",
+							"aria-labelledby": "foo"
+						});
+						doh.is("my title", dojo.attr(fw.focusNode, "title"), "focusNode title");
+						doh.is("foo", fw.focusNode.getAttribute("aria-labelledby"), "focusNode labelledby");
+
+						// Mapping attributes with dashes and mixed case
+						var mc = (new dojo.declare([dijit._WidgetBase, dijit._TemplatedMixin], {
+							templateString: "<form></form>"
+						}))({
+							"accept-charset": "utf8",
+							"novalidate": "true"	// parser delivers as lowercase even though it's noValidate in JS obj
+						});
+						doh.is("utf8", mc.domNode.getAttribute("accept-charset"), "accept-charset");
+						if(dojo.isFF >= 4 || dojo.isIE >= 10 || dojo.isWebKit){
+							// only works for HTML5 compliant browsers where novalidate is understood
+							doh.t(mc.domNode.hasAttribute("novalidate"), "noValidate");
+						}
+					},
+
+					// Test custom setters/getter methods
+					function customSetters(){
+						var CustomSetters = dojo.declare([dijit._Widget], {
+							foo: 0,
+							_setFooAttr: function(val){ this.foo = val + 5; },
+							_getFooAttr: function(val){ return this.foo - 10; }
+						});
+
+						var widget = new CustomSetters({
+							foo: 100
+						});
+
+						doh.is(105, widget.foo, "custom setter called at initialize time");
+						doh.is(95, widget.get("foo"), "custom getter called");
+
+						widget.set("foo", 50);
+						doh.is(55, widget.foo, "custom setter called dynamically");
+						doh.is(45, widget.get("foo"), "custom getter still called");
+					},
+
+					// Test setters for attribute names with dashes
+					function settersForNamesWithDashes(){
+						var MyWidget = dojo.declare([dijit._Widget, dijit._TemplatedMixin], {
+							"name-with-dashes": "",
+							_setNameWithDashesAttr: {node: "dashNode", type: "innerHTML"},
+	
+							templateString: "<div>" +
+												"<span data-dojo-attach-point='dashNode'></span>" +
+											"</div>"
+						});
+
+						var widget = new MyWidget({
+							"name-with-dashes": "name with dashes"
+						}).placeAt(dojo.byId("wrapper"));
+
+						doh.is("name with dashes", widget.get("name-with-dashes"), "get()");
+						doh.is("name with dashes", widget.dashNode.innerHTML, "innerHTML");
+
+						widget.set("name-with-dashes", "hello");
+						doh.is("hello", widget.dashNode.innerHTML);
+					},
+
+					// Test deprecated attr() method				
+					function attr(){
+						var MyWidget = new dojo.declare([dijit._Widget, dijit._TemplatedMixin], {
+							templateString: "<div><span data-dojo-attach-point=nameNode></span></div>",
+							_setNameAttr:  {node: "nameNode", type: "innerHTML"}
+						});
+
+						var b = new MyWidget();
+
+						// simple setting
+						b.attr("name", "thinger");
+						doh.is("thinger", b.attr("name"), "b.attr('name')");
+						doh.is("thinger", b.nameNode.innerHTML, "innerHTML");
+
+						// hash setting
+						b.attr({
+							name: "bang",
+							foo: "zap"
+						});
+						doh.is("bang", b.attr("name"), "hash set of bang");
+						doh.is("zap", b.attr("foo"), "hash set of zap");
+					},
+					
+					// Test deprecated attributeMap
+					function attributeMap(){
+						var AttrMap = dojo.declare([dijit._Widget, dijit._TemplatedMixin], {
+							attributeMap: {foo: "", bar: "buttonNode", plainText: {node: "plainTextNode", type: "innerText"}},
+							templateString: "<div class='class1' style='border: 1px solid red; width: 456px'>" +
+												"<button data-dojo-attach-point='buttonNode,focusNode'>hi</button>" +
+												'<span><input data-dojo-attach-point="inputNode" value="input"></span>' +
+												"<span data-dojo-attach-point='containerNode'></span>" +
+												"<span data-dojo-attach-point='plainTextNode'>original plain text</span>" +
+											"</div>"
+						});
+
+						var widget = new AttrMap({
+							foo:"value1",
+							bar:"value2",
+							"class":"class2",
+							style:"height: 123px",
+							plainText: "hello world <>&;"
+						}).placeAt(dojo.byId("wrapper"));
+
+						// test that attributes specified to constructor were copied over to the DOM
+						doh.is("value1", widget.domNode.getAttribute("foo"), "widget.domNode.getAttribute('foo')");
+						doh.is("value2", widget.buttonNode.getAttribute("bar"), "widget.domNode.getAttribute('bar')");
+						doh.t(dojo.hasClass(widget.domNode, "class1"), "class1");
+						doh.t(dojo.hasClass(widget.domNode, "class2"), "class2");
+						doh.is("123px", dojo.style(widget.domNode).height, "height");
+						doh.is("456px", dojo.style(widget.domNode).width, "width");
+						doh.is("hello world &lt;&gt;&amp;;", widget.plainTextNode.innerHTML, "innerHTML");
+					}
+
+				]
+			);
+
+			doh.run();
+		});
+
+	</script>
+</head>
+<body>
+	<h1>Dijit widget.get()/set() Unit Test</h1>
+	<div id="wrapper"></div>
+</body>
+</html>
