@@ -182,7 +182,11 @@ defineSuite([
     });
 
     it("gets maximum texture filter anisotropy", function() {
-        expect(context.getMaximumTextureFilterAnisotropy()).toBeDefined();
+        if(context.getTextureFilterAnisotropic()) {
+            expect(context.getMaximumTextureFilterAnisotropy()).toBeGreaterThan(1.0);
+        } else {
+            expect(context.getMaximumTextureFilterAnisotropy()).toEqual(1.0);
+        }
     });
 
     it("sets shader program validation", function() {
@@ -278,7 +282,7 @@ defineSuite([
 
     it("continueDraw throws without arguments", function() {
         expect(function() {
-            context.continueDraw(undefined);
+            context.continueDraw();
         }).toThrow();
     });
 

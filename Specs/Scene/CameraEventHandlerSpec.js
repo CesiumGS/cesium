@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Scene/CameraEventHandler',
          'Scene/CameraEventType',
@@ -21,7 +22,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("thrwos without a moveType", function() {
+    it("throws without a moveType", function() {
         expect(function() {
             return new CameraEventHandler(document);
         }).toThrow();

@@ -41,10 +41,10 @@ defineSuite([
     });
 
     afterEach(function() {
+        us = null;
+        destroyContext(context);
         try {
             polyline = polyline && polyline.destroy();
-            us = null;
-            destroyContext(context);
         } catch(e) {}
     });
 

@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Scene/Camera2DController',
          'Scene/Camera',
@@ -44,12 +45,12 @@ defineSuite([
         right = dir.cross(up);
 
         frustum = new OrthographicFrustum();
-        frustum.near = 1;
-        frustum.far = 2;
-        frustum.left = -2;
-        frustum.right = 2;
-        frustum.top = 1;
-        frustum.bottom = -1;
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -2.0;
+        frustum.right = 2.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
 
         camera = new Camera(document);
         camera.position = position;
@@ -81,22 +82,22 @@ defineSuite([
 
     it("moveUp", function() {
         controller.moveUp(moverate);
-        expect(camera.position.equalsEpsilon(new Cartesian3(0, moverate, 0), CesiumMath.EPSILON10)).toEqual(true);
+        expect(camera.position.equalsEpsilon(new Cartesian3(0.0, moverate, 0.0), CesiumMath.EPSILON10)).toEqual(true);
     });
 
     it("moveDown", function() {
         controller.moveDown(moverate);
-        expect(camera.position.equalsEpsilon(new Cartesian3(0, -moverate, 0), CesiumMath.EPSILON10)).toEqual(true);
+        expect(camera.position.equalsEpsilon(new Cartesian3(0.0, -moverate, 0.0), CesiumMath.EPSILON10)).toEqual(true);
     });
 
     it("moveRight", function() {
         controller.moveRight(moverate);
-        expect(camera.position.equalsEpsilon(new Cartesian3(moverate, 0, 0), CesiumMath.EPSILON10)).toEqual(true);
+        expect(camera.position.equalsEpsilon(new Cartesian3(moverate, 0.0, 0.0), CesiumMath.EPSILON10)).toEqual(true);
     });
 
     it("moveLeft", function() {
         controller.moveLeft(moverate);
-        expect(camera.position.equalsEpsilon(new Cartesian3(-moverate, 0, 0), CesiumMath.EPSILON10)).toEqual(true);
+        expect(camera.position.equalsEpsilon(new Cartesian3(-moverate, 0.0, 0.0), CesiumMath.EPSILON10)).toEqual(true);
     });
 
     it("translate", function() {
@@ -122,24 +123,23 @@ defineSuite([
 
     it("zoomOut", function() {
         controller.zoomOut(zoomrate);
-        expect(frustum.right).toEqualEpsilon(3, CesiumMath.EPSILON10);
-        expect(frustum.left).toEqual(-3, CesiumMath.EPSILON10);
+        expect(frustum.right).toEqualEpsilon(3.0, CesiumMath.EPSILON10);
+        expect(frustum.left).toEqual(-3.0, CesiumMath.EPSILON10);
         expect(frustum.top).toEqual(1.5, CesiumMath.EPSILON10);
         expect(frustum.bottom).toEqual(-1.5, CesiumMath.EPSILON10);
     });
 
     it("zoomIn", function() {
         controller.zoomIn(zoomrate);
-        expect(frustum.right).toEqualEpsilon(1, CesiumMath.EPSILON10);
-        expect(frustum.left).toEqual(-1, CesiumMath.EPSILON10);
+        expect(frustum.right).toEqualEpsilon(1.0, CesiumMath.EPSILON10);
+        expect(frustum.left).toEqual(-1.0, CesiumMath.EPSILON10);
         expect(frustum.top).toEqual(0.5, CesiumMath.EPSILON10);
         expect(frustum.bottom).toEqual(-0.5, CesiumMath.EPSILON10);
     });
 
     it("zoomIn throws with null OrthogrphicFrustum properties", function() {
         var camera = new Camera(document);
-        var frustum = new OrthographicFrustum();
-        camera.frustum = frustum;
+        camera.frustum = new OrthographicFrustum();
         var c2dc = new Camera2DController(document, camera, ellipsoid);
         expect(function () {
             c2dc.zoomIn(moverate);
