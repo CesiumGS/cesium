@@ -15,7 +15,10 @@ var Sandbox = Sandbox || {};
         // TODO: make multiple tile providers available
         var bing = new Cesium.BingMapsTileProvider({
             server : "dev.virtualearth.net",
-            mapStyle : Cesium.BingMapsStyle.AERIAL
+            mapStyle : Cesium.BingMapsStyle.AERIAL,
+            //Safari does not currently implement CORS properly, so we need to load Bing imagery
+            //through a proxy.  Other browsers work correctly without the proxy.
+            proxy : Cesium.Sandbox.isSafari() ? new Cesium.DefaultProxy('/proxy/') : undefined
         });
 
         var cb = new Cesium.CentralBody(scene.getCamera(), ellipsoid);
@@ -82,6 +85,10 @@ var Sandbox = Sandbox || {};
         canvas.onselectstart = function(e) {
             e.preventDefault();
         };
+    };
+
+    Cesium.Sandbox.isSafari = function() {
+        return (/safari/i).test(navigator.userAgent) && !(/chrome/i).test(navigator.userAgent);
     };
 
     Cesium.Sandbox.prototype.getScene = function() {

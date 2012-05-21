@@ -1,37 +1,32 @@
 /*global require*/
-require({ baseUrl : '../../Source' }, [
-        'Core/Ellipsoid',
-        'Core/SunPosition',
-        'Core/requestAnimationFrame',
-        'Scene/Scene',
-        'Scene/CentralBody',
-        'Scene/BingMapsTileProvider',
-        'Scene/BingMapsStyle',
-        'Scene/SceneTransitioner'
-    ], function(
-        Ellipsoid,
-        SunPosition,
-        requestAnimationFrame,
-        Scene,
-        CentralBody,
-        BingMapsTileProvider,
-        BingMapsStyle,
-        SceneTransitioner) {
+require({
+    baseUrl : '../../Source'
+}, ['Cesium'], function(Cesium) {
     "use strict";
+    //A real application should require only the subset of modules that
+    //are actually used, instead of requiring the Cesium module, which
+    //includes everything.
 
-    var ellipsoid = Ellipsoid.WGS84;
+    var ellipsoid = Cesium.Ellipsoid.WGS84;
 
-    var scene3D = new Scene(document.getElementById("canvas3D"));
-    var scene2D = new Scene(document.getElementById("canvas2D"));
+    var scene3D = new Cesium.Scene(document.getElementById("canvas3D"));
+    var scene2D = new Cesium.Scene(document.getElementById("canvas2D"));
 
-    var bing = new BingMapsTileProvider({
+    function isSafari() {
+        return (/safari/i).test(navigator.userAgent) && !(/chrome/i).test(navigator.userAgent);
+    }
+
+    var bing = new Cesium.BingMapsTileProvider({
         server : "dev.virtualearth.net",
-        mapStyle : BingMapsStyle.AERIAL
+        mapStyle : Cesium.BingMapsStyle.AERIAL,
+        //Safari does not currently implement CORS properly, so we need to load Bing imagery
+        //through a proxy.  Other browsers work correctly without the proxy.
+        proxy : isSafari() ? new Cesium.DefaultProxy('/proxy/') : undefined
     });
 
     function create(scene) {
         var primitives = scene.getPrimitives();
-        var cb = new CentralBody(scene.getCamera(), ellipsoid);
+        var cb = new Cesium.CentralBody(scene.getCamera(), ellipsoid);
         cb.dayTileProvider = bing;
         cb.nightImageSource = "../../Images/land_ocean_ice_lights_2048.jpg";
         cb.specularMapSource = "../../Images/earthspec1k.jpg";
@@ -42,7 +37,7 @@ require({ baseUrl : '../../Source' }, [
         // Add examples from the Sandbox here:
 
         scene.setAnimation(function() {
-            scene.setSunPosition(SunPosition.compute().position);
+            scene.setSunPosition(Cesium.SunPosition.compute().position);
         });
     }
 
@@ -52,13 +47,13 @@ require({ baseUrl : '../../Source' }, [
 
     create(scene2D);
 
-    var transitioner = new SceneTransitioner(scene2D);
+    var transitioner = new Cesium.SceneTransitioner(scene2D);
     transitioner.to2D();
 
     (function tick() {
         scene3D.render();
         scene2D.render();
-        requestAnimationFrame(tick);
+        Cesium.requestAnimationFrame(tick);
     }());
 
     document.oncontextmenu = function() {
