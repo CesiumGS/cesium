@@ -19,14 +19,13 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URLEncoder;
-import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.regex.Pattern;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpUtils;
 
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.HttpExchange;
@@ -38,7 +37,7 @@ import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
 public final class ProxyHandler extends AbstractHandler {
-	private HashSet<String> allowedHosts = new HashSet<String>();
+	private Pattern allowedHosts;
 	private HttpClient client;
 
 	private final HashSet<String> dontProxyHeaders = new HashSet<String>();
@@ -55,7 +54,19 @@ public final class ProxyHandler extends AbstractHandler {
 	}
 
 	public ProxyHandler(String allowedHostList) throws Exception {
-		allowedHosts.addAll(Arrays.asList(allowedHostList.split(",")));
+		// build a regex that matches any of the given hosts
+		StringBuilder hostPattern = new StringBuilder();
+		for (String allowedHost : allowedHostList.split(",")) {
+			hostPattern.append("(?:");
+			hostPattern.append(allowedHost.trim().replace(".", "\\.").replace("*", ".*"));
+			hostPattern.append(")|");
+		}
+
+		// trim trailing |
+		if (hostPattern.length() > 0)
+			hostPattern.setLength(hostPattern.length() - 1);
+
+		allowedHosts = Pattern.compile(hostPattern.toString(), Pattern.CASE_INSENSITIVE);
 
 		client = new HttpClient();
 		client.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
@@ -77,7 +88,7 @@ public final class ProxyHandler extends AbstractHandler {
 			throw new ServletException(e);
 		}
 
-		if (!allowedHosts.contains(uri.getHost())) {
+		if (!allowedHosts.matcher(uri.getHost()).matches()) {
 			response.sendError(400, "Host not in list of allowed hosts.");
 			return;
 		}
