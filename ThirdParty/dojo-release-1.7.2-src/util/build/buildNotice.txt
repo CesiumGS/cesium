@@ -1,0 +1,7 @@
+/*
+	This is an optimized version of Dojo, built for deployment and not for
+	development. To get sources and documentation, please visit:
+
+		http://dojotoolkit.org
+*/
+

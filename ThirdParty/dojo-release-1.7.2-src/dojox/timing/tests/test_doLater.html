@@ -1,0 +1,140 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html lang="en">
+<head>
+    <title>dojox.timing.doLater</title>
+    <style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+	</style>
+    <script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true" ></script>
+    <script>
+       dojo.require("dojox.timing.doLater");
+		
+		
+        /*========================
+            TEST 1 - Global space
+         =========================*/
+        
+		// triggers our pseudo "isReady"
+		setTimeout(function(){ pseudoReadyThing = true; },700);
+        
+        var objectId ="global";            // objectId is used to check we are in the correct context.
+		var pseudoReadyThing = false;      // our global "ready" conditional
+		
+		// testing function in global context
+		var doThing = function(first, last){
+			if(dojox.timing.doLater(pseudoReadyThing)){return;}                      // our key statement 
+			console.log("doThing:", objectId, "::", first, last);            // success!
+		}
+		
+        // invoke!
+		doThing("Selina", "Kyle");  // invoke doThing, although it will not be ready for 700ms
+		
+		/*=====================
+            TEST 2 - context
+         ======================*/
+        
+        // triggers our "onReady"
+        setTimeout(function(){ app.ready = true; },900);
+        
+		// testing a function within an object context
+		var app = {
+			objectId:"app",
+			ready:false,
+			doStuff: function(first, last){
+				if(dojox.timing.doLater(this.ready, this)){return;}
+				console.log("app.doStuff:", this.objectId, "::", first, last)
+			},
+			goCrazy: function(first, last){
+				if(dojox.timing.doLater(this.ready, this)){return;}
+				console.log("app.goCrazy:", this.objectId, "::", first, last);
+			}
+		}
+		
+		// These three calls happen (almost) simultaneously 
+		// to test that they don't clobber each other
+		app.doStuff("Oswald", "Cobblepot");
+		app.doStuff("Edward", "Nigma");
+		app.goCrazy("Mike", "Wilcox");
+		
+        /*=====================
+               Misc Tests
+         ======================*/
+        
+        // NOTE: the timeouts used to invoke these tests cause the
+        // results to sometimes return in an unpredictable order.
+        
+		// testing an anonymous function 
+		setTimeout(function(){
+			if(dojox.timing.doLater(app.ready)){return;}
+			console.log("anonymous.function SUCCESS")
+		},700);
+        
+        // testing conditional usage OR
+		setTimeout(function(){
+			if(dojox.timing.doLater(pseudoReadyThing || app.ready)){return;}
+			console.log("pseudoReadyThing OR app.ready is ready")
+		},0);
+        
+        // testing conditional usage AND
+        setTimeout(function(){
+			if(dojox.timing.doLater(pseudoReadyThing && app.ready)){return;}
+			console.log("pseudoReadyThing AND app.ready is ready")
+		},0);
+        
+        // testing conditional expression, incremented
+        // essentially, anonymous function will get
+        // called ten times (every default 100 ms)
+        var count = 0
+        setTimeout(function(){
+			if(dojox.timing.doLater(++count>=10)){return;}
+			console.log("incremented count:", count);
+		},0);
+        
+        // testing random conditional
+        // anonymous function will be called until
+        // random result >= 8
+        setTimeout(function(){
+			if(dojox.timing.doLater(Math.random(1)*10>8)){return;}
+			console.log("random returned greater than 8");
+		},0);
+        
+        
+    </script>
+    <style>
+        p{ width:500px; }
+        .code{
+            font-family:monospace;
+            line-height:16px;
+            margin-left:20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>dojox.timing.doLater()</h1>
+    <p>
+        There are several tests running in the background - open the console to view.
+    </p>
+    <p>
+        <em>dojox.timing.doLater()</em> provides a simple mechanism that checks a conditional before allowing
+        your function to continue. If the conditional is false, the function is blocked and continually
+        re-called, with arguments, until the conditional passes.
+    </p>
+    <div>
+        <em>dojox.timing.doLater()</em> is designed to be used with one key statement (in bold):<br/>
+        <div class="code">
+            var doThing = function(first, last){
+                <div class="code"><strong>if(dojox.timing.doLater(</strong><em>pseudoReadyThing</em><strong>)){return;} </strong></div>
+                <div class="code">doOther(first);</div>
+                <div class="code">doMore(last);</div>
+            }
+        </div>
+    </div>
+    <p>
+        Although these tests are using timers and incremnters, the idea behind
+        <em>dojox.timing.doLater()</em> is to test for things like if a window is loaded,
+        or if an XHR has returned.
+    </p>
+    
+</body>
+</html>

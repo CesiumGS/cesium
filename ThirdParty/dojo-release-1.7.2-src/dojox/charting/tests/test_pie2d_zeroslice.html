@@ -1,0 +1,65 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Pie 2D</title>
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+</style>
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+<script type="text/javascript">
+
+dojo.require("dojox.charting.Chart");
+dojo.require("dojox.charting.widget.Legend");
+dojo.require("dojox.charting.plot2d.Pie");
+dojo.require("dojox.charting.themes.PlotKit.blue");
+dojo.require("dojox.charting.themes.PlotKit.green");
+dojo.require("dojox.charting.themes.PlotKit.red");
+dojo.require("dojox.charting.themes.Adobebricks");
+dojo.require("dojox.charting.themes.Algae");
+
+makeObjects = function(){
+	var chart1 = new dojox.charting.Chart("test1");
+	chart1.setTheme(dojox.charting.themes.PlotKit.blue);
+	chart1.addPlot("default", {
+		type: "Pie",
+		font: "normal normal bold 12pt Tahoma",
+		fontColor: "white",
+		labelOffset: 40
+	});
+	chart1.addSeries("Series A", [4, 3, 0, 2]);
+	chart1.render();
+	
+	var legend = new dojox.charting.widget.Legend({
+        	            chart: chart1,
+							horizontal:false
+                	}, "legend");
+};
+
+dojo.addOnLoad(makeObjects);
+
+</script>
+</head>
+<body>
+<h1>Pie 2D</h1>
+<!--<p><button onclick="makeObjects();">Go</button></p>-->
+<p>Pie with a 0 slice</p>
+<div id="test1" style="width: 300px; height: 300px;"></div>
+<div id="legend"></div>
+<p>That's all Folks!</p>
+</body>
+</html>

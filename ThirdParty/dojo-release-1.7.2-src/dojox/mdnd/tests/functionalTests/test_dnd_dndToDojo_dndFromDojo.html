@@ -1,0 +1,70 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<title>Dnd - Dojo Adapter (To Dojo & From Dojo)</title>
+	
+		<link rel="stylesheet" type="text/css" href="../../../../dojo/resources/dojo.css" />
+		<link rel="stylesheet" type="text/css" href="../../../../dojo/tests/dnd/dndDefault.css" />
+		<link rel="stylesheet" type="text/css" href="../../../../dijit/themes/tundra/tundra.css" />
+		<link rel="stylesheet" type="text/css" href="../../../../dijit/tests/css/dijitTests.css" />
+		
+		<link rel="stylesheet" type="text/css" href="../../resources/dnd.css" />
+		<link rel="stylesheet" type="text/css" href="../resources/test_dnd.css" />
+		
+		<script type="text/javascript" src="../../../../dojo/dojo.js"
+			djConfig="parseOnLoad:true, isDebug:true"></script>
+
+		<script type="text/javascript">
+			dojo.require("dojox.mdnd.AreaManager");
+			dojo.require("dojox.mdnd.DropIndicator");
+			dojo.require("dojox.mdnd.dropMode.VerticalDropMode");
+			dojo.require("dojox.mdnd.AutoScroll");
+			dojo.require("dojo.dnd.Source");
+			dojo.require("dojox.mdnd.adapter.DndToDojo");
+			dojo.require("dojox.mdnd.adapter.DndFromDojo");
+			
+			dojo.ready(function(){
+				var m = dojox.mdnd.areaManager();
+				m.areaClass = "dndArea";
+				m.dragHandleClass = "dragHandle";
+				dojox.mdnd.adapter.dndToDojo().register(dojo.byId("dojoSource"), "", true);
+				m.init();
+				
+				// integration dndFromDojo :
+				dojo.subscribe("/dnd/drop/after", "dropInDojox");
+			});
+			
+			function dropInDojox(source, nodes, copy, target, dropIndex){
+				if(target){
+					dojox.mdnd.areaManager().addDragItem(target, nodes[0], dropIndex, true);
+				}
+			}
+		</script>
+	</head>
+	<body class="tundra">
+		<h1>Drag and Drop</h1>
+		<div style="position:absolute;width:200px;left:50px;top:50px;">
+			<H2>Source/Target Dojox</H2>
+			<div class="dndArea container" accept="type1, type2, type3, text">
+				<div class="dndItem" dndType="type1">
+					<div class="title dragHandle" id="handle1">Item Type1</div>
+					<div>
+						<p>Proin aliquet accumsan nunc. Duis nec tortor.</p>
+					</div>
+				</div>
+				<div class="dndItem" dndType="type2">
+					<div class="title dragHandle" id="handle1">Item Type2</div>
+					<div>
+						<p>Proin aliquet accumsan nunc. Duis nec tortor.</p>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div style="position:absolute;width:200px;left:350px;top:50px;">
+			<H2>Source/Target Dojo</H2>
+			<h3>Accepts only Type1 items</h3>
+			<div id="dojoSource" dojoType="dojo.dnd.Source" accept="type1, text" class="container" style="width:200px;height:200px;"></div>
+		</div>
+	</body>
+</html>

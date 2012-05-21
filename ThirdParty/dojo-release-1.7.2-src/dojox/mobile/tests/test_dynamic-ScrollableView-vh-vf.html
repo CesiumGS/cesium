@@ -1,0 +1,75 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>Dynamic ScrollableView (view header / view footer)</title>
+		<link href="../themes/iphone/base.css" rel="stylesheet">
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			dojo.require("dojox.mobile");			// This is a mobile app.
+			dojo.require("dojox.mobile.parser");	// This mobile app supports running on desktop browsers
+			dojo.require("dojox.mobile.compat");	// This mobile app uses declarative programming with fast mobile parser
+			dojo.require("dojox.mobile.ScrollableView");
+
+			dojo.ready(function(){
+				// ==== view1 ====
+				var view1 = new dojox.mobile.ScrollableView({
+					id: "foo",
+					selected: true
+				});
+				dojo.body().appendChild(view1.domNode);
+				view1.startup();
+
+				var heading2 = new dojox.mobile.Heading({
+					label: "Fixed View Footer",
+					fixed: "bottom"
+				});
+				view1.addChild(heading2);
+
+				var categ1 = new dojox.mobile.RoundRectCategory({
+					label: "Documents"
+				});
+				view1.addChild(categ1);
+
+				var list1 = new dojox.mobile.RoundRectList();
+				view1.addChild(list1);
+
+				var counter = 4;
+				for(var i = 1; i <= 3; i++){
+					var item1 = new dojox.mobile.ListItem({
+						icon: "images/i-icon-"+i+".png",
+						label: "Document 000"+counter,
+						moveTo: "bar"
+					});
+					list1.addChild(item1);
+					counter++;
+				}
+
+				var heading1 = new dojox.mobile.Heading({
+					label: "Fixed View Header",
+					fixed: "top"
+				});
+				view1.addChild(heading1);
+
+
+				// ==== view2 ====
+				var view2 = new dojox.mobile.View({
+					id: "bar"
+				});
+				dojo.body().appendChild(view2.domNode);
+				view2.startup();
+
+				var rect1 = new dojox.mobile.RoundRect();
+				rect1.containerNode.innerHTML = "Go Back";
+				view2.addChild(rect1);
+				rect1.connect(rect1.domNode, "onclick", function(){
+					view2.performTransition("foo", -1, "slide");
+				});
+			});
+		</script>
+	</head>
+	<body style="visibility:hidden;">
+	</body>
+</html>

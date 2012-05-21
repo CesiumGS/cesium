@@ -1,0 +1,159 @@
+<html>
+	<head>
+		<title>dojo.NodeList.instantiate() tests</title>
+
+		<style type="text/css">
+			@import "../themes/claro/document.css";
+			@import "css/dijitTests.css";
+			#container { height:200px; }
+		</style>
+
+		<!-- required: a default dijit theme: -->
+		<link id="themeStyles" rel="stylesheet" href="../../dijit/themes/claro/claro.css"/>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../dojo/dojo.js"
+			djConfig="isDebug: true"></script>
+
+		<!-- not needed, for testing alternate themes -->
+		<script type="text/javascript" src="_testCommon.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("doh.runner");
+			dojo.require("dijit.dijit"); // optimize: load dijit layer
+			dojo.require("dijit._Widget");
+			dojo.require("dijit.form.Button");
+			dojo.require("dijit.layout.TabContainer");
+			dojo.require("dijit.layout.ContentPane");
+
+	    	dojo.ready(function(){
+
+				// declare a simple widget to use as a base test:
+				dojo.declare("test._Widget",dijit._Widget,{
+					message:"",
+					postCreate:function(){
+						this.inherited(arguments);
+						this.connect(this.domNode,"onclick","workit");
+						dojo.style(this.domNode,{
+							cursor:"pointer",
+							color:"#333"
+						});
+						this.domNode.innerHTML += this.message +" ("+this.id +")";
+						console.log('created',this.id);
+					},
+					workit:function(){
+						dojo.place(this.domNode,this.domNode.parentNode,"end");
+					}
+				});
+		
+				doh.register("Instantiate", [
+					function testWidget(){
+						dojo.query("#list1 li").instantiate(test._Widget,{}).connect("onclick",console.log);
+	
+						var li = dijit.byId("test__Widget_0");
+						doh.t(li, "test__Widget_0 exists");
+						doh.is("pointer", dojo.style("test__Widget_0", "cursor"));
+						doh.is("inner (test__Widget_0)", li.domNode.innerHTML);
+					},
+					
+					function testWidget2(){
+						dojo.query("#list2 li").instantiate(test._Widget,{ message:"woot" });
+	
+						li = dijit.byId("test__Widget_12");
+						doh.t(li, "test__Widget_12 exists");
+						doh.is("pointer", dojo.style("test__Widget_12", "cursor"));
+						doh.is("innerwoot (test__Widget_12)", li.domNode.innerHTML);
+					},
+	
+					function TabContainer(){
+						// make a tab container from some div, and all it's children div's
+						dojo.query("#container")
+							.forEach(function(n){
+								dojo.query("div",n)
+									// create contentpanes from the children and style them
+									.instantiate(dijit.layout.ContentPane,{})
+									.forEach(function(wn,idx){
+										dojo.mixin(dijit.byNode(wn),{ title:"tab" + (idx + 1) })
+									})
+								;
+							})
+							.instantiate(dijit.layout.TabContainer,{})
+						;
+						// should we add auto-startup calling?
+						dijit.byId("container").startup();
+	
+						var tc = dijit.byId("container");
+						doh.t(tc, "Tab container exists");
+						
+						var tabs = tc.tablist.getChildren();
+						doh.is(3, tabs.length);
+						dojo.forEach(tabs, function(tab, i){
+							doh.is("tab" + (i + 1), tab.label);
+						});
+	
+						var childrenContent = tc.containerNode.childNodes;
+						doh.is(3, childrenContent.length);
+						dojo.forEach(childrenContent, function(childrenContent, i){ doh.is("pane"+(i+1), childrenContent.innerHTML); })
+					},
+	
+					function Buttons(){
+						// bunches of buttons, use you imagination on how to relate them to something
+						dojo.query("#buttonTest").forEach(function(n){
+							dojo.query("button",n).instantiate(dijit.form.Button,{
+								onClick:function(){
+									this.containerNode.innerHTML = this.label + " was clicked";
+								}
+							});
+						});
+	
+						var b1 = dijit.byId("b1");
+						doh.t(b1, "button 1 exists");
+						doh.is("button 1", b1.label);
+						
+						var b2 = dijit.byId("b2");
+						doh.t(b2, "button 2 exists");
+						doh.is("button 2", b2.label);
+						
+						var b3 = dijit.byId("b3");
+						doh.t(b3, "button 3 exists");
+						doh.is("button 3", b3.label);
+						
+						var b4 = dijit.byId("b4");
+						doh.t(b4, "button 4 exists");
+						doh.is("button 4", b4.label);
+					}
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+	<body class="claro">
+
+		<h1>dojo.NodeList.instantiate() tests</h1>
+
+		<h2>Some simple widgets:</h2>
+		<ul id="list1"
+			><li>inner</li><li>inner</li><li>inner</li><li>inner</li><li>inner</li><li>inner</li><li>inner</li><li>inner</li><li>inner</li
+		></ul>
+		<ul id="list2"
+			><li>inner</li><li>inner</li><li>inner</li><li>inner</li><li>inner</li><li>inner</li><li>inner</li><li>inner</li><li>inner</li
+		></ul>
+
+		<h2>A TabContainer:</h2>
+		<div id="container"
+			><div>pane1</div
+			><div>pane2</div
+			><div>pane3</div
+		></div>
+
+		<h2>Some Buttons</h2>
+		<div id="buttonTest"
+			><button id="b1">button 1</button
+			><button id="b2">button 2</button
+			><button id="b3">button 3</button
+			><button id="b4">button 4</button
+		></div>
+
+	</body>
+</html>

@@ -1,0 +1,11 @@
+{
+	"serviceType": "JSON",
+	"serviceURL": "Service/{name}.json",
+	"methods": [{
+		"name": "get",
+		"parameters": [{
+			"name": "name",
+			"type": "str"
+		}]
+	}]
+}

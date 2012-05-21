@@ -1,0 +1,97 @@
+{
+	"id": "modelApp",
+	"name": "Model App",
+	"description": "A modelApp",
+	"splash": "splash",
+
+	"dependencies": [
+		"dojox/mobile/_base",
+		"dojox/mobile/TabBar",
+		"dojox/mobile/RoundRect",
+		"dojox/mobile/TabBarButton",
+		"dojox/mobile/Button",
+		"dojox/mobile/RoundRect",
+		"dojox/mobile/Heading",
+		"dojox/mvc/StatefulModel", //TODO remove the explicit dependency for stores.
+		"dojo/store/Memory", //TODO remove the explicit dependency for stores.
+		"dojox/mvc/Group",
+        "dojox/mvc/Repeat",
+        "dojox/mvc"
+	],
+	// Modules for the application.  The are basically used as the second
+	// array of mixins in a dojo.declare().  Modify the top level behavior
+	// of the application, how it processes the config or any other life cycle
+	// by creating and including one or more of these
+	"modules": [
+		"dojox/app/module/env",
+		"dojox/app/module/history",
+		"dojox/app/module/lifecycle"
+		//"dojox/app/module/phonegap",
+		//"dojox/app/module/somePlugin"
+	],
+
+	//stores we are using 
+	"stores": {
+	   "namesStore":{
+	       "type": "dojo.store.Memory",
+		   "params": {
+		      "data": "modelApp.names"
+		   }
+	   },
+       "repeatStore":{
+           "type": "dojo.store.Memory",
+           "params": {
+                "data": "modelApp.repeatData"
+           }
+       }
+	},
+
+	//models and instantiation parameters for the models. Including 'type' as a property allows
+	//one to overide the class that will be used for the model.  By default it is dojox/mvc/model
+	"models": {
+	   "names": {
+	       "params":{
+		      "store": {"$ref":"#stores.namesStore"}
+		   }	       
+	   }
+	}, 
+
+	//the name of the scene to load when the app is initialized.
+	"defaultView": "home", 
+
+	"defaultTransition": "slide",
+	//scenes are groups of views and models loaded at once	
+	"views": {
+
+		"home": { 
+			"type": "dojox.app.view",
+			"dependencies":["dojox/mobile/ListItem","dojox/mobile/RoundRectList","dojox/mobile/RoundRectCategory","dojox/mobile/Heading"],
+			"template": "views/main.html"
+		},
+
+		"simple":{
+			"type": "dojox.app.view",
+			"template": "views/simple.html",			
+			"dependencies":["dojox/mobile/TextBox"],
+		},
+
+		"repeat": {
+            "type": "dojox.app.view",
+            "models": {
+                "repeatmodels": {
+                    "params":{
+                        "store": {"$ref":"#stores.repeatStore"}
+                    }           
+                }
+            },
+            "template": "views/repeat.html",
+            "dependencies":["dojox/mobile/TextBox"],
+		},
+
+		"generate": {
+            "type": "dojox.app.view",
+            "template": "views/generate.html",
+            "dependencies":["dojox/mobile/TextBox", "dojox/mobile/TextArea", "dojox/mvc/Generate"],
+		}
+	}	
+}

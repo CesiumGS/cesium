@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>DateTextBox DOH Test</title>
+
+	<style>
+		@import "../../../dojo/resources/dojo.css";
+		@import "../css/dijitTests.css";
+	</style>
+
+	<!-- required: the default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../themes/claro/claro.css"/>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		data-dojo-config="isDebug: true"></script>
+	<script type="text/javascript" src="../helpers.js"></script>
+
+	<!-- only needed for alternate theme testing: do NOT use in your code! -->
+	<script type="text/javascript" src="../_testCommon.js"></script>
+
+
+	<script type="text/javascript">
+		dojo.require('doh.runner');
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dijit.form.DateTextBox");
+		dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+
+		dojo.ready(function(){
+
+			doh.register("parse", function(){
+				dojo.parser.parse();
+			});
+
+			doh.register("tests",
+				function noYear(){
+					var widget = dijit.byId("noyear");
+					doh.t(widget.isValid(false), "isValid");
+					doh.is(2011, widget.get('value').getFullYear(), "programmatic value");
+					doh.is(2011, widget.value.getFullYear(), "JS value");
+				}
+			);
+
+			doh.run();
+
+		});
+	</script>
+
+</head>
+<body class="claro">
+	<h1 class="testTitle">dijit.form.DateTextBox automated tests (non-robot)</h1>
+	
+	<label for="noyear">Pick a day in 3Q 2011</label>
+	<input data-dojo-type="dijit.form.DateTextBox" id="noyear", data-dojo-props='
+		required:"true",
+		constraints:{datePattern:"MMMM dd",
+			min:new Date(2011,9,1),
+			max:new Date(2011,11,31)
+		},
+		parse:function(){
+			var d = this.inherited("parse", arguments);
+			if(d instanceof Date)d.setFullYear(2011);
+			return d;
+		},
+		value:new Date(2011,10,25)'
+	/>
+</body>
+</html>

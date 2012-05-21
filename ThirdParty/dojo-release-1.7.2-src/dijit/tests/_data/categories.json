@@ -1,0 +1,12 @@
+{
+	identifier: 'id',
+	label: 'name',
+	items: [
+		{ id: '0', name:'Foods', numberOfItems:1, children:[ {_reference: '1'},  {_reference: '2'},  {_reference: '3'} ] },
+			{ id: '1', name:'Fruits', numberOfItems:1, children:[ {_reference: '4'} ] },
+				{ id: '4',name:'Citrus', numberOfItems:1, items:[ {_reference: '5'} ] },
+					{ id: '5', name:'Orange'},
+		{ id: '2', name:'Vegetables', numberOfItems:0},
+		{ id: '3', name:'Cereals', numberOfItems:0}
+	]
+}

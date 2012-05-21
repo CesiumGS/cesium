@@ -1,0 +1,116 @@
+<!--
+  This file is a demo of multiple dojo.data aware widgets using different datastore implementations for displaying data.
+-->
+<html>
+<head>
+	<title>Demo of Multiple Widgets using different Datastores</title>
+	<style type="text/css">
+		@import "../../../dijit/themes/tundra/tundra.css";
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+	</style>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+	<script type="text/javascript">
+		dojo.require("dojo.parser");
+		dojo.require("dijit.form.ComboBox");
+		dojo.require("dijit.form.FilteringSelect");
+		dojo.require("dijit.Tree");
+		dojo.require("dijit.tree.ForestStoreModel");
+
+		dojo.require("dojox.data.OpmlStore");
+		dojo.require("dojox.data.XmlStore");
+		dojo.require("dojo.data.ItemFileReadStore");
+
+	</script>
+</head>
+
+<body class="tundra">
+	<h1>
+		DEMO:  Multiple DataStore implementations with dojo.data aware Widgets
+	</h1>
+	<hr>
+	<h3>
+		Description:
+	</h3>
+	<p>
+		This simple demo shows how widgets which know only the dojo.data interfaces can work with data sources of varying formats.  In this case an OpmlStore
+		and a ItemFileReadStore are used to house the same data in different formats.
+	</p>
+
+	<blockquote>
+
+    	<!--
+    		The store instances used by this demo.
+    	-->
+    	<div dojoType="dojo.data.ItemFileReadStore" url="geography.json"               jsId="ifrGeoStore"></div>
+    	<div dojoType="dojox.data.OpmlStore"        url="geography.xml"   label="text" jsId="opmlGeoStore"></div>
+        <div dojoType="dojox.data.XmlStore"         url="geography2.xml"  label="text" attributeMap="{'text': '@text'}" jsId="xmlGeoStore"></div>
+    
+    	<h3>
+    		Widgets using OpmlStore:
+    	</h3>
+    	<blockquote>
+        	<b>ComboBox:</b><br>
+        	<input dojoType="dijit.form.ComboBox" id="combo1" name="combo1" class="medium" store="opmlGeoStore" searchAttr="text" query="{}"></input>
+        	<br>
+        	<br>
+        	<b>Filtering Select:</b><br>
+        	<input dojoType="dijit.form.FilteringSelect" id="fs1" name="fs1" class="medium" store="opmlGeoStore" searchAttr="text" query="{}"></input>
+        	<br>
+        	<br>
+        
+        	<b>Tree:</b><br>
+        	<div dojoType="dijit.tree.ForestStoreModel" jsId="opmlModel" 
+		        store="opmlGeoStore" query="{}"
+		        rootId="Continents" rootLabel="Continents" childrenAttrs="children">
+            </div>
+        	<div dojoType="dijit.Tree" id="tree1" model="opmlModel"></div>
+        </blockquote>
+    
+    	<h3>
+    		Widgets using ItemFileReadStore:
+    	</h3>
+    	<blockquote>
+        	<b>ComboBox:</b><br>
+        	<input dojoType="dijit.form.ComboBox" id="combo2" name="combo2" class="medium" store="ifrGeoStore" searchAttr="name" query="{}"></input>
+        	<br>
+        	<br>
+        
+            <b>Filtering Select:</b><br>
+        	<input dojoType="dijit.form.FilteringSelect" id="fs2" name="fs2" class="medium" store="ifrGeoStore" searchAttr="text" query="{}"></input>
+        	<br>
+        	<br>
+        
+        	<b>Tree:</b><br>
+        	<div dojoType="dijit.tree.ForestStoreModel" jsId="ifrModel" 
+		        store="ifrGeoStore" query="{}"
+		        rootId="Continents" rootLabel="Continents" childrenAttrs="children">
+            </div>
+           	<div dojoType="dijit.Tree" id="tree2" model="ifrModel"></div>
+    	</blockquote>
+    
+    	<h3>
+    		Widgets using XmlStore:
+    	</h3>
+    	<blockquote>
+        	<b>ComboBox:</b><br>
+        	<input dojoType="dijit.form.ComboBox" id="combo3" name="combo3" class="medium" store="xmlGeoStore" searchAttr="text" query="{}"></input>
+        	<br>
+        	<br>
+        	
+            <b>Filtering Select:</b><br>
+        	<input dojoType="dijit.form.FilteringSelect" id="fs3" name="fs3" class="medium" store="xmlGeoStore" searchAttr="text" query="{}"></input>
+        	<br>
+        	<br>
+        
+        	<b>Tree:</b><br>
+        	<div dojoType="dijit.tree.ForestStoreModel" jsId="xmlModel" 
+		        store="xmlGeoStore" query="{}"
+		        rootId="Continents" rootLabel="Continents" childrenAttrs="childNodes">
+            </div>
+           	<div dojoType="dijit.Tree" id="tree3" model="xmlModel"></div>
+    	</blockquote>
+	</blockquote>
+</body>
+</html>

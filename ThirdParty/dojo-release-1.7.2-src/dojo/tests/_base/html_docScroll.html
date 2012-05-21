@@ -1,0 +1,101 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>testing Core _docScroll function</title>
+		<script type="text/javascript" src="../../dojo.js" data-dojo-config="isDebug:true"></script>
+		<script type="text/javascript">
+			require(["dojo", "doh", "dojo/domReady!"], function(dojo, doh){
+			
+				doh.register("t", 
+					[
+						function testNonScrolled(t){
+							dojo.global.scrollTo(0,0);
+							var s = dojo._docScroll();
+							t.is(0, s.x);
+							t.is(0, s.y);
+						},
+						function testScrolled(t){
+							dojo.global.scrollTo(1,2);
+							var s = dojo._docScroll();
+							t.is(1, s.x);
+							t.is(2, s.y);
+						},
+						function testQuirksNonScrolled(t){
+							var win = dojo.byId('iframe').iframeContentWindow;
+							win.scrollTo(0,0);
+							var s = dojo.withGlobal(win, "_docScroll", dojo);
+							t.is(0, s.x);
+							t.is(0, s.y);
+							var s = dojo._docScroll();
+							t.is(1, s.x);
+							t.is(2, s.y);
+						},
+						function testQuirksScrolled(t){
+							dojo.global.scrollTo(0,0);
+							var win = dojo.byId('iframe').iframeContentWindow;
+							win.scrollTo(10,20);
+							var s = dojo.withGlobal(win, "_docScroll", dojo);
+							t.is(10, s.x);
+							t.is(20, s.y);
+						},
+
+						function testSpeed(t){
+							var old_docScroll = function(){
+								var
+									_b = dojo.body(),
+									_w = dojo.global,
+									de = dojo.doc.documentElement;
+								return {
+									y: (_w.pageYOffset || de.scrollTop || _b.scrollTop || 0),
+									x: (_w.pageXOffset || dojo._fixIeBiDiScrollLeft(de.scrollLeft) || _b.scrollLeft || 0)
+								};
+							};
+							var count = 10000; // initial guess
+							var new_docScroll = dojo._docScroll;
+							var t0 = new Date().getTime();
+							for (var i=0; i < count; i++){
+											var j = new_docScroll();
+							}
+							t0 = new Date().getTime() - t0;
+							// modify guess to get about 1 second of CPU crunching
+							if(t0 < 50){ // crazy short time
+								count *= 25;
+							}else{
+								count = Math.ceil(10000000/t0);
+							}
+							t0 = new Date().getTime();
+							for (i=0; i < count; i++){
+											j = new_docScroll();
+							}
+							t0 = new Date().getTime() - t0;
+							var t1 = new Date().getTime();
+							for (var i=0; i < count; i++){
+											j = old_docScroll();
+							}
+							t1 = new Date().getTime() - t1;
+							console.log(Math.floor(100*(t1-t0)/t1)+"% speed improvement");
+							t.is(true, t1 > t0);
+						}
+					]
+				);
+				doh.runOnLoad();
+			});
+		</script>
+	</head>
+	<body>
+		<h1>testing Core _docScroll function</h1>
+		<div id='div' style="border:0px;padding:0px;margin:0px;">
+			<iframe id="iframe" src="javascript:'&lt;html&gt;&lt;head&gt;&lt;script&gt;frameElement.iframeContentWindow=window&lt;/script&gt;&lt;/head&gt;&lt;body&gt;&lt;div style=\'height:500px;width:500px;\'&gt;&nbsp;&lt;/div&gt;&lt;/body&gt;'"></iframe>
+		</div>
+		<script type="text/javascript">
+			// make sure div is too big to display
+      require(["dojo"], function(dojo) {
+  			var div = dojo.byId('div');
+	  		div.style.height = (dojo.doc.documentElement.clientHeight + 2) + "px";
+		  	div.style.width = (dojo.doc.documentElement.clientWidth + 1) + "px";
+      });
+		</script>
+	</body>
+</html>
+

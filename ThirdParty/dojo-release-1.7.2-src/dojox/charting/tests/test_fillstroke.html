@@ -1,0 +1,138 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>Chart Fill & Stroke</title>
+		<style type="text/css">
+			@import "../../../dojo/resources/dojo.css";
+			@import "../../../dijit/tests/css/dijitTests.css";
+		</style>
+		<!-- required for Tooltip: a default dijit theme: -->
+		<link rel="stylesheet" href="../../../dijit/themes/tundra/tundra.css">
+		<style>
+			.dojoxLegendNode {border: 1px solid #ccc; margin: 5px 10px 5px 10px; padding: 3px}
+			.dojoxLegendText {vertical-align: text-top; padding-right: 10px}
+		</style>
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+
+		<script type="text/javascript">
+			dojo.require("dojo.parser");	
+            dojo.require("dojox.charting.widget.Chart");
+            dojo.require("dojox.charting.axis2d.Default");
+            dojo.require("dojox.charting.plot2d.Pie");
+			dojo.require("dojox.charting.themes.PlotKit.base");
+            dojo.require("dojox.charting.themes.PlotKit.orange");
+
+			seriesB = [2.6, 1.8, 2, 1, 1.4, 0.7, 2];
+			
+			blueColor =  "blue";
+			blackColor = "black";
+			nullColor = null;
+            
+            dojo.addOnLoad(function(){
+
+				(function(){
+					var dc = dojox.charting, pk = dc.themes.PlotKit;
+					pk.myorange = pk.base.clone();
+					pk.myorange.chart.fill =  "#f5eee6";
+					pk.orange.plotarea.fill = "#ff0000"; 
+					pk.myorange.colors = dc.Theme.defineColors({hue: 31, saturation: 60, low: 40, high: 88});
+				})();
+				
+				dojo.parser.parse();
+				
+				var chart3 = new dojox.charting.Chart("nchart3");
+				chart3.setTheme(dojox.charting.themes.PlotKit.myorange);
+				chart3.addPlot("default", {
+					type: "Pie",
+					fontColor: "white",
+					radius: 100
+				});
+				chart3.addSeries("Series B", seriesB);
+				chart3.render();
+				
+				var chart4 = new dojox.charting.Chart("nchart4", {fill : blueColor, black: blackColor });
+				chart4.setTheme(dojox.charting.themes.PlotKit.myorange);
+				chart4.addPlot("default", {
+					type: "Pie",
+					fontColor: "white",
+					radius: 100
+				});
+				chart4.addSeries("Series B", seriesB);
+				chart4.render();
+				
+				var chart5 = new dojox.charting.Chart("nchart5", {fill : nullColor});
+				chart5.setTheme(dojox.charting.themes.PlotKit.myorange);
+				chart5.addPlot("default", {
+					type: "Pie",
+					fontColor: "white",
+					radius: 100
+				});
+				chart5.addSeries("Series B", seriesB);
+				chart5.render();
+			
+            });
+			
+		</script>
+
+	</head>
+	<body class="tundra">
+		<h1>Chart Fill & Stroke</h1>
+		<table border="0" cellspacing="30">
+			<tr>
+				<td>
+				    <!-- orange theme must be used by default -->
+					<div dojoType="dojox.charting.widget.Chart" id="chart1" theme="dojox.charting.themes.PlotKit.myorange"
+							 style="width: 300px; border: black 1px">
+						<div class="plot" name="default" type="Pie" radius="100" fontColor="white"></div>
+						<div class="series" name="Series B" array="seriesB"></div>
+					</div>
+				</td>
+				<td>
+					<!--  fill & stroke must override orange theme -->
+					<div dojoType="dojox.charting.widget.Chart" id="chart2" theme="dojox.charting.themes.PlotKit.myorange"
+							 style="width: 300px; height: 300px;" fill="blueColor" stroke="blackColor">
+						<div class="plot" name="default" type="Pie" radius="100" fontColor="white"></div>
+						<div class="series" name="Series B" array="seriesB"></div>
+					</div>
+				</td>
+				<td>
+					<!--  fill must override remove orange theme chart fill by null color -->
+					<div dojoType="dojox.charting.widget.Chart" id="chart3" theme="dojox.charting.themes.PlotKit.myorange"
+							 style="width: 300px; height: 300px;" fill="nullColor">
+						<div class="plot" name="default" type="Pie" radius="100" fontColor="white"></div>
+						<div class="series" name="Series B" array="seriesB"></div>
+					</div>
+				</td>
+				
+			</tr>
+			<tr>
+				<td>
+					<div id="nchart3" style="width: 300px; height: 300px;">
+					</div>
+				</td>
+				<td>
+					<div id="nchart4" style="width: 300px; height: 300px;">
+					</div>
+				</td>
+				<td>
+					<div id="nchart5" style="width: 300px; height: 300px;">
+					</div>
+				</td>
+			</tr>
+		</table>
+	</body>
+</html>

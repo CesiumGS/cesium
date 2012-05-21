@@ -1,0 +1,5 @@
+define(
+({
+	"pageBreak": "Prijelom stranice"
+})
+);

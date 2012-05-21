@@ -1,0 +1,73 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>Standard Transitions</title>
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			dojo.require("dojox.mobile");			// This is a mobile app.
+			dojo.require("dojox.mobile.parser");	// This mobile app uses declarative programming with fast mobile parser
+			dojo.require("dojox.mobile.compat");	// This mobile app supports running on desktop browsers
+			dojo.require("dojox.mobile.deviceTheme");
+			dojo.require("dojox.mobile.IconContainer");
+		</script>
+		<style>
+		html,body {
+			height: 100%;
+			overflow: hidden;
+		}
+		</style>
+	</head>
+	<body style="visibility:hidden;">
+		<div id="view1" dojoType="dojox.mobile.View" selected="true" style="height:100%;">
+			<h1 dojoType="dojox.mobile.Heading" back="Top" href="test_transition-animations.html" transition="none">View 1</h1>
+			<h2 dojoType="dojox.mobile.RoundRectCategory">Standard Transitions</h2>
+			<ul dojoType="dojox.mobile.RoundRectList">
+				<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-9.png" moveTo="view2" transition="slide">
+					Slide
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-2.png" moveTo="view3" transition="slide" transitionDir="-1">
+					Slide (Reverse)
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-3.png" moveTo="view2" transition="flip">
+					Flip
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-1.png" moveTo="view2" transition="fade">
+					Fade
+				</li>
+			</ul>
+		</div>
+
+		<div id="view2" dojoType="dojox.mobile.View" style="height:100%;">
+			<h1 dojoType="dojox.mobile.Heading" back="Top" href="test_transition-animations.html" transition="none">View 2</h1>
+			<h2 dojoType="dojox.mobile.EdgeToEdgeCategory">Standard Transitions</h2>
+			<ul dojoType="dojox.mobile.EdgeToEdgeList">
+				<li dojoType="dojox.mobile.ListItem" moveTo="view3" transition="slide">
+					Slide
+				</li>
+				<li dojoType="dojox.mobile.ListItem" moveTo="view1" transition="slide" transitionDir="-1">
+					Slide (Reverse)
+				</li>
+				<li dojoType="dojox.mobile.ListItem" moveTo="view3" transition="flip">
+					Flip
+				</li>
+				<li dojoType="dojox.mobile.ListItem" moveTo="view3" transition="fade">
+					Fade
+				</li>
+			</ul>
+		</div>
+
+		<div id="view3" dojoType="dojox.mobile.View" style="height:100%;">
+			<h1 dojoType="dojox.mobile.Heading" back="Top" href="test_transition-animations.html" transition="none">View 3</h1>
+			<ul dojoType="dojox.mobile.IconContainer">
+				<li dojoType="dojox.mobile.IconItem" label="Slide" icon="images/icon9.png" lazy="true" moveTo="view1" transition="slide"></li>
+				<li dojoType="dojox.mobile.IconItem" label="Slide (Reverse)" icon="images/icon2.png" lazy="true" moveTo="view2" transition="slide" transitionDir="-1"></li>
+				<li dojoType="dojox.mobile.IconItem" label="Flip" icon="images/icon3.png" lazy="true" moveTo="view1" transition="flip"></li>
+				<li dojoType="dojox.mobile.IconItem" label="Fade" icon="images/icon1.png" lazy="true" moveTo="view1" transition="fade"></li>
+			</ul>
+		</div>
+
+	</body>
+</html>

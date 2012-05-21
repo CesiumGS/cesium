@@ -1,0 +1,92 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<!--
+	we use a strict-mode DTD to ensure that the box model is the same for these
+	basic tests
+-->
+<html>
+	<head>
+		<title>testing Core HTML/DOM/CSS/Style utils: dojo.byId</title>
+		<style type="text/css">
+			@import "../../resources/dojo.css";
+		</style>
+		<script type="text/javascript" src="../../dojo.js" data-dojo-config="isDebug:true"></script>
+		<script type="text/javascript">
+			require(["dojo", "doh", "dojo/domReady!"], function(dojo, doh){
+			
+				doh.register("t", 
+					[
+						function byId(t){
+							doh.f(dojo.byId(null));
+							doh.f(dojo.byId(undefined));
+
+							doh.f(dojo.byId("baz"));
+							doh.f(dojo.byId("foobar"));
+							doh.f(dojo.byId("dude"));
+							doh.f(dojo.byId("cattle"));
+							doh.f(dojo.byId("cattle2"));
+
+							doh.f(dojo.byId("lamps"));
+							doh.f(dojo.byId("blue"));
+							doh.t(dojo.byId("chairs"));
+							
+							doh.t(dojo.byId("ranch"));
+							doh.t(dojo.byId("cattle3"));
+							doh.is("span", dojo.byId("fish").nodeName.toLowerCase());
+							
+							var startNode = dojo.byId("start");
+							var clonedNode = dojo.clone(startNode);
+							clonedNode.id= "clonedStart";
+							clonedNode.innerHTML= "This is a cloned div";
+							dojo.body().appendChild(clonedNode);
+
+							doh.is("This is a cloned div", dojo.byId("clonedStart").innerHTML);
+						}
+					]
+				);
+				doh.runOnLoad();
+
+			});
+		</script>
+	</head>
+	<body>
+		<h1>testing Core DOM utils: dojo.byId</h1>
+		
+		<form name="foobar">
+			<input type="text" name="baz" value="baz1">
+			<input type="text" name="baz" value="baz2">
+		</form>
+		
+		<form name="dude"></form>
+
+		<form name="ranch">
+			<input type="text" name="cattle" id="ranch" value="baz1">
+		</form>
+		
+		<form name="ranch2">
+			<input type="text" name="cattle2" value="baz1">
+		</form>
+		
+		<form name="ranch3">
+			<input type="text" name="cattle3" value="baz1">
+			<input type="text" name="cattle3" id="cattle3" value="cattle3">
+		</form>
+		
+		<form name="sea">
+			<input type="text" name="fish" value="fish">
+			<input type="text" name="turtle" value="turtle">
+		</form>
+		<span id="fish">Fish span</span>
+				
+		<form name="lamps">
+			<input type="text" name="id" value="blue">
+		</form>
+
+		<form name="chairs" id="chairs">
+			<input type="text" name="id" value="recliner">
+		</form>
+
+		<div id="start">a start node</div>
+		
+	</body>
+</html>

@@ -1,0 +1,228 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Chart 2D: fireEvent test</title>
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+	@import "../../../dijit/themes/tundra/tundra.css";
+
+	.dojoxLegendNode {border: 1px solid #ccc; margin: 5px 10px 5px 10px; padding: 3px}
+	.dojoxLegendText {vertical-align: text-top; padding-right: 10px}
+
+    .events {font-size: 11pt;}
+    .events th, .events td {padding: 0.25em 1em;}
+    .events th {font-weight: bold;}
+</style>
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+<script type="text/javascript">
+dojo.require("dijit.form.Button");
+dojo.require("dijit.form.Select");
+dojo.require("dijit.form.NumberSpinner");
+
+dojo.require("dojox.charting.Chart");
+dojo.require("dojox.charting.axis2d.Default");
+dojo.require("dojox.charting.plot2d.Columns");
+dojo.require("dojox.charting.plot2d.ClusteredColumns");
+dojo.require("dojox.charting.plot2d.StackedColumns");
+dojo.require("dojox.charting.plot2d.Bars");
+dojo.require("dojox.charting.plot2d.ClusteredBars");
+dojo.require("dojox.charting.plot2d.StackedBars");
+dojo.require("dojox.charting.plot2d.Lines");
+dojo.require("dojox.charting.plot2d.StackedAreas");
+dojo.require("dojox.charting.plot2d.Pie");
+dojo.require("dojox.charting.plot2d.Grid");
+dojo.require("dojox.charting.themes.CubanShirts");
+dojo.require("dojox.charting.widget.Legend");
+
+dojo.require("dojox.charting.action2d.Base");
+dojo.require("dojox.charting.action2d.Highlight");
+dojo.require("dojox.charting.action2d.Magnify");
+dojo.require("dojox.charting.action2d.MoveSlice");
+dojo.require("dojox.charting.action2d.Shake");
+dojo.require("dojox.charting.action2d.Tooltip");
+
+dojo.require("dojox.lang.functional.sequence");
+
+dojo.require("dojo.parser");
+
+var chart, legend, size = 10, magnitude = 30, none = "<em>none</em>";
+
+
+var Listener = dojo.declare(dojox.charting.action2d.Base, {
+    constructor: function(chart, plot, tr){
+        this.tr = dojo.byId(tr);
+        this.connect();
+    },
+
+    process: function(o){
+        var t = [
+                o.plot ? o.plot.name : none,
+                o.type === "onindirect" ? o.type + " (" + (o.originalPlot ? o.originalPlot.name : none) + " : " + o.originalEvent + ")" : o.type,
+                o.event ? "object" : none,
+                o.hAxis || none,
+                o.vAxis || none,
+                o.run ? o.run.name : none,
+                "index" in o ? o.index : none,
+                "x" in o ? o.x : none,
+                "y" in o ? o.y : none
+            ];
+        dojo.query("td", this.tr).forEach(function(td, i){
+            td.innerHTML = t[i] + "";
+        });
+    }
+});
+
+function getData(){
+	var data = new Array(size);
+	for(var i = 0; i < size; ++i){
+		data[i] = Math.random() * magnitude;
+	}
+	return data;
+};
+
+function getZeroes(){
+	return dojox.lang.functional.repeat(size, "-> 0", 0);
+};
+
+var actions = [];
+
+function addActions(chart){
+	dojox.lang.functional.forEach(actions, ".disconnect()");
+	actions = [
+		new dojox.charting.action2d.Highlight(chart),
+		new dojox.charting.action2d.Magnify(chart),
+		new dojox.charting.action2d.MoveSlice(chart),
+		new dojox.charting.action2d.Tooltip(chart),
+		new Listener(chart, "default", "def")
+	];
+}
+
+function makeObjects(){
+	chart = new dojox.charting.Chart("test");
+	chart.setTheme(dojox.charting.themes.CubanShirts);
+
+	chart.addAxis("x", {natural: true, includeZero: true, fixUpper: "minor"});
+
+	chart.addAxis("y", {vertical: true, natural: true, includeZero: true, fixUpper: "minor"});
+
+	chart.addPlot("default", {type: dijit.byId("plot").get("value"), gap: 2});
+    addActions(chart);
+
+	chart.addPlot("empty"); // just to see indirect events
+    new Listener(chart, "empty", "emp");
+
+
+	chart.addPlot("grid", {type: "Grid", hMinorLines: true, vMinorLines: true});
+
+	for(var i = 1; i <= 5; ++i){
+		chart.addSeries("Series " + i, getData(), {stroke: {color: "black", width: 1}});
+	}
+
+	chart.render();
+
+	legend = new dojox.charting.widget.Legend({chart: chart}, "legend");
+};
+
+dojo.addOnLoad(makeObjects);
+
+changePlot = function(){
+	var type = dijit.byId("plot").get("value"),
+        opts = {type: type, gap: 2};
+    switch(type){
+        case "Lines":
+        case "StackedAreas":
+            opts.markers = true;
+            break;
+        case "Pie":
+            opts.radius = 150;
+            break;
+    }
+	chart.addPlot("default", opts);
+    addActions(chart);
+	chart.render();
+	legend.refresh();
+};
+
+fireEvent = function(type){
+    chart.fireEvent(
+        dijit.byId("series").get("value"),
+        type,
+        dijit.byId("index").get("value")
+    );
+}
+
+</script>
+</head>
+<body class="tundra">
+
+<h1>Chart 2D: fireEvent test</h1>
+
+<p>
+    <span>Plot:&nbsp;</span>
+    <select dojoType="dijit.form.Select" id="plot" onChange="changePlot()">
+        <option value="Columns">Columns</option>
+        <option value="ClusteredColumns">ClusteredColumns</option>
+        <option value="StackedColumns">StackedColumns</option>
+        <option value="Bars">Bars</option>
+        <option value="ClusteredBars">ClusteredBars</option>
+        <option value="StackedBars">StackedBars</option>
+        <option value="Lines">Lines</option>
+        <option value="StackedAreas">StackedAreas</option>
+        <option value="Pie">Pie</option>
+    </select>
+</p>
+
+<table class="events" border="1">
+    <thead>
+        <tr>
+            <th>Plot</th><th>Event</th><th>Event Object</th><th>H. axis</th><th>V. axis</th><th>Series</th><th>Index</th><th>X value</th><th>Y value</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr id="def">
+            <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+        </tr>
+        <tr id="emp">
+            <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+        </tr>
+    </tbody>
+</table>
+
+<p>
+    <span>Fire event:&nbsp;</span>
+    <select dojoType="dijit.form.Select" id="series">
+        <option value="Series 1">Series 1</option>
+        <option value="Series 2">Series 2</option>
+        <option value="Series 3">Series 3</option>
+        <option value="Series 4">Series 4</option>
+        <option value="Series 5">Series 5</option>
+    </select>
+    <span>&nbsp;on index:&nbsp;</span>
+	<input dojoType="dijit.form.NumberSpinner" id="index" value="0" constraints="{min: 0, max: 9, fractional: false}" style="width: 5em;">
+    &nbsp;<button dojoType="dijit.form.Button" onClick="fireEvent('onmouseover')">onmouseover</button>
+    &nbsp;<button dojoType="dijit.form.Button" onClick="fireEvent('onmouseout')">onmouseout</button>
+    &nbsp;<button dojoType="dijit.form.Button" onClick="fireEvent('onclick')">onclick</button>
+</p>
+
+<p><em>Warning: the pie chart shows only the last series (Series 5).</em></p>
+
+<div id="test" style="width: 600px; height: 400px;"></div>
+<div id="legend"></div>
+
+</body>
+</html>

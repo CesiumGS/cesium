@@ -1,0 +1,227 @@
+<!--
+  This file is a demo of the FlickrStore, a simple wrapper to the public feed service
+  of Flickr.  This just does very basic queries against Flickr and loads the results
+  into a list viewing widget.
+-->
+<html>
+<head>
+	<title>Demo of FlickrStore</title>
+	<style type="text/css">
+
+		@import "../../../../dijit/themes/tundra/tundra.css";
+		@import "../../../../dojo/resources/dojo.css";
+		@import "../../../../dijit/tests/css/dijitTests.css";
+		@import "./flickrDemo.css";
+	</style>
+
+	<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+	<script type="text/javascript">
+		dojo.require("dojo.parser");
+		dojo.require("dijit.form.TextBox");
+		dojo.require("dijit.form.Button");
+		dojo.require("dijit.form.ComboBox");
+		dojo.require("dijit.form.NumberSpinner");
+		dojo.require("dojox.data.FlickrStore");
+		dojo.require("dojox.wire.ml.Invocation");
+		dojo.require("dojox.wire.ml.Transfer");
+		dojo.require("dojox.wire.ml.Data");
+		dojo.require("dojox.wire");
+		dojo.require("dojox.data.demos.widgets.FlickrViewList");
+
+		//Toplevel JS Object to contain a few basics for us, such as the request to pass to the store and a stub onItem and onComplete function
+		// to trap on for triggering other events.
+		var dataHolder = {
+			//Simple stub datastore request
+			request: {query: {}}
+		};
+
+		//Function to convert the input from a widget into a comma separated list.
+		//that is the format of the store parameter.
+		var tagsInputConverter = function(tags){
+			if(tags && tags !== ""){
+				var tagsArray = tags.split(" ");
+				tags = "";
+				for(var i = 0; i < tagsArray.length; i++){
+					tags = tags + tagsArray[i];
+					if(i < (tagsArray.length - 1)){
+						tags += ","
+					}
+				}
+			}
+			return tags
+		}
+	</script>
+</head>
+
+<body class="tundra">
+	<h1>
+		DEMO:  FlickrStore Search
+	</h1>
+	<hr>
+	<h3>
+		Description:
+	</h3>
+	<p>
+		This simple demo shows how services, such as Flickr, can be wrapped by the datastore API.  In this demo, you can search public 
+		Flickr images through a simple FlickrStore by specifying a series of tags (separated by spaces) to search on.  The results 
+		will be displayed below the search box.  This demo is the same as the example demo provided in dojox/data/demos/demo_FlickrStore.html, 
+		except that all the interactions are implemented via Wire instead of a script that runs at dojo.addOnLoad().
+	</p>
+	<p>
+		For fun, search on the 3dny tag!
+	</p>
+
+	<blockquote>
+
+	<!--
+		Layout.
+	-->
+	<table>
+		<tbody>
+			<tr>
+				<td>
+					<b>Status:</b>
+				</td>
+				<td>
+					<div dojoType="dijit.form.TextBox" size="50" id="status" jsId="statusWidget" disabled="true"></div>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<b>ID:</b>
+				</td>
+				<td>
+					<div dojoType="dijit.form.TextBox" size="50" id="userid" jsId="idWidget"></div>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<b>Tags:</b>
+				</td>
+				<td>
+					<div dojoType="dijit.form.TextBox" size="50" id="tags" jsId="tagsWidget" value="3dny"></div>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<b>Tagmode:</b>
+				</td>
+				<td>
+					<select id="tagmode"
+							jsId="tagmodeWidget"
+							dojoType="dijit.form.ComboBox"
+							autocomplete="false"
+							value="any"
+					>
+						<option>any</option>
+						<option>all</option>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<b>Number of Pictures:</b>
+				</td>
+				<td>
+					<div   
+						id="count"
+						jsId="countWidget"
+						dojoType="dijit.form.NumberSpinner"
+						value="20"
+						constraints="{min:1,max:20,places:0}" 
+					></div>
+				</td>
+			</tr>
+			<tr>
+				<td>
+				</td>
+				<td>
+					<div dojoType="dijit.form.Button" label="Search" id="searchButton" jsId="searchButtonWidget"></div>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+    </blockquote>
+	<!--
+		The store instance used by this demo.
+	-->
+	<div dojoType="dojox.data.FlickrStore" jsId="flickrStore" label="title"></div>
+	<div dojoType="dojox.data.demos.widgets.FlickrViewList" store="flickrStore" id="flickrViews" jsId="flickrViewsWidget"></div>
+
+	<!-------------------------------- Using dojox.wire, declaratively wire up the widgets. --------------------------->
+
+	<!--
+		This is an example of using the declarative data value definition.
+		These are effectively declarative variables to act as placeholders
+		for data values.
+	-->
+	<div dojoType="dojox.wire.ml.Data"
+		id="messageData"
+		jsId="messageData">
+		<div dojoType="dojox.wire.ml.DataProperty"
+			name="processingStart"
+			value="PROCESSING REQUEST">
+		</div>
+		<div dojoType="dojox.wire.ml.DataProperty"
+			name="processingDone"
+			value="PROCESSING COMPLETE">
+		</div>
+	</div>
+
+
+	<!-- 
+		When the search button is clicked, do the following in order:
+		1.)  Map the widget values over to the request properties.
+		2.)  Set the status to processing
+		3.)  Invoke the fetch on the  FLickrList to repopulate the table.
+	-->
+	<div dojoType="dojox.wire.ml.Action"
+		trigger="searchButtonWidget"
+		triggerEvent="onClick">
+		
+		<!-- 
+			Read in the values from the widgets and bind them to the appropriate data locations
+            The Transfer tag looks for a getter property before using direct access, so it calls
+            getValue() to get the data from the widget, which works well for the dijit.form.* widgets.
+		-->
+		<div dojoType="dojox.wire.ml.Transfer" 
+			 source="idWidget.value" 
+			 target="dataHolder.request.query.id">
+		</div>
+
+		<!--
+		   For the tags, we need to get the value and then perform a conversion on the result
+		   This is done by doing a transfer through a converter.
+		-->
+		<div dojoType="dojox.wire.ml.Transfer" 
+			 source="tagsWidget.value" 
+			 target="dataHolder.request.query.tags"
+             converter="tagsInputConverter">
+		</div>
+        
+		<div dojoType="dojox.wire.ml.Transfer" 
+			 source="tagmodeWidget.value" 
+			 target="dataHolder.request.query.tagmode">
+		</div>
+
+		<div dojoType="dojox.wire.ml.Transfer" 
+			 source="countWidget.value" 
+			 target="dataHolder.request.count">
+		</div>
+
+		<!-- Now invoke the actions in order. -->
+		<div dojoType="dojox.wire.ml.Transfer" target="statusWidget.value" source="messageData.processingStart"></div>
+		<div dojoType="dojox.wire.ml.Invocation" object="flickrViewsWidget" method="fetch" parameters="dataHolder.request"></div>
+	</div>    
+
+	<!-- 
+		When the fetch processing finishes (onComplete is called), then set status to complete.
+	-->
+	<div dojoType="dojox.wire.ml.Action"
+		trigger="flickrViewsWidget"
+		triggerEvent="onComplete">
+		<div dojoType="dojox.wire.ml.Transfer" target="statusWidget.value" source="messageData.processingDone"></div>
+	</div>    
+
+</body>
+</html>

@@ -1,0 +1,189 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="fr">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<meta http-equiv="pragma" content="no-cache" />
+	<meta http-equiv="expires" content="-1" />
+	<title>test ListInput</title>
+	<style type="text/css" title="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/themes/dijit.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+		@import "../../../dijit/themes/tundra/tundra.css";
+		
+		@import "../../../dojox/form/resources/ListInput.css";
+		
+	</style>
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="debugAtAllCost:true,isDebug: true,parseOnLoad:true"></script>
+	
+	<script type="text/javascript">
+		dojo.require("dojo.parser");
+		dojo.require("dijit.layout.TabContainer");
+		dojo.require("dijit.layout.ContentPane");
+		dojo.require("dijit.form.Button");
+		var current="list_0";
+		dojo.addOnLoad(function(){
+			dojo.connect(tabC,"selectChild",function(pageId) {
+				current=(typeof pageId=="object")?pageId.id:pageId;
+				current="list_" + current.split("_").pop();
+			});
+		});
+		
+		
+		//test begining
+		dojo.require("dojox.form.ListInput");
+		dojo.require("dojox.validate.regexp");
+		
+		
+		getValues=function() {
+			console.warn(window[current].get("value"));
+		};
+		getValuesMatch=function() {
+			console.warn(window[current].get("MatchedValue"));
+		};
+		getValuesMisMatch=function() {
+			console.warn(window[current].get("MismatchedValue"));
+		};
+		
+		disable=function(disable) {
+			window[current].set("disabled",disable);
+		};
+		reset=function() {
+			window[current].reset();
+		};
+		undo=function() {
+			window[current].undo();
+		};
+		
+		addedVal=0;
+		addValue=function() {
+			window[current].add("new item " + (++addedVal));
+		};
+		addValues=function() {
+			var vals=[];
+			for (var i=0;i<3;i++) {
+				vals.push("new item " + (++addedVal));
+			}
+			window[current].add(vals);
+		};
+	</script>
+</head>
+<body class="tundra">
+	<h1>ListInput</h1>
+	<div>
+		<a href="dl.php?file=dojox/form/ListInput.js">Download ListInput.js</a><br />
+		<a href="dl.php?file=dojox/form/resources/ListInput.css">Download ListInput.css</a><br />
+	</div>
+	
+	<blockquote>
+		Enter some element in the list. <br />
+		Separate them by comma or just press enter
+	</blockquote>
+	
+	<h1>Actions</h1>
+	<a dojoType="dijit.form.Button" onclick="disable(true);">Disable</a>
+	<a dojoType="dijit.form.Button" onclick="disable(false);">Enable</a>
+	<a dojoType="dijit.form.Button" onclick="undo();">Undo</a>
+	<a dojoType="dijit.form.Button" onclick="reset();">Reset</a>
+	<a dojoType="dijit.form.Button" onclick="addValue();">Add an item</a>
+	<a dojoType="dijit.form.Button" onclick="addValues();">Add 3 items</a>
+	<a dojoType="dijit.form.Button" onclick="getValues();">See all values in firebug</a>
+	<a dojoType="dijit.form.Button" onclick="getValuesMatch();">See validated values in firebug</a>
+	<a dojoType="dijit.form.Button" onclick="getValuesMisMatch();">See unvalidated values in firebug</a>
+	
+	<h1>Demos</h1>
+	<div jsId="tabC" dojoType="dijit.layout.TabContainer" tabStrip="true" style="width: 100%; height:300px;">
+		<div dojoType="dijit.layout.ContentPane" title="Demo 1">
+			<h1>With inputbox and editable items</h1>
+			
+			<blockquote>
+				note : you can move between all editable area with left and right arrow.<br />
+				This feature can be desactivated
+			</blockquote>
+			
+			<div value="initial item 1" jsId="list_0" name="list" dojoType="dojox.form.ListInput"></div>
+		</div>
+		<div dojoType="dijit.layout.ContentPane" title="Demo 2">
+			<h1>Without inputbox and with editable items</h1>
+			
+			<blockquote>
+				note : you can move between all editable area with left and right arrow<br />
+				This feature can be desactivated
+			</blockquote>
+			
+			<div value="initial item 1" jsId="list_1" readOnlyInput="true" dojoType="dojox.form.ListInput"></div>
+		</div>
+		<div dojoType="dijit.layout.ContentPane" title="Demo 3">
+			<h1>Without initial value</h1>
+			<div jsId="list_2" dojoType="dojox.form.ListInput"></div>
+		</div>
+		<div dojoType="dijit.layout.ContentPane" title="Demo 4">
+			<h1>With inputbox and without editable items</h1>
+			<div value="initial item 1" jsId="list_3" readOnlyItem="true"  dojoType="dojox.form.ListInput"></div>
+		</div>
+		<div dojoType="dijit.layout.ContentPane" title="Demo 5">
+			<h1>Without inputbox and without editable items</h1>
+			<div value="initial item 1" jsId="list_4" readOnlyItem="true" readOnlyInput="true" dojoType="dojox.form.ListInput"></div>
+		</div>
+		<div dojoType="dijit.layout.ContentPane" title="Demo 6">
+			<h1>With validation</h1>
+			<blockquote>
+				note : enter only digits
+			</blockquote>
+			<div value="1234" jsId="list_5" regExp="[0-9]+" dojoType="dojox.form.ListInput"></div>
+		</div>
+		<div dojoType="dijit.layout.ContentPane" title="Demo 7">
+			<h1>With custom separator</h1>
+			<blockquote>
+				note : you can use semi-colon for separate item<br />
+				You also can use an array of separators
+			</blockquote>
+			<div value="initial item 1" jsId="list_6" delimiter=";" dojoType="dojox.form.ListInput"></div>
+		</div>
+		<div dojoType="dijit.layout.ContentPane" title="Demo 8">
+			<h1>With a submit form</h1>
+			<blockquote>
+				note : after submit, see url
+			</blockquote>
+			<form action="?" method="get">
+				<div value="initial item 1" name="demo8" jsId="list_7" dojoType="dojox.form.ListInput"></div>
+				<input type="submit" />
+			</form>
+		</div>
+		<div dojoType="dijit.layout.ContentPane" title="Demo 9">
+			<h1>With a submit form - submit only validated value</h1>
+			<blockquote>
+				note : after submit, see url<br />
+				enter only digits
+			</blockquote>
+			<form action="?" method="get">
+				<div name="demo9" jsId="list_8" value="invalid value,1234" regExp="[0-9]+" submitOnlyValidValue="true" dojoType="dojox.form.ListInput"></div>
+				<input type="submit" />
+			</form>
+		</div>
+		<div dojoType="dijit.layout.ContentPane" title="Demo 10">
+			<h1>With a max number of items</h1>
+			<blockquote>
+				note : you can only add 3 items
+			</blockquote>
+			<div value="initial item 1" jsId="list_9" maxItems="3" dojoType="dojox.form.ListInput"></div>
+		</div>
+		<div dojoType="dijit.layout.ContentPane" title="Demo 11">
+			<h1>Without close button</h1>
+			<blockquote>
+				note : you can specify if you want close button : <br />
+				- only on validated value<br />
+				- only on unvalidated value<br />
+				- never<br />
+				- always<br />
+			</blockquote>
+			<div jsId="list_10" showCloseButtonWhenValid="false" showCloseButtonWhenInvalid="false" dojoType="dojox.form.ListInput"></div>
+		</div>
+		<div dojoType="dijit.layout.ContentPane" title="Demo 12">
+			<h1>Without anim</h1>
+			<div value="initial item 1" jsId="list_11" useAnim="false" dojoType="dojox.form.ListInput"></div>
+		</div>
+	</div>
+</body>
+</html>

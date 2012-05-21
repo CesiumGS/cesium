@@ -1,0 +1,199 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>Test Print/Export plugins of dojox.grid.EnhancedGrid</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+	<link rel=stylesheet href="support/common.css"/>
+	<style type="text/css">
+		body {
+			font-size: 0.9em;
+			font-family: Geneva, Arial, Helvetica, sans-serif;
+			padding: 0.5em;
+		}
+		.title {
+			text-align:center;
+			margin:1em;
+		}
+ 		#grid{
+			width: 95em;
+			height: 50em;
+		}
+	</style>
+	<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: true"></script>
+	<script type="text/javascript" src="../../../../dijit/tests/_testCommon.js"></script>
+	<script type="text/javascript" src="support/test_write_store_music.js"></script>
+	<script type="text/javascript">
+		dojo.require("dojo.parser");
+		dojo.require("dojox.grid.EnhancedGrid");
+		dojo.require("dojox.data.CsvStore");
+		dojo.require("dojox.grid.enhanced.plugins.exporter.CSVWriter");
+		dojo.require("dojox.grid.enhanced.plugins.Printer");
+		
+		var layout = [//--------------------------------------------------------------------------5
+			{//first view
+				rows:
+				[
+					[
+						{ field: "Genre", width: '10', rowSpan: 2},
+						{ field: "Artist", width: '15'},
+						{ field: "Year", width: '15'},
+					],[
+						{ field: "Album", colSpan: 2}
+					]
+				]
+			},
+			{//second view
+				rows:
+				[
+					[
+						{ field: "Name", width: '20', rowSpan: 2},
+						{ field: "Length", width: '20'},
+						{ field: "Track"}
+					],[
+						{ field: "Composer", colSpan: 2},
+						
+					],[
+						{ field: "Download Date"},
+						{ field: "Last Played"},
+						{ field: "Checked"}
+					]
+				]
+			}
+		];
+		var plugins = {
+			printer: true
+		};
+		function exportCSV(){
+			dijit.byId("grid").exportGrid("csv", {
+				writerArgs: {
+					separator: dojo.byId('sep').value
+				}
+			}, function(str){
+				dojo.byId("csvResults").value = str;
+			});
+		}
+		function exportSelected(){
+			var s = dojo.byId('sep').value;
+			dojo.byId("csvResults").value = dijit.byId("grid").exportSelected("csv", {
+				separator: s
+			});
+		}
+		function exportTable(){
+			dijit.byId("grid").exportGrid("table", function(str){
+				dojo.byId("csvResults").value = str;
+			});
+		}
+		function printGrid(){
+			dijit.byId("grid").printGrid({
+				title: dojo.byId('print_title').value,
+			    cssFiles: ["support/print_style1.css","support/print_style2.css"]
+			});
+		}
+		function printSelected(){
+			dijit.byId("grid").printSelected({
+				title: dojo.byId('print_title').value,
+				cssFiles: ["support/print_style1.css", "support/print_style2.css"]
+			});
+		}
+		function printPreview(){
+			var g = dijit.byId("grid");
+			g.exportToHTML({
+				title: dojo.byId('print_title').value, 
+				cssFiles: ["support/print_style1.css", "support/print_style2.css"]
+			}, function(str){
+				var win = window.open();
+				win.document.open();
+				win.document.write(str);
+				g.normalizePrintedGrid(win.document);
+				win.document.close();
+			});
+		}
+	</script>
+</head>
+<body class="claro">
+	<h1 class="title">dojox.grid.EnhancedGrid - Print, Export</h1>
+	<div id="gridContainer">
+		<div id="grid" dojoType="dojox.grid.EnhancedGrid" store="test_store[0]" structure="layout" plugins="plugins"></div>
+	</div><br/>
+	<div>
+		<h2>Printer API</h2>
+		<input type='button' value='Print All' onclick='printGrid()' />
+		<input type='button' value='Print Selected' onclick='printSelected()' />
+		<input type='button' value='Print Preview' onclick='printPreview()' />
+		Use Title:<input id='print_title' type='text' value='Favorite Music' />
+		<br/>
+		<h4>Usage 1:</h4>
+		<div style="width:100%;">
+			<pre style="float:left;">someGrid.printGrid({
+    title: "A title: All Content",
+    cssFiles: ["cssfile1.css","cssfile2.css"],
+    writerArgs: {table:"border='border'"},
+    fetchArgs: {start: 0, count: 100}
+});</pre>
+			<pre style="float:left;">someGrid.printSelected({
+    title: "A title: Only Selected",
+    cssFiles: ["cssfile1.css","cssfile2.css"],
+    writerArgs: {table:"border='border'"}
+});</pre>
+		</div>
+		<p style="width:100%;clear:left;">
+			Generate an HTML string containing all the content in the grid and then print it.
+		</p>
+		<ul>
+			<li>A title, an array of CSS files and an associative array containing HTML tag attributes can be provided.</li>
+			<li><b>All three arguments are optional</b>
+			<li>The generated HTML page assigns predefined CSS classes for grid rows and columns, so the user can design styles for every rows,columns or even a single cell.</li>
+		</ul>
+		<h4>Usage 2:</h4>
+		<div>
+			<pre style="float:left;">someGrid.exportToHTML({
+    title: "Export All To HTML",
+    cssFiles: ["cssfile1.css","cssfile2.css"],
+    writerArgs: {table:"border='border'"},
+    fetchArgs: {start: 0, count: 100}
+}, function(html){
+    /* do sth with the generated html page */
+});</pre>
+			<pre style="float:left;">var html = 
+someGrid.exportSelectedToHTML({
+    title: "Export Selected Rows to HTML",
+    cssFiles: ["cssfile1.css","cssfile2.css"],
+    writerArgs: {table:"border='border'"}
+});</pre>
+		</div>
+		<p style="width:100%;clear:left;">
+			Do not print, only generate html string. Users can use this to implement preview.
+		</p>
+		<hr/>
+		<h2>Exporter API</h2>
+		<input type='button' value='Export All to CSV' onclick='exportCSV()' />
+		<input type='button' value='Export Selected to CSV' onclick='exportSelected()' />
+		Separator is:<input id='sep' type='text' value=',' />
+		<input type='button' value='Export All to HTML Table' onclick='exportTable()' /><br/>
+		Results:<br />
+	    <textarea rows="10" cols="100" id="csvResults"></textarea>
+		<h4>Usage:</h4>
+		<pre style="float:left;">someGrid.exportGrid("csv", {
+	writerArgs: {separator:":"},
+	fetchArgs: {start: 0, count: 100}
+}, function(str){
+    /* do sth with str */
+});</pre>
+		<pre style="float:left;">var str = 
+someGrid.exportSelected("csv", {
+	writerArgs: {separator:"###"}
+});</pre>
+		<p style="width:100%;clear:left;">
+			Export grid content to a specified format.
+		</p>
+		<ul>
+			<li>The type argument is a supported format name, mandatory.</li>
+			<li>The writerArgs argument is a format-specific argument, optional.</li>
+			<li>If we are exporting everything, a callback function should be provided.</li>
+			<li>Actually, the printer is implemented using an HTML Table exporter</li>
+		</ul>
+	</div>
+<p><strong>Note:</strong> To see the tundra theme, just append <b style="color:blue;">?theme=tundra</b> to the URL.</p>
+</body>
+</html>

@@ -1,0 +1,191 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Chart 2D labels</title>
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+</style>
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+<script type="text/javascript">
+
+dojo.require("dojox.charting.Chart");
+dojo.require("dojox.charting.axis2d.Default");
+dojo.require("dojox.charting.plot2d.Bars");
+
+makeObjects = function(){
+	var chart1 = new dojox.charting.Chart("test1");
+	chart1.addAxis("x", {fixLower: "major", fixUpper: "major", includeZero: true});
+	chart1.addAxis("y", {vertical: true, fixLower: "major", fixUpper: "major", natural: true});
+	chart1.addPlot("default", {type: "Bars"});
+	chart1.addSeries("Series A", [1, 2, 3, 4, 5], {stroke: {color: "red"}, fill: "lightpink"});
+	chart1.addSeries("Series B", [5, 4, 3, 2, 1], {stroke: {color: "blue"}, fill: "lightblue"});
+	chart1.render();
+	
+	var chart2 = new dojox.charting.Chart("test2");
+	chart2.addAxis("x", {
+		fixLower: "major", fixUpper: "major", includeZero: true, 
+		labels: [
+			//{value: 0, text: "zero"},
+			{value: 2, text: "two"},
+			{value: 4, text: "four"}
+		]
+	});
+	chart2.addAxis("y", {
+		vertical: true, fixLower: "major", fixUpper: "major", natural: true,
+		labels: [{value: 0, text: ""},
+			{value: 1, text: "Jan"}, {value: 2, text: "Feb"},
+			{value: 3, text: "Mar"}, {value: 4, text: "Apr"},
+			{value: 5, text: "May"}, {value: 6, text: "Jun"}]
+	});
+	chart2.addPlot("default", {type: "Bars"});
+	chart2.addSeries("Series A", [1, 2, 3, 4, 5], {stroke: {color: "red"}, fill: "lightpink"});
+	chart2.addSeries("Series B", [5, 4, 3, 2, 1], {stroke: {color: "blue"}, fill: "lightblue"});
+	chart2.render();
+
+	
+	var chart3 = new dojox.charting.Chart("test3");
+	chart3.addAxis("x", {
+		fixLower: "major", fixUpper: "major", includeZero: true, 
+		labels: [{value: 0, text: "z e r o"}, {value: 2, text: "t w o"}, {value: 4, text: "f o u r"}]
+	});
+	chart3.addAxis("y", {
+		vertical: true, fixLower: "major", fixUpper: "major", natural: true,
+		labels: [{value: 0, text: ""},
+			{value: 1, text: "J A N"}, {value: 2, text: "F E B"},
+			{value: 3, text: "M A R"}, {value: 4, text: "A P R"},
+			{value: 5, text: "M A Y"}, {value: 6, text: "J U N"}]
+	});
+	chart3.addPlot("default", {type: "Bars"});
+	chart3.addSeries("Series A", [1, 2, 3, 4, 5], {stroke: {color: "red"}, fill: "lightpink"});
+	chart3.addSeries("Series B", [5, 4, 3, 2, 1], {stroke: {color: "blue"}, fill: "lightblue"});
+	chart3.render();
+	
+	var chart4 = new dojox.charting.Chart("test4");
+	chart4.addAxis("x", {
+		majorLabels: false,
+		includeZero: true, 
+		minorTicks: false, 
+		microTicks: false, 
+		majorTick: { length: 0 }
+	});
+	chart4.addAxis("y", {
+		vertical: true, 
+		fixLower: "none", 
+		fixUpper: "none", 
+		natural: true,
+		majorTick: { length: 3 },
+		labels: [
+			{value: 0, text: ""},
+			{value: 1, text: "January"}, 
+			{value: 2, text: "Febuary"},
+			{value: 3, text: "March"}, 
+			{value: 4, text: "April"},
+			{value: 5, text: "May"} 
+		]
+	});
+	chart4.addPlot("default", { type: "Bars", gap: 3 });
+	chart4.addSeries(
+		"Series A", 
+		[ 1, 6, 9, 4, 5, 2 ],
+		{
+			stroke: {width: 0}, 
+			// fill: "#ffcc2d",
+			fill: {
+				type: "linear",
+				x1: 0, y1: 0,
+				x2: 150, y2: 0,
+				colors: [
+					{ offset: 0,   color: "#ffe495" },
+					{ offset: 1,   color: "#ffcc2d" }
+				]
+			}
+		}
+	);
+	chart4.render();
+
+	var chart5 = new dojox.charting.Chart("test5").
+			addAxis("x", {
+				fixLower: "major", fixUpper: "major", includeZero: true, 
+				labels: [
+					{value: 0, text: "zero"},
+					{value: 2, text: "two"},
+					{value: 4, text: "four"}
+				],
+				rotation: 30
+			}).
+			addAxis("y", {
+				vertical: true, fixLower: "major", fixUpper: "major", natural: true,
+				labels: [{value: 0, text: ""},
+					{value: 1, text: "January"}, {value: 2, text: "February"},
+					{value: 3, text: "March"}, {value: 4, text: "April"},
+					{value: 5, text: "May"}, {value: 6, text: "June"}
+				],
+				rotation: -30
+			}).
+			addPlot("default", {type: "Bars"}).
+			addSeries("Series A", [1, 2, 3, 4, 5], {stroke: {color: "red"}, fill: "lightpink"}).
+			addSeries("Series B", [5, 4, 3, 2, 1], {stroke: {color: "blue"}, fill: "lightblue"}).
+			render();
+
+	var chart6 = new dojox.charting.Chart("test6").
+			addAxis("x", {
+				fixLower: "major", fixUpper: "major", includeZero: true, 
+				labels: [
+					{value: 0, text: "zero"},
+					{value: 2, text: "two"},
+					{value: 4, text: "four"}
+				],
+				rotation: 180
+			}).
+			addAxis("y", {
+				vertical: true, fixLower: "major", fixUpper: "major", natural: true, majorTickStep: 2,
+				labels: [{value: 0, text: ""},
+					{value: 1, text: "January"}, {value: 2, text: "February"},
+					{value: 3, text: "March"}, {value: 4, text: "April"},
+					{value: 5, text: "May"}, {value: 6, text: "June"}
+				],
+				rotation: 90
+			}).
+			addPlot("default", {type: "Bars"}).
+			addSeries("Series A", [1, 2, 3, 4, 5], {stroke: {color: "red"}, fill: "lightpink"}).
+			addSeries("Series B", [5, 4, 3, 2, 1], {stroke: {color: "blue"}, fill: "lightblue"}).
+			render();
+};
+
+dojo.addOnLoad(makeObjects);
+
+</script>
+</head>
+<body>
+<h1>Chart 2D labels</h1>
+<!--<p><button onclick="makeObjects();">Go</button></p>-->
+<p>1: Bars, axes aligned on major ticks, no minor ticks, custom strokes and fills.</p>
+<div id="test1" style="width: 200px; height: 200px;"></div>
+<p>2: Bars, axes aligned on major ticks, no minor ticks, custom strokes and fills, custom labels.</p>
+<div id="test2" style="width: 200px; height: 200px;"></div>
+<p>3: Bars, axes aligned on major ticks, no minor ticks, custom strokes and fills, custom labels with spaces.</p>
+<div id="test3" style="width: 200px; height: 200px;"></div>
+<p>4: Trying to make it look good.</p>
+<div id="test4" style="width: 200px; height: 200px;"></div>
+<p>5: Label rotation.</p>
+<div id="test5" style="width: 200px; height: 200px;"></div>
+<p>6: Label rotation (opposite).</p>
+<div id="test6" style="width: 200px; height: 200px;"></div>
+<p>That's all Folks!</p>
+</body>
+</html>

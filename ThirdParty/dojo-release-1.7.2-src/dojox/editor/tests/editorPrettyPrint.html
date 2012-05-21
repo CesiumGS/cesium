@@ -1,0 +1,327 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>Editor Pretty Print Test</title>
+
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+		@import "../../../dijit/themes/tundra/tundra.css";
+	</style>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true, isDebug: true"></script>
+
+	<script type="text/javascript">
+		dojo.require("dijit.layout.AccordionContainer");
+		dojo.require("dijit.layout.ContentPane");    
+		dojo.require("dijit.Editor");
+		dojo.require("dijit.Dialog");
+		dojo.require("dijit.form.Button");
+		dojo.require("dojo.parser");
+		dojo.require("dojox.editor.plugins.PrettyPrint");
+		dojo.require("dijit._editor.plugins.ViewSource");
+
+		var init = function(){
+			var deb = dijit.byId("bEditorDefault");
+			var sib = dijit.byId("bEditorSpaceIndent");
+			var slb = dijit.byId("bEditorSpaceLine");
+			var slx = dijit.byId("bEditorXhtml");
+
+			var editorDefault = dijit.byId("editor1");
+			var editorSpaceIndent = dijit.byId("editor2");
+			var editorSpaceLine = dijit.byId("editor3");
+			var editorXhtml = dijit.byId("editor4");
+			var dialog = dijit.byId("dialog");
+			dojo.connect(deb, "onClick", function(){
+				dialog.setContent("<textarea style=\"width: 800px; height: 600px;\" readOnly=\"true\">" + editorDefault.attr("value") + "</textarea>");
+				dialog.show();
+			});
+			dojo.connect(sib, "onClick", function(){
+				dialog.setContent("<textarea style=\"width: 800px; height: 600px;\" readOnly=\"true\">" + editorSpaceIndent.attr("value") + "</textarea>");
+				dialog.show();
+			});
+			dojo.connect(slb, "onClick", function(){
+				dialog.setContent("<textarea style=\"width: 800px; height: 600px;\" readOnly=\"true\">" + editorSpaceLine.attr("value") + "</textarea>");
+				dialog.show();
+			});
+			dojo.connect(slx, "onClick", function(){
+				dialog.setContent("<textarea style=\"width: 800px; height: 600px;\" readOnly=\"true\">" + editorXhtml.attr("value") + "</textarea>");
+				dialog.show();
+			});
+		}
+		dojo.addOnLoad(init);
+	</script>
+</head>
+<body class="tundra">
+	<br>
+	<h1 class="testTitle">Editor + PrettyPrint Plugin</h1>
+   	<div dojoType="dijit.layout.AccordionContainer" style="width: 100%; height: 550px; overflow: hidden">
+		<div dojoType="dijit.layout.ContentPane" title="PrettyPrint (with defaults)">
+			<h2>This is an example editor with PrettyPrint enabled and the default settings for indent, entity character mapping, and line length</h2>
+			<div dojoType="dijit.Editor" id="editor1" extraPlugins="['prettyprint', 'viewsource']">
+				This instance is created from a div with an extra plugin, 'PrettyPrint' loaded.
+				<div>
+					<ul>
+						<li>List Item One</li>
+						<li>List Item Two</li>
+						<li>List Item Three</li>
+						<li>List Item Four</li>
+					</ul>
+					<br>
+					<a href="http://www.dojotoolkit.org">The Dojo Toolkit</a>
+					<br>
+					<br>
+					<ol>
+						<li>One</li>
+						<li>Two</li>
+					</ol>
+					<br>
+					<br>
+					<h3>A bunch of Lorum Ipsum Text:</h3>
+					<p style="color: #646060;">
+						Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus eget turpis nunc.
+						Praesent ut metus ac mi gravida lobortis vel quis nulla. Sed elementum elit eget
+						ante viverra consectetur. Praesent pulvinar faucibus risus in pulvinar. Sed auctor,
+						dui sed suscipit semper, metus sapien feugiat urna, et auctor nisi est quis purus.
+						Aliquam eu tortor eu ante venenatis pellentesque nec sed massa. Nulla feugiat, nunc
+						ac aliquet elementum, lacus odio dictum nisl, vel molestie neque tellus eget nibh.
+						Curabitur et eros quam, non consectetur erat. Class aptent taciti sociosqu ad litora
+						torquent per conubia nostra, per inceptos himenaeos. Quisque luctus imperdiet felis,
+						a mollis sapien scelerisque ut. Quisque dui neque, vulputate eu consectetur et, fermentum
+						id est. Nulla euismod lorem at massa aliquam at cursus mi fermentum. Quisque rhoncus
+						ornare pharetra. Cras vestibulum convallis nisl, eget ultrices sem porta eget. Duis
+						in dolor id nibh volutpat sodales. Nullam eleifend, sapien accumsan convallis tincidunt,
+						justo mi pellentesque dolor, in suscipit dolor quam ac ligula.
+					</p>
+					<p>
+						Ut molestie facilisis nisi sed consequat. Nunc in turpis quam, vel elementum lectus.
+						Suspendisse vel consequat augue. Praesent id orci orci. Praesent est tortor, consequat
+						eu posuere nec, volutpat ac diam. Cras pretium quam non diam dictum tincidunt. Mauris
+						aliquet lacinia odio vitae elementum. Nam rutrum semper metus, in consectetur lectus
+						aliquam a. Maecenas pharetra nibh nec leo consequat vitae rhoncus nibh volutpat.
+						Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus
+						mus. Sed at odio turpis, sit amet molestie nisl. Curabitur in ligula id tortor feugiat
+						semper. Vestibulum id nunc magna, eu lacinia nibh. Ut congue adipiscing dictum.
+					</p>
+					<p>
+						Suspendisse potenti. Class aptent taciti sociosqu ad litora torquent per conubia
+						nostra, per inceptos himenaeos. Phasellus in orci purus, sed aliquet quam. Aenean
+						ultrices tincidunt augue, in feugiat massa dignissim in. Nunc a dolor eu mi fringilla
+						laoreet. Praesent lacinia mi eu sapien imperdiet dignissim. Praesent a pellentesque
+						est. Sed augue eros, porttitor nec consequat bibendum, mattis lobortis diam. Sed
+						at massa ante. In volutpat ultrices mattis. Vestibulum tempus pretium risus quis
+						aliquet. Donec non ante vitae orci euismod eleifend. Aliquam at metus quis turpis
+						pharetra porta. Sed dignissim risus in erat aliquam et posuere nulla molestie. Nunc
+						iaculis lectus eget augue sollicitudin gravida ac non nisl. Vivamus bibendum gravida
+						vehicula. Aliquam vitae mi ligula. Nulla at augue velit, vitae ultricies libero.
+						Proin at lorem turpis.
+					</p>
+					<center>Centered Text</center>
+				</div>
+			</div>
+			<button dojoType="dijit.form.Button" id="bEditorDefault">Get Content</button>
+		</div>
+		<div dojoType="dijit.layout.ContentPane" title="PrettyPrint (with 3 space indent)">
+			<h2>This is an example editor with PrettyPrint enabled and indent set to three spaces</h2>
+			<div dojoType="dijit.Editor" id="editor2" extraPlugins="[{name: 'prettyprint', indentBy: 3}]">
+				This instance is created from a div with an extra plugin, 'PrettyPrint' loaded.
+				It also has indent set to three spaces.
+				<div>
+					<ul>
+						<li>List Item One</li>
+						<li>List Item Two</li>
+						<li>List Item Three</li>
+						<li>List Item Four</li>
+					</ul>
+					<br>
+					<a href="http://www.dojotoolkit.org">The Dojo Toolkit</a>
+					<br>
+					<br>
+					<ol>
+						<li>One</li>
+						<li>Two</li>
+					</ol>
+					<br>
+					<br>
+					<h3>A bunch of Lorum Ipsum Text:</h3>
+					<p style="color: #646060;">
+						Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus eget turpis nunc.
+						Praesent ut metus ac mi gravida lobortis vel quis nulla. Sed elementum elit eget
+						ante viverra consectetur. Praesent pulvinar faucibus risus in pulvinar. Sed auctor,
+						dui sed suscipit semper, metus sapien feugiat urna, et auctor nisi est quis purus.
+						Aliquam eu tortor eu ante venenatis pellentesque nec sed massa. Nulla feugiat, nunc
+						ac aliquet elementum, lacus odio dictum nisl, vel molestie neque tellus eget nibh.
+						Curabitur et eros quam, non consectetur erat. Class aptent taciti sociosqu ad litora
+						torquent per conubia nostra, per inceptos himenaeos. Quisque luctus imperdiet felis,
+						a mollis sapien scelerisque ut. Quisque dui neque, vulputate eu consectetur et, fermentum
+						id est. Nulla euismod lorem at massa aliquam at cursus mi fermentum. Quisque rhoncus
+						ornare pharetra. Cras vestibulum convallis nisl, eget ultrices sem porta eget. Duis
+						in dolor id nibh volutpat sodales. Nullam eleifend, sapien accumsan convallis tincidunt,
+						justo mi pellentesque dolor, in suscipit dolor quam ac ligula.
+					</p>
+					<p>
+						Ut molestie facilisis nisi sed consequat. Nunc in turpis quam, vel elementum lectus.
+						Suspendisse vel consequat augue. Praesent id orci orci. Praesent est tortor, consequat
+						eu posuere nec, volutpat ac diam. Cras pretium quam non diam dictum tincidunt. Mauris
+						aliquet lacinia odio vitae elementum. Nam rutrum semper metus, in consectetur lectus
+						aliquam a. Maecenas pharetra nibh nec leo consequat vitae rhoncus nibh volutpat.
+						Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus
+						mus. Sed at odio turpis, sit amet molestie nisl. Curabitur in ligula id tortor feugiat
+						semper. Vestibulum id nunc magna, eu lacinia nibh. Ut congue adipiscing dictum.
+					</p>
+					<p>
+						Suspendisse potenti. Class aptent taciti sociosqu ad litora torquent per conubia
+						nostra, per inceptos himenaeos. Phasellus in orci purus, sed aliquet quam. Aenean
+						ultrices tincidunt augue, in feugiat massa dignissim in. Nunc a dolor eu mi fringilla
+						laoreet. Praesent lacinia mi eu sapien imperdiet dignissim. Praesent a pellentesque
+						est. Sed augue eros, porttitor nec consequat bibendum, mattis lobortis diam. Sed
+						at massa ante. In volutpat ultrices mattis. Vestibulum tempus pretium risus quis
+						aliquet. Donec non ante vitae orci euismod eleifend. Aliquam at metus quis turpis
+						pharetra porta. Sed dignissim risus in erat aliquam et posuere nulla molestie. Nunc
+						iaculis lectus eget augue sollicitudin gravida ac non nisl. Vivamus bibendum gravida
+						vehicula. Aliquam vitae mi ligula. Nulla at augue velit, vitae ultricies libero.
+						Proin at lorem turpis.
+					</p>
+					<center>Centered Text</center>
+				</div>
+			</div>
+			<button dojoType="dijit.form.Button" id="bEditorSpaceIndent">Get Content</button>
+		</div>
+		<div dojoType="dijit.layout.ContentPane" title="PrettyPrint (with 3 space indent and 60 character lines)" style="width:100%; height:100%"> 
+			<h2>This is an example editor with PrettyPrint enabled, indent set to three spaces, and max text line length at 60 characters</h2>
+			<div dojoType="dijit.Editor" id="editor3" extraPlugins="[{name: 'prettyprint', indentBy: 3, lineLength: 60}]">
+				This instance is created from a div with an extra plugin, 'PrettyPrint' loaded.
+				It also has indent set to three spaces and text line length fixed at 60 characters (not including the indent).
+				<div>
+					<ul>
+						<li>List Item One</li>
+						<li>List Item Two</li>
+						<li>List Item Three</li>
+						<li>List Item Four</li>
+					</ul>
+					<br>
+					<a href="http://www.dojotoolkit.org">The Dojo Toolkit</a>
+					<br>
+					<br>
+					<ol>
+						<li>One</li>
+						<li>Two</li>
+					</ol>
+					<br>
+					<br>
+					<h3>A bunch of Lorum Ipsum Text:</h3>
+					<p style="color: #646060;">
+						Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus eget turpis nunc.
+						Praesent ut metus ac mi gravida lobortis vel quis nulla. Sed elementum elit eget
+						ante viverra consectetur. Praesent pulvinar faucibus risus in pulvinar. Sed auctor,
+						dui sed suscipit semper, metus sapien feugiat urna, et auctor nisi est quis purus.
+						Aliquam eu tortor eu ante venenatis pellentesque nec sed massa. Nulla feugiat, nunc
+						ac aliquet elementum, lacus odio dictum nisl, vel molestie neque tellus eget nibh.
+						Curabitur et eros quam, non consectetur erat. Class aptent taciti sociosqu ad litora
+						torquent per conubia nostra, per inceptos himenaeos. Quisque luctus imperdiet felis,
+						a mollis sapien scelerisque ut. Quisque dui neque, vulputate eu consectetur et, fermentum
+						id est. Nulla euismod lorem at massa aliquam at cursus mi fermentum. Quisque rhoncus
+						ornare pharetra. Cras vestibulum convallis nisl, eget ultrices sem porta eget. Duis
+						in dolor id nibh volutpat sodales. Nullam eleifend, sapien accumsan convallis tincidunt,
+						justo mi pellentesque dolor, in suscipit dolor quam ac ligula.
+					</p>
+					<p>
+						Ut molestie facilisis nisi sed consequat. Nunc in turpis quam, vel elementum lectus.
+						Suspendisse vel consequat augue. Praesent id orci orci. Praesent est tortor, consequat
+						eu posuere nec, volutpat ac diam. Cras pretium quam non diam dictum tincidunt. Mauris
+						aliquet lacinia odio vitae elementum. Nam rutrum semper metus, in consectetur lectus
+						aliquam a. Maecenas pharetra nibh nec leo consequat vitae rhoncus nibh volutpat.
+						Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus
+						mus. Sed at odio turpis, sit amet molestie nisl. Curabitur in ligula id tortor feugiat
+						semper. Vestibulum id nunc magna, eu lacinia nibh. Ut congue adipiscing dictum.
+					</p>
+					<p>
+						Suspendisse potenti. Class aptent taciti sociosqu ad litora torquent per conubia
+						nostra, per inceptos himenaeos. Phasellus in orci purus, sed aliquet quam. Aenean
+						ultrices tincidunt augue, in feugiat massa dignissim in. Nunc a dolor eu mi fringilla
+						laoreet. Praesent lacinia mi eu sapien imperdiet dignissim. Praesent a pellentesque
+						est. Sed augue eros, porttitor nec consequat bibendum, mattis lobortis diam. Sed
+						at massa ante. In volutpat ultrices mattis. Vestibulum tempus pretium risus quis
+						aliquet. Donec non ante vitae orci euismod eleifend. Aliquam at metus quis turpis
+						pharetra porta. Sed dignissim risus in erat aliquam et posuere nulla molestie. Nunc
+						iaculis lectus eget augue sollicitudin gravida ac non nisl. Vivamus bibendum gravida
+						vehicula. Aliquam vitae mi ligula. Nulla at augue velit, vitae ultricies libero.
+						Proin at lorem turpis.
+					</p>
+					<center>Centered Text</center>
+				</div>
+			</div>
+			<button dojoType="dijit.form.Button" id="bEditorSpaceLine">Get Content</button>
+		</div>
+		<div dojoType="dijit.layout.ContentPane" title="PrettyPrint (with 3 space indent and 60 character lines), and XHTML output" style="width:100%; height:100%"> 
+			<h2>This is an example editor with PrettyPrint enabled, indent set to three spaces, and max text line length at 60 characters</h2>
+			<div dojoType="dijit.Editor" id="editor4" extraPlugins="[{name: 'prettyprint', indentBy: 3, lineLength: 60, xhtml: true}]">
+				This instance is created from a div with an extra plugin, 'PrettyPrint' loaded.
+				It also has indent set to three spaces and text line length fixed at 60 characters (not including the indent).
+                The output has also been configured to try to be XHTML compliant.
+				<div>
+					<ul>
+						<li>List Item One</li>
+						<li>List Item Two</li>
+						<li>List Item Three</li>
+						<li>List Item Four</li>
+					</ul>
+					<br>
+					<a href="http://www.dojotoolkit.org">The Dojo Toolkit</a>
+					<br>
+					<br>
+					<ol>
+						<li>One</li>
+						<li>Two</li>
+					</ol>
+					<br>
+					<br>
+					<h3>A bunch of Lorum Ipsum Text:</h3>
+					<p style="color: #646060;">
+						Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus eget turpis nunc.
+						Praesent ut metus ac mi gravida lobortis vel quis nulla. Sed elementum elit eget
+						ante viverra consectetur. Praesent pulvinar faucibus risus in pulvinar. Sed auctor,
+						dui sed suscipit semper, metus sapien feugiat urna, et auctor nisi est quis purus.
+						Aliquam eu tortor eu ante venenatis pellentesque nec sed massa. Nulla feugiat, nunc
+						ac aliquet elementum, lacus odio dictum nisl, vel molestie neque tellus eget nibh.
+						Curabitur et eros quam, non consectetur erat. Class aptent taciti sociosqu ad litora
+						torquent per conubia nostra, per inceptos himenaeos. Quisque luctus imperdiet felis,
+						a mollis sapien scelerisque ut. Quisque dui neque, vulputate eu consectetur et, fermentum
+						id est. Nulla euismod lorem at massa aliquam at cursus mi fermentum. Quisque rhoncus
+						ornare pharetra. Cras vestibulum convallis nisl, eget ultrices sem porta eget. Duis
+						in dolor id nibh volutpat sodales. Nullam eleifend, sapien accumsan convallis tincidunt,
+						justo mi pellentesque dolor, in suscipit dolor quam ac ligula.
+					</p>
+					<p>
+						Ut molestie facilisis nisi sed consequat. Nunc in turpis quam, vel elementum lectus.
+						Suspendisse vel consequat augue. Praesent id orci orci. Praesent est tortor, consequat
+						eu posuere nec, volutpat ac diam. Cras pretium quam non diam dictum tincidunt. Mauris
+						aliquet lacinia odio vitae elementum. Nam rutrum semper metus, in consectetur lectus
+						aliquam a. Maecenas pharetra nibh nec leo consequat vitae rhoncus nibh volutpat.
+						Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus
+						mus. Sed at odio turpis, sit amet molestie nisl. Curabitur in ligula id tortor feugiat
+						semper. Vestibulum id nunc magna, eu lacinia nibh. Ut congue adipiscing dictum.
+					</p>
+					<p>
+						Suspendisse potenti. Class aptent taciti sociosqu ad litora torquent per conubia
+						nostra, per inceptos himenaeos. Phasellus in orci purus, sed aliquet quam. Aenean
+						ultrices tincidunt augue, in feugiat massa dignissim in. Nunc a dolor eu mi fringilla
+						laoreet. Praesent lacinia mi eu sapien imperdiet dignissim. Praesent a pellentesque
+						est. Sed augue eros, porttitor nec consequat bibendum, mattis lobortis diam. Sed
+						at massa ante. In volutpat ultrices mattis. Vestibulum tempus pretium risus quis
+						aliquet. Donec non ante vitae orci euismod eleifend. Aliquam at metus quis turpis
+						pharetra porta. Sed dignissim risus in erat aliquam et posuere nulla molestie. Nunc
+						iaculis lectus eget augue sollicitudin gravida ac non nisl. Vivamus bibendum gravida
+						vehicula. Aliquam vitae mi ligula. Nulla at augue velit, vitae ultricies libero.
+						Proin at lorem turpis.
+					</p>
+					<center>Centered Text</center>
+				</div>
+			</div>
+			<button dojoType="dijit.form.Button" id="bEditorXhtml">Get Content</button>
+		</div>
+	</div>
+	<div dojoType="dijit.Dialog" id="dialog"></div>
+</body>
+</html>

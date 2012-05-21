@@ -765,53 +765,21 @@ define([
     };
 
     CentralBody.prototype._createTextureCache = function(context) {
-        if (this._dayTileProvider &&
-            typeof this._dayTileProvider.tileWidth !== "undefined" &&
-            typeof this._dayTileProvider.tileHeight !== "undefined") {
-            this._texturePool = new Texture2DPool(this._dayTileProvider.tileWidth, this._dayTileProvider.tileHeight);
-        } else {
-            this._texturePool = undefined;
-        }
-
-        var pool = this._texturePool;
+        var pool = this._texturePool = new Texture2DPool(context);
 
         var fetch = function(tile) {
-            var texture;
-
             var width = parseInt(tile.image.width, 10);
             var height = parseInt(tile.image.height, 10);
-            var usePool = pool && (width === pool.getWidth() && height === pool.getHeight());
-            var inPool = false;
-
-            if (usePool && pool.hasAvailable()) {
-                texture = pool.getTexture();
-                inPool = true;
-            } else {
-                texture = context.createTexture2D({
-                    width : width,
-                    height : height,
-                    pixelFormat : PixelFormat.RGB
-                });
-            }
-
-            if (usePool && !inPool) {
-                pool.add(texture);
-            }
+            var texture = pool.createTexture2D({
+                width : width,
+                height : height,
+                pixelFormat : PixelFormat.RGB
+            });
             return texture;
         };
 
         var remove = function(tile) {
-            var width = tile.texture.getWidth();
-            var height = tile.texture.getHeight();
-            var usePool = (width === pool.getWidth() && height === pool.getHeight());
-
-            if (usePool) {
-                pool.remove(tile.texture);
-                tile.texture = undefined;
-            } else {
-                tile.texture = tile.texture && tile.texture.destroy();
-            }
-
+            tile.texture = tile.texture && tile.texture.destroy();
             tile._extentVA = tile._extentVA && tile._extentVA.destroy();
             tile.projection = undefined;
             tile.state = TileState.READY;
@@ -1920,12 +1888,7 @@ define([
 
             // destroy texture
             if (tile.texture) {
-                // if the texture isn't in the texture pool, destroy it; otherwise,
-                // it already has been or will be destroyed by it.
-                var width = tile.texture.getWidth();
-                var height = tile.texture.getHeight();
-                var usePool = this._texturePool && (width === this._texturePool.getWidth() && height === this._texturePool.getHeight());
-                tile.texture = (usePool) ? undefined : tile.texture && tile.texture.destroy();
+                tile.texture = tile.texture && tile.texture.destroy();
             }
 
             // process children
@@ -1973,10 +1936,11 @@ define([
      * centralBody = centralBody && centralBody.destroy();
      */
     CentralBody.prototype.destroy = function() {
+        this._destroyTileTree();
+
         this._texturePool = this._texturePool && this._texturePool.destroy();
         this._textureCache = this._textureCache && this._textureCache.destroy();
 
-        this._destroyTileTree();
         this._fb = this._fb && this._fb.destroy();
         this._quadV = this._quadV && this._quadV.destroy();
         this._quadH = this._quadH && this._quadH.destroy();

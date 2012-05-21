@@ -1,0 +1,520 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>testing form and xhr utils</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<style type="text/css">
+			@import "../../resources/dojo.css";
+		</style>
+		<script type="text/javascript" src="../../dojo.js" data-dojo-config="isDebug:true, ioPublish:true"></script>
+		<script type="text/javascript">
+			require(["dojo", "doh", "dojo/domReady!"], function(dojo, doh){
+				var f1NoValueObj = null;
+				var f1NoValue2Obj = 'blah';
+				var f2MultiObj = [ 'thud', 'thonk' ];
+				var f2TextareaObj = 'textarea_value';
+				var f2fileParam1Obj = '';
+				var f4ActionObj = 'Form with input named action';
+				var f6Checkbox1Obj = 'foo';
+				var f6Checkbox2Obj = null;
+				var f6Radio1Obj = null;
+				var f6Radio2Obj = 'bam';
+				
+				
+				var f1fo = { 'blah': "blah" };
+				var f1foStr = "blah=blah";
+				var f1foJson = '{"blah":"blah"}';
+
+				var f2fo = { 
+					blah: "blah",
+					multi: [
+						"thud",
+						"thonk"
+					],
+					textarea: "textarea_value"
+				};
+				var f2foStr = "blah=blah&multi=thud&multi=thonk&textarea=textarea_value";
+				var f2foJson = '{"blah":"blah","multi":["thud","thonk"],"textarea":"textarea_value"}';
+
+				var f3fo = { 
+					spaces: "string with spaces"
+				};
+				var f3foStr = "spaces=string%20with%20spaces&";
+				var f3foJson = '{"spaces":"string with spaces"}';
+
+				var f5fo = { 'blåh': "bláh" };
+				var f5foStr = "bl%C3%A5h=bl%C3%A1h";
+				var f5foJson = '{"blåh":"bláh"}';
+
+				var f6fo = {
+					cb_group: "foo",
+					radio_group: "bam"
+				};
+
+				var f6fo1 = {
+					cb_group: "boo",
+					radio_group: "baz"
+				};
+
+				var f6fo2 = {
+					cb_group: ["foo","boo"],
+					radio_group: "baz"
+				};
+
+				var topics = [
+					"/dojo/io/start",
+					"/dojo/io/send",
+					"/dojo/io/load",
+					"/dojo/io/error",
+					"/dojo/io/done",
+					"/dojo/io/stop"
+				];
+
+				var topicCount = {
+				};
+
+				dojo.forEach(topics, function(topic){
+					topicCount[topic] = 0;
+					dojo.subscribe(topic, function(){
+						topicCount[topic] += 1;
+						console.log("##"+ topic + ": " + topicCount[topic]);
+					});
+				});
+
+				doh.register("t", 
+					[
+						function inputNodeValueFromId(t){
+							t.is(f1NoValueObj, dojo.fieldToObject('f1_no_value'));
+							t.is(f1NoValue2Obj, dojo.fieldToObject('f1_no_value2'));
+							t.is(f2MultiObj, dojo.fieldToObject('f2_multi'));
+							t.is(f2TextareaObj, dojo.fieldToObject('f2_textarea'));
+							t.is(f2fileParam1Obj, dojo.fieldToObject('f2_fileParam1'));
+							t.is(f4ActionObj, dojo.fieldToObject('f4_action'));
+							t.is(f6Checkbox1Obj, dojo.fieldToObject('f6_checkbox1'));
+							t.is(f6Checkbox2Obj, dojo.fieldToObject('f6_checkbox2'));
+							t.is(f6Radio1Obj, dojo.fieldToObject('f6_radio1'));
+							t.is(f6Radio2Obj, dojo.fieldToObject('f6_radio2'));
+							t.is(null, dojo.fieldToObject('some_id_that_doesnt_exist'));
+						},
+						
+						function formNodeValueFromNode(t){
+							t.is(f1NoValueObj, dojo.fieldToObject(dojo.byId('f1_no_value')));
+							t.is(f1NoValue2Obj, dojo.fieldToObject(dojo.byId('f1_no_value2')));
+							t.is(f2MultiObj, dojo.fieldToObject(dojo.byId('f2_multi')));
+							t.is(f2TextareaObj, dojo.fieldToObject(dojo.byId('f2_textarea')));
+							t.is(f2fileParam1Obj, dojo.fieldToObject(dojo.byId('f2_fileParam1')));
+							t.is(f4ActionObj, dojo.fieldToObject(dojo.byId('f4_action')));
+							t.is(f6Checkbox1Obj, dojo.fieldToObject(dojo.byId('f6_checkbox1')));
+							t.is(f6Checkbox2Obj, dojo.fieldToObject(dojo.byId('f6_checkbox2')));
+							t.is(f6Radio1Obj, dojo.fieldToObject(dojo.byId('f6_radio1')));
+							t.is(f6Radio2Obj, dojo.fieldToObject(dojo.byId('f6_radio2')));
+							t.is(null, dojo.fieldToObject(dojo.byId('some_id_that_doesnt_exist')));
+						},
+						function formNodeToObject(t){
+							t.is(f1fo , dojo.formToObject(dojo.byId("f1")));
+							t.is(f5fo , dojo.formToObject(dojo.byId("f5")));
+						},
+						function formIdToObject(t){
+							t.is(f1fo , dojo.formToObject("f1"));
+							t.is(f5fo , dojo.formToObject("f5"));
+						},
+						function formToObjectRadioGroup(t){
+							t.is(f6fo , dojo.formToObject("f6"));
+							
+							dojo.byId('f6_checkbox1').checked = false;
+							dojo.byId('f6_checkbox2').checked = true;
+							dojo.byId('f6_radio1').checked = true;
+							t.is(f6fo1 , dojo.formToObject("f6"));
+
+							dojo.byId('f6_checkbox1').checked = true;
+							t.is(f6fo2 , dojo.formToObject("f6"));
+
+							dojo.byId('f6_checkbox2').checked = false; // reset back to defaults
+							dojo.byId('f6_radio2').checked = true;
+						},
+						function formToObjectWithMultiSelect(t){
+							t.is(f2fo , dojo.formToObject("f2"));
+						},
+						function objectToQuery(t){
+							t.is(f1foStr , dojo.objectToQuery(f1fo));
+							t.is(f5foStr , dojo.objectToQuery(f5fo));
+						},
+						function objectToQueryArr(t){
+							t.is(f2foStr, dojo.objectToQuery(f2fo));
+						},
+						function formToQuery(t){
+							t.is(f1foStr, dojo.formToQuery("f1"));
+							t.is(f5foStr, dojo.formToQuery("f5"));
+						},
+						function formToQueryArr(t){
+							t.is(f2foStr, dojo.formToQuery("f2"));
+						},
+						function formToJson(t){
+							t.is(f1foJson, dojo.formToJson("f1"));
+							t.is(dojo.fromJson(f5foJson), dojo.fromJson(dojo.formToJson("f5")));
+						},
+						function formToJsonArr(t){
+							t.is(f2foJson, dojo.formToJson("f2"));
+						},
+						function queryToObject(t){
+							t.is(f1fo , dojo.queryToObject(f1foStr));
+							t.is(f2fo , dojo.queryToObject(f2foStr));
+							t.is(f3fo , dojo.queryToObject(f3foStr));
+							t.is(f5fo , dojo.queryToObject(f5foStr));
+						},
+						function textContentHandler(t){
+							t.is("foo bar baz ", 
+								dojo._contentHandlers.text({
+									responseText: "foo bar baz "
+								})
+							);
+						},
+						function jsonContentHandler(t){
+							var jsonObj = {
+								foo: "bar",
+								baz: [
+									{ thonk: "blarg" },
+									"xyzzy!"
+								]
+							};
+							t.is(jsonObj, 
+								dojo._contentHandlers.json({
+									responseText: dojo.toJson(jsonObj)
+								})
+							);
+						},
+						function jsonCFContentHandler(t){
+							var jsonObj = {
+								foo: "bar",
+								baz: [
+									{ thonk: "blarg" },
+									"xyzzy!"
+								]
+							};
+							var e;
+							try{
+								dojo._contentHandlers["json-comment-filtered"]({
+									responseText: dojo.toJson(jsonObj)
+								})
+							}catch(ex){
+								e = ex;
+							}finally{
+								// did we fail closed?
+								t.is((typeof e), "object");
+							}
+							t.is(jsonObj,
+								dojo._contentHandlers["json-comment-filtered"]({
+									responseText: "\tblag\n/*"+dojo.toJson(jsonObj)+"*/\n\r\t\r"
+								})
+							);
+							t.is(jsonObj,
+								dojo._contentHandlers["json-comment-optional"]({
+									responseText: "\tblag\n/*"+dojo.toJson(jsonObj)+"*/\n\r\t\r"
+								})
+							);
+						},
+						function jsContentHandler(t){
+							var jsonObj = {
+								foo: "bar",
+								baz: [
+									{ thonk: "blarg" },
+									"xyzzy!"
+								]
+							};
+							t.is(jsonObj,
+								dojo._contentHandlers["javascript"]({
+									responseText: "("+dojo.toJson(jsonObj)+")"
+								})
+							);
+							t.t(dojo._contentHandlers["javascript"]({
+									responseText: "true;"
+								})
+							);
+							t.f(dojo._contentHandlers["javascript"]({
+									responseText: "false;"
+								})
+							);
+						},
+						function xmlContentHandler(t){
+							var fauxXhr = { responseText: "<foo><bar baz='thonk'>blarg</bar></foo>" };
+							if("DOMParser" in dojo.global){
+								var parser = new DOMParser();
+								fauxXhr.responseXML = parser.parseFromString(fauxXhr.responseText, "text/xml");
+							}
+							var xmlDoc = dojo._contentHandlers["xml"](fauxXhr);
+							t.is("foo", xmlDoc.documentElement.tagName);
+						},
+						function xhrGet(t){
+							var d = new doh.Deferred();
+							var td = dojo.xhrGet({
+								url: "xhr.html", // self
+								preventCache: true,
+								load: function(text, ioArgs){
+									t.is(4, ioArgs.xhr.readyState);
+									return text; //must return a value here or the parent test deferred fails.
+								}
+							});
+							t.t(td instanceof dojo.Deferred);
+							td.addCallback(d, "callback");
+							return d;
+						},
+						function xhrGet404(t){
+							var d = new doh.Deferred();
+							try{
+								var td = dojo.xhrGet({
+									url: "xhr_blarg.html", // doesn't exist
+									error: function(err, ioArgs){
+										t.is(404, ioArgs.xhr.status);
+										return err; //must return a value here or the parent test deferred fails.
+									}
+								});
+								// td.addErrback(d, "callback");
+							}catch(e){
+								d.callback(true);
+							}
+							// return d;
+						},
+						function xhrGetContent(t){
+							var d = new doh.Deferred();
+							var td = dojo.xhrGet({
+								url: "xhr.html?color=blue",
+								content: {
+									foo: [ "bar", "baz" ],
+									thud: "thonk",
+									xyzzy: 3
+								}
+							});
+							td.addCallback(function(text){
+								// console.debug(td, td.xhr, td.args);
+								t.is("xhr.html?color=blue&foo=bar&foo=baz&thud=thonk&xyzzy=3", 
+										td.ioArgs.url);
+								d.callback(true);
+							});
+							return d;
+						},
+						function xhrGetForm(t){
+							var d = new doh.Deferred();
+							var td = dojo.xhrGet({
+								url: "xhr.html", // self
+								form: "f3"
+							});
+							td.addCallback(function(xhr){
+								// console.debug(td.args.url);
+								t.is("xhr.html?spaces=string%20with%20spaces", td.ioArgs.url);
+								d.callback(true);
+							});
+							return d;
+						},
+						function xhrGetFormWithContent(t){
+							// ensure that stuff passed via content over-rides
+							// what's specified in the form
+							var d = new doh.Deferred();
+							var td = dojo.xhrGet({
+								url: "xhr.html", // self
+								form: "f3",
+								content: { spaces: "blah" }
+							});
+							td.addCallback(function(xhr){
+								// console.debug(td.args.url);
+								t.is("xhr.html?spaces=blah", td.ioArgs.url);
+								d.callback(true);
+							});
+							return d;
+						},
+						function xhrPost(t){
+							var d = new doh.Deferred();
+							var td = dojo.xhrPost({
+								url: "xhr.html?foo=bar", // self
+								content: { color: "blue"},
+								handle: function(res, ioArgs){
+									if((dojo._isDocumentOk(ioArgs.xhr))||
+										(ioArgs.xhr.status == 405)
+									){
+										d.callback(true);
+									}else{
+										d.errback(false);
+									}								
+								}
+							});
+							// t.t(td instanceof dojo.Deferred);
+							return d;
+						},
+						function xhrPostWithContent(t){
+							var d = new doh.Deferred();
+							var td = dojo.xhrPost({
+								url: "xhr.html",
+								content: {
+									foo: [ "bar", "baz" ],
+									thud: "thonk",
+									xyzzy: 3
+								}
+							});
+							td.addBoth(function(text){
+								t.is("foo=bar&foo=baz&thud=thonk&xyzzy=3", 
+										td.ioArgs.query);
+								if(	(dojo._isDocumentOk(td.ioArgs.xhr))||
+									(td.ioArgs.xhr.status == 405)
+								){
+									d.callback(true);
+								}else{
+									d.errback(false);
+								}
+							});
+							return d;
+						},
+						function xhrPostForm(t){
+							var d = new doh.Deferred();
+							var form = dojo.byId("f4");
+
+							//Make sure we can send a form to its 
+							//action URL.   See trac: #2844.
+							var td = dojo.xhrPost({
+								form: form
+							});
+							td.addCallback(function(){
+								d.callback(true);
+							});
+							td.addErrback(function(error){
+								d.callback(error);
+							});
+							// t.t(td instanceof dojo.Deferred);
+							return d;
+						},
+						function rawXhrPost(t){
+							var d = new doh.Deferred();
+							var td = dojo.rawXhrPost({
+								url: "xhr.html", // self
+								postData: "foo=bar&color=blue&height=average",
+								handle: function(res, ioArgs){
+									if((dojo._isDocumentOk(ioArgs.xhr))||
+										(ioArgs.xhr.status == 405)
+									){
+										d.callback(true);
+									}else{
+										d.errback(false);
+									}								
+								}
+							});
+							// t.t(td instanceof dojo.Deferred);
+							return d;
+						},
+						function xhrPut(t){
+							var d = new doh.Deferred();
+							var td = dojo.xhrPut({
+								url: "xhrDummyMethod.php?foo=bar", // self
+								content: { color: "blue"},
+								handle: function(res, ioArgs){
+									if((dojo._isDocumentOk(ioArgs.xhr))||
+										(ioArgs.xhr.status == 403)
+									){
+										d.callback(true);
+									}else{
+										d.errback(false);
+									}								
+								}
+							});
+							// t.t(td instanceof dojo.Deferred);
+							return d;
+						},
+						function xhrDelete(t){
+							var d = new doh.Deferred();
+							var td = dojo.xhrDelete({
+								url: "xhrDummyMethod.php", // self
+								preventCache: true,
+								handle: function(res, ioArgs){
+									if((dojo._isDocumentOk(ioArgs.xhr))||
+										(ioArgs.xhr.status == 403)
+									){
+										d.callback(true);
+									}else{
+										d.errback(false);
+									}								
+								}
+							});
+							// t.t(td instanceof dojo.Deferred);
+							return d;
+						},
+						function xhrCancel(t){
+							var d = new doh.Deferred();
+							var td = dojo.xhrPost({
+								url: "xhrDummyMethod.php", // self
+								handle: function(res, ioArgs){
+									if(res instanceof Error && res.dojoType == "cancel"){
+										d.callback(true);
+									}else{
+										d.errback(false);
+									}								
+								}
+							});
+							td.cancel();
+							// t.t(td instanceof dojo.Deferred);
+							return d;
+						},
+
+						function ioPublish(t){
+							// TODO: this test needs to be rewritten as it is unreliable with the
+							// 1.7 bootstrap that uses dojo.xhr
+							return;
+
+							//These numbers will look a bit odd at this point, since
+							//some of the topics publish after this test is run.
+							
+							t.is(1, topicCount["/dojo/io/start"]);
+							t.is(12, topicCount["/dojo/io/send"]);
+							t.is(9, topicCount["/dojo/io/load"]);
+							t.is(2, topicCount["/dojo/io/error"]);
+							t.is(11, topicCount["/dojo/io/done"]);
+							t.is(0, topicCount["/dojo/io/stop"]);
+
+							/*
+							dojo.forEach(topics, function(topic){
+								console.log(topic + ": " + topicCount[topic]);
+							});
+							*/
+						}
+					]
+				);
+				doh.runOnLoad();
+			});
+		</script>
+	</head>
+	<body>
+		<form id="f1" style="border: 1px solid black;">
+			<input id="f1_blah" type="text" name="blah" value="blah">
+			<input id="f1_no_value" type="text" name="no_value" value="blah" disabled>
+			<input  id="f1_no_value2" type="button" name="no_value2" value="blah">
+		</form>
+		<form id="f2" style="border: 1px solid black;">
+			<input id="f2_blah" type="text" name="blah" value="blah">
+			<input id="f2_no_value" type="text" name="no_value" value="blah" disabled>
+			<input  id="f2_no_value2" type="button" name="no_value2" value="blah">
+			<select  id="f2_multi" type="select" multiple name="multi" size="5">
+				<option value="blah">blah</option>
+				<option value="thud" selected>thud</option>
+				<option value="thonk" selected>thonk</option>
+			</select>
+			<textarea id="f2_textarea" name="textarea">textarea_value</textarea>
+			<button id="f2_button1" name="button1" value="buttonValue1">This is a button that should not be in formToObject.</button>
+			<input id="f2_fileParam1" type="file" name="fileParam1" value="fileValue1"> File input should not show up in formToObject.
+		</form>
+		<form id="f3" style="border: 1px solid black;">
+			<input id="f3_spaces" type="hidden" name="spaces" value="string with spaces">
+		</form>
+		<form id="f4" style="border: 1px solid black;" action="xhrDummyMethod.php">
+			<input id="f4_action" type="hidden" name="action" value="Form with input named action">
+		</form>
+		<form id="f5" style="border: 1px solid black;">
+			<input id="f5_blah" type="text" name="blåh" value="bláh">
+			<input id="f5_no_value" type="text" name="no_value" value="blah" disabled>
+			<input id="f5_no_value2" type="button" name="no_value2" value="blah">
+		</form>
+		<form id="f6" style="border: 1px solid black;">
+			<input id="f6_checkbox1" type="checkbox" name="cb_group" value="foo" checked>
+			<input id="f6_checkbox2" type="checkbox" name="cb_group" value="boo">
+			<input id="f6_radio1" type="radio" name="radio_group" value="baz">
+			<input id="f6_radio2" type="radio" name="radio_group" value="bam" checked>
+		</form>
+	</body>
+</html>
+

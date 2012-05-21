@@ -1,0 +1,87 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	
+	<title>dojox.timing.Sequence class</title>
+
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+	</style>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: true" ></script>
+	<!--
+	<script type="text/javascript" src="../Sequence.js"></script>
+	-->
+	<script type="text/javascript">
+		dojo.require("dojox.timing.Sequence"); 
+
+		var seqObj = null,
+			outputNode = null,
+			otherObj = null;
+
+		dojo.addOnLoad(function(){
+			outputNode = dojo.byId('logBox'); 
+			seqObj = new dojox.timing.Sequence({});
+		 	otherObj = new dojox.timing.Sequence({});
+		});
+
+		function runSequence(){
+			outputNode.innerHTML = ""; 
+			seqObj.go(seq, function() { logMsg('done') });
+			otherObj.go(otherSeq, function(){ console.log('other done'); });
+		};
+
+		function logMsg(msg){
+			outputNode.innerHTML += msg + "<br>"; 
+		}
+	
+		function showMessage(msg) {
+			logMsg(msg);
+		}
+
+		function returnWhenDone() {
+			logMsg("in returnWhenDone");
+			setTimeout(continueSequence, 1000);
+			return false;
+		}
+
+		function continueSequence() {
+		// continue the sequence run
+			seqObj.goOn();
+		}
+			// this is our example sequence array:
+		var seq = [
+			{ func: [showMessage, window, "i am first"], pauseAfter: 1000 },
+			{ func: [showMessage, window, "after 1000ms pause this should be seen"], pauseAfter: 2000 },
+			{ func: [showMessage, window, "another 2000ms pause and 1000ms pause before"], pauseAfter: 1000 },
+			{ func: [showMessage, window, "repeat 10 times and pause 100ms after"], repeat: 10, pauseAfter: 100 },
+			{ func: returnWhenDone } // no array, just a function to call 
+		];
+
+		var otherSeq = [
+			{ func: [dojo.hitch(console,"log","woot"), window, "woot2?"], pauseAfter: 1000, repeat:20 }
+		];
+
+	</script>
+</head>
+<body class="tundra">
+
+	<h1>dojox.timing.Sequence tests</h1>
+
+	<br>(example code in page source)<br>
+	<input type="button" onClick="runSequence()" value="Run Sequence">
+
+	<h3>Sequence output:</h3>
+	<div id="logBox" style="width:420px; height:250px; overflow:auto; border:1px solid #ccc;">
+	</div>
+
+	<p>TODO: maybe need to put an Animation sequence example here? seems much more robust 
+	than using chains and combines with delays and durations to hack timing ... also, need
+	examples for stop() and other methods of class</p>
+
+
+
+</body>
+</html>

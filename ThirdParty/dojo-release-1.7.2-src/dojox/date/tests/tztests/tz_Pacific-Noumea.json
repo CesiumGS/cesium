@@ -1,0 +1,26 @@
+({
+	name: "date.timezone.Pacific-Noumea",
+	runTest: function(t){
+		var tz = "Pacific/Noumea";
+		doh.checkDate({tzOffset: -665.8, tzAbbr: "LMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: -665.8, tzAbbr: "LMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: -665.8, tzAbbr: "LMT"}, -1829387149000, tz, 1);
+		doh.checkDate({tzOffset: -660, tzAbbr: "NCT"}, -1829387148000, tz, 1);
+		doh.checkDate({tzOffset: -660, tzAbbr: "NCT"}, 250001999000, tz, 1);
+		doh.checkDate({tzOffset: -720, tzAbbr: "NCST"}, 250002000000, tz, 1);
+		doh.checkDate({tzOffset: -720, tzAbbr: "NCST"}, 257342399000, tz, 1);
+		doh.checkDate({tzOffset: -660, tzAbbr: "NCT"}, 257342400000, tz, 1);
+		doh.checkDate({tzOffset: -660, tzAbbr: "NCT"}, 281451599000, tz, 1);
+		doh.checkDate({tzOffset: -720, tzAbbr: "NCST"}, 281451600000, tz, 1);
+		doh.checkDate({tzOffset: -720, tzAbbr: "NCST"}, 288878399000, tz, 1);
+		doh.checkDate({tzOffset: -660, tzAbbr: "NCT"}, 288878400000, tz, 1);
+		doh.checkDate({tzOffset: -660, tzAbbr: "NCT"}, 849365999000, tz, 1);
+		doh.checkDate({tzOffset: -720, tzAbbr: "NCST"}, 849366000000, tz, 1);
+		doh.checkDate({tzOffset: -720, tzAbbr: "NCST"}, 857228399000, tz, 1);
+		doh.checkDate({tzOffset: -660, tzAbbr: "NCT"}, 857228400000, tz, 1);
+		doh.checkDate({tzOffset: -660, tzAbbr: "NCT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: -660, tzAbbr: "NCT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: -660, tzAbbr: "NCT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: -660, tzAbbr: "NCT"}, 1246789800000, tz, 0);
+	}
+})

@@ -1,0 +1,122 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+		<title>Demo GridContainer</title>
+
+		<style type="text/css" title="text/css">
+			@import "../../../dojo/resources/dojo.css";
+			@import "../../../dijit/themes/tundra/tundra.css";
+			
+			html, body{
+				margin:0;
+				padding:1%;
+			}
+
+			.cpane{
+				border:1px solid #666;
+				font:bold 12px Arial;
+				color:#666;
+				background:#FFF;
+				padding:10px;
+			}
+			
+			.gridContainerPopup{
+				position:absolute;
+				top:40%;
+				left:40%;
+				width:200px;
+				height:auto;	
+				border:1px solid #BFBFBF;
+				background-color:#FFF;
+				text-align:center;
+				padding:10px;
+			}
+			
+			.dj_ie6 .orange .gridContainerPopup{
+				top:10%;
+			}
+			
+			.dj_ie6 .dropIndicator, .dj_ie6 .dijitContentpane, .dj_ie6 .dijitCalendar{
+				margin: 10px;
+			}
+			.gridContainerZone > *{
+				margin: 10px !important;
+			}
+		</style>
+		
+		<link rel="stylesheet" href="../resources/GridContainer.css">
+		
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+		<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+		
+		<script type="text/javascript">
+			dojo.require("dojo.parser");
+			dojo.require("dijit.TitlePane");
+			dojo.require("dijit.layout.ContentPane");
+			dojo.require("dojox.layout.GridContainerLite");
+			dojo.require("dijit.Calendar");
+
+			var canDisplayPopup = true;
+			
+			function displayPopup(gridContainer) {
+				//	summary:
+				//		Display a popup when a widget can not be moved (not accepted type)
+
+				if(canDisplayPopup){
+					canDisplayPopup = false;
+					var popup = dojo.doc.createElement("div");
+					dojo.addClass(popup, "gridContainerPopup");
+					popup.innerHTML = "Impossible to move this widget ! ";
+					var attachPopup = dijit.byId("GC1").containerNode.appendChild(popup);
+					setTimeout(dojo.hitch(this, function(){
+						dijit.byId("GC1").containerNode.removeChild(attachPopup);
+						dojo.destroy(attachPopup);
+						canDisplayPopup = true;
+					}), 1500);
+				}
+			};
+
+			dojo.addOnLoad(function(){
+				dojo.subscribe("/dojox/layout/gridContainer/moveRestriction",displayPopup);
+			});
+	
+				
+
+		</script>
+
+	</head>
+
+	<body class="tundra">
+		
+		<h1 class="testTitle">Grid Container Lite</h1>
+		<h2>Accessibility</h2>
+			<ul>
+				<li>Possibility to move focus into the GridContainer (TAB, LEFT ARROW, RIGHT ARROW, UP ARROW, DOWN ARROW).</li>
+				<li>Possibility to move GridContainer's children (Drag and Drop) with keyboard. (SHIFT + LEFT ARROW or RIGHT ARROW or UP ARROW or DOWN ARROW). To test dnd restriction, try to move a TitlePane widget...</li>
+			</ul>
+		<h2>Grid Container (acceptTypes="ContentPane, Calendar", nbZones="3", isAutoOrganized="true", doLayout="false")</h2>
+			
+			<div id="GC1" dojoType="dojox.layout.GridContainerLite" 
+				nbZones="3"
+				hasResizableColumns="false" 
+				doLayout="false" 
+				acceptTypes="ContentPane, Calendar">
+					<div dojoType="dijit.layout.ContentPane" class="cpane" label="Content Pane" dndType="ContentPane" >Content Pane n°1 !</div>
+					<div dojoType="dijit.TitlePane" title="Ergo" dndType="TitlePane" >
+						Non ergo erunt homines deliciis diffluentes audiendi, si quando de amicitia, quam nec usu nec ratione habent cognitam, disputabunt. Nam quis est, pro deorum fidem atque hominum! qui velit, ut neque diligat quemquam nec ipse ab ullo diligatur, circumfluere omnibus copiis atque in omnium rerum abundantia vivere? Haec enim est tyrannorum vita nimirum, in qua nulla fides, nulla caritas, nulla stabilis benevolentiae potest esse fiducia, omnia semper suspecta atque sollicita, nullus locus amicitiae.
+					</div>
+					<div dojoType="dijit.layout.ContentPane" class="cpane" label="Content Pane" dndType="ContentPane">Content Pane n°2 !</div>
+			  		<div dojoType="dijit.layout.ContentPane" title="Intellectum" dndType="ContentPane">
+			  			Intellectum est enim mihi quidem in multis, et maxime in me ipso, sed paulo ante in omnibus, cum M. Marcellum senatui reique publicae concessisti, commemoratis praesertim offensionibus, te auctoritatem huius ordinis dignitatemque rei publicae tuis vel doloribus vel suspicionibus anteferre. Ille quidem fructum omnis ante actae vitae hodierno die maximum cepit, cum summo consensu senatus, tum iudicio tuo gravissimo et maximo. Ex quo profecto intellegis quanta in dato beneficio sit laus, cum in accepto sit tanta gloria.
+			  		</div>
+			  		
+					<div dojoType="dijit.layout.ContentPane" class="cpane" label="Content Pane" dndType="ContentPane">Content Pane n°3 !</div>
+					<div dojoType="dijit.layout.ContentPane" class="cpane" label="Content Pane" dndType="ContentPane">Content Pane n°4 !</div>
+					<div dojoType="dijit.Calendar" dndType="Calendar"></div>
+			</div>
+		
+	</body>
+</html>

@@ -1,0 +1,78 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+
+	<title>ScrollPane layout widget Test</title>
+
+	<!-- required: a default theme file -->
+	<link rel="stylesheet" id="themeStyles" href="../../../dijit/themes/tundra/tundra.css">
+	<link rel="stylesheet" href="../resources/ScrollPane.css">	
+
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: false"></script>
+
+	<!-- do not use! only for testing dynamic themes -->
+	<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+
+	<script language="JavaScript" type="text/javascript">
+		dojo.require("dojo.parser");
+		dojo.require("dojox.layout.ScrollPane");
+		dojo.addOnLoad(function(){
+			var i;
+			var n = dojo.byId("hold");
+			var c = dojo.query(".clone")[0];
+			for(i=0; i<12; i++){
+				var b = dojo.clone(c);
+				n.appendChild(b); // dojo.clone(dojo.byId("clone")));
+			}
+			dojo.parser.parse();
+//			dijit.byId("horiz").layout(); 
+		});
+	</script>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+
+		.dojoxScrollWindow {
+			position:relative;
+		}
+		.dojoxScrollHelper .helperInner {
+			visibility:hidden;
+		}
+		.dojoxScrollHelper {
+			border:1px solid #b7b7b7;
+			width:4px;
+			background:#ededed;
+			height:3px;
+			position:absolute;
+			bottom:2px;
+			left:4px; 
+		}
+		#altStyle .dojoxScrollHelper {
+			-moz-border-radius:3pt;
+			background:#b7cdee;
+			border:2px solid #333;
+			width:3px;
+		}
+		
+		.container { width:602px; margin:0 auto; }
+		.example { padding:20px; margin:5px; border:1px dotted #b7b7b7; } 
+	</style>
+
+</head>
+<body class="tundra">
+
+<div class="container">
+	<h1 class='testTitle'>dojox.layout.ScrollPane</h1>
+	<h2>horizontal</h2>
+	<div dojoType="dojox.layout.ScrollPane" orientation="horizontal"  style="width:600px; height:125px" id="horiz">
+		<div class="dijitInline" id="hold">
+			<div class="dijitInline clone example">
+				<h2>Foo!</h2><div>text <ul><li>bar</li><li>bar</li></ul></div>
+			</div>
+		</div>
+	</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,58 @@
+({
+	name: "date.timezone.Africa-Casablanca",
+	runTest: function(t){
+		var tz = "Africa/Casablanca";
+		doh.checkDate({tzOffset: 30.3333333333333, tzAbbr: "LMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: 30.3333333333333, tzAbbr: "LMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: 30.3333333333333, tzAbbr: "LMT"}, -1773012581000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "WET"}, -1773012580000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "WET"}, -956361601000, tz, 1);
+		doh.checkDate({tzOffset: -60, tzAbbr: "WEST"}, -956361600000, tz, 1);
+		doh.checkDate({tzOffset: -60, tzAbbr: "WEST"}, -950490001000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "WET"}, -950490000000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "WET"}, -942019201000, tz, 1);
+		doh.checkDate({tzOffset: -60, tzAbbr: "WEST"}, -942019200000, tz, 1);
+		doh.checkDate({tzOffset: -60, tzAbbr: "WEST"}, -761187601000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "WET"}, -761187600000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "WET"}, -617241601000, tz, 1);
+		doh.checkDate({tzOffset: -60, tzAbbr: "WEST"}, -617241600000, tz, 1);
+		doh.checkDate({tzOffset: -60, tzAbbr: "WEST"}, -605149201000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "WET"}, -605149200000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "WET"}, -81432001000, tz, 1);
+		doh.checkDate({tzOffset: -60, tzAbbr: "WEST"}, -81432000000, tz, 1);
+		doh.checkDate({tzOffset: -60, tzAbbr: "WEST"}, -71110801000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "WET"}, -71110800000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "WET"}, 141263999000, tz, 1);
+		doh.checkDate({tzOffset: -60, tzAbbr: "WEST"}, 141264000000, tz, 1);
+		doh.checkDate({tzOffset: -60, tzAbbr: "WEST"}, 147221999000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "WET"}, 147222000000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "WET"}, 199756799000, tz, 1);
+		doh.checkDate({tzOffset: -60, tzAbbr: "WEST"}, 199756800000, tz, 1);
+		doh.checkDate({tzOffset: -60, tzAbbr: "WEST"}, 207701999000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "WET"}, 207702000000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "WET"}, 231292799000, tz, 1);
+		doh.checkDate({tzOffset: -60, tzAbbr: "WEST"}, 231292800000, tz, 1);
+		doh.checkDate({tzOffset: -60, tzAbbr: "WEST"}, 244249199000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "WET"}, 244249200000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "WET"}, 265507199000, tz, 1);
+		doh.checkDate({tzOffset: -60, tzAbbr: "WEST"}, 265507200000, tz, 1);
+		doh.checkDate({tzOffset: -60, tzAbbr: "WEST"}, 271033199000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "WET"}, 271033200000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "WET"}, 448243199000, tz, 1);
+		doh.checkDate({tzOffset: -60, tzAbbr: "CET"}, 448243200000, tz, 1);
+		doh.checkDate({tzOffset: -60, tzAbbr: "CET"}, 504917999000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "WET"}, 504918000000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "WET"}, 1212278399000, tz, 1);
+		doh.checkDate({tzOffset: -60, tzAbbr: "WEST"}, 1212278400000, tz, 1);
+		doh.checkDate({tzOffset: -60, tzAbbr: "WEST"}, 1220223599000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "WET"}, 1220223600000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "WET"}, 1243814399000, tz, 1);
+		doh.checkDate({tzOffset: -60, tzAbbr: "WEST"}, 1243814400000, tz, 1);
+		doh.checkDate({tzOffset: -60, tzAbbr: "WEST"}, 1250809199000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "WET"}, 1250809200000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "WET"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "WET"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "WET"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: -60, tzAbbr: "WEST"}, 1246789800000, tz, 0);
+	}
+})

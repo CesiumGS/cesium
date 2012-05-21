@@ -1,0 +1,305 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<!--
+	we use a strict-mode DTD to ensure that the box model is the same for these
+	basic tests
+-->
+<html>
+	<head>
+		<title>testing Core HTML/DOM/CSS/Style utils</title>
+		<style type="text/css">
+			@import "../../resources/dojo.css";
+		</style>
+		<script type="text/javascript" src="../../dojo.js" data-dojo-config="isDebug:true"></script>
+		<script type="text/javascript">
+			require(["dojo", "doh", "dojo/domReady!"], function(dojo, doh){
+			
+				doh.register("t", 
+					[
+					
+						function createBasic(t){
+							// test plain creation
+							var n = dojo.create("div");
+							dojo.byId("holder1").appendChild(n);
+							dojo.addClass(n, "testing");
+							var q = dojo.query(".testing");
+							
+							doh.is(1, q.length);
+							doh.is("div", n.nodeName.toLowerCase());
+						},
+						
+						function createAttrs(t){
+							// test attr creation, no placement
+							var n = dojo.create('div', {
+								"class":"hasClass",
+								title:"foo",
+								style:"border:2px solid #ededed; padding:3px"
+							});
+							// plain placement:
+							dojo.byId("holder1").appendChild(n);
+							
+							doh.t(dojo.hasClass(n, "hasClass"));
+							doh.is("foo", dojo.attr(n, "title"));
+							//FIXME: apparently attr(n, "style", "foo:bar; baz:bam;") doesn't work in IE?
+							// need to test further in attr or document.
+							//doh.is(3, dojo.style(n, "padding"));
+						},
+						
+						function createPlace(t){
+							// test only creation and placement, no attr
+							var n = dojo.create("div", null, dojo.body());
+							n.innerHTML = "<p class='bar'>a</p>";
+							var q = dojo.query("p", n);
+							
+							doh.is(1, q.length);
+							doh.t(dojo.hasClass(q[0], "bar"));
+						},
+						
+						function createHtml(t){
+							// test creation, placement, and attr (innerHTML)
+							var n = dojo.create("div", {
+								innerHTML: "<p class='bar2'>a</p>"
+							}, dojo.body());
+							var q = dojo.query("p", n);
+							
+							doh.is(1, q.length);
+							doh.t(dojo.hasClass(q[0], "bar2"));
+						},
+						
+						function createPlaceRef(t){
+							// test creation and referenced placement, with some attr
+							var ref = dojo.query("#holder2 > li.last")[0];
+							
+							var n = dojo.create("li", { 
+								innerHTML:"middle", "class":"middleNode"
+							}, ref, "before");
+							
+							doh.is(3, dojo.query("#holder2 li").length);
+							
+							var nn = dojo.create("li", { 
+								innerHTML:"afterLast", "class":"afterLast"
+							}, ref, "after");
+							
+							// FIXME: this is dependant on query() retaining DOM order. 
+							//		is that safe? nextSibling and friends are a PITA
+							var classes = ["first", "middleNode", "last", "afterLast"];
+							var q = dojo.query("#holder2 li");
+							doh.is(4, q.length);
+							
+							q.forEach(function(n, i){
+								doh.is(classes[i], n.className);
+							});
+							
+						},
+						
+						function destroyList(t){
+							// destroy node byId
+							dojo.destroy("holder2");
+							doh.f(dojo.byId("holder2"));
+							// destroyed because is child of holder
+							doh.is(0, dojo.query(".first").length);
+						},
+						
+						function createList(t){
+							// test creation/placement of a variety of node tags
+							var es = ["div", "a", "span", "br", "table", "ul", "dd", "img", "h2"];
+							dojo.forEach(es, function(el){
+								dojo.create(el, null, "holder3");
+							});
+							var q = dojo.query(">", "holder3");
+							doh.is(q.length, es.length);
+							
+							// destroy this list:
+							q.forEach(dojo.destroy);
+							q = dojo.query(">", "holder3");
+							doh.is(q.length, 0);
+							
+						},
+						
+						function destroyAll(t){
+							var c = function(){
+								// eg: don't destroy firebug lite in page
+								return dojo.query("body >").filter(function(n){
+									return !dojo.hasClass(n, "firebug");
+								})
+							};
+							c().forEach(dojo.destroy);
+
+							// check for deepest embeeded id
+							doh.f(dojo.byId("ancFoo"));
+							doh.is(0, c().length);
+						},
+
+						function recreateOneV1(t){
+							var n = dojo.create("h2", {
+								"class":"restored",
+								innerHTML:"<span>The End</span>"
+							}, dojo.body());
+							
+							doh.is(1, dojo.query(".restored").length);
+							dojo.destroy(n);
+						},
+
+						function recreateOneV2(t){
+							var n = dojo.place("<h2 class='restored'><span>The End</span></h2>", dojo.body());
+							doh.is(1, dojo.query(".restored").length);
+							dojo.destroy(n);
+						},
+
+						function emptyDiv(t){
+							var n = dojo.create("div", {
+								innerHTML: "1<span class='red'>2</span>3<em custom='x'>4</em>5"
+							});
+							doh.isNot("", n.innerHTML);
+							dojo.empty(n);
+							doh.is("", n.innerHTML);
+							dojo.destroy(n);
+						},
+
+						function emptyTable(t){
+							var table = dojo.create("table", null, dojo.body()),
+								tr1 = dojo.create("tr", null, table),
+								td1 = dojo.create("td", {innerHTML: "a"}, tr1),
+								td2 = dojo.create("td", {innerHTML: "b"}, tr1),
+								tr2 = dojo.create("tr", null, table),
+								td3 = dojo.create("td", {innerHTML: "c"}, tr2),
+								td4 = dojo.create("td", {innerHTML: "d"}, tr2);
+							doh.isNot("", table.innerHTML);
+							dojo.empty(table);
+							doh.is("", table.innerHTML);
+							dojo.destroy(table);
+						},
+
+						function toDomSpans(t){
+							var n = dojo._toDom("<span>1</span><span>2</span>");
+							doh.is(2, n.childNodes.length);
+							doh.is("span", n.firstChild.tagName.toLowerCase());
+							doh.is("1", n.firstChild.innerHTML);
+							doh.is("span", n.lastChild.tagName.toLowerCase());
+							doh.is("2", n.lastChild.innerHTML);
+						},
+
+						function toDomTr(t){
+							var n = dojo._toDom("<tr><td>First!</td></tr>");
+							doh.is("tr", n.tagName.toLowerCase());
+							doh.is(1, n.childNodes.length);
+							doh.is("td", n.firstChild.tagName.toLowerCase());
+							doh.is("First!", n.firstChild.innerHTML);
+						},
+
+						function toDomText(t){
+							var n = dojo._toDom("Hello, world!");
+							doh.is(3, n.nodeType);
+							doh.is("Hello, world!", n.nodeValue);
+						},
+
+						function toDomOption(t){
+							var n = dojo._toDom('<option value="1">First</option>');
+							doh.f(n.selected);
+
+							var n = dojo._toDom('<option value="1" selected="selected">First</option>');
+							doh.t(n.selected);
+
+							n = dojo._toDom('<option value="1">First</option><option value="2" selected>Second</option>');
+							doh.f(n.childNodes[0].selected);
+							doh.t(n.childNodes[1].selected);
+						},
+
+						function placeDivs(t){
+							dojo.place("<p class='disposable'>2</p>", dojo.body());
+							var n = dojo.query("body > .disposable")[0];
+							dojo.place("<p class='disposable'>0</p><p class='disposable'>1</p>", n, "before");
+							dojo.place("<p class='disposable'>3</p><p class='disposable'>4</p>", n, "after");
+							dojo.place("<span>a</span>", n, "first");
+							dojo.place("<span>z</span>", n, "last");
+							n = dojo.query("body > .disposable");
+							doh.is(5, n.length);
+							doh.is("0", n[0].innerHTML);
+							doh.is("1", n[1].innerHTML);
+							doh.is("3", n[3].innerHTML);
+							doh.is("4", n[4].innerHTML);
+							doh.is("<span>a</span>2<span>z</span>", n[2].innerHTML.toLowerCase());
+							n.forEach(dojo.destroy);
+						},
+
+						function placeTable(t){
+							dojo.place("<table class='disposable'><tbody></tbody></table>", dojo.body());
+							var n = dojo.query("body > table.disposable > tbody")[0];
+							dojo.place("<tr><td>2</td></tr>", n);
+							dojo.place("<tr><td>0</td></tr><tr><td>1</td></tr>", n, "first");
+							dojo.place("<tr><td>3</td></tr><tr><td>4</td></tr>", n, "last");
+							n = dojo.query("body > table.disposable tr");
+							doh.is(5, n.length);
+							doh.is("<td>0</td>", n[0].innerHTML.toLowerCase());
+							doh.is("<td>1</td>", n[1].innerHTML.toLowerCase());
+							doh.is("<td>2</td>", n[2].innerHTML.toLowerCase());
+							doh.is("<td>3</td>", n[3].innerHTML.toLowerCase());
+							doh.is("<td>4</td>", n[4].innerHTML.toLowerCase());
+							dojo.query("body > table.disposable").forEach(dojo.destroy);
+						},
+
+						function placeReplace(t){
+							dojo.place("<p class='disposable'>2</p>", dojo.body());
+							var n = dojo.query("body > .disposable")[0];
+							dojo.place("<p class='disposable'>0</p><p class='disposable'>1</p>", n, "replace");
+							n = dojo.query("body > .disposable");
+							doh.is(2, n.length);
+							doh.is("0", n[0].innerHTML);
+							doh.is("1", n[1].innerHTML);
+							n.forEach(dojo.destroy);
+						},
+
+						function placeOnly(t){
+							dojo.place("<p class='disposable'><em>1</em>2<strong>3</strong></p>", dojo.body());
+							var n = dojo.query("body > .disposable")[0];
+							dojo.place("<span>42</span>99", n, "only");
+							n = dojo.query("body > .disposable");
+							doh.is(1, n.length);
+							doh.is("<span>42</span>99", n[0].innerHTML.toLowerCase());
+							n.forEach(dojo.destroy);
+						},
+						
+						function placeNumber(t){
+							var n = dojo.place("<p><em>1</em><em>2</em></p>", dojo.body());
+							doh.is(2, n.childNodes.length);
+							dojo.place("<span>C</span>", n, 99);
+							doh.is(3, n.childNodes.length);
+							doh.is("span", n.childNodes[2].tagName.toLowerCase());
+							doh.is("C", n.childNodes[2].innerHTML);
+							dojo.place("<span>A</span>", n, -1);
+							doh.is(4, n.childNodes.length);
+							doh.is("span", n.childNodes[0].tagName.toLowerCase());
+							doh.is("A", n.childNodes[0].innerHTML);
+							dojo.place("<span>B</span>", n, 2);
+							doh.is(5, n.childNodes.length);
+							doh.is("span", n.childNodes[2].tagName.toLowerCase());
+							doh.is("B", n.childNodes[2].innerHTML);
+							dojo.destroy(n);
+						}
+					]
+				);
+				doh.runOnLoad();
+			});
+		</script>
+	</head>
+	<body>
+		<h1>testing Core DOM utils</h1>
+		
+		<div id="holder1"></div>
+		<ul id="holder2">
+			<li class="first">first</li>
+			<li class="last">last</li>
+		</ul>
+		
+		<div id="holder3"></div>
+		
+		<p id="someId"></p>
+		
+		<div>
+			<div>
+				<a id="ancFoo" href="null.html">link</a>
+			</div>
+		</div>
+		
+	</body>
+</html>

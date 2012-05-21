@@ -1,0 +1,39 @@
+<div>     
+    <div>This repeat uses exprchar: #</div>              
+	<div data-dojo-type="dojox.mvc.Repeat" data-dojo-props="exprchar: '#', ref: 'searchRecords.Results'">
+                        <div class="row" data-dojo-type="dojox.mvc.Group" data-dojo-props="ref: '#{this.index}'">
+                            <label class="cell" for="nameInput#{this.index}">
+                                Name-#:
+                            </label>
+                       <input class="cell" data-dojo-type="dijit.form.TextBox" id="nameInput#{this.index}" data-dojo-props="ref: 'First'"/>      
+                        </div>
+    </div>
+    <div>This repeat uses exprchar: a</div>              
+	<div data-dojo-type="dojox.mvc.Repeat" data-dojo-props="exprchar: 'a', ref: 'searchRecords.Results'">
+                        <div class="row" data-dojo-type="dojox.mvc.Group" data-dojo-props="ref: 'a{this.index}'">
+                            <label class="cell" for="anameInputa{this.index}">
+                                Name-a:
+                            </label>
+                       <input class="cell" data-dojo-type="dijit.form.TextBox" id="anameInputa{this.index}" data-dojo-props="ref: 'First'"/>      
+                        </div>
+    </div>
+    <div>This repeat uses exprchar: b</div>              
+	<div data-dojo-type="dojox.mvc.Repeat" data-dojo-props="exprchar: 'b', ref: 'searchRecords.Results'">
+                        <div class="row" data-dojo-type="dojox.mvc.Group" data-dojo-props="ref: 'b{this.index}'">
+                            <label class="cell" for="bnameInputb{this.index}">
+                                Name-b:
+                            </label>
+                       <input class="cell" data-dojo-type="dijit.form.TextBox" id="bnameInputb{this.index}" data-dojo-props="ref: 'First'"/>      
+                        </div>
+    </div>
+    <div>This repeat uses exprchar: 9</div>              
+	<div data-dojo-type="dojox.mvc.Repeat" data-dojo-props="exprchar: '9', ref: 'searchRecords.Results'">
+                        <div class="row" data-dojo-type="dojox.mvc.Group" data-dojo-props="ref: '9{this.index}'">
+                            <label class="cell" for="9nameInput9{this.index}">
+                                Name-9:
+                            </label>
+                       <input class="cell" data-dojo-type="dijit.form.TextBox" id="9nameInput9{this.index}" data-dojo-props="ref: 'First'"/>      
+                        </div>
+    </div>
+    
+</div>

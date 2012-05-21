@@ -1,0 +1,93 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<script type="text/javascript" src="../../dojo.js"></script>
+
+<script type="text/javascript">
+
+	var w, start;
+	dojo.addOnLoad(function(){
+		 w = dojo.byId('ipt');
+	});
+
+	function repeat(/*String*/ testName, /*Function*/ func, /*Number*/ iters, /*Date?*/ start){
+		// summary:
+		//		Call func() for iters times
+
+		start = start || new Date();
+
+		while(iters-- > 0){
+			func();
+			if(iters % 1000 == 0){
+				// avoid locking up browser or getting "script hung" warning dialog
+				dojo.byId("log").innerHTML = "Running " + testName + " (" + iters + ")";
+				setTimeout(function(){ repeat(testName, func, iters, start)}, 0);
+				return;
+			}
+		}
+		if(typeof CollectGarbage != "undefined"){
+			CollectGarbage(); // collect garbage in IE to make it easy to read the memory levels
+		}
+		dojo.byId("log").innerHTML = "Finished " + testName + ", elapsed time = " + ((new Date()) - start)/1000 + "s";
+	}
+
+	var cc = [];
+	function disconnectTest(){
+		//console.log("repeating");		
+		dojo.forEach(cc, function(c, i, conns){
+			dojo.disconnect(c);
+		});
+		cc = [
+			dojo.connect(w, "onblur", func),
+			dojo.connect(w, "onclick", func),
+			dojo.connect(w, "onchange",func)
+		];
+	}
+
+	function func(){
+		console.log('callback triggered')
+	}
+	function destroyTest(){
+		var button = dojo.place("<button>test button</button>", dojo.body());
+		dojo.connect(button, "onclick", func);
+		dojo.destroy(button);
+	}
+	function removeTest(){
+		var button = dojo.place("<button>test button</button>", dojo.body());
+		dojo.connect(button, "onclick", func);
+		button.parentNode.removeChild(button);
+	}
+	function iframeTest(){
+		var iframe = dojo.place("<iframe style='display:none' src='connectLeaks.html?inframe'></iframe>", dojo.body());
+		setTimeout(function(){
+			dojo.destroy(iframe);
+		}, 1000);
+	}
+	if(location.search == "?inframe"){
+	
+		dojo.ready(function(){
+			var a  = [];
+			for(var i = 0; i < 100000;i++){
+				a.push({a:4});
+			}
+			dojo.connect(document.body, "unload", function(){
+				a.push(4);
+				parent.console.log("a " + a.length);
+			});
+		});
+	}
+</script>
+</head>
+
+<body class="tundra">
+	<h1>Memory leak tests</h1>
+	<p>Monitor memory usage in IE6/7 (or any browser) before/after pressing buttons below</p>
+	<button onclick="repeat('disconnect test', disconnectTest, 10000);">dojo.disconnect() test</button>
+	<button onclick="repeat('destroy test', destroyTest, 10000);">dojo.destroy() test</button>
+	<button onclick="repeat('remove test', removeTest, 10000);">remove node test</button>
+	<button onclick="repeat('iframe test', iframeTest, 10);">iframe test</button>
+	<button onclick="CollectGarbage()">Collect Garbage</button>
+	<div id="log"></div>
+	<input id='ipt' value='connect target' type=button />
+</body>
+</html>

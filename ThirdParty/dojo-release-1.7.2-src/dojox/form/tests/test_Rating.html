@@ -1,0 +1,105 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>Dojox Rating Test</title>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/themes/tundra/tundra.css";
+		@import "../../../dijit/themes/dijit.css";
+		@import "../../../dijit/tests/css/dijitTests.css"; 
+		@import "../resources/Rating.css"; 
+	</style>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: true"></script>
+	<script type="text/javascript">
+		dojo.require("dojox.form.Rating");
+		dojo.require("dojo.parser"); // scan page for widgets and instantiate them
+	</script>
+	<style>
+		/* Use bigger stars and make the node wider than the star actually is,
+		   this creates some space around the stars (use background-position to center the stars)*/
+		#rating1Box .dojoxRatingStar {
+			background-image:url(images/rating_empty.gif);
+			background-position:top center;
+			background-repeat:no-repeat;
+			height:30px;
+			width:40px;
+		}
+		
+		#rating1Box .dojoxRatingStarChecked {
+			background-image:url(images/rating_full.gif);
+		}
+		
+		#rating1Box .dojoxRatingStarHover {
+			background-image:url(images/rating_full.gif);
+			background-color:lightgrey;
+		}
+
+	</style>
+</head>
+<body class="tundra">
+
+	<h1 class="testTitle">Dojox Rating test</h1>
+
+	<h3>default usage:</h3>
+	The attribute "numStars" is not given, so the default 3 stars are shown.<br />
+	<span id="rating0" dojoType="dojox.form.Rating" onChange="dojo.query('#rating0Value')[0].innerHTML = this.value"></span>
+	The value is: <b><span id="rating0Value">0</span></b>
+	<br /><br />
+
+	<h3>5 stars:</h3>
+	The attribute "numStars" is given and set to 5, the initial value is 3.<br />
+	<span dojoType="dojox.form.Rating" numStars="5" value="3"></span>
+	<br /><br />
+
+	<h3>Customized, "my big stars":</h3>
+	The stars are bigger, and styled this way that there is space around each.
+	When hovering the background color is changed too. All this is achieved via CSS, see top of this file.
+	<br />
+	The attribute "numStars" is set to 10, so we see ten stars.
+	<div id="rating1Box">
+		<span id="rating1" dojoType="dojox.form.Rating" numStars="10">
+			<script type="dojo/event" event="onChange">
+				dojo.query('#rating1Value')[0].innerHTML = this.value;
+			</script>
+			<script type="dojo/event" event="onMouseOver" args="evt,value">
+				dojo.query('#rating1HoverValue')[0].innerHTML = value;
+			</script>
+		</span>
+		<br /><br />
+		The value is: <b><span id="rating1Value">0</span></b>
+		<br />
+		The mouse is over: <b><span id="rating1HoverValue">0</span></b>
+	</div>
+
+	<h3>Spacing</h3>
+	Surrounded by text to see that it really takes all it's space
+	Surrounded by text to see that it really takes all it's space 
+	Surrounded by text to see that it really takes all it's space
+	Surrounded by text to see that it really takes all it's space 
+	Surrounded by text to see that it really takes all it's space<div dojoType="dojox.form.Rating" numStars="5" value="1"></div>
+	Surrounded by text to see that it really takes all it's space
+	Surrounded by text to see that it really takes all it's space 
+	Surrounded by text to see that it really takes all it's space
+	Surrounded by text to see that it really takes all it's space 
+	<br /><br />
+	
+	<h3>Inside a dojo form</h3>
+	<script type="text/javascript">
+		dojo.require("dijit.form.Form");
+		dojo.require("dijit.form.FilteringSelect");
+		dojo.require("dijit.form.Button");
+	</script>
+	<form dojoType="dijit.form.Form">
+		<select dojoType="dijit.form.FilteringSelect">
+			<option>Does</option>
+			<option>this</option>
+			<option>work?</option>
+		</select>
+		<br /><br />
+		<div dojoType="dojox.form.Rating" numStars="5" value="1"></div>
+		<br /><br />
+		<button dojoType="dijit.form.Button">Click me</button>
+	</form>
+</body>
+</html>

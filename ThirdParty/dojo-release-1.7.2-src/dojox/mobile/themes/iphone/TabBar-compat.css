@@ -1,0 +1,36 @@
+/* dojox.mobile.TabBarButton */
+.dj_ie6 .mblTabBarButtonDiv, .dj_ie7 .mblTabBarButtonDiv {
+	left: auto;
+}
+.dj_ie6 .mblTabBar .mblTabBarButton {
+  display: inline; /* IE bug*/
+}
+.mblTabPanelHeader {
+	background-image: url(compat/heading-bg.png);
+}
+.mblTabContainer .mblTabButton {
+	background-image: url(compat/tab-button-bg.png);
+}
+.mblTabContainer .mblTabButtonSelected {
+	background-image: url(compat/tab-sel-button-bg.png);
+}
+*html .mblTabButton { /* IE6 hack */
+	behavior: expression(
+		(function(el){
+			if(!el.previousSibling)
+				el.style.borderWidth = "1px";
+			el.style.behavior = "none";
+		})(this)
+	);
+}
+.dj_ie6 .mblTabPanelHeader .mblDomButton {
+	left: 0px;
+}
+.mblTabButton:first-child {
+  -moz-border-radius-topleft: 5px;
+  -moz-border-radius-bottomleft: 5px;
+}
+.mblTabButton:last-child {
+  -moz-border-radius-topright: 5px;
+  -moz-border-radius-bottomright: 5px;
+}

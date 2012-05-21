@@ -1,0 +1,40 @@
+/* overwrite */
+.tundra .dojoxGridHeader .dojoxGridCell{
+	background: #fafafa url(../../../../../dijit/themes/tundra/images/titleBar.png) repeat-x bottom left;
+	border-top: 1px solid #bfbfbf;
+	/*border-left-width: 0px;*/
+}
+.tundra .dojoxGridCell {
+	padding:0px;
+	/*display:inline;*/
+	/*position:relative;*/
+	/*border-left-width: 0px;*/
+}
+.dj_ie6 .tundra .dojoxGridMasterView .dojoxGridCellOver{
+	border: 1px dashed #e9e9e9;
+}
+.dj_ie6 .tundra .dojoxGridHeader .dojoxGridCellOver{
+	border-bottom: none !important;
+	border-right: 1px solid #D5CDB5 !important;
+	border-top: 1px solid #D5CDB5 !important;
+}
+.tundra .dojoxGridRowbarInner {
+	width:20px;
+}
+.tundra .dojoxGridCellOver .dojoxGridSortNode,
+.tundra .dojoxGridCellSortFocus .dojoxGridSortNode {
+	cursor:pointer;
+	background: #f8fafd url("../../../../../dijit/themes/tundra/images/accordionItemHover.gif") bottom repeat-x;
+}
+/* end overwrite */
+
+/* fix safari focus border - overwrite */
+.dj_webkit .tundra .dojoxGridCell,
+.dj_webkit .tundra .dojoxGridCellFocus {
+	outline: none;
+}
+
+/*Pagination*/
+.tundra .dojoxGridPaginator {
+	background: url("../../../../../dijit/themes/tundra/images/titleBar.png") repeat-x top left;
+}

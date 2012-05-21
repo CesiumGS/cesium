@@ -1,0 +1,207 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+    <head>
+        <title>dojox.grid.TreeGrid Model-based test</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+        <style type="text/css">
+            @import "../../../dojo/resources/dojo.css";
+            @import "../../../dijit/themes/claro/claro.css";
+            @import "../../../dojox/grid/resources/Grid.css";
+            @import "../../../dojox/grid/resources/claroGrid.css";
+            .grid {
+                width: 70em;
+                height: 40em;
+            }
+        </style>
+        <script type="text/javascript" src="../../../dojo/dojo.js"  djConfig="isDebug:true, parseOnLoad: true"></script>
+        <script type="text/javascript">
+            dojo.require("dojox.grid.TreeGrid");
+            dojo.require("dijit.tree.ForestStoreModel");
+            dojo.require("dojo.data.ItemFileWriteStore");
+            dojo.require("dijit.form.Button");
+            dojo.require("dojo.parser");
+            var dataItems = {
+                identifier: 'id',
+                label: 'name',
+                items: [
+                    { id: 'AF', name:'Africa', type:'continent', population:'900 million', area: '30,221,532 sq km',
+                        timezone: '-1 UTC to +4 UTC',
+                        children:[{_reference:'EG'}, {_reference:'KE'}, {_reference:'SD'}] },
+                    { id: 'EG', name:'Egypt', type:'country' },
+                    { id: 'KE', name:'Kenya', type:'country',
+                        children:[{_reference:'Nairobi'}, {_reference:'Mombasa'}] },
+                    { id: 'Nairobi', name:'Nairobi', type:'city' },
+                    { id: 'Mombasa', name:'Mombasa', type:'city' },
+                    { id: 'SD', name:'Sudan', type:'country',
+                        children:{_reference:'Khartoum'} },
+                    { id: 'Khartoum', name:'Khartoum', type:'city' },
+                    { id: 'AS', name:'Asia', type:'continent',
+                        children:[{_reference:'CN'}, {_reference:'IN'}, {_reference:'RU'}, {_reference:'MN'}] },
+                    { id: 'CN', name:'China', type:'country' },
+                    { id: 'IN', name:'India', type:'country' },
+                    { id: 'RU', name:'Russia', type:'country' },
+                    { id: 'MN', name:'Mongolia', type:'country' },
+                    { id: 'OC', name:'Oceania', type:'continent', population:'21 million',
+                        children:{_reference:'AU'}},
+                    { id: 'AU', name:'Australia', type:'country', population:'21 million'},
+                    { id: 'EU', name:'Europe', type:'continent',
+                        children:[{_reference:'DE'}, {_reference:'FR'}, {_reference:'ES'}, {_reference:'IT'}] },
+                    { id: 'DE', name:'Germany', type:'country' },
+                    { id: 'FR', name:'France', type:'country' },
+                    { id: 'ES', name:'Spain', type:'country' },
+                    { id: 'IT', name:'Italy', type:'country' },
+                    { id: 'NA', name:'North America', type:'continent',
+                        children:[{_reference:'MX'}, {_reference:'CA'}, {_reference:'US'}] },
+                    { id: 'MX', name:'Mexico', type:'country',  population:'108 million', area:'1,972,550 sq km',
+                        children:[{_reference:'Mexico City'}, {_reference:'Guadalajara'}] },
+                    { id: 'Mexico City', name:'Mexico City', type:'city', population:'19 million', timezone:'-6 UTC'},
+                    { id: 'Guadalajara', name:'Guadalajara', type:'city', population:'4 million', timezone:'-6 UTC' },
+                    { id: 'CA', name:'Canada', type:'country',  population:'33 million', area:'9,984,670 sq km',
+                        children:[{_reference:'Ottawa'}, {_reference:'Toronto'}] },
+                    { id: 'Ottawa', name:'Ottawa', type:'city', population:'0.9 million', timezone:'-5 UTC'},
+                    { id: 'Toronto', name:'Toronto', type:'city', population:'2.5 million', timezone:'-5 UTC' },
+                    { id: 'US', name:'United States of America', type:'country' },
+                    { id: 'SA', name:'South America', type:'continent',
+                        children:[{_reference:'BR'}, {_reference:'AR'}] },
+                    { id: 'BR', name:'Brazil', type:'country', population:'186 million' },
+                    { id: 'AR', name:'Argentina', type:'country', population:'40 million' }
+                ]};
+			var dataItems2 = dojo.clone(dataItems);
+
+            function add_item(child, parentId){
+                if(child){
+                    jsonStore.fetchItemByIdentity({
+                        identity: parentId,
+                        onItem: function(item){
+                            if(item){
+                                continentModel.newItem(child, item);
+                            }
+                        }
+                    });
+                }
+            }
+
+			dojo.addOnLoad(function(){
+				var layout = [
+					{ name: "Name", field: "name", width: "auto" },
+					{ name: "Population", field: "population", width: "auto" },
+					{ name: "Timezone", field: "timezone", width: "auto" }
+				];
+				var jsonStore2 = new dojo.data.ItemFileWriteStore({ data: dataItems2 });
+				var treeModel2 = new dijit.tree.ForestStoreModel({
+					store: jsonStore2,
+					query: { type: 'continent' },
+					rootId: 'continentRoot',
+					rootLabel: 'Continents',
+					childrenAttrs: ['children']
+				});
+				var grid2 = new dojox.grid.TreeGrid({
+					treeModel: treeModel2,
+					structure: layout,
+					defaultOpen: true
+				}, 'programmatic_grid');
+				grid2.startup();
+				dojo.connect(window, "onresize", grid2, "resize");
+			});
+        </script>
+    </head>
+    <body class="claro">
+        <h1 class="testTitle">Test: dojox.grid.TreeGrid - Model-based</h1>
+        <span dojoType="dojo.data.ItemFileWriteStore"
+              jsId="jsonStore" data="dataItems">
+        </span>
+
+        <div dojoType="dijit.tree.ForestStoreModel" jsId="continentModel"
+        store="jsonStore" query="{type:'continent'}"
+        rootId="continentRoot" rootLabel="Continents" childrenAttrs="children"></div>
+
+        <h4 class="testSubtitle">dojox.grid.TreeGrid n-Level</h4>
+        <button dojoType="dijit.form.Button">
+            Add Belgium
+            <script type="dojo/connect" event="onClick">
+                add_item({ id: 'EU_BE', name: 'Belgium', type: 'country' }, "EU");
+				this.set("disabled", true);
+            </script>
+        </button>
+        <button dojoType="dijit.form.Button">
+            Delete Italy
+            <script type="dojo/connect" event="onClick">
+				jsonStore.fetchItemByIdentity({
+					identity: 'IT',
+					onItem: function(item){
+						if(item){
+							jsonStore.deleteItem(item);
+						}
+					}
+				});
+				this.set("disabled", true);
+            </script>
+        </button>
+        <button dojoType="dijit.form.Button">
+            Add California
+            <script type="dojo/connect" event="onClick">
+                add_item({ id: 'US_CA', name: 'California', type: 'state' }, "US");
+				delCal.attr("disabled", false);
+				this.set("disabled", true);
+            </script>
+        </button>
+        <button dojoType="dijit.form.Button" disabled jsId="delCal">
+            Delete California
+            <script type="dojo/connect" event="onClick">
+				jsonStore.fetchItemByIdentity({
+					identity: 'US_CA',
+					onItem: function(item){
+						if(item){
+							jsonStore.deleteItem(item);
+						}
+					}
+				});
+				this.set("disabled", true);
+            </script>
+        </button>
+        <button dojoType="dijit.form.Button" jsId="delEU">
+            Delete Europe
+            <script type="dojo/connect" event="onClick">
+				jsonStore.fetchItemByIdentity({
+					identity: 'EU',
+					onItem: function(item){
+						if(item){
+							jsonStore.deleteItem(item);
+						}
+					}
+				});
+				this.set("disabled", true);
+            </script>
+        </button>
+        <button dojoType="dijit.form.Button" jsId="empty">
+            Empty
+            <script type="dojo/connect" event="onClick">
+				jsonStore.fetch({
+					query: { id: '*' },
+					queryOptions: { deep: true },
+					onComplete: function(items){
+						dojo.forEach(items, function(item){
+							if(item){
+								jsonStore.deleteItem(item);
+							}
+						});
+					}
+				});
+				jsonStore.save();
+				this.set("disabled", true);
+            </script>
+        </button>
+        <table jsid="grid" dojoType="dojox.grid.TreeGrid" class="grid" treeModel="continentModel">
+            <thead>
+                <tr>
+                    <th field="name" width="auto">Name</th>
+                    <th field="population" width="auto">Population</th>
+                    <th field="timezone" width="auto">Timezone</th>
+                </tr>
+            </thead>
+        </table>
+		<h4 class="testSubtitle">dojox.grid.TreeGrid Programmatic - defaultOpen true</h4>
+		<div id="programmatic_grid"></div>
+    </body>
+</html>
+

@@ -1,0 +1,65 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>Selectable Round Rect List</title>
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+		<script language="JavaScript" type="text/javascript">
+			dojo.require("dojox.mobile");			// This is a mobile app.
+			dojo.require("dojox.mobile.parser");	// This mobile app supports running on desktop browsers
+			dojo.require("dojox.mobile.compat");	// This mobile app uses declarative programming with fast mobile parser
+			dojo.require("dojox.mobile.deviceTheme");
+			function check(){
+				dijit.byId("item1").set("checked", true);
+			}
+			function uncheck(){
+				dijit.byId("item1").set("checked", false);
+			}
+			function callback(item, state){
+				var span = dojo.byId("msgArea");
+				span.innerHTML += "onCheckStateChanged: "+item.labelNode.innerHTML+", "+state+"<br>";
+				setTimeout(function(){
+					span.innerHTML = "";
+				}, 1000);
+			}
+			dojo.addOnLoad(function(){
+				dojo.connect(dijit.byId("list1"), "onCheckStateChanged", null, callback);
+				dojo.connect(dijit.byId("list2"), "onCheckStateChanged", null, callback);
+			});
+		</script>
+	</head>
+	<body style="visibility:hidden;">
+		<div id="foo" dojoType="dojox.mobile.View" selected="true">
+			<h1 dojoType="dojox.mobile.Heading">Selectable List</h1>
+			<h2 dojoType="dojox.mobile.RoundRectCategory">Single Select</h2>
+			<ul id="list1" dojoType="dojox.mobile.RoundRectList" select="single">
+				<li id="item1" dojoType="dojox.mobile.ListItem" checked="true">
+					Cube
+				</li>
+				<li dojoType="dojox.mobile.ListItem">
+					Dissolve
+				</li>
+				<li dojoType="dojox.mobile.ListItem">
+					Ripple
+				</li>
+			</ul>
+			<input type="button" onclick="check()" value="check">
+			<input type="button" onclick="uncheck()" value="uncheck">
+			<h2 dojoType="dojox.mobile.RoundRectCategory">Multiple Select</h2>
+			<ul id="list2" dojoType="dojox.mobile.RoundRectList" select="multiple">
+				<li dojoType="dojox.mobile.ListItem" checked="true">
+					Cube
+				</li>
+				<li dojoType="dojox.mobile.ListItem">
+					Dissolve
+				</li>
+				<li dojoType="dojox.mobile.ListItem">
+					Ripple
+				</li>
+			</ul>
+
+			<div id="msgArea" style="margin-left:10px;"></div><br><br>
+		</div>
+	</body>
+</html>

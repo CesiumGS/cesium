@@ -1,0 +1,57 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<title>Dnd OverDropMode Test</title>
+		
+		<link rel="stylesheet" type="text/css" href="../../../../dojo/resources/dojo.css" />
+		<link rel="stylesheet" type="text/css" href="../../../../dojo/tests/dnd/dndDefault.css" />
+		<link rel="stylesheet" type="text/css" href="../../../../dijit/themes/tundra/tundra.css" />
+		<link rel="stylesheet" type="text/css" href="../../../../dijit/tests/css/dijitTests.css" />
+		
+		<link rel="stylesheet" type="text/css" href="../../resources/dnd.css" />
+		<link rel="stylesheet" type="text/css" href="../resources/test_dnd.css" />
+
+		<script type="text/javascript" src="../../../../dojo/dojo.js"
+			djConfig="parseOnLoad:true, isDebug:false"></script>
+	
+		<script type="text/javascript">
+			dojo.require("dojox.mdnd.AreaManager");
+			dojo.require("dojox.mdnd.DropIndicator");
+			dojo.require("dojox.mdnd.dropMode.OverDropMode");
+			
+			var init = function(){
+				var m = dojox.mdnd.areaManager();
+				m.areaClass = "dndArea";
+				m.dragHandleClass = "dragHandle";
+				m.registerByClass();
+			};
+			
+			dojo.addOnLoad(init);
+		</script>
+	</head>
+	<body class="tundra">
+		<div id="main">
+			<h1>Drag and Drop : OverDropMode</h1>
+			<div id="topLeftArea" class="dndArea container" style="top:100px; left:50px;">
+				<div id="itemA" class="dndItem">
+					<div class="title dragHandle">title</div>
+						<div>
+							<p>Proin aliquet accumsan nunc.</p>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="topRightArea" class="dndArea container" style="top:100px; left:350px;"></div>
+			<div id="bottomLeftArea" class="dndArea container" style="top:350px; left:50px;">
+				<div id="itemB" class="dndItem">
+					<div class="title dragHandle">title</div>
+					<div>
+						<p>Proin aliquet accumsan nunc.</p>
+					</div>
+				</div>
+			</div>
+			<div id="bottomRightArea" class="dndArea container" style="top:350px; left:350px;"></div>
+		</div>
+	</body>
+</html>

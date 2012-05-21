@@ -1,0 +1,44 @@
+.picasaView {
+	padding: 3 3 3 3;
+	border-width: 1px;
+	border-style: solid;
+	border-color: #000000;
+	border-collapse: separate;
+        width: 100%;
+}
+
+.picasaView th {
+	text-align: left;
+} 
+
+.picasaView tr {
+	padding: 3 3 3 3;
+	border-width: 1px;
+	border-style: solid;
+	border-color: #000000;
+}
+
+.picasaView tr td {
+	padding: 3 3 3 3;
+	border-width: 1px;
+	border-style: solid;
+	border-color: #000000;
+}
+
+.picasaView {
+	background-color: #EFEFEF;
+        float: left;
+        width: 250px;
+        height: 250px;
+}
+
+.picasaSummary { 
+       width: 250px;
+       height: 30px;
+       overflow: hidden;
+ }
+
+.picasaTitle {
+	background-color: #CCCCCC;
+}
+

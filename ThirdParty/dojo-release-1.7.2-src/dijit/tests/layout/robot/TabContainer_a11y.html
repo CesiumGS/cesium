@@ -1,0 +1,402 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot TabContainer A11Y Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"
+			djConfig="isDebug: true"></script>
+
+		<!-- functions to help test -->
+		<script type="text/javascript" src="../../helpers.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../test_TabContainer.html');
+				doh.register("basic navigation",[
+					{
+						name: "focus on button before TabContainer",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+
+							onFocus(d.getTestCallback(function(node){
+							}));
+
+							dojo.query("button")[0].focus();							
+
+							return d;
+						}
+					},
+					{
+						name: "tab into main TabContainer",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							onFocus(d.getTestCallback(function(node){
+								doh.is("mainTabContainer_tablist_tab2", node.id, "focus");
+							}));
+
+							doh.robot.keyPress(dojo.keys.TAB, 500, {});
+
+							return d;
+						}
+					},
+					{
+						name: "move to tab 3 with RIGHT arrow",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+
+							onFocus(d.getTestCallback(function(node){
+								var tc = dijit.byId("mainTabContainer");
+								doh.is('mainTabContainer_tablist_tab3', node.id, "currently chosen tab");
+								doh.is("tab3", tc.selectedChildWidget.id, "currently displayed pane");
+							}));
+							
+							doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 500, {});
+							
+							return d;
+						}
+					},
+					{
+						name: "move to tab 2 with LEFT arrow",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							var tc = dijit.byId("mainTabContainer");							
+							onFocus(d.getTestCallback(function(node){
+								doh.is('mainTabContainer_tablist_tab2', node.id, "currently chosen tab");
+								doh.is("tab2", tc.selectedChildWidget.id, "currently chosen pane");
+							}));
+							
+							doh.robot.keyPress(dojo.keys.LEFT_ARROW, 500, {});
+
+							return d;
+						}
+					},
+
+					{
+						name: "move to tab 3 again with RIGHT arrow",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+
+							onFocus(d.getTestCallback(function(node){
+							}));
+							
+							doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 500, {});
+							
+							return d;
+						}
+					},
+					{
+						name: "move to inlined subcontainer tab with RIGHT arrow",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+
+							onFocus(d.getTestCallback(function(node){
+							}));
+							
+							doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 500, {});
+							
+							return d;
+						}
+					},
+					
+					{
+						name: "TAB focus to nested tab",
+						timeout: 10000,
+						runTest: function(t){
+								var d = new doh.Deferred();
+
+								onFocus(d.getTestCallback(function(node){
+									doh.is('inlined_tablist_tab2href', node.id);
+								}));								
+								
+								doh.robot.keyPress(dojo.keys.TAB, 750);
+
+								return d;
+						}
+					},
+
+					{
+						name: "move to second nested tab button",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+
+							onFocus(d.getTestCallback(function(node){
+							}));
+							
+							doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 500, {});
+							
+							return d;
+						}
+					},
+					{
+						name: "shift-TAB to parent tabs from nested tabs",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							onFocus(d.getTestCallback(function(node){
+							}));
+
+							doh.robot.keyPress(dojo.keys.TAB, 750, {shift:true});
+							
+							return d;
+						}
+					},
+					{
+						name: "left arrow to tab 3",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							onFocus(d.getTestCallback(function(node){
+								doh.is('mainTabContainer_tablist_tab3', node.id);
+							}));
+
+							doh.robot.keyPress(dojo.keys.LEFT_ARROW, 500, {});
+							
+							return d;
+						}
+					},
+					{
+						name: "right arrow to inline subtabcontainer",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							onFocus(d.getTestCallback(function(node){
+							}));
+
+							doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 500, {});
+							
+							return d;
+						}
+					},
+					{
+						name: "verify nested tablist keeps it's state",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							//verify that the third nested tab is still selected
+							onFocus(d.getTestCallback(function(node){
+								doh.is('inlined_tablist_subtab3', node.id);
+							}));
+
+							doh.robot.keyPress(dojo.keys.TAB, 750, {});	// give IE8 time to complete slide animation
+							
+							return d;
+						}
+					}
+				]);
+
+				doh.register("HOME/END keys", [
+					{
+						name: "focus tab 3",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+
+							dijit.byId("mainTabContainer").selectChild(dijit.byId("tab3"), false);
+
+							setTimeout(d.getTestCallback(function(){
+								dojo.byId("mainTabContainer_tablist_tab3href").focus();
+							}), 500);
+
+							return d;
+						}
+					},
+					{
+						name: "home key",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+								
+							onFocus(d.getTestCallback(function(node){
+								doh.is('mainTabContainer_tablist_tab1', node.id);
+							}));
+
+							doh.robot.keyPress(dojo.keys.HOME, 500, {});
+
+							return d;
+						}
+					},
+					{
+						name: "end key",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+								
+							onFocus(d.getTestCallback(function(node){
+								doh.is('mainTabContainer_tablist_embedded', node.id);
+							}));
+
+							doh.robot.keyPress(dojo.keys.END, 500, {});
+
+							return d;
+						}
+					},
+					{
+						name: "verify left/right arrows still work",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+								
+							onFocus(d.getTestCallback(function(node){
+								doh.is('mainTabContainer_tablist_tab4href', node.id);
+							}));
+
+							doh.robot.keyPress(dojo.keys.LEFT_ARROW, 500, {});
+
+							return d;
+						}
+					}
+				]);
+
+				doh.register("closing tabs", [
+					{
+						name: "close tab with DELETE button",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							doh.robot.sequence(function(){
+								dojo.byId("mainTabContainer_tablist_inlined").focus();
+							}, 500, 500);
+							
+							doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 500, {});
+							doh.robot.keyPress(dojo.keys.DELETE, 750, {});
+
+							var tc = dijit.byId("mainTabContainer");
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is(6, tc.getChildren().length);
+							}), 500);
+							
+							return d;
+						}
+					},
+					{
+						name: "close tab with CTRL-W button",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							doh.robot.sequence(function(){
+								dojo.byId("mainTabContainer_tablist_tab1").focus();
+							}, 500, 500);
+							
+							doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 500, {});
+							doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 750, {});
+							if(dojo.isChrome){
+								// on chrome ctrl+w isn't trapped, and closes the whole browser!
+								doh.robot.keyPress(dojo.keys.DELETE, 750, {});
+							}else{
+								doh.robot.keyPress("w", 750, {ctrl:true});
+							}
+							
+							var tc = dijit.byId("mainTabContainer");
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is(5, tc.getChildren().length);
+							}), 500);
+							return d;
+						}
+					}
+				]);
+
+				// Run test about opening context menu via keyboard, except on:
+				//	- safari/mac where it doesn't work unless VoiceOver is turned on (#9927)
+				//	- webkit/win, where in suite mode (runTests.html), F10 triggers context menu
+				//		in both the iframe and the outer window
+				if(!dojo.isWebKit){
+					doh.register("closing tabs via context menu", {
+						name: "close tab through context menu",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 500, {});
+							doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 750, {});
+							doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 750, {});
+							
+							// open via keyboard
+							if(dojo.isMac){
+								doh.robot.keyPress(dojo.keys.SPACE, 500, {
+									ctrl: true
+								});
+							}else{
+								doh.robot.keyPress(dojo.keys.F10, 500, {
+									shift: true
+								});
+							}
+							
+							doh.robot.keyPress(dojo.keys.ENTER, 500, {});
+							
+							var tc = dijit.byId("mainTabContainer");
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is(4, tc.getChildren().length);
+							}), 500);
+							
+							return d;
+						}
+					});
+				}
+
+				doh.register("up/down arrows", [
+					{
+						name: "move to tab with DOWN button",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							dojo.byId("ltabs_tablist_HanselGretel1").focus();
+
+							var tc = dijit.byId("ltabs");
+							onFocus(d.getTestCallback(function(node){
+								doh.is('ltabs_tablist_GreenTwigs1', node.id, "currently chosen tab");
+								doh.is("GreenTwigs1", tc.selectedChildWidget.id, "currently displayed pane");
+							}));
+
+							doh.robot.keyPress(dojo.keys.DOWN_ARROW, 500, {});
+
+							return d;
+						}
+					},
+					{
+						name: "move to tab with UP button",
+						timeout: 10000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							var tc = dijit.byId("ltabs");							
+							onFocus(d.getTestCallback(function(node){
+								doh.is('ltabs_tablist_HanselGretel1', node.id, "currently chosen tab");
+								doh.is("HanselGretel1", tc.selectedChildWidget.id, "currently chosen pane");
+							}));
+
+							doh.robot.keyPress(dojo.keys.UP_ARROW, 500, {});
+							
+							return d;
+						}
+					}
+				]);
+				
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

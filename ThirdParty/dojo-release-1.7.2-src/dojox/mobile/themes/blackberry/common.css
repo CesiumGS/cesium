@@ -1,0 +1,29 @@
+html.mobile, .mobile body {
+  width: 100%;
+  margin: 0px;
+  padding: 0px;
+}
+.mobile body {
+  overflow-x: hidden;
+  -webkit-text-size-adjust: none;
+  background-color: #DEDFDE;
+  font-family: Helvetica;
+  font-size: 18px;
+}
+/* Button Colors */
+.mblColorBlue {
+  color: white;
+  background-color: #215fdc;
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#7a9de9), to(#2362dd), color-stop(0.5, #366edf), color-stop(0.5, #215fdc));
+}
+/* Default Button Colors */
+.mblColorDefault {
+  color: black;
+  background-color: #CED3CE;
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#f7fbf7), to(#cecfd6), color-stop(0.5, #ced3ce));
+}
+.mblColorDefaultSel {
+  color: white;
+  background-color: #0869C6;
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#088eef), to(#0851ad), color-stop(0.5, #0869c6));
+}

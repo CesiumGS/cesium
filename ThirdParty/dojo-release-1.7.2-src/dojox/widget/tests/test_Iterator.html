@@ -1,0 +1,77 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>Dojox Iterator Test</title>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/themes/tundra/tundra.css";
+		@import "../../../dijit/themes/dijit.css";
+		@import "../../../dijit/tests/css/dijitTests.css"; 
+	</style>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: true"></script>
+
+	<!-- do not use! only for testing dynamic themes -->
+	<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+	
+	<script type="text/javascript">
+		dojo.require("dijit.layout.TabContainer");
+		dojo.require("dijit.layout.SplitContainer");
+		dojo.require("dojo.data.ItemFileReadStore"); 
+		dojo.require("dojox.widget.Iterator"); 
+		dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+	</script>
+	
+</head>
+<body class="tundra">
+
+	<h1 class="testTitle">Dojox Iterator test</h1>
+
+	<div dojoType="dojo.data.ItemFileReadStore" 
+		url="../../../dijit/tests/_data/countries.json" 
+		jsId="stateStore"></div>
+	
+	<h3>Data store backed Iterator</h3>
+	<ul>
+		<li>before</li>
+		<li dojoType="dojox.widget.Iterator" 
+			query="{ name: 'A*' }"
+			store="stateStore">
+			${name}
+		</li>
+		<li>after</li>
+	</ul>
+
+	<h3>Array backed Iterator</h3>
+	<ul>
+		<li>before</li>
+		<script>
+			var tdata = [
+				{ thinger: "blah", name: "named:" },
+				{ thinger: "..." },
+				{ thinger: "w00t!" }
+			];
+		</script>
+		<li dojoType="dojox.widget.Iterator" 
+			defaultValue="*this space intentionally left blank*"
+			data="tdata">
+			${name} ${thinger}
+		</li>
+		<li>after</li>
+	</ul>
+
+	<h3>Array-property Iterator</h3>
+	<ul>
+		<li>before</li>
+		<li>blah</li>
+		<li dojoType="dojox.widget.Iterator" 
+			dataValues="thinger, blah, blah">
+			${value}
+		</li>
+		<li>after</li>
+	</ul>
+
+</body>
+</html>

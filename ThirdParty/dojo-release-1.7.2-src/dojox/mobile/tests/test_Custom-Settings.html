@@ -1,0 +1,167 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>Settings</title>
+		<link href="../themes/custom/base.css" rel="stylesheet">
+
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			dojo.require("dojox.mobile");			// This is a mobile app.
+			dojo.require("dojox.mobile.parser");	// This mobile app supports running on desktop browsers
+			dojo.require("dojox.mobile.compat");	// This mobile app uses declarative programming with fast mobile parser
+		</script>
+	</head>
+	<body style="visibility:hidden;">
+		<div id="settings" dojoType="dojox.mobile.View" selected="true">
+			<h1 dojoType="dojox.mobile.Heading">Settings</h1>
+			<ul dojoType="dojox.mobile.RoundRectList">
+				<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-1.png">
+					Airplane Mode
+					<div class="mblItemSwitch" dojoType="dojox.mobile.Switch"></div>
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-2.png" rightText="mac" href="test_iPhone-Icon.html">
+					Wi-Fi
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-3.png" rightText="AcmePhone" moveTo="general">
+					Carrier
+				</li>
+			</ul>
+
+			<ul dojoType="dojox.mobile.RoundRectList">
+				<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-4.png" moveTo="general">
+					Sounds
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-5.png" moveTo="general">
+					Brightness
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-6.png" moveTo="general">
+					Wallpaper
+				</li>
+			</ul>
+
+			<ul dojoType="dojox.mobile.RoundRectList">
+				<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-7.png" moveTo="general">
+					General
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-8.png" moveTo="general">
+					Mail, Contacts, Calendars
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-9.png" moveTo="general">
+					Phone
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-10.png" moveTo="general">
+					Safari
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-1.png" moveTo="general">
+					SMS/MMS
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-2.png" moveTo="general">
+					iPod
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-3.png" moveTo="general">
+					Photos
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-4.png" moveTo="general">
+					Store
+				</li>
+			</ul>
+		</div>
+
+		<div id="general" dojoType="dojox.mobile.View">
+			<h1 dojoType="dojox.mobile.Heading" back="Settings" moveTo="settings">General</h1>
+			<ul dojoType="dojox.mobile.RoundRectList">
+				<li dojoType="dojox.mobile.ListItem" moveTo="about">
+					About
+				</li>
+				<li dojoType="dojox.mobile.ListItem" rightText="2h 40m" moveTo="about">
+					Usage
+				</li>
+			</ul>
+
+			<ul dojoType="dojox.mobile.RoundRectList">
+				<li dojoType="dojox.mobile.ListItem" moveTo="about">
+					Network
+				</li>
+				<li dojoType="dojox.mobile.ListItem" rightText="Off" moveTo="about">
+					Bluetooth
+				</li>
+				<li dojoType="dojox.mobile.ListItem" moveTo="about">
+					Location Services
+				</li>
+			</ul>
+
+			<ul dojoType="dojox.mobile.RoundRectList">
+				<li dojoType="dojox.mobile.ListItem" rightText="1 Minute" moveTo="about">
+					Auto-Lock
+				</li>
+				<li dojoType="dojox.mobile.ListItem" rightText="Off" moveTo="about">
+					Passcode Lock
+				</li>
+				<li dojoType="dojox.mobile.ListItem" rightText="Off" moveTo="about">
+					Restrictions
+				</li>
+			</ul>
+
+			<ul dojoType="dojox.mobile.RoundRectList">
+				<li dojoType="dojox.mobile.ListItem" moveTo="about">
+					Home
+				</li>
+				<li dojoType="dojox.mobile.ListItem" moveTo="about">
+					Date & Time					   
+				</li>							   
+				<li dojoType="dojox.mobile.ListItem" moveTo="about">
+					Keyboard					   
+				</li>							   
+				<li dojoType="dojox.mobile.ListItem" moveTo="about">
+					International				   
+				</li>							   
+				<li dojoType="dojox.mobile.ListItem" moveTo="about">
+					Accessibility
+				</li>
+			</ul>
+
+			<ul dojoType="dojox.mobile.RoundRectList">
+				<li dojoType="dojox.mobile.ListItem" moveTo="about">
+					Reset
+				</li>
+			</ul>
+		</div>
+
+		<div id="about" dojoType="dojox.mobile.View">
+			<h1 dojoType="dojox.mobile.Heading" back="General" moveTo="general">About</h1>
+			<h2 dojoType="dojox.mobile.RoundRectCategory">Generic Mobile Device</h2>
+			<ul dojoType="dojox.mobile.RoundRectList">
+				<li dojoType="dojox.mobile.ListItem" rightText="AcmePhone">
+					Network											   
+				</li>												   
+				<li dojoType="dojox.mobile.ListItem" rightText="AcmePhone">
+					Line
+				</li>
+				<li dojoType="dojox.mobile.ListItem" rightText="1024">
+					Songs
+				</li>
+				<li dojoType="dojox.mobile.ListItem" rightText="10">
+					Videos
+				</li>
+				<li dojoType="dojox.mobile.ListItem" rightText="96">
+					Photos
+				</li>
+				<li dojoType="dojox.mobile.ListItem" rightText="2">
+					Applications
+				</li>
+				<li dojoType="dojox.mobile.ListItem" rightText="29.3 BG">
+					Capacity
+				</li>
+				<li dojoType="dojox.mobile.ListItem" rightText="28.0 BG">
+					Available
+				</li>
+				<li dojoType="dojox.mobile.ListItem" rightText="3.0 (7A341)">
+					Version
+				</li>
+			</ul>
+		</div>
+	</body>
+</html>

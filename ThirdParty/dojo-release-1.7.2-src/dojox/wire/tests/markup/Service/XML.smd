@@ -1,0 +1,11 @@
+{
+	"serviceType": "XML",
+	"serviceURL": "Service/{name}.xml",
+	"methods": [{
+		"name": "get",
+		"parameters": [{
+			"name": "name",
+			"type": "str"
+		}]
+	}]
+}

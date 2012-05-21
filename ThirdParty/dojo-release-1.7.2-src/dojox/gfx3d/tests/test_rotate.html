@@ -1,0 +1,123 @@
+﻿<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" >
+<head>
+<title>Rotate test of dojox.gfx3d.</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+	@import "../../../dijit/themes/tundra/tundra.css";
+</style>
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+<script type="text/javascript">
+
+dojo.require("dojox.gfx3d");
+
+var angles = {x: 0, y: 0, z: 0};
+var cube = null;
+var view = null;
+
+rotate = function(){
+	var m = dojox.gfx3d.matrix;
+
+	if(dojo.byId('rx').checked){
+		angles.x += 10;
+	}
+	if(dojo.byId('ry').checked){
+		angles.y += 10;
+	}
+	if(dojo.byId('rz').checked){
+		angles.z += 10;
+	}
+	var t = m.normalize([
+		m.cameraRotateXg(angles.x), 
+		m.cameraRotateYg(angles.y), 
+		m.cameraRotateZg(angles.z)
+	]);
+	cube.setTransform(t);
+	cube.invalidate();
+	view.render();
+}
+
+makeObjects = function(){
+	var surface = dojox.gfx.createSurface("test", 500, 500);
+	view = surface.createViewport();
+	var c = {bottom: {x: 0, y: 0, z: 0}, top: {x: 100, y: 100, z: 100}};
+	var xaxis = [
+		{x: 0, y: 0, z: 0}, 
+		{x: 200, y: 0, z: 0}
+	];
+
+	var yaxis = [
+		{x: 0, y: 0, z: 0}, 
+		{x: 0, y: 200, z: 0}
+	];
+	
+	var zaxis = [
+		{x: 0, y: 0, z: 0}, 
+		{x: 0, y: 0, z: 200}
+	];
+
+	var m = dojox.gfx3d.matrix;
+
+	view.createEdges(xaxis).setStroke({color: "red",   width: 1});
+	view.createEdges(yaxis).setStroke({color: "green", width: 1});
+	view.createEdges(zaxis).setStroke({color: "blue",  width: 1});
+
+	cube = view.createCube(c).setStroke({color: "lime", width: 1});
+
+	var camera = dojox.gfx3d.matrix.normalize([
+		m.cameraRotateXg(20), 
+		m.cameraRotateYg(30),
+		m.cameraTranslate(-100, -100, 0)
+	]);
+
+	view.applyCameraTransform(camera);
+	view.render();
+	window.setInterval(rotate, 200);
+
+	// add the click event handler
+	dojo.connect(dojo.byId("conservative"), "onclick", drawWithConservative);
+	dojo.connect(dojo.byId("chart"), "onclick", drawWithChart);
+};
+
+draw = function(title, drawer){
+	dojo.byId("drawer").innerHTML = title;
+	view.setDrawer(drawer);
+};
+
+drawWithConservative = function(){
+	draw("Conservative", dojox.gfx3d.drawer.conservative);
+};
+
+drawWithChart = function(){
+	draw("Chart", dojox.gfx3d.drawer.chart);
+};
+
+dojo.addOnLoad(makeObjects);
+
+</script>
+</head>
+<body class="tundra">
+	<h1>Pilot Test</h1>
+	<p>There are two drawers(well, the name is quite misleading, it means draw-er) in dojox.gfx3d, conservative and chart:</p>
+	<ul>
+		<li><em>conservative</em> drawer is a pessimist, it assumes that the movement, transformation of objects would take a big fat impact to the viewport, so it not only render the modified objects, but also reorder all the underlying 2D shapes and redraw them.</li>
+		<li> <em>chart</em> drawer is an optimist, it assumes the change of the objects does not take effect on the z-order, this is most likely true in chart application. It only render and then draw the modified objects.</li>
+	</ul>
+	<p>The cube is in the center (0, 0, 0): The color of X, Y, Z axes are red, green, blue as the reference. The cube would rotate around X, Y, Z or their combination, it is up to you.</p>
+	<p>Current Drawer: <strong id="drawer">Conservative</strong></p>
+<form>
+	<input id="conservative" type="button" value="Draw with conservative"/>
+	<input id="chart" type="button" value="Draw with chart"/><br />
+	<input id="rx" type="checkbox" name="rotateX" checked="true" value="on"/> 
+	<label for="rx"> Rotate around X-axis</label> <br/>
+	<input id="ry" type="checkbox" name="rotateY" checked="false" value="off"/> 
+	<label for="ry"> Rotate around Y-axis</label> <br/>
+	<input id="rz" type="checkbox" name="rotateZ" checked="false" value="off"/> 
+	<label for="rz"> Rotate around Z-axis</label> <br/>
+</form>
+
+<div id="test" style="width: 500px; height: 500px;"></div>
+<p>That's all Folks!</p>
+</body>
+</html>

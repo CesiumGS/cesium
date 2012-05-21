@@ -1,0 +1,96 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>TabContainer Demo</title>
+
+	<!-- required: the default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../../dijit/themes/tundra/tundra.css">
+
+	<style type="text/css">
+		@import "../../../../dojo/resources/dojo.css";
+		@import "../../../../dijit/tests/css/dijitTests.css";
+
+		@import "../../resources/Grid.css";
+		@import "../../resources/tundraGrid.css";
+	</style>
+	
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../../dojo/dojo.js"
+		djConfig="isDebug: true, parseOnLoad: true"></script>
+
+	<!-- only needed for alternate theme testing: do NOT use in your code! -->
+	<script type="text/javascript" src="../../../../dijit/tests/_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dijit.layout.ContentPane");
+		dojo.require("dijit.layout.TabContainer");
+		dojo.require("dijit.layout.SplitContainer");
+		dojo.require("dijit.Tooltip");
+		dojo.require("dijit.Menu");
+		dojo.require("dijit.layout.LinkPane");
+		dojo.require("dijit.form.Button");
+		dojo.require("dojox.grid.DataGrid");
+		dojo.require("dojo.data.ItemFileWriteStore");
+		dojo.require("dojo.dnd.Source");
+		dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+		formatCurrency = function(inDatum){
+			return isNaN(inDatum) ? '...' : dojo.currency.format(inDatum, this.constraint);
+		}
+		formatDate = function(inDatum){
+			return dojo.date.locale.format(new Date(inDatum), this.constraint);
+		}
+	</script>
+	<script type="text/javascript" src="structures.js"></script>
+	<script type="text/javascript" src="stores.js"></script>
+</head>
+<body class="tundra">
+
+	<h1 dojoType="dojo.dnd.Target" class="testTitle">dojox.grid.DataGrid tests</h1>
+	<input id="initialfocus"></input>
+		<div dojoType="dijit.Menu" jsid="gridMenu" id="gridMenu" style="display: none;">
+				<div dojoType="dijit.MenuItem" >Item One</div>
+				<div dojoType="dijit.MenuItem" >Item Two</div>
+				<div dojoType="dijit.MenuItem" >Item Three</div>
+		</div>
+	<div id="mainTabContainer" dojoType="dijit.layout.TabContainer" tabStrip="true" style="width: 100%; height: 20em;">
+
+		<div dojoType="dijit.layout.ContentPane"  title="Markup 1">
+			<h1>Editable DataGrid, markup, pane shown on init, context menu on header</h1>
+			<div id="markup_grid_1" dojoType="dojox.grid.DataGrid" columnReordering="true" store="structure1_store1" query="{ id: '*' }" structure="structure1" rowSelector="20px" headerMenu="gridMenu" style="width: 100%;height:19em;"></div>
+		</div>
+
+		<div dojoType="dijit.layout.ContentPane" title="Markup 2">
+			<h1>Editable DataGrid, markup, pane hidden on init. This grid should be identical to the first tab.</h1>
+			<div id="markup_grid_2" dojoType="dojox.grid.DataGrid" columnReordering="true" store="structure1_store2" query="{ id: '*' }" structure="structure1" rowSelector="20px" headerMenu="gridMenu" style="width: 100%;height:19em;"></div>
+		</div>
+
+		<div dojoType="dijit.layout.ContentPane" title="Markup 3">
+			<h1>Some filler text</h1>
+			<h1>More filler text</h1>
+			<h1>Even more filler text</h1>
+			<h1>Editable DataGrid, markup, pane hidden on init. This grid should be identical to the first tab.</h1>
+			<div id="markup_grid_3" dojoType="dojox.grid.DataGrid" columnReordering="true" store="structure1_store3" query="{ id: '*' }" structure="structure1" rowSelector="20px" headerMenu="gridMenu" style="width: 100%;height:19em;"></div>
+		</div>
+		<div dojoType="dijit.layout.ContentPane"  title="Markup structure"><table id="markup_grid_markup_structure" dojoType="dojox.grid.DataGrid" columnReordering="true" store="structure1_store4" query="{ id: '*' }" rowSelector="20px" headerMenu="gridMenu" style="width: 100%;">
+			<h1>Editable DataGrid, markup structure, pane hidden on init. This grid should be identical to the first tab.</h1>
+			<thead>
+					<tr>
+						<th field="id" width="8em" styles='text-align: right;'>Id</th>
+						<th cellType="dojox.grid.cells.DateTextBox" field="col8" formatter="formatDate" constraint="{formatLength: 'long', selector: 'date'}" editable="true" width="10em" styles='text-align: right;'>Date</th>
+						<th cellType="dojox.grid.cells.ComboBox" field="col1" options="normal,note,important" editable="true" width="10em" styles='text-align: center;'>Priority</th>
+						<th cellType="dojox.grid.cells.CheckBox" field="col2" editable="true" width="3em" styles='text-align: center;'>Mark</th>
+						<th cellType="dojox.grid.cells.Select" field="col3" options="new,read,replied" editable="true" width="8em" styles='text-align: center;'>Status</th>
+						<th cellType="dojox.grid.cells.Editor" field="col4" editorToolbar="true" editable="true" width="auto" styles=''>Message</th>
+						<th cellType="dojox.grid.cells._Widget" widgetClass="dijit.form.CurrencyTextBox" field="col5" formatter="formatCurrency" constraint="{currency:'EUR'}" editable="true" width="8em" styles='text-align: right;'>Amount</th>
+						<th cellType="dojox.grid.cells._Widget" widgetClass="dijit.form.HorizontalSlider" field="col6" formatter="formatCurrency" constraint="{currency:'EUR'}" editable="true" width="10em" styles='text-align: right;'>Amount</th>
+					</tr>
+				</thead>
+			</table>
+		</div>
+	</div>
+	<h1>Space for creating grids (grid should appear as part of the robot test)</h1>
+	<div id="prog_grid_1" rowSelector="20px" style="width: 100%;height:100px;"></div>
+</body>
+</html>

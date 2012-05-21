@@ -1,0 +1,99 @@
+<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" >
+<head>
+    <title>Drawing GFX Toolbar Test</title>
+	<link href="../resources/drawing.css" rel="stylesheet" />
+	<link href="../resources/toolbar.css" rel="stylesheet" />
+
+	<style>
+		href, body{
+			overflow:hidden;
+		}
+		.drawing{
+			width:800px;
+			height:400px;
+			border:1px solid #ccc;
+			cursor:crosshair;
+		}
+		#data{
+			display:block;
+			height:100px;
+			width:855px;
+			margin-top:5px;
+		}
+		button{
+			border:2px solid #ccc;
+			border-color:#D9E1F9 #B5BCD0 #878E9D #C6CEE4;
+			background-color:#CDDCF3;
+			cursor:pointer;
+		}
+		.gfxToolbar{
+			width:800px;
+			height:50px;
+			margin-bottom:10px;
+			border:1px solid #ccc;
+		}
+	</style>
+
+	<script>
+		djConfig = {
+			isDebug:false,
+			parseOnLoad:true
+		};
+	</script>
+	<script src="../../../dojo/dojo.js"></script>
+	<script>
+		dojo.require("dojo.parser");
+		dojo.require("dojox.drawing");
+
+
+		// custom Tools and Plugins need to be required
+		dojo.require("dojox.drawing.tools.TextBlock");
+		dojo.require("dojox.drawing.tools.Rect");
+		dojo.require("dojox.drawing.tools.Ellipse");
+		dojo.require("dojox.drawing.tools.Line");
+		dojo.require("dojox.drawing.tools.Path");
+
+		dojo.require("dojox.drawing.plugins.drawing.Grid");
+
+		dojo.require("dojox.drawing.ui.Toolbar");
+		dojo.require("dojox.drawing.ui.Button");
+
+
+		dojo.addOnLoad(function(){
+			dojo.connect(myDrawing, "onSurfaceReady", function(){
+
+				var image = myDrawing.addStencil("image", {data:{x:450, y:125, width:320, height:240, src:"../resources/CrazyTruck.jpg"}, shadow:{place:"BR", size:8, mult:6}});
+
+				myDrawing.addStencil("rect", {data:{x:50, y:25, width:100, height:50}, shadow:{color:"#0000ff", place:"TL"}});
+				myDrawing.addStencil("rect", {data:{x:50, y:100, width:100, height:50, r:10}, shadow:{place:"C", color:"#ff0000", size:8, mult:6}});
+				myDrawing.addStencil("rect", {data:{x:50, y:175, width:100, height:50, r:10}, shadow:{place:"BR"}});
+
+				myDrawing.addStencil("ellipse", {data:{cx:300, cy:60, rx:100, ry:50, fill:{r:200,g:200,b:0,a:1}}, shadow:{place:"TL"}});
+				myDrawing.addStencil("ellipse", {data:{cx:300, cy:175, rx:100, ry:50, fill:{r:200,g:200,b:0,a:1}}, shadow:{place:"C", size:6, mult:4, color:"#ffff00"}});
+				myDrawing.addStencil("ellipse", {data:{cx:300, cy:290, rx:100, ry:50, fill:{r:200,g:200,b:0,a:1}}, shadow:{place:"BR"}});
+
+				myDrawing.addStencil("line", {data:{x1:500, y1:70, x2:700, y2:10}, shadow:{place:"BR", size:4, mult:2}});
+				myDrawing.addStencil("line", {data:{x1:500, y1:100, x2:700, y2:100}, shadow:{place:"C", size:4, mult:4, color:"#00ff00"}});
+
+				myDrawing.addStencil("path", {points:[{x:10, y:390},{x:50, y:250},{x:175,y:330}, {x:100,y:300} ], shadow:{place:"C", size:4, mult:4, color:"#00ff00"}});//
+
+			});
+		})
+	</script>
+
+</head>
+<body>
+    <h2>Drawing Test</h2>
+	<div id="conEdit" contenteditable="true"></div>
+	<div id="wrapper">
+
+
+		<!--<div dojoType="dojox.drawing.ui.Toolbar" id="gfxToolbarNode" drawingId="drawingNode" class="gfxToolbar" tools="all" plugs="all" selected="ellipse"></div>-->
+
+		<div dojoType="dojox.drawing.Drawing" id="drawingNode" jsId="myDrawing" class="drawing"
+			 plugins="[{'name':'dojox.drawing.plugins.drawing.Grid', 'options':{minor:20, major:100}}]">
+		</div>
+	</div>
+
+</body>
+</html>

@@ -1,0 +1,219 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>SwapView</title>
+		<link href="../themes/iphone/base.css" rel="stylesheet">
+		<link href="../themes/iphone/PageIndicator.css" rel="stylesheet">
+		<link href="../themes/common/FixedSplitter.css" rel="stylesheet">
+		<link href="../themes/common/domButtons.css" rel="stylesheet">
+		<style>
+		html,body{
+			height: 100%;
+			overflow: hidden;
+			position: relative;
+		}
+		.subtitle {
+			color: gray;
+			font-size: 12px;
+		}
+		#news {
+			font-size: 14px;
+		}
+		.list1 li{
+		}
+		.list1 li:nth-child(even){
+			background-color: #EAEAEA;
+		}
+		.list1 .mblListItemTextBox {
+			padding-right: 5px;
+		}
+		.c1 {
+			width: 100px;
+			float: left;
+		}
+		.c2 {
+			width: 80px;
+			text-align: right;
+			float: left;
+		}
+		.c3 {
+			text-align: right;
+			width: 70px;
+			color: white;
+			padding: 0px 4px;
+			margin-top: 4px;
+			height: 30px;
+			line-height: 32px;
+			float: right;
+			-webkit-border-radius: 4px;
+			-moz-border-radius: 4px;
+		}
+		.c3a {
+			border: 2px solid #598F3A;
+			background-color: #6FB248;
+			background-image: -webkit-gradient(linear, left top, left bottom, from(#6FB248), to(#54972D), color-stop(0.5, #5FA238), color-stop(0.5, #54972D));
+		}
+		.c3b {
+			border: 2px solid #9B322D;
+			background-color: #C13E37;
+			background-image: -webkit-gradient(linear, left top, left bottom, from(#C13E37), to(#A6231C), color-stop(0.5, #B6332C), color-stop(0.5, #A8251E));
+		}
+		#tbl1 {
+			margin: auto;
+		}
+		#tbl1 td {
+			text-align: right;
+			border-bottom: 1px solid #DEE9F5;
+			font: bold 13px arial,helvetica,clean,sans-serif;
+		}
+		#tbl1 td:first-child {
+			text-align: left;
+		}
+		#tbl1 td.g {
+			color: #008800
+		}
+		#tbl1 td.r {
+			color: #CC0000
+		}
+		</style>
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true, async: true, mblAlwaysHideAddressBar: true"></script>
+		<script language="JavaScript" type="text/javascript">
+		require([
+			"dojox/mobile/parser", 	// This mobile app uses declarative programming with fast mobile parser
+			"dojox/mobile",			// This is a mobile app.
+			"dojox/mobile/FixedSplitter",
+			"dojox/mobile/ScrollableView",
+			"dojox/mobile/SwapView",
+			"dojox/mobile/PageIndicator",
+			"dojox/mobile/compat" 	// This mobile app supports running on desktop browsers
+			// "domReady!" // Enable if user code placed in the callback here that needs DOMReady
+		]);
+		</script>
+	</head>
+	<body style="visibility:hidden;">
+		<div dojoType="dojox.mobile.FixedSplitter" orientation="V">
+			<div dojoType="dojox.mobile.FixedSplitterPane" style="height:50%;overflow:hidden;">
+				<div id="general" dojoType="dojox.mobile.ScrollableView" height="inherit">
+					<ul dojoType="dojox.mobile.RoundRectList" class="list1" stateful="true">
+						<li dojoType="dojox.mobile.ListItem" moveTo="#">
+							<div class="c1">Gold</div>
+							<div class="c2">3,400.20</div>
+							<div class="c3 c3a">+1.57%</div>
+						</li>
+						<li dojoType="dojox.mobile.ListItem" moveTo="#">
+							<div class="c1">Oil</div>
+							<div class="c2">347.26</div>
+							<div class="c3 c3b">-0.82%</div>
+						</li>
+						<li dojoType="dojox.mobile.ListItem" moveTo="#">
+							<div class="c1">Commodities</div>
+							<div class="c2">541.77</div>
+							<div class="c3 c3b">-0.43%</div>
+							
+						</li>
+						<li dojoType="dojox.mobile.ListItem" moveTo="#">
+							<div class="c1">Silver</div>
+							<div class="c2">12,823.94</div>
+							<div class="c3 c3a">+0.17%</div>
+						<li dojoType="dojox.mobile.ListItem" moveTo="#">
+							<div class="c1">Soybeans</div>
+							<div class="c2">18.19</div>
+							<div class="c3 c3a">+2.77%</div>
+						</li>
+						<li dojoType="dojox.mobile.ListItem" moveTo="#">
+							<div class="c1">Wheat</div>
+							<div class="c2">3,335</div>
+							<div class="c3 c3a">+1.62%</div>
+						</li>
+						<li dojoType="dojox.mobile.ListItem" moveTo="#">
+							<div class="c1">Corn</div>
+							<div class="c2">29,930</div>
+							<div class="c3 c3a">+1.15%</div>
+						</li>
+						<li dojoType="dojox.mobile.ListItem" moveTo="#">
+							<div class="c1">Sugar</div>
+							<div class="c2">172.15</div>
+							<div class="c3 c3a">+0.00%</div>
+						</li>
+					</ul>
+				</div>
+			</div>
+
+			<div dojoType="dojox.mobile.FixedSplitterPane" style="height:10px;overflow:hidden;">
+			</div>
+
+			<div dojoType="dojox.mobile.FixedSplitterPane" style="overflow:hidden;">
+				<div id="swap1" dojoType="dojox.mobile.SwapView">
+					<div dojoType="dojox.mobile.ScrollableView" height="100%">
+						<ul id="news" dojoType="dojox.mobile.RoundRectList">
+							<li class="mblVariableHeight" dojoType="dojox.mobile.ListItem"
+								href="test_iPhone-ScrollableView-demo.html" hrefTarget="_blank" arrowClass="mblDomButtonBlueCircleArrow">
+								Oil prices rise as dollar weakens
+								<div class="subtitle">Daily News - 2011/05/02 15:40</div>
+							</li>
+							<li class="mblVariableHeight" dojoType="dojox.mobile.ListItem"
+								href="test_iPhone-ScrollableView-demo.html" hrefTarget="_blank" arrowClass="mblDomButtonBlueCircleArrow">
+								Same Old Story For Air Service Costs
+								<div class="subtitle">Daily News - 2011/05/02 14:30</div>
+							</li>
+							<li class="mblVariableHeight" dojoType="dojox.mobile.ListItem"
+								href="test_iPhone-ScrollableView-demo.html" hrefTarget="_blank" arrowClass="mblDomButtonBlueCircleArrow">
+								Local stocks mixed despite new trade data
+								<div class="subtitle">Daily News - 2011/05/02 14:10</div>
+							</li>
+
+							<li class="mblVariableHeight" dojoType="dojox.mobile.ListItem"
+								href="test_iPhone-ScrollableView-demo.html" hrefTarget="_blank" arrowClass="mblDomButtonBlueCircleArrow">
+								Stocks point higher after economic data
+								<div class="subtitle">Daily News - 2011/05/02 11:00</div>
+							</li>
+							<li class="mblVariableHeight" dojoType="dojox.mobile.ListItem"
+								href="test_iPhone-ScrollableView-demo.html" hrefTarget="_blank" arrowClass="mblDomButtonBlueCircleArrow">
+								Wall St seen higher after industry forecasts
+								<div class="subtitle">Daily News - 2011/05/01 16:05</div>
+							</li>
+							<li class="mblVariableHeight" dojoType="dojox.mobile.ListItem"
+								href="test_iPhone-ScrollableView-demo.html" hrefTarget="_blank" arrowClass="mblDomButtonBlueCircleArrow">
+								Stocks drop on slower job creation
+								<div class="subtitle">Daily News - 2011/05/01 15:50</div>
+							</li>
+							<li class="mblVariableHeight" dojoType="dojox.mobile.ListItem"
+								href="test_iPhone-ScrollableView-demo.html" hrefTarget="_blank" arrowClass="mblDomButtonBlueCircleArrow">
+								Dollar initially falls after revised jobs report
+								<div class="subtitle">Daily News - 2011/05/01 13:20</div>
+							</li>
+						</ul>
+					</div>
+				</div>
+
+				<div id="swap2" dojoType="dojox.mobile.SwapView">
+					<div dojoType="dojox.mobile.ScrollableView" height="100%">
+						<div dojoType="dojox.mobile.RoundRect" style="position:relative;">
+						<table id="tbl1" cellpadding="0" cellspacing="0" width="90%">
+							<tr><td>2 Yr Bond</td><td>113.75</td><td>0.00</td><td class="g">0.00%</td></tr>
+							<tr><td>N225</td><td>10,004.20</td><td>154.46</td><td class="g">1.57%</td></tr>
+							<tr><td>JKSE</td><td>3,816.44</td><td>32.87</td><td class="r">-0.85%</td></tr>
+							<tr><td>Seoul</td><td>2,200.73</td><td>28.23</td><td class="g">1.27%</td></tr>
+							<tr><td>TW</td><td>8,946.08</td><td>61.79</td><td class="r">-0.69%</td></tr>
+							<tr><td>Tokyo</td><td>2,932.19</td><td>20.68</td><td class="r">-0.71%</td></tr>
+							<tr><td>All</td><td>4,854.70</td><td>41.50</td><td class="r">-0.85%</td></tr>
+						</table>
+						</div>
+					</div>
+				</div>
+
+				<div id="swap3" dojoType="dojox.mobile.SwapView">
+					<div dojoType="dojox.mobile.ScrollableView" height="100%">
+						<div dojoType="dojox.mobile.RoundRect" style="overflow:hidden">
+							<img src="images/chart.png">
+						</div>
+					</div>
+				</div>
+
+				<div dojoType="dojox.mobile.PageIndicator" fixed="bottom"></div>
+			</div>
+		</div>
+	</body>
+</html>

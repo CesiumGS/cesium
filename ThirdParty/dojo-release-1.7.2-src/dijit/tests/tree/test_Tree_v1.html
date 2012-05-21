@@ -1,0 +1,123 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Dijit Tree V1 API Test</title>
+
+	<style type="text/css">
+		@import "../../themes/claro/document.css";
+		@import "../css/dijitTests.css";
+	</style>
+
+	<!-- required: the default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		data-dojo-config="isDebug: true, parseOnLoad: true"></script>
+
+	<!-- only needed for alternate theme testing: -->
+	<script type="text/javascript" src="../_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dojo.data.ItemFileReadStore");
+		dojo.require("dijit.Tree");
+		dojo.require("dijit.ColorPalette");
+		dojo.require("dijit.Menu");
+		dojo.require("dijit.MenuItem");
+		dojo.require("dijit.PopupMenuItem");
+		dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+	</script>
+</head>
+<body class="claro">
+
+	<h1 class="testTitle">Dijit Tree V1 API Test</h1>
+	<p>
+		This file is for testing the old Tree API's, where the store is specified directly
+		rather than specifying a model which connects to a store.
+	</p>
+	<div dojoType="dojo.data.ItemFileReadStore" jsId="continentStore"
+		url="../_data/countries.json"></div>
+
+	<h3>Tree with hardcoded root node (not corresponding to any item in the store)</h3>
+	<p>Clicking a folder node will open/close it (openOnclick==true), and clicking a leaf node will change the display name of the leaf node.</p>
+	<div dojoType="dijit.Tree" id="mytree" store="continentStore" query="{type:'continent'}"
+		onfocus="console.log('user focus handler')"
+		onblur="console.log('user blur handler')"
+		label="Continents" openOnClick="true" persist="false">
+		<script type="dojo/method" data-dojo-event="onClick" data-dojo-args="item">
+			this.getNodesByItem(item)[0].labelNode.innerHTML=item.name[0] + " was clicked";
+		</script>
+	</div>
+
+	<button onclick="dijit.byId('mytree').destroyRecursive();">destroy</button>
+
+	<h2>A rootless tree (no "continents" node) with context menus, and custom icons</h2>
+
+	<ul dojoType="dijit.Menu" id="tree_menu" style="display: none;">
+		<li dojoType="dijit.MenuItem" onClick="alert('Hello world');">Enabled Item</li>
+		<li dojoType="dijit.MenuItem" disabled="true">Disabled Item</li>
+		<li dojoType="dijit.MenuItem" iconClass="dijitEditorIcon dijitEditorIconCut"
+			onClick="alert('not actually cutting anything, just a test!')">Cut</li>
+		<li dojoType="dijit.MenuItem" iconClass="dijitEditorIcon dijitEditorIconCopy"
+			onClick="alert('not actually copying anything, just a test!')">Copy</li>
+		<li dojoType="dijit.MenuItem" iconClass="dijitEditorIcon dijitEditorIconPaste"
+			onClick="alert('not actually pasting anything, just a test!')">Paste</li>
+		<li id="popupSubMenu" dojoType="dijit.PopupMenuItem">
+			<span>Enabled Submenu</span>
+			<ul dojoType="dijit.Menu" id="submenu2">
+				<li dojoType="dijit.MenuItem" onClick="alert('Submenu 1!')">Submenu Item One</li>
+				<li dojoType="dijit.MenuItem" onClick="alert('Submenu 2!')">Submenu Item Two</li>
+				<li id="deeperSubmenu" dojoType="dijit.PopupMenuItem">
+					<span>Deeper Submenu</span>
+					<ul dojoType="dijit.Menu" id="submenu4">
+						<li dojoType="dijit.MenuItem" onClick="alert('Sub-submenu 1!')">Sub-sub-menu Item One</li>
+						<li dojoType="dijit.MenuItem" onClick="alert('Sub-submenu 2!')">Sub-sub-menu Item Two</li>
+					</ul>
+				</li>
+			</ul>
+		</li>
+		<li dojoType="dijit.PopupMenuItem" disabled="true">
+			<span>Disabled Submenu</span>
+			<ul dojoType="dijit.Menu" id="submenu3" style="display: none;">
+				<li dojoType="dijit.MenuItem" onClick="alert('Submenu 1!')">Submenu Item One</li>
+				<li dojoType="dijit.MenuItem" onClick="alert('Submenu 2!')">Submenu Item Two</li>
+			</ul>
+		</li>
+	</ul>
+
+	<div dojoType="dijit.Tree" id="tree2" store="continentStore" query="{type:'continent'}" persist="false">
+		<script type="dojo/connect">
+			var menu = dijit.byId("tree_menu");
+			// when we right-click anywhere on the tree, make sure we open the menu
+			menu.bindDomNode(this.domNode);
+
+			dojo.connect(menu, "_openMyself", this, function(e){
+				// get a hold of, and log out, the tree node that was the source of this open event
+				var tn = dijit.getEnclosingWidget(e.target);
+				console.debug(tn);
+
+				// now inspect the data store item that backs the tree node:
+				console.debug(tn.item);
+
+				// contrived condition: if this tree node doesn't have any children, disable all of the menu items
+				dojo.forEach(menu.getChildren(), function(i){ i.set('disabled', !tn.item.children); });
+
+				// IMPLEMENT CUSTOM MENU BEHAVIOR HERE
+			});
+		</script>
+		<script type="dojo/method" event="getIconClass" args="item, opened">
+           return (!item || continentStore.getValue(item, "type") == "continent") ?
+                   (opened ? "customFolderOpenedIcon" : "customFolderClosedIcon") :
+                    "noteIcon";
+		</script>
+		<script type="dojo/method" data-dojo-event="onClick" data-dojo-args="item">
+			this.getNodesByItem(item)[0].labelNode.innerHTML = item.name[0] 
+				+ " (population: " + continentStore.getValue(item, "population") +")";
+		</script>
+</div>
+
+</body>
+</html>

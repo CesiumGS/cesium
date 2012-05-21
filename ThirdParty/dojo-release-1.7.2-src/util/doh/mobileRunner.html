@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html style="height:100%;">
+	<head>
+		<title>The Dojo Unit Test Harness, $Rev: 25266 $</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+		<script type="text/javascript">
+			// workaround for bug in Safari 3.	See #7189
+			if (/3[\.0-9]+ Safari/.test(navigator.appVersion))
+			{
+				window.console = {
+					origConsole: window.console,
+						log: function(s){
+						this.origConsole.log(s);
+					},
+					info: function(s){
+						this.origConsole.info(s);
+					},
+					error: function(s){
+						this.origConsole.error(s);
+					},
+					warn: function(s){
+						this.origConsole.warn(s);
+					}
+				};
+			}
+		</script>
+
+		<script type="text/javascript" src="_parseURLargs.js"></script>
+	
+		<style type="text/css">
+			@import "../../dojo/resources/dojo.css";
+
+			#testLayout {
+				position: relative;
+				left: 0px;
+				top: 0px;
+				width: 100%;
+				height: 100%;
+				border: 1px solid black;
+				border: 0px;
+			}
+
+			.tabBody {
+				margin: 0px;
+				padding: 0px;
+				/*
+				border: 1px solid black;
+				*/
+				background-color: #DEDEDE;
+				border: 0px;
+				width: 100%;
+				height: 100%;
+				position: absolute;
+				left: 0px; 
+				top: 0px;
+				overflow: auto;
+			}
+
+			#logBody {
+				padding-left: 5px;
+				padding-top: 5px;
+				font-family: Monaco, monospace;
+				font-size: 11px;
+				white-space: pre;
+			}
+
+
+		</style>
+	</head>
+	<body style="height: 100%;">
+				<td style="height: 100%;">
+					<div style="position: relative; width: 100%; height: 100%; top: 0px; left: 0px;">
+						<div class="tabBody"
+							style="z-index: 1;">
+							<pre id="logBody"></pre>
+							<div id="perfTestsBody" style="background-color: white;"></div>
+						</div>
+						<iframe id="testBody" class="tabBody"
+							style="z-index: -1;"></iframe>
+						<!--
+							src="http://redesign.dojotoolkit.org"></iframe>
+						-->
+					</div>
+		<span id="hiddenAudio"></span>
+	</body>
+</html>
+

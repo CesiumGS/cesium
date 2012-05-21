@@ -1,0 +1,50 @@
+<html>
+	<head>
+		<title>Demo using dojox.dtl._DomTemplated without Dijit</title>
+    <script type="text/javascript" src="../../../dojo/dojo.js"
+			djConfig="isDebug: true"></script>
+		<script type="text/javascript">
+			dojo.require("dojox.dtl.dom");
+			dojo.require("dojox.dtl.render.dom");
+			dojo.require("dojox.dtl.Context");
+
+			dojo.addOnLoad(function(){
+				var context = new dojox.dtl.Context({
+					items: ["apple", "banana", "orange"]
+				});
+
+				var template = new dojox.dtl.DomTemplate("<ul><!--{% for item in items %}--><li><!--{{ item }}--></li><!--{% endfor %}--></ul>");
+				// Render it plain
+				var node = template.render(context).getRootNode();
+				dojo.body().appendChild(node);
+
+				// Now show an example of how hard it is to manage stuff if the root node changes
+				var template2 = new dojox.dtl.DomTemplate("<!--{% ifequal items.length 3 %}--><ul><!--{% for item in items %}--><li><!--{{ item }}--></li><!--{% endfor %}--></ul>{% else %}<div>More than 3 items!</div>{% endifequal %}");
+				// Render it plain
+				var node2 = template2.render(context).getRootNode();
+				dojo.body().appendChild(node2);
+
+				// Now show how the HTML Render object makes this easier
+				var renderer = new dojox.dtl.render.dom.Render(dojo.byId("attach"), new dojox.dtl.DomTemplate("<!--{% ifequal items.length 3 %}--><ul><!--{% for item in items reversed %}--><li><!--{{ item }}--></li><!--{% endfor %}--></ul>{% else %}<div>More than 3 items!</div>{% endifequal %}"));
+				renderer.render(context);
+
+				// Now re-render and break template2
+				setTimeout(function(){
+					context.items.push("guava");
+					template.render(context);
+					template2.render(context);
+					renderer.render(context);
+
+					// This is what has to be done to fix template2
+					setTimeout(function(){
+						var frag = template2.render(context).getRootNode();
+						node2.parentNode.replaceChild(frag, node2);
+					}, 3000);
+				}, 3000);
+			});
+		</script>
+	</head>
+	<body>
+		<div id="attach"></div>
+	</body>
+</html>

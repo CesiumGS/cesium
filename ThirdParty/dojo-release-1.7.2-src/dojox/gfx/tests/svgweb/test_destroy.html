@@ -1,0 +1,58 @@
+<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" >
+<head>
+<title>Testing surface.destroy()</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+	@import "../../../../dojo/resources/dojo.css";
+	@import "../../../../dijit/tests/css/dijitTests.css";
+</style>
+<!-- SVGWEB { -->
+<meta name="svg.render.forceflash" content="true"/>
+<script src="svgweb/src/svg.js" data-path="svgweb/src"></script>
+<script src="../../../../dojo/dojo.js" djConfig="isDebug:true,forceGfxRenderer:'svg'" type="text/javascript"></script>
+<!-- } -->
+<script type="text/javascript">
+dojo.require("dojox.gfx");
+
+surface = null;
+
+makeShapes = function(){
+	if(surface){
+		surface.destroy();
+		surface = null;
+		var t = dojo.byId("test").innerHTML;
+		if(t){
+			console.error("Garbage detected: " + t);
+		}else{
+			console.log("The parent node was cleaned up properly.");
+		}
+	}
+	surface = dojox.gfx.createSurface("test", 500, 500);
+	/* SVGWEB { */
+	surface.whenLoaded(function() {
+	var path = surface.createPath("");
+	// form concentric circles
+	var center = {x: 250, y: 250};
+	for(var r = 200; r > 0; r -= 30){
+		// make two 180 degree arcs to form a circle
+		var start = {x: center.x, y: center.y - r};
+		var end   = {x: center.x, y: center.y + r};
+		path.moveTo(start).arcTo(r, r, 0, true, true, end).arcTo(r, r, 0, true, true, start).closePath();
+	}
+	// set visual attributes
+	path.setFill("red").setStroke("black");
+	});
+	/* } */
+};
+
+dojo.addOnLoad(makeShapes);
+</script>
+</head>
+<body>
+	<h1>Testing surface.destroy()</h1>
+	<p><button onclick="makeShapes();">Regenerate</button></p>
+	<p><em>See the firebug log for detailed reports.</em></p>
+	<div id="test" style="width: 500px; height: 500px;"></div>
+	<p>That's all Folks!</p>
+</body>
+</html>

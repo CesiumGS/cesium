@@ -1,0 +1,10 @@
+This folder contains the stores and utilities implementing the proposed new Dojo Object Store API,
+a successor and unifier to Dojo Data, Dojo Storage, and potentially Dojo Model. These
+stores are brand new, and designed to provide simple lightweight implementations 
+providing core functionality for typical applications. These modules are under active 
+development, and exist here at this time to provide maximum visibility to the 
+efforts to design and develop this new API and set of base stores. The goal is 
+to have these stores ready for Dojo 1.6. In the meantime, these stores are likely to
+have API changes, may be missing some functionality, tests, and/or documentation.
+If these modules are not deemed suitably stable by the 1.6 release, this directory (or
+individual modules) will be removed and be given a later release target.  

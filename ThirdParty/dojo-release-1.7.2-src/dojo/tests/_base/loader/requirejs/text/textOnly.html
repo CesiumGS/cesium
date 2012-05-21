@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>require.js: Text Test</title>
+    <script type="text/javascript">
+		requirejsArgs= {
+			dojoLocation:"../../../../.."
+		};
+	</script>
+    <script type="text/javascript" src="../requirejs-setup.js"></script>
+    <script type="text/javascript" src="../../../../../dojo.js"></script>
+    <script type="text/javascript">
+    // alias dojo's text module to text!
+	define("text", ["dojo/text"], function(text){ return text; });
+
+    require({
+            baseUrl: "./",
+            paths: {
+                text: "../../text"
+            }
+        },
+        ["text!resources/sample.html!strip", "doh"],
+        function(sampleText, doh) {
+            doh.register(
+                "textOnly",
+                [
+                    function textOnly(t){
+                        t.is("<span>Hello World!</span>", sampleText);
+                    }
+                ]
+            );
+            doh.run();
+        }
+    );
+    </script>
+</head>
+<body>
+    <h1>require.js: Text Test</h1>
+    <p>Test for usage of text! require plugin.
+    <p>Check console for messages</p>
+</body>
+</html>

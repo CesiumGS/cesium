@@ -1,0 +1,16 @@
+({
+	name: "date.timezone.America-Antigua",
+	runTest: function(t){
+		var tz = "America/Antigua";
+		doh.checkDate({tzOffset: 247.2, tzAbbr: "LMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: 247.2, tzAbbr: "LMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: 247.2, tzAbbr: "LMT"}, -1825098769000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "EST"}, -1825098768000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "EST"}, -599598001000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "AST"}, -599598000000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "AST"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "AST"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "AST"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: 240, tzAbbr: "AST"}, 1246789800000, tz, 0);
+	}
+})

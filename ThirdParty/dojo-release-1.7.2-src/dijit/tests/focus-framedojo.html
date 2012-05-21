@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Focus Issue</title>
+	<style type="text/css">
+		@import "../themes/claro/claro.css";
+	</style>
+</head>
+<body class="claro">
+	<p>
+		Test case for focus code when dojo is loaded into an iframe.
+		Not supported officially but checking in test case anyway.
+	</p>
+
+	<p>Automated test will focus this input, causing a console message:</p>
+	<input id="input">
+
+	<p>Dojo is loaded into this iframe:</p>
+	<iframe style="width:100%;height:2em;" src="./focus-framedojo-child.html"></iframe>
+</body>
+</html>

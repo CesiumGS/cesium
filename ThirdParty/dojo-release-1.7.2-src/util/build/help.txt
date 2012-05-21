@@ -1,0 +1,77 @@
+NAME
+     The Dojo Builder - Read, process, and write a set of resources as instructed by a profile.
+
+DESCRIPTION
+     Discover and process a set of resources with an ordered synchronized set of transforms.
+
+     See http://dojotoolkit.org/reference-guide/build/index.html for reference documentation.
+     
+     See http://dojotoolkit.org/reference-guide/build/qref.html for a quick reference manual.
+
+     Typically this program is executed with the convience wrapper /util/buildscripts/build.bat (Window) or
+     /util/buildscripts/build.sh (all other environments); it may also be executed explicitly.
+
+     Usage with the build script on non-windows:
+     path/to/util/buildscripts/build.sh [options]
+     
+     Usage with the build script on windows:
+     IMPORTANT: the util/buildscripts directory must be the current working directory
+     build.bat [options]
+
+     Explicit usage with node.js:
+     node path/to/dojo/dojo.js load=build [options] 
+     
+     Explicit usage with java:
+     java -Xms256m -Xmx256m -jar path/to/util/shrinksafe/js.jar path/to/dojo/dojo.js baseUrl=path/to/dojo load=build [options]
+     
+     IMPORTANT:
+     This program assumes the default directory structure provided with the standard dojo source release.
+     
+     IMPORTANT:
+     When using v1.6- profiles, this program assumes the current working directory is utils/buildscripts.
+
+OPTIONS
+     -p <filename>
+     --profile <filename>      read profile for file
+     
+     -p <profile>
+     --profile <profile>       read profile from profile in util/buildscripts/profiles
+     
+     --package <path>          read profile from package.json located in the directory path
+     
+     --require <filename>
+     --dojoConfig              read profile from loader configuration 
+     
+     --htmlFiles <file-list>   deduce profile from HTML file(s); file-list is a comma-separated list of filenames
+     
+     --htmlDir <path>          deduce profile from all HTML files in directory at path
+     
+     --check-args              print computed raw command line input, including raw profiles, then terminate
+     
+     --check                   print computed profile, then terminate
+     
+     --check-discovery         print all discovered resources, then terminate
+     
+     --debug-check             print computed profile, including internal structures
+     
+     -r
+     --release                 process the build control script(s) and/or profile(s) and transform sources into a release
+     
+     --releaseDir <path>       base directory for build output
+     
+     --releaseName <string>    path segment to append to releaseDir that gives base directory for build output
+     
+     --writeProfile <filename> write the processed profile to filename
+     
+     --copyTests               Copy test files and the DOH package.
+     
+     --mini                    Ignore resources tagged as not mini (e.g. tests, demos dijit/bench, etc.)
+     
+     -v                        print the program's version number
+     
+     --help                    this help message
+     
+     Scalar profile property values may also be specified as options with the syntax
+     
+          --<profile-property-name> <value>
+     

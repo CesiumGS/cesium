@@ -1,0 +1,110 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Testing plot order</title>
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dojo/resources/dnd.css";
+	@import "../../../dojo/tests/dnd/dndDefault.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+</style>
+<script src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+<script>
+
+dojo.require("dojox.charting.Chart");
+dojo.require("dojox.charting.axis2d.Default");
+dojo.require("dojox.charting.plot2d.Bubble");
+dojo.require("dojox.charting.themes.ThreeD");
+dojo.require("dojox.charting.widget.Legend");
+
+dojo.require("dojo.dnd.Source");
+
+makeObjects = function(){
+    dojo.query("button").style("disabled", true);
+    
+	var chart1 = new dojox.charting.Chart("chart1").
+            setTheme(dojox.charting.themes.ThreeD).
+            addAxis("x", {min: 0, max: 10}).
+            addAxis("y", {vertical: true, min: 0, max: 10}).
+            addPlot("Plot 1", {type: "Bubble"}).
+            addSeries("Plot 1 / Series A", [{x: 3, y: 3, size: 4}], {plot: "Plot 1"}).
+            addPlot("Plot 2", {type: "Bubble"}).
+            addSeries("Plot 2 / Series B", [{x: 5, y: 5, size: 4}], {plot: "Plot 2"}).
+            //addSeries("Plot 2 / Series B1", [{x: 5, y: 6, size: 3}], {plot: "Plot 2"}).
+            //addSeries("Plot 2 / Series B2", [{x: 4, y: 4, size: 3}], {plot: "Plot 2"}).
+            //addSeries("Plot 2 / Series B3", [{x: 6, y: 4, size: 3}], {plot: "Plot 2"}).
+            addPlot("Plot 3", {type: "Bubble"}).
+            addSeries("Plot 3 / Series C", [{x: 7, y: 7, size: 4}], {plot: "Plot 3"}).
+            render();
+
+	var legend1 = new dojox.charting.widget.Legend({chart: chart1, horizontal: false}, "legend1");
+    dojo.connect(chart1, "render", legend1, "refresh");
+    
+    var plots = new dojo.dnd.Source("dnd1"), noUpdate = false;
+    plots.insertNodes(false, chart1.getPlotOrder());
+    dojo.connect(plots, "onDropInternal", function(){
+        var newOrder = this.getAllNodes().map(function(node){
+                return node.innerHTML;
+            })
+        chart1.setPlotOrder(newOrder);
+        noUpdate = true;
+        chart1.render();
+        noUpdate = false;
+    });
+    dojo.connect(chart1, "render", function(){
+        if(!noUpdate){
+            plots.getAllNodes().orphan();
+            plots.sync();
+            plots.insertNodes(false, chart1.getPlotOrder());
+        }
+    });
+
+    dojo.forEach(["p1", "p2", "p3"], function(id, i){
+        dojo.query("button", id).forEach(function(btn){
+            if(btn.innerHTML == "Front"){
+                dojo.connect(btn, "onclick", function(){
+                    chart1.movePlotToFront("Plot " + (i + 1));
+                    chart1.render();
+                });
+            }else{
+                dojo.connect(btn, "onclick", function(){
+                    chart1.movePlotToBack("Plot " + (i + 1));
+                    chart1.render();
+                });
+            }
+        });
+    });
+};
+
+dojo.ready(makeObjects);
+
+</script>
+</head>
+<body>
+<h1>Testing plot order</h1>
+<!--<p><button onclick="makeObjects();">Go</button></p>-->
+<p>Chart:</p>
+<div id="chart1" style="width: 200px; height: 200px;"></div>
+<div id="legend1"></div>
+<p id="p1">Plot 1: <button>Front</button> <button>Back</button></p>
+<p id="p2">Plot 2: <button>Front</button> <button>Back</button></p>
+<p id="p3">Plot 3: <button>Front</button> <button>Back</button></p>
+<p>Plots (rearrange using drag-and-drop):</p>
+<div id="dnd1" class="container"></div>
+<p>That's all Folks!</p>
+</body>
+</html>

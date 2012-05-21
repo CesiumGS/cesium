@@ -1,0 +1,24 @@
+/* mbl.widget.Heading */
+@import url("android-compat.css");
+
+.alertTitle {
+	background-image: url(compat/heading-bg.png);
+}
+
+.mblImageThumbView .mblThumb {
+	-moz-transition: all 0.5s ease-in-out;
+	-o-transition: all 0.5s ease-in-out;
+}
+
+.mblImageThumbView .mblThumb:hover {
+	-moz-transform: scale(1.2);
+	-moz-transition: all 0.3s ease-in-out;
+	-o-transform: scale(1.2);
+	-o-transition: all 0.3s ease-in-out;
+}
+.mblImageThumbView .mblThumbInner .mblThumbMask .mblThumbSrc {
+  -moz-background-size: 100% 100%;
+  -moz-border-radius: 5px;
+  -o-background-size: 100% 100%;
+  -o-border-radius: 5px;
+}

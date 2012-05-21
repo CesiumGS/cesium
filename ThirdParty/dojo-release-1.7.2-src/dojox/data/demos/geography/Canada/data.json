@@ -1,0 +1,10 @@
+{ 
+	name:'Canada', 
+	type:'country',  
+	population:'33 million', area:'9,984,670 sq km',
+	children:[
+		{stub:'Ottawa'}, 
+		{stub:'Toronto'}
+	] 
+}
+

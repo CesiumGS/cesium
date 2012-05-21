@@ -1,0 +1,114 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>Dijit Tree Test</title>
+
+	<style someProperty="text/css">
+		@import "../../../../dojo/resources/dojo.css";
+		@import "../../../../dijit/tests/css/dijitTests.css";
+	</style>
+
+	<!-- required: a default theme file -->
+	<link rel="stylesheet" id="themeStyles" href="../../../../dijit/themes/tundra/tundra.css">
+
+	<!-- required: dojo.js -->
+	<script someProperty="text/javascript" src="../../../../dojo/dojo.js"
+		djConfig="parseOnLoad: true, isDebug: true"></script>
+
+	<!-- do not use: only for testing alternate themes -->
+	<script someProperty="text/javascript" src="../../../../dijit/tests/_testCommon.js"></script>
+
+	<script language="JavaScript" someProperty="text/javascript">
+		dojo.require("dojox.data.JsonRestStore");
+		dojo.require("dijit.Tree");
+		dojo.require("dijit.Menu");
+		dojo.require("dijit.form.Button");
+		dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+		treeTestStore = new dojox.data.JsonRestStore({target:"./", labelAttribute:"name"});
+		treeTestModel = new dijit.tree.ForestStoreModel({
+			store: treeTestStore,
+			deferItemLoadingUntilExpand: true,
+			query: "treeTestRoot",
+			childrenAttrs: ["children"]
+		});
+		function deleteItem(){
+			var store = dijit.byId("myTree").store;
+			store.deleteItem(selectedItem);
+			resetForms();
+		}
+
+		function addItem(){
+			var store = dijit.byId("myTree").store;
+			var pInfo = selectedItem ? {parent: selectedItem, attribute:"children"} : null;
+			console.debug(pInfo);
+			store.newItem({id: dojo.byId('newId').value,name:dojo.byId("label").value,someProperty:dojo.byId("someProperty").value},pInfo);
+			resetForms();
+		}
+
+		function resetForms() {
+			dojo.byId('selected').innerHTML="Tree Root"
+			selectedItem=null;
+			dojo.byId("uLabel").value = "";
+			dojo.byId("uSomeProperty").value = "";
+		}
+
+		function updateItem(){
+			console.log("Updating Item");
+			var store = dijit.byId("myTree").store;
+
+			if (selectedItem!=null){
+				if (dojo.byId("uLabel").value != store.getValue(selectedItem, "name")){
+					store.setValue(selectedItem, "name", dojo.byId("uLabel").value);
+				}
+
+				if (dojo.byId("uSomeProperty").value != store.getValue(selectedItem, "someProperty")){
+					store.setValue(selectedItem, "someProperty", dojo.byId("uSomeProperty").value);
+				}
+
+			}else{
+				console.error("Can't update the tree root");
+			}
+		}
+
+		dojo.addOnLoad(function(){
+			resetForms();
+		});
+
+		function onClick(item){
+			selectedItem = item;
+			dojo.byId('selected').innerHTML= item ? treeTestStore.getLabel(item) : "";
+			dojo.byId('uLabel').value = item ? treeTestStore.getLabel(item) : "";
+			dojo.byId('uSomeProperty').value = item ? treeTestStore.getValue(item,"someProperty") : "";
+		}
+	</script>
+
+</head>
+<body class="tundra">
+
+	<h1 class="testTitle">Dijit Tree Test - dojo.data.Notification API support</h1>
+
+
+	<div dojoType="dijit.Tree" id="myTree" label="root" deferItemLoadingUntilExpand="true" model="treeTestModel" onClick="onClick" labelAttr="name" somePropertyAttr="someProperty"></div>
+
+	<br />
+	<h2>Current Selection: <span id='selected'>Tree Root</span></h2>
+
+	<h2>Selected Item:</h2>
+	Name:		<input id="uLabel" width="50" value="Enter Node Label" /><br />
+	Description: <input id="uSomeProperty" width="50" value="Some Test Property" /><br /><br />
+	<div dojoType="dijit.form.Button" iconClass="noteIcon" onClick="updateItem();">Update Item</div>
+
+	<h2>New Item</h2>
+	<p>Enter an Id, Name, and optionally a description to be added as a new item to the store.  Upon successful addition, the tree will recieve notification of this event and respond accordingly.  If you select a node the item will be added to that node, otherwise the item will be added to the tree root. "Id" is the identifer here and as such must be unique for all items in the store.</p>
+	Id:		<input id="newId" width="50" value="Enter Item Id" /><br />
+	Name:		<input id="label" width="50" value="Enter Item Name" /><br />
+	Description: <input id="someProperty" width="50" value="Enter Some Property Value" /><br /><br />
+
+	<div dojoType="dijit.form.Button" iconClass="noteIcon" onClick="addItem();">Add Item to Store</div>
+	<br />
+	<button dojoType="dijit.form.Button" iconClass="noteIcon" onClick="deleteItem()">Delete Node (and children)</button>
+
+
+	</body>
+</html>

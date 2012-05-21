@@ -1,0 +1,24 @@
+<div>
+	This scene shows how to render a list containing buttons.
+	Swipe to delete rows.
+</div>
+
+<div dojoType="dojox.mobile.RoundRect"
+		shadow="true" id="buttonOutput" style="min-height: 70px;">
+	Click a button in the list to see the output here
+</div>
+
+<button id="btn1" dojoType="dojox.mobile.Button">Data 1</button>
+<button id="btn2" dojoType="dojox.mobile.Button">Data 2</button>
+<button id="btn3"
+				dojoType="dojox.mobile.Button"
+				btnClass="mblRedButton">Empty Data</button>
+
+<div dojoType="dojox.mobile.RoundRect" shadow="true">
+	<div id="listWidget" dojoType="dojox.mobile.app.List"
+			class="iconList"
+			autoDelete="false"
+			itemTemplate="app/views/main/rowTemplate.html"
+			dividerTemplate="app/views/main/dividerTemplate.html"
+			emptyTemplate="app/views/main/emptyTemplate.html"></div>
+</div>

@@ -1,0 +1,148 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>dojox.grid.Grid Sizing Example</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../resources/Grid.css";
+		@import "../resources/tundraGrid.css";
+		
+		body {
+			font-size: 0.9em;
+			font-family: Geneva, Arial, Helvetica, sans-serif;
+		}
+		.heading {
+			font-weight: bold;
+			padding-bottom: 0.25em;
+		}
+		
+		#container {
+			width: 400px;
+			height: 200px;
+			border: 4px double #333; 
+		}
+				
+		#grid { 
+			border: 1px solid #333;
+		}
+	</style>
+	<script type="text/javascript" src="../../../dojo/dojo.js" 
+		djConfig="isDebug: true, parseOnLoad: true"></script>
+	<script type="text/javascript">
+		dojo.require("dijit.dijit");
+		dojo.require("dojox.grid.DataGrid");
+		dojo.require("dojo.data.ItemFileWriteStore");
+		dojo.require("dojo.parser");
+	</script>
+	<script type="text/javascript" src="support/test_data.js"></script>
+	<script type="text/javascript">
+		var structure = [
+			{
+				noscroll: true,
+				cells: [
+					{name: 'Column 1', field: 'col1'},
+					{name: 'Column 2', field: 'col2'}
+				]
+			},
+			[
+				{name: 'Column 3', field: 'col3'},
+				{name: 'Column 4', field: 'col4'},
+				{name: 'Column 5', field: 'col5'},
+				{name: 'Column 6', field: 'col6'},
+				{name: 'Column 7', field: 'col7'}
+			]
+		];
+
+		// get can return data for each cell of the grid
+		function get(inRowIndex) {
+			return [this.index, inRowIndex].join(', ');
+		}
+		
+		function resizeInfo() {
+			setTimeout(function() {
+				dojo.byId('gridWidth').value = grid.domNode.clientWidth;
+				dojo.byId('gridHeight').value = grid.domNode.clientHeight;
+			}, 1);
+		}
+		
+		function resizeGrid() {
+			dojo.attr('autoHeight', false);
+			dojo.attr('autoWidth', false);
+			var
+				w = Number(dojo.byId('gridWidth').value),
+				h = Number(dojo.byId('gridHeight').value);
+			
+			dojo.contentBox(grid.domNode, {w: w, h: h});
+			grid.update();
+		}
+		
+		function fitWidth() {
+			dojo.attr('autoWidth', true);
+			dojo.attr('autoHeight', false);
+			grid.update();
+		}
+		
+		function fitHeight() {
+			dojo.attr('autoWidth', false);
+			dojo.attr('autoHeight', true);
+			grid.update();
+		}
+		
+		function fitBoth() {
+			dojo.attr('autoWidth', true);
+			dojo.attr('autoHeight', true);
+			grid.update();
+		}
+		
+		function sizeDefault() {
+			dojo.attr('autoWidth', false);
+			dojo.attr('autoHeight', false);
+			grid.domNode.style.width = '';
+			grid.domNode.style.height = 0;
+			grid.update();
+		}
+		
+		dojo.addOnLoad(function() {
+			dojo.byId('gridWidth').value = 500;
+			dojo.byId('gridHeight').value = 200;
+			dojo.connect(grid, 'update', resizeInfo);
+			resizeGrid();
+		});
+	</script>
+</head>
+<body class="tundra">
+	<div class="heading">dojox.grid.Grid Sizing Test</div>
+	Grid width: <input id="gridWidth" type="text">&nbsp; 
+	and height: <input id="gridHeight" type="text">&nbsp;
+	<button onclick="resizeGrid()">Resize Grid</button><br><br>
+	<button onclick="fitWidth()">Fit Data Width</button>&nbsp;
+	<button onclick="fitHeight()">Fit Data Height</button>&nbsp;
+	<button onclick="fitBoth()">Fit Data Width &amp; Height</button>
+	<button onclick="sizeDefault()">DefaultSize</button><br><br>
+	<div id="grid" jsid="grid" dojoType="dojox.grid.DataGrid" 
+		autoWidth="true" autoHeight="true" store="test_store" 
+		structure="structure" rowSelector="20px" elasticView="2"></div>
+	
+	<p>Grid fits to a sized container by default:</p>
+	<div id="container">
+		<div id="grid1" jsid="grid1" dojoType="dojox.grid._Grid" 
+			get="get" structure="structure" rowCount="10" 
+			rowSelector="20px" elasticView="2"></div>
+	</div>
+
+	<p> Grid is essentially hidden (height of zero) when parent container is unsized 
+		(nothing, including the header, should be displayed):</p>
+	<div id="unsizedContainer">
+		<div id="grid2" dojoType="dojox.grid._Grid" 
+			get="get" structure="structure" rowCount="10" 
+			rowSelector="20px" elasticView="2"></div>
+	</div>
+
+	<p> Grid is autoHeight and autoWidth via markup</p>
+	<div id="grid3" dojoType="dojox.grid._Grid" 
+		autoWidth="true" autoHeight="true" get="get" 
+		structure="structure" rowCount="100" rowSelector="20px" elasticView="2"></div>
+</body>
+</html>

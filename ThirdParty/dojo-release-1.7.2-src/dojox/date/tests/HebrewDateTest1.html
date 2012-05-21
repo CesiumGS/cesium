@@ -1,0 +1,175 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+	<head>
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="locale: 'he', parseOnLoad: true, isDebug: true, extraLocale: ['he', 'ru']"></script>
+		<script language="javascript" type="text/javascript">
+			dojo.require("dojox.date.hebrew");
+			dojo.require("dojox.date.hebrew.Date");
+			dojo.require("dojox.date.hebrew.locale");
+			dojo.require("dijit.form.Button");
+		</script>
+	</head>
+	<body>
+		Date in Hebrew calendar:
+		&nbsp;&nbsp;&nbsp;
+		<br>
+		<br>
+		<label for="list_input">Date input Hebrew calendar</label>
+		<input type="text" id="list_input" NAME="list_input" style="width: 400px;">
+			<script type="text/javascript">
+				var date = new dojox.date.hebrew.Date();
+				var year = date.getFullYear();
+				function onButtonClick(){ //from gregorian to hebrew, use pattern
+					var date = new dojox.date.hebrew.Date();
+					var grdate = new Date();
+					var pat = dojo.trim(document.getElementById('Text5').value);
+					var options = {datePattern:pat, selector:'date'};
+					document.getElementById('Text4').value = dojox.date.hebrew.locale.format(date.fromGregorian(grdate), options);
+				}
+				function onButtonClickH(){ //from hebrew, use pattern
+					var str = dojo.trim(document.getElementById('list_input').value);
+					var pattstr = dojo.trim(document.getElementById('Text2').value);
+					// timePattern:'hh:mm:ss'
+					var options = {datePattern:pattstr, selector:'date'};
+					var dateH = dojox.date.hebrew.locale.parse (str,  options);
+					document.getElementById('Text3').value = dateH.toGregorian();
+				}	
+				function ListChange(){
+						var dropdownIndex = document.getElementById('setvaluetest').selectedIndex;
+						var dropdownValue = document.getElementById('setvaluetest')[dropdownIndex].value;
+						document.getElementById('Text2').value = dropdownValue;
+				}			
+			</script>
+		</input>
+		<label for="Text2">Type Pattern for input</label> 
+		<input ID="Text2" NAME="Text2"  ></input>
+		<label for="setvaluetest">Select Pattern for input</label> 
+		<select	id="setvaluetest"
+				name="state1"
+				onChange="ListChange()"
+				>
+			<option VALUE = "d MMMM yyyy" selected >d MMMM yyyy</option>
+			<option VALUE = "EEEE d MMMM yyyy" >EEEE d MMMM yyyy</option>
+			<option VALUE = "dd/MM/yy" >dd/MM/yy</option>
+			<option VALUE = "d MM yy" >d MM yy</option>
+		</select> 
+		<br>
+		<br>
+		<BR>
+		<label for="Text3">Output Gregorian calendar</label> 
+		<input  type="text" ID="Text3" NAME="Text3" style="width: 400px;"></input>
+		<button onclick="onButtonClickH()" type="button" ID="Button3"> Convert from input to Greg</button>
+		<br>
+		///////////////////////////////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\////////////////////////////////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+		<br>
+		<br>
+		<label for="Text5">Type Pattern for Hebrew output</label> 
+		<input  type="text" ID="Text5" NAME="Text5"></input>
+		<label for="Select1">Select Pattern for Hebrew output</label> 
+		<select	id="Select1"
+				name="state1"
+				onChange="Change()"
+				>
+			<option VALUE = "d MMMM yyyy" selected>d MMMM yyyy</option>
+			<option VALUE = "EEEE d MMMM yyyy" >EEEE d MMMM yyyy</option>
+			<option VALUE = "dd/MM/yy" >dd/MM/yy</option>
+			<option VALUE = "d MM yy">d MM yy</option>
+				<script type="text/javascript">
+					function Change(){
+						document.getElementById('Text5').value = Select1.options[Select1.selectedIndex].value;
+					}
+				</script>
+		</select> 		
+		<br>
+		<br>
+		<label for="Text4">Output Hebrew calendar</label> 
+		<input  type="text" ID="Text4" NAME="Text4"  style="width: 400px;"></input>
+		<button onclick="onButtonClick()" type="button" ID="Button1"> Convert today from  Gregorian to Hebrew</button>
+		<br>
+		<br>
+		<BR>
+		///////////////////////////////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\////////////////////////////////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+		<br>
+		Test add function
+		<br>
+		<br>
+		<br>
+		<label for="Text6">Type amount number</label> 
+		<input  type="text" ID="Text6" NAME="Text5" style="width: 100px;"></input>	 	
+		<label for="Select2">Select  interval</label> 
+		<select	id="Select2"
+				name="state2"
+				>
+			<option VALUE = "day" selected>day</option>
+			<option VALUE = "week" >week</option>
+			<option VALUE = "weekday" >weekday</option>
+			<option VALUE = "month">month</option>
+			<option VALUE = "year">year</option>
+			<option VALUE = "hour">hour</option>
+			<option VALUE = "minute">minute</option>	
+			<option VALUE = "second">second</option>									
+	
+		</select>
+		<button onclick="onButtonClickAdd()" type="button" ID="Button2"> Add</button>
+				
+		<script type="text/javascript">
+			function onButtonClickAdd(){
+				var dateHebrew= new dojox.date.hebrew.Date();
+				var num = parseInt(document.getElementById('Text6').value);
+				var sel = document.getElementById('Select2');
+				var dateHebrewAdd= dojox.date.hebrew.add(dateHebrew, sel.options[sel.selectedIndex].value, num);
+				var options = {datePattern:'EEEE dd MMMM yyyy HH:mm:ss', selector:'date'};
+				document.getElementById('Text7').value	= dojox.date.hebrew.locale.format(dateHebrewAdd,options);
+			}	
+		</script>				
+		<br>		
+		<br>
+		<br>
+		<label for="Text7">Result: added to today</label> 
+		<input  type="text" ID="Text7" NAME="Text7" style="width: 400px;"></input>	
+		<br>
+		<BR>
+		///////////////////////////////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\////////////////////////////////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+		<br>
+		Test difference function	
+		<br>
+		<br>
+		<label for="Text8">Type date in format dd MMMM yyyy HH:mm:ss</label> 
+		<input  type="text" ID="Text8" NAME="Text8" style="width: 200px;"></input>	
+		<label for="Text9">Type date in format dd MMMM yyyy HH:mm:ss</label> 
+		<input  type="text" ID="Text9" NAME="Text9" style="width: 200px;"></input>
+		<br>	
+		<label for="Select3">Select  interval</label> 
+		<select	id="Select3"
+				name="state3"
+				>
+			<option VALUE = "day" selected>day</option>
+			<option VALUE = "week" >week</option>
+			<option VALUE = "weekday" >weekday</option>
+			<option VALUE = "month">month</option>
+			<option VALUE = "year">year</option>
+			<option VALUE = "hour">hour</option>
+			<option VALUE = "minute">minute</option>	
+			<option VALUE = "second">second</option>									
+		</select>		
+		<button onclick="onButtonClickDiff()" type="button" ID="Button4"> Diff</button>
+				
+		<script type="text/javascript">
+			function onButtonClickDiff(){
+				var dateHebrew1 = dojox.date.hebrew.locale.parse(dojo.trim(document.getElementById('Text8').value), {datePattern:'dd MMMM yyyy HH:mm:ss', selector:'date'});
+				var dateHebrew2= dojox.date.hebrew.locale.parse(dojo.trim(document.getElementById('Text9').value),  {datePattern:'dd MMMM yyyy HH:mm:ss', selector:'date'});
+				var sel = document.getElementById('Select3');
+				var dif= dojox.date.hebrew.difference(dateHebrew1, dateHebrew2, sel.options[sel.selectedIndex].value);
+				document.getElementById('Text10').value= dif;
+			}	
+		</script>				
+		<br>		
+		<br>
+		<br>
+		<label for="Text10">Result: difference</label> 
+		<input  type="text" ID="Text10" NAME="Text10" style="width: 40px;"></input>	
+		<br>				
+		<br>		 			
+		<P></P>
+	</body>
+</html>

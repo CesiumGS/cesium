@@ -1,0 +1,250 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>dojox.grid.TreeGrid Tests</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../resources/Grid.css";
+		@import "../resources/claroGrid.css";
+		.grid {
+			width: 70em;
+			height: 15em;
+		}
+	</style>
+	<script type="text/javascript" src="../../../dojo/dojo.js" 
+		djConfig="isDebug:false, parseOnLoad: true"></script>
+	<script type="text/javascript">
+		dojo.require("dojox.grid.TreeGrid");
+		dojo.require("dojo.data.ItemFileWriteStore");
+		dojo.require("dojo.parser");
+		
+		function formatTime(value, rowIdx){
+			var hrs = Math.floor(value / 60) + "";
+			var mins = (value % 60) + "";
+			while (hrs.length < 2){
+				hrs = "0" + hrs;
+			}
+			while (mins.length < 2){
+				mins = "0" + mins;
+			}
+			return hrs + ":" + mins;
+		}
+		
+		function summaryFormatter(value, rowIdx, cell, sing, plur){
+			var str;
+			if(rowIdx >= 0){
+				return value;
+			}
+			if(rowIdx == -1){
+				str = "Total (${numItems} ${displayName}):";
+			}else{
+				str = "${numItems} ${displayName}";
+			}
+			return dojo.string.substitute(str, {numItems: value, 
+						displayName: (value == 1) ? sing : plur});			
+		}
+		function quarterSummary(value, rowIdx){
+			return summaryFormatter(value, rowIdx, this, "Quarter", "Quarters");
+		}
+		function gameSummary(value, rowIdx){
+			return summaryFormatter(value, rowIdx, this, "Game", "Games");
+		}
+		function seasonSummary(value, rowIdx){
+			return summaryFormatter(value, rowIdx, this, "Season", "Seasons");
+		}
+		dojo.addOnLoad(function(){
+			var g = new dojox.grid.TreeGrid({
+				structure: [ 
+					{ cells: [
+						[ 
+							{ field: "label", name: "Game" }, 
+							{ field: "qtrs", 
+								children: [
+									{ field: "label", name: "Quarter", width: "12em", formatter: quarterSummary }, 
+									{ field: "pts", name: "Points" }, 
+									{ field: "reb", name: "Rebounds" }, 
+									{ field: "ast", name: "Assists" }, 
+									{ field: "tp", name: "Time Played" } 
+								], 
+								itemAggregates: [ "numQtrs", "totPts", "totReb", "totAst", "totTP" ], 
+								aggregate: "sum"
+							}
+						]] 
+					}					
+				],
+				store: jsonStore,
+				query: {id: "3"},
+				queryOptions: {deep: true},
+				rowSelector: true
+			}, dojo.byId("progGrid"));
+			dojo.addClass(g.domNode, "grid");
+			g.startup();
+			dojo.connect(window, "onresize", grid4, "resize");
+		});
+
+	</script>
+</head>
+<body class="claro">
+	<h1 class="testTitle">Test: dojox.tests.grid.TreeGrid</h1>
+	<span dojoType="dojo.data.ItemFileWriteStore" 
+		jsId="jsonStore" url="support/gamedata.json">
+	</span>
+
+	<h4 class="testSubtitle">dojox.grid.TreeGrid 1-Level</h4>
+	<table dojoType="dojox.grid.TreeGrid" class="grid"
+		store="jsonStore" query="{ id: '4' }" queryOptions="{deep: true}" rowsPerPage="20" rowSelector="true">
+		<thead>
+			<tr>
+				<th field="label">Quarter</th>
+				<th field="pts">Points</th>
+				<th field="reb">Rebounds</th>
+				<th field="ast">Assists</th>
+				<th field="tp" formatter="formatTime">Time Played</th>
+			</tr>
+		</thead>
+	</table>
+
+	<h4 class="testSubtitle">dojox.grid.TreeGrid 2-Level (draggable columns)</h4>
+	<table dojoType="dojox.grid.TreeGrid" class="grid" columnReordering="true"
+		store="jsonStore" query="{ id: '3' }" queryOptions="{deep: true}" rowsPerPage="20" rowSelector="true">
+		<thead>
+			<tr>
+				<th field="label">Game</th>
+				<th field="qtrs" aggregate="sum" itemAggregates="numQtrs,totPts,totReb,totAst,totTP">
+					<table>
+						<thead>
+							<tr>
+								<th field="label" width="12em" formatter="quarterSummary">Quarter</th>
+								<th field="pts">Points</th>
+								<th field="reb">Rebounds</th>
+								<th field="ast">Assists</th>
+								<th field="tp" formatter="formatTime">Time Played</th>
+							</tr>
+						</thead>
+					</table>
+				</th>
+			</tr>
+		</thead>
+	</table>
+	
+	<h4 class="testSubtitle">dojox.grid.TreeGrid 2-Level (programmatic)</h4>
+	<div id="progGrid"></div>
+
+	<h4 class="testSubtitle">dojox.grid.TreeGrid 3-Level (initially closed, using relWidths)</h4>
+	<table dojoType="dojox.grid.TreeGrid" class="grid" defaultOpen="false"
+		store="jsonStore" query="{ id: '2' }" queryOptions="{deep: true}" rowsPerPage="20" rowSelector="true">
+		<thead>
+			<tr>
+				<th field="label" relWidth="2">Season</th>
+				<th field="games" aggregate="sum" itemAggregates="numGames">
+					<table>
+						<thead>
+							<tr>
+								<th field="label" formatter="gameSummary" relWidth="2">Game</th>
+								<th field="qtrs" aggregate="sum" itemAggregates="numQtrs,totPts,totReb,totAst,totTP">
+									<table>
+										<thead>
+											<tr>
+												<th field="label" formatter="quarterSummary" relWidth="2">Quarter</th>
+												<th field="pts" relWidth="1">Points</th>
+												<th field="reb" relWidth="1">Rebounds</th>
+												<th field="ast" relWidth="1">Assists</th>
+												<th field="tp" relWidth="1" formatter="formatTime">Time Played</th>
+											</tr>
+										</thead>
+									</table>
+								</th>
+							</tr>
+						</thead>
+					</table>
+				</th>
+			</tr>
+		</thead>
+	</table>
+
+	<h4 class="testSubtitle">dojox.grid.TreeGrid 4-Level - calculated totals, autoHeight and autoWidth</h4>
+	<table dojoType="dojox.grid.TreeGrid" class="grid" autoWidth="true" autoHeight="true"
+		store="jsonStore" query="{ id: '1' }" rowsPerPage="20" rowSelector="true">
+		<thead>
+			<tr>
+				<th field="label">Player</th>
+				<th field="seasns" aggregate="sum">
+					<table>
+						<thead>
+							<tr>
+								<th field="label" width="10em" formatter="seasonSummary">Season</th>
+								<th field="games" aggregate="sum">
+									<table>
+										<thead>
+											<tr>
+												<th field="label" width="10em" formatter="gameSummary">Game</th>
+												<th field="qtrs" aggregate="sum">
+													<table>
+														<thead>
+															<tr>
+																<th field="label" width="10em" formatter="quarterSummary">Quarter</th>
+																<th field="pts">Points</th>
+																<th field="reb">Rebounds</th>
+																<th field="ast">Assists</th>
+																<th field="tp" formatter="formatTime">Time Played</th>
+															</tr>
+														</thead>
+													</table>
+												</th>
+											</tr>
+										</thead>
+									</table>
+								</th>
+							</tr>
+						</thead>
+					</table>
+				</th>
+			</tr>
+		</thead>
+	</table>
+
+	<h4 class="testSubtitle">dojox.grid.TreeGrid Large 4-Level - calculated totals and openAtLevels</h4>
+	<table dojoType="dojox.grid.TreeGrid" class="grid" style="height: 45em;width: 100%;"
+		store="jsonStore" rowsPerPage="20" jsId="grid4" rowSelector="true" openAtLevels="false,true,3">
+		<thead>
+			<tr>
+				<th field="label" relWidth="2">Player</th>
+				<th field="seasns" aggregate="sum">
+					<table>
+						<thead>
+							<tr>
+								<th field="label" relWidth="2" formatter="seasonSummary">Season</th>
+								<th field="games" aggregate="sum">
+									<table>
+										<thead>
+											<tr>
+												<th field="label" relWidth="2" formatter="gameSummary">Game</th>
+												<th field="qtrs" aggregate="sum">
+													<table>
+														<thead>
+															<tr>
+																<th field="label" relWidth="2" formatter="quarterSummary">Quarter</th>
+																<th field="pts" relWidth="1">Points</th>
+																<th field="reb" relWidth="1">Rebounds</th>
+																<th field="ast" relWidth="1">Assists</th>
+																<th field="tp" relWidth="1" formatter="formatTime">Time Played</th>
+															</tr>
+														</thead>
+													</table>
+												</th>
+											</tr>
+										</thead>
+									</table>
+								</th>
+							</tr>
+						</thead>
+					</table>
+				</th>
+			</tr>
+		</thead>
+	</table>
+	Text After
+</body>
+</html>
+

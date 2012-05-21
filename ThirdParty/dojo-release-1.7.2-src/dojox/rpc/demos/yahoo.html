@@ -1,0 +1,39 @@
+<html>
+	<head>
+		<title>
+			Yahoo Search Demo
+		</title>
+		<script src="../../../dojo/dojo.js" type="text/javascript"
+			djConfig="parseOnLoad: true, isDebug: true"></script>
+		<script type="text/javascript">
+			dojo.require("dojo.io.script")
+			dojo.require("dojox.rpc.Service");
+			dojo.require("dijit._Widget");
+			dojo.require("dojox.dtl._Templated");
+			dojo.require("dojo.parser");
+
+			dojo.declare("YahooWebSearchApiWidget", [dijit._Widget, dojox.dtl._Templated], {
+				constructor: function(params, node){
+					var mu = dojo.moduleUrl("dojox.rpc.SMDLibrary", "yahoo.smd");
+					this.yahoo = new dojox.rpc.Service(mu);
+				},
+				onSearch: function(e){
+					if(e.keyCode == dojo.keys.ENTER){
+						this.yahoo.webSearch({
+							query: e.target.value
+						}).addCallback(this, function(results){
+							console.debug(results.ResultSet);
+							this.results = results.ResultSet;
+							this.render();
+						});
+					}
+				},
+				templateString: dojo.cache("dojox.rpc.demos.templates", "yahoo.html")
+			});
+		</script>
+	</head>
+	<body>
+		<h1>Yahoo Web Search</h1>
+		<div dojoType="YahooWebSearchApiWidget"></div>
+	</body>
+</html>
