@@ -5,6 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <title>Cesium Sandcastle</title>
+    <link rel="Stylesheet" href="../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css" type="text/css">
     <link rel="stylesheet" href="../../ThirdParty/CodeMirror-2.24/lib/codemirror.css">
     <link rel="stylesheet" href="CesiumSandcastle.css">
     <script src="../../ThirdParty/CodeMirror-2.24/lib/codemirror.js"></script>
@@ -61,7 +62,19 @@
             <div data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: 'JavaScript code'">
             <textarea id="code" name="code">
 /*global require*/
-require({ baseUrl : '../../Source' }, [
+require({
+        baseUrl : '../../Source',
+        packages: [{
+            name: 'dojo',
+            location: '../ThirdParty/dojo-release-1.7.2-src/dojo'
+        }, {
+            name: 'dijit',
+            location: '../ThirdParty/dojo-release-1.7.2-src/dijit'
+        }, {
+            name: 'dojox',
+            location: '../ThirdParty/dojo-release-1.7.2-src/dojox'
+        }]
+    }, [
         'Core/Ellipsoid',
         'Core/SunPosition',
         'Core/EventHandler',
@@ -70,7 +83,10 @@ require({ baseUrl : '../../Source' }, [
         'Scene/Scene',
         'Scene/CentralBody',
         'Scene/BingMapsTileProvider',
-        'Scene/BingMapsStyle'
+        'Scene/BingMapsStyle',
+        'dojo/parser',
+        'dijit/form/Button',
+        'dijit/form/ToggleButton'
     ], function(
         Ellipsoid,
         SunPosition,
@@ -115,6 +131,29 @@ require({ baseUrl : '../../Source' }, [
     // Add examples from the Sandbox here:
 
     ///////////////////////////////////////////////////////////////////////////
+    // Demo buttons:
+
+    dojo.byId("toolbar").innerHTML = "Demo buttons: ";
+
+    var button1 = new dijit.form.ToggleButton({
+        label: "Ground Atmosphere",
+        iconClass: 'dijitCheckBoxIcon',
+        checked: cb.showGroundAtmosphere,
+        onChange: function (newValue) {
+            cb.showGroundAtmosphere = newValue;
+        }
+    }).placeAt("toolbar");
+
+    var button2 = new dijit.form.ToggleButton({
+        label: "Sky Atmosphere",
+        iconClass: 'dijitCheckBoxIcon',
+        checked: cb.showSkyAtmosphere,
+        onChange: function (newValue) {
+            cb.showSkyAtmosphere = newValue;
+        }
+    }).placeAt("toolbar");
+
+    ///////////////////////////////////////////////////////////////////////////
 
     scene.setAnimation(function() {
         //scene.setSunPosition(scene.getCamera().position);
@@ -145,7 +184,7 @@ require({ baseUrl : '../../Source' }, [
     }, MouseEventType.MOVE);
 
     // Prevent right-click from opening a context menu.
-    document.oncontextmenu = function() {
+    canvas.oncontextmenu = function() {
         return false;
     };
 
