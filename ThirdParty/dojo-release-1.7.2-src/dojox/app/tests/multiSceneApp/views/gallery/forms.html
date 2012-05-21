@@ -1,0 +1,110 @@
+<div id="forms" 
+	style="width: 100%;">
+	<form name="testForm" id="testForm">
+		<div class="field-title">Personal Data</div>
+		<div class="fieldset">
+			<div class="field-row">
+				<span>Full name</span>
+				<input id="forms_name" dojoType="dojox.mobile.TextBox" selectOnClick="true" value="Luke" type=text name="name"></input>
+			</div>
+			 <!--div class="field-row">
+                <span>Title</span>
+                <select name="title" id="titlelist">
+                    <option value="1">Mr.</option>
+                    <option value="0">Mrs.</option>
+					<option value="0">Ms.</option>
+					<option value="0">Miss</option>
+					<option value="0">Dr.</option>
+                </select>
+				<input id="titlecombo"></input>
+            </div>
+			<div class="field-row">
+                <span>Phone</span>
+                <input type=tel name="tel">
+                </input>
+            </div>
+            <div class="field-row">
+                <span>Email</span>
+                <input type=email name="email" multiple placeholder="me@dojotoolkit.org">
+                </input>
+            </div>
+            <div class="field-row">
+                <span>Website</span>
+                <input type=url name="url" placeholder="http://dojotoolkit.org">
+                </input>
+            </div>
+            <div class="field-row">
+                <span style="vertical-align:top;">Birthdate</span>
+                <div id="birthdate" dojoType="dojox.mobile.SpinWheelDatePicker" style="display:inline-block;"></div>
+            </div>
+			<div class="field-row">
+                <span>Hide birthdate</span>
+                <input type=checkbox dojoType="dojox.mobile.CheckBox" name="hidebirth" checked style="margin-left:0px;">
+                </input>
+            </div-->
+			<div class="field-row">
+                <span style="vertical-align:top;">Goals</span>
+                <textarea name="goals" dojoType="dojox.mobile.TextArea" maxLength="100" cols="20"></textarea>
+            </div>
+		</div>
+		
+		<div class="field-title">
+            Login
+        </div>
+		<div class="fieldset">
+            <div class="field-row">
+                <span>User name*</span>
+                <input type=text dojoType="dojox.mobile.TextBox" name="username" required>
+                </input>
+            </div>
+            <div class="field-row">
+                <span>Password*</span>
+                <input type=password name="pass" dojoType="dojox.mobile.TextBox">
+                </input>
+            </div>
+            <!--div class="field-row">
+                <span>Login retries</span>
+                <input type=number name="retries" value="3">
+                </input>
+            </div-->
+        </div>
+		
+        <div class="field-title">
+            Alerts
+        </div>
+        <div class="fieldset">
+            <span>Issue alerts for:</span>
+            <br/>
+            <div class="field-row">
+                <span>All messages</span>
+                <input type=radio name="forwardtype" dojoType="dojox.mobile.RadioButton" value="all">
+                </input>
+            </div>
+            <div class="field-row">
+                <span>Urgent messages only</span>
+                <input type=radio name="forwardtype" dojoType="dojox.mobile.RadioButton" checked="true" value="urgent">
+                </input>
+            </div>
+            <div class="field-row">
+                <span style="vertical-align:top;">Audible alerts:</span>
+                <div dojoType="dojox.mobile.Switch" value="off" style="display:-moz-inline-box;display:inline-block;">
+                </div>
+            </div>
+			<div class="field-row">
+	            <span>Alert volume</span>
+			</div>
+		    <input id="alertSlider" dojoType="dojox.mobile.Slider" name="alertvolume" min="0" max="100" value="0" style="width:50%;">
+            </input>
+            <!--div class="field-row">
+                <span>Forward to</span>
+                <input type=search results=10>
+                </input>
+            </div-->
+        </div>
+        <div style="text-align: center;">
+            <button type=reset dojotype="dojox.mobile.Button" class="mblButton greyBtn baseBtn normalBtn" onclick="dojo.byId('testForm').reset();">
+                Reset Form
+            </button>
+        </div>
+    </form>
+</div>

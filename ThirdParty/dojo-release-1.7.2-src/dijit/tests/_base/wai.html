@@ -1,0 +1,113 @@
+<html>
+<head>
+	<title>Dijit wai unit test</title>
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		djConfig="isDebug: true"></script>
+	<script type="text/javascript">
+		dojo.require("doh.runner");
+		dojo.require("dijit.dijit");
+
+		dojo.ready(function(){
+			doh.register("dijit.tests._base.wai",
+				[
+					function getWaiRoleOnElementWithNoRole(){
+						var elem = dojo.byId("no-role-or-states");
+						doh.assertFalse(dijit.hasWaiRole(elem));
+						doh.assertEqual("", dijit.getWaiRole(elem));
+					},
+
+					function getEmptyWairoleRole(){
+						var elem = dojo.byId("empty-wairole");
+						doh.assertFalse(dijit.hasWaiRole(elem));
+						doh.assertEqual("", dijit.getWaiRole(elem));
+					},
+
+					function getWairoleRole(){
+						var elem = dojo.byId("wairole");
+						doh.assertTrue(dijit.hasWaiRole(elem));
+						doh.assertEqual("menuitem", dijit.getWaiRole(elem));
+					},
+
+					function getUnprefixedRole(){
+						var elem = dojo.byId("unprefixed-role");
+						doh.assertTrue(dijit.hasWaiRole(elem));
+						doh.assertEqual("menuitem", dijit.getWaiRole(elem));
+					},
+
+					function setWaiRole(){
+						var div = document.createElement("div");
+						dijit.setWaiRole(div, "menuitem");
+						doh.assertEqual("menuitem", div.getAttribute("role"));
+					},
+
+					function setWaiRoleToExistingXHTML(){
+						/* replacing XHTML role w/wai role */
+						var elem=dojo.byId("navigation-role");
+						dijit.setWaiRole(elem, "treeitem");
+						doh.assertEqual("treeitem", elem.getAttribute("role"));
+					},
+
+					function setWaiRoleToExistingWaiRole(){
+						/* replacing wai role w/another wai role */
+						var div= document.createElement("div");
+						dijit.setWaiRole(div, "menuitem");
+						doh.assertTrue(dijit.hasWaiRole(div, "menuitem"));
+						dijit.setWaiRole(div, "treeitem");
+						doh.assertEqual("treeitem", div.getAttribute("role"));
+					},
+
+					function removeAllWaiRole(){
+						var div = document.createElement("div");
+						dijit.setWaiRole(div, "menuitem");
+						doh.assertTrue(dijit.hasWaiRole(div, "menuitem"));
+						dijit.removeWaiRole(div);
+						if(div.hasAttribute){
+							doh.assertFalse(div.hasAttribute("role"));
+						}else{
+							doh.assertTrue(div.getAttribute("role") == null
+								|| div.getAttribute("role") == "");
+						}
+					},
+
+					function getWaiStateOnElementWithNoState(){
+						var elem = dojo.byId("no-role-or-states");
+						doh.assertFalse(dijit.hasWaiState(elem, "checked"));
+						doh.assertEqual("", dijit.getWaiState(elem, "checked"));
+					},
+
+					function getWaiState(){
+						var elem = dojo.byId("checked");
+						doh.assertTrue(dijit.hasWaiState(elem, "checked"));
+						doh.assertEqual("true",
+							dijit.getWaiState(elem, "checked"));
+					},
+
+					function setWaiState(){
+						var div = document.createElement("div");
+						dijit.setWaiState(div, "checked", "true");
+						doh.assertEqual("true",
+							div.getAttribute("aria-checked"));
+					},
+
+					function removeWaiState(){
+						var div = document.createElement("div");
+						dijit.setWaiState(div, "checked", "true");
+						dijit.removeWaiState(div, "checked");
+						doh.assertEqual("", dijit.getWaiState(div, "checked"));
+					}
+				]
+			);
+			doh.run();
+		});
+	</script>
+</head>
+<body>
+	<div id="no-role-or-states"></div>
+	<div id="empty-wairole" role="wairole:"></div>
+	<div id="wairole" role="wairole:menuitem"></div>
+	<div id="unprefixed-role" role="menuitem"></div>
+	<div id="navigation-role" role="contentinfo"></div>
+	<div id="single-role" role="contentinfo"></div>
+	<div id="checked" aria-checked="true"></div>
+</body>
+</html>

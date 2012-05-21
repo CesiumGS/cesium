@@ -1,0 +1,431 @@
+<html>
+<head>
+	<title>Ellipsis tests</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<style type="text/css">
+		@import "../resources/ellipsis.css";
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+	</style>
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: false"></script>
+	<script type="text/javascript">
+		dojo.require("dojox.html.ellipsis");
+		
+		dojo.addOnLoad(function(){
+			// Add in some stuff programmatically after a delay
+			setTimeout(function(){
+				var content = "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. In porta. " +
+								"Etiam mattis libero nec ante. Nam porta lacus eu ligula. Cras mauris. " +
+								"Suspendisse vel augue. Vivamus aliquam orci ut eros. Nunc eleifend " +
+								"sagittis turpis. Nullam consequat iaculis augue. Aliquam pellentesque " +
+								"egestas massa. Curabitur pulvinar, enim vel porta dapibus, ligula " +
+								"lectus vulputate purus, eu tempus ante dolor id quam. Sed luctus " +
+								"fermentum nulla. Donec sollicitudin imperdiet risus. Cras cursus, " +
+								"sapien ac faucibus feugiat, ligula felis laoreet justo, eu " +
+								"sollicitudin purus purus in nibh. Phasellus in nunc.";
+				dojo.create("hr", {}, dojo.body());
+				dojo.create("div", {className: "heading", innerHTML: "Programmatic and delayed"}, dojo.body());
+				dojo.create("div", {className: "subheading", innerHTML: "Within Div"}, dojo.body());
+				dojo.create("div", {className: "dojoxEllipsis", innerHTML: content},
+							dojo.create("div", {className: "divContainer", style: {width: "100px"}}, dojo.body()));
+
+				dojo.create("div", {className: "subheading", innerHTML: "Within Table (using innerHTML)"}, dojo.body());
+				dojo.create("button", {innerHTML: "Change Data", onclick: function(){
+					var n = dojo.byId("c_1_1");
+					if(n.innerHTML == "Short Text"){
+						n.innerHTML = content;
+					}else if(n.innerHTML == content){
+						n.innerHTML = "<div class='dojoxEllipsis'>" + content + "</div>";
+					}else{
+						n.innerHTML = "Short Text";
+					}
+				}}, dojo.body());
+				var tableDiv = dojo.create("div", {});
+				var tableNode = dojo.create("table", {className: "tableContainer", style: {width: "600px"}}, tableDiv);
+				var inner = "<div class='dojoxEllipsis'>" + content + "</div>";
+				for (var r = 0; r < 3; r++){
+					var tableRow = dojo.create("tr", {}, tableNode);
+					for (var c = 0; c < 3; c++){
+						dojo.create("td", {id: "c_" + r + "_" + c, innerHTML: inner, style: {width: ((c+1)*100) + "px"}}, tableRow);
+					}
+				}
+				var ihtml = tableDiv.innerHTML;
+				tableDiv.innerHTML = "";
+				dojo.body().appendChild(tableDiv);
+				tableDiv.innerHTML = ihtml;
+			}, 1000);
+		});
+	</script>
+	<style>
+		.heading {
+			font-weight: bold;
+			font-size: 1.25em;
+		}
+		.subheading {
+			font-weight: bold;
+			padding-top: 1em;
+		}
+		.divContainer,
+		.tableContainer,
+		.tableContainer td {
+			border: 1px solid #F00;
+		}
+		.tableContainer {
+			/* If using ellipsis inside a table, the 
+				table-layout needs to be set to fixed */
+			table-layout: fixed;
+		}
+	</style>
+</head>
+<body>
+	<div class="heading">Within divs</div>
+	<div class="subheading">Fixed width (px):</div>
+	<div class="divContainer" style="width: 250px; margin-bottom: 0.25em">
+		<div class="dojoxEllipsis">
+			Short data that shouldn't wrap
+		</div>
+	</div>
+	<div class="divContainer" style="width: 250px">	
+		<div class="dojoxEllipsis">
+			Lorem ipsum dolor sit amet, consectetuer adipiscing elit. In porta. 
+			Etiam mattis libero nec ante. Nam porta lacus eu ligula. Cras mauris. 
+			Suspendisse vel augue. Vivamus aliquam orci ut eros. Nunc eleifend 
+			sagittis turpis. Nullam consequat iaculis augue. Aliquam pellentesque 
+			egestas massa. Curabitur pulvinar, enim vel porta dapibus, ligula 
+			lectus vulputate purus, eu tempus ante dolor id quam. Sed luctus 
+			fermentum nulla. Donec sollicitudin imperdiet risus. Cras cursus, 
+			sapien ac faucibus feugiat, ligula felis laoreet justo, eu 
+			sollicitudin purus purus in nibh. Phasellus in nunc.
+		</div>
+	</div>
+	<div class="subheading">Fixed width (em):</div>
+	<div class="divContainer" style="width: 20em">
+		<div class="dojoxEllipsis">
+			Lorem ipsum dolor sit amet, consectetuer adipiscing elit. In porta. 
+			Etiam mattis libero nec ante. Nam porta lacus eu ligula. Cras mauris. 
+			Suspendisse vel augue. Vivamus aliquam orci ut eros. Nunc eleifend 
+			sagittis turpis. Nullam consequat iaculis augue. Aliquam pellentesque 
+			egestas massa. Curabitur pulvinar, enim vel porta dapibus, ligula 
+			lectus vulputate purus, eu tempus ante dolor id quam. Sed luctus 
+			fermentum nulla. Donec sollicitudin imperdiet risus. Cras cursus, 
+			sapien ac faucibus feugiat, ligula felis laoreet justo, eu 
+			sollicitudin purus purus in nibh. Phasellus in nunc.
+		</div>
+	</div>
+	<div class="subheading">Relative width (% - resize browser window):</div>
+	<div class="divContainer" style="width: 70%">
+		<div class="dojoxEllipsis">
+			Lorem ipsum dolor sit amet, consectetuer adipiscing elit. In porta. 
+			Etiam mattis libero nec ante. Nam porta lacus eu ligula. Cras mauris. 
+			Suspendisse vel augue. Vivamus aliquam orci ut eros. Nunc eleifend 
+			sagittis turpis. Nullam consequat iaculis augue. Aliquam pellentesque 
+			egestas massa. Curabitur pulvinar, enim vel porta dapibus, ligula 
+			lectus vulputate purus, eu tempus ante dolor id quam. Sed luctus 
+			fermentum nulla. Donec sollicitudin imperdiet risus. Cras cursus, 
+			sapien ac faucibus feugiat, ligula felis laoreet justo, eu 
+			sollicitudin purus purus in nibh. Phasellus in nunc.
+		</div>
+	</div>
+	<div class="subheading">Floated and margins</div>
+	<div class="divContainer" style="width: 25%; float: right">
+		<div class="dojoxEllipsis">
+			Lorem ipsum dolor sit amet, consectetuer adipiscing elit. In porta. 
+			Etiam mattis libero nec ante. Nam porta lacus eu ligula. Cras mauris. 
+			Suspendisse vel augue. Vivamus aliquam orci ut eros. Nunc eleifend 
+			sagittis turpis. Nullam consequat iaculis augue. Aliquam pellentesque 
+			egestas massa. Curabitur pulvinar, enim vel porta dapibus, ligula 
+			lectus vulputate purus, eu tempus ante dolor id quam. Sed luctus 
+			fermentum nulla. Donec sollicitudin imperdiet risus. Cras cursus, 
+			sapien ac faucibus feugiat, ligula felis laoreet justo, eu 
+			sollicitudin purus purus in nibh. Phasellus in nunc.
+		</div>
+	</div>
+	<div class="divContainer" style="width: 25%; float: left">
+		<div class="dojoxEllipsis">
+			Lorem ipsum dolor sit amet, consectetuer adipiscing elit. In porta. 
+			Etiam mattis libero nec ante. Nam porta lacus eu ligula. Cras mauris. 
+			Suspendisse vel augue. Vivamus aliquam orci ut eros. Nunc eleifend 
+			sagittis turpis. Nullam consequat iaculis augue. Aliquam pellentesque 
+			egestas massa. Curabitur pulvinar, enim vel porta dapibus, ligula 
+			lectus vulputate purus, eu tempus ante dolor id quam. Sed luctus 
+			fermentum nulla. Donec sollicitudin imperdiet risus. Cras cursus, 
+			sapien ac faucibus feugiat, ligula felis laoreet justo, eu 
+			sollicitudin purus purus in nibh. Phasellus in nunc.
+		</div>
+	</div>
+	<div class="divContainer" style="width: 250px; margin-left: 30%;">
+		<div class="dojoxEllipsis">
+			Lorem ipsum dolor sit amet, consectetuer adipiscing elit. In porta. 
+			Etiam mattis libero nec ante. Nam porta lacus eu ligula. Cras mauris. 
+			Suspendisse vel augue. Vivamus aliquam orci ut eros. Nunc eleifend 
+			sagittis turpis. Nullam consequat iaculis augue. Aliquam pellentesque 
+			egestas massa. Curabitur pulvinar, enim vel porta dapibus, ligula 
+			lectus vulputate purus, eu tempus ante dolor id quam. Sed luctus 
+			fermentum nulla. Donec sollicitudin imperdiet risus. Cras cursus, 
+			sapien ac faucibus feugiat, ligula felis laoreet justo, eu 
+			sollicitudin purus purus in nibh. Phasellus in nunc.
+		</div>
+	</div>
+	<div style="clear: both"></div>
+	<hr>
+	<div class="heading">Within tables</div>
+	<div class="subheading">Fixed table, fixed columns:</div>
+	<table class="tableContainer" style="width: 500px;">
+		<tr>
+			<td style="width: 200px;">
+				<div class="dojoxEllipsis">
+					Lorem ipsum dolor sit amet, consectetuer adipiscing elit. In porta. 
+					Etiam mattis libero nec ante. Nam porta lacus eu ligula. Cras mauris. 
+					Suspendisse vel augue. Vivamus aliquam orci ut eros. Nunc eleifend 
+					sagittis turpis. Nullam consequat iaculis augue. Aliquam pellentesque 
+					egestas massa. Curabitur pulvinar, enim vel porta dapibus, ligula 
+					lectus vulputate purus, eu tempus ante dolor id quam. Sed luctus 
+					fermentum nulla. Donec sollicitudin imperdiet risus. Cras cursus, 
+					sapien ac faucibus feugiat, ligula felis laoreet justo, eu 
+					sollicitudin purus purus in nibh. Phasellus in nunc.
+				</div>
+			</td>
+			<td style="width: 300px;">
+				<div class="dojoxEllipsis">
+					Lorem ipsum dolor sit amet, consectetuer adipiscing elit. In porta. 
+					Etiam mattis libero nec ante. Nam porta lacus eu ligula. Cras mauris. 
+					Suspendisse vel augue. Vivamus aliquam orci ut eros. Nunc eleifend 
+					sagittis turpis. Nullam consequat iaculis augue. Aliquam pellentesque 
+					egestas massa. Curabitur pulvinar, enim vel porta dapibus, ligula 
+					lectus vulputate purus, eu tempus ante dolor id quam. Sed luctus 
+					fermentum nulla. Donec sollicitudin imperdiet risus. Cras cursus, 
+					sapien ac faucibus feugiat, ligula felis laoreet justo, eu 
+					sollicitudin purus purus in nibh. Phasellus in nunc.
+				</div>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<div class="dojoxEllipsis">
+					Lorem ipsum dolor sit amet, consectetuer adipiscing elit. In porta. 
+					Etiam mattis libero nec ante. Nam porta lacus eu ligula. Cras mauris. 
+					Suspendisse vel augue. Vivamus aliquam orci ut eros. Nunc eleifend 
+					sagittis turpis. Nullam consequat iaculis augue. Aliquam pellentesque 
+					egestas massa. Curabitur pulvinar, enim vel porta dapibus, ligula 
+					lectus vulputate purus, eu tempus ante dolor id quam. Sed luctus 
+					fermentum nulla. Donec sollicitudin imperdiet risus. Cras cursus, 
+					sapien ac faucibus feugiat, ligula felis laoreet justo, eu 
+					sollicitudin purus purus in nibh. Phasellus in nunc.
+				</div>
+			</td>
+			<td>
+				<div class="dojoxEllipsis">
+					Lorem ipsum dolor sit amet, consectetuer adipiscing elit. In porta. 
+					Etiam mattis libero nec ante. Nam porta lacus eu ligula. Cras mauris. 
+					Suspendisse vel augue. Vivamus aliquam orci ut eros. Nunc eleifend 
+					sagittis turpis. Nullam consequat iaculis augue. Aliquam pellentesque 
+					egestas massa. Curabitur pulvinar, enim vel porta dapibus, ligula 
+					lectus vulputate purus, eu tempus ante dolor id quam. Sed luctus 
+					fermentum nulla. Donec sollicitudin imperdiet risus. Cras cursus, 
+					sapien ac faucibus feugiat, ligula felis laoreet justo, eu 
+					sollicitudin purus purus in nibh. Phasellus in nunc.
+				</div>
+			</td>
+		</tr>
+	</table>
+	<div class="subheading">Fixed table, relative columns:</div>
+	<table class="tableContainer" style="width: 500px;">
+		<tr>
+			<td style="width: 25%;">
+				<div class="dojoxEllipsis">
+					Lorem ipsum dolor sit amet, consectetuer adipiscing elit. In porta. 
+					Etiam mattis libero nec ante. Nam porta lacus eu ligula. Cras mauris. 
+					Suspendisse vel augue. Vivamus aliquam orci ut eros. Nunc eleifend 
+					sagittis turpis. Nullam consequat iaculis augue. Aliquam pellentesque 
+					egestas massa. Curabitur pulvinar, enim vel porta dapibus, ligula 
+					lectus vulputate purus, eu tempus ante dolor id quam. Sed luctus 
+					fermentum nulla. Donec sollicitudin imperdiet risus. Cras cursus, 
+					sapien ac faucibus feugiat, ligula felis laoreet justo, eu 
+					sollicitudin purus purus in nibh. Phasellus in nunc.
+				</div>
+			</td>
+			<td style="width: 75%;">
+				<div class="dojoxEllipsis">
+					Lorem ipsum dolor sit amet, consectetuer adipiscing elit. In porta. 
+					Etiam mattis libero nec ante. Nam porta lacus eu ligula. Cras mauris. 
+					Suspendisse vel augue. Vivamus aliquam orci ut eros. Nunc eleifend 
+					sagittis turpis. Nullam consequat iaculis augue. Aliquam pellentesque 
+					egestas massa. Curabitur pulvinar, enim vel porta dapibus, ligula 
+					lectus vulputate purus, eu tempus ante dolor id quam. Sed luctus 
+					fermentum nulla. Donec sollicitudin imperdiet risus. Cras cursus, 
+					sapien ac faucibus feugiat, ligula felis laoreet justo, eu 
+					sollicitudin purus purus in nibh. Phasellus in nunc.
+				</div>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<div class="dojoxEllipsis">
+					Lorem ipsum dolor sit amet, consectetuer adipiscing elit. In porta. 
+					Etiam mattis libero nec ante. Nam porta lacus eu ligula. Cras mauris. 
+					Suspendisse vel augue. Vivamus aliquam orci ut eros. Nunc eleifend 
+					sagittis turpis. Nullam consequat iaculis augue. Aliquam pellentesque 
+					egestas massa. Curabitur pulvinar, enim vel porta dapibus, ligula 
+					lectus vulputate purus, eu tempus ante dolor id quam. Sed luctus 
+					fermentum nulla. Donec sollicitudin imperdiet risus. Cras cursus, 
+					sapien ac faucibus feugiat, ligula felis laoreet justo, eu 
+					sollicitudin purus purus in nibh. Phasellus in nunc.
+				</div>
+			</td>
+			<td>
+				<div class="dojoxEllipsis">
+					Lorem ipsum dolor sit amet, consectetuer adipiscing elit. In porta. 
+					Etiam mattis libero nec ante. Nam porta lacus eu ligula. Cras mauris. 
+					Suspendisse vel augue. Vivamus aliquam orci ut eros. Nunc eleifend 
+					sagittis turpis. Nullam consequat iaculis augue. Aliquam pellentesque 
+					egestas massa. Curabitur pulvinar, enim vel porta dapibus, ligula 
+					lectus vulputate purus, eu tempus ante dolor id quam. Sed luctus 
+					fermentum nulla. Donec sollicitudin imperdiet risus. Cras cursus, 
+					sapien ac faucibus feugiat, ligula felis laoreet justo, eu 
+					sollicitudin purus purus in nibh. Phasellus in nunc.
+				</div>
+			</td>
+		</tr>
+	</table>
+	<div class="subheading">Relative table, relative columns:</div>	
+	<table class="tableContainer" style="width: 75%;">
+		<tr>
+			<td style="width: 30%;">
+				<div class="dojoxEllipsis">
+					Lorem ipsum dolor sit amet, consectetuer adipiscing elit. In porta. 
+					Etiam mattis libero nec ante. Nam porta lacus eu ligula. Cras mauris. 
+					Suspendisse vel augue. Vivamus aliquam orci ut eros. Nunc eleifend 
+					sagittis turpis. Nullam consequat iaculis augue. Aliquam pellentesque 
+					egestas massa. Curabitur pulvinar, enim vel porta dapibus, ligula 
+					lectus vulputate purus, eu tempus ante dolor id quam. Sed luctus 
+					fermentum nulla. Donec sollicitudin imperdiet risus. Cras cursus, 
+					sapien ac faucibus feugiat, ligula felis laoreet justo, eu 
+					sollicitudin purus purus in nibh. Phasellus in nunc.
+				</div>
+			</td>
+			<td style="width: 60%;">
+				<div class="dojoxEllipsis">
+					Lorem ipsum dolor sit amet, consectetuer adipiscing elit. In porta. 
+					Etiam mattis libero nec ante. Nam porta lacus eu ligula. Cras mauris. 
+					Suspendisse vel augue. Vivamus aliquam orci ut eros. Nunc eleifend 
+					sagittis turpis. Nullam consequat iaculis augue. Aliquam pellentesque 
+					egestas massa. Curabitur pulvinar, enim vel porta dapibus, ligula 
+					lectus vulputate purus, eu tempus ante dolor id quam. Sed luctus 
+					fermentum nulla. Donec sollicitudin imperdiet risus. Cras cursus, 
+					sapien ac faucibus feugiat, ligula felis laoreet justo, eu 
+					sollicitudin purus purus in nibh. Phasellus in nunc.
+				</div>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<div class="dojoxEllipsis">
+					Lorem ipsum dolor sit amet, consectetuer adipiscing elit. In porta. 
+					Etiam mattis libero nec ante. Nam porta lacus eu ligula. Cras mauris. 
+					Suspendisse vel augue. Vivamus aliquam orci ut eros. Nunc eleifend 
+					sagittis turpis. Nullam consequat iaculis augue. Aliquam pellentesque 
+					egestas massa. Curabitur pulvinar, enim vel porta dapibus, ligula 
+					lectus vulputate purus, eu tempus ante dolor id quam. Sed luctus 
+					fermentum nulla. Donec sollicitudin imperdiet risus. Cras cursus, 
+					sapien ac faucibus feugiat, ligula felis laoreet justo, eu 
+					sollicitudin purus purus in nibh. Phasellus in nunc.
+				</div>
+			</td>
+			<td>
+				<div class="dojoxEllipsis">
+					Lorem ipsum dolor sit amet, consectetuer adipiscing elit. In porta. 
+					Etiam mattis libero nec ante. Nam porta lacus eu ligula. Cras mauris. 
+					Suspendisse vel augue. Vivamus aliquam orci ut eros. Nunc eleifend 
+					sagittis turpis. Nullam consequat iaculis augue. Aliquam pellentesque 
+					egestas massa. Curabitur pulvinar, enim vel porta dapibus, ligula 
+					lectus vulputate purus, eu tempus ante dolor id quam. Sed luctus 
+					fermentum nulla. Donec sollicitudin imperdiet risus. Cras cursus, 
+					sapien ac faucibus feugiat, ligula felis laoreet justo, eu 
+					sollicitudin purus purus in nibh. Phasellus in nunc.
+				</div>
+			</td>
+		</tr>
+	</table>
+	<hr>
+	<div class="heading">With Markup</div>
+	<div class="subheading">Bold/Underline</div>
+	<div class="divContainer" style="width: 25%">
+		<div class="dojoxEllipsis">
+			Some dummy text that should wrap <b><u>right about here</u></b>
+		</div>
+	</div>
+	<div class="subheading">Font Sizes</div>
+	<div class="divContainer" style="width: 250px">
+		<div class="dojoxEllipsis">
+			<font size="1">Some</font> <font size="2">more</font> <font size="3">dummy</font> <font size="4">text</font> <font size="5">getting</font> 
+			<font size="4">bigger</font> <font size="3">and</font> <font size="2">then</font> <font size="1">smaller</font>
+		</div>
+	</div>
+	<div class="subheading">Link</div>
+	<div class="divContainer" style="width: 250px">
+		<div class="dojoxEllipsis">
+			Some dummy text with a <a href="#" onclick="alert('clicked'); return false;">link that should truncate</a>
+		</div>
+	</div>
+	<hr>
+	<div class="heading">Text Selectable (in FF)</div>
+	<table class="tableContainer" style="width: 75%;">
+		<tr>
+			<td style="width: 30%;">
+				<div class="dojoxEllipsis dojoxEllipsisSelectable">
+					Lorem ipsum dolor sit amet, consectetuer adipiscing elit. In porta. 
+					Etiam mattis libero nec ante. Nam porta lacus eu ligula. Cras mauris. 
+					Suspendisse vel augue. Vivamus aliquam orci ut eros. Nunc eleifend 
+					sagittis turpis. Nullam consequat iaculis augue. Aliquam pellentesque 
+					egestas massa. Curabitur pulvinar, enim vel porta dapibus, ligula 
+					lectus vulputate purus, eu tempus ante dolor id quam. Sed luctus 
+					fermentum nulla. Donec sollicitudin imperdiet risus. Cras cursus, 
+					sapien ac faucibus feugiat, ligula felis laoreet justo, eu 
+					sollicitudin purus purus in nibh. Phasellus in nunc.
+				</div>
+			</td>
+			<td style="width: 60%;">
+				<div class="dojoxEllipsis dojoxEllipsisSelectable">
+					Lorem ipsum dolor sit amet, consectetuer adipiscing elit. In porta. 
+					Etiam mattis libero nec ante. Nam porta lacus eu ligula. Cras mauris. 
+					Suspendisse vel augue. Vivamus aliquam orci ut eros. Nunc eleifend 
+					sagittis turpis. Nullam consequat iaculis augue. Aliquam pellentesque 
+					egestas massa. Curabitur pulvinar, enim vel porta dapibus, ligula 
+					lectus vulputate purus, eu tempus ante dolor id quam. Sed luctus 
+					fermentum nulla. Donec sollicitudin imperdiet risus. Cras cursus, 
+					sapien ac faucibus feugiat, ligula felis laoreet justo, eu 
+					sollicitudin purus purus in nibh. Phasellus in nunc.
+				</div>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<div class="dojoxEllipsis dojoxEllipsisSelectable">
+					Lorem ipsum dolor sit amet, consectetuer adipiscing elit. In porta. 
+					Etiam mattis libero nec ante. Nam porta lacus eu ligula. Cras mauris. 
+					Suspendisse vel augue. Vivamus aliquam orci ut eros. Nunc eleifend 
+					sagittis turpis. Nullam consequat iaculis augue. Aliquam pellentesque 
+					egestas massa. Curabitur pulvinar, enim vel porta dapibus, ligula 
+					lectus vulputate purus, eu tempus ante dolor id quam. Sed luctus 
+					fermentum nulla. Donec sollicitudin imperdiet risus. Cras cursus, 
+					sapien ac faucibus feugiat, ligula felis laoreet justo, eu 
+					sollicitudin purus purus in nibh. Phasellus in nunc.
+				</div>
+			</td>
+			<td>
+				<div class="dojoxEllipsis dojoxEllipsisSelectable">
+					Lorem ipsum dolor sit amet, consectetuer adipiscing elit. In porta. 
+					Etiam mattis libero nec ante. Nam porta lacus eu ligula. Cras mauris. 
+					Suspendisse vel augue. Vivamus aliquam orci ut eros. Nunc eleifend 
+					sagittis turpis. Nullam consequat iaculis augue. Aliquam pellentesque 
+					egestas massa. Curabitur pulvinar, enim vel porta dapibus, ligula 
+					lectus vulputate purus, eu tempus ante dolor id quam. Sed luctus 
+					fermentum nulla. Donec sollicitudin imperdiet risus. Cras cursus, 
+					sapien ac faucibus feugiat, ligula felis laoreet justo, eu 
+					sollicitudin purus purus in nibh. Phasellus in nunc.
+				</div>
+			</td>
+		</tr>
+	</table>
+</body>
+</html>

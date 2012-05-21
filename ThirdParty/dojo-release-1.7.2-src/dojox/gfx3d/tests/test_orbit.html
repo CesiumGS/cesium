@@ -1,0 +1,50 @@
+﻿<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" >
+<head>
+<title>Orbit test of dojox.gfx3d.</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+</style>
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+<script type="text/javascript">
+
+dojo.require("dojox.gfx3d");
+
+makeObjects = function(){
+	var surface = dojox.gfx.createSurface("test", 500, 500);
+	var view = surface.createViewport();
+	var m = dojox.gfx3d.matrix;
+
+	view.createOrbit({center: {x: 0, y: 0, z: 0}, radius: 80})
+		.setStroke({color: "blue", width: 1});
+
+	var camera = dojox.gfx3d.matrix.normalize([
+		m.cameraRotateXg(60), 
+		m.cameraRotateYg(30),
+		m.cameraRotateZg(0),
+		m.cameraTranslate(-300, -100, 0)
+	]);
+
+	view.applyCameraTransform(camera);
+	view.render();
+};
+
+mdebug = function(matrix){
+	var m = dojox.gfx3d.matrix.normalize(matrix);
+	console.debug("xx: " + m.xx + ", xy: " + m.xy + " | xz:" + m.xz + " | dx:" + m.dx);
+	console.debug("yx: " + m.yx + ", yy: " + m.yy + " | yz:" + m.yz + " | dy:" + m.dy);
+	console.debug("zx: " + m.zx + ", zy: " + m.zy + " | zz:" + m.zz + " | dz:" + m.dz);
+};
+
+dojo.addOnLoad(makeObjects);
+
+</script>
+</head>
+<body>
+	<h1>Orbit Test</h1>
+	<p>Test how orbit looks like in 3D</p>
+<div id="test" style="width: 500px; height: 500px;"></div>
+<p>That's all Folks!</p>
+</body>
+</html>

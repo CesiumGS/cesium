@@ -1,0 +1,24 @@
+({
+	name: "date.timezone.Asia-Dhaka",
+	runTest: function(t){
+		var tz = "Asia/Dhaka";
+		doh.checkDate({tzOffset: -353.333333333333, tzAbbr: "HMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: -353.333333333333, tzAbbr: "HMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: -353.333333333333, tzAbbr: "HMT"}, -891582801000, tz, 1);
+		doh.checkDate({tzOffset: -390, tzAbbr: "BURT"}, -891582800000, tz, 1);
+		doh.checkDate({tzOffset: -390, tzAbbr: "BURT"}, -872058601000, tz, 1);
+		doh.checkDate({tzOffset: -330, tzAbbr: "IST"}, -872058600000, tz, 1);
+		doh.checkDate({tzOffset: -330, tzAbbr: "IST"}, -862637401000, tz, 1);
+		doh.checkDate({tzOffset: -390, tzAbbr: "BURT"}, -862637400000, tz, 1);
+		doh.checkDate({tzOffset: -390, tzAbbr: "BURT"}, -576138601000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "DACT"}, -576138600000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "DACT"}, 38771999000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "BDT"}, 38772000000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "BDT"}, 1245430799000, tz, 1);
+		doh.checkDate({tzOffset: -420, tzAbbr: "BDST"}, 1245430800000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "BDST"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "BDST"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "BDT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: -420, tzAbbr: "BDST"}, 1246789800000, tz, 0);
+	}
+})

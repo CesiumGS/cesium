@@ -1,0 +1,89 @@
+<div class="view mblView">
+    <h1 dojoType="dojox.mobile.Heading" back="Home">Repeat Data Binding Example</h1>
+    <form name="repeatTestForm" id="repeatTestForm">    
+    <div class="field-title">Search Results</div>
+    
+        <div id="repeatWidget" class="fieldset" data-dojo-type="dojox.mvc.Repeat" data-dojo-props="exprchar: '#', ref: 'repeatmodels'" >
+            <div dojoType="dojox.mvc.Group" ref="'rel:#{this.index}'">
+                <div class="row">            
+                    <input dojoType="dojox.mobile.TextBox"
+                        id="nameInput#{this.index}" ref="'rel:First'" placeHolder="First Name"></input>
+                    <button type="button" data-dojo-type="dojox.mobile.Button" class="mblBlueButton" data-dojo-props="onClick: function(e){setDetailsContext('#{this.index}');}">
+                        Details
+                    </button>
+                    <button type="button" data-dojo-type="dojox.mobile.Button" class="mblBlueButton" data-dojo-props="onClick: function(){insertResult('#{this.index}');}">
+                        +
+                    </button>
+                    <button type="button" data-dojo-type="dojox.mobile.Button" class="mblBlueButton" data-dojo-props="onClick: function(){deleteResult('#{this.index}');}">
+                        -
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="spacer"></div>
+        <div  dojoType="dojox.mvc.Group" ref="'repeatmodels'">
+            <div id="detailsBanner">Details for selected index:</div>
+                <div class="fieldset" id="detailsGroup" dojoType="dojox.mvc.Group" ref="'rel:0'">
+                    <div class="field-row">
+                        <span>First Name</span>
+                        <input type=text id="firstInput" dojoType="dojox.mobile.TextBox"
+                            placeholder="First Name" ref="'rel:First'"></input>
+                    </div>
+                    <div class="field-row">
+                        <span>Last Name</span>
+                        <input type=text id="lastInput" dojoType="dojox.mobile.TextBox"
+                            placeholder="Last Name" ref="'rel:Last'"></input>
+                    </div>
+                    <div class="field-row">
+                        <span>Email</span>
+                        <input type=text id="emailInput2" dojoType="dojox.mobile.TextBox"
+                            placeholder="Email" ref="'rel:Email'"></input>
+                    </div>
+                    <div class="field-row">
+                        <span>Telephone</span>
+                        <input type=text id="telInput" dojoType="dojox.mobile.TextBox"
+                            placeholder="Telephone" ref="'rel:Tel'"></input>
+                    </div>
+                </div>
+            </div>         
+        <div class="spacer"></div>
+        <button id="save" type="button" dojoType="dojox.mobile.Button" class="mblBlueButton" data-dojo-props="onClick: function(){console.log(repeatmodel[selectedIndex].toPlainObject());repeatmodel[selectedIndex].commit();}">Save</button>
+        <button id="reset2" type="button" dojoType="dojox.mobile.Button" class="mblBlueButton" data-dojo-props="onClick: function(){repeatmodel.reset();}">Reset</button>
+        <script type="text/javascript">
+            var selectedIndex = 0;
+            var repeatmodel = dijit.byId('repeatWidget').ref;
+
+            function setDetailsContext(index) {
+                var widget = dijit.byId("detailsGroup");
+                widget.set("ref", index);
+                selectedIndex = index;
+            }
+
+            // used in the Repeat Data binding demo
+        function insertResult(index){
+
+            if (repeatmodel[index].First.value !== "") {
+                var insert = dojox.mvc.newStatefulModel({
+                    "data": {
+                        "First": "",
+                        "Last": "",
+                        "Location": "CA",
+                        "Office": "",
+                        "Email": "",
+                        "Tel": "",
+                        "Fax": ""
+                    }
+                });
+                repeatmodel.add(index, insert);
+												
+                setDetailsContext(parseInt(index)+1);
+            }
+
+        };
+        
+        function deleteResult(index){
+            repeatmodel.remove(index);
+        }
+        </script>
+</div>

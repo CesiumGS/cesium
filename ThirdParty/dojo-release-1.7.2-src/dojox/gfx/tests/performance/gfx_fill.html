@@ -1,0 +1,199 @@
+<html>
+<head>
+<title>Testing Fill Performance</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+	@import "../../../../dojo/resources/dojo.css";
+	@import "../../../../dijit/tests/css/dijitTests.css";
+</style>
+<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+<script type="text/javascript" src="../../../../util/doh/runner.js"></script>
+<script type="text/javascript">
+	dojo.require("doh.runner");
+	dojo.require("dojox.gfx");
+	dojo.require("dojo.colors");
+
+	
+	var surface;
+	createSurface = function(){
+		surface = dojox.gfx.createSurface("test", 500, 500);
+	};
+	
+	destroySurface = function(){
+		if(surface){
+			surface.destroy();
+			surface = null;
+		}
+	}
+	dojo.addOnLoad(function(){
+    	doh.register("gfx.fill.performance", [
+			{
+				name: "Fill Concentric Circles",
+                testType: "perf",
+                trialDuration: 100,
+                trialDelay: 50,
+                trialIterations: 50,
+                setUp: function() {
+                    createSurface();
+                },
+                tearDown: function(){
+                    destroySurface();
+                },
+                runTest: function(){
+					surface.clear();
+					var path = surface.createPath("");
+					 // form concentric circles
+					var center = {x: 250, y: 250};
+					for(var r = 200; r > 0; r -= 30){
+						// make two 180 degree arcs to form a circle
+						var start = {x: center.x, y: center.y - r};
+						var end   = {x: center.x, y: center.y + r};
+						path.moveTo(start).arcTo(r, r, 0, true, true, end).arcTo(r, r, 0, true, true, start).closePath();
+					}
+					// set visual attributes
+					path.setFill("red").setStroke("black");
+                 }
+            },
+			{
+				name: "Fill Square",
+                testType: "perf",
+                trialDuration: 100,
+                trialDelay: 50,
+                trialIterations: 50,
+                setUp: function() {
+                    createSurface();
+                },
+                tearDown: function(){
+                    destroySurface();
+                },
+                runTest: function(){
+					surface.clear();
+                    surface.createRect({ 
+						 width:  100,
+						 height: 100,
+                         x: 100,
+                         y: 100
+					}).setFill("blue").setStroke("black");
+                 }
+            },
+			{
+				name: "Fill Rectangle",
+                testType: "perf",
+                trialDuration: 100,
+                trialDelay: 50,
+                trialIterations: 50,
+                setUp: function() {
+                    createSurface();
+                },
+                tearDown: function(){
+                    destroySurface();
+                },
+                runTest: function(){
+					surface.clear();
+					var path = surface.createPath("");
+                    surface.createRect({ 
+						 width:  100,
+						 height: 200,
+                         x: 100,
+                         y: 100
+					}).setFill("red").setStroke("black");
+                 }
+            },
+			{
+				name: "Fill Circle",
+                testType: "perf",
+                trialDuration: 100,
+                trialDelay: 50,
+                trialIterations: 50,
+                setUp: function() {
+                    createSurface();
+                },
+                tearDown: function(){
+                    destroySurface();
+                },
+                runTest: function(){
+					surface.clear();
+                    surface.createEllipse({ 
+						 cx: 150,
+						 cy: 150,
+                         rx: 100,
+                         ry: 100
+					}).setFill("green").setStroke("black");
+                 }
+            },
+			{
+				name: "Fill Rectangle Linear Gradient",
+                testType: "perf",
+                trialDuration: 50,
+                trialDelay: 50,
+                trialIterations: 50,
+                setUp: function() {
+                    createSurface();
+                },
+                tearDown: function(){
+                    destroySurface();
+                },
+                runTest: function(){
+					 surface.clear();
+					 surface.createRect({ 
+						 width:  100,
+						 height: 75,
+                         x: 100,
+                         y: 100
+					 }).setFill({
+						 colors: [
+							 { offset: 0,   color: [255, 255, 0, 0] },
+							 { offset: 0.5, color: "red" },
+							 { offset: 1,   color: [255, 255, 0, 0] }
+						 ],
+						 type: "linear",
+						 x1: 0, 
+						 y1: 0,
+						 x2: 200, 
+						 y2: 0
+					 });
+                 }
+            },
+			{
+				name: "Fill Circle Linear Gradient",
+                testType: "perf",
+                trialDuration: 50,
+                trialDelay: 50,
+                trialIterations: 50,
+                setUp: function() {
+                    createSurface();
+                },
+                tearDown: function(){
+                    destroySurface();
+                },
+                runTest: function(){
+					 surface.clear();
+					 surface.createEllipse({ 
+						  cx: 150,
+						  cy: 150,
+						  rx: 100,
+						  ry: 100
+					 }).setFill({
+						colors: [
+							{ offset: 0,   color: [255, 255, 0, 0] },
+							{ offset: 0.5, color: "red" },
+							{ offset: 1,   color: [255, 255, 0, 0] }
+						],
+						type: "linear",
+						x1: 0, 
+						y1: 0,
+						x2: 200, 
+						y2: 0
+					 }).setStroke("black");
+                 }
+            }
+    	]);
+		doh.run();
+	});
+</script>
+</head>
+<body>
+<h1>Testing Fill Performance</h1>
+<div id="test" style="width: 500px; height: 500px;"></div>
+</body>
+</html>

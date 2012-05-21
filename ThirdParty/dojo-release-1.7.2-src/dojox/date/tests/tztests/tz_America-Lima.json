@@ -1,0 +1,42 @@
+({
+	name: "date.timezone.America-Lima",
+	runTest: function(t){
+		var tz = "America/Lima";
+		doh.checkDate({tzOffset: 308.6, tzAbbr: "LMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: 308.6, tzAbbr: "LMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: 308.6, tzAbbr: "LMT"}, -1938538285000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "PET"}, -1938538284000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "PET"}, -1009825201000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "PEST"}, -1009825200000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "PEST"}, -1002052801000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "PET"}, -1002052800000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "PET"}, -986756401000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "PEST"}, -986756400000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "PEST"}, -971035201000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "PET"}, -971035200000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "PET"}, -955306801000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "PEST"}, -955306800000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "PEST"}, -939585601000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "PET"}, -939585600000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "PET"}, 504939599000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "PEST"}, 504939600000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "PEST"}, 512711999000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "PET"}, 512712000000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "PET"}, 536475599000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "PEST"}, 536475600000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "PEST"}, 544247999000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "PET"}, 544248000000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "PET"}, 631169999000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "PEST"}, 631170000000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "PEST"}, 638942399000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "PET"}, 638942400000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "PET"}, 757400399000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "PEST"}, 757400400000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "PEST"}, 765172799000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "PET"}, 765172800000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "PET"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "PET"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "PET"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: 300, tzAbbr: "PET"}, 1246789800000, tz, 0);
+	}
+})

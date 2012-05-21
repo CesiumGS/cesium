@@ -1,0 +1,80 @@
+<html>
+<head>
+	<style>
+		@import "../robot/robot.css";
+	</style>
+	<script src="../runner.js"></script>
+	<script src="../robot.js"></script>
+</head>
+<body>
+<form>
+<input type="text" value="hi" id="textbox" style="position:absolute; left:0px; top:20px; font-family:system;"></input>
+</form>
+<script>
+var textbox=document.getElementById('textbox');
+var BACKSPACE=8;
+var END=35;
+var LEFT_ARROW=37;
+var SHIFT=16;
+doh.register("doh.robot",[
+{
+	name:"dojorobot1",
+	timeout:6900,
+	setUp:function(){
+		textbox.value="hi";
+	},
+	runTest:function(){
+		var d=new doh.Deferred();
+		doh.robot.mouseMove(30, 30, 500);
+		doh.robot.mouseClick({left:true}, 500);
+		doh.robot.typeKeys(" again", 500, 2500);
+		doh.robot.sequence(function(){
+			if(textbox.value=="hi again"){
+				textbox.value += ": passed";
+				d.callback(true);
+			}else{
+				textbox.value += ": failed";
+				d.errback(new Error("Expected value 'hi again', got "+textbox.value));
+			}
+		}, 900);
+		return d;
+	}
+},
+{
+	name:"shiftarrow",
+	timeout:10000,
+	setUp:function(){
+		textbox.value="hi again";
+	},
+	runTest:function(){
+		var d=new doh.Deferred();
+		doh.robot.keyPress(END,500);
+		// test shift+arrow with keyPress
+		for(var i=0; i<3; i++){
+			doh.robot.keyPress(LEFT_ARROW,500,{shift:true});
+		}
+		// test shift+arrow with keyDown then keyUp
+		doh.robot.keyDown(SHIFT,500);
+		for(var i=0; i<3; i++){
+			doh.robot.keyDown(LEFT_ARROW,500);
+			doh.robot.keyUp(LEFT_ARROW,20);
+		}
+		doh.robot.keyUp(SHIFT,500);
+		doh.robot.keyPress(BACKSPACE,500);
+		doh.robot.sequence(function(){
+			if(textbox.value=="hi"){
+				textbox.value += ": passed";
+				d.callback(true);
+			}else{
+				textbox.value += ": failed";
+				d.errback(new Error("Expected value 'hi', got "+textbox.value));
+			}
+		}, 900);
+		return d;
+	}
+}
+]);
+doh.run();
+</script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+({
+	name: "date.timezone.Asia-Makassar",
+	runTest: function(t){
+		var tz = "Asia/Makassar";
+		doh.checkDate({tzOffset: -477.6, tzAbbr: "LMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: -477.6, tzAbbr: "LMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: -477.6, tzAbbr: "LMT"}, -1577951857000, tz, 1);
+		doh.checkDate({tzOffset: -477.6, tzAbbr: "MMT"}, -1577951856000, tz, 1);
+		doh.checkDate({tzOffset: -477.6, tzAbbr: "MMT"}, -1172908657000, tz, 1);
+		doh.checkDate({tzOffset: -480, tzAbbr: "CIT"}, -1172908656000, tz, 1);
+		doh.checkDate({tzOffset: -480, tzAbbr: "CIT"}, -880272001000, tz, 1);
+		doh.checkDate({tzOffset: -540, tzAbbr: "JST"}, -880272000000, tz, 1);
+		doh.checkDate({tzOffset: -540, tzAbbr: "JST"}, -766054801000, tz, 1);
+		doh.checkDate({tzOffset: -480, tzAbbr: "CIT"}, -766054800000, tz, 1);
+		doh.checkDate({tzOffset: -480, tzAbbr: "CIT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: -480, tzAbbr: "CIT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: -480, tzAbbr: "CIT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: -480, tzAbbr: "CIT"}, 1246789800000, tz, 0);
+	}
+})

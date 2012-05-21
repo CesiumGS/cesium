@@ -1,0 +1,103 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+   "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <title>loader-only</title>
+    <script type="text/javascript" data-dojo-config="async:true" src="../../../dojo.js"></script>
+    <script type="text/javascript">
+	function loadProvidePlugin(){
+		define("dojo/provide", ["dojo", "./text"], function(dojo, textPlugin){
+			// summary:
+			//		Plugin for loading legacy dojo modules (that use dojo.provide/dojo.require)
+			//		with the async loader. For example:
+			//		|	define(["dojo/dojo-require!dojox.cometd"], function(){
+			//		|		dojox.cometd.init("/cometd");
+			//		|		...
+			//		|	});
+			//		This will load dojox.cometd and all it's dependencies asynchronously. 
+			dojo.require = function(id){
+				// this is mainly for top level, it should be do nothing once a module is loaded
+				var loadedModule; 
+				require(["dojo/provide!" + id], function(module){
+					loadedModule = module;
+				});
+				return loadedModule; // return the loaded module if it is synchronously available 
+			};
+			dojo.provide = function(id){
+				dojo.getObject(id, true);
+			};
+			return {
+				load: function(id, parentRequire, loaded, config){
+					id = id.replace(/\//g, '.');
+					var existing = dojo.getObject(id); 
+					if(existing){
+						return loaded(existing);
+					}
+					textPlugin.load(id.replace(/\./g, '/') + ".js", parentRequire, function(text){
+						var deps = 0, done;
+						var commentFree = text.replace(/\/\*[\s\S]*?\*\//g, '');
+						if(!/dojo\.provide\s*\(\s*['"]([^'"]*)['"]\s*\)/.test(commentFree)){
+							// doesn't look like a dojo module after all, revert back to script loading (hopefully the request should be cached)
+							return parentRequire([id.replace(/\./g, '/')], function(module){
+								loaded(module);
+							});
+						}
+						addDependencies(/dojo\.require\s*\(\s*['"]([^'"]*)['"]\s*\)/g, function(moduleId, loaded){
+							parentRequire(["dojo/provide!" + moduleId], loaded);
+						});
+						addDependencies(/dojo\.cache\s*\(\s*['"]([^'"]*['"]\s*,\s*['"][^'"]*)['"]\s*\)/g, function(moduleId, loaded){
+							var parts = moduleId.split(/['"]\s*,\s*['"]/);
+							parts[0] = parts[0].replace(/\./g, '/');
+							textPlugin.load(parts.join('/'), require, loaded, config);
+						});
+						done = true;
+						if(deps == 0){
+							ready();
+						}
+						function addDependencies(regex, handler){
+							commentFree.replace(regex, function(t, moduleId){
+								deps++;
+								handler(moduleId, function(){
+									deps--;
+									if(done && deps == 0){
+										ready();
+									}
+								});
+							});					
+						}
+						function ready(){
+							eval(text + "\r\n//@ sourceURL=" + id);
+							loaded(dojo.getObject(id));
+						}
+					});
+				}
+			};
+		});
+	}
+	</script>
+    <script type="text/javascript">
+		var mid = "dojo/tests/_base/loader/syncFromAsyncModule"
+		if(location.search=="?provide!"){
+			// this just keeps the plugin out of the repo until we decide which way to go
+			loadProvidePlugin();
+			mid = "dojo/provide!" + mid;
+		}else{
+			// dojo must be loaded for legacy modes to work
+			require({async:"sync"}, ["dojo"]);
+			// now we can switch to legacy async mode
+			require({async:"legacyAsync"});
+		}
+		require(["dojo", "doh", mid], function(dojo, doh, syncModule) {
+			dojo.ready(function() {
+				doh.register("asyncWithDojoRequire", [function loadSyncModule(t){
+					t.is(syncModule.status, "OK");
+				}]);
+				doh.runOnLoad();
+			});
+		});
+    </script>
+  </head>
+  <body>
+    <h1>Description: Async Dojo loading 1.6 module</h1>
+  </body>
+</html>

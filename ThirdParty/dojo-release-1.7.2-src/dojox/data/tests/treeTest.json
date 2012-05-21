@@ -1,0 +1,10 @@
+{ 
+	node1: { id: 'node1', name:'node1', someProperty:'somePropertyA', children:[
+			{ id: 'node1.1',name:'node1.1', someProperty:'somePropertyA1'},
+			{ id: 'node1.2',name:'node1.2', someProperty:'somePropertyA2'}
+	]},
+	node2:{ id: 'node2', name:'node2', someProperty:'somePropertyB'},
+	node3:{ id: 'node3', name:'node3', someProperty:'somePropertyC'},
+	node4:{ id: 'node4', name:'node4', someProperty:'somePropertyA'},
+	node5:{ id: 'node5', name:'node5', someProperty:'somePropertyB'}
+}

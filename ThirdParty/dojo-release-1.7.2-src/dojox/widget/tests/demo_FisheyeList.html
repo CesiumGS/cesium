@@ -1,0 +1,117 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>FisheyeList Widget Demonstration</title>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/themes/tundra/tundra.css";
+	
+		.fisheyebar {
+			width:550px;
+			margin: 0 auto;
+			text-align: center;
+		}
+
+		.outerbar {
+			background-color: #666;
+			text-align: center;
+			position: absolute;
+			left: 0px;
+			top: 0px;
+			width: 100%;
+			height:85px; 
+			border-bottom:2px solid #333;
+		}
+		
+		body {
+			font-family: Arial, Helvetica, sans-serif;
+			padding: 0;
+			margin: 0;
+			background-color:#fff;
+			background-image:none; 
+		}
+		
+		.page {
+			padding: 85px 20px 20px 20px;
+		}
+		.outerbar img {
+			top:0;
+			position:relative;
+			vertical-align:super;
+			float:left;
+		}
+	</style>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:false, parseOnLoad: true"></script>
+	<script type="text/javascript">
+		dojo.require("dojox.widget.FisheyeLite");
+		dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+
+		function load_app(id){
+			alert('icon '+id+' was clicked');
+		}
+
+	</script>
+</head>
+<body class="tundra"><div class="outerbar">
+	<div class="fisheyebar">
+	<img dojoType="dojox.widget.FisheyeLite"
+		style="width:75px; height:75px"
+		properties="{ width:1.65, height:1.65 }"
+		onClick="alert('click on ' + this.label + '(from widget id ' + this.widgetid + ')!');"
+		src="images/icon_browser.png"
+	/>
+
+	<img dojoType="dojox.widget.FisheyeLite"
+		label="Item 2"
+		src="images/icon_calendar.png"
+		style="width:75px; height:75px"
+		properties="{ width:1.65, height:1.65 }"
+	/>
+
+	<img dojoType="dojox.widget.FisheyeLite"
+		label="Item 3"
+		style="width:75px; height:75px"
+		properties="{ width:1.55, height:1.65 }"
+		onClick="alert('click on ' + this.label + '(from widget id ' + this.widgetid + ')!');"
+		src="images/icon_email.png"
+	/>
+
+	<img dojoType="dojox.widget.FisheyeLite"
+		src="images/icon_texteditor.png" style="width:75px; height:75px"
+		properties="{ width:1.65, height:1.65 }"
+	/>
+
+	<img dojoType="dojox.widget.FisheyeLite"
+		label="Really Long Item Label"
+		src="images/icon_update.png"
+		style="width:75px; height:75px"
+		properties="{ width:1.65, height:1.65 }"
+	/>
+
+	<img dojoType="dojox.widget.FisheyeLite"
+		src="images/icon_users.png"
+		style="width:75px; height:75px"
+		properties="{ width:1.75, height:1.75 }"
+	/>
+</div></div>
+
+<div class="page">
+	<p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Nam facilisis enim. Pellentesque in elit et lacus euismod dignissim. Aliquam dolor pede, convallis eget, dictum a, blandit ac, urna. Pellentesque sed nunc ut justo volutpat egestas. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos hymenaeos. In erat. Suspendisse potenti. Fusce faucibus nibh sed nisi. Phasellus faucibus, dui a cursus dapibus, mauris nulla euismod velit, a lobortis turpis arcu vel dui. Pellentesque fermentum ultrices pede. Donec auctor lectus eu arcu. Curabitur non orci eget est porta gravida. Aliquam pretium orci id nisi. Duis faucibus, mi non adipiscing venenatis, erat urna aliquet elit, eu fringilla lacus tellus quis erat. Nam tempus ornare lorem. Nullam feugiat.</p>
+
+	<p>Sed congue. Aenean blandit sollicitudin mi. Maecenas pellentesque. Vivamus ac urna. Nunc consequat nisi vitae quam. Suspendisse sed nunc. Proin suscipit porta magna. Duis accumsan nunc in velit. Nam et nibh. Nulla facilisi. Cras venenatis urna et magna. Aenean magna mauris, bibendum sit amet, semper quis, aliquet nec, sapien. Aliquam aliquam odio quis erat. Etiam est nisi, condimentum non, lacinia ac, vehicula laoreet, elit. Sed interdum augue sit amet quam dapibus semper. Nulla facilisi. Pellentesque lobortis erat nec quam.</p>
+
+	<p>Sed arcu magna, molestie at, fringilla in, sodales eu, elit. Curabitur mattis lorem et est. Quisque et tortor. Integer bibendum vulputate odio. Nam nec ipsum. Vestibulum mollis eros feugiat augue. Integer fermentum odio lobortis odio. Nullam mollis nisl non metus. Maecenas nec nunc eget pede ultrices blandit. Ut non purus ut elit convallis eleifend. Fusce tincidunt, justo quis tempus euismod, magna nulla viverra libero, sit amet lacinia odio diam id risus. Ut varius viverra turpis. Morbi urna elit, imperdiet eu, porta ac, pharetra sed, nisi. Etiam ante libero, ultrices ac, faucibus ac, cursus sodales, nisl. Praesent nisl sem, fermentum eu, consequat quis, varius interdum, nulla. Donec neque tortor, sollicitudin sed, consequat nec, facilisis sit amet, orci. Aenean ut eros sit amet ante pharetra interdum.</p>
+
+	<p>Fusce rutrum pede eget quam. Praesent purus. Aenean at elit in sem volutpat facilisis. Nunc est augue, commodo at, pretium a, fermentum at, quam. Nam sit amet enim. Suspendisse potenti. Cras hendrerit rhoncus justo. Integer libero. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Aliquam erat volutpat. Sed adipiscing mi vel ipsum.</p>
+
+	<p>Sed aliquam, quam consectetuer condimentum bibendum, neque libero commodo metus, non consectetuer magna risus vitae eros. Pellentesque mollis augue id libero. Morbi nonummy hendrerit dui. Morbi nisi felis, fringilla ac, euismod vitae, dictum mollis, pede. Integer suscipit, est sed posuere ullamcorper, ipsum lectus interdum nunc, quis blandit erat eros hendrerit pede. Vestibulum varius, elit id mattis mattis, nulla est feugiat ante, eget vestibulum augue eros ut odio. Maecenas euismod purus quis felis. Ut hendrerit tincidunt est. Fusce euismod, nunc eu tempus tempor, purus ligula volutpat tellus, nec lacinia sapien enim id risus. Aliquam orci turpis, condimentum sed, sollicitudin vel, placerat in, purus. Proin tortor nisl, blandit quis, imperdiet quis, scelerisque at, nisl. Maecenas suscipit fringilla erat. Curabitur consequat, dui blandit suscipit dictum, felis lectus imperdiet tellus, sit amet ornare risus mauris non ipsum. Fusce a purus. Vestibulum sodales. Sed porta ultrices nibh. Vestibulum metus.</p>
+
+
+</div>
+
+
+
+</body>
+</html>

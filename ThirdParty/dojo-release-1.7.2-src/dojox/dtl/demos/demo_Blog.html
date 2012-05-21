@@ -1,0 +1,95 @@
+<html>
+	<head>
+		<title>Testing dojox.dtl using a blog example</title>
+		<script src="../../../dojo/dojo.js" djConfig="usePlainJson: true, parseOnLoad: true"></script>
+		<script>
+			dojo.require("dijit._WidgetBase");
+			dojo.require("dojox.dtl._DomTemplated");
+			dojo.require("dojo.parser");
+
+			dojo.declare("demo.Blog", [dijit._WidgetBase, dojox.dtl._DomTemplated],
+			{
+				templatePath: dojo.moduleUrl("dojox.dtl.demos.templates", "blog_list.html"),
+				base: {
+					url: dojo.moduleUrl("dojox.dtl.demos.templates", "blog_base.html"),
+					shared: true
+				},
+				constructor: function(props, node){
+					this.list = false;
+					this.blogs = {};
+					this.pages = {};
+				},
+				postCreate: function(){
+					if(!this.list){
+						dojo.xhrGet({
+							url: dojo.moduleUrl("dojox.dtl.demos.json.blog", "get_blog_list.json"),
+							handleAs: "json"
+						}).addCallback(this, "_loadList");
+					}
+				},
+				_showList: function(obj){
+					this.title = "Blog Posts";
+					this.setTemplate(this.templatePath);
+				},
+				_showDetail: function(obj){
+					var key = obj.target.className.substring(5);
+
+					if(this.blogs[key]){
+						this.title = "Blog Post";
+						this.blog = this.blogs[key];
+						this.blog.title = this.blog_list[key].title;
+						this.setTemplate(dojo.moduleUrl("dojox.dtl.demos.templates", "blog_detail.html"));
+					}else{
+						dojo.xhrGet({
+							url: dojo.moduleUrl("dojox.dtl.demos.json.blog", "get_blog_" + key + ".json"),
+							handleAs: "json",
+							load: function(data){
+								data.key = key;
+								return data;
+							}
+						}).addCallback(this, "_loadDetail");
+					}
+				},
+				_showPage: function(obj){
+					var key = obj.target.className.substring(5);
+
+					if(this.pages[key]){
+						this.title = this.pages[key].title;
+						this.body = this.pages[key].body;
+						this.setTemplate(dojo.moduleUrl("dojox.dtl.demos.templates", "blog_page.html"));
+					}else{
+						dojo.xhrGet({
+							url: dojo.moduleUrl("dojox.dtl.demos.json.blog", "get_page_" + key + ".json"),
+							handleAs: "json",
+							load: function(data){
+								data.key = key;
+								return data;
+							}
+						}).addCallback(this, "_loadPage");
+					}
+				},
+				_loadList: function(data){
+					this.title = "Blog Posts";
+					dojo.mixin(this, data);
+					this.render();
+				},
+				_loadDetail: function(data){
+					data.date = new Date(data.date);
+					this.blogs[data.key] = data;
+					this.title = "Blog Post";
+					this.blog = data;
+					this.blog.title = this.blog_list[data.key].title;
+					this.setTemplate(dojo.moduleUrl("dojox.dtl.demos.templates", "blog_detail.html"));
+				},
+				_loadPage: function(data){
+					this.pages[data.key] = data;
+					dojo.mixin(this, data);
+					this.setTemplate(dojo.moduleUrl("dojox.dtl.demos.templates", "blog_page.html"));
+				}
+			});
+		</script>
+	</head>
+	<body>
+		<div dojoType="demo.Blog"></div>
+	</body>
+</html>

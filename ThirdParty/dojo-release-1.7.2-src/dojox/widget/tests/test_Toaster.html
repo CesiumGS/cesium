@@ -1,0 +1,161 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>Toaster Widget Dojo Tests</title>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/themes/tundra/tundra.css";
+		@import "../../../dijit/themes/dijit.css";
+		@import "../../../dijit/tests/css/dijitTests.css"; 
+		@import "../Toaster/Toaster.css";
+	</style>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: true"></script>
+	<script type="text/javascript">
+		dojo.require("dojox.widget.Toaster");
+		dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+
+		dojo.require("dijit.Tooltip");
+		
+		var toast = null;
+		function showTestMessage(){
+			dojo.publish("testMessageTopic", 
+				[ "This is a message! It's kind of long to show message wrapping."]
+			);
+		}
+		function showAnotherMessage(){
+			dojo.publish("testMessageTopic", 
+				[{
+					message: "This is another message!", 
+					type: "warning", 
+					duration: 500
+				}]
+			);
+		}
+		function showYetAnotherMessage(){
+			dojo.publish("testMessageTopic", 
+				[{ message: "This is yet another message!" }]
+			);
+		}
+
+		dojo.addOnLoad(function(){
+			toast = dijit.byId("toast");
+		});
+	</script>
+</head>
+<body class="tundra">
+	<div dojoType="dojox.widget.Toaster" id="toast" 
+		positionDirection="br-left" duration="0" 
+		messageTopic="testMessageTopic"></div>
+
+	<div dojoType="dojox.widget.Toaster" id="toast2" 
+		separator="&lt;hr&gt;" positionDirection="bl-up" 
+		messageTopic="testMessageTopic"></div>
+
+	<button type="submit" 
+		onclick="showTestMessage();">Click to show message</button>
+	<button type="submit" 
+		onclick="showAnotherMessage();">Click to show another message</button>
+	<button type="submit" 
+		onclick="showYetAnotherMessage();">Click to show yet another message</button>
+
+	<h1>dojox.widget.Toaster test</h1>
+
+	<div style="color: #FF0000;">
+		When you click any of the buttons above, the bottom right hand message will
+		stay on the screen until you acknowledge it by clicking inside the message
+		box. If you click one of the message buttons while a message is still
+		displayed in the bottom right corner it should append the new message below
+		the old one with a separator between them.
+	</div>
+	
+	<h2>A Tooltip: (#10046)</h2>
+	<div><span id="one" class="tt" tabindex="0"> focusable text </span>
+		<span dojoType="dijit.Tooltip" connectId="one" id="one_tooltip">
+			<b>
+				<span style="color: blue;">rich formatting</span>
+				<span style="color: red; font-size: x-large;"><i>!</i></span>
+			</b>
+		</span>
+	</div>
+	
+	<p>
+		Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean semper
+		sagittis velit. Cras in mi. Duis porta mauris ut ligula. Proin porta rutrum
+		lacus. Etiam consequat scelerisque quam. Nulla facilisi.  Maecenas luctus
+		venenatis nulla. In sit amet dui non mi semper iaculis.  Sed molestie
+		tortor at ipsum. Morbi dictum rutrum magna. Sed vitae risus.
+	</p>
+	<p>
+		Aliquam vitae enim. Duis scelerisque metus auctor est venenatis imperdiet.
+		Fusce dignissim porta augue. Nulla vestibulum. Integer lorem nunc,
+		ullamcorper a, commodo ac, malesuada sed, dolor. Aenean id mi in massa
+		bibendum suscipit. Integer eros. Nullam suscipit mauris. In pellentesque.
+		Mauris ipsum est, pharetra semper, pharetra in, viverra quis, tellus. Etiam
+		purus. Quisque egestas, tortor ac cursus lacinia, felis leo adipiscing
+		nisi, et rhoncus elit dolor eget eros. Fusce ut quam. Suspendisse eleifend
+		leo vitae ligula. Nulla facilisi. Nulla rutrum, erat vitae lacinia dictum,
+		pede purus imperdiet lacus, ut semper velit ante id metus. Praesent massa
+		dolor, porttitor sed, pulvinar in, consequat ut, leo. Nullam nec est.
+		Aenean id risus blandit tortor pharetra congue. Suspendisse pulvinar.
+	</p>
+	<p>
+		Vestibulum convallis eros ac justo. Proin dolor. Etiam aliquam. Nam ornare
+		elit vel augue. Suspendisse potenti. Etiam sed mauris eu neque nonummy
+		mollis. Vestibulum vel purus ac pede semper accumsan. Vivamus lobortis, sem
+		vitae nonummy lacinia, nisl est gravida magna, non cursus est quam sed
+		urna. Phasellus adipiscing justo in ipsum. Duis sagittis dolor sit amet
+		magna. Suspendisse suscipit, neque eu dictum auctor, nisi augue tincidunt
+		arcu, non lacinia magna purus nec magna. Praesent pretium sollicitudin
+		sapien. Suspendisse imperdiet. Class aptent taciti sociosqu ad litora
+		torquent per conubia nostra, per inceptos hymenaeos.
+	</p>
+	<p>
+		Mauris pharetra lorem sit amet sapien. Nulla libero metus, tristique et,
+		dignissim a, tempus et, metus. Ut libero. Vivamus tempus purus vel ipsum.
+		Quisque mauris urna, vestibulum commodo, rutrum vitae, ultrices vitae,
+		nisl. Class aptent taciti sociosqu ad litora torquent per conubia nostra,
+		per inceptos hymenaeos. Nulla id erat sit amet odio luctus eleifend. Proin
+		massa libero, ultricies non, tincidunt a, vestibulum non, tellus. Nunc nunc
+		purus, lobortis a, pulvinar at, egestas a, mi. Cras adipiscing velit a
+		mauris. Morbi felis. Etiam at felis. Cras eget eros et justo mattis
+		pulvinar. Nullam at justo id risus porttitor dignissim. Vestibulum sed
+		velit vel metus tincidunt tempus. Nunc euismod nisl id dolor tristique
+		tincidunt. Nullam placerat turpis sed odio. Curabitur in est id nibh tempus
+		ultrices. Aliquam consectetuer dapibus eros. Aliquam nisl.
+	</p>
+	<p>
+		Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean semper
+		sagittis velit. Cras in mi. Duis porta mauris ut ligula. Proin porta rutrum
+		lacus. Etiam consequat scelerisque quam. Nulla facilisi.  Maecenas luctus
+		venenatis nulla. In sit amet dui non mi semper iaculis.  Sed molestie
+		tortor at ipsum. Morbi dictum rutrum magna. Sed vitae risus.
+	</p>
+	<p>
+		Aliquam vitae enim. Duis scelerisque metus auctor est venenatis imperdiet.
+		Fusce dignissim porta augue. Nulla vestibulum. Integer lorem nunc,
+		ullamcorper a, commodo ac, malesuada sed, dolor. Aenean id mi in massa
+		bibendum suscipit. Integer eros. Nullam suscipit mauris. In pellentesque.
+		Mauris ipsum est, pharetra semper, pharetra in, viverra quis, tellus. Etiam
+		purus. Quisque egestas, tortor ac cursus lacinia, felis leo adipiscing
+		nisi, et rhoncus elit dolor eget eros. Fusce ut quam. Suspendisse eleifend
+		leo vitae ligula. Nulla facilisi. Nulla rutrum, erat vitae lacinia dictum,
+		pede purus imperdiet lacus, ut semper velit ante id metus. Praesent massa
+		dolor, porttitor sed, pulvinar in, consequat ut, leo. Nullam nec est.
+		Aenean id risus blandit tortor pharetra congue. Suspendisse pulvinar.
+	</p>
+	<p>
+		Vestibulum convallis eros ac justo. Proin dolor. Etiam aliquam. Nam ornare
+		elit vel augue. Suspendisse potenti. Etiam sed mauris eu neque nonummy
+		mollis. Vestibulum vel purus ac pede semper accumsan. Vivamus lobortis, sem
+		vitae nonummy lacinia, nisl est gravida magna, non cursus est quam sed
+		urna. Phasellus adipiscing justo in ipsum. Duis sagittis dolor sit amet
+		magna. Suspendisse suscipit, neque eu dictum auctor, nisi augue tincidunt
+		arcu, non lacinia magna purus nec magna. Praesent pretium sollicitudin
+		sapien. Suspendisse imperdiet. Class aptent taciti sociosqu ad litora
+		torquent per conubia nostra, per inceptos hymenaeos.
+	</p>
+		
+</body>
+</html>

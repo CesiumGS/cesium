@@ -1,0 +1,18 @@
+({
+	name: "date.timezone.America-Caracas",
+	runTest: function(t){
+		var tz = "America/Caracas";
+		doh.checkDate({tzOffset: 267.666666666667, tzAbbr: "CMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: 267.666666666667, tzAbbr: "CMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: 267.666666666667, tzAbbr: "CMT"}, -1826739141000, tz, 1);
+		doh.checkDate({tzOffset: 270, tzAbbr: "VET"}, -1826739140000, tz, 1);
+		doh.checkDate({tzOffset: 270, tzAbbr: "VET"}, -157750201000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "VET"}, -157750200000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "VET"}, 1197183599000, tz, 1);
+		doh.checkDate({tzOffset: 270, tzAbbr: "VET"}, 1197183600000, tz, 1);
+		doh.checkDate({tzOffset: 270, tzAbbr: "VET"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: 270, tzAbbr: "VET"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: 270, tzAbbr: "VET"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: 270, tzAbbr: "VET"}, 1246789800000, tz, 0);
+	}
+})

@@ -1,0 +1,180 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>Dojo Dynamcic Tooltip Widget Test</title>
+
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+		
+		td { padding: 20px; }
+	</style>
+
+	<!-- required: a default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/tundra/tundra.css">
+	
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		djConfig="parseOnLoad: true, isDebug: true"></script>
+	
+	<!-- not needed, for testing alternate themes -->
+	<script type="text/javascript" src="_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dojox.widget.DynamicTooltip");
+		dojo.require("dijit.ColorPalette");
+		dojo.require("dojo.parser");
+		
+		dojo.addOnLoad(function(){
+			console.log("on load func");
+			var tt = new dojox.widget.DynamicTooltip({
+				label:"programmatically created tooltip", 
+				connectId:["programmaticTest"]
+			});
+			console.log("created", tt, tt.id);
+			var ttd = new dojox.widget.DynamicTooltip({
+				label:"programmatically created dynmaic tooltip", 
+				href: 'get_time.php', 
+				connectId:["programmaticTestDynamic"]
+			});
+			console.log("created", ttd, ttd.id);
+		});
+	</script>
+</head>
+<body class="tundra">
+	
+	<h1 class="testTitle">Dynamic Tooltip test</h1>
+
+	<p>Mouse-over or focus the items below to test tooltips.</p>
+	<table>
+		<tr>
+			<td>
+				Change tooltip positioning search list:
+			</td>
+			<td>
+				Set background color:
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<button onclick="dojox.widget.DynamicTooltip.defaultPosition=['above', 'below']; dojo.byId('current').innerHTML='Current: ' + dojox.widget.DynamicTooltip.defaultPosition;">above, below</button>
+				<button onclick="dojox.widget.DynamicTooltip.defaultPosition=['after', 'before']; dojo.byId('current').innerHTML='Current: ' + dojox.widget.DynamicTooltip.defaultPosition;">after, before (default)</button>
+				<div id=current>
+					Current: default (unchanged)
+				</div>
+			</td>
+			<td>
+				<div dojoType="dijit.ColorPalette" onChange="dojo.query('body').style('background', arguments[0]);"></div>
+			</td>
+		</tr>
+	</table>
+	
+	<div><span id="dyn_one" class="tt" tabindex="0"> dynamic tooltip </span>
+		<span dojoType="dojox.widget.DynamicTooltip" connectId="dyn_one" id="dyn_one_tooltip" href="get_time.php" preventCache="true">
+			<b>
+				<span style="color: blue;">Should not ever see this!</span>
+			</b>
+		</span>
+		<span style="color: blue;"><button onclick="dijit.byId('dyn_one_tooltip').refresh();">Refresh Dynamic Tooltip</button></span>
+	</div>
+	<div><span id="dyn_two" class="tt" tabindex="0"> dynamic tooltip set href</span>
+		<span dojoType="dojox.widget.DynamicTooltip" connectId="dyn_two" id="dyn_two_tooltip" href="get_time.php" preventCache="true">
+			<b>
+				<span style="color: blue;">Should not ever see this!</span>
+			</b>
+		</span>
+		<span style="color: blue;">
+			<button onclick="dijit.byId('dyn_two_tooltip').set('href', 'honey.php');">Set URL honey.php, delayed</button>
+			<button onclick="dijit.byId('dyn_two_tooltip').set('href', 'get_time.php');">Set URL get_time.php</button>
+		</span>
+	</div>
+	<span id="programmaticTestDynamic">this text has a programmatically created dynamic tooltip</span>
+
+	<br><br>
+	
+	<div><span id="one" class="tt" tabindex="0"> focusable text </span>
+		<span dojoType="dojox.widget.DynamicTooltip" connectId="one" id="one_tooltip">
+			<b>
+				<span style="color: blue;">rich formatting</span>
+				<span style="color: red; font-size: x-large;"><i>!</i></span>
+			</b>
+		</span>
+	</div>
+	<span id="oneA" class="tt"> plain text (not focusable) </span>
+	<span dojoType="dojox.widget.DynamicTooltip" connectId="oneA" id="oneA_tooltip">
+		<span> keyboard users can not access this tooltip</span>
+	</span>
+    <a id="three" href="#bogus">anchor</a>
+	<span dojoType="dojox.widget.DynamicTooltip" connectId="three" id="three_tooltip">tooltip on a link </span>
+	<p></p>
+
+	<span id="programmaticTest">this text has a programmatically created tooltip</span>
+	<br>
+
+	<button id="four">button w/tooltip</button>
+	<span id="btnTt" dojoType="dojox.widget.DynamicTooltip" connectId="four" id="four_tooltip">tooltip on a button</span>
+	<button onclick="dijit.byId('btnTt').destroy()">Remove</button> tooltip from "button w/tooltip".
+
+	<span style="float: right">
+		Test tooltip on right aligned element.  Tooltip should flow to the left --&gt;
+		<select id="seven">
+			<option value="alpha">Alpha</option>
+			<option value="beta">Beta</option>
+			<option value="gamma">Gamma</option>
+			<option value="delta">Delta</option>
+		</select>
+
+		<span dojoType="dojox.widget.DynamicTooltip" connectId="seven" id="seven_tooltip">
+			tooltip on a select<br>
+			two line tooltip.
+		</span>
+	</span>
+
+	<p></p>
+
+	<form>
+		<input id="id1" value="#1"><br>
+		<input id="id2" value="#2"><br>
+		<input id="id3" value="#3"><br>
+		<input id="id4" value="#4"><br>
+   		<input id="id5" value="#5"><br>
+		<input id="id6" value="#6"><br>
+	</form>
+	<br>
+
+	<div style="overflow: auto; height: 100px; position: relative; border: solid blue 3px;">
+		<span id="s1">s1 text</span><br><br><br>
+		<span id="s2">s2 text</span><br><br><br>
+		<span id="s3">s3 text</span><br><br><br>
+		<span id="s4">s4 text</span><br><br><br>
+		<span id="s5">s5 text</span><br><br><br>
+	</div>
+
+	<span dojoType="dojox.widget.DynamicTooltip" connectId="id1" id="id1_tooltip">
+
+	tooltip for #1<br>
+	long&nbsp;long&nbsp;long&nbsp;long&nbsp;long&nbsp;long&nbsp;long&nbsp;long&nbsp;long&nbsp;long&nbsp;long&nbsp;text<br>
+	make sure that this works properly with a really narrow window
+	</span>
+
+	<span dojoType="dojox.widget.DynamicTooltip" connectId="id2" id="id2_tooltip">tooltip for #2</span>
+	<span dojoType="dojox.widget.DynamicTooltip" connectId="id3" id="id3_tooltip">tooltip for #3</span>
+	<span dojoType="dojox.widget.DynamicTooltip" connectId="id4" id="id4_tooltip">tooltip for #4</span>
+	<span dojoType="dojox.widget.DynamicTooltip" connectId="id5" id="id5_tooltip">tooltip for #5</span>
+	<span dojoType="dojox.widget.DynamicTooltip" connectId="id6" id="id6_tooltip">tooltip for #6</span>
+
+	<span dojoType="dojox.widget.DynamicTooltip" connectId="s1" id="s1_tooltip">s1 tooltip</span>
+	<span dojoType="dojox.widget.DynamicTooltip" connectId="s2" id="s2_tooltip">s2 tooltip</span>
+	<span dojoType="dojox.widget.DynamicTooltip" connectId="s3" id="s3_tooltip">s3 tooltip</span>
+	<span dojoType="dojox.widget.DynamicTooltip" connectId="s4" id="s4_tooltip">s4 tooltip</span>
+	<span dojoType="dojox.widget.DynamicTooltip" connectId="s5" id="s5_tooltip">s5 tooltip</span>
+
+	<h3>One Tooltip for multiple connect nodes</h3>
+	<span dojoType="dojox.widget.DynamicTooltip" connectId="multi1,multi2" id="multiboth" style="display:none;">multi tooltip</span>
+	<a id="multi1" href="#bogus">multi1</a><br><a id="multi2" href="#bogus">multi2</a>
+
+</body>
+</html>
+

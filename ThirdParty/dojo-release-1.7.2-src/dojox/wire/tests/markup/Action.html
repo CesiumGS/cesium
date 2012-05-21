@@ -1,0 +1,147 @@
+<html>
+<head>
+<title>Test Action</title>
+<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+<script type="text/javascript">
+dojo.provide("dojox.wire.ml.tests.markup.Action");
+
+dojo.require("dojo.parser");
+dojo.require("doh.runner");
+dojo.require("dojox.wire.ml.Action");
+dojo.require("dojox.wire.ml.Transfer");
+
+dojox.wire.ml.tests.markup.Action = {
+	transfer: function(){},
+	source: {a: "A", b: "B"}
+};
+
+dojo.addOnLoad(function(){
+	doh.register("dojox.wire.ml.tests.markup.Action", [
+		function test_Action_triggerEvent(t){
+			dojox.wire.ml.tests.markup.Action.target = {};
+			dojox.wire.ml.tests.markup.Action.transfer();
+			t.assertEqual(dojox.wire.ml.tests.markup.Action.source.a, dojox.wire.ml.tests.markup.Action.target.a);
+			t.assertEqual(dojox.wire.ml.tests.markup.Action.source.b, dojox.wire.ml.tests.markup.Action.target.b);
+		},
+
+		function test_Action_triggerTopic(t){
+			dojox.wire.ml.tests.markup.Action.target = {};
+			dojo.publish("transfer");
+			t.assertEqual(dojox.wire.ml.tests.markup.Action.source.a, dojox.wire.ml.tests.markup.Action.target.a);
+		},
+
+		function test_ActionFilter_required(t){
+			dojox.wire.ml.tests.markup.Action.target = {};
+			dojo.publish("transferFilter");
+			t.assertEqual(undefined, dojox.wire.ml.tests.markup.Action.target.a);
+			t.assertEqual("no required", dojox.wire.ml.tests.markup.Action.error);
+			dojox.wire.ml.tests.markup.Action.required = true;
+			dojo.publish("transferFilter");
+			t.assertEqual(dojox.wire.ml.tests.markup.Action.source.a, dojox.wire.ml.tests.markup.Action.target.a);
+		},
+
+		function test_ActionFilter_requiredSpecificNumber(t){
+			dojox.wire.ml.tests.markup.Action.value = null
+			dojox.wire.ml.tests.markup.Action.target = {};
+			dojo.publish("transferFilterNumber");
+
+			t.assertEqual(undefined, dojox.wire.ml.tests.markup.Action.target.a);
+
+			dojox.wire.ml.tests.markup.Action.value = 20;
+			dojo.publish("transferFilterNumber");
+			t.assertEqual(dojox.wire.ml.tests.markup.Action.source.a, dojox.wire.ml.tests.markup.Action.target.a);
+		},
+
+		function test_ActionFilter_requiredSpecificBoolean(t){
+			dojox.wire.ml.tests.markup.Action.value = null;
+			dojox.wire.ml.tests.markup.Action.target = {};
+			dojo.publish("transferFilterBoolean");
+	
+			t.assertEqual(undefined, dojox.wire.ml.tests.markup.Action.target.a);
+	
+			dojox.wire.ml.tests.markup.Action.value = true;
+			dojo.publish("transferFilterBoolean");
+			t.assertEqual(dojox.wire.ml.tests.markup.Action.source.a, dojox.wire.ml.tests.markup.Action.target.a);
+		},
+
+		function test_ActionFilter_requiredSpecificString(t){
+			dojox.wire.ml.tests.markup.Action.target = {};
+			dojox.wire.ml.tests.markup.Action.value = null;
+			dojo.publish("transferFilterString");
+	
+			t.assertEqual(undefined, dojox.wire.ml.tests.markup.Action.target.a);
+	
+			dojox.wire.ml.tests.markup.Action.value = "executeThis";
+			dojo.publish("transferFilterString");
+			t.assertEqual(dojox.wire.ml.tests.markup.Action.source.a, dojox.wire.ml.tests.markup.Action.target.a);
+		}
+	]);
+	doh.run();
+});
+</script>
+</head>
+<body>
+<div dojoType="dojox.wire.ml.Action"
+	trigger="dojox.wire.ml.tests.markup.Action"
+	triggerEvent="transfer">
+	<div dojoType="dojox.wire.ml.Transfer"
+		source="dojox.wire.ml.tests.markup.Action.source.a"
+		target="dojox.wire.ml.tests.markup.Action.target.a"></div>
+	<div dojoType="dojox.wire.ml.Transfer"
+		source="dojox.wire.ml.tests.markup.Action.source.b"
+		target="dojox.wire.ml.tests.markup.Action.target.b"></div>
+</div>
+<div dojoType="dojox.wire.ml.Action"
+	triggerTopic="transfer">
+	<div dojoType="dojox.wire.ml.Transfer"
+		source="dojox.wire.ml.tests.markup.Action.source.a"
+		target="dojox.wire.ml.tests.markup.Action.target.a"></div>
+</div>
+<div dojoType="dojox.wire.ml.Action"
+	triggerTopic="transferFilter">
+	<div dojoType="dojox.wire.ml.ActionFilter"
+		required="dojox.wire.ml.tests.markup.Action.required"
+		message="no required"
+		error="dojox.wire.ml.tests.markup.Action.error"></div>
+	<div dojoType="dojox.wire.ml.Transfer"
+		source="dojox.wire.ml.tests.markup.Action.source.a"
+		target="dojox.wire.ml.tests.markup.Action.target.a"></div>
+</div>
+
+<div dojoType="dojox.wire.ml.Action"
+	triggerTopic="transferFilterNumber">
+	<div dojoType="dojox.wire.ml.ActionFilter"
+		required="dojox.wire.ml.tests.markup.Action.value"
+		requiredValue="20"
+		type="number">
+	</div>
+	<div dojoType="dojox.wire.ml.Transfer"
+		source="dojox.wire.ml.tests.markup.Action.source.a"
+		target="dojox.wire.ml.tests.markup.Action.target.a"></div>
+</div>
+
+<div dojoType="dojox.wire.ml.Action"
+	triggerTopic="transferFilterBoolean">
+	<div dojoType="dojox.wire.ml.ActionFilter"
+		required="dojox.wire.ml.tests.markup.Action.value"
+		requiredValue="true"
+		type="boolean">
+	</div>
+	<div dojoType="dojox.wire.ml.Transfer"
+		source="dojox.wire.ml.tests.markup.Action.source.a"
+		target="dojox.wire.ml.tests.markup.Action.target.a"></div>
+</div>
+
+<div dojoType="dojox.wire.ml.Action"
+	triggerTopic="transferFilterString">
+	<div dojoType="dojox.wire.ml.ActionFilter"
+		required="dojox.wire.ml.tests.markup.Action.value"
+		requiredValue="executeThis">
+	</div>
+	<div dojoType="dojox.wire.ml.Transfer"
+		source="dojox.wire.ml.tests.markup.Action.source.a"
+		target="dojox.wire.ml.tests.markup.Action.target.a"></div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+
+	<title>Drop Indicator place test</title>
+	
+	<script type="text/javascript" src="../../../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+	
+	<script type="text/javascript">
+
+		dojo.require("doh.runner");		
+		dojo.require("dojo.parser");
+		dojo.require("dojox.mdnd.AreaManager");
+		dojo.require("dojox.mdnd.DropIndicator");
+		dojo.require("dojox.mdnd.dropMode.VerticalDropMode");
+		
+		dojo.addOnLoad(function(){
+			var size = {'w':100,'h':100};
+			
+			var mgr = dojox.mdnd.areaManager();
+			var dropIndicator = mgr._dropIndicator;
+			
+			mgr.areaClass = "dndArea";
+			mgr.dragHandleClass="dragHandle";
+			mgr.registerByClass();
+			
+			var area1, area2, area3,item;
+			area1 = dojo.byId("area1");
+			area2 = dojo.byId("area2");
+			item = dojo.byId("item1");
+			
+			
+			doh.register("DropIndicatorPlace",
+				[
+				{
+				 	// Test to place drop indicator into area 1
+				 	// with no node references. In this case the drop
+				 	// indicator is displayed at the end of the area
+					 name:"TestPlaceDropIndicatorNoPlace",
+					 runTest: function(t){
+					 	var diNode = dropIndicator.place(area1,null,size);
+					 	// retrieve drop indicator which must be at the end
+					 	var node = area1.getElementsByTagName("div")[4];
+					 	
+					 	//check that DropIndicator is at good position
+					 	doh.assertEqual(diNode,node);
+					 	doh.assertEqual("dropIndicator",node.className);
+					 	//check content node size
+					 	doh.assertEqual(100,dojo.contentBox(node).h);
+					 }
+				},
+				{	/**
+				 	 * Test to place drop indicator into area 1
+				 	 * with place0 node reference. In this case the drop
+				 	 * indicator is displayed at the begenning
+				 	 * 
+					 */
+					 name:"TestPlaceDropIndicatorPlace0",
+					 runTest: function(t){
+					 	var place0 = dojo.byId("place0");
+					 	var diNode = dropIndicator.place(area1,place0,size);
+					 	// retrieve drop indicator which must be at the first position
+					 	var node = area1.getElementsByTagName("div")[0];
+					 	//check that DropIndicator is present
+					 	doh.assertEqual(diNode,node);
+					 	doh.assertEqual("dropIndicator",node.className);
+					 	//check node size
+					 	doh.assertEqual(100,dojo.contentBox(node).h);
+					 }
+				},
+				{	/**
+				 	 * Test to place drop indicator into area 1
+				 	 * with place2 node reference. In this case the drop
+				 	 * indicator is displayed at the begenning
+				 	 * 
+					 */
+					 name:"TestPlaceDropIndicatorPlace2",
+					 runTest: function(t){
+					 	var place0 = dojo.byId("place2");
+					 	var diNode = dropIndicator.place(area1,place0,size);
+					 	// retrieve drop indicator which must be at the first position
+					 	var node = area1.getElementsByTagName("div")[2];
+					 	//check that DropIndicator is present
+					 	doh.assertEqual(diNode,node);
+					 	doh.assertEqual("dropIndicator",node.className);
+					 	//check node size
+					 	doh.assertEqual(100,dojo.contentBox(node).h);
+					 }
+				},
+				{	/**
+				 	 * Test to place drop indicator into area 1
+				 	 * with bad node reference (using item). In this case the drop
+				 	 * indicator is displayed at the begenning
+				 	 * 
+					 */
+					 name:"TestPlaceDropIndicatorNoPlace",
+					 runTest: function(t){
+					 	var a1BeginSize = area1.getElementsByTagName("div").length;
+					 	var a2BeginSize = area2.getElementsByTagName("div").length;
+					 	
+					 	var diNode = dropIndicator.place(area1,item,size);
+					 	// get elements number after placement
+					 	
+					 	var a1EndSize = area1.getElementsByTagName("div").length;
+					 	var a2EndSize = area2.getElementsByTagName("div").length;
+					 	//check that none child added to the 2 areas and diNode is null
+					 	doh.assertEqual(null,diNode);
+					 	doh.assertEqual(a1BeginSize, a1EndSize);
+					 	doh.assertEqual(a2BeginSize, a2EndSize);
+					 }
+				},
+				{	/**
+				 	 * Test removing dropIndicator
+					 */
+					 name:"TestRemoveDropIndicator",
+					 runTest: function(t){
+					 	var listDropIndicator = dojo.query(".dropIndicator");
+					 	// check that there's only one dromIndicator
+					 	doh.assertEqual(1,listDropIndicator.length);
+					 	// remove the drop indicator
+					 	dropIndicator.remove();
+					 	// check that there's none drop indicator
+					 	listDropIndicator = dojo.query(".dropIndicator");
+					 	doh.assertEqual(0,listDropIndicator.length);
+					 }
+				},
+				{	/**
+				 	 * Test removing dropIndicator that is not present in the document
+					 */
+					 name:"TestRemoveDropIndicatorNonExisting",
+					 runTest: function(t){
+					 	var listDropIndicator = dojo.query(".dropIndicator");
+					 	// check that there's no drop indicator present
+					 	doh.assertEqual(0,listDropIndicator.length);
+					 	// remove the drop indicator
+					 	dropIndicator.remove();
+					 	// check that there's none drop indicator present
+					 	listDropIndicator = dojo.query(".dropIndicator");
+					 	doh.assertEqual(0,listDropIndicator.length);
+					 }
+				}
+				]
+			);
+			doh.run();
+		});
+		
+		
+		//--------------------------------------
+	</script>
+	<style type="text/css">
+		.area{
+			position:absolute;
+			top:10px;
+			border:5px solid #AAA;
+			background-color:#DDD;
+			margin:0;
+			padding:0;
+		}
+		#area1{
+			left:10px;
+			width : 300px;
+		}
+		#area2{
+			left:330px;
+			width : 100px;
+			height:300px;
+		}
+		.placeNode{
+			width:100%;
+			height:75px;
+			
+		}
+	</style>
+	</head>
+	<body class="orange">
+		<div id="area2" class="dndArea area">
+			<div style="background-color:white" id="item1">tested item</div>
+		</div>
+		<div id="area1" class="dndArea area">
+			<div id="place0" class="placeNode"></div>
+			<div id="place1" class="placeNode"></div>
+			<div id="place2" class="placeNode"></div>
+			<div id="place3" class="placeNode"></div>
+		</div>
+	</body>
+</html>

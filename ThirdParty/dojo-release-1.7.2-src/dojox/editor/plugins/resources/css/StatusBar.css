@@ -1,0 +1,75 @@
+@import "../../../../layout/resources/ResizeHandle.css"; 
+
+.dojoxEditorStatusBar {
+        overflow: hidden;
+        vertical-align: bottom;
+        padding: 2px; 
+}
+
+.dojoxEditorStatusBar table {
+        width: 100%;
+}
+
+.dojoxEditorStatusBar .dojoxResizeHandle {
+        position: static;
+        padding: 0px;
+        vertical-align: bottom; 
+}
+
+.dojoxEditorStatusBar .dojoxEditorStatusBarText{
+        height: 1.5em;
+        vertical-align: middle; 
+        width: 100%;
+        overflow: hidden;
+}
+
+.claro .dojoxEditorStatusBar {
+        background-color: #F1F1F1;
+}
+
+.claro .dojoxEditorStatusBar .dojoxEditorStatusBarText{
+        border-style: solid;
+        border-width: 1px;
+        border-color: #B5BCC7;
+        
+}
+
+.tundra .dojoxEditorStatusBar {
+        background-color: #EAEAEA;
+}
+
+.tundra .dojoxEditorStatusBar .dojoxEditorStatusBarText{
+        border-style: solid;
+        border-width: 1px;
+        border-color: #CCCCCC;
+        
+}
+
+.nihilo .dojoxEditorStatusBar {
+        border-style: solid;
+        background-color: #FFFFFF;
+        border-width: 1px;
+        border-color: #CCCCCC;
+}
+
+.nihilo .dojoxEditorStatusBar .dojoxEditorStatusBarText {
+        border-style: solid;
+        border-width: 1px;
+        border-color: #CCCCCC;
+        
+}
+
+.soria .dojoxEditorStatusBar {
+        border-style: solid;
+        background-color: #BDD6F0;
+        border-width: 1px;
+        border-color: #698FB3;
+}
+
+.soria .dojoxEditorStatusBar .dojoxEditorStatusBarText {
+        border-style: solid;
+        border-width: 1px;
+        border-color: #698FB3;
+        
+}
+

@@ -1,0 +1,73 @@
+<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" >
+<head>
+<title>Testing image 3</title>
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+</style>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+<script type="text/javascript">
+dojo.require("dojox.gfx");
+
+var surface, image = null, grid_size = 1000, grid_step = 50, surface2, image2
+	m = dojox.gfx.matrix;
+
+createSurface = function(){
+	surface = dojox.gfx.createSurface("test", 800, 600);
+	surface.whenLoaded(makeShapes);
+
+    //create second test
+    surface2 = dojox.gfx.createSurface("test2", 600, 600);
+	surface2.whenLoaded(makeShapes2);
+};
+
+makeShapes = function(surface){
+	for(var i = 0; i <= grid_size; i += grid_step){
+		surface.createLine({x1: 0, x2: grid_size, y1: i, y2: i}).setStroke("black");
+		surface.createLine({y1: 0, y2: grid_size, x1: i, x2: i}).setStroke("black");
+	}
+    image = surface.createImage({width: 150, height: 100, src: "images/eugene-sm.jpg"});
+    image.connect("onclick", function(){ alert("You didn't expect a download, did you?"); });
+};
+
+makeShapes2 = function(surface){
+    image2 = surface.createImage({width: 150, height: 100, src: "images/eugene-sm.jpg"});
+};
+
+transformImage = function(){
+	if(window.scaled){
+		surface.setDimensions(800,600);
+		image.setTransform({});
+                
+		surface2.setDimensions(600,600);
+		image2.setTransform();
+	}else{
+		surface.setDimensions(1000,600);
+	    image.setTransform({xx: 6, yy: 6});
+
+            surface2.setDimensions(800,600);
+            image2.setTransform({xx: 5, yy: 5});
+	}
+	window.scaled=!window.scaled;
+};
+
+dojo.addOnLoad(createSurface);
+
+</script>
+</head>
+<body>
+<h1>dojox.gfx Image tests</h1>
+<p>Clicking the following button should enlarge the surface and the image.<br>
+In the first Test: The image should not be cropped on the right and the background of grid should be red.<br>
+In the secondd test: the cavas should stay the same size, the image is increased and scrollbars appear
+	</p>
+<p>
+<input type="button" onclick="transformImage()" value="scale/reset"/><br />
+</p>
+<div id="test" style="background-color:red"></div>
+<p>second test with overflow=auto</p>
+<div style="overflow:auto;background-color:red;width:602px;height:602px;"><div id="test2"></div></div>
+<p>That's all Folks!</p>
+</body>
+</html>

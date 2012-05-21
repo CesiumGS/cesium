@@ -1,0 +1,123 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>Pie 2D</title>
+		<style type="text/css">
+			@import "../../../../dojo/resources/dojo.css";
+			@import "../../../../dijit/tests/css/dijitTests.css";
+		</style>
+		<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad:true"></script>
+		<script type="text/javascript">
+			dojo.require("dojo.parser");
+			dojo.require("doh.runner");
+
+			dojo.require("dojox.charting.Chart");
+			dojo.require("dojox.charting.plot2d.Pie");
+			dojo.require("dojox.charting.themes.PlotKit.blue");
+			dojo.require("dojox.charting.themes.PlotKit.green");
+			dojo.require("dojox.charting.themes.PlotKit.red");
+			dojo.require("dojox.charting.themes.Adobebricks");
+			dojo.require("dojox.charting.themes.Algae");
+			dojo.require("dojox.charting.action2d.Tooltip");
+
+			dojo.require("dojox.charting.BidiSupport");
+
+			var chart1, chart2, chart8;
+			makeObjects = function(){
+				chart1 = new dojox.charting.Chart("test1", {textDir:"rtl"});
+				chart1.setTheme(dojox.charting.themes.PlotKit.blue);
+				chart1.addPlot("default", {
+					type: "Pie",
+					font: "normal normal bold 12pt Tahoma",
+					fontColor: "black",
+					labelOffset: 40,
+					htmlLabels: false
+				});
+				chart1.addSeries("Series A", [{y: 4, text: "\u05e9\u05dc\u05d5\u05dd big world!"}, {y: 2, text: "Hello \u05e2\u05d5\u05dc\u05dd\u0020\u05d2\u05d3\u05d5\u05dc!"}, {y: 1, text: "Blue."}, {y: 1, text: "Other..."}]);
+				   new dojox.charting.action2d.Tooltip(chart1);
+			 
+				chart1.render();
+
+				chart2 = new dojox.charting.Chart("test2", {textDir:"auto"});
+				chart2.setTheme(dojox.charting.themes.PlotKit.blue);
+				chart2.addPlot("default", {
+					type: "Pie",
+					font: "normal normal bold 12pt Tahoma",
+					fontColor: "black",
+					labelOffset: -25,
+					precision: 0,
+					radius: 100,
+					htmlLabels: false
+				});
+				chart2.addSeries("Series A", [{y: 4, text: "\u05e9\u05dc\u05d5\u05dd!"}, {y: 2, text: "Hello!"}, {y: 1, text: "Blue!"}, {y: 1, text: "Other!"}]);
+				chart2.render();
+
+
+				chart8 = new dojox.charting.Chart("test8");
+				chart8.setTheme(dojox.charting.themes.Algae);
+				chart8.addPlot("default", {
+					type: "Pie",
+					font: "normal normal bold 12pt Tahoma",
+					fontColor: "white",
+					radius: 80,
+					htmlLabels: false
+				});
+				chart8.addSeries("Series A", [
+					{y: -1, text: "Red", color: "red"},
+					{y: 5, text: "\u05e9\u05dc\u05d5\u05dd!", color: "green"},
+					{y: 0, text: "Blue", color: "blue"},
+					{y: 0, text: "Other", color: "white", fontColor: "black"}
+				]);
+				chart8.render();
+			};
+
+			dojo.addOnLoad(function(){
+				makeObjects();
+				
+				doh.register("parse", function(){
+					dojo.parser.parse();
+				});
+
+				doh.register("test textDir", [
+					{
+						name: "Pies textDir",
+
+						runTest: function(){
+							doh.is("rtl", chart1.textDir, "chart1: internal labels");
+							doh.is("auto", chart2.textDir, "chart2: external labels");
+							doh.is("ltr", chart8.textDir, "chart8: Degenerated pie, textDir inherited");
+						}
+					}	
+				]);		
+
+				doh.run();
+			});
+		</script>
+	</head>
+	<body>
+		<h1>Pie 2D</h1>
+		<table border="1"><tr>
+			<td><p>1: Pie with internal labels.</p>
+				<div id="test1" style="width: 300px; height: 300px;"></div></td>
+			<td><p>2: Pie with external labels.</p>
+				<div id="test2" style="width: 300px; height: 300px;"></div></td>
+			<td><p>3: Degenerated pie with 1 positive elements (out of 5).</p>
+				<div id="test8" style="width: 200px; height: 200px;"></div></td>
+		</tr></table>
+		<p>That's all Folks!</p>
+	</body>
+</html>

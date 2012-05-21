@@ -1,0 +1,59 @@
+<html>
+	<head>
+			<title>Demo using the dojo.data bind_data tag</title>
+	    <script type="text/javascript" src="../../../dojo/dojo.js"
+				djConfig="isDebug: true, parseOnLoad: true"></script>
+	    <script type="text/javascript">
+				dojo.require("dijit._WidgetBase");
+				dojo.require("dojox.dtl._Templated");
+				dojo.require("dojox.data.FlickrRestStore");
+				dojo.require("dojo.parser");
+
+				dojo.declare("demo.Gallery", [dijit._WidgetBase, dojox.dtl._Templated], {
+					templateString: dojo.cache("dojox.dtl.demos.templates", "gallery.html"),
+					store: new dojox.data.FlickrRestStore(),
+					selectThumbnail: function(e){
+						this.selected = e.target.className;
+						this.render();
+					},
+					keyUp: function(e){
+						if(e.keyCode == dojo.keys.ENTER){
+							var search = e.target.value;
+							var query = {
+								query: {
+									userid: "44153025@N00",
+									apikey: "8c6803164dbc395fb7131c9d54843627",
+									sort: [
+										   {
+											attribute: "interestingness",
+											descending: true
+											}
+									],
+									tags: search.split(/\s*,\s*/g),
+									tag_mode: "any"
+								},
+								start: 0,
+								count: 10,
+								onBegin: dojo.hitch(this, function(total){
+									console.debug(total);
+									this._maxPhotos = total;
+								}),
+								onComplete: dojo.hitch(this, function(items, request){
+									console.debug(items);
+									if(items && items.length) {
+										this.items = items;
+										this.render();
+									}
+								})
+							};
+							this.store.fetch(query);
+						}
+					}
+				});
+	    </script>
+	</head>
+	<body>
+		<p>Also see demo_Tree.html for an alternative way to use data stores.</p>
+		<div dojoType="demo.Gallery"></div>
+	</body>
+</html>

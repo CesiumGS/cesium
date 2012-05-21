@@ -1,0 +1,32 @@
+{ items: [
+	{
+	  "thumb":"images/extraWide.jpg",
+	  "large":"images/extraWide.jpg",
+	  "title":"I'm wide, me",
+	  "link":"http://www.flickr.com/photos/44153025@N00/748348847"
+	},
+	{
+	 "thumb":"images/imageHoriz.jpg",
+	  "large":"images/imageHoriz.jpg",
+	  "title":"I'm a horizontal picture",
+	  "link":"http://www.flickr.com/photos/44153025@N00/735656038"
+	},
+	{
+	  "thumb":"images/imageHoriz2.jpg",
+	  "large":"images/imageHoriz2.jpg",
+	  "title":"I'm another horizontal picture",
+	  "link":"http://www.flickr.com/photos/44153025@N00/714540483"
+	},
+	{
+	 "thumb":"images/imageVert.jpg",
+	  "large":"images/imageVert.jpg",
+	  "title":"I'm a vertical picture",
+	  "link":"http://www.flickr.com/photos/44153025@N00/715392758"
+	},
+	{
+	 "large":"images/square.jpg",
+	 "thumb":"images/square.jpg",
+	 "link" :"images/square.jpg",
+	 "title":"1:1 aspect ratio"
+	}
+]}

@@ -1,0 +1,58 @@
+/* Progress Indicator */
+.mblProgContainer {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  top: 180px;
+  left: 50%;
+  margin: -18px 0px 0px -18px;
+}
+.mblProg {
+  position: absolute;
+  left: 2px;
+  top: 0px;
+  width: 11px;
+  font-size: 1px;
+  height: 4px;
+  overflow: hidden;
+  -webkit-transform-origin: 0 2px;
+  background-color: #C0C0C0;
+  -webkit-border-radius: 2px;
+  -moz-border-radius: 2px;
+}
+.mblProg0 {
+  -webkit-transform: translate(18px, 10px) rotate(-90.1deg);
+}
+.mblProg1 {
+  -webkit-transform: translate(22px, 11px) rotate(-60deg);
+}
+.mblProg2 {
+  -webkit-transform: translate(25px, 14px) rotate(-30deg);
+}
+.mblProg3 {
+  -webkit-transform: translate(26px, 18px) rotate(0deg);
+}
+.mblProg4 {
+  -webkit-transform: translate(25px, 22px) rotate(30deg);
+}
+.mblProg5 {
+  -webkit-transform: translate(22px, 25px) rotate(60deg);
+}
+.mblProg6 {
+  -webkit-transform: translate(18px, 26px) rotate(90.1deg);
+}
+.mblProg7 {
+  -webkit-transform: translate(14px, 25px) rotate(120deg);
+}
+.mblProg8 {
+  -webkit-transform: translate(11px, 22px) rotate(150deg);
+}
+.mblProg9 {
+  -webkit-transform: translate(10px, 18px) rotate(180deg);
+}
+.mblProg10 {
+  -webkit-transform: translate(11px, 14px) rotate(210deg);
+}
+.mblProg11 {
+  -webkit-transform: translate(14px, 11px) rotate(240deg);
+}

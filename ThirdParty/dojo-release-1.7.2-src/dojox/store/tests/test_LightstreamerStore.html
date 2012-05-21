@@ -1,0 +1,74 @@
+<html>
+	<head>
+		<title>DojoX LightstreamerStore test</title>
+		<style type="text/css">
+			@import "../../../dojo/resources/dojo.css";
+			@import "../../../dijit/tests/css/dijitTests.css";
+			.price {
+				font-weight: bold;
+			}
+		</style>
+		<script type="text/javascript" src="path/to/ls/commons/lightstreamer/lscommons.js"></script>
+		<script type="text/javascript" src="path/to/ls/commons/lightstreamer/lspushpage.js"></script>
+		<script type="text/javascript" src="path/to/ls/commons/custom/misc.js"></script>
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:false, parseOnLoad: true"></script>
+		<script type="text/javascript">
+			dojo.require("dojox.store.LightstreamerStore");
+
+			var group = ["item1", "item2", "item3", "item4", "item5" ],
+				schema = [ "last_price", "stock_name" ];
+
+			dojo.ready(function(){
+				//	the following two lines are defined in misc.js; they are a part of the demo
+				//	code that comes with a default Lightstreamer server install.  Make sure the
+				//	paths in both functions point to the right place, just like with the three
+				//	script tag references above.
+				var pushPage = initializeDemoPushPage("path/to/ls/commons/custom/", true, null, null);
+				initializeDemoEngine(pushPage, "path/to/ls/commons/lightstreamer/", null);
+
+				//	The actual demonstration.
+				var stopHandler, store;
+				dojo.connect(dojo.byId("starter"), "onclick", function(e){
+					dojo.stopEvent(e);
+					if(!store){
+						store = new dojox.store.LightstreamerStore(pushPage, group, schema);
+					}
+
+					var results = store.query("MERGE", { dataAdapter: "QUOTE_ADAPTER" });
+					results.observe(function(o){
+						var d = dojo.byId("price-" + o.id);
+						if(!d){
+							var c = dojo.byId("resultContainer");
+							var div = dojo.create("div", { 
+								innerHTML: o.stock_name + ': <span class="price" id="price-' + o.id + '"></span>'
+							}, c);
+							d = dojo.byId("price-" + o.id);
+						}
+						d.innerHTML = o.last_price;
+					});
+
+					stopHandler = dojo.connect(dojo.byId("stopper"), "onclick", function(e){
+						dojo.stopEvent(e);
+						if(results){
+							results.close();
+						}
+						dojo.disconnect(stopHandler);
+					});
+				});
+			});
+		</script>
+	</head>
+	<body>
+		<h1>dojox.store.LightstreamerStore test</h1>
+		<p><strong>NOTE:</strong> You must have the Lightstreamer Web Client installed and included in this page.
+		When attempting to try this demo, change the three script lines in the head to include the right path,
+		and make sure you change the paths in the first two statements in the script block in the head.</p>
+		<div>
+			<div>Start and stop the stream from the Lightstreamer server:</div>
+			<input type="button" id="starter" value="start" />
+			<input type="button" id="stopper" value="stop" />
+		</div>
+		<h2>Results:</h2>
+		<div id="resultContainer"></div>
+	</body>
+</html>

@@ -1,0 +1,458 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	
+	<title>dojox.highlight - syntax highlighting | The Dojo Toolkit</title>
+
+	<style type="text/css">
+		@import "../../../dijit/tests/css/dijitTests.css";
+
+		/* a sample set of definitions to use as a foundation to color your code */
+		@import "../resources/highlight.css";
+
+		/* additional styling for this test case */
+		pre.item code[class]:after {
+		  content: 'highlight: ' attr(class);
+		  display: block; text-align: right;
+		  font-size: smaller;
+		  color: #CCC; background: white;
+		  border-top: solid 1px;
+		  padding-top: 0.5em;
+		}
+		
+		pre code {
+		  display: block;
+		}
+		
+		code {
+		  background: #F0F0F0;
+		}
+		
+		pre code, 
+		.ruby .subst {
+		  color: black;
+		}
+	</style>
+
+	<script type="text/javascript" djConfig="parseOnLoad: false, isDebug: true" src="../../../dojo/dojo.js"></script>
+
+	<script type="text/javascript">
+		// initHighlightOnLoad is deprecated.
+		// if parseOnLoad==true, the onLoad init stuff is run.
+		// if parseOnLoad==false, you can call dojox.highlight.init(domNode)
+		// 
+		// utilizing the dojo build system, the dojox.highlight engine
+		// will "do it's best" based on the language maps available
+		// at the time of construction.
+		//
+		
+		require(["dojo/parser", "dojox/highlight", "dojox/highlight/languages/_all", "dojox/highlight/widget/Code"], function(){
+		    
+			dojo.query("code").forEach(dojox.highlight.init);
+			dojo.xhrGet({
+				url: "../../../dojo/aspect.js",
+				load: function(data){
+					var n = dojo.byId("foobar"),
+						c = document.createElement('div'),
+						e = n.parentNode.parentNode;
+					c.innerHTML = '<pre class="item"><code class="javascript">' + data.replace(/\</gi,"&lt;") + '</code></pre>';
+					e.replaceChild(c.firstChild, n.parentNode);
+					dojo.query("pre > code", e).forEach(dojox.highlight.init);
+				}
+			});
+			
+			dojo.ready(function(){
+				dojo.parser.parse();
+			})
+
+		});
+
+	</script>
+</head>
+<body>
+
+	<h1 class="testTitle">dojox.highlight</h1>
+
+	<p>client-side syntax highlighting for a number of languages.</p>
+
+	<p><em>NOTE:</em> All languages listed here have working language definitions, though
+	not all exist in the release or dojo subversion. The missing packs are not publically available.
+	<span style="display:none">based on</span>
+	</p>
+
+	<h2>Examples:</h2>
+
+	<p>Some Python code:</p>
+
+<pre class="item"><code>@requires_authorization
+def somefunc(param1, param2):
+  '''A docstring'''
+  if param1 &gt; param2: # interesting
+    print 'Gre\'ater'
+    print ''
+  return param2 - param1 + 1
+  
+class SomeClass:<br>    pass
+</code></pre>
+
+	<p>A chunk of PHP: </p>
+
+<pre class="item"><code class="php">
+$opAr = array (    "-a|--append", // a or append toggle, nothing extra
+        "-i|--input:", // i or input with next input being needed
+        "-l|--list:",           // l with input needed
+        //"--foo",     // broken
+        "-f:",           // f with no input
+        "--wot:"      // wot with input, no short
+        );
+
+
+$op = bgetop($opAr);
+if (is_array($op)) { print_r($op); }
+
+/* here is the code: */
+
+function bgetop($opAr=array(),$unknown=true) {
+
+$argv = $_SERVER['argv'];
+$argc = $_SERVER['argc'];
+$argPos = 1; // zero is program running
+
+// foreach arg
+while ($argPos&lt;$argc) {
+    $arg = $argv[$argPos];
+    if ($arg{0}=="-") {
+        if ($arg{1}=="-") {
+        $var = substr($arg,2,strlen($arg));
+        } else { $var = $arg{1}; }
+        foreach ($opAr as $opk =&gt; $opv) {
+            if (!isset($return[$var])) {
+            if (strpos($opv,$arg) !== FALSE) {
+                // this is where the -f -foo fix needs to be,
+                // the partial string exists in this record,
+                // but we need to determine if it's accurate
+                // somehow (i'm thinking: eregi?)
+                if ($accurate=1) {
+                    // we foudn the key
+                    if (strpos($opv,':') !== FALSE) {
+                        // next value is the one to use,
+                        // then skip it in the parser.
+                        if (isset($argv[$argPos+1])) {
+                            $return[$var] = $argv[++$argPos];
+                            } else {
+                            $return[$var] = FALSE;     
+                            }
+                        } else {
+                        // just set the toggle
+                        $return[$var] = TRUE;
+                        }
+                    // don't check this opAr value again
+                    unset($opAr[$opk]);
+                    }
+                } // if accurate
+            } // !isset already
+            } // foreach opAr    
+    } else { // we weren't expecting a non-hyphened argument, possibly just a filename, or whatnot
+        if ($unknown) { $return['unknown'][]=$arg; }
+    }
+    $argPos++;
+} // while argPos < argc
+
+if (is_array($return)) {
+return $return;
+} else { return 0; }
+
+} // end function bgetop
+
+</code></pre>
+
+	<p>A custom XML document:</p>
+
+<pre class="item"><code>&lt;?xml version="1.0"?&gt;
+&lt;response value="ok"&gt;
+  &lt;text&gt;Ok&lt;/text&gt;
+  &lt;comment/&gt;
+  &lt;ns:description&gt;&lt;![CDATA[ 
+  CDATA is &lt;not&gt; magical. 
+  ]]&gt;&lt;/ns:description&gt;
+&lt;/response&gt;
+</code></pre>
+
+	<p>Some HTML code:</p>
+
+<pre class="item"><code>&lt;head&gt;
+  &lt;title&gt;Title&lt;/title&gt;
+&lt;body&gt;
+  &lt;p class="something"&gt;Something&lt;/p&gt;
+  &lt;p class=something&gt;Something&lt;/p&gt;
+  &lt;!-- comment --&gt;
+  &lt;p class&gt;Something&lt;/p&gt;
+  &lt;p class="something" title="p"&gt;Something&lt;/p&gt;
+&lt;/body&gt;
+</code></pre>
+
+	<p>HTML with Django templates:</p>
+
+<pre class="item"><code>{% if articles|length %}
+{% for article in articles %}
+
+{# Striped table #}
+&lt;tr class="{% cycle odd,even %}"&gt;
+  &lt;td&gt;{{ article|default:"Hi... "|escape }}&lt;/td&gt;
+  &lt;td&gt;{{ article.date|date:"d.m.Y" }}&lt;/td&gt;
+&lt;/tr&gt;
+  
+{% endfor %}
+{% endif %}
+
+{% comment %}
+Comments may be long and
+multiline.
+{% endcomment %}
+</code></pre>
+
+	<p>Some CSS code:</p>
+
+<pre class="item"><code>body, 
+html {
+  font: Tahoma, Arial, san-serif;
+}
+
+#content {
+  width: 100%; /* css comment */
+  height: 100%
+}
+
+p[lang=ru] {
+  color: red;
+}
+</code></pre>
+
+	<p>Explicit Python highlight:</p>
+
+<pre class="item"><code class="python">for x in [1, 2, 3]:
+  count(x)
+</code></pre>
+
+	<p>Disabled highlighting:</p>
+
+<pre class="item"><code class="no-highlight">&lt;div id="contents"&gt;
+  &lt;p&gt;Hello, World!
+&lt;/div&gt;
+</code></pre>
+
+	<p>Normal dojo-looking code</p>
+
+<pre class="item"><code>
+dojo.provide("some.object");
+dojo.declare("some.object",null,{
+	param: "value",
+	_myMethod: function(/* Event */e){
+		this.inherited(arguments);
+	},
+	// comments
+	_another: function(){
+		dojo.addClass("foo","hovered");
+	}
+});
+dojo.addOnLoad(function(){
+	//
+	// comments with &lt;HTML&gt; inline
+	var d = dojo;
+	d.mixin(d,{
+		foo: function(e){
+			d.bar(e);
+		},
+		bar: function(e){
+			alert(e);
+		}
+	});
+});
+</code></pre>
+
+	<p>Lazy, xhr'd code:</p>
+
+<pre class="item"><code id="foobar"></code></pre>
+
+<hr>
+
+	<p>Text with inlined JavaScript code: <code class="javascript">dojo.forEach(a, function(x){ console.log(x); });</code> &mdash; that was the inlined sample.</p>
+
+<hr>
+
+	<p>Markuped code (python), no language was specified:</p>
+
+<div data-dojo-type="dojox.highlight.widget.Code">@requires_authorization
+def somefunc(param1, param2):
+  '''A docstring'''
+  if param1 &gt; param2: # interesting
+    print 'Gre\'ater'
+    print ''
+  return param2 - param1 + 1
+  
+class SomeClass:<br>    pass
+</div>
+
+	<p>Markuped code, "python" was specified:</p>
+
+<div data-dojo-type="dojox.highlight.widget.Code" class="python">
+@requires_authorization
+def somefunc(param1, param2):
+  '''A docstring'''
+  if param1 &gt; param2: # interesting
+    print 'Gre\'ater'
+    print ''
+  return param2 - param1 + 1
+  
+class SomeClass:<br>    pass
+</div>
+
+	<p>Some XQuery code:</p>
+
+<pre class="item"><code class="xquery">
+declare variable $my:entityName as xs:string external;
+
+declare variable $databaseURI := concat('jdbc://getCreditDefaultSwapsByEntityName?cd&#37;&amp;', $my:entityName); 
+declare variable $creditDefaultSwaps := collection($databaseURI);
+
+(: This is a comment :)
+
+(: This is a multi-line
+comment :)
+declare function local:equityRows($root) {
+	for $equity in $root//equity
+	let $referenceEntity := $creditDefaultSwaps//fpml:referenceEntity
+	where $equity/name = $referenceEntity/fpml:entityName
+	return
+		&lt;tr xmlns="http://www.w3.org/1999/xhtml">
+			&lt;td>{ $equity/*:symbol/text() }&lt;/td>
+			&lt;td>{ $equity/*:name/text() }&lt;/td>
+			&lt;td>{ $equity/*:high/text() }&lt;/td>
+			&lt;td>{ $equity/*:currency/text() }&lt;/td>
+		&lt;/tr>
+};
+
+&lt;table border="1">
+&lt;tr>
+	&lt;th>Ticker Symbol&lt;/th>
+	&lt;th>Company Name&lt;/th>
+	&lt;th>High&lt;/th>
+	&lt;th>Currency&lt;/th>
+&lt;/tr>
+{ local:equityRows(/) }
+&lt;/table>
+</code></pre>
+
+	<p>Some Java code:</p>
+
+<pre class="item"><code class="java">
+import java.io.*;
+public final class DOHRobot extends Applet{
+	// The last reported mouse x,y.
+	// If this is different from the real one, something's up.
+	private int lastMouseX;
+	private int lastMouseY;
+	JSObject dohrobot = null;
+
+	final private class onvisible extends ComponentAdapter{
+		public void componentShown(ComponentEvent evt){
+			/* sets the security manager to fix a bug *
+			 * in liveconnect in Safari on Mac        */
+			if(key != -1){ return; }
+			Thread thread = new Thread(){
+				public void run(){
+					window = (JSObject) JSObject.getWindow(applet());   
+					AccessController.doPrivileged(new PrivilegedAction(){
+						public Object run(){
+							log("> init Robot");
+							try{
+								SecurityManager oldsecurity = System.getSecurityManager();
+								boolean needsSecurityManager = applet().getParameter("needsSecurityManager").equals("true");
+								log("Socket connections managed? "+needsSecurityManager);
+								try{
+									securitymanager.checkTopLevelWindow(null);
+									// xdomain
+									if(charMap == null){
+										if(!confirm("DOH has detected that the current Web page is attempting to access DOH,\n"+
+													"but belongs to a different domain than the one you agreed to let DOH automate.")){
+											return null;
+										}
+									}
+								}catch(Exception e){
+									e.printStackTrace();
+									securitymanager = new RobotSecurityManager(needsSecurityManager,
+											oldsecurity);
+									System.setSecurityManager(securitymanager);
+								}
+								// instantiate the Robot
+								robot = new Robot();
+								robot.setAutoWaitForIdle(true);
+							}catch(Exception e){
+								key = -2;
+								e.printStackTrace();
+							}
+							return null;
+						}
+					});
+					if(key == -2){
+						// applet not trusted
+						// start the test without it
+						window.eval("doh.robot._appletDead=true;doh.run();");
+					}
+				}
+			};
+			thread.start();
+		}
+	}
+}
+</code></pre>
+
+	<p>A Groovy fragment:</p>
+
+<pre class="item"><code class="groovy">
+/*
+* A comment test block
+* 
+* ?debug
+* ?nodebug
+* 
+*/
+
+def settings = [
+	debug: false,
+	compress: true,
+	console: false,
+	ping: false,
+	testing: false,
+	profile: false
+];
+
+// function calls
+init(settings);
+render(settings);
+
+def render(settings) {
+	request.header = settings;
+	render();
+}
+
+def init(settings) {
+
+	// Default parameter handling.
+	settings.each { key, value ->
+		def onkey = "${key}";
+		def offkey = "no${key}";
+		if (foo("/request/params/${onkey}",null) != null) {
+			settings[key] = true;
+		}
+		else if (foo("/request/params/${offkey}",null) != null) {
+			settings[key] = false;
+		}
+	}
+
+	return settings;
+}
+</code></pre>
+
+</body></html>

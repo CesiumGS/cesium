@@ -1,0 +1,94 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<meta name="viewport" content="width=device-width,maximum-scale=1,minimum-scale=1,user-scalable=no" />
+		<title>Dojo Gesture Testing</title>
+		<style type="text/css">
+			#outer {
+				width: 350px;
+				height: 180px;
+				border: 1px solid #54A201;
+				background-color: #54A201;			
+			}
+			#inner {
+				width: 250px;
+				height: 80px;
+				border: 1px solid #7FB0DB;
+				background-color: #7FB0DB
+			}
+			#log1, #log2 {
+				width: 350px;
+				height: 50px;
+			}
+		</style>		
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+		<script>
+			require([
+				"dojo/_base/kernel",
+				"dojo/_base/connect",
+				"dojo/_base/html",
+				"dojo/_base/event",
+				"dojo/on",
+				"dojo/touch",
+				"dojo/ready",
+				"dojox/gesture/tap",
+				"dojox/gesture/swipe"
+			], function(dojo, conn, html, evt, on, touch, ready, tap, swipe){
+				
+				ready(function(){
+					var action = function(e){
+						html.byId("log1").innerHTML = "";
+						var info = " e.target.id=" + e.target.id + " | e.type=" + e.type + " | e.currentTarget.id="+ e.currentTarget.id;
+						/*
+						for(var i in e){
+						    if(typeof e[i] != "function"){
+						      info += "- " + i + ": " + e[i] + (e[i] && e[i]['id'] ? ' id = '+e[i]['id'] : '') + "<br/>";
+						    }
+						}*/
+						html.byId("log1").innerHTML += info;
+						//evt.stop(e);
+					};
+					
+					var swipeAction = function(e){
+						html.byId("log2").innerHTML = "";
+						var info =  " e.target.id=" + e.target.id + " | e.type=" + e.type + " | e.currentTarget.id="+ e.currentTarget.id +
+							" e.dx=" + e.dx + " e.dy=" + e.dy + " e.time=" + e.time + "<br/>";
+						html.byId("log2").innerHTML += info;
+						//evt.stop(e);
+					};
+					
+					//tap and swipe gestures both work well both on PC and touch devices
+					var inner = html.byId("inner");
+					on(inner, tap, action);
+					on(inner, tap.hold, action);
+					on(inner, tap.doubletap, action);
+					on(inner, swipe, swipeAction);
+					
+					//test gesture events bubbling from inner div
+					var outer = html.byId("outer");
+					conn.connect(outer, tap, action);
+					conn.connect(outer, tap.hold, action);
+					conn.connect(outer, tap.doubletap, action);
+					conn.connect(outer, swipe, swipeAction);
+					conn.connect(outer, swipe.end, swipeAction);
+					
+					//conn.connect(outer, touch.press, function(){console.log('outer.touch.press!');});
+					
+					on(dojo.doc, "orientationchange", function(e){
+						html.byId("log1").innerHTML="";
+						html.byId("log2").innerHTML="";
+					});
+				});
+			});
+		</script>
+	</head>
+	<body>
+		<div id="outer">
+			outer<div id="inner">inner</div>
+		</div>
+		<div id="log1"></div>
+		<hr/>
+		<div id="log2"></div>
+	</body>
+</html>

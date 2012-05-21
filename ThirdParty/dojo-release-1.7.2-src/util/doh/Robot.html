@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html style="margin:0px; padding:0px; border:0px none; overflow:hidden;">
+<head>
+<script>
+	// support document.domain
+	// Yes, we need this try/catch to handle document.domain.
+	// If one page explicitly sets document.domain,
+	// ALL pages (this page, test case, page to be tested) must also explicitly set document.domain,
+	// or you get Permission Denied.
+	// So it's not as easy as just setting document.domain to whatever the browser reports,
+	// because you don't know if the user explicitly set that.
+	try{
+		// Was the passed domain just a stupid browser default?
+		// If so, this statement will work.
+		var test=window.frameElement.ownerDocument;
+	}catch(e){
+		// Permission Denied.
+		// Means user explicitly set document.domain elsewhere.
+		// robot.js passes the document.domain as a GET parameter.
+		var domain=unescape(/[\\?&]domain=([^&#]*)/.exec(window.location.href)[1]);
+		document.domain=domain;
+	}
+	// find doh
+	var doc = window.frameElement.ownerDocument;
+	var w = doc.parentWindow || doc.defaultView || top;
+	doh = w.doh;
+
+	function init(){
+		var applet = document.getElementsByTagName('applet')[0];
+
+		doh.robot._killApplet = function(){
+			document.body.removeChild(applet);
+			applet = null;
+		};
+	}
+
+	// the box that the applet writes into to test the user's keyboard capabilities
+	var _robotField = null;
+
+
+	/*
+		Robot uses the event handlers below to measure system-level
+		properties that the java.awt.Robot class just expects us to know
+		magically. For instance, we don't know how big the user set their mouse
+		wheel to be in the Control Panel, so we measure it using onmousewheel.
+	*/
+
+	function _onfocus(robotField){
+		_robotField = robotField;
+		doh.robot._initWheel();
+	}
+
+	function _onblur(e){
+		setTimeout(function(){
+			document.body.removeChild(_robotField);
+		},0);
+	}
+
+	function _onmousedown(e){
+		e = e||window.event;
+		if(e.screenX == 0||e.clientX == 0){ return; }
+		var docScreenX = e.screenX-e.clientX;
+		var docScreenY = e.screenY-e.clientY;
+		doh.robot._setDocumentBounds(docScreenX, docScreenY);
+	}
+
+	function _onmousewheel(e){
+		e = e||window.event;
+		doh.robot.mouseWheelSize = e.detail ? (e.detail * -1) : (e.wheelDelta / 120);
+		if(e.preventDefault){ e.preventDefault(); }
+		else { e.returnValue = false; }
+		doh.robot._primePump = true;
+		doh.robot._initKeyboard();
+		return false;
+	}
+
+	var charCode = 32;
+	var keystring = "";
+	var expectedlength = 0;
+
+	doh.robot._nextKeyGroup = function(size){
+		// called from Robot
+		// moves to the next group of keys to press; shift, alt-graph etc.
+		expectedlength = size;
+		keystring = "";
+	};
+
+	function _onkeypress(e){
+		e = e||window.event;
+		var c = e.charCode ? e.charCode :
+                   (e.keyCode ? e.keyCode :
+                   (e.which ? e.which : 0)); // opera
+		if(doh.robot._primePump){
+			// event pump was primed with spaces and JS finally received one
+			// tell robot to stop sending spaces now
+			if(c == 32){
+				doh.robot._spaceReceived = true;
+			}
+			else if(c == 13){
+				// enter: start accepting keys
+				doh.robot._primePump = false;
+			}
+		}
+		else if(c == 32){
+			keystring += String.fromCharCode(charCode);
+			charCode = 32;
+			if(keystring.length >= expectedlength){
+				doh.robot._notified(keystring);
+			}
+		}
+		else if(c > 32){ // printable
+			charCode = c;
+		}
+		// keyboard discovery misbehaves on Safari/Mac
+		// prevent default action if possible
+		if(e.preventDefault){ e.preventDefault(); }
+		else { e.returnValue = false; }
+		return false;
+	}
+
+	var rf=null;
+	doh.robot._onKeyboard = function(){
+	 	// called from Robot
+		// Robot calls _onKeyboard after it finishes discovering the keyboard
+		// need to untie from Java thread with setTimeout
+		setTimeout(function(){
+			rf.style.visibility = "hidden";
+			doh.robot._run(window.frameElement);
+ 		}, 0);
+	};
+</script>
+</head>
+<body style="margin:0px; padding:0px; border:0px none;background-color:transparent;" onload="init()">
+<input type="text" tabIndex="-1" style="border:0px none;margin:0px;padding:0px;width:200px;height:42px;background-color:white;z-index:9998;opacity:0;filter:alpha(opacity=0);cursor:default;"
+	onmousewheel="_onmousewheel(arguments[0])"
+	onmousedown="_onmousedown(arguments[0])"
+	onkeypress="_onkeypress(arguments[0])"
+	onfocus="_onfocus(this)"
+	onblur="_onblur(arguments[0])"></input>
+<script>
+	rf = document.getElementsByTagName('input')[0];
+	if(rf.addEventListener){
+		rf.addEventListener('DOMMouseScroll', _onmousewheel, false);
+	}
+</script>
+<img src="robot/signature.png" style="width:3px; height:3px; position:absolute; left:0px; top:0px; z-index:9999"></img>
+<script>
+	// taken from hostenv_browser.js
+	// Dojo is not always available to DOH
+	var needsSecurityManager='<param name="needsSecurityManager" value="'+((
+		(Math.max(navigator.appVersion.indexOf("WebKit"), navigator.appVersion.indexOf("Safari"), 0) > 0 && navigator.userAgent.indexOf("Chrome/") == -1 && parseFloat(navigator.appVersion.split("Version/")[1]) < 4) // Safari 3
+		|| (document.all && navigator.userAgent.indexOf("Opera") == -1 && parseFloat(navigator.appVersion.split("MSIE ")[1]) < 8)) // IE6,7
+		?"true":"false")+'">';
+	var appletString = '<applet width="1" height="1" code="DOHRobot.class" archive="robot/DOHRobot.jar" MAYSCRIPT style="position:absolute;left:0px;top:22px;"><param name="mayscript" value="true"><param name="scriptable" value="true"><param name="initial_focus" value="false">'+needsSecurityManager+'</applet>';
+	document.write(appletString);
+	// if no Java, the applet is officially dead
+	if(/MSIE/.test(navigator.appVersion)){
+		// navigator.javaEnabled() not known for its reliability in IE6
+		try{
+			// applet loads synchronously in IE6
+			document.applets[0].isActive();
+		}catch(e){
+			doh.robot._appletDead=true;
+			// IE skips the dojo.robot XHR test below in the else
+			// since the no java behavior is the same as no applet behavior in IE
+			doh.run();
+		}
+	}else if(!navigator.javaEnabled()){
+		// FF, Safari, Opera etc.
+		// unreliable in IE6
+		doh.robot._appletDead=true;
+		doh.run();
+	}else{
+		// Opera etc. have Java enabled, but load the applet asychronously so it might still be missing from server at this point
+		// Do an XHR to find out if the applet is there
+		// IE is taken care of in the first if, so no need for special ActiveX XHR for it
+		var dohRobotCheck=new XMLHttpRequest();
+		dohRobotCheck.onreadystatechange=function(){
+			if(dohRobotCheck.readyState == 4 && dohRobotCheck.status == 404){
+				// oops! no applet
+				// move the tests along
+				doh.robot._appletDead=true;
+				doh.run();
+			}
+		};
+		dohRobotCheck.open("HEAD", "robot/DOHRobot.jar");
+		dohRobotCheck.send(null);
+	}
+</script>
+</body>
+</html>

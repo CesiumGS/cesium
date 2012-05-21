@@ -1,0 +1,262 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>Chart: Selectable Legend test</title>
+        <style type="text/css">
+            @import "../../../dojo/resources/dojo.css";
+            @import "../../../dijit/tests/css/dijitTests.css";
+            @import "../../../dijit/themes/claro/claro.css";
+			@import "../resources/Legend.css";
+        </style>
+        <style>
+			.bars{
+				width:300px;
+				height:200px;
+			}
+			.columns{
+				width:300px;
+				height:250px;
+			}
+			.pie {
+				width:500px;
+				height:300px;
+			}
+			.bubble{
+				width:320px;
+				height:300px;
+			}
+        </style>
+
+        <script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+        <script type="text/javascript">
+            dojo.require("dijit.dijit");
+            dojo.require("dojox.charting.Chart");
+            dojo.require("dojox.charting.axis2d.Default");
+            dojo.require("dojox.charting.plot2d.Lines");
+            dojo.require("dojox.charting.plot2d.StackedAreas");
+            dojo.require("dojox.charting.plot2d.Bars");
+            dojo.require("dojox.charting.plot2d.ClusteredBars");
+            dojo.require("dojox.charting.plot2d.StackedBars");
+            dojo.require("dojox.charting.plot2d.Columns");
+            dojo.require("dojox.charting.plot2d.ClusteredColumns");
+            dojo.require("dojox.charting.plot2d.StackedColumns");
+            dojo.require("dojox.charting.plot2d.Bubble");
+            dojo.require("dojox.charting.plot2d.Pie");
+			dojo.require("dojox.charting.themes.MiamiNice");
+			dojo.require("dojox.charting.widget.SelectableLegend");
+			dojo.require("dojox.charting.action2d.Highlight");
+        	dojo.addOnLoad(function(){
+				var bars = new dojox.charting.Chart("bars").
+					setTheme(dojox.charting.themes.MiamiNice).
+					addPlot("default",{type: "Bars",gap:2}).
+					addAxis("x",{natural: true, includeZero: true}).
+					addAxis("y",{natural: true, vertical:true}).
+					addSeries("A",[1,3,5,7,2,4,6]).
+					render();
+				var barsLegend = new dojox.charting.widget.SelectableLegend({chart: bars},"barsLegend");
+				
+				var clusteredBars = new dojox.charting.Chart("clusteredBars").
+					setTheme(dojox.charting.themes.MiamiNice).
+					addPlot("default",{type:"ClusteredBars",gap:2}).
+					addAxis("x",{natural: true, includeZero: true}).
+					addAxis("y",{natural: true, vertical:true}).
+					addSeries("A",[1,3,5,7,2,4,6]).
+					addSeries("B",[2,4,6,8,3,5,7]).
+					addSeries("C",[6,4,2,7,5,3,1]);
+//					new dojox.charting.action2d.Highlight(clusteredBars, "default");
+					clusteredBars.render();
+				var clusteredBarsLegend = new dojox.charting.widget.SelectableLegend({chart: clusteredBars},"clusteredBarsLegend");
+				
+				var stackedBars = new dojox.charting.Chart("stackedBars").
+					setTheme(dojox.charting.themes.MiamiNice).
+					addPlot("default", {type:"StackedBars",gap:2}).
+					addAxis("x",{natual: true, includeZero: true, majorTickStep:1}).
+					addAxis("y",{natual: true, vertical: true}).
+					addSeries("A",[1,3,5,7,2,4,6]).
+					addSeries("B",[2,4,6,8,3,5,7]).
+					addSeries("C",[6,4,2,7,5,3,1]).
+					render();
+				var stackedBarsLegend = new dojox.charting.widget.SelectableLegend({chart: stackedBars},"stackedBarsLegend");
+				
+				var stackedArea = new dojox.charting.Chart("stackedArea").
+					setTheme(dojox.charting.themes.MiamiNice).
+					addPlot("default", {type:"StackedAreas",tension:4}).
+					addAxis("y",{natural: true, includeZero: true, vertical:true}).
+					addAxis("x",{natural: true}).
+					addSeries("A",[1,3,5,7,2,4,6]).
+					addSeries("B",[2,4,6,8,3,5,7]).
+					addSeries("C",[6,4,2,7,5,3,1]).
+					render();
+				var stackedAreaLegend = new dojox.charting.widget.SelectableLegend({chart: stackedArea},"stackedAreaLegend");
+				
+				var columns = new dojox.charting.Chart("columns").
+					setTheme(dojox.charting.themes.MiamiNice).
+					addPlot("default",{type: "Columns",gap:2}).
+					addAxis("y",{natural: true, includeZero: true, vertical:true}).
+					addAxis("x",{natural: true}).
+					addSeries("A",[1,3,5,7,2,4,6]).
+					render();
+				var columnsLegend = new dojox.charting.widget.SelectableLegend({chart: columns},"columnsLegend");
+				
+				var clusteredColumns = new dojox.charting.Chart("clusteredColumns").
+					setTheme(dojox.charting.themes.MiamiNice).
+					addPlot("default",{type:"ClusteredColumns",gap:2}).
+					addAxis("y",{natural: true, includeZero: true, vertical:true}).
+					addAxis("x",{natural: true}).
+					addSeries("A",[1,3,5,7,2,4,6]).
+					addSeries("B",[2,4,6,8,3,5,7]).
+					addSeries("C",[6,4,2,7,5,3,1]).
+					render();
+				var clusteredColumnsLegend = new dojox.charting.widget.SelectableLegend({chart: clusteredColumns},"clusteredColumnsLegend");
+				
+				var stackedColumns = new dojox.charting.Chart("stackedColumns").
+					setTheme(dojox.charting.themes.MiamiNice).
+					addPlot("default", {type:"StackedColumns",gap:2}).
+					addAxis("y",{natual: true, includeZero: true, majorTickStep:1, vertical: true}).
+					addAxis("x",{natual: true}).
+					addSeries("A",[1,3,5,7,2,4,6]).
+					addSeries("B",[2,4,6,8,3,5,7]).
+					addSeries("C",[6,4,2,7,5,3,1]).
+					render();
+				var stackedColumnsLegend = new dojox.charting.widget.SelectableLegend({chart: stackedColumns},"stackedColumnsLegend");	
+				
+				var linesColumns = new dojox.charting.Chart("linesColumns").
+					setTheme(dojox.charting.themes.MiamiNice).
+					addPlot("lines",{type: "Lines",markers:true}).
+					addPlot("default",{type: "Columns",gap:2}).
+					addAxis("y",{natural: true, vertical:true,includeZero: true}).
+					addAxis("x",{natural: true,includeZero: true}).
+					addSeries("A",[2,4,6,8,3,5,7]).
+					addSeries("B",[1,3,5,7,2,4,6],{plot:"lines"}).
+					render();
+				var linesColumnsLegend = new dojox.charting.widget.SelectableLegend({chart: linesColumns},"linesColumnsLegend");
+				
+				var pie = new dojox.charting.Chart("pie").
+					setTheme(dojox.charting.themes.MiamiNice).
+					addPlot("default",{type:"Pie",radius:100,font: "normal normal 10pt Tahoma",htmlLabels:true,labelOffset:-20}).
+					addSeries("A",[{
+	                    y: 12.1,
+	                    text: "China"
+	                },{
+	                    y: 9.52,
+	                    text: "India"
+	                }, {
+	                    y: 2.66,
+	                    text: "USA"
+	                }, {
+	                    y: 2.06,
+	                    text: "Indonesia"
+	                }, {
+	                    y: 1.63,
+	                    text: "Brazil"
+	                },{
+	                    y: 1.48,
+	                    text: "Russian"
+	                },{
+	                    y: 1.29,
+	                    text: "Pakistan"
+	                },{
+	                    y: 1.25,
+	                    text: "Japan"
+	                }]).
+					render();
+				var ainm = new dojox.charting.action2d.Highlight(pie,"default");
+				var pieLegend = new dojox.charting.widget.SelectableLegend({chart: pie,horizontal:false, outline: true},"pieLegend");
+				
+				var bubble = new dojox.charting.Chart("bubble").
+					setTheme(dojox.charting.themes.MiamiNice).
+					addPlot("default",{type:"Bubble"}).
+					addAxis("x",{natual:true, includeZero: true, max:7}).
+					addAxis("y",{natual:true, vertical: true, includeZero: true,max:10}).
+					addSeries("A",[{x:3,y:5,size:1},{x:1,y:7,size:1},{x:4,y:2,size:3}]).
+					addSeries("B",[{x:5,y:5,size:2},{x:2,y:3,size:4},{x:6,y:2,size:1}]).
+					addSeries("C",[{x:2,y:7,size:3},{x:6,y:8,size:3}]).
+					render();
+				var bubbleLegend = new dojox.charting.widget.SelectableLegend({chart: bubble, horizontal:false, outline:true},"bubbleLegend");
+			})
+        
+        </script>
+    </head>
+    <body class="claro">
+		<h1>Chart: Selectable Legend</h1>
+		<h3>Click the legends</h3>
+		<div style="clear:both;">
+		<div style="float:left;">
+		<h2>1.Bars</h2>
+		<div id="bars" class="bars"></div>
+		<div id="barsLegend"></div>
+		</div>
+		<div style="float:left;">
+		<h2>2.Clustered Bars</h2>
+		<div id="clusteredBars" class="bars"></div>
+		<div id="clusteredBarsLegend"></div>
+		</div>
+		<div style="float:left;">
+		<h2>3.Stacked Bars</h2>
+		<div id="stackedBars" class="bars"></div>
+		<div id="stackedBarsLegend"></div>
+		</div>
+		<div style="float:left;">
+		<h2>4.Stacked Area</h2>
+		<div id="stackedArea" class="bars"></div>
+		<div id="stackedAreaLegend"></div>
+		</div>
+		</div>
+		
+		
+		<div style="clear:both;">
+		<div style="float:left;">
+		<h2>5.Columns</h2>
+		<div id="columns" class="columns"></div>
+		<div id="columnsLegend"></div>
+		</div>
+		<div style="float:left;">
+		<h2>6.Clustered Columns</h2>
+		<div id="clusteredColumns" class="columns"></div>
+		<div id="clusteredColumnsLegend"></div>
+		</div>
+		<div style="float:left;">
+		<h2>7.Stacked Columns</h2>
+		<div id="stackedColumns" class="columns"></div>
+		<div id="stackedColumnsLegend"></div>
+		</div>
+		<div style="float:left;">
+		<h2>8.Lines&Columns</h2>
+		<div id="linesColumns" class="columns"></div>
+		<div id="linesColumnsLegend"></div>
+		</div>
+		</div>
+		
+		<div style="clear:both;">
+		<div style="float:left;">
+		<h2>9.Pie</h2>
+		<div id="pie" class="pie" style="float:left;"></div>
+		<div style="float:left;">
+		<div id="pieLegend"></div>
+		</div>
+		</div>
+		<div style="float:left;margin-left:40px">
+		<h2>10.Bubble</h2>
+		<div id="bubble" class="bubble" style="float:left;"></div>
+		<div style="float:left;">
+		<div id="bubbleLegend"></div>
+		</div>
+		</div>
+		</div>
+
+    </body>
+</html>

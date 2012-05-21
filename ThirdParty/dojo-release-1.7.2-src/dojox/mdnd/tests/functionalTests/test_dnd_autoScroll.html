@@ -1,0 +1,52 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+
+	<title>Drag And Drop - AutoScroll</title>
+
+	<link rel="stylesheet" type="text/css" href="../../../../dojo/resources/dojo.css" />
+	<link rel="stylesheet" type="text/css" href="../../../../dijit/themes/tundra/tundra.css" />
+	<link rel="stylesheet" type="text/css" href="../../../../dijit/tests/css/dijitTests.css" />
+	
+	<link rel="stylesheet" type="text/css" href="../../resources/dnd.css" />
+	<link rel="stylesheet" type="text/css" href="../resources/test_dnd.css" />
+
+	<style type="text/css">
+		
+		.draggedNode{
+			position:absolute;
+			width:120px;
+			height:120px;
+			background-color:#FFF;
+			border:1px solid #000;
+			padding:5px;
+		}
+		
+		.bigDiv{
+			top:0px;
+			left:0px;
+			width:1600px;
+			height:1600px;
+		}
+	</style>
+
+	<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+	
+	<script type="text/javascript">
+		dojo.require("dojox.mdnd.AutoScroll");
+		dojo.require("dojox.mdnd.Moveable");
+		
+		dojo.addOnLoad(function(){
+			var mov = new dojox.mdnd.Moveable({},dojo.byId("dragNode"));
+		});
+	</script>
+	
+	</head>
+	<body class="tundra">
+		<div class="bigDiv">
+			<h1>Drag and Drop</h1>
+			<div id="dragNode" class="draggedNode" style="left:150px;top:150px;">Drag me ! to see autoscroll working go out of the screen</div>
+		</div>
+	</body>
+</html>

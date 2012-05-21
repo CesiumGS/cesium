@@ -1,0 +1,8 @@
+{
+	items: [
+		{src:"images/dish1.jpg", value:"dish", headerText:"dish"},
+		{src:"images/glass1.jpg", value:"glass", headerText:"glass"},
+		{src:"images/stone1.jpg", value:"stone", headerText:"stone"},
+		{src:"images/shell1.jpg", value:"shell", headerText:"shell"}
+	]
+}

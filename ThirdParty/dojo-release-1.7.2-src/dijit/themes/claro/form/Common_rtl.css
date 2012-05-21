@@ -1,0 +1,10 @@
+/* claro/form/Common_rtl.css */
+/*claro should not have the icon on the container
+.claro .dijitTextBoxRtlError .dijitValidationIcon {
+	border-left-width: 0;
+	border-right-width: 1px;
+}*/
+.claro .dijitTextBoxRtlError .dijitValidationContainer {
+  border-left-width: 0;
+  border-right-width: 1px;
+}

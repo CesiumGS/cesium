@@ -1,0 +1,67 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>Transition Listener (pub/sub)</title>
+		<link href="../themes/iphone/base.css" rel="stylesheet">
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			dojo.require("dojox.mobile");			// This is a mobile app.
+			dojo.require("dojox.mobile.parser");	// This mobile app supports running on desktop browsers
+			dojo.require("dojox.mobile.compat");	// This mobile app uses declarative programming with fast mobile parser
+
+			var print = function(name, view, moveTo, dir, transition, context, method){
+				console.log(name +
+							": view=" + view +
+							", moveTo=" + moveTo +
+							", dir=" + dir +
+							", transition=" + transition +
+							", context=" + context +
+							", method=" + method +
+							", movedFrom=" + view.movedFrom);
+			};
+
+			dojo.subscribe("/dojox/mobile/startView", function(view){
+				console.log("startView: view="+view);
+			});
+			dojo.subscribe("/dojox/mobile/beforeTransitionOut", function(view, moveTo, dir, transition, context, method){
+				print("onBeforeTransitionOut", view, moveTo, dir, transition, context, method);
+			});
+			dojo.subscribe("/dojox/mobile/beforeTransitionIn", function(view, moveTo, dir, transition, context, method){
+				print("onBeforeTransitionIn", view, moveTo, dir, transition, context, method);
+			});
+			dojo.subscribe("/dojox/mobile/afterTransitionOut", function(view, moveTo, dir, transition, context, method){
+				print("afterTransitionOut", view, moveTo, dir, transition, context, method);
+			});
+			dojo.subscribe("/dojox/mobile/afterTransitionIn", function(view, moveTo, dir, transition, context, method){
+				print("afterTransitionIn", view, moveTo, dir, transition, context, method);
+			});
+		</script>
+	</head>
+	<body style="visibility:hidden;">
+		<div id="view1" dojoType="dojox.mobile.View" selected="true">
+			<h1 dojoType="dojox.mobile.Heading">Animations</h1>
+			<h2 dojoType="dojox.mobile.RoundRectCategory">Transition Effects</h2>
+			<ul dojoType="dojox.mobile.RoundRectList">
+				<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-1.png" moveTo="view2" transition="slide">
+					Slide
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-2.png" moveTo="view2" transition="flip">
+					Flip
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-3.png" moveTo="view2" transition="fade">
+					Fade
+				</li>
+			</ul>
+		</div>
+
+		<div id="view2" dojoType="dojox.mobile.View">
+			<h1 dojoType="dojox.mobile.Heading" back="Home" moveTo="view1">Search Result</h1>
+			<div dojoType="dojox.mobile.RoundRect" shadow="true">
+				Open the browser console to see transition event logs.
+			</div>
+		</div>
+	</body>
+</html>

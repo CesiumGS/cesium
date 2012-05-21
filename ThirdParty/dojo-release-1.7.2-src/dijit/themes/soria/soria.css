@@ -1,0 +1,41 @@
+/*
+	Adds cosmetic styling to Dijit.  Users may swap with a custom theme CSS file.
+
+	NOTES:
+	---
+	Dialog.css contains css classes for both Dialog and Tooltip!
+	This because currently a dijit.TooltipDialog exist. Until this is resolved
+	you need to include Dialog.css for both dijits
+	---
+	Toolbar.css contains classes also used in Editor. Until this is resolved
+	you need to include Toolbar.css for both Toolbar and Editor
+	---
+	Button.css contains classes for combobox,
+
+*/
+
+@import url("../dijit.css");
+@import url("../../icons/commonIcons.css");/*sprite containing common icons to be used by all themes*/
+@import url("Common.css");
+@import url("layout/ContentPane.css");
+@import url("layout/TabContainer.css");
+@import url("layout/AccordionContainer.css");
+@import url("layout/SplitContainer.css");
+@import url("layout/BorderContainer.css");
+@import url("form/Common.css");
+@import url("form/Button.css");
+@import url("form/Checkbox.css");
+@import url("form/RadioButton.css");
+@import url("form/Slider.css");
+@import url("form/Select.css");
+@import url("Tree.css");
+@import url("ProgressBar.css");
+@import url("TitlePane.css");
+@import url("Calendar.css");
+@import url("TimePicker.css");
+@import url("Toolbar.css");
+@import url("Dialog.css");
+@import url("Menu.css");
+@import url("Editor.css");
+@import url("../../icons/editorIcons.css"); /* sprite for editor icons to be used by all themes */
+@import url("ColorPalette.css");

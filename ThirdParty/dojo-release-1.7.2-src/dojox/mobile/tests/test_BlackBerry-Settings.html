@@ -1,0 +1,111 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+
+		<title>Setting</title>
+		<link href="../themes/blackberry/base.css" rel="stylesheet">
+
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			dojo.require("dojox.mobile");			// This is a mobile app.
+			dojo.require("dojox.mobile.parser");	// This mobile app supports running on desktop browsers
+			dojo.require("dojox.mobile.compat");	// This mobile app uses declarative programming with fast mobile parser
+		</script>
+	</head>
+	<body style="visibility:hidden;">
+	    <div id="options" dojoType="dojox.mobile.View" selected="true">
+		    <h1 dojoType="dojox.mobile.Heading">Options</h1>
+		    <ul dojoType="dojox.mobile.EdgeToEdgeList" transition=fade>
+			    <li class="mblVariableHeight" dojoType="dojox.mobile.ListItem" clickable="true" icon="images/b-icon-6.png" noArrow="true" moveTo="settings">
+				    Sounds and Ring Tones
+				    <div class="mblListItemSubText">
+					    Ring tones, reminders, profiles
+				    </div>
+			    </li>
+			    <li class="mblVariableHeight" dojoType="dojox.mobile.ListItem" clickable="true" icon="images/b-icon-3.png" noArrow="true" moveTo="settings">
+				    Networks and Connections
+				    <div class="mblListItemSubText">
+					    Bluetooth connections, WiFi mode
+				    </div>
+			    </li>
+			    <li class="mblVariableHeight" dojoType="dojox.mobile.ListItem" clickable="true" icon="images/b-icon-2.png" noArrow="true" moveTo="settings">
+				    Display
+				    <div class="mblListItemSubText">
+					    Date, time, themes, screen
+				    </div>
+			    </li>
+			    <li class="mblVariableHeight" dojoType="dojox.mobile.ListItem" clickable="true" icon="images/b-icon-1.png" noArrow="true" moveTo="settings">
+				    Typing and Input
+				    <div class="mblListItemSubText">
+					    Language, keyboard, text input
+				    </div>
+			    </li>
+			    <li class="mblVariableHeight" dojoType="dojox.mobile.ListItem" clickable="true" icon="images/b-icon-6.png" noArrow="true" moveTo="settings">
+				    Device
+				    <div class="mblListItemSubText">
+					    PIN, auto on/off, battery, storage
+				    </div>
+			    </li>
+			    <li class="mblVariableHeight" dojoType="dojox.mobile.ListItem" clickable="true" icon="images/b-icon-5.png" noArrow="true" moveTo="settings">
+				    Call Management
+				    <div class="mblListItemSubText">
+					    Call behavior, voice mail, speed dial
+				    </div>
+			    </li>
+			    <li class="mblVariableHeight" dojoType="dojox.mobile.ListItem" clickable="true" icon="images/b-icon-7.png" noArrow="true" moveTo="settings">
+				    Security
+				    <div class="mblListItemSubText">
+					    Password ,encryption, firewall
+				    </div>
+			    </li>
+			    <li class="mblVariableHeight" dojoType="dojox.mobile.ListItem" clickable="true" icon="images/b-icon-8.png" noArrow="true" moveTo="settings">
+				    Accessibility
+				    <div class="mblListItemSubText">
+					    Display, sound and input options
+				    </div>
+			    </li>
+			    <li class="mblVariableHeight" dojoType="dojox.mobile.ListItem" clickable="true" icon="images/b-icon-6.png" noArrow="true" moveTo="settings">
+				    Third Party Applications
+				    <div class="mblListItemSubText">
+					    Options for third-party applications
+				    </div>
+			    </li>
+		    </ul>
+	    </div>
+
+	    <div id="settings" dojoType="dojox.mobile.View">
+		    <h1 dojoType="dojox.mobile.Heading">Sounds and Ring Tones</h1>
+		    <ul dojoType="dojox.mobile.EdgeToEdgeList" transition="fade">
+			    <li class="mblVariableHeight" dojoType="dojox.mobile.ListItem" clickable="true" icon="images/b-icon-3.png" noArrow="true" moveTo="options">
+				    Phone Ring Tone
+				    <div class="mblListItemSubText">
+					    Set ring tone for chosen profile
+				    </div>
+			    </li>
+				<li class="mblVariableHeight" dojoType="dojox.mobile.ListItem" clickable="true" icon="images/b-icon-2.png" noArrow="true" moveTo="options">
+				    Sounds for Selected Profile
+				    <div class="mblListItemSubText">
+					    Set any alert in chosen profile
+				    </div>
+			    </li>
+			    <li class="mblVariableHeight" dojoType="dojox.mobile.ListItem" clickable="true" icon="images/b-icon-1.png" noArrow="true" moveTo="options">
+				    Sounds for Contacts
+				    <div class="mblListItemSubText">
+					    Add alert for one or more contacts
+				    </div>
+			    </li>
+			    <li class="mblVariableHeight" dojoType="dojox.mobile.ListItem" clickable="true" icon="images/b-icon-6.png" noArrow="true" moveTo="options">
+				    Profile Management
+				    <div class="mblListItemSubText">
+					    Add, edit or delete a sound profile
+				    </div>
+			    </li>
+		    </ul>
+	    </div>
+
+	</body>
+</html>

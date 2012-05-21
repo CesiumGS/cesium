@@ -1,0 +1,162 @@
+<html>
+	<head>
+		<title>OO/mixin</title>
+		<style type="text/css">
+			@import "../../../dojo/resources/dojo.css";
+		</style>
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true"></script>
+		<script type="text/javascript">
+			dojo.require("dojox.lang.oo.mixin");
+			dojo.require("dojox.lang.oo.general");
+			dojo.require("dojox.lang.oo.aop");
+
+			var oo = dojox.lang.oo, oog = oo.general, ooa = oo.aop;
+
+			var test = function(){
+				// test chaining of constructor() and destroy()
+
+				var a = {
+					init: function(){ console.log("init #1"); },
+					abc: function(){ console.log("abc #1: args = ", arguments); return 1; },
+					destroy: function(){ console.log("destroy #1"); }
+				},
+				b = {
+					init: function(){ console.log("init #2"); },
+					abc: function(){ console.log("abc #2: args = ", arguments); return 2; },
+					destroy: function(){ console.log("destroy #2"); }
+				},
+				c = {
+					init: function(){ console.log("init #3"); },
+					abc: function(){ console.log("abc #3: args = ", arguments); return 3; },
+					destroy: function(){ console.log("destroy #3"); }
+				};
+
+				console.log("=== test default mixin: a");
+				var t = oo.mixin({}, a);
+				t.init();
+				t.abc(42);
+				t.destroy();
+
+				console.log("=== test default mixin: a + b");
+				var t = oo.mixin({}, a, b);
+				t.init();
+				t.abc(42);
+				t.destroy();
+
+				console.log("=== test default mixin: a + b + c");
+				var t = oo.mixin({}, a, b, c);
+				t.init();
+				t.abc(42);
+				t.destroy();
+
+				console.log("=== test default mixin: a + (b - 'abc')");
+				var t = oo.mixin({}, a, oo.filter(b, {abc: ""}));
+				t.init();
+				t.abc(42);
+				t.destroy();
+
+				console.log("=== test default mixin: a + (b - 'destroy' * 'abc'/'def')");
+				var t = oo.mixin({}, a, oo.filter(b, {abc: "def", destroy: ""}));
+				t.init();
+				t.abc(42);
+				console.log("the next line shoud print 'abc #2'");
+				t.def(42);
+				t.destroy();
+
+				console.log("=== test default mixin: a + 'abc2'/after + 'abc3'/before");
+				var t = oo.mixin({}, a,
+							oo.filter(oog.after(b),  {init: "", destroy: ""}),
+							oo.filter(oog.before(c), {init: "", destroy: ""})
+						);
+				t.init();
+				t.abc(42);
+				t.destroy();
+
+				console.log("=== test augment and override (negative case)");
+				var t = oo.mixin({}, a, {
+					abc: oog.augment(function(){ console.log("augmented"); }),	// can't override
+					def: oog.override(function(){ console.log("overidden"); })	// nothing to override
+				});
+				t.init();
+				t.abc(42);
+				console.log("should be 'undefined': ", t.def);
+				t.destroy();
+
+				console.log("=== test augment and override (positive case)");
+				var t = oo.mixin({}, a, {
+					def: oog.augment(function(){ console.log("augmented"); }),	// can't override
+					abc: oog.override(function(){ console.log("overidden"); })	// nothing to override
+				});
+				t.init();
+				t.abc(42);
+				t.def(42);
+				t.destroy();
+
+				console.log("=== test augment and general.after (no chaining for existing functions)");
+				var t = oo.mixin({}, a, {
+					abc: oog.augment(oog.after(
+							function(){ console.log("overidden"); }
+					))
+				});
+				t.init();
+				t.abc(42);
+				t.destroy();
+
+				console.log("=== test override and general.after (chaining only for existing functions)");
+				var t = oo.mixin({}, a, {
+					abc: oog.override(oog.after(
+							function(){ console.log("overidden? not really"); }
+					))
+				});
+				t.init();
+				t.abc(42);
+				t.destroy();
+
+				console.log("=== test decorated objects");
+				var t = oo.mixin({}, a, oog.after({
+					abc: function(){ console.log("added after abc"); },
+					def: function(){ console.log("added after def"); }
+				}));
+				t.init();
+				t.abc(42);
+				t.def(42);
+				t.destroy();
+
+				console.log("=== test aop-like decorators");
+				var t = oo.mixin({}, a,
+					{
+						abc: ooa.around(function(f, args){
+							console.log("aop.around: args = ", args);
+							var ret = f.apply(this, args);
+							console.log("aop.around: ret = ", ret);
+							return ret;
+						})
+					},
+					{
+						abc: ooa.before(function(){
+							console.log("aop.before: args = ", arguments);
+						})
+					},
+					{
+						abc: ooa.afterReturning(function(ret){
+							console.log("aop.afterReturning: ret = ", ret);
+						})
+					},
+					{
+						abc: ooa.after(function(){
+							console.log("aop.after");
+						})
+					}
+				);
+				t.init();
+				t.abc(42);
+				t.destroy();
+			};
+			//dojo.addOnLoad(test);
+		</script>
+	</head>
+	<body>
+		<p>This test is meant to run with Firebug. Open the console to see the output.</p>
+		<p><button onclick="test()">Start</button></p>
+	</body>
+</html>

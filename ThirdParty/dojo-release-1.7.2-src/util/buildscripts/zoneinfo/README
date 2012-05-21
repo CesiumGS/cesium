@@ -1,0 +1,9 @@
+Use these files and scripts to generate the zoneinfo files in dojox/date/zoneinfo
+
+In the tzdata folder are the olson zoneinfo files as distributed.  Only the following
+files are needed from this archive:
+	africa, antarctica, asia, australasia, backward, etcetera, europe,
+	northamerica, pacificnew, southamerica
+	
+The strip_olson_comments.rb script can be used to pull out unneeded comment lines
+from the files - thus making them smaller

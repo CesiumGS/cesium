@@ -1,0 +1,662 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>DojoX Portlet In a GridContainer example</title>
+
+	<!-- required: a default theme file -->
+	<link rel="stylesheet" id="themeStyles" href="../../../dijit/themes/soria/soria.css">
+	<link rel="stylesheet" href="../Dialog/Dialog.css">
+
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+
+		@import "../Portlet/Portlet.css";
+		@import "../../layout/resources/GridContainer.css";
+		@import "../Calendar/Calendar.css";
+		@import "../../grid/resources/Grid.css";
+		@import "../../grid/resources/tundraGrid.css";
+		@import "../../grid/resources/soriaGrid.css";
+		@import "../../grid/resources/nihiloGrid.css";
+		@import "../../image/resources/image.css";
+		@import "../../layout/resources/ExpandoPane.css";
+
+		.dijitTabContainer  .gridContainerTable {
+			border: 0px none;
+		}
+		.dijitTabContainer .gridContainer {
+			padding: 2px;
+		}
+
+		#masker {
+			position: absolute;
+			width: 100%;
+			height: 100%;
+			left: 0;
+			top: 0;
+			background: white;
+			z-index: 1000;
+		}
+
+		#clients .dijitTitlePaneContentInner,
+		#quotes  .dijitTitlePaneContentInner {
+			padding: 0;
+		}
+		body , html{
+			padding: 0px;
+			height: 100%;
+			width: 100%;
+		}
+		.calendarStack span {
+			font-weight: bold;
+		}
+		.calendarStack div {
+			padding-bottom: 5px;
+		}
+		.gridContainer {overflow-y: auto;}
+
+		.dijitTooltip {
+			max-width: 400px;
+		}
+		.labelTable td {
+			padding: 4px;
+			border: 0;
+		}
+		.labelTable .tableContainer-labelCell {
+			background-color: #CCC;
+		}
+		.portletNoBorder div.dijitTitlePaneContentInner {
+			padding: 0;
+		}
+		.dj_ie6 .dropIndicator, .dj_ie6 .dojoxPortlet{
+			margin: 5px;
+		}
+		.gridContainerZone > *{
+			margin: 5px !important;
+		}
+	</style>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:false, parseOnLoad: false"></script>
+
+	<!-- do not use! only for testing dynamic themes -->
+	<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+
+	<script type="text/javascript" src="test_PortletInGridContainer.js"></script>
+	<script type="text/javascript" src="../FeedPortlet.js"></script>
+	<script type="text/javascript" src="CalendarStackLayout.js"></script>
+</head>
+<body class="soria">
+
+	<div id="masker"></div>
+
+	<span dojoType="dojox.data.HtmlStore"
+		jsId="htmlStore" dataId="gridDataTable">
+	</span>
+
+	<div dojoType="dojox.data.FileStore" url="../../data/demos/stores/filestore_dojotree.php"
+					jsId="fileStore" pathAsQueryParam="true"></div>
+
+	<div dojoType="dijit.tree.ForestStoreModel" jsId="fileModel"
+		store="fileStore" query="{}"
+		rootId="DojoFiles" rootLabel="Dojo Files" childrenAttrs="children">
+		<script type="dojo/method" event="getChildren" args="parent, callback">
+			if (!this._allItems) {
+			  this._allItems = [];
+			}
+			dijit.tree.ForestStoreModel.prototype.getChildren.apply(this, [parent, dojo.hitch(this, function(items){
+			  this._allItems = this._allItems.concat(items);
+				console.log("getChildren of " + parent.name);
+			  dojo.publish("/fileChange", [this._allItems]);
+			  callback(items);
+			})]);
+		</script>
+
+	</div>
+
+	<div dojoType="dijit.Menu" id="gridCols" jsId="gridCols" style="display: none">
+		<div dojoType="dojox.widget.PlaceholderMenuItem" label="GridColumns"></div>
+	</div>
+
+
+
+	<div dojoType="dijit.layout.TabContainer" region="center" style="height:100%;">
+
+		<div dojoType="dijit.layout.BorderContainer"
+				id="mainLayout"
+				title="Home"
+				style="width: 100%; height: 100%; padding: 2px;">
+
+			<div dojoType="dojox.layout.GridContainer"
+					id="gridContainer"
+					region="center"
+					acceptTypes="Portlet"
+					hasResizableColumns="false"
+					nbZones="2"
+					dragHandleClass="dijitTitlePaneTitle">
+
+				<div dojoType="dojox.widget.Portlet" title="Info" toggleable="false" dragRestriction="true">
+					<p onclick="text_explode_2(this)">This is a Portlet widget, which is similar to a dijit.TitlePane,
+						but is designed to be used with the dojox.layout.GridContainer widget.  Each widget can be extended
+						 with a number of different plug in widgets, with each plug in specifying
+						 an icon to display in the title bar. (<i>By the way, click this paragraph somewhere</i> :-)
+					</p>
+					<p>
+						Two settings widgets are currently defined, <b>dojox.widget.PortletSettings</b>
+						and <b>dojox.widget.PortletDialogSettings</b>
+					</p>
+					<p>This Portlet is not draggable, but all others are.</p>
+				</div>
+
+				<div dojoType="dojox.widget.FeedPortlet" title="Todays News"
+					id="todaysNews"
+					url="http://news.google.com/news?hl=en&topic=t&output=atom"
+					maxResults="5"
+					dndType="Portlet"
+					>
+					<div dojoType="dojox.widget.PortletFeedSettings"></div>
+
+					<div>
+					This is a FeedPortlet with a single feed.
+					Click the settings icon in the title bar to enter a
+					different feed to load.  Hovering over a news item shows a summary
+					of it in a tooltip.
+					</div>
+				</div>
+
+				<div dojoType="dojox.widget.Portlet" title="Clients"  id="clients"
+					class="gridPortlet"
+					dndType="Portlet">
+
+					<div id="staticGrid"
+						dojoType="dojox.grid.DataGrid"
+						rowsPerPage="10"
+						columnReordering="false"
+						store="htmlStore"
+						structure="layoutHtmlTable",
+						query="{}"
+						headerMenu="gridCols"
+						columnToggling="true"
+						title="Simple Grid"
+						autoHeight="true"
+						>
+						<script type="dojo/connect">
+							setTimeout(dojo.hitch(this, "resize"), 100);
+						</script>
+
+					</div>
+
+				</div>
+
+				<div dojoType="dojox.widget.Portlet" title="Line Chart" id="lineChartPortlet" dndType="Portlet">
+					<div dojoType="dojox.widget.PortletDialogSettings"
+							id="lineChartSettings" dimensions="[300, 117]" title="Line Chart Settings">
+						<div dojoType="dojox.layout.TableContainer" cols="1">
+						  <div dojoType="dijit.form.TextBox" title="Option 3"></div>
+							<div dojoType="dijit.form.TextBox" title="Option 4"></div>
+						</div>
+						<div style="text-align: center;">
+						  <div dojoType="dijit.form.Button" onClick="dijit.byId('lineChartSettings').toggle();">OK</div>
+						</div>
+					</div>
+					<script type="dojo/connect" event="onUpdateSize">
+						if(window.chart){chart.resize();}
+					</script>
+					<div>
+						Change the zoom of the chart using the slider, then drag it using the mouse.  This portlet uses
+						a dialog settings widget, click the settings icon in the title bar to see it.
+					</div>
+					<div id="zoomer" style="height:200px; width: 400px;"></div>
+					<div style="margin-bottom:5px;">Scale:</div>
+					<div id="scaleXSlider" dojoType="dijit.form.HorizontalSlider"
+							value="1" minimum="1" maximum="10" discreteValues="10" showButtons="false">
+						<div dojoType="dijit.form.HorizontalRule" container="bottomDecoration" count="10" style="height:5px;"></div>
+						<div dojoType="dijit.form.HorizontalRuleLabels" container="bottomDecoration" minimum="1" maximum="10" count="10"
+							constraints="{pattern: '##'}" style="height:1.2em;font-size:75%;color:gray;"></div>
+					</div>
+
+				</div>
+				-->
+			</div>
+
+			<div dojoType="dojox.layout.ExpandoPane" region="right"
+					title="Calendar"
+					style="height: 100%;">
+
+				<div dojoType="dojox.widget.tests.CalendarStackLayout">
+					<div dojoType="dijit.layout.ContentPane" dateref="2009-06-20">
+						<div>
+							<span>
+								Type:
+							</span>
+							Meeting
+						</div>
+						<div>
+							<span>
+								Time:
+							</span>
+							12:00 - 13:00
+						</div>
+						<div>
+							<span>
+								Details:
+							</span>
+						</div>
+						<div>
+							Meeting about the User Interface
+						</div>
+					</div>
+					<div dojoType="dijit.layout.ContentPane" dateref="2009-06-22">
+						<div>
+							<span>
+								Type:
+							</span>
+							Meeting
+						</div>
+						<div>
+							<span>
+								Time:
+							</span>
+							09:00 - 10:30
+						</div>
+						<div>
+							<span>
+								Details:
+							</span>
+						</div>
+						<div>
+							Morning prayer for the end of life of IE6
+						</div>
+					</div>
+					<div dojoType="dijit.layout.ContentPane" dateref="2009-06-24">
+						<div>
+							<span>
+								Type:
+							</span>
+							Appointment
+						</div>
+						<div>
+							<span>
+								Time:
+							</span>
+							19:00 - 20:30
+						</div>
+						<div>
+							<span>
+								Details:
+							</span>
+						</div>
+						<div>
+							Root canal at dentist.  Gonna get a candy bar!
+						</div>
+					</div>
+				</div>
+
+			</div>
+
+		</div>
+
+		<div dojoType="dijit.layout.BorderContainer" title="My Interests">
+			<div dojoType="dojox.layout.GridContainer"
+				id="gridContainer2"
+				acceptTypes="Portlet"
+				hasResizableColumns="false"
+				nbZones="2"
+				dragHandleClass="dijitTitlePaneTitle"
+				region="center"
+			>
+				<div dojoType="dojox.widget.ExpandableFeedPortlet" dndType="Portlet" title="Cool Blogs -> Remembering Your Selection" showFeedTitle="false">
+					<select dojoType="dojox.widget.PortletFeedSettings" id="coolBlogsSettings">
+						<script type="dojo/connect">
+							this.set("selectedIndex", dojo.cookie(this.id + "-selectedIndex") || 0);
+						</script>
+						<script type="dojo/connect" event="attr" args="name, value">
+							if(name == "selectedIndex"){
+								dojo.cookie(this.id + "-selectedIndex", value);
+
+								// Set a custom title when selection changes.
+								if (this.portlet){
+									this.portlet.attr("title", "Cool Blogs - " + this.text.options[value].innerHTML);
+								}
+							}
+						</script>
+						<option value="http://shaneosullivan.wordpress.com/category/dojo/feed/">Dojo Blatherings</option>
+						<option value="http://www.dojotoolkit.org/aggregator/rss">Planet Dojo</option>
+						<option value="http://feeds2.feedburner.com/ajaxian">Ajaxian</option>
+					</select>
+					<div>
+					This is an ExpandableFeedPortlet with multiple available feeds.
+					Click the settings icon in the title bar to choose a feed to load.
+					This Portlet also maintains its state using a cookie, so when you choose
+					a feed to show and refresh the page, that same feed will be selected.
+					this example also shows how to modify the title of the portlet when a new
+					feed is selected.
+					When a feed is loaded, it automatically sets the title of the Portlet to the
+					title of the feed.  This portlet has disabled that behavior using
+					showFeedTitle="false"
+					</div>
+				</div>
+				<div dndType="Portlet" dojoType="dojox.widget.ExpandableFeedPortlet"  title="Cool Blogs -> onlyOpenOne == true"
+						onlyOpenOne="true" >
+					<select dojoType="dojox.widget.PortletFeedSettings" id="multiOptions">
+						<option value="http://www.dojotoolkit.org/aggregator/rss/">Planet Dojo</option>
+						<option value="http://shaneosullivan.wordpress.com/category/dojo/feed/">Dojo Blatherings</option>
+						<option value="http://feeds2.feedburner.com/ajaxian">Ajaxian</option>
+					</select>
+					<div>
+					This is an ExpandableFeedPortlet with multiple available feeds, in which you
+					can only expand a single item at a time.
+					Click the settings icon in the title bar to choose a feed to load.
+					</div>
+				</div>
+				<div dojoType="dojox.widget.Portlet" dndType="Portlet" title="Quotes of the Day" id="quotes">
+					<div dojoType="dojox.widget.PortletSettings">
+						<div dojoType="dojox.layout.TableContainer" cols="1">
+						  <div dojoType="dijit.form.TextBox" title="Option 3"></div>
+							<div dojoType="dijit.form.TextBox" title="Option 4"></div>
+						</div>
+					</div>
+					<script type="dojo/connect">
+						loadFeed("http://feeds2.feedburner.com/quotationspage/qotd", "quotes");
+					</script>
+					<div id="quotes">
+
+					</div>
+				</div>
+
+				<div dojoType="dojox.widget.FeedPortlet" dndType="Portlet" title="Dojo Campus - Local Feed"
+						url="testAtom.xml"
+						maxResults="5"
+						local="true"
+						>
+					<div>
+					This is a FeedPortlet with a local feed, which is useful
+					if you have a feed that is not public, perhaps on an
+					intranet.
+					</div>
+				</div>
+
+				<div dojoType="dojox.widget.Portlet" dndType="Portlet" title="My Flickr">
+					<div dojoType="dojox.widget.PortletSettings">
+						<div dojoType="dojox.layout.TableContainer" cols="1">
+						  <div dojoType="dijit.form.TextBox" title="Option 3"></div>
+							<div dojoType="dijit.form.TextBox" title="Option 4"></div>
+						</div>
+					</div>
+
+					<div dojoType="dojox.image.SlideShow" imageWidth="300" imageHeight="300">
+						<script type="dojo/connect">
+
+							var flickrRestStore = new dojox.data.FlickrRestStore();
+							var req = {
+								query: {
+									userid: "44153025@N00",
+									apikey: "8c6803164dbc395fb7131c9d54843627",
+									setid: "72057594114596784",
+									sort: [
+										   {
+											attribute: "interestingness",
+											descending: true
+											}
+										   ],
+									tag_mode: "any"
+								},
+								count: 20
+							};
+							this.setDataStore(flickrRestStore, req);
+						</script>
+					</div>
+				</div>
+
+			</div>
+		</div>
+
+		<div dojoType="dijit.layout.BorderContainer" title="My Files">
+			<div dojoType="dojox.layout.ExpandoPane" region="left" title="File Explorer" style="width: 230px;">
+				<div
+					id="tree"
+					dojoType="dijit.Tree"
+					model="fileModel"
+					persist="false"
+					style="overflow-y: auto;height: 100%;max-width: 230px;">
+					<script type="dojo/method" event="onClick" args="item">
+						if (fileStore.isItem(item)){
+							dojo.publish("/fileinfo", [fileStore, item]);
+						}
+					</script>
+				</div>
+			</div>
+
+				<div dojoType="dojox.layout.GridContainer"
+						region="center"
+						acceptTypes="Portlet"
+						hasResizableColumns="false"
+						nbZones="2"
+						dragHandleClass="dijitTitlePaneTitle"
+					>
+						<div dojoType="dojox.widget.Portlet" dndType="Portlet" title="File Info" class="portletNoBorder">
+							<script type="dojo/connect">
+								var mapping = {
+									"fileName" : "name",
+									"filePath": "path",
+									"fileSize": "size",
+									"fileModified": "modified",
+									"fileParent":"parentDir",
+									"fileIsDir": "directory"
+								};
+
+								dojo.subscribe("/fileinfo", function(store, item) {
+								  for (var dijitId in mapping) {
+										var attrib = mapping[dijitId];
+									  var val = store.getValue(item, attrib);
+									  if (attrib == "size") {
+										  val += " bytes";
+										} else if (attrib == "modified") {
+										  val = dojo.date.locale.format(new Date(Number(val)), {formatLength: "medium"});
+										} else if (attrib == "directory") {
+										  val = val ? "Yes" : "No";
+										}
+
+									  dijit.byId(dijitId).attr("content", val);
+									}
+								});
+							</script>
+							<div dojoType="dojox.layout.TableContainer" class="labelTable" spacing="0">
+								<div dojoType="dijit.layout.ContentPane" label="Name:" id="fileName"></div>
+								<div dojoType="dijit.layout.ContentPane" label="Path:" id="filePath"></div>
+								<div dojoType="dijit.layout.ContentPane" label="Size:" id="fileSize"></div>
+								<div dojoType="dijit.layout.ContentPane" label="Modified:" id="fileModified"></div>
+								<div dojoType="dijit.layout.ContentPane" label="Parent Directory:" id="fileParent"></div>
+								<div dojoType="dijit.layout.ContentPane" label="Is Directory?:" id="fileIsDir"></div>
+							</div>
+						</div>
+
+						<div dojoType="dojox.widget.Portlet" dndType="Portlet" title="File Contents"
+							id="fileContentPortlet"
+								style="max-height: 350px;">
+							<script type="dojo/connect" event="startup">
+								var widget = dijit.byId("fileContents");
+								dojo.style(this.containerNode, {
+								  height: "310px",
+									paddingTop: 0,
+									paddingBottom: 0,
+									paddingRight: 0
+								});
+								dojo.subscribe("/fileinfo", function(store, item) {
+								  var path = dojo.config.baseUrl + "../" + store.getValue(item, "path");
+
+									if (path.indexOf(".png") > -1 || path.indexOf(".jpg") > -1 || path.indexOf(".gif") > -1) {
+									  widget.attr("content", "<img src='" +path + "'>");
+									} else if(store.getValue(item, "size") > 0
+											&& path.indexOf(".zip") < 0
+											&& path.indexOf(".tgz") < 0){
+									  widget.attr("href", path);
+									} else {
+										widget.attr("content", "");
+									}
+								});
+							</script>
+							<div dojoType="dijit.layout.ContentPane" id="fileContents" parseOnLoad="false">
+								<script type="dojo/method" event="_setContent" args="data, isFake">
+									var text = typeof data == "string" ? data : data.textContent;
+									if (text.indexOf("<img") != 0 && text.indexOf("<span") != 0) {
+									  text = text.replace(/</gm, "&lt;").replace(/>/gm, "&gt;")
+													.replace(/\t/g, "&nbsp;&nbsp;").split("\n").join("<br>");
+									}
+									dijit.layout.ContentPane.prototype._setContent.apply(this, [text, isFake]);
+								</script>
+								File contents are loaded here.  Click on any file in the tree to see its contents.
+							</div>
+						</div>
+
+						<div dojoType="dojox.widget.Portlet" dndType="Portlet" title="Selected Files">
+							<script type="dojo/connect">
+								var timer;
+
+							  	dojo.subscribe("/fileChange", dojo.hitch(this, function(items){
+								  this._items = items;
+									if (this._started) {
+									  if (timer) {
+										  clearTimeout(timer);
+										}
+										timer = setTimeout(dojo.hitch(this, "updateChart"), 200);
+									}
+								}));
+
+							</script>
+							<script type="dojo/connect" event="startup">
+								dojo.require("dojox.charting.themes.Bahamation");
+								var dc = dojox.charting;
+
+								var container = dojo.create("div", {}, this.containerNode);
+								dojo.style(container, {"height": "300px", "width" : "300px"});
+
+								console.log("dimensions of container are", dojo.marginBox(container));
+
+								var chart = this.chart = new dc.Chart2D(container);
+								chart.setTheme(dc.themes.Bahamation);
+								chart.addPlot("default", {
+									type: "Pie",
+									font: "normal normal 11pt Tahoma",
+									fontColor: "black",
+									labelOffset: -30,
+									radius: 80
+								});
+								this.updateChart();
+							</script>
+							<script type="dojo/method" event="updateChart">
+								var extensions = {};
+								var items = this._items;
+								var dc = dojox.charting;
+
+								if (!items || items.length < 1) {
+								  return;
+								}
+
+								function val(item, attr) {
+								  return fileStore.getValue(item, attr);
+								}
+								function getExtension(item) {
+								  if (val(item, "directory")) {
+									  return "folder";
+									}
+									var str = val(item, "name");
+									var parts = str.split(".");
+									if (parts.length < 2) {
+									  return "none";
+									}
+									return parts[1];
+								}
+
+								dojo.forEach(items, function(item){
+								  if (val(item, "directory")) {
+									  return;
+									}
+
+								  var count = extensions[getExtension(item)] ;
+									if (!count) {
+									  count = 0;
+									}
+									var ext = getExtension(item);
+									extensions[ext] = ++count;
+								});
+								var series = [];
+								for (var ext in extensions) {
+									series.push({
+									  y : extensions[ext],
+										text: ext,
+										stroke: "black",
+										tooltip: extensions[ext] + " " +
+											(ext == "none" ?
+											  "files with no extension" :
+												ext + " files")
+												+ " found"
+									});
+								}
+
+
+								this.chart.addSeries("Series A", series);
+							  	this.chart.resize(300, 300);
+
+								dojo.forEach(this._anims || [], function(anim){
+								  anim.destroy();
+								});
+
+								this._anims = [
+								new dc.action2d.MoveSlice(this.chart, "default"),
+								new dc.action2d.Highlight(this.chart, "default"),
+								new dc.action2d.Tooltip(this.chart, "default")];
+
+								this.chart.render();
+							</script>
+							<div>
+								This Pie chart shows the proportion of files in the Dojo toolkit.
+								As you open folders in the tree, it updates the chart.
+							</div>
+						</div>
+
+					</div>
+			</div>
+
+	</div>
+
+		<table id="gridDataTable" style="display:none;">
+			<thead>
+				<tr>
+					<th >First Name</th>
+					<th >Last Name</th>
+					<th >DOB</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr >
+					<td >Davy</td>
+					<td >Jones</td>
+					<td >10/26/1974</td>
+				</tr>
+				<tr >
+					<td >Dee</td>
+					<td >Murphy</td>
+					<td >2/25/1936</td>
+				</tr>
+				<tr >
+					<td >Dozy</td>
+					<td >Kowalski</td>
+					<td >3/17/1991</td>
+				</tr>
+				<tr >
+					<td >Mick</td>
+					<td >Mickelson</td>
+					<td >3/31/1993</td>
+				</tr>
+				<tr >
+					<td >Titch</td>
+					<td >Woods</td>
+					<td >1/29/1998</td>
+				</tr>
+			</tbody>
+		</table>
+
+</body>
+</html>

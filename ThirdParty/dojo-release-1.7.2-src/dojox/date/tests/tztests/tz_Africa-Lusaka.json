@@ -1,0 +1,14 @@
+({
+	name: "date.timezone.Africa-Lusaka",
+	runTest: function(t){
+		var tz = "Africa/Lusaka";
+		doh.checkDate({tzOffset: -113.133333333333, tzAbbr: "LMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: -113.133333333333, tzAbbr: "LMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: -113.133333333333, tzAbbr: "LMT"}, -2109289989000, tz, 1);
+		doh.checkDate({tzOffset: -120, tzAbbr: "CAT"}, -2109289988000, tz, 1);
+		doh.checkDate({tzOffset: -120, tzAbbr: "CAT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: -120, tzAbbr: "CAT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: -120, tzAbbr: "CAT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: -120, tzAbbr: "CAT"}, 1246789800000, tz, 0);
+	}
+})
