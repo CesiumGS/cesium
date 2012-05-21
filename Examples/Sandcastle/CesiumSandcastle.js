@@ -48,18 +48,41 @@ require({
             domConstruct.destroy('loading');
         }}).play();
 
-        var types = [];
+        var editor, docTimer, that = this;
+        var docNode = dojo.byId('docPopup');
+        that.types = [];
         xhr.get({
             url: '../../Build/Documentation/types.txt',
             handleAs: 'json'
         }).then(function (value) {
-            types = value;
-            console.log(types);
+            that.types = value;
+            console.log(that.types /* .toString() */);
         });
+        window.types = types;
+        window.docNode = docNode;
 
-        var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+        function showDocPopup () {
+            var selectedText = editor.getSelection();
+            if (selectedText && that.types.indexOf(selectedText) >= 0) {
+                console.log(selectedText);
+                editor.addWidget(editor.getCursor(true), docNode);
+            } else {
+
+            }
+        }
+
+        function onCursorActivity() {
+            docNode.style.left = "-999px";
+            if (typeof docTimer !== 'undefined') {
+                window.clearTimeout(docTimer);
+            }
+            docTimer = window.setTimeout(showDocPopup, 500);
+        }
+
+        editor = CodeMirror.fromTextArea(document.getElementById("code"), {
             lineNumbers: true,
-            matchBrackets: true
+            matchBrackets: true,
+            onCursorActivity: onCursorActivity
           });
         // TODO: remove debugging
         window.editor = editor;
