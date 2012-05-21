@@ -76,15 +76,6 @@ define([
      *
      * @return {Ellipsoid} DOC_TBA
      */
-    Ellipsoid.SCALED_WGS84 = new Ellipsoid(new Cartesian3(1.0, 1.0, 6356752.314245 / 6378137.0));
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof Ellipsoid
-     *
-     * @return {Ellipsoid} DOC_TBA
-     */
     Ellipsoid.UNIT_SPHERE = Object.freeze(new Ellipsoid(new Cartesian3(1.0, 1.0, 1.0)));
 
     /**

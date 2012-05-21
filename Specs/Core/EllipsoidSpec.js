@@ -39,11 +39,6 @@ defineSuite([
         }).toThrow();
     });
 
-    it("getScaledWgs84", function() {
-        var e = Ellipsoid.SCALED_WGS84;
-        expect(e.getRadii().equals(new Cartesian3(1.0, 1.0, 6356752.314245 / 6378137.0))).toEqual(true);
-    });
-
     it("getMinimumRadius", function() {
         expect(new Ellipsoid(new Cartesian3(1, 2, 3)).getMinimumRadius()).toEqual(1);
     });

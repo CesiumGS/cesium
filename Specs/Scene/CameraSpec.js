@@ -105,10 +105,10 @@ defineSuite([
     });
 
     it("viewExtent", function() {
-        var west = -CesiumMath.PI_OVER_TWO,
-            south = -CesiumMath.PI_OVER_TWO,
-            east = CesiumMath.PI_OVER_TWO,
-            north = CesiumMath.PI_OVER_TWO;
+        var west = -CesiumMath.PI_OVER_TWO;
+        var south = -CesiumMath.PI_OVER_TWO;
+        var east = CesiumMath.PI_OVER_TWO;
+        var north = CesiumMath.PI_OVER_TWO;
         camera.viewExtent(Ellipsoid.WGS84, west, south, east, north);
         expect(camera.position.equalsEpsilon(new Cartesian3(24078036.74383515, 0, 0.0), CesiumMath.EPSILON10));
         expect(camera.direction.equalsEpsilon(new Cartesian3(-1.0, 0.0, 0.0), CesiumMath.EPSILON10));

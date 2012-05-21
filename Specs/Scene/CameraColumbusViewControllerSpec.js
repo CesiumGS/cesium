@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Scene/CameraColumbusViewController',
          'Scene/Camera',
@@ -16,7 +17,7 @@ defineSuite([
 
     beforeEach(function() {
         camera = new Camera(document);
-        camera.position = new Cartesian3();
+        camera.position = Cartesian3.ZERO;
         camera.up = Cartesian3.UNIT_Y;
         camera.direction = Cartesian3.UNIT_Z.negate();
 
@@ -31,7 +32,7 @@ defineSuite([
 
     it("updateReferenceFrame", function() {
         controller._updateReferenceFrame();
-        expect(camera.position.equalsEpsilon(new Cartesian3(), CesiumMath.EPSILON10)).toEqual(true);
+        expect(camera.position.equalsEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON10)).toEqual(true);
     });
 
     it("isDestroyed", function() {
