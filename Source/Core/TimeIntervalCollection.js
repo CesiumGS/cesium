@@ -261,8 +261,10 @@ function(binarySearch,
         var thisIntervals = this._intervals, interval;
         for ( var i = 0, len = thisIntervals.length; i < len; i++) {
             interval = thisIntervals[i];
-            if ((typeof start === 'undefined' || interval.start.equals(start)) && (typeof stop === 'undefined' || interval.stop.equals(start)) &&
-                    (typeof isStartIncluded === 'undefined' || interval.isStartIncluded === isStartIncluded) && (typeof start === 'undefined' || interval.isStopIncluded === isStopIncluded)) {
+            if ((typeof start === 'undefined' || interval.start.equals(start)) &&
+                (typeof stop === 'undefined' || interval.stop.equals(stop)) &&
+                (typeof isStartIncluded === 'undefined' || interval.isStartIncluded === isStartIncluded) &&
+                (typeof isStopIncluded === 'undefined' || interval.isStopIncluded === isStopIncluded)) {
                 return thisIntervals[i];
             }
         }

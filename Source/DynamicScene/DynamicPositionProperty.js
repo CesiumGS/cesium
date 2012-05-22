@@ -62,7 +62,7 @@ define([
             //If so, see if the new data is the same type.
             property = existingInterval.data;
             if (typeof property !== 'undefined') {
-                handler = property.handler;
+                handler = property.dataHandler;
                 unwrappedInterval = handler.unwrapCzmlInterval(czmlInterval);
             }
         } else {
@@ -79,7 +79,7 @@ define([
                 if (typeof unwrappedInterval !== 'undefined') {
                     //Found a valid handler, but lets check to see if we already have a property with that handler
                     for ( var q = 0, lenQ = this._dynamicProperties.length; q < lenQ; q++) {
-                        if (this._dynamicProperties[q].handler === handler) {
+                        if (this._dynamicProperties[q].dataHandler === handler) {
                             property = this._dynamicProperties[q];
                             break;
                         }

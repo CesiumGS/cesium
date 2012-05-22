@@ -4,7 +4,7 @@ define(['./incrementalGet'], function(incrementalGet) {
 
     function fillBufferIncrementally(buffer, url, doneCallback) {
         return incrementalGet(url, function(item) {
-            buffer.addData(item, url);
+            buffer.processCzml(item, url);
         }, doneCallback);
     }
 
