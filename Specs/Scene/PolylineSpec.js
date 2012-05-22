@@ -41,14 +41,13 @@ defineSuite([
     });
 
     afterEach(function() {
-        polyline = polyline && polyline.destroy();
+        polyline = polyline && !polyline.isDestroyed() && polyline.destroy();
         us = null;
-
         destroyContext(context);
     });
 
     it("gets default show", function() {
-        expect(polyline.show).toBeTruthy();
+        expect(polyline.show).toEqual(true);
     });
 
     it("sets positions", function() {
@@ -160,5 +159,11 @@ defineSuite([
 
         var pickedObject = pick(context, polyline, 0, 0);
         expect(pickedObject).not.toBeDefined();
+    });
+
+    it("isDestroyed", function() {
+        expect(polyline.isDestroyed()).toEqual(false);
+        polyline.destroy();
+        expect(polyline.isDestroyed()).toEqual(true);
     });
 });
