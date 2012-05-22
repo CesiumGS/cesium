@@ -15,7 +15,7 @@ function(Cartographic3,
         doublesPerInterpolationValue : doublesPerValue,
 
         unwrapCzmlInterval : function(czmlInterval) {
-            var cartographic = czmlInterval.cartographic;
+            var cartographic = czmlInterval.cartographicRadians;
             if (typeof cartographic === 'undefined') {
                 var cartographicDegrees = czmlInterval.cartographicDegrees;
                 if (typeof cartographicDegrees !== 'undefined') {
