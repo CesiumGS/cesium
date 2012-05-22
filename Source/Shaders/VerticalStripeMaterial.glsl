@@ -14,7 +14,7 @@ vec4 agi_getMaterialColor(float zDistance, vec2 st, vec3 str)
     
     //anti-aliasing
     float val1 = clamp(value / fuzz, 0.0, 1.0);
-    float val2 = clamp((value - .5) / fuzz, 0.0, 1.0);
+    float val2 = clamp((value - 0.5) / fuzz, 0.0, 1.0);
     val1 = val1 * (1.0 - val2);
     val1 = val1 * val1 * (3.0 - (2.0 * val1));
     
