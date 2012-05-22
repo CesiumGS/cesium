@@ -95,6 +95,12 @@ div.menu
 	background-color: rgba(255, 255, 255, 1.0);
 }
 
+#mainIndex div.menu {
+    border-radius: 15px;
+    margin: 5px;
+    padding: 15px;
+}
+
 div.nav 
 {
 	position: fixed;
@@ -175,6 +181,10 @@ div.nav input.classFilter {
 	-webkit-border-radius: 3px;
 	-border-radius: 3px;
 }
+
+#mainIndex div.nav input.classFilter {
+    max-width: 250px;
+}
 /* End menu */
 
 nav
@@ -188,6 +198,17 @@ nav
     padding-left: 9px;
 }
 
+#mainIndex nav, #mainIndex div.nav {
+    position: static;
+    float: none;
+    margin: 0;
+    padding: 0;
+    width: auto;
+    height: auto;
+    border: none;
+    max-width: none;
+}
+
 div.nav ul {
     font-family: 'Lucida Grande', 'Lucida Sans Unicode', arial, sans-serif;
     font-size: 100%;
@@ -195,6 +216,12 @@ div.nav ul {
     padding:0;
     margin:0;
     list-style-type:none;
+}
+
+#mainIndex div.nav ul {
+    -webkit-columns: 250px;
+    -moz-columns: 250px;
+    columns: 250px;
 }
 
 div.nav h3 {
@@ -226,6 +253,10 @@ footer {
     font-size: 90%;
 }
 
+#mainIndex footer {
+    padding: 6px;
+}
+
 .page-title
 {
 	font-size: 2em;
@@ -244,6 +275,10 @@ footer {
 	-moz-box-shadow: 0px 0px 10px #B2CCF0;
 	-webkit-box-shadow: 0px 0px 10px #B2CCF0;
 	box-shadow: 0px 0px 10px #B2CCF0;
+}
+
+#mainIndex .page-title {
+    margin-right: 30px;
 }
 
 h1
