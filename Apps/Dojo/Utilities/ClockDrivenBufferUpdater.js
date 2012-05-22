@@ -38,10 +38,6 @@ define(['dojo/io-query',
         return this._bufferStop;
     };
 
-    ClockDrivenBufferUpdater.prototype.setUpdateCallback = function(callback) {
-        this._updateCallback = callback;
-    };
-
     ClockDrivenBufferUpdater.prototype.update = function() {
         var currentTime = this._clock.currentTime;
 
@@ -55,12 +51,12 @@ define(['dojo/io-query',
 
         if (this._handle && (currentTime.lessThan(this._bufferStart) || currentTime.greaterThan(this._bufferStop))) {
             this._handle.abort();
-            delete this._handle;
+            this._handle = undefined;
         }
 
         var bufferSize = this._bufferSize;
 
-        if (!this._handle) {
+        if (typeof this._handle === 'undefined') {
             if (currentTime.getSecondsDifference(this._bufferStop) < bufferSize) {
                 if (currentTime.greaterThan(this._bufferStart)) {
                     this._bufferStart = this._bufferStop = currentTime;
@@ -73,10 +69,6 @@ define(['dojo/io-query',
 
                 var step = this._stepSize;
 
-                if (typeof this._updateCallback !== 'undefined') {
-                    this._updateCallback(this, false);
-                }
-
                 this._query.start = start;
                 this._query.stop = stop;
                 this._query.step = step;
@@ -84,10 +76,7 @@ define(['dojo/io-query',
 
                 var self = this, storeHandle = true, handle = this._bufferFillFunction(this._buffer, url, function() {
                     storeHandle = false;
-                    delete self._handle;
-                    if (typeof self._updateCallback !== 'undefined') {
-                        self._updateCallback(self, true);
-                    }
+                    self._handle = undefined;
                 });
                 if (storeHandle) {
                     this._handle = handle;
@@ -102,9 +91,9 @@ define(['dojo/io-query',
     };
 
     ClockDrivenBufferUpdater.prototype.abort = function() {
-        if (this._handle) {
+        if (typeof this._handle !== 'undefined') {
             this._handle.abort();
-            delete this._handle;
+            this._handle = undefined;
         }
     };
 

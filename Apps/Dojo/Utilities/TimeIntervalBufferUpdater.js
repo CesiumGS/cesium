@@ -26,14 +26,10 @@ define(['dojo/io-query',
         }
     }
 
-    TimeIntervalBufferUpdater.prototype.setUpdateCallback = function(callback) {
-        this._updateCallback = callback;
-    };
-
     TimeIntervalBufferUpdater.prototype.setRange = function(startTime, stopTime, stepSize) {
-        if (this._handle) {
+        if (typeof this._handle !== 'undefined') {
             this._handle.abort();
-            delete this._handle;
+            this._handle = undefined;
         }
 
         this._bufferStart = startTime;
@@ -51,10 +47,7 @@ define(['dojo/io-query',
 
         var self = this, storeHandle = true, handle = this._bufferFillFunction(this._buffer, url, function() {
             storeHandle = false;
-            delete self._handle;
-            if (typeof self._updateCallback !== 'undefined') {
-                self._updateCallback(self);
-            }
+            self._handle = undefined;
         });
         if (storeHandle) {
             this._handle = handle;
@@ -62,9 +55,9 @@ define(['dojo/io-query',
     };
 
     TimeIntervalBufferUpdater.prototype.abort = function() {
-        if (this._handle) {
+        if (typeof this._handle !== 'undefined') {
             this._handle.abort();
-            delete this._handle;
+            this._handle = undefined;
         }
     };
 

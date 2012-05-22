@@ -36,7 +36,11 @@ define([
     };
 
     DynamicMaterialProperty.prototype.getValue = function(time) {
-        return this._intervals.findIntervalContainingDate(time).data;
+        var value = this._intervals.findIntervalContainingDate(time);
+        if (typeof value !== 'undefined') {
+            return value.data;
+        }
+        return undefined;
     };
 
     DynamicMaterialProperty.prototype.addIntervals = function(czmlIntervals, buffer, sourceUri, constrainedInterval) {
@@ -54,6 +58,7 @@ define([
         if (typeof material !== 'undefined') {
             return material.applyToMaterial(time, existingMaterial);
         }
+        return existingMaterial;
     };
 
     DynamicMaterialProperty.prototype.addInterval = function(czmlInterval, buffer, sourceUri, constrainedInterval) {
