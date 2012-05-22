@@ -15,7 +15,10 @@ var Sandbox = Sandbox || {};
         // TODO: make multiple tile providers available
         var bing = new Cesium.BingMapsTileProvider({
             server : "dev.virtualearth.net",
-            mapStyle : Cesium.BingMapsStyle.AERIAL
+            mapStyle : Cesium.BingMapsStyle.AERIAL,
+            // Some versions of Safari support WebGL, but don't correctly implement
+            // cross-origin image loading, so we need to load Bing imagery using a proxy.
+            proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
         });
 
         var cb = new Cesium.CentralBody(scene.getCamera(), ellipsoid);
