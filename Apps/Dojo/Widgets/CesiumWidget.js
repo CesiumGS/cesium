@@ -204,6 +204,7 @@ define([
 
             var centralBody = this.centralBody = new CentralBody(scene.getCamera(), ellipsoid);
             centralBody.showSkyAtmosphere = true;
+            centralBody.showGroundAtmosphere = true;
 
             this._configureCentralBodyImagery();
 
@@ -276,6 +277,10 @@ define([
 
         showSkyAtmosphere : function(show) {
             this.centralBody.showSkyAtmosphere = show;
+        },
+
+        showGroundAtmosphere : function(show) {
+            this.centralBody.showGroundAtmosphere = show;
         },
 
         enableStreamingImagery : function(value) {
