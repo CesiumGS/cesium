@@ -6,7 +6,7 @@ define(function() {
      * A set of functions to detect whether the current browser supports
      * various features.
      *
-     * @name FeatureDetection
+     * @exports FeatureDetection
      */
     var FeatureDetection = {};
 
@@ -88,7 +88,7 @@ define(function() {
      * Detects whether the current browser supports the use of cross-origin
      * requests to load streaming imagery.
      *
-     * @see http://www.w3.org/TR/cors/
+     * @see <a href="http://www.w3.org/TR/cors/">Cross-Origin Resource Sharing</a>
      */
     FeatureDetection.supportsCrossOriginImagery = function() {
         if (typeof _supportsCrossOriginImagery === 'undefined') {
