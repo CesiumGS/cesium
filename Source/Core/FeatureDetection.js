@@ -92,7 +92,7 @@ define(function() {
      */
     FeatureDetection.supportsCrossOriginImagery = function() {
         if (typeof _supportsCrossOriginImagery === 'undefined') {
-            if (isSafari() && webkitVersion()[0] < 537) {
+            if (isSafari() && webkitVersion()[0] < 536) {
                 // versions of Safari below this incorrectly throw a DOM error when calling
                 // readPixels on a canvas containing a cross-origin image.
                 _supportsCrossOriginImagery = false;
