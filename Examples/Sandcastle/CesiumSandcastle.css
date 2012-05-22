@@ -47,7 +47,9 @@ html, body {
     font-family: sans-serif;
 }
 #docPopup a, #docPopup a:visited {
+    display: block;
     text-decoration: none;
+    line-height: 1em;
 }
 #docPopup a:focus, #docPopup a:hover {
     text-decoration: underline;

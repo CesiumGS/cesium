@@ -62,12 +62,17 @@ require({
         window.docNode = docNode;
 
         function showDocPopup () {
-            var selectedText = editor.getSelection();
-            if (selectedText && that.types.indexOf(selectedText) >= 0) {
+            var selectedText = editor.getSelection(), linkList = '';
+            if (selectedText && selectedText in that.types && typeof that.types[selectedText].push === 'function') {
+                var member, i, len = that.types[selectedText].length;
+                for (i = 0; i < len; ++i) {
+                    member = that.types[selectedText][i];
+                    linkList += '<a target="_blank" href="../../Build/Documentation/' + member +
+                        '">' + member.replace('.html', '').replace('module-', '').replace('#', '.') + '</a>';
+                }
+                docMessage.innerHTML = linkList;
                 editor.addWidget(editor.getCursor(true), docNode);
-                docNode.style.top = (parseInt(docNode.style.top) - 5) + 'px';
-                docMessage.innerHTML = '<a target="_blank" href="../../Build/Documentation/' +
-                    selectedText + '.html">' + selectedText + ' documentation</a>';
+                docNode.style.top = (parseInt(docNode.style.top, 10) - 5) + 'px';
             }
         }
 
