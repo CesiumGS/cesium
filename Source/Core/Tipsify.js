@@ -61,6 +61,7 @@ define(['./DeveloperError'], function(DeveloperError) {
 
         // Compute the maximumIndex if not given
         if(!maximumIndex) {
+            maximumIndex = 0;
             var currentIndex = 0;
             var intoIndices = indices[currentIndex];
             while (currentIndex < numIndices) {

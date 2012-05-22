@@ -13,6 +13,11 @@ defineSuite([
                                       cacheSize : 3})).toEqual(2);
     });
 
+    it("can calculate the ACMR without a specified maximum index", function() {
+        expect(Tipsify.calculateACMR({indices : [0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5, 0, 5, 6, 0, 1, 6],
+                                      cacheSize : 3})).toEqual(2);
+    });
+
     it("throws when calculating ACMR (1 of 4)", function() {
         expect(function() {
             Tipsify.calculateACMR({indices : null,
@@ -63,7 +68,7 @@ defineSuite([
 
     it("throws when executing Tipsify (3 of 5)", function () {
         expect(function() {
-            Tipsify.tipsify({indices : [1, 2, 3, 4],
+            Tipsify.tipsify({indices : [1, 2, 3],
                              maximumIndex : -1,
                              cacheSize : 3});
         }).toThrow();
