@@ -768,11 +768,9 @@ define([
         var pool = this._texturePool = new Texture2DPool(context);
 
         var fetch = function(tile) {
-            var width = parseInt(tile.image.width, 10);
-            var height = parseInt(tile.image.height, 10);
             var texture = pool.createTexture2D({
-                width : width,
-                height : height,
+                width : tile.image.width,
+                height : tile.image.height,
                 pixelFormat : PixelFormat.RGB
             });
             return texture;
