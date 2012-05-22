@@ -49,4 +49,15 @@ defineSuite(['Core/PlaneTessellator'], function(PlaneTessellator) {
             y : 1.0
         }]);
     });
+
+    it("throws if resolution is less than 1", function() {
+       expect(function() {
+           PlaneTessellator.compute({
+               resolution: {
+                   x : 0.0,
+                   y : 0.0
+               }
+           });
+       }).toThrow();
+    });
 });

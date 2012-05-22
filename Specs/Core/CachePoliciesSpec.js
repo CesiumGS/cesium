@@ -63,7 +63,7 @@ defineSuite([
             }
 
             // check that nothing was removed
-            expect(lastRemoved === null).toBeTruthy();
+            expect(lastRemoved === null).toEqual(true);
         });
 
         it("miss replaces lru", function() {

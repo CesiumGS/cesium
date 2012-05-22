@@ -7,7 +7,7 @@ Beta Releases
 ### b6 - TBA
 
 * Breaking changes:
-    * TBA
+    * Changed Tipsify.tipsify and Tipsify.calculateACMR to accept an object literal instead of three separate arguments. Supplying a maximum index and cache size is now optional.
 * TBA
 
 ### b5 - 05/15/2012
