@@ -40,7 +40,7 @@ define(function() {
     var _safariVersion;
     function isSafari() {
         if (typeof _isSafari === 'undefined') {
-            //Chrome contains Safari in the user agent too
+            // Chrome contains Safari in the user agent too
             if (isChrome() || !(/ Safari\/[\.0-9]+/).test(navigator.userAgent)) {
                 return (_isSafari = false);
             }
@@ -93,6 +93,8 @@ define(function() {
     FeatureDetection.supportsCrossOriginImagery = function() {
         if (typeof _supportsCrossOriginImagery === 'undefined') {
             if (isSafari() && webkitVersion()[0] < 537) {
+                // versions of Safari below this incorrectly throw a DOM error when calling
+                // readPixels on a canvas containing a cross-origin image.
                 _supportsCrossOriginImagery = false;
             } else {
                 // any other versions of browsers that incorrectly block
