@@ -13,7 +13,7 @@ defineSuite([
                                       cacheSize : 3})).toEqual(2);
     });
 
-    it("throws when calculating ACMR (1 of 3)", function() {
+    it("throws when calculating ACMR (1 of 4)", function() {
         expect(function() {
             Tipsify.calculateACMR({indices : null,
                                    maximumIndex : 1,
@@ -21,7 +21,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("throws when calculating ACMR (2 of 3)", function() {
+    it("throws when calculating ACMR (2 of 4)", function() {
         expect(function() {
             Tipsify.calculateACMR({indices : [1, 2, 3, 4],
                                    maximumIndex : 1,
@@ -29,7 +29,15 @@ defineSuite([
         }).toThrow();
     });
 
-    it("throws when calculating ACMR (3 of 3)", function() {
+    it("throws when calculating ACMR (3 of 4)", function() {
+        expect(function() {
+            Tipsify.calculateACMR({indices : [0, 1, 2],
+                                   maximumIndex : -1,
+                                   cacheSize : 2});
+        }).toThrow();
+    });
+
+    it("throws when calculating ACMR (4 of 4)", function() {
         expect(function() {
             Tipsify.calculateACMR({indices : [0, 1, 2],
                                    maximumIndex : 2,
@@ -37,7 +45,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("throws when executing Tipsify (1 of 4)", function() {
+    it("throws when executing Tipsify (1 of 5)", function() {
         expect(function() {
             Tipsify.tipsify({indices : null,
                              maximumIndex : 1,
@@ -45,10 +53,18 @@ defineSuite([
         }).toThrow();
     });
 
-    it("throws when executing Tipsify (2 of 4)", function() {
+    it("throws when executing Tipsify (2 of 5)", function() {
         expect(function() {
             Tipsify.tipsify({indices : [1, 2, 3, 4],
                              maximumIndex : 1,
+                             cacheSize : 3});
+        }).toThrow();
+    });
+
+    it("throws when executing Tipsify (3 of 5)", function () {
+        expect(function() {
+            Tipsify.tipsify({indices : [1, 2, 3, 4],
+                             maximumIndex : -1,
                              cacheSize : 3});
         }).toThrow();
     });
@@ -61,9 +77,9 @@ defineSuite([
         }).toThrow();
     });
 
-    it("throws when executing Tipsify (4 of 4)", function() {
+    it("throws when executing Tipsify (5 of 5)", function() {
         expect(function() {
-            Tipsify.tipsify(null);
+            Tipsify.tipsify();
         }).toThrow();
     });
 
