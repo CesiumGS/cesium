@@ -71,7 +71,7 @@ defineSuite(['Core/Queue'], function(Queue) {
         queue.dequeue(); //remove 99
 
         queue.sort(function(a, b) {
-            return a > b;
+            return a - b;
         });
 
         expect(queue.dequeue()).toEqual(0);
