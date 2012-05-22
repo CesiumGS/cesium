@@ -220,7 +220,7 @@ nav a:active {
 
 footer {
     display: block;
-    padding: 6px;
+    padding: 6px 6px 100%;  /* Large bottom padding, so #anchors scroll correctly. */
     margin-top: 12px;
     font-style: italic;
     font-size: 90%;
