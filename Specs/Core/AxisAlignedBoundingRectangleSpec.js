@@ -20,17 +20,17 @@ defineSuite([
 
     it("computes the minimum", function() {
         var rectangle = new AxisAlignedBoundingRectangle(positions);
-        expect(rectangle.minimum.equals(new Cartesian2(-3, -3))).toBeTruthy();
+        expect(rectangle.minimum.equals(new Cartesian2(-3, -3))).toEqual(true);
     });
 
     it("computes the maximum", function() {
         var rectangle = new AxisAlignedBoundingRectangle(positions);
-        expect(rectangle.maximum.equals(new Cartesian2(3, 3))).toBeTruthy();
+        expect(rectangle.maximum.equals(new Cartesian2(3, 3))).toEqual(true);
     });
 
     it("computes the center", function() {
         var rectangle = new AxisAlignedBoundingRectangle(positions);
-        expect(rectangle.center.equalsEpsilon(Cartesian2.ZERO, Math.EPSILON14)).toBeTruthy();
+        expect(rectangle.center.equalsEpsilon(Cartesian2.ZERO, Math.EPSILON14)).toEqual(true);
     });
 
     it("computes the bounding rectangle for a single position", function() {
@@ -39,9 +39,9 @@ defineSuite([
             y : 2
         }]);
 
-        expect(rectangle.minimum.equals(new Cartesian2(1, 2))).toBeTruthy();
-        expect(rectangle.maximum.equals(new Cartesian2(1, 2))).toBeTruthy();
-        expect(rectangle.center.equals(new Cartesian2(1, 2))).toBeTruthy();
+        expect(rectangle.minimum.equals(new Cartesian2(1, 2))).toEqual(true);
+        expect(rectangle.maximum.equals(new Cartesian2(1, 2))).toEqual(true);
+        expect(rectangle.center.equals(new Cartesian2(1, 2))).toEqual(true);
     });
 
     it("has undefined properties with positions of length zero", function() {

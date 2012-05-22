@@ -31,10 +31,10 @@ defineSuite([
         expect(sp._cachedShader.count).toEqual(1);
 
         cache.releaseShaderProgram(sp);
-        expect(sp.isDestroyed()).toBeFalsy();
+        expect(sp.isDestroyed()).toEqual(false);
 
         cache.destroyReleasedShaderPrograms();
-        expect(sp.isDestroyed()).toBeTruthy();
+        expect(sp.isDestroyed()).toEqual(true);
 
         cache.destroy();
     });
@@ -50,10 +50,10 @@ defineSuite([
         expect(sp._cachedShader.count).toEqual(1);
 
         sp.release();
-        expect(sp.isDestroyed()).toBeFalsy();
+        expect(sp.isDestroyed()).toEqual(false);
 
         cache.destroyReleasedShaderPrograms();
-        expect(sp.isDestroyed()).toBeTruthy();
+        expect(sp.isDestroyed()).toEqual(true);
 
         cache.destroy();
     });
@@ -77,7 +77,7 @@ defineSuite([
         sp2.release();
         cache.destroyReleasedShaderPrograms();
 
-        expect(sp.isDestroyed()).toBeTruthy();
+        expect(sp.isDestroyed()).toEqual(true);
 
         cache.destroy();
     });
@@ -96,14 +96,14 @@ defineSuite([
         }); // still cache hit
 
         cache.destroyReleasedShaderPrograms(); // does not destroy
-        expect(sp.isDestroyed()).toBeFalsy();
-        expect(sp2.isDestroyed()).toBeFalsy();
+        expect(sp.isDestroyed()).toEqual(false);
+        expect(sp2.isDestroyed()).toEqual(false);
 
         sp2.release();
         cache.destroyReleasedShaderPrograms(); // destroys
 
-        expect(sp.isDestroyed()).toBeTruthy();
-        expect(sp2.isDestroyed()).toBeTruthy();
+        expect(sp.isDestroyed()).toEqual(true);
+        expect(sp2.isDestroyed()).toEqual(true);
 
         cache.destroy();
     });
@@ -119,12 +119,12 @@ defineSuite([
 
         cache.destroy();
 
-        expect(sp.isDestroyed()).toBeTruthy();
-        expect(cache.isDestroyed()).toBeTruthy();
+        expect(sp.isDestroyed()).toEqual(true);
+        expect(cache.isDestroyed()).toEqual(true);
     });
 
     it("is not destroyed", function() {
         var cache = new ShaderCache(context);
-        expect(cache.isDestroyed()).toBeFalsy();
+        expect(cache.isDestroyed()).toEqual(false);
     });
 });

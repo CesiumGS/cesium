@@ -301,7 +301,9 @@ define([
                             maximumIndex = indices[j];
                         }
                     }
-                    indexLists[i].values = Tipsify.tipsify(indices, maximumIndex, cacheCapacity || 24);
+                    indexLists[i].values = Tipsify.tipsify({indices : indices,
+                                                            maximumIndex : maximumIndex,
+                                                            cacheSize : cacheCapacity});
                 }
             }
         }

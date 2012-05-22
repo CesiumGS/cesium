@@ -1,11 +1,13 @@
 /*global defineSuite*/
 defineSuite([
+         'Renderer/TextureAtlas',
          '../Specs/createContext',
          '../Specs/destroyContext',
          'Core/PrimitiveType',
          'Renderer/BufferUsage',
          'Renderer/PixelFormat'
-     ], "Renderer/TextureAtlas", function(
+     ], function(
+         TextureAtlas,
          createContext,
          destroyContext,
          PrimitiveType,
@@ -29,7 +31,7 @@ defineSuite([
         destroyContext(context);
     });
 
-    it("initializem suite", function() {
+    it("initialize suite", function() {
         greenImage = new Image();
         greenImage.src = "./Data/Images/Green.png";
 
@@ -205,7 +207,7 @@ defineSuite([
             x : (greenCoords.x0 + greenCoords.x1) * 0.5,
             y : (greenCoords.y0 + greenCoords.y1) * 0.5
         }]);
-        expect((pixels[0] === 0) || (pixels[0] === 1)).toBeTruthy(); // Workaround:  Firefox on Windows
+        expect((pixels[0] === 0) || (pixels[0] === 1)).toEqual(true); // Workaround:  Firefox on Windows
         expect(pixels[1]).toEqual(255);
         expect(pixels[2]).toEqual(0);
         expect(pixels[3]).toEqual(255);
@@ -219,7 +221,13 @@ defineSuite([
 
     it("throws with a negative borderWidthInPixels", function() {
         expect(function() {
-            atlas = context.createTextureAtlas([], PixelFormat.RGBA, -1);
+            atlas = context.createTextureAtlas([greenImage, blueImage], PixelFormat.RGBA, -1);
+        }).toThrow();
+    });
+
+    it("throws without context", function() {
+        expect(function() {
+            return new TextureAtlas();
         }).toThrow();
     });
 });

@@ -316,11 +316,11 @@ define([
      * Returns the angle, in radians, between this Cartesian and the Cartesian passed in.
      *
      * @memberof Cartesian3
-     * @param {Cartesian3} scalar The Cartesian used to compute the angle.
+     * @param {Cartesian3} cartesian The Cartesian used to compute the angle.
      * @return {Number} The angle between the two Cartesians.
      */
-    Cartesian3.prototype.angleBetween = function(Cartesian) {
-        var c = Cartesian3.clone(Cartesian);
+    Cartesian3.prototype.angleBetween = function(cartesian) {
+        var c = Cartesian3.clone(cartesian);
         return Math.acos(this.normalize().dot(c.normalize()));
     };
 
