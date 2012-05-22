@@ -15,10 +15,16 @@ vec4 agi_getMaterialColor(float zDistance, vec2 st, vec3 str)
     scaledWidth = abs(scaledWidth - floor(scaledWidth + .5));
     float scaledHeight = fract(u_repeat.t * st.t);
     scaledHeight = abs(scaledHeight - floor(scaledHeight + .5));
-    float scaled = min(scaledWidth,scaledHeight);
+    float value = min(scaledWidth, scaledHeight);
     
     //anti-aliasing
-    float interpValue = b*agi_getInterpolatedAntialiasedValue(scaled,fuzz);
+    float val1 = clamp(value / fuzz, 0.0, 1.0);
+    float val2 = clamp((value - .5) / fuzz, 0.0, 1.0);
+    val1 = val1 * (1.0 - val2);
+    val1 = val1 * val1 * (3.0 - (2.0 * val1));
+    val1 = pow(val1, .5); //makes the transition nicer
     
-    return mix(u_lightColor, u_darkColor, interpValue);
+    vec4 midColor = (u_lightColor + u_darkColor) / 2.0;
+    vec4 currentColor = (b) * u_lightColor + (1.0-b) * u_darkColor;
+    return mix(midColor, currentColor, val1);
 }

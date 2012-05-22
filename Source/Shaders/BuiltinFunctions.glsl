@@ -685,29 +685,3 @@ agi_ellipsoid agi_getWgs84EllipsoidEC()
         vec3(agi_view[3].x, agi_view[3].y, agi_view[3].z),              // center
         vec3(6378137.0, 6378137.0, 6356752.314245));                    // radii
 }
-
-/**
- * Returns an interpolation value that can be used for anti-aliasing. Loosely based on the glsl smoothstep function.
- *
- * @name agi_getInterpolatedAntialiasedValue
- * @glslFunction
- *
- * @param {value} Value between 0.0 and 1.0.
- * @param {fuzzAmount} Desired fuzziness (for best results, use a number between 0.01 and 0.2)
- *
- * @returns {float} The interpolated value (between 0.0 and 1.0)
- *
- * @example
- * float interpVal = agi_getInterpolatedAntialiasedValue(.05,.1)
- * vec4 color = mix(color1, color2, interpVal);
- */
-float agi_getInterpolatedAntialiasedValue(float value, float fuzzAmount)
-{
-    float val1 = clamp(value / fuzzAmount, 0.0, 1.0);
-    float val2 = clamp((value - .5) / fuzzAmount, 0.0, 1.0);
-    
-    val1 = val1 * (1.0 - val2);
-    val1 = val1 * val1 * (3.0 - (2.0 * val1));
-    
-    return val1;
-}
