@@ -12,16 +12,12 @@ require({
     var scene3D = new Cesium.Scene(document.getElementById("canvas3D"));
     var scene2D = new Cesium.Scene(document.getElementById("canvas2D"));
 
-    function isSafari() {
-        return (/safari/i).test(navigator.userAgent) && !(/chrome/i).test(navigator.userAgent);
-    }
-
     var bing = new Cesium.BingMapsTileProvider({
         server : "dev.virtualearth.net",
         mapStyle : Cesium.BingMapsStyle.AERIAL,
-        //Safari does not currently implement CORS properly, so we need to load Bing imagery
-        //through a proxy.  Other browsers work correctly without the proxy.
-        proxy : isSafari() ? new Cesium.DefaultProxy('/proxy/') : undefined
+        // Some versions of Safari support WebGL, but don't correctly implement
+        // cross-origin image loading, so we need to load Bing imagery using a proxy.
+        proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
     });
 
     function create(scene) {

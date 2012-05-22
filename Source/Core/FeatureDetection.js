@@ -1,0 +1,107 @@
+/*global define*/
+define(function() {
+    "use strict";
+
+    /**
+     * A set of functions to detect whether the current browser supports
+     * various features.
+     *
+     * @name FeatureDetection
+     */
+    var FeatureDetection = {};
+
+    function extractVersion(versionString) {
+        return versionString.split('.').map(function(v) {
+            return parseInt(v, 10);
+        });
+    }
+
+    var _isChrome;
+    var _chromeVersion;
+    function isChrome() {
+        if (typeof _isChrome === 'undefined') {
+            var fields = (/ Chrome\/([\.0-9]+)/).exec(navigator.userAgent);
+            if (!fields) {
+                return (_isChrome = false);
+            }
+
+            _isChrome = true;
+            _chromeVersion = extractVersion(fields[1]);
+        }
+
+        return _isChrome;
+    }
+
+    function chromeVersion() {
+        return isChrome() && _chromeVersion;
+    }
+
+    var _isSafari;
+    var _safariVersion;
+    function isSafari() {
+        if (typeof _isSafari === 'undefined') {
+            //Chrome contains Safari in the user agent too
+            if (isChrome() || !(/ Safari\/[\.0-9]+/).test(navigator.userAgent)) {
+                return (_isSafari = false);
+            }
+
+            var fields = (/ Version\/([\.0-9]+)/).exec(navigator.userAgent);
+            if (!fields) {
+                return (_isSafari = false);
+            }
+
+            _isSafari = true;
+            _safariVersion = extractVersion(fields[1]);
+        }
+
+        return _isSafari;
+    }
+
+    function safariVersion() {
+        return isSafari() && _safariVersion;
+    }
+
+    var _isWebkit;
+    var _webkitVersion;
+    function isWebkit() {
+        if (typeof _isWebkit === 'undefined') {
+            var fields = (/ AppleWebKit\/([\.0-9]+)(\+?)/).exec(navigator.userAgent);
+            if (!fields) {
+                return (_isWebkit = false);
+            }
+
+            _isWebkit = true;
+            _webkitVersion = extractVersion(fields[1]);
+            _webkitVersion.isNightly = !!fields[2];
+        }
+
+        return _isWebkit;
+    }
+
+    function webkitVersion() {
+        return isWebkit() && _webkitVersion;
+    }
+
+    var _supportsCrossOriginImagery;
+
+    /**
+     * Detects whether the current browser supports the use of cross-origin
+     * requests to load streaming imagery.
+     *
+     * @see http://www.w3.org/TR/cors/
+     */
+    FeatureDetection.supportsCrossOriginImagery = function() {
+        if (typeof _supportsCrossOriginImagery === 'undefined') {
+            if (isSafari() && webkitVersion()[0] < 537) {
+                _supportsCrossOriginImagery = false;
+            } else {
+                // any other versions of browsers that incorrectly block
+                // readPixels on canvas containing crossOrigin images?
+                _supportsCrossOriginImagery = 'withCredentials' in new XMLHttpRequest();
+            }
+        }
+        return _supportsCrossOriginImagery;
+    };
+
+    return FeatureDetection;
+});

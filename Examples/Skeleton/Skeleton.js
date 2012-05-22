@@ -12,17 +12,13 @@ require({
     var scene = new Cesium.Scene(canvas);
     var primitives = scene.getPrimitives();
 
-    function isSafari() {
-        return (/safari/i).test(navigator.userAgent) && !(/chrome/i).test(navigator.userAgent);
-    }
-
     // Bing Maps
     var bing = new Cesium.BingMapsTileProvider({
         server : "dev.virtualearth.net",
         mapStyle : Cesium.BingMapsStyle.AERIAL,
-        //Safari does not currently implement CORS properly, so we need to load Bing imagery
-        //through a proxy.  Other browsers work correctly without the proxy.
-        proxy : isSafari() ? new Cesium.DefaultProxy('/proxy/') : undefined
+        // Some versions of Safari support WebGL, but don't correctly implement
+        // cross-origin image loading, so we need to load Bing imagery using a proxy.
+        proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
     });
 
     var cb = new Cesium.CentralBody(scene.getCamera(), ellipsoid);
