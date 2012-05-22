@@ -65,7 +65,7 @@
 	<property name="build.minification" value="false" />
 
 	<!-- Inputs -->
-	<property name="version" value="b5" />
+	<property name="version" value="b6" />
 	<property name="sourceDirectory" location="Source" />
 	<property name="shadersDirectory" location="${sourceDirectory}/Shaders" />
 	<property name="examplesDirectory" location="Examples" />
@@ -371,6 +371,6 @@ if (oldContents !== contents) {
 			</classpath>
 		</taskdef>
 
-		<server proxyContextPath="/proxy" allowedHostList="server.arcgisonline.com,tile.openstreetmap.org,otile1.mqcdn.com,oatile1.mqcdn.com,tile.stamen.com,dev.virtualearth.net" port="8080" baseDir="${basedir}" />
+		<server proxyContextPath="/proxy" allowedHostList="server.arcgisonline.com,tile.openstreetmap.org,otile1.mqcdn.com,oatile1.mqcdn.com,tile.stamen.com,*.virtualearth.net" port="8080" baseDir="${basedir}" />
 	</target>
 </project>

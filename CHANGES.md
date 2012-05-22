@@ -4,6 +4,12 @@ Change Log
 Beta Releases
 -------------
 
+### b6 - TBA
+
+* Breaking changes:
+    * TBA
+* TBA
+
 ### b5 - 05/15/2012
 
 * Breaking changes:
