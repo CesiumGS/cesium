@@ -5,6 +5,7 @@ html,body {
 	margin: 0;
 	overflow: hidden;
 	padding: 0;
+	font-family: sans-serif;
 	-moz-user-select: none;
 	-webkit-user-select: none;
 }
