@@ -49,14 +49,14 @@ require({
         }}).play();
 
         var editor, docTimer, that = this;
-        var docNode = dojo.byId('docPopup');
+        var docNode = dojo.byId('docPopup'), docMessage = dojo.byId('docPopupMessage');
         that.types = [];
         xhr.get({
             url: '../../Build/Documentation/types.txt',
             handleAs: 'json'
         }).then(function (value) {
             that.types = value;
-            console.log(that.types /* .toString() */);
+            //console.log(that.types /* .toString() */);
         });
         window.types = types;
         window.docNode = docNode;
@@ -64,10 +64,10 @@ require({
         function showDocPopup () {
             var selectedText = editor.getSelection();
             if (selectedText && that.types.indexOf(selectedText) >= 0) {
-                console.log(selectedText);
                 editor.addWidget(editor.getCursor(true), docNode);
-            } else {
-
+                docNode.style.top = (parseInt(docNode.style.top) - 5) + 'px';
+                docMessage.innerHTML = '<a target="_blank" href="../../Build/Documentation/' +
+                    selectedText + '.html">' + selectedText + ' documentation</a>';
             }
         }
 

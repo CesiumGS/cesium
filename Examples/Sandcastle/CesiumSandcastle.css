@@ -44,6 +44,13 @@ html, body {
     position: absolute;
     left: -999px;
     top: 0;
+    font-family: sans-serif;
+}
+#docPopup a, #docPopup a:visited {
+    text-decoration: none;
+}
+#docPopup a:focus, #docPopup a:hover {
+    text-decoration: underline;
 }
 
 .logContainer {
