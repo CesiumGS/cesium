@@ -34,7 +34,6 @@ define([
     function DynamicProperty(dataHandler) {
         this.dataHandler = dataHandler;
         this._intervals = new TimeIntervalCollection();
-        this._isSampled = false;
     }
 
     DynamicProperty.createOrUpdate = function(parentObject, propertyName, valueType, czmlIntervals, constrainedInterval, czmlObjectCollection) {
@@ -162,10 +161,10 @@ define([
                 intervalData.yTable = undefined;
             }
 
-            if (!this._isSampled) {
+            if (!intervalData.isSampled) {
                 intervalData.times = [];
                 intervalData.values = [];
-                this._isSampled = true;
+                intervalData.isSampled = true;
             }
             var epoch = czmlInterval.epoch;
             if (typeof epoch !== 'undefined') {
@@ -176,7 +175,7 @@ define([
             //Packet itself is a constant value
             intervalData.times = undefined;
             intervalData.values = this_dataHandler.createValue(unwrappedInterval);
-            this._isSampled = false;
+            intervalData.isSampled = false;
         }
     };
 
@@ -188,7 +187,7 @@ define([
             var intervalData = interval.data;
             var times = intervalData.times;
             var values = intervalData.values;
-            if (this._isSampled && times.length >= 0 && values.length > 0) {
+            if (intervalData.isSampled && times.length >= 0 && values.length > 0) {
                 var index = binarySearch(times, time, JulianDate.compare);
 
                 if (index < 0) {

@@ -58,6 +58,11 @@ define([
         mapStyle : BingMapsStyle.AERIAL,
         defaultCamera : undefined,
         lockSunPositionToCamera : false,
+        dayImageUrl : undefined,
+        nightImageUrl : undefined,
+        specularMapUrl : undefined,
+        cloudsMapUrl : undefined,
+        bumpMapUrl : undefined,
 
         constructor : function() {
             this.ellipsoid = Ellipsoid.WGS84;
@@ -186,15 +191,15 @@ define([
             var maxTextureSize = scene.getContext().getMaximumTextureSize();
             if (maxTextureSize < 4095) {
                 // Mobile, or low-end card
-                this.dayImageUrl = require.toUrl('Images//NE2_50M_SR_W_1024.jpg');
-                this.nightImageUrl = require.toUrl('Images//land_ocean_ice_lights_512.jpg');
+                this.dayImageUrl = this.dayImageUrl || require.toUrl('Images//NE2_50M_SR_W_1024.jpg');
+                this.nightImageUrl = this.nightImageUrl || require.toUrl('Images//land_ocean_ice_lights_512.jpg');
             } else {
                 // Desktop
-                this.dayImageUrl = require.toUrl('Images//NE2_50M_SR_W_4096.jpg');
-                this.nightImageUrl = require.toUrl('Images//land_ocean_ice_lights_2048.jpg');
-                this.specularMapUrl = require.toUrl('Images//earthspec1k.jpg');
-                this.cloudsMapUrl = require.toUrl('Images//earthcloudmaptrans.jpg');
-                this.bumpMapUrl = require.toUrl('Images//earthbump1k.jpg');
+                this.dayImageUrl = this.dayImageUrl || require.toUrl('Images//NE2_50M_SR_W_4096.jpg');
+                this.nightImageUrl = this.nightImageUrl || require.toUrl('Images//land_ocean_ice_lights_2048.jpg');
+                this.specularMapUrl = this.specularMapUrl || require.toUrl('Images//earthspec1k.jpg');
+                this.cloudsMapUrl = this.cloudsMapUrl || require.toUrl('Images//earthcloudmaptrans.jpg');
+                this.bumpMapUrl = this.bumpMapUrl || require.toUrl('Images//earthbump1k.jpg');
             }
 
             var centralBody = this.centralBody = new CentralBody(scene.getCamera(), ellipsoid);

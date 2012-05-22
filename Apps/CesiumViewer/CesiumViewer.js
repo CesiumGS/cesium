@@ -81,11 +81,11 @@ function(dom,
         clock : clock,
 
         preRender : function(widget) {
-            clock.tick();
+            var currentTime = clock.tick();
             if (typeof timeline !== 'undefined') {
                 timeline.updateFromClock();
             }
-            visualizers.update(clock.currentTime, _buffer);
+            visualizers.update(currentTime, _buffer);
         },
 
         postSetup : function(widget) {
@@ -130,7 +130,7 @@ function(dom,
             var object = czmlObjects[i];
             if (typeof object.position !== 'undefined') {
                 var intervals = object.position._propertyIntervals;
-                if (typeof intervals !== 'undefined' && intervals._intervals[0].data._isSampled) {
+                if (typeof intervals !== 'undefined' && intervals._intervals[0].data._intervals._intervals[0].data.isSampled) {
                     var firstTime = intervals._intervals[0].data._intervals._intervals[0].data.times[0];
                     if (typeof firstTime !== 'undefined') {
                         clock.startTime = firstTime;

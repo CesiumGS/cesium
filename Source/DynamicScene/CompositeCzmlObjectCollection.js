@@ -9,12 +9,19 @@ define([
         CzmlObjectCollection) {
     "use strict";
 
-    function CompositeCzmlObjectCollection(mergeFunctions, deleteFunctions) {
+    function CompositeCzmlObjectCollection(mergeFunctions, deleteFunctions, collections) {
         this._hash = {};
         this._array = [];
         this._collections = [];
         this._mergeFunctions = mergeFunctions;
         this._deleteFunctions = deleteFunctions;
+
+        if (typeof collections !== 'undefined') {
+            for ( var i = 0; i < collections.length; i++) {
+                this.addCollection(collections[i]);
+            }
+            this.applyChanges();
+        }
     }
 
     CompositeCzmlObjectCollection.prototype.addCollection = function(czmlObjectCollection) {
