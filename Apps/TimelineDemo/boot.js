@@ -33,7 +33,10 @@ require({
         location : 'Source/ThirdParty'
     }, {
         name : 'DojoWidgets',
-        location : 'Apps/DojoWidgets'
+        location : 'Apps/Dojo/Widgets'
+    }, {
+        name : 'DojoUtilities',
+        location : 'Apps/Dojo/Utilities'
     }, {
         name : 'TimelineDemo',
         location : 'Apps/TimelineDemo'
