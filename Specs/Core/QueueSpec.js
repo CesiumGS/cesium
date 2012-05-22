@@ -47,8 +47,8 @@ defineSuite(['Core/Queue'], function(Queue) {
     it('can check if it contains an item', function() {
         queue.enqueue(1);
 
-        expect(queue.contains(1)).toBeTruthy();
-        expect(queue.contains(2)).toBeFalsy();
+        expect(queue.contains(1)).toEqual(true);
+        expect(queue.contains(2)).toEqual(false);
     });
 
     it('can clear items', function() {

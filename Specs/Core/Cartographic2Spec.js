@@ -35,16 +35,16 @@ defineSuite([
     it("clones itself", function() {
         var c = new Cartographic2(0, 1);
         var c2 = c.clone();
-        expect(c.equals(c2)).toBeTruthy();
+        expect(c.equals(c2)).toEqual(true);
 
         ++c2.latitude;
-        expect(c.equals(c2)).toBeFalsy();
+        expect(c.equals(c2)).toEqual(false);
     });
 
     it("equalsEpsilon", function() {
-        expect(new Cartographic2(1, 2).equalsEpsilon(new Cartographic2(1, 2), 0)).toBeTruthy();
-        expect(new Cartographic2(1, 2).equalsEpsilon(new Cartographic2(2, 2), 1)).toBeTruthy();
-        expect(new Cartographic2(1, 2).equalsEpsilon(new Cartographic2(3, 2), 1)).toBeFalsy();
+        expect(new Cartographic2(1, 2).equalsEpsilon(new Cartographic2(1, 2), 0)).toEqual(true);
+        expect(new Cartographic2(1, 2).equalsEpsilon(new Cartographic2(2, 2), 1)).toEqual(true);
+        expect(new Cartographic2(1, 2).equalsEpsilon(new Cartographic2(3, 2), 1)).toEqual(false);
     });
 
     it("toString", function() {

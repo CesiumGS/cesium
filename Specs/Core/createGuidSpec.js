@@ -17,13 +17,13 @@ defineSuite(['Core/createGuid'], function(createGuid) {
         expect(guid2).toNotEqual(guid3);
 
         //Make sure they are all properly formatted
-        expect(isGuidRegex.test(guid1)).toBeTruthy();
+        expect(isGuidRegex.test(guid1)).toEqual(true);
         expect(guid1.length).toEqual(36);
 
-        expect(isGuidRegex.test(guid2)).toBeTruthy();
+        expect(isGuidRegex.test(guid2)).toEqual(true);
         expect(guid2.length).toEqual(36);
 
-        expect(isGuidRegex.test(guid3)).toBeTruthy();
+        expect(isGuidRegex.test(guid3)).toEqual(true);
         expect(guid3.length).toEqual(36);
     });
 });

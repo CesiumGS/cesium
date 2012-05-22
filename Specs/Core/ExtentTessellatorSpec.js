@@ -103,7 +103,7 @@ defineSuite([
             granularity : 1.0
         });
         expect(m.attributes.position.values.length).toEqual(9 * 3);
-        expect(typeof m.attributes.textureCoordinates === "undefined").toBeTruthy();
+        expect(typeof m.attributes.textureCoordinates === "undefined").toEqual(true);
         expect(m.indexLists[0].values.length).toEqual(8 * 3);
     });
 

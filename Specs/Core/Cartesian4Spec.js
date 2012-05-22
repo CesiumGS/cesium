@@ -53,10 +53,10 @@ defineSuite([
     it("clone", function() {
         var v = new Cartesian4(1, 2, 3, 4);
         var w = v.clone();
-        expect(v.equals(w)).toBeTruthy();
+        expect(v.equals(w)).toEqual(true);
     });
 
-    it("getZero", function() {
+    it("ZERO", function() {
         var v = Cartesian4.ZERO;
         expect(v.x).toEqual(0);
         expect(v.y).toEqual(0);
@@ -98,13 +98,13 @@ defineSuite([
 
     it("getXYZ", function() {
         var v = new Cartesian4(1, 2, 3, 4);
-        expect(v.getXYZ().equals(new Cartesian3(1, 2, 3))).toBeTruthy();
+        expect(v.getXYZ().equals(new Cartesian3(1, 2, 3))).toEqual(true);
         expect(v.w).toEqual(4);
     });
 
     it("getXY", function() {
         var v = new Cartesian4(1, 2, 3, 4);
-        expect(v.getXY().equals(new Cartesian2(1, 2))).toBeTruthy();
+        expect(v.getXY().equals(new Cartesian2(1, 2))).toEqual(true);
         expect(v.z).toEqual(3);
         expect(v.w).toEqual(4);
     });
@@ -134,22 +134,22 @@ defineSuite([
 
     it("add", function() {
         var v = new Cartesian4(1, 2, 3, 4).add(new Cartesian4(5, 6, 7, 8));
-        expect(v.equals(new Cartesian4(6, 8, 10, 12))).toBeTruthy();
+        expect(v.equals(new Cartesian4(6, 8, 10, 12))).toEqual(true);
     });
 
     it("multiplyWithScalar", function() {
         var v = new Cartesian4(1, 2, 3, 4).multiplyWithScalar(2);
-        expect(v.equals(new Cartesian4(2, 4, 6, 8))).toBeTruthy();
+        expect(v.equals(new Cartesian4(2, 4, 6, 8))).toEqual(true);
     });
 
     it("multiplyComponents", function() {
         var v = new Cartesian4(1, 2, 3, 4).multiplyComponents(new Cartesian4(5, 6, 7, 8));
-        expect(v.equals(new Cartesian4(5, 12, 21, 32))).toBeTruthy();
+        expect(v.equals(new Cartesian4(5, 12, 21, 32))).toEqual(true);
     });
 
     it("divideByScalar", function() {
         var v = new Cartesian4(2, 4, 6, 8).divideByScalar(2);
-        expect(v.equals(new Cartesian4(1, 2, 3, 4))).toBeTruthy();
+        expect(v.equals(new Cartesian4(1, 2, 3, 4))).toEqual(true);
     });
 
     it("getMinimumComponent", function() {
@@ -163,31 +163,31 @@ defineSuite([
     });
 
     it("mostOrthogonalAxis", function() {
-        expect(new Cartesian4(1, 2, 3, 4).mostOrthogonalAxis().equals(Cartesian4.UNIT_X)).toBeTruthy();
-        expect(new Cartesian4(4, 1, 2, 3).mostOrthogonalAxis().equals(Cartesian4.UNIT_Y)).toBeTruthy();
-        expect(new Cartesian4(3, 4, 1, 2).mostOrthogonalAxis().equals(Cartesian4.UNIT_Z)).toBeTruthy();
-        expect(new Cartesian4(2, 3, 4, 1).mostOrthogonalAxis().equals(Cartesian4.UNIT_W)).toBeTruthy();
+        expect(new Cartesian4(1, 2, 3, 4).mostOrthogonalAxis().equals(Cartesian4.UNIT_X)).toEqual(true);
+        expect(new Cartesian4(4, 1, 2, 3).mostOrthogonalAxis().equals(Cartesian4.UNIT_Y)).toEqual(true);
+        expect(new Cartesian4(3, 4, 1, 2).mostOrthogonalAxis().equals(Cartesian4.UNIT_Z)).toEqual(true);
+        expect(new Cartesian4(2, 3, 4, 1).mostOrthogonalAxis().equals(Cartesian4.UNIT_W)).toEqual(true);
     });
 
     it("negate", function() {
         var v = new Cartesian4(1, 2, 3, 4).negate();
-        expect(v.equals(new Cartesian4(-1, -2, -3, -4))).toBeTruthy();
+        expect(v.equals(new Cartesian4(-1, -2, -3, -4))).toEqual(true);
     });
 
     it("abs", function() {
         var v = new Cartesian4(-1, -2, -3, -4).abs();
-        expect(v.equals(new Cartesian4(1, 2, 3, 4))).toBeTruthy();
+        expect(v.equals(new Cartesian4(1, 2, 3, 4))).toEqual(true);
     });
 
     it("subtract", function() {
         var v = new Cartesian4(4, 5, 6, 7).subtract(new Cartesian4(4, 3, 2, 1));
-        expect(v.equals(new Cartesian4(0, 2, 4, 6))).toBeTruthy();
+        expect(v.equals(new Cartesian4(0, 2, 4, 6))).toEqual(true);
     });
 
     it("equalsEpsilon", function() {
-        expect(new Cartesian4(1, 1, 2, 1).equalsEpsilon(new Cartesian4(1, 1, 2, 1), 0)).toBeTruthy();
-        expect(new Cartesian4(1, 1, 2, 1).equalsEpsilon(new Cartesian4(1, 1, 2, 2), 1)).toBeTruthy();
-        expect(new Cartesian4(1, 1, 2, 1).equalsEpsilon(new Cartesian4(1, 1, 2, 3), 1)).toBeFalsy();
+        expect(new Cartesian4(1, 1, 2, 1).equalsEpsilon(new Cartesian4(1, 1, 2, 1), 0)).toEqual(true);
+        expect(new Cartesian4(1, 1, 2, 1).equalsEpsilon(new Cartesian4(1, 1, 2, 2), 1)).toEqual(true);
+        expect(new Cartesian4(1, 1, 2, 1).equalsEpsilon(new Cartesian4(1, 1, 2, 3), 1)).toEqual(false);
     });
 
     it("toString", function() {

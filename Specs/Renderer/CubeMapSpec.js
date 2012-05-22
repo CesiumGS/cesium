@@ -206,7 +206,7 @@ defineSuite([
             },
             preMultiplyAlpha : true
         });
-        expect(cubeMap.getPreMultiplyAlpha()).toBeTruthy();
+        expect(cubeMap.getPreMultiplyAlpha()).toEqual(true);
 
         var vs = "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
         var fs =
