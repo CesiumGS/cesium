@@ -48,8 +48,8 @@ require({
             domConstruct.destroy('loading');
         }}).play();
 
-        var editor, docTimer, that = this;
-        var docNode = dojo.byId('docPopup'), docMessage = dojo.byId('docPopupMessage');
+        var editor, docTimer, that = this, cesiumContainer = registry.byId('cesiumContainer');
+        var docNode = dojo.byId('docPopup'), docMessage = dojo.byId('docPopupMessage'), docTabs = {};
         that.types = [];
         xhr.get({
             url: '../../Build/Documentation/types.txt',
@@ -61,16 +61,41 @@ require({
         window.types = types;
         window.docNode = docNode;
 
+        function openDocTab(title, link) {
+            if (typeof docTabs[title] === 'undefined') {
+                docTabs[title] = new dijit.layout.ContentPane({
+                    title: title,
+                    focused: true,
+                    content: '<iframe class="fullFrame" src="' + link + '"></iframe>',
+                    closable: true,
+                    onClose: function () {
+                        docTabs[this.title] = undefined;
+                        // Return true to close the tab.
+                        return true;
+                    }
+                }).placeAt(cesiumContainer);
+            }
+            //docTabs[title].domNode.childNodes[0].contentDocument.body.className = "noNav";
+            cesiumContainer.selectChild(docTabs[title]);
+        }
+
         function showDocPopup () {
-            var selectedText = editor.getSelection(), linkList = '';
+            var selectedText = editor.getSelection();
             if (selectedText && selectedText in that.types && typeof that.types[selectedText].push === 'function') {
-                var member, i, len = that.types[selectedText].length;
+                var member, ele, i, len = that.types[selectedText].length;
+                docMessage.innerHTML = '';
                 for (i = 0; i < len; ++i) {
                     member = that.types[selectedText][i];
-                    linkList += '<a target="_blank" href="../../Build/Documentation/' + member +
-                        '">' + member.replace('.html', '').replace('module-', '').replace('#', '.') + '</a>';
+                    ele = document.createElement('a');
+                    ele.target = "_blank";
+                    ele.textContent = member.replace('.html', '').replace('module-', '').replace('#', '.');
+                    ele.href = '../../Build/Documentation/' + member;
+                    ele.onclick = function () {
+                        openDocTab(this.textContent, this.href);
+                        return false;
+                    };
+                    docMessage.appendChild(ele);
                 }
-                docMessage.innerHTML = linkList;
                 editor.addWidget(editor.getCursor(true), docNode);
                 docNode.style.top = (parseInt(docNode.style.top, 10) - 5) + 'px';
             }
