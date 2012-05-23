@@ -92,7 +92,7 @@ define(['Core/DeveloperError'
          */
         requestFullScreen : function(element) {
             if (FullScreen.supportsFullScreen()) {
-                return (_prefix === '') ? element.requestFullScreen(element) : element[_prefix + 'RequestFullScreen'](element);
+                return (_prefix === '') ? element.requestFullScreen() : element[_prefix + 'RequestFullScreen']();
             }
         },
 
@@ -101,7 +101,7 @@ define(['Core/DeveloperError'
          */
         exitFullscreen : function() {
             if (FullScreen.supportsFullScreen()) {
-                return typeof document.exitFullscreen !== 'undefined' ? document.exitFullscreen() : document[_prefix + 'CancelFullScreen']();
+                return (_prefix === '') ? document.exitFullscreen() : document[_prefix + 'CancelFullScreen']();
             }
         }
     };
