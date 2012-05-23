@@ -369,9 +369,12 @@
         }
 
         //if (globals.length) generate('Global', [{kind: 'globalobj'}], 'global.html');
-        generate('Cesium Documentation', [], 'index.html');
         
-        fs.writeFileSync(outdir+'/types.txt', JSON.stringify(types_json));
+        view.layout = 'index.tmpl';
+        var indexHtml = view.render('empty.tmpl', { title: 'Cesium Documentation' });
+        fs.writeFileSync(outdir + '/index.html', indexHtml);
+        
+        fs.writeFileSync(outdir + '/types.txt', JSON.stringify(types_json));
         
         function generate(title, docs, filename) {
             var data = {
@@ -408,7 +411,7 @@
                 }
             }
             
-            fs.writeFileSync(path, html)
+            fs.writeFileSync(path, html);
         }
         
         function generateTutorial(title, tutorial, filename) {
@@ -425,7 +428,7 @@
             // yes, you can use {@link} in tutorials too!
             html = helper.resolveLinks(html); // turn {@link foo} into <a href="foodoc.html">foo</a>
             
-            fs.writeFileSync(path, html)
+            fs.writeFileSync(path, html);
         }
         
         // tutorials can have only one parent so there is no risk for loops
