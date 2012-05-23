@@ -1833,7 +1833,7 @@ define([
             }
 
             if (!this._dayTileProvider || (tile.state === TileState.TEXTURE_LOADED && tile.texture && !tile.texture.isDestroyed())) {
-                if (tile.zoom + 1 > this._dayTileProvider.zoomMax || !this.refine(tile, state)) {
+                if ((this._dayTileProvider && tile.zoom + 1 > this._dayTileProvider.zoomMax) || !this.refine(tile, state)) {
                     this._enqueueTile(tile, state);
                 } else {
                     var children = tile.getChildren();
@@ -1939,8 +1939,14 @@ define([
             this._quadH.render(context);
 
             // render quads to fill the poles
-            this._quadNorthPole.render(context);
-            this._quadSouthPole.render(context);
+            if (this._mode === SceneMode.SCENE3D) {
+                if (typeof this._quadNorthPole !== 'undefined') {
+                    this._quadNorthPole.render(context);
+                }
+                if (typeof this._quadNorthPole !== 'undefined') {
+                    this._quadSouthPole.render(context);
+                }
+            }
 
             // render depth plane
             if (this._mode === SceneMode.SCENE3D) {
@@ -1952,7 +1958,7 @@ define([
                 });
             }
 
-            if (this._quadLogo && !this._quadLogo.isDestroyed()) {
+            if (typeof this._quadLogo !== 'undefined' && !this._quadLogo.isDestroyed()) {
                 this._quadLogo.render(context);
             }
         }

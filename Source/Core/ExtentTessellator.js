@@ -3,6 +3,7 @@ define([
         './DeveloperError',
         './Math',
         './Ellipsoid',
+        './Extent',
         './Cartesian3',
         './Cartographic3',
         './ComponentDatatype',
@@ -11,6 +12,7 @@ define([
         DeveloperError,
         CesiumMath,
         Ellipsoid,
+        Extent,
         Cartesian3,
         Cartographic3,
         ComponentDatatype,
@@ -27,40 +29,6 @@ define([
      * @see PlaneTessellator
      */
     var ExtentTessellator = {};
-
-    ExtentTessellator._validateExtent = function(extent) {
-        if (!extent ||
-            typeof extent.north === "undefined" ||
-            typeof extent.south === "undefined" ||
-            typeof extent.west === "undefined" ||
-            typeof extent.east === "undefined") {
-            throw new DeveloperError("extent is required and must have north, south, east and west attributes.", "extent");
-        }
-
-        if (extent.north < -CesiumMath.PI_OVER_TWO || extent.north > CesiumMath.PI_OVER_TWO) {
-            throw new DeveloperError("extent.north must be in the interval [-Pi/2, Pi/2].", "extent.north");
-        }
-
-        if (extent.south < -CesiumMath.PI_OVER_TWO || extent.south > CesiumMath.PI_OVER_TWO) {
-            throw new DeveloperError("extent.south must be in the interval [-Pi/2, Pi/2].", "extent.south");
-        }
-
-        if (extent.north < extent.south) {
-            throw new DeveloperError("extent.north must be greater than extent.south.", "extent");
-        }
-
-        if (extent.west < -CesiumMath.PI || extent.west > CesiumMath.PI) {
-            throw new DeveloperError("extent.west must be in the interval [-Pi, Pi].", "extent.west");
-        }
-
-        if (extent.east < -CesiumMath.PI || extent.east > CesiumMath.PI) {
-            throw new DeveloperError("extent.east must be in the interval [-Pi, Pi].", "extent.east");
-        }
-
-        if (extent.west > extent.east) {
-            throw new DeveloperError("extent.west must be greater than extent.east.", "extent");
-        }
-    };
 
     ExtentTessellator._computeVertices = function(description) {
         var desc = description || {};
@@ -169,6 +137,7 @@ define([
      * @see Context#createVertexArrayFromMesh
      * @see MeshFilters#createAttributeIndices
      * @see MeshFilters#toWireframeInPlace
+     * @see Extent
      *
      * @example
      * // Create a vertex array for rendering a wireframe extent.
@@ -192,7 +161,9 @@ define([
     ExtentTessellator.compute = function(description) {
         var desc = description || {};
 
-        ExtentTessellator._validateExtent(desc.extent);
+        if (!Extent.valid(desc.extent)) {
+            throw new DeveloperError("One or more members of description.extent are out of range.", "description.extent");
+        }
 
         desc.ellipsoid = desc.ellipsoid || Ellipsoid.WGS84;
         desc.granularity = (desc.granularity && desc.granularity > 0.0) ? desc.granularity : 0.1;
@@ -338,7 +309,9 @@ define([
     ExtentTessellator.computeBuffers = function(description) {
         var desc = description || {};
 
-        ExtentTessellator._validateExtent(desc.extent);
+        if (!Extent.valid(desc.extent)) {
+            throw new DeveloperError("One or more members of description.extent are out of range.", "description.extent");
+        }
 
         desc.ellipsoid = desc.ellipsoid || Ellipsoid.WGS84;
         desc.granularity = (typeof desc.granularity !== "undefined" && desc.granularity > 0.0) ? desc.granularity : 0.1;
