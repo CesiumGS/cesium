@@ -1,5 +1,10 @@
 /*global define*/
-define(['../Shaders/DiffuseMapMaterial'], function(ShadersDiffuseMapMaterial) {
+define([
+        '../Core/DeveloperError',
+        '../Shaders/DiffuseMapMaterial'
+    ], function(
+        DeveloperError,
+        ShadersDiffuseMapMaterial) {
     "use strict";
 
     /**
@@ -15,7 +20,7 @@ define(['../Shaders/DiffuseMapMaterial'], function(ShadersDiffuseMapMaterial) {
         /**
          * DOC_TBA
          */
-        this.texture = t.texture || null;
+        this.texture = t.texture;
 
         /**
          * DOC_TBA
@@ -30,6 +35,10 @@ define(['../Shaders/DiffuseMapMaterial'], function(ShadersDiffuseMapMaterial) {
         var that = this;
         this._uniforms = {
             u_texture : function() {
+                if (typeof that.texture === 'undefined') {
+                    throw new DeveloperError("DiffuseMapMaterial requires a texture.");
+                }
+
                 return that.texture;
             },
             u_repeat : function() {

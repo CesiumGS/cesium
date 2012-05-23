@@ -70,10 +70,10 @@
     tree.addNode("Draw a polygon", [new Sandbox.Polygon(scene, ellipsoid, primitives)], pg, "Polygon");
     var mat = tree.addNode("Materials", "", pg, "Material");
     tree.addNode("Modify the default material", [new Sandbox.PolygonColor(scene, ellipsoid, primitives)], mat, "Material");
+    tree.addNode("Apply a diffuse map material", [new Sandbox.DiffuseMapPolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");
     tree.addNode("Apply a stripe material", [new Sandbox.StripePolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");
     tree.addNode("Apply a checkerboard material", [new Sandbox.CheckerboardPolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");
     tree.addNode("Apply a dot material", [new Sandbox.DotPolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");
-    tree.addNode("Apply a diffuse map material", [new Sandbox.DiffuseMapPolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");
     tree.addNode("Apply a tie-dye material", [new Sandbox.TieDyePolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");
     tree.addNode("Apply a facet material", [new Sandbox.FacetPolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");
     tree.addNode("Apply a blob material", [new Sandbox.BlobPolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");
