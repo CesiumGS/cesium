@@ -118,6 +118,15 @@ require({
             docTimer = window.setTimeout(showDocPopup, 500);
         }
 
+        var bucketFrame = document.getElementById('bucketFrame'),
+            logOutput = document.getElementById('logOutput'),
+            bucketPane = registry.byId('bucketPane');
+
+        CodeMirror.commands.runCesium = function() {
+            cesiumContainer.selectChild(bucketPane);
+            bucketFrame.contentWindow.location.reload();
+        };
+
         CodeMirror.commands.autocomplete = function(cm) {
             CodeMirror.simpleHint(cm, CodeMirror.javascriptHint);
         };
@@ -125,14 +134,12 @@ require({
         editor = CodeMirror.fromTextArea(document.getElementById("code"), {
             lineNumbers: true,
             matchBrackets: true,
-            extraKeys: {"Ctrl-Space": "autocomplete"},
+            indentUnit: 4,
+            extraKeys: {"Ctrl-Space": "autocomplete", "F9": "runCesium"},
             onCursorActivity: onCursorActivity
         });
         // TODO: remove debugging
         window.editor = editor;
-
-        var bucketFrame = document.getElementById('bucketFrame'),
-            logOutput = document.getElementById('logOutput');
 
         // The iframe (bucket.html) sends this message on load.
         // This triggers the code to be injected into the iframe.
@@ -158,6 +165,6 @@ require({
 
         // Clicking the 'Run' button simply reloads the iframe.
         registry.byId('buttonRun').on('click', function () {
-            bucketFrame.contentWindow.location.reload();
+            CodeMirror.commands.runCesium();
         });
     });
