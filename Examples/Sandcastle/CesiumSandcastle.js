@@ -118,22 +118,18 @@ require({
             docTimer = window.setTimeout(showDocPopup, 500);
         }
 
+        CodeMirror.commands.autocomplete = function(cm) {
+            CodeMirror.simpleHint(cm, CodeMirror.javascriptHint);
+        };
+
         editor = CodeMirror.fromTextArea(document.getElementById("code"), {
             lineNumbers: true,
             matchBrackets: true,
+            extraKeys: {"Ctrl-Space": "autocomplete"},
             onCursorActivity: onCursorActivity
-          });
+        });
         // TODO: remove debugging
         window.editor = editor;
-
-        //var canvas = document.getElementById("glCanvas");
-
-        //var pane3D = registry.byId('resultPane');
-        //pane3D.originalResize = pane3D.resize;
-        //pane3D.resize = function(changeSize, resultSize) {
-        //    console.log('3d - resize');
-        //    pane3D.originalResize(changeSize, resultSize);
-        //};
 
         var bucketFrame = document.getElementById('bucketFrame'),
             logOutput = document.getElementById('logOutput');
