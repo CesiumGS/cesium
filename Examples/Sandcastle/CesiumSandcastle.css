@@ -45,11 +45,12 @@ html, body {
     left: -999px;
     top: 0;
     font-family: sans-serif;
+    font-size: 10pt;
 }
 #docPopup a, #docPopup a:visited {
     display: block;
     text-decoration: none;
-    line-height: 1em;
+    line-height: 12pt;
 }
 #docPopup a:focus, #docPopup a:hover {
     text-decoration: underline;
