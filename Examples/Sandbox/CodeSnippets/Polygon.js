@@ -139,6 +139,7 @@
                     tRepeat : 1
                 });
             };
+
             image.src = "../../Images/Cesium_Logo_Color.jpg";
 
             primitives.add(polygon);
