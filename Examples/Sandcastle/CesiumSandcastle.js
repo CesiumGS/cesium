@@ -74,9 +74,18 @@ require({
                         return true;
                     }
                 }).placeAt(cesiumContainer);
+                // After the iframe loads, re-scroll to selected field.
+                docTabs[title].domNode.childNodes[0].onload = function () {
+                    this.onload = function () {};
+                    this.src = link;
+                };
+                cesiumContainer.selectChild(docTabs[title]);
+            } else {
+                // Tab already exists, but maybe not visible.  FireFox needs the tab to
+                // be revealed before a re-scroll can happen.  Chrome works either way.
+                cesiumContainer.selectChild(docTabs[title]);
+                docTabs[title].domNode.childNodes[0].src = link;
             }
-            //docTabs[title].domNode.childNodes[0].contentDocument.body.className = "noNav";
-            cesiumContainer.selectChild(docTabs[title]);
         }
 
         function showDocPopup () {
