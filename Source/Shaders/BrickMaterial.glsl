@@ -34,7 +34,7 @@ vec4 agi_getMaterialColor(float zDistance, vec2 st, vec3 str)
     //Apply noise to mortar
     vec2 mortarScaled = st / 0.005;
     float mortarNoise = max(agi_snoise(mortarScaled) * 0.1 - 0.01, 0.0);
-    color += mortarNoise * (1.0 - useBrickFinal); 
+    color.xyz += mortarNoise * (1.0 - useBrickFinal); 
     
     return color;
 }

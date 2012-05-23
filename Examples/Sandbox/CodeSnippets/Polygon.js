@@ -108,6 +108,29 @@
         };
     };
 
+    Sandbox.AsphaltPolygonMaterial = function (scene, ellipsoid, primitives) {
+        this.code = function() {
+            var polygon = new Cesium.Polygon(undefined);
+            polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
+                new Cesium.Cartographic2(-80.0, 30.0),
+                new Cesium.Cartographic2(-70.0, 30.0),
+                new Cesium.Cartographic2(-70.0, 40.0),
+                new Cesium.Cartographic2(-80.0, 40.0)
+            ]));
+            polygon.material = new Cesium.AsphaltMaterial({
+                asphaltColor : {
+                    red : 0.2,
+                    green : 0.2,
+                    blue : 0.2,
+                    alpha : 1.0
+                },
+                bumpSize : 0.01
+            });
+
+            primitives.add(polygon);
+        };
+    };
+
     Sandbox.StripePolygonMaterial = function (scene, ellipsoid, primitives) {
         this.code = function () {
             var polygon = new Cesium.Polygon(undefined);
