@@ -1,9 +1,10 @@
-/*global defineSuite it expect*/
+/*global defineSuite */
 defineSuite([
          'Core/combine'
      ], function(
          combine) {
     "use strict";
+    /*global it,expect*/
 
     it("combine throws with duplicate member", function() {
         expect(function() {

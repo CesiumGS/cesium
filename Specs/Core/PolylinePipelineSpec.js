@@ -1,4 +1,4 @@
-/*global defineSuite it expect*/
+/*global defineSuite*/
 defineSuite([
          'Core/PolylinePipeline',
          'Core/Cartographic2',
@@ -8,6 +8,7 @@ defineSuite([
          Cartographic2,
          Ellipsoid) {
     "use strict";
+    /*global it,expect*/
 
     it("wrapLongitude", function() {
         var ellipsoid = Ellipsoid.WGS84;
