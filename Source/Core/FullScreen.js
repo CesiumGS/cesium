@@ -3,9 +3,7 @@ define(['Core/DeveloperError'
        ],function(
          DeveloperError) {
     "use strict";
-    var _prefix;
-    var _supportsFullScreen;
-    var _browserPrefixes = ['webkit', 'moz', 'o', 'ms', 'khtml'];
+    var _prefix, _supportsFullScreen;
 
     /**
      * Encapsulates browser dependent methods for working with the
@@ -30,8 +28,9 @@ define(['Core/DeveloperError'
                     _prefix = '';
                 } else {
                     // check for full screen support by vendor prefix
-                    for ( var i = 0; i < _browserPrefixes.length; i++) {
-                        _prefix = _browserPrefixes[i];
+                    var prefixes = ['webkit', 'moz', 'o', 'ms', 'khtml'];
+                    for ( var i = 0; i < prefixes.length; i++) {
+                        _prefix = prefixes[i];
 
                         if (typeof document[_prefix + 'CancelFullScreen'] !== 'undefined') {
                             _supportsFullScreen = true;
@@ -82,6 +81,14 @@ define(['Core/DeveloperError'
 
         /**
          * Queues a request for full screen mode if the browser is currently not in full screen, does nothing otherwise.
+         * @param {Object} element The HTML element which will be placed into full-screen.
+         *
+         * @example
+         * // Put the entire page into full screen.
+         * FullScreen.requestFullScreen(document.body)
+         *
+         * // Place only the Cesium canvas into full screen.
+         * FullScreen.requestFullScreen(scene.getCanvas())
          */
         requestFullScreen : function(element) {
             if (FullScreen.supportsFullScreen()) {
