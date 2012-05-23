@@ -18,7 +18,7 @@ var Sandbox = Sandbox || {};
             mapStyle : Cesium.BingMapsStyle.AERIAL,
             // Some versions of Safari support WebGL, but don't correctly implement
             // cross-origin image loading, so we need to load Bing imagery using a proxy.
-            proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
+            proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/CesiumViewer/Proxy.ashx')
         });
 
         var cb = new Cesium.CentralBody(scene.getCamera(), ellipsoid);
