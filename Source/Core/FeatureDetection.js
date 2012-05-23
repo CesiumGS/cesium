@@ -1,5 +1,7 @@
 /*global define*/
-define(function() {
+define(['Core/FullScreen'
+       ], function(
+         FullScreen) {
     "use strict";
 
     /**
@@ -105,6 +107,18 @@ define(function() {
             }
         }
         return _supportsCrossOriginImagery;
+    };
+
+    /**
+     * Detects whether the current browser supports the full screen standard.
+     *
+     * @returns true if the supports the full screen standard, false if not.
+     *
+     * @see FullScreen
+     * @see <a href="http://dvcs.w3.org/hg/fullscreen/raw-file/tip/Overview.html">W3C Fullscreen Living Specification</a>
+     */
+    FeatureDetection.supportsFullScreen = function() {
+        return FullScreen.supportsFullScreen();
     };
 
     return FeatureDetection;
