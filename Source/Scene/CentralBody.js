@@ -45,6 +45,8 @@ define([
         '../Shaders/CentralBodyFSDepth',
         '../Shaders/CentralBodyVSFilter',
         '../Shaders/CentralBodyFSFilter',
+        '../Shaders/CentralBodyVSPole',
+        '../Shaders/CentralBodyFSPole',
         '../Shaders/SkyAtmosphereFS',
         '../Shaders/SkyAtmosphereVS'
     ], function(
@@ -93,6 +95,8 @@ define([
         CentralBodyFSDepth,
         CentralBodyVSFilter,
         CentralBodyFSFilter,
+        CentralBodyVSPole,
+        CentralBodyFSPole,
         SkyAtmosphereFS,
         SkyAtmosphereVS) {
     "use strict";
@@ -284,6 +288,9 @@ define([
         this._showBumps = false;
         this._showTerminator = false;
 
+        this._quadNorthPole = undefined;
+        this._quadSouthPole = undefined;
+
         this._minTileDistance = undefined;
 
         /**
@@ -401,7 +408,7 @@ define([
         this.bumpImageSource = undefined;
 
         /**
-         * When <code>true</code>, textures from the <code>dayProvider</code> are shown on the central body.
+         * When <code>true</code>, textures from the <code>dayTileProvider</code> are shown on the central body.
          * <br /><br />
          * <div align="center">
          * <img src="../images/CentralBody.showDay.jpg" width="400" height="300" />
@@ -409,7 +416,7 @@ define([
          *
          * @type {Boolean}
          *
-         * @see CentralBody#dayProvider
+         * @see CentralBody#dayTileProvider
          * @see CentralBody#showNight
          */
         this.showDay = true;
@@ -1322,6 +1329,99 @@ define([
         return [upperLeft.x, upperLeft.y, upperLeft.z, lowerLeft.x, lowerLeft.y, lowerLeft.z, upperRight.x, upperRight.y, upperRight.z, lowerRight.x, lowerRight.y, lowerRight.z];
     };
 
+    function toWindowCoords(viewProjMatrix, viewportTransformation, point) {
+        var pnt = new Cartesian4(point.x, point.y, point.z, 1.0);
+        pnt = viewProjMatrix.multiplyWithVector(pnt);
+        pnt = pnt.multiplyWithScalar(1.0 / pnt.w);
+        pnt = viewportTransformation.multiplyWithVector(pnt);
+        return pnt.getXY();
+    }
+
+    CentralBody.prototype._computePoleQuad = function(maxLatitude, viewProjMatrix, viewportTransformation) {
+        var pt1 = this._ellipsoid.toCartesian(new Cartographic2(0.0, maxLatitude));
+        var pt2 = this._ellipsoid.toCartesian(new Cartographic2(Math.PI, maxLatitude));
+        var radius = pt1.subtract(pt2).magnitude() * 0.5;
+
+        var center = pt2.add(pt1.subtract(pt2).normalize().multiplyWithScalar(radius));
+
+        var right;
+        var dir = this._camera.direction;
+        if (1.0 - Cartesian3.UNIT_Z.negate().dot(dir) < CesiumMath.EPSILON6) {
+            right = Cartesian3.UNIT_X;
+        } else {
+            right = dir.cross(Cartesian3.UNIT_Z).normalize();
+        }
+
+        var screenRight = center.add(right.multiplyWithScalar(radius));
+        var screenUp = center.add(Cartesian3.UNIT_Z.cross(right).normalize().multiplyWithScalar(radius));
+
+        center = toWindowCoords(viewProjMatrix, viewportTransformation, center);
+        screenRight = toWindowCoords(viewProjMatrix, viewportTransformation, screenRight);
+        screenUp = toWindowCoords(viewProjMatrix, viewportTransformation, screenUp);
+
+        var halfWidth = Math.floor(Math.max(screenUp.subtract(center).magnitude(), screenRight.subtract(center).magnitude()));
+        var halfHeight = halfWidth;
+
+        return new Rectangle(
+                Math.floor(center.x) - halfWidth,
+                Math.floor(center.y) - halfHeight,
+                halfWidth * 2.0,
+                halfHeight * 2.0);
+    };
+
+    CentralBody.prototype._fillPoles = function(state) {
+        if (typeof this._dayTileProvider === 'undefined' || state.mode !== SceneMode.SCENE3D) {
+            return;
+        }
+
+        var viewProjMatrix = state.context.getUniformState().getViewProjection();
+        var viewportTransformation = state.context.getUniformState().getViewportTransformation();
+        var latitudeExtension = 0.01;
+
+        // handle north pole
+        if (this._dayTileProvider.maxExtent.north < CesiumMath.PI_OVER_TWO) {
+            var maxLatitudeNorth = this._dayTileProvider.maxExtent.north - latitudeExtension;
+            var rectNorth = this._computePoleQuad(maxLatitudeNorth, viewProjMatrix, viewportTransformation);
+
+            if (typeof this._quadNorthPole === 'undefined') {
+                this._quadNorthPole = new ViewportQuad(rectNorth);
+                this._quadNorthPole.vertexShader = CentralBodyVSPole;
+                this._quadNorthPole.fragmentShader = "#define MAX_STEPS " + Math.max(state.context.getCanvas().clientWidth, state.context.getCanvas().clientHeight) + "\n" + CentralBodyFSPole;
+                this._quadNorthPole.uniforms.u_color = function() {
+                    //return new Cartesian4(1.0, 1.0, 1.0, 1.0);
+                    //return new Cartesian3(0.0, 9.0, 36.0);
+                    return new Cartesian3(0.0, 9.0 / 255.0, 36.0 / 255.0);
+                };
+                this._quadNorthPole.setTexture(this._fb.getColorTexture());
+                this._quadNorthPole.setDestroyTexture(false);
+            } else {
+                this._quadNorthPole.setRectangle(rectNorth);
+            }
+            this._quadNorthPole.update(state.context);
+        }
+
+        // handle south pole
+        if (this._dayTileProvider.maxExtent.south > -CesiumMath.PI_OVER_TWO) {
+            var maxLatitudeSouth = this._dayTileProvider.maxExtent.south + latitudeExtension;
+            var rectSouth = this._computePoleQuad(maxLatitudeSouth, viewProjMatrix, viewportTransformation);
+
+            if (typeof this._quadSouthPole === 'undefined') {
+                this._quadSouthPole = new ViewportQuad(rectSouth);
+                this._quadSouthPole.vertexShader = CentralBodyVSPole;
+                this._quadSouthPole.fragmentShader = "#define MAX_STEPS " + Math.max(state.context.getCanvas().clientWidth, state.context.getCanvas().clientHeight) + "\n" + CentralBodyFSPole;
+                this._quadSouthPole.uniforms.u_color = function() {
+                    return new Cartesian3(1.0, 1.0, 1.0);
+                    //return new Cartesian3(255.0, 255.0, 255.0);
+                };
+                this._quadSouthPole.setTexture(this._fb.getColorTexture());
+                this._quadSouthPole.setDestroyTexture(false);
+            } else {
+                this._quadSouthPole.setRectangle(rectSouth);
+            }
+            this._quadSouthPole.update(state.context);
+        }
+    };
+
     /**
      * @private
      */
@@ -1751,6 +1851,9 @@ define([
                 projection : projection
         };
 
+        // TODO: refactor
+        this._fillPoles(state);
+
         this._throttleImages(state);
         this._throttleReprojection(state);
         this._throttleTextures(state);
@@ -1869,6 +1972,10 @@ define([
             // render quad with horizontal gaussian blur
             this._quadH.render(context);
 
+            // render quads to fill the poles
+            this._quadNorthPole.render(context);
+            this._quadSouthPole.render(context);
+
             // render depth plane
             if (this._mode === SceneMode.SCENE3D) {
                 context.draw({
@@ -1980,6 +2087,8 @@ define([
         this._fb = this._fb && this._fb.destroy();
         this._quadV = this._quadV && this._quadV.destroy();
         this._quadH = this._quadH && this._quadH.destroy();
+        this._quadNorthPole = this._quadNorthPole && this._quadNorthPole.destroy();
+        this._quadSouthPole = this._quadSouthPole && this._quadSouthPole.destroy();
 
         this._spWithoutAtmosphere = this._spWithoutAtmosphere && this._spWithoutAtmosphere.release();
         this._spGroundFromSpace = this._spGroundFromSpace && this._spGroundFromSpace.release();

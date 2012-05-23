@@ -188,13 +188,49 @@ vec4 agi_modelToWindowCoordinates(vec4 position)
  * @see BillboardCollection
  *
  * @example
- * vec4 positionWC = agi_modelToWindowCoordinates(positionEC);
+ * vec4 positionWC = agi_eyeToWindowCoordinates(positionEC);
  */
 vec4 agi_eyeToWindowCoordinates(vec4 positionEC)
 {
     vec4 q = agi_projection * positionEC;                       // clip coordinates
     q.xyz /= q.w;                                                // normalized device coordinates
     q.xyz = (agi_viewportTransformation * vec4(q.xyz, 1.0)).xyz; // window coordinates
+    return q;
+}
+
+/**
+ * Transforms a position from window to eye coordinates.
+ * The transform from window to normalized device coordinates is done using components
+ * of (@link agi_viewport} and {@link agi_viewportTransformation} instead of calculating
+ * the inverse of <code>agi_viewportTransformation</code>. The transformation from 
+ * normalized device coordinates to clip coordinates is done using <code>positionWC.w</code>,
+ * which is expected to be the scalar used in the perspective divide. The transformation
+ * from clip to eye coordinates is done using {@link agi_inverseProjection}.
+ *
+ * @name agi_windowToEyeCoordinates
+ * @glslFunction
+ *
+ * @param {vec4} positionWC The position in window coordinates to transform.
+ *
+ * @returns {vec4} The transformed position in eye coordinates.
+ *
+ * @see agi_modelToWindowCoordinates
+ * @see agi_eyeToWindowCoordinates
+ * @see agi_inverseProjection
+ * @see agi_viewport
+ * @see agi_viewportTransformation
+ *
+ * @example
+ * vec4 positionEC = agi_windowToEyeCoordinates(gl_FragCoord);
+ */
+vec4 agi_windowToEyeCoordinates(vec4 positionWC)
+{
+    float x = 2.0 * (positionWC.x - float(agi_viewport.x)) / float(agi_viewport.z) - 1.0;
+    float y = 2.0 * (positionWC.y - float(agi_viewport.y)) / float(agi_viewport.w) - 1.0;
+    float z = (positionWC.z - agi_viewportTransformation[3][2]) / agi_viewportTransformation[2][2];
+    vec4 q = vec4(x, y, z, 1.0);
+    q /= positionWC.w;
+    q = agi_inverseProjection * q;
     return q;
 }
 
