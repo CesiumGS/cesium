@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Scene/Polyline',
          '../Specs/createContext',
@@ -31,8 +32,8 @@ defineSuite([
 
         var camera = {
             eye : new Cartesian3(-1.0, 0.0, 0.0),
-            target : Cartesian3.getZero(),
-            up : Cartesian3.getUnitZ()
+            target : Cartesian3.ZERO,
+            up : Cartesian3.UNIT_Z
         };
         us = context.getUniformState();
         us.setView(Matrix4.createLookAt(camera.eye, camera.target, camera.up));
@@ -40,14 +41,13 @@ defineSuite([
     });
 
     afterEach(function() {
-        polyline = polyline && polyline.destroy();
+        polyline = polyline && !polyline.isDestroyed() && polyline.destroy();
         us = null;
-
         destroyContext(context);
     });
 
     it("gets default show", function() {
-        expect(polyline.show).toBeTruthy();
+        expect(polyline.show).toEqual(true);
     });
 
     it("sets positions", function() {
@@ -159,5 +159,11 @@ defineSuite([
 
         var pickedObject = pick(context, polyline, 0, 0);
         expect(pickedObject).not.toBeDefined();
+    });
+
+    it("isDestroyed", function() {
+        expect(polyline.isDestroyed()).toEqual(false);
+        polyline.destroy();
+        expect(polyline.isDestroyed()).toEqual(true);
     });
 });

@@ -1,0 +1,149 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+
+	<title>AreaManager</title>
+	<script type="text/javascript" src="../../../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+	
+	<link rel="stylesheet" type="text/css" href="../../../../../dojo/resources/dojo.css" />
+	<link rel="stylesheet" type="text/css" href="../../../../../dijit/themes/tundra/tundra.css" />
+	
+	<script type="text/javascript"><!--
+	dojo.require("doh.runner");		
+		dojo.require("dojox.mdnd.AreaManager");
+		dojo.require("dojox.mdnd.DropIndicator");
+		dojo.require("dojox.mdnd.dropMode.VerticalDropMode");
+
+		dojo.declare("AreaManagerTestFixture", null, {
+			constructor:function(testName, test) {
+				this.name = testName;
+				this.runTest = test;
+			},
+			setUp:function() {
+				this.mgr = dojox.mdnd.areaManager();
+				
+				this.areaA = dojo.byId("areaA");
+				this.areaB = dojo.byId("areaB");
+				this.areaC = dojo.byId("areaC");
+
+				this.itemA = createItem("itemA");
+				this.itemB = createItem("itemB");
+				this.itemC = createItem("itemC");
+
+			},
+			tearDown:function() {
+				//reinit DOM
+				var areas = [this.areaA,this.areaB,this.areaC];
+				for (var i = 0; i < areas.length; i++) {
+					while (areas[i].firstChild) {
+						dojo.destroy(areas[i].removeChild(areas[i].lastChild));
+					}
+					this.mgr.unregister(areas[i]);
+				}
+				delete this.areaA;
+				delete this.areaB;
+				delete this.areaC;
+				delete this.itemA;
+				delete this.itemB;
+				delete this.itemC;
+				
+			}
+		});
+
+		function createItem(id){
+			return dojo.create('div',{'class':'item', 'id': id});
+		};
+		
+		//--------------------------------------
+		dojo.addOnLoad(function(){
+			
+			doh.register("AreaManagerManagingDragItems",
+				[
+					/*
+					 * Default test of adding an item
+					 */
+					new AreaManagerTestFixture("addDragItem",function(){
+						
+						this.mgr.registerByNode(this.areaA);
+						this.mgr.addDragItem(this.areaA, this.itemA);
+						
+						doh.assertEqual(1, this.mgr._areaList.length, "One area should be register!");
+						var areaItem = this.mgr._areaList[0];
+						doh.assertEqual(areaItem.items.length, 1, "The register area should contain one item!");
+					}),
+					
+					new AreaManagerTestFixture("unregisteredArea",function(){
+						this.mgr.addDragItem(this.areaB, this.itemA);
+						doh.assertEqual(0, this.mgr._areaList.length, "An item shouldn't add to an unregitered area");
+					}),
+					
+					new AreaManagerTestFixture("addDragItemWithDomAppendedNode",function(){
+						this.mgr.registerByNode(this.areaB);
+						this.areaC.appendChild(this.itemA);
+						this.mgr.addDragItem(this.areaB, this.itemA);
+						doh.assertEqual(0, this.mgr._areaList[0].items.length, "Item shouldn't append to a node before add");						
+					}),
+					
+					new AreaManagerTestFixture("addDragItemWithInsideAreaNode",function(){
+						this.mgr.registerByNode(this.areaC);
+						this.areaC.appendChild(this.itemA);
+						this.mgr.addDragItem(this.areaC, this.itemA);
+						var areaItem = this.mgr._areaList[0];
+						doh.assertTrue(1, areaItem.items.length);
+					}),
+					
+					new AreaManagerTestFixture("addDragItemWithNegativeIndex",function(){
+						this.mgr.registerByNode(this.areaA);
+						this.mgr.addDragItem(this.areaA, this.itemA, -1);
+						var areaItem = this.mgr._areaList[0];
+						doh.assertEqual(1, areaItem.items.length);
+					}),
+					
+					new AreaManagerTestFixture("addDragItemWithOutsideIndex",function(){
+						this.mgr.registerByNode(this.areaB);
+						this.mgr.addDragItem(this.areaB, this.itemA);
+						this.mgr.addDragItem(this.areaB, this.itemB, 100);
+						
+						var areaItem = this.mgr._areaList[0];
+						doh.assertEqual(2, areaItem.items.length);
+					}),
+					
+					/*
+					 * Default test of removing an item
+					 */
+					new AreaManagerTestFixture("removeDragItem",function(){
+						this.mgr.registerByNode(this.areaA);
+						this.mgr.addDragItem(this.areaA, this.itemA);
+						
+						doh.assertEqual(1, this.mgr._areaList[0].items.length);
+						
+						this.mgr.removeDragItem(this.areaA, this.itemA);
+						var areaItem = this.mgr._areaList[0];
+						
+						doh.assertEqual(0, this.mgr._areaList[0].items.length);
+					}),
+					
+					new AreaManagerTestFixture("removeWrongDragItem",function(){
+						this.mgr.registerByNode(this.areaA);
+						this.mgr.registerByNode(this.areaB);
+						this.mgr.addDragItem(this.areaA, this.itemA);
+						this.mgr.removeDragItem(this.areaB, this.itemA);
+						
+						doh.assertEqual(1, this.mgr._areaList[0].items.length);
+						doh.assertEqual(0, this.mgr._areaList[1].items.length);
+					})
+				]
+			);
+			doh.run();
+		});
+		//--------------------------------------
+	--></script>
+
+	</head>
+	<body class="tundra">
+		<div class="area" id="areaA"></div>
+		<div class="area" id="areaB"></div>
+		<div class="area" id="areaC"></div>
+	</body>
+</html>

@@ -1,0 +1,12 @@
+	//INSERT dojo.i18n._preloadLocalizations HERE
+
+	//Check if document already complete, and if so, just trigger page load
+	//listeners. NOTE: does not work with Firefox before 3.6. To support
+	//those browsers, set djConfig.afterOnLoad = true when you know Dojo is added
+	//after page load. Using a timeout so the rest of this
+	//script gets evaluated properly. This work needs to happen after the
+	//dojo.config.require work done in dojo._base.
+	if(dojo.isBrowser && (document.readyState === "complete" || dojo.config.afterOnLoad)){
+		window.setTimeout(dojo._loadInit, 100);
+	}
+})();

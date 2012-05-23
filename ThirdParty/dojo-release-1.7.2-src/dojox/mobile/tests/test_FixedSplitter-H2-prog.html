@@ -1,0 +1,45 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>FixedSplitter Test</title>
+		<style type="text/css">
+			@import "../themes/common/FixedSplitter.css";
+			html, body{
+				width: 100%;
+				height: 100%;
+				padding: 0px;
+				margin: 0px;
+				overflow: hidden;
+			}
+		</style>
+
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			dojo.require("dojo.parser");
+			dojo.require("dojox.mobile.FixedSplitter");
+			dojo.ready(function(){
+					var w = new dojox.mobile.FixedSplitter({
+						orientation: "H"
+					}, dojo.byId("container"));
+					w.startup();
+
+					var p0 = new dojox.mobile.FixedSplitterPane({
+						innerHTML: "pane #1 (width=200px)"
+					});
+					p0.domNode.style.backgroundColor = "yellow";
+					p0.domNode.style.width = "200px";
+					w.addChild(p0);
+
+					var p1 = new dojox.mobile.FixedSplitterPane({
+						innerHTML: "pane #2"
+					});
+					p1.domNode.style.backgroundColor = "pink";
+					w.addChild(p1);
+			});
+		</script>
+	</head>
+	<body>
+		<div id="container"></div>
+	</body>
+</html>

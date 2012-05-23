@@ -1,7 +1,6 @@
 /*global define*/
 define(['Renderer/Context'], function(Context) {
     "use strict";
-    /*global document*/
 
     function createContext() {
         var canvas = document.createElement("canvas");

@@ -1,0 +1,26 @@
+({
+	name: "date.timezone.Pacific-Tongatapu",
+	runTest: function(t){
+		var tz = "Pacific/Tongatapu";
+		doh.checkDate({tzOffset: -740, tzAbbr: "TOT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: -740, tzAbbr: "TOT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: -740, tzAbbr: "TOT"}, -915193201000, tz, 1);
+		doh.checkDate({tzOffset: -780, tzAbbr: "TOT"}, -915193200000, tz, 1);
+		doh.checkDate({tzOffset: -780, tzAbbr: "TOT"}, 939214799000, tz, 1);
+		doh.checkDate({tzOffset: -840, tzAbbr: "TOST"}, 939214800000, tz, 1);
+		doh.checkDate({tzOffset: -840, tzAbbr: "TOST"}, 953384399000, tz, 1);
+		doh.checkDate({tzOffset: -780, tzAbbr: "TOT"}, 953384400000, tz, 1);
+		doh.checkDate({tzOffset: -780, tzAbbr: "TOT"}, 973342799000, tz, 1);
+		doh.checkDate({tzOffset: -840, tzAbbr: "TOST"}, 973342800000, tz, 1);
+		doh.checkDate({tzOffset: -840, tzAbbr: "TOST"}, 980596799000, tz, 1);
+		doh.checkDate({tzOffset: -780, tzAbbr: "TOT"}, 980596800000, tz, 1);
+		doh.checkDate({tzOffset: -780, tzAbbr: "TOT"}, 1004792399000, tz, 1);
+		doh.checkDate({tzOffset: -840, tzAbbr: "TOST"}, 1004792400000, tz, 1);
+		doh.checkDate({tzOffset: -840, tzAbbr: "TOST"}, 1012046399000, tz, 1);
+		doh.checkDate({tzOffset: -780, tzAbbr: "TOT"}, 1012046400000, tz, 1);
+		doh.checkDate({tzOffset: -780, tzAbbr: "TOT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: -780, tzAbbr: "TOT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: -780, tzAbbr: "TOT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: -780, tzAbbr: "TOT"}, 1246789800000, tz, 0);
+	}
+})

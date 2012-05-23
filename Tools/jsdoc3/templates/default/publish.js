@@ -237,10 +237,10 @@
         var nav = '',
             seen = {};
         
-		var classNames = find({kind: 'class'});
+        nav += '<ul id="ClassList"><div id="classItems">';	// Start single class list, begin JavaScript div
+        var classNames = find({kind: 'class'});
         if (classNames.length) {
             //nav += '<h3>Classes</h3><ul>';
-			nav += '<ul id="ClassList"><div id="classItems">';	// Start single class list, being JavaScript div
             classNames.forEach(function(c) {
                 var moduleSameName = find({kind: 'module', longname: c.longname});
                 if (moduleSameName.length) {
@@ -284,15 +284,15 @@
             //nav += '</ul>';
         }
 		
-		var glslNames = find({kind: 'glsl'});
-		nav += '</div><div id="glslItems">';	// Start GLSL div
+        var glslNames = find({kind: 'glsl'});
+        nav += '</div><div id="glslItems">';	// End classItems div, start GLSL div
         if (glslNames.length) {
             glslNames.forEach(function(g) {
                 if ( !seen.hasOwnProperty(g.longname) ) nav += '<li>'+linkto(g.longname, g.name)+'</li>';
                 seen[g.longname] = true;
             });    
-            nav += '</div></ul>';	// End GLSL div, end Class list
         }
+        nav += '</div></ul>';	// End GLSL div, end Class list
         
 //         var constantNames = find({kind: 'constants'});
 //         if (constantNames.length) {
@@ -327,7 +327,7 @@
         
         var globalNames = find({kind: ['members', 'function', 'constant', 'typedef'], 'memberof': {'isUndefined': true}});
         if (globalNames.length) {
-            //nav += '<h3>Global</h3><ul>';
+            nav += '<h3>Global</h3><ul>';
             globalNames.forEach(function(g) {
                 if ( g.kind !== 'typedef' && !seen.hasOwnProperty(g.longname) ) nav += '<li>'+linkto(g.longname, g.name)+'</li>';
                 seen[g.longname] = true;
@@ -344,6 +344,7 @@
         // once for all
         view.nav = nav;
 
+        var types_json = {};
         for (var longname in helper.longnameToUrl) {
             var classes = find({kind: 'class', longname: longname});
             if (classes.length) generate(classes[0].name, classes, helper.longnameToUrl[longname]);
@@ -368,7 +369,12 @@
         }
 
         //if (globals.length) generate('Global', [{kind: 'globalobj'}], 'global.html');
-        generate('Cesium Documentation', [], 'index.html');
+        
+        view.layout = 'index.tmpl';
+        var indexHtml = view.render('empty.tmpl', { title: 'Cesium Documentation' });
+        fs.writeFileSync(outdir + '/index.html', indexHtml);
+        
+        fs.writeFileSync(outdir + '/types.txt', JSON.stringify(types_json));
         
         function generate(title, docs, filename) {
             var data = {
@@ -381,7 +387,31 @@
             
             html = helper.resolveLinks(html); // turn {@link foo} into <a href="foodoc.html">foo</a>
             
-            fs.writeFileSync(path, html)
+            if (title in types_json) {
+                types_json[title].push(filename);
+            } else {
+                types_json[title] = [ filename ];
+            }
+            
+            var pos = 0, pos2, member, match = 'h4 class="name" id="', matchLen = match.length;
+            while ((pos = html.indexOf(match, pos)) >= 0) {
+                pos += matchLen;
+                if ((pos2 = html.indexOf('"', pos)) > 0) {
+                    member = html.substring(pos, pos2);
+                    if (member !== title) {
+                        if (member in types_json) {
+                            // Note that ".toString" and ".valueOf" are discarded here.
+                            if (typeof types_json[member].push === 'function') {
+                                types_json[member].push(filename + '#' + member);
+                            }
+                        } else {
+                            types_json[member] = [ filename + '#' + member ];
+                        }
+                    }
+                }
+            }
+            
+            fs.writeFileSync(path, html);
         }
         
         function generateTutorial(title, tutorial, filename) {
@@ -398,7 +428,7 @@
             // yes, you can use {@link} in tutorials too!
             html = helper.resolveLinks(html); // turn {@link foo} into <a href="foodoc.html">foo</a>
             
-            fs.writeFileSync(path, html)
+            fs.writeFileSync(path, html);
         }
         
         // tutorials can have only one parent so there is no risk for loops

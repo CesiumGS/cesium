@@ -1,0 +1,68 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+	<title>Testing the Image Gallery</title>
+
+	<!-- required: a default theme file -->
+	<link rel="stylesheet" id="themeStyles" href="../../../dijit/themes/tundra/tundra.css">
+	<link rel="stylesheet" href="../resources/image.css">
+
+	<style type="text/css">
+		@import "../../../dijit/tests/css/dijitTests.css";
+	</style>
+	
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig=" parseOnLoad: true"></script>
+
+	<!-- do not use! only for testing dynamic themes -->
+	<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require('dojo.data.ItemFileReadStore');
+		dojo.require('dojox.image.Gallery');
+		dojo.require('dojox.data.FlickrRestStore');
+		dojo.require("dojo.parser");	// find widgets
+		
+		dojo.ready(function(){
+			console.log('onload');
+			var flickrRestStore = new dojox.data.FlickrRestStore();
+			var req = {
+				query: {
+					userid: "44153025@N00",
+					apikey: "8c6803164dbc395fb7131c9d54843627",
+					sort: [
+						   {
+							attribute: "interestingness",
+							descending: true
+							}
+						   ],
+				//	tags: ["superhorse", "redbones", "beachvolleyball"],
+					tag_mode: "any"
+				},
+				count: 20
+			};
+			setTimeout(function(){
+				dijit.byId('gallery1').setDataStore(flickrRestStore, req);				
+			},250);
+
+			dijit.byId('gallery2').setDataStore(imageItemStore,{ count:20 },{
+				imageThumbAttr: "thumb",
+				imageLargeAttr: "large"
+			});
+		});
+	</script>
+</head>
+<body class="tundra">
+	<h1 class="testTitle">dojox.image.Gallery</h1>
+
+	<h2>From FlickrRestStore:</h2>
+	<div id="gallery1" dojoType="dojox.image.Gallery" imageWidth="700" imageHeight="500"></div>
+
+	<h2>From ItemFileReadStore:</h2>
+	
+	<div jsId="imageItemStore" dojoType="dojo.data.ItemFileReadStore" url="images.json"></div>
+	<div id="gallery2" dojoType="dojox.image.Gallery"></div>
+
+</body>
+</html>

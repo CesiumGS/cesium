@@ -1,0 +1,116 @@
+/* Test file styles for Dijit widgets */
+
+body {
+	background:#fff url("../images/testsBodyBg.gif") repeat-x top left;
+	padding:2em 2em 2em 2em;
+}
+
+h1.testTitle {
+	font-size:2em;
+	margin:0 0 1em 0;
+}
+
+/* Icons used in the tests */
+
+.plusIcon, .plusBlockIcon {
+	background-image: url(../images/plus.gif);
+	background-repeat: no-repeat;
+	background-position: center center;
+	width: 18px;
+	height: 18px;
+}
+.plusBlockIcon {
+	display: block !important;
+}
+.noteIcon {
+	background-image: url(../images/note.gif);
+	background-repeat: no-repeat;
+	background-position: center center;
+	width: 18px;
+	height: 18px;
+}
+.flatScreenIcon {
+	background-image: url(../images/flatScreen.gif);
+	background-repeat: no-repeat;
+	width: 32px;
+	height: 32px;
+}
+.dijitTestNodeDialog {
+	position:absolute;
+	top:5px;
+	right:5px;
+	display:block;
+	width:200px;
+	visibility:hidden;
+	background-color:#fff !important;
+	color:#000 !important;
+	border:1px solid #000;
+	padding:5px;
+}
+.dijitTestNodeDialog table {
+	background-color:#fff !important;
+}
+.dijitTestNodeDialog td {
+	padding:3px;
+}
+.dijitTestNodeShowing {
+	visibility:visible;
+}
+
+body .customFolderOpenedIcon, body .customFolderClosedIcon {
+	background-image: url('../images/folderIcons.png'); /* mail icons sprite image */
+	background-repeat: no-repeat;
+	width: 18px;
+	height: 18px;
+    background-position: -44px;
+}
+
+.dj_ie6 .customFolderOpenedIcon, .dj_ie6 .customFolderClosedIcon {
+	background-image: url('../images/folderIcons.gif');
+}
+
+.customFolderClosedIcon {
+    background-position: -154px;
+}
+
+#testMatrix {
+	width:100%;
+	text-align:center;
+}
+#testMatrix tr > td {
+	text-align:left;
+}
+#testMatrix tr.top {
+	background:blue;
+	color:#fff;
+}
+#testMatrix tr.top th {
+	padding:6px;
+}
+#testMatrix tr.tests {
+	background:#666;
+	padding:3px;
+	padding-left:6px;
+	padding-right:6px;
+	color:#fff;
+}
+#testMatrix tr.tests th {
+	text-align:center;
+}
+#testMatrix tr.spacer {
+	background:#dedede;
+	color:#666;
+}
+#testMatrix tr.spacer td {
+	padding:6px;
+}
+#testMatrix tr.testRow td {
+	text-align:center;
+}
+#testMatrix tr.testRow td.label {
+	text-align:left;
+	padding-left:15px;
+}
+#testMatrix tr.alt {
+	background:#ededed;
+}

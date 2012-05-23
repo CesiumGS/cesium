@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          '../Specs/createContext',
          '../Specs/destroyContext',
@@ -21,7 +22,7 @@ defineSuite([
          TextureMinificationFilter,
          TextureMagnificationFilter) {
     "use strict";
-    /*global Uint8Array,Float32Array,Image,xit,it,expect,beforeEach,afterEach,waitsFor*/
+    /*global xit,it,expect,beforeEach,afterEach,waitsFor*/
 
     var context;
     var sp;
@@ -205,7 +206,7 @@ defineSuite([
             },
             preMultiplyAlpha : true
         });
-        expect(cubeMap.getPreMultiplyAlpha()).toBeTruthy();
+        expect(cubeMap.getPreMultiplyAlpha()).toEqual(true);
 
         var vs = "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
         var fs =

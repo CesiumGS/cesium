@@ -1,0 +1,105 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+	<title>Chart 2D</title>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+	</style>
+	<script type="text/javascript" src="../../../dojo/dojo.js" 
+		djConfig="isDebug: true"></script>
+	<script type="text/javascript">
+
+        dojo.require("dojox.charting.Chart");
+        dojo.require("dojox.charting.axis2d.Default");
+        dojo.require("dojox.charting.plot2d.Areas");
+        dojo.require("dojox.charting.plot2d.Grid");
+		dojo.require("dojox.charting.themes.PlotKit.orange");
+		dojo.require("dojox.charting.themes.Tufte");
+
+		var chart, limit = 10, magnitude = 30, counter = [0, 0, 0];
+
+		var randomValue = function(nCounter){
+			return {x: ++counter[nCounter], y: Math.random() * magnitude};
+		};
+
+		var makeSeries = function(len, nCounter){
+			var s = [];
+			do{
+				s.push(randomValue(nCounter));
+			}while(s.length < len);
+			return s;
+		};
+
+		var seriesA = makeSeries(limit, 0),
+			seriesB = makeSeries(limit, 1),
+			seriesC = makeSeries(limit, 2);
+
+		var makeObjects = function(){
+			chart = new dojox.charting.Chart("test");
+			chart.setTheme(dojox.charting.themes.Tufte);
+			chart.addAxis("x", {
+				fixLower: "minor", 
+				natural: true
+			});
+			chart.addAxis("y", {
+				vertical: true, 
+				min: 0, 
+				max: 30, 
+				majorTickStep: 5, 
+				minorTickStep: 1
+			});
+			chart.addPlot("default", {type: "Areas"});
+			chart.addSeries("Series A", seriesA);
+			chart.addSeries("Series B", seriesB);
+			chart.addSeries("Series C", seriesC);
+			chart.addPlot("grid", {
+				type: "Grid", hMinorLines: true
+			});
+			chart.render();
+
+			setInterval(function(){updateTest();}, 500);
+		};
+
+		var updateTest = function(){
+			seriesA.shift();
+			seriesA.push(randomValue(0));
+			chart.updateSeries("Series A", seriesA);
+
+			seriesB.shift();
+			seriesB.push(randomValue(1));
+			chart.updateSeries("Series B", seriesB);
+
+			seriesC.shift();
+			seriesC.push(randomValue(2));
+			chart.updateSeries("Series C", seriesC);
+
+			chart.render();
+		};
+
+		dojo.addOnLoad(makeObjects);
+
+	</script>
+</head>
+<body>
+	<h1>Chart 2D Updating Data</h1>
+	<p>
+		Areas, grey theme, axes, grid. Very crude example to show a chart
+		with updating values.
+	</p>
+	<div id="test" style="width: 400px; height: 400px;"></div>
+</body>
+</html>

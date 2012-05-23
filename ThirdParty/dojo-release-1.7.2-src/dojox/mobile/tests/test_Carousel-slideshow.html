@@ -1,0 +1,40 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>Lazy-loadable Carousel Photo Gallery</title>
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true, mblAlwaysHideAddressBar: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			dojo.require("dojo.data.ItemFileReadStore");
+			dojo.require("dojox.mobile");			// This is a mobile app.
+			dojo.require("dojox.mobile.parser");	// This mobile app supports running on desktop browsers
+			dojo.require("dojox.mobile.compat");	// This mobile app uses declarative programming with fast mobile parser
+			dojo.require("dojox.mobile.deviceTheme");
+			dojo.require("dojox.mobile.Carousel");
+			dojo.require("dojox.mobile.ScrollableView");
+
+			var json = {
+				items: [
+					{src:"images/pic1.jpg"},
+					{src:"images/pic2.jpg"},
+					{src:"images/pic3.jpg"},
+					{src:"images/pic4.jpg"},
+					{src:"images/pic5.jpg"},
+					{src:"images/pic6.jpg"},
+					{src:"images/pic7.jpg"},
+					{src:"images/pic8.jpg"},
+					{src:"images/pic9.jpg"},
+					{src:"images/pic10.jpg"}
+				]
+			};
+		</script>
+	</head>
+	<body style="visibility:hidden;background-color:#6D6D6D">
+		<div id="foo" dojoType="dojox.mobile.ScrollableView">
+			<span jsId="store1" dojoType="dojo.data.ItemFileReadStore" data="json"></span>
+			<div id="carousel1" dojoType="dojox.mobile.Carousel" height="280px" store="store1" numVisible="1" title="Photo Gallery"></div>
+		</div>
+	</body>
+</html>

@@ -34,7 +34,6 @@ define([
         PolylineVS,
         PolylineFS) {
     "use strict";
-    /*global Float32Array,Uint16Array*/
 
     var attributeIndices = {
         position2D : 0,
@@ -350,22 +349,22 @@ define([
 
         this._drawUniformsOne2D = combine(drawUniformsOne, {
             u_model : function() {
-                return Matrix4.getIdentity();
+                return Matrix4.IDENTITY;
             }
         });
         this._drawUniformsTwo2D = combine(drawUniformsTwo, {
             u_model : function() {
-                return Matrix4.getIdentity();
+                return Matrix4.IDENTITY;
             }
         });
         this._drawUniformsThree2D = combine(drawUniformsThree, {
             u_model : function() {
-                return Matrix4.getIdentity();
+                return Matrix4.IDENTITY;
             }
         });
         this._pickUniforms2D = combine(pickUniforms, {
             u_model : function() {
-                return Matrix4.getIdentity();
+                return Matrix4.IDENTITY;
             }
         });
 
@@ -476,8 +475,8 @@ define([
          *   new Cartesian3(1000000.0, 0.0, 0.0)
          * ]);
          */
-        this.modelMatrix = Matrix4.getIdentity();
-        this._modelMatrix = Matrix4.getIdentity();
+        this.modelMatrix = Matrix4.IDENTITY;
+        this._modelMatrix = Matrix4.IDENTITY;
 
         /**
          * The usage hint for the polyline's vertex buffer.
@@ -594,7 +593,7 @@ define([
             return this.scene2D.modelMatrix || this.modelMatrix;
 
         case SceneMode.MORPHING:
-            return Matrix4.getIdentity();
+            return Matrix4.IDENTITY;
         }
     };
 

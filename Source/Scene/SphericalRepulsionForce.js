@@ -14,7 +14,7 @@ define([
      */
     function SphericalRepulsionForce(template) {
         template = template || {};
-        template.center = template.center || Cartesian3.getZero();
+        template.center = template.center || Cartesian3.ZERO;
         template.radius = (typeof template.radius === "undefined") ? 1.0 : template.radius;
 
         if (template.radius < 0) {

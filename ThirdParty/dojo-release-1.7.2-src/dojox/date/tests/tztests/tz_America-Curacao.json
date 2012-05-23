@@ -1,0 +1,16 @@
+({
+	name: "date.timezone.America-Curacao",
+	runTest: function(t){
+		var tz = "America/Curacao";
+		doh.checkDate({tzOffset: 275.733333333333, tzAbbr: "LMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: 275.733333333333, tzAbbr: "LMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: 275.733333333333, tzAbbr: "LMT"}, -1826738657000, tz, 1);
+		doh.checkDate({tzOffset: 270, tzAbbr: "ANT"}, -1826738656000, tz, 1);
+		doh.checkDate({tzOffset: 270, tzAbbr: "ANT"}, -157750201000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "AST"}, -157750200000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "AST"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "AST"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "AST"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: 240, tzAbbr: "AST"}, 1246789800000, tz, 0);
+	}
+})

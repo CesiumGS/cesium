@@ -1,6 +1,6 @@
 (function() {
     "use strict";
-    /*global Image, Cesium, Sandbox*/
+    /*global Cesium,Sandbox*/
 
     var camera = {
         eye : new Cesium.Cartesian3(10023151.69362372, -13827878.43369639, 9372792.307042792),

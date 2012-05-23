@@ -1,7 +1,5 @@
-defineSuite([
-         'Core/Cartesian2'
-     ], function(
-         Cartesian2) {
+/*global defineSuite*/
+defineSuite(['Core/Cartesian2'], function(Cartesian2) {
     "use strict";
     /*global it,expect*/
 
@@ -26,29 +24,29 @@ defineSuite([
     it("clone", function() {
         var v = new Cartesian2(1, 2);
         var w = v.clone();
-        expect(v.equals(w)).toBeTruthy();
+        expect(v.equals(w)).toEqual(true);
     });
 
-    it("non-prototypal clone", function () {
+    it("non-prototypal clone", function() {
         var v = new Cartesian2(1, 2);
         var w = Cartesian2.clone(v);
-        expect(v.equals(w)).toBeTruthy();
+        expect(v.equals(w)).toEqual(true);
     });
 
-    it("getZero", function() {
-        var v = new Cartesian2.getZero();
+    it("ZERO", function() {
+        var v = Cartesian2.ZERO;
         expect(v.x).toEqual(0);
         expect(v.y).toEqual(0);
     });
 
-    it("getUnitX", function() {
-        var v = new Cartesian2.getUnitX();
+    it("UNIT_X", function() {
+        var v = Cartesian2.UNIT_X;
         expect(v.x).toEqual(1);
         expect(v.y).toEqual(0);
     });
 
-    it("getUnitY", function() {
-        var v = new Cartesian2.getUnitY();
+    it("UNIT_Y", function() {
+        var v = Cartesian2.UNIT_Y;
         expect(v.x).toEqual(0);
         expect(v.y).toEqual(1);
     });
@@ -76,38 +74,38 @@ defineSuite([
 
     it("add", function() {
         var v = new Cartesian2(1, 2).add(new Cartesian2(3, 4));
-        expect(v.equals(new Cartesian2(4, 6))).toBeTruthy();
+        expect(v.equals(new Cartesian2(4, 6))).toEqual(true);
     });
 
     it("multiplyWithScalar", function() {
         var v = new Cartesian2(1, 2).multiplyWithScalar(2);
-        expect(v.equals(new Cartesian2(2, 4))).toBeTruthy();
+        expect(v.equals(new Cartesian2(2, 4))).toEqual(true);
     });
 
     it("divideByScalar", function() {
         var v = new Cartesian2(2, 4).divideByScalar(2);
-        expect(v.equals(new Cartesian2(1, 2))).toBeTruthy();
+        expect(v.equals(new Cartesian2(1, 2))).toEqual(true);
     });
 
     it("negate", function() {
         var v = new Cartesian2(1, 2).negate();
-        expect(v.equals(new Cartesian2(-1, -2))).toBeTruthy();
+        expect(v.equals(new Cartesian2(-1, -2))).toEqual(true);
     });
 
     it("abs", function() {
         var v = new Cartesian2(-1, -2).abs();
-        expect(v.equals(new Cartesian2(1, 2))).toBeTruthy();
+        expect(v.equals(new Cartesian2(1, 2))).toEqual(true);
     });
 
     it("subtract", function() {
         var v = new Cartesian2(3, 4).subtract(new Cartesian2(2, 1));
-        expect(v.equals(new Cartesian2(1, 3))).toBeTruthy();
+        expect(v.equals(new Cartesian2(1, 3))).toEqual(true);
     });
 
     it("equalsEpsilon", function() {
-        expect(new Cartesian2(1, 2).equalsEpsilon(new Cartesian2(1, 2), 0)).toBeTruthy();
-        expect(new Cartesian2(1, 2).equalsEpsilon(new Cartesian2(2, 2), 1)).toBeTruthy();
-        expect(new Cartesian2(1, 2).equalsEpsilon(new Cartesian2(3, 2), 1)).toBeFalsy();
+        expect(new Cartesian2(1, 2).equalsEpsilon(new Cartesian2(1, 2), 0)).toEqual(true);
+        expect(new Cartesian2(1, 2).equalsEpsilon(new Cartesian2(2, 2), 1)).toEqual(true);
+        expect(new Cartesian2(1, 2).equalsEpsilon(new Cartesian2(3, 2), 1)).toEqual(false);
     });
 
     it("toString", function() {

@@ -1,0 +1,79 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>Testing afterOnLoad</title>
+
+		<link rel="stylesheet" type="text/css" href="../../../resources/dojo.css"/>
+		<link rel="stylesheet" type="text/css" href="../../../../dijit/tests/css/dijitTests.css"/>
+		<link rel="stylesheet" type="text/css" href="../../../../dijit/themes/tundra/tundra.css"/>
+
+		<script type="text/javascript">
+			function init(){
+				//Create global dojoConfig object first. We cannot use the dojoConfig attribute
+				//on the script tag since it may not be visible in some browsers at the time
+				//dojo.js executes. This causes problems when the "require" property is used
+				//as part of djConfig. 
+
+				//Previous versions of this test stated that baseUrl must be set explicitly because
+				//the sniffing code would not work. As of 1.7, this seems to be unnecessary
+
+				var startTime = (new Date()).getTime();
+
+				var async = /async/.test(location.search);
+				dojoConfig = {
+					async:async,
+					parseOnLoad:true,
+					afterOnLoad:true,
+					isDebug: true
+				};
+				var callback = function(){
+					dojo.byId("status").innerHTML = 
+						"dojo.ready callback executed OK.<br>" +
+						"total load time: " + (((new Date()).getTime() - startTime) / 1000) + "s";
+				}
+				if(async){
+					dojoConfig.deps = ["dojo", "dojo/parser", "dijit/Calendar"]
+					dojoConfig.callback = callback;
+				}else{
+					dojoConfig.addOnLoad = callback;
+					dojoConfig.require = ['dojo.parser', 'dijit.Calendar'];
+				};
+
+				var script = document.createElement("script");
+				script.type = "text/javascript";
+				script.src = "../../../dojo.js";
+				document.getElementsByTagName("head")[0].appendChild(script);
+			}
+
+			function myHandler(id,newValue){
+				console.debug("onChange for id = " + id + ", value: " + newValue);
+			}
+			
+			//Register onload init function that will add Dojo to the page.
+			if(window.addEventListener){
+				window.addEventListener("load", init, false);
+			}else{
+				window.attachEvent("onload", init);
+			}
+		</script>
+	</head>
+	<body>
+		<h1>Testing afterOnLoad</h1>
+
+		<p>This page tests loading dojo after the page is loaded. </p>
+
+		<p>Add the query string "?async" to the URL to test asynchronous operation; an empty query string results in
+		synchronous loading.</p>
+		
+		<p>When the window.onload fires, the dojo script tag will be added to the DOM 
+		and configured to fire the onload callbacks. If everything works, you should
+		see a Calendar below.</p>
+
+		<p id="status"></p>
+		
+		<p class="tundra">
+			<input id="calendar1" data-dojo-type="dijit.Calendar" onChange="myHandler(this.id,arguments[0])">
+		</p>
+	</body>
+</html>

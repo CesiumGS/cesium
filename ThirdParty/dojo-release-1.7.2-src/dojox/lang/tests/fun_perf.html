@@ -1,0 +1,178 @@
+<html>
+	<head>
+		<title>Clocking fun</title>
+		<style type="text/css">
+			@import "../../../dojo/resources/dojo.css";
+		</style>
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true"></script>
+		<script type="text/javascript" src="../functional.js"></script>
+		<script type="text/javascript" src="../functional/sequence.js"></script>
+		<script type="text/javascript" src="../functional/fold.js"></script>
+		<script type="text/javascript">
+			var clock = function(body){
+				var b = new Date();
+				body();
+				var e = new Date();
+				return e.getTime() - b.getTime();	// in ms
+			};
+			
+			var log = function(name, body){
+				var ms = clock(body);
+				console.log(name + ":", ms);
+			};
+
+			var LEN = 2000, ITER = 200, tests = {},
+				df = dojox.lang.functional,
+				sample = df.repeat(LEN, "+1", 0),
+				add = df.lambda("+"),
+				isOdd = df.lambda("%2");
+				
+			// filter
+			tests["raw filter"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					var t = [];
+					for(var j = 0; j < sample.length; ++j){
+						if(isOdd(sample[j])){ t.push(sample[j]); }
+					}
+				}
+			};
+			tests["dojo.filter"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					dojo.filter(sample, isOdd);
+				}
+			};
+			tests["df.filter"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					df.filter(sample, isOdd);
+				}
+			};
+			if(sample.filter){
+				tests["Array.prototype.filter"] = function(){
+					for(var i = 0; i < ITER; ++i){
+						sample.filter(isOdd);
+					}
+				};
+			}
+
+			// map
+			tests["raw map"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					var t = [];
+					for(var j = 0; j < sample.length; ++j){
+						t.push(isOdd(sample[j]));
+					}
+				}
+			};
+			tests["dojo.map"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					dojo.map(sample, isOdd);
+				}
+			};
+			tests["df.map"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					df.map(sample, isOdd);
+				}
+			};
+			if(sample.map){
+				tests["Array.prototype.map"] = function(){
+					for(var i = 0; i < ITER; ++i){
+						sample.map(isOdd);
+					}
+				};
+			}
+
+			// forEach
+			tests["raw forEach"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					for(var j = 0; j < sample.length; ++j){
+						isOdd(sample[j]);
+					}
+				}
+			};
+			tests["dojo.forEach"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					dojo.forEach(sample, isOdd);
+				}
+			};
+			tests["df.forEach"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					df.forEach(sample, isOdd);
+				}
+			};
+			if(sample.forEach){
+				tests["Array.prototype.forEach"] = function(){
+					for(var i = 0; i < ITER; ++i){
+						sample.forEach(isOdd);
+					}
+				};
+			}
+
+			// reduce
+			tests["raw reduce"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					var z = 0;
+					for(var j = 0; j < sample.length; ++j){
+						z = add(z, sample[j]);
+					}
+				}
+			};
+			tests["df.reduce"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					df.reduce(sample, add, 0);
+				}
+			};
+			if(sample.reduce){
+				tests["Array.prototype.reduce"] = function(){
+					for(var i = 0; i < ITER; ++i){
+						sample.reduce(add, 0);
+					}
+				};
+			}
+
+			// reduceRight
+			tests["raw reduceRight"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					var z = 0;
+					for(var j = sample.length - 1; j >= 0; --j){
+						z = add(z, sample[j]);
+					}
+				}
+			};
+			tests["df.reduceRight"] = function(){
+				for(var i = 0; i < ITER; ++i){
+					df.reduceRight(sample, add, 0);
+				}
+			};
+			if(sample.reduceRight){
+				tests["Array.prototype.reduceRight"] = function(){
+					for(var i = 0; i < ITER; ++i){
+						sample.reduceRight(add, 0);
+					}
+				};
+			}
+			
+			var keys = df.keys(tests), i = 0;
+			
+			var doTest = function(){
+				log(keys[i], tests[keys[i]]);
+				++i;
+				if(i < keys.length){
+					setTimeout(doTest, 20);
+				}else{
+					console.log("that's all");
+				}
+			};
+			
+			var test = function(){
+				i = 0;
+				setTimeout(doTest, 20);
+			};
+				
+			//dojo.addOnLoad(test);
+		</script>
+	</head>
+	<body>
+		<p>This test is meant to run with Firebug. Open the console to see the output.</p>
+		<p><button onclick="test()">Start</button></p>
+	</body>
+</html>

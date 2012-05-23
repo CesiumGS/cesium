@@ -1,0 +1,104 @@
+<html>
+	<head>
+		<title>withDoc test</title>
+		<style type="text/css">
+iframe {
+	width: 100%;
+	height: 120px;
+}
+		</style>
+	<body>
+		<script type="text/javascript" src="../../dojo.js" data-dojo-config="async:1"></script>
+		<script type="text/javascript">
+var frameLoaded; // callback for iframes, defined later
+require(["dojo/_base/kernel", "doh", "dojo/dom-construct", "dojo/has", "dojo/_base/window", "dojo/_base/sniff"],
+function(dojo, doh, domConstruct, has, win){
+	var
+		fStandards, fQuirks, // iframes used for tests
+		tests, numFrames = 2, framesLoaded = 0;
+	
+	frameLoaded = function(){
+		// Called by each child frame.
+		// Tests start running when all iframes are loaded.
+		if(++framesLoaded == numFrames){
+			doh.run();
+		}
+	};
+	
+	tests = [
+		function withDoc(t){
+			var d = fQuirks.contentWindow.document, finished,
+				thisObj = {test: "myThis"};
+			
+			dojo.withDoc(d, function(a1, a2){
+				t.is(1, a1, "first passed argument should be 1");
+				t.is(2, a2, "second passed argument should be 2");
+				t.is(this.test, "myThis", "context should be re-hitched");
+				t.is(d, dojo.doc, "dojo.doc should be reassigned");
+				finished = true;
+			}, thisObj, [1, 2]);
+			
+			t.t(finished, "Did withDoc test function complete?");
+			t.is(document, dojo.doc, "dojo.doc should be restored");
+		},
+		function withGlobal(t){
+			var w = fQuirks.contentWindow, finished,
+				thisObj = {test: "myThis"};
+			
+			dojo.withGlobal(w, function(a1, a2){
+				t.is(1, a1, "first passed argument should be 1");
+				t.is(2, a2, "second passed argument should be 2");
+				t.is(this.test, "myThis", "context should be re-hitched");
+				t.is(42, dojo.global.answer, "dojo.global should be reassigned");
+				t.is(w.document, dojo.doc, "dojo.doc should be reassigned");
+				finished = true;
+			}, thisObj, [1, 2]);
+			
+			t.t(finished, "Did withGlobal test function complete?");
+			t.is(window, dojo.global, "dojo.global should be restored");
+			t.is(document, dojo.doc, "dojo.doc should be restored");
+		},
+		function isQuirks(t){
+			var origQuirks = has("quirks");
+			win.withGlobal(fQuirks.contentWindow, function(){
+				t.t(true === dojo.isQuirks && true === has("quirks"),
+					"dojo.isQuirks / has('quirks') should be true in withDoc w/ quirks document");
+			});
+			t.t(origQuirks === dojo.isQuirks && origQuirks === has("quirks"),
+				"dojo.isQuirks / has('quirks') should be reset to initial value");
+			win.withGlobal(fStandards.contentWindow, function(){
+				t.t(false === dojo.isQuirks && false === has("quirks"),
+					"dojo.isQuirks / has('quirks') should be false in withDoc w/ standards document");
+			});
+			t.t(origQuirks === dojo.isQuirks && origQuirks === has("quirks"),
+				"dojo.isQuirks / has('quirks') should be reset to initial value (again)");
+		}
+	];
+
+	if(has("ie") > 7){ // add isIE test for X-UA-Compatible-triggered switch
+		tests.push(function isIE(t){
+			var origIE = has("ie");
+			win.withGlobal(fStandards.contentWindow, function(){
+				console.log('isIE=' + dojo.isIE + ' / has: ' + has("ie"));
+				t.t(7 === dojo.isIE && 7 === has("ie"),
+					"dojo.isIE / has('ie') should be 7 in withDoc w/ standards document w/ EmulateIE7");
+			});
+			t.t(origIE === dojo.isIE && origIE === has("ie"),
+				"dojo.isIE / has('ie') should be reset to initial value");
+		});
+	}
+
+	doh.register("_base/window", tests);
+	
+	// Add iframe to page w/ document in standards mode
+	fStandards = domConstruct.create("iframe", {
+		src: "window_iframe_standards.html"
+	}, document.body);
+	// Add iframe to page w/ document in quirks mode
+	fQuirks = domConstruct.create("iframe", {
+		src: "window_iframe_quirks.html"
+	}, document.body);
+});
+		</script>
+	</body>
+</html>

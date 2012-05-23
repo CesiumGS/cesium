@@ -61,44 +61,32 @@ define(['./Cartesian2'], function(Cartesian2) {
     };
 
     /**
-     * Creates a Cartesian3 instance initialized to (0, 0, 0).
+     * An immutable Cartesian3 instance initialized to (0.0, 0.0, 0.0).
      *
      * @memberof Cartesian3
-     * @return {Cartesian3} A new Cartesian3 instance.
      */
-    Cartesian3.getZero = function() {
-        return new Cartesian3(0, 0, 0);
-    };
+    Cartesian3.ZERO = Object.freeze(new Cartesian3(0.0, 0.0, 0.0));
 
     /**
-     * Creates a Cartesian3 instance initialized to (1, 0, 0).
+     * An immutable Cartesian3 instance initialized to (1.0, 0.0, 0.0).
      *
      * @memberof Cartesian3v
-     * @return {Cartesian3} A new Cartesian3 instance.
      */
-    Cartesian3.getUnitX = function() {
-        return new Cartesian3(1, 0, 0);
-    };
+    Cartesian3.UNIT_X = Object.freeze(new Cartesian3(1.0, 0.0, 0.0));
 
     /**
-     * Creates a Cartesian3 instance initialized to (0, 1, 0).
+     * An immutable Cartesian3 instance initialized to (0.0, 1.0, 0.0).
      *
      * @memberof Cartesian3
-     * @return {Cartesian3} A new Cartesian3 instance.
      */
-    Cartesian3.getUnitY = function() {
-        return new Cartesian3(0, 1, 0);
-    };
+    Cartesian3.UNIT_Y = Object.freeze(new Cartesian3(0.0, 1.0, 0.0));
 
     /**
-     * Creates a Cartesian3 instance initialized to (0, 0, 1).
+     * An immutable Cartesian3 instance initialized to (0.0, 0.0, 1.0).
      *
      * @memberof Cartesian3
-     * @return {Cartesian3} A new Cartesian3 instance.
      */
-    Cartesian3.getUnitZ = function() {
-        return new Cartesian3(0, 0, 1);
-    };
+    Cartesian3.UNIT_Z = Object.freeze(new Cartesian3(0.0, 0.0, 1.0));
 
     /**
      * Returns a new array, where each {@link Cartesian3}
@@ -280,11 +268,11 @@ define(['./Cartesian2'], function(Cartesian2) {
         var z = Math.abs(this.z);
 
         if ((x < y) && (x < z)) {
-            return Cartesian3.getUnitX();
+            return Cartesian3.UNIT_X;
         } else if ((y < x) && (y < z)) {
-            return Cartesian3.getUnitY();
+            return Cartesian3.UNIT_Y;
         } else {
-            return Cartesian3.getUnitZ();
+            return Cartesian3.UNIT_Z;
         }
     };
 
@@ -292,11 +280,11 @@ define(['./Cartesian2'], function(Cartesian2) {
      * Returns the angle, in radians, between this Cartesian and the Cartesian passed in.
      *
      * @memberof Cartesian3
-     * @param {Cartesian3} scalar The Cartesian used to compute the angle.
+     * @param {Cartesian3} cartesian The Cartesian used to compute the angle.
      * @return {Number} The angle between the two Cartesians.
      */
-    Cartesian3.prototype.angleBetween = function(Cartesian) {
-        var c = Cartesian3.clone(Cartesian);
+    Cartesian3.prototype.angleBetween = function(cartesian) {
+        var c = Cartesian3.clone(cartesian);
         return Math.acos(this.normalize().dot(c.normalize()));
     };
 

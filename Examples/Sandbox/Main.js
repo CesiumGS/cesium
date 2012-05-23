@@ -3,8 +3,7 @@
  */
 (function() {
     "use strict";
-    /*global window, document, XMLHttpRequest, Cesium, Sandbox, dojo, dijit, dojox, js_beautify, initializeOverlayCreator*/
-    /*jslint evil : true */
+    /*global Cesium,Sandbox,dojo,dijit,js_beautify,initializeOverlayCreator*/
 
     Sandbox.beautify = function(code) {
         var beautifiedCode = js_beautify(code);
@@ -74,6 +73,7 @@
     tree.addNode("Apply a stripe material", [new Sandbox.StripePolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");
     tree.addNode("Apply a checkerboard material", [new Sandbox.CheckerboardPolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");
     tree.addNode("Apply a dot material", [new Sandbox.DotPolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");
+    tree.addNode("Apply a diffuse map material", [new Sandbox.DiffuseMapPolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");
     tree.addNode("Apply a tie-dye material", [new Sandbox.TieDyePolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");
     tree.addNode("Apply a facet material", [new Sandbox.FacetPolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");
     tree.addNode("Apply a blob material", [new Sandbox.BlobPolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");
@@ -196,7 +196,7 @@
 
                 scene.getCamera().lookAt(currentCodeSnippet.camera || {
                     eye : new Cesium.Cartesian3(2203128.2853925996, -7504680.128731707, 5615591.201449535),
-                    target : Cesium.Cartesian3.getZero(),
+                    target : Cesium.Cartesian3.ZERO,
                     up : new Cesium.Cartesian3(-0.1642824655609347, 0.5596076102188919, 0.8123118822806428)
                 });
             } else {
@@ -214,6 +214,7 @@
     };
 
     function recompile() {
+        /*jslint evil : true*/
         var func = new Function("scene", "ellipsoid", "primitives", "cb", editor.getValue());
 
         Sandbox.reset();

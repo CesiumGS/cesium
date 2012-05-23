@@ -1,0 +1,94 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>Test dojox.grid.DataGrid Large Data Set with Flex cells</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../resources/Grid.css";
+		@import "../resources/tundraGrid.css";
+		body {
+			font-size: 0.9em;
+			font-family: Geneva, Arial, Helvetica, sans-serif;
+		}
+		.heading {
+			font-weight: bold;
+			padding-bottom: 0.25em;
+		}
+		#grid {
+			width: 100%;
+			height: 25em;
+		}
+	</style>
+	<script type="text/javascript" src="../../../dojo/dojo.js" 
+		djConfig="isDebug:false, parseOnLoad: false"></script>
+	<script type="text/javascript">
+		dojo.require("dijit.dijit");
+		dojo.require("dojox.grid.DataGrid");
+		dojo.require("dojo.data.ItemFileWriteStore");
+		dojo.require("dojo.parser");
+	</script>
+	<script type="text/javascript" src="support/test_data.js"></script>
+	<script type="text/javascript">
+		// a grid layout is an array of views.
+		var layout = [
+			[
+				{ name: 'Column 0', field: 'id', width: '10%' },
+				{ name: 'Column 1', field: 'col1', width: '10%' },
+				{ name: 'Column 2', field: 'col2', width: '10%' },
+				{ name: 'Column 3', field: 'col3', width: '10%' },
+				{ name: 'Column 4', field: 'col4', width: '20%' },
+				{ name: 'Column 5', field: 'col5', width: '10%' },
+				{ name: 'Column 6', field: 'col6', width: '10%' },
+				{ name: 'Column 7', field: 'col7', width: '10%' },
+				{ name: 'Column 8', field: 'col3', width: '10%' }
+			]
+		];
+		// Set to true in order to kick off profiling startup and resizes in
+		// firebug
+		var doProfiling = false;
+		
+		dojo.addOnLoad(function(){
+			doProfiling = dojo.isMoz && doProfiling;
+			if(doProfiling){
+				console.profile("Startup/Creation");
+				window.profiling = true;
+			}
+			dojo.parser.parse();
+			grid.connect(window, "onresize", function(){
+				if(doProfiling){
+					console.profile("Resize");
+					window.profiling = true;
+				}
+				this.resize();
+				if(doProfiling){
+					window.setTimeout(function(){
+						console.profileEnd(); 
+						delete window.profiling;
+					}, 1000);
+				}
+			});
+			if(doProfiling){
+				window.setTimeout(function(){
+					console.profileEnd(); 
+					delete window.profiling;
+				}, 1000);
+			}
+		});
+	</script>
+</head>
+<body class="tundra">
+	<div class="heading">dojox.grid.DataGrid Large Data Set Test with Flex Cells</div>
+	<table dojoType="dojox.grid.DataGrid"
+		jsid="grid" id="grid" columnReordering="true" 
+		store="test_store" query="{ id: '*' }" rowsPerPage="20" structure="layout">
+		<thead>
+			<tr>
+				<th field="name" width="300px">Country/Continent Name</th>
+				<th field="type" width="auto">Type</th>
+			</tr>
+		</thead>
+	</table>
+</body>
+</html>

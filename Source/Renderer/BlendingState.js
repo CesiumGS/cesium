@@ -1,15 +1,15 @@
 /*global define*/
 define([
-        './BlendEquation', 
+        './BlendEquation',
         './BlendFunction'
     ], function(
-        BlendEquation, 
+        BlendEquation,
         BlendFunction) {
     "use strict";
 
     /**
      * DOC_TBA
-     * 
+     *
      * @exports BlendingState
      */
     var BlendingState = {

@@ -1,0 +1,213 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Scaling, scrolling, and panning.</title>
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/themes/tundra/tundra.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+</style>
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+<script type="text/javascript">
+
+dojo.require("dijit.form.HorizontalSlider");
+dojo.require("dijit.form.HorizontalRule");
+dojo.require("dijit.form.HorizontalRuleLabels");
+dojo.require("dojo.parser"); // scan page for widgets
+
+dojo.require("dojox.charting.Chart");
+dojo.require("dojox.charting.axis2d.Default");
+dojo.require("dojox.charting.plot2d.Areas");
+dojo.require("dojox.charting.plot2d.Grid");
+dojo.require("dojox.charting.themes.PlotKit.orange");
+
+dojo.require("dojox.lang.functional.object");
+
+var df = dojox.lang.functional;
+var chart, moveable, scaleX = 1, scaleY = 1, offsetX = 0, offsetY = 0;
+
+var reflect = function(){
+	df.forIn(chart.axes, function(axis){
+		var scale  = axis.getWindowScale(),
+			offset = Math.round(axis.getWindowOffset() * axis.getScaler().bounds.scale);
+		if(axis.vertical){
+			scaleY  = scale;
+			offsetY = offset;
+		}else{
+			scaleX  = scale;
+			offsetX = offset;
+		}
+	});
+	setTimeout(function(){
+		dijit.byId("scaleXSlider").set("value",scaleX);
+		dijit.byId("offsetXSlider").set("value",offsetX);
+		dijit.byId("scaleYSlider").set("value",scaleY);
+		dijit.byId("offsetYSlider").set("value",offsetY);
+	}, 25);
+};
+
+var update = function(){
+	chart.setWindow(scaleX, scaleY, offsetX, offsetY, {duration: 1500}).render();
+	reflect();
+};
+
+var scaleXEvent = function(value){
+	scaleX = value;
+	dojo.byId("scaleXValue").innerHTML = value;
+	update();
+};
+
+var scaleYEvent = function(value){
+	scaleY = value;
+	dojo.byId("scaleYValue").innerHTML = value;
+	update();
+};
+
+var offsetXEvent = function(value){
+	offsetX = value;
+	dojo.byId("offsetXValue").innerHTML = value;
+	update();
+};
+
+var offsetYEvent = function(value){
+	offsetY = value;
+	dojo.byId("offsetYValue").innerHTML = value;
+	update();
+};
+
+var _init = null;
+var onMouseDown = function(e){
+	_init = {x: e.clientX, y: e.clientY, ox: offsetX, oy: offsetY};
+	dojo.stopEvent(e);
+};
+
+var onMouseUp = function(e){
+	if(_init){
+		_init = null;
+		reflect();
+		dojo.stopEvent(e);
+	}
+};
+
+var onMouseMove = function(e){
+	if(_init){
+		var dx = e.clientX - _init.x,
+			dy = e.clientY - _init.y;
+		offsetX = _init.ox - dx;
+		offsetY = _init.oy + dy;
+		chart.setWindow(scaleX, scaleY, offsetX, offsetY).render();
+		dojo.stopEvent(e);
+	}
+};
+
+makeObjects = function(){
+	chart = new dojox.charting.Chart("test");
+	chart.setTheme(dojox.charting.themes.PlotKit.orange);
+	chart.addAxis("x", {fixLower: "minor", natural: true, stroke: "grey",
+		majorTick: {stroke: "black", length: 4}, minorTick: {stroke: "gray", length: 2}});
+	chart.addAxis("y", {vertical: true, min: 0, max: 30, majorTickStep: 5, minorTickStep: 1, stroke: "grey",
+		majorTick: {stroke: "black", length: 4}, minorTick: {stroke: "gray", length: 2}});
+	chart.addPlot("default", {type: "Areas", animate: {duration: 1800}});
+	chart.addSeries("Series A", [0, 25, 5, 20, 10, 15, 5, 20, 0, 25]);
+	chart.addAxis("x2", {fixLower: "minor", natural: true, leftBottom: false, stroke: "grey",
+		majorTick: {stroke: "black", length: 4}, minorTick: {stroke: "gray", length: 2}});
+	chart.addAxis("y2", {vertical: true, min: 0, max: 20, leftBottom: false, stroke: "grey",
+		majorTick: {stroke: "black", length: 4}, minorTick: {stroke: "gray", length: 2}});
+	chart.addPlot("plot2", {type: "Areas", hAxis: "x2", vAxis: "y2", animate: {duration: 1800}});
+	chart.addSeries("Series B", [15, 0, 15, 0, 15, 0, 15, 0, 15, 0, 15, 0, 15, 0, 15, 0, 15], {plot: "plot2"});
+	chart.addPlot("grid", {type: "Grid", hMinorLines: true});
+	chart.render();
+	
+    dojo.connect(dijit.byId("scaleXSlider"), "onChange", scaleXEvent);
+    dojo.connect(dijit.byId("scaleYSlider"), "onChange", scaleYEvent);
+    dojo.connect(dijit.byId("offsetXSlider"), "onChange", offsetXEvent);
+    dojo.connect(dijit.byId("offsetYSlider"), "onChange", offsetYEvent);
+
+    dojo.connect(dojo.byId("test"), "onmousedown", onMouseDown);
+    dojo.connect(dojo.byId("test"), "onmousemove", onMouseMove);
+    dojo.connect(dojo.byId("test"), "onmouseup",   onMouseUp);
+};
+
+dojo.addOnLoad(makeObjects);
+
+</script>
+</head>
+<body class="tundra">
+<h1>Scaling, scrolling, and panning.</h1>
+<!--<p><button onclick="makeObjects();">Go</button></p>-->
+<p>UI explained:</p>
+<ul>
+	<li>Use Scale X and Scale Y to zoom in the chart. You can scale the chart anisotropically.</li>
+	<li>Use Offset X and Offset Y to move the origin of the chart.</li>
+	<li>You cannot move the chart outside its boundaries.
+		<ul>
+			<li>Example: if both scale factors are 1, you cannot move the origin &mdash; you should zoom in first.</li>
+		</ul>
+	</li>
+	<li>After applying scale/offset to the chart, sliders' positions change to reflect actual values.</li>
+	<li>When you zoomed in, you can grab chart with mouse and move around (pan).
+		<ul>
+			<li>Warning: can be slow on some browsers.</li>
+		</ul>
+	</li>
+</ul>
+<table>
+	<tr><td align="center" class="pad">Scale X (<span id="scaleXValue">1</span>)</td></tr>
+	<tr><td>
+		<div id="scaleXSlider" dojoType="dijit.form.HorizontalSlider" 
+				value="1" minimum="1" maximum="10" discreteValues="10" showButtons="false"
+				style="width: 600px;">
+			<div dojoType="dijit.form.HorizontalRule" container="bottomDecoration" count="10" style="height:5px;"></div>
+			<div dojoType="dijit.form.HorizontalRuleLabels" container="bottomDecoration" minimum="1" maximum="10" count="10"
+				constraints="{pattern: '##'}" style="height:1.2em;font-size:75%;color:gray;"></div>
+		</div>
+	</td></tr>
+	<tr><td align="center" class="pad">Scale Y (<span id="scaleYValue">1</span>)</td></tr>
+	<tr><td>
+		<div id="scaleYSlider" dojoType="dijit.form.HorizontalSlider" 
+				value="1" minimum="1" maximum="10" discreteValues="10" showButtons="false"
+				style="width: 600px;">
+			<div dojoType="dijit.form.HorizontalRule" container="bottomDecoration" count="10" style="height:5px;"></div>
+			<div dojoType="dijit.form.HorizontalRuleLabels" container="bottomDecoration" minimum="1" maximum="10" count="10"
+				constraints="{pattern: '##'}" style="height:1.2em;font-size:75%;color:gray;"></div>
+		</div>
+	</td></tr>
+	<tr><td align="center" class="pad">Offset X (<span id="offsetXValue">0</span>)</td></tr>
+	<tr><td>
+		<div id="offsetXSlider" dojoType="dijit.form.HorizontalSlider" 
+				value="1" minimum="0" maximum="1000" discreteValues="1001" showButtons="false"
+				style="width: 600px;">
+			<div dojoType="dijit.form.HorizontalRule" container="bottomDecoration" count="11" style="height:5px;"></div>
+			<div dojoType="dijit.form.HorizontalRuleLabels" container="bottomDecoration" minimum="0" maximum="1000" count="11"
+				constraints="{pattern: '####'}" style="height:1.2em;font-size:75%;color:gray;"></div>
+		</div>
+	</td></tr>
+	<tr><td align="center" class="pad">Offset Y (<span id="offsetYValue">0</span>)</td></tr>
+	<tr><td>
+		<div id="offsetYSlider" dojoType="dijit.form.HorizontalSlider" 
+				value="1" minimum="0" maximum="1000" discreteValues="1001" showButtons="false"
+				style="width: 600px;">
+			<div dojoType="dijit.form.HorizontalRule" container="bottomDecoration" count="11" style="height:5px;"></div>
+			<div dojoType="dijit.form.HorizontalRuleLabels" container="bottomDecoration" minimum="0" maximum="1000" count="11"
+				constraints="{pattern: '####'}" style="height:1.2em;font-size:75%;color:gray;"></div>
+		</div>
+	</td></tr>
+</table>
+<div id="test" style="width: 500px; height: 300px;"></div>
+<p>That's all Folks!</p>
+</body>
+</html>

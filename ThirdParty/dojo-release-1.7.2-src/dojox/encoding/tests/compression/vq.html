@@ -1,0 +1,185 @@
+﻿<html>
+	<head>
+		<title>Compress colors using VQ</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<style type="text/css">
+			@import "../../../../dojo/resources/dojo.css";
+			@import "../../../../dijit/tests/css/dijitTests.css";
+			
+			.pane { margin-top: 2em; }
+		</style>
+		<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+		<script type="text/javascript">
+			dojo.require("dojox.encoding.tests.compression.colors");
+			dojo.require("dojox.encoding.compression.splay");
+			dojo.require("dojox.encoding.bits");
+			
+			var colors = dojox.encoding.tests.compression.colors;
+			
+			var dist = function(a, b){
+				var r = a[0] - b[0], g = a[1] - b[1], b = a[2] - b[2];
+				return r * r + g * g + b * b;				
+			};
+			
+			var hexcolor = function(c){
+				return "#" + (c[0] < 16 ? "0" : "") + c[0].toString(16) + 
+					(c[1] < 16 ? "0" : "") + c[1].toString(16) + 
+					(c[2] < 16 ? "0" : "") + c[2].toString(16);
+			};
+			
+			var maxdist = function(a, b, maxdist){
+				var r = Math.abs(a[0] - b[0]), g = Math.abs(a[1] - b[1]), b = Math.abs(a[2] - b[2]);
+				++maxdist[bits(r)];
+				++maxdist[bits(g)];
+				++maxdist[bits(b)];
+			};
+			
+			var encodeColor = function(a, b, splay, stream){
+				var r = a[0] - b[0], g = a[1] - b[1], b = a[2] - b[2];
+				stream.putBits(r < 0 ? 1 : 0, 1);
+				splay.encode(Math.abs(r), stream);
+				stream.putBits(g < 0 ? 1 : 0, 1);
+				splay.encode(Math.abs(g), stream);
+				stream.putBits(b < 0 ? 1 : 0, 1);
+				splay.encode(Math.abs(b), stream);
+			};
+			
+			var bits = function(x){
+				var w = 1;
+				for(var v = 2; x >= v; v <<= 1, ++w);
+				return w;
+			};
+			
+			var runVQ = function(n){
+				dojo.byId("status").innerHTML = "<em>Initializing...</em>";
+				dojo.byId("report").innerHTML = "<em>Running VQ...</em>";
+				var clusters = [];
+				// select initial cluster centers
+				var empty = {};
+				for(var i in colors){
+					if(i in empty){ continue; }
+					clusters.push({center: colors[i]});
+					if(clusters.length == n){ break; }
+				}
+				/*
+				for(var i = 0; i < n; ++i){
+					var r = Math.floor(Math.random() * 256), g = Math.floor(Math.random() * 256), b = Math.floor(Math.random() * 256);
+					clusters.push({center: [r, g, b]});
+				}
+				*/
+				// do runs
+				dojo.byId("status").innerHTML = "<div>Starting runs...</div>";
+				var jitter = 0, niter = 1;
+				do {
+					// save previous centers
+					var old_clusters = [];
+					dojo.forEach(clusters, function(c){	old_clusters.push({center: c.center}); c.members = []; });
+					// assign colors to clusters
+					for(var i in colors){
+						if(i in empty){ continue; }
+						var c = colors[i], k = -1, kd = Number.MAX_VALUE;
+						for(var j = 0; j < clusters.length; ++j){
+							var jd = dist(clusters[j].center, c);
+							if(jd < kd){ k = j, kd = jd; }
+						}
+						clusters[k].members.push(i);
+					}
+					// recalculate cluster centers
+					for(var i = 0; i < clusters.length; ++i){
+						if(!clusters[i].members.length){ continue; }
+						var r = 0, g = 0, b = 0;
+						dojo.forEach(clusters[i].members, function(name){
+							var c = colors[name];
+							r += c[0];
+							g += c[1];
+							b += c[2];
+						});
+						r = Math.round(r / clusters[i].members.length);
+						g = Math.round(g / clusters[i].members.length);
+						b = Math.round(b / clusters[i].members.length);
+						clusters[i].center = [r, g, b];
+					}
+					// calculate the jitter
+					jitter = 0;
+					for(var i = 0; i < clusters.length; ++i){
+						jitter = Math.max(jitter, dist(clusters[i].center, old_clusters[i].center));
+					}
+					var node = dojo.doc.createElement("div");
+					node.innerHTML = "Run #" + niter + ", jitter = " + jitter;
+					dojo.byId("status").appendChild(node);
+					++niter;
+				}while(jitter > 1 && niter < 1000);
+				// calculate the required number of bytes
+				var output = new dojox.encoding.bits.OutputStream(),
+					splay = new dojox.encoding.compression.Splay(256);
+				for(var i = 0; i < clusters.length; ++i){
+					var c = clusters[i], m = c.members, d = 0, ol = output.getWidth();
+					output.putBits(c.center[0], 8);
+					output.putBits(c.center[1], 8);
+					output.putBits(c.center[2], 8);
+					splay.reset();
+					c.maxdist = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+					for(var j = 0; j < m.length; ++j){
+						var color = colors[m[j]];
+						maxdist(c.center, color, c.maxdist);
+						encodeColor(c.center, color, splay, output);
+					}
+					c.bits = output.getWidth() - ol;
+				}
+				var node = dojo.doc.createElement("div");
+				node.innerHTML = "Required " + Math.ceil(output.getWidth() / 8) + " bytes";
+				dojo.byId("status").appendChild(node);
+				// generate color tables
+				var reps = [];
+				for(var i = 0; i < clusters.length; ++i){
+					var c = clusters[i], m = c.members;
+					reps.push("<p>Cluster #" + i + " contains " + m.length + " members. Length histogram:");
+					for(var j = 0; j < c.maxdist.length; ++j){
+						if(c.maxdist[j]){
+							reps.push(" " + j + "&mdash;" + c.maxdist[j]);
+						}
+					}
+					reps.push(". It requires " + c.bits + " bits (" + Math.ceil(c.bits / 8) + " bytes) to be encoded.</p>");
+					reps.push("<table>");
+					var wd = dist([255,255,255], c.center), bd = dist([0,0,0], c.center);
+					reps.push("<tr><td style='background: " + hexcolor(c.center) + "; color: " + 
+						(wd < bd ? "black" : "white") + "'><strong>CENTER</strong></td><td>" + 
+						c.center[0] + "</td><td>" + c.center[1] + "</td><td>" + c.center[2] + "</td></tr>");
+					for(var j = 0; j < m.length; ++j){
+						var color = colors[m[j]];
+						wd = dist([255,255,255], color);
+						bd = dist([0,0,0], color);
+						reps.push("<tr><td style='background: " + m[j] + "; color: " +
+							(wd < bd ? "black" : "white") + "'><strong>" + m[j] + "</strong></td><td>" + 
+							color[0] + "</td><td>" + color[1] + "</td><td>" + color[2] + "</td></tr>");
+					}
+					reps.push("</table>");
+				}
+				dojo.byId("report").innerHTML = reps.join("\n");
+			};
+			
+			run = function(){
+				var n = parseInt(dojo.byId("ncluster").value);
+				runVQ(n);
+			};
+			
+			dojo.addOnLoad(function(){
+				dojo.connect(dojo.byId("run"), "onclick", run);
+			});
+		</script>
+	</head>
+	<body>
+		<h1>Compress colors using VQ</h1>
+		<p>Select desirable number of clusters:&nbsp;<select id="ncluster">
+			<option value="1">1</option>
+			<option value="2">2</option>
+			<option value="4">4</option>
+			<option value="8">8</option>
+			<option value="16">16</option>
+			<option value="32">32</option>
+			<option value="64">64</option>
+		</select>&nbsp;<button id="run">Run</button></p>
+		<div id="status" class="pane"><em>No status yet.</em></div>
+		<div id="report" class="pane"><em>No results yet.</em></div>
+	</body>
+</html>

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Dijit Tree Test</title>
+
+	<style type="text/css">
+		@import "../../../themes/claro/document.css";
+		@import "../../css/dijitTests.css";
+	</style>
+
+	<!-- required: a default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../../dijit/themes/claro/claro.css"/>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../../dojo/dojo.js"
+		data-dojo-config="parseOnLoad: true, isDebug: true"></script>
+
+	<script type="text/javascript">
+		dojo.require("dojo.data.ItemFileReadStore");
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+
+		dojo.require("dijit.Tree");
+		dojo.require("dijit.tree.ForestStoreModel");
+
+		dojo.require("dijit.ColorPalette");
+
+		dojo.require("dijit.Menu");
+		dojo.require("dijit.MenuItem");
+		dojo.require("dijit.PopupMenuItem");
+		
+		dojo.require("dijit._BidiSupport");
+		dojo.require("doh.runner");
+
+		dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+		dojo.addOnLoad(function(){
+
+			var treeRootless, treeCustIcons, buttonLtr, buttonRtl, buttonAuto;
+			
+			function expandNode(tree, node){
+				var d = new doh.Deferred();
+
+				if(!node.isExpandable){
+					return;
+				}
+				if(!node.isExpanded){
+					tree._onExpandoClick({node: node});	
+				}
+				//node.expand();
+				setTimeout(d.getTestCallback(function(){
+					dojo.forEach(node.getChildren(),  function(child){expandNode(tree,child)});
+				}), 100);
+				return d;
+			};
+			function expandAll(tree){
+				expandNode(tree,tree.rootNode);
+			};
+			
+
+			function testNodeAuto(node,textDir){
+
+				doh.is(node.tree._checkContextual(node.label), node.labelNode.dir, "direction of " + node.tree.id +" : rootNode");
+			
+				if(!node.item.children){
+					return;
+				}
+				dojo.forEach(node.getChildren(), function(childNode){
+					//doh.is(textDir, childNode.labelNode.dir, "direction of " + childNode.tree.id + " element: " + i);
+					testNodeAuto(childNode,textDir);
+				});
+				
+			};
+			
+			function testNode(node,textDir){
+
+				doh.is(textDir, node.labelNode.dir, "direction of " + node.tree.id +" : rootNode");
+			
+				if(!node.item.children){
+					return;
+				}
+				dojo.forEach(node.getChildren(), function(childNode){
+					//doh.is(textDir, childNode.labelNode.dir, "direction of " + childNode.tree.id + " element: " + i);
+					testNode(childNode,textDir);
+				});
+				
+			};
+			function expandedNodesTextDirTest(tree, textDir){
+
+				textDir == "auto" ? testNodeAuto(tree.rootNode, textDir) : testNode(tree.rootNode, textDir);
+
+			};
+			
+			doh.register("paths", [
+				{
+					name: "initial dirs",
+					
+					setUp: function(){
+						treeRootless = dijit.byId("treeRootless");						
+						treeCustIcons = dijit.byId("treeCustIcons");						
+					},
+
+					runTest: function(){
+						var d = new doh.Deferred();
+						
+						setTimeout(d.getTestCallback(function(){
+							doh.is("ltr", treeCustIcons.rootNode.labelNode.dir, "direction of treeCustIcons: rootNode");
+							var autoChildren = treeCustIcons.rootNode.getChildren(); // rtlChildren = treeRootless.rootNode.getChildren(), 
+							
+							for(var i = 0 ; i < autoChildren.length ; i++){
+								doh.is(treeCustIcons._checkContextual(autoChildren[i].label), autoChildren[i].labelNode.dir, "direction of treeCustIcons element: " + autoChildren[i].label);
+							};
+						}), 100);
+
+						return d;
+					}
+				},
+				{
+					name: "expanded RTL",
+					
+					runTest: function(){
+						var d = expandAll(treeRootless);
+						
+						expandedNodesTextDirTest(treeRootless, "rtl");
+						
+						return d;
+
+					}
+				},
+				{
+					name: "expanded AUTO",
+					
+					runTest: function(){
+						expandedNodesTextDirTest(treeCustIcons, "auto");
+					}
+				}
+			]);
+			doh.register("Dynamic change textDir", [
+				{
+					name: 'check "set("textDir", textDir)" function',
+					
+					setUp: function(){
+						treeRootless = dijit.byId("treeRootless");						
+						treeCustIcons = dijit.byId("treeCustIcons");	
+						buttonLtr = dojo.byId("buttonLtr");
+						buttonRtl = dojo.byId("buttonRtl");
+						buttonAuto = dojo.byId("buttonAuto");
+						
+					},
+
+					runTest: function(){
+
+						dijit.byId("treeRootless").set("textDir", "ltr");
+						
+						expandedNodesTextDirTest(treeRootless, "ltr");
+						
+						expandedNodesTextDirTest(treeCustIcons, "auto");
+					}
+				},
+				{
+					name: 'set using the buttons: LTR',
+					
+					runTest: function(){
+						
+						buttonLtr.click();
+
+						expandedNodesTextDirTest(treeRootless, "ltr");
+						
+						expandedNodesTextDirTest(treeCustIcons, "ltr");
+					}
+				},
+				{
+					name: 'set using the buttons: RTL',
+					
+					runTest: function(){
+						
+						buttonRtl.click();
+
+						expandedNodesTextDirTest(treeRootless, "rtl");
+						
+						expandedNodesTextDirTest(treeCustIcons, "rtl");
+					}
+				},
+				{
+					name: 'set using the buttons: AUTO',
+					
+					runTest: function(){
+						
+						buttonAuto.click();
+
+						expandedNodesTextDirTest(treeRootless, "auto");
+						
+						expandedNodesTextDirTest(treeCustIcons, "auto");
+					}
+				}					
+			]);					
+			doh.run();
+		});		
+	
+	</script>
+
+</head>
+<body class="claro">
+
+	<h1 class="testTitle">Dijit Tree Test</h1>
+
+	<div data-dojo-id="continentStore" data-dojo-type="dojo.data.ItemFileReadStore" data-dojo-props='url:"../../../../dijit/tests/_BidiSupport/_data/countriesHeb.json"'></div>
+	<div data-dojo-id="continentModel" data-dojo-type="dijit.tree.ForestStoreModel" data-dojo-props='store:continentStore, query:{type:"continent"},
+		rootId:"continentRoot", rootLabel:"Continents!", childrenAttrs:["children"]'></div>
+	
+		<table>
+			<tr>
+				<td>
+					<h2>A rootless tree (no "continents" node) with custom icons</h2>
+
+					<div id="treeRootless" data-dojo-type="dijit.Tree" data-dojo-props='textDir:"rtl",model:continentModel, showRoot:false, openOnClick:true'>
+
+						<script type="dojo/method" data-dojo-event="getIconClass" data-dojo-args="item, opened">
+						   return (item == this.model.root || continentStore.getValue(item, "type") == "continent") ?
+								   (opened ? "customFolderOpenedIcon" : "customFolderClosedIcon") :
+									"noteIcon";
+						</script>
+					</div>
+				</td>
+				<td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+				<td>
+					<div id="treeCustIcons" data-dojo-type="dijit.Tree" data-dojo-props='textDir:"auto",store:continentStore, query:{type:"continent"},
+						label:"Continents!", openOnClick:false, openOnDblClick:true,
+						autoExpand:true'>
+						<script type="dojo/method" data-dojo-event="getLabelStyle" data-dojo-args="item,opened">
+							if(item && continentStore.getValue(item,"type") == "continent"){
+								return {color: "red"};
+							}else{
+								return {color: "green"};
+							}
+						</script>
+						<script type="dojo/method" data-dojo-event="getIconStyle" data-dojo-args="item,opened">
+							if(item && continentStore.getValue(item,"type") == "continent"){
+								return {
+									backgroundImage: "url('../../images/flatScreen.gif')",
+									height: "32px",
+									width: "32px"
+								};
+							}else{
+								return null;
+							}
+						</script>
+						<script type="dojo/method" data-dojo-event="getIconClass" data-dojo-args="item, opened">
+						   if(!item || continentStore.getValue(item, "type") != "continent")
+								return (!item || this.model.mayHaveChildren(item)) ? (opened ? "dijitFolderOpened" : "dijitFolderClosed") : "dijitLeaf"
+							else
+								return "";
+						</script>
+					</div>
+				</td>
+			</tr>
+		</table>
+		
+	<input id="buttonRtl" type="button" onclick="dijit.byId('treeRootless').set('textDir','rtl');dijit.byId('treeCustIcons').set('textDir','rtl');"
+	value="RTL"/>
+	<input id="buttonLtr" type="button" onclick="dijit.byId('treeRootless').set('textDir','ltr');dijit.byId('treeCustIcons').set('textDir','ltr');"
+	value="LTR"/>
+	<input id="buttonAuto" type="button" onclick="dijit.byId('treeRootless').set('textDir','auto');dijit.byId('treeCustIcons').set('textDir','auto');"
+	value="AUTO"/>
+
+
+</body>
+</html>

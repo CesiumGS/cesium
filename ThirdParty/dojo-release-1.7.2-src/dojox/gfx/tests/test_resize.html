@@ -1,0 +1,56 @@
+﻿<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" >
+<head>
+<title>Testing surface resizing</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+</style>
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+<script type="text/javascript">
+dojo.require("dojox.gfx");
+dojo.require("dojox.gfx.shape");
+dojo.require("dojox.gfx.path");
+dojo.require("dojox.gfx.arc");
+
+var surface;
+
+createSurface = function(){
+	surface = dojox.gfx.createSurface("test", 500, 500);
+	surface.whenLoaded(makeShapes);
+};
+
+makeShapes = function(){
+	surface.createRect({width: 300, height: 300}).setFill([255, 0, 0, 0.3]).setStroke("red");
+	surface.createRect({x: 200, y: 200, width: 300, height: 300}).setFill([0, 0, 255, 0.3]).setStroke("green");
+};
+
+getDim = function(){
+	var t = surface.getDimensions();
+	alert("dimensions: " + t.width + " by " + t.height);
+};
+
+make500x500 = function(){ surface.setDimensions(500, 500); };
+make400x400 = function(){ surface.setDimensions(400, 400); };
+make300x300 = function(){ surface.setDimensions(300, 300); };
+
+dojo.addOnLoad(createSurface);
+
+</script>
+</head>
+<body>
+<h1>Testing surface resizing</h1>
+<!--<p><button onclick="makeShapes();">Go</button></p>-->
+<p>
+	<button onclick="getDim();">getDimensions</button>
+	&nbsp;
+	<button onclick="make300x300();">Make 300x300</button>
+	&nbsp;
+	<button onclick="make400x400();">Make 400x400</button>
+	&nbsp;
+	<button onclick="make500x500();">Make 500x500</button>
+</p>
+<div id="test" style="width: 500px; height: 500px;"></div>
+<p>That's all Folks!</p>
+</body>
+</html>

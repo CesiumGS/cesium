@@ -1,0 +1,117 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html style="overflow:hidden;">
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>test Tooltip</title>
+		<link href="../themes/common/SpinWheel.css" rel="stylesheet">
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+		<style>
+		.dj_phone BUTTON {
+			display:none;
+		}
+		INPUT {
+			font-family: monospace;
+			border-radius: 0px;
+		}
+		#spin1 {
+			width: 304px;
+ 		}
+		#pt {
+			width: 20px;
+			background-color: #C4C9DB;
+			opacity: 0.2;
+		}
+		#txt {
+			width: 10px;
+			margin-left: -15px;
+			padding-top: 85px;
+			font-size: 24px;
+			font-weight: bold;
+			border: none;
+		}
+		HTML {
+			min-height: 100%; /* workaround for android 3.x position:fixed bug */
+		}
+		</style>
+
+		<script language="JavaScript" type="text/javascript">
+			dojo.require("dojox.mobile");			// This is a mobile app.
+			dojo.require("dojox.mobile.parser");	// This mobile app supports running on desktop browsers
+			dojo.require("dojox.mobile.compat");	// This mobile app uses declarative programming with fast mobile parser
+			dojo.require("dojox.mobile.deviceTheme");
+			dojo.require("dojox.mobile.SpinWheel");
+			dojo.require("dojox.mobile.SpinWheelSlot");
+			dojo.require("dojox.mobile.Tooltip");
+			dojo.require("dojox.mobile.common");
+			dojo.ready(function(){
+				dojo.byId('bot').scrollIntoView(false);
+			});
+
+		</script>
+	</head>
+	<body style="visibility:hidden;">
+		<center style="width:100%;">
+			<button type="button" onclick="dijit.byId('customPicker').show(this, ['above','below-centered','before','after'])">below</button>
+			<input readonly onclick="dijit.byId('textTooltip').show(this, ['above-centered','below-centered','after','before'])" value="below" size="5">
+			<br><br><b>Click boundary nodes to see tooltips</b>
+		</center>
+		<center id="bot" class="bottom" style="position:fixed;bottom:0;width:100%;">
+			<input readonly tabindex="0" onclick="dijit.byId('textTooltip').show(this, ['above-centered','below-centered','before','after'])" value="above" size="5">
+			<button type="button" tabindex="0" onclick="dijit.byId('customPicker').show(this, ['below','above-centered','after','before'])">above</button>
+		</center>
+		<center style="position:fixed;top:33%;width:100%;">
+			<button type="button" onclick="dijit.byId('customPicker').hide()">click to hide spin wheels</button>
+		</center>
+		<center style="position:fixed;bottom:33%;width:100%;">
+			<input readonly onclick="dijit.byId('textTooltip').hide()" value="click to hide text tooltip" size="26">
+		</center>
+		<div style="position:fixed;top:50%;left:1px;direction:ltr;">
+			<input readonly onclick="dijit.byId('textTooltip').show(this, ['before','after','below-centered','above-centered'])" value="right" size="5">
+			<br>
+			<br>
+			<button type="button" onclick="dijit.byId('customPicker').show(this, ['before','after','below-centered','above-centered'])">right</button>
+		</div>
+		<div style="position:fixed;bottom:50%;right:1px;direction:rtl;">
+			<button type="button" onclick="dijit.byId('customPicker').show(this, ['after','before','above','below'])">left</button>
+			<br>
+			<br>
+			<input readonly onclick="dijit.byId('textTooltip').show(this, ['after','before','below','above'])" value="left" size="4">
+		</div>
+
+		<div id="textTooltip" dojoType="dojox.mobile.Tooltip" class="mblTooltipBubble">Enter a value.<br><center>Please!</center></div>
+
+		<div id="customPicker" dojoType="dojox.mobile.Tooltip">
+			<div id="spin1" dojoType="dojox.mobile.SpinWheel">
+				<div dojoType="dojox.mobile.SpinWheelSlot"
+					labels="['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']"
+					style="text-align:center;width:40px;"></div>
+				<div dojoType="dojox.mobile.SpinWheelSlot"
+					labelFrom="3000" labelTo="3100"
+					style="width:70px;"></div>
+				<div id="pt" class="mblSpinWheelSlot"></div>
+				<div id="txt" class="mblSpinWheelSlot">.</div>
+				<div dojoType="dojox.mobile.SpinWheelSlot"
+					labelFrom="0" labelTo="9"
+					style="width:30px;"></div>
+				<div dojoType="dojox.mobile.SpinWheelSlot"
+					labels="['pt','px','cm']"
+					style="width:50px;"></div>
+				<div dojoType="dojox.mobile.SpinWheelSlot"
+					labels="[
+						'<img src=images/i-icon-1.png>',
+						'<img src=images/i-icon-2.png>',
+						'<img src=images/i-icon-3.png>',
+						'<img src=images/i-icon-4.png>',
+						'<img src=images/i-icon-5.png>',
+						'<img src=images/i-icon-6.png>',
+						'<img src=images/i-icon-7.png>',
+						'<img src=images/i-icon-8.png>',
+						'<img src=images/i-icon-9.png>',
+						'<img src=images/i-icon-10.png>'
+					]"
+					style="width:70px;text-align: center;"></div>
+			</div>
+		</div>
+	</body>
+</html>

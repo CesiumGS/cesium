@@ -1,7 +1,6 @@
 /*global define*/
 define(function() {
     "use strict";
-    /*global document*/
 
     function destroyContext(context) {
         if (context) {

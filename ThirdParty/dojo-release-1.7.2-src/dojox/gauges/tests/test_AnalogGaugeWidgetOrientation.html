@@ -1,0 +1,129 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>Analog Gauge Widget Orientation</title>
+		<style>
+			@import "../_Gauge.css";
+			@import "../../../dojo/resources/dojo.css";
+			@import "../../../dijit/themes/tundra/tundra.css";
+		</style>
+		<script type="text/javascript">
+			djConfig = {
+				parseOnLoad: true,
+				isDebug: true
+			};
+		</script>
+		<script type="text/javascript" src="../../../dojo/dojo.js">
+		</script>
+		<script language="JavaScript" type="text/javascript">
+			dojo.require('dojox.gauges.AnalogGauge');
+			dojo.require('dojox.gauges.AnalogArcIndicator');
+			dojo.require('dojox.gauges.AnalogNeedleIndicator');
+			dojo.require('dojox.gauges.AnalogCircleIndicator');
+			dojo.require('dojox.gauges.TextIndicator');
+			dojo.require('dijit.form.Button');
+			dojo.require('dojo.parser');
+			
+			dojo.addOnLoad(init);
+			
+			
+			function init(){
+			
+			
+				var gauge1 = new dojox.gauges.AnalogGauge({
+					id: "gauge",
+					startAngle: -60,
+					endAngle: 60,
+					background: 'white',
+					width: 300,
+					height: 180,
+					cx: 150,
+					cy: 150,
+					radius: 130,
+					ranges: [{
+						low: 0,
+						high: 60,
+						color: 'white'
+					}],
+					
+					majorTicks: {
+						offset: 100,
+						interval: 10,
+						length: 3,
+						color: 'black',
+						labelPlacement: 'outside'
+					},
+					
+					indicators: [new dojox.gauges.AnalogNeedleIndicator({
+						interactionMode: "gauge",
+						value: 0,
+						width: 10,
+						length: 100,
+						strokeColor: [100, 100, 100],
+						color: [200, 200, 200]
+					
+					})]
+				}, dojo.byId("gauge"));
+				
+				gauge1.startup();
+				
+				
+				var gauge2 = new dojox.gauges.AnalogGauge({
+					id: "gauge2",
+					orientation: "cclockwise",
+					startAngle: 60,
+					endAngle: -60,
+					background: 'white',
+					width: 300,
+					height: 180,
+					cx: 150,
+					cy: 150,
+					radius: 130,
+					ranges: [{
+						low: 0,
+						high: 60,
+						color: 'white'
+					}],
+					
+					majorTicks: {
+						offset: 100,
+						interval: 10,
+						length: 3,
+						color: 'black'
+					},
+					
+					indicators: [new dojox.gauges.AnalogNeedleIndicator({
+						interactionMode: "gauge",
+						value: 0,
+						width: 10,
+						length: 100,
+						strokeColor: [100, 100, 100],
+						color: [200, 200, 200]
+					
+					})]
+				}, dojo.byId("gauge2"));
+				
+				gauge2.startup();
+				
+				
+			}
+		</script>
+	</head>
+	<body class="tundra">
+		<h1>Analog Gauge Widget Orientation</h1>
+		<ul class="lst">
+			<li>
+				Clockwise
+			</li>
+		</ul>
+		<div id="gauge">
+		</div>
+		<ul class="lst">
+			<li>
+				Counter Clockwise
+			</li>
+		</ul>
+		<div id="gauge2">
+		</div>
+	</body>
+</html>

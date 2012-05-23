@@ -1,0 +1,46 @@
+<html>
+	<head>
+		<link rel="stylesheet" type="text/css" href="../../../../../dijit/themes/claro/claro.css" />
+
+		<script type="text/javascript">
+			var startTime = (new Date()).getTime();
+			var dojoConfig = {
+				// set baseUrl === to the page URL; this overrides dojo's desire to be the center of the world
+				baseUrl:".",
+
+				packages:[{
+					// the dojo package for non-coolio use
+					name:"dojo",
+					location:"../../../..",
+				},{
+					// the dijit package for non-coolio use
+					name:"dijit",
+					location:"../../../../../dijit",
+			    },{
+					name:"coolio",
+					location:"."
+				}]
+			};
+		</script>
+
+		<!-- load the loader, which in sync mode, also loads dojo -->
+		<script type="text/javascript" src="../../../../dojo.js"></script>
+		<script type="text/javascript">
+			dojo.require("dijit.Calendar");
+			dojo.require("dojo.parser");
+			dojo.require("coolio.calendar");
+			dojo.ready(function(){
+				coolio.calendar("c1");
+				dojo.parser.parse();
+				console.log("total load time: " + ((new Date()).getTime() - startTime) / 1000 + "s");
+			});
+		</script>
+	</head>
+	<body class=" claro ">
+		<!-- see it all work: instantiate a couple of widgets, one built in the dojo, dijit stack, the other in the cdojo, cdijit, coolio stack -->
+		<p>A Coolio Calendar</p>
+		<div id="c1"></div>
+		<p>A Dijit Calendar</p>
+		<div dojoType="dijit.Calendar" onChange="dojo.byId('formatted').innerHTML=dojo.date.locale.format(arguments[0], {formatLength: 'full', selector:'date'})"> </div>
+	</body>
+</html>

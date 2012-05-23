@@ -1,6 +1,6 @@
 (function() {
     "use strict";
-    /*global Cesium, Sandbox*/
+    /*global Cesium,Sandbox*/
 
     Sandbox.CameraFlyToLosAngeles = function (scene, ellipsoid, primitives) {
         var flight = null;
@@ -20,7 +20,7 @@
             // set a new camera position, in case this example is clicked consecutively.
             scene.getCamera().lookAt({
                 eye : new Cesium.Cartesian3(2203128.2853925996, -7504680.128731707, 5615591.201449535),
-                target: Cesium.Cartesian3.getZero(),
+                target: Cesium.Cartesian3.ZERO,
                 up : new Cesium.Cartesian3(-0.1642824655609347, 0.5596076102188919, 0.8123118822806428)
             });
         };
@@ -33,15 +33,15 @@
 
             var spindle = scene.getCamera().getControllers().get(0);
             spindle.mouseConstrainedZAxis = true;
-            spindle.setReferenceFrame(transform, Cesium.Ellipsoid.getUnitSphere());
+            spindle.setReferenceFrame(transform, Cesium.Ellipsoid.UNIT_SPHERE);
 
             // draw x axis in red
             var xAxis = new Cesium.Polyline(undefined);
             xAxis.modelMatrix = transform;
             xAxis.color = {red : 1.0, green : 0.0, blue : 0.0, alpha : 1.0 };
             xAxis.setPositions([
-                Cesium.Cartesian3.getZero(),
-                Cesium.Cartesian3.getUnitX().multiplyWithScalar(100000.0)
+                Cesium.Cartesian3.ZERO,
+                Cesium.Cartesian3.UNIT_X.multiplyWithScalar(100000.0)
             ]);
             primitives.add(xAxis);
 
@@ -50,8 +50,8 @@
             yAxis.modelMatrix = transform;
             yAxis.color = {red : 0.0, green : 1.0, blue : 0.0, alpha : 1.0 };
             yAxis.setPositions([
-                Cesium.Cartesian3.getZero(),
-                Cesium.Cartesian3.getUnitY().multiplyWithScalar(100000.0)
+                Cesium.Cartesian3.ZERO,
+                Cesium.Cartesian3.UNIT_Y.multiplyWithScalar(100000.0)
             ]);
             primitives.add(yAxis);
 
@@ -60,21 +60,21 @@
             zAxis.modelMatrix = transform;
             zAxis.color = {red : 0.0, green : 0.0, blue : 1.0, alpha : 1.0 };
             zAxis.setPositions([
-                Cesium.Cartesian3.getZero(),
-                Cesium.Cartesian3.getUnitZ().multiplyWithScalar(100000.0)
+                Cesium.Cartesian3.ZERO,
+                Cesium.Cartesian3.UNIT_Z.multiplyWithScalar(100000.0)
             ]);
             primitives.add(zAxis);
         };
 
         this.camera = {
             eye: new Cesium.Cartesian3(1.0, 1.0, 1.0).normalize().multiplyWithScalar(200000.0),
-            target: Cesium.Cartesian3.getZero(),
-            up: Cesium.Cartesian3.getUnitZ()
+            target: Cesium.Cartesian3.ZERO,
+            up: Cesium.Cartesian3.UNIT_Z
         };
 
         this.clear = function() {
             var spindle = scene.getCamera().getControllers().get(0);
-            spindle.setReferenceFrame(Cesium.Matrix4.getIdentity());
+            spindle.setReferenceFrame(Cesium.Matrix4.IDENTITY);
             spindle.mouseConstrainedZAxis = false;
         };
     };
@@ -102,7 +102,7 @@
         this.clear = function() {
             scene.getCamera().lookAt({
                 eye : new Cesium.Cartesian3(2203128.2853925996, -7504680.128731707, 5615591.201449535),
-                target: Cesium.Cartesian3.getZero(),
+                target: Cesium.Cartesian3.ZERO,
                 up : new Cesium.Cartesian3(-0.1642824655609347, 0.5596076102188919, 0.8123118822806428)
             });
         };

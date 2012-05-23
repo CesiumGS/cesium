@@ -1,0 +1,62 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+	"http://www.w3.org/TR/html4/loose.dtd"> 
+<html> 
+<head> 
+	<title>dojox.grid.DataGrid with an empty result set</title> 
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta> 
+	<style type="text/css"> 
+		@import "../../../dojo/resources/dojo.css"; 
+		@import "../resources/Grid.css"; 
+		#grid { 
+			width: 65em; 
+			height: 25em; 
+		}
+	</style> 
+	<script type="text/javascript" src="../../../dojo/dojo.js"  
+		djConfig="isDebug: true, debugAtAllCosts: false, parseOnLoad: true"></script> 
+	<script type="text/javascript"> 
+		dojo.require("dijit.dijit");
+		dojo.require("dojox.grid.DataGrid"); 
+		dojo.require("dojo.data.ItemFileWriteStore"); 
+		dojo.require("dojo.parser"); 
+		dojo.require("dijit.form.Button"); 
+	</script> 
+	<script type="text/javascript"> 
+		var layoutCountries = [ 
+			// view 1 
+			{ cells: [ new dojox.grid.cells.RowIndex({width: 5}) ], noscroll: true}, 
+			// view 2 
+			[ 
+				{ name: "field 0", field: 'name', width: 8 }, 
+				{ name: "field 1", field: 'type', width: 8 } 
+			]
+		];
+		
+		var emptyData = { identifier: 'name', label: 'name', items: []}; 
+		var jsonStore = new dojo.data.ItemFileWriteStore({data: emptyData}); 
+		var numItems = 0; 
+	</script> 
+</head> 
+<body class="tundra"> 
+		<h5>dojox.grid.DataGrid using initially-empty write stores and then adding an item.  Item should show up correctly (no "..."s) when added.</h5> 
+		<br>
+		<div id="grid" dojoType="dojox.grid.DataGrid" elasticView="2" query="{ name: '*' }" rowsPerPage="20"
+			store="jsonStore" structure="layoutCountries" rowSelector="20px"> 
+		</div> 
+		<button dojoType="dijit.form.Button"> 
+			<script type="dojo/method" event="onClick"> 
+				numItems++; 
+				dojo.connect(jsonStore, "fetch", function(){
+					console.error("Calling newItem should not trigger a fetch.");
+					throw new Error("Calling newItem should not trigger a fetch.");
+				});
+				jsonStore.newItem({
+					name: numItems + "-person Land", 
+					type: "city", 
+					population: numItems
+				}); 
+			</script> 
+			Add Item 
+		</button> 
+</body> 
+</html> 

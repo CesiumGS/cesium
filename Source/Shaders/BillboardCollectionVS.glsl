@@ -43,7 +43,7 @@ void main()
     positionWC.xy += (origin * abs(halfSize)) + halfSize;
     positionWC.xy += (pixelOffset * agi_highResolutionSnapScale);
     
-    gl_Position = agi_viewportOrthographic * vec4(positionWC.xy, -positionWC.z, 1.0);
+    gl_Position = agi_viewportOrthographic * vec4(positionWC.x, floor(positionWC.y), -positionWC.z, 1.0);
     v_textureCoordinates = textureCoordinates;
     v_color = color;
     v_pickColor = pickColor;

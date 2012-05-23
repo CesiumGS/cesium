@@ -1,7 +1,5 @@
-defineSuite([
-         'Core/binarySearch'
-     ], function(
-         binarySearch) {
+/*global defineSuite*/
+defineSuite(['Core/binarySearch'], function(binarySearch) {
     "use strict";
     /*global it,expect*/
 
@@ -29,7 +27,7 @@ defineSuite([
         var index = binarySearch(array, toFind, function(a, b) {
             return a - b;
         });
-        expect(index < 0).toBeTruthy();
+        expect(index < 0).toEqual(true);
     });
 
     it("throws an exception if array is missing", function() {

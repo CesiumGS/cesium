@@ -1,0 +1,224 @@
+/* Switch - default */
+.mblSwitch {
+	margin: 0;
+	position: relative;
+	width: 94px;
+	height: 27px;
+	line-height: 29px;
+	overflow: hidden;
+	text-align: left;
+	-webkit-tap-highlight-color: rgba(255,255,255,0);
+}
+.mblItemSwitch {
+	position: absolute;
+	right: 12px;
+}
+.mblSwitchInner {
+	position: absolute;
+	top: 0px;
+	height: 27px;
+}
+.mblSwitchAnimation .mblSwitchInner {
+	-webkit-transition-property: left;
+	-webkit-transition-duration: .3s;
+}
+.mblSwitchOn .mblSwitchInner {
+	left: 0px;
+}
+.mblSwitchOff .mblSwitchInner {
+	left: -53px;
+}
+.mblSwitchBg {
+	position: absolute;
+	top: 0px;
+	height: 27px;
+	border-width: 1px;
+	border-style: inset;
+	border-color: #9CACC0;
+	font-family: Helvetica;
+	font-size: 16px;
+	font-weight: bold;
+	line-height: 29px;
+	-webkit-box-sizing: border-box;
+}
+.mblSwitchBgLeft {
+	left: 0px;
+	width: 94px;
+	color: white;
+	background-color: #3F84EB;
+}
+.mblSwitchBgRight {
+	left: 53px;
+	width: 94px;
+	color: #7F7F7F;
+}
+.mblSwitchKnob {
+	position: absolute;
+	top: 1px;
+	left: 53px;
+	width: 41px;
+	height: 26px;
+	font-size: 1px;
+	border-width: 1px;
+	border-style: solid;
+	border-color: #EFEFEF #A5A5A5 #969696 #325E9E;
+	-webkit-box-sizing: border-box;
+}
+.mblSwitchText {
+	position: relative;
+	top: 0px;
+	width: 53px;
+	height: 27px;
+	padding: 0px;
+	line-height: 28px;
+	text-align: center;
+}
+.mblSwitchTextLeft {
+	left: 0px;
+}
+.mblSwitchTextRight {
+	left: 40px;
+}
+
+/* Round Shape1 */
+.mblSwRoundShape1 {
+	height: 28px;
+	-webkit-mask-image: -webkit-canvas(mblSwRoundShape1Mask);
+}
+.mblSwRoundShape1.mblItemSwitch {
+	top: 8px;
+}
+.mblSwRoundShape1 .mblSwitchInner {
+	height: 28px;
+}
+.mblSwRoundShape1.mblSwitchOff .mblSwitchInner {
+	left: -67px;
+}
+.mblSwRoundShape1 .mblSwitchBg {
+	height: 28px;
+	-webkit-border-radius: 14px;
+}
+.mblSwRoundShape1 .mblSwitchBgLeft {
+}
+.mblSwRoundShape1 .mblSwitchBgRight {
+	left: 67px;
+}
+.mblSwRoundShape1 .mblSwitchKnob {
+	left: 67px;
+	width: 26px;
+	height: 26px;
+	-webkit-border-radius: 13px;
+}
+.mblSwRoundShape1 .mblSwitchText {
+	width: 67px;
+	height: 26px;
+}
+.mblSwRoundShape1 .mblSwitchTextRight {
+	left: 26px;
+}
+
+/* Round Shape2 */
+.mblSwRoundShape2 {
+	height: 28px;
+	-webkit-mask-image: -webkit-canvas(mblSwRoundShape2Mask);
+}
+.mblSwRoundShape2.mblItemSwitch {
+	top: 8px;
+}
+.mblSwRoundShape2 .mblSwitchInner {
+	height: 28px;
+}
+.mblSwRoundShape2.mblSwitchOff .mblSwitchInner {
+	left: -51px;
+}
+.mblSwRoundShape2 .mblSwitchBg {
+	height: 28px;
+	-webkit-border-radius: 14px;
+}
+.mblSwRoundShape2 .mblSwitchBgRight {
+	left: 51px;
+}
+.mblSwRoundShape2 .mblSwitchKnob {
+	left: 51px;
+	width: 42px;
+	height: 26px;
+	-webkit-border-radius: 13px;
+}
+.mblSwRoundShape2 .mblSwitchText {
+	width: 51px;
+	height: 28px;
+}
+.mblSwRoundShape2 .mblSwitchTextRight {
+	left: 42px;
+}
+
+/* Arc Shape1 */
+.mblSwArcShape1 {
+	height: 28px;
+	-webkit-border-radius: 6px/14px;
+}
+.mblSwArcShape1.mblItemSwitch {
+	top: 8px;
+}
+.mblSwArcShape1 .mblSwitchInner {
+	height: 28px;
+}
+.mblSwArcShape1.mblSwitchOff .mblSwitchInner {
+	left: -67px;
+}
+.mblSwArcShape1 .mblSwitchBg {
+	height: 28px;
+	-webkit-border-radius: 6px/14px;
+}
+.mblSwArcShape1 .mblSwitchBgRight {
+	left: 67px;
+}
+.mblSwArcShape1 .mblSwitchKnob {
+	left: 67px;
+	width: 26px;
+	height: 26px;
+	-webkit-border-radius: 5px/13px;
+}
+.mblSwArcShape1 .mblSwitchText {
+	width: 67px;
+	height: 26px;
+}
+.mblSwArcShape1 .mblSwitchTextRight {
+	left: 26px;
+}
+
+/* Arc Shape2 */
+.mblSwArcShape2 {
+	height: 28px;
+	-webkit-border-radius: 6px/14px;
+}
+.mblSwArcShape2.mblItemSwitch {
+	top: 8px;
+}
+.mblSwArcShape2 .mblSwitchInner {
+	height: 28px;
+}
+.mblSwArcShape2.mblSwitchOff .mblSwitchInner {
+	left: -51px;
+}
+.mblSwArcShape2 .mblSwitchBg {
+	height: 28px;
+	-webkit-border-radius: 6px/14px;
+}
+.mblSwArcShape2 .mblSwitchBgRight {
+	left: 51px;
+}
+.mblSwArcShape2 .mblSwitchKnob {
+	left: 51px;
+	width: 42px;
+	height: 26px;
+	-webkit-border-radius: 5px/13px;
+}
+.mblSwArcShape2 .mblSwitchText {
+	width: 51px;
+	height: 26px;
+}
+.mblSwArcShape2 .mblSwitchTextRight {
+	left: 42px;
+}
+

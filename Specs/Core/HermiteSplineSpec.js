@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Core/HermiteSpline',
          'Core/Cartesian3',
@@ -67,19 +68,19 @@ defineSuite([
     it("evaluate can jump around in time", function() {
         var hs = new HermiteSpline(points);
 
-        expect(hs.evaluate(points[0].time).equals(points[0].point)).toBeTruthy();
+        expect(hs.evaluate(points[0].time).equals(points[0].point)).toEqual(true);
 
         // jump forward
-        expect(hs.evaluate(points[1].time).equals(points[1].point)).toBeTruthy();
+        expect(hs.evaluate(points[1].time).equals(points[1].point)).toEqual(true);
 
         // jump backward
-        expect(hs.evaluate(points[0].time).equals(points[0].point)).toBeTruthy();
+        expect(hs.evaluate(points[0].time).equals(points[0].point)).toEqual(true);
 
         // jump far forward
-        expect(hs.evaluate(points[points.length - 2].time).equals(points[points.length - 2].point)).toBeTruthy();
+        expect(hs.evaluate(points[points.length - 2].time).equals(points[points.length - 2].point)).toEqual(true);
 
         // jump far back
-        expect(hs.evaluate(points[0].time).equals(points[0].point)).toBeTruthy();
+        expect(hs.evaluate(points[0].time).equals(points[0].point)).toEqual(true);
     });
 
     // returns a function for a hermite curve between points p and q
@@ -123,7 +124,7 @@ defineSuite([
 
         var granularity = 0.1;
         for ( var i = points[0].time; i < points[1].time; i = i + granularity) {
-            expect(hs.evaluate(i).equalsEpsilon(interpolate(i), CesiumMath.EPSILON3)).toBeTruthy();
+            expect(hs.evaluate(i).equalsEpsilon(interpolate(i), CesiumMath.EPSILON3)).toEqual(true);
         }
     });
 
@@ -152,7 +153,7 @@ defineSuite([
 
         var granularity = 0.1;
         for ( var i = points[0].time; i < points[1].time; i = i + granularity) {
-            expect(hs.evaluate(i).equalsEpsilon(interpolate(i), CesiumMath.EPSILON3)).toBeTruthy();
+            expect(hs.evaluate(i).equalsEpsilon(interpolate(i), CesiumMath.EPSILON3)).toEqual(true);
         }
     });
 });

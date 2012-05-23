@@ -1,0 +1,150 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>Demo GridContainer</title>
+		<style type="text/css" title="text/css">
+			/* <![CDATA[ */
+				@import "../../../dojo/resources/dojo.css";
+				@import "../../../dijit/themes/soria/soria.css";
+				
+				html,body{
+					overflow:hidden;
+					margin:0; padding:0; 
+					width:100%; height:100%;
+				}
+				.cpane{
+					border:1px solid #666;
+					font:bold 12px Arial;
+					color:#999;
+					background:#FFF;
+					padding:10px;
+					height:50px;
+				}
+				
+				#GC1{
+					margin:0;
+					padding:5px;
+					overflow-x:hidden;
+					overflow-y:scroll;
+				}
+				#lGC,
+				#GC1 .gridContainerTable {
+					border-collapse:collapse;
+				}
+
+				#lGC,
+				#GC1 .gridContainerZone {
+					border-collapse:collapse;
+					border : 2px solid #ededed
+				}
+				
+				.dj_ie6 .dropIndicator, .dj_ie6 .dijitContentpane, .dj_ie6 .dijitCalendar{
+					margin: 5px;
+				}
+				.gridContainerZone > *{
+					margin: 5px !important;
+				}
+			/* ]]> */
+		</style>
+		
+		<link rel="stylesheet" href="../resources/GridContainer.css">
+		<link rel="stylesheet" href="../resources/ExpandoPane.css">
+		
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+
+		<script type="text/javascript">
+			dojo.require("dojo.parser");
+			dojo.require("dijit.TitlePane");
+			dojo.require("dijit.layout.ContentPane");
+			dojo.require("dojox.layout.GridContainer");
+			dojo.require("dojox.layout.ExpandoPane");
+			dojo.require("dijit.layout.BorderContainer");
+			dojo.require("dijit.layout.AccordionContainer");
+			dojo.require("dijit.form.Button");
+			dojo.require("dijit.Calendar");
+			dojo.require("dojo.fx.easing");
+			var GC1;
+			function setColumns(){
+				GC1 = dijit.byId("GC1");
+				nb = dojo.byId("nbCol").value;
+				if(nb > 0){
+					GC1.setColumns(nb);
+				}
+			}
+		</script>
+
+	</head>
+
+	<body class="soria">
+		<div id="layout" dojoType="dijit.layout.BorderContainer" liveSplitters="false" style="height:100%; width:100%">
+			
+			<div id="expandoL" dojoType="dojox.layout.ExpandoPane" 
+				title="Left Side" splitter="true" 
+				style="width:200px" 
+				region="left" 
+				easeIn="dojo.fx.easing.backOut" duration="600"
+			>
+				<div id="lGC" dojoType="dojox.layout.GridContainer"
+					acceptTypes="TitlePane, AccordionContainer, Calendar"
+					hasResizableColumns="false"
+					nbZones="1"
+					style="height:100%"
+				>
+					<div dojoType="dijit.TitlePane" attachParent="true" title="Panel 1" dndType="TitlePane">
+						lorem ipsum
+					</div>	
+					<div dojoType="dijit.TitlePane" title="Panel 2" dndType="TitlePane">
+						lorem ipsum
+					</div>	
+					<div dojoType="dijit.TitlePane" title="Panel 3" dndType="TitlePane">
+						lorem ipsum
+					</div>	
+
+				</div>
+			</div>
+			
+			<div id="GC1" dojoType="dojox.layout.GridContainer" 
+				region="center"
+				nbZones="3"
+				hasResizableColumns="false"				
+				acceptTypes="ContentPane, TitlePane">
+					<div dojoType="dijit.layout.ContentPane" class="cpane" label="Content Pane" dndType="ContentPane">Content Pane n°1 !</div>
+					<div dojoType="dijit.TitlePane" title="Ergo" dndType="TitlePane">
+						Non ergo erunt homines deliciis diffluentes audiendi, si quando de amicitia, quam nec usu nec ratione habent cognitam, disputabunt. Nam quis est, pro deorum fidem atque hominum! qui velit, ut neque diligat quemquam nec ipse ab ullo diligatur, circumfluere omnibus copiis atque in omnium rerum abundantia vivere? Haec enim est tyrannorum vita nimirum, in qua nulla fides, nulla caritas, nulla stabilis benevolentiae potest esse fiducia, omnia semper suspecta atque sollicita, nullus locus amicitiae.
+					</div>
+					<div dojoType="dijit.layout.ContentPane" class="cpane" label="Content Pane" dndType="ContentPane">Content Pane n°2 !</div>
+			  		<div dojoType="dijit.layout.ContentPane" title="Intellectum" dndType="ContentPane">
+			  			Intellectum est enim mihi quidem in multis, et maxime in me ipso, sed paulo ante in omnibus, cum M. Marcellum senatui reique publicae concessisti, commemoratis praesertim offensionibus, te auctoritatem huius ordinis dignitatemque rei publicae tuis vel doloribus vel suspicionibus anteferre. Ille quidem fructum omnis ante actae vitae hodierno die maximum cepit, cum summo consensu senatus, tum iudicio tuo gravissimo et maximo. Ex quo profecto intellegis quanta in dato beneficio sit laus, cum in accepto sit tanta gloria.
+			  		</div>
+			  		
+					<div dojoType="dijit.layout.ContentPane" class="cpane" label="Content Pane" dndType="ContentPane">Content Pane n°3 !</div>
+					<div dojoType="dijit.layout.ContentPane" class="cpane" label="Content Pane" dndType="ContentPane">Content Pane n°4 !</div>
+					<div dojoType="dijit.Calendar" dndType="Calendar"></div>
+
+			</div>
+			
+			<div id="rGC" dojoType="dojox.layout.GridContainer"
+				acceptTypes="TitlePane"
+				hasResizableColumns="false"
+				nbZones="1"
+				region="right"
+				style="width:200px"
+				splitter="true"
+			>
+				<div dojoType="dijit.TitlePane" attachParent="true" title="Panel 1" dndType="TitlePane">
+					lorem ipsum
+				</div>	
+				<div dojoType="dijit.TitlePane" title="Panel 2" dndType="TitlePane">
+					lorem ipsum
+				</div>	
+				<div dojoType="dijit.TitlePane" title="Panel 3" dndType="TitlePane">
+					lorem ipsum
+				</div>	
+			</div>
+			
+		</div>
+
+	</body>
+</html>

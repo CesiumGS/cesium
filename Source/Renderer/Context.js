@@ -68,7 +68,6 @@ define([
         VertexArray,
         VertexLayout) {
     "use strict";
-    /*global window,Uint8Array,Uint16Array,ArrayBuffer*/
 
     function _errorToString(gl, error) {
         var message = "OpenGL Error:  ";
@@ -1370,10 +1369,10 @@ define([
         }
 
         var source = description.source;
-        var width = source ? source.width : description.width;
-        var height = source ? source.height : description.height;
+        var width = typeof source !== 'undefined' ? source.width : description.width;
+        var height = typeof source !== 'undefined' ? source.height : description.height;
 
-        if (!source && (typeof width === "undefined" || typeof height === "undefined")) {
+        if (typeof width === "undefined" || typeof height === "undefined") {
             throw new DeveloperError("description requires a source field to create an initialized texture or width and height fields to create a blank texture.", "description");
         }
 
@@ -1405,7 +1404,7 @@ define([
 
         // Use premultiplied alpha for opaque textures should perform better on Chrome:
         // http://media.tojicode.com/webglCamp4/#20
-        var preMultiplyAlpha = description.preMultiplyAlpha || ((pixelFormat === PixelFormat.RGB) || (pixelFormat === PixelFormat.LUMINANCE));
+        var preMultiplyAlpha = description.preMultiplyAlpha || pixelFormat === PixelFormat.RGB || pixelFormat === PixelFormat.LUMINANCE;
 
         var gl = this._gl;
         var textureTarget = gl.TEXTURE_2D;

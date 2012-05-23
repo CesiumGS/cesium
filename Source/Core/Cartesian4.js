@@ -86,54 +86,39 @@ define([
     };
 
     /**
-     * Creates a Cartesian4 instance initialized to (0, 0, 0, 0).
+     * An immutable Cartesian4 instance initialized to (0.0, 0.0, 0.0, 0.0).
      *
      * @memberof Cartesian4
-     * @return {Cartesian4} A new Cartesian4 instance.
      */
-    Cartesian4.getZero = function() {
-        return new Cartesian4(0, 0, 0, 0);
-    };
+    Cartesian4.ZERO = Object.freeze(new Cartesian4(0.0, 0.0, 0.0, 0.0));
 
     /**
-     * Creates a Cartesian4 instance initialized to (1, 0, 0, 0).
+     * An immutable Cartesian4 instance initialized to (1.0, 0.0, 0.0, 0.0).
      *
      * @memberof Cartesian4
-     * @return {Cartesian4} A new Cartesian4 instance.
      */
-    Cartesian4.getUnitX = function() {
-        return new Cartesian4(1, 0, 0, 0);
-    };
+    Cartesian4.UNIT_X = Object.freeze(new Cartesian4(1.0, 0.0, 0.0, 0.0));
 
     /**
-     * Creates a Cartesian4 instance initialized to (0, 1, 0, 0).
+     * An immutable Cartesian4 instance initialized to (0.0, 1.0, 0.0, 0.0).
      *
      * @memberof Cartesian4
-     * @return {Cartesian4} A new Cartesian4 instance.
      */
-    Cartesian4.getUnitY = function() {
-        return new Cartesian4(0, 1, 0, 0);
-    };
+    Cartesian4.UNIT_Y = Object.freeze(new Cartesian4(0.0, 1.0, 0.0, 0.0));
 
     /**
-     * Creates a Cartesian4 instance initialized to (0, 0, 1, 0).
+     * An immutable Cartesian4 instance initialized to (0.0, 0.0, 1.0, 0.0).
      *
      * @memberof Cartesian4
-     * @return {Cartesian4} A new Cartesian4 instance.
      */
-    Cartesian4.getUnitZ = function() {
-        return new Cartesian4(0, 0, 1, 0);
-    };
+    Cartesian4.UNIT_Z = Object.freeze(new Cartesian4(0.0, 0.0, 1.0, 0.0));
 
     /**
-     * Creates a Cartesian4 instance initialized to (0, 0, 0, 1).
+     * An immutable Cartesian4 instance initialized to (0.0, 0.0, 0.0, 1.0).
      *
      * @memberof Cartesian4
-     * @return {Cartesian4} A new Cartesian4 instance.
      */
-    Cartesian4.getUnitW = function() {
-        return new Cartesian4(0, 0, 0, 1);
-    };
+    Cartesian4.UNIT_W = Object.freeze(new Cartesian4(0.0, 0.0, 0.0, 1.0));
 
     /**
      * Returns the Cartesian's x and y components as a Cartesian2.
@@ -287,13 +272,13 @@ define([
         var w = Math.abs(this.w);
 
         if ((x < y) && (x < z) && (x < w)) {
-            return Cartesian4.getUnitX();
+            return Cartesian4.UNIT_X;
         } else if ((y < x) && (y < z) && (y < w)) {
-            return Cartesian4.getUnitY();
+            return Cartesian4.UNIT_Y;
         } else if ((z < x) && (z < y) && (z < w)) {
-            return Cartesian4.getUnitZ();
+            return Cartesian4.UNIT_Z;
         } else {
-            return Cartesian4.getUnitW();
+            return Cartesian4.UNIT_W;
         }
     };
 

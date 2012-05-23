@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Renderer/Context',
          '../Specs/createContext',
@@ -18,7 +19,7 @@ defineSuite([
     });
 
     afterEach(function() {
-        destroyContext(context);
+        context = !context.isDestroyed() && destroyContext(context);
     });
 
     it("getCanvas", function() {
@@ -178,36 +179,53 @@ defineSuite([
         expect(context.getTextureFilterAnisotropic()).toBeDefined();
     });
 
+    it("gets maximum texture filter anisotropy", function() {
+        if(context.getTextureFilterAnisotropic()) {
+            expect(context.getMaximumTextureFilterAnisotropy() >= 2.0).toEqual(true);
+        } else {
+            expect(context.getMaximumTextureFilterAnisotropy()).toEqual(1.0);
+        }
+    });
+
     it("sets shader program validation", function() {
         context.setValidateShaderProgram(false);
-        expect(context.getValidateShaderProgram()).toBeFalsy();
+        expect(context.getValidateShaderProgram()).toEqual(false);
 
         context.setValidateShaderProgram(true);
-        expect(context.getValidateShaderProgram()).toBeTruthy();
+        expect(context.getValidateShaderProgram()).toEqual(true);
     });
 
     it("sets framebuffer validation", function() {
         context.setValidateFramebuffer(false);
-        expect(context.getValidateFramebuffer()).toBeFalsy();
+        expect(context.getValidateFramebuffer()).toEqual(false);
 
         context.setValidateFramebuffer(true);
-        expect(context.getValidateFramebuffer()).toBeTruthy();
+        expect(context.getValidateFramebuffer()).toEqual(true);
     });
 
     it("sets logging shader compilation", function() {
         context.setLogShaderCompilation(false);
-        expect(context.getLogShaderCompilation()).toBeFalsy();
+        expect(context.getLogShaderCompilation()).toEqual(false);
 
         context.setLogShaderCompilation(true);
-        expect(context.getLogShaderCompilation()).toBeTruthy();
+        expect(context.getLogShaderCompilation()).toEqual(true);
     });
 
     it("sets throws on WebGL errors", function() {
         context.setThrowOnWebGLError(false);
-        expect(context.getThrowOnWebGLError()).toBeFalsy();
+        expect(context.getThrowOnWebGLError()).toEqual(false);
 
         context.setThrowOnWebGLError(true);
-        expect(context.getThrowOnWebGLError()).toBeTruthy();
+        expect(context.getThrowOnWebGLError()).toEqual(true);
+    });
+
+    it("fails to set the viewport (undefined viewport properties)", function() {
+        expect(function() {
+            context.setViewport({
+                x : 0,
+                y : 0
+            });
+        }).toThrow();
     });
 
     it("fails to set the viewport (negative width)", function() {
@@ -258,5 +276,17 @@ defineSuite([
         expect(function() {
             return new Context();
         }).toThrow();
+    });
+
+    it("continueDraw throws without arguments", function() {
+        expect(function() {
+            context.continueDraw();
+        }).toThrow();
+    });
+
+    it("isDestroyed", function() {
+        expect(context.isDestroyed()).toEqual(false);
+        context.destroy();
+        expect(context.isDestroyed()).toEqual(true);
     });
 });

@@ -1,27 +1,34 @@
+/*global defineSuite*/
 defineSuite([
          'Scene/Camera',
          'Core/AxisAlignedBoundingBox',
          'Core/BoundingSphere',
          'Core/Cartesian3',
+         'Core/Ellipsoid',
          'Core/Intersect',
-         'Core/Matrix4'
+         'Core/Math',
+         'Core/Matrix4',
+         'Scene/CameraControllerCollection'
      ], function(
          Camera,
          AxisAlignedBoundingBox,
          BoundingSphere,
          Cartesian3,
+         Ellipsoid,
          Intersect,
-         Matrix4) {
+         CesiumMath,
+         Matrix4,
+         CameraControllerCollection) {
     "use strict";
-    /*global document,describe,it,expect,beforeEach,afterEach*/
+    /*global describe,it,expect,document,beforeEach,afterEach*/
 
     var camera;
 
     beforeEach(function() {
         camera = new Camera(document);
         camera.position = new Cartesian3();
-        camera.up = Cartesian3.getUnitY();
-        camera.direction = Cartesian3.getUnitZ().negate();
+        camera.up = Cartesian3.UNIT_Y;
+        camera.direction = Cartesian3.UNIT_Z.negate();
         camera.frustum.near = 1.0;
         camera.frustum.far = 2.0;
         camera.frustum.fovy = (Math.PI) / 3;
@@ -34,8 +41,13 @@ defineSuite([
         }).toThrow();
     });
 
+    it("getControllers", function() {
+        var controllers = camera.getControllers();
+        expect(controllers).toEqual(new CameraControllerCollection(camera, document));
+    });
+
     it("lookAt object", function() {
-        var target = Cartesian3.getZero();
+        var target = Cartesian3.ZERO;
         var newPosition = new Cartesian3(1.0, 1.0, 1.0);
         var newDirection = target.subtract(newPosition).normalize();
         var newUp = camera.right.cross(newDirection).normalize();
@@ -45,21 +57,33 @@ defineSuite([
             up : newUp,
             target : target
         });
-        expect(tempCamera.position.equals(newPosition)).toBeTruthy();
-        expect(tempCamera.direction.equals(newDirection)).toBeTruthy();
-        expect(tempCamera.up.equals(newUp)).toBeTruthy();
+        expect(tempCamera.position.equals(newPosition)).toEqual(true);
+        expect(tempCamera.direction.equals(newDirection)).toEqual(true);
+        expect(tempCamera.up.equals(newUp)).toEqual(true);
     });
 
     it("lookAt array", function() {
-        var target = Cartesian3.getZero();
+        var target = Cartesian3.ZERO;
         var newPosition = new Cartesian3(1.0, 1.0, 1.0);
         var newDirection = target.subtract(newPosition).normalize();
         var newUp = camera.right.cross(newDirection).normalize();
         var tempCamera = camera.clone();
         tempCamera.lookAt(newPosition, target, newUp);
-        expect(tempCamera.position.equals(newPosition)).toBeTruthy();
-        expect(tempCamera.direction.equals(newDirection)).toBeTruthy();
-        expect(tempCamera.up.equals(newUp)).toBeTruthy();
+        expect(tempCamera.position.equals(newPosition)).toEqual(true);
+        expect(tempCamera.direction.equals(newDirection)).toEqual(true);
+        expect(tempCamera.up.equals(newUp)).toEqual(true);
+    });
+
+    it("lookAt returns without proper arguments", function() {
+        var eye = new Cartesian3(1, 1, 1);
+
+        camera.lookAt(eye);
+        expect(camera.position.equals(eye)).toEqual(false);
+
+        camera.lookAt({
+            eye : eye
+        });
+        expect(camera.position.equals(eye)).toEqual(false);
     });
 
     it("get view matrix", function() {
@@ -77,18 +101,36 @@ defineSuite([
                                       0.0, 0.0, 1.0, -position.z,
                                       0.0, 0.0, 0.0,         1.0);
         var expected = rotation.multiplyWithMatrix(translation);
-        expect(viewMatrix.equals(expected)).toBeTruthy();
+        expect(viewMatrix.equals(expected)).toEqual(true);
+    });
+
+    it("viewExtent", function() {
+        var west = -CesiumMath.PI_OVER_TWO;
+        var south = -CesiumMath.PI_OVER_TWO;
+        var east = CesiumMath.PI_OVER_TWO;
+        var north = CesiumMath.PI_OVER_TWO;
+        camera.viewExtent(Ellipsoid.WGS84, west, south, east, north);
+        expect(camera.position.equalsEpsilon(new Cartesian3(24078036.74383515, 0, 0.0), CesiumMath.EPSILON10));
+        expect(camera.direction.equalsEpsilon(new Cartesian3(-1.0, 0.0, 0.0), CesiumMath.EPSILON10));
+        expect(camera.up.equalsEpsilon(new Cartesian3(0.0, 0.0, 1.0), CesiumMath.EPSILON10));
+        expect(camera.right.equalsEpsilon(new Cartesian3(0.0, 1.0, 0.0), CesiumMath.EPSILON10));
     });
 
     it("get inverse view matrix", function() {
         var expected = camera.getViewMatrix().inverse();
-        expect(expected.equals(camera.getInverseViewMatrix())).toBeTruthy();
+        expect(expected.equals(camera.getInverseViewMatrix())).toEqual(true);
     });
 
     it("get inverse transform", function() {
         camera.transform = new Matrix4(5.0, 0.0, 0.0, 1.0, 0.0, 5.0, 0.0, 2.0, 0.0, 0.0, 5.0, 3.0, 0.0, 0.0, 0.0, 1.0);
         var expected = camera.transform.inverseTransformation();
-        expect(expected.equals(camera.getInverseTransform())).toBeTruthy();
+        expect(expected.equals(camera.getInverseTransform())).toEqual(true);
+    });
+
+    it("isDestroyed", function() {
+        expect(camera.isDestroyed()).toEqual(false);
+        camera.destroy();
+        expect(camera.isDestroyed()).toEqual(true);
     });
 
     describe("box intersections", function() {

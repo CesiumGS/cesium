@@ -1,0 +1,26 @@
+/* dojox.mobile.CheckBox */
+.mblCheckBox {
+	background-image: url(compat/ui-widget-bg.png);
+	-moz-border-radius: 5px;
+	-o-border-radius: 5px;
+	-ms-border-radius: 5px;
+	border-radius: 5px;
+	-moz-appearance: none;
+	-o-appearance: none;
+	-ms-appearance: none;
+	appearance: none;
+	-o-transform: translateY(0.45em);
+	-ms-transform: translateY(0.45em);
+	transform: translateY(0.45em);
+}
+.mblCheckBoxChecked::after,
+.mblCheckBox:checked::after {
+	-moz-transform: rotate(45deg);
+	-o-transform: rotate(45deg);
+	-ms-transform: rotate(45deg);
+	transform: rotate(45deg);
+	-moz-transform-origin: 50% 50%;
+	-o-transform-origin: 50% 50%;
+	-ms-transform-origin: 50% 50%;
+	transform-origin: 50% 50%;
+}

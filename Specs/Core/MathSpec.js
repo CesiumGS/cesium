@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Core/Math',
          'Core/Cartesian3',
@@ -26,15 +27,15 @@ defineSuite([
     ///////////////////////////////////////////////////////////////////////
 
     it("angleBetween between orthogonal vectors", function() {
-        expect(CesiumMath.angleBetween(Cartesian3.getUnitX(), Cartesian3.getUnitY())).toEqual(CesiumMath.PI_OVER_TWO);
+        expect(CesiumMath.angleBetween(Cartesian3.UNIT_X, Cartesian3.UNIT_Y)).toEqual(CesiumMath.PI_OVER_TWO);
     });
 
     it("angleBetween between colinear vectors", function() {
-        expect(CesiumMath.angleBetween(Cartesian3.getUnitX(), Cartesian3.getUnitX())).toEqual(0.0);
+        expect(CesiumMath.angleBetween(Cartesian3.UNIT_X, Cartesian3.UNIT_X)).toEqual(0.0);
     });
 
     it("angleBetween between zero vector", function() {
-        expect(CesiumMath.angleBetween(Cartesian3.getUnitX(), Cartesian3.getZero())).toEqual(0.0);
+        expect(CesiumMath.angleBetween(Cartesian3.UNIT_X, Cartesian3.ZERO)).toEqual(0.0);
     });
 
     //////////////////////////////////////////////////////////////////////
@@ -46,7 +47,7 @@ defineSuite([
     });
 
     it("cosh NaN", function() {
-        expect(isNaN(CesiumMath.cosh(NaN))).toBeTruthy();
+        expect(isNaN(CesiumMath.cosh(NaN))).toEqual(true);
     });
 
     it("cosh infinity", function() {
@@ -61,7 +62,7 @@ defineSuite([
     });
 
     it("sinh NaN", function() {
-        expect(isNaN(CesiumMath.sinh(NaN))).toBeTruthy();
+        expect(isNaN(CesiumMath.sinh(NaN))).toEqual(true);
     });
 
     it("sinh infinity", function() {
@@ -134,11 +135,13 @@ defineSuite([
     it("negativePiToPi positive", function() {
         expect(CesiumMath.negativePiToPi((Math.PI / 2) * Math.PI)).toEqualEpsilon((Math.PI / 2) * Math.PI - CesiumMath.TWO_PI, CesiumMath.EPSILON16);
         expect(CesiumMath.negativePiToPi(Math.PI / 0.5)).toEqualEpsilon(0.0, CesiumMath.EPSILON16);
+        expect(CesiumMath.negativePiToPi(Math.PI + CesiumMath.EPSILON10)).toEqualEpsilon(Math.PI, CesiumMath.EPSILON16);
     });
 
     it("negativePiToPi negative", function() {
         expect(CesiumMath.negativePiToPi(-Math.PI / 0.5)).toEqualEpsilon(0.0, CesiumMath.EPSILON16);
         expect(CesiumMath.negativePiToPi(-(Math.PI / 2) * Math.PI)).toEqualEpsilon(-(Math.PI / 2) * Math.PI + CesiumMath.TWO_PI, CesiumMath.EPSILON16);
+        expect(CesiumMath.negativePiToPi(-(Math.PI + CesiumMath.EPSILON10))).toEqualEpsilon(-Math.PI, CesiumMath.EPSILON16);
     });
 
     it("negativePiToPi should not change", function() {

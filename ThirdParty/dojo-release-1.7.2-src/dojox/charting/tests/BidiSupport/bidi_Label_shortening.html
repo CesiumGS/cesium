@@ -1,0 +1,233 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>Chart 2D labels shortening</title>
+		<style type="text/css">
+			@import "../../../../dojo/resources/dojo.css";
+			@import "../../../../dijit/tests/css/dijitTests.css";
+			@import "../../../../dijit/themes/claro/claro.css";
+		</style>
+		<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+		<script type="text/javascript">
+			dojo.require("dojo.parser");
+			dojo.require("doh.runner");
+
+			dojo.require("dojox.charting.Chart");
+			dojo.require("dojox.charting.axis2d.Default");
+			dojo.require("dojox.charting.plot2d.Bars");
+			dojo.require("dojox.charting.plot2d.Columns");
+			dojo.require("dojox.charting.plot2d.Lines");
+			dojo.require("dojox.charting.plot2d.Areas");
+			dojo.require("dijit.Tooltip");
+
+			dojo.require("dijit.dijit");
+			dojo.require("dojox.charting.widget.Chart");
+			dojo.require("dojox.charting.plot2d.Grid");
+			dojo.require("dojox.charting.widget.Legend");
+			dojo.require("dojox.data.HtmlStore");
+
+			dojo.require("dojox.charting.BidiSupport");
+			dojo.require("dojox.charting.widget.BidiSupport");
+
+			var seriesB = [260, 180, 200, 100, 140, 70, 200]
+				, chart1, chart2, chart3, chart4;
+			
+			makeObjects = function(){
+				chart1 = new dojox.charting.Chart("test1", {textDir:"auto"}).
+						addAxis("x", {
+							fixLower: "major", fixUpper: "major", includeZero: true, 
+							labels: [
+								{value: 0, text: "11111111111\u05d0."},
+								{value: 2, text: "\u05e9\u05ea\u05d9\u05d9\u05dd\u0020\u05e9\u05dc\u05d5\u05e9\u0020\u05d0\u05e8\u05d1\u05e2\u05e2\u05e2\u05e2."},
+								{value: 3, text: "11111111111\u05d0."},
+								{value: 5, text: "\u05d0."}
+							],
+							maxLabelSize: 20,
+							trailingSymbol: ".",
+							htmlLabels: true
+						}).
+						addAxis("y", {
+							vertical: true, fixLower: "major", fixUpper: "major", natural: true,
+							labels: [{value: 0, text: ""},
+								{value: 1, text: "\u05d9\u05e0\u05d5\u05d0\u05e8."}, {value: 2, text: "February."},
+								{value: 3, text: "March."}, {value: 4, text: "\u05d0\u05e4\u05e8\u05d9\u05dc."},
+								{value: 5, text: "May."}, {value: 6, text: "11111111111\u05d0."}
+							],
+							maxLabelSize: 20
+						}).
+						addPlot("default", {type: "Bars"}).
+						addSeries("Series A.", [1, 2, 3, 4, 5], {stroke: {color: "red"}, fill: "lightpink"}).
+						addSeries("Series B.", [5, 4, 3, 2, 1], {stroke: {color: "blue"}, fill: "lightblue"}).
+						render();
+
+				chart2 = new dojox.charting.Chart("test2").
+						addAxis("x", {
+							fixLower: "major", fixUpper: "major", includeZero: true, 
+							labels: [
+								{value: 0, text: "first start point."},
+								{value: 2, text: "two."},
+								{value: 5, text: "111111111111111\u05d0."}
+							],
+							rotation: 180,
+							maxLabelSize: 30
+						}).
+						addAxis("y", {
+							vertical: true, fixLower: "major", fixUpper: "major", natural: true, majorTickStep: 2,
+							labels: [{value: 0, text: ""},
+								{value: 1, text: "\u05d9\u05e0\u05d5\u05d0\u05e8."}, {value: 2, text: "February."},
+								{value: 3, text: "March."}, {value: 4, text: "\u05d0\u05e4\u05e8\u05d9\u05dc."},
+								{value: 5, text: "May."}, {value: 6, text: "June."}
+							],
+							rotation: -30,
+							maxLabelSize: 20
+						}).
+						addPlot("default", {type: "Columns"}).
+						addSeries("Series A", [1, 2, 3, 4, 5], {stroke: {color: "red"}, fill: "lightpink"}).
+						addSeries("Series B", [5, 4, 3, 2, 1], {stroke: {color: "blue"}, fill: "lightblue"}).
+						render();
+						
+				chart3 = new dojox.charting.Chart("test3").
+						addAxis("x", {
+							fixLower: "major", fixUpper: "major", includeZero: true, 
+							labels: [
+								{value: 0, text: "first start point"},
+								{value: 2, text: "two"},
+								{value: 5, text: "1111111111111111111111111111\u05d0"}
+							],
+							maxLabelCharCount: 5
+						}).
+						addAxis("y", {
+							vertical: true, fixLower: "major", fixUpper: "major", natural: true, majorTickStep: 2,
+							labels: [{value: 0, text: ""},
+								{value: 1, text: "\u05d9\u05e0\u05d5\u05d0\u05e8."}, {value: 2, text: "February."},
+								{value: 3, text: "March."}, {value: 4, text: "\u05d0\u05e4\u05e8\u05d9\u05dc."},
+								{value: 5, text: "May."}, {value: 6, text: "June."}
+							],
+							maxLabelCharCount: 2,
+							trailingSymbol: "__"
+						}).
+						addPlot("default", {type: "Lines"}).
+						addSeries("Series A.", [1, 2, 3, 4, 5], {stroke: {color: "red"}, fill: "lightpink"}).
+						addSeries("Series B.", [5, 4, 3, 2, 1], {stroke: {color: "blue"}, fill: "lightblue"}).
+						render();
+						
+				chart4 = new dojox.charting.Chart("test4", {textDir:"rtl"}).
+						addAxis("x", {
+							fixLower: "major", fixUpper: "major", includeZero: true, 
+							labels: [
+								{value: 0, text: "\u05e8\u05d0\u05e9\u05d5\u05df\u0020\u05e9\u05e0\u05d9\u0020\u05e9\u05dc\u05d9\u05e9\u05d9\u05e9"},
+								{value: 2, text: "second middle point"},
+								{value: 5, text: "1111111111111111111111111111\u05d0."}
+							],
+							maxLabelCharCount: 20,
+							maxLabelSize: 30
+						}).
+						addAxis("y", {
+							vertical: true, fixLower: "major", fixUpper: "major", natural: true, majorTickStep: 2,
+							labels: [{value: 0, text: ""},
+								{value: 1, text: "\u05d9\u05e0\u05d5\u05d0\u05e8"}, {value: 2, text: "February"},
+								{value: 3, text: "March"}, {value: 4, text: "\u05d0\u05e4\u05e8\u05d9\u05dc."},
+								{value: 5, text: "May"}, {value: 6, text: "June"}
+							],
+							maxLabelCharCount: 2,
+							maxLabelSize: 40
+						}).
+						addPlot("default", {type: "Areas"}).
+						addSeries("Series A", [1, 2, 3, 4, 5], {stroke: {color: "red"}, fill: "lightpink"}).
+						addSeries("Series B", [5, 4, 3, 2, 1], {stroke: {color: "blue"}, fill: "lightblue"}).
+						render();
+			};
+
+			dojo.addOnLoad(function(){
+				makeObjects();
+				
+				doh.register("test textDir", [
+					{
+						name: "Pies textDir",
+
+						runTest: function(){
+							doh.is("auto", chart1.textDir, "textDir of : chart1");
+							doh.is("ltr", chart2.textDir, "textDir of : chart2");
+							doh.is("ltr", chart3.textDir, "textDir of : chart3");
+							doh.is("rtl", chart4.textDir, "textDir of : chart4");
+							
+							var node = dojo.byId("chart5");
+							var chart5 = dijit.byNode(node);
+							doh.is("auto", chart5.textDir, "textDir of : chart4");
+
+						}
+					}	
+				]);		
+
+				doh.run();
+			});
+
+		</script>
+	</head>
+	<body class="claro">
+		<h1>Chart 2D labels shortening</h1>
+		<h2>Hover on the truncated label(end with default trailing Symbol: "..." or your customized trailing symbols) you will see the whole label on tooltip</h2>
+		<h2>1: Label shortening.(x axis customized trailing Symbol)
+textDir = auto</h2>
+		<div id="test1" style="width: 300px; height: 200px;"></div>
+		<h2>2: Label shortening with rotation
+textDir inherited.</h2>
+		<div id="test2" style="width: 300px; height: 200px;"></div>
+		<h2>3: Label shortening with limited character.(y axis customized trailing Symbol)
+textDir inherited</h2>
+		<div id="test3" style="width: 300px; height: 200px;"></div>
+		<h2>4: Label shortening with both limited character and limited length in px
+textDir = rtl.</h2>
+		<div id="test4" style="width: 300px; height: 200px;"></div>
+		<h2>5: Label shortening for HTML declared chart
+textDir = auto.</h2>
+		<div dojoType="dojox.data.HtmlStore" dataId="tableExample" jsId="tableStore"></div>
+		<table id="tableExample" style="display: none;">
+			<thead>
+				<tr><th>value</th></tr>
+			</thead>
+			<tbody>
+				<tr><td>350</td></tr>
+				<tr><td>275</td></tr>
+				<tr><td>350  </td></tr>
+				<tr><td>400</td></tr>
+				<tr><td>250</td></tr>
+				<tr><td>350</td></tr>
+				<tr><td>200  </td></tr>
+			</tbody>
+		</table>
+		<table border="0" cellspacing="30">
+			<tr>
+				<td>
+					<div dojoType="dojox.charting.widget.Chart" id="chart5" textDir="auto" style="width: 500px; height: 500px;">
+						<div class="axis" name="x" maxLabelCharCount= 2 title="&#1511;&#1493;&#1512;&#1488;&#1497;&#1501; &#1500;&#1497; &#1510;&#1497;&#1512; X." titleOrientation= "away"  font="italic normal normal 8pt Tahoma" labels="[{value:1, text:'First.'},{value:2, text:'&#1513;&#1514;&#1497;&#1497;&#1501; &#1513;&#1500;&#1493;&#1513;.'},{value:4, text:'111111111&#1514;.'}]"></div>
+						<div class="axis" name="y" maxLabelCharCount= 2 title="&#1511;&#1493;&#1512;&#1488;&#1497;&#1501; &#1500;&#1497; &#1510;&#1497;&#1512; Y." vertical="true" fixUpper="major" includeZero="true" 
+							font="italic normal normal 8pt Tahoma"></div>
+						<div class="plot" name="default" type="Areas"></div>
+						<div class="plot" name="grid" type="Grid"></div>
+						<div class="series" name="&#1505;&#1491;&#1512;&#1492; 1." data="100, 200, 50, 15, 100, 28, 40"></div>
+						<div class="series" name="Run B." array="seriesB" ></div>
+						<div class="series" name="Run C." store="tableStore" valueFn="Number(x)"></div>
+					</div>
+					<div dojoType="dojox.charting.widget.Legend" chartRef="chart5"></div>
+				</td>
+			</tr>
+		</table>
+
+		<p>That's all Folks!</p>
+	</body>
+</html>

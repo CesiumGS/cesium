@@ -1,0 +1,16 @@
+({
+	name: "date.timezone.Africa-Bissau",
+	runTest: function(t){
+		var tz = "Africa/Bissau";
+		doh.checkDate({tzOffset: 62.3333333333333, tzAbbr: "LMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: 62.3333333333333, tzAbbr: "LMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: 62.3333333333333, tzAbbr: "LMT"}, -1849388261000, tz, 1);
+		doh.checkDate({tzOffset: 60, tzAbbr: "WAT"}, -1849388260000, tz, 1);
+		doh.checkDate({tzOffset: 60, tzAbbr: "WAT"}, 157769999000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "GMT"}, 157770000000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "GMT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "GMT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: 0, tzAbbr: "GMT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: 0, tzAbbr: "GMT"}, 1246789800000, tz, 0);
+	}
+})

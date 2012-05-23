@@ -1,0 +1,108 @@
+﻿<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Scaler/tick generator</title>
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+</style>
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+<script type="text/javascript">
+
+dojo.require("dojox.charting.scaler.linear");
+
+calc = function(){
+	var min = parseFloat(dojo.byId("imin").value);
+	var max = parseFloat(dojo.byId("imax").value);
+	var span = parseFloat(dojo.byId("ispan").value);
+	
+	var o = dojox.charting.scaler.linear.buildScaler(
+		min, max, span, {
+			fixLower: dojo.byId("ifl").value,
+			fixUpper: dojo.byId("ifu").value,
+			natural:  Boolean(dojo.byId("inat").checked)
+		}
+	);
+	
+	dojo.byId("imin").value = min;
+	dojo.byId("imax").value = max;
+	dojo.byId("ispan").value = span;
+	
+	dojo.byId("olb").innerHTML = o.bounds.lower;
+	dojo.byId("oub").innerHTML = o.bounds.upper;
+	
+	dojo.byId("omajt").innerHTML = o.major.tick;
+	dojo.byId("omajs").innerHTML = o.major.start;
+	dojo.byId("omajc").innerHTML = o.major.count;
+	dojo.byId("omajp").innerHTML = o.major.prec;
+	
+	dojo.byId("omint").innerHTML = o.minor.tick;
+	dojo.byId("omins").innerHTML = o.minor.start;
+	dojo.byId("ominc").innerHTML = o.minor.count;
+	dojo.byId("ominp").innerHTML = o.minor.prec;
+	
+	dojo.byId("omict").innerHTML = o.micro.tick;
+	dojo.byId("omics").innerHTML = o.micro.start;
+	dojo.byId("omicc").innerHTML = o.micro.count;
+	dojo.byId("omicp").innerHTML = o.micro.prec;
+	
+	dojo.byId("oscale").innerHTML = o.scale;
+	dojo.byId("ospan").innerHTML  = o.span;
+};
+
+</script>
+</head>
+<body>
+<h1>Scaler/tick generator</h1>
+<h2>Input</h2>
+<table>
+	<tr><th>Name</th><th>Value</th></tr>
+	<tr><td>min</td><td><input type="text" id="imin" /></td></tr>
+	<tr><td>max</td><td><input type="text" id="imax" /></td></tr>
+	<tr><td>span</td><td><input type="text" id="ispan" /></td></tr>
+	<tr><td>natural</td><td><input type="checkbox" id="inat" /></td></tr>
+	<tr><td>fixLower</td><td><input type="text" id="ifl" /></td></tr>
+	<tr><td>fixUpper</td><td><input type="text" id="ifu" /></td></tr>
+</table>
+<p><button onclick="calc()">Calculate!</button></p>
+<h2>Output</h2>
+<table>
+	<tr><th>Name</th><th>Value</th></tr>
+	
+	<tr><td>lowerBound</td><td><span id="olb">&nbsp;</span></td></tr>
+	<tr><td>upperBound</td><td><span id="oub">&nbsp;</span></td></tr>
+	
+	<tr><td>major.tick</td><td><span id="omajt">&nbsp;</span></td></tr>
+	<tr><td>major.start</td><td><span id="omajs">&nbsp;</span></td></tr>
+	<tr><td>major.count</td><td><span id="omajc">&nbsp;</span></td></tr>
+	<tr><td>major.prec</td><td><span id="omajp">&nbsp;</span></td></tr>
+
+	<tr><td>minor.tick</td><td><span id="omint">&nbsp;</span></td></tr>
+	<tr><td>minor.start</td><td><span id="omins">&nbsp;</span></td></tr>
+	<tr><td>minor.count</td><td><span id="ominc">&nbsp;</span></td></tr>
+	<tr><td>minor.prec</td><td><span id="ominp">&nbsp;</span></td></tr>
+
+	<tr><td>micro.tick</td><td><span id="omict">&nbsp;</span></td></tr>
+	<tr><td>micro.start</td><td><span id="omics">&nbsp;</span></td></tr>
+	<tr><td>micro.count</td><td><span id="omicc">&nbsp;</span></td></tr>
+	<tr><td>micro.prec</td><td><span id="omicp">&nbsp;</span></td></tr>
+
+	<tr><td>scale</td><td><span id="oscale">&nbsp;</span></td></tr>
+	<tr><td>span</td><td><span id="ospan">&nbsp;</span></td></tr>
+</table>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<html>
+	<head>
+			<title>Demo using dojox.dtl._Templated</title>
+	    <script type="text/javascript" src="../../../dojo/dojo.js"
+				djConfig="isDebug: true, parseOnLoad: true"></script>
+	    <script type="text/javascript">
+					dojo.require("dijit._WidgetBase");
+					dojo.require("dojox.dtl._Templated");
+
+					dojo.declare("Fruit", [dijit._WidgetBase, dojox.dtl._Templated], {
+						oldRepl: "Fruit: ",
+						_dijitTemplateCompat: true,
+						items: ["apple", "banana", "orange"],
+						keyUp: function(e){
+							if(e.keyCode == dojo.keys.ENTER){
+								var i = dojo.indexOf(this.items, e.target.value);
+								if(i != -1){
+									this.items.splice(i, 1);
+								}else{
+									this.items.push(e.target.value);
+								}
+								e.target.value = "";
+								this.render();
+								dojo.query("input", this.domNode).forEach("item.focus();");
+							}
+						},
+						templateString: '<div><input dojoAttachEvent="onkeyup: keyUp"><ul>{% for item in items %}<li>${oldRepl} {{ item }}</li>{% endfor %}</ul></div>'
+					});
+
+	        dojo.require("dojo.parser");
+	    </script>
+	</head>
+	<body>
+		<div dojoType="Fruit"></div>
+	</body>
+</html>

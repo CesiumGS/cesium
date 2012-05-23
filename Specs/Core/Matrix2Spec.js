@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Core/Matrix2',
          'Core/Cartesian2'
@@ -35,20 +36,20 @@ defineSuite([
     it("creates a non-uniform scale matrix", function() {
         var m = Matrix2.createNonUniformScale(new Cartesian2(1, 2));
 
-        expect(m.getColumn0().equals(new Cartesian2(1, 0))).toBeTruthy();
-        expect(m.getColumn1().equals(new Cartesian2(0, 2))).toBeTruthy();
+        expect(m.getColumn0().equals(new Cartesian2(1, 0))).toEqual(true);
+        expect(m.getColumn1().equals(new Cartesian2(0, 2))).toEqual(true);
     });
 
     it("creates a uniform scale matrix", function() {
         var m0 = Matrix2.createScale(2);
         var m1 = Matrix2.createNonUniformScale(new Cartesian2(2, 2));
 
-        expect(m0.equals(m1)).toBeTruthy();
+        expect(m0.equals(m1)).toEqual(true);
     });
 
     it("creates scale matrices without arguments", function() {
-        expect(Matrix2.createNonUniformScale().equals(new Matrix2())).toBeTruthy();
-        expect(Matrix2.createScale().equals(new Matrix2())).toBeTruthy();
+        expect(Matrix2.createNonUniformScale().equals(new Matrix2())).toEqual(true);
+        expect(Matrix2.createScale().equals(new Matrix2())).toEqual(true);
     });
 
     it("creates from a column major array", function() {
@@ -62,11 +63,11 @@ defineSuite([
     });
 
     it("creates from a column major array 2", function() {
-        expect(Matrix2.fromColumnMajorArray().equals(new Matrix2())).toBeTruthy();
+        expect(Matrix2.fromColumnMajorArray().equals(new Matrix2())).toEqual(true);
     });
 
-    it("getIdentity", function() {
-        expect(Matrix2.getIdentity().equals(new Matrix2(1))).toBeTruthy();
+    it("IDENTITY", function() {
+        expect(Matrix2.IDENTITY.equals(new Matrix2(1))).toEqual(true);
     });
 
     it("getColumnMajorValue0", function() {
@@ -94,13 +95,13 @@ defineSuite([
         var m = new Matrix2(1, 2,
                             4, 5);
 
-        expect(m.getColumn0().equals(new Cartesian2(1, 4))).toBeTruthy();
-        expect(m.getColumn1().equals(new Cartesian2(2, 5))).toBeTruthy();
+        expect(m.getColumn0().equals(new Cartesian2(1, 4))).toEqual(true);
+        expect(m.getColumn1().equals(new Cartesian2(2, 5))).toEqual(true);
     });
 
     it("gets individual columns 2", function() {
-        expect(Matrix2.getIdentity().getColumn0().equals(Cartesian2.getUnitX())).toBeTruthy();
-        expect(Matrix2.getIdentity().getColumn1().equals(Cartesian2.getUnitY())).toBeTruthy();
+        expect(Matrix2.IDENTITY.getColumn0().equals(Cartesian2.UNIT_X)).toEqual(true);
+        expect(Matrix2.IDENTITY.getColumn1().equals(Cartesian2.UNIT_Y)).toEqual(true);
     });
 
     it("sets individual columns", function() {
@@ -111,24 +112,24 @@ defineSuite([
         m.setColumn0(c0);
         m.setColumn1(c1);
 
-        expect(m.getColumn0().equals(c0)).toBeTruthy();
-        expect(m.getColumn1().equals(c1)).toBeTruthy();
+        expect(m.getColumn0().equals(c0)).toEqual(true);
+        expect(m.getColumn1().equals(c1)).toEqual(true);
 
         expect(m.equals(new Matrix2(1, 3,
-                                    2, 4))).toBeTruthy();
+                                    2, 4))).toEqual(true);
     });
 
     it("gets individual rows", function() {
         var m = new Matrix2(1, 2,
                             3, 4);
 
-        expect(m.getRow0().equals(new Cartesian2(1, 2))).toBeTruthy();
-        expect(m.getRow1().equals(new Cartesian2(3, 4))).toBeTruthy();
+        expect(m.getRow0().equals(new Cartesian2(1, 2))).toEqual(true);
+        expect(m.getRow1().equals(new Cartesian2(3, 4))).toEqual(true);
     });
 
     it("gets individual rows 2", function() {
-        expect(Matrix2.getIdentity().getRow0().equals(Cartesian2.getUnitX())).toBeTruthy();
-        expect(Matrix2.getIdentity().getRow1().equals(Cartesian2.getUnitY())).toBeTruthy();
+        expect(Matrix2.IDENTITY.getRow0().equals(Cartesian2.UNIT_X)).toEqual(true);
+        expect(Matrix2.IDENTITY.getRow1().equals(Cartesian2.UNIT_Y)).toEqual(true);
     });
 
     it("sets individual rows", function() {
@@ -139,11 +140,11 @@ defineSuite([
         m.setRow0(c0);
         m.setRow1(c1);
 
-        expect(m.getRow0().equals(c0)).toBeTruthy();
-        expect(m.getRow1().equals(c1)).toBeTruthy();
+        expect(m.getRow0().equals(c0)).toEqual(true);
+        expect(m.getRow1().equals(c1)).toEqual(true);
 
         expect(m.equals(new Matrix2(1, 2,
-                                    3, 4))).toBeTruthy();
+                                    3, 4))).toEqual(true);
     });
 
     it("getNumberOfElements0", function() {
@@ -156,8 +157,8 @@ defineSuite([
         var mT = new Matrix2(1, 3,
                              2, 4);
 
-        expect(m.transpose().equals(mT)).toBeTruthy();
-        expect(m.transpose().transpose().equals(m)).toBeTruthy();
+        expect(m.transpose().equals(mT)).toEqual(true);
+        expect(m.transpose().transpose().equals(m)).toEqual(true);
     });
 
     it("equals0", function() {
@@ -165,7 +166,7 @@ defineSuite([
                             3, 4);
         var m2 = new Matrix2(1, 2,
                              3, 4);
-        expect(m.equals(m2)).toBeTruthy();
+        expect(m.equals(m2)).toEqual(true);
     });
 
     it("equals1", function() {
@@ -173,7 +174,7 @@ defineSuite([
                             3, 4);
         var m2 = new Matrix2(1, 9,
                              3, 4);
-        expect(m.equals(m2)).toBeFalsy();
+        expect(m.equals(m2)).toEqual(false);
     });
 
     it("equalsEpsilon", function() {
@@ -181,8 +182,8 @@ defineSuite([
                             3, 4);
         var m2 = new Matrix2(2, 3,
                              4, 5);
-        expect(m.equalsEpsilon(m2, 1)).toBeTruthy();
-        expect(m.equalsEpsilon(m2, 0.5)).toBeFalsy();
+        expect(m.equalsEpsilon(m2, 1)).toEqual(true);
+        expect(m.equalsEpsilon(m2, 0.5)).toEqual(false);
     });
 
     it("toString", function() {
@@ -204,6 +205,6 @@ defineSuite([
         var m = new Matrix2(1.0, 2.0,
                             3.0, 4.0);
         var n = m.clone();
-        expect(m.equals(n)).toBeTruthy();
+        expect(m.equals(n)).toEqual(true);
     });
 });

@@ -1,0 +1,172 @@
+<project name="dojoweb" default="compile" basedir=".">
+	<property file="build.properties"/>
+	<import file="${tomcat.home}/bin/catalina-tasks.xml"/>
+	
+
+	<property name="app.name"      value="dojoweb"/>
+	<property name="app.path"      value="/${app.name}"/>
+	<property name="app.version"   value="0.1-dev"/>
+	<property name="build.home"    value="${basedir}/build"/>
+	<property name="dist.home"     value="${basedir}/dist"/>
+	<property name="docs.home"     value="${basedir}/docs"/>
+	<property name="src.home"      value="${basedir}/src"/>
+	<property name="web.home"      value="${basedir}/web"/>
+	<property name="lib.home"      value="lib"/>
+	<property name="jslib.home"      value="jslib"/>
+
+	<property name="compile.debug"       value="true"/>
+	<property name="compile.deprecation" value="true"/>
+	<property name="compile.optimize"    value="false"/>
+
+	<path id="compile.classpath">
+		<pathelement location="${tomcat.home}/lib/servlet-api.jar"/>
+		<pathelement location="${lib.home}/js.jar" />
+		<pathelement location="${lib.home}/shinksafe.jar" />
+	</path>
+
+
+	<!-- ==================== All Target ==================================== -->
+	<target name="all" depends="clean,compile" description="Clean build and dist directories, then compile"/>
+
+	<!-- ==================== Clean Target ==================================== -->
+	<target name="clean" description="Delete old build and dist directories">
+		<delete dir="${build.home}"/>
+		<delete dir="${dist.home}"/>
+	</target>
+
+	<!-- ==================== Prepare Target ================================== -->
+	<target name="prepare">
+		<!-- Create build directories as needed -->
+		<mkdir  dir="${build.home}"/>
+		<mkdir  dir="${build.home}/WEB-INF"/>
+		<mkdir  dir="${build.home}/WEB-INF/classes"/>
+		
+		
+		<!-- Copy static content of this web application -->
+		<copy todir="${build.home}">
+			<fileset dir="${web.home}"/>
+		</copy>
+		
+		<!-- Copy external dependencies as required -->
+		<mkdir  dir="${build.home}/WEB-INF/lib"/>
+		<copy todir="${build.home}/WEB-INF/lib">
+			<fileset dir="${lib.home}"/>
+		</copy>
+	</target>
+
+	<!-- ==================== Compile Target ================================== -->
+	<target name="compile" depends="prepare" description="Compile Java sources">
+	
+		<!-- Compile Java classes as necessary -->
+		<mkdir    dir="${build.home}/WEB-INF/classes"/>
+		<javac srcdir="${src.home}"
+			destdir="${build.home}/WEB-INF/classes"
+			debug="${compile.debug}"
+			deprecation="${compile.deprecation}"
+			optimize="${compile.optimize}">
+			<classpath refid="compile.classpath"/>
+		</javac>
+
+		<!-- Copy application resources -->
+		<copy  todir="${build.home}/WEB-INF/classes">
+			<fileset dir="${src.home}" excludes="**/*.java"/>
+		</copy>
+	
+	</target>
+
+	<!-- ==================== Dist Target ===================================== -->
+	<target name="dist" depends="compile,javadoc" description="Create binary distribution">	
+		<!-- Copy documentation subdirectories -->
+		<!-- mkdir   dir="${dist.home}/docs"/>
+		<copy    todir="${dist.home}/docs">
+			<fileset dir="${docs.home}"/>
+		</copy -->
+		
+		<!-- Create application JAR file -->
+		<jar jarfile="${dist.home}/${app.name}-${app.version}.war" basedir="${build.home}"/>
+	</target>
+
+	<!-- ==================== Install Target ================================== -->
+	<!--
+	
+	The "install" target tells the specified Tomcat 6 installation to dynamically
+	install this web application and make it available for execution.  It does
+	*not* cause the existence of this web application to be remembered across
+	Tomcat restarts; if you restart the server, you will need to re-install all
+	this web application.
+	
+	If you have already installed this application, and simply want Tomcat to
+	recognize that you have updated Java classes (or the web.xml file), use the
+	"reload" target instead.
+	
+	NOTE:  This target will only succeed if it is run from the same server that
+	Tomcat is running on.
+	
+	NOTE:  This is the logical opposite of the "remove" target.
+	
+	-->
+	<target name="install" depends="compile" description="Install application to servlet container">
+		<deploy url="${manager.url}"
+			username="${manager.username}"
+			password="${manager.password}"
+			path="${app.path}"
+			localWar="file://${build.home}"/>
+	</target>
+
+
+	<!-- ==================== Javadoc Target ================================== -->
+	<!--
+	
+	  The "javadoc" target creates Javadoc API documentation for the Java
+	  classes included in your application.  Normally, this is only required
+	  when preparing a distribution release, but is available as a separate
+	  target in case the developer wants to create Javadocs independently.
+	
+	-->
+	<target name="javadoc" depends="compile" description="Create Javadoc API documentation">
+		<mkdir dir="${dist.home}/docs/api"/>
+		<javadoc sourcepath="${src.home}"
+			destdir="${dist.home}/docs/api"
+			packagenames="*">
+			<classpath refid="compile.classpath"/>
+		</javadoc>
+	</target>
+
+	<!-- ==================== Reload Target =================================== -->
+	<!--
+	
+	  The "reload" signals the specified application Tomcat 6 to shut itself down
+	  and reload. This can be useful when the web application context is not
+	  reloadable and you have updated classes or property files in the
+	  /WEB-INF/classes directory or when you have added or updated jar files in the
+	  /WEB-INF/lib directory.
+	
+	  NOTE: The /WEB-INF/web.xml web application configuration file is not reread
+	  on a reload. If you have made changes to your web.xml file you must stop
+	  then start the web application. 
+	
+	-->
+	<target name="reload" depends="compile" description="Reload application on servlet container">
+	
+	<reload url="${manager.url}"
+		username="${manager.username}"
+		password="${manager.password}"
+		path="${app.path}"/>
+	</target>
+
+	<!-- ==================== Remove Target =================================== -->
+	<!--
+	
+	  The "remove" target tells the specified Tomcat 6 installation to dynamically
+	  remove this web application from service.
+	
+	  NOTE:  This is the logical opposite of the "install" target.
+	
+	-->
+	<target name="remove" description="Remove application on servlet container">
+		<undeploy url="${manager.url}"
+			username="${manager.username}"
+			password="${manager.password}"
+			path="${app.path}"/>		
+	</target>
+</project>

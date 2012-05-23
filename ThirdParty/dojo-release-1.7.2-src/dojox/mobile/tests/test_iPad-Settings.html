@@ -1,0 +1,235 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>iPad Settings</title>
+		<style>
+		@import "../themes/iphone/base.css";
+		@import "../themes/iphone/ipad.css";
+		@import "../themes/common/FixedSplitter.css";
+		html, body{
+			height: 100%;
+			overflow: hidden;
+			position: relative;
+		}
+		.mblEdgeToEdgeList {
+			background-color: #DBDDE2;
+		}
+		</style>
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true, mblAlwaysHideAddressBar: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			dojo.require("dojox.mobile");			// This is a mobile app.
+			dojo.require("dojox.mobile.parser");	// This mobile app supports running on desktop browsers
+			dojo.require("dojox.mobile.FixedSplitter");
+			dojo.require("dojox.mobile.ScrollableView");
+			dojo.require("dojox.mobile.compat");	// This mobile app uses declarative programming with fast mobile parser
+		</script>
+	</head>
+	<body style="visibility:hidden;">
+		<div dojoType="dojox.mobile.FixedSplitter" orientation="H">
+			<div dojoType="dojox.mobile.FixedSplitterPane" style="width:300px;border-right:1px solid black;">
+				<div id="settings" dojoType="dojox.mobile.ScrollableView" selected="true">
+					<h1 dojoType="dojox.mobile.Heading" fixed="top">Settings</h1>
+					<ul dojoType="dojox.mobile.EdgeToEdgeList" transition="flip" stateful="true">
+						<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-1.png" moveTo="wifi">
+							Wi-Fi
+						</li>
+						<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-2.png" moveTo="bright">
+							Brightness &amp; Wallpaper
+						</li>
+						<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-3.png" moveTo="picture">
+							Picture Frame
+						</li>
+						<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-4.png" moveTo="general" selected="true">
+							General
+						</li>
+						<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-5.png" moveTo="wifi">
+							Mail, Contacts, Calendars
+						</li>
+						<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-6.png" moveTo="bright">
+							Safari
+						</li>
+						<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-7.png" moveTo="picture">
+							iPod
+						</li>
+						<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-8.png" moveTo="general">
+							Video
+						</li>
+						<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-9.png" moveTo="wifi">
+							Photos
+						</li>
+						<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-10.png" moveTo="bright">
+							Store
+						</li>
+						<li class="mblEdgeToEdgeCategory">
+							Apps
+						</li>
+						<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-1.png" moveTo="wifi">
+							News
+						</li>
+						<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-2.png" moveTo="bright">
+							Weather
+						</li>
+						<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-3.png" moveTo="picture">
+							Books
+						</li>
+						<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-4.png" moveTo="general">
+							 Business
+						</li>
+						<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-1.png" moveTo="wifi">
+							Navigation
+						</li>
+						<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-2.png" moveTo="bright">
+							Sports
+						</li>
+						<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-3.png" moveTo="picture">
+							Social
+						</li>
+						<li dojoType="dojox.mobile.ListItem" icon="images/i-icon-4.png" moveTo="general">
+							Music
+						</li>
+					</ul>
+				</div>
+			</div>
+
+			<div dojoType="dojox.mobile.FixedSplitterPane">
+
+				<div id="general" dojoType="dojox.mobile.ScrollableView" selected="true">
+					<h1 dojoType="dojox.mobile.Heading" fixed="top">General</h1>
+					<ul dojoType="dojox.mobile.RoundRectList">
+						<li dojoType="dojox.mobile.ListItem" moveTo="about">
+							About
+						</li>
+						<li dojoType="dojox.mobile.ListItem" rightText="2h 40m" moveTo="about">
+							Usage
+						</li>
+					</ul>
+
+					<ul dojoType="dojox.mobile.RoundRectList">
+						<li dojoType="dojox.mobile.ListItem" moveTo="about">
+							Network
+						</li>
+						<li dojoType="dojox.mobile.ListItem" rightText="Off" moveTo="about">
+							Bluetooth
+						</li>
+						<li dojoType="dojox.mobile.ListItem" moveTo="about">
+							Location Services
+						</li>
+					</ul>
+
+					<ul dojoType="dojox.mobile.RoundRectList">
+						<li dojoType="dojox.mobile.ListItem" rightText="1 Minute" moveTo="about">
+							Auto-Lock
+						</li>
+						<li dojoType="dojox.mobile.ListItem" rightText="Off" moveTo="about">
+							Passcode Lock
+						</li>
+						<li dojoType="dojox.mobile.ListItem" rightText="Off" moveTo="about">
+							Restrictions
+						</li>
+					</ul>
+
+					<ul dojoType="dojox.mobile.RoundRectList">
+						<li dojoType="dojox.mobile.ListItem" moveTo="about">
+							Home
+						</li>
+						<li dojoType="dojox.mobile.ListItem" moveTo="about">
+							Date & Time					   
+						</li>							   
+						<li dojoType="dojox.mobile.ListItem" moveTo="about">
+							Keyboard					   
+						</li>							   
+						<li dojoType="dojox.mobile.ListItem" moveTo="about">
+							International				   
+						</li>							   
+						<li dojoType="dojox.mobile.ListItem" moveTo="about">
+							Accessibility
+						</li>
+					</ul>
+
+					<ul dojoType="dojox.mobile.RoundRectList">
+						<li dojoType="dojox.mobile.ListItem" moveTo="about">
+							Reset
+						</li>
+					</ul>
+				</div>
+
+				<div id="about" dojoType="dojox.mobile.ScrollableView">
+					<h1 dojoType="dojox.mobile.Heading" fixed="top" back="General" moveTo="general">About</h1>
+					<h2 dojoType="dojox.mobile.RoundRectCategory">Generic Mobile Device</h2>
+					<ul dojoType="dojox.mobile.RoundRectList">
+						<li dojoType="dojox.mobile.ListItem" rightText="AcmePhone">
+							Network											   
+						</li>												   
+						<li dojoType="dojox.mobile.ListItem" rightText="AcmePhone">
+							Line
+						</li>
+						<li dojoType="dojox.mobile.ListItem" rightText="1024">
+							Songs
+						</li>
+						<li dojoType="dojox.mobile.ListItem" rightText="10">
+							Videos
+						</li>
+						<li dojoType="dojox.mobile.ListItem" rightText="96">
+							Photos
+						</li>
+						<li dojoType="dojox.mobile.ListItem" rightText="2">
+							Applications
+						</li>
+						<li dojoType="dojox.mobile.ListItem" rightText="29.3 BG">
+							Capacity
+						</li>
+						<li dojoType="dojox.mobile.ListItem" rightText="28.0 BG">
+							Available
+						</li>
+						<li dojoType="dojox.mobile.ListItem" rightText="3.0 (7A341)">
+							Version
+						</li>
+					</ul>
+				</div>
+
+				<div id="wifi" dojoType="dojox.mobile.ScrollableView">
+					<h1 dojoType="dojox.mobile.Heading" fixed="top">Wi-Fi Networks</h1>
+					<ul dojoType="dojox.mobile.RoundRectList">
+						<li dojoType="dojox.mobile.ListItem">
+							Wi-Fi
+							<div class="mblItemSwitch" dojoType="dojox.mobile.Switch"></div>
+						</li>
+						<li dojoType="dojox.mobile.ListItem">
+							<input type="text">
+						</li>
+						<li dojoType="dojox.mobile.ListItem">
+							<select><option>Songs</option><option>Videos</option><option>Photos</option></select>
+						</li>
+					</ul>
+				</div>
+
+				<div id="bright" dojoType="dojox.mobile.ScrollableView">
+					<h1 dojoType="dojox.mobile.Heading" fixed="top">Brightness &amp; Wallpaper</h1>
+					<ul dojoType="dojox.mobile.RoundRectList">
+						<li dojoType="dojox.mobile.ListItem">
+							Auto-Brightness
+							<div class="mblItemSwitch" dojoType="dojox.mobile.Switch"></div>
+						</li>
+					</ul>
+				</div>
+
+				<div id="picture" dojoType="dojox.mobile.ScrollableView">
+					<h1 dojoType="dojox.mobile.Heading" fixed="top">Picture Frame</h1>
+					<h2 dojoType="dojox.mobile.RoundRectCategory">Transition</h2>
+					<ul dojoType="dojox.mobile.RoundRectList" select="single">
+						<li dojoType="dojox.mobile.ListItem" checked="true">
+							Dissolve
+						</li>
+						<li dojoType="dojox.mobile.ListItem">
+							Origami
+						</li>
+					</ul>
+				</div>
+
+			</div>
+		</div>
+	</body>
+</html>

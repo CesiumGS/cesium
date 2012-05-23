@@ -1,0 +1,169 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+		<title>dojox.gesture bubbling Unit Test</title>
+	</head>
+	<style type="text/css">
+		@import "../../../../util/doh/robot/robot.css";
+		
+		#outer {
+			width: 350px;
+			height: 200px;
+			border: 1px solid #54A201;
+			background-color: #54A201;			
+		}
+		#inner {
+			width: 250px;
+			height: 80px;
+			border: 1px solid #7FB0DB;
+			background-color: #7FB0DB
+		}
+		
+	</style>
+	<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="isDebug:true"></script>
+	<script type="text/javascript">
+		require([
+			"dojo/_base/html",
+			"dojo/_base/sniff",
+			"dojo/ready",
+			"dojo/on",
+			"doh/runner",
+			"dojo/touch",
+			"dojox/gesture/tap",
+			"dojox/gesture/swipe"
+		], function(html, has, ready, on, doh, touch, tap, swipe){	
+			ready(function(){
+				var h1, h2, h3;
+				var inner = html.byId("inner");
+				var outer = html.byId("outer");
+				var innerExecuted, outerExecuted, touchExecuted;
+				var innerObj = {}, outerObj = {}, outerTouchObj = {};
+				
+				function setObj(obj, e){
+					obj.type = e.type;
+					obj.target = e.target;
+					obj.currentTarget = e.currentTarget;					
+				}
+				function assert(obj, type, target, currentTarget){
+					doh.assertEqual(type, obj.type);
+					doh.assertEqual(target, obj.target);
+					doh.assertEqual(currentTarget && !has('ie'), !!obj.currentTarget);			
+				}
+				
+				doh.register("dojox.gesture.* bubbling", [
+					function tapBubble(){
+						// test tap bubbling
+						h1 = on(inner, tap, function(e){
+							innerExecuted = true;
+							setObj(innerObj, e);
+						});
+						h2 = on(outer, tap, function(e){
+							outerExecuted = true;
+							setObj(outerObj, e);
+						});
+						// shouldn't affect other native events, e.g. touch.release = mouseup|touchend
+						h3 = on(outer, touch.release, function(e){
+							touchExecuted = true;
+							setObj(outerTouchObj, e);
+						});
+						on.emit(inner, 'mousedown', {screenX: 100, screenY: 100, bubbles:true, cancelable:true});
+						on.emit(inner, 'mouseup', {screenX: 106, screenY: 108, bubbles:true, cancelable:true});
+						doh.assertTrue(innerExecuted && outerExecuted && touchExecuted, 'tapBubble(),tap not bubbled to outer!');
+						
+						// inner tap assertion
+						assert(innerObj, 'tap', inner, inner);				
+						// outer tap assertion
+						assert(outerObj, 'tap', inner, outer);
+						// outer touch assertion
+						assert(outerTouchObj, 'mouseup', inner, outer);
+					},
+					function tapStopBubble(){
+						// test prevent bubbling						
+						innerExecuted = outerExecuted = touchExecuted = false;
+						innerObj = {}, outerObj = {}, outerTouchObj = {};
+						h1.remove();
+						//use dojo.stopEven() to prevent bubbling of tap event
+						h1 = on(inner, tap, function(e){
+							innerExecuted = true;
+							setObj(innerObj, e);
+							dojo.stopEvent(e);							
+						});
+						on.emit(inner, 'mousedown', {screenX: 100, screenY: 100, bubbles:true, cancelable:true});
+						on.emit(inner, 'mouseup', {screenX: 106, screenY: 108, bubbles:true, cancelable:true});
+						doh.assertTrue(innerExecuted && !outerExecuted && touchExecuted, "tapStopBubble(),tap shouldn't bubbled to outer!");
+
+						// inner tap assertion
+						assert(innerObj, 'tap', inner, inner);
+						// outer touch assertion
+						assert(outerTouchObj, 'mouseup', inner, outer);
+
+						h1.remove();
+						h2.remove();							
+						h3.remove();
+					},
+					function swipeBubble(){
+						// test swipe bubbling
+						innerExecuted = outerExecuted = touchExecuted = false;
+						innerObj = {}, outerObj = {}, outerTouchObj = {};
+						h1 = on(inner, swipe, function(e){
+							innerExecuted = true;
+							setObj(innerObj, e);
+						});
+						h2 = on(outer, swipe, function(e){
+							outerExecuted = true;
+							setObj(outerObj, e);
+						});
+						// shouldn't affect other native events, e.g. touch.release = mouseup|touchend
+						h3 = on(outer, touch.release, function(e){
+							touchExecuted = true;
+							setObj(outerTouchObj, e);
+						});
+						on.emit(inner, 'mousedown', {screenX: 100, screenY: 200, bubbles:true, cancelable:true});
+						on.emit(inner, 'mousemove', {screenX: 260, screenY: 100, bubbles:true, cancelable:true});
+						on.emit(inner, 'mouseup', {screenX: 300, screenY: 80, bubbles:true, cancelable:true});
+						doh.assertTrue(innerExecuted && outerExecuted && touchExecuted, 'swipeBubble(), swipe not bubbled to outer!');
+						
+						// inner swipe assertion
+						assert(innerObj, 'swipe', inner, inner);					
+						// outer swipe assertion
+						assert(outerObj, 'swipe', inner, outer);
+						// outer touch assertion
+						assert(outerTouchObj, 'mouseup', inner, outer);
+					},
+					function swipeStopBubble(){
+						// test prevent bubbling						
+						innerExecuted = outerExecuted = touchExecuted = false;
+						innerObj = {}, outerObj = {}, outerTouchObj = {};
+						h1.remove();
+						//use dojo.stopEven() to prevent bubbling of tap event
+						h1 = on(inner, swipe, function(e){
+							innerExecuted = true;
+							setObj(innerObj, e);
+							dojo.stopEvent(e);
+						});
+						on.emit(inner, 'mousedown', {screenX: 100, screenY: 200, bubbles:true, cancelable:true});
+						on.emit(inner, 'mousemove', {screenX: 260, screenY: 100, bubbles:true, cancelable:true});
+						on.emit(inner, 'mouseup', {screenX: 300, screenY: 80, bubbles:true, cancelable:true});
+						doh.assertTrue(innerExecuted && !outerExecuted && touchExecuted, "tapStopBubble(),tap shouldn't bubbled to outer!");
+
+						// inner swipe assertion
+						assert(innerObj, 'swipe', inner, inner);
+						// outer touch assertion
+						assert(outerTouchObj, 'mouseup', inner, outer);
+
+						h1.remove();
+						h2.remove();
+						h3.remove();
+					}
+				]);
+				doh.run();
+			});
+		});
+	</script>
+	<body class='claro'>
+		<div id="outer">
+			outer<div id="inner">inner</div>
+		</div>
+	</body>
+</html>

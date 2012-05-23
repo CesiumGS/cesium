@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Test Reflection and Projection matrices</title>
+    <style>
+        @import "../../../dojo/resources/dojo.css";
+        @import "../../../dijit/themes/tundra/tundra.css";
+    </style>
+    <script src="../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+    <script>
+        dojo.require("dojox.gfx");
+        dojo.require("dojo.colors");
+        
+        dojo.require("dijit.form.HorizontalSlider");
+        dojo.require("dijit.form.HorizontalRule");
+        dojo.require("dijit.form.HorizontalRuleLabels");
+        
+        var W = 500, H = 500, MARKER_SIZE = 5;
+
+        function makeGrid(group, size, step, stroke){
+            var g = group.createGroup();
+            stroke = stroke || {color: [0, 0, 0, 0.1], width: 1};
+            for(var i = step; i < size; i += step){
+                g.createLine({x1: 0, y1: i, x2: size, y2: i}).setStroke(stroke);
+                g.createLine({x1: i, y1: 0, x2: i, y2: size}).setStroke(stroke);
+            }
+            g.createRect({x: 0, y: 0, width: size - 1, height: size -1}).setStroke("black");
+            return g;
+        }
+        
+        var surface, shape, line = {x1: 0, y1: 0, x2: W, y2: H},
+            rm, pm, pt, rpt, ppt, point, rpoint, ppoint, rline, pline;
+            
+        function updatePoints(){
+            // get all transforms
+            rm = dojox.gfx.matrix.reflect(line.x2, line.y2);
+            pm = dojox.gfx.matrix.project(line.x2, line.y2);
+            
+            // update points and lines
+            if(point){
+                rpt = dojox.gfx.matrix.multiplyPoint(rm, pt);
+                ppt = dojox.gfx.matrix.multiplyPoint(pm, pt);
+                point.setShape({cx: pt.x, cy: pt.y, r: MARKER_SIZE});
+                rpoint.setShape({cx: rpt.x, cy: rpt.y, r: MARKER_SIZE});
+                ppoint.setShape({cx: ppt.x, cy: ppt.y, r: MARKER_SIZE});
+                rline.setShape({x1: pt.x, y1: pt.y, x2: rpt.x, y2: rpt.y});
+                pline.setShape({x1: pt.x, y1: pt.y, x2: ppt.x, y2: ppt.y});
+            }
+        }
+        
+        function shiftVector(value){
+            // update the line
+            if(value < 0){
+                line.y2 = H;
+                line.x2 = W + (W / 100) * value;
+            }else{
+                line.x2 = W;
+                line.y2 = H - (H / 100) * value;
+            }
+            shape.setShape(line);
+            updatePoints();
+        }
+        
+        function setPoint(e){
+            var bbox = dojo.position("surf", true);
+            pt = {x: e.pageX - bbox.x, y: e.pageY - bbox.y};
+            if(!point){
+                point = surface.createCircle({cx: 0, cy: 0, r: MARKER_SIZE}).
+                    setStroke("black").setFill("yellow");
+                rpoint = surface.createCircle({cx: 0, cy: 0, r: MARKER_SIZE}).
+                    setStroke("black").setFill("red");
+                ppoint = surface.createCircle({cx: 0, cy: 0, r: MARKER_SIZE}).
+                    setStroke("black").setFill("green");
+                rline = surface.createLine({x1: 0, y1: 0, x2: 0, y2: 0}).
+                    setStroke("red");
+                pline = surface.createLine({x1: 0, y1: 0, x2: 0, y2: 0}).
+                    setStroke({color: "green", style: "dash"});
+            }
+            updatePoints();
+        }
+
+        run = function(surface){
+            makeGrid(surface, W, 50);
+            shape = surface.createLine(line).setStroke("black");
+            dojo.connect(dijit.byId("shifter"), "onChange", shiftVector);
+            dojo.connect(dojo.byId("surf"), "onclick", setPoint);
+            shiftVector(0);
+        };
+        
+		createSurface = function(){
+			surface = dojox.gfx.createSurface("surf", W, H);
+			surface.whenLoaded(run);
+		};
+
+        dojo.addOnLoad(createSurface);
+    </script>
+</head>
+<body class="tundra">
+    <h1>Test Reflection and Projection matrices</h1>
+    <div id="shifter" dojoType="dijit.form.HorizontalSlider" 
+            value="0" minimum="-100" maximum="100" value="0" discreteValues="21" showButtons="false" intermediateChanges="true" style="width: 500px;">
+        <div dojoType="dijit.form.HorizontalRule" container="topDecoration" count="21" style="height: 5px;"></div>
+        <div dojoType="dijit.form.HorizontalRule" container="bottomDecoration" count="5" style="height: 5px;"></div>
+        <div dojoType="dijit.form.HorizontalRuleLabels" container="bottomDecoration" labels="-100,-50,0,50,100" style="height: 1.2em; font-size: 75%; color: gray;"></div>
+    </div>
+    <div id="surf"></div>
+    <p>Legend: <span style="background: yellow;">yellow</span> is your point, <span style="color: red;">red</span> is a reflected point,
+    <span style="color: green;">green</span> is a projected point.</p>
+    <p>Click anywhere on the surface to set a point and see its reflection and projection.</p>
+</body>
+</html>

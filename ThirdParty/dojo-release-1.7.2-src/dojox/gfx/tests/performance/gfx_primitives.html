@@ -1,0 +1,347 @@
+<html>
+<head>
+<title>Testing Primitives</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+	@import "../../../../dojo/resources/dojo.css";
+	@import "../../../../dijit/tests/css/dijitTests.css";
+</style>
+<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+<script type="text/javascript" src="../../../../util/doh/runner.js"></script>
+<script type="text/javascript">
+	dojo.require("doh.runner");
+	dojo.require("dojox.gfx");
+	
+	var surface;
+	createSurface = function(){
+		surface = dojox.gfx.createSurface("test", 500, 500);
+	};
+	
+	destroySurface = function(){
+		if(surface){
+			surface.destroy();
+			surface = null;
+		}
+	}
+
+	var imageHref;
+
+	dojo.addOnLoad(function(){
+        imageHref = dojo.moduleUrl("dojox", "gfx/tests/performance/images/testImage.jpg").toString();
+    	doh.register("gfx.primitives.performance", [
+			{
+				name: "Line",
+                testType: "perf",
+                trialDuration: 100,
+                trialDelay: 50,
+                trialIterations: 50,
+                setUp: function() {
+					createSurface();
+                },
+                tearDown: function(){
+					destroySurface();
+                },
+                runTest: function(){
+                    surface.clear();
+                    var path = surface.createLine({
+                        x: 100,
+                        y: 100,
+                        x1: 200,
+                        y1: 200
+					}).setStroke({color: "black"});
+				}
+			},
+			{
+				name: "PolyLine",
+                testType: "perf",
+                trialDuration: 100,
+                trialDelay: 50,
+                trialIterations: 50,
+                setUp: function() {
+					createSurface();
+                },
+                tearDown: function(){
+					destroySurface();
+                },
+                runTest: function(){
+                    surface.clear();
+                    var path = surface.createPolyline([{
+							x: 100,
+							y: 100
+						},{
+							x: 200,
+							y: 200
+						},{
+							x: 150,
+							y: 200
+						},{
+							x: 150,
+							y: 100
+						}
+					]).setStroke({color: "black"});
+				}
+			},
+			{
+				name: "Path (lineTo)",
+                testType: "perf",
+                trialDuration: 100,
+                trialDelay: 50,
+                trialIterations: 50,
+                setUp: function() {
+					createSurface();
+                },
+                tearDown: function(){
+					destroySurface();
+                },
+                runTest: function(){
+                    surface.clear();
+                    var path = surface.createPath();
+					path.moveTo(100,100);
+					path.lineTo(200, 200);
+					path.lineTo(150, 200);
+					path.lineTo(150, 100);
+					path.setStroke({color: "black"});
+				}
+			},
+			{
+				name: "Path (hLineTo)",
+                testType: "perf",
+                trialDuration: 100,
+                trialDelay: 50,
+                trialIterations: 50,
+                setUp: function() {
+					createSurface();
+                },
+                tearDown: function(){
+					destroySurface();
+                },
+                runTest: function(){
+                    surface.clear();
+                    var path = surface.createPath();
+					path.moveTo(100,100);
+					path.hLineTo(200);
+					path.setStroke({color: "black"});
+				}
+			},
+			{
+				name: "Path (vLineTo)",
+                testType: "perf",
+                trialDuration: 100,
+                trialDelay: 50,
+                trialIterations: 50,
+                setUp: function() {
+					createSurface();
+                },
+                tearDown: function(){
+					destroySurface();
+                },
+                runTest: function(){
+                    surface.clear();
+                    var path = surface.createPath();
+					path.moveTo(100,100);
+					path.vLineTo(200);
+					path.setStroke({color: "black"});
+				}
+			},
+			{
+				name: "Path (qCurveTo)",
+                testType: "perf",
+                trialDuration: 100,
+                trialDelay: 50,
+                trialIterations: 50,
+                setUp: function() {
+					createSurface();
+                },
+                tearDown: function(){
+					destroySurface();
+                },
+                runTest: function(){
+                    surface.clear();
+                    var path = surface.createPath();
+					path.moveTo(50,50);
+					path.qCurveTo(175,150, 200,200);
+					path.setStroke({color: "black"});
+				}
+			},
+			{
+				name: "Path (qSmoothCurveTo)",
+                testType: "perf",
+                trialDuration: 100,
+                trialDelay: 50,
+                trialIterations: 50,
+                setUp: function() {
+					createSurface();
+                },
+                tearDown: function(){
+					destroySurface();
+                },
+                runTest: function(){
+                    surface.clear();
+                    var path = surface.createPath();
+					path.moveTo(50,50);
+					path.qCurveTo(175,150, 200,200);
+					path.qSmoothCurveTo(100,300);
+					path.setStroke({color: "black"});
+				}
+			},
+			{
+				name: "Path (arcTo)",
+                testType: "perf",
+                trialDuration: 100,
+                trialDelay: 50,
+                trialIterations: 50,
+                setUp: function() {
+					createSurface();
+                },
+                tearDown: function(){
+					destroySurface();
+                },
+                runTest: function(){
+                    surface.clear();
+                    var path = surface.createPath();
+					path.moveTo(50,50);
+					path.arcTo(75, 60, -30, false, true, 200,200);
+					path.setStroke({color: "black"});
+				}
+			},
+			{
+				name: "Image",
+                testType: "perf",
+                trialDuration: 100,
+                trialDelay: 50,
+                trialIterations: 50,
+                setUp: function() {
+					createSurface();
+                },
+                tearDown: function(){
+					destroySurface();
+                },
+                runTest: function(){
+                    surface.clear();
+                    surface.createImage({
+						src: imageHref,
+                        x: 50,
+                        y: 50,
+                        width: 300,
+                        height: 50
+					});
+				}
+			},
+			{
+				name: "Text",
+                testType: "perf",
+                trialDuration: 100,
+                trialDelay: 50,
+                trialIterations: 50,
+                setUp: function() {
+					createSurface();
+                },
+                tearDown: function(){
+					destroySurface();
+                },
+                runTest: function(){
+                    surface.clear();
+                    surface.createText({
+                        x: 50,
+                        y: 50,
+                        text: "I'm a bunch of text!"
+					}).setStroke({color: "black"});;
+				}
+			},
+			{
+				name: "Textpath",
+                testType: "perf",
+                trialDuration: 100,
+                trialDelay: 50,
+                trialIterations: 50,
+                setUp: function() {
+					createSurface();
+                },
+                tearDown: function(){
+					destroySurface();
+                },
+                runTest: function(){
+                    surface.clear();
+                    var tp = surface.createTextPath({
+                        text: "I'm a bunch of text!"
+					});
+					tp.moveTo(50, 100);
+                    tp.arcTo(75, 60, -30, false, true, 200,200);
+					tp.setStroke({color: "black"});
+				}
+			},
+			{
+				name: "Rectangle",
+                testType: "perf",
+                trialDuration: 100,
+                trialDelay: 50,
+                trialIterations: 50,
+                setUp: function() {
+					createSurface();
+                },
+                tearDown: function(){
+					destroySurface();
+                },
+                runTest: function(){
+                    surface.clear();
+                    surface.createRect({
+                        x: 100,
+                        y: 100,
+                        width: 200,
+                        height: 50
+					}).setStroke({color: "black"});
+				}
+			},
+			{
+				name: "Circle",
+                testType: "perf",
+                trialDuration: 100,
+                trialDelay: 50,
+                trialIterations: 50,
+                setUp: function() {
+					createSurface();
+                },
+                tearDown: function(){
+					destroySurface();
+                },
+                runTest: function(){
+                    surface.clear();
+                    surface.createCircle({
+                        cx: 150,
+                        cy: 150,
+                        r: 100
+					}).setStroke({color: "black"});
+				}
+			},
+			{
+				name: "Ellipse",
+                testType: "perf",
+                trialDuration: 100,
+                trialDelay: 50,
+                trialIterations: 50,
+                setUp: function() {
+					createSurface();
+                },
+                tearDown: function(){
+					destroySurface();
+                },
+                runTest: function(){
+                    surface.clear();
+                    surface.createEllipse({
+                        cx: 150,
+                        cy: 150,
+                        rx: 100,
+                        ry: 50
+					}).setStroke({color: "black"});
+				}
+			}
+    	]);
+		doh.run();
+	});
+</script>
+</head>
+<body>
+<h1>Testing Primitive Shapes</h1>
+<div id="test" style="width: 500px; height: 500px;"></div>
+</body>
+</html>

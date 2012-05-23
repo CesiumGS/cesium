@@ -1,0 +1,5 @@
+define(
+({
+	"blockquote": "Dugi citat"
+})
+);

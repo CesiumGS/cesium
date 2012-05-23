@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Core/PolygonPipeline',
          'Core/Cartesian2',
@@ -55,21 +56,21 @@ defineSuite([
 
     it("cleanUp throws without three positions", function() {
         expect(function() {
-            PolygonPipeline.cleanUp([Cartesian3.getZero(), Cartesian3.getZero()]);
+            PolygonPipeline.cleanUp([Cartesian3.ZERO, Cartesian3.ZERO]);
         }).toThrow();
     });
 
     ///////////////////////////////////////////////////////////////////////
 
     it("EllipsoidTangentPlane projects a point", function() {
-        var ellipsoid = Ellipsoid.getWgs84();
-        var p = ellipsoid.toCartesian(Cartographic3.getZero());
+        var ellipsoid = Ellipsoid.WGS84;
+        var p = ellipsoid.toCartesian(Cartographic3.ZERO);
 
         var tangentPlane = EllipsoidTangentPlane.create(ellipsoid, [p]);
         var projectedP = tangentPlane.projectPointsOntoPlane([p]);
 
         expect(projectedP.length).toEqual(1);
-        expect(projectedP[0].equals(Cartesian2.getZero())).toBeTruthy();
+        expect(projectedP[0].equals(Cartesian2.ZERO)).toEqual(true);
     });
 
     it("EllipsoidTangentPlane throws without ellipsoid", function() {
@@ -79,7 +80,7 @@ defineSuite([
     });
 
     it("EllipsoidTangentPlane throws without positions", function() {
-        var ellipsoid = Ellipsoid.getWgs84();
+        var ellipsoid = Ellipsoid.WGS84;
 
         expect(function() {
             return EllipsoidTangentPlane.create(ellipsoid);
@@ -87,8 +88,8 @@ defineSuite([
     });
 
     it("projectPointsOntoPlane throws without positions", function() {
-        var ellipsoid = Ellipsoid.getWgs84();
-        var p = ellipsoid.toCartesian(Cartographic3.getZero());
+        var ellipsoid = Ellipsoid.WGS84;
+        var p = ellipsoid.toCartesian(Cartographic3.ZERO);
         var tangentPlane = EllipsoidTangentPlane.create(ellipsoid, [p]);
 
         expect(function() {
@@ -128,7 +129,7 @@ defineSuite([
 
     it("computeArea2D throws without three positions", function() {
         expect(function() {
-            PolygonPipeline.computeArea2D([Cartesian3.getZero(), Cartesian3.getZero()]);
+            PolygonPipeline.computeArea2D([Cartesian3.ZERO, Cartesian3.ZERO]);
         }).toThrow();
     });
 
@@ -164,7 +165,7 @@ defineSuite([
 
     it("computeWindingOrder2D throws without three positions", function() {
         expect(function() {
-            PolygonPipeline.computeWindingOrder2D([Cartesian3.getZero(), Cartesian3.getZero()]);
+            PolygonPipeline.computeWindingOrder2D([Cartesian3.ZERO, Cartesian3.ZERO]);
         }).toThrow();
     });
 
@@ -207,7 +208,69 @@ defineSuite([
 
     it("earClip2D throws without three positions", function() {
         expect(function() {
-            PolygonPipeline.earClip2D([Cartesian2.getZero(), Cartesian2.getZero()]);
+            PolygonPipeline.earClip2D([Cartesian2.ZERO, Cartesian2.ZERO]);
+        }).toThrow();
+    });
+
+    ///////////////////////////////////////////////////////////////////////
+
+    it("computeSubdivision throws without positions", function() {
+        expect(function() {
+            PolygonPipeline.computeSubdivision();
+        }).toThrow();
+    });
+
+    it("computeSubdivision throws without indices", function() {
+        expect(function() {
+            PolygonPipeline.computeSubdivision([]);
+        }).toThrow();
+    });
+
+    it("computeSubdivision throws with less than 3 indices", function() {
+        expect(function() {
+            PolygonPipeline.computeSubdivision([], [1, 2]);
+        }).toThrow();
+    });
+
+    it("computeSubdivision throws without a multiple of 3 indices", function() {
+        expect(function() {
+            PolygonPipeline.computeSubdivision([], [1, 2, 3, 4]);
+        }).toThrow();
+    });
+
+    it("computeSubdivision throws with negative granularity", function() {
+        expect(function() {
+            PolygonPipeline.computeSubdivision([], [1, 2, 3], -1.0);
+        }).toThrow();
+    });
+
+    it("computeSubdivision", function() {
+        var positions = [
+                         new Cartesian3(0.0, 0.0, 90.0),
+                         new Cartesian3(0.0, 90.0, 0.0),
+                         new Cartesian3(90.0, 0.0, 0.0)
+                        ];
+        var indices = [0, 1, 2];
+        var subdivision = PolygonPipeline.computeSubdivision(positions, indices, 60.0);
+
+        expect(subdivision.attributes.position.values[0]).toEqual(0.0);
+        expect(subdivision.attributes.position.values[1]).toEqual(0.0);
+        expect(subdivision.attributes.position.values[2]).toEqual(90.0);
+        expect(subdivision.attributes.position.values[3]).toEqual(0.0);
+        expect(subdivision.attributes.position.values[4]).toEqual(90.0);
+        expect(subdivision.attributes.position.values[5]).toEqual(0.0);
+        expect(subdivision.attributes.position.values[6]).toEqual(90.0);
+        expect(subdivision.attributes.position.values[7]).toEqual(0.0);
+        expect(subdivision.attributes.position.values[8]).toEqual(0.0);
+
+        expect(subdivision.indexLists[0].values[0]).toEqual(0);
+        expect(subdivision.indexLists[0].values[1]).toEqual(1);
+        expect(subdivision.indexLists[0].values[2]).toEqual(2);
+    });
+
+    it("scaleToGeodeticHeight throws without ellipsoid", function() {
+        expect(function() {
+            PolygonPipeline.scaleToGeodeticHeight();
         }).toThrow();
     });
 });

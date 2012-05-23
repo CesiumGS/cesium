@@ -1,0 +1,82 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<title>Wikipedia Data Store</title>
+<style type="text/css">
+@import "../../../dojo/resources/dojo.css";
+@import "../../../dijit/themes/tundra/tundra.css";
+h1 { margin-bottom: 1em; }
+</style>
+<script type="text/javascript">
+//<![CDATA[
+djConfig = { isDebug: true };
+//]]>
+</script>
+<script type="text/javascript" src="../../../dojo/dojo.js"></script>
+<script type="text/javascript">
+//<![CDATA[
+dojo.require("dojox.data.WikipediaStore");
+var store = new dojox.data.WikipediaStore();
+
+function doSearch(){
+	var outNode = dojo.byId("output");
+	outNode.innerHTML = "Searching...";	
+
+	function loadArticle(article){
+		var request = {
+			query: {
+				title: article
+			},
+			onItem: function(item, req){
+				var title = store.getValue(item, "title");
+				var text = store.getValue(item, "text")["*"];
+				outNode.innerHTML = "<h1>" + title + "</h1>" + text;
+			}
+		};
+		console.log("Article request: ", request);
+		store.fetch(request);
+	}
+
+
+	var request = {
+		query: {
+			action: "query",
+			text: dojo.byId("searchText").value
+		},
+		count: dojo.byId("count").value,
+		onBegin: function(count){
+			outNode.innerHTML += " found " + count + " results.<br>Click one to load the article.";
+		},
+		onItem: function(item, req){
+			console.debug(item);
+			var node = document.createElement("a");
+			node.href = "#";
+			node.onclick = function(){
+				console.log("clicked ", this.innerHTML);
+				loadArticle(this.innerHTML);
+			};
+			node.style.padding = "6px";
+			node.style.display = "block";
+			node.innerHTML = store.getValue(item, "title");
+			outNode.appendChild(node);
+		}
+	};
+	console.log("Request: ", request);
+	store.fetch(request);
+}
+//]]>
+</script>
+</head>
+<body class="tundra" style="margin:20px;">
+	<form action="#">
+		<p>
+			Text: <input id="searchText" type="text" value="dojo toolkit">
+			Count: <input id="count" type="text" value="8" size="3">
+			<input id="searchButton" type="button" value="store.fetch()" onclick="doSearch()">
+		</p>
+
+		<div id="output" style="padding:0 20px;">
+		</div>
+	</form>
+</body>
+</html>

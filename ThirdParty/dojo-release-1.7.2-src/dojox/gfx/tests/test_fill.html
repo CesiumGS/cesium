@@ -1,0 +1,47 @@
+﻿<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" >
+<head>
+<title>Testing fill rule</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+</style>
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+<!--<script type="text/javascript" src="../_base.js"></script>-->
+<!--<script type="text/javascript" src="../shape.js"></script>-->
+<!--<script type="text/javascript" src="../path.js"></script>-->
+<!--<script type="text/javascript" src="../vml.js"></script>-->
+<!--<script type="text/javascript" src="../svg.js"></script>-->
+<!--<script type="text/javascript" src="../silverlight.js"></script>-->
+<script type="text/javascript">
+dojo.require("dojox.gfx");
+
+createSurface = function(){
+	var surface = dojox.gfx.createSurface("test", 500, 500);
+	surface.whenLoaded(makeShapes);
+};
+
+makeShapes = function(surface){
+	var path = surface.createPath("");
+	// form concentric circles
+	var center = {x: 250, y: 250};
+	for(var r = 200; r > 0; r -= 30){
+		// make two 180 degree arcs to form a circle
+		var start = {x: center.x, y: center.y - r};
+		var end   = {x: center.x, y: center.y + r};
+		path.moveTo(start).arcTo(r, r, 0, true, true, end).arcTo(r, r, 0, true, true, start).closePath();
+	}
+	// set visual attributes
+	path.setFill("red").setStroke("black");
+};
+
+dojo.addOnLoad(createSurface);
+
+</script>
+</head>
+<body>
+	<h1>Testing fill rule</h1>
+	<div id="test" style="width: 500px; height: 500px;"></div>
+	<p>That's all Folks!</p>
+</body>
+</html>

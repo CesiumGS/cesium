@@ -1,0 +1,33 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+	<title>Testing clipping on surface</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<style>
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+	</style>
+	<script src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+	<script>
+		dojo.require("dojox.gfx");
+
+		createSurface = function(){
+			var surface = dojox.gfx.createSurface("test", 200, 200);
+			surface.whenLoaded(makeShapes);
+		};
+
+		makeShapes = function(surface){
+			surface.createRect({width: 200, height: 200}).setStroke("black");
+			surface.createRect({x: 150, y: 10, width: 300, height: 300}).setFill("red");
+		};
+
+		dojo.addOnLoad(createSurface);
+	</script>
+</head>
+<body>
+	<h1>Testing clipping on surface</h1>
+	<!--<p><button onclick="createSurface();">Go</button></p>-->
+	<div id="test"></div>
+	<p>That's all Folks!</p>
+</body>
+</html>

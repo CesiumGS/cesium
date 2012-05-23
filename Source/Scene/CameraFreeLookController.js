@@ -212,10 +212,10 @@ define([
      * @param {Cartesian3} axis The axis to rotate around.
      * @param {Number} angle The angle, in radians, to rotate by.
      *
-     * @see CameraFreeLookcontroller#lookUp
-     * @see CameraFreeLookcontroller#lookDown
-     * @see CameraFreeLookcontroller#lookLeft
-     * @see CameraFreeLookcontroller#lookRight
+     * @see CameraFreeLookController#lookUp
+     * @see CameraFreeLookController#lookDown
+     * @see CameraFreeLookController#lookLeft
+     * @see CameraFreeLookController#lookRight
      */
     CameraFreeLookController.prototype.rotate = function(axis, angle) {
         var a = Cartesian3.clone(axis);
@@ -286,10 +286,10 @@ define([
         dot = startY.dot(endY);
         angle = 0.0;
         axis = startY.cross(endY);
-        if (dot < 1.0 && !axis.equalsEpsilon(Cartesian3.getZero(), CesiumMath.EPSILON14)) { // dot is in [0, 1]
+        if (dot < 1.0 && !axis.equalsEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON14)) { // dot is in [0, 1]
             angle = -Math.acos(dot);
         } else { // no rotation
-            axis = Cartesian3.getUnitX();
+            axis = Cartesian3.UNIT_X;
         }
         rotation = Quaternion.fromAxisAngle(axis, angle).toRotationMatrix();
 

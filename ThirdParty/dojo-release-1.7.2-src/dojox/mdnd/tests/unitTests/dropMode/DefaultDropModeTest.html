@@ -1,0 +1,241 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+
+	<title>DefaultDropMode</title>
+	
+	<script type="text/javascript" 
+		src="../../../../../dojo/dojo.js" 
+		djConfig="isDebug: true, parseOnLoad: true">
+	</script>
+	
+	<script type="text/javascript">
+		dojo.require("dijit.robotx");	
+		dojo.require("dojo.parser");
+		dojo.require("dojox.mdnd.tests.unitTests.dropMode.FixtureLib");
+		dojo.require("dojox.mdnd.dropMode.DefaultDropMode");
+		
+		dojo.addOnLoad(function(){			
+			
+			doh.robot.initRobot('resources/domElement.html');
+			
+			doh.register("getDragPoint",
+			    [
+					// summary:
+					//		getDragPoint get the reference point used to
+					//		represent the drag item.
+					//
+					//		For the defaultDropMode, this point varies with the
+					//		direction of moving (up or down).
+
+					 new getDragPointFixture("firstCall",function(){
+						// On the first call, this point is :
+						// X = (X position + width/2)
+						// Y = Y position
+						var point = this.dropMode.getDragPoint(this.coords, this.size, this.mousePosition);						
+						doh.assertTrue(point.x === 75);
+						doh.assertTrue(point.y === 50);
+					}),
+
+					new getDragPointFixture("moveHorizontal",function(){
+						// The drag item move from (25,50) to (125,50).
+						// X = (X position + width/2)
+						// Y = Y position
+
+						//1st call
+						this.dropMode.getDragPoint(this.coords, this.size, this.mousePosition);
+						//2nd call
+						var point = this.dropMode.getDragPoint(
+								{'x':125,'y':50},
+								this.size);
+						doh.assertTrue(point.x === 175);
+						doh.assertTrue(point.y === 50);
+					}),
+
+					new getDragPointFixture("moveUp",function(){
+						// The drag item move from (25,50) to (25,0).
+						// X = (X position + width/2)
+						// Y = Y position
+						
+						//1st call
+						this.dropMode.getDragPoint(this.coords, this.size, this.mousePosition);
+						//2nd  call
+						var point = this.dropMode.getDragPoint(
+									{'x':25,'y':0}, 
+									this.size);
+						doh.assertTrue(point.x === 75);
+						doh.assertTrue(point.y === 0);
+					}),
+
+					new getDragPointFixture("moveDown",function(){
+					 	// The drag item move from (25,50) to (25,0).
+						// X = (X position + width/2)
+						// Y = Y position + Y size
+
+						//1st call
+						this.dropMode.getDragPoint(this.coords, this.size, this.mousePosition);
+						//2nd call
+						var point = this.dropMode.getDragPoint(
+									{'x':25,'y':75}, 
+									this.size);
+						doh.assertTrue(point.x === 75);
+						doh.assertTrue(point.y === 175);
+					})					
+			    ]
+			);
+			
+			doh.register("addArea",
+				[
+					// summary:
+					//		addArea allows to add a DnD area. They are sorted
+					//		by their x position.
+
+					new AreaFixture("addAnArea", function(){
+						this.dropMode.addArea(this.array, this.objectA);
+						doh.assertTrue(this.array.length === 1);
+						doh.assertTrue(this.objectA.coords.x === 50 && this.objectA.coords.y === 50);	
+					}),
+
+					new AreaFixture("addAtStart", function(){
+						this.dropMode.addArea(this.array, this.objectB);
+						this.dropMode.addArea(this.array, this.objectA);
+						doh.assertTrue(this.array.length === 2);
+						doh.assertTrue(this.array[0]=== this.objectA);	
+					}),
+
+					new AreaFixture("addAtEnd", function(){
+						this.dropMode.addArea(this.array, this.objectB);
+						this.dropMode.addArea(this.array, this.objectC);
+						doh.assertTrue(this.array.length === 2);
+						doh.assertTrue(this.array[1] === this.objectC);
+					}),
+
+					new AreaFixture("addAtMiddle", function(){
+						this.dropMode.addArea(this.array, this.objectB);
+						this.dropMode.addArea(this.array, this.objectD);
+						console.dir(this.array);
+						this.dropMode.addArea(this.array, this.objectC);
+						doh.assertTrue(this.array.length === 3);
+						doh.assertTrue(this.array[1] === this.objectC);
+					})					
+				]			
+			);
+			
+			doh.register("updateAreas",
+				[
+					// summary:
+					//		Refresh intervals between areas to determinate the 
+					//		nearest area to drop an item.
+
+					new AreaFixture("areaDropZone", function(){
+						this.dropMode.addArea(this.array, this.objectA);
+						this.dropMode.addArea(this.array, this.objectB);
+						this.dropMode.addArea(this.array, this.objectC);
+						this.dropMode.addArea(this.array, this.objectD);
+						this.dropMode.updateAreas(this.array); 
+
+						doh.assertTrue(this.objectA.coords.x1 === -1 && this.objectA.coords.x2 === 176);
+						doh.assertTrue(this.objectB.coords.x1 === 176 && this.objectB.coords.x2 === 326);
+						doh.assertTrue(this.objectD.coords.x1 === 601 && this.objectD.coords.x2 === -1);
+					}),
+					
+					new AreaFixture("updateDOMCoord", function(){
+						this.dropMode.addArea(this.array, this.objectA);
+						this.dropMode.addArea(this.array, this.objectB);
+						this.dropMode.addArea(this.array, this.objectC);
+						this.dropMode.addArea(this.array, this.objectD);
+						this.dropMode.updateAreas(this.array); 
+
+						doh.assertTrue(this.objectC.coords.x === 350 && this.objectC.coords.y === 50);
+						doh.assertTrue(this.objectC.coords.x1 === 326 && this.objectC.coords.x2 === 601);
+						var domNode = this.objectC.node;
+						dojo.style(domNode,{'left': '400px','top':'25px'});
+						this.dropMode.updateAreas(this.array); 
+						doh.assertTrue(this.objectC.coords.x === 400 && this.objectC.coords.y === 25);
+						doh.assertTrue(this.objectC.coords.x1 === 351 && this.objectC.coords.x2 === 626);
+					})
+				]
+			);
+			
+			doh.register("initItems",
+				[
+					// summary:
+					// 		iniItems allows to initialize the horizontal line 
+					//		in order to determinate the drop zone.
+
+					new ItemFixture("initItems", function(){
+
+						this.object = {
+							'items':[this.itemA]
+						}
+						this.dropMode.initItems(this.object);
+
+						doh.assertTrue(this.itemA.y === 551);
+					}),
+					
+					new ItemFixture("initItems2", function(){
+
+						this.object = {
+							'items':[this.itemA, this.itemB, this.itemC, this.itemD]
+						}
+						this.dropMode.initItems(this.object);
+
+						doh.assertTrue(this.itemA.y === 551);
+						doh.assertTrue(this.itemB.y === 701);
+						doh.assertTrue(this.itemC.y === 851);
+						doh.assertTrue(this.itemD.y === 1051);
+					})
+				]
+			);
+			
+			doh.register("refreshItems",
+				[
+					new ItemFixture("addAtStart", function(){
+
+						this.object = {
+							'items':[this.itemA, this.itemB, this.itemC, this.itemD]
+						}
+						this.dropMode.initItems(this.object);
+						this.dropMode.refreshItems(this.object, 0, {h:50,w:50}, true);
+
+						doh.assertTrue(this.itemA.y === 601);
+					}),
+
+					new ItemFixture("addDropIndicator", function(){
+
+						this.object = {
+							'items':[this.itemA, this.itemB, this.itemC, this.itemD]
+						}
+						this.dropMode.initItems(this.object);
+						this.dropMode.refreshItems(this.object, 2, {h:50,w:50}, true);
+						doh.assertTrue(this.itemB.y === 701);
+						doh.assertTrue(this.itemD.y === 1101);
+					}),
+
+					new ItemFixture("removeDropIndicator", function(){
+
+						this.object = {
+							'items':[this.itemA, this.itemB, this.itemC, this.itemD]
+						}
+						this.dropMode.initItems(this.object);
+						this.dropMode.refreshItems(this.object, 2, {h:50,w:50}, true);
+						
+						doh.assertTrue(this.itemB.y === 701);
+						doh.assertTrue(this.itemD.y === 1101);
+
+						this.dropMode.refreshItems(this.object, 2, {h:50,w:50}, false);
+
+						doh.assertTrue(this.itemB.y === 701);
+						doh.assertTrue(this.itemD.y === 1051);
+					})
+				]
+			);
+			
+			doh.run();
+		});
+	</script>
+	<style type="text/css"></style>
+	</head>
+	<body></body>
+</html>

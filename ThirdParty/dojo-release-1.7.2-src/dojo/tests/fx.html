@@ -1,0 +1,484 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>Testing dojo.fx</title>
+		<script type="text/javascript" src="../dojo.js" data-dojo-config="isDebug:true"></script>
+		<script type="text/javascript">
+			require(["dojo", "doh", "dojo/fx", "dojo/fx/easing", "dojo/domReady!"], function(dojo, doh){
+				doh.register("t", 
+					[
+						function slideTo(t){
+							var s = dojo.fx.slideTo({
+								node: "foo",
+								duration: 500,
+								left: 500,
+								top: 50
+							}).play();
+							var d = new doh.Deferred();
+							dojo.connect(s, "onEnd", function(){
+								doh.is(dojo.style("foo", "left"), 500);
+								doh.is(dojo.style("foo", "top"), 50);
+								with(dojo.byId("foo").style){
+									position = left = top = "";
+								}
+								d.callback(true);
+							});
+							s.play();
+							return d;
+						},
+
+						function wipeOut(t){
+							dojo.byId("foo").style.height = "";
+							var d = new doh.Deferred();
+							var s = dojo.fx.wipeOut({
+								node: "foo",
+								onEnd: function(){
+									doh.t(dojo.style("foo", "height") < 5);
+									d.callback(true);
+								}
+							}).play();
+							return d;
+						},
+						
+						function wipeIn(t){
+							var d = new doh.Deferred();
+							setTimeout(function(){
+								dojo.fx.wipeIn({
+									node: "foo", 
+									onEnd: function(){
+										console.debug(dojo.style("foo", "height"));
+										doh.t(dojo.style("foo", "height") > 10);
+										d.callback(true);
+									}
+								}).play();
+							}, 10);
+							return d;
+						},
+
+						{
+							name: "chain",
+							timeout: 1500,
+							runTest: function(t){
+								dojo.byId("foo").style.height = "0px";
+								var d = new doh.Deferred();
+								var w = dojo.fx.wipeIn({
+									node: "foo",
+									duration: 500
+								});
+								var f = dojo.fadeOut({
+									node: "foo",
+									duration: 500
+								});
+								var a = dojo.fx.chain([w,f]);
+								dojo.connect(a, "onEnd", function(){
+									doh.t((w.status()=="stopped"&&f.status()=="stopped"));
+									d.callback(true);
+								});
+								a.play();
+								return d;
+							}
+						},
+						
+						{
+							name: "combine",
+							timeout: 1500,
+							runTest: function(t){
+								dojo.byId("foo").style.height = "0px";
+								var d = new doh.Deferred();
+								var w = dojo.fx.wipeIn({
+									node: "foo",
+									duration: 500
+								});
+								var f = dojo.fadeIn({
+									node: "foo",
+									duration: 1000
+								});
+								var a = dojo.fx.combine([w,f]);
+								dojo.connect(a, "onEnd", function(){
+									doh.t((w.status()=="stopped"&&f.status()=="stopped"));
+									d.callback(true);
+								});
+								a.play();
+								return d;
+							}
+						},
+						{
+							name:"combineBeforeBegin",
+							timeout:1500,
+							runTest: function(t){
+								var d = new doh.Deferred();
+								var a = dojo.fadeOut({ node:"foo2", duration:400 });
+								var b = dojo.fadeIn({ node:"foo2", duration:400 });
+								var chain = dojo.fx.combine([a,b]);
+								dojo.connect(chain,"beforeBegin",dojo.hitch(d,"callback",true));
+								chain.play();
+								return d;
+							}
+							
+						},
+						{
+							name:"delayTest",
+							timeout:2000,
+							runTest:function(t){
+								var d = new doh.Deferred();
+								var delay = 100;
+								var _anims = [];
+								var nodes = ["a","b","c","d"];
+								dojo.forEach(nodes,function(n){
+									_anims.push(dojo.fadeOut({ node:n, duration:100, delay: delay += 100 }));
+								});
+								var a = dojo.fx.combine(_anims);
+								var timer = (new Date()).getTime();
+								dojo.connect(a,"onEnd",function(){
+									console.warn("delayTest running time:", (new Date()).getTime() - timer, "ms, expected:", a.duration, "ms");
+									d.callback(true);
+								});
+								a.play();
+								return d;	
+							}
+						},
+						{
+							name:"delayTestChain",
+							timeout:2200,
+							runTest:function(t){
+								var d = new doh.Deferred();
+								var delay = 100;
+								var _anims = [];
+								var nodes = ["a","b","c","d"];
+								dojo.forEach(nodes,function(n){
+									_anims.push(dojo.fadeIn({ node:n, duration:100, delay: delay += 100 }));
+								});
+								var a = dojo.fx.chain(_anims);
+								var timer = (new Date()).getTime();
+								dojo.connect(a,"onEnd",function(){
+									console.warn("delayTestChain running time:", (new Date()).getTime() - timer, "ms, expected:", a.duration, "ms");
+									d.callback(true);
+								});
+								a.play();
+								return d;
+							}
+						},
+						{
+							name:"combineOnEnd",
+							timeout:1500,
+							runTest: function(t){
+								var d = new doh.Deferred();
+								var a = dojo.fadeOut({ node:"foo2", duration:400 });
+								var b = dojo.fadeIn({ node:"foo2", duration:400 });
+								var combine = dojo.fx.combine([a,b]);
+								dojo.connect(combine,"onEnd",dojo.hitch(d,"callback",true));
+								combine.play();
+								return d;
+							}
+							
+						},
+						{
+							name:"combineOnPlay",
+							timeout:1500,
+							runTest: function(t){
+								var d = new doh.Deferred();
+								var a = dojo.fadeOut({ node:"foo2", duration:400 });
+								var b = dojo.fadeIn({ node:"foo2", duration:400 });
+								var combine = dojo.fx.combine([a,b]);
+								dojo.connect(combine,"onPlay",dojo.hitch(d,"callback",true));
+								combine.play();
+								return d;
+							}
+							
+						},
+						{
+							name:"chainOnEnd",
+							timeout:1500,
+							runTest: function(t){
+								var d = new doh.Deferred();
+								var a = dojo.fadeOut({ node:"foo2", duration:400 });
+								var b = dojo.fadeIn({ node:"foo2", duration:400 });
+								var chain = dojo.fx.chain([a,b]);
+								dojo.connect(chain,"onEnd",dojo.hitch(d,"callback",true));
+								chain.play();
+								return d;
+							}
+							
+						},
+						{
+							name:"chainOnPlay",
+							timeout:1500,
+							runTest: function(t){
+
+								var d = new doh.Deferred();
+								var a = dojo.fadeOut({ node:"foo2", duration:200 });
+								var b = dojo.fadeIn({ node:"foo2", duration:200 });
+								var chain = dojo.fx.chain([a,b]);
+								dojo.connect(chain,"onPlay",dojo.hitch(d,"callback",true));
+								chain.play();
+								return d;
+							}
+							
+						},
+						
+						{
+							name:"stopDelay",
+							timeout:1500,
+							runTest: function(t){
+								
+								var d = new doh.Deferred();
+								var a = dojo.fadeOut({ node: "foo2", delay:400 });
+								dojo.connect(a, "onPlay", dojo.hitch(d, "errback", true));
+								a.play(); 
+								a.stop();
+								setTimeout(function(){
+									d.callback(true);
+								}, 500);
+								return d;
+							}
+						},
+						
+						{
+							name:"stopDelayPassed",
+							timeout:1500,
+							runTest: function(t){
+							
+								var d = new doh.Deferred();
+								var b = dojo.fadeIn({ node: "foo2" });
+								dojo.connect(b, "onPlay", dojo.hitch(d, "errback", true));
+								b.play(400); 
+								b.stop();
+								setTimeout(function(){
+									d.callback(true);
+								}, 600);
+								return d;
+							}
+							
+						},
+						
+						function Toggler(){
+							var d = new doh.Deferred();
+							var t = new dojo.fx.Toggler({
+								node: "foo",
+								hideDuration: 100,
+								hideFunc: dojo.fx.wipeOut,
+								showFunc: dojo.fx.wipeIn 
+							});
+							t.hide();
+							setTimeout(function(){
+								var sa = t.show();
+								dojo.connect(sa, "onEnd", dojo.hitch(d, "callback", true));
+							}, 50);
+							return d;
+						},
+						
+						function combineChain(t){
+							// test combining two chained() animations
+							var anim1 = dojo.fx.chain([
+								dojo.fadeIn({ node:"chained" }),
+								dojo.fadeOut({ node:"chained" })
+							]);
+							var anim2 = dojo.fx.chain([
+								dojo.fadeOut({ node:"chainedtoo" }),
+								dojo.fadeIn({ node:"chainedtoo" })
+							]);
+							
+							var anim = dojo.fx.combine([anim1, anim2]);
+
+							var d = new doh.Deferred();
+							dojo.connect(anim, "onEnd", dojo.hitch(d, "callback", true));
+							anim.play();
+						},
+						
+						function chainCombine(t){
+							// test chaining two combined() animations
+							var anim1 = dojo.fx.combine([
+								dojo.fadeIn({ node:"chained" }),
+								dojo.fadeOut({ node:"chainedtoo" })
+							]);
+							var anim2 = dojo.fx.combine([
+								dojo.fadeOut({ node:"chained" }),
+								dojo.fadeIn({ node:"chainedtoo" })
+							]);
+							
+							var anim = dojo.fx.chain([anim1, anim2]);
+
+							var d = new doh.Deferred();
+							dojo.connect(anim, "onEnd", dojo.hitch(d, "callback", true));
+							anim.play();
+
+						},
+						
+						function easingNames(t){
+							for(var i in dojo.fx.easing){
+								t.assertTrue(dojo.isFunction(dojo.fx.easing[i]));
+							}
+						},
+						
+						function easingReturns(t){
+							for(var i in dojo.fx.easing){
+								t.assertTrue(!isNaN(dojo.fx.easing[i](0.5)));
+							}
+						},
+						
+						{
+							name:"onendStatus-chain",
+							timeout:1500,
+							runTest: function(t){
+								var d = new doh.Deferred;
+								
+								var a1 = dojo.fadeOut({ node:"a1" });
+								var a2 = dojo.fadeOut({ node:"a2" });
+								
+								var anim = dojo.fx.chain([a1, a2]);
+								dojo.connect(anim, "onEnd", function(){
+									t.is("stopped", a1.status());
+									t.is("stopped", a2.status());
+									t.is("stopped", anim.status());
+									d.callback(true);
+								});
+								
+								anim.play();
+								
+								return d;
+							}
+						},	
+						{
+							name:"onendStatus-combine",
+							timeout:1500,
+							runTest: function(t){
+								var d = new doh.Deferred;
+
+								var a1 = dojo.fadeOut({ node:"a1" });
+								var a2 = dojo.fadeOut({ node:"a2" });
+
+								var anim = dojo.fx.combine([a1, a2]);
+								dojo.connect(anim, "onEnd", function(){
+									t.is("stopped", a1.status());
+									t.is("stopped", a2.status());
+									setTimeout(function(){
+										t.is("stopped", anim.status());
+										d.callback(true);	
+									}, 10);
+								});
+
+								anim.play();
+								return d;
+							}
+						},
+						{
+							name: "wipeOut onStop",
+							timeout: 1500,
+							runTest: function(t){
+								dojo.byId("foo").style.height = "auto";
+								dojo.byId("foo").style.overflow = "visible";
+								var d = new doh.Deferred();
+								var w = dojo.fx.wipeOut({
+									node: "foo",
+									duration: 1000
+								});
+								dojo.connect(w, "onStop", function(){
+									doh.t(dojo.byId("foo").style.overflow == "visible");
+									d.callback(true);
+								});
+								w.play();
+								setTimeout(function(){ w.stop(); }, 100);
+								return d;
+							}
+						},
+						{
+							name: "wipeIn onStop",
+							timeout: 1500,
+							runTest: function(t){
+								dojo.byId("foo").style.height = "0px";
+								dojo.byId("foo").style.overflow = "visible";
+								var d = new doh.Deferred();
+								var w = dojo.fx.wipeIn({
+									node: "foo",
+									duration: 1000
+								});
+								dojo.connect(w, "onStop", function(){
+									doh.t(dojo.byId("foo").style.overflow == "visible");
+									d.callback(true);
+								});
+								w.play();
+								setTimeout(function(){ w.stop(); }, 100);
+								return d;
+							}
+						}
+					]
+				);
+				doh.run();
+			});
+		</script>
+		<style type="text/css">
+			@import "../resources/dojo.css";
+
+			body {
+				text-shadow: 0px 0px;
+				margin: 1em;
+				background-color: #DEDEDE;
+			}
+
+			.box {
+				color: #292929;
+				/* color: #424242; */
+				/* text-align: left; */
+				width: 300px;
+				border: 1px solid #BABABA;
+				background-color: white;
+				padding-left: 10px;
+				padding-right: 10px;
+				margin-left: 10px;
+				margin-bottom: 1em;
+				-o-border-radius: 10px;
+				-moz-border-radius: 12px;
+				-webkit-border-radius: 10px;
+				-webkit-box-shadow: 0px 3px 7px #adadad;
+				/* -opera-border-radius: 10px; */
+				border-radius: 10px;
+				-moz-box-sizing: border-box;
+				-opera-sizing: border-box;
+				-webkit-box-sizing: border-box;
+				-khtml-box-sizing: border-box;
+				box-sizing: border-box;
+				overflow: hidden;
+				/* position: absolute; */
+			}
+		</style>
+	</head>
+	<body>
+		<div class="box" id="a">a</div><div class="box" id="b">b</div>
+		<div class="box" id="c">c</div><div class="box" id="d">d</div>
+	
+		<div id="foo" class="box">
+			<p>
+			Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean
+			semper sagittis velit. Cras in mi. Duis porta mauris ut ligula.
+			Proin porta rutrum lacus. Etiam consequat scelerisque quam. Nulla
+			facilisi. Maecenas luctus venenatis nulla. In sit amet dui non mi
+			semper iaculis. Sed molestie tortor at ipsum. Morbi dictum rutrum
+			magna. Sed vitae risus.
+			</p>
+			<p>
+			Aliquam vitae enim. Duis scelerisque metus auctor est venenatis
+			imperdiet. Fusce dignissim porta augue. Nulla vestibulum. Integer
+			lorem nunc, ullamcorper a, commodo ac, malesuada sed, dolor. Aenean
+			id mi in massa bibendum suscipit. Integer eros. Nullam suscipit
+			mauris. In pellentesque. Mauris ipsum est, pharetra semper,
+			pharetra in, viverra quis, tellus. Etiam purus. Quisque egestas,
+			tortor ac cursus lacinia, felis leo adipiscing nisi, et rhoncus
+			elit dolor eget eros. Fusce ut quam. Suspendisse eleifend leo vitae
+			ligula. Nulla facilisi. Nulla rutrum, erat vitae lacinia dictum,
+			pede purus imperdiet lacus, ut semper velit ante id metus. Praesent
+			massa dolor, porttitor sed, pulvinar in, consequat ut, leo. Nullam
+			nec est. Aenean id risus blandit tortor pharetra congue.
+			Suspendisse pulvinar.
+			</p>
+		</div>
+		<div id="foo2">foo2</div>
+		
+		<div>
+			<p id="chained">foo</p><p id="chainedtoo">bar</p>
+		</div>
+		
+		<p id="a1">p</p><p id="a2">p</p>
+		
+	</body>
+</html>

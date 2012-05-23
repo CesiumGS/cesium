@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Standard Calculator Test</title>
+
+	<style>
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+		@import "../../../dijit/themes/claro/claro.css";
+		@import "../../../dojox/layout/resources/FloatingPane.css";
+		@import "../../../dojox/calc/resources/Standard.css";
+	</style>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: false"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojox/calc/Standard",
+			"dojo/ready",
+			"dojo/store/Memory"
+		], function(Standard, ready, Memory){
+			ready(function(){
+				new Standard(
+				{
+					readStore: new Memory({ idProperty: "name", data: [
+						{ name: "test2", args: "a, b", body: "return a/b;"}
+					]}),
+					writeStore: new Memory({ idProperty: "name", data: [
+						{ name: "test", args: "a, b", body: "for(var i = 0;i<1;i++)return a/b;" },
+						{ name: "newFunc", args: "", body: "var a,b; return test(b=8,a=4);" },
+						{ name: "exampleFunction", args:"x", body:"return 2*x;" }
+					]})
+				}, "calculator");
+			});
+		});
+
+	</script>
+</head>
+<body class=claro>
+	<div id="calculator"></div>
+</body>
+</html>

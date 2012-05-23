@@ -1,0 +1,5 @@
+{
+	name:'Nairobi', 
+	type:'city',
+	population: "Unknown"
+}

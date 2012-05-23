@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          '../Specs/createContext',
          '../Specs/destroyContext',
@@ -21,7 +22,7 @@ defineSuite([
          TextureMinificationFilter,
          TextureMagnificationFilter) {
     "use strict";
-    /*global Uint8Array,Float32Array,Image,xit,it,expect,beforeEach,afterEach,waitsFor*/
+    /*global xit,it,expect,beforeEach,afterEach,waitsFor*/
 
     var context;
     var sp;
@@ -185,7 +186,7 @@ defineSuite([
             pixelFormat :PixelFormat.RGBA,
             preMultiplyAlpha : true
         });
-        expect(texture.getPreMultiplyAlpha()).toBeTruthy();
+        expect(texture.getPreMultiplyAlpha()).toEqual(true);
 
         expect(renderFragment(context)).toEqualArray([0, 0, 127, 127]);
     });

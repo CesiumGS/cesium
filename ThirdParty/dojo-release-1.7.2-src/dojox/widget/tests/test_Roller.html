@@ -1,0 +1,226 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+
+	<style type="text/css">
+		@import "../../../dijit/tests/css/dijitTests.css";
+	</style>
+
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>Testing the Roller / Slider / Exploder</title>
+	
+	<script type="text/javascript" src="../../../dojo/dojo.js" djconfig="parseOnLoad:true, isDebug: true, defaultTestTheme:'soria'"></script>
+	<script type="text/javascript" src="../Roller.js"></script>
+	<script type="text/javascript">
+	dojo.require("dojo.parser");
+	dojo.require("dojox.data.GoogleFeedStore");
+	
+	var request;
+	var makeDojoDataExample = function(){
+
+		// an entirely programatic one, from a DataStore. First make the store:
+		var store = new dojox.data.GoogleFeedStore();
+		// then the widget
+		var roller = new dojox.widget.Roller({
+			autoStart: false,
+			delay: 6000
+		});
+		// and put it in the dom somewhere
+		dojo.byId("wrapper").appendChild(roller.domNode);
+				
+		var insertItem = function(item){
+			// for each feed result, make a simple link, then add it to the widget
+			var htmlPiece = "<div class='exTitle'>" +
+				"<p><a href='" + item.link + "'>" + item.title + "</a></p>" + //" - <span class='exAuthor'>by: " + item.author + "</span></p>" +
+				"<div class='exSummary'>" + item.summary + "" +
+				"</div></div>";
+				
+			roller.items.push(htmlPiece);
+		}
+
+		var sourceIdx = 0,
+			sources = [
+				"http://twitter.com/statuses/user_timeline/14572071.rss",
+				"http://dojocampus.org/content/category/dojo-cookies/feed/",
+				"http://www.dojotoolkit.org/aggregator/rss"
+			]
+		;
+		var source = function(){ return sources[sourceIdx++]; }
+		
+		var start = 0;
+		// send off a store request
+		request = {
+			query: {
+				// we'll get the campus cookie feed
+				url: source(),
+				count: 10,
+				start: start
+			},
+			onItem: insertItem,
+			onComplete: function(){
+				// once we have das data, start it up
+				console.log('oncomplete fired');
+				
+				var s = source();
+				if(s){
+					request.query.url = s + "";
+					setTimeout(dojo.hitch(store, "fetch", request), 5000);
+				}
+				
+				// make sure she's running:
+				roller.start();
+				
+			},
+			onError: function(e){
+				// stub for debugging:
+				console.warn(e);
+			}			
+		};
+		store.fetch(request);
+
+	}
+	
+	dojo.addOnLoad(function(){
+		
+		var dasroller = new dojox.widget.Roller({ delay: 3000 }, "dasroller");
+		dojo.connect(dasroller.domNode, "onmouseenter", dasroller, "stop");
+		dojo.connect(dasroller.domNode, "onmouseleave", dasroller, "start");
+		
+		var items = ["one","two","three","four","five"];
+		new dojox.widget.Roller({ delay: 1000, items: items }, "roller2");
+		new dojox.widget.RollerSlide({ delay: 2000, items: items }, "rollerslide");
+		
+		// programatic google-store fed roller:
+		makeDojoDataExample();
+		
+	})
+	</script>
+	
+	<style type="text/css">
+		body {
+			font-family: Arial;
+		}
+		.dojoxRoller {
+			list-style:none;
+			margin:0; padding:7px;
+		}
+		.dj_ie6 ul.dojoxRoller li {
+			float:left;
+		}
+		div ul.dojoxRoller li {
+			padding:4px;
+			text-align:center;
+		}
+		#wrapper .dojoxRoller {
+			padding:0; margin:0;
+		}
+		#wrapper .exSummary,
+		#wrapper .exAuthor {
+			font-size:10pt;
+			padding:6px; 
+		}
+		#wrapper p {
+			padding:4px;
+			margin-top:4px;
+		}
+	</style>
+</head>
+<body>
+		
+	<h1 class="testTitle">dojox.widget.Roller</h1>
+	
+	<div id="googleStore">
+		<h2>Powered by dojo.data (by way of <a href="http://google.com">google</a>):</h2>
+		<div id="wrapper" style="border:2px dashed #666; background:#dedede; width:500px; height:120px; overflow:hidden;"></div>
+	</div>
+
+	<h2>A Simple UL: (progressive)</h2>
+	<p>start/stop onhover</p>
+	<div id="ex1" style="background:#ededed; width:175px;">
+		<ul id="dasroller">
+			<li>First Item</li>			
+			<li>Second Item</li>
+			<li>items added 1</li>
+			<li>items added 2</li>
+			<li>items added 3</li>
+			<li>items added 4</li>
+			<li>items added 5</li>
+			<li>items added 6</li>
+			<li>items added 7</li>
+			<li>items added 8</li>
+			<li>items added 9</li>
+			<li>items added 0</li>
+		</ul>
+	</div>
+
+	<h2>An empty UL, programatic from Array</h2>
+	<div style="background:#ededed; width:175px;">
+		<ul id="roller2"></ul>
+	</div>
+
+	<h2>An empty UL, programatic Slider from Array</h2>
+	<div style="background:#ededed; width:175px; height:42px">
+		<ul id="rollerslide"></ul>
+	</div>
+	
+	<h2>and a dojoType one</h2>
+	<div style="background:#ededed; width:375px;">
+		<ul id="foo" dojoType="dojox.widget.Roller" delay="5000">
+			<li>Today's episode of random widget</li>
+			<li>brought to you by <a href="http://dojotoolkit.org">Dojo</a></li>
+			<li>(really just testing simple markup)</li>
+			<li>enjoy.</li>
+			<li>&nbsp; <!-- left blank for fake delay --></li>
+			<li>wow that was 10 seconds</li>
+		</ul>
+	</div>
+
+	<h2>One with embedded LI's</h2>
+	<div>
+		<ul id="embedded" dojoType="dojox.widget.Roller">
+			<li>one: <ul><li>inner</li><li>inner</li></ul></li>
+			<li>one: <ul><li>inner</li><li>inner</li></ul></li>
+			<li>one: <ul><li>inner</li><li>inner</li></ul></li>
+		</ul>
+	</div>
+	
+	<h2>Customer RollerHover</h2>
+	<div>
+		<ul id="customType">
+			<li>test 1</li>
+			<li>test 2</li>
+			<li>test 3</li>
+			<li>test 4</li>
+		</ul>
+	</div>
+
+	<script type="text/javascript">
+		dojo.addOnLoad(function(){
+			// taking advantage of the _RollerHover mixin:
+			dojo.declare("a.custom.Roller", [dojox.widget.RollerSlide, dojox.widget._RollerHover], {});
+			new a.custom.Roller({}, "customType");
+		});
+	</script>
+	
+	<!-- disabled because of styling mishaps :)
+	<h2>programatic Exploder:</h2>
+	<div id="ex1" style="background:#ededed; width:175px;">
+		<ul id="exploder">
+			<li>First Item</li>
+			<li>Second Item</li>
+			<li>items added 1</li>
+			<li>items added 2</li>
+			<li>items added 3</li>
+			<li>items added 4</li>
+			<li>items added 5</li>
+			<li>items added 6</li>
+			<li>items added 7</li>
+			<li>items added 8</li>
+			<li>items added 9</li>
+			<li>items added 0</li>
+		</ul>
+	</div>
+	-->
+
+</body>
+</html>

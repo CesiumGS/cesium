@@ -1,0 +1,119 @@
+<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" >
+<head>
+    <title>Drawing Paths Test</title>
+	<style>
+		@import url("../../../dijit/themes/dijit.css");
+		@import url("../../../dojox/drawing/resources/drawing.css");
+		@import url("../../../dojox/drawing/resources/toolbar.css");
+		@import url("../../../dojox/drawing/resources/GreekPalette.css");
+		href, body{
+			overflow:hidden;
+		}
+		.drawing{
+			width:800px;
+			height:400px;
+			border:1px solid #ccc;
+			cursor:crosshair;
+		}
+		#data{
+			display:block;
+			height:100px;
+			width:855px;
+			margin-top:5px;
+		}
+		button{
+			border:2px solid #ccc;
+			border-color:#D9E1F9 #B5BCD0 #878E9D #C6CEE4;
+			background-color:#CDDCF3;
+			cursor:pointer;
+		}
+		.gfxToolbar{
+			width:800px;
+			height:50px;
+			margin-bottom:10px;
+			border:1px solid #ccc;
+		}
+	</style>
+	
+	<script>
+		djConfig = {
+			isDebug:false,
+			parseOnLoad:true
+		};
+	</script>
+	<script src="../../../dojo/dojo.js"></script>
+	<script>
+		dojo.require("dojo.parser");
+		dojo.require("dojox.drawing");
+		
+		
+		// custom Tools and Plugins need to be required
+		dojo.require("dojox.drawing.tools.TextBlock");
+		dojo.require("dojox.drawing.tools.Rect");
+		dojo.require("dojox.drawing.tools.Ellipse");
+		dojo.require("dojox.drawing.tools.Line");
+		dojo.require("dojox.drawing.tools.Path");
+		dojo.require("dojox.drawing.tools.Pencil");
+		
+		dojo.require("dojox.drawing.plugins.drawing.GreekPalette");
+		dojo.require("dojox.drawing.plugins.drawing.Grid");
+		
+		dojo.require("dojox.drawing.ui.Toolbar");
+		dojo.require("dojox.drawing.ui.Button");
+		
+
+		dojo.addOnLoad(function(){
+			dojo.connect(myDrawing, "onSurfaceReady", function(){
+				
+				var path = function(pts, dontClosePath){
+					var closePath = !dontClosePath;
+					myDrawing.addStencil("path", {points:pts, closePath:closePath});
+					
+				}
+				
+				// Test Q curve
+				path([{x:210, y:210},{t:"Q", x:300, y:400},{x:400,y:210} ])
+				
+				// Test closing path on a Q curve (have to use a double-point)
+				path([{t:"Q", x:300, y:390},{x:500, y:390},{t:"Q", x:400,y:300}, {x:300,y:390} ])
+				
+				// test double donut
+				path([
+					  {x:10, y:390},{x:10, y:200},{x:100,y:200},{x:100,y:390}, {t:"Z"},
+					  {t:"M", x:20, y:210}, {x:90,y:210}, {x:90, y:290}, {x:20, y:290}, {t:"Z"},
+					  {t:"M", x:20, y:310}, {x:90,y:310}, {x:90, y:380}, {x:20, y:380} , {t:"Z"}
+				]);
+				
+				//  test unclosed paths
+				path([{x:300, y:10},{x:400, y:50}, {x:320, y:100}], true);
+				path([{x:400, y:10},{x:500, y:50}, {x:420, y:100}], true);
+				
+				// approximate a circle
+				path([
+					  {x:600, y:150},{t:"Q", x:600, y:100},{x:650,y:100}, {x:700, y:100},
+					  {x:700,y:150},{x:700,y:200},{x:650,y:200},{x:600,y:200},{x:600,y:150}
+					  ]);
+				
+				// pencil icon
+				path([ { x:68, y:20 }, { x:80, y:32 }, { x:32, y:74 }, { x:20, y:80 }, { x:62, y:74 }, { x:80, y:80 }, { x:20, y:80 }, { x:26, y:68 }, { t:'Z' }, { t:'M', x:26, y:74 }, { x:26, y:68 }, { x:62, y:32 }, { x:68, y:38 }, { x:62, y:38 }, { x:32, y:68 } ])
+			});	
+		})
+	</script>
+
+</head>
+<body class="tundra">
+    <h2>Drawing Paths Test</h2>
+	<div id="conEdit" contenteditable="true"></div>
+	<div id="wrapper">
+		
+		
+		<div dojoType="dojox.drawing.ui.Toolbar" id="gfxToolbarNode" drawingId="drawingNode" class="gfxToolbar" orient="H" tools="all" plugs="all" selected="pencil"></div>
+		
+		<div dojoType="dojox.drawing.Drawing" id="drawingNode" jsId="myDrawing" class="drawing"
+			 plugins="[{'name':'dojox.drawing.plugins.drawing.Grid', 'options':{minor:20, major:100}}]">
+		</div>
+	</div>
+	
+	<div dojoType="dojox.drawing.plugins.drawing.GreekPalette" id="greekPalette"></div>
+</body>
+</html>

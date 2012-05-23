@@ -1,0 +1,848 @@
+<?xml version="1.0" encoding="UTF-8"?><feed
+  xmlns="http://www.w3.org/2005/Atom"
+  xmlns:thr="http://purl.org/syndication/thread/1.0"
+  xml:lang="en"
+  xml:base="http://shaneosullivan.wordpress.com/wp-atom.php"
+   >
+	<title type="text">SOS</title>
+	<subtitle type="text">..where the wave finally broke, and rolled back.. Shane O'Sullivan's technical blog</subtitle>
+
+	<updated>2008-01-22T14:32:09Z</updated>
+	<generator uri="http://wordpress.org/" version="MU">WordPress</generator>
+
+	<link rel="alternate" type="text/html" href="http://shaneosullivan.wordpress.com" />
+	<id>http://shaneosullivan.wordpress.com/feed/atom/</id>
+	<link rel="self" type="application/atom+xml" href="http://shaneosullivan.wordpress.com/feed/atom/" />
+
+			<entry>
+		<author>
+			<name>Shane O'Sullivan</name>
+						<uri>http://shaneosullivan.wordpress.com/</uri>
+					</author>
+		<title type="html"><![CDATA[Using AOL hosted Dojo with your custom code]]></title>
+		<link rel="alternate" type="text/html" href="http://shaneosullivan.wordpress.com/2008/01/22/using-aol-hosted-dojo-with-your-custom-code/" />
+		<id>http://shaneosullivan.wordpress.com/2008/01/22/using-aol-hosted-dojo-with-your-custom-code/</id>
+		<updated>2008-01-22T14:32:09Z</updated>
+		<published>2008-01-22T14:32:09Z</published>
+		<category scheme="http://shaneosullivan.wordpress.com" term="Ajax" />
+		<category scheme="http://shaneosullivan.wordpress.com" term="Dojo" />
+		<category scheme="http://shaneosullivan.wordpress.com" term="Javascript" />
+		<category scheme="http://shaneosullivan.wordpress.com" term="Technical" />
+		<category scheme="http://shaneosullivan.wordpress.com" term="aol" />
+		<category scheme="http://shaneosullivan.wordpress.com" term="cross domain" />
+		<category scheme="http://shaneosullivan.wordpress.com" term="open source" />		
+		<summary type="html"><![CDATA[The Dojo Ajax Toolkit is kindly hosted by AOL for the consumption of anyone at all.  This has the advantage of
+
+Reducing the load on your own server
+Speeding up the delivery, as a Content Delivery Network (CDN) is used to ensure that the server is as close as possible to the client, and
+The more people [...]]]></summary>
+		<content type="html" xml:base="http://shaneosullivan.wordpress.com/2008/01/22/using-aol-hosted-dojo-with-your-custom-code/"><![CDATA[<div class='snap_preview'><br /><p>The <a href="http://www.dojotoolkit.org" target="_blank">Dojo Ajax Toolkit</a> is kindly <a href="http://dev.aol.com/dojo" target="_blank">hosted</a> by AOL for the consumption of anyone at all.  This has the advantage of</p>
+
+<ul>
+<li>Reducing the load on your own server</li>
+<li>Speeding up the delivery, as a Content Delivery Network (CDN) is used to ensure that the server is as close as possible to the client, and</li>
+<li>The more people who use this the better, as the same Dojo files will be cached when users move from site to site, as they&#8217;ll all be downloading the AOL hosted files.</li>
+<li>Gzip compression as standard, so the files are as small as possible</li>
+</ul>
+<p>Additionally, since release 0.9 onwards, the main Dojo JavaScript file, <i>dojo.js</i>, is always exactly the same, whereas in previous released it changed for every developer who built it.</p>
+<p>However, the problem comes in where you want to use your own custom code with the hosted Dojo code.  This is because the hosted code uses <a href="http://dojotoolkit.org/book/dojo-book-0-9/part-3-programmatic-dijit-and-dojo/functions-used-everywhere/dojo-require" target="_blank">Dojo&#8217;s loading system</a> to  dynamically load the resources needed on the page, and this will read the files from AOL, not your server (as you would expect - it knows nothing about your server).  If you want to <a href="http://dojotoolkit.org/book/dojo-book-0-9/part-4-meta-dojo/package-system-and-custom-builds" target="_blank">build custom layers</a> to improve performance, the remotely hosted Dojo will not be able to find them.</p>
+
+<p>So, the solution I generally tend to use is to put the AOL <i>dojo.js</i> on every page, and tell Dojo to load any other required files from my own server. To do this, set the <i>baseUrl </i>parameter on the djConfig attribute for the JavaScript file to the folder where Dojo is stored on your server. E.g.</p>
+<p><b>&lt;script type=&#8221;text/javascript&#8221; src=&#8221;http://o.aolcdn.com/dojo/1.0.2/dojo/dojo.js&#8221; djConfig=&#8221;{baseUrl:&#8217;/js/dojo/&#8217;}&#8221;&gt;&lt;/script&gt;</b></p>
+
+<p>Notice here that the file I load is <i>dojo.js</i>, the normal version, not <i>dojo.xd.js</i>, which is the cross domain version capable of loading files from AOL.</p>
+<p>After doing this, you can then include whatever custom built layers you like onto an particular page.  For example, if you have a layer built for the <a href="http://dojotoolkit.org/book/dojo-book-0-9/part-5-dojox/dojox-image/gallery" target="_blank">dojox.image.Gallery</a> widget called  <i>/js/dojo/dojox/image/Gallery-layer.js</i>, you can load it either dynamically:</p>
+<p><b>&lt;script type=&#8221;text/javascript&#8221;&gt;dojo.require(&#8221;dojox.image.Gallery-layer.js&#8221;);&lt;/script&gt;</b></p>
+
+<p>or include it via a script tag:</p>
+<p><b>&lt;script type=&#8221;text/javascript&#8221; src=&#8221;js/dojo/dojox/image/Gallery-layer.js&#8221;&gt;&lt;/script&gt;</b></p>
+<p>and it should work just as if you were using Dojo from your own server. Only of course you are not - AOL is serving up that file, and in many cases users will already have cached that file, speeding up your site quite nicely.</p>
+<p>Another approach is to create a custom namespace, register it with Dojo, and put all your layers in there&#8230;. but that&#8217;s for another post <img src='http://shaneosullivan.wordpress.com/wp-includes/images/smilies/icon_smile.gif' alt=':-)' class='wp-smiley' /><br />
+
+<b>Share this post:</b><a href="http://www.digg.com/submit?url=http://shaneosullivan.wordpress.com/2008/1/22/using-aol-hosted-dojo-with-your-custom-code&amp;phase=2" target="_blank" title="Post 'Using AOL hosted Dojo with your custom code">digg it</a>|<a href="http://www.dotnetkicks.com/submit/?url=http://shaneosullivan.wordpress.com/2008/1/22/using-aol-hosted-dojo-with-your-custom-code&amp;title=Using+AOL+hosted+Dojo+with+your+custom+code" target="_blank" title="Post 'Using AOL hosted Dojo with your custom code">kick it</a>|<a href="mailto:?body=Thought%20you%20might%20like%20this:%20http://shaneosullivan.wordpress.com/2008/1/22/using-aol-hosted-dojo-with-your-custom-code&amp;subject=Using+AOL+hosted+Dojo+with+your+custom+code" target="_blank" title="Post 'Using AOL hosted Dojo with your custom code">Email it</a>|<a href="http://del.icio.us/post?url=http://shaneosullivan.wordpress.com/2008/1/22/using-aol-hosted-dojo-with-your-custom-code&amp;title=Using+AOL+hosted+Dojo+with+your+custom+code" target="_blank" title="Post 'Using AOL hosted Dojo with your custom code">bookmark it</a>|<a href="http://reddit.com/submit?url=http://shaneosullivan.wordpress.com/2008/1/22/using-aol-hosted-dojo-with-your-custom-code&amp;title=Using+AOL+hosted+Dojo+with+your+custom+code" target="_blank" title="Post 'Using AOL hosted Dojo with your custom code">reddit</a>|<a href="https://favorites.live.com/quickadd.aspx?marklet=1&amp;mkt=en-us&amp;url=http://shaneosullivan.wordpress.com/2008/1/22/using-aol-hosted-dojo-with-your-custom-code&amp;title=Using+AOL+hosted+Dojo+with+your+custom+code&amp;top=1" target="_blank" title="Post 'Using AOL hosted Dojo with your custom code">liveIt</a></p>
+
+<img alt="" border="0" src="http://feeds.wordpress.com/1.0/categories/shaneosullivan.wordpress.com/88/" /> <img alt="" border="0" src="http://feeds.wordpress.com/1.0/tags/shaneosullivan.wordpress.com/88/" /> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gocomments/shaneosullivan.wordpress.com/88/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/comments/shaneosullivan.wordpress.com/88/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godelicious/shaneosullivan.wordpress.com/88/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/delicious/shaneosullivan.wordpress.com/88/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gostumble/shaneosullivan.wordpress.com/88/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/stumble/shaneosullivan.wordpress.com/88/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godigg/shaneosullivan.wordpress.com/88/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/digg/shaneosullivan.wordpress.com/88/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/goreddit/shaneosullivan.wordpress.com/88/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/reddit/shaneosullivan.wordpress.com/88/" /></a> <img alt="" border="0" src="http://stats.wordpress.com/b.gif?host=shaneosullivan.wordpress.com&blog=258432&post=88&subd=shaneosullivan&ref=&feed=1" /></div>]]></content>
+		<link rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2008/01/22/using-aol-hosted-dojo-with-your-custom-code/#comments" thr:count="1"/>
+		<link rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2008/01/22/using-aol-hosted-dojo-with-your-custom-code/feed/atom/" thr:count="1"/>
+		<thr:total>1</thr:total>
+	</entry>
+		<entry>
+		<author>
+			<name>Shane O'Sullivan</name>
+						<uri>http://shaneosullivan.wordpress.com/</uri>
+					</author>
+		<title type="html"><![CDATA[Dojo Demo Engine Update]]></title>
+		<link rel="alternate" type="text/html" href="http://shaneosullivan.wordpress.com/2008/01/07/dojo-demo-engine-update/" />
+		<id>http://shaneosullivan.wordpress.com/2008/01/07/dojo-demo-engine-update/</id>
+		<updated>2008-01-12T13:22:38Z</updated>
+		<published>2008-01-07T01:02:43Z</published>
+		<category scheme="http://shaneosullivan.wordpress.com" term="Ajax" /><category scheme="http://shaneosullivan.wordpress.com" term="Demo Engine" /><category scheme="http://shaneosullivan.wordpress.com" term="Dojo" /><category scheme="http://shaneosullivan.wordpress.com" term="Javascript" /><category scheme="http://shaneosullivan.wordpress.com" term="demo" /><category scheme="http://shaneosullivan.wordpress.com" term="dijit" /><category scheme="http://shaneosullivan.wordpress.com" term="documentation" /><category scheme="http://shaneosullivan.wordpress.com" term="dojo.query" /><category scheme="http://shaneosullivan.wordpress.com" term="dojox" /><category scheme="http://shaneosullivan.wordpress.com" term="json" /><category scheme="http://shaneosullivan.wordpress.com" term="open source" />		<summary type="html"><![CDATA[A short while ago I posted about the demo engine I&#8217;m writing for the Dojo Ajax Toolkit. Click here to read that post or go to http://www.skynet.ie/~sos/js/demo/dojo/dojoc/demos/featureexplorer.html to see it in action.
+Features
+Since that post, quite a lot of work has gone into both the features and the content of the demo engine, and the development [...]]]></summary>
+		<content type="html" xml:base="http://shaneosullivan.wordpress.com/2008/01/07/dojo-demo-engine-update/"><![CDATA[<div class='snap_preview'><br /><p>A short while ago I posted about the demo engine I&#8217;m writing for the Dojo Ajax Toolkit. <a href="http://shaneosullivan.wordpress.com/2007/12/04/a-new-demo-engine-for-dojo/" target="_blank">Click here</a> to read that post or go to <a href="http://www.skynet.ie/~sos/js/demo/dojo/dojoc/demos/featureexplorer.html" target="_blank">http://www.skynet.ie/~sos/js/demo/dojo/dojoc/demos/featureexplorer.html</a> to see it in action.</p>
+
+<p><b>Features</b></p>
+<p><b></b>Since that post, quite a lot of work has gone into both the features and the content of the demo engine, and the development process has solidified nicely.  Some of the features include:</p>
+<ul>
+<li><b>Tree navigation</b>. A <i>dijit.Tree</i> widget, reading from a remote JSON data store is used to navigate the various demos.</li>
+<li><b>Search feature</b>. A <i>dijit.form.ComboBox</i> widget, reading from the same JSON data store as the tree, can be used to dynamically search for demos by matching any part of their name.</li>
+
+<li><b>Theme switcher</b>. A <i>dijit.form.ComboBox</i> widget is used to switch between the CSS styles that Dojo provides.</li>
+<li><b>URL addressability</b>. Using a hash identifier (e.g. <i>#Dojo_Query_By%20Class</i>) in the URL of the demo engine causes it to open that demo when it has finished loading.  For example, if you click <a href="http://www.skynet.ie/~sos/js/demo/dojo/dijit/demos/featureexplorer.html#Dojo_Query_By%20Class" target="_blank">this link</a>, it will open the <i>dojo.query</i> demo showing you how to select nodes by class name. Opening any demo changes the URL in the browser to the URL for that demo, for easy bookmarking.</li>
+
+<li><b>Integrated build process</b>. A simple build script is integrated with the Dojo build process. It builds a JSON data file listing all the existing demos and their respective files. It also builds files with URL links for each demo.</li>
+</ul>
+<p><b>Content</b></p>
+<p>To date, a lot of content has been added.  Many, many widgets in <a href="http://www.skynet.ie/~sos/js/demo/dojo/dijit/demos/featureexplorer.html#Dijit" target="_blank">Dijit</a> and <a href="http://www.skynet.ie/~sos/js/demo/dojo/dijit/demos/featureexplorer.html#Dojox" target="_blank">DojoX<br />
+</a> have have been added, including the majority of the <a href="http://www.skynet.ie/~sos/js/demo/dojo/dijit/demos/featureexplorer.html#Dijit_Form%20Controls" target="_blank">Form Controls</a>.</p>
+
+<p>The latest, pretty cool additions have been the <a href="http://www.skynet.ie/~sos/js/demo/dojo/dijit/demos/featureexplorer.html#Dojo_IO" target="_blank">IO</a> and <a href="http://www.skynet.ie/~sos/js/demo/dojo/dijit/demos/featureexplorer.html#Dojo_Query" target="_blank">dojo.query</a> demos.  These cover things such as:</p>
+<ul>
+<li>Performing a XMLHttpRequest request</li>
+<li>Using an iFrame transport</li>
+<li>Submitting a form asynchronously</li>
+<li>Loading remote JavaScript files from another domain</li>
+<li>Selecting nodes using <a href="http://www.w3.org/TR/REC-CSS2/selector.html" target="_blank">CSS selectors</a> with <a href="http://ajaxian.com/archives/dojoquery-a-css-query-engine" target="_blank">dojo.query</a></li>
+
+<li>Performing operations on the NodeList returned from dojo.query</li>
+<li>Attaching events to the <a href="http://www.w3.org/TR/DOM-Level-2-Core/core.html#ID-536297177" target="_blank">NodeList</a> returned from dojo.query</li>
+</ul>
+<p><b>File Naming Scheme</b><br />
+A simple file naming scheme is used to add content to the demo framework. Each folder beneath the root folder represents a demo. Each file in a folder must be named the same as the folder, with five possible extensions. For example, given a folder with the name &#8216;<b>Button</b>&#8216;, the possible files are:</p>
+<ul>
+
+<li><b>Button.html</b> -  this contains the demo to be displayed. Any JavaScript code inside &lt;script&gt; tags is executed, and any &lt;link type=&#8221;text/css&#8221;&gt; and &lt;style&gt; tags have their CSS loaded. The executed code is shown in the <i>View</i> tab, and and the source code is shown in the <i>XML</i> tab. The <i>&lt;html&gt;</i>, <i>&lt;head&gt;</i> and <i>&lt;body&gt;</i> tags are not required.</li>
+
+<li><b>Button.js</b> - this contains pure JavaScript code that performs the same operations as Button.html, if applicable. It is not executed however. It is shown in the <i>JS</i> tab.</li>
+<li><b>Button.txt</b> - this contains the text description of the demo. It is loaded above the tabs.</li>
+<li><b>Button.links</b> - this contains a JSON array of URL links.  The build script transforms these links into HTML, and the result is loaded into the <i>Links</i> tab. One neat feature of this is that all links from sub folders are integrated with the parent folder and displayed in a nested structure. Do, for example, clicking on <i>Dijit</i> will show all the links for all widgets in the Dijit project.</li>
+
+<li><b>Button.full.html</b> - this is standalone demo, that is designed to run outside the demo engine. The <i>View</i> tab provides a link to the external file.</li>
+<li><b>sort.txt</b> - this contains a comma separated list of the child folders contained in this folder. It specifies the order in which to display the child demos in the tree. If this file is not specified, then an alphabetical ordering is used.</li>
+</ul>
+<p>All of these files are optional. If a file in a folder does not match this naming scheme, it is assumed to be some kind of resource that the demo needs, such as an image or a JSON data file. In this case, the file can be named whatever you like.</p>
+<p>The tree structure in the demo engine mirrors the folder layout.</p>
+
+<p><b>Still To Do</b></p>
+<p>There remains quite a lot of work ahead.  There are a few bugs remaining, some more cross browser testing is needed, and of course more content is required, particularly the base Dojo package.</p>
+<p>In the relatively near future this should be opened up to the public for development. The Dojo folks are setting up a source control server for community additions, and this demo engine should be part of that. Once that is done, people can start adding all sorts of cool stuff!<br />
+<b>Share this post:</b><a href="http://www.digg.com/submit?url=http://shaneosullivan.wordpress.com/2008/01/07/dojo-demo-engine-update&amp;phase=2" target="_blank" title="Post 'Dojo Demo Engine Update">digg it</a>|<a href="http://www.dotnetkicks.com/submit/?url=http://shaneosullivan.wordpress.com/2008/01/07/dojo-demo-engine-update&amp;title=Dojo+Demo+Engine+Update" target="_blank" title="Post 'Dojo Demo Engine Update">kick it</a>|<a href="mailto:?body=Thought%20you%20might%20like%20this:%20http://shaneosullivan.wordpress.com/2008/01/07/dojo-demo-engine-update&amp;subject=Dojo+Demo+Engine+Update" target="_blank" title="Post 'Dojo Demo Engine Update">Email it</a>|<a href="http://del.icio.us/post?url=http://shaneosullivan.wordpress.com/2008/01/07/dojo-demo-engine-update&amp;title=Dojo+Demo+Engine+Update" target="_blank" title="Post 'Dojo Demo Engine Update">bookmark it</a>|<a href="http://reddit.com/submit?url=http://shaneosullivan.wordpress.com/2008/01/07/dojo-demo-engine-update&amp;title=Dojo+Demo+Engine+Update" target="_blank" title="Post 'Dojo Demo Engine Update">reddit</a>|<a href="https://favorites.live.com/quickadd.aspx?marklet=1&amp;mkt=en-us&amp;url=http://shaneosullivan.wordpress.com/2008/01/07/dojo-demo-engine-update&amp;title=Dojo+Demo+Engine+Update&amp;top=1" target="_blank" title="Post 'Dojo Demo Engine Update">liveIt</a></p>
+
+<img alt="" border="0" src="http://feeds.wordpress.com/1.0/categories/shaneosullivan.wordpress.com/87/" /> <img alt="" border="0" src="http://feeds.wordpress.com/1.0/tags/shaneosullivan.wordpress.com/87/" /> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gocomments/shaneosullivan.wordpress.com/87/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/comments/shaneosullivan.wordpress.com/87/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godelicious/shaneosullivan.wordpress.com/87/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/delicious/shaneosullivan.wordpress.com/87/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gostumble/shaneosullivan.wordpress.com/87/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/stumble/shaneosullivan.wordpress.com/87/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godigg/shaneosullivan.wordpress.com/87/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/digg/shaneosullivan.wordpress.com/87/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/goreddit/shaneosullivan.wordpress.com/87/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/reddit/shaneosullivan.wordpress.com/87/" /></a> <img alt="" border="0" src="http://stats.wordpress.com/b.gif?host=shaneosullivan.wordpress.com&blog=258432&post=87&subd=shaneosullivan&ref=&feed=1" /></div>]]></content>
+		<link rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2008/01/07/dojo-demo-engine-update/#comments" thr:count="3"/>
+		<link rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2008/01/07/dojo-demo-engine-update/feed/atom/" thr:count="3"/>
+		<thr:total>3</thr:total>
+	</entry>
+		<entry>
+		<author>
+			<name>Shane O'Sullivan</name>
+						<uri>http://shaneosullivan.wordpress.com/</uri>
+					</author>
+		<title type="html"><![CDATA[Navigating in an IE Modal Dialog]]></title>
+		<link rel="alternate" type="text/html" href="http://shaneosullivan.wordpress.com/2007/12/31/navigating-in-an-ie-modal-dialog/" />
+		<id>http://shaneosullivan.wordpress.com/2007/12/31/navigating-in-an-ie-modal-dialog/</id>
+		<updated>2007-12-31T16:36:21Z</updated>
+		<published>2007-12-31T16:36:21Z</published>
+		<category scheme="http://shaneosullivan.wordpress.com" term="Dojo" /><category scheme="http://shaneosullivan.wordpress.com" term="Internet Explorer" /><category scheme="http://shaneosullivan.wordpress.com" term="Javascript" /><category scheme="http://shaneosullivan.wordpress.com" term="Technical" /><category scheme="http://shaneosullivan.wordpress.com" term="modal" />		<summary type="html"><![CDATA[Internet Explorer has a nice feature where a new window can be opened modally using the window.showModalDialog function, meaning that the page that opened it cannot be accessed until the new window is closed.  This can be useful in many situations.
+However, the main limitation of IE Modal Dialogs (other than being non-standard), is that [...]]]></summary>
+		<content type="html" xml:base="http://shaneosullivan.wordpress.com/2007/12/31/navigating-in-an-ie-modal-dialog/"><![CDATA[<div class='snap_preview'><br /><p>Internet Explorer has a nice feature where a new window can be opened modally using the <a href="http://msdn2.microsoft.com/en-us/library/ms536759.aspx"><i>window.showModalDialog</i></a> function, meaning that the page that opened it cannot be accessed until the new window is closed.  This can be useful in many situations.</p>
+
+<p>However, the main limitation of IE Modal Dialogs (other than being non-standard), is that any hyperlink clicked in a modal dialog causes another, non modal, dialog to be opened, rather than opening the page linked to in the same window, as would happen in a normal pop up window.</p>
+<p>The key to solving this problem is to note that a modal dialog only opens another window when a <a href="http://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol#Request_Methods" target="_blank">GET</a> request is made, not when a <a href="http://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol#Request_Methods" target="_blank">POST</a> request is made.  However, an anchor tag automatically causes a GET request, so the solution is to:</p>
+<ol>
+<li> Catch the click on each anchor tag, cancel it,</li>
+<li>Submit a dynamically created FORM element, with it&#8217;s <i>method</i> set to &#8216;<i>POST&#8217; </i>and it&#8217;s <i>action</i> set to the URL of the link clicked.</li>
+
+</ol>
+<p>While it is possible to put a listener on each anchor tag to achieve this, such an approach will not scale well.  Instead, place a listener on the <b>body </b>tag. The example below is done using methods from the <a href="http://www.dojotoolkit.org" target="_blank">Dojo Ajax Toolkit</a>, since that the toolkit I use the most, but you can of course use whatever methods you like to achieve the same result:</p>
+<blockquote><p> <code>&lt;script type="text/javascript"&gt;<br />
+dojo.addOnLoad(function(){<br />
+dojo.connect(dojo.body(), &#8220;onclick&#8221;, function(evt) {<br />
+if(evt.target.tagName != &#8220;A&#8221;) {return true;}<br />
+dojo.stopEvent(evt);<br />
+var form = document.createElement(&#8221;form&#8221;);<br />
+form.setAttribute(&#8221;target&#8221;, window.name ? window.name : &#8220;SrPopUp&#8221;);<br />
+form.setAttribute(&#8221;action&#8221;, url);<br />
+form.setAttribute(&#8221;method&#8221;,&#8221;POST&#8221;);<br />
+document.appendChild(form);<br />
+form.submit();<br />
+return false;<br />
+});<br />
+});<br />
+
+&lt;/script&gt;</code></p></blockquote>
+<p>This method assumes that you have control over the content of the page being shown in the modal dialog.  It would also make sense to add a similar listener to the body tag for key events, as a user can trigger an anchor tag by tabbing to it and hitting enter.</p>
+<p>Thanks to <a href="http://www.dannyg.com/support/modalFix.html" target="_blank">Danny Goodman</a> and <a href="http://www.dannyg.com/support/SOCmodalWindow.js" target="_blank">Steiner Overbeck Cook</a> for coming up with this solution.<br />
+<b>Share this post:</b><a href="http://www.digg.com/submit?url=http://shaneosullivan.wordpress.com/2007/12/31/navigating-in-an-ie-modal-dialog&amp;phase=2" target="_blank" title="Post 'Navigating in an IE Modal Dialog">digg it</a>|<a href="http://www.dotnetkicks.com/submit/?url=http://shaneosullivan.wordpress.com/2007/12/31/navigating-in-an-ie-modal-dialog&amp;title=Navigating+in+an+IE+Modal+Dialog" target="_blank" title="Post 'Navigating in an IE Modal Dialog">kick it</a>|<a href="mailto:?body=Thought%20you%20might%20like%20this:%20http://shaneosullivan.wordpress.com/2007/12/31/navigating-in-an-ie-modal-dialog&amp;subject=Navigating+in+an+IE+Modal+Dialog" target="_blank" title="Post 'Navigating in an IE Modal Dialog">Email it</a>|<a href="http://del.icio.us/post?url=http://shaneosullivan.wordpress.com/2007/12/31/navigating-in-an-ie-modal-dialog&amp;title=Navigating+in+an+IE+Modal+Dialog" target="_blank" title="Post 'Navigating in an IE Modal Dialog">bookmark it</a>|<a href="http://reddit.com/submit?url=http://shaneosullivan.wordpress.com/2007/12/31/navigating-in-an-ie-modal-dialog&amp;title=Navigating+in+an+IE+Modal+Dialog" target="_blank" title="Post 'Navigating in an IE Modal Dialog">reddit</a>|<a href="https://favorites.live.com/quickadd.aspx?marklet=1&amp;mkt=en-us&amp;url=http://shaneosullivan.wordpress.com/2007/12/31/navigating-in-an-ie-modal-dialog&amp;title=Navigating+in+an+IE+Modal+Dialog&amp;top=1" target="_blank" title="Post 'Navigating in an IE Modal Dialog">liveIt</a></p>
+
+<img alt="" border="0" src="http://feeds.wordpress.com/1.0/categories/shaneosullivan.wordpress.com/86/" /> <img alt="" border="0" src="http://feeds.wordpress.com/1.0/tags/shaneosullivan.wordpress.com/86/" /> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gocomments/shaneosullivan.wordpress.com/86/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/comments/shaneosullivan.wordpress.com/86/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godelicious/shaneosullivan.wordpress.com/86/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/delicious/shaneosullivan.wordpress.com/86/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gostumble/shaneosullivan.wordpress.com/86/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/stumble/shaneosullivan.wordpress.com/86/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godigg/shaneosullivan.wordpress.com/86/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/digg/shaneosullivan.wordpress.com/86/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/goreddit/shaneosullivan.wordpress.com/86/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/reddit/shaneosullivan.wordpress.com/86/" /></a> <img alt="" border="0" src="http://stats.wordpress.com/b.gif?host=shaneosullivan.wordpress.com&blog=258432&post=86&subd=shaneosullivan&ref=&feed=1" /></div>]]></content>
+		<link rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2007/12/31/navigating-in-an-ie-modal-dialog/#comments" thr:count="1"/>
+		<link rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2007/12/31/navigating-in-an-ie-modal-dialog/feed/atom/" thr:count="1"/>
+		<thr:total>1</thr:total>
+	</entry>
+		<entry>
+		<author>
+			<name>Shane O'Sullivan</name>
+						<uri>http://shaneosullivan.wordpress.com/</uri>
+					</author>
+		<title type="html"><![CDATA[A new Demo engine for Dojo]]></title>
+		<link rel="alternate" type="text/html" href="http://shaneosullivan.wordpress.com/2007/12/04/a-new-demo-engine-for-dojo/" />
+		<id>http://shaneosullivan.wordpress.com/2007/12/04/a-new-demo-engine-for-dojo/</id>
+		<updated>2008-01-12T13:23:15Z</updated>
+		<published>2007-12-04T09:29:16Z</published>
+		<category scheme="http://shaneosullivan.wordpress.com" term="Ajax" /><category scheme="http://shaneosullivan.wordpress.com" term="Dojo" /><category scheme="http://shaneosullivan.wordpress.com" term="Javascript" /><category scheme="http://shaneosullivan.wordpress.com" term="demo" /><category scheme="http://shaneosullivan.wordpress.com" term="dijit" /><category scheme="http://shaneosullivan.wordpress.com" term="documentation" /><category scheme="http://shaneosullivan.wordpress.com" term="dojox.image" /><category scheme="http://shaneosullivan.wordpress.com" term="json" /><category scheme="http://shaneosullivan.wordpress.com" term="open source" />		<summary type="html"><![CDATA[A couple of weeks ago I saw a cool demo framework for an Ajax toolkit just released as open source.  It&#8217;s a very slick implementation, with a tree listing all the various demos, and a tabbed area showing the implementation, and the widget in practice.
+So, I think to myself, this is exactly what the [...]]]></summary>
+		<content type="html" xml:base="http://shaneosullivan.wordpress.com/2007/12/04/a-new-demo-engine-for-dojo/"><![CDATA[<div class='snap_preview'><br /><p>A couple of weeks ago I saw a cool <a href="http://www.smartclient.com/#_Welcome" target="_blank">demo framework</a> for an Ajax toolkit just released as open source.  It&#8217;s a very slick implementation, with a tree listing all the various demos, and a tabbed area showing the implementation, and the widget in practice.</p>
+
+<p>So, I think to myself, this is exactly what the <a href="http://www.dojotoolkit.org/" target="_blank">Dojo Ajax Toolkit</a> is missing!  Cut to today, and I&#8217;ve put the first rough cut at the demo framework on the web for people&#8217;s perusal.  Check it out at <a href="http://www.skynet.ie/~sos/js/demo/dojo/dojoc/demos/featureexplorer.html" target="_blank">http://www.skynet.ie/~sos/js/demo/dojo/dojoc/demos/featureexplorer.html</a> .</p>
+<p><b>Note: I have written a follow up post <a href="http://shaneosullivan.wordpress.com/2008/01/07/dojo-demo-engine-update/" target="_blank">here</a>.</b></p>
+<p>Some of the features include:</p>
+<ul>
+
+<li>Tree navigation for the demos.  Demos can be nested as deep as required.</li>
+<li>View tab.  This shows the widgets in action.</li>
+<li>HTML tab. This shows how to instantiate the widget using HTML markup.</li>
+<li>JS tab. This shows how to instantiate the widget using JavaScript code.</li>
+<li>Links tab. This shows various hyperlinks to alternate content for that demo, e.g. the <a href="http://dojotoolkit.org/book/dojo-book-0-9-0" target="_blank">Dojo Book</a>.</li>
+<li>Demo description. Gives a text description of the demo.</li>
+<li>Theme selector.  This allows you to change from one CSS theme to another</li>
+<li>Ability to link to standalone demos that open in a new page. This is useful for large demos that show the integration of many widgets together, and may not fit well within the demo framework itself.  See the Dijit/Mail demo for an example of this.</li>
+
+<li>A build system that takes a very simple naming scheme for the demos, and creates a JSON data store that the framework runs off of.  So, whenever a user adds a new demo, they simply have to re-run the build step, and that&#8217;s it!  No need for a server side script, so you can run this right off your hard drive.</li>
+</ul>
+<p>This is still very much beta code, and there are a couple of errors floating around, but those will of course be hunted down.  There are also some Internet Explorer issues that I&#8217;ll get to soon, so try this in Firefox for now (<b>update Dec 05 2007 - most of these have been solved, with one or two small bugs remaining)</b>.  I&#8217;m in discussions to get this into the Dojo toolkit, so that the community at large can start adding in demos.  I&#8217;ve put in quite a few already, but it&#8217;s so easy to do that this could become a huge resource for the Dojo community.</p>
+<p>If you have any suggestions, please let me know.</p>
+<p><a href="http://shaneosullivan.wordpress.com/2007/12/04/a-new-demo-engine-for-dojo/demo-framework/" target="_blank" rel="attachment wp-att-85" title="Demo Framework"><img src="http://shaneosullivan.files.wordpress.com/2007/12/demo_framework.jpg" alt="Demo Framework" /></a><br />
+
+<b>Share this post:</b><a href="http://www.digg.com/submit?url=http://shaneosullivan.wordpress.com/2007/12/4/a-new-demo-engine-for-dojo&amp;phase=2" target="_blank" title="Post 'A new Demo engine for Dojo">digg it</a>|<a href="http://www.dotnetkicks.com/submit/?url=http://shaneosullivan.wordpress.com/2007/12/4/a-new-demo-engine-for-dojo&amp;title=A+new+Demo+engine+for+Dojo" target="_blank" title="Post 'A new Demo engine for Dojo">kick it</a>|<a href="mailto:?body=Thought%20you%20might%20like%20this:%20http://shaneosullivan.wordpress.com/2007/12/4/a-new-demo-engine-for-dojo&amp;subject=A+new+Demo+engine+for+Dojo" target="_blank" title="Post 'A new Demo engine for Dojo">Email it</a>|<a href="http://del.icio.us/post?url=http://shaneosullivan.wordpress.com/2007/12/4/a-new-demo-engine-for-dojo&amp;title=A+new+Demo+engine+for+Dojo" target="_blank" title="Post 'A new Demo engine for Dojo">bookmark it</a>|<a href="http://reddit.com/submit?url=http://shaneosullivan.wordpress.com/2007/12/4/a-new-demo-engine-for-dojo&amp;title=A+new+Demo+engine+for+Dojo" target="_blank" title="Post 'A new Demo engine for Dojo">reddit</a>|<a href="https://favorites.live.com/quickadd.aspx?marklet=1&amp;mkt=en-us&amp;url=http://shaneosullivan.wordpress.com/2007/12/4/a-new-demo-engine-for-dojo&amp;title=A+new+Demo+engine+for+Dojo&amp;top=1" target="_blank" title="Post 'A new Demo engine for Dojo">liveIt</a></p>
+
+<img alt="" border="0" src="http://feeds.wordpress.com/1.0/categories/shaneosullivan.wordpress.com/84/" /> <img alt="" border="0" src="http://feeds.wordpress.com/1.0/tags/shaneosullivan.wordpress.com/84/" /> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gocomments/shaneosullivan.wordpress.com/84/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/comments/shaneosullivan.wordpress.com/84/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godelicious/shaneosullivan.wordpress.com/84/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/delicious/shaneosullivan.wordpress.com/84/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gostumble/shaneosullivan.wordpress.com/84/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/stumble/shaneosullivan.wordpress.com/84/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godigg/shaneosullivan.wordpress.com/84/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/digg/shaneosullivan.wordpress.com/84/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/goreddit/shaneosullivan.wordpress.com/84/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/reddit/shaneosullivan.wordpress.com/84/" /></a> <img alt="" border="0" src="http://stats.wordpress.com/b.gif?host=shaneosullivan.wordpress.com&blog=258432&post=84&subd=shaneosullivan&ref=&feed=1" /></div>]]></content>
+		<link rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2007/12/04/a-new-demo-engine-for-dojo/#comments" thr:count="3"/>
+		<link rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2007/12/04/a-new-demo-engine-for-dojo/feed/atom/" thr:count="3"/>
+		<thr:total>3</thr:total>
+	</entry>
+		<entry>
+		<author>
+			<name>Shane O'Sullivan</name>
+						<uri>http://shaneosullivan.wordpress.com/</uri>
+					</author>
+		<title type="html"><![CDATA[Upgrading Ubuntu Feisty Fawn (7.04) to Gutsy Gibbon (7.10)]]></title>
+		<link rel="alternate" type="text/html" href="http://shaneosullivan.wordpress.com/2007/10/18/upgrading-ubuntu-feisty-fawn-704-to-gutsy-gibbon-710/" />
+		<id>http://shaneosullivan.wordpress.com/2007/10/18/upgrading-ubuntu-feisty-fawn-704-to-gutsy-gibbon-710/</id>
+		<updated>2008-01-12T10:26:42Z</updated>
+		<published>2007-10-18T16:11:37Z</published>
+		<category scheme="http://shaneosullivan.wordpress.com" term="Gutsy Gibbon" /><category scheme="http://shaneosullivan.wordpress.com" term="Ubuntu" /><category scheme="http://shaneosullivan.wordpress.com" term="open source" />		<summary type="html"><![CDATA[Today I&#8217;ve begun the process of upgrading my Ubuntu installation of version 7.04 to version 7.10.  To see my previous tutorial of getting Ubuntu installed on my IBM Thinkpad X41, see http://shaneosullivan.wordpress.com/2007/02/16/installing-ubuntu-edgy-on-a-thinkpad-x41-tablet/.
+This post lists whatever issues I found when upgrading, and my solutions to them.  For the official instructions, see https://help.ubuntu.com/community/GutsyUpgrades.
+Third Party software [...]]]></summary>
+		<content type="html" xml:base="http://shaneosullivan.wordpress.com/2007/10/18/upgrading-ubuntu-feisty-fawn-704-to-gutsy-gibbon-710/"><![CDATA[<div class='snap_preview'><br /><p>Today I&#8217;ve begun the process of upgrading my Ubuntu installation of version 7.04 to version 7.10.  To see my previous tutorial of getting Ubuntu installed on my IBM Thinkpad X41, see <a href="http://shaneosullivan.wordpress.com/2007/02/16/installing-ubuntu-edgy-on-a-thinkpad-x41-tablet/" target="_blank">http://shaneosullivan.wordpress.com/2007/02/16/installing-ubuntu-edgy-on-a-thinkpad-x41-tablet/</a>.</p>
+
+<p>This post lists whatever issues I found when upgrading, and my solutions to them.  For the official instructions, see <a href="https://help.ubuntu.com/community/GutsyUpgrades" target="_blank">https://help.ubuntu.com/community/GutsyUpgrades</a>.</p>
+<p><b>Third Party software sources cause problems</b></p>
+<p>My first problem was caused by having links to third party software distribution sites.  When running the &#8220;<i>update-manager -d</i>&#8221; command, I received an error, saying the dbus couldn&#8217;t run.</p>
+<p>This was caused by having third party software sources enabled that no longer existed, for whatever reason.</p>
+
+<p>To fix this:</p>
+<ol>
+<li>click <i>&#8220;System/Administration/Software Sources&#8221;</i></li>
+<li>Click the &#8220;<i>Third-Party Software</i>&#8221; tab</li>
+<li>Deselect any non-Ubuntu software sources.  You can always reselect them after the upgrade</li>
+
+</ol>
+<p><b>Modifying the software channels gets stuck</b></p>
+<p>When the second step in the &#8220;Distribution Upgrade&#8221; application is running, that is, the &#8220;Modifying the software channels&#8221; step, it got stuck downloading files.  It would say</p>
+<p>Downloading file 36 of 97</p>
+<p>and stay at that number for a long time.  This was not a bandwidth issue, it simply stopped.  To fix this</p>
+<ol>
+<li>Click the &#8220;<i>Cancel</i>&#8221; button.</li>
+
+<li>Run the &#8220;<i>update-manager -d</i>&#8221; command again.</li>
+<li>Repeat this each time it gets stuck downloading files.  I had to do this four times for it to work completely.</li>
+</ol>
+<p><b>Dual monitors didn&#8217;t work correctly</b></p>
+<p>When booted up with an external monitor plugged in, the desktop was fixed at 640 * 480 pixels resolution.  I found someone else with a similar issue at <a href="http://ubuntuforums.org/showthread.php?t=566947" target="_blank">http://ubuntuforums.org/showthread.php?t=566947</a> , but their solution didn&#8217;t work for me.  I solved this by:</p>
+
+<ol>
+<li>Unplugging the monitor.</li>
+<li>Restart the machine, and log in.</li>
+<li>Click &#8220;<i>System/Administration/Screens and Graphics</i>&#8220;</li>
+<li>Click the &#8220;<i>Graphics Card</i>&#8221; tab.</li>
+
+<li>Click the &#8220;<i>Driver</i>&#8221; button</li>
+<li>From the &#8220;<i>Driver</i>&#8221; dropdown list, choose &#8220;<i>i810 - Intel Integrated Graphics Chipsets</i>&#8220;</li>
+<li>Restart the machine.</li>
+
+</ol>
+<p><b>Compiz has problems with dual monitors</b></p>
+<p>Compiz (the 3D graphics stuff) causes problems and refuses to work at all if I am using dual monitors.  Still working on this one.</p>
+<p><b>Some Eclipse plug-ins no longer work</b></p>
+<p>As a Java developer, I often use the <a href="http://www.eclipse.org" target="_blank">Eclipse</a> development platform.   I include some non-standard plugins in the application, like plugins for Subversion support.  However, when Ubuntu is upgraded to 7.10, the base Eclipse platform in upgraded, but not the non-standard plugins, which stops some of them from working.</p>
+<p><i>Update: actually, this didn&#8217;t fix my Eclipse problems, please ignore <img src='http://shaneosullivan.wordpress.com/wp-includes/images/smilies/icon_smile.gif' alt=':-)' class='wp-smiley' /> </i></p>
+
+<p>The solution is to upgrade the plugins in the usual Eclipse manner:</p>
+<ol>
+<li>Open Eclipse</li>
+<li>Click <i>Help/Software Updates/Find and Install</i></li>
+<li>Click <i>Finish</i></li>
+<li>Wait a while&#8230;</li>
+</ol>
+
+<p><b>Running low on disk space after upgrade</b></p>
+<p>My laptop was running out of disk space after the install, as it downloaded quite a few packages.  I found a very good blog post on how to clean up your Ubuntu install at <a href="http://www.ubuntugeek.com/cleaning-up-all-unnecessary-junk-files-in-ubuntu.html" target="_blank">http://www.ubuntugeek.com/cleaning-up-all-unnecessary-junk-files-in-ubuntu.html</a>.</p>
+<p>Make sure to read comment #7 also, that alone saved me 1GB.</p>
+<p><span style="font-weight:bold;">Some Thinkpad features no longer work</span></p>
+<p>I found that some things didn&#8217;t work that did work before, for example the stylus pen and the middle &#8217;scroller&#8217; button of the mouse.  If this happens, just reapply the settings I describe <a href="http://shaneosullivan.wordpress.com/2007/02/16/ubuntu-on-thinkpad-x41-enabling-thinkpad-specific-components/" target="_blank">here</a>, as the upgrade removed them. This solved the problems for me.</p>
+
+<p><b>Share this post:</b><a href="http://www.digg.com/submit?url=http://shaneosullivan.wordpress.com/2007/10/18/upgrading-ubuntu-feisty-fawn-%28704%29-to-gutsy-gibbon-%287.10%29&amp;phase=2" target="_blank" title="Post 'Upgrading Ubuntu Feisty Fawn (704) to Gutsy Gibbon (7.10)">digg it</a>|<a href="http://www.dotnetkicks.com/submit/?url=http://shaneosullivan.wordpress.com/2007/10/18/upgrading-ubuntu-feisty-fawn-%28704%29-to-gutsy-gibbon-%287.10%29&amp;title=Upgrading+Ubuntu+Feisty+Fawn+%28704%29+to+Gutsy+Gibbon+%287.10%29" target="_blank" title="Post 'Upgrading Ubuntu Feisty Fawn (704) to Gutsy Gibbon (7.10)">kick it</a>|<a href="mailto:?body=Thought%20you%20might%20like%20this:%20http://shaneosullivan.wordpress.com/2007/10/18/upgrading-ubuntu-feisty-fawn-%28704%29-to-gutsy-gibbon-%287.10%29&amp;subject=Upgrading+Ubuntu+Feisty+Fawn+%28704%29+to+Gutsy+Gibbon+%287.10%29" target="_blank" title="Post 'Upgrading Ubuntu Feisty Fawn (704) to Gutsy Gibbon (7.10)">Email it</a>|<a href="http://del.icio.us/post?url=http://shaneosullivan.wordpress.com/2007/10/18/upgrading-ubuntu-feisty-fawn-%28704%29-to-gutsy-gibbon-%287.10%29&amp;title=Upgrading+Ubuntu+Feisty+Fawn+%28704%29+to+Gutsy+Gibbon+%287.10%29" target="_blank" title="Post 'Upgrading Ubuntu Feisty Fawn (704) to Gutsy Gibbon (7.10)">bookmark it</a>|<a href="http://reddit.com/submit?url=http://shaneosullivan.wordpress.com/2007/10/18/upgrading-ubuntu-feisty-fawn-%28704%29-to-gutsy-gibbon-%287.10%29&amp;title=Upgrading+Ubuntu+Feisty+Fawn+%28704%29+to+Gutsy+Gibbon+%287.10%29" target="_blank" title="Post 'Upgrading Ubuntu Feisty Fawn (704) to Gutsy Gibbon (7.10)">reddit</a>|<a href="https://favorites.live.com/quickadd.aspx?marklet=1&amp;mkt=en-us&amp;url=http://shaneosullivan.wordpress.com/2007/10/18/upgrading-ubuntu-feisty-fawn-%28704%29-to-gutsy-gibbon-%287.10%29&amp;title=Upgrading+Ubuntu+Feisty+Fawn+%28704%29+to+Gutsy+Gibbon+%287.10%29&amp;top=1" target="_blank" title="Post 'Upgrading Ubuntu Feisty Fawn (704) to Gutsy Gibbon (7.10)">liveIt</a></p>
+
+<img alt="" border="0" src="http://feeds.wordpress.com/1.0/categories/shaneosullivan.wordpress.com/82/" /> <img alt="" border="0" src="http://feeds.wordpress.com/1.0/tags/shaneosullivan.wordpress.com/82/" /> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gocomments/shaneosullivan.wordpress.com/82/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/comments/shaneosullivan.wordpress.com/82/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godelicious/shaneosullivan.wordpress.com/82/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/delicious/shaneosullivan.wordpress.com/82/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gostumble/shaneosullivan.wordpress.com/82/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/stumble/shaneosullivan.wordpress.com/82/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godigg/shaneosullivan.wordpress.com/82/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/digg/shaneosullivan.wordpress.com/82/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/goreddit/shaneosullivan.wordpress.com/82/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/reddit/shaneosullivan.wordpress.com/82/" /></a> <img alt="" border="0" src="http://stats.wordpress.com/b.gif?host=shaneosullivan.wordpress.com&blog=258432&post=82&subd=shaneosullivan&ref=&feed=1" /></div>]]></content>
+		<link rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2007/10/18/upgrading-ubuntu-feisty-fawn-704-to-gutsy-gibbon-710/#comments" thr:count="25"/>
+		<link rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2007/10/18/upgrading-ubuntu-feisty-fawn-704-to-gutsy-gibbon-710/feed/atom/" thr:count="25"/>
+		<thr:total>25</thr:total>
+	</entry>
+		<entry>
+		<author>
+			<name>Shane O'Sullivan</name>
+						<uri>http://shaneosullivan.wordpress.com/</uri>
+					</author>
+		<title type="html"><![CDATA[Introducing the new Dojo Image Widgets]]></title>
+		<link rel="alternate" type="text/html" href="http://shaneosullivan.wordpress.com/2007/10/13/introducing-the-new-dojo-image-widgets/" />
+		<id>http://shaneosullivan.wordpress.com/2007/10/13/introducing-the-new-dojo-image-widgets/</id>
+		<updated>2008-01-08T11:23:13Z</updated>
+		<published>2007-10-13T11:09:13Z</published>
+		<category scheme="http://shaneosullivan.wordpress.com" term="Ajax" />
+		<category scheme="http://shaneosullivan.wordpress.com" term="Dojo" />
+		<category scheme="http://shaneosullivan.wordpress.com" term="Flickr" />
+		<category scheme="http://shaneosullivan.wordpress.com" term="Image Gallery" />
+		<category scheme="http://shaneosullivan.wordpress.com" term="Javascript" />
+		<category scheme="http://shaneosullivan.wordpress.com" term="Technical" />
+		<category scheme="http://shaneosullivan.wordpress.com" term="aol" />
+		<category scheme="http://shaneosullivan.wordpress.com" term="cross domain" />
+		<category scheme="http://shaneosullivan.wordpress.com" term="dijit" />
+		<category scheme="http://shaneosullivan.wordpress.com" term="dojo.data" />
+		<category scheme="http://shaneosullivan.wordpress.com" term="dojox" />
+		<category scheme="http://shaneosullivan.wordpress.com" term="dojox.data" />
+		<category scheme="http://shaneosullivan.wordpress.com" term="dojox.image" />
+		<category scheme="http://shaneosullivan.wordpress.com" term="json" />
+		<category scheme="http://shaneosullivan.wordpress.com" term="open source" />
+				<summary type="html"><![CDATA[In previous posts (here for the Dojo 0.4.3 version, here and here), I wrote how I wrote an image gallery for version 0.4.3 of the Dojo Ajax Toolkit, and how I was translating it for the latest version of the toolkit, version 1.0.
+Well, that work is now, finally, complete, and I have to say, I&#8217;m [...]]]></summary>
+		<content type="html" xml:base="http://shaneosullivan.wordpress.com/2007/10/13/introducing-the-new-dojo-image-widgets/"><![CDATA[<div class='snap_preview'><br /><p>In previous posts (<a href="http://shaneosullivan.wordpress.com/2007/07/03/flickr-and-dojo-image-gallery/" target="_blank">here for the Dojo 0.4.3 version</a>, <a href="http://shaneosullivan.wordpress.com/2007/09/04/image-gallery-slideshow-and-flickr-data-source-for-dojo-09/" target="_blank">here</a> and <a href="http://shaneosullivan.wordpress.com/2007/09/22/querying-flickr-with-dojo/" target="_blank">here</a>), I wrote how I wrote an <a href="http://www.skynet.ie/~sos/ajax/imagegallery.php">image gallery for version 0.4.3</a> of the <a href="http://www.dojotoolkit.org" target="_blank">Dojo Ajax Toolkit</a>, and how I was translating it for the latest version of the toolkit, version 1.0.</p>
+
+<p>Well, that work is now, finally, complete, and I have to say, I&#8217;m pretty damn happy with the results.  The code is now part of the <a href="http://dojotoolkit.org/book/dojo-book-0-9/part-5-dojox/dojox-image" target="_blank">dojox.image</a> project (dojox is the Dojo extensions project, for cool new code that may in the future make it into the core code base if enough people like/want it).</p>
+<p>If you&#8217;d like to just see the gallery in action, have a look at the <a href="http://www.skynet.ie/~sos/photos.php" target="_blank">Photos page on my personal website</a>, or see the links at the bottom of the post, otherwise, read on!</p>
+<p><b>Update: changes have been made to the widgets since this post was written, resulting in some badly aligned images. This will be fixed in the next few days. (Oct 25th 2007)</b></p>
+<p><b>Update: issue above has been fixed (Oct 29th 2007)</b></p>
+
+<h2>All For One&#8230;.</h2>
+<p>The gallery is composed of three widgets:</p>
+<ul>
+<li>dojox.image.<a href="http://dojotoolkit.org/book/dojo-book-0-9/part-5-dojox/dojox-image/thumbnailpicker" target="_blank">ThumbnailPicker</a> - a widget to list many small images in either a horizontal or vertical orientation, scroll through them, and attach click events that other widgets can listen to</li>
+<li>dojox.image.<a href="http://dojotoolkit.org/book/dojo-book-0-9/part-5-dojox/dojox-image/slideshow" target="_blank">SlideShow</a> - a widget that displays one image at a time, and can run a slideshow, changing the images every &#8216;x&#8217; seconds.</li>
+<li>dojox.image.<a href="http://dojotoolkit.org/book/dojo-book-0-9/part-5-dojox/dojox-image/gallery" target="_blank">Gallery</a> - A wrapper around the ThumbnailPicker, and SlideShow widgets.</li>
+
+</ul>
+<p>Both the ThumbnailPicker and Slideshow widgets can also be used on their own, and have no dependencies on each other.<br />
+<img src="http://dojotoolkit.org/files/gallery_0.jpg" height="515" width="524" /></p>
+<h2>Dojo Data Is Too Cool for School</h2>
+<p>One of the coolest features of all of these widgets is that they all feed off image data provided by the<a href="http://dojotoolkit.org/book/dojo-book-0-9/part-3-programmatic-dijit-and-dojo/data-retrieval-dojo-data-0" target="_blank"> dojo.data</a> API.  What this basically means is that each widget can display images from any source, with no modification whatsoever.  You simply pass it a Dojo data store, and is shows the pictures.  Some of the data stores currently in the Dojo toolkit include:</p>
+<ul>
+<li>dojo.data.<a href="http://dojotoolkit.org/book/dojo-book-0-9/part-3-programmatic-dijit-and-dojo/what-dojo-data/available-stores/dojo-data-item" target="_blank">ItemFileReadStore</a> - pull in simple JSON data in an array.  You could use this if you simply have a directory of images on your own web server you would like to display</li>
+<li>dojox.data.<a href="http://dojotoolkit.org/book/dojo-book-0-9/part-3-programmatic-dijit-and-dojo/using-dojo-data/available-stores/flickr-rest-s" target="_blank">FlickrRestStore</a> (<a href="http://archive.dojotoolkit.org/nightly/checkout/dojox/data/demos/demo_FlickrRestStore.html" target="_blank">demo</a>) - query the Flickr photo sharing website for images.  This is all done on the browser, with no need for any server-side redirects. This is <a href="http://shaneosullivan.wordpress.com/2007/09/22/querying-flickr-with-dojo/" target="_blank">another of my additions</a> to the Dojo toolkit - I love Flickr, feel free to check out my photo stream <a href="http://www.flickr.com/photos/shaneosullivan/" target="_blank">here</a>. I previously wrote another blog post on this data store <a href="http://shaneosullivan.wordpress.com/2007/09/22/querying-flickr-with-dojo/" target="_blank">here</a>.</li>
+
+<li>dojox.data.PicasaStore (<a href="http://archive.dojotoolkit.org/nightly/checkout/dojox/data/demos/demo_PicasaStore.html" target="_blank">demo</a>) - query Google&#8217;s Picasa image sharing website for images.  As with the Flickr data store, this is done on the browser, with no need for server side support.</li>
+</ul>
+<p>and many more&#8230;..   You can also write your own data store if you so desire, but the ones included in the toolkit should cover almost everything you might need.</p>
+<h2>Gimme, Gimme, Gimme!</h2>
+<p>So, how can I get this, you ask!  Well, you can:</p>
+<ul>
+<li>Have a look at the test pages for the widgets:
+
+<ul>
+<li><a href="http://archive.dojotoolkit.org/nightly/checkout/dojox/image/tests/test_Gallery.html" target="_blank">Test page for ThumbnailPicker</a></li>
+<li><a href="http://archive.dojotoolkit.org/nightly/checkout/dojox/image/tests/test_SlideShow.html">Test page for SlideShow</a></li>
+<li><a href="http://archive.dojotoolkit.org/nightly/checkout/dojox/image/tests/test_Gallery.html" target="_blank">Test page for Gallery</a></li>
+<li><a href="http://archive.dojotoolkit.org/nightly/checkout/dojox/data/demos/demo_FlickrRestStore.html" target="_blank">Demo page for dojox.data.FlickrRestStore</a></li>
+
+<li><a href="http://www.skynet.ie/~sos/photos.php" target="_blank">The Gallery on my personal website</a> - example of using the widget hosted on your own server</li>
+<li><a href="http://kadca.com/site/index.php?/photos" target="_blank">The Gallery on another website</a> - example of using the widget hosted on <a href="http://dev.aol.com/dojo" target="_blank">AOL&#8217;s cross domain</a> <a href="http://en.wikipedia.org/wiki/Content_Delivery_Network" target="_blank">CDN</a> network.</li>
+<li><a href="http://www.skynet.ie/~sos/js/demo/dojo/dijit/demos/featureexplorer.html#Dojox_Image" target="_blank">Demo page for all DojoX Image widgets</a></li>
+
+</ul>
+</li>
+<li>Read the documentation (I know!!  Documentation&#8230; in Dojo!!)
+<ul>
+<li><a href="http://dojotoolkit.org/book/dojo-book-0-9/part-5-dojox/dojox-image/thumbnailpicker" target="_blank">Doc page for ThumbnailPicker</a></li>
+<li><a href="http://dojotoolkit.org/book/dojo-book-0-9/part-5-dojox/dojox-image/slideshow" target="_blank">Doc page for SlideShow</a></li>
+<li><a href="http://dojotoolkit.org/book/dojo-book-0-9/part-5-dojox/dojox-image/gallery" target="_blank">Doc page for Gallery</a></li>
+
+<li><a href="http://dojotoolkit.org/book/dojo-book-0-9/part-3-programmatic-dijit-and-dojo/using-dojo-data/available-stores/dojox-data-fl" target="_blank">Doc page for dojox.data.FlickrRestStore</a></li>
+</ul>
+</li>
+<li>Download the <a href="http://archive.dojotoolkit.org/nightly/" target="_blank">latest nightly archive</a> from Dojo.</li>
+<li><a href="http://dojotoolkit.org/book/dojo-book-0-9/part-4-meta-dojo/get-code-subversion" target="_blank">Check out the code</a> from the Subversion repository.</li>
+<li>Wait for Dojo 1.0 to come out (end of Oct 2007) and download the full release from the main<a href="http://www.dojotoolkit.org" target="_blank"> Dojo website</a>.</li>
+
+</ul>
+<p><b>Update: Dojo 1.0 is now released.  Get it at <a href="http://www.dojotoolkit.org/downloads" target="_blank">http://www.dojotoolkit.org/downloads</a></b><br />
+As always, any and all feedback is welcome.  Also, a big thanks to <a href="http://higginsforpresident.net/" target="_blank">Peter Higgins</a>, owner of the dojox.image project, and <a href="http://www.ibm.com/developerworks/blogs/page/webtwooh?tag=Jared_Jurkiewicz" target="_blank">Jared Jurkiewicz</a>, owner of the dojo.data project, for all their helpful ideas, and for reviewing/committing my code to the Dojo project.<br />
+<b>Share this post:</b><a href="http://www.digg.com/submit?url=http://shaneosullivan.wordpress.com/2007/10/13/introducing-the-new-dojo-image-widgets&amp;phase=2" target="_blank" title="Post 'Introducing the new Dojo Image Widgets">digg it</a>|<a href="http://www.dotnetkicks.com/submit/?url=http://shaneosullivan.wordpress.com/2007/10/13/introducing-the-new-dojo-image-widgets&amp;title=Introducing+the+new+Dojo+Image+Widgets" target="_blank" title="Post 'Introducing the new Dojo Image Widgets">kick it</a>|<a href="mailto:?body=Thought%20you%20might%20like%20this:%20http://shaneosullivan.wordpress.com/2007/10/13/introducing-the-new-dojo-image-widgets&amp;subject=Introducing+the+new+Dojo+Image+Widgets" target="_blank" title="Post 'Introducing the new Dojo Image Widgets">Email it</a>|<a href="http://del.icio.us/post?url=http://shaneosullivan.wordpress.com/2007/10/13/introducing-the-new-dojo-image-widgets&amp;title=Introducing+the+new+Dojo+Image+Widgets" target="_blank" title="Post 'Introducing the new Dojo Image Widgets">bookmark it</a>|<a href="http://reddit.com/submit?url=http://shaneosullivan.wordpress.com/2007/10/13/introducing-the-new-dojo-image-widgets&amp;title=Introducing+the+new+Dojo+Image+Widgets" target="_blank" title="Post 'Introducing the new Dojo Image Widgets">reddit</a>|<a href="https://favorites.live.com/quickadd.aspx?marklet=1&amp;mkt=en-us&amp;url=http://shaneosullivan.wordpress.com/2007/10/13/introducing-the-new-dojo-image-widgets&amp;title=Introducing+the+new+Dojo+Image+Widgets&amp;top=1" target="_blank" title="Post 'Introducing the new Dojo Image Widgets">liveIt</a></p>
+
+<img alt="" border="0" src="http://feeds.wordpress.com/1.0/categories/shaneosullivan.wordpress.com/81/" /> <img alt="" border="0" src="http://feeds.wordpress.com/1.0/tags/shaneosullivan.wordpress.com/81/" /> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gocomments/shaneosullivan.wordpress.com/81/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/comments/shaneosullivan.wordpress.com/81/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godelicious/shaneosullivan.wordpress.com/81/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/delicious/shaneosullivan.wordpress.com/81/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gostumble/shaneosullivan.wordpress.com/81/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/stumble/shaneosullivan.wordpress.com/81/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godigg/shaneosullivan.wordpress.com/81/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/digg/shaneosullivan.wordpress.com/81/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/goreddit/shaneosullivan.wordpress.com/81/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/reddit/shaneosullivan.wordpress.com/81/" /></a> <img alt="" border="0" src="http://stats.wordpress.com/b.gif?host=shaneosullivan.wordpress.com&blog=258432&post=81&subd=shaneosullivan&ref=&feed=1" /></div>]]></content>
+		<link rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2007/10/13/introducing-the-new-dojo-image-widgets/#comments" thr:count="46"/>
+		<link rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2007/10/13/introducing-the-new-dojo-image-widgets/feed/atom/" thr:count="46"/>
+		<thr:total>46</thr:total>
+	</entry>
+		<entry>
+		<author>
+			<name>Shane O'Sullivan</name>
+						<uri>http://shaneosullivan.wordpress.com/</uri>
+					</author>
+		<title type="html"><![CDATA[Dojo Grid has landed]]></title>
+		<link rel="alternate" type="text/html" href="http://shaneosullivan.wordpress.com/2007/10/05/dojo-grid-has-landed/" />
+		<id>http://shaneosullivan.wordpress.com/2007/10/05/dojo-grid-has-landed/</id>
+		<updated>2007-10-14T21:46:03Z</updated>
+		<published>2007-10-05T13:23:17Z</published>
+		<category scheme="http://shaneosullivan.wordpress.com" term="Ajax" /><category scheme="http://shaneosullivan.wordpress.com" term="Dojo" /><category scheme="http://shaneosullivan.wordpress.com" term="grid" /><category scheme="http://shaneosullivan.wordpress.com" term="open source" />		<summary type="html"><![CDATA[The previously  announced Dojo Grid has landed in source control, and is in the nightly builds.  It has all sorts of fancy functionality, like support for lazy loading huge data sets, individual styling of rows and columns, inline editing etc.
+Check it out at http://archive.dojotoolkit.org/nightly/checkout/dojox/grid/tests/
+Very cool stuff!
+Update: The Sitepen guys have recently blogged about [...]]]></summary>
+		<content type="html" xml:base="http://shaneosullivan.wordpress.com/2007/10/05/dojo-grid-has-landed/"><![CDATA[<div class='snap_preview'><br /><p>The <a href="http://ajaxian.com/archives/plugging-in-to-the-dojo-grid" target="_blank">previously </a> <a href="http://sitepen.com/pressReleases.php?item=20070917">announced</a> Dojo Grid has landed in source control, and is in the nightly builds.  It has all sorts of fancy functionality, like support for lazy loading huge data sets, individual styling of rows and columns, inline editing etc.</p>
+
+<p>Check it out at <a href="http://archive.dojotoolkit.org/nightly/checkout/dojox/grid/tests/" target="_blank">http://archive.dojotoolkit.org/nightly/checkout/dojox/grid/tests/</a></p>
+<p>Very cool stuff!</p>
+<p><strong>Update: </strong>The Sitepen guys have recently blogged about the grid at <a href="http://www.sitepen.com/blog/2007/10/13/dojo-grid-update/" target="_blank">http://www.sitepen.com/blog/2007/10/13/dojo-grid-update/</a></p>
+<p><strong>Share this post:</strong><a href="http://www.digg.com/submit?url=http://shaneosullivan.wordpress.com/2007/10/05/dojo-grid-has-landed&amp;phase=2" target="_blank" title="Post 'Dojo Grid has landed">digg it</a>|<a href="http://www.dotnetkicks.com/submit/?url=http://shaneosullivan.wordpress.com/2007/10/05/dojo-grid-has-landed&amp;title=Dojo+Grid+has+landed" target="_blank" title="Post 'Dojo Grid has landed">kick it</a>|<a href="mailto:?body=Thought%20you%20might%20like%20this:%20http://shaneosullivan.wordpress.com/2007/10/05/dojo-grid-has-landed&amp;subject=Dojo+Grid+has+landed" target="_blank" title="Post 'Dojo Grid has landed">Email it</a>|<a href="http://del.icio.us/post?url=http://shaneosullivan.wordpress.com/2007/10/05/dojo-grid-has-landed&amp;title=Dojo+Grid+has+landed" target="_blank" title="Post 'Dojo Grid has landed">bookmark it</a>|<a href="http://reddit.com/submit?url=http://shaneosullivan.wordpress.com/2007/10/05/dojo-grid-has-landed&amp;title=Dojo+Grid+has+landed" target="_blank" title="Post 'Dojo Grid has landed">reddit</a>|<a href="https://favorites.live.com/quickadd.aspx?marklet=1&amp;mkt=en-us&amp;url=http://shaneosullivan.wordpress.com/2007/10/05/dojo-grid-has-landed&amp;title=Dojo+Grid+has+landed&amp;top=1" target="_blank" title="Post 'Dojo Grid has landed">liveIt</a></p>
+
+<img alt="" border="0" src="http://feeds.wordpress.com/1.0/categories/shaneosullivan.wordpress.com/80/" /> <img alt="" border="0" src="http://feeds.wordpress.com/1.0/tags/shaneosullivan.wordpress.com/80/" /> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gocomments/shaneosullivan.wordpress.com/80/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/comments/shaneosullivan.wordpress.com/80/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godelicious/shaneosullivan.wordpress.com/80/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/delicious/shaneosullivan.wordpress.com/80/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gostumble/shaneosullivan.wordpress.com/80/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/stumble/shaneosullivan.wordpress.com/80/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godigg/shaneosullivan.wordpress.com/80/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/digg/shaneosullivan.wordpress.com/80/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/goreddit/shaneosullivan.wordpress.com/80/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/reddit/shaneosullivan.wordpress.com/80/" /></a> <img alt="" border="0" src="http://stats.wordpress.com/b.gif?host=shaneosullivan.wordpress.com&blog=258432&post=80&subd=shaneosullivan&ref=&feed=1" /></div>]]></content>
+		<link rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2007/10/05/dojo-grid-has-landed/#comments" thr:count="0"/>
+		<link rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2007/10/05/dojo-grid-has-landed/feed/atom/" thr:count="0"/>
+		<thr:total>0</thr:total>
+	</entry>
+		<entry>
+		<author>
+			<name>Shane O'Sullivan</name>
+						<uri>http://shaneosullivan.wordpress.com/</uri>
+					</author>
+		<title type="html"><![CDATA[A TortoiseSVN replacement for Ubuntu]]></title>
+		<link rel="alternate" type="text/html" href="http://shaneosullivan.wordpress.com/2007/10/04/a-tortoisesvn-replacement-for-ubuntu/" />
+		<id>http://shaneosullivan.wordpress.com/2007/10/04/a-tortoisesvn-replacement-for-ubuntu/</id>
+		<updated>2007-10-04T15:50:50Z</updated>
+		<published>2007-10-04T15:50:50Z</published>
+		<category scheme="http://shaneosullivan.wordpress.com" term="Linux" /><category scheme="http://shaneosullivan.wordpress.com" term="Nautilus" /><category scheme="http://shaneosullivan.wordpress.com" term="Subversion" /><category scheme="http://shaneosullivan.wordpress.com" term="Technical" /><category scheme="http://shaneosullivan.wordpress.com" term="TortoiseSVN" /><category scheme="http://shaneosullivan.wordpress.com" term="Ubuntu" /><category scheme="http://shaneosullivan.wordpress.com" term="open source" />		<summary type="html"><![CDATA[I work on a number of open source projects, and many of them use the Subversion version control system to manage their code.  Before my switch from Windows XP to Ubuntu Linux (which I am still ecstatically happy with btw), I became a big fan of TortoiseSVN, an extremely useful Subversion client that integrates itself [...]]]></summary>
+		<content type="html" xml:base="http://shaneosullivan.wordpress.com/2007/10/04/a-tortoisesvn-replacement-for-ubuntu/"><![CDATA[<div class='snap_preview'><br /><p>I work on a number of open source projects, and many of them use the <a href="http://subversion.tigris.org/" target="_blank">Subversion</a> version control system to manage their code.  Before <a href="http://shaneosullivan.wordpress.com/2007/02/16/installing-ubuntu-edgy-on-a-thinkpad-x41-tablet/" target="_blank">my switch</a> from Windows XP to <a href="http://www.ubuntu.com" target="_blank">Ubuntu Linux </a>(which I am still ecstatically happy with btw), I became a big fan of <a href="http://tortoisesvn.tigris.org/" target="_blank">TortoiseSVN,</a> an extremely useful Subversion client that integrates itself directly into Windows Explorer.</p>
+
+<p>TortoiseSVN is simple to use, very intuitive, and does everything I need from it.  You simply right click on a folder you want to store your checked out files in, give it the URL of the Subversion server, and it checks out the code, updates it, checks it back in (if you have permission), performs file diffs &#8230;.. basically everything you need to do is integrated right in with your file browser.</p>
+<p>So, I miss this in Ubuntu, as TortoiseSVN is Windows only.  However, I recently found a replacement, which integrates nicely with Nautilus, the Ubuntu file browser.  While it is not as slick as TortoiseSVN, it works in a very similar way.  You right click on a folder, and have a selection of SVN operations you can perform.</p>
+<p>See <a href="http://marius.scurtescu.com/2005/08/24/nautilus_scripts_for_subversion" target="_blank">http://marius.scurtescu.com/2005/08/24/nautilus_scripts_for_subversion</a> for details.</p>
+<p><img src="http://shaneosullivan.files.wordpress.com/2007/10/nautilussubversionscripts.png?w=615&h=264" alt="Nautilus Subversion Menu" height="264" width="615" /></p>
+<p><img src="http://shaneosullivan.files.wordpress.com/2007/10/nautilussubversionscripts-add.png" alt="Nautilus Subversion Dialog" /></p>
+<p>One thing that is missing from this is the display of icons in the file browser (Nautilus) to inform you of the state of a file - checked out, modified, not added to source control etc.  Another person has developed a solution to this, which unfortunately I have not, yet, been able to get working, but perhaps you will have more luck.</p>
+
+<p>See <a href="http://www.kryogenix.org/days/2006/09/12/extremely-noddy-tortoisesvn-for-the-gnome-desktop" target="_blank">http://www.kryogenix.org/days/2006/09/12/extremely-noddy-tortoisesvn-for-the-gnome-desktop</a> for details on this.<br />
+<strong>Share this post:</strong><a href="http://www.digg.com/submit?url=http://shaneosullivan.wordpress.com/2007/10/04/a-tortoisesvn-replacement-for-ubuntu&amp;phase=2" target="_blank" title="Post 'A TortoiseSVN replacement for Ubuntu">digg it</a>|<a href="http://www.dotnetkicks.com/submit/?url=http://shaneosullivan.wordpress.com/2007/10/04/a-tortoisesvn-replacement-for-ubuntu&amp;title=A+TortoiseSVN+replacement+for+Ubuntu" target="_blank" title="Post 'A TortoiseSVN replacement for Ubuntu">kick it</a>|<a href="mailto:?body=Thought%20you%20might%20like%20this:%20http://shaneosullivan.wordpress.com/2007/10/04/a-tortoisesvn-replacement-for-ubuntu&amp;subject=A+TortoiseSVN+replacement+for+Ubuntu" target="_blank" title="Post 'A TortoiseSVN replacement for Ubuntu">Email it</a>|<a href="http://del.icio.us/post?url=http://shaneosullivan.wordpress.com/2007/10/04/a-tortoisesvn-replacement-for-ubuntu&amp;title=A+TortoiseSVN+replacement+for+Ubuntu" target="_blank" title="Post 'A TortoiseSVN replacement for Ubuntu">bookmark it</a>|<a href="http://reddit.com/submit?url=http://shaneosullivan.wordpress.com/2007/10/04/a-tortoisesvn-replacement-for-ubuntu&amp;title=A+TortoiseSVN+replacement+for+Ubuntu" target="_blank" title="Post 'A TortoiseSVN replacement for Ubuntu">reddit</a>|<a href="https://favorites.live.com/quickadd.aspx?marklet=1&amp;mkt=en-us&amp;url=http://shaneosullivan.wordpress.com/2007/10/04/a-tortoisesvn-replacement-for-ubuntu&amp;title=A+TortoiseSVN+replacement+for+Ubuntu&amp;top=1" target="_blank" title="Post 'A TortoiseSVN replacement for Ubuntu">liveIt</a></p>
+
+<img alt="" border="0" src="http://feeds.wordpress.com/1.0/categories/shaneosullivan.wordpress.com/77/" /> <img alt="" border="0" src="http://feeds.wordpress.com/1.0/tags/shaneosullivan.wordpress.com/77/" /> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gocomments/shaneosullivan.wordpress.com/77/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/comments/shaneosullivan.wordpress.com/77/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godelicious/shaneosullivan.wordpress.com/77/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/delicious/shaneosullivan.wordpress.com/77/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gostumble/shaneosullivan.wordpress.com/77/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/stumble/shaneosullivan.wordpress.com/77/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godigg/shaneosullivan.wordpress.com/77/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/digg/shaneosullivan.wordpress.com/77/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/goreddit/shaneosullivan.wordpress.com/77/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/reddit/shaneosullivan.wordpress.com/77/" /></a> <img alt="" border="0" src="http://stats.wordpress.com/b.gif?host=shaneosullivan.wordpress.com&blog=258432&post=77&subd=shaneosullivan&ref=&feed=1" /></div>]]></content>
+		<link rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2007/10/04/a-tortoisesvn-replacement-for-ubuntu/#comments" thr:count="3"/>
+		<link rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2007/10/04/a-tortoisesvn-replacement-for-ubuntu/feed/atom/" thr:count="3"/>
+		<thr:total>3</thr:total>
+	</entry>
+		<entry>
+		<author>
+			<name>Shane O'Sullivan</name>
+						<uri>http://shaneosullivan.wordpress.com/</uri>
+					</author>
+		<title type="html"><![CDATA[Querying Flickr with Dojo!]]></title>
+		<link rel="alternate" type="text/html" href="http://shaneosullivan.wordpress.com/2007/09/22/querying-flickr-with-dojo/" />
+		<id>http://shaneosullivan.wordpress.com/2007/09/22/querying-flickr-with-dojo/</id>
+		<updated>2007-09-22T18:26:51Z</updated>
+		<published>2007-09-22T16:10:05Z</published>
+		<category scheme="http://shaneosullivan.wordpress.com" term="Ajax" /><category scheme="http://shaneosullivan.wordpress.com" term="Dojo" /><category scheme="http://shaneosullivan.wordpress.com" term="Flickr" /><category scheme="http://shaneosullivan.wordpress.com" term="Image Gallery" /><category scheme="http://shaneosullivan.wordpress.com" term="Javascript" /><category scheme="http://shaneosullivan.wordpress.com" term="Technical" /><category scheme="http://shaneosullivan.wordpress.com" term="dojo.data" /><category scheme="http://shaneosullivan.wordpress.com" term="dojox.data" /><category scheme="http://shaneosullivan.wordpress.com" term="dojox.image" /><category scheme="http://shaneosullivan.wordpress.com" term="json" /><category scheme="http://shaneosullivan.wordpress.com" term="open source" />		<summary type="html"><![CDATA[I&#8217;ve recently submitted a new data store for the Dojo Ajax Toolkit that makes it very simple to query Flickr for your and other peoples images.  For those not familiar with Flickr, it is a photo sharing website, one of the most popular on the net.  However, what makes it quite special is [...]]]></summary>
+		<content type="html" xml:base="http://shaneosullivan.wordpress.com/2007/09/22/querying-flickr-with-dojo/"><![CDATA[<div class='snap_preview'><br /><p>I&#8217;ve recently submitted a new data store for the <a href="http://www.dojotoolkit.org" target="_blank">Dojo Ajax Toolkit</a> that makes it very simple to query <a href="http://www.flickr.com">Flickr</a> for your and other peoples images.  For those not familiar with Flickr, it is a photo sharing website, one of the most popular on the net.  However, what makes it quite special is the <a href="http://www.flickr.com/services/api/" target="_blank">comprehensive public API</a>s that it exposes.</p>
+
+<p>While these APIs are extremely useful, however, they are also very complex, with a steep learning curve before you can even get started.  In steps Dojo and their new <a href="http://dojotoolkit.org/book/dojo-book-0-9/part-3-programmatic-dijit-and-dojo/using-dojo-data" target="_blank">Data API</a> specification, whose stated aim is to have a single unified interface to all data sources, so that users of a data store won&#8217;t have to care if they&#8217;re reading from a database, from a XML or JSON file, or from some remote service like Flickr.</p>
+<p>So, long story short, I&#8217;ve written an implementation of the Dojo Data APIs to query data from Flickr.  It is part of the <a href="http://dojotoolkit.org/book/dojo-book-0-9/part-5-dojox-extensions-dojo-0" target="_blank">DojoX</a> project, and is called <a href="http://dojotoolkit.org/book/dojo-book-0-9/part-3-programmatic-dijit-and-dojo/using-dojo-data/available-stores/flickr-rest-s" target="_blank">dojox.data.FlickrRestStore</a>.  It provides quite a few methods of querying for photos:</p>
+<ul>
+<li>By one or more tags, matchine any or all of them</li>
+<li>By user id</li>
+
+<li>By set id</li>
+<li>Full text search</li>
+<li>Sorting on date taken, date published or &#8216;interestingness&#8217;</li>
+</ul>
+<p>FlickrRestStore also performs caching of image data, so if you request the data twice it won&#8217;t make a second remote request.</p>
+<p>The store is also designed to be accessed by multiple clients simultaneously.  If two clients request the same data, only one request is made, with both clients being notified of the identical results.</p>
+<p><strong>Examples</strong></p>
+
+<p>I&#8217;ve put a fairly comprehensive set of examples in the Dojo book at <a href="http://dojotoolkit.org/book/dojo-book-0-9/part-3-programmatic-dijit-and-dojo/using-dojo-data/available-stores/flickr-rest-s#examples" target="_blank">http://dojotoolkit.org/book/dojo-book-0-9/part-3-programmatic-dijit-and-dojo<br />
+/using-dojo-data/available-stores/flickr-rest-s#examples  </a>.</p>
+<p>You can see a <a href="http://archive.dojotoolkit.org/nightly/dojotoolkit/dojox/data/demos/demo_FlickrRestStore.html" target="_blank">Demo</a> of it running at <a href="http://archive.dojotoolkit.org/nightly/dojotoolkit/dojox/data/demos/demo_FlickrRestStore.html" target="_blank">http://archive.dojotoolkit.org/nightly/dojotoolkit/dojox/data/demos/demo_FlickrRestStore.html</a> .</p>
+<p>The unit tests cover quite a few cases also, and you can see them at <a href="http://archive.dojotoolkit.org/nightly/dojotoolkit/dojox/data/tests/stores/FlickrRestStore.js" target="_blank">http://archive.dojotoolkit.org/nightly/dojotoolkit/dojox/data/tests/stores/FlickrRestStore.js</a></p>
+<p>To get the code, you can:</p>
+
+<ul>
+<li>Check out the latest copy of the Dojo toolkit, see the instructions <a href="http://dojotoolkit.org/book/dojo-book-0-9/part-4-meta-dojo/get-code-subversion" target="_blank">here</a>.</li>
+<li>Grab the entire nightly build from <a href="http://archive.dojotoolkit.org/nightly/" target="_blank">http://archive.dojotoolkit.org/nightly/</a></li>
+<li>Wait for release 1.0!</li>
+</ul>
+<p><strong>Share this post:</strong><a href="http://www.digg.com/submit?url=http://shaneosullivan.wordpress.com/2007/09/22/querying-flickr-with-dojo&amp;phase=2" target="_blank" title="Post 'Querying Flickr with Dojo!">digg it</a>|<a href="http://www.dotnetkicks.com/submit/?url=http://shaneosullivan.wordpress.com/2007/09/22/querying-flickr-with-dojo&amp;title=Querying+Flickr+with+Dojo%21" target="_blank" title="Post 'Querying Flickr with Dojo!">kick it</a>|<a href="mailto:?body=Thought%20you%20might%20like%20this:%20http://shaneosullivan.wordpress.com/2007/09/22/querying-flickr-with-dojo%21&amp;subject=Querying+Flickr+with+Dojo" target="_blank" title="Post 'Querying Flickr with Dojo!">Email it</a>|<a href="http://del.icio.us/post?url=http://shaneosullivan.wordpress.com/2007/09/22/querying-flickr-with-dojo%21&amp;title=Querying+Flickr+with+Dojo" target="_blank" title="Post 'Querying Flickr with Dojo!">bookmark it</a>|<a href="http://reddit.com/submit?url=http://shaneosullivan.wordpress.com/2007/09/22/querying-flickr-with-dojo%21&amp;title=Querying+Flickr+with+Dojo" target="_blank" title="Post 'Querying Flickr with Dojo!">reddit</a>|<a href="https://favorites.live.com/quickadd.aspx?marklet=1&amp;mkt=en-us&amp;url=http://shaneosullivan.wordpress.com/2007/09/22/querying-flickr-with-dojo&amp;title=Querying+Flickr+with+Dojo%21&amp;top=1" target="_blank" title="Post 'Querying Flickr with Dojo!">liveIt</a></p>
+
+<img alt="" border="0" src="http://feeds.wordpress.com/1.0/categories/shaneosullivan.wordpress.com/76/" /> <img alt="" border="0" src="http://feeds.wordpress.com/1.0/tags/shaneosullivan.wordpress.com/76/" /> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gocomments/shaneosullivan.wordpress.com/76/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/comments/shaneosullivan.wordpress.com/76/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godelicious/shaneosullivan.wordpress.com/76/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/delicious/shaneosullivan.wordpress.com/76/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gostumble/shaneosullivan.wordpress.com/76/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/stumble/shaneosullivan.wordpress.com/76/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godigg/shaneosullivan.wordpress.com/76/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/digg/shaneosullivan.wordpress.com/76/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/goreddit/shaneosullivan.wordpress.com/76/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/reddit/shaneosullivan.wordpress.com/76/" /></a> <img alt="" border="0" src="http://stats.wordpress.com/b.gif?host=shaneosullivan.wordpress.com&blog=258432&post=76&subd=shaneosullivan&ref=&feed=1" /></div>]]></content>
+		<link rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2007/09/22/querying-flickr-with-dojo/#comments" thr:count="3"/>
+		<link rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2007/09/22/querying-flickr-with-dojo/feed/atom/" thr:count="3"/>
+		<thr:total>3</thr:total>
+	</entry>
+		<entry>
+		<author>
+			<name>Shane O'Sullivan</name>
+						<uri>http://shaneosullivan.wordpress.com/</uri>
+					</author>
+		<title type="html"><![CDATA[Specifying the callback function with the Flickr JSON APIs]]></title>
+		<link rel="alternate" type="text/html" href="http://shaneosullivan.wordpress.com/2007/09/13/specifying-the-callback-function-with-the-flickr-json-apis/" />
+		<id>http://shaneosullivan.wordpress.com/2007/09/13/specifying-the-callback-function-with-the-flickr-json-apis/</id>
+		<updated>2007-09-13T09:54:53Z</updated>
+		<published>2007-09-13T09:31:30Z</published>
+		<category scheme="http://shaneosullivan.wordpress.com" term="Ajax" /><category scheme="http://shaneosullivan.wordpress.com" term="Dojo" /><category scheme="http://shaneosullivan.wordpress.com" term="Flickr" /><category scheme="http://shaneosullivan.wordpress.com" term="Image Gallery" /><category scheme="http://shaneosullivan.wordpress.com" term="Javascript" /><category scheme="http://shaneosullivan.wordpress.com" term="Technical" /><category scheme="http://shaneosullivan.wordpress.com" term="dojox" /><category scheme="http://shaneosullivan.wordpress.com" term="dojox.data" /><category scheme="http://shaneosullivan.wordpress.com" term="dojox.image" /><category scheme="http://shaneosullivan.wordpress.com" term="open source" />		<summary type="html"><![CDATA[Flickr is a photo sharing website that has a very flexible set of APIs that other applications and websites can use to access the photos it stores. This post shows you how to specify a callback function that Flickr can call to pass your web application information on photos it stores.
+Quite a while ago I [...]]]></summary>
+		<content type="html" xml:base="http://shaneosullivan.wordpress.com/2007/09/13/specifying-the-callback-function-with-the-flickr-json-apis/"><![CDATA[<div class='snap_preview'><br /><p>Flickr is a photo sharing website that has a very flexible set of <a href="http://en.wikipedia.org/wiki/Api" target="_blank">API</a>s that other applications and websites can use to access the photos it stores. This post shows you how to specify a callback function that Flickr can call to pass your web application information on photos it stores.</p>
+
+<p>Quite a while ago I looked into the <a href="http://www.flickr.com" target="_blank">Flickr</a> APIs for a website I was writing.  Looking at the service that returns photo data in <a href="http://en.wikipedia.org/wiki/Json" target="_blank">JSON</a> (Javascript Object Notation), I noticed that it did so by calling a predefined function, <em>jsonFlickrApi, </em>passing in the data to that function.  This seemed to be an obvious weak spot, since if more than one widget on a page were accessing the Flickr REST services, they would clash with each other, possibly receiving each others data.  Obviously not a good thing.</p>
+<p>Cut to today.  I&#8217;ve been working on a JavaScript data store that operates against the Flickr <a href="http://en.wikipedia.org/wiki/Representational_State_Transfer" target="_blank">REST</a> services for the <a href="http://www.dojotoolkit.org" target="_blank">Dojo Ajax Toolkit</a>, and had another look at the Flickr APIs.  Now, whether I missed it before (doubtful, as I looked specifically for it), or the fine Flickr folk have listened to complaints (very likely), but there is now a parameter that can be passed to the Flickr API that specifies the callback function to use when the data is retrieved from Flickr.</p>
+<p>All you have to do is pass a parameter <em>jsoncallback</em> to Flickr, with the name of the function you want to be called with the data, and thats it.</p>
+
+<p>E.g. if I had a function:</p>
+<p>function myCallbackFunction(data) {</p>
+<p>alert(&#8221;I received &#8221; + data.photos.photo.length +&#8221; photos&#8221;);</p>
+<p>}</p>
+<p>I could then specify a &lt;script&gt; element in my HTML page to retrieve the data in a cross site manner (since you can&#8217;t make cross site <a href="http://en.wikipedia.org/wiki/XmlHttpRequest" target="_blank">XmlHttpRequest </a>calls), like so:</p>
+
+<p>&lt;SCRIPT type=&#8221;text/javascript&#8221; src=&#8221;http://www.flickr.com/services/rest/?format=json&amp;<font color="#ff0000">jsoncallback=myCallbackFunction</font><br />
+&amp;method=flickr.people.getPublicPhotos<br />
+&amp;api_key=8c6803164dbc395fb7131c9d54843627<br />
+&amp;user_id=44153025%40N00&amp;per_page=1&#8243;&gt;</p>
+
+<p>&lt;/SCRIPT&gt;</p>
+<p>Note the jsoncallback parameter in the <em>src</em> attribute.  This results in JavaScript similar to:</p>
+<p><em>myCallbackFunction<span class="sourceRowText">({&#8221;photos&#8221;:{&#8221;page&#8221;:1, &#8220;pages&#8221;:489, &#8220;perpage&#8221;:1, &#8220;total&#8221;:&#8221;489&#8243;, &#8220;photo&#8221;:[{&#8221;id&#8221;:&#8221;1352049918&#8243;, &#8220;owner&#8221;:&#8221;44153025@N00&#8243;, &#8220;secret&#8221;:&#8221;5636009306&#8243;, &#8220;server&#8221;:&#8221;1111&#8243;, &#8220;farm&#8221;:2, &#8220;title&#8221;:&#8221;The Liffey Panorama&#8221;, &#8220;ispublic&#8221;:1, &#8220;isfriend&#8221;:0, &#8220;isfamily&#8221;:0}]}, &#8220;stat&#8221;:&#8221;ok&#8221;});</span></em></p>
+
+<p>being called.</p>
+<p>Thanks Flickr! Nice to see them listening, and continually improving.  This will make web applications built on Flickr much more robust, without the need of ridiculous hackery to get around unnecessarily difficult APIs. See <a href="http://www.flickr.com/services/api/response.json.html" target="_blank">http://www.flickr.com/services/api/response.json.html</a> for the offical info on JSON responses.</p>
+<p>Keep an eye out for my dojox.data.FlickrRestStore being release some day soon!!<br />
+<strong>Share this post:</strong><a href="http://www.digg.com/submit?url=http://shaneosullivan.wordpress.com/2007/09/13/specifying-the-callback-function-with-the-flickr-json-apis&amp;phase=2" target="_blank" title="Post 'Specifying the callback function with the Flickr JSON APIs">digg it</a>|<a href="http://www.dotnetkicks.com/submit/?url=http://shaneosullivan.wordpress.com/2007/09/13/specifying-the-callback-function-with-the-flickr-json-apis&amp;title=Specifying+the+callback+function+with+the+Flickr+JSON+APIs" target="_blank" title="Post 'Specifying the callback function with the Flickr JSON APIs">kick it</a>|<a href="mailto:?body=Thought%20you%20might%20like%20this:%20http://shaneosullivan.wordpress.com/2007/09/13/specifying-the-callback-function-with-the-flickr-json-apis&amp;subject=Specifying+the+callback+function+with+the+Flickr+JSON+APIs" target="_blank" title="Post 'Specifying the callback function with the Flickr JSON APIs">Email it</a>|<a href="http://del.icio.us/post?url=http://shaneosullivan.wordpress.com/2007/09/13/specifying-the-callback-function-with-the-flickr-json-apis&amp;title=Specifying+the+callback+function+with+the+Flickr+JSON+APIs" target="_blank" title="Post 'Specifying the callback function with the Flickr JSON APIs">bookmark it</a>|<a href="http://reddit.com/submit?url=http://shaneosullivan.wordpress.com/2007/09/13/specifying-the-callback-function-with-the-flickr-json-apis&amp;title=Specifying+the+callback+function+with+the+Flickr+JSON+APIs" target="_blank" title="Post 'Specifying the callback function with the Flickr JSON APIs">reddit</a>|<a href="https://favorites.live.com/quickadd.aspx?marklet=1&amp;mkt=en-us&amp;url=http://shaneosullivan.wordpress.com/2007/09/13/specifying-the-callback-function-with-the-flickr-json-apis&amp;title=Specifying+the+callback+function+with+the+Flickr+JSON+APIs&amp;top=1" target="_blank" title="Post 'Specifying the callback function with the Flickr JSON APIs">liveIt</a></p>
+
+<img alt="" border="0" src="http://feeds.wordpress.com/1.0/categories/shaneosullivan.wordpress.com/75/" /> <img alt="" border="0" src="http://feeds.wordpress.com/1.0/tags/shaneosullivan.wordpress.com/75/" /> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gocomments/shaneosullivan.wordpress.com/75/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/comments/shaneosullivan.wordpress.com/75/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godelicious/shaneosullivan.wordpress.com/75/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/delicious/shaneosullivan.wordpress.com/75/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gostumble/shaneosullivan.wordpress.com/75/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/stumble/shaneosullivan.wordpress.com/75/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godigg/shaneosullivan.wordpress.com/75/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/digg/shaneosullivan.wordpress.com/75/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/goreddit/shaneosullivan.wordpress.com/75/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/reddit/shaneosullivan.wordpress.com/75/" /></a> <img alt="" border="0" src="http://stats.wordpress.com/b.gif?host=shaneosullivan.wordpress.com&blog=258432&post=75&subd=shaneosullivan&ref=&feed=1" /></div>]]></content>
+		<link rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2007/09/13/specifying-the-callback-function-with-the-flickr-json-apis/#comments" thr:count="0"/>
+		<link rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2007/09/13/specifying-the-callback-function-with-the-flickr-json-apis/feed/atom/" thr:count="0"/>
+		<thr:total>0</thr:total>
+	</entry>
+		<entry>
+		<author>
+			<name>Shane O'Sullivan</name>
+						<uri>http://shaneosullivan.wordpress.com/</uri>
+					</author>
+		<title type="html"><![CDATA[Image Gallery, Slideshow, and Flickr data source for Dojo 0.9]]></title>
+		<link rel="alternate" type="text/html" href="http://shaneosullivan.wordpress.com/2007/09/04/image-gallery-slideshow-and-flickr-data-source-for-dojo-09/" />
+		<id>http://shaneosullivan.wordpress.com/2007/09/04/image-gallery-slideshow-and-flickr-data-source-for-dojo-09/</id>
+		<updated>2007-09-05T08:32:22Z</updated>
+		<published>2007-09-04T23:32:51Z</published>
+		<category scheme="http://shaneosullivan.wordpress.com" term="Ajax" /><category scheme="http://shaneosullivan.wordpress.com" term="Dojo" /><category scheme="http://shaneosullivan.wordpress.com" term="Image Gallery" /><category scheme="http://shaneosullivan.wordpress.com" term="Javascript" /><category scheme="http://shaneosullivan.wordpress.com" term="Technical" /><category scheme="http://shaneosullivan.wordpress.com" term="dijit" /><category scheme="http://shaneosullivan.wordpress.com" term="dojo.image" /><category scheme="http://shaneosullivan.wordpress.com" term="dojox" /><category scheme="http://shaneosullivan.wordpress.com" term="open source" />		<summary type="html"><![CDATA[In a previous post (see here)  I spoke about how I&#8217;d written an Image Gallery widget that worked with Dojo Ajax Toolkit version 0.4.2 and 0.4.3.  I contacted the good folks at Dojo about updating it for the latest release, 0.9, and adding it to the toolkit.
+They were very receptive to the idea, [...]]]></summary>
+		<content type="html" xml:base="http://shaneosullivan.wordpress.com/2007/09/04/image-gallery-slideshow-and-flickr-data-source-for-dojo-09/"><![CDATA[<div class='snap_preview'><br /><p>In a previous post (see <a href="http://shaneosullivan.wordpress.com/2007/07/03/flickr-and-dojo-image-gallery/" target="_blank">here</a>)  I spoke about how I&#8217;d written an Image Gallery widget that worked with <a href="http://www.dojotoolkit.org" target="_blank">Dojo Ajax Toolkit</a> version 0.4.2 and 0.4.3.  I contacted the good folks at Dojo about updating it for the latest release, <a href="http://ajaxian.com/archives/dojo-09-final-version-released" target="_blank">0.9</a>, and adding it to the toolkit.</p>
+
+<p>They were very receptive to the idea, with a few suggestions.  Firstly, rather than having its own method of storing information, it should run off the <a href="http://dojotoolkit.org/book/dojo-book-0-9/part-3-programmatic-dijit-and-dojo/data-retrieval-dojo-data-0" target="_blank">dojo.data </a>API, and secondly, it should go into the newly created dojox.image project.</p>
+<p>Both of these suggestions were perfectly reasonable, so, cut to a few weeks later and I&#8217;ve finished my first pass at converting over the code from 0.4.3 to 0.9.  As the Dojo APIs have changed drastically recently, this was no simple matter, but thats the subject of another blog post.</p>
+<p>The code is not finished (or even checked in) yet, but you can see some examples of it running from test pages.  There are two separate widgets:</p>
+<ul>
+<li>dojox.image.SlideShow - a simple widget that runs a slide show of images, with urls loaded from a dojo.data store.</li>
+<li>dojox.image.ImageGallery - this wraps the SlideShow widget, adding thumbnail views. This is also loaded from a dojo.data store.</li>
+</ul>
+<p>Finally, I&#8217;ve implemented a dojo.data store that reads from the <a href="http://www.flickr.com/photos/shaneosullivan" target="_blank">Flickr</a> REST APIs, to pull down lists of photos.  This store is more complex than the existing Flickr store, as it does caching of results, as well as going against a much more flexible  API, meaning that expanding its capabilities later is possible.</p>
+
+<p>Whether or not this goes into dojox or not is still undecided. However, you can see the widgets running using this data store.</p>
+<p>See the test files at <a href="http://www.skynet.ie/~sos/js2/dojox/image/tests/" target="_blank">http://www.skynet.ie/~sos/js2/dojox/image/tests</a>  for examples of this working.</p>
+<p>Note that this is NOT the final code.  It may still be buggy, may look different in the future (it&#8217;s pretty basic now), and the code will be cleaned up.  However, if you have any suggestions, please feel free to leave comments on this post.</p>
+<p><strong>Share this post:</strong><a href="http://www.digg.com/submit?url=http://shaneosullivan.wordpress.com/2007/09/04/image-gallery-slideshow-and-flickr-data-source-for-dojo-09&amp;phase=2" target="_blank" title="Post 'Image Gallery, Slideshow, and Flickr data source for Dojo 09">digg it</a>|<a href="http://www.dotnetkicks.com/submit/?url=http://shaneosullivan.wordpress.com/2007/09/04/image-gallery-slideshow-and-flickr-data-source-for-dojo-09&amp;title=Image+Gallery,+Slideshow,+and+Flickr+data+source+for+Dojo+09" target="_blank" title="Post 'Image Gallery, Slideshow, and Flickr data source for Dojo 09">kick it</a>|<a href="mailto:?body=Thought%20you%20might%20like%20this:%20http://shaneosullivan.wordpress.com/2007/09/04/image-gallery-slideshow-and-flickr-data-source-for-dojo-09&amp;subject=Image+Gallery,+Slideshow,+and+Flickr+data+source+for+Dojo+09" target="_blank" title="Post 'Image Gallery, Slideshow, and Flickr data source for Dojo 09">Email it</a>|<a href="http://del.icio.us/post?url=http://shaneosullivan.wordpress.com/2007/09/04/image-gallery-slideshow-and-flickr-data-source-for-dojo-09&amp;title=Image+Gallery,+Slideshow,+and+Flickr+data+source+for+Dojo+09" target="_blank" title="Post 'Image Gallery, Slideshow, and Flickr data source for Dojo 09">bookmark it</a>|<a href="http://reddit.com/submit?url=http://shaneosullivan.wordpress.com/2007/09/04/image-gallery-slideshow-and-flickr-data-source-for-dojo-09&amp;title=Image+Gallery,+Slideshow,+and+Flickr+data+source+for+Dojo+09" target="_blank" title="Post 'Image Gallery, Slideshow, and Flickr data source for Dojo 09">reddit</a>|<a href="https://favorites.live.com/quickadd.aspx?marklet=1&amp;mkt=en-us&amp;url=http://shaneosullivan.wordpress.com/2007/09/04/image-gallery-slideshow-and-flickr-data-source-for-dojo-09&amp;title=Image+Gallery,+Slideshow,+and+Flickr+data+source+for+Dojo+09&amp;top=1" target="_blank" title="Post 'Image Gallery, Slideshow, and Flickr data source for Dojo 09">liveIt</a></p>
+
+<img alt="" border="0" src="http://feeds.wordpress.com/1.0/categories/shaneosullivan.wordpress.com/74/" /> <img alt="" border="0" src="http://feeds.wordpress.com/1.0/tags/shaneosullivan.wordpress.com/74/" /> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gocomments/shaneosullivan.wordpress.com/74/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/comments/shaneosullivan.wordpress.com/74/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godelicious/shaneosullivan.wordpress.com/74/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/delicious/shaneosullivan.wordpress.com/74/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gostumble/shaneosullivan.wordpress.com/74/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/stumble/shaneosullivan.wordpress.com/74/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godigg/shaneosullivan.wordpress.com/74/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/digg/shaneosullivan.wordpress.com/74/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/goreddit/shaneosullivan.wordpress.com/74/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/reddit/shaneosullivan.wordpress.com/74/" /></a> <img alt="" border="0" src="http://stats.wordpress.com/b.gif?host=shaneosullivan.wordpress.com&blog=258432&post=74&subd=shaneosullivan&ref=&feed=1" /></div>]]></content>
+		<link rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2007/09/04/image-gallery-slideshow-and-flickr-data-source-for-dojo-09/#comments" thr:count="1"/>
+		<link rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2007/09/04/image-gallery-slideshow-and-flickr-data-source-for-dojo-09/feed/atom/" thr:count="1"/>
+		<thr:total>1</thr:total>
+	</entry>
+		<entry>
+		<author>
+			<name>Shane O'Sullivan</name>
+						<uri>http://shaneosullivan.wordpress.com/</uri>
+					</author>
+		<title type="html"><![CDATA[Dojo event performance tip]]></title>
+		<link rel="alternate" type="text/html" href="http://shaneosullivan.wordpress.com/2007/08/23/dojo-event-performance-tip/" />
+		<id>http://shaneosullivan.wordpress.com/2007/08/23/dojo-event-performance-tip/</id>
+		<updated>2007-08-23T12:38:36Z</updated>
+		<published>2007-08-23T12:29:08Z</published>
+		<category scheme="http://shaneosullivan.wordpress.com" term="Ajax" /><category scheme="http://shaneosullivan.wordpress.com" term="Dojo" /><category scheme="http://shaneosullivan.wordpress.com" term="Javascript" /><category scheme="http://shaneosullivan.wordpress.com" term="Technical" /><category scheme="http://shaneosullivan.wordpress.com" term="dojo.event" /><category scheme="http://shaneosullivan.wordpress.com" term="open source" /><category scheme="http://shaneosullivan.wordpress.com" term="performance" />		<summary type="html"><![CDATA[When working with the Dojo Ajax Toolkit and using it&#8217;s dojo.event package to listen to DOM and custom events, the two most common approaches are:
+
+Listen for an event (or function call) to be triggered on  an object, and when it is to run a custom function, e.g.
+    var alertFn = function() [...]]]></summary>
+		<content type="html" xml:base="http://shaneosullivan.wordpress.com/2007/08/23/dojo-event-performance-tip/"><![CDATA[<div class='snap_preview'><br /><p>When working with the <a href="http://www.dojotoolkit.org" target="_blank">Dojo Ajax Toolkit</a> and using it&#8217;s <em>dojo.event</em> package to listen to DOM and custom events, the two most common approaches are:</p>
+
+<ol>
+<li>Listen for an event (or function call) to be triggered on  an object, and when it is to run a custom function, e.g.<br />
+<strong>    var alertFn = function() {alert(&#8221;widget is showing&#8221;);};<br />
+dojo.event.connect(myWidget, &#8220;onShow&#8221;, <font color="#ff0000">alertFn</font>);</strong></li>
+<p>This basically says that when the &#8220;onShow&#8221; function is called on some widget, called myWidget,  run a function that does a simple alert.  Of course you can do whatever you like inside this function.</p>
+
+<li>Listen for an event (or function call) to be triggered on  an object, and when it is to run a custom function defined in the scope of an object, e.g.<br />
+<strong>    var myObj = {<br />
+alertFn: function() {alert(&#8221;widget is showing&#8221;);}<br />
+};<br />
+dojo.event.connect(myWidget, &#8220;onShow&#8221;,<font color="#ff0000">myObj,  &#8220;alertFn&#8221;</font>);</strong></p>
+<p>This is saying that I have an object called &#8220;<font color="#ff0000">myObj</font>&#8220;, which has  a function called &#8220;<font color="#ff0000">alertFn</font>&#8220;, and when the &#8220;<font color="#ff0000">onShow</font>&#8221; method on &#8220;<font color="#ff0000">myWidget</font>&#8221; is called, call the &#8220;<font color="#ff0000">alertFn</font>&#8221; function on &#8220;<font color="#ff0000">myObj</font>&#8220;.</li>
+
+</ol>
+<p>I&#8217;ve found that when working with Dojo version 0.4.2 and 0.4.3, <strong>using the second approach is far far quicker</strong>.  It turns out that internally, if you simply pass an anonymous function to Dojo, it will add that function to an internal structure and do a brute force search on that internal structure to make sure that this function is unique.  This can result in a very significant performance hit - I&#8217;ve seen it take up over 50% of the startup time of a page on one of our more JavaScript heavy applications.</p>
+<p>So, the conclusion is that if you are <em>dojo.event.connect</em>, which is one of the most useful functions in the toolkit, make sure to use four arguments to the function (approach #2 above), rather than just three (approach #1 above).  If necessary, place a simple wrapper around the function as I have shown.<br />
+<strong>Share this post:</strong><a href="http://www.digg.com/submit?url=http://shaneosullivan.wordpress.com/2007/08/23/dojo-event-performance-tip&amp;phase=2" target="_blank" title="Post 'Dojo event performance tip">digg it</a>|<a href="http://www.dotnetkicks.com/submit/?url=http://shaneosullivan.wordpress.com/2007/08/23/dojo-event-performance-tip&amp;title=Dojo+event+performance+tip" target="_blank" title="Post 'Dojo event performance tip">kick it</a>|<a href="mailto:?body=Thought%20you%20might%20like%20this:%20http://shaneosullivan.wordpress.com/2007/08/23/dojo-event-performance-tip&amp;subject=Dojo+event+performance+tip" target="_blank" title="Post 'Dojo event performance tip">Email it</a>|<a href="http://del.icio.us/post?url=http://shaneosullivan.wordpress.com/2007/08/23/dojo-event-performance-tip&amp;title=Dojo+event+performance+tip" target="_blank" title="Post 'Dojo event performance tip">bookmark it</a>|<a href="http://reddit.com/submit?url=http://shaneosullivan.wordpress.com/2007/08/23/dojo-event-performance-tip&amp;title=Dojo+event+performance+tip" target="_blank" title="Post 'Dojo event performance tip">reddit</a>|<a href="https://favorites.live.com/quickadd.aspx?marklet=1&amp;mkt=en-us&amp;url=http://shaneosullivan.wordpress.com/2007/08/23/dojo-event-performance-tip&amp;title=Dojo+event+performance+tip&amp;top=1" target="_blank" title="Post 'Dojo event performance tip">liveIt</a></p>
+
+<img alt="" border="0" src="http://feeds.wordpress.com/1.0/categories/shaneosullivan.wordpress.com/73/" /> <img alt="" border="0" src="http://feeds.wordpress.com/1.0/tags/shaneosullivan.wordpress.com/73/" /> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gocomments/shaneosullivan.wordpress.com/73/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/comments/shaneosullivan.wordpress.com/73/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godelicious/shaneosullivan.wordpress.com/73/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/delicious/shaneosullivan.wordpress.com/73/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gostumble/shaneosullivan.wordpress.com/73/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/stumble/shaneosullivan.wordpress.com/73/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godigg/shaneosullivan.wordpress.com/73/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/digg/shaneosullivan.wordpress.com/73/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/goreddit/shaneosullivan.wordpress.com/73/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/reddit/shaneosullivan.wordpress.com/73/" /></a> <img alt="" border="0" src="http://stats.wordpress.com/b.gif?host=shaneosullivan.wordpress.com&blog=258432&post=73&subd=shaneosullivan&ref=&feed=1" /></div>]]></content>
+		<link rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2007/08/23/dojo-event-performance-tip/#comments" thr:count="0"/>
+		<link rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2007/08/23/dojo-event-performance-tip/feed/atom/" thr:count="0"/>
+		<thr:total>0</thr:total>
+	</entry>
+		<entry>
+		<author>
+			<name>Shane O'Sullivan</name>
+						<uri>http://shaneosullivan.wordpress.com/</uri>
+					</author>
+		<title type="html"><![CDATA[Dojo 0.9 released]]></title>
+		<link rel="alternate" type="text/html" href="http://shaneosullivan.wordpress.com/2007/08/22/dojo-09-released/" />
+		<id>http://shaneosullivan.wordpress.com/2007/08/22/dojo-09-released/</id>
+		<updated>2007-09-04T15:23:50Z</updated>
+		<published>2007-08-22T10:24:51Z</published>
+		<category scheme="http://shaneosullivan.wordpress.com" term="Ajax" /><category scheme="http://shaneosullivan.wordpress.com" term="Dojo" /><category scheme="http://shaneosullivan.wordpress.com" term="Javascript" /><category scheme="http://shaneosullivan.wordpress.com" term="Technical" /><category scheme="http://shaneosullivan.wordpress.com" term="dijit" /><category scheme="http://shaneosullivan.wordpress.com" term="open source" />		<summary type="html"><![CDATA[The latest  version of the Dojo Ajax Toolkit has just been released into the wild.  Version 0.9 is a very streamlined progression of the toolkit, with many of the less essential features pushed out to another project, DojoX, and the Dojo widgets given their own project, Dijit.
+Another big change is the the main [...]]]></summary>
+		<content type="html" xml:base="http://shaneosullivan.wordpress.com/2007/08/22/dojo-09-released/"><![CDATA[<div class='snap_preview'><br /><p>The latest  version of the <a href="http://www.dojotoolkit.org" target="_blank">Dojo Ajax Toolkit</a> has just been released into the wild.  Version 0.9 is a very streamlined progression of the toolkit, with many of the less essential features pushed out to another project, DojoX, and the Dojo widgets given their own project, Dijit.</p>
+
+<p>Another big change is the the main JavaScript file in Dojo, dojo.js, is no longer customisable.  It now contains the most common features required by most web developers, and nothing more.  As a result, it is far smaller than previous incarnations, down to ~24k when gzipped.</p>
+<p>Some resources:</p>
+<p>James Burke has written up a very informative post about what exactly is baked into the default build of dojo.js, which you can find at <a href="http://dojotoolkit.org/2007/08/22/dissecting-0-9s-dojo-js" target="_blank">http://dojotoolkit.org/2007/08/22/dissecting-0-9s-dojo-js</a> .  Well worth a read.</p>
+<p>Bill Keese wrote up a guided tour of 0.9 at <a href="http://dojotoolkit.org/2007/08/20/dijit-0-9-guided-tour" target="_blank">http://dojotoolkit.org/2007/08/20/dijit-0-9-guided-tour</a>.</p>
+<p>The Dojo book for version 0.9 can be found at <a href="http://dojotoolkit.org/book/dojo-book-0-9-0" target="_blank">http://dojotoolkit.org/book/dojo-book-0-9-0</a>. It&#8217;s almost finished (almost!) as of today, Aug 22 2007.</p>
+
+<p>The Ajaxian post on Dojo 0.9 can be read at <a href="http://ajaxian.com/archives/dojo-09-final-version-released" target="_blank">http://ajaxian.com/archives/dojo-09-final-version-released</a>.</p>
+<p>Download  the toolkit from <a href="http://build.dojotoolkit.org/0.9.0/" target="_blank">http://build.dojotoolkit.org/0.9.0</a>.  This page gives some information on how you can use Dojo from AOL&#8217;s hosting servers, so you never have to download it at all.<br />
+<strong>Share this post:</strong><a href="http://www.digg.com/submit?url=http://shaneosullivan.wordpress.com/2007/08/22/dojo-09-released&amp;phase=2" target="_blank" title="Post 'Dojo 0.9 released">digg it</a>|<a href="http://www.dotnetkicks.com/submit/?url=http://shaneosullivan.wordpress.com/2007/08/22/dojo-09-released&amp;title=Dojo+0.9+released" target="_blank" title="Post 'Dojo 0.9 released">kick it</a>|<a href="mailto:?body=Thought%20you%20might%20like%20this:%20http://shaneosullivan.wordpress.com/2007/08/22/dojo-09-released&amp;subject=Dojo+0.9+released" target="_blank" title="Post 'Dojo 0.9 released">Email it</a>|<a href="http://del.icio.us/post?url=http://shaneosullivan.wordpress.com/2007/08/22/dojo-09-released&amp;title=Dojo+0.9+released" target="_blank" title="Post 'Dojo 0.9 released">bookmark it</a>|<a href="http://reddit.com/submit?url=http://shaneosullivan.wordpress.com/2007/08/22/dojo-09-released&amp;title=Dojo+0.9+released" target="_blank" title="Post 'Dojo 0.9 released">reddit</a>|<a href="https://favorites.live.com/quickadd.aspx?marklet=1&amp;mkt=en-us&amp;url=http://shaneosullivan.wordpress.com/2007/08/22/dojo-09-released&amp;title=Dojo+0.9+released&amp;top=1" target="_blank" title="Post 'Dojo 0.9 released">liveIt</a></p>
+
+<img alt="" border="0" src="http://feeds.wordpress.com/1.0/categories/shaneosullivan.wordpress.com/72/" /> <img alt="" border="0" src="http://feeds.wordpress.com/1.0/tags/shaneosullivan.wordpress.com/72/" /> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gocomments/shaneosullivan.wordpress.com/72/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/comments/shaneosullivan.wordpress.com/72/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godelicious/shaneosullivan.wordpress.com/72/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/delicious/shaneosullivan.wordpress.com/72/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gostumble/shaneosullivan.wordpress.com/72/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/stumble/shaneosullivan.wordpress.com/72/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godigg/shaneosullivan.wordpress.com/72/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/digg/shaneosullivan.wordpress.com/72/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/goreddit/shaneosullivan.wordpress.com/72/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/reddit/shaneosullivan.wordpress.com/72/" /></a> <img alt="" border="0" src="http://stats.wordpress.com/b.gif?host=shaneosullivan.wordpress.com&blog=258432&post=72&subd=shaneosullivan&ref=&feed=1" /></div>]]></content>
+		<link rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2007/08/22/dojo-09-released/#comments" thr:count="2"/>
+		<link rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2007/08/22/dojo-09-released/feed/atom/" thr:count="2"/>
+		<thr:total>2</thr:total>
+	</entry>
+		<entry>
+		<author>
+			<name>Shane O'Sullivan</name>
+						<uri>http://shaneosullivan.wordpress.com/</uri>
+					</author>
+		<title type="html"><![CDATA[Dojo theme browser shows off Dijit widgets]]></title>
+		<link rel="alternate" type="text/html" href="http://shaneosullivan.wordpress.com/2007/08/17/dojo-theme-browser-shows-off-dijit-widgets/" />
+		<id>http://shaneosullivan.wordpress.com/2007/08/17/dojo-theme-browser-shows-off-dijit-widgets/</id>
+		<updated>2007-11-05T13:45:45Z</updated>
+		<published>2007-08-17T12:18:57Z</published>
+		<category scheme="http://shaneosullivan.wordpress.com" term="Ajax" /><category scheme="http://shaneosullivan.wordpress.com" term="Dojo" /><category scheme="http://shaneosullivan.wordpress.com" term="Javascript" /><category scheme="http://shaneosullivan.wordpress.com" term="Rich Text" /><category scheme="http://shaneosullivan.wordpress.com" term="Technical" /><category scheme="http://shaneosullivan.wordpress.com" term="dijit" /><category scheme="http://shaneosullivan.wordpress.com" term="open source" />		<summary type="html"><![CDATA[The Dojo/Dijit (Dojo&#8217;s widget project) toolkit has created a page where you can view many of their widgets using the four CSS themes written so far for Dojo.  This is cool for a couple of reasons.
+Firstly, it showcases the excellent work the Dijit developers have put into new themeing skins.  There are four [...]]]></summary>
+		<content type="html" xml:base="http://shaneosullivan.wordpress.com/2007/08/17/dojo-theme-browser-shows-off-dijit-widgets/"><![CDATA[<div class='snap_preview'><br /><p>The <a href="http://www.dojotoolkit.org" target="_blank">Dojo</a>/<a href="http://dojotoolkit.org/developer/dijit" target="_blank">Dijit</a> (Dojo&#8217;s widget project) toolkit has <a href="http://dojotoolkit.org/~bill/0.9/dijit/themes/themeTester.html?theme=tundra" target="_blank">created a page</a> where you can view many of their widgets using the four <a href="http://en.wikipedia.org/wiki/Css" target="_blank">CSS</a> themes written so far for Dojo.  This is cool for a couple of reasons.</p>
+
+<p>Firstly, it showcases the excellent work the Dijit developers have put into new themeing skins.  There are four themes completed so far, and changing the look of Dojo is now as simple as including a different CSS file on your web page.  All Dijit widgets now run off a single CSS file, rather than each having their own CSS file.</p>
+<p>Secondly, it shows the usage of many of Dijit&#8217;s widgets (say that five times in a row! <img src='http://shaneosullivan.wordpress.com/wp-includes/images/smilies/icon_smile.gif' alt=':-)' class='wp-smiley' /> ).  Many of the demos from the 0.4.* days are gone now, and this is about as comprehensive a demo of Dojo&#8217;s widgets as you&#8217;re likely to see for a while.  And yes, they are very nice indeed.</p>
+<p>Go to <a href="http://archive.dojotoolkit.org/nightly/dojotoolkit/dijit/themes/themeTester.html" target="_blank">http://archive.dojotoolkit.org/nightly/dojotoolkit/dijit/themes/themeTester.html</a> to see the default theme (<em>tundra</em>) in use.  Click on the &#8220;Alternate Themes&#8221; tab at the bottom of the page to switch themes to one of the alternate themes.</p>
+
+<p>Enjoy!</p>
+<p><strong>Share this post:</strong><a href="http://www.digg.com/submit?url=http://shaneosullivan.wordpress.com/2007/08/17/dojo-theme-browser-shows-off-dijit-widgets&amp;phase=2" target="_blank" title="Post 'Dojo theme browser shows off Dijit widgets">digg it</a>|<a href="http://www.dotnetkicks.com/submit/?url=http://shaneosullivan.wordpress.com/2007/08/17/dojo-theme-browser-shows-off-dijit-widgets&amp;title=Dojo+theme+browser+shows+off+Dijit+widgets" target="_blank" title="Post 'Dojo theme browser shows off Dijit widgets">kick it</a>|<a href="mailto:?body=Thought%20you%20might%20like%20this:%20http://shaneosullivan.wordpress.com/2007/08/17/dojo-theme-browser-shows-off-dijit-widgets&amp;subject=Dojo+theme+browser+shows+off+Dijit+widgets" target="_blank" title="Post 'Dojo theme browser shows off Dijit widgets">Email it</a>|<a href="http://del.icio.us/post?url=http://shaneosullivan.wordpress.com/2007/08/17/dojo-theme-browser-shows-off-dijit-widgets&amp;title=Dojo+theme+browser+shows+off+Dijit+widgets" target="_blank" title="Post 'Dojo theme browser shows off Dijit widgets">bookmark it</a>|<a href="http://reddit.com/submit?url=http://shaneosullivan.wordpress.com/2007/08/17/dojo-theme-browser-shows-off-dijit-widgets&amp;title=Dojo+theme+browser+shows+off+Dijit+widgets" target="_blank" title="Post 'Dojo theme browser shows off Dijit widgets">reddit</a>|<a href="https://favorites.live.com/quickadd.aspx?marklet=1&amp;mkt=en-us&amp;url=http://shaneosullivan.wordpress.com/2007/08/17/dojo-theme-browser-shows-off-dijit-widgets&amp;title=Dojo+theme+browser+shows+off+Dijit+widgets&amp;top=1" target="_blank" title="Post 'Dojo theme browser shows off Dijit widgets">liveIt</a></p>
+
+<img alt="" border="0" src="http://feeds.wordpress.com/1.0/categories/shaneosullivan.wordpress.com/71/" /> <img alt="" border="0" src="http://feeds.wordpress.com/1.0/tags/shaneosullivan.wordpress.com/71/" /> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gocomments/shaneosullivan.wordpress.com/71/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/comments/shaneosullivan.wordpress.com/71/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godelicious/shaneosullivan.wordpress.com/71/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/delicious/shaneosullivan.wordpress.com/71/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gostumble/shaneosullivan.wordpress.com/71/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/stumble/shaneosullivan.wordpress.com/71/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godigg/shaneosullivan.wordpress.com/71/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/digg/shaneosullivan.wordpress.com/71/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/goreddit/shaneosullivan.wordpress.com/71/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/reddit/shaneosullivan.wordpress.com/71/" /></a> <img alt="" border="0" src="http://stats.wordpress.com/b.gif?host=shaneosullivan.wordpress.com&blog=258432&post=71&subd=shaneosullivan&ref=&feed=1" /></div>]]></content>
+		<link rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2007/08/17/dojo-theme-browser-shows-off-dijit-widgets/#comments" thr:count="2"/>
+		<link rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2007/08/17/dojo-theme-browser-shows-off-dijit-widgets/feed/atom/" thr:count="2"/>
+		<thr:total>2</thr:total>
+	</entry>
+		<entry>
+		<author>
+			<name>Shane O'Sullivan</name>
+						<uri>http://shaneosullivan.wordpress.com/</uri>
+					</author>
+		<title type="html"><![CDATA[Why is my web page slow? YSlow for Firebug can tell you.]]></title>
+		<link rel="alternate" type="text/html" href="http://shaneosullivan.wordpress.com/2007/07/25/why-is-my-web-page-slow-yslow-for-firebug-can-tell-you/" />
+		<id>http://shaneosullivan.wordpress.com/2007/07/25/why-is-my-web-page-slow-yslow-for-firebug-can-tell-you/</id>
+		<updated>2007-07-26T08:28:03Z</updated>
+		<published>2007-07-25T15:08:30Z</published>
+		<category scheme="http://shaneosullivan.wordpress.com" term="Ajax" /><category scheme="http://shaneosullivan.wordpress.com" term="Firebug" /><category scheme="http://shaneosullivan.wordpress.com" term="Firefox" /><category scheme="http://shaneosullivan.wordpress.com" term="Javascript" /><category scheme="http://shaneosullivan.wordpress.com" term="Technical" /><category scheme="http://shaneosullivan.wordpress.com" term="tools" />		<summary type="html"><![CDATA[Yahoo have released a very useful extension for Firebug, which is itself an extension for Firefox, which can be used to analyze a web page&#8217;s performance.  The extension, called YSlow, appears as a separate pane in Firebug, and gives you a whole load of statistics about your page.
+However, in addition to the bare numbers, [...]]]></summary>
+		<content type="html" xml:base="http://shaneosullivan.wordpress.com/2007/07/25/why-is-my-web-page-slow-yslow-for-firebug-can-tell-you/"><![CDATA[<div class='snap_preview'><br /><p>Yahoo have released a <a href="http://developer.yahoo.com/yslow/" target="_blank">very useful extension</a> for <a href="http://www.getfirebug.com" target="_blank">Firebug</a>, which is itself an extension for <a href="http://www.getfirefox.com" target="_blank">Firefox</a>, which can be used to analyze a web page&#8217;s performance.  The extension, called <a href="http://developer.yahoo.com/yslow/" target="_blank">YSlow</a>, appears as a separate pane in Firebug, and gives you a whole load of statistics about your page.</p>
+
+<p>However, in addition to the bare numbers, it also gives your page a ranking, from zero to a hundred, and offers tips in plain English on you can improve the performance of your page.</p>
+<p>All in all, a very handy little addition to a web developer&#8217;s toolkit.</p>
+<p>One caveat is that it is of course not perfect -  I tried to use it on Gmail, and it gave the site a 98% mark (practically impossible to achieve in reality), as the initial page of the Gmail application simply loads a single JavaScript page and not much else.  Therefore, YSlow seems to only analyze content sent down the wire to browser upon page load, and ignores generated content.  However, this does not take away from the fact that it is perfectly suitable for the vast majority of websites out there.</p>
+<p>More information available <a href="http://developer.yahoo.com/yslow/" target="_blank">here</a>, or read Ajaxian&#8217;s post <a href="http://ajaxian.com/archives/yahoo-announces-yslow-firebug-based-performance-tool" target="_blank">here</a>.<br />
+<strong>Share this post:</strong><a href="http://www.digg.com/submit?url=http://shaneosullivan.wordpress.com/2007/07/25/why-is-my-web-page-slow-yslow-for-firebug-can-tell-you&amp;phase=2" target="_blank" title="Post 'Why is my web page slow YSlow for Firebug can tell you.">digg it</a>|<a href="http://www.dotnetkicks.com/submit/?url=http://shaneosullivan.wordpress.com/2007/07/25/why-is-my-web-page-slow-yslow-for-firebug-can-tell-you&amp;title=Why+is+my+web+page+slow+YSlow+for+Firebug+can+tell+you." target="_blank" title="Post 'Why is my web page slow YSlow for Firebug can tell you.">kick it</a>|<a href="mailto:?body=Thought%20you%20might%20like%20this:%20http://shaneosullivan.wordpress.com/2007/07/25/why-is-my-web-page-slow-yslow-for-firebug-can-tell-you&amp;subject=Why+is+my+web+page+slow+YSlow+for+Firebug+can+tell+you." target="_blank" title="Post 'Why is my web page slow YSlow for Firebug can tell you.">Email it</a>|<a href="http://del.icio.us/post?url=http://shaneosullivan.wordpress.com/2007/07/25/why-is-my-web-page-slow-yslow-for-firebug-can-tell-you&amp;title=Why+is+my+web+page+slow+YSlow+for+Firebug+can+tell+you." target="_blank" title="Post 'Why is my web page slow YSlow for Firebug can tell you.">bookmark it</a>|<a href="http://reddit.com/submit?url=http://shaneosullivan.wordpress.com/2007/07/25/why-is-my-web-page-slow-yslow-for-firebug-can-tell-you&amp;title=Why+is+my+web+page+slow+YSlow+for+Firebug+can+tell+you." target="_blank" title="Post 'Why is my web page slow YSlow for Firebug can tell you.">reddit</a>|<a href="https://favorites.live.com/quickadd.aspx?marklet=1&amp;mkt=en-us&amp;url=http://shaneosullivan.wordpress.com/2007/07/25/why-is-my-web-page-slow-yslow-for-firebug-can-tell-you&amp;title=Why+is+my+web+page+slow+YSlow+for+Firebug+can+tell+you.&amp;top=1" target="_blank" title="Post 'Why is my web page slow YSlow for Firebug can tell you.">liveIt</a></p>
+
+<img alt="" border="0" src="http://feeds.wordpress.com/1.0/categories/shaneosullivan.wordpress.com/68/" /> <img alt="" border="0" src="http://feeds.wordpress.com/1.0/tags/shaneosullivan.wordpress.com/68/" /> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gocomments/shaneosullivan.wordpress.com/68/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/comments/shaneosullivan.wordpress.com/68/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godelicious/shaneosullivan.wordpress.com/68/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/delicious/shaneosullivan.wordpress.com/68/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gostumble/shaneosullivan.wordpress.com/68/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/stumble/shaneosullivan.wordpress.com/68/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godigg/shaneosullivan.wordpress.com/68/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/digg/shaneosullivan.wordpress.com/68/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/goreddit/shaneosullivan.wordpress.com/68/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/reddit/shaneosullivan.wordpress.com/68/" /></a> <img alt="" border="0" src="http://stats.wordpress.com/b.gif?host=shaneosullivan.wordpress.com&blog=258432&post=68&subd=shaneosullivan&ref=&feed=1" /></div>]]></content>
+		<link rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2007/07/25/why-is-my-web-page-slow-yslow-for-firebug-can-tell-you/#comments" thr:count="1"/>
+		<link rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2007/07/25/why-is-my-web-page-slow-yslow-for-firebug-can-tell-you/feed/atom/" thr:count="1"/>
+		<thr:total>1</thr:total>
+	</entry>
+		<entry>
+		<author>
+			<name>Shane O'Sullivan</name>
+						<uri>http://shaneosullivan.wordpress.com/</uri>
+					</author>
+		<title type="html"><![CDATA[Flickr and Dojo Image Gallery]]></title>
+		<link rel="alternate" type="text/html" href="http://shaneosullivan.wordpress.com/2007/07/03/flickr-and-dojo-image-gallery/" />
+		<id>http://shaneosullivan.wordpress.com/2007/07/03/flickr-and-dojo-image-gallery/</id>
+		<updated>2007-07-19T10:44:19Z</updated>
+		<published>2007-07-03T15:53:33Z</published>
+		<category scheme="http://shaneosullivan.wordpress.com" term="Ajax" /><category scheme="http://shaneosullivan.wordpress.com" term="Dojo" /><category scheme="http://shaneosullivan.wordpress.com" term="Flickr" /><category scheme="http://shaneosullivan.wordpress.com" term="Image Gallery" /><category scheme="http://shaneosullivan.wordpress.com" term="Javascript" /><category scheme="http://shaneosullivan.wordpress.com" term="Technical" /><category scheme="http://shaneosullivan.wordpress.com" term="json" />		<summary type="html"><![CDATA[I have created an Image Gallery widget built on Dojo 0.4.3 that integrates nicely with Flickr.  The widget it written entirely using JavaScript and CSS as a standalone Dojo widget, and is released under the same open source license as Dojo, the Academic Free License.
+For more information, including the code and examples, see http://www.skynet.ie/~sos/ajax/imagegallery.php.
+Some [...]]]></summary>
+		<content type="html" xml:base="http://shaneosullivan.wordpress.com/2007/07/03/flickr-and-dojo-image-gallery/"><![CDATA[<div class='snap_preview'><br /><p>I have created an Image Gallery widget built on <a href="http://www.dojotoolkit.org" target="_blank">Dojo</a> 0.4.3 that integrates nicely with <a href="http://www.flickr.com" target="_blank">Flickr</a>.  The widget it written entirely using JavaScript and CSS as a standalone Dojo widget, and is released under the same open source license as Dojo, the Academic Free License.</p>
+
+<p>For more information, including the code and examples, see <a href="http://www.skynet.ie/~sos/ajax/imagegallery.php" target="_blank">http://www.skynet.ie/~sos/ajax/imagegallery.php</a>.</p>
+<p>Some of the features of the widget include:</p>
+<ul>
+<li> 			Pages of thumbnails.</li>
+<li> 			Intelligent pre-loading of images so the images you are looking 			at are loaded first.</li>
+<li> 			Fade effects for transitioning of images</li>
+<li> 			Populated using JSON data - any JSON data, not just Flickr.</li>
+<li> 			Flickr integration - remotely load your Flickr images.</li>
+
+<li> 			Paging through a Flickr collection.</li>
+<li> 			Slideshow</li>
+</ul>
+<p>The widget can be instantiated from both HTML markup and programmatically in JavaScript.</p>
+<p>To view your own Flickr pictures on the widget, without installing it on your own site, go to <a href="http://www.skynet.ie/~sos/ajax/yourpics.php" target="_blank">http://www.skynet.ie/~sos/ajax/yourpics.php</a> .</p>
+<p>There is a discussion thread in the Flickr API group at <a href="http://www.flickr.com/groups/api/discuss/72157600624623643/" target="_blank">http://www.flickr.com/groups/api/discuss/72157600624623643</a>.</p>
+<p>So, why create this widget?  Well, firstly I wanted a JavaScript image gallery that would list thumbnails and allow me to page through Flickr photos.  Also, a slide show would have been nice.  I was surprised to discover that I couldn&#8217;t find one that I liked in the twenty or so minutes I spent looking for one.  I found a handy Flash based one, but I wanted a HTML and JavaScript only widget.  So I grabbed Dojo 0.4.3 (my JavaScript library of choice right now) and wrote one.</p>
+
+<p>Here is a screen shot:</p>
+<p><a href="http://www.skynet.ie/~sos/ajax/imagegallery.php" target="_blank"><br />
+<img src="http://farm2.static.flickr.com/1359/704747548_d3062f896a.jpg?v=0" alt="Screenshot" border="0" height="458" width="500" /></a></p>
+<p>The widget has all the features that I personally require at the moment, but will probably evolve as I think of new things to add.  If you have  any suggestions/bug reports, please comment on this post.</p>
+<p><strong>Share this post:</strong><a href="http://www.digg.com/submit?url=http://shaneosullivan.wordpress.com/2007/07/03/flickr-and-dojo-image-gallery&amp;phase=2" target="_blank" title="Post 'Flickr and Dojo Image Gallery">digg it</a>|<a href="http://www.dotnetkicks.com/submit/?url=http://shaneosullivan.wordpress.com/2007/07/03/flickr-and-dojo-image-gallery&amp;title=Flickr+and+Dojo+Image+Gallery" target="_blank" title="Post 'Flickr and Dojo Image Gallery">kick it</a>|<a href="mailto:?body=Thought%20you%20might%20like%20this:%20http://shaneosullivan.wordpress.com/2007/07/03/flickr-and-dojo-image-gallery&amp;subject=Flickr+and+Dojo+Image+Gallery" target="_blank" title="Post 'Flickr and Dojo Image Gallery">Email it</a>|<a href="http://del.icio.us/post?url=http://shaneosullivan.wordpress.com/2007/07/03/flickr-and-dojo-image-gallery&amp;title=Flickr+and+Dojo+Image+Gallery" target="_blank" title="Post 'Flickr and Dojo Image Gallery">bookmark it</a>|<a href="http://reddit.com/submit?url=http://shaneosullivan.wordpress.com/2007/07/03/flickr-and-dojo-image-gallery&amp;title=Flickr+and+Dojo+Image+Gallery" target="_blank" title="Post 'Flickr and Dojo Image Gallery">reddit</a>|<a href="https://favorites.live.com/quickadd.aspx?marklet=1&amp;mkt=en-us&amp;url=http://shaneosullivan.wordpress.com/2007/07/03/flickr-and-dojo-image-gallery&amp;title=Flickr+and+Dojo+Image+Gallery&amp;top=1" target="_blank" title="Post 'Flickr and Dojo Image Gallery">liveIt</a></p>
+
+<img alt="" border="0" src="http://feeds.wordpress.com/1.0/categories/shaneosullivan.wordpress.com/66/" /> <img alt="" border="0" src="http://feeds.wordpress.com/1.0/tags/shaneosullivan.wordpress.com/66/" /> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gocomments/shaneosullivan.wordpress.com/66/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/comments/shaneosullivan.wordpress.com/66/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godelicious/shaneosullivan.wordpress.com/66/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/delicious/shaneosullivan.wordpress.com/66/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gostumble/shaneosullivan.wordpress.com/66/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/stumble/shaneosullivan.wordpress.com/66/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godigg/shaneosullivan.wordpress.com/66/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/digg/shaneosullivan.wordpress.com/66/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/goreddit/shaneosullivan.wordpress.com/66/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/reddit/shaneosullivan.wordpress.com/66/" /></a> <img alt="" border="0" src="http://stats.wordpress.com/b.gif?host=shaneosullivan.wordpress.com&blog=258432&post=66&subd=shaneosullivan&ref=&feed=1" /></div>]]></content>
+		<link rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2007/07/03/flickr-and-dojo-image-gallery/#comments" thr:count="7"/>
+		<link rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2007/07/03/flickr-and-dojo-image-gallery/feed/atom/" thr:count="7"/>
+		<thr:total>7</thr:total>
+	</entry>
+		<entry>
+		<author>
+			<name>Shane O'Sullivan</name>
+						<uri>http://shaneosullivan.wordpress.com/</uri>
+					</author>
+		<title type="html"><![CDATA[Is Dojo being ignored by developers?]]></title>
+		<link rel="alternate" type="text/html" href="http://shaneosullivan.wordpress.com/2007/06/19/is-dojo-being-ignored-by-developers/" />
+		<id>http://shaneosullivan.wordpress.com/2007/06/19/is-dojo-being-ignored-by-developers/</id>
+		<updated>2007-06-26T10:18:09Z</updated>
+		<published>2007-06-19T10:36:49Z</published>
+		<category scheme="http://shaneosullivan.wordpress.com" term="Ajax" /><category scheme="http://shaneosullivan.wordpress.com" term="Dojo" /><category scheme="http://shaneosullivan.wordpress.com" term="Javascript" /><category scheme="http://shaneosullivan.wordpress.com" term="Technical" /><category scheme="http://shaneosullivan.wordpress.com" term="open source" />		<summary type="html"><![CDATA[The two main areas of interest for me over the last year or two, blog-wise that is, have been the Dojo Ajax toolkit, one of the more popular open source JavaScript toolkits, and Ubuntu Linux, the very popular operating system that is seen by many as the best chance Linux has of succeeding on the [...]]]></summary>
+		<content type="html" xml:base="http://shaneosullivan.wordpress.com/2007/06/19/is-dojo-being-ignored-by-developers/"><![CDATA[<div class='snap_preview'><br /><p>The two main areas of interest for me over the last year or two, blog-wise that is, have been the <a href="http://www.dojotoolkit.org" target="_blank">Dojo</a> <a href="http://en.wikipedia.org/wiki/Ajax_%28programming%29" target="_blank">Ajax</a> toolkit, one of the more popular open source <a href="http://en.wikipedia.org/wiki/JavaScript" target="_blank">JavaScript</a> toolkits, and <a href="http://www.ubuntu.com/" target="_blank">Ubuntu Linux</a>, the very popular operating system that is seen by many as the best chance Linux has of succeeding on the desktop.</p>
+
+<p>Due to the fact that my blog is hosted on Wordpress.com, I am provided with very detailed statistics on which blog posts are more popular, what days they are accessed on etc.  Looking at these, a very definite trend has become apparent</p>
+<blockquote><p><strong>While the number of hits received by the Ubuntu blogs remains more or less steady, hits on Dojo blog posts falls dramatically on the weekend.</strong></p></blockquote>
+<p>While this is not an exact measurement by any means, it points to a worrying possibility.  People are obviously working with Ubuntu on their spare time, <a href="http://shaneosullivan.wordpress.com/2007/02/16/ubuntu-on-thinkpad-x41-basic-installation-instructions/" target="_blank">installing it</a>, <a href="http://shaneosullivan.wordpress.com/2007/04/30/ubuntu-on-thinkpad-x41-upgrading-to-feisty-fawn-704/" target="_blank">upgrading</a>, <a href="http://shaneosullivan.wordpress.com/2007/02/16/ubuntu-on-thinkpad-x41-installing-utility-programs/" target="_blank">adding applications</a> and <a href="http://shaneosullivan.wordpress.com/2007/02/16/ubuntu-on-thinkpad-x41-installing-the-beryl-window-manager/" target="_blank">window managers</a> etc, and need help doing this.  They are personally interested in Ubuntu, not just professionally.  This is one of the main reasons for Ubuntu&#8217;s success - people are excited and motivated by it.  They want to work and play with it on their own time.</p>
+
+<p>This does not seem to be the case for Dojo.</p>
+<p>Dojo has the backing of many large and small companies, including two I have worked for, my previous employer <a href="http://www.ibm.com" target="_blank">IBM</a>, and my current employer <a href="http://www.curamsoftware.com" target="_blank">Curam</a>. Both of these are attracted to Dojo for a number of reasons, chief among them being it&#8217;s good design and wide range of features.  The very large size of the toolkit is not a problem for them (and corporations in general) because it will be included in websites that employees will use to do their everyday work tasks (e.g. using a corporate installation of <a href="http://www-306.ibm.com/software/info1/websphere/index.jsp?tab=landings/portalbuzz&amp;S_TACT=103BEW01" target="_blank">IBM WebSphere Portal</a>), so the JavaScript is cached and the performance hit is avoided.</p>
+<p>However, for hobbyists, this is not the case.  A person might only visit a single page on their website, and a ~200KB overhead for perhaps something simple like a collapsible menu and some fading effects is simply not feasible.  I&#8217;ve experienced this recently when writing a <a href="http://www.skynet.ie/~sos" target="_blank">simple website for myself </a>- all I wanted was some fading/sliding effects, but the huge overhead just wasn&#8217;t worth it.  And I am a very big supporter of Dojo (I&#8217;ve contributed code even - <a href="http://dojotoolkit.org/node/291" target="_blank">here</a> and <a href="http://codinginparadise.org/weblog/2007/03/shane-osullivan-creates-dojo-storage.html" target="_blank">here</a>), and use it every day at <u><em>work</em></u>.</p>
+
+<p>The Dojo team are working hard on the 0.9 release, which is addressing many of these issues, bringing the base size down to a more manageable  size (at time of writing <a href="http://archive.dojotoolkit.org/nightly/dojotoolkit/dojo/dojo.js" target="_blank">dojo.js</a> is down to 68KB).  I look forward to the day when my site statistics change, when Dojo can stand on the shoulders of many thousands of enthusiastic hackers rather than being held up by a few big corporations.  I really do.</p>
+<p>However, this does not seem to be the case today.  Version 0.9 has a lot of work to do.<br />
+<strong>Share this post: </strong><a href="http://www.digg.com/submit?url=http://shaneosullivan.wordpress.com/2007/6/19/is-dojo-being-ignored-by-developers&amp;phase=2" target="_blank" title="Post 'Is Dojo being ignored by developers?">digg it</a>|<a href="http://www.dotnetkicks.com/submit/?url=http://shaneosullivan.wordpress.com/2007/6/19/is-dojo-being-ignored-by-developers&amp;title=Is+Dojo+being+ignored+by+developers" target="_blank" title="Post 'Is Dojo being ignored by developers?">kick it</a>|<a href="mailto:?body=Thought%20you%20might%20like%20this:%20http://shaneosullivan.wordpress.com/2007/6/19/is-dojo-being-ignored-by-developers&amp;subject=Is+Dojo+being+ignored+by+developers?" target="_blank" title="Post 'Is Dojo being ignored by developers?">Email it</a>|<a href="http://del.icio.us/post?url=http://shaneosullivan.wordpress.com/2007/6/19/is-dojo-being-ignored-by-developers&amp;title=Is+Dojo+being+ignored+by+developers?" target="_blank" title="Post 'Is Dojo being ignored by developers?">bookmark it</a>|<a href="http://reddit.com/submit?url=http://shaneosullivan.wordpress.com/2007/6/19/is-dojo-being-ignored-by-developers&amp;title=Is+Dojo+being+ignored+by+developers" target="_blank" title="Post 'Is Dojo being ignored by developers?">reddit</a>|<a href="https://favorites.live.com/quickadd.aspx?marklet=1&amp;mkt=en-us&amp;url=http://shaneosullivan.wordpress.com/2007/6/19/is-dojo-being-ignored-by-developers&amp;title=Is+Dojo+being+ignored+by+developers&amp;top=1" target="_blank" title="Post 'Is Dojo being ignored by developers?">liveIt</a></p>
+
+<img alt="" border="0" src="http://feeds.wordpress.com/1.0/categories/shaneosullivan.wordpress.com/64/" /> <img alt="" border="0" src="http://feeds.wordpress.com/1.0/tags/shaneosullivan.wordpress.com/64/" /> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gocomments/shaneosullivan.wordpress.com/64/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/comments/shaneosullivan.wordpress.com/64/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godelicious/shaneosullivan.wordpress.com/64/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/delicious/shaneosullivan.wordpress.com/64/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gostumble/shaneosullivan.wordpress.com/64/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/stumble/shaneosullivan.wordpress.com/64/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godigg/shaneosullivan.wordpress.com/64/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/digg/shaneosullivan.wordpress.com/64/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/goreddit/shaneosullivan.wordpress.com/64/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/reddit/shaneosullivan.wordpress.com/64/" /></a> <img alt="" border="0" src="http://stats.wordpress.com/b.gif?host=shaneosullivan.wordpress.com&blog=258432&post=64&subd=shaneosullivan&ref=&feed=1" /></div>]]></content>
+		<link rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2007/06/19/is-dojo-being-ignored-by-developers/#comments" thr:count="5"/>
+		<link rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2007/06/19/is-dojo-being-ignored-by-developers/feed/atom/" thr:count="5"/>
+		<thr:total>5</thr:total>
+	</entry>
+		<entry>
+		<author>
+			<name>Shane O'Sullivan</name>
+						<uri>http://shaneosullivan.wordpress.com/</uri>
+					</author>
+		<title type="html"><![CDATA[Dojo Charting example to show website statistics]]></title>
+		<link rel="alternate" type="text/html" href="http://shaneosullivan.wordpress.com/2007/06/15/dojo-charting-example-to-show-website-statistics-2/" />
+		<id>http://shaneosullivan.wordpress.com/2007/06/15/dojo-charting-example-to-show-website-statistics-2/</id>
+		<updated>2007-06-15T12:38:24Z</updated>
+		<published>2007-06-15T12:35:35Z</published>
+		<category scheme="http://shaneosullivan.wordpress.com" term="Ajax" /><category scheme="http://shaneosullivan.wordpress.com" term="Dojo" /><category scheme="http://shaneosullivan.wordpress.com" term="Javascript" /><category scheme="http://shaneosullivan.wordpress.com" term="Technical" /><category scheme="http://shaneosullivan.wordpress.com" term="chart" /><category scheme="http://shaneosullivan.wordpress.com" term="charting" /><category scheme="http://shaneosullivan.wordpress.com" term="dojo.charting" /><category scheme="http://shaneosullivan.wordpress.com" term="json" /><category scheme="http://shaneosullivan.wordpress.com" term="open source" /><category scheme="http://shaneosullivan.wordpress.com" term="php" />		<summary type="html"><![CDATA[I&#8217;ve created an example usage of the Dojo Charting engine, which you can find at http://www.skynet.ie/~sos/pageStats.php.  View the source to see how it works.
+It&#8217;s a modified version of the unit test available with the Dojo toolkit, but used in a specific scenario - in this case, to graph the page impressions for my personal [...]]]></summary>
+		<content type="html" xml:base="http://shaneosullivan.wordpress.com/2007/06/15/dojo-charting-example-to-show-website-statistics-2/"><![CDATA[<div class='snap_preview'><br /><p>I&#8217;ve created an example usage of the <a href="http://www.dojotoolkit.org" target="_blank">Dojo</a> <a href="http://ajaxian.com/archives/dojo-charting-engine-released" target="_blank">Charting</a> engine, which you can find at <a href="http://www.skynet.ie/~sos/pageStats.php" target="_blank">http://www.skynet.ie/~sos/pageStats.php</a>.  View the source to see how it works.<br />
+It&#8217;s a modified version of the unit test available with the Dojo toolkit, but used in a specific scenario - in this case, to graph the page impressions for my <a href="http://www.skynet.ie/~sos">personal website</a> .  The <a href="http://en.wikipedia.org/wiki/Json" target="_blank">JSON</a> data on the page is dynamically generated by PHP, however all other processing is done in JavaScript.</p>
+
+<p>You can filter the data to show info on any combination of pages, and also use a number of different chart types.</p>
+<p>The code is well documented, so should be easy to follow.<br />
+Some other good examples of using the Dojo Charting engine can be found <a href="http://www.ridgway.co.za/archive/2007/04/13/A-Simple-Dojo-Charting-Example.aspx" target="_blank">here</a> and <a href="http://labs.mackirdy.com/chart/chart4.html" target="_blank">here</a>.<br />
+<strong>Share this post:</strong><a href="http://www.digg.com/submit?url=http://shaneosullivan.wordpress.com/2007/6/15/dojo-charting-example-to-show-website-statistics-2&amp;phase=2" target="_blank" title="Post 'Dojo Charting example to show website statistics">digg it</a>|<a href="http://www.dotnetkicks.com/submit/?url=http://shaneosullivan.wordpress.com/2007/6/15/dojo-charting-example-to-show-website-statistics-2&amp;title=Dojo+Charting+example+to+show+website+statistics" target="_blank" title="Post 'Dojo Charting example to show website statistics">kick it</a>|<a href="mailto:?body=Thought%20you%20might%20like%20this:%20http://shaneosullivan.wordpress.com/2007/6/15/dojo-charting-example-to-show-website-statistics-2&amp;subject=Dojo+Charting+example+to+show+website+statistics" target="_blank" title="Post 'Dojo Charting example to show website statistics">Email it</a>|<a href="http://del.icio.us/post?url=http://shaneosullivan.wordpress.com/2007/6/15/dojo-charting-example-to-show-website-statistics-2&amp;title=Dojo+Charting+example+to+show+website+statistics" target="_blank" title="Post 'Dojo Charting example to show website statistics">bookmark it</a>|<a href="http://reddit.com/submit?url=http://shaneosullivan.wordpress.com/2007/6/15/dojo-charting-example-to-show-website-statistics-2&amp;title=Dojo+Charting+example+to+show+website+statistics" target="_blank" title="Post 'Dojo Charting example to show website statistics">reddit</a>|<a href="https://favorites.live.com/quickadd.aspx?marklet=1&amp;mkt=en-us&amp;url=http://shaneosullivan.wordpress.com/2007/6/15/dojo-charting-example-to-show-website-statistics-2&amp;title=Dojo+Charting+example+to+show+website+statistics&amp;top=1" target="_blank" title="Post 'Dojo Charting example to show website statistics">liveIt</a></p>
+
+<img alt="" border="0" src="http://feeds.wordpress.com/1.0/categories/shaneosullivan.wordpress.com/63/" /> <img alt="" border="0" src="http://feeds.wordpress.com/1.0/tags/shaneosullivan.wordpress.com/63/" /> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gocomments/shaneosullivan.wordpress.com/63/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/comments/shaneosullivan.wordpress.com/63/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godelicious/shaneosullivan.wordpress.com/63/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/delicious/shaneosullivan.wordpress.com/63/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gostumble/shaneosullivan.wordpress.com/63/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/stumble/shaneosullivan.wordpress.com/63/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godigg/shaneosullivan.wordpress.com/63/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/digg/shaneosullivan.wordpress.com/63/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/goreddit/shaneosullivan.wordpress.com/63/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/reddit/shaneosullivan.wordpress.com/63/" /></a> <img alt="" border="0" src="http://stats.wordpress.com/b.gif?host=shaneosullivan.wordpress.com&blog=258432&post=63&subd=shaneosullivan&ref=&feed=1" /></div>]]></content>
+		<link rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2007/06/15/dojo-charting-example-to-show-website-statistics-2/#comments" thr:count="4"/>
+		<link rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2007/06/15/dojo-charting-example-to-show-website-statistics-2/feed/atom/" thr:count="4"/>
+		<thr:total>4</thr:total>
+	</entry>
+		<entry>
+		<author>
+			<name>Shane O'Sullivan</name>
+						<uri>http://shaneosullivan.wordpress.com/</uri>
+					</author>
+		<title type="html"><![CDATA[GreaseMonkey script to add Digg-like links to posts]]></title>
+		<link rel="alternate" type="text/html" href="http://shaneosullivan.wordpress.com/2007/05/22/greasemonkey-script-to-add-digg-like-links-to-posts/" />
+		<id>http://shaneosullivan.wordpress.com/2007/05/22/greasemonkey-script-to-add-digg-like-links-to-posts/</id>
+		<updated>2007-05-23T14:56:07Z</updated>
+		<published>2007-05-22T16:57:02Z</published>
+		<category scheme="http://shaneosullivan.wordpress.com" term="Ajax" /><category scheme="http://shaneosullivan.wordpress.com" term="Firefox" /><category scheme="http://shaneosullivan.wordpress.com" term="Javascript" /><category scheme="http://shaneosullivan.wordpress.com" term="greasemonkey" />		<summary type="html"><![CDATA[I decided today that I wanted to put links at the bottom of each of my blog posts that would allow people to  perform actions on the post, e.g:
+
+Digg it
+Kick it
+Mail it
+Bookmark it on del.icio.us
+Bookmark it on reddit.com
+Bookmark it on live.com
+
+My blog is on Wordpress.com which doesn&#8217;t seem to have a plugin that will [...]]]></summary>
+		<content type="html" xml:base="http://shaneosullivan.wordpress.com/2007/05/22/greasemonkey-script-to-add-digg-like-links-to-posts/"><![CDATA[<div class='snap_preview'><br /><p>I decided today that I wanted to put links at the bottom of each of my blog posts that would allow people to  perform actions on the post, e.g:</p>
+
+<ul>
+<li><a href="http://digg.com" target="_blank">Digg </a>it</li>
+<li><a href="http://www.dotnetkicks.com" target="_blank">Kick</a> it</li>
+<li>Mail it</li>
+<li>Bookmark it on <a href="http://del.icio.us" target="_blank">del.icio.us</a></li>
+<li>Bookmark it on <a href="http://reddit.com" target="_blank">reddit.com</a></li>
+
+<li>Bookmark it on <a href="http://favorites.live.com" target="_blank">live.com</a></li>
+</ul>
+<p>My blog is on <a href="http://shaneosullivan.wordpress.com" target="_blank">Wordpress.com</a> which doesn&#8217;t seem to have a plugin that will allow me to do this.  So, I got off my ass and wrote a <a href="http://greasemonkey.mozdev.org/" target="_blank">GreaseMonkey</a> Firefox script that&#8217;ll do it for me.  You can download this script <a href="http://www.skynet.ie/~sos/misc/wordpresslinker.user.js" target="_blank"></a>by going to <a href="http://userscripts.org/scripts/show/9421" target="_blank">http://userscripts.org/scripts/show/9421</a> and clicking the &#8220;Install This Script&#8221; button.</p>
+
+<p>The links that are inserted are at the bottom of this post.  The script is open source (GPL license), so  take it, play with it, whatever.  If you find any bugs, please let me know by commenting on this post.<br />
+<strong>Share this post:</strong><a href="http://www.digg.com/submit?url=http://shaneosullivan.wordpress.com/2007/5/22/greasemonkey-script-to-add-digg-like-links-to-posts&amp;phase=2" target="_blank" title="Post 'GreaseMonkey script to add Digg-like links to posts">digg it</a>|<a href="http://www.dotnetkicks.com/submit/?url=http://shaneosullivan.wordpress.com/2007/5/22/greasemonkey-script-to-add-digg-like-links-to-posts&amp;title=GreaseMonkey+script+to+add+Digg-like+links+to+posts" target="_blank" title="Post 'GreaseMonkey script to add Digg-like links to posts">kick it</a>|<a href="mailto:?body=Thought%20you%20might%20like%20this:%20http://shaneosullivan.wordpress.com/2007/5/22/greasemonkey-script-to-add-digg-like-links-to-posts&amp;subject=GreaseMonkey+script+to+add+Digg-like+links+to+posts" target="_blank" title="Post 'GreaseMonkey script to add Digg-like links to posts">Email it</a>|<a href="http://del.icio.us/post?url=http://shaneosullivan.wordpress.com/2007/5/22/greasemonkey-script-to-add-digg-like-links-to-posts&amp;title=GreaseMonkey+script+to+add+Digg-like+links+to+posts" target="_blank" title="Post 'GreaseMonkey script to add Digg-like links to posts">bookmark it</a>|<a href="http://reddit.com/submit?url=http://shaneosullivan.wordpress.com/2007/5/22/greasemonkey-script-to-add-digg-like-links-to-posts&amp;title=GreaseMonkey+script+to+add+Digg-like+links+to+posts" target="_blank" title="Post 'GreaseMonkey script to add Digg-like links to posts">reddit</a>|<a href="https://favorites.live.com/quickadd.aspx?marklet=1&amp;mkt=en-us&amp;url=http://shaneosullivan.wordpress.com/2007/5/22/greasemonkey-script-to-add-digg-like-links-to-posts&amp;title=GreaseMonkey+script+to+add+Digg-like+links+to+posts&amp;top=1" target="_blank" title="Post 'GreaseMonkey script to add Digg-like links to posts">liveIt</a></p>
+
+<img alt="" border="0" src="http://feeds.wordpress.com/1.0/categories/shaneosullivan.wordpress.com/61/" /> <img alt="" border="0" src="http://feeds.wordpress.com/1.0/tags/shaneosullivan.wordpress.com/61/" /> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gocomments/shaneosullivan.wordpress.com/61/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/comments/shaneosullivan.wordpress.com/61/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godelicious/shaneosullivan.wordpress.com/61/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/delicious/shaneosullivan.wordpress.com/61/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gostumble/shaneosullivan.wordpress.com/61/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/stumble/shaneosullivan.wordpress.com/61/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godigg/shaneosullivan.wordpress.com/61/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/digg/shaneosullivan.wordpress.com/61/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/goreddit/shaneosullivan.wordpress.com/61/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/reddit/shaneosullivan.wordpress.com/61/" /></a> <img alt="" border="0" src="http://stats.wordpress.com/b.gif?host=shaneosullivan.wordpress.com&blog=258432&post=61&subd=shaneosullivan&ref=&feed=1" /></div>]]></content>
+		<link rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2007/05/22/greasemonkey-script-to-add-digg-like-links-to-posts/#comments" thr:count="8"/>
+		<link rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2007/05/22/greasemonkey-script-to-add-digg-like-links-to-posts/feed/atom/" thr:count="8"/>
+		<thr:total>8</thr:total>
+	</entry>
+		<entry>
+		<author>
+			<name>Shane O'Sullivan</name>
+						<uri>http://shaneosullivan.wordpress.com/</uri>
+					</author>
+		<title type="html"><![CDATA[Article on the square pegs and round holes of desktop and web applications]]></title>
+		<link rel="alternate" type="text/html" href="http://shaneosullivan.wordpress.com/2007/05/22/article-on-the-square-pegs-and-round-holes-of-desktop-and-web-applications/" />
+		<id>http://shaneosullivan.wordpress.com/2007/05/22/article-on-the-square-pegs-and-round-holes-of-desktop-and-web-applications/</id>
+		<updated>2007-05-22T08:57:59Z</updated>
+		<published>2007-05-22T08:49:00Z</published>
+		<category scheme="http://shaneosullivan.wordpress.com" term="Ajax" /><category scheme="http://shaneosullivan.wordpress.com" term="Javascript" /><category scheme="http://shaneosullivan.wordpress.com" term="Zimbra" />		<summary type="html"><![CDATA[Bill Higgins of IBM has written a very well thought out article of why web applications should look and act like web applications, and not the desktop variety.  Well worth a read - http://billhiggins.us/weblog/2007/05/17/the-uncanny-valley-of-user-interface-design
+       ]]></summary>
+		<content type="html" xml:base="http://shaneosullivan.wordpress.com/2007/05/22/article-on-the-square-pegs-and-round-holes-of-desktop-and-web-applications/"><![CDATA[<div class='snap_preview'><br /><p><a href="http://billhiggins.us/weblog/about/" target="_blank">Bill Higgins</a> of IBM has written a very well thought out article of why web applications should look and act like web applications, and not the desktop variety.  Well worth a read - <a href="http://billhiggins.us/weblog/2007/05/17/the-uncanny-valley-of-user-interface-design" target="_blank">http://billhiggins.us/weblog/2007/05/17/the-uncanny-valley-of-user-interface-design</a></p>
+
+<img alt="" border="0" src="http://feeds.wordpress.com/1.0/categories/shaneosullivan.wordpress.com/56/" /> <img alt="" border="0" src="http://feeds.wordpress.com/1.0/tags/shaneosullivan.wordpress.com/56/" /> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gocomments/shaneosullivan.wordpress.com/56/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/comments/shaneosullivan.wordpress.com/56/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godelicious/shaneosullivan.wordpress.com/56/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/delicious/shaneosullivan.wordpress.com/56/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/gostumble/shaneosullivan.wordpress.com/56/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/stumble/shaneosullivan.wordpress.com/56/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/godigg/shaneosullivan.wordpress.com/56/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/digg/shaneosullivan.wordpress.com/56/" /></a> <a rel="nofollow" href="http://feeds.wordpress.com/1.0/goreddit/shaneosullivan.wordpress.com/56/"><img alt="" border="0" src="http://feeds.wordpress.com/1.0/reddit/shaneosullivan.wordpress.com/56/" /></a> <img alt="" border="0" src="http://stats.wordpress.com/b.gif?host=shaneosullivan.wordpress.com&blog=258432&post=56&subd=shaneosullivan&ref=&feed=1" /></div>]]></content>
+		<link rel="replies" type="text/html" href="http://shaneosullivan.wordpress.com/2007/05/22/article-on-the-square-pegs-and-round-holes-of-desktop-and-web-applications/#comments" thr:count="0"/>
+		<link rel="replies" type="appication/atom+xml" href="http://shaneosullivan.wordpress.com/2007/05/22/article-on-the-square-pegs-and-round-holes-of-desktop-and-web-applications/feed/atom/" thr:count="0"/>
+		<thr:total>0</thr:total>
+	</entry>
+	</feed>
+

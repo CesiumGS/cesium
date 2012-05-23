@@ -1,0 +1,147 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>visualising dojo.Animation.easing via dojox.charting</title>
+
+	<link rel="stylesheet" type="text/css" media="screen"
+		href="../../../dojo/resources/dojo.css">
+
+	<link rel="stylesheet" type="text/css" media="screen"
+		href="../../../dijit/themes/tundra/tundra.css">
+
+	<style type="text/css">
+	.box { padding:14px; 
+		border:1px solid #b7b7b7;
+		-moz-border-radius:8pt;
+	}
+	</style>
+	
+	<script type="text/javascript" djConfig="isDebug:false, parseOnLoad: true"
+		src="../../../dojo/dojo.js"></script>
+
+	<script type="text/javascript">
+		// one simple theme, and the charting engine:
+		dojo.require("dojox.charting.Chart2D");
+		// and easing functions:
+		dojo.require("dojo.fx.easing"); 
+
+		var d=0;
+		var masterData = {};
+		var makeSeries = function(/* string */str, /* Function */ func){
+			// make some data by running a 2sec animation with an easing function
+			// and adding it to the chart
+			var seriesData = [];
+			if(str in masterData){
+				seriesData=masterData[str];
+			}
+
+			if(!seriesData.length){
+				var func = func || dojo.fx.easing[str];
+				func = (dojo.isFunction(func) ? func : dojo._defaultEasing);
+
+				for(var i=0; i<=120; i++){
+					var pct = i/120;
+					seriesData.push({ y: 30 * func(pct), x: (pct) * 30});
+				}
+				if(!str.match(/^dynSeries/)){
+					masterData[str] = seriesData;
+				}
+				chart.addSeries(str,
+					seriesData,
+					{ stroke: { color: "black", width: 0 }, fill: "rgba(30,0,255,0.10)" }
+				).render();
+			}else{
+				chart.updateSeries(str, seriesData).render();
+			}
+		};
+
+		var removeSeries = function(str){
+			chart.updateSeries(str, []);
+			if(!clearAll){ chart.render(); }
+		};
+
+		var toggleChart = function(widget, str){
+			if(!chart) return;
+			if(widget.checked){
+				makeSeries(str);
+			}else{
+				removeSeries(str);
+			}
+		}
+
+		var chart;
+		var clearAll=false;
+		
+		dojo.addOnLoad(function(){
+				
+			// setup our chart
+			chart = new dojox.charting.Chart2D("easingChart");
+			chart.addAxis("x", {
+				fixLower: "major",
+				fixUpper: "major",
+				majorTickStep: 10,
+				minorTickStep: 1,
+				minorLabels: false,
+				htmlLabels: false
+			});
+			chart.addAxis("y", {
+				vertical: true,
+				fixLower: "major",
+				fixUpper: "major",
+				majorTickStep: 10,
+				minorTickStep: 1,
+				htmlLabels: false
+			});
+			chart.addPlot("default", {type: "Areas"});
+		});
+		
+		var opt;
+		dojo.addOnLoad(function(){
+			
+			var c = dojo.query(".clone")[0];	
+			opt = dojo.byId("select");
+			
+			for(var i in dojo.fx.easing){
+				var n = opt.appendChild(dojo.clone(c));
+				n.value = n.innerHTML = i
+				// n.innerHTML = i;
+			}
+		
+		    dojo.connect(opt,"onchange",function(e){
+				dojo.query("option",opt)
+				     // we only want "selected" nodes
+				    .filter(function(n){ return n.selected; })
+					 // yay, here they are:
+					.forEach(function(n){
+						console.log(n);
+				    });
+				makeSeries(opt.value, dojo.fx.easing[opt.value]);
+			});
+				
+			dojo.query(".box").connect("onclick",function(e){
+				console.log(opt.value, dojo.fx.easing[opt.value]);	
+			});
+			
+			makeSeries("visible",dojo._defaultEasing);	
+				
+		});
+		
+	</script>
+</head>
+<body class="tundra" style="padding:20px">
+
+	<h1>dojo.fx.easing</h1>
+	
+	<p>this chart shows time (x axis) vs. position (y axis) for a movement from 0px to 30px modified by easing functions</p>
+
+		<select id="select" multiple="true" size="7" name="easing">
+				<option class="clone" value="dojo._defaultEasing">dojo._defaultEasing</option>
+		</select>
+	
+		<div class="box">
+			<div id="easingChart" style="height:300px"></div>
+		</div>
+
+</body>
+</html>

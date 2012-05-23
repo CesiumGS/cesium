@@ -1,0 +1,231 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>Demo GridContainer</title>
+		<style type="text/css" title="text/css">
+			/* <![CDATA[ */
+				@import "../../../dojo/resources/dojo.css";
+				@import "../../../dijit/themes/soria/soria.css";
+				
+				html,body{
+					overflow:hidden;
+					margin:0; padding:0; 
+					width:100%; height:100%;
+				}
+
+				.cpane{
+					border:1px solid #666;
+					font:bold 12px Arial;
+					color:#999;
+					background:#FFF;
+					padding:10px;
+					height:50px;
+				}
+				
+				#GC1{
+					margin:0;
+					padding:5px;
+					overflow-x:hidden;
+					overflow-y:scroll;
+				}
+				#GC1 .gridContainerTable {
+					border-collapse:collapse;
+				}
+
+				#GC1 .gridContainerZone {
+					border : 2px solid #ededed
+				}
+				
+				.dj_ie6 .dropIndicator, .dj_ie6 .dijitContentPane, .dj_ie6 .dijitCalendar{
+					margin: 5px;
+				}
+				.gridContainerZone > *{
+					margin: 5px !important;
+				}
+				
+			/* ]]> */
+		</style>
+		
+		<link rel="stylesheet" href="../resources/GridContainer.css">
+		<link rel="stylesheet" href="../resources/ExpandoPane.css">
+		
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+
+		<script type="text/javascript">
+			dojo.require("dojo.parser");
+			dojo.require("dijit.TitlePane");
+			dojo.require("dijit.layout.ContentPane");
+			dojo.require("dojox.layout.GridContainer");
+			dojo.require("dojox.layout.ExpandoPane");
+			dojo.require("dijit.layout.BorderContainer");
+			dojo.require("dijit.layout.AccordionContainer");
+			dojo.require("dijit.form.Button");
+			dojo.require("dijit.Calendar");
+			dojo.require("dojo.fx.easing");
+
+			dojo.addOnLoad(init);
+			function init(){
+				// Create the border container
+				bc = new dijit.layout.BorderContainer({liveSplitters:false, style:{height: '100%', width: '100%'}});
+				document.body.appendChild(bc.domNode);
+				
+				// Create the ExpandoPane to be placed on the left hand side
+				ep = new dojox.layout.ExpandoPane({
+					title: 'Left Side', 
+					splitter:true, 
+					style:{
+						width:'200px'
+					}, 
+					region: 'left', 
+					easing: dojo.fx.easing.backOut, 
+					duration: 600
+				});
+				bc.addChild(ep);
+				
+				// Create the GridContainer to be placed on the left hand side.
+				// You cna drag TitlePanes, AccordionContainers and Calendar widgets into it
+				gc1 = new dojox.layout.GridContainer({
+					acceptTypes: ['TitlePane', 'AccordionContainer', 'Calendar'], 
+					hasResizableColumns:false,  
+					nbZones:1, 
+					style:{
+						height: '100%'
+					}
+				});
+				ep.containerNode.appendChild(gc1.domNode);
+				
+				// Add three TitlePane widgets. Note that the 'dndType' attributes are the same
+				// as those in the 'acceptTypes' attribute of the GridContainer.
+				// These do NOT have to match to the widget type name
+				tp1 = new dijit.TitlePane({
+					attachParent:true, 
+					title:'Panel 1', 
+					dndType:'TitlePane'
+				});
+				tp1.set('content', 'lorem ipsum');
+				gc1.addChild(tp1);
+
+				tp2 = new dijit.TitlePane({
+					title:'Panel 2', 
+					dndType:'TitlePane'
+				});
+				tp2.set('content', 'lorem ipsum');
+				gc1.addChild(tp2);
+
+				tp3 = new dijit.TitlePane({
+					title:'Panel 3', 
+					dndType:'TitlePane'
+				});
+				tp3.set('content', 'lorem ipsum');
+				gc1.addChild(tp3,0,2);
+				
+				// Create the central GridContainer
+				gc2 = new dojox.layout.GridContainer({
+					id:'GC1', 
+					region: 'center', 
+					nbZones:3, 
+					hasResizableColumns:false, 
+					acceptTypes:['ContentPane', 'TitlePane', 'Calendar', 'AccordionPane']
+				});
+				bc.addChild(gc2);
+				
+				cp1 = new dijit.layout.ContentPane({
+					"class":'cpane', 
+					label:'Content Pane', 
+					dndType:'ContentPane'
+				});
+				cp1.set('content', 'ContentPane n*1 !');
+				gc2.addChild(cp1);
+
+				tp4 = new dijit.TitlePane({
+					title:'Ergo', 
+					dndType:'TitlePane'
+				});
+				tp4.set('content', 'Non ergo erunt homines deliciis diffluentes audiendi, si quando de amicitia, quam nec usu nec ratione habent cognitam, disputabunt. Nam quis est, pro deorum fidem atque hominum! qui velit, ut neque diligat quemquam nec ipse ab ullo diligatur, circumfluere omnibus copiis atque in omnium rerum abundantia vivere? Haec enim est tyrannorum vita nimirum, in qua nulla fides, nulla caritas, nulla stabilis benevolentiae potest esse fiducia, omnia semper suspecta atque sollicita, nullus locus amicitiae.');
+				gc2.addChild(tp4,0,1);
+
+				cp2 = new dijit.layout.ContentPane({
+					"class":'cpane', 
+					label:"Content Pane", 
+					dndType:'ContentPane'
+				});
+				cp2.set('content', 'Content Pane n*2 !');
+				gc2.addChild(cp2,1,0);
+
+				cp3 = new dijit.layout.ContentPane({
+					title:"Itellectum", 
+					dndType:'ContentPane'
+				});
+				cp3.set('content', 'Intellectum est enim mihi quidem in multis, et maxime in me ipso, sed paulo ante in omnibus, cum M. Marcellum senatui reique publicae concessisti, commemoratis praesertim offensionibus, te auctoritatem huius ordinis dignitatemque rei publicae tuis vel doloribus vel suspicionibus anteferre. Ille quidem fructum omnis ante actae vitae hodierno die maximum cepit, cum summo consensu senatus, tum iudicio tuo gravissimo et maximo. Ex quo profecto intellegis quanta in dato beneficio sit laus, cum in accepto sit tanta gloria.');
+				gc2.addChild(cp3,1,1);
+
+				cp4 = new dijit.layout.ContentPane({
+					"class":'cpane', 
+					label:'Content Pane', 
+					dndType:'ContentPane'
+				});
+				cp4.set('content', 'Content Pane n*3 !');
+				gc2.addChild(cp4,1,2);
+
+				cp5 = new dijit.layout.ContentPane({
+					"class":'cpane', 
+					label:'Content Pane', 
+					dndType:'ContentPane'
+				});
+				cp5.set('content', 'Content Pane n*4 !');
+				gc2.addChild(cp5,2,0);
+
+				dp = new dijit.Calendar({dndType:'Calendar'});
+				gc2.addChild(dp,2,1);
+
+				// Add the grid container on the right hand side.  Only TitlePanes can be dragged into it.
+				gc3 = new dojox.layout.GridContainer({
+					region: 'right', 
+					nbZones:1, 
+					hasResizableColumns:false, 
+					acceptTypes:['TitlePane'], 
+					style: {width:'200px'}, 
+					splitter:true});
+				bc.addChild(gc3);
+
+				tp4 = new dijit.TitlePane({
+					attachParent:true, 
+					title:'Panel 1', 
+					dndType:'TitlePane'
+				});
+				tp4.set('content', 'lorem ipsum');
+				gc3.addChild(tp4,0,0);
+
+				tp5 = new dijit.TitlePane({
+					title:'Panel 2', 
+					dndType:'TitlePane'
+				});
+				tp5.set('content', 'lorem ipsum');
+				gc3.addChild(tp5,0,1);
+
+				tp6 = new dijit.TitlePane({
+					title:'Panel 3', 
+					dndType:'TitlePane'
+				});
+				tp6.set('content', 'lorem ipsum');
+				gc3.addChild(tp6,0,2);
+
+				gc1.startup();
+				bc.startup();
+			}
+
+		</script>
+
+	</head>
+
+	<body class="soria">
+		<div style="width:200px;height:200px;background-color: #aaa;cursor:pointer;" 
+				id="deleteThis" 
+				onclick="dojo.destroy(dojo.byId('deleteThis'))">
+			Test dragging elements in the GridContainer. 
+			Then click To Delete Me Then try to drag elements in the GridContainer again
+		</div>
+	</body>
+</html>

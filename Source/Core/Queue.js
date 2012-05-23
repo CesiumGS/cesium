@@ -1,5 +1,7 @@
 /*global define*/
 define(function() {
+    "use strict";
+
     /**
      * A queue that can enqueue items at the end, and dequeue items from the front.
      */

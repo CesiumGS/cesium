@@ -1,0 +1,24 @@
+/* mbl.widget.Heading */
+.mblHeading {
+	background-image: url(compat/heading-bg.png);
+}
+.mblHeadingSpanTitle {
+	white-space: normal;
+}
+
+/* Heading Arrow Button */
+.mblArrowButtonHead {
+	position: absolute;
+	top: 6px;
+	left: 3px;
+	width: 19px;
+	height: 29px;
+	border-style: none;
+	background-image: url(compat/arrow-button-head.png);
+}
+.mblArrowButtonBody {
+	padding: 0px 10px 0px 4px;
+	-moz-border-radius-topright: 5px;
+	-moz-border-radius-bottomright: 5px;
+	background-image: url(compat/arrow-button-bg.png);
+}

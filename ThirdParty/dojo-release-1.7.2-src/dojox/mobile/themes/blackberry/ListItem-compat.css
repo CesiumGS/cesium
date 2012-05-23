@@ -1,0 +1,26 @@
+@import url("../common/domButtons/DomButtonGrayArrow-compat.css");
+@import url("../common/domButtons/DomButtonDarkBlueCheck-compat.css");
+
+/* mbl.widget.ListItem */
+*html li.mblListItem.mblVariableHeight { /* IE6 hack */
+	height: 0;
+}
+
+.mblListItemIcon {
+	top: 13px;
+}
+.mblListItem .mblArrow {
+	border-style: none;
+	width: 9px;
+	height: 13px;
+	background-image: url(compat/gray-arrow.png);
+}
+.mblItemSelected .mblArrow {
+	background-image: url(compat/white-arrow.png);
+}
+*html .mblListItemTextBox { /* IE6 hack */
+	height: 100%;
+}
+*html li.mblListItem.mblVariableHeight .mblListItemTextBox { /* IE6 hack */
+	height: auto;
+}

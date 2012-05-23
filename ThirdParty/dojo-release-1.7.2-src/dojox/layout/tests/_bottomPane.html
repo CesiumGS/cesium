@@ -1,0 +1,53 @@
+<div class="wrap">
+	Bottom Pane Content:
+	<button dojoType="dijit.form.Button">
+		Setup Toggler
+		<script type="dojo/method" event="onClick">
+			// only do this once:
+			this.setAttribute('disabled',true);
+			var pane = dijit.getEnclosingWidget(this.domNode.parentNode);
+			
+			dijit.registry
+				.filter(function(n){
+					// there is probably an easier way to get all the Splitters
+					return n.declaredClass == "dijit.layout._Splitter";
+				})
+				.forEach(function(n){
+					// add some stuff to this instance:
+					dojo.mixin(n,{
+						// toggle additions:
+						_hackSize:null,
+						_hackShowing:true,
+						/*_setHack:function(e){
+							this._hackShowing = true;
+						},*/
+						_tgl: function(e){
+							if(this._hackShowing){
+								this._hackSize = dojo.marginBox(this.child.domNode);
+								this.child.domNode.style.height = "1px";
+							}else{
+								this.child.domNode.style.height = this._hackSize.h + "px";
+							}
+							// toggle state, and call layout() on parent
+							this._hackShowing = !this._hackShowing;
+							dijit.getEnclosingWidget(this.domNode.parentNode).layout();
+						}
+					});
+					// using it's internal connect method, setup the toggler
+					n.connect(n.domNode,"ondblclick","_tgl");
+					//n.connect(n,"_cleanupHandlers","_setHack");
+				});
+		</script>
+	</button>
+
+	<button dojoType="dijit.form.Button">
+		Minimize
+		<script type="dojo/method" event="onClick">
+			// simplified version of above:
+			var pane = dijit.getEnclosingWidget(this.domNode.parentNode);
+			pane.domNode.style.height = "1px";
+			dijit.byId("bc").layout();
+		</script>
+	</button>
+
+</div>

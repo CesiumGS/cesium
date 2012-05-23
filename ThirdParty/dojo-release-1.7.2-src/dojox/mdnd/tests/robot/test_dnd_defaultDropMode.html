@@ -1,0 +1,99 @@
+<html>
+	<head>
+		<title>DefaultDropMode</title>
+		
+		<script type="text/javascript" 
+			src="../../../../dojo/dojo.js" 
+			djConfig="isDebug: true">
+		</script>
+		
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");	
+
+			dojo.addOnLoad(function(){			
+				
+				doh.robot.initRobot('../functionalTests/test_dnd_defaultDropMode.html');
+				
+				doh.register("test_dnd_defaultDropMode", 
+					[
+						{
+							name: "moveClassic",
+							timeout:10000,
+							runTest: function(){
+
+								// Tries to drag and drop an item between Dnd 
+								// areas.
+								
+								var d = new doh.Deferred();
+
+								var leftArea = dojo.byId('leftArea');
+								var rightArea = dojo.byId('rightArea');
+
+								var itemA =	dojo.query('#itemA > .dragHandle')[0];
+								
+								var sizeA = leftArea.childNodes.length;
+	                			var sizeB = rightArea.childNodes.length;
+	                			
+	                			doh.robot.mouseMoveAt(itemA, 200);
+	                			doh.robot.mousePress({left:true}, 200);
+	                			doh.robot.mouseMoveAt(rightArea,200);
+	                			doh.robot.mouseRelease({left:true}, 200);
+	                			
+	                			doh.robot.sequence(function(){
+	                				try{
+	                					doh.assertEqual(rightArea.childNodes.length, sizeB + 1, "An item should be drop on the right area.");
+	                					doh.assertEqual(leftArea.childNodes.length, sizeA - 1, "An item should be remove from left area");
+	                					d.callback(true);
+	                				}
+	                				catch(e){
+	                					d.errback(e);
+	                				}
+	               				}, 200);
+	               				return d;
+							}
+						},
+						{
+							name: "dropIndicator",
+							timeout:1000,
+							runTest: function(){
+								var d = new doh.Deferred();
+
+								// Checks if the the dropIndicator is displayed.
+								
+								var leftArea = dojo.byId('leftArea');
+								var rightArea = dojo.byId('rightArea');
+
+								var itemA =	dojo.query('#itemA > .dragHandle')[0];
+								
+								var sizeA = rightArea.childNodes.length;
+	                			var sizeB = leftArea.childNodes.length;
+	                			
+	                			doh.robot.mouseMoveAt(itemA,200);
+	                			doh.robot.mousePress({left:true}, 200);
+	                			doh.robot.mouseMoveAt(leftArea,200);
+	                			
+	                			doh.robot.sequence(function(){
+	                				try{
+	                					doh.assertEqual(rightArea.childNodes.length, sizeA - 1, "Item should be remove from the right area.");
+	                					doh.assertEqual(leftArea.childNodes.length, sizeB + 1, "An item should be add to the left area.");
+	                					doh.assertEqual(dojo.query('.dropIndicator').length, 1, "Item in left area should be the dropIndicator.");
+	                					d.callback(true);
+	                				}
+	                				catch(e){
+	                					d.errback(e);
+	                				}
+	               				}, 200);
+	                			doh.robot.mouseRelease({left:true}, 200);
+	               				return d;
+							}
+						}
+					]
+				);
+				doh.run();
+			});
+		</script>
+		<style type="text/css"></style>
+	</head>
+	<body>
+	</body>
+</html>

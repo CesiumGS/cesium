@@ -1,0 +1,93 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>Test Menus plugin of dojox.grid.EnhancedGrid</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+	<link rel=stylesheet href="support/common.css"/>
+	<style type="text/css">
+		body {
+			font-size: 0.9em;
+			font-family: Geneva, Arial, Helvetica, sans-serif;
+			padding: 0.5em;
+		}
+ 		#grid1, #grid2 {
+			width: 85.2em;
+			height: 50em;
+		}
+
+	</style>
+	<script type="text/javascript" src="../../../../dojo/dojo.js" 
+		djConfig="isDebug:true, parseOnLoad: true"></script>
+	<script type="text/javascript" src="../../../../dijit/tests/_testCommon.js"></script>
+	<script type="text/javascript">
+		dojo.require("dojox.grid.EnhancedGrid");
+		dojo.require("dojox.grid.enhanced.plugins.Menu");
+		dojo.require("dojox.grid.enhanced.plugins.IndirectSelection");
+		dojo.require("dojo.data.ItemFileWriteStore");
+		dojo.require("dojo.parser");
+	</script>
+	<script type="text/javascript" src="../support/test_data.js"></script>
+	<script type="text/javascript">		
+		var layout = [[
+			{name: 'Column 1', field: 'id'},
+			{name: 'Column 2', field: 'col2'},
+			{name: 'Column 3', field: 'col3'},
+			{name: 'Column 4', field: 'col4', width: "150px"},
+			{name: 'Column 5', field: 'col5'},
+			{name: 'Column 6', field: 'col6'},
+			{name: 'Column 7', field: 'col7'},
+			{name: 'Column 8', field: 'col5'}
+		]];
+		
+		dojo.addOnLoad(function(){
+			var grid = new dojox.grid.EnhancedGrid({
+				id: "grid2",
+				store: test_store,
+				structure: layout,
+				rowSelector: '20px',
+				plugins : {menus:{headerMenu:"headerMenu", rowMenu:"rowMenu", cellMenu:"cellMenu", selectedRegionMenu:"selectedRegionMenu"},
+				indirectSelection: {headerSelector:true, name: "Selection", width: "60px", styles: "text-align: center;"}
+				}
+			}, dojo.byId('gridDiv'));
+			grid.startup();
+		});
+	</script>
+</head>
+<body class="claro">
+	<h1 class="title">dojox.grid.EnhancedGrid - Menus</h1>
+	<p>
+		<div id="grid1" dojoType="dojox.grid.EnhancedGrid" query="{ id: '*' }" rowsPerPage="30" 
+			plugins='{menus:{headerMenu:"headerMenu", rowMenu:"rowMenu", cellMenu:"cellMenu", selectedRegionMenu:"selectedRegionMenu"}}'
+			store="test_store" structure="layout" rowSelector="20px">
+			<div dojoType="dijit.Menu" id="headerMenu"  style="display: none;">
+				<div dojoType="dijit.MenuItem">Header Menu Item 1</div>
+				<div dojoType="dijit.MenuItem">Header Menu Item 2</div>
+				<div dojoType="dijit.MenuItem">Header Menu Item 3</div>
+				<div dojoType="dijit.MenuItem">Header Menu Item 4</div>
+			</div>
+			<div dojoType="dijit.Menu" id="rowMenu"  style="display: none;">
+				<div dojoType="dijit.MenuItem">Row Menu Item 1</div>
+				<div dojoType="dijit.MenuItem">Row Menu Item 2</div>
+				<div dojoType="dijit.MenuItem">Row Menu Item 3</div>
+				<div dojoType="dijit.MenuItem">Row Menu Item 4</div>
+			</div>
+			<div dojoType="dijit.Menu" id="cellMenu"  style="display: none;">
+				<div dojoType="dijit.MenuItem">Cell Menu Item 1</div>
+				<div dojoType="dijit.MenuItem">Cell Menu Item 2</div>
+				<div dojoType="dijit.MenuItem">Cell Menu Item 3</div>
+				<div dojoType="dijit.MenuItem">Cell Menu Item 4</div>
+			</div>
+			<div dojoType="dijit.Menu" id="selectedRegionMenu"  style="display: none;">
+				<div dojoType="dijit.MenuItem">Action 1 for Selected Region</div>
+				<div dojoType="dijit.MenuItem">Action 2 for Selected Region</div>
+				<div dojoType="dijit.MenuItem">Action 3 for Selected Region</div>
+				<div dojoType="dijit.MenuItem">Action 4 for Selected Region</div>
+			</div>
+		</div>
+	</p>
+	<p>
+		<div id="gridDiv"></div>
+	</p>
+</body>
+</html>

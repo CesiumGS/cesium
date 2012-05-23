@@ -1,0 +1,52 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>Dojo parent constraint test</title>
+	<style type="text/css">
+		@import "../../resources/dojo.css";
+
+		body {
+			padding: 1em;
+		}
+
+		.moveable {
+			background: #FFFFBF;
+			border: 1px solid black;
+			width: 300px;
+			padding: 10px 20px;
+			cursor: pointer;
+		}
+
+		.parent {
+			background: #BFECFF;
+			border: 10px solid lightblue;
+			width: 500px;
+			height: 500px;
+			padding: 10px;
+			margin: 10px;
+			overflow: hidden;
+		}
+	</style>
+	<script type="text/javascript" src="../../dojo.js" djConfig="isDebug: true"></script>
+	<!--
+	<script type="text/javascript" src="../../dnd/move.js"></script>
+	-->
+	<script type="text/javascript">
+		dojo.require("dojo.dnd.move");
+		var m7, m8;
+		var init = function(){
+			m7 = new dojo.dnd.move.parentConstrainedMoveable("moveable7", {area: "margin"});
+			m8 = new dojo.dnd.move.parentConstrainedMoveable("moveable8", {area: "margin", within: true});
+		};
+		dojo.addOnLoad(init);
+	</script>
+</head>
+<body>
+	<h1>Dojo parent constraint test</h1>
+	<div class="parent" id="parent">
+		<div><strong>This is the parent element.</strong></div>
+		<div class="moveable" id="moveable7"><strong>Paragraph restricted to its parent element:</strong> Sed hendrerit ornare justo. Maecenas ac urna. Maecenas in leo in tortor tincidunt pellentesque. Vivamus augue. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Integer eget ipsum vitae quam condimentum tempus. Phasellus augue tortor, pretium nec, bibendum eget, eleifend eget, quam. Nam sem mauris, volutpat eget, ultricies in, consequat nec, tortor. Nulla eleifend. Vivamus et purus ultricies turpis vehicula auctor.</div>
+		<div class="moveable" id="moveable8"><strong>Paragraph restricted to its parent element (cannot go outside):</strong> Nam nibh. Mauris neque sem, pharetra ac, gravida ac, ultricies eget, quam. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos hymenaeos. Vivamus scelerisque molestie mi. Duis eget ligula nec justo interdum hendrerit. Curabitur tempor convallis enim. In quis lorem. Proin nonummy consectetuer ligula. Curabitur tempor adipiscing lorem. Maecenas vitae nunc. Aliquam et magna. In vestibulum justo eleifend ante. Nulla pede sem, tempus tincidunt, vehicula ut, tempor et, nisi. Nulla ut lorem. Aliquam erat volutpat. Proin sodales, elit ut molestie dignissim, quam neque vulputate felis, quis scelerisque magna arcu aliquet lacus. Vivamus blandit. Nam eu mi vel augue pharetra semper.</div>
+	</div>
+</body>
+</html>

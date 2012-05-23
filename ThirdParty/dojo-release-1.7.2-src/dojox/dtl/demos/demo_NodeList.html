@@ -1,0 +1,37 @@
+<html>
+	<head>
+		<title>Demo using dojox.dtl._Templated</title>
+    <script type="text/javascript" src="../../../dojo/dojo.js"
+			djConfig="isDebug: true, parseOnLoad: true"></script>
+		<script type="text/javascript">
+			dojo.require("dojox.dtl.ext-dojo.NodeList");
+			dojo.require("dojox.dtl.Context");
+
+			dojo.addOnLoad(function(){
+				// First, look at the NodeList extension
+				dojo.query(".fruit").dtl(dojo.moduleUrl("dojox.dtl.demos.templates", "nodelist.html"), { items: ["apple", "banana", "pear"] });
+
+				dojo.query(".fruit2").dtl("<div><ul>{% for item in items %}<li>{{ item }}</li>{% endfor %}</ul></div", { items: ["apple", "banana", "pear"] });
+
+				// Now, create a real template object
+				var tpl = new dojox.dtl.Template(dojo.moduleUrl("dojox.dtl.demos.templates", "nodelist.html"));
+
+				// And test its update function with a dojo.query
+				tpl.update(dojo.query(".update"), dojo.moduleUrl("dojox.dtl.demos.json", "fruit.json"));
+
+				setTimeout(function(){
+					// And now test it with an ID reference
+					tpl.update("updateId", dojo.moduleUrl("dojox.dtl.demos.json", "morefruit.json"));
+					// And throw in a standard rendering just for fun
+					dojo.byId("updateId2").innerHTML = tpl.render(new dojox.dtl.Context({ items: ["pineapple", "orange", "tomato"] }));
+				}, 5000);
+			});
+		</script>
+	</head>
+	<body>
+		<div class="fruit"></div>
+		<div class="fruit2"></div>
+		<div class="update" id="updateId"></div>
+		<div class="update" id="updateId2"></div>
+	</body>
+</html>

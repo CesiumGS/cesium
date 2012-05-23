@@ -1,5 +1,8 @@
-Cesium
-======
+<p align="center">
+<img src="https://github.com/AnalyticalGraphicsInc/cesium/wiki/logos/Cesium_Logo_Color.jpg" width="50%" />
+</p>
+
+Cesium is a WebGL virtual globe and map engine.
 
 ### Mission ###
 
@@ -32,10 +35,11 @@ Our mission is to create the leading web-based globe and map for visualizing dyn
 
 Check out the [CZML Guide](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Cesium-Language-%28CZML%29-Guide) and the [czml-writer library](https://github.com/AnalyticalGraphicsInc/czml-writer).
 
-### Developer Community ###
+### Get Started ###
 
-The [wiki](https://github.com/AnalyticalGraphicsInc/cesium/wiki) has everything you need to get started with Cesium including the [contributor's guide](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor's-Guide), [architecture](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Architecture), and [roadmap](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Roadmap).
+Check out the [wiki](https://github.com/AnalyticalGraphicsInc/cesium/wiki), including the [quick start](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Quick-Start), [architecture](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Architecture), [roadmap](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Roadmap), and [contributor's guide](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor's-Guide).
 
-Also join our mailing lists:
+
+Join our mailing lists:
 * [Development](https://groups.google.com/d/forum/cesium-dev)
 * [Announcements](https://groups.google.com/d/forum/cesium-announce)

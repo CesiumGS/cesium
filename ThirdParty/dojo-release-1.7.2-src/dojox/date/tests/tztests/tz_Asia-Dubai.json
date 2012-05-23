@@ -1,0 +1,14 @@
+({
+	name: "date.timezone.Asia-Dubai",
+	runTest: function(t){
+		var tz = "Asia/Dubai";
+		doh.checkDate({tzOffset: -221.2, tzAbbr: "LMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: -221.2, tzAbbr: "LMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: -221.2, tzAbbr: "LMT"}, -1577936473000, tz, 1);
+		doh.checkDate({tzOffset: -240, tzAbbr: "GST"}, -1577936472000, tz, 1);
+		doh.checkDate({tzOffset: -240, tzAbbr: "GST"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: -240, tzAbbr: "GST"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: -240, tzAbbr: "GST"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: -240, tzAbbr: "GST"}, 1246789800000, tz, 0);
+	}
+})

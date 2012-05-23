@@ -1,0 +1,5 @@
+define(
+({
+	label: "Wybierz pliki..."
+})
+);

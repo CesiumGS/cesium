@@ -1,7 +1,5 @@
-defineSuite([
-         'Core/PlaneTessellator'
-     ], function(
-         PlaneTessellator) {
+/*global defineSuite*/
+defineSuite(['Core/PlaneTessellator'], function(PlaneTessellator) {
     "use strict";
     /*global it,expect*/
 
@@ -50,5 +48,16 @@ defineSuite([
             x : 1.0,
             y : 1.0
         }]);
+    });
+
+    it("throws if resolution is less than 1", function() {
+       expect(function() {
+           PlaneTessellator.compute({
+               resolution: {
+                   x : 0.0,
+                   y : 0.0
+               }
+           });
+       }).toThrow();
     });
 });
