@@ -1,0 +1,59 @@
+<html>
+<head>
+	<script type="text/javascript">
+		dojoConfig= {
+			someConfigSwitch:0,
+			isDebug:1,
+			has:{
+				"some-has-feature":5
+			}
+		}
+	</script>
+	<script type="text/javascript" src="../../../dojo.js" data-dojo-config="anotherConfigSwitch:2"></script>
+	<script type="text/javascript">
+		require(["doh", "dojo/has"], function(doh, has) {
+			doh.register("config-has", [
+				function check1(t) {
+					t.is(require.rawConfig.someConfigSwitch, 0);
+					t.is(require.rawConfig.isDebug, 1);
+					t.is(require.rawConfig.anotherConfigSwitch, 2);
+
+					t.is(has("config-someConfigSwitch"), 0);
+					t.is(has("config-isDebug"), 1);
+					t.is(has("config-anotherConfigSwitch"), 2);
+					t.is(has("some-has-feature"), 5);
+
+					// setting an existing config variable after boot does *not* affect the has cache
+					require({someConfigSwitch:3});
+					t.is(require.rawConfig.someConfigSwitch, 3);
+					t.is(has("config-someConfigSwitch"), 0);
+
+					// but, we can add new configfeatures any time
+					require({someNewConfigSwitch:4});
+					t.is(require.rawConfig.someNewConfigSwitch, 4);
+					t.is(has("config-someNewConfigSwitch"), 4);
+
+					// setting an existing has feature via config after boot does *not* affect the has cache
+					require({has:{"some-has-feature":6}});
+					t.is(has("some-has-feature"), 5);
+
+					// setting an existing has feature via has.add does *not* affect the has cache...
+					has.add("some-has-feature", 6);
+					t.is(has("some-has-feature"), 5);
+
+					// ...*unless* you use force...
+					has.add("some-has-feature", 6, 0, 1);
+					t.is(has("some-has-feature"), 6);
+
+					// but, we can add new has features any time
+					require({has:{"some-new-has-feature":7}});
+					t.is(has("some-new-has-feature"), 7);
+				}
+			]);
+			doh.runOnLoad();
+		});
+	</script>
+</head>
+<body>
+</body>
+</html>

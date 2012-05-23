@@ -35,9 +35,9 @@ Our mission is to create the leading web-based globe and map for visualizing dyn
 
 Check out the [CZML Guide](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Cesium-Language-%28CZML%29-Guide) and the [czml-writer library](https://github.com/AnalyticalGraphicsInc/czml-writer).
 
-### Developer Community ###
+### Get Started ###
 
-The [wiki](https://github.com/AnalyticalGraphicsInc/cesium/wiki) has everything you need to get started with Cesium including the [quick start](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Quick-Start), [architecture](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Architecture), [roadmap](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Roadmap), and [contributor's guide](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor's-Guide).
+Check out the [wiki](https://github.com/AnalyticalGraphicsInc/cesium/wiki), including the [quick start](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Quick-Start), [architecture](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Architecture), [roadmap](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Roadmap), and [contributor's guide](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor's-Guide).
 
 
 Join our mailing lists:

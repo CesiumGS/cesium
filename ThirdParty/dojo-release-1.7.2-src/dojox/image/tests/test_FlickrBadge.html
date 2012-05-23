@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>dojox.image.FlickrBadge Tests | The Dojo Toolkit</title>
+
+	<!-- required: a default theme file, and project css: -->
+	<link rel="stylesheet" id="themeStyles" href="../../../dijit/themes/claro/claro.css" />
+	<link rel="stylesheet" href="../resources/image.css" />
+	
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css"; 
+		body, html { width:100%; height:100%; margin:0; padding:0; } 
+
+		.fixed { 
+			position:fixed;
+			font:32pt Arial,sans-serif;
+			color:#777;
+			text-align:center;
+			line-height:42px;
+		}
+		.dj_ie .fixed {
+			display:none;
+		}
+		img.thing { width:50px; height:50px; }
+		.noBorderWrapper .dojoxBadge {
+			border:none;
+		}
+		
+		.b1 { background:url('images/square.jpg') !important; }
+		.b2 { background-image:url('images/imageHoriz.jpg') !important; }
+		.b3 { background-image:url('images/imageVert.jpg') !important; }
+		.b4 { background-image:url('images/imageHoriz2.jpg') !important; }
+	</style>
+	
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: true"></script>
+
+	<!-- do not use! only for testing dynamic themes -->
+	<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+	<script type="text/javascript">
+	    require(["dojo/parser", "dojox/image/FlickrBadge"]);
+	</script>
+
+</head>
+<body class="claro">
+
+	<div style="padding:20px;">
+		<h2>FlickrBadge: Dylan's photos</h2>
+		<div class="noBorderWrapper">
+			<div data-dojo-type="dojox.image.FlickrBadge" data-dojo-props="rows:6, cols:6, username:'dylans'"></div>
+		</div>
+
+		<h2>FlickrBadge: Dylan's tagged photos ('dojotoolkit' and 'italy')</h2>
+		<div class="noBorderWrapper">
+			<div dojoType="dojox.image.FlickrBadge" rows="3" cols="6" username="dylans" tags="dojotoolkit,italy"></div>
+		</div>
+		
+		<h2>FlickrBadge: Dylan's Chicago set with popup</h2>
+		<div class="noBorderWrapper">
+			<div dojoType="dojox.image.FlickrBadge" rows="3" cols="6" username="dylans" setid="72157601441046380" target="_blank"></div>
+		</div>
+	</div>
+
+</body>
+</html>

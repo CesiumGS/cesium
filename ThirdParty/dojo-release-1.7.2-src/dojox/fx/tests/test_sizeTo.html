@@ -1,0 +1,170 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>dojox.fx.sizeTo | experimental fx add-ons for the Dojo Toolkit</title>
+		
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: true" ></script>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/themes/dijit.css";
+		@import "../../../dijit/themes/tundra/tundra.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+				.testBox {
+						position:absolute;
+						top:0; left:0;
+						width:50px;
+						height:50px;
+						background:#ededed;
+						border:1px solid #b7b7b7;
+						-moz-border-radius:6pt;
+						-webkit-border-radius:5pt;
+						overflow:hidden; 
+				}
+	</style>
+		<script type="text/javascript">
+		
+	dojo.require("dojox.fx.ext-dojo.NodeList"); 
+
+		var test1 = function(e){
+			// this is our click test,
+			dojox.fx.sizeTo({
+					node: e.target,
+					width: 120,
+					height:120,
+					duration:250
+			}).play(5);
+		};
+		
+		var testundo = function(e){
+			dojox.fx.sizeTo({
+					node: e.target,
+					width:50,
+					height:50,
+					duration:320
+			}).play(5);
+				
+		};
+		
+		var test2 = function(e){
+			dojox.fx.sizeTo({
+				  node: e.target,
+				  width: 120,
+				  height:120,
+				  duration:120,
+				  method:"combine"
+			}).play(5);
+		};
+
+		var noIdTest = function(){
+			var myNode = dojo.query(".noIdHere")[0]; // first one wins
+			if(myNode){
+					// mmm, fake events (all we're using is the target anyway ... ) 
+					(!dojo.hasClass(myNode,"testRun") ? test2 : testundo)({ target: myNode });
+					dojo.toggleClass(myNode,"testRun");
+			}
+		};
+		
+		var resizeTest = function(e){
+			
+			// this is our click test,
+			var animation = dojox.fx.sizeTo({
+				node: e.target,
+				width: 30,
+				height:30,
+				duration:1250,
+				method:"combine"
+			});
+
+			dojo.style(e.target, {
+				width:"500px",
+				top:0, left:0, 
+				height:"500px"
+			});
+
+			setTimeout(dojo.hitch(animation, "play"), 1250);
+		};
+
+		var init = function(){
+			
+			// lets setup out connections, etc ...
+			dojo.connect(dojo.byId("sizer1"),"onmousedown","test1");
+			dojo.connect(dojo.byId("sizer1"),"onmouseup","testundo"); // generic resest 
+
+			// did you know dojo normalizes onmouseenter onmouseleave!?!? neat. ie got _one_ thing right.
+			dojo.connect(dojo.byId("sizer2"),"onmouseenter","test2");
+			dojo.connect(dojo.byId("sizer2"),"onmouseout","testundo");		   
+			
+			dojo.connect(dojo.byId("testNodeCache"), "onclick", "resizeTest");
+			
+			// example using dojo.query to get a couple of nodes and roll into one anim
+			var hasRun = false; 
+			dojo.connect(dojo.byId("sizer3"),"onclick",function(e){
+				var _anims = []; 
+				dojo.query(".testBox").forEach(function(n){
+					_anims.push(
+						dojox.fx.sizeTo({ node: n,
+							width: ( hasRun ? "50" : "150"),
+							height: ( hasRun ? "50" : "150"),
+							method:"chain",
+							duration:720
+						})
+					);		  
+				});
+				hasRun=!hasRun; 
+				var anim = dojo.fx.combine(_anims);
+				anim.play(); 
+			});
+		};
+		dojo.addOnLoad(init);
+		
+	</script>
+</head>
+<body class="tundra">
+	<h1 class="testTitle">dojox.fx.sizeTo test</h1>
+		
+		<p>quick sizeTo API overview:</p>
+
+		<pre>
+		dojox.fx.sizeTo({
+				// basic requirements:
+				node: "aDomNodeId", // or a domNode reference
+				width: 200, // measured in px
+				height: 200, // measured in px
+				method: "chain" // is default, or "combine"
+		});
+		</pre>
+		<p>
+		little test blocks (works in FF/win/mac + ie6) <a href="javascript:void(0)" onClick="dojo.query('.testBox').sizeTo({ width: 200, height: 200, duration:400 }).play()">dojo.query() test</a>
+		</p>
+
+		<div style="position:relative; height:60px; width:600px; margin:0 auto;">
+			<div id="sizer1" class="testBox">
+			mouse down / mouse up
+			</div>
+			<div id="sizer2" class="testBox" style="left:60px;" >
+			hover / exit
+			</div>
+			<div class="testBox noIdHere" style="left:120px; ">
+			<a href="javascript:noIdTest()">noIdTest()</a>
+			</div>
+			<div class="testBox" id="sizer3" style="left:180px;">
+			all of em'
+			</div>
+		</div>
+		<br style="clear:both;">
+		
+		(click the box labeled "all of em'" again to reset all nodes)
+				
+	HTML AFTER
+	<br>
+
+	<div style="position:relative; height:110px; width:600px; margin:0 auto;">
+		<div id="testNodeCache"	class="testBox" style="top: 0px; left: 0px; z-index: 1; height:90px; width:90px; margin:0 auto; background-color: black; color:#fff">This box moves when clicked to test parameter caching
+		</div>
+	</div>
+
+	<p>That's all, Folks!</p>
+
+</body>
+</html>

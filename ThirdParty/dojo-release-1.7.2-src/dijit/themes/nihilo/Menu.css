@@ -1,0 +1,77 @@
+
+/* Menu */
+.nihilo .dijitMenu,
+.nihilo .dijitMenuBar {
+	border: 1px solid #d3d3d3;
+	margin: 0;
+	padding: 0;
+	background-color: #fff;
+}
+
+.nihilo .dijitBorderContainer .dijitMenuBar {
+	border: 1px #ccc solid;
+}
+
+.nihilo .dijitMenuItem {
+	font-family: sans-serif;
+	margin: 0;
+	color: #243C5F;
+}
+.nihilo .dijitMenuBar .dijitMenuItem {
+	padding: 4px 5px;
+}
+
+.nihilo .dijitMenuPreviousButton, .nihilo .dijitMenuNextButton {
+	font-style: italic;
+}
+.nihilo .dijitMenuItem TD {
+	padding:1px;
+}
+
+.nihilo .dijitMenuPassive .dijitMenuItemHover,
+.nihilo .dijitMenuItemSelected {
+	background-color: #ffe284; /* #95a0b0; #555555; #aaaaaa; #646464;  #60a1ea; #848484; */
+	color: #243C5F;
+}
+
+.nihilo .dijitMenuItemIcon {
+	width: 15px;
+	height: 15px;
+}
+
+.nihilo .dijitMenuExpand {
+	width:15px;
+	height:15px;
+	background-image: url('images/spriteRoundedIconsSmall.png');
+	background-position: -30px top;
+}
+.dj_ie6 .nihilo .dijitMenuExpand {
+	background-image:url('images/spriteRoundedIconsSmall.gif');
+}
+
+.nihilo .dijitMenuSeparator {
+	height: 1px;
+}
+
+/* separator can be two pixels -- set border of either one to 0 to have only one */
+.nihilo .dijitMenuSeparatorTop {
+	border-bottom: 1px solid #fff; /*97adcb; */
+}
+
+.nihilo .dijitMenuSeparatorBottom {
+	border-top: 1px solid #d3d3d3;
+}
+
+/* the checked menu item */
+.nihilo .dijitCheckedMenuItemIconChar {
+	display: none;
+}
+
+.nihilo .dijitCheckedMenuItemIcon {
+	background-image: url('images/spriteCheckbox.gif');
+	background-position: -80px;
+}
+
+.nihilo .dijitCheckedMenuItemChecked .dijitCheckedMenuItemIcon {
+	background-position: -64px;
+}

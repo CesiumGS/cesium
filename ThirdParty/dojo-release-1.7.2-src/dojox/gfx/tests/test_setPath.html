@@ -1,0 +1,82 @@
+﻿<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" >
+<head>
+<title>Testing setPath and curves</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+	li {font-weight: bold;}
+</style>
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+<script type="text/javascript">
+dojo.require("dojox.gfx");
+
+createSurface = function(){
+	var surface = dojox.gfx.createSurface("test", 500, 400);
+	surface.whenLoaded(makeShapes);
+};
+
+makeShapes = function(surface){
+	// relative path with cubic beziers
+	surface
+		.createPath("m100 100 100 0 0 100c0 50-50 50-100 0s-50-100 0-100z")
+		.setStroke({color: "black"})
+		.setFill("red")
+		.setTransform({dx: -50, dy: -50})
+		;
+	// absolute path with cubic bezier
+	surface
+		.createPath("M100 100 200 100 200 200C200 250 150 250 100 200S50 100 100 100z")
+		.setStroke({color: "black"})
+		.setFill("#f80")
+		.setTransform({dx: 100, dy: -50})
+		;
+	// relative path with horizontal and vertical lines, and cubic beziers
+	surface
+		.createPath("m100 100h100v100c0 50-50 50-100 0s-50-100 0-100z")
+		.setStroke({color: "black"})
+		.setFill("yellow")
+		.setTransform({dx: 250, dy: -50})
+		;
+	// relative path with quadratic beziers
+	surface
+		.createPath("m100 100 100 0 0 100q0 50-75-25t-25-75z")
+		.setStroke({color: "black"})
+		.setFill("green")
+		.setTransform({dx: -50, dy: 150})
+		;
+	// absolute path with quadratic bezier
+	surface
+		.createPath("M100 100 200 100 200 200Q200 250 125 175T100 100z")
+		.setStroke({color: "black"})
+		.setFill("blue")
+		.setTransform({dx: 100, dy: 150})
+		;
+	// relative path with horizontal and vertical lines, and quadratic beziers
+	surface
+		.createPath("m100 100h100v100q0 50-75-25t-25-75z")
+		.setStroke({color: "black"})
+		.setFill("#f0f")
+		.setTransform({dx: 250, dy: 150})
+		;
+};
+
+dojo.addOnLoad(createSurface);
+
+</script>
+</head>
+<body>
+<h1>dojox.gfx setPath and curve test</h1>
+<div id="test" style="width: 500px; height: 400px;"></div>
+<p>Legend:</p>
+<ul>
+	<li style="background: red"><span style="color: white">relative path with cubic beziers</span></li>
+	<li style="background: #f80"><span style="color: black">absolute path with cubic bezier</span></li>
+	<li style="background: yellow"><span style="color: black">relative path with horizontal and vertical lines, and cubic beziers</span></li>
+	<li style="background: green"><span style="color: white">relative path with quadratic beziers</span></li>
+	<li style="background: blue"><span style="color: white">absolute path with quadratic bezier</span></li>
+	<li style="background: #f0f"><span style="color: black">relative path with horizontal and vertical lines, and quadratic beziers</span></li>
+</ul>
+<p>That's all Folks!</p>
+</body>
+</html>

@@ -1,0 +1,29 @@
+{
+	identifier: 'id',
+	label: 'name',
+	items: [
+		{ id: 'root', children: [
+			{_reference: 'h0'},
+			{_reference: 'h1'},
+			{_reference: 'h2'},
+			{_reference: 'h3'},
+			{_reference: 'h4'} ]},
+		{ id: 'h0', name:'South Africa', type: 'header', children:[ {_reference: 'p0'}] },
+		{ id: 'h1', name:'Ireland', type: 'header', children:[ {_reference: 'p1'},  {_reference: 'p2'}] },
+		{ id: 'h2', name:'France', type: 'header',  children:[ {_reference: 'p3'},  {_reference: 'p4'}] },
+		{ id: 'h3', name:'Canada', type: 'header',
+				children:[ {_reference: 'p5'},  {_reference: 'p6'},  {_reference: 'p7'},  {_reference: 'p8'} ] },
+		{ id: 'h4', name:'Korea', type: 'header', children:[ {_reference: 'p9'}] },
+
+		{ id: 'p0', name:'Joburg', type: 'place'},
+		{ id: 'p1', name:'Knocknahilan', type: 'place'  },
+		{ id: 'p2', name:'Kinsale',  type: 'place' },
+		{ id: 'p3', name:'Lyon',  type: 'place' },
+		{ id: 'p4', name:'Nice', type: 'place' },
+		{ id: 'p5', name:'Toronto',  type: 'place'},
+		{ id: 'p6', name:'Hudson Bay', type: 'place'},
+		{ id: 'p7', name:'Quebec',  type: 'place' },
+		{ id: 'p8', name:'Polar Bear County', type: 'place' },
+		{ id: 'p9', name:'Jeonju', type: 'place' }
+	]
+}

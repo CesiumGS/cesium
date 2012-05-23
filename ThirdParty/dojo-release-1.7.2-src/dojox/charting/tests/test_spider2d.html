@@ -1,0 +1,297 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Spider 2D</title>
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+	@import "../../../dijit/themes/claro/claro.css";
+	@import "../resources/Legend.css";
+	
+	.dojoxLegendItem{
+		padding: 3px 5px 2px 5px;
+	}
+	.dojoxLegendItem .dojoxLegendText{
+		float: right;
+		margin-top: 2px;
+	}
+	.dojoxLegendItem .dojoxLegendIcon{
+		float: left;
+	}
+	.dojoxLegendItemRtl{
+		padding: 3px 5px 2px 5px;
+	}
+	.dojoxLegendItemRtl .dojoxLegendText{
+		float: left;
+		margin-top: 2px;
+	}
+	.dojoxLegendItemRtl .dojoxLegendIcon{
+		float: right;
+	}
+	.dojoxLegendHover{
+		background-color: #afd9ff;
+		cursor: pointer;
+		padding: 3px 5px 2px 5px;
+	}
+	.dojoxLegendActive{
+		cursor: pointer;
+		border: 2px solid #7dbefa;
+		padding: 1px 3px 0 3px;
+	}
+</style>
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+<script type="text/javascript">
+	dojo.require("dojox.charting.Chart");
+	dojo.require("dojox.charting.plot2d.Spider");
+	dojo.require("dojox.charting.themes.PlotKit.blue");
+	dojo.require("dijit.Tooltip");
+	dojo.require("dijit.form.CheckBox");
+	dojo.require("dijit.form.RadioButton");
+	dojo.require("dijit.form.Form");
+	dojo.require("dojo.fx.easing");
+	dojo.require("dojox.gfx.fx");
+	dojo.require("dojox.charting.widget.SelectableLegend");
+	
+	var dc = dojox.charting,
+		divisions = 7,
+		stype = "polygon",
+		easing = dojo.fx.easing.backOut;
+	var empty = {};
+    var populateSelect = function(from, select){
+        var module = dojo.getObject(from);
+        for(var name in module){
+            if(name in empty){ continue; }
+            var fun = module[name];
+            if(dojo.isFunction(fun)){
+                dojo.create("option", {
+                    value:     from + "." + name,
+                    selected:  name == "backOut",
+                    innerHTML: from + "." + name
+                }, select);
+            }
+        }
+    };
+	
+	var chart1, legend1;
+	makeObjects = function(){
+		chart1 = new dojox.charting.Chart("test1");
+		chart1.setTheme(dojox.charting.themes.PlotKit.blue);
+		chart1.addPlot("default", {
+			type: "Spider",
+			labelOffset: -10,
+			divisions: divisions,
+			axisColor:      "lightgray",
+			spiderColor:    "silver",
+            seriesFillAlpha: 0.2,
+			spiderOrigin:	 0.16,
+			markerSize:  	 3,
+			precision:		 0,
+			spiderType:	 	 stype
+		});
+		chart1.addSeries("China", {data: {"GDP": 2,"area": 6,"population": 2000,"inflation": 15,"growth": 12}}, { fill: "blue" });
+		chart1.addSeries("France", {data: {"GDP": 6,"area": 15,"population": 500,"inflation": 5,"growth": 6}}, { fill: "red" });
+		chart1.addSeries("USA", {data: {"GDP": 3,"area": 20,"population": 1500,"inflation": 10,"growth": 3}}, { fill: "green" });
+		chart1.addSeries("Japan", {data: {"GDP": 4,"area": 2,"population": 1000,"inflation": 20,"growth": 2}}, { fill: "yellow" });
+		chart1.addSeries("Korean", {data: {"GDP": 10,"area": 10,"population": 800,"inflation": 2,"growth": 18}}, { fill: "orange" });
+		chart1.addSeries("Canada", {data: {"GDP": 1,"area": 18,"population": 300,"inflation": 3,"growth": 15}}, { fill: "purple" });
+		chart1.render();
+		
+		legend1 = new dc.widget.SelectableLegend({chart: chart1, horizontal: true}, "legend1");
+		
+		// prepare and enable controls
+        populateSelect("dojo.fx.easing", "easing");
+	};
+	
+	dojo.addOnLoad(makeObjects);
+
+</script>
+
+<script type="text/javascript">
+	function switchData(val){
+		if(val == "b1"){
+			chart1.updateSeries("China", {data: {"GDP": 2,"area": 6,"population": 2000,"inflation": 15,"growth": 12}}, { fill: "blue" });
+			chart1.updateSeries("France", {data: {"GDP": 6,"area": 15,"population": 500,"inflation": 5,"growth": 6}}, { fill: "red" });
+			chart1.updateSeries("USA", {data: {"GDP": 3,"area": 20,"population": 1500,"inflation": 10,"growth": 3}}, { fill: "green" });
+			chart1.updateSeries("Japan", {data: {"GDP": 4,"area": 2,"population": 1000,"inflation": 20,"growth": 2}}, { fill: "yellow" });
+			chart1.updateSeries("Korean", {data: {"GDP": 10,"area": 10,"population": 800,"inflation": 2,"growth": 18}}, { fill: "orange" });
+			chart1.updateSeries("Canada", {data: {"GDP": 1,"area": 18,"population": 300,"inflation": 3,"growth": 15}}, { fill: "purple" });
+		}else{
+			chart1.updateSeries("China", {data: {"GDP": 8,"area": 2,"population": 500,"inflation": 2,"growth": 18}}, { fill: "blue" });
+			chart1.updateSeries("France", {data: {"GDP": 10,"area": 6,"population": 1000,"inflation": 20,"growth": 12}}, { fill: "red" });
+			chart1.updateSeries("USA", {data: {"GDP": 2,"area": 5,"population": 1500,"inflation": 12,"growth": 6}}, { fill: "green" });
+			chart1.updateSeries("Japan", {data: {"GDP": 1,"area": 20,"population": 500,"inflation": 5,"growth": 11}}, { fill: "yellow" });
+			chart1.updateSeries("Korean", {data: {"GDP": 4,"area": 2,"population": 2000,"inflation": 16,"growth": 8}}, { fill: "orange" });
+			chart1.updateSeries("Canada", {data: {"GDP": 6,"area": 10,"population": 300,"inflation": 3,"growth": 2}}, { fill: "purple" });
+		}
+		chart1.render();
+		legend1 && legend1.refresh && legend1.refresh();
+	}
+
+</script>
+
+<script type="text/javascript">
+	function switchSpider(val){
+		stype = document.getElementById("b11").checked ? "polygon" : "circle";
+		if(val == "b11"){
+			chart1.addPlot("default", {
+				type: "Spider",
+				divisions: 		divisions,
+				spiderType: 	stype
+			});
+		}else{
+			chart1.addPlot("default", {
+				type: "Spider",
+				divisions: 		divisions,
+				spiderType: 	stype
+			});
+		}
+		chart1.render();
+		legend1 && legend1.refresh && legend1.refresh();
+	}
+
+</script>
+
+<script type="text/javascript">
+	function switchDivisions(val){
+		if(val == "b111"){
+			divisions = 7;
+			chart1.addPlot("default", {
+				type: "Spider",
+				divisions: 		divisions,
+				spiderType: 	stype
+			});
+		}else{
+			divisions = 3;
+			chart1.addPlot("default", {
+				type: "Spider",
+				divisions: 		divisions,
+				spiderType: 	stype
+			});
+		}
+		chart1.render();
+		legend1 && legend1.refresh && legend1.refresh();
+	}
+
+</script>
+<script type="text/javascript">
+	function switchAnimation(val){
+		easing = dojo.getObject(dojo.byId("easing").value);
+		chart1.addPlot("default", {
+			type: "Spider",
+			divisions: 		divisions,
+			spiderType: 	stype,
+			animationType:	easing
+		});
+		chart1.render();
+		legend1 && legend1.refresh && legend1.refresh();
+	}
+
+</script>
+
+</head>
+<body class="claro">
+<h1>Spider 2D</h1>
+<h5>
+A spider chart is a graphical method of displaying multivariate data in the form of a two-dimensional chart of three or more quantitative variables represented on axes starting from the same point. The relative position and angle of the axes is typically uninformative.
+</h5>
+<ul>
+	<li>
+	It consists of a sequence of equi-angular spokes, called radii, with each spoke representing one of the variables. The data length of a spoke is proportional to the magnitude of the variable for the data point relative to the maximum magnitude of the variable across all data points. 
+	A line is drawn connecting the data values for each spoke. This gives the plot a star-like appearance and the origin of the name of this plot.
+	</li>
+	<li>
+	Spider charts are useful when you want to look at several different factors all related to one item. spider charts have multiple axes along which data can be plotted
+	</li>
+</ul>
+
+<h5>
+Application
+</h5>
+<ul>
+
+	<li>
+	The "spider chart" can be a format commonly used by management consultants to show their clients how an organization compares with those in similar companies.
+	</li>
+	<li>
+	It also can be used as the control of quality improvement to display the performance metrics of any ongoing program.
+	</li>
+	<li>
+	Furthermore, it is also being used in sports to chart players' strengths and weaknesses.
+	</li>
+	<li>
+	For example, you could use a spider chart to compile data about a wide receiver on a professional football team. On one axis, you could plot the percentage of passes caught. 
+	Another axis would show his yards per completion; another, his completions per 100 plays; another, blocks made; and a final axis might show his interceptions
+	So far as we can see, the spider has a broad application area.
+	</li>
+</ul>
+<h5>
+Comparison with radar chart in dojox.charting
+</h5>
+<ul>
+	<li>
+	Spider charts differ from radar chart in that a spider chart is a chart that has N "y" axes while radar chart has only one "y" axis, all radiating from a central point, 
+	where each "y" axis represents a specific category. For example, there are 5 "y" axes: GDP, area, population, inflation and growth here.
+	</li>
+	<li>
+	The radar chart, however, instead of being drawn in a typical linear X/Y space, the radar chart is drawn using a circular plot, with specific X values being shown using an arbitrary number of spokes drawn from a center point. 
+	These charts are useful for showing data over a cyclical set of values (for instance, hours of a day, minutes in an hour, etc.). With a radar chart, data is plotted in much the same way as with a typical line or area chart.
+	</li>
+	<li><strong>
+	Actually, the radar chart is somewhat similar with line chart, the major difference between them is: line chart has a "straight" X axis while radar chart has a "circular" X axis, and the orientation of their Y axis is opposite.
+	</strong></li>
+</ul>
+<hr/>
+<h2>
+Spider 2D Demo:
+</h2>
+<p>
+<span>
+	<span>Switch Year:</span>
+	<span>
+		<input dojoType="dijit.form.RadioButton" type=radio checked="checked" onClick="switchData(this.id)" name='a1' id='b1' value="1"/><label for='b1'> Figures in 2008 </label>
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input dojoType="dijit.form.RadioButton" type=radio name='a1' onClick="switchData(this.id)" id='b2' value="2"/><label for='b2'> Figures in 2009 </label>
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		<span><label>Animation Type:&nbsp;</label><select id="easing" onchange="switchAnimation()"></select></span>&nbsp;
+	</span>
+</span>
+</p>
+<p>
+<span>
+	<span>Switch Spider Type:</span>
+	<span>
+		<input dojoType="dijit.form.RadioButton" type=radio checked="checked" onClick="switchSpider(this.id)" name='a11' id='b11' value="polygon"/><label for='b11'> Polygon </label>
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input dojoType="dijit.form.RadioButton" type=radio name='a11' onClick="switchSpider(this.id)" id='b22' value="circle"/><label for='b22'> Circle </label>
+	</span>
+</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span>
+	<span>Switch Divisions:</span>
+	<span>
+		<input dojoType="dijit.form.RadioButton" type=radio checked="checked" onClick="switchDivisions(this.id)" name='a111' id='b111' value="1"/><label for='b111'> Divisions = 7 </label>
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input dojoType="dijit.form.RadioButton" type=radio name='a111' onClick="switchDivisions(this.id)" id='b222' value="2"/><label for='b222'> Divisions = 3 </label>
+	</span>
+</span>
+</p>
+<h5>
+	The following legends are selectable:
+</h5>
+<div id="legend1"></div>
+<p/>
+<div id="test1" style="width: 500px; height: 500px;"></div>
+<p/>
+</body>
+</html>

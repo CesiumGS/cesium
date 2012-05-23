@@ -1,0 +1,14 @@
+({
+	name: "date.timezone.America-Cayman",
+	runTest: function(t){
+		var tz = "America/Cayman";
+		doh.checkDate({tzOffset: 307.2, tzAbbr: "KMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: 307.2, tzAbbr: "KMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: 307.2, tzAbbr: "KMT"}, -1827687169000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "EST"}, -1827687168000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "EST"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "EST"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "EST"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: 300, tzAbbr: "EST"}, 1246789800000, tz, 0);
+	}
+})

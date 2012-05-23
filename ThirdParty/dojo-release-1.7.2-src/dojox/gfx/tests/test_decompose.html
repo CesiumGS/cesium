@@ -1,0 +1,54 @@
+﻿<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" >
+<head>
+<title>Testing decompose</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+</style>
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+<script type="text/javascript">
+dojo.require("dojox.gfx");
+dojo.require("dojox.gfx.matrix");
+dojo.require("dojox.gfx.decompose");
+
+var m = dojox.gfx.matrix;
+
+var eq = function(a, b){
+	return Math.abs((a - b) / (a + b)) < 1e-6;
+};
+
+var calc = function(){
+	var matrix1 = eval("(m.normalize([" + dojo.byId("input").value + "]))");
+	dojo.byId("matrix1").value = dojo.toJson(matrix1, true);
+	var result = dojox.gfx.decompose(matrix1);
+	dojo.byId("result").innerHTML = "Result: " + dojo.toJson(result);
+	var matrix2 = m.normalize([
+		m.translate(result.dx, result.dy),
+		m.rotate(result.angle2),
+		m.scale(result.sx, result.sy),
+		m.rotate(result.angle1)
+	]);
+	dojo.byId("matrix2").value = dojo.toJson(matrix2, true);
+};
+
+</script>
+</head>
+<body>
+	<h1>Testing decompose</h1>
+	<p>
+		<span style="font-size: 8pt;">Example: m.rotategAt(30, 100, 100), m.scaleAt(2, 3, 5, 5), m.rotate(45)</span><br />
+		<input id="input" type="text" size="50" maxlength="200" /><button onclick="calc();">Calc</button>
+	</p>
+	<p id="result">Result:</p>
+	<p>
+		<span style="font-size: 8pt;">Original matrix</span><br />
+		<textarea id="matrix1" cols="50" rows="8" readonly="readonly"></textarea>
+	</p>
+	<p>
+		<span style="font-size: 8pt;">Decomposed matrix</span><br />
+		<textarea id="matrix2" cols="50" rows="8" readonly="readonly"></textarea>
+	</p>
+	<p>That's all Folks!</p>
+</body>
+</html>

@@ -1,0 +1,98 @@
+<html>
+	<head>
+		<title>Robot - Adapter - DndFromDojo</title>
+		
+		<script type="text/javascript" 
+			src="../../../../dojo/dojo.js" 
+			djConfig="isDebug: true">
+		</script>
+		
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");	
+
+			dojo.addOnLoad(function(){			
+				
+				doh.robot.initRobot('../functionalTests/test_dnd_dndToDojo.html');
+				
+				doh.register("test_dnd_dndToDojo", 
+				[
+					{
+						name: "dndToDojoSource",
+						timeout:10000,
+						runTest: function(){
+
+							// Moves an item from a dojox source to a dojo
+							// target.
+
+							var d = new doh.Deferred();
+
+							var itemType1 = dojo.query(".dndItem[dndType=type1] > .dragHandle")[0];
+							var source = dojo.query(".dndArea")[0];
+							var dojoTarget = dojo.query(".dojoDndTarget")[0];
+
+							var sizeArea = source.childNodes.length
+							
+							doh.robot.mouseMoveAt(itemType1, 200);
+                			doh.robot.mousePress({left:true}, 200);
+                			doh.robot.mouseMoveAt(dojoTarget, 200);
+                			doh.robot.mouseRelease({left:true}, 200);
+                			
+                			doh.robot.sequence(function(){
+                				try{
+                					doh.assertEqual(source.childNodes.length , sizeArea-1, "A child should be delete from dojox dnd area.");
+                					d.callback(true);
+                				}
+                				catch(e){
+                					d.errback(e);
+                				}
+               				}, 200);
+               				return d;
+						}
+					},
+					{
+						name: "dndToDojoAcceptance",
+						timeout:10000,
+						runTest: function(){
+
+							// Tries to move an item from a dojox source to
+							// a dojo area :
+							// 		- Item's type : 2
+							//		- Drop area accept types : 1
+							// -> In this case, drop is refused
+
+							var d = new doh.Deferred();
+							
+							var itemType2 = dojo.query(".dndItem[dndType=type2] > .dragHandle")[0];
+							var source = dojo.query(".dndArea")[0];
+							var dojoTarget = dojo.query(".dojoDndTarget")[0];
+
+							var sizeArea = source.childNodes.length
+							
+							doh.robot.mouseMoveAt(itemType2, 200);
+                			doh.robot.mousePress({left:true}, 200);
+                			doh.robot.mouseMoveAt(dojoTarget, 200);
+                			doh.robot.mouseRelease({left:true}, 200);
+                			
+                			doh.robot.sequence(function(){
+                				try{
+                					doh.assertEqual(source.childNodes.length ,sizeArea, "DnD restriction. No change !");
+                					d.callback(true);
+                				}
+                				catch(e){
+                					d.errback(e);
+                				}
+               				}, 200);
+               				
+               				return d;
+						}
+					}
+				]
+				);
+				doh.run();
+			});
+		</script>
+		<style type="text/css"></style>
+	</head>
+	<body>
+	</body>
+</html>

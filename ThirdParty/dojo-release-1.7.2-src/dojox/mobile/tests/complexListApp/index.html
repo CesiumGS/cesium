@@ -1,0 +1,33 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<link href="../../themes/iphone/iphone-app.css" rel="stylesheet">
+		<link href="styles/style.css" rel="stylesheet">
+		<style>
+		.lnk {
+			font-size: 17px;
+			color: cyan;
+			text-decoration: none;
+		}
+		</style>
+		<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="parseOnLoad: false"></script>
+    
+		<script language="JavaScript" type="text/javascript">
+			dojo.require("dojox.mobile.app");
+			dojo.requireIf(!dojo.isWebKit, "dojox.mobile.app.compat");
+      
+			  var appInfo = {
+				id: "org.dojo.simpleApp",
+				title: "Mobile App With Complex List",
+				initialScene: "main"
+			  };
+
+			  dojo.ready(dojox.mobile.app.init);
+		</script>
+	</head>
+	<body>
+		
+	</body>
+</html>

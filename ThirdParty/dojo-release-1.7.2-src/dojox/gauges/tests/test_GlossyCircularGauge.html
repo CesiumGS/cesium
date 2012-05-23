@@ -1,0 +1,300 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>Circular Gauge Sample</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+		<link rel="stylesheet" type="text/css" href="../../../dijit/themes/claro/claro.css">
+	</head>
+	<script type="text/javascript">
+		var djConfig = {
+			parseOnLoad: true,
+			isDebug: true
+		}
+	</script>
+	<script type="text/javascript" src="../../../dojo/dojo.js">
+	</script>
+	<script type="text/javascript">
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dijit.layout.BorderContainer");
+		dojo.require("dijit.layout.ContentPane");
+		dojo.require("dijit.ColorPalette");
+		
+		dojo.require('dijit.form.Button');
+		dojo.require('dijit.form.CheckBox');
+		dojo.require("dijit.form.ComboBox");
+		dojo.require("dijit.form.HorizontalSlider");
+		dojo.require("dijit.TitlePane");
+		
+		dojo.require('dojox.gauges.GlossyCircularGauge');
+		dojo.require('dojox.gauges.GlossySemiCircularGauge');
+		dojo.require("dojo.parser");
+		
+		dojo.addOnLoad(sample);
+		
+		
+		
+		var glossyCircular = null;
+		var glossyCircular2 = null;
+		
+		function sample(){
+		
+			// create an glossy Circular Gauge
+			glossyCircular = new dojox.gauges.GlossyCircularGauge({
+				background: [255, 255, 255, 0],
+				title: 'Value',
+				id: "glossyGauge",
+				width: 300,
+				height: 300
+			}, dojo.byId("CircularGauge"));
+			glossyCircular.startup();
+			
+			// create an glossy semi Circular Gauge
+			glossyCircular2 = new dojox.gauges.GlossySemiCircularGauge({
+				title: 'Value',
+				background: [255, 255, 255, 0],
+				id: "glossyGauge2",
+				width: 300,
+				height: 300
+			}, dojo.byId("SemiCircularGauge"));
+			glossyCircular2.startup();
+			
+		}
+		
+		function changeOrientation(orientation){
+			var t = glossyCircular.startAngle;
+			glossyCircular.startAngle = glossyCircular.endAngle;
+			glossyCircular.endAngle = t;
+			glossyCircular.set('orientation', orientation);
+			
+			t = glossyCircular2.startAngle;
+			glossyCircular2.startAngle = glossyCircular2.endAngle;
+			glossyCircular2.endAngle = t;
+			glossyCircular2.set('orientation', orientation);
+		}
+		
+		function changeGaugeColor(v){
+			glossyCircular.set('color', v);
+			glossyCircular2.set('color', v)
+		}
+		
+		function changeNeedleColor(v){
+			glossyCircular.set('needleColor', v);
+			glossyCircular2.set('needleColor', v)
+		}
+		
+		function changeMinorTicksColor(v){
+			glossyCircular.set('minorTicksColor', v);
+			glossyCircular2.set('minorTicksColor', v)
+		}
+		
+		function changeMajorTicksColor(v){
+			glossyCircular.set('majorTicksColor', v);
+			glossyCircular2.set('majorTicksColor', v)
+		}
+		
+		function changeTextIndicatorColor(v){
+			glossyCircular.set('textIndicatorColor', v);
+			glossyCircular2.set('textIndicatorColor', v)
+		}
+	</script>
+	<body class="claro">
+		<table width="100%" border="0">
+			<tr>
+				<td width="450px">
+					<div id="CircularGauge">
+					</div>
+					<div id="SemiCircularGauge">
+					</div>
+				</td>
+				<td>
+					<table border="0">
+						<tr>
+							<td>
+								Title
+							</td>
+							<td>
+								<input type="text" value="Value" dojoType="dijit.form.TextBox" trim="true" onChange="glossyCircular.set('title',this.value);glossyCircular2.set('title',this.value)">
+							</td>
+						</tr>
+						<tr>
+							<td>
+								Clockwise orientation 
+							</td>
+							<td>
+								<div dojoType='dijit.form.CheckBox' checked onChange="changeOrientation(this.checked?'clockwise':'cclockwise')" />
+							</td>
+						</tr>
+						<tr>
+							<td>
+								Minimum
+							</td>
+							<td>
+								<div dojoType='dijit.form.HorizontalSlider' intermediateChanges="true" onChange="glossyCircular.set('min',Math.round(this.value));glossyCircular2.set('min',Math.round(this.value))" value="0" minimum="0" maximum="200" discreteValues="200" showButtons="false" style="width: 200px; height: 20px"/>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								Maximum
+							</td>
+							<td>
+								<div dojoType='dijit.form.HorizontalSlider' intermediateChanges="true" onChange="glossyCircular.set('max',Math.round(this.value));glossyCircular2.set('max',Math.round(this.value))" value="100" minimum="0" maximum="200" discreteValues="200" showButtons="false" style="width: 200px; height: 20px"/>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								Gauge Color
+							</td>
+							<td>
+								<div id='gaugeColorPicker' dojoType='dijit.ColorPalette' onChange="changeGaugeColor" palette="3x4"/>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								Needle Color
+							</td>
+							<td>
+								<div id='needleColorPicker' dojoType='dijit.ColorPalette' onChange='changeNeedleColor' palette="3x4"/>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								Text Indicator Color
+							</td>
+							<td>
+								<div id='textColorPicker' dojoType='dijit.ColorPalette' onChange='changeTextIndicatorColor' palette="3x4"/>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								Scale font 
+							</td>
+							<td>
+								<div dojoType='dijit.form.Button' onClick="glossyCircular.set('font','italic normal normal 18pt serif');glossyCircular2.set('font','italic normal normal 18pt serif')">
+									Sample #1
+								</div>
+								<div dojoType='dijit.form.Button' onClick="glossyCircular.set('font','normal normal bold 12pt serif');glossyCircular2.set('font','normal normal bold 12pt serif')">
+									Sample #2
+								</div>
+								<div dojoType='dijit.form.Button' onClick="glossyCircular.set('font','normal normal normal 10pt serif');glossyCircular2.set('font','normal normal normal 10pt serif')">
+									Default
+								</div>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								Text Indicator font 
+							</td>
+							<td>
+								<div dojoType='dijit.form.Button' onClick="glossyCircular.set('textIndicatorFont','normal small-caps bold 12pt Arial');glossyCircular2.set('textIndicatorFont','normal small-caps bold 12pt Arial')">
+									Sample #1
+								</div>
+								<div dojoType='dijit.form.Button' onClick="glossyCircular.set('textIndicatorFont','italic normal normal 30pt Arial');glossyCircular2.set('textIndicatorFont','italic normal normal 30pt Arial')">
+									Sample #2
+								</div>
+								<div dojoType='dijit.form.Button' onClick="glossyCircular.set('textIndicatorFont','normal normal normal 20pt Arial,sans-serif');glossyCircular2.set('textIndicatorFont','normal normal normal 20pt Arial,sans-serif')">
+									Default
+								</div>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								Display text indicator 
+							</td>
+							<td>
+								<div dojoType='dijit.form.CheckBox' checked onChange="glossyCircular.set('textIndicatorVisible',this.checked);glossyCircular2.set('textIndicatorVisible',this.checked)" />
+							</td>
+						</tr>
+						<tr>
+							<td>
+								Allow interaction
+							</td>
+							<td>
+								<div dojoType='dijit.form.CheckBox' checked onChange="glossyCircular.set('noChange',!this.checked);glossyCircular2.set('noChange',!this.checked)" />
+							</td>
+						</tr>
+						<tr>
+							<table border="0" width="100%">
+								<tr align="left">
+									<td title="Major Ticks">
+										<table>
+											<tr>
+												<td>
+													Major Ticks interval
+												</td>
+												<td>
+													<div dojoType='dijit.form.HorizontalSlider' intermediateChanges="true" onChange="glossyCircular.set('majorTicksInterval',this.value);glossyCircular2.set('majorTicksInterval',this.value)" value="10" minimum="1" maximum="100" discreteValues="100" showButtons="false" style="width: 200px; height: 20px"/>
+												</td>
+											</tr>
+											<tr>
+												<td>
+													Major Ticks length
+												</td>
+												<td>
+													<div dojoType='dijit.form.HorizontalSlider' intermediateChanges="true" onChange="glossyCircular.setMajorTicksLength(this.value);glossyCircular2.setMajorTicksLength(this.value)" value="5" minimum="1" maximum="15" discreteValues="1" showButtons="false" style="width: 200px; height: 20px"/>
+												</td>
+											</tr>
+											<tr>
+												<td>
+													Major Ticks Color
+												</td>
+												<td>
+													<div dojoType='dijit.ColorPalette' onChange="changeMajorTicksColor" palette="3x4"/>
+												</td>
+											</tr>
+											<tr>
+												<td>
+													Label placement inside
+												</td>
+												<td>
+													<div dojoType='dijit.form.CheckBox' checked onChange="glossyCircular.set('majorTicksLabelPlacement',this.checked?'inside':'outside');glossyCircular2.set('majorTicksLabelPlacement',this.checked?'inside':'outside')" />
+												</td>
+											</tr>
+										</table>
+									</td>
+									<td title="Minor Ticks">
+										<table>
+											<!--
+											<tr>
+											<td>
+											Minor Ticks offset
+											</td>
+											<td>
+											<div dojoType='dijit.form.HorizontalSlider' intermediateChanges="true" onChange="glossyCircular.setMinorTicksOffset(this.value)" value="130" minimum="0" maximum="200" showButtons="false" style="width: 200px; height: 20px"/>
+											</td>
+											</tr>
+											-->
+											<tr>
+												<td>
+													Minor Ticks interval
+												</td>
+												<td>
+													<div dojoType='dijit.form.HorizontalSlider' intermediateChanges="true" onChange="glossyCircular.set('minorTicksInterval',this.value);glossyCircular2.set('minorTicksInterval',this.value)" value="10" minimum="1" maximum="100" discreteValues="100" showButtons="false" style="width: 200px; height: 20px"/>
+												</td>
+											</tr>
+											<tr>
+												<td>
+													Minor Ticks length
+												</td>
+												<td>
+													<div dojoType='dijit.form.HorizontalSlider' intermediateChanges="true" onChange="glossyCircular.setMinorTicksLength(this.value);glossyCircular2.setMinorTicksLength(this.value)" value="5" minimum="1" maximum="15" discreteValues="1" showButtons="false" style="width: 200px; height: 20px"/>
+												</td>
+											</tr>
+											<tr>
+												<td>
+													Minor Ticks Color
+												</td>
+												<td>
+													<div dojoType='dijit.ColorPalette' onChange="changeMinorTicksColor" palette="3x4"/>
+												</td>
+											</tr>
+										</table>
+									</td>
+								</tr>
+							</table>
+						</tr>
+					</table>
+				</td>
+			</tr>
+		</table>
+	</body>
+</html>

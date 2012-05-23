@@ -1,0 +1,44 @@
+The util/buildscripts directory allows you do to custom builds of the dojo source.
+
+REQUIREMENTS
+=======================
+The build system requires that Java 1.4.2 or later is installed.
+
+DIRECTORY STRUCTURE
+=======================
+Recommended directory structure and names (if using dijit and dojox in addition to
+dojo core):
+
+- dijit
+- dojo
+- dojox
+- util
+  - buildscripts
+
+Builds will be generated in a "release" directory that is a sibling to util
+(the output directory will also be printed at the end of the build).
+  
+DOING A BUILD
+=======================
+In the util/buildscripts directory, to run the the build, type the following:
+
+Windows-based operating systems:
+> build.bat
+
+All other operating systems:
+> build.sh
+(may need to chmod +x build.sh to get it to execute as a script)
+
+Typing the above command will give you some help text with the allowed build
+options.
+
+TYPICAL BUILDS
+=======================
+This command will use the build profile at util/buildscripts/profiles/standard.profile.js
+to do a build:
+
+> build.sh profile=standard action=release
+
+To do an xdomain build, add the loader argument:
+
+> build.sh profile=standard loader=xdomain action=release

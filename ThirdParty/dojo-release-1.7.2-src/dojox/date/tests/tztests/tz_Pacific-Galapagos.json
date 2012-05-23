@@ -1,0 +1,16 @@
+({
+	name: "date.timezone.Pacific-Galapagos",
+	runTest: function(t){
+		var tz = "Pacific/Galapagos";
+		doh.checkDate({tzOffset: 358.4, tzAbbr: "LMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: 358.4, tzAbbr: "LMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: 358.4, tzAbbr: "LMT"}, -1230746497000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "ECT"}, -1230746496000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "ECT"}, 504939599000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "GALT"}, 504939600000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "GALT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "GALT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "GALT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: 360, tzAbbr: "GALT"}, 1246789800000, tz, 0);
+	}
+})

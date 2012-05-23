@@ -1,0 +1,82 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>Dojox SortList Test</title>
+	
+	<!-- required: a default theme file -->
+	<link rel="stylesheet" id="themeStyles" href="../../../dijit/themes/tundra/tundra.css">
+	<link rel="stylesheet" href="../SortList/SortList.css">
+	
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css"; 
+	</style>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: true"></script>
+
+	<!-- do not use! only for testing dynamic themes -->
+	<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+	<!-- debugging -->
+	<script type="text/javascript" src="../SortList.js"></script>
+	
+	<script type="text/javascript">
+		dojo.require("dojox.widget.SortList");
+		dojo.require("dijit.layout.TabContainer");
+		dojo.require("dijit.layout.BorderContainer");
+		dojo.require("dojo.data.ItemFileReadStore"); 
+		dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+	</script>
+</head>
+
+<body class="tundra">
+
+	<h1 class="testTitle">Dojox SortList test</h1>
+
+	<div dojoType="dojo.data.ItemFileReadStore" url="../../../dijit/tests/_data/countries.json" jsId="stateStore"></div>
+	
+	<h3>Simple sortable example</h3>
+	<ul dojoType="dojox.widget.SortList" store="stateStore" title="sortable List" style="width:200px; height:200px;"></ul>
+
+	<h3>Children of a TabContainer</h3>
+	<div dojoType="dijit.layout.TabContainer" style="width:300px; height:300px;">
+		<div dojoType="dojox.widget.SortList" store="stateStore" title="list 1" heading="countires"></div>
+		<div dojoType="dojox.widget.SortList" store="stateStore" title="list 2" heading="states"></div>
+		<div dojoType="dojox.widget.SortList" store="stateStore" title="closable" heading="countries" closable="true"></div>
+	</div>
+
+	<h3>Child of a BorderContainer</h3>
+	<div dojoType="dijit.layout.BorderContainer" design="sidebar" gutters="true" liveSplitters="true" style="border: 1px solid #ccc; width:600px; height:200px;">
+		<div dojoType="dojox.widget.SortList" splitter="true" store="stateStore" title="list 1" region="leading" style="width: 33%"></div>
+		<div dojoType="dojox.widget.SortList" splitter="true" store="stateStore" title="list 2" region="center"></div>
+		<div dojoType="dojox.widget.SortList" splitter="true" store="stateStore" title="closable" region="trailing" style="width: 33%"></div>
+	</div>
+	
+	<br>
+	<h3>Raw, degradable UL list:</h3>
+	<ul dojoType="dojox.widget.SortList" title="SortList From Markup" sortable="false" style="width:200px; height:200px;">
+		<li>one</li>
+		<li>two</li>
+		<li>three</li>
+		<li>four</li>
+		<li>five</li>
+		<li>six</li>
+		<li>four</li>
+		<li>five</li>
+		<li>six</li>
+		<li>four</li>
+		<li>five</li>
+		<li>six</li>
+		<li>four</li>
+		<li>five</li>
+		<li>six</li>
+	</ul>
+
+	<h3>normal ul:</h3>
+		<ul style="width:200px; height:200px;">
+			<li>one</li><li>one</li><li>one</li><li>one</li><li>one</li><li>one</li><li>one</li><li>one</li>
+		</ul>
+	
+</body>
+</html>

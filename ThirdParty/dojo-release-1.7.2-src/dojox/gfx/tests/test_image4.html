@@ -1,0 +1,58 @@
+<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" >
+<head>
+<title>Testing image 4</title>
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+</style>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+<!--<script type="text/javascript" src="../vml.js"></script>-->
+<!--<script type="text/javascript" src="../svg.js"></script>-->
+<!--<script type="text/javascript" src="../silverlight.js"></script>-->
+<script type="text/javascript">
+dojo.require("dojox.gfx");
+dojo.require("dojo.colors");
+
+var grid_size = 200, grid_step = 20;
+
+createSurface = function(){
+	var surface = dojox.gfx.createSurface("test", grid_size, grid_size)
+	surface.whenLoaded(makeShapes);
+};
+
+makeShapes = function(surface){
+    var g = dojox.gfx, m = g.matrix;
+    
+	for(var i = 0; i <= grid_size; i += grid_step){
+		surface.createLine({x1: 0, x2: grid_size, y1: i, y2: i}).setStroke("grey");
+		surface.createLine({y1: 0, y2: grid_size, x1: i, x2: i}).setStroke("grey");
+	}
+    
+    var rect1 = surface.createRect({x: 50, y: 50, width: 100, height: 100, r: 5}).setFill("red").setStroke("black");
+    var img1  = surface.createImage({width: 75, height: 50, src: "images/eugene-sm.jpg"}).
+                    setTransform([m.translate(50, 0), m.rotateg(45)]);
+    var rect2 = surface.createRect({x: 75, y: 25, width: 50, height: 150, r: 5}).setFill("yellow").setStroke("black");
+    var img2  = surface.createImage({width: 75, height: 50, src: "images/eugene-sm.jpg"}).
+                    setTransform([m.translate(50, 120), m.rotateg(-45)]);
+    var rect3 = surface.createRect({x: 25, y: 75, width: 150, height: 50, r: 5}).setFill("green").setStroke("black");
+
+    img1.connect("onclick", function(){ alert("image #1"); });
+    img2.connect("onclick", function(){ alert("image #2"); });
+    
+    rect1.connect("onclick", function(){ alert("red"); });
+    rect2.connect("onclick", function(){ alert("yellow"); });
+    rect3.connect("onclick", function(){ alert("green"); });
+};
+
+dojo.addOnLoad(createSurface);
+
+</script>
+</head>
+<body>
+<h1>dojox.gfx Image event tests</h1>
+<p>Note: Silverlight doesn't allow downloading images when run from a file system. This demo should be run from a server.</p>
+<div id="test"></div>
+<p>That's all Folks!</p>
+</body>
+</html>

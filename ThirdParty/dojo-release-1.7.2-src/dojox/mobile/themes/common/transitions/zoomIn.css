@@ -1,0 +1,33 @@
+.mblZoomIn.mblOut {
+	z-index: -100;
+	-webkit-animation-duration: .5s;
+	-webkit-animation-name: mblZoomInOut;
+	-webkit-animation-timing-function: ease-out;
+}
+.mblZoomIn.mblIn {
+	z-index: 0;
+	-webkit-animation-duration: .5s;
+	-webkit-animation-name: mblZoomInIn;
+	-webkit-animation-timing-function: ease-out;
+}
+.dj_android .mblZoomIn.mblIn {
+	-webkit-animation-name: mblZoomInInAndroid;
+}
+@-webkit-keyframes mblZoomInOut {
+	from { -webkit-transform: scale(1.0); }
+	to { -webkit-transform: scale(1.0); }
+}
+@-webkit-keyframes mblZoomInIn {
+	from {
+		-webkit-transform: scale(0.0);
+		opacity: 0;
+	}
+	to {
+		-webkit-transform: scale(1.0);
+		opacity: 1;
+	}
+}
+@-webkit-keyframes mblZoomInInAndroid {
+	from { -webkit-transform: scale(0.0); }
+	to { -webkit-transform: scale(1.0); }
+}

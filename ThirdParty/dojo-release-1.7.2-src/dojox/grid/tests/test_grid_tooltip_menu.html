@@ -1,0 +1,166 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>Test dojox.grid.Grid Basic</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+
+	<style type="text/css">
+		@import "../../../dijit/themes/tundra/tundra.css";
+		@import "../resources/Grid.css";
+		@import "../resources/tundraGrid.css";
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+		body {
+			font-size: 0.9em;
+			font-family: Geneva, Arial, Helvetica, sans-serif;
+		}
+		.heading {
+			font-weight: bold;
+			padding-bottom: 0.25em;
+		}
+				
+		#grid { 
+			border: 1px solid #333;
+			width: 35em;
+			height: 30em;
+		}
+	</style>
+	<script type="text/javascript" src="../../../dojo/dojo.js" 
+		djConfig="isDebug:false, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		dojo.require("dijit.dijit");
+		dojo.require("dojox.grid.DataGrid");
+		dojo.require("dojo.data.ItemFileWriteStore");
+		dojo.require("dijit.Tooltip");
+		dojo.require("dijit.Menu");
+		dojo.require("dijit.ColorPalette");
+		dojo.require("dojo.parser");
+	</script>
+	<script type="text/javascript" src="support/test_data.js"></script>
+	<script type="text/javascript">
+		var layout = [[
+			{name: 'Column 1', field: 'col1'},
+			{name: 'Column 2', field: 'col2'},
+			{name: 'Column 3', field: 'col3'},
+			{name: 'Column 4', field: 'col4', width: "150px"},
+			{name: 'Column 5', field: 'col5'}
+		],[
+			{name: 'Column 6', field: 'col6'},
+			{name: 'Column 7', field: 'col7'},
+			{name: 'Column 8'},
+			{name: 'Column 9', field: 'col3', colSpan: 2}
+		]];
+		dojo.addOnLoad(function() {
+			var 
+				showTooltip = function(e) {
+					if(gridTooltipEnabled){
+						var msg = "This is cell " + e.rowIndex + ", " + e.cellIndex;
+						dijit.showTooltip(msg, e.cellNode);
+					}
+				},
+				hideTooltip = function(e) {
+					dijit.hideTooltip(e.cellNode);
+				}
+			
+			// cell tooltip
+			dojo.connect(grid, "onCellMouseOver", showTooltip);
+			dojo.connect(grid, "onCellMouseOut", hideTooltip);
+			// header cell tooltip
+			dojo.connect(grid, "onHeaderCellMouseOver", showTooltip);
+			dojo.connect(grid, "onHeaderCellMouseOut", hideTooltip);
+
+			// grid menu
+			window["gridMenu"] = dijit.byId("gridMenu");
+			gridMenu.bindDomNode(grid.domNode);
+			// prevent grid methods from killing the context menu event by implementing our own handler
+			grid.onCellContextMenu = function(e) {
+				cellNode = e.cellNode;
+			};
+			grid.onHeaderContextMenu = function(e) {
+				cellNode = e.cellNode;
+			};
+		});
+		
+		function reportCell() {
+			if(cellNode){
+				alert("Cell contents:  " + cellNode.innerHTML);
+				cellNode = null;
+			}
+		}
+		
+		gridTooltipEnabled = true;
+		function toggleTooltip(button){
+			gridTooltipEnabled = !gridTooltipEnabled;
+			button.value = gridTooltipEnabled ? "Disable Grid Tooltip" : "Enable Grid Tooltip";
+		}
+		
+		gridMenuEnabled = true;
+		function toggleMenu(button){
+			gridMenuEnabled = !gridMenuEnabled;
+			button.value = gridMenuEnabled ? "Disable Grid Menu" : "Enable Grid Menu";
+			gridMenu[gridMenuEnabled ? "bindDomNode" : "unBindDomNode"](grid.domNode);
+		}
+	</script>
+</head>
+<body class="tundra">
+	<div dojoType="dijit.Menu" id="gridMenu"  style="display: none;">
+		<div dojoType="dijit.MenuItem" onClick="reportCell">See cell text...</div>
+		<div dojoType="dijit.MenuItem" disabled="true">Disabled Item</div>
+		<div dojoType="dijit.MenuSeparator"></div>
+		<div dojoType="dijit.MenuItem" iconClass="dijitEditorIcon dijitEditorIconCut"
+			onClick="alert('not actually cutting anything, just a test!')">Cut</div>
+		<div dojoType="dijit.MenuItem" iconClass="dijitEditorIcon dijitEditorIconCopy"
+			onClick="alert('not actually copying anything, just a test!')">Copy</div>
+		<div dojoType="dijit.MenuItem" iconClass="dijitEditorIcon dijitEditorIconPaste"
+			onClick="alert('not actually pasting anything, just a test!')">Paste</div>
+		<div dojoType="dijit.MenuSeparator"></div>
+	</div>
+	<div dojoType="dijit.Menu" id="submenu1" contextMenuForWindow="true" style="display: none;">
+		<div dojoType="dijit.MenuItem" onClick="alert('Hello world');">Enabled Item</div>
+		<div dojoType="dijit.MenuItem" disabled="true">Disabled Item</div>
+		<div dojoType="dijit.MenuSeparator"></div>
+		<div dojoType="dijit.MenuItem" iconClass="dijitEditorIcon dijitEditorIconCut"
+			onClick="alert('not actually cutting anything, just a test!')">Cut</div>
+		<div dojoType="dijit.MenuItem" iconClass="dijitEditorIcon dijitEditorIconCopy"
+			onClick="alert('not actually copying anything, just a test!')">Copy</div>
+		<div dojoType="dijit.MenuItem" iconClass="dijitEditorIcon dijitEditorIconPaste"
+			onClick="alert('not actually pasting anything, just a test!')">Paste</div>
+		<div dojoType="dijit.MenuSeparator"></div>
+		<div dojoType="dijit.PopupMenuItem">
+			<span>Enabled Submenu</span>
+			<div dojoType="dijit.Menu" id="submenu2">
+				<div dojoType="dijit.MenuItem" onClick="alert('Submenu 1!')">Submenu Item One</div>
+				<div dojoType="dijit.MenuItem" onClick="alert('Submenu 2!')">Submenu Item Two</div>
+				<div dojoType="dijit.PopupMenuItem">
+					<span>Deeper Submenu</span>
+					<div dojoType="dijit.Menu" id="submenu4">
+						<div dojoType="dijit.MenuItem" onClick="alert('Sub-submenu 1!')">Sub-sub-menu Item One</div>
+						<div dojoType="dijit.MenuItem" onClick="alert('Sub-submenu 2!')">Sub-sub-menu Item Two</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div dojoType="dijit.PopupMenuItem" disabled="true">
+			<span>Disabled Submenu</span>
+			<div dojoType="dijit.Menu" id="submenu3" style="display: none;">
+				<div dojoType="dijit.MenuItem" onClick="alert('Submenu 1!')">Submenu Item One</div>
+				<div dojoType="dijit.MenuItem" onClick="alert('Submenu 2!')">Submenu Item Two</div>
+			</div>
+		</div>
+		<div dojoType="dijit.PopupMenuItem">
+			<span>Different popup</span>
+			<div dojoType="dijit.ColorPalette"></div>
+		</div>
+	</div>
+	<div class="heading">dojox.grid.Grid Basic Test</div>
+	<p>
+		<input type="button" onclick="toggleTooltip(this)" value="Disable Grid Tooltip">&nbsp;&nbsp;
+		<input type="button" onclick="toggleMenu(this)" value="Disable Grid Menu">&nbsp;&nbsp;<br />
+		Note: when the grid menu is disabled, the document's dijit context menu should be shown over the grid.
+	</p>
+	<div id="grid" jsid="grid" dojoType="dojox.grid.DataGrid" 
+		store="test_store" structure="layout"></div>
+</body>
+</html>

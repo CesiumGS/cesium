@@ -1,0 +1,356 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>Chart2D Title</title>
+		<style type="text/css">
+			@import "../../../../dojo/resources/dojo.css";
+			@import "../../../../dijit/tests/css/dijitTests.css";
+			@import "../../../../dijit/themes/tundra/tundra.css";
+			@import "../../resources/Legend.css";
+
+			
+			.axisTitleRotation90 {
+				transform: rotate(90deg);
+				-o-transform: rotate(90deg);
+				-webkit-transform: rotate(90deg);
+				-moz-transform: rotate(90deg);
+			}
+			.axisTitleRotation180 {
+				transform: rotate(180deg);
+				-o-transform: rotate(180deg);
+				-webkit-transform: rotate(180deg);
+				-moz-transform: rotate(180deg);
+			}
+			.axisTitleRotation270 {
+				transform: rotate(-90deg);
+				-o-transform: rotate(-90deg);
+				-webkit-transform: rotate(-90deg);
+				-moz-transform: rotate(-90deg);
+			}
+			.pie {
+				width:500px;
+				height:500px;
+			}
+
+		</style>
+		<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+		<script type="text/javascript">
+			dojo.require("dojo.parser");
+			dojo.require("doh.runner");
+
+			dojo.require("dojox.charting.Chart");
+			dojo.require("dojox.charting.axis2d.Default");
+			dojo.require("dojox.charting.plot2d.Lines");
+			dojo.require("dojox.charting.plot2d.Columns");
+			dojo.require("dojox.charting.themes.PlotKit.orange");
+			dojo.require("dojox.charting.action2d.Shake");
+			dojo.require("dojox.charting.action2d.Tooltip");
+			dojo.require("dojox.charting.widget.SelectableLegend");
+
+			dojo.require("dijit.dijit");
+			dojo.require("dojox.charting.widget.Chart");
+			dojo.require("dojox.charting.plot2d.Grid");
+			dojo.require("dojox.data.HtmlStore");
+			dojo.require("dojox.charting.plot2d.Areas");
+ 			dojo.require("dojox.charting.widget.Legend");
+			
+			dojo.require("dojox.charting.plot2d.Pie");
+			dojo.require("dojox.charting.themes.MiamiNice");
+			dojo.require("dojox.charting.action2d.Highlight");
+
+
+			dojo.require("dijit.form.NumberSpinner");
+			dojo.require("dojo.parser");
+
+
+			dojo.require("dojox.charting.BidiSupport");
+			dojo.require("dojox.charting.widget.BidiSupport");
+
+			var chart1, legend1, pie, pieLegend;
+			seriesB = [2.6, 1.8, 2, 1, 1.4, 0.7, 2];
+
+			updateAxis = function(){
+				var gap = 25,
+					rotation = 0,
+					orientation = "away";
+				chart1.addAxis("x", {
+							title: "Quarter \u05dc\u05e9\u05e0\u05ea 2010.",
+							titleGap: gap, 
+							titleFontColor: "orange",
+							titleOrientation: orientation,
+							rotation: rotation,
+							includeZero: true, natural: true, fixLower: "major", fixUpper: "major", 
+							labels: [
+								{value: 0, text: ""},{value: 1, text: "1 Qtr."},{value: 2, text: "2 Qtr."},
+								{value: 3, text: "3 Qtr."},{value: 4, text: "\u05e8\u05d1\u05e2\u05d5\u05df 4."},{value: 5, text: "End."}
+							]
+						}).
+						addAxis("y", {
+							title: "\u05ea\u05e9\u05d5\u05d0\u05d4 \u0028\u05d1\u05de\u05dc\u05d9\u05d5\u05e0\u05d9\u05dd\u0029.", 
+							titleGap: gap, 
+							titleFontColor: "orange",
+							titleOrientation: orientation,
+							rotation: rotation,
+							vertical: true, includeZero: true, natural: true, fixLower: "major", fixUpper: "major", majorTickStep: 2,
+							labels: [
+								{value: 0, text: ""},{value: 1, text: "One."},{value: 2, text: "\u05e9\u05ea\u05d9\u05d9\u05dd."},
+								{value: 3, text: "My name: \u05d8\u05dc."},{value: 4, text: "\u05e7\u05d5\u05e8\u05d0\u05d9\u05dd\u0020\u05dc\u05d9: Tal."},{value: 5, text: "Five."},{value: 6, text: "Six."}
+							]
+						}).
+						addAxis("x2", {
+							title: "\u05e8\u05d1\u05e2\u05d5\u05df of 2010.",
+							titleGap: gap, 
+							titleFontColor: "blue",
+							titleOrientation: orientation,
+							rotation: rotation,
+							leftBottom: false,
+							includeZero: true, natural: true, fixLower: "major", fixUpper: "major"
+						}).
+						addAxis("y2", {
+							title: "Quantity(ton).", 
+							titleGap: gap, 
+							titleFontColor: "blue",
+							titleOrientation: orientation,
+							rotation: rotation,
+							leftBottom: false,
+							vertical: true, includeZero: true, natural: true, fixLower: "major", fixUpper: "major", majorTickStep: 2
+						});
+						var anim6b = new dojox.charting.action2d.Shake(chart1, "default2");
+						var anim6c = new dojox.charting.action2d.Tooltip(chart1, "default2");
+
+						chart1.render();
+						legend1 = new dojox.charting.widget.SelectableLegend({chart: chart1}, "legend1");
+
+
+					};
+
+			makeObjects = function(){
+				chart1 = new dojox.charting.Chart("test1",{textDir:"auto",title:"\u05d0\u05e0\u05d9\u0020\u05db\u05d5\u05ea\u05e8\u05ea of the chart."
+					, titleFontColor: "blue"}).
+					addPlot("default", {type: "Lines"}).
+					addSeries("\u05e1\u05d3\u05e8\u05d4\u0020\u05d0\u0027.", [3, 5, 3, 4, 2], {stroke: {color: "orange"}, fill: "yellow"}).//[{x:3}, {x:5}, {x:3}, {x:4}, {x:2}], {stroke: {color: "orange"}, fill: "yellow"}).
+					addPlot("default2", {type: "Columns", gap: 15, hAxis: "x2", vAxis: "y2"}).
+					addSeries("Series B.", [{y:12,tooltip:"I'm working at \u05d9\u05d1\u05de in Israel."}, {y:8,tooltip:"\u05d0\u05e0\u05d9\u0020\u05e2\u05d5\u05d1\u05d3\u05ea\u0020\u05d1- IBM \u05d9\u05e9\u05e8\u05d0\u05dc."}, {y:15,tooltip:"I'm working at \u05d9\u05d1\u05de in Israel."}, {y:20,tooltip:"\u05d0\u05e0\u05d9\u0020\u05e2\u05d5\u05d1\u05d3\u05ea\u0020\u05d1- IBM \u05d9\u05e9\u05e8\u05d0\u05dc."}], {plot: "default2", stroke: {color: "blue"}, fill: "lightblue"});
+				updateAxis();
+						pie = new dojox.charting.Chart("pie",{textDir:"rtl"}).
+							setTheme(dojox.charting.themes.MiamiNice).
+							addPlot("default",{type:"Pie",radius:100,font: "normal normal 10pt Tahoma",htmlLabels:true,labelOffset:-20}).
+							addSeries("\u05d0\u05e3\u002e",[{
+								y: 12.1,
+								text: "\u05e1\u05d9\u05df\u002e"
+							},{
+								y: 9.52,
+								text: "India."
+							}, {
+								y: 2.66,
+								text: "USA."
+							}, {
+								y: 2.06,
+								text: "Indonesia."
+							}, {
+								y: 1.63,
+								text: "Brazil."
+							},{
+								y: 1.48,
+								text: "Russian."
+							},{
+								y: 1.29,
+								text: "Pakistan."
+							},{
+								y: 1.25,
+								text: "Japan."
+							}]).
+							render();
+						var ainm = new dojox.charting.action2d.Highlight(pie,"default");
+						pieLegend = new dojox.charting.widget.SelectableLegend({chart: pie,horizontal:false, outline: true},"pieLegend");
+			};
+
+			dojo.addOnLoad(function(){
+				makeObjects();
+
+				var buttonRtl
+					, buttonLtr
+					, buttonAuto
+					, chart5
+					, legend5;
+					
+				doh.register("test dynamic change of textDir.", [
+					{
+						name: "initial textDir of the chart",
+
+						setUp: function(){
+							buttonRtl = dojo.byId("buttonRtl");
+							buttonLtr = dojo.byId("buttonLtr");
+							buttonAuto = dojo.byId("buttonAuto");
+							chart5 = dijit.byId('chart5');
+							legend5 = dijit.byId('legend5');
+						},
+						
+						runTest: function(){
+							doh.is("auto", chart1.textDir, "textDir of : chart1");
+							doh.is("auto", chart1.surface.textDir, "textDir of : chart1.surface");
+							doh.is("auto", legend1.textDir, "textDir of : legend1");
+
+							doh.is("rtl", pie.textDir, "textDir of : pie");
+							doh.is("rtl", pie.surface.textDir, "textDir of : pie.surface");
+							doh.is("rtl", pieLegend.textDir, "textDir of : pieLegend");
+
+							doh.is("ltr", chart5.textDir, "textDir of : chart5");
+							doh.is("ltr", chart5.chart.textDir, "textDir of : chart5");
+							doh.is("ltr", chart5.chart.surface.textDir, "textDir of : chart5.surface");
+							doh.is("ltr", legend5.textDir, "textDir of : legend5");
+							
+						}
+					},
+					{
+						name: "set textDir to RTL.",
+
+						runTest: function(){
+							buttonRtl.click();
+							doh.is("rtl", chart1.textDir, "textDir of : chart");
+							doh.is("rtl", chart1.surface.textDir, "textDir of : chart");
+							doh.is("rtl", legend1.textDir, "textDir of : legend1");
+
+							doh.is("rtl", pie.textDir, "textDir of : pie");
+							doh.is("rtl", pie.surface.textDir, "textDir of : pie.surface");
+							doh.is("rtl", pieLegend.textDir, "textDir of : pieLegend");
+
+							doh.is("rtl", chart5.textDir, "textDir of : chart5");
+							doh.is("rtl", chart5.chart.textDir, "textDir of : chart5");
+							doh.is("rtl", chart5.chart.surface.textDir, "textDir of : chart5.surface");
+							doh.is("rtl", legend5.textDir, "textDir of : legend5");
+
+						}
+					},
+					{
+						name: "set textDir to LTR.",
+
+						runTest: function(){
+							buttonLtr.click();
+							doh.is("ltr", chart1.textDir, "textDir of : chart");
+							doh.is("ltr", chart1.surface.textDir, "textDir of : chart");
+							doh.is("ltr", legend1.textDir, "textDir of : legend1");
+
+							doh.is("ltr", pie.textDir, "textDir of : pie");
+							doh.is("ltr", pie.surface.textDir, "textDir of : pie.surface");
+							doh.is("ltr", pieLegend.textDir, "textDir of : pieLegend");
+
+							doh.is("ltr", chart5.textDir, "textDir of : chart5");
+							doh.is("ltr", chart5.chart.textDir, "textDir of : chart5");
+							doh.is("ltr", chart5.chart.surface.textDir, "textDir of : chart5.surface");
+							doh.is("ltr", legend5.textDir, "textDir of : legend5");
+						}
+					},
+					{
+						name: "set textDir to AUTO.",
+
+						runTest: function(){
+							buttonAuto.click();
+							doh.is("auto", chart1.textDir, "textDir of : chart");
+							doh.is("auto", chart1.surface.textDir, "textDir of : chart");
+							doh.is("auto", legend1.textDir, "textDir of : legend1");
+
+							doh.is("auto", pie.textDir, "textDir of : pie");
+							doh.is("auto", pie.surface.textDir, "textDir of : pie.surface");
+							doh.is("auto", pieLegend.textDir, "textDir of : pieLegend");
+
+							doh.is("auto", chart5.textDir, "textDir of : chart5");
+							doh.is("auto", chart5.chart.textDir, "textDir of : chart5");
+							doh.is("auto", chart5.chart.surface.textDir, "textDir of : chart5.surface");
+							doh.is("auto", legend5.textDir, "textDir of : legend5");
+						}
+					}					
+					
+				]);
+				doh.run();
+			});
+		</script>
+	</head>
+	<body class="tundra">
+		<h1>Chart2D Titles</h1>
+		<p>Column chart with axis title</p>
+		<p>
+		<input id="buttonRtl" 
+			onClick="
+				chart1.setTextDir('rtl'); 
+				dijit.byId('chart5').set('textDir','rtl');
+				pie.setTextDir('rtl');
+			" 
+			type="button" value="RTL"/>
+		<input id="buttonLtr" 
+			onClick="
+				chart1.setTextDir('ltr'); 
+				dijit.byId('chart5').set('textDir','ltr');
+				pie.setTextDir('ltr');
+			" 
+			type="button" value="LTR"/>
+		<input id="buttonAuto" 
+			onClick="
+				chart1.setTextDir('auto'); 
+				dijit.byId('chart5').set('textDir','auto');
+				pie.setTextDir('auto');
+			" 
+			type="button" value="AUTO"/>
+			
+		&nbsp;&nbsp;
+
+		<h2>Programmatically created chart.</h2>
+		<div id="legend1"></div>
+		<p/>
+		<div id="test1" style="width: 600px; height: 400px;"></div>
+		&nbsp;&nbsp;
+
+		<h2>HTML declared chart.</h2>
+		<div dojoType="dojox.data.HtmlStore" dataId="tableExample" jsId="tableStore"></div>
+		<table id="tableExample" style="display: none;">
+			<thead>
+				<tr><th>value</th></tr>
+			</thead>
+			<tbody>
+				<tr><td >6.3</td></tr>
+				<tr><td>1.8</td></tr>
+				<tr><td>3  </td></tr>
+				<tr><td>0.5</td></tr>
+				<tr><td>4.4</td></tr>
+				<tr><td>2.7</td></tr>
+				<tr><td>2  </td></tr>
+			</tbody>
+		</table>
+		<table border="0" cellspacing="30">
+			<tr>
+				<td>
+					<div dojoType="dojox.charting.widget.Chart" id="chart5" textDir="ltr" style="width: 600px; height: 400px;">
+						<div class="axis" name="x" maxLabelCharCount= 2 title="&#1511;&#1493;&#1512;&#1488;&#1497;&#1501; &#1500;&#1497; &#1510;&#1497;&#1512; X." titleOrientation= "away"  font="italic normal normal 8pt Tahoma" labels="[{value:1, text:'First.'},{value:2, text:'&#1513;&#1514;&#1497;&#1497;&#1501; &#1513;&#1500;&#1493;&#1513;.'},{value:4, text:'444444444444&#1513;.'}]"></div>
+						<div class="axis" name="y" maxLabelCharCount= 2 title="&#1511;&#1493;&#1512;&#1488;&#1497;&#1501; &#1500;&#1497; &#1510;&#1497;&#1512; Y." vertical="true" fixUpper="major" includeZero="true" labels="[{value:2, text:'&#1513;&#1514;&#1497;&#1497;&#1501; &#1513;&#1500;&#1493;&#1513;.'},{value:3, text:'Third.'},{value:4, text:'444444444444&#1513;.'}]"
+							font="italic normal normal 8pt Tahoma"></div>
+						<div class="plot" name="default" type="Areas"></div>
+						<div class="plot" name="grid" type="Grid"></div>
+						<div class="series" name="&#1505;&#1491;&#1512;&#1492; 1." data="1, 2, 0.5, 1.5, 1, 2.8, 0.4"></div>
+						<div class="series" name="Run B." array="seriesB" ></div>
+						<div class="series" name="Run C." store="tableStore" valueFn="Number(x)"></div>
+					</div>
+					<div id="legend5" dojoType="dojox.charting.widget.Legend" chartRef="chart5"></div>
+				</td>
+			</tr>
+		</table>
+		<h2>3.Pie</h2>
+		<div id="pie" class="pie" style="float:left;"></div>
+		<div style="float:left;">
+		<div id="pieLegend"></div>
+		
+	</body>
+</html>

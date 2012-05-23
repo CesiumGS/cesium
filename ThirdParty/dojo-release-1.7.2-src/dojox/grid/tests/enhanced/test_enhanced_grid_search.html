@@ -1,0 +1,186 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html dir="ltr">
+<head>
+	<title>Test Search plugin of dojox.grid.EnhancedGrid</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+	<link rel=stylesheet href="support/common.css"/>
+	<style type="text/css">
+		body {
+			font-size: 0.9em;
+			font-family: Geneva, Arial, Helvetica, sans-serif;
+			padding: 0.5em;
+		}
+		.title {
+			text-align:center;
+			margin:1em;
+		}
+ 		#grid{
+			width: 90em;
+			height: 30em;
+		}
+		.outerdiv{
+			position: relative;
+			height: 300px;
+			width: 300px;
+			background-color:blue;
+		}
+		.innerdiv{
+			display:block;
+			position: absolute;
+			height: 100px;
+			width: 100px;
+			left: 50px;
+			top: 50px;
+			background-color:red;
+		}
+		.innerBtn{
+			position: absolute;
+			height: 100px;
+			width: 100px;
+			right: 50px;
+			bottom: 50px;
+			background-color:yellow;
+		}
+	</style>
+	<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: true"></script>
+	<script type="text/javascript" src="../../../../dijit/tests/_testCommon.js"></script>
+	<script type="text/javascript" src="support/test_write_store_music.js"></script>
+	<script type="text/javascript">
+		dojo.require("dojox.grid.EnhancedGrid");
+		dojo.require("dojox.grid.enhanced.plugins.Search");
+		dojo.require("dojo.parser");
+		
+		var layout = [{
+			cells: [
+				{ field: "id", name:"Identity", datatype:"number", width: 4, editable: false},
+				{ field: "Genre", name:"Genre", datatype:"string", width: 10},
+				{ field: "Artist", name:"Artist", datatype:"string", width: 10},
+				{ field: "Year", name:"Year", datatype:"string", width: 2.5},
+				{ field: "Album", name:"Album", datatype:"string", width: 10},
+				{ field: "Name", name:"Name", datatype:"string", width: 8},
+				{ field: "Length", name:"Length", datatype:"string", width: 4},
+				{ field: "Track", name:"Track", datatype:"number", width: 3},
+				{ field: "Composer", name:"Composer", datatype:"string", width: 12},
+				{ field: "Download Date", name:"Download Date", datatype:"date", width: 12},
+				{ field: "Last Played", name:"Last Played", datatype:"time", width: 6},
+				{ field: "Heard", name: "Checked", datatype:"boolean", width: 6}
+			]
+		}];
+		var plugins = {
+			search: true
+		};
+		var getInput = function(str){
+			var start = str.indexOf('/');
+			var end = str.lastIndexOf('/');
+			if(start == 0 || end > 1){
+				var regstr = str.substring(start + 1, end);
+				var modifiers = str.substring(end + 1, str.length);
+				str = new RegExp(regstr,modifiers);
+			}
+			console.log("input:", str);
+			return str;
+		};
+		var onSearched = function(resultId, rowIdx){
+			console.log("search result:", rowIdx);
+			if(rowIdx < 0){
+				dojo.byId(resultId).innerHTML = "Not Found!";
+			}else{
+				dojo.byId(resultId).innerHTML = "Search result is Row " + (rowIdx + 1);
+				dijit.byId("grid").scrollToRow(rowIdx, true);
+			}
+		};
+		var onSearch = function(){
+			var args = {};
+			dojo.query(".searchInput").forEach(function(input){
+				var v = dojo.trim(input.value);
+				if(v){
+					args[input.name] = getInput(v);
+				}
+			});
+			console.log("search arguments:", args);
+			dijit.byId("grid").searchRow(args, dojo.partial(onSearched, "result2"));
+		};
+		var onSearchAll = function(input){
+			dijit.byId("grid").searchRow(getInput(input), dojo.partial(onSearched, "result1"));
+		};
+	</script>
+</head>
+<body class="claro">
+	<h1 class="title" tabindex="0"
+		onfocus="console.log('focus a'),this.style.color='red';"
+		onblur="console.log('blur a'),this.style.color='black';">
+		dojox.grid.EnhancedGrid - Search</h1>
+	<div id="gridContainer">
+		<div id="grid" dojoType="dojox.grid.EnhancedGrid" store="test_store[0]" structure="layout" plugins="plugins"></div>
+	</div><br/>
+	<br />
+		Note: Use "/.../" for Regular Expressions. Wildcards (* and ?) are available when not using "/.../".
+	<hr />
+	<div>Search all columns for<input id="allcolumnsInput" type="text" size="30" value="/void/i" />
+	<button onclick="onSearchAll(dojo.byId('allcolumnsInput').value)">Go =></button>
+	<span id="result1"></span>
+	<hr />
+	Search with a query object (extends the functionality of the standard store query).
+	<table>
+		<thead>
+			<tr>
+				<th>Column</th>
+				<th>Query String or Regular Expression</th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td>id</td>
+				<td><input name="id" class="searchInput" type="text" size="30" /></td>
+				<td rowspan="11" align="center" valign="center" style="padding-left: 50px;">
+					<button onclick="onSearch()">Search =></button>
+					<span id="result2"></span>
+				</td>
+			</tr>
+			<tr>
+				<td>Genre</td>
+				<td><input name="Genre" class="searchInput" type="text" size="30" /></td>
+			</tr>
+			<tr>
+				<td>Artist</td>
+				<td><input name="Artist" class="searchInput" type="text" size="30" value="/an/i" /></td>
+			</tr>
+			<tr>
+				<td>Year</td>
+				<td><input name="Year" class="searchInput" type="text" size="30" /></td>
+			</tr>
+			<tr>
+				<td>Album</td>
+				<td><input name="Album" class="searchInput" type="text" size="30" value="/t.*t/i" /></td>
+			</tr>
+			<tr>
+				<td>Name</td>
+				<td><input name="Name" class="searchInput" type="text" size="30" /></td>
+			</tr>
+			<tr>
+				<td>Length</td>
+				<td><input name="Length" class="searchInput" type="text" size="30" /></td>
+			</tr>
+			<tr>
+				<td>Track</td>
+				<td><input name="Track" class="searchInput" type="text" size="30" /></td>
+			</tr>
+			<tr>
+				<td>Composer</td>
+				<td><input name="Composer" class="searchInput" type="text" size="30" value="*ss*" /></td>
+			</tr>
+			<tr>
+				<td>Download Date</td>
+				<td><input name="Download Date" class="searchInput" type="text" size="30" /></td>
+			</tr>
+			<tr>
+				<td>Last Played</td>
+				<td><input name="Last Played" class="searchInput" type="text" size="30" /></td>
+			</tr>
+		</tbody>
+	</table>
+	<p><strong>Note:</strong> To see the tundra theme, just append <b style="color:blue;">?theme=tundra</b> to the URL.</p>
+</body>
+</html>

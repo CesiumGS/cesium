@@ -1,0 +1,18 @@
+({
+	name: "date.timezone.Africa-Ndjamena",
+	runTest: function(t){
+		var tz = "Africa/Ndjamena";
+		doh.checkDate({tzOffset: -60.2, tzAbbr: "LMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: -60.2, tzAbbr: "LMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: -60.2, tzAbbr: "LMT"}, -1830387613000, tz, 1);
+		doh.checkDate({tzOffset: -60, tzAbbr: "WAT"}, -1830387612000, tz, 1);
+		doh.checkDate({tzOffset: -60, tzAbbr: "WAT"}, 308703599000, tz, 1);
+		doh.checkDate({tzOffset: -120, tzAbbr: "WAST"}, 308703600000, tz, 1);
+		doh.checkDate({tzOffset: -120, tzAbbr: "WAST"}, 321314399000, tz, 1);
+		doh.checkDate({tzOffset: -60, tzAbbr: "WAT"}, 321314400000, tz, 1);
+		doh.checkDate({tzOffset: -60, tzAbbr: "WAT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: -60, tzAbbr: "WAT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: -60, tzAbbr: "WAT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: -60, tzAbbr: "WAT"}, 1246789800000, tz, 0);
+	}
+})

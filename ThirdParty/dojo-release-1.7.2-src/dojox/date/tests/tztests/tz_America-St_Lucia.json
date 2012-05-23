@@ -1,0 +1,14 @@
+({
+	name: "date.timezone.America-St_Lucia",
+	runTest: function(t){
+		var tz = "America/St_Lucia";
+		doh.checkDate({tzOffset: 244, tzAbbr: "CMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: 244, tzAbbr: "CMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: 244, tzAbbr: "CMT"}, -1830369361000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "AST"}, -1830369360000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "AST"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "AST"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "AST"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: 240, tzAbbr: "AST"}, 1246789800000, tz, 0);
+	}
+})

@@ -1,0 +1,20 @@
+({
+	name: "date.timezone.Africa-Nairobi",
+	runTest: function(t){
+		var tz = "Africa/Nairobi";
+		doh.checkDate({tzOffset: -147.266666666667, tzAbbr: "LMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: -147.266666666667, tzAbbr: "LMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: -147.266666666667, tzAbbr: "LMT"}, -1309746437000, tz, 1);
+		doh.checkDate({tzOffset: -180, tzAbbr: "EAT"}, -1309746436000, tz, 1);
+		doh.checkDate({tzOffset: -180, tzAbbr: "EAT"}, -1262314801000, tz, 1);
+		doh.checkDate({tzOffset: -150, tzAbbr: "BEAT"}, -1262314800000, tz, 1);
+		doh.checkDate({tzOffset: -150, tzAbbr: "BEAT"}, -946780201000, tz, 1);
+		doh.checkDate({tzOffset: -164.75, tzAbbr: "BEAUT"}, -946780200000, tz, 1);
+		doh.checkDate({tzOffset: -164.75, tzAbbr: "BEAUT"}, -315629086000, tz, 1);
+		doh.checkDate({tzOffset: -180, tzAbbr: "EAT"}, -315629085000, tz, 1);
+		doh.checkDate({tzOffset: -180, tzAbbr: "EAT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: -180, tzAbbr: "EAT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: -180, tzAbbr: "EAT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: -180, tzAbbr: "EAT"}, 1246789800000, tz, 0);
+	}
+})

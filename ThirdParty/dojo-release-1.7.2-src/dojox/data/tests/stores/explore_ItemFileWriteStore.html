@@ -1,0 +1,83 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+    <head>
+    <title>Dojox Store Explorer</title>
+    	<style type="text/css">
+		@import "../../../grid/resources/Grid.css";
+		@import "../../../grid/resources/tundraGrid.css";
+		@import "../../../../dojo/resources/dojo.css";
+		@import "../../../../dijit/themes/tundra/tundra.css";
+		@import "../../../../dijit/themes/tundra/tundra_rtl.css";
+		@import "../../../../dijit/tests/css/dijitTests.css";
+		#controls button {
+			margin-left: 10px;
+		}
+		#grid {
+			width: 850px;
+			height: 350px;
+			border: 1px solid silver;
+		}
+		</style>
+    
+    <script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: true"></script>
+    <script type="text/javascript">
+    	dojo.require("dojo.data.ItemFileWriteStore");
+    	dojo.require("dojox.data.StoreExplorer");
+    	dojo.require("dojo.parser");		gridLayout = [{
+			defaultCell: { width: 8, editable: true, type: dojox.grid.cells._Widget, styles: 'text-align: right;'  },
+			rows: [
+				{ name: 'Id', field: 'id'}
+			]
+		}];
+    	store = new dojo.data.ItemFileWriteStore({data:
+{ identifier: 'name',
+  label: 'name',
+  items: [
+     { name:'Africa', type:'continent', population:'900 million', area: '30,221,532 sq km',
+        timezone: '-1 UTC to +4 UTC',
+         children:[{_reference:'Egypt'}, {_reference:'Kenya'}, {_reference:'Sudan'}] },
+     { name:'Egypt', type:'country' },
+     { name:'Kenya', type:'country',
+         children:[{_reference:'Nairobi'}, {_reference:'Mombasa'}] },
+     { name:'Nairobi', type:'city' },
+     { name:'Mombasa', type:'city' },
+     { name:'Sudan', type:'country',
+         children:{_reference:'Khartoum'} },
+     { name:'Khartoum', type:'city' },
+     { name:'Asia', type:'continent',
+         children:[{_reference:'China'}, {_reference:'India'}, {_reference:'Russia'}, {_reference:'Mongolia'}] },
+     { name:'China', type:'country' },
+     { name:'India', type:'country' },
+     { name:'Russia', type:'country' },
+     { name:'Mongolia', type:'country' },
+     { name:'Australia', type:'continent', population:'21 million',
+         children:{_reference:'Commonwealth of Australia'}},
+     { name:'Commonwealth of Australia', type:'country', population:'21 million'},
+     { name:'Europe', type:'continent',
+         children:[{_reference:'Germany'}, {_reference:'France'}, {_reference:'Spain'}, {_reference:'Italy'}] },
+     { name:'Germany', type:'country' },
+     { name:'France', type:'country' },
+     { name:'Spain', type:'country' },
+     { name:'Italy', type:'country' },
+     { name:'North America', type:'continent',
+         children:[{_reference:'Mexico'}, {_reference:'Canada'}, {_reference:'United States of America'}] },
+     { name:'Mexico', type:'country',  population:'108 million', area:'1,972,550 sq km',
+         children:[{_reference:'Mexico City'}, {_reference:'Guadalajara'}] },
+     { name:'Mexico City', type:'city', population:'19 million', timezone:'-6 UTC'},
+     { name:'Guadalajara', type:'city', population:'4 million', timezone:'-6 UTC' },
+     { name:'Canada', type:'country',  population:'33 million', area:'9,984,670 sq km',
+         children:[{_reference:'Ottawa'}, {_reference:'Toronto'}] },
+     { name:'Ottawa', type:'city', population:'0.9 million', timezone:'-5 UTC'},
+     { name:'Toronto', type:'city', population:'2.5 million', timezone:'-5 UTC' },
+     { name:'United States of America', type:'country' },
+     { name:'South America', type:'continent',
+         children:[{_reference:'Brazil'}, {_reference:'Argentina'}] },
+     { name:'Brazil', type:'country', population:'186 million' },
+     { name:'Argentina', type:'country', population:'40 million' }
+]}});
+    </script>
+    <body class="tundra">
+    	<h2>ItemFileWriteStore Explorer</h2>
+		<div dojoType="dojox.data.StoreExplorer" store="store" style="height:500px;width:100%;border:1px solid black" structure="gridLayout"/>
+    </body>
+</html> 

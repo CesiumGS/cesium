@@ -1,0 +1,82 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<meta http-equiv= "Content-Type" content= "text/html;charset=utf-8">
+	<title>Editor Test: Spell Check Plugin</title>
+	
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+		@import "../../../dijit/themes/claro/claro.css";
+		@import "../plugins/resources/css/ShowBlockNodes.css";
+		@import "../plugins/resources/css/SpellCheck.css";
+	</style>
+	
+	<script type="text/javascript" src="../../../dojo/dojo.js"	djConfig="parseOnLoad: true, isDebug: true"></script>
+
+	<!-- only needed for alternate theme testing: -->
+	<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("dijit.Editor");
+		dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+		dojo.require("dojox.editor.plugins.SpellCheck");
+		dojo.require("dojox.editor.plugins._SpellCheckParser");
+		dojo.require("dijit._editor.plugins.NewPage");
+		dojo.require("dojox.editor.plugins.ShowBlockNodes");
+		dojo.require("dijit._editor.plugins.ViewSource");
+	</script>
+</head>
+<body class="claro">
+	<h1>Editor + Batch/Interactive SpellCheck</h1>
+	<br/>
+	<div dojoType="dijit.Editor" id="editor1" 
+		extraPlugins="[{name: 'SpellCheck', url: 'spellCheck.php', lang: 'EN', interactive: true, timeout: 20}, 'newpage', 'showblocknodes', 'viewSource']">
+		<ol>
+			<li>The is a demo to show how to use the Spell Check plugin.</li>
+			<li>You need a php server to test this plugin. Please enable <b>dojox\editor\plugins\tests\spellcheck.php</b> and  <b>dojox\editor\plugins\tests\PorterStemmer.php</b> first.</li>
+		</ol>
+		<br/>
+		<br/>
+		<br/>
+		<br/>
+		<br/>
+		<br/>
+		<br/>
+		<br/>
+		<br/>
+		<br/>
+		<br/>
+		<br/>
+		<br/>
+I am errir. Thi is wrng.
+		<br/>
+		<br/>
+		<br/>
+		<br/>
+		<br/>
+		<br/>
+		<br/>
+		<br/>
+		<br/>
+Thi is the end of the txt.
+		<br/>
+		<br/>
+		<div><a href="http://www.example.com/example.html" target="_top" id="exampleLink">This is an example link in the page.</a></div>
+		<br/>
+		<br/>
+		<div><img src="./sample.jpg" alt="Sample Image" id="exampleImage" /></div>
+		<br/>
+		<br/>
+	</div>
+	<h1>Another Instance</h1>
+	<br/>
+	<div dojoType="dijit.Editor" id="editor2" 
+		extraPlugins="[{name: 'SpellCheck', url: 'spellCheck.php', lang: 'EN', interactive: true, timeout: 20}]">
+Don’t spend hours reinventing the wheel, use Dojo’s widget system Dijit for commonly used form widgets like calendars, input validation and more.
+		<br/>
+		<br/>
+	</div>
+</body>
+</html>

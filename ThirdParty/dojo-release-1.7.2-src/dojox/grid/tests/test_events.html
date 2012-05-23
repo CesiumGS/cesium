@@ -1,0 +1,191 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>Test dojox.grid.Grid Events</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+	<style type="text/css">
+		@import "../resources/Grid.css";
+		body,td,th {
+			font-family: Geneva, Arial, Helvetica, sans-serif;
+		}	
+		#grid { 
+			border: 1px solid;
+			border-top-color: #F6F4EB;
+			border-right-color: #ACA899;
+			border-bottom-color: #ACA899;
+			border-left-color: #F6F4EB;
+		}
+		#grid {
+			width: 50em;
+			height: 20em;
+			padding: 1px;
+			overflow: hidden;
+			font-size: small;
+		}
+		h3 {
+			margin: 10px 0 2px 0;
+		}
+		.fade {
+			/*background-image:url(images/fade.gif);*/
+		}
+		.no-fade {
+			/*background-image: none;*/
+		}
+		#eventGrid {
+			float: right;
+			font-size: small;
+		}
+	</style>
+	<script type="text/javascript" src="../../../dojo/dojo.js" 
+		djConfig="isDebug:false, parseOnLoad: true"></script>
+	<script type="text/javascript">
+		dojo.require("dijit.dijit");
+		dojo.require("dojox.grid._Grid");
+		dojo.require("dojo.parser");
+	</script>
+	<script type="text/javascript">
+		// events to track
+		var eventRows = [
+			{ name: 'onCellClick' },
+			{ name: 'onRowClick', properties: ['rowIndex'] },
+			{ name: 'onCellDblClick' },
+			{ name: 'onRowDblClick', properties: ['rowIndex'] },
+			{ name: 'onCellMouseOver' },
+			{ name: 'onCellMouseOut' },
+			{ name: 'onCellMouseDown' },
+			{ name: 'onRowMouseOver' },
+			{ name: 'onRowMouseOut' },
+			{ name: 'onRowMouseDown' },
+			{ name: 'onHeaderCellClick' },
+			{ name: 'onHeaderClick', properties: ['rowIndex'] },
+			{ name: 'onHeaderCellDblClick' },
+			{ name: 'onHeaderDblClick', properties: ['rowIndex'] },
+			{ name: 'onHeaderCellMouseOver' },
+			{ name: 'onHeaderCellMouseOut' },
+			{ name: 'onHeaderCellMouseDown' },
+			{ name: 'onHeaderMouseOver' },
+			{ name: 'onHeaderMouseOut' },
+			{ name: 'onKeyDown', properties: ['keyCode'] },
+			{ name: 'onCellContextMenu' },
+			{ name: 'onRowContextMenu', properties: ['rowIndex'] },
+			{ name: 'onHeaderCellContextMenu' },
+			{ name: 'onHeaderContextMenu', properties: ['rowIndex'] }
+		];	
+		
+		getEventName = function(inRowIndex) {
+			return eventRows[inRowIndex].name;
+		};
+		
+		getEventData = function(inRowIndex) {
+			var d = eventRows[inRowIndex].data;
+			var r = [];
+			if (d)
+				for (var i in d)
+					r.push(d[i]);
+			else
+				r.push('na')
+			return r.join(', ');
+		}
+		
+		// grid structure for event tracking grid.
+		var eventLayout = {
+			noscroll: true,
+			cells: [
+				{ name: 'Event', get: getEventName, width: 12 },
+				{ name: 'Data', get: getEventData, width: 10 }
+			]
+		}
+
+		var fade = function(inNode) {
+			if (!inNode || !inNode.style) return;
+			var c = 150, step = 5, delay = 20;
+			var animate = function() {
+				c = Math.min(c + step, 255);
+				inNode.style.backgroundColor = "rgb(" + c + ", " + c + ", 255)";
+				if (c < 255) window.setTimeout(animate, delay);
+			}
+			animate();
+		}
+		
+		// setup a fade on a row. Must do this way to avoid caching of fade gif
+		updateRowFade = function(inRowIndex) {
+			var n = eventGrid.views.views[0].getRowNode(inRowIndex);
+			fade(n);
+		}
+		
+		// store data about event. By default track event.rowIndex and event.cell.index, but eventRows can specify params, which are event properties to track.
+		setEventData = function(inIndex, inEvent) {
+			var eRow = eventRows[inIndex];
+			eRow.data = {};
+			var properties = eRow.properties;
+			if (properties)
+				for (var i=0, l=properties.length, p; (p=properties[i] || i < l); i++)
+					eRow.data[p] = inEvent[p];
+			else
+				eRow.data =  {
+					row: (inEvent.rowIndex != undefined ? Number(inEvent.rowIndex) : 'na'), 
+					cell: (inEvent.cell && inEvent.cell.index != undefined ? inEvent.cell.index : 'na')
+				}	
+			eventGrid.updateRow(inIndex);
+			updateRowFade(inIndex);
+		}
+		
+		// setup grid events for all events being tracked.
+		setGridEvents = function() {
+			var makeEvent = function(inIndex, inName) {
+				return function(e) {
+					setEventData(inIndex, e);
+					dojox.grid._Grid.prototype[inName].apply(this, arguments);
+				}
+			}
+			for (var i=0, e; (e=eventRows[i]); i++)
+				grid[e.name] = makeEvent(i, e.name);
+		}
+				
+		// Grid structure
+		var layout = [// array of view objects
+			{
+				noscroll: true,
+				cells: [[
+					{ name: "Alpha", value: '<input type="checkbox"></input>', rowSpan: 2, width: 6, styles: 'text-align:center;' },
+					{ name: "Alpha2", value: "Alpha2" }
+				],[
+					{ name: "Alpha3", value: "Alpha3" }
+				]]
+			},
+			[
+				[
+					{ name: "Beta", value: 'simple'},
+					{ name: "Beta2", value: "Beta2" },
+					{ name: "Beta3", value: "Beta3" },
+					{ name: "Beta4", value: "Beta4" },
+					{ name: "Beta5", value: "Beta5" }
+				],[
+					{ name: "Summary", colSpan: 5, value: 'Summary' }
+				]
+			],
+			{
+				noscroll: true,
+				cells: [
+					{ name: "Gamma", value: "Gamma" },
+					{ name: "Gamma2", value: "<button>Radiate</button>", styles: 'text-align:center;' }
+				]
+			}
+		];
+		
+		dojo.addOnLoad(function() {
+			setGridEvents(); 
+			eventGrid.updateRowCount(eventRows.length);
+			dojo.debug = console.log;
+		});	
+	</script>
+</head>
+<body>
+	<h3>dojox.grid.Grid Event Tracking</h3>
+	<div id="eventGrid" jsId="eventGrid" autoWidth="true" autoHeight="true" 
+		structure="eventLayout" dojoType="dojox.grid._Grid"></div>
+	<div id="grid" jsId="grid" rowCount="100" structure="layout" 
+		rowSelector="20px" dojoType="dojox.grid._Grid"></div>
+</body>
+</html>

@@ -1,0 +1,12 @@
+/* dojox.mobile.EdgeToEdgeList */
+.mblEdgeToEdgeList {
+  position: relative;
+  /* IE needs this */
+
+  margin: 0px;
+  padding: 0px;
+  background-color: white;
+}
+.mblEdgeToEdgeList .mblListItem:last-child {
+  border-bottom-color: #707C84;
+}

@@ -1,0 +1,18 @@
+({
+	name: "date.timezone.Asia-Rangoon",
+	runTest: function(t){
+		var tz = "Asia/Rangoon";
+		doh.checkDate({tzOffset: -384.6, tzAbbr: "RMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: -384.6, tzAbbr: "RMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: -384.6, tzAbbr: "RMT"}, -1577946277000, tz, 1);
+		doh.checkDate({tzOffset: -390, tzAbbr: "BURT"}, -1577946276000, tz, 1);
+		doh.checkDate({tzOffset: -390, tzAbbr: "BURT"}, -873268201000, tz, 1);
+		doh.checkDate({tzOffset: -540, tzAbbr: "JST"}, -873268200000, tz, 1);
+		doh.checkDate({tzOffset: -540, tzAbbr: "JST"}, -778410001000, tz, 1);
+		doh.checkDate({tzOffset: -390, tzAbbr: "MMT"}, -778410000000, tz, 1);
+		doh.checkDate({tzOffset: -390, tzAbbr: "MMT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: -390, tzAbbr: "MMT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: -390, tzAbbr: "MMT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: -390, tzAbbr: "MMT"}, 1246789800000, tz, 0);
+	}
+})

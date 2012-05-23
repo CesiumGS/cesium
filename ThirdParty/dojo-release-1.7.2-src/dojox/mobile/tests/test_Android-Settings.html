@@ -1,0 +1,108 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>Settings</title>
+		<link href="../themes/android/base.css" rel="stylesheet">
+		<link href="../themes/common/domButtons/DomButtonCheckOn.css" rel="stylesheet">
+		<link href="../themes/common/domButtons/DomButtonCheckOff.css" rel="stylesheet">
+
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			dojo.require("dojox.mobile");			// This is a mobile app.
+			dojo.require("dojox.mobile.parser");	// This mobile app supports running on desktop browsers
+			dojo.require("dojox.mobile.compat");	// This mobile app uses declarative programming with fast mobile parser
+			dojo.ready(function(){
+				var ul = dojo.byId("list");
+				for(var i = 0, len = ul.childNodes.length; i < len; i++){
+					var li = ul.childNodes[i];
+					if(li.nodeType != 1 || li.tagName != "LI"){ continue; }
+					var w = dijit.byNode(li);
+					dojo.connect(w.btnNode, "onclick", btnClicked);
+				}
+			});
+			function btnClicked(e){
+				var btnDiv = e.currentTarget;
+				if(dojo.hasClass(btnDiv, "mblCheckOffButton")){
+					dojo.removeClass(btnDiv, "mblCheckOffButton");
+					dojo.addClass(btnDiv, "mblCheckOnButton");
+				}else if(dojo.hasClass(btnDiv, "mblCheckOnButton")){
+					dojo.removeClass(btnDiv, "mblCheckOnButton");
+					dojo.addClass(btnDiv, "mblCheckOffButton");
+				}
+				if(dojo.isBB){
+					btnDiv.parentNode.appendChild(btnDiv.parentNode.removeChild(btnDiv));
+				}
+			}
+		</script>
+	</head>
+	<body style="visibility:hidden;">
+		<div id="settings" dojoType="dojox.mobile.View" selected="true">
+			<h1 dojoType="dojox.mobile.Heading">Settings</h1>
+			<ul dojoType="dojox.mobile.EdgeToEdgeList" iconBase="images/a-icon-1-41x41.png">
+				<li dojoType="dojox.mobile.ListItem" icon="images/a-icon-10.png" moveTo="location">
+					Wireless &amp; networks
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="images/a-icon-11.png" moveTo="location">
+					Call settings
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="images/a-icon-12.png" moveTo="location">
+					Sound &amp; display
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="images/a-icon-13.png" moveTo="location">
+					Location &amp; security
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="images/a-icon-14.png" moveTo="location">
+					Applications
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="images/a-icon-15.png" moveTo="location">
+					Accounts &amp; sync
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="images/a-icon-16.png" moveTo="location">
+					Privacy
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="images/a-icon-17.png" moveTo="location">
+					SD card &amp phone storage
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="images/a-icon-18.png" moveTo="location">
+					Search
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="images/a-icon-10.png" moveTo="location">
+					Language &amp; keyboard
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="images/a-icon-11.png" moveTo="location">
+					Accessibility
+				</li>
+				<li dojoType="dojox.mobile.ListItem" icon="images/a-icon-12.png" moveTo="location">
+					Text-to-speech
+				</li>
+			</ul>
+		</div>
+		<div id="location" dojoType="dojox.mobile.View">
+			<h1 dojoType="dojox.mobile.Heading" back="Settings" moveTo="settings">Location &amp; security settings</h1>
+			<h2 class="mblHeading">My Location</h2>
+			<ul id="list" dojoType="dojox.mobile.EdgeToEdgeList">
+				<li class="mblVariableHeight" dojoType="dojox.mobile.ListItem" btnClass="mblDomButtonCheckOff">
+					Use wireless networks
+					<div class="mblListItemSubText">
+						See location in applications (such as Maps) using wireless networks
+					</div>
+				</li>
+				<li class="mblVariableHeight" dojoType="dojox.mobile.ListItem" btnClass="mblDomButtonCheckOn">
+					Use GPS satellites
+					<div class="mblListItemSubText">
+						When locating, accurate to street level (uncheck to conserve battery)
+					</div>
+				</li>
+			</ul>
+			<h2 class="mblHeading">My Location</h2>
+			<ul dojoType="dojox.mobile.EdgeToEdgeList">
+				<li dojoType="dojox.mobile.ListItem">
+					Set unlock pattern
+				</li>
+			</ul>
+		</div>
+	</body>
+</html>

@@ -1,0 +1,59 @@
+﻿<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" >
+<head>
+<title>Dojo 3D Vector</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+</style>
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+<script type="text/javascript">
+
+dojo.require("dojox.gfx3d.vector");
+
+pdebug = function(point){
+	console.debug("x: " + point.x + ", y: " + point.y + ", z: " + point.z);
+};
+
+dojo.addOnLoad(function(){
+	var m = dojox.gfx3d.vector;
+	console.debug("test crossProduct...");
+	c = m.crossProduct(1, 2, 3, 4, 5, 6);
+	pdebug(c);
+	a = {x: 1, y: 2, z: 3};
+	b = {x: 4, y: 5, z: 6};
+	c = m.crossProduct(a, b);
+	pdebug(c);
+
+	console.debug("test dotProduct...");
+	c = m.dotProduct(1, 2, 3, 4, 5, 6);
+	console.debug(c);
+	a = {x: 1, y: 2, z: 3};
+	b = {x: 4, y: 5, z: 6};
+	c = m.dotProduct(a, b);
+	console.debug(c);
+
+	console.debug("test sum/substract...");
+	a = {x: 10, y: 5, z: 8};
+	b = {x: 1, y: 15, z: 2};
+	console.debug(m.sum(a, b));
+	console.debug(m.substract(a, b));
+
+	console.debug("test normalize...");
+	c = {x: 0, y: 17, z: -2};
+	d = m.normalize(a, b, c);
+	e = m.normalize([a, b, c]);
+	console.debug(d);
+	console.debug( "expecting 0:", m.dotProduct(d, m.substract(b, a)));
+	console.debug(e);
+	console.debug( "expecting 0:", m.dotProduct(e, m.substract(b, a)));
+
+});
+
+</script>
+</head>
+<body>
+	<h1>dojox.gfx3d.vector test</h1>
+	<p>Please check the debug console for test results.</p>
+</body>
+</html>

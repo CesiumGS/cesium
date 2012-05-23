@@ -1,0 +1,491 @@
+<html>
+	<head>
+		<title>testing widgetsInTemplate support</title>
+		<style type="text/css">
+			@import "../themes/claro/document.css";
+			@import "../themes/claro/claro.css";
+		</style>
+		<script type="text/javascript" src="../../dojo/dojo.js"
+			djConfig="isDebug: true"></script>
+		<script type="text/javascript">
+			dojo.require("doh.runner");
+
+			dojo.require("dojo.parser");
+
+			dojo.require("dijit._Widget");
+			dojo.require("dijit._Templated");
+			dojo.require("dijit.form.Button");
+			dojo.require("dijit.form.CheckBox");
+			dojo.require("dijit.ProgressBar");
+			dojo.require("dijit.layout.ContentPane");
+			dojo.require("dijit.layout.TabContainer");
+			dojo.require("dijit._Container");
+			dojo.require("dijit._Contained");
+			dojo.require("dijit.layout._LayoutWidget");
+			dojo.require("dijit.focus");	// dijit.focus()
+
+			dojo.ready(function(){
+				var testW;
+
+				dojo.declare('Test1Widget',
+					[dijit._Widget, dijit._Templated],
+				{
+					widgetsInTemplate: true,
+	
+					templateString: dojo.byId('Test1Template').textContent || dojo.byId('Test1Template').innerText,
+					onClick: function(e){
+						if(e.target){
+							alert('onClick widgetId='+e.target.id);
+						}else{
+							if(e._counter == undefined){
+								e._counter = 1;
+							}else{
+								e._counter++;
+							}
+						}
+					}
+				});
+
+				dojo.declare('Test2Widget',
+					[dijit._Widget, dijit._Templated],
+				{
+					widgetsInTemplate: true,
+	
+					templateString: dojo.byId('Test2Template').textContent || dojo.byId('Test2Template').innerText
+				});
+
+				dojo.declare('Test4Widget',
+					[dijit._Widget, dijit._Templated],
+				{
+					widgetsInTemplate: true,
+		
+					templateString: dojo.byId('Test4Template').textContent || dojo.byId('Test4Template').innerText
+				});
+		
+				function validateTest4Widget(t, testW){
+					var selectedTab = dojo.query(".dijitTabChecked", testW.domNode)[0];
+					var selectedPane = dojo.query(".dijitTabPane.dijitVisible", testW.domNode)[0];
+					var tabBox = selectedTab ? dojo.contentBox(selectedTab) : null;
+					var paneBox = selectedPane ? dojo.contentBox(selectedPane) : null;
+					t.t(tabBox && tabBox.w > 0 && tabBox.h > 0, "tabBox && tabBox.w > 0 && tabBox.h > 0");
+					t.t(paneBox && paneBox.w > 0 && paneBox.h > 0, "paneBox && paneBox.w > 0 && paneBox.h");
+					// Check that everything got started
+					t.t(testW._started, "testW._started");
+					t.t(testW.tabCont._started, "tabCont._started");
+					t.t(testW.tab1._started, "tab1._started");
+					t.t(testW.tab2._started, "tab2._started");
+				}
+
+				dojo.declare('TestLayoutWidget', dijit.layout._LayoutWidget, {
+					startup: function(){
+						if(this._started){
+							this._doubleStarted = true;
+						}
+						this.inherited(arguments);
+					},
+					destroy: function(){
+						if(this._destroyed){
+							this._doubleDestroyed = true;
+						}
+						this.inherited(arguments);
+						this._destroyed = true;
+					}
+				});
+				dojo.declare('TestCtnrWidget', [dijit._Widget, dijit._Container], {
+					startup: function(){
+						if(this._started){
+							this._doubleStarted = true;
+						}
+						this.inherited(arguments);
+					},
+					destroy: function(){
+						if(this._destroyed){
+							this._doubleDestroyed = true;
+						}
+						this.inherited(arguments);
+						this._destroyed = true;
+					}
+				});
+				dojo.declare('TestCtndWidget', [dijit._Widget, dijit._Contained], {
+					startup: function(){
+						if(this._started){
+							this._doubleStarted = true;
+						}
+						this.inherited(arguments);
+					},
+					destroy: function(){
+						if(this._destroyed){
+							this._doubleDestroyed = true;
+						}
+						this.inherited(arguments);
+						this._destroyed = true;
+					}
+				});
+				dojo.declare('TestNonCtnrWidget', [dijit._Widget, dijit._Templated], {
+					templateString: "<div dojoAttachPoint=containerNode></div>",
+					startup: function(){
+						if(this._started){
+							this._doubleStarted = true;
+						}
+						this.inherited(arguments);
+					},
+					destroy: function(){
+						if(this._destroyed){
+							this._doubleDestroyed = true;
+						}
+						this.inherited(arguments);
+						this._destroyed = true;
+					}
+				});
+				dojo.declare('TestStubWidget', dijit._Widget, {
+					startup: function(){
+						if(this._started){
+							this._doubleStarted = true;
+						}
+						this.inherited(arguments);
+					},
+					destroy: function(){
+						if(this._destroyed){
+							this._doubleDestroyed = true;
+						}
+						this.inherited(arguments);
+						this._destroyed = true;
+					}
+				});
+		
+				dojo.declare('Test5Widget',
+					[dijit._Widget, dijit._Templated],
+				{
+					widgetsInTemplate: true,
+		
+					templateString: dojo.byId('Test5Template').textContent || dojo.byId('Test5Template').innerText,
+					startup: function(){
+						if(this._started){
+							this._doubleStarted = true;
+						}
+						this.inherited(arguments);
+					},
+					destroy: function(){
+						if(this._destroyed){
+							this._doubleDestroyed = true;
+						}
+						this.inherited(arguments);
+						this._destroyed = true;
+					}
+				});
+		
+				function getTestWidgets(testW){
+					return [
+						testW,
+						testW.layout,
+						testW.layChild1,
+						testW.layChild2,
+						testW.container,
+						testW.contained1,
+						testW.contained2,
+						testW.nonContainer,
+						testW.nonContained1,
+						testW.nonContained2,
+						testW.threeLevel,
+						testW.secondLevel,
+						testW.bottomLevel,
+						testW.anotherThree,
+						testW.anotherSecond,
+						testW.anotherBottom,
+						testW.stub1
+					];
+				}
+		
+				function validateTest5Widget(t, testW){
+					// Check that everything got started, but not double-started
+					dojo.forEach(getTestWidgets(testW), function(w){
+						t.t(w._started, "w._started: " + w);
+						t.is(undefined, w._doubleStarted, "w._doubleStarted: " + w);
+					});
+				}
+		
+				function validateTest5WidgetDestroy(t, testW){
+					var savedWidgets = getTestWidgets(testW);
+					testW.destroy();
+					dojo.forEach(savedWidgets, function(w, idx){
+						t.t(w._destroyed, "w._destroyed: " + w);
+						t.is(undefined, w._doubleDestroyed, "w._doubleDestroyed: " + w);
+					});
+				}
+
+				dojo.declare("Missing", [dijit._Widget, dijit._Templated], {
+					templateString: '<div>' +
+										'<div dojoType="dijit.layout.ContentPane">' +
+											'<div dojoType="dijit.form.Button" id="missingButtonId" ' +
+											'dojoAttachPoint="missingButton">Missing...</div>' +
+										'</div>' +
+									'</div>',
+					widgetsInTemplate: true
+				});
+	
+				doh.register("parse", function(){
+					dojo.parser.parse();
+				});
+
+				doh.register("_Templated-widgetsInTemplate1.x",
+					[
+						{
+							name: "dojoAttachPoint",
+							runTest: function(t){
+								var testW = dijit.byId("test1Widget");
+								t.t(testW.normalNode, "normalNode");
+								t.f(isNaN(testW.normalNode.nodeType), "normalNode.nodeType");
+								t.t(testW.buttonWidget instanceof dijit.form.Button, "buttonWidget is Button");
+								t.t(testW.checkboxWidget instanceof dijit.form.CheckBox, "checkboxWidget is CheckBox");
+								t.t(testW.progressBarWidget instanceof dijit.ProgressBar, "progressBarWidget is ProgressBar");
+								testW = dijit.byId("test2Widget");
+								t.t(testW.containerNode, "containerNode");
+								t.f(isNaN(testW.containerNode.nodeType), "containerNode nodeType");
+								t.is(undefined,testW.buttonWidget, "buttonWidget undefined");
+								t.t(testW.checkboxWidget instanceof dijit.form.CheckBox, "checkboxWidget is still CheckBox");
+							}
+						},
+						{
+							name: "dojoAttachEvent",
+							runTest: function(t){
+								var testW = dijit.byId("test1Widget");
+								testW.buttonWidget._counter=0;
+								testW.buttonWidget.onClick(testW.buttonWidget);
+								testW.checkboxWidget._counter=0;
+								testW.checkboxWidget.onClick(testW.checkboxWidget);
+								testW.progressBarWidget._counter=0;
+								testW.progressBarWidget.onChange(testW.progressBarWidget);
+								t.is(1,testW.buttonWidget._counter, "buttonWidget._counter");
+								t.is(1,testW.checkboxWidget._counter, "checkboxWidget._counter");
+								t.is(1,testW.progressBarWidget._counter, "progressBarWidget._counter");
+							}
+						},
+						{
+							// Test that getDescendants ()
+							// finds direct descendants but skips widgetsInTemplates
+							// and also nested widgets (if direct==true)
+							name: "destruction",
+							runTest: function(t){
+								var testW = dijit.byId("test3Widget");
+
+
+/*** performance tests
+								var start = new Date();
+								for(var i=0; i<1000; i++)
+									testW.getChildren();
+								console.log("*** time for getChildren(): " + (new Date()-start));
+								var start = new Date();
+								for(var i=0; i<1000; i++)
+									testW.getDescendants();
+								console.log("*** time for getDescendants(false): " + (new Date()-start));
+***/
+								var chil = testW.getChildren();
+								t.is(5, chil.length, "number of direct descendants");
+								t.is(chil[0].id, "3.1");
+								t.is(chil[1].id, "3.2");
+								t.is(chil[2].id, "3.3");
+								t.is(chil[3].id, "3.4");
+								t.is(chil[4].id, "3.5");
+
+								var desc = testW.getDescendants();
+								t.is(7, desc.length, "number of descendants (including nested ones)");
+								t.is(desc[0].id, "3.1");
+								t.is(desc[1].id, "3.2");
+								t.is(desc[2].id, "3.3");
+								t.is(desc[3].id, "3.nested");
+								t.is(desc[4].id, "3.nested2");
+								t.is(desc[5].id, "3.4");
+								t.is(desc[6].id, "3.5");
+							}
+						},
+						{
+							// Check that declarative widget with layout widgets in template is correctly created and rendered
+							name: "declarative widget with layout widgets",
+							runTest: function(t){
+								validateTest4Widget(t, dijit.byId("test4Widget"));
+							}
+						},
+						{
+							// Check that programmatic widget with layout widgets in template is correctly created and rendered
+							name: "programmatic widget with layout widgets",
+							runTest: function(t){
+								test4WidgetProgrammatic = new Test4Widget({}).placeAt("test4Widget", "after");
+								test4WidgetProgrammatic.startup();
+								validateTest4Widget(t, test4WidgetProgrammatic);
+							}
+						},
+						{
+							// Compare programmatic and declaratively created widget with layout widgets in template
+							name: "programmatic vs declarative with layout widgets",
+							runTest: function(t){
+								// Focus the body, so that we don't have different classes on our
+								// two widgets
+								dijit.focus(dojo.body());
+								var declW = dijit.byId("test4Widget");
+								var progW = test4WidgetProgrammatic;
+
+								// Check that generated HTML in DOM is same
+								var declNeutralHtml = declW.domNode.innerHTML.replace(/_\d+/g, "");
+								var progNeutralHtml = progW.domNode.innerHTML.replace(/_\d+/g, "");
+								t.is(declNeutralHtml, progNeutralHtml, "progNeutralHtml");
+
+								// Check that dimensions are same
+								var declBox = dojo.contentBox(declW.domNode);
+								var progBox = dojo.contentBox(progW.domNode);
+								t.is(declBox.h, progBox.h, "progBox.h");
+								t.is(declBox.w, progBox.w, "progBox.w");
+							}
+						},
+						{
+							// Check that declarative widget with other widgets in template is correctly started
+							name: "declarative widget with many child widgets",
+							runTest: function(t){
+								validateTest5Widget(t, dijit.byId("test5Widget"));
+							}
+						},
+						{
+							// Check that programmatic widget with other widgets in template is correctly started
+							name: "programmatic widget with many child widgets",
+							runTest: function(t){
+								test5WidgetProgrammatic = new Test5Widget().placeAt("test5Widget", "after");
+								test5WidgetProgrammatic.startup();
+								validateTest5Widget(t, test5WidgetProgrammatic);
+							}
+						},
+						{
+							// Check that destroying our declarative widget works correctly
+							name: "declarative widget destruction",
+							runTest: function(t){
+								validateTest5WidgetDestroy(t, dijit.byId("test5Widget"));
+							}
+						},
+						{
+							// Check that destroying our programmatic widget works correctly
+							name: "programmatic widget destruction",
+							runTest: function(t){
+								validateTest5WidgetDestroy(t, test5WidgetProgrammatic);
+							}
+						},
+						{
+							// Test that dojoAttachPoint inside of a ContentPane (inside of a template) works
+							name: "ContentPane",
+							runTest: function(){
+								var testW = dijit.byId("missing");
+								doh.t(testW, "widget was created");
+								doh.t(testW.missingButton, "dojoAttachPoint created");
+								doh.is("dijit.form.Button", testW.missingButton.declaredClass, "and it's to a widget");
+								doh.t(dijit.byId("missingButtonId"), "nested widget also registered by id");
+							}
+						}
+					]
+				);
+				doh.run();
+			});
+		</script>
+	</head>
+	<body class="claro">
+		<h1>testing widgetsInTemplate support</h1>
+		<xmp id="Test1Template" style="display:none;">
+			<div>
+				<div dojoAttachPoint="normalNode" >normal node</div>
+				<button dojoAttachPoint="buttonWidget" dojoAttachEvent="onClick:onClick" dojoType="dijit.form.Button">button #1</button>
+				<div dojoAttachPoint="checkboxWidget" dojoAttachEvent="onClick:onClick" dojoType="dijit.form.CheckBox"></div> checkbox #1
+				<div dojoAttachPoint="progressBarWidget" dojoAttachEvent="onChange:onClick" style="width:400px"
+					maximum="200" progress="20" dojoType="dijit.ProgressBar"></div>
+			</div>
+		</xmp>
+	<div dojoType="Test1Widget" id="test1Widget" ></div>
+
+	<!-- TODO: this is a strange test; the containerNode shouldn't have any contents as they will be overwritten -->
+	<xmp id="Test2Template" style="display:none;">
+		<div>
+			<div dojoAttachPoint="containerNode" >
+				<div dojoAttachPoint="checkboxWidget" dojoType="dijit.form.CheckBox"></div>
+				checkbox #2
+			</div>
+		</div>
+	</xmp>
+	<div dojoType="Test2Widget" id="test2Widget" ><button dojoAttachPoint="buttonWidget" dojoType="dijit.form.Button">button #2</button></div>
+
+
+	<xmp id="Test3Template" style="display:none;">
+		<div>
+			<div dojoAttachPoint="checkboxWidget" dojoType="dijit.form.CheckBox"></div> checkbox #3
+			<div dojoAttachPoint="containerNode" ></div>
+		</div>
+	</xmp>
+		<script>
+			dojo.declare('Test3Widget',
+				[dijit._Widget, dijit._Templated],
+			{
+				widgetsInTemplate: true,
+
+				templateString: dojo.byId('Test3Template').textContent || dojo.byId('Test3Template').innerText
+			});
+		</script>
+	<div dojoType="Test3Widget" id="test3Widget" >
+		<span>hello world</span>
+		<b style="border: 1px solid blue;">this is my
+			<button dojoType="dijit.form.Button" id="3.1">first button</button>
+		</b>
+		<button dojoType="dijit.form.Button" id="3.2">another button</button>
+		<i>and some more</i>
+		<div style="border: 1px solid red;">
+			<div dojoType="dijit.layout.ContentPane" style="border: 1px solid gray;" id="3.3">
+				<button dojoType="dijit.form.Button" id="3.nested">a nested button</button>
+				<button dojoType="dijit.form.Button" id="3.nested2">another nested button</button>
+			</div>
+			<button dojoType="dijit.form.Button" id="3.4">yet another button</button>
+			<button dojoType="dijit.form.Button" id="3.5">yet yet another button</button>
+		</div>
+	</div>
+
+	<!-- Test templated widget containing layout widgets in template -->
+	<xmp id="Test4Template" style="display:none;">
+		<div>
+			<div dojoType="dijit.layout.TabContainer" dojoAttachPoint="tabCont" style="height: 5em;">
+				<div dojoType="dijit.layout.ContentPane" dojoAttachPoint="tab1" title="Tab 1">
+					pane 1
+				</div>
+				<div dojoType="dijit.layout.ContentPane" dojoAttachPoint="tab2" title="Tab 2">
+					pane 2
+				</div>
+			</div>
+		</div>
+	</xmp>
+	<div dojoType="Test4Widget" id="test4Widget" ></div>
+
+	<!-- Test templated widget containing container and nested widgets in template -->
+	<xmp id="Test5Template" style="display:none;">
+		<div>
+			<div dojoType="TestLayoutWidget" dojoAttachPoint="layout">
+				<div dojoType="TestCtndWidget" dojoAttachPoint="layChild1"></div>
+				<div dojoType="TestCtndWidget" dojoAttachPoint="layChild2"></div>
+			</div>
+			<div dojoType="TestCtnrWidget" dojoAttachPoint="container">
+				<div dojoType="TestCtndWidget" dojoAttachPoint="contained1"></div>
+				<div dojoType="TestCtndWidget" dojoAttachPoint="contained2"></div>
+			</div>
+			<div dojoType="TestStubWidget" dojoAttachPoint="stub1"></div>
+			<div dojoType="TestNonCtnrWidget" dojoAttachPoint="nonContainer">
+				<div dojoType="TestStubWidget" dojoAttachPoint="nonContained1"></div>
+				<div dojoType="TestStubWidget" dojoAttachPoint="nonContained2"></div>
+			</div>
+			<div dojoType="TestCtnrWidget" dojoAttachPoint="threeLevel">
+				<div dojoType="TestNonCtnrWidget" dojoAttachPoint="secondLevel">
+					<div dojoType="TestStubWidget" dojoAttachPoint="bottomLevel"></div>
+				</div>
+			</div>
+			<div dojoType="TestNonCtnrWidget" dojoAttachPoint="anotherThree">
+				<div dojoType="TestCtnrWidget" dojoAttachPoint="anotherSecond">
+					<div dojoType="TestCtndWidget" dojoAttachPoint="anotherBottom"></div>
+				</div>
+			</div>
+		</div>
+	</xmp>
+	<div dojoType="Test5Widget" id="test5Widget" ></div>
+
+	<div dojoType="Missing" id="missing"></div>
+	</body>
+</html>
+

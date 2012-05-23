@@ -1,0 +1,160 @@
+<html>
+	<head>
+		<title>Robot - Adapter - DndFromDojo</title>
+		
+		<script type="text/javascript" 
+			src="../../../../dojo/dojo.js" 
+			djConfig="isDebug: true">
+		</script>
+		
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");	
+
+			dojo.addOnLoad(function(){			
+				
+				doh.robot.initRobot('../functionalTests/test_dnd_dndFromDojo.html');
+				
+				doh.register("test_dnd_dndFromDojo", 
+				[
+					{
+						name: "dndFromPureSource",
+						timeout:6000,
+						runTest: function(){
+
+							// Moves an item from a dojo source to a dojox 
+							// target.
+
+							var d = new doh.Deferred();
+
+							var itemType1 = dojo.query("#dojoPureSource > [dndType*=type1]")[0];
+							var area = dojo.query(".dndArea")[0];
+
+							var sizeArea = area.childNodes.length
+							doh.robot.mouseMoveAt(itemType1, 100);
+                			doh.robot.mousePress({left:true}, 100);
+                			doh.robot.mouseMoveAt(area, 100);
+                			doh.robot.mouseRelease({left:true}, 100);
+                			
+                			doh.robot.sequence(function(){
+                				try{
+                					doh.assertEqual(area.childNodes.length ,sizeArea + 1, "A child should be drop in the dojox area.");
+                					d.callback(true);
+                				}
+                				catch(e){
+                					d.errback(e);
+                				}
+               				}, 100);
+               				return d;
+						}
+					},
+					{
+						name: "dndFromDojoSource",
+						timeout:10000,
+						runTest: function(){
+
+							// Moves an item from a dojo source/target to a 
+							// dojox target.
+
+							var d = new doh.Deferred();
+
+							var itemType1 = dojo.query("#dojoSource > [dndType*=type1]")[0];
+							var area = dojo.query(".dndArea")[0];
+
+							var sizeArea = area.childNodes.length
+							doh.robot.mouseMoveAt(itemType1, 200);
+                			doh.robot.mousePress({left:true}, 200);
+                			doh.robot.mouseMoveAt(area, 200);
+                			doh.robot.mouseRelease({left:true}, 200);
+                			
+                			doh.robot.sequence(function(){
+                				try{
+                					doh.assertEqual(area.childNodes.length ,sizeArea + 1, "A child should be drop in the dojox area.");
+                					d.callback(true);
+                				}
+                				catch(e){
+                					d.errback(e);
+                				}
+               				}, 200);
+               				return d;
+						}
+					},
+					{
+						name: "dndAcceptanceFromPureSource",
+						timeout:10000,
+						runTest: function(){
+
+							// Tries to move an item from  a dojo source to a 
+							// dojox areas :
+							// 		- Item's type : 2
+							//		- Drop area accept types : 1
+							// -> In this case, drop is refused
+
+							var d = new doh.Deferred();
+
+							var itemType2 = dojo.query("#dojoPureSource > [dndType*=type2]")[0];
+							var area = dojo.query(".dndArea")[0];
+
+							var sizeArea = area.childNodes.length
+							doh.robot.mouseMoveAt(itemType2, 200);
+                			doh.robot.mousePress({left:true}, 200);
+                			doh.robot.mouseMoveAt(area, 200);
+                			doh.robot.mouseRelease({left:true}, 200);
+                			
+                			doh.robot.sequence(function(){
+                				try{
+                					doh.assertEqual(area.childNodes.length ,sizeArea, "A type 2 item should not be drop in the dojox area.");
+                					d.callback(true);
+                				}
+                				catch(e){
+                					d.errback(e);
+                				}
+               				}, 200);
+               				return d;
+						}
+					},
+					{
+						name: "dndAcceptanceFromDojoSource",
+						timeout:10000,
+						runTest: function(){
+
+							// Tries to move an item from  a dojo source/target
+							// to a dojox area :
+							// 		- Item's type : 2
+							//		- Drop area accept types : 1
+							// -> In this case, drop is refused
+
+							var d = new doh.Deferred();
+
+							var itemType2 = dojo.query("#dojoSource > [dndType*=type2]")[0];
+							var area = dojo.query(".dndArea")[0];
+
+							var sizeArea = area.childNodes.length
+							
+							doh.robot.mouseMoveAt(itemType2, 200);
+                			doh.robot.mousePress({left:true}, 200);
+                			doh.robot.mouseMoveAt(area, 200);
+                			doh.robot.mouseRelease({left:true}, 200);
+                			
+                			doh.robot.sequence(function(){
+                				try{
+                					doh.assertEqual(area.childNodes.length ,sizeArea, "A type 2 item should not be drop in the dojox area.");
+                					d.callback(true);
+                				}
+                				catch(e){
+                					d.errback(e);
+                				}
+               				}, 200);
+                			doh.robot.mouseRelease({left:true}, 200);
+               				return d;
+						}
+					}
+				]
+				);
+				doh.run();
+			});
+		</script>
+		<style type="text/css"></style>
+	</head>
+	<body>
+	</body>
+</html>

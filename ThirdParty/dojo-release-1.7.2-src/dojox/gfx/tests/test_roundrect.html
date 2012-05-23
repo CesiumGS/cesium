@@ -1,0 +1,36 @@
+<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" >
+<head>
+<title>Testing rounded rectangle</title>
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+</style>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+<script type="text/javascript">
+dojo.require("dojox.gfx");
+dojo.require("dojox.gfx.move");
+dojo.require("dojo.colors");
+
+createSurface = function(){
+	var surface = dojox.gfx.createSurface("test", 800, 600);
+	surface.whenLoaded(makeShapes);
+};
+
+makeShapes = function(surface){
+    rect1 = surface.createRect({x: 20, y: 100, width: 300, height: 200, r: 50}).setFill("red").setStroke("black");
+	new dojox.gfx.Moveable(rect1);
+    rect1 = surface.createRect({x: 0, y: 100, width: 300, height: 200, r: 50}).setFill("red").setStroke("black").setTransform(dojox.gfx.matrix.translate(350,0)).setShape({r:0});
+};
+
+dojo.addOnLoad(createSurface);
+
+</script>
+</head>
+<body>
+<h1>dojox.gfx Rounded rectangle</h1>
+The test should display 2 rectangles: the left one with round corners (radius=50), the right one with square corners (radius=0).
+<div id="test"></div>
+<p>That's all Folks!</p>
+</body>
+</html>

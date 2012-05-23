@@ -1,0 +1,6 @@
+{ 
+		name:'Ottawa', 
+		type:'city', 
+		population:'0.9 million', 
+		timezone:'-5 UTC'
+}

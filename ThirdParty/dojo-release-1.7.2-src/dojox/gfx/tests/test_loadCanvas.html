@@ -1,0 +1,28 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"	"http://www.w3.org/TR/html4/strict.dtd">
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Testing arc</title>
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+<script type="text/javascript">
+	window.onerror = function(){
+		document.writeln("Test has failed: canvas.js cannot be loaded.");
+	}
+	require(["dojox/gfx/canvas", "dojo/ready"], function(canvas,ready){
+		ready(function(){
+			dojox.gfx.switchTo("canvas");
+			dojo.byId("test").innerHTML = "Test is successful.";
+		});
+	});
+	
+</script>
+</head>
+<body>
+<h1>Test canvas.js loading under IE7/8 (Ticket 14288)</h1>
+<p>The purpose of this test is to check whether loading canvas.js breaks under IE7/8. This may happen
+when a custom dojo layer that includes gfx is built. In this case, the canvas.js code is included in
+the layer, therefore loaded.
+</p>
+<div id="test" style="width: 500px; height: 500px;font-weight:bold;"></div>
+</body>
+</html>

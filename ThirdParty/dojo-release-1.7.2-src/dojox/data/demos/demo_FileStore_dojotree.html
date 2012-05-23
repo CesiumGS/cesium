@@ -1,0 +1,119 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<!--
+	Demo application showing LazyLoading File store.
+-->
+<html>
+<head>
+	<title>Demo:  dojox.data.FileStore</title>
+	<style type="text/css">
+		@import "../../../dijit/themes/tundra/tundra.css";
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+
+		.fileView {
+			margin: 5px;
+			width: 100%;
+
+		}
+		.fileView .fileViewTitle{
+			color: white;
+			background-color: black;
+			font-size: larger;
+			font-weight: bold;
+
+		}
+
+		.fileView .fileViewTable {
+			border-width: 2px;
+			border-style: solid;
+			width: 100%;
+		}
+
+		.fileView .fileViewTable tr td {
+			border-width: 1px;
+			border-style: solid;
+			border-color: lightgray;
+			width: 50%;
+			vertical-align: top;
+		}
+
+		.fileView .fileName {
+			background-color: lightgray;
+		}
+
+	</style>
+
+	<!--
+		The following script tag instantiates the dojo library and sets some basic properties.  In this case, the application
+		is told that debug mode is off, and to parse all dojoType widgets when it has fully loaded.
+	-->
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: false, parseOnLoad: true, useCommentedJson: true"></script>
+	<script>
+		dojo.require("dijit.Tree");
+		dojo.require("dijit.tree.ForestStoreModel");
+		dojo.require("dojox.data.FileStore");
+		dojo.require("dojox.data.demos.widgets.FileView");
+	</script>
+</head>
+
+<body class="tundra">
+	<h1>
+		Demo:  Lazy Loading File Browsing Store
+	</h1>
+	<p>The tree below uses the dojox.data.FileStore and a PHP implementation for the serverside to browse the dojo tree hierarchy in a lazy-load fashion.</p>
+	<p><i><b>This demo must be run from a web-server with PHP support enabled.  Without PHP support, this demo cannot function.  The Demo also requires PHP 
+	support for json_encode and json_decode.  Please be sure to have those packages installed in your PHP environment.</b></i></p>
+	<hr>
+	<i>Clicking on a file in the tree will display the details about that file.</i>
+	<div dojoType="dojox.data.FileStore" url="stores/filestore_dojotree.php" jsId="fileStore" pathAsQueryParam="true"></div>
+	<div dojoType="dijit.tree.ForestStoreModel" jsId="fileModel" 
+		store="fileStore" query="{}"
+		rootId="DojoFiles" rootLabel="Dojo Files" childrenAttrs="children"></div>
+
+	<table style="width: 100%;">
+		<tbody>
+			<tr style="width: 100%;">
+				<td style="width: 50%;  vertical-align: top;">
+					<span id="tree" dojoType="dijit.Tree" model="fileModel" >
+						<script type="dojo/method" event="onClick" args="item">
+							if (fileStore.isItem(item)){
+								var attachPt = dojo.byId("fileInfo");
+								if (attachPt) {
+									while(attachPt.firstChild) {
+										attachPt.removeChild(attachPt.firstChild);
+									}
+									var newArgs = {};
+									newArgs.name = fileStore.getValue(item, "name");
+									newArgs.path = fileStore.getValue(item, "path");
+									newArgs.size = fileStore.getValue(item, "size");
+									newArgs.directory = fileStore.getValue(item, "directory");
+									newArgs.parentDir = fileStore.getValue(item, "parentDir");
+									var children = fileStore.getValues(item, "children");
+									if (children && children.length > 0) {
+										newArgs.children = [];
+										var i;
+										for (i = 0; i < children.length; i++) {
+											//Note here that even though the store is lazy-loading, the unloaded items for children still
+											//have the 'name' attribute, since it is used as part of the info to load the full item.  Generally
+											//you should not access properties of an item that has not been fully inflated yet.  It just works
+											//well in this case for this store.
+											newArgs.children.push(fileStore.getValue(children[i], "name"));
+										}
+									}                                
+									var fInfo = new dojox.data.demos.widgets.FileView(newArgs);
+									attachPt.appendChild(fInfo.domNode);
+									fInfo.startup();
+								}
+							}
+						</script>
+					</span>
+				</td>
+				<td id="fileInfo" STYLE="width: 50%; vertical-align: top;">
+				</td>
+			</tr>
+
+		</tbody>    
+	</table>
+	<hr>
+</body>
+</html>

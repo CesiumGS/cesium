@@ -1,0 +1,113 @@
+﻿<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" >
+<head>
+<title>Dojo Unified 2D Graphics</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+	@import "../../../../dojo/resources/dojo.css";
+	@import "../../../../dijit/tests/css/dijitTests.css";
+</style>
+<!-- SVGWEB { -->
+<meta name="svg.render.forceflash" content="true"/>
+<script src="svgweb/src/svg.js" data-path="svgweb/src"></script>
+<script src="../../../../dojo/dojo.js" djConfig="isDebug:true,forceGfxRenderer:'svg'" type="text/javascript"></script>
+<!-- } -->
+<script type="text/javascript">
+dojo.require("dojox.gfx");
+
+makeShapes = function(){
+	var surface = dojox.gfx.createSurface(document.getElementById("test"), 500, 500);
+	/* SVGWEB { */
+	surface.whenLoaded(function() {
+	var g1 = surface.createGroup();
+	// make a checkerboard
+	for(var i = 0; i < 500; i += 100){
+		for(var j = 0; j < 500; j += 100){
+			if(i % 200 == j % 200) {
+				surface.createRect({ x: i, y: j }).setFill([255, 0, 0, 0.1]);
+			}
+		}
+	}
+	var r1 = g1.createRect({ x: 200, y: 200 })
+				.setFill("green")
+				.setStroke({})
+				//.setTransform(dojox.gfx.matrix.rotategAt(45, 250, 250))
+				;
+	var r2 = surface.createRect().setStroke({})
+				.setFill({ type: "linear", to: { x: 50, y: 100 },
+					colors: [{ offset: 0, color: "green" }, { offset: 0.5, color: "red" }, { offset: 1, color: "blue" }] })
+				.setTransform({dx: 100, dy: 100})
+				;
+	var r3 = surface.createRect().setStroke({})
+				.setFill({ type: "linear" })
+				//.setTransform(dojox.gfx.matrix.rotategAt(-45, 250, 250))
+				;
+	var r4 = g1.createRect({})
+				.setFill("blue")
+				//.setStroke({})
+				//.setTransform(dojox.gfx.matrix.rotategAt(-45, 350, 250))
+				.setTransform([dojox.gfx.matrix.rotategAt(-30, 350, 250), { dx: 300, dy: 200 }])
+				;
+	var p1 = g1.createPath()
+				.setStroke({})
+				.moveTo( 300, 100 )
+				.lineTo( 400, 200 )
+				.lineTo( 400, 300 )
+				.lineTo( 300, 400 )
+				.curveTo( 400, 300, 400, 200, 300, 100 )
+				//.setTransform(dojox.gfx.matrix.rotategAt(-45, 250, 250))
+				.setTransform({})
+				;
+	var p2 = g1.createPath(p1.getShape())
+				.setStroke({ color: "red", width: 2 })
+				//.moveTo( 300, 100 )
+				//.lineTo( 400, 200 )
+				//.lineTo( 400, 300 )
+				//.lineTo( 300, 400 )
+				//.curveTo( 400, 300, 400, 200, 300, 100 )
+				//.setTransform(dojox.gfx.matrix.rotategAt(180, 250, 250))
+				.setTransform({ dx: 100 })
+				;
+	var p3 = g1.createPath()
+				.setStroke({ color: "blue", width: 2 })
+				.moveTo( 300, 100 )
+				.setAbsoluteMode(false)
+				.lineTo (  100,  100 )
+				.lineTo (    0,  100 )
+				.lineTo ( -100,  100 )
+				.curveTo(  100, -100, 100, -200, 0, -300 )
+				//.setTransform(dojox.gfx.matrix.rotategAt(135, 250, 250))
+				.setTransform(dojox.gfx.matrix.rotategAt(180, 250, 250))
+				;
+	//g1.setTransform({ dx: 100 });
+	g1.moveToFront();
+	g1.setTransform(dojox.gfx.matrix.rotategAt(-15, 250, 250));
+	//g1.setTransform([dojox.gfx.matrix.rotategAt(-45, 250, 250), dojox.gfx.matrix.scaleAt(0.5, 250, 250)]);
+	//g1.setTransform([dojox.gfx.matrix.scaleAt(2, 1, 250, 250), dojox.gfx.matrix.rotategAt(-45, 250, 250)]);
+	var a = p1.getTransformedBoundingBox();
+	a.push(a[0]);
+	surface.createPolyline(a).setStroke("green");
+	a = p2.getTransformedBoundingBox();
+	a.push(a[0]);
+	surface.createPolyline(a).setStroke("green");
+	a = p3.getTransformedBoundingBox();
+	a.push(a[0]);
+	surface.createPolyline(a).setStroke("green");
+	});
+	/* } */
+};
+
+dojo.addOnLoad(makeShapes);
+
+</script>
+<!--
+<style>
+v:group { text-align: left; }
+</style>
+-->
+</head>
+<body>
+	<h1>dojox.gfx Transformation test</h1>
+<div id="test"></div>
+<p>That's all Folks!</p>
+</body>
+</html>

@@ -1,0 +1,151 @@
+<html>
+	<head>
+	<title>Test dojox.grid.DataGrid Basic</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+
+    <style type="text/css">
+        @import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/themes/tundra/tundra.css";
+		@import "../resources/Grid.css";
+		@import "../resources/tundraGrid.css";
+        @import "../../../dijit/tests/css/dijitTests.css";
+		table { border: none; }
+        
+        body {
+			font-size: 0.9em;
+			font-family: Geneva, Arial, Helvetica, sans-serif;
+		}
+		.heading {
+			font-weight: bold;
+			padding-bottom: 0.25em;
+		}
+				
+		#grid { 
+			border: 1px solid #333;
+			width: 400px;
+			height: 500px;
+		}
+	</style>
+	<script type="text/javascript" 
+		src="../../../dojo/dojo.js"
+		djConfig="isDebug: true, parseOnLoad: true">
+	</script>
+	<script type="text/javascript">
+		dojo.require("doh.runner");
+		
+		dojo.require("dojo.data.ItemFileReadStore");
+		dojo.require("dojox.grid.DataGrid");
+		dojo.require("dijit.form.TextBox");
+
+		dojo.declare("dojox.grid.formatterScopeObj", null, {
+			store: null,
+			_widgets: [],
+			constructor: function(kwArgs){
+				this.store = kwArgs.store;
+				this._widgets = [];
+			},
+			invalidateCache: function(){
+				// Called when we need to clean our cache and destroy our
+				// widgets.
+				dojo.forEach(this._widgets, function(w){
+					if(w && w.destroy){
+						w.destroy();
+					}
+				});
+				this._widgets = [];
+			},
+			fmtABBR: function(value, idx){
+				if(value == "continent"){
+					return "BIG";
+				}else if(value == "country"){
+					return "MID";
+				}else if(value == "city"){
+					return "SML";
+				}
+				return "???";
+			},
+			fmtWidget: function(value, idx){
+				if(!this._widgets[idx]){
+					this._widgets[idx] = new dijit.form.TextBox({value: value, disabled: true});
+				}
+				return this._widgets[idx];
+			},
+			fmtValue: function(value, idx){
+				return value;
+			},
+			fmtBool: function(value, idx){
+				return (value == "country");
+			},
+			fmtInt: function(value, idx){
+				return dojo.filter(["continent", "country", "city"], function(i){ return i == value; })[0]||null;
+			},
+			fmtChildren: function(value, idx){
+				return dojo.map(value, function(i){
+					return this.store.getLabel(i);
+				}, this).join(", ") || "&nbsp;";
+			},
+			fmtItem: function(value, idx){
+				if(!this.store.isItem(value)){
+					return "&nbsp;";
+				}
+				var d = new dojo.Deferred();
+				var fx = function(items){
+					if(items.length){
+						d.callback(this.store.getLabel(items[0]))
+					}else{
+						d.callback("&nbsp;");
+					}
+				};
+				window.setTimeout(dojo.hitch(this, function(){
+					this.store.fetch({query: {children: value}, onComplete: fx, onError: function(e){d.errback(e)}, scope: this});
+				}), 5000);
+				return d;
+			}
+		});
+			
+		dojo.addOnLoad(function(){
+			// Connect our invalidateCache function to the "important" places
+			// so we get cleaned up correctly.
+			dojo.connect(grid, "_structureChanged", myObject, "invalidateCache");
+			dojo.connect(grid, "_clearData", myObject, "invalidateCache");
+			dojo.connect(grid, "destroy", myObject, "invalidateCache");
+			
+			doh.register("tests",
+				[
+					function test_gridFormatters(t){
+						t.t(true);
+					}
+				]
+			);
+			doh.run();
+		});
+	</script>
+	<style>
+		.dijitTextBox {
+			color: gray;
+			width: 90px;
+		}
+	</style>
+	</head>	
+	<body class="tundra">
+		<h1 class="testTitle">Test: dojox.tests.grid.Grid Formatters</h1>
+		<div dojoType="dojo.data.ItemFileReadStore" jsId="readStore" url="support/countryStore.json?"></div>
+		<div dojoType="dojox.grid.formatterScopeObj" store="readStore" jsId="myObject"></div>
+		<table dojoType="dojox.grid.DataGrid" jsId="grid" formatterScope="myObject" 
+				style="width: 65em;height: 25em;" store="readStore" queryOptions="{deep:true}" rowsPerPage="100">
+			<thead>
+				<tr>
+					<th field="name" relWidth="2">Name</th>
+					<th field="type" relWidth="2">Type</th>
+					<th field="type" formatter="fmtABBR" relWidth="1">Abbr</th>
+					<th field="type" formatter="fmtValue" relWidth="2">Value</th>
+					<th field="type" formatter="fmtBool" relWidth="1">IsCountry</th>
+					<th field="type" formatter="fmtInt" relWidth="1">Int</th>
+					<th fields="children" formatter="fmtChildren" relWidth="3">Children</th>
+					<th field="_item" formatter="fmtItem" relWidth="2">Parent</th>
+					<th field="name" formatter="fmtWidget" relWidth="3">Widget</th>
+				</tr>
+			</thead>
+		</table>
+	</body>
+</html>

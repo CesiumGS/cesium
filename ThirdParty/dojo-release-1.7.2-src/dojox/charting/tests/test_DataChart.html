@@ -1,0 +1,173 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>DataChart Test</title>
+<link rel="stylesheet" href="../../../dijit/themes/claro/document.css"/>
+<link rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+<link rel="stylesheet" href="../../../dijit/tests/css/dijitTests.css"/>
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: false, parseOnLoad:true"></script>
+<script type="text/javascript">
+dojo.require("dojo.parser");
+dojo.require("dojox.charting.DataChart");
+dojo.require("dojo.data.ItemFileWriteStore");
+dojo.require("dijit.form.NumberSpinner");
+
+var store = new dojo.data.ItemFileWriteStore({ url:"stock.json" });
+		
+makeCharts = function(){
+	
+	
+	
+	var lines = new dojox.charting.DataChart("lines", {
+		displayRange:7,
+		xaxis:{labels:["0", "A","B","C","D","E","F","G","H","I","J"]},
+		type: dojox.charting.plot2d.Lines
+	});
+	lines.setStore(store, {symbol:"*"}, "historicPrice");
+	
+	var linesC = new dojox.charting.DataChart("linesC", {
+		displayRange:6,
+		xaxis:{labelFunc:"seriesLabels"},
+		yaxis:{minorLabels:true},
+		type: dojox.charting.plot2d.Lines,
+		comparative:true
+	});
+	linesC.setStore(store, {symbol:"*"}, "price");
+	
+	var cols = new dojox.charting.DataChart("cols", {
+		displayRange:8,
+		scroll:false,
+		xaxis:{labelFunc:"seriesLabels"},
+		type: dojox.charting.plot2d.Columns
+	});
+	cols.setStore(store, {symbol:"*"}, "price");
+	
+	var bars = new dojox.charting.DataChart("bars", {
+		displayRange:10,
+		yaxis:{max:8,min:1, majorTickStep:1, labelFunc:"seriesLabels", maxLabelSize:30},
+		scroll:false,
+		type: dojox.charting.plot2d.Bars
+	});
+	bars.setStore(store, {symbol:"*"}, "price");
+				 
+	var pie = new dojox.charting.DataChart("pie", {
+		type: dojox.charting.plot2d.Pie,
+		comparative:true
+	});
+	pie.setStore(store, {symbol:"*"}, "price");
+};
+makeSpinners = function(items){
+	dojo.forEach(items, function(m){
+		var nm = store.getLabel(m);
+		var num = store.getValue(m, "price");
+		console.log(nm, num);
+		var w = new dijit.form.NumberSpinner({
+			onChange:function(val){
+				val = val===0 ? 0.01 : val; //HACKS the no label-when-zero bug
+				console.log("OC:", nm, val);
+				store.setValue(m, "price", val);
+				//store.setValues(m, "historicPrice", store.getValues("historicPrice").push(val));
+				console.log("OC:", nm, val);
+			},
+			value:num,
+			constraints:{min:0, max:10,places:2},
+			className:"myField"
+		});
+		w.startup();
+		dojo.place('<label>'+nm+'</label>', dojo.byId("spinners"), "last")
+		dojo.place(w.domNode, "spinners", "last")
+	});
+}
+dojo.addOnLoad(function(){
+	makeCharts();
+	console.log(store.getFeatures())
+	store.fetch({query:{symbol:"*"}, onComplete: makeSpinners, onError:function(err){console.error(err)}})
+});
+
+handleSpinner = function(){
+	console.log(arguments)
+}
+</script>
+
+<style>
+	#charts{
+		clear:both;
+		margin-bottom:50px;
+	}
+	#charts span{
+		padding:0 10px;
+		display:block;
+		font-size:10px;
+	}
+	.lines, .linesC, .cols, .bars, .pie{
+		float:left;
+		border:1px solid #ccc;
+	}
+	.lines, #lines, .linesC, #linesC, .cols, #cols, .bars, #bars, .pie, #pie{
+		width:200px;
+		height:200px;
+	}
+	.lines, .linesC, .cols, .bars, .pie{
+		height:250px;
+		margin:3px;
+	}
+	.cols, #cols{
+		width:280px;
+	}
+	.linesC, #linesC{
+		width:260px;
+	}
+	.lines, #lines,.bars, #bars{
+		width:260px;
+	}
+</style>
+</head>
+<body class="claro">
+	<h1>DataChart</h1>
+	<p>
+		DataChart extends dojox.charting.Chart2D and allows for a simple connection to a data store. When adding a store to a chart, it is necessary to also supply which
+		item property you wish charted. There are two types of properties supported: numbers and arrays of numbers (bubble charts take an array of objects and are not currently
+		supported). If the property is an array, a segment of the array is taken from the end that fits in the display range of the chart. Animated charts are also possible.
+	</p>
+	<p>
+		Use the spinner fields at the bottom to change the data. The charts listen to store changes an update automatically.
+	</p>
+	<div id="charts">
+		<div class="lines">
+			<div id="lines"></div>
+			<span>This line chart uses a different data field than the rest, which is an array. This chart will not upate using the spinners.</span>	
+		</div>
+		<div class="linesC">
+			<div id="linesC"></div>
+			<span>This chart uses <em>comparitive</em> to compare the price of each item. Without compartive, the items would each be a separate series and not be connected. Will update.</span>	
+		</div>
+		<div class="cols">
+			<div id="cols"></div>
+			<span>Each column in this chart is a separate series. Will update. </span>	
+		</div>	
+		<div class="bars">
+			<div id="bars"></div>
+			<span>Each bar in this chart is a separate series. Will update.</span>			
+		</div>
+		<div class="pie">
+			<div id="pie"></div>
+			<span>This chart also uses <em>comparitive</em> to create one series from several items. Will update.</span>	
+		</div>
+	</div>
+	<div id="spinners"></div>
+</body>
+</html>

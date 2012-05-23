@@ -1,0 +1,249 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot ColorPalette Test</title>
+
+		<style>
+			@import "../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../dojo/dojo.js"
+			djConfig="isDebug: true"></script>
+
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../test_ColorPalette.html');
+
+				var big, small, prog;
+
+				// log of calls to onChange handler
+				var changes = [];
+
+				doh.register("dijit.ColorPalette tests", [
+					{
+						name: "initial conditions",
+						setUp: function(){
+
+							// refs to ColorPalette widgets
+					    	big = dijit.byId("big");
+					    	small = dijit.byId("small");
+					    	prog = dijit.byId("prog");
+
+					    	// setup onChange handler to monitor onChange calls
+							dojo.connect(big, 'onChange', function(val){
+								console.log('onchange w/value: ', val);
+								changes.push(val);
+							});
+						},
+						runTest: function(){
+							doh.f(big.get('value'), "no value for big");
+							doh.f(small.get('value'), "no value for small");
+							doh.f(prog.get('value'), "no value for prog");
+						}
+					},
+					
+					// TODO: when attr() is implemented as a setter, add tests like big.set("value", "#ffc0cb")
+
+					{
+						name: "focus",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							big.focus();
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is(0, changes.length, "no onchange events yet");
+								
+								// test that focus is on top left cell
+								var focus = dojo.global.dijit.focus.curNode;
+								doh.t(focus, "something is focused");
+								var imgNode = focus.getElementsByTagName("img")[0];
+								doh.t(imgNode, "found image node");
+                                //
+                                var dye = big._getDye(focus);                                
+								doh.is("#ffffff", dye.getValue(), "focused on white");
+							}), 500);
+							
+							return d;
+						}
+					},
+
+					{
+						name: "arrow navigation",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred(),
+								enterPressed = false;
+
+							// Move around some
+							doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 500, {});
+							doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 500, {});
+							doh.robot.keyPress(dojo.keys.DOWN_ARROW, 500, {});
+							doh.robot.keyPress(dojo.keys.LEFT_ARROW, 500, {});
+							
+							// Focus should follow the current position for the benefit of screen readers.
+							doh.robot.sequence(d.getTestErrback(dojo.hitch(this, function(){
+								var focus = dojo.global.dijit.focus.curNode;
+								doh.t(focus, "something is focused");
+								
+								var imgNode = focus.getElementsByTagName("img")[0];
+								doh.t(imgNode, "found image node");
+                                //
+                                var dye = big._getDye(focus);
+								doh.is("#ffc0cb", dye.getValue(), "focused on right color");
+							})), 1000);
+
+							// Setup handler to catch onChange event from ENTER keypress below
+							handle = dojo.connect(big, "onChange", d.getTestCallback(dojo.hitch(this, function(val){
+								dojo.disconnect(handle);
+								handle = null;
+
+								doh.is("#ffc0cb", val, "onChange() argument");
+								doh.is("#ffc0cb", big.get("value"), "get('value')");
+
+								doh.is(1, changes.length, 'just one onchange event');
+								doh.t(enterPressed, "onChange event didn't come until enter key was pressed");
+								
+								big.set('value', null);
+								doh.is(big.get('value'), null, "value has been cleared");
+							})));
+
+							// Select the current value
+							doh.robot.sequence(function(){
+								enterPressed = true;
+							}, 0);
+							doh.robot.keyPress(dojo.keys.ENTER, 500, {});
+
+							return d;
+						},
+						tearDown: function(){
+							if(handle){
+								dojo.disconnect(handle);
+							}
+						}
+					},
+
+					{
+						name: "tab stops",
+						timeout: 10000,
+						runTest: function(){
+							// After the navigation above, make sure that there's (still) exactly one
+							// tab stop associated w/the color picker
+							var d = new doh.Deferred();
+
+							dojo.byId("beforeBig").focus();
+							doh.robot.keyPress(dojo.keys.TAB, 500, {});
+							doh.robot.sequence(d.getTestErrback(function(){
+								doh.is("pink", dojo.global.dijit.focus.curNode.title, "tab into colorpalette, focus goes to pink (last focused cell)")
+							}), 1000);
+
+							doh.robot.keyPress(dojo.keys.TAB, 500, {});
+							doh.robot.sequence(d.getTestErrback(function(){
+								doh.is("afterBig", dojo.global.dijit.focus.curNode.id, "another tab, went to input after ColorPalette")
+							}), 1000);
+
+							doh.robot.keyPress(dojo.keys.TAB, 500, {shift: true});
+							doh.robot.sequence(d.getTestErrback(function(){
+								doh.is("pink", dojo.global.dijit.focus.curNode.title, "shift-tab back into colorpalette")
+							}), 1000);
+
+							doh.robot.keyPress(dojo.keys.TAB, 500, {shift: true});
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.is("beforeBig", dojo.global.dijit.focus.curNode.id, "another shift-tab, to input before ColorPalette")
+							}), 1000);
+
+							return d;
+						}
+					},
+					{
+						name: "small palette (keyboard)",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// go to small colorpalette
+							dojo.byId("beforeSmall").focus();
+							doh.robot.keyPress(dojo.keys.TAB, 500, {});
+
+							// select a value
+							doh.robot.keyPress(dojo.keys.DOWN_ARROW, 500, {});
+							doh.robot.keyPress(dojo.keys.RIGHT_ARROW, 500, {});
+							doh.robot.keyPress(dojo.keys.SPACE, 500, {});
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								var value = small.get('value');
+								doh.is("#ffff00", value);
+							}), 1000);
+
+							return d;
+						}
+					},
+
+					{
+						name: "small palette (mouse)",
+						timeout: 10000,
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							// Testing nls too...
+							var red = dojo.query("[title=rojo]", small.domNode);
+							doh.is(1, red.length, "found rojo (red)");
+
+							doh.robot.mouseMoveAt(red[0], 500);
+							doh.robot.mouseClick({left: true}, 500);
+							if(dojo.isMoz){
+								// workaround robot bug where first mouse click doesn't happen occasionally :-(
+								doh.robot.mouseClick({left: true}, 500);
+							}
+							
+							var green = dojo.query("[title=verde]", small.domNode);
+							doh.is(1, green.length, "found verde (green)");
+
+							doh.robot.mouseMoveAt(green[0], 500);
+							doh.robot.mouseClick({left: true}, 500);
+							if(dojo.isMoz){
+								// workaround robot bug where first mouse click doesn't happen occasionally :-(
+								doh.robot.mouseClick({left: true}, 500);
+							}
+
+							doh.robot.sequence(d.getTestCallback(function(){
+								// test that value set
+								var value = small.get('value');
+								doh.is("#008000", value, "value");
+								
+								// test that focus also got set
+								var focus = dojo.global.dijit.focus.curNode;
+								doh.t(focus, "something is focused");
+								var imgNode = focus.getElementsByTagName("img")[0];
+								doh.t(imgNode, "found image node");
+								var dye = small._getDye(focus);
+								doh.is("#008000", dye.getValue(), "focused");
+								
+								//test that selected style was removed from previously selected cell and added to new selection
+								doh.f(dojo.hasClass(red[0], "dijitPaletteCellSelected"),
+									"Red swatch should not have selected class, actual class is: " + red[0].className);
+								doh.t(dojo.hasClass(green[0], "dijitPaletteCellSelected"),
+									"Green swatch should have selected class, actual class is: " + green[0].className);
+							}), 1000);
+							
+							
+							return d;
+						}
+					},
+					function valuePreselected(){
+						var cp = dijit.byId("valuePreselected");
+						doh.is("#0000ff", cp.get("value"), "get('value')");
+						doh.is("blue", dojo.query(".dijitPaletteCellSelected img", cp.domNode)[0].alt, "marked");
+					}
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

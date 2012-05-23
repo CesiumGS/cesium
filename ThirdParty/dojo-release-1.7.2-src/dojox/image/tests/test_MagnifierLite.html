@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Testing image</title>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+		@import "../../../dijit/themes/tundra/tundra.css";
+		@import "../resources/Magnifier.css";
+		
+		p { padding:20px; border:1px solid #ededed; }
+		#testImage { border:2px solid #000; }
+		
+	</style>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="async: true, isDebug: true, parseOnLoad:true"></script>
+	<script type="text/javascript">
+		require(["dojox/image/MagnifierLite", "dijit/form/Button", "dojo/parser"]);
+	</script>
+
+</head>
+<body class="tundra">
+
+	<h1 class="testTitle">dojox.image.MagnifierLite test page</h1>
+
+		<p>They are just images. It's entirely unobtrusive to add magnification to an image, and style it accordingly.</p>
+
+		<p>This is the base class for <a href="test_Magnifier.html">dojox.image.Magnifier</a>, a dojox.gfx-based extension
+		this portion does not require the dojox.gfx package, but is limited to CSS-based styling.
+		</p>
+
+		<p>
+		Scale= 2.34, 5.67, and 8.90: <br>
+		<img id="testImage" dojoType="dojox.image.MagnifierLite" src="images/spanke.jpg"
+			 style="width:200px; height:130px;" scale="2.34" />
+		<img id="testImage4" dojoType="dojox.image.MagnifierLite" src="images/spanke.jpg"
+			 style="width:200px; height:130px;" scale="5.67" />
+
+		<img id="testImage5" dojoType="dojox.image.MagnifierLite" src="images/spanke.jpg"
+			 style="width:200px; height:130px;" scale="8.90" />
+		</p>
+		
+		<p>
+		<img id="testImage2" dojoType="dojox.image.MagnifierLite" src="images/spanke.jpg"
+			 style="width:200px; height:130px; padding-right:20px; float:left" />
+		I Am Some inline text.<br>lorem ipsum.<br style="clear:both">
+		</p>
+		
+		<p>A Transparent .png: (url unavailable in release versions, need build-utils package, or svn)<br>
+
+		<img  style="width:400px; height:260px" id="test3"
+			  dojoType="dojox.image.MagnifierLite" glassSize="215" scale="3"
+			  src="../../../util/resources/logo/positive/dojo.logo.big.png" />
+		</p>
+
+		<p>Programatic: (destroy() removes this.domNode)<br>
+		
+		<button dojoType="dijit.form.Button" id="foob">
+			Make It
+			<script type="dojo/method" event="onClick">
+				this.setAttribute("disabled",true);
+				dijit.byId("foobd").setAttribute("disabled",false);
+				new dojox.image.MagnifierLite({ scale:4.2, glassSize:200 },"foobar");
+			</script>
+		</button>
+
+		<button dojoType="dijit.form.Button" id="foobd" disabled="disabled">
+			Destroy It
+			<script type="dojo/method" event="onClick">
+				dijit.byId("foob").setAttribute("disabled",false);
+				this.setAttribute("disabled",true);
+				dijit.byId("foobar").destroy(true);
+			</script>
+		</button>
+		
+		<br /><!-- srcNodeRef : -->
+		<img id="foobar" style="width:300px; height:195px;" src="images/spanke.jpg" />
+		</p>
+
+		<p>Remote file (GTA:LCS/psp map):<br>
+		<img style="width:167px; height:240px; border:4px solid #333;"
+			 src="http://img.qj.net/uploads/articles_module/66700/stauntonhpackages_qjpreviewth.png"
+			 scale="6" glassSize="150" dojoType="dojox.image.MagnifierLite"
+			/>
+
+		<br>Everybody loves Zelda:<br>
+		<img style="width:585px; height:201px" scale="7" glassSize="185" dojoType="dojox.image.MagnifierLite" src="http://www.zelda-infinite.com/games/zelda1/overworld.png" /> 
+		</p>
+
+</body>
+</html>

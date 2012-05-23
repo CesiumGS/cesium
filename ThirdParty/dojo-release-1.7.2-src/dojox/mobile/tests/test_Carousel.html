@@ -1,0 +1,49 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>Carousel</title>
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true, mblAlwaysHideAddressBar: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			dojo.require("dojo.data.ItemFileReadStore");
+			dojo.require("dojox.mobile");			// This is a mobile app.
+			dojo.require("dojox.mobile.parser");	// This mobile app supports running on desktop browsers
+			dojo.require("dojox.mobile.compat");	// This mobile app uses declarative programming with fast mobile parser
+			dojo.require("dojox.mobile.deviceTheme");
+			dojo.require("dojox.mobile.Carousel");
+			dojo.require("dojox.mobile.ScrollableView");
+
+			var store1 = new dojo.data.ItemFileReadStore({url: "carousel-categ.json"});
+			dojo.ready(function(){
+				dojo.subscribe("/dojox/mobile/carouselSelect", function(w, img, item, idx){
+					if(w.id == "carousel1"){
+						var store2 = new dojo.data.ItemFileReadStore({url: "carousel-"+item.value+".json"});
+						var w2 = dijit.byId("carousel2");
+						w2.set("title", item.value);
+						w2.setStore(store2);
+						dijit.byId("rect1").domNode.style.display = "none";
+					}else if(w.id == "carousel2"){
+						var rect1 = dijit.byId("rect1");
+						var u = "unknown";
+						var desc = "<div style='float:right;font:14px arial;width:49%'>Model: "+(item.model?item.model:u)+"<br>"+
+							"Design: "+(item.design?item.design:u)+"<br>"+
+							"Produced: "+(item.produced?item.produced:u)+"<br>"+
+							"Size: "+(item.size?item.size:u)+"<br>"+
+							"Price: "+(item.price?item.price:u)+"<br></div>";
+						rect1.containerNode.innerHTML = desc+"<img src='"+item.src+"' width='50%' align='top'>";
+						rect1.domNode.style.display = "";
+					}
+				});
+			});
+		</script>
+	</head>
+	<body style="visibility:hidden;background-color:#6D6D6D">
+		<div id="foo" dojoType="dojox.mobile.ScrollableView">
+			<div id="carousel1" dojoType="dojox.mobile.Carousel" height="150px" navButton="true" store="store1" numVisible="2" title="Category"></div>
+			<div id="carousel2" dojoType="dojox.mobile.Carousel" height="120px" navButton="true"></div>
+			<div id="rect1" dojoType="dojox.mobile.RoundRect" style="display:none"></div>
+		</div>
+	</body>
+</html>

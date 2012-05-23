@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Editor Test: Print  Plugin</title>
+	<style type="text/css">
+		@import "../../themes/claro/document.css";
+		@import "../css/dijitTests.css";
+	</style>
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		data-dojo-config="parseOnLoad: true, isDebug: true"></script>
+
+	<!-- required: a default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/claro/claro.css"/>
+
+	<script type="text/javascript" src="../_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dijit.Editor");
+		dojo.require("dijit._editor.plugins.Print");
+		dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+	</script>
+</head>
+<body class="claro">
+	<br>
+	<br>
+	<div>Content before the editor.</div>
+	<br>
+	<br>
+	<div id="editor0" data-dojo-type="dijit.Editor"
+		data-dojo-props='extraPlugins:["print"], style:"background-color: white; width: 800px;", height: "400px"'>
+		<h1>Print Plugin details</h1>
+		<ol>
+			<li>The print plugin is a small plugin that adds the capability of printing the document in the editor</li>
+			<li>If the underlying browser doesn't support print, then the button will be disabled by default</li>
+		</ol>
+
+		<h2>Things to test (manually, because of the print dialog, the function test cannot be automated):</h2>
+		<ol>
+			<li>Verify that clicking the print button opns the browser print dialog and the document will print.</li>
+			<li>Verify that the printed document is only the document in the editor, not the whole page.</li>
+		</ol>
+	</div>
+	<br>
+	<br>
+	<div>Content after the editor.</div>
+</body>
+</html>

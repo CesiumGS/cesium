@@ -186,7 +186,7 @@ defineSuite([
             pixelFormat :PixelFormat.RGBA,
             preMultiplyAlpha : true
         });
-        expect(texture.getPreMultiplyAlpha()).toBeTruthy();
+        expect(texture.getPreMultiplyAlpha()).toEqual(true);
 
         expect(renderFragment(context)).toEqualArray([0, 0, 127, 127]);
     });

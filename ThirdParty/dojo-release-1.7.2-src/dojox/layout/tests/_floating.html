@@ -1,0 +1,48 @@
+<div class="wrap">
+	<h3>I am FloatingPane</h3>
+	<p>Windows in the Browser is weird UI, but sometimes useful. Even more useful:<br>
+	<br>
+	<button dojoType="dijit.form.Button">
+		Dock To Tab
+		<script type="dojo/method" event="onClick">
+			this.setAttribute("disabled",true);
+			var c = dijit.getEnclosingWidget(this.domNode.parentNode);
+			dojo.style(c.focusNode,"display","none");
+			dojo.style(c.domNode,{
+				position:"relative",
+				top:"0",
+				left:"0"
+			})
+			var tab = dijit.byId("centerPane");
+			tab.addChild(c);
+			tab.selectChild(c);
+		</script>
+	</button>
+	<br>
+	<button dojoType="dijit.form.Button">
+		Dock To Accordion
+		<script type="dojo/method" event="onClick">
+			this.setAttribute("disabled",true);
+			var n = dijit.getEnclosingWidget(this.domNode.parentNode);
+			dojo.style(n.focusNode,"display","none");
+			dojo.style(n.domNode,{
+				position:"relative",
+				top:"0",
+				left:"0"
+			})
+			var c = new dijit.layout.ContentPane({
+				title:n.title,
+				closable:n.closable
+			});
+			c.startup();
+			c.setContent(n.containerNode);
+			var accordion = dijit.byId("rightAccordion");
+			accordion.addChild(c);
+			accordion.selectChild(c);
+		</script>
+	</button>
+	<br><br>
+	(both technically unsupported)
+	</p>
+
+</div>

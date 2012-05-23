@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+
+	<title>_Widget.placeAt tests</title>
+
+	<!-- test decoration styles -->
+	<style type="text/css">
+		@import "../themes/claro/document.css";
+		@import "../../dijit/tests/css/dijitTests.css";
+	</style>
+
+	<!-- required: a default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../dijit/themes/claro/claro.css"/>
+
+	<!-- required: load the dojo base -->
+	<script type="text/javascript" src="../../dojo/dojo.js" data-dojo-config="isDebug:true" ></script>
+	<!-- for theme-switching, only for dijit -->
+	<script type="text/javascript" src="../../dijit/tests/_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("doh.runner");
+
+		// load components need for this test
+		dojo.require("dojo.parser");
+		dojo.require("dijit.form.Button");
+		dojo.require("dijit.layout.TabContainer");
+		dojo.require("dijit.layout.ContentPane");
+		dojo.require("dijit.layout.BorderContainer");
+
+		// run all the tests onload
+		dojo.ready(function(){
+
+			var pane1, pane2, tc;
+
+			doh.register("parse", function(){
+				dojo.parser.parse();
+			});
+
+			doh.register("dijit.tests.placeAt",
+				[
+					function placeAsDOMNodeChild(){
+						// create a TabContainer
+						tc = new dijit.layout.TabContainer({
+							style: "height:200px; width:200px"
+						}, "tabContainerThinger").placeAt("container");
+
+						doh.is(dojo.byId("container"), tc.domNode.parentNode, "TabContainer is child of container");
+					},
+
+					function placeAsWidgetChild(){
+						// add the child to the TabContainer now:
+						pane1 = new dijit.layout.ContentPane({ title:"empty" }).placeAt(tc);
+
+						doh.is(pane1, tc.getChildren()[0], "pane1 is child of TabContainer");
+					},
+
+					function placeAsWidgetChildOrdered(){
+						// add this child (created second) as the first tab:
+						pane2 = new dijit.layout.ContentPane({ title:"first" }).placeAt(tc, 0);
+
+						doh.is(pane2, tc.getChildren()[0], "pane2 is new first child of TabContainer");
+						doh.is(pane1, tc.getChildren()[1], "pane1 is now second child of TabContainer");
+					},
+
+					function startup(){
+						// just starting the TabContainer so we can do some more tests
+						tc.startup();
+						tc.selectChild(pane2);
+					},
+
+					function placeAsFirst(){
+						pane2.set("content","button should appear BEFORE this text");
+
+						// create a button, and add it to pane2 before the above text
+						var button = new dijit.form.Button({
+							label:"alert",
+							onClick: function(){
+								alert('woot');
+							}
+						}).placeAt(pane2.containerNode, "first");
+
+						doh.is(button.domNode, pane2.containerNode.firstChild, "button is first child");
+						doh.is(3, button.domNode.nextSibling.nodeType, "button went before other content");
+					},
+
+					function placeBefore(){
+						// and a button, this time we'll place it before the TabContainer's dom
+						var otherButton = new dijit.form.Button({
+							label:"destroy TabContainer",
+							onClick:function(){
+								tc.destroyRecursive();
+							}
+						}).placeAt(tc.domNode, "before");
+
+						doh.is(tc.domNode, otherButton.domNode.nextSibling, "otherButton is before tab container");
+					}
+				]
+			);
+			doh.register("dijit.tests.placeAt BorderContainer",
+				[
+					function addPanes(){
+						// Add top and left pane
+						dijit.byId("addStuff").onClick();
+
+						var bc = dijit.byId("bc1"),
+							children = bc.getChildren();
+							
+						doh.is(3, children.length);
+						
+						var bcPos = dojo.position(bc.domNode),
+							center = dijit.byId("center"),
+							centerPos = dojo.position(center.domNode),
+							left = dojo.filter(children, function(child){ return child.region == "left";})[0],
+							leftPos = dojo.position(left.domNode),
+							top =  dojo.filter(children, function(child){ return child.region == "top";})[0];
+
+						doh.t(leftPos.x >= bcPos.x, "left in BorderContainer");
+						doh.t(centerPos.x >= leftPos.x + leftPos.w, "left vs. center horizontal");
+						doh.is("<p>wowzers</p>", left.domNode.innerHTML.toLowerCase(), "left pane");
+						doh.is("<div>some html text</div>", top.domNode.innerHTML.toLowerCase(), "top pane");
+					}
+				]
+			);
+			doh.run();
+		});
+	</script>
+</head>
+<body class="claro">
+	<h1 class="testTitle">_Widget.placeAt tests</h1>
+
+	<div id="container">
+
+	</div>
+
+	<h2>Node2</h2>
+	<p>This is where the tab srcNodeRef is, but it gets moved above us into the id="container" div.  (Should be there already.)</p>
+	<div id="otherContainer">
+		<div id="tabContainerThinger"></div>
+	</div>
+
+	<h2>BorderContainer sample</h2>
+	<div id="bc1" data-dojo-type="dijit.layout.BorderContainer" data-dojo-props='style:"width:600px; height:400px"'>
+		<div data-dojo-type="dijit.layout.ContentPane" data-dojo-props='id:"center", region:"center"'>
+			<button id="addStuff" data-dojo-type="dijit.form.Button">
+				Add Stuff
+				<script type="dojo/method" data-dojo-event="onClick">
+					this.set("disabled", true);
+					var bc = dijit.byId("bc1");
+
+					// add a left pane and add content
+					new dijit.layout.ContentPane({
+						region:"left",
+						style:"width:100px"
+					}).placeAt(bc).set("content","<p>wowzers</p>");
+
+					// add a top pane, and add content
+					new dijit.layout.ContentPane({
+						region:"top",
+						style:"height:100px"
+					}).placeAt(bc).set("content","<div>some HTML text</div>");
+
+				</script>
+			</button>
+		</div>
+	</div>
+
+</body>
+</html>

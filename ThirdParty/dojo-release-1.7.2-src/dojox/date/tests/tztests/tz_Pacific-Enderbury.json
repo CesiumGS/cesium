@@ -1,0 +1,16 @@
+({
+	name: "date.timezone.Pacific-Enderbury",
+	runTest: function(t){
+		var tz = "Pacific/Enderbury";
+		doh.checkDate({tzOffset: 720, tzAbbr: "PHOT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: 720, tzAbbr: "PHOT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: 720, tzAbbr: "PHOT"}, 307627199000, tz, 1);
+		doh.checkDate({tzOffset: 660, tzAbbr: "PHOT"}, 307627200000, tz, 1);
+		doh.checkDate({tzOffset: 660, tzAbbr: "PHOT"}, 788957999000, tz, 1);
+		doh.checkDate({tzOffset: -780, tzAbbr: "PHOT"}, 788958000000, tz, 1);
+		doh.checkDate({tzOffset: -780, tzAbbr: "PHOT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: -780, tzAbbr: "PHOT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: -780, tzAbbr: "PHOT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: -780, tzAbbr: "PHOT"}, 1246789800000, tz, 0);
+	}
+})

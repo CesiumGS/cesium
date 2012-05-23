@@ -1,0 +1,110 @@
+<html>
+<head>
+	<script language="JavaScript" type="text/javascript">
+		// Dojo configuration
+		djConfig = {
+			isDebug: true,
+			dojoIframeHistoryUrl: "../../resources/iframe_history.html" //for xdomain
+		};
+	</script>
+	<script type="text/javascript" 
+					src="../dojo.js" 
+					djConfig="isDebug:true, dojoIframeHistoryUrl: '../resources/iframe_history.html'"></script>
+	<!--script type="text/javascript" src="../back.js"></script-->
+	<script type="text/javascript">
+		require(["dojo/main","dojo/back"], function(dojo, back){	
+		ApplicationState = function(stateData, outputDivId, backForwardOutputDivId, bookmarkValue){
+			this.stateData = stateData;
+			this.outputDivId = outputDivId;
+			this.backForwardOutputDivId = backForwardOutputDivId;
+			this.changeUrl = bookmarkValue || false;
+		};
+	
+		dojo.extend(ApplicationState, {
+			back: function(){
+				this.showBackForwardMessage("BACK for State Data: " + this.stateData);
+				this.showStateData();
+			},
+			forward: function(){
+				this.showBackForwardMessage("FORWARD for State Data: " + this.stateData);
+				this.showStateData();
+			},
+			showStateData: function(){
+				dojo.byId(this.outputDivId).innerHTML += this.stateData + '<br />';
+			},
+			showBackForwardMessage: function(message){
+				dojo.byId(this.backForwardOutputDivId).innerHTML += message + '<br />';
+			}
+		});
+		
+		var data = {
+			link0: "This is the initial state (page first loaded)",
+			"link with spaces": "This is data for a state with spaces",
+			"link%20with%20encoded": "This is data for a state with encoded bits",
+			"link+with+pluses": "This is data for a state with pluses",
+			link1: "This is data for link 1",
+			link2: "This is data for link 2",
+			link3: "This is data for link 3",
+			link4: "This is data for link 4",
+			link5: "This is data for link 5",
+			link6: "This is data for link 6",
+			link7: "This is data for link 7"
+		};
+
+		dojo.global.goNav = function goNav(id){
+			var appState = new ApplicationState(data[id], "output", "dataOutput", id);
+			appState.showStateData();
+			dojo.back.addToHistory(appState);
+		}
+
+		dojo.addOnLoad(function(){
+			var appState = new ApplicationState(data["link0"], "output", "dataOutput");
+			appState.showStateData();
+			dojo.back.setInitialState(appState);
+		});
+		});
+	</script>
+</head>
+<body>
+	<script type="text/javascript">
+		require(["dojo/back"], function(back){back.init();});
+	</script>
+	<div style="padding-bottom: 20px; width: 100%; border-bottom: 1px solid gray">
+	<h3>dojo.back test</h3>
+	
+	
+	<p>This page tests the dojo.back back/forward code.</p>
+	
+	<p>The buttons that start with "Link" on them don't use any dojo.xhr* calls,
+	just JS data already in the page.</p>
+	
+	<ul>
+		<li>Don't test this page using local disk for MSIE. MSIE will not
+		create a history list for iframe_history.html if served from a file:
+		URL. Serve the test pages from a web server to test in that browser.</li>
+		<li>Safari 2.0.3+ (and probably 1.3.2+): Only the back button works OK
+		(not the forward button).</li>
+		<li>Opera 8.5.3: Does not work.</li>
+		<li>Konqueror: Unknown. The latest may have Safari's behavior.</li>
+	</ul>
+	</div>
+	<div style="float:left; padding: 20px">
+		<button onclick="goNav('link1')">Link 1</button><br />
+		<button onclick="goNav('link with spaces')">Link with Spaces</button><br />
+		<button onclick="goNav('link%20with%20encoded')">Link with Encoded</button><br />
+		<button onclick="goNav('link+with+pluses')">Link with Pluses</button><br />
+		<button onclick="goNav('link3')">Link 3</button><br />
+		<button onclick="goNav('link4')">Link 4</button><br />
+		<button onclick="goNav('link5')">Link 5</button><br />
+		<button onclick="goNav('link6')">Link 6</button><br />
+		<button onclick="goNav('link7')">Link 7</button><br />
+	</div>
+	<div style="float: left; padding: 20px">
+		<b>Data Output:</b><br />
+		<div id="output"></div>
+		<hr />
+		<i>Back/Forward Info:</i><br />
+		<div id="dataOutput"></div>
+	</div>
+</body>
+</html>

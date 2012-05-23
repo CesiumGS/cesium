@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<geography>
+    <outline text="Africa" type="continent">
+        <outline text="Egypt" type="country"/>
+        <outline text="Kenya" type="country">
+            <outline text="Nairobi" type="city"/>
+            <outline text="Mombasa" type="city"/>
+        </outline>
+        <outline text="Sudan" type="country">
+            <outline text="Khartoum" type="city"/>
+        </outline>
+    </outline>
+    <outline text="Asia" type="continent">
+        <outline text="China" type="country"/>
+        <outline text="India" type="country"/>
+        <outline text="Russia" type="country"/>
+        <outline text="Mongolia" type="country"/>
+    </outline>
+    <outline text="Australia" type="continent" population="21 million">
+        <outline text="Australia" type="country" population="21 million"/>
+    </outline>
+    <outline text="Europe" type="continent">
+        <outline text="Germany" type="country"/>
+        <outline text="France" type="country"/>
+        <outline text="Spain" type="country"/>
+        <outline text="Italy" type="country"/>
+    </outline>
+    <outline text="North America" type="continent">
+        <outline text="Mexico" type="country" population="108 million" area="1,972,550 sq km">
+            <outline text="Mexico City" type="city" population="19 million" timezone="-6 UTC"/>
+            <outline text="Guadalajara" type="city" population="4 million" timezone="-6 UTC"/>
+        </outline>
+        <outline text="Canada" type="country" population="33 million" area="9,984,670 sq km">
+            <outline text="Ottawa" type="city" population="0.9 million" timezone="-5 UTC"/>
+            <outline text="Toronto" type="city" population="2.5 million" timezone="-5 UTC"/>
+        </outline>
+        <outline text="United States of America" type="country"/>
+    </outline>
+    <outline text="South America" type="continent">
+        <outline text="Brazil" type="country" population="186 million"/>
+        <outline text="Argentina" type="country" population="40 million"/>
+    </outline>
+</geography>
+

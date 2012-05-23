@@ -1,0 +1,61 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>Dojo Spinner Widget Test</title>
+
+		<style type="text/css">
+			@import "../../../dojo/resources/dojo.css";
+			@import "../../../dijit/tests/css/dijitTests.css";
+			@import "../../../dijit/themes/claro/claro.css";
+		</style>
+
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: true"></script>
+
+		<script type="text/javascript">
+			dojo.require("dojo.parser");
+			dojo.require("dojox.form.TimeSpinner");
+
+			function displayData() {
+				var spinner = dijit.byId("timeSpinner");
+
+				//accessing the widget property directly
+				console.log("TimeSpinner Value (raw, unserialized): ", spinner.get('value'));
+
+				//accessing the widget from the form elements
+				var theForm = dojo.byId("form1");
+				var s = "";
+				for (var i=0; i<theForm.elements.length;i++){
+					var elem = theForm.elements[i];
+					if (!elem.name || elem.name =="button") { continue ; }
+					s+=elem.name + ": " + elem.value + "\n";
+				}
+				console.log(s);
+				
+                	}
+
+		</script>
+	</head>
+
+	<body class="claro">
+	<h1 class="testTitle">Dojox TimeSpinner Test</h1>
+		Try typing values, and use the up/down arrow keys and/or the arrow push
+		buttons to spin
+		<br>
+	<form id="form1" action="" name="example" method="post">
+		<h1>time spinner</h1>
+		<br>
+		<input id="timeSpinner" dojoType="dojox.form.TimeSpinner"
+			onChange="console.debug('onChange fired for widget id = ' + this.id + ' with value = ' + arguments[0]);"
+			value="12:30 PM"
+			name="timeSpinner"
+			hours="12"
+			id="timeSpinner" />
+	</form>
+
+	<div>
+		<button name="button" onclick="displayData(); return false;">view data</button>
+	</div>
+
+	</body>
+</html>

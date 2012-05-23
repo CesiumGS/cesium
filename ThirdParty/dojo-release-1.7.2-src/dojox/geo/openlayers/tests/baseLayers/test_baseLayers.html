@@ -1,0 +1,223 @@
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="../../../../../dijit/themes/dijit.css">
+<link rel="stylesheet" type="text/css" href="../../../../../dijit/themes/tundra/tundra.css">
+<title>Dojo Base Layers</title>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+
+<!--  Google API -->
+<script src="http://maps.google.com/maps/api/js?v=3&amp;sensor=false"></script>
+
+<!-- Virtual Earth / Bing -->
+<script src='http://dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=6.3'></script>
+
+<!-- Yahoo -->
+<script src="http://api.maps.yahoo.com/ajaxymap?v=3.0&appid=euzuro-openlayers"></script>
+
+<script type="text/javascript" src="http://openlayers.org/api/2.10/OpenLayers.js"></script>
+
+<script type="text/javascript">
+	var djConfig = {
+		parseOnLoad : true
+	};
+</script>
+
+<script type="text/javascript" src="../../../../../dojo/dojo.js"></script>
+
+<script type="text/javascript">
+	require([	"dojo/_base/kernel",
+						"dojo/_base/html",
+						"dojo/dom",
+						"dojox/geo/openlayers/Map",
+						"dijit/Menu",
+						"dijit/MenuItem",
+						"dijit/PopupMenuItem",
+						"dojo/parser"], function(dojo, html, dom, Map){
+
+		dojo.ready(function(){
+			var options = {
+				baseLayerName : "TheMap",
+				baseLayerType : dojox.geo.openlayers.BaseLayerType.GOOGLE,
+				touchHandler : true,
+				accessible : true
+			};
+
+			var menu = dom.byId("menu");
+
+			html.style(menu, "visibility", "visible");
+
+			map = new Map("map", options);
+
+			map.fitTo([-160, 70, 160, -70]);
+
+			updateTF(options);
+		})
+
+	});
+
+	var map;
+
+	function setBaseLayer(o){
+		map.setBaseLayerType(o);
+		updateTF(o);
+	}
+
+	function updateTF(o){
+		var ta = dojo.byId("textArea");
+		ta.innerHTML = "Params: " + dojo.toJson(o).replace(/[,]/g, ' ');
+		var bl = map.getOLMap().baseLayer;
+		if (bl && bl.getURL) {
+			var msg = bl.getURL(new OpenLayers.Bounds());
+		}
+
+	}
+</script>
+
+<style type="text/css">
+.olLayerGoogleCopyright {
+	visibility: hidden;
+}
+</style>
+
+</head>
+
+<body class="tundra" >
+
+	<table height="100%" width="100%">
+		<tr>
+			<td height="50" width="100%">
+				<table>
+					<tr>
+						<td>
+							<div id="menu" style="visibility: hidden;">
+								<div dojoType="dijit.Menu">
+									<div dojoType="dijit.PopupMenuItem">
+										<span> Base&nbsp;Layer </span>
+										<div dojoType="dijit.Menu">
+
+											<div dojoType="dijit.MenuItem"
+												onClick="setBaseLayer({
+ baseLayerName : 'OpenStreetMap',
+ baseLayerType : dojox.geo.openlayers.BaseLayerType.OSM
+ })">Open
+												Street Map</div>
+
+											<div dojoType="dijit.PopupMenuItem">
+												<span> Google </span>
+												<div dojoType="dijit.Menu">
+
+													<div dojoType="dijit.MenuItem"
+														onClick="setBaseLayer({
+ baseLayerName : 'Google',
+ baseLayerType : dojox.geo.openlayers.BaseLayerType.GOOGLE
+ })">Google</div>
+
+													<div dojoType="dijit.MenuItem"
+														onClick="setBaseLayer({ 
+ baseLayerName : 'GoogleTerrain', 
+ baseLayerType : dojox.geo.openlayers.BaseLayerType.GOOGLE, 
+ baseLayerOptions : { 
+    type: google.maps.MapTypeId.TERRAIN, 
+    numZoomLevels: 20
+ }})">Google
+														Terrain</div>
+
+													<div dojoType="dijit.MenuItem"
+														onClick="setBaseLayer({ 
+ baseLayerName : 'GoogleHybrid', 
+ baseLayerType : dojox.geo.openlayers.BaseLayerType.GOOGLE, 
+ baseLayerOptions : {
+   type: google.maps.MapTypeId.HYBRID, 
+   numZoomLevels: 20
+ }})">Google
+														Hybrid</div>
+
+													<div dojoType="dijit.MenuItem"
+														onClick="setBaseLayer({ 
+ baseLayerName : 'GoogleSatellite', 
+ baseLayerType : dojox.geo.openlayers.BaseLayerType.GOOGLE, 
+ baseLayerOptions : {
+    type: google.maps.MapTypeId.SATELLITE, 
+    numZoomLevels: 20}})">Google
+														Satellite</div>
+												</div>
+											</div>
+											<div dojoType="dijit.PopupMenuItem">
+												<span> WMS </span>
+												<div dojoType="dijit.Menu">
+													<div dojoType="dijit.MenuItem"
+														onClick="setBaseLayer({
+ baseLayerName : 'WebMapService',
+ baseLayerType : dojox.geo.openlayers.BaseLayerType.WMS})">labs.metacarta.com
+													</div>
+												</div>
+											</div>
+											<div dojoType="dijit.MenuItem"
+												onClick="setBaseLayer({
+  baseLayerName : 'VirtualEarth',
+  baseLayerType : dojox.geo.openlayers.BaseLayerType.VIRTUAL_EARTH})">Virtual
+												Earth BING</div>
+											<div dojoType="dijit.MenuItem"
+												onClick="setBaseLayer({
+  baseLayerName : 'Yahoo',
+  baseLayerType : dojox.geo.openlayers.BaseLayerType.YAHOO})">Yahoo
+											</div>
+											<div dojoType="dijit.PopupMenuItem">
+												<span> ArcGIS </span>
+												<div dojoType="dijit.Menu">
+													<div dojoType="dijit.MenuItem"
+														onClick="setBaseLayer({
+ baseLayerName : 'ArcGisStreetMap',
+ baseLayerType : dojox.geo.openlayers.BaseLayerType.ARCGIS})">Street
+														Map</div>
+													<div dojoType="dijit.MenuItem"
+														onClick="setBaseLayer({
+ baseLayerName : 'ArcGisWorldShadedRelief',
+ baseLayerType : dojox.geo.openlayers.BaseLayerType.ARCGIS,
+ baseLayerUrl : 'http://server.arcgisonline.com/ArcGIS/rest/services/ESRI_ShadedRelief_World_2D/MapServer/export'
+ })">World
+														Shaded Relief</div>
+													<div dojoType="dijit.MenuItem"
+														onClick="setBaseLayer({
+ baseLayerName : 'ESRIImageryWorld2D',
+ baseLayerType : dojox.geo.openlayers.BaseLayerType.ARCGIS,
+ baseLayerUrl : 'http://server.arcgisonline.com/ArcGIS/rest/services/ESRI_Imagery_World_2D/MapServer/export'
+ })">ESRI
+														Imagery World 2D</div>
+													<div dojoType="dijit.MenuItem"
+														onClick="setBaseLayer({
+ baseLayerName : 'ArcGisNGSTopoUS2D',
+ baseLayerType : dojox.geo.openlayers.BaseLayerType.ARCGIS,
+ baseLayerUrl : 'http://server.arcgisonline.com/ArcGIS/rest/services/NGS_Topo_US_2D/MapServer/export'
+ })">NGS
+														Topo US 2D</div>
+													<div dojoType="dijit.MenuItem"
+														onClick="setBaseLayer({
+ baseLayerName : 'ArcGisWorldPhysicalMap',
+ baseLayerType : dojox.geo.openlayers.BaseLayerType.ARCGIS,
+ baseLayerUrl : 'http://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/export'
+ })">World
+														Physical Map</div>
+													<div dojoType="dijit.MenuItem"
+														onClick="setBaseLayer(dojox.geo.openlayers.BaseLayerType.ARCGIS)">Arc GIS no
+														args</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div></td>
+						<td style="width: 100%; height: 100%;"><textarea id="textArea" rows="1" cols="1"
+								style="width: 100%;"></textarea></td>
+					</tr>
+
+				</table>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<div id="map" style="background-color: #b5d0d0; width: 100%; height: 100%;"></div>
+			</td>
+		</tr>
+</body>
+</html>

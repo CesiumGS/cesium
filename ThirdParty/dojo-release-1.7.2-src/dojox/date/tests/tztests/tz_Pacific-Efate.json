@@ -1,0 +1,54 @@
+({
+	name: "date.timezone.Pacific-Efate",
+	runTest: function(t){
+		var tz = "Pacific/Efate";
+		doh.checkDate({tzOffset: -673.266666666667, tzAbbr: "LMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: -673.266666666667, tzAbbr: "LMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: -673.266666666667, tzAbbr: "LMT"}, -1829387597000, tz, 1);
+		doh.checkDate({tzOffset: -660, tzAbbr: "VUT"}, -1829387596000, tz, 1);
+		doh.checkDate({tzOffset: -660, tzAbbr: "VUT"}, 433256399000, tz, 1);
+		doh.checkDate({tzOffset: -720, tzAbbr: "VUST"}, 433256400000, tz, 1);
+		doh.checkDate({tzOffset: -720, tzAbbr: "VUST"}, 448977599000, tz, 1);
+		doh.checkDate({tzOffset: -660, tzAbbr: "VUT"}, 448977600000, tz, 1);
+		doh.checkDate({tzOffset: -660, tzAbbr: "VUT"}, 467297999000, tz, 1);
+		doh.checkDate({tzOffset: -720, tzAbbr: "VUST"}, 467298000000, tz, 1);
+		doh.checkDate({tzOffset: -720, tzAbbr: "VUST"}, 480427199000, tz, 1);
+		doh.checkDate({tzOffset: -660, tzAbbr: "VUT"}, 480427200000, tz, 1);
+		doh.checkDate({tzOffset: -660, tzAbbr: "VUT"}, 496760399000, tz, 1);
+		doh.checkDate({tzOffset: -720, tzAbbr: "VUST"}, 496760400000, tz, 1);
+		doh.checkDate({tzOffset: -720, tzAbbr: "VUST"}, 511876799000, tz, 1);
+		doh.checkDate({tzOffset: -660, tzAbbr: "VUT"}, 511876800000, tz, 1);
+		doh.checkDate({tzOffset: -660, tzAbbr: "VUT"}, 528209999000, tz, 1);
+		doh.checkDate({tzOffset: -720, tzAbbr: "VUST"}, 528210000000, tz, 1);
+		doh.checkDate({tzOffset: -720, tzAbbr: "VUST"}, 543931199000, tz, 1);
+		doh.checkDate({tzOffset: -660, tzAbbr: "VUT"}, 543931200000, tz, 1);
+		doh.checkDate({tzOffset: -660, tzAbbr: "VUT"}, 559659599000, tz, 1);
+		doh.checkDate({tzOffset: -720, tzAbbr: "VUST"}, 559659600000, tz, 1);
+		doh.checkDate({tzOffset: -720, tzAbbr: "VUST"}, 575380799000, tz, 1);
+		doh.checkDate({tzOffset: -660, tzAbbr: "VUT"}, 575380800000, tz, 1);
+		doh.checkDate({tzOffset: -660, tzAbbr: "VUT"}, 591109199000, tz, 1);
+		doh.checkDate({tzOffset: -720, tzAbbr: "VUST"}, 591109200000, tz, 1);
+		doh.checkDate({tzOffset: -720, tzAbbr: "VUST"}, 606830399000, tz, 1);
+		doh.checkDate({tzOffset: -660, tzAbbr: "VUT"}, 606830400000, tz, 1);
+		doh.checkDate({tzOffset: -660, tzAbbr: "VUT"}, 622558799000, tz, 1);
+		doh.checkDate({tzOffset: -720, tzAbbr: "VUST"}, 622558800000, tz, 1);
+		doh.checkDate({tzOffset: -720, tzAbbr: "VUST"}, 638279999000, tz, 1);
+		doh.checkDate({tzOffset: -660, tzAbbr: "VUT"}, 638280000000, tz, 1);
+		doh.checkDate({tzOffset: -660, tzAbbr: "VUT"}, 654008399000, tz, 1);
+		doh.checkDate({tzOffset: -720, tzAbbr: "VUST"}, 654008400000, tz, 1);
+		doh.checkDate({tzOffset: -720, tzAbbr: "VUST"}, 669729599000, tz, 1);
+		doh.checkDate({tzOffset: -660, tzAbbr: "VUT"}, 669729600000, tz, 1);
+		doh.checkDate({tzOffset: -660, tzAbbr: "VUT"}, 686062799000, tz, 1);
+		doh.checkDate({tzOffset: -720, tzAbbr: "VUST"}, 686062800000, tz, 1);
+		doh.checkDate({tzOffset: -720, tzAbbr: "VUST"}, 696340799000, tz, 1);
+		doh.checkDate({tzOffset: -660, tzAbbr: "VUT"}, 696340800000, tz, 1);
+		doh.checkDate({tzOffset: -660, tzAbbr: "VUT"}, 719931599000, tz, 1);
+		doh.checkDate({tzOffset: -720, tzAbbr: "VUST"}, 719931600000, tz, 1);
+		doh.checkDate({tzOffset: -720, tzAbbr: "VUST"}, 727790399000, tz, 1);
+		doh.checkDate({tzOffset: -660, tzAbbr: "VUT"}, 727790400000, tz, 1);
+		doh.checkDate({tzOffset: -660, tzAbbr: "VUT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: -660, tzAbbr: "VUT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: -660, tzAbbr: "VUT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: -660, tzAbbr: "VUT"}, 1246789800000, tz, 0);
+	}
+})

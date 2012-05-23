@@ -1,0 +1,202 @@
+<!--
+	we use a quirks-mode DTD to check for quirks!
+-->
+<html>
+	<head>
+		<title> test html.js Box utils</title>
+		<style type="text/css">
+			/*@import "../../resources/dojo.css";*/
+		</style>
+		<script type="text/javascript" src="../../dojo.js" data-dojo-config="isDebug:true"></script>
+		<script type="text/javascript">
+			require(["dojo", "doh", "dojo/domReady!"], function(dojo, doh){
+			
+			var margin = '1px';
+			var border = '3px solid black';
+			var padding = '5px';
+			var defaultStyles = {
+				height: '100px',
+				width: '100px',
+				position: 'absolute',
+				backgroundColor: 'red'
+			};
+			
+			var defaultChildStyles = {
+				height: '20px',
+				width: '20px',
+				backgroundColor: 'blue'
+			};
+			
+			var testStyles = [
+				{},
+				{margin: margin},
+				{border: border},
+				{padding: padding},
+				{margin: margin, border: border},
+				{margin: margin, padding: padding},
+				{border: border, padding: padding},
+				{margin: margin, border: border, padding: padding}
+			];
+			
+			
+			function sameBox(inBox1, inBox2) {
+				for (var i in inBox1)
+					if (inBox1[i] != inBox2[i]) {
+						console.log((arguments[2]||'box1') + '.' + i + ': ', inBox1[i], ' != ', (arguments[3]||'box2') + '.' + i + ': ', inBox2[i]);
+						return false;
+					}	
+				return true;		
+			}
+			
+			function reciprocalMarginBoxTest(inNode, inBox) {
+				var s = inBox || dojo.marginBox(inNode);
+				dojo.marginBox(inNode, s);
+				var e = dojo.marginBox(inNode);
+				return sameBox(s, e);
+			}
+			
+			function fitTest(inParent, inChild) {
+				var pcb = dojo.contentBox(inParent);
+				return reciprocalMarginBoxTest(inChild, pcb);
+			}
+			
+			function createStyledElement(inStyle, inParent, inElement, inNoDefault) {
+				inStyle = inStyle||{};
+				if (!inNoDefault) {
+					for (var i in defaultStyles)
+						if (!inStyle[i])
+							inStyle[i] = defaultStyles[i];
+				}			
+				var n = document.createElement(inElement || 'div');
+				(inParent||document.body).appendChild(n);
+				dojo.mixin(n.style, inStyle);
+				return n;				
+			}
+			
+			var _testTopInc = 0;
+			var _testTop = 150;
+			var _testInitTop = 250;
+			function styleIncTop(inStyle) {
+				inStyle = dojo.mixin({}, inStyle||{});
+				inStyle.top = (_testInitTop + _testTop*_testTopInc) + 'px';
+				_testTopInc++;
+				return inStyle;
+			}
+			
+			function removeTestNode(inNode) {
+				// leave nodes for inspection or don't return to delete them
+				return;
+				inNode = dojo.byId(inNode);
+				inNode.parentNode.removeChild(inNode);
+				_testTopInc--;
+			}
+			
+			function testAndCallback(inTest, inAssert, inComment, inOk, inErr) {
+				inTest.assertTrue('/* ' + inComment +  '*/' + inAssert);
+				if (inAssert)
+					inOk&&inOk();
+				else
+					inErr&&inErr();	
+			}
+			
+			// args are (styles, parent, element name, no default)
+			function mixCreateElementArgs(inMix, inArgs) {
+				args = [{}];
+				if (inArgs&&inArgs[0])
+					dojo.mixin(args[0], inArgs[0]);
+				if (inMix.length)
+					dojo.mixin(args[0], inMix[0]||{});
+				// parent comes from source
+				if (inMix.length > 1)
+					args[1] = inMix[1];
+				args[2] = inArgs[2];
+				args[3] = inArgs[3];
+				return args;
+			}
+
+			function createStyledNodes(inArgs, inFunc) {
+				for (var i=0, n; (s=testStyles[i]); i++) {
+					n = createStyledElement.apply(this, mixCreateElementArgs([styleIncTop(s)], inArgs));
+					inFunc&&inFunc(n);
+				}	
+			}
+			
+			function createStyledParentChild(inParentArgs, inChildArgs, inFunc) {
+				for (var i=0, s, p, c; (s=testStyles[i]); i++) {
+					p = createStyledElement.apply(this, mixCreateElementArgs([styleIncTop(s)], inParentArgs));
+					c = createStyledElement.apply(this, mixCreateElementArgs([{}, p], inChildArgs));
+					inFunc&&inFunc(p, c);
+				}	
+			}
+			
+			function createStyledParentChildren(inParentArgs, inChildArgs, inFunc) {
+				for (var i=0, s, p; (s=testStyles[i]); i++)
+					for (var j=0, sc, c, props; (sc=testStyles[j]); j++) {
+						p = createStyledElement.apply(this, mixCreateElementArgs([styleIncTop(s)], inParentArgs));
+						c = createStyledElement.apply(this, mixCreateElementArgs([sc, p], inChildArgs));
+						inFunc&&inFunc(p, c);
+					}	
+				
+				for (var i=0, s, p, c; (s=testStyles[i]); i++) {
+					p = createStyledElement.apply(this, mixCreateElementArgs([styleIncTop(s)], inParentArgs));
+					c = createStyledElement.apply(this, mixCreateElementArgs([{}, p], inChildArgs));
+					inFunc&&inFunc(p, c);
+				}	
+			}
+			
+			
+			function runFitTest(inTest, inParentStyles, inChildStyles) {
+				createStyledParentChildren([inParentStyles], [inChildStyles], function(p, c) {
+					testAndCallback(inTest, fitTest(p, c), '', function() {removeTestNode(p); });
+				});
+			}
+			
+			doh.register("t", 
+				[
+					function reciprocalTests(t) {
+						createStyledNodes([], function(n) {
+							testAndCallback(t, reciprocalMarginBoxTest(n), '', function() {removeTestNode(n); });
+						});
+					},
+					function fitTests(t) {
+						runFitTest(t, null, dojo.mixin({}, defaultChildStyles));
+					},
+					function fitTestsOverflow(t) {
+						runFitTest(t, null, dojo.mixin({overflow:'hidden'}, defaultChildStyles));
+						runFitTest(t, {overflow: 'hidden'}, dojo.mixin({}, defaultChildStyles));
+						runFitTest(t, {overflow: 'hidden'}, dojo.mixin({overflow:'hidden'}, defaultChildStyles));
+					},
+					function fitTestsFloat(t) {
+						runFitTest(t, null, dojo.mixin({float: 'left'}, defaultChildStyles));
+						runFitTest(t, {float: 'left'}, dojo.mixin({}, defaultChildStyles));
+						runFitTest(t, {float: 'left'}, dojo.mixin({float: 'left'}, defaultChildStyles));
+					},
+					function reciprocalTestsInline(t) {
+						createStyledParentChild([], [{}, null, 'span'], function(p, c) {
+							c.innerHTML = 'Hello World';
+							testAndCallback(t, reciprocalMarginBoxTest(c), '', function() {removeTestNode(c); });
+						});
+					},
+					function reciprocalTestsButtonChild(t) {
+						createStyledParentChild([], [{}, null, 'button'], function(p, c) {
+							c.innerHTML = 'Hello World';
+							testAndCallback(t, reciprocalMarginBoxTest(c), '', function() {removeTestNode(c); });
+						});
+					}
+				]
+			);
+			doh.runOnLoad();
+			});
+		</script>
+		<style type="text/css">
+			html, body {
+				padding: 0px;
+				margin: 0px;
+				border: 0px;
+			}
+		</style>
+	</head>
+	<body>
+	</body>
+</html>
+

@@ -1,0 +1,66 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>Transition on Orientation Change</title>
+		<link href="../themes/iphone/base.css" rel="stylesheet">
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true, mblAlwaysHideAddressBar: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			dojo.require("dojox.mobile");			// This is a mobile app.
+			dojo.require("dojox.mobile.parser");	// This mobile app supports running on desktop browsers
+			dojo.require("dojox.mobile.compat");	// This mobile app uses declarative programming with fast mobile parser
+			dojo.ready(function(){
+				var portrait = dijit.byId("portrait");
+				var landscape = dijit.byId("landscape");
+				var timer;
+				var onChange = function(){
+					var dim = dojox.mobile.getScreenSize();
+					var n, t;
+					if(timer){
+						clearTimeout(timer);
+					}
+					if(dim.h > dim.w && dojox.mobile.currentView != portrait){
+						n = landscape.domNode;
+						t = (dojo.hasClass(n, "mblIn") || dojo.hasClass(n, "mblOut")) ? 2000 : 0;
+						timer = setTimeout(function(){
+							landscape.performTransition("portrait", 1, "fade");
+							timer = null;
+						}, t);
+					}else if (dim.h <= dim.w && dojox.mobile.currentView != landscape){
+						n = portrait.domNode;
+						t = (dojo.hasClass(n, "mblIn") || dojo.hasClass(n, "mblOut")) ? 2000 : 0;
+						timer = setTimeout(function(){
+							portrait.performTransition("landscape", 1, "fade");
+							timer = null;
+						}, t);
+					}
+				};
+				if(dojo.hasClass(dojo.doc.documentElement, "dj_landscape")){
+					setTimeout(function(){
+						landscape.show();
+					}, 0);
+				}
+				dojo.connect(null, (dojo.global.onorientationchange !== undefined && !dojo.isAndroid)
+					? "onorientationchange" : "onresize", null, onChange);
+			});
+		</script>
+	</head>
+	<body style="visibility:hidden;">
+		<div id="portrait" dojoType="dojox.mobile.View" selected="true">
+			<h1 dojoType="dojox.mobile.Heading">Portrait</h1>
+			<div style="text-align:center;padding-top:20px;">
+				<img src="images/a-icon-2-41x41.png">
+				<h2>View<br>for<br>portrait</h2>
+			</div>
+		</div>
+
+		<div id="landscape" dojoType="dojox.mobile.View">
+			<h1 dojoType="dojox.mobile.Heading">Landscape</h1>
+			<div dojoType="dojox.mobile.RoundRect" shadow="true" style="text-align:center;">
+				<h2>View for landscape</h2>
+			</div>
+		</div>
+	</body>
+</html>

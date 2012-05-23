@@ -1,0 +1,104 @@
+﻿<html>
+	<head>
+		<title>Compress colors</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<style type="text/css">
+			@import "../../../../dojo/resources/dojo.css";
+			@import "../../../../dijit/tests/css/dijitTests.css";
+			
+			.pane { margin-top: 2em; }
+		</style>
+		<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+		<script type="text/javascript">
+			dojo.require("dojox.encoding.tests.compression.colors");
+			dojo.require("dojox.encoding.ascii85");
+			dojo.require("dojox.encoding.bits");
+			dojo.require("dojox.encoding.compression.splay");
+			dojo.require("dojox.encoding.compression.lzw");
+			
+			var dc = dojox.encoding, dcc = dc.compression, colors = dc.tests.compression.colors;
+			
+			var run = function(){
+				var empty = {}, names = [];
+				for(var i in colors){
+					if(i in empty){ continue; }
+					names.push(i);
+				}
+				names.sort();
+				var output = new dc.bits.OutputStream(), result = [];
+				// encode names
+				var s = names.join("{"), encoder = new dcc.lzw.Encoder(27);
+				result.push("<div>Input is " + s.length + " bytes long.</div>");
+				result.push("<div>Input: " + s + ".</div>");
+				for(var i = 0; i < s.length; ++i){
+					var v = s.charCodeAt(i) - 97;
+					if(v < 0 || v > 26) console.debug("error!", v);
+					encoder.encode(v, output);
+				}
+				encoder.flush(output);
+				var w = output.getWidth();
+				result.push("<div>Output is " + Math.ceil(w / 8) + " bytes (" + w + " bits) long.</div>");
+				var buf = output.getBuffer();
+				{
+					var input = new dc.bits.InputStream(buf, buf.length * 8), decoder = new dcc.lzw.Decoder(27);
+					var t = [];
+					for(var w = 0; w < s.length;){
+						var v = decoder.decode(input);
+						t.push(v);
+						w += v.length;
+					}
+					t = t.join("");
+					var p = [];
+					for(var i = 0; i < t.length; ++i){
+						p.push(String.fromCharCode(t.charCodeAt(i) + 97));
+					}
+					p = p.join("");
+					result.push("<div>Control: " + p + ".</div>");
+				}
+				while(buf.length % 4){ buf.push(0); }
+				var a85 = dc.ascii85.encode(buf);
+				result.push("<div>Encoded output is " + a85.length + " bytes.</div>");
+				result.push("<div><textarea>" + a85 + "</textarea></div>");
+				// test
+				{
+					var buf = dc.ascii85.decode(a85);
+					var input = new dc.bits.InputStream(buf, buf.length * 8), decoder = new dcc.lzw.Decoder(27);
+					var t = [];
+					for(var w = 0; w < s.length;){
+						var v = decoder.decode(input);
+						t.push(v);
+						w += v.length;
+					}
+					t = t.join("");
+					var p = [];
+					for(var i = 0; i < t.length; ++i){
+						p.push(String.fromCharCode(t.charCodeAt(i) + 97));
+					}
+					p = p.join("");
+					result.push("<div>Control: " + p + ".</div>");
+				}
+				// encode values
+				buf = [];
+				for(var i = 0; i < names.length; ++i){
+					var c = colors[names[i]];
+					buf.push(c[0], c[1], c[2]);
+				}
+				result.push("<div>Output is " + buf.length + " bytes long.</div>");
+				while(buf.length % 4){ buf.push(0); }
+				a85 = dc.ascii85.encode(buf);
+				result.push("<div>Encoded output is " + a85.length + " bytes.</div>");
+				result.push("<div><textarea>" + a85 + "</textarea></div>");
+				dojo.byId("status").innerHTML = result.join("\n");
+			};			
+			
+			dojo.addOnLoad(function(){
+				dojo.connect(dojo.byId("run"), "onclick", run);
+			});
+		</script>
+	</head>
+	<body>
+		<h1>Compress colors</h1>
+		<p><button id="run">Run</button></p>
+		<div id="status" class="pane"><em>No status yet.</em></div>
+	</body>
+</html>

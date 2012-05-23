@@ -1,0 +1,88 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>Testing dojox.io.scriptFrame</title>
+		<style type="text/css">
+			@import "../../../dojo/resources/dojo.css";
+		</style>
+		<script type="text/javascript" 
+			src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+		<script type="text/javascript">
+			require(['doh/runner', 'dojo/io/script', 'dojox/io/scriptFrame'], function(doh, script, scriptFrame){
+				doh.register("t", 
+					[
+						function ioScriptJsonp(t){
+							var d = new doh.Deferred();
+							var td = script.get({
+								//Note that this URL path is relative to the URL of the iframe document
+								//(dojo.moduleUrl("dojo.resources", "blank.html")
+								url: "../tests/io/scriptJsonp.js",
+								content: { foo: "bar" },
+								callbackParamName: "callback",
+								frameDoc: "testFrame"
+							});
+							td.addBoth(function(res){
+								if(!(res instanceof Error) && 
+									t.is("mammal", res.animalType)){
+									d.callback(true);
+								}else{
+									d.errback(false);
+								}
+							});
+							return d;							
+						},
+						function ioScriptJsonpTimeout(t){
+							var d = new doh.Deferred();
+							var td = script.get({
+								//Note that this URL path is relative to the URL of the iframe document
+								//(dojo.moduleUrl("dojo.resources", "blank.html")
+								url: "../tests/_base/timeout.php",
+								callbackParamName: "callback",
+								content: {Foo: 'Bar'},
+								timeout: 500,
+								handleAs: "json",
+								preventCache: true,
+								handle: function(response, ioArgs){
+									if(response instanceof Error && response.dojoType == "timeout"){
+										console.debug("FOO OK TEST");
+										d.callback(true);
+									}else{
+										console.debug("FOO FAIL TEST");
+										d.errback(false);
+									}
+								},
+								frameDoc: "testFrame"
+							});
+							return d;
+						}
+					]
+				);
+				doh.run();
+			});
+
+/*
+			dojo.addOnLoad(function(){
+				td = dojo.io.script.get({
+					url: "scriptSimple.js",
+					checkString: "myTasks"
+				});
+				td.addCallback(function(res){
+					alert(myTasks);
+					alert(myTasks[1]);
+					if(typeof(myTasks) != "undefined"
+						&& "Do dishes." == myTasks[1]){
+						alert("yeah");
+					}else{
+						alert("boo");
+					}
+				});
+			});
+*/
+
+		</script>
+	</head>
+	<body>
+
+	</body>
+</html>

@@ -1,0 +1,28 @@
+.tundra .dijitProgressBar {
+	margin:2px 0 2px 0;
+}
+
+.tundra .dijitProgressBarEmpty {
+	/* outer container and background of the bar that's not finished yet*/
+	background:#fff url("images/progressBarEmpty.png") repeat-x center center;
+	border-color: #a2a2a2 #b8b8b8 #b8b8b8 #a2a2a2;
+}
+
+.tundra .dijitProgressBarTile {
+	/* inner container for finished portion when in 'tile' (image) mode */
+	background:#f0f0f0 url("images/progressBarFull.png") repeat-x center center;
+}
+
+.tundra .dijitProgressBarFull {
+	border-right:1px solid #b8b8b8;
+}
+
+.tundra .dijitProgressBarLabel {
+	/* Set to a color that contrasts with both the "Empty" and "Full" parts. */
+	color:#293a4b;
+}
+
+.tundra .dijitProgressBarIndeterminate .dijitProgressBarTile {
+	/* use an animated gif for the progress bar in 'indeterminate' mode */
+	background:#cad2de url("images/progressBarAnim.gif") repeat-x center center;
+}

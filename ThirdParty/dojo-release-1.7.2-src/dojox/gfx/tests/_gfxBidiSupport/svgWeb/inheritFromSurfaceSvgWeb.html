@@ -1,0 +1,192 @@
+<html dir="rtl">
+	<head>
+		<title>Testing textpath</title>
+		<style type="text/css">
+			@import "../../../../../dojo/resources/dojo.css";
+			@import "../../../../../dijit/tests/css/dijitTests.css";
+		</style>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<!-- SVGWEB { -->
+		<meta name="svg.render.forceflash" content="true"/>
+		<script src="../../svgweb/svgweb/src/svg.js" data-path="../../svgweb/svgweb/src"></script>
+		<script src="../../../../../dojo/dojo.js" djConfig="isDebug:true,forceGfxRenderer:'svg'" type="text/javascript"></script>
+		<!-- } -->
+		<script type="text/javascript">
+
+			dojo.require("dojox.gfx");
+			dojo.require("dojox.gfx._gfxBidiSupport");
+
+			var CPD = 30, tp1, tp2, tp3,tp4,tp5, t1, t2, t3, t4, t5, t6;
+			var g1 = null;
+			var g2 = null;
+
+			var surfaceLTR = null, surfaceRTL = null, surfaceAUTO = null;
+			
+			var placeAnchor = function(surface, x, y){
+				surface.createLine({x1: x - 2, y1: y, x2: x + 2, y2: y});
+				surface.createLine({x1: x, y1: y - 2, x2: x, y2: y + 2});
+			};			
+			var makeText = function(surface, text, font, fill, stroke){
+				var t = surface.createText(text);
+				if(font)   t.setFont(font);
+				if(fill)   t.setFill(fill);
+				if(stroke) t.setStroke(stroke);
+				placeAnchor(surface, text.x, text.y);
+				return t;
+			};
+
+			makeShapes = function(){
+				var m = dojox.gfx.matrix;
+				surfaceLTR = dojox.gfx.createSurface("testLTR", 500, 170, "ltr");
+				surfaceLTR.whenLoaded(function() {
+					console.debug("surfaceLTR created");
+					var p = surfaceLTR.createPath({})
+						.moveTo(0, 15)
+						.setAbsoluteMode(false)
+						.curveTo(CPD, 0, 0,  0, 50,  0)
+						;
+					console.debug("p created");
+					tp1 = surfaceLTR.createTextPath({
+							text: "\u05d4\u05ea\u05d7\u05dc\u05d4 end. "
+							, align: "start"
+						})
+						.moveTo(0, 15)
+						.setAbsoluteMode(false)
+						.curveTo(CPD, 0, 0,  0, 100,  0)
+						.setFont({family: "times", size: "12pt"})
+						.setFill("blue")
+						;
+					console.debug("tp1 created");
+					tp2 = surfaceLTR.createTextPath({
+							text: "Beginning \u05e1\u05d5\u05e3."
+							, align: "start"
+							
+						})
+						.moveTo(0, 50)
+						.setAbsoluteMode(false)
+						.curveTo(CPD, 0, 0,  0, 100,  0)
+						.setFont({family: "times", size: "12pt"})
+						.setFill("blue")
+						;
+					console.debug("tp2 created");
+					g1 = surfaceLTR.createGroup();
+					t1 = makeText(surfaceLTR, {id: "t1",x: 0, y: 100, text: "\u05d4\u05ea\u05d7\u05dc\u05d4 end."}, 
+						{family: "Times", size: "18pt"}, "black", "blue")
+						.setTransform(m.rotategAt(0, 250, 150));
+
+					t2 = makeText(surfaceLTR, {x: 0, y: 140, text: "Beginning \u05e1\u05d5\u05e3."}, 
+						{family: "Times", size: "18pt"}, "black", "blue")
+						.setTransform(m.rotategAt(0, 250, 100));
+				});				
+				surfaceRTL = dojox.gfx.createSurface("testRTL", 500, 170);
+				console.debug("surfaceRTL created");
+				surfaceRTL.whenLoaded(function() {
+					var p2 = surfaceRTL.createPath({})
+						.moveTo(0, 15)
+						.setAbsoluteMode(false)
+						.curveTo(CPD, 0, 0,  0, 100,  0)
+						;
+					console.debug("p2 created");
+					tp3 = surfaceRTL.createTextPath({
+							text: "\u05d4\u05ea\u05d7\u05dc\u05d4 end. "
+							, align: "start"
+							//, rotated: true
+						})
+						.moveTo(0, 15)
+						.setAbsoluteMode(false)
+						.curveTo(CPD, 0, 100 - CPD,  0, 100,  0)
+						.setFont({family: "times", size: "12pt"})
+						.setFill("red")
+						;
+					console.debug("tp3 created");
+					tp4 = surfaceRTL.createTextPath({
+							text: "Beginning \u05e1\u05d5\u05e3."
+							, align: "start"
+							
+							//, rotated: true
+						})
+						//.setShape(p.shape)
+						.moveTo(0, 50)
+						.setAbsoluteMode(false)
+						.curveTo(CPD, 0, 100 - CPD,  0, 100,  0)
+						.setFont({family: "times", size: "12pt"})
+						.setFill("red")
+						;				
+					console.debug("tp4 created");
+
+					t3 = makeText(surfaceRTL, {id: "t1",x: 0, y: 100, text: "\u05d4\u05ea\u05d7\u05dc\u05d4 end."}, 
+						{family: "Times", size: "18pt"}, "black", "red")
+						.setTransform(m.rotategAt(0, 250, 150));
+
+					t4 = makeText(surfaceRTL, {x: 0, y: 140, text: "Beginning \u05e1\u05d5\u05e3."}, 
+						{family: "Times", size: "18pt"}, "black", "red")
+						.setTransform(m.rotategAt(0, 250, 100));
+				});					
+				surfaceAUTO = dojox.gfx.createSurface("testAUTO", 500, 170,"auto");
+				console.debug("surfaceAUTO created");
+
+				surfaceAUTO.whenLoaded(function() {
+					var p3 = surfaceAUTO.createPath({})
+						.moveTo(0, 15)
+						.setAbsoluteMode(false)
+						.curveTo(CPD, 0, 0,  0, 100,  0)
+						;
+					console.debug("p3 created");
+
+					var tp5 = surfaceAUTO.createTextPath({
+							text: "\u05d4\u05ea\u05d7\u05dc\u05d4 end. "
+							, align: "start"
+							
+							//, rotated: true
+						})
+						//.setShape(p.shape)
+						.moveTo(0, 15)
+						.setAbsoluteMode(false)
+						.curveTo(CPD, 0, 100 - CPD,  0, 100,  0)
+
+						.setFont({family: "times", size: "12pt"})
+						.setFill("red")
+						;
+					console.debug("tp5 created");
+					var tp6 = surfaceAUTO.createTextPath({
+							text: "Beginning \u05e1\u05d5\u05e3."
+							, align: "start"
+							
+							//, rotated: true
+						})
+						//.setShape(p.shape)
+						.moveTo(0, 50)
+						.setAbsoluteMode(false)
+						.curveTo(CPD, 0, 100 - CPD,  0, 100,  0)
+						.setFont({family: "times", size: "12pt"})
+						.setFill("blue")
+						;				
+					console.debug("tp6 created");
+
+					t3 = makeText(surfaceAUTO, {id: "t1",x: 0, y: 100, text: "\u05d4\u05ea\u05d7\u05dc\u05d4 end."}, 
+						{family: "Times", size: "18pt"}, "black", "red")
+						.setTransform(m.rotategAt(0, 250, 150));
+
+					t4 = makeText(surfaceAUTO, {x: 0, y: 140, text: "Beginning \u05e1\u05d5\u05e3."}, 
+						{family: "Times", size: "18pt"}, "black", "blue")
+						.setTransform(m.rotategAt(0, 250, 100));
+				});
+			};
+
+				
+			dojo.addOnLoad(makeShapes);
+
+		</script>
+	</head>
+	<body>
+		<h1>dojox.gfx Text on a Path test</h1>
+		<h2>LTR TextPath and Text first two are TextPath and two others are Text</h2>
+		<div id="testLTR" style="width: 500px;"></div>
+		<h2>RTL Text Path and Text first two are TextPath and two others are Text</h2>
+		<div id="testRTL" style="width: 500px;"></div>
+		<h2>AUTO Text Path and Text first two are TextPath and two others are Text</h2>
+		<div id="testAUTO" style="width: 500px;"></div>
+
+	<p>That's all Folks!</p>
+	</body>
+</html>

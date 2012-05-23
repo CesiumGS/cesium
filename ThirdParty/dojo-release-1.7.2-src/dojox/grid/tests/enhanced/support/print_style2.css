@@ -1,0 +1,7 @@
+.grid_even_column{
+	background-color: #808000;
+	color: white;
+}
+.grid_header .grid_column_3{
+	background-color: blue;
+}

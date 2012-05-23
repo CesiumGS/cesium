@@ -1,0 +1,474 @@
+<?php
+
+   /**
+   *
+   *  Present by Xinhao Chen in Dojo Team, IBM Shanghai
+   *
+   *  Usage: $stem = PorterStemmer::getStem($word);
+   *
+   *  Refrence: "An algorithm for suffix stripping", M.F.Porter, http://tartarus.org/martin/PorterStemmer/def.txt
+   *
+   */
+   
+   class PorterStemmer{
+   
+      /**
+      *  String to store the original word
+      *  @var string
+      */
+      private static $word = "";
+      
+      /**
+      *  Regex for matching a consonant
+      *  @var string
+      */
+      private static $regexConsonant = "#([bcdfghjklmnpqrstvwxz])|([aeiou]y)|^y#";
+      
+      /**
+      *  Regex for matching a vowel
+      *  @var string
+      */
+      private static $regexVowel = "#([aeiou])|([bcdfghjklmnpqrstvwxz]y)#";
+      
+      /**
+      *  Regex for matching a VC set, in order to calculate m
+      *  @var string
+      */
+      private static $regexVC = "#((([aeiou])|([bcdfghjklmnpqrstvwxz]y))[bcdfghjklmnpqrstvwxyz])#";
+      
+      /**
+      *  Regex for matching a CVC set, in order to represent condition  *o;
+      *  @var string
+      */
+      private static $regexCVC = "#((([bcdfghjklmnpqrstvwxz][aeiouy])|(y[aeiou]))[bcdfghjklmnpqrstvz])#";
+      
+      /**
+      *  Stems a word.
+      *  @param  string $word Word to stem
+      *  @return string       Stemmed word
+      */     
+      public static function getStem($word){
+         if (strlen($word) <= 2){
+         	return $word;
+         } 
+         
+         self::$word = strtolower($word);
+         self::step1a();
+         self::step1b();
+         self::step1c();
+         self::step2();
+         self::step3();
+         self::step4();
+         self::step5();
+         
+         return self::$word;
+      }
+      
+      /**
+      *  step 1a
+      */
+      private static function step1a(){
+         if (substr(self::$word, -1, 1)!= "s"){
+         	return;
+         } 
+         
+         switch (substr(self::$word, -2, 1)){
+         	case 'e': 
+         	  (self::matchLetter("sses")) && self::replaceLetter(4, "ss");
+         	  (self::matchLetter("ies")) && self::replaceLetter(3, "i");
+         	  (self::matchLetter("es")) && self::replaceLetter(2, "e");
+         	  break;
+         	case 's': 
+         	  //(self::matchLetter("ss")) && self::replaceLetter(2, "ss");
+         	  break;
+         	default :
+         	  (self::matchLetter("s")) && self::replaceLetter(1, "");
+         }             
+      }
+      
+      /**
+      *  step 1b
+      */
+      private static function step1b(){
+      	if (self::matchLetter("eed")){
+      		(self::getStemM(3) > 0) && self::replaceLetter(3,"ee");
+      		return;
+      	}
+      	if ((self::matchLetter("ed"))&&(self::stemContainVowel(2))){
+            self::replaceLetter(2,"");
+            self::step1b2();
+            return;             
+      	}
+      	if ((self::matchLetter("ing"))&&(self::stemContainVowel(3))){
+            self::replaceLetter(3,"");
+      		self::step1b2();	
+      	}
+      }
+      
+      /**
+      *  step 1b2
+      */
+      private static function step1b2(){
+      	(self::matchLetter("at")) && self::replaceLetter(2, "ate");
+         (self::matchLetter("bl")) && self::replaceLetter(2, "ble");
+         (self::matchLetter("iz")) && self::replaceLetter(2, "ize");
+         
+         if (self::stemEndWithCC(0) && !(self::stemEndWithLetter(0,'l') || self::stemEndWithLetter(0,'s') || self::stemEndWithLetter(0,'z'))){
+            self::$word = substr(self::$word, 0 ,-1);  
+         } else if ((self::getStemM(0) == 1) && self::stemEndWithCVC(0)){
+         	self::$word = self::$word."e";
+         }
+      }
+      
+      /**
+      *  step 1c
+      */
+      private static function step1c(){
+      	(self::matchLetter("y")) && (self::stemContainVowel(1)) && self::replaceLetter(1,"i");
+      }
+      
+      /**
+      *  step 2
+      */
+      private static function step2(){
+      	switch (substr(self::$word, -2, 1)){
+            case 'a' :
+               if(self::matchLetter("ational")){
+                  (self::getStemM(7)>0) && self::replaceLetter(7,"tion");
+                  break;
+               } else if (self::matchLetter("tional")){
+               	(self::getStemM(6)>0) && self::replaceLetter(6,"tion");
+               	break;
+               }
+               break;
+            case 'c' :
+               if(self::matchLetter("enci")){
+                  (self::getStemM(4)>0)&& self::replaceLetter(4,"ence");
+                  break;
+               } else if (self::matchLetter("anci")){
+               	(self::getStemM(4)>0) && self::replaceLetter(4,"ance");
+               	break;
+               }
+               break;
+            case 'e' :
+               if(self::matchLetter("izer")){
+                  (self::getStemM(4)>0) && self::replaceLetter(4,"ize");
+                  break;
+               } 
+               break;
+            case 'g' :
+               if(self::matchLetter("logi")){
+                  (self::getStemM(4)>0) && self::replaceLetter(4,"log");
+                  break;
+               }
+               break;
+            case 'l' :
+               if(self::matchLetter("bli")){
+                  (self::getStemM(3)>0) && self::replaceLetter(3,"ble");
+                  break;
+               } else if (self::matchLetter("alli")){
+               	(self::getStemM(4)>0) && self::replaceLetter(4,"al");
+               	break;
+               } else if (self::matchLetter("entli")){
+                  (self::getStemM(5)>0) && self::replaceLetter(5,"ent");
+                  break;
+               } else if (self::matchLetter("eli")){
+               	(self::getStemM(3)>0) && self::replaceLetter(3,"e");
+               	break;
+               } else if (self::matchLetter("ousli")){
+               	(self::getStemM(5)>0) && self::replaceLetter(5,"ous");
+               	break;
+               }
+               break;
+            case 'o':
+               if(self::matchLetter("ization")){
+                  (self::getStemM(7)>0) && self::replaceLetter(7,"ize");
+                  break;
+               } else if (self::matchLetter("ation")){
+               	(self::getStemM(5)>0) && self::replaceLetter(5,"ate");
+               	break;
+               } else if (self::matchLetter("ator")){
+                  (self::getStemM(4)>0) && self::replaceLetter(4,"ate");
+                  break;
+               }
+               break;
+            case 's':
+               if(self::matchLetter("alism")){
+                  (self::getStemM(5)>0) && self::replaceLetter(5,"al");
+                  break;
+               } else if (self::matchLetter("iveness")){
+               	(self::getStemM(7)>0) && self::replaceLetter(7,"ive");
+               	break;
+               } else if (self::matchLetter("fulness")){
+                  (self::getStemM(7)>0) && self::replaceLetter(7,"ful");
+                  break;
+               } else if (self::matchLetter("ousness")){
+               	(self::getStemM(7)>0) && self::replaceLetter(7,"ous");
+               	break;
+               } 
+               break;
+            case 't':
+               if(self::matchLetter("aliti")){
+                  (self::getStemM(5)>0) && self::replaceLetter(5,"al");
+                  break;
+               } else if (self::matchLetter("iviti")){
+               	(self::getStemM(5)>0) && self::replaceLetter(5,"ive");
+               	break;
+               } else if (self::matchLetter("biliti")){
+                  (self::getStemM(6)>0) && self::replaceLetter(6,"ble");
+                  break;
+               } 
+               break;
+      	}
+      }
+      
+      /**
+      *  step 3
+      */
+      private static function step3(){
+         switch (substr(self::$word, -1, 1)){
+            case 'e' :
+               if(self::matchLetter("icate")){
+                  (self::getStemM(5)>0) && self::replaceLetter(5,"ic");
+                  break;
+               } else if (self::matchLetter("ative")){
+               	(self::getStemM(5)>0) && self::replaceLetter(5,"");
+               	break;
+               } else if (self::matchLetter("alize")){
+                  (self::getStemM(5)>0) && self::replaceLetter(5,"al");
+                  break;
+               } 
+               break;
+            case 'i' :
+               if(self::matchLetter("iciti")){
+                  (self::getStemM(5)>0) && self::replaceLetter(5,"ic");
+                  break;
+               }
+               break;
+            case 'l' :
+               if(self::matchLetter("ical")){
+                  (self::getStemM(4)>0) && self::replaceLetter(4,"ic");
+                  break;
+               } else if (self::matchLetter("ful")){
+               	(self::getStemM(3)>0) && self::replaceLetter(3,"");
+               	break;
+               } 
+               break;
+            case 's' :
+               if(self::matchLetter("ness")){
+                  (self::getStemM(4)>0) && self::replaceLetter(4,"");
+                  break;
+               }
+               break;
+         }
+               
+      }
+      
+      /**
+      *  step 4
+      */
+      private static function step4(){
+      	switch (substr(self::$word, -2, 1)){
+      		case 'a' :
+               if(self::matchLetter("al")){
+                  (self::getStemM(2)>1) && self::replaceLetter(2,"");
+                  break;
+               }
+               break;
+            case 'c' :
+               if(self::matchLetter("ance")){
+                  (self::getStemM(4)>1) && self::replaceLetter(4,"");
+                  break;
+               } else if (self::matchLetter("ence")){
+                  (self::getStemM(4)>1) && self::replaceLetter(4,"");
+                  break;
+               }
+               break;
+            case 'e' :
+               if(self::matchLetter("er")){
+                  (self::getStemM(2)>1) && self::replaceLetter(2,"");
+                  break;
+               }
+               break;
+            case 'i' :
+               if(self::matchLetter("ic")){
+                  (self::getStemM(2)>1) && self::replaceLetter(2,"");
+                  break;
+               }
+            case 'l' :
+               if(self::matchLetter("able")){
+                  (self::getStemM(4)>1) && self::replaceLetter(4,"");
+                  break;
+               } else if (self::matchLetter("ible")){
+               	(self::getStemM(4)>1) && self::replaceLetter(4,"");
+               	break;
+               } 
+               break;
+            case 'n' :
+               if(self::matchLetter("ant")){
+                  (self::getStemM(3)>1) && self::replaceLetter(3,"");
+                  break;
+               } else if (self::matchLetter("ement")){
+               	(self::getStemM(5)>1) && self::replaceLetter(5,"");
+               	break;
+               } else if (self::matchLetter("ment")){
+                  (self::getStemM(4)>1) && self::replaceLetter(4,"");
+                  break;
+               } else if (self::matchLetter("ent")){
+               	(self::getStemM(3)>1) && self::replaceLetter(3,"");
+               	break;
+               } 
+               break;
+            case 'o' :
+               if(self::matchLetter("sion")){
+                  (self::getStemM(3)>1) && self::replaceLetter(3,"");
+                  break;
+               } else if (self::matchLetter("tion")){
+               	(self::getStemM(3)>1) && self::replaceLetter(3,"");
+               	break;
+               } else if (self::matchLetter("ou")){
+                  (self::getStemM(2)>1) && self::replaceLetter(2,"");
+                  break;
+               } 
+               break;
+            case 's' :
+               if(self::matchLetter("ism")){
+                  (self::getStemM(3)>1) && self::replaceLetter(3,"");
+                  break;
+               }
+               break;
+            case 't' :
+               if(self::matchLetter("ate")){
+                  (self::getStemM(3)>1) && self::replaceLetter(3,"");
+                  break;
+               } else if (self::matchLetter("iti")){
+               	(self::getStemM(3)>1) && self::replaceLetter(3,"");
+               	break;
+               } 
+               break;
+            case 'u' :
+               if(self::matchLetter("ous")){
+                  (self::getStemM(3)>1) && self::replaceLetter(3,"");
+                  break;
+               }
+               break;
+            case 'v' :
+               if(self::matchLetter("ive")){
+                  (self::getStemM(3)>1) && self::replaceLetter(3,"");
+                  break;
+               }
+               break;
+            case 'z' :
+               if(self::matchLetter("ize")){
+                  (self::getStemM(3)>1) && self::replaceLetter(3,"");
+                  break;
+               }
+               break;
+      	}
+      }
+      
+      /**
+      *  step 5
+      */
+      private static function step5(){
+      	if (self::matchLetter("e")){
+            if (self::getStemM(1)>1){
+               self::replaceLetter(1,"");
+            }else if ((self::getStemM(1)==1) && !self::stemEndWithCVC(1)){
+               self::replaceLetter(1,"");
+            } 
+         } 
+      	if (((self::matchLetter("dd"))||(self::matchLetter("ll")))&&(self::getStemM(0)>1)){
+      		self::$word = substr(self::$word, 0 ,-1); 
+      	}
+      }
+      
+      /**
+      *  check whether the suffix of the word matches $strOld
+      *  @param   (string) $strOld    String to check
+      *  @return  (bool)              Result
+      */
+      private static function matchLetter($strOld){
+         return (substr(self::$word, -strlen($strOld)) == $strOld);
+      }
+      
+      /**
+      *  replace the last ($offset) letters with $strNew
+      *  @param   (int)    $offset    offset intiger
+      *  @param   (string) $strNew    String to replace with
+      */
+      private static function replaceLetter($offset, $strNew){
+         self::$word = self::getSubString($offset).$strNew;
+      }
+      
+      /**
+      *  get the substring without the last ($offset) letters
+      *  @param   (int)    $offset    offset intiger
+      *  @return  (bool)              Result
+      */
+      private static function getSubString($offset){
+         return ($offset) ? substr(self::$word, 0, -$offset) : (self::$word);
+      }
+      
+      /**
+      *  get M of the substring without the last ($offset) letters
+      *  @param   (int)    $offset    offset intiger
+      *  @return  (bool)              Result
+      */
+      private static function getStemM($offset){
+         $stem = self::getSubString($offset);
+         preg_match_all(PorterStemmer::$regexVC, $stem, $matched);
+      	return sizeOf($matched[1]);
+      }
+      
+      /**
+      *  check whether the last letters of the substring
+      *  without the last ($offset) letters matches $chLetter
+      *  @param   (int)    $offset     offset intiger
+      *  @param   (string) $Letter     String to check
+      *  @return  (bool)               Result
+      */
+      private static function stemEndWithLetter($offset, $Letter){
+         $stem = self::getSubString($offset);
+         return (substr($stem, -1 ,1) == $Letter);
+      }
+      
+      /**
+      *  check whether the substring without the last ($offset) letters
+      *  contains a vowel
+      *  @param   (int)    $offset     offset intiger
+      *  @return  (bool)               Result
+      */
+      private static function stemContainVowel($offset){
+         $stem = self::getSubString($offset);
+      	return preg_match(self::$regexVowel, $stem);
+      }
+      
+      /**
+      *  check whether the last letters of the substring
+      *  without the last ($offset) letters matches double Consonant
+      *  @param   (int)    $offset     offset intiger
+      *  @return  (bool)               Result
+      */
+      private static function stemEndWithCC($offset){
+         $stem = self::getSubString($offset);
+         $temp1 = substr($stem, -1, 1);
+         $temp2 = substr($stem, -2, 1);
+      	return (($temp1==$temp2) && (preg_match(self::$regexConsonant, $temp1)));
+      }
+      
+      /**
+      *  check whether the last letters of the substring
+      *  without the last ($offset) letters matches CVC
+      *  @param   (int)    $offset     offset intiger
+      *  @return  (bool)               Result
+      */
+      private static function stemEndWithCVC($offset){
+         $stem = self::getSubString($offset);
+      	$temp = substr($stem, -3, 3);
+      	return (preg_match(self::$regexCVC, $temp));
+      }
+           
+   }
+
+?>

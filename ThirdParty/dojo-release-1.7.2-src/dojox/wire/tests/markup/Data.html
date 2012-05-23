@@ -1,0 +1,105 @@
+<html>
+<head>
+<title>Test Data</title>
+<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+<script type="text/javascript">
+dojo.provide("dojox.wire.ml.tests.markup.Data");
+
+dojo.require("dojo.parser");
+dojo.require("doh.runner");
+dojo.require("dojox.wire.ml.Action");
+dojo.require("dojox.wire.ml.Data");
+dojo.require("dojox.wire.ml.Transfer");
+
+dojox.wire.ml.tests.markup.Data = {};
+
+dojo.addOnLoad(function(){
+	doh.register("dojox.wire.ml.tests.markup.Data", [
+
+		function test_DataProperty(t){
+			dojox.wire.ml.tests.markup.Data.target = {};
+			dojo.publish("transfer");
+			t.assertEqual("A", dojox.wire.ml.tests.markup.Data.target.a);
+			t.assertEqual(1, dojox.wire.ml.tests.markup.Data.target.b);
+			t.assertEqual(true, dojox.wire.ml.tests.markup.Data.target.c);
+			t.assertEqual("DA", dojox.wire.ml.tests.markup.Data.target.d.a);
+			t.assertEqual("DB", dojox.wire.ml.tests.markup.Data.target.d.b);
+			t.assertEqual("E1", dojox.wire.ml.tests.markup.Data.target.e[0]);
+			t.assertEqual("E2", dojox.wire.ml.tests.markup.Data.target.e[1]);
+			t.assertEqual("F", dojox.wire.ml.tests.markup.Data.target.f);
+			t.assertEqual("G", dojox.wire.ml.tests.markup.Data.target.g);
+		}
+
+	]);
+	doh.run();
+});
+</script>
+</head>
+<body>
+<div dojoType="dojox.wire.ml.Data"
+	id="Data1">
+	<div dojoType="dojox.wire.ml.DataProperty"
+		name="a"
+		value="A"></div>
+	<div dojoType="dojox.wire.ml.DataProperty"
+		name="b"
+		type="number" value="1"></div>
+	<div dojoType="dojox.wire.ml.DataProperty"
+		name="c"
+		type="boolean" value="true"></div>
+	<div dojoType="dojox.wire.ml.DataProperty"
+		name="d"
+		type="object">
+		<div dojoType="dojox.wire.ml.DataProperty"
+			name="a"
+			value="DA"></div>
+		<div dojoType="dojox.wire.ml.DataProperty"
+			name="b"
+			value="DB"></div>
+	</div>
+	<div dojoType="dojox.wire.ml.DataProperty"
+		name="e"
+		type="array">
+		<div dojoType="dojox.wire.ml.DataProperty"
+			value="E1"></div>
+		<div dojoType="dojox.wire.ml.DataProperty"
+			value="E2"></div>
+	</div>
+	<div dojoType="dojox.wire.ml.DataProperty"
+		name="f"
+		type="element"
+		value="x">
+		<div dojoType="dojox.wire.ml.DataProperty"
+			name="text()"
+			value="F"></div>
+		<div dojoType="dojox.wire.ml.DataProperty"
+			name="@y"
+			value="G"></div>
+	</div>
+</div>
+<div dojoType="dojox.wire.ml.Action"
+	triggerTopic="transfer">
+	<div dojoType="dojox.wire.ml.Transfer"
+		source="Data1.a"
+		target="dojox.wire.ml.tests.markup.Data.target.a"></div>
+	<div dojoType="dojox.wire.ml.Transfer"
+		source="Data1.b"
+		target="dojox.wire.ml.tests.markup.Data.target.b"></div>
+	<div dojoType="dojox.wire.ml.Transfer"
+		source="Data1.c"
+		target="dojox.wire.ml.tests.markup.Data.target.c"></div>
+	<div dojoType="dojox.wire.ml.Transfer"
+		source="Data1.d"
+		target="dojox.wire.ml.tests.markup.Data.target.d"></div>
+	<div dojoType="dojox.wire.ml.Transfer"
+		source="Data1.e"
+		target="dojox.wire.ml.tests.markup.Data.target.e"></div>
+	<div dojoType="dojox.wire.ml.Transfer"
+		source="Data1.f"
+		target="dojox.wire.ml.tests.markup.Data.target.f"></div>
+	<div dojoType="dojox.wire.ml.Transfer"
+		source="Data1.f.@y"
+		target="dojox.wire.ml.tests.markup.Data.target.g"></div>
+</div>
+</body>
+</html>

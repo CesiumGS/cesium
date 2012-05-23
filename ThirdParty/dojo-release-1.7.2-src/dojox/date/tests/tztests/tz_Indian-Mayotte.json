@@ -1,0 +1,14 @@
+({
+	name: "date.timezone.Indian-Mayotte",
+	runTest: function(t){
+		var tz = "Indian/Mayotte";
+		doh.checkDate({tzOffset: -180.933333333333, tzAbbr: "LMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: -180.933333333333, tzAbbr: "LMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: -180.933333333333, tzAbbr: "LMT"}, -1846292457000, tz, 1);
+		doh.checkDate({tzOffset: -180, tzAbbr: "EAT"}, -1846292456000, tz, 1);
+		doh.checkDate({tzOffset: -180, tzAbbr: "EAT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: -180, tzAbbr: "EAT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: -180, tzAbbr: "EAT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: -180, tzAbbr: "EAT"}, 1246789800000, tz, 0);
+	}
+})

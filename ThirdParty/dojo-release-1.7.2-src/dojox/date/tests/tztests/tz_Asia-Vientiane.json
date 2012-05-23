@@ -1,0 +1,20 @@
+({
+	name: "date.timezone.Asia-Vientiane",
+	runTest: function(t){
+		var tz = "Asia/Vientiane";
+		doh.checkDate({tzOffset: -410.4, tzAbbr: "LMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: -410.4, tzAbbr: "LMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: -410.4, tzAbbr: "LMT"}, -2005973425000, tz, 1);
+		doh.checkDate({tzOffset: -426.333333333333, tzAbbr: "SMT"}, -2005973424000, tz, 1);
+		doh.checkDate({tzOffset: -426.333333333333, tzAbbr: "SMT"}, -1855983921000, tz, 1);
+		doh.checkDate({tzOffset: -420, tzAbbr: "ICT"}, -1855983920000, tz, 1);
+		doh.checkDate({tzOffset: -420, tzAbbr: "ICT"}, -1819954801000, tz, 1);
+		doh.checkDate({tzOffset: -480, tzAbbr: "ICT"}, -1819954800000, tz, 1);
+		doh.checkDate({tzOffset: -480, tzAbbr: "ICT"}, -1220428801000, tz, 1);
+		doh.checkDate({tzOffset: -420, tzAbbr: "ICT"}, -1220428800000, tz, 1);
+		doh.checkDate({tzOffset: -420, tzAbbr: "ICT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: -420, tzAbbr: "ICT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: -420, tzAbbr: "ICT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: -420, tzAbbr: "ICT"}, 1246789800000, tz, 0);
+	}
+})

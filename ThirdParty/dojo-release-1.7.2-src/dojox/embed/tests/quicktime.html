@@ -1,0 +1,46 @@
+<html>
+	<head>
+		<title>dojo.embed.QuickTime Detection Test</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<style type="text/css">
+			@import "../../../dojo/resources/dojo.css";
+			@import "../../../dijit/tests/css/dijitTests.css";
+		</style>
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+		<script type="text/javascript">
+			dojo.require("dojox.embed.Quicktime");
+
+			//	what a pain.  We hate having to deal with async loading issues.
+			dojo.addOnLoad(function(){
+				console.log("Getting the Quicktime version...");
+				var r=dojo.byId("results"),
+					fn=function(){
+						var v=dojox.embed.Quicktime.version || { major: 0, minor: 0, rev: 0 };
+						r.innerHTML = v.major
+							+ '.' + v.minor
+							+ '.' + v.rev;
+					};
+				if(!dojox.embed.Quicktime.available){
+					r.innerHTML = "QuickTime plugin not installed";
+				}else if(!dojox.embed.Quicktime.supported){
+					r.innerHTML = "QuickTime not supported";
+				}else if(dojox.embed.Quicktime.initialized){
+					fn();
+				}else{
+					console.log("dojox.embed.Quicktime not initialized yet... waiting");
+					var h=dojo.connect(dojox.embed.Quicktime, "onInitialize", function(){
+						fn();
+						dojo.disconnect(h);
+					});
+				}
+			});
+		</script>
+	</head>
+	<body>
+		<h1>DojoX A/V: QuickTime detection tests.</h1>
+		
+		<p>This page is testing the base QuickTime movie generator.  See the Firebug log for details.</p>
+		
+		<p>Installed QuickTime version: <span id="results"></span></p>
+	</body>
+</html>
