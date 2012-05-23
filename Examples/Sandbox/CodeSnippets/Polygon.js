@@ -72,6 +72,42 @@
         };
     };
 
+    Sandbox.BrickPolygonMaterial = function (scene, ellipsoid, primitives) {
+        this.code = function() {
+            var polygon = new Cesium.Polygon(undefined);
+            polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
+                new Cesium.Cartographic2(-80.0, 30.0),
+                new Cesium.Cartographic2(-70.0, 30.0),
+                new Cesium.Cartographic2(-70.0, 40.0),
+                new Cesium.Cartographic2(-80.0, 40.0)
+            ]));
+            polygon.material = new Cesium.BrickMaterial({
+                brickColor : {
+                    red : 0.7,
+                    green : 0.2,
+                    blue : 0.0,
+                    alpha : 1.0
+                },
+                mortarColor : {
+                    red : 0.8,
+                    green : 0.8,
+                    blue : 0.7,
+                    alpha : 1.0
+                },
+                brickSize : {
+                    x : 0.30,
+                    y : 0.15
+                },
+                brickPct : {
+                    x : 0.90,
+                    y : 0.85
+                }
+            });
+
+            primitives.add(polygon);
+        };
+    };
+
     Sandbox.StripePolygonMaterial = function (scene, ellipsoid, primitives) {
         this.code = function () {
             var polygon = new Cesium.Polygon(undefined);
@@ -144,34 +180,6 @@
                 sRepeat : 5,
                 tRepeat : 5
             });
-
-            primitives.add(polygon);
-        };
-    };
-
-    Sandbox.DiffuseMapPolygonMaterial = function (scene, ellipsoid, primitives) {
-        this.code = function() {
-            var polygon = new Cesium.Polygon(undefined);
-            polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic2(-80.0, 30.0),
-                new Cesium.Cartographic2(-70.0, 30.0),
-                new Cesium.Cartographic2(-70.0, 33.0),
-                new Cesium.Cartographic2(-80.0, 33.0)
-            ]));
-
-            var image = new Image();
-            image.onload = function() {
-                polygon.material = new Cesium.DiffuseMapMaterial({
-                    texture : scene.getContext().createTexture2D({
-                            source : image,
-                            pixelFormat : Cesium.PixelFormat.RGB
-                    }),
-                    sRepeat : 1,
-                    tRepeat : 1
-                });
-            };
-
-            image.src = "../../Images/Cesium_Logo_Color.jpg";
 
             primitives.add(polygon);
         };

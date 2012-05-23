@@ -71,6 +71,7 @@
     var mat = tree.addNode("Materials", "", pg, "Material");
     tree.addNode("Modify the default material", [new Sandbox.PolygonColor(scene, ellipsoid, primitives)], mat, "Material");
     tree.addNode("Apply a diffuse map material", [new Sandbox.DiffuseMapPolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");
+    tree.addNode("Apply a brick material", [new Sandbox.BrickPolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");
     tree.addNode("Apply a stripe material", [new Sandbox.StripePolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");
     tree.addNode("Apply a checkerboard material", [new Sandbox.CheckerboardPolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");
     tree.addNode("Apply a dot material", [new Sandbox.DotPolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");
