@@ -51,6 +51,21 @@ header
 	max-width: 750px;
 }
 
+.embedded #main {
+    width: 97%;
+    position: relative;
+    top: 0;
+    left: 0;
+}
+
+.popout {
+    display: block;
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    font-size: 12pt;
+}
+
 section
 {
 	display: block;
@@ -115,6 +130,10 @@ div.nav
 	overflow: auto;
 }
 
+.embedded div.nav {
+    display: none;
+}
+
 div.indexTitle
 {
 	padding: 8px 0 0;
@@ -136,29 +155,35 @@ form
 	display: block;
 }
 
-div.nav div.indexLinks
+.rightLinks {
+    display: block;
+    float: right;
+}
+
+.indexLinks
 {
 	display: block;
 }
 
-div.nav div.indexLinks a
+.indexLinks a
 {
 	font-family: M1m, Arial, sans-serif;
-	font-size: 1.6em;
+	font-size: 14pt;
 	text-transform: lowercase;
+	text-decoration: none;
 	margin-right: 2px;
 	margin-bottom: 0;
 	border-right: 1px solid #999;
 	padding-right: 4px;
 }
 
-div.nav div.indexLinks a:hover
+.indexLinks a:hover
 {
 	text-decoration:underline;
 	cursor: pointer;
 }
 
-div.nav div.indexLinks a:last-child
+.indexLinks a:last-child
 {
 	margin-right: 2px;
 	border-right: 0px;

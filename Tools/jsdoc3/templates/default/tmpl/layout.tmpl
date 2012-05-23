@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: <?js= title ?></title>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <title><?js= title ?> - Cesium Documentation</title>
     
     <!--[if lt IE 9]>
       <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -22,6 +23,9 @@
 <div class="nav">
 	<div class="menu">
 		
+        <div class="rightLinks indexLinks">
+            <a href="index.html">top</a>
+        </div>
 		<div class="indexLinks">
 			<a id="allLink">all</a>
 			<a id="jsIndexLink">js</a>
@@ -51,6 +55,16 @@
 <script type="text/javascript">
 	codeview.classFilter.Init();
 	
+	if (window.frameElement) {
+        document.body.className = "embedded";
+        var ele = document.createElement('a');
+        ele.className = "popout";
+        ele.target = "_blank";
+        ele.href = window.location.href;
+        ele.innerHTML = "&raquo;";
+        ele.title = "Pop out";
+        document.getElementById('main').appendChild(ele);
+	}
 	var searchTerm = ((window.location.search).split('='))[1];
 	if(searchTerm){
 		var numDocLinks = document.links.length;
