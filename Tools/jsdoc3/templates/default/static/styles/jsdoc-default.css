@@ -51,6 +51,21 @@ header
 	max-width: 750px;
 }
 
+.embedded #main {
+    width: 97%;
+    position: relative;
+    top: 0;
+    left: 0;
+}
+
+.popout {
+    display: block;
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    font-size: 12pt;
+}
+
 section
 {
 	display: block;
@@ -95,6 +110,12 @@ div.menu
 	background-color: rgba(255, 255, 255, 1.0);
 }
 
+#mainIndex div.menu {
+    border-radius: 15px;
+    margin: 5px;
+    padding: 15px;
+}
+
 div.nav 
 {
 	position: fixed;
@@ -107,6 +128,10 @@ div.nav
 	padding: 0 0 10px 0;
 	height: 98%;
 	overflow: auto;
+}
+
+.embedded div.nav {
+    display: none;
 }
 
 div.indexTitle
@@ -130,29 +155,35 @@ form
 	display: block;
 }
 
-div.nav div.indexLinks
+.rightLinks {
+    display: block;
+    float: right;
+}
+
+.indexLinks
 {
 	display: block;
 }
 
-div.nav div.indexLinks a
+.indexLinks a
 {
 	font-family: M1m, Arial, sans-serif;
-	font-size: 1.6em;
+	font-size: 14pt;
 	text-transform: lowercase;
+	text-decoration: none;
 	margin-right: 2px;
 	margin-bottom: 0;
 	border-right: 1px solid #999;
 	padding-right: 4px;
 }
 
-div.nav div.indexLinks a:hover
+.indexLinks a:hover
 {
 	text-decoration:underline;
 	cursor: pointer;
 }
 
-div.nav div.indexLinks a:last-child
+.indexLinks a:last-child
 {
 	margin-right: 2px;
 	border-right: 0px;
@@ -175,6 +206,10 @@ div.nav input.classFilter {
 	-webkit-border-radius: 3px;
 	-border-radius: 3px;
 }
+
+#mainIndex div.nav input.classFilter {
+    max-width: 250px;
+}
 /* End menu */
 
 nav
@@ -188,6 +223,17 @@ nav
     padding-left: 9px;
 }
 
+#mainIndex nav, #mainIndex div.nav {
+    position: static;
+    float: none;
+    margin: 0;
+    padding: 0;
+    width: auto;
+    height: auto;
+    border: none;
+    max-width: none;
+}
+
 div.nav ul {
     font-family: 'Lucida Grande', 'Lucida Sans Unicode', arial, sans-serif;
     font-size: 100%;
@@ -195,6 +241,12 @@ div.nav ul {
     padding:0;
     margin:0;
     list-style-type:none;
+}
+
+#mainIndex div.nav ul {
+    -webkit-columns: 250px;
+    -moz-columns: 250px;
+    columns: 250px;
 }
 
 div.nav h3 {
@@ -220,10 +272,14 @@ nav a:active {
 
 footer {
     display: block;
-    padding: 6px;
+    padding: 6px 6px 100%;  /* Large bottom padding, so #anchors scroll correctly. */
     margin-top: 12px;
     font-style: italic;
     font-size: 90%;
+}
+
+#mainIndex footer {
+    padding: 6px;
 }
 
 .page-title
@@ -244,6 +300,10 @@ footer {
 	-moz-box-shadow: 0px 0px 10px #B2CCF0;
 	-webkit-box-shadow: 0px 0px 10px #B2CCF0;
 	box-shadow: 0px 0px 10px #B2CCF0;
+}
+
+#mainIndex .page-title {
+    margin-right: 30px;
 }
 
 h1
