@@ -7,4 +7,9 @@ defineSuite(['Core/FeatureDetection'], function(FeatureDetection) {
         //just make sure the function runs, the test can't expect a value of true or false
         expect(FeatureDetection.supportsCrossOriginImagery()).toBeDefined();
     });
+
+    it('detects full screen support', function() {
+        //just make sure the function runs, the test can't expect a value of true or false
+        expect(FeatureDetection.supportsFullScreen()).toBeDefined();
+    });
 });

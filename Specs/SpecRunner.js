@@ -15,6 +15,24 @@ var defineSuite;
     var readyToCreateTests = false;
     var createTests;
 
+    function getQueryParameter(name) {
+        var match = new RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
+
+        if (match) {
+            return decodeURIComponent(match[1].replace(/\+/g, ' '));
+        }
+    }
+
+    require.config({
+        baseUrl : getQueryParameter('baseUrl') || '../Source',
+        paths : {
+            'Specs' : '../Specs'
+        }
+    });
+
+    //start loading all of Cesium early, so it's all available for code coverage calculations.
+    require(['Cesium']);
+
     defineSuite = function(deps, name, suite) {
         if (typeof name === 'function') {
             suite = name;
@@ -27,9 +45,7 @@ var defineSuite;
 
         tests.push(test);
 
-        require({
-            baseUrl : getQueryParameter('baseUrl') || '../Source'
-        }, deps, function() {
+        require(deps, function() {
             var args = arguments;
 
             test.f = function() {
@@ -41,14 +57,6 @@ var defineSuite;
             createTestsIfReady();
         });
     };
-
-    function getQueryParameter(name) {
-        var match = new RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
-
-        if (match) {
-            return decodeURIComponent(match[1].replace(/\+/g, ' '));
-        }
-    }
 
     function createTestsIfReady() {
         if (readyToCreateTests && allTestsReady()) {
@@ -75,9 +83,7 @@ var defineSuite;
     }
 
     //specs is an array defined by SpecList.js
-    require({
-        baseUrl : '.'
-    }, ['./addDefaultMatchers'].concat(specs), function(addDefaultMatchers) {
+    require(['Specs/addDefaultMatchers'].concat(specs), function(addDefaultMatchers) {
         var env = jasmine.getEnv();
 
         env.beforeEach(addDefaultMatchers);
