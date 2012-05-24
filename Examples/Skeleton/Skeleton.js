@@ -70,7 +70,32 @@ require({
         // Use movement.startX, movement.startY, movement.endX, movement.endY
     }, Cesium.MouseEventType.MOVE);
 
-    document.oncontextmenu = function() {
+    canvas.oncontextmenu = function() {
         return false;
     };
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Example resize handler
+
+    window.onresize = function () {
+        var width = canvas.clientWidth;
+        var height = canvas.clientHeight;
+
+        if (canvas.width === width && canvas.height === height) {
+            return;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        scene.getContext().setViewport({
+            x: 0,
+            y: 0,
+            width: width,
+            height: height
+        });
+
+        scene.getCamera().frustum.aspectRatio = width / height;
+    };
+    window.onresize();
 });
