@@ -22,67 +22,37 @@ define(function() {
         }
     };
 
-    ReferenceProperty.prototype.resolve = function(buffer) {
-        var targetObject = buffer.getObject(this.targetObjectId);
-        if (typeof targetObject !== 'undefined') {
-            this.targetProperty = targetObject[this.targetPropertyName];
+    ReferenceProperty.prototype.resolve = function() {
+        var targetProperty = this.targetProperty;
+        if (typeof targetProperty === 'undefined') {
+            var resolveBuffer = this.buffer.parent || this.buffer;
+            var targetObject = resolveBuffer.getObject(this.targetObjectId);
+            if (typeof targetObject !== 'undefined') {
+                targetProperty = targetObject[this.targetPropertyName];
+                this.targetProperty = targetProperty;
+            }
         }
+        return targetProperty;
     };
 
     ReferenceProperty.prototype.getValue = function(time) {
-        var targetProperty = this.targetProperty;
-        if (typeof targetProperty === 'undefined') {
-            this.resolve(this.buffer);
-            targetProperty = this.targetProperty;
-        }
-
-        if (typeof targetProperty !== 'undefined') {
-            return targetProperty.getValue(time);
-        }
-
-        return undefined;
+        var targetProperty = this.resolve();
+        return typeof targetProperty !== 'undefined' ? targetProperty.getValue(time) : undefined;
     };
 
     ReferenceProperty.prototype.getValueCartographic = function(time) {
-        var targetProperty = this.targetProperty;
-        if (typeof targetProperty === 'undefined') {
-            this.resolve(this.buffer);
-            targetProperty = this.targetProperty;
-        }
-
-        if (typeof targetProperty !== 'undefined') {
-            return targetProperty.getValueCartographic(time);
-        }
-
-        return undefined;
+        var targetProperty = this.resolve();
+        return typeof targetProperty !== 'undefined' ? targetProperty.getValueCartographic(time) : undefined;
     };
 
     ReferenceProperty.prototype.getValueCartesian = function(time) {
-        var targetProperty = this.targetProperty;
-        if (typeof targetProperty === 'undefined') {
-            this.resolve(this.buffer);
-            targetProperty = this.targetProperty;
-        }
-
-        if (typeof targetProperty !== 'undefined') {
-            return targetProperty.getValueCartesian(time);
-        }
-
-        return undefined;
+        var targetProperty = this.resolve();
+        return typeof targetProperty !== 'undefined' ? targetProperty.getValueCartesian(time) : undefined;
     };
 
     ReferenceProperty.prototype.getValueSpherical = function(time) {
-        var targetProperty = this.targetProperty;
-        if (typeof targetProperty === 'undefined') {
-            this.resolve(this.buffer);
-            targetProperty = this.targetProperty;
-        }
-
-        if (typeof targetProperty !== 'undefined') {
-            return targetProperty.getValueSpherical(time);
-        }
-
-        return undefined;
+        var targetProperty = this.resolve();
+        return typeof targetProperty !== 'undefined' ? targetProperty.getValueSpherical(time) : undefined;
     };
 
     return ReferenceProperty;

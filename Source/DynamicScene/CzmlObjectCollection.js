@@ -10,6 +10,7 @@ define([
     function CzmlObjectCollection(name, id, propertyFunctionsMap) {
         this.name = name;
         this.id = id;
+        this.parent = undefined;
         this._propertyFunctionsMap = propertyFunctionsMap;
         this._hash = {};
         this._array = [];
