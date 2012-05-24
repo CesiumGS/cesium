@@ -244,7 +244,6 @@ define([
          */
         this.failedTileRetryTime = 30.0;
 
-
         this._spWithoutAtmosphere = undefined;
         this._spGroundFromSpace = undefined;
         this._spGroundFromAtmosphere = undefined;
@@ -272,27 +271,9 @@ define([
          * @type {Cartesian2}
          */
         this.logoOffset = Cartesian2.ZERO;
-
         this._logoOffset = this.logoOffset;
         this._imageLogo = undefined;
         this._quadLogo = undefined;
-
-        this._dayTileProvider = undefined;
-        this._nightImageSource = undefined;
-        this._specularImageSource = undefined;
-        this._cloudsImageSource = undefined;
-        this._bumpImageSource = undefined;
-        this._nightTexture = undefined;
-        this._specularTexture = undefined;
-        this._cloudsTexture = undefined;
-        this._bumpTexture = undefined;
-        this._showDay = false;
-        this._showNight = false;
-        this._showClouds = false;
-        this._showCloudShadows = false;
-        this._showSpecular = false;
-        this._showBumps = false;
-        this._showTerminator = false;
 
         this._quadNorthPole = undefined;
         this._quadSouthPole = undefined;
@@ -338,6 +319,7 @@ define([
          * DOC_TBA
          */
         this.dayTileProvider = undefined;
+        this._dayTileProvider = undefined;
 
         /**
          * The URL of the image to use as a night texture.  An asynchronous
@@ -358,6 +340,8 @@ define([
          * @see CentralBody#showNight
          */
         this.nightImageSource = undefined;
+        this._nightImageSource = undefined;
+        this._nightTexture = undefined;
 
         /**
          * The URL of the image to use as a specular map; a single-channel image where zero indicates
@@ -375,7 +359,9 @@ define([
          *
          * @see CentralBody#showSpecular
          */
-        this.specularImageSource = undefined;
+        this.specularMapSource = undefined;
+        this._specularMapSource = undefined;
+        this._specularTexture = undefined;
 
         /**
          * The URL of the image to use as a cloud map; a single-channel image where 255 indicates
@@ -393,7 +379,9 @@ define([
          *
          * @see CentralBody#showClouds
          */
-        this.cloudsImageSource = undefined;
+        this.cloudsMapSource = undefined;
+        this._cloudsMapSource = undefined;
+        this._cloudsTexture = undefined;
 
         /**
          * The URL of the image to use as a bump map; a single-channel image where zero indicates
@@ -411,7 +399,9 @@ define([
          *
          * @see CentralBody#showBumps
          */
-        this.bumpImageSource = undefined;
+        this.bumpMapSource = undefined;
+        this._bumpMapSource = undefined;
+        this._bumpTexture = undefined;
 
         /**
          * When <code>true</code>, textures from the <code>dayTileProvider</code> are shown on the central body.
@@ -426,6 +416,7 @@ define([
          * @see CentralBody#showNight
          */
         this.showDay = true;
+        this._showDay = false;
 
         /**
          * When <code>true</code>, the night texture is shown on the side of the central body not illuminated by the sun.
@@ -446,6 +437,7 @@ define([
          * cb.nightImageSource = "night.jpg";
          */
         this.showNight = true;
+        this._showNight = false;
 
         /**
          * When <code>true</code>, diffuse-lit clouds are shown on the central body.  When {@link CentralBody#showNight}
@@ -465,6 +457,7 @@ define([
          * cb.cloudsMapSource = "clouds.jpg";
          */
         this.showClouds = true;
+        this._showClouds = false;
 
         /**
          * When <code>true</code>, clouds on the daytime side of the globe cast approximate shadows.  The
@@ -488,6 +481,7 @@ define([
          * cb.cloudsMapSource = "clouds.jpg";
          */
         this.showCloudShadows = true;
+        this._showCloudShadows = false;
 
         /**
          * When <code>true</code>, a specular map (also called a gloss map) is used so only the ocean receives specular light.
@@ -507,6 +501,7 @@ define([
          * cb.specularMapSource = "specular.jpg";
          */
         this.showSpecular = true;
+        this._showSpecular = false;
 
         /**
          * When <code>true</code>, a bump map is used to add lighting detail to the mountainous areas of the central body.
@@ -529,6 +524,7 @@ define([
          * cb.bumpMapSource = "bump.jpg";
          */
         this.showBumps = true;
+        this._showBumps = false;
 
         /**
          * When <code>true</code>, shows a line on the central body where day meets night.
@@ -542,6 +538,7 @@ define([
          * @see CentralBody#dayNightBlendDelta
          */
         this.showTerminator = false;
+        this._showTerminator = false;
 
         /**
          * When {@link CentralBody#showBumps} is <code>true</code>, <code>bumpMapNormalZ</code> controls the
