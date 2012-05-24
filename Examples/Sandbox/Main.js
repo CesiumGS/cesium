@@ -73,6 +73,7 @@
     tree.addNode("Apply a diffuse map material", [new Sandbox.DiffuseMapPolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");
     tree.addNode("Apply a brick material", [new Sandbox.BrickPolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");
     tree.addNode("Apply an asphalt material", [new Sandbox.AsphaltPolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");
+    tree.addNode("Apply a wood material", [new Sandbox.WoodPolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");
     tree.addNode("Apply a stripe material", [new Sandbox.StripePolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");
     tree.addNode("Apply a checkerboard material", [new Sandbox.CheckerboardPolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");
     tree.addNode("Apply a dot material", [new Sandbox.DotPolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");

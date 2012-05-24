@@ -130,7 +130,40 @@
             primitives.add(polygon);
         };
     };
+    Sandbox.WoodPolygonMaterial = function (scene, ellipsoid, primitives) {
+        this.code = function() {
+            var polygon = new Cesium.Polygon(undefined);
+            polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
+                new Cesium.Cartographic2(-80.0, 30.0),
+                new Cesium.Cartographic2(-70.0, 30.0),
+                new Cesium.Cartographic2(-70.0, 40.0),
+                new Cesium.Cartographic2(-80.0, 40.0)
+            ]));
+            polygon.material = new Cesium.WoodMaterial({
+                lightWoodColor : {
+                    red : 0.6,
+                    green : 0.3,
+                    blue : 0.1,
+                    alpha : 1.0
+                },
+                darkWoodColor : {
+                    red : 0.4,
+                    green : 0.2,
+                    blue : 0.07,
+                    alpha : 1.0
+                },
+                ringFrequency : 2.0,
+                noiseScale : {
+                    x : 0.5,
+                    y : 0.1
+                },
+                noisiness : 3.0,
+                grainScale : 27.0
+            });
 
+            primitives.add(polygon);
+        };
+    };
     Sandbox.StripePolygonMaterial = function (scene, ellipsoid, primitives) {
         this.code = function () {
             var polygon = new Cesium.Polygon(undefined);
