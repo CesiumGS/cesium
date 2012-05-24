@@ -108,28 +108,6 @@
         };
     };
 
-    Sandbox.AsphaltPolygonMaterial = function (scene, ellipsoid, primitives) {
-        this.code = function() {
-            var polygon = new Cesium.Polygon(undefined);
-            polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic2(-80.0, 30.0),
-                new Cesium.Cartographic2(-70.0, 30.0),
-                new Cesium.Cartographic2(-70.0, 40.0),
-                new Cesium.Cartographic2(-80.0, 40.0)
-            ]));
-            polygon.material = new Cesium.AsphaltMaterial({
-                asphaltColor : {
-                    red : 0.2,
-                    green : 0.2,
-                    blue : 0.2,
-                    alpha : 1.0
-                },
-                bumpSize : 0.01
-            });
-
-            primitives.add(polygon);
-        };
-    };
     Sandbox.WoodPolygonMaterial = function (scene, ellipsoid, primitives) {
         this.code = function() {
             var polygon = new Cesium.Polygon(undefined);
@@ -159,6 +137,53 @@
                 },
                 noisiness : 3.0,
                 grainScale : 27.0
+            });
+
+            primitives.add(polygon);
+        };
+    };
+    Sandbox.AsphaltPolygonMaterial = function (scene, ellipsoid, primitives) {
+        this.code = function() {
+            var polygon = new Cesium.Polygon(undefined);
+            polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
+                new Cesium.Cartographic2(-80.0, 30.0),
+                new Cesium.Cartographic2(-70.0, 30.0),
+                new Cesium.Cartographic2(-70.0, 40.0),
+                new Cesium.Cartographic2(-80.0, 40.0)
+            ]));
+            polygon.material = new Cesium.AsphaltMaterial({
+                asphaltColor : {
+                    red : 0.15,
+                    green : 0.15,
+                    blue : 0.15,
+                    alpha : 1.0
+                },
+                bumpSize : 50.0,
+                roughness : 0.2
+            });
+
+            primitives.add(polygon);
+        };
+    };
+    Sandbox.CementPolygonMaterial = function (scene, ellipsoid, primitives) {
+        this.code = function() {
+            var polygon = new Cesium.Polygon(undefined);
+            polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
+                new Cesium.Cartographic2(-80.0, 30.0),
+                new Cesium.Cartographic2(-70.0, 30.0),
+                new Cesium.Cartographic2(-70.0, 40.0),
+                new Cesium.Cartographic2(-80.0, 40.0)
+            ]));
+
+            polygon.material = new Cesium.CementMaterial({
+                cementColor : {
+                    red : 0.95,
+                    green : 0.95,
+                    blue : 0.85,
+                    alpha : 1.0
+                },
+                grainScale : 80.0,
+                roughness : 1.0
             });
 
             primitives.add(polygon);

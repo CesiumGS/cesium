@@ -19,16 +19,21 @@ define([
         * DOC_TBA
         */
        this.asphaltColor = t.asphaltColor || {
-           red : 0.2,
-           green : 0.2,
-           blue : 0.2,
+           red : 0.15,
+           green : 0.15,
+           blue : 0.15,
            alpha : 1.0
        };
 
        /**
         * DOC_TBA
         */
-       this.bumpSize = t.bumpSize || 0.01;
+       this.bumpSize = t.bumpSize || 50.0;
+
+       /**
+        * DOC_TBA
+        */
+       this.roughness = t.roughness || 0.2;
 
        var that = this;
        this._uniforms = {
@@ -37,6 +42,9 @@ define([
            },
            u_bumpSize : function() {
                return that.bumpSize;
+           },
+           u_roughness : function() {
+               return that.roughness;
            }
        };
     }

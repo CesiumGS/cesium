@@ -9,7 +9,7 @@ define([
     *
     * DOC_TBA
     *
-    * @name AspahltMaterial
+    * @name WoodMaterial
     * @constructor
     */
    function WoodMaterial(template) {
