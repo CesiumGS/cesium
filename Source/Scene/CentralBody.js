@@ -1548,9 +1548,6 @@ define([
             });
 
             this._prefetchImages();
-
-            var viewport = context.getViewport();
-            this._minTileDistance = this._createTileDistanceFunction(viewport.width, viewport.height);
         }
 
         var hasLogo = this._dayTileProvider && this._dayTileProvider.getLogo;
@@ -1585,6 +1582,8 @@ define([
         if (createFBO || fboDimensionsChanged ||
             (!this._quadV || this._quadV.isDestroyed()) ||
             (!this._quadH || this._quadH.isDestroyed())) {
+
+            this._minTileDistance = this._createTileDistanceFunction(width, height);
 
             this._fb = this._fb && this._fb.destroy();
             this._quadV = this._quadV && this._quadV.destroy();
