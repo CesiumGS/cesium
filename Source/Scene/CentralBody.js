@@ -8,6 +8,7 @@ define([
         '../Core/Intersect',
         '../Core/Occluder',
         '../Core/Ellipsoid',
+        '../Core/Extent',
         '../Core/BoundingSphere',
         '../Core/Rectangle',
         '../Core/Cache',
@@ -58,6 +59,7 @@ define([
         Intersect,
         Occluder,
         Ellipsoid,
+        Extent,
         BoundingSphere,
         Rectangle,
         Cache,
@@ -1344,47 +1346,82 @@ define([
         var viewportTransformation = state.context.getUniformState().getViewportTransformation();
         var latitudeExtension = 0.01;
 
+        var extent;
+        var boundingVolume;
+        var frustumCull;
+        var occludeePoint;
+        var occluded;
+
         // handle north pole
         if (this._dayTileProvider.maxExtent.north < CesiumMath.PI_OVER_TWO) {
-            var maxLatitudeNorth = this._dayTileProvider.maxExtent.north - latitudeExtension;
-            var rectNorth = this._computePoleQuad(maxLatitudeNorth, viewProjMatrix, viewportTransformation);
+            extent = {
+                north : CesiumMath.PI_OVER_TWO,
+                south : this._dayTileProvider.maxExtent.north,
+                east : Math.PI,
+                west : -Math.PI
+            };
+            boundingVolume = Extent.compute3DBoundingSphere(extent, this._ellipsoid);
+            frustumCull = this._camera.getVisibility(boundingVolume, BoundingSphere.planeSphereIntersect) === Intersect.OUTSIDE;
+            occludeePoint = Extent.computeOccludeePoint(extent, this._ellipsoid).occludeePoint;
+            occluded = (occludeePoint && !state.occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !state.occluder.isVisible(boundingVolume);
 
-            if (typeof this._quadNorthPole === 'undefined') {
-                this._quadNorthPole = new ViewportQuad(rectNorth);
-                this._quadNorthPole.vertexShader = CentralBodyVSPole;
-                this._quadNorthPole.fragmentShader = "#define MAX_STEPS " + Math.max(state.context.getCanvas().clientWidth, state.context.getCanvas().clientHeight) + "\n" + CentralBodyFSPole;
-                this._quadNorthPole.uniforms.u_color = function() {
-                    //return new Cartesian4(1.0, 1.0, 1.0, 1.0);
-                    //return new Cartesian3(0.0, 9.0, 36.0);
-                    return new Cartesian3(0.0, 9.0 / 255.0, 36.0 / 255.0);
-                };
-                this._quadNorthPole.setTexture(this._fb.getColorTexture());
-                this._quadNorthPole.setDestroyTexture(false);
+            if (frustumCull || occluded) {
+                this._quadNorthPole = this._quadNorthPole && this._quadNorthPole.destroy();
+                this._quadNorthPole = undefined;
             } else {
-                this._quadNorthPole.setRectangle(rectNorth);
+                var maxLatitudeNorth = this._dayTileProvider.maxExtent.north - latitudeExtension;
+                var rectNorth = this._computePoleQuad(maxLatitudeNorth, viewProjMatrix, viewportTransformation);
+
+                if (typeof this._quadNorthPole === 'undefined') {
+                    this._quadNorthPole = new ViewportQuad(rectNorth);
+                    this._quadNorthPole.vertexShader = CentralBodyVSPole;
+                    this._quadNorthPole.fragmentShader = "#define MAX_STEPS " + Math.max(state.context.getCanvas().clientWidth, state.context.getCanvas().clientHeight) + "\n" + CentralBodyFSPole;
+                    this._quadNorthPole.uniforms.u_color = function() {
+                        return new Cartesian3(0.0, 9.0 / 255.0, 36.0 / 255.0);
+                    };
+                    this._quadNorthPole.setTexture(this._fb.getColorTexture());
+                    this._quadNorthPole.setDestroyTexture(false);
+                } else {
+                    this._quadNorthPole.setRectangle(rectNorth);
+                }
+                this._quadNorthPole.update(state.context);
             }
-            this._quadNorthPole.update(state.context);
         }
 
         // handle south pole
         if (this._dayTileProvider.maxExtent.south > -CesiumMath.PI_OVER_TWO) {
-            var maxLatitudeSouth = this._dayTileProvider.maxExtent.south + latitudeExtension;
-            var rectSouth = this._computePoleQuad(maxLatitudeSouth, viewProjMatrix, viewportTransformation);
+            extent = {
+                north : this._dayTileProvider.maxExtent.south,
+                south : -CesiumMath.PI_OVER_TWO,
+                east : Math.PI,
+                west : -Math.PI
+            };
+            boundingVolume = Extent.compute3DBoundingSphere(extent, this._ellipsoid);
+            frustumCull = this._camera.getVisibility(boundingVolume, BoundingSphere.planeSphereIntersect) === Intersect.OUTSIDE;
+            occludeePoint = Extent.computeOccludeePoint(extent, this._ellipsoid).occludeePoint;
+            occluded = (occludeePoint && !state.occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !state.occluder.isVisible(boundingVolume);
 
-            if (typeof this._quadSouthPole === 'undefined') {
-                this._quadSouthPole = new ViewportQuad(rectSouth);
-                this._quadSouthPole.vertexShader = CentralBodyVSPole;
-                this._quadSouthPole.fragmentShader = "#define MAX_STEPS " + Math.max(state.context.getCanvas().clientWidth, state.context.getCanvas().clientHeight) + "\n" + CentralBodyFSPole;
-                this._quadSouthPole.uniforms.u_color = function() {
-                    return new Cartesian3(1.0, 1.0, 1.0);
-                    //return new Cartesian3(255.0, 255.0, 255.0);
-                };
-                this._quadSouthPole.setTexture(this._fb.getColorTexture());
-                this._quadSouthPole.setDestroyTexture(false);
+            if (frustumCull || occluded) {
+                this._quadSouthPole = this._quadSouthPole && this._quadSouthPole.destroy();
+                this._quadSouthPole = undefined;
             } else {
-                this._quadSouthPole.setRectangle(rectSouth);
+                var maxLatitudeSouth = this._dayTileProvider.maxExtent.south + latitudeExtension;
+                var rectSouth = this._computePoleQuad(maxLatitudeSouth, viewProjMatrix, viewportTransformation);
+
+                if (typeof this._quadSouthPole === 'undefined') {
+                    this._quadSouthPole = new ViewportQuad(rectSouth);
+                    this._quadSouthPole.vertexShader = CentralBodyVSPole;
+                    this._quadSouthPole.fragmentShader = "#define MAX_STEPS " + Math.max(state.context.getCanvas().clientWidth, state.context.getCanvas().clientHeight) + "\n" + CentralBodyFSPole;
+                    this._quadSouthPole.uniforms.u_color = function() {
+                        return new Cartesian3(1.0, 1.0, 1.0);
+                    };
+                    this._quadSouthPole.setTexture(this._fb.getColorTexture());
+                    this._quadSouthPole.setDestroyTexture(false);
+                } else {
+                    this._quadSouthPole.setRectangle(rectSouth);
+                }
+                this._quadSouthPole.update(state.context);
             }
-            this._quadSouthPole.update(state.context);
         }
     };
 
@@ -1943,7 +1980,7 @@ define([
                 if (typeof this._quadNorthPole !== 'undefined') {
                     this._quadNorthPole.render(context);
                 }
-                if (typeof this._quadNorthPole !== 'undefined') {
+                if (typeof this._quadSouthPole !== 'undefined') {
                     this._quadSouthPole.render(context);
                 }
             }

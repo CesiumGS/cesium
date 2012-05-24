@@ -187,8 +187,7 @@ define([
             return Occluder.getOccludeePoint(new BoundingSphere(ellipsoidCenter, ellipsoid.getMinimumRadius()), bs.center, positions);
         }
         return {
-            valid : false,
-            occludeePoint : null
+            valid : false
         };
     };
 
