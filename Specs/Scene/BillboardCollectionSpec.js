@@ -69,7 +69,7 @@ defineSuite([
         destroyContext(context);
     });
 
-    it("initializem suite", function() {
+    it("initialize suite", function() {
         greenImage = new Image();
         greenImage.src = "./Data/Images/Green.png";
 
@@ -86,10 +86,10 @@ defineSuite([
 
     it("default constructs a billboard", function() {
         var b = billboards.add();
-        expect(b.getShow()).toBeTruthy();
-        expect(b.getPosition().equals(Cartesian3.ZERO)).toBeTruthy();
-        expect(b.getPixelOffset().equals(Cartesian2.ZERO)).toBeTruthy();
-        expect(b.getEyeOffset().equals(Cartesian3.ZERO)).toBeTruthy();
+        expect(b.getShow()).toEqual(true);
+        expect(b.getPosition().equals(Cartesian3.ZERO)).toEqual(true);
+        expect(b.getPixelOffset().equals(Cartesian2.ZERO)).toEqual(true);
+        expect(b.getEyeOffset().equals(Cartesian3.ZERO)).toEqual(true);
         expect(b.getHorizontalOrigin()).toEqual(HorizontalOrigin.CENTER);
         expect(b.getVerticalOrigin()).toEqual(VerticalOrigin.CENTER);
         expect(b.getScale()).toEqual(1.0);
@@ -118,10 +118,10 @@ defineSuite([
             }
         });
 
-        expect(b.getShow()).toBeFalsy();
-        expect(b.getPosition().equals(new Cartesian3(1.0, 2.0, 3.0))).toBeTruthy();
-        expect(b.getPixelOffset().equals(new Cartesian2(1.0, 2.0))).toBeTruthy();
-        expect(b.getEyeOffset().equals(new Cartesian3(1.0, 2.0, 3.0))).toBeTruthy();
+        expect(b.getShow()).toEqual(false);
+        expect(b.getPosition().equals(new Cartesian3(1.0, 2.0, 3.0))).toEqual(true);
+        expect(b.getPixelOffset().equals(new Cartesian2(1.0, 2.0))).toEqual(true);
+        expect(b.getEyeOffset().equals(new Cartesian3(1.0, 2.0, 3.0))).toEqual(true);
         expect(b.getHorizontalOrigin()).toEqual(HorizontalOrigin.LEFT);
         expect(b.getVerticalOrigin()).toEqual(VerticalOrigin.BOTTOM);
         expect(b.getScale()).toEqual(2.0);
@@ -149,10 +149,10 @@ defineSuite([
             alpha : 4.0
         });
 
-        expect(b.getShow()).toBeFalsy();
-        expect(b.getPosition().equals(new Cartesian3(1.0, 2.0, 3.0))).toBeTruthy();
-        expect(b.getPixelOffset().equals(new Cartesian2(1.0, 2.0))).toBeTruthy();
-        expect(b.getEyeOffset().equals(new Cartesian3(1.0, 2.0, 3.0))).toBeTruthy();
+        expect(b.getShow()).toEqual(false);
+        expect(b.getPosition().equals(new Cartesian3(1.0, 2.0, 3.0))).toEqual(true);
+        expect(b.getPixelOffset().equals(new Cartesian2(1.0, 2.0))).toEqual(true);
+        expect(b.getEyeOffset().equals(new Cartesian3(1.0, 2.0, 3.0))).toEqual(true);
         expect(b.getHorizontalOrigin()).toEqual(HorizontalOrigin.LEFT);
         expect(b.getVerticalOrigin()).toEqual(VerticalOrigin.BOTTOM);
         expect(b.getScale()).toEqual(2.0);
@@ -167,7 +167,7 @@ defineSuite([
         var b = billboards.add();
         billboards.remove(b);
         b.setShow(false);
-        expect(b.getShow()).toBeFalsy();
+        expect(b.getShow()).toEqual(false);
     });
 
     it("has zero billboards when constructed", function() {
@@ -184,7 +184,7 @@ defineSuite([
         });
 
         expect(billboards.getLength()).toEqual(1);
-        expect(billboards.get(0).equals(b)).toBeTruthy();
+        expect(billboards.get(0).equals(b)).toEqual(true);
     });
 
     it("removes the first billboard", function() {
@@ -205,10 +205,10 @@ defineSuite([
 
         expect(billboards.getLength()).toEqual(2);
 
-        expect(billboards.remove(one)).toBeTruthy();
+        expect(billboards.remove(one)).toEqual(true);
 
         expect(billboards.getLength()).toEqual(1);
-        expect(billboards.get(0).equals(two)).toBeTruthy();
+        expect(billboards.get(0).equals(two)).toEqual(true);
     });
 
     it("removes the last billboard", function() {
@@ -229,10 +229,10 @@ defineSuite([
 
         expect(billboards.getLength()).toEqual(2);
 
-        expect(billboards.remove(two)).toBeTruthy();
+        expect(billboards.remove(two)).toEqual(true);
 
         expect(billboards.getLength()).toEqual(1);
-        expect(billboards.get(0).equals(one)).toBeTruthy();
+        expect(billboards.get(0).equals(one)).toEqual(true);
     });
 
     it("removes the same billboard twice", function() {
@@ -245,10 +245,10 @@ defineSuite([
         });
         expect(billboards.getLength()).toEqual(1);
 
-        expect(billboards.remove(b)).toBeTruthy();
+        expect(billboards.remove(b)).toEqual(true);
         expect(billboards.getLength()).toEqual(0);
 
-        expect(billboards.remove(b)).toBeFalsy();
+        expect(billboards.remove(b)).toEqual(false);
         expect(billboards.getLength()).toEqual(0);
     });
 
@@ -262,7 +262,7 @@ defineSuite([
         });
         expect(billboards.getLength()).toEqual(1);
 
-        expect(billboards.remove(null)).toBeFalsy();
+        expect(billboards.remove(null)).toEqual(false);
         expect(billboards.getLength()).toEqual(1);
     });
 
@@ -282,10 +282,10 @@ defineSuite([
             }
         });
         expect(billboards.getLength()).toEqual(2);
-        expect(billboards.get(0).equals(one)).toBeTruthy();
-        expect(billboards.get(1).equals(two)).toBeTruthy();
+        expect(billboards.get(0).equals(one)).toEqual(true);
+        expect(billboards.get(1).equals(two)).toEqual(true);
 
-        expect(billboards.remove(two)).toBeTruthy();
+        expect(billboards.remove(two)).toEqual(true);
         var three = billboards.add({
             position : {
                 x : 7.0,
@@ -294,8 +294,8 @@ defineSuite([
             }
         });
         expect(billboards.getLength()).toEqual(2);
-        expect(billboards.get(0).equals(one)).toBeTruthy();
-        expect(billboards.get(1).equals(three)).toBeTruthy();
+        expect(billboards.get(0).equals(one)).toEqual(true);
+        expect(billboards.get(1).equals(three)).toEqual(true);
     });
 
     it("removes all billboards", function() {
@@ -323,7 +323,7 @@ defineSuite([
         var b = billboards.add();
         billboards.add(b);
 
-        expect(billboards.contains(b)).toBeTruthy();
+        expect(billboards.contains(b)).toEqual(true);
     });
 
     it("doesn't contain a billboard", function() {
@@ -334,7 +334,7 @@ defineSuite([
         billboards.add(b1);
         billboards.remove(b0);
 
-        expect(billboards.contains(b0)).toBeFalsy();
+        expect(billboards.contains(b0)).toEqual(false);
     });
 
     it("doesn't contain undefined", function() {
@@ -351,13 +351,13 @@ defineSuite([
 
     it("destroys a texture atlas", function() {
         var b = new BillboardCollection();
-        expect(b.getDestroyTextureAtlas()).toBeTruthy();
+        expect(b.getDestroyTextureAtlas()).toEqual(true);
 
         var atlas = createTextureAtlas([greenImage]);
         b.setTextureAtlas(atlas);
         b = b.destroy();
 
-        expect(atlas.isDestroyed()).toBeTruthy();
+        expect(atlas.isDestroyed()).toEqual(true);
     });
 
     it("doesn't destroy a texture atlas", function() {
@@ -368,7 +368,7 @@ defineSuite([
         b.setTextureAtlas(atlas);
         b = b.destroy();
 
-        expect(atlas.isDestroyed()).toBeFalsy();
+        expect(atlas.isDestroyed()).toEqual(false);
     });
 
     it("doesn't render when constructed", function() {
@@ -1017,7 +1017,7 @@ defineSuite([
             }
         });
 
-        expect(b.equals(b2)).toBeTruthy();
+        expect(b.equals(b2)).toEqual(true);
     });
 
     it("doesn't equal another billboard", function() {
@@ -1036,7 +1036,7 @@ defineSuite([
             }
         });
 
-        expect(b.equals(b2)).toBeFalsy();
+        expect(b.equals(b2)).toEqual(false);
     });
 
     it("doesn't equal null", function() {

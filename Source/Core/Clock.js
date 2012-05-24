@@ -2,19 +2,24 @@
 define([
         './JulianDate',
         './ClockStep',
-        './ClockRange'
+        './ClockRange',
+        './TimeStandard'
     ], function(
         JulianDate,
         ClockStep,
-        ClockRange) {
+        ClockRange,
+        TimeStandard) {
     "use strict";
 
     var Clock = function(startTime, stopTime, currentTime, clockStep, clockRange, multiplier) {
         this.startTime = startTime || new JulianDate();
+        this.startTime = TimeStandard.convertUtcToTai(this.startTime);
 
         this.stopTime = stopTime || this.startTime.addDays(1);
+        this.stopTime = TimeStandard.convertUtcToTai(this.stopTime);
 
         this.currentTime = currentTime || this.startTime;
+        this.currentTime = TimeStandard.convertUtcToTai(this.currentTime);
 
         this.clockStep = clockStep || ClockStep.SYSTEM_CLOCK;
 
@@ -63,6 +68,7 @@ define([
 
         this.currentTime = this._lastCurrentTime = currentTime;
         this._lastCpuTime = currentCpuTime;
+        return currentTime;
     };
 
     return Clock;

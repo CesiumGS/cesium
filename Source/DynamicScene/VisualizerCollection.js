@@ -2,7 +2,7 @@
 define(function() {
     "use strict";
 
-    function VisualizerCollection(visualizers, buffer) {
+    function VisualizerCollection(visualizers) {
         this._visualizers = visualizers;
     }
 

@@ -69,7 +69,9 @@ define([
         this._propertyIntervals = new TimeIntervalCollection();
     }
 
-    DynamicDirectionsProperty.createOrUpdate = function(czmlIntervals, buffer, sourceUri, existingProperty) {
+    DynamicDirectionsProperty.createOrUpdate = function(parentObject, propertyName, czmlIntervals, constrainedInterval, czmlObjectCollection) {
+        var newProperty = false;
+        var existingProperty = parentObject[propertyName];
         if (typeof czmlIntervals === 'undefined') {
             return existingProperty;
         }
@@ -77,11 +79,13 @@ define([
         //At this point we will definitely have a value, so if one doesn't exist, create it.
         if (typeof existingProperty === 'undefined') {
             existingProperty = new DynamicDirectionsProperty();
+            parentObject[propertyName] = existingProperty;
+            newProperty = true;
         }
 
-        existingProperty.addIntervals(czmlIntervals, buffer, sourceUri);
+        existingProperty.addIntervals(czmlIntervals, czmlObjectCollection, constrainedInterval);
 
-        return existingProperty;
+        return newProperty;
     };
 
     DynamicDirectionsProperty.prototype.addIntervals = function(czmlIntervals, buffer, sourceUri) {
@@ -112,14 +116,14 @@ define([
             this_intervals.addInterval(existingInterval);
         }
 
-        var objects = czmlInterval.objects;
-        if (typeof objects === 'undefined') {
+        var references = czmlInterval.references;
+        if (typeof references === 'undefined') {
             existingInterval.data = new PositionHolder(czmlInterval);
         } else {
             var properties = [];
             properties.buffer = buffer;
-            for ( var i = 0, len = objects.length; i < len; i++) {
-                properties.push(ReferenceProperty.fromString(buffer, objects[i]));
+            for ( var i = 0, len = references.length; i < len; i++) {
+                properties.push(ReferenceProperty.fromString(buffer, references[i]));
             }
             existingInterval.data = properties;
         }

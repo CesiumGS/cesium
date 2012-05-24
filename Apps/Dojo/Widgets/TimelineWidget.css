@@ -1,0 +1,27 @@
+@import url('../../../Source/Timeline/Timeline.css');
+
+/* Support the darker theme with some modifications. */
+
+.darker .timelineBar {
+	background-color: #222;
+	background-color: rgba(32, 32, 32, 0.8);
+	background-image: url("images/darker/button.png");
+	background-position: center top;
+	background-repeat: repeat-x;
+}
+
+.darker .timelineBar:hover {
+	background-color: rgba(32, 48, 57, 0.8);
+}
+
+.darker .timelineTicLabel {
+	color: #eee;
+}
+
+.darker .timelineTicMain {
+	background: #eee;
+}
+
+.darker .timelineTicSub {
+	background: #aaa;
+}

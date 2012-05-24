@@ -47,7 +47,7 @@ defineSuite([
     });
 
     it("cosh NaN", function() {
-        expect(isNaN(CesiumMath.cosh(NaN))).toBeTruthy();
+        expect(isNaN(CesiumMath.cosh(NaN))).toEqual(true);
     });
 
     it("cosh infinity", function() {
@@ -62,7 +62,7 @@ defineSuite([
     });
 
     it("sinh NaN", function() {
-        expect(isNaN(CesiumMath.sinh(NaN))).toBeTruthy();
+        expect(isNaN(CesiumMath.sinh(NaN))).toEqual(true);
     });
 
     it("sinh infinity", function() {
@@ -135,11 +135,13 @@ defineSuite([
     it("negativePiToPi positive", function() {
         expect(CesiumMath.negativePiToPi((Math.PI / 2) * Math.PI)).toEqualEpsilon((Math.PI / 2) * Math.PI - CesiumMath.TWO_PI, CesiumMath.EPSILON16);
         expect(CesiumMath.negativePiToPi(Math.PI / 0.5)).toEqualEpsilon(0.0, CesiumMath.EPSILON16);
+        expect(CesiumMath.negativePiToPi(Math.PI + CesiumMath.EPSILON10)).toEqualEpsilon(Math.PI, CesiumMath.EPSILON16);
     });
 
     it("negativePiToPi negative", function() {
         expect(CesiumMath.negativePiToPi(-Math.PI / 0.5)).toEqualEpsilon(0.0, CesiumMath.EPSILON16);
         expect(CesiumMath.negativePiToPi(-(Math.PI / 2) * Math.PI)).toEqualEpsilon(-(Math.PI / 2) * Math.PI + CesiumMath.TWO_PI, CesiumMath.EPSILON16);
+        expect(CesiumMath.negativePiToPi(-(Math.PI + CesiumMath.EPSILON10))).toEqualEpsilon(-Math.PI, CesiumMath.EPSILON16);
     });
 
     it("negativePiToPi should not change", function() {

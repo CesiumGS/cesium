@@ -33,6 +33,7 @@
 	<target name="instrumentForCoverage" description="A debug build instrumented for JSCoverage (currently Windows only)." depends="build">
 		<exec executable="${jscoveragePath}">
 			<arg line="${sourceDirectory} ${instrumentedDirectory}" />
+			<arg line="--no-instrument=./ThirdParty" />
 		</exec>
 	</target>
 
@@ -233,7 +234,7 @@ for (var i = 0, len = filesets.size(); i < len; i++) {
   for (var j = 0, len2 = filenames.length; j < len2; j++) {
     var relativePath = filenames[j];
     var spec = relativePath.substring(0, relativePath.lastIndexOf('.')).replace('\\', '/');
-    specs.push("'" + spec + "'");
+    specs.push("'Specs/" + spec + "'");
   }
 }
 

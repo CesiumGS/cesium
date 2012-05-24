@@ -1,16 +1,20 @@
 /*global define*/
-define(['./BooleanDataHandler',
+define([
+        '../Core/TimeInterval',
+        './BooleanDataHandler',
         './NumberDataHandler',
         './ColorDataHandler',
         './DynamicProperty',
         './DynamicDirectionsProperty',
-        './DynamicMaterialProperty'],
-function(BooleanDataHandler,
-         NumberDataHandler,
-         ColorDataHandler,
-         DynamicProperty,
-         DynamicDirectionsProperty,
-         DynamicMaterialProperty) {
+        './DynamicMaterialProperty'
+    ], function(
+        TimeInterval,
+        BooleanDataHandler,
+        NumberDataHandler,
+        ColorDataHandler,
+        DynamicProperty,
+        DynamicDirectionsProperty,
+        DynamicMaterialProperty) {
     "use strict";
 
     function DynamicPyramid() {
@@ -23,28 +27,59 @@ function(BooleanDataHandler,
         this.material = undefined;
     }
 
-    DynamicPyramid.createOrUpdate = function(dynamicObject, packet, buffer, sourceUri) {
+    DynamicPyramid.createOrUpdate = function(dynamicObject, packet, czmlObjectCollection) {
         //See if there's any actual data to process.
         var pyramidData = packet.pyramid, pyramid;
         if (typeof pyramidData !== 'undefined') {
 
             pyramid = dynamicObject.pyramid;
+            var pyramidUpdated = false;
 
             //Create a new pyramid if we don't have one yet.
             if (typeof pyramid === 'undefined') {
                 pyramid = new DynamicPyramid();
                 dynamicObject.pyramid = pyramid;
+                pyramidUpdated = true;
+            }
+
+            var interval = pyramidData.interval;
+            if (typeof interval !== 'undefined') {
+                interval = TimeInterval.fromIso8601(interval);
             }
 
             //Create or update each of the properties.
-            pyramid.show = DynamicProperty.createOrUpdate(BooleanDataHandler, pyramidData.show, buffer, sourceUri, pyramid.show);
-            pyramid.directions = DynamicDirectionsProperty.createOrUpdate(pyramidData.directions, buffer, sourceUri, pyramid.directions);
-            pyramid.radius = DynamicProperty.createOrUpdate(NumberDataHandler, pyramidData.radius, buffer, sourceUri, pyramid.radius);
-            pyramid.showIntersection = DynamicProperty.createOrUpdate(BooleanDataHandler, pyramidData.showIntersection, buffer, sourceUri, pyramid.showIntersection);
-            pyramid.intersectionColor = DynamicProperty.createOrUpdate(ColorDataHandler, pyramidData.intersectionColor, buffer, sourceUri, pyramid.intersectionColor);
-            pyramid.erosion = DynamicProperty.createOrUpdate(NumberDataHandler, pyramidData.erosion, buffer, sourceUri, pyramid.erosion);
-            pyramid.material = DynamicMaterialProperty.createOrUpdate(pyramidData.material, buffer, sourceUri, pyramid.material);
+            pyramidUpdated = DynamicProperty.createOrUpdate(pyramid, "show", BooleanDataHandler, pyramidData.show, interval, czmlObjectCollection) || pyramidUpdated;
+            pyramidUpdated = DynamicDirectionsProperty.createOrUpdate(pyramid, "directions", pyramidData.directions, interval, czmlObjectCollection) || pyramidUpdated;
+            pyramidUpdated = DynamicProperty.createOrUpdate(pyramid, "radius", NumberDataHandler, pyramidData.radius, interval, czmlObjectCollection) || pyramidUpdated;
+            pyramidUpdated = DynamicProperty.createOrUpdate(pyramid, "showIntersection", BooleanDataHandler, pyramidData.showIntersection, interval, czmlObjectCollection) || pyramidUpdated;
+            pyramidUpdated = DynamicProperty.createOrUpdate(pyramid, "intersectionColor", ColorDataHandler, pyramidData.intersectionColor, interval, czmlObjectCollection) || pyramidUpdated;
+            pyramidUpdated = DynamicProperty.createOrUpdate(pyramid, "erosion", NumberDataHandler, pyramidData.erosion, interval, czmlObjectCollection) || pyramidUpdated;
+            pyramidUpdated = DynamicMaterialProperty.createOrUpdate(pyramid, "material", pyramidData.material, interval, czmlObjectCollection) || pyramidUpdated;
+
+            return pyramidUpdated;
         }
+    };
+
+    DynamicPyramid.mergeProperties = function(existingObject, objectToMerge) {
+        var pyramidToMerge = objectToMerge.pyramid;
+        if (typeof pyramidToMerge !== 'undefined') {
+            var target = existingObject.pyramid;
+            if (typeof target === 'undefined') {
+                target = new DynamicPyramid();
+                existingObject.pyramid = target;
+            }
+            target.show = target.show || pyramidToMerge.show;
+            target.directions = target.directions || pyramidToMerge.directions;
+            target.radius = target.radius || pyramidToMerge.radius;
+            target.showIntersection = target.showIntersection || pyramidToMerge.showIntersection;
+            target.intersectionColor = target.intersectionColor || pyramidToMerge.intersectionColor;
+            target.erosion = target.erosion || pyramidToMerge.erosion;
+            target.material = target.material || pyramidToMerge.material;
+        }
+    };
+
+    DynamicPyramid.deleteProperties = function(existingObject) {
+        existingObject.pyramid = undefined;
     };
 
     return DynamicPyramid;

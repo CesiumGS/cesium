@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+<title>Timeline Demo</title>
+<style type="text/css">
+@import url('../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css');
+@import url('../../Source/Timeline/Timeline.css');
+
+body {
+	font-family: "Open Sans", "Trebuchet MS", Sans-Serif;
+	font-size: 15px;
+}
+
+.dateTimeBlock {
+	display: block;
+	float: left;
+	margin-right: 10px;
+	border: solid 1px #000;
+	border-radius: 25px;
+}
+
+.info {
+	display: block;
+	float: left;
+	margin-right: 10px;
+	font-family: Monospace;
+}
+
+.timeSel {
+	padding: 10px 20px;
+}
+
+.dateTimeBlock .dijitCalendarContainer {
+	margin: 5px auto 15px auto;
+}
+
+.clear {
+	clear: both;
+}
+
+.myTimeline {
+	display: block;
+	width: 90%;
+	height: 110px;
+	margin: 20px auto;
+}
+</style>
+<script data-dojo-config="async: 1, tlmSiblingOfDojo: 0"
+    src="../../ThirdParty/dojo-release-1.7.2-src/dojo/dojo.js"></script>
+<script type="text/javascript" src="boot.js"></script>
+</head>
+<body class="claro">
+    <h1>Test of the timeline</h1>
+
+    <div class="startStopBlock">
+        <div class="dateTimeBlock">
+            <div class="timeSel">
+                Start time: <input type="text" id="startTimeSel"
+                    data-dojo-type="dijit.form.TimeTextBox" required="true" />
+            </div>
+            <div id="startCal" data-dojo-type="dijit.Calendar"></div>
+        </div>
+        <div class="dateTimeBlock">
+            <div class="timeSel">
+                End time: <input type="text" id="endTimeSel"
+                    data-dojo-type="dijit.form.TimeTextBox" required="true" />
+            </div>
+            <div id="endCal" data-dojo-type="dijit.Calendar"></div>
+        </div>
+        <div class="info">
+            <p>
+                Selected dates: <span id="formatted">(none)</span>
+            </p>
+            <p>
+                Julian date: <span id="julian">(none)</span>
+            </p>
+        </div>
+        <div class="clear"></div>
+    </div>
+
+    <div id="time1" class="myTimeline"></div>
+
+    <p class="info">
+        Mouse pos: <span id="mousePos"></span>
+    </p>
+
+</body>
+</html>

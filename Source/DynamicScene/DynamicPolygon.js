@@ -1,8 +1,12 @@
 /*global define*/
-define(['./BooleanDataHandler',
+define([
+        '../Core/TimeInterval',
+        './BooleanDataHandler',
         './DynamicProperty',
-        './DynamicMaterialProperty'],
-function(BooleanDataHandler,
+        './DynamicMaterialProperty'
+    ], function(
+         TimeInterval,
+         BooleanDataHandler,
          DynamicProperty,
          DynamicMaterialProperty) {
     "use strict";
@@ -12,23 +16,48 @@ function(BooleanDataHandler,
         this.material = undefined;
     }
 
-    DynamicPolygon.createOrUpdate = function(dynamicObject, packet, buffer, sourceUri) {
+    DynamicPolygon.createOrUpdate = function(dynamicObject, packet, czmlObjectCollection) {
         //See if there's any actual data to process.
         var polygonData = packet.polygon, polygon;
         if (typeof polygonData !== 'undefined') {
 
             polygon = dynamicObject.polygon;
+            var polygonUpdated = false;
 
             //Create a new polygon if we don't have one yet.
             if (typeof polygon === 'undefined') {
                 polygon = new DynamicPolygon();
                 dynamicObject.polygon = polygon;
+                polygonUpdated = true;
+            }
+
+            var interval = polygonData.interval;
+            if (typeof interval !== 'undefined') {
+                interval = TimeInterval.fromIso8601(interval);
             }
 
             //Create or update each of the properties.
-            polygon.show = DynamicProperty.createOrUpdate(BooleanDataHandler, polygonData.show, buffer, sourceUri, polygon.show);
-            polygon.material = DynamicMaterialProperty.createOrUpdate(polygonData.material, buffer, sourceUri, polygon.material);
+            polygonUpdated = DynamicProperty.createOrUpdate(polygon, "show", BooleanDataHandler, polygonData.show, interval, czmlObjectCollection) || polygonUpdated;
+            polygonUpdated = DynamicMaterialProperty.createOrUpdate(polygon, "material", polygonData.material, interval, czmlObjectCollection) || polygonUpdated;
+            return polygonUpdated;
         }
+    };
+
+    DynamicPolygon.mergeProperties = function(existingObject, objectToMerge) {
+        var polygonToMerge = objectToMerge.polygon;
+        if (typeof polygonToMerge !== 'undefined') {
+            var target = existingObject.polygon;
+            if (typeof target === 'undefined') {
+                target = new DynamicPolygon();
+                existingObject.conde = target;
+            }
+            target.show = target.show || polygonToMerge.show;
+            target.material = target.material || polygonToMerge.material;
+        }
+    };
+
+    DynamicPolygon.deleteProperties = function(existingObject) {
+        existingObject.polygon = undefined;
     };
 
     return DynamicPolygon;

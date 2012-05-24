@@ -112,13 +112,13 @@ define([
             this_intervals.addInterval(existingInterval);
         }
 
-        var objects = czmlInterval.objects;
-        if (typeof objects === 'undefined') {
+        var references = czmlInterval.references;
+        if (typeof references === 'undefined') {
             existingInterval.data = new PositionHolder(czmlInterval);
         } else {
             var properties = [];
-            for ( var i = 0, len = objects.length; i < len; i++) {
-                properties.push(ReferenceProperty.fromString(buffer, objects[i]));
+            for ( var i = 0, len = references.length; i < len; i++) {
+                properties.push(ReferenceProperty.fromString(buffer, references[i]));
             }
             existingInterval.data = properties;
         }

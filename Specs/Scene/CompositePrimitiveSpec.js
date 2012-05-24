@@ -96,7 +96,13 @@ defineSuite([
     }
 
     it("gets default show", function() {
-        expect(primitives.show).toBeTruthy();
+        expect(primitives.show).toEqual(true);
+    });
+
+    it("get throws if index is undefined", function() {
+        expect(function() {
+            primitives.get(undefined);
+        }).toThrow();
     });
 
     it("has zero primitives when constructed", function() {
@@ -117,11 +123,11 @@ defineSuite([
 
         expect(primitives.getLength()).toEqual(2);
 
-        expect(primitives.remove(p0)).toBeTruthy();
+        expect(primitives.remove(p0)).toEqual(true);
         expect(primitives.getLength()).toEqual(1);
         expect(primitives.get(0)).toBe(p1);
 
-        expect(primitives.remove(p1)).toBeTruthy();
+        expect(primitives.remove(p1)).toEqual(true);
         expect(primitives.getLength()).toEqual(0);
     });
 
@@ -134,11 +140,11 @@ defineSuite([
 
         expect(primitives.getLength()).toEqual(2);
 
-        expect(primitives.remove(p1)).toBeTruthy();
+        expect(primitives.remove(p1)).toEqual(true);
         expect(primitives.getLength()).toEqual(1);
         expect(primitives.get(0)).toBe(p0);
 
-        expect(primitives.remove(p0)).toBeTruthy();
+        expect(primitives.remove(p0)).toEqual(true);
         expect(primitives.getLength()).toEqual(0);
     });
 
@@ -146,12 +152,12 @@ defineSuite([
         var p0 = createLabels();
         primitives.add(p0);
 
-        expect(primitives.remove(p0)).toBeTruthy();
-        expect(primitives.remove(p0)).toBeFalsy();
+        expect(primitives.remove(p0)).toEqual(true);
+        expect(primitives.remove(p0)).toEqual(false);
     });
 
     it("removes null", function() {
-        expect(primitives.remove()).toBeFalsy();
+        expect(primitives.remove()).toEqual(false);
     });
 
     it("removes all primitives", function() {
@@ -169,7 +175,7 @@ defineSuite([
         var labels = createLabels();
         primitives.add(labels);
 
-        expect(primitives.contains(labels)).toBeTruthy();
+        expect(primitives.contains(labels)).toEqual(true);
     });
 
     it("doesn't contain a primitive", function() {
@@ -177,11 +183,11 @@ defineSuite([
         var labels1 = createLabels();
         primitives.add(labels0);
 
-        expect(primitives.contains(labels1)).toBeFalsy();
+        expect(primitives.contains(labels1)).toEqual(false);
     });
 
     it("doesn't contain undefined", function() {
-        expect(primitives.contains()).toBeFalsy();
+        expect(primitives.contains()).toEqual(false);
     });
 
     it("adds and removes a primitive in two composites", function() {
@@ -195,20 +201,20 @@ defineSuite([
         otherPrimitives.destroyPrimitives = false;
 
         // In both composites
-        expect(primitives.contains(p)).toBeTruthy();
-        expect(otherPrimitives.contains(p)).toBeTruthy();
+        expect(primitives.contains(p)).toEqual(true);
+        expect(otherPrimitives.contains(p)).toEqual(true);
 
         // In one composite
-        expect(primitives.remove(p)).toBeTruthy();
-        expect(primitives.contains(p)).toBeFalsy();
-        expect(otherPrimitives.contains(p)).toBeTruthy();
+        expect(primitives.remove(p)).toEqual(true);
+        expect(primitives.contains(p)).toEqual(false);
+        expect(otherPrimitives.contains(p)).toEqual(true);
 
         // In neither composite
-        expect(otherPrimitives.remove(p)).toBeTruthy();
-        expect(primitives.contains(p)).toBeFalsy();
-        expect(otherPrimitives.contains(p)).toBeFalsy();
-        expect(primitives.remove(p)).toBeFalsy();
-        expect(otherPrimitives.remove(p)).toBeFalsy();
+        expect(otherPrimitives.remove(p)).toEqual(true);
+        expect(primitives.contains(p)).toEqual(false);
+        expect(otherPrimitives.contains(p)).toEqual(false);
+        expect(primitives.remove(p)).toEqual(false);
+        expect(otherPrimitives.remove(p)).toEqual(false);
 
         p.destroy();
         otherPrimitives.destroy();
@@ -220,12 +226,12 @@ defineSuite([
 
         var otherPrimitives = new CompositePrimitive(context);
 
-        expect(otherPrimitives.contains(p)).toBeFalsy();
-        expect(otherPrimitives.remove(p)).toBeFalsy();
+        expect(otherPrimitives.contains(p)).toEqual(false);
+        expect(otherPrimitives.remove(p)).toEqual(false);
     });
 
     it("gets default destroyPrimitives", function() {
-        expect(primitives.destroyPrimitives).toBeTruthy();
+        expect(primitives.destroyPrimitives).toEqual(true);
     });
 
     it("setting a central body", function() {
@@ -473,23 +479,23 @@ defineSuite([
     });
 
     it("is not destroyed when first constructed", function() {
-        expect(primitives.isDestroyed()).toBeFalsy();
+        expect(primitives.isDestroyed()).toEqual(false);
     });
 
     it("is destroyed after calling destroy()", function() {
         var p = new CompositePrimitive();
         p.destroy();
-        expect(p.isDestroyed()).toBeTruthy();
+        expect(p.isDestroyed()).toEqual(true);
     });
 
     it("destroys its primitives", function() {
         var labels = new LabelCollection(context);
 
         primitives.add(labels);
-        expect(labels.isDestroyed()).toBeFalsy();
+        expect(labels.isDestroyed()).toEqual(false);
 
         primitives = primitives.destroy();
-        expect(labels.isDestroyed()).toBeTruthy();
+        expect(labels.isDestroyed()).toEqual(true);
     });
 
     it("destroys children", function() {
@@ -499,42 +505,42 @@ defineSuite([
         children.add(labels);
 
         primitives.add(children);
-        expect(children.isDestroyed()).toBeFalsy();
-        expect(labels.isDestroyed()).toBeFalsy();
+        expect(children.isDestroyed()).toEqual(false);
+        expect(labels.isDestroyed()).toEqual(false);
 
         primitives = primitives.destroy();
-        expect(children.isDestroyed()).toBeTruthy();
-        expect(labels.isDestroyed()).toBeTruthy();
+        expect(children.isDestroyed()).toEqual(true);
+        expect(labels.isDestroyed()).toEqual(true);
     });
 
     it("destroys primitive on remove", function() {
         var labels = new LabelCollection(context);
 
         primitives.add(labels);
-        expect(labels.isDestroyed()).toBeFalsy();
+        expect(labels.isDestroyed()).toEqual(false);
 
         primitives.remove(labels);
-        expect(labels.isDestroyed()).toBeTruthy();
+        expect(labels.isDestroyed()).toEqual(true);
     });
 
     it("destroys primitive on removeAll", function() {
         var labels = new LabelCollection(context);
 
         primitives.add(labels);
-        expect(labels.isDestroyed()).toBeFalsy();
+        expect(labels.isDestroyed()).toEqual(false);
 
         primitives.removeAll();
-        expect(labels.isDestroyed()).toBeTruthy();
+        expect(labels.isDestroyed()).toEqual(true);
     });
 
     it("destroys primitive on setCentralBody", function() {
         var cb = new CentralBody(camera, Ellipsoid.UNIT_SPHERE);
 
         primitives.setCentralBody(cb);
-        expect(cb.isDestroyed()).toBeFalsy();
+        expect(cb.isDestroyed()).toEqual(false);
 
         primitives.setCentralBody(null);
-        expect(cb.isDestroyed()).toBeTruthy();
+        expect(cb.isDestroyed()).toEqual(true);
     });
 
     it("doesn't destroy its primitives", function() {
@@ -542,13 +548,13 @@ defineSuite([
 
         primitives.destroyPrimitives = false;
         primitives.add(labels);
-        expect(labels.isDestroyed()).toBeFalsy();
+        expect(labels.isDestroyed()).toEqual(false);
 
         primitives = primitives.destroy();
-        expect(labels.isDestroyed()).toBeFalsy();
+        expect(labels.isDestroyed()).toEqual(false);
 
         labels.destroy();
-        expect(labels.isDestroyed()).toBeTruthy();
+        expect(labels.isDestroyed()).toEqual(true);
     });
 
     it("doesn't destroy primitive on remove", function() {
@@ -556,13 +562,13 @@ defineSuite([
 
         primitives.destroyPrimitives = false;
         primitives.add(labels);
-        expect(labels.isDestroyed()).toBeFalsy();
+        expect(labels.isDestroyed()).toEqual(false);
 
         primitives.remove(labels);
-        expect(labels.isDestroyed()).toBeFalsy();
+        expect(labels.isDestroyed()).toEqual(false);
 
         labels.destroy();
-        expect(labels.isDestroyed()).toBeTruthy();
+        expect(labels.isDestroyed()).toEqual(true);
     });
 
     it("doesn't destroy primitive on removeAll", function() {
@@ -570,13 +576,13 @@ defineSuite([
 
         primitives.destroyPrimitives = false;
         primitives.add(labels);
-        expect(labels.isDestroyed()).toBeFalsy();
+        expect(labels.isDestroyed()).toEqual(false);
 
         primitives.removeAll();
-        expect(labels.isDestroyed()).toBeFalsy();
+        expect(labels.isDestroyed()).toEqual(false);
 
         labels.destroy();
-        expect(labels.isDestroyed()).toBeTruthy();
+        expect(labels.isDestroyed()).toEqual(true);
     });
 
     it("doesn't destroy primitive on setCentralBody", function() {
@@ -584,13 +590,13 @@ defineSuite([
 
         primitives.destroyPrimitives = false;
         primitives.setCentralBody(cb);
-        expect(cb.isDestroyed()).toBeFalsy();
+        expect(cb.isDestroyed()).toEqual(false);
 
         primitives.setCentralBody(null);
-        expect(cb.isDestroyed()).toBeFalsy();
+        expect(cb.isDestroyed()).toEqual(false);
 
         cb.destroy();
-        expect(cb.isDestroyed()).toBeTruthy();
+        expect(cb.isDestroyed()).toEqual(true);
     });
 
     it("throws when add() without an primitive", function() {

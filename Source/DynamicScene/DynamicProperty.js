@@ -34,10 +34,11 @@ define([
     function DynamicProperty(dataHandler) {
         this.dataHandler = dataHandler;
         this._intervals = new TimeIntervalCollection();
-        this._isSampled = false;
     }
 
-    DynamicProperty.createOrUpdate = function(valueType, czmlIntervals, buffer, sourceUri, existingProperty) {
+    DynamicProperty.createOrUpdate = function(parentObject, propertyName, valueType, czmlIntervals, constrainedInterval, czmlObjectCollection) {
+        var newProperty = false;
+        var existingProperty = parentObject[propertyName];
         if (typeof czmlIntervals === 'undefined') {
             return existingProperty;
         }
@@ -45,11 +46,13 @@ define([
         //At this point we will definitely have a value, so if one doesn't exist, create it.
         if (typeof existingProperty === 'undefined') {
             existingProperty = new DynamicProperty(valueType);
+            parentObject[propertyName] = existingProperty;
+            newProperty = true;
         }
 
-        existingProperty.addIntervals(czmlIntervals, buffer, sourceUri);
+        existingProperty.addIntervals(czmlIntervals, czmlObjectCollection, constrainedInterval);
 
-        return existingProperty;
+        return newProperty;
     };
 
     DynamicProperty._mergeNewSamples = function(epoch, times, values, newData, doublesPerValue, dataHandler) {
@@ -98,7 +101,17 @@ define([
         }
     };
 
-    DynamicProperty.prototype.addInterval = function(czmlInterval, buffer, sourceUri) {
+    DynamicProperty.prototype.addIntervals = function(czmlIntervals, buffer, constrainedInterval) {
+        if (Array.isArray(czmlIntervals)) {
+            for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
+                this.addInterval(czmlIntervals[i], buffer, constrainedInterval);
+            }
+        } else {
+            this.addInterval(czmlIntervals, buffer, constrainedInterval);
+        }
+    };
+
+    DynamicProperty.prototype.addInterval = function(czmlInterval, buffer, constrainedInterval) {
         var iso8601Interval = czmlInterval.interval;
         if (typeof iso8601Interval === 'undefined') {
             iso8601Interval = TimeInterval.INFINITE;
@@ -106,11 +119,15 @@ define([
             iso8601Interval = TimeInterval.fromIso8601(iso8601Interval);
         }
 
+        if (typeof constrainedInterval !== 'undefined') {
+            iso8601Interval = iso8601Interval.intersect(constrainedInterval);
+        }
+
         var unwrappedInterval = this.dataHandler.unwrapCzmlInterval(czmlInterval);
-        this.addIntervalUnwrapped(iso8601Interval.start, iso8601Interval.stop, czmlInterval, unwrappedInterval, buffer, sourceUri);
+        this.addIntervalUnwrapped(iso8601Interval.start, iso8601Interval.stop, czmlInterval, unwrappedInterval, buffer);
     };
 
-    DynamicProperty.prototype.addIntervalUnwrapped = function(start, stop, czmlInterval, unwrappedInterval, buffer, sourceUri) {
+    DynamicProperty.prototype.addIntervalUnwrapped = function(start, stop, czmlInterval, unwrappedInterval, buffer) {
         var this_intervals = this._intervals;
         var existingInterval = this_intervals.findInterval(start, stop);
 
@@ -144,10 +161,10 @@ define([
                 intervalData.yTable = undefined;
             }
 
-            if (!this._isSampled) {
+            if (!intervalData.isSampled) {
                 intervalData.times = [];
                 intervalData.values = [];
-                this._isSampled = true;
+                intervalData.isSampled = true;
             }
             var epoch = czmlInterval.epoch;
             if (typeof epoch !== 'undefined') {
@@ -158,17 +175,7 @@ define([
             //Packet itself is a constant value
             intervalData.times = undefined;
             intervalData.values = this_dataHandler.createValue(unwrappedInterval);
-            this._isSampled = false;
-        }
-    };
-
-    DynamicProperty.prototype.addIntervals = function(czmlIntervals, buffer, sourceUri) {
-        if (Array.isArray(czmlIntervals)) {
-            for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
-                this.addInterval(czmlIntervals[i], buffer, sourceUri);
-            }
-        } else {
-            this.addInterval(czmlIntervals, buffer, sourceUri);
+            intervalData.isSampled = false;
         }
     };
 
@@ -180,7 +187,7 @@ define([
             var intervalData = interval.data;
             var times = intervalData.times;
             var values = intervalData.values;
-            if (this._isSampled && times.length >= 0 && values.length > 0) {
+            if (intervalData.isSampled && times.length >= 0 && values.length > 0) {
                 var index = binarySearch(times, time, JulianDate.compare);
 
                 if (index < 0) {

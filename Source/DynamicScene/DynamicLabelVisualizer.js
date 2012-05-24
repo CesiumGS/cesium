@@ -11,10 +11,6 @@ define([
         VerticalOrigin) {
     "use strict";
 
-    //FIXME This class currently relies on storing data onto each CZML object
-    //These objects may be transient and therefore storing data on them is bad.
-    //We may need a slower "fallback" layer of storage in case the data doesn't exist.
-
     function DynamicLabelVisualizer(scene) {
         this._scene = scene;
         this._unusedIndexes = [];

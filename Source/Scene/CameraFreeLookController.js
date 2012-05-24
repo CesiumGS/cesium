@@ -212,10 +212,10 @@ define([
      * @param {Cartesian3} axis The axis to rotate around.
      * @param {Number} angle The angle, in radians, to rotate by.
      *
-     * @see CameraFreeLookcontroller#lookUp
-     * @see CameraFreeLookcontroller#lookDown
-     * @see CameraFreeLookcontroller#lookLeft
-     * @see CameraFreeLookcontroller#lookRight
+     * @see CameraFreeLookController#lookUp
+     * @see CameraFreeLookController#lookDown
+     * @see CameraFreeLookController#lookLeft
+     * @see CameraFreeLookController#lookRight
      */
     CameraFreeLookController.prototype.rotate = function(axis, angle) {
         var a = Cartesian3.clone(axis);

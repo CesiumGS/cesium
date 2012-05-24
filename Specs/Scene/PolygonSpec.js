@@ -52,7 +52,7 @@ defineSuite([
     });
 
     it("gets default show", function() {
-        expect(polygon.show).toBeTruthy();
+        expect(polygon.show).toEqual(true);
     });
 
     it("sets positions", function() {

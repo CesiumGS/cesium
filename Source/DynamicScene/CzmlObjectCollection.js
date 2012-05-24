@@ -7,19 +7,17 @@ define([
         createGuid) {
     "use strict";
 
-    //TODO Make sure we throw the proper events in all cases.
     function CzmlObjectCollection(name, id, propertyFunctionsMap) {
         this.name = name;
         this.id = id;
+        this.parent = undefined;
         this._propertyFunctionsMap = propertyFunctionsMap;
         this._hash = {};
         this._array = [];
-        this._newObjectListeners = [];
-        this._newPropertyListeners = [];
-        this._changedPropertyListeners = [];
+        this._updateListeners = [];
     }
 
-    CzmlObjectCollection.prototype._processCzmlPacket = function(packet, sourceUri) {
+    CzmlObjectCollection.prototype._processCzmlPacket = function(packet, sourceUri, updatedObjects) {
         var objectId = packet.id;
         var this_propertyFunctionsMap = this._propertyFunctionsMap;
         if (typeof objectId === 'undefined') {
@@ -31,7 +29,9 @@ define([
             if (typeof prop !== 'undefined') {
                 var propertyFunc = this_propertyFunctionsMap[prop];
                 if (typeof propertyFunc !== 'undefined') {
-                    propertyFunc(object, packet, this, sourceUri);
+                    if (propertyFunc(object, packet, this, sourceUri) && updatedObjects.indexOf(object) === -1) {
+                        updatedObjects.push(object);
+                    }
                 }
             }
         }
@@ -40,13 +40,19 @@ define([
     };
 
     CzmlObjectCollection.prototype.processCzml = function(packets, sourceUri) {
+        var updatedObjects = [];
+
         if (Array.isArray(packets)) {
             for ( var i = 0, len = packets.length; i < len; i++) {
-                this._processCzmlPacket(packets[i], sourceUri);
+                this._processCzmlPacket(packets[i], sourceUri, updatedObjects);
             }
         } else {
-            this._processCzmlPacket(packets, sourceUri);
+            this._processCzmlPacket(packets, sourceUri, updatedObjects);
         }
+
+        this.raiseOnUpdate(updatedObjects);
+
+        return updatedObjects;
     };
 
     CzmlObjectCollection.prototype.getObject = function(id) {
@@ -63,7 +69,6 @@ define([
             obj = new DynamicObject(id, this);
             this._hash[id] = obj;
             this._array.push(obj);
-            this.onNewObject(obj);
         }
 
         return obj;
@@ -74,36 +79,19 @@ define([
         this._array = [];
     };
 
-    CzmlObjectCollection.prototype.addNewObjectListener = function(listener) {
-        this._newObjectListeners.push(listener);
+    CzmlObjectCollection.prototype.addUpdateListener = function(listener) {
+        this._updateListeners.push(listener);
     };
 
-    CzmlObjectCollection.prototype.onNewObject = function(object) {
-        var listeners = this._newObjectListeners;
+    CzmlObjectCollection.prototype.removeUpdateListener = function(listener) {
+        var this_updateListeners = this._updateListeners;
+        this_updateListeners.splice(this_updateListeners.indexOf(listener), 1);
+    };
+
+    CzmlObjectCollection.prototype.raiseOnUpdate = function(updatedObjects) {
+        var listeners = this._updateListeners;
         for ( var i = 0, len = listeners.length; i < len; i++) {
-            listeners[i](object);
-        }
-    };
-
-    CzmlObjectCollection.prototype.addNewPropertyListener = function(listener) {
-        this._newPropertyListeners.push(listener);
-    };
-
-    CzmlObjectCollection.prototype.onNewProperty = function(object, name, property) {
-        var listeners = this._newPropertyListeners;
-        for ( var i = 0, len = listeners.length; i < len; i++) {
-            listeners[i](object, name, property);
-        }
-    };
-
-    CzmlObjectCollection.prototype.addChangedPropertyListener = function(listener) {
-        this._changedPropertyListeners.push(listener);
-    };
-
-    CzmlObjectCollection.prototype.onChangedProperty = function(object, name, newProperty, oldProperty) {
-        var listeners = this._changedPropertyListeners;
-        for ( var i = 0, len = listeners.length; i < len; i++) {
-            listeners[i](object, name, newProperty, oldProperty);
+            listeners[i](this, updatedObjects);
         }
     };
 

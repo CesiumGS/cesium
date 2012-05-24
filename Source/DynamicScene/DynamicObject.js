@@ -18,22 +18,45 @@ define(['./DynamicProperty',
     DynamicObject.createOrUpdatePosition = function(dynamicObject, packet, buffer, sourceUri) {
         var positionData = packet.position;
         if (typeof positionData !== 'undefined') {
-            dynamicObject.position = DynamicPositionProperty.createOrUpdate(positionData, buffer, sourceUri, dynamicObject.position);
+            var position = DynamicPositionProperty.createOrUpdate(positionData, buffer, sourceUri, dynamicObject.position);
+            if (typeof dynamicObject.position === 'undefined') {
+                dynamicObject.position = position;
+                return true;
+            }
+            return false;
         }
     };
 
-    DynamicObject.createOrUpdateOrientation = function(dynamicObject, packet, buffer, sourceUri) {
+    DynamicObject.createOrUpdateOrientation = function(dynamicObject, packet, czmlObjectCollection) {
         var orientationData = packet.orientation;
         if (typeof orientationData !== 'undefined') {
-            dynamicObject.orientation = DynamicProperty.createOrUpdate(QuaternionDataHandler, orientationData, buffer, sourceUri, dynamicObject.orientation);
+            return DynamicProperty.createOrUpdate(dynamicObject, "orientation", QuaternionDataHandler, orientationData, undefined, czmlObjectCollection);
         }
+        return false;
     };
 
     DynamicObject.createOrUpdateVertexPositions = function(dynamicObject, packet, buffer, sourceUri) {
-        var vertexPositions = packet.vertexPositions;
-        if (typeof vertexPositions !== 'undefined') {
-            dynamicObject.vertexPositions = DynamicVertexPositionsProperty.createOrUpdate(vertexPositions, buffer, sourceUri, dynamicObject.vertexPositions);
+        var vertexPositionsData = packet.vertexPositions;
+        if (typeof vertexPositionsData !== 'undefined') {
+            var vertexPositions = DynamicVertexPositionsProperty.createOrUpdate(vertexPositionsData, buffer, sourceUri, dynamicObject.vertexPositions);
+            if (typeof dynamicObject.vertexPositions === 'undefined') {
+                dynamicObject.vertexPositions = vertexPositions;
+                return true;
+            }
+            return false;
         }
+    };
+
+    DynamicObject.mergeProperties = function(existingObject, objectToMerge) {
+        existingObject.position = existingObject.position || objectToMerge.position;
+        existingObject.orientation = existingObject.orientation || objectToMerge.orientation;
+        existingObject.vertexPositions = existingObject.vertexPositions || objectToMerge.vertexPositions;
+    };
+
+    DynamicObject.deleteProperties = function(existingObject) {
+        existingObject.position = undefined;
+        existingObject.orientation = undefined;
+        existingObject.vertexPositions = undefined;
     };
 
     return DynamicObject;

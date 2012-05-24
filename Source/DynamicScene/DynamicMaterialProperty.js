@@ -16,7 +16,9 @@ define([
         this._potentialMaterials = [DynamicColorMaterial];
     }
 
-    DynamicMaterialProperty.createOrUpdate = function(czmlIntervals, buffer, sourceUri, existingProperty) {
+    DynamicMaterialProperty.createOrUpdate = function(parentObject, propertyName, czmlIntervals, constrainedInterval, czmlObjectCollection) {
+        var newProperty = false;
+        var existingProperty = parentObject[propertyName];
         if (typeof czmlIntervals === 'undefined') {
             return existingProperty;
         }
@@ -24,24 +26,30 @@ define([
         //At this point we will definitely have a value, so if one doesn't exist, create it.
         if (typeof existingProperty === 'undefined') {
             existingProperty = new DynamicMaterialProperty();
+            parentObject[propertyName] = existingProperty;
+            newProperty = true;
         }
 
-        existingProperty.addIntervals(czmlIntervals, buffer, sourceUri);
+        existingProperty.addIntervals(czmlIntervals, czmlObjectCollection, constrainedInterval);
 
-        return existingProperty;
+        return newProperty;
     };
 
     DynamicMaterialProperty.prototype.getValue = function(time) {
-        return this._intervals.findIntervalContainingDate(time).data;
+        var value = this._intervals.findIntervalContainingDate(time);
+        if (typeof value !== 'undefined') {
+            return value.data;
+        }
+        return undefined;
     };
 
-    DynamicMaterialProperty.prototype.addIntervals = function(czmlIntervals, buffer, sourceUri) {
+    DynamicMaterialProperty.prototype.addIntervals = function(czmlIntervals, buffer, sourceUri, constrainedInterval) {
         if (Array.isArray(czmlIntervals)) {
             for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
-                this.addInterval(czmlIntervals[i], buffer, sourceUri);
+                this.addInterval(czmlIntervals[i], buffer, sourceUri, constrainedInterval);
             }
         } else {
-            this.addInterval(czmlIntervals, buffer, sourceUri);
+            this.addInterval(czmlIntervals, buffer, sourceUri, constrainedInterval);
         }
     };
 
@@ -50,14 +58,19 @@ define([
         if (typeof material !== 'undefined') {
             return material.applyToMaterial(time, existingMaterial);
         }
+        return existingMaterial;
     };
 
-    DynamicMaterialProperty.prototype.addInterval = function(czmlInterval, buffer, sourceUri) {
+    DynamicMaterialProperty.prototype.addInterval = function(czmlInterval, buffer, sourceUri, constrainedInterval) {
         var iso8601Interval = czmlInterval.interval, property, material;
         if (typeof iso8601Interval === 'undefined') {
             iso8601Interval = TimeInterval.INFINITE.clone();
         } else {
             iso8601Interval = TimeInterval.fromIso8601(iso8601Interval);
+        }
+
+        if (typeof constrainedInterval !== 'undefined') {
+            iso8601Interval = iso8601Interval.intersect(constrainedInterval);
         }
 
         //See if we already have data at that interval.
@@ -91,7 +104,7 @@ define([
 
         //We could handle the data, add it to the property.
         if (foundMaterial) {
-            existingInterval.data = material.createOrUpdate(czmlInterval, buffer, sourceUri, existingInterval.data);
+            existingInterval.data = material.createOrUpdate(czmlInterval, buffer, existingInterval.data);
         }
     };
 
