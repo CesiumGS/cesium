@@ -42,12 +42,14 @@ define([
         './ViewportQuad',
         '../Shaders/CentralBodyVS',
         '../Shaders/CentralBodyFS',
+        '../Shaders/CentralBodyFSCommon',
         '../Shaders/CentralBodyVSDepth',
         '../Shaders/CentralBodyFSDepth',
         '../Shaders/CentralBodyVSFilter',
         '../Shaders/CentralBodyFSFilter',
         '../Shaders/CentralBodyVSPole',
         '../Shaders/CentralBodyFSPole',
+        '../Shaders/GroundAtmosphere',
         '../Shaders/SkyAtmosphereFS',
         '../Shaders/SkyAtmosphereVS'
     ], function(
@@ -93,12 +95,14 @@ define([
         ViewportQuad,
         CentralBodyVS,
         CentralBodyFS,
+        CentralBodyFSCommon,
         CentralBodyVSDepth,
         CentralBodyFSDepth,
         CentralBodyVSFilter,
         CentralBodyFSFilter,
         CentralBodyVSPole,
         CentralBodyFSPole,
+        GroundAtmosphere,
         SkyAtmosphereFS,
         SkyAtmosphereVS) {
     "use strict";
@@ -1779,6 +1783,7 @@ define([
             (this._showTerminator !== this.showTerminator)) {
 
             vs = "#line 0\n" +
+                 GroundAtmosphere +
                  CentralBodyVS;
 
             fs = ((this.showDay && this._dayTileProvider) ? "#define SHOW_DAY 1\n" : "") +
@@ -1789,6 +1794,7 @@ define([
                  ((this.showBumps && this._bumpTexture) ? "#define SHOW_BUMPS 1\n" : "") +
                  (this.showTerminator ? "#define SHOW_TERMINATOR 1\n" : "") +
                  "#line 0\n" +
+                 CentralBodyFSCommon +
                  CentralBodyFS;
 
             this._spWithoutAtmosphere = this._spWithoutAtmosphere && this._spWithoutAtmosphere.release();
