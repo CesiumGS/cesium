@@ -13,7 +13,7 @@
     <script src="../../Build/CesiumUnminified.js"> </script>
     <script src="../../ThirdParty/CodeMirror-2.24/lib/util/simple-hint.js"></script>
     <link rel="stylesheet" href="../../ThirdParty/CodeMirror-2.24/lib/util/simple-hint.css">
-    <script src="../../ThirdParty/CodeMirror-2.24/lib/util/javascript-hint.js"></script>
+    <script src="Cesium-hint.js"></script>
     <!-- End of autocomplete -->
     <script src="../../ThirdParty/CodeMirror-2.24/mode/javascript/javascript.js"></script>
 
@@ -75,43 +75,33 @@ require({
         { name: 'dojox', location: '../ThirdParty/dojo-release-1.7.2-src/dojox' }
     ]
 }, [
-    'Core/Ellipsoid',
-    'Core/SunPosition',
-    'Core/EventHandler',
-    'Core/MouseEventType',
-    'Core/requestAnimationFrame',
-    'Scene/Scene',
-    'Scene/CentralBody',
-    'Scene/BingMapsTileProvider',
-    'Scene/BingMapsStyle',
+    'Cesium',
     'dojo/parser',
     'dijit/form/Button',
     'dijit/form/ToggleButton'
 ], function(
-    Ellipsoid,
-    SunPosition,
-    EventHandler,
-    MouseEventType,
-    requestAnimationFrame,
-    Scene,
-    CentralBody,
-    BingMapsTileProvider,
-    BingMapsStyle)
+    Cesium)
 {
     "use strict";
+    //A real application should require only the subset of modules that
+    //are actually used, instead of requiring the Cesium module, which
+    //includes everything.
 
     var canvas = document.getElementById("glCanvas");
-    var ellipsoid = Ellipsoid.WGS84; // Used in many Sandbox examples
-    var scene = new Scene(canvas);
+    var ellipsoid = Cesium.Ellipsoid.WGS84; // Used in many Sandbox examples
+    var scene = new Cesium.Scene(canvas);
     var primitives = scene.getPrimitives();
 
     // Bing Maps
-    var bing = new BingMapsTileProvider({
+    var bing = new Cesium.BingMapsTileProvider({
         server : "dev.virtualearth.net",
-        mapStyle : BingMapsStyle.AERIAL
+        mapStyle : Cesium.BingMapsStyle.AERIAL,
+        // Some versions of Safari support WebGL, but don't correctly implement
+        // cross-origin image loading, so we need to load Bing imagery using a proxy.
+        proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
     });
 
-    var cb = new CentralBody(scene.getCamera(), ellipsoid);
+    var cb = new Cesium.CentralBody(scene.getCamera(), ellipsoid);
     cb.dayTileProvider = bing;
     cb.nightImageSource = "../../Images/land_ocean_ice_lights_2048.jpg";
     cb.specularMapSource = "../../Images/earthspec1k.jpg";
@@ -158,31 +148,31 @@ require({
 
     scene.setAnimation(function() {
         //scene.setSunPosition(scene.getCamera().position);
-        scene.setSunPosition(SunPosition.compute().position);
+        scene.setSunPosition(Cesium.SunPosition.compute().position);
 
         // INSERT CODE HERE to update primitives based on changes to animation time, camera parameters, etc.
     });
 
     (function tick() {
         scene.render();
-        requestAnimationFrame(tick);
+        Cesium.requestAnimationFrame(tick);
     }());
 
     ///////////////////////////////////////////////////////////////////////////
     // Example mouse handler
 
-    var handler = new EventHandler(canvas);
+    var handler = new Cesium.EventHandler(canvas);
 
     handler.setMouseAction(function(movement) {
         // INSERT CODE HERE: Handler for left-click
         // ...
-    }, MouseEventType.LEFT_CLICK);
+    }, Cesium.MouseEventType.LEFT_CLICK);
 
     handler.setMouseAction(function(movement) {
         // INSERT CODE HERE: Handler for mouse move
         // Use movement.startX, movement.startY, movement.endX, movement.endY
         // ...
-    }, MouseEventType.MOVE);
+    }, Cesium.MouseEventType.MOVE);
 
     // Prevent right-click from opening a context menu.
     canvas.oncontextmenu = function() {
