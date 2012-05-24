@@ -70,7 +70,7 @@ require({
         // Use movement.startX, movement.startY, movement.endX, movement.endY
     }, Cesium.MouseEventType.MOVE);
 
-    document.oncontextmenu = function() {
+    canvas.oncontextmenu = function() {
         return false;
     };
 
