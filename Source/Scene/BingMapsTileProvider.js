@@ -444,6 +444,14 @@ define([
      * DOC_TBA
      * @memberof BingMapsTileProvider
      */
+    BingMapsTileProvider.prototype.getPoleIntensity = function() {
+        return 1.0;
+    };
+
+    /**
+     * DOC_TBA
+     * @memberof BingMapsTileProvider
+     */
     BingMapsTileProvider.prototype.getLogo = function() {
         if (typeof BingMapsTileProvider._logo === 'undefined') {
             var image = new Image();

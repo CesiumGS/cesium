@@ -279,7 +279,7 @@ define([
          *
          * @type {Cartesian3}
          */
-        this.northPoleColor = new Cartesian3(0.0, 9.0 / 255.0, 36.0 / 255.0);
+        this.northPoleColor = new Cartesian3(2.0 / 255.0, 6.0 / 255.0, 18.0 / 255.0);
 
         /**
          * DOC_TBA
@@ -1483,7 +1483,7 @@ define([
                 return that._fb.getColorTexture();
             },
             u_dayIntensity : function() {
-                return 0.0;
+                return (that._dayTileProvider && that._dayTileProvider.getPoleIntensity && that._dayTileProvider.getPoleIntensity()) || 0.0;
             }
         };
 

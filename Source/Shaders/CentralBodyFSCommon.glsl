@@ -110,15 +110,13 @@ vec3 dayColor(vec3 positionMC, vec3 positionEC, vec3 normalEC, vec3 startColor, 
     vec4 diffuseSpecularAmbientShininess = vec4(0.75, 0.5, u_dayIntensity, 10.0);
 #endif
     
-    vec3 dayColor = startColor;
-    
 #ifdef SHOW_SPECULAR    
     float specularWeight = texture2D(u_specularMap, txCoord).r;
 #else
     float specularWeight = 1.0;     // Specular everywhere, no specular map.
 #endif
     
-    float intensity = diffuseSpecularAmbientShininess.z;    // Start with ambient, then accumulate diffuse and specular   
+    float intensity = diffuseSpecularAmbientShininess.z;    // Start with ambient, then accumulate diffuse and specular
     float diffuse = max(dot(agi_sunDirectionEC, normalEC), 0.0);
     
 #ifdef SHOW_BUMPS   
@@ -151,8 +149,8 @@ vec3 dayColor(vec3 positionMC, vec3 positionEC, vec3 normalEC, vec3 startColor, 
         intensity += (diffuseSpecularAmbientShininess.y * specular);
     }
 
-    //vec3 earthColor = agi_multiplyWithColorBalance(vec3(intensity), dayColor);
-    vec3 earthColor = vec3(intensity) * dayColor;
+    //vec3 earthColor = agi_multiplyWithColorBalance(vec3(intensity), startColor);
+    vec3 earthColor = vec3(intensity) * startColor;
     vec3 cloudColor = vec3(cloudCover * diffuse);
     vec3 earthUnderCloudColor = mix(earthColor, cloudColor, cloudCover);
     
