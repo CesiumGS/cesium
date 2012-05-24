@@ -25,11 +25,11 @@ void main()
 	    vec3 mieColor = atmosphereColor.mie;
         vec3 rayleighColor = atmosphereColor.rayleigh;
         
-	    #ifdef SHOW_DAY    
+#ifdef SHOW_DAY    
 		    vec3 startDayColor = u_color;
-		#else
+#else
 		    vec3 startDayColor = vec3(1.0);
-		#endif
+#endif
 		
         vec3 rgb = getCentralBodyColor(positionMC, positionEC, normalMC, normalEC, startDayColor, rayleighColor, mieColor);
         gl_FragColor = vec4(rgb, 1.0);

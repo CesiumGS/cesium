@@ -203,12 +203,14 @@ vec3 dayColor(vec3 positionMC, vec3 positionEC, vec3 normalEC, vec3 startColor, 
     return earthUnderCloudColor;
 }
 
-#ifdef SHOW_NIGHT
 vec3 nightColor(vec2 txCoord, float cloudCover)
 {
+#ifdef SHOW_NIGHT
     return u_nightIntensity * texture2D(u_nightTexture, txCoord).rgb * (1.0 - cloudCover);
-}
+#else
+    return vec3(0.0);
 #endif
+}
 
 vec3 getCentralBodyColor(vec3 positionMC, vec3 positionEC, vec3 normalMC, vec3 normalEC, vec3 startDayColor, vec3 rayleighColor, vec3 mieColor) {
     float diffuse = dot(agi_sunDirectionEC, normalEC);
@@ -248,7 +250,6 @@ vec3 getCentralBodyColor(vec3 positionMC, vec3 positionEC, vec3 normalMC, vec3 n
     rgb = vec3(1.0) - exp(-fExposure * color);
 #endif
 
-#ifdef SHOW_NIGHT
     if (diffuse < -u_dayNightBlendDelta)
     {
         // Night time
@@ -262,7 +263,6 @@ vec3 getCentralBodyColor(vec3 positionMC, vec3 positionEC, vec3 normalMC, vec3 n
             rgb,
             (diffuse + u_dayNightBlendDelta) / (2.0 * u_dayNightBlendDelta));
     }
-#endif
     
     return rgb;
 }

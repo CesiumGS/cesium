@@ -1113,7 +1113,7 @@ define([
 
             tile._extentVA = context.createVertexArray(attributes, indexBuffer);
 
-            var intensity = (this._dayTileProvider && this._dayTileProvider.getIntensity && this._dayTileProvider.getIntensity(tile)) || 0.1;
+            var intensity = (this._dayTileProvider && this._dayTileProvider.getIntensity && this._dayTileProvider.getIntensity(tile)) || 0.0;
             var drawUniforms = {
                 u_dayTexture : function() {
                     return tile.texture;
@@ -1483,7 +1483,7 @@ define([
                 return that._fb.getColorTexture();
             },
             u_dayIntensity : function() {
-                return 0.1;
+                return 0.0;
             }
         };
 
