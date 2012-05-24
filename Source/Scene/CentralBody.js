@@ -277,6 +277,20 @@ define([
         /**
          * DOC_TBA
          *
+         * @type {Cartesian3}
+         */
+        this.northPoleColor = new Cartesian3(0.0, 9.0 / 255.0, 36.0 / 255.0);
+
+        /**
+         * DOC_TBA
+         *
+         * @type {Cartesian3}
+         */
+        this.southPoleColor = new Cartesian3(1.0, 1.0, 1.0);
+
+        /**
+         * DOC_TBA
+         *
          * @type {Cartesian2}
          */
         this.logoOffset = Cartesian2.ZERO;
@@ -1476,7 +1490,7 @@ define([
         if (typeof this._northPoleUniforms === 'undefined') {
             this._northPoleUniforms = combine(drawUniforms, {
                 u_color : function() {
-                    return new Cartesian3(0.0, 9.0 / 255.0, 36.0 / 255.0);
+                    return that.northPoleColor;
                 }
             });
             this._northPoleUniforms = combine(this._northPoleUniforms, this._drawUniforms);
@@ -1485,7 +1499,7 @@ define([
         if (typeof this._southPoleUniforms === 'undefined') {
             this._southPoleUniforms = combine(drawUniforms, {
                 u_color : function() {
-                    return new Cartesian3(1.0, 1.0, 1.0);
+                    return that.southPoleColor;
                 }
             });
             this._southPoleUniforms = combine(this._southPoleUniforms, this._drawUniforms);
