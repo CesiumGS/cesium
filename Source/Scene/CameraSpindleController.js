@@ -180,7 +180,7 @@ define([
     */
     CameraSpindleController.prototype.rotate = function(axis, angle) {
         var a = Cartesian3.clone(axis);
-        var turnAngle = angle || this._moveRate;
+        var turnAngle = (typeof angle !== 'undefined') ? angle : this._moveRate;
         var rotation = Quaternion.fromAxisAngle(a, turnAngle).toRotationMatrix();
 
         var camera = this._camera;
@@ -201,7 +201,7 @@ define([
      * @see CameraSpindleController#rotate
      */
     CameraSpindleController.prototype.moveDown = function(angle) {
-        angle = -angle || -this._moveRate;
+        angle = (typeof angle !== 'undefined') ? -angle : -this._moveRate;
         this._moveVertical(angle, false);
     };
 
@@ -216,7 +216,7 @@ define([
      * @see CameraSpindleController#rotate
      */
     CameraSpindleController.prototype.moveUp = function(angle) {
-        angle = angle || this._moveRate;
+        angle = (typeof angle !== 'undefined') ? angle : this._moveRate;
         this._moveVertical(angle, false);
     };
 
@@ -232,7 +232,7 @@ define([
      * @see CameraSpindleController#rotate
      */
     CameraSpindleController.prototype.moveDownWithConstrainedZ = function(angle) {
-        angle = -angle || -this._moveRate;
+        angle = (typeof angle !== 'undefined') ? -angle : -this._moveRate;
         this._moveVertical(angle, true);
     };
 
@@ -248,7 +248,7 @@ define([
      * @see CameraSpindleController#rotate
      */
     CameraSpindleController.prototype.moveUpWithConstrainedZ = function(angle) {
-        angle = angle || this._moveRate;
+        angle = (typeof angle !== 'undefined') ? angle : this._moveRate;
         this._moveVertical(angle, true);
     };
 
@@ -258,6 +258,11 @@ define([
             var dot = p.dot(this._zAxis);
             if (CesiumMath.equalsEpsilon(1.0, Math.abs(dot), CesiumMath.EPSILON3) && dot * angle < 0.0) {
                 return;
+            }
+
+            var angleToZ = Math.acos(dot);
+            if (Math.abs(angle) > Math.abs(angleToZ)) {
+                angle = angleToZ;
             }
         }
         this.rotate(this._camera.right, angle);
@@ -274,7 +279,7 @@ define([
      * @see CameraSpindleController#rotate
      */
     CameraSpindleController.prototype.moveRight = function(angle) {
-        angle = angle || this._moveRate;
+        angle = (typeof angle !== 'undefined') ? angle : this._moveRate;
         this._moveHorizontal(angle, false);
     };
 
@@ -289,7 +294,7 @@ define([
      * @see CameraSpindleController#rotate
      */
     CameraSpindleController.prototype.moveLeft = function(angle) {
-        angle = -angle || -this._moveRate;
+        angle = (typeof angle !== 'undefined') ? -angle : -this._moveRate;
         this._moveHorizontal(angle, false);
     };
 
@@ -305,7 +310,7 @@ define([
      * @see CameraSpindleController#rotate
      */
     CameraSpindleController.prototype.moveRightWithConstrainedZ = function(angle) {
-        angle = angle || this._moveRate;
+        angle = (typeof angle !== 'undefined') ? angle : this._moveRate;
         this._moveHorizontal(angle, true);
     };
 
@@ -321,7 +326,7 @@ define([
      * @see CameraSpindleController#rotate
      */
     CameraSpindleController.prototype.moveLeftWithConstrainedZ = function(angle) {
-        angle = -angle || -this._moveRate;
+        angle = (typeof angle !== 'undefined') ? -angle : -this._moveRate;
         this._moveHorizontal(angle, true);
     };
 
@@ -343,7 +348,7 @@ define([
      * @see CameraSpindleController#zoomOut
      */
     CameraSpindleController.prototype.zoomIn = function(rate) {
-        zoom(this._camera, rate || this._zoomRate);
+        zoom(this._camera, (typeof rate !== 'undefined') ? rate : this._zoomRate);
     };
 
     /**
@@ -357,7 +362,7 @@ define([
      * @see CameraSpindleController#zoomIn
      */
     CameraSpindleController.prototype.zoomOut = function(rate) {
-        zoom(this._camera, -rate || -this._zoomRate);
+        zoom(this._camera, (typeof rate !== 'undefined') ? -rate : -this._zoomRate);
     };
 
     /**
@@ -430,6 +435,11 @@ define([
         var deltaPhi = -rotateRate * phiWindowRatio * Math.PI * 2.0;
         var deltaTheta = -rotateRate * thetaWindowRatio * Math.PI;
 
+        var theta = Math.acos(position.z / rho) + deltaTheta;
+        if (this.mouseConstrainedZAxis && (theta < 0 || theta > Math.PI)) {
+            deltaTheta = 0;
+        }
+
         this._moveHorizontal(deltaPhi, this.mouseConstrainedZAxis);
         this._moveVertical(deltaTheta, this.mouseConstrainedZAxis);
     };
@@ -464,6 +474,11 @@ define([
 
             var deltaPhi = startPhi - endPhi;
             var deltaTheta = startTheta - endTheta;
+
+            var theta = Math.acos(camera.position.z / camera.position.magnitude()) + deltaTheta;
+            if (theta < 0 || theta > Math.PI) {
+                deltaTheta = 0;
+            }
 
             this._moveHorizontal(deltaPhi, this.mouseConstrainedZAxis);
             this._moveVertical(deltaTheta, this.mouseConstrainedZAxis);
