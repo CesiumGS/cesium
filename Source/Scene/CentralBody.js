@@ -1326,12 +1326,12 @@ define([
         return pnt.getXY();
     }
 
-    CentralBody.prototype._computePoleQuad = function(maxLatitude, viewProjMatrix, viewportTransformation) {
-        var pt1 = this._ellipsoid.toCartesian(new Cartographic2(0.0, maxLatitude));
-        var pt2 = this._ellipsoid.toCartesian(new Cartographic2(Math.PI, maxLatitude));
+    CentralBody.prototype._computePoleQuad = function(maxLat, maxGivenLat, viewProjMatrix, viewportTransformation) {
+        var pt1 = this._ellipsoid.toCartesian(new Cartographic2(0.0, maxGivenLat));
+        var pt2 = this._ellipsoid.toCartesian(new Cartographic2(Math.PI, maxGivenLat));
         var radius = pt1.subtract(pt2).magnitude() * 0.5;
 
-        var center = pt2.add(pt1.subtract(pt2).normalize().multiplyWithScalar(radius));
+        var center = this._ellipsoid.toCartesian(new Cartographic2(0.0, maxLat));
 
         var right;
         var dir = this._camera.direction;
@@ -1365,7 +1365,7 @@ define([
 
         var viewProjMatrix = state.context.getUniformState().getViewProjection();
         var viewportTransformation = state.context.getUniformState().getViewportTransformation();
-        var latitudeExtension = 0.01;
+        var latitudeExtension = 0.05;
 
         var extent;
         var boundingVolume;
@@ -1394,8 +1394,7 @@ define([
                 this._vaNorthPole = this._vaNorthPole && this._vaNorthPole.destroy();
                 this._vaNorthPole = undefined;
             } else {
-                var maxLatitudeNorth = this._dayTileProvider.maxExtent.north - latitudeExtension;
-                rect = this._computePoleQuad(maxLatitudeNorth, viewProjMatrix, viewportTransformation);
+                rect = this._computePoleQuad(extent.north, extent.south - latitudeExtension, viewProjMatrix, viewportTransformation);
                 positions = [
                     rect.x, rect.y,
                     rect.x + rect.width, rect.y,
@@ -1444,8 +1443,7 @@ define([
                 this._vaSouthPole = this._vaSouthPole && this._vaSouthPole.destroy();
                 this._vaSouthPole = undefined;
             } else {
-                var maxLatitudeSouth = this._dayTileProvider.maxExtent.south + latitudeExtension;
-                rect = this._computePoleQuad(maxLatitudeSouth, viewProjMatrix, viewportTransformation);
+                rect = this._computePoleQuad(extent.south, extent.north + latitudeExtension, viewProjMatrix, viewportTransformation);
                 positions = [
                      rect.x, rect.y,
                      rect.x + rect.width, rect.y,
