@@ -5,15 +5,17 @@ varying vec2 v_textureCoordinates;
 
 void main()
 {
+    vec4 color = texture2D(u_fbTexture, v_textureCoordinates);
+    if (color.a != 0.0)
+        discard;
+    
     // TODO: make arbitrary ellipsoid
     agi_ellipsoid ellipsoid = agi_getWgs84EllipsoidEC();
     vec3 direction = normalize(agi_windowToEyeCoordinates(gl_FragCoord).xyz);
     agi_ray ray = agi_ray(vec3(0.0, 0.0, 0.0), direction);
     agi_raySegment intersection = agi_rayEllipsoidIntersectionInterval(ray, ellipsoid);
     
-    vec4 color = texture2D(u_fbTexture, v_textureCoordinates);
-    
-    if (!agi_isEmpty(intersection) && color.a == 0.0)
+    if (!agi_isEmpty(intersection))
     {
         vec3 positionEC = agi_pointAlongRay(ray, intersection.start);
         vec3 positionMC = (agi_inverseModelView * vec4(positionEC, 1.0)).xyz;
