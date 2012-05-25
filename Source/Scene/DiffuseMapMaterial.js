@@ -9,7 +9,7 @@ define([
 
     /**
      *
-     * DOC_TBA
+     * Draws a texture to a diffuse surface
      *
      * @name DiffuseMapMaterial
      * @constructor
@@ -18,17 +18,21 @@ define([
         var t = template || {};
 
         /**
-         * DOC_TBA
+         * The texture being used
          */
         this.texture = t.texture;
 
         /**
-         * DOC_TBA
+         * Number of texture repeats in the x directions
+         *
+         * type {Number}
          */
         this.sRepeat = t.sRepeat || 1.0;
 
         /**
-         * DOC_TBA
+         * Number of texture repeats in the y direction
+         *
+         * type {Number}
          */
         this.tRepeat = t.tRepeat || 1.0;
 

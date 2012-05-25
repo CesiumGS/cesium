@@ -3,7 +3,7 @@ define(['../Shaders/CheckerboardMaterial'], function(ShadersCheckerboardMaterial
     "use strict";
 
     /**
-     * DOC_TBA
+     * Checkerboard material with alternating colors
      *
      * @name CheckerboardMaterial
      * @constructor
@@ -12,7 +12,7 @@ define(['../Shaders/CheckerboardMaterial'], function(ShadersCheckerboardMaterial
         var t = template || {};
 
         /**
-         * DOC_TBA
+         * Light color
          */
         this.lightColor = t.lightColor || {
             red : 1.0,
@@ -22,7 +22,7 @@ define(['../Shaders/CheckerboardMaterial'], function(ShadersCheckerboardMaterial
         };
 
         /**
-         * DOC_TBA
+         * Dark color
          */
         this.darkColor = t.darkColor || {
             red : 0.0,
@@ -32,14 +32,14 @@ define(['../Shaders/CheckerboardMaterial'], function(ShadersCheckerboardMaterial
         };
 
         /**
-         * DOC_TBA
+         * Number of cells in the x directions
          *
          * @type Number
          */
         this.sRepeat = t.sRepeat || 10.0;
 
         /**
-         * DOC_TBA
+         * Number of cells in the y directions
          *
          * @type Number
          */

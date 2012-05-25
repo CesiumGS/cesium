@@ -7,7 +7,7 @@ define([
 
    /**
     *
-    * DOC_TBA
+    * Cement material
     *
     * @name CementMaterial
     * @constructor
@@ -16,7 +16,7 @@ define([
        var t = template || {};
 
        /**
-        * DOC_TBA
+        * Cement color
         */
        this.cementColor = t.cementColor || {
            red : 0.95,
@@ -26,12 +26,16 @@ define([
        };
 
        /**
-        * DOC_TBA
+        * Controls the size of the rock grains in the cement (values between 0.0 and 0.05 recommended)
+        *
+        * @type {Number}
         */
-       this.grainScale = t.grainScale || 100.0;
+       this.grainScale = t.grainScale || 0.01;
 
        /**
-        * DOC_TBA
+        * Controls how rough the surface looks (values between 0.0 and 1.0 recommended)
+        *
+        * @type {Number}
         */
        this.roughness = t.roughness || 0.3;
 

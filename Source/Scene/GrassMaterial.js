@@ -7,7 +7,7 @@ define([
 
    /**
     *
-    * DOC_TBA
+    * Grass material
     *
     * @name GrassMaterial
     * @constructor
@@ -16,7 +16,7 @@ define([
        var t = template || {};
 
        /**
-        * DOC_TBA
+        * Grass color
         */
        this.grassColor = t.grassColor || {
            red : 0.25,
@@ -26,7 +26,7 @@ define([
        };
 
        /**
-        * DOC_TBA
+        * Dirt color (only has minor impact on the overall material color)
         */
        this.dirtColor = t.dirtColor || {
            red : 0.1,
@@ -36,9 +36,11 @@ define([
        };
 
        /**
-        * DOC_TBA
+        * Controls the size of the color patches in the grass (values between 0 and 5 recommended)
+        *
+        * @type {Number}
         */
-       this.grassLength = t.grassLength || 3.0;
+       this.patchiness = t.patchiness || 1.5;
 
        var that = this;
        this._uniforms = {
@@ -48,8 +50,8 @@ define([
            u_dirtColor : function() {
                return that.dirtColor;
            },
-           u_grassLength : function() {
-               return that.grassLength;
+           u_patchiness : function() {
+               return that.patchiness;
            },
        };
     }

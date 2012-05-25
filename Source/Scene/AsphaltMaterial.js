@@ -7,7 +7,7 @@ define([
 
    /**
     *
-    * DOC_TBA
+    * Asphalt material
     *
     * @name AspahltMaterial
     * @constructor
@@ -16,7 +16,7 @@ define([
        var t = template || {};
 
        /**
-        * DOC_TBA
+        * Asphalt color
         */
        this.asphaltColor = t.asphaltColor || {
            red : 0.15,
@@ -26,12 +26,16 @@ define([
        };
 
        /**
-        * DOC_TBA
+        * Controls the size of the bumps (values between 0.0 and 0.05 recommended)
+        *
+        * @type {Number}
         */
-       this.bumpSize = t.bumpSize || 50.0;
+       this.bumpSize = t.bumpSize || 0.02;
 
        /**
-        * DOC_TBA
+        * Controls how rough the surface looks (values between 0.0 and 1.0 recommended)
+        *
+        * @type {Number}
         */
        this.roughness = t.roughness || 0.2;
 

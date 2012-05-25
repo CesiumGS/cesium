@@ -7,7 +7,7 @@ define([
 
    /**
     *
-    * DOC_TBA
+    * Material for a brick wall. Gives control over brick and mortar properties.
     *
     * @name BrickMaterial
     * @constructor
@@ -16,7 +16,7 @@ define([
        var t = template || {};
 
        /**
-        * DOC_TBA
+        * Brick color
         */
        this.brickColor = t.brickColor || {
            red : 0.7,
@@ -26,7 +26,7 @@ define([
        };
 
        /**
-        * DOC_TBA
+        * Mortar color
         */
        this.mortarColor = t.mortarColor || {
            red : 0.8,
@@ -36,7 +36,7 @@ define([
        };
 
        /**
-        * DOC_TBA
+        * Controls the size of the bricks (mortar will get scaled as well)
         */
        this.brickSize = t.brickSize || {
            x : 0.30,
@@ -44,12 +44,26 @@ define([
        };
 
        /**
-        * DOC_TBA
+        * Ratio between brick and mortar (values between 0.0 and 1.0)
         */
        this.brickPct = t.brickPct || {
            x : 0.90,
            y : 0.85
        };
+
+       /**
+        * Controls brick roughness (values between 0.01 and 0.10 recommended)
+        *
+        * @type {Number}
+        */
+       this.brickRoughness = t.brickRoughness || 0.04;
+
+       /**
+        * Controls mortar roughness (values between 0.0 and 0.5 recommended)
+        *
+        * @type {Number}
+        */
+       this.mortarRoughness = t.mortarRoughness || 0.1;
 
        var that = this;
        this._uniforms = {
@@ -64,6 +78,12 @@ define([
            },
            u_brickPct : function() {
                return that.brickPct;
+           },
+           u_brickRoughness : function() {
+               return that.brickRoughness;
+           },
+           u_mortarRoughness : function() {
+               return that.mortarRoughness;
            }
        };
     }

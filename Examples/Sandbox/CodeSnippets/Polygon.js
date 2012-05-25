@@ -101,7 +101,9 @@
                 brickPct : {
                     x : 0.90,
                     y : 0.85
-                }
+                },
+                brickRoughness : 0.04,
+                mortarRoughness : 0.1
             });
 
             primitives.add(polygon);
@@ -136,7 +138,7 @@
                     y : 0.1
                 },
                 noisiness : 3.0,
-                grainScale : 27.0
+                grainFrequency : 27.0
             });
 
             primitives.add(polygon);
@@ -158,7 +160,7 @@
                     blue : 0.15,
                     alpha : 1.0
                 },
-                bumpSize : 50.0,
+                bumpSize : 0.02,
                 roughness : 0.2
             });
 
@@ -182,7 +184,7 @@
                     blue : 0.85,
                     alpha : 1.0
                 },
-                grainScale : 100.0,
+                grainScale : 0.01,
                 roughness : 0.3
             });
 
@@ -212,7 +214,7 @@
                     blue : 0.1,
                     alpha : 1.0
                 },
-                grassLength : 3.0
+                patchiness : 1.5
             });
 
             primitives.add(polygon);

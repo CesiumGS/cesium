@@ -7,7 +7,7 @@ define([
 
    /**
     *
-    * DOC_TBA
+    * Wood material
     *
     * @name WoodMaterial
     * @constructor
@@ -16,7 +16,7 @@ define([
        var t = template || {};
 
        /**
-        * DOC_TBA
+        * Light wood color
         */
        this.lightWoodColor = t.lightWoodColor || {
            red : 0.6,
@@ -26,7 +26,7 @@ define([
        };
 
        /**
-        * DOC_TBA
+        * Dark wood color
         */
        this.darkWoodColor = t.darkWoodColor || {
            red : 0.4,
@@ -36,12 +36,16 @@ define([
        };
 
        /**
-        * DOC_TBA
+        * Controls the number of rings in the wood
+        *
+        * @type {Number}
         */
        this.ringFrequency = t.ringFrequency || 4.0;
 
        /**
-        * DOC_TBA
+        * Controls how noisy the wood pattern is in both directions
+        *
+        * @type {Number}
         */
        this.noiseScale = t.noiseScale || {
            x : 0.5,
@@ -49,14 +53,18 @@ define([
        };
 
        /**
-        * DOC_TBA
+        * Scales the noisiness determined by noiseScale
+        *
+        * @type {Number}
         */
        this.noisiness = t.noisiness || 3.0;
 
        /**
-        * DOC_TBA
+        * Controls how grainy the wood is (values between 10 and 50 recommended)
+        *
+        * @type {Number}
         */
-       this.grainScale = t.grainScale || 27.0;
+       this.grainFrequency = t.grainFrequency || 27.0;
 
        var that = this;
        this._uniforms = {
@@ -78,8 +86,8 @@ define([
            u_noisiness : function() {
                return that.noisiness;
            },
-           u_grainScale : function() {
-               return that.grainScale;
+           u_grainFrequency : function() {
+               return that.grainFrequency;
            }
        };
     }

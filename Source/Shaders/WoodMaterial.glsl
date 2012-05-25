@@ -6,7 +6,7 @@ uniform float u_darkGrains;
 uniform float u_grainThreshold;
 uniform vec2 u_noiseScale;
 uniform float u_noisiness;
-uniform float u_grainScale;
+uniform float u_grainFrequency;
 
 vec4 agi_getMaterialColor(float zDistance, vec2 st, vec3 str)
 {
@@ -27,7 +27,8 @@ vec4 agi_getMaterialColor(float zDistance, vec2 st, vec3 str)
         
     vec4 color = mix(u_lightWoodColor, u_darkWoodColor, r);
     
-    r = abs(agi_snoise(vec2(st.x * u_grainScale, st.y * u_grainScale * 0.01))) * 0.3;
+    //streaks
+    r = abs(agi_snoise(vec2(st.x * u_grainFrequency, st.y * u_grainFrequency * 0.02))) * 0.2;
     color += u_lightWoodColor * r;
 
     color.w = 1.0;
