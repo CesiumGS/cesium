@@ -253,17 +253,14 @@ define([
     };
 
     CameraSpindleController.prototype._moveVertical = function(angle, constrainedZ) {
-        var direction = (angle > 0) ? 1.0 : -1.0;
         if (constrainedZ) {
             var p = this._camera.position.normalize();
-            if (CesiumMath.equalsEpsilon(direction, p.dot(this._zAxis), CesiumMath.EPSILON6)) {
+            var dot = p.dot(this._zAxis);
+            if (CesiumMath.equalsEpsilon(1.0, Math.abs(dot), CesiumMath.EPSILON3) && dot * angle < 0.0) {
                 return;
             }
-
-            this.rotate(p.cross(this._zAxis), angle);
-        } else {
-            this.rotate(this._camera.right, angle);
         }
+        this.rotate(this._camera.right, angle);
     };
 
     /**
@@ -417,7 +414,6 @@ define([
     CameraSpindleController.prototype._rotate = function(movement) {
         var position = this._camera.position;
         var rho = position.magnitude();
-        var theta = Math.acos(position.z / rho);
         var rotateRate = this._rotateFactor * (rho - this._rotateRateRangeAdjustment);
 
         if (rotateRate > this._maximumRotateRate) {
@@ -434,14 +430,8 @@ define([
         var deltaPhi = -rotateRate * phiWindowRatio * Math.PI * 2.0;
         var deltaTheta = -rotateRate * thetaWindowRatio * Math.PI;
 
-        theta += deltaTheta;
-
-        if (this.mouseConstrainedZAxis && (theta < 0 || theta > Math.PI)) {
-            deltaTheta = 0;
-        }
-
         this._moveHorizontal(deltaPhi, this.mouseConstrainedZAxis);
-        this._moveVertical(deltaTheta);
+        this._moveVertical(deltaTheta, this.mouseConstrainedZAxis);
     };
 
     CameraSpindleController.prototype._pan = function(movement) {
@@ -475,17 +465,8 @@ define([
             var deltaPhi = startPhi - endPhi;
             var deltaTheta = startTheta - endTheta;
 
-            var theta = Math.acos(camera.position.z / camera.position.magnitude()) + deltaTheta;
-            if (theta < 0 || theta > Math.PI) {
-                deltaTheta = 0;
-            }
-
             this._moveHorizontal(deltaPhi, this.mouseConstrainedZAxis);
-
-            var normal = camera.right.cross(this._zAxis);
-            if (p0.dot(normal) > 0) {
-                this._moveVertical(deltaTheta);
-            }
+            this._moveVertical(deltaTheta, this.mouseConstrainedZAxis);
         }
     };
 
