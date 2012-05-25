@@ -19,7 +19,7 @@ defineSuite([
     /*global it,expect*/
 
     it("TODO", function() {
-        var czmlObjectCollection = new CzmlObjectCollection("testCzmlObjectCollection", "testId", {
+        var czmlObjectCollection = new CzmlObjectCollection({
             billboard : DynamicBillboard.createOrUpdate,
             label : DynamicLabel.createOrUpdate,
             orientation : DynamicObject.createOrUpdateOrientation,

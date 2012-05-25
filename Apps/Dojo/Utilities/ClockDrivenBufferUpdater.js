@@ -86,7 +86,8 @@ define(['dojo/io-query',
 
         if (this._bufferStart.getSecondsDifference(currentTime) > bufferSize) {
             this._bufferStart = currentTime.addSeconds(-bufferSize / 2);
-            this._buffer.deleteDataBefore([this._bufferStart.getJulianDayNumber(), this._bufferStart.getSecondsOfDay()]);
+            //TODO deleteDataBefore
+            //this._buffer.deleteDataBefore([this._bufferStart.getJulianDayNumber(), this._bufferStart.getSecondsOfDay()]);
         }
     };
 

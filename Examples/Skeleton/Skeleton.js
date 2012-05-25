@@ -70,7 +70,7 @@ require({
         // Use movement.startX, movement.startY, movement.endX, movement.endY
     }, Cesium.MouseEventType.MOVE);
 
-    document.oncontextmenu = function() {
+    canvas.oncontextmenu = function() {
         return false;
     };
 
@@ -78,8 +78,8 @@ require({
     // Example resize handler
 
     window.onresize = function () {
-        var width = canvas.clientWidth,
-            height = canvas.clientHeight;
+        var width = canvas.clientWidth;
+        var height = canvas.clientHeight;
 
         if (canvas.width === width && canvas.height === height) {
             return;

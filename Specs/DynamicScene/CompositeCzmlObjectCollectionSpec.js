@@ -20,29 +20,23 @@ defineSuite([
     "use strict";
     /*global it,expect*/
 
-    it("applyChanges works with Existing buffers", function() {
-        var czmlObjectCollection1 = new CzmlObjectCollection("1", "1", {
-            billboard : DynamicBillboard.createOrUpdate,
-            label : DynamicLabel.createOrUpdate,
-            orientation : DynamicObject.createOrUpdateOrientation,
-            point : DynamicPoint.createOrUpdate,
-            polyline : DynamicPolyline.createOrUpdate,
-            position : DynamicObject.createOrUpdatePosition,
-            vertexPositions : DynamicObject.createOrUpdateVertexPositions
-        });
+    var updaters = {
+        billboard : DynamicBillboard.createOrUpdate,
+        label : DynamicLabel.createOrUpdate,
+        orientation : DynamicObject.createOrUpdateOrientation,
+        point : DynamicPoint.createOrUpdate,
+        polyline : DynamicPolyline.createOrUpdate,
+        position : DynamicObject.createOrUpdatePosition,
+        vertexPositions : DynamicObject.createOrUpdateVertexPositions
+    };
 
-        var czmlObjectCollection2 = new CzmlObjectCollection("1", "1", {
-            billboard : DynamicBillboard.createOrUpdate,
-            label : DynamicLabel.createOrUpdate,
-            orientation : DynamicObject.createOrUpdateOrientation,
-            point : DynamicPoint.createOrUpdate,
-            polyline : DynamicPolyline.createOrUpdate,
-            position : DynamicObject.createOrUpdatePosition,
-            vertexPositions : DynamicObject.createOrUpdateVertexPositions
-        });
+    it("applyChanges works with Existing buffers", function() {
+
+        var czmlObjectCollection1 = new CzmlObjectCollection(updaters);
+        var czmlObjectCollection2 = new CzmlObjectCollection(updaters);
 
         var czml1 = {
-            "id":"testBillboard",
+            "id" : "testBillboard",
             "billboard" : {
                 "show" : true,
                 "rotation" : 0.0,
@@ -51,12 +45,12 @@ defineSuite([
         czmlObjectCollection1.processCzml(czml1);
 
         var czml2 = {
-                "id":"testBillboard",
-                "billboard" : {
-                    "rotation" : 2.0,
-                    "scale" : 3.0,
-                }
-            };
+            "id" : "testBillboard",
+            "billboard" : {
+                "rotation" : 2.0,
+                "scale" : 3.0,
+            }
+        };
         czmlObjectCollection2.processCzml(czml2);
 
         var mergeFuncs = [DynamicBillboard.mergeProperties];
@@ -79,25 +73,8 @@ defineSuite([
     });
 
     it("Data updates as underlying buffers update", function() {
-        var czmlObjectCollection1 = new CzmlObjectCollection("1", "1", {
-            billboard : DynamicBillboard.createOrUpdate,
-            label : DynamicLabel.createOrUpdate,
-            orientation : DynamicObject.createOrUpdateOrientation,
-            point : DynamicPoint.createOrUpdate,
-            polyline : DynamicPolyline.createOrUpdate,
-            position : DynamicObject.createOrUpdatePosition,
-            vertexPositions : DynamicObject.createOrUpdateVertexPositions
-        });
-
-        var czmlObjectCollection2 = new CzmlObjectCollection("1", "1", {
-            billboard : DynamicBillboard.createOrUpdate,
-            label : DynamicLabel.createOrUpdate,
-            orientation : DynamicObject.createOrUpdateOrientation,
-            point : DynamicPoint.createOrUpdate,
-            polyline : DynamicPolyline.createOrUpdate,
-            position : DynamicObject.createOrUpdatePosition,
-            vertexPositions : DynamicObject.createOrUpdateVertexPositions
-        });
+        var czmlObjectCollection1 = new CzmlObjectCollection(updaters);
+        var czmlObjectCollection2 = new CzmlObjectCollection(updaters);
 
         var mergeFuncs = [DynamicBillboard.mergeProperties];
         var deleteFuncs = [DynamicBillboard.deleteProperties];
@@ -107,7 +84,7 @@ defineSuite([
         compositeCzmlObjectCollection.applyChanges();
 
         var czml1 = {
-            "id":"testBillboard",
+            "id" : "testBillboard",
             "billboard" : {
                 "show" : true,
                 "rotation" : 0.0,
@@ -127,12 +104,12 @@ defineSuite([
         expect(object.billboard.rotation.getValue(new JulianDate())).toEqual(0.0);
 
         var czml2 = {
-                "id":"testBillboard",
-                "billboard" : {
-                    "rotation" : 2.0,
-                    "scale" : 3.0,
-                }
-            };
+            "id" : "testBillboard",
+            "billboard" : {
+                "rotation" : 2.0,
+                "scale" : 3.0,
+            }
+        };
         czmlObjectCollection2.processCzml(czml2);
 
         objects = compositeCzmlObjectCollection.getObjects();

@@ -60,7 +60,7 @@ require({
         Cesium.requestAnimationFrame(tick);
     }());
 
-    document.oncontextmenu = function() {
+    scene3D.getCanvas().oncontextmenu = scene2D.getCanvas().oncontextmenu = function() {
         return false;
     };
 });

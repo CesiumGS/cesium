@@ -64,7 +64,7 @@ function(dom,
     var clock = new Clock(new JulianDate(), undefined, undefined, ClockStep.SYSTEM_CLOCK, ClockRange.LOOP, 300);
     var timeline;
 
-    var _buffer = new CzmlObjectCollection("root", "root", {
+    var _buffer = new CzmlObjectCollection({
         billboard : DynamicBillboard.createOrUpdate,
         cone : DynamicCone.createOrUpdate,
         label : DynamicLabel.createOrUpdate,

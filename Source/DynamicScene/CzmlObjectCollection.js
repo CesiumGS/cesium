@@ -7,14 +7,13 @@ define([
         createGuid) {
     "use strict";
 
-    function CzmlObjectCollection(name, id, propertyFunctionsMap) {
-        this.name = name;
-        this.id = id;
+    function CzmlObjectCollection(propertyFunctionsMap) {
         this.parent = undefined;
         this._propertyFunctionsMap = propertyFunctionsMap;
         this._hash = {};
         this._array = [];
-        this._updateListeners = [];
+        this._propertyAddedListeners = [];
+        this._objectRemovedListeners = [];
     }
 
     CzmlObjectCollection.prototype._processCzmlPacket = function(packet, sourceUri, updatedObjects) {
@@ -50,7 +49,7 @@ define([
             this._processCzmlPacket(packets, sourceUri, updatedObjects);
         }
 
-        this.raiseOnUpdate(updatedObjects);
+        this.raiseOnPropertyAdded(updatedObjects);
 
         return updatedObjects;
     };
@@ -70,28 +69,49 @@ define([
             this._hash[id] = obj;
             this._array.push(obj);
         }
-
         return obj;
     };
 
     CzmlObjectCollection.prototype.clear = function() {
+        var removedObjects = this._array;
         this._hash = {};
         this._array = [];
+        this.raiseOnObjectRemoved(removedObjects);
     };
 
-    CzmlObjectCollection.prototype.addUpdateListener = function(listener) {
-        this._updateListeners.push(listener);
+    CzmlObjectCollection.prototype.addPropertyAddedListener = function(listener) {
+        this._propertyAddedListeners.push(listener);
     };
 
-    CzmlObjectCollection.prototype.removeUpdateListener = function(listener) {
-        var this_updateListeners = this._updateListeners;
-        this_updateListeners.splice(this_updateListeners.indexOf(listener), 1);
+    CzmlObjectCollection.prototype.removePropertyAddedListener = function(listener) {
+        var this_propertyAddedListeners = this._propertyAddedListeners;
+        this_propertyAddedListeners.splice(this_propertyAddedListeners.indexOf(listener), 1);
     };
 
-    CzmlObjectCollection.prototype.raiseOnUpdate = function(updatedObjects) {
-        var listeners = this._updateListeners;
-        for ( var i = 0, len = listeners.length; i < len; i++) {
-            listeners[i](this, updatedObjects);
+    CzmlObjectCollection.prototype.raiseOnPropertyAdded = function(updatedObjects) {
+        if (updatedObjects.length > 0) {
+            var listeners = this._propertyAddedListeners;
+            for ( var i = listeners.length - 1; i > -1; i--) {
+                listeners[i](this, updatedObjects);
+            }
+        }
+    };
+
+    CzmlObjectCollection.prototype.addObjectRemovedListener = function(listener) {
+        this._objectRemovedListeners.push(listener);
+    };
+
+    CzmlObjectCollection.prototype.removeObjectRemovedListener = function(listener) {
+        var this_objectRemovedListeners = this._objectRemovedListeners;
+        this_objectRemovedListeners.splice(this_objectRemovedListeners.indexOf(listener), 1);
+    };
+
+    CzmlObjectCollection.prototype.raiseOnObjectRemoved = function(removedObjects) {
+        if (removedObjects.length > 0) {
+            var listeners = this._objectRemovedListeners;
+            for ( var i = listeners.length - 1; i > -1; i--) {
+                listeners[i](this, removedObjects);
+            }
         }
     };
 
