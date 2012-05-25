@@ -28,12 +28,12 @@ define([
        /**
         * DOC_TBA
         */
-       this.grainScale = t.grainScale || 80.0;
+       this.grainScale = t.grainScale || 100.0;
 
        /**
         * DOC_TBA
         */
-       this.roughness = t.roughness || 1.0;
+       this.roughness = t.roughness || 0.3;
 
        var that = this;
        this._uniforms = {

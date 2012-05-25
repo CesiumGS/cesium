@@ -83,10 +83,10 @@
             ]));
             polygon.material = new Cesium.BrickMaterial({
                 brickColor : {
-                    red : 0.7,
-                    green : 0.2,
-                    blue : 0.0,
-                    alpha : 1.0
+                    red: 0.6,
+                    green: 0.3,
+                    blue: 0.1,
+                    alpha: 1.0
                 },
                 mortarColor : {
                     red : 0.8,
@@ -182,13 +182,43 @@
                     blue : 0.85,
                     alpha : 1.0
                 },
-                grainScale : 80.0,
-                roughness : 1.0
+                grainScale : 100.0,
+                roughness : 0.3
             });
 
             primitives.add(polygon);
         };
     };
+    Sandbox.GrassPolygonMaterial = function (scene, ellipsoid, primitives) {
+        this.code = function() {
+            var polygon = new Cesium.Polygon(undefined);
+            polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
+                new Cesium.Cartographic2(-80.0, 30.0),
+                new Cesium.Cartographic2(-70.0, 30.0),
+                new Cesium.Cartographic2(-70.0, 40.0),
+                new Cesium.Cartographic2(-80.0, 40.0)
+            ]));
+
+            polygon.material = new Cesium.GrassMaterial({
+                grassColor : {
+                    red : 0.25,
+                    green : 0.4,
+                    blue : 0.1,
+                    alpha : 1.0
+                },
+                dirtColor : {
+                    red : 0.1,
+                    green : 0.1,
+                    blue : 0.1,
+                    alpha : 1.0
+                },
+                grassLength : 3.0
+            });
+
+            primitives.add(polygon);
+        };
+    };
+
     Sandbox.StripePolygonMaterial = function (scene, ellipsoid, primitives) {
         this.code = function () {
             var polygon = new Cesium.Polygon(undefined);

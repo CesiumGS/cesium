@@ -16,13 +16,13 @@ vec4 agi_getMaterialColor(float zDistance, vec2 st, vec3 str)
         position.x += 0.5;    
         
     //bend the edges of the brick
-    float shiftNoise = agi_snoise(st / 0.2) * 0.01;
-    position += shiftNoise;
+    //float shiftNoise = agi_snoise(st / 0.2) * 0.01;
+    //position += shiftNoise;
     
     //calculate whether to use brick or mortar (does AA)
     vec2 filterWidth = fwidth(position);
     vec2 useBrick = (Integral(position + filterWidth, u_brickPct) - 
-                     Integral(position, u_brickPct)) / filterWidth;
+                       Integral(position, u_brickPct)) / filterWidth;
     float useBrickFinal = useBrick.x * useBrick.y;
     vec4 color = mix(u_mortarColor, u_brickColor, useBrickFinal);
     
