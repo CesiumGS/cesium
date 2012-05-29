@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
-    <title><?js= title ?> - Cesium Documentation</title>
+    <title><?js= title ?></title>
     
     <!--[if lt IE 9]>
       <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -20,29 +20,29 @@
 
 <body onload="document.filterForm.classFilter.focus(); document.filterForm.classFilter.value=((window.location.search).split('='))[1] || document.getElementById('ClassFilter').value; ">
 
-<div class="nav">
-	<div class="menu">
-		
-        <div class="rightLinks indexLinks">
-            <a href="index.html">top</a>
-        </div>
-		<div class="indexLinks">
-			<a id="allLink">all</a>
-			<a id="jsIndexLink">js</a>
-			<a id="glslIndexLink">glsl</a>
-		</div>
-		<div class="divider"></div>
-		<form name="filterForm" method="get">
-			<input type="text" name="classFilter" class="classFilter" id="ClassFilter" placeholder="Filter"></input>
-		</form>
-		<?js= this.nav ?>
-	</div>
-</div>
-<div class="nav navStatic"></div>
-
-<div id="main">
+<div id="mainIndex">
     
     <h1 class="page-title"><?js= title ?></h1>
+
+    <div class="nav">
+        <div class="menu">
+            
+            <div class="rightLinks indexLinks">
+                <a href="http://cesium.agi.com/">demos</a>
+                <a href="https://github.com/AnalyticalGraphicsInc/cesium/wiki">source</a>
+            </div>
+            <div class="indexLinks">
+                <a id="allLink">all</a>
+                <a id="jsIndexLink">js</a>
+                <a id="glslIndexLink">glsl</a>
+            </div>
+            <div class="divider"></div>
+            <form name="filterForm" method="get">
+                <input type="text" name="classFilter" class="classFilter" id="ClassFilter" placeholder="Filter"></input>
+            </form>
+            <?js= this.nav ?>
+        </div>
+    </div>
     
     <?js= content ?>
 	<footer>
@@ -55,16 +55,6 @@
 <script type="text/javascript">
 	codeview.classFilter.Init();
 	
-	if (window.frameElement) {
-        document.body.className = "embedded";
-        var ele = document.createElement('a');
-        ele.className = "popout";
-        ele.target = "_blank";
-        ele.href = window.location.href;
-        ele.innerHTML = "&raquo;";
-        ele.title = "Pop out";
-        document.getElementById('main').appendChild(ele);
-	}
 	var searchTerm = ((window.location.search).split('='))[1];
 	if(searchTerm){
 		var numDocLinks = document.links.length;
