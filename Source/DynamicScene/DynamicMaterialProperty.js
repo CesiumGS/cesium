@@ -3,17 +3,19 @@ define([
         '../Core/JulianDate',
         '../Core/TimeInterval',
         '../Core/TimeIntervalCollection',
-        './DynamicColorMaterial'
+        './DynamicColorMaterial',
+        './DynamicImageMaterial'
     ], function(
         JulianDate,
         TimeInterval,
         TimeIntervalCollection,
-        DynamicColorMaterial) {
+        DynamicColorMaterial,
+        DynamicImageMaterial) {
     "use strict";
 
     function DynamicMaterialProperty() {
         this._intervals = new TimeIntervalCollection();
-        this._potentialMaterials = [DynamicColorMaterial];
+        this._potentialMaterials = [DynamicColorMaterial, DynamicImageMaterial];
     }
 
     DynamicMaterialProperty.createOrUpdate = function(parentObject, propertyName, czmlIntervals, constrainedInterval, czmlObjectCollection) {
@@ -53,10 +55,10 @@ define([
         }
     };
 
-    DynamicMaterialProperty.prototype.applyToMaterial = function(time, existingMaterial) {
+    DynamicMaterialProperty.prototype.applyToMaterial = function(time, existingMaterial, scene) {
         var material = this.getValue(time);
         if (typeof material !== 'undefined') {
-            return material.applyToMaterial(time, existingMaterial);
+            return material.applyToMaterial(time, existingMaterial, scene);
         }
         return existingMaterial;
     };

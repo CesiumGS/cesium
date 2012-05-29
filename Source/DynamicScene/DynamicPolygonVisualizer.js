@@ -74,7 +74,7 @@ define([
 
         var material = dynamicPolygon.material;
         if (typeof material !== 'undefined') {
-            polygon.material = material.applyToMaterial(time, polygon.material);
+            polygon.material = material.applyToMaterial(time, polygon.material, this._scene);
         }
     };
 
