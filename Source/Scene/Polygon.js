@@ -3,9 +3,10 @@ define([
         '../Core/DeveloperError',
         '../Core/combine',
         '../Core/destroyObject',
+        '../Core/Cartesian2',
         '../Core/Math',
         '../Core/Ellipsoid',
-        '../Core/AxisAlignedBoundingRectangle',
+        '../Core/Rectangle',
         '../Core/Cartesian3',
         '../Core/ComponentDatatype',
         '../Core/MeshFilters',
@@ -28,9 +29,10 @@ define([
         DeveloperError,
         combine,
         destroyObject,
+        Cartesian2,
         CesiumMath,
         Ellipsoid,
-        AxisAlignedBoundingRectangle,
+        Rectangle,
         Cartesian3,
         ComponentDatatype,
         MeshFilters,
@@ -290,9 +292,8 @@ define([
     };
 
     Polygon._appendTextureCoordinates = function(tangentPlane, positions2D, mesh) {
-        var boundingRectangle = new AxisAlignedBoundingRectangle(positions2D);
-        var origin = boundingRectangle.minimum;
-        var extent = boundingRectangle.maximum.subtract(boundingRectangle.minimum);
+        var boundingRectangle = new Rectangle.createAxisAlignedBoundingRectangle(positions2D);
+        var origin = new Cartesian2(boundingRectangle.x, boundingRectangle.y);
 
         var positions = mesh.attributes.position.values;
         var length = positions.length;
@@ -308,8 +309,8 @@ define([
             var st = tangentPlane.projectPointOntoPlane(p);
             st = st.subtract(origin);
 
-            textureCoordinates[j++] = st.x / extent.x;
-            textureCoordinates[j++] = st.y / extent.y;
+            textureCoordinates[j++] = st.x / boundingRectangle.width;
+            textureCoordinates[j++] = st.y / boundingRectangle.height;
         }
 
         mesh.attributes.textureCoordinates = {

@@ -34,38 +34,36 @@ define([
      *
      * @exception {DeveloperError} One of the parameters is out of range.
      */
-    function Extent(north, east, south, west) {
+    function Extent(west, south, east, north) {
         /**
          * The northernmost latitude.
          *
          * @type Number
          */
-        this.north = (typeof north !== 'undefined') ? north : CesiumMath.PI_OVER_TWO;
+        this.north = north;
 
         /**
          * The southernmost latitude.
          *
          * @type Number
          */
-        this.south = (typeof south !== 'undefined') ? south : -CesiumMath.PI_OVER_TWO;
+        this.south = south;
 
         /**
          * The westernmost longitude.
          *
          * @type Number
          */
-        this.west = (typeof west !== 'undefined') ? west : -CesiumMath.PI;
+        this.west = west;
 
         /**
          * The easternmost longitude.
          *
          * @type Number
          */
-        this.east = (typeof east !== 'undefined') ? east : CesiumMath.PI;
+        this.east = east;
 
-        if (!Extent.valid(this)) {
-            throw new DeveloperError("One or more of the parameters is out of range.", "north, south, east or west");
-        }
+        Extent.validate(this);
     }
 
     /**
@@ -73,42 +71,46 @@ define([
      *
      * @param {Extent} extent The extent to be checked for validity.
      *
-     * @returns {Boolean} True if all of the members of <code>extent</code> are in their respective ranges and false otherwise.
+     * @exception {DeveloperError} <code>extent</code> is required and must have north, south, east and west attributes.
+     * @exception {DeveloperError} <code>extent.north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
+     * @exception {DeveloperError} <code>extent.south</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
+     * @exception {DeveloperError} <code>extent.east</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
+     * @exception {DeveloperError} <code>extent.west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
+     * @exception {DeveloperError} <code>extent.north</code> must be greater than <code>extent.south</code>.
+     * @exception {DeveloperError} <code>extent.east</code> must be greater than <code>extent.west</code>.
      */
-    Extent.valid = function(extent) {
-        if (typeof extent === 'undefined' ||
-            typeof extent.north === 'undefined' ||
-            typeof extent.south === 'undefined' ||
-            typeof extent.west === 'undefined' ||
-            typeof extent.east === 'undefined') {
-            return false;
+    Extent.validate = function(extent) {
+        if (!extent ||
+                typeof extent.north === "undefined" ||
+                typeof extent.south === "undefined" ||
+                typeof extent.west === "undefined" ||
+                typeof extent.east === "undefined") {
+            throw new DeveloperError("extent is required and must have north, south, east and west attributes.", "extent");
         }
 
         if (extent.north < -CesiumMath.PI_OVER_TWO || extent.north > CesiumMath.PI_OVER_TWO) {
-            return false;
+            throw new DeveloperError("extent.north must be in the interval [-Pi/2, Pi/2].", "extent.north");
         }
 
         if (extent.south < -CesiumMath.PI_OVER_TWO || extent.south > CesiumMath.PI_OVER_TWO) {
-            return false;
+            throw new DeveloperError("extent.south must be in the interval [-Pi/2, Pi/2].", "extent.south");
         }
 
         if (extent.north < extent.south) {
-            return false;
+            throw new DeveloperError("extent.north must be greater than extent.south.", "extent");
         }
 
         if (extent.west < -CesiumMath.PI || extent.west > CesiumMath.PI) {
-            return false;
+            throw new DeveloperError("extent.west must be in the interval [-Pi, Pi].", "extent.west");
         }
 
         if (extent.east < -CesiumMath.PI || extent.east > CesiumMath.PI) {
-            return false;
+            throw new DeveloperError("extent.east must be in the interval [-Pi, Pi].", "extent.east");
         }
 
         if (extent.west > extent.east) {
-            return false;
+            throw new DeveloperError("extent.west must be greater than extent.east.", "extent");
         }
-
-        return true;
     };
 
     function getPosition(lla, ellipsoid, time, projection) {
@@ -126,9 +128,7 @@ define([
             throw new DeveloperError("extent is required.", "extent");
         }
 
-        if (!Extent.valid(extent)) {
-            throw new DeveloperError("extent is invalid.", "extent");
-        }
+        Extent.validate(extent);
 
         ellipsoid = ellipsoid || Ellipsoid.WGS84;
         var positions = [];
@@ -196,9 +196,7 @@ define([
             throw new DeveloperError("extent is required.", "extent");
         }
 
-        if (!Extent.valid(extent)) {
-            throw new DeveloperError("extent is invalid.", "extent");
-        }
+        Extent.validate(extent);
 
         if (typeof projection === 'undefined') {
             throw new DeveloperError("projection is required.", "projection");

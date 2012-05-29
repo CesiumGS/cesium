@@ -161,9 +161,7 @@ define([
     ExtentTessellator.compute = function(description) {
         var desc = description || {};
 
-        if (!Extent.valid(desc.extent)) {
-            throw new DeveloperError("One or more members of description.extent are out of range.", "description.extent");
-        }
+        Extent.validate(desc.extent);
 
         desc.ellipsoid = desc.ellipsoid || Ellipsoid.WGS84;
         desc.granularity = (desc.granularity && desc.granularity > 0.0) ? desc.granularity : 0.1;
@@ -309,9 +307,7 @@ define([
     ExtentTessellator.computeBuffers = function(description) {
         var desc = description || {};
 
-        if (!Extent.valid(desc.extent)) {
-            throw new DeveloperError("One or more members of description.extent are out of range.", "description.extent");
-        }
+        Extent.validate(desc.extent);
 
         desc.ellipsoid = desc.ellipsoid || Ellipsoid.WGS84;
         desc.granularity = (typeof desc.granularity !== "undefined" && desc.granularity > 0.0) ? desc.granularity : 0.1;
