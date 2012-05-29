@@ -371,7 +371,14 @@ if (oldContents !== contents) {
 				<fileset dir="${webProxyDirectory}" includes="**/*.jar" />
 			</classpath>
 		</taskdef>
-
-		<server proxyContextPath="/proxy" allowedHostList="server.arcgisonline.com,tile.openstreetmap.org,otile1.mqcdn.com,oatile1.mqcdn.com,tile.stamen.com,*.virtualearth.net" port="8080" baseDir="${basedir}" />
+		<!-- lanProxy is used to get out from behind a proxy on your network. (ex: proxy.company.com:80) -->
+		<!-- lanNoProxyHosts is a comma delimited string of servers
+			that should not be sent through the LAN Proxy (ex: localhost,myserver) -->
+		<server proxyContextPath="/proxy"
+			allowedHostList="localhost,server.arcgisonline.com,tile.openstreetmap.org,otile1.mqcdn.com,oatile1.mqcdn.com,dev.virtualearth.net,www2.demis.nl"
+			port="8080"
+			baseDir="${basedir}"
+			lanProxy=""
+			lanNoProxyHosts=""/>
 	</target>
 </project>

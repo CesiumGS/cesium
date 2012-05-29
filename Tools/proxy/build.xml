@@ -32,6 +32,13 @@
 			</classpath>
 		</taskdef>
 
-		<server contextPath="/proxy" allowedHostList="dev.virtualearth.net" port="8080" baseDir="." />
+		<!-- lanNoProxyHosts is a comma delimited string of servers
+			that should not be sent through the LAN Proxy (ex: localhost,myserver) -->
+		<server contextPath="/proxy"
+			allowedHostList="dev.virtualearth.net"
+			port="8080"
+			baseDir="."
+			lanProxy=""
+			lanNoProxyHosts=""/>
 	</target>
 </project>

@@ -19,14 +19,17 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URLEncoder;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.eclipse.jetty.client.Address;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.HttpExchange;
 import org.eclipse.jetty.continuation.Continuation;
@@ -53,7 +56,7 @@ public final class ProxyHandler extends AbstractHandler {
 		dontProxyHeaders.add("upgrade");
 	}
 
-	public ProxyHandler(String allowedHostList) throws Exception {
+	public ProxyHandler(String allowedHostList, String lanProxy, String noProxyHosts) throws Exception {
 		// build a regex that matches any of the given hosts
 		StringBuilder hostPattern = new StringBuilder();
 		for (String allowedHost : allowedHostList.split(",")) {
@@ -69,6 +72,19 @@ public final class ProxyHandler extends AbstractHandler {
 		allowedHosts = Pattern.compile(hostPattern.toString(), Pattern.CASE_INSENSITIVE);
 
 		client = new HttpClient();
+		try{
+			if(lanProxy != null && lanProxy.length()>0){
+				String[] myProxy = lanProxy.split(":");
+				client.setProxy(new Address(myProxy[0], Integer.parseInt(myProxy[1])));
+				if(noProxyHosts != null && noProxyHosts.length()>0){
+					String[] noProxyArray = noProxyHosts.split(",");
+					Set<String> noProxyHostsSet = new HashSet<String>(Arrays.asList(noProxyArray));
+					client.setNoProxy(noProxyHostsSet);
+				}
+			}
+		}catch (Exception e) {
+			System.out.println("Failed to apply LAN proxy settings "+e);
+		}
 		client.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
 		client.start();
 	}
