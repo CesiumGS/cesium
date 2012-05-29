@@ -180,7 +180,7 @@ define([
     */
     CameraSpindleController.prototype.rotate = function(axis, angle) {
         var a = Cartesian3.clone(axis);
-        var turnAngle = angle || this._moveRate;
+        var turnAngle = (typeof angle !== 'undefined') ? angle : this._moveRate;
         var rotation = Quaternion.fromAxisAngle(a, turnAngle).toRotationMatrix();
 
         var camera = this._camera;
@@ -201,7 +201,7 @@ define([
      * @see CameraSpindleController#rotate
      */
     CameraSpindleController.prototype.moveDown = function(angle) {
-        angle = -angle || -this._moveRate;
+        angle = (typeof angle !== 'undefined') ? -angle : -this._moveRate;
         this._moveVertical(angle, false);
     };
 
@@ -216,7 +216,7 @@ define([
      * @see CameraSpindleController#rotate
      */
     CameraSpindleController.prototype.moveUp = function(angle) {
-        angle = angle || this._moveRate;
+        angle = (typeof angle !== 'undefined') ? angle : this._moveRate;
         this._moveVertical(angle, false);
     };
 
@@ -232,7 +232,7 @@ define([
      * @see CameraSpindleController#rotate
      */
     CameraSpindleController.prototype.moveDownWithConstrainedZ = function(angle) {
-        angle = -angle || -this._moveRate;
+        angle = (typeof angle !== 'undefined') ? -angle : -this._moveRate;
         this._moveVertical(angle, true);
     };
 
@@ -248,22 +248,24 @@ define([
      * @see CameraSpindleController#rotate
      */
     CameraSpindleController.prototype.moveUpWithConstrainedZ = function(angle) {
-        angle = angle || this._moveRate;
+        angle = (typeof angle !== 'undefined') ? angle : this._moveRate;
         this._moveVertical(angle, true);
     };
 
     CameraSpindleController.prototype._moveVertical = function(angle, constrainedZ) {
-        var direction = (angle > 0) ? 1.0 : -1.0;
         if (constrainedZ) {
             var p = this._camera.position.normalize();
-            if (CesiumMath.equalsEpsilon(direction, p.dot(this._zAxis), CesiumMath.EPSILON6)) {
+            var dot = p.dot(this._zAxis);
+            if (CesiumMath.equalsEpsilon(1.0, Math.abs(dot), CesiumMath.EPSILON3) && dot * angle < 0.0) {
                 return;
             }
 
-            this.rotate(p.cross(this._zAxis), angle);
-        } else {
-            this.rotate(this._camera.right, angle);
+            var angleToZ = Math.acos(dot);
+            if (Math.abs(angle) > Math.abs(angleToZ)) {
+                angle = angleToZ;
+            }
         }
+        this.rotate(this._camera.right, angle);
     };
 
     /**
@@ -277,7 +279,7 @@ define([
      * @see CameraSpindleController#rotate
      */
     CameraSpindleController.prototype.moveRight = function(angle) {
-        angle = angle || this._moveRate;
+        angle = (typeof angle !== 'undefined') ? angle : this._moveRate;
         this._moveHorizontal(angle, false);
     };
 
@@ -292,7 +294,7 @@ define([
      * @see CameraSpindleController#rotate
      */
     CameraSpindleController.prototype.moveLeft = function(angle) {
-        angle = -angle || -this._moveRate;
+        angle = (typeof angle !== 'undefined') ? -angle : -this._moveRate;
         this._moveHorizontal(angle, false);
     };
 
@@ -308,7 +310,7 @@ define([
      * @see CameraSpindleController#rotate
      */
     CameraSpindleController.prototype.moveRightWithConstrainedZ = function(angle) {
-        angle = angle || this._moveRate;
+        angle = (typeof angle !== 'undefined') ? angle : this._moveRate;
         this._moveHorizontal(angle, true);
     };
 
@@ -324,7 +326,7 @@ define([
      * @see CameraSpindleController#rotate
      */
     CameraSpindleController.prototype.moveLeftWithConstrainedZ = function(angle) {
-        angle = -angle || -this._moveRate;
+        angle = (typeof angle !== 'undefined') ? -angle : -this._moveRate;
         this._moveHorizontal(angle, true);
     };
 
@@ -346,7 +348,7 @@ define([
      * @see CameraSpindleController#zoomOut
      */
     CameraSpindleController.prototype.zoomIn = function(rate) {
-        zoom(this._camera, rate || this._zoomRate);
+        zoom(this._camera, (typeof rate !== 'undefined') ? rate : this._zoomRate);
     };
 
     /**
@@ -360,7 +362,7 @@ define([
      * @see CameraSpindleController#zoomIn
      */
     CameraSpindleController.prototype.zoomOut = function(rate) {
-        zoom(this._camera, -rate || -this._zoomRate);
+        zoom(this._camera, (typeof rate !== 'undefined') ? -rate : -this._zoomRate);
     };
 
     /**
@@ -417,7 +419,6 @@ define([
     CameraSpindleController.prototype._rotate = function(movement) {
         var position = this._camera.position;
         var rho = position.magnitude();
-        var theta = Math.acos(position.z / rho);
         var rotateRate = this._rotateFactor * (rho - this._rotateRateRangeAdjustment);
 
         if (rotateRate > this._maximumRotateRate) {
@@ -434,14 +435,13 @@ define([
         var deltaPhi = -rotateRate * phiWindowRatio * Math.PI * 2.0;
         var deltaTheta = -rotateRate * thetaWindowRatio * Math.PI;
 
-        theta += deltaTheta;
-
+        var theta = Math.acos(position.z / rho) + deltaTheta;
         if (this.mouseConstrainedZAxis && (theta < 0 || theta > Math.PI)) {
             deltaTheta = 0;
         }
 
         this._moveHorizontal(deltaPhi, this.mouseConstrainedZAxis);
-        this._moveVertical(deltaTheta);
+        this._moveVertical(deltaTheta, this.mouseConstrainedZAxis);
     };
 
     CameraSpindleController.prototype._pan = function(movement) {
@@ -481,11 +481,7 @@ define([
             }
 
             this._moveHorizontal(deltaPhi, this.mouseConstrainedZAxis);
-
-            var normal = camera.right.cross(this._zAxis);
-            if (p0.dot(normal) > 0) {
-                this._moveVertical(deltaTheta);
-            }
+            this._moveVertical(deltaTheta, this.mouseConstrainedZAxis);
         }
     };
 
