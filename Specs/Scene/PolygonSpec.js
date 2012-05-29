@@ -90,8 +90,6 @@ defineSuite([
     });
 
     it("renders", function() {
-        // This test fails in Chrome if a breakpoint is set inside this function.  Strange.
-
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
         polygon.ellipsoid = ellipsoid;
         polygon.granularity = CesiumMath.toRadians(20.0);
