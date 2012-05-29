@@ -210,7 +210,7 @@ vec4 agi_eyeToWindowCoordinates(vec4 positionEC)
  * @name agi_windowToEyeCoordinates
  * @glslFunction
  *
- * @param {vec4} positionWC The position in window coordinates to transform.
+ * @param {vec4} fragmentCoordinate The position in window coordinates to transform.
  *
  * @returns {vec4} The transformed position in eye coordinates.
  *
@@ -223,13 +223,13 @@ vec4 agi_eyeToWindowCoordinates(vec4 positionEC)
  * @example
  * vec4 positionEC = agi_windowToEyeCoordinates(gl_FragCoord);
  */
-vec4 agi_windowToEyeCoordinates(vec4 positionWC)
+vec4 agi_windowToEyeCoordinates(vec4 fragmentCoordinate)
 {
-    float x = 2.0 * (positionWC.x - float(agi_viewport.x)) / float(agi_viewport.z) - 1.0;
-    float y = 2.0 * (positionWC.y - float(agi_viewport.y)) / float(agi_viewport.w) - 1.0;
-    float z = (positionWC.z - agi_viewportTransformation[3][2]) / agi_viewportTransformation[2][2];
+    float x = 2.0 * (fragmentCoordinate.x - float(agi_viewport.x)) / float(agi_viewport.z) - 1.0;
+    float y = 2.0 * (fragmentCoordinate.y - float(agi_viewport.y)) / float(agi_viewport.w) - 1.0;
+    float z = (fragmentCoordinate.z - agi_viewportTransformation[3][2]) / agi_viewportTransformation[2][2];
     vec4 q = vec4(x, y, z, 1.0);
-    q /= positionWC.w;
+    q /= fragmentCoordinate.w;
     q = agi_inverseProjection * q;
     return q;
 }
