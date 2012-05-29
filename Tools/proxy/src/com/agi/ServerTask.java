@@ -15,6 +15,8 @@ import org.eclipse.jetty.server.nio.SelectChannelConnector;
 public class ServerTask extends Task {
 	private String proxyContextPath;
 	private String allowedHostList;
+	private String lanProxy;
+	private String lanNoProxyHosts;
 	private int port;
 	private File baseDir;
 
@@ -26,7 +28,7 @@ public class ServerTask extends Task {
 			connector.setPort(this.port);
 			server.addConnector(connector);
 
-			ProxyHandler proxyHandler = new ProxyHandler(this.allowedHostList);
+			ProxyHandler proxyHandler = new ProxyHandler(this.allowedHostList, this.lanProxy, this.lanNoProxyHosts);
 			ContextHandler proxyContextHandler = new ContextHandler(this.proxyContextPath);
 			proxyContextHandler.setHandler(proxyHandler);
 
@@ -72,4 +74,13 @@ public class ServerTask extends Task {
 	public void setBaseDir(File value) {
 		this.baseDir = value;
 	}
+
+	public void setLanProxy(String host){
+		this.lanProxy = host;
+	}
+
+	public void setLanNoProxyHosts(String hosts){
+		this.lanNoProxyHosts = hosts;
+	}
+
 }
