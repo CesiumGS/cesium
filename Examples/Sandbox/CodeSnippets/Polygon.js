@@ -62,7 +62,7 @@
                 polygon.material = new Cesium.DiffuseMapMaterial({
                     texture : scene.getContext().createTexture2D({
                         source : image,
-                        pixelFormat : Cesium.PixelFormat.RGB
+                        pixelFormat : Cesium.PixelFormat.RGBA
                     })
                 });
             };
@@ -102,7 +102,7 @@
                     x : 0.90,
                     y : 0.85
                 },
-                brickRoughness : 0.04,
+                brickRoughness : 0.2,
                 mortarRoughness : 0.1
             });
 
@@ -132,12 +132,11 @@
                     blue : 0.07,
                     alpha : 1.0
                 },
-                ringFrequency : 2.0,
+                ringFrequency : 3.0,
                 noiseScale : {
-                    x : 0.5,
-                    y : 0.1
+                    x : 0.7,
+                    y : 0.5
                 },
-                noisiness : 3.0,
                 grainFrequency : 27.0
             });
 
@@ -320,7 +319,7 @@
                     blue: 0.0,
                     alpha: 0.75
                 },
-                frequency : (1.0 / 5.0)
+                frequency : 5.0
             });
 
             primitives.add(polygon);

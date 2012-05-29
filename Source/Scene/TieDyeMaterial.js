@@ -8,7 +8,8 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * Procedural tie-dye material generated with simplex noise.
+     * The effect is created by taking the absolute value of the noise value.
      *
      * @name TieDyeMaterial
      * @constructor
@@ -17,7 +18,7 @@ define([
         var t = template || {};
 
         /**
-         * DOC_TBA
+         * The light color of the tie-dye (sharp consistency).
          */
         this.lightColor = t.lightColor || {
             red : 1.0,
@@ -27,7 +28,7 @@ define([
         };
 
         /**
-         * DOC_TBA
+         * The dark color of the tie-dye (smooth consistency).
          */
         this.darkColor = t.darkColor || {
             red : 0.0,
@@ -37,11 +38,13 @@ define([
         };
 
         /**
-         * DOC_TBA
+         * Controls the noise frequency.
+         * Values between 1.0 (less noisy) and
+         * 10.0 (more noisy) recommended.
          *
          * @type Number
          */
-        this.frequency = t.frequency || (1.0 / 10.0);
+        this.frequency = t.frequency || 5.0;
 
         var that = this;
         this._uniforms = {

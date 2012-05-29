@@ -7,7 +7,10 @@ define([
 
    /**
     *
-    * Grass material
+    * Procedural grass material generated with simplex noise.
+    * Grass is composed of a grass color and a dirt color,
+    * though the grass color is more prominent. A non-configurable
+    * thatch pattern is placed on top (same color as grass color).
     *
     * @name GrassMaterial
     * @constructor
@@ -16,7 +19,7 @@ define([
        var t = template || {};
 
        /**
-        * Grass color
+        * Grass color. Green/brown color recommended.
         */
        this.grassColor = t.grassColor || {
            red : 0.25,
@@ -26,7 +29,8 @@ define([
        };
 
        /**
-        * Dirt color (only has minor impact on the overall material color)
+        * Dirt color. Black/brown color recommended.
+        * This color shows up underneath the grass color.
         */
        this.dirtColor = t.dirtColor || {
            red : 0.1,
@@ -36,7 +40,9 @@ define([
        };
 
        /**
-        * Controls the size of the color patches in the grass (values between 0 and 5 recommended)
+        * Controls the size of the color patches in the grass.
+        * Values between 0.1 (one big grass color patch) and
+        * 10.0 (many small grass patches mixed with dirt) recommended.
         *
         * @type {Number}
         */

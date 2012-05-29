@@ -7,7 +7,10 @@ define([
 
    /**
     *
-    * Asphalt material
+    * Procedural asphalt material generated with a combination of
+    * simplex and cellular noise. The cellular noise creates the
+    * basic bump shape (like little stones). The simplex noise adds
+    * black and white speckles to give a more grainy feel.
     *
     * @name AspahltMaterial
     * @constructor
@@ -16,7 +19,7 @@ define([
        var t = template || {};
 
        /**
-        * Asphalt color
+        * Controls asphalt color. Gray colors are recommended.
         */
        this.asphaltColor = t.asphaltColor || {
            red : 0.15,
@@ -26,14 +29,18 @@ define([
        };
 
        /**
-        * Controls the size of the bumps (values between 0.0 and 0.05 recommended)
+        * Controls the size of the bumps.
+        * Values between 0.01 (many small bumps)
+        * and 0.1 (some large bumps) recommended.
         *
         * @type {Number}
         */
        this.bumpSize = t.bumpSize || 0.02;
 
        /**
-        * Controls how rough the surface looks (values between 0.0 and 1.0 recommended)
+        * Controls how rough the surface looks.
+        * Values between 0.05 (low roughness)
+        * and 1.0 (high roughness) recommended.
         *
         * @type {Number}
         */

@@ -9,7 +9,7 @@ define([
 
     /**
      *
-     * Draws a texture to a diffuse surface
+     * Contains a texture as a diffuse map.
      *
      * @name DiffuseMapMaterial
      * @constructor
@@ -18,19 +18,19 @@ define([
         var t = template || {};
 
         /**
-         * The texture being used
+         *  2D RGBA diffuse map texture.
          */
         this.texture = t.texture;
 
         /**
-         * Number of texture repeats in the x directions
+         * Number of texture repeats in the x direction.
          *
          * type {Number}
          */
         this.sRepeat = t.sRepeat || 1.0;
 
         /**
-         * Number of texture repeats in the y direction
+         * Number of texture repeats in the y direction.
          *
          * type {Number}
          */

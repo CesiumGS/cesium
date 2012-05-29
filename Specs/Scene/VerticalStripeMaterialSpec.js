@@ -1,15 +1,15 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/HorizontalStripeMaterial',
+         'Scene/VerticalStripeMaterial',
          '../Specs/renderMaterial'
      ], function(
-         HorizontalStripeMaterial,
+         VerticalStripeMaterial,
          renderMaterial) {
     "use strict";
     /*global it,expect*/
 
-    it("draws a horizontal stripe material", function() {
-        var pixel = renderMaterial(new HorizontalStripeMaterial({
+    it("draws a vertical stripe material", function() {
+        var pixel = renderMaterial(new VerticalStripeMaterial({
             lightColor : {
                 red : 1.0,
                 green : 0.0,

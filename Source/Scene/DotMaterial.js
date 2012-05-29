@@ -3,7 +3,7 @@ define(['../Shaders/DotMaterial'], function(ShadersDotMaterial) {
     "use strict";
 
     /**
-     * DOC_TBA
+     * A pattern of dots organized by row and column.
      *
      * @name DotMaterial
      * @constructor
@@ -12,7 +12,7 @@ define(['../Shaders/DotMaterial'], function(ShadersDotMaterial) {
         var t = template || {};
 
         /**
-         * DOC_TBA
+         * Dot color.
          */
         this.lightColor = t.lightColor || {
             red : 1.0,
@@ -22,7 +22,7 @@ define(['../Shaders/DotMaterial'], function(ShadersDotMaterial) {
         };
 
         /**
-         * DOC_TBA
+         * Background color.
          */
         this.darkColor = t.darkColor || {
             red : 0.0,
@@ -32,14 +32,14 @@ define(['../Shaders/DotMaterial'], function(ShadersDotMaterial) {
         };
 
         /**
-         * DOC_TBA
+         * Number of dots in the x direction.
          *
          * @type Number
          */
         this.sRepeat = t.sRepeat || 10.0;
 
         /**
-         * DOC_TBA
+         * Number of dots in the y direction.
          *
          * @type Number
          */

@@ -3,7 +3,7 @@ define(['../Shaders/CheckerboardMaterial'], function(ShadersCheckerboardMaterial
     "use strict";
 
     /**
-     * Checkerboard material with alternating colors
+     * Checker board material with alternating light and dark colors.
      *
      * @name CheckerboardMaterial
      * @constructor
@@ -12,7 +12,7 @@ define(['../Shaders/CheckerboardMaterial'], function(ShadersCheckerboardMaterial
         var t = template || {};
 
         /**
-         * Light color
+         * Light color. Adjacent to dark colors and diagonal to light colors.
          */
         this.lightColor = t.lightColor || {
             red : 1.0,
@@ -22,7 +22,7 @@ define(['../Shaders/CheckerboardMaterial'], function(ShadersCheckerboardMaterial
         };
 
         /**
-         * Dark color
+         * Dark color. Adjacent to light colors and diagonal to dark colors.
          */
         this.darkColor = t.darkColor || {
             red : 0.0,
@@ -32,14 +32,14 @@ define(['../Shaders/CheckerboardMaterial'], function(ShadersCheckerboardMaterial
         };
 
         /**
-         * Number of cells in the x directions
+         * Number of cells in the x direction.
          *
          * @type Number
          */
         this.sRepeat = t.sRepeat || 10.0;
 
         /**
-         * Number of cells in the y directions
+         * Number of cells in the y direction.
          *
          * @type Number
          */

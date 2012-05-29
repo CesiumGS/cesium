@@ -7,7 +7,10 @@ define([
 
    /**
     *
-    * Material for a brick wall. Gives control over brick and mortar properties.
+    * Procedural brick material generated with a combination of
+    * a simple brick pattern and simplex noise (for roughness).
+    * The brick wall is made up of brick and mortar, each of which
+    * can be controlled with various parameters.
     *
     * @name BrickMaterial
     * @constructor
@@ -16,7 +19,8 @@ define([
        var t = template || {};
 
        /**
-        * Brick color
+        * Color of the bricks.
+        * Red/brown/orange colors recommended.
         */
        this.brickColor = t.brickColor || {
            red : 0.7,
@@ -26,7 +30,8 @@ define([
        };
 
        /**
-        * Mortar color
+        * Color of the mortar (the space between bricks).
+        * White/tan colors recommended.
         */
        this.mortarColor = t.mortarColor || {
            red : 0.8,
@@ -36,7 +41,10 @@ define([
        };
 
        /**
-        * Controls the size of the bricks (mortar will get scaled as well)
+        * Controls the size of the bricks.
+        * Does not affect the brick-mortar ratio.
+        * Values between 0.1 (many small bricks) and
+        * 1.0 (one large brick) recommended.
         */
        this.brickSize = t.brickSize || {
            x : 0.30,
@@ -44,7 +52,9 @@ define([
        };
 
        /**
-        * Ratio between brick and mortar (values between 0.0 and 1.0)
+        * Ratio between brick and mortar.
+        * Values between 0.7 (high mortar content) and
+        * 0.9 (high brick content) recommended.
         */
        this.brickPct = t.brickPct || {
            x : 0.90,
@@ -52,14 +62,18 @@ define([
        };
 
        /**
-        * Controls brick roughness (values between 0.01 and 0.10 recommended)
+        * Controls brick roughness.
+        * Values between 0.01 (low roughness) and
+        * 1.0 (high roughness) recommended.
         *
         * @type {Number}
         */
-       this.brickRoughness = t.brickRoughness || 0.04;
+       this.brickRoughness = t.brickRoughness || 0.2;
 
        /**
-        * Controls mortar roughness (values between 0.0 and 0.5 recommended)
+        * Controls mortar roughness.
+        * Values between 0.01 (low roughness) and
+        * 1.0 (high roughness) recommended.
         *
         * @type {Number}
         */

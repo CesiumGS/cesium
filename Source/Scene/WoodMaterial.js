@@ -7,7 +7,8 @@ define([
 
    /**
     *
-    * Wood material
+    * Procedural wood texture generated with simplex noise.
+    * Creates rings of dark color around a few different points in the wood.
     *
     * @name WoodMaterial
     * @constructor
@@ -16,7 +17,8 @@ define([
        var t = template || {};
 
        /**
-        * Light wood color
+        * The wood's base color.
+        * Light brown recommended.
         */
        this.lightWoodColor = t.lightWoodColor || {
            red : 0.6,
@@ -26,7 +28,8 @@ define([
        };
 
        /**
-        * Dark wood color
+        * The wood's ring color.
+        * Dark brown recommended.
         */
        this.darkWoodColor = t.darkWoodColor || {
            red : 0.4,
@@ -36,31 +39,32 @@ define([
        };
 
        /**
-        * Controls the number of rings in the wood
+        * Controls the frequency of rings in the wood.
+        * Values between 0.1 (fewer rings) and
+        * 10.0 (many rings) recommended.
         *
         * @type {Number}
         */
        this.ringFrequency = t.ringFrequency || 4.0;
 
        /**
-        * Controls how noisy the wood pattern is in both directions
+        * Controls how noisy the ring pattern is in two directions.
+        * For example, if x and y are the same, the rings have a circular shape.
+        * If x and y are different, the rings are more amorphous.
+        * Values between 0.0 and 1.0 recommended.
         *
         * @type {Number}
         */
        this.noiseScale = t.noiseScale || {
-           x : 0.5,
-           y : 0.1,
+           x : 0.7,
+           y : 0.5,
        };
 
        /**
-        * Scales the noisiness determined by noiseScale
-        *
-        * @type {Number}
-        */
-       this.noisiness = t.noisiness || 3.0;
-
-       /**
-        * Controls how grainy the wood is (values between 10 and 50 recommended)
+        * Controls how grainy the wood is. Grains are represented by
+        * thin vertical slits of varying darkness.
+        * Values between 10.0 (fewer grains) and
+        * 50.0 (more grains) recommended.
         *
         * @type {Number}
         */
@@ -82,9 +86,6 @@ define([
            },
            u_noiseScale : function() {
                return that.noiseScale;
-           },
-           u_noisiness : function() {
-               return that.noisiness;
            },
            u_grainFrequency : function() {
                return that.grainFrequency;

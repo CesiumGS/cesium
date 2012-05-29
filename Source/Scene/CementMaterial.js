@@ -7,7 +7,9 @@ define([
 
    /**
     *
-    * Cement material
+    * Procedural cement material generated with simplex noise.
+    * Overall, a relatively homogeneous material with the ability
+    * to add small, rock-like bumps.
     *
     * @name CementMaterial
     * @constructor
@@ -16,7 +18,7 @@ define([
        var t = template || {};
 
        /**
-        * Cement color
+        * Cement color. White/tan values recommended.
         */
        this.cementColor = t.cementColor || {
            red : 0.95,
@@ -26,14 +28,18 @@ define([
        };
 
        /**
-        * Controls the size of the rock grains in the cement (values between 0.0 and 0.05 recommended)
+        * Controls the size of the rock grains in the cement.
+        * Values between 0.005 (small bumps) and
+        * 0.05 (large bumps) recommended.
         *
         * @type {Number}
         */
        this.grainScale = t.grainScale || 0.01;
 
        /**
-        * Controls how rough the surface looks (values between 0.0 and 1.0 recommended)
+        * Controls how rough the surface looks.
+        * Values between 0.1 (low roughness) and
+        * 1.0 (high roughness) recommended.
         *
         * @type {Number}
         */

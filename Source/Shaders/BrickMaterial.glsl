@@ -5,8 +5,6 @@ uniform vec2 u_brickPct;
 uniform float u_brickRoughness;
 uniform float u_mortarRoughness;
 
-#extension GL_OES_standard_derivatives : enable
-
 #define Integral(x, p) ((floor(x) * p) + max(fract(x) - (1.0 - p), 0.0))
 
 vec4 agi_getMaterialColor(float zDistance, vec2 st, vec3 str)
@@ -17,7 +15,7 @@ vec4 agi_getMaterialColor(float zDistance, vec2 st, vec3 str)
         position.x += 0.5;    
         
     //calculate whether to use brick or mortar (does AA)
-    vec2 filterWidth = vec2(0.02); //fwidth(position);
+    vec2 filterWidth = vec2(0.02);
     vec2 useBrick = (Integral(position + filterWidth, u_brickPct) - 
                        Integral(position, u_brickPct)) / filterWidth;
     float useBrickFinal = useBrick.x * useBrick.y;
@@ -25,7 +23,7 @@ vec4 agi_getMaterialColor(float zDistance, vec2 st, vec3 str)
     
     //Apply noise to brick
     vec2 brickScaled = vec2(st.x / 0.1, st.y / 0.006);
-    float brickNoise = abs(agi_snoise(brickScaled) * u_brickRoughness);
+    float brickNoise = abs(agi_snoise(brickScaled) * u_brickRoughness / 5.0);
     color.xy += brickNoise * useBrickFinal;
     
     //Apply noise to mortar

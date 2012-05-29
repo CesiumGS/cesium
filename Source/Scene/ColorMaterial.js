@@ -3,7 +3,7 @@ define(['../Shaders/ColorMaterial'], function(ShadersColorMaterial) {
     "use strict";
 
     /**
-     * DOC_TBA
+     * A material with a single color.
      *
      * @name ColorMaterial
      * @constructor
@@ -12,7 +12,7 @@ define(['../Shaders/ColorMaterial'], function(ShadersColorMaterial) {
         var t = template || {};
 
         /**
-         * DOC_TBA
+         * Color of the material.
          */
         this.color = t.color || {
             red : 1.0,

@@ -3,7 +3,7 @@ define(['../Shaders/HorizontalStripeMaterial'], function(ShadersHorizontalStripe
     "use strict";
 
     /**
-     * DOC_TBA
+     * Alternating light and dark horizontal stripes.
      *
      * @name HorizontalStripeMaterial
      * @constructor
@@ -12,7 +12,7 @@ define(['../Shaders/HorizontalStripeMaterial'], function(ShadersHorizontalStripe
         var t = template || {};
 
         /**
-         * DOC_TBA
+         * Color of the light stripes.
          */
         this.lightColor = t.lightColor || {
             red : 1.0,
@@ -22,7 +22,7 @@ define(['../Shaders/HorizontalStripeMaterial'], function(ShadersHorizontalStripe
         };
 
         /**
-         * DOC_TBA
+         * Color of the dark stripes.
          */
         this.darkColor = t.darkColor || {
             red : 0.0,
@@ -32,14 +32,16 @@ define(['../Shaders/HorizontalStripeMaterial'], function(ShadersHorizontalStripe
         };
 
         /**
-         * DOC_TBA
+         * How much the stripes are shifted from the starting point.
+         * The dark color starts at the left with an offset of 0.0.
+         * The light color starts at the left with an offset of 0.2.
          *
          * @type Number
          */
         this.offset = t.offset || 0.0;
 
         /**
-         * DOC_TBA
+         * The total number of stripes (half dark and half light).
          *
          * @type Number
          */

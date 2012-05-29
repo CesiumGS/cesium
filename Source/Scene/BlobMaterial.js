@@ -8,7 +8,8 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * Procedural blob material generated with cellular noise.
+     * Resembles water, but clumped in a cell pattern.
      *
      * @name BlobMaterial
      * @constructor
@@ -17,7 +18,7 @@ define([
         var t = template || {};
 
         /**
-         * DOC_TBA
+         * Color between the cells.
          */
         this.lightColor = t.lightColor || {
             red : 1.0,
@@ -27,7 +28,7 @@ define([
         };
 
         /**
-         * DOC_TBA
+         * Cell color.
          */
         this.darkColor = t.darkColor || {
             red : 0.0,
@@ -37,7 +38,9 @@ define([
         };
 
         /**
-         * DOC_TBA
+         * Cell frequency.
+         * Values between 1.0 (one large cell) and
+         * 50.0 (many small cells) recommended.
          *
          * @type Number
          */
