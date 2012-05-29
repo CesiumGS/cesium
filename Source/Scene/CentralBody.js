@@ -26,6 +26,7 @@ define([
         '../Core/ExtentTessellator',
         '../Core/PlaneTessellator',
         '../Core/JulianDate',
+        '../Core/Transforms',
         '../Renderer/BufferUsage',
         '../Renderer/CullFace',
         '../Renderer/DepthFunction',
@@ -79,6 +80,7 @@ define([
         ExtentTessellator,
         PlaneTessellator,
         JulianDate,
+        Transforms,
         BufferUsage,
         CullFace,
         DepthFunction,
@@ -1318,14 +1320,6 @@ define([
         return [upperLeft.x, upperLeft.y, upperLeft.z, lowerLeft.x, lowerLeft.y, lowerLeft.z, upperRight.x, upperRight.y, upperRight.z, lowerRight.x, lowerRight.y, lowerRight.z];
     };
 
-    function toWindowCoords(viewProjMatrix, viewportTransformation, point) {
-        var pnt = new Cartesian4(point.x, point.y, point.z, 1.0);
-        pnt = viewProjMatrix.multiplyWithVector(pnt);
-        pnt = pnt.multiplyWithScalar(1.0 / pnt.w);
-        pnt = viewportTransformation.multiplyWithVector(pnt);
-        return pnt.getXY();
-    }
-
     CentralBody.prototype._computePoleQuad = function(maxLat, maxGivenLat, viewProjMatrix, viewportTransformation) {
         var pt1 = this._ellipsoid.toCartesian(new Cartographic2(0.0, maxGivenLat));
         var pt2 = this._ellipsoid.toCartesian(new Cartographic2(Math.PI, maxGivenLat));
@@ -1344,9 +1338,9 @@ define([
         var screenRight = center.add(right.multiplyWithScalar(radius));
         var screenUp = center.add(Cartesian3.UNIT_Z.cross(right).normalize().multiplyWithScalar(radius));
 
-        center = toWindowCoords(viewProjMatrix, viewportTransformation, center);
-        screenRight = toWindowCoords(viewProjMatrix, viewportTransformation, screenRight);
-        screenUp = toWindowCoords(viewProjMatrix, viewportTransformation, screenUp);
+        center = Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, center);
+        screenRight = Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, screenRight);
+        screenUp = Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, screenUp);
 
         var halfWidth = Math.floor(Math.max(screenUp.subtract(center).magnitude(), screenRight.subtract(center).magnitude()));
         var halfHeight = halfWidth;
