@@ -66,7 +66,7 @@ define([
          * west properties in radians.
          *
          * @constant
-         * @type {Object}
+         * @type {Extent}
          */
         this.maxExtent = this._list[0].provider.maxExtent;
 

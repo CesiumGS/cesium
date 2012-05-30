@@ -1,9 +1,11 @@
 /*global defineSuite*/
 defineSuite([
          'Scene/Tile',
+         'Core/Extent',
          'Core/Math'
      ], function(
          Tile,
+         Extent,
          CesiumMath) {
     "use strict";
     /*global document,it,expect*/
@@ -27,12 +29,12 @@ defineSuite([
     it("throws without description.zoom", function() {
         expect(function() {
             return new Tile({
-                extent : {
-                    north : CesiumMath.PI_OVER_FOUR,
-                    south : 0.0,
-                    east : CesiumMath.PI_OVER_FOUR,
-                    west : -CesiumMath.PI_OVER_FOUR
-                },
+                extent : new Extent(
+                    -CesiumMath.PI_OVER_FOUR,
+                    0.0,
+                    CesiumMath.PI_OVER_FOUR,
+                    CesiumMath.PI_OVER_FOUR
+                ),
                 x : 0,
                 y : 0
             });
@@ -58,12 +60,12 @@ defineSuite([
 
     it("creates x, y, zoom on construction", function() {
         var desc = {
-            extent : {
-                north : CesiumMath.toRadians(85.05112878),
-                south : CesiumMath.toRadians(-85.05112878),
-                west : -CesiumMath.PI,
-                east : CesiumMath.PI
-            },
+            extent : new Extent(
+                    -CesiumMath.PI,
+                    CesiumMath.toRadians(-85.05112878),
+                    CesiumMath.PI,
+                    CesiumMath.toRadians(85.05112878)
+            ),
             zoom : 0
         };
         var tile = new Tile(desc);

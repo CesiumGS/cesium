@@ -71,12 +71,14 @@
 /*global define*/
 define([
         '../Core/DeveloperError',
+        '../Core/Extent',
         '../Core/Math',
         '../Core/jsonp',
         './BingMapsStyle',
         './Projections'
     ], function(
         DeveloperError,
+        Extent,
         CesiumMath,
         jsonp,
         BingMapsStyle,
@@ -150,14 +152,14 @@ define([
          * The cartographic extent of the base tile, with north, south, east and
          * west properties in radians.
          *
-         * @type {Object}
+         * @type {Extent}
          */
-        this.maxExtent = {
-            north : CesiumMath.toRadians(85.05112878),
-            south : CesiumMath.toRadians(-85.05112878),
-            west : -CesiumMath.PI,
-            east : CesiumMath.PI
-        };
+        this.maxExtent = new Extent(
+            -CesiumMath.PI,
+            CesiumMath.toRadians(-85.05112878),
+            CesiumMath.PI,
+            CesiumMath.toRadians(85.05112878)
+        );
 
         /**
          * The width of every image loaded.

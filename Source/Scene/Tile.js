@@ -17,7 +17,7 @@ define([
      * @name Tile
      * @constructor
      *
-     * @param {Object} description.extent The cartographic extent of the tile, with north, south, east and
+     * @param {Extent} description.extent The cartographic extent of the tile, with north, south, east and
      * west properties in radians.
      * @param {Number} description.x The tile x coordinate.
      * @param {Number} description.y The tile y coordinate.
@@ -59,7 +59,7 @@ define([
          * The cartographic extent of the tile, with north, south, east and
          * west properties in radians.
          *
-         * @type Object
+         * @type Extent
          */
         this.extent = undefined;
 
@@ -128,7 +128,7 @@ define([
      *
      * @memberof Tile
      *
-     * @param {Object} extent The cartographic extent of the tile, with north, south, east and
+     * @param {Extent} extent The cartographic extent of the tile, with north, south, east and
      * west properties in radians.
      * @param {Number} zoom The tile zoom level.
      *
@@ -158,25 +158,23 @@ define([
      * @param {Number} y The y coordinate.
      * @param {Number} zoom The tile zoom level.
      *
-     * @return {Object} The cartographic extent of the tile, with north, south, east and
+     * @return {Extent} The cartographic extent of the tile, with north, south, east and
      * west properties in radians.
      */
     Tile.tileXYToExtent = function(x, y, zoom) {
-        var extent = {};
-
         // Lat
         var invZoom = 4.0 * Math.PI / (1 << zoom);
         var k = Math.exp(CesiumMath.TWO_PI - (y * invZoom));
-        extent.north = Math.asin((k - 1.0) / (k + 1.0));
+        var north = Math.asin((k - 1.0) / (k + 1.0));
         k = Math.exp(CesiumMath.TWO_PI - ((y + 1) * invZoom));
-        extent.south = Math.asin((k - 1.0) / (k + 1.0));
+        var south = Math.asin((k - 1.0) / (k + 1.0));
 
         // Lon
         invZoom = Math.PI / (1 << (zoom - 1.0));
-        extent.west = x * invZoom - Math.PI;
-        extent.east = (x + 1.0) * invZoom - Math.PI;
+        var west = x * invZoom - Math.PI;
+        var east = (x + 1.0) * invZoom - Math.PI;
 
-        return extent;
+        return new Extent(west, south, east, north);
     };
 
     /**

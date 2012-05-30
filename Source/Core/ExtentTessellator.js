@@ -114,7 +114,7 @@ define([
      * Creates a mesh from a cartographic extent.
      *
      * @param {Ellipsoid} description.ellipsoid The ellipsoid on which the extent lies. Defaults to a WGS84 ellipsoid.
-     * @param {Object} description.extent A cartographic extent with north, south, east and west properties in radians.
+     * @param {Extent} description.extent A cartographic extent with north, south, east and west properties in radians.
      * @param {Number} description.granularity The distance, in radians, between each latitude and longitude.
      * Determines the number of positions in the buffer. Defaults to 0.1.
      * @param {Number} description.altitude The height from the surface of the ellipsoid. Defaults to 0.
@@ -143,12 +143,12 @@ define([
      * // Create a vertex array for rendering a wireframe extent.
      * var mesh = ExtentTessellator.compute({
      *     ellipsoid : Ellipsoid.WGS84,
-     *     extent : {
-     *         north : CesiumMath.toRadians(42.0),
-     *         south : CesiumMath.toRadians(39.0),
-     *         east : CesiumMath.toRadians(-74.0),
-     *         west : CesiumMath.toRadians(-80.0)
-     *     },
+     *     extent : new Extent(
+     *         CesiumMath.toRadians(-80.0),
+     *         CesiumMath.toRadians(39.0),
+     *         CesiumMath.toRadians(-74.0),
+     *         CesiumMath.toRadians(42.0)
+     *     ),
      *     granularity : 0.01,
      *     altitude : 10000.0
      * });
@@ -179,12 +179,12 @@ define([
         desc.vertices = vertices;
         desc.texCoords = texCoords;
         desc.indices = indices;
-        desc.boundaryExtent = {
-            north : desc.extent.north + desc.granularity * desc.boundaryWidth,
-            south : desc.extent.south - desc.granularity * desc.boundaryWidth,
-            west : desc.extent.west - desc.granularity * desc.boundaryWidth,
-            east : desc.extent.east + desc.granularity * desc.boundaryWidth
-        };
+        desc.boundaryExtent = new Extent(
+            desc.extent.west - desc.granularity * desc.boundaryWidth,
+            desc.extent.south - desc.granularity * desc.boundaryWidth,
+            desc.extent.east + desc.granularity * desc.boundaryWidth,
+            desc.extent.north + desc.granularity * desc.boundaryWidth
+        );
 
         ExtentTessellator._computeVertices(desc);
 
@@ -218,7 +218,7 @@ define([
      * Creates arrays of vertex attributes and indices from a cartographic extent.
      *
      * @param {Ellipsoid} description.ellipsoid The ellipsoid on which the extent lies. Defaults to a WGS84 ellipsoid.
-     * @param {Object} description.extent A cartographic extent with north, south, east and west properties in radians.
+     * @param {Extent} description.extent A cartographic extent with north, south, east and west properties in radians.
      * @param {Number} description.granularity The distance, in radians, between each latitude and longitude.
      * Determines the number of positions in the buffer. Defaults to 0.1.
      * @param {Number} description.altitude The height from the surface of the ellipsoid. Defaults to 0.
@@ -318,12 +318,12 @@ define([
         desc.vertices = [];
         desc.texCoords = [];
         desc.indices = [];
-        desc.boundaryExtent = {
-            north : desc.extent.north + desc.granularity * desc.boundaryWidth,
-            south : desc.extent.south - desc.granularity * desc.boundaryWidth,
-            west : desc.extent.west - desc.granularity * desc.boundaryWidth,
-            east : desc.extent.east + desc.granularity * desc.boundaryWidth
-        };
+        desc.boundaryExtent = new Extent(
+            desc.extent.west - desc.granularity * desc.boundaryWidth,
+            desc.extent.south - desc.granularity * desc.boundaryWidth,
+            desc.extent.east + desc.granularity * desc.boundaryWidth,
+            desc.extent.north + desc.granularity * desc.boundaryWidth
+        );
 
         ExtentTessellator._computeVertices(desc);
 

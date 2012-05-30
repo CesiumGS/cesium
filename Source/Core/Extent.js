@@ -168,14 +168,39 @@ define([
         return positions;
     };
 
+    /**
+     * DOC_TBA
+     *
+     * @param {Extent} extent DOC_TBA
+     * @param {Ellipsoid} ellipsoid DOC_TBA
+     * @param {Number} time DOC_TBA
+     * @param {Object} projection DOC_TBA
+     *
+     * @returns {BoundingSphere} DOC_TBA
+     */
     Extent.computeMorphBoundingSphere = function(extent, ellipsoid, time, projection) {
         return new BoundingSphere(Extent._computePositions(extent, ellipsoid, time, projection));
     };
 
+    /**
+     * DOC_TBA
+     *
+     * @param {Extent} extent DOC_TBA
+     * @param {Ellipsoid} ellipsoid DOC_TBA
+     * @returns {BoundingSphere} DOC_TBA
+     */
     Extent.compute3DBoundingSphere = function(extent, ellipsoid) {
         return new BoundingSphere(Extent._computePositions(extent, ellipsoid));
     };
 
+    /**
+     * DOC_TBA
+     *
+     * @param {Extent} extent DOC_TBA
+     * @param {Ellipsoid} ellipsoid DOC_TBA
+     *
+     * @returns {Object} DOC_TBA
+     */
     Extent.computeOccludeePoint = function(extent, ellipsoid) {
         ellipsoid = ellipsoid || Ellipsoid.WGS84;
         var positions = Extent._computePositions(extent, ellipsoid);
@@ -191,6 +216,13 @@ define([
         };
     };
 
+    /**
+     * DOC_TBA
+     *
+     * @param {Extent} extent DOC_TBA
+     * @param {Object} projection DOC_TBA
+     * @returns {Rectangle} DOC_TBA
+     */
     Extent.computeBoundingRectangle = function(extent, projection) {
         if (typeof extent === 'undefined') {
             throw new DeveloperError("extent is required.", "extent");
@@ -212,6 +244,13 @@ define([
         return new Rectangle(lowerLeft.x, lowerLeft.y, diagonal.x, diagonal.y);
     };
 
+    /**
+     * DOC_TBA
+     *
+     * @param {Extent} extent DOC_TBA
+     * @param {Object} projection DOC_TBA
+     * @returns {BoundingSphere} DOC_TBA
+     */
     Extent.compute2DBoundingSphere = function(extent, projection) {
         var rect = Extent.computeBoundingRectangle(extent, projection);
         var center = new Cartesian3((2.0 * rect.x + rect.width) * 0.5, (2.0 * rect.y + rect.height) * 0.5, 0.0);

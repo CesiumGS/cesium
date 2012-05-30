@@ -194,12 +194,12 @@ define([
         ellipsoid = ellipsoid || Ellipsoid.WGS84;
 
         this._ellipsoid = ellipsoid;
-        this._maxExtent = {
-            north : CesiumMath.PI_OVER_TWO,
-            south : -CesiumMath.PI_OVER_TWO,
-            west : -CesiumMath.PI,
-            east : CesiumMath.PI
-        };
+        this._maxExtent = new Extent(
+            -CesiumMath.PI,
+            -CesiumMath.PI_OVER_TWO,
+            CesiumMath.PI,
+            CesiumMath.PI_OVER_TWO
+        );
         this._camera = camera;
         this._rootTile = new Tile({
             extent : this._maxExtent,
@@ -1373,12 +1373,12 @@ define([
 
         // handle north pole
         if (this._dayTileProvider.maxExtent.north < CesiumMath.PI_OVER_TWO) {
-            extent = {
-                north : CesiumMath.PI_OVER_TWO,
-                south : this._dayTileProvider.maxExtent.north,
-                east : Math.PI,
-                west : -Math.PI
-            };
+            extent = new Extent(
+                -Math.PI,
+                this._dayTileProvider.maxExtent.north,
+                Math.PI,
+                CesiumMath.PI_OVER_TWO
+            );
             boundingVolume = Extent.compute3DBoundingSphere(extent, this._ellipsoid);
             frustumCull = this._camera.getVisibility(boundingVolume, BoundingSphere.planeSphereIntersect) === Intersect.OUTSIDE;
             occludeePoint = Extent.computeOccludeePoint(extent, this._ellipsoid).occludeePoint;
@@ -1422,12 +1422,12 @@ define([
 
         // handle south pole
         if (this._dayTileProvider.maxExtent.south > -CesiumMath.PI_OVER_TWO) {
-            extent = {
-                north : this._dayTileProvider.maxExtent.south,
-                south : -CesiumMath.PI_OVER_TWO,
-                east : Math.PI,
-                west : -Math.PI
-            };
+            extent = new Extent(
+                -Math.PI,
+                -CesiumMath.PI_OVER_TWO,
+                Math.PI,
+                this._dayTileProvider.maxExtent.south
+            );
             boundingVolume = Extent.compute3DBoundingSphere(extent, this._ellipsoid);
             frustumCull = this._camera.getVisibility(boundingVolume, BoundingSphere.planeSphereIntersect) === Intersect.OUTSIDE;
             occludeePoint = Extent.computeOccludeePoint(extent, this._ellipsoid).occludeePoint;
