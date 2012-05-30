@@ -82,46 +82,22 @@
                 new Cesium.Cartographic2(-80.0, 36.0)
             ]));
             polygon.material.color = {
-                    red: 0.0,
-                    green: 0.0,
-                    blue: 0.0,
-                    alpha: 1.0
+                red: 0.0,
+                green: 0.0,
+                blue: 0.0,
+                alpha: 1.0
             };
 
-            //Load two images at once
-            var alphaMapImage =   "../../Images/earthcloudmaptrans.jpg";
-            var diffuseMapImage = "../../Images/NE2_50M_SR_W_2048.jpg";
-            var imageSources = [alphaMapImage, diffuseMapImage];
-            var images = [];
-            var imageCount = imageSources.length;
-            var loadedCount = 0;
-
-            var allImagesLoaded = function() {
+            var image = new Image();
+            image.onload = function() {
                 polygon.material = new Cesium.AlphaMapMaterial({
-                    alphaMapTexture : scene.getContext().createTexture2D({
-                        source : images[0],
-                        pixelFormat : Cesium.PixelFormat.RGB
-                    }),
-                    diffuseMapTexture : scene.getContext().createTexture2D({
-                        source : images[1],
-                        pixelFormat : Cesium.PixelFormat.RGB
+                    texture : scene.getContext().createTexture2D({
+                        source : image,
+                        pixelFormat : Cesium.PixelFormat.RGBA
                     })
                 });
             };
-
-            var onload = function() {
-                loadedCount++;
-                if(loadedCount === imageCount) {
-                    allImagesLoaded();
-                }
-            };
-
-            for (var i = 0; i < imageCount; i++) {
-                var image = new Image();
-                image.onload = onload;
-                image.src = imageSources[i];
-                images[i] = image;
-            }
+            image.src = "../../Images/earthcloudmaptrans.jpg";
 
             primitives.add(polygon);
         };
