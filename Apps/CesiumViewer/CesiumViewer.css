@@ -91,3 +91,41 @@ html,body {
     right: 6px;
     padding: 5px 10px;
 }
+
+.viewIcon {
+    background-image: url('Images/viewControlBar.png');
+    background-repeat: no-repeat;
+    width: 24px;
+    height: 24px;
+}
+
+.view2D {
+    background-position: -24px 0;
+}
+
+.view3D {
+    background-position: -48px 0;
+}
+
+.viewColumbus {
+    background-position: -72px 0;
+}
+
+.toggleSun {
+    background-position: -96px 0;
+}
+
+.viewFullScreen {
+    background-position: -120px 0;
+}
+
+.viewButtons {
+    display: block;
+    position: fixed;
+    top: 5px;
+    right: 5px;
+}
+
+.imagerySelector {
+    display: block;
+}

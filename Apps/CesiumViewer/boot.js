@@ -45,6 +45,8 @@ require({
     'dijit/form/Button',
     'dijit/form/TextBox',
     'dijit/form/ToggleButton',
+    'dijit/form/DropDownButton',
+    'dijit/TooltipDialog',
     'CesiumDojo/TimelineWidget',
     'CesiumViewer/CesiumViewer',
     'dojo/domReady!'
