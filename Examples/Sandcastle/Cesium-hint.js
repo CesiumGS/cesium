@@ -64,7 +64,7 @@
                   "if in instanceof new null return switch throw true try typeof var void while with").split(" ");
   var knownGlobals = "Cesium CesiumWidget dojo dijit dojox".split(" ");
 
-  CodeMirror.javascriptHint = function(editor) {
+  CodeMirror.cesiumHint = function(editor) {
     return scriptHint(editor, javascriptKeywords,
       function (e, cur) {
         var tprop = e.getTokenAt(cur);
@@ -87,22 +87,23 @@
       for (var name in obj) maybeAdd(name);
     }
 
+    var win = (CodeMirror.cesiumWindow && CodeMirror.cesiumWindow.autocomplete) || window;
     if (context) {
       // If this is a property, see if it belongs to some object we can
       // find in the current environment.
       var obj = context.pop(), base;
       if (obj.className == "variable")
-        base = window[obj.string];
+        base = win[obj.string];
       else if (obj.className == "string")
         base = "";
       else if (obj.className == "atom")
         base = 1;
       else if (obj.className == "function") {
-        if (window.jQuery != null && (obj.string == '$' || obj.string == 'jQuery') &&
-            (typeof window.jQuery == 'function'))
-          base = window.jQuery();
-        else if (window._ != null && (obj.string == '_') && (typeof window._ == 'function'))
-          base = window._();
+        if (win.jQuery != null && (obj.string == '$' || obj.string == 'jQuery') &&
+            (typeof win.jQuery == 'function'))
+          base = win.jQuery();
+        else if (win._ != null && (obj.string == '_') && (typeof win._ == 'function'))
+          base = win._();
       }
       while (base != null && context.length)
         base = base[context.pop().string];
@@ -112,7 +113,7 @@
       // If not, just look in the window object and any local scope
       // (reading into JS mode internals to get at the local variables)
       for (var v = token.state.localVars; v; v = v.next) maybeAdd(v.name);
-      gatherCompletions(window);
+      gatherCompletions(win);
       forEach(keywords, maybeAdd);
     }
     return found.sort();

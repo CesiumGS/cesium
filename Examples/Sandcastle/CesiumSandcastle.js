@@ -123,12 +123,13 @@ require({
             bucketPane = registry.byId('bucketPane');
 
         CodeMirror.commands.runCesium = function() {
+            CodeMirror.cesiumWindow = undefined;
             cesiumContainer.selectChild(bucketPane);
             bucketFrame.contentWindow.location.reload();
         };
 
         CodeMirror.commands.autocomplete = function(cm) {
-            CodeMirror.simpleHint(cm, CodeMirror.javascriptHint);
+            CodeMirror.simpleHint(cm, CodeMirror.cesiumHint);
         };
 
         editor = CodeMirror.fromTextArea(document.getElementById("code"), {
@@ -144,6 +145,7 @@ require({
         window.addEventListener('message', function (e) {
             if (e.data === 'reload') {
                 logOutput.innerHTML = "";
+                CodeMirror.cesiumWindow = bucketFrame.contentWindow;
                 var bucketDoc = bucketFrame.contentDocument;
                 var sc = bucketDoc.createElement('script');
                 sc.type = 'text/javascript';
