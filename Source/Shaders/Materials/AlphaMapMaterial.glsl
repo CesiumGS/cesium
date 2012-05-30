@@ -1,4 +1,5 @@
-uniform sampler2D u_texture;
+uniform sampler2D u_alphaMapTexture;
+uniform sampler2D u_diffuseMapTexture;
 uniform vec2 u_repeat;
 
 //x,y,z : normal in tangent space
@@ -11,8 +12,10 @@ vec3 agi_getMaterialNormal(float zDistance, vec2 st, vec3 str, vec3 viewWC)
 //    w : alpha
 vec4 agi_getMaterialDiffuseComponent(float zDistance, vec2 st, vec3 str, vec3 viewWC)
 {
-    float alpha = texture2D(u_texture, fract(u_repeat * st)).r;
-    return vec4(0.0, 0.0, 0.0, alpha); //alpha on black
+    vec2 repeatAmount = fract(u_repeat * st);
+    float alpha = texture2D(u_alphaMapTexture, repeatAmount).x;
+    vec3 diffuseColor = texture2D(u_diffuseMapTexture, repeatAmount).xyz;
+    return vec4(diffuseColor, alpha); //alpha on black
 }
 
 //x,y,z : specular color

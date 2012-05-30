@@ -9,11 +9,10 @@ define([
 
     /**
      *
-     * Contains a texture as an alpha map.
-     * Input: Grayscale image where black is 0% alpha
+     * Combines an alpha map with a diffuse map.
+     * Alpha map: Grayscale texture where black is 0% alpha
      * and white is 100% alpha.
-     * Result: Black background with transparent areas where
-     * the texture was dark/black.
+     * Diffuse map: Any 2D RGB texture.
      *
      * @name AlphaMapMaterial
      * @constructor
@@ -24,7 +23,12 @@ define([
         /**
          *  2D RGB grayscale alpha map texture.
          */
-        this.texture = t.texture;
+        this.alphaMapTexture = t.alphaMapTexture;
+
+        /**
+         *  2D RGB diffuse map texture.
+         */
+        this.diffuseMapTexture = t.diffuseMapTexture;
 
         /**
          * Number of texture repeats in the x direction.
@@ -42,12 +46,17 @@ define([
 
         var that = this;
         this._uniforms = {
-            u_texture : function() {
-                if (typeof that.texture === 'undefined') {
-                    throw new DeveloperError("AlphaMapMaterial requires a texture.");
+            u_alphaMapTexture : function() {
+                if (typeof that.alphaMapTexture === 'undefined') {
+                    throw new DeveloperError("Alpha map required.");
                 }
-
-                return that.texture;
+                return that.alphaMapTexture;
+            },
+            u_diffuseMapTexture : function() {
+                if (typeof that.diffuseMapTexture === 'undefined') {
+                    throw new DeveloperError("Diffuse map required.");
+                }
+                return that.diffuseMapTexture;
             },
             u_repeat : function() {
                 return {

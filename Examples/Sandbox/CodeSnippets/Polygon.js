@@ -87,16 +87,41 @@
                     blue: 0.0,
                     alpha: 1.0
             };
-            var image = new Image();
-            image.onload = function() {
+
+            //Load two images at once
+            var alphaMapImage =   "../../Images/earthcloudmaptrans.jpg";
+            var diffuseMapImage = "../../Images/NE2_50M_SR_W_2048.jpg";
+            var imageSources = [alphaMapImage, diffuseMapImage];
+            var images = [];
+            var imageCount = imageSources.length;
+            var loadedCount = 0;
+
+            var allImagesLoaded = function() {
                 polygon.material = new Cesium.AlphaMapMaterial({
-                    texture : scene.getContext().createTexture2D({
-                        source : image,
+                    alphaMapTexture : scene.getContext().createTexture2D({
+                        source : images[0],
+                        pixelFormat : Cesium.PixelFormat.RGB
+                    }),
+                    diffuseMapTexture : scene.getContext().createTexture2D({
+                        source : images[1],
                         pixelFormat : Cesium.PixelFormat.RGB
                     })
                 });
             };
-            image.src = "../../Images/earthcloudmaptrans.jpg";
+
+            var onload = function() {
+                loadedCount++;
+                if(loadedCount === imageCount) {
+                    allImagesLoaded();
+                }
+            };
+
+            for (var i = 0; i < imageCount; i++) {
+                var image = new Image();
+                image.onload = onload;
+                image.src = imageSources[i];
+                images[i] = image;
+            }
 
             primitives.add(polygon);
         };
