@@ -68,25 +68,76 @@
             <div data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: 'JavaScript code'">
             <textarea id="code" name="code">
 require({
-    baseUrl : '../../Source',
+    baseUrl : '../..',
     packages: [
-        { name: 'dojo', location: '../ThirdParty/dojo-release-1.7.2-src/dojo' },
-        { name: 'dijit', location: '../ThirdParty/dojo-release-1.7.2-src/dijit' },
-        { name: 'dojox', location: '../ThirdParty/dojo-release-1.7.2-src/dojox' }
+        { name: 'dojo', location: 'ThirdParty/dojo-release-1.7.2-src/dojo' },
+        { name: 'dijit', location: 'ThirdParty/dojo-release-1.7.2-src/dijit' },
+        { name: 'dojox', location: 'ThirdParty/dojo-release-1.7.2-src/dojox' },
+        { name: 'Source', location: 'Source' },
+        { name: 'Core', location: 'Source/Core' },
+        { name: 'DynamicScene', location: 'Source/DynamicScene' },
+        { name: 'Renderer', location: 'Source/Renderer' },
+        { name: 'Scene', location: 'Source/Scene' },
+        { name: 'Shaders', location: 'Source/Shaders' },
+        { name: 'Timeline', location: 'Source/Timeline' },
+        { name: 'ThirdParty', location: 'Source/ThirdParty' },
+        { name: 'DojoWidgets', location: 'Apps/Dojo/Widgets' },
+        { name: 'DojoUtilities', location : 'Apps/Dojo/Utilities' }
     ]
 }, [
-    'Cesium',
+    'Source/Cesium',
+    'DojoWidgets/CesiumWidget',
+    'dojo/on',
+    'dojo/dom',
     'dojo/parser',
     'dijit/form/Button',
     'dijit/form/ToggleButton'
 ], function(
-    Cesium)
+    Cesium, CesiumWidget, on, dom)
 {
     "use strict";
+
     //A real application should require only the subset of modules that
     //are actually used, instead of requiring the Cesium module, which
     //includes everything.
 
+    var cesiumWidget = new CesiumWidget({
+        postSetup : function(widget) {
+            ///////////////////////////////////////////////////////////////////////////
+            // Demo buttons:
+
+            var cb = widget.centralBody;
+            dojo.byId("toolbar").innerHTML = "Demo buttons: ";
+
+            var button1 = new dijit.form.ToggleButton({
+                label: "Ground Atmosphere",
+                iconClass: 'dijitCheckBoxIcon',
+                checked: cb.showGroundAtmosphere,
+                onChange: function (newValue) {
+                    cb.showGroundAtmosphere = newValue;
+                }
+            }).placeAt("toolbar");
+
+            var button2 = new dijit.form.ToggleButton({
+                label: "Sky Atmosphere",
+                iconClass: 'dijitCheckBoxIcon',
+                checked: cb.showSkyAtmosphere,
+                onChange: function (newValue) {
+                    cb.showSkyAtmosphere = newValue;
+                }
+            }).placeAt("toolbar");
+        },
+        onSetupError : function(widget, error) {
+            console.log(error);
+        }
+    });
+    cesiumWidget.placeAt(dom.byId("cesiumContainer"));
+
+    on(window, 'resize', function() {
+        cesiumWidget.resize();
+    });
+
+/*
     var canvas = document.getElementById("glCanvas");
     var ellipsoid = Cesium.Ellipsoid.WGS84; // Used in many Sandbox examples
     var scene = new Cesium.Scene(canvas);
@@ -203,6 +254,7 @@ require({
         scene.getCamera().frustum.aspectRatio = width / height;
     };
     window.onresize();
+*/
     console.log('Cesium started.');
 });
 </textarea>

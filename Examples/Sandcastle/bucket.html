@@ -20,7 +20,7 @@
         height: 100%;
         overflow: hidden;
     }
-    #glCanvas {
+    #glCanvas, #cesiumContainer {
         display: block;
         position: absolute;
         top: 0;
@@ -40,7 +40,8 @@
     </style>
 </head>
 <body class="claro">
-    <canvas id="glCanvas" width="100" height="100"></canvas>
+    <!--  canvas id="glCanvas" width="100" height="100"></canvas  -->
+    <div id="cesiumContainer"></div>
     <div id="toolbar"></div>
 
     <script type="text/javascript">
