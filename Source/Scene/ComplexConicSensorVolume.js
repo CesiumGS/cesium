@@ -21,7 +21,8 @@ define([
         '../Shaders/ConstructiveSolidGeometry',
         '../Shaders/SensorVolume',
         '../Shaders/ComplexConicSensorVolumeVS',
-        '../Shaders/ComplexConicSensorVolumeFS'
+        '../Shaders/ComplexConicSensorVolumeFS',
+        './SceneMode'
     ], function(
         DeveloperError,
         combine,
@@ -44,7 +45,8 @@ define([
         ShadersConstructiveSolidGeometry,
         ShadersSensorVolume,
         ComplexConicSensorVolumeVS,
-        ComplexConicSensorVolumeFS) {
+        ComplexConicSensorVolumeFS,
+        SceneMode) {
     "use strict";
 
     var attributeIndices = {
@@ -240,6 +242,7 @@ define([
         };
         this._drawUniforms = null;
         this._pickUniforms = null;
+        this._mode = SceneMode.SCENE3D;
     }
 
     ComplexConicSensorVolume.prototype._getBoundingVolume = function() {
@@ -325,6 +328,11 @@ define([
      * @exception {DeveloperError} this.radius must be greater than or equal to zero.
      */
     ComplexConicSensorVolume.prototype.update = function(context, sceneState) {
+        this._mode = sceneState.mode;
+        if (this._mode !== SceneMode.SCENE3D) {
+            return;
+        }
+
         if (this.innerHalfAngle > this.outerHalfAngle) {
             throw new DeveloperError("this.innerHalfAngle cannot be greater than this.outerHalfAngle.");
         }
@@ -403,7 +411,7 @@ define([
      * @memberof ComplexConicSensorVolume
      */
     ComplexConicSensorVolume.prototype.render = function(context) {
-        if (this.show) {
+        if (this._mode === SceneMode.SCENE3D && this.show) {
             context.draw({
                 primitiveType : PrimitiveType.TRIANGLES,
                 shaderProgram : this._sp,
@@ -419,7 +427,7 @@ define([
      * @memberof ComplexConicSensorVolume
      */
     ComplexConicSensorVolume.prototype.updateForPick = function(context) {
-        if (this.show) {
+        if (this._mode === SceneMode.SCENE3D && this.show) {
             // Since this ignores all other materials, if a material does discard, the sensor will still be picked.
             var fsSource =
                 "#define RENDER_FOR_PICK 1\n" +
@@ -452,7 +460,7 @@ define([
      * @memberof ComplexConicSensorVolume
      */
     ComplexConicSensorVolume.prototype.renderForPick = function(context, framebuffer) {
-        if (this.show) {
+        if (this._mode === SceneMode.SCENE3D && this.show) {
             context.draw({
                 primitiveType : PrimitiveType.TRIANGLES,
                 shaderProgram : this._spPick,
