@@ -2,14 +2,14 @@
 define(['dojo',
         'dijit/dijit',
         'Core/Clock',
-        'Timeline/Timeline',
-        'Core/JulianDate'
+        'Core/JulianDate',
+        'Controls/Timeline'
     ], function(
          dojo,
          dijit,
          Clock,
-         Timeline,
-         JulianDate) {
+         JulianDate,
+         Timeline) {
     "use strict";
 
     var startDatePart, endDatePart, startTimePart, endTimePart;

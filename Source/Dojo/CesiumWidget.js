@@ -8,21 +8,21 @@ define([
         'dojo/on',
         'dijit/_WidgetBase',
         'dijit/_TemplatedMixin',
-        'Core/Ellipsoid',
-        'Core/SunPosition',
-        'Core/EventHandler',
-        'Core/MouseEventType',
-        'Core/requestAnimationFrame',
-        'Core/Cartesian2',
-        'Core/JulianDate',
-        'Core/DefaultProxy',
-        'Scene/Scene',
-        'Scene/CentralBody',
-        'Scene/BingMapsTileProvider',
-        'Scene/BingMapsStyle',
-        'Scene/SingleTileProvider',
-        'Scene/PerformanceDisplay',
-        'dojo/text!./templates/CesiumWidget.html'
+        '../Core/Ellipsoid',
+        '../Core/SunPosition',
+        '../Core/EventHandler',
+        '../Core/MouseEventType',
+        '../Core/requestAnimationFrame',
+        '../Core/Cartesian2',
+        '../Core/JulianDate',
+        '../Core/DefaultProxy',
+        '../Scene/Scene',
+        '../Scene/CentralBody',
+        '../Scene/BingMapsTileProvider',
+        '../Scene/BingMapsStyle',
+        '../Scene/SingleTileProvider',
+        '../Scene/PerformanceDisplay',
+        'dojo/text!./CesiumWidget.html'
     ], function (
         require,
         declare,
@@ -49,7 +49,7 @@ define([
         template) {
     "use strict";
 
-    return declare('DojoWidgets.CesiumWidget', [_WidgetBase, _TemplatedMixin], {
+    return declare('Cesium.CesiumWidget', [_WidgetBase, _TemplatedMixin], {
         templateString : template,
         clock : undefined,
         preRender : undefined,
