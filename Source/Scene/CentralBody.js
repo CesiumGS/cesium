@@ -1144,8 +1144,12 @@ define([
     };
 
     CentralBody.prototype._createTileDistanceFunction = function(width, height) {
-        var frustum = this._camera.frustum;
         var provider = this._dayTileProvider;
+        if (typeof provider === 'undefined') {
+            return undefined;
+        }
+
+        var frustum = this._camera.frustum;
         var extent = provider.maxExtent;
 
         var pixelSizePerDistance = 2.0 * Math.tan(frustum.fovy * 0.5);

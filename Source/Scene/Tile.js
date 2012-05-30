@@ -162,6 +162,15 @@ define([
      * west properties in radians.
      */
     Tile.tileXYToExtent = function(x, y, zoom) {
+        if (x === 0 && y === 0 && zoom === 0) {
+            return new Extent(
+                -CesiumMath.PI,
+                CesiumMath.toRadians(-85.05112878),
+                CesiumMath.PI,
+                CesiumMath.toRadians(85.05112878)
+            );
+        }
+
         // Lat
         var invZoom = 4.0 * Math.PI / (1 << zoom);
         var k = Math.exp(CesiumMath.TWO_PI - (y * invZoom));
