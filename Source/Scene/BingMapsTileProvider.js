@@ -278,7 +278,7 @@ define([
     };
 
     BingMapsTileProvider.prototype._getMetadataUrl = function() {
-        return 'http://' + this.server + '/REST/v1/Imagery/Metadata/' + this.mapStyle.name + '?key=' + this.key;
+        return 'http://' + this.server + '/REST/v1/Imagery/Metadata/' + this.mapStyle.imagerySetName + '?key=' + this.key;
     };
 
     BingMapsTileProvider.prototype._requestTemplate = function() {

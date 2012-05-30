@@ -27,6 +27,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.eclipse.jetty.client.Address;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.HttpExchange;
 import org.eclipse.jetty.continuation.Continuation;
@@ -37,7 +38,7 @@ import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
 public final class ProxyHandler extends AbstractHandler {
-	private Pattern allowedHosts;
+	private final Pattern allowedHosts;
 	private HttpClient client;
 
 	private final HashSet<String> dontProxyHeaders = new HashSet<String>();
@@ -53,28 +54,47 @@ public final class ProxyHandler extends AbstractHandler {
 		dontProxyHeaders.add("upgrade");
 	}
 
-	public ProxyHandler(String allowedHostList) throws Exception {
-		// build a regex that matches any of the given hosts
-		StringBuilder hostPattern = new StringBuilder();
-		for (String allowedHost : allowedHostList.split(",")) {
-			hostPattern.append("(?:");
-			hostPattern.append(allowedHost.trim().replace(".", "\\.").replace("*", ".*"));
-			hostPattern.append(")|");
-		}
-
-		// trim trailing |
-		if (hostPattern.length() > 0)
-			hostPattern.setLength(hostPattern.length() - 1);
-
-		allowedHosts = Pattern.compile(hostPattern.toString(), Pattern.CASE_INSENSITIVE);
+	public ProxyHandler(String allowedHostList, String upstreamProxyHost, Integer upstreamProxyPort, String noUpstreamProxyHostList) throws Exception {
+		allowedHosts = hostListToPattern(allowedHostList);
 
 		client = new HttpClient();
+
+		if (upstreamProxyHost != null && upstreamProxyHost.length() > 0) {
+			if (upstreamProxyPort == null)
+				upstreamProxyPort = 80;
+
+			client.setProxy(new Address(upstreamProxyHost, upstreamProxyPort));
+
+			if (noUpstreamProxyHostList != null) {
+				HashSet<String> set = new HashSet<String>();
+				for (String noUpstreamProxyHost : noUpstreamProxyHostList.split(",")) {
+					set.add(noUpstreamProxyHost.trim());
+				}
+				client.setNoProxy(set);
+			}
+		}
+
 		client.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
 		client.start();
 	}
 
-	public void handle(String target, Request baseRequest, final HttpServletRequest request, final HttpServletResponse response) throws IOException,
-			ServletException {
+	private static final Pattern hostListToPattern(String hosts) {
+		// build a regex that matches any of the given hosts
+		StringBuilder pattern = new StringBuilder();
+		for (String allowedHost : hosts.split(",")) {
+			pattern.append("(?:");
+			pattern.append(allowedHost.trim().replace(".", "\\.").replace("*", ".*"));
+			pattern.append(")|");
+		}
+
+		// trim trailing |
+		if (pattern.length() > 0)
+			pattern.setLength(pattern.length() - 1);
+
+		return Pattern.compile(pattern.toString(), Pattern.CASE_INSENSITIVE);
+	}
+
+	public void handle(String target, Request baseRequest, final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
 		Enumeration<?> parameterNames = request.getParameterNames();
 		if (!parameterNames.hasMoreElements()) {
 			response.sendError(400, "No url specified.");
