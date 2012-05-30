@@ -14,7 +14,7 @@
         <sup class="variation"><?js= doc.variation ?></sup>
     <?js } ?></h2>
     <?js if (doc.classdesc) { ?>
-        <p class="class-description"><?js= doc.classdesc ?></p>
+        <div class="class-description"><?js= doc.classdesc ?></div>
     <?js } ?>
 </header>  
 
@@ -28,7 +28,7 @@
         <?js= self.partial('method.tmpl', doc) ?>
     <?js } else { ?>
         <?js if (doc.description) { ?>
-            <p class="description"><?js= doc.description ?></p>
+            <div class="description"><?js= doc.description ?></div>
         <?js } ?>
         
         <?js if (doc.examples && doc.examples.length) { ?>
