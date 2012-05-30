@@ -92,7 +92,6 @@ var visualizers;
         var speedIndicatorElement;
         var timeLabel;
         var lastTimeLabelUpdate;
-        var in3D;
         var cameraCenteredObjectID;
         var lastCameraCenteredObjectID;
 
@@ -305,7 +304,6 @@ var visualizers;
                         cesium.viewHome();
                         cesium.showSkyAtmosphere(true);
                         cesium.showGroundAtmosphere(true);
-                        in3D = true;
                     });
                     on(view2D, "Click", function() {
                         cameraCenteredObjectID = undefined;
@@ -314,7 +312,6 @@ var visualizers;
                         viewColumbus.set('checked', false);
                         cesium.showSkyAtmosphere(false);
                         cesium.showGroundAtmosphere(false);
-                        in3D = false;
                         transitioner.morphTo2D();
                     });
                     on(view3D, "Click", function() {
@@ -325,7 +322,6 @@ var visualizers;
                         transitioner.morphTo3D();
                         cesium.showSkyAtmosphere(true);
                         cesium.showGroundAtmosphere(true);
-                        in3D = true;
                     });
                     on(viewColumbus, "Click", function() {
                         cameraCenteredObjectID = undefined;
@@ -334,7 +330,6 @@ var visualizers;
                         viewColumbus.set('checked', true);
                         cesium.showSkyAtmosphere(false);
                         cesium.showGroundAtmosphere(false);
-                        in3D = false;
                         transitioner.morphToColumbusView();
                     });
 
