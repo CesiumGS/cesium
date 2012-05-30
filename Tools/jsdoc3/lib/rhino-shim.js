@@ -11,13 +11,13 @@ console = {
     log: function(/*...*/) {
         var args = Array.prototype.slice.call(arguments, 0),
             dumper = dumper || require('jsdoc/util/dumper');
-        
+
         for (var i = 0, len = args.length; i < len; i++) {
             if (typeof args[i] !== 'string') {
                 args[i] = dumper.dump(args[i]);
             }
         }
-        
+
         print( args.join(' ') );
     }
 };
@@ -33,4 +33,3 @@ process = {
     },
     argv: [__dirname + '/jsdoc.js'].concat(Array.prototype.slice.call(arguments, 0))
 };
- 
