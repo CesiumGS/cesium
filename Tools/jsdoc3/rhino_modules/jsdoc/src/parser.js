@@ -8,11 +8,11 @@
 var Token = Packages.org.mozilla.javascript.Token,
     currentParser = null,
     currentSourceName = '';
-    
-/** 
+
+/**
  * @class
  * @mixes module:common/events
- * 
+ *
  * @example <caption>Create a new parser.</caption>
  * var jsdocParser = new (require('jsdoc/src/parser').Parser)();
  */
@@ -25,7 +25,7 @@ exports.Parser = function() {
         }
     };
     this._visitors = [];
-}
+};
 require('common/util').mixin(exports.Parser.prototype, require('common/events'));
 
 /**
@@ -38,7 +38,7 @@ require('common/util').mixin(exports.Parser.prototype, require('common/events'))
  * @fires newDoclet
  * @fires fileBegin
  * @fires fileComplete
- * 
+ *
  * @example <caption>Parse two source files.</caption>
  * var myFiles = ['file1.js', 'file2.js'];
  * var docs = jsdocParser.parse(myFiles);
@@ -47,9 +47,9 @@ exports.Parser.prototype.parse = function(sourceFiles, encoding) {
     const SCHEMA = 'javascript:';
     var sourceCode = '',
         filename = '';
-    
+
     if (typeof sourceFiles === 'string') { sourceFiles = [sourceFiles]; }
-    
+
     for (i = 0, leni = sourceFiles.length; i < leni; i++) {
         if (sourceFiles[i].indexOf(SCHEMA) === 0) {
             sourceCode = sourceFiles[i].substr(SCHEMA.length);
@@ -65,14 +65,14 @@ exports.Parser.prototype.parse = function(sourceFiles, encoding) {
                 continue;
             }
         }
-        
+
         currentParser = this;
         this._parseSourceCode(sourceCode, filename);
         currentParser = null;
     }
-    
+
     return this._resultBuffer;
-}
+};
 
 /**
  * @returns {Array<Doclet>} The accumulated results of any calls to parse.
@@ -115,13 +115,13 @@ exports.Parser.prototype.getVisitors = function() {
 exports.Parser.prototype._parseSourceCode = function(sourceCode, sourceName) {
     var e = {filename: sourceName};
     this.fire('fileBegin', e);
-    
+
     if (!e.defaultPrevented) {
         e = {filename: sourceName, source: sourceCode};
         this.fire('beforeParse', e);
         sourceCode = e.source;
         currentSourceName = sourceName = e.filename;
-        
+
         sourceCode = pretreat(e.source);
 
         var ast = parserFactory().parse(sourceCode, sourceName, 1);
@@ -131,9 +131,9 @@ exports.Parser.prototype._parseSourceCode = function(sourceCode, sourceName) {
             })
         );
     }
-    
+
     this.fire('fileComplete', e);
-    
+
     currentSourceName = '';
 }
 
@@ -141,16 +141,16 @@ function pretreat(code) {
     return code
         // make starbangstar comments look like real jsdoc comments
         .replace(/\/\*\!\*/g, '/**')
-        
+
         // make matching comment endings easier
         .replace(/\*\//g, '»')
-        
+
         // merge adjacent doclets
         .replace(/»\/\*\*+/g, '@also')
         // make lent objectliterals documentable by giving them a dummy name
         .replace(/(\/\*\*[^»]*?@lends\b[^»]*?»\s*)\{/g, '$1 ____ = {') // like return @lends {
         .replace(/(\/\*\*[^»]*?@lends\b[^»]*?»)(\s*)return(\s*)\{/g, '$2$3 return $1 ____ = {') // like @lends return {
-        
+
         // make matching comment endings harder
         .replace(/»/g, '*/');
 }
@@ -166,7 +166,7 @@ exports.Parser.tkn = tkn;
 exports.Parser.prototype.astnodeToMemberof = function(node) {
     var id,
         doclet;
-    
+
     if (node.type === Token.VAR || node.type === Token.FUNCTION || node.type == tkn.NAMEDFUNCTIONSTATEMENT) {
         if (node.enclosingFunction) { // an inner var or func
             id = 'astnode'+node.enclosingFunction.hashCode();
@@ -185,7 +185,7 @@ exports.Parser.prototype.astnodeToMemberof = function(node) {
             id = 'astnode'+scope.enclosingFunction.hashCode();
             doclet = this.refs[id];
             if (doclet && doclet.meta.vars && basename in doclet.meta.vars) {
-                var alias = doclet.meta.vars[basename];
+                var alias = doclet.meta.vars.hasOwnProperty(basename)? doclet.meta.vars[basename] : false;
                 if (alias !== false) {
                     return [alias, basename];
                 }
@@ -195,13 +195,13 @@ exports.Parser.prototype.astnodeToMemberof = function(node) {
         }
         //First check to see if we have a global scope alias
         doclet = this.refs["__global__"];
-        if (doclet && doclet.meta.vars && basename in doclet.meta.vars) {
+        if (doclet && doclet.meta.vars && doclet.meta.vars.hasOwnProperty(basename)) {
             var alias = doclet.meta.vars[basename];
             if (alias !== false) {
                 return [alias, basename];
             }
         }
-        
+
         id = 'astnode'+node.parent.hashCode();
         doclet = this.refs[id];
         if (!doclet) return ''; // global?
@@ -216,7 +216,7 @@ exports.Parser.prototype.astnodeToMemberof = function(node) {
  */
 exports.Parser.prototype.resolveThis = function(node) {
     var memberof = {};
-    
+
     if (node.type !== Token.COLON && node.enclosingFunction) {
         // get documentation for the enclosing function
         memberof.id = 'astnode'+node.enclosingFunction.hashCode();
@@ -225,7 +225,7 @@ exports.Parser.prototype.resolveThis = function(node) {
         if (!memberof.doclet) {
             return '<anonymous>'; // TODO handle global this?
         }
-        
+
         if (memberof.doclet['this']) {
             return memberof.doclet['this'];
         }
@@ -247,11 +247,11 @@ exports.Parser.prototype.resolveThis = function(node) {
     else if (node.parent) {
         var parent = node.parent;
         if (parent.type === Token.COLON) parent = parent.parent; // go up one more
-        
+
         memberof.id = 'astnode'+parent.hashCode();
-        memberof.doclet = this.refs[memberof.id];        
+        memberof.doclet = this.refs[memberof.id];
         if (!memberof.doclet) return ''; // global?
-        
+
         return memberof.doclet.longname||memberof.doclet.name;
     }
     else {
@@ -264,14 +264,14 @@ exports.Parser.prototype.resolveThis = function(node) {
  */
 exports.Parser.prototype.resolvePropertyParent = function(node) {
     var memberof = {};
-    
+
     if (node.parent) {
         var parent = node.parent;
         if (parent.type === Token.COLON) parent = parent.parent; // go up one more
-        
+
         memberof.id = 'astnode'+parent.hashCode();
         memberof.doclet = this.refs[memberof.id];
-        
+
         if (memberof.doclet) { return memberof; }
     }
 }
@@ -284,14 +284,14 @@ exports.Parser.prototype.resolvePropertyParent = function(node) {
 exports.Parser.prototype.resolveVar = function(node, basename) {
     var doclet,
         enclosingFunction = node.enclosingFunction;
-    
+
     if (!enclosingFunction) { return ''; } // global
     doclet = this.refs['astnode'+enclosingFunction.hashCode()];
 
     if ( doclet && doclet.meta.vars && basename in doclet.meta.vars ) {
         return doclet.longname;
     }
-    
+
     return this.resolveVar(enclosingFunction, basename);
 }
 
@@ -332,7 +332,7 @@ function visitNode(node) {
             if (comment.commentType !== Token.CommentType.JSDOC) {
                 continue;
             }
-            
+
             if (commentSrc = ''+comment.toSource()) {
 
                 e = {
@@ -359,9 +359,9 @@ function visitNode(node) {
             event: "symbolFound",
             finishers: [currentParser.addDocletRef]
         };
-        
+
         var basename = getBasename(e.code.name);
-        
+
         if (basename !== 'this') e.code.funcscope = currentParser.resolveVar(node, basename);
     }
     else if (node.type === Token.COLON) { // assignment within an object literal
@@ -381,7 +381,7 @@ function visitNode(node) {
         if (node.variables) {
             return true; // we'll get each var separately on future visits
         }
-        
+
         if (node.parent.variables.toArray()[0] === node) { // like /** blah */ var a=1, b=2, c=3;
             // the first var assignment gets any jsDoc before the whole var series
             node.jsDoc = node.parent.jsDoc;
@@ -403,7 +403,7 @@ function visitNode(node) {
             funcDoc = null;
         if (node.enclosingFunction) {
             func = 'astnode'+node.enclosingFunction.hashCode();
-        }  
+        }
         funcDoc = currentParser.refs[func];
         if (funcDoc) {
             funcDoc.meta.vars = funcDoc.meta.vars || {};
@@ -422,23 +422,23 @@ function visitNode(node) {
             event: "symbolFound",
             finishers: [currentParser.addDocletRef]
         };
-        
+
         e.code.name = (node.type == tkn.NAMEDFUNCTIONSTATEMENT)? '' : String(node.name) || '';
         //console.log(':: e.code.name is', e.code.name);
-        
+
         // keep track of vars in a function or global scope
         var func = "__global__",
             funcDoc = null;
         if (node.enclosingFunction) {
             func = 'astnode'+node.enclosingFunction.hashCode();
-        }  
+        }
         funcDoc = currentParser.refs[func];
         if (funcDoc) {
             funcDoc.meta.vars = funcDoc.meta.vars || {};
             funcDoc.meta.vars[e.code.name] = false;
             e.finishers.push(makeVarsFinisher(funcDoc));
         }
-        
+
         var basename = getBasename(e.code.name)
         e.code.funcscope = currentParser.resolveVar(node, basename);
     }
@@ -463,12 +463,12 @@ function visitNode(node) {
 /** @private */
 function parserFactory() {
     var cx = Packages.org.mozilla.javascript.Context.getCurrentContext();
-    
+
     var ce = new Packages.org.mozilla.javascript.CompilerEnvirons();
     ce.setRecordingComments(true);
     ce.setRecordingLocalJsDocComments(true);
     ce.setLanguageVersion(180);
-    
+
     ce.initFromContext(cx);
     return new Packages.org.mozilla.javascript.Parser(ce, ce.getErrorReporter());
 }
@@ -480,7 +480,7 @@ function parserFactory() {
  */
 function aboutNode(node) {
     about = {};
-    
+
     if (node.type == Token.FUNCTION || node.type == tkn.NAMEDFUNCTIONSTATEMENT) {
         about.name = node.type == tkn.NAMEDFUNCTIONSTATEMENT? '' : '' + node.name;
         about.type = 'function';
@@ -514,7 +514,7 @@ function aboutNode(node) {
         about.node = node.right;
         about.value = nodeToString(about.node);
         about.type = getTypeName(node.right);
-        
+
         if (about.type === 'FUNCTION' && about.node.name) {
             about.node.type = tkn.NAMEDFUNCTIONSTATEMENT;
         }
@@ -526,7 +526,7 @@ function aboutNode(node) {
             about.name = string;
         }
     }
-    
+
     // get names of the formal parameters declared for this function
     if (about.node && about.node.getParamCount) {
         var paramCount = about.node.getParamCount();
@@ -539,7 +539,7 @@ function aboutNode(node) {
             about.paramnames = paramNames;
         }
     }
-        
+
     return about;
 }
 
@@ -548,9 +548,9 @@ function aboutNode(node) {
 */
 function nodeToString(node) {
     var str;
-    
+
     if (!node) return;
-    
+
     if (node.type === Token.GETPROP) {
         str = [nodeToString(node.target), node.property.string].join('.');
     }
@@ -578,7 +578,7 @@ function nodeToString(node) {
     else {
         str = getTypeName(node);
     }
-    
+
     return '' + str;
 };
 
@@ -587,11 +587,11 @@ function nodeToString(node) {
 */
 function getTypeName(node) {
     var type = '';
-    
+
     if (node) {
         type = ''+ Packages.org.mozilla.javascript.Token.typeToName(node.getType());
     }
-    
+
     return type;
 }
 
