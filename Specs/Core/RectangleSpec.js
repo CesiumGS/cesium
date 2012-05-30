@@ -1,10 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/Cartesian2',
-         'Core/Rectangle'
+         'Core/Rectangle',
+         'Core/Cartesian2'
      ], function(
-         Cartesian2,
-         Rectangle) {
+         Rectangle,
+         Cartesian2) {
     "use strict";
     /*global it,expect*/
 

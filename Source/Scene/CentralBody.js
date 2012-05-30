@@ -1411,7 +1411,7 @@ define([
                         attributeIndices : {
                             position : 0
                         },
-                        bufferUsage : BufferUsage.DYNAMIC_DRAW
+                        bufferUsage : BufferUsage.STREAM_DRAW
                     });
                 } else {
                     datatype = ComponentDatatype.FLOAT;
@@ -1460,7 +1460,7 @@ define([
                          attributeIndices : {
                              position : 0
                          },
-                         bufferUsage : BufferUsage.DYNAMIC_DRAW
+                         bufferUsage : BufferUsage.STREAM_DRAW
                      });
                  } else {
                      datatype = ComponentDatatype.FLOAT;
