@@ -39,21 +39,25 @@ require({
         location : 'Apps/CesiumViewer'
     }]
 }, [
+    'CesiumDojo/checkForChromeFrame',
     'dojo/parser',
     'dojo/dom-class',
     'dojo/_base/window',
     'dijit/form/Button',
     'dijit/form/TextBox',
     'dijit/form/ToggleButton',
+    'dijit/form/DropDownButton',
+    'dijit/TooltipDialog',
     'CesiumDojo/TimelineWidget',
     'CesiumViewer/CesiumViewer',
     'dojo/domReady!'
 ], function(
+    checkForChromeFrame,
     parser,
     domClass,
     win) {
     "use strict";
-
+    checkForChromeFrame();
     parser.parse();
     domClass.remove(win.body(), 'loading');
 });

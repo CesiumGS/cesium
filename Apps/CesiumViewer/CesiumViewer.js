@@ -11,6 +11,11 @@ define(['dojo/dom',
         'Core/Clock',
         'Core/ClockStep',
         'Core/ClockRange',
+        'Core/FullScreen',
+        'Core/Ellipsoid',
+        'Core/Transforms',
+        'Scene/SceneTransitioner',
+        'Scene/BingMapsStyle',
         'DynamicScene/DynamicBillboard',
         'DynamicScene/DynamicCone',
         'DynamicScene/DynamicLabel',
@@ -40,6 +45,11 @@ function(dom,
          Clock,
          ClockStep,
          ClockRange,
+         FullScreen,
+         Ellipsoid,
+         Transforms,
+         SceneTransitioner,
+         BingMapsStyle,
          DynamicBillboard,
          DynamicCone,
          DynamicLabel,
@@ -59,6 +69,31 @@ function(dom,
          VisualizerCollection) {
     "use strict";
     /*global console*/
+
+    var visualizers;
+    var clock = new Clock(new JulianDate(), undefined, undefined, ClockStep.SYSTEM_CLOCK, ClockRange.LOOP, 256);
+    var timeline;
+    var transitioner;
+
+    var _buffer = new CzmlObjectCollection({
+        billboard : DynamicBillboard.createOrUpdate,
+        cone : DynamicCone.createOrUpdate,
+        label : DynamicLabel.createOrUpdate,
+        orientation : DynamicObject.createOrUpdateOrientation,
+        point : DynamicPoint.createOrUpdate,
+        polygon : DynamicPolygon.createOrUpdate,
+        polyline : DynamicPolyline.createOrUpdate,
+        position : DynamicObject.createOrUpdatePosition,
+        pyramid : DynamicPyramid.createOrUpdate,
+        vertexPositions : DynamicObject.createOrUpdateVertexPositions
+    });
+
+    var animating = true;
+    var speedIndicatorElement;
+    var timeLabel;
+    var lastTimeLabelUpdate;
+    var cameraCenteredObjectID;
+    var lastCameraCenteredObjectID;
 
     //This function is a total HACK and only temporary.
     function setTimeFromBuffer() {
@@ -97,31 +132,17 @@ function(dom,
         reader.readAsText(f);
     }
 
+    function onObjectRightClickSelected(selectedObject) {
+        if (selectedObject && selectedObject.id) {
+            cameraCenteredObjectID = selectedObject.id;
+        } else {
+            cameraCenteredObjectID = undefined;
+        }
+    }
+
     function updateSpeedIndicator() {
         speedIndicatorElement.innerHTML = clock.multiplier + 'x realtime';
     }
-
-    var visualizers;
-    var clock = new Clock(new JulianDate(), undefined, undefined, ClockStep.SYSTEM_CLOCK, ClockRange.LOOP, 256);
-    var timeline;
-
-    var _buffer = new CzmlObjectCollection({
-        billboard : DynamicBillboard.createOrUpdate,
-        cone : DynamicCone.createOrUpdate,
-        label : DynamicLabel.createOrUpdate,
-        orientation : DynamicObject.createOrUpdateOrientation,
-        point : DynamicPoint.createOrUpdate,
-        polygon : DynamicPolygon.createOrUpdate,
-        polyline : DynamicPolyline.createOrUpdate,
-        position : DynamicObject.createOrUpdatePosition,
-        pyramid : DynamicPyramid.createOrUpdate,
-        vertexPositions : DynamicObject.createOrUpdateVertexPositions
-    });
-
-    var animating = true;
-    var speedIndicatorElement;
-    var timeLabel;
-    var lastTimeLabelUpdate;
 
     var cesium = new CesiumWidget({
         clock : clock,
@@ -138,10 +159,32 @@ function(dom,
                 timeLabel.innerHTML = currentTime.toDate().toUTCString();
                 lastTimeLabelUpdate = currentTime;
             }
+
+            // Update the camera to stay centered on the selected object, if any.
+            if (cameraCenteredObjectID) {
+                var czmlObject = _buffer.getObject(cameraCenteredObjectID);
+                if (czmlObject && czmlObject.position) {
+                    var position = czmlObject.position.getValueCartesian(currentTime);
+                    if (typeof position !== 'undefined') {
+                        // If we're centering on an object for the first time, zoom to within 2km of it.
+                        if (lastCameraCenteredObjectID !== cameraCenteredObjectID) {
+                            lastCameraCenteredObjectID = cameraCenteredObjectID;
+                            var camera = widget.scene.getCamera();
+                            camera.position = camera.position.normalize().multiplyWithScalar(2500000.0);
+                        }
+
+                        var transform = Transforms.eastNorthUpToFixedFrame(position, widget.ellipsoid);
+                        this.spindleCameraController.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
+                    }
+                }
+            }
         },
 
         postSetup : function(widget) {
             var scene = widget.scene;
+
+            transitioner = new SceneTransitioner(scene);
+
             visualizers = new VisualizerCollection([new DynamicBillboardVisualizer(scene), new DynamicConeVisualizer(scene), new DynamicLabelVisualizer(scene), new DynamicPointVisualizer(scene),
                     new DynamicPolygonVisualizer(scene), new DynamicPolylineVisualizer(scene), new DynamicPyramidVisualizer(scene)]);
             widget.enableStatistics(true);
@@ -164,6 +207,8 @@ function(dom,
                 timeline.zoomTo(clock.startTime, clock.stopTime);
             };
 
+            on(cesium, 'ObjectRightClickSelected', onObjectRightClickSelected);
+
             var dropBox = dom.byId('cesiumContainer');
             on(dropBox, 'drop', handleDrop);
             on(dropBox, 'dragenter', event.stop);
@@ -175,7 +220,7 @@ function(dom,
             });
 
             lastTimeLabelUpdate = clock.currentTime;
-            timeLabel = dom.byId('timeLabel');
+            timeLabel = dom.byId('timeLabel_label');
             timeLabel.innerHTML = clock.currentTime.toDate().toUTCString();
 
             speedIndicatorElement = dom.byId('speedIndicator');
@@ -231,6 +276,91 @@ function(dom,
                 clock.multiplier *= 2.0;
                 updateSpeedIndicator();
             });
+
+            var viewHome = registry.byId("viewHome");
+            var view2D = registry.byId("view2D");
+            var view3D = registry.byId("view3D");
+            var viewColumbus = registry.byId("viewColumbus");
+            var viewFullScreen = registry.byId("viewFullScreen");
+
+            view2D.set('checked', false);
+            view3D.set('checked', true);
+            viewColumbus.set('checked', false);
+
+            on(viewFullScreen, "Click", function() {
+                if (FullScreen.isFullscreenEnabled()) {
+                    FullScreen.exitFullscreen();
+                } else {
+                    FullScreen.requestFullScreen(document.body);
+                }
+            });
+
+            on(viewHome, "Click", function() {
+                view2D.set('checked', false);
+                view3D.set('checked', true);
+                viewColumbus.set('checked', false);
+                transitioner.morphTo3D();
+                cesium.viewHome();
+                cesium.showSkyAtmosphere(true);
+                cesium.showGroundAtmosphere(true);
+            });
+            on(view2D, "Click", function() {
+                cameraCenteredObjectID = undefined;
+                view2D.set('checked', true);
+                view3D.set('checked', false);
+                viewColumbus.set('checked', false);
+                cesium.showSkyAtmosphere(false);
+                cesium.showGroundAtmosphere(false);
+                transitioner.morphTo2D();
+            });
+            on(view3D, "Click", function() {
+                cameraCenteredObjectID = undefined;
+                view2D.set('checked', false);
+                view3D.set('checked', true);
+                viewColumbus.set('checked', false);
+                transitioner.morphTo3D();
+                cesium.showSkyAtmosphere(true);
+                cesium.showGroundAtmosphere(true);
+            });
+            on(viewColumbus, "Click", function() {
+                cameraCenteredObjectID = undefined;
+                view2D.set('checked', false);
+                view3D.set('checked', false);
+                viewColumbus.set('checked', true);
+                cesium.showSkyAtmosphere(false);
+                cesium.showGroundAtmosphere(false);
+                transitioner.morphToColumbusView();
+            });
+
+            var sunPosition = registry.byId('sunPosition');
+            on(sunPosition, 'Change', function(value) {
+                cesium.lockSunPositionToCamera = !value;
+            });
+
+            var imageryAerial = registry.byId('imageryAerial');
+            var imageryAerialWithLabels = registry.byId('imageryAerialWithLabels');
+            var imageryRoad = registry.byId('imageryRoad');
+            var imagerySingleTile = registry.byId('imagerySingleTile');
+            var imageryOptions = [imageryAerial, imageryAerialWithLabels, imageryRoad, imagerySingleTile];
+
+            function createImageryClickFunction(control, style) {
+                return function() {
+                    if (style) {
+                        cesium.setStreamingImageryMapStyle(style);
+                    } else {
+                        cesium.enableStreamingImagery(false);
+                    }
+
+                    imageryOptions.forEach(function(o) {
+                        o.set('checked', o === control);
+                    });
+                };
+            }
+
+            on(imageryAerial, 'Click', createImageryClickFunction(imageryAerial, BingMapsStyle.AERIAL));
+            on(imageryAerialWithLabels, 'Click', createImageryClickFunction(imageryAerialWithLabels, BingMapsStyle.AERIAL_WITH_LABELS));
+            on(imageryRoad, 'Click', createImageryClickFunction(imageryRoad, BingMapsStyle.ROAD));
+            on(imagerySingleTile, 'Click', createImageryClickFunction(imagerySingleTile, undefined));
         },
 
         onSetupError : function(widget, error) {
