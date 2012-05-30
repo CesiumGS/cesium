@@ -9,7 +9,7 @@ defineSuite([
          'Core/Math',
          'Core/Matrix4',
          'Scene/CameraControllerCollection'
-     ], function(
+    ], function(
          Camera,
          AxisAlignedBoundingBox,
          BoundingSphere,

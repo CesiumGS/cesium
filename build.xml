@@ -4,11 +4,14 @@
 			<glslToJavascript destination="${shadersDirectory}" stripcomments="${build.minification}">
 				<fileset dir="${shadersDirectory}" includes="*.glsl" />
 			</glslToJavascript>
-
+			<!-- TODO: Figure out a better way of handling Materials subfolder later -->
+			<glslToJavascript destination="${shadersMaterialsDirectory}" stripcomments="${build.minification}">
+				<fileset dir="${shadersMaterialsDirectory}" includes="*.glsl" />
+			</glslToJavascript>
+			<!-- /////////////////////////////////////////////////////////////////// -->
 			<createCesiumJs output="${sourceDirectory}/Cesium.js">
 				<fileset dir="${sourceDirectory}" includes="**/*.js" excludes="Cesium.js,main.js" />
 			</createCesiumJs>
-
 			<createSpecList output="${specsDirectory}/SpecList.js">
 				<fileset dir="${specsDirectory}" includes="**/*.js" excludes="*.js" />
 			</createSpecList>
@@ -56,7 +59,7 @@
 		<delete includeEmptyDirs="true" failonerror="false">
 			<fileset dir="${buildDirectory}" defaultexcludes="false" />
 			<fileset dir="${instrumentedDirectory}" defaultexcludes="false" />
-			<fileset dir="${shadersDirectory}" includes="*.js" />
+			<fileset dir="${shadersDirectory}" includes="**/*.js" />
 			<fileset dir="${specsDirectory}" includes="SpecList.js" />
 			<fileset dir="." includes="Cesium-*.zip" />
 		</delete>
@@ -69,6 +72,7 @@
 	<property name="version" value="b6" />
 	<property name="sourceDirectory" location="Source" />
 	<property name="shadersDirectory" location="${sourceDirectory}/Shaders" />
+	<property name="shadersMaterialsDirectory" location="${shadersDirectory}/Materials" />
 	<property name="examplesDirectory" location="Examples" />
 	<property name="specsDirectory" location="Specs" />
 	<property name="imagesDirectory" location="Images" />

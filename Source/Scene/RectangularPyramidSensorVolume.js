@@ -5,7 +5,7 @@ define([
         '../Core/Math',
         '../Core/Matrix4',
         '../Renderer/BufferUsage',
-        './ColorMaterial',
+        './Materials/ColorMaterial',
         './CustomSensorVolume'
     ], function(
         DeveloperError,

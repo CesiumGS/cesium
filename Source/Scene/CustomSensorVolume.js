@@ -12,7 +12,7 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/BlendEquation',
         '../Renderer/BlendFunction',
-        './ColorMaterial',
+        './Materials/ColorMaterial',
         '../Shaders/Noise',
         '../Shaders/SensorVolume',
         '../Shaders/CustomSensorVolumeVS',
