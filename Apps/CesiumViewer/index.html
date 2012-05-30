@@ -1,27 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8">
+<head>
+<meta charset="utf-8">
 
-        <!-- Use Chrome Frame in IE -->
-        <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+<!-- Use Chrome Frame in IE -->
+<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
 
-        <!-- Make the application take up the full browser screen and disable user scaling-->
-        <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-        
-        <title>Cesium Viewer</title>
-        
-        <link rel="stylesheet" href="CesiumViewer.css" media="screen">
-        
-        <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../ThirdParty/dojo-release-1.7.2-src/dojo/dojo.js"></script>
-        
-        <script src="boot.js"></script>
-    </head>
-    <body>
-        <div id="cesiumContainer"></div>
-        <div class="timelineContainer">
-            <div id="mainTimeline" data-dojo-type="CesiumDojo.TimelineWidget">
-            </div>
-        </div>        
-    </body>
+<!-- Make the application take up the full browser screen and disable user scaling-->
+<meta name="viewport"
+    content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+
+<title>Cesium Viewer</title>
+
+<link rel="stylesheet" href="CesiumViewer.css" media="screen">
+
+<script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../ThirdParty/dojo-release-1.7.2-src/dojo/dojo.js"></script>
+
+<script src="boot.js"></script>
+</head>
+<body class="claro">
+    <div id="cesiumContainer"></div>
+    <span id="timeLabel"></span>
+    <div class="animButtons">
+        <div id="animReset" data-dojo-type="dijit.form.Button"
+            data-dojo-props="iconClass: 'animationIcon', showLabel: false">Reset</div>
+        <div id="animReverse" data-dojo-type="dijit.form.ToggleButton"
+            data-dojo-props="iconClass: 'animationIcon animReverse', showLabel: false">Reverse</div>
+        <div id="animPause" data-dojo-type="dijit.form.ToggleButton"
+            data-dojo-props="iconClass: 'animationIcon animPause', showLabel: false">Pause</div>
+        <div id="animPlay" data-dojo-type="dijit.form.ToggleButton"
+            data-dojo-props="iconClass: 'animationIcon animPlay', showLabel: false, checked: true">Play</div>
+        <div id="animSlow" data-dojo-type="dijit.form.Button"
+            data-dojo-props="iconClass: 'animationIcon animSlow', showLabel: false">Slower</div>
+        <div id="animFast" data-dojo-type="dijit.form.Button"
+            data-dojo-props="iconClass: 'animationIcon animFast', showLabel: false">Faster</div>
+        <span id="speedIndicator"></span>
+    </div>
+    <div class="timelineContainer">
+        <div id="mainTimeline" data-dojo-type="Cesium.TimelineWidget"></div>
+    </div>
+</body>
 </html>

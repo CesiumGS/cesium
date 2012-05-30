@@ -42,6 +42,9 @@ require({
     'dojo/parser',
     'dojo/dom-class',
     'dojo/_base/window',
+    'dijit/form/Button',
+    'dijit/form/TextBox',
+    'dijit/form/ToggleButton',
     'CesiumDojo/TimelineWidget',
     'CesiumViewer/CesiumViewer',
     'dojo/domReady!'
