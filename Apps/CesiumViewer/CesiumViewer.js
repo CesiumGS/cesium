@@ -221,7 +221,7 @@ var visualizers;
                     });
 
                     lastTimeLabelUpdate = clock.currentTime;
-                    timeLabel = dom.byId('timeLabel');
+                    timeLabel = dom.byId('timeLabel_label');
                     timeLabel.innerHTML = clock.currentTime.toDate().toUTCString();
 
                     speedIndicatorElement = dom.byId('speedIndicator');

@@ -81,15 +81,11 @@ html,body {
 	opacity: 1;
 }
 
-#timeLabel {
-    background: rgba(42, 42, 42, 0.8);
-    color: #eee;
-    font-size: 16px;
+.timeLabel {
     display: block;
     position: absolute;
     bottom: 31px;
     right: 6px;
-    padding: 5px 10px;
 }
 
 .viewIcon {
