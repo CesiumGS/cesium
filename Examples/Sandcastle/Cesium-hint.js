@@ -62,7 +62,7 @@
   var funcProps = "prototype apply call bind".split(" ");
   var javascriptKeywords = ("break case catch continue debugger default delete do else false finally for function " +
                   "if in instanceof new null return switch throw true try typeof var void while with").split(" ");
-  var knownGlobals = "Cesium dojo dijit dojox".split(" ");
+  var knownGlobals = "Cesium CesiumWidget dojo dijit dojox".split(" ");
 
   CodeMirror.javascriptHint = function(editor) {
     return scriptHint(editor, javascriptKeywords,
@@ -78,7 +78,7 @@
   function getCompletions(token, context, keywords) {
     var found = [], start = token.string;
     function maybeAdd(str) {
-      if (str.indexOf(start) == 0 && !arrayContains(found, str)) found.push(str);
+      if (str.indexOf(start) == 0 && !arrayContains(found, str) && str[0] !== '_') found.push(str);
     }
     function gatherCompletions(obj) {
       if (typeof obj == "string") forEach(stringProps, maybeAdd);
@@ -115,6 +115,6 @@
       gatherCompletions(window);
       forEach(keywords, maybeAdd);
     }
-    return found;
+    return found.sort();
   }
 })();

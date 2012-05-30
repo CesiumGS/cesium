@@ -10,7 +10,8 @@ require({
             name: 'dojox',
             location: '../ThirdParty/dojo-release-1.7.2-src/dojox'
         }]
-	}, [
+    }, [
+        'Dojo/CesiumWidget',
         'dojo/parser',
         'dojo/dom-class',
         'dojo/dom-construct',
@@ -35,6 +36,7 @@ require({
         'dijit/ToolbarSeparator',
         'dojo/domReady!'],
     function (
+            CesiumWidget,
             parser,
             domClass,
             domConstruct,
@@ -44,6 +46,7 @@ require({
             registry
     ) {
         parser.parse();
+        window.CesiumWidget = CesiumWidget;
         fx.fadeOut({ node: 'loading', onEnd: function () {
             domConstruct.destroy('loading');
         }}).play();
@@ -56,10 +59,7 @@ require({
             handleAs: 'json'
         }).then(function (value) {
             that.types = value;
-            //console.log(that.types /* .toString() */);
         });
-        window.types = types;
-        window.docNode = docNode;
 
         function openDocTab(title, link) {
             if (typeof docTabs[title] === 'undefined') {
@@ -138,8 +138,6 @@ require({
             extraKeys: {"Ctrl-Space": "autocomplete", "F9": "runCesium"},
             onCursorActivity: onCursorActivity
         });
-        // TODO: remove debugging
-        window.editor = editor;
 
         // The iframe (bucket.html) sends this message on load.
         // This triggers the code to be injected into the iframe.
