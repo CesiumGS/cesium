@@ -3,7 +3,7 @@ define(['dojo/_base/declare',
         'dojo/ready',
         'dojo/dom-construct',
         'dijit/_WidgetBase',
-        'Timeline/Timeline'
+        '../Controls/Timeline'
     ], function(
         declare,
         ready,
@@ -11,7 +11,7 @@ define(['dojo/_base/declare',
         _WidgetBase, Timeline) {
     "use strict";
 
-    return declare('DojoWidgets.TimelineWidget', [_WidgetBase], {
+    return declare('CesiumDojo.TimelineWidget', [_WidgetBase], {
         buildRendering : function() {
             this.domNode = domConstruct.create("div");
         },

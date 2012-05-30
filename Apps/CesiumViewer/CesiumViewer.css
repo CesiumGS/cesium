@@ -1,4 +1,4 @@
-@import url('../Dojo/Widgets/TimelineWidget.css');
+@import url('../../Source/Dojo/TimelineWidget.css');
 
 html,body {
 	height: 100%;
@@ -19,9 +19,9 @@ html,body {
 }
 
 .timelineContainer {
-    position:absolute;
-    bottom:0;
-    width:100%;
-    height: 25px;
-    padding: 0 2px 2px;
+	position: absolute;
+	bottom: 0;
+	width: 100%;
+	height: 25px;
+	padding: 0 2px 2px;
 }

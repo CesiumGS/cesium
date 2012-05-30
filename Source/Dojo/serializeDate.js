@@ -1,5 +1,5 @@
 /*global define*/
-define(['Core/TimeStandard'],
+define(['../Core/TimeStandard'],
 function(TimeStandard) {
     "use strict";
 

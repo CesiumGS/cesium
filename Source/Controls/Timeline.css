@@ -39,7 +39,6 @@
 	z-index: 100;
 
 	background-color: #fafafa;
-	/* background: url("images/timebar_bg.png"); */  /* fallback */
 	background-repeat: repeat-x;
 	background: -webkit-linear-gradient(top, #eee, #fff, #fafafa);
 	background: -moz-linear-gradient(top, #eee, #fff, #fafafa);
@@ -98,7 +97,7 @@
 	position: absolute;
 	width: 16px;
 	height: 16px;
-	background-image: url("images/timeline_icons.png");
+	background-image: url("TimelineIcons.png");
 	background-repeat: no-repeat;
 	z-index: 10;
 }

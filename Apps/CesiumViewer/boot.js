@@ -14,6 +14,12 @@ require({
         name : 'Core',
         location : 'Source/Core'
     }, {
+        name : 'Controls',
+        location : 'Source/Controls'
+    }, {
+        name : 'CesiumDojo',
+        location : 'Source/Dojo'
+    }, {
         name : 'DynamicScene',
         location : 'Source/DynamicScene'
     }, {
@@ -26,17 +32,8 @@ require({
         name : 'Shaders',
         location : 'Source/Shaders'
     }, {
-        name : 'Timeline',
-        location : 'Source/Timeline'
-    }, {
         name : 'ThirdParty',
         location : 'Source/ThirdParty'
-    }, {
-        name : 'DojoWidgets',
-        location : 'Apps/Dojo/Widgets'
-    }, {
-        name : 'DojoUtilities',
-        location : 'Apps/Dojo/Utilities'
     }, {
         name : 'CesiumViewer',
         location : 'Apps/CesiumViewer'
@@ -45,7 +42,7 @@ require({
     'dojo/parser',
     'dojo/dom-class',
     'dojo/_base/window',
-    'DojoWidgets/TimelineWidget',
+    'CesiumDojo/TimelineWidget',
     'CesiumViewer/CesiumViewer',
     'dojo/domReady!'
 ], function(

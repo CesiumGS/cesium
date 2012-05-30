@@ -14,29 +14,8 @@ require({
         name : 'Core',
         location : 'Source/Core'
     }, {
-        name : 'DynamicScene',
-        location : 'Source/DynamicScene'
-    }, {
-        name : 'Renderer',
-        location : 'Source/Renderer'
-    }, {
-        name : 'Scene',
-        location : 'Source/Scene'
-    }, {
-        name : 'Shaders',
-        location : 'Source/Shaders'
-    }, {
-        name : 'Timeline',
-        location : 'Source/Timeline'
-    }, {
-        name : 'ThirdParty',
-        location : 'Source/ThirdParty'
-    }, {
-        name : 'DojoWidgets',
-        location : 'Apps/Dojo/Widgets'
-    }, {
-        name : 'DojoUtilities',
-        location : 'Apps/Dojo/Utilities'
+        name : 'Controls',
+        location : 'Source/Controls'
     }, {
         name : 'TimelineDemo',
         location : 'Apps/TimelineDemo'
