@@ -11,7 +11,7 @@ define(['dojo/_base/declare',
         _WidgetBase, Timeline) {
     "use strict";
 
-    return declare('CesiumDojo.TimelineWidget', [_WidgetBase], {
+    return declare('Cesium.TimelineWidget', [_WidgetBase], {
         buildRendering : function() {
             this.domNode = domConstruct.create("div");
         },

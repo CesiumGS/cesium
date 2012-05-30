@@ -49,7 +49,7 @@ define([
         template) {
     "use strict";
 
-    return declare('CesiumDojo.CesiumWidget', [_WidgetBase, _TemplatedMixin], {
+    return declare('Cesium.CesiumWidget', [_WidgetBase, _TemplatedMixin], {
         templateString : template,
         clock : undefined,
         preRender : undefined,
