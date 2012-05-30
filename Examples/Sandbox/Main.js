@@ -72,6 +72,7 @@
     tree.addNode("Modify the default material", [new Sandbox.PolygonColor(scene, ellipsoid, primitives)], mat, "Material");
     tree.addNode("Apply a diffuse map material", [new Sandbox.DiffuseMapPolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");
     tree.addNode("Apply an alpha map material", [new Sandbox.AlphaMapPolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");
+    tree.addNode("Apply a specular map material", [new Sandbox.SpecularMapPolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");
     tree.addNode("Apply a brick material", [new Sandbox.BrickPolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");
     tree.addNode("Apply a wood material", [new Sandbox.WoodPolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");
     tree.addNode("Apply an asphalt material", [new Sandbox.AsphaltPolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");

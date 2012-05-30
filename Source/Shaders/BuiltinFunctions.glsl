@@ -334,7 +334,7 @@ mat3 agi_eastNorthUpToEyeCoordinates(vec3 positionMC, vec3 normalEC)
  * @name agi_lightIntensity
  * @glslFunction
  */
-float agi_lightIntensity(vec3 normal, vec3 toLight, vec3 toEye)
+vec2 agi_lightIntensity(vec3 normal, vec3 toLight, vec3 toEye)
 {
     // TODO: where does this come from?
     // TODO: Better specular lighting model -- gaussian and attenuation?
@@ -345,11 +345,11 @@ float agi_lightIntensity(vec3 normal, vec3 toLight, vec3 toEye)
     float diffuse = max(dot(toLight, normal), 0.0);
     float specular = max(dot(toReflectedLight, toEye), 0.0);
     specular = pow(specular, diffuseSpecularAmbientShininess.w);
-    specular *= 100.0;
 
-    return (diffuseSpecularAmbientShininess.x * diffuse) +
-           (diffuseSpecularAmbientShininess.y * specular) +
-            diffuseSpecularAmbientShininess.z;
+    return vec2(diffuse, specular);
+    //return (diffuseSpecularAmbientShininess.x * diffuse) +
+    //       (diffuseSpecularAmbientShininess.y * specular) +
+    //        diffuseSpecularAmbientShininess.z;
 }
 
 /**

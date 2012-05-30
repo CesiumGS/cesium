@@ -49,6 +49,10 @@ void main()
     //Perturb normal based on material tangent space normal
     normalEC = normalize(agi_eastNorthUpToEyeCoordinates(v_positionMC, normalEC) * normalTangentSpace);
     
-    float intensity = agi_lightIntensity(normalEC, agi_sunDirectionEC, positionToEyeEC);
-    gl_FragColor = vec4(intensity * diffuseColor, alpha);
+    vec2 intensities = agi_lightIntensity(normalEC, agi_sunDirectionEC, positionToEyeEC);
+    diffuseColor = diffuseColor * intensities.x;
+    specularColor = specularColor * specularIntensity * intensities.y;
+    vec3 finalColor = clamp(diffuseColor + specularColor, 0.0, 1.0);
+    
+    gl_FragColor = vec4(finalColor, alpha);
 }
