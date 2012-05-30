@@ -6,7 +6,8 @@ define([
         '../Core/Matrix4',
         '../Renderer/BufferUsage',
         './ColorMaterial',
-        './CustomSensorVolume'
+        './CustomSensorVolume',
+        './SceneMode'
     ], function(
         DeveloperError,
         destroyObject,
@@ -14,7 +15,8 @@ define([
         Matrix4,
         BufferUsage,
         ColorMaterial,
-        CustomSensorVolume) {
+        CustomSensorVolume,
+        SceneMode) {
     "use strict";
 
     /**
@@ -128,6 +130,8 @@ define([
 
         t._pickIdThis = t._pickIdThis || this;
         this._customSensor = new CustomSensorVolume(t);
+
+        this._mode = SceneMode.SCENE3D;
     }
 
     /**
@@ -139,6 +143,11 @@ define([
      * @exception {DeveloperError} this.radius must be greater than or equal to zero.
      */
     RectangularPyramidSensorVolume.prototype.update = function(context, sceneState) {
+        this._mode = sceneState.mode;
+        if (sceneState !== SceneMode.SCENE3D) {
+            return;
+        }
+
         if ((this.xHalfAngle > CesiumMath.PI_OVER_TWO) || (this.yHalfAngle > CesiumMath.PI_OVER_TWO)) {
             throw new DeveloperError("this.xHalfAngle and this.yHalfAngle must each be less than or equal to 90 degrees.");
         }
@@ -188,7 +197,9 @@ define([
      * @memberof RectangularPyramidSensorVolume
      */
     RectangularPyramidSensorVolume.prototype.render = function(context) {
-        this._customSensor.render(context);
+        if (this._mode === SceneMode.SCENE3D) {
+            this._customSensor.render(context);
+        }
     };
 
     /**
@@ -196,7 +207,9 @@ define([
      * @memberof RectangularPyramidSensorVolume
      */
     RectangularPyramidSensorVolume.prototype.updateForPick = function(context) {
-        this._customSensor.updateForPick(context);
+        if (this._mode === SceneMode.SCENE3D) {
+            this._customSensor.updateForPick(context);
+        }
     };
 
     /**
@@ -204,7 +217,9 @@ define([
      * @memberof RectangularPyramidSensorVolume
      */
     RectangularPyramidSensorVolume.prototype.renderForPick = function(context, framebuffer) {
-        this._customSensor.renderForPick(context, framebuffer);
+        if (this._mode === SceneMode.SCENE3D) {
+            this._customSensor.renderForPick(context, framebuffer);
+        }
     };
 
     /**
