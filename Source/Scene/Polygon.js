@@ -310,12 +310,12 @@ define([
      *
      * @param {double} [height=0.0]. The height of the cartographic extent.
      * @example
-     * polygon.configureExtent({
-     *   north : CesiumMath.toRadians(10.0),
-     *   south : CesiumMath.toRadians(0.0),
-     *   east : CesiumMath.toRadians(10.0),
-     *   west : CesiumMath.toRadians(0.0)
-     * });
+     * polygon.configureExtent(new Extent(
+     *     CesiumMath.toRadians(0.0),
+     *     CesiumMath.toRadians(0.0),
+     *     CesiumMath.toRadians(10.0),
+     *     CesiumMath.toRadians(10.0)
+     * ));
      */
     Polygon.prototype.configureExtent = function(extent, height){
         this._extent = extent;
