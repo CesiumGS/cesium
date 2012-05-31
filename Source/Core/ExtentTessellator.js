@@ -49,16 +49,12 @@ define([
             throw new DeveloperError("extent.north must be greater than extent.south.", "extent");
         }
 
-        if (extent.west < -CesiumMath.PI || extent.west > CesiumMath.PI) {
-            throw new DeveloperError("extent.west must be in the interval [-Pi, Pi].", "extent.west");
-        }
+        extent.west = CesiumMath.negativePiToPi(extent.west);
+        extent.east = CesiumMath.negativePiToPi(extent.east);
 
-        if (extent.east < -CesiumMath.PI || extent.east > CesiumMath.PI) {
-            throw new DeveloperError("extent.east must be in the interval [-Pi, Pi].", "extent.east");
-        }
-
-        if (extent.west > extent.east) {
-            throw new DeveloperError("extent.west must be greater than extent.east.", "extent");
+        // If we go across the International Date Line
+        if(extent.west > extent.east) {
+            extent.east += CesiumMath.TWO_PI;
         }
     };
 
@@ -103,8 +99,8 @@ define([
                 vertices.push(position.x, position.y, position.z);
 
                 if (genTexCoords) {
-                    var u = (cartPosition.longitude - extent.west) * lonScalar;
-                    var v = (cartPosition.latitude - extent.south) * latScalar;
+                    var u = (j - extent.west) * lonScalar;
+                    var v = (i - extent.south) * latScalar;
                     if (interleave) {
                         vertices.push(u, v);
                     } else {
