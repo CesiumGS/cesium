@@ -87,7 +87,7 @@
       for (var name in obj) maybeAdd(name);
     }
 
-    var win = (CodeMirror.cesiumWindow && CodeMirror.cesiumWindow.autocomplete) || window;
+    var win = CodeMirror.cesiumWindow || window;
     if (context) {
       // If this is a property, see if it belongs to some object we can
       // find in the current environment.
