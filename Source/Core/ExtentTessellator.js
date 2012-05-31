@@ -94,7 +94,7 @@ define([
                     j = boundExtent.east;
                 }
 
-                var cartPosition = new Cartographic3(CesiumMath.negativePiToPi(j), i, altitude);
+                var cartPosition = new Cartographic3(j, i, altitude);
                 var position = ellipsoid.toCartesian(cartPosition).subtract(relativeToCenter);
                 vertices.push(position.x, position.y, position.z);
 
