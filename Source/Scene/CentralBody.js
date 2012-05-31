@@ -275,6 +275,8 @@ define([
         this._spPoles = undefined; // Reference to without-atmosphere, ground-from-space, or ground-from-atmosphere
         this._northPoleUniforms = undefined;
         this._southPoleUniforms = undefined;
+        this._drawNorthPole = false;
+        this._drawSouthPole = false;
 
         /**
          * DOC_TBA
@@ -1388,10 +1390,8 @@ define([
             occludeePoint = Extent.computeOccludeePoint(extent, this._ellipsoid).occludeePoint;
             occluded = (occludeePoint && !state.occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !state.occluder.isVisible(boundingVolume);
 
-            if (frustumCull || occluded) {
-                this._vaNorthPole = this._vaNorthPole && this._vaNorthPole.destroy();
-                this._vaNorthPole = undefined;
-            } else {
+            this._drawNorthPole = !frustumCull && !occluded;
+            if (this._drawNorthPole) {
                 rect = this._computePoleQuad(extent.north, extent.south - latitudeExtension, viewProjMatrix, viewportTransformation);
                 positions = [
                     rect.x, rect.y,
@@ -1437,10 +1437,8 @@ define([
             occludeePoint = Extent.computeOccludeePoint(extent, this._ellipsoid).occludeePoint;
             occluded = (occludeePoint && !state.occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !state.occluder.isVisible(boundingVolume);
 
-            if (frustumCull || occluded) {
-                this._vaSouthPole = this._vaSouthPole && this._vaSouthPole.destroy();
-                this._vaSouthPole = undefined;
-            } else {
+            this._drawSouthPole = !frustumCull && !occluded;
+            if (this._drawSouthPole) {
                 rect = this._computePoleQuad(extent.south, extent.north + latitudeExtension, viewProjMatrix, viewportTransformation);
                 positions = [
                      rect.x, rect.y,
@@ -2079,7 +2077,7 @@ define([
 
             // render quads to fill the poles
             if (this._mode === SceneMode.SCENE3D) {
-                if (typeof this._vaNorthPole !== 'undefined') {
+                if (this._drawNorthPole) {
                     context.draw({
                         primitiveType : PrimitiveType.TRIANGLE_FAN,
                         shaderProgram : this._spPoles,
@@ -2088,7 +2086,7 @@ define([
                         renderState : this._rsColor
                     });
                 }
-                if (typeof this._vaSouthPole !== 'undefined') {
+                if (this._drawSouthPole) {
                     context.draw({
                         primitiveType : PrimitiveType.TRIANGLE_FAN,
                         shaderProgram : this._spPoles,
