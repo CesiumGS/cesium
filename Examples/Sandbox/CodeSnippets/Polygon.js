@@ -17,6 +17,20 @@
         };
     };
 
+    Sandbox.PolygonWithExtent = function (scene, ellipsoid, primitives) {
+        this.code = function() {
+            var polygon = new Cesium.Polygon(undefined);
+            polygon.configureExtent({
+                north : Cesium.Math.toRadians(90.0),
+                south : Cesium.Math.toRadians(50.0),
+                east : Cesium.Math.toRadians(180.0),
+                west : Cesium.Math.toRadians(-180.0)
+            });
+
+            primitives.add(polygon);
+        };
+    };
+
     Sandbox.PolygonColor = function (scene, ellipsoid, primitives) {
         this.code = function () {
             var polygon = new Cesium.Polygon(undefined);
