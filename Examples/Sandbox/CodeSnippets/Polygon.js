@@ -93,7 +93,7 @@
                 polygon.material = new Cesium.AlphaMapMaterial({
                     texture : scene.getContext().createTexture2D({
                         source : image,
-                        pixelFormat : Cesium.PixelFormat.RGBA
+                        pixelFormat : Cesium.PixelFormat.RGB
                     })
                 });
             };
@@ -130,6 +130,37 @@
                 });
             };
             image.src = "../../Images/earthcloudmaptrans.jpg";
+
+            primitives.add(polygon);
+        };
+    };
+
+    Sandbox.BumpMapPolygonMaterial = function (scene, ellipsoid, primitives) {
+        this.code = function() {
+            var polygon = new Cesium.Polygon(undefined);
+            polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
+                new Cesium.Cartographic2(-80.0, 30.0),
+                new Cesium.Cartographic2(-70.0, 30.0),
+                new Cesium.Cartographic2(-70.0, 36.0),
+                new Cesium.Cartographic2(-80.0, 36.0)
+            ]));
+            polygon.material.color = {
+                red: 0.0,
+                green: 0.0,
+                blue: 0.0,
+                alpha: 1.0
+            };
+
+            var image = new Image();
+            image.onload = function() {
+                polygon.material = new Cesium.BumpMapMaterial({
+                    texture : scene.getContext().createTexture2D({
+                        source : image,
+                        pixelFormat : Cesium.PixelFormat.RGB
+                    })
+                });
+            };
+            image.src = "../../Images/earthbump1k.jpg";
 
             primitives.add(polygon);
         };
