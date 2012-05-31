@@ -93,7 +93,7 @@
                 polygon.material = new Cesium.AlphaMapMaterial({
                     texture : scene.getContext().createTexture2D({
                         source : image,
-                        pixelFormat : Cesium.PixelFormat.RGB
+                        pixelFormat : Cesium.PixelFormat.LUMINANCE
                     })
                 });
             };
@@ -156,7 +156,7 @@
                 polygon.material = new Cesium.BumpMapMaterial({
                     texture : scene.getContext().createTexture2D({
                         source : image,
-                        pixelFormat : Cesium.PixelFormat.RGB
+                        pixelFormat : Cesium.PixelFormat.LUMINANCE
                     })
                 });
             };
