@@ -3,6 +3,7 @@ define([
         './DeveloperError',
         './Math',
         './Ellipsoid',
+        './Extent',
         './Cartesian3',
         './Cartographic3',
         './ComponentDatatype',
@@ -11,6 +12,7 @@ define([
         DeveloperError,
         CesiumMath,
         Ellipsoid,
+        Extent,
         Cartesian3,
         Cartographic3,
         ComponentDatatype,
@@ -28,40 +30,10 @@ define([
      */
     var ExtentTessellator = {};
 
-    ExtentTessellator._validateExtent = function(extent) {
-        if (!extent ||
-            typeof extent.north === "undefined" ||
-            typeof extent.south === "undefined" ||
-            typeof extent.west === "undefined" ||
-            typeof extent.east === "undefined") {
-            throw new DeveloperError("extent is required and must have north, south, east and west attributes.", "extent");
-        }
-
-        if (extent.north < -CesiumMath.PI_OVER_TWO || extent.north > CesiumMath.PI_OVER_TWO) {
-            throw new DeveloperError("extent.north must be in the interval [-Pi/2, Pi/2].", "extent.north");
-        }
-
-        if (extent.south < -CesiumMath.PI_OVER_TWO || extent.south > CesiumMath.PI_OVER_TWO) {
-            throw new DeveloperError("extent.south must be in the interval [-Pi/2, Pi/2].", "extent.south");
-        }
-
-        if (extent.north < extent.south) {
-            throw new DeveloperError("extent.north must be greater than extent.south.", "extent");
-        }
-
-        extent.west = CesiumMath.negativePiToPi(extent.west);
-        extent.east = CesiumMath.negativePiToPi(extent.east);
-
-        // If we go across the International Date Line
-        if(extent.west > extent.east) {
-            extent.east += CesiumMath.TWO_PI;
-        }
-    };
-
     ExtentTessellator._computeVertices = function(description) {
         var desc = description || {};
 
-        var extent = desc.extent;
+        var extent = desc.extent.clone();
         var boundExtent = desc.boundaryExtent;
         var ellipsoid = desc.ellipsoid;
         var granularity = desc.granularity;
@@ -73,6 +45,16 @@ define([
         var vertices = desc.vertices;
         var texCoords = desc.texCoords;
         var indices = desc.indices;
+
+        if (boundExtent.south > boundExtent.north) {
+            boundExtent.north += CesiumMath.TWO_PI;
+            extent.north += CesiumMath.TWO_PI;
+        }
+
+        if (boundExtent.west > boundExtent.east) {
+            boundExtent.east += CesiumMath.TWO_PI;
+            extent.east += CesiumMath.TWO_PI;
+        }
 
         // for computing texture coordinates
         var lonScalar = 1.0 / (extent.east - extent.west);
@@ -142,7 +124,7 @@ define([
      * Creates a mesh from a cartographic extent.
      *
      * @param {Ellipsoid} description.ellipsoid The ellipsoid on which the extent lies. Defaults to a WGS84 ellipsoid.
-     * @param {Object} description.extent A cartographic extent with north, south, east and west properties in radians.
+     * @param {Extent} description.extent A cartographic extent with north, south, east and west properties in radians.
      * @param {Number} description.granularity The distance, in radians, between each latitude and longitude.
      * Determines the number of positions in the buffer. Defaults to 0.1.
      * @param {Number} description.altitude The height from the surface of the ellipsoid. Defaults to 0.
@@ -165,17 +147,18 @@ define([
      * @see Context#createVertexArrayFromMesh
      * @see MeshFilters#createAttributeIndices
      * @see MeshFilters#toWireframeInPlace
+     * @see Extent
      *
      * @example
      * // Create a vertex array for rendering a wireframe extent.
      * var mesh = ExtentTessellator.compute({
      *     ellipsoid : Ellipsoid.WGS84,
-     *     extent : {
-     *         north : CesiumMath.toRadians(42.0),
-     *         south : CesiumMath.toRadians(39.0),
-     *         east : CesiumMath.toRadians(-74.0),
-     *         west : CesiumMath.toRadians(-80.0)
-     *     },
+     *     extent : new Extent(
+     *         CesiumMath.toRadians(-80.0),
+     *         CesiumMath.toRadians(39.0),
+     *         CesiumMath.toRadians(-74.0),
+     *         CesiumMath.toRadians(42.0)
+     *     ),
      *     granularity : 0.01,
      *     altitude : 10000.0
      * });
@@ -188,7 +171,7 @@ define([
     ExtentTessellator.compute = function(description) {
         var desc = description || {};
 
-        ExtentTessellator._validateExtent(desc.extent);
+        Extent.validate(desc.extent);
 
         desc.ellipsoid = desc.ellipsoid || Ellipsoid.WGS84;
         desc.granularity = (desc.granularity && desc.granularity > 0.0) ? desc.granularity : 0.1;
@@ -206,12 +189,12 @@ define([
         desc.vertices = vertices;
         desc.texCoords = texCoords;
         desc.indices = indices;
-        desc.boundaryExtent = {
-            north : desc.extent.north + desc.granularity * desc.boundaryWidth,
-            south : desc.extent.south - desc.granularity * desc.boundaryWidth,
-            west : desc.extent.west - desc.granularity * desc.boundaryWidth,
-            east : desc.extent.east + desc.granularity * desc.boundaryWidth
-        };
+        desc.boundaryExtent = new Extent(
+            desc.extent.west - desc.granularity * desc.boundaryWidth,
+            desc.extent.south - desc.granularity * desc.boundaryWidth,
+            desc.extent.east + desc.granularity * desc.boundaryWidth,
+            desc.extent.north + desc.granularity * desc.boundaryWidth
+        );
 
         ExtentTessellator._computeVertices(desc);
 
@@ -245,7 +228,7 @@ define([
      * Creates arrays of vertex attributes and indices from a cartographic extent.
      *
      * @param {Ellipsoid} description.ellipsoid The ellipsoid on which the extent lies. Defaults to a WGS84 ellipsoid.
-     * @param {Object} description.extent A cartographic extent with north, south, east and west properties in radians.
+     * @param {Extent} description.extent A cartographic extent with north, south, east and west properties in radians.
      * @param {Number} description.granularity The distance, in radians, between each latitude and longitude.
      * Determines the number of positions in the buffer. Defaults to 0.1.
      * @param {Number} description.altitude The height from the surface of the ellipsoid. Defaults to 0.
@@ -334,7 +317,7 @@ define([
     ExtentTessellator.computeBuffers = function(description) {
         var desc = description || {};
 
-        ExtentTessellator._validateExtent(desc.extent);
+        Extent.validate(desc.extent);
 
         desc.ellipsoid = desc.ellipsoid || Ellipsoid.WGS84;
         desc.granularity = (typeof desc.granularity !== "undefined" && desc.granularity > 0.0) ? desc.granularity : 0.1;
@@ -345,12 +328,12 @@ define([
         desc.vertices = [];
         desc.texCoords = [];
         desc.indices = [];
-        desc.boundaryExtent = {
-            north : desc.extent.north + desc.granularity * desc.boundaryWidth,
-            south : desc.extent.south - desc.granularity * desc.boundaryWidth,
-            west : desc.extent.west - desc.granularity * desc.boundaryWidth,
-            east : desc.extent.east + desc.granularity * desc.boundaryWidth
-        };
+        desc.boundaryExtent = new Extent(
+            desc.extent.west - desc.granularity * desc.boundaryWidth,
+            desc.extent.south - desc.granularity * desc.boundaryWidth,
+            desc.extent.east + desc.granularity * desc.boundaryWidth,
+            desc.extent.north + desc.granularity * desc.boundaryWidth
+        );
 
         ExtentTessellator._computeVertices(desc);
 

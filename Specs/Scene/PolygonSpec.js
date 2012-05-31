@@ -8,6 +8,7 @@ defineSuite([
          'Core/Cartesian3',
          'Core/Cartographic3',
          'Core/Ellipsoid',
+         'Core/Extent',
          'Core/Matrix4',
          'Core/Math',
          'Renderer/BufferUsage'
@@ -20,6 +21,7 @@ defineSuite([
          Cartesian3,
          Cartographic3,
          Ellipsoid,
+         Extent,
          Matrix4,
          CesiumMath,
          BufferUsage) {
@@ -69,13 +71,12 @@ defineSuite([
     });
 
     it("configures extent", function() {
-        var extent = {
-                         north : CesiumMath.toRadians(10.0),
-                         south : 0.0,
-                         east : CesiumMath.toRadians(10.0),
-                         west : 0.0
-                     };
-
+        var extent = new Extent(
+            0.0,
+            0.0,
+            CesiumMath.toRadians(10.0),
+            CesiumMath.toRadians(10.0)
+        );
 
         polygon.configureExtent(extent);
         expect(polygon.getPositions()).not.toBeDefined();
@@ -136,12 +137,12 @@ defineSuite([
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
         polygon.ellipsoid = ellipsoid;
         polygon.granularity = CesiumMath.toRadians(20.0);
-        polygon.configureExtent({
-            north : CesiumMath.toRadians(10.0),
-            south : 0.0,
-            east : CesiumMath.toRadians(10.0),
-            west : 0.0
-        });
+        polygon.configureExtent(new Extent(
+            0.0,
+            0.0,
+            CesiumMath.toRadians(10.0),
+            CesiumMath.toRadians(10.0)
+        ));
         polygon.material.color = {
             red : 1.0,
             green : 0.0,
