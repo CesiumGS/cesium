@@ -1,10 +1,12 @@
 /*global define*/
 define([
         '../Core/DeveloperError',
+        '../Core/Extent',
         '../Core/Math',
         './Projections'
     ], function(
         DeveloperError,
+        Extent,
         CesiumMath,
         Projections) {
     "use strict";
@@ -56,14 +58,14 @@ define([
          * The cartographic extent of the base tile, with north, south, east and
          * west properties in radians.
          *
-         * @type {Object}
+         * @type {Extent}
          */
-        this.maxExtent = {
-            north : CesiumMath.PI_OVER_TWO,
-            south : -CesiumMath.PI_OVER_TWO,
-            west : -CesiumMath.PI,
-            east : CesiumMath.PI
-        };
+        this.maxExtent = new Extent(
+            -CesiumMath.PI,
+            -CesiumMath.PI_OVER_TWO,
+            CesiumMath.PI,
+            CesiumMath.PI_OVER_TWO
+        );
 
         /**
          * The width of every image loaded.
