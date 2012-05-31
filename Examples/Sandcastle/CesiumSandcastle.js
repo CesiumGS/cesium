@@ -167,4 +167,8 @@ require({
         registry.byId('buttonRun').on('click', function () {
             CodeMirror.commands.runCesium();
         });
+
+        registry.byId('buttonSuggest').on('click', function () {
+            CodeMirror.commands.autocomplete(editor);
+        });
     });
