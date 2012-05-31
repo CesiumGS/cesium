@@ -71,13 +71,12 @@ defineSuite([
     });
 
     it("configures extent", function() {
-        var extent = {
-                         north : CesiumMath.toRadians(10.0),
-                         south : 0.0,
-                         east : CesiumMath.toRadians(10.0),
-                         west : 0.0
-                     };
-
+        var extent = new Extent(
+            0.0,
+            0.0,
+            CesiumMath.toRadians(10.0),
+            CesiumMath.toRadians(10.0)
+        );
 
         polygon.configureExtent(extent);
         expect(polygon.getPositions()).not.toBeDefined();
