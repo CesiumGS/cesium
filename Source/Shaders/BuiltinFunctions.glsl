@@ -334,22 +334,58 @@ mat3 agi_eastNorthUpToEyeCoordinates(vec3 positionMC, vec3 normalEC)
  * @name agi_lightIntensity
  * @glslFunction
  */
-vec2 agi_lightIntensity(vec3 normal, vec3 toLight, vec3 toEye)
+vec4 agi_lightValueBasic(vec3 toLight, vec3 toEye, vec3 normal, vec4 diffuseComponent, vec4 specularComponent)
 {
     // TODO: where does this come from?
     // TODO: Better specular lighting model -- gaussian and attenuation?
     
+    //Diffuse values
+    vec3 diffuseColor = diffuseComponent.xyz;
+    float alpha = diffuseComponent.w;
+    
+    //Specular values
+    vec3 specularColor = specularComponent.xyz;
+    float specularIntensity = specularComponent.w;
+    
     vec4 diffuseSpecularAmbientShininess = vec4(0.8, 0.1, 0.1, 10.0);
 
     vec3 toReflectedLight = reflect(-toLight, normal);
-    float diffuse = max(dot(toLight, normal), 0.0);
-    float specular = max(dot(toReflectedLight, toEye), 0.0);
-    specular = pow(specular, diffuseSpecularAmbientShininess.w);
+    float diffuseAmount = max(dot(toLight, normal), 0.0);
+    float specularAmount = max(dot(toReflectedLight, toEye), 0.0);
+    specularAmount = pow(specularAmount, diffuseSpecularAmbientShininess.w);
 
-    return vec2(diffuse, specular);
-    //return (diffuseSpecularAmbientShininess.x * diffuse) +
-    //       (diffuseSpecularAmbientShininess.y * specular) +
-    //        diffuseSpecularAmbientShininess.z;
+    vec3 lighting = diffuseColor * diffuseAmount;
+    lighting += specularColor * specularAmount * specularIntensity;
+    lighting = clamp(lighting, 0.0, 1.0);
+    
+    vec4 finalLighting = vec4(lighting, alpha);
+    return finalLighting;
+}
+
+vec4 agi_lightValueGaussian(vec3 toLight, vec3 toEye, vec3 normal, vec4 diffuseComponent, vec4 specularComponent)
+{
+    //Diffuse values
+    vec3 diffuseColor = diffuseComponent.xyz;
+    float alpha = diffuseComponent.w;
+    
+    //Specular values
+    vec3 specularColor = specularComponent.xyz;
+    float specularIntensity = specularComponent.w;
+    
+    float cosAngIncidence = max(dot(normal, toLight), 0.0);
+    vec3 halfAngle = normalize(toLight + toEye);
+    float angleNormalHalf = acos(dot(halfAngle, normal));
+    float exponent = angleNormalHalf / specularIntensity;
+    exponent = -(exponent * exponent);
+    float gaussianTerm = exp(exponent);
+    gaussianTerm = cosAngIncidence != 0.0 ? gaussianTerm : 0.0;
+
+    vec3 lighting = diffuseColor * cosAngIncidence;
+    lighting += specularColor * gaussianTerm * 0.5;
+    lighting = clamp(lighting, 0.0, 1.0);
+    
+    vec4 finalLighting = vec4(lighting, alpha);
+    return finalLighting;
 }
 
 /**
