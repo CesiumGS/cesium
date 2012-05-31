@@ -69,8 +69,8 @@ define([
         return this._va;
     };
 
-    PositionVertices.prototype.update = function(context, positions, meshes, bufferUsage) {
-        if (positions) {
+    PositionVertices.prototype.update = function(context, meshes, bufferUsage) {
+        if (typeof meshes !== 'undefined') {
             // Initially create or recreate vertex array and buffers
             this._destroyVA();
 
@@ -128,9 +128,9 @@ define([
      *   alpha : 1.0
      * };
      * polygon.setPositions([
-     *   ellipsoid.toCartesian(new Cartographic3(...)),
-     *   ellipsoid.toCartesian(new Cartographic3(...)),
-     *   ellipsoid.toCartesian(new Cartographic3(...))
+     *   ellipsoid.toCartesian(new Cartographic2(...)),
+     *   ellipsoid.toCartesian(new Cartographic2(...)),
+     *   ellipsoid.toCartesian(new Cartographic2(...))
      * ]);
      */
     function Polygon() {
@@ -182,8 +182,8 @@ define([
          */
         };
 
-        this._positions = null;
-        this._extent = null;
+        this._positions = undefined;
+        this._extent = undefined;
         this._createVertexArray = false;
 
         /**
@@ -277,19 +277,23 @@ define([
      *
      * @see Polygon#getPositions
      *
+     * @param {Array} positions. The cartesian positions of the polygon.
+     * @param {double} [height=0.0]. The height of the polygon.
+     *
      * @example
      * polygon.setPositions([
-     *   ellipsoid.toCartesian(new Cartographic3(...)),
-     *   ellipsoid.toCartesian(new Cartographic3(...)),
-     *   ellipsoid.toCartesian(new Cartographic3(...))
-     * ]);
+     *   ellipsoid.toCartesian(new Cartographic2(...)),
+     *   ellipsoid.toCartesian(new Cartographic2(...)),
+     *   ellipsoid.toCartesian(new Cartographic2(...))
+     * ], 10.0);
      */
-    Polygon.prototype.setPositions = function(positions) {
-        // positions can be null
-        if (positions && (positions.length < 3)) {
+    Polygon.prototype.setPositions = function(positions, height) {
+        // positions can be undefined
+        if (typeof positions !== 'undefined' && (positions.length < 3)) {
             throw new DeveloperError("At least three positions are required.", "positions");
         }
-        this._extent = null;
+        this.height = height || 0.0;
+        this._extent = undefined;
         this._positions = positions;
         this._createVertexArray = true;
     };
@@ -299,26 +303,22 @@ define([
      *
      * @memberof Polygon
      *
-     * @exception {DeveloperError} At least three positions are required.
-     *
-     * @see Polygon#getPositions
-     *
      * @param {extent} extent. The cartographic extent of the tile, with north, south, east and
      * west properties in radians.
      *
-     * @param {double} height. The height of the cartographic extent.
+     * @param {double} [height=0.0]. The height of the cartographic extent.
      * @example
      * polygon.configureExtent({
-     *   north:CesiumMath.toRadians(10.0),
-     *   south:CesiumMath.toRadians(0.0),
-     *   east:CesiumMath.toRadians(10.0),
-     *   west:CesiumMath.toRadians(0.0)
+     *   north : CesiumMath.toRadians(10.0),
+     *   south : CesiumMath.toRadians(0.0),
+     *   east : CesiumMath.toRadians(10.0),
+     *   west : CesiumMath.toRadians(0.0)
      * });
      */
     Polygon.prototype.configureExtent = function(extent, height){
         this._extent = extent;
-        height = height || 0.0;
-        this._positions = this.ellipsoid.cartographicDegreesToCartesians([new Cartographic3(extent.west, extent.south, height), new Cartographic3(extent.east, extent.south, height), new Cartographic3(extent.east, extent.north, height), new Cartographic3(extent.west, extent.north, height)]);
+        this.height = height || 0.0;
+        this._positions = undefined;
         this._createVertexArray = true;
     };
 
@@ -359,11 +359,10 @@ define([
         var mesh;
         var meshes = null;
 
-        if(this._extent !== null){
-            var description = {extent: this._extent, generateTextureCoords:true};
-            mesh = ExtentTessellator.compute(description);
+        if(typeof this._extent !== 'undefined'){
+            mesh = ExtentTessellator.compute({extent: this._extent, generateTextureCoords:true});
         }
-        else if(this._positions){
+        else if(typeof this._positions !== 'undefined'){
             var cleanedPositions = PolygonPipeline.cleanUp(this._positions);
             var tangentPlane = EllipsoidTangentPlane.create(this.ellipsoid, cleanedPositions);
             var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions);
@@ -377,6 +376,9 @@ define([
             mesh = PolygonPipeline.computeSubdivision(cleanedPositions, indices, this._granularity);
             // PERFORMANCE_IDEA:  Only compute texture coordinates if the material requires them.
             mesh = Polygon._appendTextureCoordinates(tangentPlane, positions2D, mesh);
+        }
+        else {
+            return undefined;
         }
         mesh = PolygonPipeline.scaleToGeodeticHeight(this.ellipsoid, mesh, this.height);
         mesh = MeshFilters.reorderForPostVertexCache(mesh);
@@ -474,7 +476,7 @@ define([
 
                 this._projection = projection;
 
-                this._vertices.update(context, this._positions, this._createMeshes(), this.bufferUsage);
+                this._vertices.update(context, this._createMeshes(), this.bufferUsage);
             }
 
             if (!this._rs) {
