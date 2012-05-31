@@ -6,7 +6,7 @@ varying vec2 v_textureCoordinates;
 void main()
 {
     vec4 color = texture2D(u_fbTexture, v_textureCoordinates);
-    if (color.a != 0.0)
+    if (color.a == 1.0)
         discard;
     
     // TODO: make arbitrary ellipsoid
