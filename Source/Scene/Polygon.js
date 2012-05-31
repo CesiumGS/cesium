@@ -7,6 +7,7 @@ define([
         '../Core/Ellipsoid',
         '../Core/AxisAlignedBoundingRectangle',
         '../Core/Cartesian3',
+        '../Core/Cartographic3',
         '../Core/ComponentDatatype',
         '../Core/MeshFilters',
         '../Core/PrimitiveType',
@@ -33,6 +34,7 @@ define([
         Ellipsoid,
         AxisAlignedBoundingRectangle,
         Cartesian3,
+        Cartographic3,
         ComponentDatatype,
         MeshFilters,
         PrimitiveType,
@@ -181,6 +183,7 @@ define([
         };
 
         this._positions = null;
+        this._extent = null;
         this._createVertexArray = false;
 
         /**
@@ -286,8 +289,36 @@ define([
         if (positions && (positions.length < 3)) {
             throw new DeveloperError("At least three positions are required.", "positions");
         }
-
+        this._extent = null;
         this._positions = positions;
+        this._createVertexArray = true;
+    };
+
+    /**
+     * DOC_TBA
+     *
+     * @memberof Polygon
+     *
+     * @exception {DeveloperError} At least three positions are required.
+     *
+     * @see Polygon#getPositions
+     *
+     * @param {extent} extent. The cartographic extent of the tile, with north, south, east and
+     * west properties in radians.
+     *
+     * @param {double} height. The height of the cartographic extent.
+     * @example
+     * polygon.configureExtent({
+     *   north:CesiumMath.toRadians(10.0),
+     *   south:CesiumMath.toRadians(0.0),
+     *   east:CesiumMath.toRadians(10.0),
+     *   west:CesiumMath.toRadians(0.0)
+     * });
+     */
+    Polygon.prototype.configureExtent = function(extent, height){
+        this._extent = extent;
+        height = height || 0.0;
+        this._positions = this.ellipsoid.cartographicDegreesToCartesians([new Cartographic3(extent.west, extent.south, height), new Cartographic3(extent.east, extent.south, height), new Cartographic3(extent.east, extent.north, height), new Cartographic3(extent.west, extent.north, height)]);
         this._createVertexArray = true;
     };
 
@@ -328,42 +359,39 @@ define([
         var mesh;
         var meshes = null;
 
-        if (this._positions) {
-            var extent = null;
-            if((extent = this._getExtent()) !== null){
-                var description = {extent: extent, generateTextureCoords:true};
-                mesh = ExtentTessellator.compute(description);
-            }
-            else{
-                var cleanedPositions = PolygonPipeline.cleanUp(this._positions);
-                var tangentPlane = EllipsoidTangentPlane.create(this.ellipsoid, cleanedPositions);
-                var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions);
-
-                var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
-                if (originalWindingOrder === WindingOrder.CLOCKWISE) {
-                    positions2D.reverse();
-                    cleanedPositions.reverse();
-                }
-                var indices = PolygonPipeline.earClip2D(positions2D);
-                mesh = PolygonPipeline.computeSubdivision(cleanedPositions, indices, this._granularity);
-                // PERFORMANCE_IDEA:  Only compute texture coordinates if the material requires them.
-                mesh = Polygon._appendTextureCoordinates(tangentPlane, positions2D, mesh);
-            }
-            mesh = PolygonPipeline.scaleToGeodeticHeight(this.ellipsoid, mesh, this.height);
-            mesh = MeshFilters.reorderForPostVertexCache(mesh);
-            mesh = MeshFilters.reorderForPreVertexCache(mesh);
-
-            if (this._mode === SceneMode.SCENE3D) {
-                mesh.attributes.position2D = { // Not actually used in shader
-                        value : [0.0, 0.0]
-                    };
-                mesh.attributes.position3D = mesh.attributes.position;
-                delete mesh.attributes.position;
-            } else {
-                mesh = MeshFilters.projectTo2D(mesh, this._projection);
-            }
-            meshes = MeshFilters.fitToUnsignedShortIndices(mesh);
+        if(this._extent !== null){
+            var description = {extent: this._extent, generateTextureCoords:true};
+            mesh = ExtentTessellator.compute(description);
         }
+        else if(this._positions){
+            var cleanedPositions = PolygonPipeline.cleanUp(this._positions);
+            var tangentPlane = EllipsoidTangentPlane.create(this.ellipsoid, cleanedPositions);
+            var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions);
+
+            var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
+            if (originalWindingOrder === WindingOrder.CLOCKWISE) {
+                positions2D.reverse();
+                cleanedPositions.reverse();
+            }
+            var indices = PolygonPipeline.earClip2D(positions2D);
+            mesh = PolygonPipeline.computeSubdivision(cleanedPositions, indices, this._granularity);
+            // PERFORMANCE_IDEA:  Only compute texture coordinates if the material requires them.
+            mesh = Polygon._appendTextureCoordinates(tangentPlane, positions2D, mesh);
+        }
+        mesh = PolygonPipeline.scaleToGeodeticHeight(this.ellipsoid, mesh, this.height);
+        mesh = MeshFilters.reorderForPostVertexCache(mesh);
+        mesh = MeshFilters.reorderForPreVertexCache(mesh);
+
+        if (this._mode === SceneMode.SCENE3D) {
+            mesh.attributes.position2D = { // Not actually used in shader
+                    value : [0.0, 0.0]
+                };
+            mesh.attributes.position3D = mesh.attributes.position;
+            delete mesh.attributes.position;
+        } else {
+            mesh = MeshFilters.projectTo2D(mesh, this._projection);
+        }
+        meshes = MeshFilters.fitToUnsignedShortIndices(mesh);
 
         return meshes;
     };
@@ -374,73 +402,6 @@ define([
         return ((oldMode !== newMode) &&
                 ((oldMode === SceneMode.SCENE3D) ||
                  (newMode === SceneMode.SCENE3D)));
-    };
-
-    Polygon.prototype._getExtent = function(){
-        if(this._positions.length === 4){
-            var cartographics = this.ellipsoid.toCartographic3s(this._positions);
-            var nw = this._getNorthWest(cartographics);
-            var sw = this._getSouthWest(cartographics);
-            var ne = this._getNorthEast(cartographics);
-            var se = this._getSouthEast(cartographics);
-            if(nw.latitude === ne.latitude && sw.latitude === se.latitude && sw.longitude === nw.longitude && se.longitude === ne.longitude){
-                return  {
-                        north : nw.latitude,
-                        south : se.latitude,
-                        east : se.longitude,
-                        west : nw.longitude
-                        };
-            }
-        }
-        return null;
-    };
-
-    Polygon.prototype._getSouthEast = function(cartographics){
-        var length = cartographics.length;
-        var temp = cartographics[0];
-        for ( var j = 1; j < length; ++j) {
-            var cartographic = cartographics[j];
-            if(cartographic.latitude <= temp.latitude && cartographic.longitude >= temp.longitude ){
-                temp = cartographic;
-            }
-        }
-        return temp;
-    };
-
-    Polygon.prototype._getNorthEast = function(cartographics){
-        var length = cartographics.length;
-        var temp = cartographics[0];
-        for ( var j = 1; j < length; ++j) {
-            var cartographic = cartographics[j];
-            if(cartographic.latitude >= temp.latitude && cartographic.longitude >= temp.longitude ){
-                temp = cartographic;
-            }
-        }
-        return temp;
-    };
-
-    Polygon.prototype._getSouthWest = function(cartographics){
-        var length = cartographics.length;
-        var temp = cartographics[0];
-        for ( var j = 1; j < length; ++j) {
-            var cartographic = cartographics[j];
-            if(cartographic.latitude <= temp.latitude && cartographic.longitude <= temp.longitude ){
-                temp = cartographic;
-            }
-        }
-        return temp;
-    };
-
-    Polygon.prototype._getNorthWest = function(cartographics){
-        var length = cartographics.length;
-        var temp = cartographics[0];
-        for ( var j = 1; j < length; ++j) {
-            var cartographic = cartographics[j];
-            if(cartographic.latitude >= temp.latitude && cartographic.longitude <= temp.longitude ){
-                temp = cartographic;
-            }
-        }
-        return temp;
     };
 
     Polygon.prototype._getGranularity = function(mode) {

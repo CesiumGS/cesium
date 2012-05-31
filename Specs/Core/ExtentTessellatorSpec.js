@@ -44,49 +44,10 @@ defineSuite([
         expect(function() {
             return ExtentTessellator.compute({
                 extent : {
-                    north : CesiumMath.PI_OVER_TWO,
-                    south : -CesiumMath.PI_OVER_TWO,
-                    west : -CesiumMath.PI - 1,
-                    east : CesiumMath.PI
-                }
-            });
-        }).toThrow();
-    });
-
-    it("compute throws exception with invalid extent 4", function() {
-        expect(function() {
-            return ExtentTessellator.compute({
-                extent : {
-                    north : CesiumMath.PI_OVER_TWO,
-                    south : -CesiumMath.PI_OVER_TWO,
-                    west : -CesiumMath.PI,
-                    east : CesiumMath.PI + 1
-                }
-            });
-        }).toThrow();
-    });
-
-    it("compute throws exception with invalid extent 5", function() {
-        expect(function() {
-            return ExtentTessellator.compute({
-                extent : {
                     south : CesiumMath.PI_OVER_TWO,
                     north : -CesiumMath.PI_OVER_TWO,
                     west : -CesiumMath.PI,
                     east : CesiumMath.PI
-                }
-            });
-        }).toThrow();
-    });
-
-    it("compute throws exception with invalid extent 6", function() {
-        expect(function() {
-            return ExtentTessellator.compute({
-                extent : {
-                    north : CesiumMath.PI_OVER_TWO,
-                    south : -CesiumMath.PI_OVER_TWO,
-                    east : -CesiumMath.PI,
-                    west : CesiumMath.PI
                 }
             });
         }).toThrow();
@@ -159,49 +120,10 @@ defineSuite([
         expect(function() {
             return ExtentTessellator.computeBuffers({
                 extent : {
-                    north : CesiumMath.PI_OVER_TWO,
-                    south : -CesiumMath.PI_OVER_TWO,
-                    west : -CesiumMath.PI - 1,
-                    east : CesiumMath.PI
-                }
-            });
-        }).toThrow();
-    });
-
-    it("computeBuffers throws exception with invalid extent 4", function() {
-        expect(function() {
-            return ExtentTessellator.computeBuffers({
-                extent : {
-                    north : CesiumMath.PI_OVER_TWO,
-                    south : -CesiumMath.PI_OVER_TWO,
-                    west : -CesiumMath.PI,
-                    east : CesiumMath.PI + 1
-                }
-            });
-        }).toThrow();
-    });
-
-    it("computeBuffers throws exception with invalid extent 5", function() {
-        expect(function() {
-            return ExtentTessellator.computeBuffers({
-                extent : {
                     south : CesiumMath.PI_OVER_TWO,
                     north : -CesiumMath.PI_OVER_TWO,
                     west : -CesiumMath.PI,
                     east : CesiumMath.PI
-                }
-            });
-        }).toThrow();
-    });
-
-    it("computeBuffers throws exception with invalid extent 6", function() {
-        expect(function() {
-            return ExtentTessellator.computeBuffers({
-                extent : {
-                    north : CesiumMath.PI_OVER_TWO,
-                    south : -CesiumMath.PI_OVER_TWO,
-                    east : -CesiumMath.PI,
-                    west : CesiumMath.PI
                 }
             });
         }).toThrow();
