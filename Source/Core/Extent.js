@@ -67,6 +67,15 @@ define([
     }
 
     /**
+     * Returns a duplicate of this Extent.
+     *
+     * @return {Extent} A new Extent instance.
+     */
+    Extent.prototype.clone = function() {
+        return new Extent(this.west, this.south, this.east, this.north);
+    };
+
+    /**
      * Checks that an {@link Extent}'s members are in the proper ranges, north is greater than south and east is greater than west.
      *
      * @param {Extent} extent The extent to be checked for validity.
@@ -76,8 +85,6 @@ define([
      * @exception {DeveloperError} <code>extent.south</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
      * @exception {DeveloperError} <code>extent.east</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
      * @exception {DeveloperError} <code>extent.west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
-     * @exception {DeveloperError} <code>extent.north</code> must be greater than <code>extent.south</code>.
-     * @exception {DeveloperError} <code>extent.east</code> must be greater than <code>extent.west</code>.
      */
     Extent.validate = function(extent) {
         if (!extent ||
@@ -96,20 +103,12 @@ define([
             throw new DeveloperError("extent.south must be in the interval [-Pi/2, Pi/2].", "extent.south");
         }
 
-        if (extent.north < extent.south) {
-            throw new DeveloperError("extent.north must be greater than extent.south.", "extent");
-        }
-
         if (extent.west < -CesiumMath.PI || extent.west > CesiumMath.PI) {
             throw new DeveloperError("extent.west must be in the interval [-Pi, Pi].", "extent.west");
         }
 
         if (extent.east < -CesiumMath.PI || extent.east > CesiumMath.PI) {
             throw new DeveloperError("extent.east must be in the interval [-Pi, Pi].", "extent.east");
-        }
-
-        if (extent.west > extent.east) {
-            throw new DeveloperError("extent.west must be greater than extent.east.", "extent");
         }
     };
 

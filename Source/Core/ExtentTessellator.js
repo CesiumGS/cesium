@@ -33,7 +33,7 @@ define([
     ExtentTessellator._computeVertices = function(description) {
         var desc = description || {};
 
-        var extent = desc.extent;
+        var extent = desc.extent.clone();
         var boundExtent = desc.boundaryExtent;
         var ellipsoid = desc.ellipsoid;
         var granularity = desc.granularity;
@@ -45,6 +45,16 @@ define([
         var vertices = desc.vertices;
         var texCoords = desc.texCoords;
         var indices = desc.indices;
+
+        if (boundExtent.south > boundExtent.north) {
+            boundExtent.north += CesiumMath.TWO_PI;
+            extent.north += CesiumMath.TWO_PI;
+        }
+
+        if (boundExtent.west > boundExtent.east) {
+            boundExtent.east += CesiumMath.TWO_PI;
+            extent.east += CesiumMath.TWO_PI;
+        }
 
         // for computing texture coordinates
         var lonScalar = 1.0 / (extent.east - extent.west);
@@ -71,8 +81,8 @@ define([
                 vertices.push(position.x, position.y, position.z);
 
                 if (genTexCoords) {
-                    var u = (cartPosition.longitude - extent.west) * lonScalar;
-                    var v = (cartPosition.latitude - extent.south) * latScalar;
+                    var u = (j - extent.west) * lonScalar;
+                    var v = (i - extent.south) * latScalar;
                     if (interleave) {
                         vertices.push(u, v);
                     } else {
