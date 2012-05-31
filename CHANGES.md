@@ -7,8 +7,8 @@ Beta Releases
 ### b6 - TBA
 
 * Breaking changes:
-    * Changed Tipsify.tipsify and Tipsify.calculateACMR to accept an object literal instead of three separate arguments. Supplying a maximum index and cache size is now optional.
-* Added CentralBody.northPoleColor and CentralBody.southPoleColor to fill in the poles if they are not covered by a texture.
+    * Changed `Tipsify.tipsify` and `Tipsify.calculateACMR` to accept an object literal instead of three separate arguments. Supplying a maximum index and cache size is now optional.
+* Added `CentralBody.northPoleColor` and `CentralBody.southPoleColor` to fill in the poles if they are not covered by a texture.
 
 ### b5 - 05/15/2012
 
