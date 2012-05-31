@@ -72,7 +72,7 @@ source code being documented, like methods provided by a third-party superclass:
                 "@memberof ui.mywidget",
                 "@function",
                 "*/", ""];
-            e.comment += extraDoc.join("\n");
+            e.source += extraDoc.join("\n");
         }
     }
 
@@ -342,3 +342,32 @@ Lastly, the visitors are executed in the order the plugins are listed in the
 conf.json file.  A plugin can stop later plugins from visiting a node by
 setting a ```stopPropagation``` property on the event object (e.stopPropagation = true).
 A plugin can stop the event from firing setting a ```preventDefault``` property.
+
+Packaging JSDoc 3 Plugins
+----
+
+The JSDoc 3 Jakefile has an ```install``` task that can be used to install a plugin
+into the jsdoc 3 installation.  So running the following will install the plugin:
+
+    $>jake install[path/to/YourPluginFolder]
+
+_note: on some systems (like MacOS X), you may need to quote the target name and parameters_:
+
+    $>jake 'install[path/to/YourPluginFolder]'
+
+The task is passed a directory that should look something like the following:
+
+    YourPluginFolder
+     |- plugins
+     |   |- YourPlugin.js
+     |   \- test
+     |       |- fixtures
+     |       |   \- YourFixtures.js
+     |       \- specs
+     |           \- YourTests.js
+     \- templates
+         \- YourTemplate
+             \- publish.js
+
+Basically everything is copied over into the jsdoc installation directory, the
+directory should contain anything you want to put there.
