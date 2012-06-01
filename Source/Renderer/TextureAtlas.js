@@ -1,15 +1,37 @@
 /*global define*/
 define([
+        '../Core/Event',
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Cartesian2',
         './PixelFormat'
     ], function(
+        Event,
         DeveloperError,
         destroyObject,
         Cartesian2,
         PixelFormat) {
     "use strict";
+
+    function SourceHolder(callbacks) {
+        this.callbacks = callbacks;
+        this.index = -1;
+        this.loaded = false;
+    }
+
+    function getImageFromUrl(loadedCallback, url) {
+        var image = new Image();
+        image.onload = function() {
+            loadedCallback(image);
+        };
+
+        //Only add the crossOrigin flag for non-data URLs
+        if (url.substr(0, 5) !== "data:") {
+            image.crossOrigin = '';
+        }
+
+        image.src = url;
+    }
 
     /**
      * DOC_TBA
@@ -24,7 +46,6 @@ define([
      * @internalConstructor
      *
      * @exception {DeveloperError} context is required.
-     * @exception {DeveloperError} images is required and must have length greater than zero.
      * @exception {DeveloperError} borderWidthInPixels must be greater than or equal to zero.
      */
     function TextureAtlas(context, images, pixelFormat, borderWidthInPixels) {
@@ -32,25 +53,64 @@ define([
             throw new DeveloperError("context is required.", "images");
         }
 
-        if (!images || (images.length < 1)) {
-            throw new DeveloperError("images is required and must have length greater than zero.", "images");
-        }
-
-        pixelFormat = (typeof pixelFormat === "undefined") ? PixelFormat.RGBA : pixelFormat;
         borderWidthInPixels = (typeof borderWidthInPixels === "undefined") ? 1 : borderWidthInPixels;
-
         if (borderWidthInPixels < 0) {
             throw new DeveloperError("borderWidthInPixels must be greater than or equal to zero.", "borderWidthInPixels");
         }
 
+        pixelFormat = (typeof pixelFormat === "undefined") ? PixelFormat.RGBA : pixelFormat;
+
+        /**
+         * The event that is fired whenever the texture or textureCoordinates have changed.
+         *
+         * @type Event
+         *
+         * @example
+         * function textureChanged(atlas) {
+         *     var newTexture = atlas.getTexture();
+         *     var newTextureCoordinates = atlas.getTextureCoordinates();
+         * }
+         *
+         * textureAtlas.textureAtlasChanged.addEventListener(textureChanged);
+         * ...
+         * textureAtlas.textureAtlasChanged.removeEventListener(textureChanged);
+         */
+        this.textureAtlasChanged = new Event();
+
+        this._context = context;
+        this._pixelFormat = pixelFormat;
+        this._borderWidthInPixels = borderWidthInPixels;
+        this._images = [];
+        this._imagesHash = {};
+        this._nextIndex = 0;
+        this._recreateTexture = false;
+
+        if (typeof images !== 'undefined' && images.length > 0) {
+            for ( var i = 0, len = images.length; i < len; i++) {
+                var image = images[i];
+                var sourceHolder = new SourceHolder();
+                sourceHolder.index = i;
+                sourceHolder.loaded = true;
+                this._imagesHash[image.src] = sourceHolder;
+                this._images.push(image);
+                this._nextIndex++;
+            }
+            this._createTexture();
+        }
+    }
+
+    TextureAtlas.prototype._createTexture = function() {
+        var this_images = this._images;
+        var this_borderWidthInPixels = this._borderWidthInPixels;
+
         var annotatedImages = [];
-        var numberOfImages = images.length;
+        var numberOfImages = this_images.length;
         var i;
         var image;
 
         for (i = 0; i < numberOfImages; ++i) {
             annotatedImages.push({
-                image : images[i],
+                image : this_images[i],
                 index : i
             });
         }
@@ -66,12 +126,12 @@ define([
             var area = 0;
             for ( var i = 0; i < numberOfImages; ++i) {
                 var image = images[i];
-                area += (image.width + borderWidthInPixels) * (image.height + borderWidthInPixels);
+                area += (image.width + this_borderWidthInPixels) * (image.height + this_borderWidthInPixels);
                 maxWidth = Math.max(maxWidth, image.width);
             }
 
-            return Math.max(Math.floor(Math.sqrt(area)), maxWidth + borderWidthInPixels);
-        }(images, numberOfImages));
+            return Math.max(Math.floor(Math.sqrt(area)), maxWidth + this_borderWidthInPixels);
+        }(this_images, numberOfImages));
 
         var xOffset = 0;
         var yOffset = 0;
@@ -84,11 +144,11 @@ define([
         // Compute subrectangle positions and, finally, the atlas' height
         for (i = 0; i < numberOfImages; ++i) {
             image = annotatedImages[i].image;
-            var widthIncrement = image.width + borderWidthInPixels;
+            var widthIncrement = image.width + this_borderWidthInPixels;
 
             if (xOffset + widthIncrement > atlasWidth) {
                 xOffset = 0;
-                yOffset += rowHeight + borderWidthInPixels;
+                yOffset += rowHeight + this_borderWidthInPixels;
             }
 
             if (xOffset === 0) {
@@ -104,10 +164,10 @@ define([
 
         // Write images into a texture, saving the texture coordinates rectangle for each
         var textureCoordinates = [];
-        var texture = context.createTexture2D({
+        var texture = this._context.createTexture2D({
             width : atlasWidth,
             height : atlasHeight,
-            pixelFormat : pixelFormat
+            pixelFormat : this._pixelFormat
         });
 
         for (i = 0; i < numberOfImages; ++i) {
@@ -127,11 +187,121 @@ define([
             texture.copyFrom(image.image, lowerLeft.x, lowerLeft.y);
         }
 
-        this._context = context;
-        this._borderWidthInPixels = borderWidthInPixels;
         this._texture = texture;
         this._textureCoordinates = textureCoordinates;
-    }
+
+        this.textureAtlasChanged.raiseEvent(this);
+    };
+
+    TextureAtlas.prototype.addTexture = function(image, textureAvailableCallback, id) {
+        if (typeof image === 'undefined') {
+            throw new DeveloperError("url is required.");
+        }
+
+        this.addTextureFromFunction(id || image.src, function(callback) {
+            callback(image);
+        }, textureAvailableCallback);
+    };
+
+    /**
+     * Retrieves the image from the specified url and adds it to the atlas.
+     * The supplied callback is triggered with the index of the next texture.
+     * If the url is already in the atlas, the atlas is unchanged and the callback
+     * is triggered immediately.
+     *
+     * @memberof TextureAtlasFactory
+     *
+     * @param {String} url The url of the image to add to the atlas.
+     * @param {Function} textureAvailableCallback DOC_TBA.
+     *
+     * @exception {DeveloperError} url is required.
+     * @exception {DeveloperError} textureAvailableCallback is required.
+     */
+    TextureAtlas.prototype.addTextureFromUrl = function(url, textureAvailableCallback) {
+        if (typeof url === 'undefined') {
+            throw new DeveloperError("url is required.");
+        }
+
+        if (typeof textureAvailableCallback === 'undefined') {
+            throw new DeveloperError("textureAvailableCallback is required.");
+        }
+
+        this.addTextureFromFunction(url, getImageFromUrl, textureAvailableCallback);
+    };
+
+    /**
+     * <p>
+     * Checks the atlas for a texture with the supplied id, if the id does not
+     * exist, the supplied callback is triggered to create it.  In either case,
+     * once the image is in the atlas, the second supplied callback is triggered
+     * with its index.
+     * </p>
+     *
+     * <p>
+     * This function is useful for dynamically generated textures that are shared
+     * across many billboards.  Only the first billboard will actually create the texture
+     * while subsequent billboards will re-use the existing one.  One example of this is
+     * the LabelCollection, which uses the canvas to render individual letters and share
+     * them across words.
+     * </p>
+     *
+     * @memberof TextureAtlasFactory
+     *
+     * @param {String} id The id of the image to add to the atlas.
+     * @param {Function} getImageCallback DOC_TBA.
+     * @param {Function} textureAvailableCallback DOC_TBA.
+     *
+     * @exception {DeveloperError} id is required.
+     * @exception {DeveloperError} getImageCallback is required.
+     * @exception {DeveloperError} textureAvailableCallback is required.
+     */
+    TextureAtlas.prototype.addTextureFromFunction = function(id, getImageCallback, textureAvailableCallback) {
+        if (typeof id === 'undefined') {
+            throw new DeveloperError("id is required.");
+        }
+
+        if (typeof getImageCallback === 'undefined') {
+            throw new DeveloperError("getImageCallback is required.");
+        }
+
+        if (typeof textureAvailableCallback === 'undefined') {
+            throw new DeveloperError("textureAvailableCallback is required.");
+        }
+
+        var sourceHolder = this._imagesHash[id];
+        if (typeof sourceHolder !== 'undefined') {
+            //we're already aware of this source
+            if (sourceHolder.loaded) {
+                //and it's already loaded, tell the callback what index to use
+                textureAvailableCallback(sourceHolder.index);
+            } else {
+                //add the callback to be notified once it loads
+                sourceHolder.callbacks.push(textureAvailableCallback);
+            }
+            return;
+        }
+
+        //not in atlas, create the source, which may be async
+        this._imagesHash[id] = sourceHolder = new SourceHolder([textureAvailableCallback]);
+
+        var that = this;
+        getImageCallback(function(source) {
+            //assign an index
+            var index = sourceHolder.index = that._nextIndex++;
+
+            //store the loaded source in the array and rebuild the atlas
+            that._images[index] = source;
+            that._recreateTexture = true;
+            sourceHolder.loaded = true;
+
+            // fire all callbacks with the index
+            var callbacks = sourceHolder.callbacks;
+            for ( var i = callbacks.length - 1; i > -1; i--) {
+                callbacks[i](index, id);
+            }
+            sourceHolder.callbacks = undefined;
+        }, id);
+    };
 
     /**
      * Add a set of sub-regions of one atlas image as additional image indices.
@@ -156,7 +326,7 @@ define([
         }
         var baseRegion = this._textureCoordinates[index];
 
-        for (var i = 0; i < numSubRegions; ++i) {
+        for ( var i = 0; i < numSubRegions; ++i) {
             var thisRegion = subRegions[i];
             this._textureCoordinates.push({
                 // Lower Left
@@ -169,6 +339,7 @@ define([
             });
         }
 
+        this.textureAtlasChanged.raiseEvent(this);
         return numTextureCoordinates;
     };
 
@@ -185,6 +356,10 @@ define([
      * @memberof TextureAtlas
      */
     TextureAtlas.prototype.getTextureCoordinates = function() {
+        if (this._recreateTexture) {
+            this._recreateTexture = false;
+            this._createTexture();
+        }
         return this._textureCoordinates;
     };
 
@@ -193,6 +368,10 @@ define([
      * @memberof TextureAtlas
      */
     TextureAtlas.prototype.getTexture = function() {
+        if (this._recreateTexture) {
+            this._recreateTexture = false;
+            this._createTexture();
+        }
         return this._texture;
     };
 
