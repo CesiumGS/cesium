@@ -197,6 +197,52 @@
         };
     };
 
+    Sandbox.ReflectionMapPolygonMaterial = function (scene, ellipsoid, primitives) {
+        this.code = function() {
+            var polygon = new Cesium.Polygon(undefined);
+            polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
+                new Cesium.Cartographic2(-120.0, 30.0),
+                new Cesium.Cartographic2(-70.0, 30.0),
+                new Cesium.Cartographic2(-70.0, 70.0),
+                new Cesium.Cartographic2(-120.0, 70.0)
+            ]));
+            polygon.material.color = {
+                red: 0.0,
+                green: 0.0,
+                blue: 0.0,
+                alpha: 1.0
+            };
+
+            //Load cube map images at once
+            var cubeMapFolder = "../../Images/PalmTreesCubeMap/";
+            var fileExtension = ".jpg";
+            Cesium.Chain.run(
+                Cesium.Jobs.downloadImage(cubeMapFolder + "posx" + fileExtension),
+                Cesium.Jobs.downloadImage(cubeMapFolder + "negx" + fileExtension),
+                Cesium.Jobs.downloadImage(cubeMapFolder + "posy" + fileExtension),
+                Cesium.Jobs.downloadImage(cubeMapFolder + "negy" + fileExtension),
+                Cesium.Jobs.downloadImage(cubeMapFolder + "posz" + fileExtension),
+                Cesium.Jobs.downloadImage(cubeMapFolder + "negz" + fileExtension)
+            ).thenRun(
+            function() {
+                polygon.material = new Cesium.ReflectionMapMaterial({
+                    texture : scene.getContext().createCubeMap({
+                        source : {
+                            positiveX : this.images[cubeMapFolder + "posx" + fileExtension],
+                            negativeX : this.images[cubeMapFolder + "negx" + fileExtension],
+                            positiveY : this.images[cubeMapFolder + "negy" + fileExtension],
+                            negativeY : this.images[cubeMapFolder + "posy" + fileExtension],
+                            positiveZ : this.images[cubeMapFolder + "posz" + fileExtension],
+                            negativeZ : this.images[cubeMapFolder + "negz" + fileExtension]
+                        },
+                        pixelFormat : Cesium.PixelFormat.RGB
+                    })
+                });
+                primitives.add(polygon);
+            });
+        };
+    };
+
     Sandbox.BrickPolygonMaterial = function (scene, ellipsoid, primitives) {
         this.code = function() {
             var polygon = new Cesium.Polygon(undefined);
