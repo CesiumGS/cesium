@@ -457,11 +457,26 @@ define([
      * });
      */
     BillboardCollection.prototype.setTextureAtlas = function(value) {
-        if (this._textureAtlas !== value) {
-            this._textureAtlas = this._destroyTextureAtlas && this._textureAtlas && this._textureAtlas.destroy();
+        var currentAtlas = this._textureAtlas;
+        if (currentAtlas !== value) {
+            if (typeof currentAtlas !== 'undefined') {
+                currentAtlas.textureAtlasChanged.removeEventListener(this._texturesChangedCallback);
+                if (this._destroyTextureAtlas) {
+                    currentAtlas.destroy();
+                }
+            }
+
+            if (typeof value !== 'undefined') {
+                value.textureAtlasChanged.addEventListener(this._texturesChangedCallback, this);
+            }
+
             this._textureAtlas = value;
             this._createVertexArray = true; // New per-billboard texture coordinates
         }
+    };
+
+    BillboardCollection.prototype._texturesChangedCallback = function() {
+        this._createVertexArray = true; // New per-billboard texture coordinates
     };
 
     /**
@@ -918,9 +933,15 @@ define([
     };
 
     BillboardCollection.prototype._update = function(context, sceneState) {
-        if (!this._textureAtlas) {
-            // Can't write billboard vertices until we have texture coordinates
-            // provided by a texture atlas
+        // Can't write billboard vertices until we have texture coordinates
+        // provided by a texture atlas
+        var textureAtlas = this._textureAtlas;
+        if (typeof textureAtlas === 'undefined') {
+            return;
+        }
+
+        var textureAtlasCoordinates = textureAtlas.getTextureCoordinates();
+        if (typeof textureAtlasCoordinates === 'undefined') {
             return;
         }
 
@@ -932,7 +953,6 @@ define([
         var length = billboards.length;
         var properties = this._propertiesChanged;
 
-        var textureAtlasCoordinates = this._textureAtlas.getTextureCoordinates();
         var vafWriters;
 
         // PERFORMANCE_IDEA: Round robin multiple buffers.
@@ -1088,7 +1108,7 @@ define([
      * billboards = billboards && billboards.destroy();
      */
     BillboardCollection.prototype.destroy = function() {
-        this._textureAtlas = this._destroyTextureAtlas && this._textureAtlas && this._textureAtlas.destroy();
+        this.setTextureAtlas(undefined);
         this._sp = this._sp && this._sp.release();
         this._spPick = this._spPick && this._spPick.release();
         this._vaf = this._vaf && this._vaf.destroy();
