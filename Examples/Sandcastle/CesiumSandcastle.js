@@ -167,10 +167,17 @@ require({
                 logOutput.innerHTML = "";
                 //CodeMirror.cesiumWindow = bucketFrame.contentWindow;
                 var bucketDoc = bucketFrame.contentDocument;
-                var sc = bucketDoc.createElement('script');
-                sc.type = 'text/javascript';
-                sc.textContent = jsEditor.getValue();
-                bucketDoc.body.appendChild(sc);
+                var styleEle = bucketDoc.createElement('style');
+                styleEle.type = 'text/css';
+                styleEle.textContent = cssEditor.getValue();
+                bucketDoc.head.appendChild(styleEle);
+                var bodyEle = bucketDoc.createElement('div');
+                bodyEle.innerHTML = htmlEditor.getValue();
+                bucketDoc.body.appendChild(bodyEle);
+                var jsEle = bucketDoc.createElement('script');
+                jsEle.type = 'text/javascript';
+                jsEle.textContent = jsEditor.getValue();
+                bucketDoc.body.appendChild(jsEle);
             } else if (typeof e.data.log !== 'undefined') {
                 var ele = document.createElement('span');
                 ele.textContent = e.data.log + "\n";
