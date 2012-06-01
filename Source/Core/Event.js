@@ -50,17 +50,17 @@ define([
      */
     Event.prototype.addEventListener = function(listener, scope) {
         if (typeof listener !== 'function') {
-            throw new DeveloperError("listener is required and must be a function.");
+            throw new DeveloperError("listener is required and must be a function.", "listener");
         }
 
-        var this_listeners = this._listeners;
-        var index = this_listeners.indexOf(listener);
+        var thisListeners = this._listeners;
+        var index = thisListeners.indexOf(listener);
 
         if (index !== -1) {
-            throw new DeveloperError("listener is already subscribed.");
+            throw new DeveloperError("listener is already subscribed.", "listener");
         }
 
-        this_listeners.push(listener);
+        thisListeners.push(listener);
         this._scopes.push(scope);
     };
 
@@ -81,17 +81,17 @@ define([
      */
     Event.prototype.removeEventListener = function(listener) {
         if (typeof listener !== 'function') {
-            throw new DeveloperError("listener is required and must be a function.");
+            throw new DeveloperError("listener is required and must be a function.", "listener");
         }
 
-        var this_listeners = this._listeners;
-        var index = this_listeners.indexOf(listener);
+        var thisListeners = this._listeners;
+        var index = thisListeners.indexOf(listener);
 
         if (index === -1) {
-            throw new DeveloperError("listener is not subscribed.");
+            throw new DeveloperError("listener is not subscribed.", "listener");
         }
 
-        this_listeners.splice(index, 1);
+        thisListeners.splice(index, 1);
         this._scopes.splice(index, 1);
     };
 
