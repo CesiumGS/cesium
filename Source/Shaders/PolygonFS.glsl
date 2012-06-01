@@ -30,7 +30,7 @@ void main()
     vec3 str = vec3(st, 0.0);       // 3D texture coordinates
     
     vec3 positionToEyeEC = normalize(-v_positionEC); 
-    vec3 positionToEyeWC = vec3(agi_inverseView * vec4(positionToEyeEC, 1.0));
+    vec3 positionToEyeWC = normalize(vec3(agi_inverseView * vec4(positionToEyeEC, 1.0)));
     vec4 diffuseComponent = agi_getMaterialDiffuseComponent(zDistance, st, str, v_positionMC, positionToEyeWC);
     vec4 specularComponent = agi_getMaterialSpecularComponent(zDistance, st, str);
 

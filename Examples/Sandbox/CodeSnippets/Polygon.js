@@ -213,8 +213,6 @@
 
     Sandbox.ReflectionMapPolygonMaterial = function (scene, ellipsoid, primitives) {
         this.code = function() {
-
-
             var polygon = new Cesium.Polygon(undefined);
 
             polygon.configureExtent(new Cesium.Extent(
@@ -263,6 +261,52 @@
                         pixelFormat : Cesium.PixelFormat.LUMINANCE
                     }),
                     reflectivity : 0.5
+                });
+                primitives.add(polygon);
+            });
+        };
+    };
+
+    Sandbox.RefractionMapPolygonMaterial = function (scene, ellipsoid, primitives) {
+        this.code = function() {
+            var polygon = new Cesium.Polygon(undefined);
+
+            polygon.configureExtent(new Cesium.Extent(
+                    Cesium.Math.toRadians(-180.0), Cesium.Math.toRadians(-90.0), Cesium.Math.toRadians(180.0), Cesium.Math.toRadians(90.0)));
+
+            polygon.material.color = {
+                red: 0.0,
+                green: 0.0,
+                blue: 0.0,
+                alpha: 1.0
+            };
+
+            //Load cube map images at once
+            var imageFolder = "../../Images/";
+            var cubeMapFolder = imageFolder + "PalmTreesCubeMap/";
+            var cubeMapFileExtension = ".jpg";
+            Cesium.Chain.run(
+                Cesium.Jobs.downloadImage(cubeMapFolder + "posx" + cubeMapFileExtension),
+                Cesium.Jobs.downloadImage(cubeMapFolder + "negx" + cubeMapFileExtension),
+                Cesium.Jobs.downloadImage(cubeMapFolder + "posy" + cubeMapFileExtension),
+                Cesium.Jobs.downloadImage(cubeMapFolder + "negy" + cubeMapFileExtension),
+                Cesium.Jobs.downloadImage(cubeMapFolder + "posz" + cubeMapFileExtension),
+                Cesium.Jobs.downloadImage(cubeMapFolder + "negz" + cubeMapFileExtension)
+            ).thenRun(
+            function() {
+                polygon.material = new Cesium.RefractionMapMaterial({
+                    cubeMap : scene.getContext().createCubeMap({
+                        source : {
+                            positiveX : this.images[cubeMapFolder + "posx" + cubeMapFileExtension],
+                            negativeX : this.images[cubeMapFolder + "negx" + cubeMapFileExtension],
+                            positiveY : this.images[cubeMapFolder + "negy" + cubeMapFileExtension],
+                            negativeY : this.images[cubeMapFolder + "posy" + cubeMapFileExtension],
+                            positiveZ : this.images[cubeMapFolder + "posz" + cubeMapFileExtension],
+                            negativeZ : this.images[cubeMapFolder + "negz" + cubeMapFileExtension]
+                        },
+                        pixelFormat : Cesium.PixelFormat.RGB
+                    }),
+                    indexOfRefractionRatio : 0.5
                 });
                 primitives.add(polygon);
             });
