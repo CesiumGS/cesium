@@ -213,13 +213,13 @@
 
     Sandbox.ReflectionMapPolygonMaterial = function (scene, ellipsoid, primitives) {
         this.code = function() {
+
+
             var polygon = new Cesium.Polygon(undefined);
-            polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic2(-120.0, 30.0),
-                new Cesium.Cartographic2(-70.0, 30.0),
-                new Cesium.Cartographic2(-70.0, 70.0),
-                new Cesium.Cartographic2(-120.0, 70.0)
-            ]));
+
+            polygon.configureExtent(new Cesium.Extent(
+                    Cesium.Math.toRadians(-180.0), Cesium.Math.toRadians(-90.0), Cesium.Math.toRadians(180.0), Cesium.Math.toRadians(90.0)));
+
             polygon.material.color = {
                 red: 0.0,
                 green: 0.0,
