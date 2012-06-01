@@ -16,7 +16,8 @@ define([
         '../Shaders/Noise',
         '../Shaders/SensorVolume',
         '../Shaders/CustomSensorVolumeVS',
-        '../Shaders/CustomSensorVolumeFS'
+        '../Shaders/CustomSensorVolumeFS',
+        './SceneMode'
     ], function(
         DeveloperError,
         combine,
@@ -34,7 +35,8 @@ define([
         ShadersNoise,
         ShadersSensorVolume,
         CustomSensorVolumeVS,
-        CustomSensorVolumeFS) {
+        CustomSensorVolumeFS,
+        SceneMode) {
     "use strict";
 
     var attributeIndices = {
@@ -166,6 +168,8 @@ define([
         };
         this._drawUniforms = null;
         this._pickUniforms = null;
+
+        this._mode = SceneMode.SCENE3D;
     }
 
     /**
@@ -287,6 +291,11 @@ define([
      * @exception {DeveloperError} this.radius must be greater than or equal to zero.
      */
     CustomSensorVolume.prototype.update = function(context, sceneState) {
+        this._mode = sceneState.mode;
+        if (this._mode !== SceneMode.SCENE3D) {
+            return;
+        }
+
         if (this.radius < 0.0) {
             throw new DeveloperError("this.radius must be greater than or equal to zero.");
         }
@@ -350,7 +359,7 @@ define([
      * @memberof CustomSensorVolume
      */
     CustomSensorVolume.prototype.render = function(context) {
-        if (this.show && this._va) {
+        if (this._mode === SceneMode.SCENE3D && this.show && this._va) {
             context.draw({
                 primitiveType : PrimitiveType.TRIANGLES,
                 shaderProgram : this._sp,
@@ -366,7 +375,7 @@ define([
      * @memberof CustomSensorVolume
      */
     CustomSensorVolume.prototype.updateForPick = function(context) {
-        if (this.show && this._va) {
+        if (this._mode === SceneMode.SCENE3D && this.show && this._va) {
             // Since this ignores all other materials, if a material does discard, the sensor will still be picked.
             var fsSource =
                 "#define RENDER_FOR_PICK 1\n" +
@@ -395,7 +404,7 @@ define([
      * @memberof CustomSensorVolume
      */
     CustomSensorVolume.prototype.renderForPick = function(context, framebuffer) {
-        if (this.show && this._va) {
+        if (this._mode === SceneMode.SCENE3D && this.show && this._va) {
             context.draw({
                 primitiveType : PrimitiveType.TRIANGLES,
                 shaderProgram : this._spPick,

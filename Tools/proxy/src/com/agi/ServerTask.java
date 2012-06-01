@@ -17,6 +17,9 @@ public class ServerTask extends Task {
 	private String allowedHostList;
 	private int port;
 	private File baseDir;
+	private String upstreamProxyHost;
+	private Integer upstreamProxyPort;
+	private String noUpstreamProxyHostList;
 
 	public void execute() throws BuildException {
 		try {
@@ -26,7 +29,7 @@ public class ServerTask extends Task {
 			connector.setPort(this.port);
 			server.addConnector(connector);
 
-			ProxyHandler proxyHandler = new ProxyHandler(this.allowedHostList);
+			ProxyHandler proxyHandler = new ProxyHandler(this.allowedHostList, this.upstreamProxyHost, this.upstreamProxyPort, this.noUpstreamProxyHostList);
 			ContextHandler proxyContextHandler = new ContextHandler(this.proxyContextPath);
 			proxyContextHandler.setHandler(proxyHandler);
 
@@ -71,5 +74,17 @@ public class ServerTask extends Task {
 
 	public void setBaseDir(File value) {
 		this.baseDir = value;
+	}
+
+	public void setUpstreamProxyHost(String value) {
+		this.upstreamProxyHost = value;
+	}
+
+	public void setUpstreamProxyPort(int value) {
+		this.upstreamProxyPort = value;
+	}
+
+	public void setNoUpstreamProxyHostList(String value) {
+		this.noUpstreamProxyHostList = value;
 	}
 }

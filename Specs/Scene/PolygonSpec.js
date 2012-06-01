@@ -8,6 +8,7 @@ defineSuite([
          'Core/Cartesian3',
          'Core/Cartographic3',
          'Core/Ellipsoid',
+         'Core/Extent',
          'Core/Matrix4',
          'Core/Math',
          'Renderer/BufferUsage'
@@ -20,6 +21,7 @@ defineSuite([
          Cartesian3,
          Cartographic3,
          Ellipsoid,
+         Extent,
          Matrix4,
          CesiumMath,
          BufferUsage) {
@@ -62,10 +64,23 @@ defineSuite([
                          new Cartesian3(7.0, 8.0, 9.0)
                         ];
 
-        expect(polygon.getPositions()).toBeNull();
+        expect(polygon.getPositions()).not.toBeDefined();
 
         polygon.setPositions(positions);
         expect(polygon.getPositions()).toEqualArray(positions);
+    });
+
+    it("configures extent", function() {
+        var extent = new Extent(
+            0.0,
+            0.0,
+            CesiumMath.toRadians(10.0),
+            CesiumMath.toRadians(10.0)
+        );
+
+        polygon.configureExtent(extent);
+        expect(polygon.getPositions()).not.toBeDefined();
+
     });
 
     it("gets the default color", function() {
@@ -99,6 +114,33 @@ defineSuite([
                               ellipsoid.toCartesian(CesiumMath.cartographic3ToRadians(new Cartographic3(50.0, 50.0, 0.0))),
                               ellipsoid.toCartesian(CesiumMath.cartographic3ToRadians(new Cartographic3(-50.0, 50.0, 0.0)))
                              ]);
+        polygon.material.color = {
+            red : 1.0,
+            green : 0.0,
+            blue : 0.0,
+            alpha : 1.0
+        };
+
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polygon.update(context, sceneState);
+        polygon.render(context, us);
+        expect(context.readPixels()).not.toEqualArray([0, 0, 0, 0]);
+    });
+
+    it("renders extent", function() {
+        // This test fails in Chrome if a breakpoint is set inside this function.  Strange.
+
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+        polygon.ellipsoid = ellipsoid;
+        polygon.granularity = CesiumMath.toRadians(20.0);
+        polygon.configureExtent(new Extent(
+            0.0,
+            0.0,
+            CesiumMath.toRadians(10.0),
+            CesiumMath.toRadians(10.0)
+        ));
         polygon.material.color = {
             red : 1.0,
             green : 0.0,

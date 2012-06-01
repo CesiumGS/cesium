@@ -10,6 +10,8 @@ Beta Releases
     * Changed `Tipsify.tipsify` and `Tipsify.calculateACMR` to accept an object literal instead of three separate arguments. Supplying a maximum index and cache size is now optional.
 * Added new materials:
    * `DiffuseMapMaterial`
+* Added `CentralBody.northPoleColor` and `CentralBody.southPoleColor` to fill in the poles if they are not covered by a texture.
+* Added `Polygon.configureExtent` to create a polygon defined by west, south, east, and north values.
 
 ### b5 - 05/15/2012
 
