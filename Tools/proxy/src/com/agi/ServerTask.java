@@ -18,7 +18,7 @@ public class ServerTask extends Task {
 	private int port;
 	private File baseDir;
 	private String upstreamProxyHost;
-	private int upstreamProxyPort;
+	private Integer upstreamProxyPort;
 	private String noUpstreamProxyHostList;
 
 	public void execute() throws BuildException {

@@ -1,14 +1,20 @@
 /*global defineSuite*/
 defineSuite([
          'Core/Transforms',
+         'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/Cartesian4',
-         'Core/Ellipsoid'
+         'Core/Ellipsoid',
+         'Core/Matrix4',
+         'Core/Math'
      ], function(
          Transforms,
+         Cartesian2,
          Cartesian3,
          Cartesian4,
-         Ellipsoid) {
+         Ellipsoid,
+         Matrix4,
+         CesiumMath) {
     "use strict";
     /*global it,expect*/
 
@@ -113,4 +119,78 @@ defineSuite([
             Transforms.northEastDownToFixedFrame();
         }).toThrow();
     });
+
+    it("transform point to window coordinates without a model-view-projection matrix throws", function() {
+        expect(function() {
+            Transforms.pointToWindowCoordinates();
+        }).toThrow();
+    });
+
+    it("transform point to window coordinates without a viewport transformation throws", function() {
+        expect(function() {
+            Transforms.pointToWindowCoordinates(Matrix4.IDENTITY);
+        }).toThrow();
+    });
+
+    it("transform point to window coordinates without a point throws", function() {
+        expect(function() {
+            Transforms.pointToWindowCoordinates(Matrix4.IDENTITY, Matrix4.IDENTITY);
+        }).toThrow();
+    });
+
+    it("transform point to window coordinates center", function() {
+        var width = 1024.0;
+        var height = 768.0;
+        var perspective = Matrix4.createPerspectiveFieldOfView(CesiumMath.toRadians(60.0), width / height, 1.0, 10.0);
+        var view = Matrix4.createLookAt(Cartesian3.UNIT_X.multiplyWithScalar(2.0), Cartesian3.ZERO, Cartesian3.UNIT_Z);
+        var mvpMatrix = perspective.multiplyWithMatrix(view);
+        var vpTransform = Matrix4.createViewportTransformation(
+            {
+                width : width,
+                height : height
+            });
+        var expected = new Cartesian2(width * 0.5, height * 0.5);
+        expect(Transforms.pointToWindowCoordinates(mvpMatrix, vpTransform, Cartesian3.ZERO)).toEqual(expected);
+    });
+
+    it("transform point to window coordinates lower left", function() {
+        var width = 1024.0;
+        var height = 768.0;
+        var perspective = Matrix4.createPerspectiveFieldOfView(CesiumMath.toRadians(60.0), width / height, 1.0, 10.0);
+        var vpTransform = Matrix4.createViewportTransformation(
+            {
+                width : width,
+                height : height
+            });
+
+        var z = -perspective.getColumn3Row2() / perspective.getColumn2Row2();
+        var x = z / perspective.getColumn0Row0();
+        var y = z / perspective.getColumn1Row1();
+        var point = new Cartesian3(x, y, z);
+        var expected = new Cartesian2(0.0, 0.0);
+        var actual = Transforms.pointToWindowCoordinates(perspective, vpTransform, point);
+
+        expect(actual.equalsEpsilon(expected, CesiumMath.EPSILON12)).toEqual(true);
+    });
+
+    it("transform point to window coordinates upper right", function() {
+        var width = 1024.0;
+        var height = 768.0;
+        var perspective = Matrix4.createPerspectiveFieldOfView(CesiumMath.toRadians(60.0), width / height, 1.0, 10.0);
+        var vpTransform = Matrix4.createViewportTransformation(
+            {
+                width : width,
+                height : height
+            });
+
+        var z = -perspective.getColumn3Row2() / perspective.getColumn2Row2();
+        var x = -z / perspective.getColumn0Row0();
+        var y = -z / perspective.getColumn1Row1();
+        var point = new Cartesian3(x, y, z);
+        var expected = new Cartesian2(width, height);
+        var actual = Transforms.pointToWindowCoordinates(perspective, vpTransform, point);
+
+        expect(actual.equalsEpsilon(expected, CesiumMath.EPSILON12)).toEqual(true);
+    });
+
 });
