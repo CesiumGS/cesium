@@ -1,8 +1,8 @@
 /*global define document canvas*/
-define(['./DynamicTextureAtlas',
-        'Core/Color',
-        'Scene/BillboardCollection'],
-function(DynamicTextureAtlas,
+define(['../Renderer/TextureAtlas',
+        '../Core/Color',
+        '../Scene/BillboardCollection'],
+function(TextureAtlas,
          Color,
          BillboardCollection) {
     "use strict";
@@ -14,9 +14,9 @@ function(DynamicTextureAtlas,
         var billboardCollection = this._billboardCollection = new BillboardCollection();
         scene.getPrimitives().add(billboardCollection);
 
-        this._textureAtlas = new DynamicTextureAtlas(scene.getContext(), function(atlas) {
-            billboardCollection.setTextureAtlas(atlas);
-        });
+        var atlas = new TextureAtlas(scene.getContext());
+        this._textureAtlas = atlas;
+        billboardCollection.setTextureAtlas(atlas);
     }
 
     DynamicPointVisualizer.prototype.update = function(time, czmlObjects) {
@@ -135,7 +135,7 @@ function(DynamicTextureAtlas,
                 outlineWidth : outlineWidth
             });
 
-            this._textureAtlas.addTexture(textureId, function(loadedCallback) {
+            this._textureAtlas.addTextureFromFunction(textureId, function(loadedCallback) {
                 var canvas = document.createElement("canvas");
 
                 var length = pixelSize + (2 * outlineWidth);
