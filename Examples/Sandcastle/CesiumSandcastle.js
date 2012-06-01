@@ -51,7 +51,8 @@ require({
             domConstruct.destroy('loading');
         }}).play();
 
-        var editor, docTimer, that = this, cesiumContainer = registry.byId('cesiumContainer');
+        var jsEditor, htmlEditor, cssEditor, suggestButton = registry.byId('buttonSuggest');
+        var docTimer, that = this, cesiumContainer = registry.byId('cesiumContainer');
         var docNode = dojo.byId('docPopup'), docMessage = dojo.byId('docPopupMessage'), docTabs = {};
         that.types = [];
         xhr.get({
@@ -89,7 +90,7 @@ require({
         }
 
         function showDocPopup () {
-            var selectedText = editor.getSelection();
+            var selectedText = jsEditor.getSelection();
             if (selectedText && selectedText in that.types && typeof that.types[selectedText].push === 'function') {
                 var member, ele, i, len = that.types[selectedText].length;
                 docMessage.innerHTML = '';
@@ -105,7 +106,7 @@ require({
                     };
                     docMessage.appendChild(ele);
                 }
-                editor.addWidget(editor.getCursor(true), docNode);
+                jsEditor.addWidget(jsEditor.getCursor(true), docNode);
                 docNode.style.top = (parseInt(docNode.style.top, 10) - 5) + 'px';
             }
         }
@@ -132,13 +133,32 @@ require({
             CodeMirror.simpleHint(cm, CodeMirror.cesiumHint);
         };
 
-        editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+        jsEditor = CodeMirror.fromTextArea(document.getElementById("code"), {
+            mode: "javascript",
             lineNumbers: true,
             matchBrackets: true,
             indentUnit: 4,
             extraKeys: {"Ctrl-Space": "autocomplete", "F9": "runCesium"},
             onCursorActivity: onCursorActivity
         });
+
+        htmlEditor = CodeMirror.fromTextArea(document.getElementById("htmlBody"), {
+            mode: { name: "xml", htmlMode: true },
+            lineNumbers: true,
+            matchBrackets: true,
+            indentUnit: 4,
+            extraKeys: {"F9": "runCesium"},
+        });
+        window.htmlEditor = htmlEditor;
+
+        cssEditor = CodeMirror.fromTextArea(document.getElementById("styleCode"), {
+            mode: "css",
+            lineNumbers: true,
+            matchBrackets: true,
+            indentUnit: 4,
+            extraKeys: {"F9": "runCesium"},
+        });
+        window.cssEditor = cssEditor;
 
         // The iframe (bucket.html) sends this message on load.
         // This triggers the code to be injected into the iframe.
@@ -149,7 +169,7 @@ require({
                 var bucketDoc = bucketFrame.contentDocument;
                 var sc = bucketDoc.createElement('script');
                 sc.type = 'text/javascript';
-                sc.textContent = editor.getValue();
+                sc.textContent = jsEditor.getValue();
                 bucketDoc.body.appendChild(sc);
             } else if (typeof e.data.log !== 'undefined') {
                 var ele = document.createElement('span');
@@ -163,12 +183,27 @@ require({
             }
         }, true);
 
+        registry.byId('jsContainer').on('show', function () {
+            suggestButton.set('disabled', false);
+            jsEditor.refresh();
+        });
+
+        registry.byId('htmlContainer').on('show', function () {
+            suggestButton.set('disabled', true);
+            htmlEditor.refresh();
+        });
+
+        registry.byId('cssContainer').on('show', function () {
+            suggestButton.set('disabled', true);
+            cssEditor.refresh();
+        });
+
         // Clicking the 'Run' button simply reloads the iframe.
         registry.byId('buttonRun').on('click', function () {
             CodeMirror.commands.runCesium();
         });
 
         registry.byId('buttonSuggest').on('click', function () {
-            CodeMirror.commands.autocomplete(editor);
+            CodeMirror.commands.autocomplete(jsEditor);
         });
     });
