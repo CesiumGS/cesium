@@ -10,7 +10,9 @@ define([
     /**
      *
      * The reflection map works by reflecting the world-space view
-     * vector off of
+     * vector off of the surface normal. The reflected vector samples
+     * a cube map. The user provides a cube map, a diffuse texture,
+     * a reflectivity parameter, and optionally a grayscale reflection map.
      *
      * @name ReflectionMapMaterial
      * @constructor
@@ -19,17 +21,47 @@ define([
         var t = template || {};
 
         /**
-         * Cube map texture
+         * RGB Cube map texture
          */
-        this.texture = t.texture;
+        this.cubeMap = t.cubeMap;
+
+        /**
+         * RGBA Diffuse texture
+         */
+        this.diffuseTexture = t.diffuseTexture;
+
+        /**
+         * Grayscale reflection map
+         */
+        this.reflectionMap = t.reflectionMap;
+
+        /**
+         * Reflectivity controls how strong the reflection is from 0.0 to 1.0
+         */
+        this.reflectivity = t.reflectivity;
 
         var that = this;
         this._uniforms = {
-            u_texture : function() {
-                if (typeof that.texture === 'undefined') {
+            u_cubeMap : function() {
+                if (typeof that.cubeMap === 'undefined') {
+                    throw new DeveloperError("Reflection cube map required.");
+                }
+                return that.cubeMap;
+            },
+            u_diffuseTexture : function() {
+                if (typeof that.diffuseTexture === 'undefined') {
+                    throw new DeveloperError("Reflection diffuse texture required.");
+                }
+                return that.diffuseTexture;
+            },
+            u_reflectionMap : function() {
+                if (typeof that.reflectionMap === 'undefined') {
                     throw new DeveloperError("Reflection map texture required.");
                 }
-                return that.texture;
+                return that.reflectionMap;
+            },
+            u_reflectivity : function() {
+                return that.reflectivity;
             }
         };
     }
