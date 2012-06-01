@@ -409,7 +409,7 @@ define([
             this._createTextureAtlas = false;
 
             // The previous texture atlas is implicitly destroyed by the billboard collection.
-            var textureAtlas = (this._labels.length > 0) ? context.createTextureAtlas(this._canvasContainer.getItems(), PixelFormat.RGBA, 1) : null;
+            var textureAtlas = (this._labels.length > 0) ? context.createTextureAtlas(this._canvasContainer.getItems(), PixelFormat.RGBA, 1) : undefined;
             this._billboardCollection.setTextureAtlas(textureAtlas);
         }
 

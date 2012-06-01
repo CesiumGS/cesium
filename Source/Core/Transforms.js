@@ -5,6 +5,7 @@ define([
         './Matrix3',
         './Matrix4',
         './Cartesian3',
+        './Cartesian4',
         './TimeStandard',
         './TimeConstants',
         './Ellipsoid'
@@ -15,6 +16,7 @@ define([
         Matrix3,
         Matrix4,
         Cartesian3,
+        Cartesian4,
         TimeStandard,
         TimeConstants,
         Ellipsoid) {
@@ -132,6 +134,44 @@ define([
                 bitangent.y, tangent.y, -normal.y, position.y,
                 bitangent.z, tangent.z, -normal.z, position.z,
                 0.0,         0.0,        0.0,      1.0);
+        },
+
+        /**
+         * Transform a point from model coordinates to window coordinates.
+         *
+         * @param {Matrix4} modelViewProjectionMatrix The 4x4 model-view-projection matrix.
+         * @param {Matrix4} viewportTransformation The 4x4 viewport transformation.
+         * @param {Cartesian3} point The point to transform.
+         *
+         * @returns {Cartesian2} The point in window coordinates.
+         *
+         * @see UniformState#getModelViewProjection
+         * @see agi_modelViewProjection
+         * @see UniformState#getViewportTransformation
+         * @see agi_viewportTransformation
+         *
+         * @exception {DeveloperError} modelViewProjectionMatrix is required.
+         * @exception {DeveloperError} viewportTransformation is required.
+         * @exception {DeveloperError} point is required.
+         */
+        pointToWindowCoordinates : function (modelViewProjectionMatrix, viewportTransformation, point) {
+            if (typeof modelViewProjectionMatrix === 'undefined') {
+                throw new DeveloperError("modelViewProjectionMatrix is required.", "modelViewProjectionMatrix");
+            }
+
+            if (typeof viewportTransformation === 'undefined') {
+                throw new DeveloperError("viewportTransformation is required.", "viewportTransformation");
+            }
+
+            if (typeof point === 'undefined') {
+                throw new DeveloperError("point is required.", "point");
+            }
+
+            var pnt = new Cartesian4(point.x, point.y, point.z, 1.0);
+            pnt = modelViewProjectionMatrix.multiplyWithVector(pnt);
+            pnt = pnt.multiplyWithScalar(1.0 / pnt.w);
+            pnt = viewportTransformation.multiplyWithVector(pnt);
+            return pnt.getXY();
         }
     };
 

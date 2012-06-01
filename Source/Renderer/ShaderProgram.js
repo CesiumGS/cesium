@@ -901,6 +901,46 @@ define([
                 },
 
                 /**
+                 * An automatic GLSL uniform representing a 4x4 inverse projection transformation matrix that
+                 * transforms from clip coordinates to eye coordinates. Clip coordinates is the
+                 * coordinate system for a vertex shader's <code>gl_Position</code> output.
+                 * <br /><br />
+                 * Like all automatic uniforms, <code>agi_inverseProjection</code> does not need to be explicitly declared.
+                 * However, it can be explicitly declared when a shader is also used by other applications such
+                 * as a third-party authoring tool.
+                 *
+                 * @name agi_inverseProjection
+                 * @glslUniform
+                 *
+                 * @see UniformState#getInverseProjection
+                 * @see agi_projection
+                 *
+                 * @example
+                 * // GLSL declaration
+                 * uniform mat4 agi_inverseProjection;
+                 *
+                 * // Example
+                 * vec4 eyePosition = agi_inverseProjection * clipPosition;
+                 */
+                agi_inverseProjection : {
+                    getSize : function() {
+                        return 1;
+                    },
+
+                    getDatatype : function() {
+                        return UniformDatatype.FLOAT_MATRIX4;
+                    },
+
+                    create : function(uniform) {
+                        return {
+                            _set : function(uniformState) {
+                                uniform.value = uniformState.getInverseProjection();
+                            }
+                        };
+                    }
+                },
+
+                /**
                  * An automatic GLSL uniform representing a 4x4 projection transformation matrix with the far plane at infinity,
                  * that transforms eye coordinates to clip coordinates.  Clip coordinates is the
                  * coordinate system for a vertex shader's <code>gl_Position</code> output.  An infinite far plane is used

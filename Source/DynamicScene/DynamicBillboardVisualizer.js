@@ -1,11 +1,11 @@
 /*global define*/
 define([
-        './DynamicTextureAtlas',
+        '../Renderer/TextureAtlas',
         '../Scene/BillboardCollection',
         '../Scene/HorizontalOrigin',
         '../Scene/VerticalOrigin'
     ], function(
-        DynamicTextureAtlas,
+        TextureAtlas,
         BillboardCollection,
         HorizontalOrigin,
         VerticalOrigin) {
@@ -18,9 +18,9 @@ define([
         var billboardCollection = this._billboardCollection = new BillboardCollection();
         scene.getPrimitives().add(billboardCollection);
 
-        this._textureAtlas = new DynamicTextureAtlas(scene.getContext(), function(atlas) {
-            billboardCollection.setTextureAtlas(atlas);
-        });
+        var atlas = new TextureAtlas(scene.getContext());
+        this._textureAtlas = atlas;
+        billboardCollection.setTextureAtlas(atlas);
     }
 
     DynamicBillboardVisualizer.prototype.update = function(time, czmlObjects) {

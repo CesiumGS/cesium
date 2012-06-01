@@ -42,6 +42,7 @@ define([
 
         // Derived members
         this._inverseViewDirty = true;
+        this._inverseProjectionDirty = true;
         this._modelViewDirty = true;
         this._inverseModelViewDirty = true;
         this._viewProjectionDirty = true;
@@ -216,6 +217,7 @@ define([
         matrix = matrix || Matrix4.IDENTITY;
 
         this._projection = matrix;
+        this._inverseProjectionDirty = true;
         this._viewProjectionDirty = true;
         this._modelViewProjectionDirty = true;
     };
@@ -232,6 +234,29 @@ define([
      */
     UniformState.prototype.getProjection = function() {
         return this._projection;
+    };
+
+    UniformState.prototype._cleanInverseProjection = function() {
+        if (this._inverseProjectionDirty) {
+            this._inverseProjectionDirty = false;
+
+            var n = this.getProjection().inverse();
+            this._inverseProjection = n;
+        }
+    };
+
+    /**
+     * DOC_TBA
+     *
+     * @memberof UniformState
+     *
+     * @return {Matrix4} DOC_TBA.
+     *
+     * @see agi_inverseProjection
+     */
+    UniformState.prototype.getInverseProjection = function() {
+        this._cleanInverseProjection();
+        return this._inverseProjection;
     };
 
     /**
