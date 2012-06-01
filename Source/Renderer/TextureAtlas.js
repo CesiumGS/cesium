@@ -39,7 +39,7 @@ define([
      * @name TextureAtlas
      *
      * @param {Context} context The context that the created texture will be used by.
-     * @param {Array} images DOC_TBA
+     * @param {Array} [images] DOC_TBA
      * @param {PixelFormat}[pixelFormat = PixelFormat.RGBA] DOC_TBA
      * @param {Number}[borderWidthInPixels = 1]  DOC_TBA
      *
@@ -193,9 +193,28 @@ define([
         this.textureAtlasChanged.raiseEvent(this);
     };
 
+    /**
+     * Adds the provided image to the atlas. The supplied callback is triggered with the
+     * index of the texture once it is ready for use in the atlas.  If the atlas already
+     * contains an image with the same idea, the callback is triggered immediately and
+     * the atlas itself is unmodified.
+     *
+     * @memberof TextureAtlas
+     *
+     * @param {Image} image The image to add to the atlas.
+     * @param {Function} textureAvailableCallback DOC_TBA.
+     * @param {Object} [id] The id to use for the texture.  If none is provided the <code>image.src</code> property is used.
+     *
+     * @exception {DeveloperError} image is required.
+     * @exception {DeveloperError} textureAvailableCallback is required.
+     */
     TextureAtlas.prototype.addTexture = function(image, textureAvailableCallback, id) {
         if (typeof image === 'undefined') {
             throw new DeveloperError("url is required.");
+        }
+
+        if (typeof textureAvailableCallback === 'undefined') {
+            throw new DeveloperError("textureAvailableCallback is required.");
         }
 
         this.addTextureFromFunction(id || image.src, function(callback) {
@@ -209,7 +228,7 @@ define([
      * If the url is already in the atlas, the atlas is unchanged and the callback
      * is triggered immediately.
      *
-     * @memberof TextureAtlasFactory
+     * @memberof TextureAtlas
      *
      * @param {String} url The url of the image to add to the atlas.
      * @param {Function} textureAvailableCallback DOC_TBA.
@@ -245,7 +264,7 @@ define([
      * them across words.
      * </p>
      *
-     * @memberof TextureAtlasFactory
+     * @memberof TextureAtlas
      *
      * @param {String} id The id of the image to add to the atlas.
      * @param {Function} getImageCallback DOC_TBA.

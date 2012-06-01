@@ -39,7 +39,7 @@ define([
      * @memberof Event
      *
      * @param {Function} listener The function to be executed when the event is raised.
-     * @param {Object} scope An optional object scope to serve as the <code>this</code>
+     * @param {Object} [scope] An optional object scope to serve as the <code>this</code>
      * pointer in which the listener function will execute.
      *
      * @see Event#raiseEvent
@@ -49,7 +49,7 @@ define([
      * @exception {DeveloperError} listener is already subscribed.
      */
     Event.prototype.addEventListener = function(listener, scope) {
-        if (typeof listener !== 'function' || listener === null) {
+        if (typeof listener !== 'function') {
             throw new DeveloperError("listener is required and must be a function.");
         }
 
@@ -80,7 +80,7 @@ define([
      * @exception {DeveloperError} listener is not subscribed.
      */
     Event.prototype.removeEventListener = function(listener) {
-        if (typeof listener !== 'function' || listener === null) {
+        if (typeof listener !== 'function') {
             throw new DeveloperError("listener is required and must be a function.");
         }
 
