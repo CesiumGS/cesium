@@ -117,6 +117,7 @@ require({
                 checked: cb.showGroundAtmosphere,
                 onChange: function (newValue) {
                     cb.showGroundAtmosphere = newValue;
+                    console.log('Show ground atmosphere: ' + newValue);
                 }
             }).placeAt("toolbar");
 
@@ -126,6 +127,7 @@ require({
                 checked: cb.showSkyAtmosphere,
                 onChange: function (newValue) {
                     cb.showSkyAtmosphere = newValue;
+                    console.log('Show sky atmosphere: ' + newValue);
                 }
             }).placeAt("toolbar");
         },
@@ -185,6 +187,7 @@ require({
         checked: cb.showGroundAtmosphere,
         onChange: function (newValue) {
             cb.showGroundAtmosphere = newValue;
+            console.log('Show ground atmosphere: ' + newValue);
         }
     }).placeAt("toolbar");
 
@@ -194,6 +197,7 @@ require({
         checked: cb.showSkyAtmosphere,
         onChange: function (newValue) {
             cb.showSkyAtmosphere = newValue;
+            console.log('Show sky atmosphere: ' + newValue);
         }
     }).placeAt("toolbar");
 
@@ -303,14 +307,11 @@ body {
             <div id="bucketPane" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: 'Cesium'">
                 <iframe id="bucketFrame" src="bucket.html" class="fullFrame"></iframe>
             </div>
-            <div data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: 'Console log'">
-                <div class="logContainer">
-                    <div id="logOutput"></div>
-                </div>
-            </div>
         </div>
-        <div id="bottomBar" class="edgePanel" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="region: 'bottom', splitter: true">
-        <p>Film strip of effects goes here</p>
+        <div class="bottomPanel" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="region: 'bottom', splitter: true" style="height: 100px;" tabindex="10">
+            <div class="logContainer">
+                <div id="logOutput"></div>
+            </div>
         </div>
     </div>
     <div class="dijitTooltip dijitTooltipBelow" id="docPopup">

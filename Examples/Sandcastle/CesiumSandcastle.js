@@ -150,6 +150,12 @@ require({
             extraKeys: {"F9": "runCesium"},
         });
 
+        function appendConsole(element) {
+            logOutput.appendChild(element);
+            //registry.byId("appLayout").resize();
+            logOutput.parentNode.scrollTop = logOutput.clientHeight + 8 - logOutput.parentNode.clientHeight;
+        }
+
         // The iframe (bucket.html) sends this message on load.
         // This triggers the code to be injected into the iframe.
         window.addEventListener('message', function (e) {
@@ -167,12 +173,12 @@ require({
             } else if (typeof e.data.log !== 'undefined') {
                 var ele = document.createElement('span');
                 ele.textContent = e.data.log + "\n";
-                logOutput.appendChild(ele);
+                appendConsole(ele);
             } else if (typeof e.data.error !== 'undefined') {
                 var ele = document.createElement('span');
                 ele.className = 'consoleError';
                 ele.textContent = e.data.error + "\n";
-                logOutput.appendChild(ele);
+                appendConsole(ele);
             }
         }, true);
 

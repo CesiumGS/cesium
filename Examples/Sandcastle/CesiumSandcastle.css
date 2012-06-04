@@ -60,12 +60,13 @@ html, body {
 	display: block;
 	width: 100%;
 	height: 100%;
-	overflow: auto;
+	overflow-x: hidden;
+	overflow-y: scroll;
 }
 
 #logOutput {
 	white-space: pre;
-	padding: 7px;
+	padding: 2px 4px;
 	font-size: 9pt;
 	font-family: monospace;
 }
@@ -82,6 +83,11 @@ html, body {
 
 .CodeMirror, .CodeMirror-scroll {
     height: 100%;
+}
+
+.claro .bottomPanel {
+    padding: 0;
+    overflow: hidden;
 }
 
 .claro .dijitTabContainerBottom-tabs .dijitTabChecked .dijitTabContent {
