@@ -1,15 +1,15 @@
 /*global define*/
 define([
         '../Core/TimeInterval',
-        './BooleanDataHandler',
-        './NumberDataHandler',
-        './ColorDataHandler',
+        './CzmlBoolean',
+        './CzmlNumber',
+        './CzmlColor',
         './DynamicProperty'
     ], function(
          TimeInterval,
-         BooleanDataHandler,
-         NumberDataHandler,
-         ColorDataHandler,
+         CzmlBoolean,
+         CzmlNumber,
+         CzmlColor,
          DynamicProperty) {
     "use strict";
 
@@ -42,11 +42,11 @@ define([
             }
 
             //Create or update each of the properties.
-            pointUpdated = DynamicProperty.createOrUpdate(point, "color", ColorDataHandler, pointData.color, interval, czmlObjectCollection) || pointUpdated;
-            pointUpdated = DynamicProperty.createOrUpdate(point, "pixelSize", NumberDataHandler, pointData.pixelSize, interval, czmlObjectCollection) || pointUpdated;
-            pointUpdated = DynamicProperty.createOrUpdate(point, "outlineColor", ColorDataHandler, pointData.outlineColor, interval, czmlObjectCollection) || pointUpdated;
-            pointUpdated = DynamicProperty.createOrUpdate(point, "outlineWidth", NumberDataHandler, pointData.outlineWidth, interval, czmlObjectCollection) || pointUpdated;
-            pointUpdated = DynamicProperty.createOrUpdate(point, "show", BooleanDataHandler, pointData.show, interval, czmlObjectCollection) || pointUpdated;
+            pointUpdated = DynamicProperty.createOrUpdate(point, "color", CzmlColor, pointData.color, interval, czmlObjectCollection) || pointUpdated;
+            pointUpdated = DynamicProperty.createOrUpdate(point, "pixelSize", CzmlNumber, pointData.pixelSize, interval, czmlObjectCollection) || pointUpdated;
+            pointUpdated = DynamicProperty.createOrUpdate(point, "outlineColor", CzmlColor, pointData.outlineColor, interval, czmlObjectCollection) || pointUpdated;
+            pointUpdated = DynamicProperty.createOrUpdate(point, "outlineWidth", CzmlNumber, pointData.outlineWidth, interval, czmlObjectCollection) || pointUpdated;
+            pointUpdated = DynamicProperty.createOrUpdate(point, "show", CzmlBoolean, pointData.show, interval, czmlObjectCollection) || pointUpdated;
 
             return pointUpdated;
         }

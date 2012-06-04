@@ -1,17 +1,17 @@
 /*global define*/
 define([
         '../Core/TimeInterval',
-        './BooleanDataHandler',
-        './NumberDataHandler',
-        './ColorDataHandler',
+        './CzmlBoolean',
+        './CzmlNumber',
+        './CzmlColor',
         './DynamicProperty',
         './DynamicDirectionsProperty',
         './DynamicMaterialProperty'
     ], function(
         TimeInterval,
-        BooleanDataHandler,
-        NumberDataHandler,
-        ColorDataHandler,
+        CzmlBoolean,
+        CzmlNumber,
+        CzmlColor,
         DynamicProperty,
         DynamicDirectionsProperty,
         DynamicMaterialProperty) {
@@ -48,12 +48,12 @@ define([
             }
 
             //Create or update each of the properties.
-            pyramidUpdated = DynamicProperty.createOrUpdate(pyramid, "show", BooleanDataHandler, pyramidData.show, interval, czmlObjectCollection) || pyramidUpdated;
+            pyramidUpdated = DynamicProperty.createOrUpdate(pyramid, "show", CzmlBoolean, pyramidData.show, interval, czmlObjectCollection) || pyramidUpdated;
             pyramidUpdated = DynamicDirectionsProperty.createOrUpdate(pyramid, "directions", pyramidData.directions, interval, czmlObjectCollection) || pyramidUpdated;
-            pyramidUpdated = DynamicProperty.createOrUpdate(pyramid, "radius", NumberDataHandler, pyramidData.radius, interval, czmlObjectCollection) || pyramidUpdated;
-            pyramidUpdated = DynamicProperty.createOrUpdate(pyramid, "showIntersection", BooleanDataHandler, pyramidData.showIntersection, interval, czmlObjectCollection) || pyramidUpdated;
-            pyramidUpdated = DynamicProperty.createOrUpdate(pyramid, "intersectionColor", ColorDataHandler, pyramidData.intersectionColor, interval, czmlObjectCollection) || pyramidUpdated;
-            pyramidUpdated = DynamicProperty.createOrUpdate(pyramid, "erosion", NumberDataHandler, pyramidData.erosion, interval, czmlObjectCollection) || pyramidUpdated;
+            pyramidUpdated = DynamicProperty.createOrUpdate(pyramid, "radius", CzmlNumber, pyramidData.radius, interval, czmlObjectCollection) || pyramidUpdated;
+            pyramidUpdated = DynamicProperty.createOrUpdate(pyramid, "showIntersection", CzmlBoolean, pyramidData.showIntersection, interval, czmlObjectCollection) || pyramidUpdated;
+            pyramidUpdated = DynamicProperty.createOrUpdate(pyramid, "intersectionColor", CzmlColor, pyramidData.intersectionColor, interval, czmlObjectCollection) || pyramidUpdated;
+            pyramidUpdated = DynamicProperty.createOrUpdate(pyramid, "erosion", CzmlNumber, pyramidData.erosion, interval, czmlObjectCollection) || pyramidUpdated;
             pyramidUpdated = DynamicMaterialProperty.createOrUpdate(pyramid, "material", pyramidData.material, interval, czmlObjectCollection) || pyramidUpdated;
 
             return pyramidUpdated;

@@ -1,15 +1,15 @@
 /*global define*/
 define([
         '../Core/TimeInterval',
-        './BooleanDataHandler',
-        './NumberDataHandler',
-        './ColorDataHandler',
+        './CzmlBoolean',
+        './CzmlNumber',
+        './CzmlColor',
         './DynamicProperty'],
 function(
         TimeInterval,
-        BooleanDataHandler,
-        NumberDataHandler,
-        ColorDataHandler,
+        CzmlBoolean,
+        CzmlNumber,
+        CzmlColor,
         DynamicProperty) {
     "use strict";
 
@@ -42,11 +42,11 @@ function(
             }
 
             //Create or update each of the properties.
-            polylineUpdated = DynamicProperty.createOrUpdate(polyline, "color", ColorDataHandler, polylineData.color, interval, czmlObjectCollection) || polylineUpdated;
-            polylineUpdated = DynamicProperty.createOrUpdate(polyline, "outlineColor", ColorDataHandler, polylineData.outlineColor, interval, czmlObjectCollection) || polylineUpdated;
-            polylineUpdated = DynamicProperty.createOrUpdate(polyline, "outlineWidth", NumberDataHandler, polylineData.outlineWidth, interval, czmlObjectCollection) || polylineUpdated;
-            polylineUpdated = DynamicProperty.createOrUpdate(polyline, "show", BooleanDataHandler, polylineData.show, interval, czmlObjectCollection) || polylineUpdated;
-            polylineUpdated = DynamicProperty.createOrUpdate(polyline, "width", NumberDataHandler, polylineData.width, interval, czmlObjectCollection) || polylineUpdated;
+            polylineUpdated = DynamicProperty.createOrUpdate(polyline, "color", CzmlColor, polylineData.color, interval, czmlObjectCollection) || polylineUpdated;
+            polylineUpdated = DynamicProperty.createOrUpdate(polyline, "outlineColor", CzmlColor, polylineData.outlineColor, interval, czmlObjectCollection) || polylineUpdated;
+            polylineUpdated = DynamicProperty.createOrUpdate(polyline, "outlineWidth", CzmlNumber, polylineData.outlineWidth, interval, czmlObjectCollection) || polylineUpdated;
+            polylineUpdated = DynamicProperty.createOrUpdate(polyline, "show", CzmlBoolean, polylineData.show, interval, czmlObjectCollection) || polylineUpdated;
+            polylineUpdated = DynamicProperty.createOrUpdate(polyline, "width", CzmlNumber, polylineData.width, interval, czmlObjectCollection) || polylineUpdated;
 
             return polylineUpdated;
         }

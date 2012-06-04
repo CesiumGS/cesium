@@ -1,12 +1,12 @@
 /*global define*/
 define([
         '../Core/TimeInterval',
-        './BooleanDataHandler',
+        './CzmlBoolean',
         './DynamicProperty',
         './DynamicMaterialProperty'
     ], function(
          TimeInterval,
-         BooleanDataHandler,
+         CzmlBoolean,
          DynamicProperty,
          DynamicMaterialProperty) {
     "use strict";
@@ -37,7 +37,7 @@ define([
             }
 
             //Create or update each of the properties.
-            polygonUpdated = DynamicProperty.createOrUpdate(polygon, "show", BooleanDataHandler, polygonData.show, interval, czmlObjectCollection) || polygonUpdated;
+            polygonUpdated = DynamicProperty.createOrUpdate(polygon, "show", CzmlBoolean, polygonData.show, interval, czmlObjectCollection) || polygonUpdated;
             polygonUpdated = DynamicMaterialProperty.createOrUpdate(polygon, "material", polygonData.material, interval, czmlObjectCollection) || polygonUpdated;
             return polygonUpdated;
         }

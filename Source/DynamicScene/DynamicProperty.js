@@ -31,8 +31,8 @@ define([
         return epoch.addSeconds(date);
     }
 
-    function DynamicProperty(dataHandler) {
-        this.dataHandler = dataHandler;
+    function DynamicProperty(valueType) {
+        this.valueType = valueType;
         this._intervals = new TimeIntervalCollection();
     }
 
@@ -55,7 +55,7 @@ define([
         return newProperty;
     };
 
-    DynamicProperty._mergeNewSamples = function(epoch, times, values, newData, doublesPerValue, dataHandler) {
+    DynamicProperty._mergeNewSamples = function(epoch, times, values, newData, doublesPerValue, valueType) {
         var newDataIndex = 0, i, prevItem, timesInsertionPoint, valuesInsertionPoint, timesSpliceArgs, valuesSpliceArgs, currentTime, nextTime;
         while (newDataIndex < newData.length) {
             currentTime = convertDate(newData[newDataIndex], epoch);
@@ -123,13 +123,13 @@ define([
             iso8601Interval = iso8601Interval.intersect(constrainedInterval);
         }
 
-        var unwrappedInterval = this.dataHandler.unwrapCzmlInterval(czmlInterval);
+        var unwrappedInterval = this.valueType.unwrapInterval(czmlInterval);
         this.addIntervalUnwrapped(iso8601Interval.start, iso8601Interval.stop, czmlInterval, unwrappedInterval, buffer);
     };
 
     DynamicProperty.prototype.addIntervalUnwrapped = function(start, stop, czmlInterval, unwrappedInterval, buffer) {
-        var this_intervals = this._intervals;
-        var existingInterval = this_intervals.findInterval(start, stop);
+        var thisIntervals = this._intervals;
+        var existingInterval = thisIntervals.findInterval(start, stop);
 
         var intervalData;
         if (typeof existingInterval === 'undefined') {
@@ -140,13 +140,13 @@ define([
 
             existingInterval = new TimeInterval(start, stop, true, true);
             existingInterval.data = intervalData;
-            this_intervals.addInterval(existingInterval);
+            thisIntervals.addInterval(existingInterval);
         } else {
             intervalData = existingInterval.data;
         }
 
-        var this_dataHandler = this.dataHandler;
-        if (this_dataHandler.isSampled(unwrappedInterval)) {
+        var thisValueType = this.valueType;
+        if (thisValueType.isSampled(unwrappedInterval)) {
             var interpolationAlgorithm;
             var interpolationAlgorithmType = czmlInterval.interpolationAlgorithm;
             if (interpolationAlgorithmType) {
@@ -170,17 +170,17 @@ define([
             if (typeof epoch !== 'undefined') {
                 epoch = JulianDate.fromIso8601(epoch);
             }
-            DynamicProperty._mergeNewSamples(epoch, intervalData.times, intervalData.values, unwrappedInterval, this_dataHandler.doublesPerValue, this_dataHandler);
+            DynamicProperty._mergeNewSamples(epoch, intervalData.times, intervalData.values, unwrappedInterval, thisValueType.doublesPerValue, thisValueType);
         } else {
             //Packet itself is a constant value
             intervalData.times = undefined;
-            intervalData.values = this_dataHandler.createValue(unwrappedInterval);
+            intervalData.values = thisValueType.createValue(unwrappedInterval);
             intervalData.isSampled = false;
         }
     };
 
     DynamicProperty.prototype.getValue = function(time) {
-        var this_dataHandler = this.dataHandler;
+        var thisValueType = this.valueType;
         var interval = this._intervals.findIntervalContainingDate(time);
 
         if (typeof interval !== 'undefined') {
@@ -225,7 +225,7 @@ define([
 
                     var length = lastIndex - firstIndex + 1;
 
-                    var doublesPerInterpolationValue = this_dataHandler.doublesPerInterpolationValue, xTable = intervalData.xTable, yTable = intervalData.yTable;
+                    var doublesPerInterpolationValue = thisValueType.doublesPerInterpolationValue, xTable = intervalData.xTable, yTable = intervalData.yTable;
 
                     if (typeof xTable === 'undefined') {
                         xTable = intervalData.xTable = new Array(intervalData.numberOfPoints);
@@ -236,16 +236,16 @@ define([
                     for ( var i = 0; i < length; ++i) {
                         xTable[i] = times[lastIndex].getSecondsDifference(times[firstIndex + i]);
                     }
-                    this_dataHandler.packValuesForInterpolation(values, yTable, firstIndex, lastIndex);
+                    thisValueType.packValuesForInterpolation(values, yTable, firstIndex, lastIndex);
 
                     // Interpolate!
                     var x = times[lastIndex].getSecondsDifference(time);
                     var interpolationFunction = intervalData.interpolationAlgorithm.interpolateOrderZero;
                     var result = interpolationFunction(x, xTable, yTable, doublesPerInterpolationValue);
 
-                    return this_dataHandler.createValueFromInterpolationResult(result, values, firstIndex, lastIndex);
+                    return thisValueType.createValueFromInterpolationResult(result, values, firstIndex, lastIndex);
                 }
-                return this_dataHandler.createValueFromArray(intervalData.values, index * this_dataHandler.doublesPerValue);
+                return thisValueType.createValueFromArray(intervalData.values, index * thisValueType.doublesPerValue);
             }
             return intervalData.values;
         }

@@ -1,21 +1,21 @@
 /*global define*/
 define([
         '../Core/TimeInterval',
-        './BooleanDataHandler',
-        './Cartesian2DataHandler',
-        './Cartesian3DataHandler',
-        './NumberDataHandler',
-        './StringDataHandler',
-        './ColorDataHandler',
+        './CzmlBoolean',
+        './CzmlCartesian2',
+        './CzmlCartesian3',
+        './CzmlNumber',
+        './CzmlString',
+        './CzmlColor',
         './DynamicProperty'
     ], function(
         TimeInterval,
-        BooleanDataHandler,
-        Cartesian2DataHandler,
-        Cartesian3DataHandler,
-        NumberDataHandler,
-        StringDataHandler,
-        ColorDataHandler,
+        CzmlBoolean,
+        CzmlCartesian2,
+        CzmlCartesian3,
+        CzmlNumber,
+        CzmlString,
+        CzmlColor,
         DynamicProperty) {
     "use strict";
 
@@ -60,16 +60,16 @@ define([
             }
 
             //Create or update each of the properties.
-            billboardUpdated = DynamicProperty.createOrUpdate(billboard, "color", ColorDataHandler, billboardData.color, interval, czmlObjectCollection) || billboardUpdated;
-            billboardUpdated = DynamicProperty.createOrUpdate(billboard, "eyeOffset", Cartesian3DataHandler, billboardData.eyeOffset, interval, czmlObjectCollection) || billboardUpdated;
-            billboardUpdated = DynamicProperty.createOrUpdate(billboard, "horizontalOrigin", StringDataHandler, billboardData.horizontalOrigin, interval, czmlObjectCollection) || billboardUpdated;
-            billboardUpdated = DynamicProperty.createOrUpdate(billboard, "image", StringDataHandler, billboardData.image, interval, czmlObjectCollection) || billboardUpdated;
-            billboardUpdated = DynamicProperty.createOrUpdate(billboard, "pixelOffset", Cartesian2DataHandler, billboardData.pixelOffset, interval, czmlObjectCollection) || billboardUpdated;
-            billboardUpdated = DynamicProperty.createOrUpdate(billboard, "rotation", NumberDataHandler, billboardData.rotation, interval, czmlObjectCollection) || billboardUpdated;
-            billboardUpdated = DynamicProperty.createOrUpdate(billboard, "scale", NumberDataHandler, billboardData.scale, interval, czmlObjectCollection) || billboardUpdated;
-            billboardUpdated = DynamicProperty.createOrUpdate(billboard, "show", BooleanDataHandler, billboardData.show, interval, czmlObjectCollection) || billboardUpdated;
-            billboardUpdated = DynamicProperty.createOrUpdate(billboard, "verticalOrigin", StringDataHandler, billboardData.verticalOrigin, interval, czmlObjectCollection) || billboardUpdated;
-            billboardUpdated = DynamicProperty.createOrUpdate(billboard, "color", ColorDataHandler, billboardData.color, interval, czmlObjectCollection) || billboardUpdated;
+            billboardUpdated = DynamicProperty.createOrUpdate(billboard, "color", CzmlColor, billboardData.color, interval, czmlObjectCollection) || billboardUpdated;
+            billboardUpdated = DynamicProperty.createOrUpdate(billboard, "eyeOffset", CzmlCartesian3, billboardData.eyeOffset, interval, czmlObjectCollection) || billboardUpdated;
+            billboardUpdated = DynamicProperty.createOrUpdate(billboard, "horizontalOrigin", CzmlString, billboardData.horizontalOrigin, interval, czmlObjectCollection) || billboardUpdated;
+            billboardUpdated = DynamicProperty.createOrUpdate(billboard, "image", CzmlString, billboardData.image, interval, czmlObjectCollection) || billboardUpdated;
+            billboardUpdated = DynamicProperty.createOrUpdate(billboard, "pixelOffset", CzmlCartesian2, billboardData.pixelOffset, interval, czmlObjectCollection) || billboardUpdated;
+            billboardUpdated = DynamicProperty.createOrUpdate(billboard, "rotation", CzmlNumber, billboardData.rotation, interval, czmlObjectCollection) || billboardUpdated;
+            billboardUpdated = DynamicProperty.createOrUpdate(billboard, "scale", CzmlNumber, billboardData.scale, interval, czmlObjectCollection) || billboardUpdated;
+            billboardUpdated = DynamicProperty.createOrUpdate(billboard, "show", CzmlBoolean, billboardData.show, interval, czmlObjectCollection) || billboardUpdated;
+            billboardUpdated = DynamicProperty.createOrUpdate(billboard, "verticalOrigin", CzmlString, billboardData.verticalOrigin, interval, czmlObjectCollection) || billboardUpdated;
+            billboardUpdated = DynamicProperty.createOrUpdate(billboard, "color", CzmlColor, billboardData.color, interval, czmlObjectCollection) || billboardUpdated;
 
             return billboardUpdated;
         }

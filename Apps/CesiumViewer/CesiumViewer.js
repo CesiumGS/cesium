@@ -24,7 +24,7 @@ define(['dojo/dom',
         'DynamicScene/DynamicPolygon',
         'DynamicScene/DynamicPolyline',
         'DynamicScene/DynamicPyramid',
-        'DynamicScene/CzmlObjectCollection',
+        'DynamicScene/DynamicObjectCollection',
         'DynamicScene/DynamicBillboardVisualizer',
         'DynamicScene/DynamicConeVisualizer',
         'DynamicScene/DynamicLabelVisualizer',
@@ -58,7 +58,7 @@ function(dom,
          DynamicPolygon,
          DynamicPolyline,
          DynamicPyramid,
-         CzmlObjectCollection,
+         DynamicObjectCollection,
          DynamicBillboardVisualizer,
          DynamicConeVisualizer,
          DynamicLabelVisualizer,
@@ -75,7 +75,7 @@ function(dom,
     var timeline;
     var transitioner;
 
-    var czmlObjectCollection = new CzmlObjectCollection({
+    var czmlObjectCollection = new DynamicObjectCollection({
         billboard : DynamicBillboard.createOrUpdate,
         cone : DynamicCone.createOrUpdate,
         label : DynamicLabel.createOrUpdate,

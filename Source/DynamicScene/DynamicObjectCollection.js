@@ -9,7 +9,7 @@ define([
         DynamicObject) {
     "use strict";
 
-    function CzmlObjectCollection(propertyFunctionsMap) {
+    function DynamicObjectCollection(propertyFunctionsMap) {
         this.parent = undefined;
         this._propertyFunctionsMap = propertyFunctionsMap;
         this._hash = {};
@@ -19,15 +19,15 @@ define([
         this.objectsRemoved = new Event();
     }
 
-    CzmlObjectCollection.prototype.getObject = function(id) {
+    DynamicObjectCollection.prototype.getObject = function(id) {
         return this._hash[id];
     };
 
-    CzmlObjectCollection.prototype.getObjects = function() {
+    DynamicObjectCollection.prototype.getObjects = function() {
         return this._array;
     };
 
-    CzmlObjectCollection.prototype.getOrCreateObject = function(id) {
+    DynamicObjectCollection.prototype.getOrCreateObject = function(id) {
         var obj = this._hash[id];
         if (!obj) {
             obj = new DynamicObject(id, this);
@@ -37,7 +37,7 @@ define([
         return obj;
     };
 
-    CzmlObjectCollection.prototype.clear = function() {
+    DynamicObjectCollection.prototype.clear = function() {
         var removedObjects = this._array;
         this._hash = {};
         this._array = [];
@@ -46,7 +46,7 @@ define([
         }
     };
 
-    CzmlObjectCollection.prototype.processCzml = function(packets, sourceUri) {
+    DynamicObjectCollection.prototype.processCzml = function(packets, sourceUri) {
         var updatedObjects = {};
 
         if (Array.isArray(packets)) {
@@ -71,9 +71,9 @@ define([
         return updatedObjects;
     };
 
-    CzmlObjectCollection.prototype._processCzmlPacket = function(packet, sourceUri, updatedObjects) {
+    DynamicObjectCollection.prototype._processCzmlPacket = function(packet, sourceUri, updatedObjects) {
         var objectId = packet.id;
-        var this_propertyFunctionsMap = this._propertyFunctionsMap;
+        var thisPropertyFunctionsMap = this._propertyFunctionsMap;
         if (typeof objectId === 'undefined') {
             objectId = createGuid();
         }
@@ -81,7 +81,7 @@ define([
         var object = this.getOrCreateObject(objectId);
         for ( var prop in packet) {
             if (typeof prop !== 'undefined') {
-                var propertyFunc = this_propertyFunctionsMap[prop];
+                var propertyFunc = thisPropertyFunctionsMap[prop];
                 if (typeof propertyFunc !== 'undefined') {
                     if (propertyFunc(object, packet, this, sourceUri)) {
                         updatedObjects[objectId] = object;
@@ -93,5 +93,5 @@ define([
         packet.id = objectId;
     };
 
-    return CzmlObjectCollection;
+    return DynamicObjectCollection;
 });

@@ -1,21 +1,21 @@
 /*global define*/
 define([
         '../Core/TimeInterval',
-        './BooleanDataHandler',
-        './Cartesian2DataHandler',
-        './Cartesian3DataHandler',
-        './NumberDataHandler',
-        './StringDataHandler',
-        './ColorDataHandler',
+        './CzmlBoolean',
+        './CzmlCartesian2',
+        './CzmlCartesian3',
+        './CzmlNumber',
+        './CzmlString',
+        './CzmlColor',
         './DynamicProperty'
     ], function(
         TimeInterval,
-        BooleanDataHandler,
-        Cartesian2DataHandler,
-        Cartesian3DataHandler,
-        NumberDataHandler,
-        StringDataHandler,
-        ColorDataHandler,
+        CzmlBoolean,
+        CzmlCartesian2,
+        CzmlCartesian3,
+        CzmlNumber,
+        CzmlString,
+        CzmlColor,
         DynamicProperty) {
     "use strict";
 
@@ -65,17 +65,17 @@ define([
             }
 
             //Create or update each of the properties.
-            labelUpdated = DynamicProperty.createOrUpdate(label, "text", StringDataHandler, labelData.text, interval, czmlObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.createOrUpdate(label, "font", StringDataHandler, labelData.font, interval, czmlObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.createOrUpdate(label, "show", BooleanDataHandler, labelData.show, interval, czmlObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.createOrUpdate(label, "style", StringDataHandler, labelData.style, interval, czmlObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.createOrUpdate(label, "fillColor", ColorDataHandler, labelData.fillColor, interval, czmlObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.createOrUpdate(label, "outlineColor", ColorDataHandler, labelData.outlineColor, interval, czmlObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.createOrUpdate(label, "scale", NumberDataHandler, labelData.scale, interval, czmlObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.createOrUpdate(label, "horizontalOrigin", StringDataHandler, labelData.horizontalOrigin, interval, czmlObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.createOrUpdate(label, "verticalOrigin", StringDataHandler, labelData.verticalOrigin, interval, czmlObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.createOrUpdate(label, "eyeOffset", Cartesian3DataHandler, labelData.eyeOffset, interval, czmlObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.createOrUpdate(label, "pixelOffset", Cartesian2DataHandler, labelData.pixelOffset, interval, czmlObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.createOrUpdate(label, "text", CzmlString, labelData.text, interval, czmlObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.createOrUpdate(label, "font", CzmlString, labelData.font, interval, czmlObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.createOrUpdate(label, "show", CzmlBoolean, labelData.show, interval, czmlObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.createOrUpdate(label, "style", CzmlString, labelData.style, interval, czmlObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.createOrUpdate(label, "fillColor", CzmlColor, labelData.fillColor, interval, czmlObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.createOrUpdate(label, "outlineColor", CzmlColor, labelData.outlineColor, interval, czmlObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.createOrUpdate(label, "scale", CzmlNumber, labelData.scale, interval, czmlObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.createOrUpdate(label, "horizontalOrigin", CzmlString, labelData.horizontalOrigin, interval, czmlObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.createOrUpdate(label, "verticalOrigin", CzmlString, labelData.verticalOrigin, interval, czmlObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.createOrUpdate(label, "eyeOffset", CzmlCartesian3, labelData.eyeOffset, interval, czmlObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.createOrUpdate(label, "pixelOffset", CzmlCartesian2, labelData.pixelOffset, interval, czmlObjectCollection) || labelUpdated;
             return labelUpdated;
         }
     };

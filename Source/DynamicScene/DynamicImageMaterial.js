@@ -1,12 +1,12 @@
 /*global define*/
 define([
         './DynamicProperty',
-        './StringDataHandler',
+        './CzmlString',
         '../Scene/DiffuseMapMaterial',
         '../Renderer/PixelFormat'
     ], function(
          DynamicProperty,
-         StringDataHandler,
+         CzmlString,
          DiffuseMapMaterial,
          PixelFormat) {
     "use strict";
@@ -26,7 +26,7 @@ define([
             if (typeof existingMaterial === 'undefined') {
                 existingMaterial = new DynamicImageMaterial();
             }
-            DynamicProperty.createOrUpdate(existingMaterial, "image", StringDataHandler, materialData.image, undefined, czmlObjectCollection);
+            DynamicProperty.createOrUpdate(existingMaterial, "image", CzmlString, materialData.image, undefined, czmlObjectCollection);
         }
         return existingMaterial;
     };

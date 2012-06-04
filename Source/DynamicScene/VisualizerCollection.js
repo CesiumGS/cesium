@@ -4,14 +4,14 @@ define(function() {
 
     function VisualizerCollection(visualizers, czmlObjectCollection) {
         this._visualizers = visualizers;
-        this.setCzmlObjectCollection(czmlObjectCollection);
+        this.setDynamicObjectCollection(czmlObjectCollection);
     }
 
-    VisualizerCollection.prototype.getCzmlObjectCollection = function() {
+    VisualizerCollection.prototype.getDynamicObjectCollection = function() {
         return this._czmlObjectCollection;
     };
 
-    VisualizerCollection.prototype.setCzmlObjectCollection = function(czmlObjectCollection) {
+    VisualizerCollection.prototype.setDynamicObjectCollection = function(czmlObjectCollection) {
         var oldCollection = this._czmlObjectCollection;
         if (oldCollection !== czmlObjectCollection) {
             this._czmlObjectCollection = czmlObjectCollection;

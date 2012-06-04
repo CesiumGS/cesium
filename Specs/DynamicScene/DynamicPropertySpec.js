@@ -2,28 +2,28 @@
 defineSuite([
          'DynamicScene/DynamicProperty',
          'Core/JulianDate',
-         'DynamicScene/BooleanDataHandler',
-         'DynamicScene/NumberDataHandler',
-         'DynamicScene/Cartesian3DataHandler',
-         'DynamicScene/QuaternionDataHandler',
+         'DynamicScene/CzmlBoolean',
+         'DynamicScene/CzmlNumber',
+         'DynamicScene/CzmlCartesian3',
+         'DynamicScene/CzmlQuaternion',
          'Core/Quaternion',
          'Core/Math',
-         'DynamicScene/Cartesian2DataHandler'
+         'DynamicScene/CzmlCartesian2'
      ], function(
          DynamicProperty,
          JulianDate,
-         BooleanDataHandler,
-         NumberDataHandler,
-         Cartesian3DataHandler,
-         QuaternionDataHandler,
+         CzmlBoolean,
+         CzmlNumber,
+         CzmlCartesian3,
+         CzmlQuaternion,
          Quaternion,
          CesiumMath,
-         Cartesian2DataHandler) {
+         CzmlCartesian2) {
     "use strict";
     /*global it,expect*/
 
     it("Works with uninterpolatable values.", function() {
-        var dynamicProperty = new DynamicProperty(BooleanDataHandler);
+        var dynamicProperty = new DynamicProperty(CzmlBoolean);
 
         var booleanConstant = true;
 
@@ -67,7 +67,7 @@ defineSuite([
         var iso8601Epoch = '2012-04-18T15:59:00Z';
         var epoch = JulianDate.fromIso8601(iso8601Epoch);
 
-        var property = new DynamicProperty(NumberDataHandler);
+        var property = new DynamicProperty(CzmlNumber);
         var czmlInterval = {
             epoch : iso8601Epoch,
             number : [0, 0, 10, 10, 20, 20]
@@ -82,7 +82,7 @@ defineSuite([
         var iso8601Epoch = '2012-04-18T15:59:00Z';
         var epoch = JulianDate.fromIso8601(iso8601Epoch);
 
-        var property = new DynamicProperty(NumberDataHandler);
+        var property = new DynamicProperty(CzmlNumber);
         var czmlInterval = {
             epoch : iso8601Epoch,
             number : [0, 0, 10, 10, 20, 20],
@@ -99,7 +99,7 @@ defineSuite([
         var iso8601Epoch = '2012-04-18T15:59:00Z';
         var epoch = JulianDate.fromIso8601(iso8601Epoch);
 
-        var property = new DynamicProperty(Cartesian3DataHandler);
+        var property = new DynamicProperty(CzmlCartesian3);
         var czmlInterval = {
             epoch : iso8601Epoch,
             cartesian : [0, 0, 1, 2, 10, 10, 11, 12, 20, 21, 22, 23],
@@ -123,7 +123,7 @@ defineSuite([
         var iso8601Epoch = '2012-04-18T15:59:00Z';
         var epoch = JulianDate.fromIso8601(iso8601Epoch);
 
-        var property = new DynamicProperty(Cartesian3DataHandler);
+        var property = new DynamicProperty(CzmlCartesian3);
         var czmlInterval = {
             cartesian : [0, 1, 2]
         };
@@ -141,7 +141,7 @@ defineSuite([
         var iso8601Epoch = '2012-04-18T15:59:00Z';
         var epoch = JulianDate.fromIso8601(iso8601Epoch);
 
-        var property = new DynamicProperty(QuaternionDataHandler);
+        var property = new DynamicProperty(CzmlQuaternion);
         var czmlInterval = {
             quaternion : [0, 1, 2, 3]
         };
@@ -158,7 +158,7 @@ defineSuite([
         var iso8601Epoch = '2012-04-18T15:59:00Z';
         var epoch = JulianDate.fromIso8601(iso8601Epoch);
 
-        var property = new DynamicProperty(Cartesian2DataHandler);
+        var property = new DynamicProperty(CzmlCartesian2);
         var czmlInterval = {
             epoch : iso8601Epoch,
             cartesian : [0, 0, 1, 10, 10, 11, 12, 21, 22],
@@ -180,7 +180,7 @@ defineSuite([
         var iso8601Epoch = '2012-04-18T15:59:00Z';
         var epoch = JulianDate.fromIso8601(iso8601Epoch);
 
-        var property = new DynamicProperty(Cartesian2DataHandler);
+        var property = new DynamicProperty(CzmlCartesian2);
         var czmlInterval = {
             cartesian : [0, 1]
         };
@@ -195,7 +195,7 @@ defineSuite([
         var iso8601Epoch = '2012-04-18T15:59:00Z';
         var epoch = JulianDate.fromIso8601(iso8601Epoch);
 
-        var property = new DynamicProperty(QuaternionDataHandler);
+        var property = new DynamicProperty(CzmlQuaternion);
 
         var czmlInterval = {
             epoch : iso8601Epoch,

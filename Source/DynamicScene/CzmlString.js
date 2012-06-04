@@ -2,8 +2,8 @@
 define(function() {
     "use strict";
 
-    var StringDataHandler = {
-        unwrapCzmlInterval : function(czmlInterval) {
+    var CzmlString = {
+        unwrapInterval : function(czmlInterval) {
             var result = czmlInterval.string;
             return typeof result === 'undefined' ? String(czmlInterval) : String(result);
         },
@@ -12,10 +12,10 @@ define(function() {
             return false;
         },
 
-        createValue : function(data) {
-            return data;
+        createValue : function(unwrappedInterval) {
+            return unwrappedInterval;
         }
     };
 
-    return StringDataHandler;
+    return CzmlString;
 });

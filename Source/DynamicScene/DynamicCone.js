@@ -1,16 +1,16 @@
 /*global define*/
 define([
         '../Core/TimeInterval',
-        './BooleanDataHandler',
-        './NumberDataHandler',
-        './ColorDataHandler',
+        './CzmlBoolean',
+        './CzmlNumber',
+        './CzmlColor',
         './DynamicProperty',
         './DynamicMaterialProperty'
        ], function(
          TimeInterval,
-         BooleanDataHandler,
-         NumberDataHandler,
-         ColorDataHandler,
+         CzmlBoolean,
+         CzmlNumber,
+         CzmlColor,
          DynamicProperty,
          DynamicMaterialProperty) {
     "use strict";
@@ -51,14 +51,14 @@ define([
             }
 
             //Create or update each of the properties.
-            coneUpdated = DynamicProperty.createOrUpdate(cone, "show", BooleanDataHandler, coneData.show, interval, czmlObjectCollection) || coneUpdated;
-            coneUpdated = DynamicProperty.createOrUpdate(cone, "innerHalfAngle", NumberDataHandler, coneData.innerHalfAngle, interval, czmlObjectCollection) || coneUpdated;
-            coneUpdated = DynamicProperty.createOrUpdate(cone, "outerHalfAngle", NumberDataHandler, coneData.outerHalfAngle, interval, czmlObjectCollection) || coneUpdated;
-            coneUpdated = DynamicProperty.createOrUpdate(cone, "minimumClockAngle", NumberDataHandler, coneData.minimumClockAngle, interval, czmlObjectCollection) || coneUpdated;
-            coneUpdated = DynamicProperty.createOrUpdate(cone, "maximumClockAngle", NumberDataHandler, coneData.maximumClockAngle, interval, czmlObjectCollection) || coneUpdated;
-            coneUpdated = DynamicProperty.createOrUpdate(cone, "radius", NumberDataHandler, coneData.radius, interval, czmlObjectCollection) || coneUpdated;
-            coneUpdated = DynamicProperty.createOrUpdate(cone, "showIntersection", BooleanDataHandler, coneData.showIntersection, interval, czmlObjectCollection) || coneUpdated;
-            coneUpdated = DynamicProperty.createOrUpdate(cone, "intersectionColor", ColorDataHandler, coneData.intersectionColor, interval, czmlObjectCollection) || coneUpdated;
+            coneUpdated = DynamicProperty.createOrUpdate(cone, "show", CzmlBoolean, coneData.show, interval, czmlObjectCollection) || coneUpdated;
+            coneUpdated = DynamicProperty.createOrUpdate(cone, "innerHalfAngle", CzmlNumber, coneData.innerHalfAngle, interval, czmlObjectCollection) || coneUpdated;
+            coneUpdated = DynamicProperty.createOrUpdate(cone, "outerHalfAngle", CzmlNumber, coneData.outerHalfAngle, interval, czmlObjectCollection) || coneUpdated;
+            coneUpdated = DynamicProperty.createOrUpdate(cone, "minimumClockAngle", CzmlNumber, coneData.minimumClockAngle, interval, czmlObjectCollection) || coneUpdated;
+            coneUpdated = DynamicProperty.createOrUpdate(cone, "maximumClockAngle", CzmlNumber, coneData.maximumClockAngle, interval, czmlObjectCollection) || coneUpdated;
+            coneUpdated = DynamicProperty.createOrUpdate(cone, "radius", CzmlNumber, coneData.radius, interval, czmlObjectCollection) || coneUpdated;
+            coneUpdated = DynamicProperty.createOrUpdate(cone, "showIntersection", CzmlBoolean, coneData.showIntersection, interval, czmlObjectCollection) || coneUpdated;
+            coneUpdated = DynamicProperty.createOrUpdate(cone, "intersectionColor", CzmlColor, coneData.intersectionColor, interval, czmlObjectCollection) || coneUpdated;
             coneUpdated = DynamicMaterialProperty.createOrUpdate(cone, "capMaterial", coneData.capMaterial, interval, czmlObjectCollection) || coneUpdated;
             coneUpdated = DynamicMaterialProperty.createOrUpdate(cone, "innerMaterial", coneData.innerMaterial, interval, czmlObjectCollection) || coneUpdated;
             coneUpdated = DynamicMaterialProperty.createOrUpdate(cone, "outerMaterial", coneData.outerMaterial, interval, czmlObjectCollection) || coneUpdated;

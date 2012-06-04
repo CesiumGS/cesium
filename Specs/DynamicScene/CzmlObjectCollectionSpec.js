@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-         'DynamicScene/CzmlObjectCollection',
+         'DynamicScene/DynamicObjectCollection',
          'Core/JulianDate',
          'DynamicScene/DynamicObject',
          'DynamicScene/DynamicBillboard',
@@ -8,7 +8,7 @@ defineSuite([
          'DynamicScene/DynamicPolyline',
          'DynamicScene/DynamicLabel'
      ], function(
-         CzmlObjectCollection,
+         DynamicObjectCollection,
          JulianDate,
          DynamicObject,
          DynamicBillboard,
@@ -19,7 +19,7 @@ defineSuite([
     /*global it,expect*/
 
     it("TODO", function() {
-        var czmlObjectCollection = new CzmlObjectCollection({
+        var czmlObjectCollection = new DynamicObjectCollection({
             billboard : DynamicBillboard.createOrUpdate,
             label : DynamicLabel.createOrUpdate,
             orientation : DynamicObject.createOrUpdateOrientation,

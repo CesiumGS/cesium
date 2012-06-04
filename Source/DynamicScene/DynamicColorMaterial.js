@@ -1,11 +1,11 @@
 /*global define*/
 define([
         './DynamicProperty',
-        './ColorDataHandler',
+        './CzmlColor',
         '../Scene/ColorMaterial'
     ], function(
          DynamicProperty,
-         ColorDataHandler,
+         CzmlColor,
          ColorMaterial) {
     "use strict";
 
@@ -23,7 +23,7 @@ define([
             if (typeof existingMaterial === 'undefined') {
                 existingMaterial = new DynamicColorMaterial();
             }
-            DynamicProperty.createOrUpdate(existingMaterial, "color", ColorDataHandler, materialData.color, undefined, czmlObjectCollection);
+            DynamicProperty.createOrUpdate(existingMaterial, "color", CzmlColor, materialData.color, undefined, czmlObjectCollection);
         }
         return existingMaterial;
     };

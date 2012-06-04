@@ -76,8 +76,8 @@ define([
         }
 
         //See if we already have data at that interval.
-        var this_intervals = this._intervals;
-        var existingInterval = this_intervals.findInterval(iso8601Interval.start, iso8601Interval.stop);
+        var thisIntervals = this._intervals;
+        var existingInterval = thisIntervals.findInterval(iso8601Interval.start, iso8601Interval.stop);
         var foundMaterial = false;
 
         if (typeof existingInterval !== 'undefined') {
@@ -90,7 +90,7 @@ define([
         } else {
             //If not, create it.
             existingInterval = iso8601Interval;
-            this_intervals.addInterval(existingInterval);
+            thisIntervals.addInterval(existingInterval);
         }
 
         //If the new data was a different type, unwrapping fails, look for a handler for this type.
