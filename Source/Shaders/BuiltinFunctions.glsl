@@ -389,11 +389,11 @@ vec4 agi_lightValuePhong(vec3 toLight, vec3 toEye, vec3 normal, vec4 diffuseComp
     vec3 toReflectedLight = reflect(-toLight, normal);
     float diffuseAmount = max(dot(toLight, normal), 0.0);
     float specularAmount = max(dot(toReflectedLight, toEye), 0.0);
-    specularAmount = pow(specularAmount, ambientLight.w);
+    specularAmount = pow(specularAmount, 1.0 / specularIntensity);
 
     vec3 lighting = ambientLight.xyz + emissionComponent;
     lighting += diffuseColor * diffuseAmount;
-    lighting += specularColor * specularAmount * specularIntensity;
+    lighting += specularColor * specularAmount * ambientLight.w;
     lighting = clamp(lighting, 0.0, 1.0);
     
     vec4 finalLighting = vec4(lighting, alpha);
