@@ -10,9 +10,8 @@ define([
     /**
      *
      * The reflection map works by reflecting the world-space view
-     * vector off of the surface normal. The reflected vector samples
-     * a cube map. The user provides a cube map, a diffuse texture,
-     * a reflectivity parameter, and optionally a grayscale reflection map.
+     * vector off of the world-space surface normal.
+     * The reflected vector samples a cube map.
      *
      * @name ReflectionMapMaterial
      * @constructor
@@ -21,7 +20,7 @@ define([
         var t = template || {};
 
         /**
-         * RGB Cube map texture
+         * RGB cube map texture
          */
         this.cubeMap = t.cubeMap;
 

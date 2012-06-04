@@ -10,11 +10,10 @@ define([
     /**
      * A fresnel material has both reflective and refractive
      * properties. At glancing angles there is more reflection
-     * and at straight angles more refraction. The algorithm used
+     * and at straight angles more refraction. The algorithm we use
      * is an approximation of fresnel reflection where the
      * dot product of the view and normal controls the reflection strength.
-     * The amount of reflection and refraction is controlled by diffuseAmount
-     * value.
+     * The amount of reflection/refraction is controlled by diffuseAmount.
      *
      * @name FresnelMaterial
      * @constructor

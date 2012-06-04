@@ -32,8 +32,6 @@ define([
 
         /**
          * Controls the size of the bumps.
-         * Values between 0.01 (many small bumps)
-         * and 0.1 (some large bumps) recommended.
          *
          * @type {Number}
          */
@@ -41,8 +39,6 @@ define([
 
         /**
          * Controls how rough the surface looks.
-         * Values between 0.05 (low roughness)
-         * and 1.0 (high roughness) recommended.
          *
          * @type {Number}
          */

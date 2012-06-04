@@ -10,8 +10,9 @@ define([
     /**
      *
      * The refraction map works by refracting the world-space view
-     * vector off of the surface normal using the two indices of
-     * refraction. The refracted vector samples a cube map.
+     * vector off of the world-space surface normal using the
+     * two indices of refraction.
+     * The refracted vector samples a cube map.
      *
      * @name RefractionMapMaterial
      * @constructor
@@ -20,7 +21,7 @@ define([
         var t = template || {};
 
         /**
-         * RGB Cube map texture
+         * RGB cube map texture
          */
         this.cubeMap = t.cubeMap;
 

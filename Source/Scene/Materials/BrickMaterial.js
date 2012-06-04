@@ -10,7 +10,7 @@ define([
     /**
      *
      * Procedural brick material generated with a combination of
-     * a simple brick pattern and simplex noise (for roughness).
+     * a simple brick pattern and simplex noise for roughness.
      * The brick wall is made up of brick and mortar, each of which
      * can be controlled with various parameters.
      *

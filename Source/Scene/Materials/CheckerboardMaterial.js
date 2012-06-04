@@ -6,7 +6,7 @@ define([
     "use strict";
 
     /**
-     * Checker board material with alternating light and dark colors.
+     * Checkerboard material with alternating light and dark colors.
      *
      * @name CheckerboardMaterial
      * @constructor

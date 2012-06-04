@@ -35,16 +35,14 @@ define([
         };
 
         /**
-         * How much the stripes are shifted from the starting point.
-         * The dark color starts at the left with an offset of 0.0.
-         * The light color starts at the left with an offset of 0.2.
+         * How much the stripes are shifted horizontally.
          *
          * @type Number
          */
         this.offset = t.offset || 0.0;
 
         /**
-         * The total number of stripes (half dark and half light).
+         * The total number of stripes, half dark and half light.
          *
          * @type Number
          */

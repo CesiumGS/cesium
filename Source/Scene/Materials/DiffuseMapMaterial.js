@@ -9,7 +9,7 @@ define([
 
     /**
      *
-     * Contains a texture as a diffuse map.
+     * Contains an RGBA texture as a diffuse map.
      *
      * @name DiffuseMapMaterial
      * @constructor

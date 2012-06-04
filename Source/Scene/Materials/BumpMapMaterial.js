@@ -19,7 +19,7 @@ define([
         var t = template || {};
 
         /**
-         * 2D RGB grayscale bump map texture.
+         * 2D grayscale bump map texture.
          */
         this.texture = t.texture;
 

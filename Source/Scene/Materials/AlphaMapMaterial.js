@@ -20,7 +20,7 @@ define([
         var t = template || {};
 
         /**
-         * 2D RGB grayscale alpha map texture.
+         * 2D grayscale alpha map texture.
          */
         this.texture = t.texture;
 

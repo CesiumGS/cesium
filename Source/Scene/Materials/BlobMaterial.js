@@ -39,8 +39,6 @@ define([
 
         /**
          * Cell frequency.
-         * Values between 1.0 (one large cell) and
-         * 50.0 (many small cells) recommended.
          *
          * @type Number
          */

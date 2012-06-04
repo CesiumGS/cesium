@@ -9,13 +9,14 @@ define([
 
     /**
      *
-     * The specular map is an RGBA texture where RGB is the
-     * specular color and A is the specular intensity.
-     * If the user sets useSpecularColor to false, the specular
-     * intensity will be derived from a grayscale texture and
-     * specular color will automatically be white.
+     * If useSpecularColor is TRUE, the specular
+     * color will come from the texture's RGB components and
+     * the specular intensity will come from the A component.
+     * If useSpecularColor is FALSE, the specular
+     * color will automatically be white and the specular
+     * intensity will come from a grayscale texture.
      * Specular intensity determines how strongly a pixel is affected by
-     * a light source, where 0 is no specular and 1 is full specular.
+     * a light source, where 0.0 is no specular and 1.0 is full specular.
      *
      * @name SpecularMapMaterial
      * @constructor
@@ -24,15 +25,18 @@ define([
         var t = template || {};
 
         /**
-         * 2D RGBA texture where RGB is the
-         * specular color and A is the specular intensity.
+         * 2D RGBA texture.
+         * When useSpecularColor is TRUE,
+         * RGB is the specular color and A is the
+         * specular intensity.
+         * When useSpecularColor is FALSE,
+         * the specular color is white and R is the
+         * specular intensity.
          */
         this.texture = t.texture;
 
         /**
-         * When true, specular color comes from RGB and specular intensity
-         * comes from A. When false, specular intensity comes from R and
-         * specular color will automatically be white.
+         * Details about this value above.
          */
         this.useSpecularColor = t.useSpecularColor;
 

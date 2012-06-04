@@ -18,7 +18,7 @@ define([
         var t = template || {};
 
         /**
-         * The light color of the tie-dye (sharp consistency).
+         * The light color of the tie-dye.
          */
         this.lightColor = t.lightColor || {
             red : 1.0,
@@ -28,7 +28,7 @@ define([
         };
 
         /**
-         * The dark color of the tie-dye (smooth consistency).
+         * The dark color of the tie-dye.
          */
         this.darkColor = t.darkColor || {
             red : 0.0,
@@ -39,8 +39,6 @@ define([
 
         /**
          * Controls the noise frequency.
-         * Values between 1.0 (less noisy) and
-         * 10.0 (more noisy) recommended.
          *
          * @type Number
          */

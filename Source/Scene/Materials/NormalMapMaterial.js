@@ -9,11 +9,9 @@ define([
 
     /**
      *
-     * The normal map is an RGB texture where each fragment's normal is
-     * offset in the x, y, and z directions by the texture's R, G, and B
-     * components in tangent space.
-     * Since the computation is done in tangent space,
-     * the B value should usually be the same for all pixels.
+     * Each fragment's normal is offset in the x, y and z directions
+     * in tangent space based on the associated R, G, and B values in
+     * the normal map texture.
      *
      * @name NormalMapMaterial
      * @constructor
@@ -22,7 +20,7 @@ define([
         var t = template || {};
 
         /**
-         * 2D RGB normal map texture.
+         * 2D RGB tangent space normal map texture.
          */
         this.texture = t.texture;
 

@@ -43,8 +43,6 @@ define([
 
         /**
          * Controls the size of the color patches in the grass.
-         * Values between 0.1 (one big grass color patch) and
-         * 10.0 (many small grass patches mixed with dirt) recommended.
          *
          * @type {Number}
          */

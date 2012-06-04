@@ -42,8 +42,6 @@ define([
 
        /**
         * Controls the frequency of rings in the wood.
-        * Values between 0.1 (fewer rings) and
-        * 10.0 (many rings) recommended.
         *
         * @type {Number}
         */
@@ -53,7 +51,6 @@ define([
         * Controls how noisy the ring pattern is in two directions.
         * For example, if x and y are the same, the rings have a circular shape.
         * If x and y are different, the rings are more amorphous.
-        * Values between 0.0 and 1.0 recommended.
         *
         * @type {Number}
         */
@@ -65,8 +62,6 @@ define([
        /**
         * Controls how grainy the wood is. Grains are represented by
         * thin vertical slits of varying darkness.
-        * Values between 10.0 (fewer grains) and
-        * 50.0 (more grains) recommended.
         *
         * @type {Number}
         */

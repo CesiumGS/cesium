@@ -31,8 +31,6 @@ define([
 
         /**
          * Controls the size of the rock grains in the cement.
-         * Values between 0.005 (small bumps) and
-         * 0.05 (large bumps) recommended.
          *
          * @type {Number}
          */
@@ -40,8 +38,6 @@ define([
 
         /**
          * Controls how rough the surface looks.
-         * Values between 0.1 (low roughness) and
-         * 1.0 (high roughness) recommended.
          *
          * @type {Number}
          */
