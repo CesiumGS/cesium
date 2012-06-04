@@ -1,47 +1,15 @@
 /*global define*/
 define([
+        '../Core/Event',
         '../Core/DeveloperError',
         './DynamicObject',
         './CzmlObjectCollection'
     ], function(
+        Event,
         DeveloperError,
         DynamicObject,
         CzmlObjectCollection) {
     "use strict";
-
-    function _updateObjects(czmlObjectCollection, updatedObjects) {
-        var _this = czmlObjectCollection.parent;
-        var this_mergeFunctions = _this._mergeFunctions;
-        var this_deleteFunctions = _this._deleteFunctions;
-        var this_collections = _this._collections;
-
-        var updatedObject, compositeObject, compositeObjects = [];
-        for ( var i = updatedObjects.length - 1; i > -1; i--) {
-            updatedObject = updatedObjects[i];
-            compositeObject = _this.getObject(updatedObject.id);
-            if (typeof compositeObject !== 'undefined') {
-                for ( var iDeleteFuncs = this_deleteFunctions.length - 1; iDeleteFuncs > -1; iDeleteFuncs--) {
-                    var deleteFunc = this_deleteFunctions[iDeleteFuncs];
-                    deleteFunc(compositeObject);
-                }
-            } else {
-                compositeObject = _this.getOrCreateObject(updatedObject.id);
-            }
-
-            compositeObjects.push(compositeObject);
-            for ( var iCollection = this_collections.length - 1; iCollection > -1; iCollection--) {
-                var currentCollection = this_collections[iCollection];
-                var objectToUpdate = currentCollection.getObject(updatedObject.id);
-                if (typeof objectToUpdate !== 'undefined') {
-                    for ( var iMergeFuncs = this_mergeFunctions.length - 1; iMergeFuncs > -1; iMergeFuncs--) {
-                        var mergeFunc = this_mergeFunctions[iMergeFuncs];
-                        mergeFunc(compositeObject, objectToUpdate);
-                    }
-                }
-            }
-        }
-        _this.raiseOnPropertyAdded(compositeObjects);
-    }
 
     function CompositeCzmlObjectCollection(mergeFunctions, deleteFunctions, collections) {
         this._hash = {};
@@ -49,8 +17,8 @@ define([
         this._collections = [];
         this._mergeFunctions = mergeFunctions;
         this._deleteFunctions = deleteFunctions;
-        this._propertyAddedListeners = [];
-        this._objectRemovedListeners = [];
+        this.objectsUpdated = new Event();
+        this.objectsRemoved = new Event();
 
         if (typeof collections !== 'undefined') {
             for ( var i = 0; i < collections.length; i++) {
@@ -72,7 +40,7 @@ define([
         }
 
         czmlObjectCollection.parent = this;
-        czmlObjectCollection.addPropertyAddedListener(_updateObjects);
+        czmlObjectCollection.objectsUpdated.addEventListener(CompositeCzmlObjectCollection.prototype._onObjectsUpdated, this);
         this._collections.push(czmlObjectCollection);
     };
 
@@ -87,7 +55,7 @@ define([
         this_collections.splice(index, 0, czmlObjectCollection);
 
         czmlObjectCollection.parent = this;
-        czmlObjectCollection.addPropertyAddedListener(_updateObjects);
+        czmlObjectCollection.objectsUpdated.addEventListener(CompositeCzmlObjectCollection.prototype._onObjectsUpdated, this);
     };
 
     CompositeCzmlObjectCollection.prototype.insertCollectionBefore = function(beforeCzmlObjectCollection, czmlObjectCollection) {
@@ -113,7 +81,7 @@ define([
         var this_collections = this._collections;
         this_collections.splice(this_collections.indexOf(czmlObjectCollection), 1);
         czmlObjectCollection.parent = undefined;
-        czmlObjectCollection.removePropertyAddedListener(_updateObjects);
+        czmlObjectCollection.objectsUpdated.removeEventListener(CompositeCzmlObjectCollection.prototype._onObjectsUpdated);
     };
 
     CompositeCzmlObjectCollection.prototype.getLength = function() {
@@ -165,42 +133,43 @@ define([
         var removedObjects = this._array;
         this._hash = {};
         this._array = [];
-        this.raiseOnObjectRemoved(removedObjects);
-    };
-
-    CompositeCzmlObjectCollection.prototype.addPropertyAddedListener = function(listener) {
-        this._propertyAddedListeners.push(listener);
-    };
-
-    CompositeCzmlObjectCollection.prototype.removePropertyAddedListener = function(listener) {
-        var this_propertyAddedListeners = this._propertyAddedListeners;
-        this_propertyAddedListeners.splice(this_propertyAddedListeners.indexOf(listener), 1);
-    };
-
-    CompositeCzmlObjectCollection.prototype.raiseOnPropertyAdded = function(updatedObjects) {
-        if (updatedObjects.length > 0) {
-            var listeners = this._propertyAddedListeners;
-            for ( var i = listeners.length - 1; i > -1; i--) {
-                listeners[i](this, updatedObjects);
-            }
+        if (removedObjects.length > 0) {
+            this.objectsRemoved.raiseEvent(this, removedObjects);
         }
     };
 
-    CompositeCzmlObjectCollection.prototype.addObjectRemovedListener = function(listener) {
-        this._objectRemovedListeners.push(listener);
-    };
+    CompositeCzmlObjectCollection.prototype._onObjectsUpdated = function(czmlObjectCollection, updatedObjects) {
+        var this_mergeFunctions = this._mergeFunctions;
+        var this_deleteFunctions = this._deleteFunctions;
+        var this_collections = this._collections;
 
-    CompositeCzmlObjectCollection.prototype.removeObjectRemovedListener = function(listener) {
-        var this_objectRemovedListeners = this._objectRemovedListeners;
-        this_objectRemovedListeners.splice(this_objectRemovedListeners.indexOf(listener), 1);
-    };
-
-    CompositeCzmlObjectCollection.prototype.raiseOnObjectRemoved = function(removedObjects) {
-        if (removedObjects.length > 0) {
-            var listeners = this._objectRemovedListeners;
-            for ( var i = listeners.length - 1; i > -1; i--) {
-                listeners[i](this, removedObjects);
+        var updatedObject, compositeObject, compositeObjects = [];
+        for ( var i = updatedObjects.length - 1; i > -1; i--) {
+            updatedObject = updatedObjects[i];
+            compositeObject = this.getObject(updatedObject.id);
+            if (typeof compositeObject !== 'undefined') {
+                for ( var iDeleteFuncs = this_deleteFunctions.length - 1; iDeleteFuncs > -1; iDeleteFuncs--) {
+                    var deleteFunc = this_deleteFunctions[iDeleteFuncs];
+                    deleteFunc(compositeObject);
+                }
+            } else {
+                compositeObject = this.getOrCreateObject(updatedObject.id);
             }
+
+            compositeObjects.push(compositeObject);
+            for ( var iCollection = this_collections.length - 1; iCollection > -1; iCollection--) {
+                var currentCollection = this_collections[iCollection];
+                var objectToUpdate = currentCollection.getObject(updatedObject.id);
+                if (typeof objectToUpdate !== 'undefined') {
+                    for ( var iMergeFuncs = this_mergeFunctions.length - 1; iMergeFuncs > -1; iMergeFuncs--) {
+                        var mergeFunc = this_mergeFunctions[iMergeFuncs];
+                        mergeFunc(compositeObject, objectToUpdate);
+                    }
+                }
+            }
+        }
+        if (compositeObjects.length > 0) {
+            this.objectsUpdated.raiseEvent(this, compositeObjects);
         }
     };
 

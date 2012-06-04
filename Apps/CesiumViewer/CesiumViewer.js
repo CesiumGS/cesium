@@ -75,7 +75,7 @@ function(dom,
     var timeline;
     var transitioner;
 
-    var _buffer = new CzmlObjectCollection({
+    var czmlObjectCollection = new CzmlObjectCollection({
         billboard : DynamicBillboard.createOrUpdate,
         cone : DynamicCone.createOrUpdate,
         label : DynamicLabel.createOrUpdate,
@@ -97,7 +97,7 @@ function(dom,
 
     //This function is a total HACK and only temporary.
     function setTimeFromBuffer() {
-        var czmlObjects = _buffer.getObjects();
+        var czmlObjects = czmlObjectCollection.getObjects();
         for ( var i = 0, len = czmlObjects.length; i < len; i++) {
             var object = czmlObjects[i];
             if (typeof object.position !== 'undefined') {
@@ -124,9 +124,8 @@ function(dom,
         var f = files[0];
         var reader = new FileReader();
         reader.onload = function(evt) {
-            visualizers.clear(_buffer);
-            _buffer.clear();
-            _buffer.processCzml(JSON.parse(evt.target.result), f.name);
+            czmlObjectCollection.clear();
+            czmlObjectCollection.processCzml(JSON.parse(evt.target.result), f.name);
             setTimeFromBuffer();
         };
         reader.readAsText(f);
@@ -153,7 +152,7 @@ function(dom,
             if (typeof timeline !== 'undefined') {
                 timeline.updateFromClock();
             }
-            visualizers.update(currentTime, _buffer);
+            visualizers.update(currentTime);
 
             if (Math.abs(currentTime.getSecondsDifference(lastTimeLabelUpdate)) >= 1.0) {
                 timeLabel.innerHTML = currentTime.toDate().toUTCString();
@@ -162,7 +161,7 @@ function(dom,
 
             // Update the camera to stay centered on the selected object, if any.
             if (cameraCenteredObjectID) {
-                var czmlObject = _buffer.getObject(cameraCenteredObjectID);
+                var czmlObject = czmlObjectCollection.getObject(cameraCenteredObjectID);
                 if (czmlObject && czmlObject.position) {
                     var position = czmlObject.position.getValueCartesian(currentTime);
                     if (typeof position !== 'undefined') {
@@ -186,7 +185,7 @@ function(dom,
             transitioner = new SceneTransitioner(scene);
 
             visualizers = new VisualizerCollection([new DynamicBillboardVisualizer(scene), new DynamicConeVisualizer(scene), new DynamicLabelVisualizer(scene), new DynamicPointVisualizer(scene),
-                    new DynamicPolygonVisualizer(scene), new DynamicPolylineVisualizer(scene), new DynamicPyramidVisualizer(scene)]);
+                    new DynamicPolygonVisualizer(scene), new DynamicPolylineVisualizer(scene), new DynamicPyramidVisualizer(scene)], czmlObjectCollection);
             widget.enableStatistics(true);
 
             var queryObject = {};
@@ -195,9 +194,8 @@ function(dom,
             }
 
             if (typeof queryObject.source !== 'undefined') {
-                visualizers.clear(_buffer);
-                _buffer.clear();
-                loadCzmlFromUrl(_buffer, queryObject.source, setTimeFromBuffer);
+                czmlObjectCollection.clear();
+                loadCzmlFromUrl(czmlObjectCollection, queryObject.source, setTimeFromBuffer);
             }
 
             var timelineWidget = registry.byId('mainTimeline');
