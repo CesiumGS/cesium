@@ -144,7 +144,7 @@ defineSuite([
             greenIndex = index;
         });
 
-        atlas.addTextureFromFunction("./Data/Images/Blue.png", function(loadedCallback) {
+        atlas.addTextureFromFunction("./Data/Images/Blue.png", function(id, loadedCallback) {
             loadedCallback(blueImage);
         }, function(index) {
             blueIndex = index;

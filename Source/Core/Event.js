@@ -19,8 +19,9 @@ define([
      *     this.myArg2Copy = arg2;
      * }
      *
+     * var myObjectInstance = new MyObject();
      * var evt = new Event();
-     * evt.addEventListener(MyObject.prototype.myListener, MyObjectInstance);
+     * evt.addEventListener(MyObject.prototype.myListener, myObjectInstance);
      * evt.raiseEvent("1", "2");
      * evt.removeEventListener(MyObject.prototype.myListener);
      */
