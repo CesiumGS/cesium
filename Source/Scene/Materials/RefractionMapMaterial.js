@@ -31,6 +31,11 @@ define([
          */
         this.indexOfRefractionRatio = t.indexOfRefractionRatio;
 
+        /**
+         * Refractivity controls how strong the refraction is from 0.0 to 1.0
+         */
+        this.refractivity = t.refractivity;
+
         var that = this;
         this._uniforms = {
             u_cubeMap : function() {
@@ -41,6 +46,9 @@ define([
             },
             u_indexOfRefractionRatio : function() {
                 return that.indexOfRefractionRatio;
+            },
+            u_refractivity : function() {
+                return that.refractivity;
             }
         };
     }

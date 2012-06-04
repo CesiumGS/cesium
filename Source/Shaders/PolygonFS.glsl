@@ -28,16 +28,20 @@ void main()
     float zDistance = 0.0;          // 1D distance
     vec2 st = v_textureCoordinates; // 2D texture coordinates
     vec3 str = vec3(st, 0.0);       // 3D texture coordinates
-    
-    vec3 positionToEyeEC = normalize(-v_positionEC); 
-    vec3 positionToEyeWC = normalize(vec3(agi_inverseView * vec4(positionToEyeEC, 1.0)));
-    vec4 diffuseComponent = agi_getMaterialDiffuseComponent(zDistance, st, str, v_positionMC, positionToEyeWC);
-    vec4 specularComponent = agi_getMaterialSpecularComponent(zDistance, st, str);
 
     //Convert tangent space material normal to eye space
     vec3 normalGlobeSurfaceEC = normalize(agi_normal * agi_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0)));  
-    vec3 normalEC = agi_getMaterialNormal(zDistance, st, str, v_positionMC, normalGlobeSurfaceEC);
+    mat3 tangentToEyeMatrix = agi_eastNorthUpToEyeCoordinates(v_positionMC, normalGlobeSurfaceEC);
+    
+    //Convert view vector to world space
+    vec3 positionToEyeEC = normalize(-v_positionEC); 
+    vec3 positionToEyeWC = normalize(vec3(agi_inverseView * vec4(positionToEyeEC, 0.0)));
+    
+    //Get different lighting values from material shader
+    vec4 diffuseComponent = agi_getMaterialDiffuseComponent(zDistance, st, str, tangentToEyeMatrix, positionToEyeWC);
+    vec4 specularComponent = agi_getMaterialSpecularComponent(zDistance, st, str, tangentToEyeMatrix, positionToEyeWC);
+    vec3 normalEC = agi_getMaterialNormal(zDistance, st, str, tangentToEyeMatrix, positionToEyeWC);
 
     //Final
-    gl_FragColor = agi_lightValueGaussian(agi_sunDirectionEC, positionToEyeEC, normalEC, diffuseComponent, specularComponent);
+    gl_FragColor = agi_lightValuePhong(agi_sunDirectionEC, positionToEyeEC, normalEC, diffuseComponent, specularComponent);
 }

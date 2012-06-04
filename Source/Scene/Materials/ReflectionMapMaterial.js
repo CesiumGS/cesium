@@ -26,16 +26,6 @@ define([
         this.cubeMap = t.cubeMap;
 
         /**
-         * RGBA Diffuse texture
-         */
-        this.diffuseTexture = t.diffuseTexture;
-
-        /**
-         * Grayscale reflection map
-         */
-        this.reflectionMap = t.reflectionMap;
-
-        /**
          * Reflectivity controls how strong the reflection is from 0.0 to 1.0
          */
         this.reflectivity = t.reflectivity;
@@ -47,18 +37,6 @@ define([
                     throw new DeveloperError("Reflection cube map required.");
                 }
                 return that.cubeMap;
-            },
-            u_diffuseTexture : function() {
-                if (typeof that.diffuseTexture === 'undefined') {
-                    throw new DeveloperError("Reflection diffuse texture required.");
-                }
-                return that.diffuseTexture;
-            },
-            u_reflectionMap : function() {
-                if (typeof that.reflectionMap === 'undefined') {
-                    throw new DeveloperError("Reflection map texture required.");
-                }
-                return that.reflectionMap;
             },
             u_reflectivity : function() {
                 return that.reflectivity;

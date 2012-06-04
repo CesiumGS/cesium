@@ -78,6 +78,7 @@
     tree.addNode("Apply a normal map material", [new Sandbox.NormalMapPolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");
     tree.addNode("Apply a reflection map material", [new Sandbox.ReflectionMapPolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");
     tree.addNode("Apply a refraction map material", [new Sandbox.RefractionMapPolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");
+    tree.addNode("Apply a fresnel material", [new Sandbox.FresnelPolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");
     tree.addNode("Apply a brick material", [new Sandbox.BrickPolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");
     tree.addNode("Apply a wood material", [new Sandbox.WoodPolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");
     tree.addNode("Apply an asphalt material", [new Sandbox.AsphaltPolygonMaterial(scene, ellipsoid, primitives)], mat, "Material");
