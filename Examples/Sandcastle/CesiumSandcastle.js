@@ -51,7 +51,7 @@ require({
             domConstruct.destroy('loading');
         }}).play();
 
-        var jsEditor, htmlEditor, cssEditor, suggestButton = registry.byId('buttonSuggest');
+        var jsEditor, htmlEditor, suggestButton = registry.byId('buttonSuggest');
         var docTimer, that = this, cesiumContainer = registry.byId('cesiumContainer');
         var docNode = dojo.byId('docPopup'), docMessage = dojo.byId('docPopupMessage'), docTabs = {};
         that.types = [];
@@ -143,22 +143,12 @@ require({
         });
 
         htmlEditor = CodeMirror.fromTextArea(document.getElementById("htmlBody"), {
-            mode: { name: "xml", htmlMode: true },
+            mode: "text/html",
             lineNumbers: true,
             matchBrackets: true,
             indentUnit: 4,
             extraKeys: {"F9": "runCesium"},
         });
-        window.htmlEditor = htmlEditor;
-
-        cssEditor = CodeMirror.fromTextArea(document.getElementById("styleCode"), {
-            mode: "css",
-            lineNumbers: true,
-            matchBrackets: true,
-            indentUnit: 4,
-            extraKeys: {"F9": "runCesium"},
-        });
-        window.cssEditor = cssEditor;
 
         // The iframe (bucket.html) sends this message on load.
         // This triggers the code to be injected into the iframe.
@@ -167,10 +157,6 @@ require({
                 logOutput.innerHTML = "";
                 //CodeMirror.cesiumWindow = bucketFrame.contentWindow;
                 var bucketDoc = bucketFrame.contentDocument;
-                var styleEle = bucketDoc.createElement('style');
-                styleEle.type = 'text/css';
-                styleEle.textContent = cssEditor.getValue();
-                bucketDoc.head.appendChild(styleEle);
                 var bodyEle = bucketDoc.createElement('div');
                 bodyEle.innerHTML = htmlEditor.getValue();
                 bucketDoc.body.appendChild(bodyEle);
@@ -198,11 +184,6 @@ require({
         registry.byId('htmlContainer').on('show', function () {
             suggestButton.set('disabled', true);
             htmlEditor.refresh();
-        });
-
-        registry.byId('cssContainer').on('show', function () {
-            suggestButton.set('disabled', true);
-            cssEditor.refresh();
         });
 
         // Clicking the 'Run' button simply reloads the iframe.

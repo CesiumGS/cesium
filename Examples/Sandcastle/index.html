@@ -18,6 +18,7 @@
     <script src="../../ThirdParty/CodeMirror-2.24/mode/javascript/javascript.js"></script>
     <script src="../../ThirdParty/CodeMirror-2.24/mode/css/css.js"></script>
     <script src="../../ThirdParty/CodeMirror-2.24/mode/xml/xml.js"></script>
+    <script src="../../ThirdParty/CodeMirror-2.24/mode/htmlmixed/htmlmixed.js"></script>
 
     <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../ThirdParty/dojo-release-1.7.2-src/dojo/dojo.js"> </script>
     <script src="CesiumSandcastle.js"> </script>
@@ -260,14 +261,9 @@ require({
 });
 </textarea>
             </div>
-            <div id="htmlContainer" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: 'HTML body'">
+            <div id="htmlContainer" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: 'HTML body &amp; CSS'">
                 <textarea id="htmlBody" name="htmlBody">
-&lt;div id="cesiumContainer"&gt;&lt;/div&gt;
-&lt;div id="toolbar"&gt;&lt;/div&gt;
-</textarea>
-            </div>
-            <div id="cssContainer" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: 'CSS styles'">
-                <textarea id="styleCode" name="styleCode">
+&lt;style&gt;
 body {
     background: #000;
     color: #eee;
@@ -296,6 +292,10 @@ body {
     padding: 2px 5px;
     border-radius: 5px;
 }
+&lt;/style&gt;
+
+&lt;div id="cesiumContainer"&gt;&lt;/div&gt;
+&lt;div id="toolbar"&gt;&lt;/div&gt;
 </textarea>
             </div>
         </div>
