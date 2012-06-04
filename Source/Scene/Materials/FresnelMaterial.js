@@ -17,8 +17,8 @@ define([
      *
      * @name FresnelMaterial
      * @constructor
-     * @see ReflectionMapMaterial
-     * @see RefractionMapMaterial
+     * @see ReflectionMaterial
+     * @see RefractionMaterial
      */
 
     function FresnelMaterial(template) {

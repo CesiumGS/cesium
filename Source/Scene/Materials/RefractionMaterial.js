@@ -1,23 +1,23 @@
 /*global define*/
 define([
         '../../Core/DeveloperError',
-        '../../Shaders/Materials/RefractionMapMaterial'
+        '../../Shaders/Materials/RefractionMaterial'
     ], function(
         DeveloperError,
-        ShadersRefractionMapMaterial) {
+        ShadersRefractionMaterial) {
     "use strict";
 
     /**
      *
-     * The refraction map works by refracting the world-space view
+     * The refraction material works by refracting the world-space view
      * vector off of the world-space surface normal using the
      * two indices of refraction.
      * The refracted vector samples a cube map.
      *
-     * @name RefractionMapMaterial
+     * @name RefractionMaterial
      * @constructor
      */
-    function RefractionMapMaterial(template) {
+    function RefractionMaterial(template) {
         var t = template || {};
 
         /**
@@ -54,10 +54,10 @@ define([
         };
     }
 
-    RefractionMapMaterial.prototype._getShaderSource = function() {
-        return "#line 0\n" + ShadersRefractionMapMaterial;
+    RefractionMaterial.prototype._getShaderSource = function() {
+        return "#line 0\n" + ShadersRefractionMaterial;
     };
 
-    return RefractionMapMaterial;
+    return RefractionMaterial;
 });
 

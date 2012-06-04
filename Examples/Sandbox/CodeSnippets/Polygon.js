@@ -211,7 +211,7 @@
         };
     };
 
-    Sandbox.ReflectionMapPolygonMaterial = function (scene, ellipsoid, primitives) {
+    Sandbox.ReflectionPolygonMaterial = function (scene, ellipsoid, primitives) {
         this.code = function() {
             var polygon = new Cesium.Polygon(undefined);
 
@@ -238,7 +238,7 @@
                 Cesium.Jobs.downloadImage(cubeMapFolder + "negz" + cubeMapFileExtension)
             ).thenRun(
             function() {
-                polygon.material = new Cesium.ReflectionMapMaterial({
+                polygon.material = new Cesium.ReflectionMaterial({
                     cubeMap : scene.getContext().createCubeMap({
                         source : {
                             positiveX : this.images[cubeMapFolder + "posx" + cubeMapFileExtension],
@@ -257,7 +257,7 @@
         };
     };
 
-    Sandbox.RefractionMapPolygonMaterial = function (scene, ellipsoid, primitives) {
+    Sandbox.RefractionPolygonMaterial = function (scene, ellipsoid, primitives) {
         this.code = function() {
             var polygon = new Cesium.Polygon(undefined);
 
@@ -284,7 +284,7 @@
                 Cesium.Jobs.downloadImage(cubeMapFolder + "negz" + cubeMapFileExtension)
             ).thenRun(
             function() {
-                polygon.material = new Cesium.RefractionMapMaterial({
+                polygon.material = new Cesium.RefractionMaterial({
                     cubeMap : scene.getContext().createCubeMap({
                         source : {
                             positiveX : this.images[cubeMapFolder + "posx" + cubeMapFileExtension],

@@ -1,22 +1,22 @@
 /*global define*/
 define([
         '../../Core/DeveloperError',
-        '../../Shaders/Materials/ReflectionMapMaterial'
+        '../../Shaders/Materials/ReflectionMaterial'
     ], function(
         DeveloperError,
-        ShadersReflectionMapMaterial) {
+        ShadersReflectionMaterial) {
     "use strict";
 
     /**
      *
-     * The reflection map works by reflecting the world-space view
+     * The reflection material works by reflecting the world-space view
      * vector off of the world-space surface normal.
      * The reflected vector samples a cube map.
      *
-     * @name ReflectionMapMaterial
+     * @name ReflectionMaterial
      * @constructor
      */
-    function ReflectionMapMaterial(template) {
+    function ReflectionMaterial(template) {
         var t = template || {};
 
         /**
@@ -43,10 +43,10 @@ define([
         };
     }
 
-    ReflectionMapMaterial.prototype._getShaderSource = function() {
-        return "#line 0\n" + ShadersReflectionMapMaterial;
+    ReflectionMaterial.prototype._getShaderSource = function() {
+        return "#line 0\n" + ShadersReflectionMaterial;
     };
 
-    return ReflectionMapMaterial;
+    return ReflectionMaterial;
 });
 
