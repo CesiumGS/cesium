@@ -21,6 +21,7 @@ defineSuite([
     var greenImage;
     var tallGreenImage;
     var blueImage;
+    var whiteImage;
 
     beforeEach(function() {
         context = createContext();
@@ -41,8 +42,11 @@ defineSuite([
         blueImage = new Image();
         blueImage.src = "./Data/Images/Blue.png";
 
+        whiteImage = new Image();
+        whiteImage.src = "./Data/Images/White.png";
+
         waitsFor(function() {
-            return greenImage.complete && tallGreenImage.complete && blueImage.complete;
+            return greenImage.complete && tallGreenImage.complete && blueImage.complete && whiteImage.complete;
         }, "Load .png file(s) for texture atlas test.", 3000);
     });
 
@@ -129,6 +133,67 @@ defineSuite([
         expect(coordinates[1].y1).toEqual(1.0);
     });
 
+    it("creates a three image atlas using addTexture, addTextureFromUrl, and addTextureFromFunction", function() {
+        atlas = context.createTextureAtlas(undefined, PixelFormat.RGBA, 0);
+
+        var whiteIndex = -1;
+        var greenIndex = -1;
+        var blueIndex = -1;
+
+        atlas.addTextureFromUrl("./Data/Images/Green.png", function(index) {
+            greenIndex = index;
+        });
+
+        atlas.addTextureFromFunction("./Data/Images/Blue.png", function(id, loadedCallback) {
+            loadedCallback(blueImage);
+        }, function(index) {
+            blueIndex = index;
+        });
+
+        atlas.addTexture(whiteImage, function(index) {
+            whiteIndex = index;
+        });
+
+        waitsFor(function() {
+            if (whiteIndex !== -1 && greenIndex !== -1 && blueIndex !== -1) {
+                var texture = atlas.getTexture();
+                var coordinates = atlas.getTextureCoordinates();
+                expect(texture.getWidth()).toEqual(1);
+                expect(texture.getHeight()).toEqual(3);
+                expect(coordinates.length).toEqual(3);
+                return true;
+            }
+            return false;
+        }, "Waits for addTexture and addTextureUrl to complete and verifies the test.", 3000);
+    });
+
+    it("add existing texture works", function() {
+        atlas = context.createTextureAtlas([whiteImage], PixelFormat.RGBA, 0);
+
+        var texture = atlas.getTexture();
+        var coordinates = atlas.getTextureCoordinates();
+        expect(texture.getWidth()).toEqual(1);
+        expect(texture.getHeight()).toEqual(1);
+        expect(coordinates.length).toEqual(1);
+
+        var whiteLoaded = false;
+        atlas.addTexture(whiteImage, function(index) {
+            whiteLoaded = true;
+            expect(index).toEqual(0);
+        });
+
+        waitsFor(function() {
+            if (whiteLoaded) {
+                texture = atlas.getTexture();
+                coordinates = atlas.getTextureCoordinates();
+                expect(texture.getWidth()).toEqual(1);
+                expect(texture.getHeight()).toEqual(1);
+                expect(coordinates.length).toEqual(1);
+            }
+            return whiteLoaded;
+        }, "Waits for addTexture and addTextureUrl to complete and verifies the test.", 3000);
+    });
+
     it("renders a two image atlas", function() {
         atlas = context.createTextureAtlas([greenImage, blueImage], PixelFormat.RGBA, 0);
 
@@ -213,12 +278,6 @@ defineSuite([
         expect(pixels[3]).toEqual(255);
     });
 
-    it("throws without images", function() {
-        expect(function() {
-            atlas = context.createTextureAtlas();
-        }).toThrow();
-    });
-
     it("throws with a negative borderWidthInPixels", function() {
         expect(function() {
             atlas = context.createTextureAtlas([greenImage, blueImage], PixelFormat.RGBA, -1);
@@ -228,6 +287,68 @@ defineSuite([
     it("throws without context", function() {
         expect(function() {
             return new TextureAtlas();
+        }).toThrow();
+    });
+
+    it("addTexture throws without image", function() {
+        atlas = context.createTextureAtlas(undefined, PixelFormat.RGBA, 0);
+
+        expect(function() {
+            atlas.addTexture(undefined, function(index) {
+            });
+        }).toThrow();
+    });
+
+    it("addTexture throws without callback", function() {
+        atlas = context.createTextureAtlas(undefined, PixelFormat.RGBA, 0);
+
+        expect(function() {
+            atlas.addTexture("./Data/Images/Green.png", undefined);
+        }).toThrow();
+    });
+
+    it("addTextureFromUrl throws without url", function() {
+        atlas = context.createTextureAtlas(undefined, PixelFormat.RGBA, 0);
+
+        expect(function() {
+            atlas.addTextureFromUrl(undefined, function(index) {
+            });
+        }).toThrow();
+    });
+
+    it("addTextureFromUrl throws without callback", function() {
+        atlas = context.createTextureAtlas(undefined, PixelFormat.RGBA, 0);
+
+        expect(function() {
+            atlas.addTextureFromUrl("./Data/Images/Green.png", undefined);
+        }).toThrow();
+    });
+
+    it("addTextureFromFunction throws without url", function() {
+        atlas = context.createTextureAtlas(undefined, PixelFormat.RGBA, 0);
+
+        expect(function() {
+            atlas.addTextureFromFunction(undefined, function(loadedCallback) {
+            }, function(index) {
+            });
+        }).toThrow();
+    });
+
+    it("addTextureFromFunction throws without create callback", function() {
+        atlas = context.createTextureAtlas(undefined, PixelFormat.RGBA, 0);
+
+        expect(function() {
+            atlas.addTextureFromFunction("./Data/Images/Blue.png", undefined, function(index) {
+            });
+        }).toThrow();
+    });
+
+    it("addTextureFromFunction throws without ready callback", function() {
+        atlas = context.createTextureAtlas(undefined, PixelFormat.RGBA, 0);
+
+        expect(function() {
+            atlas.addTextureFromFunction("./Data/Images/Blue.png", function(loadedCallback) {
+            }, undefined);
         }).toThrow();
     });
 });
