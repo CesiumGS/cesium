@@ -26,7 +26,13 @@ vec4 agi_getMaterialDiffuseComponent(float zDistance, vec2 st, vec3 str, mat3 ta
 
 //x,y,z : specular color
 //    w : specular intensity
-vec4 agi_getMaterialSpecularComponent(float zDistance, vec2 st, vec3 str, mat3 tangentToEyeMatrix, vec3 viewWC)
+vec4 agi_getMaterialSpecularComponent(float zDistance, vec2 st, vec3 str)
 {
     return vec4(1.0, 1.0, 1.0, 1.0);
+}
+
+//x,y,z : emission color. In other words per-object ambient color.
+vec3 agi_getMaterialEmissionComponent(float zDistance, vec2 st, vec3 str)
+{
+    return vec3(0.0, 0.0, 0.0);
 }

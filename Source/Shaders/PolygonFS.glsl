@@ -38,10 +38,11 @@ void main()
     vec3 positionToEyeWC = normalize(vec3(agi_inverseView * vec4(positionToEyeEC, 0.0)));
     
     //Get different lighting values from material shader
-    vec4 diffuseComponent = agi_getMaterialDiffuseComponent(zDistance, st, str, tangentToEyeMatrix, positionToEyeWC);
-    vec4 specularComponent = agi_getMaterialSpecularComponent(zDistance, st, str, tangentToEyeMatrix, positionToEyeWC);
     vec3 normalEC = agi_getMaterialNormal(zDistance, st, str, tangentToEyeMatrix, positionToEyeWC);
+    vec4 diffuseComponent = agi_getMaterialDiffuseComponent(zDistance, st, str, tangentToEyeMatrix, positionToEyeWC);
+    vec4 specularComponent = agi_getMaterialSpecularComponent(zDistance, st, str);
+    vec3 emissionComponent = agi_getMaterialEmissionComponent(zDistance, st, str);
 
     //Final
-    gl_FragColor = agi_lightValuePhong(agi_sunDirectionEC, positionToEyeEC, normalEC, diffuseComponent, specularComponent);
+    gl_FragColor = agi_lightValuePhong(agi_sunDirectionEC, positionToEyeEC, normalEC, diffuseComponent, specularComponent, emissionComponent);
 }

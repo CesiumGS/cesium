@@ -372,8 +372,12 @@ mat3 agi_eastNorthUpToEyeCoordinates(vec3 positionMC, vec3 normalEC)
  */
  
 //Fast specular light computation
-vec4 agi_lightValuePhong(vec3 toLight, vec3 toEye, vec3 normal, vec4 diffuseComponent, vec4 specularComponent)
+vec4 agi_lightValuePhong(vec3 toLight, vec3 toEye, vec3 normal, vec4 diffuseComponent, vec4 specularComponent, vec3 emissionComponent)
 {
+    //x, y, z : diffuse ambient
+    //w : specular strength
+    vec4 ambientLight = vec4(0.1, 0.1, 0.1, 1.0);
+    
     //Diffuse values
     vec3 diffuseColor = diffuseComponent.xyz;
     float alpha = diffuseComponent.w;
@@ -381,18 +385,14 @@ vec4 agi_lightValuePhong(vec3 toLight, vec3 toEye, vec3 normal, vec4 diffuseComp
     //Specular values
     vec3 specularColor = specularComponent.xyz;
     float specularIntensity = specularComponent.w;
-    
-    //x, y, z : diffuse ambient
-    //w : specular ambient
-    vec4 ambientLight = vec4(0.1, 0.1, 0.1, 100.0);
 
     vec3 toReflectedLight = reflect(-toLight, normal);
     float diffuseAmount = max(dot(toLight, normal), 0.0);
     float specularAmount = max(dot(toReflectedLight, toEye), 0.0);
     specularAmount = pow(specularAmount, ambientLight.w);
 
-    vec3 lighting = ambientLight.xyz;
-    lighting = diffuseColor * diffuseAmount;
+    vec3 lighting = ambientLight.xyz + emissionComponent;
+    lighting += diffuseColor * diffuseAmount;
     lighting += specularColor * specularAmount * specularIntensity;
     lighting = clamp(lighting, 0.0, 1.0);
     
@@ -401,8 +401,12 @@ vec4 agi_lightValuePhong(vec3 toLight, vec3 toEye, vec3 normal, vec4 diffuseComp
 }
 
 //Slow, but higher quality light computation. Use sparingly.
-vec4 agi_lightValueGaussian(vec3 toLight, vec3 toEye, vec3 normal, vec4 diffuseComponent, vec4 specularComponent)
+vec4 agi_lightValueGaussian(vec3 toLight, vec3 toEye, vec3 normal, vec4 diffuseComponent, vec4 specularComponent, vec3 emissionComponent)
 {
+    //x, y, z : diffuse ambient
+    //w : specular strength
+    vec4 ambientLight = vec4(0.1, 0.1, 0.1, 0.5);
+    
     //Diffuse values
     vec3 diffuseColor = diffuseComponent.xyz;
     float alpha = diffuseComponent.w;
@@ -419,8 +423,9 @@ vec4 agi_lightValueGaussian(vec3 toLight, vec3 toEye, vec3 normal, vec4 diffuseC
     float gaussianTerm = exp(exponent);
     gaussianTerm = cosAngIncidence != 0.0 ? gaussianTerm : 0.0;
 
-    vec3 lighting = diffuseColor * cosAngIncidence;
-    lighting += specularColor * gaussianTerm * 0.5;
+    vec3 lighting = ambientLight.xyz + emissionComponent;
+    lighting += diffuseColor * cosAngIncidence;
+    lighting += specularColor * gaussianTerm * ambientLight.w;
     lighting = clamp(lighting, 0.0, 1.0);
     
     vec4 finalLighting = vec4(lighting, alpha);
