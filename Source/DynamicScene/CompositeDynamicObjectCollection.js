@@ -11,12 +11,12 @@ define([
         DynamicObjectCollection) {
     "use strict";
 
-    function CompositeDynamicObjectCollection(mergeFunctions, deleteFunctions, collections) {
+    function CompositeDynamicObjectCollection(mergeFunctions, undefinedFunctions, collections) {
         this._hash = {};
         this._array = [];
         this._collections = [];
         this._mergeFunctions = mergeFunctions;
-        this._deleteFunctions = deleteFunctions;
+        this._undefinedFunctions = undefinedFunctions;
         this.objectsUpdated = new Event();
         this.objectsRemoved = new Event();
 
@@ -97,7 +97,7 @@ define([
             var objects = currentCollection.getObjects();
             for ( var iObjects = objects.length - 1; iObjects > -1; iObjects--) {
                 var object = objects[iObjects];
-                var compositeObject = this.getOrCreateObject(object.id);
+                var compositeObject = this._getOrCreateObject(object.id);
                 for ( var iMergeFuncs = thisMergeFunctions.length - 1; iMergeFuncs > -1; iMergeFuncs--) {
                     var mergeFunc = thisMergeFunctions[iMergeFuncs];
                     mergeFunc(compositeObject, object);
@@ -114,7 +114,12 @@ define([
         return this._array;
     };
 
-    CompositeDynamicObjectCollection.prototype.getOrCreateObject = function(id) {
+    CompositeDynamicObjectCollection.prototype.clear = function() {
+        this._collections = [];
+        this._clearObjects();
+    };
+
+    CompositeDynamicObjectCollection.prototype._getOrCreateObject = function(id) {
         var obj = this._hash[id];
         if (!obj) {
             obj = new DynamicObject(id, this);
@@ -122,11 +127,6 @@ define([
             this._array.push(obj);
         }
         return obj;
-    };
-
-    CompositeDynamicObjectCollection.prototype.clear = function() {
-        this._collections = [];
-        this._clearObjects();
     };
 
     CompositeDynamicObjectCollection.prototype._clearObjects = function() {
@@ -140,7 +140,7 @@ define([
 
     CompositeDynamicObjectCollection.prototype._onObjectsUpdated = function(czmlObjectCollection, updatedObjects) {
         var thisMergeFunctions = this._mergeFunctions;
-        var thisDeleteFunctions = this._deleteFunctions;
+        var thisUndefinedFunctions = this._undefinedFunctions;
         var thisCollections = this._collections;
 
         var updatedObject, compositeObject, compositeObjects = [];
@@ -148,12 +148,12 @@ define([
             updatedObject = updatedObjects[i];
             compositeObject = this.getObject(updatedObject.id);
             if (typeof compositeObject !== 'undefined') {
-                for ( var iDeleteFuncs = thisDeleteFunctions.length - 1; iDeleteFuncs > -1; iDeleteFuncs--) {
-                    var deleteFunc = thisDeleteFunctions[iDeleteFuncs];
+                for ( var iDeleteFuncs = thisUndefinedFunctions.length - 1; iDeleteFuncs > -1; iDeleteFuncs--) {
+                    var deleteFunc = thisUndefinedFunctions[iDeleteFuncs];
                     deleteFunc(compositeObject);
                 }
             } else {
-                compositeObject = this.getOrCreateObject(updatedObject.id);
+                compositeObject = this._getOrCreateObject(updatedObject.id);
             }
 
             compositeObjects.push(compositeObject);

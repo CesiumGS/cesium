@@ -30,7 +30,7 @@ define([
         this.silhouetteMaterial = undefined;
     }
 
-    DynamicCone.createOrUpdate = function(dynamicObject, packet, czmlObjectCollection, sourceUri) {
+    DynamicCone.processCzmlPacket = function(dynamicObject, packet, czmlObjectCollection, sourceUri) {
         //See if there's any actual data to process.
         var coneData = packet.cone, cone;
         if (typeof coneData !== 'undefined') {
@@ -51,46 +51,46 @@ define([
             }
 
             //Create or update each of the properties.
-            coneUpdated = DynamicProperty.createOrUpdate(cone, "show", CzmlBoolean, coneData.show, interval, czmlObjectCollection) || coneUpdated;
-            coneUpdated = DynamicProperty.createOrUpdate(cone, "innerHalfAngle", CzmlNumber, coneData.innerHalfAngle, interval, czmlObjectCollection) || coneUpdated;
-            coneUpdated = DynamicProperty.createOrUpdate(cone, "outerHalfAngle", CzmlNumber, coneData.outerHalfAngle, interval, czmlObjectCollection) || coneUpdated;
-            coneUpdated = DynamicProperty.createOrUpdate(cone, "minimumClockAngle", CzmlNumber, coneData.minimumClockAngle, interval, czmlObjectCollection) || coneUpdated;
-            coneUpdated = DynamicProperty.createOrUpdate(cone, "maximumClockAngle", CzmlNumber, coneData.maximumClockAngle, interval, czmlObjectCollection) || coneUpdated;
-            coneUpdated = DynamicProperty.createOrUpdate(cone, "radius", CzmlNumber, coneData.radius, interval, czmlObjectCollection) || coneUpdated;
-            coneUpdated = DynamicProperty.createOrUpdate(cone, "showIntersection", CzmlBoolean, coneData.showIntersection, interval, czmlObjectCollection) || coneUpdated;
-            coneUpdated = DynamicProperty.createOrUpdate(cone, "intersectionColor", CzmlColor, coneData.intersectionColor, interval, czmlObjectCollection) || coneUpdated;
-            coneUpdated = DynamicMaterialProperty.createOrUpdate(cone, "capMaterial", coneData.capMaterial, interval, czmlObjectCollection) || coneUpdated;
-            coneUpdated = DynamicMaterialProperty.createOrUpdate(cone, "innerMaterial", coneData.innerMaterial, interval, czmlObjectCollection) || coneUpdated;
-            coneUpdated = DynamicMaterialProperty.createOrUpdate(cone, "outerMaterial", coneData.outerMaterial, interval, czmlObjectCollection) || coneUpdated;
-            coneUpdated = DynamicMaterialProperty.createOrUpdate(cone, "silhouetteMaterial", coneData.silhouetteMaterial, interval, czmlObjectCollection) || coneUpdated;
+            coneUpdated = DynamicProperty.processCzmlPacket(cone, "show", CzmlBoolean, coneData.show, interval, czmlObjectCollection) || coneUpdated;
+            coneUpdated = DynamicProperty.processCzmlPacket(cone, "innerHalfAngle", CzmlNumber, coneData.innerHalfAngle, interval, czmlObjectCollection) || coneUpdated;
+            coneUpdated = DynamicProperty.processCzmlPacket(cone, "outerHalfAngle", CzmlNumber, coneData.outerHalfAngle, interval, czmlObjectCollection) || coneUpdated;
+            coneUpdated = DynamicProperty.processCzmlPacket(cone, "minimumClockAngle", CzmlNumber, coneData.minimumClockAngle, interval, czmlObjectCollection) || coneUpdated;
+            coneUpdated = DynamicProperty.processCzmlPacket(cone, "maximumClockAngle", CzmlNumber, coneData.maximumClockAngle, interval, czmlObjectCollection) || coneUpdated;
+            coneUpdated = DynamicProperty.processCzmlPacket(cone, "radius", CzmlNumber, coneData.radius, interval, czmlObjectCollection) || coneUpdated;
+            coneUpdated = DynamicProperty.processCzmlPacket(cone, "showIntersection", CzmlBoolean, coneData.showIntersection, interval, czmlObjectCollection) || coneUpdated;
+            coneUpdated = DynamicProperty.processCzmlPacket(cone, "intersectionColor", CzmlColor, coneData.intersectionColor, interval, czmlObjectCollection) || coneUpdated;
+            coneUpdated = DynamicMaterialProperty.processCzmlPacket(cone, "capMaterial", coneData.capMaterial, interval, czmlObjectCollection) || coneUpdated;
+            coneUpdated = DynamicMaterialProperty.processCzmlPacket(cone, "innerMaterial", coneData.innerMaterial, interval, czmlObjectCollection) || coneUpdated;
+            coneUpdated = DynamicMaterialProperty.processCzmlPacket(cone, "outerMaterial", coneData.outerMaterial, interval, czmlObjectCollection) || coneUpdated;
+            coneUpdated = DynamicMaterialProperty.processCzmlPacket(cone, "silhouetteMaterial", coneData.silhouetteMaterial, interval, czmlObjectCollection) || coneUpdated;
         }
     };
 
-    DynamicCone.mergeProperties = function(existingObject, objectToMerge) {
+    DynamicCone.mergeProperties = function(targetObject, objectToMerge) {
         var coneToMerge = objectToMerge.cone;
         if (typeof coneToMerge !== 'undefined') {
-            var target = existingObject.cone;
-            if (typeof target === 'undefined') {
-                target = new DynamicCone();
-                existingObject.conde = target;
+            var targetCone = targetObject.cone;
+            if (typeof targetCone === 'undefined') {
+                targetCone = new DynamicCone();
+                targetObject.cone = targetCone;
             }
-            target.show = target.show || coneToMerge.show;
-            target.innerHalfAngle = target.innerHalfAngle || coneToMerge.innerHalfAngle;
-            target.outerHalfAngle = target.outerHalfAngle || coneToMerge.outerHalfAngle;
-            target.minimumClockAngle = target.minimumClockAngle || coneToMerge.minimumClockAngle;
-            target.maximumClockAngle = target.maximumClockAngle || coneToMerge.maximumClockAngle;
-            target.radius = target.radius || coneToMerge.radius;
-            target.showIntersection = target.showIntersection || coneToMerge.showIntersection;
-            target.intersectionColor = target.intersectionColor || coneToMerge.intersectionColor;
-            target.capMaterial = target.capMaterial || coneToMerge.capMaterial;
-            target.innerMaterial = target.innerMaterial || coneToMerge.innerMaterial;
-            target.outerMaterial = target.outerMaterial || coneToMerge.outerMaterial;
-            target.silhouetteMaterial = target.silhouetteMaterial || coneToMerge.silhouetteMaterial;
+            targetCone.show = targetCone.show || coneToMerge.show;
+            targetCone.innerHalfAngle = targetCone.innerHalfAngle || coneToMerge.innerHalfAngle;
+            targetCone.outerHalfAngle = targetCone.outerHalfAngle || coneToMerge.outerHalfAngle;
+            targetCone.minimumClockAngle = targetCone.minimumClockAngle || coneToMerge.minimumClockAngle;
+            targetCone.maximumClockAngle = targetCone.maximumClockAngle || coneToMerge.maximumClockAngle;
+            targetCone.radius = targetCone.radius || coneToMerge.radius;
+            targetCone.showIntersection = targetCone.showIntersection || coneToMerge.showIntersection;
+            targetCone.intersectionColor = targetCone.intersectionColor || coneToMerge.intersectionColor;
+            targetCone.capMaterial = targetCone.capMaterial || coneToMerge.capMaterial;
+            targetCone.innerMaterial = targetCone.innerMaterial || coneToMerge.innerMaterial;
+            targetCone.outerMaterial = targetCone.outerMaterial || coneToMerge.outerMaterial;
+            targetCone.silhouetteMaterial = targetCone.silhouetteMaterial || coneToMerge.silhouetteMaterial;
         }
     };
 
-    DynamicCone.deleteProperties = function(existingObject) {
-        existingObject.cone = undefined;
+    DynamicCone.undefineProperties = function(dynamicObject) {
+        dynamicObject.cone = undefined;
     };
 
     return DynamicCone;

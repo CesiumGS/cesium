@@ -33,7 +33,7 @@ define([
         this.show = undefined;
     }
 
-    DynamicLabel.createOrUpdate = function(dynamicObject, packet, czmlObjectCollection, sourceUri) {
+    DynamicLabel.processCzmlPacket = function(dynamicObject, packet, czmlObjectCollection, sourceUri) {
         //See if there's any actual data to process.
         var labelData = packet.label;
         if (typeof labelData !== 'undefined' &&
@@ -65,47 +65,47 @@ define([
             }
 
             //Create or update each of the properties.
-            labelUpdated = DynamicProperty.createOrUpdate(label, "text", CzmlString, labelData.text, interval, czmlObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.createOrUpdate(label, "font", CzmlString, labelData.font, interval, czmlObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.createOrUpdate(label, "show", CzmlBoolean, labelData.show, interval, czmlObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.createOrUpdate(label, "style", CzmlString, labelData.style, interval, czmlObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.createOrUpdate(label, "fillColor", CzmlColor, labelData.fillColor, interval, czmlObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.createOrUpdate(label, "outlineColor", CzmlColor, labelData.outlineColor, interval, czmlObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.createOrUpdate(label, "scale", CzmlNumber, labelData.scale, interval, czmlObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.createOrUpdate(label, "horizontalOrigin", CzmlString, labelData.horizontalOrigin, interval, czmlObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.createOrUpdate(label, "verticalOrigin", CzmlString, labelData.verticalOrigin, interval, czmlObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.createOrUpdate(label, "eyeOffset", CzmlCartesian3, labelData.eyeOffset, interval, czmlObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.createOrUpdate(label, "pixelOffset", CzmlCartesian2, labelData.pixelOffset, interval, czmlObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.processCzmlPacket(label, "text", CzmlString, labelData.text, interval, czmlObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.processCzmlPacket(label, "font", CzmlString, labelData.font, interval, czmlObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.processCzmlPacket(label, "show", CzmlBoolean, labelData.show, interval, czmlObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.processCzmlPacket(label, "style", CzmlString, labelData.style, interval, czmlObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.processCzmlPacket(label, "fillColor", CzmlColor, labelData.fillColor, interval, czmlObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.processCzmlPacket(label, "outlineColor", CzmlColor, labelData.outlineColor, interval, czmlObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.processCzmlPacket(label, "scale", CzmlNumber, labelData.scale, interval, czmlObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.processCzmlPacket(label, "horizontalOrigin", CzmlString, labelData.horizontalOrigin, interval, czmlObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.processCzmlPacket(label, "verticalOrigin", CzmlString, labelData.verticalOrigin, interval, czmlObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.processCzmlPacket(label, "eyeOffset", CzmlCartesian3, labelData.eyeOffset, interval, czmlObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.processCzmlPacket(label, "pixelOffset", CzmlCartesian2, labelData.pixelOffset, interval, czmlObjectCollection) || labelUpdated;
             return labelUpdated;
         }
     };
 
-    DynamicLabel.mergeProperties = function(existingObject, objectToMerge)
+    DynamicLabel.mergeProperties = function(targetObject, objectToMerge)
     {
         var labelToMerge = objectToMerge.label;
         if (typeof labelToMerge !== 'undefined') {
-            var target = existingObject.label;
-            if (typeof target === 'undefined') {
-                target = new DynamicLabel();
-                existingObject.label = target;
+            var targetLabel = targetObject.label;
+            if (typeof targetLabel === 'undefined') {
+                targetLabel = new DynamicLabel();
+                targetObject.label = targetLabel;
             }
-            target.text = target.text || labelToMerge.text;
-            target.font = target.font || labelToMerge.font;
-            target.show = target.show || labelToMerge.show;
-            target.style = target.style || labelToMerge.style;
-            target.fillColor = target.fillColor || labelToMerge.fillColor;
-            target.outlineColor = target.outlineColor || labelToMerge.outlineColor;
-            target.scale = target.scale || labelToMerge.scale;
-            target.horizontalOrigin = target.horizontalOrigin || labelToMerge.horizontalOrigin;
-            target.verticalOrigin = target.verticalOrigin || labelToMerge.verticalOrigin;
-            target.eyeOffset = target.eyeOffset || labelToMerge.eyeOffset;
-            target.pixelOffset = target.pixelOffset || labelToMerge.pixelOffset;
+            targetLabel.text = targetLabel.text || labelToMerge.text;
+            targetLabel.font = targetLabel.font || labelToMerge.font;
+            targetLabel.show = targetLabel.show || labelToMerge.show;
+            targetLabel.style = targetLabel.style || labelToMerge.style;
+            targetLabel.fillColor = targetLabel.fillColor || labelToMerge.fillColor;
+            targetLabel.outlineColor = targetLabel.outlineColor || labelToMerge.outlineColor;
+            targetLabel.scale = targetLabel.scale || labelToMerge.scale;
+            targetLabel.horizontalOrigin = targetLabel.horizontalOrigin || labelToMerge.horizontalOrigin;
+            targetLabel.verticalOrigin = targetLabel.verticalOrigin || labelToMerge.verticalOrigin;
+            targetLabel.eyeOffset = targetLabel.eyeOffset || labelToMerge.eyeOffset;
+            targetLabel.pixelOffset = targetLabel.pixelOffset || labelToMerge.pixelOffset;
         }
     };
 
-    DynamicLabel.deleteProperties = function(existingObject)
+    DynamicLabel.undefineProperties = function(dynamicObject)
     {
-        existingObject.label = undefined;
+        dynamicObject.label = undefined;
     };
 
     return DynamicLabel;

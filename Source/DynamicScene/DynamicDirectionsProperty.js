@@ -69,7 +69,7 @@ define([
         this._propertyIntervals = new TimeIntervalCollection();
     }
 
-    DynamicDirectionsProperty.createOrUpdate = function(parentObject, propertyName, czmlIntervals, constrainedInterval, czmlObjectCollection) {
+    DynamicDirectionsProperty.processCzmlPacket = function(parentObject, propertyName, czmlIntervals, constrainedInterval, czmlObjectCollection) {
         var newProperty = false;
         var existingProperty = parentObject[propertyName];
         if (typeof czmlIntervals === 'undefined') {

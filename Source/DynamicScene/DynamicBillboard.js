@@ -30,7 +30,7 @@ define([
         this.show = undefined;
     }
 
-    DynamicBillboard.createOrUpdate = function(dynamicObject, packet, czmlObjectCollection, sourceUri) {
+    DynamicBillboard.processCzmlPacket = function(dynamicObject, packet, czmlObjectCollection, sourceUri) {
         //See if there's any actual data to process.
         var billboardData = packet.billboard;
         if (typeof billboardData !== 'undefined' &&
@@ -60,43 +60,43 @@ define([
             }
 
             //Create or update each of the properties.
-            billboardUpdated = DynamicProperty.createOrUpdate(billboard, "color", CzmlColor, billboardData.color, interval, czmlObjectCollection) || billboardUpdated;
-            billboardUpdated = DynamicProperty.createOrUpdate(billboard, "eyeOffset", CzmlCartesian3, billboardData.eyeOffset, interval, czmlObjectCollection) || billboardUpdated;
-            billboardUpdated = DynamicProperty.createOrUpdate(billboard, "horizontalOrigin", CzmlString, billboardData.horizontalOrigin, interval, czmlObjectCollection) || billboardUpdated;
-            billboardUpdated = DynamicProperty.createOrUpdate(billboard, "image", CzmlString, billboardData.image, interval, czmlObjectCollection) || billboardUpdated;
-            billboardUpdated = DynamicProperty.createOrUpdate(billboard, "pixelOffset", CzmlCartesian2, billboardData.pixelOffset, interval, czmlObjectCollection) || billboardUpdated;
-            billboardUpdated = DynamicProperty.createOrUpdate(billboard, "rotation", CzmlNumber, billboardData.rotation, interval, czmlObjectCollection) || billboardUpdated;
-            billboardUpdated = DynamicProperty.createOrUpdate(billboard, "scale", CzmlNumber, billboardData.scale, interval, czmlObjectCollection) || billboardUpdated;
-            billboardUpdated = DynamicProperty.createOrUpdate(billboard, "show", CzmlBoolean, billboardData.show, interval, czmlObjectCollection) || billboardUpdated;
-            billboardUpdated = DynamicProperty.createOrUpdate(billboard, "verticalOrigin", CzmlString, billboardData.verticalOrigin, interval, czmlObjectCollection) || billboardUpdated;
-            billboardUpdated = DynamicProperty.createOrUpdate(billboard, "color", CzmlColor, billboardData.color, interval, czmlObjectCollection) || billboardUpdated;
+            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "color", CzmlColor, billboardData.color, interval, czmlObjectCollection) || billboardUpdated;
+            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "eyeOffset", CzmlCartesian3, billboardData.eyeOffset, interval, czmlObjectCollection) || billboardUpdated;
+            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "horizontalOrigin", CzmlString, billboardData.horizontalOrigin, interval, czmlObjectCollection) || billboardUpdated;
+            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "image", CzmlString, billboardData.image, interval, czmlObjectCollection) || billboardUpdated;
+            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "pixelOffset", CzmlCartesian2, billboardData.pixelOffset, interval, czmlObjectCollection) || billboardUpdated;
+            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "rotation", CzmlNumber, billboardData.rotation, interval, czmlObjectCollection) || billboardUpdated;
+            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "scale", CzmlNumber, billboardData.scale, interval, czmlObjectCollection) || billboardUpdated;
+            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "show", CzmlBoolean, billboardData.show, interval, czmlObjectCollection) || billboardUpdated;
+            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "verticalOrigin", CzmlString, billboardData.verticalOrigin, interval, czmlObjectCollection) || billboardUpdated;
+            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "color", CzmlColor, billboardData.color, interval, czmlObjectCollection) || billboardUpdated;
 
             return billboardUpdated;
         }
     };
 
-    DynamicBillboard.mergeProperties = function(existingObject, objectToMerge) {
+    DynamicBillboard.mergeProperties = function(targetObject, objectToMerge) {
         var billboardToMerge = objectToMerge.billboard;
         if (typeof billboardToMerge !== 'undefined') {
-            var target = existingObject.billboard;
-            if (typeof target === 'undefined') {
-                target = new DynamicBillboard();
-                existingObject.billboard = target;
+            var targetBillboard = targetObject.billboard;
+            if (typeof targetBillboard === 'undefined') {
+                targetBillboard = new DynamicBillboard();
+                targetObject.billboard = targetBillboard;
             }
-            target.color = target.color || billboardToMerge.color;
-            target.eyeOffset = target.eyeOffset || billboardToMerge.eyeOffset;
-            target.horizontalOrigin = target.horizontalOrigin || billboardToMerge.horizontalOrigin;
-            target.image = target.image || billboardToMerge.image;
-            target.pixelOffset = target.pixelOffset || billboardToMerge.pixelOffset;
-            target.rotation = target.rotation || billboardToMerge.rotation;
-            target.scale = target.scale || billboardToMerge.scale;
-            target.show = target.show || billboardToMerge.show;
-            target.verticalOrigin = target.verticalOrigin || billboardToMerge.verticalOrigin;
+            targetBillboard.color = targetBillboard.color || billboardToMerge.color;
+            targetBillboard.eyeOffset = targetBillboard.eyeOffset || billboardToMerge.eyeOffset;
+            targetBillboard.horizontalOrigin = targetBillboard.horizontalOrigin || billboardToMerge.horizontalOrigin;
+            targetBillboard.image = targetBillboard.image || billboardToMerge.image;
+            targetBillboard.pixelOffset = targetBillboard.pixelOffset || billboardToMerge.pixelOffset;
+            targetBillboard.rotation = targetBillboard.rotation || billboardToMerge.rotation;
+            targetBillboard.scale = targetBillboard.scale || billboardToMerge.scale;
+            targetBillboard.show = targetBillboard.show || billboardToMerge.show;
+            targetBillboard.verticalOrigin = targetBillboard.verticalOrigin || billboardToMerge.verticalOrigin;
         }
     };
 
-    DynamicBillboard.deleteProperties = function(existingObject) {
-        existingObject.billboard = undefined;
+    DynamicBillboard.undefineProperties = function(dynamicObject) {
+        dynamicObject.billboard = undefined;
     };
 
     return DynamicBillboard;

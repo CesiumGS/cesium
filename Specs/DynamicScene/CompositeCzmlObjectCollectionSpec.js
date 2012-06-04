@@ -21,13 +21,13 @@ defineSuite([
     /*global it,expect*/
 
     var updaters = {
-        billboard : DynamicBillboard.createOrUpdate,
-        label : DynamicLabel.createOrUpdate,
-        orientation : DynamicObject.createOrUpdateOrientation,
-        point : DynamicPoint.createOrUpdate,
-        polyline : DynamicPolyline.createOrUpdate,
-        position : DynamicObject.createOrUpdatePosition,
-        vertexPositions : DynamicObject.createOrUpdateVertexPositions
+        billboard : DynamicBillboard.processCzmlPacket,
+        label : DynamicLabel.processCzmlPacket,
+        orientation : DynamicObject.processCzmlPacketOrientation,
+        point : DynamicPoint.processCzmlPacket,
+        polyline : DynamicPolyline.processCzmlPacket,
+        position : DynamicObject.processCzmlPacketPosition,
+        vertexPositions : DynamicObject.processCzmlPacketVertexPositions
     };
 
     it("applyChanges works with Existing buffers", function() {
@@ -54,7 +54,7 @@ defineSuite([
         czmlObjectCollection2.processCzml(czml2);
 
         var mergeFuncs = [DynamicBillboard.mergeProperties];
-        var deleteFuncs = [DynamicBillboard.deleteProperties];
+        var deleteFuncs = [DynamicBillboard.undefineProperties];
         var compositeDynamicObjectCollection = new CompositeDynamicObjectCollection(mergeFuncs, deleteFuncs);
         compositeDynamicObjectCollection.addCollection(czmlObjectCollection1);
         compositeDynamicObjectCollection.addCollection(czmlObjectCollection2);
@@ -77,7 +77,7 @@ defineSuite([
         var czmlObjectCollection2 = new DynamicObjectCollection(updaters);
 
         var mergeFuncs = [DynamicBillboard.mergeProperties];
-        var deleteFuncs = [DynamicBillboard.deleteProperties];
+        var deleteFuncs = [DynamicBillboard.undefineProperties];
         var compositeDynamicObjectCollection = new CompositeDynamicObjectCollection(mergeFuncs, deleteFuncs);
         compositeDynamicObjectCollection.addCollection(czmlObjectCollection1);
         compositeDynamicObjectCollection.addCollection(czmlObjectCollection2);

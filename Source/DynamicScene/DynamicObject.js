@@ -13,12 +13,26 @@ define(['./DynamicProperty',
     function DynamicObject(id) {
         //TODO Throw developer error on undefined id?
         this.id = id;
+
+        //Add all standard CZML properties, even though they won't all be used,
+        //having the superset here will allow the compiler to better optimize this class.
+        this.billboard = undefined;
+        this.cone = undefined;
+        this.directions = undefined;
+        this.label = undefined;
+        this.orientation = undefined;
+        this.point = undefined;
+        this.polygon = undefined;
+        this.polyline = undefined;
+        this.position = undefined;
+        this.pyramid = undefined;
+        this.vertexPositions = undefined;
     }
 
-    DynamicObject.createOrUpdatePosition = function(dynamicObject, packet, buffer, sourceUri) {
+    DynamicObject.processCzmlPacketPosition = function(dynamicObject, packet, buffer, sourceUri) {
         var positionData = packet.position;
         if (typeof positionData !== 'undefined') {
-            var position = DynamicPositionProperty.createOrUpdate(positionData, buffer, sourceUri, dynamicObject.position);
+            var position = DynamicPositionProperty.processCzmlPacket(positionData, buffer, sourceUri, dynamicObject.position);
             if (typeof dynamicObject.position === 'undefined') {
                 dynamicObject.position = position;
                 return true;
@@ -27,18 +41,18 @@ define(['./DynamicProperty',
         }
     };
 
-    DynamicObject.createOrUpdateOrientation = function(dynamicObject, packet, czmlObjectCollection) {
+    DynamicObject.processCzmlPacketOrientation = function(dynamicObject, packet, czmlObjectCollection) {
         var orientationData = packet.orientation;
         if (typeof orientationData !== 'undefined') {
-            return DynamicProperty.createOrUpdate(dynamicObject, "orientation", CzmlQuaternion, orientationData, undefined, czmlObjectCollection);
+            return DynamicProperty.processCzmlPacket(dynamicObject, "orientation", CzmlQuaternion, orientationData, undefined, czmlObjectCollection);
         }
         return false;
     };
 
-    DynamicObject.createOrUpdateVertexPositions = function(dynamicObject, packet, buffer, sourceUri) {
+    DynamicObject.processCzmlPacketVertexPositions = function(dynamicObject, packet, buffer, sourceUri) {
         var vertexPositionsData = packet.vertexPositions;
         if (typeof vertexPositionsData !== 'undefined') {
-            var vertexPositions = DynamicVertexPositionsProperty.createOrUpdate(vertexPositionsData, buffer, sourceUri, dynamicObject.vertexPositions);
+            var vertexPositions = DynamicVertexPositionsProperty.processCzmlPacket(vertexPositionsData, buffer, sourceUri, dynamicObject.vertexPositions);
             if (typeof dynamicObject.vertexPositions === 'undefined') {
                 dynamicObject.vertexPositions = vertexPositions;
                 return true;
@@ -47,16 +61,16 @@ define(['./DynamicProperty',
         }
     };
 
-    DynamicObject.mergeProperties = function(existingObject, objectToMerge) {
-        existingObject.position = existingObject.position || objectToMerge.position;
-        existingObject.orientation = existingObject.orientation || objectToMerge.orientation;
-        existingObject.vertexPositions = existingObject.vertexPositions || objectToMerge.vertexPositions;
+    DynamicObject.mergeProperties = function(targetObject, objectToMerge) {
+        targetObject.position = targetObject.position || objectToMerge.position;
+        targetObject.orientation = targetObject.orientation || objectToMerge.orientation;
+        targetObject.vertexPositions = targetObject.vertexPositions || objectToMerge.vertexPositions;
     };
 
-    DynamicObject.deleteProperties = function(existingObject) {
-        existingObject.position = undefined;
-        existingObject.orientation = undefined;
-        existingObject.vertexPositions = undefined;
+    DynamicObject.undefineProperties = function(dynamicObject) {
+        dynamicObject.position = undefined;
+        dynamicObject.orientation = undefined;
+        dynamicObject.vertexPositions = undefined;
     };
 
     return DynamicObject;

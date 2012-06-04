@@ -69,7 +69,7 @@ define([
         this._propertyIntervals = new TimeIntervalCollection();
     }
 
-    DynamicVertexPositionsProperty.createOrUpdate = function(czmlIntervals, buffer, sourceUri, existingProperty) {
+    DynamicVertexPositionsProperty.processCzmlPacket = function(czmlIntervals, buffer, sourceUri, existingProperty) {
         if (typeof czmlIntervals === 'undefined') {
             return existingProperty;
         }

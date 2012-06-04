@@ -76,16 +76,16 @@ function(dom,
     var transitioner;
 
     var czmlObjectCollection = new DynamicObjectCollection({
-        billboard : DynamicBillboard.createOrUpdate,
-        cone : DynamicCone.createOrUpdate,
-        label : DynamicLabel.createOrUpdate,
-        orientation : DynamicObject.createOrUpdateOrientation,
-        point : DynamicPoint.createOrUpdate,
-        polygon : DynamicPolygon.createOrUpdate,
-        polyline : DynamicPolyline.createOrUpdate,
-        position : DynamicObject.createOrUpdatePosition,
-        pyramid : DynamicPyramid.createOrUpdate,
-        vertexPositions : DynamicObject.createOrUpdateVertexPositions
+        billboard : DynamicBillboard.processCzmlPacket,
+        cone : DynamicCone.processCzmlPacket,
+        label : DynamicLabel.processCzmlPacket,
+        orientation : DynamicObject.processCzmlPacketOrientation,
+        point : DynamicPoint.processCzmlPacket,
+        polygon : DynamicPolygon.processCzmlPacket,
+        polyline : DynamicPolyline.processCzmlPacket,
+        position : DynamicObject.processCzmlPacketPosition,
+        pyramid : DynamicPyramid.processCzmlPacket,
+        vertexPositions : DynamicObject.processCzmlPacketVertexPositions
     });
 
     var animating = true;

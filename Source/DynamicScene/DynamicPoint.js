@@ -21,7 +21,7 @@ define([
         this.show = undefined;
     }
 
-    DynamicPoint.createOrUpdate = function(dynamicObject, packet, czmlObjectCollection) {
+    DynamicPoint.processCzmlPacket = function(dynamicObject, packet, czmlObjectCollection) {
         //See if there's any actual data to process.
         var pointData = packet.point, point;
         if (typeof pointData !== 'undefined') {
@@ -42,36 +42,34 @@ define([
             }
 
             //Create or update each of the properties.
-            pointUpdated = DynamicProperty.createOrUpdate(point, "color", CzmlColor, pointData.color, interval, czmlObjectCollection) || pointUpdated;
-            pointUpdated = DynamicProperty.createOrUpdate(point, "pixelSize", CzmlNumber, pointData.pixelSize, interval, czmlObjectCollection) || pointUpdated;
-            pointUpdated = DynamicProperty.createOrUpdate(point, "outlineColor", CzmlColor, pointData.outlineColor, interval, czmlObjectCollection) || pointUpdated;
-            pointUpdated = DynamicProperty.createOrUpdate(point, "outlineWidth", CzmlNumber, pointData.outlineWidth, interval, czmlObjectCollection) || pointUpdated;
-            pointUpdated = DynamicProperty.createOrUpdate(point, "show", CzmlBoolean, pointData.show, interval, czmlObjectCollection) || pointUpdated;
+            pointUpdated = DynamicProperty.processCzmlPacket(point, "color", CzmlColor, pointData.color, interval, czmlObjectCollection) || pointUpdated;
+            pointUpdated = DynamicProperty.processCzmlPacket(point, "pixelSize", CzmlNumber, pointData.pixelSize, interval, czmlObjectCollection) || pointUpdated;
+            pointUpdated = DynamicProperty.processCzmlPacket(point, "outlineColor", CzmlColor, pointData.outlineColor, interval, czmlObjectCollection) || pointUpdated;
+            pointUpdated = DynamicProperty.processCzmlPacket(point, "outlineWidth", CzmlNumber, pointData.outlineWidth, interval, czmlObjectCollection) || pointUpdated;
+            pointUpdated = DynamicProperty.processCzmlPacket(point, "show", CzmlBoolean, pointData.show, interval, czmlObjectCollection) || pointUpdated;
 
             return pointUpdated;
         }
     };
 
-    DynamicPoint.mergeProperties = function(existingObject, objectToMerge)
-    {
+    DynamicPoint.mergeProperties = function(targetObject, objectToMerge) {
         var pointToMerge = objectToMerge.point;
         if (typeof pointToMerge !== 'undefined') {
-            var target = existingObject.point;
-            if (typeof target === 'undefined') {
-                target = new DynamicPoint();
-                existingObject.point = target;
+            var targetPoint = targetObject.point;
+            if (typeof targetPoint === 'undefined') {
+                targetPoint = new DynamicPoint();
+                targetObject.point = targetPoint;
             }
-            target.color = target.color || pointToMerge.color;
-            target.pixelSize = target.pixelSize || pointToMerge.pixelSize;
-            target.outlineColor = target.outlineColor || pointToMerge.outlineColor;
-            target.outlineWidth = target.outlineWidth || pointToMerge.outlineWidth;
-            target.show = target.show || pointToMerge.show;
+            targetPoint.color = targetPoint.color || pointToMerge.color;
+            targetPoint.pixelSize = targetPoint.pixelSize || pointToMerge.pixelSize;
+            targetPoint.outlineColor = targetPoint.outlineColor || pointToMerge.outlineColor;
+            targetPoint.outlineWidth = targetPoint.outlineWidth || pointToMerge.outlineWidth;
+            targetPoint.show = targetPoint.show || pointToMerge.show;
         }
     };
 
-    DynamicPoint.deleteProperties = function(existingObject)
-    {
-        existingObject.point = undefined;
+    DynamicPoint.undefineProperties = function(dynamicObject) {
+        dynamicObject.point = undefined;
     };
 
     return DynamicPoint;

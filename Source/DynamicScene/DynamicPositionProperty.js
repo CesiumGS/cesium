@@ -21,7 +21,7 @@ define([
         this._potentialTypes = [CzmlCartesian3, CzmlCartographic3];
     }
 
-    DynamicPositionProperty.createOrUpdate = function(czmlIntervals, buffer, sourceUri, existingProperty) {
+    DynamicPositionProperty.processCzmlPacket = function(czmlIntervals, buffer, sourceUri, existingProperty) {
         if (typeof czmlIntervals === 'undefined') {
             return existingProperty;
         }

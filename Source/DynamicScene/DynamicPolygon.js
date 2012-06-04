@@ -16,7 +16,7 @@ define([
         this.material = undefined;
     }
 
-    DynamicPolygon.createOrUpdate = function(dynamicObject, packet, czmlObjectCollection) {
+    DynamicPolygon.processCzmlPacket = function(dynamicObject, packet, czmlObjectCollection) {
         //See if there's any actual data to process.
         var polygonData = packet.polygon, polygon;
         if (typeof polygonData !== 'undefined') {
@@ -37,27 +37,27 @@ define([
             }
 
             //Create or update each of the properties.
-            polygonUpdated = DynamicProperty.createOrUpdate(polygon, "show", CzmlBoolean, polygonData.show, interval, czmlObjectCollection) || polygonUpdated;
-            polygonUpdated = DynamicMaterialProperty.createOrUpdate(polygon, "material", polygonData.material, interval, czmlObjectCollection) || polygonUpdated;
+            polygonUpdated = DynamicProperty.processCzmlPacket(polygon, "show", CzmlBoolean, polygonData.show, interval, czmlObjectCollection) || polygonUpdated;
+            polygonUpdated = DynamicMaterialProperty.processCzmlPacket(polygon, "material", polygonData.material, interval, czmlObjectCollection) || polygonUpdated;
             return polygonUpdated;
         }
     };
 
-    DynamicPolygon.mergeProperties = function(existingObject, objectToMerge) {
+    DynamicPolygon.mergeProperties = function(targetObject, objectToMerge) {
         var polygonToMerge = objectToMerge.polygon;
         if (typeof polygonToMerge !== 'undefined') {
-            var target = existingObject.polygon;
-            if (typeof target === 'undefined') {
-                target = new DynamicPolygon();
-                existingObject.conde = target;
+            var targetPolygon = targetObject.polygon;
+            if (typeof targetPolygon === 'undefined') {
+                targetPolygon = new DynamicPolygon();
+                targetObject.polygon = targetPolygon;
             }
-            target.show = target.show || polygonToMerge.show;
-            target.material = target.material || polygonToMerge.material;
+            targetPolygon.show = targetPolygon.show || polygonToMerge.show;
+            targetPolygon.material = targetPolygon.material || polygonToMerge.material;
         }
     };
 
-    DynamicPolygon.deleteProperties = function(existingObject) {
-        existingObject.polygon = undefined;
+    DynamicPolygon.undefineProperties = function(dynamicObject) {
+        dynamicObject.polygon = undefined;
     };
 
     return DynamicPolygon;

@@ -21,7 +21,7 @@ function(
         this.width = undefined;
     }
 
-    DynamicPolyline.createOrUpdate = function(dynamicObject, packet, czmlObjectCollection) {
+    DynamicPolyline.processCzmlPacket = function(dynamicObject, packet, czmlObjectCollection) {
         //See if there's any actual data to process.
         var polylineData = packet.polyline, polyline;
         if (typeof polylineData !== 'undefined') {
@@ -42,36 +42,34 @@ function(
             }
 
             //Create or update each of the properties.
-            polylineUpdated = DynamicProperty.createOrUpdate(polyline, "color", CzmlColor, polylineData.color, interval, czmlObjectCollection) || polylineUpdated;
-            polylineUpdated = DynamicProperty.createOrUpdate(polyline, "outlineColor", CzmlColor, polylineData.outlineColor, interval, czmlObjectCollection) || polylineUpdated;
-            polylineUpdated = DynamicProperty.createOrUpdate(polyline, "outlineWidth", CzmlNumber, polylineData.outlineWidth, interval, czmlObjectCollection) || polylineUpdated;
-            polylineUpdated = DynamicProperty.createOrUpdate(polyline, "show", CzmlBoolean, polylineData.show, interval, czmlObjectCollection) || polylineUpdated;
-            polylineUpdated = DynamicProperty.createOrUpdate(polyline, "width", CzmlNumber, polylineData.width, interval, czmlObjectCollection) || polylineUpdated;
+            polylineUpdated = DynamicProperty.processCzmlPacket(polyline, "color", CzmlColor, polylineData.color, interval, czmlObjectCollection) || polylineUpdated;
+            polylineUpdated = DynamicProperty.processCzmlPacket(polyline, "outlineColor", CzmlColor, polylineData.outlineColor, interval, czmlObjectCollection) || polylineUpdated;
+            polylineUpdated = DynamicProperty.processCzmlPacket(polyline, "outlineWidth", CzmlNumber, polylineData.outlineWidth, interval, czmlObjectCollection) || polylineUpdated;
+            polylineUpdated = DynamicProperty.processCzmlPacket(polyline, "show", CzmlBoolean, polylineData.show, interval, czmlObjectCollection) || polylineUpdated;
+            polylineUpdated = DynamicProperty.processCzmlPacket(polyline, "width", CzmlNumber, polylineData.width, interval, czmlObjectCollection) || polylineUpdated;
 
             return polylineUpdated;
         }
     };
 
-    DynamicPolyline.mergeProperties = function(existingObject, objectToMerge)
-    {
+    DynamicPolyline.mergeProperties = function(targetObject, objectToMerge) {
         var polylineToMerge = objectToMerge.polyline;
         if (typeof polylineToMerge !== 'undefined') {
-            var target = existingObject.polyline;
-            if (typeof target === 'undefined') {
-                target = new DynamicPolyline();
-                existingObject.polyline = target;
+            var targetPolyline = targetObject.polyline;
+            if (typeof targetPolyline === 'undefined') {
+                targetPolyline = new DynamicPolyline();
+                targetObject.polyline = targetPolyline;
             }
-            target.color = target.color || polylineToMerge.color;
-            target.pixelSize = target.pixelSize || polylineToMerge.pixelSize;
-            target.outlineColor = target.outlineColor || polylineToMerge.outlineColor;
-            target.outlineWidth = target.outlineWidth || polylineToMerge.outlineWidth;
-            target.show = target.show || polylineToMerge.show;
+            targetPolyline.color = targetPolyline.color || polylineToMerge.color;
+            targetPolyline.pixelSize = targetPolyline.pixelSize || polylineToMerge.pixelSize;
+            targetPolyline.outlineColor = targetPolyline.outlineColor || polylineToMerge.outlineColor;
+            targetPolyline.outlineWidth = targetPolyline.outlineWidth || polylineToMerge.outlineWidth;
+            targetPolyline.show = targetPolyline.show || polylineToMerge.show;
         }
     };
 
-    DynamicPolyline.deleteProperties = function(existingObject)
-    {
-        existingObject.polyline = undefined;
+    DynamicPolyline.undefineProperties = function(dynamicObject) {
+        dynamicObject.polyline = undefined;
     };
 
     return DynamicPolyline;

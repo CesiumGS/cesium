@@ -47,7 +47,7 @@ define([
     };
 
     DynamicObjectCollection.prototype.processCzml = function(packets, sourceUri) {
-        var updatedObjects = {};
+        var updatedObjects = [];
 
         if (Array.isArray(packets)) {
             for ( var i = 0, len = packets.length; i < len; i++) {
@@ -57,15 +57,8 @@ define([
             this._processCzmlPacket(packets, sourceUri, updatedObjects);
         }
 
-        var objectId, updatedObjectsArray = [];
-        for (objectId in updatedObjects) {
-            if (updatedObjects.hasOwnProperty(objectId)) {
-                updatedObjectsArray.push(updatedObjects[objectId]);
-            }
-        }
-
-        if (updatedObjectsArray.length > 0) {
-            this.objectsUpdated.raiseEvent(this, updatedObjectsArray);
+        if (updatedObjects.length > 0) {
+            this.objectsUpdated.raiseEvent(this, updatedObjects);
         }
 
         return updatedObjects;
@@ -82,10 +75,10 @@ define([
         for ( var prop in packet) {
             if (typeof prop !== 'undefined') {
                 var propertyFunc = thisPropertyFunctionsMap[prop];
-                if (typeof propertyFunc !== 'undefined') {
-                    if (propertyFunc(object, packet, this, sourceUri)) {
-                        updatedObjects[objectId] = object;
-                    }
+                if (typeof propertyFunc !== 'undefined' &&
+                    propertyFunc(object, packet, this, sourceUri) &&
+                    updatedObjects.indexOf(object) === -1) {
+                    updatedObjects.push(object);
                 }
             }
         }
