@@ -1,24 +1,45 @@
 /*global define*/
-define(['./DynamicProperty',
+define([
+        '../Core/DeveloperError',
+        './DynamicProperty',
         './DynamicPositionProperty',
         './DynamicVertexPositionsProperty',
-        './QuaternionDataHandler'
+        './CzmlQuaternion'
     ], function(
+        DeveloperError,
         DynamicProperty,
         DynamicPositionProperty,
         DynamicVertexPositionsProperty,
-        QuaternionDataHandler) {
+        CzmlQuaternion) {
     "use strict";
 
     function DynamicObject(id) {
-        //TODO Throw developer error on undefined id?
+        if (typeof id === 'undefined' || id === null) {
+            throw new DeveloperError("id is required");
+        }
+
         this.id = id;
+
+        //Add standard CZML properties.  Even though they won't all be used
+        //for each object, having the superset directly will allow the compiler
+        //to greatly optimize this class.  Any changes to this list should
+        //coincide with changes to CzmlStandard.updaters
+        this.billboard = undefined;
+        this.cone = undefined;
+        this.label = undefined;
+        this.point = undefined;
+        this.polygon = undefined;
+        this.polyline = undefined;
+        this.pyramid = undefined;
+        this.position = undefined;
+        this.orientation = undefined;
+        this.vertexPositions = undefined;
     }
 
-    DynamicObject.createOrUpdatePosition = function(dynamicObject, packet, buffer, sourceUri) {
+    DynamicObject.processCzmlPacketPosition = function(dynamicObject, packet, buffer, sourceUri) {
         var positionData = packet.position;
         if (typeof positionData !== 'undefined') {
-            var position = DynamicPositionProperty.createOrUpdate(positionData, buffer, sourceUri, dynamicObject.position);
+            var position = DynamicPositionProperty.processCzmlPacket(positionData, buffer, sourceUri, dynamicObject.position);
             if (typeof dynamicObject.position === 'undefined') {
                 dynamicObject.position = position;
                 return true;
@@ -27,18 +48,18 @@ define(['./DynamicProperty',
         }
     };
 
-    DynamicObject.createOrUpdateOrientation = function(dynamicObject, packet, czmlObjectCollection) {
+    DynamicObject.processCzmlPacketOrientation = function(dynamicObject, packet, czmlObjectCollection) {
         var orientationData = packet.orientation;
         if (typeof orientationData !== 'undefined') {
-            return DynamicProperty.createOrUpdate(dynamicObject, "orientation", QuaternionDataHandler, orientationData, undefined, czmlObjectCollection);
+            return DynamicProperty.processCzmlPacket(dynamicObject, "orientation", CzmlQuaternion, orientationData, undefined, czmlObjectCollection);
         }
         return false;
     };
 
-    DynamicObject.createOrUpdateVertexPositions = function(dynamicObject, packet, buffer, sourceUri) {
+    DynamicObject.processCzmlPacketVertexPositions = function(dynamicObject, packet, buffer, sourceUri) {
         var vertexPositionsData = packet.vertexPositions;
         if (typeof vertexPositionsData !== 'undefined') {
-            var vertexPositions = DynamicVertexPositionsProperty.createOrUpdate(vertexPositionsData, buffer, sourceUri, dynamicObject.vertexPositions);
+            var vertexPositions = DynamicVertexPositionsProperty.processCzmlPacket(vertexPositionsData, buffer, sourceUri, dynamicObject.vertexPositions);
             if (typeof dynamicObject.vertexPositions === 'undefined') {
                 dynamicObject.vertexPositions = vertexPositions;
                 return true;
@@ -47,16 +68,16 @@ define(['./DynamicProperty',
         }
     };
 
-    DynamicObject.mergeProperties = function(existingObject, objectToMerge) {
-        existingObject.position = existingObject.position || objectToMerge.position;
-        existingObject.orientation = existingObject.orientation || objectToMerge.orientation;
-        existingObject.vertexPositions = existingObject.vertexPositions || objectToMerge.vertexPositions;
+    DynamicObject.mergeProperties = function(targetObject, objectToMerge) {
+        targetObject.position = targetObject.position || objectToMerge.position;
+        targetObject.orientation = targetObject.orientation || objectToMerge.orientation;
+        targetObject.vertexPositions = targetObject.vertexPositions || objectToMerge.vertexPositions;
     };
 
-    DynamicObject.deleteProperties = function(existingObject) {
-        existingObject.position = undefined;
-        existingObject.orientation = undefined;
-        existingObject.vertexPositions = undefined;
+    DynamicObject.undefineProperties = function(dynamicObject) {
+        dynamicObject.position = undefined;
+        dynamicObject.orientation = undefined;
+        dynamicObject.vertexPositions = undefined;
     };
 
     return DynamicObject;

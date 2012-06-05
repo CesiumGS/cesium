@@ -1,13 +1,13 @@
 /*global defineSuite*/
-defineSuite(['DynamicScene/ColorDataHandler'], function(ColorDataHandler) {
+defineSuite(['DynamicScene/CzmlColor'], function(CzmlColor) {
     "use strict";
     /*global it,expect*/
 
     it("isSampled works.", function() {
         var constantRgba = [0, 0, 0, 0];
-        expect(ColorDataHandler.isSampled(constantRgba)).toEqual(false);
+        expect(CzmlColor.isSampled(constantRgba)).toEqual(false);
 
         var sampledRgba = [0, 0, 0, 0, 1, 255, 255, 255];
-        expect(ColorDataHandler.isSampled(sampledRgba)).toEqual(true);
+        expect(CzmlColor.isSampled(sampledRgba)).toEqual(true);
     });
 });

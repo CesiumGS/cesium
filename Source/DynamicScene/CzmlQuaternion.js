@@ -10,24 +10,24 @@ define([
     var doublesPerCartesian = 3;
     var doublesPerQuaternion = 4;
 
-    var QuaternionDataHandler = {
+    var CzmlQuaternion = {
         doublesPerValue : doublesPerQuaternion,
         doublesPerInterpolationValue : doublesPerCartesian,
 
-        unwrapCzmlInterval : function(czmlInterval) {
+        unwrapInterval : function(czmlInterval) {
             return czmlInterval.unitQuaternion || czmlInterval.quaternion;
         },
 
-        isSampled : function(czmlIntervalData) {
-            return Array.isArray(czmlIntervalData) && czmlIntervalData.length > doublesPerQuaternion;
+        isSampled : function(unwrappedInterval) {
+            return Array.isArray(unwrappedInterval) && unwrappedInterval.length > doublesPerQuaternion;
         },
 
-        packValuesForInterpolation : function(valuesArray, destinationArray, firstIndex, lastIndex) {
-            var quaternion0Conjugate = QuaternionDataHandler.createValueFromArray(valuesArray, lastIndex * doublesPerQuaternion).conjugate();
+        packValuesForInterpolation : function(sourceArray, destinationArray, firstIndex, lastIndex) {
+            var quaternion0Conjugate = CzmlQuaternion.createValueFromArray(sourceArray, lastIndex * doublesPerQuaternion).conjugate();
 
             for ( var i = 0, len = lastIndex - firstIndex + 1; i < len; i++) {
                 var offset = i * doublesPerCartesian;
-                var value = QuaternionDataHandler.createValueFromArray(valuesArray, (firstIndex + i) * doublesPerQuaternion);
+                var value = CzmlQuaternion.createValueFromArray(sourceArray, (firstIndex + i) * doublesPerQuaternion);
                 var difference = value.multiply(quaternion0Conjugate).normalize();
 
                 if (difference.w < 0) {
@@ -53,19 +53,19 @@ define([
             }
         },
 
-        createValue : function(data) {
-            return new Quaternion(data[1], data[2], data[3], data[0]);
+        createValue : function(unwrappedInterval) {
+            return new Quaternion(unwrappedInterval[1], unwrappedInterval[2], unwrappedInterval[3], unwrappedInterval[0]);
         },
 
-        createValueFromArray : function(data, startingIndex) {
-            return new Quaternion(data[startingIndex + 1], data[startingIndex + 2], data[startingIndex + 3], data[startingIndex]);
+        createValueFromArray : function(array, startingIndex) {
+            return new Quaternion(array[startingIndex + 1], array[startingIndex + 2], array[startingIndex + 3], array[startingIndex]);
         },
 
-        createValueFromInterpolationResult : function(result, valuesArray, firstIndex, lastIndex) {
-            var rotationVector = new Cartesian3(result[0], result[1], result[2]);
+        createValueFromInterpolationResult : function(array, sourceArray, firstIndex, lastIndex) {
+            var rotationVector = new Cartesian3(array[0], array[1], array[2]);
             var magnitude = rotationVector.magnitude();
 
-            var quaternion0 = QuaternionDataHandler.createValueFromArray(valuesArray, lastIndex * doublesPerQuaternion);
+            var quaternion0 = CzmlQuaternion.createValueFromArray(sourceArray, lastIndex * doublesPerQuaternion);
 
             var difference;
             if (magnitude === 0) {
@@ -78,5 +78,5 @@ define([
         }
     };
 
-    return QuaternionDataHandler;
+    return CzmlQuaternion;
 });

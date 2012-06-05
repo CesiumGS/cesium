@@ -16,23 +16,8 @@ define(['dojo/dom',
         'Core/Transforms',
         'Scene/SceneTransitioner',
         'Scene/BingMapsStyle',
-        'DynamicScene/DynamicBillboard',
-        'DynamicScene/DynamicCone',
-        'DynamicScene/DynamicLabel',
-        'DynamicScene/DynamicObject',
-        'DynamicScene/DynamicPoint',
-        'DynamicScene/DynamicPolygon',
-        'DynamicScene/DynamicPolyline',
-        'DynamicScene/DynamicPyramid',
-        'DynamicScene/CzmlObjectCollection',
-        'DynamicScene/DynamicBillboardVisualizer',
-        'DynamicScene/DynamicConeVisualizer',
-        'DynamicScene/DynamicLabelVisualizer',
-        'DynamicScene/DynamicPointVisualizer',
-        'DynamicScene/DynamicPolygonVisualizer',
-        'DynamicScene/DynamicPolylineVisualizer',
-        'DynamicScene/DynamicPyramidVisualizer',
-        'DynamicScene/VisualizerCollection'],
+        'DynamicScene/CzmlStandard',
+        'DynamicScene/DynamicObjectCollection'],
 function(dom,
          on,
          event,
@@ -50,23 +35,8 @@ function(dom,
          Transforms,
          SceneTransitioner,
          BingMapsStyle,
-         DynamicBillboard,
-         DynamicCone,
-         DynamicLabel,
-         DynamicObject,
-         DynamicPoint,
-         DynamicPolygon,
-         DynamicPolyline,
-         DynamicPyramid,
-         CzmlObjectCollection,
-         DynamicBillboardVisualizer,
-         DynamicConeVisualizer,
-         DynamicLabelVisualizer,
-         DynamicPointVisualizer,
-         DynamicPolygonVisualizer,
-         DynamicPolylineVisualizer,
-         DynamicPyramidVisualizer,
-         VisualizerCollection) {
+         CzmlStandard,
+         DynamicObjectCollection) {
     "use strict";
     /*global console*/
 
@@ -75,18 +45,7 @@ function(dom,
     var timeline;
     var transitioner;
 
-    var _buffer = new CzmlObjectCollection({
-        billboard : DynamicBillboard.createOrUpdate,
-        cone : DynamicCone.createOrUpdate,
-        label : DynamicLabel.createOrUpdate,
-        orientation : DynamicObject.createOrUpdateOrientation,
-        point : DynamicPoint.createOrUpdate,
-        polygon : DynamicPolygon.createOrUpdate,
-        polyline : DynamicPolyline.createOrUpdate,
-        position : DynamicObject.createOrUpdatePosition,
-        pyramid : DynamicPyramid.createOrUpdate,
-        vertexPositions : DynamicObject.createOrUpdateVertexPositions
-    });
+    var dynamicObjectCollection = new DynamicObjectCollection();
 
     var animating = true;
     var speedIndicatorElement;
@@ -97,9 +56,9 @@ function(dom,
 
     //This function is a total HACK and only temporary.
     function setTimeFromBuffer() {
-        var czmlObjects = _buffer.getObjects();
-        for ( var i = 0, len = czmlObjects.length; i < len; i++) {
-            var object = czmlObjects[i];
+        var dynamicObjects = dynamicObjectCollection.getObjects();
+        for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
+            var object = dynamicObjects[i];
             if (typeof object.position !== 'undefined') {
                 var intervals = object.position._propertyIntervals;
                 if (typeof intervals !== 'undefined' && intervals._intervals[0].data._intervals._intervals[0].data.isSampled) {
@@ -124,9 +83,8 @@ function(dom,
         var f = files[0];
         var reader = new FileReader();
         reader.onload = function(evt) {
-            visualizers.clear(_buffer);
-            _buffer.clear();
-            _buffer.processCzml(JSON.parse(evt.target.result), f.name);
+            dynamicObjectCollection.clear();
+            dynamicObjectCollection.processCzml(JSON.parse(evt.target.result), f.name);
             setTimeFromBuffer();
         };
         reader.readAsText(f);
@@ -153,7 +111,7 @@ function(dom,
             if (typeof timeline !== 'undefined') {
                 timeline.updateFromClock();
             }
-            visualizers.update(currentTime, _buffer);
+            visualizers.update(currentTime);
 
             if (Math.abs(currentTime.getSecondsDifference(lastTimeLabelUpdate)) >= 1.0) {
                 timeLabel.innerHTML = currentTime.toDate().toUTCString();
@@ -162,9 +120,9 @@ function(dom,
 
             // Update the camera to stay centered on the selected object, if any.
             if (cameraCenteredObjectID) {
-                var czmlObject = _buffer.getObject(cameraCenteredObjectID);
-                if (czmlObject && czmlObject.position) {
-                    var position = czmlObject.position.getValueCartesian(currentTime);
+                var dynamicObject = dynamicObjectCollection.getObject(cameraCenteredObjectID);
+                if (dynamicObject && dynamicObject.position) {
+                    var position = dynamicObject.position.getValueCartesian(currentTime);
                     if (typeof position !== 'undefined') {
                         // If we're centering on an object for the first time, zoom to within 2km of it.
                         if (lastCameraCenteredObjectID !== cameraCenteredObjectID) {
@@ -184,9 +142,7 @@ function(dom,
             var scene = widget.scene;
 
             transitioner = new SceneTransitioner(scene);
-
-            visualizers = new VisualizerCollection([new DynamicBillboardVisualizer(scene), new DynamicConeVisualizer(scene), new DynamicLabelVisualizer(scene), new DynamicPointVisualizer(scene),
-                    new DynamicPolygonVisualizer(scene), new DynamicPolylineVisualizer(scene), new DynamicPyramidVisualizer(scene)]);
+            visualizers = CzmlStandard.createVisualizers(scene, dynamicObjectCollection);
             widget.enableStatistics(true);
 
             var queryObject = {};
@@ -195,9 +151,8 @@ function(dom,
             }
 
             if (typeof queryObject.source !== 'undefined') {
-                visualizers.clear(_buffer);
-                _buffer.clear();
-                loadCzmlFromUrl(_buffer, queryObject.source, setTimeFromBuffer);
+                dynamicObjectCollection.clear();
+                loadCzmlFromUrl(dynamicObjectCollection, queryObject.source, setTimeFromBuffer);
             }
 
             var timelineWidget = registry.byId('mainTimeline');

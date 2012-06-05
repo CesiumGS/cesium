@@ -69,7 +69,7 @@ define([
         this._propertyIntervals = new TimeIntervalCollection();
     }
 
-    DynamicDirectionsProperty.createOrUpdate = function(parentObject, propertyName, czmlIntervals, constrainedInterval, czmlObjectCollection) {
+    DynamicDirectionsProperty.processCzmlPacket = function(parentObject, propertyName, czmlIntervals, constrainedInterval, czmlObjectCollection) {
         var newProperty = false;
         var existingProperty = parentObject[propertyName];
         if (typeof czmlIntervals === 'undefined') {
@@ -107,13 +107,13 @@ define([
         }
 
         //See if we already have data at that interval.
-        var this_intervals = this._propertyIntervals;
-        var existingInterval = this_intervals.findInterval(iso8601Interval.start, iso8601Interval.stop);
+        var thisIntervals = this._propertyIntervals;
+        var existingInterval = thisIntervals.findInterval(iso8601Interval.start, iso8601Interval.stop);
 
         //If not, create it.
         if (typeof existingInterval === 'undefined') {
             existingInterval = iso8601Interval;
-            this_intervals.addInterval(existingInterval);
+            thisIntervals.addInterval(existingInterval);
         }
 
         var references = czmlInterval.references;

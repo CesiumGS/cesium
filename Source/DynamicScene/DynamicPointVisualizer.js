@@ -135,7 +135,7 @@ function(TextureAtlas,
                 outlineWidth : outlineWidth
             });
 
-            this._textureAtlas.addTextureFromFunction(textureId, function(loadedCallback) {
+            this._textureAtlas.addTextureFromFunction(textureId, function(id, loadedCallback) {
                 var canvas = document.createElement("canvas");
 
                 var length = pixelSize + (2 * outlineWidth);

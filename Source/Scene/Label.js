@@ -456,12 +456,7 @@ define([
     Label.prototype.setHorizontalOrigin = function(value) {
         if ((typeof value !== "undefined") && (this._horizontalOrigin !== value)) {
             this._horizontalOrigin = value;
-
-            var billboards = this._billboards;
-            var length = this._billboards ? this._billboards.length : 0;
-            for ( var i = 0; i < length; i++) {
-                billboards[i].setHorizontalOrigin(value);
-            }
+            this._createBillboards();
         }
     };
 
@@ -650,7 +645,7 @@ define([
                 show : this._show,
                 position : this._position,
                 eyeOffset : this._eyeOffset,
-                horizontalOrigin : this._horizontalOrigin,
+                horizontalOrigin : HorizontalOrigin.LEFT,
                 verticalOrigin : this._verticalOrigin,
                 scale : this._scale,
                 _pickIdThis : this
@@ -744,6 +739,18 @@ define([
         return maxHeight;
     };
 
+    Label.prototype._getWidth = function(){
+        var i;
+        var billboards = this._billboards;
+        var length = billboards.length;
+        var width = 0;
+        for (i = 0; i < length; i++) {
+            var billboard = billboards[i];
+            width += billboard._labelDimension.width;
+        }
+        return width;
+    };
+
     Label.prototype._setPixelOffsets = function() {
         var billboards = this._billboards;
         var maxHeight = 0;
@@ -751,10 +758,18 @@ define([
         var length = billboards.length;
         var thisPixelOffset = this._pixelOffset;
         var thisVerticalOrigin = this._verticalOrigin;
+        var thisHorizontalOrigin = this._horizontalOrigin;
+        var totalWidth = this._getWidth();
         var widthOffset = 0;
         var scale = this._scale;
         var dimension;
         var billboard;
+        if(thisHorizontalOrigin === HorizontalOrigin.CENTER){
+            widthOffset -= totalWidth / 2 * scale;
+        }
+        else if(thisHorizontalOrigin === HorizontalOrigin.RIGHT){
+            widthOffset -= totalWidth * scale;
+        }
         if (thisVerticalOrigin === VerticalOrigin.TOP) {
             maxHeight = this._getMaxHeight();
             for (i = 0; i < length; i++) {

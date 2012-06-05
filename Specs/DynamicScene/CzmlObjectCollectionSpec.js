@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-         'DynamicScene/CzmlObjectCollection',
+         'DynamicScene/DynamicObjectCollection',
          'Core/JulianDate',
          'DynamicScene/DynamicObject',
          'DynamicScene/DynamicBillboard',
@@ -8,7 +8,7 @@ defineSuite([
          'DynamicScene/DynamicPolyline',
          'DynamicScene/DynamicLabel'
      ], function(
-         CzmlObjectCollection,
+         DynamicObjectCollection,
          JulianDate,
          DynamicObject,
          DynamicBillboard,
@@ -19,14 +19,14 @@ defineSuite([
     /*global it,expect*/
 
     it("TODO", function() {
-        var czmlObjectCollection = new CzmlObjectCollection({
-            billboard : DynamicBillboard.createOrUpdate,
-            label : DynamicLabel.createOrUpdate,
-            orientation : DynamicObject.createOrUpdateOrientation,
-            point : DynamicPoint.createOrUpdate,
-            polyline : DynamicPolyline.createOrUpdate,
-            position : DynamicObject.createOrUpdatePosition,
-            vertexPositions : DynamicObject.createOrUpdateVertexPositions
+        var czmlObjectCollection = new DynamicObjectCollection({
+            billboard : DynamicBillboard.processCzmlPacket,
+            label : DynamicLabel.processCzmlPacket,
+            orientation : DynamicObject.processCzmlPacketOrientation,
+            point : DynamicPoint.processCzmlPacket,
+            polyline : DynamicPolyline.processCzmlPacket,
+            position : DynamicObject.processCzmlPacketPosition,
+            vertexPositions : DynamicObject.processCzmlPacketVertexPositions
         });
 
         expect(typeof czmlObjectCollection.getObject("TestFacility") === 'undefined').toBeTruthy();

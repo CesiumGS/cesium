@@ -19,8 +19,9 @@ define([
      *     this.myArg2Copy = arg2;
      * }
      *
+     * var myObjectInstance = new MyObject();
      * var evt = new Event();
-     * evt.addEventListener(MyObject.prototype.myListener, MyObjectInstance);
+     * evt.addEventListener(MyObject.prototype.myListener, myObjectInstance);
      * evt.raiseEvent("1", "2");
      * evt.removeEventListener(MyObject.prototype.myListener);
      */
@@ -39,7 +40,7 @@ define([
      * @memberof Event
      *
      * @param {Function} listener The function to be executed when the event is raised.
-     * @param {Object} scope An optional object scope to serve as the <code>this</code>
+     * @param {Object} [scope] An optional object scope to serve as the <code>this</code>
      * pointer in which the listener function will execute.
      *
      * @see Event#raiseEvent
@@ -49,18 +50,18 @@ define([
      * @exception {DeveloperError} listener is already subscribed.
      */
     Event.prototype.addEventListener = function(listener, scope) {
-        if (typeof listener !== 'function' || listener === null) {
-            throw new DeveloperError("listener is required and must be a function.");
+        if (typeof listener !== 'function') {
+            throw new DeveloperError("listener is required and must be a function.", "listener");
         }
 
-        var this_listeners = this._listeners;
-        var index = this_listeners.indexOf(listener);
+        var thisListeners = this._listeners;
+        var index = thisListeners.indexOf(listener);
 
         if (index !== -1) {
-            throw new DeveloperError("listener is already subscribed.");
+            throw new DeveloperError("listener is already subscribed.", "listener");
         }
 
-        this_listeners.push(listener);
+        thisListeners.push(listener);
         this._scopes.push(scope);
     };
 
@@ -80,18 +81,18 @@ define([
      * @exception {DeveloperError} listener is not subscribed.
      */
     Event.prototype.removeEventListener = function(listener) {
-        if (typeof listener !== 'function' || listener === null) {
-            throw new DeveloperError("listener is required and must be a function.");
+        if (typeof listener !== 'function') {
+            throw new DeveloperError("listener is required and must be a function.", "listener");
         }
 
-        var this_listeners = this._listeners;
-        var index = this_listeners.indexOf(listener);
+        var thisListeners = this._listeners;
+        var index = thisListeners.indexOf(listener);
 
         if (index === -1) {
-            throw new DeveloperError("listener is not subscribed.");
+            throw new DeveloperError("listener is not subscribed.", "listener");
         }
 
-        this_listeners.splice(index, 1);
+        thisListeners.splice(index, 1);
         this._scopes.splice(index, 1);
     };
 

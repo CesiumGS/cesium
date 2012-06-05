@@ -5,6 +5,7 @@
 	overflow: hidden;
 	border: solid 1px #888;
 }
+
 .timelineTrackContainer {
 	width: 100%;
 	overflow: auto;
@@ -13,12 +14,14 @@
 	top: 0;
 	left: 0;
 }
+
 .timelineTracks {
 	position: absolute;
 	top: 0;
 	left: 0;
 	width: 100%;
 }
+
 .timelineNeedle {
 	position: absolute;
 	left: 0;
@@ -28,6 +31,7 @@
 	z-index: 50;
 	background: #F00;
 }
+
 .timelineBar {
 	position: relative;
 	left: 0;
@@ -37,7 +41,6 @@
 	width: 100%;
 	height: 1.7em;
 	z-index: 100;
-
 	background-color: #fafafa;
 	background-repeat: repeat-x;
 	background: -webkit-linear-gradient(top, #eee, #fff, #fafafa);
@@ -46,6 +49,7 @@
 	background: -o-linear-gradient(top, #eee, #fff, #fafafa);
 	background: linear-gradient(top, #eee, #fff, #fafafa);
 }
+
 .timelineRuler {
 	/* NOTE: The label and the ruler must use the same font/size */
 	visibility: hidden;
@@ -53,12 +57,14 @@
 	font-size: 80%;
 	z-index: -200;
 }
+
 .timelineHighlight {
 	position: absolute;
 	bottom: 0;
 	left: 0;
 	background: #08F;
 }
+
 .timelineTicLabel {
 	position: absolute;
 	top: 0;
@@ -68,6 +74,7 @@
 	color: #000;
 	cursor: default;
 }
+
 .timelineTicMain {
 	position: absolute;
 	bottom: 0;
@@ -76,6 +83,7 @@
 	height: 50%;
 	background: #000;
 }
+
 .timelineTicSub {
 	position: absolute;
 	bottom: 0;
@@ -84,6 +92,7 @@
 	height: 33%;
 	background: #444;
 }
+
 .timelineTicTiny {
 	position: absolute;
 	bottom: 0;
@@ -92,6 +101,7 @@
 	height: 25%;
 	background: #888;
 }
+
 .timelineIcon16 {
 	display: block;
 	position: absolute;

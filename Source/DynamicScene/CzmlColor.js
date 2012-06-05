@@ -4,11 +4,11 @@ define(['../Core/Color'], function(Color) {
 
     var doublesPerValue = 4;
 
-    var ColorDataHandler = {
+    var CzmlColor = {
         doublesPerValue : doublesPerValue,
         doublesPerInterpolationValue : doublesPerValue,
 
-        unwrapCzmlInterval : function(czmlInterval) {
+        unwrapInterval : function(czmlInterval) {
             var rgbaf = czmlInterval.rgbaf;
             if (typeof rgbaf === 'undefined') {
                 var rgba = czmlInterval.rgba;
@@ -31,33 +31,33 @@ define(['../Core/Color'], function(Color) {
             return rgbaf;
         },
 
-        isSampled : function(czmlIntervalData) {
-            return Array.isArray(czmlIntervalData) && czmlIntervalData.length > doublesPerValue;
+        isSampled : function(unwrappedInterval) {
+            return Array.isArray(unwrappedInterval) && unwrappedInterval.length > doublesPerValue;
         },
 
-        packValuesForInterpolation : function(valuesArray, destinationArray, firstIndex, lastIndex) {
+        packValuesForInterpolation : function(sourceArray, destinationArray, firstIndex, lastIndex) {
             var sourceIndex = firstIndex * doublesPerValue;
             var destinationIndex = 0;
             var stop = (lastIndex + 1) * doublesPerValue;
 
             while (sourceIndex < stop) {
-                destinationArray[destinationIndex] = valuesArray[sourceIndex];
+                destinationArray[destinationIndex] = sourceArray[sourceIndex];
                 sourceIndex++;
                 destinationIndex++;
             }
         },
 
-        createValue : function(data) {
-            return new Color(data[0], data[1], data[2], data[3]);
+        createValue : function(unwrappedInterval) {
+            return new Color(unwrappedInterval[0], unwrappedInterval[1], unwrappedInterval[2], unwrappedInterval[3]);
         },
 
-        createValueFromArray : function(data, startingIndex) {
-            return new Color(data[startingIndex], data[startingIndex + 1], data[startingIndex + 2], data[startingIndex + 3]);
+        createValueFromArray : function(array, startingIndex) {
+            return new Color(array[startingIndex], array[startingIndex + 1], array[startingIndex + 2], array[startingIndex + 3]);
         },
 
-        createValueFromInterpolationResult : function(result) {
-            return new Color(result[0], result[1], result[2], result[3]);
+        createValueFromInterpolationResult : function(array) {
+            return new Color(array[0], array[1], array[2], array[3]);
         }
     };
-    return ColorDataHandler;
+    return CzmlColor;
 });

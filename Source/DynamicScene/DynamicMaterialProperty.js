@@ -18,7 +18,7 @@ define([
         this._potentialMaterials = [DynamicColorMaterial, DynamicImageMaterial];
     }
 
-    DynamicMaterialProperty.createOrUpdate = function(parentObject, propertyName, czmlIntervals, constrainedInterval, czmlObjectCollection) {
+    DynamicMaterialProperty.processCzmlPacket = function(parentObject, propertyName, czmlIntervals, constrainedInterval, czmlObjectCollection) {
         var newProperty = false;
         var existingProperty = parentObject[propertyName];
         if (typeof czmlIntervals === 'undefined') {
@@ -76,8 +76,8 @@ define([
         }
 
         //See if we already have data at that interval.
-        var this_intervals = this._intervals;
-        var existingInterval = this_intervals.findInterval(iso8601Interval.start, iso8601Interval.stop);
+        var thisIntervals = this._intervals;
+        var existingInterval = thisIntervals.findInterval(iso8601Interval.start, iso8601Interval.stop);
         var foundMaterial = false;
 
         if (typeof existingInterval !== 'undefined') {
@@ -90,7 +90,7 @@ define([
         } else {
             //If not, create it.
             existingInterval = iso8601Interval;
-            this_intervals.addInterval(existingInterval);
+            thisIntervals.addInterval(existingInterval);
         }
 
         //If the new data was a different type, unwrapping fails, look for a handler for this type.
@@ -106,7 +106,7 @@ define([
 
         //We could handle the data, add it to the property.
         if (foundMaterial) {
-            existingInterval.data = material.createOrUpdate(czmlInterval, buffer, existingInterval.data);
+            existingInterval.data = material.processCzmlPacket(czmlInterval, buffer, existingInterval.data);
         }
     };
 

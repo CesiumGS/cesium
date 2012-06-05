@@ -2,8 +2,8 @@
 define(function() {
     "use strict";
 
-    var BooleanDataHandler = {
-        unwrapCzmlInterval : function(czmlInterval) {
+    var CzmlBoolean = {
+        unwrapInterval : function(czmlInterval) {
             var result = czmlInterval.boolean;
             return typeof result === 'undefined' ? Boolean(czmlInterval) : Boolean(result);
         },
@@ -12,10 +12,10 @@ define(function() {
             return false;
         },
 
-        createValue : function(data) {
-            return data;
+        createValue : function(unwrappedInterval) {
+            return unwrappedInterval;
         }
     };
 
-    return BooleanDataHandler;
+    return CzmlBoolean;
 });

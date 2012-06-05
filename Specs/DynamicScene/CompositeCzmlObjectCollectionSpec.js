@@ -1,7 +1,7 @@
 /*global defineSuite*/
 defineSuite([
-         'DynamicScene/CompositeCzmlObjectCollection',
-         'DynamicScene/CzmlObjectCollection',
+         'DynamicScene/CompositeDynamicObjectCollection',
+         'DynamicScene/DynamicObjectCollection',
          'Core/JulianDate',
          'DynamicScene/DynamicObject',
          'DynamicScene/DynamicBillboard',
@@ -9,8 +9,8 @@ defineSuite([
          'DynamicScene/DynamicPolyline',
          'DynamicScene/DynamicLabel'
      ], function(
-         CompositeCzmlObjectCollection,
-         CzmlObjectCollection,
+         CompositeDynamicObjectCollection,
+         DynamicObjectCollection,
          JulianDate,
          DynamicObject,
          DynamicBillboard,
@@ -21,19 +21,19 @@ defineSuite([
     /*global it,expect*/
 
     var updaters = {
-        billboard : DynamicBillboard.createOrUpdate,
-        label : DynamicLabel.createOrUpdate,
-        orientation : DynamicObject.createOrUpdateOrientation,
-        point : DynamicPoint.createOrUpdate,
-        polyline : DynamicPolyline.createOrUpdate,
-        position : DynamicObject.createOrUpdatePosition,
-        vertexPositions : DynamicObject.createOrUpdateVertexPositions
+        billboard : DynamicBillboard.processCzmlPacket,
+        label : DynamicLabel.processCzmlPacket,
+        orientation : DynamicObject.processCzmlPacketOrientation,
+        point : DynamicPoint.processCzmlPacket,
+        polyline : DynamicPolyline.processCzmlPacket,
+        position : DynamicObject.processCzmlPacketPosition,
+        vertexPositions : DynamicObject.processCzmlPacketVertexPositions
     };
 
     it("applyChanges works with Existing buffers", function() {
 
-        var czmlObjectCollection1 = new CzmlObjectCollection(updaters);
-        var czmlObjectCollection2 = new CzmlObjectCollection(updaters);
+        var czmlObjectCollection1 = new DynamicObjectCollection(updaters);
+        var czmlObjectCollection2 = new DynamicObjectCollection(updaters);
 
         var czml1 = {
             "id" : "testBillboard",
@@ -54,17 +54,17 @@ defineSuite([
         czmlObjectCollection2.processCzml(czml2);
 
         var mergeFuncs = [DynamicBillboard.mergeProperties];
-        var deleteFuncs = [DynamicBillboard.deleteProperties];
-        var compositeCzmlObjectCollection = new CompositeCzmlObjectCollection(mergeFuncs, deleteFuncs);
-        compositeCzmlObjectCollection.addCollection(czmlObjectCollection1);
-        compositeCzmlObjectCollection.addCollection(czmlObjectCollection2);
-        compositeCzmlObjectCollection.applyChanges();
+        var deleteFuncs = [DynamicBillboard.undefineProperties];
+        var compositeDynamicObjectCollection = new CompositeDynamicObjectCollection(mergeFuncs, deleteFuncs);
+        compositeDynamicObjectCollection.addCollection(czmlObjectCollection1);
+        compositeDynamicObjectCollection.addCollection(czmlObjectCollection2);
+        compositeDynamicObjectCollection.applyChanges();
 
-        var objects = compositeCzmlObjectCollection.getObjects();
+        var objects = compositeDynamicObjectCollection.getObjects();
         expect(objects.length).toEqual(1);
 
         var object = objects[0];
-        var sameObject = compositeCzmlObjectCollection.getObject(object.id);
+        var sameObject = compositeDynamicObjectCollection.getObject(object.id);
         expect(object).toEqual(sameObject);
 
         expect(object.billboard.show.getValue(new JulianDate())).toEqual(true);
@@ -73,15 +73,15 @@ defineSuite([
     });
 
     it("Data updates as underlying buffers update", function() {
-        var czmlObjectCollection1 = new CzmlObjectCollection(updaters);
-        var czmlObjectCollection2 = new CzmlObjectCollection(updaters);
+        var czmlObjectCollection1 = new DynamicObjectCollection(updaters);
+        var czmlObjectCollection2 = new DynamicObjectCollection(updaters);
 
         var mergeFuncs = [DynamicBillboard.mergeProperties];
-        var deleteFuncs = [DynamicBillboard.deleteProperties];
-        var compositeCzmlObjectCollection = new CompositeCzmlObjectCollection(mergeFuncs, deleteFuncs);
-        compositeCzmlObjectCollection.addCollection(czmlObjectCollection1);
-        compositeCzmlObjectCollection.addCollection(czmlObjectCollection2);
-        compositeCzmlObjectCollection.applyChanges();
+        var deleteFuncs = [DynamicBillboard.undefineProperties];
+        var compositeDynamicObjectCollection = new CompositeDynamicObjectCollection(mergeFuncs, deleteFuncs);
+        compositeDynamicObjectCollection.addCollection(czmlObjectCollection1);
+        compositeDynamicObjectCollection.addCollection(czmlObjectCollection2);
+        compositeDynamicObjectCollection.applyChanges();
 
         var czml1 = {
             "id" : "testBillboard",
@@ -92,11 +92,11 @@ defineSuite([
         };
         czmlObjectCollection1.processCzml(czml1);
 
-        var objects = compositeCzmlObjectCollection.getObjects();
+        var objects = compositeDynamicObjectCollection.getObjects();
         expect(objects.length).toEqual(1);
 
         var object = objects[0];
-        var sameObject = compositeCzmlObjectCollection.getObject(object.id);
+        var sameObject = compositeDynamicObjectCollection.getObject(object.id);
         expect(object).toEqual(sameObject);
 
         expect(object.billboard.show.getValue(new JulianDate())).toEqual(true);
@@ -112,11 +112,11 @@ defineSuite([
         };
         czmlObjectCollection2.processCzml(czml2);
 
-        objects = compositeCzmlObjectCollection.getObjects();
+        objects = compositeDynamicObjectCollection.getObjects();
         expect(objects.length).toEqual(1);
 
         object = objects[0];
-        sameObject = compositeCzmlObjectCollection.getObject(object.id);
+        sameObject = compositeDynamicObjectCollection.getObject(object.id);
         expect(object === sameObject);
 
         expect(object.billboard.show.getValue(new JulianDate())).toEqual(true);

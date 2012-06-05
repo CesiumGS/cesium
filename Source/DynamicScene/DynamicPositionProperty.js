@@ -3,25 +3,25 @@ define([
         '../Core/JulianDate',
         '../Core/TimeInterval',
         '../Core/TimeIntervalCollection',
-        './Cartesian3DataHandler',
-        './Cartographic3DataHandler',
+        './CzmlCartesian3',
+        './CzmlCartographic3',
         './DynamicProperty'
     ], function(
         JulianDate,
         TimeInterval,
         TimeIntervalCollection,
-        Cartesian3DataHandler,
-        Cartographic3DataHandler,
+        CzmlCartesian3,
+        CzmlCartographic3,
         DynamicProperty) {
     "use strict";
 
     function DynamicPositionProperty() {
         this._dynamicProperties = [];
         this._propertyIntervals = new TimeIntervalCollection();
-        this._potentialDataHandlers = [Cartesian3DataHandler, Cartographic3DataHandler];
+        this._potentialTypes = [CzmlCartesian3, CzmlCartographic3];
     }
 
-    DynamicPositionProperty.createOrUpdate = function(czmlIntervals, buffer, sourceUri, existingProperty) {
+    DynamicPositionProperty.processCzmlPacket = function(czmlIntervals, buffer, sourceUri, existingProperty) {
         if (typeof czmlIntervals === 'undefined') {
             return existingProperty;
         }
@@ -47,7 +47,7 @@ define([
     };
 
     DynamicPositionProperty.prototype.addInterval = function(czmlInterval, buffer, sourceUri) {
-        var iso8601Interval = czmlInterval.interval, property, handler, unwrappedInterval;
+        var iso8601Interval = czmlInterval.interval, property, valueType, unwrappedInterval;
         if (typeof iso8601Interval === 'undefined') {
             iso8601Interval = TimeInterval.INFINITE.clone();
         } else {
@@ -55,38 +55,38 @@ define([
         }
 
         //See if we already have data at that interval.
-        var this_intervals = this._propertyIntervals;
-        var existingInterval = this_intervals.findInterval(iso8601Interval.start, iso8601Interval.stop);
+        var thisIntervals = this._propertyIntervals;
+        var existingInterval = thisIntervals.findInterval(iso8601Interval.start, iso8601Interval.stop);
 
         if (typeof existingInterval !== 'undefined') {
             //If so, see if the new data is the same type.
             property = existingInterval.data;
             if (typeof property !== 'undefined') {
-                handler = property.dataHandler;
-                unwrappedInterval = handler.unwrapCzmlInterval(czmlInterval);
+                valueType = property.valueType;
+                unwrappedInterval = valueType.unwrapInterval(czmlInterval);
             }
         } else {
             //If not, create it.
             existingInterval = iso8601Interval;
-            this_intervals.addInterval(existingInterval);
+            thisIntervals.addInterval(existingInterval);
         }
 
-        //If the new data was a different type, unwrapping fails, look for a handler for this type.
+        //If the new data was a different type, unwrapping fails, look for a valueType for this type.
         if (typeof unwrappedInterval === 'undefined') {
-            for ( var i = 0, len = this._potentialDataHandlers.length; i < len; i++) {
-                handler = this._potentialDataHandlers[i];
-                unwrappedInterval = handler.unwrapCzmlInterval(czmlInterval);
+            for ( var i = 0, len = this._potentialTypes.length; i < len; i++) {
+                valueType = this._potentialTypes[i];
+                unwrappedInterval = valueType.unwrapInterval(czmlInterval);
                 if (typeof unwrappedInterval !== 'undefined') {
-                    //Found a valid handler, but lets check to see if we already have a property with that handler
+                    //Found a valid valueType, but lets check to see if we already have a property with that valueType
                     for ( var q = 0, lenQ = this._dynamicProperties.length; q < lenQ; q++) {
-                        if (this._dynamicProperties[q].dataHandler === handler) {
+                        if (this._dynamicProperties[q].valueType === valueType) {
                             property = this._dynamicProperties[q];
                             break;
                         }
                     }
                     //If we don't have the property, create it.
                     if (typeof property === 'undefined') {
-                        property = new DynamicProperty(handler);
+                        property = new DynamicProperty(valueType);
                         this._dynamicProperties.push(property);
                     }
                     //Save the property in our interval.
@@ -110,7 +110,7 @@ define([
         var property = interval.data;
         var result = property.getValue(time);
         if (typeof result !== undefined) {
-            result = property.dataHandler.convertToCartographic(result);
+            result = property.valueType.convertToCartographic3(result);
         }
         return result;
     };
@@ -123,7 +123,7 @@ define([
         var property = interval.data;
         var result = property.getValue(time);
         if (typeof result !== undefined) {
-            result = property.dataHandler.convertToCartesian(result);
+            result = property.valueType.convertToCartesian3(result);
         }
         return result;
     };

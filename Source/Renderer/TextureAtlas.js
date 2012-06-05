@@ -1,11 +1,13 @@
 /*global define*/
 define([
+        '../Core/getImageFromUrl',
         '../Core/Event',
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Cartesian2',
         './PixelFormat'
     ], function(
+        getImageFromUrl,
         Event,
         DeveloperError,
         destroyObject,
@@ -13,24 +15,10 @@ define([
         PixelFormat) {
     "use strict";
 
-    function SourceHolder(callbacks) {
-        this.callbacks = callbacks;
+    function SourceHolder() {
+        this.imageLoaded = new Event();
         this.index = -1;
         this.loaded = false;
-    }
-
-    function getImageFromUrl(loadedCallback, url) {
-        var image = new Image();
-        image.onload = function() {
-            loadedCallback(image);
-        };
-
-        //Only add the crossOrigin flag for non-data URLs
-        if (url.substr(0, 5) !== "data:") {
-            image.crossOrigin = '';
-        }
-
-        image.src = url;
     }
 
     /**
@@ -39,7 +27,7 @@ define([
      * @name TextureAtlas
      *
      * @param {Context} context The context that the created texture will be used by.
-     * @param {Array} images DOC_TBA
+     * @param {Array} [images] DOC_TBA
      * @param {PixelFormat}[pixelFormat = PixelFormat.RGBA] DOC_TBA
      * @param {Number}[borderWidthInPixels = 1]  DOC_TBA
      *
@@ -100,17 +88,17 @@ define([
     }
 
     TextureAtlas.prototype._createTexture = function() {
-        var this_images = this._images;
-        var this_borderWidthInPixels = this._borderWidthInPixels;
+        var thisImages = this._images;
+        var thisBorderWidthInPixels = this._borderWidthInPixels;
 
         var annotatedImages = [];
-        var numberOfImages = this_images.length;
+        var numberOfImages = thisImages.length;
         var i;
         var image;
 
         for (i = 0; i < numberOfImages; ++i) {
             annotatedImages.push({
-                image : this_images[i],
+                image : thisImages[i],
                 index : i
             });
         }
@@ -126,12 +114,12 @@ define([
             var area = 0;
             for ( var i = 0; i < numberOfImages; ++i) {
                 var image = images[i];
-                area += (image.width + this_borderWidthInPixels) * (image.height + this_borderWidthInPixels);
+                area += (image.width + thisBorderWidthInPixels) * (image.height + thisBorderWidthInPixels);
                 maxWidth = Math.max(maxWidth, image.width);
             }
 
-            return Math.max(Math.floor(Math.sqrt(area)), maxWidth + this_borderWidthInPixels);
-        }(this_images, numberOfImages));
+            return Math.max(Math.floor(Math.sqrt(area)), maxWidth + thisBorderWidthInPixels);
+        }(thisImages, numberOfImages));
 
         var xOffset = 0;
         var yOffset = 0;
@@ -144,11 +132,11 @@ define([
         // Compute subrectangle positions and, finally, the atlas' height
         for (i = 0; i < numberOfImages; ++i) {
             image = annotatedImages[i].image;
-            var widthIncrement = image.width + this_borderWidthInPixels;
+            var widthIncrement = image.width + thisBorderWidthInPixels;
 
             if (xOffset + widthIncrement > atlasWidth) {
                 xOffset = 0;
-                yOffset += rowHeight + this_borderWidthInPixels;
+                yOffset += rowHeight + thisBorderWidthInPixels;
             }
 
             if (xOffset === 0) {
@@ -193,12 +181,30 @@ define([
         this.textureAtlasChanged.raiseEvent(this);
     };
 
-    TextureAtlas.prototype.addTexture = function(image, textureAvailableCallback, id) {
+    /**
+     * Adds the provided image to the atlas. The supplied callback is triggered with the
+     * index of the texture once it is ready for use in the atlas.  If the atlas already
+     * contains an image with the same id, the callback is triggered immediately and
+     * the atlas itself is unmodified.
+     *
+     * @memberof TextureAtlas
+     *
+     * @param {Image} image The image to add to the atlas.
+     * @param {Function} textureAvailableCallback DOC_TBA.
+     *
+     * @exception {DeveloperError} image is required.
+     * @exception {DeveloperError} textureAvailableCallback is required.
+     */
+    TextureAtlas.prototype.addTexture = function(image, textureAvailableCallback) {
         if (typeof image === 'undefined') {
-            throw new DeveloperError("url is required.");
+            throw new DeveloperError("image is required.", "image");
         }
 
-        this.addTextureFromFunction(id || image.src, function(callback) {
+        if (typeof textureAvailableCallback === 'undefined') {
+            throw new DeveloperError("textureAvailableCallback is required.", "textureAvailableCallback");
+        }
+
+        this.addTextureFromFunction(image.src, function(src, callback) {
             callback(image);
         }, textureAvailableCallback);
     };
@@ -209,7 +215,7 @@ define([
      * If the url is already in the atlas, the atlas is unchanged and the callback
      * is triggered immediately.
      *
-     * @memberof TextureAtlasFactory
+     * @memberof TextureAtlas
      *
      * @param {String} url The url of the image to add to the atlas.
      * @param {Function} textureAvailableCallback DOC_TBA.
@@ -219,11 +225,11 @@ define([
      */
     TextureAtlas.prototype.addTextureFromUrl = function(url, textureAvailableCallback) {
         if (typeof url === 'undefined') {
-            throw new DeveloperError("url is required.");
+            throw new DeveloperError("url is required.", "url");
         }
 
         if (typeof textureAvailableCallback === 'undefined') {
-            throw new DeveloperError("textureAvailableCallback is required.");
+            throw new DeveloperError("textureAvailableCallback is required.", "textureAvailableCallback");
         }
 
         this.addTextureFromFunction(url, getImageFromUrl, textureAvailableCallback);
@@ -245,7 +251,7 @@ define([
      * them across words.
      * </p>
      *
-     * @memberof TextureAtlasFactory
+     * @memberof TextureAtlas
      *
      * @param {String} id The id of the image to add to the atlas.
      * @param {Function} getImageCallback DOC_TBA.
@@ -257,15 +263,15 @@ define([
      */
     TextureAtlas.prototype.addTextureFromFunction = function(id, getImageCallback, textureAvailableCallback) {
         if (typeof id === 'undefined') {
-            throw new DeveloperError("id is required.");
+            throw new DeveloperError("id is required.", "id");
         }
 
         if (typeof getImageCallback === 'undefined') {
-            throw new DeveloperError("getImageCallback is required.");
+            throw new DeveloperError("getImageCallback is required.", "getImageCallback");
         }
 
         if (typeof textureAvailableCallback === 'undefined') {
-            throw new DeveloperError("textureAvailableCallback is required.");
+            throw new DeveloperError("textureAvailableCallback is required.", "textureAvailableCallback");
         }
 
         var sourceHolder = this._imagesHash[id];
@@ -276,16 +282,17 @@ define([
                 textureAvailableCallback(sourceHolder.index);
             } else {
                 //add the callback to be notified once it loads
-                sourceHolder.callbacks.push(textureAvailableCallback);
+                sourceHolder.imageLoaded.addEventListener(textureAvailableCallback);
             }
             return;
         }
 
         //not in atlas, create the source, which may be async
-        this._imagesHash[id] = sourceHolder = new SourceHolder([textureAvailableCallback]);
+        this._imagesHash[id] = sourceHolder = new SourceHolder();
+        sourceHolder.imageLoaded.addEventListener(textureAvailableCallback);
 
         var that = this;
-        getImageCallback(function(source) {
+        getImageCallback(id, function(source) {
             //assign an index
             var index = sourceHolder.index = that._nextIndex++;
 
@@ -294,13 +301,9 @@ define([
             that._recreateTexture = true;
             sourceHolder.loaded = true;
 
-            // fire all callbacks with the index
-            var callbacks = sourceHolder.callbacks;
-            for ( var i = callbacks.length - 1; i > -1; i--) {
-                callbacks[i](index, id);
-            }
-            sourceHolder.callbacks = undefined;
-        }, id);
+            sourceHolder.imageLoaded.raiseEvent(index, id);
+            sourceHolder.imageLoaded = undefined;
+        });
     };
 
     /**
