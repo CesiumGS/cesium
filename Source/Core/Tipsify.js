@@ -19,14 +19,14 @@ define(['./DeveloperError'], function(DeveloperError) {
     /**
      * Calculates the average cache miss ratio (ACMR) for a given set of indices.
      *
-     * @param {Array} indices Lists triads of numbers corresponding to the indices of the vertices
+     * @param {Array} description.indices Lists triads of numbers corresponding to the indices of the vertices
      *                        in the vertex buffer that define the mesh's triangles.
-     * @param {Number} maximumIndex The maximum value of the elements in <code>indices</code>.
-     * @param {Number} cacheSize The number of vertices that can be stored in the cache at any one time.
+     * @param {Number} [description.maximumIndex] The maximum value of the elements in <code>args.indices</code>.
+     *                                     If not supplied, this value will be computed.
+     * @param {Number} [description.cacheSize=24] The number of vertices that can be stored in the cache at any one time.
      *
      * @exception {DeveloperError} indices is required.
      * @exception {DeveloperError} indices length must be a multiple of three.
-     * @exception {DeveloperError} maximumIndex must be greater than zero.
      * @exception {DeveloperError} cacheSize must be greater than two.
      *
      * @return {Number} The average cache miss ratio (ACMR).
@@ -37,7 +37,12 @@ define(['./DeveloperError'], function(DeveloperError) {
      * var cacheSize = 3;
      * var acmr = Tipsify.calculateACMR(indices, maxIndex, cacheSize);
      */
-    Tipsify.calculateACMR = function(indices, maximumIndex, cacheSize) {
+    Tipsify.calculateACMR = function(description) {
+        description = description || {};
+        var indices = description.indices;
+        var maximumIndex = description.maximumIndex;
+        var cacheSize = description.cacheSize || 24;
+
         if (!indices) {
             throw new DeveloperError("indices is required.", "indices");
         }
@@ -52,6 +57,20 @@ define(['./DeveloperError'], function(DeveloperError) {
         }
         if (cacheSize < 3) {
             throw new DeveloperError("cacheSize must be greater than two.", "cachSize");
+        }
+
+        // Compute the maximumIndex if not given
+        if(!maximumIndex) {
+            maximumIndex = 0;
+            var currentIndex = 0;
+            var intoIndices = indices[currentIndex];
+            while (currentIndex < numIndices) {
+                if (intoIndices > maximumIndex) {
+                    maximumIndex = intoIndices;
+                }
+                ++currentIndex;
+                intoIndices = indices[currentIndex];
+            }
         }
 
         // Vertex time stamps
@@ -75,14 +94,14 @@ define(['./DeveloperError'], function(DeveloperError) {
     /**
      * Optimizes triangles for the post-vertex shader cache.
      *
-     * @param {Array} indices Lists triads of numbers corresponding to the indices of the vertices
+     * @param {Array} description.indices Lists triads of numbers corresponding to the indices of the vertices
      *                        in the vertex buffer that define the mesh's triangles.
-     * @param {Number} maximumIndex The maximum value of the elements in <code>indices</code>.
-     * @param {Number} cacheSize The number of vertices that can be stored in the cache at any one time.
+     * @param {Number} [description.maximumIndex] The maximum value of the elements in <code>args.indices</code>.
+     *                                     If not supplied, this value will be computed.
+     * @param {Number} [description.cacheSize=24] The number of vertices that can be stored in the cache at any one time.
      *
      * @exception {DeveloperError} indices is required.
      * @exception {DeveloperError} indices length must be a multiple of three.
-     * @exception {DeveloperError} maximumIndex must be greater than zero.
      * @exception {DeveloperError} cacheSize must be greater than two.
      *
      * @return {Array} A list of the input indices in an optimized order.
@@ -93,7 +112,12 @@ define(['./DeveloperError'], function(DeveloperError) {
      * var cacheSize = 3;
      * var reorderedIndices = Tipsify.tipsify(indices, maxIndex, cacheSize);
      */
-    Tipsify.tipsify = function(indices, maximumIndex, cacheSize) {
+    Tipsify.tipsify = function(description) {
+        description = description || {};
+        var indices = description.indices;
+        var maximumIndex = description.maximumIndex;
+        var cacheSize = description.cacheSize || 24;
+
         var cursor;
 
         function skipDeadEnd(vertices, deadEnd, indices, maximumIndexPlusOne) {
@@ -162,7 +186,7 @@ define(['./DeveloperError'], function(DeveloperError) {
         var currentIndex = 0;
         var intoIndices = indices[currentIndex];
         var endIndex = numIndices;
-        if (maximumIndex !== -1) {
+        if (maximumIndex) {
             maximumIndexPlusOne = maximumIndex + 1;
         } else {
             while (currentIndex < endIndex) {

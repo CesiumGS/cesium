@@ -161,6 +161,24 @@ defineSuite([
         verifyDraw(fs);
     });
 
+    it("has agi_inverseProjection", function() {
+        var us = context.getUniformState();
+        us.setProjection(new Matrix4(1.0, 0.0, 0.0, 1.0,
+                                     0.0, 1.0, 0.0, 2.0,
+                                     0.0, 0.0, 1.0, 3.0,
+                                     0.0, 0.0, 0.0, 1.0));
+
+        var fs =
+            "void main() { " +
+            "  bool b0 = (agi_inverseProjection[0][0] == 1.0) && (agi_inverseProjection[1][0] == 0.0) && (agi_inverseProjection[2][0] == 0.0) && (agi_inverseProjection[3][0] == -1.0); " +
+            "  bool b1 = (agi_inverseProjection[0][1] == 0.0) && (agi_inverseProjection[1][1] == 1.0) && (agi_inverseProjection[2][1] == 0.0) && (agi_inverseProjection[3][1] == -2.0); " +
+            "  bool b2 = (agi_inverseProjection[0][2] == 0.0) && (agi_inverseProjection[1][2] == 0.0) && (agi_inverseProjection[2][2] == 1.0) && (agi_inverseProjection[3][2] == -3.0); " +
+            "  bool b3 = (agi_inverseProjection[0][3] == 0.0) && (agi_inverseProjection[1][3] == 0.0) && (agi_inverseProjection[2][3] == 0.0) && (agi_inverseProjection[3][3] ==  1.0); " +
+            "  gl_FragColor = vec4(b0 && b1 && b2 && b3); " +
+            "}";
+        verifyDraw(fs);
+    });
+
     it("has agi_infiniteProjection", function() {
         var us = context.getUniformState();
         us.setInfiniteProjection(new Matrix4( 1.0,  2.0,  3.0,  4.0,

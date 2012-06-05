@@ -2,6 +2,7 @@
 define([
         '../Core/DeveloperError',
         '../Core/RuntimeError',
+        '../Core/Extent',
         '../Core/clone',
         '../Core/Math',
         './Projections',
@@ -9,6 +10,7 @@ define([
     ], function(
         DeveloperError,
         RuntimeError,
+        Extent,
         clone,
         CesiumMath,
         Projections,
@@ -25,6 +27,8 @@ define([
      * @param {String} description.url The url that provides the WMS imagery service.
      * @param {String|String[]} description.layer The name(s) of the layer in the WMS imagery service.
      * @param {String|String[]} description.style The name(s) of the style of the layer in the WMS imagery service.
+     * @param {Object} description.maxExtent An object that contains the north, south, east and west values.
+     * @param {Number} description.zoomMax The maximum number of zoom levels that we will request. Raise this number if you aren't receiving all levels of detail.
      * @param {Object} description.proxy A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
      *
      * @exception {DeveloperError} <code>description.server</code> is required.
@@ -64,14 +68,20 @@ define([
          * The name(s) of the layer in the WMS imagery service.
          * @type {String}
          */
-        this.layer = typeof desc.layer === "string" ? [desc.layer] : desc.layer.slice();
-        this._layer = this.layer.slice();
+        if( typeof desc.layer !== 'undefined' ) {
+            this.layer = typeof desc.layer === "string" ? [desc.layer] : desc.layer.slice();
+            this._layer = this.layer.slice();
+        }
+        else {
+            this.layer = [];
+            this._layer = [];
+        }
 
         /**
          * The name(s) of the style of the layer in the WMS imagery service.
          * @type {String}
          */
-        if( desc.style ) {
+        if( typeof desc.style !== 'undefined' ) {
             this.style = typeof desc.style === "string" ? [desc.style] : desc.style.slice();
             this._style = this.style.slice();
         }
@@ -84,7 +94,7 @@ define([
          * A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
          * @type {Object}
          */
-        this.proxy = desc.proxy;
+        this._proxy = desc.proxy;
 
         /**
          * The cartographic extent of the base tile, with north, south, east and
@@ -92,12 +102,12 @@ define([
          *
          * @type {Object}
          */
-        this.extent = {
-            north :  CesiumMath.PI_OVER_TWO,
-            south : -CesiumMath.PI_OVER_TWO,
-            west :  -CesiumMath.PI,
-            east :   CesiumMath.PI
-        };
+        this.maxExtent = desc.maxExtent || new Extent(
+            -CesiumMath.PI,
+            -CesiumMath.PI_OVER_TWO,
+             CesiumMath.PI,
+             CesiumMath.PI_OVER_TWO
+        );
 
         /**
          * The width of every image loaded.
@@ -118,7 +128,7 @@ define([
          *
          * @type {Number}
          */
-        this.zoomMax = 18;
+        this.zoomMax = desc.zoomMax || 18;
 
         /**
          * The minimum zoom level that can be requested.
@@ -145,8 +155,8 @@ define([
     WebMapServiceTileProvider.prototype._getTileUrl = function(tile) {
         var url = this._tileUrl + CesiumMath.toDegrees(tile.extent.west) + "," + CesiumMath.toDegrees(tile.extent.south) + "," +
                     CesiumMath.toDegrees(tile.extent.east) + "," + CesiumMath.toDegrees(tile.extent.north);
-        if (this.proxy) {
-            url = this.proxy.getURL(url);
+        if (typeof this._proxy !== 'undefined') {
+            url = this._proxy.getURL(url);
         }
 
         return url;
@@ -225,7 +235,7 @@ define([
 
         WebMapServiceTileProvider.GetCapabilities({
             url: this.url,
-            proxy: this.proxy,
+            proxy: this._proxy,
             onLoad: callback
         });
     };
@@ -397,7 +407,7 @@ define([
         }
 
         var url = desc.url + "?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetCapabilities";
-        if ( desc.proxy ) {
+        if (typeof desc.proxy !== 'undefined') {
             url = desc.proxy.getURL(url);
         }
 

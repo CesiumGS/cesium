@@ -17,6 +17,20 @@
         };
     };
 
+    Sandbox.PolygonWithExtent = function (scene, ellipsoid, primitives) {
+        this.code = function() {
+            var polygon = new Cesium.Polygon(undefined);
+            polygon.configureExtent(new Cesium.Extent(
+                Cesium.Math.toRadians(-180.0),
+                Cesium.Math.toRadians(50.0),
+                Cesium.Math.toRadians(180.0),
+                Cesium.Math.toRadians(90.0)
+            ));
+
+            primitives.add(polygon);
+        };
+    };
+
     Sandbox.PolygonColor = function (scene, ellipsoid, primitives) {
         this.code = function () {
             var polygon = new Cesium.Polygon(undefined);
@@ -113,6 +127,33 @@
                 sRepeat : 5,
                 tRepeat : 5
             });
+
+            primitives.add(polygon);
+        };
+    };
+
+    Sandbox.DiffuseMapPolygonMaterial = function (scene, ellipsoid, primitives) {
+        this.code = function() {
+            var polygon = new Cesium.Polygon(undefined);
+            polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
+                new Cesium.Cartographic2(-80.0, 30.0),
+                new Cesium.Cartographic2(-70.0, 30.0),
+                new Cesium.Cartographic2(-70.0, 33.0),
+                new Cesium.Cartographic2(-80.0, 33.0)
+            ]));
+
+            var image = new Image();
+            image.onload = function() {
+                polygon.material = new Cesium.DiffuseMapMaterial({
+                    texture : scene.getContext().createTexture2D({
+                            source : image,
+                            pixelFormat : Cesium.PixelFormat.RGB
+                    }),
+                    sRepeat : 1,
+                    tRepeat : 1
+                });
+            };
+            image.src = "../../Images/Cesium_Logo_Color.jpg";
 
             primitives.add(polygon);
         };
