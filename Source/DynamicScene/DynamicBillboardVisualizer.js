@@ -49,7 +49,7 @@ define([
         var objectId = czmlObject.id;
         var showProperty = dynamicBillboard.show;
         var billboardVisualizerIndex = czmlObject.billboardVisualizerIndex;
-        var show = typeof showProperty === 'undefined' || showProperty.getValue(time);
+        var show = czmlObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
 
         if (!show) {
             //don't bother creating or updating anything else
