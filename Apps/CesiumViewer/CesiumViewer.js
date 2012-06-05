@@ -54,25 +54,27 @@ function(dom,
     var cameraCenteredObjectID;
     var lastCameraCenteredObjectID;
 
-    //This function is a total HACK and only temporary.
     function setTimeFromBuffer() {
+        var startTime = JulianDate.MAXIMUM_VALUE;
+        var stopTime = JulianDate.MINIMUM_VALUE;
         var dynamicObjects = dynamicObjectCollection.getObjects();
         for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
             var object = dynamicObjects[i];
-            if (typeof object.position !== 'undefined') {
-                var intervals = object.position._propertyIntervals;
-                if (typeof intervals !== 'undefined' && intervals._intervals[0].data._intervals._intervals[0].data.isSampled) {
-                    var firstTime = intervals._intervals[0].data._intervals._intervals[0].data.times[0];
-                    if (typeof firstTime !== 'undefined') {
-                        clock.startTime = firstTime;
-                        clock.stopTime = firstTime.addDays(1);
-                        clock.currentTime = firstTime;
-                        timeline.zoomTo(clock.startTime, clock.stopTime);
-                        break;
-                    }
+            if (typeof object.availability !== 'undefined') {
+                if (object.availability.start.lessThan(startTime)) {
+                    startTime = object.availability.start;
+                }
+                if (object.availability.stop.greaterThan(stopTime)) {
+                    stopTime = object.availability.stop;
                 }
             }
         }
+
+        clock.multiplier = startTime.getSecondsDifference(stopTime) / 30.0;
+        clock.startTime = startTime;
+        clock.stopTime = stopTime;
+        clock.currentTime = startTime;
+        timeline.zoomTo(startTime, stopTime);
     }
 
     function handleDrop(e) {
