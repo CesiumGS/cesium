@@ -1,10 +1,12 @@
 /*global define*/
 define([
         '../../Core/DeveloperError',
-        '../../Shaders/Materials/DiffuseMapMaterial'
+        '../../Shaders/Materials/DiffuseMapMaterial',
+        '../../Scene/Materials/materialBuilder'
     ], function(
         DeveloperError,
-        ShadersDiffuseMapMaterial) {
+        ShadersDiffuseMapMaterial,
+        materialBuilder) {
     "use strict";
 
     /**
@@ -55,7 +57,7 @@ define([
     }
 
     DiffuseMapMaterial.prototype._getShaderSource = function() {
-        return "#line 0\n" + ShadersDiffuseMapMaterial;
+        return materialBuilder.constructMaterial(ShadersDiffuseMapMaterial);
     };
 
     return DiffuseMapMaterial;

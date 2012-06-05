@@ -1,10 +1,12 @@
 /*global define*/
 define([
         '../../Core/DeveloperError',
-        '../../Shaders/Materials/SpecularMapMaterial'
+        '../../Shaders/Materials/SpecularMapMaterial',
+        '../../Scene/Materials/materialBuilder'
     ], function(
         DeveloperError,
-        ShadersSpecularMapMaterial) {
+        ShadersSpecularMapMaterial,
+        materialBuilder) {
     "use strict";
 
     /**
@@ -75,7 +77,7 @@ define([
     }
 
     SpecularMapMaterial.prototype._getShaderSource = function() {
-        return "#line 0\n" + ShadersSpecularMapMaterial;
+        return materialBuilder.constructMaterial(ShadersSpecularMapMaterial);
     };
 
     return SpecularMapMaterial;

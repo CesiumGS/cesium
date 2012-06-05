@@ -1,10 +1,12 @@
 /*global define*/
 define([
         '../../Core/DeveloperError',
-        '../../Shaders/Materials/NormalMapMaterial'
+        '../../Shaders/Materials/NormalMapMaterial',
+        '../../Scene/Materials/materialBuilder'
     ], function(
         DeveloperError,
-        ShadersNormalMapMaterial) {
+        ShadersNormalMapMaterial,
+        materialBuilder) {
     "use strict";
 
     /**
@@ -56,7 +58,7 @@ define([
     }
 
     NormalMapMaterial.prototype._getShaderSource = function() {
-        return "#line 0\n" + ShadersNormalMapMaterial;
+        return materialBuilder.constructMaterial(ShadersNormalMapMaterial);
     };
 
     return NormalMapMaterial;

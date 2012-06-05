@@ -12,24 +12,30 @@ define(['../../Core/DeveloperError'], function(DeveloperError) {
     var materialBuilder = {
 
         // Normal
+        // x,y,z : normal in eye space
         materialNormalComponentHeader :
         "vec3 agi_getMaterialNormalComponent(MaterialHelperInput helperInput)",
         materialNormalComponentBody :
         "{\n return helperInput.normalEC; \n}\n",
 
         // Diffuse
+        // x,y,z : diffuse color
+        // w : alpha
         materialDiffuseComponentHeader :
         "vec4 agi_getMaterialDiffuseComponent(MaterialHelperInput helperInput)",
         materialDiffuseComponentBody :
-        "{\n return vec4(1.0, 0.0, 0.0, 1.0); \n}\n",
+        "{\n return vec4(0.2, 0.2, 0.2, 1.0); \n}\n",
 
         // Specular
+        // x,y,z : specular color
+        // w : specular intensity
         materialSpecularComponentHeader :
         "vec4 agi_getMaterialSpecularComponent(MaterialHelperInput helperInput)",
         materialSpecularComponentBody :
-        "{\n return vec4(1.0, 1.0, 1.0, 0.01); \n}\n",
+        "{\n return vec4(0.5, 0.5, 0.5, 0.1); \n}\n",
 
         // Emission
+        // x,y,z : emission color, in other words per-object ambient light
         materialEmissionComponentHeader :
         "vec3 agi_getMaterialEmissionComponent(MaterialHelperInput helperInput)",
         materialEmissionComponentBody :

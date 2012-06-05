@@ -1,9 +1,11 @@
 uniform sampler2D u_texture;
 uniform vec2 u_repeat;
 
-//x,y,z : normal in tangent space
-vec3 agi_getMaterialNormal(float zDistance, vec2 st, vec3 str, vec3 viewWC)
+//x,y,z : normal in eye space
+vec3 agi_getMaterialNormalComponent(MaterialHelperInput helperInput)
 {
+    vec2 st = helperInput.st;
+    
     vec2 centerPixel = fract(u_repeat * st);
     float centerBump = texture2D(u_texture, centerPixel).x;
     
@@ -15,19 +17,7 @@ vec3 agi_getMaterialNormal(float zDistance, vec2 st, vec3 str, vec3 viewWC)
     vec2 leftPixel = fract(u_repeat * (st + vec2(0.0, 1.0 / windowHeight)));
     float topBump = texture2D(u_texture, leftPixel).x;
     
-    return normalize(vec3(centerBump - rightBump, centerBump - topBump, 1.0));
-}
-
-//x,y,z : diffuse color
-//    w : alpha
-vec4 agi_getMaterialDiffuseComponent(float zDistance, vec2 st, vec3 str, vec3 viewWC)
-{
-    return vec4(0.2, 0.2, 0.2, 1.0); //black
-}
-
-//x,y,z : specular color
-//    w : specular intensity
-vec4 agi_getMaterialSpecularComponent(float zDistance, vec2 st, vec3 str, vec3 viewWC)
-{
-    return vec4(1.0, 1.0, 1.0, 0.2);
+    vec3 normalTangentSpace = normalize(vec3(centerBump - rightBump, centerBump - topBump, 1.0));
+    vec3 normalEC = helperInput.tangentToEyeMatrix * normalTangentSpace;
+    return normalEC;
 }
