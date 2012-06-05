@@ -130,7 +130,7 @@ function(dom,
                         if (lastCameraCenteredObjectID !== cameraCenteredObjectID) {
                             lastCameraCenteredObjectID = cameraCenteredObjectID;
                             var camera = widget.scene.getCamera();
-                            camera.position = camera.position.normalize().multiplyWithScalar(2500000.0);
+                            camera.position = camera.position.normalize().multiplyWithScalar(5000.0);
                         }
 
                         var transform = Transforms.eastNorthUpToFixedFrame(position, widget.ellipsoid);
@@ -155,6 +155,10 @@ function(dom,
             if (typeof queryObject.source !== 'undefined') {
                 dynamicObjectCollection.clear();
                 loadCzmlFromUrl(dynamicObjectCollection, queryObject.source, setTimeFromBuffer);
+            }
+
+            if (typeof queryObject.lookAt !== 'undefined') {
+                cameraCenteredObjectID = queryObject.lookAt;
             }
 
             var timelineWidget = registry.byId('mainTimeline');

@@ -217,7 +217,7 @@ define([
             camera.frustum.far = 50.0 * maxRadii;
 
             this.spindleCameraController = camera.getControllers().addSpindle(ellipsoid);
-            this.spindleCameraController.constrainedZAxis = true;
+            this.spindleCameraController.mouseConstrainedZAxis = true;
             this.freelookCameraController = camera.getControllers().addFreeLook(ellipsoid);
 
             var handler = new EventHandler(canvas);
