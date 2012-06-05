@@ -67,8 +67,6 @@ define([
          * <code>true</code> if this sensor will be shown; otherwise, <code>false</code>
          *
          * @type Boolean
-         *
-         * @see CustomSensorVolume#showIntersection
          */
         this.show = (typeof t.show === "undefined") ? true : t.show;
 
@@ -76,10 +74,21 @@ define([
          * DOC_TBA
          *
          * @type Boolean
-         *
-         * @see CustomSensorVolume#show
          */
         this.showIntersection = (typeof t.showIntersection === "undefined") ? true : t.showIntersection;
+
+        /**
+         * <p>
+         * Determines if a sensor intersecting the ellipsoid is drawn through the ellipsoid and potentially out
+         * to the other side, or if the part of the sensor intersecting the ellipsoid stops at the ellipsoid.
+         * </p>
+         * <p>
+         * The default is <code>false</code>, meaning the sensor will not go through the ellipsoid.
+         * </p>
+         *
+         * @type Boolean
+         */
+        this.showThroughEllipsoid = (typeof t.showThroughEllipsoid === "undefined") ? false : t.showThroughEllipsoid;
 
         /**
          * The 4x4 transformation matrix that transforms this sensor from model to world coordinates.  In it's model
@@ -152,6 +161,9 @@ define([
         this._uniforms = {
             u_model : function() {
                 return that.modelMatrix;
+            },
+            u_showThroughEllipsoid : function() {
+                return that.showThroughEllipsoid;
             },
             u_showIntersection : function() {
                 return that.showIntersection;
@@ -319,6 +331,10 @@ define([
                     depthMask : false
                 });
             }
+            // This would be better served by depth testing with a depth buffer that does not
+            // include the ellipsoid depth - or a g-buffer containing an ellipsoid mask
+            // so we can selectively depth test.
+            this._rs.depthTest.enabled = !this.showThroughEllipsoid;
 
             // Recompile shader when material changes
             if (!this._material || (this._material !== this.material)) {
