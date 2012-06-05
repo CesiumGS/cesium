@@ -2,8 +2,11 @@ uniform vec4 u_grassColor;
 uniform vec4 u_dirtColor;
 uniform float u_patchiness;
 
-vec4 agi_getMaterialColor(float zDistance, vec2 st, vec3 str)
+// x,y,z : diffuse color
+// w : alpha
+vec4 agi_getMaterialDiffuseComponent(MaterialHelperInput helperInput)
 {
+    vec2 st = helperInput.st;
     float noise1 = (agi_snoise(st * u_patchiness * 1.0)) * 1.0;
     float noise2 = (agi_snoise(st * u_patchiness * 2.0)) * 0.5;
     float noise3 = (agi_snoise(st * u_patchiness * 4.0)) * 0.25;

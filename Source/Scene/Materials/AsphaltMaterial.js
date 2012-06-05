@@ -1,10 +1,12 @@
 /*global define*/
 define([
         '../../Shaders/Noise',
-        '../../Shaders/Materials/AsphaltMaterial'
+        '../../Shaders/Materials/AsphaltMaterial',
+        '../../Scene/Materials/materialBuilder'
     ], function (
         ShadersNoise,
-        ShadersAsphaltMaterial) {
+        ShadersAsphaltMaterial,
+        materialBuilder) {
     "use strict";
 
     /**
@@ -59,10 +61,7 @@ define([
     }
 
     AsphaltMaterial.prototype._getShaderSource = function() {
-        return "#line 0\n" +
-               ShadersNoise +
-               "#line 0\n" +
-               ShadersAsphaltMaterial;
+        return materialBuilder.constructMaterial(ShadersAsphaltMaterial, ShadersNoise);
     };
 
     return AsphaltMaterial;

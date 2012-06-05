@@ -1,8 +1,8 @@
 uniform samplerCube u_cubeMap;
 uniform float u_reflectivity;
 
-//x,y,z : diffuse color
-//    w : alpha
+// x,y,z : diffuse color
+// w : alpha
 vec4 agi_getMaterialDiffuseComponent(MaterialHelperInput helperInput)
 {
     vec3 normalEC = agi_getMaterialNormalComponent(helperInput);

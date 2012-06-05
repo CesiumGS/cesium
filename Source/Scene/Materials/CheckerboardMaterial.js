@@ -1,8 +1,10 @@
 /*global define*/
 define([
-        '../../Shaders/Materials/CheckerboardMaterial'
+        '../../Shaders/Materials/CheckerboardMaterial',
+        '../../Scene/Materials/materialBuilder'
     ], function(
-        ShadersCheckerboardMaterial) {
+        ShadersCheckerboardMaterial,
+        materialBuilder) {
     "use strict";
 
     /**
@@ -66,7 +68,7 @@ define([
     }
 
     CheckerboardMaterial.prototype._getShaderSource = function() {
-        return "#line 0\n" + ShadersCheckerboardMaterial;
+        return materialBuilder.constructMaterial(ShadersCheckerboardMaterial);
     };
 
     return CheckerboardMaterial;

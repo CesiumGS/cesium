@@ -1,10 +1,12 @@
 /*global define*/
 define([
         '../../Shaders/Noise',
-        '../../Shaders/Materials/WoodMaterial'
+        '../../Shaders/Materials/WoodMaterial',
+        '../../Scene/Materials/materialBuilder'
     ], function (
         ShadersNoise,
-        ShadersWoodMaterial) {
+        ShadersWoodMaterial,
+        materialBuilder) {
     "use strict";
 
    /**
@@ -91,10 +93,8 @@ define([
     }
 
    WoodMaterial.prototype._getShaderSource = function() {
-       return "#line 0\n" +
-              ShadersNoise +
-              "#line 0\n" +
-              ShadersWoodMaterial;
+       return materialBuilder.constructMaterial(ShadersWoodMaterial, ShadersNoise);
+
    };
 
     return WoodMaterial;

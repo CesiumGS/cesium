@@ -376,7 +376,7 @@ vec4 agi_lightValuePhong(vec3 toLight, vec3 toEye, vec3 normal, vec4 diffuseComp
 {
     //x, y, z : diffuse ambient
     //w : specular strength
-    vec4 ambientLight = vec4(0.1, 0.1, 0.1, 1.0);
+    vec4 ambientLight = vec4(0.0, 0.0, 0.0, 1.0);
     
     //Diffuse values
     vec3 diffuseColor = diffuseComponent.xyz;
@@ -405,7 +405,7 @@ vec4 agi_lightValueGaussian(vec3 toLight, vec3 toEye, vec3 normal, vec4 diffuseC
 {
     //x, y, z : diffuse ambient
     //w : specular strength
-    vec4 ambientLight = vec4(0.1, 0.1, 0.1, 0.5);
+    vec4 ambientLight = vec4(0.0, 0.0, 0.0, 0.5);
     
     //Diffuse values
     vec3 diffuseColor = diffuseComponent.xyz;

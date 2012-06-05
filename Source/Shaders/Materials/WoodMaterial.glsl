@@ -7,9 +7,13 @@ uniform float u_grainThreshold;
 uniform vec2 u_noiseScale;
 uniform float u_grainFrequency;
 
-vec4 agi_getMaterialColor(float zDistance, vec2 st, vec3 str)
+// x,y,z : diffuse color
+// w : alpha
+vec4 agi_getMaterialDiffuseComponent(MaterialHelperInput helperInput)
 {
-    //Base on wood shader from OpenGL Shading Language (3rd edition) pg. 455
+    //Based on wood shader from OpenGL Shading Language (3rd edition) pg. 455
+    
+    vec2 st = helperInput.st;
     
     vec2 noisevec;
     noisevec.x = agi_snoise(st * u_noiseScale.x);

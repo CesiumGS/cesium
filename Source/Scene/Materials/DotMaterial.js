@@ -1,8 +1,10 @@
 /*global define*/
 define([
-        '../../Shaders/Materials/DotMaterial'
+        '../../Shaders/Materials/DotMaterial',
+        '../../Scene/Materials/materialBuilder'
     ], function(
-        ShadersDotMaterial) {
+        ShadersDotMaterial,
+        materialBuilder) {
     "use strict";
 
     /**
@@ -66,7 +68,7 @@ define([
     }
 
     DotMaterial.prototype._getShaderSource = function() {
-        return "#line 0\n" + ShadersDotMaterial;
+        return materialBuilder.constructMaterial(ShadersDotMaterial);
     };
 
     return DotMaterial;

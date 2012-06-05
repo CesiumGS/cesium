@@ -7,9 +7,13 @@ uniform float u_mortarRoughness;
 
 #define Integral(x, p) ((floor(x) * p) + max(fract(x) - (1.0 - p), 0.0))
 
-vec4 agi_getMaterialColor(float zDistance, vec2 st, vec3 str)
+// x,y,z : diffuse color
+// w : alpha
+vec4 agi_getMaterialDiffuseComponent(MaterialHelperInput helperInput)
 {
     // From OpenGL Shading Language (3rd edition) pg. 194, 501
+    vec2 st = helperInput.st;
+    
     vec2 position = st / u_brickSize;
     if(fract(position.y * 0.5) > 0.5)
         position.x += 0.5;    

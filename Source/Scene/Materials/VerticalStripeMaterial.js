@@ -1,8 +1,10 @@
 /*global define*/
 define([
-        '../../Shaders/Materials/VerticalStripeMaterial'
+        '../../Shaders/Materials/VerticalStripeMaterial',
+        '../../Scene/Materials/materialBuilder'
     ], function(
-        ShadersVerticalStripeMaterial) {
+        ShadersVerticalStripeMaterial,
+        materialBuilder) {
     "use strict";
 
     /**
@@ -66,7 +68,7 @@ define([
     }
 
     VerticalStripeMaterial.prototype._getShaderSource = function() {
-        return "#line 0\n" + ShadersVerticalStripeMaterial;
+        return materialBuilder.constructMaterial(ShadersVerticalStripeMaterial);
     };
 
     return VerticalStripeMaterial;

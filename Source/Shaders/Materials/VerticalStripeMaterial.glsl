@@ -3,14 +3,16 @@ uniform vec4 u_darkColor;
 uniform float u_offset;
 uniform float u_repeat;
 
-vec4 agi_getMaterialColor(float zDistance, vec2 st, vec3 str)
+// x,y,z : diffuse color
+// w : alpha
+vec4 agi_getMaterialDiffuseComponent(MaterialHelperInput helperInput)
 {
     // Based on the Stripes Fragment Shader in the Orange Book (11.1.2)
     
     // Fuzz Factor - Controls blurriness between light and dark colors
     const float fuzz = 0.1;
 
-    float value = fract((st.s - u_offset) * (u_repeat * 0.5));
+    float value = fract((helperInput.st.s - u_offset) * (u_repeat * 0.5));
     
     //anti-aliasing
     float val1 = clamp(value / fuzz, 0.0, 1.0);
