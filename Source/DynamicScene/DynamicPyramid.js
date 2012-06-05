@@ -28,18 +28,13 @@ define([
     }
 
     DynamicPyramid.processCzmlPacket = function(dynamicObject, packet, czmlObjectCollection) {
-        //See if there's any actual data to process.
-        var pyramidData = packet.pyramid, pyramid;
+        var pyramidData = packet.pyramid;
         if (typeof pyramidData !== 'undefined') {
 
-            pyramid = dynamicObject.pyramid;
-            var pyramidUpdated = false;
-
-            //Create a new pyramid if we don't have one yet.
-            if (typeof pyramid === 'undefined') {
-                pyramid = new DynamicPyramid();
-                dynamicObject.pyramid = pyramid;
-                pyramidUpdated = true;
+            var pyramid = dynamicObject.pyramid;
+            var pyramidUpdated = typeof pyramid === 'undefined';
+            if (pyramidUpdated) {
+                dynamicObject.pyramid = pyramid = new DynamicPyramid();
             }
 
             var interval = pyramidData.interval;
@@ -47,7 +42,6 @@ define([
                 interval = TimeInterval.fromIso8601(interval);
             }
 
-            //Create or update each of the properties.
             pyramidUpdated = DynamicProperty.processCzmlPacket(pyramid, "show", CzmlBoolean, pyramidData.show, interval, czmlObjectCollection) || pyramidUpdated;
             pyramidUpdated = DynamicDirectionsProperty.processCzmlPacket(pyramid, "directions", pyramidData.directions, interval, czmlObjectCollection) || pyramidUpdated;
             pyramidUpdated = DynamicProperty.processCzmlPacket(pyramid, "radius", CzmlNumber, pyramidData.radius, interval, czmlObjectCollection) || pyramidUpdated;
@@ -63,11 +57,12 @@ define([
     DynamicPyramid.mergeProperties = function(targetObject, objectToMerge) {
         var pyramidToMerge = objectToMerge.pyramid;
         if (typeof pyramidToMerge !== 'undefined') {
+
             var targetPyramid = targetObject.pyramid;
             if (typeof targetPyramid === 'undefined') {
-                targetPyramid = new DynamicPyramid();
-                targetObject.pyramid = targetPyramid;
+                targetObject.pyramid = targetPyramid = new DynamicPyramid();
             }
+
             targetPyramid.show = targetPyramid.show || pyramidToMerge.show;
             targetPyramid.directions = targetPyramid.directions || pyramidToMerge.directions;
             targetPyramid.radius = targetPyramid.radius || pyramidToMerge.radius;

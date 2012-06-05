@@ -31,18 +31,13 @@ define([
     }
 
     DynamicCone.processCzmlPacket = function(dynamicObject, packet, czmlObjectCollection, sourceUri) {
-        //See if there's any actual data to process.
-        var coneData = packet.cone, cone;
+        var coneData = packet.cone;
         if (typeof coneData !== 'undefined') {
 
-            var coneUpdated = false;
-            cone = dynamicObject.cone;
-
-            //Create a new cone if we don't have one yet.
-            if (typeof cone === 'undefined') {
-                cone = new DynamicCone();
-                dynamicObject.cone = cone;
-                coneUpdated = true;
+            var cone = dynamicObject.cone;
+            var coneUpdated = typeof cone === 'undefined';
+            if (coneUpdated) {
+                dynamicObject.cone = cone = new DynamicCone();
             }
 
             var interval = coneData.interval;
@@ -50,7 +45,6 @@ define([
                 interval = TimeInterval.fromIso8601(interval);
             }
 
-            //Create or update each of the properties.
             coneUpdated = DynamicProperty.processCzmlPacket(cone, "show", CzmlBoolean, coneData.show, interval, czmlObjectCollection) || coneUpdated;
             coneUpdated = DynamicProperty.processCzmlPacket(cone, "innerHalfAngle", CzmlNumber, coneData.innerHalfAngle, interval, czmlObjectCollection) || coneUpdated;
             coneUpdated = DynamicProperty.processCzmlPacket(cone, "outerHalfAngle", CzmlNumber, coneData.outerHalfAngle, interval, czmlObjectCollection) || coneUpdated;
@@ -69,11 +63,12 @@ define([
     DynamicCone.mergeProperties = function(targetObject, objectToMerge) {
         var coneToMerge = objectToMerge.cone;
         if (typeof coneToMerge !== 'undefined') {
+
             var targetCone = targetObject.cone;
             if (typeof targetCone === 'undefined') {
-                targetCone = new DynamicCone();
-                targetObject.cone = targetCone;
+                targetObject.cone = targetCone = new DynamicCone();
             }
+
             targetCone.show = targetCone.show || coneToMerge.show;
             targetCone.innerHalfAngle = targetCone.innerHalfAngle || coneToMerge.innerHalfAngle;
             targetCone.outerHalfAngle = targetCone.outerHalfAngle || coneToMerge.outerHalfAngle;

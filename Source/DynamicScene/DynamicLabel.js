@@ -8,7 +8,7 @@ define([
         './CzmlString',
         './CzmlColor',
         './DynamicProperty'
-    ], function(
+       ], function(
         TimeInterval,
         CzmlBoolean,
         CzmlCartesian2,
@@ -34,29 +34,13 @@ define([
     }
 
     DynamicLabel.processCzmlPacket = function(dynamicObject, packet, czmlObjectCollection, sourceUri) {
-        //See if there's any actual data to process.
         var labelData = packet.label;
-        if (typeof labelData !== 'undefined' &&
-            (typeof labelData.text !== 'undefined' ||
-             typeof labelData.font !== 'undefined' ||
-             typeof labelData.show !== 'undefined' ||
-             typeof labelData.style !== 'undefined' ||
-             typeof labelData.fillColor !== 'undefined' ||
-             typeof labelData.outlineColor !== 'undefined' ||
-             typeof labelData.scale !== 'undefined' ||
-             typeof labelData.horizontalOrigin !== 'undefined' ||
-             typeof labelData.verticalOrigin !== 'undefined' ||
-             typeof labelData.pixelOffset !== 'undefined' ||
-             typeof labelData.eyeOffset !== 'undefined')) {
+        if (typeof labelData !== 'undefined') {
 
             var label = dynamicObject.label;
-            var labelUpdated = false;
-
-            //Create a new label if we don't have one yet.
-            if (typeof label === 'undefined') {
-                label = new DynamicLabel();
-                dynamicObject.label = label;
-                labelUpdated = true;
+            var labelUpdated = typeof label === 'undefined';
+            if (labelUpdated) {
+                dynamicObject.label = label = new DynamicLabel();
             }
 
             var interval = labelData.interval;
@@ -64,7 +48,6 @@ define([
                 interval = TimeInterval.fromIso8601(interval);
             }
 
-            //Create or update each of the properties.
             labelUpdated = DynamicProperty.processCzmlPacket(label, "text", CzmlString, labelData.text, interval, czmlObjectCollection) || labelUpdated;
             labelUpdated = DynamicProperty.processCzmlPacket(label, "font", CzmlString, labelData.font, interval, czmlObjectCollection) || labelUpdated;
             labelUpdated = DynamicProperty.processCzmlPacket(label, "show", CzmlBoolean, labelData.show, interval, czmlObjectCollection) || labelUpdated;
@@ -80,15 +63,15 @@ define([
         }
     };
 
-    DynamicLabel.mergeProperties = function(targetObject, objectToMerge)
-    {
+    DynamicLabel.mergeProperties = function(targetObject, objectToMerge) {
         var labelToMerge = objectToMerge.label;
         if (typeof labelToMerge !== 'undefined') {
+
             var targetLabel = targetObject.label;
             if (typeof targetLabel === 'undefined') {
-                targetLabel = new DynamicLabel();
-                targetObject.label = targetLabel;
+                targetObject.label = targetLabel = new DynamicLabel();
             }
+
             targetLabel.text = targetLabel.text || labelToMerge.text;
             targetLabel.font = targetLabel.font || labelToMerge.font;
             targetLabel.show = targetLabel.show || labelToMerge.show;
@@ -103,8 +86,7 @@ define([
         }
     };
 
-    DynamicLabel.undefineProperties = function(dynamicObject)
-    {
+    DynamicLabel.undefineProperties = function(dynamicObject) {
         dynamicObject.label = undefined;
     };
 

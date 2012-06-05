@@ -22,18 +22,13 @@ function(
     }
 
     DynamicPolyline.processCzmlPacket = function(dynamicObject, packet, czmlObjectCollection) {
-        //See if there's any actual data to process.
-        var polylineData = packet.polyline, polyline;
+        var polylineData = packet.polyline;
         if (typeof polylineData !== 'undefined') {
 
-            polyline = dynamicObject.polyline;
-            var polylineUpdated = false;
-
-            //Create a new polyline if we don't have one yet.
-            if (typeof polyline === 'undefined') {
-                polyline = new DynamicPolyline();
-                dynamicObject.polyline = polyline;
-                polylineUpdated = true;
+            var polyline = dynamicObject.polyline;
+            var polylineUpdated = typeof polyline === 'undefined';
+            if (polylineUpdated) {
+                dynamicObject.polyline = polyline = new DynamicPolyline();
             }
 
             var interval = polylineData.interval;
@@ -41,7 +36,6 @@ function(
                 interval = TimeInterval.fromIso8601(interval);
             }
 
-            //Create or update each of the properties.
             polylineUpdated = DynamicProperty.processCzmlPacket(polyline, "color", CzmlColor, polylineData.color, interval, czmlObjectCollection) || polylineUpdated;
             polylineUpdated = DynamicProperty.processCzmlPacket(polyline, "outlineColor", CzmlColor, polylineData.outlineColor, interval, czmlObjectCollection) || polylineUpdated;
             polylineUpdated = DynamicProperty.processCzmlPacket(polyline, "outlineWidth", CzmlNumber, polylineData.outlineWidth, interval, czmlObjectCollection) || polylineUpdated;
@@ -55,11 +49,12 @@ function(
     DynamicPolyline.mergeProperties = function(targetObject, objectToMerge) {
         var polylineToMerge = objectToMerge.polyline;
         if (typeof polylineToMerge !== 'undefined') {
+
             var targetPolyline = targetObject.polyline;
             if (typeof targetPolyline === 'undefined') {
-                targetPolyline = new DynamicPolyline();
-                targetObject.polyline = targetPolyline;
+                targetObject.polyline = targetPolyline = new DynamicPolyline();
             }
+
             targetPolyline.color = targetPolyline.color || polylineToMerge.color;
             targetPolyline.pixelSize = targetPolyline.pixelSize || polylineToMerge.pixelSize;
             targetPolyline.outlineColor = targetPolyline.outlineColor || polylineToMerge.outlineColor;

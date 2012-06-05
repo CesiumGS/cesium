@@ -31,27 +31,13 @@ define([
     }
 
     DynamicBillboard.processCzmlPacket = function(dynamicObject, packet, czmlObjectCollection, sourceUri) {
-        //See if there's any actual data to process.
         var billboardData = packet.billboard;
-        if (typeof billboardData !== 'undefined' &&
-            (typeof billboardData.image !== 'undefined' ||
-             typeof billboardData.show !== 'undefined' ||
-             typeof billboardData.scale !== 'undefined' ||
-             typeof billboardData.color !== 'undefined' ||
-             typeof billboardData.horizontalOrigin !== 'undefined' ||
-             typeof billboardData.verticalOrigin !== 'undefined' ||
-             typeof billboardData.rotation !== 'undefined' ||
-             typeof billboardData.pixelOffset !== 'undefined' ||
-             typeof billboardData.eyeOffset !== 'undefined')) {
+        if (typeof billboardData !== 'undefined') {
 
-            var billboardUpdated = false;
             var billboard = dynamicObject.billboard;
-
-            //Create a new billboard if we don't have one yet.
-            if (typeof billboard === 'undefined') {
-                billboard = new DynamicBillboard();
-                dynamicObject.billboard = billboard;
-                billboardUpdated = true;
+            var billboardUpdated = typeof billboard === 'undefined';
+            if (billboardUpdated) {
+                dynamicObject.billboard = billboard = new DynamicBillboard();
             }
 
             var interval = billboardData.interval;
@@ -59,7 +45,6 @@ define([
                 interval = TimeInterval.fromIso8601(interval);
             }
 
-            //Create or update each of the properties.
             billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "color", CzmlColor, billboardData.color, interval, czmlObjectCollection) || billboardUpdated;
             billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "eyeOffset", CzmlCartesian3, billboardData.eyeOffset, interval, czmlObjectCollection) || billboardUpdated;
             billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "horizontalOrigin", CzmlString, billboardData.horizontalOrigin, interval, czmlObjectCollection) || billboardUpdated;
@@ -78,11 +63,12 @@ define([
     DynamicBillboard.mergeProperties = function(targetObject, objectToMerge) {
         var billboardToMerge = objectToMerge.billboard;
         if (typeof billboardToMerge !== 'undefined') {
+
             var targetBillboard = targetObject.billboard;
             if (typeof targetBillboard === 'undefined') {
-                targetBillboard = new DynamicBillboard();
-                targetObject.billboard = targetBillboard;
+                targetObject.billboard = targetBillboard = new DynamicBillboard();
             }
+
             targetBillboard.color = targetBillboard.color || billboardToMerge.color;
             targetBillboard.eyeOffset = targetBillboard.eyeOffset || billboardToMerge.eyeOffset;
             targetBillboard.horizontalOrigin = targetBillboard.horizontalOrigin || billboardToMerge.horizontalOrigin;

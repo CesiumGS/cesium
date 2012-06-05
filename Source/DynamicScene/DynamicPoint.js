@@ -22,18 +22,13 @@ define([
     }
 
     DynamicPoint.processCzmlPacket = function(dynamicObject, packet, czmlObjectCollection) {
-        //See if there's any actual data to process.
-        var pointData = packet.point, point;
+        var pointData = packet.point;
         if (typeof pointData !== 'undefined') {
 
-            point = dynamicObject.point;
-            var pointUpdated = false;
-
-            //Create a new point if we don't have one yet.
-            if (typeof point === 'undefined') {
-                point = new DynamicPoint();
-                dynamicObject.point = point;
-                pointUpdated = true;
+            var point = dynamicObject.point;
+            var pointUpdated = typeof point === 'undefined';
+            if (pointUpdated) {
+                dynamicObject.point = point = new DynamicPoint();
             }
 
             var interval = pointData.interval;
@@ -41,7 +36,6 @@ define([
                 interval = TimeInterval.fromIso8601(interval);
             }
 
-            //Create or update each of the properties.
             pointUpdated = DynamicProperty.processCzmlPacket(point, "color", CzmlColor, pointData.color, interval, czmlObjectCollection) || pointUpdated;
             pointUpdated = DynamicProperty.processCzmlPacket(point, "pixelSize", CzmlNumber, pointData.pixelSize, interval, czmlObjectCollection) || pointUpdated;
             pointUpdated = DynamicProperty.processCzmlPacket(point, "outlineColor", CzmlColor, pointData.outlineColor, interval, czmlObjectCollection) || pointUpdated;
@@ -55,11 +49,12 @@ define([
     DynamicPoint.mergeProperties = function(targetObject, objectToMerge) {
         var pointToMerge = objectToMerge.point;
         if (typeof pointToMerge !== 'undefined') {
+
             var targetPoint = targetObject.point;
             if (typeof targetPoint === 'undefined') {
-                targetPoint = new DynamicPoint();
-                targetObject.point = targetPoint;
+                targetObject.point = targetPoint = new DynamicPoint();
             }
+
             targetPoint.color = targetPoint.color || pointToMerge.color;
             targetPoint.pixelSize = targetPoint.pixelSize || pointToMerge.pixelSize;
             targetPoint.outlineColor = targetPoint.outlineColor || pointToMerge.outlineColor;

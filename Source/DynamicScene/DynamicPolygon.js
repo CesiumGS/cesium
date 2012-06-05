@@ -17,18 +17,13 @@ define([
     }
 
     DynamicPolygon.processCzmlPacket = function(dynamicObject, packet, czmlObjectCollection) {
-        //See if there's any actual data to process.
-        var polygonData = packet.polygon, polygon;
+        var polygonData = packet.polygon;
         if (typeof polygonData !== 'undefined') {
 
-            polygon = dynamicObject.polygon;
-            var polygonUpdated = false;
-
-            //Create a new polygon if we don't have one yet.
-            if (typeof polygon === 'undefined') {
-                polygon = new DynamicPolygon();
-                dynamicObject.polygon = polygon;
-                polygonUpdated = true;
+            var polygon = dynamicObject.polygon;
+            var polygonUpdated = typeof polygon === 'undefined';
+            if (polygonUpdated) {
+                dynamicObject.polygon = polygon = new DynamicPolygon();
             }
 
             var interval = polygonData.interval;
@@ -36,7 +31,6 @@ define([
                 interval = TimeInterval.fromIso8601(interval);
             }
 
-            //Create or update each of the properties.
             polygonUpdated = DynamicProperty.processCzmlPacket(polygon, "show", CzmlBoolean, polygonData.show, interval, czmlObjectCollection) || polygonUpdated;
             polygonUpdated = DynamicMaterialProperty.processCzmlPacket(polygon, "material", polygonData.material, interval, czmlObjectCollection) || polygonUpdated;
             return polygonUpdated;
@@ -46,11 +40,12 @@ define([
     DynamicPolygon.mergeProperties = function(targetObject, objectToMerge) {
         var polygonToMerge = objectToMerge.polygon;
         if (typeof polygonToMerge !== 'undefined') {
+
             var targetPolygon = targetObject.polygon;
             if (typeof targetPolygon === 'undefined') {
-                targetPolygon = new DynamicPolygon();
-                targetObject.polygon = targetPolygon;
+                targetObject.polygon = targetPolygon = new DynamicPolygon();
             }
+
             targetPolygon.show = targetPolygon.show || polygonToMerge.show;
             targetPolygon.material = targetPolygon.material || polygonToMerge.material;
         }
