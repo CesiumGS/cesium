@@ -142,13 +142,6 @@ define([
         this.modelMatrix = Matrix4.IDENTITY;
         this._modelMatrix = Matrix4.IDENTITY;
 
-        /**
-         * DOC_TBA
-         *
-         * @type Number
-         */
-        this.morphTime = 0.0;
-
         this._mode = SceneMode.SCENE3D;
         this._projection = undefined;
 
@@ -810,23 +803,6 @@ define([
         this._writeTextureCoordinatesAndImageSize(context, textureAtlasCoordinates, vafWriters, billboard);
     };
 
-    ///////////////////////////////////////////////////////////////////////////
-
-    BillboardCollection.prototype._syncMorphTime = function(mode) {
-        switch (mode) {
-        case SceneMode.SCENE3D:
-            this.morphTime = 1.0;
-            break;
-
-        case SceneMode.SCENE2D:
-        case SceneMode.COLUMBUS_VIEW:
-            this.morphTime = 0.0;
-            break;
-
-        // MORPHING - don't change it
-        }
-    };
-
     BillboardCollection.prototype._updateScene2D = function(projection, billboards) {
         var length = billboards.length;
 
@@ -860,7 +836,6 @@ define([
     BillboardCollection.prototype._updateMode = function(sceneState) {
         var mode = sceneState.mode;
         var projection = sceneState.scene2D.projection;
-        this._syncMorphTime(mode);
 
         var billboards;
         var length;
@@ -904,10 +879,11 @@ define([
                 var p = b.getPosition();
                 var projectedPoint = projection.project(projection.getEllipsoid().toCartographic3(p));
 
+                var morphTime = sceneState.morphTime;
                 b._setActualPosition({
-                    x : CesiumMath.lerp(projectedPoint.z, p.x, this.morphTime),
-                    y : CesiumMath.lerp(projectedPoint.x, p.y, this.morphTime),
-                    z : CesiumMath.lerp(projectedPoint.y, p.z, this.morphTime)
+                    x : CesiumMath.lerp(projectedPoint.z, p.x, morphTime),
+                    y : CesiumMath.lerp(projectedPoint.x, p.y, morphTime),
+                    z : CesiumMath.lerp(projectedPoint.y, p.z, morphTime)
                 });
             }
         } else if (mode === SceneMode.SCENE2D) {

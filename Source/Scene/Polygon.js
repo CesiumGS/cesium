@@ -230,14 +230,8 @@ define([
          */
         this.erosion = 1.0;
 
-        /**
-         * DOC_TBA
-         *
-         * @type Number
-         */
-        this.morphTime = 1.0;
-
         this._mode = SceneMode.SCENE3D;
+        this._morphTime = 1.0;
         this._projection = undefined;
 
         var that = this;
@@ -246,7 +240,7 @@ define([
                 return that.erosion;
             },
             u_morphTime : function() {
-                return that.morphTime;
+                return that._morphTime;
             },
             u_height : function() {
                 return (that._mode !== SceneMode.SCENE2D) ? that.height : 0.0;
@@ -415,21 +409,6 @@ define([
         return this.scene2D.granularity || this.granularity;
     };
 
-    Polygon.prototype._syncMorphTime = function(mode) {
-        switch (mode) {
-        case SceneMode.SCENE3D:
-            this.morphTime = 1.0;
-            break;
-
-        case SceneMode.SCENE2D:
-        case SceneMode.COLUMBUS_VIEW:
-            this.morphTime = 0.0;
-            break;
-
-        // MORPHING - don't change it
-        }
-    };
-
     /**
      * Commits changes to properties before rendering by updating the object's WebGL resources.
      * This must be called before calling {@link Polygon#render} in order to realize
@@ -444,7 +423,6 @@ define([
      * @see Polygon#render
      */
     Polygon.prototype.update = function(context, sceneState) {
-
         if (!this.ellipsoid) {
             throw new DeveloperError("this.ellipsoid must be defined.");
         }
@@ -457,8 +435,8 @@ define([
         }
 
         if (this.show) {
-            this._syncMorphTime(mode);
             this._mode = mode;
+            this._morphTime = sceneState.morphTime;
 
             var projection = sceneState.scene2D.projection;
 
@@ -565,7 +543,7 @@ define([
                     return that._pickId.normalizedRgba;
                 },
                 u_morphTime : function() {
-                    return that.morphTime;
+                    return that._morphTime;
                 },
                 u_height : function() {
                     return that.height;

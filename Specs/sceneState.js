@@ -2,20 +2,30 @@
 define([
         'Core/Ellipsoid',
         'Core/EquidistantCylindricalProjection',
-        'Scene/SceneMode'
+        'Scene/Camera',
+        'Scene/SceneMode',
+        'Scene/SceneState'
     ], function(
         Ellipsoid,
         EquidistantCylindricalProjection,
-        SceneMode) {
+        Camera,
+        SceneMode,
+        SceneState) {
     "use strict";
 
     // Mock scene-state for testing.
-    var sceneState = {
-        mode : SceneMode.SCENE3D,
-        scene2D : {
-            projection : new EquidistantCylindricalProjection(Ellipsoid.WGS84)
-        }
+    var sceneState = new SceneState();
+
+    sceneState.mode = SceneMode.SCENE3D;
+    sceneState.morphTime = 1.0;
+    sceneState.scene2D = {
+        projection : new EquidistantCylindricalProjection(Ellipsoid.WGS84)
     };
+
+    sceneState.camera = new Camera({
+        clientHeight : 1,
+        clientWidth : 1
+    });
 
     return sceneState;
 });
