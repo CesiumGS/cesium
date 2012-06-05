@@ -1,10 +1,12 @@
 /*global define*/
 define([
         '../../Core/DeveloperError',
-        '../../Shaders/Materials/RefractionMaterial'
+        '../../Shaders/Materials/RefractionMaterial',
+        '../../Scene/Materials/materialBuilder'
     ], function(
         DeveloperError,
-        ShadersRefractionMaterial) {
+        ShadersRefractionMaterial,
+        materialBuilder) {
     "use strict";
 
     /**
@@ -55,7 +57,7 @@ define([
     }
 
     RefractionMaterial.prototype._getShaderSource = function() {
-        return "#line 0\n" + ShadersRefractionMaterial;
+        return materialBuilder.constructMaterial(ShadersRefractionMaterial);
     };
 
     return RefractionMaterial;
