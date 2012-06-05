@@ -8,6 +8,7 @@ define([
         '../Core/Intersect',
         '../Core/Occluder',
         '../Core/Ellipsoid',
+        '../Core/Extent',
         '../Core/BoundingSphere',
         '../Core/Rectangle',
         '../Core/Cache',
@@ -25,6 +26,7 @@ define([
         '../Core/ExtentTessellator',
         '../Core/PlaneTessellator',
         '../Core/JulianDate',
+        '../Core/Transforms',
         '../Renderer/BufferUsage',
         '../Renderer/CullFace',
         '../Renderer/DepthFunction',
@@ -41,10 +43,14 @@ define([
         './ViewportQuad',
         '../Shaders/CentralBodyVS',
         '../Shaders/CentralBodyFS',
+        '../Shaders/CentralBodyFSCommon',
         '../Shaders/CentralBodyVSDepth',
         '../Shaders/CentralBodyFSDepth',
         '../Shaders/CentralBodyVSFilter',
         '../Shaders/CentralBodyFSFilter',
+        '../Shaders/CentralBodyVSPole',
+        '../Shaders/CentralBodyFSPole',
+        '../Shaders/GroundAtmosphere',
         '../Shaders/SkyAtmosphereFS',
         '../Shaders/SkyAtmosphereVS'
     ], function(
@@ -56,6 +62,7 @@ define([
         Intersect,
         Occluder,
         Ellipsoid,
+        Extent,
         BoundingSphere,
         Rectangle,
         Cache,
@@ -73,6 +80,7 @@ define([
         ExtentTessellator,
         PlaneTessellator,
         JulianDate,
+        Transforms,
         BufferUsage,
         CullFace,
         DepthFunction,
@@ -89,10 +97,14 @@ define([
         ViewportQuad,
         CentralBodyVS,
         CentralBodyFS,
+        CentralBodyFSCommon,
         CentralBodyVSDepth,
         CentralBodyFSDepth,
         CentralBodyVSFilter,
         CentralBodyFSFilter,
+        CentralBodyVSPole,
+        CentralBodyFSPole,
+        GroundAtmosphere,
         SkyAtmosphereFS,
         SkyAtmosphereVS) {
     "use strict";
@@ -182,12 +194,12 @@ define([
         ellipsoid = ellipsoid || Ellipsoid.WGS84;
 
         this._ellipsoid = ellipsoid;
-        this._maxExtent = {
-            north : CesiumMath.PI_OVER_TWO,
-            south : -CesiumMath.PI_OVER_TWO,
-            west : -CesiumMath.PI,
-            east : CesiumMath.PI
-        };
+        this._maxExtent = new Extent(
+            -CesiumMath.PI,
+            -CesiumMath.PI_OVER_TWO,
+            CesiumMath.PI,
+            CesiumMath.PI_OVER_TWO
+        );
         this._camera = camera;
         this._rootTile = new Tile({
             extent : this._maxExtent,
@@ -234,7 +246,6 @@ define([
          */
         this.failedTileRetryTime = 30.0;
 
-
         this._spWithoutAtmosphere = undefined;
         this._spGroundFromSpace = undefined;
         this._spGroundFromAtmosphere = undefined;
@@ -256,33 +267,40 @@ define([
 
         this._fb = undefined;
 
+        this._vaNorthPole = undefined;
+        this._vaSouthPole = undefined;
+        this._spPolesWithoutAtmosphere = undefined;
+        this._spPolesGroundFromSpace = undefined;
+        this._spPolesGroundFromAtmosphere = undefined;
+        this._spPoles = undefined; // Reference to without-atmosphere, ground-from-space, or ground-from-atmosphere
+        this._northPoleUniforms = undefined;
+        this._southPoleUniforms = undefined;
+        this._drawNorthPole = false;
+        this._drawSouthPole = false;
+
+        /**
+         * DOC_TBA
+         *
+         * @type {Cartesian3}
+         */
+        this.northPoleColor = new Cartesian3(2.0 / 255.0, 6.0 / 255.0, 18.0 / 255.0);
+
+        /**
+         * DOC_TBA
+         *
+         * @type {Cartesian3}
+         */
+        this.southPoleColor = new Cartesian3(1.0, 1.0, 1.0);
+
         /**
          * DOC_TBA
          *
          * @type {Cartesian2}
          */
         this.logoOffset = Cartesian2.ZERO;
-
         this._logoOffset = this.logoOffset;
         this._imageLogo = undefined;
         this._quadLogo = undefined;
-
-        this._dayTileProvider = undefined;
-        this._nightImageSource = undefined;
-        this._specularImageSource = undefined;
-        this._cloudsImageSource = undefined;
-        this._bumpImageSource = undefined;
-        this._nightTexture = undefined;
-        this._specularTexture = undefined;
-        this._cloudsTexture = undefined;
-        this._bumpTexture = undefined;
-        this._showDay = false;
-        this._showNight = false;
-        this._showClouds = false;
-        this._showCloudShadows = false;
-        this._showSpecular = false;
-        this._showBumps = false;
-        this._showTerminator = false;
 
         this._minTileDistance = undefined;
 
@@ -325,6 +343,7 @@ define([
          * DOC_TBA
          */
         this.dayTileProvider = undefined;
+        this._dayTileProvider = undefined;
 
         /**
          * The URL of the image to use as a night texture.  An asynchronous
@@ -345,6 +364,8 @@ define([
          * @see CentralBody#showNight
          */
         this.nightImageSource = undefined;
+        this._nightImageSource = undefined;
+        this._nightTexture = undefined;
 
         /**
          * The URL of the image to use as a specular map; a single-channel image where zero indicates
@@ -362,7 +383,9 @@ define([
          *
          * @see CentralBody#showSpecular
          */
-        this.specularImageSource = undefined;
+        this.specularMapSource = undefined;
+        this._specularMapSource = undefined;
+        this._specularTexture = undefined;
 
         /**
          * The URL of the image to use as a cloud map; a single-channel image where 255 indicates
@@ -380,7 +403,9 @@ define([
          *
          * @see CentralBody#showClouds
          */
-        this.cloudsImageSource = undefined;
+        this.cloudsMapSource = undefined;
+        this._cloudsMapSource = undefined;
+        this._cloudsTexture = undefined;
 
         /**
          * The URL of the image to use as a bump map; a single-channel image where zero indicates
@@ -398,10 +423,12 @@ define([
          *
          * @see CentralBody#showBumps
          */
-        this.bumpImageSource = undefined;
+        this.bumpMapSource = undefined;
+        this._bumpMapSource = undefined;
+        this._bumpTexture = undefined;
 
         /**
-         * When <code>true</code>, textures from the <code>dayProvider</code> are shown on the central body.
+         * When <code>true</code>, textures from the <code>dayTileProvider</code> are shown on the central body.
          * <br /><br />
          * <div align="center">
          * <img src="../images/CentralBody.showDay.jpg" width="400" height="300" />
@@ -409,10 +436,11 @@ define([
          *
          * @type {Boolean}
          *
-         * @see CentralBody#dayProvider
+         * @see CentralBody#dayTileProvider
          * @see CentralBody#showNight
          */
         this.showDay = true;
+        this._showDay = false;
 
         /**
          * When <code>true</code>, the night texture is shown on the side of the central body not illuminated by the sun.
@@ -433,6 +461,7 @@ define([
          * cb.nightImageSource = "night.jpg";
          */
         this.showNight = true;
+        this._showNight = false;
 
         /**
          * When <code>true</code>, diffuse-lit clouds are shown on the central body.  When {@link CentralBody#showNight}
@@ -452,6 +481,7 @@ define([
          * cb.cloudsMapSource = "clouds.jpg";
          */
         this.showClouds = true;
+        this._showClouds = false;
 
         /**
          * When <code>true</code>, clouds on the daytime side of the globe cast approximate shadows.  The
@@ -475,6 +505,7 @@ define([
          * cb.cloudsMapSource = "clouds.jpg";
          */
         this.showCloudShadows = true;
+        this._showCloudShadows = false;
 
         /**
          * When <code>true</code>, a specular map (also called a gloss map) is used so only the ocean receives specular light.
@@ -494,6 +525,7 @@ define([
          * cb.specularMapSource = "specular.jpg";
          */
         this.showSpecular = true;
+        this._showSpecular = false;
 
         /**
          * When <code>true</code>, a bump map is used to add lighting detail to the mountainous areas of the central body.
@@ -516,6 +548,7 @@ define([
          * cb.bumpMapSource = "bump.jpg";
          */
         this.showBumps = true;
+        this._showBumps = false;
 
         /**
          * When <code>true</code>, shows a line on the central body where day meets night.
@@ -529,6 +562,7 @@ define([
          * @see CentralBody#dayNightBlendDelta
          */
         this.showTerminator = false;
+        this._showTerminator = false;
 
         /**
          * When {@link CentralBody#showBumps} is <code>true</code>, <code>bumpMapNormalZ</code> controls the
@@ -1112,8 +1146,12 @@ define([
     };
 
     CentralBody.prototype._createTileDistanceFunction = function(width, height) {
-        var frustum = this._camera.frustum;
         var provider = this._dayTileProvider;
+        if (typeof provider === 'undefined') {
+            return undefined;
+        }
+
+        var frustum = this._camera.frustum;
         var extent = provider.maxExtent;
 
         var pixelSizePerDistance = 2.0 * Math.tan(frustum.fovy * 0.5);
@@ -1288,6 +1326,180 @@ define([
         return [upperLeft.x, upperLeft.y, upperLeft.z, lowerLeft.x, lowerLeft.y, lowerLeft.z, upperRight.x, upperRight.y, upperRight.z, lowerRight.x, lowerRight.y, lowerRight.z];
     };
 
+    CentralBody.prototype._computePoleQuad = function(maxLat, maxGivenLat, viewProjMatrix, viewportTransformation) {
+        var pt1 = this._ellipsoid.toCartesian(new Cartographic2(0.0, maxGivenLat));
+        var pt2 = this._ellipsoid.toCartesian(new Cartographic2(Math.PI, maxGivenLat));
+        var radius = pt1.subtract(pt2).magnitude() * 0.5;
+
+        var center = this._ellipsoid.toCartesian(new Cartographic2(0.0, maxLat));
+
+        var right;
+        var dir = this._camera.direction;
+        if (1.0 - Cartesian3.UNIT_Z.negate().dot(dir) < CesiumMath.EPSILON6) {
+            right = Cartesian3.UNIT_X;
+        } else {
+            right = dir.cross(Cartesian3.UNIT_Z).normalize();
+        }
+
+        var screenRight = center.add(right.multiplyWithScalar(radius));
+        var screenUp = center.add(Cartesian3.UNIT_Z.cross(right).normalize().multiplyWithScalar(radius));
+
+        center = Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, center);
+        screenRight = Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, screenRight);
+        screenUp = Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, screenUp);
+
+        var halfWidth = Math.floor(Math.max(screenUp.subtract(center).magnitude(), screenRight.subtract(center).magnitude()));
+        var halfHeight = halfWidth;
+
+        return new Rectangle(
+                Math.floor(center.x) - halfWidth,
+                Math.floor(center.y) - halfHeight,
+                halfWidth * 2.0,
+                halfHeight * 2.0);
+    };
+
+    CentralBody.prototype._fillPoles = function(state) {
+        if (typeof this._dayTileProvider === 'undefined' || state.mode !== SceneMode.SCENE3D) {
+            return;
+        }
+
+        var viewProjMatrix = state.context.getUniformState().getViewProjection();
+        var viewportTransformation = state.context.getUniformState().getViewportTransformation();
+        var latitudeExtension = 0.05;
+
+        var extent;
+        var boundingVolume;
+        var frustumCull;
+        var occludeePoint;
+        var occluded;
+        var datatype;
+        var mesh;
+        var rect;
+        var positions;
+
+        // handle north pole
+        if (this._dayTileProvider.maxExtent.north < CesiumMath.PI_OVER_TWO) {
+            extent = new Extent(
+                -Math.PI,
+                this._dayTileProvider.maxExtent.north,
+                Math.PI,
+                CesiumMath.PI_OVER_TWO
+            );
+            boundingVolume = Extent.compute3DBoundingSphere(extent, this._ellipsoid);
+            frustumCull = this._camera.getVisibility(boundingVolume, BoundingSphere.planeSphereIntersect) === Intersect.OUTSIDE;
+            occludeePoint = Extent.computeOccludeePoint(extent, this._ellipsoid).occludeePoint;
+            occluded = (occludeePoint && !state.occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !state.occluder.isVisible(boundingVolume);
+
+            this._drawNorthPole = !frustumCull && !occluded;
+            if (this._drawNorthPole) {
+                rect = this._computePoleQuad(extent.north, extent.south - latitudeExtension, viewProjMatrix, viewportTransformation);
+                positions = [
+                    rect.x, rect.y,
+                    rect.x + rect.width, rect.y,
+                    rect.x + rect.width, rect.y + rect.height,
+                    rect.x, rect.y + rect.height
+                ];
+
+                if (typeof this._vaNorthPole === 'undefined') {
+                    mesh = {
+                        attributes : {
+                            position : {
+                                componentDatatype : ComponentDatatype.FLOAT,
+                                componentsPerAttribute : 2,
+                                values : positions
+                            }
+                        }
+                    };
+                    this._vaNorthPole = state.context.createVertexArrayFromMesh({
+                        mesh : mesh,
+                        attributeIndices : {
+                            position : 0
+                        },
+                        bufferUsage : BufferUsage.STREAM_DRAW
+                    });
+                } else {
+                    datatype = ComponentDatatype.FLOAT;
+                    this._vaNorthPole.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.toTypedArray(positions));
+                }
+            }
+        }
+
+        // handle south pole
+        if (this._dayTileProvider.maxExtent.south > -CesiumMath.PI_OVER_TWO) {
+            extent = new Extent(
+                -Math.PI,
+                -CesiumMath.PI_OVER_TWO,
+                Math.PI,
+                this._dayTileProvider.maxExtent.south
+            );
+            boundingVolume = Extent.compute3DBoundingSphere(extent, this._ellipsoid);
+            frustumCull = this._camera.getVisibility(boundingVolume, BoundingSphere.planeSphereIntersect) === Intersect.OUTSIDE;
+            occludeePoint = Extent.computeOccludeePoint(extent, this._ellipsoid).occludeePoint;
+            occluded = (occludeePoint && !state.occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !state.occluder.isVisible(boundingVolume);
+
+            this._drawSouthPole = !frustumCull && !occluded;
+            if (this._drawSouthPole) {
+                rect = this._computePoleQuad(extent.south, extent.north + latitudeExtension, viewProjMatrix, viewportTransformation);
+                positions = [
+                     rect.x, rect.y,
+                     rect.x + rect.width, rect.y,
+                     rect.x + rect.width, rect.y + rect.height,
+                     rect.x, rect.y + rect.height
+                 ];
+
+                 if (typeof this._vaSouthPole === 'undefined') {
+                     mesh = {
+                         attributes : {
+                             position : {
+                                 componentDatatype : ComponentDatatype.FLOAT,
+                                 componentsPerAttribute : 2,
+                                 values : positions
+                             }
+                         }
+                     };
+                     this._vaSouthPole = state.context.createVertexArrayFromMesh({
+                         mesh : mesh,
+                         attributeIndices : {
+                             position : 0
+                         },
+                         bufferUsage : BufferUsage.STREAM_DRAW
+                     });
+                 } else {
+                     datatype = ComponentDatatype.FLOAT;
+                     this._vaSouthPole.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.toTypedArray(positions));
+                 }
+            }
+        }
+
+        var that = this;
+        var drawUniforms = {
+            u_fbTexture : function() {
+                return that._fb.getColorTexture();
+            },
+            u_dayIntensity : function() {
+                return (that._dayTileProvider && that._dayTileProvider.getPoleIntensity && that._dayTileProvider.getPoleIntensity()) || 0.0;
+            }
+        };
+
+        if (typeof this._northPoleUniforms === 'undefined') {
+            this._northPoleUniforms = combine(drawUniforms, {
+                u_color : function() {
+                    return that.northPoleColor;
+                }
+            });
+            this._northPoleUniforms = combine(this._northPoleUniforms, this._drawUniforms);
+        }
+
+        if (typeof this._southPoleUniforms === 'undefined') {
+            this._southPoleUniforms = combine(drawUniforms, {
+                u_color : function() {
+                    return that.southPoleColor;
+                }
+            });
+            this._southPoleUniforms = combine(this._southPoleUniforms, this._drawUniforms);
+        }
+    };
+
     /**
      * @private
      */
@@ -1330,9 +1542,6 @@ define([
             });
 
             this._prefetchImages();
-
-            var viewport = context.getViewport();
-            this._minTileDistance = this._createTileDistanceFunction(viewport.width, viewport.height);
         }
 
         var hasLogo = this._dayTileProvider && this._dayTileProvider.getLogo;
@@ -1367,6 +1576,8 @@ define([
         if (createFBO || fboDimensionsChanged ||
             (!this._quadV || this._quadV.isDestroyed()) ||
             (!this._quadH || this._quadH.isDestroyed())) {
+
+            this._minTileDistance = this._createTileDistanceFunction(width, height);
 
             this._fb = this._fb && this._fb.destroy();
             this._quadV = this._quadV && this._quadV.destroy();
@@ -1637,22 +1848,29 @@ define([
         var specularChanged = ((this._showSpecular !== this.showSpecular) && (!this.showSpecular || this._specularTexture));
         var bumpsChanged = ((this._showBumps !== this.showBumps) && (!this.showBumps || this._bumpTexture));
 
-        if (!this._sp ||
+        if (typeof this._sp === 'undefined' || typeof this._spPoles === 'undefined' ||
             (dayChanged || nightChanged || cloudsChanged || cloudShadowsChanged || specularChanged || bumpsChanged) ||
             (this._showTerminator !== this.showTerminator)) {
 
+            var fsPrepend = ((this.showDay && this._dayTileProvider) ? "#define SHOW_DAY 1\n" : "") +
+                ((this.showNight && this._nightTexture) ? "#define SHOW_NIGHT 1\n" : "") +
+                ((this.showClouds && this._cloudsTexture) ? "#define SHOW_CLOUDS 1\n" : "") +
+                ((this.showCloudShadows && this._cloudsTexture) ? "#define SHOW_CLOUD_SHADOWS 1\n" : "") +
+                ((this.showSpecular && this._specularTexture) ? "#define SHOW_SPECULAR 1\n" : "") +
+                ((this.showBumps && this._bumpTexture) ? "#define SHOW_BUMPS 1\n" : "") +
+                (this.showTerminator ? "#define SHOW_TERMINATOR 1\n" : "") +
+                "#line 0\n" +
+                CentralBodyFSCommon;
+            var groundFromSpacePrepend = "#define SHOW_GROUND_ATMOSPHERE 1\n" +
+                "#define SHOW_GROUND_ATMOSPHERE_FROM_SPACE 1\n";
+            var groundFromAtmospherePrepend = "#define SHOW_GROUND_ATMOSPHERE 1\n" +
+                "#define SHOW_GROUND_ATMOSPHERE_FROM_ATMOSPHERE 1\n";
+
             vs = "#line 0\n" +
+                 GroundAtmosphere +
                  CentralBodyVS;
 
-            fs = ((this.showDay && this._dayTileProvider) ? "#define SHOW_DAY 1\n" : "") +
-                 ((this.showNight && this._nightTexture) ? "#define SHOW_NIGHT 1\n" : "") +
-                 ((this.showClouds && this._cloudsTexture) ? "#define SHOW_CLOUDS 1\n" : "") +
-                 ((this.showCloudShadows && this._cloudsTexture) ? "#define SHOW_CLOUD_SHADOWS 1\n" : "") +
-                 ((this.showSpecular && this._specularTexture) ? "#define SHOW_SPECULAR 1\n" : "") +
-                 ((this.showBumps && this._bumpTexture) ? "#define SHOW_BUMPS 1\n" : "") +
-                 (this.showTerminator ? "#define SHOW_TERMINATOR 1\n" : "") +
-                 "#line 0\n" +
-                 CentralBodyFS;
+            fs = fsPrepend + CentralBodyFS;
 
             this._spWithoutAtmosphere = this._spWithoutAtmosphere && this._spWithoutAtmosphere.release();
             this._spGroundFromSpace = this._spGroundFromSpace && this._spGroundFromSpace.release();
@@ -1660,19 +1878,30 @@ define([
 
             this._spWithoutAtmosphere = context.getShaderCache().getShaderProgram(vs, fs, attributeIndices);
             this._spGroundFromSpace = context.getShaderCache().getShaderProgram(
-                    "#define SHOW_GROUND_ATMOSPHERE 1\n" +
-                    "#define SHOW_GROUND_ATMOSPHERE_FROM_SPACE 1\n" +
-                    vs,
-                    "#define SHOW_GROUND_ATMOSPHERE 1\n" +
-                    "#define SHOW_GROUND_ATMOSPHERE_FROM_SPACE 1\n" +
-                    fs, attributeIndices);
+                    groundFromSpacePrepend + vs,
+                    groundFromSpacePrepend + fs,
+                    attributeIndices);
             this._spGroundFromAtmosphere = context.getShaderCache().getShaderProgram(
-                    "#define SHOW_GROUND_ATMOSPHERE 1\n" +
-                    "#define SHOW_GROUND_ATMOSPHERE_FROM_ATMOSPHERE 1\n" +
+                    groundFromAtmospherePrepend + vs,
+                    groundFromAtmospherePrepend + fs,
+                    attributeIndices);
+
+            vs = CentralBodyVSPole;
+            fs = fsPrepend + GroundAtmosphere + CentralBodyFSPole;
+
+            this._spPolesWithoutAtmosphere = this._spPolesWithoutAtmosphere && this._spPolesWithoutAtmosphere.release();
+            this._spPolesGroundFromSpace = this._spPolesGroundFromSpace && this._spPolesGroundFromSpace.release();
+            this._spPolesGroundFromAtmosphere = this._spPolesGroundFromAtmosphere && this._spPolesGroundFromAtmosphere.release();
+
+            this._spPolesWithoutAtmosphere = context.getShaderCache().getShaderProgram(vs, fs, attributeIndices);
+            this._spPolesGroundFromSpace = context.getShaderCache().getShaderProgram(
                     vs,
-                    "#define SHOW_GROUND_ATMOSPHERE 1\n" +
-                    "#define SHOW_GROUND_ATMOSPHERE_FROM_ATMOSPHERE 1\n" +
-                    fs, attributeIndices);
+                    groundFromSpacePrepend + fs,
+                    attributeIndices);
+            this._spPolesGroundFromAtmosphere = context.getShaderCache().getShaderProgram(
+                    vs,
+                    groundFromAtmospherePrepend + fs,
+                    attributeIndices);
 
             // Sync to public state
             this._showDay = dayChanged ? this.showDay : this._showDay;
@@ -1694,14 +1923,22 @@ define([
         if (this._fCameraHeight > this._outerRadius) {
             // Viewer in space
             this._spSky = this._spSkyFromSpace;
-            this._sp = this.showGroundAtmosphere ? this._spGroundFromSpace : this._spWithoutAtmosphere;
+            if (this.showGroundAtmosphere) {
+                this._sp = this._spGroundFromSpace;
+                this._spPoles = this._spPolesGroundFromSpace;
+            } else {
+                this._sp = this._spWithoutAtmosphere;
+                this._spPoles = this._spPolesWithoutAtmosphere;
+            }
         } else {
             // after the camera passes the minimum height, there is no ground atmosphere effect
             var showAtmosphere = this._ellipsoid.toCartographic3(cameraPosition).height >= this._minGroundFromAtmosphereHeight;
             if (this.showGroundAtmosphere && showAtmosphere) {
                 this._sp = this._spGroundFromAtmosphere;
+                this._spPoles = this._spPolesGroundFromAtmosphere;
             } else {
                 this._sp = this._spWithoutAtmosphere;
+                this._spPoles = this._spPolesWithoutAtmosphere;
             }
             this._spSky = this._spSkyFromAtmosphere;
         }
@@ -1717,6 +1954,9 @@ define([
                 projection : projection
         };
 
+        // TODO: refactor
+        this._fillPoles(state);
+
         this._throttleImages(state);
         this._throttleReprojection(state);
         this._throttleTextures(state);
@@ -1730,7 +1970,7 @@ define([
             }
 
             if (!this._dayTileProvider || (tile.state === TileState.TEXTURE_LOADED && tile.texture && !tile.texture.isDestroyed())) {
-                if (tile.zoom + 1 > this._dayTileProvider.zoomMax || !this.refine(tile, state)) {
+                if ((this._dayTileProvider && tile.zoom + 1 > this._dayTileProvider.zoomMax) || !this.refine(tile, state)) {
                     this._enqueueTile(tile, state);
                 } else {
                     var children = tile.getChildren();
@@ -1835,6 +2075,28 @@ define([
             // render quad with horizontal gaussian blur
             this._quadH.render(context);
 
+            // render quads to fill the poles
+            if (this._mode === SceneMode.SCENE3D) {
+                if (this._drawNorthPole) {
+                    context.draw({
+                        primitiveType : PrimitiveType.TRIANGLE_FAN,
+                        shaderProgram : this._spPoles,
+                        uniformMap : this._northPoleUniforms,
+                        vertexArray : this._vaNorthPole,
+                        renderState : this._rsColor
+                    });
+                }
+                if (this._drawSouthPole) {
+                    context.draw({
+                        primitiveType : PrimitiveType.TRIANGLE_FAN,
+                        shaderProgram : this._spPoles,
+                        uniformMap : this._southPoleUniforms,
+                        vertexArray : this._vaSouthPole,
+                        renderState : this._rsColor
+                    });
+                }
+            }
+
             // render depth plane
             if (this._mode === SceneMode.SCENE3D) {
                 context.draw({
@@ -1845,7 +2107,7 @@ define([
                 });
             }
 
-            if (this._quadLogo && !this._quadLogo.isDestroyed()) {
+            if (typeof this._quadLogo !== 'undefined' && !this._quadLogo.isDestroyed()) {
                 this._quadLogo.render(context);
             }
         }
@@ -1942,6 +2204,13 @@ define([
         this._fb = this._fb && this._fb.destroy();
         this._quadV = this._quadV && this._quadV.destroy();
         this._quadH = this._quadH && this._quadH.destroy();
+
+        this._vaNorthPole = this._vaNorthPole && this._vaNorthPole.destroy();
+        this._vaSouthPole = this._vaSouthPole && this._vaSouthPole.destroy();
+
+        this._spPolesWithoutAtmosphere = this._spPolesWithoutAtmosphere && this._spPolesWithoutAtmosphere.release();
+        this._spPolesGroundFromSpace = this._spPolesGroundFromSpace && this._spPolesGroundFromSpace.release();
+        this._spPolesGroundFromAtmosphere = this._spPolesGroundFromAtmosphere && this._spPolesGroundFromAtmosphere.release();
 
         this._spWithoutAtmosphere = this._spWithoutAtmosphere && this._spWithoutAtmosphere.release();
         this._spGroundFromSpace = this._spGroundFromSpace && this._spGroundFromSpace.release();

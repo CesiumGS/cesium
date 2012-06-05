@@ -1,6 +1,8 @@
 /**
     @overview Builds a tree-like JSON string from the doclet data.
     @version 0.0.1
+    @example
+        ./jsdoc scratch/jsdoc_test.js -t templates/haruki -d console -q format=xml
  */
 
 (function() {
@@ -41,8 +43,6 @@
             return (element.memberof === parentLongname);
         })
         .forEach(function (element, i) {
-            //console.log((i+1)+': '+element.kind+' '+element.longname+' ('+element.name+')');
-            
             if (element.kind === 'namespace') {
                 if (! parentNode.namespaces) {
                     parentNode.namespaces = { };
@@ -81,14 +81,21 @@
                     'access': element.access || '',
                     'virtual': !!element.virtual,
                     'description': element.description || '',
-                    'parameters': [ ]
+                    'parameters': [ ],
+                    'examples': []
                 };
-                
+  
                 if (element.returns) {
                     parentNode.functions[element.name].returns = {
-                        'type': element.returns.type? (element.returns.type.names.length === 1? element.returns.type.names[0] : element.returns.type.names) : '',
-                        'description': element.returns.description || ''
+                        'type': element.returns[0].type? (element.returns[0].type.names.length === 1? element.returns[0].type.names[0] : element.returns[0].type.names) : '',
+                        'description': element.returns[0].description || ''
                     };
+                }
+                
+                if (element.examples) {
+                    for (var i = 0, len = element.examples.length; i < len; i++) {
+                        parentNode.functions[element.name].examples.push(element.examples[i]);
+                    }
                 }
                 
                 if (element.params) {
@@ -104,7 +111,7 @@
                     }
                 }
             }
-            else if (element.kind === 'property') {
+            else if (element.kind === 'member') {
                 if (! parentNode.properties) {
                     parentNode.properties = { };
                 }
@@ -127,8 +134,8 @@
                     'access': element.access || '',
                     'virtual': !!element.virtual,
                     'description': element.description || '',
-                    'parameters': [
-                    ]
+                    'parameters': [],
+                    'examples': []
                 };
                 
                 if (element.returns) {
@@ -136,6 +143,12 @@
                         'type': element.returns.type? (element.returns.type.names.length === 1? element.returns.type.names[0] : element.returns.type.names) : '',
                         'description': element.returns.description || ''
                     };
+                }
+                
+                if (element.examples) {
+                    for (var i = 0, len = element.examples.length; i < len; i++) {
+                        thisEvent.examples.push(element.examples[i]);
+                    }
                 }
                 
                 if (element.params) {
@@ -167,9 +180,16 @@
                         'name': element.name,
                         'description': element.description || '',
                         'parameters': [
-                        ]
+                        ],
+                        'examples': []
                     }
                 };
+                
+                if (element.examples) {
+                    for (var i = 0, len = element.examples.length; i < len; i++) {
+                        thisClass.constructor.examples.push(element.examples[i]);
+                    }
+                }
                 
                 if (element.params) {
                     for (var i = 0, len = element.params.length; i < len; i++) {

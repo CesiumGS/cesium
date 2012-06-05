@@ -12,7 +12,7 @@ require({
     var scene3D = new Cesium.Scene(document.getElementById("canvas3D"));
     var scene2D = new Cesium.Scene(document.getElementById("canvas2D"));
 
-    var bing = new Cesium.BingMapsTileProvider({
+    var bing3D = new Cesium.BingMapsTileProvider({
         server : "dev.virtualearth.net",
         mapStyle : Cesium.BingMapsStyle.AERIAL,
         // Some versions of Safari support WebGL, but don't correctly implement
@@ -20,10 +20,18 @@ require({
         proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
     });
 
-    function create(scene) {
+    var bing2D = new Cesium.BingMapsTileProvider({
+        server : "dev.virtualearth.net",
+        mapStyle : Cesium.BingMapsStyle.AERIAL,
+        // Some versions of Safari support WebGL, but don't correctly implement
+        // cross-origin image loading, so we need to load Bing imagery using a proxy.
+        proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
+    });
+
+    function create(scene, imagery) {
         var primitives = scene.getPrimitives();
         var cb = new Cesium.CentralBody(scene.getCamera(), ellipsoid);
-        cb.dayTileProvider = bing;
+        cb.dayTileProvider = imagery;
         cb.nightImageSource = "../../Images/land_ocean_ice_lights_2048.jpg";
         cb.specularMapSource = "../../Images/earthspec1k.jpg";
         cb.bumpMapSource = "../../Images/earthbump1k.jpg";
@@ -37,11 +45,11 @@ require({
         });
     }
 
-    create(scene3D);
+    create(scene3D, bing3D);
     scene3D.getCamera().getControllers().addSpindle();
     scene3D.getCamera().getControllers().addFreeLook();
 
-    create(scene2D);
+    create(scene2D, bing2D);
 
     var transitioner = new Cesium.SceneTransitioner(scene2D);
     transitioner.to2D();
@@ -52,7 +60,7 @@ require({
         Cesium.requestAnimationFrame(tick);
     }());
 
-    document.oncontextmenu = function() {
+    scene3D.getCanvas().oncontextmenu = scene2D.getCanvas().oncontextmenu = function() {
         return false;
     };
 });

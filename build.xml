@@ -234,7 +234,7 @@ for (var i = 0, len = filesets.size(); i < len; i++) {
   for (var j = 0, len2 = filenames.length; j < len2; j++) {
     var relativePath = filenames[j];
     var spec = relativePath.substring(0, relativePath.lastIndexOf('.')).replace('\\', '/');
-    specs.push("'" + spec + "'");
+    specs.push("'Specs/" + spec + "'");
   }
 }
 
@@ -372,6 +372,12 @@ if (oldContents !== contents) {
 			</classpath>
 		</taskdef>
 
+		<!--
+		 Other server options:
+		 upstreamProxyHost: a standard proxy server that the local server will use to retrieve data
+		 upstreamProxyPort: the port number of the upstream proxy, default 80
+		 noUpstreamProxyHostList: A comma-separated list of hosts that will not use the upstreamProxy
+		-->
 		<server proxyContextPath="/proxy" allowedHostList="server.arcgisonline.com,tile.openstreetmap.org,otile1.mqcdn.com,oatile1.mqcdn.com,tile.stamen.com,*.virtualearth.net" port="8080" baseDir="${basedir}" />
 	</target>
 </project>

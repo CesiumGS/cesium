@@ -970,6 +970,50 @@ defineSuite([
         expect(label._billboards[2]._pixelOffset.y).toBeGreaterThan(y2);
     });
 
+    it("pixelOffsets of billboards should should be correct when HorizontalOrigin is changed", function() {
+        var label = labels.add({
+            text : "apl"
+        });
+        var x0 = label._billboards[0]._pixelOffset.x;
+        label.setHorizontalOrigin(HorizontalOrigin.CENTER);
+        var centerX0 = label._billboards[0]._pixelOffset.x,
+            centerX1 = label._billboards[1]._pixelOffset.x,
+            centerX2 = label._billboards[2]._pixelOffset.x;
+        expect(centerX0).toBeLessThan(x0);
+        expect(centerX1).toBeGreaterThan(centerX0);
+        expect(centerX2).toBeGreaterThan(centerX1);
+
+        label.setHorizontalOrigin(HorizontalOrigin.RIGHT);
+        expect(label._billboards[0]._pixelOffset.x).toBeLessThan(centerX0);
+        expect(label._billboards[1]._pixelOffset.x).toBeLessThan(centerX1);
+        expect(label._billboards[2]._pixelOffset.x).toBeLessThan(centerX2);
+    });
+
+    it("pixelOffsets of billboards should should be correct when HorizontalOrigin and scale are changed", function() {
+        var label = labels.add({
+            text : "apl"
+        });
+        var x0 = label._billboards[0]._pixelOffset.x;
+        var x1 = label._billboards[1]._pixelOffset.x;
+        var x2 = label._billboards[2]._pixelOffset.x;
+
+        label.setScale(2);
+        expect(label._billboards[0]._pixelOffset.x).toEqual(x0);
+        expect(label._billboards[1]._pixelOffset.x).toBeGreaterThan(x1);
+        expect(label._billboards[2]._pixelOffset.x).toBeGreaterThan(x2);
+        label.setHorizontalOrigin(HorizontalOrigin.CENTER);
+        var centerX0 = label._billboards[0]._pixelOffset.x,
+            centerX1 = label._billboards[1]._pixelOffset.x,
+            centerX2 = label._billboards[2]._pixelOffset.x;
+        expect(centerX0).toBeLessThan(x0);
+        expect(centerX1).toBeGreaterThan(centerX0);
+        expect(centerX2).toBeGreaterThan(centerX1);
+        label.setHorizontalOrigin(HorizontalOrigin.RIGHT);
+        expect(label._billboards[0]._pixelOffset.x).toBeLessThan(centerX0);
+        expect(label._billboards[1]._pixelOffset.x).toBeLessThan(centerX1);
+        expect(label._billboards[2]._pixelOffset.x).toBeLessThan(centerX2);
+    });
+
     it("pixelOffsets of billboards should should be correct when verticalOrigin, scale and pixelOffset are changed", function() {
         var label = labels.add({
             text : "apl"

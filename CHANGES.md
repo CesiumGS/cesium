@@ -7,8 +7,9 @@ Beta Releases
 ### b6 - TBA
 
 * Breaking changes:
-    * Changed Tipsify.tipsify and Tipsify.calculateACMR to accept an object literal instead of three separate arguments. Supplying a maximum index and cache size is now optional.
-* TBA
+    * Changed `Tipsify.tipsify` and `Tipsify.calculateACMR` to accept an object literal instead of three separate arguments. Supplying a maximum index and cache size is now optional.
+* Added `CentralBody.northPoleColor` and `CentralBody.southPoleColor` to fill in the poles if they are not covered by a texture.
+* Added `Polygon.configureExtent` to create a polygon defined by west, south, east, and north values.
 
 ### b5 - 05/15/2012
 
@@ -84,7 +85,7 @@ Beta Releases
         * `Ellipsoid.getUnitSphere()` -> `Ellipsoid.UNIT_SPHERE`
         * `Cartesian2/3/4/Cartographic.getZero()` -> `Cartesian2/3/4/Cartographic.ZERO`
 
-* Added PerformanceDisplay which can be added to a scene to display frames per second (FPS).
+* Added `PerformanceDisplay` which can be added to a scene to display frames per second (FPS).
 * Labels now correctly allow specifying fonts by non-pixel CSS units such as points, ems, etc.
 * Added `Shapes.computeEllipseBoundary` and updated `Shapes.computeCircleBoundary` to compute boundaries using arc-distance.
 * Added `fileExtension` and `credit` properties to `OpenStreetMapTileProvider` construction.

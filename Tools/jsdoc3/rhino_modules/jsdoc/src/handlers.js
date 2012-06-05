@@ -11,33 +11,33 @@ var currentModule = null;
  */
 exports.attachTo = function(parser) {
     var jsdoc = {doclet: require('jsdoc/doclet'), name: require('jsdoc/name')};
-    
+
     // handles JSDoc comments that include a @name tag -- the code is ignored in such a case
     parser.on('jsdocCommentFound', function(e) {
         var newDoclet = new jsdoc.doclet.Doclet(e.comment, e);
-        
+
         if (!newDoclet.name) {
             return false; // only interested in virtual comments (with a @name) here
         }
-        
+
         addDoclet.call(this, newDoclet);
         if (newDoclet.kind === 'module') {
             currentModule = newDoclet.longname;
         }
         e.doclet = newDoclet;
-        
+
         resolveProperties(newDoclet);
     });
-    
+
     // handles named symbols in the code, may or may not have a JSDoc comment attached
     parser.on('symbolFound', function(e) {
         var subDoclets = e.comment.split(/@also\b/g);
-        
+
         for (var i = 0, l = subDoclets.length; i < l; i++) {
             newSymbolDoclet.call(this, subDoclets[i], e);
         }
     });
-    
+
     function newSymbolDoclet(docletSrc, e) {
         var newDoclet = new jsdoc.doclet.Doclet(docletSrc, e);
 
@@ -47,11 +47,11 @@ exports.attachTo = function(parser) {
             e.comment = '@undocumented';
             newDoclet = new jsdoc.doclet.Doclet(e.comment, e);
         }
-        
+
         if (newDoclet.alias) {
             if (newDoclet.alias === '{@thisClass}') {
                 memberofName = this.resolveThis(e.astnode);
-                
+
                 // "class" refers to the owner of the prototype, not the prototype itself
                 if ( /^(.+?)(\.prototype|#)$/.test(memberofName) ) {
                     memberofName = RegExp.$1;
@@ -69,7 +69,7 @@ exports.attachTo = function(parser) {
                     scope = '';
                 if ( /^((module.)?exports|this)(\.|$)/.test(newDoclet.name) ) {
                     var nameStartsWith = RegExp.$1;
-                    
+
                     newDoclet.name = newDoclet.name.replace(/^(exports|this)(\.|$)/, '');
 
                     // like /** @module foo */ exports.bar = 1;
@@ -86,14 +86,14 @@ exports.attachTo = function(parser) {
                         // or /** blah */ this.foo = 1;
                         memberofName = this.resolveThis(e.astnode);
                         scope = nameStartsWith === 'exports'? 'static' : 'instance';
-                        
+
                         // like /** @module foo */ this.bar = 1;
                         if (nameStartsWith === 'this' && currentModule && !memberofName) {
                             memberofName = currentModule;
                             scope = 'static';
                         }
                     }
-                    
+
                     if (memberofName) {
                         if (newDoclet.name) {
                             newDoclet.name = memberofName + (scope === 'instance'? '#' : '.') + newDoclet.name;
@@ -108,8 +108,8 @@ exports.attachTo = function(parser) {
                         memberofName = memberofName[0];
                     }
                 }
-                
-                if (memberofName) { 
+
+                if (memberofName) {
                     newDoclet.addTag( 'memberof', memberofName);
                     if (basename) {
                         newDoclet.name = newDoclet.name.replace(new RegExp('^' + RegExp.escape(basename) + '.'), '');
@@ -117,30 +117,30 @@ exports.attachTo = function(parser) {
                 }
                 else {
                     if (currentModule) {
-                        if (!newDoclet.scope) newDoclet.addTag( 'inner');
-                        if (!newDoclet.memberof && newDoclet.scope !== 'global') newDoclet.addTag( 'memberof', currentModule);
+                        if (!newDoclet.scope){newDoclet.addTag( 'inner');}
+                        if (!newDoclet.memberof && newDoclet.scope !== 'global'){newDoclet.addTag( 'memberof', currentModule);}
                     }
                 }
             }
-            
+
             newDoclet.postProcess();
         }
         else {
             return false;
         }
-        
+
         resolveProperties(newDoclet);
-        
+
         if (!newDoclet.memberof) {
             newDoclet.scope = 'global';
         }
-        
+
         addDoclet.call(this, newDoclet);
         e.doclet = newDoclet;
     }
-    
+
     //parser.on('fileBegin', function(e) { });
-    
+
     parser.on('fileComplete', function(e) {
         currentModule = null;
     });
@@ -149,7 +149,7 @@ exports.attachTo = function(parser) {
         if (newDoclet) {
             e = { doclet: newDoclet };
             this.fire('newDoclet', e);
-            
+
             if (!e.defaultPrevented) {
                 if ( !filter(newDoclet) ) {
                     this.addResult(newDoclet);
@@ -157,27 +157,31 @@ exports.attachTo = function(parser) {
             }
         }
     }
-    
+
     function filter(doclet) {
         // you can't document prototypes
-        if ( /#$/.test(doclet.longname) ) return true;
+        if ( /#$/.test(doclet.longname) ) {
+            return true;
+        }
         // you can't document symbols added by the parser with a dummy name
-        if (doclet.meta.code && doclet.meta.code.name === '____') return true;
-        
+        if (doclet.meta.code && doclet.meta.code.name === '____') {
+            return true;
+        }
+
         return false;
     }
-    
+
     function resolveProperties(newDoclet) {
         // find name and description from each property tag text
         if (newDoclet.properties) {
             for (var i = 0, len = newDoclet.properties.length; i < len; i++) {
                 var property = newDoclet.properties[i];
-                
+
                 var parts = jsdoc.name.splitName(property.description);
                 property.name = parts.name;
                 property.description = parts.description;
             }
         }
     }
-}
+};
 

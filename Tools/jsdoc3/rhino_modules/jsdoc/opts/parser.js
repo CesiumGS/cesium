@@ -27,9 +27,13 @@ argParser.addOption('X', 'explain',     false, 'Dump all found doclet internals 
 argParser.addOption('q', 'query',       true,  'Provide a querystring to define custom variable names/values to add to the options hash.');
 argParser.addOption('u', 'tutorials',   true,  'Directory in which JSDoc should search for tutorials.');
 
+//TODO [-R, recurseonly] = a number representing the depth to recurse
+//TODO [-f, filter] = a regex to filter on <-- this can be better defined in the configs?
 
-// TODO [-R, recurseonly] = a number representing the depth to recurse
-// TODO [-f, filter] = a regex to filter on <-- this can be better defined in the configs?
+//Here are options specific to tests
+argParser.addOption(null, 'verbose',    false, 'Display verbose output for tests');
+argParser.addOption(null, 'match',      true,  'only run tests containing <value>', true);
+argParser.addOption(null, 'coffee',     false,  'load coffee-script which allows execution .coffee files');
 
 /**
 	Set the options for this app.
@@ -38,13 +42,13 @@ argParser.addOption('u', 'tutorials',   true,  'Directory in which JSDoc should 
  */
 exports.parse = function(args) {
 	args = args || [];
-	
+
 	if (typeof args === 'string' || args.constructor === String) {
 		args = (''+args).split(/\s+/g);
 	}
-	
+
 	ourOptions = argParser.parse(args, defaults);
-	
+
 	return ourOptions;
 }
 
