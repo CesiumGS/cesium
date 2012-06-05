@@ -30,8 +30,9 @@ defineSuite([
     var frustum;
     var moverate;
     var zoomrate;
-    var controller;
     var ellipsoid;
+    var controller;
+    var controller2;
 
     beforeEach(function() {
         ellipsoid = Ellipsoid.WGS84;
@@ -64,6 +65,7 @@ defineSuite([
 
     afterEach(function() {
         controller = controller && !controller.isDestroyed() && controller.destroy();
+        controller2 = controller2 && !controller2.isDestroyed() && controller2.destroy();
     });
 
     it("setReferenceFrame", function() {
@@ -138,9 +140,9 @@ defineSuite([
     it("zoomIn throws with null OrthogrphicFrustum properties", function() {
         var camera = new Camera(document);
         camera.frustum = new OrthographicFrustum();
-        var c2dc = new Camera2DController(document, camera, ellipsoid);
+        controller2 = new Camera2DController(document, camera, ellipsoid);
         expect(function () {
-            c2dc.zoomIn(moverate);
+            controller2.zoomIn(moverate);
         }).toThrow();
     });
 
