@@ -32,8 +32,6 @@ define([
          * <code>true</code> if this sensor will be shown; otherwise, <code>false</code>
          *
          * @type Boolean
-         *
-         * @see RectangularPyramidSensorVolume#showIntersection
          */
         this.show = (typeof t.show === "undefined") ? true : t.show;
 
@@ -41,10 +39,21 @@ define([
          * DOC_TBA
          *
          * @type Boolean
-         *
-         * @see RectangularPyramidSensorVolume#show
          */
         this.showIntersection = (typeof t.showIntersection === "undefined") ? true : t.showIntersection;
+
+        /**
+         * <p>
+         * Determines if a sensor intersecting the ellipsoid is drawn through the ellipsoid and potentially out
+         * to the other side, or if the part of the sensor intersecting the ellipsoid stops at the ellipsoid.
+         * </p>
+         * <p>
+         * The default is <code>false</code>, meaning the sensor will not go through the ellipsoid.
+         * </p>
+         *
+         * @type Boolean
+         */
+        this.showThroughEllipsoid = (typeof t.showThroughEllipsoid === "undefined") ? false : t.showThroughEllipsoid;
 
         /**
          * The 4x4 transformation matrix that transforms this sensor from model to world coordinates.  In it's model
@@ -147,6 +156,7 @@ define([
 
         s.show = this.show;
         s.showIntersection = this.showIntersection;
+        s.showThroughEllipsoid = this.showThroughEllipsoid;
         s.modelMatrix = this.modelMatrix;
         s.bufferUsage = this.bufferUsage;
         s.radius = this.radius;
