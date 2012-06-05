@@ -21,12 +21,18 @@
 
     console.originalError = console.error;
     console.error = function (d1) {
+        // TODO: Look for d1.stack, "bucket.html:line:char"
         console.originalError.apply(console, arguments);
         window.parent.postMessage({ 'error': d1.toString() }, "*");
     };
 
-    window.onerror = function (error) {
-        console.error(error);
+    window.onerror = function (errorMsg, url, lineNumber) {
+        if (typeof lineNumber !== 'undefined') {
+            errorMsg += ' (on line ' + lineNumber + ')';
+        }
+        window.parent.postMessage({ 'error': errorMsg, 'url': url, 'lineNumber': lineNumber }, "*");
+        console.originalError.apply(console, [ errorMsg ]);
+        return false;
     }
     </script>
 </body>

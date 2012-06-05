@@ -103,6 +103,7 @@ require({
     //are actually used, instead of requiring the Cesium module, which
     //includes everything.
 
+/*
     var cesiumWidget = new CesiumWidget({
         postSetup : function(widget) {
             ///////////////////////////////////////////////////////////////////////////
@@ -140,9 +141,11 @@ require({
     on(window, 'resize', function() {
         cesiumWidget.resize();
     });
+*/
 
-/*
-    var canvas = document.getElementById("glCanvas");
+    var canvas = document.createElement('canvas');
+    canvas.className = "fullSize";
+    document.getElementById('cesiumContainer').appendChild(canvas);
     var ellipsoid = Cesium.Ellipsoid.WGS84; // Used in many Sandbox examples
     var scene = new Cesium.Scene(canvas);
     var primitives = scene.getPrimitives();
@@ -260,7 +263,7 @@ require({
         scene.getCamera().frustum.aspectRatio = width / height;
     };
     window.onresize();
-*/
+
     console.log('Cesium started.');
 });
 </textarea>
@@ -279,7 +282,7 @@ body {
     height: 100%;
     overflow: hidden;
 }
-#cesiumContainer {
+.fullSize {
     display: block;
     position: absolute;
     top: 0;
@@ -298,7 +301,7 @@ body {
 }
 &lt;/style&gt;
 
-&lt;div id="cesiumContainer"&gt;&lt;/div&gt;
+&lt;div id="cesiumContainer" class="fullSize"&gt;&lt;/div&gt;
 &lt;div id="toolbar"&gt;Loading, please wait...&lt;/div&gt;
 </textarea>
             </div>
