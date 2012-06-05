@@ -1,9 +1,12 @@
 /*global define*/
-define(['./DynamicProperty',
+define([
+        '../Core/DeveloperError',
+        './DynamicProperty',
         './DynamicPositionProperty',
         './DynamicVertexPositionsProperty',
         './CzmlQuaternion'
     ], function(
+        DeveloperError,
         DynamicProperty,
         DynamicPositionProperty,
         DynamicVertexPositionsProperty,
@@ -11,21 +14,25 @@ define(['./DynamicProperty',
     "use strict";
 
     function DynamicObject(id) {
-        //TODO Throw developer error on undefined id?
+        if (typeof id === 'undefined' || id === null) {
+            throw new DeveloperError("id is required");
+        }
+
         this.id = id;
 
-        //Add all standard CZML properties, even though they won't all be used,
-        //having the superset here will allow the compiler to better optimize this class.
+        //Add standard CZML properties.  Even though they won't all be used
+        //for each object, having the superset directly will allow the compiler
+        //to greatly optimize this class.  Any changes to this list should
+        //coincide with changes to CzmlStandard.updaters
         this.billboard = undefined;
         this.cone = undefined;
-        this.directions = undefined;
         this.label = undefined;
-        this.orientation = undefined;
         this.point = undefined;
         this.polygon = undefined;
         this.polyline = undefined;
-        this.position = undefined;
         this.pyramid = undefined;
+        this.position = undefined;
+        this.orientation = undefined;
         this.vertexPositions = undefined;
     }
 

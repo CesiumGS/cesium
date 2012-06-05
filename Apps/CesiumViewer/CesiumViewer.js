@@ -16,23 +16,8 @@ define(['dojo/dom',
         'Core/Transforms',
         'Scene/SceneTransitioner',
         'Scene/BingMapsStyle',
-        'DynamicScene/DynamicBillboard',
-        'DynamicScene/DynamicCone',
-        'DynamicScene/DynamicLabel',
-        'DynamicScene/DynamicObject',
-        'DynamicScene/DynamicPoint',
-        'DynamicScene/DynamicPolygon',
-        'DynamicScene/DynamicPolyline',
-        'DynamicScene/DynamicPyramid',
-        'DynamicScene/DynamicObjectCollection',
-        'DynamicScene/DynamicBillboardVisualizer',
-        'DynamicScene/DynamicConeVisualizer',
-        'DynamicScene/DynamicLabelVisualizer',
-        'DynamicScene/DynamicPointVisualizer',
-        'DynamicScene/DynamicPolygonVisualizer',
-        'DynamicScene/DynamicPolylineVisualizer',
-        'DynamicScene/DynamicPyramidVisualizer',
-        'DynamicScene/VisualizerCollection'],
+        'DynamicScene/CzmlStandard',
+        'DynamicScene/DynamicObjectCollection'],
 function(dom,
          on,
          event,
@@ -50,23 +35,8 @@ function(dom,
          Transforms,
          SceneTransitioner,
          BingMapsStyle,
-         DynamicBillboard,
-         DynamicCone,
-         DynamicLabel,
-         DynamicObject,
-         DynamicPoint,
-         DynamicPolygon,
-         DynamicPolyline,
-         DynamicPyramid,
-         DynamicObjectCollection,
-         DynamicBillboardVisualizer,
-         DynamicConeVisualizer,
-         DynamicLabelVisualizer,
-         DynamicPointVisualizer,
-         DynamicPolygonVisualizer,
-         DynamicPolylineVisualizer,
-         DynamicPyramidVisualizer,
-         VisualizerCollection) {
+         CzmlStandard,
+         DynamicObjectCollection) {
     "use strict";
     /*global console*/
 
@@ -75,18 +45,7 @@ function(dom,
     var timeline;
     var transitioner;
 
-    var czmlObjectCollection = new DynamicObjectCollection({
-        billboard : DynamicBillboard.processCzmlPacket,
-        cone : DynamicCone.processCzmlPacket,
-        label : DynamicLabel.processCzmlPacket,
-        orientation : DynamicObject.processCzmlPacketOrientation,
-        point : DynamicPoint.processCzmlPacket,
-        polygon : DynamicPolygon.processCzmlPacket,
-        polyline : DynamicPolyline.processCzmlPacket,
-        position : DynamicObject.processCzmlPacketPosition,
-        pyramid : DynamicPyramid.processCzmlPacket,
-        vertexPositions : DynamicObject.processCzmlPacketVertexPositions
-    });
+    var dynamicObjectCollection = new DynamicObjectCollection();
 
     var animating = true;
     var speedIndicatorElement;
@@ -97,9 +56,9 @@ function(dom,
 
     //This function is a total HACK and only temporary.
     function setTimeFromBuffer() {
-        var czmlObjects = czmlObjectCollection.getObjects();
-        for ( var i = 0, len = czmlObjects.length; i < len; i++) {
-            var object = czmlObjects[i];
+        var dynamicObjects = dynamicObjectCollection.getObjects();
+        for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
+            var object = dynamicObjects[i];
             if (typeof object.position !== 'undefined') {
                 var intervals = object.position._propertyIntervals;
                 if (typeof intervals !== 'undefined' && intervals._intervals[0].data._intervals._intervals[0].data.isSampled) {
@@ -124,8 +83,8 @@ function(dom,
         var f = files[0];
         var reader = new FileReader();
         reader.onload = function(evt) {
-            czmlObjectCollection.clear();
-            czmlObjectCollection.processCzml(JSON.parse(evt.target.result), f.name);
+            dynamicObjectCollection.clear();
+            dynamicObjectCollection.processCzml(JSON.parse(evt.target.result), f.name);
             setTimeFromBuffer();
         };
         reader.readAsText(f);
@@ -161,9 +120,9 @@ function(dom,
 
             // Update the camera to stay centered on the selected object, if any.
             if (cameraCenteredObjectID) {
-                var czmlObject = czmlObjectCollection.getObject(cameraCenteredObjectID);
-                if (czmlObject && czmlObject.position) {
-                    var position = czmlObject.position.getValueCartesian(currentTime);
+                var dynamicObject = dynamicObjectCollection.getObject(cameraCenteredObjectID);
+                if (dynamicObject && dynamicObject.position) {
+                    var position = dynamicObject.position.getValueCartesian(currentTime);
                     if (typeof position !== 'undefined') {
                         // If we're centering on an object for the first time, zoom to within 2km of it.
                         if (lastCameraCenteredObjectID !== cameraCenteredObjectID) {
@@ -183,9 +142,7 @@ function(dom,
             var scene = widget.scene;
 
             transitioner = new SceneTransitioner(scene);
-
-            visualizers = new VisualizerCollection([new DynamicBillboardVisualizer(scene), new DynamicConeVisualizer(scene), new DynamicLabelVisualizer(scene), new DynamicPointVisualizer(scene),
-                    new DynamicPolygonVisualizer(scene), new DynamicPolylineVisualizer(scene), new DynamicPyramidVisualizer(scene)], czmlObjectCollection);
+            visualizers = CzmlStandard.createVisualizers(scene, dynamicObjectCollection);
             widget.enableStatistics(true);
 
             var queryObject = {};
@@ -194,8 +151,8 @@ function(dom,
             }
 
             if (typeof queryObject.source !== 'undefined') {
-                czmlObjectCollection.clear();
-                loadCzmlFromUrl(czmlObjectCollection, queryObject.source, setTimeFromBuffer);
+                dynamicObjectCollection.clear();
+                loadCzmlFromUrl(dynamicObjectCollection, queryObject.source, setTimeFromBuffer);
             }
 
             var timelineWidget = registry.byId('mainTimeline');

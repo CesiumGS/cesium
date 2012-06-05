@@ -3,20 +3,22 @@ define([
         '../Core/Event',
         '../Core/DeveloperError',
         './DynamicObject',
-        './DynamicObjectCollection'
+        './DynamicObjectCollection',
+        './CzmlStandard'
     ], function(
         Event,
         DeveloperError,
         DynamicObject,
-        DynamicObjectCollection) {
+        DynamicObjectCollection,
+        CzmlStandard) {
     "use strict";
 
-    function CompositeDynamicObjectCollection(mergeFunctions, undefinedFunctions, collections) {
+    function CompositeDynamicObjectCollection(collections, mergeFunctions, undefinedFunctions) {
         this._hash = {};
         this._array = [];
         this._collections = [];
-        this._mergeFunctions = mergeFunctions;
-        this._undefinedFunctions = undefinedFunctions;
+        this._mergeFunctions = mergeFunctions || CzmlStandard.mergers;
+        this._undefinedFunctions = undefinedFunctions || CzmlStandard.cleaners;
         this.objectsUpdated = new Event();
         this.objectsRemoved = new Event();
 

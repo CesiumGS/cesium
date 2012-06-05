@@ -2,18 +2,20 @@
 define([
         '../Core/Event',
         '../Core/createGuid',
-        './DynamicObject'
-    ], function(
+        './DynamicObject',
+        './CzmlStandard'
+       ], function(
         Event,
         createGuid,
-        DynamicObject) {
+        DynamicObject,
+        CzmlStandard) {
     "use strict";
 
-    function DynamicObjectCollection(propertyFunctionsMap) {
-        this.parent = undefined;
-        this._propertyFunctionsMap = propertyFunctionsMap;
+    function DynamicObjectCollection(updaterFunctions) {
+        this._updaterFunctions = updaterFunctions || CzmlStandard.updaters;
         this._hash = {};
         this._array = [];
+        this.parent = undefined;
 
         this.objectsUpdated = new Event();
         this.objectsRemoved = new Event();
@@ -48,13 +50,14 @@ define([
 
     DynamicObjectCollection.prototype.processCzml = function(packets, sourceUri) {
         var updatedObjects = [];
+        var updatedObjectsHash = {};
 
         if (Array.isArray(packets)) {
             for ( var i = 0, len = packets.length; i < len; i++) {
-                this._processCzmlPacket(packets[i], sourceUri, updatedObjects);
+                this._processCzmlPacket(packets[i], sourceUri, updatedObjects, updatedObjectsHash);
             }
         } else {
-            this._processCzmlPacket(packets, sourceUri, updatedObjects);
+            this._processCzmlPacket(packets, sourceUri, updatedObjects, updatedObjectsHash);
         }
 
         if (updatedObjects.length > 0) {
@@ -64,22 +67,18 @@ define([
         return updatedObjects;
     };
 
-    DynamicObjectCollection.prototype._processCzmlPacket = function(packet, sourceUri, updatedObjects) {
+    DynamicObjectCollection.prototype._processCzmlPacket = function(packet, sourceUri, updatedObjects, updatedObjectsHash) {
         var objectId = packet.id;
-        var thisPropertyFunctionsMap = this._propertyFunctionsMap;
+        var thisUpdaterFunctions = this._updaterFunctions;
         if (typeof objectId === 'undefined') {
             objectId = createGuid();
         }
 
         var object = this.getOrCreateObject(objectId);
-        for ( var prop in packet) {
-            if (typeof prop !== 'undefined') {
-                var propertyFunc = thisPropertyFunctionsMap[prop];
-                if (typeof propertyFunc !== 'undefined' &&
-                    propertyFunc(object, packet, this, sourceUri) &&
-                    updatedObjects.indexOf(object) === -1) {
-                    updatedObjects.push(object);
-                }
+        for ( var i = thisUpdaterFunctions.length - 1; i > -1; i--) {
+            if (thisUpdaterFunctions[i](object, packet, this, sourceUri) && typeof updatedObjectsHash[objectId] === 'undefined') {
+                updatedObjectsHash[objectId] = true;
+                updatedObjects.push(object);
             }
         }
 
