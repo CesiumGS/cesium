@@ -22,8 +22,8 @@ define([
     "use strict";
     /*global expect*/
 
-    function renderMaterial(material) {
-        var context = createContext();
+    //createContext and destroyContext happen in the spec file.
+    function renderMaterial(material, context) {
         var polygon = new Polygon();
         var camera = {
             eye : new Cartesian3(1.02, 0.0, 0.0),
@@ -53,8 +53,6 @@ define([
         var pixel = context.readPixels();
 
         polygon = polygon && polygon.destroy();
-        destroyContext(context);
-
         return pixel;
     }
 
