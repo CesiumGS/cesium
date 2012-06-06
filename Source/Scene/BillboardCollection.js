@@ -142,6 +142,14 @@ define([
         this.modelMatrix = Matrix4.IDENTITY;
         this._modelMatrix = Matrix4.IDENTITY;
 
+        /**
+         * The current morph transition time between 2D/Columbus View and 3D,
+         * with 0.0 being 2D or Columbus View and 1.0 being 3D.
+         *
+         * @type Number
+         */
+        this.morphTime = 0.0;
+
         this._mode = SceneMode.SCENE3D;
         this._projection = undefined;
 
@@ -879,11 +887,10 @@ define([
                 var p = b.getPosition();
                 var projectedPoint = projection.project(projection.getEllipsoid().toCartographic3(p));
 
-                var morphTime = sceneState.morphTime;
                 b._setActualPosition({
-                    x : CesiumMath.lerp(projectedPoint.z, p.x, morphTime),
-                    y : CesiumMath.lerp(projectedPoint.x, p.y, morphTime),
-                    z : CesiumMath.lerp(projectedPoint.y, p.z, morphTime)
+                    x : CesiumMath.lerp(projectedPoint.z, p.x, this.morphTime),
+                    y : CesiumMath.lerp(projectedPoint.x, p.y, this.morphTime),
+                    z : CesiumMath.lerp(projectedPoint.y, p.z, this.morphTime)
                 });
             }
         } else if (mode === SceneMode.SCENE2D) {

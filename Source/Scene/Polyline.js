@@ -281,8 +281,15 @@ define([
         this._rsThree = undefined;
         this._rsPick = undefined;
 
+        /**
+         * The current morph transition time between 2D/Columbus View and 3D,
+         * with 0.0 being 2D or Columbus View and 1.0 being 3D.
+         *
+         * @type Number
+         */
+        this.morphTime = 0.0;
+
         this._mode = SceneMode.SCENE3D;
-        this._morphTime = 0.0;
         this._projection = undefined;
 
         var that = this;
@@ -292,7 +299,7 @@ define([
                 return that.color; // Doesn't matter; doesn't write color
             },
             u_morphTime : function() {
-                return that._morphTime;
+                return that.morphTime;
             }
         };
         var drawUniformsTwo = {
@@ -300,7 +307,7 @@ define([
                 return that.color;
             },
             u_morphTime : function() {
-                return that._morphTime;
+                return that.morphTime;
             }
         };
         var drawUniformsThree = {
@@ -308,7 +315,7 @@ define([
                 return that.outlineColor;
             },
             u_morphTime : function() {
-                return that._morphTime;
+                return that.morphTime;
             }
         };
         var pickUniforms = {
@@ -316,7 +323,7 @@ define([
                 return that._pickId.normalizedRgba;
             },
             u_morphTime : function() {
-                return that._morphTime;
+                return that.morphTime;
             }
         };
 
@@ -737,7 +744,6 @@ define([
 
             var mode = sceneState.mode;
             var projection = sceneState.scene2D.projection;
-            this._morphTime = sceneState.morphTime;
 
             if (this.columbusView.groundTrack.show || (mode === SceneMode.SCENE2D)) {
                 this._spGroundTrack =
@@ -766,7 +772,7 @@ define([
             var outlineWidth = this._clampWidth(context, this.outlineWidth);
 
             // Enable depth testing during and after a morph.
-            var useDepthTest = (this._morphTime !== 0.0);
+            var useDepthTest = (this.morphTime !== 0.0);
 
             var rsOne = this._rsOne;
             rsOne.lineWidth = outlineWidth;
@@ -920,7 +926,7 @@ define([
 
             var outlineWidth = this._clampWidth(context, this.outlineWidth);
             // Enable depth testing during and after a morph.
-            var useDepthTest = (this._morphTime !== 0.0);
+            var useDepthTest = (this.morphTime !== 0.0);
 
             var rs = this._rsPick;
             rs.lineWidth = outlineWidth;

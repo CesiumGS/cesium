@@ -614,8 +614,15 @@ define([
          */
         this.nightIntensity = 2.0;
 
+        /**
+         * The current morph transition time between 2D/Columbus View and 3D,
+         * with 0.0 being 2D or Columbus View and 1.0 being 3D.
+         *
+         * @type Number
+         */
+        this.morphTime = 1.0;
+
         this._mode = SceneMode.SCENE3D;
-        this._morphTime = 1.0;
         this._projection = undefined;
 
         this._fCameraHeight = undefined;
@@ -728,7 +735,7 @@ define([
                 return that.nightIntensity;
             },
             u_morphTime : function() {
-                return that._morphTime;
+                return that.morphTime;
             }
         };
 
@@ -823,7 +830,7 @@ define([
             boundingVolume.center = new Cartesian3(0.0, boundingVolume.center.x, boundingVolume.center.y);
             return boundingVolume;
         } else {
-            return tile.computeMorphBounds(this._morphTime, sceneState.scene2D.projection);
+            return tile.computeMorphBounds(this.morphTime, sceneState.scene2D.projection);
         }
     };
 
@@ -1474,7 +1481,6 @@ define([
 
         var mode = sceneState.mode;
         var projection = sceneState.scene2D.projection;
-        this._morphTime = sceneState.morphTime;
 
         if (this._dayTileProvider !== this.dayTileProvider) {
             this._dayTileProvider = this.dayTileProvider;
@@ -1994,10 +2000,10 @@ define([
                 var tile = this._renderQueue.dequeue();
 
                 var rtc;
-                if (this._morphTime === 1.0) {
+                if (this.morphTime === 1.0) {
                     rtc = tile._drawUniforms.u_center3D();
                     tile.mode = 0;
-                } else if (this._morphTime === 0.0) {
+                } else if (this.morphTime === 0.0) {
                     var center = tile._drawUniforms.u_center2D();
                     rtc = new Cartesian3(0.0, center.x, center.y);
                     tile.mode = 1;

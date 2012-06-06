@@ -69,7 +69,10 @@ define([
         };
 
         /**
-         * The current morph time between 2D and 3D, with 0.0 being 2D and 1.0 being 3D.
+         * The current morph transition time between 2D/Columbus View and 3D,
+         * with 0.0 being 2D or Columbus View and 1.0 being 3D.
+         *
+         * @type Number
          */
         this.morphTime = 1.0;
     }
@@ -181,7 +184,6 @@ define([
         sceneState.mode = this.mode;
         sceneState.scene2D = this.scene2D;
         sceneState.camera = camera;
-        sceneState.morphTime = this.morphTime;
 
         this._primitives.update(this._context, sceneState);
     };

@@ -134,6 +134,14 @@ define([
         this.modelMatrix = Matrix4.IDENTITY;
 
         /**
+         * The current morph transition time between 2D/Columbus View and 3D,
+         * with 0.0 being 2D or Columbus View and 1.0 being 3D.
+         *
+         * @type Number
+         */
+        this.morphTime = 0.0;
+
+        /**
          * The usage hint for the collection's vertex buffer.
          *
          * @performance If <code>bufferUsage</code> changes, the next time
@@ -394,6 +402,7 @@ define([
      */
     LabelCollection.prototype.update = function(context, sceneState) {
         this._billboardCollection.modelMatrix = this.modelMatrix;
+        this._billboardCollection.morphTime = this.morphTime;
         this._billboardCollection.bufferUsage = this.bufferUsage;
         this._removeLabels();
 

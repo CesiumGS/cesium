@@ -28,11 +28,6 @@ define([], function() {
          * The current camera.
          */
         this.camera = undefined;
-
-        /**
-         * The current morph time between 2D and 3D, with 0.0 being 2D and 1.0 being 3D.
-         */
-        this.morphTime = 0.0;
     }
 
     return SceneState;

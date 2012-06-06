@@ -230,8 +230,15 @@ define([
          */
         this.erosion = 1.0;
 
+        /**
+         * The current morph transition time between 2D/Columbus View and 3D,
+         * with 0.0 being 2D or Columbus View and 1.0 being 3D.
+         *
+         * @type Number
+         */
+        this.morphTime = 1.0;
+
         this._mode = SceneMode.SCENE3D;
-        this._morphTime = 1.0;
         this._projection = undefined;
 
         var that = this;
@@ -240,7 +247,7 @@ define([
                 return that.erosion;
             },
             u_morphTime : function() {
-                return that._morphTime;
+                return that.morphTime;
             },
             u_height : function() {
                 return (that._mode !== SceneMode.SCENE2D) ? that.height : 0.0;
@@ -436,7 +443,6 @@ define([
 
         if (this.show) {
             this._mode = mode;
-            this._morphTime = sceneState.morphTime;
 
             var projection = sceneState.scene2D.projection;
 
@@ -543,7 +549,7 @@ define([
                     return that._pickId.normalizedRgba;
                 },
                 u_morphTime : function() {
-                    return that._morphTime;
+                    return that.morphTime;
                 },
                 u_height : function() {
                     return that.height;

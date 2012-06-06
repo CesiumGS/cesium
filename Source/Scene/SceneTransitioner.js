@@ -127,6 +127,55 @@ define([
         this.endMorphOnMouseInput = true;
     }
 
+    //immediately set the morph time of all objects in the scene
+    function setMorphTime(scene, morphTime) {
+        scene.morphTime = morphTime;
+
+        var primitives = scene.getPrimitives();
+        for ( var i = 0, len = primitives.getLength(); i < len; i++) {
+            var primitive = primitives.get(i);
+            if (typeof primitive.morphTime !== 'undefined') {
+                primitive.morphTime = morphTime;
+            }
+        }
+
+        var centralBody = primitives.getCentralBody();
+        centralBody.morphTime = morphTime;
+    }
+
+    //in the future the animations will be more complicated
+    function addMorphTimeAnimations(transitioner, scene, start, stop, duration, onComplete) {
+        //for now, all objects morph at the same rate
+        var template = {
+            duration : duration,
+            easingFunction : Tween.Easing.Quartic.EaseOut
+        };
+
+        var primitives = scene.getPrimitives();
+        var sceneAnimations = scene.getAnimations();
+        var animation;
+        for ( var i = 0, len = primitives.getLength(); i < len; i++) {
+            var primitive = primitives.get(i);
+            if (typeof primitive.morphTime !== 'undefined') {
+                animation = sceneAnimations.addProperty(primitive, 'morphTime', start, stop, template);
+                transitioner._currentAnimations.push(animation);
+            }
+        }
+
+        var centralBody = primitives.getCentralBody();
+        animation = sceneAnimations.addProperty(centralBody, 'morphTime', start, stop, template);
+        transitioner._currentAnimations.push(animation);
+
+        if (typeof onComplete !== 'undefined') {
+            template.onComplete = function() {
+                onComplete.call(transitioner);
+            };
+        }
+
+        animation = sceneAnimations.addProperty(scene, 'morphTime', start, stop, template);
+        transitioner._currentAnimations.push(animation);
+    }
+
     /**
      * DOC_TBA
      * @memberof SceneTransitioner
@@ -136,7 +185,7 @@ define([
 
         if (scene.mode !== SceneMode.SCENE2D) {
             scene.mode = SceneMode.SCENE2D;
-            scene.morphTime = 0.0;
+            setMorphTime(scene, 0.0);
 
             this._destroyMorphHandler();
 
@@ -165,7 +214,7 @@ define([
 
         if (scene.mode !== SceneMode.COLUMBUS_VIEW) {
             scene.mode = SceneMode.COLUMBUS_VIEW;
-            scene.morphTime = 0.0;
+            setMorphTime(scene, 0.0);
 
             this._destroyMorphHandler();
 
@@ -199,7 +248,7 @@ define([
 
         if (scene.mode !== SceneMode.SCENE3D) {
             scene.mode = SceneMode.SCENE3D;
-            scene.morphTime = 1.0;
+            setMorphTime(scene, 1.0);
 
             this._destroyMorphHandler();
 
@@ -523,16 +572,7 @@ define([
         });
         this._currentAnimations.push(animation);
 
-        animation = scene.getAnimations().addProperty(scene, 'morphTime', 1.0, 0.0, {
-            duration : duration,
-            easingFunction : Tween.Easing.Quartic.EaseOut,
-            onComplete : function() {
-                if (onComplete) {
-                    onComplete.call(that);
-                }
-            }
-        });
-        this._currentAnimations.push(animation);
+        addMorphTimeAnimations(this, scene, 1.0, 0.0, duration, onComplete);
     };
 
     SceneTransitioner.prototype._scene2DTo3D = function(duration, onComplete) {
@@ -586,14 +626,7 @@ define([
         });
         this._currentAnimations.push(animation);
 
-        animation = scene.getAnimations().addProperty(scene, 'morphTime', 0.0, 1.0, {
-            duration : duration,
-            easingFunction : Tween.Easing.Quartic.EaseOut,
-            onComplete : function() {
-                onComplete.call(that);
-            }
-        });
-        this._currentAnimations.push(animation);
+        addMorphTimeAnimations(this, scene, 0.0, 1.0, duration, onComplete);
     };
 
     /**

@@ -17,7 +17,6 @@ define([
     var sceneState = new SceneState();
 
     sceneState.mode = SceneMode.SCENE3D;
-    sceneState.morphTime = 1.0;
     sceneState.scene2D = {
         projection : new EquidistantCylindricalProjection(Ellipsoid.WGS84)
     };
