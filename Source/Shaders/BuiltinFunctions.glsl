@@ -365,13 +365,12 @@ mat3 agi_eastNorthUpToEyeCoordinates(vec3 positionMC, vec3 normalEC)
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * DOC_TBA
+ * Fast specular light computation
  *
- * @name agi_lightIntensity
+ * @name agi_lightValuePhong
  * @glslFunction
  */
- 
-//Fast specular light computation
+
 vec4 agi_lightValuePhong(vec3 toLight, vec3 toEye, vec3 normal, vec4 diffuseComponent, vec4 specularComponent, vec3 emissionComponent)
 {
     //x, y, z : diffuse ambient
@@ -400,7 +399,13 @@ vec4 agi_lightValuePhong(vec3 toLight, vec3 toEye, vec3 normal, vec4 diffuseComp
     return finalLighting;
 }
 
-//Slow, but higher quality light computation. Use sparingly.
+/**
+ * Slow, but high quality light computation. Use sparingly.
+ *
+ * @name agi_lightValueGaussian
+ * @glslFunction
+ */
+
 vec4 agi_lightValueGaussian(vec3 toLight, vec3 toEye, vec3 normal, vec4 diffuseComponent, vec4 specularComponent, vec3 emissionComponent)
 {
     //x, y, z : diffuse ambient
@@ -430,28 +435,6 @@ vec4 agi_lightValueGaussian(vec3 toLight, vec3 toEye, vec3 normal, vec4 diffuseC
     
     vec4 finalLighting = vec4(lighting, alpha);
     return finalLighting;
-}
-
-/**
- * DOC_TBA
- *
- * @name agi_twoSidedLightIntensity
- * @glslFunction
- */
-float agi_twoSidedLightIntensity(vec3 normal, vec3 toLight, vec3 toEye)
-{
-    // TODO: This is temporary.
-    vec4 diffuseSpecularAmbientShininess = vec4(0.8, 0.1, 0.1, 10.0);
-    
-    vec3 toReflectedLight = reflect(-toLight, normal);
-
-    float diffuse = abs(dot(toLight, normal));
-    float specular = abs(dot(toReflectedLight, toEye));
-    specular = pow(specular, diffuseSpecularAmbientShininess.w);
-
-    return (diffuseSpecularAmbientShininess.x * diffuse) +
-           (diffuseSpecularAmbientShininess.y * specular) +
-            diffuseSpecularAmbientShininess.z;
 }
 
 /**

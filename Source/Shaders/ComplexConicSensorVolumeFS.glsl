@@ -17,56 +17,88 @@ varying vec3 v_sensorAxisEC;
 
 #ifndef RENDER_FOR_PICK
 
-vec4 getOuterColor(float sensorRadius, vec3 pointEC)
+MaterialHelperInput getMaterialHelperInput(float sensorRadius, vec3 pointEC, vec3 normalEC)
+{
+    MaterialHelperInput helperInput;
+
+    vec3 pointMC = (agi_inverseModelView * vec4(pointEC, 1.0)).xyz;
+    vec3 positionToEyeEC = normalize(-v_positionEC);
+    helperInput.positionToEyeWC = normalize(vec3(agi_inverseView * vec4(positionToEyeEC, 0.0))); 
+    
+    helperInput.zDistance = pointMC.z;                                    // 1D distance
+    helperInput.st = sensor2dTextureCoordinates(sensorRadius, pointMC);   // 2D texture coordinates
+    helperInput.str = pointMC / sensorRadius;                             // 3D texture coordinates
+    
+    helperInput.normalEC = normalEC;
+    
+    return helperInput;
+}
+vec4 getOuterColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
 {
     sensorErode(sensorRadius, pointEC);
     
-    vec3 pointMC = (agi_inverseModelView * vec4(pointEC, 1.0)).xyz;
-
-    float zDistance = pointMC.z;                                   // 1D distance
-    vec2 st = sensor2dTextureCoordinates(sensorRadius, pointMC);   // 2D texture coordinates
-    vec3 str = pointMC / sensorRadius;                             // 3D texture coordinates
+    MaterialHelperInput helperInput = getMaterialHelperInput(sensorRadius, pointEC, normalEC);
     
-    return agi_getOuterMaterialColor(zDistance, st, str);
+    //Get different material values from material shader
+    vec3 normalComponent = agi_getOuterMaterialNormalComponent(helperInput);
+    vec4 diffuseComponent = agi_getOuterMaterialDiffuseComponent(helperInput);
+    vec4 specularComponent = agi_getOuterMaterialSpecularComponent(helperInput);
+    vec3 emissionComponent = agi_getOuterMaterialEmissionComponent(helperInput);
+    
+    //Final
+    vec3 positionToEyeEC = normalize(-v_positionEC);
+    return agi_lightValuePhong(agi_sunDirectionEC, positionToEyeEC, normalComponent, diffuseComponent, specularComponent, emissionComponent);
 }
 
-vec4 getInnerColor(float sensorRadius, vec3 pointEC)
+vec4 getInnerColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
 {
     sensorErode(sensorRadius, pointEC);
-
-    vec3 pointMC = (agi_inverseModelView * vec4(pointEC, 1.0)).xyz;
-
-    float zDistance = pointMC.z;                                   // 1D distance
-    vec2 st = sensor2dTextureCoordinates(sensorRadius, pointMC);   // 2D texture coordinates
-    vec3 str = pointMC / sensorRadius;                             // 3D texture coordinates
     
-    return agi_getInnerMaterialColor(zDistance, st, str);
+    MaterialHelperInput helperInput = getMaterialHelperInput(sensorRadius, pointEC, normalEC);
+    
+    //Get different material values from material shader
+    vec3 normalComponent = agi_getInnerMaterialNormalComponent(helperInput);
+    vec4 diffuseComponent = agi_getInnerMaterialDiffuseComponent(helperInput);
+    vec4 specularComponent = agi_getInnerMaterialSpecularComponent(helperInput);
+    vec3 emissionComponent = agi_getInnerMaterialEmissionComponent(helperInput);
+    
+    //Final
+    vec3 positionToEyeEC = normalize(-v_positionEC);
+    return agi_lightValuePhong(agi_sunDirectionEC, positionToEyeEC, normalComponent, diffuseComponent, specularComponent, emissionComponent);
 }
 
-vec4 getCapColor(float sensorRadius, vec3 pointEC)
+vec4 getCapColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
 {
     sensorErode(sensorRadius, pointEC);
-
-    vec3 pointMC = (agi_inverseModelView * vec4(pointEC, 1.0)).xyz;
-
-    float zDistance = pointMC.z;                                   // 1D distance
-    vec2 st = sensor2dTextureCoordinates(sensorRadius, pointMC);   // 2D texture coordinates
-    vec3 str = pointMC / sensorRadius;                             // 3D texture coordinates
     
-    return agi_getCapMaterialColor(zDistance, st, str);
+    MaterialHelperInput helperInput = getMaterialHelperInput(sensorRadius, pointEC, normalEC);
+    
+    //Get different material values from material shader
+    vec3 normalComponent = agi_getCapMaterialNormalComponent(helperInput);
+    vec4 diffuseComponent = agi_getCapMaterialDiffuseComponent(helperInput);
+    vec4 specularComponent = agi_getCapMaterialSpecularComponent(helperInput);
+    vec3 emissionComponent = agi_getCapMaterialEmissionComponent(helperInput);
+    
+    //Final
+    vec3 positionToEyeEC = normalize(-v_positionEC);
+    return agi_lightValuePhong(agi_sunDirectionEC, positionToEyeEC, normalComponent, diffuseComponent, specularComponent, emissionComponent);
 }
 
-vec4 getSilhouetteColor(float sensorRadius, vec3 pointEC)
+vec4 getSilhouetteColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
 {
     sensorErode(sensorRadius, pointEC);
-
-    vec3 pointMC = (agi_inverseModelView * vec4(pointEC, 1.0)).xyz;
-
-    float zDistance = pointMC.z;                                   // 1D distance
-    vec2 st = sensor2dTextureCoordinates(sensorRadius, pointMC);   // 2D texture coordinates
-    vec3 str = pointMC / sensorRadius;                             // 3D texture coordinates
     
-    return agi_getSilhouetteMaterialColor(zDistance, st, str);
+    MaterialHelperInput helperInput = getMaterialHelperInput(sensorRadius, pointEC, normalEC);
+    
+    //Get different material values from material shader
+    vec3 normalComponent = agi_getSilhouetteMaterialNormalComponent(helperInput);
+    vec4 diffuseComponent = agi_getSilhouetteMaterialDiffuseComponent(helperInput);
+    vec4 specularComponent = agi_getSilhouetteMaterialSpecularComponent(helperInput);
+    vec3 emissionComponent = agi_getSilhouetteMaterialEmissionComponent(helperInput);
+    
+    //Final
+    vec3 positionToEyeEC = normalize(-v_positionEC);
+    return agi_lightValuePhong(agi_sunDirectionEC, positionToEyeEC, normalComponent, diffuseComponent, specularComponent, emissionComponent);
 }
 
 #endif
@@ -200,11 +232,9 @@ vec4 shade(
 	        (nearestRayTime == outerConeInterval.intervals[i].stop)))         // Viewer inside
 	    {
 	        // Shade outer cone
-	        vec4 color = getOuterColor(u_sensorRadius, nearestPoint);
 	        vec3 normal = agi_coneNormal(outerCone, nearestPoint);
 	        normal = mix(normal, -normal, step(normal.z, 0.0));  // Normal facing viewer
-	        float intensity = agi_twoSidedLightIntensity(normal, agi_sunDirectionEC, positionToEyeEC);
-	        return vec4(color.rgb * intensity, color.a);
+	        return getOuterColor(u_sensorRadius, nearestPoint, normal);
 	    }
     }
     
@@ -215,11 +245,9 @@ vec4 shade(
 	        (nearestRayTime == innerConeInterval.intervals[i].stop)))     // Viewer inside
 	    {
 	        // Shade inner cone
-	        vec4 color = getInnerColor(u_sensorRadius, nearestPoint);
 	        vec3 normal = -agi_coneNormal(innerCone, nearestPoint);
 	        normal = mix(normal, -normal, step(normal.z, 0.0));  // Normal facing viewer
-	        float intensity = agi_twoSidedLightIntensity(normal, agi_sunDirectionEC, positionToEyeEC);
-	        return vec4(color.rgb * intensity, color.a);        
+	        return getInnerColor(u_sensorRadius, nearestPoint, normal);       
 	    }
     }
     
@@ -227,43 +255,35 @@ vec4 shade(
         (nearestRayTime == sphereInterval.stop))       // Viewer inside
     {
         // Shade top cap
-        vec4 color = getCapColor(u_sensorRadius, nearestPoint);
         vec3 normal = agi_sphereNormal(sphere, nearestPoint);
         normal = mix(normal, -normal, step(normal.z, 0.0));  // Normal facing viewer
-        float intensity = agi_twoSidedLightIntensity(normal, agi_sunDirectionEC, positionToEyeEC);
-        return vec4(color.rgb * intensity, color.a);        
+        return getCapColor(u_sensorRadius, nearestPoint, normal);     
     }
 
     if ((nearestRayTime == maxClockInterval.start) ||    // Viewer outside sensor CSG volume
         (nearestRayTime == maxClockInterval.stop))       // Viewer inside
     {
         // Shade top cap
-        vec4 color = getOuterColor(u_sensorRadius, nearestPoint);
         vec3 normal = maxClock.normal;
         normal = mix(normal, -normal, step(normal.z, 0.0));  // Normal facing viewer
-        float intensity = agi_lightIntensity(normal, agi_sunDirectionEC, positionToEyeEC);
-        return vec4(color.rgb * intensity, color.a);        
+        return getOuterColor(u_sensorRadius, nearestPoint, normal);        
     }
 
     if ((nearestRayTime == minClockInterval.start) ||    // Viewer outside sensor CSG volume
         (nearestRayTime == minClockInterval.stop))       // Viewer inside
     {
         // Shade top cap
-        vec4 color = getOuterColor(u_sensorRadius, nearestPoint);
         vec3 normal = minClock.normal;
         normal = mix(normal, -normal, step(normal.z, 0.0));  // Normal facing viewer
-        float intensity = agi_lightIntensity(normal, agi_sunDirectionEC, positionToEyeEC);
-        return vec4(color.rgb * intensity, color.a);        
+        return getOuterColor(u_sensorRadius, nearestPoint, normal);        
     }
 
     if ((nearestRayTime == silhouetteConeInterval.start) ||    // Viewer outside sensor CSG volume
         (nearestRayTime == silhouetteConeInterval.stop))       // Viewer inside
     {
-        vec4 color = getSilhouetteColor(u_sensorRadius, nearestPoint);
         vec3 normal = agi_ellipsoidSilhouetteConeNormal(silhouetteCone, nearestPoint); // Normal is already inverted.
         normal = mix(normal, -normal, step(normal.z, 0.0));  // Normal facing viewer
-        float intensity = agi_twoSidedLightIntensity(normal, agi_sunDirectionEC, positionToEyeEC);
-        return vec4(color.rgb * intensity, color.a);     
+        return getSilhouetteColor(u_sensorRadius, nearestPoint, normal);   
     }
 
     // Should never happen
@@ -300,11 +320,9 @@ vec4 shade(
             (nearestRayTime == outerConeInterval.intervals[i].stop)))         // Viewer inside
         {
             // Shade outer cone
-            vec4 color = getOuterColor(u_sensorRadius, nearestPoint);
             vec3 normal = agi_coneNormal(outerCone, nearestPoint);
             normal = mix(normal, -normal, step(normal.z, 0.0));  // Normal facing viewer
-            float intensity = agi_twoSidedLightIntensity(normal, agi_sunDirectionEC, positionToEyeEC);
-            return vec4(color.rgb * intensity, color.a);
+            return getOuterColor(u_sensorRadius, nearestPoint, normal);
         }
     }
     
@@ -315,11 +333,9 @@ vec4 shade(
             (nearestRayTime == innerConeInterval.intervals[i].stop)))     // Viewer inside
         {
             // Shade inner cone
-            vec4 color = getInnerColor(u_sensorRadius, nearestPoint);
             vec3 normal = -agi_coneNormal(innerCone, nearestPoint);
             normal = mix(normal, -normal, step(normal.z, 0.0));  // Normal facing viewer
-            float intensity = agi_twoSidedLightIntensity(normal, agi_sunDirectionEC, positionToEyeEC);
-            return vec4(color.rgb * intensity, color.a);        
+            return getInnerColor(u_sensorRadius, nearestPoint, normal);       
         }
     }
     
@@ -327,36 +343,30 @@ vec4 shade(
         (nearestRayTime == sphereInterval.stop))       // Viewer inside
     {
         // Shade top cap
-        vec4 color = getCapColor(u_sensorRadius, nearestPoint);
         vec3 normal = agi_sphereNormal(sphere, nearestPoint);
         normal = mix(normal, -normal, step(normal.z, 0.0));  // Normal facing viewer
-        float intensity = agi_twoSidedLightIntensity(normal, agi_sunDirectionEC, positionToEyeEC);
-        return vec4(color.rgb * intensity, color.a);        
+        return getCapColor(u_sensorRadius, nearestPoint, normal);      
     }
     
     if ((nearestRayTime == maxClockInterval.start) ||    // Viewer outside sensor CSG volume
         (nearestRayTime == maxClockInterval.stop))       // Viewer inside
     {
         // Shade top cap
-        vec4 color = getOuterColor(u_sensorRadius, nearestPoint);
         vec3 normal = maxClock.normal;
         normal = mix(normal, -normal, step(normal.z, 0.0));  // Normal facing viewer
-        float intensity = agi_lightIntensity(normal, agi_sunDirectionEC, positionToEyeEC);
-        return vec4(color.rgb * intensity, color.a);        
+        return getOuterColor(u_sensorRadius, nearestPoint, normal);       
     }
 
     if ((nearestRayTime == minClockInterval.start) ||    // Viewer outside sensor CSG volume
         (nearestRayTime == minClockInterval.stop))       // Viewer inside
     {
         // Shade top cap
-        vec4 color = getOuterColor(u_sensorRadius, nearestPoint);
         vec3 normal = minClock.normal;
         normal = mix(normal, -normal, step(normal.z, 0.0));  // Normal facing viewer
-        float intensity = agi_lightIntensity(normal, agi_sunDirectionEC, positionToEyeEC);
-        return vec4(color.rgb * intensity, color.a);        
+        return getOuterColor(u_sensorRadius, nearestPoint, normal);      
     }
 
-    // Should never happen
+   // Should never happen
    return vec4(1.0, 0.0, 0.0, 1.0);
 #endif
 }

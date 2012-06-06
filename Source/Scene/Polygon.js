@@ -51,7 +51,7 @@ define([
         VertexLayout,
         ColorMaterial,
         SceneMode,
-        Noise,
+        ShadersNoise,
         PolygonVS,
         PolygonFS,
         PolygonVSPick,
@@ -499,7 +499,7 @@ define([
 
                 var fsSource =
                     "#line 0\n" +
-                    Noise +
+                    ShadersNoise +
                     "#line 0\n" +
                     materialHelperInput +
                     "#line 0\n" +

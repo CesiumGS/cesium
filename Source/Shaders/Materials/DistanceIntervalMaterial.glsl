@@ -9,7 +9,7 @@ vec4 agi_getMaterialDiffuseComponent(MaterialHelperInput helperInput)
     
     for (int i = 0; i < NUMBER_OF_DISTANCES; ++i)
     {
-	    if (zDistance < u_distances[i])
+	    if (helperInput.zDistance < u_distances[i])
 	    {
 		    color = u_colors[i];
 		    break;

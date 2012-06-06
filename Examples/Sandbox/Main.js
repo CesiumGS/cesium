@@ -130,6 +130,7 @@
     tree.addNode("Draw a conic sensor with clock angles", [new Sandbox.ConicSensorVolumeClockAngles(scene, ellipsoid, primitives)], cs, "Sensor");
     var mt = tree.addNode("Materials", "", sens, "Material");
     tree.addNode("Modify the default material", [new Sandbox.SensorMaterial(scene, ellipsoid, primitives)], mt, "Material");
+    tree.addNode("Apply a reflection material", [new Sandbox.ReflectionSensorMaterial(scene, ellipsoid, primitives)], mt, "Material");
     tree.addNode("Apply a stripe material", [new Sandbox.StripeSensorMaterial(scene, ellipsoid, primitives)], mt, "Material");
     tree.addNode("Apply a distance interval material", [new Sandbox.DistanceIntervalSensorMaterial(scene, ellipsoid, primitives)], mt, "Material");
     tree.addNode("Apply a checkerboard material", [new Sandbox.CheckerboardSensorMaterial(scene, ellipsoid, primitives)], mt, "Material");

@@ -22,6 +22,7 @@ define([
         '../Shaders/SensorVolume',
         '../Shaders/ComplexConicSensorVolumeVS',
         '../Shaders/ComplexConicSensorVolumeFS',
+        '../Shaders/Materials/materialHelperInput',
         './SceneMode'
     ], function(
         DeveloperError,
@@ -46,6 +47,7 @@ define([
         ShadersSensorVolume,
         ComplexConicSensorVolumeVS,
         ComplexConicSensorVolumeFS,
+        materialHelperInput,
         SceneMode) {
     "use strict";
 
@@ -296,25 +298,40 @@ define([
     ComplexConicSensorVolume.prototype._combineMaterials = function() {
         // On older/mobile hardware, we could do one pass per material to avoid
         // going over the maximum uniform limit
+
+        var replaceMaterialMethods = function(source, type)
+        {
+            var finalSource = source;
+            var materialProperties = ["Normal", "Diffuse", "Specular", "Emission"];
+            for(var i = 0; i < materialProperties.length; i++)
+            {
+                var property = materialProperties[i];
+                var origName = "agi_getMaterial" + property + "Component";
+                var newName = "agi_get" + type + "Material" + property + "Component";
+                finalSource = finalSource.replace(new RegExp(origName, "g"), newName);
+            }
+            return finalSource;
+        };
+
         return combineMaterials({
             material : this.outerMaterial,
             sourceTransform : function(source) {
-                return source.replace(new RegExp("agi_getMaterialColor", "g"), "agi_getOuterMaterialColor");
+                return replaceMaterialMethods(source, "Outer");
             }
         }, {
             material : this.innerMaterial,
             sourceTransform : function(source) {
-                return source.replace(new RegExp("agi_getMaterialColor", "g"), "agi_getInnerMaterialColor");
+                return replaceMaterialMethods(source, "Inner");
             }
         }, {
             material : this.capMaterial,
             sourceTransform : function(source) {
-                return source.replace(new RegExp("agi_getMaterialColor", "g"), "agi_getCapMaterialColor");
+                return replaceMaterialMethods(source, "Cap");
             }
         }, {
             material : this.silhouetteMaterial,
             sourceTransform : function(source) {
-                return source.replace(new RegExp("agi_getMaterialColor", "g"), "agi_getSilhouetteMaterialColor");
+                return replaceMaterialMethods(source, "Silhouette");
             }
         });
     };
@@ -378,6 +395,8 @@ define([
                     "#line 0\n" +
                     ShadersSensorVolume +
                     "#line 0\n" +
+                    materialHelperInput +
+                    "#line 0\n" +
                     material._getShaderSource() +
                     "#line 0\n" +
                     ComplexConicSensorVolumeFS;
@@ -437,6 +456,8 @@ define([
                 ShadersConstructiveSolidGeometry +
                 "#line 0\n" +
                 ShadersSensorVolume +
+                "#line 0\n" +
+                materialHelperInput +
                 "#line 0\n" +
                 ComplexConicSensorVolumeFS;
 

@@ -30,7 +30,8 @@ void main()
     helperInput.zDistance = 0.0;          // 1D distance
     helperInput.st = v_textureCoordinates; // 2D texture coordinates
     helperInput.str = vec3(helperInput.st, 0.0);       // 3D texture coordinates
-
+    erode(helperInput.str);
+    
     //Convert tangent space material normal to eye space
     helperInput.normalEC = normalize(agi_normal * agi_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0)));  
     helperInput.tangentToEyeMatrix = agi_eastNorthUpToEyeCoordinates(v_positionMC, helperInput.normalEC);
@@ -40,11 +41,11 @@ void main()
     helperInput.positionToEyeWC = normalize(vec3(agi_inverseView * vec4(positionToEyeEC, 0.0)));
 
     //Get different material values from material shader
-    vec3 normalEC = agi_getMaterialNormalComponent(helperInput);
+    vec3 normalComponent = agi_getMaterialNormalComponent(helperInput);
     vec4 diffuseComponent = agi_getMaterialDiffuseComponent(helperInput);
     vec4 specularComponent = agi_getMaterialSpecularComponent(helperInput);
     vec3 emissionComponent = agi_getMaterialEmissionComponent(helperInput);
 
     //Final
-    gl_FragColor = agi_lightValuePhong(agi_sunDirectionEC, positionToEyeEC, normalEC, diffuseComponent, specularComponent, emissionComponent);
+    gl_FragColor = agi_lightValuePhong(agi_sunDirectionEC, positionToEyeEC, normalComponent, diffuseComponent, specularComponent, emissionComponent);
 }

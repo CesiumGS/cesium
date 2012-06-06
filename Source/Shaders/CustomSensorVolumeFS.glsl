@@ -22,11 +22,22 @@ vec4 getColor(float sensorRadius, vec3 pointEC)
     
     vec3 pointMC = (agi_inverseModelView * vec4(pointEC, 1.0)).xyz;
 
-    float zDistance = pointMC.z;                                   // 1D distance
-    vec2 st = sensor2dTextureCoordinates(sensorRadius, pointMC);   // 2D texture coordinates
-    vec3 str = pointMC / sensorRadius;                             // 3D texture coordinates
+    MaterialHelperInput helperInput;
+    helperInput.zDistance = pointMC.z;                                    // 1D distance
+    helperInput.st = sensor2dTextureCoordinates(sensorRadius, pointMC);   // 2D texture coordinates
+    helperInput.str = pointMC / sensorRadius;                             // 3D texture coordinates
     
-    return agi_getMaterialColor(zDistance, st, str);
+    vec3 positionToEyeEC = normalize(-v_positionEC);
+    vec3 normalEC = normalize(v_normalEC);
+    normalEC = mix(normalEC, -normalEC, step(normalEC.z, 0.0));  // Normal facing viewer
+    helperInput.normalEC = normalEC;
+    
+    vec3 normalComponent = agi_getMaterialNormalComponent(helperInput);
+    vec4 diffuseComponent = agi_getMaterialDiffuseComponent(helperInput);
+    vec4 specularComponent = agi_getMaterialSpecularComponent(helperInput);
+    vec3 emissionComponent = agi_getMaterialEmissionComponent(helperInput);
+    
+    return agi_lightValuePhong(agi_sunDirectionEC, positionToEyeEC, normalComponent, diffuseComponent, specularComponent, emissionComponent);
 }
 
 #endif
@@ -46,9 +57,9 @@ bool ellipsoidSensorIntersection(agi_raySegment ellipsoidInterval)
     
     if (epsilon >= ellipsoidInterval.start)
     {
-       // If the fragment is on the silhouette of the ellipsoid, the adjacent fragment
-       // will not hit the ellipsoid (its ellipsoidInterval.start will be zero),
-       // so the derivative will be large, and we would get false positives.
+        // If the fragment is on the silhouette of the ellipsoid, the adjacent fragment
+        // will not hit the ellipsoid (its ellipsoidInterval.start will be zero),
+        // so the derivative will be large, and we would get false positives.
         return false;
     }
 #else
@@ -71,14 +82,7 @@ vec4 shade(agi_raySegment ellipsoidInterval)
     {
         return getIntersectionColor(u_sensorRadius, v_positionEC);
     }
-    
-    vec3 positionToEyeEC = normalize(-v_positionEC);
-    vec3 normal = normalize(v_normalEC);
-    normal = mix(normal, -normal, step(normal.z, 0.0));  // Normal facing viewer
-
-    vec4 color = getColor(u_sensorRadius, v_positionEC);
-    float intensity = agi_twoSidedLightIntensity(normal, agi_sunDirectionEC, positionToEyeEC);
-    return vec4(color.rgb * intensity, color.a);
+    return getColor(u_sensorRadius, v_positionEC);
 #endif
 }
 
