@@ -39,21 +39,46 @@ define([
         }
     };
 
-    function DynamicPyramidVisualizer(scene) {
+    function DynamicPyramidVisualizer(scene, dynamicObjectCollection) {
         this._scene = scene;
         this._unusedIndexes = [];
         this._primitives = scene.getPrimitives();
         this._pyramidCollection = [];
+        this._dynamicObjectCollection = undefined;
+        this.setDynamicObjectCollection(dynamicObjectCollection);
     }
 
-    DynamicPyramidVisualizer.prototype.update = function(time, czmlObjects) {
-        for ( var i = 0, len = czmlObjects.length; i < len; i++) {
-            this.updateObject(time, czmlObjects[i]);
+    DynamicPyramidVisualizer.prototype.getScene = function() {
+        return this._scene;
+    };
+
+    DynamicPyramidVisualizer.prototype.getDynamicObjectCollection = function() {
+        return this._dynamicObjectCollection;
+    };
+
+    DynamicPyramidVisualizer.prototype.setDynamicObjectCollection = function(dynamicObjectCollection) {
+        var oldCollection = this._dynamicObjectCollection;
+        if (oldCollection !== dynamicObjectCollection) {
+            if (typeof oldCollection !== 'undefined') {
+                oldCollection.objectsRemoved.removeEventListener(DynamicPyramidVisualizer.prototype._onObjectsRemoved);
+                this.removeAll();
+            }
+            this._dynamicObjectCollection = dynamicObjectCollection;
+            if (typeof dynamicObjectCollection !== 'undefined') {
+                dynamicObjectCollection.objectsRemoved.addEventListener(DynamicPyramidVisualizer.prototype._onObjectsRemoved, this);
+            }
         }
     };
 
-    DynamicPyramidVisualizer.prototype.updateObject = function(time, czmlObject) {
-        var dynamicPyramid = czmlObject.pyramid;
+    DynamicPyramidVisualizer.prototype.update = function(time) {
+        var dynamicObjects = this._dynamicObjectCollection.getObjects();
+        for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
+            this.updateObject(time, dynamicObjects[i]);
+        }
+    };
+
+    DynamicPyramidVisualizer.prototype.updateObject = function(time, dynamicObject) {
+        var dynamicPyramid = dynamicObject.pyramid;
         if (typeof dynamicPyramid === 'undefined') {
             return;
         }
@@ -63,28 +88,28 @@ define([
             return;
         }
 
-        var positionProperty = czmlObject.position;
+        var positionProperty = dynamicObject.position;
         if (typeof positionProperty === 'undefined') {
             return;
         }
 
-        var orientationProperty = czmlObject.orientation;
+        var orientationProperty = dynamicObject.orientation;
         if (typeof orientationProperty === 'undefined') {
             return;
         }
 
         var pyramid;
-        var objectId = czmlObject.id;
+        var objectId = dynamicObject.id;
         var showProperty = dynamicPyramid.show;
-        var pyramidVisualizerIndex = czmlObject.pyramidVisualizerIndex;
-        var show = czmlObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
+        var pyramidVisualizerIndex = dynamicObject.pyramidVisualizerIndex;
+        var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
 
         if (!show) {
             //don't bother creating or updating anything else
             if (typeof pyramidVisualizerIndex !== 'undefined') {
                 pyramid = this._pyramidCollection[pyramidVisualizerIndex];
                 pyramid.show = false;
-                czmlObject.pyramidVisualizerIndex = undefined;
+                dynamicObject.pyramidVisualizerIndex = undefined;
                 this._unusedIndexes.push(pyramidVisualizerIndex);
             }
             return;
@@ -102,7 +127,7 @@ define([
                 this._pyramidCollection.push(pyramid);
                 this._primitives.add(pyramid);
             }
-            czmlObject.pyramidVisualizerIndex = pyramidVisualizerIndex;
+            dynamicObject.pyramidVisualizerIndex = pyramidVisualizerIndex;
             pyramid.id = objectId;
         } else {
             pyramid = this._pyramidCollection[pyramidVisualizerIndex];
@@ -140,19 +165,36 @@ define([
         }
     };
 
-    DynamicPyramidVisualizer.prototype.removeAll = function(czmlObjects) {
+    DynamicPyramidVisualizer.prototype.removeAll = function() {
         var i, len;
         for (i = 0, len = this._pyramidCollection.length; i < len; i++) {
             this._primitives.remove(this._pyramidCollection[i]);
         }
 
-        for (i = 0, len = czmlObjects.length; i < len; i++) {
-            czmlObjects.pyramidVisualizerIndex = undefined;
+        var dynamicObjects = this._dynamicObjectCollection.getObjects();
+        for (i = dynamicObjects.length - 1; i > -1; i--) {
+            dynamicObjects[i].pyramidVisualizerIndex = undefined;
         }
 
         this._unusedIndexes = [];
         this._pyramidCollection = [];
     };
+
+    DynamicPyramidVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, dynamicObjects) {
+        var thisPyramidCollection = this._pyramidCollection;
+        var thisUnusedIndexes = this._unusedIndexes;
+        for ( var i = dynamicObjects.length - 1; i > -1; i--) {
+            var dynamicObject = dynamicObjects[i];
+            var pyramidVisualizerIndex = dynamicObject.pyramidVisualizerIndex;
+            if (typeof pyramidVisualizerIndex !== 'undefined') {
+                var pyramid = thisPyramidCollection[pyramidVisualizerIndex];
+                pyramid.show = false;
+                thisUnusedIndexes.push(pyramidVisualizerIndex);
+                dynamicObject.pyramidVisualizerIndex = undefined;
+            }
+        }
+    };
+
 
     return DynamicPyramidVisualizer;
 });

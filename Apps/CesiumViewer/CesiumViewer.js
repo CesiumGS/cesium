@@ -55,17 +55,35 @@ function(dom,
     var lastCameraCenteredObjectID;
 
     function setTimeFromBuffer() {
+        var i, object, len;
         var startTime = JulianDate.MAXIMUM_VALUE;
         var stopTime = JulianDate.MINIMUM_VALUE;
         var dynamicObjects = dynamicObjectCollection.getObjects();
-        for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
-            var object = dynamicObjects[i];
+        for (i = 0, len = dynamicObjects.length; i < len; i++) {
+            object = dynamicObjects[i];
             if (typeof object.availability !== 'undefined') {
                 if (object.availability.start.lessThan(startTime)) {
                     startTime = object.availability.start;
                 }
                 if (object.availability.stop.greaterThan(stopTime)) {
                     stopTime = object.availability.stop;
+                }
+            }
+        }
+
+        if (startTime === JulianDate.MAXIMUM_VALUE) {
+            for (i = 0, len = dynamicObjects.length; i < len; i++) {
+                object = dynamicObjects[i];
+                if (typeof object.position !== 'undefined') {
+                    var intervals = object.position._propertyIntervals;
+                    if (typeof intervals !== 'undefined' && intervals._intervals[0].data._intervals._intervals[0].data.isSampled) {
+                        var firstTime = intervals._intervals[0].data._intervals._intervals[0].data.times[0];
+                        if (typeof firstTime !== 'undefined') {
+                            startTime = firstTime;
+                            stopTime = firstTime.addDays(1);
+                            break;
+                        }
+                    }
                 }
             }
         }

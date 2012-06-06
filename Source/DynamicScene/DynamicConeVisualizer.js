@@ -39,21 +39,46 @@ define([
         }
     };
 
-    function DynamicConeVisualizer(scene) {
+    function DynamicConeVisualizer(scene, dynamicObjectCollection) {
         this._scene = scene;
         this._unusedIndexes = [];
         this._primitives = scene.getPrimitives();
         this._coneCollection = [];
+        this._dynamicObjectCollection = undefined;
+        this.setDynamicObjectCollection(dynamicObjectCollection);
     }
 
-    DynamicConeVisualizer.prototype.update = function(time, czmlObjects) {
-        for ( var i = 0, len = czmlObjects.length; i < len; i++) {
-            this.updateObject(time, czmlObjects[i]);
+    DynamicConeVisualizer.prototype.getScene = function() {
+        return this._scene;
+    };
+
+    DynamicConeVisualizer.prototype.getDynamicObjectCollection = function() {
+        return this._dynamicObjectCollection;
+    };
+
+    DynamicConeVisualizer.prototype.setDynamicObjectCollection = function(dynamicObjectCollection) {
+        var oldCollection = this._dynamicObjectCollection;
+        if (oldCollection !== dynamicObjectCollection) {
+            if (typeof oldCollection !== 'undefined') {
+                oldCollection.objectsRemoved.removeEventListener(DynamicConeVisualizer.prototype._onObjectsRemoved);
+                this.removeAll();
+            }
+            this._dynamicObjectCollection = dynamicObjectCollection;
+            if (typeof dynamicObjectCollection !== 'undefined') {
+                dynamicObjectCollection.objectsRemoved.addEventListener(DynamicConeVisualizer.prototype._onObjectsRemoved, this);
+            }
         }
     };
 
-    DynamicConeVisualizer.prototype.updateObject = function(time, czmlObject) {
-        var dynamicCone = czmlObject.cone;
+    DynamicConeVisualizer.prototype.update = function(time) {
+        var dynamicObjects = this._dynamicObjectCollection.getObjects();
+        for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
+            this.updateObject(time, dynamicObjects[i]);
+        }
+    };
+
+    DynamicConeVisualizer.prototype.updateObject = function(time, dynamicObject) {
+        var dynamicCone = dynamicObject.cone;
         if (typeof dynamicCone === 'undefined') {
             return;
         }
@@ -68,28 +93,28 @@ define([
             return;
         }
 
-        var positionProperty = czmlObject.position;
+        var positionProperty = dynamicObject.position;
         if (typeof positionProperty === 'undefined') {
             return;
         }
 
-        var orientationProperty = czmlObject.orientation;
+        var orientationProperty = dynamicObject.orientation;
         if (typeof orientationProperty === 'undefined') {
             return;
         }
 
         var cone;
-        var objectId = czmlObject.id;
+        var objectId = dynamicObject.id;
         var showProperty = dynamicCone.show;
-        var coneVisualizerIndex = czmlObject.coneVisualizerIndex;
-        var show = czmlObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
+        var coneVisualizerIndex = dynamicObject.coneVisualizerIndex;
+        var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
 
         if (!show) {
             //don't bother creating or updating anything else
             if (typeof coneVisualizerIndex !== 'undefined') {
                 cone = this._coneCollection[coneVisualizerIndex];
                 cone.show = false;
-                czmlObject.coneVisualizerIndex = undefined;
+                dynamicObject.coneVisualizerIndex = undefined;
                 this._unusedIndexes.push(coneVisualizerIndex);
             }
             return;
@@ -109,7 +134,7 @@ define([
                 this._coneCollection.push(cone);
                 this._primitives.add(cone);
             }
-            czmlObject.coneVisualizerIndex = coneVisualizerIndex;
+            dynamicObject.coneVisualizerIndex = coneVisualizerIndex;
             cone.id = objectId;
         } else {
             cone = this._coneCollection[coneVisualizerIndex];
@@ -182,18 +207,34 @@ define([
         }
     };
 
-    DynamicConeVisualizer.prototype.removeAll = function(czmlObjects) {
+    DynamicConeVisualizer.prototype.removeAll = function() {
         var i, len;
         for (i = 0, len = this._coneCollection.length; i < len; i++) {
             this._primitives.remove(this._coneCollection[i]);
         }
 
-        for (i = 0, len = czmlObjects.length; i < len; i++) {
-            czmlObjects.coneVisualizerIndex = undefined;
+        var dynamicObjects = this._dynamicObjectCollection.getObjects();
+        for (i = dynamicObjects.length - 1; i > -1; i--) {
+            dynamicObjects[i].coneVisualizerIndex = undefined;
         }
 
         this._unusedIndexes = [];
         this._coneCollection = [];
+    };
+
+    DynamicConeVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, dynamicObjects) {
+        var thisConeCollection = this._coneCollection;
+        var thisUnusedIndexes = this._unusedIndexes;
+        for ( var i = dynamicObjects.length - 1; i > -1; i--) {
+            var dynamicObject = dynamicObjects[i];
+            var coneVisualizerIndex = dynamicObject.coneVisualizerIndex;
+            if (typeof coneVisualizerIndex !== 'undefined') {
+                var cone = thisConeCollection[coneVisualizerIndex];
+                cone.show = false;
+                thisUnusedIndexes.push(coneVisualizerIndex);
+                dynamicObject.coneVisualizerIndex = undefined;
+            }
+        }
     };
 
     return DynamicConeVisualizer;
