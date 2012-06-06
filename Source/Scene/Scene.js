@@ -7,7 +7,8 @@ define([
         './Camera',
         './CompositePrimitive',
         './AnimationCollection',
-        './SceneMode'
+        './SceneMode',
+        './SceneState'
     ], function(
         destroyObject,
         EquidistantCylindricalProjection,
@@ -16,7 +17,8 @@ define([
         Camera,
         CompositePrimitive,
         AnimationCollection,
-        SceneMode) {
+        SceneMode,
+        SceneState) {
     "use strict";
 
     /**
@@ -28,6 +30,7 @@ define([
     function Scene(canvas) {
         var context = new Context(canvas);
 
+        this._sceneState = new SceneState();
         this._canvas = canvas;
         this._context = context;
         this._primitives = new CompositePrimitive();
@@ -49,7 +52,9 @@ define([
         this._shaderFrameCount = 0;
 
         /**
-         * DOC_TBA
+         * The current mode of the scene.
+         *
+         * @type SceneMode
          */
         this.mode = SceneMode.SCENE3D;
 
@@ -58,10 +63,18 @@ define([
          */
         this.scene2D = {
             /**
-             * DOC_TBA
+             * The projection to use in 2D mode.
              */
             projection : new EquidistantCylindricalProjection(Ellipsoid.WGS84)
         };
+
+        /**
+         * The current morph transition time between 2D/Columbus View and 3D,
+         * with 0.0 being 2D or Columbus View and 1.0 being 3D.
+         *
+         * @type Number
+         */
+        this.morphTime = 1.0;
     }
 
     /**
@@ -167,10 +180,12 @@ define([
             this._animate();
         }
 
-        this._primitives.update(this._context, {
-            mode : this.mode,
-            scene2D : this.scene2D
-        });
+        var sceneState = this._sceneState;
+        sceneState.mode = this.mode;
+        sceneState.scene2D = this.scene2D;
+        sceneState.camera = camera;
+
+        this._primitives.update(this._context, sceneState);
     };
 
     /**

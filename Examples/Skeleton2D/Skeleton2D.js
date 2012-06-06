@@ -9,8 +9,11 @@ require({
 
     var ellipsoid = Cesium.Ellipsoid.WGS84;
 
-    var scene3D = new Cesium.Scene(document.getElementById("canvas3D"));
-    var scene2D = new Cesium.Scene(document.getElementById("canvas2D"));
+    var canvas3D = document.getElementById("canvas3D");
+    var scene3D = new Cesium.Scene(canvas3D);
+
+    var canvas2D = document.getElementById("canvas2D");
+    var scene2D = new Cesium.Scene(canvas2D);
 
     var bing3D = new Cesium.BingMapsTileProvider({
         server : "dev.virtualearth.net",
@@ -30,7 +33,7 @@ require({
 
     function create(scene, imagery) {
         var primitives = scene.getPrimitives();
-        var cb = new Cesium.CentralBody(scene.getCamera(), ellipsoid);
+        var cb = new Cesium.CentralBody(ellipsoid);
         cb.dayTileProvider = imagery;
         cb.nightImageSource = "../../Images/land_ocean_ice_lights_2048.jpg";
         cb.specularMapSource = "../../Images/earthspec1k.jpg";
@@ -60,7 +63,19 @@ require({
         Cesium.requestAnimationFrame(tick);
     }());
 
-    scene3D.getCanvas().oncontextmenu = scene2D.getCanvas().oncontextmenu = function() {
+    var handler = new Cesium.EventHandler();
+
+    handler.setKeyAction(function() {
+        transitioner.morphTo3D();
+    }, "1");
+    handler.setKeyAction(function() {
+        transitioner.morphTo2D();
+    }, "2");
+    handler.setKeyAction(function() {
+        transitioner.morphToColumbusView();
+    }, "3");
+
+    canvas3D.oncontextmenu = canvas2D.oncontextmenu = function() {
         return false;
     };
 });
