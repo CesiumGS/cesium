@@ -180,7 +180,7 @@ define([
 
         property = dynamicBillboard.horizontalOrigin;
         if (typeof property !== 'undefined') {
-            value = HorizontalOrigin[property.getValue(time)];
+            value = property.getValue(time);
             if (typeof value !== 'undefined') {
                 billboard.setHorizontalOrigin(value);
             }
@@ -188,7 +188,7 @@ define([
 
         property = dynamicBillboard.verticalOrigin;
         if (typeof property !== 'undefined') {
-            value = VerticalOrigin[property.getValue(time)];
+            value = property.getValue(time);
             if (typeof value !== 'undefined') {
                 billboard.setVerticalOrigin(value);
             }

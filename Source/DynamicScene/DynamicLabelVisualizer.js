@@ -163,7 +163,7 @@ define([
 
         property = dynamicLabel.style;
         if (typeof property !== 'undefined') {
-            value = LabelStyle[property.getValue(time)];
+            value = property.getValue(time);
             if (typeof value !== 'undefined') {
                 label.setStyle(value);
             }
@@ -187,7 +187,7 @@ define([
 
         property = dynamicLabel.horizontalOrigin;
         if (typeof property !== 'undefined') {
-            value = HorizontalOrigin[property.getValue(time)];
+            value = property.getValue(time);
             if (typeof value !== 'undefined') {
                 label.setHorizontalOrigin(value);
             }
@@ -195,7 +195,7 @@ define([
 
         property = dynamicLabel.verticalOrigin;
         if (typeof property !== 'undefined') {
-            value = VerticalOrigin[property.getValue(time)];
+            value = property.getValue(time);
             if (typeof value !== 'undefined') {
                 label.setVerticalOrigin(value);
             }
