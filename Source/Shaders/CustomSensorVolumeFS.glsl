@@ -3,6 +3,8 @@
 #endif  
 
 uniform bool u_showIntersection;
+uniform bool u_showThroughEllipsoid;
+
 uniform float u_sensorRadius;
 uniform vec4 u_pickColor;
 
@@ -92,19 +94,23 @@ void main()
 {
     agi_ellipsoid ellipsoid = agi_getWgs84EllipsoidEC();
 
-    // Discard if in the ellipsoid    
-    // PERFORMANCE_IDEA: A coarse check for ellipsoid intersection could be done on the CPU first.
-    if (agi_pointInEllipsoid(ellipsoid, v_positionWC))
-    {
-        discard;
+    // Occluded by the ellipsoid?
+	if (!u_showThroughEllipsoid)
+	{
+	    // Discard if in the ellipsoid    
+	    // PERFORMANCE_IDEA: A coarse check for ellipsoid intersection could be done on the CPU first.
+	    if (agi_pointInEllipsoid(ellipsoid, v_positionWC))
+	    {
+	        discard;
+	    }
+	
+	    // Discard if in the sensor's shadow
+	    if (inSensorShadow(v_sensorVertexWC, ellipsoid, v_positionEC))
+	    {
+	        discard;
+	    }
     }
-
-    // Discard if in the sensor's shadow
-    if (inSensorShadow(v_sensorVertexWC, ellipsoid, v_positionEC))
-    {
-        discard;
-    }
-
+    
     // Discard if not in the sensor's sphere
     // PERFORMANCE_IDEA: We can omit this check if the radius is Number.POSITIVE_INFINITY.
     if (distance(v_positionEC, v_sensorVertexEC) > u_sensorRadius)
