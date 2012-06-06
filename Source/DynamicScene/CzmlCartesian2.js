@@ -9,7 +9,7 @@ define(['../Core/Cartesian2'], function(Cartesian2) {
         doublesPerInterpolationValue : doublesPerValue,
 
         unwrapInterval : function(czmlInterval) {
-            return czmlInterval.cartesian;
+            return czmlInterval.cartesian2;
         },
 
         isSampled : function(unwrappedInterval) {

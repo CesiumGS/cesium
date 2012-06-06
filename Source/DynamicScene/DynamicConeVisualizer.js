@@ -145,12 +145,12 @@ define([
 
             // CZML_TODO Determine official defaults
             cone.capMaterial = new ColorMaterial();
-            cone.innerHalfAngle = CesiumMath.PI_OVER_TWO;
+            cone.innerHalfAngle = 0;
+            cone.outerHalfAngle = Math.PI;
             cone.innerMaterial = new ColorMaterial();
             cone.intersectionColor = Color.YELLOW;
-            cone.maximumClockAngle =  Math.PI;
-            cone.minimumClockAngle = -Math.PI;
-            cone.outerHalfAngle = CesiumMath.PI_OVER_TWO;
+            cone.maximumClockAngle =  CesiumMath.TWO_PI;
+            cone.minimumClockAngle = -CesiumMath.TWO_PI;
             cone.outerMaterial = new ColorMaterial();
             cone.radius = Number.POSITIVE_INFINITY;
             cone.showIntersection = true;
