@@ -62,6 +62,16 @@ require({
             that.types = value;
         });
 
+        var bucketHTML = { 'headers': "<html><head></head><body>" };
+        xhr.get({
+            url: 'bucket.html',
+            handleAs: 'text'
+        }).then(function (value) {
+            var pos = value.indexOf('<body');
+            pos = value.indexOf('>', pos);
+            bucketHTML.headers = value.substring(0, pos + 1) + '\n';
+        });
+
         function openDocTab(title, link) {
             if (typeof docTabs[title] === 'undefined') {
                 docTabs[title] = new dijit.layout.ContentPane({
@@ -199,5 +209,11 @@ require({
 
         registry.byId('buttonSuggest').on('click', function () {
             CodeMirror.commands.autocomplete(jsEditor);
+        });
+
+        registry.byId('buttonSaveAs').on('click', function () {
+            var html = bucketHTML.headers + htmlEditor.getValue() +
+                '\n<script id="cesium_sandcastle_script">\n' + jsEditor.getValue() + '\n</script>\n</body>\n</html>\n';
+            console.log(html); // just a hack for now
         });
     });

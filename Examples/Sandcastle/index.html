@@ -57,11 +57,11 @@
                 Suggest (Ctrl-Space)
             </div>
             <span data-dojo-type="dijit.ToolbarSeparator"></span>
-            <div id="buttonDownload" data-dojo-type="dijit.form.Button" data-dojo-props="iconClass: 'dijitIconSave', showLabel: true">
+            <div id="buttonSaveAs" data-dojo-type="dijit.form.Button" data-dojo-props="iconClass: 'dijitIconSave', showLabel: true">
                 Save As...
             </div>
             <span data-dojo-type="dijit.ToolbarSeparator"></span>
-            <div id="buttonContribute" data-dojo-type="dijit.form.Button" data-dojo-props="iconClass: 'dijitIconDocuments', showLabel: true">
+            <div id="buttonUpload" data-dojo-type="dijit.form.Button" data-dojo-props="iconClass: 'dijitIconDocuments', showLabel: true">
                 Upload to Gallery...
             </div>
             <span data-dojo-type="dijit.ToolbarSeparator"></span>
@@ -95,9 +95,10 @@ require({
     'dijit/form/Button',
     'dijit/form/ToggleButton'
 ], function(
-    Cesium, CesiumWidget, on, dom)
+    Cesium, CesiumWidget, on, dom, parser)
 {
     "use strict";
+    parser.parse();
 
     //A real application should require only the subset of modules that
     //are actually used, instead of requiring the Cesium module, which
