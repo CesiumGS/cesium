@@ -8,35 +8,41 @@ defineSuite([
          CameraEventType,
          MouseEventType) {
     "use strict";
-    /*global document,describe,it,expect,beforeEach*/
+    /*global document,describe,it,expect,beforeEach,afterEach*/
 
     var handler;
+    var handler2;
 
     beforeEach(function() {
         handler = new CameraEventHandler(document, CameraEventType.LEFT_DRAG);
     });
 
+    afterEach(function() {
+        handler = handler && !handler.isDestroyed() && handler.destroy();
+        handler2 = handler2 && !handler2.isDestroyed() && handler2.destroy();
+    });
+
     it("throws without a canvas", function() {
         expect(function() {
-            return new CameraEventHandler();
+            handler2 = new CameraEventHandler();
         }).toThrow();
     });
 
     it("throws without a moveType", function() {
         expect(function() {
-            return new CameraEventHandler(document);
+            handler2 = new CameraEventHandler(document);
         }).toThrow();
     });
 
     it("throws if the event type is not of CameraEventType", function() {
         expect(function() {
-            return new CameraEventHandler(document, MouseEventType.LEFT_CLICK);
+            handler2 = new CameraEventHandler(document, MouseEventType.LEFT_CLICK);
         }).toThrow();
     });
 
     it("can be constructed using the middle drag event type", function() {
         expect(function(){
-            return new CameraEventHandler(document, CameraEventType.MIDDLE_DRAG);
+            handler2 = new CameraEventHandler(document, CameraEventType.MIDDLE_DRAG);
         }).not.toThrow();
     });
 

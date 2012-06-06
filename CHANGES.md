@@ -10,6 +10,7 @@ Beta Releases
     * Changed `Tipsify.tipsify` and `Tipsify.calculateACMR` to accept an object literal instead of three separate arguments. Supplying a maximum index and cache size is now optional.
 * Added `CentralBody.northPoleColor` and `CentralBody.southPoleColor` to fill in the poles if they are not covered by a texture.
 * Added `Polygon.configureExtent` to create a polygon defined by west, south, east, and north values.
+* Added `showThroughEllipsoid` to `CustomSensorVolume` and `RectangularPyramidSensorVolume` to allow sensors to draw through Earth.
 * Added `Event`, a new utility class which makes it easy for objects to expose event properties.
 * Added `TextureAtlas.addTexture`, `TextureAtlas.addTextureFromUrl', and `TextureAtlas.addTextureFromFunction` to enable adding new textures to an existing `TextureAtlas`.
 * Added 'TextureAtlas.textureAtlasChanged' event which is raised whenever new textures are added to the atlas.
