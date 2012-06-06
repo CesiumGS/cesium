@@ -33,7 +33,7 @@ define([
         this.show = undefined;
     }
 
-    DynamicLabel.processCzmlPacket = function(dynamicObject, packet, czmlObjectCollection, sourceUri) {
+    DynamicLabel.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var labelData = packet.label;
         if (typeof labelData !== 'undefined') {
 
@@ -48,17 +48,17 @@ define([
                 interval = TimeInterval.fromIso8601(interval);
             }
 
-            labelUpdated = DynamicProperty.processCzmlPacket(label, "text", CzmlString, labelData.text, interval, czmlObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.processCzmlPacket(label, "font", CzmlString, labelData.font, interval, czmlObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.processCzmlPacket(label, "show", CzmlBoolean, labelData.show, interval, czmlObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.processCzmlPacket(label, "style", CzmlString, labelData.style, interval, czmlObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.processCzmlPacket(label, "fillColor", CzmlColor, labelData.fillColor, interval, czmlObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.processCzmlPacket(label, "outlineColor", CzmlColor, labelData.outlineColor, interval, czmlObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.processCzmlPacket(label, "scale", CzmlNumber, labelData.scale, interval, czmlObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.processCzmlPacket(label, "horizontalOrigin", CzmlString, labelData.horizontalOrigin, interval, czmlObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.processCzmlPacket(label, "verticalOrigin", CzmlString, labelData.verticalOrigin, interval, czmlObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.processCzmlPacket(label, "eyeOffset", CzmlCartesian3, labelData.eyeOffset, interval, czmlObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.processCzmlPacket(label, "pixelOffset", CzmlCartesian2, labelData.pixelOffset, interval, czmlObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.processCzmlPacket(label, "text", CzmlString, labelData.text, interval, dynamicObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.processCzmlPacket(label, "font", CzmlString, labelData.font, interval, dynamicObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.processCzmlPacket(label, "show", CzmlBoolean, labelData.show, interval, dynamicObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.processCzmlPacket(label, "style", CzmlString, labelData.style, interval, dynamicObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.processCzmlPacket(label, "fillColor", CzmlColor, labelData.fillColor, interval, dynamicObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.processCzmlPacket(label, "outlineColor", CzmlColor, labelData.outlineColor, interval, dynamicObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.processCzmlPacket(label, "scale", CzmlNumber, labelData.scale, interval, dynamicObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.processCzmlPacket(label, "horizontalOrigin", CzmlString, labelData.horizontalOrigin, interval, dynamicObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.processCzmlPacket(label, "verticalOrigin", CzmlString, labelData.verticalOrigin, interval, dynamicObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.processCzmlPacket(label, "eyeOffset", CzmlCartesian3, labelData.eyeOffset, interval, dynamicObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.processCzmlPacket(label, "pixelOffset", CzmlCartesian2, labelData.pixelOffset, interval, dynamicObjectCollection) || labelUpdated;
             return labelUpdated;
         }
     };

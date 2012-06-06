@@ -16,7 +16,7 @@ define([
         this.material = undefined;
     }
 
-    DynamicPolygon.processCzmlPacket = function(dynamicObject, packet, czmlObjectCollection) {
+    DynamicPolygon.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection) {
         var polygonData = packet.polygon;
         if (typeof polygonData !== 'undefined') {
 
@@ -31,8 +31,8 @@ define([
                 interval = TimeInterval.fromIso8601(interval);
             }
 
-            polygonUpdated = DynamicProperty.processCzmlPacket(polygon, "show", CzmlBoolean, polygonData.show, interval, czmlObjectCollection) || polygonUpdated;
-            polygonUpdated = DynamicMaterialProperty.processCzmlPacket(polygon, "material", polygonData.material, interval, czmlObjectCollection) || polygonUpdated;
+            polygonUpdated = DynamicProperty.processCzmlPacket(polygon, "show", CzmlBoolean, polygonData.show, interval, dynamicObjectCollection) || polygonUpdated;
+            polygonUpdated = DynamicMaterialProperty.processCzmlPacket(polygon, "material", polygonData.material, interval, dynamicObjectCollection) || polygonUpdated;
             return polygonUpdated;
         }
     };

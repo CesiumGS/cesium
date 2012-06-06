@@ -1,8 +1,10 @@
 /*global define*/
 define([
-        '../Scene/Polygon'
+        '../Scene/Polygon',
+        '../Scene/ColorMaterial'
     ], function(
-         Polygon) {
+         Polygon,
+         ColorMaterial) {
     "use strict";
 
     function DynamicPolygonVisualizer(scene, dynamicObjectCollection) {
@@ -85,6 +87,9 @@ define([
             }
             dynamicObject.polygonVisualizerIndex = polygonVisualizerIndex;
             polygon.id = objectId;
+
+            // CZML_TODO Determine official defaults
+            polygon.material = new ColorMaterial();
         } else {
             polygon = this._polygonCollection[polygonVisualizerIndex];
         }

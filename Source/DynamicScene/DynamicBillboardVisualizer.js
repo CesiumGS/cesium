@@ -1,10 +1,16 @@
 /*global define*/
 define([
+        '../Core/Color',
+        '../Core/Cartesian2',
+        '../Core/Cartesian3',
         '../Renderer/TextureAtlas',
         '../Scene/BillboardCollection',
         '../Scene/HorizontalOrigin',
         '../Scene/VerticalOrigin'
     ], function(
+        Color,
+        Cartesian2,
+        Cartesian3,
         TextureAtlas,
         BillboardCollection,
         HorizontalOrigin,
@@ -101,6 +107,14 @@ define([
             billboard.id = objectId;
             billboard.vizTexture = undefined;
             billboard.vizTextureAvailable = false;
+
+            // CZML_TODO Determine official defaults
+            billboard.setColor(Color.WHITE);
+            billboard.setEyeOffset(Cartesian3.ZERO);
+            billboard.setPixelOffset(Cartesian2.ZERO);
+            billboard.setScale(1.0);
+            billboard.setHorizontalOrigin(HorizontalOrigin.CENTER);
+            billboard.setVerticalOrigin(VerticalOrigin.CENTER);
         } else {
             billboard = this._billboardCollection.get(billboardVisualizerIndex);
         }

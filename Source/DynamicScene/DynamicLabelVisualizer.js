@@ -1,10 +1,16 @@
 /*global define*/
 define([
+        '../Core/Color',
+        '../Core/Cartesian2',
+        '../Core/Cartesian3',
         '../Scene/LabelCollection',
         '../Scene/LabelStyle',
         '../Scene/HorizontalOrigin',
         '../Scene/VerticalOrigin'
     ], function(
+        Color,
+        Cartesian2,
+        Cartesian3,
         LabelCollection,
         LabelStyle,
         HorizontalOrigin,
@@ -95,6 +101,18 @@ define([
             }
             dynamicObject.labelVisualizerIndex = labelVisualizerIndex;
             label.id = objectId;
+
+            // CZML_TODO Determine official defaults
+            label.setText('');
+            label.setScale(1.0);
+            label.setFont("30px sans-serif");
+            label.setFillColor(Color.WHITE);
+            label.setOutlineColor(Color.BLACK);
+            label.setStyle(LabelStyle.FILL);
+            label.setPixelOffset(Cartesian2.ZERO);
+            label.setEyeOffset(Cartesian3.ZERO);
+            label.setHorizontalOrigin(HorizontalOrigin.CENTER);
+            label.setVerticalOrigin(VerticalOrigin.CENTER);
         } else {
             label = this._labelCollection.get(labelVisualizerIndex);
         }

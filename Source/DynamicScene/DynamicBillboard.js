@@ -30,7 +30,7 @@ define([
         this.show = undefined;
     }
 
-    DynamicBillboard.processCzmlPacket = function(dynamicObject, packet, czmlObjectCollection, sourceUri) {
+    DynamicBillboard.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var billboardData = packet.billboard;
         if (typeof billboardData !== 'undefined') {
 
@@ -45,16 +45,15 @@ define([
                 interval = TimeInterval.fromIso8601(interval);
             }
 
-            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "color", CzmlColor, billboardData.color, interval, czmlObjectCollection) || billboardUpdated;
-            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "eyeOffset", CzmlCartesian3, billboardData.eyeOffset, interval, czmlObjectCollection) || billboardUpdated;
-            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "horizontalOrigin", CzmlString, billboardData.horizontalOrigin, interval, czmlObjectCollection) || billboardUpdated;
-            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "image", CzmlString, billboardData.image, interval, czmlObjectCollection) || billboardUpdated;
-            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "pixelOffset", CzmlCartesian2, billboardData.pixelOffset, interval, czmlObjectCollection) || billboardUpdated;
-            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "rotation", CzmlNumber, billboardData.rotation, interval, czmlObjectCollection) || billboardUpdated;
-            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "scale", CzmlNumber, billboardData.scale, interval, czmlObjectCollection) || billboardUpdated;
-            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "show", CzmlBoolean, billboardData.show, interval, czmlObjectCollection) || billboardUpdated;
-            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "verticalOrigin", CzmlString, billboardData.verticalOrigin, interval, czmlObjectCollection) || billboardUpdated;
-            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "color", CzmlColor, billboardData.color, interval, czmlObjectCollection) || billboardUpdated;
+            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "color", CzmlColor, billboardData.color, interval, dynamicObjectCollection) || billboardUpdated;
+            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "eyeOffset", CzmlCartesian3, billboardData.eyeOffset, interval, dynamicObjectCollection) || billboardUpdated;
+            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "horizontalOrigin", CzmlString, billboardData.horizontalOrigin, interval, dynamicObjectCollection) || billboardUpdated;
+            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "image", CzmlString, billboardData.image, interval, dynamicObjectCollection) || billboardUpdated;
+            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "pixelOffset", CzmlCartesian2, billboardData.pixelOffset, interval, dynamicObjectCollection) || billboardUpdated;
+            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "scale", CzmlNumber, billboardData.scale, interval, dynamicObjectCollection) || billboardUpdated;
+            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "show", CzmlBoolean, billboardData.show, interval, dynamicObjectCollection) || billboardUpdated;
+            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "verticalOrigin", CzmlString, billboardData.verticalOrigin, interval, dynamicObjectCollection) || billboardUpdated;
+            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "color", CzmlColor, billboardData.color, interval, dynamicObjectCollection) || billboardUpdated;
 
             return billboardUpdated;
         }
@@ -74,7 +73,6 @@ define([
             targetBillboard.horizontalOrigin = targetBillboard.horizontalOrigin || billboardToMerge.horizontalOrigin;
             targetBillboard.image = targetBillboard.image || billboardToMerge.image;
             targetBillboard.pixelOffset = targetBillboard.pixelOffset || billboardToMerge.pixelOffset;
-            targetBillboard.rotation = targetBillboard.rotation || billboardToMerge.rotation;
             targetBillboard.scale = targetBillboard.scale || billboardToMerge.scale;
             targetBillboard.show = targetBillboard.show || billboardToMerge.show;
             targetBillboard.verticalOrigin = targetBillboard.verticalOrigin || billboardToMerge.verticalOrigin;

@@ -1,10 +1,16 @@
 /*global define*/
 define([
+        '../Core/Color',
+        '../Core/Math',
+        '../Core/Matrix4',
         '../Scene/ComplexConicSensorVolume',
-        '../Core/Matrix4'
-    ], function(
-            ComplexConicSensorVolume,
-         Matrix4) {
+        '../Scene/ColorMaterial'
+       ], function(
+         Color,
+         CesiumMath,
+         Matrix4,
+         ComplexConicSensorVolume,
+         ColorMaterial) {
     "use strict";
 
     var setModelMatrix = function(sensor,  position, orientation)
@@ -136,6 +142,19 @@ define([
             }
             dynamicObject.coneVisualizerIndex = coneVisualizerIndex;
             cone.id = objectId;
+
+            // CZML_TODO Determine official defaults
+            cone.capMaterial = new ColorMaterial();
+            cone.innerHalfAngle = CesiumMath.PI_OVER_TWO;
+            cone.innerMaterial = new ColorMaterial();
+            cone.intersectionColor = Color.YELLOW;
+            cone.maximumClockAngle =  Math.PI;
+            cone.minimumClockAngle = -Math.PI;
+            cone.outerHalfAngle = CesiumMath.PI_OVER_TWO;
+            cone.outerMaterial = new ColorMaterial();
+            cone.radius = Number.POSITIVE_INFINITY;
+            cone.showIntersection = true;
+            cone.silhouetteMaterial = new ColorMaterial();
         } else {
             cone = this._coneCollection[coneVisualizerIndex];
         }

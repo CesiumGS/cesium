@@ -2,23 +2,23 @@
 define(function() {
     "use strict";
 
-    function VisualizerCollection(visualizers, czmlObjectCollection) {
+    function VisualizerCollection(visualizers, dynamicObjectCollection) {
         this._visualizers = visualizers;
-        this._czmlObjectCollection = undefined;
-        this.setDynamicObjectCollection(czmlObjectCollection);
+        this._dynamicObjectCollection = undefined;
+        this.setDynamicObjectCollection(dynamicObjectCollection);
     }
 
     VisualizerCollection.prototype.getDynamicObjectCollection = function() {
-        return this._czmlObjectCollection;
+        return this._dynamicObjectCollection;
     };
 
-    VisualizerCollection.prototype.setDynamicObjectCollection = function(czmlObjectCollection) {
-        var oldCollection = this._czmlObjectCollection;
-        if (oldCollection !== czmlObjectCollection) {
-            this._czmlObjectCollection = czmlObjectCollection;
+    VisualizerCollection.prototype.setDynamicObjectCollection = function(dynamicObjectCollection) {
+        var oldCollection = this._dynamicObjectCollection;
+        if (oldCollection !== dynamicObjectCollection) {
+            this._dynamicObjectCollection = dynamicObjectCollection;
             var visualizers = this._visualizers;
             for ( var i = visualizers.length - 1; i > -1; i--) {
-                visualizers[i].setDynamicObjectCollection(czmlObjectCollection);
+                visualizers[i].setDynamicObjectCollection(dynamicObjectCollection);
             }
         }
     };

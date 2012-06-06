@@ -1,10 +1,14 @@
 /*global define*/
 define([
+        '../Core/Color',
+        '../Core/Matrix4',
         '../Scene/CustomSensorVolume',
-        '../Core/Matrix4'
-    ], function(
-         CustomSensorVolume,
-         Matrix4) {
+        '../Scene/ColorMaterial'
+       ], function(
+        Color,
+        Matrix4,
+        CustomSensorVolume,
+        ColorMaterial) {
     "use strict";
 
     var setModelMatrix = function(sensor,  position, orientation)
@@ -129,6 +133,12 @@ define([
             }
             dynamicObject.pyramidVisualizerIndex = pyramidVisualizerIndex;
             pyramid.id = objectId;
+
+            // CZML_TODO Determine official defaults
+            pyramid.radius = Number.POSITIVE_INFINITY;
+            pyramid.showIntersection = true;
+            pyramid.intersectionColor = Color.YELLOW;
+            pyramid.material = new ColorMaterial();
         } else {
             pyramid = this._pyramidCollection[pyramidVisualizerIndex];
         }

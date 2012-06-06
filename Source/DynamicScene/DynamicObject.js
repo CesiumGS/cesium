@@ -55,10 +55,10 @@ define([
         }
     };
 
-    DynamicObject.processCzmlPacketOrientation = function(dynamicObject, packet, czmlObjectCollection) {
+    DynamicObject.processCzmlPacketOrientation = function(dynamicObject, packet, dynamicObjectCollection) {
         var orientationData = packet.orientation;
         if (typeof orientationData !== 'undefined') {
-            return DynamicProperty.processCzmlPacket(dynamicObject, "orientation", CzmlQuaternion, orientationData, undefined, czmlObjectCollection);
+            return DynamicProperty.processCzmlPacket(dynamicObject, "orientation", CzmlQuaternion, orientationData, undefined, dynamicObjectCollection);
         }
         return false;
     };

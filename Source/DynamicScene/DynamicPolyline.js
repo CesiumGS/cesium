@@ -21,7 +21,7 @@ function(
         this.width = undefined;
     }
 
-    DynamicPolyline.processCzmlPacket = function(dynamicObject, packet, czmlObjectCollection) {
+    DynamicPolyline.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection) {
         var polylineData = packet.polyline;
         if (typeof polylineData !== 'undefined') {
 
@@ -36,11 +36,11 @@ function(
                 interval = TimeInterval.fromIso8601(interval);
             }
 
-            polylineUpdated = DynamicProperty.processCzmlPacket(polyline, "color", CzmlColor, polylineData.color, interval, czmlObjectCollection) || polylineUpdated;
-            polylineUpdated = DynamicProperty.processCzmlPacket(polyline, "outlineColor", CzmlColor, polylineData.outlineColor, interval, czmlObjectCollection) || polylineUpdated;
-            polylineUpdated = DynamicProperty.processCzmlPacket(polyline, "outlineWidth", CzmlNumber, polylineData.outlineWidth, interval, czmlObjectCollection) || polylineUpdated;
-            polylineUpdated = DynamicProperty.processCzmlPacket(polyline, "show", CzmlBoolean, polylineData.show, interval, czmlObjectCollection) || polylineUpdated;
-            polylineUpdated = DynamicProperty.processCzmlPacket(polyline, "width", CzmlNumber, polylineData.width, interval, czmlObjectCollection) || polylineUpdated;
+            polylineUpdated = DynamicProperty.processCzmlPacket(polyline, "color", CzmlColor, polylineData.color, interval, dynamicObjectCollection) || polylineUpdated;
+            polylineUpdated = DynamicProperty.processCzmlPacket(polyline, "outlineColor", CzmlColor, polylineData.outlineColor, interval, dynamicObjectCollection) || polylineUpdated;
+            polylineUpdated = DynamicProperty.processCzmlPacket(polyline, "outlineWidth", CzmlNumber, polylineData.outlineWidth, interval, dynamicObjectCollection) || polylineUpdated;
+            polylineUpdated = DynamicProperty.processCzmlPacket(polyline, "show", CzmlBoolean, polylineData.show, interval, dynamicObjectCollection) || polylineUpdated;
+            polylineUpdated = DynamicProperty.processCzmlPacket(polyline, "width", CzmlNumber, polylineData.width, interval, dynamicObjectCollection) || polylineUpdated;
 
             return polylineUpdated;
         }

@@ -1,7 +1,9 @@
 /*global define*/
 define([
+        '../Core/Color',
         '../Scene/Polyline'
-    ], function(
+       ], function(
+         Color,
          Polyline) {
     "use strict";
 
@@ -85,6 +87,12 @@ define([
             }
             dynamicObject.polylineVisualizerIndex = polylineVisualizerIndex;
             polyline.id = objectId;
+
+            // CZML_TODO Determine official defaults
+            polyline.color = Color.WHITE;
+            polyline.outlineColor = Color.BLACK;
+            polyline.outlineWidth = 1;
+            polyline.width = 1;
         } else {
             polyline = this._polylineCollection[polylineVisualizerIndex];
         }

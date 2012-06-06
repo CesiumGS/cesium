@@ -16,6 +16,22 @@ define(function() {
         this.alpha = alpha;
     }
 
+    Color.WHITE = Object.freeze(new Color(1.0, 1.0, 1.0, 1.0));
+
+    Color.BLACK = Object.freeze(new Color(0.0, 0.0, 0.0, 1.0));
+
+    Color.RED = Object.freeze(new Color(1.0, 0.0, 0.0, 1.0));
+
+    Color.GREEN = Object.freeze(new Color(0.0, 1.0, 0.0, 1.0));
+
+    Color.BLUE = Object.freeze(new Color(0.0, 0.0, 1.0, 1.0));
+
+    Color.YELLOW = Object.freeze(new Color(1.0, 1.0, 0.0, 1.0));
+
+    Color.MAGENTA = Object.freeze(new Color(1.0, 0.0, 1.0, 1.0));
+
+    Color.CYAN = Object.freeze(new Color(0.0, 1.0, 1.0, 1.0));
+
     /**
      * Returns a string containing a CSS color value for this color.
      */

@@ -69,7 +69,7 @@ define([
         this._propertyIntervals = new TimeIntervalCollection();
     }
 
-    DynamicDirectionsProperty.processCzmlPacket = function(parentObject, propertyName, czmlIntervals, constrainedInterval, czmlObjectCollection) {
+    DynamicDirectionsProperty.processCzmlPacket = function(parentObject, propertyName, czmlIntervals, constrainedInterval, dynamicObjectCollection) {
         var newProperty = false;
         var existingProperty = parentObject[propertyName];
         if (typeof czmlIntervals === 'undefined') {
@@ -83,7 +83,7 @@ define([
             newProperty = true;
         }
 
-        existingProperty.addIntervals(czmlIntervals, czmlObjectCollection, constrainedInterval);
+        existingProperty.addIntervals(czmlIntervals, dynamicObjectCollection, constrainedInterval);
 
         return newProperty;
     };

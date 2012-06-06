@@ -94,6 +94,12 @@ function(TextureAtlas,
             }
             dynamicObject.pointVisualizerIndex = pointVisualizerIndex;
             billboard.id = objectId;
+
+            // CZML_TODO Determine official defaults
+            billboard.point_color = Color.WHITE;
+            billboard.point_outlineColor = Color.BLACK;
+            billboard.point_outlineWidth = 2;
+            billboard.point_pixelSize = 3;
         } else {
             billboard = this._billboardCollection.get(pointVisualizerIndex);
         }

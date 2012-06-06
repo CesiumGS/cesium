@@ -54,6 +54,10 @@ function(dom,
     var cameraCenteredObjectID;
     var lastCameraCenteredObjectID;
 
+    function updateSpeedIndicator() {
+        speedIndicatorElement.innerHTML = clock.multiplier + 'x realtime';
+    }
+
     function setTimeFromBuffer() {
         var i, object, len;
         var startTime = JulianDate.MAXIMUM_VALUE;
@@ -88,11 +92,11 @@ function(dom,
             }
         }
 
-        clock.multiplier = startTime.getSecondsDifference(stopTime) / 30.0;
         clock.startTime = startTime;
         clock.stopTime = stopTime;
         clock.currentTime = startTime;
         timeline.zoomTo(startTime, stopTime);
+        updateSpeedIndicator();
     }
 
     function handleDrop(e) {
@@ -116,10 +120,6 @@ function(dom,
         } else {
             cameraCenteredObjectID = undefined;
         }
-    }
-
-    function updateSpeedIndicator() {
-        speedIndicatorElement.innerHTML = clock.multiplier + 'x realtime';
     }
 
     var cesium = new CesiumWidget({
