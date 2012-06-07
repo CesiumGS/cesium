@@ -134,7 +134,8 @@ define([
         this.modelMatrix = Matrix4.IDENTITY;
 
         /**
-         * DOC_TBA
+         * The current morph transition time between 2D/Columbus View and 3D,
+         * with 0.0 being 2D or Columbus View and 1.0 being 3D.
          *
          * @type Number
          */
