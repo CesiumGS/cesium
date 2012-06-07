@@ -160,7 +160,7 @@ require({
         proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
     });
 
-    var cb = new Cesium.CentralBody(scene.getCamera(), ellipsoid);
+    var cb = new Cesium.CentralBody(ellipsoid);
     cb.dayTileProvider = bing;
     cb.nightImageSource = "../../Images/land_ocean_ice_lights_2048.jpg";
     cb.specularMapSource = "../../Images/earthspec1k.jpg";
