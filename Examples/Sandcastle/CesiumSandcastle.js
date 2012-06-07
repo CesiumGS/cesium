@@ -45,31 +45,39 @@ require({
             xhr,
             registry
     ) {
+        "use strict";
         parser.parse();
-        window.CesiumWidget = CesiumWidget;
+        window.CesiumWidget = CesiumWidget; // for autocomplete.
         fx.fadeOut({ node: 'loading', onEnd: function () {
             domConstruct.destroy('loading');
         }}).play();
 
+        // NOTE: BlobBuilder will eventually be deprecated and replaced with a direct constructor on Blob itself.
+        // https://developer.mozilla.org/en/DOM/Blob
+        var BlobBuilder = BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder;
+        var getURL = window.URL || window.webkitURL || window;
+        if (typeof BlobBuilder === 'undefined') {
+            registry.byId('buttonSaveAs').set('disabled', true);
+        }
+
         var jsEditor, htmlEditor, suggestButton = registry.byId('buttonSuggest');
-        var docTimer, that = this, cesiumContainer = registry.byId('cesiumContainer');
-        var docNode = dojo.byId('docPopup'), docMessage = dojo.byId('docPopupMessage'), docTabs = {};
-        that.types = [];
+        var docTimer, docTabs = {}, cesiumContainer = registry.byId('cesiumContainer');
+        var docNode = dojo.byId('docPopup'), docMessage = dojo.byId('docPopupMessage');
+        var local = { 'docTypes': [],  'headers': "<html><head></head><body>"};
         xhr.get({
             url: '../../Build/Documentation/types.txt',
             handleAs: 'json'
         }).then(function (value) {
-            that.types = value;
+            local.docTypes = value;
         });
 
-        var bucketHTML = { 'headers': "<html><head></head><body>" };
         xhr.get({
             url: 'bucket.html',
             handleAs: 'text'
         }).then(function (value) {
             var pos = value.indexOf('<body');
             pos = value.indexOf('>', pos);
-            bucketHTML.headers = value.substring(0, pos + 1) + '\n';
+            local.headers = value.substring(0, pos + 1) + '\n';
         });
 
         function openDocTab(title, link) {
@@ -101,11 +109,11 @@ require({
 
         function showDocPopup () {
             var selectedText = jsEditor.getSelection();
-            if (selectedText && selectedText in that.types && typeof that.types[selectedText].push === 'function') {
-                var member, ele, i, len = that.types[selectedText].length;
+            if (selectedText && selectedText in local.docTypes && typeof local.docTypes[selectedText].push === 'function') {
+                var member, ele, i, len = local.docTypes[selectedText].length;
                 docMessage.innerHTML = '';
                 for (i = 0; i < len; ++i) {
-                    member = that.types[selectedText][i];
+                    member = local.docTypes[selectedText][i];
                     ele = document.createElement('a');
                     ele.target = "_blank";
                     ele.textContent = member.replace('.html', '').replace('module-', '').replace('#', '.');
@@ -212,8 +220,15 @@ require({
         });
 
         registry.byId('buttonSaveAs').on('click', function () {
-            var html = bucketHTML.headers + htmlEditor.getValue() +
-                '\n<script id="cesium_sandcastle_script">\n' + jsEditor.getValue() + '\n</script>\n</body>\n</html>\n';
-            console.log(html); // just a hack for now
+            var html = local.headers + htmlEditor.getValue() +
+                '\n<script id="cesium_sandcastle_script">\n' + jsEditor.getValue() +
+                '\n</script>\n</body>\n</html>\n';
+            //console.log(html); // just a hack for now
+
+            var bb = new BlobBuilder();
+            bb.append(html);
+            var blob = bb.getBlob("application/octet-stream");  // was "text/plain;charset=utf-8"
+            var blobURL = getURL.createObjectURL(blob);
+            console.log(blobURL); // just a hack for now
         });
     });
