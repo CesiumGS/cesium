@@ -138,6 +138,19 @@ defineSuite([
         expect(context.readPixels()).not.toEqualArray([0, 0, 0, 0]);
     });
 
+    it("renders without a material", function() {
+        // This test fails in Chrome if a breakpoint is set inside this function.  Strange.
+        polygon = createPolygon();
+        polygon.material = undefined;
+
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polygon.update(context, sceneState);
+        polygon.render(context, us);
+        expect(context.readPixels()).not.toEqualArray([0, 0, 0, 0]);
+    });
+
     it("renders without lighting", function() {
         // This test fails in Chrome if a breakpoint is set inside this function.  Strange.
         polygon = createPolygon();
