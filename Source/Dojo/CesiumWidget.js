@@ -202,7 +202,7 @@ define([
                 this.bumpMapUrl = this.bumpMapUrl || require.toUrl('Images//earthbump1k.jpg');
             }
 
-            var centralBody = this.centralBody = new CentralBody(scene.getCamera(), ellipsoid);
+            var centralBody = this.centralBody = new CentralBody(ellipsoid);
             centralBody.showSkyAtmosphere = true;
             centralBody.showGroundAtmosphere = true;
 
