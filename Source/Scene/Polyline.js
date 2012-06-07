@@ -282,7 +282,8 @@ define([
         this._rsPick = undefined;
 
         /**
-         * DOC_TBA
+         * The current morph transition time between 2D/Columbus View and 3D,
+         * with 0.0 being 2D or Columbus View and 1.0 being 3D.
          *
          * @type Number
          */
@@ -650,21 +651,6 @@ define([
         return this.show && (this.color.alpha !== 0);
     };
 
-    Polyline.prototype._syncMorphTime = function(mode) {
-        switch (mode) {
-        case SceneMode.SCENE3D:
-            this.morphTime = 1.0;
-            break;
-
-        case SceneMode.SCENE2D:
-        case SceneMode.COLUMBUS_VIEW:
-            this.morphTime = 0.0;
-            break;
-
-        // MORPHING - don't change it
-        }
-    };
-
     /**
      * Commits changes to properties before rendering by updating the object's WebGL resources.
      * This must be called before calling {@link Polyline#render} in order to realize
@@ -758,7 +744,6 @@ define([
 
             var mode = sceneState.mode;
             var projection = sceneState.scene2D.projection;
-            this._syncMorphTime(mode);
 
             if (this.columbusView.groundTrack.show || (mode === SceneMode.SCENE2D)) {
                 this._spGroundTrack =

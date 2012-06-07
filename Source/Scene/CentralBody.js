@@ -178,7 +178,6 @@ define([
     /**
      * DOC_TBA
      *
-     * @param {Camera} camera DOC_TBA
      * @param {Ellipsoid} [ellipsoid=WGS84 Ellipsoid] Determines the size and shape of the central body.
      *
      * @name CentralBody
@@ -186,11 +185,7 @@ define([
      *
      * @exception {DeveloperError} camera is required.
      */
-    function CentralBody(camera, ellipsoid) {
-        if (!camera) {
-            throw new DeveloperError("camera is required.", "camera");
-        }
-
+    function CentralBody(ellipsoid) {
         ellipsoid = ellipsoid || Ellipsoid.WGS84;
 
         this._ellipsoid = ellipsoid;
@@ -200,7 +195,6 @@ define([
             CesiumMath.PI,
             CesiumMath.PI_OVER_TWO
         );
-        this._camera = camera;
         this._rootTile = new Tile({
             extent : this._maxExtent,
             zoom : 0,
@@ -621,9 +615,10 @@ define([
         this.nightIntensity = 2.0;
 
         /**
-         * DOC_TBA
+         * The current morph transition time between 2D/Columbus View and 3D,
+         * with 0.0 being 2D or Columbus View and 1.0 being 3D.
          *
-         * @type {Number}
+         * @type Number
          */
         this.morphTime = 1.0;
 
@@ -768,21 +763,6 @@ define([
                  (newMode === SceneMode.SCENE3D)));
     };
 
-    CentralBody.prototype._syncMorphTime = function(mode) {
-        switch (mode) {
-        case SceneMode.SCENE3D:
-            this.morphTime = 1.0;
-            break;
-
-        case SceneMode.SCENE2D:
-        case SceneMode.COLUMBUS_VIEW:
-            this.morphTime = 0.0;
-            break;
-
-        // MORPHING - don't change it
-        }
-    };
-
     CentralBody.prototype._prefetchImages = function() {
         var limit = Math.max(Math.min(this._prefetchLimit, this._dayTileProvider.zoomMax), this._dayTileProvider.zoomMin);
         var stack = [this._rootTile];
@@ -842,25 +822,24 @@ define([
         return this._dayTileProvider.loadTileImage(tile, onload, onerror, oninvalid);
     };
 
-    CentralBody.prototype._getTileBoundingSphere = function (tile, state) {
-        var boundingVolume;
-        if (state.mode === SceneMode.SCENE3D) {
-            boundingVolume = tile.get3DBoundingSphere().clone();
-        } else if (state.mode === SceneMode.COLUMBUS_VIEW){
-            boundingVolume = tile.get2DBoundingSphere(state.projection).clone();
+    CentralBody.prototype._getTileBoundingSphere = function(tile, sceneState) {
+        if (sceneState.mode === SceneMode.SCENE3D) {
+            return tile.get3DBoundingSphere();
+        } else if (sceneState.mode === SceneMode.COLUMBUS_VIEW) {
+            var boundingVolume = tile.get2DBoundingSphere(sceneState.scene2D.projection).clone();
             boundingVolume.center = new Cartesian3(0.0, boundingVolume.center.x, boundingVolume.center.y);
+            return boundingVolume;
         } else {
-            boundingVolume = tile.computeMorphBounds(this.morphTime, state.projection);
+            return tile.computeMorphBounds(this.morphTime, sceneState.scene2D.projection);
         }
-        return boundingVolume;
     };
 
-    CentralBody.prototype._cull = function(tile, state) {
-        if (state.mode === SceneMode.SCENE2D) {
-            var bRect = tile.get2DBoundingRectangle(state.projection);
+    CentralBody.prototype._cull = function(tile, occluder, sceneState) {
+        if (sceneState.mode === SceneMode.SCENE2D) {
+            var bRect = tile.get2DBoundingRectangle(sceneState.scene2D.projection);
 
-            var frustum = this._camera.frustum;
-            var position = this._camera.position;
+            var frustum = sceneState.camera.frustum;
+            var position = sceneState.camera.position;
             var x = position.x + frustum.left;
             var y = position.y + frustum.bottom;
             var w = position.x + frustum.right - x;
@@ -870,24 +849,24 @@ define([
             return !Rectangle.rectangleRectangleIntersect(bRect, fRect);
         }
 
-        var boundingVolume = this._getTileBoundingSphere(tile, state);
-        if (this._camera.getVisibility(boundingVolume, BoundingSphere.planeSphereIntersect) === Intersect.OUTSIDE) {
+        var boundingVolume = this._getTileBoundingSphere(tile, sceneState);
+        if (sceneState.camera.getVisibility(boundingVolume, BoundingSphere.planeSphereIntersect) === Intersect.OUTSIDE) {
             return true;
         }
 
-        if (state.mode === SceneMode.SCENE3D) {
+        if (sceneState.mode === SceneMode.SCENE3D) {
             var occludeePoint = tile.getOccludeePoint();
-            return (occludeePoint && !state.occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !state.occluder.isVisible(boundingVolume);
+            return (occludeePoint && !occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !occluder.isVisible(boundingVolume);
         }
 
         return false;
     };
 
-    CentralBody.prototype._throttleImages = function(state) {
+    CentralBody.prototype._throttleImages = function(occluder, sceneState) {
         for ( var i = 0, len = this._imageQueue.length; i < len && i < this._imageThrottleLimit; ++i) {
             var tile = this._imageQueue.dequeue();
 
-            if (this._cull(tile, state)) {
+            if (this._cull(tile, occluder, sceneState)) {
                 tile.state = TileState.READY;
                 continue;
             }
@@ -915,11 +894,11 @@ define([
         return canvas;
     };
 
-    CentralBody.prototype._throttleReprojection = function(state) {
+    CentralBody.prototype._throttleReprojection = function(occluder, sceneState) {
         for ( var i = 0, len = this._reprojectQueue.length; i < len && i < this._reprojectThrottleLimit; ++i) {
             var tile = this._reprojectQueue.dequeue();
 
-            if (this._cull(tile, state)) {
+            if (this._cull(tile, occluder, sceneState)) {
                 tile.image = undefined;
                 tile.state = TileState.READY;
                 continue;
@@ -931,11 +910,11 @@ define([
         }
     };
 
-    CentralBody.prototype._throttleTextures = function(state) {
+    CentralBody.prototype._throttleTextures = function(context, occluder, sceneState) {
         for ( var i = 0, len = this._textureQueue.length; i < len && i < this._textureThrottleLimit; ++i) {
             var tile = this._textureQueue.dequeue();
 
-            if (this._cull(tile, state) || !tile.image) {
+            if (this._cull(tile, occluder, sceneState) || !tile.image) {
                 tile.image = undefined;
                 tile.state = TileState.READY;
                 continue;
@@ -949,7 +928,7 @@ define([
                 wrapT : TextureWrap.CLAMP,
                 minificationFilter : TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
                 magnificationFilter : TextureMagnificationFilter.LINEAR,
-                maximumAnisotropy : state.context.getMaximumTextureFilterAnisotropy() || 8 // TODO: Remove Chrome work around
+                maximumAnisotropy : context.getMaximumTextureFilterAnisotropy() || 8 // TODO: Remove Chrome work around
             });
             tile.state = TileState.TEXTURE_LOADED;
             tile.image = undefined;
@@ -992,14 +971,13 @@ define([
         }
     };
 
-    CentralBody.prototype._enqueueTile = function(tile, state) {
+    CentralBody.prototype._enqueueTile = function(tile, context, sceneState) {
         if (this._renderQueue.contains(tile)) {
             return;
         }
 
-        var mode = state.mode;
-        var projection = state.projection;
-        var context = state.context;
+        var mode = sceneState.mode;
+        var projection = sceneState.scene2D.projection;
 
         // create vertex array the first time it is needed or when morphing
         if (!tile._extentVA ||
@@ -1145,13 +1123,13 @@ define([
         this._renderQueue.enqueue(tile);
     };
 
-    CentralBody.prototype._createTileDistanceFunction = function(width, height) {
+    CentralBody.prototype._createTileDistanceFunction = function(sceneState, width, height) {
         var provider = this._dayTileProvider;
         if (typeof provider === 'undefined') {
             return undefined;
         }
 
-        var frustum = this._camera.frustum;
+        var frustum = sceneState.camera.frustum;
         var extent = provider.maxExtent;
 
         var pixelSizePerDistance = 2.0 * Math.tan(frustum.fovy * 0.5);
@@ -1173,7 +1151,7 @@ define([
         };
     };
 
-    CentralBody.prototype._refine3D = function(tile, state) {
+    CentralBody.prototype._refine3D = function(tile, context, sceneState) {
         var provider = this._dayTileProvider;
         if (typeof provider === "undefined") {
             return false;
@@ -1183,9 +1161,9 @@ define([
             return true;
         }
 
-        var boundingVolume = this._getTileBoundingSphere(tile, state);
-        var cameraPosition = state.camera.position;
-        var direction = state.camera.direction;
+        var boundingVolume = this._getTileBoundingSphere(tile, sceneState);
+        var cameraPosition = sceneState.camera.getPositionWC();
+        var direction = sceneState.camera.getDirectionWC();
 
         var texturePixelError = (this.pixelError3D !== "undefined" && this.pixelError3D > 0.0) ? this.pixelError3D : 1.0;
         var dmin = this._minTileDistance(tile.zoom, texturePixelError);
@@ -1201,14 +1179,14 @@ define([
         return false;
     };
 
-    CentralBody.prototype._refine2D = function(tile, state) {
-        var camera = this._camera;
+    CentralBody.prototype._refine2D = function(tile, context, sceneState) {
+        var camera = sceneState.camera;
         var frustum = camera.frustum;
         var pixelError = this.pixelError2D;
         var provider = this._dayTileProvider;
 
-        var projection = state.projection;
-        var viewport = state.context.getViewport();
+        var projection = sceneState.scene2D.projection;
+        var viewport = context.getViewport();
         var viewportWidth = viewport.width;
         var viewportHeight = viewport.height;
 
@@ -1247,19 +1225,12 @@ define([
         return false;
     };
 
-    /**
-     * Determines whether a tile should be refined to a higher resolution.
-     *
-     * @memberof CentralBody
-     *
-     * @return {Boolean} <code>true</code> if a higher resolution tile should be displayed or <code>false</code> if a higher resolution tile is not needed.
-     */
-    CentralBody.prototype.refine = function(tile, state) {
-        if (state.mode === SceneMode.SCENE2D) {
-            return this._refine2D(tile, state);
+    CentralBody.prototype._refine = function(tile, context, sceneState) {
+        if (sceneState.mode === SceneMode.SCENE2D) {
+            return this._refine2D(tile, context, sceneState);
         }
 
-        return this._refine3D(tile, state);
+        return this._refine3D(tile, context, sceneState);
     };
 
     CentralBody.prototype._createScissorRectangle = function(description) {
@@ -1289,15 +1260,12 @@ define([
         };
     };
 
-    CentralBody.prototype._computeDepthQuad = function() {
+    CentralBody.prototype._computeDepthQuad = function(sceneState) {
         // PERFORMANCE_TODO: optimize diagonal matrix multiplies.
         var dInverse = Matrix3.createNonUniformScale(this._ellipsoid.getRadii());
         var d = Matrix3.createNonUniformScale(this._ellipsoid.getOneOverRadii());
 
-        // TODO: Stop transforming camera position to world coordinates all the time.
-        var p = this._camera.position;
-        p = new Cartesian4(p.x, p.y, p.z, 1.0);
-        p = this._camera.transform.multiplyWithVector(p).getXYZ();
+        var p = sceneState.camera.getPositionWC();
 
         // Find the corresponding position in the scaled space of the ellipsoid.
         var q = d.multiplyWithVector(p);
@@ -1326,7 +1294,7 @@ define([
         return [upperLeft.x, upperLeft.y, upperLeft.z, lowerLeft.x, lowerLeft.y, lowerLeft.z, upperRight.x, upperRight.y, upperRight.z, lowerRight.x, lowerRight.y, lowerRight.z];
     };
 
-    CentralBody.prototype._computePoleQuad = function(maxLat, maxGivenLat, viewProjMatrix, viewportTransformation) {
+    CentralBody.prototype._computePoleQuad = function(sceneState, maxLat, maxGivenLat, viewProjMatrix, viewportTransformation) {
         var pt1 = this._ellipsoid.toCartesian(new Cartographic2(0.0, maxGivenLat));
         var pt2 = this._ellipsoid.toCartesian(new Cartographic2(Math.PI, maxGivenLat));
         var radius = pt1.subtract(pt2).magnitude() * 0.5;
@@ -1334,7 +1302,7 @@ define([
         var center = this._ellipsoid.toCartesian(new Cartographic2(0.0, maxLat));
 
         var right;
-        var dir = this._camera.direction;
+        var dir = sceneState.camera.direction;
         if (1.0 - Cartesian3.UNIT_Z.negate().dot(dir) < CesiumMath.EPSILON6) {
             right = Cartesian3.UNIT_X;
         } else {
@@ -1358,13 +1326,13 @@ define([
                 halfHeight * 2.0);
     };
 
-    CentralBody.prototype._fillPoles = function(state) {
-        if (typeof this._dayTileProvider === 'undefined' || state.mode !== SceneMode.SCENE3D) {
+    CentralBody.prototype._fillPoles = function(context, occluder, sceneState) {
+        if (typeof this._dayTileProvider === 'undefined' || sceneState.mode !== SceneMode.SCENE3D) {
             return;
         }
 
-        var viewProjMatrix = state.context.getUniformState().getViewProjection();
-        var viewportTransformation = state.context.getUniformState().getViewportTransformation();
+        var viewProjMatrix = context.getUniformState().getViewProjection();
+        var viewportTransformation = context.getUniformState().getViewportTransformation();
         var latitudeExtension = 0.05;
 
         var extent;
@@ -1386,13 +1354,13 @@ define([
                 CesiumMath.PI_OVER_TWO
             );
             boundingVolume = Extent.compute3DBoundingSphere(extent, this._ellipsoid);
-            frustumCull = this._camera.getVisibility(boundingVolume, BoundingSphere.planeSphereIntersect) === Intersect.OUTSIDE;
+            frustumCull = sceneState.camera.getVisibility(boundingVolume, BoundingSphere.planeSphereIntersect) === Intersect.OUTSIDE;
             occludeePoint = Extent.computeOccludeePoint(extent, this._ellipsoid).occludeePoint;
-            occluded = (occludeePoint && !state.occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !state.occluder.isVisible(boundingVolume);
+            occluded = (occludeePoint && !occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !occluder.isVisible(boundingVolume);
 
             this._drawNorthPole = !frustumCull && !occluded;
             if (this._drawNorthPole) {
-                rect = this._computePoleQuad(extent.north, extent.south - latitudeExtension, viewProjMatrix, viewportTransformation);
+                rect = this._computePoleQuad(sceneState, extent.north, extent.south - latitudeExtension, viewProjMatrix, viewportTransformation);
                 positions = [
                     rect.x, rect.y,
                     rect.x + rect.width, rect.y,
@@ -1410,7 +1378,7 @@ define([
                             }
                         }
                     };
-                    this._vaNorthPole = state.context.createVertexArrayFromMesh({
+                    this._vaNorthPole = context.createVertexArrayFromMesh({
                         mesh : mesh,
                         attributeIndices : {
                             position : 0
@@ -1433,13 +1401,13 @@ define([
                 this._dayTileProvider.maxExtent.south
             );
             boundingVolume = Extent.compute3DBoundingSphere(extent, this._ellipsoid);
-            frustumCull = this._camera.getVisibility(boundingVolume, BoundingSphere.planeSphereIntersect) === Intersect.OUTSIDE;
+            frustumCull = sceneState.camera.getVisibility(boundingVolume, BoundingSphere.planeSphereIntersect) === Intersect.OUTSIDE;
             occludeePoint = Extent.computeOccludeePoint(extent, this._ellipsoid).occludeePoint;
-            occluded = (occludeePoint && !state.occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !state.occluder.isVisible(boundingVolume);
+            occluded = (occludeePoint && !occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !occluder.isVisible(boundingVolume);
 
             this._drawSouthPole = !frustumCull && !occluded;
             if (this._drawSouthPole) {
-                rect = this._computePoleQuad(extent.south, extent.north + latitudeExtension, viewProjMatrix, viewportTransformation);
+                rect = this._computePoleQuad(sceneState, extent.south, extent.north + latitudeExtension, viewProjMatrix, viewportTransformation);
                 positions = [
                      rect.x, rect.y,
                      rect.x + rect.width, rect.y,
@@ -1457,7 +1425,7 @@ define([
                              }
                          }
                      };
-                     this._vaSouthPole = state.context.createVertexArrayFromMesh({
+                     this._vaSouthPole = context.createVertexArrayFromMesh({
                          mesh : mesh,
                          attributeIndices : {
                              position : 0
@@ -1513,8 +1481,6 @@ define([
 
         var mode = sceneState.mode;
         var projection = sceneState.scene2D.projection;
-
-        this._syncMorphTime(mode);
 
         if (this._dayTileProvider !== this.dayTileProvider) {
             this._dayTileProvider = this.dayTileProvider;
@@ -1577,7 +1543,7 @@ define([
             (!this._quadV || this._quadV.isDestroyed()) ||
             (!this._quadH || this._quadH.isDestroyed())) {
 
-            this._minTileDistance = this._createTileDistanceFunction(width, height);
+            this._minTileDistance = this._createTileDistanceFunction(sceneState, width, height);
 
             this._fb = this._fb && this._fb.destroy();
             this._quadV = this._quadV && this._quadV.destroy();
@@ -1702,7 +1668,7 @@ define([
         this._rsDepth.cull.enabled = cull;
 
         // update scisor/depth plane
-        var depthQuad = this._computeDepthQuad();
+        var depthQuad = this._computeDepthQuad(sceneState);
 
         // TODO: re-enable scissorTest
         /*if (mode === SceneMode.SCENE3D) {
@@ -1913,9 +1879,8 @@ define([
             this._showTerminator = this.showTerminator;
         }
 
-        var camera = this._camera;
-        var cameraPosition = camera.transform.multiplyWithVector(new Cartesian4(camera.position.x, camera.position.y, camera.position.z, 1.0)).getXYZ();
-        var cameraDirection = camera.transform.multiplyWithVector(new Cartesian4(camera.direction.x, camera.direction.y, camera.direction.z, 0.0)).getXYZ();
+        var camera = sceneState.camera;
+        var cameraPosition = camera.getPositionWC();
 
         this._fCameraHeight2 = cameraPosition.magnitudeSquared();
         this._fCameraHeight = Math.sqrt(this._fCameraHeight2);
@@ -1943,35 +1908,26 @@ define([
             this._spSky = this._spSkyFromAtmosphere;
         }
 
-        var state = {
-                context : context,
-                camera : {
-                    position : cameraPosition,
-                    direction : cameraDirection
-                },
-                occluder : new Occluder(new BoundingSphere(Cartesian3.ZERO, this._ellipsoid.getMinimumRadius()), cameraPosition),
-                mode : mode,
-                projection : projection
-        };
+        var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, this._ellipsoid.getMinimumRadius()), cameraPosition);
 
         // TODO: refactor
-        this._fillPoles(state);
+        this._fillPoles(context, occluder, sceneState);
 
-        this._throttleImages(state);
-        this._throttleReprojection(state);
-        this._throttleTextures(state);
+        this._throttleImages(occluder, sceneState);
+        this._throttleReprojection(occluder, sceneState);
+        this._throttleTextures(context, occluder, sceneState);
 
         var stack = [this._rootTile];
         while (stack.length !== 0) {
             var tile = stack.pop();
 
-            if (this._cull(tile, state)) {
+            if (this._cull(tile, occluder, sceneState)) {
                 continue;
             }
 
             if (!this._dayTileProvider || (tile.state === TileState.TEXTURE_LOADED && tile.texture && !tile.texture.isDestroyed())) {
-                if ((this._dayTileProvider && tile.zoom + 1 > this._dayTileProvider.zoomMax) || !this.refine(tile, state)) {
-                    this._enqueueTile(tile, state);
+                if ((this._dayTileProvider && tile.zoom + 1 > this._dayTileProvider.zoomMax) || !this._refine(tile, context, sceneState)) {
+                    this._enqueueTile(tile, context, sceneState);
                 } else {
                     var children = tile.getChildren();
                     for (var i = 0; i < children.length; ++i) {
@@ -1979,7 +1935,7 @@ define([
                         if ((child.state === TileState.TEXTURE_LOADED && child.texture && !child.texture.isDestroyed())) {
                             stack.push(child);
                         } else {
-                            this._enqueueTile(tile, state);
+                            this._enqueueTile(tile, context, sceneState);
                             this._processTile(child);
                         }
                     }

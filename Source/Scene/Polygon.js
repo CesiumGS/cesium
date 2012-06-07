@@ -231,7 +231,8 @@ define([
         this.erosion = 1.0;
 
         /**
-         * DOC_TBA
+         * The current morph transition time between 2D/Columbus View and 3D,
+         * with 0.0 being 2D or Columbus View and 1.0 being 3D.
          *
          * @type Number
          */
@@ -415,21 +416,6 @@ define([
         return this.scene2D.granularity || this.granularity;
     };
 
-    Polygon.prototype._syncMorphTime = function(mode) {
-        switch (mode) {
-        case SceneMode.SCENE3D:
-            this.morphTime = 1.0;
-            break;
-
-        case SceneMode.SCENE2D:
-        case SceneMode.COLUMBUS_VIEW:
-            this.morphTime = 0.0;
-            break;
-
-        // MORPHING - don't change it
-        }
-    };
-
     /**
      * Commits changes to properties before rendering by updating the object's WebGL resources.
      * This must be called before calling {@link Polygon#render} in order to realize
@@ -444,7 +430,6 @@ define([
      * @see Polygon#render
      */
     Polygon.prototype.update = function(context, sceneState) {
-
         if (!this.ellipsoid) {
             throw new DeveloperError("this.ellipsoid must be defined.");
         }
@@ -457,7 +442,6 @@ define([
         }
 
         if (this.show) {
-            this._syncMorphTime(mode);
             this._mode = mode;
 
             var projection = sceneState.scene2D.projection;
