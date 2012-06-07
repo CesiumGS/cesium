@@ -338,7 +338,9 @@ define([
 
             // Recompile shader when material changes
             if (!this._material || (this._material !== this.material)) {
-                this._material = this.material || new ColorMaterial();
+
+                this.material = this.material || new ColorMaterial();
+                this._material = this.material;
 
                 var fsSource =
                     "#line 0\n" +

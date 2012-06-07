@@ -509,7 +509,8 @@ define([
             if ((!this._material || (this._material !== this.material)) ||
                 (this._affectedByLighting !== this.affectedByLighting)) {
 
-                this._material = this.material || new ColorMaterial();
+                this.material = this.material || new ColorMaterial();
+                this._material = this.material;
                 this._affectedByLighting = this.affectedByLighting;
 
                 var fsSource =
