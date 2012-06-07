@@ -200,6 +200,7 @@ define([
             zoom : 0,
             ellipsoid : ellipsoid
         });
+        this._occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), Cartesian3.ZERO);
 
         this._renderQueue = new Queue();
         this._imageQueue = new Queue();
@@ -834,7 +835,7 @@ define([
         }
     };
 
-    CentralBody.prototype._cull = function(tile, occluder, sceneState) {
+    CentralBody.prototype._cull = function(tile, sceneState) {
         if (sceneState.mode === SceneMode.SCENE2D) {
             var bRect = tile.get2DBoundingRectangle(sceneState.scene2D.projection);
 
@@ -856,17 +857,18 @@ define([
 
         if (sceneState.mode === SceneMode.SCENE3D) {
             var occludeePoint = tile.getOccludeePoint();
+            var occluder = this._occluder;
             return (occludeePoint && !occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !occluder.isVisible(boundingVolume);
         }
 
         return false;
     };
 
-    CentralBody.prototype._throttleImages = function(occluder, sceneState) {
+    CentralBody.prototype._throttleImages = function(sceneState) {
         for ( var i = 0, len = this._imageQueue.length; i < len && i < this._imageThrottleLimit; ++i) {
             var tile = this._imageQueue.dequeue();
 
-            if (this._cull(tile, occluder, sceneState)) {
+            if (this._cull(tile, sceneState)) {
                 tile.state = TileState.READY;
                 continue;
             }
@@ -894,11 +896,11 @@ define([
         return canvas;
     };
 
-    CentralBody.prototype._throttleReprojection = function(occluder, sceneState) {
+    CentralBody.prototype._throttleReprojection = function(sceneState) {
         for ( var i = 0, len = this._reprojectQueue.length; i < len && i < this._reprojectThrottleLimit; ++i) {
             var tile = this._reprojectQueue.dequeue();
 
-            if (this._cull(tile, occluder, sceneState)) {
+            if (this._cull(tile, sceneState)) {
                 tile.image = undefined;
                 tile.state = TileState.READY;
                 continue;
@@ -910,11 +912,11 @@ define([
         }
     };
 
-    CentralBody.prototype._throttleTextures = function(context, occluder, sceneState) {
+    CentralBody.prototype._throttleTextures = function(context, sceneState) {
         for ( var i = 0, len = this._textureQueue.length; i < len && i < this._textureThrottleLimit; ++i) {
             var tile = this._textureQueue.dequeue();
 
-            if (this._cull(tile, occluder, sceneState) || !tile.image) {
+            if (this._cull(tile, sceneState) || !tile.image) {
                 tile.image = undefined;
                 tile.state = TileState.READY;
                 continue;
@@ -1326,7 +1328,7 @@ define([
                 halfHeight * 2.0);
     };
 
-    CentralBody.prototype._fillPoles = function(context, occluder, sceneState) {
+    CentralBody.prototype._fillPoles = function(context, sceneState) {
         if (typeof this._dayTileProvider === 'undefined' || sceneState.mode !== SceneMode.SCENE3D) {
             return;
         }
@@ -1344,6 +1346,7 @@ define([
         var mesh;
         var rect;
         var positions;
+        var occluder = this._occluder;
 
         // handle north pole
         if (this._dayTileProvider.maxExtent.north < CesiumMath.PI_OVER_TWO) {
@@ -1908,20 +1911,20 @@ define([
             this._spSky = this._spSkyFromAtmosphere;
         }
 
-        var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, this._ellipsoid.getMinimumRadius()), cameraPosition);
+        this._occluder.setCameraPosition(cameraPosition);
 
         // TODO: refactor
-        this._fillPoles(context, occluder, sceneState);
+        this._fillPoles(context, sceneState);
 
-        this._throttleImages(occluder, sceneState);
-        this._throttleReprojection(occluder, sceneState);
-        this._throttleTextures(context, occluder, sceneState);
+        this._throttleImages(sceneState);
+        this._throttleReprojection(sceneState);
+        this._throttleTextures(context, sceneState);
 
         var stack = [this._rootTile];
         while (stack.length !== 0) {
             var tile = stack.pop();
 
-            if (this._cull(tile, occluder, sceneState)) {
+            if (this._cull(tile, sceneState)) {
                 continue;
             }
 
