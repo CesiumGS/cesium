@@ -88,6 +88,17 @@ define([
     };
 
     /**
+     * Creates a copy of this TimeInterval.
+     *
+     * @returns A new TimeInterval that is equal to this interval.
+     *
+     * @memberof TimeInterval
+     */
+    TimeInterval.prototype.clone = function() {
+        return new TimeInterval(this.start, this.stop, this.isStartIncluded, this.isStopIncluded, this.data);
+    };
+
+    /**
      * An empty interval.
      *
      * @memberof TimeInterval

@@ -1,6 +1,12 @@
 /*global define*/
-define(['./interpolateWithDegree'], function(interpolateWithDegree) {
+define(['./Math',
+        './interpolateWithDegree'
+       ], function(
+        CesiumMath,
+        interpolateWithDegree) {
     "use strict";
+
+    var factorial = CesiumMath.factorial;
 
     var HermitePolynomialApproximation = {
         type : 'Hermite'
@@ -196,14 +202,6 @@ define(['./interpolateWithDegree'], function(interpolateWithDegree) {
         }
 
         return result;
-    }
-
-    function factorial(num) {
-        var sum = 1;
-        for ( var i = 2; i <= num; i++) {
-            sum *= i;
-        }
-        return sum;
     }
 
     return HermitePolynomialApproximation;

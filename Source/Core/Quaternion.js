@@ -22,10 +22,11 @@ define([
      * @param {Number} y The y-component of the Quaternion.
      * @param {Number} z The z-component of the Quaternion.
      * @param {Number} w The w-component of the Quaternion.
+     * @param {Boolean} [normalize=false] True if you would like the Quaternion to be normalized;
      *
      * @see Matrix3
      */
-    function Quaternion(x, y, z, w) {
+    function Quaternion(x, y, z, w, normalize) {
 
         /**
          * The x coordinate.
@@ -70,6 +71,14 @@ define([
          * @see Quaternion.z
          */
         this.w = (typeof w !== "undefined") ? w : 0.0;
+
+        if (normalize) {
+            var inverseMagnitude = 1.0 / this.norm();
+            this.x *= inverseMagnitude;
+            this.y *= inverseMagnitude;
+            this.z *= inverseMagnitude;
+            this.w *= inverseMagnitude;
+        }
     }
 
     /**

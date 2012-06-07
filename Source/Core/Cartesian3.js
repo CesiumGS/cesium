@@ -19,11 +19,12 @@ define([
      * @param {Number} x The x-coordinate for the Cartesian type.
      * @param {Number} y The y-coordinate for the Cartesian type.
      * @param {Number} z The z-coordinate for the Cartesian type.
+     * @param {Boolean} [normalize=false] True if you would like the Cartesian to be normalized;
      *
      * @see Cartesian2
      * @see Cartesian4
      */
-    function Cartesian3(x, y, z) {
+    function Cartesian3(x, y, z, normalize) {
        /**
          * DOC_TBA
          *
@@ -53,6 +54,15 @@ define([
          * @see Cartesian3.y
          */
         this.z = (typeof z !== "undefined") ? z : 0.0;
+
+        if (normalize) {
+            var magnitude = this.magnitude();
+            if (magnitude > 0) {
+                this.x = this.x / magnitude;
+                this.y = this.y / magnitude;
+                this.z = this.z / magnitude;
+            }
+        }
     }
 
     /**
@@ -185,7 +195,10 @@ define([
      */
     Cartesian3.prototype.normalize = function() {
         var magnitude = this.magnitude();
-        return new Cartesian3(this.x / magnitude, this.y / magnitude, this.z / magnitude);
+        if (magnitude > 0) {
+            return new Cartesian3(this.x / magnitude, this.y / magnitude, this.z / magnitude);
+        }
+        return Cartesian3.ZERO;
     };
 
     /**

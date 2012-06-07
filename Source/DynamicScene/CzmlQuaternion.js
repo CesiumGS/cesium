@@ -54,11 +54,11 @@ define([
         },
 
         createValue : function(unwrappedInterval) {
-            return new Quaternion(unwrappedInterval[1], unwrappedInterval[2], unwrappedInterval[3], unwrappedInterval[0]);
+            return new Quaternion(unwrappedInterval[1], unwrappedInterval[2], unwrappedInterval[3], unwrappedInterval[0], true);
         },
 
         createValueFromArray : function(array, startingIndex) {
-            return new Quaternion(array[startingIndex + 1], array[startingIndex + 2], array[startingIndex + 3], array[startingIndex]);
+            return new Quaternion(array[startingIndex + 1], array[startingIndex + 2], array[startingIndex + 3], array[startingIndex], true);
         },
 
         createValueFromInterpolationResult : function(array, sourceArray, firstIndex, lastIndex) {
