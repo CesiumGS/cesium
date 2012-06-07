@@ -1,15 +1,16 @@
 /*global define*/
-define(['../Core/Cartesian2'], function(Cartesian2) {
+define(['../Core/Cartesian3'],
+function(Cartesian3) {
     "use strict";
 
-    var doublesPerValue = 2;
+    var doublesPerValue = 3;
 
-    var CzmlCartesian2 = {
+    var CzmlUnitCartesian3 = {
         doublesPerValue : doublesPerValue,
         doublesPerInterpolationValue : doublesPerValue,
 
         unwrapInterval : function(czmlInterval) {
-            return czmlInterval.cartesian2;
+            return czmlInterval.unitCartesian;
         },
 
         isSampled : function(unwrappedInterval) {
@@ -29,17 +30,17 @@ define(['../Core/Cartesian2'], function(Cartesian2) {
         },
 
         createValue : function(unwrappedInterval) {
-            return new Cartesian2(unwrappedInterval[0], unwrappedInterval[1]);
+            return new Cartesian3(unwrappedInterval[0], unwrappedInterval[1], unwrappedInterval[2], true);
         },
 
         createValueFromArray : function(array, startingIndex) {
-            return new Cartesian2(array[startingIndex], array[startingIndex + 1]);
+            return new Cartesian3(array[startingIndex], array[startingIndex + 1], array[startingIndex + 2], true);
         },
 
         createValueFromInterpolationResult : function(array) {
-            return new Cartesian2(array[0], array[1]);
-        }
+            return new Cartesian3(array[0], array[1], array[2], true);
+        },
     };
 
-    return CzmlCartesian2;
+    return CzmlUnitCartesian3;
 });

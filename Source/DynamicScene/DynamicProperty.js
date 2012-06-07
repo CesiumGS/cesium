@@ -36,7 +36,7 @@ define([
         this._intervals = new TimeIntervalCollection();
     }
 
-    DynamicProperty.processCzmlPacket = function(parentObject, propertyName, valueType, czmlIntervals, constrainedInterval, czmlObjectCollection) {
+    DynamicProperty.processCzmlPacket = function(parentObject, propertyName, valueType, czmlIntervals, constrainedInterval, dynamicObjectCollection) {
         var newProperty = false;
         var existingProperty = parentObject[propertyName];
         if (typeof czmlIntervals === 'undefined') {
@@ -50,7 +50,7 @@ define([
             newProperty = true;
         }
 
-        existingProperty.addIntervals(czmlIntervals, czmlObjectCollection, constrainedInterval);
+        existingProperty.addIntervals(czmlIntervals, dynamicObjectCollection, constrainedInterval);
 
         return newProperty;
     };
@@ -73,7 +73,7 @@ define([
                 while (newDataIndex < newData.length) {
                     currentTime = convertDate(newData[newDataIndex], epoch);
 
-                    //TODO We can probably further optimize here by dealing with the special cases of ===,
+                    //CZML_TODO We can probably further optimize here by dealing with the special cases of ===,
                     //rather than bailing, though the case probably happens so infrequently, that not checking may be faster
                     if ((typeof prevItem !== 'undefined' && JulianDate.compare(prevItem, currentTime) >= 0) ||
                         (typeof nextTime !== 'undefined' && JulianDate.compare(currentTime, nextTime) >= 0)) {
@@ -156,7 +156,7 @@ define([
             var interpolationDegree = czmlInterval.interpolationDegree;
             if (interpolationAlgorithm && interpolationDegree) {
                 intervalData.interpolationDegree = interpolationDegree;
-                intervalData.numberOfPoints = interpolationAlgorithm.getRequiredDataPoints(interpolationDegree, 0);
+                intervalData.numberOfPoints = interpolationAlgorithm.getRequiredDataPoints(interpolationDegree);
                 intervalData.xTable = undefined;
                 intervalData.yTable = undefined;
             }

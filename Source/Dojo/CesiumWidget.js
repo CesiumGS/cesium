@@ -202,7 +202,7 @@ define([
                 this.bumpMapUrl = this.bumpMapUrl || require.toUrl('Images//earthbump1k.jpg');
             }
 
-            var centralBody = this.centralBody = new CentralBody(scene.getCamera(), ellipsoid);
+            var centralBody = this.centralBody = new CentralBody(ellipsoid);
             centralBody.showSkyAtmosphere = true;
             centralBody.showGroundAtmosphere = true;
 
@@ -217,7 +217,7 @@ define([
             camera.frustum.far = 50.0 * maxRadii;
 
             this.spindleCameraController = camera.getControllers().addSpindle(ellipsoid);
-            this.spindleCameraController.constrainedZAxis = true;
+            this.spindleCameraController.mouseConstrainedZAxis = true;
             this.freelookCameraController = camera.getControllers().addFreeLook(ellipsoid);
 
             var handler = new EventHandler(canvas);

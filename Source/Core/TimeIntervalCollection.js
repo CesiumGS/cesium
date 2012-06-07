@@ -29,7 +29,7 @@ function(binarySearch,
                 ++right;
             } else {
                 // The following will return an intersection whose data is "merged" if the callback is non-null
-                var intersection = typeof mergeCallback === 'undefined' ? that._intervals[left].intersect(otherIntervals[right], dataComparer) : that._intervals[left].intersectMergingData(
+                var intersection = typeof mergeCallback === 'undefined' ? that._intervals[left].intersect(otherIntervals[right], dataComparer) : that._intervals[left].intersect(
                         otherIntervals[right], mergeCallback);
                 if (!intersection.isEmpty) {
                     // Since we start with an empty collection for "result", and there are no overlapping intervals in "that" (as a rule),

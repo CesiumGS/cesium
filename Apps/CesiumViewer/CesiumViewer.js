@@ -54,25 +54,49 @@ function(dom,
     var cameraCenteredObjectID;
     var lastCameraCenteredObjectID;
 
-    //This function is a total HACK and only temporary.
+    function updateSpeedIndicator() {
+        speedIndicatorElement.innerHTML = clock.multiplier + 'x realtime';
+    }
+
     function setTimeFromBuffer() {
+        var i, object, len;
+        var startTime = JulianDate.MAXIMUM_VALUE;
+        var stopTime = JulianDate.MINIMUM_VALUE;
         var dynamicObjects = dynamicObjectCollection.getObjects();
-        for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
-            var object = dynamicObjects[i];
-            if (typeof object.position !== 'undefined') {
-                var intervals = object.position._propertyIntervals;
-                if (typeof intervals !== 'undefined' && intervals._intervals[0].data._intervals._intervals[0].data.isSampled) {
-                    var firstTime = intervals._intervals[0].data._intervals._intervals[0].data.times[0];
-                    if (typeof firstTime !== 'undefined') {
-                        clock.startTime = firstTime;
-                        clock.stopTime = firstTime.addDays(1);
-                        clock.currentTime = firstTime;
-                        timeline.zoomTo(clock.startTime, clock.stopTime);
-                        break;
+        for (i = 0, len = dynamicObjects.length; i < len; i++) {
+            object = dynamicObjects[i];
+            if (typeof object.availability !== 'undefined') {
+                if (object.availability.start.lessThan(startTime)) {
+                    startTime = object.availability.start;
+                }
+                if (object.availability.stop.greaterThan(stopTime)) {
+                    stopTime = object.availability.stop;
+                }
+            }
+        }
+
+        if (startTime === JulianDate.MAXIMUM_VALUE) {
+            for (i = 0, len = dynamicObjects.length; i < len; i++) {
+                object = dynamicObjects[i];
+                if (typeof object.position !== 'undefined') {
+                    var intervals = object.position._propertyIntervals;
+                    if (typeof intervals !== 'undefined' && intervals._intervals[0].data._intervals._intervals[0].data.isSampled) {
+                        var firstTime = intervals._intervals[0].data._intervals._intervals[0].data.times[0];
+                        if (typeof firstTime !== 'undefined') {
+                            startTime = firstTime;
+                            stopTime = firstTime.addDays(1);
+                            break;
+                        }
                     }
                 }
             }
         }
+
+        clock.startTime = startTime;
+        clock.stopTime = stopTime;
+        clock.currentTime = startTime;
+        timeline.zoomTo(startTime, stopTime);
+        updateSpeedIndicator();
     }
 
     function handleDrop(e) {
@@ -96,10 +120,6 @@ function(dom,
         } else {
             cameraCenteredObjectID = undefined;
         }
-    }
-
-    function updateSpeedIndicator() {
-        speedIndicatorElement.innerHTML = clock.multiplier + 'x realtime';
     }
 
     var cesium = new CesiumWidget({
@@ -128,7 +148,7 @@ function(dom,
                         if (lastCameraCenteredObjectID !== cameraCenteredObjectID) {
                             lastCameraCenteredObjectID = cameraCenteredObjectID;
                             var camera = widget.scene.getCamera();
-                            camera.position = camera.position.normalize().multiplyWithScalar(2500000.0);
+                            camera.position = camera.position.normalize().multiplyWithScalar(5000.0);
                         }
 
                         var transform = Transforms.eastNorthUpToFixedFrame(position, widget.ellipsoid);
@@ -153,6 +173,10 @@ function(dom,
             if (typeof queryObject.source !== 'undefined') {
                 dynamicObjectCollection.clear();
                 loadCzmlFromUrl(dynamicObjectCollection, queryObject.source, setTimeFromBuffer);
+            }
+
+            if (typeof queryObject.lookAt !== 'undefined') {
+                cameraCenteredObjectID = queryObject.lookAt;
             }
 
             var timelineWidget = registry.byId('mainTimeline');

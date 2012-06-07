@@ -40,6 +40,22 @@ defineSuite([
         expect(v.z).toEqual(3);
     });
 
+    it("construct normalized", function() {
+        var v = new Cartesian3(1, 0, 0, true);
+        expect(v.x).toEqual(1);
+        expect(v.y).toEqual(0);
+        expect(v.z).toEqual(0);
+
+        v = new Cartesian3(1, 2, 3, true);
+        expect(v.magnitude()).toEqual(1);
+
+        v = new Cartesian3(0, 0, 0, true);
+        expect(v.x).toEqual(0);
+        expect(v.y).toEqual(0);
+        expect(v.z).toEqual(0);
+        expect(v.magnitude()).toEqual(0);
+    });
+
     it("clone", function() {
         var v = new Cartesian3(1, 2, 3);
         var w = v.clone();
@@ -94,6 +110,11 @@ defineSuite([
         var v = new Cartesian3(0, 2, 0).normalize();
         expect(v.x).toEqual(0);
         expect(v.y).toEqual(1);
+        expect(v.z).toEqual(0);
+
+        v = new Cartesian3(0, 0, 0).normalize();
+        expect(v.x).toEqual(0);
+        expect(v.y).toEqual(0);
         expect(v.z).toEqual(0);
     });
 

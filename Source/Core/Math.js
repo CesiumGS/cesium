@@ -487,5 +487,36 @@ define([
         return Math.abs(left - right) <= epsilon;
     };
 
+    var factorials = [1];
+
+    /**
+     * Computes the factorial of the provided number.
+     *
+     * @memberof CesiumMath
+     *
+     * @param {Number} n The number whose factorial is to be computed.
+     *
+     * @return {Number} The factorial of the provided number or undefined if the number is less than 0.
+     *
+     * @see <a href="http://en.wikipedia.org/wiki/Factorial">Factorial on Wikipedia</a>.
+     *
+     * @example
+     * //Compute 7!, which is equal to 5040
+     * var computedFactorial = CesiumMath.factorial(7);
+     *
+     */
+    CesiumMath.factorial = function(n) {
+        var length = factorials.length;
+        if (n >= length) {
+            var sum = factorials[length - 1];
+            for ( var i = length; i <= n; i++) {
+                factorials.push(sum * i);
+            }
+        } else if (n < 0) {
+            return undefined;
+        }
+        return factorials[n];
+    };
+
     return CesiumMath;
 });

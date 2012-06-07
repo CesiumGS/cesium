@@ -30,60 +30,60 @@ define([
         }
     }
 
-    CompositeDynamicObjectCollection.prototype.addCollection = function(czmlObjectCollection) {
-        if (!(czmlObjectCollection instanceof DynamicObjectCollection)) {
+    CompositeDynamicObjectCollection.prototype.addCollection = function(dynamicObjectCollection) {
+        if (!(dynamicObjectCollection instanceof DynamicObjectCollection)) {
             throw new DeveloperError();
         }
-        if (this._collections.indexOf(czmlObjectCollection) !== -1) {
+        if (this._collections.indexOf(dynamicObjectCollection) !== -1) {
             throw new DeveloperError();
         }
-        if (typeof czmlObjectCollection.parent !== 'undefined') {
+        if (typeof dynamicObjectCollection.parent !== 'undefined') {
             throw new DeveloperError();
         }
 
-        czmlObjectCollection.parent = this;
-        czmlObjectCollection.objectsUpdated.addEventListener(CompositeDynamicObjectCollection.prototype._onObjectsUpdated, this);
-        this._collections.push(czmlObjectCollection);
+        dynamicObjectCollection.parent = this;
+        dynamicObjectCollection.objectsUpdated.addEventListener(CompositeDynamicObjectCollection.prototype._onObjectsUpdated, this);
+        this._collections.push(dynamicObjectCollection);
     };
 
-    CompositeDynamicObjectCollection.prototype.insertCollection = function(index, czmlObjectCollection) {
-        if (!(czmlObjectCollection instanceof DynamicObjectCollection)) {
+    CompositeDynamicObjectCollection.prototype.insertCollection = function(index, dynamicObjectCollection) {
+        if (!(dynamicObjectCollection instanceof DynamicObjectCollection)) {
             throw new DeveloperError();
         }
-        if (this._collections.indexOf(czmlObjectCollection) !== -1) {
+        if (this._collections.indexOf(dynamicObjectCollection) !== -1) {
             throw new DeveloperError();
         }
         var thisCollections = this._collections;
-        thisCollections.splice(index, 0, czmlObjectCollection);
+        thisCollections.splice(index, 0, dynamicObjectCollection);
 
-        czmlObjectCollection.parent = this;
-        czmlObjectCollection.objectsUpdated.addEventListener(CompositeDynamicObjectCollection.prototype._onObjectsUpdated, this);
+        dynamicObjectCollection.parent = this;
+        dynamicObjectCollection.objectsUpdated.addEventListener(CompositeDynamicObjectCollection.prototype._onObjectsUpdated, this);
     };
 
-    CompositeDynamicObjectCollection.prototype.insertCollectionBefore = function(beforeDynamicObjectCollection, czmlObjectCollection) {
+    CompositeDynamicObjectCollection.prototype.insertCollectionBefore = function(beforeDynamicObjectCollection, dynamicObjectCollection) {
         var indexBefore = this._collections.indexOf(beforeDynamicObjectCollection);
         if (indexBefore === -1) {
             throw new DeveloperError();
         }
-        this.insertCollection(indexBefore, czmlObjectCollection);
+        this.insertCollection(indexBefore, dynamicObjectCollection);
     };
 
-    CompositeDynamicObjectCollection.prototype.insertCollectionAfter = function(afterDynamicObjectCollection, czmlObjectCollection) {
+    CompositeDynamicObjectCollection.prototype.insertCollectionAfter = function(afterDynamicObjectCollection, dynamicObjectCollection) {
         var indexAfter = this._collections.indexOf(afterDynamicObjectCollection);
         if (indexAfter === -1) {
             throw new DeveloperError();
         }
-        this.insertCollection(indexAfter + 1, czmlObjectCollection);
+        this.insertCollection(indexAfter + 1, dynamicObjectCollection);
     };
 
-    CompositeDynamicObjectCollection.prototype.removeCollection = function(czmlObjectCollection) {
-        if (this._collections.indexOf(czmlObjectCollection) === -1) {
+    CompositeDynamicObjectCollection.prototype.removeCollection = function(dynamicObjectCollection) {
+        if (this._collections.indexOf(dynamicObjectCollection) === -1) {
             throw new DeveloperError();
         }
         var thisCollections = this._collections;
-        thisCollections.splice(thisCollections.indexOf(czmlObjectCollection), 1);
-        czmlObjectCollection.parent = undefined;
-        czmlObjectCollection.objectsUpdated.removeEventListener(CompositeDynamicObjectCollection.prototype._onObjectsUpdated);
+        thisCollections.splice(thisCollections.indexOf(dynamicObjectCollection), 1);
+        dynamicObjectCollection.parent = undefined;
+        dynamicObjectCollection.objectsUpdated.removeEventListener(CompositeDynamicObjectCollection.prototype._onObjectsUpdated);
     };
 
     CompositeDynamicObjectCollection.prototype.getLength = function() {
@@ -140,7 +140,7 @@ define([
         }
     };
 
-    CompositeDynamicObjectCollection.prototype._onObjectsUpdated = function(czmlObjectCollection, updatedObjects) {
+    CompositeDynamicObjectCollection.prototype._onObjectsUpdated = function(dynamicObjectCollection, updatedObjects) {
         var thisMergeFunctions = this._mergeFunctions;
         var thisUndefinedFunctions = this._undefinedFunctions;
         var thisCollections = this._collections;

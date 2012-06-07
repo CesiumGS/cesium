@@ -19,7 +19,7 @@ defineSuite([
     /*global it,expect*/
 
     it("TODO", function() {
-        var czmlObjectCollection = new DynamicObjectCollection({
+        var dynamicObjectCollection = new DynamicObjectCollection({
             billboard : DynamicBillboard.processCzmlPacket,
             label : DynamicLabel.processCzmlPacket,
             orientation : DynamicObject.processCzmlPacketOrientation,
@@ -29,7 +29,7 @@ defineSuite([
             vertexPositions : DynamicObject.processCzmlPacketVertexPositions
         });
 
-        expect(typeof czmlObjectCollection.getObject("TestFacility") === 'undefined').toBeTruthy();
+        expect(typeof dynamicObjectCollection.getObject("TestFacility") === 'undefined').toBeTruthy();
 
         var czml = {
             "billboard" : {
@@ -51,9 +51,9 @@ defineSuite([
             }
         };
 
-        czmlObjectCollection.processCzml(czml);
+        dynamicObjectCollection.processCzml(czml);
 
-        var testFacility = czmlObjectCollection.getObject(czml.id);
+        var testFacility = dynamicObjectCollection.getObject(czml.id);
         expect(typeof testFacility !== undefined).toBeTruthy();
         expect(typeof testFacility.billboard !== undefined).toBeTruthy();
         expect(typeof testFacility.billboard.pixelOffset !== undefined).toBeTruthy();

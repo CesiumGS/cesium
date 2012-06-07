@@ -2,7 +2,7 @@
 define(['dojo/_base/xhr'], function(xhr) {
     "use strict";
 
-    function loadCzmlFromUrl(czmlObjectCollection, url, doneCallback) {
+    function loadCzmlFromUrl(dynamicObjectCollection, url, doneCallback) {
         var deferred = xhr.get({
             url : url,
             headers : {
@@ -12,7 +12,7 @@ define(['dojo/_base/xhr'], function(xhr) {
         }).then(function(value) {
             return JSON.parse(value);
         }).then(function(data) {
-            czmlObjectCollection.processCzml(data, url);
+            dynamicObjectCollection.processCzml(data, url);
             if (typeof doneCallback !== 'undefined') {
                 doneCallback();
             }

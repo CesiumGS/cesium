@@ -1,32 +1,63 @@
 /*global define*/
 define([
+        '../Core/Color',
+        '../Core/Cartesian2',
+        '../Core/Cartesian3',
         '../Scene/LabelCollection',
         '../Scene/LabelStyle',
         '../Scene/HorizontalOrigin',
         '../Scene/VerticalOrigin'
     ], function(
+        Color,
+        Cartesian2,
+        Cartesian3,
         LabelCollection,
         LabelStyle,
         HorizontalOrigin,
         VerticalOrigin) {
     "use strict";
 
-    function DynamicLabelVisualizer(scene) {
+    function DynamicLabelVisualizer(scene, dynamicObjectCollection) {
         this._scene = scene;
         this._unusedIndexes = [];
+        this._dynamicObjectCollection = undefined;
 
         var labelCollection = this._labelCollection = new LabelCollection();
         scene.getPrimitives().add(labelCollection);
+        this.setDynamicObjectCollection(dynamicObjectCollection);
     }
 
-    DynamicLabelVisualizer.prototype.update = function(time, czmlObjects) {
-        for ( var i = 0, len = czmlObjects.length; i < len; i++) {
-            this.updateObject(time, czmlObjects[i]);
+    DynamicLabelVisualizer.prototype.getScene = function() {
+        return this._scene;
+    };
+
+    DynamicLabelVisualizer.prototype.getDynamicObjectCollection = function() {
+        return this._dynamicObjectCollection;
+    };
+
+    DynamicLabelVisualizer.prototype.setDynamicObjectCollection = function(dynamicObjectCollection) {
+        var oldCollection = this._dynamicObjectCollection;
+        if (oldCollection !== dynamicObjectCollection) {
+            if (typeof oldCollection !== 'undefined') {
+                oldCollection.objectsRemoved.removeEventListener(DynamicLabelVisualizer.prototype._onObjectsRemoved);
+                this.removeAll();
+            }
+            this._dynamicObjectCollection = dynamicObjectCollection;
+            if (typeof dynamicObjectCollection !== 'undefined') {
+                dynamicObjectCollection.objectsRemoved.addEventListener(DynamicLabelVisualizer.prototype._onObjectsRemoved, this);
+            }
         }
     };
 
-    DynamicLabelVisualizer.prototype.updateObject = function(time, czmlObject) {
-        var dynamicLabel = czmlObject.label;
+    DynamicLabelVisualizer.prototype.update = function(time) {
+        var dynamicObjects = this._dynamicObjectCollection.getObjects();
+        for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
+            this.updateObject(time, dynamicObjects[i]);
+        }
+    };
+
+    DynamicLabelVisualizer.prototype.updateObject = function(time, dynamicObject) {
+        var dynamicLabel = dynamicObject.label;
         if (typeof dynamicLabel === 'undefined') {
             return;
         }
@@ -36,16 +67,16 @@ define([
             return;
         }
 
-        var positionProperty = czmlObject.position;
+        var positionProperty = dynamicObject.position;
         if (typeof positionProperty === 'undefined') {
             return;
         }
 
         var label;
-        var objectId = czmlObject.id;
+        var objectId = dynamicObject.id;
         var showProperty = dynamicLabel.show;
-        var labelVisualizerIndex = czmlObject.labelVisualizerIndex;
-        var show = typeof showProperty === 'undefined' || showProperty.getValue(time);
+        var labelVisualizerIndex = dynamicObject.labelVisualizerIndex;
+        var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
 
         if (!show) {
             //don't bother creating or updating anything else
@@ -53,7 +84,7 @@ define([
                 label = this._labelCollection.get(labelVisualizerIndex);
                 label.setShow(false);
                 this._unusedIndexes.push(labelVisualizerIndex);
-                czmlObject.labelVisualizerIndex = undefined;
+                dynamicObject.labelVisualizerIndex = undefined;
             }
             return;
         }
@@ -68,8 +99,20 @@ define([
                 labelVisualizerIndex = this._labelCollection.getLength();
                 label = this._labelCollection.add();
             }
-            czmlObject.labelVisualizerIndex = labelVisualizerIndex;
+            dynamicObject.labelVisualizerIndex = labelVisualizerIndex;
             label.id = objectId;
+
+            // CZML_TODO Determine official defaults
+            label.setText('');
+            label.setScale(1.0);
+            label.setFont("30px sans-serif");
+            label.setFillColor(Color.WHITE);
+            label.setOutlineColor(Color.BLACK);
+            label.setStyle(LabelStyle.FILL);
+            label.setPixelOffset(Cartesian2.ZERO);
+            label.setEyeOffset(Cartesian3.ZERO);
+            label.setHorizontalOrigin(HorizontalOrigin.CENTER);
+            label.setVerticalOrigin(VerticalOrigin.CENTER);
         } else {
             label = this._labelCollection.get(labelVisualizerIndex);
         }
@@ -120,7 +163,7 @@ define([
 
         property = dynamicLabel.style;
         if (typeof property !== 'undefined') {
-            value = LabelStyle[property.getValue(time)];
+            value = property.getValue(time);
             if (typeof value !== 'undefined') {
                 label.setStyle(value);
             }
@@ -144,7 +187,7 @@ define([
 
         property = dynamicLabel.horizontalOrigin;
         if (typeof property !== 'undefined') {
-            value = HorizontalOrigin[property.getValue(time)];
+            value = property.getValue(time);
             if (typeof value !== 'undefined') {
                 label.setHorizontalOrigin(value);
             }
@@ -152,19 +195,34 @@ define([
 
         property = dynamicLabel.verticalOrigin;
         if (typeof property !== 'undefined') {
-            value = VerticalOrigin[property.getValue(time)];
+            value = property.getValue(time);
             if (typeof value !== 'undefined') {
                 label.setVerticalOrigin(value);
             }
         }
     };
 
-    DynamicLabelVisualizer.prototype.removeAll = function(czmlObjects) {
+    DynamicLabelVisualizer.prototype.removeAll = function() {
         this._unusedIndexes = [];
         this._labelCollection.removeAll();
+        var dynamicObjects = this._dynamicObjectCollection.getObjects();
+        for ( var i = dynamicObjects.length - 1; i > -1; i--) {
+            dynamicObjects[i].labelVisualizerIndex = undefined;
+        }
+    };
 
-        for ( var i = 0, len = czmlObjects.length; i < len; i++) {
-            czmlObjects.labelVisualizerIndex = undefined;
+    DynamicLabelVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, dynamicObjects) {
+        var thisLabelCollection = this._labelCollection;
+        var thisUnusedIndexes = this._unusedIndexes;
+        for ( var i = dynamicObjects.length - 1; i > -1; i--) {
+            var dynamicObject = dynamicObjects[i];
+            var labelVisualizerIndex = dynamicObject.labelVisualizerIndex;
+            if (typeof labelVisualizerIndex !== 'undefined') {
+                var label = thisLabelCollection.get(labelVisualizerIndex);
+                label.setShow(false);
+                thisUnusedIndexes.push(labelVisualizerIndex);
+                dynamicObject.labelVisualizerIndex = undefined;
+            }
         }
     };
 

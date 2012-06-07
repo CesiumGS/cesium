@@ -1,46 +1,73 @@
 /*global define*/
 define([
+        '../Core/Color',
         '../Scene/Polyline'
-    ], function(
+       ], function(
+         Color,
          Polyline) {
     "use strict";
 
-    function DynamicPolylineVisualizer(scene) {
+    function DynamicPolylineVisualizer(scene, dynamicObjectCollection) {
         this._scene = scene;
         this._unusedIndexes = [];
         this._primitives = scene.getPrimitives();
         this._polylineCollection = [];
+        this._dynamicObjectCollection = undefined;
+        this.setDynamicObjectCollection(dynamicObjectCollection);
     }
 
-    DynamicPolylineVisualizer.prototype.update = function(time, czmlObjects) {
-        for ( var i = 0, len = czmlObjects.length; i < len; i++) {
-            this.updateObject(time, czmlObjects[i]);
+    DynamicPolylineVisualizer.prototype.getScene = function() {
+        return this._scene;
+    };
+
+    DynamicPolylineVisualizer.prototype.getDynamicObjectCollection = function() {
+        return this._dynamicObjectCollection;
+    };
+
+    DynamicPolylineVisualizer.prototype.setDynamicObjectCollection = function(dynamicObjectCollection) {
+        var oldCollection = this._dynamicObjectCollection;
+        if (oldCollection !== dynamicObjectCollection) {
+            if (typeof oldCollection !== 'undefined') {
+                oldCollection.objectsRemoved.removeEventListener(DynamicPolylineVisualizer.prototype._onObjectsRemoved);
+                this.removeAll();
+            }
+            this._dynamicObjectCollection = dynamicObjectCollection;
+            if (typeof dynamicObjectCollection !== 'undefined') {
+                dynamicObjectCollection.objectsRemoved.addEventListener(DynamicPolylineVisualizer.prototype._onObjectsRemoved, this);
+            }
         }
     };
 
-    DynamicPolylineVisualizer.prototype.updateObject = function(time, czmlObject) {
-        var dynamicPolyline = czmlObject.polyline;
+    DynamicPolylineVisualizer.prototype.update = function(time) {
+        var dynamicObjects = this._dynamicObjectCollection.getObjects();
+        for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
+            this.updateObject(time, dynamicObjects[i]);
+        }
+    };
+
+    DynamicPolylineVisualizer.prototype.updateObject = function(time, dynamicObject) {
+        var dynamicPolyline = dynamicObject.polyline;
         if (typeof dynamicPolyline === 'undefined') {
             return;
         }
 
-        var vertexPositionsProperty = czmlObject.vertexPositions;
+        var vertexPositionsProperty = dynamicObject.vertexPositions;
         if (typeof vertexPositionsProperty === 'undefined') {
             return;
         }
 
         var polyline;
-        var objectId = czmlObject.id;
+        var objectId = dynamicObject.id;
         var showProperty = dynamicPolyline.show;
-        var polylineVisualizerIndex = czmlObject.polylineVisualizerIndex;
-        var show = typeof showProperty === 'undefined' || showProperty.getValue(time);
+        var polylineVisualizerIndex = dynamicObject.polylineVisualizerIndex;
+        var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
 
         if (!show) {
             //don't bother creating or updating anything else
             if (typeof polylineVisualizerIndex !== 'undefined') {
                 polyline = this._polylineCollection[polylineVisualizerIndex];
                 polyline.show = false;
-                czmlObject.polylineVisualizerIndex = undefined;
+                dynamicObject.polylineVisualizerIndex = undefined;
                 this._unusedIndexes.push(polylineVisualizerIndex);
             }
             return;
@@ -58,8 +85,14 @@ define([
                 this._polylineCollection.push(polyline);
                 this._primitives.add(polyline);
             }
-            czmlObject.polylineVisualizerIndex = polylineVisualizerIndex;
+            dynamicObject.polylineVisualizerIndex = polylineVisualizerIndex;
             polyline.id = objectId;
+
+            // CZML_TODO Determine official defaults
+            polyline.color = Color.WHITE;
+            polyline.outlineColor = Color.BLACK;
+            polyline.outlineWidth = 1;
+            polyline.width = 1;
         } else {
             polyline = this._polylineCollection[polylineVisualizerIndex];
         }
@@ -105,18 +138,34 @@ define([
         }
     };
 
-    DynamicPolylineVisualizer.prototype.removeAll = function(czmlObjects) {
+    DynamicPolylineVisualizer.prototype.removeAll = function() {
         var i, len;
         for (i = 0, len = this._polylineCollection.length; i < len; i++) {
             this._primitives.remove(this._polylineCollection[i]);
         }
 
-        for (i = 0, len = czmlObjects.length; i < len; i++) {
-            czmlObjects.polylineVisualizerIndex = undefined;
+        var dynamicObjects = this._dynamicObjectCollection.getObjects();
+        for (i = dynamicObjects.length - 1; i > -1; i--) {
+            dynamicObjects[i].polylineVisualizerIndex = undefined;
         }
 
         this._unusedIndexes = [];
         this._polylineCollection = [];
+    };
+
+    DynamicPolylineVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, dynamicObjects) {
+        var thisPolylineCollection = this._polylineCollection;
+        var thisUnusedIndexes = this._unusedIndexes;
+        for ( var i = dynamicObjects.length - 1; i > -1; i--) {
+            var dynamicObject = dynamicObjects[i];
+            var polylineVisualizerIndex = dynamicObject.polylineVisualizerIndex;
+            if (typeof polylineVisualizerIndex !== 'undefined') {
+                var polyline = thisPolylineCollection[polylineVisualizerIndex];
+                polyline.show = false;
+                thisUnusedIndexes.push(polylineVisualizerIndex);
+                dynamicObject.polylineVisualizerIndex = undefined;
+            }
+        }
     };
 
     return DynamicPolylineVisualizer;

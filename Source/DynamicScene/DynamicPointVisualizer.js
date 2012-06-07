@@ -7,40 +7,63 @@ function(TextureAtlas,
          BillboardCollection) {
     "use strict";
 
-    function DynamicPointVisualizer(scene) {
+    function DynamicPointVisualizer(scene, dynamicObjectCollection) {
         this._scene = scene;
         this._unusedIndexes = [];
+        this._dynamicObjectCollection = undefined;
 
         var billboardCollection = this._billboardCollection = new BillboardCollection();
-        scene.getPrimitives().add(billboardCollection);
-
-        var atlas = new TextureAtlas(scene.getContext());
-        this._textureAtlas = atlas;
+        var atlas = this._textureAtlas = new TextureAtlas(scene.getContext());
         billboardCollection.setTextureAtlas(atlas);
+        scene.getPrimitives().add(billboardCollection);
+        this.setDynamicObjectCollection(dynamicObjectCollection);
     }
 
-    DynamicPointVisualizer.prototype.update = function(time, czmlObjects) {
-        for ( var i = 0, len = czmlObjects.length; i < len; i++) {
-            this.updateObject(time, czmlObjects[i]);
+    DynamicPointVisualizer.prototype.getScene = function() {
+        return this._scene;
+    };
+
+    DynamicPointVisualizer.prototype.getDynamicObjectCollection = function() {
+        return this._dynamicObjectCollection;
+    };
+
+    DynamicPointVisualizer.prototype.setDynamicObjectCollection = function(dynamicObjectCollection) {
+        var oldCollection = this._dynamicObjectCollection;
+        if (oldCollection !== dynamicObjectCollection) {
+            if (typeof oldCollection !== 'undefined') {
+                oldCollection.objectsRemoved.removeEventListener(DynamicPointVisualizer.prototype._onObjectsRemoved);
+                this.removeAll();
+            }
+            this._dynamicObjectCollection = dynamicObjectCollection;
+            if (typeof dynamicObjectCollection !== 'undefined') {
+                dynamicObjectCollection.objectsRemoved.addEventListener(DynamicPointVisualizer.prototype._onObjectsRemoved, this);
+            }
         }
     };
 
-    DynamicPointVisualizer.prototype.updateObject = function(time, czmlObject) {
-        var dynamicPoint = czmlObject.point;
+    DynamicPointVisualizer.prototype.update = function(time) {
+        var dynamicObjects = this._dynamicObjectCollection.getObjects();
+        for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
+            this.updateObject(time, dynamicObjects[i]);
+        }
+    };
+
+    DynamicPointVisualizer.prototype.updateObject = function(time, dynamicObject) {
+        var dynamicPoint = dynamicObject.point;
         if (typeof dynamicPoint === 'undefined') {
             return;
         }
 
-        var positionProperty = czmlObject.position;
+        var positionProperty = dynamicObject.position;
         if (typeof positionProperty === 'undefined') {
             return;
         }
 
         var billboard;
-        var objectId = czmlObject.id;
+        var objectId = dynamicObject.id;
         var showProperty = dynamicPoint.show;
-        var pointVisualizerIndex = czmlObject.pointVisualizerIndex;
-        var show = typeof showProperty === 'undefined' || showProperty.getValue(time);
+        var pointVisualizerIndex = dynamicObject.pointVisualizerIndex;
+        var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
 
         if (!show) {
             //don't bother creating or updating anything else
@@ -51,7 +74,7 @@ function(TextureAtlas,
                 billboard.point_outlineColor = undefined;
                 billboard.point_outlineWidth = undefined;
                 billboard.point_pixelSize = undefined;
-                czmlObject.pointVisualizerIndex = undefined;
+                dynamicObject.pointVisualizerIndex = undefined;
                 this._unusedIndexes.push(pointVisualizerIndex);
             }
             return;
@@ -69,8 +92,14 @@ function(TextureAtlas,
                 pointVisualizerIndex = this._billboardCollection.getLength();
                 billboard = this._billboardCollection.add();
             }
-            czmlObject.pointVisualizerIndex = pointVisualizerIndex;
+            dynamicObject.pointVisualizerIndex = pointVisualizerIndex;
             billboard.id = objectId;
+
+            // CZML_TODO Determine official defaults
+            billboard.point_color = Color.WHITE;
+            billboard.point_outlineColor = Color.BLACK;
+            billboard.point_outlineWidth = 2;
+            billboard.point_pixelSize = 3;
         } else {
             billboard = this._billboardCollection.get(pointVisualizerIndex);
         }
@@ -174,12 +203,31 @@ function(TextureAtlas,
         }
     };
 
-    DynamicPointVisualizer.prototype.removeAll = function(czmlObjects) {
+    DynamicPointVisualizer.prototype.removeAll = function() {
         this._unusedIndexes = [];
         this._billboardCollection.removeAll();
+        var dynamicObjects = this._dynamicObjectCollection.getObjects();
+        for ( var i = dynamicObjects.length - 1; i > -1; i--) {
+            dynamicObjects[i].pointVisualizerIndex = undefined;
+        }
+    };
 
-        for ( var i = 0, len = czmlObjects.length; i < len; i++) {
-            czmlObjects.pointVisualizerIndex = undefined;
+    DynamicPointVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, dynamicObjects) {
+        var thisBillboardCollection = this._billboardCollection;
+        var thisUnusedIndexes = this._unusedIndexes;
+        for ( var i = dynamicObjects.length - 1; i > -1; i--) {
+            var dynamicObject = dynamicObjects[i];
+            var pointVisualizerIndex = dynamicObject.pointVisualizerIndex;
+            if (typeof pointVisualizerIndex !== 'undefined') {
+                var billboard = thisBillboardCollection.get(pointVisualizerIndex);
+                billboard.setShow(false);
+                billboard.point_color = undefined;
+                billboard.point_outlineColor = undefined;
+                billboard.point_outlineWidth = undefined;
+                billboard.point_pixelSize = undefined;
+                dynamicObject.pointVisualizerIndex = undefined;
+                thisUnusedIndexes.push(pointVisualizerIndex);
+            }
         }
     };
 

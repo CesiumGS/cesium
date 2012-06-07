@@ -1,12 +1,14 @@
 /*global define*/
 define([
         '../Core/DeveloperError',
+        '../Core/TimeInterval',
         './DynamicProperty',
         './DynamicPositionProperty',
         './DynamicVertexPositionsProperty',
         './CzmlQuaternion'
     ], function(
         DeveloperError,
+        TimeInterval,
         DynamicProperty,
         DynamicPositionProperty,
         DynamicVertexPositionsProperty,
@@ -34,7 +36,12 @@ define([
         this.position = undefined;
         this.orientation = undefined;
         this.vertexPositions = undefined;
+        this.availability = undefined;
     }
+
+    DynamicObject.prototype.isAvailable = function(time) {
+        return typeof this.availability === 'undefined' || this.availability.contains(time);
+    };
 
     DynamicObject.processCzmlPacketPosition = function(dynamicObject, packet, buffer, sourceUri) {
         var positionData = packet.position;
@@ -48,10 +55,10 @@ define([
         }
     };
 
-    DynamicObject.processCzmlPacketOrientation = function(dynamicObject, packet, czmlObjectCollection) {
+    DynamicObject.processCzmlPacketOrientation = function(dynamicObject, packet, dynamicObjectCollection) {
         var orientationData = packet.orientation;
         if (typeof orientationData !== 'undefined') {
-            return DynamicProperty.processCzmlPacket(dynamicObject, "orientation", CzmlQuaternion, orientationData, undefined, czmlObjectCollection);
+            return DynamicProperty.processCzmlPacket(dynamicObject, "orientation", CzmlQuaternion, orientationData, undefined, dynamicObjectCollection);
         }
         return false;
     };
@@ -68,16 +75,30 @@ define([
         }
     };
 
+    DynamicObject.processCzmlPacketAvailability = function(dynamicObject, packet, buffer, sourceUri) {
+        var availability = packet.availability;
+        if (typeof availability !== 'undefined') {
+            var interval = TimeInterval.fromIso8601(availability);
+            if (typeof interval !== 'undefined') {
+                dynamicObject.availability = interval;
+            }
+            return true;
+        }
+        return false;
+    };
+
     DynamicObject.mergeProperties = function(targetObject, objectToMerge) {
         targetObject.position = targetObject.position || objectToMerge.position;
         targetObject.orientation = targetObject.orientation || objectToMerge.orientation;
         targetObject.vertexPositions = targetObject.vertexPositions || objectToMerge.vertexPositions;
+        targetObject.availability = targetObject.availability || objectToMerge.availability;
     };
 
     DynamicObject.undefineProperties = function(dynamicObject) {
         dynamicObject.position = undefined;
         dynamicObject.orientation = undefined;
         dynamicObject.vertexPositions = undefined;
+        dynamicObject.availability = undefined;
     };
 
     return DynamicObject;

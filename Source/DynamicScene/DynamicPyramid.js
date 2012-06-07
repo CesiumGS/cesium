@@ -23,11 +23,10 @@ define([
         this.radius = undefined;
         this.showIntersection = undefined;
         this.intersectionColor = undefined;
-        this.erosion = undefined;
         this.material = undefined;
     }
 
-    DynamicPyramid.processCzmlPacket = function(dynamicObject, packet, czmlObjectCollection) {
+    DynamicPyramid.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection) {
         var pyramidData = packet.pyramid;
         if (typeof pyramidData !== 'undefined') {
 
@@ -42,13 +41,12 @@ define([
                 interval = TimeInterval.fromIso8601(interval);
             }
 
-            pyramidUpdated = DynamicProperty.processCzmlPacket(pyramid, "show", CzmlBoolean, pyramidData.show, interval, czmlObjectCollection) || pyramidUpdated;
-            pyramidUpdated = DynamicDirectionsProperty.processCzmlPacket(pyramid, "directions", pyramidData.directions, interval, czmlObjectCollection) || pyramidUpdated;
-            pyramidUpdated = DynamicProperty.processCzmlPacket(pyramid, "radius", CzmlNumber, pyramidData.radius, interval, czmlObjectCollection) || pyramidUpdated;
-            pyramidUpdated = DynamicProperty.processCzmlPacket(pyramid, "showIntersection", CzmlBoolean, pyramidData.showIntersection, interval, czmlObjectCollection) || pyramidUpdated;
-            pyramidUpdated = DynamicProperty.processCzmlPacket(pyramid, "intersectionColor", CzmlColor, pyramidData.intersectionColor, interval, czmlObjectCollection) || pyramidUpdated;
-            pyramidUpdated = DynamicProperty.processCzmlPacket(pyramid, "erosion", CzmlNumber, pyramidData.erosion, interval, czmlObjectCollection) || pyramidUpdated;
-            pyramidUpdated = DynamicMaterialProperty.processCzmlPacket(pyramid, "material", pyramidData.material, interval, czmlObjectCollection) || pyramidUpdated;
+            pyramidUpdated = DynamicProperty.processCzmlPacket(pyramid, "show", CzmlBoolean, pyramidData.show, interval, dynamicObjectCollection) || pyramidUpdated;
+            pyramidUpdated = DynamicDirectionsProperty.processCzmlPacket(pyramid, "directions", pyramidData.directions, interval, dynamicObjectCollection) || pyramidUpdated;
+            pyramidUpdated = DynamicProperty.processCzmlPacket(pyramid, "radius", CzmlNumber, pyramidData.radius, interval, dynamicObjectCollection) || pyramidUpdated;
+            pyramidUpdated = DynamicProperty.processCzmlPacket(pyramid, "showIntersection", CzmlBoolean, pyramidData.showIntersection, interval, dynamicObjectCollection) || pyramidUpdated;
+            pyramidUpdated = DynamicProperty.processCzmlPacket(pyramid, "intersectionColor", CzmlColor, pyramidData.intersectionColor, interval, dynamicObjectCollection) || pyramidUpdated;
+            pyramidUpdated = DynamicMaterialProperty.processCzmlPacket(pyramid, "material", pyramidData.material, interval, dynamicObjectCollection) || pyramidUpdated;
 
             return pyramidUpdated;
         }
@@ -68,7 +66,6 @@ define([
             targetPyramid.radius = targetPyramid.radius || pyramidToMerge.radius;
             targetPyramid.showIntersection = targetPyramid.showIntersection || pyramidToMerge.showIntersection;
             targetPyramid.intersectionColor = targetPyramid.intersectionColor || pyramidToMerge.intersectionColor;
-            targetPyramid.erosion = targetPyramid.erosion || pyramidToMerge.erosion;
             targetPyramid.material = targetPyramid.material || pyramidToMerge.material;
         }
     };

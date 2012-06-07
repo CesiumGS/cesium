@@ -22,7 +22,7 @@ define([
     function PositionHolder(czmlInterval) {
         var i, len, values = [], tmp;
 
-        tmp = czmlInterval.unitSpherical || czmlInterval.spherical;
+        tmp = czmlInterval.unitSpherical;
         if (typeof tmp !== 'undefined') {
             for (i = 0, len = tmp.length; i < len; i += 2) {
                 values.push(new Spherical(tmp[i], tmp[i + 1]));
@@ -30,10 +30,10 @@ define([
             this.spherical = values;
         }
 
-        tmp = czmlInterval.cartesian;
+        tmp = czmlInterval.unitCartesian;
         if (typeof tmp !== 'undefined') {
             for (i = 0, len = tmp.length; i < len; i += 3) {
-                values.push(new Cartesian3(tmp[i], tmp[i + 1], tmp[i + 2]));
+                values.push(new Cartesian3(tmp[i], tmp[i + 1], tmp[i + 2], true));
             }
             this.cartesian = values;
         }
@@ -69,7 +69,7 @@ define([
         this._propertyIntervals = new TimeIntervalCollection();
     }
 
-    DynamicDirectionsProperty.processCzmlPacket = function(parentObject, propertyName, czmlIntervals, constrainedInterval, czmlObjectCollection) {
+    DynamicDirectionsProperty.processCzmlPacket = function(parentObject, propertyName, czmlIntervals, constrainedInterval, dynamicObjectCollection) {
         var newProperty = false;
         var existingProperty = parentObject[propertyName];
         if (typeof czmlIntervals === 'undefined') {
@@ -83,7 +83,7 @@ define([
             newProperty = true;
         }
 
-        existingProperty.addIntervals(czmlIntervals, czmlObjectCollection, constrainedInterval);
+        existingProperty.addIntervals(czmlIntervals, dynamicObjectCollection, constrainedInterval);
 
         return newProperty;
     };
@@ -134,11 +134,11 @@ define([
         if (typeof interval === 'undefined') {
             return undefined;
         }
-        var interval_data = interval.data;
-        if (Array.isArray(interval_data)) {
+        var intervalData = interval.data;
+        if (Array.isArray(intervalData)) {
             var result = [];
-            for ( var i = 0, len = interval_data.length; i < len; i++) {
-                var value = interval_data[i].getValueSpherical(time);
+            for ( var i = 0, len = intervalData.length; i < len; i++) {
+                var value = intervalData[i].getValueSpherical(time);
                 if (typeof value !== 'undefined') {
                     result.push(value);
                 }
@@ -146,7 +146,7 @@ define([
             return result;
         }
 
-        return interval_data.getValueSpherical();
+        return intervalData.getValueSpherical();
 
     };
 
@@ -155,11 +155,11 @@ define([
         if (typeof interval === 'undefined') {
             return undefined;
         }
-        var interval_data = interval.data;
-        if (Array.isArray(interval_data)) {
+        var intervalData = interval.data;
+        if (Array.isArray(intervalData)) {
             var result = [];
-            for ( var i = 0, len = interval_data.length; i < len; i++) {
-                var value = interval_data[i].getValueCartesian(time);
+            for ( var i = 0, len = intervalData.length; i < len; i++) {
+                var value = intervalData[i].getValueCartesian(time);
                 if (typeof value !== 'undefined') {
                     result.push(value);
                 }
@@ -167,7 +167,7 @@ define([
             return result;
         }
 
-        return interval_data.getValueCartesian();
+        return intervalData.getValueCartesian();
     };
 
     return DynamicDirectionsProperty;

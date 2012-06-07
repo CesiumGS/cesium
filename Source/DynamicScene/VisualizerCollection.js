@@ -2,49 +2,38 @@
 define(function() {
     "use strict";
 
-    function VisualizerCollection(visualizers, czmlObjectCollection) {
+    function VisualizerCollection(visualizers, dynamicObjectCollection) {
         this._visualizers = visualizers;
-        this.setDynamicObjectCollection(czmlObjectCollection);
+        this._dynamicObjectCollection = undefined;
+        this.setDynamicObjectCollection(dynamicObjectCollection);
     }
 
     VisualizerCollection.prototype.getDynamicObjectCollection = function() {
-        return this._czmlObjectCollection;
+        return this._dynamicObjectCollection;
     };
 
-    VisualizerCollection.prototype.setDynamicObjectCollection = function(czmlObjectCollection) {
-        var oldCollection = this._czmlObjectCollection;
-        if (oldCollection !== czmlObjectCollection) {
-            this._czmlObjectCollection = czmlObjectCollection;
-            czmlObjectCollection.objectsRemoved.addEventListener(VisualizerCollection.prototype._onObjectsRemoved, this);
+    VisualizerCollection.prototype.setDynamicObjectCollection = function(dynamicObjectCollection) {
+        var oldCollection = this._dynamicObjectCollection;
+        if (oldCollection !== dynamicObjectCollection) {
+            this._dynamicObjectCollection = dynamicObjectCollection;
             var visualizers = this._visualizers;
-            if (oldCollection) {
-                oldCollection.objectsRemoved.removeEventListener(VisualizerCollection.prototype._onObjectsRemoved);
-                for ( var i = visualizers.length - 1; i > -1; i--) {
-                    visualizers[i].removeAll();
-                }
+            for ( var i = visualizers.length - 1; i > -1; i--) {
+                visualizers[i].setDynamicObjectCollection(dynamicObjectCollection);
             }
         }
     };
 
     VisualizerCollection.prototype.update = function(time) {
-        var objects = this._czmlObjectCollection.getObjects();
         var visualizers = this._visualizers;
         for ( var i = visualizers.length - 1; i > -1; i--) {
-            visualizers[i].update(time, objects);
+            visualizers[i].update(time);
         }
     };
 
     VisualizerCollection.prototype.removeAll = function() {
         var visualizers = this._visualizers;
         for ( var i = visualizers.length - 1; i > -1; i--) {
-            visualizers[i].removeAll(this._czmlObjectCollection.getObjects());
-        }
-    };
-
-    VisualizerCollection.prototype._onObjectsRemoved = function(collection, removedObjects) {
-        var visualizers = this._visualizers;
-        for ( var i = visualizers.length - 1; i > -1; i--) {
-            visualizers[i].removeAll(removedObjects);
+            visualizers[i].removeAll();
         }
     };
 

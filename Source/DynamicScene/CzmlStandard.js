@@ -46,7 +46,8 @@ define([
                     DynamicPyramid.processCzmlPacket,
                     DynamicObject.processCzmlPacketPosition,
                     DynamicObject.processCzmlPacketOrientation,
-                    DynamicObject.processCzmlPacketVertexPositions],
+                    DynamicObject.processCzmlPacketVertexPositions,
+                    DynamicObject.processCzmlPacketAvailability],
 
         mergers : [DynamicBillboard.mergeProperties,
                    DynamicCone.mergeProperties,

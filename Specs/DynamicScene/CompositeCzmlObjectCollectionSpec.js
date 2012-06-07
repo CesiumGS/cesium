@@ -32,8 +32,8 @@ defineSuite([
 
     it("applyChanges works with Existing buffers", function() {
 
-        var czmlObjectCollection1 = new DynamicObjectCollection(updaters);
-        var czmlObjectCollection2 = new DynamicObjectCollection(updaters);
+        var dynamicObjectCollection1 = new DynamicObjectCollection(updaters);
+        var dynamicObjectCollection2 = new DynamicObjectCollection(updaters);
 
         var czml1 = {
             "id" : "testBillboard",
@@ -42,7 +42,7 @@ defineSuite([
                 "rotation" : 0.0,
             }
         };
-        czmlObjectCollection1.processCzml(czml1);
+        dynamicObjectCollection1.processCzml(czml1);
 
         var czml2 = {
             "id" : "testBillboard",
@@ -51,13 +51,13 @@ defineSuite([
                 "scale" : 3.0,
             }
         };
-        czmlObjectCollection2.processCzml(czml2);
+        dynamicObjectCollection2.processCzml(czml2);
 
         var mergeFuncs = [DynamicBillboard.mergeProperties];
         var deleteFuncs = [DynamicBillboard.undefineProperties];
         var compositeDynamicObjectCollection = new CompositeDynamicObjectCollection(mergeFuncs, deleteFuncs);
-        compositeDynamicObjectCollection.addCollection(czmlObjectCollection1);
-        compositeDynamicObjectCollection.addCollection(czmlObjectCollection2);
+        compositeDynamicObjectCollection.addCollection(dynamicObjectCollection1);
+        compositeDynamicObjectCollection.addCollection(dynamicObjectCollection2);
         compositeDynamicObjectCollection.applyChanges();
 
         var objects = compositeDynamicObjectCollection.getObjects();
@@ -73,14 +73,14 @@ defineSuite([
     });
 
     it("Data updates as underlying buffers update", function() {
-        var czmlObjectCollection1 = new DynamicObjectCollection(updaters);
-        var czmlObjectCollection2 = new DynamicObjectCollection(updaters);
+        var dynamicObjectCollection1 = new DynamicObjectCollection(updaters);
+        var dynamicObjectCollection2 = new DynamicObjectCollection(updaters);
 
         var mergeFuncs = [DynamicBillboard.mergeProperties];
         var deleteFuncs = [DynamicBillboard.undefineProperties];
         var compositeDynamicObjectCollection = new CompositeDynamicObjectCollection(mergeFuncs, deleteFuncs);
-        compositeDynamicObjectCollection.addCollection(czmlObjectCollection1);
-        compositeDynamicObjectCollection.addCollection(czmlObjectCollection2);
+        compositeDynamicObjectCollection.addCollection(dynamicObjectCollection1);
+        compositeDynamicObjectCollection.addCollection(dynamicObjectCollection2);
         compositeDynamicObjectCollection.applyChanges();
 
         var czml1 = {
@@ -90,7 +90,7 @@ defineSuite([
                 "rotation" : 0.0,
             }
         };
-        czmlObjectCollection1.processCzml(czml1);
+        dynamicObjectCollection1.processCzml(czml1);
 
         var objects = compositeDynamicObjectCollection.getObjects();
         expect(objects.length).toEqual(1);
@@ -110,7 +110,7 @@ defineSuite([
                 "scale" : 3.0,
             }
         };
-        czmlObjectCollection2.processCzml(czml2);
+        dynamicObjectCollection2.processCzml(czml2);
 
         objects = compositeDynamicObjectCollection.getObjects();
         expect(objects.length).toEqual(1);

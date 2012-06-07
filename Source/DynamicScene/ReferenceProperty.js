@@ -2,7 +2,7 @@
 define(function() {
     "use strict";
 
-    //TODO We should probably have a ReferencePositionProperty and a ReferenceDirectionProperty
+    //CZML_TODO We should probably have a ReferencePositionProperty and a ReferenceDirectionProperty
     //rather than have them all tied together like this.  Though it might be easier to just
     //keep it this way.
 
