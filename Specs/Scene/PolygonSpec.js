@@ -32,6 +32,22 @@ defineSuite([
     var polygon;
     var us;
 
+    function createPolygon() {
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+
+        var p = new Polygon();
+        p.ellipsoid = ellipsoid;
+        p.granularity = CesiumMath.toRadians(20.0);
+        p.setPositions([
+            ellipsoid.toCartesian(CesiumMath.cartographic3ToRadians(new Cartographic3(-50.0, -50.0, 0.0))),
+            ellipsoid.toCartesian(CesiumMath.cartographic3ToRadians(new Cartographic3(50.0, -50.0, 0.0))),
+            ellipsoid.toCartesian(CesiumMath.cartographic3ToRadians(new Cartographic3(50.0, 50.0, 0.0))),
+            ellipsoid.toCartesian(CesiumMath.cartographic3ToRadians(new Cartographic3(-50.0, 50.0, 0.0)))
+        ]);
+
+        return p;
+    }
+
     beforeEach(function() {
         context = createContext();
         polygon = new Polygon();
@@ -106,22 +122,26 @@ defineSuite([
 
     it("renders", function() {
         // This test fails in Chrome if a breakpoint is set inside this function.  Strange.
-
-        var ellipsoid = Ellipsoid.UNIT_SPHERE;
-        polygon.ellipsoid = ellipsoid;
-        polygon.granularity = CesiumMath.toRadians(20.0);
-        polygon.setPositions([
-                              ellipsoid.toCartesian(CesiumMath.cartographic3ToRadians(new Cartographic3(-50.0, -50.0, 0.0))),
-                              ellipsoid.toCartesian(CesiumMath.cartographic3ToRadians(new Cartographic3(50.0, -50.0, 0.0))),
-                              ellipsoid.toCartesian(CesiumMath.cartographic3ToRadians(new Cartographic3(50.0, 50.0, 0.0))),
-                              ellipsoid.toCartesian(CesiumMath.cartographic3ToRadians(new Cartographic3(-50.0, 50.0, 0.0)))
-                             ]);
+        polygon = createPolygon();
         polygon.material.color = {
             red : 1.0,
             green : 0.0,
             blue : 0.0,
             alpha : 1.0
         };
+
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polygon.update(context, sceneState);
+        polygon.render(context, us);
+        expect(context.readPixels()).not.toEqualArray([0, 0, 0, 0]);
+    });
+
+    it("renders without lighting", function() {
+        // This test fails in Chrome if a breakpoint is set inside this function.  Strange.
+        polygon = createPolygon();
+        polygon.affectedByLighting = false;
 
         context.clear();
         expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
@@ -159,15 +179,7 @@ defineSuite([
     });
 
     it("doesn't renders", function() {
-        var ellipsoid = Ellipsoid.UNIT_SPHERE;
-        polygon.ellipsoid = ellipsoid;
-        polygon.granularity = CesiumMath.toRadians(20.0);
-        polygon.setPositions([
-                              ellipsoid.toCartesian(CesiumMath.cartographic3ToRadians(new Cartographic3(-50.0, -50.0, 0.0))),
-                              ellipsoid.toCartesian(CesiumMath.cartographic3ToRadians(new Cartographic3(50.0, -50.0, 0.0))),
-                              ellipsoid.toCartesian(CesiumMath.cartographic3ToRadians(new Cartographic3(50.0, 50.0, 0.0))),
-                              ellipsoid.toCartesian(CesiumMath.cartographic3ToRadians(new Cartographic3(-50.0, 50.0, 0.0)))
-                             ]);
+        polygon = createPolygon();
         polygon.material.color = {
             red : 1.0,
             green : 0.0,
@@ -185,15 +197,7 @@ defineSuite([
     });
 
     it("is picked", function() {
-        var ellipsoid = Ellipsoid.UNIT_SPHERE;
-        polygon.ellipsoid = ellipsoid;
-        polygon.granularity = CesiumMath.toRadians(20.0);
-        polygon.setPositions([
-                              ellipsoid.toCartesian(CesiumMath.cartographic3ToRadians(new Cartographic3(-50.0, 50.0, 0.0))),
-                              ellipsoid.toCartesian(CesiumMath.cartographic3ToRadians(new Cartographic3(50.0, 50.0, 0.0))),
-                              ellipsoid.toCartesian(CesiumMath.cartographic3ToRadians(new Cartographic3(50.0, -50.0, 0.0))),
-                              ellipsoid.toCartesian(CesiumMath.cartographic3ToRadians(new Cartographic3(-50.0, -50.0, 0.0)))
-                             ]);
+        polygon = createPolygon();
 
         polygon.update(context, sceneState);
 
@@ -202,15 +206,7 @@ defineSuite([
     });
 
     it("is not picked", function() {
-        var ellipsoid = Ellipsoid.UNIT_SPHERE;
-        polygon.ellipsoid = ellipsoid;
-        polygon.granularity = CesiumMath.toRadians(20.0);
-        polygon.setPositions([
-                              ellipsoid.toCartesian(CesiumMath.cartographic3ToRadians(new Cartographic3(-50.0, -50.0, 0.0))),
-                              ellipsoid.toCartesian(CesiumMath.cartographic3ToRadians(new Cartographic3(50.0, -50.0, 0.0))),
-                              ellipsoid.toCartesian(CesiumMath.cartographic3ToRadians(new Cartographic3(50.0, 50.0, 0.0))),
-                              ellipsoid.toCartesian(CesiumMath.cartographic3ToRadians(new Cartographic3(-50.0, 50.0, 0.0)))
-                             ]);
+        polygon = createPolygon();
         polygon.show = false;
 
         polygon.update(context, sceneState);
