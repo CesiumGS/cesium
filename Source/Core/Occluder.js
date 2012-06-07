@@ -13,7 +13,7 @@ define([
 
     /**
      * Creates an Occluder derived from an object's position and radius, as well as the camera position.
-     * The occluder can be used to determine wether or not other objects are visible or hidden behind the
+     * The occluder can be used to determine whether or not other objects are visible or hidden behind the
      * visible horizon defined by the occluder and camera position.
      *
      * @name Occluder
@@ -36,36 +36,21 @@ define([
         if (!occluderBS) {
             throw new DeveloperError("occluder bounding sphere is required.", "occluderPBS");
         }
+
         if (!cameraPosition) {
             throw new DeveloperError("camera position is required.", "cameraPosition");
         }
 
-        var cameraPos = Cartesian3.clone(cameraPosition);
-        var occluderPosition = occluderBS.center.clone();
-        var occluderRadius = occluderBS.radius;
+        this._occluderPosition = occluderBS.center.clone();
+        this._occluderRadius = occluderBS.radius;
 
-        var cameraToOccluderVec = occluderPosition.subtract(cameraPosition);
-        var invCameraToOccluderDistance = cameraToOccluderVec.magnitudeSquared();
-        var occluderRadiusSqrd = occluderRadius * occluderRadius;
-        var horizonDistance;
-        var horizonPlaneNormal;
-        var horizonPlanePosition;
-        if (invCameraToOccluderDistance > occluderRadiusSqrd) {
-            horizonDistance = Math.sqrt(invCameraToOccluderDistance - occluderRadiusSqrd);
-            invCameraToOccluderDistance = 1.0 / Math.sqrt(invCameraToOccluderDistance);
-            horizonPlaneNormal = cameraToOccluderVec.multiplyWithScalar(invCameraToOccluderDistance);
-            var nearPlaneDistance = horizonDistance * horizonDistance * invCameraToOccluderDistance;
-            horizonPlanePosition = cameraPos.add(horizonPlaneNormal.multiplyWithScalar(nearPlaneDistance));
-        } else {
-            horizonDistance = Number.MAX_VALUE;
-        }
+        this._horizonDistance = 0.0;
+        this._horizonPlaneNormal = undefined;
+        this._horizonPlanePosition = undefined;
+        this._cameraPosition = undefined;
 
-        this._occluderPosition = occluderPosition;
-        this._occluderRadius = occluderRadius;
-        this._cameraPosition = cameraPos.clone();
-        this._horizonDistance = horizonDistance;
-        this._horizonPlaneNormal = horizonPlaneNormal;
-        this._horizonPlanePosition = horizonPlanePosition;
+        // setCameraPosition fills in the above values
+        this.setCameraPosition(cameraPosition);
     }
 
     /**
@@ -86,6 +71,37 @@ define([
      */
     Occluder.prototype.getRadius = function() {
         return this._occluderRadius;
+    };
+
+    /**
+     * Sets the position of the camera.
+     *
+     * @param {Cartesian3} cameraPosition The new position of the camera.
+     */
+    Occluder.prototype.setCameraPosition = function(cameraPosition) {
+        cameraPosition = Cartesian3.clone(cameraPosition);
+
+        var cameraToOccluderVec = this._occluderPosition.subtract(cameraPosition);
+        var invCameraToOccluderDistance = cameraToOccluderVec.magnitudeSquared();
+        var occluderRadiusSqrd = this._occluderRadius * this._occluderRadius;
+
+        var horizonDistance;
+        var horizonPlaneNormal;
+        var horizonPlanePosition;
+        if (invCameraToOccluderDistance > occluderRadiusSqrd) {
+            horizonDistance = Math.sqrt(invCameraToOccluderDistance - occluderRadiusSqrd);
+            invCameraToOccluderDistance = 1.0 / Math.sqrt(invCameraToOccluderDistance);
+            horizonPlaneNormal = cameraToOccluderVec.multiplyWithScalar(invCameraToOccluderDistance);
+            var nearPlaneDistance = horizonDistance * horizonDistance * invCameraToOccluderDistance;
+            horizonPlanePosition = cameraPosition.add(horizonPlaneNormal.multiplyWithScalar(nearPlaneDistance));
+        } else {
+            horizonDistance = Number.MAX_VALUE;
+        }
+
+        this._horizonDistance = horizonDistance;
+        this._horizonPlaneNormal = horizonPlaneNormal;
+        this._horizonPlanePosition = horizonPlanePosition;
+        this._cameraPosition = cameraPosition;
     };
 
     /**
