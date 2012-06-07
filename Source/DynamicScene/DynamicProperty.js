@@ -156,7 +156,7 @@ define([
             var interpolationDegree = czmlInterval.interpolationDegree;
             if (interpolationAlgorithm && interpolationDegree) {
                 intervalData.interpolationDegree = interpolationDegree;
-                intervalData.numberOfPoints = interpolationAlgorithm.getRequiredDataPoints(interpolationDegree, 0);
+                intervalData.numberOfPoints = interpolationAlgorithm.getRequiredDataPoints(interpolationDegree);
                 intervalData.xTable = undefined;
                 intervalData.yTable = undefined;
             }

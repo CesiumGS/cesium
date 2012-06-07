@@ -1,11 +1,30 @@
 /*global define*/
-define(['./interpolateWithDegree'], function(interpolateWithDegree) {
+define([
+        './DeveloperError'
+       ],function(
+         DeveloperError) {
     "use strict";
 
+
+    /**
+     * Methods for performing linear interpolation.
+     *
+     * @see LagrangePolynomialApproximation
+     * @see HermitePolynomialApproximation
+     */
     var LinearApproximation = {
         type : 'Linear'
     };
 
+    /**
+     * Given the desired degree, returns the number of data points required for interpolation.
+     *
+     * @memberof LinearApproximation
+     *
+     * @param degree The desired degree of interpolation.
+     *
+     * @returns The number of required data points needed for the desired degree of interpolation.
+     */
     LinearApproximation.getRequiredDataPoints = function(degree) {
         if (degree !== 1) {
             throw 'Linear interpolation can only generate a first degree polynomial.';
@@ -13,76 +32,49 @@ define(['./interpolateWithDegree'], function(interpolateWithDegree) {
         return 2;
     };
 
-    LinearApproximation.interpolateWithDegree = function(x, xTable, yTable, degree, yStride, inputOrder, outputOrder) {
-        return interpolateWithDegree(x, xTable, yTable, degree, yStride, inputOrder, outputOrder, LinearApproximation);
-    };
-
-    LinearApproximation.interpolate = function(x, xTable, yTable, yStride, inputOrder, outputOrder, startIndex, length) {
-        if (startIndex === undefined) {
-            startIndex = 0;
-        }
-        if (length === undefined) {
-            length = xTable.length;
-        }
-
-        if (length > 2) {
-            throw 'The xTable provided to the linear interpolator must have exactly two elements.';
-        } else if (startIndex > xTable.length - 2) {
-            throw 'The startIndex must be within the bounds of xTable.';
-        } else if (yStride <= 0) {
-            throw 'There must be at least 1 dependent variable for each independent variable.';
-        }
-
-        var result = new Array((outputOrder + 1) * yStride);
-        var x0 = xTable[startIndex];
-        var x1 = xTable[startIndex + 1];
-
-        var i, j, order, yIndex, y0, y1;
-        var interpolationOrder = Math.min(inputOrder, outputOrder);
-        for (order = 0; order <= interpolationOrder; order++) {
-            yIndex = startIndex * yStride * (inputOrder + 1);
-            for (j = 0; j < yStride; j++) {
-                //calculates the interpolated values
-
-                y0 = yTable[yIndex + order * yStride];
-                y1 = yTable[yIndex + yStride * (inputOrder + 1 + order)];
-
-                yIndex++;
-
-                result[j + order * yStride] = (((y1 - y0) * x) + (x1 * y0) - (x0 * y1)) / (x1 - x0);
-            }
-        }
-
-        if (outputOrder > inputOrder) {
-            //calculates the derivatives of the interpolated values
-            yIndex = startIndex * yStride * (inputOrder + 1) + yStride * inputOrder;
-
-            for (i = 0; i < yStride; i++) {
-                y0 = yTable[yIndex];
-                y1 = yTable[yIndex + yStride * (inputOrder + 1)];
-
-                result[i + order * yStride] = (y1 - y0) / (xTable[startIndex + 1] - xTable[startIndex]);
-
-                yIndex += 1;
-            }
-            order++;
-
-            if (outputOrder > inputOrder + 1) {
-                //generates zeroes for all derivatives past the first degree.
-                for (j = order * yStride; j < result.length; j++) {
-                    result[j] = 0;
-                }
-            }
-        }
-
-        return result;
-    };
-
+    /**
+     * <p>
+     * Interpolates values using the supplied interpolation algorithm.  The appropriate subset of input
+     * values to use for the interpolation is determined automatically from an interpolation given
+     * degree.
+     * </p>
+     * <p>
+     * The xTable array can contain any number of elements, and the appropriate subset will be
+     * selected according to the degree of interpolation requested.  For example, if degree is 5,
+     * the 6 elements surrounding x will be used for interpolation.  When using
+     * {@link LinearApproximation} the degree should be 1 since it always deals with only 2 elements
+     * surrounding x. The yTable array should contain a number of elements equal to:
+     * <code>xTable.length * yStride</code>.  If insufficient elements are provided
+     * to perform the requested degree of interpolation, the highest possible degree of interpolation
+     * will be performed.
+     * </p>
+     *
+     * @param {Number} x The independent variable for which the dependent variables will be interpolated.
+     *
+     * @param {Array} xTable The array of independent variables to use to interpolate.  The values
+     * in this array must be in increasing order and the same value must not occur twice in the array.
+     *
+     * @param {Array} yTable The array of dependent variables to use to interpolate.  For a set of three
+     * dependent values (p,q,w) and their derivatives (dp, dq, dw) at time 1 and time 2 this should be
+     * as follows: {p1, q1, w1, dp1, dq1, dw1, p2, q2, w2, dp2, dq2, dw2}.
+     *
+     * @param {Number} yStride The number of dependent variable values in yTable corresponding to
+     * each independent variable value in xTable.
+     *
+     * @returns An array of interpolated values.  The array contains at least yStride elements, each
+     * of which is an interpolated dependent variable value.
+     *
+     * @see LagrangePolynomialApproximation
+     * @see HermitePolynomialApproximation
+     *
+     *
+     * @memberof LinearApproximation
+     */
     LinearApproximation.interpolateOrderZero = function(x, xTable, yTable, yStride) {
         if (xTable.length !== 2) {
-            throw 'The xTable provided to the linear interpolator must have exactly two elements.';
+            throw new DeveloperError('The xTable provided to the linear interpolator must have exactly two elements.');
         } else if (yStride <= 0) {
-            throw 'There must be at least 1 dependent variable for each independent variable.';
+            throw new DeveloperError('There must be at least 1 dependent variable for each independent variable.');
         }
 
         var result = new Array(yStride), x0 = xTable[0], x1 = xTable[1], i, y0, y1;

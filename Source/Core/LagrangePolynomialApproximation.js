@@ -1,78 +1,68 @@
 /*global define*/
-define(['./interpolateWithDegree'], function(interpolateWithDegree) {
+define(function() {
     "use strict";
 
+    /**
+     * Methods for performing Lagrange interpolation.
+     *
+     * @see LinearApproximation
+     * @see HermitePolynomialApproximation
+     */
     var LagrangePolynomialApproximation = {
         type : 'Lagrange'
     };
 
-    LagrangePolynomialApproximation.getRequiredDataPoints = function(degree, inputOrder) {
-        return Math.max(Math.ceil((degree + 1.0) / (inputOrder + 1.0)), 2);
+    /**
+     * Given the desired degree, returns the number of data points required for interpolation.
+     *
+     * @memberof LagrangePolynomialApproximation
+     *
+     * @param degree The desired degree of interpolation.
+     *
+     * @returns The number of required data points needed for the desired degree of interpolation.
+     */
+    LagrangePolynomialApproximation.getRequiredDataPoints = function(degree) {
+        return Math.max(degree + 1.0, 2);
     };
 
-    LagrangePolynomialApproximation.interpolateWithDegree = function(x, xTable, yTable, degree, yStride, inputOrder, outputOrder) {
-        return interpolateWithDegree(x, xTable, yTable, degree, yStride, inputOrder, outputOrder, LagrangePolynomialApproximation);
-    };
-
-    LagrangePolynomialApproximation.interpolate = function(x, xTable, yTable, yStride, inputOrder, outputOrder, startIndex, length) {
-        if (startIndex === undefined) {
-            startIndex = 0;
-        }
-        if (length === undefined) {
-            length = xTable.length;
-        }
-
-        var i, j, m, order, derivOrder;
-
-        //A Lagrange Polynomial made from "length" points is degree "length-1", so that is the
-        //maximum number of nonzero derivatives.
-        var maxNonZeroDerivatives = length - 1;
-
-        //For all the orders <= inputOrder the coefficient will be the same (coefficients[0]),
-        //after that each order will have a different coefficient.
-        var numCoef = Math.min(Math.max(1, outputOrder - inputOrder + 1), maxNonZeroDerivatives + 1);
-
-        var result = new Array(yStride * (outputOrder + 1));
-        for (i = 0; i < result.length; i++) {
-            result[i] = 0;
-        }
-
-        // The number of doubles in the yTable corresponding to each double in the xTable.
-        var yPerX = yStride * (inputOrder + 1);
-
-        var firstIndex = startIndex;
-        var lastIndex = startIndex + length - 1;
-        var reservedIndices = [];
-
-        for (m = firstIndex; m <= lastIndex; m++) {
-            reservedIndices.push(m);
-
-            var coefficients = new Array(numCoef);
-            coefficients[0] = 1;
-            for (j = 1; j < numCoef; j++) {
-                coefficients[j] = 0;
-            }
-
-            lagrangeInterpolateCoefficients(x, xTable, startIndex, lastIndex, reservedIndices, coefficients);
-            reservedIndices.splice(0, 1);
-
-            for (order = 0; order <= inputOrder && order <= outputOrder; order++) {
-                for (i = 0; i < yStride; ++i) {
-                    result[i + yStride * order] += coefficients[0] * yTable[m * yPerX + i + yStride * order];
-                }
-            }
-
-            for (derivOrder = 1; derivOrder < coefficients.length; derivOrder++) {
-                for (i = 0; i < yStride; i++) {
-                    result[yStride * order + i] += coefficients[derivOrder] * yTable[m * yPerX + i + yStride * inputOrder];
-                }
-                order++;
-            }
-        }
-
-        return result;
-    };
-
+    /**
+     * <p>
+     * Interpolates values using the supplied interpolation algorithm.  The appropriate subset of input
+     * values to use for the interpolation is determined automatically from an interpolation given
+     * degree.
+     * </p>
+     * <p>
+     * The xTable array can contain any number of elements, and the appropriate subset will be
+     * selected according to the degree of interpolation requested.  For example, if degree is 5,
+     * the 6 elements surrounding x will be used for interpolation.  When using
+     * {@link LinearApproximation} the degree should be 1 since it always deals with only 2 elements
+     * surrounding x. The yTable array should contain a number of elements equal to:
+     * <code>xTable.length * yStride</code>.  If insufficient elements are provided
+     * to perform the requested degree of interpolation, the highest possible degree of interpolation
+     * will be performed.
+     * </p>
+     *
+     * @param {Number} x The independent variable for which the dependent variables will be interpolated.
+     *
+     * @param {Array} xTable The array of independent variables to use to interpolate.  The values
+     * in this array must be in increasing order and the same value must not occur twice in the array.
+     *
+     * @param {Array} yTable The array of dependent variables to use to interpolate.  For a set of three
+     * dependent values (p,q,w) and their derivatives (dp, dq, dw) at time 1 and time 2 this should be
+     * as follows: {p1, q1, w1, dp1, dq1, dw1, p2, q2, w2, dp2, dq2, dw2}.
+     *
+     * @param {Number} yStride The number of dependent variable values in yTable corresponding to
+     * each independent variable value in xTable.
+     *
+     * @returns An array of interpolated values.  The array contains at least yStride elements, each
+     * of which is an interpolated dependent variable value.
+     *
+     * @see LinearApproximation
+     * @see HermitePolynomialApproximation
+     *
+     * @memberof LagrangePolynomialApproximation
+     *
+     */
     LagrangePolynomialApproximation.interpolateOrderZero = function(x, xTable, yTable, yStride) {
         var i, j, length = xTable.length, result = new Array(yStride);
 
@@ -97,39 +87,6 @@ define(['./interpolateWithDegree'], function(interpolateWithDegree) {
 
         return result;
     };
-
-    function lagrangeInterpolateCoefficients(x, xTable, startIndex, lastIndex, reservedXIndices, coefficients) {
-        var i, j, k;
-        for (i = startIndex; i <= lastIndex; i++) {
-            var reserved = false;
-            for (j = 0; j < reservedXIndices.length && !reserved; j++) {
-                if (i === reservedXIndices[j]) {
-                    reserved = true;
-                }
-            }
-
-            if (!reserved) {
-                var childCoef = new Array(coefficients.length - 1);
-                for (k = 0; k < childCoef.length; k++) {
-                    childCoef[k] = 0;
-                }
-
-                if (childCoef.length > 0) {
-                    childCoef[0] = 1;
-                    reservedXIndices.push(i);
-                    lagrangeInterpolateCoefficients(x, xTable, startIndex, lastIndex, reservedXIndices, childCoef);
-                    reservedXIndices.splice(reservedXIndices.length - 1, 1);
-                }
-
-                var diffX = xTable[reservedXIndices[0]] - xTable[i];
-                coefficients[0] *= (x - xTable[i]) / diffX;
-
-                for (k = 0; k < childCoef.length; k++) {
-                    coefficients[k + 1] += childCoef[k] / diffX;
-                }
-            }
-        }
-    }
 
     return LagrangePolynomialApproximation;
 });
