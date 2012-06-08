@@ -158,6 +158,7 @@
     var imagery = tree.addNode("Imagery", "", null, "Imagery");
     tree.addNode("Use Bing Maps imagery", [new Sandbox.BingMaps(scene, ellipsoid, primitives)], imagery, "Imagery");
     tree.addNode("Use ArcGIS World Street Maps imagery", [new Sandbox.ArcGIS(scene, ellipsoid, primitives)], imagery, "Imagery");
+    tree.addNode("Use ArcGIS World Elevation DTMEllipsoidal terrain", [new Sandbox.ArcGISImageServer(scene, ellipsoid, primitives)], imagery, "Imagery");
     tree.addNode("Use OpenStreetMaps imagery", [new Sandbox.OSM(scene, ellipsoid, primitives)], imagery, "Imagery");
     tree.addNode("Use MapQuest OpenStreetMaps imagery", [new Sandbox.MQOSM(scene, ellipsoid, primitives)], imagery, "Imagery");
     tree.addNode("Use MapQuest Aerial OpenStreetMaps imagery", [new Sandbox.MQAerialOSM(scene, ellipsoid, primitives)], imagery, "Imagery");

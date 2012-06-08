@@ -31,6 +31,24 @@
         };
     };
 
+    Sandbox.ArcGISImageServer = function (scene, ellipsoid, primitives) {
+        this.code = function () {
+            // ArcGIS WorldElevation/DTMEllipsoidal
+            // The token below is only valid when the hosted on http://localhost:8080!
+            // You can generate a new token by visiting http://elevation.arcgisonline.com/arcgis/REST/services
+            // and clicking "Get Token" in the top-right corner.
+            var arcgisimage = new Cesium.ArcGISImageServerTileProvider({
+                host : 'elevation.arcgisonline.com',
+                folder : 'WorldElevation',
+                service : 'DTMEllipsoidal',
+                token : 'DGJSOGtTzERNdu-c_h2VhU4QsgOcUf5R1whWIuPdc1EQ3H9-8fSrb10-I_CAgCv_rlreK2gSVQ4y1HXeVkO9PQ..',
+                proxy : new Cesium.DefaultProxy('/proxy/')
+            });
+
+            primitives.getCentralBody().dayTileProvider = arcgisimage;
+        };
+    };
+
     Sandbox.OSM = function (scene, ellipsoid, primitives) {
         this.code = function () {
             // OpenStreetMaps
