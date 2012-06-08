@@ -139,7 +139,7 @@ define([
          *
          * @type Number
          */
-        this.morphTime = 0.0;
+        this.morphTime = 1.0;
 
         /**
          * The usage hint for the collection's vertex buffer.

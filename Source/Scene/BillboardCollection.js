@@ -148,7 +148,7 @@ define([
          *
          * @type Number
          */
-        this.morphTime = 0.0;
+        this.morphTime = 1.0;
 
         this._mode = SceneMode.SCENE3D;
         this._projection = undefined;
