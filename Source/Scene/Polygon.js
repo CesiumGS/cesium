@@ -211,6 +211,20 @@ define([
         this._bufferUsage = BufferUsage.STATIC_DRAW;
 
         /**
+         * <p>
+         * Determines if the polygon is affected by lighting, i.e., if the polygon is bright on the
+         * day side of the globe, and dark on the night side.  When <code>true</code>, the polygon
+         * is affected by lighting; when <code>false</code>, the polygon is uniformly shaded regardless
+         * of the sun position.
+         * </p>
+         * <p>
+         * The default is <code>true</code>.
+         * </p>
+         */
+        this.affectedByLighting = true;
+        this._affectedByLighting = true;
+
+        /**
          * DOC_TBA
          */
         this.material = new ColorMaterial({
@@ -475,22 +489,27 @@ define([
                 });
             }
 
-            // Recompile shader when material changes
-            if (!this._material || (this._material !== this.material)) {
-                this._material = this.material || new ColorMaterial();
+            // Recompile shader when material or lighting changes
+            if ((!this._material || (this._material !== this.material)) ||
+                (this._affectedByLighting !== this.affectedByLighting)) {
+
+                this.material = this.material || new ColorMaterial();
+                this._material = this.material;
+                this._affectedByLighting = this.affectedByLighting;
 
                 var fsSource =
                     "#line 0\n" +
                     Noise +
                     "#line 0\n" +
-                    this.material._getShaderSource() +
+                    this._material._getShaderSource() +
+                    (this._affectedByLighting ? "#define AFFECTED_BY_LIGHTING 1\n" : "") +
                     "#line 0\n" +
                     PolygonFS;
 
                 this._sp = this._sp && this._sp.release();
                 this._sp = context.getShaderCache().getShaderProgram(PolygonVS, fsSource, attributeIndices);
 
-                this._drawUniforms = combine(this._uniforms, this.material._uniforms);
+                this._drawUniforms = combine(this._uniforms, this._material._uniforms);
             }
         }
     };
