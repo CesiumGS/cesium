@@ -119,7 +119,7 @@ define([
      */
     LeapSecond.setLeapSeconds = function(data) {
         if (!data) {
-            throw new DeveloperError("data is required.", "data");
+            throw new DeveloperError("data is required.");
         }
 
         LeapSecond._leapSeconds = [];

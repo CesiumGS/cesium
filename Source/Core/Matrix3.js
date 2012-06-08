@@ -158,11 +158,11 @@ define([
      *
      * @memberof Matrix3
      * @return {Number} The element at the zero-based, column-major index.
-     * @exception {DeveloperError} Index must be between 0 and 8.
+     * @exception {DeveloperError} index must be between 0 and 8.
      */
     Matrix3.prototype.getColumnMajorValue = function(index) {
         if (index < 0 || index > 8) {
-            throw new DeveloperError("Index must be between 0 and 8.", "index");
+            throw new DeveloperError("index must be between 0 and 8.");
         }
 
         return this.values[index];
@@ -462,7 +462,7 @@ define([
                         columnMajorValues[2], columnMajorValues[5], columnMajorValues[8]);
             }
 
-            throw new DeveloperError("columnMajorValues must have 9 elements.", "columnMajorValues");
+            throw new DeveloperError("columnMajorValues must have 9 elements.");
         }
         return new Matrix3();
     };

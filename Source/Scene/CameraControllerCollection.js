@@ -180,7 +180,7 @@ define([
      */
     CameraControllerCollection.prototype.get = function(index) {
         if (typeof index === "undefined") {
-            throw new DeveloperError("index is required.", "index");
+            throw new DeveloperError("index is required.");
         }
 
         return this._controllers[index];

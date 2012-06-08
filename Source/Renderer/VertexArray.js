@@ -29,7 +29,7 @@ define([
                 try {
                     this._addAttribute(attributes[i], i);
                 } catch (e) {
-                    throw new DeveloperError(e.message, "attributes");
+                    throw new DeveloperError(e.message);
                 }
             }
         }
@@ -39,7 +39,7 @@ define([
         for ( var j = 0; j < this._attributes.length; ++j) {
             var index = this._attributes[j].index;
             if (uniqueIndices[index]) {
-                throw new DeveloperError("Index " + index + " is used by more than one attribute.", "attributes");
+                throw new DeveloperError("Index " + index + " is used by more than one attribute.");
             }
 
             uniqueIndices[index] = true;
@@ -148,7 +148,7 @@ define([
      */
     VertexArray.prototype.getAttribute = function(index) {
         if (typeof index === "undefined") {
-            throw new DeveloperError("index is required.", "index");
+            throw new DeveloperError("index is required.");
         }
 
         return this._attributes[index];
@@ -183,14 +183,14 @@ define([
             var index = (typeof attribute.index === "undefined") ? attributes.length : attribute.index;
             for ( var i = 0; i < attributes.length; ++i) {
                 if (index === attributes[i].index) {
-                    throw new DeveloperError("Index " + index + " is already in use.", "attribute");
+                    throw new DeveloperError("Index " + index + " is already in use.");
                 }
             }
 
             try {
                 this._addAttribute(attribute, index);
             } catch (e) {
-                throw new DeveloperError(e.message, "attribute");
+                throw new DeveloperError(e.message);
             }
         }
     };
@@ -208,7 +208,7 @@ define([
     VertexArray.prototype.removeAttribute = function(attribute) {
         if (attribute) {
             if (typeof attribute.index === "undefined") {
-                throw new DeveloperError("Attribute must have an index.", "attribute");
+                throw new DeveloperError("Attribute must have an index.");
             }
 
             var attributes = this._attributes;

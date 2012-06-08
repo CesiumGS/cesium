@@ -54,11 +54,11 @@ define(['./DeveloperError'], function(DeveloperError) {
 
     Rectangle.createAxisAlignedBoundingRectangle = function(positions) {
         if (typeof positions === 'undefined') {
-            throw new DeveloperError("positions is required.", "positions");
+            throw new DeveloperError("positions is required.");
         }
 
         if (typeof positions.length === 'undefined' || positions.length <= 0) {
-            throw new DeveloperError("The length of positions must be greater than zero.", "positions");
+            throw new DeveloperError("The length of positions must be greater than zero.");
         }
 
         var length = positions.length;

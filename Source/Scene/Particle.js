@@ -19,7 +19,7 @@ define([
         template.mass = (typeof template.mass === "undefined") ? 1.0 : template.mass;
 
         if (template.mass < 0) {
-            throw new DeveloperError("template.mass must be positive.", "template");
+            throw new DeveloperError("template.mass must be positive.");
         }
 
         this.position = new Cartesian3(template.position.x, template.position.y, template.position.z);

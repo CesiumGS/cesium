@@ -45,11 +45,11 @@ define([
      */
     function CompositeTileProvider(list, camera, ellipsoid) {
         if (!list) {
-            throw new DeveloperError("A non-empty list is required.", "list");
+            throw new DeveloperError("A non-empty list is required.");
         }
 
         if (!camera) {
-            throw new DeveloperError("camera is required.", "camera");
+            throw new DeveloperError("camera is required.");
         }
 
         this._camera = camera;
@@ -169,7 +169,7 @@ define([
      */
     CompositeTileProvider.prototype.loadTileImage = function(tile, onload, onerror, oninvalid) {
         if (tile.zoom < this.zoomMin || tile.zoom > this.zoomMax) {
-            throw new DeveloperError("The zoom must be between in [zoomMin, zoomMax].", "tile.zoom");
+            throw new DeveloperError("tile.zoom must be between in [zoomMin, zoomMax].");
         }
 
         var height = this._camera.position.magnitude() - this._radius;

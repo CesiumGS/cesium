@@ -291,11 +291,11 @@ define([
      *
      * @memberof Matrix4
      * @return {Number} The element at the zero-based, column-major index.
-     * @exception {DeveloperError} Index must be between 0 and 15.
+     * @exception {DeveloperError} index must be between 0 and 15.
      */
     Matrix4.prototype.getColumnMajorValue = function(index) {
         if (index < 0 || index > 15) {
-            throw new DeveloperError("Index must be between 0 and 15.", "index");
+            throw new DeveloperError("index must be between 0 and 15.");
         }
 
         return this.values[index];
@@ -630,7 +630,7 @@ define([
                         columnMajorValues[3], columnMajorValues[7], columnMajorValues[11], columnMajorValues[15]);
             }
 
-            throw new DeveloperError("columnMajorValues must have 16 elements.", "columnMajorValues");
+            throw new DeveloperError("columnMajorValues must have 16 elements.");
         }
 
         return new Matrix4();
@@ -728,19 +728,19 @@ define([
      */
     Matrix4.createPerspectiveFieldOfView = function(fovy, aspect, zNear, zFar) {
         if (fovy <= 0.0 || fovy > Math.PI) {
-            throw new DeveloperError("fovy must be in [0, PI).", "fovy");
+            throw new DeveloperError("fovy must be in [0, PI).");
         }
 
         if (aspect <= 0.0) {
-            throw new DeveloperError("aspect must be greater than zero.", "aspect");
+            throw new DeveloperError("aspect must be greater than zero.");
         }
 
         if (zNear <= 0.0) {
-            throw new DeveloperError("zNear must be greater than zero.", "zNear");
+            throw new DeveloperError("zNear must be greater than zero.");
         }
 
         if (zFar <= 0.0) {
-            throw new DeveloperError("zFar must be greater than zero.", "zFar");
+            throw new DeveloperError("zFar must be greater than zero.");
         }
 
         var bottom = Math.tan(fovy * 0.5);

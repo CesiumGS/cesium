@@ -71,13 +71,13 @@ define(['require', './DeveloperError', './binarySearch', './LeapSecond'], functi
          */
         convertTaiToUtc : function(julianDate) {
             if (!julianDate) {
-                throw new DeveloperError("julianDate is required.", "julianDate");
+                throw new DeveloperError("julianDate is required.");
             }
             if (julianDate.getTimeStandard() === TimeStandard.UTC) {
                 return julianDate;
             }
             if (julianDate.getTimeStandard() !== TimeStandard.TAI) {
-                throw new DeveloperError("julianDate is not in the TAI time standard.", "julianDate");
+                throw new DeveloperError("julianDate is not in the TAI time standard.");
             }
 
             // treat the request date as if it were UTC, and search for the most recent leap second.
@@ -134,13 +134,13 @@ define(['require', './DeveloperError', './binarySearch', './LeapSecond'], functi
          */
         convertUtcToTai : function(julianDate) {
             if (!julianDate) {
-                throw new DeveloperError("julianDate is required.", "julianDate");
+                throw new DeveloperError("julianDate is required.");
             }
             if (julianDate.getTimeStandard() === TimeStandard.TAI) {
                 return julianDate;
             }
             if (julianDate.getTimeStandard() !== TimeStandard.UTC) {
-                throw new DeveloperError("julianDate is not in the UTC time standard.", "julianDate");
+                throw new DeveloperError("julianDate is not in the UTC time standard.");
             }
 
             var newDate = julianDate.addSeconds(julianDate.getTaiMinusUtc());

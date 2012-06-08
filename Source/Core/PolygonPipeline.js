@@ -86,12 +86,12 @@ define([
          */
         cleanUp : function(positions) {
             if (!positions) {
-                throw new DeveloperError("positions is required.", "positions");
+                throw new DeveloperError("positions is required.");
             }
 
             var length = positions.length;
             if (length < 3) {
-                throw new DeveloperError("At least three positions are required.", "positions");
+                throw new DeveloperError("At least three positions are required.");
             }
 
             var cleanedPositions = [];
@@ -116,12 +116,12 @@ define([
          */
         computeArea2D : function(positions) {
             if (!positions) {
-                throw new DeveloperError("positions is required.", "positions");
+                throw new DeveloperError("positions is required.");
             }
 
             var length = positions.length;
             if (length < 3) {
-                throw new DeveloperError("At least three positions are required.", "positions");
+                throw new DeveloperError("At least three positions are required.");
             }
 
             var area = 0.0;
@@ -170,12 +170,12 @@ define([
             //   * http://blogs.agi.com/insight3d/index.php/2008/03/20/triangulation-rhymes-with-strangulation/
 
             if (!positions) {
-                throw new DeveloperError("positions is required.", "positions");
+                throw new DeveloperError("positions is required.");
             }
 
             var length = positions.length;
             if (length < 3) {
-                throw new DeveloperError("At least three positions are required.", "positions");
+                throw new DeveloperError("At least three positions are required.");
             }
 
             var remainingPositions = new DoublyLinkedList();
@@ -259,24 +259,24 @@ define([
          */
         computeSubdivision : function(positions, indices, granularity) {
             if (!positions) {
-                throw new DeveloperError("positions is required.", "positions");
+                throw new DeveloperError("positions is required.");
             }
 
             if (!indices) {
-                throw new DeveloperError("indices is required.", "indices");
+                throw new DeveloperError("indices is required.");
             }
 
             if (indices.length < 3) {
-                throw new DeveloperError("At least three indices are required.", "indices");
+                throw new DeveloperError("At least three indices are required.");
             }
 
             if (indices.length % 3 !== 0) {
-                throw new DeveloperError("The number of indices must be divisable by three.", "indices");
+                throw new DeveloperError("The number of indices must be divisable by three.");
             }
 
             granularity = granularity || CesiumMath.toRadians(1.0);
             if (granularity <= 0.0) {
-                throw new DeveloperError("Granularity must be greater than zero.", "granularity");
+                throw new DeveloperError("granularity must be greater than zero.");
             }
 
             // Use a queue for triangles that need (or might need) to be subdivided.
@@ -405,7 +405,7 @@ define([
          */
         scaleToGeodeticHeight : function(ellipsoid, mesh, height) {
             if (!ellipsoid) {
-                throw new DeveloperError("ellipsoid is required.", "ellipsoid");
+                throw new DeveloperError("ellipsoid is required.");
             }
 
             height = height || 0.0;

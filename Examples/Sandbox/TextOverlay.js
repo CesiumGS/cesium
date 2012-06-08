@@ -12,7 +12,7 @@
      */
     Sandbox.TextOverlay = function(content, position) {
         if (!content) {
-            throw new Cesium.DeveloperError("content is required.", "content");
+            throw new Cesium.DeveloperError("content is required.");
         }
 
         var overlayContainer = document.getElementById("textOverlays");
@@ -83,7 +83,7 @@
      */
     Sandbox.TextOverlay.prototype.setPosition = function(positions) {
         if (!positions) {
-            throw new Cesium.DeveloperError("positions is required", "positions");
+            throw new Cesium.DeveloperError("positions is required");
         }
         // Clear old position so the overlay does not stretch
         this._overlay.style.left = null;

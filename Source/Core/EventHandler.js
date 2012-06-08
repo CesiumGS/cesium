@@ -248,11 +248,11 @@ define([
      */
     EventHandler.prototype.setKeyAction = function(action, key, modifier) {
         if (!action) {
-            throw new DeveloperError("action is required.", "action");
+            throw new DeveloperError("action is required.");
         }
 
         if (!key) {
-            throw new DeveloperError("key is required.", "key");
+            throw new DeveloperError("key is required.");
         }
 
         var keyEvents;
@@ -283,7 +283,7 @@ define([
      */
     EventHandler.prototype.getKeyAction = function(key, modifier) {
         if (!key) {
-            throw new DeveloperError("key is required.", "key");
+            throw new DeveloperError("key is required.");
         }
 
         var keyEvents;
@@ -316,7 +316,7 @@ define([
      */
     EventHandler.prototype.removeKeyAction = function(key, modifier) {
         if (!key) {
-            throw new DeveloperError("key is required.", "key");
+            throw new DeveloperError("key is required.");
         }
 
         var keyEvents;
@@ -350,11 +350,11 @@ define([
      */
     EventHandler.prototype.setMouseAction = function(action, type, modifier) {
         if (!action) {
-            throw new DeveloperError("action is required.", "action");
+            throw new DeveloperError("action is required.");
         }
 
         if (!type) {
-            throw new DeveloperError("type is required.", "type");
+            throw new DeveloperError("type is required.");
         }
 
         var mouseEvents;
@@ -385,7 +385,7 @@ define([
      */
     EventHandler.prototype.getMouseAction = function(type, modifier) {
         if (!type) {
-            throw new DeveloperError("type is required.", "type");
+            throw new DeveloperError("type is required.");
         }
 
         var mouseEvents;
@@ -418,7 +418,7 @@ define([
      */
     EventHandler.prototype.removeMouseAction = function(type, modifier) {
         if (!type) {
-            throw new DeveloperError("type is required.", "type");
+            throw new DeveloperError("type is required.");
         }
 
         var mouseEvents;

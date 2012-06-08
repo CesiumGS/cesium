@@ -55,7 +55,7 @@ define([
      */
     CubeMap.prototype._copyFrom = function(targetFace, source, xOffset, yOffset) {
         if (!source) {
-            throw new DeveloperError("source is required.", "source");
+            throw new DeveloperError("source is required.");
         }
 
         xOffset = xOffset || 0;
@@ -65,11 +65,11 @@ define([
         var height = source.height;
 
         if (xOffset < 0) {
-            throw new DeveloperError("xOffset must be greater than or equal to zero.", "xOffset");
+            throw new DeveloperError("xOffset must be greater than or equal to zero.");
         }
 
         if (yOffset < 0) {
-            throw new DeveloperError("yOffset must be greater than or equal to zero.", "yOffset");
+            throw new DeveloperError("yOffset must be greater than or equal to zero.");
         }
 
         if (xOffset + width > this._size) {
@@ -128,19 +128,19 @@ define([
         height = height || this._size;
 
         if (xOffset < 0) {
-            throw new DeveloperError("xOffset must be greater than or equal to zero.", "xOffset");
+            throw new DeveloperError("xOffset must be greater than or equal to zero.");
         }
 
         if (yOffset < 0) {
-            throw new DeveloperError("yOffset must be greater than or equal to zero.", "yOffset");
+            throw new DeveloperError("yOffset must be greater than or equal to zero.");
         }
 
         if (framebufferXOffset < 0) {
-            throw new DeveloperError("framebufferXOffset must be greater than or equal to zero.", "framebufferXOffset");
+            throw new DeveloperError("framebufferXOffset must be greater than or equal to zero.");
         }
 
         if (framebufferYOffset < 0) {
-            throw new DeveloperError("framebufferYOffset must be greater than or equal to zero.", "framebufferYOffset");
+            throw new DeveloperError("framebufferYOffset must be greater than or equal to zero.");
         }
 
         if (xOffset + width > this._size) {
@@ -317,7 +317,7 @@ define([
      *
      * @param {MipmapHint} hint optional.
      *
-     * @exception {DeveloperError} Invalid hint.
+     * @exception {DeveloperError} hint is invalid.
      * @exception {DeveloperError} This CubeMap's width must be a power of two to call generateMipmap().
      * @exception {DeveloperError} This CubeMap's height must be a power of two to call generateMipmap().
      * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
@@ -329,7 +329,7 @@ define([
 
         hint = hint || MipmapHint.DONT_CARE;
         if (!MipmapHint.validate(hint)) {
-            throw new DeveloperError("Invalid hint.", "hint");
+            throw new DeveloperError("hint is invalid.");
         }
 
         var gl = this._gl;
