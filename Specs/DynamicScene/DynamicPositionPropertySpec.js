@@ -12,7 +12,7 @@ defineSuite([
     "use strict";
     /*global it,expect*/
 
-    it("Works with Cartesian3 interpolatable values (specified linear interpolator).", function() {
+    it('Works with Cartesian3 interpolatable values (specified linear interpolator).', function() {
         var iso8601Epoch = '2012-04-18T15:59:00Z';
         var epoch = JulianDate.fromIso8601(iso8601Epoch);
 
@@ -20,7 +20,7 @@ defineSuite([
         var czmlInterval = {
             epoch : iso8601Epoch,
             cartesian : [0, 100000, 100001, 100002, 10, 100010, 100011, 100012, 20, 100020, 100021, 100022],
-            interpolationAlgorithm : "LINEAR",
+            interpolationAlgorithm : 'LINEAR',
             interpolationDegree : 1
         };
         property.addIntervals(czmlInterval);
@@ -48,7 +48,7 @@ defineSuite([
         expect(result.height).toEqual(resultCartographic.height);
     });
 
-    it("Works with static Cartesian3 values.", function() {
+    it('Works with static Cartesian3 values.', function() {
         var iso8601Epoch = '2012-04-18T15:59:00Z';
         var epoch = JulianDate.fromIso8601(iso8601Epoch);
 

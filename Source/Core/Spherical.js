@@ -60,7 +60,7 @@ define([
     };
 
     Spherical.prototype.toString = function() {
-        return "(" + this.clock + ", " + this.cone + ", " + this.magnitude + ")";
+        return '(' + this.clock + ', ' + this.cone + ', ' + this.magnitude + ')';
     };
 
     return Spherical;

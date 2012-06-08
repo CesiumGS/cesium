@@ -3,7 +3,7 @@ defineSuite(['DynamicScene/CzmlColor'], function(CzmlColor) {
     "use strict";
     /*global it,expect*/
 
-    it("isSampled works.", function() {
+    it('isSampled works.', function() {
         var constantRgba = [0, 0, 0, 0];
         expect(CzmlColor.isSampled(constantRgba)).toEqual(false);
 

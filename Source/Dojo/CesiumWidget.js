@@ -69,7 +69,7 @@ define([
         },
 
         postCreate : function() {
-            ready(this, "_setupCesium");
+            ready(this, '_setupCesium');
         },
 
         resize : function() {
@@ -340,7 +340,7 @@ define([
 
             if (this.useStreamingImagery) {
                 centralBody.dayTileProvider = new BingMapsTileProvider({
-                    server : "dev.virtualearth.net",
+                    server : 'dev.virtualearth.net',
                     mapStyle : this.mapStyle
                 });
             } else {

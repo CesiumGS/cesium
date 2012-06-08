@@ -28,12 +28,12 @@ function(binarySearch,
             } else if (otherIntervals[right].stop.lessThan(that._intervals[left].start)) {
                 ++right;
             } else {
-                // The following will return an intersection whose data is "merged" if the callback is non-null
+                // The following will return an intersection whose data is 'merged' if the callback is non-null
                 var intersection = typeof mergeCallback === 'undefined' ? that._intervals[left].intersect(otherIntervals[right], dataComparer) : that._intervals[left].intersect(
                         otherIntervals[right], mergeCallback);
                 if (!intersection.isEmpty) {
-                    // Since we start with an empty collection for "result", and there are no overlapping intervals in "that" (as a rule),
-                    // the "intersection" will never overlap with a previous interval in "result".  So, no need to do any additional "merging".
+                    // Since we start with an empty collection for 'result', and there are no overlapping intervals in 'that' (as a rule),
+                    // the 'intersection' will never overlap with a previous interval in 'result'.  So, no need to do any additional 'merging'.
                     result.add(intersection, dataComparer);
                 }
 
@@ -124,7 +124,7 @@ function(binarySearch,
                         --index;
                     } else {
                         // Overlapping intervals have different data.  The new interval
-                        // being added "wins" so truncate the previous interval.
+                        // being added 'wins' so truncate the previous interval.
                         // If the existing interval extends past the end of the new one,
                         // split the existing interval into two intervals.
                         comparison = JulianDate.compare(this._intervals[index - 1].stop, interval.stop);
@@ -156,7 +156,7 @@ function(binarySearch,
                         this._intervals.splice(index, 1);
                     } else {
                         // Overlapping intervals have different data.  The new interval
-                        // being added "wins" so truncate the next interval.
+                        // being added 'wins' so truncate the next interval.
                         this._intervals[index] = new TimeInterval(interval.stop, this._intervals[index].stop, !interval.isStopIncluded, this._intervals[index].isStopIncluded,
                                 this._intervals[index].data);
                         if (this._intervals[index].isEmpty) {
@@ -190,13 +190,13 @@ function(binarySearch,
         var intersections = this.intersectInternal(this, items, undefined, mergeCallback);
         for ( var i = 0; i < intersections.length; i++) {
             var intersection = intersections[i];
-            // Add the intersected piece and clobber the existing data with the "merged" data
+            // Add the intersected piece and clobber the existing data with the 'merged' data
             this.addInterval(intersection);
             // Remove the already merged interval from consideration
             otherUnion.remove(intersection);
         }
-        // Make sure to add the remaining (new) pieces of "items" which may not already intersect
-        // Items in "this" which don't intersect with "items" will continue to exist in "this" unhindered
+        // Make sure to add the remaining (new) pieces of 'items' which may not already intersect
+        // Items in 'this' which don't intersect with 'items' will continue to exist in 'this' unhindered
         this.addIntervalCollection(otherUnion);
     };
 
@@ -207,7 +207,7 @@ function(binarySearch,
     };
 
     TimeIntervalCollection.prototype.intersectIntervalCollection = function(intervals, dataComparer) {
-        // Conduct the usual intersection, but instead of an actual merge function, just accept "this" data
+        // Conduct the usual intersection, but instead of an actual merge function, just accept 'this' data
         return this.intersectInternal(this, intervals, dataComparer);
     };
 

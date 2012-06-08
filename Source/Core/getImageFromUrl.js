@@ -26,19 +26,19 @@ define(['./DeveloperError'
      */
     function getImageFromUrl(url, onLoad, onError, onAbort) {
         if (typeof url !== 'string') {
-            throw new DeveloperError("url is a required string parameter.");
+            throw new DeveloperError('url is a required string parameter.');
         }
 
         if (typeof onLoad !== 'function') {
-            throw new DeveloperError("onLoad is a required function parameter.");
+            throw new DeveloperError('onLoad is a required function parameter.');
         }
 
         if (typeof onError !== 'function' && typeof onError !== 'undefined') {
-            throw new DeveloperError("onError must be a function.");
+            throw new DeveloperError('onError must be a function.');
         }
 
         if (typeof onAbort !== 'function' && typeof onError !== 'undefined') {
-            throw new DeveloperError("onAbort must be a function.");
+            throw new DeveloperError('onAbort must be a function.');
         }
 
         var image = new Image();
@@ -59,7 +59,7 @@ define(['./DeveloperError'
         }
 
         //Only add the crossOrigin flag for non-data URLs
-        if (url.substr(0, 5) !== "data:") {
+        if (url.substr(0, 5) !== 'data:') {
             image.crossOrigin = '';
         }
 

@@ -36,11 +36,11 @@ function(
                 interval = TimeInterval.fromIso8601(interval);
             }
 
-            polylineUpdated = DynamicProperty.processCzmlPacket(polyline, "color", CzmlColor, polylineData.color, interval, dynamicObjectCollection) || polylineUpdated;
-            polylineUpdated = DynamicProperty.processCzmlPacket(polyline, "outlineColor", CzmlColor, polylineData.outlineColor, interval, dynamicObjectCollection) || polylineUpdated;
-            polylineUpdated = DynamicProperty.processCzmlPacket(polyline, "outlineWidth", CzmlNumber, polylineData.outlineWidth, interval, dynamicObjectCollection) || polylineUpdated;
-            polylineUpdated = DynamicProperty.processCzmlPacket(polyline, "show", CzmlBoolean, polylineData.show, interval, dynamicObjectCollection) || polylineUpdated;
-            polylineUpdated = DynamicProperty.processCzmlPacket(polyline, "width", CzmlNumber, polylineData.width, interval, dynamicObjectCollection) || polylineUpdated;
+            polylineUpdated = DynamicProperty.processCzmlPacket(polyline, 'color', CzmlColor, polylineData.color, interval, dynamicObjectCollection) || polylineUpdated;
+            polylineUpdated = DynamicProperty.processCzmlPacket(polyline, 'outlineColor', CzmlColor, polylineData.outlineColor, interval, dynamicObjectCollection) || polylineUpdated;
+            polylineUpdated = DynamicProperty.processCzmlPacket(polyline, 'outlineWidth', CzmlNumber, polylineData.outlineWidth, interval, dynamicObjectCollection) || polylineUpdated;
+            polylineUpdated = DynamicProperty.processCzmlPacket(polyline, 'show', CzmlBoolean, polylineData.show, interval, dynamicObjectCollection) || polylineUpdated;
+            polylineUpdated = DynamicProperty.processCzmlPacket(polyline, 'width', CzmlNumber, polylineData.width, interval, dynamicObjectCollection) || polylineUpdated;
 
             return polylineUpdated;
         }

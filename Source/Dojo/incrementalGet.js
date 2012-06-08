@@ -7,7 +7,7 @@ define(function() {
 
         if (itemCallback) {
             eventSource.onmessage = function(event) {
-                if (event.data !== "") {
+                if (event.data !== '') {
                     itemCallback(JSON.parse(event.data));
                 }
             };

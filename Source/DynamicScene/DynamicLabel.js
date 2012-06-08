@@ -54,17 +54,17 @@ define([
                 interval = TimeInterval.fromIso8601(interval);
             }
 
-            labelUpdated = DynamicProperty.processCzmlPacket(label, "text", CzmlString, labelData.text, interval, dynamicObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.processCzmlPacket(label, "font", CzmlString, labelData.font, interval, dynamicObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.processCzmlPacket(label, "show", CzmlBoolean, labelData.show, interval, dynamicObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.processCzmlPacket(label, "style", CzmlLabelStyle, labelData.style, interval, dynamicObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.processCzmlPacket(label, "fillColor", CzmlColor, labelData.fillColor, interval, dynamicObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.processCzmlPacket(label, "outlineColor", CzmlColor, labelData.outlineColor, interval, dynamicObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.processCzmlPacket(label, "scale", CzmlNumber, labelData.scale, interval, dynamicObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.processCzmlPacket(label, "horizontalOrigin", CzmlHorizontalOrigin, labelData.horizontalOrigin, interval, dynamicObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.processCzmlPacket(label, "verticalOrigin", CzmlVerticalOrigin, labelData.verticalOrigin, interval, dynamicObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.processCzmlPacket(label, "eyeOffset", CzmlCartesian3, labelData.eyeOffset, interval, dynamicObjectCollection) || labelUpdated;
-            labelUpdated = DynamicProperty.processCzmlPacket(label, "pixelOffset", CzmlCartesian2, labelData.pixelOffset, interval, dynamicObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.processCzmlPacket(label, 'text', CzmlString, labelData.text, interval, dynamicObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.processCzmlPacket(label, 'font', CzmlString, labelData.font, interval, dynamicObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.processCzmlPacket(label, 'show', CzmlBoolean, labelData.show, interval, dynamicObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.processCzmlPacket(label, 'style', CzmlLabelStyle, labelData.style, interval, dynamicObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.processCzmlPacket(label, 'fillColor', CzmlColor, labelData.fillColor, interval, dynamicObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.processCzmlPacket(label, 'outlineColor', CzmlColor, labelData.outlineColor, interval, dynamicObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.processCzmlPacket(label, 'scale', CzmlNumber, labelData.scale, interval, dynamicObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.processCzmlPacket(label, 'horizontalOrigin', CzmlHorizontalOrigin, labelData.horizontalOrigin, interval, dynamicObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.processCzmlPacket(label, 'verticalOrigin', CzmlVerticalOrigin, labelData.verticalOrigin, interval, dynamicObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.processCzmlPacket(label, 'eyeOffset', CzmlCartesian3, labelData.eyeOffset, interval, dynamicObjectCollection) || labelUpdated;
+            labelUpdated = DynamicProperty.processCzmlPacket(label, 'pixelOffset', CzmlCartesian2, labelData.pixelOffset, interval, dynamicObjectCollection) || labelUpdated;
             return labelUpdated;
         }
     };

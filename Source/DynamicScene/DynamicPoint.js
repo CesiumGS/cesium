@@ -36,11 +36,11 @@ define([
                 interval = TimeInterval.fromIso8601(interval);
             }
 
-            pointUpdated = DynamicProperty.processCzmlPacket(point, "color", CzmlColor, pointData.color, interval, dynamicObjectCollection) || pointUpdated;
-            pointUpdated = DynamicProperty.processCzmlPacket(point, "pixelSize", CzmlNumber, pointData.pixelSize, interval, dynamicObjectCollection) || pointUpdated;
-            pointUpdated = DynamicProperty.processCzmlPacket(point, "outlineColor", CzmlColor, pointData.outlineColor, interval, dynamicObjectCollection) || pointUpdated;
-            pointUpdated = DynamicProperty.processCzmlPacket(point, "outlineWidth", CzmlNumber, pointData.outlineWidth, interval, dynamicObjectCollection) || pointUpdated;
-            pointUpdated = DynamicProperty.processCzmlPacket(point, "show", CzmlBoolean, pointData.show, interval, dynamicObjectCollection) || pointUpdated;
+            pointUpdated = DynamicProperty.processCzmlPacket(point, 'color', CzmlColor, pointData.color, interval, dynamicObjectCollection) || pointUpdated;
+            pointUpdated = DynamicProperty.processCzmlPacket(point, 'pixelSize', CzmlNumber, pointData.pixelSize, interval, dynamicObjectCollection) || pointUpdated;
+            pointUpdated = DynamicProperty.processCzmlPacket(point, 'outlineColor', CzmlColor, pointData.outlineColor, interval, dynamicObjectCollection) || pointUpdated;
+            pointUpdated = DynamicProperty.processCzmlPacket(point, 'outlineWidth', CzmlNumber, pointData.outlineWidth, interval, dynamicObjectCollection) || pointUpdated;
+            pointUpdated = DynamicProperty.processCzmlPacket(point, 'show', CzmlBoolean, pointData.show, interval, dynamicObjectCollection) || pointUpdated;
 
             return pointUpdated;
         }

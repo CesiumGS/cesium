@@ -31,8 +31,8 @@ define([
                 interval = TimeInterval.fromIso8601(interval);
             }
 
-            polygonUpdated = DynamicProperty.processCzmlPacket(polygon, "show", CzmlBoolean, polygonData.show, interval, dynamicObjectCollection) || polygonUpdated;
-            polygonUpdated = DynamicMaterialProperty.processCzmlPacket(polygon, "material", polygonData.material, interval, dynamicObjectCollection) || polygonUpdated;
+            polygonUpdated = DynamicProperty.processCzmlPacket(polygon, 'show', CzmlBoolean, polygonData.show, interval, dynamicObjectCollection) || polygonUpdated;
+            polygonUpdated = DynamicMaterialProperty.processCzmlPacket(polygon, 'material', polygonData.material, interval, dynamicObjectCollection) || polygonUpdated;
             return polygonUpdated;
         }
     };

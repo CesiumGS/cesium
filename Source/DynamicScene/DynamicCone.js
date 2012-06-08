@@ -45,18 +45,18 @@ define([
                 interval = TimeInterval.fromIso8601(interval);
             }
 
-            coneUpdated = DynamicProperty.processCzmlPacket(cone, "show", CzmlBoolean, coneData.show, interval, dynamicObjectCollection) || coneUpdated;
-            coneUpdated = DynamicProperty.processCzmlPacket(cone, "innerHalfAngle", CzmlNumber, coneData.innerHalfAngle, interval, dynamicObjectCollection) || coneUpdated;
-            coneUpdated = DynamicProperty.processCzmlPacket(cone, "outerHalfAngle", CzmlNumber, coneData.outerHalfAngle, interval, dynamicObjectCollection) || coneUpdated;
-            coneUpdated = DynamicProperty.processCzmlPacket(cone, "minimumClockAngle", CzmlNumber, coneData.minimumClockAngle, interval, dynamicObjectCollection) || coneUpdated;
-            coneUpdated = DynamicProperty.processCzmlPacket(cone, "maximumClockAngle", CzmlNumber, coneData.maximumClockAngle, interval, dynamicObjectCollection) || coneUpdated;
-            coneUpdated = DynamicProperty.processCzmlPacket(cone, "radius", CzmlNumber, coneData.radius, interval, dynamicObjectCollection) || coneUpdated;
-            coneUpdated = DynamicProperty.processCzmlPacket(cone, "showIntersection", CzmlBoolean, coneData.showIntersection, interval, dynamicObjectCollection) || coneUpdated;
-            coneUpdated = DynamicProperty.processCzmlPacket(cone, "intersectionColor", CzmlColor, coneData.intersectionColor, interval, dynamicObjectCollection) || coneUpdated;
-            coneUpdated = DynamicMaterialProperty.processCzmlPacket(cone, "capMaterial", coneData.capMaterial, interval, dynamicObjectCollection) || coneUpdated;
-            coneUpdated = DynamicMaterialProperty.processCzmlPacket(cone, "innerMaterial", coneData.innerMaterial, interval, dynamicObjectCollection) || coneUpdated;
-            coneUpdated = DynamicMaterialProperty.processCzmlPacket(cone, "outerMaterial", coneData.outerMaterial, interval, dynamicObjectCollection) || coneUpdated;
-            coneUpdated = DynamicMaterialProperty.processCzmlPacket(cone, "silhouetteMaterial", coneData.silhouetteMaterial, interval, dynamicObjectCollection) || coneUpdated;
+            coneUpdated = DynamicProperty.processCzmlPacket(cone, 'show', CzmlBoolean, coneData.show, interval, dynamicObjectCollection) || coneUpdated;
+            coneUpdated = DynamicProperty.processCzmlPacket(cone, 'innerHalfAngle', CzmlNumber, coneData.innerHalfAngle, interval, dynamicObjectCollection) || coneUpdated;
+            coneUpdated = DynamicProperty.processCzmlPacket(cone, 'outerHalfAngle', CzmlNumber, coneData.outerHalfAngle, interval, dynamicObjectCollection) || coneUpdated;
+            coneUpdated = DynamicProperty.processCzmlPacket(cone, 'minimumClockAngle', CzmlNumber, coneData.minimumClockAngle, interval, dynamicObjectCollection) || coneUpdated;
+            coneUpdated = DynamicProperty.processCzmlPacket(cone, 'maximumClockAngle', CzmlNumber, coneData.maximumClockAngle, interval, dynamicObjectCollection) || coneUpdated;
+            coneUpdated = DynamicProperty.processCzmlPacket(cone, 'radius', CzmlNumber, coneData.radius, interval, dynamicObjectCollection) || coneUpdated;
+            coneUpdated = DynamicProperty.processCzmlPacket(cone, 'showIntersection', CzmlBoolean, coneData.showIntersection, interval, dynamicObjectCollection) || coneUpdated;
+            coneUpdated = DynamicProperty.processCzmlPacket(cone, 'intersectionColor', CzmlColor, coneData.intersectionColor, interval, dynamicObjectCollection) || coneUpdated;
+            coneUpdated = DynamicMaterialProperty.processCzmlPacket(cone, 'capMaterial', coneData.capMaterial, interval, dynamicObjectCollection) || coneUpdated;
+            coneUpdated = DynamicMaterialProperty.processCzmlPacket(cone, 'innerMaterial', coneData.innerMaterial, interval, dynamicObjectCollection) || coneUpdated;
+            coneUpdated = DynamicMaterialProperty.processCzmlPacket(cone, 'outerMaterial', coneData.outerMaterial, interval, dynamicObjectCollection) || coneUpdated;
+            coneUpdated = DynamicMaterialProperty.processCzmlPacket(cone, 'silhouetteMaterial', coneData.silhouetteMaterial, interval, dynamicObjectCollection) || coneUpdated;
         }
     };
 

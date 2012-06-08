@@ -17,7 +17,7 @@ define([
 
     function DynamicObject(id) {
         if (typeof id === 'undefined' || id === null) {
-            throw new DeveloperError("id is required");
+            throw new DeveloperError('id is required');
         }
 
         this.id = id;
@@ -58,7 +58,7 @@ define([
     DynamicObject.processCzmlPacketOrientation = function(dynamicObject, packet, dynamicObjectCollection) {
         var orientationData = packet.orientation;
         if (typeof orientationData !== 'undefined') {
-            return DynamicProperty.processCzmlPacket(dynamicObject, "orientation", CzmlQuaternion, orientationData, undefined, dynamicObjectCollection);
+            return DynamicProperty.processCzmlPacket(dynamicObject, 'orientation', CzmlQuaternion, orientationData, undefined, dynamicObjectCollection);
         }
         return false;
     };

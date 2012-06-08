@@ -26,7 +26,7 @@ define(function() {
     };
 
     TimelineHighlightRange.prototype.render = function(renderState) {
-        var range = "";
+        var range = '';
         if (this._start && this._stop && this._color) {
             var highlightStart = renderState.epochJulian.getSecondsDifference(this._start);
             var highlightLeft = Math.round(renderState.timeBarWidth * renderState.getAlpha(highlightStart));

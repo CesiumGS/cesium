@@ -41,12 +41,12 @@ define([
                 interval = TimeInterval.fromIso8601(interval);
             }
 
-            pyramidUpdated = DynamicProperty.processCzmlPacket(pyramid, "show", CzmlBoolean, pyramidData.show, interval, dynamicObjectCollection) || pyramidUpdated;
-            pyramidUpdated = DynamicDirectionsProperty.processCzmlPacket(pyramid, "directions", pyramidData.directions, interval, dynamicObjectCollection) || pyramidUpdated;
-            pyramidUpdated = DynamicProperty.processCzmlPacket(pyramid, "radius", CzmlNumber, pyramidData.radius, interval, dynamicObjectCollection) || pyramidUpdated;
-            pyramidUpdated = DynamicProperty.processCzmlPacket(pyramid, "showIntersection", CzmlBoolean, pyramidData.showIntersection, interval, dynamicObjectCollection) || pyramidUpdated;
-            pyramidUpdated = DynamicProperty.processCzmlPacket(pyramid, "intersectionColor", CzmlColor, pyramidData.intersectionColor, interval, dynamicObjectCollection) || pyramidUpdated;
-            pyramidUpdated = DynamicMaterialProperty.processCzmlPacket(pyramid, "material", pyramidData.material, interval, dynamicObjectCollection) || pyramidUpdated;
+            pyramidUpdated = DynamicProperty.processCzmlPacket(pyramid, 'show', CzmlBoolean, pyramidData.show, interval, dynamicObjectCollection) || pyramidUpdated;
+            pyramidUpdated = DynamicDirectionsProperty.processCzmlPacket(pyramid, 'directions', pyramidData.directions, interval, dynamicObjectCollection) || pyramidUpdated;
+            pyramidUpdated = DynamicProperty.processCzmlPacket(pyramid, 'radius', CzmlNumber, pyramidData.radius, interval, dynamicObjectCollection) || pyramidUpdated;
+            pyramidUpdated = DynamicProperty.processCzmlPacket(pyramid, 'showIntersection', CzmlBoolean, pyramidData.showIntersection, interval, dynamicObjectCollection) || pyramidUpdated;
+            pyramidUpdated = DynamicProperty.processCzmlPacket(pyramid, 'intersectionColor', CzmlColor, pyramidData.intersectionColor, interval, dynamicObjectCollection) || pyramidUpdated;
+            pyramidUpdated = DynamicMaterialProperty.processCzmlPacket(pyramid, 'material', pyramidData.material, interval, dynamicObjectCollection) || pyramidUpdated;
 
             return pyramidUpdated;
         }

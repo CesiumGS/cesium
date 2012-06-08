@@ -34,11 +34,11 @@ define([
      */
     function TimeInterval(start, stop, isStartIncluded, isStopIncluded, data) {
         if (typeof start === 'undefined') {
-            throw new DeveloperError("start must be specified.", "start");
+            throw new DeveloperError('start must be specified.');
         }
 
         if (typeof stop === 'undefined') {
-            throw new DeveloperError("stop must be specified.", "stop");
+            throw new DeveloperError('stop must be specified.');
         }
 
         if (typeof isStartIncluded === 'undefined') {
@@ -74,11 +74,11 @@ define([
      * @see TimeInterval
      * @see TimeIntervalCollection
      * @see JulianDate
-     * @see <a href="http://en.wikipedia.org/wiki/ISO_8601">ISO 8601 on Wikipedia</a>.
+     * @see <a href='http://en.wikipedia.org/wiki/ISO_8601'>ISO 8601 on Wikipedia</a>.
      *
      * @example
      * // Construct an open Timeinterval with a Cartesian data payload.
-     * var interval = TimeInterval.fromIso8601("2012-03-15T11:02:24.55Z/2012-03-15T12:28:24.03Z", false, false, new Cartesian3(1,2,3));
+     * var interval = TimeInterval.fromIso8601('2012-03-15T11:02:24.55Z/2012-03-15T12:28:24.03Z', false, false, new Cartesian3(1,2,3));
      */
     TimeInterval.fromIso8601 = function(iso8601String, isStartIncluded, isStopIncluded, data) {
         var iso8601Interval = iso8601String.split('/');

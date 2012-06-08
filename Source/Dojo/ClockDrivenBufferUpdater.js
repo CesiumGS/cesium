@@ -17,7 +17,7 @@ define(['dojo/io-query',
         this._buffer = buffer;
         this._bufferFillFunction = bufferFillFunction;
 
-        var queryIndex = baseUrl.indexOf("?");
+        var queryIndex = baseUrl.indexOf('?');
         if (queryIndex >= 0) {
             this._query = ioquery.queryToObject(baseUrl.substring(queryIndex + 1, baseUrl.length));
             this._baseUrl = baseUrl.substring(0, queryIndex);

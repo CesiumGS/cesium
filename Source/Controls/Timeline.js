@@ -64,10 +64,10 @@ define(['./TimelineTrack',
     31536000000.0 // 1000years
     ];
 
-    var timelineMonthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    var timelineMonthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
     function Timeline(id, clock) {
-        if (typeof (id) === "string") {
+        if (typeof (id) === 'string') {
             this._topElement = document.getElementById(id);
         } else {
             this._topElement = id;
@@ -83,7 +83,7 @@ define(['./TimelineTrack',
         this._mouseX = 0;
         var self = this;
 
-        this._topElement.className += " timelineMain";
+        this._topElement.className += ' timelineMain';
         this._topElement.innerHTML = '<div class="timelineBar"></div><div class="timelineTrackContainer">' +
                                      '<canvas class="timelineTracks" width="10" height="1">' +
                                      '</canvas></div><div class="timelineNeedle"></div><span class="timelineRuler"></span>';
@@ -92,7 +92,7 @@ define(['./TimelineTrack',
         this._trackListEle = this._topElement.childNodes[1].childNodes[0];
         this._needleEle = this._topElement.childNodes[2];
         this._rulerEle = this._topElement.childNodes[3];
-        this._context = this._trackListEle.getContext("2d");
+        this._context = this._trackListEle.getContext('2d');
 
         this._trackList = [];
         this._highlightRanges = [];
@@ -206,18 +206,18 @@ define(['./TimelineTrack',
     };
 
     function twoDigits(num) {
-        return ((num < 10) ? ("0" + num.toString()) : num.toString());
+        return ((num < 10) ? ('0' + num.toString()) : num.toString());
     }
 
     Timeline.prototype.makeLabel = function(date) {
         var hours = date.getUTCHours();
-        var ampm = (hours < 12) ? " AM" : " PM";
+        var ampm = (hours < 12) ? ' AM' : ' PM';
         if (hours >= 13) {
             hours -= 12;
         } else if (hours === 0) {
             hours = 12;
         }
-        var mils = date.getUTCMilliseconds(), milString = "";
+        var mils = date.getUTCMilliseconds(), milString = '';
         if ((mils > 0) && (this._timeBarSecondsSpan < 3600)) {
             milString = mils.toString();
             while (milString.length < 3) {
@@ -226,7 +226,7 @@ define(['./TimelineTrack',
             milString = '.' + milString;
         }
 
-        return timelineMonthNames[date.getUTCMonth()] + " " + date.getUTCDate() + " " + date.getUTCFullYear() + " " + twoDigits(hours) + ":" + twoDigits(date.getUTCMinutes()) + ":" +
+        return timelineMonthNames[date.getUTCMonth()] + ' ' + date.getUTCDate() + ' ' + date.getUTCFullYear() + ' ' + twoDigits(hours) + ':' + twoDigits(date.getUTCMinutes()) + ':' +
                 twoDigits(date.getUTCSeconds()) + milString + ampm;
     };
 
@@ -238,7 +238,7 @@ define(['./TimelineTrack',
         var scrubX = xPos - 8, tic;
         var self = this;
 
-        this._needleEle.style.left = xPos.toString() + "px";
+        this._needleEle.style.left = xPos.toString() + 'px';
 
         var tics = '<span class="timelineIcon16" style="left:' + scrubX + 'px;bottom:0;background-position: 0px 0px;"></span>';
 
@@ -264,10 +264,10 @@ define(['./TimelineTrack',
 
         var epochJulian;
         if (Duration > 31536000) { // 365 days
-            epochJulian = JulianDate.fromDate(new Date(this._startJulian.toDate().getFullYear().toString().substring(0, 3) + "0-01-01"));
+            epochJulian = JulianDate.fromDate(new Date(this._startJulian.toDate().getFullYear().toString().substring(0, 3) + '0-01-01'));
             StartTime = epochJulian.addSeconds(0.01).getSecondsDifference(this._startJulian);
         } else if (Duration > 86400) { // 1 day
-            epochJulian = JulianDate.fromDate(new Date(this._startJulian.toDate().getFullYear().toString() + "-01-01"));
+            epochJulian = JulianDate.fromDate(new Date(this._startJulian.toDate().getFullYear().toString() + '-01-01'));
             StartTime = epochJulian.addSeconds(0.01).getSecondsDifference(this._startJulian);
         } else {
             epochJulian = this._startJulian.addSeconds(-StartTime);
@@ -424,8 +424,8 @@ define(['./TimelineTrack',
 
         if (this._scrubElement) {
             var scrubX = xPos - 8;
-            this._scrubElement.style.left = scrubX.toString() + "px";
-            this._needleEle.style.left = xPos.toString() + "px";
+            this._scrubElement.style.left = scrubX.toString() + 'px';
+            this._needleEle.style.left = xPos.toString() + 'px';
         }
     };
 
@@ -433,8 +433,8 @@ define(['./TimelineTrack',
         this._scrubJulian = this._startJulian.addSeconds(seconds);
         if (this._scrubElement) {
             var scrubX = xPos - 8;
-            this._scrubElement.style.left = scrubX.toString() + "px";
-            this._needleEle.style.left = xPos.toString() + "px";
+            this._scrubElement.style.left = scrubX.toString() + 'px';
+            this._needleEle.style.left = xPos.toString() + 'px';
         }
         this._clock.currentTime = this._scrubJulian;
 
@@ -451,7 +451,7 @@ define(['./TimelineTrack',
             if (e.button === 0) {
                 this._mouseMode = timelineMouseMode.scrub;
                 if (this._scrubElement) {
-                    this._scrubElement.style.backgroundPosition = "-16px 0";
+                    this._scrubElement.style.backgroundPosition = '-16px 0';
                 }
                 this._handleMouseMove(e);
             } else {
@@ -468,7 +468,7 @@ define(['./TimelineTrack',
     Timeline.prototype._handleMouseUp = function(e) {
         this._mouseMode = timelineMouseMode.none;
         if (this._scrubElement) {
-            this._scrubElement.style.backgroundPosition = "0px 0px";
+            this._scrubElement.style.backgroundPosition = '0px 0px';
         }
     };
     Timeline.prototype._handleMouseMove = function(e) {
@@ -511,7 +511,7 @@ define(['./TimelineTrack',
             if (Math.abs(e.touches[0].clientX - xPos) < 50) {
                 this._touchMode = timelineTouchMode.scrub;
                 if (this._scrubElement) {
-                    this._scrubElement.style.backgroundPosition = (len === 1) ? "-16px 0" : "0 0";
+                    this._scrubElement.style.backgroundPosition = (len === 1) ? '-16px 0' : '0 0';
                 }
             } else {
                 this._touchMode = timelineTouchMode.singleTap;
@@ -540,7 +540,7 @@ define(['./TimelineTrack',
             this._touchState.centerX = e.touches[0].clientX - leftX;
         }
         if (this._scrubElement) {
-            this._scrubElement.style.backgroundPosition = "0 0";
+            this._scrubElement.style.backgroundPosition = '0 0';
         }
     };
     Timeline.prototype._handleTouchMove = function(e) {
@@ -588,13 +588,13 @@ define(['./TimelineTrack',
 
     Timeline.prototype.handleResize = function() {
         var containerHeight = this._topElement.getBoundingClientRect().height - this._timeBarEle.getBoundingClientRect().height - 2;
-        this._trackContainer.style.height = containerHeight.toString() + "px";
+        this._trackContainer.style.height = containerHeight.toString() + 'px';
 
         var trackListHeight = 1;
         this._trackList.forEach(function(track) {
             trackListHeight += track.getHeight();
         });
-        this._trackListEle.style.height = trackListHeight.toString() + "px";
+        this._trackListEle.style.height = trackListHeight.toString() + 'px';
         this._trackListEle.width = this._trackListEle.clientWidth;
         this._trackListEle.height = trackListHeight;
         this._makeTics();

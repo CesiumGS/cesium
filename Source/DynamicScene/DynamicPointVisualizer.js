@@ -152,8 +152,8 @@ function(TextureAtlas,
         }
 
         if (needRedraw) {
-            var cssColor = color ? color.toCSSColor() : "#FFFFFF";
-            var cssOutlineColor = outlineColor ? outlineColor.toCSSColor() : "#000000";
+            var cssColor = color ? color.toCSSColor() : '#FFFFFF';
+            var cssOutlineColor = outlineColor ? outlineColor.toCSSColor() : '#000000';
             pixelSize = pixelSize || 3;
             outlineWidth = outlineWidth || 2;
 
@@ -165,12 +165,12 @@ function(TextureAtlas,
             });
 
             this._textureAtlas.addTextureFromFunction(textureId, function(id, loadedCallback) {
-                var canvas = document.createElement("canvas");
+                var canvas = document.createElement('canvas');
 
                 var length = pixelSize + (2 * outlineWidth);
                 canvas.height = canvas.width = length;
 
-                var context2D = canvas.getContext("2d");
+                var context2D = canvas.getContext('2d');
                 context2D.clearRect(0, 0, length, length);
 
                 if (outlineWidth) {
