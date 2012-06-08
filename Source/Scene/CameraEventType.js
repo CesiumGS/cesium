@@ -14,7 +14,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        LEFT_DRAG : new Enumeration(0, "LEFT_DRAG"),
+        LEFT_DRAG : new Enumeration(0, 'LEFT_DRAG'),
 
         /**
          * DOC_TBA
@@ -22,7 +22,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        RIGHT_DRAG : new Enumeration(1, "RIGHT_DRAG"),
+        RIGHT_DRAG : new Enumeration(1, 'RIGHT_DRAG'),
 
         /**
          * DOC_TBA
@@ -30,7 +30,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        MIDDLE_DRAG : new Enumeration(2, "MIDDLE_DRAG"),
+        MIDDLE_DRAG : new Enumeration(2, 'MIDDLE_DRAG'),
 
         /**
          * DOC_TBA
@@ -38,7 +38,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        WHEEL : new Enumeration(3, "WHEEL")
+        WHEEL : new Enumeration(3, 'WHEEL')
     };
 
     return CameraEventType;

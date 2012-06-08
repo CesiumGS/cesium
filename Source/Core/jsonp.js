@@ -1,6 +1,6 @@
 /*global define*/
 define(['./DeveloperError'], function(DeveloperError) {
-    'use strict';
+    "use strict";
 
     function pushQueryParameter(array, name, value) {
         array.push(encodeURIComponent(name) + '=' + encodeURIComponent(value));

@@ -34,11 +34,11 @@ define([
      */
     function Occluder(occluderBoundingSphere, cameraPosition) {
         if (!occluderBoundingSphere) {
-            throw new DeveloperError("occluderBoundingSphere is required.");
+            throw new DeveloperError('occluderBoundingSphere is required.');
         }
 
         if (!cameraPosition) {
-            throw new DeveloperError("camera position is required.");
+            throw new DeveloperError('camera position is required.');
         }
 
         this._occluderPosition = occluderBoundingSphere.center.clone();
@@ -262,15 +262,15 @@ define([
     Occluder.getOccludeePoint = function(occluderBoundingSphere, occludeePosition, positions) {
         // Validate input data
         if (!occluderBoundingSphere) {
-            throw new DeveloperError("occluderBoundingSphere is required.");
+            throw new DeveloperError('occluderBoundingSphere is required.');
         }
 
         if (!positions) {
-            throw new DeveloperError("positions is required.");
+            throw new DeveloperError('positions is required.');
         }
 
         if (positions.length === 0) {
-            throw new DeveloperError("positions must contain at least one element");
+            throw new DeveloperError('positions must contain at least one element');
         }
 
         var occludeePos = Cartesian3.clone(occludeePosition);
@@ -279,7 +279,7 @@ define([
         var numPositions = positions.length;
 
         if (occluderPosition.equals(occludeePosition)) {
-            throw new DeveloperError("Argument occludeePosition must be different than argument occluderBoundingSphere's center point");
+            throw new DeveloperError('occludeePosition must be different than occluderBoundingSphere.center');
         }
 
         var valid = true;
