@@ -380,7 +380,7 @@ define([
      */
     BillboardCollection.prototype.get = function(index) {
         if (typeof index === "undefined") {
-            throw new DeveloperError("index is required.", "index");
+            throw new DeveloperError("index is required.");
         }
 
         this._removeBillboards();

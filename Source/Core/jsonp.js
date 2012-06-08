@@ -17,11 +17,11 @@ define(['./DeveloperError'], function(DeveloperError) {
      */
     function jsonp(url, callback, options) {
         if (typeof url === 'undefined') {
-            throw new DeveloperError('url is required.', 'url');
+            throw new DeveloperError('url is required.');
         }
 
         if (typeof callback === 'undefined') {
-            throw new DeveloperError('callback is required.', 'callback');
+            throw new DeveloperError('callback is required.');
         }
 
         options = typeof options !== 'undefined' ? options : {};

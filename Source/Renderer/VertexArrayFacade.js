@@ -27,11 +27,11 @@ define([
      */
     function VertexArrayFacade(context, attributes, sizeInVertices) {
         if (!context) {
-            throw new DeveloperError("context is required.", "context");
+            throw new DeveloperError("context is required.");
         }
 
         if (!attributes || (attributes.length === 0)) {
-            throw new DeveloperError("At least one attribute is required.", "attributes");
+            throw new DeveloperError("At least one attribute is required.");
         }
 
         var attrs = VertexArrayFacade._verifyAttributes(attributes);
@@ -168,7 +168,7 @@ define([
         for ( var j = 0; j < attrs.length; ++j) {
             var index = attrs[j].index;
             if (uniqueIndices[index]) {
-                throw new DeveloperError("Index " + index + " is used by more than one attribute.", "attributes");
+                throw new DeveloperError("Index " + index + " is used by more than one attribute.");
             }
             uniqueIndices[index] = true;
         }
@@ -409,7 +409,7 @@ define([
      */
     VertexArrayFacade.prototype.subCommit = function(offsetInVertices, lengthInVertices) {
         if (offsetInVertices < 0 || offsetInVertices >= this._size) {
-            throw new DeveloperError("offsetInVertices must be greater than or equal to zero and less than the vertex array's size.", offsetInVertices);
+            throw new DeveloperError("offsetInVertices must be greater than or equal to zero and less than the vertex array's size.");
         }
 
         if (offsetInVertices + lengthInVertices > this._size) {

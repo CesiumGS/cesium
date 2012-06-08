@@ -38,7 +38,7 @@ define([
      */
     Buffer.prototype.copyFromArrayView = function(arrayView, offsetInBytes) {
         if (!arrayView) {
-            throw new DeveloperError("arrayView is required.", "arrayView");
+            throw new DeveloperError("arrayView is required.");
         }
 
         offsetInBytes = offsetInBytes || 0;

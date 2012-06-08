@@ -55,7 +55,7 @@ define([
      */
     AnimationCollection.prototype.addAlpha = function(material, start, stop, template) {
         if (typeof material === "undefined") {
-            throw new DeveloperError("material is required.", "material");
+            throw new DeveloperError("material is required.");
         }
 
         var properties = [];
@@ -69,7 +69,7 @@ define([
         }
 
         if (properties.length === 0) {
-            throw new DeveloperError("material has no properties with alpha components.", "material");
+            throw new DeveloperError("material has no properties with alpha components.");
         }
 
         // Default to fade in
@@ -110,11 +110,11 @@ define([
      */
     AnimationCollection.prototype.addProperty = function(object, property, start, stop, template) {
         if (typeof object === "undefined") {
-            throw new DeveloperError("object is required.", "object");
+            throw new DeveloperError("object is required.");
         }
 
         if (typeof property === "undefined") {
-            throw new DeveloperError("property is required.", "property");
+            throw new DeveloperError("property is required.");
         }
 
         if (typeof object[property] === "undefined") {
@@ -155,11 +155,11 @@ define([
      */
     AnimationCollection.prototype.addOffsetIncrement = function(material, template) {
         if (typeof material === "undefined") {
-            throw new DeveloperError("material is required.", "material");
+            throw new DeveloperError("material is required.");
         }
 
         if (typeof material.offset === "undefined") {
-            throw new DeveloperError("material must have an offset property.", "material");
+            throw new DeveloperError("material must have an offset property.");
         }
 
         var t = template || {};

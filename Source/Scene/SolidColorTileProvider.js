@@ -129,7 +129,7 @@ define([
      */
     SolidColorTileProvider.prototype.loadTileImage = function(tile, onload, onerror) {
         if (tile.zoom < this.zoomMin || tile.zoom > this.zoomMax) {
-            throw new DeveloperError("tile.zoom must be in [zoomMin, zoomMax].", "tile.zoom");
+            throw new DeveloperError("tile.zoom must be in [zoomMin, zoomMax].");
         }
 
         if (typeof onload === "function") {

@@ -116,15 +116,15 @@ function(DeveloperError,
                 //use UTC if not supplied
                 timeStandard = TimeStandard.UTC;
             } else if (!TimeStandard.isKnownStandard(timeStandard)) {
-                throw new DeveloperError("Invalid TimeStandard.", "timeStandard");
+                throw new DeveloperError("timeStandard is not a known TimeStandard.");
             }
 
             if (julianDayNumber === null || isNaN(julianDayNumber)) {
-                throw new DeveloperError("Number required.", "julianDayNumber");
+                throw new DeveloperError("julianDayNumber is required.");
             }
 
             if (julianSecondsOfDay === null || isNaN(julianSecondsOfDay)) {
-                throw new DeveloperError("Number required.", "julianSecondsOfDay");
+                throw new DeveloperError("julianSecondsOfDay is required.");
             }
 
             //coerce to integer
@@ -169,7 +169,7 @@ function(DeveloperError,
      *
      * @return {JulianDate} The new {@Link JulianDate} instance.
      *
-     * @exception {DeveloperError} Valid JavaScript Date required.
+     * @exception {DeveloperError} date must be a valid JavaScript Date.
      *
      * @see JulianDate
      * @see JulianDate.fromTotalDays
@@ -186,7 +186,7 @@ function(DeveloperError,
      */
     JulianDate.fromDate = function(date, timeStandard) {
         if (typeof date === 'undefined' || date === null || isNaN(date.getTime())) {
-            throw new DeveloperError("Valid JavaScript Date required.", "date");
+            throw new DeveloperError("date must be a valid JavaScript Date.");
         }
 
         var components = computeJulianDateComponentsFromDate(date);
@@ -226,7 +226,7 @@ function(DeveloperError,
      */
     JulianDate.fromIso8601 = function(iso8601String) {
         if (typeof iso8601String !== 'string') {
-            throw new DeveloperError(iso8601ErrorMessage, "iso8601String");
+            throw new DeveloperError(iso8601ErrorMessage);
         }
 
         //Comma and decimal point both indicate a fractional number according to ISO 8601,
@@ -241,7 +241,7 @@ function(DeveloperError,
         var time = tokens[1];
         var tmp, inLeapYear;
         if (typeof date === 'undefined') {
-            throw new DeveloperError(iso8601ErrorMessage, "iso8601String");
+            throw new DeveloperError(iso8601ErrorMessage);
         }
 
         var dashCount;
@@ -251,7 +251,7 @@ function(DeveloperError,
         if (tokens !== null) {
             dashCount = date.split('-').length - 1;
             if (dashCount > 0 && dashCount !== 2) {
-                throw new DeveloperError(iso8601ErrorMessage, "iso8601String");
+                throw new DeveloperError(iso8601ErrorMessage);
             }
             year = +tokens[1];
             month = +tokens[2];
@@ -277,7 +277,7 @@ function(DeveloperError,
 
                         //This validation is only applicable for this format.
                         if (dayOfYear < 1 || (inLeapYear && dayOfYear > 366) || (!inLeapYear && dayOfYear > 365)) {
-                            throw new DeveloperError(iso8601ErrorMessage, "iso8601String");
+                            throw new DeveloperError(iso8601ErrorMessage);
                         }
                     } else {
                         tokens = date.match(matchWeekDate);
@@ -292,14 +292,14 @@ function(DeveloperError,
                             if (dashCount > 0 &&
                                ((typeof tokens[3] === 'undefined' && dashCount !== 1) ||
                                (typeof tokens[3] !== 'undefined' && dashCount !== 2))) {
-                                throw new DeveloperError(iso8601ErrorMessage, "iso8601String");
+                                throw new DeveloperError(iso8601ErrorMessage);
                             }
 
                             var january4 = new Date(Date.UTC(year, 0, 4));
                             dayOfYear = (weekNumber * 7) + dayOfWeek - january4.getUTCDay() - 3;
                         } else {
                             //None of our regular expressions succeeded in parsing the date properly.
-                            throw new DeveloperError(iso8601ErrorMessage, "iso8601String");
+                            throw new DeveloperError(iso8601ErrorMessage);
                         }
                     }
                     //Split an ordinal date into month/day.
@@ -314,7 +314,7 @@ function(DeveloperError,
         //Now that we have all of the date components, validate them to make sure nothing is out of range.
         inLeapYear = isLeapYear(year);
         if (month < 1 || month > 12 || day < 1 || ((month !== 2 || !inLeapYear) && day > daysInMonth[month - 1]) || (inLeapYear && month === 2 && day > daysInLeapFeburary)) {
-            throw new DeveloperError(iso8601ErrorMessage, "iso8601String");
+            throw new DeveloperError(iso8601ErrorMessage);
         }
 
         //Not move onto the time string, which is much simpler.
@@ -324,7 +324,7 @@ function(DeveloperError,
             if (tokens !== null) {
                 dashCount = time.split(':').length - 1;
                 if (dashCount > 0 && dashCount !== 2) {
-                    throw new DeveloperError(iso8601ErrorMessage, "iso8601String");
+                    throw new DeveloperError(iso8601ErrorMessage);
                 }
 
                 hours = +tokens[1];
@@ -337,7 +337,7 @@ function(DeveloperError,
                 if (tokens !== null) {
                     dashCount = time.split(':').length - 1;
                     if (dashCount > 0 && dashCount !== 1) {
-                        throw new DeveloperError(iso8601ErrorMessage, "iso8601String");
+                        throw new DeveloperError(iso8601ErrorMessage);
                     }
 
                     hours = +tokens[1];
@@ -351,14 +351,14 @@ function(DeveloperError,
                         minutes = +(tokens[2] || 0) * 60.0;
                         offsetIndex = 3;
                     } else {
-                        throw new DeveloperError(iso8601ErrorMessage, "iso8601String");
+                        throw new DeveloperError(iso8601ErrorMessage);
                     }
                 }
             }
 
             //Validate that all values are in proper range.  Minutes and hours have special cases at 60 and 24.
             if (minutes >= 60 || seconds >= 61 || hours > 24 || (hours === 24 && (minutes > 0 || seconds > 0 || milliseconds > 0))) {
-                throw new DeveloperError(iso8601ErrorMessage, "iso8601String");
+                throw new DeveloperError(iso8601ErrorMessage);
             }
 
             //Check the UTC offset value, if no value exists, use local time
@@ -465,7 +465,7 @@ function(DeveloperError,
      *
      * @return {JulianDate} The new {@Link JulianDate} instance.
      *
-     * @exception {DeveloperError} Number required.
+     * @exception {DeveloperError} totalDays is required.
      *
      * @see JulianDate
      * @see JulianDate.fromDate
@@ -479,7 +479,7 @@ function(DeveloperError,
      */
     JulianDate.fromTotalDays = function(totalDays, timeStandard) {
         if (totalDays === null || isNaN(totalDays)) {
-            throw new DeveloperError("Number required", "totalDays");
+            throw new DeveloperError("totalDays is required.");
         }
         return new JulianDate(totalDays, 0, timeStandard);
     };
@@ -783,7 +783,7 @@ function(DeveloperError,
      *
      * @return {JulianDate} A new Julian date object
      *
-     * @exception {DeveloperError} Number required.
+     * @exception {DeveloperError} duration is required and must be a number.
      *
      * @see JulianDate#addMinutes
      * @see JulianDate#addHours
@@ -798,7 +798,7 @@ function(DeveloperError,
      */
     JulianDate.prototype.addSeconds = function(duration) {
         if (duration === null || isNaN(duration)) {
-            throw new DeveloperError("Number required.", duration);
+            throw new DeveloperError("duration is required and must be a number.");
         }
         var newSecondsOfDay = this._secondsOfDay + duration;
         return new JulianDate(this._julianDayNumber, newSecondsOfDay, this._timeStandard);
@@ -814,7 +814,7 @@ function(DeveloperError,
      *
      * @return {JulianDate} A new Julian date object
      *
-     * @exception {DeveloperError} Number required.
+     * @exception {DeveloperError} duration is required and must be a number.
      *
      * @see JulianDate#addSeconds
      * @see JulianDate#addHours
@@ -829,7 +829,7 @@ function(DeveloperError,
      */
     JulianDate.prototype.addMinutes = function(duration) {
         if (duration === null || isNaN(duration)) {
-            throw new DeveloperError("Number required.", duration);
+            throw new DeveloperError("duration is required and must be a number.");
         }
         var newSecondsOfDay = this._secondsOfDay + (duration * TimeConstants.SECONDS_PER_MINUTE);
         return new JulianDate(this._julianDayNumber, newSecondsOfDay, this._timeStandard);
@@ -845,7 +845,7 @@ function(DeveloperError,
      *
      * @return {JulianDate} A new Julian date object
      *
-     * @exception {DeveloperError} Number required.
+     * @exception {DeveloperError} duration is required and must be a number.
      *
      * @see JulianDate#addSeconds
      * @see JulianDate#addMinutes
@@ -860,7 +860,7 @@ function(DeveloperError,
      */
     JulianDate.prototype.addHours = function(duration) {
         if (duration === null || isNaN(duration)) {
-            throw new DeveloperError("Number required.", duration);
+            throw new DeveloperError("duration is required and must be a number.");
         }
         var newSecondsOfDay = this._secondsOfDay + (duration * TimeConstants.SECONDS_PER_HOUR);
         return new JulianDate(this._julianDayNumber, newSecondsOfDay, this._timeStandard);
@@ -876,7 +876,7 @@ function(DeveloperError,
      *
      * @return {JulianDate} A new Julian date object
      *
-     * @exception {DeveloperError} Number required.
+     * @exception {DeveloperError} duration is required and must be a number.
      *
      * @see JulianDate#addSeconds
      * @see JulianDate#addMinutes
@@ -891,7 +891,7 @@ function(DeveloperError,
      */
     JulianDate.prototype.addDays = function(duration) {
         if (duration === null || isNaN(duration)) {
-            throw new DeveloperError("Number required.", duration);
+            throw new DeveloperError("duration is required and must be a number.");
         }
         var newJulianDayNumber = this._julianDayNumber + duration;
         return new JulianDate(newJulianDayNumber, this._secondsOfDay, this._timeStandard);
@@ -1019,7 +1019,7 @@ function(DeveloperError,
      *
      * @return {Boolean} <code>true</code> if the two JulianDates are within <code>epsilon</code> seconds of each other; otherwise <code>false</code>.
      *
-     * @exception {DeveloperError} Number required.
+     * @exception {DeveloperError} epsilon is required and must be number.
      *
      * @see JulianDate#equals
      *
@@ -1030,7 +1030,7 @@ function(DeveloperError,
      */
     JulianDate.prototype.equalsEpsilon = function(other, epsilon) {
         if (epsilon === null || isNaN(epsilon)) {
-            throw new DeveloperError("Number required.", "epsilon");
+            throw new DeveloperError("epsilon is required and must be number.");
         }
         return Math.abs(this.getSecondsDifference(other)) <= epsilon;
     };

@@ -11,7 +11,7 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
         template = template || {};
 
         if (!template.particleOne || !template.particleTwo) {
-            throw new DeveloperError("template.particleOne and template.particleTwo are required.", "template");
+            throw new DeveloperError("template.particleOne and template.particleTwo are required.");
         }
 
         this.particleOne = template.particleOne;

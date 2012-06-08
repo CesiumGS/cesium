@@ -17,15 +17,15 @@
      */
     Sandbox.Overlay = function(id, content, sandbox) {
         if (!id) {
-            throw new Cesium.DeveloperError("id is required.", "id");
+            throw new Cesium.DeveloperError("id is required.");
         }
 
         if (!content) {
-            throw new Cesium.DeveloperError("content is required.", "content");
+            throw new Cesium.DeveloperError("content is required.");
         }
 
         if (!sandbox) {
-            throw new Cesium.DeveloperError("sandbox is required.", "sandbox");
+            throw new Cesium.DeveloperError("sandbox is required.");
         }
 
         var overlayContainer = document.getElementById("userOverlays");
@@ -134,7 +134,7 @@
      */
     Sandbox.Overlay.prototype.setPosition = function(positions) {
         if (!positions) {
-            throw new Cesium.DeveloperError("positions is required", "positions");
+            throw new Cesium.DeveloperError("positions is required");
         }
         // Clear old position so the overlay does not stretch
         this._overlay.style.left = null;

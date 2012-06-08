@@ -48,11 +48,11 @@ define([
         var instance = desc.instance || 'arcgis/rest';
 
         if (!desc.host) {
-            throw new DeveloperError("description.host is required.", "description.host");
+            throw new DeveloperError("description.host is required.");
         }
 
         if (!desc.service) {
-            throw new DeveloperError("description.service is required.", "description.service");
+            throw new DeveloperError("description.service is required.");
         }
 
         this._url = 'http://' + desc.host + '/' + instance + '/services/';
@@ -181,7 +181,7 @@ define([
      */
     ArcGISTileProvider.prototype.loadTileImage = function(tile, onload, onerror) {
         if (tile.zoom < this.zoomMin || tile.zoom > this.zoomMax) {
-            throw new DeveloperError("The zoom must be between in [zoomMin, zoomMax].", "tile.zoom");
+            throw new DeveloperError("tile.zoom must be between in [zoomMin, zoomMax].");
         }
 
         var image = new Image();

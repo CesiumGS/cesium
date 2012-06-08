@@ -119,7 +119,7 @@ define([
         var mapStyle = desc.mapStyle || BingMapsStyle.AERIAL;
 
         if (typeof desc.server === 'undefined') {
-            throw new DeveloperError("description.server is required.", "description.server");
+            throw new DeveloperError("description.server is required.");
         }
 
         /**
@@ -330,7 +330,7 @@ define([
         }
 
         if (tile.zoom < this.zoomMin || tile.zoom > this.zoomMax) {
-            throw new DeveloperError("The zoom must be between in [zoomMin, zoomMax].", "tile.zoom");
+            throw new DeveloperError("tile.zoom must be between in [zoomMin, zoomMax].");
         }
 
         var image = new Image();
