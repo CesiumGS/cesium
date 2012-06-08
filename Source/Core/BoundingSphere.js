@@ -46,7 +46,7 @@ define([
      */
     function BoundingSphere(positions, radius) {
         if (!positions) {
-            throw new DeveloperError("positions is required.", "positions");
+            throw new DeveloperError("positions is required.");
         }
 
         if ((arguments.length === 2) && (typeof arguments[1] === 'number')) {

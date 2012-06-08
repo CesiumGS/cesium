@@ -293,7 +293,7 @@ define([
     Polygon.prototype.setPositions = function(positions, height) {
         // positions can be undefined
         if (typeof positions !== 'undefined' && (positions.length < 3)) {
-            throw new DeveloperError("At least three positions are required.", "positions");
+            throw new DeveloperError("At least three positions are required.");
         }
         this.height = height || 0.0;
         this._extent = undefined;

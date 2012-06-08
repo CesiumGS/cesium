@@ -21,11 +21,11 @@ define([
         MERCATOR : new Enumeration(1, "MERCATOR", {
             toWgs84 : function(extent, image) {
                 if (!extent || typeof extent.north === "undefined" || typeof extent.south === "undefined") {
-                    throw new DeveloperError("extent, extent.north and extent.south are required.", "extent");
+                    throw new DeveloperError("extent, extent.north and extent.south are required.");
                 }
 
                 if (!image) {
-                    throw new DeveloperError("image is required.", "image");
+                    throw new DeveloperError("image is required.");
                 }
 
                 var width = parseInt(image.width, 10);

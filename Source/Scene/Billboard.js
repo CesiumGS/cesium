@@ -588,7 +588,7 @@ define([
         }
 
         if (!uniformState) {
-            throw new DeveloperError("uniformState is required.", "uniformState");
+            throw new DeveloperError("uniformState is required.");
         }
 
         return Billboard._computeScreenSpacePosition(this._collection.modelMatrix, this._actualPosition, this._eyeOffset, this._pixelOffset, uniformState);

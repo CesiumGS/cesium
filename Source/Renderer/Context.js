@@ -165,7 +165,7 @@ define([
         }
 
         if (!canvas) {
-            throw new DeveloperError("canvas is required.", "canvas");
+            throw new DeveloperError("canvas is required.");
         }
 
         this._canvas = canvas;
@@ -516,7 +516,7 @@ define([
             (typeof viewport.y === "undefined") ||
             (typeof viewport.width === "undefined") ||
             (typeof viewport.height === "undefined")) {
-            throw new DeveloperError("A viewport with x, y, width, and height properties is required.", "viewport");
+            throw new DeveloperError("A viewport with x, y, width, and height properties is required.");
         }
 
         var x = viewport.x;
@@ -525,19 +525,19 @@ define([
         var h = viewport.height;
 
         if (w < 0) {
-            throw new DeveloperError("viewport.width must be greater than or equal to zero.", "viewport");
+            throw new DeveloperError("viewport.width must be greater than or equal to zero.");
         }
 
         if (w > this.getMaximumViewportWidth()) {
-            throw new RuntimeError("viewport.width must be less than or equal to the maximum viewport width (" + this.getMaximumViewportWidth().toString() + ").  Check getMaximumViewportWidth().", "viewport");
+            throw new RuntimeError("viewport.width must be less than or equal to the maximum viewport width (" + this.getMaximumViewportWidth().toString() + ").  Check getMaximumViewportWidth().");
         }
 
         if (h < 0) {
-            throw new DeveloperError("viewport.height must be greater than or equal to zero.", "viewport");
+            throw new DeveloperError("viewport.height must be greater than or equal to zero.");
         }
 
         if (h > this.getMaximumViewportHeight()) {
-            throw new RuntimeError("viewport.height must be less than or equal to the maximum viewport height (" + this.getMaximumViewportHeight().toString() + ").  Check getMaximumViewportHeight().", "viewport");
+            throw new RuntimeError("viewport.height must be less than or equal to the maximum viewport height (" + this.getMaximumViewportHeight().toString() + ").  Check getMaximumViewportHeight().");
         }
 
         var v = this._viewport;
@@ -1129,11 +1129,11 @@ define([
         }
 
         if (sizeInBytes <= 0) {
-            throw new DeveloperError("The size in bytes must be greater than zero.", "arrayViewOrSizeInBytes");
+            throw new DeveloperError("arrayViewOrSizeInBytes must be greater than zero.");
         }
 
         if (!BufferUsage.validate(usage)) {
-            throw new DeveloperError("Invalid usage.", "usage");
+            throw new DeveloperError("usage is invalid");
         }
 
         var buffer = gl.createBuffer();
@@ -1230,7 +1230,7 @@ define([
         } else if (indexDatatype === IndexDatatype.UNSIGNED_SHORT) {
             bytesPerIndex = Uint16Array.BYTES_PER_ELEMENT;
         } else {
-            throw new DeveloperError("Invalid indexDatatype.", "indexDatatype");
+            throw new DeveloperError("Invalid indexDatatype.");
         }
 
         var buffer = this._createBuffer(gl, gl.ELEMENT_ARRAY_BUFFER, arrayViewOrSizeInBytes, usage);
@@ -1365,7 +1365,7 @@ define([
      */
     Context.prototype.createTexture2D = function(description) {
         if (!description) {
-            throw new DeveloperError("description is required.", "description");
+            throw new DeveloperError("description is required.");
         }
 
         var source = description.source;
@@ -1373,33 +1373,33 @@ define([
         var height = typeof source !== 'undefined' ? source.height : description.height;
 
         if (typeof width === "undefined" || typeof height === "undefined") {
-            throw new DeveloperError("description requires a source field to create an initialized texture or width and height fields to create a blank texture.", "description");
+            throw new DeveloperError("description requires a source field to create an initialized texture or width and height fields to create a blank texture.");
         }
 
         if (width <= 0) {
-            throw new DeveloperError("Width must be greater than zero.", "description");
+            throw new DeveloperError("Width must be greater than zero.");
         }
 
         if (width > this._maximumTextureSize) {
-            throw new DeveloperError("Width must be less than or equal to the maximum texture size (" + this._maximumTextureSize + ").  Check getMaximumTextureSize().", "description");
+            throw new DeveloperError("Width must be less than or equal to the maximum texture size (" + this._maximumTextureSize + ").  Check getMaximumTextureSize().");
         }
 
         if (height <= 0) {
-            throw new DeveloperError("Height must be greater than zero.", "description");
+            throw new DeveloperError("Height must be greater than zero.");
         }
 
         if (height > this._maximumTextureSize) {
-            throw new DeveloperError("Height must be less than or equal to the maximum texture size (" + this._maximumTextureSize + ").  Check getMaximumTextureSize().", "description");
+            throw new DeveloperError("Height must be less than or equal to the maximum texture size (" + this._maximumTextureSize + ").  Check getMaximumTextureSize().");
         }
 
         var pixelFormat = description.pixelFormat || PixelFormat.RGBA;
         if (!PixelFormat.validate(pixelFormat)) {
-            throw new DeveloperError("Invalid description.pixelFormat.", "description");
+            throw new DeveloperError("Invalid description.pixelFormat.");
         }
 
         var pixelDatatype = description.pixelDatatype || PixelDatatype.UNSIGNED_BYTE;
         if (!PixelDatatype.validate(pixelDatatype)) {
-            throw new DeveloperError("Invalid description.pixelDatatype.", "description");
+            throw new DeveloperError("Invalid description.pixelDatatype.");
         }
 
         // Use premultiplied alpha for opaque textures should perform better on Chrome:
@@ -1458,15 +1458,15 @@ define([
     Context.prototype.createTexture2DFromFramebuffer = function(pixelFormat, framebufferXOffset, framebufferYOffset, width, height) {
         pixelFormat = pixelFormat || PixelFormat.RGB;
         if (!PixelFormat.validate(pixelFormat)) {
-            throw new DeveloperError("Invalid pixelFormat.", "pixelFormat");
+            throw new DeveloperError("Invalid pixelFormat.");
         }
 
         if (framebufferXOffset < 0) {
-            throw new DeveloperError("framebufferXOffset must be greater than or equal to zero.", "framebufferXOffset");
+            throw new DeveloperError("framebufferXOffset must be greater than or equal to zero.");
         }
 
         if (framebufferYOffset < 0) {
-            throw new DeveloperError("framebufferYOffset must be greater than or equal to zero.", "framebufferYOffset");
+            throw new DeveloperError("framebufferYOffset must be greater than or equal to zero.");
         }
 
         if (framebufferXOffset + width > this._canvas.clientWidth) {
@@ -1526,7 +1526,7 @@ define([
      */
     Context.prototype.createCubeMap = function(description) {
         if (!description) {
-            throw new DeveloperError("description is required.", "description");
+            throw new DeveloperError("description is required.");
         }
 
         var source = description.source;
@@ -1537,7 +1537,7 @@ define([
             var faces = [source.positiveX, source.negativeX, source.positiveY, source.negativeY, source.positiveZ, source.negativeZ];
 
             if (!faces[0] || !faces[1] || !faces[2] || !faces[3] || !faces[4] || !faces[5]) {
-                throw new DeveloperError("description.source requires positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ faces.", "description");
+                throw new DeveloperError("description.source requires positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ faces.");
             }
 
             width = faces[0].width;
@@ -1545,7 +1545,7 @@ define([
 
             for ( var i = 1; i < 6; ++i) {
                 if ((Number(faces[i].width) !== width) || (Number(faces[i].height) !== height)) {
-                    throw new DeveloperError("Each face in description.source must have the same width and height.", "description");
+                    throw new DeveloperError("Each face in description.source must have the same width and height.");
                 }
             }
         } else {
@@ -1554,31 +1554,31 @@ define([
         }
 
         if (typeof width === "undefined" || typeof height === "undefined") {
-            throw new DeveloperError("description requires a source field to create an initialized cube map or width and height fields to create a blank cube map.", "description");
+            throw new DeveloperError("description requires a source field to create an initialized cube map or width and height fields to create a blank cube map.");
         }
 
         if (width !== height) {
-            throw new DeveloperError("Width must equal height.", "description");
+            throw new DeveloperError("Width must equal height.");
         }
 
         var size = width;
 
         if (size <= 0) {
-            throw new DeveloperError("Width and height must be greater than zero.", "description");
+            throw new DeveloperError("Width and height must be greater than zero.");
         }
 
         if (size > this._maximumCubeMapSize) {
-            throw new DeveloperError("Width and height must be less than or equal to the maximum cube map size (" + this._maximumCubeMapSize + ").  Check getMaximumCubeMapSize().", "description");
+            throw new DeveloperError("Width and height must be less than or equal to the maximum cube map size (" + this._maximumCubeMapSize + ").  Check getMaximumCubeMapSize().");
         }
 
         var pixelFormat = description.pixelFormat || PixelFormat.RGBA;
         if (!PixelFormat.validate(pixelFormat)) {
-            throw new DeveloperError("Invalid description.pixelFormat.", "description");
+            throw new DeveloperError("Invalid description.pixelFormat.");
         }
 
         var pixelDatatype = description.pixelDatatype || PixelDatatype.UNSIGNED_BYTE;
         if (!PixelDatatype.validate(pixelDatatype)) {
-            throw new DeveloperError("Invalid description.pixelDatatype.", "description");
+            throw new DeveloperError("Invalid description.pixelDatatype.");
         }
 
         // Use premultiplied alpha for opaque textures should perform better on Chrome:
@@ -1643,15 +1643,15 @@ define([
     Context.prototype.createFramebuffer = function(description) {
         if (description) {
             if (description.depthRenderbuffer && description.depthStencilRenderbuffer) {
-                throw new DeveloperError("Cannot have both a depth and depth-stencil attachment.", "description");
+                throw new DeveloperError("Cannot have both a depth and depth-stencil attachment.");
             }
 
             if (description.stencilRenderbuffer && description.depthStencilRenderbuffer) {
-                throw new DeveloperError("Cannot have both a stencil and depth-stencil attachment.", "description");
+                throw new DeveloperError("Cannot have both a stencil and depth-stencil attachment.");
             }
 
             if (description.depthRenderbuffer && description.stencilRenderbuffer) {
-                throw new DeveloperError("Cannot have both a depth and stencil attachment.", "description");
+                throw new DeveloperError("Cannot have both a depth and stencil attachment.");
             }
         }
         return new Framebuffer(this._gl, description);
@@ -1683,23 +1683,23 @@ define([
 
         var gl = this._gl;
         if (!RenderbufferFormat.validate(format)) {
-            throw new DeveloperError("Invalid format.", "description");
+            throw new DeveloperError("Invalid format.");
         }
 
         if (width <= 0) {
-            throw new DeveloperError("Width must be greater than zero.", "description");
+            throw new DeveloperError("Width must be greater than zero.");
         }
 
         if (width > this.getMaximumRenderbufferSize()) {
-            throw new DeveloperError("Width must be less than or equal to the maximum renderbuffer size (" + this.getMaximumRenderbufferSize() + ").  Check getMaximumRenderbufferSize().", "description");
+            throw new DeveloperError("Width must be less than or equal to the maximum renderbuffer size (" + this.getMaximumRenderbufferSize() + ").  Check getMaximumRenderbufferSize().");
         }
 
         if (height <= 0) {
-            throw new DeveloperError("Height must be greater than zero.", "description");
+            throw new DeveloperError("Height must be greater than zero.");
         }
 
         if (height > this.getMaximumRenderbufferSize()) {
-            throw new DeveloperError("Height must be less than or equal to the maximum renderbuffer size (" + this.getMaximumRenderbufferSize() + ").  Check getMaximumRenderbufferSize().", "description");
+            throw new DeveloperError("Height must be less than or equal to the maximum renderbuffer size (" + this.getMaximumRenderbufferSize() + ").  Check getMaximumRenderbufferSize().");
         }
 
         return new Renderbuffer(gl, format, width, height);
@@ -1834,41 +1834,41 @@ define([
         // Validate
 
         if (!WindingOrder.validate(r.frontFace)) {
-            throw new DeveloperError("Invalid renderState.frontFace.", "renderState");
+            throw new DeveloperError("Invalid renderState.frontFace.");
         }
 
         if (!CullFace.validate(r.cull.face)) {
-            throw new DeveloperError("Invalid renderState.cull.face.", "renderState");
+            throw new DeveloperError("Invalid renderState.cull.face.");
         }
 
         if ((r.lineWidth < this._aliasedLineWidthRange[0]) ||
             (r.lineWidth > this._aliasedLineWidthRange[1])) {
-            throw new RuntimeError("renderState.lineWidth is out of range.  Check getMinimumAliasedLineWidth() and getMaximumAliasedLineWidth().", "renderState");
+            throw new RuntimeError("renderState.lineWidth is out of range.  Check getMinimumAliasedLineWidth() and getMaximumAliasedLineWidth().");
         }
 
         if ((r.scissorTest.rectangle.width < 0) ||
             (r.scissorTest.rectangle.height < 0)) {
-            throw new DeveloperError("renderState.scissorTest.rectangle.width and renderState.scissorTest.rectangle.height must be greater than or equal to zero.", "renderState");
+            throw new DeveloperError("renderState.scissorTest.rectangle.width and renderState.scissorTest.rectangle.height must be greater than or equal to zero.");
         }
 
         if (r.depthRange.near > r.depthRange.far) {
             // WebGL specific - not an error in GL ES
-            throw new DeveloperError("renderState.depthRange.near can't be greater than renderState.depthRange.far.", "renderState");
+            throw new DeveloperError("renderState.depthRange.near can't be greater than renderState.depthRange.far.");
         }
 
         if (r.depthRange.near < 0) {
             // Would be clamped by GL
-            throw new DeveloperError("renderState.depthRange.near must be greater than or equal to zero.", "renderState");
+            throw new DeveloperError("renderState.depthRange.near must be greater than or equal to zero.");
         }
 
         if (r.depthRange.far > 1) {
             // Would be clamped by GL
-            throw new DeveloperError("renderState.depthRange.far must be less than or equal to one.", "renderState");
+            throw new DeveloperError("renderState.depthRange.far must be less than or equal to one.");
         }
 
 
         if (!DepthFunction.validate(r.depthTest.func)) {
-            throw new DeveloperError("Invalid renderState.depthTest.func.", "renderState");
+            throw new DeveloperError("Invalid renderState.depthTest.func.");
         }
 
         if ((r.blending.color.red < 0.0) || (r.blending.color.red > 1.0) ||
@@ -1876,63 +1876,63 @@ define([
             (r.blending.color.blue < 0.0) || (r.blending.color.blue > 1.0) ||
             (r.blending.color.alpha < 0.0) || (r.blending.color.alpha > 1.0)) {
             // Would be clamped by GL
-            throw new DeveloperError("renderState.blending.color components must be greater than or equal to zero and less than or equal to one.", "renderState");
+            throw new DeveloperError("renderState.blending.color components must be greater than or equal to zero and less than or equal to one.");
         }
 
         if (!BlendEquation.validate(r.blending.equationRgb)) {
-            throw new DeveloperError("Invalid renderState.blending.equationRgb.", "renderState");
+            throw new DeveloperError("Invalid renderState.blending.equationRgb.");
         }
 
         if (!BlendEquation.validate(r.blending.equationAlpha)) {
-            throw new DeveloperError("Invalid renderState.blending.equationAlpha.", "renderState");
+            throw new DeveloperError("Invalid renderState.blending.equationAlpha.");
         }
 
         if (!BlendFunction.validate(r.blending.functionSourceRgb)) {
-            throw new DeveloperError("Invalid renderState.blending.functionSourceRgb.", "renderState");
+            throw new DeveloperError("Invalid renderState.blending.functionSourceRgb.");
         }
 
         if (!BlendFunction.validate(r.blending.functionSourceAlpha)) {
-            throw new DeveloperError("Invalid renderState.blending.functionSourceAlpha.", "renderState");
+            throw new DeveloperError("Invalid renderState.blending.functionSourceAlpha.");
         }
 
         if (!BlendFunction.validate(r.blending.functionDestinationRgb)) {
-            throw new DeveloperError("Invalid renderState.blending.functionDestinationRgb.", "renderState");
+            throw new DeveloperError("Invalid renderState.blending.functionDestinationRgb.");
         }
 
         if (!BlendFunction.validate(r.blending.functionDestinationAlpha)) {
-            throw new DeveloperError("Invalid renderState.blending.functionDestinationAlpha.", "renderState");
+            throw new DeveloperError("Invalid renderState.blending.functionDestinationAlpha.");
         }
 
         if (!StencilFunction.validate(r.stencilTest.frontFunction)) {
-            throw new DeveloperError("Invalid renderState.stencilTest.frontFunction.", "renderState");
+            throw new DeveloperError("Invalid renderState.stencilTest.frontFunction.");
         }
 
         if (!StencilFunction.validate(r.stencilTest.backFunction)) {
-            throw new DeveloperError("Invalid renderState.stencilTest.backFunction.", "renderState");
+            throw new DeveloperError("Invalid renderState.stencilTest.backFunction.");
         }
 
         if (!StencilOperation.validate(r.stencilTest.frontOperation.fail)) {
-            throw new DeveloperError("Invalid renderState.stencilTest.frontOperation.fail.", "renderState");
+            throw new DeveloperError("Invalid renderState.stencilTest.frontOperation.fail.");
         }
 
         if (!StencilOperation.validate(r.stencilTest.frontOperation.zFail)) {
-            throw new DeveloperError("Invalid renderState.stencilTest.frontOperation.zFail.", "renderState");
+            throw new DeveloperError("Invalid renderState.stencilTest.frontOperation.zFail.");
         }
 
         if (!StencilOperation.validate(r.stencilTest.frontOperation.zPass)) {
-            throw new DeveloperError("Invalid renderState.stencilTest.frontOperation.zPass.", "renderState");
+            throw new DeveloperError("Invalid renderState.stencilTest.frontOperation.zPass.");
         }
 
         if (!StencilOperation.validate(r.stencilTest.backOperation.fail)) {
-            throw new DeveloperError("Invalid renderState.stencilTest.backOperation.fail.", "renderState");
+            throw new DeveloperError("Invalid renderState.stencilTest.backOperation.fail.");
         }
 
         if (!StencilOperation.validate(r.stencilTest.backOperation.zFail)) {
-            throw new DeveloperError("Invalid renderState.stencilTest.backOperation.zFail.", "renderState");
+            throw new DeveloperError("Invalid renderState.stencilTest.backOperation.zFail.");
         }
 
         if (!StencilOperation.validate(r.stencilTest.backOperation.zPass)) {
-            throw new DeveloperError("Invalid renderState.stencilTest.backOperation.zPass.", "renderState");
+            throw new DeveloperError("Invalid renderState.stencilTest.backOperation.zPass.");
         }
 
         return r;
@@ -1961,23 +1961,23 @@ define([
         };
 
         if (!TextureWrap.validate(s.wrapS)) {
-            throw new DeveloperError("Invalid sampler.wrapS.", "sampler");
+            throw new DeveloperError("Invalid sampler.wrapS.");
         }
 
         if (!TextureWrap.validate(s.wrapT)) {
-            throw new DeveloperError("Invalid sampler.wrapT.", "sampler");
+            throw new DeveloperError("Invalid sampler.wrapT.");
         }
 
         if (!TextureMinificationFilter.validate(s.minificationFilter)) {
-            throw new DeveloperError("Invalid sampler.minificationFilter.", "sampler");
+            throw new DeveloperError("Invalid sampler.minificationFilter.");
         }
 
         if (!TextureMagnificationFilter.validate(s.magnificationFilter)) {
-            throw new DeveloperError("Invalid sampler.magnificationFilter.", "sampler");
+            throw new DeveloperError("Invalid sampler.magnificationFilter.");
         }
 
         if (s.maximumAnisotropy < 1.0) {
-            throw new DeveloperError("sampler.maximumAnisotropy must be greater than or equal to one.", "sampler");
+            throw new DeveloperError("sampler.maximumAnisotropy must be greater than or equal to one.");
         }
 
         return s;
@@ -2044,7 +2044,7 @@ define([
         };
 
         if ((c.scissorTest.rectangle.width < 0) || (c.scissorTest.rectangle.height < 0)) {
-            throw new DeveloperError("clearState.scissorTest.rectangle.width and clearState.scissorTest.rectangle.height must be greater than or equal to zero.", "clearState");
+            throw new DeveloperError("clearState.scissorTest.rectangle.width and clearState.scissorTest.rectangle.height must be greater than or equal to zero.");
         }
 
         return c;
@@ -2211,11 +2211,11 @@ define([
      */
     Context.prototype.beginDraw = function(drawArguments) {
         if (typeof drawArguments === "undefined") {
-            throw new DeveloperError("drawArguments is required.", "drawArguments");
+            throw new DeveloperError("drawArguments is required.");
         }
 
         if (!drawArguments.shaderProgram) {
-            throw new DeveloperError("drawArguments.shaderProgram is required.", "drawArguments");
+            throw new DeveloperError("drawArguments.shaderProgram is required.");
         }
 
         var framebuffer = drawArguments.framebuffer;
@@ -2226,7 +2226,7 @@ define([
             if (rs.depthTest.enabled &&
                 !framebuffer.getDepthRenderbuffer() &&
                 !framebuffer.getDepthStencilRenderbuffer()) {
-                throw new DeveloperError("The depth test can't be enabled (drawArguments.renderState.depthTest.enabled) because the framebuffer (drawArguments.framebuffer) doesn't have a depth or depth-stencil renderbuffer.", "drawArguments");
+                throw new DeveloperError("The depth test can't be enabled (drawArguments.renderState.depthTest.enabled) because the framebuffer (drawArguments.framebuffer) doesn't have a depth or depth-stencil renderbuffer.");
             }
         }
 
@@ -2255,16 +2255,16 @@ define([
         }
 
         if (typeof drawArguments === "undefined") {
-            throw new DeveloperError("drawArguments is required.", "drawArguments");
+            throw new DeveloperError("drawArguments is required.");
         }
 
         var primitiveType = drawArguments.primitiveType;
         if (!PrimitiveType.validate(primitiveType)) {
-            throw new DeveloperError("drawArguments.primitiveType is required and must be valid.", "drawArguments");
+            throw new DeveloperError("drawArguments.primitiveType is required and must be valid.");
         }
 
         if (!drawArguments.vertexArray) {
-            throw new DeveloperError("drawArguments.vertexArray is required.", "drawArguments");
+            throw new DeveloperError("drawArguments.vertexArray is required.");
         }
 
         var va = drawArguments.vertexArray;
@@ -2282,7 +2282,7 @@ define([
         }
 
         if (offset < 0) {
-            throw new DeveloperError("drawArguments.offset must be omitted or greater than or equal to zero.", "drawArguments");
+            throw new DeveloperError("drawArguments.offset must be omitted or greater than or equal to zero.");
         }
 
         if (count > 0) {
@@ -2332,11 +2332,11 @@ define([
         var framebuffer = readState.framebuffer || null;
 
         if (width <= 0) {
-            throw new DeveloperError("readState.width must be greater than zero.", "readState");
+            throw new DeveloperError("readState.width must be greater than zero.");
         }
 
         if (height <= 0) {
-            throw new DeveloperError("readState.height must be greater than zero.", "readState");
+            throw new DeveloperError("readState.height must be greater than zero.");
         }
 
         var pixels = new Uint8Array(4 * width * height);

@@ -56,7 +56,7 @@ define([
      */
     function Camera(canvas) {
         if (!canvas) {
-            throw new DeveloperError("canvas is required.", "canvas");
+            throw new DeveloperError("canvas is required.");
         }
 
         /**

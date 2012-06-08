@@ -113,7 +113,7 @@ define([
         var desc = description || {};
 
         if (!desc.fetchFunc || typeof desc.fetchFunc !== "function") {
-            throw new DeveloperError("description.fetchFunc is a required function.", "description.fetchFunc");
+            throw new DeveloperError("description.fetchFunc is a required function.");
         }
 
         this._limit = desc.limit || 128;
