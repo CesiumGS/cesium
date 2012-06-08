@@ -338,7 +338,9 @@ define([
 
             // Recompile shader when material changes
             if (!this._material || (this._material !== this.material)) {
-                this._material = this.material || new ColorMaterial();
+
+                this.material = this.material || new ColorMaterial();
+                this._material = this.material;
 
                 var fsSource =
                     "#line 0\n" +
@@ -346,14 +348,14 @@ define([
                     "#line 0\n" +
                     ShadersSensorVolume +
                     "#line 0\n" +
-                    this.material._getShaderSource() +
+                    this._material._getShaderSource() +
                     "#line 0\n" +
                     CustomSensorVolumeFS;
 
                 this._sp = this._sp && this._sp.release();
                 this._sp = context.getShaderCache().getShaderProgram(CustomSensorVolumeVS, fsSource, attributeIndices);
 
-                this._drawUniforms = combine(this._uniforms, this.material._uniforms);
+                this._drawUniforms = combine(this._uniforms, this._material._uniforms);
             }
 
             // Recreate vertex buffer when directions change
