@@ -16,7 +16,7 @@ define(['Core/DeveloperError'], function(DeveloperError) {
      */
     function isLeapYear(year) {
         if (year === null || isNaN(year)) {
-            throw new DeveloperError("year is required and must be a number.");
+            throw new DeveloperError('year is required and must be a number.');
         }
         return ((year % 4 === 0) && (year % 100 !== 0)) || (year % 400 === 0);
     }

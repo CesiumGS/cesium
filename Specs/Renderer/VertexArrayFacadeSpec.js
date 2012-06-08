@@ -24,7 +24,7 @@ defineSuite([
         destroyContext(context);
     });
 
-    it("creates a vertex array with static floats", function() {
+    it('creates a vertex array with static floats', function() {
         var positionIndex = 0;
         var vaf = new VertexArrayFacade(context, [{
             index : positionIndex,
@@ -48,7 +48,7 @@ defineSuite([
         expect(vaf.va[0].va.getAttribute(0).strideInBytes).toEqual(3 * 4);
     });
 
-    it("resizes a vertex array with static floats", function() {
+    it('resizes a vertex array with static floats', function() {
         var positionIndex = 0;
         var vaf = new VertexArrayFacade(context, [{
             index : positionIndex,
@@ -75,7 +75,7 @@ defineSuite([
         expect(vaf.va[0].va.getAttribute(0).strideInBytes).toEqual(3 * 4);
     });
 
-    it("creates a vertex array with static floats and unsigned bytes", function() {
+    it('creates a vertex array with static floats and unsigned bytes', function() {
         var positionIndex = 0;
         var colorIndex = 2;
         var vaf = new VertexArrayFacade(context, [{
@@ -117,7 +117,7 @@ defineSuite([
         expect(vaf.va[0].va.getAttribute(1).strideInBytes).toEqual(vaf.va[0].va.getAttribute(0).strideInBytes);
     });
 
-    it("creates a vertex array with static and dynamic attributes", function() {
+    it('creates a vertex array with static and dynamic attributes', function() {
         var positionIndex = 0;
         var txCoordIndex = 2;
         var vaf = new VertexArrayFacade(context, [{
@@ -162,7 +162,7 @@ defineSuite([
         expect(vaf.va[0].va.getAttribute(1).strideInBytes).toEqual(2 * 2);
     });
 
-    it("sub-commits", function() {
+    it('sub-commits', function() {
         var positionIndex = 0;
         var temperatureIndex = 2;
         var vaf = new VertexArrayFacade(context, [{
@@ -220,49 +220,49 @@ defineSuite([
         expect(vaf.va[0].va.getAttribute(1).strideInBytes).toEqual(1 * 4);
     });
 
-    it("throws when constructed without a context", function() {
+    it('throws when constructed without a context', function() {
         expect(function() {
             return new VertexArrayFacade(undefined, undefined, undefined);
         }).toThrow();
     });
 
-    it("throws when constructed undefined attributes", function() {
+    it('throws when constructed undefined attributes', function() {
         expect(function() {
             return new VertexArrayFacade(context, undefined, undefined);
         }).toThrow();
     });
 
-    it("throws when constructed without attributes", function() {
+    it('throws when constructed without attributes', function() {
         expect(function() {
             return new VertexArrayFacade(context, []);
         }).toThrow();
     });
 
-    it("throws when constructed with attributes without componentsPerAttribute", function() {
+    it('throws when constructed with attributes without componentsPerAttribute', function() {
         expect(function() {
             return new VertexArrayFacade(context, [{}]);
         }).toThrow();
     });
 
-    it("throws when constructed with attributes with an invalid componentDatatype", function() {
+    it('throws when constructed with attributes with an invalid componentDatatype', function() {
         expect(function() {
             return new VertexArrayFacade(context, [{
                 componentsPerAttribute : 1,
-                componentDatatype : "invalid component datatype"
+                componentDatatype : 'invalid component datatype'
             }]);
         }).toThrow();
     });
 
-    it("throws when constructed with attributes with an invalid usage", function() {
+    it('throws when constructed with attributes with an invalid usage', function() {
         expect(function() {
             return new VertexArrayFacade(context, [{
                 componentsPerAttribute : 1,
-                usage : "invalid component usage"
+                usage : 'invalid component usage'
             }]);
         }).toThrow();
     });
 
-    it("throws when constructed with attributes with duplicate indices", function() {
+    it('throws when constructed with attributes with duplicate indices', function() {
         expect(function() {
             return new VertexArrayFacade(context, [{
                 index : 0,

@@ -34,13 +34,13 @@ define(['./DeveloperError'], function(DeveloperError) {
      */
     function binarySearch(array, itemToFind, comparator) {
         if (!array) {
-            throw new DeveloperError("array is required.");
+            throw new DeveloperError('array is required.');
         }
         if (!itemToFind) {
-            throw new DeveloperError("itemToFind is required.");
+            throw new DeveloperError('itemToFind is required.');
         }
         if (!comparator) {
-            throw new DeveloperError("comparator is required.");
+            throw new DeveloperError('comparator is required.');
         }
 
         var low = 0;

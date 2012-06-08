@@ -68,39 +68,39 @@ defineSuite([
         controller2 = controller2 && !controller2.isDestroyed() && controller2.destroy();
     });
 
-    it("setReferenceFrame", function() {
+    it('setReferenceFrame', function() {
         var transform = Transforms.eastNorthUpToFixedFrame(ellipsoid.cartographicDegreesToCartesian(new Cartographic2(-75.0, 40.0)));
         controller.setReferenceFrame(transform, ellipsoid);
         expect(controller.getEllipsoid()).toBe(ellipsoid);
         expect(controller._camera.transform).toBe(transform);
     });
 
-    it("setEllipsoid", function() {
+    it('setEllipsoid', function() {
         controller.setEllipsoid(Ellipsoid.UNIT_SPHERE);
         expect(controller.getEllipsoid().equals(Ellipsoid.UNIT_SPHERE)).toEqual(true);
     });
 
-    it("moveUp", function() {
+    it('moveUp', function() {
         controller.moveUp(moverate);
         expect(camera.position.equalsEpsilon(new Cartesian3(0.0, moverate, 0.0), CesiumMath.EPSILON10)).toEqual(true);
     });
 
-    it("moveDown", function() {
+    it('moveDown', function() {
         controller.moveDown(moverate);
         expect(camera.position.equalsEpsilon(new Cartesian3(0.0, -moverate, 0.0), CesiumMath.EPSILON10)).toEqual(true);
     });
 
-    it("moveRight", function() {
+    it('moveRight', function() {
         controller.moveRight(moverate);
         expect(camera.position.equalsEpsilon(new Cartesian3(moverate, 0.0, 0.0), CesiumMath.EPSILON10)).toEqual(true);
     });
 
-    it("moveLeft", function() {
+    it('moveLeft', function() {
         controller.moveLeft(moverate);
         expect(camera.position.equalsEpsilon(new Cartesian3(-moverate, 0.0, 0.0), CesiumMath.EPSILON10)).toEqual(true);
     });
 
-    it("translate", function() {
+    it('translate', function() {
         controller._translate({
             startPosition : new Cartesian2(0.0, 0.0),
             endPosition : new Cartesian2(10.0, 10.0)
@@ -108,7 +108,7 @@ defineSuite([
         expect(camera.position.equalsEpsilon(new Cartesian3(100000.0, 100000.0, 0.0))).toEqual(true);
     });
 
-    it("zoom", function() {
+    it('zoom', function() {
         var offset = 0.5 * Math.max(camera.frustum.right - camera.frustum.left, camera.frustum.top - camera.frustum.bottom);
         var ratio = frustum.top / frustum.right;
         controller._zoom({
@@ -121,7 +121,7 @@ defineSuite([
         expect(frustum.bottom).toEqual(-ratio * (controller._zoomRate + offset), CesiumMath.EPSILON10);
     });
 
-    it("zoomOut", function() {
+    it('zoomOut', function() {
         controller.zoomOut(zoomrate);
         expect(frustum.right).toEqualEpsilon(3.0, CesiumMath.EPSILON10);
         expect(frustum.left).toEqual(-3.0, CesiumMath.EPSILON10);
@@ -129,7 +129,7 @@ defineSuite([
         expect(frustum.bottom).toEqual(-1.5, CesiumMath.EPSILON10);
     });
 
-    it("zoomIn", function() {
+    it('zoomIn', function() {
         controller.zoomIn(zoomrate);
         expect(frustum.right).toEqualEpsilon(1.0, CesiumMath.EPSILON10);
         expect(frustum.left).toEqual(-1.0, CesiumMath.EPSILON10);
@@ -137,7 +137,7 @@ defineSuite([
         expect(frustum.bottom).toEqual(-0.5, CesiumMath.EPSILON10);
     });
 
-    it("zoomIn throws with null OrthogrphicFrustum properties", function() {
+    it('zoomIn throws with null OrthogrphicFrustum properties', function() {
         var camera = new Camera(document);
         camera.frustum = new OrthographicFrustum();
         controller2 = new Camera2DController(document, camera, ellipsoid);
@@ -146,7 +146,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("isDestroyed", function() {
+    it('isDestroyed', function() {
         expect(controller.isDestroyed()).toEqual(false);
         controller.destroy();
         expect(controller.isDestroyed()).toEqual(true);

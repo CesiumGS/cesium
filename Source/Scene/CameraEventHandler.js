@@ -37,11 +37,11 @@ define([
      */
     function CameraEventHandler(canvas, moveType, moveModifier) {
         if (!canvas) {
-            throw new DeveloperError("description.canvas is required.");
+            throw new DeveloperError('description.canvas is required.');
         }
 
         if (!moveType) {
-            throw new DeveloperError("moveType is required.");
+            throw new DeveloperError('moveType is required.');
         }
 
         this._eventHandler = new EventHandler(canvas);
@@ -78,7 +78,7 @@ define([
                 this._eventReleaseTimeFunc = this._eventHandler.getRightReleaseTime;
             } else {
                 this._eventHandler = this._eventHandler && this._eventHandler.destroy();
-                throw new DeveloperError("moveType must be of type CameraEventType.");
+                throw new DeveloperError('moveType must be of type CameraEventType.');
             }
 
             this._eventHandler.setMouseAction(function(movement) {

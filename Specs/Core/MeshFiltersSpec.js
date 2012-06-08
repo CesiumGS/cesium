@@ -20,7 +20,7 @@ defineSuite([
     "use strict";
     /*global it,expect*/
 
-    it("converts triangles to wireframe in place", function() {
+    it('converts triangles to wireframe in place', function() {
         var mesh = MeshFilters.toWireframeInPlace({
             indexLists : [{
                 primitiveType : PrimitiveType.TRIANGLES,
@@ -48,7 +48,7 @@ defineSuite([
         expect(v[11]).toEqual(3);
     });
 
-    it("converts a triangle fan to wireframe in place", function() {
+    it('converts a triangle fan to wireframe in place', function() {
         var mesh = MeshFilters.toWireframeInPlace({
             indexLists : [{
                 primitiveType : PrimitiveType.TRIANGLE_FAN,
@@ -76,7 +76,7 @@ defineSuite([
         expect(v[11]).toEqual(0);
     });
 
-    it("converts a triangle strip to wireframe in place", function() {
+    it('converts a triangle strip to wireframe in place', function() {
         var mesh = MeshFilters.toWireframeInPlace({
             indexLists : [{
                 primitiveType : PrimitiveType.TRIANGLE_STRIP,
@@ -104,7 +104,7 @@ defineSuite([
         expect(v[11]).toEqual(2);
     });
 
-    it("creates attribute indices", function() {
+    it('creates attribute indices', function() {
         var mesh = {
             attributes : {
                 position : {},
@@ -122,7 +122,7 @@ defineSuite([
         expect(indices.position).not.toEqual(indices.color);
     });
 
-    it("maps attribute indices to different names", function() {
+    it('maps attribute indices to different names', function() {
         var indices = {
             positions : 0,
             normals : 1,
@@ -130,9 +130,9 @@ defineSuite([
         };
 
         var mappedIndices = MeshFilters.mapAttributeIndices(indices, {
-            positions : "position",
-            normals : "normal",
-            colors : "color"
+            positions : 'position',
+            normals : 'normal',
+            colors : 'color'
         });
 
         expect(mappedIndices.position).toEqual(indices.positions);
@@ -140,7 +140,7 @@ defineSuite([
         expect(mappedIndices.color).toEqual(indices.colors);
     });
 
-    it("throws an exception when mesh properties have a different number of attributes", function() {
+    it('throws an exception when mesh properties have a different number of attributes', function() {
         expect(function() {
             var mesh = {};
             mesh.attributes = {};
@@ -160,7 +160,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("can reorder all indices and attributes for the pre vertex cahce", function() {
+    it('can reorder all indices and attributes for the pre vertex cahce', function() {
         var mesh = {};
         mesh.attributes = {};
         mesh.indexLists = [];
@@ -178,7 +178,7 @@ defineSuite([
         mesh.attributes.vertexNames = {
             componentDatatype : ComponentDatatype.FLOAT,
             componentsPerAttribute : 1,
-            values : ["v0", "v1", "v2", "v3", "v4", "v5"]
+            values : ['v0', 'v1', 'v2', 'v3', 'v4', 'v5']
         };
 
         mesh.attributes.positions = {
@@ -202,12 +202,12 @@ defineSuite([
         expect(mesh.indexLists[1].values[4]).toEqual(0);
         expect(mesh.indexLists[1].values[5]).toEqual(3);
 
-        expect(mesh.attributes.vertexNames.values[0]).toEqual("v5");
-        expect(mesh.attributes.vertexNames.values[1]).toEqual("v3");
-        expect(mesh.attributes.vertexNames.values[2]).toEqual("v2");
-        expect(mesh.attributes.vertexNames.values[3]).toEqual("v0");
-        expect(mesh.attributes.vertexNames.values[4]).toEqual("v1");
-        expect(mesh.attributes.vertexNames.values[5]).toEqual("v4");
+        expect(mesh.attributes.vertexNames.values[0]).toEqual('v5');
+        expect(mesh.attributes.vertexNames.values[1]).toEqual('v3');
+        expect(mesh.attributes.vertexNames.values[2]).toEqual('v2');
+        expect(mesh.attributes.vertexNames.values[3]).toEqual('v0');
+        expect(mesh.attributes.vertexNames.values[4]).toEqual('v1');
+        expect(mesh.attributes.vertexNames.values[5]).toEqual('v4');
 
         expect(mesh.attributes.positions.values[0]).toEqual(15);
         expect(mesh.attributes.positions.values[1]).toEqual(16);
@@ -229,7 +229,7 @@ defineSuite([
         expect(mesh.attributes.positions.values[17]).toEqual(14);
     });
 
-    it("can reorder indices for the post vertex cache", function() {
+    it('can reorder indices for the post vertex cache', function() {
         var mesh = CubeMapEllipsoidTessellator.compute(new Ellipsoid(new Cartesian3(10.0, 10.0, 10.0)), 100);
         var indices = mesh.indexLists[0].values;
         var numIndices = indices.length;
@@ -251,7 +251,7 @@ defineSuite([
         expect(ACMRafter).toBeLessThan(0.70);
     });
 
-    it("fitToUnsignedShortIndices doesn't change mesh", function() {
+    it('fitToUnsignedShortIndices does not change mesh', function() {
         var mesh = {
             attributes : {
                 time : {
@@ -277,7 +277,7 @@ defineSuite([
         expect(meshes[0]).toBe(mesh);
     });
 
-    it("fitToUnsignedShortIndices creates one mesh", function() {
+    it('fitToUnsignedShortIndices creates one mesh', function() {
         var sixtyFourK = 64 * 1024;
         var times = [];
         for ( var i = 0; i < sixtyFourK + 1; ++i) {
@@ -309,7 +309,7 @@ defineSuite([
         expect(meshes[0].indexLists[0].values).toEqualArray([0, 0, 0, 1, 1, 1, 0, 1, 0]);
     });
 
-    it("fitToUnsignedShortIndices creates two meshes", function() {
+    it('fitToUnsignedShortIndices creates two meshes', function() {
         var sixtyFourK = 64 * 1024;
 
         var positions = [];
@@ -348,7 +348,7 @@ defineSuite([
         expect(meshes[1].indexLists[0].values.length).toEqual(3);
     });
 
-    it("fitToUnsignedShortIndices throws without triangles", function() {
+    it('fitToUnsignedShortIndices throws without triangles', function() {
         var mesh = {
             attributes : {
                 time : {
@@ -369,7 +369,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("fitToUnsignedShortIndices throws with different numbers of attributes", function() {
+    it('fitToUnsignedShortIndices throws with different numbers of attributes', function() {
         var mesh = {
             attributes : {
                 time : {
@@ -396,7 +396,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("projectTo2D", function() {
+    it('projectTo2D', function() {
         var p1 = new Cartesian3(1, 2, 3);
         var p2 = new Cartesian3(4, 5, 6);
 

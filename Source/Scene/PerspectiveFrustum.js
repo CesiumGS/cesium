@@ -94,20 +94,20 @@ define([
 
     PerspectiveFrustum.prototype._update = function() {
         if (this.fovy === null || this.aspectRatio === null || this.near === null || this.far === null) {
-            throw new DeveloperError("fovy, aspectRatio, near, or far parameters are not set.");
+            throw new DeveloperError('fovy, aspectRatio, near, or far parameters are not set.');
         }
 
         if (this.fovy !== this._fovy || this.aspectRatio !== this._aspectRatio || this.near !== this._near || this.far !== this._far) {
             if (this.fovy < 0 || this.fovy >= Math.PI) {
-                throw new DeveloperError("fovy must be in the range [0, PI).");
+                throw new DeveloperError('fovy must be in the range [0, PI).');
             }
 
             if (this.aspectRatio < 0) {
-                throw new DeveloperError("aspectRatio must be positive.");
+                throw new DeveloperError('aspectRatio must be positive.');
             }
 
             if (this.near < 0 || this.near > this.far) {
-                throw new DeveloperError("near must be greater than zero and less than far.");
+                throw new DeveloperError('near must be greater than zero and less than far.');
             }
 
             this._fovy = this.fovy;
@@ -146,15 +146,15 @@ define([
      */
     PerspectiveFrustum.prototype.getPlanes = function(position, direction, up) {
         if (!position) {
-            throw new DeveloperError("position is required.");
+            throw new DeveloperError('position is required.');
         }
 
         if (!direction) {
-            throw new DeveloperError("direction is required.");
+            throw new DeveloperError('direction is required.');
         }
 
         if (!up) {
-            throw new DeveloperError("up is required.");
+            throw new DeveloperError('up is required.');
         }
 
         var pos = Cartesian3.clone(position);

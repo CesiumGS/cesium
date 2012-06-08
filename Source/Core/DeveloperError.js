@@ -21,12 +21,12 @@ define(function() {
      */
     function DeveloperError(message) {
         /**
-         * "DeveloperError" indicating that this exception was thrown due to a developer error.
+         * 'DeveloperError' indicating that this exception was thrown due to a developer error.
          *
          * @constant
          * @type String
          */
-        this.name = "DeveloperError";
+        this.name = 'DeveloperError';
 
         /**
          * The explanation for why this exception was thrown.

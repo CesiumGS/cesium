@@ -16,7 +16,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        AERIAL : new Enumeration(0, "AERIAL", { imagerySetName : "Aerial" }),
+        AERIAL : new Enumeration(0, 'AERIAL', { imagerySetName : 'Aerial' }),
 
         /**
          * Aerial imagery with a road overlay.
@@ -24,7 +24,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        AERIAL_WITH_LABELS : new Enumeration(1, "AERIAL_WITH_LABELS", { imagerySetName : "AerialWithLabels" }),
+        AERIAL_WITH_LABELS : new Enumeration(1, 'AERIAL_WITH_LABELS', { imagerySetName : 'AerialWithLabels' }),
 
         /**
          * Roads without additional imagery.
@@ -32,7 +32,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        ROAD : new Enumeration(2, "ROAD", { imagerySetName : "Road" }),
+        ROAD : new Enumeration(2, 'ROAD', { imagerySetName : 'Road' }),
 
         /**
          * Ordnance Survey imagery
@@ -40,7 +40,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        ORDNANCE_SURVEY : new Enumeration(3, "ORDNANCE_SURVEY", { imagerySetName : "OrdnanceSurvey" }),
+        ORDNANCE_SURVEY : new Enumeration(3, 'ORDNANCE_SURVEY', { imagerySetName : 'OrdnanceSurvey' }),
 
         /**
          * Collins Bart imagery.
@@ -48,7 +48,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        COLLINS_BART : new Enumeration(4, "COLLINS_BART", { imagerySetName : "CollinsBart" })
+        COLLINS_BART : new Enumeration(4, 'COLLINS_BART', { imagerySetName : 'CollinsBart' })
     };
 
     return BingMapsStyle;

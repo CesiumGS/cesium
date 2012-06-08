@@ -18,21 +18,21 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        CENTER : new Enumeration(0, "CENTER"),
+        CENTER : new Enumeration(0, 'CENTER'),
         /**
          * The origin is at the bottom of the object.
          *
          * @constant
          * @type {Enumeration}
          */
-        BOTTOM : new Enumeration(1, "BOTTOM"),
+        BOTTOM : new Enumeration(1, 'BOTTOM'),
         /**
          * The origin is at the top of the object.
          *
          * @constant
          * @type {Enumeration}
          */
-        TOP : new Enumeration(-1, "TOP")
+        TOP : new Enumeration(-1, 'TOP')
     };
 
     return VerticalOrigin;

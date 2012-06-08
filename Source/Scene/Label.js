@@ -29,15 +29,15 @@ define([
      * @see LabelCollection#add
      * @see Billboard
      *
-     * @see <a href="http://www.whatwg.org/specs/web-apps/current-work/#2dcontext">HTML canvas 2D context</a>
+     * @see <a href='http://www.whatwg.org/specs/web-apps/current-work/#2dcontext'>HTML canvas 2D context</a>
      */
     function Label(labelTemplate, labelCollection) {
         var l = labelTemplate || {};
-        var show = (typeof l.show === "undefined") ? true : l.show;
+        var show = (typeof l.show === 'undefined') ? true : l.show;
         var billboardCollection = labelCollection._getCollection();
 
-        this._text = l.text || "";
-        this._font = l.font || "30px sans-serif";
+        this._text = l.text || '';
+        this._font = l.font || '30px sans-serif';
         this._fillColor = l.fillColor || {
             red : 1.0,
             green : 1.0,
@@ -57,7 +57,7 @@ define([
         this._eyeOffset = l.eyeOffset ? new Cartesian3(l.eyeOffset.x, l.eyeOffset.y, l.eyeOffset.z) : Cartesian3.ZERO.clone();
 
         this._position = l.position ? new Cartesian3(l.position.x, l.position.y, l.position.z) : Cartesian3.ZERO.clone();
-        this._scale = (typeof l.scale === "undefined") ? 1.0 : l.scale;
+        this._scale = (typeof l.scale === 'undefined') ? 1.0 : l.scale;
         this._show = show;
 
         this._billboardCollection = billboardCollection;
@@ -92,7 +92,7 @@ define([
      * @see Label#getShow
      */
     Label.prototype.setShow = function(value) {
-        if ((typeof value !== "undefined") && (value !== this._show)) {
+        if ((typeof value !== 'undefined') && (value !== this._show)) {
             this._show = value;
 
             var billboards = this._billboards;
@@ -145,7 +145,7 @@ define([
     Label.prototype.setPosition = function(value) {
         var p = this._position;
 
-        if ((typeof value !== "undefined") &&
+        if ((typeof value !== 'undefined') &&
             ((p.x !== value.x) || (p.y !== value.y) || (p.z !== value.z))) {
 
             p.x = value.x;
@@ -179,7 +179,7 @@ define([
      * @see Label#getText
      */
     Label.prototype.setText = function(value) {
-        if ((typeof value !== "undefined") && (value !== this._text)) {
+        if ((typeof value !== 'undefined') && (value !== this._text)) {
             this._text = value;
             this._createBillboards();
         }
@@ -206,10 +206,10 @@ define([
      * @see Label#getFont
      * @see Label#setFillColor
      * @see Label#setOutlineColor
-     * @see <a href="http://www.whatwg.org/specs/web-apps/current-work/#dom-context-2d-font">HTML canvas 2D context font</a>
+     * @see <a href='http://www.whatwg.org/specs/web-apps/current-work/#dom-context-2d-font'>HTML canvas 2D context font</a>
      */
     Label.prototype.setFont = function(value) {
-        if ((typeof value !== "undefined") && (this._font !== value)) {
+        if ((typeof value !== 'undefined') && (this._font !== value)) {
             this._font = value;
             this._createBillboards();
         }
@@ -239,7 +239,7 @@ define([
      */
     Label.prototype.setFillColor = function(value) {
         var c = this._fillColor;
-        if ((typeof value !== "undefined") &&
+        if ((typeof value !== 'undefined') &&
             (c.red !== value.red || c.green !== value.green || c.blue !== value.blue || c.alpha !== value.alpha)) {
             this._fillColor = value;
             this._createBillboards();
@@ -270,7 +270,7 @@ define([
      */
     Label.prototype.setOutlineColor = function(value) {
         var c = this._outlineColor;
-        if ((typeof value !== "undefined") &&
+        if ((typeof value !== 'undefined') &&
             (c.red !== value.red || c.green !== value.green || c.blue !== value.blue || c.alpha !== value.alpha)) {
             this._outlineColor = value;
             this._createBillboards();
@@ -300,7 +300,7 @@ define([
      * @see Label#setFillColor
      */
     Label.prototype.setStyle = function(value) {
-        if ((typeof value !== "undefined") && (this._style !== value)) {
+        if ((typeof value !== 'undefined') && (this._style !== value)) {
             this._style = value;
             this._createBillboards();
         }
@@ -330,10 +330,10 @@ define([
      * changing it after calling <code>setPixelOffset</code> does not affect the label's pixel
      * offset; an explicit call to <code>setPixelOffset</code> is required.
      * <br /><br />
-     * <div align="center">
-     * <table border="0" cellpadding="5"><tr>
-     * <td align="center"><code>default</code><br/><img src="images/Label.setPixelOffset.default.png" width="250" height="188" /></td>
-     * <td align="center"><code>l.setPixelOffset({ x : 25, y : -75 });</code><br/><img src="images/Label.setPixelOffset.x50y-25.png" width="250" height="188" /></td>
+     * <div align='center'>
+     * <table border='0' cellpadding='5'><tr>
+     * <td align='center'><code>default</code><br/><img src='images/Label.setPixelOffset.default.png' width='250' height='188' /></td>
+     * <td align='center'><code>l.setPixelOffset({ x : 25, y : -75 });</code><br/><img src='images/Label.setPixelOffset.x50y-25.png' width='250' height='188' /></td>
      * </tr></table>
      * The label's origin is indicated by the yellow point.
      * </div>
@@ -347,7 +347,7 @@ define([
      */
     Label.prototype.setPixelOffset = function(value) {
         var p = this._pixelOffset;
-        if ((typeof value !== "undefined") && ((p.x !== value.x) || (p.y !== value.y))) {
+        if ((typeof value !== 'undefined') && ((p.x !== value.x) || (p.y !== value.y))) {
             p.x = value.x;
             p.y = value.y;
             this._setPixelOffsets();
@@ -384,10 +384,10 @@ define([
      * Below, the label is positioned at the center of the Earth but an eye offset makes it always
      * appear on top of the Earth regardless of the viewer's or Earth's orientation.
      * <br /><br />
-     * <div align="center">
-     * <table border="0" cellpadding="5"><tr>
-     * <td align="center"><img src="images/Billboard.setEyeOffset.one.png" width="250" height="188" /></td>
-     * <td align="center"><img src="images/Billboard.setEyeOffset.two.png" width="250" height="188" /></td>
+     * <div align='center'>
+     * <table border='0' cellpadding='5'><tr>
+     * <td align='center'><img src='images/Billboard.setEyeOffset.one.png' width='250' height='188' /></td>
+     * <td align='center'><img src='images/Billboard.setEyeOffset.two.png' width='250' height='188' /></td>
      * </tr></table>
      * <code>l.setEyeOffset({ x : 0.0, y : 8000000.0, z : 0.0 });</code><br /><br />
      * </div>
@@ -401,7 +401,7 @@ define([
     Label.prototype.setEyeOffset = function(value) {
         var e = this._eyeOffset;
 
-        if ((typeof value !== "undefined") &&
+        if ((typeof value !== 'undefined') &&
             ((e.x !== value.x) || (e.y !== value.y) || (e.z !== value.z))) {
             e.x = value.x;
             e.y = value.y;
@@ -437,8 +437,8 @@ define([
      * Sets the horizontal origin of this label, which determines if the label is
      * to the left, center, or right of its position.
      * <br /><br />
-     * <div align="center">
-     * <img src="images/Billboard.setHorizontalOrigin.png" width="400" height="300" /><br />
+     * <div align='center'>
+     * <img src='images/Billboard.setHorizontalOrigin.png' width='400' height='300' /><br />
      * </div>
      *
      * @memberof Label
@@ -454,7 +454,7 @@ define([
      * l.setVerticalOrigin(VerticalOrigin.TOP);
      */
     Label.prototype.setHorizontalOrigin = function(value) {
-        if ((typeof value !== "undefined") && (this._horizontalOrigin !== value)) {
+        if ((typeof value !== 'undefined') && (this._horizontalOrigin !== value)) {
             this._horizontalOrigin = value;
             this._createBillboards();
         }
@@ -477,8 +477,8 @@ define([
      * Sets the vertical origin of this label, which determines if the label is
      * to the above, below, or at the center of its position.
      * <br /><br />
-     * <div align="center">
-     * <img src="images/Billboard.setVerticalOrigin.png" width="400" height="300" /><br />
+     * <div align='center'>
+     * <img src='images/Billboard.setVerticalOrigin.png' width='400' height='300' /><br />
      * </div>
      *
      * @memberof Label
@@ -494,7 +494,7 @@ define([
      * l.setVerticalOrigin(VerticalOrigin.TOP);
      */
     Label.prototype.setVerticalOrigin = function(value) {
-        if ((typeof value !== "undefined") && (this._verticalOrigin !== value)) {
+        if ((typeof value !== 'undefined') && (this._verticalOrigin !== value)) {
             this._verticalOrigin = value;
             this._createBillboards();
         }
@@ -522,8 +522,8 @@ define([
      * Applying a large scale value may pixelate the label.  To make text larger without pixelation,
      * use a larger font size when calling {@link Label#setFont} instead.
      * <br /><br />
-     * <div align="center">
-     * <img src="images/Label.setScale.png" width="400" height="300" /><br/>
+     * <div align='center'>
+     * <img src='images/Label.setScale.png' width='400' height='300' /><br/>
      * From left to right in the above image, the scales are <code>0.5</code>, <code>1.0</code>,
      * and <code>2.0</code>.
      * </div>
@@ -536,7 +536,7 @@ define([
      * @see Label#setFont
      */
     Label.prototype.setScale = function(value) {
-        if ((typeof value !== "undefined") && (this._scale !== value)) {
+        if ((typeof value !== 'undefined') && (this._scale !== value)) {
             this._scale = value;
             var billboards = this._billboards;
             var length = this._billboards ? this._billboards.length : 0;
@@ -662,9 +662,9 @@ define([
 
     Label.prototype._createId = function(charValue) {
         return JSON.stringify({
-            fillColor : this._fillColor.red.toString() + "," + this._fillColor.green.toString() + "," + this._fillColor.blue.toString() + "," + this._fillColor.alpha.toString(),
+            fillColor : this._fillColor.red.toString() + ',' + this._fillColor.green.toString() + ',' + this._fillColor.blue.toString() + ',' + this._fillColor.alpha.toString(),
             font : this._font,
-            outlineColor : this._outlineColor.red.toString() + "," + this._outlineColor.green.toString() + "," + this._outlineColor.blue.toString() + "," + this._outlineColor.alpha.toString(),
+            outlineColor : this._outlineColor.red.toString() + ',' + this._outlineColor.green.toString() + ',' + this._outlineColor.blue.toString() + ',' + this._outlineColor.alpha.toString(),
             style : this._style,
             verticalOrigin : this._verticalOrigin,
             value : charValue
@@ -674,12 +674,12 @@ define([
     Label.prototype._createCanvas = function(charValue) {
         var font = this._font;
 
-        var canvas = document.createElement("canvas");
+        var canvas = document.createElement('canvas');
         canvas.width = canvas.height = 1;
         canvas.style.font = font;
         canvas.style.display = 'hidden';
 
-        var context2D = canvas.getContext("2d");
+        var context2D = canvas.getContext('2d');
         context2D.font = font;
 
 
@@ -687,11 +687,11 @@ define([
         //It's magic.
         var verticalOrigin = this._verticalOrigin;
         if (verticalOrigin === VerticalOrigin.BOTTOM) {
-            context2D.textBaseline = "bottom";
+            context2D.textBaseline = 'bottom';
         } else if (verticalOrigin === VerticalOrigin.TOP) {
-            context2D.textBaseline = "top";
+            context2D.textBaseline = 'top';
         } else {// VerticalOrigin.CENTER
-            context2D.textBaseline = "middle";
+            context2D.textBaseline = 'middle';
         }
 
         //in order for measureText to calculate style, the canvas has to be
@@ -704,8 +704,8 @@ define([
         canvas.height = dimensions.height;
         context2D.font = font;
         // font must be explicitly set again after changing width and height
-        context2D.fillStyle = "rgba(" + this._fillColor.red * 255 + ", " + this._fillColor.green * 255 + ", " + this._fillColor.blue * 255 + ", " + this._fillColor.alpha + ")";
-        context2D.strokeStyle = "rgba(" + this._outlineColor.red * 255 + ", " + this._outlineColor.green * 255 + ", " + this._outlineColor.blue * 255 + ", " + this._outlineColor.alpha + ")";
+        context2D.fillStyle = 'rgba(' + this._fillColor.red * 255 + ', ' + this._fillColor.green * 255 + ', ' + this._fillColor.blue * 255 + ', ' + this._fillColor.alpha + ')';
+        context2D.strokeStyle = 'rgba(' + this._outlineColor.red * 255 + ', ' + this._outlineColor.green * 255 + ', ' + this._outlineColor.blue * 255 + ', ' + this._outlineColor.alpha + ')';
 
         var y = canvas.height - baseline;
         var style = this._style;
