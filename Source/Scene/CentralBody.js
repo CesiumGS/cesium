@@ -1843,6 +1843,7 @@ define([
                 ((this.showSpecular && this._specularTexture) ? '#define SHOW_SPECULAR 1\n' : '') +
                 ((this.showBumps && this._bumpTexture) ? '#define SHOW_BUMPS 1\n' : '') +
                 (this.showTerminator ? '#define SHOW_TERMINATOR 1\n' : '') +
+                (this._affectedByLighting ? '#define AFFECTED_BY_LIGHTING 1\n' : '') +
                 '#line 0\n' +
                 CentralBodyFSCommon;
             var groundFromSpacePrepend = '#define SHOW_GROUND_ATMOSPHERE 1\n' +
