@@ -12,17 +12,21 @@ require({
     var scene = new Cesium.Scene(canvas);
     var primitives = scene.getPrimitives();
 
-    // Bing Maps
-    var bing = new Cesium.BingMapsTileProvider({
+    var cb = new Cesium.CentralBody(ellipsoid);
+    cb.getImageLayers().add(new Cesium.ImageryLayer(cb, new Cesium.BingMapsTileProvider({
         server : 'dev.virtualearth.net',
         mapStyle : Cesium.BingMapsStyle.AERIAL,
         // Some versions of Safari support WebGL, but don't correctly implement
         // cross-origin image loading, so we need to load Bing imagery using a proxy.
         proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
-    });
-
-    var cb = new Cesium.CentralBody(ellipsoid);
-    cb.dayTileProvider = bing;
+    })));
+    cb.getImageLayers().add(new Cesium.ImageryLayer(cb, new Cesium.BingMapsTileProvider({
+        server : 'dev.virtualearth.net',
+        mapStyle : Cesium.BingMapsStyle.ROAD,
+        // Some versions of Safari support WebGL, but don't correctly implement
+        // cross-origin image loading, so we need to load Bing imagery using a proxy.
+        proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
+    })));
     cb.nightImageSource = '../../Images/land_ocean_ice_lights_2048.jpg';
     cb.specularMapSource = '../../Images/earthspec1k.jpg';
     if (scene.getContext().getMaximumTextureSize() > 2048) {

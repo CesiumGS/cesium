@@ -3,12 +3,14 @@ define([
         '../Core/DeveloperError',
         '../Core/Math',
         '../Core/Ellipsoid',
-        '../Core/Extent'
+        '../Core/Extent',
+        './TileState'
     ], function(
         DeveloperError,
         CesiumMath,
         Ellipsoid,
-        Extent) {
+        Extent,
+        TileState) {
     "use strict";
 
     /**
@@ -121,6 +123,10 @@ define([
         this._projection = undefined;
         this._boundingSphere2D = undefined;
         this._boundingRectangle = undefined;
+
+        this._failCount = 0;
+        this._lastFailTime = 0;
+        this.state = TileState.UNLOADED;
     }
 
     /**
