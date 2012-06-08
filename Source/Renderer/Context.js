@@ -1495,10 +1495,12 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Creates a texture atlas and adds a list of images to it.
      */
     Context.prototype.createTextureAtlas = function(images, pixelFormat, borderWidthInPixels) {
-        return new TextureAtlas(this, images, pixelFormat, borderWidthInPixels);
+        var textureAtlas = new TextureAtlas(this, pixelFormat, borderWidthInPixels);
+        textureAtlas.addImages(images);
+        return textureAtlas;
     };
 
     /**
