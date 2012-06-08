@@ -31,19 +31,19 @@ define([
          */
         rayPlane : function(rayOrigin, rayDirection, planeNormal, planeD) {
             if (!rayOrigin) {
-                throw new DeveloperError("rayOrigin is required.", "rayOrigin");
+                throw new DeveloperError('rayOrigin is required.');
             }
 
             if (!rayDirection) {
-                throw new DeveloperError("rayDirection is required.", "rayDirection");
+                throw new DeveloperError('rayDirection is required.');
             }
 
             if (!planeNormal) {
-                throw new DeveloperError("planeNormal is required.", "planeNormal");
+                throw new DeveloperError('planeNormal is required.');
             }
 
             if (!planeD) {
-                throw new DeveloperError("planeD is required.", "planeD");
+                throw new DeveloperError('planeD is required.');
             }
 
             var origin = Cartesian3.clone(rayOrigin);
@@ -68,15 +68,15 @@ define([
 
         rayEllipsoid : function(rayOrigin, rayDirection, ellipsoid) {
             if (!rayOrigin) {
-                throw new DeveloperError("rayOrigin is required.", "rayOrigin");
+                throw new DeveloperError('rayOrigin is required.');
             }
 
             if (!rayDirection) {
-                throw new DeveloperError("rayDirection is required.", "rayDirection");
+                throw new DeveloperError('rayDirection is required.');
             }
 
             if (!ellipsoid) {
-                throw new DeveloperError("ellipsoid is required.", "ellipsoid");
+                throw new DeveloperError('ellipsoid is required.');
             }
 
             var inverseRadii = ellipsoid.getOneOverRadii();

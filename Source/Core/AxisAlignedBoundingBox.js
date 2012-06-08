@@ -29,7 +29,7 @@ define([
      */
     function AxisAlignedBoundingBox(positions) {
         if (!positions) {
-            throw new DeveloperError("positions is required.", "positions");
+            throw new DeveloperError('positions is required.');
         }
 
         var length = positions.length;

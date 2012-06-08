@@ -18,7 +18,7 @@ defineSuite([
                      new Cartesian2(-3, 3)
                  ];
 
-    it("default constructs", function() {
+    it('default constructs', function() {
         var r = new Rectangle();
         expect(r.x).toEqual(0.0);
         expect(r.y).toEqual(0.0);
@@ -26,7 +26,7 @@ defineSuite([
         expect(r.height).toEqual(0.0);
     });
 
-    it("constructs", function() {
+    it('constructs', function() {
         var r = new Rectangle(1.0, 2.0, 3.0, 4.0);
         expect(r.x).toEqual(1.0);
         expect(r.y).toEqual(2.0);
@@ -34,7 +34,7 @@ defineSuite([
         expect(r.height).toEqual(4.0);
     });
 
-    it("clones", function() {
+    it('clones', function() {
         var r = new Rectangle(1.0, 2.0, 3.0, 4.0);
         var r2 = r.clone();
         r.x = 0.0;
@@ -43,26 +43,26 @@ defineSuite([
         expect(r2.x).toEqual(1.0);
     });
 
-    it("equals (1)", function() {
+    it('equals (1)', function() {
         expect(new Rectangle(1.0, 2.0, 3.0, 4.0).equals(new Rectangle(1.0, 2.0, 3.0, 4.0))).toEqual(true);
     });
 
-    it("equals (2)", function() {
+    it('equals (2)', function() {
         expect(new Rectangle(1.0, 2.0, 3.0, 4.0).equals(new Rectangle(1.0, 2.0, 3.0, 0.0))).toEqual(false);
     });
 
-    it("equalsEpsilon", function() {
+    it('equalsEpsilon', function() {
         expect(new Rectangle(1.0, 2.0, 3.0, 4.0).equalsEpsilon(new Rectangle(1.0, 2.0, 3.0, 4.0), 0.0)).toEqual(true);
         expect(new Rectangle(1.0, 2.0, 3.0, 4.0).equalsEpsilon(new Rectangle(2.0, 2.0, 3.0, 4.0), 1.0)).toEqual(true);
         expect(new Rectangle(1.0, 2.0, 3.0, 4.0).equalsEpsilon(new Rectangle(3.0, 2.0, 3.0, 4.0), 1.0)).toEqual(false);
     });
 
-    it("converts to a string", function() {
+    it('converts to a string', function() {
         var r = new Rectangle(1, 2, 3, 4);
-        expect(r.toString()).toEqual("(1, 2, 3, 4)");
+        expect(r.toString()).toEqual('(1, 2, 3, 4)');
     });
 
-    it("rectangleRectangleIntersect", function() {
+    it('rectangleRectangleIntersect', function() {
         var rect1 = new Rectangle(0, 0, 4, 4);
         var rect2 = new Rectangle(2, 2, 4, 4);
         var rect3 = new Rectangle(5, 5, 4, 4);
@@ -70,7 +70,7 @@ defineSuite([
         expect(Rectangle.rectangleRectangleIntersect(rect1, rect3)).toEqual(false);
     });
 
-    it("create axis aligned bounding rectangle", function() {
+    it('create axis aligned bounding rectangle', function() {
         var rectangle = Rectangle.createAxisAlignedBoundingRectangle(positions);
         expect(rectangle.x).toEqual(-3);
         expect(rectangle.y).toEqual(-3);
@@ -78,7 +78,7 @@ defineSuite([
         expect(rectangle.height).toEqual(6);
     });
 
-    it("creates the axis aligned bounding rectangle for a single position", function() {
+    it('creates the axis aligned bounding rectangle for a single position', function() {
         var rectangle = Rectangle.createAxisAlignedBoundingRectangle([{
             x : 1,
             y : 2
@@ -90,13 +90,13 @@ defineSuite([
         expect(rectangle.height).toEqual(0);
     });
 
-    it("throws an exception creating an axis aligned bounding rectangle with positions of length zero", function() {
+    it('throws an exception creating an axis aligned bounding rectangle with positions of length zero', function() {
         expect(function() {
             return Rectangle.createAxisAlignedBoundingRectangle([]);
         }).toThrow();
     });
 
-    it("throws an exception when creating an axis aligned bounding rectangle without any positions", function() {
+    it('throws an exception when creating an axis aligned bounding rectangle without any positions', function() {
         expect(function() {
             return Rectangle.createAxisAlignedBoundingRectangle(undefined);
         }).toThrow();

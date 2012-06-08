@@ -22,19 +22,19 @@ define([
      * @constructor
      * @immutable
      *
-     * @exception {DeveloperError} One argument is required.
+     * @exception {DeveloperError} radii is required.
      * @exception {DeveloperError} All radii components must be greater than or equal to zero.
      */
-    function Ellipsoid() {
+    function Ellipsoid(radii) {
         if (arguments.length === 0) {
-            throw new DeveloperError("One argument is required.");
+            throw new DeveloperError('radii is required.');
         }
 
-        if (arguments[0].x < 0 || arguments[0].y < 0 || arguments[0].z < 0) {
-            throw new DeveloperError("All radii components must be greater than or equal to zero.", "radii");
+        if (radii.x < 0 || radii.y < 0 || radii.z < 0) {
+            throw new DeveloperError('All radii components must be greater than or equal to zero.');
         }
 
-        var radii = Cartesian3.clone(arguments[0]);
+        radii = Cartesian3.clone(radii);
         var x = radii.x;
         var y = radii.y;
         var z = radii.z;

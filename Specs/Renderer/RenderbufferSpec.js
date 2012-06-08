@@ -3,7 +3,7 @@ defineSuite([
          '../Specs/createContext',
          '../Specs/destroyContext',
          'Renderer/RenderbufferFormat'
-     ], "Renderer/Renderbuffer", function(
+     ], 'Renderer/Renderbuffer', function(
          createContext,
          destroyContext,
          RenderbufferFormat) {
@@ -25,7 +25,7 @@ defineSuite([
         destroyContext(context);
     });
 
-    it("creates", function() {
+    it('creates', function() {
         renderbuffer = context.createRenderbuffer({
             format : RenderbufferFormat.DEPTH_COMPONENT16,
             width : 64,
@@ -37,7 +37,7 @@ defineSuite([
         expect(renderbuffer.getHeight()).toEqual(32);
     });
 
-    it("creates with defaults", function() {
+    it('creates with defaults', function() {
         renderbuffer = context.createRenderbuffer();
 
         expect(renderbuffer.getFormat()).toEqual(RenderbufferFormat.RGBA4);
@@ -45,22 +45,22 @@ defineSuite([
         expect(renderbuffer.getHeight()).toEqual(context.getCanvas().clientHeight);
     });
 
-    it("destroys", function() {
+    it('destroys', function() {
         var r = context.createRenderbuffer();
         expect(r.isDestroyed()).toEqual(false);
         r.destroy();
         expect(r.isDestroyed()).toEqual(true);
     });
 
-    it("fails to create (format)", function() {
+    it('fails to create (format)', function() {
         expect(function() {
             renderbuffer = context.createRenderbuffer({
-                format : "invalid format"
+                format : 'invalid format'
             });
         }).toThrow();
     });
 
-    it("fails to create (small width)", function() {
+    it('fails to create (small width)', function() {
         expect(function() {
             renderbuffer = context.createRenderbuffer({
                 width : 0
@@ -68,7 +68,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("fails to create (large width)", function() {
+    it('fails to create (large width)', function() {
         expect(function() {
             renderbuffer = context.createRenderbuffer({
                 width : context.getMaximumRenderbufferSize() + 1
@@ -76,7 +76,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("fails to create (small height)", function() {
+    it('fails to create (small height)', function() {
         expect(function() {
             renderbuffer = context.createRenderbuffer({
                 height : 0
@@ -84,7 +84,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("fails to create (large height)", function() {
+    it('fails to create (large height)', function() {
         expect(function() {
             renderbuffer = context.createRenderbuffer({
                 height : context.getMaximumRenderbufferSize() + 1
@@ -92,7 +92,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("fails to destroy", function() {
+    it('fails to destroy', function() {
         var r = context.createRenderbuffer();
         r.destroy();
 

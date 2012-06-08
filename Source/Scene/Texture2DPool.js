@@ -51,7 +51,7 @@ define([
      */
     function Texture2DPool(context) {
         if (typeof context === 'undefined') {
-            throw new DeveloperError('context is required.', 'context');
+            throw new DeveloperError('context is required.');
         }
 
         this._context = context;
@@ -71,7 +71,7 @@ define([
      */
     Texture2DPool.prototype.createTexture2D = function(description) {
         if (!description) {
-            throw new DeveloperError('description is required.', 'description');
+            throw new DeveloperError('description is required.');
         }
 
         var source = description.source;

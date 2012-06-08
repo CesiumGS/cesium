@@ -42,7 +42,7 @@ define(['../Shaders/DiffuseMapMaterial'], function(ShadersDiffuseMapMaterial) {
     }
 
     DiffuseMapMaterial.prototype._getShaderSource = function() {
-        return "#line 0\n" + ShadersDiffuseMapMaterial;
+        return '#line 0\n' + ShadersDiffuseMapMaterial;
     };
 
     return DiffuseMapMaterial;

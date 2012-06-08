@@ -14,25 +14,25 @@ defineSuite([
     "use strict";
     /*global it,expect*/
 
-    it("throws an exception during construction (1 of 3)", function() {
+    it('throws an exception during construction (1 of 3)', function() {
         expect(function() {
             return new Occluder();
         }).toThrow();
     });
 
-    it("throws an exception during construction (2 of 3)", function() {
+    it('throws an exception during construction (2 of 3)', function() {
         expect(function() {
             return new Occluder(new BoundingSphere(new Cartesian3(0, 0, 0)));
         }).toThrow();
     });
 
-    it("throws an exception during construction (3 of 3)", function() {
+    it('throws an exception during construction (3 of 3)', function() {
         expect(function() {
             return new Occluder(new Cartesian3(0, 0, 0));
         }).toThrow();
     });
 
-    it("can entirely eclipse a smaller occludee", function() {
+    it('can entirely eclipse a smaller occludee', function() {
         var giantSphere = new BoundingSphere(new Cartesian3(0, 0, -1.5), 0.5);
         var littleSphere = new BoundingSphere(new Cartesian3(0, 0, -2.75), 0.25);
         var cameraPosition = Cartesian3.ZERO;
@@ -41,7 +41,7 @@ defineSuite([
         expect(occluder.getVisibility(littleSphere)).toEqual(Visibility.NONE);
     });
 
-    it("can have a fully visible occludee", function() {
+    it('can have a fully visible occludee', function() {
         var bigSphere = new BoundingSphere(new Cartesian3(0, 0, -1.5), 0.5);
         var littleSphere = new BoundingSphere(new Cartesian3(0, 0, -2.75), 0.25);
         var cameraPosition = Cartesian3.ZERO;
@@ -51,7 +51,7 @@ defineSuite([
         expect(occluder.getVisibility(bigSphere)).toEqual(Visibility.FULL);
     });
 
-    it("blocks the occludee when both are aligned and the same size", function() {
+    it('blocks the occludee when both are aligned and the same size', function() {
         var sphere1 = new BoundingSphere(new Cartesian3(0, 0, -1.5), 0.5);
         var sphere2 = new BoundingSphere(new Cartesian3(0, 0, -2.5), 0.5);
         var cameraPosition = Cartesian3.ZERO;
@@ -60,7 +60,7 @@ defineSuite([
         expect(occluder.getVisibility(sphere2)).toEqual(Visibility.NONE);
     });
 
-    it("can have a fully visible occludee", function() {
+    it('can have a fully visible occludee', function() {
         var sphere1 = new BoundingSphere(new Cartesian3(-1.25, 0, -1.5), 0.5);
         var sphere2 = new BoundingSphere(new Cartesian3(1.25, 0, -1.5), 0.5);
         var cameraPosition = Cartesian3.ZERO;
@@ -68,7 +68,7 @@ defineSuite([
         expect(occluder.getVisibility(sphere2)).toEqual(Visibility.FULL);
     });
 
-    it("can partially block an occludee without intersecting", function() {
+    it('can partially block an occludee without intersecting', function() {
         var cameraPosition = Cartesian3.ZERO;
         var occluderBS = new BoundingSphere(new Cartesian3(0, 0, -2), 1);
         var occluder = new Occluder(occluderBS, cameraPosition);
@@ -76,7 +76,7 @@ defineSuite([
         expect(occluder.getVisibility(occludeeBS)).toEqual(Visibility.PARTIAL);
     });
 
-    it("can partially block an occludee when it intersects laterally", function() {
+    it('can partially block an occludee when it intersects laterally', function() {
         var cameraPosition = Cartesian3.ZERO;
         var occluderBS = new BoundingSphere(new Cartesian3(-0.5, 0, -1), 1);
         var occluder = new Occluder(occluderBS, cameraPosition);
@@ -84,7 +84,7 @@ defineSuite([
         expect(occluder.getVisibility(occludeeBS)).toEqual(Visibility.PARTIAL);
     });
 
-    it("can partially block an occludee when it intersects vertically", function() {
+    it('can partially block an occludee when it intersects vertically', function() {
         var cameraPosition = Cartesian3.ZERO;
         var occluderBS = new BoundingSphere(new Cartesian3(0, 0, -2), 1);
         var occluder = new Occluder(occluderBS, cameraPosition);
@@ -92,7 +92,7 @@ defineSuite([
         expect(occluder.getVisibility(occludeeBS)).toEqual(Visibility.PARTIAL);
     });
 
-    it("reports full visibility when occludee is larger than occluder", function() {
+    it('reports full visibility when occludee is larger than occluder', function() {
         var littleSphere = new BoundingSphere(new Cartesian3(0, 0, -1.5), 0.5);
         var bigSphere = new BoundingSphere(new Cartesian3(0, 0, -3), 1);
         var cameraPosition = Cartesian3.ZERO;
@@ -100,13 +100,13 @@ defineSuite([
         expect(occluder.getVisibility(bigSphere)).toEqual(Visibility.FULL);
     });
 
-    it("can throw errors during getOccludeePoint (1 of 5)", function() {
+    it('can throw errors during getOccludeePoint (1 of 5)', function() {
         expect(function() {
             Occluder.getOccludeePoint();
         }).toThrow();
     });
 
-    it("can throw errors during getOccludeePoint (2 of 5)", function() {
+    it('can throw errors during getOccludeePoint (2 of 5)', function() {
         var occluderBS = new BoundingSphere(new Cartesian3(0, 0, -5), 1);
         var occludeePosition = new Cartesian3(0, 0, -5);
         var positions = [];
@@ -116,7 +116,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("can throw errors during getOccludeePoint (3 of 5)", function() {
+    it('can throw errors during getOccludeePoint (3 of 5)', function() {
         var occluderBS = new BoundingSphere(new Cartesian3(0, 0, -5), 1);
         var positions = [];
 
@@ -125,7 +125,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("can throw errors during getOccludeePoint (4 of 5)", function() {
+    it('can throw errors during getOccludeePoint (4 of 5)', function() {
         var occluderBS = new BoundingSphere(new Cartesian3(0, 0, -5), 1);
 
         expect(function() {
@@ -133,7 +133,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("can throw errors during getOccludeePoint (5 of 5)", function() {
+    it('can throw errors during getOccludeePoint (5 of 5)', function() {
         var occluderBS = new BoundingSphere(new Cartesian3(0, 0, -5), 1);
 
         expect(function() {
@@ -141,7 +141,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("can compute an occludee point", function() {
+    it('can compute an occludee point', function() {
         var occluderBS = new BoundingSphere(new Cartesian3(0, 0, -8), 2);
         var positions = [new Cartesian3(-1.085, 0, -6.221), new Cartesian3(1.085, 0, -6.221)];
         var tileOccluderSphere = new BoundingSphere(positions);
@@ -151,7 +151,7 @@ defineSuite([
         expect(result.occludeePoint.equalsEpsilon(new Cartesian3(0, 0, -5), CesiumMath.EPSILON1)).toEqual(true);
     });
 
-    it("can compute a rotation vector (major axis = 0)", function() {
+    it('can compute a rotation vector (major axis = 0)', function() {
         var cameraPosition = Cartesian3.ZERO;
         var occluderBS = new BoundingSphere(new Cartesian3(5, 0, 0), 2);
         var occluder = new Occluder(occluderBS, cameraPosition);
@@ -173,7 +173,7 @@ defineSuite([
         expect(aRotationVector).toBeTruthy();
     });
 
-    it("can compute a rotation vector (major axis = 1)", function() {
+    it('can compute a rotation vector (major axis = 1)', function() {
         var cameraPosition = Cartesian3.ZERO;
         var occluderBS = new BoundingSphere(new Cartesian3(5, 0, 0), 2);
         var occluder = new Occluder(occluderBS, cameraPosition);
@@ -195,7 +195,7 @@ defineSuite([
         expect(aRotationVector).toBeTruthy();
     });
 
-    it("can compute a rotation vector (major axis = 2)", function() {
+    it('can compute a rotation vector (major axis = 2)', function() {
         var cameraPosition = Cartesian3.ZERO;
         var occluderBS = new BoundingSphere(new Cartesian3(5, 0, 0), 2);
         var occluder = new Occluder(occluderBS, cameraPosition);
@@ -217,7 +217,7 @@ defineSuite([
         expect(aRotationVector).toBeTruthy();
     });
 
-    it("can  have an invisible occludee point", function() {
+    it('can  have an invisible occludee point', function() {
         var cameraPosition = new Cartesian3(0, 0, -8);
         var occluderBS = new BoundingSphere(new Cartesian3(0, 0, -8), 2);
         var occluder = new Occluder(occluderBS, cameraPosition);
@@ -234,7 +234,7 @@ defineSuite([
         expect(occluder.getVisibility(bs)).toEqual(Visibility.NONE);
     });
 
-    it("can have a visible occludee point", function() {
+    it('can have a visible occludee point', function() {
         var cameraPosition = new Cartesian3(3, 0, -8);
         var occluderBS = new BoundingSphere(new Cartesian3(0, 0, -8), 2);
         var occluder = new Occluder(occluderBS, cameraPosition);

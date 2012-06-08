@@ -127,7 +127,7 @@ define([
      */
     CompositePrimitive.prototype.add = function(primitive) {
         if (!primitive) {
-            throw new DeveloperError("primitive is required.", "primitive");
+            throw new DeveloperError('primitive is required.');
         }
 
         var external = (primitive._external = primitive._external || {});
@@ -224,7 +224,7 @@ define([
 
     CompositePrimitive.prototype._getPrimitiveIndex = function(primitive) {
         if (!this.contains(primitive)) {
-            throw new DeveloperError("primitive is not in this composite.", "primitive");
+            throw new DeveloperError('primitive is not in this composite.');
         }
 
         return this._primitives.indexOf(primitive);
@@ -356,8 +356,8 @@ define([
      * }
      */
     CompositePrimitive.prototype.get = function(index) {
-        if (typeof index === "undefined") {
-            throw new DeveloperError("index is required.", "index");
+        if (typeof index === 'undefined') {
+            throw new DeveloperError('index is required.');
         }
 
         return this._primitives[index];

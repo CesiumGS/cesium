@@ -287,7 +287,7 @@ define([
          *
          * @type Number
          */
-        this.morphTime = 0.0;
+        this.morphTime = 1.0;
 
         this._mode = SceneMode.SCENE3D;
         this._projection = undefined;
@@ -296,7 +296,7 @@ define([
 
         var drawUniformsOne = {
             u_color : function() {
-                return that.color; // Doesn't matter; doesn't write color
+                return that.color; // does not matter; does not write color
             },
             u_morphTime : function() {
                 return that.morphTime;
@@ -749,8 +749,8 @@ define([
                 this._spGroundTrack =
                     this._spGroundTrack ||
                     context.getShaderCache().getShaderProgram(
-                            "#define GROUND_TRACK\n" +
-                            "#line 0\n" +
+                            '#define GROUND_TRACK\n' +
+                            '#line 0\n' +
                             PolylineVS, PolylineFS, attributeIndices);
             } else {
                 this._spGroundTrack = this._spGroundTrack && this._spGroundTrack.release();
@@ -760,8 +760,8 @@ define([
                 this._spHeightTrack =
                     this._spHeightTrack ||
                     context.getShaderCache().getShaderProgram(
-                            "#define HEIGHT_TRACK\n" +
-                            "#line 0\n" +
+                            '#define HEIGHT_TRACK\n' +
+                            '#line 0\n' +
                             PolylineVS, PolylineFS, attributeIndices);
             } else {
                 this._spHeightTrack = this._spHeightTrack && this._spHeightTrack.release();

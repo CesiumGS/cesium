@@ -17,7 +17,7 @@ define([
         template.vector = template.vector || Cartesian3.UNIT_Z.negate();
 
         if (!template.particle) {
-            throw new DeveloperError("template.particle is required.", "template");
+            throw new DeveloperError('template.particle is required.');
         }
 
         this.vector = new Cartesian3(template.vector.x, template.vector.y, template.vector.z);

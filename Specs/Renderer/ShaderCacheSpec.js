@@ -20,9 +20,9 @@ defineSuite([
         destroyContext(context);
     });
 
-    it("adds and removes", function() {
-        var vs = "attribute vec4 position; void main() { gl_Position = position; }";
-        var fs = "void main() { gl_FragColor = vec4(1.0); }";
+    it('adds and removes', function() {
+        var vs = 'attribute vec4 position; void main() { gl_Position = position; }';
+        var fs = 'void main() { gl_FragColor = vec4(1.0); }';
 
         var cache = new ShaderCache(context);
         var sp = cache.getShaderProgram(vs, fs, {
@@ -39,9 +39,9 @@ defineSuite([
         cache.destroy();
     });
 
-    it("adds and removes 2", function() {
-        var vs = "attribute vec4 position; void main() { gl_Position = position; }";
-        var fs = "void main() { gl_FragColor = vec4(1.0); }";
+    it('adds and removes 2', function() {
+        var vs = 'attribute vec4 position; void main() { gl_Position = position; }';
+        var fs = 'void main() { gl_FragColor = vec4(1.0); }';
 
         var cache = new ShaderCache(context);
         var sp = cache.getShaderProgram(vs, fs, {
@@ -58,9 +58,9 @@ defineSuite([
         cache.destroy();
     });
 
-    it("has a cache hit", function() {
-        var vs = "attribute vec4 position; void main() { gl_Position = position; }";
-        var fs = "void main() { gl_FragColor = vec4(1.0); }";
+    it('has a cache hit', function() {
+        var vs = 'attribute vec4 position; void main() { gl_Position = position; }';
+        var fs = 'void main() { gl_FragColor = vec4(1.0); }';
 
         var cache = new ShaderCache(context);
         var sp = cache.getShaderProgram(vs, fs, {
@@ -82,9 +82,9 @@ defineSuite([
         cache.destroy();
     });
 
-    it("avoids thrashing", function() {
-        var vs = "attribute vec4 position; void main() { gl_Position = position; }";
-        var fs = "void main() { gl_FragColor = vec4(1.0); }";
+    it('avoids thrashing', function() {
+        var vs = 'attribute vec4 position; void main() { gl_Position = position; }';
+        var fs = 'void main() { gl_FragColor = vec4(1.0); }';
 
         var cache = new ShaderCache(context);
         var sp = cache.getShaderProgram(vs, fs, {
@@ -108,9 +108,9 @@ defineSuite([
         cache.destroy();
     });
 
-    it("is destroyed", function() {
-        var vs = "attribute vec4 position; void main() { gl_Position = position; }";
-        var fs = "void main() { gl_FragColor = vec4(1.0); }";
+    it('is destroyed', function() {
+        var vs = 'attribute vec4 position; void main() { gl_Position = position; }';
+        var fs = 'void main() { gl_FragColor = vec4(1.0); }';
 
         var cache = new ShaderCache(context);
         var sp = cache.getShaderProgram(vs, fs, {
@@ -123,7 +123,7 @@ defineSuite([
         expect(cache.isDestroyed()).toEqual(true);
     });
 
-    it("is not destroyed", function() {
+    it('is not destroyed', function() {
         var cache = new ShaderCache(context);
         expect(cache.isDestroyed()).toEqual(false);
     });

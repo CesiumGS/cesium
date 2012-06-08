@@ -5,7 +5,7 @@
     "use strict";
     /*global Cesium,Sandbox,dojo,dijit,SandboxTree,SandboxTreeNode*/
 
-    dojo.declare("SandboxTree", [dijit.Tree], { // Extend dojo's tree display
+    dojo.declare('SandboxTree', [dijit.Tree], { // Extend dojo's tree display
 
         optionScope : null,
         optionMethod : null,
@@ -16,9 +16,9 @@
         }
     });
 
-    dojo.provide("SandboxTreeNode"); // Import the custom tree class
+    dojo.provide('SandboxTreeNode'); // Import the custom tree class
 
-    dojo.declare("SandboxTreeNode", [dijit._TreeNode], { // Extend dojo's tree node
+    dojo.declare('SandboxTreeNode', [dijit._TreeNode], { // Extend dojo's tree node
 
         // Override the default constructor
         _createTreeNode : function( /*Object*/args) {
@@ -38,15 +38,15 @@
                 var containerDOM = this.domNode.children[0];
 
                 // Create the On/Off buttons
-                var toggleOn = dojo.create("a", {
-                    className : "treeIcon toggleOn"
-                }, containerDOM, "last");
-                var toggleOff = dojo.create("a", {
-                    className : "treeIcon toggleOff"
-                }, containerDOM, "last");
+                var toggleOn = dojo.create('a', {
+                    className : 'treeIcon toggleOn'
+                }, containerDOM, 'last');
+                var toggleOff = dojo.create('a', {
+                    className : 'treeIcon toggleOff'
+                }, containerDOM, 'last');
 
                 // Place them next to the tree item
-                dojo.style(containerDOM, "position", "relative");
+                dojo.style(containerDOM, 'position', 'relative');
 
                 // Set up event handling:
 
@@ -54,7 +54,7 @@
 
                 var onCode = this.item.codeSnippet[0];
 
-                dojo.connect(toggleOn, "onclick", this, function(e) { // On button
+                dojo.connect(toggleOn, 'onclick', this, function(e) { // On button
                     Sandbox.reset();
 
                     editor.display(Sandbox.beautify(onCode.code.toString()));
@@ -66,7 +66,7 @@
 
                 var offCode = this.item.codeSnippet[1];
 
-                dojo.connect(toggleOff, "onclick", this, function(e) { // Off button
+                dojo.connect(toggleOff, 'onclick', this, function(e) { // Off button
                     Sandbox.reset();
 
                     editor.display(Sandbox.beautify(offCode.code.toString()));
@@ -141,14 +141,14 @@
             // Connect the node with it's corresponding icon class
             // See notes in all.css  .
             if (item.icon && item.icon[0]) {
-                return ('treeIcon ' + item.icon[0]) || "dijitLeaf";
+                return ('treeIcon ' + item.icon[0]) || 'dijitLeaf';
             }
             // Handle node's with children and no icon
-            return (opened ? "dijitFolderOpened" : "dijitFolderClosed");
+            return (opened ? 'dijitFolderOpened' : 'dijitFolderClosed');
         });
 
         /* Dojo's pseudo-database.  Data after construction can be accessed
-         * via the query method; e.g., <code>store.query("String")</code>
+         * via the query method; e.g., <code>store.query('String')</code>
          * This is needed because Dojo's tree display was designed to connect
          * to a database and/or a JSON containing URI.
          *
@@ -167,7 +167,7 @@
          */
         var treeModel = new dijit.tree.ForestStoreModel({
             store : store,
-            childrenAttrs : ["children"]
+            childrenAttrs : ['children']
         });
 
         // The actual Dojo Tree object
@@ -297,7 +297,7 @@
             return null; // No keyword found
         }
 
-        keyword = keyword || document.getElementById("searchBox").value;
+        keyword = keyword || document.getElementById('searchBox').value;
 
         if (keyword.length) {
 

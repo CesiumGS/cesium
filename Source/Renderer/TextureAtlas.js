@@ -38,15 +38,15 @@ define([
      */
     function TextureAtlas(context, images, pixelFormat, borderWidthInPixels) {
         if (!context) {
-            throw new DeveloperError("context is required.", "images");
+            throw new DeveloperError('context is required.');
         }
 
-        borderWidthInPixels = (typeof borderWidthInPixels === "undefined") ? 1 : borderWidthInPixels;
+        borderWidthInPixels = (typeof borderWidthInPixels === 'undefined') ? 1 : borderWidthInPixels;
         if (borderWidthInPixels < 0) {
-            throw new DeveloperError("borderWidthInPixels must be greater than or equal to zero.", "borderWidthInPixels");
+            throw new DeveloperError('borderWidthInPixels must be greater than or equal to zero.');
         }
 
-        pixelFormat = (typeof pixelFormat === "undefined") ? PixelFormat.RGBA : pixelFormat;
+        pixelFormat = (typeof pixelFormat === 'undefined') ? PixelFormat.RGBA : pixelFormat;
 
         /**
          * The event that is fired whenever the texture or textureCoordinates have changed.
@@ -197,11 +197,11 @@ define([
      */
     TextureAtlas.prototype.addTexture = function(image, textureAvailableCallback) {
         if (typeof image === 'undefined') {
-            throw new DeveloperError("image is required.", "image");
+            throw new DeveloperError('image is required.');
         }
 
         if (typeof textureAvailableCallback === 'undefined') {
-            throw new DeveloperError("textureAvailableCallback is required.", "textureAvailableCallback");
+            throw new DeveloperError('textureAvailableCallback is required.');
         }
 
         this.addTextureFromFunction(image.src, function(src, callback) {
@@ -225,11 +225,11 @@ define([
      */
     TextureAtlas.prototype.addTextureFromUrl = function(url, textureAvailableCallback) {
         if (typeof url === 'undefined') {
-            throw new DeveloperError("url is required.", "url");
+            throw new DeveloperError('url is required.');
         }
 
         if (typeof textureAvailableCallback === 'undefined') {
-            throw new DeveloperError("textureAvailableCallback is required.", "textureAvailableCallback");
+            throw new DeveloperError('textureAvailableCallback is required.');
         }
 
         this.addTextureFromFunction(url, getImageFromUrl, textureAvailableCallback);
@@ -263,15 +263,15 @@ define([
      */
     TextureAtlas.prototype.addTextureFromFunction = function(id, getImageCallback, textureAvailableCallback) {
         if (typeof id === 'undefined') {
-            throw new DeveloperError("id is required.", "id");
+            throw new DeveloperError('id is required.');
         }
 
         if (typeof getImageCallback === 'undefined') {
-            throw new DeveloperError("getImageCallback is required.", "getImageCallback");
+            throw new DeveloperError('getImageCallback is required.');
         }
 
         if (typeof textureAvailableCallback === 'undefined') {
-            throw new DeveloperError("textureAvailableCallback is required.", "textureAvailableCallback");
+            throw new DeveloperError('textureAvailableCallback is required.');
         }
 
         var sourceHolder = this._imagesHash[id];
@@ -325,7 +325,7 @@ define([
         var numSubRegions = subRegions.length;
 
         if ((index < 0) || (index >= numTextureCoordinates)) {
-            throw new DeveloperError("invalid image index.", "index");
+            throw new DeveloperError('invalid image index.');
         }
         var baseRegion = this._textureCoordinates[index];
 

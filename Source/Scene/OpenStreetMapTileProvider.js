@@ -27,8 +27,8 @@ define([
      * @see ArcGISTileProvider
      * @see CompositeTileProvider
      *
-     * @see <a href="http://wiki.openstreetmap.org/wiki/Main_Page">OpenStreetMap Wiki</a>
-     * @see <a href="http://www.w3.org/TR/cors/">Cross-Origin Resource Sharing</a>
+     * @see <a href='http://wiki.openstreetmap.org/wiki/Main_Page'>OpenStreetMap Wiki</a>
+     * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
      *
      * @example
      * // OpenStreetMap tile provider
@@ -118,7 +118,7 @@ define([
      */
     OpenStreetMapTileProvider.prototype.loadTileImage = function(tile, onload, onerror) {
         if (tile.zoom < this.zoomMin || tile.zoom > this.zoomMax) {
-            throw new DeveloperError("The zoom must be between in [zoomMin, zoomMax].", "tile.zoom");
+            throw new DeveloperError('tile.zoom must be between in [zoomMin, zoomMax].');
         }
 
         var image = new Image();
@@ -142,12 +142,12 @@ define([
      */
     OpenStreetMapTileProvider.prototype.getLogo = function() {
         if (!this._logo) {
-            var canvas = document.createElement("canvas");
+            var canvas = document.createElement('canvas');
             canvas.width = 800.0;
             canvas.height = 20.0;
 
-            var context = canvas.getContext("2d");
-            context.fillStyle = "#fff";
+            var context = canvas.getContext('2d');
+            context.fillStyle = '#fff';
             context.font = '12px sans-serif';
             context.textBaseline = 'top';
             context.fillText(this._credit, 0, 0);

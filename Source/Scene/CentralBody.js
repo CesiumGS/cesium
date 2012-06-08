@@ -112,14 +112,14 @@ define([
     function TileTextureCachePolicy(description) {
         var desc = description || {};
 
-        if (!desc.fetchFunc || typeof desc.fetchFunc !== "function") {
-            throw new DeveloperError("description.fetchFunc is a required function.", "description.fetchFunc");
+        if (!desc.fetchFunc || typeof desc.fetchFunc !== 'function') {
+            throw new DeveloperError('description.fetchFunc is a required function.');
         }
 
         this._limit = desc.limit || 128;
         this._count = 0;
         this._fetchFunc = desc.fetchFunc;
-        this._removeFunc = (typeof desc.removeFunc === "function") ? desc.removeFunc : undefined;
+        this._removeFunc = (typeof desc.removeFunc === 'function') ? desc.removeFunc : undefined;
     }
 
     TileTextureCachePolicy.prototype.hit = function(object) {
@@ -200,6 +200,7 @@ define([
             zoom : 0,
             ellipsoid : ellipsoid
         });
+        this._occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), Cartesian3.ZERO);
 
         this._renderQueue = new Queue();
         this._imageQueue = new Queue();
@@ -334,6 +335,20 @@ define([
         this.showSkyAtmosphere = false;
 
         /**
+         * <p>
+         * Determines if the central body is affected by lighting, i.e., if sun light brightens the
+         * day side of the globe, and and the night side appears dark.  When <code>true</code>, the
+         * central body is affected by lighting; when <code>false</code>, the central body is uniformly
+         * shaded with the day tile provider, i.e., no night lights, atmosphere, etc. are used.
+         * </p>
+         * <p>
+         * The default is <code>true</code>.
+         * </p>
+         */
+        this.affectedByLighting = true;
+        this._affectedByLighting = true;
+
+        /**
          * DOC_TBA
          */
         this.dayTileProvider = undefined;
@@ -346,9 +361,9 @@ define([
          * is <code>true</code>.
          * <br /><br />
          * Example day image:
-         * <div align="center">
-         * <img src="../images/CentralBody.nightImageSource.jpg" width="512" height="256" />
-         * <a href="http://visibleearth.nasa.gov/view_rec.php?id=1438">NASA Visible Earth</a>.
+         * <div align='center'>
+         * <img src='../images/CentralBody.nightImageSource.jpg' width='512' height='256' />
+         * <a href='http://visibleearth.nasa.gov/view_rec.php?id=1438'>NASA Visible Earth</a>.
          * Data courtesy Marc Imhoff of NASA GSFC and Christopher Elvidge of
          * NOAA NGDC. Image by Craig Mayhew and Robert Simmon, NASA GSFC.
          * </div>
@@ -368,9 +383,9 @@ define([
          * image is loaded and {@link CentralBody#showSpecular} is <code>true</code>.
          * <br /><br />
          * Example specular map:
-         * <div align="center">
-         * <img src="../images/CentralBody.specularMapSource.jpg" width="512" height="256" />
-         * <a href="http://planetpixelemporium.com/earth.html">Planet Texture Maps</a>
+         * <div align='center'>
+         * <img src='../images/CentralBody.specularMapSource.jpg' width='512' height='256' />
+         * <a href='http://planetpixelemporium.com/earth.html'>Planet Texture Maps</a>
          * </div>
          *
          * @type {String}
@@ -388,9 +403,9 @@ define([
          * image is loaded and {@link CentralBody#showClouds} is <code>true</code>.
          * <br /><br />
          * Example cloud map:
-         * <div align="center">
-         * <img src="../images/CentralBody.cloudsMapSource.jpg" width="512" height="256" />
-         * <a href="http://planetpixelemporium.com/earth.html">Planet Texture Maps</a>
+         * <div align='center'>
+         * <img src='../images/CentralBody.cloudsMapSource.jpg' width='512' height='256' />
+         * <a href='http://planetpixelemporium.com/earth.html'>Planet Texture Maps</a>
          * </div>
          *
          * @type {String}
@@ -408,9 +423,9 @@ define([
          * image is loaded and {@link CentralBody#showBumps} is <code>true</code>.
          * <br /><br />
          * Example bump map:
-         * <div align="center">
-         * <img src="../images/CentralBody.bumpMapSource.jpg" width="512" height="256" />
-         * <a href="http://planetpixelemporium.com/earth.html">Planet Texture Maps</a>
+         * <div align='center'>
+         * <img src='../images/CentralBody.bumpMapSource.jpg' width='512' height='256' />
+         * <a href='http://planetpixelemporium.com/earth.html'>Planet Texture Maps</a>
          * </div>
          *
          * @type {String}
@@ -424,8 +439,8 @@ define([
         /**
          * When <code>true</code>, textures from the <code>dayTileProvider</code> are shown on the central body.
          * <br /><br />
-         * <div align="center">
-         * <img src="../images/CentralBody.showDay.jpg" width="400" height="300" />
+         * <div align='center'>
+         * <img src='../images/CentralBody.showDay.jpg' width='400' height='300' />
          * </div>
          *
          * @type {Boolean}
@@ -440,8 +455,8 @@ define([
          * When <code>true</code>, the night texture is shown on the side of the central body not illuminated by the sun.
          * The day and night textures are blended across the terminator using {@link CentralBody#dayNightBlendDelta}.
          * When <code>false</code>, the day textures are shown on the entire globe (if enabled).
-         * <div align="center">
-         * <img src="../images/CentralBody.showNight.jpg" width="400" height="300" />
+         * <div align='center'>
+         * <img src='../images/CentralBody.showNight.jpg' width='400' height='300' />
          * </div>
          *
          * @type {Boolean}
@@ -452,7 +467,7 @@ define([
          *
          * @example
          * cb.showNight = true;
-         * cb.nightImageSource = "night.jpg";
+         * cb.nightImageSource = 'night.jpg';
          */
         this.showNight = true;
         this._showNight = false;
@@ -460,8 +475,8 @@ define([
         /**
          * When <code>true</code>, diffuse-lit clouds are shown on the central body.  When {@link CentralBody#showNight}
          * is also true, clouds on the dark side of the globe will fully or partially occlude the night texture.
-         * <div align="center">
-         * <img src="../images/CentralBody.showClouds.jpg" width="400" height="300" />
+         * <div align='center'>
+         * <img src='../images/CentralBody.showClouds.jpg' width='400' height='300' />
          * </div>
          *
          * @type {Boolean}
@@ -472,7 +487,7 @@ define([
          *
          * @example
          * cb.showClouds = true;
-         * cb.cloudsMapSource = "clouds.jpg";
+         * cb.cloudsMapSource = 'clouds.jpg';
          */
         this.showClouds = true;
         this._showClouds = false;
@@ -481,10 +496,10 @@ define([
          * When <code>true</code>, clouds on the daytime side of the globe cast approximate shadows.  The
          * shadows can be shown with or without the clouds themselves, which are controlled with
          * {@link CentralBody#showClouds}.
-         * <div align="center">
-         * <table border="0" cellpadding="5"><tr>
-         * <td align="center"><code>true</code><br/><img src="../images/CentralBody.showCloudShadows.true.jpg" width="250" height="188" /></td>
-         * <td align="center"><code>false</code><br/><img src="../images/CentralBody.showCloudShadows.false.jpg" width="250" height="188" /></td>
+         * <div align='center'>
+         * <table border='0' cellpadding='5'><tr>
+         * <td align='center'><code>true</code><br/><img src='../images/CentralBody.showCloudShadows.true.jpg' width='250' height='188' /></td>
+         * <td align='center'><code>false</code><br/><img src='../images/CentralBody.showCloudShadows.false.jpg' width='250' height='188' /></td>
          * </tr></table>
          * </div>
          *
@@ -496,17 +511,17 @@ define([
          * @example
          * cb.showClouds = true;
          * cb.showCloudShadows = true;
-         * cb.cloudsMapSource = "clouds.jpg";
+         * cb.cloudsMapSource = 'clouds.jpg';
          */
         this.showCloudShadows = true;
         this._showCloudShadows = false;
 
         /**
          * When <code>true</code>, a specular map (also called a gloss map) is used so only the ocean receives specular light.
-         * <div align="center">
-         * <table border="0" cellpadding="5"><tr>
-         * <td align="center"><code>true</code><br/><img src="../images/CentralBody.showSpecular.true.jpg" width="250" height="188" /></td>
-         * <td align="center"><code>false</code><br/><img src="../images/CentralBody.showSpecular.false.jpg" width="250" height="188" /></td>
+         * <div align='center'>
+         * <table border='0' cellpadding='5'><tr>
+         * <td align='center'><code>true</code><br/><img src='../images/CentralBody.showSpecular.true.jpg' width='250' height='188' /></td>
+         * <td align='center'><code>false</code><br/><img src='../images/CentralBody.showSpecular.false.jpg' width='250' height='188' /></td>
          * </tr></table>
          * </div>
          *
@@ -516,7 +531,7 @@ define([
          *
          * @example
          * cb.showSpecular = true;
-         * cb.specularMapSource = "specular.jpg";
+         * cb.specularMapSource = 'specular.jpg';
          */
         this.showSpecular = true;
         this._showSpecular = false;
@@ -525,10 +540,10 @@ define([
          * When <code>true</code>, a bump map is used to add lighting detail to the mountainous areas of the central body.
          * This gives the appearance of extra geometric complexity even though the central body is still a smooth ellipsoid.
          * The apparent steepness of the mountains is controlled by {@link CentralBody#bumpMapNormalZ}.
-         * <div align="center">
-         * <table border="0" cellpadding="5"><tr>
-         * <td align="center"><code>true</code><br/><img src="../images/CentralBody.showBumps.true.jpg" width="250" height="188" /></td>
-         * <td align="center"><code>false</code><br/><img src="../images/CentralBody.showBumps.false.jpg" width="250" height="188" /></td>
+         * <div align='center'>
+         * <table border='0' cellpadding='5'><tr>
+         * <td align='center'><code>true</code><br/><img src='../images/CentralBody.showBumps.true.jpg' width='250' height='188' /></td>
+         * <td align='center'><code>false</code><br/><img src='../images/CentralBody.showBumps.false.jpg' width='250' height='188' /></td>
          * </tr></table>
          * </div>
          *
@@ -539,15 +554,15 @@ define([
          *
          * @example
          * cb.showBumps = true;
-         * cb.bumpMapSource = "bump.jpg";
+         * cb.bumpMapSource = 'bump.jpg';
          */
         this.showBumps = true;
         this._showBumps = false;
 
         /**
          * When <code>true</code>, shows a line on the central body where day meets night.
-         * <div align="center">
-         * <img src="../images/CentralBody.showTerminator.jpg" width="400" height="300" />
+         * <div align='center'>
+         * <img src='../images/CentralBody.showTerminator.jpg' width='400' height='300' />
          * </div>
          *
          * @type {Boolean}
@@ -562,10 +577,10 @@ define([
          * When {@link CentralBody#showBumps} is <code>true</code>, <code>bumpMapNormalZ</code> controls the
          * apparent steepness of the mountains.  A value less than one over-exaggerates the steepness; a value greater
          * than one under-exaggerates, making mountains less noticeable.
-         * <div align="center">
-         * <table border="0" cellpadding="5"><tr>
-         * <td align="center"><code>0.25</code><br/><img src="../images/Centralbody.bumpMapNormalZ.025.jpg" width="250" height="188" /></td>
-         * <td align="center"><code>1.25</code><br/><img src="../images/Centralbody.bumpMapNormalZ.125.jpg" width="250" height="188" /></td>
+         * <div align='center'>
+         * <table border='0' cellpadding='5'><tr>
+         * <td align='center'><code>0.25</code><br/><img src='../images/Centralbody.bumpMapNormalZ.025.jpg' width='250' height='188' /></td>
+         * <td align='center'><code>1.25</code><br/><img src='../images/Centralbody.bumpMapNormalZ.125.jpg' width='250' height='188' /></td>
          * </tr></table>
          * </div>
          *
@@ -575,7 +590,7 @@ define([
          *
          * @example
          * cb.showBumps = true;
-         * cb.bumpMapSource = "bump.jpg";
+         * cb.bumpMapSource = 'bump.jpg';
          * cb.bumpMapNormalZ = 1.0;
          */
         this.bumpMapNormalZ = 0.5;
@@ -585,10 +600,10 @@ define([
          * <code>dayNightBlendDelta</code> determines the size of the blend region surrounding the terminator (where day
          * meets night).  A value of zero indicates a sharp transition without blending; a larger value creates a linearly
          * blended region based on the diffuse lighting component:  <code>-dayNightBlendDelta &lt; diffuse &lt; dayNightBlendDelta</code>.
-         * <div align="center">
-         * <table border="0" cellpadding="5"><tr>
-         * <td align="center"><code>0.0</code><br/><img src="../images/Centralbody.dayNightBlendDelta.0.jpg" width="250" height="188" /></td>
-         * <td align="center"><code>0.05</code><br/><img src="../images/Centralbody.dayNightBlendDelta.05.jpg" width="250" height="188" /></td>
+         * <div align='center'>
+         * <table border='0' cellpadding='5'><tr>
+         * <td align='center'><code>0.0</code><br/><img src='../images/Centralbody.dayNightBlendDelta.0.jpg' width='250' height='188' /></td>
+         * <td align='center'><code>0.05</code><br/><img src='../images/Centralbody.dayNightBlendDelta.05.jpg' width='250' height='188' /></td>
          * </tr></table>
          * </div>
          *
@@ -600,9 +615,9 @@ define([
          *
          * @example
          * cb.showDay = true;
-         * cb.dayImageSource = "day.jpg";
+         * cb.dayImageSource = 'day.jpg';
          * cb.showNight = true;
-         * cb.nightImageSource = "night.jpg";
+         * cb.nightImageSource = 'night.jpg';
          * cb.dayNightBlendDelta = 0.0;  // Sharp transition
          */
         this.dayNightBlendDelta = 0.05;
@@ -834,7 +849,7 @@ define([
         }
     };
 
-    CentralBody.prototype._cull = function(tile, occluder, sceneState) {
+    CentralBody.prototype._cull = function(tile, sceneState) {
         if (sceneState.mode === SceneMode.SCENE2D) {
             var bRect = tile.get2DBoundingRectangle(sceneState.scene2D.projection);
 
@@ -856,17 +871,18 @@ define([
 
         if (sceneState.mode === SceneMode.SCENE3D) {
             var occludeePoint = tile.getOccludeePoint();
+            var occluder = this._occluder;
             return (occludeePoint && !occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !occluder.isVisible(boundingVolume);
         }
 
         return false;
     };
 
-    CentralBody.prototype._throttleImages = function(occluder, sceneState) {
+    CentralBody.prototype._throttleImages = function(sceneState) {
         for ( var i = 0, len = this._imageQueue.length; i < len && i < this._imageThrottleLimit; ++i) {
             var tile = this._imageQueue.dequeue();
 
-            if (this._cull(tile, occluder, sceneState)) {
+            if (this._cull(tile, sceneState)) {
                 tile.state = TileState.READY;
                 continue;
             }
@@ -887,18 +903,18 @@ define([
     CentralBody.prototype._createBaseTile = function() {
         // Some tile servers, like Bing, don't have a base image for the entire central body.
         // Create a 1x1 image that will never get rendered.
-        var canvas = document.createElement("canvas");
+        var canvas = document.createElement('canvas');
         canvas.width = 1.0;
         canvas.height = 1.0;
 
         return canvas;
     };
 
-    CentralBody.prototype._throttleReprojection = function(occluder, sceneState) {
+    CentralBody.prototype._throttleReprojection = function(sceneState) {
         for ( var i = 0, len = this._reprojectQueue.length; i < len && i < this._reprojectThrottleLimit; ++i) {
             var tile = this._reprojectQueue.dequeue();
 
-            if (this._cull(tile, occluder, sceneState)) {
+            if (this._cull(tile, sceneState)) {
                 tile.image = undefined;
                 tile.state = TileState.READY;
                 continue;
@@ -910,11 +926,11 @@ define([
         }
     };
 
-    CentralBody.prototype._throttleTextures = function(context, occluder, sceneState) {
+    CentralBody.prototype._throttleTextures = function(context, sceneState) {
         for ( var i = 0, len = this._textureQueue.length; i < len && i < this._textureThrottleLimit; ++i) {
             var tile = this._textureQueue.dequeue();
 
-            if (this._cull(tile, occluder, sceneState) || !tile.image) {
+            if (this._cull(tile, sceneState) || !tile.image) {
                 tile.image = undefined;
                 tile.state = TileState.READY;
                 continue;
@@ -1153,7 +1169,7 @@ define([
 
     CentralBody.prototype._refine3D = function(tile, context, sceneState) {
         var provider = this._dayTileProvider;
-        if (typeof provider === "undefined") {
+        if (typeof provider === 'undefined') {
             return false;
         }
 
@@ -1165,7 +1181,7 @@ define([
         var cameraPosition = sceneState.camera.getPositionWC();
         var direction = sceneState.camera.getDirectionWC();
 
-        var texturePixelError = (this.pixelError3D !== "undefined" && this.pixelError3D > 0.0) ? this.pixelError3D : 1.0;
+        var texturePixelError = (this.pixelError3D !== 'undefined' && this.pixelError3D > 0.0) ? this.pixelError3D : 1.0;
         var dmin = this._minTileDistance(tile.zoom, texturePixelError);
 
         var toCenter = boundingVolume.center.subtract(cameraPosition);
@@ -1190,7 +1206,7 @@ define([
         var viewportWidth = viewport.width;
         var viewportHeight = viewport.height;
 
-        if (typeof provider === "undefined") {
+        if (typeof provider === 'undefined') {
             return false;
         }
 
@@ -1204,7 +1220,7 @@ define([
         if (tile.texture && !tile.texture.isDestroyed()) {
             tileWidth = tile.texture.getWidth();
             tileHeight = tile.texture.getHeight();
-        } else if (tile.image && typeof tile.image.width !== "undefined") {
+        } else if (tile.image && typeof tile.image.width !== 'undefined') {
             tileWidth = tile.image.width;
             tileHeight = tile.image.height;
         } else {
@@ -1277,7 +1293,7 @@ define([
         var eUnit = Cartesian3.UNIT_Z.cross(q).normalize();
         var nUnit = qUnit.cross(eUnit).normalize();
 
-        // Determine the radius of the "limb" of the ellipsoid.
+        // Determine the radius of the 'limb' of the ellipsoid.
         var wMagnitude = Math.sqrt(q.magnitudeSquared() - 1.0);
 
         // Compute the center and offsets.
@@ -1326,7 +1342,7 @@ define([
                 halfHeight * 2.0);
     };
 
-    CentralBody.prototype._fillPoles = function(context, occluder, sceneState) {
+    CentralBody.prototype._fillPoles = function(context, sceneState) {
         if (typeof this._dayTileProvider === 'undefined' || sceneState.mode !== SceneMode.SCENE3D) {
             return;
         }
@@ -1344,6 +1360,7 @@ define([
         var mesh;
         var rect;
         var positions;
+        var occluder = this._occluder;
 
         // handle north pole
         if (this._dayTileProvider.maxExtent.north < CesiumMath.PI_OVER_TWO) {
@@ -1560,7 +1577,7 @@ define([
 
             // create viewport quad for vertical gaussian blur pass
             this._quadV = new ViewportQuad(new Rectangle(0.0, 0.0, width, height));
-            this._quadV.vertexShader = "#define VERTICAL 1\n" + CentralBodyVSFilter;
+            this._quadV.vertexShader = '#define VERTICAL 1\n' + CentralBodyVSFilter;
             this._quadV.fragmentShader = CentralBodyFSFilter;
             this._quadV.uniforms.u_height = function() {
                 return height;
@@ -1606,17 +1623,17 @@ define([
                 bufferUsage : BufferUsage.STATIC_DRAW
             });
 
-            vs = "#define SKY_FROM_SPACE \n" +
-                 "#line 0 \n" +
+            vs = '#define SKY_FROM_SPACE \n' +
+                 '#line 0 \n' +
                  SkyAtmosphereVS;
 
-            fs = "#line 0\n" +
+            fs = '#line 0\n' +
                  SkyAtmosphereFS;
 
             this._spSkyFromSpace = context.getShaderCache().getShaderProgram(vs, fs);
 
-            vs = "#define SKY_FROM_ATMOSPHERE" +
-                 "#line 0 \n" +
+            vs = '#define SKY_FROM_ATMOSPHERE' +
+                 '#line 0 \n' +
                  SkyAtmosphereVS;
 
             this._spSkyFromAtmosphere = context.getShaderCache().getShaderProgram(vs, fs);
@@ -1719,7 +1736,7 @@ define([
         if (!this._spDepth) {
             this._spDepth = context.getShaderCache().getShaderProgram(
                     CentralBodyVSDepth,
-                    "#line 0\n" +
+                    '#line 0\n' +
                     CentralBodyFSDepth, {
                         position : 0
                     });
@@ -1750,7 +1767,7 @@ define([
                 });
             };
             nightImage.onerror = function() {
-                that._exception = "Could not load image: " + this.src + ".";
+                that._exception = 'Could not load image: ' + this.src + '.';
             };
             nightImage.src = this.nightImageSource;
         }
@@ -1767,7 +1784,7 @@ define([
                 });
             };
             specularImage.onerror = function() {
-                that._exception = "Could not load image: " + this.src + ".";
+                that._exception = 'Could not load image: ' + this.src + '.';
             };
             specularImage.src = this.specularMapSource;
         }
@@ -1784,7 +1801,7 @@ define([
                 });
             };
             cloudsImage.onerror = function() {
-                that._exception = "Could not load image: " + this.src + ".";
+                that._exception = 'Could not load image: ' + this.src + '.';
             };
             cloudsImage.src = this.cloudsMapSource;
         }
@@ -1801,7 +1818,7 @@ define([
                 });
             };
             bumpImage.onerror = function() {
-                that._exception = "Could not load image: " + this.src + ".";
+                that._exception = 'Could not load image: ' + this.src + '.';
             };
             bumpImage.src = this.bumpMapSource;
         }
@@ -1816,23 +1833,24 @@ define([
 
         if (typeof this._sp === 'undefined' || typeof this._spPoles === 'undefined' ||
             (dayChanged || nightChanged || cloudsChanged || cloudShadowsChanged || specularChanged || bumpsChanged) ||
-            (this._showTerminator !== this.showTerminator)) {
+            (this._showTerminator !== this.showTerminator) ||
+            (this._affectedByLighting !== this.affectedByLighting)) {
 
-            var fsPrepend = ((this.showDay && this._dayTileProvider) ? "#define SHOW_DAY 1\n" : "") +
-                ((this.showNight && this._nightTexture) ? "#define SHOW_NIGHT 1\n" : "") +
-                ((this.showClouds && this._cloudsTexture) ? "#define SHOW_CLOUDS 1\n" : "") +
-                ((this.showCloudShadows && this._cloudsTexture) ? "#define SHOW_CLOUD_SHADOWS 1\n" : "") +
-                ((this.showSpecular && this._specularTexture) ? "#define SHOW_SPECULAR 1\n" : "") +
-                ((this.showBumps && this._bumpTexture) ? "#define SHOW_BUMPS 1\n" : "") +
-                (this.showTerminator ? "#define SHOW_TERMINATOR 1\n" : "") +
-                "#line 0\n" +
+            var fsPrepend = ((this.showDay && this._dayTileProvider) ? '#define SHOW_DAY 1\n' : '') +
+                ((this.showNight && this._nightTexture) ? '#define SHOW_NIGHT 1\n' : '') +
+                ((this.showClouds && this._cloudsTexture) ? '#define SHOW_CLOUDS 1\n' : '') +
+                ((this.showCloudShadows && this._cloudsTexture) ? '#define SHOW_CLOUD_SHADOWS 1\n' : '') +
+                ((this.showSpecular && this._specularTexture) ? '#define SHOW_SPECULAR 1\n' : '') +
+                ((this.showBumps && this._bumpTexture) ? '#define SHOW_BUMPS 1\n' : '') +
+                (this.showTerminator ? '#define SHOW_TERMINATOR 1\n' : '') +
+                '#line 0\n' +
                 CentralBodyFSCommon;
-            var groundFromSpacePrepend = "#define SHOW_GROUND_ATMOSPHERE 1\n" +
-                "#define SHOW_GROUND_ATMOSPHERE_FROM_SPACE 1\n";
-            var groundFromAtmospherePrepend = "#define SHOW_GROUND_ATMOSPHERE 1\n" +
-                "#define SHOW_GROUND_ATMOSPHERE_FROM_ATMOSPHERE 1\n";
+            var groundFromSpacePrepend = '#define SHOW_GROUND_ATMOSPHERE 1\n' +
+                '#define SHOW_GROUND_ATMOSPHERE_FROM_SPACE 1\n';
+            var groundFromAtmospherePrepend = '#define SHOW_GROUND_ATMOSPHERE 1\n' +
+                '#define SHOW_GROUND_ATMOSPHERE_FROM_ATMOSPHERE 1\n';
 
-            vs = "#line 0\n" +
+            vs = '#line 0\n' +
                  GroundAtmosphere +
                  CentralBodyVS;
 
@@ -1877,6 +1895,7 @@ define([
             this._showSpecular = specularChanged ? this.showSpecular : this._showSpecular;
             this._showBumps = bumpsChanged ? this.showBumps : this._showBumps;
             this._showTerminator = this.showTerminator;
+            this._affectedByLighting = this.affectedByLighting;
         }
 
         var camera = sceneState.camera;
@@ -1908,20 +1927,20 @@ define([
             this._spSky = this._spSkyFromAtmosphere;
         }
 
-        var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, this._ellipsoid.getMinimumRadius()), cameraPosition);
+        this._occluder.setCameraPosition(cameraPosition);
 
         // TODO: refactor
-        this._fillPoles(context, occluder, sceneState);
+        this._fillPoles(context, sceneState);
 
-        this._throttleImages(occluder, sceneState);
-        this._throttleReprojection(occluder, sceneState);
-        this._throttleTextures(context, occluder, sceneState);
+        this._throttleImages(sceneState);
+        this._throttleReprojection(sceneState);
+        this._throttleTextures(context, sceneState);
 
         var stack = [this._rootTile];
         while (stack.length !== 0) {
             var tile = stack.pop();
 
-            if (this._cull(tile, occluder, sceneState)) {
+            if (this._cull(tile, sceneState)) {
                 continue;
             }
 
