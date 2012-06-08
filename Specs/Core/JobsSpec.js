@@ -8,16 +8,16 @@ defineSuite([
     "use strict";
     /*global it,expect,waitsFor,runs*/
 
-    it("downloads an image", function() {
+    it('downloads an image', function() {
         var image;
 
-        Chain.run(Jobs.downloadImage("./Data/Images/Green.png")).thenRun(function() {
-            image = this.images["./Data/Images/Green.png"];
+        Chain.run(Jobs.downloadImage('./Data/Images/Green.png')).thenRun(function() {
+            image = this.images['./Data/Images/Green.png'];
         });
 
         waitsFor(function() {
             return image;
-        }, "downloads an image.", 3000);
+        }, 'downloads an image.', 3000);
 
         runs(function() {
             expect(image.width).toEqual(1);

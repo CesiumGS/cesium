@@ -27,11 +27,11 @@ define([
      */
     function Ellipsoid(radii) {
         if (arguments.length === 0) {
-            throw new DeveloperError("radii is required.");
+            throw new DeveloperError('radii is required.');
         }
 
         if (radii.x < 0 || radii.y < 0 || radii.z < 0) {
-            throw new DeveloperError("All radii components must be greater than or equal to zero.");
+            throw new DeveloperError('All radii components must be greater than or equal to zero.');
         }
 
         radii = Cartesian3.clone(radii);

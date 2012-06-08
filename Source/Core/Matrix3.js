@@ -162,7 +162,7 @@ define([
      */
     Matrix3.prototype.getColumnMajorValue = function(index) {
         if (index < 0 || index > 8) {
-            throw new DeveloperError("index must be between 0 and 8.");
+            throw new DeveloperError('index must be between 0 and 8.');
         }
 
         return this.values[index];
@@ -462,7 +462,7 @@ define([
                         columnMajorValues[2], columnMajorValues[5], columnMajorValues[8]);
             }
 
-            throw new DeveloperError("columnMajorValues must have 9 elements.");
+            throw new DeveloperError('columnMajorValues must have 9 elements.');
         }
         return new Matrix3();
     };
@@ -648,9 +648,9 @@ define([
      * @return {String} Returns a string representing this instance.
      */
     Matrix3.prototype.toString = function() {
-        return "(" + this.getColumn0Row0() + ", " + this.getColumn1Row0() + ", " + this.getColumn2Row0() + ")\n" +
-               "(" + this.getColumn0Row1() + ", " + this.getColumn1Row1() + ", " + this.getColumn2Row1() + ")\n" +
-               "(" + this.getColumn0Row2() + ", " + this.getColumn1Row2() + ", " + this.getColumn2Row2() + ")";
+        return '(' + this.getColumn0Row0() + ', ' + this.getColumn1Row0() + ', ' + this.getColumn2Row0() + ')\n' +
+               '(' + this.getColumn0Row1() + ', ' + this.getColumn1Row1() + ', ' + this.getColumn2Row1() + ')\n' +
+               '(' + this.getColumn0Row2() + ', ' + this.getColumn1Row2() + ', ' + this.getColumn2Row2() + ')';
     };
 
     /**

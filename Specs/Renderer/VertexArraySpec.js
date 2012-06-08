@@ -5,7 +5,7 @@ defineSuite([
          'Core/ComponentDatatype',
          'Core/PrimitiveType',
          'Renderer/BufferUsage'
-     ], "Renderer/VertexArray", function(
+     ], 'Renderer/VertexArray', function(
          createContext,
          destroyContext,
          ComponentDatatype,
@@ -24,7 +24,7 @@ defineSuite([
         destroyContext(context);
     });
 
-    it("binds", function() {
+    it('binds', function() {
         var positionBuffer = context.createVertexBuffer(3, BufferUsage.STATIC_DRAW);
 
         var attributes = [{
@@ -44,7 +44,7 @@ defineSuite([
         va = va.destroy();
     });
 
-    it("binds with default values", function() {
+    it('binds with default values', function() {
         var positionBuffer = context.createVertexBuffer(3, BufferUsage.STATIC_DRAW);
 
         var attributes = [{
@@ -67,7 +67,7 @@ defineSuite([
         va = va.destroy();
     });
 
-    it("binds with multiple buffers", function() {
+    it('binds with multiple buffers', function() {
         var attributeSize = 3 * Float32Array.BYTES_PER_ELEMENT;
         var positionBuffer = context.createVertexBuffer(attributeSize, BufferUsage.STATIC_DRAW);
         var normalBuffer = context.createVertexBuffer(attributeSize, BufferUsage.STATIC_DRAW);
@@ -90,7 +90,7 @@ defineSuite([
         va = va.destroy();
     });
 
-    it("binds with interleaved buffer", function() {
+    it('binds with interleaved buffer', function() {
         var attributeSize = 3 * Float32Array.BYTES_PER_ELEMENT;
         var buffer = context.createVertexBuffer(attributeSize, BufferUsage.STATIC_DRAW);
 
@@ -115,7 +115,7 @@ defineSuite([
         va = va.destroy();
     });
 
-    it("adds attributes", function() {
+    it('adds attributes', function() {
         var positionBuffer = context.createVertexBuffer(3, BufferUsage.STATIC_DRAW);
 
         var va = context.createVertexArray();
@@ -137,7 +137,7 @@ defineSuite([
         va = va.destroy();
     });
 
-    it("modifies attributes", function() {
+    it('modifies attributes', function() {
         var buffer = context.createVertexBuffer(6, BufferUsage.STATIC_DRAW);
 
         var attributes = [{
@@ -155,7 +155,7 @@ defineSuite([
         va = va.destroy();
     });
 
-    it("removes attributes", function() {
+    it('removes attributes', function() {
         var buffer = context.createVertexBuffer(3, BufferUsage.STATIC_DRAW);
 
         var va = context.createVertexArray();
@@ -199,18 +199,18 @@ defineSuite([
         })).toEqual(false);
     });
 
-    it("renders with a one-component constant value", function() {
+    it('renders with a one-component constant value', function() {
         var vs =
-            "attribute float attr;" +
-            "varying vec4 v_color;" +
-            "void main() { " +
-            "  v_color = vec4(attr == 0.5);" +
-            "  gl_PointSize = 1.0;" +
-            "  gl_Position = vec4(0.0, 0.0, 0.0, 1.0);" +
-            "}";
+            'attribute float attr;' +
+            'varying vec4 v_color;' +
+            'void main() { ' +
+            '  v_color = vec4(attr == 0.5);' +
+            '  gl_PointSize = 1.0;' +
+            '  gl_Position = vec4(0.0, 0.0, 0.0, 1.0);' +
+            '}';
         var fs =
-            "varying vec4 v_color;" +
-            "void main() { gl_FragColor = v_color; }";
+            'varying vec4 v_color;' +
+            'void main() { gl_FragColor = v_color; }';
         var sp = context.createShaderProgram(vs, fs, {
             position : 0
         });
@@ -233,18 +233,18 @@ defineSuite([
         va = va.destroy();
     });
 
-    it("renders with a two-component constant value", function() {
+    it('renders with a two-component constant value', function() {
         var vs =
-            "attribute vec2 attr;" +
-            "varying vec4 v_color;" +
-            "void main() { " +
-            "  v_color = vec4(attr == vec2(0.25, 0.75));" +
-            "  gl_PointSize = 1.0;" +
-            "  gl_Position = vec4(0.0, 0.0, 0.0, 1.0);" +
-            "}";
+            'attribute vec2 attr;' +
+            'varying vec4 v_color;' +
+            'void main() { ' +
+            '  v_color = vec4(attr == vec2(0.25, 0.75));' +
+            '  gl_PointSize = 1.0;' +
+            '  gl_Position = vec4(0.0, 0.0, 0.0, 1.0);' +
+            '}';
         var fs =
-            "varying vec4 v_color;" +
-            "void main() { gl_FragColor = v_color; }";
+            'varying vec4 v_color;' +
+            'void main() { gl_FragColor = v_color; }';
         var sp = context.createShaderProgram(vs, fs, {
             position : 0
         });
@@ -267,18 +267,18 @@ defineSuite([
         va = va.destroy();
     });
 
-    it("renders with a three-component constant value", function() {
+    it('renders with a three-component constant value', function() {
         var vs =
-            "attribute vec3 attr;" +
-            "varying vec4 v_color;" +
-            "void main() { " +
-            "  v_color = vec4(attr == vec3(0.25, 0.5, 0.75));" +
-            "  gl_PointSize = 1.0;" +
-            "  gl_Position = vec4(0.0, 0.0, 0.0, 1.0);" +
-            "}";
+            'attribute vec3 attr;' +
+            'varying vec4 v_color;' +
+            'void main() { ' +
+            '  v_color = vec4(attr == vec3(0.25, 0.5, 0.75));' +
+            '  gl_PointSize = 1.0;' +
+            '  gl_Position = vec4(0.0, 0.0, 0.0, 1.0);' +
+            '}';
         var fs =
-            "varying vec4 v_color;" +
-            "void main() { gl_FragColor = v_color; }";
+            'varying vec4 v_color;' +
+            'void main() { gl_FragColor = v_color; }';
         var sp = context.createShaderProgram(vs, fs, {
             position : 0
         });
@@ -301,18 +301,18 @@ defineSuite([
         va = va.destroy();
     });
 
-    it("renders with a four-component constant value", function() {
+    it('renders with a four-component constant value', function() {
         var vs =
-            "attribute vec4 attr;" +
-            "varying vec4 v_color;" +
-            "void main() { " +
-            "  v_color = vec4(attr == vec4(0.2, 0.4, 0.6, 0.8));" +
-            "  gl_PointSize = 1.0;" +
-            "  gl_Position = vec4(0.0, 0.0, 0.0, 1.0);" +
-            "}";
+            'attribute vec4 attr;' +
+            'varying vec4 v_color;' +
+            'void main() { ' +
+            '  v_color = vec4(attr == vec4(0.2, 0.4, 0.6, 0.8));' +
+            '  gl_PointSize = 1.0;' +
+            '  gl_Position = vec4(0.0, 0.0, 0.0, 1.0);' +
+            '}';
         var fs =
-            "varying vec4 v_color;" +
-            "void main() { gl_FragColor = v_color; }";
+            'varying vec4 v_color;' +
+            'void main() { gl_FragColor = v_color; }';
         var sp = context.createShaderProgram(vs, fs, {
             position : 0
         });
@@ -335,14 +335,14 @@ defineSuite([
         va = va.destroy();
     });
 
-    it("destroys", function() {
+    it('destroys', function() {
         var va = context.createVertexArray({});
         expect(va.isDestroyed()).toEqual(false);
         va.destroy();
         expect(va.isDestroyed()).toEqual(true);
     });
 
-    it("fails to create (missing vertexBuffer and value)", function() {
+    it('fails to create (missing vertexBuffer and value)', function() {
         var attributes = [{
             componentsPerAttribute : 3
         }];
@@ -352,7 +352,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("fails to create (provides both vertexBuffer and value)", function() {
+    it('fails to create (provides both vertexBuffer and value)', function() {
         var buffer = context.createVertexBuffer(3, BufferUsage.STATIC_DRAW);
 
         var attributes = [{
@@ -366,7 +366,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("fails to create with duplicate indices", function() {
+    it('fails to create with duplicate indices', function() {
         var buffer = context.createVertexBuffer(1, BufferUsage.STATIC_DRAW);
 
         var attributes = [{
@@ -384,7 +384,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("fails to create (componentsPerAttribute missing)", function() {
+    it('fails to create (componentsPerAttribute missing)', function() {
         var buffer = context.createVertexBuffer(3, BufferUsage.STATIC_DRAW);
 
         var attributes = [{
@@ -396,7 +396,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("fails to create (componentsPerAttribute < 1)", function() {
+    it('fails to create (componentsPerAttribute < 1)', function() {
         var attributes = [{
             componentsPerAttribute : 0
         }];
@@ -406,7 +406,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("fails to create (componentsPerAttribute > 4)", function() {
+    it('fails to create (componentsPerAttribute > 4)', function() {
         var attributes = [{
             componentsPerAttribute : 5
         }];
@@ -416,7 +416,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("fails to create (value.length < 1)", function() {
+    it('fails to create (value.length < 1)', function() {
         var attributes = [{
             value : []
         }];
@@ -426,7 +426,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("fails to create (value.length > 4)", function() {
+    it('fails to create (value.length > 4)', function() {
         var attributes = [{
             value : [1.0, 2.0, 3.0, 4.0, 5.0]
         }];
@@ -436,13 +436,13 @@ defineSuite([
         }).toThrow();
     });
 
-    it("fails to create (componentDatatype)", function() {
+    it('fails to create (componentDatatype)', function() {
         var buffer = context.createVertexBuffer(3, BufferUsage.STATIC_DRAW);
 
         var attributes = [{
             vertexBuffer : buffer,
             componentsPerAttribute : 3,
-            componentDatatype : "invalid component datatype"
+            componentDatatype : 'invalid component datatype'
         }];
 
         expect(function() {
@@ -450,7 +450,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("fails to create (strideInBytes)", function() {
+    it('fails to create (strideInBytes)', function() {
         var buffer = context.createVertexBuffer(3, BufferUsage.STATIC_DRAW);
 
         var attributes = [{
@@ -464,7 +464,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("fails to get attribute", function() {
+    it('fails to get attribute', function() {
         var va = context.createVertexArray();
 
         expect(function() {
@@ -472,7 +472,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("fails to add attribute with duplicate index", function() {
+    it('fails to add attribute with duplicate index', function() {
         var buffer = context.createVertexBuffer(3, BufferUsage.STATIC_DRAW);
 
         var va = context.createVertexArray();
@@ -491,7 +491,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("fails to add attribute without vertex buffer", function() {
+    it('fails to add attribute without vertex buffer', function() {
         var va = context.createVertexArray();
 
         expect(function() {
@@ -499,7 +499,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("fails to remove attribute without an index", function() {
+    it('fails to remove attribute without an index', function() {
         var va = context.createVertexArray();
 
         expect(function() {
@@ -507,7 +507,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("fails to destroy", function() {
+    it('fails to destroy', function() {
         var va = context.createVertexArray();
         va.destroy();
 

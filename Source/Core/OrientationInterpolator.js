@@ -26,7 +26,7 @@ define([
      */
     function OrientationInterpolator(controlPoints) {
         if (!controlPoints || !(controlPoints instanceof Array) || controlPoints.length < 2) {
-            throw new DeveloperError("controlPoints is required. It must be an array with at least a length of 3.");
+            throw new DeveloperError('controlPoints is required. It must be an array with at least a length of 3.');
         }
 
         this._points = controlPoints;
@@ -91,12 +91,12 @@ define([
      * @return {Quaternion} The orientation at the given <code>time</code>.
      */
     OrientationInterpolator.prototype.evaluate = function(time) {
-        if (typeof time === "undefined") {
-            throw new DeveloperError("time is required.");
+        if (typeof time === 'undefined') {
+            throw new DeveloperError('time is required.');
         }
 
         if (time < this._points[0].time || time > this._points[this._points.length - 1].time) {
-            throw new DeveloperError("time is out of range.");
+            throw new DeveloperError('time is out of range.');
         }
 
         var i = this._findIndex(time);

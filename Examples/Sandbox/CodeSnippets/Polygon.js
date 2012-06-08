@@ -153,7 +153,7 @@
                     tRepeat : 1
                 });
             };
-            image.src = "../../Images/Cesium_Logo_Color.jpg";
+            image.src = '../../Images/Cesium_Logo_Color.jpg';
 
             primitives.add(polygon);
         };
@@ -249,7 +249,7 @@
             });
             primitives.add(polygon);
 
-            scene.getAnimations().addProperty(polygon, "erosion", 0.0, 1.0);
+            scene.getAnimations().addProperty(polygon, 'erosion', 0.0, 1.0);
         };
     };
 
@@ -287,7 +287,7 @@
             });
             primitives.add(polygon);
 
-            scene.getAnimations().addProperty(polygon, "height", 2000000.0, 0.0);
+            scene.getAnimations().addProperty(polygon, 'height', 2000000.0, 0.0);
         };
     };
 

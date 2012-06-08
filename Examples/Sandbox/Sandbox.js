@@ -7,14 +7,14 @@ var Sandbox = Sandbox || {};
      * @constructor
      */
     Cesium.Sandbox = function() {
-        var canvas = document.getElementById("glCanvas");
+        var canvas = document.getElementById('glCanvas');
         var scene = new Cesium.Scene(canvas);
         var primitives = scene.getPrimitives();
         var ellipsoid = Cesium.Ellipsoid.WGS84;
 
         // TODO: make multiple tile providers available
         var bing = new Cesium.BingMapsTileProvider({
-            server : "dev.virtualearth.net",
+            server : 'dev.virtualearth.net',
             mapStyle : Cesium.BingMapsStyle.AERIAL,
             // Some versions of Safari support WebGL, but don't correctly implement
             // cross-origin image loading, so we need to load Bing imagery using a proxy.
@@ -23,10 +23,10 @@ var Sandbox = Sandbox || {};
 
         var cb = new Cesium.CentralBody(ellipsoid);
         cb.dayTileProvider = bing;
-        cb.nightImageSource = "Images/land_ocean_ice_lights_2048.jpg";
-        cb.specularMapSource = "Images/earthspec1k.jpg";
-        cb.cloudsMapSource = "Images/earthcloudmaptrans.jpg";
-        cb.bumpMapSource = "Images/earthbump1k.jpg";
+        cb.nightImageSource = 'Images/land_ocean_ice_lights_2048.jpg';
+        cb.specularMapSource = 'Images/earthspec1k.jpg';
+        cb.cloudsMapSource = 'Images/earthcloudmaptrans.jpg';
+        cb.bumpMapSource = 'Images/earthbump1k.jpg';
         cb.showSkyAtmosphere = true;
         cb.showGroundAtmosphere = true;
 

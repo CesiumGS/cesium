@@ -38,8 +38,8 @@ defineSuite([
     };
 
     MockDoc.prototype.addEventListener = function(name, callback, bubble) {
-        if (name === "DOMMouseScroll") {
-            name = "mousewheel";
+        if (name === 'DOMMouseScroll') {
+            name = 'mousewheel';
         }
 
         if (this._callbacks[name]) {
@@ -48,8 +48,8 @@ defineSuite([
     };
 
     MockDoc.prototype.removeEventListener = function(name, callback) {
-        if (name === "DOMMouseScroll") {
-            name = "mousewheel";
+        if (name === 'DOMMouseScroll') {
+            name = 'mousewheel';
         }
 
         var callbacks = this._callbacks[name];
@@ -105,57 +105,57 @@ defineSuite([
         handler = !handler.isDestroyed() && handler.destroy();
     });
 
-    it("setting key events require an action", function() {
+    it('setting key events require an action', function() {
         expect(function() {
             handler.setKeyAction();
         }).toThrow();
     });
 
-    it("setting key events require a key", function() {
+    it('setting key events require a key', function() {
         expect(function() {
             handler.setKeyAction(function() {
             });
         }).toThrow();
     });
 
-    it("getting key events require a key", function() {
+    it('getting key events require a key', function() {
         expect(function() {
             handler.getKeyAction();
         }).toThrow();
     });
 
-    it("removing key events require a key", function() {
+    it('removing key events require a key', function() {
         expect(function() {
             handler.removeKeyAction();
         }).toThrow();
     });
 
-    it("setting mouse events require an action", function() {
+    it('setting mouse events require an action', function() {
         expect(function() {
             handler.setMouseAction();
         }).toThrow();
     });
 
-    it("setting mouse events require a type", function() {
+    it('setting mouse events require a type', function() {
         expect(function() {
             handler.setMouseAction(function() {
             });
         }).toThrow();
     });
 
-    it("getting mouse events require a type", function() {
+    it('getting mouse events require a type', function() {
         expect(function() {
             handler.getMouseAction();
         }).toThrow();
     });
 
-    it("removing mouse events require a type", function() {
+    it('removing mouse events require a type', function() {
         expect(function() {
             handler.removeMouseAction();
         }).toThrow();
     });
 
-    it("key events", function() {
+    it('key events', function() {
         var keyPressed = false;
 
         var keyPressedFunction = function() {
@@ -163,7 +163,7 @@ defineSuite([
         };
 
         handler.setKeyAction(keyPressedFunction, 'a');
-        element.fireEvents("keydown", {
+        element.fireEvents('keydown', {
             keyCode : 'a'.charCodeAt(0)
         });
         expect(keyPressed).toEqual(true);
@@ -171,14 +171,14 @@ defineSuite([
         expect(handler.getKeyAction('a') === keyPressedFunction).toEqual(true);
 
         handler.removeKeyAction('a');
-        element.fireEvents("keyDown", {
+        element.fireEvents('keyDown', {
             keyCode : 'a'.charCodeAt(0)
         });
 
         expect(keyPressed).toEqual(true);
     });
 
-    it("modified key events", function() {
+    it('modified key events', function() {
         var modifiedKeyPressed = false;
 
         var modfiedKeyPressedFunction = function() {
@@ -186,7 +186,7 @@ defineSuite([
         };
 
         handler.setKeyAction(modfiedKeyPressedFunction, 'b', EventModifier.CTRL);
-        element.fireEvents("keydown", {
+        element.fireEvents('keydown', {
             keyCode : 'b'.charCodeAt(0),
             ctrlKey : true
         });
@@ -195,7 +195,7 @@ defineSuite([
         expect(handler.getKeyAction('b', EventModifier.CTRL) === modfiedKeyPressedFunction).toEqual(true);
 
         handler.removeKeyAction('b', EventModifier.CTRL);
-        element.fireEvents("keyDown", {
+        element.fireEvents('keyDown', {
             keyCode : 'b'.charCodeAt(0),
             ctrlKey : true
         });
@@ -203,7 +203,7 @@ defineSuite([
         expect(modifiedKeyPressed).toEqual(true);
     });
 
-    it("mouse right down", function() {
+    it('mouse right down', function() {
         var actualCoords = new Cartesian2(0, 0);
         var expectedCoords = new Cartesian2(1, 1);
 
@@ -212,7 +212,7 @@ defineSuite([
         };
 
         handler.setMouseAction(mouseDown, MouseEventType.RIGHT_DOWN);
-        element.fireEvents("mousedown", {
+        element.fireEvents('mousedown', {
             button : 2,
             clientX : 1,
             clientY : 1
@@ -222,7 +222,7 @@ defineSuite([
         expect(handler.getMouseAction(MouseEventType.RIGHT_DOWN) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.RIGHT_DOWN);
-        element.fireEvents("mousedown", {
+        element.fireEvents('mousedown', {
             button : 2,
             clientX : 2,
             clientY : 2
@@ -231,7 +231,7 @@ defineSuite([
         expect(actualCoords).toEqual(expectedCoords);
     });
 
-    it("mouse right up", function() {
+    it('mouse right up', function() {
         var actualCoords = new Cartesian2(0, 0);
         var expectedCoords = new Cartesian2(1, 1);
 
@@ -240,7 +240,7 @@ defineSuite([
         };
 
         handler.setMouseAction(mouseDown, MouseEventType.RIGHT_UP);
-        element.fireEvents("mouseup", {
+        element.fireEvents('mouseup', {
             button : 2,
             clientX : 1,
             clientY : 1
@@ -250,7 +250,7 @@ defineSuite([
         expect(handler.getMouseAction(MouseEventType.RIGHT_UP) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.RIGHT_UP);
-        element.fireEvents("mousedown", {
+        element.fireEvents('mousedown', {
             button : 2,
             clientX : 2,
             clientY : 2
@@ -259,7 +259,7 @@ defineSuite([
         expect(actualCoords).toEqual(expectedCoords);
     });
 
-    it("mouse right click", function() {
+    it('mouse right click', function() {
         var actualCoords = new Cartesian2(0, 0);
         var expectedCoords = new Cartesian2(1, 1);
 
@@ -268,12 +268,12 @@ defineSuite([
         };
 
         handler.setMouseAction(mouseDown, MouseEventType.RIGHT_CLICK);
-        element.fireEvents("mousedown", {
+        element.fireEvents('mousedown', {
             button : 2,
             clientX : 1,
             clientY : 1
         });
-        element.fireEvents("mouseup", {
+        element.fireEvents('mouseup', {
             button : 2,
             clientX : 1,
             clientY : 1
@@ -283,12 +283,12 @@ defineSuite([
         expect(handler.getMouseAction(MouseEventType.RIGHT_CLICK) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.RIGHT_CLICK);
-        element.fireEvents("mousedown", {
+        element.fireEvents('mousedown', {
             button : 2,
             clientX : 2,
             clientY : 2
         });
-        element.fireEvents("mouseup", {
+        element.fireEvents('mouseup', {
             button : 2,
             clientX : 2,
             clientY : 2
@@ -297,7 +297,7 @@ defineSuite([
         expect(actualCoords).toEqual(expectedCoords);
     });
 
-    it("mouse left down", function() {
+    it('mouse left down', function() {
         var actualCoords = new Cartesian2(0, 0);
         var expectedCoords = new Cartesian2(1, 1);
 
@@ -306,7 +306,7 @@ defineSuite([
         };
 
         handler.setMouseAction(mouseDown, MouseEventType.LEFT_DOWN);
-        element.fireEvents("mousedown", {
+        element.fireEvents('mousedown', {
             button : 0,
             clientX : 1,
             clientY : 1
@@ -316,7 +316,7 @@ defineSuite([
         expect(handler.getMouseAction(MouseEventType.LEFT_DOWN) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.LEFT_DOWN);
-        element.fireEvents("mousedown", {
+        element.fireEvents('mousedown', {
             button : 0,
             clientX : 2,
             clientY : 2
@@ -325,7 +325,7 @@ defineSuite([
         expect(actualCoords).toEqual(expectedCoords);
     });
 
-    it("mouse left up", function() {
+    it('mouse left up', function() {
         var actualCoords = new Cartesian2(0, 0);
         var expectedCoords = new Cartesian2(1, 1);
 
@@ -334,7 +334,7 @@ defineSuite([
         };
 
         handler.setMouseAction(mouseDown, MouseEventType.LEFT_UP);
-        element.fireEvents("mouseup", {
+        element.fireEvents('mouseup', {
             button : 0,
             clientX : 1,
             clientY : 1
@@ -344,7 +344,7 @@ defineSuite([
         expect(handler.getMouseAction(MouseEventType.LEFT_UP) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.LEFT_UP);
-        element.fireEvents("mousedown", {
+        element.fireEvents('mousedown', {
             button : 0,
             clientX : 2,
             clientY : 2
@@ -353,7 +353,7 @@ defineSuite([
         expect(actualCoords).toEqual(expectedCoords);
     });
 
-    it("mouse left click", function() {
+    it('mouse left click', function() {
         var actualCoords = new Cartesian2(0, 0);
         var expectedCoords = new Cartesian2(1, 1);
 
@@ -362,12 +362,12 @@ defineSuite([
         };
 
         handler.setMouseAction(mouseDown, MouseEventType.LEFT_CLICK);
-        element.fireEvents("mousedown", {
+        element.fireEvents('mousedown', {
             button : 0,
             clientX : 1,
             clientY : 1
         });
-        element.fireEvents("mouseup", {
+        element.fireEvents('mouseup', {
             button : 0,
             clientX : 1,
             clientY : 1
@@ -377,12 +377,12 @@ defineSuite([
         expect(handler.getMouseAction(MouseEventType.LEFT_CLICK) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.LEFT_CLICK);
-        element.fireEvents("mousedown", {
+        element.fireEvents('mousedown', {
             button : 0,
             clientX : 2,
             clientY : 2
         });
-        element.fireEvents("mouseup", {
+        element.fireEvents('mouseup', {
             button : 0,
             clientX : 2,
             clientY : 2
@@ -391,7 +391,7 @@ defineSuite([
         expect(actualCoords).toEqual(expectedCoords);
     });
 
-    it("mouse middle down", function() {
+    it('mouse middle down', function() {
         var actualCoords = new Cartesian2(0, 0);
         var expectedCoords = new Cartesian2(1, 1);
 
@@ -400,7 +400,7 @@ defineSuite([
         };
 
         handler.setMouseAction(mouseDown, MouseEventType.MIDDLE_DOWN);
-        element.fireEvents("mousedown", {
+        element.fireEvents('mousedown', {
             button : 1,
             clientX : 1,
             clientY : 1
@@ -410,7 +410,7 @@ defineSuite([
         expect(handler.getMouseAction(MouseEventType.MIDDLE_DOWN) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.MIDDLE_DOWN);
-        element.fireEvents("mousedown", {
+        element.fireEvents('mousedown', {
             button : 1,
             clientX : 2,
             clientY : 2
@@ -419,7 +419,7 @@ defineSuite([
         expect(actualCoords).toEqual(expectedCoords);
     });
 
-    it("mouse middle up", function() {
+    it('mouse middle up', function() {
         var actualCoords = new Cartesian2(0, 0);
         var expectedCoords = new Cartesian2(1, 1);
 
@@ -428,7 +428,7 @@ defineSuite([
         };
 
         handler.setMouseAction(mouseDown, MouseEventType.MIDDLE_UP);
-        element.fireEvents("mouseup", {
+        element.fireEvents('mouseup', {
             button : 1,
             clientX : 1,
             clientY : 1
@@ -438,7 +438,7 @@ defineSuite([
         expect(handler.getMouseAction(MouseEventType.MIDDLE_UP) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.MIDDLE_UP);
-        element.fireEvents("mousedown", {
+        element.fireEvents('mousedown', {
             button : 1,
             clientX : 2,
             clientY : 2
@@ -447,7 +447,7 @@ defineSuite([
         expect(actualCoords).toEqual(expectedCoords);
     });
 
-    it("mouse middle click", function() {
+    it('mouse middle click', function() {
         var actualCoords = new Cartesian2(0, 0);
         var expectedCoords = new Cartesian2(1, 1);
 
@@ -456,12 +456,12 @@ defineSuite([
         };
 
         handler.setMouseAction(mouseDown, MouseEventType.MIDDLE_CLICK);
-        element.fireEvents("mousedown", {
+        element.fireEvents('mousedown', {
             button : 1,
             clientX : 1,
             clientY : 1
         });
-        element.fireEvents("mouseup", {
+        element.fireEvents('mouseup', {
             button : 1,
             clientX : 1,
             clientY : 1
@@ -471,12 +471,12 @@ defineSuite([
         expect(handler.getMouseAction(MouseEventType.MIDDLE_CLICK) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.MIDDLE_CLICK);
-        element.fireEvents("mousedown", {
+        element.fireEvents('mousedown', {
             button : 1,
             clientX : 2,
             clientY : 2
         });
-        element.fireEvents("mouseup", {
+        element.fireEvents('mouseup', {
             button : 1,
             clientX : 2,
             clientY : 2
@@ -485,7 +485,7 @@ defineSuite([
         expect(actualCoords).toEqual(expectedCoords);
     });
 
-    it("mouse left double click", function() {
+    it('mouse left double click', function() {
         var actualCoords = new Cartesian2(0, 0);
         var expectedCoords = new Cartesian2(1, 1);
 
@@ -494,7 +494,7 @@ defineSuite([
         };
 
         handler.setMouseAction(mouseDown, MouseEventType.LEFT_DOUBLE_CLICK);
-        element.fireEvents("dblclick", {
+        element.fireEvents('dblclick', {
             button : 0,
             clientX : 1,
             clientY : 1
@@ -504,7 +504,7 @@ defineSuite([
         expect(handler.getMouseAction(MouseEventType.LEFT_DOUBLE_CLICK) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.LEFT_DOUBLE_CLICK);
-        element.fireEvents("dblclick", {
+        element.fireEvents('dblclick', {
             button : 0,
             clientX : 2,
             clientY : 2
@@ -513,7 +513,7 @@ defineSuite([
         expect(actualCoords).toEqual(expectedCoords);
     });
 
-    it("mouse right double click", function() {
+    it('mouse right double click', function() {
         var actualCoords = new Cartesian2(0, 0);
         var expectedCoords = new Cartesian2(1, 1);
 
@@ -522,7 +522,7 @@ defineSuite([
         };
 
         handler.setMouseAction(mouseDown, MouseEventType.RIGHT_DOUBLE_CLICK);
-        element.fireEvents("dblclick", {
+        element.fireEvents('dblclick', {
             button : 2,
             clientX : 1,
             clientY : 1
@@ -532,7 +532,7 @@ defineSuite([
         expect(handler.getMouseAction(MouseEventType.RIGHT_DOUBLE_CLICK) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.RIGHT_DOUBLE_CLICK);
-        element.fireEvents("dblclick", {
+        element.fireEvents('dblclick', {
             button : 2,
             clientX : 2,
             clientY : 2
@@ -541,7 +541,7 @@ defineSuite([
         expect(actualCoords).toEqual(expectedCoords);
     });
 
-    it("mouse middle double click", function() {
+    it('mouse middle double click', function() {
         var actualCoords = new Cartesian2(0, 0);
         var expectedCoords = new Cartesian2(1, 1);
 
@@ -550,7 +550,7 @@ defineSuite([
         };
 
         handler.setMouseAction(mouseDown, MouseEventType.MIDDLE_DOUBLE_CLICK);
-        element.fireEvents("dblclick", {
+        element.fireEvents('dblclick', {
             button : 1,
             clientX : 1,
             clientY : 1
@@ -560,7 +560,7 @@ defineSuite([
         expect(handler.getMouseAction(MouseEventType.MIDDLE_DOUBLE_CLICK) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.MIDDLE_DOUBLE_CLICK);
-        element.fireEvents("dblclick", {
+        element.fireEvents('dblclick', {
             button : 1,
             clientX : 2,
             clientY : 2
@@ -569,7 +569,7 @@ defineSuite([
         expect(actualCoords).toEqual(expectedCoords);
     });
 
-    it("mouse move", function() {
+    it('mouse move', function() {
         var actualMove = {
             startPosition : new Cartesian2(0, 0),
             endPosition : new Cartesian2(0, 0)
@@ -585,12 +585,12 @@ defineSuite([
         };
 
         handler.setMouseAction(mouseMove, MouseEventType.MOVE);
-        element.fireEvents("mousemove", {
+        element.fireEvents('mousemove', {
             button : 1,
             clientX : 1,
             clientY : 1
         });
-        element.fireEvents("mousemove", {
+        element.fireEvents('mousemove', {
             button : 1,
             clientX : 2,
             clientY : 2
@@ -600,12 +600,12 @@ defineSuite([
         expect(handler.getMouseAction(MouseEventType.MOVE) === mouseMove).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.MOVE);
-        element.fireEvents("mousemove", {
+        element.fireEvents('mousemove', {
             button : 1,
             clientX : 2,
             clientY : 2
         });
-        element.fireEvents("mousemove", {
+        element.fireEvents('mousemove', {
             button : 1,
             clientX : 3,
             clientY : 3
@@ -614,7 +614,7 @@ defineSuite([
         expect(actualMove).toEqual(expectedMove);
     });
 
-    it("mouse wheel", function() {
+    it('mouse wheel', function() {
         var actualDelta = 0;
         var expectedDelta = -120;
 
@@ -623,7 +623,7 @@ defineSuite([
         };
 
         handler.setMouseAction(mouseWheel, MouseEventType.WHEEL);
-        element.fireEvents("mousewheel", {
+        element.fireEvents('mousewheel', {
             wheelDelta : -120
         });
         expect(actualDelta).toEqual(expectedDelta);
@@ -631,14 +631,14 @@ defineSuite([
         expect(handler.getMouseAction(MouseEventType.WHEEL) === mouseWheel).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.WHEEL);
-        element.fireEvents("mousewheel", {
+        element.fireEvents('mousewheel', {
             wheelDelta : -360
         });
 
         expect(actualDelta).toEqual(expectedDelta);
     });
 
-    it("modified mouse right down", function() {
+    it('modified mouse right down', function() {
         var actualCoords = new Cartesian2(0, 0);
         var expectedCoords = new Cartesian2(1, 1);
 
@@ -647,7 +647,7 @@ defineSuite([
         };
 
         handler.setMouseAction(mouseDown, MouseEventType.RIGHT_DOWN, EventModifier.SHIFT);
-        element.fireEvents("mousedown", {
+        element.fireEvents('mousedown', {
             button : 2,
             clientX : 1,
             clientY : 1,
@@ -658,7 +658,7 @@ defineSuite([
         expect(handler.getMouseAction(MouseEventType.RIGHT_DOWN, EventModifier.SHIFT) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.RIGHT_DOWN, EventModifier.SHIFT);
-        element.fireEvents("mousedown", {
+        element.fireEvents('mousedown', {
             button : 2,
             clientX : 2,
             clientY : 2,
@@ -668,7 +668,7 @@ defineSuite([
         expect(actualCoords).toEqual(expectedCoords);
     });
 
-    it("modified mouse right up", function() {
+    it('modified mouse right up', function() {
         var actualCoords = new Cartesian2(0, 0);
         var expectedCoords = new Cartesian2(1, 1);
 
@@ -677,7 +677,7 @@ defineSuite([
         };
 
         handler.setMouseAction(mouseDown, MouseEventType.RIGHT_UP, EventModifier.SHIFT);
-        element.fireEvents("mouseup", {
+        element.fireEvents('mouseup', {
             button : 2,
             clientX : 1,
             clientY : 1,
@@ -688,7 +688,7 @@ defineSuite([
         expect(handler.getMouseAction(MouseEventType.RIGHT_UP, EventModifier.SHIFT) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.RIGHT_UP, EventModifier.SHIFT);
-        element.fireEvents("mousedown", {
+        element.fireEvents('mousedown', {
             button : 2,
             clientX : 2,
             clientY : 2,
@@ -698,7 +698,7 @@ defineSuite([
         expect(actualCoords).toEqual(expectedCoords);
     });
 
-    it("modified mouse right click", function() {
+    it('modified mouse right click', function() {
         var actualCoords = new Cartesian2(0, 0);
         var expectedCoords = new Cartesian2(1, 1);
 
@@ -707,13 +707,13 @@ defineSuite([
         };
 
         handler.setMouseAction(mouseDown, MouseEventType.RIGHT_CLICK, EventModifier.SHIFT);
-        element.fireEvents("mousedown", {
+        element.fireEvents('mousedown', {
             button : 2,
             clientX : 1,
             clientY : 1,
             shiftKey : true
         });
-        element.fireEvents("mouseup", {
+        element.fireEvents('mouseup', {
             button : 2,
             clientX : 1,
             clientY : 1,
@@ -724,13 +724,13 @@ defineSuite([
         expect(handler.getMouseAction(MouseEventType.RIGHT_CLICK, EventModifier.SHIFT) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.RIGHT_CLICK, EventModifier.SHIFT);
-        element.fireEvents("mousedown", {
+        element.fireEvents('mousedown', {
             button : 2,
             clientX : 2,
             clientY : 2,
             shiftKey : true
         });
-        element.fireEvents("mouseup", {
+        element.fireEvents('mouseup', {
             button : 2,
             clientX : 2,
             clientY : 2,
@@ -740,7 +740,7 @@ defineSuite([
         expect(actualCoords).toEqual(expectedCoords);
     });
 
-    it("modified mouse left down", function() {
+    it('modified mouse left down', function() {
         var actualCoords = new Cartesian2(0, 0);
         var expectedCoords = new Cartesian2(1, 1);
 
@@ -749,7 +749,7 @@ defineSuite([
         };
 
         handler.setMouseAction(mouseDown, MouseEventType.LEFT_DOWN, EventModifier.ALT);
-        element.fireEvents("mousedown", {
+        element.fireEvents('mousedown', {
             button : 0,
             clientX : 1,
             clientY : 1,
@@ -760,7 +760,7 @@ defineSuite([
         expect(handler.getMouseAction(MouseEventType.LEFT_DOWN, EventModifier.ALT) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.LEFT_DOWN, EventModifier.ALT);
-        element.fireEvents("mousedown", {
+        element.fireEvents('mousedown', {
             button : 0,
             clientX : 2,
             clientY : 2,
@@ -770,7 +770,7 @@ defineSuite([
         expect(actualCoords).toEqual(expectedCoords);
     });
 
-    it("modified mouse left up", function() {
+    it('modified mouse left up', function() {
         var actualCoords = new Cartesian2(0, 0);
         var expectedCoords = new Cartesian2(1, 1);
 
@@ -779,7 +779,7 @@ defineSuite([
         };
 
         handler.setMouseAction(mouseDown, MouseEventType.LEFT_UP, EventModifier.ALT);
-        element.fireEvents("mouseup", {
+        element.fireEvents('mouseup', {
             button : 0,
             clientX : 1,
             clientY : 1,
@@ -790,7 +790,7 @@ defineSuite([
         expect(handler.getMouseAction(MouseEventType.LEFT_UP, EventModifier.ALT) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.LEFT_UP, EventModifier.ALT);
-        element.fireEvents("mousedown", {
+        element.fireEvents('mousedown', {
             button : 0,
             clientX : 2,
             clientY : 2,
@@ -800,7 +800,7 @@ defineSuite([
         expect(actualCoords).toEqual(expectedCoords);
     });
 
-    it("modified mouse left click", function() {
+    it('modified mouse left click', function() {
         var actualCoords = new Cartesian2(0, 0);
         var expectedCoords = new Cartesian2(1, 1);
 
@@ -809,13 +809,13 @@ defineSuite([
         };
 
         handler.setMouseAction(mouseDown, MouseEventType.LEFT_CLICK, EventModifier.ALT);
-        element.fireEvents("mousedown", {
+        element.fireEvents('mousedown', {
             button : 0,
             clientX : 1,
             clientY : 1,
             altKey : true
         });
-        element.fireEvents("mouseup", {
+        element.fireEvents('mouseup', {
             button : 0,
             clientX : 1,
             clientY : 1,
@@ -826,13 +826,13 @@ defineSuite([
         expect(handler.getMouseAction(MouseEventType.LEFT_CLICK, EventModifier.ALT) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.LEFT_CLICK, EventModifier.ALT);
-        element.fireEvents("mousedown", {
+        element.fireEvents('mousedown', {
             button : 0,
             clientX : 2,
             clientY : 2,
             altKey : true
         });
-        element.fireEvents("mouseup", {
+        element.fireEvents('mouseup', {
             button : 0,
             clientX : 2,
             clientY : 2,
@@ -842,7 +842,7 @@ defineSuite([
         expect(actualCoords).toEqual(expectedCoords);
     });
 
-    it("modified mouse middle down", function() {
+    it('modified mouse middle down', function() {
         var actualCoords = new Cartesian2(0, 0);
         var expectedCoords = new Cartesian2(1, 1);
 
@@ -851,7 +851,7 @@ defineSuite([
         };
 
         handler.setMouseAction(mouseDown, MouseEventType.MIDDLE_DOWN, EventModifier.CTRL);
-        element.fireEvents("mousedown", {
+        element.fireEvents('mousedown', {
             button : 1,
             clientX : 1,
             clientY : 1,
@@ -862,7 +862,7 @@ defineSuite([
         expect(handler.getMouseAction(MouseEventType.MIDDLE_DOWN, EventModifier.CTRL) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.MIDDLE_DOWN, EventModifier.CTRL);
-        element.fireEvents("mousedown", {
+        element.fireEvents('mousedown', {
             button : 1,
             clientX : 2,
             clientY : 2,
@@ -872,7 +872,7 @@ defineSuite([
         expect(actualCoords).toEqual(expectedCoords);
     });
 
-    it("modified mouse middle up", function() {
+    it('modified mouse middle up', function() {
         var actualCoords = new Cartesian2(0, 0);
         var expectedCoords = new Cartesian2(1, 1);
 
@@ -881,7 +881,7 @@ defineSuite([
         };
 
         handler.setMouseAction(mouseDown, MouseEventType.MIDDLE_UP, EventModifier.CTRL);
-        element.fireEvents("mouseup", {
+        element.fireEvents('mouseup', {
             button : 1,
             clientX : 1,
             clientY : 1,
@@ -892,7 +892,7 @@ defineSuite([
         expect(handler.getMouseAction(MouseEventType.MIDDLE_UP, EventModifier.CTRL) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.MIDDLE_UP, EventModifier.CTRL);
-        element.fireEvents("mousedown", {
+        element.fireEvents('mousedown', {
             button : 1,
             clientX : 2,
             clientY : 2,
@@ -902,7 +902,7 @@ defineSuite([
         expect(actualCoords).toEqual(expectedCoords);
     });
 
-    it("modified mouse middle click", function() {
+    it('modified mouse middle click', function() {
         var actualCoords = new Cartesian2(0, 0);
         var expectedCoords = new Cartesian2(1, 1);
 
@@ -911,13 +911,13 @@ defineSuite([
         };
 
         handler.setMouseAction(mouseDown, MouseEventType.MIDDLE_CLICK, EventModifier.CTRL);
-        element.fireEvents("mousedown", {
+        element.fireEvents('mousedown', {
             button : 1,
             clientX : 1,
             clientY : 1,
             ctrlKey : true
         });
-        element.fireEvents("mouseup", {
+        element.fireEvents('mouseup', {
             button : 1,
             clientX : 1,
             clientY : 1,
@@ -928,13 +928,13 @@ defineSuite([
         expect(handler.getMouseAction(MouseEventType.MIDDLE_CLICK, EventModifier.CTRL) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.MIDDLE_CLICK, EventModifier.CTRL);
-        element.fireEvents("mousedown", {
+        element.fireEvents('mousedown', {
             button : 1,
             clientX : 2,
             clientY : 2,
             ctrlKey : true
         });
-        element.fireEvents("mouseup", {
+        element.fireEvents('mouseup', {
             button : 1,
             clientX : 2,
             clientY : 2,
@@ -944,7 +944,7 @@ defineSuite([
         expect(actualCoords).toEqual(expectedCoords);
     });
 
-    it("modified mouse left double click", function() {
+    it('modified mouse left double click', function() {
         var actualCoords = new Cartesian2(0, 0);
         var expectedCoords = new Cartesian2(1, 1);
 
@@ -953,7 +953,7 @@ defineSuite([
         };
 
         handler.setMouseAction(mouseDown, MouseEventType.LEFT_DOUBLE_CLICK, EventModifier.CTRL);
-        element.fireEvents("dblclick", {
+        element.fireEvents('dblclick', {
             button : 0,
             clientX : 1,
             clientY : 1,
@@ -964,7 +964,7 @@ defineSuite([
         expect(handler.getMouseAction(MouseEventType.LEFT_DOUBLE_CLICK, EventModifier.CTRL) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.LEFT_DOUBLE_CLICK, EventModifier.CTRL);
-        element.fireEvents("dblclick", {
+        element.fireEvents('dblclick', {
             button : 0,
             clientX : 2,
             clientY : 2,
@@ -974,7 +974,7 @@ defineSuite([
         expect(actualCoords).toEqual(expectedCoords);
     });
 
-    it("modified mouse right double click", function() {
+    it('modified mouse right double click', function() {
         var actualCoords = new Cartesian2(0, 0);
         var expectedCoords = new Cartesian2(1, 1);
 
@@ -983,7 +983,7 @@ defineSuite([
         };
 
         handler.setMouseAction(mouseDown, MouseEventType.RIGHT_DOUBLE_CLICK, EventModifier.CTRL);
-        element.fireEvents("dblclick", {
+        element.fireEvents('dblclick', {
             button : 2,
             clientX : 1,
             clientY : 1,
@@ -994,7 +994,7 @@ defineSuite([
         expect(handler.getMouseAction(MouseEventType.RIGHT_DOUBLE_CLICK, EventModifier.CTRL) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.RIGHT_DOUBLE_CLICK, EventModifier.CTRL);
-        element.fireEvents("dblclick", {
+        element.fireEvents('dblclick', {
             button : 2,
             clientX : 2,
             clientY : 2,
@@ -1004,7 +1004,7 @@ defineSuite([
         expect(actualCoords).toEqual(expectedCoords);
     });
 
-    it("modified mouse middle double click", function() {
+    it('modified mouse middle double click', function() {
         var actualCoords = new Cartesian2(0, 0);
         var expectedCoords = new Cartesian2(1, 1);
 
@@ -1013,7 +1013,7 @@ defineSuite([
         };
 
         handler.setMouseAction(mouseDown, MouseEventType.MIDDLE_DOUBLE_CLICK, EventModifier.CTRL);
-        element.fireEvents("dblclick", {
+        element.fireEvents('dblclick', {
             button : 1,
             clientX : 1,
             clientY : 1,
@@ -1024,7 +1024,7 @@ defineSuite([
         expect(handler.getMouseAction(MouseEventType.MIDDLE_DOUBLE_CLICK, EventModifier.CTRL) === mouseDown).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.MIDDLE_DOUBLE_CLICK, EventModifier.CTRL);
-        element.fireEvents("dblclick", {
+        element.fireEvents('dblclick', {
             button : 1,
             clientX : 2,
             clientY : 2,
@@ -1034,9 +1034,9 @@ defineSuite([
         expect(actualCoords).toEqual(expectedCoords);
     });
 
-    it("get middle press time", function() {
+    it('get middle press time', function() {
         handler.setMouseAction(function(event) {}, MouseEventType.MIDDLE_DOWN);
-        element.fireEvents("mousedown", {
+        element.fireEvents('mousedown', {
             button : 1,
             clientX : 1,
             clientY : 1
@@ -1045,9 +1045,9 @@ defineSuite([
         expect(handler.getMiddlePressTime()).toBeDefined();
     });
 
-    it("get middle release time", function() {
+    it('get middle release time', function() {
         handler.setMouseAction(function(event) {}, MouseEventType.MIDDLE_DOWN);
-        element.fireEvents("mouseup", {
+        element.fireEvents('mouseup', {
             button : 1,
             clientX : 1,
             clientY : 1
@@ -1056,7 +1056,7 @@ defineSuite([
         expect(handler.getMiddleReleaseTime()).toBeDefined();
     });
 
-    it("modified mouse move", function() {
+    it('modified mouse move', function() {
         var actualMove = {
             startPosition : new Cartesian2(0, 0),
             endPosition : new Cartesian2(0, 0)
@@ -1072,13 +1072,13 @@ defineSuite([
         };
 
         handler.setMouseAction(mouseMove, MouseEventType.MOVE, EventModifier.CTRL);
-        element.fireEvents("mousemove", {
+        element.fireEvents('mousemove', {
             button : 1,
             clientX : 1,
             clientY : 1,
             ctrlKey : true
         });
-        element.fireEvents("mousemove", {
+        element.fireEvents('mousemove', {
             button : 1,
             clientX : 2,
             clientY : 2,
@@ -1089,13 +1089,13 @@ defineSuite([
         expect(handler.getMouseAction(MouseEventType.MOVE, EventModifier.CTRL) === mouseMove).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.MOVE, EventModifier.CTRL);
-        element.fireEvents("mousemove", {
+        element.fireEvents('mousemove', {
             button : 1,
             clientX : 2,
             clientY : 2,
             ctrlKey : true
         });
-        element.fireEvents("mousemove", {
+        element.fireEvents('mousemove', {
             button : 1,
             clientX : 3,
             clientY : 3,
@@ -1105,7 +1105,7 @@ defineSuite([
         expect(actualMove).toEqual(expectedMove);
     });
 
-    it("modified mouse wheel", function() {
+    it('modified mouse wheel', function() {
         var actualDelta = 0;
         var expectedDelta = -120;
 
@@ -1114,7 +1114,7 @@ defineSuite([
         };
 
         handler.setMouseAction(mouseWheel, MouseEventType.WHEEL, EventModifier.CTRL);
-        element.fireEvents("mousewheel", {
+        element.fireEvents('mousewheel', {
             wheelDelta : -120,
             ctrlKey : true
         });
@@ -1123,7 +1123,7 @@ defineSuite([
         expect(handler.getMouseAction(MouseEventType.WHEEL, EventModifier.CTRL) === mouseWheel).toEqual(true);
 
         handler.removeMouseAction(MouseEventType.WHEEL, EventModifier.CTRL);
-        element.fireEvents("mousewheel", {
+        element.fireEvents('mousewheel', {
             wheelDelta : -360,
             ctrlKey : true
         });
@@ -1131,13 +1131,13 @@ defineSuite([
         expect(actualDelta).toEqual(expectedDelta);
     });
 
-    it("isDestroyed", function() {
+    it('isDestroyed', function() {
         expect(handler.isDestroyed()).toEqual(false);
         handler.destroy();
         expect(handler.isDestroyed()).toEqual(true);
     });
 
-    it("destroy event handler", function() {
+    it('destroy event handler', function() {
         expect(element.getNumRegistered() !== 0).toEqual(true);
         handler._unregister();
         expect(element.getNumRegistered()).toEqual(0);

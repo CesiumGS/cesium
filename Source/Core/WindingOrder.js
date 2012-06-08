@@ -14,14 +14,14 @@ define(['./Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        CLOCKWISE : new Enumeration(0x0900, "CLOCKWISE"), // WebGL: CW
+        CLOCKWISE : new Enumeration(0x0900, 'CLOCKWISE'), // WebGL: CW
         /**
          * DOC_TBA
          *
          * @constant
          * @type {Enumeration}
          */
-        COUNTER_CLOCKWISE : new Enumeration(0x0901, "COUNTER_CLOCKWISE"), // WebGL CCW
+        COUNTER_CLOCKWISE : new Enumeration(0x0901, 'COUNTER_CLOCKWISE'), // WebGL CCW
 
         /**
          * DOC_TBA

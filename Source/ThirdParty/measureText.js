@@ -1,5 +1,5 @@
 /*!
-  This library rewrites the Canvas2D "measureText" function
+  This library rewrites the Canvas2D 'measureText' function
   so that it returns a more complete metrics object.
   This library is licensed under the MIT (Expat) license,
   the text for which is included below.
@@ -13,10 +13,10 @@
 
    -----------------------------------------------------------------------------
 
-  Copyright (C) 2011 by Mike "Pomax" Kamermans
+  Copyright (C) 2011 by Mike 'Pomax' Kamermans
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
-  of this software and associated documentation files (the "Software"), to deal
+  of this software and associated documentation files (the 'Software'), to deal
   in the Software without restriction, including without limitation the rights
   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
   copies of the Software, and to permit persons to whom the Software is
@@ -25,7 +25,7 @@
   The above copyright notice and this permission notice shall be included in
   all copies or substantial portions of the Software.
 
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
@@ -36,12 +36,12 @@
 /*global define*/
 define(function() {
     "use strict";
-//  var NAME = "FontMetrics Library";
-//  var VERSION = "1-2012.0121.1300";
+//  var NAME = 'FontMetrics Library';
+//  var VERSION = '1-2012.0121.1300';
 
   // if there is no getComputedStyle, this library won't work.
 //  if(!document.defaultView.getComputedStyle) {
-//    throw("ERROR: 'document.defaultView.getComputedStyle' not found. This library only works in browsers that can report computed CSS values.");
+//    throw('ERROR: 'document.defaultView.getComputedStyle' not found. This library only works in browsers that can report computed CSS values.');
 //  }
 
   // store the old text metrics function on the Canvas2D prototype
@@ -90,40 +90,40 @@ define(function() {
    */
   return function(context2D, textstring) {
     var metrics = context2D.measureText(textstring),
-        fontFamily = getCSSValue(context2D.canvas,"font-family"),
-        fontSize = getCSSValue(context2D.canvas,"font-size").replace("px",""),
+        fontFamily = getCSSValue(context2D.canvas,'font-family'),
+        fontSize = getCSSValue(context2D.canvas,'font-size').replace('px',''),
         isSpace = !(/\S/.test(textstring));
         metrics.fontsize = fontSize;
 
     // for text lead values, we meaure a multiline text container.
-    var leadDiv = document.createElement("div");
-    leadDiv.style.position = "absolute";
+    var leadDiv = document.createElement('div');
+    leadDiv.style.position = 'absolute';
     leadDiv.style.opacity = 0;
-    leadDiv.style.font = fontSize + "px " + fontFamily;
-    leadDiv.innerHTML = textstring + "<br/>" + textstring;
+    leadDiv.style.font = fontSize + 'px ' + fontFamily;
+    leadDiv.innerHTML = textstring + '<br/>' + textstring;
     document.body.appendChild(leadDiv);
 
     // make some initial guess at the text leading (using the standard TeX ratio)
     metrics.leading = 1.2 * fontSize;
 
     // then we try to get the real value from the browser
-    var leadDivHeight = getCSSValue(leadDiv,"height");
-    leadDivHeight = leadDivHeight.replace("px","");
+    var leadDivHeight = getCSSValue(leadDiv,'height');
+    leadDivHeight = leadDivHeight.replace('px','');
     if (leadDivHeight >= fontSize * 2) { metrics.leading = (leadDivHeight/2) | 0; }
     document.body.removeChild(leadDiv);
 
     // if we're not dealing with white space, we can compute metrics
     if (!isSpace) {
         // Have characters, so measure the text
-        var canvas = document.createElement("canvas");
+        var canvas = document.createElement('canvas');
         var padding = 100;
         canvas.width = metrics.width + padding;
         canvas.height = 3*fontSize;
         canvas.style.opacity = 1;
         canvas.style.fontFamily = fontFamily;
         canvas.style.fontSize = fontSize;
-        var ctx = canvas.getContext("2d");
-        ctx.font = fontSize + "px " + fontFamily;
+        var ctx = canvas.getContext('2d');
+        ctx.font = fontSize + 'px ' + fontFamily;
 
         var w = canvas.width,
             h = canvas.height,
@@ -131,9 +131,9 @@ define(function() {
 
         // Set all canvas pixeldata values to 255, with all the content
         // data being 0. This lets us scan for data[i] != 255.
-        ctx.fillStyle = "white";
+        ctx.fillStyle = 'white';
         ctx.fillRect(-1, -1, w+2, h+2);
-        ctx.fillStyle = "black";
+        ctx.fillStyle = 'black';
         ctx.fillText(textstring, padding/2, baseline);
         var pixelData = ctx.getImageData(0, 0, w, h).data;
 

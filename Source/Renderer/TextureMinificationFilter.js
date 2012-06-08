@@ -14,7 +14,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        NEAREST : new Enumeration(0x2600, "NEAREST"),
+        NEAREST : new Enumeration(0x2600, 'NEAREST'),
 
         /**
          * DOC_TBA
@@ -22,7 +22,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        LINEAR : new Enumeration(0x2601, "LINEAR"),
+        LINEAR : new Enumeration(0x2601, 'LINEAR'),
 
         /**
          * DOC_TBA
@@ -30,7 +30,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        NEAREST_MIPMAP_NEAREST : new Enumeration(0x2700, "NEAREST_MIPMAP_NEAREST"),
+        NEAREST_MIPMAP_NEAREST : new Enumeration(0x2700, 'NEAREST_MIPMAP_NEAREST'),
 
         /**
          * DOC_TBA
@@ -38,7 +38,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        LINEAR_MIPMAP_NEAREST : new Enumeration(0x2701, "LINEAR_MIPMAP_NEAREST"),
+        LINEAR_MIPMAP_NEAREST : new Enumeration(0x2701, 'LINEAR_MIPMAP_NEAREST'),
 
         /**
          * DOC_TBA
@@ -46,7 +46,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        NEAREST_MIPMAP_LINEAR : new Enumeration(0x2702, "NEAREST_MIPMAP_LINEAR"),
+        NEAREST_MIPMAP_LINEAR : new Enumeration(0x2702, 'NEAREST_MIPMAP_LINEAR'),
 
         /**
          * DOC_TBA
@@ -54,7 +54,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        LINEAR_MIPMAP_LINEAR : new Enumeration(0x2703, "LINEAR_MIPMAP_LINEAR"),
+        LINEAR_MIPMAP_LINEAR : new Enumeration(0x2703, 'LINEAR_MIPMAP_LINEAR'),
 
         /**
          * DOC_TBA

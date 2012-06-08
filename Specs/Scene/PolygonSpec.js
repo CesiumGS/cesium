@@ -53,11 +53,11 @@ defineSuite([
         destroyContext(context);
     });
 
-    it("gets default show", function() {
+    it('gets default show', function() {
         expect(polygon.show).toEqual(true);
     });
 
-    it("sets positions", function() {
+    it('sets positions', function() {
         var positions = [
                          new Cartesian3(1.0, 2.0, 3.0),
                          new Cartesian3(4.0, 5.0, 6.0),
@@ -70,7 +70,7 @@ defineSuite([
         expect(polygon.getPositions()).toEqualArray(positions);
     });
 
-    it("configures extent", function() {
+    it('configures extent', function() {
         var extent = new Extent(
             0.0,
             0.0,
@@ -83,7 +83,7 @@ defineSuite([
 
     });
 
-    it("gets the default color", function() {
+    it('gets the default color', function() {
         expect(polygon.material.color).toEqualProperties({
             red : 1.0,
             green : 1.0,
@@ -92,19 +92,19 @@ defineSuite([
         });
     });
 
-    it("gets default buffer usage", function() {
+    it('gets default buffer usage', function() {
         expect(polygon.bufferUsage).toEqual(BufferUsage.STATIC_DRAW);
     });
 
-    it("has a default ellipsoid", function() {
+    it('has a default ellipsoid', function() {
         expect(polygon.ellipsoid).toEqual(Ellipsoid.WGS84);
     });
 
-    it("gets the default granularity", function() {
+    it('gets the default granularity', function() {
         expect(polygon.granularity).toEqual(CesiumMath.toRadians(1.0));
     });
 
-    it("renders", function() {
+    it('renders', function() {
         // This test fails in Chrome if a breakpoint is set inside this function.  Strange.
 
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
@@ -131,7 +131,7 @@ defineSuite([
         expect(context.readPixels()).not.toEqualArray([0, 0, 0, 0]);
     });
 
-    it("renders extent", function() {
+    it('renders extent', function() {
         // This test fails in Chrome if a breakpoint is set inside this function.  Strange.
 
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
@@ -158,7 +158,7 @@ defineSuite([
         expect(context.readPixels()).not.toEqualArray([0, 0, 0, 0]);
     });
 
-    it("doesn't renders", function() {
+    it('does not renders', function() {
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
         polygon.ellipsoid = ellipsoid;
         polygon.granularity = CesiumMath.toRadians(20.0);
@@ -184,7 +184,7 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
     });
 
-    it("is picked", function() {
+    it('is picked', function() {
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
         polygon.ellipsoid = ellipsoid;
         polygon.granularity = CesiumMath.toRadians(20.0);
@@ -201,7 +201,7 @@ defineSuite([
         expect(pickedObject).toEqual(polygon);
     });
 
-    it("is not picked", function() {
+    it('is not picked', function() {
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
         polygon.ellipsoid = ellipsoid;
         polygon.granularity = CesiumMath.toRadians(20.0);

@@ -3,13 +3,13 @@ defineSuite(['Core/PlaneTessellator'], function(PlaneTessellator) {
     "use strict";
     /*global it,expect*/
 
-    it("compute with default arguments", function() {
+    it('compute with default arguments', function() {
         var m = PlaneTessellator.compute();
 
         expect(m.indexLists[0].values.length).toEqual(2 * 3); // 2 triangles
     });
 
-    it("compute with arguments", function() {
+    it('compute with arguments', function() {
         var m = PlaneTessellator.compute({
             resolution : {
                 x : 4,
@@ -22,7 +22,7 @@ defineSuite(['Core/PlaneTessellator'], function(PlaneTessellator) {
         expect(m.indexLists[0].values.length).toEqual(12 * 3); // 8 triangles
     });
 
-    it("compute with onInterpolation callback", function() {
+    it('compute with onInterpolation callback', function() {
         var callbacks = [];
 
         PlaneTessellator.compute({
@@ -50,7 +50,7 @@ defineSuite(['Core/PlaneTessellator'], function(PlaneTessellator) {
         }]);
     });
 
-    it("throws if resolution is less than 1", function() {
+    it('throws if resolution is less than 1', function() {
        expect(function() {
            PlaneTessellator.compute({
                resolution: {

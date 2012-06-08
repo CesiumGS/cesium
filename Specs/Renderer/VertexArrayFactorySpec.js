@@ -8,7 +8,7 @@ defineSuite([
          'Core/IndexDatatype',
          'Renderer/BufferUsage',
          'Renderer/VertexLayout'
-     ], "Renderer/VertexArrayFactory", function(
+     ], 'Renderer/VertexArrayFactory', function(
          createContext,
          destroyContext,
          ComponentDatatype,
@@ -40,13 +40,13 @@ defineSuite([
         destroyContext(context);
     });
 
-    it("creates with no arguments", function() {
+    it('creates with no arguments', function() {
         va = context.createVertexArrayFromMesh();
         expect(va.getNumberOfAttributes()).toEqual(0);
         expect(va.getIndexBuffer()).not.toBeDefined();
     });
 
-    it("creates with no mesh", function() {
+    it('creates with no mesh', function() {
         va = context.createVertexArrayFromMesh({
             vertexLayout : VertexLayout.INTERLEAVED
         });
@@ -54,7 +54,7 @@ defineSuite([
         expect(va.getIndexBuffer()).not.toBeDefined();
     });
 
-    it("creates a single-attribute vertex (non-interleaved)", function() {
+    it('creates a single-attribute vertex (non-interleaved)', function() {
         var mesh = {
             attributes : {
                 position : {
@@ -83,7 +83,7 @@ defineSuite([
         expect(va.getAttribute(0).vertexBuffer.getUsage()).toEqual(BufferUsage.DYNAMIC_DRAW); // Default
     });
 
-    it("creates a single-attribute vertex (interleaved)", function() {
+    it('creates a single-attribute vertex (interleaved)', function() {
         var mesh = {
             attributes : {
                 position : {
@@ -114,7 +114,7 @@ defineSuite([
         expect(va.getAttribute(0).vertexBuffer.getUsage()).toEqual(BufferUsage.STATIC_DRAW);
     });
 
-    it("creates a homogeneous multiple-attribute vertex (non-interleaved)", function() {
+    it('creates a homogeneous multiple-attribute vertex (non-interleaved)', function() {
         var mesh = {
             attributes : {
                 position : {
@@ -155,7 +155,7 @@ defineSuite([
         expect(va.getAttribute(0).vertexBuffer).not.toBe(va.getAttribute(1).vertexBuffer);
     });
 
-    it("creates a homogeneous multiple-attribute vertex (interleaved)", function() {
+    it('creates a homogeneous multiple-attribute vertex (interleaved)', function() {
         var mesh = {
             attributes : {
                 position : {
@@ -199,7 +199,7 @@ defineSuite([
         expect(va.getAttribute(0).vertexBuffer).toBe(va.getAttribute(1).vertexBuffer);
     });
 
-    it("creates a heterogeneous multiple-attribute vertex (interleaved)", function() {
+    it('creates a heterogeneous multiple-attribute vertex (interleaved)', function() {
         var mesh = {
             attributes : {
                 position : {
@@ -243,7 +243,7 @@ defineSuite([
         expect(va.getAttribute(0).vertexBuffer).toBe(va.getAttribute(1).vertexBuffer);
     });
 
-    it("sorts interleaved attributes from large to small components", function() {
+    it('sorts interleaved attributes from large to small components', function() {
         var mesh = {
             attributes : {
                 bytes : {
@@ -280,20 +280,20 @@ defineSuite([
 
         // Validate via rendering
         var vs =
-            "attribute float bytes; " +
-            "attribute float shorts; " +
-            "attribute float floats; " +
-            "varying vec4 fsColor; " +
-            "void main() { " +
-            "  gl_PointSize = 1.0; " +
-            "  gl_Position = vec4(0.0, 0.0, 0.0, 1.0); " +
-            "  fsColor = vec4((bytes == 0.0) && (shorts == 1.0) && (floats == 2.0)); " +
-            "}";
+            'attribute float bytes; ' +
+            'attribute float shorts; ' +
+            'attribute float floats; ' +
+            'varying vec4 fsColor; ' +
+            'void main() { ' +
+            '  gl_PointSize = 1.0; ' +
+            '  gl_Position = vec4(0.0, 0.0, 0.0, 1.0); ' +
+            '  fsColor = vec4((bytes == 0.0) && (shorts == 1.0) && (floats == 2.0)); ' +
+            '}';
         var fs =
-            "varying vec4 fsColor; " +
-            "void main() { " +
-            "  gl_FragColor = fsColor; " +
-            "}";
+            'varying vec4 fsColor; ' +
+            'void main() { ' +
+            '  gl_FragColor = fsColor; ' +
+            '}';
         sp = context.createShaderProgram(vs, fs, attributeIndices);
 
         context.clear();
@@ -307,7 +307,7 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
     });
 
-    it("sorts interleaved attributes from large to small components (2)", function() {
+    it('sorts interleaved attributes from large to small components (2)', function() {
         // TODO:  Color should be normalized
         var mesh = {
             attributes : {
@@ -335,19 +335,19 @@ defineSuite([
 
         // Validate via rendering
         var vs =
-            "attribute vec3 position; " +
-            "attribute vec4 color; " +
-            "varying vec4 fsColor; " +
-            "void main() { " +
-            "  gl_PointSize = 1.0; " +
-            "  gl_Position = vec4(position, 1.0); " +
-            "  fsColor = color; " +
-            "}";
+            'attribute vec3 position; ' +
+            'attribute vec4 color; ' +
+            'varying vec4 fsColor; ' +
+            'void main() { ' +
+            '  gl_PointSize = 1.0; ' +
+            '  gl_Position = vec4(position, 1.0); ' +
+            '  fsColor = color; ' +
+            '}';
         var fs =
-            "varying vec4 fsColor; " +
-            "void main() { " +
-            "  gl_FragColor = fsColor; " +
-            "}";
+            'varying vec4 fsColor; ' +
+            'void main() { ' +
+            '  gl_FragColor = fsColor; ' +
+            '}';
         sp = context.createShaderProgram(vs, fs, attributeIndices);
 
         context.clear();
@@ -372,7 +372,7 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([0, 255, 0, 255]);
     });
 
-    it("sorts interleaved attributes from large to small components (3)", function() {
+    it('sorts interleaved attributes from large to small components (3)', function() {
         var mesh = {
             attributes : {
                 unsignedByteAttribute : {
@@ -410,21 +410,21 @@ defineSuite([
 
         // Validate via rendering
         var vs =
-            "attribute vec2 unsignedByteAttribute; " +
-            "attribute float unsignedShortAttribute; " +
-            "attribute float byteAttribute; " +
-            "attribute float shortAttribute; " +
-            "varying vec4 fsColor; " +
-            "void main() { " +
-            "  gl_PointSize = 1.0; " +
-            "  gl_Position = vec4(0.0, 0.0, 0.0, 1.0); " +
-            "  fsColor = vec4((unsignedByteAttribute.x == 1.0) && (unsignedByteAttribute.y == 2.0) && (unsignedShortAttribute == 3.0) && (byteAttribute == 4.0) && (shortAttribute == 5.0)); " +
-            "}";
+            'attribute vec2 unsignedByteAttribute; ' +
+            'attribute float unsignedShortAttribute; ' +
+            'attribute float byteAttribute; ' +
+            'attribute float shortAttribute; ' +
+            'varying vec4 fsColor; ' +
+            'void main() { ' +
+            '  gl_PointSize = 1.0; ' +
+            '  gl_Position = vec4(0.0, 0.0, 0.0, 1.0); ' +
+            '  fsColor = vec4((unsignedByteAttribute.x == 1.0) && (unsignedByteAttribute.y == 2.0) && (unsignedShortAttribute == 3.0) && (byteAttribute == 4.0) && (shortAttribute == 5.0)); ' +
+            '}';
         var fs =
-            "varying vec4 fsColor; " +
-            "void main() { " +
-            "  gl_FragColor = fsColor; " +
-            "}";
+            'varying vec4 fsColor; ' +
+            'void main() { ' +
+            '  gl_FragColor = fsColor; ' +
+            '}';
         sp = context.createShaderProgram(vs, fs, attributeIndices);
 
         context.clear();
@@ -438,7 +438,7 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
     });
 
-    it("creates a custom interleaved vertex", function() {
+    it('creates a custom interleaved vertex', function() {
         // TODO:  Color should be normalized
 
         var mesh = {
@@ -477,26 +477,26 @@ defineSuite([
 
         // Validate via rendering
         var vs =
-            "attribute vec3 position; " +
-            "attribute vec3 color; " +
-            "attribute vec3 normal; " +
-            "attribute float temperature; " +
-            "varying vec4 fsColor; " +
-            "void main() { " +
-            "  gl_PointSize = 1.0; " +
-            "  gl_Position = vec4(position, 1.0); " +
-            "  if ((normal == vec3(1.0, 0.0, 0.0)) && (temperature == 75.0)) { " +
-            "    fsColor = vec4(color, 1.0); " +
-            "  } " +
-            "  else {" +
-            "    fsColor = vec4(1.0); " +
-            "  }" +
-            "}";
+            'attribute vec3 position; ' +
+            'attribute vec3 color; ' +
+            'attribute vec3 normal; ' +
+            'attribute float temperature; ' +
+            'varying vec4 fsColor; ' +
+            'void main() { ' +
+            '  gl_PointSize = 1.0; ' +
+            '  gl_Position = vec4(position, 1.0); ' +
+            '  if ((normal == vec3(1.0, 0.0, 0.0)) && (temperature == 75.0)) { ' +
+            '    fsColor = vec4(color, 1.0); ' +
+            '  } ' +
+            '  else {' +
+            '    fsColor = vec4(1.0); ' +
+            '  }' +
+            '}';
         var fs =
-            "varying vec4 fsColor; " +
-            "void main() { " +
-            "  gl_FragColor = fsColor; " +
-            "}";
+            'varying vec4 fsColor; ' +
+            'void main() { ' +
+            '  gl_FragColor = fsColor; ' +
+            '}';
         sp = context.createShaderProgram(vs, fs, attributeIndices);
 
         context.clear();
@@ -512,21 +512,21 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
 
         var vs2 =
-            "attribute vec3 position; " +
-            "attribute vec3 color; " +
-            "attribute vec3 normal; " +
-            "attribute float temperature; " +
-            "varying vec4 fsColor; " +
-            "void main() { " +
-            "  gl_PointSize = 1.0; " +
-            "  gl_Position = vec4(position, 1.0); " +
-            "  if ((normal == vec3(0.0, 1.0, 0.0)) && (temperature == 100.0)) { " +
-            "    fsColor = vec4(color, 1.0); " +
-            "  } " +
-            "  else {" +
-            "    fsColor = vec4(1.0); " +
-            "  }" +
-            "}";
+            'attribute vec3 position; ' +
+            'attribute vec3 color; ' +
+            'attribute vec3 normal; ' +
+            'attribute float temperature; ' +
+            'varying vec4 fsColor; ' +
+            'void main() { ' +
+            '  gl_PointSize = 1.0; ' +
+            '  gl_Position = vec4(position, 1.0); ' +
+            '  if ((normal == vec3(0.0, 1.0, 0.0)) && (temperature == 100.0)) { ' +
+            '    fsColor = vec4(color, 1.0); ' +
+            '  } ' +
+            '  else {' +
+            '    fsColor = vec4(1.0); ' +
+            '  }' +
+            '}';
         sp = sp.destroy();
         sp = context.createShaderProgram(vs2, fs, attributeIndices);
 
@@ -540,7 +540,7 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([0, 255, 0, 255]);
     });
 
-    it("creates an index buffer", function() {
+    it('creates an index buffer', function() {
         var mesh = {
             indexLists : [{
                 primitiveType : PrimitiveType.POINTS,
@@ -559,7 +559,7 @@ defineSuite([
         expect(va.getIndexBuffer().getNumberOfIndices()).toEqual(mesh.indexLists[0].values.length);
     });
 
-    it("throws with multiple index lists", function() {
+    it('throws with multiple index lists', function() {
         var mesh = {
             indexLists : [{
                 primitiveType : PrimitiveType.POINTS,
@@ -577,7 +577,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("throws with different number of interleaved attributes", function() {
+    it('throws with different number of interleaved attributes', function() {
         var mesh = {
             attributes : {
                 position : {
@@ -601,7 +601,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("throws with duplicate indices", function() {
+    it('throws with duplicate indices', function() {
         var mesh = {
             attributes : {
                 position : {

@@ -293,7 +293,7 @@ define([
     Polygon.prototype.setPositions = function(positions, height) {
         // positions can be undefined
         if (typeof positions !== 'undefined' && (positions.length < 3)) {
-            throw new DeveloperError("At least three positions are required.");
+            throw new DeveloperError('At least three positions are required.');
         }
         this.height = height || 0.0;
         this._extent = undefined;
@@ -431,14 +431,14 @@ define([
      */
     Polygon.prototype.update = function(context, sceneState) {
         if (!this.ellipsoid) {
-            throw new DeveloperError("this.ellipsoid must be defined.");
+            throw new DeveloperError('this.ellipsoid must be defined.');
         }
 
         var mode = sceneState.mode;
         var granularity = this._getGranularity(mode);
 
         if (granularity < 0.0) {
-            throw new DeveloperError("this.granularity and scene2D/scene3D overrides must be greater than zero.");
+            throw new DeveloperError('this.granularity and scene2D/scene3D overrides must be greater than zero.');
         }
 
         if (this.show) {
@@ -480,11 +480,11 @@ define([
                 this._material = this.material || new ColorMaterial();
 
                 var fsSource =
-                    "#line 0\n" +
+                    '#line 0\n' +
                     Noise +
-                    "#line 0\n" +
+                    '#line 0\n' +
                     this.material._getShaderSource() +
-                    "#line 0\n" +
+                    '#line 0\n' +
                     PolygonFS;
 
                 this._sp = this._sp && this._sp.release();
