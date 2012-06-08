@@ -11,13 +11,13 @@ defineSuite([
     /*global document,it,expect*/
 
 
-    it("throws without a description", function() {
+    it('throws without a description', function() {
         expect(function() {
             return new Tile();
         }).toThrow();
     });
 
-    it("throws without description.extent", function() {
+    it('throws without description.extent', function() {
         expect(function() {
             return new Tile({
                 x : 0,
@@ -26,7 +26,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("throws without description.zoom", function() {
+    it('throws without description.zoom', function() {
         expect(function() {
             return new Tile({
                 extent : new Extent(
@@ -41,7 +41,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("throws with negative x or y properties", function() {
+    it('throws with negative x or y properties', function() {
         expect(function() {
             return new Tile({
                 x : -1.0,
@@ -51,14 +51,14 @@ defineSuite([
         }).toThrow();
     });
 
-    it("creates extent on construction", function() {
+    it('creates extent on construction', function() {
         var desc = {x : 0, y : 0, zoom : 0};
         var tile = new Tile(desc);
         var extent = Tile.tileXYToExtent(desc.x, desc.y, desc.zoom);
         expect(tile.extent).toEqual(extent);
     });
 
-    it("creates x, y, zoom on construction", function() {
+    it('creates x, y, zoom on construction', function() {
         var desc = {
             extent : new Extent(
                     -CesiumMath.PI,

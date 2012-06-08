@@ -15,11 +15,11 @@
                     if (p) {
                         var d = Cesium.Math.cartographic2ToDegrees(ellipsoid.toCartographic2(p));
                         label.setShow(true);
-                        label.setText("(" + d.longitude.toFixed(2) + ", " + d.latitude.toFixed(2) + ")");
+                        label.setText('(' + d.longitude.toFixed(2) + ', ' + d.latitude.toFixed(2) + ')');
                         label.setPosition(p);
                     }
                     else {
-                        label.setText("");
+                        label.setText('');
                     }
                 },
                 Cesium.MouseEventType.MOVE
@@ -70,7 +70,7 @@
                 });
                 primitives.add(billboards);
             };
-            image.src = "Images/logoColor.png";
+            image.src = 'Images/logoColor.png';
         };
 
         this.clear = function () {
@@ -164,7 +164,7 @@
                 billboard.highlighted = true;
                 primitives.add(billboards);
             };
-            image.src = "Images/logoColor.png";
+            image.src = 'Images/logoColor.png';
         };
 
         this.clear = function () {
@@ -298,7 +298,7 @@
                         // Prevent multiple erosions
                         eroding = true;
 
-                        scene.getAnimations().addProperty(sensor, "erosion", 1.0, 0.0, {
+                        scene.getAnimations().addProperty(sensor, 'erosion', 1.0, 0.0, {
                             onComplete : function() {
                                 sensors.remove(sensor);
                             }

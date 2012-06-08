@@ -24,7 +24,7 @@ defineSuite([
         }];
     });
 
-    it("constructor throws an exception with invalid control points", function() {
+    it('constructor throws an exception with invalid control points', function() {
         expect(function() {
             return new OrientationInterpolator();
         }).toThrow();
@@ -38,19 +38,19 @@ defineSuite([
         }).toThrow();
     });
 
-    it("get control points", function() {
+    it('get control points', function() {
         var oi = new OrientationInterpolator(points);
         expect(oi.getControlPoints()).toEqual(points);
     });
 
-    it("evaluate fails with undefined time", function() {
+    it('evaluate fails with undefined time', function() {
         var oi = new OrientationInterpolator(points);
         expect(function() {
             oi.evaluate();
         }).toThrow();
     });
 
-    it("evaluate fails with time out of range", function() {
+    it('evaluate fails with time out of range', function() {
         var oi = new OrientationInterpolator(points);
 
         expect(function() {
@@ -62,7 +62,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("evaluate can jump around in time", function() {
+    it('evaluate can jump around in time', function() {
         var oi = new OrientationInterpolator(points);
 
         expect(oi.evaluate(points[0].time).equalsEpsilon(points[0].orientation, CesiumMath.EPSILON12)).toEqual(true);
@@ -80,14 +80,14 @@ defineSuite([
         expect(oi.evaluate(points[0].time).equalsEpsilon(points[0].orientation, CesiumMath.EPSILON12)).toEqual(true);
     });
 
-    it("evaluate (1)", function() {
+    it('evaluate (1)', function() {
         var oi = new OrientationInterpolator(points);
         var actual = oi.evaluate((points[0].time + points[1].time) * 0.5);
         var expected = new Quaternion(0.0, 0.0, Math.sin(Math.PI / 8.0), Math.cos(Math.PI / 8.0));
         expect(actual.equalsEpsilon(expected, CesiumMath.EPSILON15)).toEqual(true);
     });
 
-    it("evaluate (2)", function() {
+    it('evaluate (2)', function() {
         var oi = new OrientationInterpolator(points);
         var actual = oi.evaluate(points[2].time);
         var expected = new Quaternion(0.0, -1.0, 0.0, CesiumMath.toRadians(15.0));

@@ -27,11 +27,11 @@ define([
      */
     function VertexArrayFacade(context, attributes, sizeInVertices) {
         if (!context) {
-            throw new DeveloperError("context is required.");
+            throw new DeveloperError('context is required.');
         }
 
         if (!attributes || (attributes.length === 0)) {
-            throw new DeveloperError("At least one attribute is required.");
+            throw new DeveloperError('At least one attribute is required.');
         }
 
         var attrs = VertexArrayFacade._verifyAttributes(attributes);
@@ -137,8 +137,8 @@ define([
             var attribute = attributes[i];
 
             var attr = {
-                index : (typeof attribute.index === "undefined") ? i : attribute.index,
-                enabled : (typeof attribute.enabled === "undefined") ? true : attribute.enabled,
+                index : (typeof attribute.index === 'undefined') ? i : attribute.index,
+                enabled : (typeof attribute.enabled === 'undefined') ? true : attribute.enabled,
                 componentsPerAttribute : attribute.componentsPerAttribute,
                 componentDatatype : attribute.componentDatatype || ComponentDatatype.FLOAT,
                 normalize : attribute.normalize || false,
@@ -150,16 +150,16 @@ define([
             attrs.push(attr);
 
             if ((attr.componentsPerAttribute !== 1) && (attr.componentsPerAttribute !== 2) && (attr.componentsPerAttribute !== 3) && (attr.componentsPerAttribute !== 4)) {
-                throw new DeveloperError("attribute.componentsPerAttribute must be in the range [1, 4].");
+                throw new DeveloperError('attribute.componentsPerAttribute must be in the range [1, 4].');
             }
 
             var datatype = attr.componentDatatype;
             if (!ComponentDatatype.validate(datatype)) {
-                throw new DeveloperError("Attribute must have a valid componentDatatype or not specify it.");
+                throw new DeveloperError('Attribute must have a valid componentDatatype or not specify it.');
             }
 
             if (!BufferUsage.validate(attr.usage)) {
-                throw new DeveloperError("Attribute must have a valid usage or not specify it.");
+                throw new DeveloperError('Attribute must have a valid usage or not specify it.');
             }
         }
 
@@ -168,7 +168,7 @@ define([
         for ( var j = 0; j < attrs.length; ++j) {
             var index = attrs[j].index;
             if (uniqueIndices[index]) {
-                throw new DeveloperError("Index " + index + " is used by more than one attribute.");
+                throw new DeveloperError('Index ' + index + ' is used by more than one attribute.');
             }
             uniqueIndices[index] = true;
         }
@@ -409,11 +409,11 @@ define([
      */
     VertexArrayFacade.prototype.subCommit = function(offsetInVertices, lengthInVertices) {
         if (offsetInVertices < 0 || offsetInVertices >= this._size) {
-            throw new DeveloperError("offsetInVertices must be greater than or equal to zero and less than the vertex array's size.");
+            throw new DeveloperError('offsetInVertices must be greater than or equal to zero and less than the vertex array size.');
         }
 
         if (offsetInVertices + lengthInVertices > this._size) {
-            throw new DeveloperError("offsetInVertices + lengthInVertices cannot exceed the vertex array's size.");
+            throw new DeveloperError('offsetInVertices + lengthInVertices cannot exceed the vertex array size.');
         }
 
         this._subCommit(this._static, offsetInVertices, lengthInVertices);

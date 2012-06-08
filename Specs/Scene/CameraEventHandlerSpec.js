@@ -22,51 +22,51 @@ defineSuite([
         handler2 = handler2 && !handler2.isDestroyed() && handler2.destroy();
     });
 
-    it("throws without a canvas", function() {
+    it('throws without a canvas', function() {
         expect(function() {
             handler2 = new CameraEventHandler();
         }).toThrow();
     });
 
-    it("throws without a moveType", function() {
+    it('throws without a moveType', function() {
         expect(function() {
             handler2 = new CameraEventHandler(document);
         }).toThrow();
     });
 
-    it("throws if the event type is not of CameraEventType", function() {
+    it('throws if the event type is not of CameraEventType', function() {
         expect(function() {
             handler2 = new CameraEventHandler(document, MouseEventType.LEFT_CLICK);
         }).toThrow();
     });
 
-    it("can be constructed using the middle drag event type", function() {
+    it('can be constructed using the middle drag event type', function() {
         expect(function(){
             handler2 = new CameraEventHandler(document, CameraEventType.MIDDLE_DRAG);
         }).not.toThrow();
     });
 
-    it("getMovement", function() {
+    it('getMovement', function() {
         expect(handler.getMovement()).toBeFalsy();
     });
 
-    it("isMoving", function() {
+    it('isMoving', function() {
         expect(handler.isMoving()).toEqual(false);
     });
 
-    it("isButtonDown", function() {
+    it('isButtonDown', function() {
         expect(handler.isButtonDown()).toEqual(false);
     });
 
-    it("getButtonPressTime", function() {
+    it('getButtonPressTime', function() {
         expect(handler.getButtonPressTime()).toEqual(null);
     });
 
-    it("getButtonReleaseTime", function() {
+    it('getButtonReleaseTime', function() {
         expect(handler.getButtonReleaseTime()).toEqual(null);
     });
 
-    it("isDestroyed", function() {
+    it('isDestroyed', function() {
         expect(handler.isDestroyed()).toEqual(false);
         handler.destroy();
         expect(handler.isDestroyed()).toEqual(true);

@@ -14,7 +14,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        ZERO : new Enumeration(0, "ZERO"),
+        ZERO : new Enumeration(0, 'ZERO'),
 
         /**
          * DOC_TBA
@@ -22,7 +22,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        KEEP : new Enumeration(0x1E00, "KEEP"),
+        KEEP : new Enumeration(0x1E00, 'KEEP'),
 
         /**
          * DOC_TBA
@@ -30,7 +30,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        REPLACE : new Enumeration(0x1E01, "REPLACE"),
+        REPLACE : new Enumeration(0x1E01, 'REPLACE'),
 
         /**
          * DOC_TBA
@@ -38,7 +38,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        INCREMENT : new Enumeration(0x1E02, "INCREMENT"), // WebGL: INCR
+        INCREMENT : new Enumeration(0x1E02, 'INCREMENT'), // WebGL: INCR
 
         /**
          * DOC_TBA
@@ -46,7 +46,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        DECREMENT : new Enumeration(0x1E03, "DECREMENT"), // WebGL: DECR
+        DECREMENT : new Enumeration(0x1E03, 'DECREMENT'), // WebGL: DECR
 
         /**
          * DOC_TBA
@@ -54,7 +54,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        INVERT : new Enumeration(0x150A, "INVERT"),
+        INVERT : new Enumeration(0x150A, 'INVERT'),
 
         /**
          * DOC_TBA
@@ -62,7 +62,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        INCREMENT_WRAP : new Enumeration(0x8507, "INCREMENT_WRAP"), // WebGL: INCR_WRAP
+        INCREMENT_WRAP : new Enumeration(0x8507, 'INCREMENT_WRAP'), // WebGL: INCR_WRAP
 
         /**
          * DOC_TBA
@@ -70,7 +70,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        DECREMENT_WRAP : new Enumeration(0x8508, "DECREMENT_WRAP"), // WebGL: DECR_WRAP
+        DECREMENT_WRAP : new Enumeration(0x8508, 'DECREMENT_WRAP'), // WebGL: DECR_WRAP
 
         /**
          * DOC_TBA

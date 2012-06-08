@@ -22,31 +22,31 @@ defineSuite([
             ];
     }
 
-    it("throws an exception when constructed without any positions", function() {
+    it('throws an exception when constructed without any positions', function() {
         expect(function() {
             return new BoundingSphere();
         }).toThrow();
     });
 
-    it("can be constructed using a point and a radius", function() {
+    it('can be constructed using a point and a radius', function() {
         var sphere = new BoundingSphere(new Cartesian3(0, 0, 0), 1);
         expect(sphere.center.equals(Cartesian3.ZERO)).toEqual(true);
         expect(sphere.radius).toEqual(1);
     });
 
-    it("has a center", function() {
+    it('has a center', function() {
         var sphere = new BoundingSphere(getPositions());
         var center = sphere.center;
         expect(center.equalsEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON14)).toEqual(true);
     });
 
-    it("has a radius", function() {
+    it('has a radius', function() {
         var sphere = new BoundingSphere(getPositions());
         var radius = sphere.radius;
         expect(radius).toEqual(1);
     });
 
-    it("contains all points (naive)", function() {
+    it('contains all points (naive)', function() {
         var sphere = new BoundingSphere(getPositions());
         var radius = sphere.radius;
         var center = sphere.center;
@@ -65,7 +65,7 @@ defineSuite([
         }
     });
 
-    it("contains all points (ritter)", function() {
+    it('contains all points (ritter)', function() {
         var positions = getPositions();
         positions.push(new Cartesian3(1, 1, 1), new Cartesian3(2, 2, 2), new Cartesian3(3, 3, 3));
         var sphere = new BoundingSphere(positions);

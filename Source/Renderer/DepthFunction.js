@@ -14,7 +14,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        NEVER : new Enumeration(0x0200, "NEVER"),
+        NEVER : new Enumeration(0x0200, 'NEVER'),
 
         /**
          * DOC_TBA
@@ -22,7 +22,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        LESS : new Enumeration(0x0201, "LESS"),
+        LESS : new Enumeration(0x0201, 'LESS'),
 
         /**
          * DOC_TBA
@@ -30,7 +30,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        EQUAL : new Enumeration(0x0202, "EQUAL"),
+        EQUAL : new Enumeration(0x0202, 'EQUAL'),
 
         /**
          * DOC_TBA
@@ -38,7 +38,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        LESS_OR_EQUAL : new Enumeration(0x0203, "LEQUAL"),
+        LESS_OR_EQUAL : new Enumeration(0x0203, 'LEQUAL'),
 
         /**
          * DOC_TBA
@@ -46,7 +46,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        GREATER : new Enumeration(0x0204, "GREATER"),
+        GREATER : new Enumeration(0x0204, 'GREATER'),
 
         /**
          * DOC_TBA
@@ -54,7 +54,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        NOT_EQUAL : new Enumeration(0x0205, "NOTEQUAL"),
+        NOT_EQUAL : new Enumeration(0x0205, 'NOTEQUAL'),
 
         /**
          * DOC_TBA
@@ -62,7 +62,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        GREATER_OR_EQUAL : new Enumeration(0x0206, "GEQUAL"),
+        GREATER_OR_EQUAL : new Enumeration(0x0206, 'GEQUAL'),
 
         /**
          * DOC_TBA
@@ -70,7 +70,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        ALWAYS : new Enumeration(0x0207, "ALWAYS"),
+        ALWAYS : new Enumeration(0x0207, 'ALWAYS'),
 
         /**
          * DOC_TBA

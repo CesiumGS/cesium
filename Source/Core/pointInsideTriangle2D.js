@@ -16,7 +16,7 @@ define(['./DeveloperError'], function(DeveloperError) {
      */
     function pointInsideTriangle2D(point, p0, p1, p2) {
         if (!point || !p0 || !p1 || !p2) {
-            throw new DeveloperError("point, p0, p1, and p2 are required.");
+            throw new DeveloperError('point, p0, p1, and p2 are required.');
         }
 
         // Implementation based on http://www.blackpawn.com/texts/pointinpoly/default.html.

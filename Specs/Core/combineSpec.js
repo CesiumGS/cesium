@@ -6,7 +6,7 @@ defineSuite([
     "use strict";
     /*global it,expect*/
 
-    it("combine throws with duplicate member", function() {
+    it('combine throws with duplicate member', function() {
         expect(function() {
             combine({
                 x : 1,
@@ -18,7 +18,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("combine", function() {
+    it('combine', function() {
         var obj1 = {
             x : 1,
             y : 2

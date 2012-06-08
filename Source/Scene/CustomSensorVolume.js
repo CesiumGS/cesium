@@ -68,14 +68,14 @@ define([
          *
          * @type Boolean
          */
-        this.show = (typeof t.show === "undefined") ? true : t.show;
+        this.show = (typeof t.show === 'undefined') ? true : t.show;
 
         /**
          * DOC_TBA
          *
          * @type Boolean
          */
-        this.showIntersection = (typeof t.showIntersection === "undefined") ? true : t.showIntersection;
+        this.showIntersection = (typeof t.showIntersection === 'undefined') ? true : t.showIntersection;
 
         /**
          * <p>
@@ -88,7 +88,7 @@ define([
          *
          * @type Boolean
          */
-        this.showThroughEllipsoid = (typeof t.showThroughEllipsoid === "undefined") ? false : t.showThroughEllipsoid;
+        this.showThroughEllipsoid = (typeof t.showThroughEllipsoid === 'undefined') ? false : t.showThroughEllipsoid;
 
         /**
          * The 4x4 transformation matrix that transforms this sensor from model to world coordinates.  In it's model
@@ -98,8 +98,8 @@ define([
          * This matrix is available to GLSL vertex and fragment shaders via
          * {@link agi_model} and derived uniforms.
          * <br /><br />
-         * <div align="center">
-         * <img src="images/CustomSensorVolume.setModelMatrix.png" /><br />
+         * <div align='center'>
+         * <img src='images/CustomSensorVolume.setModelMatrix.png' /><br />
          * Model coordinate system for a custom sensor
          * </div>
          *
@@ -128,7 +128,7 @@ define([
          *
          * @type Number
          */
-        this.radius = (typeof t.radius === "undefined") ? Number.POSITIVE_INFINITY : t.radius;
+        this.radius = (typeof t.radius === 'undefined') ? Number.POSITIVE_INFINITY : t.radius;
 
         this._directions = undefined;
         this._directionsDirty = false;
@@ -155,7 +155,7 @@ define([
          *
          * @type Number
          */
-        this.erosion = (typeof t.erosion === "undefined") ? 1.0 : t.erosion;
+        this.erosion = (typeof t.erosion === 'undefined') ? 1.0 : t.erosion;
 
         var that = this;
         this._uniforms = {
@@ -309,7 +309,7 @@ define([
         }
 
         if (this.radius < 0.0) {
-            throw new DeveloperError("this.radius must be greater than or equal to zero.");
+            throw new DeveloperError('this.radius must be greater than or equal to zero.');
         }
 
         if (this.show) {
@@ -343,13 +343,13 @@ define([
                 this._material = this.material;
 
                 var fsSource =
-                    "#line 0\n" +
+                    '#line 0\n' +
                     ShadersNoise +
-                    "#line 0\n" +
+                    '#line 0\n' +
                     ShadersSensorVolume +
-                    "#line 0\n" +
+                    '#line 0\n' +
                     this._material._getShaderSource() +
-                    "#line 0\n" +
+                    '#line 0\n' +
                     CustomSensorVolumeFS;
 
                 this._sp = this._sp && this._sp.release();
@@ -396,10 +396,10 @@ define([
         if (this._mode === SceneMode.SCENE3D && this.show && this._va) {
             // Since this ignores all other materials, if a material does discard, the sensor will still be picked.
             var fsSource =
-                "#define RENDER_FOR_PICK 1\n" +
-                "#line 0\n" +
+                '#define RENDER_FOR_PICK 1\n' +
+                '#line 0\n' +
                 ShadersSensorVolume +
-                "#line 0\n" +
+                '#line 0\n' +
                 CustomSensorVolumeFS;
 
             this._spPick = context.getShaderCache().getShaderProgram(CustomSensorVolumeVS, fsSource, attributeIndices);
