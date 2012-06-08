@@ -335,6 +335,20 @@ define([
         this.showSkyAtmosphere = false;
 
         /**
+         * <p>
+         * Determines if the central body is affected by lighting, i.e., if sun light brightens the
+         * day side of the globe, and and the night side appears dark.  When <code>true</code>, the
+         * central body is affected by lighting; when <code>false</code>, the central body is uniformly
+         * shaded with the day tile provider, i.e., no night lights, atmosphere, etc. are used.
+         * </p>
+         * <p>
+         * The default is <code>true</code>.
+         * </p>
+         */
+        this.affectedByLighting = true;
+        this._affectedByLighting = true;
+
+        /**
          * DOC_TBA
          */
         this.dayTileProvider = undefined;
@@ -1819,7 +1833,8 @@ define([
 
         if (typeof this._sp === 'undefined' || typeof this._spPoles === 'undefined' ||
             (dayChanged || nightChanged || cloudsChanged || cloudShadowsChanged || specularChanged || bumpsChanged) ||
-            (this._showTerminator !== this.showTerminator)) {
+            (this._showTerminator !== this.showTerminator) ||
+            (this._affectedByLighting !== this.affectedByLighting)) {
 
             var fsPrepend = ((this.showDay && this._dayTileProvider) ? '#define SHOW_DAY 1\n' : '') +
                 ((this.showNight && this._nightTexture) ? '#define SHOW_NIGHT 1\n' : '') +
@@ -1880,6 +1895,7 @@ define([
             this._showSpecular = specularChanged ? this.showSpecular : this._showSpecular;
             this._showBumps = bumpsChanged ? this.showBumps : this._showBumps;
             this._showTerminator = this.showTerminator;
+            this._affectedByLighting = this.affectedByLighting;
         }
 
         var camera = sceneState.camera;
