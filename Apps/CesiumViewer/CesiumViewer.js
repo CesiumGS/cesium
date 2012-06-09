@@ -311,9 +311,9 @@ function(dom,
                 transitioner.morphToColumbusView();
             });
 
-            var sunPosition = registry.byId('sunPosition');
-            on(sunPosition, 'Change', function(value) {
-                cesium.lockSunPositionToCamera = !value;
+            var cbLighting = registry.byId('cbLighting');
+            on(cbLighting, 'Change', function(value) {
+                cesium.centralBody.affectedByLighting = !value;
             });
 
             var imageryAerial = registry.byId('imageryAerial');

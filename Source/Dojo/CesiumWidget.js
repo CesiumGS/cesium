@@ -57,7 +57,6 @@ define([
         useStreamingImagery : true,
         mapStyle : BingMapsStyle.AERIAL,
         defaultCamera : undefined,
-        lockSunPositionToCamera : false,
         dayImageUrl : undefined,
         nightImageUrl : undefined,
         specularMapUrl : undefined,
@@ -319,11 +318,7 @@ define([
             }
 
             var scene = this.scene;
-            if (this.lockSunPositionToCamera) {
-                scene.setSunPosition(scene.getCamera().position);
-            } else {
-                scene.setSunPosition(SunPosition.compute(time).position);
-            }
+            scene.setSunPosition(SunPosition.compute(time).position);
             scene.render();
 
             var renderHitched = this._renderHitched;
