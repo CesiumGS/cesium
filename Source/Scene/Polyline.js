@@ -281,16 +281,16 @@ define([
         this._rsThree = undefined;
         this._rsPick = undefined;
 
+        this._mode = SceneMode.SCENE3D;
+        this._projection = undefined;
+
         /**
          * The current morph transition time between 2D/Columbus View and 3D,
          * with 0.0 being 2D or Columbus View and 1.0 being 3D.
          *
          * @type Number
          */
-        this.morphTime = 1.0;
-
-        this._mode = SceneMode.SCENE3D;
-        this._projection = undefined;
+        this.morphTime = this._mode.morphTime;
 
         var that = this;
 
@@ -744,6 +744,10 @@ define([
 
             var mode = sceneState.mode;
             var projection = sceneState.scene2D.projection;
+
+            if (this._mode !== mode && typeof mode.morphTime !== 'undefined') {
+                this.morphTime = mode.morphTime;
+            }
 
             if (this.columbusView.groundTrack.show || (mode === SceneMode.SCENE2D)) {
                 this._spGroundTrack =
