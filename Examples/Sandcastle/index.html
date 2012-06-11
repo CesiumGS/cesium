@@ -8,6 +8,13 @@
     <link rel="Stylesheet" href="../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css" type="text/css">
     <link rel="stylesheet" href="../../ThirdParty/CodeMirror-2.24/lib/codemirror.css">
     <link rel="stylesheet" href="CesiumSandcastle.css">
+    <script>
+    if (window.location.protocol === 'file:') {
+        if (confirm("You must host this app on a web server.\nSee contributor's guide for more info?")) {
+            window.location = 'https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor%27s-Guide';
+        }
+    }
+    </script>
     <script src="../../ThirdParty/CodeMirror-2.24/lib/codemirror.js"></script>
     <!-- The next four lines, including Cesium itself, are only for autocomplete -->
     <script src="../../Build/CesiumUnminified.js"> </script>

@@ -5,6 +5,13 @@
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <title>Cesium Demo</title>
+    <script>
+    if (window.location.protocol === 'file:') {
+        if (confirm("You must host this app on a web server.\nSee contributor's guide for more info?")) {
+            window.location = 'https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor%27s-Guide';
+        }
+    }
+    </script>
     <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../ThirdParty/dojo-release-1.7.2-src/dojo/dojo.js"></script>
     <link rel="Stylesheet" href="../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css" type="text/css">
 </head>
