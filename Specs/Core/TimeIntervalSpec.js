@@ -48,6 +48,18 @@ defineSuite([
         interval = new TimeInterval(JulianDate.fromTotalDays(5), JulianDate.fromTotalDays(4));
         expect(interval.isEmpty).toEqual(true);
         expect(interval.contains(JulianDate.fromTotalDays(4.5))).toEqual(false);
+
+        interval = new TimeInterval(JulianDate.fromTotalDays(5), JulianDate.fromTotalDays(5), false, true);
+        expect(interval.isEmpty).toEqual(true);
+        expect(interval.contains(interval.start)).toEqual(false);
+
+        interval = new TimeInterval(JulianDate.fromTotalDays(5), JulianDate.fromTotalDays(5), true, false);
+        expect(interval.isEmpty).toEqual(true);
+        expect(interval.contains(interval.start)).toEqual(false);
+
+        interval = new TimeInterval(JulianDate.fromTotalDays(5), JulianDate.fromTotalDays(5), true, true);
+        expect(interval.isEmpty).toEqual(false);
+        expect(interval.contains(interval.start)).toEqual(true);
     });
 
     it('Contains', function() {

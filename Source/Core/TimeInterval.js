@@ -56,7 +56,7 @@ define([
         this.data = data;
         this.isStartIncluded = isStartIncluded;
         this.isStopIncluded = isStopIncluded;
-        this.isEmpty = stopComparedToStart < 0 || (stopComparedToStart === 0 && !isStartIncluded && !isStopIncluded);
+        this.isEmpty = stopComparedToStart < 0 || (stopComparedToStart === 0 && (!isStartIncluded || !isStopIncluded));
     }
 
     /**
