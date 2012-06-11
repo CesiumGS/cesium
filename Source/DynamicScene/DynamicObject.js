@@ -5,14 +5,14 @@ define([
         './DynamicProperty',
         './DynamicPositionProperty',
         './DynamicVertexPositionsProperty',
-        './CzmlQuaternion'
+        './CzmlUnitQuaternion'
     ], function(
         DeveloperError,
         TimeInterval,
         DynamicProperty,
         DynamicPositionProperty,
         DynamicVertexPositionsProperty,
-        CzmlQuaternion) {
+        CzmlUnitQuaternion) {
     "use strict";
 
     function DynamicObject(id) {
@@ -58,7 +58,7 @@ define([
     DynamicObject.processCzmlPacketOrientation = function(dynamicObject, packet, dynamicObjectCollection) {
         var orientationData = packet.orientation;
         if (typeof orientationData !== 'undefined') {
-            return DynamicProperty.processCzmlPacket(dynamicObject, 'orientation', CzmlQuaternion, orientationData, undefined, dynamicObjectCollection);
+            return DynamicProperty.processCzmlPacket(dynamicObject, 'orientation', CzmlUnitQuaternion, orientationData, undefined, dynamicObjectCollection);
         }
         return false;
     };

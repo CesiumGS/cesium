@@ -5,7 +5,7 @@ defineSuite([
          'DynamicScene/CzmlBoolean',
          'DynamicScene/CzmlNumber',
          'DynamicScene/CzmlCartesian3',
-         'DynamicScene/CzmlQuaternion',
+         'DynamicScene/CzmlUnitQuaternion',
          'Core/Quaternion',
          'Core/Math',
          'DynamicScene/CzmlCartesian2'
@@ -15,7 +15,7 @@ defineSuite([
          CzmlBoolean,
          CzmlNumber,
          CzmlCartesian3,
-         CzmlQuaternion,
+         CzmlUnitQuaternion,
          Quaternion,
          CesiumMath,
          CzmlCartesian2) {
@@ -141,7 +141,7 @@ defineSuite([
         var iso8601Epoch = '2012-04-18T15:59:00Z';
         var epoch = JulianDate.fromIso8601(iso8601Epoch);
 
-        var property = new DynamicProperty(CzmlQuaternion);
+        var property = new DynamicProperty(CzmlUnitQuaternion);
         var czmlInterval = {
             quaternion : [0, 1, 2, 3]
         };
@@ -195,7 +195,7 @@ defineSuite([
         var iso8601Epoch = '2012-04-18T15:59:00Z';
         var epoch = JulianDate.fromIso8601(iso8601Epoch);
 
-        var property = new DynamicProperty(CzmlQuaternion);
+        var property = new DynamicProperty(CzmlUnitQuaternion);
 
         var czmlInterval = {
             epoch : iso8601Epoch,
