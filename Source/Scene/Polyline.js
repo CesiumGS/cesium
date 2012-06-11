@@ -42,101 +42,82 @@ define([
      * @constructor
      *
      * @example
-     * var polyline = new Polyline();
-     * polyline.color = {
-     *   red   : 1.0,
-     *   green : 0.0,
-     *   blue  : 0.0,
-     *   alpha : 0.5
-     * };
-     * polyline.outlineColor = {
-     *   red   : 1.0,
-     *   green : 1.0,
-     *   blue  : 0.0,
-     *   alpha : 0.5
-     * };
-     * polyline.setPositions([
-     *   ellipsoid.toCartesian(new Cartographic3(...)),
-     *   ellipsoid.toCartesian(new Cartographic3(...)),
-     *   ellipsoid.toCartesian(new Cartographic3(...))
-     * ]);
      */
     function Polyline(polylineTemplate, polylineCollection) {
         var p = polylineTemplate || {};
+
+        this._positions = [];
         this.setPositions(p.positions);
-        /**
-         * DOC_TBA
-         * <br /><br />
-         * The actual width used is clamped to the minimum and maximum width supported by the WebGL implementation.
-         * These can be queried with {@link Context#getMinimumAliasedLineWidth} and
-         * {@link Context#getMaximumAliasedLineWidth}.
-         *
-         * @type Number
-         *
-         * @see Polyline#outlineWidth
-         * @see Context#getMinimumAliasedLineWidth
-         * @see Context#getMaximumAliasedLineWidth
-         *
-         * @example
-         * // 3 pixel total width, 1 pixel interior width
-         * polyline.width = 1.0;
-         * polyline.outlineWidth = 3.0;
-         */
-        this.width = 2;
-
-        /**
-         * DOC_TBA
-         * <br /><br />
-         * The actual width used is clamped to the minimum and maximum width supported by the WebGL implementation.
-         * These can be queried with {@link Context#getMinimumAliasedLineWidth} and
-         * {@link Context#getMaximumAliasedLineWidth}.
-         *
-         * @type Number
-         *
-         * @see Polyline#width
-         * @see Context#getMinimumAliasedLineWidth
-         * @see Context#getMaximumAliasedLineWidth
-         *
-         * @example
-         * // 3 pixel total width, 1 pixel interior width
-         * polyline.width = 1.0;
-         * polyline.outlineWidth = 3.0;
-         */
-        this.outlineWidth = 5;
-
-        /**
-         * DOC_TBA
-         *
-         * @see Polyline#outlineColor
-         */
-        this.color = {
-            red : 0.0,
-            green : 0.0,
-            blue : 1.0,
-            alpha : 1.0
-        };
-
-        /**
-         * DOC_TBA
-         *
-         * @see Polyline#color
-         */
-        this.outlineColor = {
+        this._show = (typeof p.show === "undefined") ? true : p.show;
+        this._width = (typeof p.width === "undefined") ? 2.0 : p.width;
+        this._outlineWidth = (typeof p.outlineWidth === "undefined") ? 5.0 : p.outlineWidth;
+        var color = p.color || {
             red : 1.0,
             green : 1.0,
             blue : 1.0,
             alpha : 1.0
         };
+        this._color = {
+                red : color.red,
+                green : color.green,
+                blue : color.blue,
+                alpha : color.alpha
+            };
+        var outlineColor = p.outlineColor ||{
+            red : 1.0,
+            green : 1.0,
+            blue : 1.0,
+            alpha : 1.0
+        };
+        this._outlineColor = {
+            red : outlineColor.red,
+            green : outlineColor.green,
+            blue : outlineColor.blue,
+            alpha : outlineColor.alpha
+        };
 
-        /**
-         * Determines if this polyline will be shown.
-         *
-         * @type Boolean
-         */
-        this.show = true;
-
+        this._collection = polylineCollection;
+        this._dirty = false;
     }
 
+    var SHOW_INDEX = Polyline.SHOW_INDEX = 0;
+    var POSITION_INDEX = Polyline.POSITION_INDEX = 1;
+    var COLOR_INDEX = Polyline.COLOR_INDEX = 2;
+    var WIDTH_INDEX = Polyline.WIDTH_INDEX = 3;
+    var OUTLINE_WIDTH_INDEX = Polyline.OUTLINE_WIDTH_INDEX = 4;
+    var OUTLINE_COLOR_INDEX = Polyline.OUTLINE_COLOR_INDEX = 5;
+    Polyline.NUMBER_OF_PROPERTIES = 6;
+
+    /**
+     * Returns true if this billboard will be shown.  Call {@link Billboard#setShow}
+     * to hide or show a billboard, instead of removing it and re-adding it to the collection.
+     *
+     * @memberof Billboard
+     *
+     * @return {Boolean} <code>true</code> if this billboard will be shown; otherwise, <code>false</code>.
+     *
+     * @see Billboard#setShow
+     */
+    Polyline.prototype.getShow = function() {
+        return this._show;
+    };
+
+    /**
+     * Determines if this billboard will be shown.  Call this to hide or show a billboard, instead
+     * of removing it and re-adding it to the collection.
+     *
+     * @memberof Billboard
+     *
+     * @param {Boolean} value Indicates if this billboard will be shown.
+     *
+     * @see Billboard#getShow
+     */
+    Polyline.prototype.setShow = function(value) {
+        if ((typeof value !== "undefined") && (this._show !== value)) {
+            this._show = value;
+            this._makeDirty(SHOW_INDEX);
+        }
+    };
 
     /**
      * DOC_TBA
@@ -168,56 +149,186 @@ define([
      * ]);
      */
     Polyline.prototype.setPositions = function(value) {
-        this._positions = value;
-        this._createVertexArray = true;
+        this._changeToLinesPositions(value);
+        this._makeDirty(POSITION_INDEX);
     };
+
 
     Polyline.prototype.getColor = function() {
-        return this.color;
+        return this._color;
+    };
+
+    Polyline.prototype.setColor = function(value){
+        var c = this._color;
+
+        if ((typeof value !== "undefined") &&
+            ((c.red !== value.red) || (c.green !== value.green) || (c.blue !== value.blue) || (c.alpha !== value.alpha))) {
+
+            c.red = value.red;
+            c.green = value.green;
+            c.blue = value.blue;
+            c.alpha = value.alpha;
+            this._makeDirty(COLOR_INDEX);
+        }
     };
 
     /**
-     * Returns true if this object was destroyed; otherwise, false.
+     * DOC_TBA
      * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     * The actual width used is clamped to the minimum and maximum width supported by the WebGL implementation.
+     * These can be queried with {@link Context#getMinimumAliasedLineWidth} and
+     * {@link Context#getMaximumAliasedLineWidth}.
      *
-     * @memberof Polyline
+     * @type Number
      *
-     * @return {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
-     *
-     * @see Polyline#destroy
-     */
-    Polyline.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof Polyline
-     *
-     * @return {undefined}
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see Polyline#isDestroyed
+     * @see Polyline#width
+     * @see Context#getMinimumAliasedLineWidth
+     * @see Context#getMaximumAliasedLineWidth
      *
      * @example
-     * polyline = polyline && polyline.destroy();
+     * // 3 pixel total width, 1 pixel interior width
+     * polyline.width = 1.0;
+     * polyline.outlineWidth = 3.0;
      */
+    Polyline.prototype.getWidth = function() {
+        return this._width;
+    };
+
+    /**
+     * DOC_TBA
+     * <br /><br />
+     * The actual width used is clamped to the minimum and maximum width supported by the WebGL implementation.
+     * These can be queried with {@link Context#getMinimumAliasedLineWidth} and
+     * {@link Context#getMaximumAliasedLineWidth}.
+     *
+     * @type Number
+     *
+     * @see Polyline#width
+     * @see Context#getMinimumAliasedLineWidth
+     * @see Context#getMaximumAliasedLineWidth
+     *
+     * @example
+     * // 3 pixel total width, 1 pixel interior width
+     * polyline.width = 1.0;
+     * polyline.outlineWidth = 3.0;
+     */
+    Polyline.prototype.setWidth = function(value){
+        var width = this._width;
+
+        if ((typeof value !== "undefined") && (value !== width)) {
+
+            this._width = value;
+            this._makeDirty(WIDTH_INDEX);
+        }
+    };
+
+    /**
+     * DOC_TBA
+     * <br /><br />
+     * The actual width used is clamped to the minimum and maximum width supported by the WebGL implementation.
+     * These can be queried with {@link Context#getMinimumAliasedLineWidth} and
+     * {@link Context#getMaximumAliasedLineWidth}.
+     *
+     * @type Number
+     *
+     * @see Polyline#outlineWidth
+     * @see Context#getMinimumAliasedLineWidth
+     * @see Context#getMaximumAliasedLineWidth
+     *
+     * @example
+     * // 3 pixel total width, 1 pixel interior width
+     * polyline.width = 1.0;
+     * polyline.outlineWidth = 3.0;
+     */
+    Polyline.prototype.getOutlineWidth = function() {
+        return this._width;
+    };
+
+    /**
+     * DOC_TBA
+     * <br /><br />
+     * The actual width used is clamped to the minimum and maximum width supported by the WebGL implementation.
+     * These can be queried with {@link Context#getMinimumAliasedLineWidth} and
+     * {@link Context#getMaximumAliasedLineWidth}.
+     *
+     * @type Number
+     *
+     * @see Polyline#outlineWidth
+     * @see Context#getMinimumAliasedLineWidth
+     * @see Context#getMaximumAliasedLineWidth
+     *
+     * @example
+     * // 3 pixel total width, 1 pixel interior width
+     * polyline.width = 1.0;
+     * polyline.outlineWidth = 3.0;
+     */
+    Polyline.prototype.setOutlineWidth = function(value){
+        var width = this._outlineWidth;
+
+        if ((typeof value !== "undefined") && (value !== width)) {
+
+            this._outlineWidth = value;
+            this._makeDirty(OUTLINE_WIDTH_INDEX);
+        }
+    };
+
+    Polyline.prototype.getOutlineColor = function() {
+        return this._outlineColor;
+    };
+
+    Polyline.prototype.setOutlineColor = function(value){
+        var c = this._outlineColor;
+
+        if ((typeof value !== "undefined") &&
+            ((c.red !== value.red) || (c.green !== value.green) || (c.blue !== value.blue) || (c.alpha !== value.alpha))) {
+
+            c.red = value.red;
+            c.green = value.green;
+            c.blue = value.blue;
+            c.alpha = value.alpha;
+            this._makeDirty(OUTLINE_COLOR_INDEX);
+        }
+    };
+
+    Polyline.prototype._isDirty = function() {
+        return this._dirty;
+    };
+
+    Polyline.prototype._getCollection = function(){
+        return this._collection;
+    };
+
+    Polyline.prototype._changeToLinesPositions = function(value){
+        var length = value.length;
+        if(length === 2){
+            this._positions = value;
+        }else if(length > 2){
+            this._positions.push(value[0]);
+            this._positions.push(value[1]);
+            for(var i = 1; i < length - 1; i++){
+                this._positions.push(value[i]);
+                this._positions.push(value[i+1]);
+            }
+        }
+    };
+
+    Polyline.prototype._makeDirty = function(propertyChanged) {
+        var c = this._collection;
+        if (c) {
+            c._updatePolyline(this, propertyChanged);
+            this._dirty = true;
+        }
+    };
+
     Polyline.prototype._destroy = function() {
-        this._sp = this._sp && this._sp.release();
-        this._spGroundTrack = this._spGroundTrack && this._spGroundTrack.release();
-        this._spHeightTrack = this._spHeightTrack && this._spHeightTrack.release();
-        this._vertices = this._vertices.destroy();
-        this._pickId = this._pickId && this._pickId.destroy();
-        return destroyObject(this);
+        var polylines = this._polylines;
+        var length = polylines ? polylines.length : 0;
+        var polylineCollection = this._collection;
+        for ( var i = 0; i < length; i++) {
+            polylineCollection.remove(polylines[i]);
+        }
+        this._polylines = null;
+        this._collection = null;
     };
 
     return Polyline;

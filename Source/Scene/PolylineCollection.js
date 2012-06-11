@@ -41,12 +41,20 @@ define([
         StencilOperation) {
     "use strict";
 
+    var SHOW_INDEX = Polyline.SHOW_INDEX;
+    var POSITION_INDEX = Polyline.POSITION_INDEX;
+    var COLOR_INDEX = Polyline.COLOR_INDEX;
+    var WIDTH_INDEX = Polyline.WIDTH_INDEX;
+    var OUTLINE_WIDTH_INDEX = Polyline.OUTLINE_WIDTH_INDEX;
+    var OUTLINE_COLOR_INDEX = Polyline.OUTLINE_COLOR_INDEX;
+    var NUMBER_OF_PROPERTIES = Polyline.NUMBER_OF_PROPERTIES;
+
     // PERFORMANCE_IDEA:  Use vertex compression so we don't run out of
     // vec4 attributes (WebGL minimum: 8)
     var attributeIndices = {
-        position2D : 0,
-        position3D : 1,
-        color : 2
+        position3D : 0,
+        color : 1,
+        outlineColor : 3
     };
 
     /**
@@ -91,7 +99,7 @@ define([
         this._polylinesRemoved = false;
         this._createVertexArray = false;
         this.morphTime = 0.0;
-        //this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
+        this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
 
         /**
          * The 4x4 transformation matrix that transforms each polyline in this collection from model to world coordinates.
@@ -221,12 +229,6 @@ define([
      * var b = polylines.add({
      *   show : true,
      *   position : new Cartesian3(0.0, 0.0, 0.0),
-     *   pixelOffset : new Cartesian2(0.0, 0.0),
-     *   eyeOffset : new Cartesian3(0.0, 0.0, 0.0),
-     *   horizontalOrigin : HorizontalOrigin.CENTER,
-     *   verticalOrigin : VerticalOrigin.CENTER,
-     *   scale : 1.0,
-     *   imageIndex : 0,
      *   color : { red : 1.0, green : 1.0, blue : 1.0, alpha : 1.0 }
      * });
      *
@@ -479,7 +481,7 @@ define([
 
     PolylineCollection.prototype._render = function(context, sp) {
         var va = this._va;
-        var primitiveType = PrimitiveType.LINE_STRIP;
+        var primitiveType = PrimitiveType.LINES;
 
         context.draw({
             primitiveType : primitiveType,
@@ -539,28 +541,34 @@ define([
             positionsLength += polyline.getPositions().length;
         }
         var positionArray = new Float32Array(positionsLength * 3);
-        var colorArray = new Float32Array(positionsLength * 4);
-
+        var colorArray = new Uint8Array(positionsLength * 4);
+        var outlineColorArray = new Uint8Array(positionsLength * 4);
 
         var j = 0;
         var colorIndex = 0;
         for ( var i = 0; i < length; ++i) {
             var polyline = polylines[i];
             var positions = polyline.getPositions();
-
+            var color = polyline.getColor();
+            var outlineColor = polyline.getOutlineColor();
             for(var k = 0; k < positions.length; ++k){
                 var p = positions[k];
                 positionArray[j + 0] = p.x;
                 positionArray[j + 1] = p.y;
                 positionArray[j + 2] = p.z;
+
+                colorArray[colorIndex] = color.red * 255;
+                colorArray[colorIndex + 1] = color.green * 255;
+                colorArray[colorIndex + 2] = color.blue * 255;
+                colorArray[colorIndex + 3] = color.alpha * 255;
+
+                outlineColorArray[colorIndex] = outlineColor.red * 255;
+                outlineColorArray[colorIndex + 1] = outlineColor.green * 255;
+                outlineColorArray[colorIndex + 2] = outlineColor.blue * 255;
+                outlineColorArray[colorIndex + 3] = outlineColor.alpha * 255;
                 j += 3;
+                colorIndex += 4;
             }
-            var color = polyline.getColor();
-            colorArray[colorIndex] = color.red;
-            colorArray[colorIndex + 1] = color.green;
-            colorArray[colorIndex + 2] = color.blue;
-            colorArray[colorIndex + 3] = color.alpha;
-            colorIndex += 4;
         }
 
         var attributes = [{
@@ -569,20 +577,20 @@ define([
             componentsPerAttribute : 3,
             componentDatatype : ComponentDatatype.FLOAT
         }, {
-            index : attributeIndices.position2D,
-            value : [0.0, 0.0]
-        }, {
             index : attributeIndices.color,
-            value : [1,0,0,1]
-            /*componentsPerAttribute : 4,
-            normalize : true,
+            componentsPerAttribute : 4,
+            normalize:true,
             vertexBuffer : context.createVertexBuffer(colorArray, BufferUsage.STATIC_DRAW),
-            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-            usage : BufferUsage.STATIC_DRAW*/
+            componentDatatype : ComponentDatatype.UNSIGNED_BYTE
+        }, {
+            index : attributeIndices.outlineColor,
+            componentsPerAttribute : 4,
+            normalize:true,
+            vertexBuffer : context.createVertexBuffer(outlineColorArray, BufferUsage.STATIC_DRAW),
+            componentDatatype : ComponentDatatype.UNSIGNED_BYTE
         }];
 
         this._va = context.createVertexArray(attributes);
-        this._primitiveType = PrimitiveType.LINES;
     };
 
     PolylineCollection.prototype._isShown = function() {
@@ -807,7 +815,6 @@ define([
     PolylineCollection.prototype.destroy = function() {
         this._sp = this._sp && this._sp.release();
         this._spPick = this._spPick && this._spPick.release();
-        this._vaf = this._vaf && this._vaf.destroy();
         this._destroyPolylines();
 
         return destroyObject(this);
