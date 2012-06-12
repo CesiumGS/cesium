@@ -19,14 +19,18 @@ define([
      *
      * @param {Context} context The context that will be used to create the texture.
      * @param {PixelFormat}[pixelFormat = PixelFormat.RGBA] Pixel format for the texture atlas.
-     * @param {Number}[borderWidthInPixels = 1] Spacing in pixels between adjacent images
+     * @param {Number}[borderWidthInPixels = 1] Spacing in pixels between adjacent images.
+     * @param {Number}[scalingFactor = 2] Amount of padding added to the texture atlas when the texture is rebuilt.
+     * For example, if the texture atlas is constructed with an image of width and height 10 and the scalingFactor is 2,
+     * the final texture will be 20x20 with 75% of the atlas empty. Integer values only.
      *
      * @internalConstructor
      *
      * @exception {DeveloperError} context is required.
      * @exception {DeveloperError} borderWidthInPixels must be greater than or equal to zero.
+     * @exception {DeveloperError} scalingFactor must be greater than or equal to one.
      */
-    function TextureAtlas(context, pixelFormat, borderWidthInPixels) {
+    function TextureAtlas(context, pixelFormat, borderWidthInPixels, scalingFactor) {
 
         // Context
         if (!context) {
@@ -42,8 +46,15 @@ define([
             throw new DeveloperError('borderWidthInPixels must be greater than or equal to zero.', 'borderWidthInPixels');
         }
 
+        //Scaling Factor
+        scalingFactor = (typeof scalingFactor === 'undefined') ? 2 : Math.floor(scalingFactor);
+        if(scalingFactor < 1) {
+            throw new DeveloperError('scalingFactor must be greater than or equal to one', 'scalingFactor');
+        }
+
         this._context = context;
         this._borderWidthInPixels = borderWidthInPixels;
+        this._scalingFactor = scalingFactor;
         this._pixelFormat = pixelFormat;
         this._images = [];
         this._textureCoordinates = [];
@@ -83,11 +94,7 @@ define([
                     totalWidth += image.width + self._borderWidthInPixels;
                     totalHeight += image.height + self._borderWidthInPixels;
                 }
-                // 2.0 is a somewhat arbitrary scaling factor that leaves empty space for
-                // subsequent additions to the atlas. 1.0 is the lowest possible value.
-                // Integer values recommended.
-                var scaleFactor = 2.0;
-                return scaleFactor * (Math.max(totalWidth, totalHeight) - self._borderWidthInPixels);
+                return self._scalingFactor * (Math.max(totalWidth, totalHeight) - self._borderWidthInPixels);
             }(images));
 
             // Destroy old texture.
@@ -292,6 +299,15 @@ define([
      */
     TextureAtlas.prototype.getImages = function() {
         return this._images;
+    };
+
+    /**
+     * Return the scaling factor, a property that determines how much padding
+     * to add to the texture atlas upon its creation.
+     * @memberof TextureAtlas
+     */
+    TextureAtlas.prototype.getScalingFactor = function() {
+        return this._scalingFactor;
     };
 
     /**
