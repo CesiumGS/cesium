@@ -126,7 +126,7 @@ defineSuite([
     it('remove returns false with no key', function() {
         var result = cache.remove();
         expect(result).toEqual(false);
-     });
+    });
 
     it('remove returns false with null key', function() {
         var result = cache.remove({'key': null});
