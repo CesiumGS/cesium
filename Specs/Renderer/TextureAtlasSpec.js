@@ -137,13 +137,13 @@ defineSuite([
         var blueCoords = atlas.getTextureCoordinates()[1];
 
         expect(draw.apply(this, [texture, {
-            x : (greenCoords.x0 + greenCoords.x1 / 2.0),
-            y : (greenCoords.y0 + greenCoords.y1 / 2.0)
+            x : ((greenCoords.x0 + greenCoords.x1) / 2.0),
+            y : ((greenCoords.y0 + greenCoords.y1) / 2.0)
         }])).toEqualArray([0, 255, 0, 255]);
 
         expect(draw.apply(this, [texture, {
-            x : (blueCoords.x0 + blueCoords.x1 / 2.0),
-            y : (blueCoords.y0 + blueCoords.y1 / 2.0)
+            x : ((blueCoords.x0 + blueCoords.x1) / 2.0),
+            y : ((blueCoords.y0 + blueCoords.y1) / 2.0)
         }])).toEqualArray([0, 0, 255, 255]);
     });
 
@@ -158,23 +158,23 @@ defineSuite([
         var c3 = atlas.getTextureCoordinates()[3];
 
         expect(draw.apply(this, [texture, {
-            x : (c0.x0 + c0.x1 / 2.0),
-            y : (c0.y0 + c0.y1 / 2.0)
+            x : ((c0.x0 + c0.x1) / 2.0),
+            y : ((c0.y0 + c0.y1) / 2.0)
         }])).toEqualArray([0, 255, 0, 255]);
 
         expect(draw.apply(this, [texture, {
-            x : (c1.x0 + c1.x1 / 2.0),
-            y : (c1.y0 + c1.y1 / 2.0)
+            x : ((c1.x0 + c1.x1) / 2.0),
+            y : ((c1.y0 + c1.y1) / 2.0)
         }])).toEqualArray([0, 0, 255, 255]);
 
         expect(draw.apply(this, [texture, {
-            x : (c2.x0 + c2.x1 / 2.0),
-            y : (c2.y0 + c2.y1 / 2.0)
+            x : ((c2.x0 + c2.x1) / 2.0),
+            y : ((c2.y0 + c2.y1) / 2.0)
         }])).toEqualArray([0, 0, 255, 255]);
 
         expect(draw.apply(this, [texture, {
-            x : (c3.x0 + c3.x1 / 2.0),
-            y : (c3.y0 + c3.y1 / 2.0)
+            x : ((c3.x0 + c3.x1) / 2.0),
+            y : ((c3.y0 + c3.y1) / 2.0)
         }])).toEqualArray([0, 255, 0, 255]);
     });
 
@@ -199,13 +199,13 @@ defineSuite([
         var greenCoords = atlas.getTextureCoordinates()[1];
 
         expect(draw.apply(this, [texture, {
-            x : (blueCoords.x0 + blueCoords.x1) * 0.5,
-            y : (blueCoords.y0 + blueCoords.y1) * 0.5
+            x : ((blueCoords.x0 + blueCoords.x1) / 2.0),
+            y : ((blueCoords.y0 + blueCoords.y1) / 2.0)
         }])).toEqualArray([0, 0, 255, 255]);
 
         var pixels = draw.apply(this, [texture, {
-            x : (greenCoords.x0 + greenCoords.x1) * 0.5,
-            y : (greenCoords.y0 + greenCoords.y1) * 0.5
+            x : ((greenCoords.x0 + greenCoords.x1) / 2.0),
+            y : ((greenCoords.y0 + greenCoords.y1) / 2.0)
         }]);
         expect((pixels[0] === 0) || (pixels[0] === 1)).toEqual(true); // Workaround:  Firefox on Windows
         expect(pixels[1]).toEqual(255);

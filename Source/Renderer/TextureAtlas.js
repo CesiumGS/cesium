@@ -13,23 +13,21 @@ define([
      * A TextureAtlas stores multiple images in one large texture and keeps
      * track of the texture coordinates for each image. TextureAtlas is dynamic,
      * meaning new images can be added at any point in time. If the initial texture
-     * is filled, TextureAtlas will automatically generate a larger texture.
+     * is filled, TextureAtlas will silently generate a larger texture.
      *
      * @name TextureAtlas
      *
      * @param {Context} context The context that will be used to create the texture.
      * @param {PixelFormat}[pixelFormat = PixelFormat.RGBA] Pixel format for the texture atlas.
-     * @param {Number}[borderWidthInPixels = 1] Spacing between adjacent images in pixels
-     * @param {Number}[initialTextureSize = 512] The side length of the texture atlas.
-     * The texture will automatically grow if the initial texture size is exceeded.
+     * @param {Number}[borderWidthInPixels = 1] Spacing in pixels between adjacent images
      *
      * @internalConstructor
      *
      * @exception {DeveloperError} context is required.
      * @exception {DeveloperError} borderWidthInPixels must be greater than or equal to zero.
-     * @exception {DeveloperError} initialTextureSize must be greater than zero.
      */
-    function TextureAtlas(context, pixelFormat, borderWidthInPixels, initialTextureSize) {
+    function TextureAtlas(context, pixelFormat, borderWidthInPixels) {
+
         // Context
         if (!context) {
             throw new DeveloperError('context is required.', 'context');
@@ -44,31 +42,13 @@ define([
             throw new DeveloperError('borderWidthInPixels must be greater than or equal to zero.', 'borderWidthInPixels');
         }
 
-        // Initial texture Size
-        initialTextureSize = (typeof initialTextureSize === 'undefined') ? 512 : initialTextureSize;
-        if(initialTextureSize < 1) {
-            throw new DeveloperError('initialTextureSize must be greater than zero.', 'initialTextureSize');
-        }
-
-        // Create the initial texture with initialTextureSize.
-        var texture = context.createTexture2D({
-            width : initialTextureSize,
-            height : initialTextureSize,
-            pixelFormat : pixelFormat
-        });
-
-        // Top-most node in the atlas
-        var root = {};
-        root.x0 = 0.0;
-        root.x1 = initialTextureSize - 1.0;
-        root.y0 = 0.0;
-        root.y1 = initialTextureSize - 1.0;
-
         this._context = context;
         this._borderWidthInPixels = borderWidthInPixels;
-        this._texture = texture;
+        this._pixelFormat = pixelFormat;
+        this._images = [];
         this._textureCoordinates = [];
-        this._root = root;
+        this._texture = undefined;
+        this._root = undefined;
     }
 
     /**
@@ -82,20 +62,58 @@ define([
      * @exception {DeveloperError} images is required and must have length greater than zero.
      */
     TextureAtlas.prototype.addImages = function(images) {
-        // Images
-        if (!images || (images.length < 1)) {
-            throw new DeveloperError('images is required and must have length greater than zero.', 'images');
-        }
 
-        // Sort images by maximum to minimum area
-        images.sort(function(image1, image2) {
-            return image1.height * image1.width -
-                   image2.height * image2.width;
-        });
+        var self = this;
+
+        // createNewAtlas generates the initial texture and any successive textures that
+        // need to be expanded to fit more images.
+        var createNewAtlas = function (images) {
+
+            //Clear arrays
+            self._textureCoordinates = [];
+            self._images = [];
+
+            // Compute atlas size
+            var atlasSize = (function(images) {
+                var numberOfImages = images.length;
+                var totalWidth = 0;
+                var totalHeight = 0;
+                for ( var i = 0; i < numberOfImages; ++i) {
+                    var image = images[i];
+                    totalWidth += image.width + self._borderWidthInPixels;
+                    totalHeight += image.height + self._borderWidthInPixels;
+                }
+                return Math.max(totalWidth, totalHeight) - self._borderWidthInPixels;
+            }(images));
+
+            // Destroy old texture.
+            self._texture = self._texture && self._texture.destroy();
+
+            // Create the texture with atlasSize.
+            self._texture = self._context.createTexture2D({
+                width : atlasSize,
+                height : atlasSize,
+                pixelFormat : self._pixelFormat
+            });
+
+            // Create new root node
+            var root = {};
+            root.x0 = 0.0;       // left
+            root.y0 = 0.0;       // bottom
+            root.x1 = atlasSize; // right
+            root.y1 = atlasSize; // top
+            self._root = root;
+        };
 
         // A recursive function that finds the best place to insert
         // a new image based on existing image 'nodes'
-        var addImageToNode = function(node, image, borderWidth) {
+        var addImageToNode = function(node, image) {
+
+            //If node is not defined, return.
+            if(typeof node === 'undefined') {
+                return;
+            }
+
             // If a leaf node
             if(typeof node.child1 === 'undefined' &&
                typeof node.child2 === 'undefined') {
@@ -105,13 +123,13 @@ define([
                     return;
                 }
 
-                var nodeWidth = node.x1 - node.x0 + 1;
-                var nodeHeight = node.y1 - node.y0 + 1;
+                var nodeWidth = node.x1 - node.x0;
+                var nodeHeight = node.y1 - node.y0;
                 var widthDifference = nodeWidth - image.width;
                 var heightDifference = nodeHeight - image.height;
 
                 // Node is smaller than the image.
-                if (widthDifference < 0 && heightDifference < 0) {
+                if (widthDifference < 0 || heightDifference < 0) {
                     return;
                 }
 
@@ -126,62 +144,76 @@ define([
 
                 // Vertical split
                 if (widthDifference > heightDifference) {
-                    // child1
+                    // child1 - left half
                     node.child1.x0 = node.x0; // left
-                    node.child1.x1 = node.x0 + image.width - 1; // middle
-                    node.child1.y0 = node.y0; // top
-                    node.child1.y1 = node.y1; // bottom
-                    // child2
-                    node.child2.x0 = node.x0 + image.width + borderWidth; // middle
+                    node.child1.x1 = node.x0 + image.width; // middle
+                    node.child1.y0 = node.y0; // bottom
+                    node.child1.y1 = node.y1; // top
+                    // child2 - right half
+                    node.child2.x0 = node.x0 + image.width + self._borderWidthInPixels; // middle
                     node.child2.x1 = node.x1; // right
-                    node.child2.y0 = node.y0; // top
-                    node.child2.y1 = node.y1; // bottom
-                }
-                // Horizontal split
-                else {
-                    // child1
-                    node.child1.x0 = node.x0; // left
-                    node.child1.x1 = node.x1; // right
-                    node.child1.y0 = node.y0; // top
-                    node.child1.y1 = node.y0 + image.height - 1; // middle
-                    // child2
-                    node.child2.x0 = node.x0; // left
-                    node.child2.x1 = node.x1; // right
-                    node.child2.y0 = node.y0 + image.height + borderWidth; // middle
-                    node.child2.y1 = node.y1; // bottom
+                    node.child2.y0 = node.y0; // bottom
+                    node.child2.y1 = node.y1; // top
                 }
 
-                return addImageToNode(node.child1, image, borderWidth);
+                // Horizontal split
+                else {
+                    // child1 - top half
+                    node.child1.x0 = node.x0; // left
+                    node.child1.x1 = node.x1; // right
+                    node.child1.y0 = node.y1 - image.height; // middle
+                    node.child1.y1 = node.y1; // top
+
+                    // child2 - bottom half
+                    node.child2.x0 = node.x0; // left
+                    node.child2.x1 = node.x1; // right
+                    node.child2.y0 = node.y0; // bottom
+                    node.child2.y1 = node.y1 - image.height - self._borderWidthInPixels; // middle
+                }
+
+                return addImageToNode(node.child1, image);
             }
 
             // If not a leaf node
-            var newNode = addImageToNode(node.child1, image, borderWidth);
-            if (typeof newNode === 'undefined') {
-                newNode = addImageToNode(node.child2, image, borderWidth);
-            }
-            return newNode;
+            return addImageToNode(node.child1, image) ||
+                   addImageToNode(node.child2, image);
         };
 
-        // Add all images in the list
-        var i;
+        // Check if image array is valid.
+        if (!images || (images.length < 1)) {
+            throw new DeveloperError('images is required and must have length greater than zero.', 'images');
+        }
+
+        // Add images to the texture atlas.
         var numberOfImages = images.length;
-        var atlasSize = this._texture.getWidth();
-        for (i = 0; i < numberOfImages; ++i) {
+        for (var i = 0; i < numberOfImages; ++i) {
             var image = images[i];
-            var node = addImageToNode(this._root, image, this._borderWidthInPixels);
+            var node = addImageToNode(this._root, image);
+
+            // Found a node that can hold the image.
             if (typeof node !== 'undefined'){
-                node.imageID = this._textureCoordinates.length - 1;
+                // Set node's ID to show it contains an image
+                node.imageID = this._images.length;
+                this._images.push(image);
+
+                // Add texture coordinates and write to texture
+                var atlasSize = this._texture.getWidth();
                 this._textureCoordinates.push({
-                    x0: node.x0 / atlasSize,
-                    x1: node.x1 / atlasSize,
-                    y0: node.y0 / atlasSize,
-                    y1: node.y1 / atlasSize
+                    x0: node.x0 / atlasSize, // Left
+                    x1: node.x1 / atlasSize, // Right
+                    y0: node.y0 / atlasSize, // Bottom
+                    y1: node.y1 / atlasSize  // Top
                 });
                 this._texture.copyFrom(image, node.x0, node.y0);
             }
+
+            // No node found, must create or expand texture atlas.
             else
             {
-                // Make texture bigger!
+                var allImages = this._images.concat(images);
+                createNewAtlas(allImages);
+                this.addImages(allImages);
+                break;
             }
         }
     };
@@ -199,8 +231,7 @@ define([
      * @exception {DeveloperError} invalid image index.
      */
     TextureAtlas.prototype.addSubRegions = function(index, subRegions) {
-        var atlasWidth = this._texture.getWidth();
-        var atlasHeight = this._texture.getHeight();
+        var atlasSize = this._texture.getWidth();
         var numTextureCoordinates = this._textureCoordinates.length;
         var numSubRegions = subRegions.length;
 
@@ -213,12 +244,12 @@ define([
             var thisRegion = subRegions[i];
             this._textureCoordinates.push({
                 // Lower Left
-                x0 : baseRegion.x0 + (thisRegion.x / atlasWidth),
-                y0 : baseRegion.y1 - ((thisRegion.y + thisRegion.height) / atlasHeight),
+                x0 : baseRegion.x0 + (thisRegion.x / atlasSize),
+                y0 : baseRegion.y1 - ((thisRegion.y + thisRegion.height) / atlasSize),
 
                 // Upper Right
-                x1 : baseRegion.x0 + ((thisRegion.x + thisRegion.width) / atlasWidth),
-                y1 : baseRegion.y1 - (thisRegion.y / atlasHeight)
+                x1 : baseRegion.x0 + ((thisRegion.x + thisRegion.width) / atlasSize),
+                y1 : baseRegion.y1 - (thisRegion.y / atlasSize)
             });
         }
 
