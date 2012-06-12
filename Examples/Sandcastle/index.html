@@ -64,8 +64,22 @@
                 Suggest (Ctrl-Space)
             </div>
             <span data-dojo-type="dijit.ToolbarSeparator"></span>
-            <div id="buttonSaveAs" data-dojo-type="dijit.form.Button" data-dojo-props="iconClass: 'dijitIconSave', showLabel: true">
-                Save As...
+            <div data-dojo-type="dijit.form.DropDownButton" data-dojo-props="iconClass: 'dijitIconSave', showLabel: true">
+                <span>Save As</span>
+                <div id="dropDownSaveAs" data-dojo-type="dijit.TooltipDialog" data-dojo-props="class: 'saveAsDialog'">
+                    <p>Some browsers require you to manually rename
+                        the saved file to a <code>*.html</code> file.</p>
+                    <a id="saveAsNewWindow" class="linkButton" href="#" target="_blank">
+                        <span data-dojo-type="Sandcastle.LinkButton">
+                            Open in new window
+                        </span>
+                    </a>
+                    <a id="saveAsFile" class="linkButton" href="#" download="cesiumDemo.html">
+                        <span data-dojo-type="Sandcastle.LinkButton">
+                            Save *.html file
+                        </span>
+                    </a>
+                </div>
             </div>
             <span data-dojo-type="dijit.ToolbarSeparator"></span>
             <div id="buttonUpload" data-dojo-type="dijit.form.Button" data-dojo-props="iconClass: 'dijitIconDocuments', showLabel: true">

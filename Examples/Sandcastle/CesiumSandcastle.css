@@ -81,6 +81,18 @@ html, body {
     height: 100%;
 }
 
+.saveAsDialog {
+    width: 360px;
+}
+
+a.linkButton, a.linkButton:visited {
+    display: inline-block;
+}
+
+a.linkButton:focus, a.linkButton:hover {
+    text-decoration: none;
+}
+
 .CodeMirror, .CodeMirror-scroll {
     height: 100%;
 }

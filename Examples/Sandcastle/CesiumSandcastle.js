@@ -9,10 +9,14 @@ require({
         }, {
             name: 'dojox',
             location: '../ThirdParty/dojo-release-1.7.2-src/dojox'
+        }, {
+            name: 'Sandcastle',
+            location: '../Examples/Sandcastle'
         }]
     }, [
         'Dojo/CesiumWidget',
         'dojo/parser',
+        'dojo/dom',
         'dojo/dom-class',
         'dojo/dom-construct',
         'dojo/_base/fx',
@@ -34,10 +38,12 @@ require({
         'dijit/layout/TabContainer',
         'dijit/Toolbar',
         'dijit/ToolbarSeparator',
+        'Sandcastle/LinkButton',
         'dojo/domReady!'],
     function (
             CesiumWidget,
             parser,
+            dom,
             domClass,
             domConstruct,
             fx,
@@ -219,16 +225,23 @@ require({
             CodeMirror.commands.autocomplete(jsEditor);
         });
 
-        registry.byId('buttonSaveAs').on('click', function () {
+        registry.byId('dropDownSaveAs').on('show', function () {
             var html = local.headers + htmlEditor.getValue() +
                 '\n<script id="cesium_sandcastle_script">\n' + jsEditor.getValue() +
                 '\n</script>\n</body>\n</html>\n';
-            //console.log(html); // just a hack for now
 
-            var bb = new BlobBuilder();
-            bb.append(html);
-            var blob = bb.getBlob("application/octet-stream");  // was "text/plain;charset=utf-8"
-            var blobURL = getURL.createObjectURL(blob);
-            console.log(blobURL); // just a hack for now
+            var octetBB = new BlobBuilder();
+            octetBB.append(html);
+            var octetBlob = octetBB.getBlob("application/octet-stream");
+            var octetBlobURL = getURL.createObjectURL(octetBlob);
+            dom.byId('saveAsFile').href = octetBlobURL;
+
+            html = html.replace('<head>', '<head>\n    <base href="' + window.location.href + '">');
+            var htmlBB = new BlobBuilder();
+            htmlBB.append(html);
+            var htmlBlob = htmlBB.getBlob("text/html;charset=utf-8");
+            var htmlBlobURL = getURL.createObjectURL(htmlBlob);
+            dom.byId('saveAsNewWindow').href = htmlBlobURL;
+
         });
     });
