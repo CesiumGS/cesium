@@ -287,6 +287,14 @@ define([
     };
 
     /**
+     * Returns the list of images in the texture atlas
+     * @memberof TextureAtlas
+     */
+    TextureAtlas.prototype.getImages = function() {
+        return this._images;
+    };
+
+    /**
      * Returns true if this object was destroyed; otherwise, false.
      * <br /><br />
      * If this object was destroyed, it should not be used; calling any function other than

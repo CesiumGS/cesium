@@ -465,7 +465,7 @@ defineSuite([
                 y : 0.0,
                 z : 0.0
             }, // Closer to viewer
-            text : 'x',
+            text : 'y',
             fillColor : {
                 red : 1.0,
                 green : 0.0,
