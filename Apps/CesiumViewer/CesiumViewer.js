@@ -11,6 +11,7 @@ define(['dojo/dom',
         'Core/Clock',
         'Core/ClockStep',
         'Core/ClockRange',
+        'Core/Iso8601',
         'Core/FullScreen',
         'Core/Ellipsoid',
         'Core/Transforms',
@@ -30,6 +31,7 @@ function(dom,
          Clock,
          ClockStep,
          ClockRange,
+         Iso8601,
          FullScreen,
          Ellipsoid,
          Transforms,
@@ -60,8 +62,8 @@ function(dom,
 
     function setTimeFromBuffer() {
         var i, object, len;
-        var startTime = JulianDate.MAXIMUM_VALUE;
-        var stopTime = JulianDate.MINIMUM_VALUE;
+        var startTime = Iso8601.MAXIMUM_VALUE;
+        var stopTime = Iso8601.MINIMUM_VALUE;
         var dynamicObjects = dynamicObjectCollection.getObjects();
         for (i = 0, len = dynamicObjects.length; i < len; i++) {
             object = dynamicObjects[i];
@@ -75,7 +77,7 @@ function(dom,
             }
         }
 
-        if (startTime === JulianDate.MAXIMUM_VALUE) {
+        if (startTime === Iso8601.MAXIMUM_VALUE) {
             for (i = 0, len = dynamicObjects.length; i < len; i++) {
                 object = dynamicObjects[i];
                 if (typeof object.position !== 'undefined') {

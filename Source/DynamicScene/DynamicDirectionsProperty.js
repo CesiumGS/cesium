@@ -6,6 +6,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Spherical',
         '../Core/Math',
+        '../Core/Iso8601',
         './ReferenceProperty',
         './DynamicPositionProperty'
     ], function(
@@ -15,6 +16,7 @@ define([
         Cartesian3,
         Spherical,
         CesiumMath,
+        Iso8601,
         ReferenceProperty,
         DynamicPositionProperty) {
     "use strict";
@@ -101,7 +103,7 @@ define([
     DynamicDirectionsProperty.prototype.addInterval = function(czmlInterval, buffer, sourceUri) {
         var iso8601Interval = czmlInterval.interval;
         if (typeof iso8601Interval === 'undefined') {
-            iso8601Interval = TimeInterval.INFINITE.clone();
+            iso8601Interval = Iso8601.MAXIMUM_INTERVAL.clone();
         } else {
             iso8601Interval = TimeInterval.fromIso8601(iso8601Interval);
         }

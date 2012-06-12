@@ -107,18 +107,6 @@ define([
     TimeInterval.EMPTY = Object.freeze(new TimeInterval(new JulianDate(0, 0), new JulianDate(0, 0), false, false));
 
     /**
-     * An infinite interval defined by the minimum and maximum JulianDate values.
-     *
-     * @memberof TimeInterval
-     *
-     * @see JulianDate
-     * @see JulianDate.MINIMUM_VALUE
-     * @see JulianDate.MAXIMUM_VALUE
-     */
-    TimeInterval.INFINITE = Object.freeze(new TimeInterval(JulianDate.MINIMUM_VALUE, JulianDate.MAXIMUM_VALUE, true, true));
-
-
-    /**
      * Computes an interval which is the intersection of this interval with another while
      * also providing a means to merge the data of the two intervals.
      *

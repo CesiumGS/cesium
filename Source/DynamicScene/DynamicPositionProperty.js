@@ -3,6 +3,7 @@ define([
         '../Core/JulianDate',
         '../Core/TimeInterval',
         '../Core/TimeIntervalCollection',
+        '../Core/Iso8601',
         './CzmlCartesian3',
         './CzmlCartographic3',
         './DynamicProperty'
@@ -10,6 +11,7 @@ define([
         JulianDate,
         TimeInterval,
         TimeIntervalCollection,
+        Iso8601,
         CzmlCartesian3,
         CzmlCartographic3,
         DynamicProperty) {
@@ -49,7 +51,7 @@ define([
     DynamicPositionProperty.prototype.addInterval = function(czmlInterval, buffer, sourceUri) {
         var iso8601Interval = czmlInterval.interval, property, valueType, unwrappedInterval;
         if (typeof iso8601Interval === 'undefined') {
-            iso8601Interval = TimeInterval.INFINITE.clone();
+            iso8601Interval = Iso8601.MAXIMUM_INTERVAL.clone();
         } else {
             iso8601Interval = TimeInterval.fromIso8601(iso8601Interval);
         }

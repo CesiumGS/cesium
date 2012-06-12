@@ -3,6 +3,7 @@ define([
         '../Core/JulianDate',
         '../Core/TimeInterval',
         '../Core/TimeIntervalCollection',
+        '../Core/Iso8601',
         '../Core/binarySearch',
         '../Core/HermitePolynomialApproximation',
         '../Core/LinearApproximation',
@@ -11,6 +12,7 @@ define([
         JulianDate,
         TimeInterval,
         TimeIntervalCollection,
+        Iso8601,
         binarySearch,
         HermitePolynomialApproximation,
         LinearApproximation,
@@ -114,7 +116,7 @@ define([
     DynamicProperty.prototype.addInterval = function(czmlInterval, buffer, constrainedInterval) {
         var iso8601Interval = czmlInterval.interval;
         if (typeof iso8601Interval === 'undefined') {
-            iso8601Interval = TimeInterval.INFINITE;
+            iso8601Interval = Iso8601.MAXIMUM_INTERVAL;
         } else {
             iso8601Interval = TimeInterval.fromIso8601(iso8601Interval);
         }
