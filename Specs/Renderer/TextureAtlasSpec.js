@@ -230,10 +230,4 @@ defineSuite([
             return new TextureAtlas();
         }).toThrow();
     });
-
-    it("getContext", function() {
-        atlas = context.createTextureAtlas([greenImage, blueImage], PixelFormat.RGBA, 1);
-        var c = atlas.getContext();
-        expect(c).toBe(context);
-    });
 });
