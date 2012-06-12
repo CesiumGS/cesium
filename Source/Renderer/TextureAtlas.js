@@ -83,7 +83,11 @@ define([
                     totalWidth += image.width + self._borderWidthInPixels;
                     totalHeight += image.height + self._borderWidthInPixels;
                 }
-                return Math.max(totalWidth, totalHeight) - self._borderWidthInPixels;
+                // 2.0 is a somewhat arbitrary scaling factor that leaves empty space for
+                // subsequent additions to the atlas. 1.0 is the lowest possible value.
+                // Integer values recommended.
+                var scaleFactor = 2.0;
+                return scaleFactor * (Math.max(totalWidth, totalHeight) - self._borderWidthInPixels);
             }(images));
 
             // Destroy old texture.
@@ -107,7 +111,7 @@ define([
 
         // A recursive function that finds the best place to insert
         // a new image based on existing image 'nodes'
-        var addImageToNode = function(node, image) {
+        var addImageToNode = function (node, image) {
 
             //If node is not defined, return.
             if(typeof node === 'undefined') {
@@ -149,6 +153,7 @@ define([
                     node.child1.x1 = node.x0 + image.width; // middle
                     node.child1.y0 = node.y0; // bottom
                     node.child1.y1 = node.y1; // top
+
                     // child2 - right half
                     node.child2.x0 = node.x0 + image.width + self._borderWidthInPixels; // middle
                     node.child2.x1 = node.x1; // right
