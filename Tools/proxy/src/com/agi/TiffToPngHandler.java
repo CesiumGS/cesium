@@ -15,10 +15,17 @@
 
 package com.agi;
 
+import java.awt.Transparency;
+import java.awt.color.ColorSpace;
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.ComponentColorModel;
+import java.awt.image.DataBuffer;
+import java.awt.image.DataBufferUShort;
 import java.awt.image.Raster;
 import java.awt.image.WritableRaster;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
@@ -29,6 +36,7 @@ import java.util.HashSet;
 import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
+import javax.imageio.spi.IIORegistry;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -58,6 +66,53 @@ public final class TiffToPngHandler extends AbstractHandler {
 		dontProxyHeaders.add("proxy-authorization");
 		dontProxyHeaders.add("proxy-authenticate");
 		dontProxyHeaders.add("upgrade");
+	}
+	
+	public static void main(String[] args) throws IOException {
+		IIORegistry registry = IIORegistry.getDefaultInstance();  
+		registry.registerServiceProvider(new com.sun.media.imageioimpl.plugins.tiff.TIFFImageWriterSpi());  
+		registry.registerServiceProvider(new com.sun.media.imageioimpl.plugins.tiff.TIFFImageReaderSpi());
+
+		BufferedImage sourceImage = ImageIO.read(new File("C:\\GitHub\\cesium\\Tools\\proxy\\test.tif"));
+		Raster sourceRaster = sourceImage.getData();
+
+		float[] pixels = new float[sourceImage.getWidth() * sourceImage.getHeight()];
+		sourceRaster.getSamples(0, 0, sourceImage.getWidth(), sourceImage.getHeight(), 0, pixels);
+
+		final int bias = 1000;
+
+		short[] shortPixels = new short[sourceImage.getWidth() * sourceImage.getHeight()];
+		for (int i = 0; i < shortPixels.length; ++i) {
+			int value = Math.round(pixels[i]) + bias;
+			shortPixels[i] = (short)value;
+		}
+		
+		ColorModel colorModel = new ComponentColorModel(
+	            ColorSpace.getInstance(ColorSpace.CS_GRAY),
+	            new int[]{16},
+	            false,
+	            false,
+	            Transparency.OPAQUE,
+	            DataBuffer.TYPE_USHORT);
+		
+		DataBufferUShort db = new DataBufferUShort(shortPixels, shortPixels.length);
+		
+		WritableRaster raster = Raster.createInterleavedRaster(db, sourceImage.getWidth(), sourceImage.getHeight(), sourceImage.getWidth(), 1, new int[1], null);
+		BufferedImage targetImage = new BufferedImage(colorModel, raster, false, null);
+		
+		ImageIO.write(targetImage, "PNG", new File("C:\\GitHub\\cesium\\Tools\\proxy\\test.png"));
+		
+		BufferedImage reloaded = ImageIO.read(new File("C:\\GitHub\\cesium\\Tools\\proxy\\test.png"));
+		Raster reloadedRaster = reloaded.getData();
+
+		int[] reloadedPixels = new int[reloaded.getWidth() * reloaded.getHeight()];
+		reloadedRaster.getSamples(0, 0, reloaded.getWidth(), reloaded.getHeight(), 0, reloadedPixels);
+		
+		for (int i = 0; i < pixels.length; ++i) {
+			if (reloadedPixels[i] != Math.round(pixels[i]) + bias) {
+				System.out.println("Bad: " + Float.toString(pixels[i]) + " -> " + Short.toString((short)shortPixels[i]));
+			}
+		}
 	}
 
 	public TiffToPngHandler(String allowedHostList, String upstreamProxyHost, Integer upstreamProxyPort, String noUpstreamProxyHostList) throws Exception {
@@ -135,31 +190,43 @@ public final class TiffToPngHandler extends AbstractHandler {
 			protected void onResponseComplete() throws IOException {
 				ByteArrayInputStream inputStream = null;
 				try {
+					IIORegistry registry = IIORegistry.getDefaultInstance();  
+					registry.registerServiceProvider(new com.sun.media.imageioimpl.plugins.tiff.TIFFImageWriterSpi());  
+					registry.registerServiceProvider(new com.sun.media.imageioimpl.plugins.tiff.TIFFImageReaderSpi());
+
 					inputStream = new ByteArrayInputStream(tiff);
-					ImageIO.scanForPlugins();
 					BufferedImage sourceImage = ImageIO.read(inputStream);
 					Raster sourceRaster = sourceImage.getData();
 
 					float[] pixels = new float[sourceImage.getWidth() * sourceImage.getHeight()];
 					sourceRaster.getSamples(0, 0, sourceImage.getWidth(), sourceImage.getHeight(), 0, pixels);
-					
-					int[] shortPixels = new int[sourceImage.getWidth() * sourceImage.getHeight()];
+
+					final int bias = 1000;
+
+					short[] shortPixels = new short[sourceImage.getWidth() * sourceImage.getHeight()];
 					for (int i = 0; i < shortPixels.length; ++i) {
-						shortPixels[i] = Math.round(pixels[i]);
+						int value = Math.round(pixels[i]) + bias;
+						shortPixels[i] = (short)value;
 					}
 					
-					BufferedImage targetImage = new BufferedImage(sourceImage.getWidth(), sourceImage.getHeight(), BufferedImage.TYPE_USHORT_GRAY);
-					Raster targetRaster = targetImage.getData();
-					WritableRaster writable = targetRaster.createCompatibleWritableRaster(0, 0, sourceImage.getWidth(), sourceImage.getHeight());
-					writable.setSamples(0,  0, sourceImage.getWidth(), sourceImage.getHeight(), 0, shortPixels);
-					targetImage.setData(writable);
+					ColorModel colorModel = new ComponentColorModel(
+				            ColorSpace.getInstance(ColorSpace.CS_GRAY),
+				            new int[]{16},
+				            false,
+				            false,
+				            Transparency.OPAQUE,
+				            DataBuffer.TYPE_USHORT);
+					
+					DataBufferUShort db = new DataBufferUShort(shortPixels, shortPixels.length);
+					
+					WritableRaster raster = Raster.createInterleavedRaster(db, sourceImage.getWidth(), sourceImage.getHeight(), sourceImage.getWidth(), 1, new int[1], null);
+					BufferedImage targetImage = new BufferedImage(colorModel, raster, false, null);
 					
 					ImageIO.write(targetImage, "PNG", out);
 				} finally {
 					if (inputStream != null) inputStream.close();
+					continuation.complete();
 				}
-				
-				continuation.complete();
 			}
 
 			protected void onResponseContent(Buffer content) throws IOException {
@@ -167,8 +234,7 @@ public final class TiffToPngHandler extends AbstractHandler {
 				if (tiff == null || tiff.length < spaceRequired) {
 					tiff = tiff == null ? new byte[spaceRequired] : Arrays.copyOf(tiff, spaceRequired);
 				}
-				content.put(tiff, nextTiffPosition, content.length());
-				nextTiffPosition += content.length();
+				nextTiffPosition += content.get(tiff, nextTiffPosition, content.length());
 			}
 
 			protected void onResponseStatus(Buffer version, int status, Buffer reason) throws IOException {
