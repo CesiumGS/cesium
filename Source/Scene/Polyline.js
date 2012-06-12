@@ -84,6 +84,8 @@ define([
 
         this._collection = polylineCollection;
         this._dirty = false;
+        this._pickId = undefined;
+        this._pickIdThis = p._pickIdThis;
     }
 
     var SHOW_INDEX = Polyline.SHOW_INDEX = 0;
@@ -299,6 +301,11 @@ define([
         }
     };
 
+    Polyline.prototype.getPickId = function(context){
+        this._pickId = this._pickId || context.createPickId(this._pickIdThis || this);
+        return this._pickId;
+    };
+
     Polyline.prototype.equals = function(other) {
         return other &&
                (this._show === other._show) &&
@@ -350,8 +357,9 @@ define([
         for ( var i = 0; i < length; i++) {
             polylineCollection.remove(polylines[i]);
         }
-        this._polylines = null;
-        this._collection = null;
+        this._pickId = this._pickId && this._pickId.destroy();
+        this._polylines = undefined;
+        this._collection = undefined;
     };
 
     return Polyline;

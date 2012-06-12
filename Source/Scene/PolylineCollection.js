@@ -54,7 +54,9 @@ define([
     var attributeIndices = {
         position3D : 0,
         color : 1,
-        outlineColor : 2
+        outlineColor : 2,
+        position2D : 3,
+        pickColor : 4
     };
 
     /**
@@ -148,7 +150,7 @@ define([
                               BufferUsage.STATIC_DRAW // OUTLINE_COLOR_INDEX
                               ];
 
-        this._mode = SceneMode.SCENE3D;
+        this._mode = undefined;
         var that = this;
 
         var drawUniformsOne = {
@@ -163,6 +165,11 @@ define([
         };
         var drawUniformsThree = {
             u_morphTime : function() {
+                return that.morphTime;
+            }
+        };
+        var pickUniforms = {
+            u_morphTime : function(){
                 return that.morphTime;
             }
         };
@@ -181,6 +188,32 @@ define([
         this._drawUniformsThree3D = combine(drawUniformsThree, {
             u_model : function() {
                 return that._getModelMatrix(that._mode);
+            }
+        });
+        this._pickUniforms3D = combine(pickUniforms, {
+            u_model : function(){
+                return that._getModelMatrix(that._mode);
+            }
+        });
+
+        this._drawUniformsOne2D = combine(drawUniformsOne, {
+            u_model : function() {
+                return Matrix4.IDENTITY;
+            }
+        });
+        this._drawUniformsTwo2D = combine(drawUniformsTwo, {
+            u_model : function() {
+                return Matrix4.IDENTITY;
+            }
+        });
+        this._drawUniformsThree2D = combine(drawUniformsThree, {
+            u_model : function() {
+                return Matrix4.IDENTITY;
+            }
+        });
+        this._pickUniforms2D = combine(pickUniforms, {
+            u_model : function() {
+                return Matrix4.IDENTITY;
             }
         });
 
@@ -303,32 +336,7 @@ define([
         this._createVertexArray = true;
     };
 
-    PolylineCollection.prototype._removePolylines = function() {
-        if (this._polylinesRemoved) {
-            this._polylinesRemoved = false;
 
-            var polylines = [];
-
-            var length = this._polylines.length;
-            for ( var i = 0, j = 0; i < length; ++i) {
-                var polyline = this._polylines[i];
-                if (polyline) {
-                    polyline._index = j++;
-                    polylines.push(polyline);
-                }
-            }
-
-            this._polylines = polylines;
-        }
-    };
-
-    PolylineCollection.prototype._updatePolyline = function(polyline, propertyChanged) {
-        if (!polyline._isDirty()) {
-            this._polylinesToUpdate.push(polyline);
-        }
-
-        ++this._propertiesChanged[propertyChanged];
-    };
 
     /**
      * DOC_TBA
@@ -427,38 +435,6 @@ define([
         return usageChanged;
     };
 
-    PolylineCollection._getIndexBuffer = function(context) {
-        var sixteenK = 16 * 1024;
-
-        // Per-context cache for polyline collections
-        context._primitivesCache = context._primitivesCache || {};
-        var primitivesCache = context._primitivesCache;
-        primitivesCache._polylineCollection = primitivesCache._polylineCollection || {};
-        var c = primitivesCache._polylineCollection;
-
-        if (c.indexBuffer) {
-            return c.indexBuffer;
-        }
-
-        var length = sixteenK * 6;
-        var indices = new Uint16Array(length);
-        for ( var i = 0, j = 0; i < length; i += 6, j += 4) {
-            indices[i + 0] = j + 0;
-            indices[i + 1] = j + 1;
-            indices[i + 2] = j + 2;
-
-            indices[i + 3] = j + 0;
-            indices[i + 4] = j + 2;
-            indices[i + 5] = j + 3;
-        }
-
-        // PERFORMANCE_IDEA:  Should we reference count polyline collections, and eventually delete this?
-        // Is this too much memory to allocate up front?  Should we dynamically grow it?
-        c.indexBuffer = context.createIndexBuffer(indices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
-        c.indexBuffer.setVertexArrayDestroyable(false);
-        return c.indexBuffer;
-    };
-
     /**
      * Renders the polylines.  In order for changes to properties to be realized,
      * {@link PolylineCollection#update} must be called before <code>render</code>.
@@ -509,10 +485,8 @@ define([
      */
     PolylineCollection.prototype.renderForPick = function(context, framebuffer) {
         var va = this._va;
-
         // TODO:  Pick on ground track and height track
-
-        if (this._isShown() && va) {
+        if (va) {
             context.draw({
                 primitiveType : this._vertices.getPrimitiveType(),
                 shaderProgram : this._sp,
@@ -524,254 +498,113 @@ define([
         }
     };
 
-    /**
-     * @private
-     */
-    PolylineCollection.prototype._update = function(context, sceneState) {
-        var polylines = this._polylines;
-        var length = polylines.length;
-        var sizeInVertices = 0;
-        for(var j = 0; j < length; j++){
-            sizeInVertices += polylines[j].getPositions().length;
-        }
-        this._vaf = this._vaf && this._vaf.destroy();
-        this._vaf = new VertexArrayFacade(context,[{
-            index : attributeIndices.position3D,
-            componentsPerAttribute : 3,
-            componentDatatype : ComponentDatatype.FLOAT,
-            usage : this._buffersUsage[POSITION_INDEX]
-        }, {
-            index : attributeIndices.color,
-            componentsPerAttribute : 4,
-            normalize:true,
-            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-            usage : this._buffersUsage[COLOR_INDEX]
-        }, {
-            index : attributeIndices.outlineColor,
-            componentsPerAttribute : 4,
-            normalize:true,
-            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-            usage : this._buffersUsage[OUTLINE_COLOR_INDEX]
-        }], sizeInVertices);
-
-
-        var vafWriters = this._vaf.writers;
-        var index = 0;
-        for ( var i = 0; i < length; ++i) {
-            var polyline = this._polylines[i];
-            polyline._clean(); // In case it needed an update.
-            this._writePolyline(context, vafWriters, polyline, index);
-            index += polyline.getPositions().length;
-        }
-        this._vaf.commit(null);
-    };
-
-    PolylineCollection.prototype._writeColor = function(context, vafWriters, polyline, index) {
-        var positions = polyline.getPositions();
-        var length = positions.length;
-        var color = polyline.getColor();
-        for(var j = 0; j < length; ++j){
-            vafWriters[attributeIndices.color](index + j, color.red * 255, color.green * 255, color.blue * 255, color.alpha * 255);
-        }
-
-    };
-
-    PolylineCollection.prototype._writePosition = function(context, vafWriters, polyline, index) {
-        var positions = polyline.getPositions();
-        var length = positions.length;
-        for(var j = 0; j < length; ++j){
-            var position = positions[j];
-            vafWriters[attributeIndices.position3D](index + j, position.x, position.y, position.z);
-        }
-    };
-
-    PolylineCollection.prototype._writePolyline = function(context, vafWriters, polyline, index){
-        this._writePosition(context, vafWriters, polyline, index);
-        this._writeColor(context, vafWriters, polyline, index);
-    };
-
-    PolylineCollection.prototype._isShown = function() {
-        return true;
-    };
-
-    PolylineCollection.prototype._clampWidth = function(context, value) {
-        var min = context.getMinimumAliasedLineWidth();
-        var max = context.getMaximumAliasedLineWidth();
-
-        return Math.min(Math.max(value, min), max);
-    };
-
-    PolylineCollection.prototype._syncMorphTime = function(mode) {
-        switch (mode) {
-        case SceneMode.SCENE3D:
-            this.morphTime = 1.0;
-            break;
-
-        case SceneMode.SCENE2D:
-        case SceneMode.COLUMBUS_VIEW:
-            this.morphTime = 0.0;
-            break;
-
-        // MORPHING - don't change it
-        }
-    };
-
     PolylineCollection.prototype.update = function(context, sceneState) {
-        if (this._isShown()) {
-            if (!this._sp) {
-                this._sp = context.getShaderCache().getShaderProgram(PolylineVS, PolylineFS, attributeIndices);
+        if (!this._sp) {
+            this._sp = context.getShaderCache().getShaderProgram(PolylineVS, PolylineFS, attributeIndices);
 
-                this._rsOne = context.createRenderState({
-                    colorMask : {
-                        red : false,
-                        green : false,
-                        blue : false,
-                        alpha : false
+            this._rsOne = context.createRenderState({
+                colorMask : {
+                    red : false,
+                    green : false,
+                    blue : false,
+                    alpha : false
+                },
+                lineWidth : 1,
+                blending : BlendingState.ALPHA_BLEND,
+                stencilTest : {
+                    enabled : true,
+                    frontFunction : StencilFunction.ALWAYS,
+                    backFunction : StencilFunction.ALWAYS,
+                    reference : 0,
+                    mask : ~0,
+                    frontOperation : {
+                        fail : StencilOperation.REPLACE,
+                        zFail : StencilOperation.REPLACE,
+                        zPass : StencilOperation.REPLACE
                     },
-                    lineWidth : 1,
-                    blending : BlendingState.ALPHA_BLEND,
-                    stencilTest : {
-                        enabled : true,
-                        frontFunction : StencilFunction.ALWAYS,
-                        backFunction : StencilFunction.ALWAYS,
-                        reference : 0,
-                        mask : ~0,
-                        frontOperation : {
-                            fail : StencilOperation.REPLACE,
-                            zFail : StencilOperation.REPLACE,
-                            zPass : StencilOperation.REPLACE
-                        },
-                        backOperation : {
-                            fail : StencilOperation.REPLACE,
-                            zFail : StencilOperation.REPLACE,
-                            zPass : StencilOperation.REPLACE
-                        }
+                    backOperation : {
+                        fail : StencilOperation.REPLACE,
+                        zFail : StencilOperation.REPLACE,
+                        zPass : StencilOperation.REPLACE
                     }
-                });
+                }
+            });
 
-                this._rsTwo = context.createRenderState({
-                    lineWidth : 1,
-                    depthMask : false,
-                    blending : BlendingState.ALPHA_BLEND,
-                    stencilTest : {
-                        enabled : true,
-                        frontFunction : StencilFunction.ALWAYS,
-                        backFunction : StencilFunction.ALWAYS,
-                        reference : 1,
-                        mask : ~0,
-                        frontOperation : {
-                            fail : StencilOperation.KEEP,
-                            zFail : StencilOperation.KEEP,
-                            zPass : StencilOperation.REPLACE
-                        },
-                        backOperation : {
-                            fail : StencilOperation.KEEP,
-                            zFail : StencilOperation.KEEP,
-                            zPass : StencilOperation.REPLACE
-                        }
+            this._rsTwo = context.createRenderState({
+                lineWidth : 1,
+                depthMask : false,
+                blending : BlendingState.ALPHA_BLEND,
+                stencilTest : {
+                    enabled : true,
+                    frontFunction : StencilFunction.ALWAYS,
+                    backFunction : StencilFunction.ALWAYS,
+                    reference : 1,
+                    mask : ~0,
+                    frontOperation : {
+                        fail : StencilOperation.KEEP,
+                        zFail : StencilOperation.KEEP,
+                        zPass : StencilOperation.REPLACE
+                    },
+                    backOperation : {
+                        fail : StencilOperation.KEEP,
+                        zFail : StencilOperation.KEEP,
+                        zPass : StencilOperation.REPLACE
                     }
-                });
+                }
+            });
 
-                this._rsThree = context.createRenderState({
-                    lineWidth : 1,
-                    depthMask : false,
-                    blending : BlendingState.ALPHA_BLEND,
-                    stencilTest : {
-                        enabled : true,
-                        frontFunction : StencilFunction.NOT_EQUAL,
-                        backFunction : StencilFunction.NOT_EQUAL,
-                        reference : 1,
-                        mask : ~0,
-                        frontOperation : {
-                            fail : StencilOperation.KEEP,
-                            zFail : StencilOperation.KEEP,
-                            zPass : StencilOperation.KEEP
-                        },
-                        backOperation : {
-                            fail : StencilOperation.KEEP,
-                            zFail : StencilOperation.KEEP,
-                            zPass : StencilOperation.KEEP
-                        }
+            this._rsThree = context.createRenderState({
+                lineWidth : 1,
+                depthMask : false,
+                blending : BlendingState.ALPHA_BLEND,
+                stencilTest : {
+                    enabled : true,
+                    frontFunction : StencilFunction.NOT_EQUAL,
+                    backFunction : StencilFunction.NOT_EQUAL,
+                    reference : 1,
+                    mask : ~0,
+                    frontOperation : {
+                        fail : StencilOperation.KEEP,
+                        zFail : StencilOperation.KEEP,
+                        zPass : StencilOperation.KEEP
+                    },
+                    backOperation : {
+                        fail : StencilOperation.KEEP,
+                        zFail : StencilOperation.KEEP,
+                        zPass : StencilOperation.KEEP
                     }
-                });
-            }
+                }
+            });
+        }
 
-            var mode = SceneMode.SCENE3D;
-            this._syncMorphTime(mode);
-            // Update render state if line width or depth test changed.
-            var width = this._clampWidth(context, this.width);
-            var outlineWidth = this._clampWidth(context, this.outlineWidth);
+        this._removePolylines();
+        this._updateMode(sceneState);
 
-            // Enable depth testing during and after a morph.
-            var useDepthTest = (this.morphTime !== 0.0);
-
-            var rsOne = this._rsOne;
-            rsOne.lineWidth = outlineWidth;
-            rsOne.depthMask = !useDepthTest;
-            rsOne.depthTest.enabled = useDepthTest;
-
-            var rsTwo = this._rsTwo;
-            rsTwo.lineWidth = width;
-            rsTwo.depthTest.enabled = useDepthTest;
-
-            var rsThree = this._rsThree;
-            rsThree.lineWidth = outlineWidth;
-            rsThree.depthTest.enabled = useDepthTest;
-
-            var modelMatrix = this._getModelMatrix(mode);
-
-            if (this._createVertexArray ||
-                (this._bufferUsage !== this.bufferUsage) ||
-                (this._mode !== mode) ||
-                (mode !== SceneMode.SCENE3D) &&
-                (!this._modelMatrix.equals(modelMatrix))) {
-                this._createVertexArray = false;
-                this._bufferUsage = this.bufferUsage;
-                this._mode = mode;
-                this._modelMatrix = modelMatrix.clone();
-
-                if (mode === SceneMode.SCENE3D) {
-                    this._drawUniformsOne = this._drawUniformsOne3D;
-                    this._drawUniformsTwo = this._drawUniformsTwo3D;
-                    this._drawUniformsThree = this._drawUniformsThree3D;
-                    this._pickUniforms = this._pickUniforms3D;
-
-                    this._update(context, sceneState);
+        if (this._createVertexArray || this.computeNewBuffersUsage()){
+            this._update(context, sceneState);
+        }else{
+            var polylinesToUpdate = this._polylinesToUpdate;
+            var updateLength = polylinesToUpdate.length;
+            if(updateLength){
+                var properties = this._propertiesChanged;
+                for ( var k = 0; k < NUMBER_OF_PROPERTIES; ++k) {
+                    properties[k] = 0;
                 }
             }
         }
     };
 
-    PolylineCollection.prototype._getModelMatrix = function(mode) {
-        switch (mode) {
-        case SceneMode.SCENE3D:
-            return this.modelMatrix;
-
-        case SceneMode.SCENE2D:
-        case SceneMode.COLUMBUS_VIEW:
-            return this.scene2D.modelMatrix || this.modelMatrix;
-
-        case SceneMode.MORPHING:
-            return Matrix4.IDENTITY;
-        }
-    };
-
-    /**
-     * @private
-     */
     PolylineCollection.prototype.updateForPick = function(context) {
-        if (this._isShown()) {
-            this._pickId = this._pickId || context.createPickId(this);
-            this._rsPick = this._rsPick || context.createRenderState();
+        this._pickId = this._pickId || context.createPickId(this);
+        this._rsPick = this._rsPick || context.createRenderState();
 
-            var outlineWidth = this._clampWidth(context, this.outlineWidth);
-            // Enable depth testing during and after a morph.
-            var useDepthTest = false;//(this.morphTime !== 0.0);
+        var outlineWidth = this._clampWidth(context, this.outlineWidth);
+        // Enable depth testing during and after a morph.
+        var useDepthTest = false;//(this.morphTime !== 0.0);
 
-            var rs = this._rsPick;
-            rs.lineWidth = outlineWidth;
-            rs.depthTest.enabled = useDepthTest;
-        }
+        var rs = this._rsPick;
+        rs.lineWidth = outlineWidth;
+        rs.depthTest.enabled = useDepthTest;
     };
 
     /**
@@ -815,6 +648,197 @@ define([
         this._destroyPolylines();
 
         return destroyObject(this);
+    };
+
+    /**
+     * @private
+     */
+    PolylineCollection.prototype._update = function(context, sceneState) {
+        this._createVertexArray = false;
+        this._vaf = this._vaf && this._vaf.destroy();
+        var polylines = this._polylines;
+        var length = polylines.length;
+        if(length > 0){
+            var sizeInVertices = 0;
+            for(var j = 0; j < length; j++){
+                sizeInVertices += polylines[j].getPositions().length;
+            }
+            this._vaf = new VertexArrayFacade(context,[{
+                index : attributeIndices.position3D,
+                componentsPerAttribute : 3,
+                componentDatatype : ComponentDatatype.FLOAT,
+                usage : this._buffersUsage[POSITION_INDEX]
+            }, {
+                index : attributeIndices.color,
+                componentsPerAttribute : 4,
+                normalize:true,
+                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                usage : this._buffersUsage[COLOR_INDEX]
+            }, {
+                index : attributeIndices.outlineColor,
+                componentsPerAttribute : 4,
+                normalize:true,
+                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                usage : this._buffersUsage[OUTLINE_COLOR_INDEX]
+            }], sizeInVertices);
+
+
+            var vafWriters = this._vaf.writers;
+            var index = 0;
+            for ( var i = 0; i < length; ++i) {
+                var polyline = this._polylines[i];
+                polyline._clean(); // In case it needed an update.
+                this._writePolyline(context, vafWriters, polyline, index);
+                index += polyline.getPositions().length;
+            }
+            this._vaf.commit(null);
+        }
+        this._polylinesToUpdate = [];
+    };
+
+    PolylineCollection.prototype._updateMode = function(sceneState) {
+        var mode = sceneState.mode;
+        var projection = sceneState.scene2D.projection;
+        this._syncMorphTime(mode);
+
+        if(this._mode !== mode){
+            this._mode = mode;
+            switch(mode){
+                case SceneMode.SCENE3D:
+                    this._drawUniformsOne = this._drawUniformsOne3D;
+                    this._drawUniformsTwo = this._drawUniformsTwo3D;
+                    this._drawUniformsThree = this._drawUniformsThree3D;
+                    this._pickUniforms = this._pickUniforms3D;
+                    break;
+                case SceneMode.SCENE2D:
+                    this._drawUniformsOne = this._drawUniformsOne2D;
+                    this._drawUniformsTwo = this._drawUniformsTwo2D;
+                    this._drawUniformsThree = this._drawUniformsThree2D;
+                    this._pickUniforms = this._pickUniforms2D;
+                    break;
+                case SceneMode.COLUMBUS_VIEW:
+                    this._drawUniformsOne = this._drawUniformsOne2D;
+                    this._drawUniformsTwo = this._drawUniformsTwo2D;
+                    this._drawUniformsThree = this._drawUniformsThree2D;
+                    this._pickUniforms = this._pickUniforms2D;
+                    break;
+
+            }
+        }
+        if(this._projection !== projection)
+        if ((this._projection !== projection) ||
+            (!this._modelMatrix.equals(this.modelMatrix))) {
+            this._projection = projection;
+            this._modelMatrix = this.modelMatrix.clone();
+
+        }
+        if (mode === SceneMode.MORPHING) {
+            /*polylines = this._polylines;
+            length = polylines.length;
+
+            for (i = 0; i < length; ++i) {
+                p = polylines[i];
+                var positions = p.getPositions();
+                var projectedPoint = projection.project(projection.getEllipsoid().toCartographic3s(positions));
+
+                b._setActualPosition({
+                    x : CesiumMath.lerp(projectedPoint.z, p.x, this.morphTime),
+                    y : CesiumMath.lerp(projectedPoint.x, p.y, this.morphTime),
+                    z : CesiumMath.lerp(projectedPoint.y, p.z, this.morphTime)
+                });
+            }*/
+        } else if (mode === SceneMode.SCENE2D) {
+            this._updateScene2D(projection, this._polylinesToUpdate);
+        } else if (mode === SceneMode.COLUMBUS_VIEW) {
+            this._updateColumbusView(projection, this._polylinesToUpdate);
+        }
+    };
+
+    PolylineCollection.prototype._getModelMatrix = function(mode) {
+        switch (mode) {
+        case SceneMode.SCENE3D:
+            return this.modelMatrix;
+
+        case SceneMode.SCENE2D:
+        case SceneMode.COLUMBUS_VIEW:
+            return this.modelMatrix;
+
+        case SceneMode.MORPHING:
+            return Matrix4.IDENTITY;
+        }
+    };
+
+    PolylineCollection.prototype._writeColor = function(context, vafWriters, polyline, index) {
+        var positions = polyline.getPositions();
+        var length = positions.length;
+        var color = polyline.getColor();
+        for(var j = 0; j < length; ++j){
+            vafWriters[attributeIndices.color](index + j, color.red * 255, color.green * 255, color.blue * 255, color.alpha * 255);
+        }
+
+    };
+
+    PolylineCollection.prototype._writePosition = function(context, vafWriters, polyline, index) {
+        var positions = polyline.getPositions();
+        var length = positions.length;
+        for(var j = 0; j < length; ++j){
+            var position = positions[j];
+            vafWriters[attributeIndices.position3D](index + j, position.x, position.y, position.z);
+        }
+    };
+
+    PolylineCollection.prototype._writePolyline = function(context, vafWriters, polyline, index){
+        this._writePosition(context, vafWriters, polyline, index);
+        this._writeColor(context, vafWriters, polyline, index);
+    };
+
+    PolylineCollection.prototype._clampWidth = function(context, value) {
+        var min = context.getMinimumAliasedLineWidth();
+        var max = context.getMaximumAliasedLineWidth();
+
+        return Math.min(Math.max(value, min), max);
+    };
+
+    PolylineCollection.prototype._syncMorphTime = function(mode) {
+        switch (mode) {
+        case SceneMode.SCENE3D:
+            this.morphTime = 1.0;
+            break;
+
+        case SceneMode.SCENE2D:
+        case SceneMode.COLUMBUS_VIEW:
+            this.morphTime = 0.0;
+            break;
+
+        // MORPHING - don't change it
+        }
+    };
+
+    PolylineCollection.prototype._removePolylines = function() {
+        if (this._polylinesRemoved) {
+            this._polylinesRemoved = false;
+
+            var polylines = [];
+
+            var length = this._polylines.length;
+            for ( var i = 0, j = 0; i < length; ++i) {
+                var polyline = this._polylines[i];
+                if (polyline) {
+                    polyline._index = j++;
+                    polylines.push(polyline);
+                }
+            }
+
+            this._polylines = polylines;
+        }
+    };
+
+    PolylineCollection.prototype._updatePolyline = function(polyline, propertyChanged) {
+        if (!polyline._isDirty()) {
+            this._polylinesToUpdate.push(polyline);
+        }
+
+        ++this._propertiesChanged[propertyChanged];
     };
 
     PolylineCollection.prototype._destroyPolylines = function() {
