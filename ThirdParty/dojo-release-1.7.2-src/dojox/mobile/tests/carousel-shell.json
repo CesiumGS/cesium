@@ -1,0 +1,15 @@
+{
+	items: [
+		{src:"images/shell1.jpg", design:"Lion", model: "984", produced: "1990'", size: "H3.5cm W4cm", price: "3,300yen"},
+		{src:"images/shell2.jpg", design:"Lion", model: "984", produced: "1990'", size: "H3.5cm W4cm", price: "2,800yen"},
+		{src:"images/shell3.jpg", design:"Lion", model: "984", produced: "1990'", size: "H3.5cm W4cm", price: "1,800yen"},
+		{src:"images/shell4.jpg", design:"Lion", model: "984", produced: "1990'", size: "H3.5cm W4cm", price: "800yen"},
+		{src:"images/shell5.jpg", design:"Lion", model: "984", produced: "1990'", size: "H3.5cm W4cm", price: "100yen"},
+		{src:"images/shell6.jpg", design:"Lion", model: "984", produced: "1990'", size: "H3.5cm W4cm", price: "4,800yen"},
+		{src:"images/shell7.jpg", design:"Lion", model: "984", produced: "1990'", size: "H3.5cm W4cm", price: "10yen"},
+		{src:"images/shell8.jpg", design:"Lion", model: "984", produced: "1990'", size: "H3.5cm W4cm", price: "5yen"},
+		{src:"images/shell9.jpg", design:"Lion", model: "984", produced: "1990'", size: "H3.5cm W4cm", price: "20yen"},
+		{src:"images/shell10.jpg", design:"Lion", model: "984", produced: "1990'", size: "H3.5cm W4cm", price: "2,600yen"},
+		{src:"images/shell11.jpg", design:"Lion", model: "984", produced: "1990'", size: "H3.5cm W4cm", price: "1,200yen"}
+	]
+}

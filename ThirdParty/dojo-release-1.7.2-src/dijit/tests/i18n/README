@@ -1,0 +1,4 @@
+Global Verification Tests (GVT)
+
+In order to run these tests, you will need full locale support in Dojo.  Dojo only ships with a small subset by default.
+See util/buildscripts/cldr for an ant-based build script.

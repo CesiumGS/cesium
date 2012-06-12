@@ -1,0 +1,78 @@
+/* dojox.mobile.ListItem */
+.mblListItem {
+	position: relative;
+	list-style-type: none;
+	vertical-align: bottom; /* To avoid IE6 LI bug */
+	.mblListItem-styles;
+	&.mblVariableHeight {
+		height: auto;
+		.mblListItem-mblVariableHeight-styles;
+	}
+	.mblListItemAnchor {
+		display: block;
+		height: 100%;
+		-webkit-tap-highlight-color: rgba(255,255,255,0);
+		.mblListItem-mblListItemAnchor-styles;
+		* {
+			-webkit-tap-highlight-color: rgba(0, 0, 0, 0.2);
+		}
+	}
+}
+.mblItemSelected {
+	.mblItemSelected-styles;
+	.mblListItemSubText {
+		.mblItemSelected-mblListItemSubText-styles;
+	}
+	.mblListItemAnchor {
+		.mblItemSelected-mblListItemAnchor-styles;
+	}
+	.mblDomButton {
+		div {
+			.mblItemSelected-mblDomButton-Div-styles;
+		}
+	}
+}
+.mblListItemTextBoxSelected {
+	.mblListItemTextBoxSelected-styles;
+}
+.mblListItemChecked {
+	.mblListItemChecked-styles;
+}
+.mblListItemIcon {
+	float: left;
+	line-height: normal;
+	.mblListItemIcon-styles;
+}
+.mblListItemSpriteIcon {
+	position: absolute;
+	.mblListItemSpriteIcon-styles;
+
+}
+.mblListItemRightIcon,
+.mblListItemRightIcon2 {
+	position: relative;
+	float: right;
+	line-height: normal;
+	.mblListItemRightIcon-styles;
+}
+.mblListItemRightText {
+	position: relative;
+	float: right;
+	line-height: normal;
+	.mblListItemRightText-styles;
+}
+.mblListItemTextBox {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	.mblListItemTextBox-styles;
+}
+.mblVariableHeight .mblListItemTextBox {
+	white-space: normal;
+}
+.mblListItemAnchorNoIcon .mblListItemTextBox {
+	.mblListItemAnchorNoIcon-mblListItemTextBox-styles;
+}
+.mblListItemSubText {
+	.mblListItemSubText-styles;
+}

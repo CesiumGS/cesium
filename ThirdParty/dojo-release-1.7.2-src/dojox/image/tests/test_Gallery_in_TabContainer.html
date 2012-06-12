@@ -1,0 +1,85 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+	<title>Testing the Image Gallery</title>
+
+	<!-- required: a default theme file -->
+	<link rel="stylesheet" id="themeStyles" href="../../../dijit/themes/tundra/tundra.css">
+	<link rel="stylesheet" href="../resources/image.css">
+
+	<style type="text/css">
+		@import "../../../dijit/tests/css/dijitTests.css";
+	</style>
+	
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: true"></script>
+
+	<!-- do not use! only for testing dynamic themes -->
+	<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+	
+	<!-- debugging includes -->
+	<script type="text/javascript" src="../ThumbnailPicker.js"></script>
+	<script type="text/javascript" src="../SlideShow.js"></script>
+	<script type="text/javascript" src="../Gallery.js"></script>
+	<script type="text/javascript" src="../../../dojo/data/util/simpleFetch.js"></script>
+	<script type="text/javascript" src="../../data/FlickrStore.js"></script>
+	<script type="text/javascript" src="../../data/FlickrRestStore.js"></script>
+	<script type="text/javascript" src="../../../dojo/data/ItemFileReadStore.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("dojox.image.Gallery");
+		dojo.require("dojox.data.FlickrRestStore");
+		dojo.require("dijit.layout.TabContainer");;
+		dojo.require("dijit.layout.ContentPane");
+		
+	</script>
+</head>
+<body class="tundra">
+	<h1 class="testTitle">dojox.image.Gallery in a TabContainer</h1>
+	
+	<div dojoType="dojox.data.FlickrRestStore" jsId="flickrStore"></div>
+
+	<div dojoType="dijit.layout.TabContainer" style="width:800px;height:1000px;">
+		<script type="dojo/connect" event="startup">
+			// When the TabContainer has finished constructing, set the data store on each Gallery
+			dojo.forEach(["gallery1", "gallery2", "gallery3"], function(galleryId){
+				var req = {
+					query: {
+						userid: "44153025@N00",
+						apikey: "8c6803164dbc395fb7131c9d54843627",
+						sort: [
+							   {
+								attribute: "interestingness",
+								descending: true
+								}
+							   ],
+					//	tags: ["superhorse", "redbones", "beachvolleyball"],
+						tag_mode: "any"
+					},
+					count: 20
+				};
+				
+				dijit.byId(galleryId).setDataStore(flickrStore, req);
+			});
+			
+		</script>
+		
+		<div id="gallery1" dojoType="dojox.image.Gallery" imageWidth="700" imageHeight="500"
+			  title="Gallery As Base Widget"
+		></div>
+		
+		<div dojoType="dijit.layout.ContentPane" title="Gallery In ContentPane">
+			
+			<div id="gallery2" dojoType="dojox.image.Gallery" imageWidth="700" imageHeight="500"></div>
+		
+		</div>
+		
+		
+		<div id="gallery3" dojoType="dojox.image.Gallery" imageWidth="700" imageHeight="500"
+			  title="Gallery As Base Widget"
+		></div>
+	</div>
+
+</body>
+</html>

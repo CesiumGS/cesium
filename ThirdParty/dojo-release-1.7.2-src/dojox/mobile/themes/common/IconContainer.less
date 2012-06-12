@@ -1,0 +1,79 @@
+/* dojox.mobile.IconContainer */
+.mblIconContainer {
+	.mblIconContainer-styles;
+}
+
+/* dojox.mobile.IconItem */
+.mblIconItem {
+	list-style-type: none;
+	float: left;
+	-webkit-tap-highlight-color: rgba(255, 255, 255, 0);
+}
+.mblIconItemTerminator {
+	list-style-type: none;
+	clear: both;
+	.mblIconItemTerminator-styles;
+}
+.mblIconItemSub {
+	list-style-type: none;
+	.mblIconItemSub-styles;
+}
+.mblIconArea {
+	.mblIconArea-styles;
+	div {
+		position: relative;
+		height: 65px;
+		line-height: 65px;
+		text-align: center;
+	}
+	img {
+		vertical-align: middle;
+	}
+}
+.mblIconItemSpriteIcon {
+	position: absolute;
+}
+.mblContent {
+	clear: both;
+	.mblContent-styles;
+}
+table.mblClose {
+	clear: both;
+	cursor: pointer;
+}
+.mblVibrate{
+	position: relative;
+	-webkit-animation-duration: .5s;
+	-webkit-animation-timing-function: ease-in-out;
+	-webkit-animation-iteration-count: 20;
+	-webkit-animation-name: mblVibrate;
+	-webkit-transform: rotate(0deg);
+}
+.mblCloseContent{
+	-webkit-animation-duration: .3s;
+	-webkit-animation-timing-function: ease-in-out;
+	-webkit-animation-name: mblShrink;
+	-webkit-transform: scale(0.01);
+	&.mblShrink0{
+		-webkit-animation-name: mblShrink0;
+	}
+	&.mblShrink1{
+		-webkit-animation-name: mblShrink1;
+	}
+	&.mblShrink2{
+		-webkit-animation-name: mblShrink2;
+	}
+	&.mblShrink3{
+		-webkit-animation-name: mblShrink3;
+	}
+}
+
+/* Icon Content Heading */
+.mblIconContentHeading {
+	position: relative;
+	clear: both;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	.mblIconContentHeading-styles;
+}

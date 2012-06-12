@@ -1,10 +1,12 @@
 /*global define*/
 define([
         '../Core/DeveloperError',
+        '../Core/Extent',
         '../Core/Math',
         './Projections'
     ], function(
         DeveloperError,
+        Extent,
         CesiumMath,
         Projections) {
     "use strict";
@@ -56,14 +58,14 @@ define([
          * The cartographic extent of the base tile, with north, south, east and
          * west properties in radians.
          *
-         * @type {Object}
+         * @type {Extent}
          */
-        this.maxExtent = {
-            north : CesiumMath.PI_OVER_TWO,
-            south : -CesiumMath.PI_OVER_TWO,
-            west : -CesiumMath.PI,
-            east : CesiumMath.PI
-        };
+        this.maxExtent = new Extent(
+            -CesiumMath.PI,
+            -CesiumMath.PI_OVER_TWO,
+            CesiumMath.PI,
+            CesiumMath.PI_OVER_TWO
+        );
 
         /**
          * The width of every image loaded.
@@ -103,12 +105,12 @@ define([
     }
 
     SolidColorTileProvider.prototype._createImage = function(color, width, height) {
-        var canvas = document.createElement("canvas");
+        var canvas = document.createElement('canvas');
         canvas.width = width;
         canvas.height = height;
 
-        var context = canvas.getContext("2d");
-        context.fillStyle = "rgba(" + color.r + ", " + color.g + ", " + color.b + ", 1.0)";
+        var context = canvas.getContext('2d');
+        context.fillStyle = 'rgba(' + color.r + ', ' + color.g + ', ' + color.b + ', 1.0)';
         context.fillRect(0, 0, width, height);
 
         return canvas;
@@ -127,10 +129,10 @@ define([
      */
     SolidColorTileProvider.prototype.loadTileImage = function(tile, onload, onerror) {
         if (tile.zoom < this.zoomMin || tile.zoom > this.zoomMax) {
-            throw new DeveloperError("tile.zoom must be in [zoomMin, zoomMax].", "tile.zoom");
+            throw new DeveloperError('tile.zoom must be in [zoomMin, zoomMax].');
         }
 
-        if (typeof onload === "function") {
+        if (typeof onload === 'function') {
             onload();
         }
 

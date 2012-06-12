@@ -74,7 +74,7 @@ defineSuite([
                 y : 0.0,
                 z : 0.0
             },
-            text : "x",
+            text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
         });
@@ -95,25 +95,26 @@ defineSuite([
         return polygon;
     }
 
-    it("gets default show", function() {
-        expect(primitives.show).toBeTruthy();
+    it('gets default show', function() {
+        expect(primitives.show).toEqual(true);
     });
 
-    it("get throws if index is undefined", function() {
-        var n;
-        expect(primitives.get(n)).toThrow();
+    it('get throws if index is undefined', function() {
+        expect(function() {
+            primitives.get(undefined);
+        }).toThrow();
     });
 
-    it("has zero primitives when constructed", function() {
+    it('has zero primitives when constructed', function() {
         expect(primitives.getLength()).toEqual(0);
     });
 
-    it("adds a primitive with add()", function() {
+    it('adds a primitive with add()', function() {
         primitives.add(createLabels());
         expect(primitives.getLength()).toEqual(1);
     });
 
-    it("removes the first primitive", function() {
+    it('removes the first primitive', function() {
         var p0 = createLabels();
         var p1 = createLabels();
 
@@ -122,15 +123,15 @@ defineSuite([
 
         expect(primitives.getLength()).toEqual(2);
 
-        expect(primitives.remove(p0)).toBeTruthy();
+        expect(primitives.remove(p0)).toEqual(true);
         expect(primitives.getLength()).toEqual(1);
         expect(primitives.get(0)).toBe(p1);
 
-        expect(primitives.remove(p1)).toBeTruthy();
+        expect(primitives.remove(p1)).toEqual(true);
         expect(primitives.getLength()).toEqual(0);
     });
 
-    it("removes the last primitive", function() {
+    it('removes the last primitive', function() {
         var p0 = createLabels();
         var p1 = createLabels();
 
@@ -139,27 +140,27 @@ defineSuite([
 
         expect(primitives.getLength()).toEqual(2);
 
-        expect(primitives.remove(p1)).toBeTruthy();
+        expect(primitives.remove(p1)).toEqual(true);
         expect(primitives.getLength()).toEqual(1);
         expect(primitives.get(0)).toBe(p0);
 
-        expect(primitives.remove(p0)).toBeTruthy();
+        expect(primitives.remove(p0)).toEqual(true);
         expect(primitives.getLength()).toEqual(0);
     });
 
-    it("removes a primitive twice", function() {
+    it('removes a primitive twice', function() {
         var p0 = createLabels();
         primitives.add(p0);
 
-        expect(primitives.remove(p0)).toBeTruthy();
-        expect(primitives.remove(p0)).toBeFalsy();
+        expect(primitives.remove(p0)).toEqual(true);
+        expect(primitives.remove(p0)).toEqual(false);
     });
 
-    it("removes null", function() {
-        expect(primitives.remove()).toBeFalsy();
+    it('removes null', function() {
+        expect(primitives.remove()).toEqual(false);
     });
 
-    it("removes all primitives", function() {
+    it('removes all primitives', function() {
         primitives.add(createLabels());
         primitives.add(createLabels());
         primitives.add(createLabels());
@@ -170,26 +171,26 @@ defineSuite([
         expect(primitives.getLength()).toEqual(0);
     });
 
-    it("contains a primitive", function() {
+    it('contains a primitive', function() {
         var labels = createLabels();
         primitives.add(labels);
 
-        expect(primitives.contains(labels)).toBeTruthy();
+        expect(primitives.contains(labels)).toEqual(true);
     });
 
-    it("doesn't contain a primitive", function() {
+    it('does not contain a primitive', function() {
         var labels0 = createLabels();
         var labels1 = createLabels();
         primitives.add(labels0);
 
-        expect(primitives.contains(labels1)).toBeFalsy();
+        expect(primitives.contains(labels1)).toEqual(false);
     });
 
-    it("doesn't contain undefined", function() {
-        expect(primitives.contains()).toBeFalsy();
+    it('does not contain undefined', function() {
+        expect(primitives.contains()).toEqual(false);
     });
 
-    it("adds and removes a primitive in two composites", function() {
+    it('adds and removes a primitive in two composites', function() {
         var p = createLabels();
 
         primitives.add(p);
@@ -200,52 +201,52 @@ defineSuite([
         otherPrimitives.destroyPrimitives = false;
 
         // In both composites
-        expect(primitives.contains(p)).toBeTruthy();
-        expect(otherPrimitives.contains(p)).toBeTruthy();
+        expect(primitives.contains(p)).toEqual(true);
+        expect(otherPrimitives.contains(p)).toEqual(true);
 
         // In one composite
-        expect(primitives.remove(p)).toBeTruthy();
-        expect(primitives.contains(p)).toBeFalsy();
-        expect(otherPrimitives.contains(p)).toBeTruthy();
+        expect(primitives.remove(p)).toEqual(true);
+        expect(primitives.contains(p)).toEqual(false);
+        expect(otherPrimitives.contains(p)).toEqual(true);
 
         // In neither composite
-        expect(otherPrimitives.remove(p)).toBeTruthy();
-        expect(primitives.contains(p)).toBeFalsy();
-        expect(otherPrimitives.contains(p)).toBeFalsy();
-        expect(primitives.remove(p)).toBeFalsy();
-        expect(otherPrimitives.remove(p)).toBeFalsy();
+        expect(otherPrimitives.remove(p)).toEqual(true);
+        expect(primitives.contains(p)).toEqual(false);
+        expect(otherPrimitives.contains(p)).toEqual(false);
+        expect(primitives.remove(p)).toEqual(false);
+        expect(otherPrimitives.remove(p)).toEqual(false);
 
         p.destroy();
         otherPrimitives.destroy();
     });
 
-    it("doesn't remove from a second composite", function() {
+    it('does not remove from a second composite', function() {
         var p = createLabels();
         primitives.add(p);
 
         var otherPrimitives = new CompositePrimitive(context);
 
-        expect(otherPrimitives.contains(p)).toBeFalsy();
-        expect(otherPrimitives.remove(p)).toBeFalsy();
+        expect(otherPrimitives.contains(p)).toEqual(false);
+        expect(otherPrimitives.remove(p)).toEqual(false);
     });
 
-    it("gets default destroyPrimitives", function() {
-        expect(primitives.destroyPrimitives).toBeTruthy();
+    it('gets default destroyPrimitives', function() {
+        expect(primitives.destroyPrimitives).toEqual(true);
     });
 
-    it("setting a central body", function() {
+    it('setting a central body', function() {
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
-        var cb = new CentralBody(camera, ellipsoid);
+        var cb = new CentralBody(ellipsoid);
         primitives.setCentralBody(cb);
 
         expect(primitives.getCentralBody()).toBe(cb);
     });
 
-    it("renders a central body", function() {
+    it('renders a central body', function() {
         context.clear();
         expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
 
-        var cb = new CentralBody(camera, Ellipsoid.UNIT_SPHERE);
+        var cb = new CentralBody(Ellipsoid.UNIT_SPHERE);
         primitives.setCentralBody(cb);
 
         primitives.update(context, sceneState);
@@ -253,7 +254,7 @@ defineSuite([
         expect(context.readPixels()).not.toEqualArray([0, 0, 0, 0]);
     });
 
-    it("renders a primitive added with add()", function() {
+    it('renders a primitive added with add()', function() {
         context.clear();
         expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
 
@@ -263,7 +264,7 @@ defineSuite([
         expect(context.readPixels()).not.toEqualArray([0, 0, 0, 0]);
     });
 
-    it("doesn't render", function() {
+    it('does not render', function() {
         context.clear();
         expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
 
@@ -274,7 +275,7 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
     });
 
-    it("renders a primitive in more than one composite", function() {
+    it('renders a primitive in more than one composite', function() {
         var otherPrimitives = new CompositePrimitive(context);
 
         context.clear();
@@ -300,7 +301,7 @@ defineSuite([
         otherPrimitives.destroy();
     });
 
-    it("renders child composites", function() {
+    it('renders child composites', function() {
         context.clear();
         expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
 
@@ -313,7 +314,7 @@ defineSuite([
         expect(context.readPixels()).not.toEqualArray([0, 0, 0, 0]);
     });
 
-    it("picks a primitive added with add()", function() {
+    it('picks a primitive added with add()', function() {
         var labels = createLabels();
         var l = labels.get(0);
 
@@ -324,7 +325,7 @@ defineSuite([
         expect(pickedObject).toEqual(l);
     });
 
-    it("doesn't pick", function() {
+    it('does not pick', function() {
         var labels = createLabels();
 
         primitives.show = false;
@@ -335,7 +336,7 @@ defineSuite([
         expect(pickedObject).not.toBeDefined();
     });
 
-    it("picks child composites", function() {
+    it('picks child composites', function() {
         var labels = createLabels();
         var l = labels.get(0);
 
@@ -349,7 +350,7 @@ defineSuite([
         expect(pickedObject).toEqual(l);
     });
 
-    it("picks a primitive added with render order (0)", function() {
+    it('picks a primitive added with render order (0)', function() {
         var p0 = createPolygon();
         var p1 = createPolygon();
 
@@ -361,7 +362,7 @@ defineSuite([
         expect(pickedObject).toEqual(p1);
     });
 
-    it("picks a primitive added with render order (1)", function() {
+    it('picks a primitive added with render order (1)', function() {
         var p0 = createPolygon();
         var p1 = createPolygon();
 
@@ -373,7 +374,7 @@ defineSuite([
         expect(pickedObject).toEqual(p0);
     });
 
-    it("picks a primitive added with bringForward (0)", function() {
+    it('picks a primitive added with bringForward (0)', function() {
         var p0 = createPolygon();
         var p1 = createPolygon();
 
@@ -386,7 +387,7 @@ defineSuite([
         expect(pickedObject).toEqual(p1);
     });
 
-    it("picks a primitive added with bringForward (1)", function() {
+    it('picks a primitive added with bringForward (1)', function() {
         var p0 = createPolygon();
         var p1 = createPolygon();
 
@@ -399,7 +400,7 @@ defineSuite([
         expect(pickedObject).toEqual(p0);
     });
 
-    it("picks a primitive added with bringToFront (0)", function() {
+    it('picks a primitive added with bringToFront (0)', function() {
         var p0 = createPolygon();
         var p1 = createPolygon();
 
@@ -412,7 +413,7 @@ defineSuite([
         expect(pickedObject).toEqual(p1);
     });
 
-    it("picks a primitive added with bringToFront (1)", function() {
+    it('picks a primitive added with bringToFront (1)', function() {
         var p0 = createPolygon();
         var p1 = createPolygon();
 
@@ -425,7 +426,7 @@ defineSuite([
         expect(pickedObject).toEqual(p0);
     });
 
-    it("picks a primitive added with sendBackward (0)", function() {
+    it('picks a primitive added with sendBackward (0)', function() {
         var p0 = createPolygon();
         var p1 = createPolygon();
 
@@ -438,7 +439,7 @@ defineSuite([
         expect(pickedObject).toEqual(p0);
     });
 
-    it("picks a primitive added with sendBackward (1)", function() {
+    it('picks a primitive added with sendBackward (1)', function() {
         var p0 = createPolygon();
         var p1 = createPolygon();
 
@@ -451,7 +452,7 @@ defineSuite([
         expect(pickedObject).toEqual(p1);
     });
 
-    it("picks a primitive added with sendToBack (0)", function() {
+    it('picks a primitive added with sendToBack (0)', function() {
         var p0 = createPolygon();
         var p1 = createPolygon();
 
@@ -464,7 +465,7 @@ defineSuite([
         expect(pickedObject).toEqual(p0);
     });
 
-    it("picks a primitive added with sendToBack (1)", function() {
+    it('picks a primitive added with sendToBack (1)', function() {
         var p0 = createPolygon();
         var p1 = createPolygon();
 
@@ -477,134 +478,134 @@ defineSuite([
         expect(pickedObject).toEqual(p1);
     });
 
-    it("is not destroyed when first constructed", function() {
-        expect(primitives.isDestroyed()).toBeFalsy();
+    it('is not destroyed when first constructed', function() {
+        expect(primitives.isDestroyed()).toEqual(false);
     });
 
-    it("is destroyed after calling destroy()", function() {
+    it('is destroyed after calling destroy()', function() {
         var p = new CompositePrimitive();
         p.destroy();
-        expect(p.isDestroyed()).toBeTruthy();
+        expect(p.isDestroyed()).toEqual(true);
     });
 
-    it("destroys its primitives", function() {
+    it('destroys its primitives', function() {
         var labels = new LabelCollection(context);
 
         primitives.add(labels);
-        expect(labels.isDestroyed()).toBeFalsy();
+        expect(labels.isDestroyed()).toEqual(false);
 
         primitives = primitives.destroy();
-        expect(labels.isDestroyed()).toBeTruthy();
+        expect(labels.isDestroyed()).toEqual(true);
     });
 
-    it("destroys children", function() {
+    it('destroys children', function() {
         var labels = new LabelCollection(context);
 
         var children = new CompositePrimitive();
         children.add(labels);
 
         primitives.add(children);
-        expect(children.isDestroyed()).toBeFalsy();
-        expect(labels.isDestroyed()).toBeFalsy();
+        expect(children.isDestroyed()).toEqual(false);
+        expect(labels.isDestroyed()).toEqual(false);
 
         primitives = primitives.destroy();
-        expect(children.isDestroyed()).toBeTruthy();
-        expect(labels.isDestroyed()).toBeTruthy();
+        expect(children.isDestroyed()).toEqual(true);
+        expect(labels.isDestroyed()).toEqual(true);
     });
 
-    it("destroys primitive on remove", function() {
+    it('destroys primitive on remove', function() {
         var labels = new LabelCollection(context);
 
         primitives.add(labels);
-        expect(labels.isDestroyed()).toBeFalsy();
+        expect(labels.isDestroyed()).toEqual(false);
 
         primitives.remove(labels);
-        expect(labels.isDestroyed()).toBeTruthy();
+        expect(labels.isDestroyed()).toEqual(true);
     });
 
-    it("destroys primitive on removeAll", function() {
+    it('destroys primitive on removeAll', function() {
         var labels = new LabelCollection(context);
 
         primitives.add(labels);
-        expect(labels.isDestroyed()).toBeFalsy();
+        expect(labels.isDestroyed()).toEqual(false);
 
         primitives.removeAll();
-        expect(labels.isDestroyed()).toBeTruthy();
+        expect(labels.isDestroyed()).toEqual(true);
     });
 
-    it("destroys primitive on setCentralBody", function() {
-        var cb = new CentralBody(camera, Ellipsoid.UNIT_SPHERE);
+    it('destroys primitive on setCentralBody', function() {
+        var cb = new CentralBody(Ellipsoid.UNIT_SPHERE);
 
         primitives.setCentralBody(cb);
-        expect(cb.isDestroyed()).toBeFalsy();
+        expect(cb.isDestroyed()).toEqual(false);
 
         primitives.setCentralBody(null);
-        expect(cb.isDestroyed()).toBeTruthy();
+        expect(cb.isDestroyed()).toEqual(true);
     });
 
-    it("doesn't destroy its primitives", function() {
+    it('does not destroy its primitives', function() {
         var labels = new LabelCollection(context);
 
         primitives.destroyPrimitives = false;
         primitives.add(labels);
-        expect(labels.isDestroyed()).toBeFalsy();
+        expect(labels.isDestroyed()).toEqual(false);
 
         primitives = primitives.destroy();
-        expect(labels.isDestroyed()).toBeFalsy();
+        expect(labels.isDestroyed()).toEqual(false);
 
         labels.destroy();
-        expect(labels.isDestroyed()).toBeTruthy();
+        expect(labels.isDestroyed()).toEqual(true);
     });
 
-    it("doesn't destroy primitive on remove", function() {
+    it('does not destroy primitive on remove', function() {
         var labels = new LabelCollection(context);
 
         primitives.destroyPrimitives = false;
         primitives.add(labels);
-        expect(labels.isDestroyed()).toBeFalsy();
+        expect(labels.isDestroyed()).toEqual(false);
 
         primitives.remove(labels);
-        expect(labels.isDestroyed()).toBeFalsy();
+        expect(labels.isDestroyed()).toEqual(false);
 
         labels.destroy();
-        expect(labels.isDestroyed()).toBeTruthy();
+        expect(labels.isDestroyed()).toEqual(true);
     });
 
-    it("doesn't destroy primitive on removeAll", function() {
+    it('does not destroy primitive on removeAll', function() {
         var labels = new LabelCollection(context);
 
         primitives.destroyPrimitives = false;
         primitives.add(labels);
-        expect(labels.isDestroyed()).toBeFalsy();
+        expect(labels.isDestroyed()).toEqual(false);
 
         primitives.removeAll();
-        expect(labels.isDestroyed()).toBeFalsy();
+        expect(labels.isDestroyed()).toEqual(false);
 
         labels.destroy();
-        expect(labels.isDestroyed()).toBeTruthy();
+        expect(labels.isDestroyed()).toEqual(true);
     });
 
-    it("doesn't destroy primitive on setCentralBody", function() {
-        var cb = new CentralBody(camera, Ellipsoid.UNIT_SPHERE);
+    it('does not destroy primitive on setCentralBody', function() {
+        var cb = new CentralBody(Ellipsoid.UNIT_SPHERE);
 
         primitives.destroyPrimitives = false;
         primitives.setCentralBody(cb);
-        expect(cb.isDestroyed()).toBeFalsy();
+        expect(cb.isDestroyed()).toEqual(false);
 
         primitives.setCentralBody(null);
-        expect(cb.isDestroyed()).toBeFalsy();
+        expect(cb.isDestroyed()).toEqual(false);
 
         cb.destroy();
-        expect(cb.isDestroyed()).toBeTruthy();
+        expect(cb.isDestroyed()).toEqual(true);
     });
 
-    it("throws when add() without an primitive", function() {
+    it('throws when add() without an primitive', function() {
         expect(function() {
             primitives.add();
         }).toThrow();
     });
 
-    it("bringForward throws when primitive is not in composite", function() {
+    it('bringForward throws when primitive is not in composite', function() {
         var p = createLabels();
 
         expect(function() {
@@ -612,7 +613,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("bringToFront throws when primitive is not in composite", function() {
+    it('bringToFront throws when primitive is not in composite', function() {
         var p = createLabels();
 
         expect(function() {
@@ -620,7 +621,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("sendBackward throws when primitive is not in composite", function() {
+    it('sendBackward throws when primitive is not in composite', function() {
         var p = createLabels();
 
         expect(function() {
@@ -628,7 +629,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("sendToBack throws when primitive is not in composite", function() {
+    it('sendToBack throws when primitive is not in composite', function() {
         var p = createLabels();
 
         expect(function() {

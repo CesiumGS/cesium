@@ -1,120 +1,28 @@
 /*global defineSuite*/
 defineSuite([
          'Core/ExtentTessellator',
+         'Core/Extent',
          'Core/Math'
      ], function(
          ExtentTessellator,
+         Extent,
          CesiumMath) {
     "use strict";
     /*global it,expect*/
 
-    it("compute throws exception with invalid extent 0", function() {
-        expect(function() {
-            return ExtentTessellator.compute();
-        }).toThrow();
-    });
-
-    it("compute throws exception with invalid extent 1", function() {
-        expect(function() {
-            return ExtentTessellator.compute({
-                extent : {
-                    north : CesiumMath.PI_OVER_TWO + 1,
-                    south : -CesiumMath.PI_OVER_TWO,
-                    west : -CesiumMath.PI,
-                    east : CesiumMath.PI
-                }
-            });
-        }).toThrow();
-    });
-
-    it("compute throws exception with invalid extent 2", function() {
-        expect(function() {
-            return ExtentTessellator.compute({
-                extent : {
-                    north : CesiumMath.PI_OVER_TWO,
-                    south : -CesiumMath.PI_OVER_TWO - 1,
-                    west : -CesiumMath.PI,
-                    east : CesiumMath.PI
-                }
-            });
-        }).toThrow();
-    });
-
-    it("compute throws exception with invalid extent 3", function() {
-        expect(function() {
-            return ExtentTessellator.compute({
-                extent : {
-                    north : CesiumMath.PI_OVER_TWO,
-                    south : -CesiumMath.PI_OVER_TWO,
-                    west : -CesiumMath.PI - 1,
-                    east : CesiumMath.PI
-                }
-            });
-        }).toThrow();
-    });
-
-    it("compute throws exception with invalid extent 4", function() {
-        expect(function() {
-            return ExtentTessellator.compute({
-                extent : {
-                    north : CesiumMath.PI_OVER_TWO,
-                    south : -CesiumMath.PI_OVER_TWO,
-                    west : -CesiumMath.PI,
-                    east : CesiumMath.PI + 1
-                }
-            });
-        }).toThrow();
-    });
-
-    it("compute throws exception with invalid extent 5", function() {
-        expect(function() {
-            return ExtentTessellator.compute({
-                extent : {
-                    south : CesiumMath.PI_OVER_TWO,
-                    north : -CesiumMath.PI_OVER_TWO,
-                    west : -CesiumMath.PI,
-                    east : CesiumMath.PI
-                }
-            });
-        }).toThrow();
-    });
-
-    it("compute throws exception with invalid extent 6", function() {
-        expect(function() {
-            return ExtentTessellator.compute({
-                extent : {
-                    north : CesiumMath.PI_OVER_TWO,
-                    south : -CesiumMath.PI_OVER_TWO,
-                    east : -CesiumMath.PI,
-                    west : CesiumMath.PI
-                }
-            });
-        }).toThrow();
-    });
-
-    it("compute 0", function() {
+    it('compute 0', function() {
         var m = ExtentTessellator.compute({
-            extent : {
-                north : 1.0,
-                south : -1.0,
-                west : -2.0,
-                east : 0.0
-            },
+            extent : new Extent(-2.0, -1.0, 0.0, 1.0),
             granularity : 1.0
         });
         expect(m.attributes.position.values.length).toEqual(9 * 3);
-        expect(typeof m.attributes.textureCoordinates === "undefined").toBeTruthy();
+        expect(typeof m.attributes.textureCoordinates === 'undefined').toEqual(true);
         expect(m.indexLists[0].values.length).toEqual(8 * 3);
     });
 
-    it("compute 1", function() {
+    it('compute 1', function() {
         var m = ExtentTessellator.compute({
-            extent : {
-                north : 1.0,
-                south : -1.0,
-                west : -2.0,
-                east : 0.0
-            },
+            extent : new Extent(-2.0, -1.0, 0.0, 1.0),
             granularity : 1.0,
             generateTextureCoords : true
         });
@@ -123,98 +31,9 @@ defineSuite([
         expect(m.indexLists[0].values.length).toEqual(8 * 3);
     });
 
-    it("computeBuffers throws exception with invalid extent 0", function() {
-        expect(function() {
-            return ExtentTessellator.computeBuffers();
-        }).toThrow();
-    });
-
-    it("computeBuffers throws exception with invalid extent 1", function() {
-        expect(function() {
-            return ExtentTessellator.computeBuffers({
-                extent : {
-                    north : CesiumMath.PI_OVER_TWO + 1,
-                    south : -CesiumMath.PI_OVER_TWO,
-                    west : -CesiumMath.PI,
-                    east : CesiumMath.PI
-                }
-            });
-        }).toThrow();
-    });
-
-    it("computeBuffers throws exception with invalid extent 2", function() {
-        expect(function() {
-            return ExtentTessellator.computeBuffers({
-                extent : {
-                    north : CesiumMath.PI_OVER_TWO,
-                    south : -CesiumMath.PI_OVER_TWO - 1,
-                    west : -CesiumMath.PI,
-                    east : CesiumMath.PI
-                }
-            });
-        }).toThrow();
-    });
-
-    it("computeBuffers throws exception with invalid extent 3", function() {
-        expect(function() {
-            return ExtentTessellator.computeBuffers({
-                extent : {
-                    north : CesiumMath.PI_OVER_TWO,
-                    south : -CesiumMath.PI_OVER_TWO,
-                    west : -CesiumMath.PI - 1,
-                    east : CesiumMath.PI
-                }
-            });
-        }).toThrow();
-    });
-
-    it("computeBuffers throws exception with invalid extent 4", function() {
-        expect(function() {
-            return ExtentTessellator.computeBuffers({
-                extent : {
-                    north : CesiumMath.PI_OVER_TWO,
-                    south : -CesiumMath.PI_OVER_TWO,
-                    west : -CesiumMath.PI,
-                    east : CesiumMath.PI + 1
-                }
-            });
-        }).toThrow();
-    });
-
-    it("computeBuffers throws exception with invalid extent 5", function() {
-        expect(function() {
-            return ExtentTessellator.computeBuffers({
-                extent : {
-                    south : CesiumMath.PI_OVER_TWO,
-                    north : -CesiumMath.PI_OVER_TWO,
-                    west : -CesiumMath.PI,
-                    east : CesiumMath.PI
-                }
-            });
-        }).toThrow();
-    });
-
-    it("computeBuffers throws exception with invalid extent 6", function() {
-        expect(function() {
-            return ExtentTessellator.computeBuffers({
-                extent : {
-                    north : CesiumMath.PI_OVER_TWO,
-                    south : -CesiumMath.PI_OVER_TWO,
-                    east : -CesiumMath.PI,
-                    west : CesiumMath.PI
-                }
-            });
-        }).toThrow();
-    });
-
-    it("computeBuffers 0", function() {
+    it('computeBuffers 0', function() {
         var buffers = ExtentTessellator.computeBuffers({
-            extent : {
-                north : 1.0,
-                south : -1.0,
-                west : -2.0,
-                east : 0.0
-            },
+            extent : new Extent(-2.0, -1.0, 0.0, 1.0),
             granularity : 1.0
         });
 
@@ -222,14 +41,9 @@ defineSuite([
         expect(buffers.indices.length).toEqual(8 * 3);
     });
 
-    it("computeBuffers 1", function() {
+    it('computeBuffers 1', function() {
         var buffers = ExtentTessellator.computeBuffers({
-            extent : {
-                north : 1.0,
-                south : -1.0,
-                west : -2.0,
-                east : 0.0
-            },
+            extent : new Extent(-2.0, -1.0, 0.0, 1.0),
             granularity : 1.0,
             generateTextureCoords : true
         });
@@ -239,14 +53,9 @@ defineSuite([
         expect(buffers.indices.length).toEqual(8 * 3);
     });
 
-    it("computeBuffers 2", function() {
+    it('computeBuffers 2', function() {
         var buffers = ExtentTessellator.computeBuffers({
-            extent : {
-                north : 1.0,
-                south : -1.0,
-                west : -2.0,
-                east : 0.0
-            },
+            extent : new Extent(-2.0, -1.0, 0.0, 1.0),
             granularity : 1.0,
             generateTextureCoords : true,
             interleave : true

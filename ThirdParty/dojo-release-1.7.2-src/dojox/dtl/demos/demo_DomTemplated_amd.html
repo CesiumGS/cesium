@@ -1,0 +1,50 @@
+<html>
+	<head>
+			<title>Demo using dojox.dtl._DomTemplated</title>
+			<script type="text/javascript" src="../../../dojo/dojo.js"
+				data-dojo-config="async:true, isDebug: true, parseOnLoad: true"></script>
+			<style type="text/css">
+				@import "../../../dijit/themes/tundra/tundra.css";
+				#pane {
+				    border: 1px solid darkblue;
+				}
+			</style>
+	    <script type="text/javascript">
+			require(["dojo/_base/declare",
+					 "dojo/keys",
+					 "dojo/_base/array",
+					 "dijit/_WidgetBase",
+					 "dojox/dtl/_DomTemplated",
+					 "dijit/form/Button",
+            		 "dijit/layout/ContentPane",
+					 "dojo/parser",
+					 "dojox/dtl/tag/logic"],
+				 function(declare, keys, array, _WidgetBase, _DomTemplated, Button, ContentPane){
+
+					declare("Fruit", [_WidgetBase, _DomTemplated], {
+						widgetsInTemplate: true,
+						items: ["apple", "banana", "orange"],
+						keyUp: function(e){
+							if((e.type == "click" || e.keyCode == keys.ENTER) && this.input.value){
+								console.debug(this.button);
+								var i = array.indexOf(this.items, this.input.value);
+								if(i != -1){
+									this.items.splice(i, 1);
+								}else{
+									this.items.push(this.input.value);
+								}
+								this.input.value = "";
+								this.render();
+							}
+						},
+						templateString: '<div><input data-dojo-attach-event="onkeyup:keyUp" data-dojo-attach-point="input"> <button data-dojo-type="dijit.form.Button" data-dojo-attach-point="button" data-dojo-attach-event="onClick: keyUp">Add/Remove Item</button><div id="pane" data-dojo-type="dijit.layout.ContentPane parsed"><ul><!--{% for item in items %}--><li><button data-dojo-type="dijit.form.Button parsed" title="Fruit: {{ item }}" otherAttr2="x_{{item}}"><!--{{ item }}--><script type="dojo/on" data-dojo-event="click" data-dojo-args="e">console.debug("You clicked", this.containerNode.innerHTML);</' + 'script></button></li><!--{% endfor %}--></ul></div></div>'
+					});
+				}
+			);
+				
+	    </script>
+	</head>
+	<body class="tundra">
+		<div data-dojo-type="Fruit" id="dtl"></div>
+	</body>
+</html>

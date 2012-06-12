@@ -1,0 +1,26 @@
+({
+	name: "date.timezone.Asia-Colombo",
+	runTest: function(t){
+		var tz = "Asia/Colombo";
+		doh.checkDate({tzOffset: -319.533333333333, tzAbbr: "MMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: -319.533333333333, tzAbbr: "MMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: -319.533333333333, tzAbbr: "MMT"}, -2019705573000, tz, 1);
+		doh.checkDate({tzOffset: -330, tzAbbr: "IST"}, -2019705572000, tz, 1);
+		doh.checkDate({tzOffset: -330, tzAbbr: "IST"}, -883287001000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "IHST"}, -883287000000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "IHST"}, -862639201000, tz, 1);
+		doh.checkDate({tzOffset: -390, tzAbbr: "IST"}, -862639200000, tz, 1);
+		doh.checkDate({tzOffset: -390, tzAbbr: "IST"}, -764051401000, tz, 1);
+		doh.checkDate({tzOffset: -330, tzAbbr: "IST"}, -764051400000, tz, 1);
+		doh.checkDate({tzOffset: -330, tzAbbr: "IST"}, 832962599000, tz, 1);
+		doh.checkDate({tzOffset: -390, tzAbbr: "LKT"}, 832962600000, tz, 1);
+		doh.checkDate({tzOffset: -390, tzAbbr: "LKT"}, 846266399000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "LKT"}, 846266400000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "LKT"}, 1145039399000, tz, 1);
+		doh.checkDate({tzOffset: -330, tzAbbr: "IST"}, 1145039400000, tz, 1);
+		doh.checkDate({tzOffset: -330, tzAbbr: "IST"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: -330, tzAbbr: "IST"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: -330, tzAbbr: "IST"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: -330, tzAbbr: "IST"}, 1246789800000, tz, 0);
+	}
+})

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<dataStore>
+	<item>
+		<x>X1</x>
+		<y>Y1</y>
+		<z>Z1</z>
+	</item>
+	<item>
+		<x>X2</x>
+		<y>Y2</y>
+		<z>Z2</z>
+	</item>
+	<item>
+		<x>X3</x>
+		<y>Y3</y>
+		<z>Z3</z>
+	</item>
+</dataStore>

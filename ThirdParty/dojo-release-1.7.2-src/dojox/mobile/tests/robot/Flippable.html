@@ -1,0 +1,56 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+		"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>doh.robot Tooltip Mouse Quirks Test</title>
+
+		<style>
+			@import "../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../dojo/dojo.js"
+			djConfig="isDebug: true"></script>
+
+		<!-- functions to help test -->
+		<!-- script type="text/javascript" src="../helpers.js"></script -->
+
+		<script type="text/javascript">
+			dojo.require("dojo.parser");
+			dojo.require("dijit.robotx");
+			dojo.require("dojox.mobile");
+			dojo.require("dojox.mobile.IconContainer");
+	        dojo.require("doh.runner");
+
+			dojo.addOnLoad(function(){
+				doh.robot.initRobot("../test_iPhone-SwapView.html");
+
+				doh.register("dojox.mobile.FlippableView mouse tests", [
+					{
+						name: "FlippableView mouse tests",
+						timeout: 40000,
+						runTest: function(){
+							var d = new doh.Deferred();
+							var dim = dojox.mobile.getScreenSize();
+
+							doh.robot.mouseMoveAt(dijit.byId("foo").domNode, 1000,100, (dim.w -30),100);
+							doh.robot.mousePress({left: true}, 1000);
+
+							doh.robot.mouseMoveAt(dijit.byId("foo").domNode, 1000,100,(dim.w -30)/2,0);
+
+							doh.robot.mouseMoveAt(dijit.byId("foo").domNode, 1000,100,0,100);
+							doh.robot.mouseRelease({left: true}, 50);
+							
+							doh.robot.sequence(d.getTestCallback(function(){
+								doh.assertEqual("",  dijit.byId("bar").domNode.style.display);
+							}), 500);
+							return d;
+						}
+					}
+				]);
+
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

@@ -1,0 +1,238 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>dojox.grid.DataGrid using multiple store implementations.</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+	<style type="text/css">
+		@import "../../../dijit/themes/tundra/tundra.css";
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+		@import "../resources/Grid.css";
+		@import "../resources/tundraGrid.css";
+		
+		#grid, #grid2, #grid3, #grid4, #grid5, #grid6{
+			width: 65em;
+			height: 25em;
+			padding: 1px;
+		}
+	</style>
+	<script type="text/javascript" src="../../../dojo/dojo.js" 
+		djConfig="isDebug: true, debugAtAllCosts: false, parseOnLoad: true"></script>
+	<script type="text/javascript">
+		dojo.require("dijit.dijit");
+		dojo.require("dojox.grid.DataGrid");
+		dojo.require("dojo.data.ItemFileReadStore");
+		dojo.require("dojox.data.CsvStore");
+		dojo.require("dojox.data.XmlStore");
+		dojo.require("dojox.data.FlickrStore");
+		dojo.require("dojox.data.OpmlStore");
+		dojo.require("dojox.data.HtmlStore");
+		dojo.require("dojo.parser");
+	</script>
+
+	<script type="text/javascript">
+		var formatHref = function(value, rowIndex) {
+			return "<a href=\"" + value + "\" target=\"_blank\">Image Link</a>";
+		}
+
+		var rowView = { cells: [ new dojox.grid.cells.RowIndex({ width: 5 }) ], noscroll: true };
+
+		var layoutMovies = [
+			// view 1
+			rowView,
+			// view 2
+			[
+				{ field: "Title", width: 'auto' },
+				{ field: "Year", width: 5 },
+				{ field: "Producer", width: 20 }
+			]
+		];
+		
+		var layoutCountries = [
+			// view 1
+			rowView,
+			// view 2
+			[
+				{ field: 'name', width: 'auto' },
+				{ field: 'type', width: 8 }
+			]
+		];
+
+		var layoutBooks = [
+			// view 1
+			rowView,
+			// view 2
+			[
+				{ field: "title", width: 'auto' },
+				{ field: "isbn", width: '8' }
+			]
+		];
+
+		//Lay out the Flickr data so one column is a URL.  This makes use of the
+		//get function of a cell.
+		var layoutFlickrData = [
+			// view 1
+			rowView,
+			// view 2
+			[
+				{ name: "Title", field: "title", width: 'auto' },
+				{ name: "Image URL", field: "imageUrl", width: '15', formatter: formatHref}
+			]
+		];
+
+		var layoutOpmlData = [
+			// view 1
+			rowView,
+			// view 2
+			[
+				{ name: 'Name', field: 'text', width: 'auto'},
+				{ name: 'Type', field: 'type', width: '8' }
+			]
+		];
+
+		var layoutHtmlTable = [
+			// view 1
+			rowView,
+			// view 2
+			[
+				{ name: 'Column 1', field: 'Column 1', width: 'auto'},
+				{ name: 'Column 2', field: 'Column 2', width: 'auto'},
+				{ name: 'Column 3', field: 'Column 3', width: 'auto'},
+				{ name: 'Column 4', field: 'Column 4', width: 'auto'}
+			]
+		];
+	</script>
+</head>
+<body class="tundra">
+	<h1>dojox.grid.DataGrid using multiple store implementations.</h1>
+	<p>
+		This page demonstrates the Grid can display data accessed by dojo.data
+		implementing Datastores.  Each of the datastores used stores data in a
+		different format, and as this test and demonstration page shows, the
+		logic for rendering the data is virtually identical.  You define your
+		source store and then you define the layout, which maps the data
+		attribute names to columns in the grid.  You can even perform
+		cusomization of what is displayed, as demonstrated in the
+		dojox.data.FlickrStore layout.  The image url is displayed as a
+		clickable link that opens a new page.
+	</p>
+	<p>
+		The choice of stores used were ones that did not require back end
+		services to function for sake of simplicity.  There is no reason that
+		dojox.data.QueryReadStore could not be used with grid as well, it just
+		requires a back end service to send it the query results.
+	</p>
+	<p><b>Stores used:</b></p>
+	<ul>
+		<li>dojo.data.ItemFileReadStore</li>
+		<li>dojox.data.CsvStore</li>
+		<li>dojox.data.XmlStore</li>
+		<li>dojox.data.FlickrStore</li>
+		<li>dojox.data.OpmlStore</li>
+		<li>dojox.data.HtmlTableStore</li>
+	</ul>
+
+	<h2>dojo.data.ItemFileReadStore:</h2>
+	<i>Displays a list of countries through ItemFileReadStore format.</i>
+	<span dojoType="dojo.data.ItemFileReadStore" 
+		jsId="jsonStore" url="../../../dijit/tests/_data/countries.json">
+	</span>
+	<div id="grid" dojoType="dojox.grid.DataGrid" elasticView="2" query="{ name: '*' }" rowsPerPage="20"
+		store="jsonStore" structure="layoutCountries" rowSelector="20px">
+	</div>
+
+
+	<h2>dojox.data.CsvStore:</h2>
+	<i>Displays a list of movies that were stored in CSV format.</i>
+	<span dojoType="dojox.data.CsvStore" 
+		jsId="csvStore" url="support/movies.csv">
+	</span>
+	<div id="grid2" dojoType="dojox.grid.DataGrid" elasticView="2" query="{ Title: '*' }" rowsPerPage="5"
+		store="csvStore" structure="layoutMovies" rowSelector="20px">
+	</div>
+
+	<h2>dojox.data.XmlStore:</h2>
+	<i>Displays a list of books that were stored in XML format.</i>
+	<span dojoType="dojox.data.XmlStore" 
+		jsId="xmlStore" url="support/books.xml">
+	</span>
+	<div id="grid3" dojoType="dojox.grid.DataGrid" elasticView="2" query="{ title: '*' }" rowsPerPage="5"
+		store="xmlStore" structure="layoutBooks" rowSelector="20px">
+	</div>
+
+
+	<h2>dojox.data.FlickrStore:</h2>
+	<i>Displays Flickr imformation on 3DNY (Dojo Developer Days, New York) from the flickr public photo feed, accessed via the FlickrStore dojo.data implementation.</i>
+	<span dojoType="dojox.data.FlickrStore" 
+		jsId="flickrStore">
+	</span>
+	<div id="grid4" dojoType="dojox.grid.DataGrid" elasticView="2" query="{ tags: '3dny' }"
+		rowsPerPage="5"
+		store="flickrStore" structure="layoutFlickrData" rowSelector="20px">
+	</div>
+
+	<h2>dojox.data.OpmlStore:</h2>
+	<i>Scans an Opml based document for all items of type 'country'</i> 
+	<span dojoType="dojox.data.OpmlStore" 
+		jsId="opmlStore" url="support/geography.xml">
+	</span>
+	<div id="grid5" dojoType="dojox.grid.DataGrid" elasticView="2" query="{ type: 'country' }"
+		queryOptions="{ deep: true }" rowsPerPage="5"
+		store="opmlStore" structure="layoutOpmlData" rowSelector="20px">
+	</div>
+
+
+	<h2>dojox.data.HtmlStore:</h2>
+	<i>Loads the grid from an HTML Table.</i> 
+	<!-- 
+		Inline data table to be displayed bu the grid! 
+		This is accessed via the dojox.data.HtmlTableStore
+	-->
+	<table id="tableExample" style="display: none;">
+		<thead>
+			<tr>
+				<th>Column 1</th>
+				<th>Column 2</th>
+				<th>Column 3</th>
+				<th>Column 4</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td>This</td>
+				<td>is</td>
+				<td></td>
+				<td>empty in column 3</td>
+			</tr>
+			<tr>
+				<td>This</td>
+				<td>is</td>
+				<td>a</td>
+				<td>value</td>
+			</tr>
+			<tr>
+				<td>Who?</td>
+				<td>What?</td>
+				<td>When?</td>
+				<td>Where?</td>
+			</tr>
+			<tr>
+				<td>She</td>
+				<td>sells</td>
+				<td>sea</td>
+				<td>shells</td>
+			</tr>
+		</tbody>
+	</table>
+	<span dojoType="dojox.data.HtmlStore" 
+		jsId="htmlStore" dataId="tableExample">
+	</span>
+	<div id="grid6" dojoType="dojox.grid.DataGrid" elasticView="2" query="{}"
+		store="htmlStore" rowsPerPage="5" structure="layoutHtmlTable" rowSelector="20px">
+	</div>
+
+</body>
+</html>
+
+

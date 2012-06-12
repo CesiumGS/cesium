@@ -1,0 +1,64 @@
+<html>
+	<head>
+		<title>DojoX GFX: Vector Text test: draw a font</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<style type="text/css">
+			@import "../../../../dojo/resources/dojo.css";
+			@import "../../../../dijit/tests/css/dijitTests.css";
+		</style>
+		<!-- SVGWEB { -->
+		<meta name="svg.render.forceflash" content="true"/>
+		<script src="svgweb/src/svg.js" data-path="svgweb/src"></script>
+		<script src="../../../../dojo/dojo.js" djConfig="isDebug:true,forceGfxRenderer:'svg'" type="text/javascript"></script>
+		<!-- } -->
+		<script type="text/javascript">
+			dojo.require("dojox.gfx");
+			dojo.require("dojox.gfx.fx");
+			dojo.require("dojox.gfx.VectorText");
+
+			var bg="#181818", fill="#a36e2c";
+			dojo.addOnLoad(function(){
+				var url = dojo.moduleUrl("dojox", "gfx/resources/Gillius.svg");
+				var f = new dojox.gfx.VectorFont(url);
+
+				//	draw out the glyphs for testing.
+				var surface = dojox.gfx.createSurface("test", 600, 400);
+	/* SVGWEB { */
+	surface.whenLoaded(function() {
+				var rect = surface.createRect({ x: 0, y: 0, width: 600, height: 400 })
+					.setFill(bg);
+
+				//	draw it up.
+				var txtArgs = {
+					text: "Now is the time for all good men to come to a rest.  Plus, the rain in Spain falls mainly on the plain!",
+					x: 0, y: 0,
+					width: 560, height: 360,
+					align: "start", fitting: dojox.gfx.vectorFontFitting.FIT,
+					leading: 1.2
+				};
+				var fontArgs = {
+					size: "12pt", family: "Gillius"
+				};
+
+				var master = surface.createGroup();	
+				var g = f.draw(master, txtArgs, fontArgs, fill);
+
+				dojox.gfx.fx.animateTransform({
+					shape: master,
+					duration: 1000,
+					transform: [ 
+						{name: "rotategAt", start: [0, 250, 250], end: [360, 350, 350]},
+						{ name: "scale", start: [0.1, 0.1], end:[1, 1 ] } 
+					]
+				}).play();
+	});
+	/* } */
+			});
+		</script>
+	</head>
+	<body>
+		<h1>dojox.gfx Vector Text test: drawing a font</h1>
+		<p>This is a test of the new VectorText functionality; we draw a font using flow or fit.</p>
+		<div id="test" style="width: 500px; height: 560px;"></div>
+	</body>
+</html>

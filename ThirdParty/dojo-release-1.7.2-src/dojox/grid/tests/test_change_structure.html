@@ -1,0 +1,114 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>dojox.grid._Grid Change Structure Example</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+	<style type="text/css">
+		@import "../resources/Grid.css";
+		body {
+			font-size: 0.9em;
+			font-family: Geneva, Arial, Helvetica, sans-serif;
+		}
+		.heading {
+			font-weight: bold;
+			padding-bottom: 0.25em;
+		}
+				
+		#grid { 
+			border: 1px solid #333;
+			width: 48em;
+			height: 30em;
+		}
+		
+		#grid .dojoxGridCell {
+			text-align: center;
+		}
+	</style>
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:false, parseOnLoad: true"></script>
+	<script type="text/javascript">
+		dojo.require("dijit.dijit");
+		dojo.require("dojox.grid._Grid");
+		dojo.require("dojo.parser");
+	</script>
+	<script type="text/javascript">
+
+		// get can return data for a cell of the grid
+		function get(inRowIndex) {
+			return [this.index, inRowIndex].join(', ');
+		}
+
+		// grid structure
+		// a grid view is a group of columns
+		
+		// a view without scrollbars
+		var view0 = {
+			noscroll: true,
+			cells: [
+				{name: 'Alpha', value: '<input name="" type="checkbox" value="0">'},
+				{name: 'Beta', get: get, width: 4.5}
+		]};
+		
+		var view1 = [
+				{name: 'Apple', value: '<button>Apple</button>'},
+				{name: 'Banana', get: get},
+				{name: 'Beans', value: 'Happy to be grid!'},
+				{name: 'Kiwi', get: get},
+				{name: 'Orange', value: '<img src="images/flatScreen.gif" height="48" width="48">'},
+				{name: 'Pear', get: get},
+				{name: 'Tomato', width: 20, value: '<input name="" type="file">'}
+		];
+		
+		var view2 = {
+			noscroll: true,
+			cells: [
+				[
+					{name: 'Alpha', value: '<input name="" type="checkbox" value="0">', rowSpan: 2},
+					{name: 'Beta', get: get, width: 4.5}
+				],[
+					{name: 'Gamma', get: get}
+				],[
+					{name: 'Epsilon', value: '<button>Epsilon</button>', colSpan: 2}
+				]
+			]
+		}
+		
+		var view3 = [
+			[	
+				{name: 'Apple', value: '<button>Apple</button>', rowSpan: 3},
+				{name: 'Banana', get: get, width: 20},
+				{name: 'Kiwi', get: get, width: 20},
+				{name: 'Pear', get: get, width: 20}
+			],[
+				{name: 'Beans', value: 'Happy to be grid!'},
+				{name: 'Orange', value: '<img src="images/flatScreen.gif" height="48" width="48">'},
+				{name: 'Tomato', value: '<input name="" type="file">'}
+			],[
+				{name: 'Zuchini', value: '<span style="letter-spacing: 10em;">wide</span>', colSpan: 3}
+			]
+		];
+		
+		
+		// a grid structure is an array of views.
+		// By default the middle view will be 'elastic', sized to fit the remaining space left by other views
+		// grid.elasticView can also be manually set
+		var structure = [ view0, view1 ];
+		var structure2 = [ view2, view3 ];
+		
+		
+		var l2 = false;
+		toggleStructure = function() {
+			l2 = !l2;
+			grid.scrollToRow(0);
+			grid.set('structure', l2 ? structure2 : structure);
+		}
+</script>
+</head>
+<body>
+<div class="heading">dojox.grid._Grid Change Structure Example</div>
+<p>
+	<button onclick="toggleStructure()">Change Structure</button>
+</p>	
+<div id="grid" jsid="grid" dojoType="dojox.grid._Grid" structure="structure" rowSelector="20px" rowCount="100000" elasticView="2"></div>
+
+</body>
+</html>

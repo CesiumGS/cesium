@@ -1,0 +1,125 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>dojox.form.FileInput | The Dojo Toolkit</title>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/themes/dijit.css";
+		@import "../../../dijit/tests/css/dijitTests.css"; 
+		@import "../resources/FileInput.css"; 
+	</style>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true, parseOnLoad: true"></script>
+	<script type="text/javascript">
+		dojo.require("dojox.form.FileInput"); 
+		dojo.require("dojox.form.FileInputAuto"); 
+		dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+		
+		var sampleCallback = function(data,ioArgs,widgetRef){
+			// this function is fired for every programatic FileUploadAuto
+			// when the upload is complete. It uses dojo.io.iframe, which
+			// expects the results to come wrapped in TEXTAREA tags.
+			// this is IMPORTANT. to utilize FileUploadAuto (or Blind)
+			// you have to pass your response data in a TEXTAREA tag.
+			// in our sample file (if you have php5 installed and have
+			// file uploads enabled) it _should_ return some text in the
+			// form of valid JSON data, like:
+			// { status: "success", details: { size: "1024" } }
+			// you can do whatever.
+			//
+			// the ioArgs is the standard ioArgs ref found in all dojo.xhr* methods.
+			//
+			// widget is a reference to the calling widget. you can manipulate the widget
+			// from within this callback function 
+			if(data){
+				if(data.status && data.status == "success"){
+					widgetRef.overlay.innerHTML = "success!";
+				}else{
+					widgetRef.overlay.innerHTML = "error? ";
+					console.log('error',data,ioArgs);
+				}
+			}else{
+				// debug assist
+				console.log('ugh?',arguments);
+			}
+		}
+
+		var i = 0;
+		function addNewUpload(){
+			var node = document.createElement('input'); 
+			dojo.byId('dynamic').appendChild(node);
+			var widget = new dojox.form.FileInputAuto({
+				id: "dynamic"+(++i),
+				url: "../resources/RecieveFile.php",
+				//url:"http://archive.dojotoolkit.org/nightly/checkout/dojox/widget/resources/RecieveFile.php",
+				name: "dynamic"+i,
+				onComplete: sampleCallback
+			},node);
+			widget.startup();
+		}
+
+	</script>
+</head>
+<body>
+
+	<h1 class="testTitle">dojox FileInput widget:</h1>
+	<p>This is a prototype of a dojo input type="file" with a FormWidget mixin, to be styled to match tundra and soria themes</p>
+	<p>The API is up for discussion, nor is it known to drop into forms and "just work" yet</p>
+	<p>FileInputAuto API is up for discussion, as well, though by use of the url="" attrib, you can basically
+	do all your file-processing server side, and just use the filename sent that remains in the form input</p>
+	<p>There are two parts. dojo.require("dojox.form.FileInput") for just the base class, or dojo.require("dojox.form.FileInputAuto"); 
+	to provide the Auto Uploading widget (on blur), and the Blind Auto Upload widget.</p>
+	<p>Both themes are defined in the FileInput.css file, as well as basic styling needed to run</p>
+
+	<h3>A standard file input:</h3>
+	<input type="file" id="normal" name="inputFile" />
+
+	<h3>The default dojox.form.FileInput:</h3>
+	<p>
+	<input dojoType="dojox.form.FileInput" id="default" name="inputFile" />
+	</p>
+
+	<h3>default dojox.form.FileInput, tundra:</h3>
+	<p class="tundra">
+	<input dojoType="dojox.form.FileInput" id="default2" name="inputFile" />
+	</p>
+
+	<h3>dojox.form.FileInputAuto, soria theme:</h3>
+	<p class="soria">
+	<input dojoType="dojox.form.FileInputAuto" id="defaultAuto" name="inputFileAuto" url="../resources/RecieveFile.php" />
+	</p>
+
+	<h3>dojox.form.FileInputAuto, claro theme:</h3>
+	<p class="claro">
+	<input dojoType="dojox.form.FileInputAuto" id="claroAuto" name="inputFileAuto" url="../resources/RecieveFile.php" />
+	</p>
+
+	<h3>another one, tundra theme (with callback)</h3>
+	<p class="tundra">
+	<input dojoType="dojox.form.FileInputAuto" id="defaultAuto2" name="inputFileAuto2" url="../resources/RecieveFile.php" onComplete="sampleCallback"/>
+	</p>
+
+	<h3>dojox.form.FileInputAuto -  tundra theme (with callback) - and onchange triggerEvent</h3>
+	<p class="tundra">
+	<input dojoType="dojox.form.FileInputAuto" id="defaultAuto2onchange" blurDelay="10" name="inputFileAuto2" triggerEvent="onchange" url="../resources/RecieveFile.php" onComplete="sampleCallback"/>
+	</p>
+
+
+	<h3>a blind auto upload widget, tundra:</h3>
+	<p class="tundra">
+		<input dojoType="dojox.form.FileInputBlind" id="blind1" name="blind1" url="../resources/RecieveFile.php" />
+	</p>
+
+	<h3>dojox.form.FileInputBlind - soria</h3>
+	<p class="soria">
+		<input dojoType="dojox.form.FileInputBlind" id="blind2" name="blind2" label="do my upload" url="../resources/RecieveFile.php" />
+	</p>
+
+	<h3>dynamic, tundra, dojox.form.FileInputAuto:</h3>
+	<button onclick="addNewUpload()">add new file upload</button>
+	<br><br>
+	<div id="dynamic" class="tundra"></div>
+
+</body>
+</html>

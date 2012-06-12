@@ -1,0 +1,115 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+<title>Chart 2D nulls</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style>
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+</style>
+<script src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+<script>
+
+dojo.require("dojox.charting.Chart");
+dojo.require("dojox.charting.axis2d.Default");
+dojo.require("dojox.charting.plot2d.Lines");
+dojo.require("dojox.charting.plot2d.Areas");
+dojo.require("dojox.charting.plot2d.Markers");
+dojo.require("dojox.charting.plot2d.StackedLines");
+dojo.require("dojox.charting.plot2d.StackedAreas");
+dojo.require("dojox.charting.plot2d.Bars");
+dojo.require("dojox.charting.plot2d.ClusteredBars");
+dojo.require("dojox.charting.plot2d.StackedBars");
+dojo.require("dojox.charting.plot2d.ClusteredColumns");
+dojo.require("dojox.charting.plot2d.StackedColumns");
+dojo.require("dojox.charting.plot2d.Bubble");
+dojo.require("dojox.charting.plot2d.Candlesticks");
+dojo.require("dojox.charting.plot2d.Pie");
+
+makeObjects = function(){
+
+	var types = [ "Areas", "Bars", "ClusteredBars", "ClusteredColumns", "Lines", "Markers", "StackedAreas", "StackedBars", "StackedColumns", "StackedLines" ];
+
+	dojo.forEach(types, function(type, i){
+		new dojox.charting.Chart("test" + (i + 1))
+		.addAxis("x", { vertical: false, min: 0, max: 15 })
+		.addAxis("y", { vertical: true, min: 0, max: 15 })
+		.addPlot("default", { type: type })
+		.addSeries("Series A", [3, 5, null, 4, 0, 4, null, 1, 6, 5], { stroke: {color: "blue"}, fill: "lightblue" })
+		.addSeries("Series B", [6, 9, null, 5, 10, 7, 6, 3, 8, 6], { stroke: {color: "red"}, fill: "lightpink" })
+		.render();
+	});
+	
+	new dojox.charting.Chart("test10")
+	.addAxis("x", { vertical: false, min: 0, max: 15 })
+	.addAxis("y", { vertical: true, min: 0, max: 15 })
+	.addPlot("default", { type: "Candlesticks" })
+	.addSeries("Series A", [
+		{ low: 2, open: 3, close: 4, high: 9 },
+		{ low: 2, open: 5, close: 7, high: 8 },
+		null, 
+		{ low: 2, open: 4, close: 2, high: 5 },
+		{ low: 0, open: 0, close: 3, high: 3 },
+		{ low: 3, open: 4, close: 6, high: 7 },
+		null, 
+		{ low: 1, open: 1, close: 1, high: 1 },
+		{ low: 2, open: 6, close: 3, high: 8 },
+		{ low: 3, open: 5, close: 9, high: 10 }
+	], { stroke: {color: "blue"}, fill: "lightblue" })
+	.render();
+	
+	new dojox.charting.Chart("test11")
+	.addPlot("default", { type: "Pie" })
+	.addSeries("Series A", [3, 5, null, 4, 0, 4, null, 1, 6, 5])
+	.render();
+	
+	new dojox.charting.Chart("test12")
+	.addAxis("x", { vertical: false, min: 0, max: 15 })
+	.addAxis("y", { vertical: true, min: 0, max: 15 })
+	.addPlot("default", { type: "Bubble" })
+	.addSeries("Series A", [
+		{ x: 2, y: 5, size: 2 },
+		null,
+		{ x: 8, y: 6, size: 5 },
+		{ x: 5, y: 9, size: 4 },
+		null,
+		{ x: 5, y: 1, size: 1 }
+	])
+	.render();
+	
+};
+
+dojo.addOnLoad(makeObjects);
+
+</script>
+</head>
+<body>
+<h1>Chart 2D nulls in series</h1>
+<div id="test1" style="width: 200px; height: 200px;"></div>
+<div id="test2" style="width: 200px; height: 200px;"></div>
+<div id="test3" style="width: 200px; height: 200px;"></div>
+<div id="test4" style="width: 200px; height: 200px;"></div>
+<div id="test5" style="width: 200px; height: 200px;"></div>
+<div id="test6" style="width: 200px; height: 200px;"></div>
+<div id="test7" style="width: 200px; height: 200px;"></div>
+<div id="test8" style="width: 200px; height: 200px;"></div>
+<div id="test9" style="width: 200px; height: 200px;"></div>
+<div id="test10" style="width: 200px; height: 200px;"></div>
+<div id="test11" style="width: 200px; height: 200px;"></div>
+<div id="test12" style="width: 200px; height: 200px;"></div>
+<p>That's all Folks!</p>
+</body>
+</html>

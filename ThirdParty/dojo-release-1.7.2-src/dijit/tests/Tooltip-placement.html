@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Dojo Tooltip Placement Test</title>
+
+	<style type="text/css">
+		@import "../themes/claro/document.css";
+		@import "css/dijitTests.css";
+		
+		div {font-size:9px}
+	</style>
+
+	<!-- required: a default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../dijit/themes/claro/claro.css"/>
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../dojo/dojo.js"
+		data-dojo-config="isDebug: true"></script>
+
+	<!-- not needed, for testing alternate themes -->
+	<script type="text/javascript" src="_testCommon.js"></script>
+	<script type="text/javascript">
+		dojo.require("doh.runner");
+		dojo.require("dojo.parser");
+		dojo.require("dijit.dijit"); // optimize: load dijit layer
+		dojo.require("dijit.form.ValidationTextBox");
+		dojo.require("dijit.layout.ContentPane");
+		
+		dojo.ready(function(){
+			doh.register("parse", function(){
+				dojo.parser.parse();
+			});
+
+			doh.register("other setup", function(){
+				dijit._MasterTooltip.prototype.duration = 0.05; // speed up tooltip fading
+				var view = dojo.window.getBox();
+				var width = view.w;
+				var height = view.h;
+				
+				if(width < 600){
+					//Make the larger tooltips smaller so they fit on the page and pass all tests
+					dijit.byId("test2").promptMessage="really really really really really really really really really really really really really really really really really really really really";
+					dijit.byId("test5").promptMessage="really really really really really really really really really really really really really really really really really really really really";
+					dijit.byId("test12").promptMessage="really really really really really really really really really really really really really really really really really really really really";
+					dijit.byId("test17").promptMessage="really really really really really really really really really really really really really really really really really really really really";
+					dijit.byId("test19").promptMessage="really really really really really really really really really really really really really really really really really really really really";
+				}else if(width > 1200){
+					//Make a shorter tooltip longer in order to span the whole width
+					dijit.byId("test1").promptMessage = "really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really<br><br><br><br><br><br><br><br><br><br><br><br><br><br>a";
+					dijit.byId("test4").promptMessage = "really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really<br><br><br><br><br><br><br><br><br>a";
+					dijit.byId("test10").promptMessage = "really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really<br><br><br><br><br><br><br><br><br>a";
+					dijit.byId("test20").promptMessage="really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really<br><br><br><br><br><br><br><br><br>a"
+				}
+				
+				if(height < 600){
+					//Make the taller tooltips shorter
+					for(var i=1;i<22;i++){
+						if(i==7){
+							//skip
+						}else{
+							dijit.byId("test"+i+"_tall_skinny").promptMessage="<br><br><br><br>a";
+						}
+					}
+				}
+				
+				dijit.byId("test1").set("style", "width:"+width*(0.3)+"px");
+				dijit.byId("test1_tall_skinny").set("style", "width:"+width*(0.3)+"px");
+				dijit.byId("test2").set("style", "width:"+width*(0.6)+"px");
+				dijit.byId("test2_tall_skinny").set("style", "width:"+width*(0.6)+"px");
+				dijit.byId("test3").set("style", "width:"+width*(0.9)+"px");
+				dijit.byId("test3_tall_skinny").set("style", "width:"+width*(0.9)+"px");
+				dijit.byId("test4").set("style", "width:"+width*(0.3)+"px");
+				dijit.byId("test4_tall_skinny").set("style", "width:"+width*(0.3)+"px");
+				dijit.byId("test5").set("style", "width:"+width*(0.6)+"px");
+				dijit.byId("test5_tall_skinny").set("style", "width:"+width*(0.6)+"px");
+				dijit.byId("test6").set("style", "width:"+width*(0.9)+"px");
+				dijit.byId("test6_tall_skinny").set("style", "width:"+width*(0.9)+"px");
+				dijit.byId("test7").set("style", "width:"+width*(1.1)+"px");
+				dijit.byId("test8").set("style", "width:"+width*(0.2)+"px");
+				dijit.byId("test8_tall_skinny").set("style", "width:"+width*(0.2)+"px");
+				dijit.byId("test9").set("style", "width:"+width*(0.3)+"px");
+				dijit.byId("test9_tall_skinny").set("style", "width:"+width*(0.3)+"px");
+				dijit.byId("test10").set("style", "width:"+width*(0.6)+"px");
+				dijit.byId("test10_tall_skinny").set("style", "width:"+width*(0.6)+"px");
+				dijit.byId("test11").set("style", "width:"+width*(0.9)+"px");
+				dijit.byId("test11_tall_skinny").set("style", "width:"+width*(0.9)+"px");
+				dijit.byId("test12").set("style", "width:"+width*(0.3)+"px");
+				dijit.byId("test12_tall_skinny").set("style", "width:"+width*(0.3)+"px");
+				dijit.byId("test13").set("style", "width:"+width*(0.6)+"px");
+				dijit.byId("test13_tall_skinny").set("style", "width:"+width*(0.6)+"px");
+				dijit.byId("test14").set("style", "width:"+width*(0.9)+"px");
+				dijit.byId("test14_tall_skinny").set("style", "width:"+width*(0.9)+"px");
+				dijit.byId("test15").set("style", "width:"+width*(0.9)+"px");
+				dijit.byId("test15_tall_skinny").set("style", "width:"+width*(0.9)+"px");
+				dijit.byId("test16").set("style", "width:"+width*(0.3)+"px");
+				dijit.byId("test16_tall_skinny").set("style", "width:"+width*(0.3)+"px");
+				dijit.byId("test17").set("style", "width:"+width*(0.6)+"px");
+				dijit.byId("test17_tall_skinny").set("style", "width:"+width*(0.6)+"px");
+				dijit.byId("test18").set("style", "width:"+width*(0.9)+"px");
+				dijit.byId("test18_tall_skinny").set("style", "width:"+width*(0.9)+"px");
+				dijit.byId("test19").set("style", "width:"+width*(0.3)+"px");
+				dijit.byId("test19_tall_skinny").set("style", "width:"+width*(0.3)+"px");
+				dijit.byId("test20").set("style", "width:"+width*(0.6)+"px");
+				dijit.byId("test20_tall_skinny").set("style", "width:"+width*(0.6)+"px");
+				dijit.byId("test21").set("style", "width:"+width*(0.9)+"px");
+				dijit.byId("test21_tall_skinny").set("style", "width:"+width*(0.9)+"px");
+			});
+
+			//Verify the following is true:
+			//	1. The tooltip is displayed to the right or the left of the textbox
+			//	2. The tooltip arrow is next to the textbox
+			//	3. The user can view the entire tooltip on the screen OR the tooltip is displayed on the side with the largest width available
+			//	4. If the tooltip is not completely visible, verify that it uses all available height
+			function testRightOrLeft(textbox, verifyFullWidthIsUtilized){
+				verifyTooltipArrowPosition(textbox);
+
+				var textboxPos = dojo.position(textbox.domNode);
+				var tooltipContainerPos = dojo.position(dojo.query(".dijitTooltip")[0]);
+				
+				var xDiff = textboxPos.x - tooltipContainerPos.x - tooltipContainerPos.w;
+				var toTheLeft = xDiff >= -0.5 && xDiff < 2;
+
+				xDiff = tooltipContainerPos.x - textboxPos.x - textboxPos.w;
+				var toTheRight = xDiff >= -0.5 && xDiff < 2;
+
+				doh.t(toTheLeft || toTheRight, "The tooltip was not to the left or right");
+
+				var tooltip = dijit.Tooltip._masterTT.containerNode;
+				var tooltipPos = dojo.position(tooltip);
+
+				var view = dojo.window.getBox();
+				var isIE6 = dojo.isIE < 7;
+				//verify the entire width is utilized.  Small tooltips will not utilize the entire width.
+				if(verifyFullWidthIsUtilized && !isIE6 && !dojo.isOpera){
+					if(toTheLeft){
+						doh.t(tooltipContainerPos.w + 3/*space in between arrow and textbox*/ >= textboxPos.x, "The entire width was not utilized to the left");					
+					}else{
+						doh.t(tooltipContainerPos.w + 3/*space in between arrow and textbox*/ >= view.w - tooltipContainerPos.x, "The entire width was not utilized to the right");
+					}
+				}
+			
+				//If we cannot view the entire tooltip, verify they side with the most space was choosen and the entire height was utilized.
+				var canViewEntireTooltip = (tooltipContainerPos.x + tooltipContainerPos.w <= view.w+1) && 
+										   (tooltipPos.y + tooltipPos.h <= view.h+1);			
+				if(!canViewEntireTooltip && !isIE6 && !dojo.isOpera){
+					if(toTheLeft){
+						//verify there is more space on the left than the right
+						doh.t(textboxPos.x >= (view.w - textboxPos.x - textboxPos.w), "There is not more space on the left than the right");
+					}else{
+						doh.t(textboxPos.x <= (view.w - textboxPos.x - textboxPos.w), "There is not more space on the right than the left");
+					}
+					//verify the entire height is utilized
+					doh.t(tooltipPos.h >= view.h, "The entire height was not utilized. Tooltip height="+tooltipPos.h+". View height="+view.h);
+				}
+			}
+			
+			function toTheLeftOrRight(textbox){
+				var textboxPos = dojo.position(textbox.domNode);
+				var tooltipContainerPos = dojo.position(dojo.query(".dijitTooltip")[0]);
+				
+				var xDiff = textboxPos.x - tooltipContainerPos.x - tooltipContainerPos.w;
+				var toTheLeft = xDiff >= -1 && xDiff < 2;
+
+				xDiff = tooltipContainerPos.x - textboxPos.x - textboxPos.w;
+				var toTheRight = xDiff >= -1 && xDiff < 2;
+
+				doh.t(toTheLeft || toTheRight, "The tooltip was not to the left or right");
+			}
+			
+			//Verify the tooltip arrow is next to the textbox
+			function verifyTooltipArrowPosition(textbox){
+				var textboxPos = dojo.position(textbox.domNode);
+				var tooltipConnectorPos = dojo.position(dojo.query(".dijitTooltipConnector")[0]);
+				
+				var middleOfTextbox = textboxPos.y + (textboxPos.h / 2);
+				var middleOfTooltipConnector = tooltipConnectorPos.y + (tooltipConnectorPos.h /2);
+
+				var yDiff = middleOfTextbox - middleOfTooltipConnector;
+				var yAxisValid = yDiff <= 2 && yDiff >= -1.5; //tooltip arrow is at a similar y coord as the box
+				doh.t(yAxisValid, "Y axis is invalid. yDiff was: "+yDiff);
+			}
+			
+			//Verify the following is true:
+			//	1. The tooltip arrow is next to the textbox
+			//	2. The text fits inside the tooltip
+			function testNoWrapOrLargeWords(textbox){
+				verifyTooltipArrowPosition(textbox);
+				
+				//Verify the text fits inside the tooltip
+				var tooltipContainer = dojo.query(".dijitTooltipContainer")[0];
+				tooltipContainer.style.overflow = "auto";
+				var scrollWidth = tooltipContainer.scrollWidth;
+				tooltipContainer.style.overflow = "visible"; //change it back
+				
+				var tooltipWidth = dojo.position(tooltipContainer).w;
+				doh.t(tooltipWidth >= scrollWidth);
+			}
+		
+			function testAboveBelow(textbox, verifyConnectorPosition){
+				var textboxPos = dojo.position(textbox.domNode);
+				var tooltipConnectorPos = dojo.position(dojo.query(".dijitTooltipConnector")[0]);
+				var tooltipContainerPos = dojo.position(dojo.query(".dijitTooltip")[0]);
+
+				if(verifyConnectorPosition){
+					var xAxisValid = textboxPos.x <= tooltipConnectorPos.x && tooltipConnectorPos.x <= (textboxPos.x + textboxPos.w);
+					doh.t(xAxisValid, "X axis is invalid");
+				}
+			
+				//verify the tooltip is above or below the textbox
+				var yDiff = textboxPos.y - tooltipContainerPos.y - tooltipContainerPos.h;
+				var above = yDiff >= -0.5 && yDiff < 1;
+	
+				yDiff = tooltipContainerPos.y - textboxPos.y - textboxPos.h;
+				var below = yDiff >= -0.5 && yDiff < 1;
+			
+				doh.t(above || below);
+			}
+
+			var widget, handler;
+
+			// init tests for each group
+			var tooltip_left_right_tall_skinny = [{
+				name: "test1_tall_skinny",
+				timeout: 4000,
+				runTest: function(){
+					var d = new doh.Deferred();
+					widget = dijit.byId("test1_tall_skinny");
+
+					dojo.byId("aboveBelowButton").focus();
+					widget.set('value', null);
+
+					handler = dojo.connect(dijit._MasterTooltip.prototype, "_onShow", d.getTestCallback(function(){
+						testRightOrLeft(widget, false);
+					}));
+					dijit.byId("test7").focusNode.focus(); //hack for IE6.  test1 is not getting focus in IE6 if we don't focus something else first
+					widget.focusNode.focus();
+				
+					return d;
+				},
+				tearDown: function(){
+					dojo.disconnect(handler);
+				}
+			}];
+			var tooltip_left_right = [{
+				name: "test1",
+				timeout: 4000,
+				runTest: function(){
+					var d = new doh.Deferred();
+					widget = dijit.byId("test1");
+
+					dojo.byId("aboveBelowButton").focus();
+					widget.set('value', null);
+
+					handler = dojo.connect(dijit._MasterTooltip.prototype, "_onShow", d.getTestCallback(function(){
+						testRightOrLeft(widget, true);
+					}));
+					dijit.byId("test7").focusNode.focus(); //hack for IE6.  test1 is not getting focus in IE6 if we don't focus something else first
+					widget.focusNode.focus();
+				
+					return d;
+				},
+				tearDown: function(){
+					dojo.disconnect(handler);
+				}
+			}];
+			var tooltip_left_right_small = [{
+				name: "test1_lrs",
+				timeout: 6000,
+				runTest: function(){
+					var d = new doh.Deferred();
+				
+					var widget = dijit.byId("test1");
+					widget.set('value', null);
+				
+					dijit.byId("test7").focusNode.focus();
+				
+					setTimeout(function(){ widget.focusNode.focus();}, 500);
+
+					setTimeout(d.getTestCallback(function(){
+						testRightOrLeft(widget, false);
+					}), 1000);
+					return d;
+				}
+			}];
+			var tooltip_above_below_small = [{
+				name: "test1_abs",
+				timeout: 3000,
+				runTest: function(){
+					var d = new doh.Deferred();
+		
+					var widget = dijit.byId("test1");
+					dojo.byId("aboveBelowButton").focus();
+					dojo.byId("aboveBelowButton").click();
+					widget.focusNode.focus();
+
+					setTimeout(d.getTestCallback(function(){
+						testAboveBelow(widget, true);
+					}), 1000);
+					return d;
+				}
+			}];
+			var tooltip_above_below = [{
+				name: "test1_ab",
+				timeout: 5000,
+				runTest: function(){
+					var d = new doh.Deferred();
+					widget = dijit.byId("test1");
+
+					widget.set('value', "a");
+
+					handler = dojo.connect(dijit._MasterTooltip.prototype, "_onShow", d.getTestCallback(function(){
+						testAboveBelow(widget, true);
+					}));
+
+					widget.focusNode.focus();
+
+					return d;
+				},
+				tearDown: function(){
+					dojo.disconnect(handler);
+				}
+			}];
+			var tooltip_above_below_tall_skinny = [{
+				name: "test1_ab_tall_skinny",
+				timeout: 5000,
+				runTest: function(){
+					var d = new doh.Deferred();
+					widget = dijit.byId("test1_tall_skinny");
+
+					widget.set('value', "a");
+
+					handler = dojo.connect(dijit._MasterTooltip.prototype, "_onShow", d.getTestCallback(function(){
+						testAboveBelow(widget, true);
+					}));
+
+					widget.focusNode.focus();
+
+					return d;
+				},
+				tearDown: function(){
+					dojo.disconnect(handler);
+				}
+			}];
+			var tooltip_left_right_overflow = [{
+				name: "test22",
+				timeout: 4000,
+				runTest: function(){
+					var d = new doh.Deferred();
+					widget = dijit.byId("test22");
+					var cp = dijit.byId("test22_cp");
+
+					dojo.byId("afterBeforeButton").focus();
+					dojo.byId("afterBeforeButton").click();
+					widget.set('value', null);
+
+					handler = dojo.connect(dijit._MasterTooltip.prototype, "_onShow", d.getTestCallback(function(){
+						toTheLeftOrRight(cp, true);
+					}));
+					widget.focusNode.focus();
+				
+					return d;
+				},
+				tearDown: function(){
+					dojo.disconnect(handler);
+				}
+			}];
+			var tooltip_left_right_overflow_rtl = [{
+				name: "test23",
+				timeout: 4000,
+				runTest: function(){
+					var d = new doh.Deferred();
+					widget = dijit.byId("test23");
+					var cp = dijit.byId("test23_cp");
+
+					widget.set('value', null);
+
+					handler = dojo.connect(dijit._MasterTooltip.prototype, "_onShow", d.getTestCallback(function(){
+						toTheLeftOrRight(cp, true);
+					}));
+					widget.focusNode.focus();
+				
+					return d;
+				},
+				tearDown: function(){
+					dojo.disconnect(handler);
+				}
+			}];
+
+			// rest of tests
+			for(var i=2; i<=21; i++){
+				if(i==7){ continue; }
+				tooltip_left_right_tall_skinny.push({
+					name: "test"+i+"_tall_skinny",
+					widget: "test"+i+"_tall_skinny",
+					timeout: 3000,
+					runTest: function(){
+						var d = new doh.Deferred();
+						widget = dijit.byId(this.widget);
+
+						widget.set('value', null);
+
+						handler = dojo.connect(dijit._MasterTooltip.prototype, "_onShow", d.getTestCallback(function(){
+							testRightOrLeft(widget, false);
+						}));
+						dojo.window.scrollIntoView(widget.focusNode);
+						widget.focusNode.focus();
+					
+						return d;
+					},
+					tearDown: function(){
+						dojo.disconnect(handler);
+					}
+				});
+				tooltip_left_right.push({
+					name: "test"+i,
+					widget: "test"+i,
+					timeout: 3000,
+					runTest: function(){
+						var d = new doh.Deferred();
+						widget = dijit.byId(this.widget);
+
+						widget.set('value', null);
+
+						handler = dojo.connect(dijit._MasterTooltip.prototype, "_onShow", d.getTestCallback(function(){
+							var id = widget.id;
+							if(id=="test3" || id=="test6" || id=="test8" || id=="test9" || id=="test13" || id=="test16" || id=="test21"){
+								//These are the nowrap tests and therefore we should only verify the arrow is pointing to the textbox
+								testNoWrapOrLargeWords(widget);
+							}else{
+								testRightOrLeft(widget, true);
+							}
+						}));
+						dojo.window.scrollIntoView(widget.focusNode);
+						widget.focusNode.focus();
+					
+						return d;
+					},
+					tearDown: function(){
+						dojo.disconnect(handler);
+					}
+				});
+				tooltip_left_right_small.push({
+					name: "test"+i+"_lrs",
+					widget: "test"+i,
+					timeout: 3000,
+					runTest: function(){
+						var d = new doh.Deferred();
+						widget = dijit.byId(this.widget);
+
+						handler = dojo.connect(dijit._MasterTooltip.prototype, "_onShow", d.getTestCallback(function(){
+							testRightOrLeft(widget, false);
+						}));
+						widget.focusNode.focus();
+
+						return d;
+					},
+					tearDown: function(){
+						dojo.disconnect(handler);
+					}
+				});
+				tooltip_above_below_small.push({
+					name: "test"+i+"_abs",
+					widget: "test"+i,
+					timeout: 3000,
+					runTest: function(){
+						var d = new doh.Deferred();
+						widget = dijit.byId(this.widget);
+
+						handler = dojo.connect(dijit._MasterTooltip.prototype, "_onShow", d.getTestCallback(function(){
+							testAboveBelow(widget, true);
+						}));
+						widget.focusNode.focus();
+
+						return d;
+					},
+					tearDown: function(){
+						dojo.disconnect(handler);
+					}
+				});
+				tooltip_above_below.push({
+					name: "test"+i+"_ab",
+					widget: "test"+i,
+					timeout: 5000,
+					runTest: function(){
+						var d = new doh.Deferred();
+						widget = dijit.byId(this.widget);
+
+						widget.set('value', "a");
+
+						handler = dojo.connect(dijit._MasterTooltip.prototype, "_onShow", d.getTestCallback(function(){
+							var id = widget.id;
+							if(id=="test3" || id=="test6" || id=="test8" || id=="test9" || id=="test13" || id=="test16" || id=="test21"){
+								//These are the nowrap tests and therefore we should only verify the arrow is pointing to the textbox (in most cases it's off the screen)
+								testAboveBelow(widget, false);
+							}else{
+								testAboveBelow(widget, true);
+							}
+						}));
+
+						widget.focusNode.focus();
+
+						return d;
+					},
+					tearDown: function(){
+						dojo.disconnect(handler);
+					}
+				});
+				tooltip_above_below_tall_skinny.push({
+					name: "test"+i+"_ab_tall_skinny",
+					widget: "test"+i+"_tall_skinny",
+					timeout: 5000,
+					runTest: function(){
+						var d = new doh.Deferred();
+						widget = dijit.byId(this.widget);
+
+						widget.set('value', "a");
+
+						handler = dojo.connect(dijit._MasterTooltip.prototype, "_onShow", d.getTestCallback(function(){
+							testAboveBelow(widget, true);
+						}));
+
+						widget.focusNode.focus();
+
+						return d;
+					},
+					tearDown: function(){
+						dojo.disconnect(handler);
+					}
+				});
+			}
+
+			doh.register("tooltip_left_right_tall_skinny", tooltip_left_right_tall_skinny);
+			doh.register("tooltip_left_right", tooltip_left_right);
+			doh.register("tooltip_left_right_small", tooltip_left_right_small);
+			doh.register("tooltip_above_below_small", tooltip_above_below_small);
+			doh.register("tooltip_above_below", tooltip_above_below);
+			doh.register("tooltip_above_below_tall_skinny", tooltip_above_below_tall_skinny);
+			doh.register("tooltip_left_right_overflow", tooltip_left_right_overflow);
+			doh.register("tooltip_left_right_overflow_rtl", tooltip_left_right_overflow_rtl);
+			doh.run();
+		});
+	</script>
+</head>
+<body class="claro">
+<table>
+
+	<tr>
+	<td style="text-align:right;">
+		<input type="text" id="test1" name="test1" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really<br><br><br><br><br><br><br><br><br><br><br><br><br><br>a', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>	
+	<tr>
+	<td style="text-align:right;">
+		<input type="text" id="test1_tall_skinny" name="test1_tall_skinny" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'<br><br><br><br><br><br><br><br><br><br><br>a', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:right;">
+		<input type="text" id="test2" name="test2" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really reallyreally really really really really really really really really really really really really reallyreally really really really really really really really really really really really really reallyreally really really really really really really really really really really really really reallyreally really really really really really really really really really really really really reallyreally really really really really really really really really really really really really reallyreally really really really really really really really really really really really really reallyreally really really really really really really really really really really really really reallyreally really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really really really really really really really really really really really really reallybig', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:right;">
+		<input type="text" id="test2_tall_skinny" name="test2_tall_skinny" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'<br><br><br><br><br><br><br><br><br><br><br>a', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:right;">
+		<input type="text" id="test3" name="test3" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'reallyreallylonggermanwordreallyreallyreallyreallyreallyreallyreallylongword big', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:right;">
+		<input type="text" id="test3_tall_skinny" name="test3_tall_skinny" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'<br><br><br><br><br><br><br><br><br><br><br>a', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test4" name="test4" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really<br><br><br><br><br><br><br><br><br>a', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test4_tall_skinny" name="test4_tall_skinny" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'<br><br><br><br><br><br><br><br><br><br><br>a', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test5" name="test5" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallybig', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test5_tall_skinny" name="test5_tall_skinny" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'<br><br><br><br><br><br><br><br><br><br><br>a', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test6" name="test6" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'<div style=\'white-space: nowrap\'>really really really really big</div>', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test6_tall_skinny" name="test6_tall_skinny" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'<br><br><br><br><br><br><br><br><br><br><br>a', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test7" name="test7" data-dojo-type="dijit.form.ValidationTextBox"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test8" name="test8" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'<div style=\'white-space: nowrap\'>really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really<br><br><br><br><br><br><br><br><br><br><br><br><br><br>a</div>', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test8_tall_skinny" name="test8_tall_skinny" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'<br><br><br><br><br><br><br><br><br><br><br>a', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+	<tr>
+	<td>
+		<button id="aboveBelowButton" onclick="dijit.Tooltip.defaultPosition=['above', 'below']; dojo.byId('current').innerHTML='Current: ' + dijit.Tooltip.defaultPosition;">above, below</button>
+		<button id="afterBeforeButton" onclick="dijit.Tooltip.defaultPosition=['after', 'before']; dojo.byId('current').innerHTML='Current: ' + dijit.Tooltip.defaultPosition;">after, before (default)</button>
+		<div id=current>
+			Current: default (unchanged)
+		</div>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<br><br>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:right;">
+		<input type="text" id="test9" name="test9" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'reallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallylongword', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:right;">
+		<input type="text" id="test9_tall_skinny" name="test9_tall_skinny" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'<br><br><br><br><br><br><br><br><br><br><br>a', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:right;">
+		<input type="text" id="test10" name="test10" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'really really really really really really really really really really really really really really really really really really really<br><br><br><br><br><br><br><br><br><br><br><br><br><br>a', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:right;">
+		<input type="text" id="test10_tall_skinny" name="test10_tall_skinny" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'<br><br><br><br><br><br><br><br><br><br><br>a', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:right;">
+		<input type="text" id="test11" name="test11" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'a a a a a a a a a a a a a a a a a a a a a a a a a a a a<br><br><br><br><br><br><br><br><br><br><br><br><br><br>a', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:right;">
+		<input type="text" id="test11_tall_skinny" name="test11_tall_skinny" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'<br><br><br><br><br><br><br><br><br><br><br>a', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test12" name="test12" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really really big', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test12_tall_skinny" name="test12_tall_skinny" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'<br><br><br><br><br><br><br><br><br><br><br>a', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test13" name="test13" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'<div style=\'white-space: nowrap\'>really really really really really really really really really really really really really really really really really big</div>', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test13_tall_skinny" name="test13_tall_skinny" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'<br><br><br><br><br><br><br><br><br><br><br>a', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test14" name="test14" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'really really really really really really really really really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really really big', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test14_tall_skinny" name="test14_tall_skinny" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'<br><br><br><br><br><br><br><br><br><br><br>a', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test15" name="test15" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'a a a a a a a a a a a a a a a a a a<br><br><br><br><br><br><br><br><br><br><br>a', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test15_tall_skinny" name="test15_tall_skinny" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'<br><br><br><br><br><br><br><br><br><br><br>a', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<br>
+	</td>
+	</tr>	
+	<tr>
+	<td style="text-align:right;">
+		<input type="text" id="test16" name="test16" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'reallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallylongword big word really big word', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:right;">
+		<input type="text" id="test16_tall_skinny" name="test16_tall_skinny" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'<br><br><br><br><br><br><br><br><br><br><br>a', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:right;">
+		<input type="text" id="test17" name="test17" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really really big', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:right;">
+		<input type="text" id="test17_tall_skinny" name="test17_tall_skinny" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'<br><br><br><br><br><br><br><br><br><br><br>a', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:right;">
+		<input type="text" id="test18" name="test18" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'a a a a a a a a a a a a a a a a a a a a a a<br><br><br><br><br><br><br><br><br><br><br><br><br><br>a', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:right;">
+		<input type="text" id="test18_tall_skinny" name="test18_tall_skinny" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'<br><br><br><br><br><br><br><br><br><br><br>a', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test19" name="test19" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really reallyreally really really really really really really really really really really really really really really really really big', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test19_tall_skinny" name="test19_tall_skinny" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'<br><br><br><br><br><br><br><br><br><br><br>a', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test20" name="test20" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'really really really really really really really really really really really really really really really really really really really<br><br><br><br><br><br><br><br><br><br><br><br><br><br>a', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test20_tall_skinny" name="test20_tall_skinny" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'<br><br><br><br><br><br><br><br><br><br><br>a', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test21" name="test21" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'reallyreallyreallyreallyreallyreallylongword<br><br><br><br><br><br><br><br><br><br><br><br><br><br>a', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+	<tr>
+	<td style="text-align:left;">
+		<input type="text" id="test21_tall_skinny" name="test21_tall_skinny" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="regExp:'ab', promptMessage:'<br><br><br><br><br><br><br><br><br><br><br>a', required:true, missingMessage:'!'"/>
+	</td>
+	</tr>
+</table>
+
+<div id="test22_cp" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="style:{height:'90px', width:'100px', padding:'0px'}">
+   <input type="text" id="test22" name="test22" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="style:{fontSize:'100pt'}, promptMessage:'test overflow', required:true"/>
+<br><br><br><br><br>
+</div>
+
+<table width='100%' align='left'><tr><td width='95%'></td><td style="width:'5%'">
+<div id="test23_cp" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="dir:'rtl', style:{height:'100px', width:'100px', border:'1px', overflow:'scroll'}">
+   <input type="text" id="test23" name="test23" data-dojo-type="dijit.form.ValidationTextBox" data-dojo-props="dir:'rtl', style:{fontSize:'20pt'}, promptMessage:'test overflow', required:true"/>
+</div>
+</td></tr></table>
+
+</body>
+</html>

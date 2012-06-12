@@ -1,0 +1,80 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+
+	<title>dojox.image.Badge Tests | The Dojo Toolkit</title>
+	
+	<!-- required: dojo.js -->
+	<script>
+		var djConfig = {
+			isDebug:true,
+			preloadImages:[
+				"images/chris2_lg.jpg"
+			]
+		}
+	</script>
+	<script type="text/javascript" src="../../../dojo/dojo.js"></script>
+	
+	<script type="text/javascript">
+		dojo.require("doh.runner");
+		dojo.require("dojox.image");
+		dojo.addOnLoad(function(){
+
+			doh.register("imageBase",
+				[
+					{
+						name: "test djConfig.preloadImages",
+						timeout:5000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							t.t(dojo.isArray(dojo.config.preloadImages));
+							
+							var l = dojo.query("div > img");
+							t.is(1, l.length);
+
+							l
+								.connect("onload", function(e){
+									d.callback(true);
+								})
+								.attr("src", dojo.config.preloadImages[0])
+							;
+
+							return d;
+						}
+					},
+					{
+						name: "test manual preload",
+						timeout:2000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+
+							var urls = dojo.map(["chris1_lg.jpg","chris1_sm.jpg"], function(url){
+								return "images/" + url;
+							});
+							
+							var retvals = dojox.image.preload(urls);
+							t.is(2, retvals.length);
+
+							setTimeout(function(){
+								var n = dojo.query("div > img");
+								t.is(3, n.length);
+								d.callback(n.length);
+							}, 1000);
+							
+							return d;
+						}
+					}
+				]
+			);
+			
+			doh.run();
+			
+		});
+
+	</script>
+
+</head>
+<body></body>
+</html>

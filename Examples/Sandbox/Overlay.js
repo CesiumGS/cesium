@@ -17,18 +17,18 @@
      */
     Sandbox.Overlay = function(id, content, sandbox) {
         if (!id) {
-            throw new Cesium.DeveloperError("id is required.", "id");
+            throw new Cesium.DeveloperError('id is required.');
         }
 
         if (!content) {
-            throw new Cesium.DeveloperError("content is required.", "content");
+            throw new Cesium.DeveloperError('content is required.');
         }
 
         if (!sandbox) {
-            throw new Cesium.DeveloperError("sandbox is required.", "sandbox");
+            throw new Cesium.DeveloperError('sandbox is required.');
         }
 
-        var overlayContainer = document.getElementById("userOverlays");
+        var overlayContainer = document.getElementById('userOverlays');
 
         var ellipsoid = sandbox.getEllipsoid();
         var primitives = sandbox.getScene().getPrimitives();
@@ -56,15 +56,15 @@
 
         // Default position: top right corner.
         // Can be changed via Sandbox.Overlay.prototype.setPosition
-        overlay.style.top = "10px";
-        overlay.style.right = "10px";
-        overlay.style.position = "absolute";
+        overlay.style.top = '10px';
+        overlay.style.right = '10px';
+        overlay.style.position = 'absolute';
 
         // Inherited styles can be changed by editing the overlays class in the CSS file.
-        overlay.style.border = "inherit";
-        overlay.style.backgroundColor = "inherit";
-        overlay.style.padding = "inherit";
-        overlay.style.borderRadius = "inherit";
+        overlay.style.border = 'inherit';
+        overlay.style.backgroundColor = 'inherit';
+        overlay.style.padding = 'inherit';
+        overlay.style.borderRadius = 'inherit';
 
         this._overlay = overlay;
         this._id = id;
@@ -72,11 +72,11 @@
 
         this._interval = window.setInterval(function() {
             /*jslint evil : true*/
-            var tempFunc = new Function("ellipsoid", "primitives", "cb", "sb", "display", content);
+            var tempFunc = new Function('ellipsoid', 'primitives', 'cb', 'sb', 'display', content);
             overlay.innerHTML = content;
             tempFunc(ellipsoid, primitives, cb, sandbox, function display(content) {
                 if (typeof content === 'string') {
-                    content = content.replace(/\n|\r/g, "<br/>");
+                    content = content.replace(/\n|\r/g, '<br/>');
                 }
                 overlay.innerHTML = content;
             });
@@ -115,7 +115,7 @@
      */
     Sandbox.Overlay.prototype.update = function(newContent) {
         this._content = newContent;
-        this._overlay.innerHTML = newContent.replace(/\n|\r/g, "<br/>");
+        this._overlay.innerHTML = newContent.replace(/\n|\r/g, '<br/>');
     };
 
     /**
@@ -128,13 +128,13 @@
      * @exception {Cesium.DeveloperError} <code>positions</code> is required.
      *
      * @example
-     * var overlay = new Sandbox.Overlay("test", "Hello World!");
-     * overlay.setPosition({"top": "25px", "left": "50%"});
+     * var overlay = new Sandbox.Overlay('test', 'Hello World!');
+     * overlay.setPosition({'top': '25px', 'left': '50%'});
      *
      */
     Sandbox.Overlay.prototype.setPosition = function(positions) {
         if (!positions) {
-            throw new Cesium.DeveloperError("positions is required", "positions");
+            throw new Cesium.DeveloperError('positions is required');
         }
         // Clear old position so the overlay does not stretch
         this._overlay.style.left = null;
@@ -161,13 +161,13 @@
      * Removes the overlay from the page.
      */
     Sandbox.Overlay.prototype.remove = function() {
-        var overlayContainer = document.getElementById("userOverlays");
+        var overlayContainer = document.getElementById('userOverlays');
         var child = document.getElementById(this._id);
         if (child) {
             overlayContainer.removeChild(child);
         }
         if (!overlayContainer.children.length) {
-            overlayContainer.setAttribute("style", "visibility: hidden;");
+            overlayContainer.setAttribute('style', 'visibility: hidden;');
         }
         window.clearInterval(this._interval);
     };

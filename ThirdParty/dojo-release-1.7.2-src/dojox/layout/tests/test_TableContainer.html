@@ -1,0 +1,353 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+
+	<title>TableContainer layout widget Test</title>
+
+	<!-- required: a default theme file -->
+	<link rel="stylesheet" id="themeStyles" href="../../../dijit/themes/tundra/tundra.css">
+	<link rel="stylesheet" href="../resources/ScrollPane.css">	
+
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true"></script>
+
+	<!-- do not use! only for testing dynamic themes -->
+	<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+	
+	<script language="JavaScript" type="text/javascript">
+		
+		dojo.require("dijit.dijit");
+		dojo.require("dojox.layout.TableContainer");
+		dojo.require("dojo.parser");
+		dojo.require("dijit.form.TextBox");
+		dojo.require("dijit.form.NumberTextBox");
+		dojo.require("dijit.form.NumberSpinner");
+		dojo.require("dijit.form.CheckBox");
+		dojo.require("dijit.layout.BorderContainer");
+		dojo.require("dijit.layout.ContentPane");
+		dojo.require("dojox.form.DateTextBox");
+		
+		dojo.ready(function(){
+			dojo.parser.parse();
+			
+			var programmatic = new dojox.layout.TableContainer(
+				{
+					cols: 2, 
+					customClass:"greyLNF", 
+					"labelWidth": "150"
+				}, dojo.byId("programmatic"));
+			var text1 = new dijit.form.TextBox({label: "ProgText 1"});
+			var text2 = new dijit.form.TextBox({label: "ProgText 2"});
+			var text3 = new dijit.form.TextBox({label: "ProgText 3"});
+			var text4 = new dijit.form.TextBox({label: "ProgText 4"});
+			
+			programmatic.addChild(text1);
+			programmatic.addChild(text2);
+			programmatic.addChild(text3);
+			programmatic.addChild(text4);
+			programmatic.startup();
+		});
+	</script>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+		@import "../../widget/Calendar/Calendar.css";
+
+		#altStyle .dojoxScrollHelper {
+			-moz-border-radius:3pt;
+			background:#b7cdee;
+			border:2px solid #333;
+			width:3px;
+		}
+		table.fooBar td {
+			width:50px;
+			border-right:2px solid #000; 
+			padding:20px;
+		}
+
+		#vertList li {
+			cursor:pointer;
+		}
+		.foo { float:left; }
+		p.special { width:800px; }
+		
+		.dijitTableLayout label {
+			font-weight: bold;
+		}
+		
+		.greyLNF-labelCell {
+			background-color: lightgrey;
+			padding-left: 5px;
+		}
+		.greyLNF-table-horiz .greyLNF-labelCell {
+			text-align: right;
+		}
+		.greyLNF-valueCell {
+			padding-left: 5px;
+		}
+		.innerLNF-table {
+			background-color: lightblue;
+		}
+		.innerLNF-labelCell {
+			padding-bottom: 2px;
+			text-align: center;
+		}
+		.innerLNF-table-vert .innerLNF-labelCell {
+			border-bottom: 1px solid black;
+		}
+		.innerLNF-valueCell {
+			padding-top: 2px;
+			text-align: center;
+		}
+		.greenLNF-labelCell {
+			background-color: green;
+			color: white;
+			text-align: center;
+		}
+		.greenLNF-valueCell {
+			color: blue;
+			padding: 5px;
+			text-align: center;
+		}
+		.greenLNF-valueCell-0 {
+			width: 50%;
+		}
+		.greenLNF-valueCell-2 {
+			width: 25%;
+		}
+		.greyBlueLNF-labelCell {
+			background-color: lightgrey;
+			padding-left: 5px;
+		}
+		.greyBlueLNF-table-horiz .greyBlueLNF-labelCell {
+			text-align: right;
+		}
+		.greyBlueLNF-valueCell {
+			padding-left: 5px;
+			background-color: #D6E9F8;
+		}
+	</style>
+
+</head>
+<body class="tundra">
+
+	<h1 class='testTitle'>dojox.layout.TableContainer</h1>
+
+	<p>
+		A container that lays out child widgets in a set number of columns.
+	  Each widget can have a 'label' or 'title' attribute which can
+		be configured to be displayed beside or above each widget.
+	</p>
+	<p>
+		The TableContainer has no default styling, as the base implementation
+		is designed to be a simple layout mechanism.  However you can style the
+		labels and value cells and rows very easily.  This page shows how four
+		different styling schemes, greyLNF, greyBlueLNF, greenLNF and innerLNF
+		can be applied to TableContainers.
+	</p>
+	
+	<h2>A simple single column layout, with labels in the default horizontal alignment:</h2>
+	
+	<div style="width: 500px; border: 1px solid black;">
+
+		<div dojoType="dojox.layout.TableContainer" cols="1" id="tc1">
+			<div dojoType="dijit.form.TextBox" title="First Name:"></div>
+			<div dojoType="dijit.form.TextBox" title="Last Name:"></div>
+			<div dojoType="dijit.form.CheckBox" title="Employed"></div>
+			<div dojoType="dijit.form.NumberSpinner" title="Age" value="30"></div>
+		</div>
+		
+	</div>
+	<h2>A two column layout, with labels in the default horizontal alignment, with custom styling:</h2>
+
+	<span dojoType="dojox.layout.TableContainer" cols="2" id="tc2" 
+			customClass="greyLNF" style="border: 1px solid black;width: 500px;">
+		<div dojoType="dijit.form.CheckBox" title="Married:"></div>
+		<div dojoType="dojox.form.DateTextBox" title="Date Of Birth:" value="1978-06-29"></div>
+		<div dojoType="dijit.form.CheckBox" title="Is Student:" checked="true"></div>
+		<div dojoType="dijit.form.TextBox" title="School Name:" value="University Of Limerick"></div>
+	</span>
+		
+
+	<h2>A three column nested layout with custom styles, that you can configure using the drop down controls below:</h2>
+	<div>
+		Notice the two nested TableContainers, highlighted in blue.  
+		One has the 'spanLabel' attribute set to "true"
+	  so that it takes up both the value cell and the label cell.
+		The other has the label "Nested TableContainer" set.
+	</div>
+	<div>
+		This table also automatically changes the number of columns based on its width,
+		in order to maintain a minimum cell width.  Try resizing the screen to 
+		see this in action.
+	</div>
+	Set the number of columns: 
+	<select onchange="dijit.byId('tc3').attr('cols', this.value)">
+		<option value="1">1</option>
+		<option value="2">2</option>
+		<option value="3" selected>3</option>
+		<option value="4">4</option>
+	</select>
+	Set the label layout: 
+	<select onchange="dijit.byId('tc3').attr('orientation', this.value)">
+		<option value="vert">Vertical</option>
+		<option value="horiz">Horizontal</option>
+	</select>
+	Set the custom CSS: 
+	<select onchange="dijit.byId('tc3').attr('customClass', this.value)">
+		<option value="greyLNF">greyLNF</option>
+		<option value="greenLNF">greenLNF</option>
+	</select>
+	<br>
+	<br>
+	<div style="border: 1px solid black;" >
+
+		<div dojoType="dojox.layout.TableContainer" cols="3" id="tc3" orientation="vert" customClass="greyLNF">
+			<script type="dojo/connect">
+				// This code runs after the widget has been constructed.
+				// It sets the number of columns used by the table based on the width
+				// of the table.
+				
+				var _this = this;
+				function resizeContainer(){
+				  var width = dojo.style(_this.domNode, "width");
+					var numCols = 3;
+
+					if (width < 500) {
+					  numCols = 1;
+					} else if (width < 800) {
+					  numCols = 2;
+					}
+					if (_this.get("cols") != numCols) {
+					  _this.set("cols", numCols);
+					}
+				}
+				var timer;
+				dojo.connect(window, "onresize", dojo.hitch(this, function(){
+				  if (timer) {
+					  clearTimeout(timer);
+					}
+				  timer = setTimeout(resizeContainer, 100);  
+				}));
+			</script>
+			
+			<div dojoType="dijit.form.CheckBox" title="Option 1" id="check1"></div>
+			<div dojoType="dijit.form.CheckBox" title="Option 2" id="check2"></div>
+			<div dojoType="dijit.form.TextBox" title="Text1" id="text1"></div>
+			<div dojoType="dijit.form.NumberTextBox" title="Number" value="120"></div>
+
+			<div dojoType="dijit.form.NumberSpinner" title="Number Spinner" value="100"></div>
+			<div dojoType="dijit.layout.ContentPane" title="Content Pane">
+				This is a ContentPane with a label
+			</div>
+			<div dojoType="dijit.layout.ContentPane" spanLabel="true">
+				This is just some text that fills a couple of cells,
+				look at it wrap around!!!!
+			</div>
+			<div dojoType="dojox.layout.TableContainer" cols="3" id="tc4" 
+					orientation="vert" 
+					spanLabel="true" 
+					customClass="innerLNF"
+					spacing="0"
+					>
+						
+				<div dojoType="dijit.form.CheckBox" title="Nested 1"></div>
+				<div dojoType="dijit.form.CheckBox" title="Nested 2"></div>
+				<div dojoType="dijit.form.CheckBox" title="Nested 3"></div>
+			</div>
+			
+			<div 	dojoType="dojox.layout.TableContainer" 
+						cols="3"  
+						orientation="horiz" 
+						customClass="innerLNF"
+						label="Nested TableContainer"
+						>
+				<div dojoType="dijit.form.CheckBox" title="Horiz Label1"></div>
+				<div dojoType="dijit.form.CheckBox" title="Horiz Label2"></div>
+			</div>
+		</div>
+	</div>
+	
+	<div id="colspanTest">
+		<h2>This table tests the use of the 'colspan' attribute with labels enabled</h2>
+		<div dojoType="dojox.layout.TableContainer" cols="3" customClass="greyBlueLNF" labelWidth="-1">
+			<script type="dojo/connect" event="startup">
+				// Show the actual colspan in each cell
+				dojo.query(".greyBlueLNF-valueCell", this.domNode).forEach(function(cell){
+				  cell.firstChild.innerHTML += " - <i>actual colspan = " + dojo.attr(cell, "colspan") + "</i>";
+				});
+			</script>
+			
+			<div dojoType="dijit.layout.ContentPane" label="Label 1">colspan = 1</div>
+			<div dojoType="dijit.layout.ContentPane" label="Label 1">colspan = 1</div>
+			<div dojoType="dijit.layout.ContentPane" label="Label 1">colspan = 1</div>			<div dojoType="dijit.layout.ContentPane" label="Label 2" colspan="2">colspan = 2</div>
+			<div dojoType="dijit.layout.ContentPane" label="Label 3" colspan="2">colspan = 2</div>
+			<div dojoType="dijit.layout.ContentPane" label="Label 4">colspan = 1</div>
+			<div dojoType="dijit.layout.ContentPane" label="Label 5">colspan = 1</div>
+			<div dojoType="dijit.layout.ContentPane" label="Label 6">colspan = 1</div>
+			<div dojoType="dijit.layout.ContentPane" label="Label 7" colspan="3">colspan = 3</div>
+			<div dojoType="dijit.layout.ContentPane" label="Label 8" colspan="4">colspan = 4 (just takes up 3)</div>
+		</div>
+		
+		<h2>This table tests the use of the 'colspan' attribute with labels disabled</h2>
+		<div dojoType="dojox.layout.TableContainer" cols="3" customClass="greyBlueLNF" labelWidth="-1" showLabels="false">
+			<script type="dojo/connect" event="startup">
+				// Show the actual colspan in each cell
+				dojo.query(".greyBlueLNF-valueCell", this.domNode).forEach(function(cell){
+				  cell.firstChild.innerHTML += " - <i>actual colspan = " + dojo.attr(cell, "colspan") + "</i>";
+				});
+			</script>
+			
+			<div dojoType="dijit.layout.ContentPane" label="Label 1">colspan = 1</div>
+			<div dojoType="dijit.layout.ContentPane" label="Label 1">colspan = 1</div>
+			<div dojoType="dijit.layout.ContentPane" label="Label 1">colspan = 1</div>
+			<div dojoType="dijit.layout.ContentPane" label="Label 2" colspan="2">colspan = 2</div>
+			<div dojoType="dijit.layout.ContentPane" label="Label 3" colspan="2">colspan = 2</div>
+			<div dojoType="dijit.layout.ContentPane" label="Label 4">colspan = 1</div>
+			<div dojoType="dijit.layout.ContentPane" label="Label 5">colspan = 1</div>
+			<div dojoType="dijit.layout.ContentPane" label="Label 6">colspan = 1</div>
+			<div dojoType="dijit.layout.ContentPane" label="Label 7" colspan="3">colspan = 3</div>
+			<div dojoType="dijit.layout.ContentPane" label="Label 8" colspan="4">colspan = 4 (just takes up 3)</div>
+		</div>
+	</div>
+	
+	<h2>This is a programmatically created TableContainer</h2>
+	<br><br>
+	<div id="programmatic" style="width: 800px;">
+		
+	</div>
+
+	<h2>Test resize of the TableContainer</h2>
+	<p>Drag the splitter to resize the TableContainer in the right/center region and confirm the column widths resize correctly to their new width</p>
+	<div dojoType="dijit.layout.BorderContainer" style="height:100px; border: solid #ccc 1px;">
+		<div dojoType="dijit.layout.ContentPane" region="left" style="width:20%" splitter="true">(left)</div>
+		<div dojoType="dijit.layout.ContentPane" region="center">
+			<div dojoType="dojox.layout.TableContainer" region="center" jsId="tblContainerResize" cols="3" customClass="greyBlueLNF" labelWidth="-1">
+				<div dojoType="dijit.layout.ContentPane" label="Col 1 Label">
+					<script type="dojo/connect" event="resize">
+						this.domNode.innerHTML = "<strong>Width: " + dojo.contentBox(this.domNode).w + "</strong>";
+					</script>
+				</div>
+				<div dojoType="dijit.layout.ContentPane" label="Col 2 Label">
+					<script type="dojo/connect" event="resize">
+						this.domNode.innerHTML = "<strong>Width: " + dojo.contentBox(this.domNode).w + "</strong>";
+					</script>
+				</div>
+				<div dojoType="dijit.layout.BorderContainer" label="Col 1 Label" colspan="2" style="height: 50px">
+					<div dojoType="dijit.layout.ContentPane" region="left" style="width: 50%">
+						<script type="dojo/connect" event="resize">
+							this.domNode.innerHTML = "<strong>Nested BC region width: " + dojo.contentBox(this.domNode).w + "</strong>";
+						</script>
+					</div>
+					<div dojoType="dijit.layout.ContentPane" region="center" style="width: 50%">
+						<script type="dojo/connect" event="resize">
+							this.domNode.innerHTML = "<strong>Nested BC region width: " + dojo.contentBox(this.domNode).w + "</strong>";
+							console.log(this.id + " resize");
+						</script>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

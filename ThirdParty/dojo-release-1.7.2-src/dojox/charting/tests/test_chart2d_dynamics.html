@@ -1,0 +1,262 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Chart 2D: dynamics</title>
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+	@import "../../../dijit/themes/tundra/tundra.css";
+
+	.dojoxLegendNode {border: 1px solid #ccc; margin: 5px 10px 5px 10px; padding: 3px}
+	.dojoxLegendText {vertical-align: text-top; padding-right: 10px}
+</style>
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+<script type="text/javascript">
+dojo.require("dijit.form.Button");
+dojo.require("dijit.form.CheckBox");
+dojo.require("dijit.form.ComboBox");
+
+dojo.require("dojox.charting.Chart");
+dojo.require("dojox.charting.axis2d.Default");
+dojo.require("dojox.charting.plot2d.Columns");
+dojo.require("dojox.charting.plot2d.ClusteredColumns");
+dojo.require("dojox.charting.plot2d.StackedColumns");
+dojo.require("dojox.charting.plot2d.Bars");
+dojo.require("dojox.charting.plot2d.ClusteredBars");
+dojo.require("dojox.charting.plot2d.StackedBars");
+dojo.require("dojox.charting.plot2d.Areas");
+dojo.require("dojox.charting.plot2d.StackedAreas");
+dojo.require("dojox.charting.plot2d.Pie");
+dojo.require("dojox.charting.plot2d.Grid");
+dojo.require("dojox.charting.themes.CubanShirts");
+dojo.require("dojox.charting.widget.Legend");
+
+dojo.require("dojox.lang.functional.sequence");
+
+dojo.require("dojo.parser");
+
+var chart, legend, size = 10, magnitude = 30;
+
+var getData = function(){
+	var data = new Array(size);
+	for(var i = 0; i < size; ++i){
+		data[i] = Math.random() * magnitude;
+	}
+	return data;
+};
+
+var getZeroes = function(){
+	return dojox.lang.functional.repeat(size, "-> 0", 0);
+};
+
+var makeObjects = function(){
+	chart = new dojox.charting.Chart("test");
+	chart.setTheme(dojox.charting.themes.CubanShirts);
+
+	if(dijit.byId("hAxis").get("checked")){
+		chart.addAxis("x", {natural: true, includeZero: true, fixUpper: "minor"});
+	}
+
+	if(dijit.byId("vAxis").get("checked")){
+		chart.addAxis("y", {vertical: true, natural: true, includeZero: true, fixUpper: "minor"});
+	}
+
+	chart.addPlot("default", {type: dijit.byId("plot").get("value"), gap: 2});
+
+	if(dijit.byId("grid").get("checked")){
+		chart.addPlot("grid", {type: "Grid", hMinorLines: true, vMinorLines: true});
+	}
+
+	for(var i = 1; i <= 5; ++i){
+		if(dijit.byId("s" + i).get("checked")){
+			chart.addSeries("Series " + i, getData(), {stroke: {color: "black", width: 1}});
+		}
+	}
+	if(dijit.byId("s6").get("checked")){
+		chart.addSeries("Series 6", getZeroes(), {stroke: {color: "black", width: 1}});
+	}
+
+	chart.render();
+	
+	legend = new dojox.charting.widget.Legend({chart: chart}, "legend");
+};
+
+dojo.addOnLoad(makeObjects);
+
+changePlot = function(){
+	var type = dijit.byId("plot").get("value");
+	chart.addPlot("default", {type: type, gap: 2});
+	chart.render();
+	legend.refresh();
+};
+
+changeGrid = function(){
+	if(dijit.byId("grid").get("checked")){
+		chart.addPlot("grid", {type: "Grid", hMinorLines: true, vMinorLines: true});
+	}else{
+		chart.removePlot("grid");
+	}
+	chart.render();
+};
+
+changeX = function(){
+	if(dijit.byId("hAxis").get("checked")){
+		chart.addAxis("x", {natural: true, includeZero: true, fixUpper: "minor"});
+	}else{
+		chart.removeAxis("x");
+	}
+	chart.render();
+};
+
+changeY = function(){
+	if(dijit.byId("vAxis").get("checked")){
+		chart.addAxis("y", {vertical: true, natural: true, includeZero: true, fixUpper: "minor"});
+	}else{
+		chart.removeAxis("y");
+	}
+	chart.render();
+};
+
+changeSeries = function(n){
+	if(n == 6){
+		// special case
+		if(dijit.byId("s6").get("checked")){
+			chart.addSeries("Series 6", getZeroes(), {stroke: {color: "black", width: 1}});
+		}else{
+			chart.removeSeries("Series 6");
+		}
+	}else{
+		if(dijit.byId("s" + n).get("checked")){
+			chart.addSeries("Series " + n, getData(), {stroke: {color: "black", width: 1}});
+			dijit.byId("sb" + n).get("disabled", false);
+		}else{
+			chart.removeSeries("Series " + n);
+			dijit.byId("sb" + n).get("disabled", true);
+		}
+	}
+	chart.render();
+	legend.refresh();
+};
+
+addSeries = function(n){
+	chart.addSeries("Series " + n, getData(), {stroke: {color: "black", width: 1}});
+	chart.render();
+	legend.refresh();
+};
+
+</script>
+</head>
+<body class="tundra">
+<h1>Chart 2D: dynamics</h1>
+		<button id="reset1" type="reset" dojoType="dijit.form.Button">Reset with no onClick handler should reset</button>
+
+<table>
+	<tr>
+		<td>Plot:</td>
+		<td>
+			<select dojoType="dijit.form.ComboBox" id="plot" onChange="changePlot()">
+				<option value="Columns">Columns</option>
+				<option value="ClusteredColumns">ClusteredColumns</option>
+				<option value="StackedColumns">StackedColumns</option>
+				<option value="Bars">Bars</option>
+				<option value="ClusteredBars">ClusteredBars</option>
+				<option value="StackedBars">StackedBars</option>
+				<option value="Areas">Areas</option>
+				<option value="StackedAreas">StackedAreas</option>
+				<option value="Pie">Pie</option>
+			</select>
+		</td>
+	</tr>
+	<tr>
+		<td>Grid:</td>
+		<td>
+			<input type="checkbox" dojoType="dijit.form.CheckBox" checked="true" id="grid" onChange="changeGrid()">
+			<label for="grid">include</label>
+		</td>
+	</tr>
+	<tr>
+		<td>X axis:</td>
+		<td>
+			<input type="checkbox" dojoType="dijit.form.CheckBox" checked="true" id="hAxis" onChange="changeX()">
+			<label for="hAxis">include</label>
+		</td>
+	</tr>
+	<tr>
+		<td>Y axis:</td>
+		<td>
+			<input type="checkbox" dojoType="dijit.form.CheckBox" checked="true" id="vAxis" onChange="changeY()">
+			<label for="vAxis">include</label>
+		</td>
+	</tr>
+	<tr>
+		<td>Series 1:</td>
+		<td>
+			<input type="checkbox" dojoType="dijit.form.CheckBox" checked="true" id="s1" onChange="changeSeries(1)">
+			<label for="s1">include</label>
+			&nbsp;
+			<button dojoType="dijit.form.Button" id="sb1" onClick="addSeries(1)">Randomize</button>
+		</td>
+	</tr>
+	<tr>
+		<td>Series 2:</td>
+		<td>
+			<input type="checkbox" dojoType="dijit.form.CheckBox" checked="true" id="s2" onChange="changeSeries(2)">
+			<label for="s2">include</label>
+			&nbsp;
+			<button dojoType="dijit.form.Button" id="sb2" onClick="addSeries(2)">Randomize</button>
+		</td>
+	</tr>
+	<tr>
+		<td>Series 3:</td>
+		<td>
+			<input type="checkbox" dojoType="dijit.form.CheckBox" checked="true" id="s3" onChange="changeSeries(3)">
+			<label for="s3">include</label>
+			&nbsp;
+			<button dojoType="dijit.form.Button" id="sb3" onClick="addSeries(3)">Randomize</button>
+		</td>
+	</tr>
+	<tr>
+		<td>Series 4:</td>
+		<td>
+			<input type="checkbox" dojoType="dijit.form.CheckBox" checked="true" id="s4" onChange="changeSeries(4)">
+			<label for="s4">include</label>
+			&nbsp;
+			<button dojoType="dijit.form.Button" id="sb4" onClick="addSeries(4)">Randomize</button>
+		</td>
+	</tr>
+	<tr>
+		<td>Series 5:</td>
+		<td>
+			<input type="checkbox" dojoType="dijit.form.CheckBox" checked="true" id="s5" onChange="changeSeries(5)">
+			<label for="s5">include</label>
+			&nbsp;
+			<button dojoType="dijit.form.Button" id="sb5" onClick="addSeries(5)">Randomize</button>
+		</td>
+	</tr>
+	<tr>
+		<td>Series 6:</td>
+		<td>
+			<input type="checkbox" dojoType="dijit.form.CheckBox" checked="false" id="s6" onChange="changeSeries(6)">
+			<label for="s6">include</label>
+			&nbsp;this series contains all 0 values
+		</td>
+	</tr>
+</table>
+<div id="test" style="width: 600px; height: 400px;"></div>
+<div id="legend"></div>
+</body>
+</html>

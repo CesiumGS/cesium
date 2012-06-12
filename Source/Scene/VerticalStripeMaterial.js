@@ -63,7 +63,7 @@ define(['../Shaders/VerticalStripeMaterial'], function(ShadersVerticalStripeMate
     }
 
     VerticalStripeMaterial.prototype._getShaderSource = function() {
-        return "#line 0\n" + ShadersVerticalStripeMaterial;
+        return '#line 0\n' + ShadersVerticalStripeMaterial;
     };
 
     return VerticalStripeMaterial;

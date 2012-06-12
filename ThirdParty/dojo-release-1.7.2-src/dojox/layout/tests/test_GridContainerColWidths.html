@@ -1,0 +1,162 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+		<title>Testing GridContainer Column Widths</title>
+
+		<style type="text/css" title="text/css">
+			@import "../../../dojo/resources/dojo.css";
+			@import "../../../dijit/themes/tundra/tundra.css";
+			
+			html, body{
+				margin:0;
+				padding:1%;
+			}
+			.dijitTitlePane .gripNode {
+			 	cursor: move;
+			}
+			
+			.dijitTitlePane .gripNode span {
+			 	cursor: pointer;
+			}
+			.cpane{
+				border:1px solid #666;
+				font:bold 12px Arial;
+				color:#666;
+				background:#FFF;
+				padding:10px;
+				margin:2px;
+			}
+			
+			#GC1{
+				height:300px;
+				margin:10px;
+				padding:2px;
+				border:1px solid #ededed;
+				overflow-x:hidden;
+				overflow-y:auto;
+			}
+			
+			#GC1 .gridContainerTable {
+				border-collapse:collapse;
+			}
+			
+			#GC1 .gridContainerZone {
+				border-collapse:collapse;
+				border : 1px solid #ededed;
+			}
+			#GC2 {
+				border:1px solid #333;
+			}
+		</style>
+		
+		<link rel="stylesheet" href="../resources/GridContainer.css">
+		<link rel="stylesheet" href="../resources/DndGridContainer.css">
+		
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+		<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+		<script type="text/javascript">
+			dojo.require("dojo.parser");
+			dojo.require("dijit.TitlePane");
+			dojo.require("dijit.ColorPalette");
+			dojo.require("dijit.layout.ContentPane");
+			dojo.require("dojox.layout.GridContainer");
+			dojo.require("dijit.form.Button");
+			dojo.require("dijit.Calendar");
+			
+			
+			var GC1;
+			
+			// Sets the number of columns on the first GridContainer
+			function setColumns(){
+				GC1 = dijit.byId("GC1");
+				var nb = dojo.byId("nbCol").value;
+				if(nb > 0){
+					GC1.setColumns(nb);
+				}
+			}
+			
+			function setColumnWidths(){
+				GC1 = dijit.byId("GC1");
+				var widths = dojo.byId("colWidth").value;
+				GC1.set("colWidths", widths);
+			}
+		</script>
+
+	</head>
+
+	<body class="tundra">
+		
+		<h1 class="testTitle">Grid Container</h1>
+		
+		<div>
+			This pages tests setting the widths of GridContainer columns using the "colWidths" parameter.
+		</div>
+		
+		<h2>Grid Container (allowAutoScroll="true", hasResizableColumns="false")</h2>
+			
+		<h5>Add / remove dynamically columns :</h5>
+		<input value="5" name="col" id="nbCol"/>
+		<button id="bt2" dojoType="dijit.form.Button" onclick="setColumns();">set Number of Columns</button>
+
+		<h5>Set the width of columns :</h5>
+		<input value="25,30,40" name="col" id="colWidth"/>
+		<button id="bt3" dojoType="dijit.form.Button" onclick="setColumnWidths();">Set Column Widths</button>
+		
+		<div>
+			<h4>Testing column width where the first column has a width fixed to 40%.  All other columns take up the remiaining space</h4>
+			
+			<div id="GC1" dojoType="dojox.layout.GridContainer" 
+				nbZones="3"
+				opacity="0.7" 
+				allowAutoScroll="true" 
+				hasResizableColumns="false"
+				withHandles="true"
+				acceptTypes="ContentPane, TitlePane, ColorPalette, Calendar"
+
+				colWidths="40"
+				>
+					<div dojoType="dijit.layout.ContentPane" dndType="ContentPane" class="cpane" label="Content Pane">Content Pane n°1 !</div>
+					<div dojoType="dijit.TitlePane" dndType="TitlePane" title="Ergo">
+						Non ergo erunt homines deliciis diffluentes audiendi, si quando de amicitia, quam nec usu nec ratione habent cognitam, disputabunt. Nam quis est, pro deorum fidem atque hominum! qui velit, ut neque diligat quemquam nec ipse ab ullo diligatur, circumfluere omnibus copiis atque in omnium rerum abundantia vivere? Haec enim est tyrannorum vita nimirum, in qua nulla fides, nulla caritas, nulla stabilis benevolentiae potest esse fiducia, omnia semper suspecta atque sollicita, nullus locus amicitiae.
+					</div>
+					<div dojoType="dijit.layout.ContentPane" dndType="ContentPane" class="cpane" label="Content Pane">Content Pane n°2 !</div>
+			  		<div dojoType="dijit.layout.ContentPane" dndType="ContentPane" title="Intellectum">
+			  			Intellectum est enim mihi quidem in multis, et maxime in me ipso, sed paulo ante in omnibus, cum M. Marcellum senatui reique publicae concessisti, commemoratis praesertim offensionibus, te auctoritatem huius ordinis dignitatemque rei publicae tuis vel doloribus vel suspicionibus anteferre. Ille quidem fructum omnis ante actae vitae hodierno die maximum cepit, cum summo consensu senatus, tum iudicio tuo gravissimo et maximo. Ex quo profecto intellegis quanta in dato beneficio sit laus, cum in accepto sit tanta gloria.
+			  		</div>
+			  		
+					<div dojoType="dijit.layout.ContentPane" dndType="ContentPane" class="cpane" label="Content Pane">Content Pane n°3 !</div>
+					<div dojoType="dijit.layout.ContentPane" dndType="ContentPane" class="cpane" label="Content Pane">Content Pane n°4 !</div>
+					<div dojoType="dijit.Calendar" dndType="Calendar"></div>
+			</div>
+			
+			
+			<h4>Testing column width with all column widths defined, to use 40%, 40% and 20%.</h4>
+			<div id="GC2" dojoType="dojox.layout.GridContainer" 
+							nbZones="3"
+							opacity="0.7" 
+							allowAutoScroll="true" 
+							hasResizableColumns="false"
+							withHandles="true"
+							acceptTypes="ContentPane,TitlePane,ColorPalette,Calendar"
+							colWidths="40,40,20"
+							>
+								<div dojoType="dijit.layout.ContentPane" dndType="ContentPane" class="cpane" label="Content Pane">Content Pane n°1 !</div>
+								<div dojoType="dijit.TitlePane" dndType="TitlePane" title="Ergo">
+									Non ergo erunt homines deliciis diffluentes audiendi, si quando de amicitia, quam nec usu nec ratione habent cognitam, disputabunt. Nam quis est, pro deorum fidem atque hominum! qui velit, ut neque diligat quemquam nec ipse ab ullo diligatur, circumfluere omnibus copiis atque in omnium rerum abundantia vivere? Haec enim est tyrannorum vita nimirum, in qua nulla fides, nulla caritas, nulla stabilis benevolentiae potest esse fiducia, omnia semper suspecta atque sollicita, nullus locus amicitiae.
+								</div>
+								<div dojoType="dijit.layout.ContentPane" dndType="ContentPane" class="cpane" label="Content Pane">Content Pane n°2 !</div>
+						  		<div dojoType="dijit.layout.ContentPane" dndType="ContentPane" title="Intellectum">
+						  			Intellectum est enim mihi quidem in multis, et maxime in me ipso, sed paulo ante in omnibus, cum M. Marcellum senatui reique publicae concessisti, commemoratis praesertim offensionibus, te auctoritatem huius ordinis dignitatemque rei publicae tuis vel doloribus vel suspicionibus anteferre. Ille quidem fructum omnis ante actae vitae hodierno die maximum cepit, cum summo consensu senatus, tum iudicio tuo gravissimo et maximo. Ex quo profecto intellegis quanta in dato beneficio sit laus, cum in accepto sit tanta gloria.
+						  		</div>
+						  		
+								<div dojoType="dijit.layout.ContentPane" dndType="ContentPane" class="cpane" label="Content Pane">Content Pane n°3 !</div>
+								<div dojoType="dijit.layout.ContentPane" dndType="ContentPane" class="cpane" label="Content Pane">Content Pane n°4 !</div>
+								<div dojoType="dijit.Calendar" dndType="Calendar"></div>
+			</div>
+		</div>
+		
+	</body>
+</html>

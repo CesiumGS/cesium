@@ -1,0 +1,82 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>Dojo DnD selector test</title>
+	<style type="text/css">
+		@import "../../resources/dojo.css";
+		@import "dndDefault.css"; 
+
+		body { padding: 20px; }
+	</style>
+	<script type="text/javascript" src="../../dojo.js" djConfig="isDebug: true"></script>
+	<!--
+	<script type="text/javascript" src="../../dnd/common.js"></script>
+	<script type="text/javascript" src="../../dnd/Container.js"></script>
+	<script type="text/javascript" src="../../dnd/Selector.js"></script>
+	-->
+	<script type="text/javascript">
+		dojo.require("dojo.dnd.Selector");
+		var c1, c2, c3, c4, c5;
+		var init = function(){
+			c1 = new dojo.dnd.Selector(dojo.byId("container1"), {singular: true});
+			c2 = new dojo.dnd.Selector(dojo.byId("container2"));
+			c3 = new dojo.dnd.Selector(dojo.byId("container3"));
+			c4 = new dojo.dnd.Selector(dojo.byId("container4"));
+			c5 = new dojo.dnd.Selector(dojo.byId("container5"));
+		};
+		dojo.addOnLoad(init);
+	</script>
+</head>
+<body>
+	<h1>Dojo DnD selector test</h1>
+	<p>Containers have a notion of a "current container", and one element can be "current". All containers on this page are selectors that allow to select elements.</p>
+	<p>Following selection modes are supported by default:</p>
+	<ul>
+		<li>Simple click &mdash; selects a single element, all other elements will be unselected.</li>
+		<li>Ctrl+click &mdash; toggles a selection state of an element (use Meta key on Mac).</li>
+		<li>Shift+click &mdash; selects a range of elements from the previous anchor to the current element.</li>
+		<li>Ctrl+Shift+click &mdash; adds a range of elements from the previous anchor to the current element (use Meta key on Mac).</li>
+	</ul>
+	<h2>DIV selector</h2>
+	<p>This selector can select just one element a time. It was specified during the creation time.</p>
+	<div id="container1" class="container">
+		<div class="dojoDndItem">Item 1</div>
+		<div class="dojoDndItem">Item 2</div>
+		<div class="dojoDndItem">Item 3</div>
+	</div>
+	<h2>UL selector</h2>
+	<ul id="container2" class="container">
+		<li class="dojoDndItem">Item 1</li>
+		<li class="dojoDndItem">Item 2</li>
+		<li class="dojoDndItem">Item 3</li>
+	</ul>
+	<h2>OL selector</h2>
+	<ol id="container3" class="container">
+		<li class="dojoDndItem">Item 1</li>
+		<li class="dojoDndItem">Item 2</li>
+		<li class="dojoDndItem">Item 3</li>
+	</ol>
+	<h2>TABLE selector</h2>
+	<table id="container4" class="container" border="1px solid black">
+		<tr class="dojoDndItem">
+			<td>A</td>
+			<td>row 1</td>
+		</tr>
+		<tr class="dojoDndItem">
+			<td>B</td>
+			<td>row 2</td>
+		</tr>
+		<tr class="dojoDndItem">
+			<td>C</td>
+			<td>row 3</td>
+		</tr>
+	</table>
+	<h2>P selector with SPAN elements</h2>
+	<p>Elements of this container are layed out horizontally.</p>
+	<p id="container5" class="container">
+		<span class="dojoDndItem">&nbsp;Item 1&nbsp;</span>
+		<span class="dojoDndItem">&nbsp;Item 2&nbsp;</span>
+		<span class="dojoDndItem">&nbsp;Item 3&nbsp;</span>
+	</p>
+</body>
+</html>

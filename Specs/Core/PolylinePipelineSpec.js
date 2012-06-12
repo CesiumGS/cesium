@@ -1,3 +1,4 @@
+/*global defineSuite*/
 defineSuite([
          'Core/PolylinePipeline',
          'Core/Cartographic2',
@@ -9,8 +10,8 @@ defineSuite([
     "use strict";
     /*global it,expect*/
 
-    it("wrapLongitude", function() {
-        var ellipsoid = Ellipsoid.getWgs84();
+    it('wrapLongitude', function() {
+        var ellipsoid = Ellipsoid.WGS84;
         var p1 = new Cartographic2(-75.163789, 39.952335);      // Philadelphia, PA
         var p2 = new Cartographic2(-80.2264393, 25.7889689);    // Miami, FL
         var positions = [ellipsoid.toCartesian(p1),

@@ -1,0 +1,208 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>Chart: Selectable Legend test</title>
+        <style type="text/css">
+            @import "../../../../dojo/resources/dojo.css";
+            @import "../../../../dijit/tests/css/dijitTests.css";
+            @import "../../../../dijit/themes/claro/claro.css";
+			@import "../../resources/Legend.css";
+        </style>
+        <style>
+			.bars{
+				width:300px;
+				height:200px;
+			}
+			.columns{
+				width:300px;
+				height:250px;
+			}
+			.pie {
+				width:500px;
+				height:300px;
+			}
+			.bubble{
+				width:320px;
+				height:300px;
+			}
+        </style>
+
+        <script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+        <script type="text/javascript">
+ 			dojo.require("dojo.parser");
+			dojo.require("doh.runner");
+
+			dojo.require("dijit.dijit");
+            dojo.require("dojox.charting.Chart");
+            dojo.require("dojox.charting.axis2d.Default");
+            dojo.require("dojox.charting.plot2d.Lines");
+            dojo.require("dojox.charting.plot2d.StackedAreas");
+            dojo.require("dojox.charting.plot2d.Bars");
+            dojo.require("dojox.charting.plot2d.ClusteredBars");
+            dojo.require("dojox.charting.plot2d.StackedBars");
+            dojo.require("dojox.charting.plot2d.Columns");
+            dojo.require("dojox.charting.plot2d.ClusteredColumns");
+            dojo.require("dojox.charting.plot2d.StackedColumns");
+            dojo.require("dojox.charting.plot2d.Bubble");
+            dojo.require("dojox.charting.plot2d.Pie");
+			dojo.require("dojox.charting.themes.MiamiNice");
+			dojo.require("dojox.charting.widget.SelectableLegend");
+			dojo.require("dojox.charting.action2d.Highlight");
+			
+			dojo.require("dojox.charting.BidiSupport");
+			dojo.require("dojox.charting.widget.BidiSupport");
+			
+			var bars;
+        	dojo.addOnLoad(function(){
+				 bars = new dojox.charting.Chart("bars").
+					setTheme(dojox.charting.themes.MiamiNice).
+					addPlot("default",{type: "Bars",gap:2}).
+					addAxis("x",{natural: true, includeZero: true}).
+					addAxis("y",{natural: true, vertical:true}).
+					addSeries("\u05e1\u05d9\u05df\u002e",[1,3,5,7,2,4,6]).
+					render();
+				var barsLegend = new dojox.charting.widget.SelectableLegend({chart: bars},"barsLegend");
+								
+				var linesColumns = new dojox.charting.Chart("linesColumns", {textDir:"rtl"}).
+					setTheme(dojox.charting.themes.MiamiNice).
+					addPlot("lines",{type: "Lines",markers:true}).
+					addPlot("default",{type: "Columns",gap:2}).
+					addAxis("y",{natural: true, vertical:true,includeZero: true}).
+					addAxis("x",{natural: true,includeZero: true}).
+					addSeries("\u05e1\u05d9\u05df\u002e",[2,4,6,8,3,5,7]).
+					addSeries("India.",[1,3,5,7,2,4,6],{plot:"lines"}).
+					render();
+				var linesColumnsLegend = new dojox.charting.widget.SelectableLegend({chart: linesColumns},"linesColumnsLegend");
+				
+				var pie = new dojox.charting.Chart("pie",{textDir:"auto"}).
+					setTheme(dojox.charting.themes.MiamiNice).
+					addPlot("default",{type:"Pie",radius:100,font: "normal normal 10pt Tahoma",htmlLabels:true,labelOffset:-20}).
+					addSeries("\u05d0\u05e3\u002e",[{
+	                    y: 12.1,
+	                    text: "\u05e1\u05d9\u05df\u002e"
+	                },{
+	                    y: 9.52,
+	                    text: "India."
+	                }, {
+	                    y: 2.66,
+	                    text: "USA."
+	                }, {
+	                    y: 2.06,
+	                    text: "Indonesia."
+	                }, {
+	                    y: 1.63,
+	                    text: "Brazil."
+	                },{
+	                    y: 1.48,
+	                    text: "Russian."
+	                },{
+	                    y: 1.29,
+	                    text: "Pakistan."
+	                },{
+	                    y: 1.25,
+	                    text: "Japan."
+	                }]).
+					render();
+				var ainm = new dojox.charting.action2d.Highlight(pie,"default");
+				var pieLegend = new dojox.charting.widget.SelectableLegend({chart: pie,horizontal:false, outline: true},"pieLegend");
+				
+				var bubble = new dojox.charting.Chart("bubble").
+					setTheme(dojox.charting.themes.MiamiNice).
+					addPlot("default",{type:"Bubble"}).
+					addAxis("x",{natual:true, includeZero: true, max:7}).
+					addAxis("y",{natual:true, vertical: true, includeZero: true,max:10}).
+					addSeries("\u05e1\u05d9\u05df\u002e",[{x:3,y:5,size:1},{x:1,y:7,size:1},{x:4,y:2,size:3}]).
+					addSeries("India.",[{x:5,y:5,size:2},{x:2,y:3,size:4},{x:6,y:2,size:1}]).
+					addSeries("C.",[{x:2,y:7,size:3},{x:6,y:8,size:3}]).
+					render();
+				var bubbleLegend = new dojox.charting.widget.SelectableLegend({chart: bubble, horizontal:false, outline:true},"bubbleLegend");
+
+				doh.register("parse", function(){
+					dojo.parser.parse();
+				});
+
+				doh.register("test textDir", [
+					{
+						name: "textDir inherited",
+
+						runTest: function(){
+							doh.is("ltr", bars.textDir, "bars: inherited from GUI");
+							doh.is("rtl", bubble.textDir, "bubble inherited from html container");
+						}
+					},	
+					{
+						name: "textDir in constructor",
+
+						runTest: function(){
+							doh.is("rtl", linesColumns.textDir, "direction of : linesColumns");
+							doh.is("auto", pie.textDir, "direction of : pie");
+						}
+					},	
+					{
+						name: "textDir of legends",
+
+						runTest: function(){
+							doh.is(bars.textDir, barsLegend.textDir, "direction of : barsLegend");
+							doh.is(linesColumns.textDir, linesColumnsLegend.textDir, "direction of : linesColumnsLegend");
+							doh.is(bubble.textDir, bubbleLegend.textDir, "direction of : bubbleLegend");
+							doh.is(pie.textDir, pieLegend.textDir, "direction of : pieLegend");
+						}
+					}					
+				]);					
+				doh.run();
+			});
+        
+        </script>
+    </head>
+    <body class="claro">
+		<h1>Chart: Selectable Legend</h1>
+		<h3>Click the legends</h3>
+		<div style="clear:both;">
+		<div style="float:left;">
+		<h2>1.Bars</h2>
+		<div id="bars" class="bars"></div>
+		<div id="barsLegend"></div>
+		</div>
+		<div style="float:left;">
+		
+		
+		<div style="float:left;">
+		<h2>2.Lines&Columns</h2>
+		<div id="linesColumns" class="columns"></div>
+		<div id="linesColumnsLegend"></div>
+		</div>
+		</div>
+		
+		<div style="clear:both;">
+		<div style="float:left;">
+		<h2>3.Pie</h2>
+		<div id="pie" class="pie" style="float:left;" ></div>
+		<div style="float:left;">
+		<div id="pieLegend"></div>
+		</div>
+		</div>
+		<div style="float:left;margin-left:40px">
+		<h2>4.Bubble</h2>
+		<div id="bubble" class="bubble" style="float:left;" dir="rtl"></div>
+		<div style="float:left;">
+		<div id="bubbleLegend"></div>
+		</div>
+		</div>
+		</div>
+
+    </body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+	
+	<title>Sample Dojo / Dijit Page</title>
+	<style type="text/css">
+		@import "../../../dijit/themes/tundra/tundra.css";
+		@import "../resources/Lightbox.css";
+		#container {
+			position:absolute;
+			left:-9999px;
+			width:9000px;
+			overflow:hidden;
+		}
+		#randomimage {
+			height:100px;
+		}
+	</style>
+	<script>var djConfig = { isDebug:true, parseOnLoad:true }</script>
+	<script src="../../../dojo/dojo.js"></script>
+	<script type="text/javascript">
+		dojo.require("doh.runner");
+		dojo.require("dojo.parser");
+		dojo.require("dojox.image.Lightbox");
+		
+		dojo.addOnLoad(function(){
+			
+			doh.register("testUi",
+				[
+					{
+						name:"basic lightbox",
+						timeout:7000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							var lb = dijit.byId("parsed");
+							t.is("dojox.image.Lightbox", lb.declaredClass);
+
+							setTimeout(function(){
+								lb.show();
+							}, 300);
+						
+							setTimeout(function(){
+								lb.hide();
+								d.callback(true);
+							}, lb.duration + 1700);
+
+							return d;
+						}
+					},
+					{
+						name:"basic onclick",
+						timeout:7000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							var lb = dijit.byId("parsed");
+							
+							t.is("basic title", lb.title);
+							var c = dojo.connect(lb, "show", function(){
+								lb.hide();
+								dojo.disconnect(c);
+								d.callback(true);
+							});
+							
+							dojo.query("a").at(0).forEach(function(n){
+								dojo._triggerEvent(n, "click");
+							});
+							
+							return d;
+						}
+					},
+					{
+						name:"basic programatic",
+						timeout:7000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							var lb = new dojox.image.Lightbox({
+								href:"images/square.png",
+								title:"A square image"
+							}).placeAt(dojo.body());
+							
+							lb.startup();
+							lb.show();
+							
+							t.is("A square image", lb.title);
+							t.is("dojox.image.LightboxDialog", dijit.byId("dojoxLightboxDialog").declaredClass);
+							
+							setTimeout(function(){
+								lb.hide();
+								d.callback(true);
+							}, lb.duration + 500);
+							
+							return d;
+						}
+					},
+					{
+						name:"show single in master",
+						timeout:5000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							
+							var lb = dijit.byId("dojoxLightboxDialog");
+							lb.show({
+								href:"images/extraWide.jpg",
+								title:"Wiiiide"
+							});
+							
+							setTimeout(function(){
+								lb.hide();
+								d.callback(true);
+							}, lb.duration + 1500);
+							
+							return d;
+						}
+					},
+					{
+						name:"basic group ui",
+						timeout:15000,
+						runTest: function(t){
+							var d = new doh.Deferred();
+							var l = dijit.byId("grouper"),
+								lb = l._attachedDialog;
+							
+							t.is("bar", l.group);
+							l.show();
+							
+							var next = lb.nextButtonNode, prev = lb.prevButtonNode, 
+								close = lb.closeButtonNode;
+							
+							var c = dojo.connect(lb, "hide", function(){
+								dojo.disconnect(c);
+								d.callback(true);
+							});
+								
+							setTimeout(function(){
+								dojo._triggerEvent(next, "click");
+								setTimeout(function(){
+									dojo._triggerEvent(prev, "click");
+									setTimeout(function(){
+										// note: calling trigger("click") on closeNode
+										// makes hide() called out of scope?
+										l.hide();
+									}, l.duration)
+								}, l.duration);
+							
+							}, l.duration + 400);
+							
+							return d;
+						}
+					}
+				]
+			);
+			
+			doh.run();		
+		
+		});
+		
+		// stolen from plugd (http://code.google.com/p/plugd/) to trigger basic events:
+		(function(d){
+			d._triggerEvent = function(node, event){
+				// summary: Helper for `dojo.trigger`, which handles the DOM cases. We should never
+				// be here without a nodeNode reference and a string eventname.
+				node = d.byId(node); 
+				event = event && event.slice(0, 2) == "on" ? event.slice(2) : event;
+				if(d.doc.createEvent){
+					var evObj = d.doc.createEvent("HTMLEvents");
+					evObj.initEvent(event, true, true);
+					node.dispatchEvent(evObj);
+				}else if(d.doc.createEventObject){
+					node.fireEvent("on" + event);
+				}
+			}
+		})(dojo);
+		
+	</script>
+
+</head>
+<body class="tundra">
+	<a href="images/square.jpg" id="parsed" title="basic title" dojoType="dojox.image.Lightbox">test</a>
+	<a href="images/square.jpg" id="grouper" group="bar" dojoType="dojox.image.Lightbox">testgroup</a>
+	<a href="images/square.jpg" group="bar" dojoType="dojox.image.Lightbox">testgroup</a>
+</body>
+</html>

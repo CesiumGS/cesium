@@ -1,0 +1,20 @@
+({
+	name: "date.timezone.America-Guyana",
+	runTest: function(t){
+		var tz = "America/Guyana";
+		doh.checkDate({tzOffset: 232.666666666667, tzAbbr: "LMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: 232.666666666667, tzAbbr: "LMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: 232.666666666667, tzAbbr: "LMT"}, -1730578041000, tz, 1);
+		doh.checkDate({tzOffset: 225, tzAbbr: "GBGT"}, -1730578040000, tz, 1);
+		doh.checkDate({tzOffset: 225, tzAbbr: "GBGT"}, -113688901000, tz, 1);
+		doh.checkDate({tzOffset: 225, tzAbbr: "GYT"}, -113688900000, tz, 1);
+		doh.checkDate({tzOffset: 225, tzAbbr: "GYT"}, 176010299000, tz, 1);
+		doh.checkDate({tzOffset: 180, tzAbbr: "GYT"}, 176010300000, tz, 1);
+		doh.checkDate({tzOffset: 180, tzAbbr: "GYT"}, 662698799000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "GYT"}, 662698800000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "GYT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "GYT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: 240, tzAbbr: "GYT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: 240, tzAbbr: "GYT"}, 1246789800000, tz, 0);
+	}
+})

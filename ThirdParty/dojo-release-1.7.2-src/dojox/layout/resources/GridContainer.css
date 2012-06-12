@@ -1,0 +1,74 @@
+@import url("../../mdnd/resources/dnd.css");
+.dj_ie6 .gridContainer *{
+	zoom:1;
+}
+
+.gridContainer{
+	display:block;	
+	position:relative;
+	background:#FFF;	
+	margin:0;	
+	width:100%;
+	/*height:1%;*/ /*Bug focus with IE6/7)*/
+	height:auto;
+	overflow-y:auto;
+	overflow-x:hidden !important;
+}
+	
+.gridContainerTable{
+	width:100%;
+	border:1px solid #BFBFBF;
+}
+
+.gridContainerTable tbody, .gridContainerTable tr{
+	height:100%;
+}
+
+.gridContainerZone{
+	vertical-align:top;	
+	background-color:#FDFDFD;	
+	height:100%;
+}
+
+.gridContainerZone .serviceWidgetTitleText h2{
+	position:relative;
+}
+
+.gridContainerGrip{
+	cursor:default;
+	position:absolute;
+	top:0;	
+	width:10px;	
+	padding:0;	
+	margin:0;
+	background-image:url(icons/pixel.gif);
+	height:100%;
+}
+	
+.gridContainerGripShow{
+	cursor:e-resize;	
+	position:absolute;	
+	top:0;
+	width:10px;	
+	padding:0;	
+	margin:0;	
+	background-image:url(icons/gridcontainer_grip.gif);
+	height:100%;
+}
+
+.dropIndicator{
+	border:2px dashed #BFBFBF;
+}
+
+.dropIndicator > div{
+	background-color:#FFF;
+}
+
+.dj_ie6 .dropIndicator,
+.dj_ie6 .dojoxPortlet .dijitContentPane,
+.dj_ie6 .dojoxPortlet, .dj_ie6 .dojoxPortlet.dijitTitlePane{
+	margin: 10px;
+}
+.gridContainerZone > *{
+	margin: 10px !important;
+}

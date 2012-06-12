@@ -1,0 +1,35 @@
+<html>
+<head>
+        <script type="text/javascript" src="../../../dojo.js"
+                djConfig="parseOnLoad: false, isDebug: true"></script>
+</head>
+<body>
+<h1>Testcase for #8976</h1>
+<p>Test case for <a href="http://bugs.dojotoolkit.org/ticket/8976">#8976</a>, an async load issue with Firefox even 
+    though the loading should be synchronous. Click the button then check console log for output of test. If "count = 1, worked" 
+    shows up instead of an error, then the test is successful.
+</p>
+
+<script>
+var count = 0;
+function wait(count){
+	console.log("count = "+count+", calling addOnLoad");
+	dojo.addOnLoad(function(){
+		try{
+			console.log("count = "+count+", testing");
+			var i = dijit.layout.TabController.constructor;
+			console.log("count = "+count+", worked");
+		}catch(e){ alert("failed: " + e) }
+	});
+	console.log("count = "+count+", addOnLoad returned");
+}
+function load(count){
+	console.log("count = "+count+", calling require");
+	dojo.require("dijit.dijit");
+	dojo.require("dijit.dijit-all");
+	console.log("count = "+count+", require returned");
+}
+</script>
+<input type=button onmousedown="load(count++);return true" onmouseup="wait(count++);return true" value="click this button to load and wait">
+</body>
+</html>

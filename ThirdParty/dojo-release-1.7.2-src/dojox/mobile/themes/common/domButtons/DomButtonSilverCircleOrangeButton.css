@@ -1,0 +1,27 @@
+/* === Silver Circle Orange Button ==*/
+.mblDomButtonSilverCircleOrangeButton {
+	position: relative;
+	width: 30px;
+	height: 30px;
+}
+.mblDomButtonSilverCircleOrangeButton > div {
+	position: relative;
+	top: 0px;
+	left: 0px;
+	width: 26px;
+	height: 26px;
+	border: 1px solid #B5B6B5;
+	-webkit-border-radius: 13px;
+	-webkit-box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.5);
+	background: -webkit-gradient(linear, left top, left bottom, from(#EFEFEF), to(#C2C2C2));
+}
+.mblDomButtonSilverCircleOrangeButton > div > div {
+	position: relative;
+	top: 6px;
+	left: 6px;
+	width: 12px;
+	height: 12px;
+	border: 1px inset #CA701A;
+	-webkit-border-radius: 7px;
+	background: -webkit-gradient(radial, center center, 0, center center, 6, from(#FF7A07), to(#E66B03));
+}

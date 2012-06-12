@@ -3,16 +3,19 @@ define([
         '../Core/DeveloperError',
         '../Core/combine',
         '../Core/destroyObject',
+        '../Core/Cartesian2',
         '../Core/Math',
         '../Core/Ellipsoid',
-        '../Core/AxisAlignedBoundingRectangle',
+        '../Core/Rectangle',
         '../Core/Cartesian3',
+        '../Core/Cartographic3',
         '../Core/ComponentDatatype',
         '../Core/MeshFilters',
         '../Core/PrimitiveType',
         '../Core/EllipsoidTangentPlane',
         '../Core/PolygonPipeline',
         '../Core/WindingOrder',
+        '../Core/ExtentTessellator',
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
         '../Renderer/CullFace',
@@ -28,16 +31,19 @@ define([
         DeveloperError,
         combine,
         destroyObject,
+        Cartesian2,
         CesiumMath,
         Ellipsoid,
-        AxisAlignedBoundingRectangle,
+        Rectangle,
         Cartesian3,
+        Cartographic3,
         ComponentDatatype,
         MeshFilters,
         PrimitiveType,
         EllipsoidTangentPlane,
         PolygonPipeline,
         WindingOrder,
+        ExtentTessellator,
         BlendingState,
         BufferUsage,
         CullFace,
@@ -65,8 +71,8 @@ define([
         return this._va;
     };
 
-    PositionVertices.prototype.update = function(context, positions, meshes, bufferUsage) {
-        if (positions) {
+    PositionVertices.prototype.update = function(context, meshes, bufferUsage) {
+        if (typeof meshes !== 'undefined') {
             // Initially create or recreate vertex array and buffers
             this._destroyVA();
 
@@ -124,9 +130,9 @@ define([
      *   alpha : 1.0
      * };
      * polygon.setPositions([
-     *   ellipsoid.toCartesian(new Cartographic3(...)),
-     *   ellipsoid.toCartesian(new Cartographic3(...)),
-     *   ellipsoid.toCartesian(new Cartographic3(...))
+     *   ellipsoid.toCartesian(new Cartographic2(...)),
+     *   ellipsoid.toCartesian(new Cartographic2(...)),
+     *   ellipsoid.toCartesian(new Cartographic2(...))
      * ]);
      */
     function Polygon() {
@@ -178,7 +184,8 @@ define([
          */
         };
 
-        this._positions = null;
+        this._positions = undefined;
+        this._extent = undefined;
         this._createVertexArray = false;
 
         /**
@@ -204,6 +211,20 @@ define([
         this._bufferUsage = BufferUsage.STATIC_DRAW;
 
         /**
+         * <p>
+         * Determines if the polygon is affected by lighting, i.e., if the polygon is bright on the
+         * day side of the globe, and dark on the night side.  When <code>true</code>, the polygon
+         * is affected by lighting; when <code>false</code>, the polygon is uniformly shaded regardless
+         * of the sun position.
+         * </p>
+         * <p>
+         * The default is <code>true</code>.
+         * </p>
+         */
+        this.affectedByLighting = true;
+        this._affectedByLighting = true;
+
+        /**
          * DOC_TBA
          */
         this.material = new ColorMaterial({
@@ -223,15 +244,16 @@ define([
          */
         this.erosion = 1.0;
 
+        this._mode = SceneMode.SCENE3D;
+        this._projection = undefined;
+
         /**
-         * DOC_TBA
+         * The current morph transition time between 2D/Columbus View and 3D,
+         * with 0.0 being 2D or Columbus View and 1.0 being 3D.
          *
          * @type Number
          */
-        this.morphTime = 1.0;
-
-        this._mode = SceneMode.SCENE3D;
-        this._projection = undefined;
+        this.morphTime = this._mode.morphTime;
 
         var that = this;
         this._uniforms = {
@@ -272,27 +294,54 @@ define([
      *
      * @see Polygon#getPositions
      *
+     * @param {Array} positions. The cartesian positions of the polygon.
+     * @param {double} [height=0.0]. The height of the polygon.
+     *
      * @example
      * polygon.setPositions([
-     *   ellipsoid.toCartesian(new Cartographic3(...)),
-     *   ellipsoid.toCartesian(new Cartographic3(...)),
-     *   ellipsoid.toCartesian(new Cartographic3(...))
-     * ]);
+     *   ellipsoid.toCartesian(new Cartographic2(...)),
+     *   ellipsoid.toCartesian(new Cartographic2(...)),
+     *   ellipsoid.toCartesian(new Cartographic2(...))
+     * ], 10.0);
      */
-    Polygon.prototype.setPositions = function(positions) {
-        // positions can be null
-        if (positions && (positions.length < 3)) {
-            throw new DeveloperError("At least three positions are required.", "positions");
+    Polygon.prototype.setPositions = function(positions, height) {
+        // positions can be undefined
+        if (typeof positions !== 'undefined' && (positions.length < 3)) {
+            throw new DeveloperError('At least three positions are required.');
         }
-
+        this.height = height || 0.0;
+        this._extent = undefined;
         this._positions = positions;
         this._createVertexArray = true;
     };
 
+    /**
+     * DOC_TBA
+     *
+     * @memberof Polygon
+     *
+     * @param {extent} extent. The cartographic extent of the tile, with north, south, east and
+     * west properties in radians.
+     *
+     * @param {double} [height=0.0]. The height of the cartographic extent.
+     * @example
+     * polygon.configureExtent(new Extent(
+     *     CesiumMath.toRadians(0.0),
+     *     CesiumMath.toRadians(0.0),
+     *     CesiumMath.toRadians(10.0),
+     *     CesiumMath.toRadians(10.0)
+     * ));
+     */
+    Polygon.prototype.configureExtent = function(extent, height){
+        this._extent = extent;
+        this.height = height || 0.0;
+        this._positions = undefined;
+        this._createVertexArray = true;
+    };
+
     Polygon._appendTextureCoordinates = function(tangentPlane, positions2D, mesh) {
-        var boundingRectangle = new AxisAlignedBoundingRectangle(positions2D);
-        var origin = boundingRectangle.minimum;
-        var extent = boundingRectangle.maximum.subtract(boundingRectangle.minimum);
+        var boundingRectangle = new Rectangle.createAxisAlignedBoundingRectangle(positions2D);
+        var origin = new Cartesian2(boundingRectangle.x, boundingRectangle.y);
 
         var positions = mesh.attributes.position.values;
         var length = positions.length;
@@ -308,8 +357,8 @@ define([
             var st = tangentPlane.projectPointOntoPlane(p);
             st = st.subtract(origin);
 
-            textureCoordinates[j++] = st.x / extent.x;
-            textureCoordinates[j++] = st.y / extent.y;
+            textureCoordinates[j++] = st.x / boundingRectangle.width;
+            textureCoordinates[j++] = st.y / boundingRectangle.height;
         }
 
         mesh.attributes.textureCoordinates = {
@@ -326,7 +375,10 @@ define([
         var mesh;
         var meshes = null;
 
-        if (this._positions) {
+        if(typeof this._extent !== 'undefined'){
+            mesh = ExtentTessellator.compute({extent: this._extent, generateTextureCoords:true});
+        }
+        else if(typeof this._positions !== 'undefined'){
             var cleanedPositions = PolygonPipeline.cleanUp(this._positions);
             var tangentPlane = EllipsoidTangentPlane.create(this.ellipsoid, cleanedPositions);
             var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions);
@@ -336,45 +388,30 @@ define([
                 positions2D.reverse();
                 cleanedPositions.reverse();
             }
-
             var indices = PolygonPipeline.earClip2D(positions2D);
-
+            mesh = PolygonPipeline.computeSubdivision(cleanedPositions, indices, this._granularity);
             // PERFORMANCE_IDEA:  Only compute texture coordinates if the material requires them.
+            mesh = Polygon._appendTextureCoordinates(tangentPlane, positions2D, mesh);
+        }
+        else {
+            return undefined;
+        }
+        mesh = PolygonPipeline.scaleToGeodeticHeight(this.ellipsoid, mesh, this.height);
+        mesh = MeshFilters.reorderForPostVertexCache(mesh);
+        mesh = MeshFilters.reorderForPreVertexCache(mesh);
 
-            if (this._mode === SceneMode.SCENE3D) {
-                mesh = PolygonPipeline.computeSubdivision(cleanedPositions, indices, this._granularity);
-                mesh = Polygon._appendTextureCoordinates(tangentPlane, positions2D, mesh);
-                mesh = PolygonPipeline.scaleToGeodeticHeight(this.ellipsoid, mesh, this.height);
-                mesh = MeshFilters.reorderForPostVertexCache(mesh);
-                mesh = MeshFilters.reorderForPreVertexCache(mesh);
-
-                mesh.attributes.position2D = { // Not actually used in shader
+        if (this._mode === SceneMode.SCENE3D) {
+            mesh.attributes.position2D = { // Not actually used in shader
                     value : [0.0, 0.0]
                 };
-                mesh.attributes.position3D = mesh.attributes.position;
-                delete mesh.attributes.position;
-
-                meshes = MeshFilters.fitToUnsignedShortIndices(mesh);
-            } else {
-                mesh = PolygonPipeline.computeSubdivision(cleanedPositions, indices, this._granularity);
-                mesh = Polygon._appendTextureCoordinates(tangentPlane, positions2D, mesh);
-                mesh = PolygonPipeline.scaleToGeodeticHeight(this.ellipsoid, mesh, this.height);
-                mesh = MeshFilters.reorderForPostVertexCache(mesh);
-                mesh = MeshFilters.reorderForPreVertexCache(mesh);
-                mesh = MeshFilters.projectTo2D(mesh, this._projection);
-                meshes = MeshFilters.fitToUnsignedShortIndices(mesh);
-            }
+            mesh.attributes.position3D = mesh.attributes.position;
+            delete mesh.attributes.position;
+        } else {
+            mesh = MeshFilters.projectTo2D(mesh, this._projection);
         }
+        meshes = MeshFilters.fitToUnsignedShortIndices(mesh);
 
         return meshes;
-    };
-
-    Polygon._isModeTransition = function(oldMode, newMode) {
-        // SCENE2D, COLUMBUS_VIEW, and MORPHING use the same rendering path, so a
-        // transition only occurs when switching from/to SCENE3D
-        return ((oldMode !== newMode) &&
-                ((oldMode === SceneMode.SCENE3D) ||
-                 (newMode === SceneMode.SCENE3D)));
     };
 
     Polygon.prototype._getGranularity = function(mode) {
@@ -383,21 +420,6 @@ define([
         }
 
         return this.scene2D.granularity || this.granularity;
-    };
-
-    Polygon.prototype._syncMorphTime = function(mode) {
-        switch (mode) {
-        case SceneMode.SCENE3D:
-            this.morphTime = 1.0;
-            break;
-
-        case SceneMode.SCENE2D:
-        case SceneMode.COLUMBUS_VIEW:
-            this.morphTime = 0.0;
-            break;
-
-        // MORPHING - don't change it
-        }
     };
 
     /**
@@ -414,70 +436,96 @@ define([
      * @see Polygon#render
      */
     Polygon.prototype.update = function(context, sceneState) {
-
         if (!this.ellipsoid) {
-            throw new DeveloperError("this.ellipsoid must be defined.");
+            throw new DeveloperError('this.ellipsoid must be defined.');
         }
 
         var mode = sceneState.mode;
         var granularity = this._getGranularity(mode);
 
         if (granularity < 0.0) {
-            throw new DeveloperError("this.granularity and scene2D/scene3D overrides must be greater than zero.");
+            throw new DeveloperError('this.granularity and scene2D/scene3D overrides must be greater than zero.');
         }
 
-        if (this.show) {
-            this._syncMorphTime(mode);
+        if (!this.show) {
+            return;
+        }
+
+        if (this._ellipsoid !== this.ellipsoid) {
+            this._createVertexArray = true;
+            this._ellipsoid = this.ellipsoid;
+        }
+
+        if (this._height !== this.height) {
+            this._createVertexArray = true;
+            this._height = this.height;
+        }
+
+        if (this._granularity !== granularity) {
+            this._createVertexArray = true;
+            this._granularity = granularity;
+        }
+
+        if (this._bufferUsage !== this.bufferUsage) {
+            this._createVertexArray = true;
+            this._bufferUsage = this.bufferUsage;
+        }
+
+        var projection = sceneState.scene2D.projection;
+        if (this._projection !== projection) {
+            this._createVertexArray = true;
+            this._projection = projection;
+        }
+
+        if (this._mode !== mode) {
+            // SCENE2D, COLUMBUS_VIEW, and MORPHING use the same rendering path, so a
+            // transition only occurs when switching from/to SCENE3D
+            this._createVertexArray = this._mode === SceneMode.SCENE3D || mode === SceneMode.SCENE3D;
             this._mode = mode;
 
-            var projection = sceneState.scene2D.projection;
-
-            if (this._createVertexArray ||
-                    (this._ellipsoid !== this.ellipsoid) ||
-                    (this._height !== this.height) ||
-                    (this._granularity !== granularity) ||
-                    (this._bufferUsage !== this.bufferUsage) ||
-                    (Polygon._isModeTransition(this._mode, mode)) ||
-                    (this._projection !== projection)) {
-                this._createVertexArray = false;
-                this._ellipsoid = this.ellipsoid;
-                this._height = this.height;
-                this._granularity = granularity;
-                this._bufferUsage = this.bufferUsage;
-
-                this._projection = projection;
-
-                this._vertices.update(context, this._positions, this._createMeshes(), this.bufferUsage);
+            if (typeof mode.morphTime !== 'undefined') {
+                this.morphTime = mode.morphTime;
             }
+        }
 
-            if (!this._rs) {
-                // TODO: Should not need this in 2D/columbus view, but is hiding a triangulation issue.
-                this._rs = context.createRenderState({
-                    cull : {
-                        enabled : true,
-                        face : CullFace.BACK
-                    },
-                    blending : BlendingState.ALPHA_BLEND
-                });
-            }
+        if (this._createVertexArray) {
+            this._createVertexArray = false;
+            this._vertices.update(context, this._createMeshes(), this.bufferUsage);
+        }
 
-            // Recompile shader when material changes
-            if (!this._material || (this._material !== this.material)) {
-                this._material = this.material || new ColorMaterial();
+        if (!this._rs) {
+            // TODO: Should not need this in 2D/columbus view, but is hiding a triangulation issue.
+            this._rs = context.createRenderState({
+                cull : {
+                    enabled : true,
+                    face : CullFace.BACK
+                },
+                blending : BlendingState.ALPHA_BLEND
+            });
+        }
 
-                var fsSource =
-                    "#line 0\n" +
-                    Noise +
-                    "#line 0\n" +
-                    this.material._getShaderSource() +
-                    "#line 0\n" +
-                    PolygonFS;
+        // Recompile shader when material or lighting changes
+        if (typeof this._material === 'undefined' ||
+            this._material !== this.material ||
+            this._affectedByLighting !== this.affectedByLighting) {
 
-                this._sp = this._sp && this._sp.release();
-                this._sp = context.getShaderCache().getShaderProgram(PolygonVS, fsSource, attributeIndices);
+            this.material = this.material || new ColorMaterial();
+            this._material = this.material;
+            this._affectedByLighting = this.affectedByLighting;
 
-                this._drawUniforms = combine(this._uniforms, this.material._uniforms);
-            }
+            var fsSource =
+                '#line 0\n' +
+                Noise +
+                '#line 0\n' +
+                this._material._getShaderSource() +
+                (this._affectedByLighting ? '#define AFFECTED_BY_LIGHTING 1\n' : '') +
+                '#line 0\n' +
+                PolygonFS;
+
+            this._sp = this._sp && this._sp.release();
+            this._sp = context.getShaderCache().getShaderProgram(PolygonVS, fsSource, attributeIndices);
+
+            this._drawUniforms = combine(this._uniforms, this._material._uniforms);
         }
     };
 

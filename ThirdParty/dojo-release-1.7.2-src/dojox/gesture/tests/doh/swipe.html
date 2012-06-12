@@ -1,0 +1,100 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+		<title>dojox.gesture.swipe Unit Test</title>
+	</head>
+	<style type="text/css">
+		@import "../../../../util/doh/robot/robot.css";
+		
+		#outer {
+			width: 350px;
+			height: 200px;
+			border: 1px solid #54A201;
+			background-color: #54A201;			
+		}
+		#inner {
+			width: 250px;
+			height: 80px;
+			border: 1px solid #7FB0DB;
+			background-color: #7FB0DB
+		}
+		
+	</style>
+	<script type="text/javascript" src="../../../../dojo/dojo.js" djConfig="isDebug:true"></script>
+	<script type="text/javascript">
+		require([
+			"dojo/_base/html",
+			"dojo/ready",
+			"dojo/on",
+			"doh/runner",
+			"dojox/gesture/swipe"
+		], function(html, ready, on, doh, swipe){			
+			ready(function(){
+				var inner = html.byId("inner");
+				var h1, h2;
+				doh.register("dojox.gesture.swipe", [
+					function swipe_swipeEnd(){
+						var executed, endExecuted;
+						var swipeType, swipeTarget, swipeDx, swipeDy;
+						h1 = on(inner, swipe, function(e){
+							executed = true;
+							swipeType = e.type;
+							swipeTarget = e.target;
+							swipeDx = e.dx;
+							swipeDy = e.dy;
+						});
+						var swipeEndType, swipeEndTarget, swipeEndDx, swipeEndDy;
+						h2 = on(inner, swipe.end, function(e){
+							endExecuted = true;
+							swipeEndType = e.type;
+							swipeEndTarget = e.target;
+							swipeEndDx = e.dx;
+							swipeEndDy = e.dy;
+						});
+						on.emit(inner, 'mousedown', {screenX: 100, screenY: 200});
+						on.emit(inner, 'mousemove', {screenX: 260, screenY: 100});
+						on.emit(inner, 'mouseup', {screenX: 300, screenY: 80});
+						
+						// swipe assertions
+						doh.assertEqual('swipe', swipeType);
+						doh.assertEqual(inner, swipeTarget);
+						doh.assertEqual(160, swipeDx);
+						doh.assertEqual(-100, swipeDy);
+						
+						// swipe.end assertions
+						doh.assertEqual('swipe.end', swipeEndType);
+						doh.assertEqual(inner, swipeEndTarget);
+						doh.assertEqual(200, swipeEndDx);
+						doh.assertEqual(-120, swipeEndDy);	
+						
+						doh.assertTrue(executed, 'dojox.gesture.swipe not fired!');
+						doh.assertTrue(endExecuted, 'dojox.gesture.swipe.end not fired!');
+					}, 
+					function disconnect(){
+						var elements = swipe._elements;
+						h1.remove();
+						doh.assertTrue(elements[0].handles.swipe === 0, 'dojox.gesture.swipe handle not cleared!');
+						
+						h2.remove();
+						doh.assertTrue(elements.length === 0, 'dojox.gesture.swipe elements not cleared!');
+					},
+					function destroy(){
+						//re-connect them back
+						h1 = on(inner, swipe, function(e){ });
+						h2 = on(inner, swipe.end, function(e){ });
+						//destroy them all		
+						swipe.destroy();
+						doh.assertTrue(swipe._elements === null, 'dojox.gesture.swipe not destroyed!');
+					}
+				]);
+				doh.run();
+			});
+		});
+	</script>
+	<body class='claro'>
+		<div id="outer">
+			outer<div id="inner">inner</div>
+		</div>
+	</body>
+</html>

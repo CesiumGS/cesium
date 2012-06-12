@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+	<title>Wizard Test</title>
+
+	<!-- required: a default theme file, and Wizard styles -->
+	<link rel="stylesheet" id="themeStyles" href="../../../dijit/themes/claro/claro.css">
+	<link rel="stylesheet" href="../Wizard/Wizard.css">
+	
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js" data-dojo-config="isDebug:true, parseOnLoad: true"></script>
+
+	<!-- do not use! only for testing dynamic themes -->
+	<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("dojox.widget.Wizard");
+	
+		dojo.require("dijit.Dialog");
+		dojo.require("dijit.layout.AccordionContainer");
+		dojo.require("dijit.layout.ContentPane");
+		dojo.require("dijit.layout.TabContainer");
+		dojo.require("dijit.layout.BorderContainer");
+		
+		function cancel() {
+			alert("Wizard Cancelled!");
+		}
+		
+		function done() {
+			alert("Wizard Done!");
+		}
+		
+		var programatic_Example = function(){
+			
+			var wizard = new dojox.widget.Wizard({
+				style:"width:300px; height:300px"
+			}).placeAt("programaticContainer");
+			
+			var contents = [
+				"Pane 1 content", "Pane 2 content", "<h3>Done!</h3>"
+			];
+			
+			dojo.forEach(contents, function(term){
+				new dojox.widget.WizardPane({
+					content: term
+				}).placeAt(wizard);
+			});
+			wizard.startup();
+			
+		}
+		
+		dojo.addOnLoad(programatic_Example)
+	</script>
+
+	<style type="text/css">
+		@import "../../../dijit/tests/css/dijitTests.css"; 
+		body {
+			font-family : sans-serif;
+		}
+		.floater {
+			float:left;
+			margin-right:15px;
+			margin-bottom:8px;
+		}
+	</style>
+</head>
+
+<body class="claro">
+
+	<h1 class="testTitle">dojox.widget.Wizard tests</h1>
+
+	<div class="floater">
+		<p>Test a wizard in a Dialog:</p>
+		<button data-dojo-type="dijit.form.Button" id="showDialog">
+			Show Dialog
+			<script type="dojo/connect" data-dojo-event="onClick">
+				dijit.byId("wizardDialog").show();
+			</script>
+		</button>
+		
+		<div id="wizardDialog" data-dojo-type="dijit.Dialog" data-dojo-props="title:'Wizard Dialog'">
+			<div data-dojo-type="dojox.widget.Wizard" data-dojo-props="style:'height:300px; width:400px'">
+				<div dojoType="dojox.widget.WizardPane">
+					<p>The next two (hidden) children container AccordionContainers. You'll have to be
+						more careful about the styling / sizing, as the child wants to take 100% of
+						it's height. You can size explicitly if you like, or add margin-bottom to
+						leave room for the buttons
+					</p>
+				</div>
+				<div dojoType="dojox.widget.WizardPane" style="padding:8px">
+					<div dojoType="dijit.layout.AccordionContainer">
+						<div title="foo" dojoType="dijit.layout.ContentPane">
+							foo.
+						</div>
+						<div title="bar" dojoType="dijit.layout.ContentPane">
+							foo.
+						</div>
+					</div>
+				</div>
+				<div dojoType="dojox.widget.WizardPane" style="padding:8px">
+					<div dojoType="dijit.layout.BorderContainer">
+						<div region="left" style="width:75px" dojoType="dijit.layout.ContentPane">
+							left pane
+						</div>
+						<div region="center" dojoType="dijit.layout.ContentPane">
+							main pane
+						</div>
+						<div dojoType="dijit.layout.ContentPane" region="right" style="width:75px">
+							right pane
+						</div>
+					</div>
+				</div>
+				<div dojoType="dojox.widget.WizardPane" style="padding:8px">
+					<div dojoType="dijit.layout.TabContainer">
+						<div title="tab1" dojoType="dijit.layout.ContentPane">
+							foo
+						</div>
+						<div title="tab2" dojoType="dijit.layout.ContentPane">
+							foo
+						</div>
+						<div title="tab3" dojoType="dijit.layout.ContentPane">
+							foo
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="floater">
+		
+		<p>This example shows a wizard with customized button labels.</p>
+		
+		<div id="wizard1" data-dojo-type="dojox.widget.Wizard" data-dojo-props="
+			style:'width:400px; height:200px',
+			nextButtonLabel:'Go on'
+		">
+			<div data-dojo-type="dojox.widget.WizardPane" data-dojo-props='title:"Tab 1"'>
+				<h1>Tab 1</h1>
+				<p>Sized content, box one</p>
+			</div>
+			<div data-dojo-type="dojox.widget.WizardPane">
+				<h1>Tab 2</h1>
+			</div>
+			<div data-dojo-type="dojox.widget.WizardPane">
+				<h1>Tab 3</h1>
+	
+				You won't be able to come back, but you can finish now...
+				<script type='dojo/method' data-dojo-event="doneFunction">
+					done();
+					console.log('inline done function called');
+				</script>
+			</div>
+			<div data-dojo-type="dojox.widget.WizardPane" data-dojo-props="canGoBack:false">
+				<h1>Tab 4</h1>
+	
+				... and now you can't go back.
+			</div>
+			<div data-dojo-type="dojox.widget.WizardPane" data-dojo-props='doneFunction:done'>
+				<h1>Tab 5</h1>
+				... and now you can finish up.
+			</div>
+			<script type="dojo/method" event="cancelFunction">
+				alert("dojo/method cancel function on container! bye.")
+				this.destroy();
+			</script>
+		</div>
+	</div>
+	
+	<div class="floater">
+		
+		<p>The next shows the option to hide the inactive buttons, with a smaller width...</p>
+	
+		<div id="wizard2" dojoType="dojox.widget.Wizard" hideDisabled="true" style="width: 300px; height: 200px;">
+			<div dojoType="dojox.widget.WizardPane">
+				<h1>Step 1 of 3</h1>
+				<p>Lorem ipsum dolor sit amet</p>
+			</div>
+			<div dojoType="dojox.widget.WizardPane">
+				<h1>Step 2 of 3</h1>
+				<p>consectetur adipisicing elit</p>
+			</div>
+			<div dojoType="dojox.widget.WizardPane">
+				<h1>Step 3 of 3</h1>
+				<p>sed do eiusmod tempor incididunt ut labore et dolore magna aliqua</p>
+			</div>
+		</div>
+
+	</div>
+	<div class="floater">
+		
+		<p>Layout Children</p>
+		
+		<div id="wizard2lay" dojoType="dojox.widget.Wizard" hideDisabled="true" style="width: 300px; height: 240px;">
+			<div dojoType="dojox.widget.WizardPane">
+				<p>The next two (hidden) children container AccordionContainers. You'll have to be
+					more careful about the styling / sizing, as the child wants to take 100% of
+					it's height. You can size explicitly if you like, or add margin-bottom to
+					leave room for the buttons
+				</p>
+			</div>
+			<div dojoType="dojox.widget.WizardPane" style="padding:8px; margin-bottom:35px">
+				<div dojoType="dijit.layout.AccordionContainer">
+					<div title="foo" dojoType="dijit.layout.ContentPane">
+						foo.
+					</div>
+					<div title="bar" dojoType="dijit.layout.ContentPane">
+						foo.
+					</div>
+				</div>				
+			</div>
+			<div dojoType="dojox.widget.WizardPane" style="padding:8px; margin-bottom:35px">
+				<div dojoType="dijit.layout.BorderContainer">
+					<div region="left" style="width:75px" dojoType="dijit.layout.ContentPane">
+						left pane
+					</div>
+					<div region="center" dojoType="dijit.layout.ContentPane">
+						main pane
+					</div>
+					<div dojoType="dijit.layout.ContentPane" region="right" style="width:75px">
+						right pane
+					</div>
+				</div>
+			</div>
+			<div dojoType="dojox.widget.WizardPane" style="padding:8px; margin-bottom:35px">
+				<div dojoType="dijit.layout.TabContainer">
+					<div title="tab1" dojoType="dijit.layout.ContentPane">
+						foo
+					</div>
+					<div title="tab2" dojoType="dijit.layout.ContentPane">
+						foo
+					</div>
+					<div title="tab3" dojoType="dijit.layout.ContentPane">
+						foo
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div class="floater">
+	
+		<p>The next shows blocking moving to the next step with a JS function...</p>
+	
+		<script>
+			function checkAgreement(name) {
+				var frm = document.forms[name || 'acceptAgreement'];
+				var accept = frm.accept;
+				if (!accept.checked) {
+					return "You must agree to the terms before continuing.";
+				}
+			}
+		</script>
+		
+		<div id="wizard3" data-dojo-type="dojox.widget.Wizard" style="width: 420px; height: 400px; margin:0 auto;">
+			<div dojoType="dojox.widget.WizardPane" id="Agreement1" passFunction="checkAgreement">
+				<h1>Agreement Terms</h1>
+	
+				<div dojoType="dijit.layout.ContentPane" style="width:400px; border:1px solid #b7b7b7; background:#fff; padding:8px; margin:0 auto; height:200px; overflow:auto; "
+					href="../../../dojo/LICENSE"></div>
+	
+				<form action="#" name="acceptAgreement">
+					<p>
+					<input type="checkbox" name="accept" value="true"/> I accept the terms of this agreement.
+					</p>
+				</form>
+			</div>
+			<div dojoType="dojox.widget.WizardPane" canGoBack="false">
+				<h1>Complete</h1>
+				<p>The license has been accepted.</p>
+			</div>
+		</div>
+
+	</div>
+
+	<div class="floater">
+		
+		<p>Another like above, but with dojo/method passFunction</p>
+		<div id="wizard4" dojoType="dojox.widget.Wizard" style="width: 500px; height: 400px;">
+			<div data-dojo-type="dojox.widget.WizardPane" id="Agreement12">
+				<script type="dojo/method" data-dojo-event="passFunction">
+					return checkAgreement("acceptAgreementDos");
+				</script>
+				<h1>Agreement Terms</h1>
+
+				<div data-dojo-type="dijit.layout.ContentPane" data-dojo-props='
+					href:"../../../dojo/LICENSE",
+					style:"width:400px; border:1px solid #b7b7b7; background:#fff; padding:8px; margin:0 auto; height:200px; overflow:auto; "
+				'></div>
+
+				<form action="#" name="acceptAgreementDos">
+					<p>
+					<input type="checkbox" name="accept" value="true"/> I accept the terms of this agreement.
+					</p>
+				</form>
+			</div>
+			<div data-dojo-type="dojox.widget.WizardPane" data-dojo-props="canGoBack:false">
+				<h1>Complete</h1>
+				<p>The license has been accepted.</p>
+			</div>
+		</div>	
+	</div>
+	
+	<div class="floater" id="programaticContainer">
+		<p>A Programatic Wizard should appear here</p>
+	</div>
+
+	<div class="floater">
+		<p>This should overflow, <em>badly</em>:</p>
+		<div id="weezard" data-dojo-type="dojox.widget.Wizard" data-dojo-props="
+			style:'height:300px; width:300px'
+		">
+			<div data-dojo-type="dojox.widget.WizardPane" data-dojo-props="
+				href:'../../../dojo/LICENSE'
+			"></div>
+			<div data-dojo-type="dojox.widget.WizardPane" data-dojo-props="
+				href:'../../../dojo/LICENSE'
+			"></div>
+			<div data-dojo-type="dojox.widget.WizardPane" data-dojo-props="
+				href:'../../../dojo/LICENSE'
+			"></div>
+		</div>
+	</div>
+	
+	<div style="clear:both">That's all, folks.</div>
+	
+</body>
+</html>
+
+

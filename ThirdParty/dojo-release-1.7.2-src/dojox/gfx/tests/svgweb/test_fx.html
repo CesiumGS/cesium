@@ -1,0 +1,104 @@
+<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" >
+<head>
+<title>Testing animation</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+	@import "../../../../dojo/resources/dojo.css";
+	@import "../../../../dijit/tests/css/dijitTests.css";
+</style>
+<!-- SVGWEB { -->
+<meta name="svg.render.forceflash" content="true"/>
+<script src="svgweb/src/svg.js" data-path="svgweb/src"></script>
+<script src="../../../../dojo/dojo.js" djConfig="isDebug:true,forceGfxRenderer:'svg'" type="text/javascript"></script>
+<!-- } -->
+<script type="text/javascript">
+dojo.require("dojox.gfx");
+dojo.require("dojox.gfx.fx");
+dojo.require("dojo.colors");
+
+var rect, text;
+
+var makeShapes = function(){
+	var surface = dojox.gfx.createSurface("test", 500, 500);
+	/* SVGWEB { */
+	surface.whenLoaded(function() {
+	rect = surface.createRect({x: 100, y: 100, width: 300, height: 300}).
+		setFill("yellow").setStroke({
+			color: "green",
+			width: 5,
+			join: "round"
+		});
+	text = surface.createText({x: 250, y: 250, text: "Hello!", align: "middle"})
+		.setFill("black").setFont({family: "serif", size: "10pt"});
+	});
+	/* } */
+};
+
+dojo.addOnLoad(makeShapes);
+
+var animateStroke = function(){
+	var anim = dojox.gfx.fx.animateStroke({
+		duration:	5000,
+		shape: 		rect,
+		color:		{start: "green", end: "red"},
+		width:		{start: 5, end: 15},
+		join:		{values: ["bevel", "round"]}
+	});
+	dojo.byId("stroke").disabled = "disabled";
+	dojo.connect(anim, "onEnd", function(){ dojo.byId("stroke").disabled = ""; });
+	anim.play();
+};
+
+var animateFill = function(){
+	var anim = dojox.gfx.fx.animateFill({
+		duration:	5000,
+		shape: 		rect,
+		color:		{start: "yellow", end: "blue"}
+	});
+	dojo.byId("fill").disabled = "disabled";
+	dojo.connect(anim, "onEnd", function(){ dojo.byId("fill").disabled = ""; });
+	anim.play();
+};
+
+var animateFont = function(){
+	var anim = dojox.gfx.fx.animateFont({
+		duration:	5000,
+		shape: 		text,
+		variant:	{values: ["normal", "small-caps"]},
+		size:		{start: 10, end: 50, units: "pt"}
+	});
+	dojo.byId("font").disabled = "disabled";
+	dojo.connect(anim, "onEnd", function(){ dojo.byId("font").disabled = ""; });
+	anim.play();
+};
+
+var animateTransform = function(){
+	var anim = dojox.gfx.fx.animateTransform({
+		duration:	5000,
+		shape: 		text,
+		transform:	[
+			{name: "rotategAt", start: [0, 250, 250], end: [360, 350, 350]},
+			{name: "translate", start: [0, 0], end: [100, 100]}
+		]
+	});
+	dojo.byId("transform").disabled = "disabled";
+	dojo.connect(anim, "onEnd", function(){ dojo.byId("transform").disabled = ""; });
+	anim.play();
+};
+</script>
+</head>
+<body>
+<h1>Testing animation</h1>
+<p>
+	<button id="stroke" onclick="animateStroke();">Stroke</button>
+	&nbsp;
+	<button id="fill" onclick="animateFill();">Fill</button>
+	&nbsp;
+	<button id="font" onclick="animateFont();">Font</button>
+	&nbsp;
+	<button id="transform" onclick="animateTransform();">Transform</button>
+</p>
+<div id="test" style="width: 500px; height: 500px;"></div>
+<p>That's all Folks!</p>
+</body>
+</html>

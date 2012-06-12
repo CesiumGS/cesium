@@ -1,0 +1,10 @@
+{ identifier: 'abbr', 
+  items: [
+		{ abbr:'ec', name:'Ecuador',           capital:'Quito' },
+		{ abbr:'sv', name:'El Salvador',       capital:'San Salvador' },
+		{ abbr:'gq', name:'Equatorial Guinea', capital:'Malabo' },
+		{ abbr:'er', name:'Eritrea',           capital:'Asmara' },
+		{ abbr:'ec', name:'Egypt',             capital:'Cairo' },
+		{ abbr:'ee', name:'Estonia',           capital:'Tallinn' },
+		{ abbr:'et', name:'Ethiopia',          capital:'Addis Ababa' }
+]}

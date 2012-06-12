@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>doh.robot Textarea textDir Tests</title>
+	
+		<style>
+			@import "../../../../../util/doh/robot/robot.css";
+		</style>
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../../../dojo/dojo.js">
+		</script>		
+			
+		<script type="text/javascript">
+			dojo.require("dijit.robotx");
+
+			dojo.ready(function(){
+				doh.robot.initRobot('../test_Textarea.html');
+				var textarea;
+				
+				// execute some test as soon as the widget gets focus
+				var focusThenRun = function(widget, fcn){
+					if(!widget.focused){
+						var handler = widget.connect(widget, '_onFocus', function(){
+							widget.disconnect(handler);
+							setTimeout(fcn, 1);
+						});
+						widget.focus();
+					}else{
+						fcn();
+					}
+				};
+
+				doh.register("LTR textarea", [
+					{
+						name: "initial text direction of empty 'blankL'",
+						
+						setUp: function(){
+							textarea = dijit.byId("blankL");
+							modifier = dojo.isMac ? {meta: true} : {ctrl: true};
+						},
+
+						runTest: function(){
+							doh.is("ltr",textarea.focusNode.dir,"direction of :" + textarea.id);
+						}
+					},				
+					{
+						name: "write in English in 'blankL'",
+						timeout: 3000,
+
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							focusThenRun(textarea, function(){
+								doh.robot.typeKeys('Hello!', 1, 300);
+								doh.robot.sequence(d.getTestCallback(function(){
+									doh.is("ltr",textarea.focusNode.dir,"direction of :" + textarea.id);
+								}), 400);
+							});
+
+							return d;
+						}
+					},
+					{
+						name: "paste Hebrew in 'blankL'",
+						timeout: 2000,
+						
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							focusThenRun(textarea, function(){
+								doh.robot.setClipboard("\u05e9\u05dc\u05d5\u05dd\u0021",'text/html');
+
+								doh.robot.keyPress("a", 400, modifier);
+								doh.robot.keyPress(dojo.keys.DELETE, 100, {});
+
+								doh.robot.keyPress("v", 300, modifier);
+								doh.robot.sequence(d.getTestCallback(function(){
+									doh.is("ltr",textarea.focusNode.dir,"direction of :" + textarea.id);
+								}), 400);
+							});
+							
+							return d;
+						}
+					}
+				]);				
+				
+				doh.register("RTL textarea", [
+					{
+						name: "initial text direction of empty 'blankR'",
+						
+						setUp: function(){
+							textarea = dijit.byId("blankR");
+						},
+
+						runTest: function(){
+							doh.is("rtl",textarea.focusNode.dir,"direction of :" + textarea.id);
+						}
+					},
+					{
+						name: "write in English in 'blankR'",
+						timeout: 3000,
+
+						runTest: function(){
+							var d = new doh.Deferred();
+ 
+							focusThenRun(textarea, function(){
+								doh.robot.typeKeys('Hello!', 1, 300);
+								doh.robot.sequence(d.getTestCallback(function(){
+									doh.is("rtl",textarea.focusNode.dir,"direction of :" + textarea.id);
+								}), 400);
+							});
+
+							return d;
+						}
+					},				
+					{
+						name: "paste Hebrew in 'blankR'",
+						timeout: 2000,
+	
+						runTest: function(){
+							var d = new doh.Deferred();
+							
+							focusThenRun(textarea, function(){
+								doh.robot.setClipboard("\u05e9\u05dc\u05d5\u05dd\u0021",'text/html');
+
+								doh.robot.keyPress("a", 400, modifier);
+								doh.robot.keyPress(dojo.keys.DELETE, 100, {});
+
+								doh.robot.keyPress("v", 300, modifier);
+								doh.robot.sequence(d.getTestCallback(function(){
+									doh.is("rtl",textarea.focusNode.dir,"direction of :" + textarea.id);
+								}), 400);
+							});
+
+							return d;
+						}
+					}
+				]);	
+
+				doh.register("Contextual textarea", [
+					{
+						name: "initial text direction of empty 'blankA'",
+												
+						setUp: function(){
+							textarea = dijit.byId("blankA");
+						},
+
+						runTest: function(){
+							doh.is(textarea.isLeftToRight() ? "ltr" : "rtl", textarea.focusNode.dir,
+									"direction of :" + textarea.id);
+						}
+					},
+					{
+						name: "text direction cut/paste English",
+						timeout: 6000,
+
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							focusThenRun(textarea, function(){
+								doh.robot.setClipboard("Hello again I'm pasted!!!",'text/html');
+
+								doh.robot.keyPress("a", 400, modifier);
+								doh.robot.keyPress(dojo.keys.DELETE, 100, {});
+
+								doh.robot.keyPress("v", 400, modifier);
+								doh.robot.sequence(d.getTestCallback(function(){
+									doh.is("ltr",textarea.focusNode.dir,"direction of :" + textarea.id);
+								}), 900);
+							});
+
+							return d;
+						}
+					},
+					{
+						name: "text direction paste Hebrew before English",
+						timeout: 6000,
+
+						runTest: function(){
+							var d = new doh.Deferred();
+
+							focusThenRun(textarea, function(){
+								doh.robot.setClipboard("\u05d0\u05e0\u05d9\u0020\u05d0\u05d5\u05de\u05e8\u05ea\u003a\u0020",'text/html');
+
+								dojo.isMac ? doh.robot.keyPress("a", 100, {ctrl:true}): doh.robot.keyPress(dojo.keys.HOME, 100, {});	
+
+								doh.robot.keyPress("v", 400, modifier);
+								doh.robot.sequence(d.getTestCallback(function(){
+									doh.is("rtl",textarea.focusNode.dir,"direction of :" + textarea.id);
+								}), 400);
+							});
+
+							return d;
+						}
+					}
+				]);
+
+				doh.register("Test the programmatic textareas in the tab container", [
+					{
+						name: "initial direction of the textareas",
+
+						setUp: function(){
+							textareaL = dijit.byId("programmaticLTR");
+							textareaR = dijit.byId("programmaticRTL");
+							textareaA = dijit.byId("programmaticAuto");
+						},
+						runTest: function(){
+							doh.is("ltr",textareaL.focusNode.dir,"Initial direction of - 'programmaticLTR'");
+							doh.is("rtl",textareaR.focusNode.dir,"Initial direction of - 'programmaticRTL'");
+							doh.is("ltr",textareaA.focusNode.dir,"Initial direction of - 'programmaticAUTO'");
+						}
+					},
+					{
+						name: "direction of textareas after Hebrew button in second tab is pressed",
+
+						runTest: function(){
+							var id = "buttonHebrew";
+							var buttonHebrew = dojo.byId("buttonHebrew");
+
+							buttonHebrew.click();
+
+							doh.is("ltr",textareaL.focusNode.dir,"Initial direction of - 'programmaticLTR'");
+							doh.is("rtl",textareaR.focusNode.dir,"Initial direction of - 'programmaticRTL'");
+							doh.is("rtl",textareaA.focusNode.dir,"Initial direction of - 'programmaticAUTO'");
+						}
+					},
+					{
+						name: "direction of textareas after English button in second tab is pressed",
+
+						runTest: function(){
+							var buttonEnglish = dojo.byId("buttonEnglish");
+
+							buttonEnglish.click();
+
+							doh.is("ltr",textareaL.focusNode.dir,"Initial direction of - 'programmaticLTR'");
+							doh.is("rtl",textareaR.focusNode.dir,"Initial direction of - 'programmaticRTL'");
+							doh.is("ltr",textareaA.focusNode.dir,"Initial direction of - 'programmaticAUTO'");
+						}
+					}
+				]);
+
+				doh.register("Test the large textareas", [
+					{
+						name: "initial direction of the textareas",
+
+						setUp: function(){
+							textareaL = dijit.byId("largeTextAreaLTR");
+							textareaR = dijit.byId("largeTextAreaRTL");
+						},
+
+						runTest: function(){
+							doh.is("ltr",textareaL.focusNode.dir,"Initial direction of - 'programmaticLTR'");
+							doh.is("rtl",textareaR.focusNode.dir,"Initial direction of - 'programmaticRTL'");
+						}
+					}
+				]);
+			
+				doh.run();
+			});
+		</script>
+	</head>
+</html>

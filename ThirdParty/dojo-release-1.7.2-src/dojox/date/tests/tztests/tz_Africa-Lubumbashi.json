@@ -1,0 +1,12 @@
+({
+	name: "date.timezone.Africa-Lubumbashi",
+	runTest: function(t){
+		var tz = "Africa/Lubumbashi";
+		doh.checkDate({tzOffset: -120, tzAbbr: "CAT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: -120, tzAbbr: "CAT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: -120, tzAbbr: "CAT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: -120, tzAbbr: "CAT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: -120, tzAbbr: "CAT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: -120, tzAbbr: "CAT"}, 1246789800000, tz, 0);
+	}
+})

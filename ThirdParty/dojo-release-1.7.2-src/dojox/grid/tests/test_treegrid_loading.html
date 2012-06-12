@@ -1,0 +1,151 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>dojox.grid.TreeGrid Tests</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../resources/Grid.css";
+		@import "../resources/tundraGrid.css";
+		.grid {
+			width: 70em;
+			height: 15em;
+		}
+	</style>
+	<script type="text/javascript" src="../../../dojo/dojo.js" 
+		djConfig="isDebug:false, parseOnLoad: false"></script>
+	<script type="text/javascript">
+		dojo.require("dojox.grid.TreeGrid");
+		dojo.require("dojox.data.JsonRestStore");
+		dojo.require("dojo.parser");
+		
+		var data_part = {};
+		var data_full = {};
+		store = null;
+
+		var dataService = function(query, opts){
+			var d = new dojo.Deferred();
+			if(typeof query != "object"){
+				setTimeout(function(){
+					d.callback(data_full[query]);
+				}, 5000);
+				return d;
+			}else{
+				var data = [];
+				for(var i in data_part){
+					data.push(data_part[i]);
+				}
+				d.callback(data);
+				return d;
+			}
+		}
+		dataService.servicePath = "/";
+
+		dojo.addOnLoad(function(){
+			dojox.rpc._sync = false;
+			dojo.xhrGet({
+				url: "support/gamedata.json",
+				handleAs: "json",
+				sync: true
+			}).addCallback(function(res){
+				var p2 = res.items[1];
+				p2.seasns.push({
+					games: [],
+					id: 60,
+					label: "Season 3",
+					numGames: 0,
+					numQtrs: 0,
+					totAst: 0,
+					totPts: 0,
+					totReb: 0,
+					totTP: 0
+				});
+				for(var i = 0, l = p2.seasns.length; i<l; i++){
+					var item = p2.seasns[i];
+					data_full[item.id] = dojo.mixin({}, item);
+					delete item['games'];
+					item['$ref'] = item.id;
+					data_part[item.id] = dojo.mixin({}, item);
+				}
+			});
+			store = new dojox.data.JsonRestStore({
+				service: dataService,
+				cacheByDefault: true
+			});
+			dojo.parser.parse();
+			dojo.connect(window, "onresize", grid, "resize");
+		});
+
+		function formatTime(value, rowIdx){
+			var hrs = Math.floor(value / 60) + "";
+			var mins = (value % 60) + "";
+			while (hrs.length < 2){
+				hrs = "0" + hrs;
+			}
+			while (mins.length < 2){
+				mins = "0" + mins;
+			}
+			return hrs + ":" + mins;
+		}
+		
+		function summaryFormatter(value, rowIdx, cell, sing, plur){
+			var str;
+			if(rowIdx >= 0){
+				return value;
+			}
+			if(rowIdx == -1){
+				str = "Total (${numItems} ${displayName}):";
+			}else{
+				str = "${numItems} ${displayName}";
+			}
+			return dojo.string.substitute(str, {numItems: value, 
+						displayName: (value == 1) ? sing : plur});			
+		}
+		function quarterSummary(value, rowIdx){
+			return summaryFormatter(value, rowIdx, this, "Quarter", "Quarters");
+		}
+		function gameSummary(value, rowIdx){
+			return summaryFormatter(value, rowIdx, this, "Game", "Games");
+		}
+		function seasonSummary(value, rowIdx){
+			return summaryFormatter(value, rowIdx, this, "Season", "Seasons");
+		}
+	</script>
+</head>
+<body class="tundra">
+	<h1 class="testTitle">Test: dojox.tests.grid.TreeGrid</h1>
+	<h4 class="testSubtitle">dojox.grid.TreeGrid Large 4-Level - calculated totals and openAtLevels</h4>
+	<table dojoType="dojox.grid.TreeGrid" class="grid" style="height: 45em;width: 100%;"
+		store="store" rowsPerPage="20" jsId="grid" rowSelector="true" openAtLevels="false,true,3">
+			<thead>
+				<tr>
+					<th field="label" relWidth="2" formatter="seasonSummary">Players</th>
+					<th field="games" itemAggregates="numGames">
+						<table>
+							<thead>
+								<tr>
+									<th field="label" relWidth="2" formatter="gameSummary">Game</th>
+									<th field="qtrs" itemAggregates="numQtrs,totPts,totReb,totAst,totTP">
+										<table>
+											<thead>
+												<tr>
+													<th field="label" relWidth="2" formatter="quarterSummary">Quarter</th>
+													<th field="pts" relWidth="1">Points</th>
+													<th field="reb" relWidth="1">Rebounds</th>
+													<th field="ast" relWidth="1">Assists</th>
+													<th field="tp" relWidth="1" formatter="formatTime">Time Played</th>
+												</tr>
+											</thead>
+										</table>
+									</th>
+								</tr>
+							</thead>
+						</table>
+					</th>
+				</tr>
+			</thead>
+	</table>
+	Text After
+</body>
+</html>
+

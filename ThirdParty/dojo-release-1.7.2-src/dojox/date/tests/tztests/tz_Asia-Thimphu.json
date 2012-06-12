@@ -1,0 +1,16 @@
+({
+	name: "date.timezone.Asia-Thimphu",
+	runTest: function(t){
+		var tz = "Asia/Thimphu";
+		doh.checkDate({tzOffset: -358.6, tzAbbr: "LMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: -358.6, tzAbbr: "LMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: -358.6, tzAbbr: "LMT"}, -706341517000, tz, 1);
+		doh.checkDate({tzOffset: -330, tzAbbr: "IST"}, -706341516000, tz, 1);
+		doh.checkDate({tzOffset: -330, tzAbbr: "IST"}, 560024999000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "BTT"}, 560025000000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "BTT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "BTT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: -360, tzAbbr: "BTT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: -360, tzAbbr: "BTT"}, 1246789800000, tz, 0);
+	}
+})

@@ -1,0 +1,11 @@
+<html>
+<body onload="parent.frameLoaded && parent.frameLoaded();">
+	Quirks mode frame
+	<script type="text/javascript">
+var answer = 42;
+var div = document.createElement("div");
+div.innerHTML = "appVersion: " + navigator.appVersion +
+	"<br>documentMode: " + document.documentMode;
+document.body.appendChild(div);
+	</script>
+</body></html>

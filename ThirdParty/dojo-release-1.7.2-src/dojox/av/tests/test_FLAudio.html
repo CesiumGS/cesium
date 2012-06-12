@@ -1,0 +1,104 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>dojox.av.FLAudio</title>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+	</style>
+
+    <script>
+		passthrough = function(msg){
+			//for catching messages from Flash
+			if(window.console){
+				console.log(msg);
+			}
+		}
+		var djConfig={isDebug:true, parseOnLoad: true, debugAtAllCosts:false};
+    </script>
+	<script type="text/javascript" src="../../../dojo/dojo.js"></script>
+	<script type="text/javascript">
+		dojo.require("dojox.av.FLAudio");
+		dojo.require("dojo.parser");
+
+		var mixer;
+		var cbust = "nocache_"+new Date().getTime();
+		dojo.addOnLoad(function(){
+			dojo.byId("ta").value = "";
+			mixer = new dojox.av.FLAudio({initialVolume:.1, autoPlay:false, isDebug:true, statusInterval:50});
+
+			// Testing cross domain:
+			//mixer.load({url:"http://video.bettervideo.com/video/ClubAJAX/Ola.mp3", id:'OlaRemote'});
+			mixer.load({url:"../tests/audio/Ola.mp3", id:'Ola'});
+			mixer.load({url:"../tests/audio/Hio.mp3", id:"Hio"});
+			mixer.load({url:"../tests/audio/FuzzWah.mp3", id:"Wah"});
+
+			var c = dojo.connect;
+			c(mixer, "onPlayStatus", function(obj){
+				console.info("media info >> ", obj);
+				console.log("----------Test getPosition:", mixer.getPosition({id:"Ola"}))
+				var txt = "";
+				dojo.forEach(ar, function(obj){
+					txt += obj.status+" "+obj.id+" "+obj.time+"\n";
+				});
+				dojo.byId("tf").value += txt;
+			});
+			c(mixer, "onLoadStatus", function(ar){
+				var txt = "";
+				dojo.forEach(ar, function(obj){
+					txt += obj.status+" "+obj.id+" "+obj.percent+"\n";
+				});
+				txt +="\n";
+				dojo.byId("ta").value += txt;
+			});
+			c(mixer, "onComplete", function(ar){
+				console.log("END!", ar)
+			});
+			c(mixer, "onID3", function(evt, foo){
+				console.info("ID3", evt, foo);
+			});
+			c(mixer, "onAllLoaded", function(){
+				console.info(" --->>> All Files Loaded");
+			});
+
+
+
+		});
+
+
+
+	</script>
+    <style>
+		html, body{
+			height:100%;
+			padding:0;
+		}
+		#aud{
+			width:320px;
+			margin:0px auto;
+		}
+	</style>
+</head>
+<body>
+	<div style="margin:10px;">
+		<h2>dojox.av.FLAudio</h2>
+		<div id="aud"></div>
+		<button onclick="mixer.doPlay({index:0, volume:1, pan:-1})">Ola Left</button>
+		<button onclick="mixer.doPlay({index:0, volume:.1})">Ola Quiet</button>
+		<button onclick="mixer.doPlay({index:1})">Hio</button>
+		<button onclick="mixer.doPlay({id:'Ola', volume:1, pan:-1}); mixer.doPlay({id:'Hio', volume:1, pan:1});">Ola Left - Hio Right</button>
+		<button onclick="mixer.doPlay({index:0, volume:1})">Ola Loud</button>
+		<button onclick="mixer.doPlay({id:'Ola', volume:1, pan:1})">Ola Right</button>
+		<br/>
+		<button onclick="mixer.doPlay({id:'Wah', volume:.7, pan:1, startOver:true})">Play FuzzWah</button>
+		<button onclick="mixer.pause({id:'Wah'})">Pause FuzzWah</button>
+		<button onclick="mixer.stop({id:'Wah'})">Stop FuzzWah</button>
+
+		<button onclick="mixer.doPlay({id:'Wah', volume:.7, pan:1, position:2500})">Play FuzzWah from middle</button>
+
+	<br/>
+		<textarea cols="50" rows="2" id="ta"></textarea>
+	</div>
+</body>
+</html>

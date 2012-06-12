@@ -1,0 +1,7 @@
+{% load dojox.dtl.contrib.data %}
+{% bind_data items to store as google %}
+{% for item in google %}
+<span class="search-result">
+	<a href="{{item.unescapedUrl}}"><img src="{{item.tbUrl}}" alt="{{item.contentNoFormatting}}"></a>				
+</span>
+{% endfor %}

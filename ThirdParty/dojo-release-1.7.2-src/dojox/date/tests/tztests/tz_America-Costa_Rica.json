@@ -1,0 +1,30 @@
+({
+	name: "date.timezone.America-Costa_Rica",
+	runTest: function(t){
+		var tz = "America/Costa_Rica";
+		doh.checkDate({tzOffset: 336.333333333333, tzAbbr: "SJMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: 336.333333333333, tzAbbr: "SJMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: 336.333333333333, tzAbbr: "SJMT"}, -1545071021000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, -1545071020000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, 288770399000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "CDT"}, 288770400000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "CDT"}, 297233999000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, 297234000000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, 320219999000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "CDT"}, 320220000000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "CDT"}, 328683599000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, 328683600000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, 664264799000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "CDT"}, 664264800000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "CDT"}, 678344399000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, 678344400000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, 695714399000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "CDT"}, 695714400000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "CDT"}, 700635599000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, 700635600000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, 1246789800000, tz, 0);
+	}
+})

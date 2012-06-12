@@ -1,0 +1,76 @@
+<html>
+<head profile="http://www.w3.org/2002/12/namespace">
+
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<meta name="GENERATOR"
+	content="Rational Application Developer Standard Edition for WebSphere Software">
+<meta name="viewport" content="user-scalable=no, width=device-width" />
+
+<link rel="stylesheet" type="text/css" href="../../../../../dijit/themes/dijit.css">
+<link rel="stylesheet" type="text/css" href="../../../../../dijit/themes/tundra/tundra.css">
+
+<title>JSON Import</title>
+
+<!-- -->
+<script type="text/javascript" src="http://openlayers.org/api/2.10/OpenLayers.js"></script>
+
+<script type="text/javascript" src="../../../../../dojo/dojo.js"></script>
+
+<script type="text/javascript">
+	require([	"dojo/ready",
+						"dojo/_base/lang",
+						"dojox/geo/openlayers/Map",
+						"dojox/geo/openlayers/Layer",
+						"dojox/geo/openlayers/GfxLayer",
+						"dojox/geo/openlayers/JsonImport"], function(ready, lang, Map, Layer, GfxLayer, JsonImport){
+
+		var map;
+
+		ready(function(){
+			var options = {
+				baseLayerName : "TheMap"
+			};
+
+			map = new Map("map", options);
+
+			loadJsonMap();
+
+			map.fitTo([-160, 70, 160, -70]);
+
+		});
+
+		function loadJsonMap(){
+
+			layer = new GfxLayer("GfxLayer");
+			map.addLayer(layer);
+
+			var cmc = new JsonImport({
+				url : 'ContinentalEurope.json',
+				nextFeature : lang.hitch(this, function(f){
+					f.setStroke([	Math.floor(Math.random() * 255),
+												Math.floor(Math.random() * 255),
+												Math.floor(Math.random() * 255)]);
+					var c = [	Math.floor(Math.random() * 255),
+										Math.floor(Math.random() * 255),
+										Math.floor(Math.random() * 255),
+										0.5];
+					f.setFill(c);
+					layer.addFeature(f);
+				}),
+				complete : lang.hitch(this, function(){
+					layer.redraw();
+				})
+			});
+			cmc.loadData();
+		};
+	});
+</script>
+
+</head>
+<body class="tundra">
+</head>
+
+<div id="map" style="background-color: #b5d0d0; width: 100%; height: 100%;"></div>
+
+</body>
+</html>

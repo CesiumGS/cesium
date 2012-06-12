@@ -1,0 +1,50 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+
+	<title>File Picker Demo</title>
+
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+	</style>
+
+	<!-- required: a default dijit theme: -->
+	<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/soria/soria.css">
+	
+	<!-- the additional styles for the widget -->
+	<link id="widgetStyle" rel="stylesheet" href="../resources/FilePickerTextBox.css">
+	
+	<!-- required: dojo.js -->
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		djConfig="parseOnLoad: true, isDebug: true, useCommentedJson: true"></script>
+	
+	<!-- not needed, for testing alternate themes -->
+	<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+
+	<script type="text/javascript">
+		dojo.require("dojo.parser");
+		dojo.require("dojox.form.FilePickerTextBox");
+		dojo.require("dojox.data.FileStore");
+		dojo.require("dijit.form.Form");
+		dojo.require("dijit.form.Button");
+	</script>
+</head>
+
+<body class="soria">
+	<h1>
+		Demo: File Picker text box widget using dojox.data.FileStore
+	</h1>
+	<p>The picker below uses the dojox.data.FileStore and a PHP implementation for the serverside to browse the dojo tree hierarchy in a lazy-load fashion.</p>
+	<p><i><b>This demo must be run from a web-server with PHP support enabled.  Without PHP support, this demo cannot function.</b></i></p>
+	<hr>
+	<div dojoType="dojox.data.FileStore" url="../../data/demos/stores/filestore_dojotree.php" jsId="fileStore" pathAsQueryParam="true"></div>
+	<form dojoType="dijit.form.Form" onSubmit="if(this.validate()){console.dir(this.getValues());}else{console.log('NOT VALID');} return false;">
+		<label>Choose a file:<input required="true" name="fileName" type="text" dojoType="dojox.form.FilePickerTextBox" constraints="{store: fileStore, query:{}}" /></label><br>
+		<button dojoType="dijit.form.Button" type="submit">Submit</button>
+	</form>
+</body>
+</html>
+
+

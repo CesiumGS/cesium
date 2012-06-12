@@ -6,9 +6,13 @@
         this.code = function () {
             // Bing Maps
             var bing = new Cesium.BingMapsTileProvider({
-                server : "dev.virtualearth.net",
-                mapStyle : Cesium.BingMapsStyle.AERIAL
+                server : 'dev.virtualearth.net',
+                mapStyle : Cesium.BingMapsStyle.AERIAL,
+                // Some versions of Safari support WebGL, but don't correctly implement
+                // cross-origin image loading, so we need to load Bing imagery using a proxy.
+                proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
             });
+
             primitives.getCentralBody().dayTileProvider = bing;
         };
     };
@@ -22,6 +26,7 @@
                 service : 'World_Street_Map',
                 proxy : new Cesium.DefaultProxy('/proxy/')
             });
+
             primitives.getCentralBody().dayTileProvider = arcgis;
         };
     };
@@ -32,6 +37,7 @@
             var osm = new Cesium.OpenStreetMapTileProvider({
                 proxy : new Cesium.DefaultProxy('/proxy/')
             });
+
             primitives.getCentralBody().dayTileProvider = osm;
         };
     };
@@ -43,6 +49,7 @@
                 url : 'http://otile1.mqcdn.com/tiles/1.0.0/osm/',
                 proxy : new Cesium.DefaultProxy('/proxy/')
             });
+
             primitives.getCentralBody().dayTileProvider = mqOsm;
         };
     };
@@ -54,6 +61,7 @@
                 url : 'http://oatile1.mqcdn.com/naip/',
                 proxy : new Cesium.DefaultProxy('/proxy/')
             });
+
             primitives.getCentralBody().dayTileProvider = mqAerialOsm;
         };
     };
@@ -70,6 +78,7 @@
                 proxy : new Cesium.DefaultProxy('/proxy/'),
                 credit : 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'
             });
+
             primitives.getCentralBody().dayTileProvider = layer;
         };
     };
@@ -77,7 +86,8 @@
     Sandbox.Single = function (scene, ellipsoid, primitives) {
         this.code = function () {
             // Single texture
-            var single = new Cesium.SingleTileProvider("Images/NE2_50M_SR_W_4096.jpg");
+            var single = new Cesium.SingleTileProvider('Images/NE2_50M_SR_W_4096.jpg');
+
             primitives.getCentralBody().dayTileProvider = single;
         };
     };
@@ -86,16 +96,25 @@
         this.code = function () {
             // Bing Maps
             var bing = new Cesium.BingMapsTileProvider({
-                server : "dev.virtualearth.net",
-                mapStyle : Cesium.BingMapsStyle.AERIAL
+                server : 'dev.virtualearth.net',
+                mapStyle : Cesium.BingMapsStyle.AERIAL,
+                // Some versions of Safari support WebGL, but don't correctly implement
+                // cross-origin image loading, so we need to load Bing imagery using a proxy.
+                proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
             });
+
             // Single texture
-            var single = new Cesium.SingleTileProvider("Images/NE2_50M_SR_W_4096.jpg");
+            var single = new Cesium.SingleTileProvider('Images/NE2_50M_SR_W_4096.jpg');
+
             // Composite tile provider
-            var composite = new Cesium.CompositeTileProvider([
-                { provider : single, height : 1000000 },
-                { provider : bing, height : 0}
-            ], scene.getCamera(), ellipsoid);
+            var composite = new Cesium.CompositeTileProvider([{
+                provider : single,
+                height : 1000000
+            }, {
+                provider : bing,
+                height : 0
+            }], scene.getCamera(), ellipsoid);
+
             primitives.getCentralBody().dayTileProvider = composite;
         };
     };

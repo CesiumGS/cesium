@@ -1,0 +1,50 @@
+﻿<html>
+<head>
+<title>Cube of dojox.gfx3d.</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+</style>
+<!--
+The next line should include Microsoft's Silverligth.js, if you plan to use the silverlight backend
+<script type="text/javascript" src="Silverlight.js"></script>
+-->
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+<script type="text/javascript">
+dojo.require("dojox.gfx3d");
+dojo.require("dojox.gfx.utils");
+
+makeObjects = function(){
+	var surface = dojox.gfx.createSurface("test", 500, 500);
+	var view = surface.createViewport();
+	view.setLights([{direction: {x: -10, y: -5, z: 5}, color: "white"}], 
+			{color:"white", intensity: 2}, "white");
+	
+	var m = dojox.gfx3d.matrix;
+	var l = view.createCube({bottom: {x: 0, y: 0, z: 0}, top: {x: 100, y: 100, z: 100}})
+		.setFill({type: "plastic", finish: "dull", color: "lime"});
+		
+	var camera = [m.cameraRotateXg(20), m.cameraRotateYg(20), m.cameraTranslate(-200, -200, 0)];
+	view.applyCameraTransform(camera);
+	view.render();
+	
+	//dojo.byId("out1").value = dojo.byId("test").innerHTML;
+	//dojo.byId("out2").value = dojox.gfx.utils.toJson(surface, true);
+};
+
+dojo.addOnLoad(makeObjects);
+
+</script>
+</head>
+<body>
+<h1>Cube Test</h1>
+<div id="test" style="width: 500px; height: 500px;"></div>
+<!--
+<p><button onclick="makeObjects();">Go</button></p>
+<p><textarea id="out1" cols="40" rows="5"></textarea></p>
+<p><textarea id="out2" cols="40" rows="5"></textarea></p>
+-->
+<p>That's all Folks!</p>
+</body>
+</html>

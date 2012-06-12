@@ -1,0 +1,14 @@
+({
+	name: "date.timezone.Asia-Kuwait",
+	runTest: function(t){
+		var tz = "Asia/Kuwait";
+		doh.checkDate({tzOffset: -191.933333333333, tzAbbr: "LMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: -191.933333333333, tzAbbr: "LMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: -191.933333333333, tzAbbr: "LMT"}, -631163517000, tz, 1);
+		doh.checkDate({tzOffset: -180, tzAbbr: "AST"}, -631163516000, tz, 1);
+		doh.checkDate({tzOffset: -180, tzAbbr: "AST"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: -180, tzAbbr: "AST"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: -180, tzAbbr: "AST"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: -180, tzAbbr: "AST"}, 1246789800000, tz, 0);
+	}
+})

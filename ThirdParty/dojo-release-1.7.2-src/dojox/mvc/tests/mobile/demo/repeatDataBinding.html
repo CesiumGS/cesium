@@ -1,0 +1,45 @@
+<div id="repeat" dojoType="dojox.mobile.ScrollableView"  style="width: 100%;">
+    <h1 dojoType="dojox.mobile.Heading" back="Home" moveTo="foo">Repeat Data Binding Example</h1>
+	<form name="repeatTestForm" id="repeatTestForm">	
+	<div class="field-title">Search Results</div>
+        <div class="fieldset" dojoType="dojox.mvc.Repeat" class="row" ref="repeatmodel">
+            <div dojoType="dojox.mvc.Group" ref="'rel:${this.index}'">
+        		<div class="row">            
+                	<input dojoType="dojox.mobile.TextBox"
+                    	id="nameInput${this.index}" ref="'rel:First'" placeHolder="First Name"></input>
+                	<button id="details${this.index}" type="button" dojoType="dojox.mobile.Button" class="mblBlueButton" onclick="setDetailsContext('${this.index}')">Details</button>
+            	</div>
+            </div>
+        </div>
+        <div class="spacer"></div>
+        <div  dojoType="dojox.mvc.Group" ref="repeatmodel">
+            <div id="detailsBanner">Details for selected index:</div>
+                <div class="fieldset" id="detailsGroup" dojoType="dojox.mvc.Group" ref="'rel:0'">
+        			<div class="field-row">
+						<span>First Name</span>
+						<input type=text id="firstInput" dojoType="dojox.mobile.TextBox"
+							placeholder="First Name" ref="'rel:First'"></input>
+					</div>
+        			<div class="field-row">
+						<span>Last Name</span>
+						<input type=text id="lastInput" dojoType="dojox.mobile.TextBox"
+							placeholder="Last Name" ref="'rel:Last'"></input>
+					</div>
+        			<div class="field-row">
+						<span>Email</span>
+						<input type=text id="emailInput2" dojoType="dojox.mobile.TextBox"
+							placeholder="Email" ref="'rel:Email'"></input>
+					</div>
+        			<div class="field-row">
+						<span>Telephone</span>
+						<input type=text id="telInput" dojoType="dojox.mobile.TextBox"
+							placeholder="Telephone" ref="'rel:Tel'"></input>
+					</div>
+                </div>
+            </div>         
+        <div class="spacer"></div>
+        <button id="add" type="button" dojoType="dojox.mobile.Button" class="mblBlueButton" onclick="insertResult(nextIndexToAdd)">Add</button>
+        <button id="save" type="button" dojoType="dojox.mobile.Button" class="mblBlueButton" onclick="console.log(repeatmodel[selectedIndex].toPlainObject());repeatmodel[selectedIndex].commit()">Save</button>
+        <button id="reset2" type="button" dojoType="dojox.mobile.Button" class="mblBlueButton" onclick="repeatmodel.reset()">Reset</button>
+		
+</div>

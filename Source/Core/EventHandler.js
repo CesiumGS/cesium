@@ -233,7 +233,7 @@ define([
      * @see EventHandler#removeKeyAction
      *
      * @example
-     * // Set the camera to a "home" position when 'h' is pressed.
+     * // Set the camera to a 'home' position when 'h' is pressed.
      * customHandler.setKeyAction(
      *    function() {
      *        var position = new Cartesian3(2.0 * Ellipsoid.WGS84.getRadii().getMaximumComponent(), 0.0, 0.0);
@@ -243,16 +243,16 @@ define([
      *        camera.direction = dir;
      *        camera.up = up;
      *    },
-     *    "h"
+     *    'h'
      * );
      */
     EventHandler.prototype.setKeyAction = function(action, key, modifier) {
         if (!action) {
-            throw new DeveloperError("action is required.", "action");
+            throw new DeveloperError('action is required.');
         }
 
         if (!key) {
-            throw new DeveloperError("key is required.", "key");
+            throw new DeveloperError('key is required.');
         }
 
         var keyEvents;
@@ -283,7 +283,7 @@ define([
      */
     EventHandler.prototype.getKeyAction = function(key, modifier) {
         if (!key) {
-            throw new DeveloperError("key is required.", "key");
+            throw new DeveloperError('key is required.');
         }
 
         var keyEvents;
@@ -316,7 +316,7 @@ define([
      */
     EventHandler.prototype.removeKeyAction = function(key, modifier) {
         if (!key) {
-            throw new DeveloperError("key is required.", "key");
+            throw new DeveloperError('key is required.');
         }
 
         var keyEvents;
@@ -350,11 +350,11 @@ define([
      */
     EventHandler.prototype.setMouseAction = function(action, type, modifier) {
         if (!action) {
-            throw new DeveloperError("action is required.", "action");
+            throw new DeveloperError('action is required.');
         }
 
         if (!type) {
-            throw new DeveloperError("type is required.", "type");
+            throw new DeveloperError('type is required.');
         }
 
         var mouseEvents;
@@ -385,7 +385,7 @@ define([
      */
     EventHandler.prototype.getMouseAction = function(type, modifier) {
         if (!type) {
-            throw new DeveloperError("type is required.", "type");
+            throw new DeveloperError('type is required.');
         }
 
         var mouseEvents;
@@ -418,7 +418,7 @@ define([
      */
     EventHandler.prototype.removeMouseAction = function(type, modifier) {
         if (!type) {
-            throw new DeveloperError("type is required.", "type");
+            throw new DeveloperError('type is required.');
         }
 
         var mouseEvents;

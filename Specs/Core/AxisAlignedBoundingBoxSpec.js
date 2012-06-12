@@ -18,41 +18,41 @@ defineSuite([
                      new Cartesian3(-3, 3, 3)
                  ];
 
-    it("computes the minimum", function() {
+    it('computes the minimum', function() {
         var box = new AxisAlignedBoundingBox(positions);
-        expect(box.minimum.equals(new Cartesian3(-3, -3, -3))).toBeTruthy();
+        expect(box.minimum.equals(new Cartesian3(-3, -3, -3))).toEqual(true);
     });
 
-    it("computes the maximum", function() {
+    it('computes the maximum', function() {
         var box = new AxisAlignedBoundingBox(positions);
-        expect(box.maximum.equals(new Cartesian3(3, 3, 3))).toBeTruthy();
+        expect(box.maximum.equals(new Cartesian3(3, 3, 3))).toEqual(true);
     });
 
-    it("computes a center", function() {
+    it('computes a center', function() {
         var box = new AxisAlignedBoundingBox(positions);
-        expect(box.center.equalsEpsilon(Cartesian3.ZERO, Math.EPSILON14)).toBeTruthy();
+        expect(box.center.equalsEpsilon(Cartesian3.ZERO, Math.EPSILON14)).toEqual(true);
     });
 
-    it("computes the bounding box for a single position", function() {
+    it('computes the bounding box for a single position', function() {
         var box = new AxisAlignedBoundingBox([{
             x : 1,
             y : 2,
             z : 3
         }]);
 
-        expect(box.minimum.equals(new Cartesian3(1, 2, 3))).toBeTruthy();
-        expect(box.maximum.equals(new Cartesian3(1, 2, 3))).toBeTruthy();
-        expect(box.center.equals(new Cartesian3(1, 2, 3))).toBeTruthy();
+        expect(box.minimum.equals(new Cartesian3(1, 2, 3))).toEqual(true);
+        expect(box.maximum.equals(new Cartesian3(1, 2, 3))).toEqual(true);
+        expect(box.center.equals(new Cartesian3(1, 2, 3))).toEqual(true);
     });
 
-    it("has undefined properties with positions of length zero", function() {
+    it('has undefined properties with positions of length zero', function() {
         var box = new AxisAlignedBoundingBox([]);
         expect(box.minimum).not.toBeDefined();
         expect(box.maximum).not.toBeDefined();
         expect(box.center).not.toBeDefined();
     });
 
-    it("throws an exception when constructed without any positions", function() {
+    it('throws an exception when constructed without any positions', function() {
         expect(function() {
             return new AxisAlignedBoundingBox(undefined);
         }).toThrow();

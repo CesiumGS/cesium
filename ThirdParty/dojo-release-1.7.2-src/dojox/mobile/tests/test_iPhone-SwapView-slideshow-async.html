@@ -1,0 +1,98 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>SwapView Slideshow</title>
+		<link href="../themes/iphone/base.css" rel="stylesheet">
+		<link href="../themes/iphone/PageIndicator.css" rel="stylesheet">
+		<style>
+		html,body{
+			height: 100%;
+			overflow: hidden;
+			margin: 0px;
+		}
+		img {
+			-webkit-box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);
+			width: 90%;
+		}
+		h1 {
+			background-color: #3A3A3B;
+			color: #B1B1B1;
+			font: bold 16px arial,helvetica,clean,sans-serif;
+			margin: 0px 0px 15px 0px;
+			height: 45px;
+			line-height: 45px;
+			-webkit-box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.5);
+		}
+		.mblSwapView {
+			text-align: center;
+		}
+		</style>
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true, async: true, mblAlwaysHideAddressBar: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+		require([
+			"dojox/mobile/parser", 	// This mobile app uses declarative programming with fast mobile parser
+			"dojox/mobile",			// This is a mobile app.
+			"dojox/mobile/SwapView",
+			"dojox/mobile/PageIndicator",
+			"dojox/mobile/compat" 	// This mobile app supports running on desktop browsers
+			// "domReady!" // Enable if user code placed in the callback here that needs DOMReady
+		]);
+		</script>
+	</head>
+	<body style="visibility:hidden;background-color:#6D6D6D">
+		<div dojoType="dojox.mobile.SwapView">
+			<h1>My Pictures</h1>
+			<img src="images/pic1.jpg">
+		</div>
+
+		<div dojoType="dojox.mobile.SwapView">
+			<h1>May 3, 2011</h1>
+			<img src="images/pic2.jpg">
+		</div>
+
+		<div dojoType="dojox.mobile.SwapView">
+			<h1>May 3, 2011</h1>
+			<img src="images/pic3.jpg">
+		</div>
+
+		<div dojoType="dojox.mobile.SwapView">
+			<h1>May 3, 2011</h1>
+			<img src="images/pic4.jpg">
+		</div>
+
+		<div dojoType="dojox.mobile.SwapView">
+			<h1>Apr 24, 2011</h1>
+			<img src="images/pic5.jpg">
+		</div>
+
+		<div dojoType="dojox.mobile.SwapView">
+			<h1>Apr 24, 2011</h1>
+			<img src="images/pic6.jpg">
+		</div>
+
+		<div dojoType="dojox.mobile.SwapView">
+			<h1>Apr 24, 2011</h1>
+			<img src="images/pic7.jpg">
+		</div>
+
+		<div dojoType="dojox.mobile.SwapView">
+			<h1>Apr 24, 2011</h1>
+			<img src="images/pic8.jpg">
+		</div>
+
+		<div dojoType="dojox.mobile.SwapView">
+			<h1>Apr 24, 2011</h1>
+			<img src="images/pic9.jpg">
+		</div>
+
+		<div dojoType="dojox.mobile.SwapView">
+			<h1>Apr 24, 2011</h1>
+			<img src="images/pic10.jpg">
+		</div>
+
+		<div dojoType="dojox.mobile.PageIndicator" fixed="bottom"></div>
+	</body>
+</html>

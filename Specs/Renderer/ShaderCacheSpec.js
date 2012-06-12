@@ -20,9 +20,9 @@ defineSuite([
         destroyContext(context);
     });
 
-    it("adds and removes", function() {
-        var vs = "attribute vec4 position; void main() { gl_Position = position; }";
-        var fs = "void main() { gl_FragColor = vec4(1.0); }";
+    it('adds and removes', function() {
+        var vs = 'attribute vec4 position; void main() { gl_Position = position; }';
+        var fs = 'void main() { gl_FragColor = vec4(1.0); }';
 
         var cache = new ShaderCache(context);
         var sp = cache.getShaderProgram(vs, fs, {
@@ -31,17 +31,17 @@ defineSuite([
         expect(sp._cachedShader.count).toEqual(1);
 
         cache.releaseShaderProgram(sp);
-        expect(sp.isDestroyed()).toBeFalsy();
+        expect(sp.isDestroyed()).toEqual(false);
 
         cache.destroyReleasedShaderPrograms();
-        expect(sp.isDestroyed()).toBeTruthy();
+        expect(sp.isDestroyed()).toEqual(true);
 
         cache.destroy();
     });
 
-    it("adds and removes 2", function() {
-        var vs = "attribute vec4 position; void main() { gl_Position = position; }";
-        var fs = "void main() { gl_FragColor = vec4(1.0); }";
+    it('adds and removes 2', function() {
+        var vs = 'attribute vec4 position; void main() { gl_Position = position; }';
+        var fs = 'void main() { gl_FragColor = vec4(1.0); }';
 
         var cache = new ShaderCache(context);
         var sp = cache.getShaderProgram(vs, fs, {
@@ -50,17 +50,17 @@ defineSuite([
         expect(sp._cachedShader.count).toEqual(1);
 
         sp.release();
-        expect(sp.isDestroyed()).toBeFalsy();
+        expect(sp.isDestroyed()).toEqual(false);
 
         cache.destroyReleasedShaderPrograms();
-        expect(sp.isDestroyed()).toBeTruthy();
+        expect(sp.isDestroyed()).toEqual(true);
 
         cache.destroy();
     });
 
-    it("has a cache hit", function() {
-        var vs = "attribute vec4 position; void main() { gl_Position = position; }";
-        var fs = "void main() { gl_FragColor = vec4(1.0); }";
+    it('has a cache hit', function() {
+        var vs = 'attribute vec4 position; void main() { gl_Position = position; }';
+        var fs = 'void main() { gl_FragColor = vec4(1.0); }';
 
         var cache = new ShaderCache(context);
         var sp = cache.getShaderProgram(vs, fs, {
@@ -77,14 +77,14 @@ defineSuite([
         sp2.release();
         cache.destroyReleasedShaderPrograms();
 
-        expect(sp.isDestroyed()).toBeTruthy();
+        expect(sp.isDestroyed()).toEqual(true);
 
         cache.destroy();
     });
 
-    it("avoids thrashing", function() {
-        var vs = "attribute vec4 position; void main() { gl_Position = position; }";
-        var fs = "void main() { gl_FragColor = vec4(1.0); }";
+    it('avoids thrashing', function() {
+        var vs = 'attribute vec4 position; void main() { gl_Position = position; }';
+        var fs = 'void main() { gl_FragColor = vec4(1.0); }';
 
         var cache = new ShaderCache(context);
         var sp = cache.getShaderProgram(vs, fs, {
@@ -96,21 +96,21 @@ defineSuite([
         }); // still cache hit
 
         cache.destroyReleasedShaderPrograms(); // does not destroy
-        expect(sp.isDestroyed()).toBeFalsy();
-        expect(sp2.isDestroyed()).toBeFalsy();
+        expect(sp.isDestroyed()).toEqual(false);
+        expect(sp2.isDestroyed()).toEqual(false);
 
         sp2.release();
         cache.destroyReleasedShaderPrograms(); // destroys
 
-        expect(sp.isDestroyed()).toBeTruthy();
-        expect(sp2.isDestroyed()).toBeTruthy();
+        expect(sp.isDestroyed()).toEqual(true);
+        expect(sp2.isDestroyed()).toEqual(true);
 
         cache.destroy();
     });
 
-    it("is destroyed", function() {
-        var vs = "attribute vec4 position; void main() { gl_Position = position; }";
-        var fs = "void main() { gl_FragColor = vec4(1.0); }";
+    it('is destroyed', function() {
+        var vs = 'attribute vec4 position; void main() { gl_Position = position; }';
+        var fs = 'void main() { gl_FragColor = vec4(1.0); }';
 
         var cache = new ShaderCache(context);
         var sp = cache.getShaderProgram(vs, fs, {
@@ -119,12 +119,12 @@ defineSuite([
 
         cache.destroy();
 
-        expect(sp.isDestroyed()).toBeTruthy();
-        expect(cache.isDestroyed()).toBeTruthy();
+        expect(sp.isDestroyed()).toEqual(true);
+        expect(cache.isDestroyed()).toEqual(true);
     });
 
-    it("is not destroyed", function() {
+    it('is not destroyed', function() {
         var cache = new ShaderCache(context);
-        expect(cache.isDestroyed()).toBeFalsy();
+        expect(cache.isDestroyed()).toEqual(false);
     });
 });

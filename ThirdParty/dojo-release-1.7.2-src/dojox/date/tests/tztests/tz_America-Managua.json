@@ -1,0 +1,42 @@
+({
+	name: "date.timezone.America-Managua",
+	runTest: function(t){
+		var tz = "America/Managua";
+		doh.checkDate({tzOffset: 345.2, tzAbbr: "MMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: 345.2, tzAbbr: "MMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: 345.2, tzAbbr: "MMT"}, -1121105689000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, -1121105688000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, 105083999000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "EST"}, 105084000000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "EST"}, 161758799000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, 161758800000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, 290584799000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "CDT"}, 290584800000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "CDT"}, 299134799000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, 299134800000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, 322034399000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "CDT"}, 322034400000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "CDT"}, 330584399000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, 330584400000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, 694259999000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "EST"}, 694260000000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "EST"}, 717310799000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, 717310800000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, 725867999000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "EST"}, 725868000000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "EST"}, 852094799000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, 852094800000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, 1113112799000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "CDT"}, 1113112800000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "CDT"}, 1128229199000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, 1128229200000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, 1146383999000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "CDT"}, 1146384000000, tz, 1);
+		doh.checkDate({tzOffset: 300, tzAbbr: "CDT"}, 1159682399000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, 1159682400000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: 360, tzAbbr: "CST"}, 1246789800000, tz, 0);
+	}
+})

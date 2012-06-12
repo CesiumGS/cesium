@@ -27,18 +27,18 @@
             };
 
             Sandbox.ExamplePrimitive.prototype.update = function(context, sceneState) {
-                var vs = "";
-                vs += "attribute vec4 position;";
-                vs += "void main()";
-                vs += "{";
-                vs += "    gl_Position = agi_modelViewProjection * position;";
-                vs += "}";
-                var fs = "";
-                fs += "uniform vec4 u_color;";
-                fs += "void main()";
-                fs += "{";
-                fs += "    gl_FragColor = u_color;";
-                fs += "}";
+                var vs = '';
+                vs += 'attribute vec4 position;';
+                vs += 'void main()';
+                vs += '{';
+                vs += '    gl_Position = agi_modelViewProjection * position;';
+                vs += '}';
+                var fs = '';
+                fs += 'uniform vec4 u_color;';
+                fs += 'void main()';
+                fs += '{';
+                fs += '    gl_FragColor = u_color;';
+                fs += '}';
 
                 var zLength = this._ellipsoid.getRadii().getMaximumComponent() * 0.1;
                 var mesh = Cesium.MeshFilters.toWireframeInPlace(

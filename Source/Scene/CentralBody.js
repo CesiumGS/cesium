@@ -8,6 +8,7 @@ define([
         '../Core/Intersect',
         '../Core/Occluder',
         '../Core/Ellipsoid',
+        '../Core/Extent',
         '../Core/BoundingSphere',
         '../Core/Rectangle',
         '../Core/Cache',
@@ -25,6 +26,7 @@ define([
         '../Core/ExtentTessellator',
         '../Core/PlaneTessellator',
         '../Core/JulianDate',
+        '../Core/Transforms',
         '../Renderer/BufferUsage',
         '../Renderer/CullFace',
         '../Renderer/DepthFunction',
@@ -41,10 +43,14 @@ define([
         './ViewportQuad',
         '../Shaders/CentralBodyVS',
         '../Shaders/CentralBodyFS',
+        '../Shaders/CentralBodyFSCommon',
         '../Shaders/CentralBodyVSDepth',
         '../Shaders/CentralBodyFSDepth',
         '../Shaders/CentralBodyVSFilter',
         '../Shaders/CentralBodyFSFilter',
+        '../Shaders/CentralBodyVSPole',
+        '../Shaders/CentralBodyFSPole',
+        '../Shaders/GroundAtmosphere',
         '../Shaders/SkyAtmosphereFS',
         '../Shaders/SkyAtmosphereVS'
     ], function(
@@ -56,6 +62,7 @@ define([
         Intersect,
         Occluder,
         Ellipsoid,
+        Extent,
         BoundingSphere,
         Rectangle,
         Cache,
@@ -73,6 +80,7 @@ define([
         ExtentTessellator,
         PlaneTessellator,
         JulianDate,
+        Transforms,
         BufferUsage,
         CullFace,
         DepthFunction,
@@ -89,10 +97,14 @@ define([
         ViewportQuad,
         CentralBodyVS,
         CentralBodyFS,
+        CentralBodyFSCommon,
         CentralBodyVSDepth,
         CentralBodyFSDepth,
         CentralBodyVSFilter,
         CentralBodyFSFilter,
+        CentralBodyVSPole,
+        CentralBodyFSPole,
+        GroundAtmosphere,
         SkyAtmosphereFS,
         SkyAtmosphereVS) {
     "use strict";
@@ -100,14 +112,14 @@ define([
     function TileTextureCachePolicy(description) {
         var desc = description || {};
 
-        if (!desc.fetchFunc || typeof desc.fetchFunc !== "function") {
-            throw new DeveloperError("description.fetchFunc is a required function.", "description.fetchFunc");
+        if (!desc.fetchFunc || typeof desc.fetchFunc !== 'function') {
+            throw new DeveloperError('description.fetchFunc is a required function.');
         }
 
         this._limit = desc.limit || 128;
         this._count = 0;
         this._fetchFunc = desc.fetchFunc;
-        this._removeFunc = (typeof desc.removeFunc === "function") ? desc.removeFunc : undefined;
+        this._removeFunc = (typeof desc.removeFunc === 'function') ? desc.removeFunc : undefined;
     }
 
     TileTextureCachePolicy.prototype.hit = function(object) {
@@ -166,7 +178,6 @@ define([
     /**
      * DOC_TBA
      *
-     * @param {Camera} camera DOC_TBA
      * @param {Ellipsoid} [ellipsoid=WGS84 Ellipsoid] Determines the size and shape of the central body.
      *
      * @name CentralBody
@@ -174,26 +185,22 @@ define([
      *
      * @exception {DeveloperError} camera is required.
      */
-    function CentralBody(camera, ellipsoid) {
-        if (!camera) {
-            throw new DeveloperError("camera is required.", "camera");
-        }
-
+    function CentralBody(ellipsoid) {
         ellipsoid = ellipsoid || Ellipsoid.WGS84;
 
         this._ellipsoid = ellipsoid;
-        this._maxExtent = {
-            north : CesiumMath.PI_OVER_TWO,
-            south : -CesiumMath.PI_OVER_TWO,
-            west : -CesiumMath.PI,
-            east : CesiumMath.PI
-        };
-        this._camera = camera;
+        this._maxExtent = new Extent(
+            -CesiumMath.PI,
+            -CesiumMath.PI_OVER_TWO,
+            CesiumMath.PI,
+            CesiumMath.PI_OVER_TWO
+        );
         this._rootTile = new Tile({
             extent : this._maxExtent,
             zoom : 0,
             ellipsoid : ellipsoid
         });
+        this._occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), Cartesian3.ZERO);
 
         this._renderQueue = new Queue();
         this._imageQueue = new Queue();
@@ -234,7 +241,6 @@ define([
          */
         this.failedTileRetryTime = 30.0;
 
-
         this._spWithoutAtmosphere = undefined;
         this._spGroundFromSpace = undefined;
         this._spGroundFromAtmosphere = undefined;
@@ -256,33 +262,40 @@ define([
 
         this._fb = undefined;
 
+        this._vaNorthPole = undefined;
+        this._vaSouthPole = undefined;
+        this._spPolesWithoutAtmosphere = undefined;
+        this._spPolesGroundFromSpace = undefined;
+        this._spPolesGroundFromAtmosphere = undefined;
+        this._spPoles = undefined; // Reference to without-atmosphere, ground-from-space, or ground-from-atmosphere
+        this._northPoleUniforms = undefined;
+        this._southPoleUniforms = undefined;
+        this._drawNorthPole = false;
+        this._drawSouthPole = false;
+
+        /**
+         * DOC_TBA
+         *
+         * @type {Cartesian3}
+         */
+        this.northPoleColor = new Cartesian3(2.0 / 255.0, 6.0 / 255.0, 18.0 / 255.0);
+
+        /**
+         * DOC_TBA
+         *
+         * @type {Cartesian3}
+         */
+        this.southPoleColor = new Cartesian3(1.0, 1.0, 1.0);
+
         /**
          * DOC_TBA
          *
          * @type {Cartesian2}
          */
         this.logoOffset = Cartesian2.ZERO;
-
         this._logoOffset = this.logoOffset;
         this._imageLogo = undefined;
         this._quadLogo = undefined;
-
-        this._dayTileProvider = undefined;
-        this._nightImageSource = undefined;
-        this._specularImageSource = undefined;
-        this._cloudsImageSource = undefined;
-        this._bumpImageSource = undefined;
-        this._nightTexture = undefined;
-        this._specularTexture = undefined;
-        this._cloudsTexture = undefined;
-        this._bumpTexture = undefined;
-        this._showDay = false;
-        this._showNight = false;
-        this._showClouds = false;
-        this._showCloudShadows = false;
-        this._showSpecular = false;
-        this._showBumps = false;
-        this._showTerminator = false;
 
         this._minTileDistance = undefined;
 
@@ -322,9 +335,24 @@ define([
         this.showSkyAtmosphere = false;
 
         /**
+         * <p>
+         * Determines if the central body is affected by lighting, i.e., if sun light brightens the
+         * day side of the globe, and and the night side appears dark.  When <code>true</code>, the
+         * central body is affected by lighting; when <code>false</code>, the central body is uniformly
+         * shaded with the day tile provider, i.e., no night lights, atmosphere, etc. are used.
+         * </p>
+         * <p>
+         * The default is <code>true</code>.
+         * </p>
+         */
+        this.affectedByLighting = true;
+        this._affectedByLighting = true;
+
+        /**
          * DOC_TBA
          */
         this.dayTileProvider = undefined;
+        this._dayTileProvider = undefined;
 
         /**
          * The URL of the image to use as a night texture.  An asynchronous
@@ -333,9 +361,9 @@ define([
          * is <code>true</code>.
          * <br /><br />
          * Example day image:
-         * <div align="center">
-         * <img src="../images/CentralBody.nightImageSource.jpg" width="512" height="256" />
-         * <a href="http://visibleearth.nasa.gov/view_rec.php?id=1438">NASA Visible Earth</a>.
+         * <div align='center'>
+         * <img src='../images/CentralBody.nightImageSource.jpg' width='512' height='256' />
+         * <a href='http://visibleearth.nasa.gov/view_rec.php?id=1438'>NASA Visible Earth</a>.
          * Data courtesy Marc Imhoff of NASA GSFC and Christopher Elvidge of
          * NOAA NGDC. Image by Craig Mayhew and Robert Simmon, NASA GSFC.
          * </div>
@@ -345,6 +373,8 @@ define([
          * @see CentralBody#showNight
          */
         this.nightImageSource = undefined;
+        this._nightImageSource = undefined;
+        this._nightTexture = undefined;
 
         /**
          * The URL of the image to use as a specular map; a single-channel image where zero indicates
@@ -353,16 +383,18 @@ define([
          * image is loaded and {@link CentralBody#showSpecular} is <code>true</code>.
          * <br /><br />
          * Example specular map:
-         * <div align="center">
-         * <img src="../images/CentralBody.specularMapSource.jpg" width="512" height="256" />
-         * <a href="http://planetpixelemporium.com/earth.html">Planet Texture Maps</a>
+         * <div align='center'>
+         * <img src='../images/CentralBody.specularMapSource.jpg' width='512' height='256' />
+         * <a href='http://planetpixelemporium.com/earth.html'>Planet Texture Maps</a>
          * </div>
          *
          * @type {String}
          *
          * @see CentralBody#showSpecular
          */
-        this.specularImageSource = undefined;
+        this.specularMapSource = undefined;
+        this._specularMapSource = undefined;
+        this._specularTexture = undefined;
 
         /**
          * The URL of the image to use as a cloud map; a single-channel image where 255 indicates
@@ -371,16 +403,18 @@ define([
          * image is loaded and {@link CentralBody#showClouds} is <code>true</code>.
          * <br /><br />
          * Example cloud map:
-         * <div align="center">
-         * <img src="../images/CentralBody.cloudsMapSource.jpg" width="512" height="256" />
-         * <a href="http://planetpixelemporium.com/earth.html">Planet Texture Maps</a>
+         * <div align='center'>
+         * <img src='../images/CentralBody.cloudsMapSource.jpg' width='512' height='256' />
+         * <a href='http://planetpixelemporium.com/earth.html'>Planet Texture Maps</a>
          * </div>
          *
          * @type {String}
          *
          * @see CentralBody#showClouds
          */
-        this.cloudsImageSource = undefined;
+        this.cloudsMapSource = undefined;
+        this._cloudsMapSource = undefined;
+        this._cloudsTexture = undefined;
 
         /**
          * The URL of the image to use as a bump map; a single-channel image where zero indicates
@@ -389,37 +423,40 @@ define([
          * image is loaded and {@link CentralBody#showBumps} is <code>true</code>.
          * <br /><br />
          * Example bump map:
-         * <div align="center">
-         * <img src="../images/CentralBody.bumpMapSource.jpg" width="512" height="256" />
-         * <a href="http://planetpixelemporium.com/earth.html">Planet Texture Maps</a>
+         * <div align='center'>
+         * <img src='../images/CentralBody.bumpMapSource.jpg' width='512' height='256' />
+         * <a href='http://planetpixelemporium.com/earth.html'>Planet Texture Maps</a>
          * </div>
          *
          * @type {String}
          *
          * @see CentralBody#showBumps
          */
-        this.bumpImageSource = undefined;
+        this.bumpMapSource = undefined;
+        this._bumpMapSource = undefined;
+        this._bumpTexture = undefined;
 
         /**
-         * When <code>true</code>, textures from the <code>dayProvider</code> are shown on the central body.
+         * When <code>true</code>, textures from the <code>dayTileProvider</code> are shown on the central body.
          * <br /><br />
-         * <div align="center">
-         * <img src="../images/CentralBody.showDay.jpg" width="400" height="300" />
+         * <div align='center'>
+         * <img src='../images/CentralBody.showDay.jpg' width='400' height='300' />
          * </div>
          *
          * @type {Boolean}
          *
-         * @see CentralBody#dayProvider
+         * @see CentralBody#dayTileProvider
          * @see CentralBody#showNight
          */
         this.showDay = true;
+        this._showDay = false;
 
         /**
          * When <code>true</code>, the night texture is shown on the side of the central body not illuminated by the sun.
          * The day and night textures are blended across the terminator using {@link CentralBody#dayNightBlendDelta}.
          * When <code>false</code>, the day textures are shown on the entire globe (if enabled).
-         * <div align="center">
-         * <img src="../images/CentralBody.showNight.jpg" width="400" height="300" />
+         * <div align='center'>
+         * <img src='../images/CentralBody.showNight.jpg' width='400' height='300' />
          * </div>
          *
          * @type {Boolean}
@@ -430,15 +467,16 @@ define([
          *
          * @example
          * cb.showNight = true;
-         * cb.nightImageSource = "night.jpg";
+         * cb.nightImageSource = 'night.jpg';
          */
         this.showNight = true;
+        this._showNight = false;
 
         /**
          * When <code>true</code>, diffuse-lit clouds are shown on the central body.  When {@link CentralBody#showNight}
          * is also true, clouds on the dark side of the globe will fully or partially occlude the night texture.
-         * <div align="center">
-         * <img src="../images/CentralBody.showClouds.jpg" width="400" height="300" />
+         * <div align='center'>
+         * <img src='../images/CentralBody.showClouds.jpg' width='400' height='300' />
          * </div>
          *
          * @type {Boolean}
@@ -449,18 +487,19 @@ define([
          *
          * @example
          * cb.showClouds = true;
-         * cb.cloudsMapSource = "clouds.jpg";
+         * cb.cloudsMapSource = 'clouds.jpg';
          */
         this.showClouds = true;
+        this._showClouds = false;
 
         /**
          * When <code>true</code>, clouds on the daytime side of the globe cast approximate shadows.  The
          * shadows can be shown with or without the clouds themselves, which are controlled with
          * {@link CentralBody#showClouds}.
-         * <div align="center">
-         * <table border="0" cellpadding="5"><tr>
-         * <td align="center"><code>true</code><br/><img src="../images/CentralBody.showCloudShadows.true.jpg" width="250" height="188" /></td>
-         * <td align="center"><code>false</code><br/><img src="../images/CentralBody.showCloudShadows.false.jpg" width="250" height="188" /></td>
+         * <div align='center'>
+         * <table border='0' cellpadding='5'><tr>
+         * <td align='center'><code>true</code><br/><img src='../images/CentralBody.showCloudShadows.true.jpg' width='250' height='188' /></td>
+         * <td align='center'><code>false</code><br/><img src='../images/CentralBody.showCloudShadows.false.jpg' width='250' height='188' /></td>
          * </tr></table>
          * </div>
          *
@@ -472,16 +511,17 @@ define([
          * @example
          * cb.showClouds = true;
          * cb.showCloudShadows = true;
-         * cb.cloudsMapSource = "clouds.jpg";
+         * cb.cloudsMapSource = 'clouds.jpg';
          */
         this.showCloudShadows = true;
+        this._showCloudShadows = false;
 
         /**
          * When <code>true</code>, a specular map (also called a gloss map) is used so only the ocean receives specular light.
-         * <div align="center">
-         * <table border="0" cellpadding="5"><tr>
-         * <td align="center"><code>true</code><br/><img src="../images/CentralBody.showSpecular.true.jpg" width="250" height="188" /></td>
-         * <td align="center"><code>false</code><br/><img src="../images/CentralBody.showSpecular.false.jpg" width="250" height="188" /></td>
+         * <div align='center'>
+         * <table border='0' cellpadding='5'><tr>
+         * <td align='center'><code>true</code><br/><img src='../images/CentralBody.showSpecular.true.jpg' width='250' height='188' /></td>
+         * <td align='center'><code>false</code><br/><img src='../images/CentralBody.showSpecular.false.jpg' width='250' height='188' /></td>
          * </tr></table>
          * </div>
          *
@@ -491,18 +531,19 @@ define([
          *
          * @example
          * cb.showSpecular = true;
-         * cb.specularMapSource = "specular.jpg";
+         * cb.specularMapSource = 'specular.jpg';
          */
         this.showSpecular = true;
+        this._showSpecular = false;
 
         /**
          * When <code>true</code>, a bump map is used to add lighting detail to the mountainous areas of the central body.
          * This gives the appearance of extra geometric complexity even though the central body is still a smooth ellipsoid.
          * The apparent steepness of the mountains is controlled by {@link CentralBody#bumpMapNormalZ}.
-         * <div align="center">
-         * <table border="0" cellpadding="5"><tr>
-         * <td align="center"><code>true</code><br/><img src="../images/CentralBody.showBumps.true.jpg" width="250" height="188" /></td>
-         * <td align="center"><code>false</code><br/><img src="../images/CentralBody.showBumps.false.jpg" width="250" height="188" /></td>
+         * <div align='center'>
+         * <table border='0' cellpadding='5'><tr>
+         * <td align='center'><code>true</code><br/><img src='../images/CentralBody.showBumps.true.jpg' width='250' height='188' /></td>
+         * <td align='center'><code>false</code><br/><img src='../images/CentralBody.showBumps.false.jpg' width='250' height='188' /></td>
          * </tr></table>
          * </div>
          *
@@ -513,14 +554,15 @@ define([
          *
          * @example
          * cb.showBumps = true;
-         * cb.bumpMapSource = "bump.jpg";
+         * cb.bumpMapSource = 'bump.jpg';
          */
         this.showBumps = true;
+        this._showBumps = false;
 
         /**
          * When <code>true</code>, shows a line on the central body where day meets night.
-         * <div align="center">
-         * <img src="../images/CentralBody.showTerminator.jpg" width="400" height="300" />
+         * <div align='center'>
+         * <img src='../images/CentralBody.showTerminator.jpg' width='400' height='300' />
          * </div>
          *
          * @type {Boolean}
@@ -529,15 +571,16 @@ define([
          * @see CentralBody#dayNightBlendDelta
          */
         this.showTerminator = false;
+        this._showTerminator = false;
 
         /**
          * When {@link CentralBody#showBumps} is <code>true</code>, <code>bumpMapNormalZ</code> controls the
          * apparent steepness of the mountains.  A value less than one over-exaggerates the steepness; a value greater
          * than one under-exaggerates, making mountains less noticeable.
-         * <div align="center">
-         * <table border="0" cellpadding="5"><tr>
-         * <td align="center"><code>0.25</code><br/><img src="../images/Centralbody.bumpMapNormalZ.025.jpg" width="250" height="188" /></td>
-         * <td align="center"><code>1.25</code><br/><img src="../images/Centralbody.bumpMapNormalZ.125.jpg" width="250" height="188" /></td>
+         * <div align='center'>
+         * <table border='0' cellpadding='5'><tr>
+         * <td align='center'><code>0.25</code><br/><img src='../images/Centralbody.bumpMapNormalZ.025.jpg' width='250' height='188' /></td>
+         * <td align='center'><code>1.25</code><br/><img src='../images/Centralbody.bumpMapNormalZ.125.jpg' width='250' height='188' /></td>
          * </tr></table>
          * </div>
          *
@@ -547,7 +590,7 @@ define([
          *
          * @example
          * cb.showBumps = true;
-         * cb.bumpMapSource = "bump.jpg";
+         * cb.bumpMapSource = 'bump.jpg';
          * cb.bumpMapNormalZ = 1.0;
          */
         this.bumpMapNormalZ = 0.5;
@@ -557,10 +600,10 @@ define([
          * <code>dayNightBlendDelta</code> determines the size of the blend region surrounding the terminator (where day
          * meets night).  A value of zero indicates a sharp transition without blending; a larger value creates a linearly
          * blended region based on the diffuse lighting component:  <code>-dayNightBlendDelta &lt; diffuse &lt; dayNightBlendDelta</code>.
-         * <div align="center">
-         * <table border="0" cellpadding="5"><tr>
-         * <td align="center"><code>0.0</code><br/><img src="../images/Centralbody.dayNightBlendDelta.0.jpg" width="250" height="188" /></td>
-         * <td align="center"><code>0.05</code><br/><img src="../images/Centralbody.dayNightBlendDelta.05.jpg" width="250" height="188" /></td>
+         * <div align='center'>
+         * <table border='0' cellpadding='5'><tr>
+         * <td align='center'><code>0.0</code><br/><img src='../images/Centralbody.dayNightBlendDelta.0.jpg' width='250' height='188' /></td>
+         * <td align='center'><code>0.05</code><br/><img src='../images/Centralbody.dayNightBlendDelta.05.jpg' width='250' height='188' /></td>
          * </tr></table>
          * </div>
          *
@@ -572,9 +615,9 @@ define([
          *
          * @example
          * cb.showDay = true;
-         * cb.dayImageSource = "day.jpg";
+         * cb.dayImageSource = 'day.jpg';
          * cb.showNight = true;
-         * cb.nightImageSource = "night.jpg";
+         * cb.nightImageSource = 'night.jpg';
          * cb.dayNightBlendDelta = 0.0;  // Sharp transition
          */
         this.dayNightBlendDelta = 0.05;
@@ -587,9 +630,10 @@ define([
         this.nightIntensity = 2.0;
 
         /**
-         * DOC_TBA
+         * The current morph transition time between 2D/Columbus View and 3D,
+         * with 0.0 being 2D or Columbus View and 1.0 being 3D.
          *
-         * @type {Number}
+         * @type Number
          */
         this.morphTime = 1.0;
 
@@ -734,21 +778,6 @@ define([
                  (newMode === SceneMode.SCENE3D)));
     };
 
-    CentralBody.prototype._syncMorphTime = function(mode) {
-        switch (mode) {
-        case SceneMode.SCENE3D:
-            this.morphTime = 1.0;
-            break;
-
-        case SceneMode.SCENE2D:
-        case SceneMode.COLUMBUS_VIEW:
-            this.morphTime = 0.0;
-            break;
-
-        // MORPHING - don't change it
-        }
-    };
-
     CentralBody.prototype._prefetchImages = function() {
         var limit = Math.max(Math.min(this._prefetchLimit, this._dayTileProvider.zoomMax), this._dayTileProvider.zoomMin);
         var stack = [this._rootTile];
@@ -765,53 +794,19 @@ define([
     };
 
     CentralBody.prototype._createTextureCache = function(context) {
-        if (this._dayTileProvider &&
-            typeof this._dayTileProvider.tileWidth !== "undefined" &&
-            typeof this._dayTileProvider.tileHeight !== "undefined") {
-            this._texturePool = new Texture2DPool(this._dayTileProvider.tileWidth, this._dayTileProvider.tileHeight);
-        } else {
-            this._texturePool = undefined;
-        }
-
-        var pool = this._texturePool;
+        var pool = this._texturePool = new Texture2DPool(context);
 
         var fetch = function(tile) {
-            var texture;
-
-            var width = parseInt(tile.image.width, 10);
-            var height = parseInt(tile.image.height, 10);
-            var usePool = pool && (width === pool.getWidth() && height === pool.getHeight());
-            var inPool = false;
-
-            if (usePool && pool.hasAvailable()) {
-                texture = pool.getTexture();
-                inPool = true;
-            } else {
-                texture = context.createTexture2D({
-                    width : width,
-                    height : height,
-                    pixelFormat : PixelFormat.RGB
-                });
-            }
-
-            if (usePool && !inPool) {
-                pool.add(texture);
-            }
+            var texture = pool.createTexture2D({
+                width : tile.image.width,
+                height : tile.image.height,
+                pixelFormat : PixelFormat.RGB
+            });
             return texture;
         };
 
         var remove = function(tile) {
-            var width = tile.texture.getWidth();
-            var height = tile.texture.getHeight();
-            var usePool = (width === pool.getWidth() && height === pool.getHeight());
-
-            if (usePool) {
-                pool.remove(tile.texture);
-                tile.texture = undefined;
-            } else {
-                tile.texture = tile.texture && tile.texture.destroy();
-            }
-
+            tile.texture = tile.texture && tile.texture.destroy();
             tile._extentVA = tile._extentVA && tile._extentVA.destroy();
             tile.projection = undefined;
             tile.state = TileState.READY;
@@ -842,25 +837,24 @@ define([
         return this._dayTileProvider.loadTileImage(tile, onload, onerror, oninvalid);
     };
 
-    CentralBody.prototype._getTileBoundingSphere = function (tile, state) {
-        var boundingVolume;
-        if (state.mode === SceneMode.SCENE3D) {
-            boundingVolume = tile.get3DBoundingSphere().clone();
-        } else if (state.mode === SceneMode.COLUMBUS_VIEW){
-            boundingVolume = tile.get2DBoundingSphere(state.projection).clone();
+    CentralBody.prototype._getTileBoundingSphere = function(tile, sceneState) {
+        if (sceneState.mode === SceneMode.SCENE3D) {
+            return tile.get3DBoundingSphere();
+        } else if (sceneState.mode === SceneMode.COLUMBUS_VIEW) {
+            var boundingVolume = tile.get2DBoundingSphere(sceneState.scene2D.projection).clone();
             boundingVolume.center = new Cartesian3(0.0, boundingVolume.center.x, boundingVolume.center.y);
+            return boundingVolume;
         } else {
-            boundingVolume = tile.computeMorphBounds(this.morphTime, state.projection);
+            return tile.computeMorphBounds(this.morphTime, sceneState.scene2D.projection);
         }
-        return boundingVolume;
     };
 
-    CentralBody.prototype._cull = function(tile, state) {
-        if (state.mode === SceneMode.SCENE2D) {
-            var bRect = tile.get2DBoundingRectangle(state.projection);
+    CentralBody.prototype._cull = function(tile, sceneState) {
+        if (sceneState.mode === SceneMode.SCENE2D) {
+            var bRect = tile.get2DBoundingRectangle(sceneState.scene2D.projection);
 
-            var frustum = this._camera.frustum;
-            var position = this._camera.position;
+            var frustum = sceneState.camera.frustum;
+            var position = sceneState.camera.position;
             var x = position.x + frustum.left;
             var y = position.y + frustum.bottom;
             var w = position.x + frustum.right - x;
@@ -870,24 +864,25 @@ define([
             return !Rectangle.rectangleRectangleIntersect(bRect, fRect);
         }
 
-        var boundingVolume = this._getTileBoundingSphere(tile, state);
-        if (this._camera.getVisibility(boundingVolume, BoundingSphere.planeSphereIntersect) === Intersect.OUTSIDE) {
+        var boundingVolume = this._getTileBoundingSphere(tile, sceneState);
+        if (sceneState.camera.getVisibility(boundingVolume, BoundingSphere.planeSphereIntersect) === Intersect.OUTSIDE) {
             return true;
         }
 
-        if (state.mode === SceneMode.SCENE3D) {
+        if (sceneState.mode === SceneMode.SCENE3D) {
             var occludeePoint = tile.getOccludeePoint();
-            return (occludeePoint && !state.occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !state.occluder.isVisible(boundingVolume);
+            var occluder = this._occluder;
+            return (occludeePoint && !occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !occluder.isVisible(boundingVolume);
         }
 
         return false;
     };
 
-    CentralBody.prototype._throttleImages = function(state) {
+    CentralBody.prototype._throttleImages = function(sceneState) {
         for ( var i = 0, len = this._imageQueue.length; i < len && i < this._imageThrottleLimit; ++i) {
             var tile = this._imageQueue.dequeue();
 
-            if (this._cull(tile, state)) {
+            if (this._cull(tile, sceneState)) {
                 tile.state = TileState.READY;
                 continue;
             }
@@ -908,18 +903,18 @@ define([
     CentralBody.prototype._createBaseTile = function() {
         // Some tile servers, like Bing, don't have a base image for the entire central body.
         // Create a 1x1 image that will never get rendered.
-        var canvas = document.createElement("canvas");
+        var canvas = document.createElement('canvas');
         canvas.width = 1.0;
         canvas.height = 1.0;
 
         return canvas;
     };
 
-    CentralBody.prototype._throttleReprojection = function(state) {
+    CentralBody.prototype._throttleReprojection = function(sceneState) {
         for ( var i = 0, len = this._reprojectQueue.length; i < len && i < this._reprojectThrottleLimit; ++i) {
             var tile = this._reprojectQueue.dequeue();
 
-            if (this._cull(tile, state)) {
+            if (this._cull(tile, sceneState)) {
                 tile.image = undefined;
                 tile.state = TileState.READY;
                 continue;
@@ -931,11 +926,11 @@ define([
         }
     };
 
-    CentralBody.prototype._throttleTextures = function(state) {
+    CentralBody.prototype._throttleTextures = function(context, sceneState) {
         for ( var i = 0, len = this._textureQueue.length; i < len && i < this._textureThrottleLimit; ++i) {
             var tile = this._textureQueue.dequeue();
 
-            if (this._cull(tile, state) || !tile.image) {
+            if (this._cull(tile, sceneState) || !tile.image) {
                 tile.image = undefined;
                 tile.state = TileState.READY;
                 continue;
@@ -949,7 +944,7 @@ define([
                 wrapT : TextureWrap.CLAMP,
                 minificationFilter : TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
                 magnificationFilter : TextureMagnificationFilter.LINEAR,
-                maximumAnisotropy : state.context.getMaximumTextureFilterAnisotropy() || 8 // TODO: Remove Chrome work around
+                maximumAnisotropy : context.getMaximumTextureFilterAnisotropy() || 8 // TODO: Remove Chrome work around
             });
             tile.state = TileState.TEXTURE_LOADED;
             tile.image = undefined;
@@ -992,14 +987,13 @@ define([
         }
     };
 
-    CentralBody.prototype._enqueueTile = function(tile, state) {
+    CentralBody.prototype._enqueueTile = function(tile, context, sceneState) {
         if (this._renderQueue.contains(tile)) {
             return;
         }
 
-        var mode = state.mode;
-        var projection = state.projection;
-        var context = state.context;
+        var mode = sceneState.mode;
+        var projection = sceneState.scene2D.projection;
 
         // create vertex array the first time it is needed or when morphing
         if (!tile._extentVA ||
@@ -1145,9 +1139,13 @@ define([
         this._renderQueue.enqueue(tile);
     };
 
-    CentralBody.prototype._createTileDistanceFunction = function(width, height) {
-        var frustum = this._camera.frustum;
+    CentralBody.prototype._createTileDistanceFunction = function(sceneState, width, height) {
         var provider = this._dayTileProvider;
+        if (typeof provider === 'undefined') {
+            return undefined;
+        }
+
+        var frustum = sceneState.camera.frustum;
         var extent = provider.maxExtent;
 
         var pixelSizePerDistance = 2.0 * Math.tan(frustum.fovy * 0.5);
@@ -1169,9 +1167,9 @@ define([
         };
     };
 
-    CentralBody.prototype._refine3D = function(tile, state) {
+    CentralBody.prototype._refine3D = function(tile, context, sceneState) {
         var provider = this._dayTileProvider;
-        if (typeof provider === "undefined") {
+        if (typeof provider === 'undefined') {
             return false;
         }
 
@@ -1179,11 +1177,11 @@ define([
             return true;
         }
 
-        var boundingVolume = this._getTileBoundingSphere(tile, state);
-        var cameraPosition = state.camera.position;
-        var direction = state.camera.direction;
+        var boundingVolume = this._getTileBoundingSphere(tile, sceneState);
+        var cameraPosition = sceneState.camera.getPositionWC();
+        var direction = sceneState.camera.getDirectionWC();
 
-        var texturePixelError = (this.pixelError3D !== "undefined" && this.pixelError3D > 0.0) ? this.pixelError3D : 1.0;
+        var texturePixelError = (this.pixelError3D !== 'undefined' && this.pixelError3D > 0.0) ? this.pixelError3D : 1.0;
         var dmin = this._minTileDistance(tile.zoom, texturePixelError);
 
         var toCenter = boundingVolume.center.subtract(cameraPosition);
@@ -1197,18 +1195,18 @@ define([
         return false;
     };
 
-    CentralBody.prototype._refine2D = function(tile, state) {
-        var camera = this._camera;
+    CentralBody.prototype._refine2D = function(tile, context, sceneState) {
+        var camera = sceneState.camera;
         var frustum = camera.frustum;
         var pixelError = this.pixelError2D;
         var provider = this._dayTileProvider;
 
-        var projection = state.projection;
-        var viewport = state.context.getViewport();
+        var projection = sceneState.scene2D.projection;
+        var viewport = context.getViewport();
         var viewportWidth = viewport.width;
         var viewportHeight = viewport.height;
 
-        if (typeof provider === "undefined") {
+        if (typeof provider === 'undefined') {
             return false;
         }
 
@@ -1222,7 +1220,7 @@ define([
         if (tile.texture && !tile.texture.isDestroyed()) {
             tileWidth = tile.texture.getWidth();
             tileHeight = tile.texture.getHeight();
-        } else if (tile.image && typeof tile.image.width !== "undefined") {
+        } else if (tile.image && typeof tile.image.width !== 'undefined') {
             tileWidth = tile.image.width;
             tileHeight = tile.image.height;
         } else {
@@ -1243,19 +1241,12 @@ define([
         return false;
     };
 
-    /**
-     * Determines whether a tile should be refined to a higher resolution.
-     *
-     * @memberof CentralBody
-     *
-     * @return {Boolean} <code>true</code> if a higher resolution tile should be displayed or <code>false</code> if a higher resolution tile is not needed.
-     */
-    CentralBody.prototype.refine = function(tile, state) {
-        if (state.mode === SceneMode.SCENE2D) {
-            return this._refine2D(tile, state);
+    CentralBody.prototype._refine = function(tile, context, sceneState) {
+        if (sceneState.mode === SceneMode.SCENE2D) {
+            return this._refine2D(tile, context, sceneState);
         }
 
-        return this._refine3D(tile, state);
+        return this._refine3D(tile, context, sceneState);
     };
 
     CentralBody.prototype._createScissorRectangle = function(description) {
@@ -1285,15 +1276,12 @@ define([
         };
     };
 
-    CentralBody.prototype._computeDepthQuad = function() {
+    CentralBody.prototype._computeDepthQuad = function(sceneState) {
         // PERFORMANCE_TODO: optimize diagonal matrix multiplies.
         var dInverse = Matrix3.createNonUniformScale(this._ellipsoid.getRadii());
         var d = Matrix3.createNonUniformScale(this._ellipsoid.getOneOverRadii());
 
-        // TODO: Stop transforming camera position to world coordinates all the time.
-        var p = this._camera.position;
-        p = new Cartesian4(p.x, p.y, p.z, 1.0);
-        p = this._camera.transform.multiplyWithVector(p).getXYZ();
+        var p = sceneState.camera.getPositionWC();
 
         // Find the corresponding position in the scaled space of the ellipsoid.
         var q = d.multiplyWithVector(p);
@@ -1305,7 +1293,7 @@ define([
         var eUnit = Cartesian3.UNIT_Z.cross(q).normalize();
         var nUnit = qUnit.cross(eUnit).normalize();
 
-        // Determine the radius of the "limb" of the ellipsoid.
+        // Determine the radius of the 'limb' of the ellipsoid.
         var wMagnitude = Math.sqrt(q.magnitudeSquared() - 1.0);
 
         // Compute the center and offsets.
@@ -1322,6 +1310,181 @@ define([
         return [upperLeft.x, upperLeft.y, upperLeft.z, lowerLeft.x, lowerLeft.y, lowerLeft.z, upperRight.x, upperRight.y, upperRight.z, lowerRight.x, lowerRight.y, lowerRight.z];
     };
 
+    CentralBody.prototype._computePoleQuad = function(sceneState, maxLat, maxGivenLat, viewProjMatrix, viewportTransformation) {
+        var pt1 = this._ellipsoid.toCartesian(new Cartographic2(0.0, maxGivenLat));
+        var pt2 = this._ellipsoid.toCartesian(new Cartographic2(Math.PI, maxGivenLat));
+        var radius = pt1.subtract(pt2).magnitude() * 0.5;
+
+        var center = this._ellipsoid.toCartesian(new Cartographic2(0.0, maxLat));
+
+        var right;
+        var dir = sceneState.camera.direction;
+        if (1.0 - Cartesian3.UNIT_Z.negate().dot(dir) < CesiumMath.EPSILON6) {
+            right = Cartesian3.UNIT_X;
+        } else {
+            right = dir.cross(Cartesian3.UNIT_Z).normalize();
+        }
+
+        var screenRight = center.add(right.multiplyWithScalar(radius));
+        var screenUp = center.add(Cartesian3.UNIT_Z.cross(right).normalize().multiplyWithScalar(radius));
+
+        center = Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, center);
+        screenRight = Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, screenRight);
+        screenUp = Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, screenUp);
+
+        var halfWidth = Math.floor(Math.max(screenUp.subtract(center).magnitude(), screenRight.subtract(center).magnitude()));
+        var halfHeight = halfWidth;
+
+        return new Rectangle(
+                Math.floor(center.x) - halfWidth,
+                Math.floor(center.y) - halfHeight,
+                halfWidth * 2.0,
+                halfHeight * 2.0);
+    };
+
+    CentralBody.prototype._fillPoles = function(context, sceneState) {
+        if (typeof this._dayTileProvider === 'undefined' || sceneState.mode !== SceneMode.SCENE3D) {
+            return;
+        }
+
+        var viewProjMatrix = context.getUniformState().getViewProjection();
+        var viewportTransformation = context.getUniformState().getViewportTransformation();
+        var latitudeExtension = 0.05;
+
+        var extent;
+        var boundingVolume;
+        var frustumCull;
+        var occludeePoint;
+        var occluded;
+        var datatype;
+        var mesh;
+        var rect;
+        var positions;
+        var occluder = this._occluder;
+
+        // handle north pole
+        if (this._dayTileProvider.maxExtent.north < CesiumMath.PI_OVER_TWO) {
+            extent = new Extent(
+                -Math.PI,
+                this._dayTileProvider.maxExtent.north,
+                Math.PI,
+                CesiumMath.PI_OVER_TWO
+            );
+            boundingVolume = Extent.compute3DBoundingSphere(extent, this._ellipsoid);
+            frustumCull = sceneState.camera.getVisibility(boundingVolume, BoundingSphere.planeSphereIntersect) === Intersect.OUTSIDE;
+            occludeePoint = Extent.computeOccludeePoint(extent, this._ellipsoid).occludeePoint;
+            occluded = (occludeePoint && !occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !occluder.isVisible(boundingVolume);
+
+            this._drawNorthPole = !frustumCull && !occluded;
+            if (this._drawNorthPole) {
+                rect = this._computePoleQuad(sceneState, extent.north, extent.south - latitudeExtension, viewProjMatrix, viewportTransformation);
+                positions = [
+                    rect.x, rect.y,
+                    rect.x + rect.width, rect.y,
+                    rect.x + rect.width, rect.y + rect.height,
+                    rect.x, rect.y + rect.height
+                ];
+
+                if (typeof this._vaNorthPole === 'undefined') {
+                    mesh = {
+                        attributes : {
+                            position : {
+                                componentDatatype : ComponentDatatype.FLOAT,
+                                componentsPerAttribute : 2,
+                                values : positions
+                            }
+                        }
+                    };
+                    this._vaNorthPole = context.createVertexArrayFromMesh({
+                        mesh : mesh,
+                        attributeIndices : {
+                            position : 0
+                        },
+                        bufferUsage : BufferUsage.STREAM_DRAW
+                    });
+                } else {
+                    datatype = ComponentDatatype.FLOAT;
+                    this._vaNorthPole.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.toTypedArray(positions));
+                }
+            }
+        }
+
+        // handle south pole
+        if (this._dayTileProvider.maxExtent.south > -CesiumMath.PI_OVER_TWO) {
+            extent = new Extent(
+                -Math.PI,
+                -CesiumMath.PI_OVER_TWO,
+                Math.PI,
+                this._dayTileProvider.maxExtent.south
+            );
+            boundingVolume = Extent.compute3DBoundingSphere(extent, this._ellipsoid);
+            frustumCull = sceneState.camera.getVisibility(boundingVolume, BoundingSphere.planeSphereIntersect) === Intersect.OUTSIDE;
+            occludeePoint = Extent.computeOccludeePoint(extent, this._ellipsoid).occludeePoint;
+            occluded = (occludeePoint && !occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !occluder.isVisible(boundingVolume);
+
+            this._drawSouthPole = !frustumCull && !occluded;
+            if (this._drawSouthPole) {
+                rect = this._computePoleQuad(sceneState, extent.south, extent.north + latitudeExtension, viewProjMatrix, viewportTransformation);
+                positions = [
+                     rect.x, rect.y,
+                     rect.x + rect.width, rect.y,
+                     rect.x + rect.width, rect.y + rect.height,
+                     rect.x, rect.y + rect.height
+                 ];
+
+                 if (typeof this._vaSouthPole === 'undefined') {
+                     mesh = {
+                         attributes : {
+                             position : {
+                                 componentDatatype : ComponentDatatype.FLOAT,
+                                 componentsPerAttribute : 2,
+                                 values : positions
+                             }
+                         }
+                     };
+                     this._vaSouthPole = context.createVertexArrayFromMesh({
+                         mesh : mesh,
+                         attributeIndices : {
+                             position : 0
+                         },
+                         bufferUsage : BufferUsage.STREAM_DRAW
+                     });
+                 } else {
+                     datatype = ComponentDatatype.FLOAT;
+                     this._vaSouthPole.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.toTypedArray(positions));
+                 }
+            }
+        }
+
+        var that = this;
+        var drawUniforms = {
+            u_fbTexture : function() {
+                return that._fb.getColorTexture();
+            },
+            u_dayIntensity : function() {
+                return (that._dayTileProvider && that._dayTileProvider.getPoleIntensity && that._dayTileProvider.getPoleIntensity()) || 0.0;
+            }
+        };
+
+        if (typeof this._northPoleUniforms === 'undefined') {
+            this._northPoleUniforms = combine(drawUniforms, {
+                u_color : function() {
+                    return that.northPoleColor;
+                }
+            });
+            this._northPoleUniforms = combine(this._northPoleUniforms, this._drawUniforms);
+        }
+
+        if (typeof this._southPoleUniforms === 'undefined') {
+            this._southPoleUniforms = combine(drawUniforms, {
+                u_color : function() {
+                    return that.southPoleColor;
+                }
+            });
+            this._southPoleUniforms = combine(this._southPoleUniforms, this._drawUniforms);
+        }
+    };
+
     /**
      * @private
      */
@@ -1335,8 +1498,6 @@ define([
 
         var mode = sceneState.mode;
         var projection = sceneState.scene2D.projection;
-
-        this._syncMorphTime(mode);
 
         if (this._dayTileProvider !== this.dayTileProvider) {
             this._dayTileProvider = this.dayTileProvider;
@@ -1364,9 +1525,6 @@ define([
             });
 
             this._prefetchImages();
-
-            var viewport = context.getViewport();
-            this._minTileDistance = this._createTileDistanceFunction(viewport.width, viewport.height);
         }
 
         var hasLogo = this._dayTileProvider && this._dayTileProvider.getLogo;
@@ -1402,6 +1560,8 @@ define([
             (!this._quadV || this._quadV.isDestroyed()) ||
             (!this._quadH || this._quadH.isDestroyed())) {
 
+            this._minTileDistance = this._createTileDistanceFunction(sceneState, width, height);
+
             this._fb = this._fb && this._fb.destroy();
             this._quadV = this._quadV && this._quadV.destroy();
             this._quadH = this._quadH && this._quadH.destroy();
@@ -1417,7 +1577,7 @@ define([
 
             // create viewport quad for vertical gaussian blur pass
             this._quadV = new ViewportQuad(new Rectangle(0.0, 0.0, width, height));
-            this._quadV.vertexShader = "#define VERTICAL 1\n" + CentralBodyVSFilter;
+            this._quadV.vertexShader = '#define VERTICAL 1\n' + CentralBodyVSFilter;
             this._quadV.fragmentShader = CentralBodyFSFilter;
             this._quadV.uniforms.u_height = function() {
                 return height;
@@ -1463,17 +1623,17 @@ define([
                 bufferUsage : BufferUsage.STATIC_DRAW
             });
 
-            vs = "#define SKY_FROM_SPACE \n" +
-                 "#line 0 \n" +
+            vs = '#define SKY_FROM_SPACE \n' +
+                 '#line 0 \n' +
                  SkyAtmosphereVS;
 
-            fs = "#line 0\n" +
+            fs = '#line 0\n' +
                  SkyAtmosphereFS;
 
             this._spSkyFromSpace = context.getShaderCache().getShaderProgram(vs, fs);
 
-            vs = "#define SKY_FROM_ATMOSPHERE" +
-                 "#line 0 \n" +
+            vs = '#define SKY_FROM_ATMOSPHERE' +
+                 '#line 0 \n' +
                  SkyAtmosphereVS;
 
             this._spSkyFromAtmosphere = context.getShaderCache().getShaderProgram(vs, fs);
@@ -1525,7 +1685,7 @@ define([
         this._rsDepth.cull.enabled = cull;
 
         // update scisor/depth plane
-        var depthQuad = this._computeDepthQuad();
+        var depthQuad = this._computeDepthQuad(sceneState);
 
         // TODO: re-enable scissorTest
         /*if (mode === SceneMode.SCENE3D) {
@@ -1576,7 +1736,7 @@ define([
         if (!this._spDepth) {
             this._spDepth = context.getShaderCache().getShaderProgram(
                     CentralBodyVSDepth,
-                    "#line 0\n" +
+                    '#line 0\n' +
                     CentralBodyFSDepth, {
                         position : 0
                     });
@@ -1607,7 +1767,7 @@ define([
                 });
             };
             nightImage.onerror = function() {
-                that._exception = "Could not load image: " + this.src + ".";
+                that._exception = 'Could not load image: ' + this.src + '.';
             };
             nightImage.src = this.nightImageSource;
         }
@@ -1624,7 +1784,7 @@ define([
                 });
             };
             specularImage.onerror = function() {
-                that._exception = "Could not load image: " + this.src + ".";
+                that._exception = 'Could not load image: ' + this.src + '.';
             };
             specularImage.src = this.specularMapSource;
         }
@@ -1641,7 +1801,7 @@ define([
                 });
             };
             cloudsImage.onerror = function() {
-                that._exception = "Could not load image: " + this.src + ".";
+                that._exception = 'Could not load image: ' + this.src + '.';
             };
             cloudsImage.src = this.cloudsMapSource;
         }
@@ -1658,7 +1818,7 @@ define([
                 });
             };
             bumpImage.onerror = function() {
-                that._exception = "Could not load image: " + this.src + ".";
+                that._exception = 'Could not load image: ' + this.src + '.';
             };
             bumpImage.src = this.bumpMapSource;
         }
@@ -1671,22 +1831,31 @@ define([
         var specularChanged = ((this._showSpecular !== this.showSpecular) && (!this.showSpecular || this._specularTexture));
         var bumpsChanged = ((this._showBumps !== this.showBumps) && (!this.showBumps || this._bumpTexture));
 
-        if (!this._sp ||
+        if (typeof this._sp === 'undefined' || typeof this._spPoles === 'undefined' ||
             (dayChanged || nightChanged || cloudsChanged || cloudShadowsChanged || specularChanged || bumpsChanged) ||
-            (this._showTerminator !== this.showTerminator)) {
+            (this._showTerminator !== this.showTerminator) ||
+            (this._affectedByLighting !== this.affectedByLighting)) {
 
-            vs = "#line 0\n" +
+            var fsPrepend = ((this.showDay && this._dayTileProvider) ? '#define SHOW_DAY 1\n' : '') +
+                ((this.showNight && this._nightTexture) ? '#define SHOW_NIGHT 1\n' : '') +
+                ((this.showClouds && this._cloudsTexture) ? '#define SHOW_CLOUDS 1\n' : '') +
+                ((this.showCloudShadows && this._cloudsTexture) ? '#define SHOW_CLOUD_SHADOWS 1\n' : '') +
+                ((this.showSpecular && this._specularTexture) ? '#define SHOW_SPECULAR 1\n' : '') +
+                ((this.showBumps && this._bumpTexture) ? '#define SHOW_BUMPS 1\n' : '') +
+                (this.showTerminator ? '#define SHOW_TERMINATOR 1\n' : '') +
+                (this.affectedByLighting ? '#define AFFECTED_BY_LIGHTING 1\n' : '') +
+                '#line 0\n' +
+                CentralBodyFSCommon;
+            var groundFromSpacePrepend = '#define SHOW_GROUND_ATMOSPHERE 1\n' +
+                '#define SHOW_GROUND_ATMOSPHERE_FROM_SPACE 1\n';
+            var groundFromAtmospherePrepend = '#define SHOW_GROUND_ATMOSPHERE 1\n' +
+                '#define SHOW_GROUND_ATMOSPHERE_FROM_ATMOSPHERE 1\n';
+
+            vs = '#line 0\n' +
+                 GroundAtmosphere +
                  CentralBodyVS;
 
-            fs = ((this.showDay && this._dayTileProvider) ? "#define SHOW_DAY 1\n" : "") +
-                 ((this.showNight && this._nightTexture) ? "#define SHOW_NIGHT 1\n" : "") +
-                 ((this.showClouds && this._cloudsTexture) ? "#define SHOW_CLOUDS 1\n" : "") +
-                 ((this.showCloudShadows && this._cloudsTexture) ? "#define SHOW_CLOUD_SHADOWS 1\n" : "") +
-                 ((this.showSpecular && this._specularTexture) ? "#define SHOW_SPECULAR 1\n" : "") +
-                 ((this.showBumps && this._bumpTexture) ? "#define SHOW_BUMPS 1\n" : "") +
-                 (this.showTerminator ? "#define SHOW_TERMINATOR 1\n" : "") +
-                 "#line 0\n" +
-                 CentralBodyFS;
+            fs = fsPrepend + CentralBodyFS;
 
             this._spWithoutAtmosphere = this._spWithoutAtmosphere && this._spWithoutAtmosphere.release();
             this._spGroundFromSpace = this._spGroundFromSpace && this._spGroundFromSpace.release();
@@ -1694,19 +1863,30 @@ define([
 
             this._spWithoutAtmosphere = context.getShaderCache().getShaderProgram(vs, fs, attributeIndices);
             this._spGroundFromSpace = context.getShaderCache().getShaderProgram(
-                    "#define SHOW_GROUND_ATMOSPHERE 1\n" +
-                    "#define SHOW_GROUND_ATMOSPHERE_FROM_SPACE 1\n" +
-                    vs,
-                    "#define SHOW_GROUND_ATMOSPHERE 1\n" +
-                    "#define SHOW_GROUND_ATMOSPHERE_FROM_SPACE 1\n" +
-                    fs, attributeIndices);
+                    groundFromSpacePrepend + vs,
+                    groundFromSpacePrepend + fs,
+                    attributeIndices);
             this._spGroundFromAtmosphere = context.getShaderCache().getShaderProgram(
-                    "#define SHOW_GROUND_ATMOSPHERE 1\n" +
-                    "#define SHOW_GROUND_ATMOSPHERE_FROM_ATMOSPHERE 1\n" +
+                    groundFromAtmospherePrepend + vs,
+                    groundFromAtmospherePrepend + fs,
+                    attributeIndices);
+
+            vs = CentralBodyVSPole;
+            fs = fsPrepend + GroundAtmosphere + CentralBodyFSPole;
+
+            this._spPolesWithoutAtmosphere = this._spPolesWithoutAtmosphere && this._spPolesWithoutAtmosphere.release();
+            this._spPolesGroundFromSpace = this._spPolesGroundFromSpace && this._spPolesGroundFromSpace.release();
+            this._spPolesGroundFromAtmosphere = this._spPolesGroundFromAtmosphere && this._spPolesGroundFromAtmosphere.release();
+
+            this._spPolesWithoutAtmosphere = context.getShaderCache().getShaderProgram(vs, fs, attributeIndices);
+            this._spPolesGroundFromSpace = context.getShaderCache().getShaderProgram(
                     vs,
-                    "#define SHOW_GROUND_ATMOSPHERE 1\n" +
-                    "#define SHOW_GROUND_ATMOSPHERE_FROM_ATMOSPHERE 1\n" +
-                    fs, attributeIndices);
+                    groundFromSpacePrepend + fs,
+                    attributeIndices);
+            this._spPolesGroundFromAtmosphere = context.getShaderCache().getShaderProgram(
+                    vs,
+                    groundFromAtmospherePrepend + fs,
+                    attributeIndices);
 
             // Sync to public state
             this._showDay = dayChanged ? this.showDay : this._showDay;
@@ -1716,11 +1896,11 @@ define([
             this._showSpecular = specularChanged ? this.showSpecular : this._showSpecular;
             this._showBumps = bumpsChanged ? this.showBumps : this._showBumps;
             this._showTerminator = this.showTerminator;
+            this._affectedByLighting = this.affectedByLighting;
         }
 
-        var camera = this._camera;
-        var cameraPosition = camera.transform.multiplyWithVector(new Cartesian4(camera.position.x, camera.position.y, camera.position.z, 1.0)).getXYZ();
-        var cameraDirection = camera.transform.multiplyWithVector(new Cartesian4(camera.direction.x, camera.direction.y, camera.direction.z, 0.0)).getXYZ();
+        var camera = sceneState.camera;
+        var cameraPosition = camera.getPositionWC();
 
         this._fCameraHeight2 = cameraPosition.magnitudeSquared();
         this._fCameraHeight = Math.sqrt(this._fCameraHeight2);
@@ -1728,44 +1908,46 @@ define([
         if (this._fCameraHeight > this._outerRadius) {
             // Viewer in space
             this._spSky = this._spSkyFromSpace;
-            this._sp = this.showGroundAtmosphere ? this._spGroundFromSpace : this._spWithoutAtmosphere;
+            if (this.showGroundAtmosphere) {
+                this._sp = this._spGroundFromSpace;
+                this._spPoles = this._spPolesGroundFromSpace;
+            } else {
+                this._sp = this._spWithoutAtmosphere;
+                this._spPoles = this._spPolesWithoutAtmosphere;
+            }
         } else {
             // after the camera passes the minimum height, there is no ground atmosphere effect
             var showAtmosphere = this._ellipsoid.toCartographic3(cameraPosition).height >= this._minGroundFromAtmosphereHeight;
             if (this.showGroundAtmosphere && showAtmosphere) {
                 this._sp = this._spGroundFromAtmosphere;
+                this._spPoles = this._spPolesGroundFromAtmosphere;
             } else {
                 this._sp = this._spWithoutAtmosphere;
+                this._spPoles = this._spPolesWithoutAtmosphere;
             }
             this._spSky = this._spSkyFromAtmosphere;
         }
 
-        var state = {
-                context : context,
-                camera : {
-                    position : cameraPosition,
-                    direction : cameraDirection
-                },
-                occluder : new Occluder(new BoundingSphere(Cartesian3.ZERO, this._ellipsoid.getMinimumRadius()), cameraPosition),
-                mode : mode,
-                projection : projection
-        };
+        this._occluder.setCameraPosition(cameraPosition);
 
-        this._throttleImages(state);
-        this._throttleReprojection(state);
-        this._throttleTextures(state);
+        // TODO: refactor
+        this._fillPoles(context, sceneState);
+
+        this._throttleImages(sceneState);
+        this._throttleReprojection(sceneState);
+        this._throttleTextures(context, sceneState);
 
         var stack = [this._rootTile];
         while (stack.length !== 0) {
             var tile = stack.pop();
 
-            if (this._cull(tile, state)) {
+            if (this._cull(tile, sceneState)) {
                 continue;
             }
 
             if (!this._dayTileProvider || (tile.state === TileState.TEXTURE_LOADED && tile.texture && !tile.texture.isDestroyed())) {
-                if (tile.zoom + 1 > this._dayTileProvider.zoomMax || !this.refine(tile, state)) {
-                    this._enqueueTile(tile, state);
+                if ((this._dayTileProvider && tile.zoom + 1 > this._dayTileProvider.zoomMax) || !this._refine(tile, context, sceneState)) {
+                    this._enqueueTile(tile, context, sceneState);
                 } else {
                     var children = tile.getChildren();
                     for (var i = 0; i < children.length; ++i) {
@@ -1773,7 +1955,7 @@ define([
                         if ((child.state === TileState.TEXTURE_LOADED && child.texture && !child.texture.isDestroyed())) {
                             stack.push(child);
                         } else {
-                            this._enqueueTile(tile, state);
+                            this._enqueueTile(tile, context, sceneState);
                             this._processTile(child);
                         }
                     }
@@ -1869,6 +2051,28 @@ define([
             // render quad with horizontal gaussian blur
             this._quadH.render(context);
 
+            // render quads to fill the poles
+            if (this._mode === SceneMode.SCENE3D) {
+                if (this._drawNorthPole) {
+                    context.draw({
+                        primitiveType : PrimitiveType.TRIANGLE_FAN,
+                        shaderProgram : this._spPoles,
+                        uniformMap : this._northPoleUniforms,
+                        vertexArray : this._vaNorthPole,
+                        renderState : this._rsColor
+                    });
+                }
+                if (this._drawSouthPole) {
+                    context.draw({
+                        primitiveType : PrimitiveType.TRIANGLE_FAN,
+                        shaderProgram : this._spPoles,
+                        uniformMap : this._southPoleUniforms,
+                        vertexArray : this._vaSouthPole,
+                        renderState : this._rsColor
+                    });
+                }
+            }
+
             // render depth plane
             if (this._mode === SceneMode.SCENE3D) {
                 context.draw({
@@ -1879,7 +2083,7 @@ define([
                 });
             }
 
-            if (this._quadLogo && !this._quadLogo.isDestroyed()) {
+            if (typeof this._quadLogo !== 'undefined' && !this._quadLogo.isDestroyed()) {
                 this._quadLogo.render(context);
             }
         }
@@ -1920,12 +2124,7 @@ define([
 
             // destroy texture
             if (tile.texture) {
-                // if the texture isn't in the texture pool, destroy it; otherwise,
-                // it already has been or will be destroyed by it.
-                var width = tile.texture.getWidth();
-                var height = tile.texture.getHeight();
-                var usePool = this._texturePool && (width === this._texturePool.getWidth() && height === this._texturePool.getHeight());
-                tile.texture = (usePool) ? undefined : tile.texture && tile.texture.destroy();
+                tile.texture = tile.texture && tile.texture.destroy();
             }
 
             // process children
@@ -1973,13 +2172,21 @@ define([
      * centralBody = centralBody && centralBody.destroy();
      */
     CentralBody.prototype.destroy = function() {
+        this._destroyTileTree();
+
         this._texturePool = this._texturePool && this._texturePool.destroy();
         this._textureCache = this._textureCache && this._textureCache.destroy();
 
-        this._destroyTileTree();
         this._fb = this._fb && this._fb.destroy();
         this._quadV = this._quadV && this._quadV.destroy();
         this._quadH = this._quadH && this._quadH.destroy();
+
+        this._vaNorthPole = this._vaNorthPole && this._vaNorthPole.destroy();
+        this._vaSouthPole = this._vaSouthPole && this._vaSouthPole.destroy();
+
+        this._spPolesWithoutAtmosphere = this._spPolesWithoutAtmosphere && this._spPolesWithoutAtmosphere.release();
+        this._spPolesGroundFromSpace = this._spPolesGroundFromSpace && this._spPolesGroundFromSpace.release();
+        this._spPolesGroundFromAtmosphere = this._spPolesGroundFromAtmosphere && this._spPolesGroundFromAtmosphere.release();
 
         this._spWithoutAtmosphere = this._spWithoutAtmosphere && this._spWithoutAtmosphere.release();
         this._spGroundFromSpace = this._spGroundFromSpace && this._spGroundFromSpace.release();

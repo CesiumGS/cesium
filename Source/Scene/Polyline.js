@@ -281,21 +281,22 @@ define([
         this._rsThree = undefined;
         this._rsPick = undefined;
 
+        this._mode = SceneMode.SCENE3D;
+        this._projection = undefined;
+
         /**
-         * DOC_TBA
+         * The current morph transition time between 2D/Columbus View and 3D,
+         * with 0.0 being 2D or Columbus View and 1.0 being 3D.
          *
          * @type Number
          */
-        this.morphTime = 0.0;
-
-        this._mode = SceneMode.SCENE3D;
-        this._projection = undefined;
+        this.morphTime = this._mode.morphTime;
 
         var that = this;
 
         var drawUniformsOne = {
             u_color : function() {
-                return that.color; // Doesn't matter; doesn't write color
+                return that.color; // does not matter; does not write color
             },
             u_morphTime : function() {
                 return that.morphTime;
@@ -650,21 +651,6 @@ define([
         return this.show && (this.color.alpha !== 0);
     };
 
-    Polyline.prototype._syncMorphTime = function(mode) {
-        switch (mode) {
-        case SceneMode.SCENE3D:
-            this.morphTime = 1.0;
-            break;
-
-        case SceneMode.SCENE2D:
-        case SceneMode.COLUMBUS_VIEW:
-            this.morphTime = 0.0;
-            break;
-
-        // MORPHING - don't change it
-        }
-    };
-
     /**
      * Commits changes to properties before rendering by updating the object's WebGL resources.
      * This must be called before calling {@link Polyline#render} in order to realize
@@ -758,14 +744,17 @@ define([
 
             var mode = sceneState.mode;
             var projection = sceneState.scene2D.projection;
-            this._syncMorphTime(mode);
+
+            if (this._mode !== mode && typeof mode.morphTime !== 'undefined') {
+                this.morphTime = mode.morphTime;
+            }
 
             if (this.columbusView.groundTrack.show || (mode === SceneMode.SCENE2D)) {
                 this._spGroundTrack =
                     this._spGroundTrack ||
                     context.getShaderCache().getShaderProgram(
-                            "#define GROUND_TRACK\n" +
-                            "#line 0\n" +
+                            '#define GROUND_TRACK\n' +
+                            '#line 0\n' +
                             PolylineVS, PolylineFS, attributeIndices);
             } else {
                 this._spGroundTrack = this._spGroundTrack && this._spGroundTrack.release();
@@ -775,8 +764,8 @@ define([
                 this._spHeightTrack =
                     this._spHeightTrack ||
                     context.getShaderCache().getShaderProgram(
-                            "#define HEIGHT_TRACK\n" +
-                            "#line 0\n" +
+                            '#define HEIGHT_TRACK\n' +
+                            '#line 0\n' +
                             PolylineVS, PolylineFS, attributeIndices);
             } else {
                 this._spHeightTrack = this._spHeightTrack && this._spHeightTrack.release();

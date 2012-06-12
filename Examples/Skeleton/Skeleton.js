@@ -1,44 +1,33 @@
 /*global require*/
-require({ baseUrl : '../../Source' }, [
-        'Core/Ellipsoid',
-        'Core/SunPosition',
-        'Core/EventHandler',
-        'Core/MouseEventType',
-        'Core/requestAnimationFrame',
-        'Scene/Scene',
-        'Scene/CentralBody',
-        'Scene/BingMapsTileProvider',
-        'Scene/BingMapsStyle'
-    ], function(
-        Ellipsoid,
-        SunPosition,
-        EventHandler,
-        MouseEventType,
-        requestAnimationFrame,
-        Scene,
-        CentralBody,
-        BingMapsTileProvider,
-        BingMapsStyle) {
+require({
+    baseUrl : '../../Source'
+}, ['Cesium'], function(Cesium) {
     "use strict";
+    //A real application should require only the subset of modules that
+    //are actually used, instead of requiring the Cesium module, which
+    //includes everything.
 
-    var canvas = document.getElementById("glCanvas");
-    var ellipsoid = Ellipsoid.WGS84; // Used in many Sandbox examples
-    var scene = new Scene(canvas);
+    var canvas = document.getElementById('glCanvas');
+    var ellipsoid = Cesium.Ellipsoid.WGS84; // Used in many Sandbox examples
+    var scene = new Cesium.Scene(canvas);
     var primitives = scene.getPrimitives();
 
     // Bing Maps
-    var bing = new BingMapsTileProvider({
-        server : "dev.virtualearth.net",
-        mapStyle : BingMapsStyle.AERIAL
+    var bing = new Cesium.BingMapsTileProvider({
+        server : 'dev.virtualearth.net',
+        mapStyle : Cesium.BingMapsStyle.AERIAL,
+        // Some versions of Safari support WebGL, but don't correctly implement
+        // cross-origin image loading, so we need to load Bing imagery using a proxy.
+        proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
     });
 
-    var cb = new CentralBody(scene.getCamera(), ellipsoid);
+    var cb = new Cesium.CentralBody(ellipsoid);
     cb.dayTileProvider = bing;
-    cb.nightImageSource = "../../Images/land_ocean_ice_lights_2048.jpg";
-    cb.specularMapSource = "../../Images/earthspec1k.jpg";
+    cb.nightImageSource = '../../Images/land_ocean_ice_lights_2048.jpg';
+    cb.specularMapSource = '../../Images/earthspec1k.jpg';
     if (scene.getContext().getMaximumTextureSize() > 2048) {
-        cb.cloudsMapSource = "../../Images/earthcloudmaptrans.jpg";
-        cb.bumpMapSource = "../../Images/earthbump1k.jpg";
+        cb.cloudsMapSource = '../../Images/earthcloudmaptrans.jpg';
+        cb.bumpMapSource = '../../Images/earthbump1k.jpg';
     }
     cb.showSkyAtmosphere = true;
     cb.showGroundAtmosphere = true;
@@ -56,32 +45,57 @@ require({ baseUrl : '../../Source' }, [
 
     scene.setAnimation(function() {
         //scene.setSunPosition(scene.getCamera().position);
-        scene.setSunPosition(SunPosition.compute().position);
+        scene.setSunPosition(Cesium.SunPosition.compute().position);
 
         // Add code here to update primitives based on changes to animation time, camera parameters, etc.
     });
 
     (function tick() {
         scene.render();
-        requestAnimationFrame(tick);
+        Cesium.requestAnimationFrame(tick);
     }());
 
     ///////////////////////////////////////////////////////////////////////////
     // Example keyboard and Mouse handlers
 
-    var handler = new EventHandler(canvas);
+    var handler = new Cesium.EventHandler(canvas);
 
     handler.setKeyAction(function() {
         /* ... */
         // Handler for key press
-    }, "1");
+    }, '1');
 
     handler.setMouseAction(function(movement) {
         /* ... */
         // Use movement.startX, movement.startY, movement.endX, movement.endY
-    }, MouseEventType.MOVE);
+    }, Cesium.MouseEventType.MOVE);
 
-    document.oncontextmenu = function() {
+    canvas.oncontextmenu = function() {
         return false;
     };
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Example resize handler
+
+    window.onresize = function () {
+        var width = canvas.clientWidth;
+        var height = canvas.clientHeight;
+
+        if (canvas.width === width && canvas.height === height) {
+            return;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        scene.getContext().setViewport({
+            x: 0,
+            y: 0,
+            width: width,
+            height: height
+        });
+
+        scene.getCamera().frustum.aspectRatio = width / height;
+    };
+    window.onresize();
 });

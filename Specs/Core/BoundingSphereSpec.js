@@ -22,31 +22,31 @@ defineSuite([
             ];
     }
 
-    it("throws an exception when constructed without any positions", function() {
+    it('throws an exception when constructed without any positions', function() {
         expect(function() {
             return new BoundingSphere();
         }).toThrow();
     });
 
-    it("can be constructed using a point and a radius", function() {
+    it('can be constructed using a point and a radius', function() {
         var sphere = new BoundingSphere(new Cartesian3(0, 0, 0), 1);
-        expect(sphere.center.equals(Cartesian3.ZERO)).toBeTruthy();
+        expect(sphere.center.equals(Cartesian3.ZERO)).toEqual(true);
         expect(sphere.radius).toEqual(1);
     });
 
-    it("has a center", function() {
+    it('has a center', function() {
         var sphere = new BoundingSphere(getPositions());
         var center = sphere.center;
-        expect(center.equalsEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON14)).toBeTruthy();
+        expect(center.equalsEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON14)).toEqual(true);
     });
 
-    it("has a radius", function() {
+    it('has a radius', function() {
         var sphere = new BoundingSphere(getPositions());
         var radius = sphere.radius;
         expect(radius).toEqual(1);
     });
 
-    it("contains all points (naive)", function() {
+    it('contains all points (naive)', function() {
         var sphere = new BoundingSphere(getPositions());
         var radius = sphere.radius;
         var center = sphere.center;
@@ -59,13 +59,13 @@ defineSuite([
         var numPositions = positions.length;
         for ( var i = 0; i < numPositions; i++) {
             var currentPos = positions[i];
-            expect(currentPos.x <= max.x && currentPos.x >= min.x).toBeTruthy();
-            expect(currentPos.y <= max.y && currentPos.y >= min.y).toBeTruthy();
-            expect(currentPos.z <= max.z && currentPos.z >= min.z).toBeTruthy();
+            expect(currentPos.x <= max.x && currentPos.x >= min.x).toEqual(true);
+            expect(currentPos.y <= max.y && currentPos.y >= min.y).toEqual(true);
+            expect(currentPos.z <= max.z && currentPos.z >= min.z).toEqual(true);
         }
     });
 
-    it("contains all points (ritter)", function() {
+    it('contains all points (ritter)', function() {
         var positions = getPositions();
         positions.push(new Cartesian3(1, 1, 1), new Cartesian3(2, 2, 2), new Cartesian3(3, 3, 3));
         var sphere = new BoundingSphere(positions);
@@ -79,9 +79,9 @@ defineSuite([
         var numPositions = positions.length;
         for ( var i = 0; i < numPositions; i++) {
             var currentPos = positions[i];
-            expect(currentPos.x <= max.x && currentPos.x >= min.x).toBeTruthy();
-            expect(currentPos.y <= max.y && currentPos.y >= min.y).toBeTruthy();
-            expect(currentPos.z <= max.z && currentPos.z >= min.z).toBeTruthy();
+            expect(currentPos.x <= max.x && currentPos.x >= min.x).toEqual(true);
+            expect(currentPos.y <= max.y && currentPos.y >= min.y).toEqual(true);
+            expect(currentPos.z <= max.z && currentPos.z >= min.z).toEqual(true);
         }
     });
 });

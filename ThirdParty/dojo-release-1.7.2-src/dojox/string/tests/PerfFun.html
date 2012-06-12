@@ -1,0 +1,263 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+  "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <title>Perf Tests</title>
+    <script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true"></script>
+    <script type="text/javascript" src="lipsum.js"></script>
+    <script type="text/javascript">
+    dojo.addOnLoad(function(){
+      dojo.byId("run").disabled="";
+      dojo.connect(dojo.byId("run"), 
+                   "onclick", 
+                   function(evt) { 
+                     setTimeout(function() { 
+                       var words = parseInt(dojo.byId("numWords").value) || 10;
+                       var iters = parseInt(dojo.byId("numIters").value) || 1000;
+                       buildAndRunSet(words, iters); 
+                      }, 0); 
+                    });
+    });
+    
+    function element(tag, textOrChild) {
+      var e = document.createElement(tag);
+      if(dojo.isArray(textOrChild)){  dojo.forEach(textOrChild, function(c) { e.appendChild(c); }); }
+      if(dojo.isString(textOrChild)){
+      	e.appendChild(document.createTextNode(textOrChild));
+      }else{
+      	e.appendChild(textOrChild);
+      }
+      return e;
+    }
+    
+    function log(t) {
+      dojo.byId("mess").innerHTML = t;
+    }
+    
+    function reportRun(results){
+      var runs = results.runs;
+      var report = element("dl",
+                     element("dt", 
+                             "Run with " + results.words + " words, " + 
+                                           results.iterations + " iterations and overhead of " + 
+                                           results.overhead));
+                          
+      runs.sort(function(a,b) { return a.time - b.time; });
+      dojo.forEach(runs, function(r) {
+        report.appendChild(element("dd", r.time + " - " + r.name));
+      });
+      
+      dojo.body().appendChild(report);
+    }
+    
+    function runTest(test, iterations, expected) {
+      var i;
+      if(expected != test()){ throw new Error("Test failed expecting " + expected + ", got " + test()); }
+      var start = new Date().getTime(), end;
+      for(i=0; i < iterations; i++){
+        test();
+      }
+      end = new Date().getTime();
+      return end-start;
+    }
+    
+    function runSet(set, iterations){
+      
+      var tests = set.tests.concat(); //copy tests
+      var resultSet = {};
+      resultSet.words = set.words.length;
+      resultSet.overhead = runTest(function(){}, iterations);
+      resultSet.iterations = iterations;
+      var runs = [];
+      
+      function _run() {
+        var t = tests.pop();
+        try {
+          log("Running " + t.name);
+          if(t && !t.skip){ runs.push({ name: t.name, time: runTest(t.test, iterations, set.expected)}); }
+        } catch(e) {
+          console.error("Error running " + t.name, e);
+        }
+        if(tests.length > 0) {
+          setTimeout(_run, 0);
+        }
+        else {
+          log("Done!");
+          resultSet.runs = runs;
+          reportRun(resultSet);
+        }
+      }
+      setTimeout(_run, 0);
+    }
+    
+    function buildTestSet(numWords) {
+      var words = [], i, wordsInLipsum = lipsum.length;
+      for(i = numWords; i > 0; i-=wordsInLipsum) { 
+        if(i >= wordsInLipsum) { words = words.concat(lipsum); }
+        else { words = words.concat(lipsum.slice(-i)); } 
+      }
+      if(words.length != numWords){ throw new Error("wrong number of words, got " + words.length + ", expected " + numWords); }
+
+      var expected = words.join("");
+      
+      //console.log(words);
+      
+      return { 
+        tests: [
+          {
+            name: "dojoForEach",
+            test: function() {
+              var s = "";
+              dojo.forEach(words, function(w) { s+=w; });
+              return s;
+            }
+          },
+          {
+            name: "nativeForEach",
+            test: function() {
+              var s = "";
+              words.forEach(function(w) { s += w; });
+              return s;
+            },
+            skip: !words.forEach
+          },
+          {
+            name: "forLoop",
+            test: function() {
+              var s="",w=words; l=w.length;
+              for(var i = 0; i < l; i++) {
+                s += w[i];
+              }
+              return s;
+            }
+          },
+          {
+            name: "forLoopCallingInlineFunction",
+            test: function() {
+              var s="",w=words; l=w.length;
+              function fn(w) { s += w; }
+              for(var i = 0; i < l; i++) {
+                fn(w[i]);
+              }
+              return s;
+            }
+          },
+          {
+            name: "forLoopCallingExternalFunction",
+            test: function() {
+              var g_s="",w=words; l=w.length;
+              for(var i = 0; i < l; i++) {
+                externalAppend(w[i]);
+              }
+              return g_s;
+            }
+          },
+          {
+            name: "forLoopWithInCheck",
+            test: function() {
+              var s="",w=words; l=w.length;
+              for(var i = 0; i < l; i++) {
+                if(i in w){ s += w[i]; }
+              }
+              return s;
+            }
+          },
+          {
+            name: "emptyFor",
+            test: function() {
+              var w = words; l = w.length;
+              for(var i = 0; i < l; i++){ empty(w[i]); }
+              return expected;
+            }
+          },
+          {
+            name: "emptyForEach",
+            test: function() {
+              dojo.forEach(words, empty);
+              return expected;
+            }
+          } ,
+          {
+            name: "identFor",
+            test: function() {
+              var w = words; l = w.length;
+              for(var i = 0; i < l; i++){ ident(w[i]); }
+              return expected;
+            }
+          },
+          {
+            name: "identForEach",
+            test: function() {
+              dojo.forEach(words, ident);
+              return expected;
+            }
+          },
+          {
+            name: "addUsingFor",
+            test: function() {
+              var x=0;
+              for(var i=0;i<1000;i++){x=x+a[i];}
+              return expected; // fake
+            }
+          },
+          {
+            name: "addUsingForEach",
+            test: function() {
+              var x=0;
+              dojo.forEach(a, function(v,i){x=x+a[i];});
+              return expected; // fake
+            }
+          }
+        ],
+        words: words,
+        expected: expected
+      };
+    }
+    
+    function buildAndRunSet(words, times) {
+      runSet(buildTestSet(words), times);
+    }
+    
+    function ident(w) { return w; }
+    function empty() { }
+    
+    var g_s = "";
+    function externalAppend(w){ g_s += w; }
+    
+    var a = new Array(1000);
+    for(var i=0; i<1000;i++){a[i]=i;}
+    
+    </script>
+    <style type="text/css">
+    html { 
+      font-family: Lucida Grande, Tahoma;
+    }
+    div { margin-bottom: 1em; }
+    #results {
+      border: 1px solid #999;
+      border-collapse: collapse;
+    }
+    #results caption {
+      font-size: medium;
+      font-weight: bold;
+    }
+    #results td, #results th {
+      text-align: right;
+      width: 10em;
+      font-size: small;
+      white-space: nowrap;
+    }
+    #wordsCol { background: yellow; }
+    td.max { color: red; font-weight: bold; }
+    td.min { color: green; font-weight: bold; }
+    </style>
+  </head>
+  <body>
+    <table>
+      <tr><td><label for="numWords">Words</label></td><td><input type="text" id="numWords" value="100"/></td></tr>
+      <tr><td><label for="numIters">Iterations</label></td><td><input type="text" id="numIters" value="1000"/></td></tr>
+      <tr><td></td><td><button id="run" disabled>Run Tests!</button></td></tr>
+    </table>
+    <div id="mess"></div>    
+  </body>
+</html>

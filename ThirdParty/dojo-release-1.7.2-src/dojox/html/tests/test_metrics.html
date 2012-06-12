@@ -1,0 +1,59 @@
+<html>
+<head>
+<title>Metrics tests</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+</style>
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true, fontSizeWatch: true"></script>
+<script type="text/javascript">
+
+dojo.require("dojox.html.metrics");
+
+var sz_to_cell = {};
+
+var updateSize = function(){
+	var sz = dojox.html.metrics.getFontMeasurements();
+	for(var p in sz_to_cell){
+		sz_to_cell[p].innerHTML = sz[p];
+	}
+}
+
+dojo.addOnLoad(function(){
+	dojo.connect(dojox.html.metrics, "onFontResize", function(){
+		console.log("Text size changed: ", dojox.html.metrics.getFontMeasurements());
+		updateSize();
+	});
+	console.log("Scrollbar measurements: ", dojox.html.metrics.getScrollbar());
+	console.log("Font measurements: ", dojox.html.metrics.getFontMeasurements());
+
+	var sz = dojox.html.metrics.getFontMeasurements();
+	for(var p in sz){
+		var row = document.createElement('tr');
+		var rel = document.createElement('td');
+		var act = sz_to_cell[p] = document.createElement('td');
+
+		rel.innerHTML = p;
+		act.innerHTML = sz[p];
+
+		row.appendChild(rel);
+		row.appendChild(act);
+
+		dojo.byId('sz_table').appendChild(row);
+	}
+});
+
+</script>
+</head>
+<body>
+	<div>Try changing the text size of your browser (make sure you're not just zooming the view).</div>
+	<table border="1">
+        <tbody id="sz_table">
+    		<tr>
+    			<th>Relative size</th><th>Actual pixel size (px)</th>
+    		</tr>
+        </tbody>
+	</table>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>dojox.fx.highlight</title>
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug:true"></script>
+	<script type="text/javascript">	
+		dojo.require("dojox.fx");
+		dojo.require("dojox.fx.ext-dojo.NodeList"); 
+	</script>
+	<style type="text/css">
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/themes/dijit.css";
+		@import "../../../dijit/themes/tundra/tundra.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+	</style>
+</head>
+<body class="tundra">
+
+	<h1 class="testTitle">dojox.fx.highlight tests</h1>
+
+	<div id="attention" style="position:absolute; left:300px; top:200px; padding:10px;" >
+		<h3>This is the default highlight</h3>
+	</div>
+
+	<div id="attention2" style="position:absolute; left:300px; top:80px; padding:10px;" >
+		<h3>BRING ATTENTION HERE!</h3>
+	</div>
+
+	<div id="attention3"  style="position:absolute; left:350px; top:150px; padding:10px; background-color:#CCCCCC" >
+		<h3>Highlight me</h3>
+	</div>
+
+	<a href="javascript:void(0)" onClick="dojox.fx.highlight({node:'attention'}).play()">test #1 (default)</a>
+    <br>
+	<a href="javascript:void(0)" onClick="dojox.fx.highlight({node:'attention', repeat:1}).play()">test #2 (default - play twice)</a>
+	<br>
+	<a href="javascript:void(0)" onClick="dojox.fx.highlight({node:'attention2', color:'#0066FF', duration:800}).play()">test #3</a>
+    <br>
+	<a href="javascript:void(0)" onClick="dojox.fx.highlight({node:'attention3', color:'#0066FF', duration:800}).play()">test #4</a>
+    <br>
+	<a href="javascript:void(0)" onClick="dojo.query('a').highlight().play(100)">highlight via dojo.query</a>
+
+
+</body></html>

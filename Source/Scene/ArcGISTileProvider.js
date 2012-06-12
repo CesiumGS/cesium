@@ -1,11 +1,13 @@
 /*global define*/
 define([
         '../Core/DeveloperError',
+        '../Core/Extent',
         '../Core/Math',
         '../Core/jsonp',
         './Projections'
     ], function(
         DeveloperError,
+        Extent,
         CesiumMath,
         jsonp,
         Projections) {
@@ -31,8 +33,8 @@ define([
      * @see OpenStreetMapTileProvider
      * @see CompositeTileProvider
      *
-     * @see <a href="http://resources.esri.com/help/9.3/arcgisserver/apis/rest/">ArcGIS Server REST API</a>
-     * @see <a href="http://www.w3.org/TR/cors/">Cross-Origin Resource Sharing</a>
+     * @see <a href='http://resources.esri.com/help/9.3/arcgisserver/apis/rest/'>ArcGIS Server REST API</a>
+     * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
      *
      * @example
      * // ArcGIS World Street Maps tile provider
@@ -46,11 +48,11 @@ define([
         var instance = desc.instance || 'arcgis/rest';
 
         if (!desc.host) {
-            throw new DeveloperError("description.host is required.", "description.host");
+            throw new DeveloperError('description.host is required.');
         }
 
         if (!desc.service) {
-            throw new DeveloperError("description.service is required.", "description.service");
+            throw new DeveloperError('description.service is required.');
         }
 
         this._url = 'http://' + desc.host + '/' + instance + '/services/';
@@ -68,7 +70,7 @@ define([
         this.host = desc.host;
 
         /**
-         * The instance name. The default value is "/arcgis/rest".
+         * The instance name. The default value is '/arcgis/rest'.
          * @type {String}
          */
         this.instance = instance;
@@ -93,14 +95,14 @@ define([
          * The cartographic extent of the base tile, with north, south, east and
          * west properties in radians.
          *
-         * @type {Object}
+         * @type {Extent}
          */
-        this.maxExtent = {
-            north : CesiumMath.toRadians(85.05112878),
-            south : CesiumMath.toRadians(-85.05112878),
-            west : -CesiumMath.PI,
-            east : CesiumMath.PI
-        };
+        this.maxExtent = new Extent(
+            -CesiumMath.PI,
+            CesiumMath.toRadians(-85.05112878),
+            CesiumMath.PI,
+            CesiumMath.toRadians(85.05112878)
+        );
 
         /**
          * The width of every image loaded.
@@ -145,12 +147,12 @@ define([
         jsonp(this._url, function(data) {
             var credit = data.copyrightText;
 
-            var canvas = document.createElement("canvas");
+            var canvas = document.createElement('canvas');
             canvas.width = 800.0;
             canvas.height = 20.0;
 
-            var context = canvas.getContext("2d");
-            context.fillStyle = "#fff";
+            var context = canvas.getContext('2d');
+            context.fillStyle = '#fff';
             context.font = '12px sans-serif';
             context.textBaseline = 'top';
             context.fillText(credit, 0, 0);
@@ -179,7 +181,7 @@ define([
      */
     ArcGISTileProvider.prototype.loadTileImage = function(tile, onload, onerror) {
         if (tile.zoom < this.zoomMin || tile.zoom > this.zoomMax) {
-            throw new DeveloperError("The zoom must be between in [zoomMin, zoomMax].", "tile.zoom");
+            throw new DeveloperError('tile.zoom must be between in [zoomMin, zoomMax].');
         }
 
         var image = new Image();

@@ -1,0 +1,146 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>Test DateTextBoxNew Islamic Widget</title>
+
+		<style type="text/css">
+			@import "../../../dojo/resources/dojo.css";
+			@import "../../../dijit/tests/css/dijitTests.css";
+
+			.testExample {
+				background-color:#fbfbfb;
+				padding:1em;
+				margin-bottom:1em;
+				border:1px solid #bfbfbf;
+			}
+
+			.noticeMessage {
+				color:#093669;
+				font-size:0.95em;
+				margin-left:0.5em;
+			}
+
+			.dojoTitlePaneLabel label {
+				font-weight:bold;
+			}
+		</style>
+
+		<!-- required: the default dijit theme: -->
+		<link id="themeStyles" rel="stylesheet" href="../../../dijit/themes/tundra/tundra.css">
+
+		<!-- required: dojo.js -->
+		<script type="text/javascript" src="../../../dojo/dojo.js"
+			djConfig=" isDebug: true, parseOnLoad: true, extraLocale: ['en-us', 'ar']"></script>
+
+		<!-- only needed for alternate theme testing: -->
+		<script type="text/javascript" src="../../../dijit/tests/_testCommon.js"></script>
+
+		<script type="text/javascript">
+			dojo.require("dijit.dijit"); // optimize: load dijit layer
+			dojo.require("dijit.form.Form");
+			dojo.require("dojo.date.locale");
+			dojo.require("dojox.date.islamic"); // TODO: think about changing this packaging so we don't have to include .locale module also
+			dojo.require("dojox.date.islamic.locale");
+			dojo.require("dijit.form.DateTextBox");
+			dojo.require("dojo.parser");	// scan page for widgets and instantiate them
+
+			function eventHandler(e){
+				// use this.domNode.getAttribute('widgetId') to show "this" is the widget
+				// mouseleave/enter map to mouseout/over in all browsers except IE
+				console.log(this.domNode.getAttribute('widgetId') + ' ' + arguments[0].type);
+			}
+		</script>
+	</head>
+
+	<body class="tundra">
+		
+		<h1 class="testTitle">Test DateTextBoxNew Islamic Widget</h1>
+		<!--	to test form submission, you'll need to create an action handler similar to
+			http://www.utexas.edu/teamweb/cgi-bin/generic.cgi -->
+		<form id="form1" dojoType='dijit.form.Form' action="" name="example" method="">
+			<div class="dojoTitlePaneLabel">
+				<label for="q1"> Islamic  Calendar </label>
+				<span class="noticeMessage">DateTextBox class, datePackage="dojox.date.islamic"</span>
+			</div>
+			<div class="testExample">
+				<input id="q1" name="noDOMvalue" value="2009-03-10" type="text" dojoType="dijit.form.DateTextBox" datePackage="dojox.date.islamic"
+					lang="ar"
+					onMouseEnter="eventHandler"
+					onMouseLeave="eventHandler"
+					onKeyDown="eventHandler"
+					onChange="dojo.byId('oc1').value=''+arguments[0]"
+				>
+				onChange:<input id="oc1" size="34" disabled value="not fired yet!" autocomplete="off">
+				<nobr>
+				<button type=button onclick="dijit.byId('q1').attr('value', null);">set value to null</button>
+				<button type=button onclick="dojo.byId('gv1').value=''+dijit.byId('q1').attr('value');">get value</button>
+				<input id="gv1" size="34" disabled value="not called yet!" autocomplete="off">
+				</nobr>
+			</div>
+			<div class="dojoTitlePaneLabel">
+				<label for="q1"> Gregorian Date</label>
+				<span class="noticeMessage">DateTextBox class, Gregorian Calendar with min max  </span>
+			</div>
+			<div class="testExample">
+				<input id="Text1" name="noDOMvalue" value="2009-01-20" type="text" dojoType="dijit.form.DateTextBox" 
+					lang="en"
+					constraints="{min:'2009-01-01',max:'2009-02-01', datePattern:'dd MMMM yyyy'}"
+					onMouseEnter="eventHandler"
+					onMouseLeave="eventHandler"
+					onKeyDown="eventHandler"
+					onChange="dojo.byId('oc2').value=''+arguments[0]"
+				>
+				onChange:<input id="oc2" size="34" disabled value="not fired yet!" autocomplete="off">
+				<nobr>
+				<button type=button onclick="dijit.byId('Text1').attr('value', null);" ID="Button1">set value to null</button>
+				<button type=button onclick="dojo.byId('Text3').value=''+dijit.byId('Text1').attr('value');" ID="Button2">get value</button>
+				<input id="Text3" size="34" disabled value="not called yet!" autocomplete="off" NAME="Text3">
+				</nobr>
+			</div>
+				<div class="dojoTitlePaneLabel">
+				<label for="q1"> Gregorian Date </label>
+				<span class="noticeMessage">DateTextBox class,  Gregorian Calendar</span>
+			</div>
+			<div class="testExample">
+				<input id="Text4" name="noDOMvalue" value="2009-01-20" type="text" dojoType="dijit.form.DateTextBox" 
+					lang="en"
+					onMouseEnter="eventHandler"
+					onMouseLeave="eventHandler"
+					onKeyDown="eventHandler"
+					onChange="dojo.byId('oc3').value=''+arguments[0]"
+				>
+				onChange:<input id="oc3" size="34" disabled value="not fired yet!" autocomplete="off">
+
+			<script>
+			// See if we can make a widget in script and attach it to the DOM ourselves.
+			dojo.addOnLoad(function(){
+		//		dojo.connect(dijit.byId('q5'), "onMouseEnter", eventHandler);
+		//		dojo.connect(dijit.byId('q5'), "onMouseLeave", eventHandler);
+		//		dojo.connect(dijit.byId('q5'), "onKeyDown", eventHandler);
+
+			});
+			</script>
+
+			<script>
+				function displayData() {
+					var f = document.getElementById("form1");
+					var s = "";
+					for (var i = 0; i < f.elements.length; i++) {
+						var elem = f.elements[i];
+						if (elem.name == "button")  { continue; }
+						s += elem.name + ": " + elem.value + "\n";
+					}
+					alert(s);
+				}
+			</script>
+
+			
+			<div>
+				<button name="button" onclick="displayData(); return false;">view data</button>
+				<input type="submit" name="submit" />
+				<input type="reset" name="reset" />
+			</div>
+		</form>
+	</body>
+</html>

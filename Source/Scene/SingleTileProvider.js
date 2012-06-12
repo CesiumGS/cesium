@@ -1,10 +1,12 @@
 /*global define*/
 define([
         '../Core/DeveloperError',
+        '../Core/Extent',
         '../Core/Math',
         './Projections'
     ], function(
         DeveloperError,
+        Extent,
         CesiumMath,
         Projections) {
     "use strict";
@@ -27,7 +29,7 @@ define([
      */
     function SingleTileProvider(url, proxy) {
         if (typeof url === 'undefined') {
-            throw new DeveloperError("url is required.", "url");
+            throw new DeveloperError('url is required.');
         }
 
         this._url = url;
@@ -38,14 +40,14 @@ define([
          * west properties in radians.
          *
          * @constant
-         * @type {Object}
+         * @type {Extent}
          */
-        this.maxExtent = {
-            north : CesiumMath.PI_OVER_TWO,
-            south : -CesiumMath.PI_OVER_TWO,
-            west : -CesiumMath.PI,
-            east : CesiumMath.PI
-        };
+        this.maxExtent = new Extent(
+            -CesiumMath.PI,
+            -CesiumMath.PI_OVER_TWO,
+            CesiumMath.PI,
+            CesiumMath.PI_OVER_TWO
+        );
 
         /**
          * The maximum zoom level that can be requested.
@@ -86,7 +88,7 @@ define([
      */
     SingleTileProvider.prototype.loadTileImage = function(tile, onload, onerror) {
         if (tile.zoom < this.zoomMin || tile.zoom > this.zoomMax) {
-            throw new DeveloperError("The zoom must be between in [zoomMin, zoomMax].", "tile.zoom");
+            throw new DeveloperError('tile.zoom must be between in [zoomMin, zoomMax].');
         }
 
         var image = new Image();

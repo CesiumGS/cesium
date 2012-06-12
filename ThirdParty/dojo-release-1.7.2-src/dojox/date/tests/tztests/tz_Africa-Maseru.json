@@ -1,0 +1,18 @@
+({
+	name: "date.timezone.Africa-Maseru",
+	runTest: function(t){
+		var tz = "Africa/Maseru";
+		doh.checkDate({tzOffset: -110, tzAbbr: "LMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: -110, tzAbbr: "LMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: -110, tzAbbr: "LMT"}, -2109289801000, tz, 1);
+		doh.checkDate({tzOffset: -120, tzAbbr: "SAST"}, -2109289800000, tz, 1);
+		doh.checkDate({tzOffset: -120, tzAbbr: "SAST"}, -829526401000, tz, 1);
+		doh.checkDate({tzOffset: -180, tzAbbr: "SAST"}, -829526400000, tz, 1);
+		doh.checkDate({tzOffset: -180, tzAbbr: "SAST"}, -813805201000, tz, 1);
+		doh.checkDate({tzOffset: -120, tzAbbr: "SAST"}, -813805200000, tz, 1);
+		doh.checkDate({tzOffset: -120, tzAbbr: "SAST"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: -120, tzAbbr: "SAST"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: -120, tzAbbr: "SAST"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: -120, tzAbbr: "SAST"}, 1246789800000, tz, 0);
+	}
+})

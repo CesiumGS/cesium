@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<entry xmlns='http://www.w3.org/2005/Atom'>
+		<title>Test Entry #1</title>
+		<id>http://example.com/sampleEntry.xml/entry/1</id>
+		<link rel='alternate' href='http://example.com/1.html'/>
+		<summary type='html'>
+			&lt;p>This is a sample entry in our Atom feed.  It is simply a bunch of stuff in the summary.&lt;/p>
+			&lt;p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Cras cursus. Aliquam eget metus sed leo lacinia 
+			rutrum. Nunc lacus lacus, viverra placerat, laoreet nec, placerat vel, eros. Donec nec magna id sem commodo rutrum. 
+			Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos hymenaeos. Aenean pede. Quisque vel 
+			leo. In vitae nisi. Curabitur sodales congue nibh. Maecenas ultrices ante nec ipsum. Aenean quis nibh. Aenean semper, 
+			quam vitae ullamcorper euismod, arcu leo tincidunt nunc, vel pulvinar turpis dolor a elit. Praesent nonummy nunc 
+			faucibus nibh. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Vivamus laoreet, 
+			ante auctor condimentum venenatis, magna quam varius elit, at feugiat dolor metus id quam. Etiam enim.&lt;/p>
+		</summary>
+		<author>
+			<name>Test User</name>
+			<email>test@example.com</email>
+		</author>
+		<updated>2007-08-07T04:00:00-05:00</updated>
+</entry>

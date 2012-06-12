@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>require.js: allplugins-text Test</title>
+    <script type="text/javascript" src="allplugins-require.js"></script>
+    <script type="text/javascript" src="../doh/runner.js"></script>
+    <script type="text/javascript" src="../doh/_browserRunner.js"></script>
+    <script type="text/javascript">
+    require(
+        {
+            baseUrl: "./"
+        },
+        ["require", "text!helloWorld.txt"],
+        function(require, helloWorld) {
+            doh.register(
+                        "allplugins-text",
+                        [
+                            function allpluginsText(t){
+                                t.is("hello world", helloWorld);
+                            }
+                        ]
+                    );
+            doh.run();
+        }
+    );
+    </script>
+</head>
+<body>
+    <h1>require.js: allplugins-text Test</h1>
+    <p><b>REQUIRES a built allplugins-require.js file built from build.sh in this directory</b></p>
+    <p>Check console for messages</p>
+</body>
+</html>

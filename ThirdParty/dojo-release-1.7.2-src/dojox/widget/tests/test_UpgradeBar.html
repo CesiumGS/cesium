@@ -1,0 +1,59 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>UpgradeBar Test</title>
+	<style type="text/css">
+		body{
+			font-family:sans-serif;
+		}
+		@import "../../../dijit/tests/css/dijitTests.css";
+	</style>
+	<link href="../UpgradeBar/UpgradeBar.css" rel="stylesheet" />
+	
+	<script type="text/javascript" src="../../../dojo/dojo.js" djconfig="parseOnLoad:false, isDebug: false"></script>
+
+	<script type="text/javascript">
+		dojo.require("dojox.widget.UpgradeBar");
+		
+		new dojox.widget.UpgradeBar({
+			notifications:[
+				{
+					validate:function(){
+						return dojo.isIE<10;	
+					},
+					message:   '<span>Your version of Internet Explorer needs to be upgraded to Firefox.</span>'
+							 + '<a href="http://www.getfirefox.net/">Get Firefox</a>'
+				},
+				{
+					validate:function(){
+						return dojo.isFF<4;
+					},
+					message:   '<span>Your version of Firefox needs to be upgraded to a version that does not exist.</span>'
+							 + '<a href="http://www.getfirefox.net/">Get Firefox</a>'
+				},
+				{
+					validate:function(){
+						var evals = true;
+						try{ evals = dojox.embed.Flash.available<14}catch(e){}
+						return evals;	
+					},
+					message:   '<span>This app needs a version of Flash that has never been released.</span>'
+							 + '<a href="http://www.adobe.com/downloads/">Get Flash Player</a>'
+				},
+				{
+					validate:function(){
+						return !google.gears;	
+					},
+					message:   '<span>This app will perform better with Google Gears.</span>'
+							 + '<a href="http://gears.google.com/download.html">Download Google Gears</a>'
+				}
+			]	
+		});
+	</script>
+	
+</head>
+<body class="tundra">
+	<h1 class="testTitle">dojox.widget.UpgradeBar</h1>
+</body>
+</html>

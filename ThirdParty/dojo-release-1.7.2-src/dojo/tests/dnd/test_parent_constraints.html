@@ -1,0 +1,55 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>Dojo parent constraint test</title>
+	<style type="text/css">
+		@import "../../resources/dojo.css";
+
+		body {
+			padding: 1em;
+		}
+
+		.moveable {
+			background: #FFFFBF;
+			border: 1px solid black;
+			width: 300px;
+			padding: 10px 20px;
+			cursor: pointer;
+		}
+
+		.parent {
+			background: #BFECFF;
+			border: 10px solid lightblue;
+			width: 500px;
+			height: 500px;
+			padding: 10px;
+			margin: 10px;
+		}
+	</style>
+	<script type="text/javascript" src="../../dojo.js" djConfig="isDebug: true"></script>
+	<!--
+	<script type="text/javascript" src="../../dnd/move.js"></script>
+	-->
+	<script type="text/javascript">
+		dojo.require("dojo.dnd.move");
+		var m1, m2, m3, m4;
+		var init = function(){
+			m1 = new dojo.dnd.move.parentConstrainedMoveable("moveable1", {area: "margin", within: true});
+			m2 = new dojo.dnd.move.parentConstrainedMoveable("moveable2", {area: "border", within: true});
+			m3 = new dojo.dnd.move.parentConstrainedMoveable("moveable3", {area: "padding", within: true});
+			m4 = new dojo.dnd.move.parentConstrainedMoveable("moveable4", {area: "content", within: true});
+		};
+		dojo.addOnLoad(init);
+	</script>
+</head>
+<body>
+	<h1>Dojo parent constraint test</h1>
+	<div class="parent" id="parent">
+		<div><strong>This is the parent element.</strong> All children will be restricted with <strong>within = true</strong>.</div>
+		<div class="moveable" id="moveable1">I am restricted within my parent's margins.</div>
+		<div class="moveable" id="moveable2">I am restricted within my parent's border.</div>
+		<div class="moveable" id="moveable3">I am restricted within my parent's paddings.</div>
+		<div class="moveable" id="moveable4">I am restricted within my parent's content.</div>
+	</div>
+</body>
+</html>

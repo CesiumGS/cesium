@@ -54,11 +54,10 @@ define([
         frustum.near = 0.01 * maxRadii;
         frustum.far = 60.0 * maxRadii;
 
-        var transform = new Matrix4(
-                0.0, 0.0, 1.0, 0.0,
-                1.0, 0.0, 0.0, 0.0,
-                0.0, 1.0, 0.0, 0.0,
-                0.0, 0.0, 0.0, 1.0);
+        var transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
+                                    1.0, 0.0, 0.0, 0.0,
+                                    0.0, 1.0, 0.0, 0.0,
+                                    0.0, 0.0, 0.0, 1.0);
 
         this._camera2D = {
             position : position,
@@ -128,6 +127,55 @@ define([
         this.endMorphOnMouseInput = true;
     }
 
+    //immediately set the morph time of all objects in the scene
+    function setMorphTime(scene, morphTime) {
+        scene.morphTime = morphTime;
+
+        var primitives = scene.getPrimitives();
+        for ( var i = 0, len = primitives.getLength(); i < len; i++) {
+            var primitive = primitives.get(i);
+            if (typeof primitive.morphTime !== 'undefined') {
+                primitive.morphTime = morphTime;
+            }
+        }
+
+        var centralBody = primitives.getCentralBody();
+        centralBody.morphTime = morphTime;
+    }
+
+    //in the future the animations will be more complicated
+    function addMorphTimeAnimations(transitioner, scene, start, stop, duration, onComplete) {
+        //for now, all objects morph at the same rate
+        var template = {
+            duration : duration,
+            easingFunction : Tween.Easing.Quartic.EaseOut
+        };
+
+        var primitives = scene.getPrimitives();
+        var sceneAnimations = scene.getAnimations();
+        var animation;
+        for ( var i = 0, len = primitives.getLength(); i < len; i++) {
+            var primitive = primitives.get(i);
+            if (typeof primitive.morphTime !== 'undefined') {
+                animation = sceneAnimations.addProperty(primitive, 'morphTime', start, stop, template);
+                transitioner._currentAnimations.push(animation);
+            }
+        }
+
+        var centralBody = primitives.getCentralBody();
+        animation = sceneAnimations.addProperty(centralBody, 'morphTime', start, stop, template);
+        transitioner._currentAnimations.push(animation);
+
+        if (typeof onComplete !== 'undefined') {
+            template.onComplete = function() {
+                onComplete.call(transitioner);
+            };
+        }
+
+        animation = sceneAnimations.addProperty(scene, 'morphTime', start, stop, template);
+        transitioner._currentAnimations.push(animation);
+    }
+
     /**
      * DOC_TBA
      * @memberof SceneTransitioner
@@ -137,6 +185,7 @@ define([
 
         if (scene.mode !== SceneMode.SCENE2D) {
             scene.mode = SceneMode.SCENE2D;
+            setMorphTime(scene, 0.0);
 
             this._destroyMorphHandler();
 
@@ -165,6 +214,7 @@ define([
 
         if (scene.mode !== SceneMode.COLUMBUS_VIEW) {
             scene.mode = SceneMode.COLUMBUS_VIEW;
+            setMorphTime(scene, 0.0);
 
             this._destroyMorphHandler();
 
@@ -198,6 +248,7 @@ define([
 
         if (scene.mode !== SceneMode.SCENE3D) {
             scene.mode = SceneMode.SCENE3D;
+            setMorphTime(scene, 1.0);
 
             this._destroyMorphHandler();
 
@@ -221,7 +272,7 @@ define([
         }
     };
 
-    SceneTransitioner.prototype._createMorphHandler = function (endMorphFunction) {
+    SceneTransitioner.prototype._createMorphHandler = function(endMorphFunction) {
         var that = this;
 
         var controllers = this._scene.getCamera().getControllers();
@@ -229,28 +280,21 @@ define([
 
         if (this.endMorphOnMouseInput) {
             this._morphHandler = new EventHandler(this._scene.getCanvas());
-            this._morphHandler.setMouseAction(function () {
+
+            var cancelMorph = function() {
                 that._morphCancelled = true;
                 endMorphFunction.call(that);
-            }, MouseEventType.LEFT_DOWN);
-            this._morphHandler.setMouseAction(function () {
-                that._morphCancelled = true;
-                endMorphFunction.call(that);
-            }, MouseEventType.MIDDLE_DOWN);
-            this._morphHandler.setMouseAction(function () {
-                that._morphCancelled = true;
-                endMorphFunction.call(that);
-            }, MouseEventType.RIGHT_DOWN);
-            this._morphHandler.setMouseAction(function () {
-                that._morphCancelled = true;
-                endMorphFunction.call(that);
-            }, MouseEventType.WHEEL);
+            };
+            this._morphHandler.setMouseAction(cancelMorph, MouseEventType.LEFT_DOWN);
+            this._morphHandler.setMouseAction(cancelMorph, MouseEventType.MIDDLE_DOWN);
+            this._morphHandler.setMouseAction(cancelMorph, MouseEventType.RIGHT_DOWN);
+            this._morphHandler.setMouseAction(cancelMorph, MouseEventType.WHEEL);
         }
     };
 
-    SceneTransitioner.prototype._destroyMorphHandler = function () {
+    SceneTransitioner.prototype._destroyMorphHandler = function() {
         var animations = this._scene.getAnimations();
-        for (var i = 0; i < this._currentAnimations.length; ++i) {
+        for ( var i = 0; i < this._currentAnimations.length; ++i) {
             animations.remove(this._currentAnimations[i]);
         }
         this._currentAnimations.length = 0;
@@ -491,8 +535,6 @@ define([
         var that = this;
 
         var scene = this._scene;
-        var primitives = scene.getPrimitives();
-        var cb = primitives.getCentralBody();
 
         var camera = scene.getCamera();
         this._changeCameraTransform(camera, this._cameraCV.transform);
@@ -511,6 +553,7 @@ define([
             camera.up = that._columbusViewMorph(startUp, endUp, value.time);
             camera.right = camera.direction.cross(camera.up);
         };
+
         var animation = scene.getAnimations().add({
             duration : duration,
             easingFunction : Tween.Easing.Quartic.EaseOut,
@@ -529,33 +572,10 @@ define([
         });
         this._currentAnimations.push(animation);
 
-        for ( var i = 0; i < primitives.getLength(); ++i) {
-            var p = primitives.get(i);
-            if(typeof p.morphTime !== 'undefined')
-            {
-                animation = scene.getAnimations().addProperty(p, "morphTime", 1.0, 0.0, {
-                    duration : duration,
-                    easingFunction : Tween.Easing.Quartic.EaseOut
-                // TODO:
-                //delayDuration : p.delayDuration
-                });
-                this._currentAnimations.push(animation);
-            }
-        }
-
-        animation = scene.getAnimations().addProperty(cb, "morphTime", 1.0, 0.0, {
-            duration : duration,
-            easingFunction : Tween.Easing.Quartic.EaseOut,
-            onComplete : function () {
-                if (onComplete) {
-                    onComplete.call(that);
-                }
-            }
-        });
-        this._currentAnimations.push(animation);
+        addMorphTimeAnimations(this, scene, 1.0, 0.0, duration, onComplete);
     };
 
-    SceneTransitioner.prototype._scene2DTo3D = function (duration, onComplete) {
+    SceneTransitioner.prototype._scene2DTo3D = function(duration, onComplete) {
         duration = duration * 0.5;
 
         var camera = this._scene.getCamera();
@@ -567,25 +587,8 @@ define([
         });
     };
 
-    SceneTransitioner.prototype._sceneCVTo3D = function (duration, onComplete) {
+    SceneTransitioner.prototype._sceneCVTo3D = function(duration, onComplete) {
         var scene = this._scene;
-        var primitives = scene.getPrimitives();
-        var cb = primitives.getCentralBody();
-
-        var animation;
-        for ( var i = 0; i < primitives.getLength(); ++i) {
-            var p = primitives.get(i);
-            if(typeof p.morphTime !== 'undefined')
-            {
-                animation = scene.getAnimations().addProperty(p, "morphTime", 0.0, 1.0, {
-                    duration : duration,
-                    easingFunction : Tween.Easing.Quartic.EaseOut
-                //TODO:
-                //delayDuration : p.delayDuration
-                });
-                this._currentAnimations.push(animation);
-            }
-        }
 
         var that = this;
 
@@ -609,7 +612,8 @@ define([
             camera.up = that._columbusViewMorph(startUp, endUp, value.time);
             camera.right = camera.direction.cross(camera.up);
         };
-        animation = scene.getAnimations().add({
+
+        var animation = scene.getAnimations().add({
             duration : duration,
             easingFunction : Tween.Easing.Quartic.EaseOut,
             startValue : {
@@ -622,14 +626,7 @@ define([
         });
         this._currentAnimations.push(animation);
 
-        animation = scene.getAnimations().addProperty(cb, "morphTime", 0.0, 1.0, {
-            duration : duration,
-            easingFunction : Tween.Easing.Quartic.EaseOut,
-            onComplete : function() {
-                onComplete.call(that);
-            }
-        });
-        this._currentAnimations.push(animation);
+        addMorphTimeAnimations(this, scene, 0.0, 1.0, duration, onComplete);
     };
 
     /**
@@ -708,7 +705,7 @@ define([
      *
      * @see SceneTransitioner#destroy
      */
-    SceneTransitioner.prototype.isDestroyed = function () {
+    SceneTransitioner.prototype.isDestroyed = function() {
         return false;
     };
 
@@ -728,7 +725,7 @@ define([
      * @example
      * transitioner = transitioner && transitioner.destroy();
      */
-    SceneTransitioner.prototype.destroy = function () {
+    SceneTransitioner.prototype.destroy = function() {
         this._destroyMorphHandler();
         return destroyObject(this);
     };

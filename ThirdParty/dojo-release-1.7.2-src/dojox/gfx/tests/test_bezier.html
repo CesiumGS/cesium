@@ -1,0 +1,80 @@
+﻿<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" >
+<head>
+<title>Approximation of an arc with bezier</title>
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+</style>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+<script type="text/javascript">
+dojo.require("dojox.gfx");
+dojo.require("dojox.gfx.shape");
+dojo.require("dojox.gfx.path");
+dojo.require("dojox.gfx.arc");
+
+createSurface = function(){
+	var surface = dojox.gfx.createSurface("test", 500, 500);
+	surface.whenLoaded(makeShapes);
+};
+
+makeShapes = function(surface){
+	var g = surface.createGroup();
+	
+	// create a reference ellipse
+	var rx = 200;
+	var ry = 100;
+	var startAngle = -30;
+	var arcAngle = -90;
+	var axisAngle = -30;
+	var e = g.createEllipse({rx: rx, ry: ry}).setStroke({});
+	
+	// calculate a bezier
+	var alpha = dojox.gfx.matrix._degToRad(arcAngle) / 2; // half of our angle
+	var cosa  = Math.cos(alpha);
+	var sina  = Math.sin(alpha);
+	// start point
+	var p1 = {x: cosa, y: sina};
+	// 1st control point
+	var p2 = {x: cosa + (4 / 3) * (1 - cosa), y: sina - (4 / 3) * cosa * (1 - cosa) / sina};
+	// 2nd control point (symmetric to the 1st one)
+	var p3 = {x: p2.x, y: -p2.y};
+	// end point (symmetric to the start point)
+	var p4 = {x: p1.x, y: -p1.y};
+	
+	// rotate and scale poins as appropriate
+	var s = dojox.gfx.matrix.normalize([dojox.gfx.matrix.scale(e.shape.rx, e.shape.ry), dojox.gfx.matrix.rotateg(startAngle + arcAngle / 2)]);
+	p1 = dojox.gfx.matrix.multiplyPoint(s, p1);
+	p2 = dojox.gfx.matrix.multiplyPoint(s, p2);
+	p3 = dojox.gfx.matrix.multiplyPoint(s, p3);
+	p4 = dojox.gfx.matrix.multiplyPoint(s, p4);
+	// draw control trapezoid
+	var t = g.createPath().setStroke({color: "blue"});
+	t.moveTo(p1.x, p1.y);
+	t.lineTo(p2.x, p2.y);
+	t.lineTo(p3.x, p3.y);
+	t.lineTo(p4.x, p4.y);
+	t.lineTo(p1.x, p1.y);
+	t.moveTo((p1.x + p4.x) / 2, (p1.y + p4.y) / 2);
+	t.lineTo((p2.x + p3.x) / 2, (p2.y + p3.y) / 2);
+	t.moveTo((p1.x + p2.x) / 2, (p1.y + p2.y) / 2);
+	t.lineTo((p3.x + p4.x) / 2, (p3.y + p4.y) / 2);
+	// draw a bezier
+	var b = g.createPath().setStroke({color: "red"});
+	b.moveTo(p1.x, p1.y);
+	b.curveTo(p2.x, p2.y, p3.x, p3.y, p4.x, p4.y);
+	// move everything in a middle
+	g.setTransform([dojox.gfx.matrix.translate(250, 150), dojox.gfx.matrix.rotateg(axisAngle)]);
+};
+
+dojo.addOnLoad(createSurface);
+
+</script>
+</head>
+<body>
+<h1>Approximation of an arc with bezier</h1>
+<!--<p><button onclick="makeShapes();">Make</button></p>-->
+<div id="test" style="width: 500px; height: 300px;"></div>
+<p>That's all Folks!</p>
+</body>
+</html>

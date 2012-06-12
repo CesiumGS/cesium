@@ -1,0 +1,16 @@
+({
+	name: "date.timezone.Africa-Mogadishu",
+	runTest: function(t){
+		var tz = "Africa/Mogadishu";
+		doh.checkDate({tzOffset: -180, tzAbbr: "EAT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: -180, tzAbbr: "EAT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: -180, tzAbbr: "EAT"}, -1230778801000, tz, 1);
+		doh.checkDate({tzOffset: -150, tzAbbr: "BEAT"}, -1230778800000, tz, 1);
+		doh.checkDate({tzOffset: -150, tzAbbr: "BEAT"}, -410236201000, tz, 1);
+		doh.checkDate({tzOffset: -180, tzAbbr: "EAT"}, -410236200000, tz, 1);
+		doh.checkDate({tzOffset: -180, tzAbbr: "EAT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: -180, tzAbbr: "EAT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: -180, tzAbbr: "EAT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: -180, tzAbbr: "EAT"}, 1246789800000, tz, 0);
+	}
+})

@@ -19,15 +19,15 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URLEncoder;
-import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.regex.Pattern;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpUtils;
 
+import org.eclipse.jetty.client.Address;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.HttpExchange;
 import org.eclipse.jetty.continuation.Continuation;
@@ -38,7 +38,7 @@ import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
 public final class ProxyHandler extends AbstractHandler {
-	private HashSet<String> allowedHosts = new HashSet<String>();
+	private final Pattern allowedHosts;
 	private HttpClient client;
 
 	private final HashSet<String> dontProxyHeaders = new HashSet<String>();
@@ -54,16 +54,47 @@ public final class ProxyHandler extends AbstractHandler {
 		dontProxyHeaders.add("upgrade");
 	}
 
-	public ProxyHandler(String allowedHostList) throws Exception {
-		allowedHosts.addAll(Arrays.asList(allowedHostList.split(",")));
+	public ProxyHandler(String allowedHostList, String upstreamProxyHost, Integer upstreamProxyPort, String noUpstreamProxyHostList) throws Exception {
+		allowedHosts = hostListToPattern(allowedHostList);
 
 		client = new HttpClient();
+
+		if (upstreamProxyHost != null && upstreamProxyHost.length() > 0) {
+			if (upstreamProxyPort == null)
+				upstreamProxyPort = 80;
+
+			client.setProxy(new Address(upstreamProxyHost, upstreamProxyPort));
+
+			if (noUpstreamProxyHostList != null) {
+				HashSet<String> set = new HashSet<String>();
+				for (String noUpstreamProxyHost : noUpstreamProxyHostList.split(",")) {
+					set.add(noUpstreamProxyHost.trim());
+				}
+				client.setNoProxy(set);
+			}
+		}
+
 		client.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
 		client.start();
 	}
 
-	public void handle(String target, Request baseRequest, final HttpServletRequest request, final HttpServletResponse response) throws IOException,
-			ServletException {
+	private static final Pattern hostListToPattern(String hosts) {
+		// build a regex that matches any of the given hosts
+		StringBuilder pattern = new StringBuilder();
+		for (String allowedHost : hosts.split(",")) {
+			pattern.append("(?:");
+			pattern.append(allowedHost.trim().replace(".", "\\.").replace("*", ".*"));
+			pattern.append(")|");
+		}
+
+		// trim trailing |
+		if (pattern.length() > 0)
+			pattern.setLength(pattern.length() - 1);
+
+		return Pattern.compile(pattern.toString(), Pattern.CASE_INSENSITIVE);
+	}
+
+	public void handle(String target, Request baseRequest, final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
 		Enumeration<?> parameterNames = request.getParameterNames();
 		if (!parameterNames.hasMoreElements()) {
 			response.sendError(400, "No url specified.");
@@ -77,7 +108,7 @@ public final class ProxyHandler extends AbstractHandler {
 			throw new ServletException(e);
 		}
 
-		if (!allowedHosts.contains(uri.getHost())) {
+		if (!allowedHosts.matcher(uri.getHost()).matches()) {
 			response.sendError(400, "Host not in list of allowed hosts.");
 			return;
 		}

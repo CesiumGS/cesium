@@ -9,7 +9,7 @@ define([
     /*global expect*/
 
     function renderFragment(context, fs) {
-        var vs = "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
+        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var sp = context.createShaderProgram(vs, fs);
 
         var va = context.createVertexArray();

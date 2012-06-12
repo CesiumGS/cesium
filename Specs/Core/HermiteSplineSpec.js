@@ -27,7 +27,7 @@ defineSuite([
         }];
     });
 
-    it("constructor throws an exception with invalid control points", function() {
+    it('constructor throws an exception with invalid control points', function() {
         expect(function() {
             return new HermiteSpline();
         }).toThrow();
@@ -41,19 +41,19 @@ defineSuite([
         }).toThrow();
     });
 
-    it("get control points", function() {
+    it('get control points', function() {
         var hs = new HermiteSpline(points);
         expect(hs.getControlPoints()).toEqual(points);
     });
 
-    it("evaluate fails with undefined time", function() {
+    it('evaluate fails with undefined time', function() {
         var hs = new HermiteSpline(points);
         expect(function() {
             hs.evaluate();
         }).toThrow();
     });
 
-    it("evaluate fails with time out of range", function() {
+    it('evaluate fails with time out of range', function() {
         var hs = new HermiteSpline(points);
 
         expect(function() {
@@ -65,22 +65,22 @@ defineSuite([
         }).toThrow();
     });
 
-    it("evaluate can jump around in time", function() {
+    it('evaluate can jump around in time', function() {
         var hs = new HermiteSpline(points);
 
-        expect(hs.evaluate(points[0].time).equals(points[0].point)).toBeTruthy();
+        expect(hs.evaluate(points[0].time).equals(points[0].point)).toEqual(true);
 
         // jump forward
-        expect(hs.evaluate(points[1].time).equals(points[1].point)).toBeTruthy();
+        expect(hs.evaluate(points[1].time).equals(points[1].point)).toEqual(true);
 
         // jump backward
-        expect(hs.evaluate(points[0].time).equals(points[0].point)).toBeTruthy();
+        expect(hs.evaluate(points[0].time).equals(points[0].point)).toEqual(true);
 
         // jump far forward
-        expect(hs.evaluate(points[points.length - 2].time).equals(points[points.length - 2].point)).toBeTruthy();
+        expect(hs.evaluate(points[points.length - 2].time).equals(points[points.length - 2].point)).toEqual(true);
 
         // jump far back
-        expect(hs.evaluate(points[0].time).equals(points[0].point)).toBeTruthy();
+        expect(hs.evaluate(points[0].time).equals(points[0].point)).toEqual(true);
     });
 
     // returns a function for a hermite curve between points p and q
@@ -101,7 +101,7 @@ defineSuite([
         };
     };
 
-    it("natural cubic spline", function() {
+    it('natural cubic spline', function() {
         points = [{
             point : new Cartesian3(1.0, 0.0, 0.0),
             time : 0.0
@@ -124,11 +124,11 @@ defineSuite([
 
         var granularity = 0.1;
         for ( var i = points[0].time; i < points[1].time; i = i + granularity) {
-            expect(hs.evaluate(i).equalsEpsilon(interpolate(i), CesiumMath.EPSILON3)).toBeTruthy();
+            expect(hs.evaluate(i).equalsEpsilon(interpolate(i), CesiumMath.EPSILON3)).toEqual(true);
         }
     });
 
-    it("clamped cubic spline", function() {
+    it('clamped cubic spline', function() {
         points = [{
             point : new Cartesian3(1.0, 0.0, 0.0),
             time : 0.0,
@@ -153,7 +153,7 @@ defineSuite([
 
         var granularity = 0.1;
         for ( var i = points[0].time; i < points[1].time; i = i + granularity) {
-            expect(hs.evaluate(i).equalsEpsilon(interpolate(i), CesiumMath.EPSILON3)).toBeTruthy();
+            expect(hs.evaluate(i).equalsEpsilon(interpolate(i), CesiumMath.EPSILON3)).toEqual(true);
         }
     });
 });

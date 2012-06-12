@@ -1,0 +1,148 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>GridContainerLite [acceptTypes, dragRestriction]</title>
+
+	<!-- Specific CSS -->
+	<style type="text/css" title="text/css">
+		/* <![CDATA[ */
+			@import "../../../dojo/resources/dojo.css";
+			@import "../../../dijit/themes/tundra/tundra.css";
+
+			body{
+				padding-left:10px;
+			}
+			.cpane{
+				border:1px solid #666;
+				font:bold 12px Arial;
+				color:#F60;
+				background:#FFF;
+				padding:5px;
+				height:100px;
+			}
+			
+			.gridContainerZone > div{
+				margin: 5px;
+			}
+			
+			.dj_ie6 .dropIndicator, .dj_ie6 .cpane{
+				margin: 10px;
+			}
+		/* ]]> */
+	</style>
+	
+	<link rel="stylesheet" href="../resources/GridContainer.css">
+	
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript" language="javascript">
+		dojo.require("dojox.layout.GridContainerLite");
+		dojo.require("dijit.layout.ContentPane");
+
+		var canDisplayPopup = true;
+		
+		function displayPopup(grid) {
+			//	summary:
+			//		Display a popup when a widget can not be moved (not accepted type)
+
+			if(canDisplayPopup){
+				canDisplayPopup = false;
+				var popup = dojo.doc.createElement("div");
+				dojo.addClass(popup, "gridContainerPopup");
+				popup.innerHTML = "Impossible to move this widget ! ";
+				var attachPopup = dijit.byId("GC1").containerNode.appendChild(popup);
+				setTimeout(dojo.hitch(this, function(){
+					dijit.byId("GC1").containerNode.removeChild(attachPopup);
+					dojo.destroy(attachPopup);
+					canDisplayPopup = true;
+				}), 1500);
+			}
+		};
+
+		dojo.addOnLoad(function(){
+			dojo.subscribe("/dojox/layout/gridContainer/moveRestriction",displayPopup);
+		});
+	</script>
+</head>
+
+<body class="orange">
+	<h1>GridContainerLite with acceptTypes</h1>
+		<ul>
+			<li>Try to drag and Drop Widget !</li>
+			<li>Try to drag and Drop Widget with keyBoard (no drag and drop between GridContainer)</li>
+			<ul>
+				<li>Use Tab to place focus on the GridContainer.</li>
+				<li>Use Arrows to place focus on children</li>
+				<li>Use Shift + Arrows to drag and drop a child</li>
+			</ul>
+			<li>Try to drag widgets which have an attribute dragRestriction="true". It's imposible !</li>
+		</ul>
+		
+		<div style="position:absolute;top:150px;left:50px;width:400px;">
+			<h3>AcceptTypes :</h3>
+			<p>text (equal to any dndType), color, animal</p>
+			<div id="GC1" 
+				dojoType="dojox.layout.GridContainerLite" 
+				nbZones="3" 
+				isAutoOrganized="true"
+				doLayout="false"
+				acceptTypes="text, color, animal">
+				<div dojoType="dijit.layout.ContentPane" class="cpane" dndType="animal">
+		   			I am a Tiger : drag Me !
+			  	</div>
+			  	<div dojoType="dijit.layout.ContentPane" class="cpane">
+			   		I have no type (text) : Drag Me !
+			  	</div>
+			  	<div dojoType="dijit.layout.ContentPane" class="cpane" dndType="color" style="background-color:blue">
+			   		I am a color : Drag Me !
+			  	</div>
+			  	<div dojoType="dijit.layout.ContentPane" class="cpane" dragRestriction="true">
+			   		I have a dragRestriction : Try to Drag Me !
+			  	</div>
+			  	<div dojoType="dijit.layout.ContentPane" class="cpane" dndType="animal">
+		   			I am a Snake : Drag Me !
+			  	</div>
+			  	<div dojoType="dijit.layout.ContentPane" class="cpane" dndType="motor">
+			   		I am a car : Drag Me !
+			  	</div>
+			  	
+			</div>
+		</div>
+		<div style="position:absolute;top:150px;left:500px;width:600px;">
+			<h3>AcceptTypes :</h3>
+			<p>color, motor</p>
+			<div id="GC2" 
+				dojoType="dojox.layout.GridContainerLite" 
+				nbZones="4" 
+				isAutoOrganized="true"
+				doLayout="false"
+				acceptTypes="color, motor">
+				<div dojoType="dijit.layout.ContentPane" class="cpane" dndType="color" style="background-color:yellow">
+		   			I am a color : drag Me !
+			  	</div>
+			  	<div dojoType="dijit.layout.ContentPane" class="cpane" dndType="motor">
+			   		I am a plane : drag Me !
+			  	</div>
+			  	<div dojoType="dijit.layout.ContentPane" class="cpane" dndType="animal">
+			   		I am a horse : Drag Me !
+			  	</div>
+			  	<div dojoType="dijit.layout.ContentPane" class="cpane" dndType="motor">
+		   			I am a bus : Drag Me !
+			  	</div>
+			  	<div dojoType="dijit.layout.ContentPane" class="cpane" dndType="color" style="background-color:pink">
+			   		I am a color: Drag Me !
+			  	</div>
+			  	<div dojoType="dijit.layout.ContentPane" class="cpane" dndType="animal">
+			   		I am a rabbit : Drag Me !
+			  	</div>
+			  	<div dojoType="dijit.layout.ContentPane" class="cpane" dragRestriction="true">
+			   		I have a dragRestriction : Try to Drag Me !
+			  	</div>
+			  	<div dojoType="dijit.layout.ContentPane" class="cpane" dndType="color" style="background-color:red">
+			   		I am a color : Drag Me !
+			  	</div>
+			</div>
+		</div>
+</body>
+</html>

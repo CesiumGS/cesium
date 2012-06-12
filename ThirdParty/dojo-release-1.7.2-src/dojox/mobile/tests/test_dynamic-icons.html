@@ -1,0 +1,55 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<title>Dynamic Icons</title>
+		<link href="../themes/iphone/base.css" rel="stylesheet">
+		<link href="../themes/iphone/IconContainer.css" rel="stylesheet">
+		<link href="../themes/iphone/Button.css" rel="stylesheet">
+		<link href="../../../dijit/themes/tundra/tundra.css" rel="stylesheet">
+
+		<style>
+			.box {
+				border: 1px solid #A7C0E0;
+				width: 300px;
+				height: 250px;
+				background-image: url(images/widget-bg.png);
+				background-repeat: no-repeat;
+				background-color: white;
+			}
+		</style>
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+
+		<script language="JavaScript" type="text/javascript">
+			dojo.require("dojox.mobile");			// This is a mobile app.
+			dojo.require("dojox.mobile.parser");	// This mobile app supports running on desktop browsers
+			dojo.require("dojox.mobile.compat");	// This mobile app uses declarative programming with fast mobile parser
+			dojo.require("dojox.mobile.IconContainer");
+			dojo.require("dojox.mobile.Button");
+
+			dojo.ready(function(){
+				var btnWidget = dijit.byId("btn1");
+				dojo.connect(btnWidget.domNode, "onclick", onBtnClicked);
+				function onBtnClicked(e){
+					var iconContainerWidget = dijit.byId("ic1");
+					var itemWidget = new dojox.mobile.IconItem({
+						icon: "images/icon-1.png",
+						label: "new icon",
+						lazy: true
+					});
+					itemWidget.containerNode.innerHTML = "<div dojoType='dijit._Calendar'></div>";
+					iconContainerWidget.addChild(itemWidget);
+				}
+			});
+		</script>
+	</head>
+	<body style="visibility:hidden;" class="tundra">
+		<div id="myhome" dojoType="dojox.mobile.View" selected="true">
+			<ul id="ic1" dojoType="dojox.mobile.IconContainer">
+				<li dojoType="dojox.mobile.IconItem" label="test1" icon="images/icon-1.png" lazy="true"><div class="box"></div></li>
+			</ul>
+			<button id="btn1" dojoType="dojox.mobile.Button" class="mblBlueButton" style="width:80px;margin-left:10px">More...</button>
+		</div>
+	</body>
+</html>

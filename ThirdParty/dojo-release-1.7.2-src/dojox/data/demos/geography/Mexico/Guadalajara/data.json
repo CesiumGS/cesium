@@ -1,0 +1,7 @@
+{ 
+	name:'Guadalajara', 
+	type:'city', 
+	population:'4 million', 
+	timezone:'-6 UTC' 
+}
+

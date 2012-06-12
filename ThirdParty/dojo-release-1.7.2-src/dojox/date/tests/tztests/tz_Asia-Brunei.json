@@ -1,0 +1,16 @@
+({
+	name: "date.timezone.Asia-Brunei",
+	runTest: function(t){
+		var tz = "Asia/Brunei";
+		doh.checkDate({tzOffset: -459.666666666667, tzAbbr: "LMT"}, -2147483648000, tz, 1);
+		doh.checkDate({tzOffset: -459.666666666667, tzAbbr: "LMT"}, -2147397248000, tz, 1);
+		doh.checkDate({tzOffset: -459.666666666667, tzAbbr: "LMT"}, -1383464381000, tz, 1);
+		doh.checkDate({tzOffset: -450, tzAbbr: "BNT"}, -1383464380000, tz, 1);
+		doh.checkDate({tzOffset: -450, tzAbbr: "BNT"}, -1167636601000, tz, 1);
+		doh.checkDate({tzOffset: -480, tzAbbr: "BNT"}, -1167636600000, tz, 1);
+		doh.checkDate({tzOffset: -480, tzAbbr: "BNT"}, 2147397247000, tz, 1);
+		doh.checkDate({tzOffset: -480, tzAbbr: "BNT"}, 2147483647000, tz, 1);
+		doh.checkDate({tzOffset: -480, tzAbbr: "BNT"}, 1231151400000, tz, 0);
+		doh.checkDate({tzOffset: -480, tzAbbr: "BNT"}, 1246789800000, tz, 0);
+	}
+})

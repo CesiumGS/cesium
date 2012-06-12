@@ -1,0 +1,252 @@
+<!--[if IE 7]>
+<!DOCTYPE>
+<html lang="en">
+	<head>
+<![endif]-->
+<!--[if IE 8]>
+<!DOCTYPE>
+<html lang="en">
+    <head>
+           <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
+<![endif]-->
+<![if gte IE 9]>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+<![endif]>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Event 2D</title>
+<style type="text/css">
+	@import "../../../dojo/resources/dojo.css";
+	@import "../../../dijit/tests/css/dijitTests.css";
+</style>
+<!-- required for Tooltip: a default dijit theme: -->
+<link rel="stylesheet" href="../../../dijit/themes/claro/claro.css">
+<style>
+.dojoxLegendNode {border: 1px solid #ccc; margin: 5px 10px 5px 10px; padding: 3px}
+.dojoxLegendText {vertical-align: text-top; padding-right: 10px}
+</style>
+<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+<script type="text/javascript">
+
+dojo.require("dojox.charting.Chart");
+dojo.require("dojox.charting.axis2d.Default");
+dojo.require("dojox.charting.plot2d.Default");
+dojo.require("dojox.charting.plot2d.StackedLines");
+dojo.require("dojox.charting.plot2d.Columns");
+dojo.require("dojox.charting.plot2d.ClusteredColumns");
+dojo.require("dojox.charting.plot2d.StackedColumns");
+dojo.require("dojox.charting.plot2d.Bars");
+dojo.require("dojox.charting.plot2d.ClusteredBars");
+dojo.require("dojox.charting.plot2d.StackedBars");
+dojo.require("dojox.charting.plot2d.Bubble");
+dojo.require("dojox.charting.plot2d.Grid");
+dojo.require("dojox.charting.plot2d.Pie");
+
+dojo.require("dojox.charting.themes.PlotKit.green");
+
+dojo.require("dojox.charting.action2d.Highlight");
+dojo.require("dojox.charting.action2d.Magnify");
+dojo.require("dojox.charting.action2d.MoveSlice");
+dojo.require("dojox.charting.action2d.Shake");
+dojo.require("dojox.charting.action2d.Tooltip");
+
+dojo.require("dojox.charting.widget.Legend");
+
+dojo.require("dojo.colors");
+dojo.require("dojo.fx.easing");
+
+var dc = dojox.charting;
+
+var dur = 450;
+
+makeObjects = function(){
+	var chart1 = new dc.Chart("test1");
+	chart1.setTheme(dc.themes.PlotKit.green);
+	chart1.addPlot("default", {type: "Default", lines: true, markers: true, tension:2});
+	chart1.addAxis("x", {min: 0, max: 6, majorTick: {stroke: "black", length: 3}, minorTick: {stroke: "gray", length: 3}});
+	chart1.addAxis("y", {vertical: true, min: 0, max: 10, majorTick: {stroke: "black", length: 3}, minorTick: {stroke: "gray", length: 3}});
+	chart1.addSeries("Series A", [{x: 0.5, y: 5}, {x: 1.5, y: 1.5}, {x: 2, y: 9}, {x: 5, y: 0.3}]);
+	chart1.addSeries("Series B", [{x: 0.3, y: 8}, {x: 4, y: 6, tooltip: "Custom tooltip"}, {x: 5.5, y: 2}]);
+	var anim1a = new dc.action2d.Magnify(chart1, "default");
+	var anim1b = new dc.action2d.Tooltip(chart1, "default");
+	chart1.render();
+	var legend1 = new dojox.charting.widget.Legend({chart: chart1, horizontal: false}, "legend1");
+
+	var chart2 = new dc.Chart("test2");
+	chart2.setTheme(dc.themes.PlotKit.green);
+	chart2.addPlot("default", {type: "StackedLines", markers: true, tension:3, shadows: {dx: 2, dy: 2, dw: 2}});
+	chart2.addSeries("Series A", [1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6], {stroke: {color: "red", width: 2}, fill: "lightpink", marker: "m-3,-3 l0,6 6,0 0,-6 z"});
+	chart2.addSeries("Series B", [1, 1.6, 1.3, 1.4, 1.1, 1.5, 1.1], {stroke: {color: "blue", width: 2}, fill: "lightblue", marker: "m-3,0 c0,-4 6,-4 6,0 m-6,0 c0,4 6,4 6,0"});
+	chart2.addSeries("Series C", [1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6], {stroke: {color: "green", width: 2}, fill: "lightgreen", marker: "m0,-3 l3,3 -3,3 -3,-3 z"});
+	var anim2a = new dc.action2d.Magnify(chart2, "default", {
+		scale: 3
+	});
+	var anim2b = new dc.action2d.Highlight(chart2, "default");
+	chart2.render();
+	var legend2 = new dojox.charting.widget.Legend({chart: chart2}, "legend2");
+
+	var chart3 = new dc.Chart("test3");
+	chart3.setTheme(dc.themes.PlotKit.green);
+	chart3.addAxis("y", {vertical: true, fixLower: "major", fixUpper: "major"});
+	chart3.addPlot("default", {type: "Columns", gap: 2});
+	chart3.addSeries("Series A", [1, 2, 3, 4, 5], {stroke: {color: "black"}, fill: "red"});
+	chart3.addSeries("Series B", [5, 4, 3, 2, 1], {stroke: {color: "black"}, fill: "blue"});
+	var anim3a = new dc.action2d.Highlight(chart3, "default");
+	var anim3b = new dc.action2d.Tooltip(chart3, "default");
+	chart3.render();
+	var legend3 = new dojox.charting.widget.Legend({chart: chart3, horizontal: false}, "legend3");
+
+	var chart4 = new dc.Chart("test4");
+	chart4.setTheme(dc.themes.PlotKit.green);
+	chart4.addAxis("x", {fixLower: "major", fixUpper: "major", includeZero: true});
+	chart4.addAxis("y", {vertical: true, fixLower: "major", fixUpper: "major", natural: true});
+	chart4.addPlot("default", {type: "Bars"});
+	chart4.addSeries("Series A", [1, 2, 3, 4, 5], {stroke: {color: "black"}, fill: "red"});
+	chart4.addSeries("Series B", [5, 4, 3, 2, 1], {stroke: {color: "black"}, fill: "blue"});
+	var anim4a = new dc.action2d.Highlight(chart4, "default", {
+		highlight: "gold"
+	});
+	var anim4b = new dc.action2d.Tooltip(chart4, "default");
+	chart4.render();
+	var legend4 = new dojox.charting.widget.Legend({chart: chart4}, "legend4");
+
+	var chart5 = new dc.Chart("test5");
+	chart5.setTheme(dc.themes.PlotKit.green);
+	chart5.addAxis("x", {fixLower: "major", fixUpper: "major", includeZero: true});
+	chart5.addAxis("y", {vertical: true, fixLower: "minor", fixUpper: "minor", natural: true});
+	chart5.addPlot("default", {type: "ClusteredBars", gap: 5});
+	chart5.addSeries("Series A", [{y: 1, tooltip: "one/custom yellow", fill: "yellow"}, {y: 2}, {y: 3, tooltip: "three"}, {y: 4}, {y: 5, tooltip: "five"}], {stroke: {color: "black"}, fill: "red"});
+	chart5.addSeries("Series B", [{y: 5}, {y: 4, tooltip: "four"}, {y: 3, fill: "black", stroke: {width: 2, color: "#f80"}, tooltip: "custom black"}, {y: 2, tooltip: "two"}, {y: 1}], {stroke: {color: "black"}, fill: "blue"});
+	var anim5a = new dc.action2d.Highlight(chart5, "default", {
+		duration: dur,
+		easing:   dojo.fx.easing.bounceOut
+	});
+	var anim5b = new dc.action2d.Tooltip(chart5, "default");
+	chart5.render();
+	var legend5 = new dojox.charting.widget.Legend({chart: chart5, horizontal: false}, "legend5");
+
+	var chart6 = new dc.Chart("test6");
+	chart6.setTheme(dc.themes.PlotKit.green);
+	chart6.addAxis("x");
+	chart6.addAxis("y", {vertical: true});
+	chart6.addPlot("default", {type: "ClusteredColumns", gap: 10});
+	chart6.addPlot("grid", {type: "Grid"});
+	chart6.addSeries("Series A", [2, 1, 0.5, -1, -2], {stroke: {color: "black"}, fill: "red"});
+	chart6.addSeries("Series B", [-2, -1, -0.5, 1, 2], {stroke: {color: "black"}, fill: "blue"});
+	chart6.addSeries("Series C", [1, 0.5, -1, -2, -3], {stroke: {color: "black"}, fill: "green"});
+	var anim6a = new dc.action2d.Highlight(chart6, "default", {
+		duration: dur,
+		easing:   dojo.fx.easing.sineOut
+	});
+	var anim6b = new dc.action2d.Shake(chart6, "default");
+	var anim6c = new dc.action2d.Tooltip(chart6, "default");
+	chart6.render();
+	var legend6 = new dojox.charting.widget.Legend({chart: chart6}, "legend6");
+
+	var chart7 = new dc.Chart("test7");
+	chart7.setTheme(dc.themes.PlotKit.green);
+	chart7.addPlot("default", {type: "StackedColumns"});
+	chart7.addSeries("Series A", [1, 2, 3, 4, 5], {stroke: {color: "black"}, fill: "red"});
+	chart7.addSeries("Series B", [2, 1, 2, 1, 2], {stroke: {color: "black"}, fill: "blue"});
+	var anim7a = new dc.action2d.Highlight(chart7, "default", {
+		duration: dur,
+		easing:   dojo.fx.easing.bounceOut
+	});
+	var anim7b = new dc.action2d.Shake(chart7, "default");
+	var anim7c = new dc.action2d.Tooltip(chart7, "default");
+	chart7.render();
+	var legend7 = new dojox.charting.widget.Legend({chart: chart7, horizontal: false}, "legend7");
+
+	var chart8 = new dc.Chart("test8");
+	chart8.setTheme(dc.themes.PlotKit.green);
+	chart8.addPlot("default", {type: "StackedBars"});
+	chart8.addSeries("Series A", [1, 2, 3, 4, 5], {stroke: {color: "black"}, fill: "red"});
+	chart8.addSeries("Series B", [2, 1, 2, 1, 2], {stroke: {color: "black"}, fill: "blue"});
+	var anim8a = new dc.action2d.Highlight(chart8, "default");
+	var anim8b = new dc.action2d.Shake(chart8, "default");
+	var anim8c = new dc.action2d.Tooltip(chart8, "default");
+	chart8.render();
+	var legend8 = new dojox.charting.widget.Legend({chart: chart8}, "legend8");
+
+	var chart9 = new dc.Chart("test9");
+	chart9.setTheme(dc.themes.PlotKit.green);
+	chart9.addPlot("default", {type: "Bubble", shadows: {dx: 2, dy: 2, dw: 2}});
+	chart9.addAxis("x", {min: 0, max: 6, majorTick: {stroke: "black", length: 3}, minorTick: {stroke: "gray", length: 3}});
+	chart9.addAxis("y", {vertical: true, min: 0, max: 10, majorTick: {stroke: "black", length: 3}, minorTick: {stroke: "gray", length: 3}});
+	chart9.addSeries("Series A", [{x: 0.5, y: 5, size: 1.4}, {x: 1.5, y: 1.5, size:4.5}, {x: 2, y: 9, size:1.5}, {x: 5, y: 0.3, size:0.8}],
+		{stroke: {color: "black"}, fill: "red"});
+	chart9.addSeries("Series B", [{x: 0.3, y: 8, size: 2.5}, {x: 4, y: 6, size:1.1}, {x: 5.5, y: 2, size: 3.2}],
+		{stroke: {color: "black"}, fill: "blue"});
+	var anim9a = new dc.action2d.Magnify(chart9, "default", {
+		scale: 1.1
+	});
+	var anim9b = new dc.action2d.Highlight(chart9, "default");
+	var anim9c = new dc.action2d.Tooltip(chart9, "default");
+	chart9.render();
+	var legend9 = new dojox.charting.widget.Legend({chart: chart9, horizontal: false}, "legend9");
+
+	var chart10 = new dc.Chart("test10");
+	chart10.setTheme(dc.themes.PlotKit.green);
+	chart10.addPlot("default", {
+		type: "Pie", 
+		font: "normal normal 11pt Tahoma", 
+		fontColor: "black", 
+		labelOffset: -30,
+		radius: 80,
+		startAngle: 45
+	});
+	chart10.addSeries("Series A", [
+		{y: 4, text: "Red",   color: "red",   stroke: "black", tooltip: "Red is 50%"},
+		{y: 2, text: "Green", color: "green", stroke: "black", tooltip: "Green is 25%"},
+		{y: 1, text: "Blue",  color: "blue",  stroke: "black", tooltip: "I am feeling Blue!"},
+		{y: 1, text: "Other", color: "white", stroke: "black", tooltip: "Mighty <strong>strong</strong><br>With two lines!"}
+	]);
+	var anim10a = new dc.action2d.MoveSlice(chart10, "default");
+	var anim10b = new dc.action2d.Highlight(chart10, "default");
+	var anim10c = new dc.action2d.Tooltip(chart10, "default");
+	chart10.render();
+	var legend10 = new dojox.charting.widget.Legend({chart: chart10}, "legend10");
+};
+
+dojo.addOnLoad(makeObjects);
+
+</script>
+</head>
+<body class="claro">
+<h1>Event 2D</h1>
+<!--<p><button onclick="makeObjects();">Go</button></p>-->
+<p>Hover over markers, bars, columns, slices, and so on.</p>
+<p>1: Markers, lines, 2D data, custom axis. Actions: Magnify, Tooltip.</p>
+<div id="test1" style="width: 400px; height: 200px;"></div>
+<div id="legend1"></div>
+<p>2: Stacked lines, markers, shadows, no axes, custom strokes, fills, and markers. Actions: Magnify, Highlight.</p>
+<div id="test2" style="width: 400px; height: 200px;"></div>
+<div id="legend2"></div>
+<p>3: Columns with gaps beetwen them, vertical axis aligned on major ticks, custom strokes, fills. Actions: Highlight, Tooltip.</p>
+<div id="test3" style="width: 400px; height: 200px;"></div>
+<div id="legend3"></div>
+<p>4: Bars, axes aligned on major ticks, no minor ticks, custom strokes and fills. Actions: Highlight, Tooltip.</p>
+<div id="test4" style="width: 400px; height: 200px;"></div>
+<div id="legend4"></div>
+<p>5: Clustered bars, custom axes, custom strokes, fills, custom tooltips, and gap. Actions: Highlight, Tooltip.</p>
+<div id="test5" style="width: 400px; height: 200px;"></div>
+<div id="legend5"></div>
+<p>6: Clustered columns with positive and negative values, axes, and grid. Actions: Highlight, Shake, Tooltip.</p>
+<div id="test6" style="width: 400px; height: 200px;"></div>
+<div id="legend6"></div>
+<p>7: Stacked columns, no axes, custom strokes and fills. Actions: Highlight, Shake, Tooltip.</p>
+<div id="test7" style="width: 400px; height: 200px;"></div>
+<div id="legend7"></div>
+<p>8: Stacked bars, no axes, custom strokes and fills. Actions: Highlight, Shake, Tooltip.</p>
+<div id="test8" style="width: 400px; height: 200px;"></div>
+<div id="legend8"></div>
+<p>9: Bubble chart, axes. Actions: Magnify, Highlight, Tooltip.</p>
+<div id="test9" style="width: 400px; height: 300px;"></div>
+<div id="legend9"></div>
+<p>10: Rotated pie with internal custom labels, custom colors, and custom tooltips. Actions: MoveSlice, Highlight, Tooltip.</p>
+<div id="test10" style="width: 300px; height: 300px;"></div>
+<div id="legend10"></div>
+<p>That's all Folks!</p>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>Dojox DnD selector test</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<style type="text/css">
+			@import "../../../dojo/resources/dojo.css";
+			@import "../../../dojo/tests/dnd/dndDefault.css";
+			body { padding: 20px; }
+		</style>
+		<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true"></script>
+		<script type="text/javascript">
+			dojo.require("dojox.dnd.Selector");
+			dojo.require("doh.runner");
+			var source,
+			init = function() {
+				source = new dojox.dnd.Selector(dojo.byId("source"));
+				dojo.connect(dojo.doc, "onkeydown", dojo.hitch(this, function(evt) {
+					// would usually use dojo.keys.UP_ARROW/dojo.keys.DOWN_ARROW
+					// but can't seem to get that working with doh. Instead, I'm using
+					// 'u' as an indicator for up and 'd' as an indicator for down.
+					if(evt.keyCode == 85) {
+						source.shift(-1, evt.shiftKey);
+					}
+					if(evt.keyCode == 68) {
+						source.shift(1, evt.shiftKey);
+					}
+				}));
+				doh.register("dojox.dnd.SelectorMixin",
+					[
+						{
+							name: "testAll", 
+							timeout: 3000, 
+							setUp: function() {
+								
+							},
+							runTest: function() {
+								var def = new doh.Deferred();
+								source.conservative = false;
+								source.selectNode("blonde");
+								doh.assertTrue(source.getSelectedNodes().length == 1);
+								source.shift(1, true);
+								doh.assertTrue(source.getSelectedNodes().length == 2);
+								source.shift(-1);
+								doh.assertTrue(source.getSelectedNodes().length == 1);
+								source.selectAll();
+								doh.assertTrue(source.getSelectedNodes().length == 3);
+								source.selectByBBox(0, 0, 0, 0, false);
+								doh.assertTrue(source.getSelectedNodes().length == 0);
+								source.selectAll(1000, 1000, 1, 1, true);
+								setTimeout(function() {
+									source.getSelectedNodes().length == 3 ? def.callback(true) : def.errback(false);
+								}, 500);
+								return def;
+							},
+							tearDown: function() {
+								
+							}
+						}
+					]
+				);
+				doh.run();
+			};
+			dojo.addOnLoad(init);
+		</script>
+	</head>
+	<body>
+		<h1 id="header">Dojox DnD selector test</h1>
+		<p>Use the up/down arrows to iterate through the list after selecting one.</p>
+		<div id="source" class="container">
+			<div id="blonde" class="dojoDndItem">Blonde on Blonde</div>
+			<div id="highway" class="dojoDndItem">Highway 61 Revisited</div>
+			<div id="tracks" class="dojoDndItem">Blood on the Tracks</div>
+		</div>
+	</body>
+</html>

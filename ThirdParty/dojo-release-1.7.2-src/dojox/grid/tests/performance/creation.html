@@ -1,0 +1,57 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>Performance Test: dojox.grid.DataGrid Creation</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+	<style type="text/css">
+		@import "../../../../dojo/resources/dojo.css";
+		@import "../../resources/Grid.css";
+		@import "../../resources/tundraGrid.css";
+
+		.heading {
+			font-weight: bold;
+			padding-bottom: 0.25em;
+		}
+	</style>
+	<script type="text/javascript" src="../../../../dojo/dojo.js"></script>
+	<script type="text/javascript">
+		dojo.require("doh.runner");
+		dojo.require("dojox.grid.tests.performance._gridPerfFramework");
+		dojo.require("dojox.grid.DataGrid");
+
+		dojo.addOnLoad(function(){
+			doh.register(searchParamsAsObj(true).rows + " rows", 
+				getRLSTests(function(rows, layout, rowSelector, doProfiling, isPerf){
+					return function(t){
+						if(doProfiling){
+							console.profile("create()");
+						}
+						var g = new dojox.grid.DataGrid({
+							store: getStore(rows),
+							structure: getLayout(layout),
+							rowSelector: rowSelector
+						}, dojo.create("div", null, dojo.body()));
+						if(doProfiling){
+							console.profileEnd();
+							console.profile("startup()");
+						}
+						g.startup();
+						if(doProfiling){
+							console.profileEnd();
+						}
+						if(isPerf){
+							g.destroy();
+						}else{
+							t.t(true);
+						}
+					};
+				}));
+			doh.run();
+		});
+	</script>
+</head>
+<body class="tundra">
+	<div class="heading">Performance Test: dojox.grid.DataGrid Creation</div>
+</body>
+</html>
