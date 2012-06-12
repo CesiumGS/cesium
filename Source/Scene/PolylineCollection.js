@@ -556,38 +556,38 @@ define([
 
 
         var vafWriters = this._vaf.writers;
+        var index = 0;
         for ( var i = 0; i < length; ++i) {
             var polyline = this._polylines[i];
             polyline._clean(); // In case it needed an update.
-            this._writePolyline(context, vafWriters, polyline);
+            this._writePolyline(context, vafWriters, polyline, index);
+            index += polyline.getPositions().length;
         }
         this._vaf.commit(null);
     };
 
-    PolylineCollection.prototype._writeColor = function(context, vafWriters, polyline) {
+    PolylineCollection.prototype._writeColor = function(context, vafWriters, polyline, index) {
         var positions = polyline.getPositions();
         var length = positions.length;
         var color = polyline.getColor();
-        var i = polyline._index;
-        for(var j = 0; j < length; j++){
-            vafWriters[attributeIndices.color](i + j, color.red * 255, color.green * 255, color.blue * 255, color.alpha * 255);
+        for(var j = 0; j < length; ++j){
+            vafWriters[attributeIndices.color](index + j, color.red * 255, color.green * 255, color.blue * 255, color.alpha * 255);
         }
 
     };
 
-    PolylineCollection.prototype._writePosition = function(context, vafWriters, polyline) {
+    PolylineCollection.prototype._writePosition = function(context, vafWriters, polyline, index) {
         var positions = polyline.getPositions();
         var length = positions.length;
-        var i = polyline._index;
-        for(var j = 0; j < length; j++){
+        for(var j = 0; j < length; ++j){
             var position = positions[j];
-            vafWriters[attributeIndices.position3D](i + j, position.x, position.y, position.z);
+            vafWriters[attributeIndices.position3D](index + j, position.x, position.y, position.z);
         }
     };
 
-    PolylineCollection.prototype._writePolyline = function(context, vafWriters, polyline){
-        this._writePosition(context, vafWriters, polyline);
-        this._writeColor(context, vafWriters, polyline);
+    PolylineCollection.prototype._writePolyline = function(context, vafWriters, polyline, index){
+        this._writePosition(context, vafWriters, polyline, index);
+        this._writeColor(context, vafWriters, polyline, index);
     };
 
     PolylineCollection.prototype._isShown = function() {
