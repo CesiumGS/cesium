@@ -7,7 +7,8 @@
 <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
 
 <!-- Make the application take up the full browser screen and disable user scaling-->
-<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+<meta name="viewport"
+    content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
 
 <title>Cesium Viewer</title>
 
@@ -34,32 +35,31 @@
             </div>
         </div>
         <div id="viewHome" data-dojo-type="dijit.form.Button" data-dojo-props="iconClass: 'viewIcon', showLabel: false">
-            Home</div>
+            Home View</div>
         <div id="view2D" data-dojo-type="dijit.form.ToggleButton"
-            data-dojo-props="iconClass: 'viewIcon view2D', showLabel: false">2D</div>
+            data-dojo-props="iconClass: 'viewIcon view2D', showLabel: false">2D View</div>
         <div id="view3D" data-dojo-type="dijit.form.ToggleButton"
-            data-dojo-props="iconClass: 'viewIcon view3D', showLabel: false, checked: true">3D</div>
+            data-dojo-props="iconClass: 'viewIcon view3D', showLabel: false, checked: true">3D View</div>
         <div id="viewColumbus" data-dojo-type="dijit.form.ToggleButton"
-            data-dojo-props="iconClass: 'viewIcon viewColumbus', showLabel: false">Columbus</div>
-        <div id="sunPosition" data-dojo-type="dijit.form.ToggleButton"
-            data-dojo-props="iconClass: 'viewIcon toggleSun', showLabel: false, checked: true">Use Time-Based Sun
-            Position</div>
+            data-dojo-props="iconClass: 'viewIcon viewColumbus', showLabel: false">Columbus View</div>
+        <div id="cbLighting" data-dojo-type="dijit.form.ToggleButton"
+            data-dojo-props="iconClass: 'viewIcon toggleCbLighting', showLabel: false, checked: false">Toggle Lighting</div>
         <div id="viewFullScreen" data-dojo-type="dijit.form.Button"
-            data-dojo-props="iconClass: 'viewIcon viewFullScreen', showLabel: false">FS</div>
+            data-dojo-props="iconClass: 'viewIcon viewFullScreen', showLabel: false">Toggle Full Screen</div>
     </div>
     <div class="animButtons">
         <div id="animReset" data-dojo-type="dijit.form.Button"
             data-dojo-props="iconClass: 'animationIcon', showLabel: false">Reset</div>
         <div id="animReverse" data-dojo-type="dijit.form.ToggleButton"
-            data-dojo-props="iconClass: 'animationIcon animReverse', showLabel: false">Reverse</div>
+            data-dojo-props="iconClass: 'animationIcon animReverse', showLabel: false">Play Reverse</div>
         <div id="animPause" data-dojo-type="dijit.form.ToggleButton"
             data-dojo-props="iconClass: 'animationIcon animPause', showLabel: false">Pause</div>
         <div id="animPlay" data-dojo-type="dijit.form.ToggleButton"
             data-dojo-props="iconClass: 'animationIcon animPlay', showLabel: false, checked: true">Play</div>
         <div id="animSlow" data-dojo-type="dijit.form.Button"
-            data-dojo-props="iconClass: 'animationIcon animSlow', showLabel: false">Slower</div>
+            data-dojo-props="iconClass: 'animationIcon animSlow', showLabel: false">Play Slower</div>
         <div id="animFast" data-dojo-type="dijit.form.Button"
-            data-dojo-props="iconClass: 'animationIcon animFast', showLabel: false">Faster</div>
+            data-dojo-props="iconClass: 'animationIcon animFast', showLabel: false">Play Faster</div>
         <span id="speedIndicator"></span>
     </div>
     <div class="timelineContainer">

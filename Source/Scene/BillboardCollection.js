@@ -65,8 +65,8 @@ define([
      * A renderable collection of billboards.  Billboards are viewport-aligned
      * images positioned in the 3D scene.
      * <br /><br />
-     * <div align="center">
-     * <img src="images/Billboard.png" width="400" height="300" /><br />
+     * <div align='center'>
+     * <img src='images/Billboard.png' width='400' height='300' /><br />
      * Example billboards
      * </div>
      * <br /><br />
@@ -142,16 +142,16 @@ define([
         this.modelMatrix = Matrix4.IDENTITY;
         this._modelMatrix = Matrix4.IDENTITY;
 
+        this._mode = SceneMode.SCENE3D;
+        this._projection = undefined;
+
         /**
          * The current morph transition time between 2D/Columbus View and 3D,
          * with 0.0 being 2D or Columbus View and 1.0 being 3D.
          *
          * @type Number
          */
-        this.morphTime = 0.0;
-
-        this._mode = SceneMode.SCENE3D;
-        this._projection = undefined;
+        this.morphTime = this._mode.morphTime;
 
         // The buffer usage for each attribute is determined based on the usage of the attribute over time.
         this._buffersUsage = [
@@ -379,8 +379,8 @@ define([
      * }
      */
     BillboardCollection.prototype.get = function(index) {
-        if (typeof index === "undefined") {
-            throw new DeveloperError("index is required.", "index");
+        if (typeof index === 'undefined') {
+            throw new DeveloperError('index is required.');
         }
 
         this._removeBillboards();
@@ -1048,7 +1048,7 @@ define([
 
         this._spPick = context.getShaderCache().getShaderProgram(
                 BillboardCollectionVS,
-                "#define RENDER_FOR_PICK 1\n" + BillboardCollectionFS,
+                '#define RENDER_FOR_PICK 1\n' + BillboardCollectionFS,
                 attributeIndices);
 
         this.updateForPick = function(context) {

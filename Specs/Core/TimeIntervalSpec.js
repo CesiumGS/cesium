@@ -8,7 +8,7 @@ defineSuite([
     "use strict";
     /*global it,expect*/
 
-    it("Construction", function() {
+    it('Construction', function() {
         var start = new JulianDate(), stop = start.addDays(1), isStartIncluded = false, isStopIncluded = true, data = {};
 
         var interval = new TimeInterval(start, stop, isStartIncluded, isStopIncluded, data);
@@ -26,19 +26,19 @@ defineSuite([
         expect(interval.data === undefined).toEqual(true);
     });
 
-    it("throws with undefined start", function() {
+    it('throws with undefined start', function() {
         expect(function() {
             return new TimeInterval(undefined, new JulianDate());
         }).toThrow();
     });
 
-    it("throws with undefined stop", function() {
+    it('throws with undefined stop', function() {
         expect(function() {
             return new TimeInterval(new JulianDate());
         }).toThrow();
     });
 
-    it("IsEmpty", function() {
+    it('IsEmpty', function() {
         var interval = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(1));
         expect(interval.isEmpty).toEqual(false);
 
@@ -48,9 +48,21 @@ defineSuite([
         interval = new TimeInterval(JulianDate.fromTotalDays(5), JulianDate.fromTotalDays(4));
         expect(interval.isEmpty).toEqual(true);
         expect(interval.contains(JulianDate.fromTotalDays(4.5))).toEqual(false);
+
+        interval = new TimeInterval(JulianDate.fromTotalDays(5), JulianDate.fromTotalDays(5), false, true);
+        expect(interval.isEmpty).toEqual(true);
+        expect(interval.contains(interval.start)).toEqual(false);
+
+        interval = new TimeInterval(JulianDate.fromTotalDays(5), JulianDate.fromTotalDays(5), true, false);
+        expect(interval.isEmpty).toEqual(true);
+        expect(interval.contains(interval.start)).toEqual(false);
+
+        interval = new TimeInterval(JulianDate.fromTotalDays(5), JulianDate.fromTotalDays(5), true, true);
+        expect(interval.isEmpty).toEqual(false);
+        expect(interval.contains(interval.start)).toEqual(true);
     });
 
-    it("Contains", function() {
+    it('Contains', function() {
         var interval1 = new TimeInterval(JulianDate.fromTotalDays(2451545), JulianDate.fromTotalDays(2451546));
         expect(interval1.contains(JulianDate.fromTotalDays(2451545))).toEqual(true);
         expect(interval1.contains(JulianDate.fromTotalDays(2451545.5))).toEqual(true);
@@ -64,7 +76,7 @@ defineSuite([
         expect(interval2.contains(JulianDate.fromTotalDays(2451546.5))).toEqual(false);
     });
 
-    it("Equality", function() {
+    it('Equality', function() {
         var interval1 = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2));
         var interval2 = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2));
         expect(interval1.equals(interval2)).toEqual(true);
@@ -91,7 +103,7 @@ defineSuite([
         expect(interval1.equalsEpsilon(undefined, 1.0)).toEqual(false);
     });
 
-    it("Intersect", function() {
+    it('Intersect', function() {
         var testParameters = [new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2.5), true, true),
                 new TimeInterval(JulianDate.fromTotalDays(1.5), JulianDate.fromTotalDays(2), true, true),
                 new TimeInterval(JulianDate.fromTotalDays(1.5), JulianDate.fromTotalDays(2), true, true),
@@ -141,7 +153,7 @@ defineSuite([
         expect(interval.intersect(undefined)).toEqual(TimeInterval.EMPTY);
     });
 
-    it("Intersect Merging", function() {
+    it('Intersect Merging', function() {
         var oneToThree = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(3), true, true, 2);
         var twoToFour = new TimeInterval(JulianDate.fromTotalDays(2), JulianDate.fromTotalDays(4), true, true, 3);
         var twoToThree = oneToThree.intersect(twoToFour, function(lhs, rhs) {

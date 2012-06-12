@@ -95,11 +95,11 @@ define([
      *
      * @memberof Matrix2
      * @return {Number} The element at the zero-based, column-major index.
-     * @exception {DeveloperError} Index must be between 0 and 3.
+     * @exception {DeveloperError} index must be between 0 and 3.
      */
     Matrix2.prototype.getColumnMajorValue = function(index) {
         if (index < 0 || index > 3) {
-            throw new DeveloperError("Index must be between 0 and 3.", "index");
+            throw new DeveloperError('index must be between 0 and 3.');
         }
 
         return this.values[index];
@@ -316,7 +316,7 @@ define([
                         columnMajorValues[1], columnMajorValues[3]);
             }
 
-            throw new DeveloperError("columnMajorValues must have 4 elements.", "columnMajorValues");
+            throw new DeveloperError('columnMajorValues must have 4 elements.');
         }
         return new Matrix2();
     };
@@ -409,8 +409,8 @@ define([
      * @return {String} Returns a string representing this instance.
      */
     Matrix2.prototype.toString = function() {
-        return "(" + this.getColumn0Row0() + ", " + this.getColumn1Row0() + ")\n" +
-               "(" + this.getColumn0Row1() + ", " + this.getColumn1Row1() + ")";
+        return '(' + this.getColumn0Row0() + ', ' + this.getColumn1Row0() + ')\n' +
+               '(' + this.getColumn0Row1() + ', ' + this.getColumn1Row1() + ')';
     };
 
     return Matrix2;

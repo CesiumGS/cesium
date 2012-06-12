@@ -13,17 +13,17 @@ define(['dojo/_base/declare',
 
     return declare('Cesium.TimelineWidget', [_WidgetBase], {
         buildRendering : function() {
-            this.domNode = domConstruct.create("div");
+            this.domNode = domConstruct.create('div');
         },
 
         postCreate : function() {
-            ready(this, "_setupTimeline");
+            ready(this, '_setupTimeline');
         },
 
         resize : function(size) {
             if (size && size.h) {
                 var height = size.h - 2;
-                this.domNode.style.height = height.toString() + "px";
+                this.domNode.style.height = height.toString() + 'px';
             }
             this._resizeTimeline();
         },

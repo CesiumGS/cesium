@@ -498,7 +498,7 @@ define([
      *
      * @return {Number} The factorial of the provided number or undefined if the number is less than 0.
      *
-     * @see <a href="http://en.wikipedia.org/wiki/Factorial">Factorial on Wikipedia</a>.
+     * @see <a href='http://en.wikipedia.org/wiki/Factorial'>Factorial on Wikipedia</a>.
      *
      * @example
      * //Compute 7!, which is equal to 5040

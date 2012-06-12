@@ -31,7 +31,7 @@ define([
      * @exception {DeveloperError} <code>positions</code> is required.
      *
      * @see AxisAlignedBoundingBox
-     * @see <a href="http://blogs.agi.com/insight3d/index.php/2008/02/04/a-bounding/">Bounding Sphere computation article</a>
+     * @see <a href='http://blogs.agi.com/insight3d/index.php/2008/02/04/a-bounding/'>Bounding Sphere computation article</a>
      *
      * @constructor
      * @immutable
@@ -46,7 +46,7 @@ define([
      */
     function BoundingSphere(positions, radius) {
         if (!positions) {
-            throw new DeveloperError("positions is required.", "positions");
+            throw new DeveloperError('positions is required.');
         }
 
         if ((arguments.length === 2) && (typeof arguments[1] === 'number')) {

@@ -38,13 +38,13 @@ define([
      */
     Buffer.prototype.copyFromArrayView = function(arrayView, offsetInBytes) {
         if (!arrayView) {
-            throw new DeveloperError("arrayView is required.", "arrayView");
+            throw new DeveloperError('arrayView is required.');
         }
 
         offsetInBytes = offsetInBytes || 0;
 
         if (offsetInBytes + arrayView.byteLength > this._sizeInBytes) {
-            throw new DeveloperError("This buffer is not large enough.");
+            throw new DeveloperError('This buffer is not large enough.');
         }
 
         var gl = this._gl;
@@ -127,7 +127,7 @@ define([
      * @exception {DeveloperError} This buffer was destroyed, i.e., destroy() was called.
      *
      * @see Buffer#isDestroyed
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteBuffers.xml">glDeleteBuffers</a>
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteBuffers.xml'>glDeleteBuffers</a>
      *
      * @example
      * buffer = buffer && buffer.destroy();

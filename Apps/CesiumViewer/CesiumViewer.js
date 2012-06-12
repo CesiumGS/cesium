@@ -256,17 +256,17 @@ function(dom,
                 updateSpeedIndicator();
             });
 
-            var viewHome = registry.byId("viewHome");
-            var view2D = registry.byId("view2D");
-            var view3D = registry.byId("view3D");
-            var viewColumbus = registry.byId("viewColumbus");
-            var viewFullScreen = registry.byId("viewFullScreen");
+            var viewHome = registry.byId('viewHome');
+            var view2D = registry.byId('view2D');
+            var view3D = registry.byId('view3D');
+            var viewColumbus = registry.byId('viewColumbus');
+            var viewFullScreen = registry.byId('viewFullScreen');
 
             view2D.set('checked', false);
             view3D.set('checked', true);
             viewColumbus.set('checked', false);
 
-            on(viewFullScreen, "Click", function() {
+            on(viewFullScreen, 'Click', function() {
                 if (FullScreen.isFullscreenEnabled()) {
                     FullScreen.exitFullscreen();
                 } else {
@@ -274,7 +274,7 @@ function(dom,
                 }
             });
 
-            on(viewHome, "Click", function() {
+            on(viewHome, 'Click', function() {
                 view2D.set('checked', false);
                 view3D.set('checked', true);
                 viewColumbus.set('checked', false);
@@ -283,7 +283,7 @@ function(dom,
                 cesium.showSkyAtmosphere(true);
                 cesium.showGroundAtmosphere(true);
             });
-            on(view2D, "Click", function() {
+            on(view2D, 'Click', function() {
                 cameraCenteredObjectID = undefined;
                 view2D.set('checked', true);
                 view3D.set('checked', false);
@@ -292,7 +292,7 @@ function(dom,
                 cesium.showGroundAtmosphere(false);
                 transitioner.morphTo2D();
             });
-            on(view3D, "Click", function() {
+            on(view3D, 'Click', function() {
                 cameraCenteredObjectID = undefined;
                 view2D.set('checked', false);
                 view3D.set('checked', true);
@@ -301,7 +301,7 @@ function(dom,
                 cesium.showSkyAtmosphere(true);
                 cesium.showGroundAtmosphere(true);
             });
-            on(viewColumbus, "Click", function() {
+            on(viewColumbus, 'Click', function() {
                 cameraCenteredObjectID = undefined;
                 view2D.set('checked', false);
                 view3D.set('checked', false);
@@ -311,9 +311,9 @@ function(dom,
                 transitioner.morphToColumbusView();
             });
 
-            var sunPosition = registry.byId('sunPosition');
-            on(sunPosition, 'Change', function(value) {
-                cesium.lockSunPositionToCamera = !value;
+            var cbLighting = registry.byId('cbLighting');
+            on(cbLighting, 'Change', function(value) {
+                cesium.centralBody.affectedByLighting = !value;
             });
 
             var imageryAerial = registry.byId('imageryAerial');

@@ -28,12 +28,12 @@ function(binarySearch,
             } else if (otherIntervals[right].stop.lessThan(that._intervals[left].start)) {
                 ++right;
             } else {
-                // The following will return an intersection whose data is "merged" if the callback is non-null
+                // The following will return an intersection whose data is 'merged' if the callback is non-null
                 var intersection = typeof mergeCallback === 'undefined' ? that._intervals[left].intersect(otherIntervals[right], dataComparer) : that._intervals[left].intersect(
                         otherIntervals[right], mergeCallback);
                 if (!intersection.isEmpty) {
-                    // Since we start with an empty collection for "result", and there are no overlapping intervals in "that" (as a rule),
-                    // the "intersection" will never overlap with a previous interval in "result".  So, no need to do any additional "merging".
+                    // Since we start with an empty collection for 'result', and there are no overlapping intervals in 'that' (as a rule),
+                    // the 'intersection' will never overlap with a previous interval in 'result'.  So, no need to do any additional 'merging'.
                     result.add(intersection, dataComparer);
                 }
 
@@ -53,29 +53,76 @@ function(binarySearch,
         this._intervals = [];
     }
 
-    TimeIntervalCollection.empty = new TimeIntervalCollection();
-
-    //TODO Do we want a JulianDate.MinimumValue, JulianDate.MaximumValue to use for here?
-    TimeIntervalCollection.infinite = new TimeIntervalCollection();
+    TimeIntervalCollection.prototype.get = function(index) {
+        return this._intervals[index];
+    };
 
     TimeIntervalCollection.prototype.getStart = function() {
-        //TODO what if _intervals is empty?  Components apparently doesn't check?
-        return this._intervals[0].start;
+        var thisIntervals = this._intervals;
+        return thisIntervals.length === 0 ? undefined : thisIntervals[0].start;
     };
 
     TimeIntervalCollection.prototype.getStop = function() {
-        //TODO what if _intervals is empty?  Components apparently doesn't check?
-        return this._intervals[this._intervals.length - 1].stop;
+        var thisIntervals = this._intervals;
+        var length = thisIntervals.length;
+        return length === 0 ? undefined : thisIntervals[length - 1].stop;
     };
 
     TimeIntervalCollection.prototype.getLength = function() {
         return this._intervals.length;
     };
 
-    TimeIntervalCollection.prototype.addIntervalCollection = function(intervals, dataComparer) {
-        for ( var i = 0, len = intervals.length; i < len; ++i) {
-            this.addInterval(intervals[i], dataComparer);
+    TimeIntervalCollection.prototype.clear = function() {
+        this._intervals = [];
+    };
+
+    TimeIntervalCollection.prototype.isEmpty = function() {
+        return this._intervals.length === 0;
+    };
+
+    TimeIntervalCollection.prototype.findIntervalContainingDate = function(date) {
+        var index = this.indexOf(date);
+        return index >= 0 ? this._intervals[index] : undefined;
+    };
+
+    TimeIntervalCollection.prototype.contains = function(date) {
+        return this.indexOf(date) >= 0;
+    };
+
+    TimeIntervalCollection.prototype.indexOf = function(date) {
+        var interval = new TimeInterval(date, date, true, true);
+        var index = binarySearch(this._intervals, interval, compareIntervalStartTimes);
+        if (index >= 0) {
+            if (this._intervals[index].isStartIncluded) {
+                return index;
+            }
+
+            if (index > 0 && this._intervals[index - 1].stop.equals(date) && this._intervals[index - 1].isStopIncluded) {
+                return index - 1;
+            }
+
+            return ~index;
         }
+
+        index = ~index;
+        if (index > 0 && (index - 1) < this._intervals.length && this._intervals[index - 1].contains(date)) {
+            return index - 1;
+        }
+        return ~index;
+    };
+
+    TimeIntervalCollection.prototype.findInterval = function(start, stop, isStartIncluded, isStopIncluded) {
+        var thisIntervals = this._intervals, interval;
+        for ( var i = 0, len = thisIntervals.length; i < len; i++) {
+            interval = thisIntervals[i];
+            if ((typeof start === 'undefined' || interval.start.equals(start)) &&
+                (typeof stop === 'undefined' || interval.stop.equals(stop)) &&
+                (typeof isStartIncluded === 'undefined' || interval.isStartIncluded === isStartIncluded) &&
+                (typeof isStopIncluded === 'undefined' || interval.isStopIncluded === isStopIncluded)) {
+                return thisIntervals[i];
+            }
+        }
+        return undefined;
     };
 
     TimeIntervalCollection.prototype.addInterval = function(interval, dataComparer) {
@@ -124,7 +171,7 @@ function(binarySearch,
                         --index;
                     } else {
                         // Overlapping intervals have different data.  The new interval
-                        // being added "wins" so truncate the previous interval.
+                        // being added 'wins' so truncate the previous interval.
                         // If the existing interval extends past the end of the new one,
                         // split the existing interval into two intervals.
                         comparison = JulianDate.compare(this._intervals[index - 1].stop, interval.stop);
@@ -156,7 +203,7 @@ function(binarySearch,
                         this._intervals.splice(index, 1);
                     } else {
                         // Overlapping intervals have different data.  The new interval
-                        // being added "wins" so truncate the next interval.
+                        // being added 'wins' so truncate the next interval.
                         this._intervals[index] = new TimeInterval(interval.stop, this._intervals[index].stop, !interval.isStopIncluded, this._intervals[index].isStopIncluded,
                                 this._intervals[index].data);
                         if (this._intervals[index].isEmpty) {
@@ -178,97 +225,14 @@ function(binarySearch,
         }
     };
 
-    TimeIntervalCollection.prototype.addIntervalMergingData = function(item, mergeCallback) {
-        var temp = new TimeIntervalCollection();
-        temp.addInterval(item);
-        this.addIntervalCollectionMergingData(temp, mergeCallback);
+    TimeIntervalCollection.prototype.intersect = function(timeIntervalCollection, dataComparer, mergeCallback) {
+        return this.intersectInternal(this, timeIntervalCollection, dataComparer, mergeCallback);
     };
 
-    TimeIntervalCollection.prototype.addIntervalCollectionMergingData = function(items, mergeCallback) {
-        var otherUnion = new TimeIntervalCollection();
-        otherUnion.addIntervalCollection(items);
-        var intersections = this.intersectInternal(this, items, undefined, mergeCallback);
-        for ( var i = 0; i < intersections.length; i++) {
-            var intersection = intersections[i];
-            // Add the intersected piece and clobber the existing data with the "merged" data
-            this.addInterval(intersection);
-            // Remove the already merged interval from consideration
-            otherUnion.remove(intersection);
-        }
-        // Make sure to add the remaining (new) pieces of "items" which may not already intersect
-        // Items in "this" which don't intersect with "items" will continue to exist in "this" unhindered
-        this.addIntervalCollection(otherUnion);
-    };
-
-    TimeIntervalCollection.prototype.intersectInterval = function(interval, dataComparer) {
+    TimeIntervalCollection.prototype.intersectInterval = function(interval, dataComparer, mergeCallback) {
         var intervals = new TimeIntervalCollection();
         intervals.addInterval(interval);
-        return this.intersectInternal(this, intervals, dataComparer);
-    };
-
-    TimeIntervalCollection.prototype.intersectIntervalCollection = function(intervals, dataComparer) {
-        // Conduct the usual intersection, but instead of an actual merge function, just accept "this" data
-        return this.intersectInternal(this, intervals, dataComparer);
-    };
-
-    TimeIntervalCollection.prototype.clear = function() {
-        this._intervals = [];
-    };
-
-    TimeIntervalCollection.prototype.isEmpty = function() {
-        return this._intervals.length === 0;
-    };
-
-    //TODO: See TimeIntervalCollection.infinite
-    //    TimeIntervalCollection.prototype.isInfinite = function() {
-    //        return this._intervals.length == 1 &&
-    //        !this._intervals[0].start.greaterThan(JulianDate.minValue) &&
-    //        !this._intervals[0].stop.lessThan(JulianDate.maxValue);
-    //    };
-
-    TimeIntervalCollection.prototype.indexOf = function(date) {
-        var interval = new TimeInterval(date, date, true, true);
-        var index = binarySearch(this._intervals, interval, compareIntervalStartTimes);
-        if (index >= 0) {
-            if (this._intervals[index].isStartIncluded) {
-                return index;
-            }
-
-            if (index > 0 && this._intervals[index - 1].stop.equals(date) && this._intervals[index - 1].isStopIncluded) {
-                return index - 1;
-            }
-
-            return ~index;
-        }
-
-        index = ~index;
-        if (index > 0 && (index - 1) < this._intervals.length && this._intervals[index - 1].contains(date)) {
-            return index - 1;
-        }
-        return ~index;
-    };
-
-    TimeIntervalCollection.prototype.findIntervalContainingDate = function(date) {
-        var index = this.indexOf(date);
-        return index >= 0 ? this._intervals[index] : undefined;
-    };
-
-    TimeIntervalCollection.prototype.contains = function(date) {
-        return this.indexOf(date) >= 0;
-    };
-
-    TimeIntervalCollection.prototype.findInterval = function(start, stop, isStartIncluded, isStopIncluded) {
-        var thisIntervals = this._intervals, interval;
-        for ( var i = 0, len = thisIntervals.length; i < len; i++) {
-            interval = thisIntervals[i];
-            if ((typeof start === 'undefined' || interval.start.equals(start)) &&
-                (typeof stop === 'undefined' || interval.stop.equals(stop)) &&
-                (typeof isStartIncluded === 'undefined' || interval.isStartIncluded === isStartIncluded) &&
-                (typeof isStopIncluded === 'undefined' || interval.isStopIncluded === isStopIncluded)) {
-                return thisIntervals[i];
-            }
-        }
-        return undefined;
+        return this.intersectInternal(this, intervals, dataComparer, mergeCallback);
     };
 
     TimeIntervalCollection.prototype.removeInterval = function(interval) {

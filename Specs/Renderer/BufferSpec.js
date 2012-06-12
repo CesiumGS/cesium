@@ -5,7 +5,7 @@ defineSuite([
          'Core/Matrix4',
          'Core/IndexDatatype',
          'Renderer/BufferUsage'
-     ], "Renderer/Buffer", function(
+     ], 'Renderer/Buffer', function(
          createContext,
          destroyContext,
          Matrix4,
@@ -29,14 +29,14 @@ defineSuite([
         destroyContext(context);
     });
 
-    it("creates vertex buffer", function() {
+    it('creates vertex buffer', function() {
         buffer = context.createVertexBuffer(16, BufferUsage.STATIC_DRAW);
 
         expect(buffer.getSizeInBytes()).toEqual(16);
         expect(buffer.getUsage()).toEqual(BufferUsage.STATIC_DRAW);
     });
 
-    it("copies array to a vertex buffer", function() {
+    it('copies array to a vertex buffer', function() {
         var sizeInBytes = 3 * Float32Array.BYTES_PER_ELEMENT;
         var vertices = new ArrayBuffer(sizeInBytes);
         var positions = new Float32Array(vertices);
@@ -48,7 +48,7 @@ defineSuite([
         buffer.copyFromArrayView(vertices);
     });
 
-    it("creates index buffer", function() {
+    it('creates index buffer', function() {
         buffer = context.createIndexBuffer(6, BufferUsage.STREAM_DRAW, IndexDatatype.UNSIGNED_SHORT);
 
         expect(buffer.getSizeInBytes()).toEqual(6);
@@ -59,7 +59,7 @@ defineSuite([
         expect(buffer.getNumberOfIndices()).toEqual(3);
     });
 
-    it("copies array to an index buffer", function() {
+    it('copies array to an index buffer', function() {
         var sizeInBytes = 3 * Uint16Array.BYTES_PER_ELEMENT;
         var elements = new ArrayBuffer(sizeInBytes);
         var indices = new Uint16Array(elements);
@@ -71,33 +71,33 @@ defineSuite([
         buffer.copyFromArrayView(elements);
     });
 
-    it("destroys", function() {
+    it('destroys', function() {
         var b = context.createIndexBuffer(3, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_BYTE);
         expect(b.isDestroyed()).toEqual(false);
         b.destroy();
         expect(b.isDestroyed()).toEqual(true);
     });
 
-    it("fails to create", function() {
+    it('fails to create', function() {
         expect(function() {
             buffer = context.createVertexBuffer(0, BufferUsage.STATIC_DRAW);
         }).toThrow();
     });
 
-    it("fails to create again", function() {
+    it('fails to create again', function() {
         expect(function() {
             buffer = context.createVertexBuffer(4, 0);
         }).toThrow();
     });
 
-    it("fails to provide an array view", function() {
+    it('fails to provide an array view', function() {
         buffer = context.createVertexBuffer(3, BufferUsage.STATIC_DRAW);
         expect(function() {
             buffer.copyFromArrayView();
         }).toThrow();
     });
 
-    it("fails to copy a large array view", function() {
+    it('fails to copy a large array view', function() {
         buffer = context.createVertexBuffer(3, BufferUsage.STATIC_DRAW);
         var elements = new ArrayBuffer(3);
 
@@ -106,7 +106,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("fails to destroy", function() {
+    it('fails to destroy', function() {
         var b = context.createIndexBuffer(3, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_BYTE);
         b.destroy();
 

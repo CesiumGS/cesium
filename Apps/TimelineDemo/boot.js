@@ -24,10 +24,10 @@ require({
     'dojo/parser',
     'dojo/dom-class',
     'dojo/_base/window',
-    "dojo/date/stamp",
-    "dijit/form/Button",
-    "dijit/Calendar",
-    "dijit/form/TimeTextBox",
+    'dojo/date/stamp',
+    'dijit/form/Button',
+    'dijit/Calendar',
+    'dijit/form/TimeTextBox',
     'TimelineDemo/TimelineDemo',
     'dojo/domReady!'
 ], function(

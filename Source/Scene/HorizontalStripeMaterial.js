@@ -63,7 +63,7 @@ define(['../Shaders/HorizontalStripeMaterial'], function(ShadersHorizontalStripe
     }
 
     HorizontalStripeMaterial.prototype._getShaderSource = function() {
-        return "#line 0\n" + ShadersHorizontalStripeMaterial;
+        return '#line 0\n' + ShadersHorizontalStripeMaterial;
     };
 
     return HorizontalStripeMaterial;

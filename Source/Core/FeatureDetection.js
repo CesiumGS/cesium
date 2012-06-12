@@ -92,7 +92,7 @@ define(['Core/FullScreen'
      *
      * @returns true if the browser can load cross-origin streaming imagery, false if not.
      *
-     * @see <a href="http://www.w3.org/TR/cors/">Cross-Origin Resource Sharing</a>
+     * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
      */
     FeatureDetection.supportsCrossOriginImagery = function() {
         if (typeof _supportsCrossOriginImagery === 'undefined') {
@@ -115,7 +115,7 @@ define(['Core/FullScreen'
      * @returns true if the supports the full screen standard, false if not.
      *
      * @see FullScreen
-     * @see <a href="http://dvcs.w3.org/hg/fullscreen/raw-file/tip/Overview.html">W3C Fullscreen Living Specification</a>
+     * @see <a href='http://dvcs.w3.org/hg/fullscreen/raw-file/tip/Overview.html'>W3C Fullscreen Living Specification</a>
      */
     FeatureDetection.supportsFullScreen = function() {
         return FullScreen.supportsFullScreen();

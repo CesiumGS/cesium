@@ -10,49 +10,49 @@ defineSuite([
     "use strict";
     /*global it,expect*/
 
-   it("solve throws exception without lower diagonal", function() {
+   it('solve throws exception without lower diagonal', function() {
         expect(function() {
             TridiagonalSystemSolver.solve();
         }).toThrow();
     });
 
-    it("solve throws exception without diagonal", function() {
+    it('solve throws exception without diagonal', function() {
         expect(function() {
             TridiagonalSystemSolver.solve([]);
         }).toThrow();
     });
 
-    it("solve throws exception without upper diagonal", function() {
+    it('solve throws exception without upper diagonal', function() {
         expect(function() {
             TridiagonalSystemSolver.solve([], []);
         }).toThrow();
     });
 
-    it("solve throws exception without rhs vector", function() {
+    it('solve throws exception without rhs vector', function() {
         expect(function() {
             TridiagonalSystemSolver.solve([], [], []);
         }).toThrow();
     });
 
-    it("solve throws exception when rhs vector length is not equal to diagonal length", function() {
+    it('solve throws exception when rhs vector length is not equal to diagonal length', function() {
         expect(function() {
             TridiagonalSystemSolver.solve([], [], [], [1]);
         }).toThrow();
     });
 
-    it("solve throws exception when lower diagonal length is not equal to upper diagonal length", function() {
+    it('solve throws exception when lower diagonal length is not equal to upper diagonal length', function() {
         expect(function() {
             TridiagonalSystemSolver.solve([1], [1], [], [1]);
         }).toThrow();
     });
 
-    it("solve throws exception when lower/upper diagonal length is not one less than diagonal length", function() {
+    it('solve throws exception when lower/upper diagonal length is not one less than diagonal length', function() {
         expect(function() {
             TridiagonalSystemSolver.solve([1], [1], [1], [1]);
         }).toThrow();
     });
 
-    it("solve three unknowns", function() {
+    it('solve three unknowns', function() {
         var l = [1.0, 1.0];
         var d = [-2.175, -2.15, -2.125];
         var u = [1.0, 1.0];
@@ -69,7 +69,7 @@ defineSuite([
         expect(actual[2].equalsEpsilon(expected[2], CesiumMath.EPSILON4)).toEqual(true);
     });
 
-    it("solve nine unknowns", function() {
+    it('solve nine unknowns', function() {
         var l = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
         var d = [-2.0304, -2.0288, -2.0272, -2.0256, -2.0240, -2.0224, -2.0208, -2.0192, -2.0176];
         var u = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];

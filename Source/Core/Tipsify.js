@@ -5,12 +5,12 @@ define(['./DeveloperError'], function(DeveloperError) {
     /**
      * Encapsulates an algorithm to optimize triangles for the post
      * vertex-shader cache.  This is based on the 2007 SIGGRAPH paper
-     * "Fast Triangle Reordering for Vertex Locality and Reduced Overdraw."
+     * 'Fast Triangle Reordering for Vertex Locality and Reduced Overdraw.'
      * The runtime is linear but several passes are made.
      *
      * @exports Tipsify
      *
-     * @see <a href="http://gfx.cs.princeton.edu/pubs/Sander_2007_%3ETR/tipsy.pdf">
+     * @see <a href='http://gfx.cs.princeton.edu/pubs/Sander_2007_%3ETR/tipsy.pdf'>
      * Fast Triangle Reordering for Vertex Locality and Reduced Overdraw</a>
      * by Sander, Nehab, and Barczak
      */
@@ -44,19 +44,19 @@ define(['./DeveloperError'], function(DeveloperError) {
         var cacheSize = description.cacheSize || 24;
 
         if (!indices) {
-            throw new DeveloperError("indices is required.", "indices");
+            throw new DeveloperError('indices is required.');
         }
 
         var numIndices = indices.length;
 
         if ((numIndices < 3) || (numIndices % 3 !== 0)) {
-            throw new DeveloperError("indices length must be a multiple of three.", "indices");
+            throw new DeveloperError('indices length must be a multiple of three.');
         }
         if (maximumIndex <= 0) {
-            throw new DeveloperError("maximumIndex must be greater than zero.", "maximumIndex");
+            throw new DeveloperError('maximumIndex must be greater than zero.');
         }
         if (cacheSize < 3) {
-            throw new DeveloperError("cacheSize must be greater than two.", "cachSize");
+            throw new DeveloperError('cacheSize must be greater than two.');
         }
 
         // Compute the maximumIndex if not given
@@ -167,18 +167,18 @@ define(['./DeveloperError'], function(DeveloperError) {
         }
 
         if (!indices) {
-            throw new DeveloperError("indices is required.", "indices");
+            throw new DeveloperError('indices is required.');
         }
         var numIndices = indices.length;
 
         if ((numIndices < 3) || (numIndices % 3 !== 0)) {
-            throw new DeveloperError("indices length must be a multiple of three.", "indices");
+            throw new DeveloperError('indices length must be a multiple of three.');
         }
         if (maximumIndex <= 0) {
-            throw new DeveloperError("maximumIndex must be greater than zero.", "maximumIndex");
+            throw new DeveloperError('maximumIndex must be greater than zero.');
         }
         if (cacheSize < 3) {
-            throw new DeveloperError("cacheSize must be greater than two.", "cachSize");
+            throw new DeveloperError('cacheSize must be greater than two.');
         }
 
         // Determine maximum index

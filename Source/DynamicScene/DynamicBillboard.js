@@ -49,15 +49,15 @@ define([
                 interval = TimeInterval.fromIso8601(interval);
             }
 
-            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "color", CzmlColor, billboardData.color, interval, dynamicObjectCollection) || billboardUpdated;
-            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "eyeOffset", CzmlCartesian3, billboardData.eyeOffset, interval, dynamicObjectCollection) || billboardUpdated;
-            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "horizontalOrigin", CzmlHorizontalOrigin, billboardData.horizontalOrigin, interval, dynamicObjectCollection) || billboardUpdated;
-            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "image", CzmlString, billboardData.image, interval, dynamicObjectCollection) || billboardUpdated;
-            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "pixelOffset", CzmlCartesian2, billboardData.pixelOffset, interval, dynamicObjectCollection) || billboardUpdated;
-            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "scale", CzmlNumber, billboardData.scale, interval, dynamicObjectCollection) || billboardUpdated;
-            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "show", CzmlBoolean, billboardData.show, interval, dynamicObjectCollection) || billboardUpdated;
-            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "verticalOrigin", CzmlVerticalOrigin, billboardData.verticalOrigin, interval, dynamicObjectCollection) || billboardUpdated;
-            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, "color", CzmlColor, billboardData.color, interval, dynamicObjectCollection) || billboardUpdated;
+            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, 'color', CzmlColor, billboardData.color, interval, dynamicObjectCollection) || billboardUpdated;
+            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, 'eyeOffset', CzmlCartesian3, billboardData.eyeOffset, interval, dynamicObjectCollection) || billboardUpdated;
+            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, 'horizontalOrigin', CzmlHorizontalOrigin, billboardData.horizontalOrigin, interval, dynamicObjectCollection) || billboardUpdated;
+            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, 'image', CzmlString, billboardData.image, interval, dynamicObjectCollection) || billboardUpdated;
+            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, 'pixelOffset', CzmlCartesian2, billboardData.pixelOffset, interval, dynamicObjectCollection) || billboardUpdated;
+            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, 'scale', CzmlNumber, billboardData.scale, interval, dynamicObjectCollection) || billboardUpdated;
+            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, 'show', CzmlBoolean, billboardData.show, interval, dynamicObjectCollection) || billboardUpdated;
+            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, 'verticalOrigin', CzmlVerticalOrigin, billboardData.verticalOrigin, interval, dynamicObjectCollection) || billboardUpdated;
+            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, 'color', CzmlColor, billboardData.color, interval, dynamicObjectCollection) || billboardUpdated;
 
             return billboardUpdated;
         }

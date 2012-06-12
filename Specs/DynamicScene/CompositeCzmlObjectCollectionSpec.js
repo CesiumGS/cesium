@@ -30,25 +30,25 @@ defineSuite([
         vertexPositions : DynamicObject.processCzmlPacketVertexPositions
     };
 
-    it("applyChanges works with Existing buffers", function() {
+    it('applyChanges works with Existing buffers', function() {
 
         var dynamicObjectCollection1 = new DynamicObjectCollection(updaters);
         var dynamicObjectCollection2 = new DynamicObjectCollection(updaters);
 
         var czml1 = {
-            "id" : "testBillboard",
-            "billboard" : {
-                "show" : true,
-                "rotation" : 0.0,
+            'id' : 'testBillboard',
+            'billboard' : {
+                'show' : true,
+                'rotation' : 0.0,
             }
         };
         dynamicObjectCollection1.processCzml(czml1);
 
         var czml2 = {
-            "id" : "testBillboard",
-            "billboard" : {
-                "rotation" : 2.0,
-                "scale" : 3.0,
+            'id' : 'testBillboard',
+            'billboard' : {
+                'rotation' : 2.0,
+                'scale' : 3.0,
             }
         };
         dynamicObjectCollection2.processCzml(czml2);
@@ -72,7 +72,7 @@ defineSuite([
         expect(object.billboard.rotation.getValue(new JulianDate())).toEqual(2.0);
     });
 
-    it("Data updates as underlying buffers update", function() {
+    it('Data updates as underlying buffers update', function() {
         var dynamicObjectCollection1 = new DynamicObjectCollection(updaters);
         var dynamicObjectCollection2 = new DynamicObjectCollection(updaters);
 
@@ -84,10 +84,10 @@ defineSuite([
         compositeDynamicObjectCollection.applyChanges();
 
         var czml1 = {
-            "id" : "testBillboard",
-            "billboard" : {
-                "show" : true,
-                "rotation" : 0.0,
+            'id' : 'testBillboard',
+            'billboard' : {
+                'show' : true,
+                'rotation' : 0.0,
             }
         };
         dynamicObjectCollection1.processCzml(czml1);
@@ -104,10 +104,10 @@ defineSuite([
         expect(object.billboard.rotation.getValue(new JulianDate())).toEqual(0.0);
 
         var czml2 = {
-            "id" : "testBillboard",
-            "billboard" : {
-                "rotation" : 2.0,
-                "scale" : 3.0,
+            'id' : 'testBillboard',
+            'billboard' : {
+                'rotation' : 2.0,
+                'scale' : 3.0,
             }
         };
         dynamicObjectCollection2.processCzml(czml2);

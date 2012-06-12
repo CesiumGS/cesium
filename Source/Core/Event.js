@@ -22,7 +22,7 @@ define([
      * var myObjectInstance = new MyObject();
      * var evt = new Event();
      * evt.addEventListener(MyObject.prototype.myListener, myObjectInstance);
-     * evt.raiseEvent("1", "2");
+     * evt.raiseEvent('1', '2');
      * evt.removeEventListener(MyObject.prototype.myListener);
      */
     function Event() {
@@ -51,14 +51,14 @@ define([
      */
     Event.prototype.addEventListener = function(listener, scope) {
         if (typeof listener !== 'function') {
-            throw new DeveloperError("listener is required and must be a function.", "listener");
+            throw new DeveloperError('listener is required and must be a function.');
         }
 
         var thisListeners = this._listeners;
         var index = thisListeners.indexOf(listener);
 
         if (index !== -1) {
-            throw new DeveloperError("listener is already subscribed.", "listener");
+            throw new DeveloperError('listener is already subscribed.');
         }
 
         thisListeners.push(listener);
@@ -82,14 +82,14 @@ define([
      */
     Event.prototype.removeEventListener = function(listener) {
         if (typeof listener !== 'function') {
-            throw new DeveloperError("listener is required and must be a function.", "listener");
+            throw new DeveloperError('listener is required and must be a function.');
         }
 
         var thisListeners = this._listeners;
         var index = thisListeners.indexOf(listener);
 
         if (index === -1) {
-            throw new DeveloperError("listener is not subscribed.", "listener");
+            throw new DeveloperError('listener is not subscribed.');
         }
 
         thisListeners.splice(index, 1);

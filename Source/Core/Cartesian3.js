@@ -33,7 +33,7 @@ define([
          * @see Cartesian3.y
          * @see Cartesian3.z
          */
-        this.x = (typeof x !== "undefined") ? x : 0.0;
+        this.x = (typeof x !== 'undefined') ? x : 0.0;
 
         /**
          * DOC_TBA
@@ -43,7 +43,7 @@ define([
          * @see Cartesian3.x
          * @see Cartesian3.z
          */
-        this.y = (typeof y !== "undefined") ? y : 0.0;
+        this.y = (typeof y !== 'undefined') ? y : 0.0;
 
         /**
          * DOC_TBA
@@ -53,7 +53,7 @@ define([
          * @see Cartesian3.x
          * @see Cartesian3.y
          */
-        this.z = (typeof z !== "undefined") ? z : 0.0;
+        this.z = (typeof z !== 'undefined') ? z : 0.0;
 
         if (normalize) {
             var magnitude = this.magnitude();
@@ -453,7 +453,7 @@ define([
      * @return {String} A string representing this instance.
      */
     Cartesian3.prototype.toString = function() {
-        return "(" + this.x + ", " + this.y + ", " + this.z + ")";
+        return '(' + this.x + ', ' + this.y + ', ' + this.z + ')';
     };
 
     return Cartesian3;

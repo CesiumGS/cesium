@@ -37,7 +37,7 @@ define([
          * @see Quaternion.z
          * @see Quaternion.w
          */
-        this.x = (typeof x !== "undefined") ? x : 0.0;
+        this.x = (typeof x !== 'undefined') ? x : 0.0;
 
         /**
          * The y coordinate.
@@ -48,7 +48,7 @@ define([
          * @see Quaternion.z
          * @see Quaternion.w
          */
-        this.y = (typeof y !== "undefined") ? y : 0.0;
+        this.y = (typeof y !== 'undefined') ? y : 0.0;
 
         /**
          * The z coordinate.
@@ -59,7 +59,7 @@ define([
          * @see Quaternion.y
          * @see Quaternion.w
          */
-        this.z = (typeof z !== "undefined") ? z : 0.0;
+        this.z = (typeof z !== 'undefined') ? z : 0.0;
 
         /**
          * The w coordinate.
@@ -70,7 +70,7 @@ define([
          * @see Quaternion.y
          * @see Quaternion.z
          */
-        this.w = (typeof w !== "undefined") ? w : 0.0;
+        this.w = (typeof w !== 'undefined') ? w : 0.0;
 
         if (normalize) {
             var inverseMagnitude = 1.0 / this.norm();
@@ -498,7 +498,7 @@ define([
      * @return {String} A string representing this Quaternion.
      */
     Quaternion.prototype.toString = function() {
-        return "(" + this.x + ", " + this.y + ", " + this.z + ", " + this.w + ")";
+        return '(' + this.x + ', ' + this.y + ', ' + this.z + ', ' + this.w + ')';
     };
 
     /**

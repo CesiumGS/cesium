@@ -12,16 +12,11 @@ define(['./DeveloperError'], function(DeveloperError) {
      *
      * @exports pointInsideTriangle2D
      *
-     * @exception {DeveloperError} point is required.
-     * @exception {DeveloperError} p0, p1, and p2 are required.
+     * @exception {DeveloperError} point, p0, p1, and p2 are required.
      */
     function pointInsideTriangle2D(point, p0, p1, p2) {
-        if (!point) {
-            throw new DeveloperError("point is required.", "point");
-        }
-
-        if (!p0 || !p1 || !p2) {
-            throw new DeveloperError("p0, p1, and p2 are required.");
+        if (!point || !p0 || !p1 || !p2) {
+            throw new DeveloperError('point, p0, p1, and p2 are required.');
         }
 
         // Implementation based on http://www.blackpawn.com/texts/pointinpoly/default.html.

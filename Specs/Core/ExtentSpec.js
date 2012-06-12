@@ -8,13 +8,13 @@ defineSuite([
     "use strict";
     /*global it,expect*/
 
-    it("constructor checks for a valid extent.", function() {
+    it('constructor checks for a valid extent.', function() {
         expect(function() {
             return new Extent();
         }).toThrow();
     });
 
-    it("constructor throws exception with invalid extent 1", function() {
+    it('constructor throws exception with invalid extent 1', function() {
         expect(function() {
             return new Extent(
                     -CesiumMath.PI - 1,
@@ -25,7 +25,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("constructor throws exception with invalid extent 2", function() {
+    it('constructor throws exception with invalid extent 2', function() {
         expect(function() {
             return new Extent(
                     -CesiumMath.PI,
@@ -36,7 +36,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("constructor throws exception with invalid extent 3", function() {
+    it('constructor throws exception with invalid extent 3', function() {
         expect(function() {
             return new Extent(
                     -CesiumMath.PI,
@@ -47,7 +47,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("constructor throws exception with invalid extent 4", function() {
+    it('constructor throws exception with invalid extent 4', function() {
         expect(function() {
             return new Extent(
                     -CesiumMath.PI,
@@ -58,7 +58,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("validate throws exception with undefined extent", function() {
+    it('validate throws exception with undefined extent', function() {
         expect(function() {
             Extent.validate();
         }).toThrow();

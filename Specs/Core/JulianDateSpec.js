@@ -11,8 +11,8 @@ function(JulianDate,
     /*global it, expect*/
 
     // All exact Julian Dates found using NASA's Time Conversion Tool: http://ssd.jpl.nasa.gov/tc.cgi
-    it("Construct a default date", function() {
-        // Default constructing a date uses "now".  Unfortunately,
+    it('Construct a default date', function() {
+        // Default constructing a date uses 'now'.  Unfortunately,
         // there's no way to know exactly what that time will be, so we
         // give ourselves a 5 second epsilon as a hack to avoid possible
         // race conditions.  In reality, it might be better to just omit
@@ -23,7 +23,7 @@ function(JulianDate,
         expect(defaultDate.equalsEpsilon(dateNow, 5)).toEqual(true);
     });
 
-    it("Construct a date from basic components", function() {
+    it('Construct a date from basic components', function() {
         var dayNumber = 12;
         var seconds = 12.5;
         var timeStandard = TimeStandard.TAI;
@@ -33,7 +33,7 @@ function(JulianDate,
         expect(julianDate.getTimeStandard()).toEqual(timeStandard);
     });
 
-    it("Construct a date from basic components with more seconds than a day", function() {
+    it('Construct a date from basic components with more seconds than a day', function() {
         var dayNumber = 12;
         var seconds = 86401;
         var timeStandard = TimeStandard.UTC;
@@ -43,7 +43,7 @@ function(JulianDate,
         expect(julianDate.getTimeStandard()).toEqual(timeStandard);
     });
 
-    it("Construct a date from basic components with negative seconds in a day", function() {
+    it('Construct a date from basic components with negative seconds in a day', function() {
         var dayNumber = 12;
         var seconds = -1;
         var timeStandard = TimeStandard.UTC;
@@ -53,7 +53,7 @@ function(JulianDate,
         expect(julianDate.getTimeStandard()).toEqual(timeStandard);
     });
 
-    it("Construct a date from basic components with partial day and seconds in a day", function() {
+    it('Construct a date from basic components with partial day and seconds in a day', function() {
         var dayNumber = 12.5;
         var seconds = -1;
         var timeStandard = TimeStandard.UTC;
@@ -63,7 +63,7 @@ function(JulianDate,
         expect(julianDate.getTimeStandard()).toEqual(timeStandard);
     });
 
-    it("Construct a date with default time standard", function() {
+    it('Construct a date with default time standard', function() {
         var dayNumber = 12;
         var seconds = 12.5;
         var julianDate = new JulianDate(dayNumber, seconds);
@@ -72,16 +72,16 @@ function(JulianDate,
         expect(julianDate.getTimeStandard()).toEqual(TimeStandard.UTC);
     });
 
-    it("Fail to construct a date with invalid time standard", function() {
+    it('Fail to construct a date with invalid time standard', function() {
         var dayNumber = 12;
         var seconds = 12.5;
-        var timeStandard = "invalid";
+        var timeStandard = 'invalid';
         expect(function() {
             return new JulianDate(dayNumber, seconds, timeStandard);
         }).toThrow();
     });
 
-    it("Fail to construct a date with a null time standard", function() {
+    it('Fail to construct a date with a null time standard', function() {
         var dayNumber = 12;
         var seconds = 12.5;
         var timeStandard = null;
@@ -90,7 +90,7 @@ function(JulianDate,
         }).toThrow();
     });
 
-    it("Fail to construct a date with an undefined secondsOfDay", function() {
+    it('Fail to construct a date with an undefined secondsOfDay', function() {
         var dayNumber = 12;
         var timeStandard = TimeStandard.UTC;
         expect(function() {
@@ -98,7 +98,7 @@ function(JulianDate,
         }).toThrow();
     });
 
-    it("Fail to construct a date with null secondsOfDay", function() {
+    it('Fail to construct a date with null secondsOfDay', function() {
         var dayNumber = 12;
         var seconds = null;
         var timeStandard = TimeStandard.UTC;
@@ -107,16 +107,16 @@ function(JulianDate,
         }).toThrow();
     });
 
-    it("Fail to construct a date with non-numerical secondsOfDay", function() {
+    it('Fail to construct a date with non-numerical secondsOfDay', function() {
         var dayNumber = 12;
-        var seconds = "not a number";
+        var seconds = 'not a number';
         var timeStandard = TimeStandard.UTC;
         expect(function() {
             return new JulianDate(dayNumber, seconds, timeStandard);
         }).toThrow();
     });
 
-    it("Fail to construct a date with undefined day number", function() {
+    it('Fail to construct a date with undefined day number', function() {
         var seconds = 12.5;
         var timeStandard = TimeStandard.UTC;
         expect(function() {
@@ -124,7 +124,7 @@ function(JulianDate,
         }).toThrow();
     });
 
-    it("Fail to construct a date with null day number", function() {
+    it('Fail to construct a date with null day number', function() {
         var dayNumber = null;
         var seconds = 12.5;
         var timeStandard = TimeStandard.UTC;
@@ -133,8 +133,8 @@ function(JulianDate,
         }).toThrow();
     });
 
-    it("Fail to construct a date with non-numerical day number", function() {
-        var dayNumber = "not a number";
+    it('Fail to construct a date with non-numerical day number', function() {
+        var dayNumber = 'not a number';
         var seconds = 12.5;
         var timeStandard = TimeStandard.UTC;
         expect(function() {
@@ -142,617 +142,617 @@ function(JulianDate,
         }).toThrow();
     });
 
-    it("Construct a date from a JavaScript Date (1)", function() {
-        var date = new Date("January 1, 1991 06:00:00 UTC");
+    it('Construct a date from a JavaScript Date (1)', function() {
+        var date = new Date('January 1, 1991 06:00:00 UTC');
         var julianDate = JulianDate.fromDate(date);
         expect(julianDate.getTotalDays()).toEqualEpsilon(2448257.75, CesiumMath.EPSILON5);
     });
 
-    it("Construct a date from a JavaScript Date (2)", function() {
-        var date = new Date("July 4, 2011 12:00:00 UTC");
+    it('Construct a date from a JavaScript Date (2)', function() {
+        var date = new Date('July 4, 2011 12:00:00 UTC');
         var julianDate = JulianDate.fromDate(date);
         expect(julianDate.getTotalDays()).toEqualEpsilon(2455747.0, CesiumMath.EPSILON5);
     });
 
-    it("Construct a date from a JavaScript Date (3)", function() {
-        var date = new Date("December 31, 2021 18:00:00 UTC");
+    it('Construct a date from a JavaScript Date (3)', function() {
+        var date = new Date('December 31, 2021 18:00:00 UTC');
         var julianDate = JulianDate.fromDate(date);
         expect(julianDate.getTotalDays()).toEqualEpsilon(2459580.25, CesiumMath.EPSILON5);
     });
 
-    it("Construct a date from a JavaScript Date (4)", function() {
-        var jsDate = new Date("September 1, 2011 12:00:00 UTC");
+    it('Construct a date from a JavaScript Date (4)', function() {
+        var jsDate = new Date('September 1, 2011 12:00:00 UTC');
         var julianDate = JulianDate.fromDate(jsDate);
         expect(julianDate.getTotalDays()).toEqualEpsilon(2455806.0, CesiumMath.EPSILON5);
     });
 
-    it("Construct a date from a JavaScript Date in different TimeStandard", function() {
-        var taiDate = new Date("September 1, 2011 12:00:00");
+    it('Construct a date from a JavaScript Date in different TimeStandard', function() {
+        var taiDate = new Date('September 1, 2011 12:00:00');
         var taiJulianDate = JulianDate.fromDate(taiDate, TimeStandard.TAI);
 
-        var utcDate = new Date("September 1, 2011 11:59:26");
+        var utcDate = new Date('September 1, 2011 11:59:26');
         var utcJulianDate = JulianDate.fromDate(utcDate, TimeStandard.UTC);
 
         expect(taiJulianDate.equalsEpsilon(utcJulianDate, CesiumMath.EPSILON20)).toEqual(true);
     });
 
-    it("Fail to construct from an undefined JavaScript Date", function() {
+    it('Fail to construct from an undefined JavaScript Date', function() {
         expect(function() {
             return JulianDate.fromDate(undefined);
         }).toThrow();
     });
 
-    it("Fail to construct from a null JavaScript Date", function() {
+    it('Fail to construct from a null JavaScript Date', function() {
         expect(function() {
             return JulianDate.fromDate(null);
         }).toThrow();
     });
 
-    it("Fail to construct from an invalid JavaScript Date", function() {
+    it('Fail to construct from an invalid JavaScript Date', function() {
         expect(function() {
-            return JulianDate.fromDate(new Date(Date.parse("garbage")));
+            return JulianDate.fromDate(new Date(Date.parse('garbage')));
         }).toThrow();
     });
 
-    it("Fail to construct from a non-date JavaScript Date", function() {
+    it('Fail to construct from a non-date JavaScript Date', function() {
         expect(function() {
             return JulianDate.fromDate(0);
         }).toThrow();
     });
 
-    it("Fail to construct from a JavaScript Date with null time standard", function() {
+    it('Fail to construct from a JavaScript Date with null time standard', function() {
         expect(function() {
             return JulianDate.fromDate(new Date(), null);
         }).toThrow();
     });
 
-    it("Fail to construct from a JavaScript Date with invalid time standard", function() {
+    it('Fail to construct from a JavaScript Date with invalid time standard', function() {
         expect(function() {
-            return JulianDate.fromDate(new Date(), "invalid");
+            return JulianDate.fromDate(new Date(), 'invalid');
         }).toThrow();
     });
 
-    it("Construct a date from total days (1)", function() {
+    it('Construct a date from total days (1)', function() {
         var julianDate = JulianDate.fromTotalDays(2448257.75, TimeStandard.UTC);
-        expect(julianDate.equals(JulianDate.fromDate(new Date("January 1, 1991 06:00:00 UTC")))).toEqual(true);
+        expect(julianDate.equals(JulianDate.fromDate(new Date('January 1, 1991 06:00:00 UTC')))).toEqual(true);
     });
 
-    it("Construct a date from total days (2)", function() {
+    it('Construct a date from total days (2)', function() {
         var julianDate = JulianDate.fromTotalDays(2455747.0, TimeStandard.UTC);
-        expect(julianDate.equals(JulianDate.fromDate(new Date("July 4, 2011 12:00:00 UTC")))).toEqual(true);
+        expect(julianDate.equals(JulianDate.fromDate(new Date('July 4, 2011 12:00:00 UTC')))).toEqual(true);
     });
 
-    it("Construct a date from total days (3)", function() {
+    it('Construct a date from total days (3)', function() {
         var julianDate = JulianDate.fromTotalDays(2459580.25, TimeStandard.UTC);
-        expect(julianDate.equals(JulianDate.fromDate(new Date("December 31, 2021 18:00:00 UTC")))).toEqual(true);
+        expect(julianDate.equals(JulianDate.fromDate(new Date('December 31, 2021 18:00:00 UTC')))).toEqual(true);
     });
 
-    it("Construct a date from total days with different time standards", function() {
+    it('Construct a date from total days with different time standards', function() {
         var julianDate = JulianDate.fromTotalDays(2455806, TimeStandard.TAI);
-        expect(julianDate.equals(JulianDate.fromDate(new Date("September 1, 2011 12:00:00 UTC"), TimeStandard.TAI))).toEqual(true);
+        expect(julianDate.equals(JulianDate.fromDate(new Date('September 1, 2011 12:00:00 UTC'), TimeStandard.TAI))).toEqual(true);
     });
 
-    it("Fail to construct from non-numeric total days", function() {
+    it('Fail to construct from non-numeric total days', function() {
         expect(function() {
-            return JulianDate.fromTotalDays("not a number", TimeStandard.UTC);
+            return JulianDate.fromTotalDays('not a number', TimeStandard.UTC);
         }).toThrow();
     });
 
-    it("Fail to construct from null total days", function() {
+    it('Fail to construct from null total days', function() {
         expect(function() {
             return JulianDate.fromTotalDays(null, TimeStandard.UTC);
         }).toThrow();
     });
 
-    it("Fail to construct from undefined total days", function() {
+    it('Fail to construct from undefined total days', function() {
         expect(function() {
             return JulianDate.fromTotalDays(undefined, TimeStandard.UTC);
         }).toThrow();
     });
 
-    it("Fail to construct from total days with null time standard", function() {
+    it('Fail to construct from total days with null time standard', function() {
         expect(function() {
             return JulianDate.fromTotalDays(1234, null);
         }).toThrow();
     });
 
-    it("Fail to construct from total days with invalid time standard", function() {
+    it('Fail to construct from total days with invalid time standard', function() {
         expect(function() {
-            return JulianDate.fromTotalDays(1234, "invalid");
+            return JulianDate.fromTotalDays(1234, 'invalid');
         }).toThrow();
     });
 
-    it("Construct from ISO8601 local calendar date, basic format", function() {
+    it('Construct from ISO8601 local calendar date, basic format', function() {
         var expectedDate = JulianDate.fromDate(new Date(2009, 7, 1));
-        var computedDate = JulianDate.fromIso8601("20090801");
+        var computedDate = JulianDate.fromIso8601('20090801');
         expect(computedDate.equals(expectedDate)).toEqual(true);
     });
 
-    it("Construct from ISO8601 local calendar date, extended format", function() {
+    it('Construct from ISO8601 local calendar date, extended format', function() {
         var expectedDate = JulianDate.fromDate(new Date(2009, 7, 1));
-        var computedDate = JulianDate.fromIso8601("2009-08-01");
+        var computedDate = JulianDate.fromIso8601('2009-08-01');
         expect(computedDate.equals(expectedDate)).toEqual(true);
     });
 
-    it("Construct from ISO8601 local calendar date on Feb 29th, basic format", function() {
+    it('Construct from ISO8601 local calendar date on Feb 29th, basic format', function() {
         var expectedDate = JulianDate.fromDate(new Date(2000, 1, 29));
-        var computedDate = JulianDate.fromIso8601("20000229");
+        var computedDate = JulianDate.fromIso8601('20000229');
         expect(computedDate.equals(expectedDate)).toEqual(true);
     });
 
-    it("Construct from ISO8601 local calendar date on Feb 29th, extended format", function() {
+    it('Construct from ISO8601 local calendar date on Feb 29th, extended format', function() {
         var expectedDate = JulianDate.fromDate(new Date(2000, 1, 29));
-        var computedDate = JulianDate.fromIso8601("2000-02-29");
+        var computedDate = JulianDate.fromIso8601('2000-02-29');
         expect(computedDate.equals(expectedDate)).toEqual(true);
     });
 
-    it("Construct from an ISO8601 local ordinal date, basic format", function() {
+    it('Construct from an ISO8601 local ordinal date, basic format', function() {
         var expectedDate = JulianDate.fromDate(new Date(1985, 3, 12));
-        var computedDate = JulianDate.fromIso8601("1985102");
+        var computedDate = JulianDate.fromIso8601('1985102');
         expect(computedDate.equals(expectedDate)).toEqual(true);
     });
 
-    it("Construct from an ISO8601 local ordinal date, extended format", function() {
+    it('Construct from an ISO8601 local ordinal date, extended format', function() {
         var expectedDate = JulianDate.fromDate(new Date(1985, 3, 12));
-        var computedDate = JulianDate.fromIso8601("1985-102");
+        var computedDate = JulianDate.fromIso8601('1985-102');
         expect(computedDate.equals(expectedDate)).toEqual(true);
     });
 
-    it("Construct an ISO8601 ordinal date on a leap year", function() {
+    it('Construct an ISO8601 ordinal date on a leap year', function() {
         var expectedDate = JulianDate.fromDate(new Date(2000, 11, 31));
-        var computedDate = JulianDate.fromIso8601("2000-366");
+        var computedDate = JulianDate.fromIso8601('2000-366');
         expect(computedDate.equals(expectedDate)).toEqual(true);
     });
 
-    it("Construct from an ISO8601 local week date, basic format", function() {
+    it('Construct from an ISO8601 local week date, basic format', function() {
         var expectedDate = JulianDate.fromDate(new Date(1985, 3, 12));
-        var computedDate = JulianDate.fromIso8601("1985W155");
+        var computedDate = JulianDate.fromIso8601('1985W155');
         expect(computedDate.equals(expectedDate)).toEqual(true);
     });
 
-    it("Construct from an ISO8601 local week date, extended format", function() {
+    it('Construct from an ISO8601 local week date, extended format', function() {
         var expectedDate = JulianDate.fromDate(new Date(2008, 8, 27));
-        var computedDate = JulianDate.fromIso8601("2008-W39-6");
+        var computedDate = JulianDate.fromIso8601('2008-W39-6');
         expect(computedDate.equals(expectedDate)).toEqual(true);
     });
 
-    it("Construct from an ISO8601 local calendar week date, basic format", function() {
+    it('Construct from an ISO8601 local calendar week date, basic format', function() {
         var expectedDate = JulianDate.fromDate(new Date(1985, 3, 7));
-        var computedDate = JulianDate.fromIso8601("1985W15");
+        var computedDate = JulianDate.fromIso8601('1985W15');
         expect(computedDate.equals(expectedDate)).toEqual(true);
     });
 
-    it("Construct from an ISO8601 local calendar week date, extended format", function() {
+    it('Construct from an ISO8601 local calendar week date, extended format', function() {
         var expectedDate = JulianDate.fromDate(new Date(2008, 8, 21));
-        var computedDate = JulianDate.fromIso8601("2008-W39");
+        var computedDate = JulianDate.fromIso8601('2008-W39');
         expect(computedDate.equals(expectedDate)).toEqual(true);
     });
 
-    //Note, there is no "extended format" for calendar month because eliminating the
+    //Note, there is no 'extended format' for calendar month because eliminating the
     //would confuse is with old YYMMDD dates
-    it("Construct from an ISO8601 local calendar month, basic format", function() {
+    it('Construct from an ISO8601 local calendar month, basic format', function() {
         var expectedDate = JulianDate.fromDate(new Date(1985, 3, 1));
-        var computedDate = JulianDate.fromIso8601("1985-04");
+        var computedDate = JulianDate.fromIso8601('1985-04');
         expect(computedDate.equals(expectedDate)).toEqual(true);
     });
 
-    //Note, there is no "extended format" for calendar year for obvious reasons
-    it("Construct from an ISO8601 local calendar month, basic format", function() {
+    //Note, there is no 'extended format' for calendar year for obvious reasons
+    it('Construct from an ISO8601 local calendar month, basic format', function() {
         var expectedDate = JulianDate.fromDate(new Date(1985, 0, 1));
-        var computedDate = JulianDate.fromIso8601("1985");
+        var computedDate = JulianDate.fromIso8601('1985');
         expect(computedDate.equals(expectedDate)).toEqual(true);
     });
 
-    it("Construct from ISO8601 UTC calendar date and time, basic format", function() {
+    it('Construct from ISO8601 UTC calendar date and time, basic format', function() {
         var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2009, 7, 1, 12, 30, 25)));
-        var computedDate = JulianDate.fromIso8601("20090801T123025Z");
+        var computedDate = JulianDate.fromIso8601('20090801T123025Z');
         expect(computedDate.equals(expectedDate)).toEqual(true);
     });
 
-    it("Construct from ISO8601 UTC calendar date and time, extended format", function() {
+    it('Construct from ISO8601 UTC calendar date and time, extended format', function() {
         var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2009, 7, 1, 12, 30, 25)));
-        var computedDate = JulianDate.fromIso8601("2009-08-01T12:30:25Z");
+        var computedDate = JulianDate.fromIso8601('2009-08-01T12:30:25Z');
         expect(computedDate.equals(expectedDate)).toEqual(true);
     });
 
-    it("Construct from ISO8601 UTC calendar date and time fractional seconds, basic format", function() {
+    it('Construct from ISO8601 UTC calendar date and time fractional seconds, basic format', function() {
         //Date is only accurate to milliseconds, while JulianDate, much more so.  The below date gets
         //rounded to 513, so we need to construct a JulianDate directly.
         //var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2009, 7, 1, 12, 30, 25, 5125423)));
         var expectedDate = new JulianDate(2455045, 1825.5125423, TimeStandard.UTC);
-        var computedDate = JulianDate.fromIso8601("20090801T123025.5125423Z");
+        var computedDate = JulianDate.fromIso8601('20090801T123025.5125423Z');
         expect(computedDate.equals(expectedDate)).toEqual(true);
     });
 
-    it("Construct from ISO8601 UTC calendar date and time fractional seconds, extended format", function() {
+    it('Construct from ISO8601 UTC calendar date and time fractional seconds, extended format', function() {
         //Date is only accurate to milliseconds, while JulianDate, much more so.  The below date gets
         //rounded to 513, so we need to construct a JulianDate directly.
         var expectedDate = new JulianDate(2455045, 1825.5125423, TimeStandard.UTC);
-        var computedDate = JulianDate.fromIso8601("2009-08-01T12:30:25.5125423Z");
+        var computedDate = JulianDate.fromIso8601('2009-08-01T12:30:25.5125423Z');
         expect(computedDate.equals(expectedDate)).toEqual(true);
     });
 
-    it("Construct from ISO8601 UTC calendar date and time fractional seconds, basic format, ',' instead of '.'", function() {
+    it('Construct from ISO8601 UTC calendar date and time fractional seconds, basic format, "," instead of "."', function() {
         //Date is only accurate to milliseconds, while JulianDate, much more so.  The below date gets
         //rounded to 513, so we need to construct a JulianDate directly.
         //var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2009, 7, 1, 12, 30, 25, 5125423)));
         var expectedDate = new JulianDate(2455045, 1825.5125423, TimeStandard.UTC);
-        var computedDate = JulianDate.fromIso8601("20090801T123025,5125423Z");
+        var computedDate = JulianDate.fromIso8601('20090801T123025,5125423Z');
         expect(computedDate.equals(expectedDate)).toEqual(true);
     });
 
-    it("Construct from ISO8601 UTC calendar date and time fractional seconds, extended format, ',' instead of '.'", function() {
+    it('Construct from ISO8601 UTC calendar date and time fractional seconds, extended format, "," instead of "."', function() {
         //Date is only accurate to milliseconds, while JulianDate, much more so.  The below date gets
         //rounded to 513, so we need to construct a JulianDate directly.
         var expectedDate = new JulianDate(2455045, 1825.5125423, TimeStandard.UTC);
-        var computedDate = JulianDate.fromIso8601("2009-08-01T12:30:25,5125423Z");
+        var computedDate = JulianDate.fromIso8601('2009-08-01T12:30:25,5125423Z');
         expect(computedDate.equals(expectedDate)).toEqual(true);
     });
 
-    it("Construct from ISO8601 UTC calendar date and time no seconds, basic format", function() {
+    it('Construct from ISO8601 UTC calendar date and time no seconds, basic format', function() {
         var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2009, 7, 1, 12, 30, 0)));
-        var computedDate = JulianDate.fromIso8601("20090801T1230Z");
+        var computedDate = JulianDate.fromIso8601('20090801T1230Z');
         expect(computedDate.equals(expectedDate)).toEqual(true);
     });
 
-    it("Construct from ISO8601 UTC calendar date and time no seconds, extended format", function() {
+    it('Construct from ISO8601 UTC calendar date and time no seconds, extended format', function() {
         var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2009, 7, 1, 12, 30, 0)));
-        var computedDate = JulianDate.fromIso8601("2009-08-01T12:30Z");
+        var computedDate = JulianDate.fromIso8601('2009-08-01T12:30Z');
         expect(computedDate.equals(expectedDate)).toEqual(true);
     });
 
-    it("Construct from ISO8601 UTC calendar date and time fractional minutes, basic format", function() {
+    it('Construct from ISO8601 UTC calendar date and time fractional minutes, basic format', function() {
         var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2009, 7, 1, 12, 30, 30)));
-        var computedDate = JulianDate.fromIso8601("20090801T1230.5Z");
+        var computedDate = JulianDate.fromIso8601('20090801T1230.5Z');
         expect(computedDate.equals(expectedDate)).toEqual(true);
     });
 
-    it("Construct from ISO8601 UTC calendar date and time fractional minutes, extended format", function() {
+    it('Construct from ISO8601 UTC calendar date and time fractional minutes, extended format', function() {
         var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2009, 7, 1, 12, 30, 30)));
-        var computedDate = JulianDate.fromIso8601("2009-08-01T12:30.5Z");
+        var computedDate = JulianDate.fromIso8601('2009-08-01T12:30.5Z');
         expect(computedDate.equals(expectedDate)).toEqual(true);
     });
 
-    it("Construct from ISO8601 UTC calendar date and time fractional minutes, basic format, ',' instead of '.'", function() {
+    it('Construct from ISO8601 UTC calendar date and time fractional minutes, basic format, "," instead of "."', function() {
         var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2009, 7, 1, 12, 30, 30)));
-        var computedDate = JulianDate.fromIso8601("20090801T1230,5Z");
+        var computedDate = JulianDate.fromIso8601('20090801T1230,5Z');
         expect(computedDate.equals(expectedDate)).toEqual(true);
     });
 
-    it("Construct from ISO8601 UTC calendar date and time fractional minutes, extended format, ',' instead of '.'", function() {
+    it('Construct from ISO8601 UTC calendar date and time fractional minutes, extended format, "," instead of "."', function() {
         var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2009, 7, 1, 12, 30, 30)));
-        var computedDate = JulianDate.fromIso8601("2009-08-01T12:30,5Z");
+        var computedDate = JulianDate.fromIso8601('2009-08-01T12:30,5Z');
         expect(computedDate.equals(expectedDate)).toEqual(true);
     });
 
-    it("Construct from ISO8601 UTC calendar date and time no minutes/seconds, basic format", function() {
+    it('Construct from ISO8601 UTC calendar date and time no minutes/seconds, basic format', function() {
         var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2009, 7, 1, 12, 0, 0)));
-        var computedDate = JulianDate.fromIso8601("20090801T12Z");
+        var computedDate = JulianDate.fromIso8601('20090801T12Z');
         expect(computedDate.equals(expectedDate)).toEqual(true);
     });
 
-    it("Construct from ISO8601 UTC calendar date and time no minutes/seconds, extended format", function() {
+    it('Construct from ISO8601 UTC calendar date and time no minutes/seconds, extended format', function() {
         var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2009, 7, 1, 12, 0, 0)));
-        var computedDate = JulianDate.fromIso8601("2009-08-01T12Z");
+        var computedDate = JulianDate.fromIso8601('2009-08-01T12Z');
         expect(computedDate.equals(expectedDate)).toEqual(true);
     });
 
-    it("Construct from ISO8601 UTC calendar date and time fractional hours, basic format", function() {
+    it('Construct from ISO8601 UTC calendar date and time fractional hours, basic format', function() {
         var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2009, 7, 1, 12, 30, 0)));
-        var computedDate = JulianDate.fromIso8601("20090801T12.5Z");
+        var computedDate = JulianDate.fromIso8601('20090801T12.5Z');
         expect(computedDate.equals(expectedDate)).toEqual(true);
     });
 
-    it("Construct from ISO8601 UTC calendar date and time fractional hours, extended format", function() {
+    it('Construct from ISO8601 UTC calendar date and time fractional hours, extended format', function() {
         var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2009, 7, 1, 12, 30, 0)));
-        var computedDate = JulianDate.fromIso8601("2009-08-01T12.5Z");
+        var computedDate = JulianDate.fromIso8601('2009-08-01T12.5Z');
         expect(computedDate.equals(expectedDate)).toEqual(true);
     });
 
-    it("Construct from ISO8601 UTC calendar date and time fractional hours, basic format, ',' instead of '.'", function() {
+    it('Construct from ISO8601 UTC calendar date and time fractional hours, basic format, "," instead of "."', function() {
         var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2009, 7, 1, 12, 30, 0)));
-        var computedDate = JulianDate.fromIso8601("20090801T12,5Z");
+        var computedDate = JulianDate.fromIso8601('20090801T12,5Z');
         expect(computedDate.equals(expectedDate)).toEqual(true);
     });
 
-    it("Construct from ISO8601 UTC calendar date and time fractional hours, extended format, ',' instead of '.'", function() {
+    it('Construct from ISO8601 UTC calendar date and time fractional hours, extended format, "," instead of "."', function() {
         var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2009, 7, 1, 12, 30, 0)));
-        var computedDate = JulianDate.fromIso8601("2009-08-01T12,5Z");
+        var computedDate = JulianDate.fromIso8601('2009-08-01T12,5Z');
         expect(computedDate.equals(expectedDate)).toEqual(true);
     });
 
-    it("Construct from an ISO8601 UTC calendar date and time on a leap second", function() {
-        var julianDate = JulianDate.fromIso8601("2008-12-31T23:59:60Z");
+    it('Construct from an ISO8601 UTC calendar date and time on a leap second', function() {
+        var julianDate = JulianDate.fromIso8601('2008-12-31T23:59:60Z');
         expect(julianDate.equals(new JulianDate(2454832, 43233, TimeStandard.TAI))).toEqual(true);
     });
 
-    it("Construct from an ISO8601 UTC calendar date and time within a leap second", function() {
-        var julianDate = JulianDate.fromIso8601("2008-12-31T23:59:60.123456789Z");
+    it('Construct from an ISO8601 UTC calendar date and time within a leap second', function() {
+        var julianDate = JulianDate.fromIso8601('2008-12-31T23:59:60.123456789Z');
         expect(julianDate.equals(new JulianDate(2454832, 43233.123456789, TimeStandard.TAI))).toEqual(true);
     });
 
-    it("Construct from an ISO8601 local calendar date and time on a leap second 1 hour behind UTC", function() {
-        var julianDate = JulianDate.fromIso8601("2008-12-31T22:59:60-01");
+    it('Construct from an ISO8601 local calendar date and time on a leap second 1 hour behind UTC', function() {
+        var julianDate = JulianDate.fromIso8601('2008-12-31T22:59:60-01');
         expect(julianDate.equals(new JulianDate(2454832, 43233, TimeStandard.TAI))).toEqual(true);
     });
 
-    it("Construct from an ISO8601 local calendar date and time on a leap second 1 hour ahead of UTC", function() {
-        var julianDate = JulianDate.fromIso8601("2009-01-01T00:59:60+01");
+    it('Construct from an ISO8601 local calendar date and time on a leap second 1 hour ahead of UTC', function() {
+        var julianDate = JulianDate.fromIso8601('2009-01-01T00:59:60+01');
         expect(julianDate.equals(new JulianDate(2454832, 43233, TimeStandard.TAI))).toEqual(true);
     });
 
-    it("Construct from an ISO8601 calendar date and time using 24:00:00 midnight notation", function() {
+    it('Construct from an ISO8601 calendar date and time using 24:00:00 midnight notation', function() {
         var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2009, 7, 2, 0, 0, 0)));
-        var computedDate = JulianDate.fromIso8601("2009-08-01T24:00:00Z");
+        var computedDate = JulianDate.fromIso8601('2009-08-01T24:00:00Z');
         expect(computedDate.equals(expectedDate)).toEqual(true);
     });
 
-    it("Construct from an ISO8601 local calendar date with UTC offset that crosses into next year", function() {
+    it('Construct from an ISO8601 local calendar date with UTC offset that crosses into next year', function() {
         var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2008, 11, 31, 23, 0, 0)));
-        var julianDate = JulianDate.fromIso8601("2009-01-01T01:00:00+02");
+        var julianDate = JulianDate.fromIso8601('2009-01-01T01:00:00+02');
         expect(julianDate.equals(expectedDate)).toEqual(true);
     });
 
-    it("Construct from an ISO8601 local calendar date with UTC offset that crosses into previous year", function() {
+    it('Construct from an ISO8601 local calendar date with UTC offset that crosses into previous year', function() {
         var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2009, 0, 1, 1, 0, 0)));
-        var julianDate = JulianDate.fromIso8601("2008-12-31T23:00:00-02");
+        var julianDate = JulianDate.fromIso8601('2008-12-31T23:00:00-02');
         expect(julianDate.equals(expectedDate)).toEqual(true);
     });
 
-    it("Fails to construct an ISO8601 ordinal date with day less than 1", function() {
+    it('Fails to construct an ISO8601 ordinal date with day less than 1', function() {
         expect(function() {
-            return JulianDate.fromIso8601("2009-000");
+            return JulianDate.fromIso8601('2009-000');
         }).toThrow();
     });
 
-    it("Fails to construct an ISO8601 ordinal date with day more than 365 on non-leap year", function() {
+    it('Fails to construct an ISO8601 ordinal date with day more than 365 on non-leap year', function() {
         expect(function() {
-            return JulianDate.fromIso8601("2001-366");
+            return JulianDate.fromIso8601('2001-366');
         }).toThrow();
     });
 
-    it("Fails to construct ISO8601 UTC calendar date of invalid YYMMDD format", function() {
+    it('Fails to construct ISO8601 UTC calendar date of invalid YYMMDD format', function() {
         expect(function() {
-            return JulianDate.fromIso8601("200905");
+            return JulianDate.fromIso8601('200905');
         }).toThrow();
     });
 
-    it("Fails to construct a complete ISO8601 date missing T delimeter", function() {
+    it('Fails to construct a complete ISO8601 date missing T delimeter', function() {
         expect(function() {
-            return JulianDate.fromIso8601("2009-08-0112:30.5Z");
+            return JulianDate.fromIso8601('2009-08-0112:30.5Z');
         }).toThrow();
     });
 
-    it("Fails to construct a complete ISO8601 date with delimeter other than T", function() {
+    it('Fails to construct a complete ISO8601 date with delimeter other than T', function() {
         expect(function() {
-            return JulianDate.fromIso8601("2009-08-01Q12:30.5Z");
+            return JulianDate.fromIso8601('2009-08-01Q12:30.5Z');
         }).toThrow();
     });
 
-    it("Fails to construct an ISO8601 date from undefined", function() {
+    it('Fails to construct an ISO8601 date from undefined', function() {
         expect(function() {
             return JulianDate.fromIso8601(undefined);
         }).toThrow();
     });
 
-    it("Fails to construct an ISO8601 date from null", function() {
+    it('Fails to construct an ISO8601 date from null', function() {
         expect(function() {
             return JulianDate.fromIso8601(null);
         }).toThrow();
     });
 
-    it("Fails to construct an ISO8601 from complete garbage", function() {
+    it('Fails to construct an ISO8601 from complete garbage', function() {
         expect(function() {
-            return JulianDate.fromIso8601("this is not a date");
+            return JulianDate.fromIso8601('this is not a date');
         }).toThrow();
     });
 
-    it("Fails to construct an ISO8601 date from a valid ISO8601 interval", function() {
+    it('Fails to construct an ISO8601 date from a valid ISO8601 interval', function() {
         expect(function() {
-            return JulianDate.fromIso8601("2007-03-01T13:00:00Z/2008-05-11T15:30:00Z");
+            return JulianDate.fromIso8601('2007-03-01T13:00:00Z/2008-05-11T15:30:00Z');
         }).toThrow();
     });
 
-    it("Fails to construct from an ISO8601 with too many year digits", function() {
+    it('Fails to construct from an ISO8601 with too many year digits', function() {
         expect(function() {
-            return JulianDate.fromIso8601("20091-05-19");
+            return JulianDate.fromIso8601('20091-05-19');
         }).toThrow();
     });
 
-    it("Fails to construct from an ISO8601 with too many month digits", function() {
+    it('Fails to construct from an ISO8601 with too many month digits', function() {
         expect(function() {
-            return JulianDate.fromIso8601("2009-100-19");
+            return JulianDate.fromIso8601('2009-100-19');
         }).toThrow();
     });
 
-    it("Fails to construct from an ISO8601 with more than 12 months", function() {
+    it('Fails to construct from an ISO8601 with more than 12 months', function() {
         expect(function() {
-            return JulianDate.fromIso8601("2009-13-19");
+            return JulianDate.fromIso8601('2009-13-19');
         }).toThrow();
     });
 
-    it("Fails to construct from an ISO8601 with less than 1 months", function() {
+    it('Fails to construct from an ISO8601 with less than 1 months', function() {
         expect(function() {
-            return JulianDate.fromIso8601("2009-00-19");
+            return JulianDate.fromIso8601('2009-00-19');
         }).toThrow();
     });
 
-    it("Fails to construct an ISO8601 January date with more than 31 days", function() {
+    it('Fails to construct an ISO8601 January date with more than 31 days', function() {
         expect(function() {
-            return JulianDate.fromIso8601("2009-01-32");
+            return JulianDate.fromIso8601('2009-01-32');
         }).toThrow();
     });
 
-    it("Fails to construct an ISO8601 Febuary date with more than 28 days", function() {
+    it('Fails to construct an ISO8601 Febuary date with more than 28 days', function() {
         expect(function() {
-            return JulianDate.fromIso8601("2009-02-29");
+            return JulianDate.fromIso8601('2009-02-29');
         }).toThrow();
     });
 
-    it("Fails to construct an ISO8601 Febuary leap year date with more than 29 days", function() {
+    it('Fails to construct an ISO8601 Febuary leap year date with more than 29 days', function() {
         expect(function() {
-            return JulianDate.fromIso8601("2000-02-30");
+            return JulianDate.fromIso8601('2000-02-30');
         }).toThrow();
     });
 
-    it("Fails to construct an ISO8601 March date with more than 29 days", function() {
+    it('Fails to construct an ISO8601 March date with more than 29 days', function() {
         expect(function() {
-            return JulianDate.fromIso8601("2000-03-32");
+            return JulianDate.fromIso8601('2000-03-32');
         }).toThrow();
     });
 
-    it("Fails to construct an ISO8601 April date with more than 29 days", function() {
+    it('Fails to construct an ISO8601 April date with more than 29 days', function() {
         expect(function() {
-            return JulianDate.fromIso8601("2000-04-31");
+            return JulianDate.fromIso8601('2000-04-31');
         }).toThrow();
     });
 
-    it("Fails to construct an ISO8601 May date with more than 29 days", function() {
+    it('Fails to construct an ISO8601 May date with more than 29 days', function() {
         expect(function() {
-            return JulianDate.fromIso8601("2000-05-32");
+            return JulianDate.fromIso8601('2000-05-32');
         }).toThrow();
     });
 
-    it("Fails to construct an ISO8601 June date with more than 29 days", function() {
+    it('Fails to construct an ISO8601 June date with more than 29 days', function() {
         expect(function() {
-            return JulianDate.fromIso8601("2000-06-31");
+            return JulianDate.fromIso8601('2000-06-31');
         }).toThrow();
     });
 
-    it("Fails to construct an ISO8601 July date with more than 29 days", function() {
+    it('Fails to construct an ISO8601 July date with more than 29 days', function() {
         expect(function() {
-            return JulianDate.fromIso8601("2000-07-32");
+            return JulianDate.fromIso8601('2000-07-32');
         }).toThrow();
     });
 
-    it("Fails to construct an ISO8601 August date with more than 29 days", function() {
+    it('Fails to construct an ISO8601 August date with more than 29 days', function() {
         expect(function() {
-            return JulianDate.fromIso8601("2000-08-32");
+            return JulianDate.fromIso8601('2000-08-32');
         }).toThrow();
     });
 
-    it("Fails to construct an ISO8601 September date with more than 29 days", function() {
+    it('Fails to construct an ISO8601 September date with more than 29 days', function() {
         expect(function() {
-            return JulianDate.fromIso8601("2000-09-31");
+            return JulianDate.fromIso8601('2000-09-31');
         }).toThrow();
     });
 
-    it("Fails to construct an ISO8601 October date with more than 29 days", function() {
+    it('Fails to construct an ISO8601 October date with more than 29 days', function() {
         expect(function() {
-            return JulianDate.fromIso8601("2000-10-32");
+            return JulianDate.fromIso8601('2000-10-32');
         }).toThrow();
     });
 
-    it("Fails to construct an ISO8601 November date with more than 29 days", function() {
+    it('Fails to construct an ISO8601 November date with more than 29 days', function() {
         expect(function() {
-            return JulianDate.fromIso8601("2000-11-31");
+            return JulianDate.fromIso8601('2000-11-31');
         }).toThrow();
     });
 
-    it("Fails to construct an ISO8601 December date with more than 29 days", function() {
+    it('Fails to construct an ISO8601 December date with more than 29 days', function() {
         expect(function() {
-            return JulianDate.fromIso8601("2000-12-32");
+            return JulianDate.fromIso8601('2000-12-32');
         }).toThrow();
     });
 
-    it("Fails to construct an ISO8601 date with more than 24 hours (extra seconds)", function() {
+    it('Fails to construct an ISO8601 date with more than 24 hours (extra seconds)', function() {
         expect(function() {
-            return JulianDate.fromIso8601("2000-12-15T24:00:01");
+            return JulianDate.fromIso8601('2000-12-15T24:00:01');
         }).toThrow();
     });
 
-    it("Fails to construct an ISO8601 date with more than 24 hours (extra minutes)", function() {
+    it('Fails to construct an ISO8601 date with more than 24 hours (extra minutes)', function() {
         expect(function() {
-            return JulianDate.fromIso8601("2000-12-15T24:01:00");
+            return JulianDate.fromIso8601('2000-12-15T24:01:00');
         }).toThrow();
     });
 
-    it("Fails to construct an ISO8601 date with more than 59 minutes", function() {
+    it('Fails to construct an ISO8601 date with more than 59 minutes', function() {
         expect(function() {
-            return JulianDate.fromIso8601("2000-12-15T12:60");
+            return JulianDate.fromIso8601('2000-12-15T12:60');
         }).toThrow();
     });
 
-    it("Fails to construct an ISO8601 date with more than 60 seconds", function() {
+    it('Fails to construct an ISO8601 date with more than 60 seconds', function() {
         expect(function() {
-            return JulianDate.fromIso8601("2000-12-15T12:59:61");
+            return JulianDate.fromIso8601('2000-12-15T12:59:61');
         }).toThrow();
     });
 
-    it("Fails to construct from an ISO8601 with less than 1 day", function() {
+    it('Fails to construct from an ISO8601 with less than 1 day', function() {
         expect(function() {
-            return JulianDate.fromIso8601("2009-01-00");
+            return JulianDate.fromIso8601('2009-01-00');
         }).toThrow();
     });
 
-    it("Fails to construct from an ISO8601 with too many dashes", function() {
+    it('Fails to construct from an ISO8601 with too many dashes', function() {
         expect(function() {
-            return JulianDate.fromIso8601("2009--01-01");
+            return JulianDate.fromIso8601('2009--01-01');
         }).toThrow();
     });
 
-    it("Fails to construct from an ISO8601 with garbage offset", function() {
+    it('Fails to construct from an ISO8601 with garbage offset', function() {
         expect(function() {
-            return JulianDate.fromIso8601("2000-12-15T12:59:23ZZ+-050708::1234");
+            return JulianDate.fromIso8601('2000-12-15T12:59:23ZZ+-050708::1234');
         }).toThrow();
     });
 
-    it("Fails to construct an ISO8601 date with more than one decimal place", function() {
+    it('Fails to construct an ISO8601 date with more than one decimal place', function() {
         expect(function() {
-            return JulianDate.fromIso8601("2000-12-15T12:59:22..2");
+            return JulianDate.fromIso8601('2000-12-15T12:59:22..2');
         }).toThrow();
     });
 
-    it("Fails to construct an ISO8601 calendar date mixing basic and extended format", function() {
+    it('Fails to construct an ISO8601 calendar date mixing basic and extended format', function() {
         expect(function() {
-            return JulianDate.fromIso8601("200108-01");
+            return JulianDate.fromIso8601('200108-01');
         }).toThrow();
     });
 
-    it("Fails to construct an ISO8601 calendar date mixing basic and extended format", function() {
+    it('Fails to construct an ISO8601 calendar date mixing basic and extended format', function() {
         expect(function() {
-            return JulianDate.fromIso8601("2001-0801");
+            return JulianDate.fromIso8601('2001-0801');
         }).toThrow();
     });
 
-    it("Fails to construct an ISO8601 calendar week mixing basic and extended format", function() {
+    it('Fails to construct an ISO8601 calendar week mixing basic and extended format', function() {
         expect(function() {
-            return JulianDate.fromIso8601("2008-W396");
+            return JulianDate.fromIso8601('2008-W396');
         }).toThrow();
     });
 
-    it("Fails to construct an ISO8601 calendar week mixing basic and extended format", function() {
+    it('Fails to construct an ISO8601 calendar week mixing basic and extended format', function() {
         expect(function() {
-            return JulianDate.fromIso8601("2008W39-6");
+            return JulianDate.fromIso8601('2008W39-6');
         }).toThrow();
     });
 
-    it("Fails to construct an ISO8601 date with trailing -", function() {
+    it('Fails to construct an ISO8601 date with trailing -', function() {
         expect(function() {
-            return JulianDate.fromIso8601("2001-");
+            return JulianDate.fromIso8601('2001-');
         }).toThrow();
     });
 
-    it("Fails to construct an ISO8601 time mixing basic and extended format", function() {
+    it('Fails to construct an ISO8601 time mixing basic and extended format', function() {
         expect(function() {
-            return JulianDate.fromIso8601("2000-12-15T22:0100");
+            return JulianDate.fromIso8601('2000-12-15T22:0100');
         }).toThrow();
     });
 
-    it("Fails to construct an ISO8601 time mixing basic and extended format", function() {
+    it('Fails to construct an ISO8601 time mixing basic and extended format', function() {
         expect(function() {
-            return JulianDate.fromIso8601("2000-12-15T2201:00");
+            return JulianDate.fromIso8601('2000-12-15T2201:00');
         }).toThrow();
     });
 
-    it("getJulianTimeFraction works", function() {
+    it('getJulianTimeFraction works', function() {
         var seconds = 12345.678;
         var fraction = seconds / 86400.0;
         var julianDate = new JulianDate(0, seconds);
         expect(julianDate.getJulianTimeFraction()).toEqualEpsilon(fraction, CesiumMath.EPSILON20);
     });
 
-    it("toDate works when constructed from total days", function() {
+    it('toDate works when constructed from total days', function() {
         var julianDate = JulianDate.fromTotalDays(2455770.9986087964, TimeStandard.UTC);
         var javascriptDate = julianDate.toDate();
         expect(javascriptDate.getUTCFullYear()).toEqual(2011);
@@ -764,7 +764,7 @@ function(JulianDate,
         expect(javascriptDate.getUTCMilliseconds()).toEqualEpsilon(800, 10);
     });
 
-    it("toDate works when using TAI", function() {
+    it('toDate works when using TAI', function() {
         var julianDate = JulianDate.fromTotalDays(2455927.157772, TimeStandard.UTC);
         var julianDateTai = TimeStandard.convertUtcToTai(julianDate);
         var javascriptDate = julianDateTai.toDate();
@@ -777,316 +777,316 @@ function(JulianDate,
         expect(javascriptDate.getUTCMilliseconds()).toEqualEpsilon(500, 10);
     });
 
-    it("toDate works on a leap second", function() {
+    it('toDate works on a leap second', function() {
         var date = new JulianDate(2454832, 43233, TimeStandard.TAI).toDate();
-        expect(date).toEqual(new Date("1/1/2009 12:00:00 AM UTC"));
+        expect(date).toEqual(new Date('1/1/2009 12:00:00 AM UTC'));
     });
 
-    it("getSecondsDifference works in UTC", function() {
-        var start = JulianDate.fromDate(new Date("July 4, 2011 12:00:00 UTC"));
-        var end = JulianDate.fromDate(new Date("July 5, 2011 12:01:00 UTC"));
+    it('getSecondsDifference works in UTC', function() {
+        var start = JulianDate.fromDate(new Date('July 4, 2011 12:00:00 UTC'));
+        var end = JulianDate.fromDate(new Date('July 5, 2011 12:01:00 UTC'));
         expect(start.getSecondsDifference(end)).toEqualEpsilon(TimeConstants.SECONDS_PER_DAY + TimeConstants.SECONDS_PER_MINUTE, CesiumMath.EPSILON5);
     });
 
-    it("getSecondsDifference works in TAI", function() {
-        var start = JulianDate.fromDate(new Date("July 4, 2011 12:00:00 UTC"));
-        var end = JulianDate.fromDate(new Date("July 5, 2011 12:01:00 UTC"));
+    it('getSecondsDifference works in TAI', function() {
+        var start = JulianDate.fromDate(new Date('July 4, 2011 12:00:00 UTC'));
+        var end = JulianDate.fromDate(new Date('July 5, 2011 12:01:00 UTC'));
         start = TimeStandard.convertUtcToTai(start);
         end = TimeStandard.convertUtcToTai(end);
         expect(start.getSecondsDifference(end)).toEqualEpsilon(TimeConstants.SECONDS_PER_DAY + TimeConstants.SECONDS_PER_MINUTE, CesiumMath.EPSILON5);
     });
 
-    it("getSecondsDifference works with mixed time standards", function() {
-        var start = JulianDate.fromDate(new Date("July 4, 2011 12:00:00 UTC"));
-        var end = JulianDate.fromDate(new Date("July 5, 2011 12:01:00 UTC"));
+    it('getSecondsDifference works with mixed time standards', function() {
+        var start = JulianDate.fromDate(new Date('July 4, 2011 12:00:00 UTC'));
+        var end = JulianDate.fromDate(new Date('July 5, 2011 12:01:00 UTC'));
         start = TimeStandard.convertUtcToTai(start);
         expect(start.getSecondsDifference(end)).toEqualEpsilon(TimeConstants.SECONDS_PER_DAY + TimeConstants.SECONDS_PER_MINUTE, CesiumMath.EPSILON5);
     });
 
-    it("getMinutesDifference works in UTC", function() {
-        var start = JulianDate.fromDate(new Date("July 4, 2011 12:00:00 UTC"));
-        var end = JulianDate.fromDate(new Date("July 5, 2011 12:01:00 UTC"));
+    it('getMinutesDifference works in UTC', function() {
+        var start = JulianDate.fromDate(new Date('July 4, 2011 12:00:00 UTC'));
+        var end = JulianDate.fromDate(new Date('July 5, 2011 12:01:00 UTC'));
         expect(start.getMinutesDifference(end)).toEqualEpsilon(TimeConstants.MINUTES_PER_DAY + 1.0, CesiumMath.EPSILON5);
     });
 
-    it("getMinutesDifference works in TAI", function() {
-        var start = JulianDate.fromDate(new Date("July 4, 2011 12:00:00 UTC"));
-        var end = JulianDate.fromDate(new Date("July 5, 2011 12:01:00 UTC"));
+    it('getMinutesDifference works in TAI', function() {
+        var start = JulianDate.fromDate(new Date('July 4, 2011 12:00:00 UTC'));
+        var end = JulianDate.fromDate(new Date('July 5, 2011 12:01:00 UTC'));
         start = TimeStandard.convertUtcToTai(start);
         end = TimeStandard.convertUtcToTai(end);
         expect(start.getMinutesDifference(end)).toEqualEpsilon(TimeConstants.MINUTES_PER_DAY + 1.0, CesiumMath.EPSILON5);
     });
 
-    it("getMinutesDifference works with mixed time standards", function() {
-        var start = JulianDate.fromDate(new Date("July 4, 2011 12:00:00 UTC"));
-        var end = JulianDate.fromDate(new Date("July 5, 2011 12:01:00 UTC"));
+    it('getMinutesDifference works with mixed time standards', function() {
+        var start = JulianDate.fromDate(new Date('July 4, 2011 12:00:00 UTC'));
+        var end = JulianDate.fromDate(new Date('July 5, 2011 12:01:00 UTC'));
         end = TimeStandard.convertUtcToTai(end);
         expect(start.getMinutesDifference(end)).toEqualEpsilon(TimeConstants.MINUTES_PER_DAY + 1.0, CesiumMath.EPSILON5);
     });
 
-    it("addSeconds works with whole seconds", function() {
-        var start = JulianDate.fromDate(new Date("July 4, 2011 12:00:30 UTC"));
+    it('addSeconds works with whole seconds', function() {
+        var start = JulianDate.fromDate(new Date('July 4, 2011 12:00:30 UTC'));
         var end = start.addSeconds(95);
         expect(end.toDate().getUTCSeconds()).toEqualEpsilon(5, CesiumMath.EPSILON5);
         expect(end.toDate().getUTCMinutes()).toEqualEpsilon(2, CesiumMath.EPSILON5);
     });
 
-    it("addSeconds works with fractions (1)", function() {
-        var start = JulianDate.fromDate(new Date("July 4, 2011 23:59:59 UTC"));
+    it('addSeconds works with fractions (1)', function() {
+        var start = JulianDate.fromDate(new Date('July 4, 2011 23:59:59 UTC'));
         var end = start.addSeconds(1.5);
         expect(end.getTotalDays()).toEqualEpsilon(2455747.5000058, CesiumMath.EPSILON7);
     });
 
-    it("addSeconds works with fractions (2)", function() {
-        var start = JulianDate.fromDate(new Date("August 11 2011 6:00:00 UTC"));
+    it('addSeconds works with fractions (2)', function() {
+        var start = JulianDate.fromDate(new Date('August 11 2011 6:00:00 UTC'));
         var end = start.addSeconds(0.5);
         expect(end.getTotalDays()).toEqualEpsilon(2455784.7500058, CesiumMath.EPSILON7);
     });
 
-    it("addSeconds works with fractions (3)", function() {
-        var start = JulianDate.fromDate(new Date("August 11 2011 11:59:59 UTC"));
+    it('addSeconds works with fractions (3)', function() {
+        var start = JulianDate.fromDate(new Date('August 11 2011 11:59:59 UTC'));
         var end = start.addSeconds(1.25);
         expect(end.getTotalDays()).toEqualEpsilon(2455785.0000029, CesiumMath.EPSILON7);
     });
 
-    it("addSeconds works with negative numbers", function() {
-        var start = JulianDate.fromDate(new Date("July 4, 2011 12:01:30 UTC"));
+    it('addSeconds works with negative numbers', function() {
+        var start = JulianDate.fromDate(new Date('July 4, 2011 12:01:30 UTC'));
         var end = start.addSeconds(-60);
         expect(end.toDate().getUTCSeconds()).toEqualEpsilon(30, CesiumMath.EPSILON5);
         expect(end.toDate().getUTCMinutes()).toEqualEpsilon(0, CesiumMath.EPSILON5);
     });
 
-    it("addSeconds works with more seconds than in a day", function() {
+    it('addSeconds works with more seconds than in a day', function() {
         var start = new JulianDate(2448444, 0, TimeStandard.UTC);
         var end = start.addSeconds(TimeConstants.SECONDS_PER_DAY * 7 + 15);
         expect(end.getJulianDayNumber()).toEqual(2448451);
         expect(end.getSecondsOfDay()).toEqual(15);
     });
 
-    it("addSeconds works with negative seconds more than in a day", function() {
+    it('addSeconds works with negative seconds more than in a day', function() {
         var start = new JulianDate(2448444, 0, TimeStandard.UTC);
         var end = start.addSeconds(-TimeConstants.SECONDS_PER_DAY * 7 - 15);
         expect(end.getJulianDayNumber()).toEqual(2448436);
         expect(end.getSecondsOfDay()).toEqual(TimeConstants.SECONDS_PER_DAY - 15);
     });
 
-    it("addSeconds fails with non-numeric input", function() {
+    it('addSeconds fails with non-numeric input', function() {
         expect(function() {
-            return new JulianDate().addSeconds("banana");
+            return new JulianDate().addSeconds('banana');
         }).toThrow();
     });
 
-    it("addSeconds fails with null input", function() {
+    it('addSeconds fails with null input', function() {
         expect(function() {
             return new JulianDate().addSeconds(null);
         }).toThrow();
     });
 
-    it("addSeconds fails with undefined input", function() {
+    it('addSeconds fails with undefined input', function() {
         expect(function() {
             return new JulianDate().addSeconds(undefined);
         }).toThrow();
     });
-    it("addMinutes works", function() {
-        var start = JulianDate.fromDate(new Date("July 4, 2011 12:00:00 UTC"));
+    it('addMinutes works', function() {
+        var start = JulianDate.fromDate(new Date('July 4, 2011 12:00:00 UTC'));
         var end = start.addMinutes(65);
         expect(end.toDate().getUTCMinutes()).toEqualEpsilon(5, CesiumMath.EPSILON5);
         expect(end.toDate().getUTCHours()).toEqualEpsilon(13, CesiumMath.EPSILON5);
     });
 
-    it("addMinutes works with negative numbers", function() {
-        var start = JulianDate.fromDate(new Date("July 4, 2011 12:00:00 UTC"));
+    it('addMinutes works with negative numbers', function() {
+        var start = JulianDate.fromDate(new Date('July 4, 2011 12:00:00 UTC'));
         var end = start.addMinutes(-35);
         expect(end.toDate().getUTCMinutes()).toEqualEpsilon(25, CesiumMath.EPSILON5);
         expect(end.toDate().getUTCHours()).toEqualEpsilon(11, CesiumMath.EPSILON5);
     });
 
-    it("addMinutes fails with non-numeric input", function() {
+    it('addMinutes fails with non-numeric input', function() {
         expect(function() {
-            return new JulianDate().addMinutes("banana");
+            return new JulianDate().addMinutes('banana');
         }).toThrow();
     });
 
-    it("addMinutes fails with null input", function() {
+    it('addMinutes fails with null input', function() {
         expect(function() {
             return new JulianDate().addMinutes(null);
         }).toThrow();
     });
 
-    it("addMinutes fails with undefined input", function() {
+    it('addMinutes fails with undefined input', function() {
         expect(function() {
             return new JulianDate().addMinutes(undefined);
         }).toThrow();
     });
 
-    it("addHours works", function() {
-        var start = JulianDate.fromDate(new Date("July 4, 2011 12:00:00 UTC"));
+    it('addHours works', function() {
+        var start = JulianDate.fromDate(new Date('July 4, 2011 12:00:00 UTC'));
         var end = start.addHours(6);
         expect(end.toDate().getUTCHours()).toEqualEpsilon(18, CesiumMath.EPSILON5);
     });
 
-    it("addHours works with negative numbers", function() {
-        var start = JulianDate.fromDate(new Date("July 4, 2011 12:00:00 UTC"));
+    it('addHours works with negative numbers', function() {
+        var start = JulianDate.fromDate(new Date('July 4, 2011 12:00:00 UTC'));
         var end = start.addHours(-6);
         expect(end.toDate().getUTCHours()).toEqualEpsilon(6, CesiumMath.EPSILON5);
     });
 
-    it("addHours fails with non-numeric input", function() {
+    it('addHours fails with non-numeric input', function() {
         expect(function() {
-            return new JulianDate().addHours("banana");
+            return new JulianDate().addHours('banana');
         }).toThrow();
     });
 
-    it("addHours fails with null input", function() {
+    it('addHours fails with null input', function() {
         expect(function() {
             return new JulianDate().addHours(null);
         }).toThrow();
     });
 
-    it("addHours fails with undefined input", function() {
+    it('addHours fails with undefined input', function() {
         expect(function() {
             return new JulianDate().addHours(undefined);
         }).toThrow();
     });
 
-    it("addDays works", function() {
-        var start = JulianDate.fromDate(new Date("July 4, 2011 12:00:00 UTC"));
+    it('addDays works', function() {
+        var start = JulianDate.fromDate(new Date('July 4, 2011 12:00:00 UTC'));
         var end = start.addDays(32);
         expect(end.toDate().getUTCDate()).toEqualEpsilon(5, CesiumMath.EPSILON5);
         expect(end.toDate().getUTCMonth()).toEqualEpsilon(7, CesiumMath.EPSILON5);
     });
 
-    it("addDays works with negative numbers", function() {
-        var start = JulianDate.fromDate(new Date("July 4, 2011 12:00:00 UTC"));
+    it('addDays works with negative numbers', function() {
+        var start = JulianDate.fromDate(new Date('July 4, 2011 12:00:00 UTC'));
         var end = start.addDays(-4);
         expect(end.toDate().getUTCDate()).toEqualEpsilon(30, CesiumMath.EPSILON5);
         expect(end.toDate().getUTCMonth()).toEqualEpsilon(5, CesiumMath.EPSILON5);
     });
 
-    it("addDays fails with non-numeric input", function() {
+    it('addDays fails with non-numeric input', function() {
         expect(function() {
-            return new JulianDate().addDays("banana");
+            return new JulianDate().addDays('banana');
         }).toThrow();
     });
 
-    it("addDays fails with null input", function() {
+    it('addDays fails with null input', function() {
         expect(function() {
             return new JulianDate().addDays(null);
         }).toThrow();
     });
 
-    it("addDays fails with undefined input", function() {
+    it('addDays fails with undefined input', function() {
         expect(function() {
             return new JulianDate().addDays(undefined);
         }).toThrow();
     });
 
-    it("lessThan works", function() {
-        var start = JulianDate.fromDate(new Date("July 6, 1991 12:00:00"));
-        var end = JulianDate.fromDate(new Date("July 6, 2011 12:01:00"));
+    it('lessThan works', function() {
+        var start = JulianDate.fromDate(new Date('July 6, 1991 12:00:00'));
+        var end = JulianDate.fromDate(new Date('July 6, 2011 12:01:00'));
         expect(start.lessThan(end)).toEqual(true);
     });
 
-    it("lessThan works with equal values", function() {
-        var start = JulianDate.fromDate(new Date("July 6, 1991 12:00:00"));
-        var end = JulianDate.fromDate(new Date("July 6, 1991 12:00:00"));
+    it('lessThan works with equal values', function() {
+        var start = JulianDate.fromDate(new Date('July 6, 1991 12:00:00'));
+        var end = JulianDate.fromDate(new Date('July 6, 1991 12:00:00'));
         expect(start.lessThan(end)).toEqual(false);
         expect(start.lessThan(end.addSeconds(1))).toEqual(true);
     });
 
-    it("lessThan works with different time standards", function() {
-        var start = JulianDate.fromDate(new Date("July 6, 1991 12:00:00"), TimeStandard.UTC);
-        var end = JulianDate.fromDate(new Date("July 6, 2011 12:00:00"), TimeStandard.TAI);
+    it('lessThan works with different time standards', function() {
+        var start = JulianDate.fromDate(new Date('July 6, 1991 12:00:00'), TimeStandard.UTC);
+        var end = JulianDate.fromDate(new Date('July 6, 2011 12:00:00'), TimeStandard.TAI);
         expect(start.lessThan(end)).toEqual(true);
     });
 
-    it("lessThanOrEquals works", function() {
-        var start = JulianDate.fromDate(new Date("July 6, 1991 12:00:00"));
-        var end = JulianDate.fromDate(new Date("July 6, 1991 12:00:00"));
+    it('lessThanOrEquals works', function() {
+        var start = JulianDate.fromDate(new Date('July 6, 1991 12:00:00'));
+        var end = JulianDate.fromDate(new Date('July 6, 1991 12:00:00'));
         expect(start.lessThanOrEquals(end)).toEqual(true);
         expect(start.addSeconds(1).lessThanOrEquals(end)).toEqual(false);
         expect(start.addSeconds(-1).lessThanOrEquals(end)).toEqual(true);
     });
 
-    it("lessThanOrEquals works with different time standards", function() {
-        var start = JulianDate.fromDate(new Date("July 6, 1991 12:00:00"), TimeStandard.UTC);
+    it('lessThanOrEquals works with different time standards', function() {
+        var start = JulianDate.fromDate(new Date('July 6, 1991 12:00:00'), TimeStandard.UTC);
         var end = TimeStandard.convertUtcToTai(start);
         expect(start.lessThanOrEquals(end)).toEqual(true);
         expect(start.addSeconds(1).lessThanOrEquals(end)).toEqual(false);
         expect(start.addSeconds(-1).lessThanOrEquals(end)).toEqual(true);
     });
 
-    it("greaterThan works", function() {
-        var start = JulianDate.fromDate(new Date("July 6, 2011 12:01:00"));
-        var end = JulianDate.fromDate(new Date("July 6, 1991 12:00:00"));
+    it('greaterThan works', function() {
+        var start = JulianDate.fromDate(new Date('July 6, 2011 12:01:00'));
+        var end = JulianDate.fromDate(new Date('July 6, 1991 12:00:00'));
         expect(start.greaterThan(end)).toEqual(true);
     });
 
-    it("greaterThan works with equal values", function() {
-        var start = JulianDate.fromDate(new Date("July 6, 1991 12:00:00"));
-        var end = JulianDate.fromDate(new Date("July 6, 1991 12:00:00"));
+    it('greaterThan works with equal values', function() {
+        var start = JulianDate.fromDate(new Date('July 6, 1991 12:00:00'));
+        var end = JulianDate.fromDate(new Date('July 6, 1991 12:00:00'));
         expect(start.greaterThan(end)).toEqual(false);
         expect(start.greaterThan(end.addSeconds(-1))).toEqual(true);
     });
 
-    it("greaterThan works with different time standards", function() {
-        var start = JulianDate.fromDate(new Date("July 6, 2011 12:01:00"), TimeStandard.TAI);
-        var end = JulianDate.fromDate(new Date("July 6, 1991 12:00:00"), TimeStandard.UTC);
+    it('greaterThan works with different time standards', function() {
+        var start = JulianDate.fromDate(new Date('July 6, 2011 12:01:00'), TimeStandard.TAI);
+        var end = JulianDate.fromDate(new Date('July 6, 1991 12:00:00'), TimeStandard.UTC);
         expect(start.greaterThan(end)).toEqual(true);
     });
 
-    it("greaterThanOrEquals works", function() {
-        var start = JulianDate.fromDate(new Date("July 6, 1991 12:00:00"));
-        var end = JulianDate.fromDate(new Date("July 6, 1991 12:00:00"));
+    it('greaterThanOrEquals works', function() {
+        var start = JulianDate.fromDate(new Date('July 6, 1991 12:00:00'));
+        var end = JulianDate.fromDate(new Date('July 6, 1991 12:00:00'));
         expect(start.greaterThanOrEquals(end)).toEqual(true);
         expect(start.addSeconds(-1).greaterThanOrEquals(end)).toEqual(false);
         expect(start.addSeconds(1).greaterThanOrEquals(end)).toEqual(true);
     });
 
-    it("greaterThanOrEquals works with different time standards", function() {
-        var start = JulianDate.fromDate(new Date("July 6, 1991 12:00:00"), TimeStandard.UTC);
+    it('greaterThanOrEquals works with different time standards', function() {
+        var start = JulianDate.fromDate(new Date('July 6, 1991 12:00:00'), TimeStandard.UTC);
         var end = TimeStandard.convertUtcToTai(start);
         expect(start.greaterThanOrEquals(end)).toEqual(true);
         expect(start.addSeconds(-1).greaterThanOrEquals(end)).toEqual(false);
         expect(start.addSeconds(1).greaterThanOrEquals(end)).toEqual(true);
     });
 
-    it("can be equal to within an epsilon of another JulianDate", function() {
-        var original = JulianDate.fromDate(new Date("September 7, 2011 12:55:00 UTC"));
-        var clone = JulianDate.fromDate(new Date("September 7, 2011 12:55:00 UTC"));
+    it('can be equal to within an epsilon of another JulianDate', function() {
+        var original = JulianDate.fromDate(new Date('September 7, 2011 12:55:00 UTC'));
+        var clone = JulianDate.fromDate(new Date('September 7, 2011 12:55:00 UTC'));
         clone = clone.addSeconds(1);
         expect(original.equalsEpsilon(clone, 2)).toEqual(true);
     });
 
-    it("getTotalDays works", function() {
+    it('getTotalDays works', function() {
         var totalDays = 2455784.7500058;
         var original = JulianDate.fromTotalDays(totalDays);
         expect(totalDays).toEqual(original.getTotalDays());
     });
 
-    it("equalsEpsilon works", function() {
+    it('equalsEpsilon works', function() {
         var original = new JulianDate();
         var clone = JulianDate.fromDate(original.toDate());
         clone = clone.addSeconds(0.01);
         expect(original.equalsEpsilon(clone, CesiumMath.EPSILON1)).toEqual(true);
     });
 
-    it("getTaiMinusUtc works between TAI and UTC (1)", function() {
-        var date = new Date("July 11, 2011 12:00:00 UTC");
+    it('getTaiMinusUtc works between TAI and UTC (1)', function() {
+        var date = new Date('July 11, 2011 12:00:00 UTC');
         var jd = JulianDate.fromDate(date, TimeStandard.TAI);
         var difference = jd.getTaiMinusUtc();
         expect(difference).toEqual(34);
     });
 
-    it("getTaiMinusUtc works between TAI and UTC (2)", function() {
-        var date = new Date("July 11, 1979 12:00:00 UTC");
+    it('getTaiMinusUtc works between TAI and UTC (2)', function() {
+        var date = new Date('July 11, 1979 12:00:00 UTC');
         var jd = JulianDate.fromDate(date, TimeStandard.TAI);
         var difference = jd.getTaiMinusUtc();
         expect(difference).toEqual(18);
     });
 
-    it("getTaiMinusUtc works between TAI and UTC (3)", function() {
-        var date = new Date("July 11, 1970 12:00:00 UTC");
+    it('getTaiMinusUtc works between TAI and UTC (3)', function() {
+        var date = new Date('July 11, 1970 12:00:00 UTC');
         var jd = JulianDate.fromDate(date, TimeStandard.TAI);
         var difference = jd.getTaiMinusUtc();
         expect(difference).toEqual(10);

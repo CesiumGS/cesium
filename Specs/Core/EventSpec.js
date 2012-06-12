@@ -6,7 +6,7 @@ defineSuite([
     "use strict";
     /*global it expect*/
 
-    it("Event works with no scope", function() {
+    it('Event works with no scope', function() {
         var e = new Event();
         var someValue = 123;
         var callbackCalled = false;
@@ -29,7 +29,7 @@ defineSuite([
         expect(callbackCalled).toEqual(false);
     });
 
-    it("Event works with scope", function() {
+    it('Event works with scope', function() {
         var e = new Event();
         var someValue = 123;
         var callbackCalled = false;
@@ -52,12 +52,12 @@ defineSuite([
         expect(callbackCalled).toEqual(false);
     });
 
-    it("Event works with no listeners", function() {
+    it('Event works with no listeners', function() {
         var e = new Event();
         e.raiseEvent(123);
     });
 
-    it("addEventListener throws with existing listener", function() {
+    it('addEventListener throws with existing listener', function() {
         var e = new Event();
 
         function callback() {
@@ -70,42 +70,42 @@ defineSuite([
         }).toThrow();
     });
 
-    it("addEventListener throws with undefined listener", function() {
+    it('addEventListener throws with undefined listener', function() {
         var e = new Event();
         expect(function() {
             e.addEventListener(undefined);
         }).toThrow();
     });
 
-    it("addEventListener throws with null listener", function() {
+    it('addEventListener throws with null listener', function() {
         var e = new Event();
         expect(function() {
             e.addEventListener(null);
         }).toThrow();
     });
 
-    it("addEventListener throws with non-function listener", function() {
+    it('addEventListener throws with non-function listener', function() {
         var e = new Event();
         expect(function() {
             e.addEventListener({});
         }).toThrow();
     });
 
-    it("removeEventListener throws with undefined listener", function() {
+    it('removeEventListener throws with undefined listener', function() {
         var e = new Event();
         expect(function() {
             e.removeEventListener(undefined);
         }).toThrow();
     });
 
-    it("removeEventListener throws with null listener", function() {
+    it('removeEventListener throws with null listener', function() {
         var e = new Event();
         expect(function() {
             e.removeEventListener(null);
         }).toThrow();
     });
 
-    it("removeEventListener throws with non registered listener", function() {
+    it('removeEventListener throws with non registered listener', function() {
         var e = new Event();
         expect(function() {
             e.removeEventListener(function() {

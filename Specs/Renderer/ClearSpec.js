@@ -2,7 +2,7 @@
 defineSuite([
          '../Specs/createContext',
          '../Specs/destroyContext'
-     ], "Renderer/Clear", function(
+     ], 'Renderer/Clear', function(
          createContext,
          destroyContext) {
     "use strict";
@@ -18,12 +18,12 @@ defineSuite([
         destroyContext(context);
     });
 
-    it("clear0", function() {
+    it('clear0', function() {
         context.clear();
         expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
     });
 
-    it("clear1", function() {
+    it('clear1', function() {
         context.clear(context.createClearState({
             color : {
                 red : 1.0,
@@ -35,7 +35,7 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
     });
 
-    it("clear2", function() {
+    it('clear2', function() {
         context.clear(context.createClearState({
             color : {
                 red : 1.0,
@@ -53,7 +53,7 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([255, 0, 255, 0]);
     });
 
-    it("clear3", function() {
+    it('clear3', function() {
         context.clear(context.createClearState({
             color : {
                 red : 1.0,
@@ -103,7 +103,7 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
     });
 
-    it("clears a framebuffer color attachment", function() {
+    it('clears a framebuffer color attachment', function() {
         var colorTexture = context.createTexture2D({
             width : 1,
             height : 1
@@ -129,7 +129,7 @@ defineSuite([
         framebuffer = framebuffer.destroy();
     });
 
-    it("clears with dithering", function() {
+    it('clears with dithering', function() {
         context.clear(context.createClearState({
             color : {
                 red : 1.0,
@@ -153,7 +153,7 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
     });
 
-    it("fails to read pixels (width)", function() {
+    it('fails to read pixels (width)', function() {
         expect(function() {
             expect(context.readPixels({
                 width : -1
@@ -161,7 +161,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("fails to read pixels (height)", function() {
+    it('fails to read pixels (height)', function() {
         expect(function() {
             expect(context.readPixels({
                 height : -1

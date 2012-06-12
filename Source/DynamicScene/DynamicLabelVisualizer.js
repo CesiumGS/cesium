@@ -105,7 +105,7 @@ define([
             // CZML_TODO Determine official defaults
             label.setText('');
             label.setScale(1.0);
-            label.setFont("30px sans-serif");
+            label.setFont('30px sans-serif');
             label.setFillColor(Color.WHITE);
             label.setOutlineColor(Color.BLACK);
             label.setStyle(LabelStyle.FILL);

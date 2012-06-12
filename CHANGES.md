@@ -13,6 +13,7 @@ Beta Releases
 * Added `Polygon.configureExtent` to create a polygon defined by west, south, east, and north values.
 * Added functions to `Camera` to provide position and directions in world coordinates.
 * Added `showThroughEllipsoid` to `CustomSensorVolume` and `RectangularPyramidSensorVolume` to allow sensors to draw through Earth.
+* Added `affectedByLighting` to `CentralBody` and `Polygon` to turn lighting on/off for these objects.
 * Added `Event`, a new utility class which makes it easy for objects to expose event properties.
 * Added `TextureAtlas.addTexture`, `TextureAtlas.addTextureFromUrl', and `TextureAtlas.addTextureFromFunction` to enable adding new textures to an existing `TextureAtlas`.
 * Added 'TextureAtlas.textureAtlasChanged' event which is raised whenever new textures are added to the atlas.

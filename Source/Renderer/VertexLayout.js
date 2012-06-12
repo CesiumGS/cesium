@@ -19,7 +19,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        SEPARATE : new Enumeration(0, "SEPARATE"),
+        SEPARATE : new Enumeration(0, 'SEPARATE'),
         /**
          * Each attribute will be interleaved in a single vertex buffer.  This can have a slight
          * performance advantage over using a separate vertex buffer per attribute, but it requires
@@ -29,7 +29,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        INTERLEAVED : new Enumeration(1, "INTERLEAVED"),
+        INTERLEAVED : new Enumeration(1, 'INTERLEAVED'),
 
         /**
          * DOC_TBA
