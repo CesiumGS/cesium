@@ -54,7 +54,7 @@ define([
     var attributeIndices = {
         position3D : 0,
         color : 1,
-        outlineColor : 3
+        outlineColor : 2
     };
 
     /**
@@ -138,8 +138,15 @@ define([
          * If the polyline will change every frame, use <code>BufferUsage.STREAM_DRAW</code>.
          */
         this.bufferUsage = BufferUsage.STATIC_DRAW;
-        this._bufferUsage = undefined;
-
+        // The buffer usage for each attribute is determined based on the usage of the attribute over time.
+        this._buffersUsage = [
+                              BufferUsage.STATIC_DRAW, // SHOW_INDEX
+                              BufferUsage.STATIC_DRAW, // POSITION_INDEX
+                              BufferUsage.STATIC_DRAW, // COLOR_INDEX
+                              BufferUsage.STATIC_DRAW, // WIDTH_INDEX
+                              BufferUsage.STATIC_DRAW, // OUTLINE_WIDTH_INDEX
+                              BufferUsage.STATIC_DRAW // OUTLINE_COLOR_INDEX
+                              ];
 
         this._mode = SceneMode.SCENE3D;
         var that = this;
@@ -180,27 +187,7 @@ define([
         this._drawUniformsOne = undefined;
         this._drawUniformsTwo = undefined;
         this._drawUniformsThree = undefined;
-
-        this.width = 2;
-        this.outlineWidth = 5;
-        this.color = {
-                red : 0.0,
-                green : 0.0,
-                blue : 1.0,
-                alpha : 1.0
-            };
-
-        /**
-         * DOC_TBA
-         *
-         * @see Polyline#color
-         */
-        this.outlineColor = {
-            red : 1.0,
-            green : 1.0,
-            blue : 1.0,
-            alpha : 1.0
-        };
+        this._vaf = null;
     }
 
     /**
@@ -425,6 +412,20 @@ define([
         return this._polylines.length;
     };
 
+    PolylineCollection.prototype.computeNewBuffersUsage = function() {
+        var buffersUsage = this._buffersUsage;
+        var usageChanged = false;
+
+        // PERFORMANCE_IDEA: Better heuristic to avoid ping-ponging.  What about DYNAMIC_STREAM?
+        var properties = this._propertiesChanged;
+        for ( var k = 0; k < NUMBER_OF_PROPERTIES; ++k) {
+            var newUsage = (properties[k] === 0) ? BufferUsage.STATIC_DRAW : BufferUsage.STREAM_DRAW;
+            usageChanged = usageChanged || (buffersUsage[k] !== newUsage);
+            buffersUsage[k] = newUsage;
+        }
+
+        return usageChanged;
+    };
 
     PolylineCollection._getIndexBuffer = function(context) {
         var sixteenK = 16 * 1024;
@@ -472,38 +473,34 @@ define([
      * @see PolylineCollection#update
      */
     PolylineCollection.prototype.render = function(context) {
-        if(this._isShown() && this._va){
-                // PERFORMANCE_IDEA:  This can do this in a single pass by checking the distance
-                // from a fragment to the line in a fragment shader.
-                this._render(context, this._sp);
+        if (this._vaf && this._vaf.va) {
+            var va = this._vaf.va;
+            var length = va.length;
+            for ( var i = 0; i < length; ++i) {
+                context.draw({
+                    primitiveType : PrimitiveType.LINES,
+                    //count : va[i].indicesCount,
+                    shaderProgram : this._sp,
+                    uniformMap : this._drawUniformsOne,
+                    vertexArray : va[i].va,
+                    renderState : this._rsOne
+                });
+                context.draw({
+                    primitiveType : PrimitiveType.LINES,
+                    shaderProgram : this._sp,
+                    uniformMap : this._drawUniformsTwo,
+                    vertexArray : va[i].va,
+                    renderState : this._rsTwo
+                });
+                context.draw({
+                    primitiveType : PrimitiveType.LINES,
+                    shaderProgram : this._sp,
+                    uniformMap : this._drawUniformsThree,
+                    vertexArray : va[i].va,
+                    renderState : this._rsThree
+                });
+            }
         }
-    };
-
-    PolylineCollection.prototype._render = function(context, sp) {
-        var va = this._va;
-        var primitiveType = PrimitiveType.LINES;
-
-        context.draw({
-            primitiveType : primitiveType,
-            shaderProgram : sp,
-            uniformMap : this._drawUniformsOne,
-            vertexArray : va,
-            renderState : this._rsOne
-        });
-        context.draw({
-            primitiveType : primitiveType,
-            shaderProgram : sp,
-            uniformMap : this._drawUniformsTwo,
-            vertexArray : va,
-            renderState : this._rsTwo
-        });
-        context.draw({
-            primitiveType : primitiveType,
-            shaderProgram : sp,
-            uniformMap : this._drawUniformsThree,
-            vertexArray : va,
-            renderState : this._rsThree
-        });
     };
 
     /**
@@ -531,66 +528,66 @@ define([
      * @private
      */
     PolylineCollection.prototype._update = function(context, sceneState) {
-        this._va = this._va && this._va.destroy();
         var polylines = this._polylines;
         var length = polylines.length;
-
-        var positionsLength = 0;
-        for(var i = 0; i < length; ++i){
-            var polyline = polylines[i];
-            positionsLength += polyline.getPositions().length;
+        var sizeInVertices = 0;
+        for(var j = 0; j < length; j++){
+            sizeInVertices += polylines[j].getPositions().length;
         }
-        var positionArray = new Float32Array(positionsLength * 3);
-        var colorArray = new Uint8Array(positionsLength * 4);
-        var outlineColorArray = new Uint8Array(positionsLength * 4);
-
-        var j = 0;
-        var colorIndex = 0;
-        for ( var i = 0; i < length; ++i) {
-            var polyline = polylines[i];
-            var positions = polyline.getPositions();
-            var color = polyline.getColor();
-            var outlineColor = polyline.getOutlineColor();
-            for(var k = 0; k < positions.length; ++k){
-                var p = positions[k];
-                positionArray[j + 0] = p.x;
-                positionArray[j + 1] = p.y;
-                positionArray[j + 2] = p.z;
-
-                colorArray[colorIndex] = color.red * 255;
-                colorArray[colorIndex + 1] = color.green * 255;
-                colorArray[colorIndex + 2] = color.blue * 255;
-                colorArray[colorIndex + 3] = color.alpha * 255;
-
-                outlineColorArray[colorIndex] = outlineColor.red * 255;
-                outlineColorArray[colorIndex + 1] = outlineColor.green * 255;
-                outlineColorArray[colorIndex + 2] = outlineColor.blue * 255;
-                outlineColorArray[colorIndex + 3] = outlineColor.alpha * 255;
-                j += 3;
-                colorIndex += 4;
-            }
-        }
-
-        var attributes = [{
+        this._vaf = this._vaf && this._vaf.destroy();
+        this._vaf = new VertexArrayFacade(context,[{
             index : attributeIndices.position3D,
-            vertexBuffer : context.createVertexBuffer(positionArray, BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 3,
-            componentDatatype : ComponentDatatype.FLOAT
+            componentDatatype : ComponentDatatype.FLOAT,
+            usage : this._buffersUsage[POSITION_INDEX]
         }, {
             index : attributeIndices.color,
             componentsPerAttribute : 4,
             normalize:true,
-            vertexBuffer : context.createVertexBuffer(colorArray, BufferUsage.STATIC_DRAW),
-            componentDatatype : ComponentDatatype.UNSIGNED_BYTE
+            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+            usage : this._buffersUsage[COLOR_INDEX]
         }, {
             index : attributeIndices.outlineColor,
             componentsPerAttribute : 4,
             normalize:true,
-            vertexBuffer : context.createVertexBuffer(outlineColorArray, BufferUsage.STATIC_DRAW),
-            componentDatatype : ComponentDatatype.UNSIGNED_BYTE
-        }];
+            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+            usage : this._buffersUsage[OUTLINE_COLOR_INDEX]
+        }], sizeInVertices);
 
-        this._va = context.createVertexArray(attributes);
+
+        var vafWriters = this._vaf.writers;
+        for ( var i = 0; i < length; ++i) {
+            var polyline = this._polylines[i];
+            polyline._clean(); // In case it needed an update.
+            this._writePolyline(context, vafWriters, polyline);
+        }
+        this._vaf.commit(null);
+    };
+
+    PolylineCollection.prototype._writeColor = function(context, vafWriters, polyline) {
+        var positions = polyline.getPositions();
+        var length = positions.length;
+        var color = polyline.getColor();
+        var i = polyline._index;
+        for(var j = 0; j < length; j++){
+            vafWriters[attributeIndices.color](i + j, color.red * 255, color.green * 255, color.blue * 255, color.alpha * 255);
+        }
+
+    };
+
+    PolylineCollection.prototype._writePosition = function(context, vafWriters, polyline) {
+        var positions = polyline.getPositions();
+        var length = positions.length;
+        var i = polyline._index;
+        for(var j = 0; j < length; j++){
+            var position = positions[j];
+            vafWriters[attributeIndices.position3D](i + j, position.x, position.y, position.z);
+        }
+    };
+
+    PolylineCollection.prototype._writePolyline = function(context, vafWriters, polyline){
+        this._writePosition(context, vafWriters, polyline);
+        this._writeColor(context, vafWriters, polyline);
     };
 
     PolylineCollection.prototype._isShown = function() {

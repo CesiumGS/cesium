@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/DeveloperError',
         '../Core/combine',
         '../Core/destroyObject',
         '../Core/Cartesian3',
@@ -15,8 +16,10 @@ define([
         '../Renderer/StencilOperation',
         './SceneMode',
         '../Shaders/PolylineVS',
-        '../Shaders/PolylineFS'
+        '../Shaders/PolylineFS',
+        '../Core/shallowEquals'
     ], function(
+        DeveloperError,
         combine,
         destroyObject,
         Cartesian3,
@@ -32,7 +35,8 @@ define([
         StencilOperation,
         SceneMode,
         PolylineVS,
-        PolylineFS) {
+        PolylineFS,
+        shallowEquals) {
     "use strict";
 
     /**
@@ -47,10 +51,12 @@ define([
         var p = polylineTemplate || {};
 
         this._positions = [];
-        this.setPositions(p.positions);
-        this._show = (typeof p.show === "undefined") ? true : p.show;
-        this._width = (typeof p.width === "undefined") ? 2.0 : p.width;
-        this._outlineWidth = (typeof p.outlineWidth === "undefined") ? 5.0 : p.outlineWidth;
+        if(typeof p.positions !== 'undefined'){
+            this.setPositions(p.positions);
+        }
+        this._show = (typeof p.show === 'undefined') ? true : p.show;
+        this._width = (typeof p.width === 'undefined') ? 1.0 : p.width;
+        this._outlineWidth = (typeof p.outlineWidth === 'undefined') ? 1.0 : p.outlineWidth;
         var color = p.color || {
             red : 1.0,
             green : 1.0,
@@ -113,7 +119,7 @@ define([
      * @see Billboard#getShow
      */
     Polyline.prototype.setShow = function(value) {
-        if ((typeof value !== "undefined") && (this._show !== value)) {
+        if ((typeof value !== 'undefined') && (this._show !== value)) {
             this._show = value;
             this._makeDirty(SHOW_INDEX);
         }
@@ -149,6 +155,9 @@ define([
      * ]);
      */
     Polyline.prototype.setPositions = function(value) {
+        if (typeof value === 'undefined' || value.length < 2) {
+            throw new DeveloperError('value must be an array with more than one element.', 'value');
+        }
         this._changeToLinesPositions(value);
         this._makeDirty(POSITION_INDEX);
     };
@@ -161,7 +170,7 @@ define([
     Polyline.prototype.setColor = function(value){
         var c = this._color;
 
-        if ((typeof value !== "undefined") &&
+        if ((typeof value !== 'undefined') &&
             ((c.red !== value.red) || (c.green !== value.green) || (c.blue !== value.blue) || (c.alpha !== value.alpha))) {
 
             c.red = value.red;
@@ -215,7 +224,7 @@ define([
     Polyline.prototype.setWidth = function(value){
         var width = this._width;
 
-        if ((typeof value !== "undefined") && (value !== width)) {
+        if ((typeof value !== 'undefined') && (value !== width)) {
 
             this._width = value;
             this._makeDirty(WIDTH_INDEX);
@@ -241,7 +250,7 @@ define([
      * polyline.outlineWidth = 3.0;
      */
     Polyline.prototype.getOutlineWidth = function() {
-        return this._width;
+        return this._outlineWidth;
     };
 
     /**
@@ -265,7 +274,7 @@ define([
     Polyline.prototype.setOutlineWidth = function(value){
         var width = this._outlineWidth;
 
-        if ((typeof value !== "undefined") && (value !== width)) {
+        if ((typeof value !== 'undefined') && (value !== width)) {
 
             this._outlineWidth = value;
             this._makeDirty(OUTLINE_WIDTH_INDEX);
@@ -279,7 +288,7 @@ define([
     Polyline.prototype.setOutlineColor = function(value){
         var c = this._outlineColor;
 
-        if ((typeof value !== "undefined") &&
+        if ((typeof value !== 'undefined') &&
             ((c.red !== value.red) || (c.green !== value.green) || (c.blue !== value.blue) || (c.alpha !== value.alpha))) {
 
             c.red = value.red;
@@ -288,6 +297,20 @@ define([
             c.alpha = value.alpha;
             this._makeDirty(OUTLINE_COLOR_INDEX);
         }
+    };
+
+    Polyline.prototype.equals = function(other) {
+        return other &&
+               (this._show === other._show) &&
+               (shallowEquals(this._positions, other._positions)) &&
+               (this._width === other._width) &&
+               (this._outlineWidth === other._outlineWidth) &&
+               (shallowEquals(this._color, other._color)) &&
+               (shallowEquals(this._outlineColor, other._outlineColor));
+    };
+
+    Polyline.prototype._clean = function() {
+        this._dirty = false;
     };
 
     Polyline.prototype._isDirty = function() {
