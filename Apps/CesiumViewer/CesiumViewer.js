@@ -5,7 +5,7 @@ define(['dojo/dom',
         'dojo/io-query',
         'dijit/registry',
         'CesiumDojo/CesiumWidget',
-        'CesiumDojo/loadCzmlFromUrl',
+        'CesiumDojo/getJson',
         'Core/DefaultProxy',
         'Core/JulianDate',
         'Core/Clock',
@@ -25,7 +25,7 @@ function(dom,
          ioQuery,
          registry,
          CesiumWidget,
-         loadCzmlFromUrl,
+         getJson,
          DefaultProxy,
          JulianDate,
          Clock,
@@ -173,8 +173,10 @@ function(dom,
             }
 
             if (typeof queryObject.source !== 'undefined') {
-                dynamicObjectCollection.clear();
-                loadCzmlFromUrl(dynamicObjectCollection, queryObject.source, setTimeFromBuffer);
+                getJson(queryObject.source).then(function(czmlData) {
+                    dynamicObjectCollection.processCzml(czmlData, queryObject.source);
+                    setTimeFromBuffer();
+                });
             }
 
             if (typeof queryObject.lookAt !== 'undefined') {
