@@ -117,7 +117,8 @@ define([
         };
 
         // A recursive function that finds the best place to insert
-        // a new image based on existing image 'nodes'
+        // a new image based on existing image 'nodes'.
+        // Inspired by: http://blackpawn.com/texts/lightmaps/default.html
         var addImageToNode = function (node, image) {
 
             //If node is not defined, return.
