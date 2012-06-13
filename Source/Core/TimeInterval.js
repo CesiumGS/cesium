@@ -9,8 +9,7 @@ define([
 
     /**
      * An interval defined by a start date and a stop date.  The end points are optionally included
-     * in the interval.  With the exception of the <code>data</code> property, the interval should
-     * be treated as immutable.
+     * in the interval.  The interval should be treated as immutable.
      *
      * @name TimeInterval
      * @constructor
@@ -29,7 +28,7 @@ define([
      * @see JulianDate
      *
      * @example
-     * // Construct an Timeinterval closed on one end with a Color pay-load.
+     * // Construct an Timeinterval closed on one end with a Color payload.
      * var interval = new TimeInterval(JulianDate.fromTotalDays(1000), JulianDate.fromTotalDays(1001), true, false, Color.WHITE);
      */
     function TimeInterval(start, stop, isStartIncluded, isStopIncluded, data) {
@@ -113,7 +112,7 @@ define([
      * @param {TimeInterval} other The interval to intersect with this interval.
      * @param {Function} [mergeCallback=undefined] A callback which takes the data property from
      * both intervals as input and merges it into a single new value. If the callback is undefined,
-     * this will intersect the two intervals and return the new interval with the data from the calling
+     * this will intersect the two intervals and return the new interval with the data from this
      * interval.
      *
      * @return {TimeInterval} The new {@Link TimeInterval} that is the intersection of the two intervals,
