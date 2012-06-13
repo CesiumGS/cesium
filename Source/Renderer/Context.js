@@ -1495,12 +1495,10 @@ define([
     };
 
     /**
-     * Creates a texture atlas and adds a list of images to it.
+     * Creates a texture atlas and adds an array of images to it.
      */
     Context.prototype.createTextureAtlas = function(images, pixelFormat, borderWidthInPixels, scalingFactor) {
-        var textureAtlas = new TextureAtlas(this, pixelFormat, borderWidthInPixels, scalingFactor);
-        textureAtlas.addImages(images);
-        return textureAtlas;
+        return new TextureAtlas(this, pixelFormat, borderWidthInPixels, scalingFactor, images);
     };
 
     /**
