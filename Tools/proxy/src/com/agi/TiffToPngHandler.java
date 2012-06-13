@@ -27,6 +27,7 @@ import java.awt.image.WritableRaster;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -68,12 +69,8 @@ public final class TiffToPngHandler extends AbstractHandler {
 		dontProxyHeaders.add("upgrade");
 	}
 	
-	public static void main(String[] args) throws IOException {
-		IIORegistry registry = IIORegistry.getDefaultInstance();  
-		registry.registerServiceProvider(new com.sun.media.imageioimpl.plugins.tiff.TIFFImageWriterSpi());  
-		registry.registerServiceProvider(new com.sun.media.imageioimpl.plugins.tiff.TIFFImageReaderSpi());
-
-		BufferedImage sourceImage = ImageIO.read(new File("C:\\GitHub\\cesium\\Tools\\proxy\\test.tif"));
+	public static BufferedImage createPng(InputStream tiffInput) throws IOException {
+		BufferedImage sourceImage = ImageIO.read(tiffInput);
 		Raster sourceRaster = sourceImage.getData();
 
 		float[] pixels = new float[sourceImage.getWidth() * sourceImage.getHeight()];
@@ -98,24 +95,15 @@ public final class TiffToPngHandler extends AbstractHandler {
 		DataBufferUShort db = new DataBufferUShort(shortPixels, shortPixels.length);
 		
 		WritableRaster raster = Raster.createInterleavedRaster(db, sourceImage.getWidth(), sourceImage.getHeight(), sourceImage.getWidth(), 1, new int[1], null);
-		BufferedImage targetImage = new BufferedImage(colorModel, raster, false, null);
-		
-		ImageIO.write(targetImage, "PNG", new File("C:\\GitHub\\cesium\\Tools\\proxy\\test.png"));
-		
-		BufferedImage reloaded = ImageIO.read(new File("C:\\GitHub\\cesium\\Tools\\proxy\\test.png"));
-		Raster reloadedRaster = reloaded.getData();
-
-		int[] reloadedPixels = new int[reloaded.getWidth() * reloaded.getHeight()];
-		reloadedRaster.getSamples(0, 0, reloaded.getWidth(), reloaded.getHeight(), 0, reloadedPixels);
-		
-		for (int i = 0; i < pixels.length; ++i) {
-			if (reloadedPixels[i] != Math.round(pixels[i]) + bias) {
-				System.out.println("Bad: " + Float.toString(pixels[i]) + " -> " + Short.toString((short)shortPixels[i]));
-			}
-		}
+		return new BufferedImage(colorModel, raster, false, null);
 	}
-
+	
 	public TiffToPngHandler(String allowedHostList, String upstreamProxyHost, Integer upstreamProxyPort, String noUpstreamProxyHostList) throws Exception {
+
+		IIORegistry registry = IIORegistry.getDefaultInstance();  
+		registry.registerServiceProvider(new com.sun.media.imageioimpl.plugins.tiff.TIFFImageWriterSpi());  
+		registry.registerServiceProvider(new com.sun.media.imageioimpl.plugins.tiff.TIFFImageReaderSpi());
+
 		allowedHosts = hostListToPattern(allowedHostList);
 
 		client = new HttpClient();
@@ -183,7 +171,7 @@ public final class TiffToPngHandler extends AbstractHandler {
 			return;
 		}
 		
-		HttpExchange exchange = new HttpExchange() {
+		HttpExchange exchange = new HttpExchange() /*{
 			private byte[] tiff;
 			private int nextTiffPosition;
 
@@ -284,7 +272,7 @@ public final class TiffToPngHandler extends AbstractHandler {
 					response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 				continuation.complete();
 			}
-		};
+		}*/;
 
 		exchange.setMethod(request.getMethod());
 		exchange.setURI(uri);
@@ -327,7 +315,15 @@ public final class TiffToPngHandler extends AbstractHandler {
 		exchange.addRequestHeader("X-Forwarded-Host", request.getServerName());
 		exchange.addRequestHeader("X-Forwarded-Server", request.getLocalName());
 
-		continuation.suspend(response);
+		//continuation.suspend(response);
 		client.send(exchange);
+		
+		InputStream tiffInputStream = exchange.getRequestContentSource();
+		
+		BufferedImage png = createPng(tiffInputStream);
+
+		response.setContentType("image/png");
+		ImageIO.write(png, "PNG", out);
+
 	}
 }

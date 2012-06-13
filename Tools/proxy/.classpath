@@ -10,6 +10,6 @@
 	<classpathentry kind="lib" path="jetty/servlet-api-2.5.jar"/>
 	<classpathentry kind="lib" path="ant.jar"/>
 	<classpathentry kind="lib" path="jai_imageio.jar"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jdk1.6.0_18"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
