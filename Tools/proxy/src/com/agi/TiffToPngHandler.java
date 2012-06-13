@@ -25,13 +25,10 @@ import java.awt.image.DataBufferUShort;
 import java.awt.image.Raster;
 import java.awt.image.WritableRaster;
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
-import java.net.URLEncoder;
-import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.regex.Pattern;
@@ -43,12 +40,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.client.Address;
+import org.eclipse.jetty.client.ContentExchange;
 import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.HttpExchange;
 import org.eclipse.jetty.continuation.Continuation;
 import org.eclipse.jetty.continuation.ContinuationSupport;
-import org.eclipse.jetty.io.Buffer;
-import org.eclipse.jetty.io.EofException;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
@@ -171,108 +166,7 @@ public final class TiffToPngHandler extends AbstractHandler {
 			return;
 		}
 		
-		HttpExchange exchange = new HttpExchange() /*{
-			private byte[] tiff;
-			private int nextTiffPosition;
-
-			protected void onResponseComplete() throws IOException {
-				ByteArrayInputStream inputStream = null;
-				try {
-					IIORegistry registry = IIORegistry.getDefaultInstance();  
-					registry.registerServiceProvider(new com.sun.media.imageioimpl.plugins.tiff.TIFFImageWriterSpi());  
-					registry.registerServiceProvider(new com.sun.media.imageioimpl.plugins.tiff.TIFFImageReaderSpi());
-
-					inputStream = new ByteArrayInputStream(tiff);
-					BufferedImage sourceImage = ImageIO.read(inputStream);
-					Raster sourceRaster = sourceImage.getData();
-
-					float[] pixels = new float[sourceImage.getWidth() * sourceImage.getHeight()];
-					sourceRaster.getSamples(0, 0, sourceImage.getWidth(), sourceImage.getHeight(), 0, pixels);
-
-					final int bias = 1000;
-
-					short[] shortPixels = new short[sourceImage.getWidth() * sourceImage.getHeight()];
-					for (int i = 0; i < shortPixels.length; ++i) {
-						int value = Math.round(pixels[i]) + bias;
-						shortPixels[i] = (short)value;
-					}
-					
-					ColorModel colorModel = new ComponentColorModel(
-				            ColorSpace.getInstance(ColorSpace.CS_GRAY),
-				            new int[]{16},
-				            false,
-				            false,
-				            Transparency.OPAQUE,
-				            DataBuffer.TYPE_USHORT);
-					
-					DataBufferUShort db = new DataBufferUShort(shortPixels, shortPixels.length);
-					
-					WritableRaster raster = Raster.createInterleavedRaster(db, sourceImage.getWidth(), sourceImage.getHeight(), sourceImage.getWidth(), 1, new int[1], null);
-					BufferedImage targetImage = new BufferedImage(colorModel, raster, false, null);
-					
-					ImageIO.write(targetImage, "PNG", out);
-				} finally {
-					if (inputStream != null) inputStream.close();
-					continuation.complete();
-				}
-			}
-
-			protected void onResponseContent(Buffer content) throws IOException {
-				int spaceRequired = nextTiffPosition + content.length();
-				if (tiff == null || tiff.length < spaceRequired) {
-					tiff = tiff == null ? new byte[spaceRequired] : Arrays.copyOf(tiff, spaceRequired);
-				}
-				nextTiffPosition += content.get(tiff, nextTiffPosition, content.length());
-			}
-
-			protected void onResponseStatus(Buffer version, int status, Buffer reason) throws IOException {
-				response.setStatus(status);
-			}
-
-			protected void onResponseHeader(Buffer name, Buffer value) throws IOException {
-				String nameStr = name.toString();
-				String valueStr = value.toString();
-				String nameLower = nameStr.toLowerCase();
-
-				if ("location".equals(nameLower)) {
-					StringBuffer url = request.getRequestURL();
-					url.append("?");
-					url.append(URLEncoder.encode(valueStr, "UTF-8"));
-					valueStr = url.toString();
-				}
-				
-				if ("content-length".equals(nameLower)) {
-					tiff = new byte[Integer.parseInt(valueStr)];
-				}
-				
-				if ("content-type".equals(nameLower) && "image/tiff".equals(valueStr)) {
-					valueStr = "image/png";
-				}
-
-				if (!dontProxyHeaders.contains(nameLower)) {
-					response.addHeader(nameStr, valueStr);
-				}
-			}
-
-			protected void onConnectionFailed(Throwable ex) {
-				onException(ex);
-			}
-
-			protected void onException(Throwable ex) {
-				if (ex instanceof EofException) {
-					return;
-				}
-				if (!response.isCommitted())
-					response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-				continuation.complete();
-			}
-
-			protected void onExpire() {
-				if (!response.isCommitted())
-					response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-				continuation.complete();
-			}
-		}*/;
+		ContentExchange exchange = new ContentExchange(true);
 
 		exchange.setMethod(request.getMethod());
 		exchange.setURI(uri);
@@ -318,12 +212,22 @@ public final class TiffToPngHandler extends AbstractHandler {
 		//continuation.suspend(response);
 		client.send(exchange);
 		
-		InputStream tiffInputStream = exchange.getRequestContentSource();
+		try {
+			exchange.waitForDone();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
-		BufferedImage png = createPng(tiffInputStream);
+		ByteArrayInputStream tiffInputStream = new ByteArrayInputStream(exchange.getResponseContentBytes());
+		BufferedImage png;
+		try {
+			png = createPng(tiffInputStream);
+		} finally {
+			tiffInputStream.close();
+		}
 
 		response.setContentType("image/png");
 		ImageIO.write(png, "PNG", out);
-
 	}
 }
