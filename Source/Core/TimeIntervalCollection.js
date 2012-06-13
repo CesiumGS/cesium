@@ -129,13 +129,16 @@ define([
     };
 
     /**
-     * Returns the index of the collection which contains the interval containing the specified date.
+     * Returns the index of the interval in the collection that contains the specified date.
      *
      * @param {JulianDate} date The date to search for.
      *
      * @memberof TimeIntervalCollection
      *
-     * @returns The index of the collection which contains the interval containing the specified date, undefined if no such interval exists.
+     * @returns The index of the interval which contains the specified date, if no such interval exists,
+     * it returns a negative number which is the bitwise complement of the index of the next interval that
+     * starts after the date, or if no interval starts after the specified date, the bitwise complement of
+     * the length of the collection.
      *
      * @exception {DeveloperError} date is required.
      */
@@ -177,8 +180,6 @@ define([
      * @memberof TimeIntervalCollection
      *
      * @returns The first interval in the collection that matches the specified parameters.
-     *
-     * @exception {DeveloperError} date is required.
      */
     TimeIntervalCollection.prototype.findInterval = function(start, stop, isStartIncluded, isStopIncluded) {
         var thisIntervals = this._intervals, interval;
@@ -197,6 +198,7 @@ define([
     /**
      * Adds an interval to the collection, merging intervals that contain the same data and
      * splitting intervals of different data as needed in order to maintain a non-overlapping collection.
+     * The data in the new interval takes precedence over any existing intervals in the collection.
      *
      * @param {TimeInterval} interval The interval to add.
      * @param {Function} [equalsCallback] An optional function which takes the data from two
@@ -338,8 +340,8 @@ define([
     };
 
     /**
-     * Removes the specified interval from the collection, splitting overllaping intervals
-     * as needed.
+     * Removes the specified interval from this interval collection, creating a hole over the specified interval.
+     * The Data property of the input interval is ignored.
      *
      * @param {TimeInterval} interval The interval to remove.
      *

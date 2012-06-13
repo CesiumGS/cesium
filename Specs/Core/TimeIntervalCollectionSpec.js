@@ -46,7 +46,7 @@ defineSuite([
         expect(intervals.indexOf(interval1.stop) < 0).toEqual(true);
     });
 
-    it('indexOf exact start and stop but not incldued', function() {
+    it('indexOf exact start and stop but not included', function() {
         var intervals = new TimeIntervalCollection();
         var interval1 = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2), true, false);
         var interval2 = new TimeInterval(JulianDate.fromTotalDays(2), JulianDate.fromTotalDays(3), false, true);

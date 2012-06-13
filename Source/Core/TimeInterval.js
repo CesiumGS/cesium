@@ -18,7 +18,7 @@ define([
      * @param {JulianDate} stop The stop date of the interval.
      * @param {Boolean} [isStartIncluded=true] <code>true</code> if the start date is included in the interval, <code>false</code> otherwise.
      * @param {Boolean} [isStopIncluded=true] <code>true</code> if the stop date is included in the interval, <code>false</code> otherwise.
-     * @param {Object} [data=undefined] The data associated with this interval.
+     * @param {Object} [data The data associated with this interval.
      *
      * @exception {DeveloperError} start must be specified.
      * @exception {DeveloperError} stop must be specified.
@@ -66,7 +66,7 @@ define([
      * @param {String} iso8601String A valid ISO8601 interval.
      * @param {Boolean} [isStartIncluded=true] <code>true</code> if the start date is included in the interval, <code>false</code> otherwise.
      * @param {Boolean} [isStopIncluded=true] <code>true</code> if the stop date is included in the interval, <code>false</code> otherwise.
-     * @param {Object} [data=undefined] The data associated with this interval.
+     * @param {Object} [data] The data associated with this interval.
      *
      * @return {TimeInterval} The new {@Link TimeInterval} instance or <code>undefined</code> if an invalid ISO8601 string is provided.
      *
@@ -110,7 +110,7 @@ define([
      * also providing a means to merge the data of the two intervals.
      *
      * @param {TimeInterval} other The interval to intersect with this interval.
-     * @param {Function} [mergeCallback=undefined] A callback which takes the data property from
+     * @param {Function} [mergeCallback] A callback which takes the data property from
      * both intervals as input and merges it into a single new value. If the callback is undefined,
      * this will intersect the two intervals and return the new interval with the data from this
      * interval.
