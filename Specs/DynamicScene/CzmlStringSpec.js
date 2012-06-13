@@ -22,7 +22,7 @@ defineSuite([
     });
 
     it('createValue', function() {
-        expect(CzmlString.createValue(CzmlString.unwrapInterval(simpleString))).toEqual(simpleString);
-        expect(CzmlString.createValue(CzmlString.unwrapInterval(constantStringInterval))).toEqual(constantStringInterval.string);
+        expect(CzmlString.createValue(simpleString)).toEqual(simpleString);
+        expect(CzmlString.createValue(constantStringInterval.string)).toEqual(constantStringInterval.string);
     });
 });

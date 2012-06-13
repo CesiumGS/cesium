@@ -1,5 +1,8 @@
 /*global define*/
-define(['../Core/Cartesian2'], function(Cartesian2) {
+define([
+        '../Core/Cartesian2'
+       ], function(
+         Cartesian2) {
     "use strict";
 
     var doublesPerValue = 2;

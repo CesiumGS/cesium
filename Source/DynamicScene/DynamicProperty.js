@@ -20,13 +20,23 @@ define([
     "use strict";
 
     var interpolators = {
-        HERMITE : HermitePolynomialApproximation,
-        LAGRANGE : LagrangePolynomialApproximation,
-        LINEAR : LinearApproximation
-    };
+            HERMITE : HermitePolynomialApproximation,
+            LAGRANGE : LagrangePolynomialApproximation,
+            LINEAR : LinearApproximation
+        };
 
+    function IntervalData() {
+        this.interpolationAlgorithm = LinearApproximation;
+        this.numberOfPoints = LinearApproximation.getRequiredDataPoints(1);
+        this.interpolationDegree = undefined;
+        this.times = undefined;
+        this.values = undefined;
+        this.isSampled = false;
+        this.xTable = undefined;
+        this.yTable = undefined;
+    }
 
-    function convertDate(date, epoch) {
+    function czmlDateToJulianDate(date, epoch) {
         if (typeof date === 'string') {
             return JulianDate.fromIso601(date);
         }
@@ -60,7 +70,7 @@ define([
     DynamicProperty._mergeNewSamples = function(epoch, times, values, newData, doublesPerValue, valueType) {
         var newDataIndex = 0, i, prevItem, timesInsertionPoint, valuesInsertionPoint, timesSpliceArgs, valuesSpliceArgs, currentTime, nextTime;
         while (newDataIndex < newData.length) {
-            currentTime = convertDate(newData[newDataIndex], epoch);
+            currentTime = czmlDateToJulianDate(newData[newDataIndex], epoch);
             timesInsertionPoint = binarySearch(times, currentTime, JulianDate.compare);
 
             if (timesInsertionPoint < 0) {
@@ -73,7 +83,7 @@ define([
                 prevItem = undefined;
                 nextTime = times[timesInsertionPoint + 1];
                 while (newDataIndex < newData.length) {
-                    currentTime = convertDate(newData[newDataIndex], epoch);
+                    currentTime = czmlDateToJulianDate(newData[newDataIndex], epoch);
 
                     //CZML_TODO We can probably further optimize here by dealing with the special cases of ===,
                     //rather than bailing, though the case probably happens so infrequently, that not checking may be faster
@@ -135,13 +145,8 @@ define([
 
         var intervalData;
         if (typeof existingInterval === 'undefined') {
-            intervalData = {
-                interpolationAlgorithm : LinearApproximation,
-                numberOfPoints : LinearApproximation.getRequiredDataPoints(1)
-            };
-
-            existingInterval = new TimeInterval(start, stop, true, true);
-            existingInterval.data = intervalData;
+            intervalData = new IntervalData();
+            existingInterval = new TimeInterval(start, stop, true, true, intervalData);
             thisIntervals.addInterval(existingInterval);
         } else {
             intervalData = existingInterval.data;

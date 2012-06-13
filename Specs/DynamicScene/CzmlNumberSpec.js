@@ -9,10 +9,8 @@ defineSuite([
     var simpleNumber = 0.5;
 
     var sampledNumberInterval = {
-        number : [0, 0, 1, 1.0]
+        number : [1, 2, 3, 4]
     };
-
-    var interpolationResult = [1.123];
 
     it('unwrapInterval', function() {
         expect(CzmlNumber.unwrapInterval(simpleNumber)).toEqualArray(simpleNumber);
@@ -29,11 +27,11 @@ defineSuite([
     });
 
     it('createValueFromArray', function() {
-        expect(CzmlNumber.createValueFromArray(sampledNumberInterval.number, 2)).toEqual(1);
+        expect(CzmlNumber.createValueFromArray(sampledNumberInterval.number, 2)).toEqual(sampledNumberInterval.number[2]);
     });
 
     it('createValueFromInterpolationResult', function() {
-        expect(CzmlNumber.createValueFromInterpolationResult(interpolationResult)).toEqual(interpolationResult[0]);
+        expect(CzmlNumber.createValueFromInterpolationResult([simpleNumber])).toEqual(simpleNumber);
     });
 
     it('packValuesForInterpolation', function() {

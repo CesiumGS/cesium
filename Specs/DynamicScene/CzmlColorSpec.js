@@ -8,26 +8,24 @@ defineSuite([
     "use strict";
     /*global it,expect*/
 
-    var testColor1 = new Color(0.5, 0.5, 0.5, 0.5);
-    var testColor3 = new Color(1.0, 1.0, 1.0, 1.0);
-
     var constantRgbaInterval = {
-        rgba : [127.5, 127.5, 127.5, 127.5]
+        rgba : [1, 2, 3, 4]
     };
 
     var constantRgbafInterval = {
-        rgbaf : [0.5, 0.5, 0.5, 0.5]
+        rgbaf : [Color.byteToFloat(1), Color.byteToFloat(2), Color.byteToFloat(3), Color.byteToFloat(4)]
     };
 
     var sampledRgbaInterval = {
-        rgba : [0, 0, 0, 0, 0, 1, 255, 255, 255, 255]
+        rgba : [0, 1, 2, 3, 4, 1, 5, 6, 7, 8]
     };
 
     var sampledRgbafInterval = {
-        rgbaf : [0, 0, 0, 0, 0, 1, 1.0, 1.0, 1.0, 1.0]
+        rgbaf : [0, Color.byteToFloat(1), Color.byteToFloat(2), Color.byteToFloat(3), Color.byteToFloat(4), 1, Color.byteToFloat(5), Color.byteToFloat(6), Color.byteToFloat(7), Color.byteToFloat(8)]
     };
 
-    var interpolationResult = [1.0, 1.0, 1.0, 1.0];
+    var color1 = new Color(sampledRgbafInterval.rgbaf[1], sampledRgbafInterval.rgbaf[2], sampledRgbafInterval.rgbaf[3], sampledRgbafInterval.rgbaf[4]);
+    var color2 = new Color(sampledRgbafInterval.rgbaf[6], sampledRgbafInterval.rgbaf[7], sampledRgbafInterval.rgbaf[8], sampledRgbafInterval.rgbaf[9]);
 
     it('unwrapInterval', function() {
         expect(CzmlColor.unwrapInterval(constantRgbaInterval)).toEqualArray(constantRgbafInterval.rgbaf);
@@ -37,22 +35,20 @@ defineSuite([
     });
 
     it('isSampled', function() {
-        expect(CzmlColor.isSampled(constantRgbaInterval.rgba)).toEqual(false);
-        expect(CzmlColor.isSampled(constantRgbafInterval.rgbaf)).toEqual(false);
         expect(CzmlColor.isSampled(sampledRgbaInterval.rgba)).toEqual(true);
         expect(CzmlColor.isSampled(sampledRgbafInterval.rgbaf)).toEqual(true);
     });
 
     it('createValue', function() {
-        expect(CzmlColor.createValue(constantRgbafInterval.rgbaf)).toEqual(testColor1);
+        expect(CzmlColor.createValue(constantRgbafInterval.rgbaf)).toEqual(color1);
     });
 
     it('createValueFromArray', function() {
-        expect(CzmlColor.createValueFromArray(sampledRgbafInterval.rgbaf, 6)).toEqual(testColor3);
+        expect(CzmlColor.createValueFromArray(sampledRgbafInterval.rgbaf, 6)).toEqual(color2);
     });
 
     it('createValueFromInterpolationResult', function() {
-        expect(CzmlColor.createValueFromInterpolationResult(interpolationResult)).toEqual(testColor3);
+        expect(CzmlColor.createValueFromInterpolationResult(constantRgbafInterval.rgbaf)).toEqual(color1);
     });
 
     it('packValuesForInterpolation', function() {

@@ -8,10 +8,10 @@ defineSuite([
     "use strict";
     /*global it,expect*/
 
-    var simpleLabelStyle = LabelStyle.FILL;
+    var simpleLabelStyle = "FILL";
 
     var constantLabelStyleInterval = {
-        labelStyle : LabelStyle.OUTLINE
+        labelStyle : "OUTLINE"
     };
 
     it('unwrapInterval', function() {
@@ -24,7 +24,7 @@ defineSuite([
     });
 
     it('createValue', function() {
-        expect(CzmlLabelStyle.createValue(CzmlLabelStyle.unwrapInterval(simpleLabelStyle))).toEqual(LabelStyle.FILL);
-        expect(CzmlLabelStyle.createValue(CzmlLabelStyle.unwrapInterval(constantLabelStyleInterval))).toEqual(LabelStyle.OUTLINE);
+        expect(CzmlLabelStyle.createValue(simpleLabelStyle)).toEqual(LabelStyle.FILL);
+        expect(CzmlLabelStyle.createValue(constantLabelStyleInterval.labelStyle)).toEqual(LabelStyle.OUTLINE);
     });
 });

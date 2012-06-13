@@ -8,10 +8,10 @@ defineSuite([
     "use strict";
     /*global it,expect*/
 
-    var simpleHorizontalOrigin = HorizontalOrigin.CENTER;
+    var simpleHorizontalOrigin = "CENTER";
 
     var constantHorizontalOriginInterval = {
-        horizontalOrigin : HorizontalOrigin.LEFT
+        horizontalOrigin : "LEFT"
     };
 
     it('unwrapInterval', function() {
@@ -24,7 +24,7 @@ defineSuite([
     });
 
     it('createValue', function() {
-        expect(CzmlHorizontalOrigin.createValue(CzmlHorizontalOrigin.unwrapInterval(simpleHorizontalOrigin))).toEqual(HorizontalOrigin.CENTER);
-        expect(CzmlHorizontalOrigin.createValue(CzmlHorizontalOrigin.unwrapInterval(constantHorizontalOriginInterval))).toEqual(HorizontalOrigin.LEFT);
+        expect(CzmlHorizontalOrigin.createValue(simpleHorizontalOrigin)).toEqual(HorizontalOrigin.CENTER);
+        expect(CzmlHorizontalOrigin.createValue(constantHorizontalOriginInterval.horizontalOrigin)).toEqual(HorizontalOrigin.LEFT);
     });
 });

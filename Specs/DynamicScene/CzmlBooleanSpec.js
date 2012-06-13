@@ -22,7 +22,7 @@ defineSuite([
     });
 
     it('createValue', function() {
-        expect(CzmlBoolean.createValue(CzmlBoolean.unwrapInterval(simpleBoolean))).toEqual(true);
-        expect(CzmlBoolean.createValue(CzmlBoolean.unwrapInterval(constantBooleanInterval))).toEqual(false);
+        expect(CzmlBoolean.createValue(simpleBoolean)).toEqual(simpleBoolean);
+        expect(CzmlBoolean.createValue(constantBooleanInterval.boolean)).toEqual(constantBooleanInterval.boolean);
     });
 });

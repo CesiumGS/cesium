@@ -25,10 +25,10 @@ function(Cartographic3,
                             cartographic[i] = cartographicDegrees[i];
                             cartographic[i + 1] = CesiumMath.toRadians(cartographicDegrees[i + 1]);
                             cartographic[i + 2] = CesiumMath.toRadians(cartographicDegrees[i + 2]);
-                            cartographic[i + 3] = CesiumMath.toRadians(cartographicDegrees[i + 3]);
+                            cartographic[i + 3] = cartographicDegrees[i + 3];
                         }
                     } else {
-                        cartographic = [CesiumMath.toRadians(cartographicDegrees[0]), CesiumMath.toRadians(cartographicDegrees[1]), CesiumMath.toRadians(cartographicDegrees[2])];
+                        cartographic = [CesiumMath.toRadians(cartographicDegrees[0]), CesiumMath.toRadians(cartographicDegrees[1]), cartographicDegrees[2]];
                     }
                 }
             }
