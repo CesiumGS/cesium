@@ -21,6 +21,7 @@ define([
         this._dynamicProperties = [];
         this._propertyIntervals = new TimeIntervalCollection();
         this._potentialTypes = [CzmlCartesian3, CzmlCartographic3];
+        this._cachedInterval = undefined;
     }
 
     DynamicPositionProperty.processCzmlPacket = function(czmlIntervals, buffer, sourceUri, existingProperty) {
@@ -49,6 +50,8 @@ define([
     };
 
     DynamicPositionProperty.prototype.addInterval = function(czmlInterval, buffer, sourceUri) {
+        this._cachedInterval = undefined;
+
         var iso8601Interval = czmlInterval.interval, property, valueType, unwrappedInterval;
         if (typeof iso8601Interval === 'undefined') {
             iso8601Interval = Iso8601.MAXIMUM_INTERVAL.clone();
@@ -105,7 +108,15 @@ define([
     };
 
     DynamicPositionProperty.prototype.getValueCartographic = function(time) {
-        var interval = this._propertyIntervals.findIntervalContainingDate(time);
+        //CZML_TODO caching the last used interval here
+        //gives an obvious performance boost, but we need
+        //to further explore performance all around.
+        var interval = this._cachedInterval;
+        if (typeof interval === 'undefined' || !interval.contains(time)) {
+            interval = this._propertyIntervals.findIntervalContainingDate(time);
+            this._cachedInterval = interval;
+        }
+
         if (typeof interval === 'undefined') {
             return undefined;
         }
@@ -118,7 +129,13 @@ define([
     };
 
     DynamicPositionProperty.prototype.getValueCartesian = function(time) {
-        var interval = this._propertyIntervals.findIntervalContainingDate(time);
+        //CZML_TODO Same as getValueCartographic comment on caching.
+        var interval = this._cachedInterval;
+        if (typeof interval === 'undefined' || !interval.contains(time)) {
+            interval = this._propertyIntervals.findIntervalContainingDate(time);
+            this._cachedInterval = interval;
+        }
+
         if (typeof interval === 'undefined') {
             return undefined;
         }
