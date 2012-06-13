@@ -123,19 +123,30 @@ define([
             return TimeInterval.EMPTY;
         }
 
-        var otherStart = other.start, otherStop = other.stop, isStartIncluded, isStopIncluded, outputData;
-        var thisStart = this.start, thisStop = this.stop, thisIsStartIncluded = this.isStartIncluded, thisIsStopIncluded = this.isStopIncluded;
+        var otherStart = other.start;
+        var otherStop = other.stop;
+        var otherIsStartIncluded = other.isStartIncluded;
+        var otherIsStopIncluded = other.isStopIncluded;
+
+        var thisStart = this.start;
+        var thisStop = this.stop;
+        var thisIsStartIncluded = this.isStartIncluded;
+        var thisIsStopIncluded = this.isStopIncluded;
+
+        var outputData;
+        var isStartIncluded;
+        var isStopIncluded;
 
         if (otherStart.greaterThanOrEquals(thisStart) && thisStop.greaterThanOrEquals(otherStart)) {
 
-            isStartIncluded = (!otherStart.equals(thisStart) && other.isStartIncluded) || (thisIsStartIncluded && other.isStartIncluded);
+            isStartIncluded = (!otherStart.equals(thisStart) && otherIsStartIncluded) || (thisIsStartIncluded && otherIsStartIncluded);
 
-            isStopIncluded = thisIsStopIncluded && other.isStopIncluded;
+            isStopIncluded = thisIsStopIncluded && otherIsStopIncluded;
 
             outputData = typeof mergeCallback !== 'undefined' ? mergeCallback(this.data, other.data) : this.data;
 
             if (thisStop.greaterThanOrEquals(otherStop)) {
-                isStopIncluded = isStopIncluded || (!otherStop.equals(thisStop) && other.isStopIncluded);
+                isStopIncluded = isStopIncluded || (!otherStop.equals(thisStop) && otherIsStopIncluded);
                 return new TimeInterval(otherStart, otherStop, isStartIncluded, isStopIncluded, outputData);
             }
 
@@ -145,13 +156,13 @@ define([
 
         if (otherStart.lessThanOrEquals(thisStart) && thisStart.lessThanOrEquals(otherStop)) {
 
-            isStartIncluded = (otherStart.equals(thisStart) === false && thisIsStartIncluded) || (thisIsStartIncluded && other.isStartIncluded);
+            isStartIncluded = (otherStart.equals(thisStart) === false && thisIsStartIncluded) || (thisIsStartIncluded && otherIsStartIncluded);
 
-            isStopIncluded = thisIsStopIncluded && other.isStopIncluded;
+            isStopIncluded = thisIsStopIncluded && otherIsStopIncluded;
 
             outputData = typeof mergeCallback !== 'undefined' ? mergeCallback(this.data, other.data) : this.data;
             if (thisStop.greaterThanOrEquals(otherStop)) {
-                isStopIncluded = isStopIncluded || (otherStop.equals(thisStop) === false && other.isStopIncluded);
+                isStopIncluded = isStopIncluded || (otherStop.equals(thisStop) === false && otherIsStopIncluded);
                 return new TimeInterval(thisStart, otherStop, isStartIncluded, isStopIncluded, outputData);
             }
 
