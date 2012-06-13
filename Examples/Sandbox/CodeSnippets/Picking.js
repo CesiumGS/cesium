@@ -63,7 +63,8 @@
             var image = new Image();
             image.onload = function() {
                 var billboards = new Cesium.BillboardCollection(undefined);
-                billboards.setTextureAtlas(scene.getContext().createTextureAtlas([image]));
+                var textureAtlas = new Cesium.TextureAtlas(scene.getContext(), Cesium.PixelFormat.RGBA, 1, 2, [image]);
+                billboards.setTextureAtlas(textureAtlas);
                 billboard = billboards.add({
                     position : ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic2(-75.59777, 40.03883)),
                     imageIndex : 0
@@ -156,7 +157,8 @@
             var image = new Image();
             image.onload = function() {
                 var billboards = new Cesium.BillboardCollection(undefined);
-                billboards.setTextureAtlas(scene.getContext().createTextureAtlas([image]));
+                var textureAtlas = new Cesium.TextureAtlas(scene.getContext(), Cesium.PixelFormat.RGBA, 1, 2, [image]);
+                billboards.setTextureAtlas(textureAtlas);
                 billboard = billboards.add({
                     position : ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic2(-75.59777, 40.03883)),
                     imageIndex : 0

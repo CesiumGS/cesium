@@ -1495,13 +1495,6 @@ define([
     };
 
     /**
-     * Creates a texture atlas and adds an array of images to it.
-     */
-    Context.prototype.createTextureAtlas = function(images, pixelFormat, borderWidthInPixels, scalingFactor) {
-        return new TextureAtlas(this, pixelFormat, borderWidthInPixels, scalingFactor, images);
-    };
-
-    /**
      * DOC_TBA.
      *
      * description.source can be {ImageData}, {HTMLImageElement}, {HTMLCanvasElement}, or {HTMLVideoElement}.

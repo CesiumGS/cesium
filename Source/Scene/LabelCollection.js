@@ -5,6 +5,7 @@ define([
         '../Core/Matrix4',
         '../Renderer/BufferUsage',
         '../Renderer/PixelFormat',
+        '../Renderer/TextureAtlas',
         './BillboardCollection',
         './Label'
     ], function(
@@ -13,6 +14,7 @@ define([
         Matrix4,
         BufferUsage,
         PixelFormat,
+        TextureAtlas,
         BillboardCollection,
         Label) {
     "use strict";
@@ -414,8 +416,9 @@ define([
             var newImages = this._canvasContainer.getItems();
 
             // First time creating texture atlas or removing images from the texture atlas.
-            if (oldImages.length == 0 || newImages.length < oldImages.length) {
-                var textureAtlas = (this._labels.length > 0) ? context.createTextureAtlas(newImages) : null;
+            if (oldImages.length == 0 || newImages.length < oldImages.length) {;
+                var textureAtlas = (this._labels.length <= 0) ? null :
+                    new TextureAtlas(context, PixelFormat.RGBA, 1, 2, newImages);
                 this._billboardCollection.setTextureAtlas(textureAtlas);
             }
             // Adding new images to the texture atlas.

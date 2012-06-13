@@ -92,8 +92,8 @@ define([
      *
      * @example
      * // Create a billboard collection with two billboards
-     * var atlas = scene.getContext().createTextureAtlas(images);
      * var billboards = new BillboardCollection();
+     * var textureAtlas = new TextureAtlas(scene.getContext(), PixelFormat.RGBA, 1, 2, images);
      * billboards.setTextureAtlas(atlas);
      * billboards.add({
      *   position : { x : 1.0, y : 2.0, z : 3.0 }
@@ -446,8 +446,9 @@ define([
      * // Two billboards, each referring to one of the images, are then
      * // added to the collection.
      * var billboards = new BillboardCollection();
-     * billboards.setTextureAtlas(
-     *   scene.getContext().createTextureAtlas([image0, image1]));
+     * var images = [image0, image1];
+     * var textureAtlas = new TextureAtlas(scene.getContext(), PixelFormat.RGBA, 1, 2, images);
+     * billboards.setTextureAtlas(textureAtlas);
      * billboards.add({
      *   // ...
      *   imageIndex : 0
@@ -499,7 +500,8 @@ define([
      *
      * @example
      * // Destroy a billboard collection but not its texture atlas.
-     * var atlas = scene.getContext().createTextureAtlas(...);
+     *
+     * var atlas = new TextureAtlas(...);
      * billboards.setTextureAtlas(atlas);
      * billboards.setDestroyTextureAtlas(false);
      * billboards = billboards.destroy();

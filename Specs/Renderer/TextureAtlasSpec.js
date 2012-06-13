@@ -83,7 +83,9 @@ defineSuite([
     };
 
     it('creates a single image atlas', function() {
-        atlas = context.createTextureAtlas([greenImage], PixelFormat.RGBA, 0);
+        var images = [greenImage];
+        atlas = new TextureAtlas(context, PixelFormat.RGBA, 0, 2, images);
+
         var texture = atlas.getTexture();
         var coordinates = atlas.getTextureCoordinates();
         var atlasSize = 2.0 * greenImage.width;
@@ -102,8 +104,9 @@ defineSuite([
     });
 
     it('renders a single image atlas', function() {
-        atlas = context.createTextureAtlas([greenImage], PixelFormat.RGBA, 0);
-        var texture = atlas.getTexture();
+        var images = [greenImage];
+        atlas = new TextureAtlas(context, PixelFormat.RGBA, 0, 2, images);        var texture = atlas.getTexture();
+
         var coordinates = atlas.getTextureCoordinates()[0];
 
         expect(draw.apply(this, [texture, {
@@ -113,7 +116,9 @@ defineSuite([
     });
 
     it('creates a two image atlas', function() {
-        atlas = context.createTextureAtlas([greenImage, blueImage], PixelFormat.RGBA, 0);
+        var images = [greenImage, blueImage];
+        atlas = new TextureAtlas(context, PixelFormat.RGBA, 0, 2, images);
+
         var texture = atlas.getTexture();
         var coordinates = atlas.getTextureCoordinates();
         var atlasSize = 2.0 * (greenImage.width + blueImage.width);
@@ -134,7 +139,8 @@ defineSuite([
     });
 
     it('renders a two image atlas', function() {
-        atlas = context.createTextureAtlas([greenImage, blueImage], PixelFormat.RGBA, 0);
+        var images = [greenImage, blueImage];
+        atlas = new TextureAtlas(context, PixelFormat.RGBA, 0, 2, images);
 
         var texture = atlas.getTexture();
         var greenCoords = atlas.getTextureCoordinates()[0];
@@ -152,7 +158,9 @@ defineSuite([
     });
 
     it('renders a four image atlas', function() {
-        atlas = context.createTextureAtlas([greenImage, blueImage, blueImage, greenImage], PixelFormat.RGBA, 0);
+        var images = [greenImage, blueImage, blueImage, greenImage];
+        atlas = new TextureAtlas(context, PixelFormat.RGBA, 0, 2, images);
+
         expect(atlas.getTextureCoordinates().length).toEqual(4);
 
         var texture = atlas.getTexture();
@@ -183,7 +191,9 @@ defineSuite([
     });
 
     it('creates an atlas with different image heights', function() {
-        atlas = context.createTextureAtlas([blueImage, tallGreenImage], PixelFormat.RGBA, 0);
+        var images = [blueImage, tallGreenImage];
+        atlas = new TextureAtlas(context, PixelFormat.RGBA, 0, 2, images);
+
         var texture = atlas.getTexture();
         var coordinates = atlas.getTextureCoordinates();
         var atlasSize = 2.0 * Math.max(tallGreenImage.width + blueImage.width,
@@ -198,7 +208,8 @@ defineSuite([
     });
 
     it('renders an atlas with different image heights', function() {
-        atlas = context.createTextureAtlas([blueImage, tallGreenImage], PixelFormat.RGBA, 0);
+        var images = [blueImage, tallGreenImage];
+        atlas = new TextureAtlas(context, PixelFormat.RGBA, 0, 2, images);
 
         var texture = atlas.getTexture();
         var blueCoords = atlas.getTextureCoordinates()[0];
@@ -220,7 +231,8 @@ defineSuite([
     });
 
     it('creates an atlas that adds images at different points in time', function() {
-        atlas = context.createTextureAtlas([greenImage], PixelFormat.RGBA, 0);
+        var images = [greenImage];
+        atlas = new TextureAtlas(context, PixelFormat.RGBA, 0, 2, images);
         atlas.addImages([blueImage]);
         atlas.addImages([greenImage]);
         atlas.addImages([blueImage]);
@@ -266,7 +278,8 @@ defineSuite([
     });
 
     it('renders an atlas that adds images at different points in time', function() {
-        atlas = context.createTextureAtlas([greenImage], PixelFormat.RGBA, 0);
+        var images = [greenImage];
+        atlas = new TextureAtlas(context, PixelFormat.RGBA, 0, 2, images);
         atlas.addImages([blueImage]);
         atlas.addImages([greenImage]);
         atlas.addImages([blueImage]);
@@ -301,7 +314,9 @@ defineSuite([
     it('creates an atlas that dynamically resizes', function() {
 
         //Add the blue image
-        atlas = context.createTextureAtlas([blueImage], PixelFormat.RGBA, 0);
+        var images = [blueImage];
+        atlas = new TextureAtlas(context, PixelFormat.RGBA, 0, 2, images);
+
         var texture = atlas.getTexture();
         var coordinates = atlas.getTextureCoordinates();
         var atlasSize = 2.0 * blueImage.width;
@@ -343,7 +358,8 @@ defineSuite([
     it('renders an atlas that dynamically resizes', function() {
 
         //Add the blue image
-        atlas = context.createTextureAtlas([blueImage], PixelFormat.RGBA, 0);
+        var images = [blueImage];
+        atlas = new TextureAtlas(context, PixelFormat.RGBA, 0, 2, images);
         var texture = atlas.getTexture();
         var blueCoordinates = atlas.getTextureCoordinates()[0];
 
@@ -372,14 +388,22 @@ defineSuite([
 
     it('throws without images', function() {
         expect(function() {
-            atlas = context.createTextureAtlas();
+            atlas = new TextureAtlas(context, PixelFormat.RGBA, 0, 2, []);
         }).toThrow();
     });
 
     it('throws with a negative borderWidthInPixels', function() {
         expect(function() {
-            atlas = context.createTextureAtlas([greenImage, blueImage], PixelFormat.RGBA, -1);
+            var images = [greenImage, blueImage];
+            atlas = new TextureAtlas(context, PixelFormat.RGBA, -1, 2, images);
         }).toThrow();
+    });
+
+    it('throws with an invalid scalingFactor', function() {
+       expect(function() {
+           var images = [greenImage, blueImage];
+           atlas = new TextureAtlas(context, PixelFormat.RGBA, 0, 0, images);
+       }).toThrow();
     });
 
     it('throws without context', function() {

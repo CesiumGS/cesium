@@ -12,6 +12,7 @@ defineSuite([
          'Renderer/TextureMinificationFilter',
          'Renderer/TextureMagnificationFilter',
          'Renderer/PixelFormat',
+         'Renderer/TextureAtlas',
          'Scene/HorizontalOrigin',
          'Scene/VerticalOrigin'
      ], function(
@@ -27,6 +28,7 @@ defineSuite([
          TextureMinificationFilter,
          TextureMagnificationFilter,
          PixelFormat,
+         TextureAtlas,
          HorizontalOrigin,
          VerticalOrigin) {
     "use strict";
@@ -41,7 +43,7 @@ defineSuite([
     var whiteImage;
 
     function createTextureAtlas(images) {
-        var atlas = context.createTextureAtlas(images, PixelFormat.RGBA, 1, 1);
+        var atlas = new TextureAtlas(context, PixelFormat.RGBA, 1, 1, images);
 
         // ANGLE Workaround
         atlas.getTexture().setSampler(context.createSampler({
