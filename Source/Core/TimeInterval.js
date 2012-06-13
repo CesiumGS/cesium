@@ -9,8 +9,7 @@ define([
 
     /**
      * An interval defined by a start date and a stop date.  The end points are optionally included
-     * in the interval.  With the exception of the <code>data</code> property, the interval should
-     * be treated as immutable.
+     * in the interval.  The interval should be treated as immutable.
      *
      * @name TimeInterval
      * @constructor
@@ -19,7 +18,7 @@ define([
      * @param {JulianDate} stop The stop date of the interval.
      * @param {Boolean} [isStartIncluded=true] <code>true</code> if the start date is included in the interval, <code>false</code> otherwise.
      * @param {Boolean} [isStopIncluded=true] <code>true</code> if the stop date is included in the interval, <code>false</code> otherwise.
-     * @param {Object} [data=undefined] The data associated with this interval.
+     * @param {Object} [data The data associated with this interval.
      *
      * @exception {DeveloperError} start must be specified.
      * @exception {DeveloperError} stop must be specified.
@@ -29,7 +28,7 @@ define([
      * @see JulianDate
      *
      * @example
-     * // Construct an Timeinterval closed on one end with a Color pay-load.
+     * // Construct an Timeinterval closed on one end with a Color payload.
      * var interval = new TimeInterval(JulianDate.fromTotalDays(1000), JulianDate.fromTotalDays(1001), true, false, Color.WHITE);
      */
     function TimeInterval(start, stop, isStartIncluded, isStopIncluded, data) {
@@ -67,7 +66,7 @@ define([
      * @param {String} iso8601String A valid ISO8601 interval.
      * @param {Boolean} [isStartIncluded=true] <code>true</code> if the start date is included in the interval, <code>false</code> otherwise.
      * @param {Boolean} [isStopIncluded=true] <code>true</code> if the stop date is included in the interval, <code>false</code> otherwise.
-     * @param {Object} [data=undefined] The data associated with this interval.
+     * @param {Object} [data] The data associated with this interval.
      *
      * @return {TimeInterval} The new {@Link TimeInterval} instance or <code>undefined</code> if an invalid ISO8601 string is provided.
      *
@@ -111,9 +110,9 @@ define([
      * also providing a means to merge the data of the two intervals.
      *
      * @param {TimeInterval} other The interval to intersect with this interval.
-     * @param {Function} [mergeCallback=undefined] A callback which takes the data property from
+     * @param {Function} [mergeCallback] A callback which takes the data property from
      * both intervals as input and merges it into a single new value. If the callback is undefined,
-     * this will intersect the two intervals and return the new interval with the data from the calling
+     * this will intersect the two intervals and return the new interval with the data from this
      * interval.
      *
      * @return {TimeInterval} The new {@Link TimeInterval} that is the intersection of the two intervals,
@@ -124,19 +123,30 @@ define([
             return TimeInterval.EMPTY;
         }
 
-        var otherStart = other.start, otherStop = other.stop, isStartIncluded, isStopIncluded, outputData;
-        var thisStart = this.start, thisStop = this.stop, thisIsStartIncluded = this.isStartIncluded, thisIsStopIncluded = this.isStopIncluded;
+        var otherStart = other.start;
+        var otherStop = other.stop;
+        var otherIsStartIncluded = other.isStartIncluded;
+        var otherIsStopIncluded = other.isStopIncluded;
+
+        var thisStart = this.start;
+        var thisStop = this.stop;
+        var thisIsStartIncluded = this.isStartIncluded;
+        var thisIsStopIncluded = this.isStopIncluded;
+
+        var outputData;
+        var isStartIncluded;
+        var isStopIncluded;
 
         if (otherStart.greaterThanOrEquals(thisStart) && thisStop.greaterThanOrEquals(otherStart)) {
 
-            isStartIncluded = (!otherStart.equals(thisStart) && other.isStartIncluded) || (thisIsStartIncluded && other.isStartIncluded);
+            isStartIncluded = (!otherStart.equals(thisStart) && otherIsStartIncluded) || (thisIsStartIncluded && otherIsStartIncluded);
 
-            isStopIncluded = thisIsStopIncluded && other.isStopIncluded;
+            isStopIncluded = thisIsStopIncluded && otherIsStopIncluded;
 
             outputData = typeof mergeCallback !== 'undefined' ? mergeCallback(this.data, other.data) : this.data;
 
             if (thisStop.greaterThanOrEquals(otherStop)) {
-                isStopIncluded = isStopIncluded || (!otherStop.equals(thisStop) && other.isStopIncluded);
+                isStopIncluded = isStopIncluded || (!otherStop.equals(thisStop) && otherIsStopIncluded);
                 return new TimeInterval(otherStart, otherStop, isStartIncluded, isStopIncluded, outputData);
             }
 
@@ -146,13 +156,13 @@ define([
 
         if (otherStart.lessThanOrEquals(thisStart) && thisStart.lessThanOrEquals(otherStop)) {
 
-            isStartIncluded = (otherStart.equals(thisStart) === false && thisIsStartIncluded) || (thisIsStartIncluded && other.isStartIncluded);
+            isStartIncluded = (otherStart.equals(thisStart) === false && thisIsStartIncluded) || (thisIsStartIncluded && otherIsStartIncluded);
 
-            isStopIncluded = thisIsStopIncluded && other.isStopIncluded;
+            isStopIncluded = thisIsStopIncluded && otherIsStopIncluded;
 
             outputData = typeof mergeCallback !== 'undefined' ? mergeCallback(this.data, other.data) : this.data;
             if (thisStop.greaterThanOrEquals(otherStop)) {
-                isStopIncluded = isStopIncluded || (otherStop.equals(thisStop) === false && other.isStopIncluded);
+                isStopIncluded = isStopIncluded || (otherStop.equals(thisStop) === false && otherIsStopIncluded);
                 return new TimeInterval(thisStart, otherStop, isStartIncluded, isStopIncluded, outputData);
             }
 
