@@ -189,6 +189,7 @@ define([
     DynamicProperty.prototype.getValue = function(time) {
         var thisValueType = this.valueType;
         var interval = this._intervals.findIntervalContainingDate(time);
+        var doublesPerValue = thisValueType.doublesPerValue;
 
         if (typeof interval !== 'undefined') {
             var intervalData = interval.data;
@@ -232,7 +233,9 @@ define([
 
                     var length = lastIndex - firstIndex + 1;
 
-                    var doublesPerInterpolationValue = thisValueType.doublesPerInterpolationValue, xTable = intervalData.xTable, yTable = intervalData.yTable;
+                    var doublesPerInterpolationValue = thisValueType.doublesPerInterpolationValue;
+                    var xTable = intervalData.xTable;
+                    var yTable = intervalData.yTable;
 
                     if (typeof xTable === 'undefined') {
                         xTable = intervalData.xTable = new Array(intervalData.numberOfPoints);
@@ -243,7 +246,20 @@ define([
                     for ( var i = 0; i < length; ++i) {
                         xTable[i] = times[lastIndex].getSecondsDifference(times[firstIndex + i]);
                     }
-                    thisValueType.packValuesForInterpolation(values, yTable, firstIndex, lastIndex);
+                    var packFunction = thisValueType.packValuesForInterpolation;
+                    if (typeof packFunction !== 'undefined') {
+                        packFunction(values, yTable, firstIndex, lastIndex);
+                    } else {
+                        var destinationIndex = 0;
+                        var sourceIndex = firstIndex * doublesPerValue;
+                        var stop = (lastIndex + 1) * doublesPerValue;
+
+                        while (sourceIndex < stop) {
+                            yTable[destinationIndex] = values[sourceIndex];
+                            sourceIndex++;
+                            destinationIndex++;
+                        }
+                    }
 
                     // Interpolate!
                     var x = times[lastIndex].getSecondsDifference(time);
@@ -252,7 +268,7 @@ define([
 
                     return thisValueType.createValueFromInterpolationResult(result, values, firstIndex, lastIndex);
                 }
-                return thisValueType.createValueFromArray(intervalData.values, index * thisValueType.doublesPerValue);
+                return thisValueType.createValueFromArray(intervalData.values, index * doublesPerValue);
             }
             return intervalData.values;
         }

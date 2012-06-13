@@ -53,13 +53,4 @@ defineSuite([
     it('createValueFromInterpolationResult', function() {
         expect(CzmlCartographic3.createValueFromInterpolationResult(constantCartographicInterval.cartographicRadians)).toEqual(cartographic1);
     });
-
-    it('packValuesForInterpolation', function() {
-        var sourceArray = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0];
-        var destinationArray = [];
-        var firstIndex = 1;
-        var lastIndex = 2;
-        CzmlCartographic3.packValuesForInterpolation(sourceArray, destinationArray, firstIndex, lastIndex);
-        expect(destinationArray).toEqualArray([0.4, 0.5, 0.6, 0.7, 0.8, 0.9]);
-    });
 });

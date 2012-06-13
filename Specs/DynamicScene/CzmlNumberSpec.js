@@ -33,13 +33,4 @@ defineSuite([
     it('createValueFromInterpolationResult', function() {
         expect(CzmlNumber.createValueFromInterpolationResult([simpleNumber])).toEqual(simpleNumber);
     });
-
-    it('packValuesForInterpolation', function() {
-        var sourceArray = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8];
-        var destinationArray = [];
-        var firstIndex = 3;
-        var lastIndex = 5;
-        CzmlNumber.packValuesForInterpolation(sourceArray, destinationArray, firstIndex, lastIndex);
-        expect(destinationArray).toEqualArray([0.4, 0.5, 0.6]);
-    });
 });

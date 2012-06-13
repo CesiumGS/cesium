@@ -50,13 +50,4 @@ defineSuite([
     it('createValueFromInterpolationResult', function() {
         expect(CzmlColor.createValueFromInterpolationResult(constantRgbafInterval.rgbaf)).toEqual(color1);
     });
-
-    it('packValuesForInterpolation', function() {
-        var sourceArray = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8];
-        var destinationArray = [];
-        var firstIndex = 0;
-        var lastIndex = 1;
-        CzmlColor.packValuesForInterpolation(sourceArray, destinationArray, firstIndex, lastIndex);
-        expect(destinationArray).toEqualArray(sourceArray);
-    });
 });

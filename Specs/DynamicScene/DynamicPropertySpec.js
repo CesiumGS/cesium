@@ -141,17 +141,18 @@ defineSuite([
         var iso8601Epoch = '2012-04-18T15:59:00Z';
         var epoch = JulianDate.fromIso8601(iso8601Epoch);
 
+        var reference = new Quaternion(1, 2, 3, 4, true);
         var property = new DynamicProperty(CzmlUnitQuaternion);
         var czmlInterval = {
-            quaternion : [0, 1, 2, 3]
+            unitQuaternion : [reference.x, reference.y, reference.z, reference.w]
         };
         property.addIntervals(czmlInterval);
 
         var result = property.getValue(epoch);
-        expect(result.x).toEqual(0);
-        expect(result.y).toEqual(1);
-        expect(result.z).toEqual(2);
-        expect(result.w).toEqual(3);
+        expect(result.x).toEqualEpsilon(reference.x, CesiumMath.EPSILON14);
+        expect(result.y).toEqualEpsilon(reference.y, CesiumMath.EPSILON14);
+        expect(result.z).toEqualEpsilon(reference.z, CesiumMath.EPSILON14);
+        expect(result.w).toEqualEpsilon(reference.w, CesiumMath.EPSILON14);
     });
 
     it('Works with Cartesian2 interpolatable values (specified linear interpolator).', function() {
@@ -161,7 +162,7 @@ defineSuite([
         var property = new DynamicProperty(CzmlCartesian2);
         var czmlInterval = {
             epoch : iso8601Epoch,
-            cartesian : [0, 0, 1, 10, 10, 11, 12, 21, 22],
+            cartesian2 : [0, 0, 1, 10, 10, 11, 12, 21, 22],
             interpolationAlgorithm : 'LINEAR',
             interpolationDegree : 1
         };
@@ -182,7 +183,7 @@ defineSuite([
 
         var property = new DynamicProperty(CzmlCartesian2);
         var czmlInterval = {
-            cartesian : [0, 1]
+            cartesian2 : [0, 1]
         };
         property.addIntervals(czmlInterval);
 
@@ -199,7 +200,7 @@ defineSuite([
 
         var czmlInterval = {
             epoch : iso8601Epoch,
-            quaternion : [0, 1, 0, 0, 0, 10, 0, 1, 0, 0],
+            unitQuaternion : [0, 1, 0, 0, 0, 10, 0, 1, 0, 0],
             interpolationAlgorithm : 'LINEAR',
             interpolationDegree : 1
         };
@@ -222,7 +223,7 @@ defineSuite([
         expect(result.w).toEqual(0);
     });
 
-    it('_mergeNewSamples works for sorted non-inersecting data.', function() {
+    it('_mergeNewSamples works for sorted non-intersecting data.', function() {
         var times = [];
         var values = [];
         var epoch = new JulianDate();
@@ -258,7 +259,7 @@ defineSuite([
         expect(values).toEqualArray(expectedValues);
     });
 
-    it('_mergeNewSamples works for unsorted inersecting data.', function() {
+    it('_mergeNewSamples works for unsorted intersecting data.', function() {
         var times = [];
         var values = [];
         var epoch = new JulianDate();

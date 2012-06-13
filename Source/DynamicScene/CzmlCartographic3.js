@@ -40,18 +40,6 @@ function(Cartographic3,
             return Array.isArray(unwrappedInterval) && unwrappedInterval.length > doublesPerValue;
         },
 
-        packValuesForInterpolation : function(sourceArray, destinationArray, firstIndex, lastIndex) {
-            var sourceIndex = firstIndex * doublesPerValue;
-            var destinationIndex = 0;
-            var stop = (lastIndex + 1) * doublesPerValue;
-
-            while (sourceIndex < stop) {
-                destinationArray[destinationIndex] = sourceArray[sourceIndex];
-                sourceIndex++;
-                destinationIndex++;
-            }
-        },
-
         createValue : function(unwrappedInterval) {
             return new Cartographic3(unwrappedInterval[0], unwrappedInterval[1], unwrappedInterval[2]);
         },

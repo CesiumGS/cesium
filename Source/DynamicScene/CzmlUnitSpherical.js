@@ -12,23 +12,11 @@ define([
         doublesPerInterpolationValue : doublesPerValue,
 
         unwrapInterval : function(czmlInterval) {
-            return czmlInterval.spherical || czmlInterval.unitSpherical;
+            return czmlInterval.unitSpherical;
         },
 
         isSampled : function(unwrappedInterval) {
             return Array.isArray(unwrappedInterval) && unwrappedInterval.length > doublesPerValue;
-        },
-
-        packValuesForInterpolation : function(sourceArray, destinationArray, firstIndex, lastIndex) {
-            var sourceIndex = firstIndex * doublesPerValue;
-            var destinationIndex = 0;
-            var stop = (lastIndex + 1) * doublesPerValue;
-
-            while (sourceIndex < stop) {
-                destinationArray[destinationIndex] = sourceArray[sourceIndex];
-                sourceIndex++;
-                destinationIndex++;
-            }
         },
 
         createValue : function(unwrappedInterval) {

@@ -19,15 +19,7 @@ defineSuite([
     /*global it,expect*/
 
     it('TODO', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection({
-            billboard : DynamicBillboard.processCzmlPacket,
-            label : DynamicLabel.processCzmlPacket,
-            orientation : DynamicObject.processCzmlPacketOrientation,
-            point : DynamicPoint.processCzmlPacket,
-            polyline : DynamicPolyline.processCzmlPacket,
-            position : DynamicObject.processCzmlPacketPosition,
-            vertexPositions : DynamicObject.processCzmlPacketVertexPositions
-        });
+        var dynamicObjectCollection = new DynamicObjectCollection();
 
         expect(typeof dynamicObjectCollection.getObject('TestFacility') === 'undefined').toBeTruthy();
 
@@ -38,14 +30,13 @@ defineSuite([
                 },
                 'horizontalOrigin' : 'CENTER',
                 'image' : 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAUSURBVBhXY2DABv5DAVwOQwBZFwAeQg/xcPKgjwAAAABJRU5ErkJgggAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==',
-                'rotation' : 0.0,
                 'scale' : 1.0,
                 'show' : [{
                     'interval' : '2012-04-28T16:00:00Z/2012-04-28T16:02:00Z',
                     'boolean' : true
                 }],
                 'pixelOffset' : {
-                    'cartesian' : [5.0, -4.0]
+                    'cartesian2' : [5.0, -4.0]
                 },
                 'verticalOrigin' : 'CENTER'
             }
@@ -64,8 +55,5 @@ defineSuite([
 
         var scale = testFacility.billboard.scale.getValue(new JulianDate());
         expect(scale).toEqual(1.0);
-
-        var rotation = testFacility.billboard.rotation.getValue(new JulianDate());
-        expect(rotation).toEqual(0.0);
     });
 });

@@ -7,7 +7,8 @@ defineSuite([
          'DynamicScene/DynamicBillboard',
          'DynamicScene/DynamicPoint',
          'DynamicScene/DynamicPolyline',
-         'DynamicScene/DynamicLabel'
+         'DynamicScene/DynamicLabel',
+         'Scene/HorizontalOrigin'
      ], function(
          CompositeDynamicObjectCollection,
          DynamicObjectCollection,
@@ -16,30 +17,21 @@ defineSuite([
          DynamicBillboard,
          DynamicPoint,
          DynamicPolyline,
-         DynamicLabel) {
+         DynamicLabel,
+         HorizontalOrigin) {
     "use strict";
     /*global it,expect*/
 
-    var updaters = {
-        billboard : DynamicBillboard.processCzmlPacket,
-        label : DynamicLabel.processCzmlPacket,
-        orientation : DynamicObject.processCzmlPacketOrientation,
-        point : DynamicPoint.processCzmlPacket,
-        polyline : DynamicPolyline.processCzmlPacket,
-        position : DynamicObject.processCzmlPacketPosition,
-        vertexPositions : DynamicObject.processCzmlPacketVertexPositions
-    };
-
     it('applyChanges works with Existing buffers', function() {
 
-        var dynamicObjectCollection1 = new DynamicObjectCollection(updaters);
-        var dynamicObjectCollection2 = new DynamicObjectCollection(updaters);
+        var dynamicObjectCollection1 = new DynamicObjectCollection();
+        var dynamicObjectCollection2 = new DynamicObjectCollection();
 
         var czml1 = {
             'id' : 'testBillboard',
             'billboard' : {
                 'show' : true,
-                'rotation' : 0.0,
+                'horizontalOrigin' : 'CENTER',
             }
         };
         dynamicObjectCollection1.processCzml(czml1);
@@ -53,9 +45,7 @@ defineSuite([
         };
         dynamicObjectCollection2.processCzml(czml2);
 
-        var mergeFuncs = [DynamicBillboard.mergeProperties];
-        var deleteFuncs = [DynamicBillboard.undefineProperties];
-        var compositeDynamicObjectCollection = new CompositeDynamicObjectCollection(mergeFuncs, deleteFuncs);
+        var compositeDynamicObjectCollection = new CompositeDynamicObjectCollection();
         compositeDynamicObjectCollection.addCollection(dynamicObjectCollection1);
         compositeDynamicObjectCollection.addCollection(dynamicObjectCollection2);
         compositeDynamicObjectCollection.applyChanges();
@@ -69,16 +59,14 @@ defineSuite([
 
         expect(object.billboard.show.getValue(new JulianDate())).toEqual(true);
         expect(object.billboard.scale.getValue(new JulianDate())).toEqual(3.0);
-        expect(object.billboard.rotation.getValue(new JulianDate())).toEqual(2.0);
+        expect(object.billboard.horizontalOrigin.getValue(new JulianDate())).toEqual(HorizontalOrigin.CENTER);
     });
 
     it('Data updates as underlying buffers update', function() {
-        var dynamicObjectCollection1 = new DynamicObjectCollection(updaters);
-        var dynamicObjectCollection2 = new DynamicObjectCollection(updaters);
+        var dynamicObjectCollection1 = new DynamicObjectCollection();
+        var dynamicObjectCollection2 = new DynamicObjectCollection();
 
-        var mergeFuncs = [DynamicBillboard.mergeProperties];
-        var deleteFuncs = [DynamicBillboard.undefineProperties];
-        var compositeDynamicObjectCollection = new CompositeDynamicObjectCollection(mergeFuncs, deleteFuncs);
+        var compositeDynamicObjectCollection = new CompositeDynamicObjectCollection();
         compositeDynamicObjectCollection.addCollection(dynamicObjectCollection1);
         compositeDynamicObjectCollection.addCollection(dynamicObjectCollection2);
         compositeDynamicObjectCollection.applyChanges();
@@ -87,7 +75,7 @@ defineSuite([
             'id' : 'testBillboard',
             'billboard' : {
                 'show' : true,
-                'rotation' : 0.0,
+                'horizontalOrigin' : 'CENTER',
             }
         };
         dynamicObjectCollection1.processCzml(czml1);
@@ -101,12 +89,12 @@ defineSuite([
 
         expect(object.billboard.show.getValue(new JulianDate())).toEqual(true);
         expect(object.billboard.scale).toEqual(undefined);
-        expect(object.billboard.rotation.getValue(new JulianDate())).toEqual(0.0);
+        expect(object.billboard.horizontalOrigin.getValue(new JulianDate())).toEqual(HorizontalOrigin.CENTER);
 
         var czml2 = {
             'id' : 'testBillboard',
             'billboard' : {
-                'rotation' : 2.0,
+                'horizontalOrigin' : 'TOP',
                 'scale' : 3.0,
             }
         };
@@ -121,6 +109,6 @@ defineSuite([
 
         expect(object.billboard.show.getValue(new JulianDate())).toEqual(true);
         expect(object.billboard.scale.getValue(new JulianDate())).toEqual(3.0);
-        expect(object.billboard.rotation.getValue(new JulianDate())).toEqual(2.0);
+        expect(object.billboard.horizontalOrigin.getValue(new JulianDate())).toEqual(HorizontalOrigin.TOP);
     });
 });
