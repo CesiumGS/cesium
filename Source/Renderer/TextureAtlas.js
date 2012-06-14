@@ -22,7 +22,8 @@ define([
     /**
      * A TextureAtlas stores multiple images in one large texture and keeps
      * track of the texture coordinates for each image. TextureAtlas is dynamic,
-     * meaning new images can be added at any point in time.
+     * meaning new images can be added at any point in time. For best performance
+     * and minimum atlas size, call addImages instead of multiple addImage in a row.
      *
      * @name TextureAtlas
      *
@@ -216,6 +217,7 @@ define([
 
     /**
      * Adds an image to the texture atlas. Can be called any number of times.
+     * Call addImages when adding multiple images at once.
      *
      * @memberof TextureAtlas
      *
@@ -230,31 +232,36 @@ define([
         }
 
         var node = this._addImageToNode(this._root, image);
+        var index = (typeof arguments[1] === 'undefined') ? this.getNumImages() : arguments[1];
 
         // Found a node that can hold the image.
         if (typeof node !== 'undefined'){
             // Set node's ID to show it contains an image
-            node.imageID = this.getNumImages();
+            node.imageID = index;
 
             // Add texture coordinates and write to texture
             var atlasSize = this._texture.getWidth();
-            this._textureCoordinates.push({
+            this._textureCoordinates[index] = {
+                // Lower left
                 x0: node.x0 / atlasSize,
-                x1: node.x1 / atlasSize,
                 y0: node.y0 / atlasSize,
+                // Upper right
+                x1: node.x1 / atlasSize,
                 y1: node.y1 / atlasSize
-            });
+            };
             this._texture.copyFrom(image, node.x0, node.y0);
         }
         // No node found, must resize the texture atlas.
         else {
             this._resizeAtlas(Math.max(image.height, image.width));
-            this.addImage(image);
+            this.addImage(image, index);
         }
     };
 
     /**
      * Adds an array of images to the texture atlas. Can be called any number of times.
+     * When adding multiple images to the atlas at once, addImages has better performance
+     * than multiple addImage.
      *
      * @memberof TextureAtlas
      *
@@ -269,10 +276,28 @@ define([
             throw new DeveloperError('images is required and must have length greater than zero.');
         }
 
-        // Add images to the texture atlas.
+        // Store images in containers that have index.
+        var i;
+        var annotatedImages = [];
         var numberOfImages = images.length;
-        for (var i = 0; i < numberOfImages; ++i) {
-            this.addImage(images[i]);
+        var oldNumberOfImages = this.getNumImages();
+        for (i = 0; i < numberOfImages; ++i) {
+            annotatedImages.push({
+                image : images[i],
+                index : i + oldNumberOfImages
+            });
+        }
+
+        // Sort images by maximum to minimum side length.
+        annotatedImages.sort(function(left, right) {
+            return Math.max(right.image.height, right.image.width) -
+                   Math.max(left.image.height, left.image.width);
+        });
+
+        // Add images to the texture atlas.
+        for (i = 0; i < numberOfImages; ++i) {
+            var annotatedImage = annotatedImages[i];
+            this.addImage(annotatedImage.image, annotatedImage.index);
         }
     };
 
@@ -304,7 +329,6 @@ define([
                 // Lower Left
                 x0 : baseRegion.x0 + (thisRegion.x / atlasSize),
                 y0 : baseRegion.y1 - ((thisRegion.y + thisRegion.height) / atlasSize),
-
                 // Upper Right
                 x1 : baseRegion.x0 + ((thisRegion.x + thisRegion.width) / atlasSize),
                 y1 : baseRegion.y1 - (thisRegion.y / atlasSize)

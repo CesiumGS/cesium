@@ -21,6 +21,7 @@ defineSuite([
     var greenImage;
     var tallGreenImage;
     var blueImage;
+    var bigRedImage;
 
     beforeEach(function() {
         context = createContext();
@@ -41,8 +42,11 @@ defineSuite([
         blueImage = new Image();
         blueImage.src = './Data/Images/Blue.png';
 
+        bigRedImage = new Image();
+        bigRedImage.src = './Data/Images/Red16x16.png';
+
         waitsFor(function() {
-            return greenImage.complete && tallGreenImage.complete && blueImage.complete;
+            return greenImage.complete && tallGreenImage.complete && blueImage.complete && bigRedImage.complete;
         }, 'Load .png file(s) for texture atlas test.', 3000);
     });
 
@@ -98,9 +102,9 @@ defineSuite([
 
         expect(coordinates.length).toEqual(1.0);
         expect(coordinates[0].x0).toEqual(0.0);
-        expect(coordinates[0].y0).toEqual(0.5);
+        expect(coordinates[0].y0).toEqual(0.0);
         expect(coordinates[0].x1).toEqual(0.5);
-        expect(coordinates[0].y1).toEqual(1.0);
+        expect(coordinates[0].y1).toEqual(0.5);
     });
 
     it('renders a single image atlas', function() {
@@ -129,14 +133,14 @@ defineSuite([
 
         expect(coordinates.length).toEqual(2);
         expect(coordinates[0].x0).toEqual(0.0);
-        expect(coordinates[0].y0).toEqual(0.75);
+        expect(coordinates[0].y0).toEqual(0.0);
         expect(coordinates[0].x1).toEqual(0.25);
-        expect(coordinates[0].y1).toEqual(1.0);
+        expect(coordinates[0].y1).toEqual(0.25);
 
         expect(coordinates[1].x0).toEqual(0.25);
-        expect(coordinates[1].y0).toEqual(0.75);
+        expect(coordinates[1].y0).toEqual(0.0);
         expect(coordinates[1].x1).toEqual(0.5);
-        expect(coordinates[1].y1).toEqual(1.0);
+        expect(coordinates[1].y1).toEqual(0.25);
     });
 
     it('renders a two image atlas', function() {
@@ -204,8 +208,15 @@ defineSuite([
         expect(texture.getHeight()).toEqual(atlasSize);
 
         expect(coordinates.length).toEqual(2);
-        expect(coordinates[0].x0).toEqual(coordinates[1].x0);
-        expect(coordinates[1].y0).toBeLessThan(coordinates[0].y0);
+        expect(coordinates[0].x0).toEqual(0.0);
+        expect(coordinates[0].x1).toEqual(0.1);
+        expect(coordinates[0].y0).toEqual(0.4);
+        expect(coordinates[0].y1).toEqual(0.5);
+
+        expect(coordinates[1].x0).toEqual(0.0);
+        expect(coordinates[1].x1).toEqual(0.1);
+        expect(coordinates[1].y0).toEqual(0.0);
+        expect(coordinates[1].y1).toEqual(0.4);
     });
 
     it('renders an atlas with different image heights', function() {
@@ -232,11 +243,11 @@ defineSuite([
     });
 
     it('creates an atlas that adds images at different points in time', function() {
-        var images = [greenImage];
-        atlas = new TextureAtlas(context, images, PixelFormat.RGBA, 0, 2);
-        atlas.addImages([blueImage]);
-        atlas.addImages([greenImage]);
-        atlas.addImages([blueImage]);
+        var images = [greenImage, blueImage];
+        atlas = new TextureAtlas(context, [images[0]], PixelFormat.RGBA, 0, 2);
+        atlas.addImage(images[1]);
+        atlas.addImage(images[0]);
+        atlas.addImage(images[1]);
 
         var texture = atlas.getTexture();
         var coordinates = atlas.getTextureCoordinates();
@@ -248,42 +259,42 @@ defineSuite([
         expect(coordinates.length).toEqual(4);
 
         //  ---------
-        //  |G1 |B1 |
-        //  ---------
         //  |G2 |B2 |
+        //  ---------
+        //  |G1 |B1 |
         //  ---------
 
         // first green image
         expect(coordinates[0].x0).toEqual(0.0);
-        expect(coordinates[0].y0).toEqual(0.5);
+        expect(coordinates[0].y0).toEqual(0.0);
         expect(coordinates[0].x1).toEqual(0.5);
-        expect(coordinates[0].y1).toEqual(1.0);
+        expect(coordinates[0].y1).toEqual(0.5);
 
         // first blue image
         expect(coordinates[1].x0).toEqual(0.5);
-        expect(coordinates[1].y0).toEqual(0.5);
+        expect(coordinates[1].y0).toEqual(0.0);
         expect(coordinates[1].x1).toEqual(1.0);
-        expect(coordinates[1].y1).toEqual(1.0);
+        expect(coordinates[1].y1).toEqual(0.5);
 
         // second green image
         expect(coordinates[2].x0).toEqual(0.0);
-        expect(coordinates[2].y0).toEqual(0.0);
+        expect(coordinates[2].y0).toEqual(0.5);
         expect(coordinates[2].x1).toEqual(0.5);
-        expect(coordinates[2].y1).toEqual(0.5);
+        expect(coordinates[2].y1).toEqual(1.0);
 
         // second blue image
         expect(coordinates[3].x0).toEqual(0.5);
-        expect(coordinates[3].y0).toEqual(0.0);
+        expect(coordinates[3].y0).toEqual(0.5);
         expect(coordinates[3].x1).toEqual(1.0);
-        expect(coordinates[3].y1).toEqual(0.5);
+        expect(coordinates[3].y1).toEqual(1.0);
     });
 
     it('renders an atlas that adds images at different points in time', function() {
-        var images = [greenImage];
-        atlas = new TextureAtlas(context, images, PixelFormat.RGBA, 0, 2);
-        atlas.addImages([blueImage]);
-        atlas.addImages([greenImage]);
-        atlas.addImages([blueImage]);
+        var images = [greenImage, blueImage];
+        atlas = new TextureAtlas(context, [images[0]], PixelFormat.RGBA, 0, 2);
+        atlas.addImage(images[1]);
+        atlas.addImage(images[0]);
+        atlas.addImage(images[1]);
 
         var texture = atlas.getTexture();
         var firstGreenCoords = atlas.getTextureCoordinates()[0];
@@ -313,10 +324,9 @@ defineSuite([
     });
 
     it('creates an atlas that dynamically resizes', function() {
-
         //Add the blue image
-        var images = [blueImage];
-        atlas = new TextureAtlas(context, images, PixelFormat.RGBA, 0, 2);
+        var images = [blueImage, tallGreenImage];
+        atlas = new TextureAtlas(context, [images[0]], PixelFormat.RGBA, 0, 2);
 
         var texture = atlas.getTexture();
         var coordinates = atlas.getTextureCoordinates();
@@ -328,39 +338,38 @@ defineSuite([
 
         // blue image
         expect(coordinates[0].x0).toEqual(0.0);
-        expect(coordinates[0].y0).toEqual(0.5);
+        expect(coordinates[0].y0).toEqual(0.0);
         expect(coordinates[0].x1).toEqual(0.5);
-        expect(coordinates[0].y1).toEqual(1.0);
+        expect(coordinates[0].y1).toEqual(0.5);
 
         //Add the tall green image
-        atlas.addImages([tallGreenImage]);
+        atlas.addImage(images[1]);
         texture = atlas.getTexture();
         coordinates = atlas.getTextureCoordinates();
-        atlasSize = 2.0 * Math.max(tallGreenImage.width + blueImage.width,
-                                   tallGreenImage.height + blueImage.height);
+        atlasSize = 2.0 * (atlasSize + tallGreenImage.height);
 
         expect(coordinates.length).toEqual(2);
         expect(texture.getWidth()).toEqual(atlasSize);
         expect(texture.getHeight()).toEqual(atlasSize);
 
         // blue image
-        expect(coordinates[0].x0).toEqual(0.0);
-        expect(coordinates[0].y0).toEqual(0.9);
-        expect(coordinates[0].x1).toEqual(0.1);
-        expect(coordinates[0].y1).toEqual(1.0);
+        expect(coordinates[0].x0).toEqual((0.0 / atlasSize));
+        expect(coordinates[0].y0).toEqual((0.0 / atlasSize));
+        expect(coordinates[0].x1).toEqual((1.0 / atlasSize));
+        expect(coordinates[0].y1).toEqual((1.0 / atlasSize));
 
         // tall green image
-        expect(coordinates[1].x0).toEqual(0.0);
-        expect(coordinates[1].y0).toEqual(0.5);
-        expect(coordinates[1].x1).toEqual(0.1);
-        expect(coordinates[1].y1).toEqual(0.9);
+        expect(coordinates[1].x0).toEqual((0.0 / atlasSize));
+        expect(coordinates[1].y0).toEqual((2.0 / atlasSize));
+        expect(coordinates[1].x1).toEqual((1.0 / atlasSize));
+        expect(coordinates[1].y1).toEqual((6.0 / atlasSize));
     });
 
     it('renders an atlas that dynamically resizes', function() {
 
         //Add the blue image
-        var images = [blueImage];
-        atlas = new TextureAtlas(context, images, PixelFormat.RGBA, 0, 2);
+        var images = [blueImage, tallGreenImage];
+        atlas = new TextureAtlas(context, [images[0]], PixelFormat.RGBA, 0, 2);
         var texture = atlas.getTexture();
         var blueCoordinates = atlas.getTextureCoordinates()[0];
 
@@ -371,7 +380,7 @@ defineSuite([
         }])).toEqualArray([0, 0, 255, 255]);
 
         //Add the tall green image
-        atlas.addImages([tallGreenImage]);
+        atlas.addImage(images[1]);
         texture = atlas.getTexture();
         blueCoordinates = atlas.getTextureCoordinates()[0];
         var tallGreenCoordinates = atlas.getTextureCoordinates()[1];
@@ -385,6 +394,69 @@ defineSuite([
             x : ((tallGreenCoordinates.x0 + tallGreenCoordinates.x1) / 2.0),
             y : ((tallGreenCoordinates.y0 + tallGreenCoordinates.y1) / 2.0)
         }])).toEqualArray([0, 255, 0, 255]);
+    });
+
+    it('creates an atlas that dynamically resizes twice', function() {
+        var images = [blueImage, tallGreenImage, bigRedImage];
+        atlas = new TextureAtlas(context, [images[0]], PixelFormat.RGBA, 0, 2);
+        atlas.addImage(images[1]);
+        atlas.addImage(images[2]);
+
+        var texture = atlas.getTexture();
+        var coordinates = atlas.getTextureCoordinates();
+
+        var atlasSize = 2.0 * blueImage.width; // 2
+        atlasSize = 2.0 * (atlasSize + tallGreenImage.height); // 12
+        atlasSize = 2.0 * (atlasSize + bigRedImage.height); // 56
+
+        expect(coordinates.length).toEqual(3);
+        expect(texture.getWidth()).toEqual(atlasSize);
+        expect(texture.getHeight()).toEqual(atlasSize);
+
+        // blue image
+        expect(coordinates[0].x0).toEqual((0.0 / atlasSize));
+        expect(coordinates[0].y0).toEqual((0.0 / atlasSize));
+        expect(coordinates[0].x1).toEqual((1.0 / atlasSize));
+        expect(coordinates[0].y1).toEqual((1.0 / atlasSize));
+
+        // tall green image
+        expect(coordinates[1].x0).toEqual((0.0 / atlasSize));
+        expect(coordinates[1].y0).toEqual((2.0 / atlasSize));
+        expect(coordinates[1].x1).toEqual((1.0 / atlasSize));
+        expect(coordinates[1].y1).toEqual((6.0 / atlasSize));
+
+        // big red image
+        expect(coordinates[2].x0).toEqual((0.0 / atlasSize));
+        expect(coordinates[2].y0).toEqual((12.0 / atlasSize));
+        expect(coordinates[2].x1).toEqual((16.0 / atlasSize));
+        expect(coordinates[2].y1).toEqual((28.0 / atlasSize));
+    });
+
+    it('renders an atlas that dynamically resizes twice', function() {
+        var images = [blueImage, tallGreenImage, bigRedImage];
+        atlas = new TextureAtlas(context, [images[0]], PixelFormat.RGBA, 0, 2);
+        atlas.addImage(images[1]);
+        atlas.addImage(images[2]);
+
+        var texture = atlas.getTexture();
+        var blueCoordinates = atlas.getTextureCoordinates()[0];
+        var tallGreenCoordinates = atlas.getTextureCoordinates()[1];
+        var bigRedCoordinates = atlas.getTextureCoordinates()[2];
+
+        expect(draw.apply(this, [texture, {
+            x : ((blueCoordinates.x0 + blueCoordinates.x1) / 2.0),
+            y : ((blueCoordinates.y0 + blueCoordinates.y1) / 2.0)
+        }])).toEqualArray([0, 0, 255, 255]);
+
+        expect(draw.apply(this, [texture, {
+            x : ((tallGreenCoordinates.x0 + tallGreenCoordinates.x1) / 2.0),
+            y : ((tallGreenCoordinates.y0 + tallGreenCoordinates.y1) / 2.0)
+        }])).toEqualArray([0, 255, 0, 255]);
+
+        expect(draw.apply(this, [texture, {
+            x : ((bigRedCoordinates.x0 + bigRedCoordinates.x1) / 2.0),
+            y : ((bigRedCoordinates.y0 + bigRedCoordinates.y1) / 2.0)
+        }])).toEqualArray([255, 0, 0, 255]);
     });
 
     it('throws without images', function() {
