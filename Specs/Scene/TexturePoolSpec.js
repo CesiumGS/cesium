@@ -1,9 +1,9 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/Texture2DPool',
+         'Scene/TexturePool',
          'Core/destroyObject'
      ], function(
-         Texture2DPool,
+         TexturePool,
          destroyObject) {
     "use strict";
     /*global jasmine,it,expect,beforeEach,afterEach*/
@@ -30,12 +30,12 @@ defineSuite([
             };
         });
 
-        pool = new Texture2DPool(fakeContext);
+        pool = new TexturePool(fakeContext);
     });
 
     it('throws when constructed without context', function() {
         expect(function() {
-            return new Texture2DPool();
+            return new TexturePool();
         }).toThrow();
     });
 

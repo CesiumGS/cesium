@@ -34,7 +34,7 @@ define([
         './Tile',
         './TileState',
         './SceneMode',
-        './Texture2DPool',
+        './TexturePool',
         './ViewportQuad',
         '../Shaders/CentralBodyVS',
         '../Shaders/CentralBodyFS',
@@ -83,7 +83,7 @@ define([
         Tile,
         TileState,
         SceneMode,
-        Texture2DPool,
+        TexturePool,
         ViewportQuad,
         CentralBodyVS,
         CentralBodyFS,
@@ -700,7 +700,7 @@ define([
     };
 
     CentralBody.prototype._createTextureCache = function(context) {
-        var pool = this._texturePool = new Texture2DPool(context);
+        var pool = this._texturePool = new TexturePool(context);
 
         var fetch = function(tile) {
             var texture = pool.createTexture2D({

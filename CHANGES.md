@@ -9,6 +9,7 @@ Beta Releases
 * Breaking changes:
     * Changed `Tipsify.tipsify` and `Tipsify.calculateACMR` to accept an object literal instead of three separate arguments. Supplying a maximum index and cache size is now optional.
     * `CentralBody` no longer requires a camera as the first parameter.
+    * `Texture2DPool` is renamed to `TexturePool`.
 * Added `CentralBody.northPoleColor` and `CentralBody.southPoleColor` to fill in the poles if they are not covered by a texture.
 * Added `Polygon.configureExtent` to create a polygon defined by west, south, east, and north values.
 * Added functions to `Camera` to provide position and directions in world coordinates.
