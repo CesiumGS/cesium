@@ -125,12 +125,16 @@ define([
             billboard.vizTextureAvailable = false;
             var that = this;
             this._textureAtlas.addTextureFromUrl(textureValue, function(imageIndex) {
-                //By the time the texture was loaded, the billboard might already be gone.
+                //By the time the texture was loaded, the billboard might already be
+                //gone or have been assigned a different texture.  Look it up again
+                //and check.
                 var currentIndex = dynamicObject.billboardVisualizerIndex;
                 if (typeof currentIndex !== 'undefined') {
                     var cbBillboard = that._billboardCollection.get(currentIndex);
-                    cbBillboard.vizTextureAvailable = true;
-                    cbBillboard.setImageIndex(imageIndex);
+                    if (cbBillboard.vizTexture === textureValue) {
+                        cbBillboard.vizTextureAvailable = true;
+                        cbBillboard.setImageIndex(imageIndex);
+                    }
                 }
             });
         }

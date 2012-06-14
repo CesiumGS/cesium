@@ -70,10 +70,6 @@ function(TextureAtlas,
             if (typeof pointVisualizerIndex !== 'undefined') {
                 billboard = this._billboardCollection.get(pointVisualizerIndex);
                 billboard.setShow(false);
-                billboard.point_color = undefined;
-                billboard.point_outlineColor = undefined;
-                billboard.point_outlineWidth = undefined;
-                billboard.point_pixelSize = undefined;
                 dynamicObject.pointVisualizerIndex = undefined;
                 this._unusedIndexes.push(pointVisualizerIndex);
             }
@@ -221,10 +217,6 @@ function(TextureAtlas,
             if (typeof pointVisualizerIndex !== 'undefined') {
                 var billboard = thisBillboardCollection.get(pointVisualizerIndex);
                 billboard.setShow(false);
-                billboard.point_color = undefined;
-                billboard.point_outlineColor = undefined;
-                billboard.point_outlineWidth = undefined;
-                billboard.point_pixelSize = undefined;
                 dynamicObject.pointVisualizerIndex = undefined;
                 thisUnusedIndexes.push(pointVisualizerIndex);
             }

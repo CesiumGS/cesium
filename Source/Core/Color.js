@@ -21,7 +21,7 @@ define(function() {
     };
 
     Color.floatToByte = function(number) {
-        return number === 1.0 ? 1.0 : (number * 256.0) | 0;
+        return number === 1.0 ? 255.0 : (number * 256.0) | 0;
     };
 
     Color.equals = function(lhs, rhs) {
