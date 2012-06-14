@@ -131,6 +131,7 @@ define([
         }
     };
 
+    //CZML_TODO: We can cache values here to speed up multiple calls
     DynamicDirectionsProperty.prototype.getValueSpherical = function(time) {
         var interval = this._propertyIntervals.findIntervalContainingDate(time);
         if (typeof interval === 'undefined') {

@@ -37,10 +37,25 @@ define([
         this.orientation = undefined;
         this.vertexPositions = undefined;
         this.availability = undefined;
+        this._cachedAvailabilityDate = undefined;
+        this._cachedAvailabilityValue = true;
     }
 
     DynamicObject.prototype.isAvailable = function(time) {
-        return typeof this.availability === 'undefined' || this.availability.contains(time);
+        if (typeof this.availability === 'undefined') {
+            return true;
+        }
+        if (this._cachedAvailabilityDate === time) {
+            return this._cachedAvailabilityValue;
+        }
+        this._cachedAvailabilityDate = time;
+        return this._cachedAvailabilityValue = this.availability.contains(time);
+    };
+
+    DynamicObject.prototype._setAvailability = function(availability) {
+        this.availability = availability;
+        this._cachedAvailabilityDate = undefined;
+        this._cachedAvailabilityValue = undefined;
     };
 
     DynamicObject.processCzmlPacketPosition = function(dynamicObject, packet, buffer, sourceUri) {
@@ -80,7 +95,7 @@ define([
         if (typeof availability !== 'undefined') {
             var interval = TimeInterval.fromIso8601(availability);
             if (typeof interval !== 'undefined') {
-                dynamicObject.availability = interval;
+                dynamicObject._setAvailability(interval);
             }
             return true;
         }
@@ -91,14 +106,14 @@ define([
         targetObject.position = targetObject.position || objectToMerge.position;
         targetObject.orientation = targetObject.orientation || objectToMerge.orientation;
         targetObject.vertexPositions = targetObject.vertexPositions || objectToMerge.vertexPositions;
-        targetObject.availability = targetObject.availability || objectToMerge.availability;
+        targetObject._setAvailability(targetObject.availability || objectToMerge.availability);
     };
 
     DynamicObject.undefineProperties = function(dynamicObject) {
         dynamicObject.position = undefined;
         dynamicObject.orientation = undefined;
         dynamicObject.vertexPositions = undefined;
-        dynamicObject.availability = undefined;
+        dynamicObject._setAvailability(undefined);
     };
 
     return DynamicObject;

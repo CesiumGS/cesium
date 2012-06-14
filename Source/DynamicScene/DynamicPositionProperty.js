@@ -21,7 +21,10 @@ define([
         this._dynamicProperties = [];
         this._propertyIntervals = new TimeIntervalCollection();
         this._potentialTypes = [CzmlCartesian3, CzmlCartographic3];
+        this._cachedTime = undefined;
         this._cachedInterval = undefined;
+        this._cachedCartesianValue = undefined;
+        this._cachedCartographicValue = undefined;
     }
 
     DynamicPositionProperty.processCzmlPacket = function(czmlIntervals, buffer, sourceUri, existingProperty) {
@@ -50,7 +53,10 @@ define([
     };
 
     DynamicPositionProperty.prototype.addInterval = function(czmlInterval, buffer, sourceUri) {
+        this._cachedTime = undefined;
         this._cachedInterval = undefined;
+        this._cachedCartesianValue = undefined;
+        this._cachedCartographicValue = undefined;
 
         var iso8601Interval = czmlInterval.interval, property, valueType, unwrappedInterval;
         if (typeof iso8601Interval === 'undefined') {
@@ -111,6 +117,10 @@ define([
         //CZML_TODO caching the last used interval here
         //gives an obvious performance boost, but we need
         //to further explore performance all around.
+        if (this._cachedTime === time) {
+            return this._cachedCartographicValue;
+        }
+        this._cachedTime = time;
         var interval = this._cachedInterval;
         if (typeof interval === 'undefined' || !interval.contains(time)) {
             interval = this._propertyIntervals.findIntervalContainingDate(time);
@@ -125,11 +135,15 @@ define([
         if (typeof result !== undefined) {
             result = property.valueType.convertToCartographic3(result);
         }
-        return result;
+        return this._cachedCartographicValue = result;
     };
 
     DynamicPositionProperty.prototype.getValueCartesian = function(time) {
         //CZML_TODO Same as getValueCartographic comment on caching.
+        if (this._cachedTime === time) {
+            return this._cachedCartesianValue;
+        }
+        this._cachedTime = time;
         var interval = this._cachedInterval;
         if (typeof interval === 'undefined' || !interval.contains(time)) {
             interval = this._propertyIntervals.findIntervalContainingDate(time);
@@ -144,7 +158,7 @@ define([
         if (typeof result !== undefined) {
             result = property.valueType.convertToCartesian3(result);
         }
-        return result;
+        return this._cachedCartesianValue = result;
     };
 
     return DynamicPositionProperty;

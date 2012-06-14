@@ -46,6 +46,8 @@ define([
     function DynamicProperty(valueType) {
         this.valueType = valueType;
         this._intervals = new TimeIntervalCollection();
+        this._cachedDate = undefined;
+        this._cachedValue = undefined;
         this._cachedInterval = undefined;
     }
 
@@ -143,6 +145,8 @@ define([
     DynamicProperty.prototype.addIntervalUnwrapped = function(start, stop, czmlInterval, unwrappedInterval, buffer) {
         var thisIntervals = this._intervals;
         var existingInterval = thisIntervals.findInterval(start, stop);
+        this._cachedDate = undefined;
+        this._cachedValue = undefined;
         this._cachedInterval = undefined;
 
         var intervalData;
@@ -165,7 +169,6 @@ define([
             var interpolationDegree = czmlInterval.interpolationDegree;
             if (interpolationAlgorithm && interpolationDegree) {
                 intervalData.interpolationDegree = interpolationDegree;
-                intervalData.numberOfPoints = interpolationAlgorithm.getRequiredDataPoints(interpolationDegree);
                 intervalData.xTable = undefined;
                 intervalData.yTable = undefined;
             }
@@ -180,6 +183,7 @@ define([
                 epoch = JulianDate.fromIso8601(epoch);
             }
             DynamicProperty._mergeNewSamples(epoch, intervalData.times, intervalData.values, unwrappedInterval, thisValueType.doublesPerValue, thisValueType);
+            intervalData.numberOfPoints = Math.min(interpolationAlgorithm.getRequiredDataPoints(intervalData.interpolationDegree), intervalData.times.length);
         } else {
             //Packet itself is a constant value
             intervalData.times = undefined;
@@ -192,6 +196,12 @@ define([
         //CZML_TODO caching the last used interval here
         //gives an obvious performance boost, but we need
         //to further explore performance all around.
+
+        if (this._cachedDate === time) {
+            return this._cachedValue;
+        }
+        this._cachedDate = time;
+
         var interval = this._cachedInterval;
         var thisValueType = this.valueType;
         var doublesPerValue = thisValueType.doublesPerValue;
@@ -199,7 +209,7 @@ define([
             interval = this._intervals.findIntervalContainingDate(time);
             this._cachedInterval = interval;
             if (typeof interval === 'undefined') {
-                return undefined;
+                return this._cachedValue = undefined;
             }
         }
 
@@ -274,14 +284,12 @@ define([
 
                 // Interpolate!
                 var x = times[lastIndex].getSecondsDifference(time);
-                var interpolationFunction = intervalData.interpolationAlgorithm.interpolateOrderZero;
-                var result = interpolationFunction(x, xTable, yTable, doublesPerInterpolationValue);
-
-                return thisValueType.createValueFromInterpolationResult(result, values, firstIndex, lastIndex);
+                var result = intervalData.interpolationAlgorithm.interpolateOrderZero(x, xTable, yTable, doublesPerInterpolationValue);
+                return this._cachedValue = thisValueType.createValueFromInterpolationResult(result, values, firstIndex, lastIndex);
             }
-            return thisValueType.createValueFromArray(intervalData.values, index * doublesPerValue);
+            return this._cachedValue = thisValueType.createValueFromArray(intervalData.values, index * doublesPerValue);
         }
-        return intervalData.values;
+        return this._cachedValue = intervalData.values;
     };
 
     return DynamicProperty;
