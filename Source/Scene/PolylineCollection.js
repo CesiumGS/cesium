@@ -54,8 +54,8 @@ define([
     var attributeIndices = {
         position3D : 0,
         color : 1,
-        outlineColor : 2,
-        position2D : 3,
+        position2D : 2,
+        outlineColor : 3,
         pickColor : 4
     };
 
@@ -100,7 +100,7 @@ define([
         this._polylinesToUpdate = [];
         this._polylinesRemoved = false;
         this._createVertexArray = false;
-        this.morphTime = 0.0;
+        this._morphTime = 0.0;
         this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
 
         /**
@@ -155,22 +155,22 @@ define([
 
         var drawUniformsOne = {
             u_morphTime : function() {
-                return that.morphTime;
+                return that._morphTime;
             }
         };
         var drawUniformsTwo = {
             u_morphTime : function() {
-                return that.morphTime;
+                return that._morphTime;
             }
         };
         var drawUniformsThree = {
             u_morphTime : function() {
-                return that.morphTime;
+                return that._morphTime;
             }
         };
         var pickUniforms = {
             u_morphTime : function(){
-                return that.morphTime;
+                return that._morphTime;
             }
         };
 
@@ -675,11 +675,10 @@ define([
                 componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                 usage : this._buffersUsage[COLOR_INDEX]
             }, {
-                index : attributeIndices.outlineColor,
-                componentsPerAttribute : 4,
-                normalize:true,
-                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                usage : this._buffersUsage[OUTLINE_COLOR_INDEX]
+                index : attributeIndices.position2D,
+                componentsPerAttribute : 3,
+                componentDatatype : ComponentDatatype.FLOAT,
+                usage : this._buffersUsage[POSITION_INDEX]
             }], sizeInVertices);
 
 
@@ -699,10 +698,14 @@ define([
     PolylineCollection.prototype._updateMode = function(sceneState) {
         var mode = sceneState.mode;
         var projection = sceneState.scene2D.projection;
-        this._syncMorphTime(mode);
 
-        if(this._mode !== mode){
+        if(this._mode !== mode ||
+          (this._projection !== projection) ||
+          (!this._modelMatrix.equals(this.modelMatrix))){
+            this._syncMorphTime(mode);
             this._mode = mode;
+            this._projection = projection;
+            this._modelMatrix = this.modelMatrix.clone();
             switch(mode){
                 case SceneMode.SCENE3D:
                     this._drawUniformsOne = this._drawUniformsOne3D;
@@ -711,46 +714,13 @@ define([
                     this._pickUniforms = this._pickUniforms3D;
                     break;
                 case SceneMode.SCENE2D:
-                    this._drawUniformsOne = this._drawUniformsOne2D;
-                    this._drawUniformsTwo = this._drawUniformsTwo2D;
-                    this._drawUniformsThree = this._drawUniformsThree2D;
-                    this._pickUniforms = this._pickUniforms2D;
-                    break;
                 case SceneMode.COLUMBUS_VIEW:
                     this._drawUniformsOne = this._drawUniformsOne2D;
                     this._drawUniformsTwo = this._drawUniformsTwo2D;
                     this._drawUniformsThree = this._drawUniformsThree2D;
                     this._pickUniforms = this._pickUniforms2D;
                     break;
-
             }
-        }
-        if(this._projection !== projection)
-        if ((this._projection !== projection) ||
-            (!this._modelMatrix.equals(this.modelMatrix))) {
-            this._projection = projection;
-            this._modelMatrix = this.modelMatrix.clone();
-
-        }
-        if (mode === SceneMode.MORPHING) {
-            /*polylines = this._polylines;
-            length = polylines.length;
-
-            for (i = 0; i < length; ++i) {
-                p = polylines[i];
-                var positions = p.getPositions();
-                var projectedPoint = projection.project(projection.getEllipsoid().toCartographic3s(positions));
-
-                b._setActualPosition({
-                    x : CesiumMath.lerp(projectedPoint.z, p.x, this.morphTime),
-                    y : CesiumMath.lerp(projectedPoint.x, p.y, this.morphTime),
-                    z : CesiumMath.lerp(projectedPoint.y, p.z, this.morphTime)
-                });
-            }*/
-        } else if (mode === SceneMode.SCENE2D) {
-            this._updateScene2D(projection, this._polylinesToUpdate);
-        } else if (mode === SceneMode.COLUMBUS_VIEW) {
-            this._updateColumbusView(projection, this._polylinesToUpdate);
         }
     };
 
@@ -775,7 +745,21 @@ define([
         for(var j = 0; j < length; ++j){
             vafWriters[attributeIndices.color](index + j, color.red * 255, color.green * 255, color.blue * 255, color.alpha * 255);
         }
+    };
 
+    PolylineCollection.prototype._write2D = function(context, vafWriters, polyline, index) {
+        var positions = polyline.getPositions();
+        //TODO not the right place, should be down in polyline during setPositions
+        // var segments = PolylinePipeline.wrapLongitude(projection.getEllipsoid(), positions);
+        var length = positions.length;
+        var modelMatrix = this._modelMatrix;
+        var ellipsoid = this._projection.getEllipsoid();
+        for(var j = 0; j < length; ++j){
+            var position = positions[j];
+            var p = modelMatrix.multiplyWithVector(new Cartesian4(position.x, position.y, position.z, 1.0));
+            p = this._projection.project(ellipsoid.toCartographic3(p.getXYZ()));
+            vafWriters[attributeIndices.position2D](index + j, p.x, p.y, p.z);
+        }
     };
 
     PolylineCollection.prototype._writePosition = function(context, vafWriters, polyline, index) {
@@ -790,6 +774,7 @@ define([
     PolylineCollection.prototype._writePolyline = function(context, vafWriters, polyline, index){
         this._writePosition(context, vafWriters, polyline, index);
         this._writeColor(context, vafWriters, polyline, index);
+        this._write2D(context, vafWriters, polyline, index);
     };
 
     PolylineCollection.prototype._clampWidth = function(context, value) {
@@ -801,16 +786,19 @@ define([
 
     PolylineCollection.prototype._syncMorphTime = function(mode) {
         switch (mode) {
-        case SceneMode.SCENE3D:
-            this.morphTime = 1.0;
-            break;
+            case SceneMode.SCENE3D:
+                this._morphTime = 1.0;
+                break;
 
-        case SceneMode.SCENE2D:
-        case SceneMode.COLUMBUS_VIEW:
-            this.morphTime = 0.0;
-            break;
-
-        // MORPHING - don't change it
+            case SceneMode.SCENE2D:
+            case SceneMode.COLUMBUS_VIEW:
+                this._morphTime = 0.0;
+                break;
+            case SceneMode.MORPHING:
+                if(typeof mode.morphTime !== 'undefined') {
+                    this._morphTime = mode.morphTime;
+                }
+                break;
         }
     };
 
