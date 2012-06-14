@@ -104,6 +104,7 @@ define([
      */
     function BillboardCollection() {
         this._textureAtlas = undefined;
+        this._textureAtlasCoordinatesSize = undefined;
         this._destroyTextureAtlas = true;
         this._sp = undefined;
         this._rs = undefined;
@@ -917,12 +918,16 @@ define([
         var length = billboards.length;
         var properties = this._propertiesChanged;
 
+
         var textureAtlasCoordinates = this._textureAtlas.getTextureCoordinates();
+        var textureAtlasChanged = this._textureAtlasCoordinatesSize !== textureAtlasCoordinates.length;
+        this._textureAtlasCoordinatesSize = textureAtlasCoordinates.length;
+
         var vafWriters;
 
         // PERFORMANCE_IDEA: Round robin multiple buffers.
 
-        if (this._createVertexArray || this.computeNewBuffersUsage()) {
+        if (textureAtlasChanged || this._createVertexArray || this.computeNewBuffersUsage()) {
             this._createVertexArray = false;
 
             this._vaf = this._vaf && this._vaf.destroy();
