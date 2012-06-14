@@ -10,13 +10,7 @@ define([
     "use strict";
 
     /**
-     *
-     * If useSpecularColor is TRUE, the specular
-     * color will come from the texture's RGB components and
-     * the specular intensity will come from the A component.
-     * If useSpecularColor is FALSE, the specular
-     * color will automatically be white and the specular
-     * intensity will come from a grayscale texture.
+     * Contains a grayscale texture as a specular map.
      * Specular intensity determines how strongly a pixel is affected by
      * a light source, where 0.0 is no specular and 1.0 is full specular.
      *
@@ -27,20 +21,9 @@ define([
         var t = template || {};
 
         /**
-         * 2D RGBA texture.
-         * When useSpecularColor is TRUE,
-         * RGB is the specular color and A is the
-         * specular intensity.
-         * When useSpecularColor is FALSE,
-         * the specular color is white and R is the
-         * specular intensity.
+         * 2D grayscale texture.
          */
         this.texture = t.texture;
-
-        /**
-         * Details about this value above.
-         */
-        this.useSpecularColor = t.useSpecularColor;
 
         /**
          * Number of texture repeats in the x direction.
@@ -63,9 +46,6 @@ define([
                     throw new DeveloperError("Specular map texture required.");
                 }
                 return that.texture;
-            },
-            u_useSpecularColor : function() {
-                return that.useSpecularColor;
             },
             u_repeat : function() {
                 return {

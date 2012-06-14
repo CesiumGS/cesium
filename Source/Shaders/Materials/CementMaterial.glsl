@@ -14,10 +14,3 @@ vec4 agi_getMaterialDiffuseComponent(MaterialHelperInput helperInput)
     color.w = 1.0;
     return color;
 }
-
-// x,y,z : specular color
-// w : specular intensity
-vec4 agi_getMaterialSpecularComponent(MaterialHelperInput helperInput)
-{
-    return vec4(0.0, 0.0, 0.0, 0.01);
-}

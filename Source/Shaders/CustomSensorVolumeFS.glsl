@@ -34,7 +34,7 @@ vec4 getColor(float sensorRadius, vec3 pointEC)
     
     vec3 normalComponent = agi_getMaterialNormalComponent(helperInput);
     vec4 diffuseComponent = agi_getMaterialDiffuseComponent(helperInput);
-    vec4 specularComponent = agi_getMaterialSpecularComponent(helperInput);
+    float specularComponent = agi_getMaterialSpecularComponent(helperInput);
     vec3 emissionComponent = agi_getMaterialEmissionComponent(helperInput);
     
     return agi_lightValuePhong(agi_sunDirectionEC, positionToEyeEC, normalComponent, diffuseComponent, specularComponent, emissionComponent);

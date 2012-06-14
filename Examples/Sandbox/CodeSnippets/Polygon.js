@@ -90,8 +90,8 @@
         this.code = function() {
             var polygon = new Cesium.Polygon(undefined);
             polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic2(-80.0, 30.0),
-                new Cesium.Cartographic2(-70.0, 30.0),
+                new Cesium.Cartographic2(-80.0, 27.0),
+                new Cesium.Cartographic2(-70.0, 27.0),
                 new Cesium.Cartographic2(-70.0, 36.0),
                 new Cesium.Cartographic2(-80.0, 36.0)
             ]));
@@ -111,7 +111,7 @@
                     })
                 });
             };
-            image.src = "../../Images/earthcloudmaptrans.jpg";
+            image.src = "../../Images/alpha_map.png";
 
             primitives.add(polygon);
         };
@@ -121,8 +121,8 @@
         this.code = function() {
             var polygon = new Cesium.Polygon(undefined);
             polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic2(-80.0, 30.0),
-                new Cesium.Cartographic2(-70.0, 30.0),
+                new Cesium.Cartographic2(-80.0, 27.0),
+                new Cesium.Cartographic2(-70.0, 27.0),
                 new Cesium.Cartographic2(-70.0, 36.0),
                 new Cesium.Cartographic2(-80.0, 36.0)
             ]));
@@ -138,12 +138,11 @@
                 polygon.material = new Cesium.SpecularMapMaterial({
                     texture : scene.getContext().createTexture2D({
                         source : image,
-                        pixelFormat : Cesium.PixelFormat.RGBA
-                    }),
-                    useSpecularColor : false
+                        pixelFormat : Cesium.PixelFormat.LUMINANCE
+                    })
                 });
             };
-            image.src = "../../Images/earthcloudmaptrans.jpg";
+            image.src = "../../Images/alpha_map.png";
 
             primitives.add(polygon);
         };

@@ -42,7 +42,7 @@ vec4 getOuterColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
     //Get different material values from material shader
     vec3 normalComponent = agi_getOuterMaterialNormalComponent(helperInput);
     vec4 diffuseComponent = agi_getOuterMaterialDiffuseComponent(helperInput);
-    vec4 specularComponent = agi_getOuterMaterialSpecularComponent(helperInput);
+    float specularComponent = agi_getOuterMaterialSpecularComponent(helperInput);
     vec3 emissionComponent = agi_getOuterMaterialEmissionComponent(helperInput);
     
     //Final
@@ -59,7 +59,7 @@ vec4 getInnerColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
     //Get different material values from material shader
     vec3 normalComponent = agi_getInnerMaterialNormalComponent(helperInput);
     vec4 diffuseComponent = agi_getInnerMaterialDiffuseComponent(helperInput);
-    vec4 specularComponent = agi_getInnerMaterialSpecularComponent(helperInput);
+    float specularComponent = agi_getInnerMaterialSpecularComponent(helperInput);
     vec3 emissionComponent = agi_getInnerMaterialEmissionComponent(helperInput);
     
     //Final
@@ -76,7 +76,7 @@ vec4 getCapColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
     //Get different material values from material shader
     vec3 normalComponent = agi_getCapMaterialNormalComponent(helperInput);
     vec4 diffuseComponent = agi_getCapMaterialDiffuseComponent(helperInput);
-    vec4 specularComponent = agi_getCapMaterialSpecularComponent(helperInput);
+    float specularComponent = agi_getCapMaterialSpecularComponent(helperInput);
     vec3 emissionComponent = agi_getCapMaterialEmissionComponent(helperInput);
     
     //Final
@@ -93,7 +93,7 @@ vec4 getSilhouetteColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
     //Get different material values from material shader
     vec3 normalComponent = agi_getSilhouetteMaterialNormalComponent(helperInput);
     vec4 diffuseComponent = agi_getSilhouetteMaterialDiffuseComponent(helperInput);
-    vec4 specularComponent = agi_getSilhouetteMaterialSpecularComponent(helperInput);
+    float specularComponent = agi_getSilhouetteMaterialSpecularComponent(helperInput);
     vec3 emissionComponent = agi_getSilhouetteMaterialEmissionComponent(helperInput);
     
     //Final

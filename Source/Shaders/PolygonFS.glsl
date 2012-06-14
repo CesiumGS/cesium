@@ -43,7 +43,7 @@ void main()
     //Get different material values from material shader
     vec3 normalComponent = agi_getMaterialNormalComponent(helperInput);
     vec4 diffuseComponent = agi_getMaterialDiffuseComponent(helperInput);
-    vec4 specularComponent = agi_getMaterialSpecularComponent(helperInput);
+    float specularComponent = agi_getMaterialSpecularComponent(helperInput);
     vec3 emissionComponent = agi_getMaterialEmissionComponent(helperInput);
 
     //Final

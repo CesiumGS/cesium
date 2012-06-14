@@ -37,7 +37,7 @@ define(function() {
          *      });
          *     var specularTexture = context.createTexture2D({
          *          source      : this.images["specular.jpg"],
-         *          pixelFormat : PixelFormat.RGB
+         *          pixelFormat : PixelFormat.LUMINANCE
          *      });
          *     // ...
          * });

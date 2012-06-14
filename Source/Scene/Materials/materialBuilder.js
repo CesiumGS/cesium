@@ -4,7 +4,7 @@ define(['../../Core/DeveloperError'], function(DeveloperError) {
 
     /**
      * A material file is made up of methods that return diffuse, specular,
-     * normal, emission, and other values. In the event that the material
+     * normal, emission, and other color values. In the event that the material
      * does not want specialized behavior for one of these values,
      * materialBuilder will insert a default method into the shader source.
      */
@@ -27,12 +27,10 @@ define(['../../Core/DeveloperError'], function(DeveloperError) {
         "{\n return vec4(0.2, 0.2, 0.2, 1.0); \n}\n",
 
         // Specular
-        // x,y,z : specular color
-        // w : specular intensity
         materialSpecularComponentHeader :
-        "vec4 agi_getMaterialSpecularComponent(MaterialHelperInput helperInput)",
+        "float agi_getMaterialSpecularComponent(MaterialHelperInput helperInput)",
         materialSpecularComponentBody :
-        "{\n return vec4(0.5, 0.5, 0.5, 0.05); \n}\n",
+        "{\n return 0.1; \n}\n",
 
         // Emission
         // x,y,z : emission color, in other words per-object ambient light
