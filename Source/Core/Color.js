@@ -10,10 +10,10 @@ define(function() {
      * @name Color
      */
     function Color(red, green, blue, alpha) {
-        this.red = red;
-        this.green = green;
-        this.blue = blue;
-        this.alpha = alpha;
+        this.red = typeof red === 'undefined' ? 1.0 : red;
+        this.green = typeof green === 'undefined' ? 1.0 : green;
+        this.blue = typeof blue === 'undefined' ? 1.0 : blue;
+        this.alpha = typeof alpha === 'undefined' ? 1.0 : alpha;
     }
 
     Color.byteToFloat = function(number) {
@@ -32,24 +32,18 @@ define(function() {
     };
 
     Color.equalsEpsilon = function(lhs, rhs, epsilon) {
-        return (Math.abs(lhs.red - rhs.red) < epsilon) &&
-               (Math.abs(lhs.green - rhs.green) < epsilon) &&
-               (Math.abs(lhs.blue - rhs.blue) < epsilon) &&
-               (Math.abs(lhs.alpha - rhs.alpha) < epsilon);
+        return (Math.abs(lhs.red - rhs.red) <= epsilon) &&
+               (Math.abs(lhs.green - rhs.green) <= epsilon) &&
+               (Math.abs(lhs.blue - rhs.blue) <= epsilon) &&
+               (Math.abs(lhs.alpha - rhs.alpha) <= epsilon);
     };
 
     Color.prototype.equals = function(other) {
-        return this.red === other.red &&
-               this.green === other.green &&
-               this.blue === other.blue &&
-               this.alpha === other.alpha;
+        return Color.equals(this, other);
     };
 
     Color.prototype.equalsEpsilon = function(other, epsilon) {
-        return (Math.abs(this.red - other.red) < epsilon) &&
-               (Math.abs(this.green - other.green) < epsilon) &&
-               (Math.abs(this.blue - other.blue) < epsilon) &&
-               (Math.abs(this.alpha - other.alpha) < epsilon);
+        return Color.equalsEpsilon(this, other, epsilon);
     };
 
     /**

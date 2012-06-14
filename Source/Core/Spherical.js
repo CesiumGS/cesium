@@ -34,7 +34,7 @@ define([
         return new Spherical(spherical.clock, spherical.cone, spherical.magnitude);
     };
 
-    Spherical.toCartesian = function(spherical) {
+    Spherical.toCartesian3 = function(spherical) {
         return Cartesian3.fromSpherical(spherical);
     };
 

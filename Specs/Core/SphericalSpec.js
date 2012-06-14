@@ -67,7 +67,7 @@ defineSuite([
         var sixtyDegrees = Math.PI / 3.0;
         var cartesian = new Cartesian3(1.0, Math.sqrt(3.0), -2.0);
         var spherical = new Spherical(sixtyDegrees, fortyFiveDegrees + Math.PI / 2.0, Math.sqrt(8.0));
-        expect(cartesian).toEqualEpsilon(Spherical.toCartesian(spherical), CesiumMath.EPSILON15);
+        expect(cartesian).toEqualEpsilon(Spherical.toCartesian3(spherical), CesiumMath.EPSILON15);
     });
 
     it('fromCartesian', function() {
