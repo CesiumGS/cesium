@@ -93,7 +93,7 @@ define([
      * @example
      * // Create a billboard collection with two billboards
      * var billboards = new BillboardCollection();
-     * var textureAtlas = new TextureAtlas(scene.getContext(), PixelFormat.RGBA, 1, 2, images);
+     * var textureAtlas = new TextureAtlas(scene.getContext(), images);
      * billboards.setTextureAtlas(atlas);
      * billboards.add({
      *   position : { x : 1.0, y : 2.0, z : 3.0 }
@@ -447,7 +447,7 @@ define([
      * // added to the collection.
      * var billboards = new BillboardCollection();
      * var images = [image0, image1];
-     * var textureAtlas = new TextureAtlas(scene.getContext(), PixelFormat.RGBA, 1, 2, images);
+     * var textureAtlas = new TextureAtlas(scene.getContext(), images);
      * billboards.setTextureAtlas(textureAtlas);
      * billboards.add({
      *   // ...

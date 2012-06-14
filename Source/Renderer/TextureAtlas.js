@@ -27,24 +27,30 @@ define([
      * @name TextureAtlas
      *
      * @param {Context} context The context that will be used to create the texture.
+     * @param {Array} images An array of {@link Image} to be added to the texture atlas.
      * @param {PixelFormat}[pixelFormat = PixelFormat.RGBA] Pixel format for the texture atlas.
      * @param {Number}[borderWidthInPixels = 1] Spacing in pixels between adjacent images.
      * @param {Number}[scalingFactor = 2] Amount of padding added to the texture atlas when the texture is rebuilt.
      * For example, if the texture atlas is constructed with an image of width and height 10 and scalingFactor of 2,
      * the final texture will be 20x20 with 75% of the atlas empty. Integer values only.
-     * @param {Array} images An array of {@link Image} to be added to the texture atlas.
      *
      * @internalConstructor
      *
      * @exception {DeveloperError} context is required.
+     * @exception {DeveloperError} images is required and must have length greater than zero.
      * @exception {DeveloperError} borderWidthInPixels must be greater than or equal to zero.
      * @exception {DeveloperError} scalingFactor must be greater than or equal to one.
      */
-    function TextureAtlas(context, pixelFormat, borderWidthInPixels, scalingFactor, images) {
+    function TextureAtlas(context, images, pixelFormat, borderWidthInPixels, scalingFactor) {
 
         // Context
         if (typeof context === 'undefined') {
             throw new DeveloperError('context is required.');
+        }
+
+        // Images
+        if (typeof images === 'undefined' || (images.length < 1)) {
+            throw new DeveloperError('images is required and must have length greater than zero.');
         }
 
         // Pixel Format
@@ -159,7 +165,7 @@ define([
     // Inspired by: http://blackpawn.com/texts/lightmaps/default.html
     TextureAtlas.prototype._addImageToNode = function (node, image) {
 
-        //If node is not defined, return.
+        // If node is not defined, return.
         if (typeof node === 'undefined') {
             return;
         }

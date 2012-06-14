@@ -43,7 +43,7 @@ defineSuite([
     var whiteImage;
 
     function createTextureAtlas(images) {
-        var atlas = new TextureAtlas(context, PixelFormat.RGBA, 1, 1, images);
+        var atlas = new TextureAtlas(context, images, PixelFormat.RGBA, 1, 1);
 
         // ANGLE Workaround
         atlas.getTexture().setSampler(context.createSampler({
