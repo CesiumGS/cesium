@@ -201,6 +201,28 @@ define([
         return Cartesian3.ZERO;
     };
 
+    Cartesian3.magnitudeSquared = function(cartesian3) {
+        return cartesian3.x * cartesian3.x + cartesian3.y * cartesian3.y + cartesian3.z * cartesian3.z;
+    };
+
+    Cartesian3.magnitude = function(cartesian3) {
+        return Math.sqrt(Cartesian3.magnitudeSquared(cartesian3));
+    };
+
+    Cartesian3.normalize = function(cartesian3) {
+        var magnitude = Cartesian3.magnitude(cartesian3);
+        if (magnitude > 0) {
+            cartesian3.x = cartesian3.x / magnitude;
+            cartesian3.y = cartesian3.y / magnitude;
+            cartesian3.z = cartesian3.z / magnitude;
+        } else {
+            cartesian3.x = 0;
+            cartesian3.y = 0;
+            cartesian3.z = 0;
+        }
+        return cartesian3;
+    };
+
     /**
      * Returns the cross (outer) product of two Cartesians.
      *

@@ -22,11 +22,10 @@ define([
      * @param {Number} y The y-component of the Quaternion.
      * @param {Number} z The z-component of the Quaternion.
      * @param {Number} w The w-component of the Quaternion.
-     * @param {Boolean} [normalize=false] True if you would like the Quaternion to be normalized;
      *
      * @see Matrix3
      */
-    function Quaternion(x, y, z, w, normalize) {
+    function Quaternion(x, y, z, w) {
 
         /**
          * The x coordinate.
@@ -71,14 +70,6 @@ define([
          * @see Quaternion.z
          */
         this.w = (typeof w !== 'undefined') ? w : 0.0;
-
-        if (normalize) {
-            var inverseMagnitude = 1.0 / this.norm();
-            this.x *= inverseMagnitude;
-            this.y *= inverseMagnitude;
-            this.z *= inverseMagnitude;
-            this.w *= inverseMagnitude;
-        }
     }
 
     /**
@@ -89,6 +80,71 @@ define([
      */
     Quaternion.clone = function(quaternion) {
         return new Quaternion(quaternion.x, quaternion.y, quaternion.z, quaternion.w);
+    };
+
+    /**
+     * Modifies the provided quaternion to be its conjugate.
+     *
+     * @param The quaternion to conjugate.
+     *
+     * @returns The same instance that is passed into it, modified to be its conjugate.
+     *
+     * @memberof Quaternion
+     *
+     */
+    Quaternion.conjugate = function(quaternion) {
+        quaternion.x = -quaternion.x;
+        quaternion.y = -quaternion.y;
+        quaternion.z = -quaternion.z;
+        return quaternion;
+    };
+
+    /**
+     * Returns the quaternion's norm squared.
+     *
+     * @memberof Quaternion
+     *
+     * @param The quaternion to use.
+     *
+     * @return {Number} The norm squared.
+     *
+     * @see Quaternion#norm
+     */
+    Quaternion.normSquared = function(quaternion) {
+        return quaternion.x * quaternion.x + quaternion.y * quaternion.y + quaternion.z * quaternion.z + quaternion.w * quaternion.w;
+    };
+
+    /**
+     * Returns the quaternion's norm.
+     *
+     * @memberof Quaternion
+     *
+     * @param The quaternion to use.
+     *
+     * @return {Number} The norm.
+     *
+     * @see Quaternion#normSquared
+     */
+    Quaternion.norm = function(quaternion) {
+        return Math.sqrt(Quaternion.normSquared(quaternion));
+    };
+
+    /**
+     * Modifies the provided quaternion to be normalized.
+     *
+     * @memberof Quaternion
+     *
+     * @param The quaternion to use.
+     *
+     * @returns {Quaternion} The same instance as the provided quaternion in its normalized form.
+     */
+    Quaternion.normalize = function(quaternion) {
+        var inverseMagnitude = 1.0 / Quaternion.norm(quaternion);
+        quaternion.x *= inverseMagnitude;
+        quaternion.y *= inverseMagnitude;
+        quaternion.z *= inverseMagnitude;
+        quaternion.w *= inverseMagnitude;
+        return quaternion;
     };
 
     /**
@@ -237,11 +293,37 @@ define([
      * @see Quaternion#dot
      */
     Quaternion.prototype.multiply = function(other) {
-        return new Quaternion(
-                this.y * other.z - this.z * other.y + this.x * other.w + this.w * other.x,
-                this.z * other.x - this.x * other.z + this.y * other.w + this.w * other.y,
-                this.x * other.y - this.y * other.x + this.z * other.w + this.w * other.z,
-                this.w * other.w - this.x * other.x - this.y * other.y - this.z * other.z);
+        return Quaternion.multiply(this, other, new Quaternion());
+    };
+
+    /**
+     * Given three parameters, computes the the product of the first two quaternions,
+     * and stores the result in the third.  It also returns the third parameter.
+     *
+     * @memberof Quaternion
+     *
+     * @param {Quaternion} other The quaternion to multiply with <code>this</code>.
+     *
+     * @return {Quaternion} The product two quaternions, <code>this</code> and <code>other</code>.
+     *
+     * @see Quaternion#dot
+     */
+    Quaternion.multiply = function(lhs, rhs, result) {
+        var lhsX = lhs.x;
+        var lhsY = lhs.y;
+        var lhsZ = lhs.z;
+        var lhsW = lhs.w;
+
+        var rhsX = rhs.x;
+        var rhsY = rhs.y;
+        var rhsZ = rhs.z;
+        var rhsW = rhs.w;
+
+        result.x = lhsY * rhsZ - lhsZ * rhsY + lhsX * rhsW + lhsW * rhsX;
+        result.y = lhsZ * rhsX - lhsX * rhsZ + lhsY * rhsW + lhsW * rhsY;
+        result.z = lhsX * rhsY - lhsY * rhsX + lhsZ * rhsW + lhsW * rhsZ;
+        result.w = lhsW * rhsW - lhsX * rhsX - lhsY * rhsY - lhsZ * rhsZ;
+        return result;
     };
 
     /**
@@ -306,6 +388,21 @@ define([
 
         var scalar = 1.0 / Math.sqrt(1.0 - (this.w * this.w));
         return new Cartesian3(this.x * scalar, this.y * scalar, this.z * scalar);
+    };
+
+    Quaternion.getAxis = function(quaternion, cartesian3) {
+        if (Math.abs(quaternion.w - 1.0) < CesiumMath.EPSILON6) {
+            cartesian3.x = 0;
+            cartesian3.y = 0;
+            cartesian3.z = 0;
+            return cartesian3;
+        }
+
+        var scalar = 1.0 / Math.sqrt(1.0 - (quaternion.w * quaternion.w));
+        cartesian3.x = quaternion.x * scalar;
+        cartesian3.y = quaternion.y * scalar;
+        cartesian3.z = quaternion.z * scalar;
+        return cartesian3;
     };
 
     /**
@@ -516,12 +613,10 @@ define([
      * @see Matrix3.fromAxisAngle
      */
     Quaternion.fromAxisAngle = function(axis, angle) {
-        var a = Cartesian3.clone(axis);
         var halfAngle = angle / 2.0;
         var s = Math.sin(halfAngle);
         var c = Math.cos(halfAngle);
-        var nAxis = a.normalize();
-
+        var nAxis = axis.magnitude() === 1.0 ? axis : axis.normalize();
         return new Quaternion(nAxis.x * s, nAxis.y * s, nAxis.z * s, c);
     };
 
