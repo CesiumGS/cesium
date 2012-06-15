@@ -160,7 +160,7 @@ define([
         if (typeof value === 'undefined' || value.length < 2) {
             throw new DeveloperError('value must be an array with more than one element.', 'value');
         }
-        this._changeToLinesPositions(value);
+        this._positions = value;
         this._makeDirty(POSITION_INDEX);
     };
 
@@ -326,20 +326,6 @@ define([
 
     Polyline.prototype._getCollection = function(){
         return this._collection;
-    };
-
-    Polyline.prototype._changeToLinesPositions = function(value){
-        var length = value.length;
-        if(length === 2){
-            this._positions = value;
-        }else if(length > 2){
-            this._positions.push(value[0]);
-            this._positions.push(value[1]);
-            for(var i = 1; i < length - 1; i++){
-                this._positions.push(value[i]);
-                this._positions.push(value[i+1]);
-            }
-        }
     };
 
     Polyline.prototype._makeDirty = function(propertyChanged) {
