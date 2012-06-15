@@ -13,20 +13,24 @@ require({
     var primitives = scene.getPrimitives();
 
     var cb = new Cesium.CentralBody(ellipsoid);
-    cb.getImageLayers().add(new Cesium.ImageryLayer(cb, new Cesium.BingMapsTileProvider({
+
+    var aerial = new Cesium.ImageryLayer(cb, new Cesium.BingMapsTileProvider({
         server : 'dev.virtualearth.net',
         mapStyle : Cesium.BingMapsStyle.AERIAL,
         // Some versions of Safari support WebGL, but don't correctly implement
         // cross-origin image loading, so we need to load Bing imagery using a proxy.
         proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
-    })));
-    cb.getImageLayers().add(new Cesium.ImageryLayer(cb, new Cesium.BingMapsTileProvider({
+    }));
+    cb.getImageLayers().add(aerial);
+
+    var road = new Cesium.ImageryLayer(cb, new Cesium.BingMapsTileProvider({
         server : 'dev.virtualearth.net',
         mapStyle : Cesium.BingMapsStyle.ROAD,
         // Some versions of Safari support WebGL, but don't correctly implement
         // cross-origin image loading, so we need to load Bing imagery using a proxy.
         proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
-    })));
+    }));
+    cb.getImageLayers().add(road);
     cb.nightImageSource = '../../Images/land_ocean_ice_lights_2048.jpg';
     cb.specularMapSource = '../../Images/earthspec1k.jpg';
     if (scene.getContext().getMaximumTextureSize() > 2048) {
@@ -62,17 +66,15 @@ require({
     ///////////////////////////////////////////////////////////////////////////
     // Example keyboard and Mouse handlers
 
-    var handler = new Cesium.EventHandler(canvas);
+    var handler = new Cesium.EventHandler();
 
     handler.setKeyAction(function() {
-        /* ... */
-        // Handler for key press
+        cb.getImageLayers().raise(aerial);
     }, '1');
 
-    handler.setMouseAction(function(movement) {
-        /* ... */
-        // Use movement.startX, movement.startY, movement.endX, movement.endY
-    }, Cesium.MouseEventType.MOVE);
+    handler.setKeyAction(function() {
+        cb.getImageLayers().lower(aerial);
+    }, '2');
 
     canvas.oncontextmenu = function() {
         return false;

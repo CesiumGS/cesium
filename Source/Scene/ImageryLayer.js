@@ -1,8 +1,9 @@
 /*global define*/
 define([
-        '../Core/DeveloperError',
         '../Core/combine',
+        '../Core/defaultValue',
         '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Core/Math',
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
@@ -29,9 +30,10 @@ define([
         './Projections',
         './SceneMode'
     ], function(
-        DeveloperError,
         combine,
+        defaultValue,
         destroyObject,
+        DeveloperError,
         CesiumMath,
         BoundingSphere,
         Cartesian2,
@@ -59,6 +61,83 @@ define([
         SceneMode) {
     "use strict";
 
+    function TileLoadList() {
+        this._head = undefined;
+        this._tail = undefined;
+    }
+
+    TileLoadList.prototype.append = function(item) {
+        if (typeof this._head === 'undefined') {
+            item._previous = undefined;
+            item._next = undefined;
+            this._head = item;
+            this._tail = item;
+        } else {
+            item._previous = this._tail;
+            item._next = undefined;
+            this._tail._next = item;
+            this._tail = item;
+        }
+    };
+
+    TileLoadList.prototype.remove = function(item) {
+        var previous = item._previous;
+        var next = item._next;
+
+        if (item === this._head) {
+            this._head = next;
+        } else {
+            previous._next = next;
+        }
+
+        if (item === this._tail) {
+            this._tail = previous;
+        } else {
+            next._previous = previous;
+        }
+
+        item._previous = undefined;
+        item._next = undefined;
+    };
+
+    TileLoadList.prototype.insertBefore = function(insertionPoint, item) {
+        if (insertionPoint === item) {
+            return;
+        }
+
+        if (typeof this._head === 'undefined') {
+            // no other tiles in the list
+            item._previous = undefined;
+            item._next = undefined;
+            this._head = item;
+            this._tail = item;
+            return;
+        }
+
+        if (typeof item._previous !== 'undefined' || typeof item._next !== 'undefined') {
+            // tile already in the list, remove from its current location
+            this.remove(item);
+        }
+
+        if (typeof insertionPoint === 'undefined') {
+            this.append(item);
+            return;
+        }
+
+        var insertAfter = insertionPoint._previous;
+        item._previous = insertAfter;
+        if (typeof insertAfter !== 'undefined') {
+            insertAfter._next = item;
+        }
+
+        item._next = insertionPoint;
+        insertionPoint._previous = item;
+
+        if (insertionPoint === this._head) {
+            this._head = item;
+        }
+    };
+
     /**
      * An imagery layer that display tiled image data from a single tile provider
      * on a central body.
@@ -69,29 +148,27 @@ define([
         this._centralBody = centralBody;
         this._tileProvider = tileProvider;
 
-        if (typeof description === 'undefined') {
-            description = {};
-        }
+        description = defaultValue(description, {});
 
-        this._maxExtent = description.maxExtent;
+        var maxExtent = defaultValue(description.maxExtent, tileProvider.maxExtent);
+        maxExtent = defaultValue(maxExtent, Extent.MAX_VALUE);
 
-        if (typeof this._maxExtent === 'undefined') {
-            this._maxExtent = tileProvider.maxExtent;
-        }
+        this._maxExtent = maxExtent;
 
-        if (typeof this._maxExtent === 'undefined') {
-            this._maxExtent = new Extent(-CesiumMath.PI, -CesiumMath.PI_OVER_TWO, CesiumMath.PI, CesiumMath.PI_OVER_TWO);
-        }
-
-        this._rootTile = new Tile({
-            extent : this._maxExtent,
+        var rootTile = this._rootTile = new Tile({
+            extent : maxExtent,
             zoom : 0,
             ellipsoid : centralBody.getEllipsoid()
         });
 
-        this._tileStack = [];
-        this._tileLoadQueue = new Queue();
-        this._tileRenderList = [];
+        // reusable stack used during update for tile tree traversal
+        var tileStack = this._tileStack = [];
+
+        // reusable array of tile built by update for rendering
+        this._tilesToRender = [];
+
+        // a doubly linked list of tiles that need to be loaded, maintained in priority order
+        var tileLoadList = this._tileLoadList = new TileLoadList();
 
         this._minTileDistance = undefined;
         this._preloadZoomLimit = 1;
@@ -134,7 +211,25 @@ define([
          */
         this.pixelError2D = 2.0;
 
-        preloadTiles(this);
+        //preload tiles
+        var zoomLimit = Math.max(Math.min(this._preloadZoomLimit, tileProvider.zoomMax), tileProvider.zoomMin);
+
+        tileStack.push(rootTile);
+        while (tileStack.length > 0) {
+            var tile = tileStack.pop();
+
+            if (tile.zoom <= zoomLimit) {
+                tileLoadList.append(tile);
+                loadImageForTile(this, tile);
+            }
+
+            if (tile.zoom < zoomLimit) {
+                var children = tile.getChildren();
+                for ( var i = 0, len = children.length; i < len; i++) {
+                    tileStack.push(children[i]);
+                }
+            }
+        }
     }
 
     /**
@@ -144,91 +239,84 @@ define([
         return this._tileProvider;
     };
 
-    function preloadTiles(layer) {
+    var activeTileImageRequests = 0;
+
+    function loadImageForTile(layer, tile) {
+        if (!tileNeedsImageLoad(layer, tile)) {
+            return;
+        }
+
+        if (activeTileImageRequests >= 10) {
+            //cap image requests globally, because the browser itself is capped, and we have no way to cancel
+            //an image load once it starts, but we need to be able to reorder pending image requests
+            return;
+        }
+
+        // start loading tile
+        tile.state = TileState.IMAGE_LOADING;
+
         var tileProvider = layer._tileProvider;
 
-        var zoomLimit = Math.max(Math.min(layer._preloadZoomLimit, tileProvider.zoomMax), tileProvider.zoomMin);
+        if (tileProvider.zoomMin !== 0 && tile.zoom === 0) {
+            // Some tile servers, like Bing, don't have a base image for the entire central body.
+            // Create a 1x1 image that will never get rendered.
+            var canvas = document.createElement("canvas");
+            canvas.width = 1;
+            canvas.height = 1;
 
-        var stack = [layer._rootTile];
-        while (stack.length > 0) {
-            var tile = stack.pop();
+            tile._width = 1;
+            tile._height = 1;
+            tile._image = canvas;
+            tile._projection = Projections.WGS84;
 
-            if (tile.zoom <= zoomLimit) {
-                loadTile(layer, tile);
-            }
+            // no need to re-project
+            tile.state = TileState.TEXTURE_LOADING;
+            return;
+        }
 
-            if (tile.zoom < zoomLimit) {
-                stack = stack.concat(tile.getChildren());
-            }
+        activeTileImageRequests++;
+
+        var onload = function() {
+            tile._failCount = 0;
+            layer._tileFailCount = 0;
+            layer._lastFailedTime = 0;
+
+            tile._width = tile._image.width;
+            tile._height = tile._image.height;
+
+            tile.state = TileState.REPROJECTING;
+            activeTileImageRequests--;
+        };
+
+        var onerror = function() {
+            tile._failCount++;
+            layer._tileFailCount++;
+            layer._lastFailedTime = Date.now();
+
+            tile.state = TileState.IMAGE_FAILED;
+            activeTileImageRequests--;
+        };
+
+        var oninvalid = function() {
+            tile.state = TileState.IMAGE_INVALID;
+            tile._image = undefined;
+            activeTileImageRequests--;
+        };
+
+        tile._image = tileProvider.loadTileImage(tile, onload, onerror, oninvalid);
+        tile._width = tileProvider.tileWidth;
+        tile._height = tileProvider.tileHeight;
+
+        if (typeof tile._projection === 'undefined') {
+            tile._projection = tileProvider.projection;
         }
     }
 
-    function loadTile(layer, tile) {
-        if (tile.state === TileState.TEXTURE_LOADED) {
-            // tile already loaded
-            return;
+    function tileNeedsImageLoad(layer, tile) {
+        if (tile.state === TileState.UNLOADED) {
+            return true;
         }
 
-        if (layer._tileLoadQueue.contains(tile)) {
-            // tile already in the process of being loaded
-            return;
-        }
-
-        layer._tileLoadQueue.enqueue(tile);
-
-        if (tile.state === 'undefined' || tile.state === TileState.UNLOADED || shouldRetryTile(layer, tile)) {
-            // start loading tile
-            tile.state = TileState.IMAGE_LOADING;
-
-            var tileProvider = layer._tileProvider;
-
-            if (tileProvider.zoomMin !== 0 && tile.zoom === 0) {
-                // Some tile servers, like Bing, don't have a base image for the entire central body.
-                // Create a 1x1 image that will never get rendered.
-                var canvas = document.createElement("canvas");
-                canvas.width = 1.0;
-                canvas.height = 1.0;
-
-                tile.image = canvas;
-                tile.projection = Projections.WGS84;
-
-                // no need to re-project
-                tile.state = TileState.TEXTURE_LOADING;
-                return;
-            }
-
-            var onload = function() {
-                tile._failCount = 0;
-                layer._tileFailCount = 0;
-                layer._lastFailedTime = 0;
-
-                tile.state = TileState.REPROJECTING;
-            };
-
-            var onerror = function() {
-                tile._failCount++;
-                layer._tileFailCount++;
-                layer._lastFailedTime = Date.now();
-
-                tile.state = TileState.IMAGE_FAILED;
-            };
-
-            var oninvalid = function() {
-                tile.state = TileState.IMAGE_INVALID;
-                tile.image = undefined;
-            };
-
-            tile.image = tileProvider.loadTileImage(tile, onload, onerror, oninvalid);
-
-            if (typeof tile.projection === 'undefined') {
-                tile.projection = tileProvider.projection;
-            }
-
-            return;
-        }
-    }
-
-    function shouldRetryTile(layer, tile) {
         // only retry failed tiles
         if (tile.state !== TileState.IMAGE_FAILED) {
             return false;
@@ -287,23 +375,10 @@ define([
 
         var texturePixelError = (pixelError > 0.0) ? pixelError : 1.0;
 
-        var tileWidth, tileHeight;
-        if (tile.texture && !tile.texture.isDestroyed()) {
-            tileWidth = tile.texture.getWidth();
-            tileHeight = tile.texture.getHeight();
-        } else if (tile.image && typeof tile.image.width !== "undefined") {
-            tileWidth = tile.image.width;
-            tileHeight = tile.image.height;
-        } else {
-            var tileProvider = layer._tileProvider;
-            tileWidth = tileProvider.tileWidth;
-            tileHeight = tileProvider.tileHeight;
-        }
-
         var a = projection.project(new Cartographic2(tile.extent.west, tile.extent.north)).getXY();
         var b = projection.project(new Cartographic2(tile.extent.east, tile.extent.south)).getXY();
         var diagonal = a.subtract(b);
-        var texelSize = Math.max(diagonal.x, diagonal.y) / Math.max(tileWidth, tileHeight);
+        var texelSize = Math.max(diagonal.x, diagonal.y) / Math.max(tile.width, tile.height);
         var pixelSize = Math.max(frustum.top - frustum.bottom, frustum.right - frustum.left) / Math.max(viewportWidth, viewportHeight);
 
         if (texelSize > pixelSize * texturePixelError) {
@@ -424,8 +499,14 @@ define([
 
         var zoomMax = this._tileProvider.zoomMax;
 
+        var now = Date.now();
+
         // start loading tiles and build render list
         var tile;
+
+        var tileLoadList = this._tileLoadList;
+        var insertionPoint = tileLoadList._head;
+
         var tileStack = this._tileStack;
         tileStack.push(this._rootTile);
         while (tileStack.length > 0) {
@@ -435,7 +516,11 @@ define([
                 continue;
             }
 
-            loadTile(this, tile);
+            if (tile.state !== TileState.TEXTURE_LOADED) {
+                tileLoadList.insertBefore(insertionPoint, tile);
+            }
+
+            tile._lastUsedTime = now;
 
             var renderTile = tile.state === TileState.TEXTURE_LOADED;
             if (tile.zoom < zoomMax && refine(this, tile, context, sceneState)) {
@@ -447,7 +532,7 @@ define([
 
                     tileStack.push(child);
 
-                    allChildrenLoaded &= child.state === TileState.TEXTURE_LOADED;
+                    allChildrenLoaded = allChildrenLoaded && child.state === TileState.TEXTURE_LOADED;
                 }
 
                 if (allChildrenLoaded) {
@@ -456,52 +541,53 @@ define([
             }
 
             if (renderTile) {
-                addToTileRenderList(this, tile, context, sceneState);
+                addToTilesToRender(this, tile, context, sceneState);
             }
         }
 
-        // process tiles in the queue
-        var loadQueue = this._tileLoadQueue;
+        // process tiles in the load queue
         var startTime = Date.now();
-        var timeSlice = 5;
-        var processedCount = 0;
-        while (loadQueue.length > 0) {
-            if (processedCount % 10 === 0 && Date.now() - startTime > timeSlice) {
+        var timeSlice = 10;
+
+        tile = tileLoadList._head;
+        while (typeof tile !== 'undefined') {
+            if (Date.now() - startTime > timeSlice) {
                 break;
             }
 
-            tile = loadQueue.dequeue();
-
-            if (cull(this, tile, sceneState)) {
-                continue;
-            }
+            loadImageForTile(this, tile);
 
             if (tile.state === TileState.REPROJECTING) {
-                tile.image = tile.projection.toWgs84(tile.extent, tile.image);
-                tile.projection = Projections.WGS84;
+                tile._image = tile._projection.toWgs84(tile.extent, tile._image);
+                tile._projection = Projections.WGS84;
                 tile.state = TileState.TEXTURE_LOADING;
-                loadQueue.enqueue(tile);
-            } else if (tile.state === TileState.TEXTURE_LOADING) {
-                tile.texture = this._centralBody._textureCache.find(tile);
-                tile.texture.copyFrom(tile.image);
-                tile.texture.generateMipmap(MipmapHint.NICEST);
-                tile.texture.setSampler({
+            }
+
+            if (tile.state === TileState.TEXTURE_LOADING) {
+                tile._texture = this._centralBody._tileCache.getTexture(context, tile);
+                tile._texture.copyFrom(tile._image);
+                tile._texture.generateMipmap(MipmapHint.NICEST);
+                tile._texture.setSampler({
                     wrapS : TextureWrap.CLAMP,
                     wrapT : TextureWrap.CLAMP,
                     minificationFilter : TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
                     magnificationFilter : TextureMagnificationFilter.LINEAR,
-                    maximumAnisotropy : context.getMaximumTextureFilterAnisotropy() || 8 // TODO: Remove Chrome work around
+
+                    // TODO: Remove Chrome work around
+                    maximumAnisotropy : context.getMaximumTextureFilterAnisotropy() || 8
                 });
                 tile.state = TileState.TEXTURE_LOADED;
-                tile.image = undefined;
+                tile._image = undefined;
+
+                tileLoadList.remove(tile);
             }
 
-            processedCount++;
+            tile = tile._next;
         }
     };
 
-    function addToTileRenderList(layer, tile, context, sceneState) {
-        if (layer._tileRenderList.indexOf(tile) !== -1) {
+    function addToTilesToRender(layer, tile, context, sceneState) {
+        if (layer._tilesToRender.indexOf(tile) !== -1) {
             return;
         }
 
@@ -634,7 +720,7 @@ define([
 
             var drawUniforms = {
                 u_dayTexture : function() {
-                    return tile.texture;
+                    return tile._texture;
                 },
                 u_center3D : function() {
                     return rtc;
@@ -657,13 +743,13 @@ define([
             tile._mode = mode;
         }
 
-        layer._tileRenderList.push(tile);
+        layer._tilesToRender.push(tile);
     }
 
     ImageryLayer.prototype.render = function(context) {
-        var tileRenderList = this._tileRenderList;
+        var tilesToRender = this._tilesToRender;
 
-        if (tileRenderList.length === 0) {
+        if (tilesToRender.length === 0) {
             return;
         }
 
@@ -674,7 +760,7 @@ define([
         });
 
         // TODO: remove once multi-frustum/depth testing is implemented
-        tileRenderList.sort(function(a, b) {
+        tilesToRender.sort(function(a, b) {
             return a.zoom - b.zoom;
         });
 
@@ -683,8 +769,8 @@ define([
         var morphTime = this._centralBody.morphTime;
 
         // render tiles to FBO
-        for ( var i = 0, len = tileRenderList.length; i < len; i++) {
-            var tile = tileRenderList[i];
+        for ( var i = 0, len = tilesToRender.length; i < len; i++) {
+            var tile = tilesToRender[i];
 
             var rtc;
             if (morphTime === 1.0) {
@@ -711,7 +797,7 @@ define([
             });
         }
 
-        tileRenderList.length = 0;
+        tilesToRender.length = 0;
 
         context.endDraw();
     };
@@ -749,33 +835,12 @@ define([
      * @see ImageryLayer#isDestroyed
      *
      * @example
-     * imageryLayer = imageryLayer && imageryLayer();
+     * imageryLayer = imageryLayer && imageryLayer.destroy();
      */
     ImageryLayer.prototype.destroy = function() {
-        var stack = [this._rootTile];
-        while (stack.length > 0) {
-            var tile = stack.pop();
+        this._rootTile.destroy();
 
-            // remove circular reference
-            tile.parent = undefined;
-
-            // destroy vertex array
-            if (tile._extentVA) {
-                tile._extentVA = tile._extentVA && tile._extentVA.destroy();
-            }
-
-            // destroy texture
-            if (tile.texture) {
-                tile.texture = tile.texture && tile.texture.destroy();
-            }
-
-            // process children
-            if (tile.children) {
-                stack = stack.concat(tile.children);
-            }
-        }
-
-        this._rootTile = undefined;
+        return destroyObject(this);
     };
 
     return ImageryLayer;

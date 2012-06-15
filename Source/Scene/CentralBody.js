@@ -1,9 +1,10 @@
 /*global define*/
 define([
+        '../Core/combine',
+        '../Core/defaultValue',
+        '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/RuntimeError',
-        '../Core/combine',
-        '../Core/destroyObject',
         '../Core/Math',
         '../Core/Intersect',
         '../Core/Occluder',
@@ -49,10 +50,11 @@ define([
         '../Shaders/SkyAtmosphereFS',
         '../Shaders/SkyAtmosphereVS'
     ], function(
+        combine,
+        defaultValue,
+        destroyObject,
         DeveloperError,
         RuntimeError,
-        combine,
-        destroyObject,
         CesiumMath,
         Intersect,
         Occluder,
@@ -99,64 +101,19 @@ define([
         SkyAtmosphereVS) {
     "use strict";
 
-    function TileTextureCachePolicy(description) {
-        var desc = description || {};
-
-        if (!desc.fetchFunc || typeof desc.fetchFunc !== 'function') {
-            throw new DeveloperError('description.fetchFunc is a required function.');
-        }
-
-        this._limit = desc.limit || 128;
-        this._count = 0;
-        this._fetchFunc = desc.fetchFunc;
-        this._removeFunc = (typeof desc.removeFunc === 'function') ? desc.removeFunc : undefined;
+    function TileCache(maxTextureSize) {
+        this._texturePool = new TexturePool();
+        this._maxTextureSize = maxTextureSize;
+        this._tiles = [];
     }
 
-    TileTextureCachePolicy.prototype.hit = function(object) {
-        var time = new JulianDate();
-        var current = object.key;
-        while (current) {
-            current._lastHit = time;
-            current = current.parent;
-        }
-        return object.value;
-    };
-
-    TileTextureCachePolicy.prototype.miss = function(name, key, object) {
-        var property = {
-            key : key,
-            value : undefined
-        };
-
-        property.value = this._fetchFunc(key);
-        var lruTime = new JulianDate();
-        this.hit(property);
-
-        if (this._count < this._limit) {
-            ++this._count;
-            object[name] = property;
-            return property.value;
-        }
-
-        var element;
-        var index = '';
-        var keys = Object.keys(object);
-        for ( var i = 0; i < keys.length; ++i) {
-            element = object[keys[i]];
-            if (element.key._lastHit.lessThan(lruTime) && element.key.zoom > 2) {
-                lruTime = element.key._lastHit;
-                index = keys[i];
-            }
-        }
-
-        element = object[index];
-        if (this._removeFunc) {
-            this._removeFunc(element.key);
-        }
-        delete object[index];
-
-        object[name] = property;
-        return property.value;
+    //remove this
+    TileCache.prototype.getTexture = function(context, tile) {
+        return this._texturePool.createTexture2D(context, {
+            width : tile._width,
+            height : tile._height,
+            pixelFormat : PixelFormat.RGB
+        });
     };
 
     /**
@@ -170,16 +127,14 @@ define([
      * @exception {DeveloperError} camera is required.
      */
     function CentralBody(ellipsoid) {
-        ellipsoid = ellipsoid || Ellipsoid.WGS84;
+        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
         this._ellipsoid = ellipsoid;
         this._occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), Cartesian3.ZERO);
 
         this._imageLayers = new ImageryLayerCollection();
 
-        this._texturePool = undefined;
-        this._textureCache = undefined;
-        this._textureCacheLimit = 512; // TODO: pick appropriate cache limit
+        this._tileCache = new TileCache(128 * 1024 * 1024);
 
         this._spWithoutAtmosphere = undefined;
         this._spGroundFromSpace = undefined;
@@ -699,33 +654,6 @@ define([
         return oldMode !== newMode && (oldMode === SceneMode.SCENE3D || newMode === SceneMode.SCENE3D);
     };
 
-    CentralBody.prototype._createTextureCache = function(context) {
-        var pool = this._texturePool = new TexturePool(context);
-
-        var fetch = function(tile) {
-            var texture = pool.createTexture2D({
-                width : tile.image.width,
-                height : tile.image.height,
-                pixelFormat : PixelFormat.RGB
-            });
-            return texture;
-        };
-
-        var remove = function(tile) {
-            tile.texture = tile.texture && tile.texture.destroy();
-            tile._extentVA = tile._extentVA && tile._extentVA.destroy();
-            tile.projection = undefined;
-            tile.state = TileState.UNLOADED;
-        };
-
-        var policy = new TileTextureCachePolicy({
-            fetchFunc : fetch,
-            removeFunc : remove,
-            limit : this._textureCacheLimit
-        });
-        this._textureCache = new Cache(policy);
-    };
-
     CentralBody.prototype._createScissorRectangle = function(description) {
         var quad = description.quad;
         var upperLeft = new Cartesian3(quad[0], quad[1], quad[2]);
@@ -976,10 +904,6 @@ define([
 
         if (width === 0 || height === 0) {
             return;
-        }
-
-        if (!this._textureCache || this._textureCache.isDestroyed()) {
-            this._createTextureCache(context);
         }
 
         var createFBO = !this._fb || this._fb.isDestroyed();
@@ -1544,7 +1468,7 @@ define([
      */
     CentralBody.prototype.destroy = function() {
         this._texturePool = this._texturePool && this._texturePool.destroy();
-        this._textureCache = this._textureCache && this._textureCache.destroy();
+        this._tileCache = this._tileCache && this._tileCache.destroy();
 
         this._fb = this._fb && this._fb.destroy();
         this._quadV = this._quadV && this._quadV.destroy();

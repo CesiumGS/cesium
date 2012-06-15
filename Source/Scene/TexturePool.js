@@ -1,13 +1,13 @@
 /*global define*/
 define([
-        '../Core/DeveloperError',
         '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Renderer/PixelDatatype',
         '../Renderer/PixelFormat',
         '../Renderer/Texture'
     ], function(
-        DeveloperError,
         destroyObject,
+        DeveloperError,
         PixelDatatype,
         PixelFormat,
         Texture) {
@@ -45,16 +45,9 @@ define([
      * @name TexturePool
      * @constructor
      *
-     * @param {Context} context The context to use to create textures when needed.
-     *
      * @see Texture
      */
     function TexturePool(context) {
-        if (typeof context === 'undefined') {
-            throw new DeveloperError('context is required.');
-        }
-
-        this._context = context;
         this._free = {};
     }
 
@@ -65,11 +58,13 @@ define([
      *
      * @memberof TexturePool
      *
+     * @param {Context} context The context to use to create textures when needed.
+     *
      * @exception {DeveloperError} description is required.
      *
      * @see Context#createTexture2D
      */
-    TexturePool.prototype.createTexture2D = function(description) {
+    TexturePool.prototype.createTexture2D = function(context, description) {
         if (!description) {
             throw new DeveloperError('description is required.');
         }
@@ -93,7 +88,7 @@ define([
             return texture;
         }
 
-        return new PooledTexture(this._context.createTexture2D(description), textureTypeKey, this);
+        return new PooledTexture(context.createTexture2D(description), textureTypeKey, this);
     };
 
     /**

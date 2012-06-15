@@ -166,12 +166,19 @@ define([
         return index;
     }
 
+    function clamp(value, min, max) {
+        return value < min ? min : value > max ? max : value;
+    }
+
     function swapLayers(collection, i, j) {
+        var arr = collection._layers;
+        i = clamp(i, 0, arr.length - 1);
+        j = clamp(j, 0, arr.length - 1);
+
         if (i === j) {
             return;
         }
 
-        var arr = collection._layers;
         var temp = arr[i];
         arr[i] = arr[j];
         arr[j] = temp;
@@ -188,7 +195,7 @@ define([
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
     ImageryLayerCollection.prototype.raise = function(layer) {
-        var index = getLayerIndex(layer);
+        var index = getLayerIndex(this._layers, layer);
         swapLayers(this, index, index + 1);
     };
 
@@ -203,7 +210,7 @@ define([
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
     ImageryLayerCollection.prototype.raiseToTop = function(layer) {
-        var index = getLayerIndex(layer);
+        var index = getLayerIndex(this._layers, layer);
         swapLayers(this, index, this._layers.length - 1);
     };
 
@@ -218,7 +225,7 @@ define([
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
     ImageryLayerCollection.prototype.lower = function(layer) {
-        var index = getLayerIndex(layer);
+        var index = getLayerIndex(this._layers, layer);
         swapLayers(this, index, index - 1);
     };
 
@@ -233,7 +240,7 @@ define([
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
     ImageryLayerCollection.prototype.lowerToBottom = function(layer) {
-        var index = getLayerIndex(layer);
+        var index = getLayerIndex(this._layers, layer);
         swapLayers(this, index, 0);
     };
 
