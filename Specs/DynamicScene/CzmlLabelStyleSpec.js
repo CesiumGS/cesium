@@ -23,8 +23,8 @@ defineSuite([
         expect(CzmlLabelStyle.isSampled()).toEqual(false);
     });
 
-    it('createValue', function() {
-        expect(CzmlLabelStyle.createValue(simpleLabelStyle)).toEqual(LabelStyle.FILL);
-        expect(CzmlLabelStyle.createValue(constantLabelStyleInterval.labelStyle)).toEqual(LabelStyle.OUTLINE);
+    it('getValue', function() {
+        expect(CzmlLabelStyle.getValue(simpleLabelStyle)).toEqual(LabelStyle.FILL);
+        expect(CzmlLabelStyle.getValue(constantLabelStyleInterval.labelStyle)).toEqual(LabelStyle.OUTLINE);
     });
 });

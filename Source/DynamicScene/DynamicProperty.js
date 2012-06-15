@@ -28,7 +28,7 @@ define([
     function IntervalData() {
         this.interpolationAlgorithm = LinearApproximation;
         this.numberOfPoints = LinearApproximation.getRequiredDataPoints(1);
-        this.interpolationDegree = undefined;
+        this.interpolationDegree = 1;
         this.times = undefined;
         this.values = undefined;
         this.isSampled = false;
@@ -47,7 +47,6 @@ define([
         this.valueType = valueType;
         this._intervals = new TimeIntervalCollection();
         this._cachedDate = undefined;
-        this._cachedValue = undefined;
         this._cachedInterval = undefined;
     }
 
@@ -146,7 +145,6 @@ define([
         var thisIntervals = this._intervals;
         var existingInterval = thisIntervals.findInterval(start, stop);
         this._cachedDate = undefined;
-        this._cachedValue = undefined;
         this._cachedInterval = undefined;
 
         var intervalData;
@@ -183,33 +181,28 @@ define([
                 epoch = JulianDate.fromIso8601(epoch);
             }
             DynamicProperty._mergeNewSamples(epoch, intervalData.times, intervalData.values, unwrappedInterval, thisValueType.doublesPerValue, thisValueType);
-            intervalData.numberOfPoints = Math.min(interpolationAlgorithm.getRequiredDataPoints(intervalData.interpolationDegree), intervalData.times.length);
+            intervalData.numberOfPoints = Math.min(intervalData.interpolationAlgorithm.getRequiredDataPoints(intervalData.interpolationDegree), intervalData.times.length);
         } else {
             //Packet itself is a constant value
             intervalData.times = undefined;
-            intervalData.values = thisValueType.createValue(unwrappedInterval);
+            intervalData.values = unwrappedInterval;
             intervalData.isSampled = false;
         }
     };
 
-    DynamicProperty.prototype.getValue = function(time) {
-        //CZML_TODO caching the last used interval here
-        //gives an obvious performance boost, but we need
-        //to further explore performance all around.
-
-        if (this._cachedDate === time) {
-            return this._cachedValue;
-        }
-        this._cachedDate = time;
-
+    DynamicProperty.prototype.getValue = function(time, existingInstance) {
         var interval = this._cachedInterval;
         var thisValueType = this.valueType;
         var doublesPerValue = thisValueType.doublesPerValue;
-        if (typeof interval === 'undefined' || !interval.contains(time)) {
-            interval = this._intervals.findIntervalContainingDate(time);
-            this._cachedInterval = interval;
-            if (typeof interval === 'undefined') {
-                return this._cachedValue = undefined;
+
+        if (this._cachedDate !== time) {
+            this._cachedDate = time;
+            if (typeof interval === 'undefined' || !interval.contains(time)) {
+                interval = this._intervals.findIntervalContainingDate(time);
+                this._cachedInterval = interval;
+                if (typeof interval === 'undefined') {
+                    return undefined;
+                }
             }
         }
 
@@ -285,11 +278,11 @@ define([
                 // Interpolate!
                 var x = times[lastIndex].getSecondsDifference(time);
                 var result = intervalData.interpolationAlgorithm.interpolateOrderZero(x, xTable, yTable, doublesPerInterpolationValue);
-                return thisValueType.createValueFromInterpolationResult(result, this._cachedValue, values, firstIndex, lastIndex);
+                return thisValueType.getValueFromInterpolationResult(result, existingInstance, values, firstIndex, lastIndex);
             }
-            return this._cachedValue = thisValueType.createValueFromArray(intervalData.values, index * doublesPerValue);
+            return thisValueType.getValueFromArray(intervalData.values, index * doublesPerValue, existingInstance);
         }
-        return this._cachedValue = intervalData.values;
+        return thisValueType.getValue(intervalData.values, existingInstance);
     };
 
     return DynamicProperty;

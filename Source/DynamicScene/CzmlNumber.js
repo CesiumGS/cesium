@@ -17,15 +17,15 @@ define(function() {
             return Array.isArray(unwrappedInterval);
         },
 
-        createValue : function(unwrappedInterval) {
+        getValue : function(unwrappedInterval) {
             return unwrappedInterval;
         },
 
-        createValueFromArray : function(array, startingIndex) {
+        getValueFromArray : function(array, startingIndex) {
             return array[startingIndex];
         },
 
-        createValueFromInterpolationResult : function(array) {
+        getValueFromInterpolationResult : function(array) {
             return array[0];
         }
     };

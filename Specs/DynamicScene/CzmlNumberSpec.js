@@ -22,15 +22,15 @@ defineSuite([
         expect(CzmlNumber.isSampled(sampledNumberInterval.number)).toEqual(true);
     });
 
-    it('createValue', function() {
-        expect(CzmlNumber.createValue(simpleNumber)).toEqual(simpleNumber);
+    it('getValue', function() {
+        expect(CzmlNumber.getValue(simpleNumber)).toEqual(simpleNumber);
     });
 
-    it('createValueFromArray', function() {
-        expect(CzmlNumber.createValueFromArray(sampledNumberInterval.number, 2)).toEqual(sampledNumberInterval.number[2]);
+    it('getValueFromArray', function() {
+        expect(CzmlNumber.getValueFromArray(sampledNumberInterval.number, 2)).toEqual(sampledNumberInterval.number[2]);
     });
 
-    it('createValueFromInterpolationResult', function() {
-        expect(CzmlNumber.createValueFromInterpolationResult([simpleNumber])).toEqual(simpleNumber);
+    it('getValueFromInterpolationResult', function() {
+        expect(CzmlNumber.getValueFromInterpolationResult([simpleNumber])).toEqual(simpleNumber);
     });
 });

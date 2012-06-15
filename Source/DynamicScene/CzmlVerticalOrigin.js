@@ -14,7 +14,7 @@ define(['../Scene/VerticalOrigin'
             return false;
         },
 
-        createValue : function(unwrappedInterval) {
+        getValue : function(unwrappedInterval) {
             return VerticalOrigin[unwrappedInterval];
         }
     };

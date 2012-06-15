@@ -38,7 +38,7 @@ define([
         this.vertexPositions = undefined;
         this.availability = undefined;
         this._cachedAvailabilityDate = undefined;
-        this._cachedAvailabilityValue = true;
+        this._cachedAvailabilityValue = undefined;
     }
 
     DynamicObject.prototype.isAvailable = function(time) {

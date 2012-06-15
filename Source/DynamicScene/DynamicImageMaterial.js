@@ -31,6 +31,7 @@ define([
         return existingMaterial;
     };
 
+    //CZML_TODO image.src race condition.
     DynamicImageMaterial.prototype.applyToMaterial = function(time, existingMaterial, scene) {
         if(typeof existingMaterial === 'undefined' || !(existingMaterial instanceof DiffuseMapMaterial)) {
             existingMaterial = new DiffuseMapMaterial();

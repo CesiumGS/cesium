@@ -17,7 +17,7 @@ function(Cartesian3) {
             return Array.isArray(unwrappedInterval) && unwrappedInterval.length > doublesPerValue;
         },
 
-        createValue : function(unwrappedInterval, existingInstance) {
+        getValue : function(unwrappedInterval, existingInstance) {
             if (typeof existingInstance === 'undefined') {
                 existingInstance = new Cartesian3();
             }
@@ -27,7 +27,7 @@ function(Cartesian3) {
             return Cartesian3.normalize(existingInstance);
         },
 
-        createValueFromArray : function(array, startingIndex, existingInstance) {
+        getValueFromArray : function(array, startingIndex, existingInstance) {
             if (typeof existingInstance === 'undefined') {
                 existingInstance = new Cartesian3();
             }
@@ -37,7 +37,7 @@ function(Cartesian3) {
             return Cartesian3.normalize(existingInstance);
         },
 
-        createValueFromInterpolationResult : function(array, existingInstance) {
+        getValueFromInterpolationResult : function(array, existingInstance) {
             if (typeof existingInstance === 'undefined') {
                 existingInstance = new Cartesian3();
             }

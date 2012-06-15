@@ -31,15 +31,15 @@ defineSuite([
         expect(CzmlUnitSpherical.isSampled(sampledSphericalInterval.unitSpherical)).toEqual(true);
     });
 
-    it('createValue', function() {
-        expect(CzmlUnitSpherical.createValue(constantSphericalInterval.unitSpherical)).toEqual(spherical1);
+    it('getValue', function() {
+        expect(CzmlUnitSpherical.getValue(constantSphericalInterval.unitSpherical)).toEqual(spherical1);
     });
 
-    it('createValueFromArray', function() {
-        expect(CzmlUnitSpherical.createValueFromArray(sampledSphericalInterval.unitSpherical, 4)).toEqual(spherical2);
+    it('getValueFromArray', function() {
+        expect(CzmlUnitSpherical.getValueFromArray(sampledSphericalInterval.unitSpherical, 4)).toEqual(spherical2);
     });
 
-    it('createValueFromInterpolationResult', function() {
-        expect(CzmlUnitSpherical.createValueFromInterpolationResult(constantSphericalInterval.unitSpherical)).toEqual(spherical1);
+    it('getValueFromInterpolationResult', function() {
+        expect(CzmlUnitSpherical.getValueFromInterpolationResult(constantSphericalInterval.unitSpherical)).toEqual(spherical1);
     });
 });

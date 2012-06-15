@@ -4,6 +4,8 @@ define([
         '../Core/TimeInterval',
         '../Core/TimeIntervalCollection',
         '../Core/Iso8601',
+        '../Core/Cartesian3',
+        '../Core/Cartographic3',
         './CzmlCartesian3',
         './CzmlCartographic3',
         './DynamicProperty'
@@ -12,6 +14,8 @@ define([
         TimeInterval,
         TimeIntervalCollection,
         Iso8601,
+        Cartesian3,
+        Cartographic3,
         CzmlCartesian3,
         CzmlCartographic3,
         DynamicProperty) {
@@ -23,8 +27,6 @@ define([
         this._potentialTypes = [CzmlCartesian3, CzmlCartographic3];
         this._cachedTime = undefined;
         this._cachedInterval = undefined;
-        this._cachedCartesianValue = undefined;
-        this._cachedCartographicValue = undefined;
     }
 
     DynamicPositionProperty.processCzmlPacket = function(czmlIntervals, buffer, sourceUri, existingProperty) {
@@ -55,8 +57,6 @@ define([
     DynamicPositionProperty.prototype.addInterval = function(czmlInterval, buffer, sourceUri) {
         this._cachedTime = undefined;
         this._cachedInterval = undefined;
-        this._cachedCartesianValue = undefined;
-        this._cachedCartographicValue = undefined;
 
         var iso8601Interval = czmlInterval.interval, property, valueType, unwrappedInterval;
         if (typeof iso8601Interval === 'undefined') {
@@ -113,52 +113,54 @@ define([
         }
     };
 
-    DynamicPositionProperty.prototype.getValueCartographic = function(time) {
-        //CZML_TODO caching the last used interval here
-        //gives an obvious performance boost, but we need
-        //to further explore performance all around.
-        if (this._cachedTime === time) {
-            return this._cachedCartographicValue;
-        }
-        this._cachedTime = time;
+    DynamicPositionProperty.prototype.getValueCartographic = function(time, existingInstance) {
         var interval = this._cachedInterval;
-        if (typeof interval === 'undefined' || !interval.contains(time)) {
-            interval = this._propertyIntervals.findIntervalContainingDate(time);
-            this._cachedInterval = interval;
+        if (this._cachedTime !== time) {
+            this._cachedTime = time;
+            if (typeof interval === 'undefined' || !interval.contains(time)) {
+                interval = this._propertyIntervals.findIntervalContainingDate(time);
+                this._cachedInterval = interval;
+            }
         }
 
         if (typeof interval === 'undefined') {
             return undefined;
         }
         var property = interval.data;
-        var result = property.getValue(time);
-        if (typeof result !== undefined) {
-            result = property.valueType.convertToCartographic3(result);
+        var valueType = property.valueType;
+        if (valueType === CzmlCartographic3) {
+            return property.getValue(time, existingInstance);
         }
-        return this._cachedCartographicValue = result;
+        var result = interval.cachedValue = property.getValue(time, interval.cachedValue);
+        if (typeof result !== undefined) {
+            result = valueType.convertToCartographic3(result);
+        }
+        return result;
     };
 
-    DynamicPositionProperty.prototype.getValueCartesian = function(time) {
-        //CZML_TODO Same as getValueCartographic comment on caching.
-        if (this._cachedTime === time) {
-            return this._cachedCartesianValue;
-        }
-        this._cachedTime = time;
+    DynamicPositionProperty.prototype.getValueCartesian = function(time, existingInstance) {
         var interval = this._cachedInterval;
-        if (typeof interval === 'undefined' || !interval.contains(time)) {
-            interval = this._propertyIntervals.findIntervalContainingDate(time);
-            this._cachedInterval = interval;
+        if (this._cachedTime !== time) {
+            this._cachedTime = time;
+            if (typeof interval === 'undefined' || !interval.contains(time)) {
+                interval = this._propertyIntervals.findIntervalContainingDate(time);
+                this._cachedInterval = interval;
+            }
         }
 
         if (typeof interval === 'undefined') {
             return undefined;
         }
         var property = interval.data;
-        var result = property.getValue(time);
-        if (typeof result !== undefined) {
-            result = property.valueType.convertToCartesian3(result);
+        var valueType = property.valueType;
+        if (valueType === CzmlCartesian3) {
+            return property.getValue(time, existingInstance);
         }
-        return this._cachedCartesianValue = result;
+        var result = interval.cachedValue = property.getValue(time, interval.cachedValue);
+        if (typeof result !== undefined) {
+            result = valueType.convertToCartesian3(result);
+        }
+        return result;
     };
 
     return DynamicPositionProperty;

@@ -21,8 +21,8 @@ defineSuite([
         expect(CzmlBoolean.isSampled()).toEqual(false);
     });
 
-    it('createValue', function() {
-        expect(CzmlBoolean.createValue(simpleBoolean)).toEqual(simpleBoolean);
-        expect(CzmlBoolean.createValue(constantBooleanInterval.boolean)).toEqual(constantBooleanInterval.boolean);
+    it('getValue', function() {
+        expect(CzmlBoolean.getValue(simpleBoolean)).toEqual(simpleBoolean);
+        expect(CzmlBoolean.getValue(constantBooleanInterval.boolean)).toEqual(constantBooleanInterval.boolean);
     });
 });

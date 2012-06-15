@@ -23,8 +23,8 @@ defineSuite([
         expect(CzmlVerticalOrigin.isSampled()).toEqual(false);
     });
 
-    it('createValue', function() {
-        expect(CzmlVerticalOrigin.createValue(simpleVerticalOrigin)).toEqual(VerticalOrigin.CENTER);
-        expect(CzmlVerticalOrigin.createValue(constantVerticalOriginInterval.verticalOrigin)).toEqual(VerticalOrigin.LEFT);
+    it('getValue', function() {
+        expect(CzmlVerticalOrigin.getValue(simpleVerticalOrigin)).toEqual(VerticalOrigin.CENTER);
+        expect(CzmlVerticalOrigin.getValue(constantVerticalOriginInterval.verticalOrigin)).toEqual(VerticalOrigin.LEFT);
     });
 });

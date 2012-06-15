@@ -17,6 +17,23 @@ define([
         VerticalOrigin) {
     "use strict";
 
+    //Callback to create a callback so that we close over all of the proper values.
+    function textureReady(dynamicObject, billboardCollection, textureValue) {
+        return function(imageIndex) {
+            //By the time the texture was loaded, the billboard might already be
+            //gone or have been assigned a different texture.  Look it up again
+            //and check.
+            var currentIndex = dynamicObject.billboardVisualizerIndex;
+            if (typeof currentIndex !== 'undefined') {
+                var cbBillboard = billboardCollection.get(currentIndex);
+                if (cbBillboard.vizTexture === textureValue) {
+                    cbBillboard.vizTextureAvailable = true;
+                    cbBillboard.setImageIndex(imageIndex);
+                }
+            }
+        };
+    }
+
     function DynamicBillboardVisualizer(scene, dynamicObjectCollection) {
         this._scene = scene;
         this._unusedIndexes = [];
@@ -58,6 +75,15 @@ define([
         }
     };
 
+    var show;
+    var textureValue;
+    var position;
+    var color;
+    var eyeOffset;
+    var pixelOffset;
+    var scale;
+    var verticalOrigin;
+    var horizontalOrigin;
     DynamicBillboardVisualizer.prototype.updateObject = function(time, dynamicObject) {
         var dynamicBillboard = dynamicObject.billboard;
         if (typeof dynamicBillboard === 'undefined') {
@@ -78,7 +104,7 @@ define([
         var objectId = dynamicObject.id;
         var showProperty = dynamicBillboard.show;
         var billboardVisualizerIndex = dynamicObject.billboardVisualizerIndex;
-        var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
+        show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time, show));
 
         if (!show) {
             //don't bother creating or updating anything else
@@ -119,24 +145,11 @@ define([
             billboard = this._billboardCollection.get(billboardVisualizerIndex);
         }
 
-        var textureValue = textureProperty.getValue(time);
+        textureValue = textureProperty.getValue(time, textureValue);
         if (textureValue !== billboard.vizTexture) {
             billboard.vizTexture = textureValue;
             billboard.vizTextureAvailable = false;
-            var that = this;
-            this._textureAtlas.addTextureFromUrl(textureValue, function(imageIndex) {
-                //By the time the texture was loaded, the billboard might already be
-                //gone or have been assigned a different texture.  Look it up again
-                //and check.
-                var currentIndex = dynamicObject.billboardVisualizerIndex;
-                if (typeof currentIndex !== 'undefined') {
-                    var cbBillboard = that._billboardCollection.get(currentIndex);
-                    if (cbBillboard.vizTexture === textureValue) {
-                        cbBillboard.vizTextureAvailable = true;
-                        cbBillboard.setImageIndex(imageIndex);
-                    }
-                }
-            });
+            this._textureAtlas.addTextureFromUrl(textureValue, textureReady(dynamicObject, this._billboardCollection, textureValue));
         }
 
         billboard.setShow(billboard.vizTextureAvailable);
@@ -144,57 +157,57 @@ define([
             return;
         }
 
-        var value = positionProperty.getValueCartesian(time);
-        if (value !== 'undefined') {
-            billboard.setPosition(value);
+        position = positionProperty.getValueCartesian(time, position);
+        if (position !== 'undefined') {
+            billboard.setPosition(position);
         }
 
         var property = dynamicBillboard.color;
 
         if (typeof property !== 'undefined') {
-            value = property.getValue(time);
-            if (typeof value !== 'undefined') {
-                billboard.setColor(value);
+            color = property.getValue(time, color);
+            if (typeof color !== 'undefined') {
+                billboard.setColor(color);
             }
         }
 
         property = dynamicBillboard.eyeOffset;
         if (typeof property !== 'undefined') {
-            value = property.getValue(time);
-            if (typeof value !== 'undefined') {
-                billboard.setEyeOffset(value);
+            eyeOffset = property.getValue(time, eyeOffset);
+            if (typeof eyeOffset !== 'undefined') {
+                billboard.setEyeOffset(eyeOffset);
             }
         }
 
         property = dynamicBillboard.pixelOffset;
         if (typeof property !== 'undefined') {
-            value = property.getValue(time);
-            if (typeof value !== 'undefined') {
-                billboard.setPixelOffset(value);
+            pixelOffset = property.getValue(time, pixelOffset);
+            if (typeof pixelOffset !== 'undefined') {
+                billboard.setPixelOffset(pixelOffset);
             }
         }
 
         property = dynamicBillboard.scale;
         if (typeof property !== 'undefined') {
-            value = property.getValue(time);
-            if (typeof value !== 'undefined') {
-                billboard.setScale(value);
+            scale = property.getValue(time, scale);
+            if (typeof scale !== 'undefined') {
+                billboard.setScale(scale);
             }
         }
 
         property = dynamicBillboard.horizontalOrigin;
         if (typeof property !== 'undefined') {
-            value = property.getValue(time);
-            if (typeof value !== 'undefined') {
-                billboard.setHorizontalOrigin(value);
+            horizontalOrigin = property.getValue(time, horizontalOrigin);
+            if (typeof horizontalOrigin !== 'undefined') {
+                billboard.setHorizontalOrigin(horizontalOrigin);
             }
         }
 
         property = dynamicBillboard.verticalOrigin;
         if (typeof property !== 'undefined') {
-            value = property.getValue(time);
-            if (typeof value !== 'undefined') {
-                billboard.setVerticalOrigin(value);
+            verticalOrigin = property.getValue(time, verticalOrigin);
+            if (typeof verticalOrigin !== 'undefined') {
+                billboard.setVerticalOrigin(verticalOrigin);
             }
         }
     };

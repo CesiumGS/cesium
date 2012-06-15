@@ -39,15 +39,15 @@ defineSuite([
         expect(CzmlColor.isSampled(sampledRgbafInterval.rgbaf)).toEqual(true);
     });
 
-    it('createValue', function() {
-        expect(CzmlColor.createValue(constantRgbafInterval.rgbaf)).toEqual(color1);
+    it('getValue', function() {
+        expect(CzmlColor.getValue(constantRgbafInterval.rgbaf)).toEqual(color1);
     });
 
-    it('createValueFromArray', function() {
-        expect(CzmlColor.createValueFromArray(sampledRgbafInterval.rgbaf, 6)).toEqual(color2);
+    it('getValueFromArray', function() {
+        expect(CzmlColor.getValueFromArray(sampledRgbafInterval.rgbaf, 6)).toEqual(color2);
     });
 
-    it('createValueFromInterpolationResult', function() {
-        expect(CzmlColor.createValueFromInterpolationResult(constantRgbafInterval.rgbaf)).toEqual(color1);
+    it('getValueFromInterpolationResult', function() {
+        expect(CzmlColor.getValueFromInterpolationResult(constantRgbafInterval.rgbaf)).toEqual(color1);
     });
 });

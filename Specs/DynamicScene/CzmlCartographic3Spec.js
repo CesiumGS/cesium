@@ -42,15 +42,15 @@ defineSuite([
         expect(CzmlCartographic3.isSampled(sampledCartographicInterval.cartographicRadians)).toEqual(true);
     });
 
-    it('createValue', function() {
-        expect(CzmlCartographic3.createValue(constantCartographicInterval.cartographicRadians)).toEqual(cartographic1);
+    it('getValue', function() {
+        expect(CzmlCartographic3.getValue(constantCartographicInterval.cartographicRadians)).toEqual(cartographic1);
     });
 
-    it('createValueFromArray', function() {
-        expect(CzmlCartographic3.createValueFromArray(sampledCartographicInterval.cartographicRadians, 5)).toEqual(cartographic2);
+    it('getValueFromArray', function() {
+        expect(CzmlCartographic3.getValueFromArray(sampledCartographicInterval.cartographicRadians, 5)).toEqual(cartographic2);
     });
 
-    it('createValueFromInterpolationResult', function() {
-        expect(CzmlCartographic3.createValueFromInterpolationResult(constantCartographicInterval.cartographicRadians)).toEqual(cartographic1);
+    it('getValueFromInterpolationResult', function() {
+        expect(CzmlCartographic3.getValueFromInterpolationResult(constantCartographicInterval.cartographicRadians)).toEqual(cartographic1);
     });
 });

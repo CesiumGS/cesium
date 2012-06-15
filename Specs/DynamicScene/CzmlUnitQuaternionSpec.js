@@ -31,18 +31,18 @@ defineSuite([
         expect(CzmlUnitQuaternion.isSampled(sampledQuaternionInterval.unitQuaternion)).toEqual(true);
     });
 
-    it('createValue', function() {
-        expect(CzmlUnitQuaternion.createValue(constantQuaternionInterval.unitQuaternion)).toEqualEpsilon(quaternion1, CesiumMath.EPSILON15);
+    it('getValue', function() {
+        expect(CzmlUnitQuaternion.getValue(constantQuaternionInterval.unitQuaternion)).toEqualEpsilon(quaternion1, CesiumMath.EPSILON15);
     });
 
-    it('createValueFromArray', function() {
-        expect(CzmlUnitQuaternion.createValueFromArray(sampledQuaternionInterval.unitQuaternion, 6)).toEqualEpsilon(quaternion2, CesiumMath.EPSILON15);
+    it('getValueFromArray', function() {
+        expect(CzmlUnitQuaternion.getValueFromArray(sampledQuaternionInterval.unitQuaternion, 6)).toEqualEpsilon(quaternion2, CesiumMath.EPSILON15);
     });
 
-    it('packValuesForInterpolation and createValueFromInterpolationResult', function() {
+    it('packValuesForInterpolation and getValueFromInterpolationResult', function() {
         var destination = [];
         var source = [quaternion1.x, quaternion1.y, quaternion1.z, quaternion1.w, quaternion2.x, quaternion2.y, quaternion2.z, quaternion2.w];
         CzmlUnitQuaternion.packValuesForInterpolation(source, destination, 0, 1);
-        expect(CzmlUnitQuaternion.createValueFromInterpolationResult(destination, source, 0, 1)).toEqualEpsilon(quaternion1, CesiumMath.EPSILON15);
+        expect(CzmlUnitQuaternion.getValueFromInterpolationResult(destination, undefined, source, 0, 1)).toEqualEpsilon(quaternion1, CesiumMath.EPSILON15);
     });
 });

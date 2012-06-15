@@ -62,7 +62,6 @@ defineSuite([
         expect(result.x).toEqual(1234);
         expect(result.y).toEqual(5678);
         expect(result.z).toEqual(9101112);
-        expect(result === property.getValueCartesian(epoch)).toEqual(true);
 
         var resultCartographic = Ellipsoid.WGS84.toCartographic3(result);
         result = property.getValueCartographic(epoch);

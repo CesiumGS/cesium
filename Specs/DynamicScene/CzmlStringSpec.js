@@ -21,8 +21,8 @@ defineSuite([
         expect(CzmlString.isSampled()).toEqual(false);
     });
 
-    it('createValue', function() {
-        expect(CzmlString.createValue(simpleString)).toEqual(simpleString);
-        expect(CzmlString.createValue(constantStringInterval.string)).toEqual(constantStringInterval.string);
+    it('getValue', function() {
+        expect(CzmlString.getValue(simpleString)).toEqual(simpleString);
+        expect(CzmlString.getValue(constantStringInterval.string)).toEqual(constantStringInterval.string);
     });
 });

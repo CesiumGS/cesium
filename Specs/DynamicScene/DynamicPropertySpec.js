@@ -133,8 +133,6 @@ defineSuite([
         expect(result.x).toEqual(0);
         expect(result.y).toEqual(1);
         expect(result.z).toEqual(2);
-
-        expect(result === property.getValue(epoch)).toEqual(true);
     });
 
     it('Works with static Quaternion values.', function() {

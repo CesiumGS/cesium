@@ -29,15 +29,15 @@ defineSuite([
         expect(CzmlCartesian3.isSampled(sampledCartesianInterval.cartesian)).toEqual(true);
     });
 
-    it('createValue', function() {
-        expect(CzmlCartesian3.createValue(constantCartesianInterval.cartesian)).toEqual(cartesian1);
+    it('getValue', function() {
+        expect(CzmlCartesian3.getValue(constantCartesianInterval.cartesian)).toEqual(cartesian1);
     });
 
-    it('createValueFromArray', function() {
-        expect(CzmlCartesian3.createValueFromArray(sampledCartesianInterval.cartesian, 5)).toEqual(cartesian2);
+    it('getValueFromArray', function() {
+        expect(CzmlCartesian3.getValueFromArray(sampledCartesianInterval.cartesian, 5)).toEqual(cartesian2);
     });
 
-    it('createValueFromInterpolationResult', function() {
-        expect(CzmlCartesian3.createValueFromInterpolationResult(constantCartesianInterval.cartesian)).toEqual(cartesian1);
+    it('getValueFromInterpolationResult', function() {
+        expect(CzmlCartesian3.getValueFromInterpolationResult(constantCartesianInterval.cartesian)).toEqual(cartesian1);
     });
 });

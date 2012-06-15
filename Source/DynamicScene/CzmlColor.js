@@ -38,7 +38,7 @@ define(['../Core/Color'], function(Color) {
             return Array.isArray(unwrappedInterval) && unwrappedInterval.length > doublesPerValue;
         },
 
-        createValue : function(unwrappedInterval, existingInstance) {
+        getValue : function(unwrappedInterval, existingInstance) {
             if (typeof existingInstance === 'undefined') {
                 existingInstance = new Color();
             }
@@ -49,7 +49,7 @@ define(['../Core/Color'], function(Color) {
             return existingInstance;
         },
 
-        createValueFromArray : function(array, startingIndex, existingInstance) {
+        getValueFromArray : function(array, startingIndex, existingInstance) {
             if (typeof existingInstance === 'undefined') {
                 existingInstance = new Color();
             }
@@ -60,7 +60,7 @@ define(['../Core/Color'], function(Color) {
             return existingInstance;
         },
 
-        createValueFromInterpolationResult : function(array, existingInstance) {
+        getValueFromInterpolationResult : function(array, existingInstance) {
             if (typeof existingInstance === 'undefined') {
                 existingInstance = new Color();
             }

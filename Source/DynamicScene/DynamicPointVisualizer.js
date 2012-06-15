@@ -48,6 +48,12 @@ function(TextureAtlas,
         }
     };
 
+    var show;
+    var color;
+    var position;
+    var pixelSize;
+    var outlineColor;
+    var outlineWidth;
     DynamicPointVisualizer.prototype.updateObject = function(time, dynamicObject) {
         var dynamicPoint = dynamicObject.point;
         if (typeof dynamicPoint === 'undefined') {
@@ -63,7 +69,7 @@ function(TextureAtlas,
         var objectId = dynamicObject.id;
         var showProperty = dynamicPoint.show;
         var pointVisualizerIndex = dynamicObject.pointVisualizerIndex;
-        var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
+        show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time, show));
 
         if (!show) {
             //don't bother creating or updating anything else
@@ -102,45 +108,41 @@ function(TextureAtlas,
 
         billboard.setShow(true);
 
-        var position = positionProperty.getValueCartesian(time);
+        position = positionProperty.getValueCartesian(time, position);
         if (position !== 'undefined') {
             billboard.setPosition(position);
         }
 
-        var color;
         var property = dynamicPoint.color;
         if (typeof property !== 'undefined') {
-            color = property.getValue(time);
+            color = property.getValue(time, color);
             if (billboard.point_color !== color) {
                 billboard.point_color = color;
                 needRedraw = true;
             }
         }
 
-        var outlineColor;
         property = dynamicPoint.outlineColor;
         if (typeof property !== 'undefined') {
-            outlineColor = property.getValue(time);
+            outlineColor = property.getValue(time, outlineColor);
             if (billboard.point_outlineColor !== outlineColor) {
                 billboard.point_outlineColor = outlineColor;
                 needRedraw = true;
             }
         }
 
-        var outlineWidth;
         property = dynamicPoint.outlineWidth;
         if (typeof property !== 'undefined') {
-            outlineWidth = property.getValue(time);
+            outlineWidth = property.getValue(time, outlineWidth);
             if (billboard.point_outlineWidth !== outlineWidth) {
                 billboard.point_outlineWidth = outlineWidth;
                 needRedraw = true;
             }
         }
 
-        var pixelSize;
         property = dynamicPoint.pixelSize;
         if (typeof property !== 'undefined') {
-            pixelSize = property.getValue(time);
+            pixelSize = property.getValue(time, pixelSize);
             if (billboard.point_pixelSize !== pixelSize) {
                 billboard.point_pixelSize = pixelSize;
                 needRedraw = true;

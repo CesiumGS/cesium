@@ -14,7 +14,7 @@ define(['../Scene/LabelStyle'
             return false;
         },
 
-        createValue : function(unwrappedInterval) {
+        getValue : function(unwrappedInterval) {
             return LabelStyle[unwrappedInterval];
         }
     };

@@ -40,7 +40,7 @@ function(Cartographic3,
             return Array.isArray(unwrappedInterval) && unwrappedInterval.length > doublesPerValue;
         },
 
-        createValue : function(unwrappedInterval, existingInstance) {
+        getValue : function(unwrappedInterval, existingInstance) {
             if (typeof existingInstance === 'undefined') {
                 existingInstance = new Cartographic3();
             }
@@ -50,7 +50,7 @@ function(Cartographic3,
             return existingInstance;
         },
 
-        createValueFromArray : function(array, startingIndex, existingInstance) {
+        getValueFromArray : function(array, startingIndex, existingInstance) {
             if (typeof existingInstance === 'undefined') {
                 existingInstance = new Cartographic3();
             }
@@ -60,7 +60,7 @@ function(Cartographic3,
             return existingInstance;
         },
 
-        createValueFromInterpolationResult : function(array, existingInstance) {
+        getValueFromInterpolationResult : function(array, existingInstance) {
             if (typeof existingInstance === 'undefined') {
                 existingInstance = new Cartographic3();
             }

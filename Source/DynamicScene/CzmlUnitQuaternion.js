@@ -29,11 +29,11 @@ define([
         },
 
         packValuesForInterpolation : function(sourceArray, destinationArray, firstIndex, lastIndex) {
-            Quaternion.conjugate(CzmlUnitQuaternion.createValueFromArray(sourceArray, lastIndex * doublesPerQuaternion, quaternion0Conjugate));
+            Quaternion.conjugate(CzmlUnitQuaternion.getValueFromArray(sourceArray, lastIndex * doublesPerQuaternion, quaternion0Conjugate));
 
             for ( var i = 0, len = lastIndex - firstIndex + 1; i < len; i++) {
                 var offset = i * doublesPerCartesian;
-                CzmlUnitQuaternion.createValueFromArray(sourceArray, (firstIndex + i) * doublesPerQuaternion, tmpQuaternion);
+                CzmlUnitQuaternion.getValueFromArray(sourceArray, (firstIndex + i) * doublesPerQuaternion, tmpQuaternion);
 
                 Quaternion.multiply(tmpQuaternion, quaternion0Conjugate, tmpQuaternion);
 
@@ -49,18 +49,18 @@ define([
             }
         },
 
-        createValue : function(unwrappedInterval, existingInstance) {
+        getValue : function(unwrappedInterval, existingInstance) {
             if (typeof existingInstance === 'undefined') {
                 existingInstance = new Quaternion();
             }
             existingInstance.x = unwrappedInterval[0];
-            existingInstance.y = unwrappedInterval[2];
-            existingInstance.z = unwrappedInterval[3];
-            existingInstance.w = unwrappedInterval[4];
+            existingInstance.y = unwrappedInterval[1];
+            existingInstance.z = unwrappedInterval[2];
+            existingInstance.w = unwrappedInterval[3];
             return Quaternion.normalize(existingInstance);
         },
 
-        createValueFromArray : function(array, startingIndex, existingInstance) {
+        getValueFromArray : function(array, startingIndex, existingInstance) {
             if (typeof existingInstance === 'undefined') {
                 existingInstance = new Quaternion();
             }
@@ -71,7 +71,7 @@ define([
             return Quaternion.normalize(existingInstance);
         },
 
-        createValueFromInterpolationResult : function(array, existingInstance, sourceArray, firstIndex, lastIndex) {
+        getValueFromInterpolationResult : function(array, existingInstance, sourceArray, firstIndex, lastIndex) {
             if (typeof existingInstance === 'undefined') {
                 existingInstance = new Quaternion();
             }
@@ -80,7 +80,7 @@ define([
             rotationVector.z = array[2];
             var magnitude = rotationVector.magnitude();
 
-            CzmlUnitQuaternion.createValueFromArray(sourceArray, lastIndex * doublesPerQuaternion, quaternion0);
+            CzmlUnitQuaternion.getValueFromArray(sourceArray, lastIndex * doublesPerQuaternion, quaternion0);
 
             var difference;
             if (magnitude === 0) {

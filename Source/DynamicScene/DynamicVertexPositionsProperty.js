@@ -126,7 +126,7 @@ define([
         }
     };
 
-    //CZML_TODO: We can cache values here to speed up multiple calls
+    //CZML_TODO: Caching and existing instace.
     DynamicVertexPositionsProperty.prototype.getValueCartographic = function(time) {
         var interval = this._propertyIntervals.findIntervalContainingDate(time);
         if (typeof interval === 'undefined') {
