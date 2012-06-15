@@ -38,16 +38,37 @@ define(['../Core/Color'], function(Color) {
             return Array.isArray(unwrappedInterval) && unwrappedInterval.length > doublesPerValue;
         },
 
-        createValue : function(unwrappedInterval) {
-            return new Color(unwrappedInterval[0], unwrappedInterval[1], unwrappedInterval[2], unwrappedInterval[3]);
+        createValue : function(unwrappedInterval, existingInstance) {
+            if (typeof existingInstance === 'undefined') {
+                existingInstance = new Color();
+            }
+            existingInstance.red = unwrappedInterval[0];
+            existingInstance.green = unwrappedInterval[1];
+            existingInstance.blue = unwrappedInterval[2];
+            existingInstance.alpha = unwrappedInterval[3];
+            return existingInstance;
         },
 
-        createValueFromArray : function(array, startingIndex) {
-            return new Color(array[startingIndex], array[startingIndex + 1], array[startingIndex + 2], array[startingIndex + 3]);
+        createValueFromArray : function(array, startingIndex, existingInstance) {
+            if (typeof existingInstance === 'undefined') {
+                existingInstance = new Color();
+            }
+            existingInstance.red = array[startingIndex];
+            existingInstance.green = array[startingIndex + 1];
+            existingInstance.blue = array[startingIndex + 2];
+            existingInstance.alpha = array[startingIndex + 3];
+            return existingInstance;
         },
 
-        createValueFromInterpolationResult : function(array) {
-            return new Color(array[0], array[1], array[2], array[3]);
+        createValueFromInterpolationResult : function(array, existingInstance) {
+            if (typeof existingInstance === 'undefined') {
+                existingInstance = new Color();
+            }
+            existingInstance.red = array[0];
+            existingInstance.green = array[1];
+            existingInstance.blue = array[2];
+            existingInstance.alpha = array[3];
+            return existingInstance;
         }
     };
     return CzmlColor;

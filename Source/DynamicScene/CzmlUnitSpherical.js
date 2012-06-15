@@ -19,17 +19,35 @@ define([
             return Array.isArray(unwrappedInterval) && unwrappedInterval.length > doublesPerValue;
         },
 
-        createValue : function(unwrappedInterval) {
-            return new Spherical(unwrappedInterval[0], unwrappedInterval[1], 1.0);
+        createValue : function(unwrappedInterval, spherical) {
+            if (typeof spherical === 'undefined') {
+                spherical = new Spherical();
+            }
+            spherical.clock = unwrappedInterval[0];
+            spherical.cone = unwrappedInterval[1];
+            spherical.magnityde = 1.0;
+            return spherical;
         },
 
-        createValueFromArray : function(array, startingIndex) {
-            return new Spherical(array[startingIndex], array[startingIndex + 1], 1.0);
+        createValueFromArray : function(array, startingIndex, spherical) {
+            if (typeof spherical === 'undefined') {
+                spherical = new Spherical();
+            }
+            spherical.clock = array[startingIndex];
+            spherical.cone = array[startingIndex + 1];
+            spherical.magnityde = 1.0;
+            return spherical;
         },
 
-        createValueFromInterpolationResult : function(array) {
-            return new Spherical(array[0], array[1], 1.0);
-        }
+        createValueFromInterpolationResult : function(array, spherical) {
+            if (typeof spherical === 'undefined') {
+                spherical = new Spherical();
+            }
+            spherical.clock = array[0];
+            spherical.cone = array[1];
+            spherical.magnityde = 1.0;
+            return spherical;
+        },
     };
 
     return CzmlUnitSpherical;

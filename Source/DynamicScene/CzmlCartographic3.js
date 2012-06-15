@@ -40,16 +40,34 @@ function(Cartographic3,
             return Array.isArray(unwrappedInterval) && unwrappedInterval.length > doublesPerValue;
         },
 
-        createValue : function(unwrappedInterval) {
-            return new Cartographic3(unwrappedInterval[0], unwrappedInterval[1], unwrappedInterval[2]);
+        createValue : function(unwrappedInterval, existingInstance) {
+            if (typeof existingInstance === 'undefined') {
+                existingInstance = new Cartographic3();
+            }
+            existingInstance.longitude = unwrappedInterval[0];
+            existingInstance.latitude = unwrappedInterval[1];
+            existingInstance.height = unwrappedInterval[2];
+            return existingInstance;
         },
 
-        createValueFromArray : function(array, startingIndex) {
-            return new Cartographic3(array[startingIndex], array[startingIndex + 1], array[startingIndex + 2]);
+        createValueFromArray : function(array, startingIndex, existingInstance) {
+            if (typeof existingInstance === 'undefined') {
+                existingInstance = new Cartographic3();
+            }
+            existingInstance.longitude = array[startingIndex];
+            existingInstance.latitude = array[startingIndex + 1];
+            existingInstance.height = array[startingIndex + 2];
+            return existingInstance;
         },
 
-        createValueFromInterpolationResult : function(array) {
-            return new Cartographic3(array[0], array[1], array[2]);
+        createValueFromInterpolationResult : function(array, existingInstance) {
+            if (typeof existingInstance === 'undefined') {
+                existingInstance = new Cartographic3();
+            }
+            existingInstance.longitude = array[0];
+            existingInstance.latitude = array[1];
+            existingInstance.height = array[2];
+            return existingInstance;
         },
 
         convertToCartographic3 : function(cartographic3) {

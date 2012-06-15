@@ -141,7 +141,7 @@ defineSuite([
         var iso8601Epoch = '2012-04-18T15:59:00Z';
         var epoch = JulianDate.fromIso8601(iso8601Epoch);
 
-        var reference = new Quaternion(1, 2, 3, 4, true);
+        var reference = new Quaternion(1, 2, 3, 4).normalize();
         var property = new DynamicProperty(CzmlUnitQuaternion);
         var czmlInterval = {
             unitQuaternion : [reference.x, reference.y, reference.z, reference.w]

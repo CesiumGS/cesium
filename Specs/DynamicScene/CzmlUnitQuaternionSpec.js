@@ -10,8 +10,8 @@ defineSuite([
     "use strict";
     /*global it,expect*/
 
-    var quaternion1 = new Quaternion(1, 2, 3, 4, true);
-    var quaternion2 = new Quaternion(4, 5, 6, 7, true);
+    var quaternion1 = new Quaternion(1, 2, 3, 4).normalize();
+    var quaternion2 = new Quaternion(4, 5, 6, 7).normalize();
 
     var constantQuaternionInterval = {
         unitQuaternion : [quaternion1.x, quaternion1.y, quaternion1.z, quaternion1.w]

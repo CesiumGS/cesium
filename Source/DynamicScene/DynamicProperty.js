@@ -285,7 +285,7 @@ define([
                 // Interpolate!
                 var x = times[lastIndex].getSecondsDifference(time);
                 var result = intervalData.interpolationAlgorithm.interpolateOrderZero(x, xTable, yTable, doublesPerInterpolationValue);
-                return this._cachedValue = thisValueType.createValueFromInterpolationResult(result, values, firstIndex, lastIndex);
+                return thisValueType.createValueFromInterpolationResult(result, this._cachedValue, values, firstIndex, lastIndex);
             }
             return this._cachedValue = thisValueType.createValueFromArray(intervalData.values, index * doublesPerValue);
         }

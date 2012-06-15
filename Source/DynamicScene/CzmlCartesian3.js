@@ -19,16 +19,34 @@ function(Cartesian3, Ellipsoid) {
             return Array.isArray(unwrappedInterval) && unwrappedInterval.length > doublesPerValue;
         },
 
-        createValue : function(unwrappedInterval) {
-            return new Cartesian3(unwrappedInterval[0], unwrappedInterval[1], unwrappedInterval[2]);
+        createValue : function(unwrappedInterval, existingInstance) {
+            if (typeof existingInstance === 'undefined') {
+                existingInstance = new Cartesian3();
+            }
+            existingInstance.x = unwrappedInterval[0];
+            existingInstance.y = unwrappedInterval[1];
+            existingInstance.z = unwrappedInterval[2];
+            return existingInstance;
         },
 
-        createValueFromArray : function(array, startingIndex) {
-            return new Cartesian3(array[startingIndex], array[startingIndex + 1], array[startingIndex + 2]);
+        createValueFromArray : function(array, startingIndex, existingInstance) {
+            if (typeof existingInstance === 'undefined') {
+                existingInstance = new Cartesian3();
+            }
+            existingInstance.x = array[startingIndex];
+            existingInstance.y = array[startingIndex + 1];
+            existingInstance.z = array[startingIndex + 2];
+            return existingInstance;
         },
 
-        createValueFromInterpolationResult : function(array) {
-            return new Cartesian3(array[0], array[1], array[2]);
+        createValueFromInterpolationResult : function(array, existingInstance) {
+            if (typeof existingInstance === 'undefined') {
+                existingInstance = new Cartesian3();
+            }
+            existingInstance.x = array[0];
+            existingInstance.y = array[1];
+            existingInstance.z = array[2];
+            return existingInstance;
         },
 
         convertToCartographic3 : function(cartesian3) {

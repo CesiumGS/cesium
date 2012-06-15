@@ -10,8 +10,8 @@ defineSuite([
     "use strict";
     /*global it,expect*/
 
-    var cartesian1 = new Cartesian3(1, 2, 3, true);
-    var cartesian2 = new Cartesian3(4, 5, 6, true);
+    var cartesian1 = new Cartesian3(1, 2, 3).normalize();
+    var cartesian2 = new Cartesian3(4, 5, 6).normalize();
 
     var constantCartesianInterval = {
         unitCartesian : [cartesian1.x, cartesian1.y, cartesian1.z]

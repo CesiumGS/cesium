@@ -29,11 +29,11 @@ define([
         },
 
         packValuesForInterpolation : function(sourceArray, destinationArray, firstIndex, lastIndex) {
-            Quaternion.conjugate(CzmlUnitQuaternion.applyValueFromArray(sourceArray, lastIndex * doublesPerQuaternion, quaternion0Conjugate));
+            Quaternion.conjugate(CzmlUnitQuaternion.createValueFromArray(sourceArray, lastIndex * doublesPerQuaternion, quaternion0Conjugate));
 
             for ( var i = 0, len = lastIndex - firstIndex + 1; i < len; i++) {
                 var offset = i * doublesPerCartesian;
-                CzmlUnitQuaternion.applyValueFromArray(sourceArray, (firstIndex + i) * doublesPerQuaternion, tmpQuaternion);
+                CzmlUnitQuaternion.createValueFromArray(sourceArray, (firstIndex + i) * doublesPerQuaternion, tmpQuaternion);
 
                 Quaternion.multiply(tmpQuaternion, quaternion0Conjugate, tmpQuaternion);
 
@@ -49,21 +49,38 @@ define([
             }
         },
 
-        createValue : function(unwrappedInterval) {
-            return Quaternion.normalize(new Quaternion(unwrappedInterval[0], unwrappedInterval[1], unwrappedInterval[2], unwrappedInterval[3]));
+        createValue : function(unwrappedInterval, existingInstance) {
+            if (typeof existingInstance === 'undefined') {
+                existingInstance = new Quaternion();
+            }
+            existingInstance.x = unwrappedInterval[0];
+            existingInstance.y = unwrappedInterval[2];
+            existingInstance.z = unwrappedInterval[3];
+            existingInstance.w = unwrappedInterval[4];
+            return Quaternion.normalize(existingInstance);
         },
 
-        createValueFromArray : function(array, startingIndex) {
-            return Quaternion.normalize(new Quaternion(array[startingIndex], array[startingIndex + 1], array[startingIndex + 2], array[startingIndex + 3]));
+        createValueFromArray : function(array, startingIndex, existingInstance) {
+            if (typeof existingInstance === 'undefined') {
+                existingInstance = new Quaternion();
+            }
+            existingInstance.x = array[startingIndex];
+            existingInstance.y = array[startingIndex + 1];
+            existingInstance.z = array[startingIndex + 2];
+            existingInstance.w = array[startingIndex + 3];
+            return Quaternion.normalize(existingInstance);
         },
 
-        createValueFromInterpolationResult : function(array, sourceArray, firstIndex, lastIndex) {
+        createValueFromInterpolationResult : function(array, existingInstance, sourceArray, firstIndex, lastIndex) {
+            if (typeof existingInstance === 'undefined') {
+                existingInstance = new Quaternion();
+            }
             rotationVector.x = array[0];
             rotationVector.y = array[1];
             rotationVector.z = array[2];
             var magnitude = rotationVector.magnitude();
 
-            CzmlUnitQuaternion.applyValueFromArray(sourceArray, lastIndex * doublesPerQuaternion, quaternion0);
+            CzmlUnitQuaternion.createValueFromArray(sourceArray, lastIndex * doublesPerQuaternion, quaternion0);
 
             var difference;
             if (magnitude === 0) {
@@ -86,15 +103,7 @@ define([
                 difference.w = c;
             }
 
-            return Quaternion.normalize(Quaternion.multiply(difference, quaternion0, new Quaternion()));
-        },
-
-        applyValueFromArray : function(array, startingIndex, quaternion) {
-            quaternion.x = array[startingIndex];
-            quaternion.y = array[startingIndex + 1];
-            quaternion.z = array[startingIndex + 2];
-            quaternion.w = array[startingIndex + 3];
-            return Quaternion.normalize(quaternion);
+            return Quaternion.normalize(Quaternion.multiply(difference, quaternion0, existingInstance));
         },
     };
 

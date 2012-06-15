@@ -19,16 +19,31 @@ define([
             return Array.isArray(unwrappedInterval) && unwrappedInterval.length > doublesPerValue;
         },
 
-        createValue : function(unwrappedInterval) {
-            return new Cartesian2(unwrappedInterval[0], unwrappedInterval[1]);
+        createValue : function(unwrappedInterval, existingInstance) {
+            if (typeof existingInstance === 'undefined') {
+                existingInstance = new Cartesian2();
+            }
+            existingInstance.x = unwrappedInterval[0];
+            existingInstance.y = unwrappedInterval[1];
+            return existingInstance;
         },
 
-        createValueFromArray : function(array, startingIndex) {
-            return new Cartesian2(array[startingIndex], array[startingIndex + 1]);
+        createValueFromArray : function(array, startingIndex, existingInstance) {
+            if (typeof existingInstance === 'undefined') {
+                existingInstance = new Cartesian2();
+            }
+            existingInstance.x = array[startingIndex];
+            existingInstance.y = array[startingIndex + 1];
+            return existingInstance;
         },
 
-        createValueFromInterpolationResult : function(array) {
-            return new Cartesian2(array[0], array[1]);
+        createValueFromInterpolationResult : function(array, existingInstance) {
+            if (typeof existingInstance === 'undefined') {
+                existingInstance = new Cartesian2();
+            }
+            existingInstance.x = array[0];
+            existingInstance.y = array[1];
+            return existingInstance;
         }
     };
 
