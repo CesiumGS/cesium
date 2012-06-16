@@ -5,6 +5,7 @@ define([
         '../Core/TimeIntervalCollection',
         '../Core/Cartesian3',
         '../Core/Spherical',
+        '../Core/CoordinateConversions',
         '../Core/Math',
         '../Core/Iso8601',
         './ReferenceProperty',
@@ -15,6 +16,7 @@ define([
         TimeIntervalCollection,
         Cartesian3,
         Spherical,
+        CoordinateConversions,
         CesiumMath,
         Iso8601,
         ReferenceProperty,
@@ -48,7 +50,7 @@ define([
             this.spherical = sphericals;
             var cartesians = this.cartesian;
             for ( var i = 0, len = cartesians.length; i < len; i++) {
-                sphericals[i].push(Spherical.fromCartesian3(cartesians[i]));
+                sphericals[i].push(CoordinateConversions.cartesian3ToSpherical(cartesians[i]));
             }
         }
         return sphericals;
@@ -61,7 +63,7 @@ define([
             this.cartesian = cartesians;
             var sphericals = this.spherical;
             for ( var i = 0, len = sphericals.length; i < len; i++) {
-                cartesians[i].push(Cartesian3.fromSpherical(sphericals[i]));
+                cartesians[i].push(CoordinateConversions.sphericalToCartesian3(sphericals[i]));
             }
         }
         return cartesians;

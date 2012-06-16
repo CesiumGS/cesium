@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/Ellipsoid',
         '../Core/JulianDate',
         '../Core/TimeInterval',
         '../Core/TimeIntervalCollection',
@@ -10,6 +11,7 @@ define([
         './CzmlCartographic3',
         './DynamicProperty'
     ], function(
+        Ellipsoid,
         JulianDate,
         TimeInterval,
         TimeIntervalCollection,
@@ -20,6 +22,8 @@ define([
         CzmlCartographic3,
         DynamicProperty) {
     "use strict";
+
+    var wgs84 = Ellipsoid.WGS84;
 
     function DynamicPositionProperty() {
         this._dynamicProperties = [];
@@ -133,7 +137,7 @@ define([
         }
         var result = interval.cachedValue = property.getValue(time, interval.cachedValue);
         if (typeof result !== undefined) {
-            result = valueType.convertToCartographic3(result);
+            result = wgs84.toCartographic3(result);
         }
         return result;
     };
@@ -158,7 +162,7 @@ define([
         }
         var result = interval.cachedValue = property.getValue(time, interval.cachedValue);
         if (typeof result !== undefined) {
-            result = valueType.convertToCartesian3(result);
+            result = wgs84.toCartesian(result);
         }
         return result;
     };

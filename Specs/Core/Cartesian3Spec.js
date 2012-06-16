@@ -192,20 +192,4 @@ defineSuite([
         var v = new Cartesian3(1, 2, 3);
         expect(v.toString()).toEqual('(1, 2, 3)');
     });
-
-    it('toSpherical', function() {
-        var fortyFiveDegrees = Math.PI / 4.0;
-        var sixtyDegrees = Math.PI / 3.0;
-        var cartesian = new Cartesian3(1.0, Math.sqrt(3.0), -2.0);
-        var spherical = new Spherical(sixtyDegrees, fortyFiveDegrees + Math.PI / 2.0, Math.sqrt(8.0));
-        expect(spherical).toEqualEpsilon(Cartesian3.toSpherical(cartesian), CesiumMath.EPSILON15);
-    });
-
-    it('fromSpherical', function() {
-        var fortyFiveDegrees = Math.PI / 4.0;
-        var sixtyDegrees = Math.PI / 3.0;
-        var cartesian = new Cartesian3(1.0, Math.sqrt(3.0), -2.0);
-        var spherical = new Spherical(sixtyDegrees, fortyFiveDegrees + Math.PI / 2.0, Math.sqrt(8.0));
-        expect(cartesian).toEqualEpsilon(Cartesian3.fromSpherical(spherical), CesiumMath.EPSILON15);
-    });
 });

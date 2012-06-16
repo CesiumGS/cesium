@@ -1,13 +1,10 @@
 /*global define*/
 define(['../Core/Cartographic3',
-        '../Core/Ellipsoid',
         '../Core/Math'],
 function(Cartographic3,
-         Ellipsoid,
          CesiumMath) {
     "use strict";
 
-    var wgs84 = Ellipsoid.WGS84;
     var doublesPerValue = 3;
 
     var CzmlCartographic3 = {
@@ -69,14 +66,6 @@ function(Cartographic3,
             existingInstance.height = array[2];
             return existingInstance;
         },
-
-        convertToCartographic3 : function(cartographic3) {
-            return cartographic3;
-        },
-
-        convertToCartesian3 : function(cartographic3) {
-            return wgs84.toCartesian(cartographic3);
-        }
     };
 
     return CzmlCartographic3;

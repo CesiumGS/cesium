@@ -1,11 +1,11 @@
 /*global define*/
-define(['../Core/Cartesian3',
-        '../Core/Ellipsoid'],
-function(Cartesian3, Ellipsoid) {
+define([
+        '../Core/Cartesian3'
+       ], function(
+         Cartesian3) {
     "use strict";
 
     var doublesPerValue = 3;
-    var wgs84 = Ellipsoid.WGS84;
 
     var CzmlCartesian3 = {
         doublesPerValue : doublesPerValue,
@@ -47,14 +47,6 @@ function(Cartesian3, Ellipsoid) {
             existingInstance.y = array[1];
             existingInstance.z = array[2];
             return existingInstance;
-        },
-
-        convertToCartographic3 : function(cartesian3) {
-            return wgs84.toCartographic3(cartesian3);
-        },
-
-        convertToCartesian3 : function(cartesian3) {
-            return cartesian3;
         }
     };
 
