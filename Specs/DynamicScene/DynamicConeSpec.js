@@ -198,14 +198,18 @@ defineSuite([
 
         DynamicCone.mergeProperties(targetObject, objectToMerge);
 
-        expect(targetObject.cone.image).toEqual(targetObject.cone.image);
-        expect(targetObject.cone.scale).toEqual(targetObject.cone.scale);
-        expect(targetObject.cone.horizontalOrigin).toEqual(targetObject.cone.horizontalOrigin);
-        expect(targetObject.cone.verticalOrigin).toEqual(targetObject.cone.verticalOrigin);
-        expect(targetObject.cone.color).toEqual(targetObject.cone.color);
-        expect(targetObject.cone.eyeOffset).toEqual(targetObject.cone.eyeOffset);
-        expect(targetObject.cone.pixelOffset).toEqual(targetObject.cone.pixelOffset);
+        expect(targetObject.cone.capMaterial).toEqual(targetObject.cone.capMaterial);
+        expect(targetObject.cone.innerHalfAngle).toEqual(targetObject.cone.innerHalfAngle);
+        expect(targetObject.cone.innerMaterial).toEqual(targetObject.cone.innerMaterial);
+        expect(targetObject.cone.intersectionColor).toEqual(targetObject.cone.intersectionColor);
+        expect(targetObject.cone.maximumClockAngle).toEqual(targetObject.cone.maximumClockAngle);
+        expect(targetObject.cone.minimumClockAngle).toEqual(targetObject.cone.minimumClockAngle);
+        expect(targetObject.cone.outerHalfAngle).toEqual(targetObject.cone.outerHalfAngle);
+        expect(targetObject.cone.outerMaterial).toEqual(targetObject.cone.outerMaterial);
+        expect(targetObject.cone.radius).toEqual(targetObject.cone.radius);
         expect(targetObject.cone.show).toEqual(targetObject.cone.show);
+        expect(targetObject.cone.showIntersection).toEqual(targetObject.cone.showIntersection);
+        expect(targetObject.cone.silhouetteMaterial).toEqual(targetObject.cone.silhouetteMaterial);
     });
 
     it('mergeProperties creates and configures an undefined cone', function() {
@@ -258,14 +262,18 @@ defineSuite([
 
         DynamicCone.mergeProperties(targetObject, objectToMerge);
 
-        expect(targetObject.cone.image).toEqual(targetObject.cone.image);
-        expect(targetObject.cone.scale).toEqual(targetObject.cone.scale);
-        expect(targetObject.cone.horizontalOrigin).toEqual(targetObject.cone.horizontalOrigin);
-        expect(targetObject.cone.verticalOrigin).toEqual(targetObject.cone.verticalOrigin);
-        expect(targetObject.cone.color).toEqual(targetObject.cone.color);
-        expect(targetObject.cone.eyeOffset).toEqual(targetObject.cone.eyeOffset);
-        expect(targetObject.cone.pixelOffset).toEqual(targetObject.cone.pixelOffset);
+        expect(targetObject.cone.capMaterial).toEqual(targetObject.cone.capMaterial);
+        expect(targetObject.cone.innerHalfAngle).toEqual(targetObject.cone.innerHalfAngle);
+        expect(targetObject.cone.innerMaterial).toEqual(targetObject.cone.innerMaterial);
+        expect(targetObject.cone.intersectionColor).toEqual(targetObject.cone.intersectionColor);
+        expect(targetObject.cone.maximumClockAngle).toEqual(targetObject.cone.maximumClockAngle);
+        expect(targetObject.cone.minimumClockAngle).toEqual(targetObject.cone.minimumClockAngle);
+        expect(targetObject.cone.outerHalfAngle).toEqual(targetObject.cone.outerHalfAngle);
+        expect(targetObject.cone.outerMaterial).toEqual(targetObject.cone.outerMaterial);
+        expect(targetObject.cone.radius).toEqual(targetObject.cone.radius);
         expect(targetObject.cone.show).toEqual(targetObject.cone.show);
+        expect(targetObject.cone.showIntersection).toEqual(targetObject.cone.showIntersection);
+        expect(targetObject.cone.silhouetteMaterial).toEqual(targetObject.cone.silhouetteMaterial);
     });
 
     it('undefineProperties works', function() {
