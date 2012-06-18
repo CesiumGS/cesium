@@ -246,4 +246,12 @@ require({
             dom.byId('saveAsNewWindow').href = htmlBlobURL;
 
         });
+
+        registry.byId('buttonThumbnail').on('change', function (newValue) {
+            if (newValue) {
+                domClass.add('bucketFrame', 'makeThumbnail');
+            } else {
+                domClass.remove('bucketFrame', 'makeThumbnail');
+            }
+        });
     });

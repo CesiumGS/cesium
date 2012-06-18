@@ -79,6 +79,23 @@ html, body {
     border: none;
     width: 100%;
     height: 100%;
+    -moz-transition-property: transform;
+    -moz-transition-duration: 0.5s;
+    -moz-transform-origin: 50% 50%;
+    -webkit-transition-property: transform;
+    -webkit-transition-duration: 0.5s;
+    -webkit-transform-origin: 50% 50%;
+    transition-property: transform;
+    transition-duration: 0.5s;
+    transform-origin: 50% 50%;
+}
+
+.makeThumbnail {
+    width: 900px;
+    height: 600px;
+    -moz-transform: scale(0.2);
+    -webkit-transform: scale(0.2);
+    transform: scale(0.2);
 }
 
 .saveAsDialog {
