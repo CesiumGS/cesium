@@ -18,6 +18,8 @@ defineSuite([
     "use strict";
     /*global it,expect*/
 
+    //CZML_TODO Implement real tests
+
     it('TODO', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
 

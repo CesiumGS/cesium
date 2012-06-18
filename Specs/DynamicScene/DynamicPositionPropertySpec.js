@@ -12,6 +12,8 @@ defineSuite([
     "use strict";
     /*global it,expect*/
 
+    //CZML_TODO Implement real tests
+
     it('Works with Cartesian3 interpolatable values (specified linear interpolator).', function() {
         var iso8601Epoch = '2012-04-18T15:59:00Z';
         var epoch = JulianDate.fromIso8601(iso8601Epoch);

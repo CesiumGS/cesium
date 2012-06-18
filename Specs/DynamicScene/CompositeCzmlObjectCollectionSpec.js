@@ -22,6 +22,8 @@ defineSuite([
     "use strict";
     /*global it,expect*/
 
+    //CZML_TODO Implement real tests
+
     it('applyChanges works with Existing buffers', function() {
 
         var dynamicObjectCollection1 = new DynamicObjectCollection();

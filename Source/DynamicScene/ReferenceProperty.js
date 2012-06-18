@@ -2,10 +2,6 @@
 define(function() {
     "use strict";
 
-    //CZML_TODO We should probably have a ReferencePositionProperty and a ReferenceDirectionProperty
-    //rather than have them all tied together like this.  Though it might be easier to just
-    //keep it this way.
-
     function ReferenceProperty(buffer, targetObjectId, targetPropertyName) {
         this.targetProperty = undefined;
         this.buffer = buffer;
