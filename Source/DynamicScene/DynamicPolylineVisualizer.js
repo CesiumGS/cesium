@@ -1,8 +1,10 @@
 /*global define*/
 define([
+        '../Core/destroyObject',
         '../Core/Color',
         '../Scene/Polyline'
        ], function(
+         destroyObject,
          Color,
          Polyline) {
     "use strict";
@@ -142,6 +144,7 @@ define([
         var i, len;
         for (i = 0, len = this._polylineCollection.length; i < len; i++) {
             this._primitives.remove(this._polylineCollection[i]);
+            this._polylineCollection[i].destroy();
         }
 
         var dynamicObjects = this._dynamicObjectCollection.getObjects();
@@ -166,6 +169,46 @@ define([
                 dynamicObject.polylineVisualizerIndex = undefined;
             }
         }
+    };
+
+    /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * <br /><br />
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     *
+     * @memberof DynamicPolylineVisualizer
+     *
+     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     *
+     * @see DynamicPolylineVisualizer#destroy
+     */
+    DynamicPolylineVisualizer.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <br /><br />
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     *
+     * @memberof DynamicPolylineVisualizer
+     *
+     * @return {undefined}
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     * @see DynamicPolylineVisualizer#isDestroyed
+     *
+     * @example
+     * visualizer = visualizer && visualizer.destroy();
+     */
+    DynamicPolylineVisualizer.prototype.destroy = function() {
+        this.removeAll();
+        return destroyObject(this);
     };
 
     return DynamicPolylineVisualizer;

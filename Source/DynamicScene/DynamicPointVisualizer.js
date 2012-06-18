@@ -1,9 +1,13 @@
 /*global define document canvas*/
-define(['../Renderer/TextureAtlas',
+define([
+        '../Core/destroyObject',
         '../Core/Color',
-        '../Scene/BillboardCollection'],
-function(TextureAtlas,
+        '../Renderer/TextureAtlas',
+        '../Scene/BillboardCollection'
+       ], function(
+         destroyObject,
          Color,
+         TextureAtlas,
          BillboardCollection) {
     "use strict";
 
@@ -223,6 +227,49 @@ function(TextureAtlas,
                 thisUnusedIndexes.push(pointVisualizerIndex);
             }
         }
+    };
+
+    /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * <br /><br />
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     *
+     * @memberof DynamicPointVisualizer
+     *
+     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     *
+     * @see DynamicPointVisualizer#destroy
+     */
+    DynamicPointVisualizer.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <br /><br />
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     *
+     * @memberof DynamicPointVisualizer
+     *
+     * @return {undefined}
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     * @see DynamicPointVisualizer#isDestroyed
+     *
+     * @example
+     * visualizer = visualizer && visualizer.destroy();
+     */
+    DynamicPointVisualizer.prototype.destroy = function() {
+        this.removeAll();
+        this._scene.getPrimitives().remove(this._billboardCollection);
+        this._billboardCollection.destroy();
+        this._textureAtlas.destroy();
+        return destroyObject(this);
     };
 
     return DynamicPointVisualizer;

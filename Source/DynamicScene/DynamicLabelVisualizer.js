@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/destroyObject',
         '../Core/Color',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -8,6 +9,7 @@ define([
         '../Scene/HorizontalOrigin',
         '../Scene/VerticalOrigin'
     ], function(
+        destroyObject,
         Color,
         Cartesian2,
         Cartesian3,
@@ -236,6 +238,48 @@ define([
                 dynamicObject.labelVisualizerIndex = undefined;
             }
         }
+    };
+
+    /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * <br /><br />
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     *
+     * @memberof DynamicLabelVisualizer
+     *
+     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     *
+     * @see DynamicLabelVisualizer#destroy
+     */
+    DynamicLabelVisualizer.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <br /><br />
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     *
+     * @memberof DynamicLabelVisualizer
+     *
+     * @return {undefined}
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     * @see DynamicLabelVisualizer#isDestroyed
+     *
+     * @example
+     * visualizer = visualizer && visualizer.destroy();
+     */
+    DynamicLabelVisualizer.prototype.destroy = function() {
+        this.removeAll();
+        this._scene.getPrimitives().remove(this._labelCollection);
+        this._labelCollection.destroy();
+        return destroyObject(this);
     };
 
     return DynamicLabelVisualizer;

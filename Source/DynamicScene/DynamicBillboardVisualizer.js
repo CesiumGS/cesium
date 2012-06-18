@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/destroyObject',
         '../Core/Color',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -8,6 +9,7 @@ define([
         '../Scene/HorizontalOrigin',
         '../Scene/VerticalOrigin'
     ], function(
+        destroyObject,
         Color,
         Cartesian2,
         Cartesian3,
@@ -236,6 +238,49 @@ define([
                 thisUnusedIndexes.push(billboardVisualizerIndex);
             }
         }
+    };
+
+    /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * <br /><br />
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     *
+     * @memberof DynamicBillboardVisualizer
+     *
+     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     *
+     * @see DynamicBillboardVisualizer#destroy
+     */
+    DynamicBillboardVisualizer.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <br /><br />
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     *
+     * @memberof DynamicBillboardVisualizer
+     *
+     * @return {undefined}
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     * @see DynamicBillboardVisualizer#isDestroyed
+     *
+     * @example
+     * visualizer = visualizer && visualizer.destroy();
+     */
+    DynamicBillboardVisualizer.prototype.destroy = function() {
+        this.removeAll();
+        this._scene.getPrimitives().remove(this._billboardCollection);
+        this._billboardCollection.destroy();
+        this._textureAtlas.destroy();
+        return destroyObject(this);
     };
 
     return DynamicBillboardVisualizer;

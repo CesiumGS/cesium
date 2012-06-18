@@ -1,11 +1,13 @@
 /*global define*/
 define([
+        '../Core/destroyObject',
         '../Core/Color',
         '../Core/Math',
         '../Core/Matrix4',
         '../Scene/ComplexConicSensorVolume',
         '../Scene/ColorMaterial'
        ], function(
+         destroyObject,
          Color,
          CesiumMath,
          Matrix4,
@@ -13,7 +15,7 @@ define([
          ColorMaterial) {
     "use strict";
 
-    var setModelMatrix = function(sensor,  position, orientation)
+    var setModelMatrix = function(sensor, position, orientation)
     {
         position = position || sensor.dynamicConeVisualizerLastPosition;
         orientation = orientation || sensor.dynamicConeVisualizerLastOrientation;
@@ -230,6 +232,7 @@ define([
         var i, len;
         for (i = 0, len = this._coneCollection.length; i < len; i++) {
             this._primitives.remove(this._coneCollection[i]);
+            this._coneCollection[i].destroy();
         }
 
         var dynamicObjects = this._dynamicObjectCollection.getObjects();
@@ -254,6 +257,46 @@ define([
                 dynamicObject.coneVisualizerIndex = undefined;
             }
         }
+    };
+
+    /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * <br /><br />
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     *
+     * @memberof DynamicConeVisualizer
+     *
+     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     *
+     * @see DynamicConeVisualizer#destroy
+     */
+    DynamicConeVisualizer.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <br /><br />
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     *
+     * @memberof DynamicConeVisualizer
+     *
+     * @return {undefined}
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     * @see DynamicConeVisualizer#isDestroyed
+     *
+     * @example
+     * visualizer = visualizer && visualizer.destroy();
+     */
+    DynamicConeVisualizer.prototype.destroy = function() {
+        this.removeAll();
+        return destroyObject(this);
     };
 
     return DynamicConeVisualizer;
