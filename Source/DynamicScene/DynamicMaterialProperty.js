@@ -47,13 +47,13 @@ define([
         return undefined;
     };
 
-    DynamicMaterialProperty.prototype.addIntervals = function(czmlIntervals, buffer, sourceUri, constrainedInterval) {
+    DynamicMaterialProperty.prototype.addIntervals = function(czmlIntervals, buffer, constrainedInterval) {
         if (Array.isArray(czmlIntervals)) {
             for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
-                this.addInterval(czmlIntervals[i], buffer, sourceUri, constrainedInterval);
+                this.addInterval(czmlIntervals[i], buffer, constrainedInterval);
             }
         } else {
-            this.addInterval(czmlIntervals, buffer, sourceUri, constrainedInterval);
+            this.addInterval(czmlIntervals, buffer, constrainedInterval);
         }
     };
 
@@ -65,7 +65,7 @@ define([
         return existingMaterial;
     };
 
-    DynamicMaterialProperty.prototype.addInterval = function(czmlInterval, buffer, sourceUri, constrainedInterval) {
+    DynamicMaterialProperty.prototype.addInterval = function(czmlInterval, buffer, constrainedInterval) {
         var iso8601Interval = czmlInterval.interval, property, material;
         if (typeof iso8601Interval === 'undefined') {
             iso8601Interval = Iso8601.MAXIMUM_INTERVAL.clone();
