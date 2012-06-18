@@ -359,4 +359,274 @@ defineSuite([
         expect(polylines.contains()).toBeFalsy();
     });
 
+    it("doesn't render when constructed", function() {
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+    });
+
+    it("modifies and removes a polyline, then renders", function() {
+        var p = polylines.add({
+            positions : [{
+                x : 0.0,
+                y : -1.0,
+                z : 0.0
+            },
+            {
+                x : 0.0,
+                y : 1.0,
+                z : 0.0
+            }],
+            color : {
+                red : 1.0,
+                green : 0.0,
+                blue : 0.0,
+                alpha : 1.0
+            }
+        });
+
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).not.toEqualArray([0, 0, 0, 0]);
+
+        polylines.remove(p);
+
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+    });
+
+    it("renders a green polyline", function() {
+        polylines.add({
+            positions : [{
+                x : 0.0,
+                y : -1.0,
+                z : 0.0
+            },
+            {
+                x : 0.0,
+                y : 1.0,
+                z : 0.0
+            }],
+            color : {
+                red : 0.0,
+                green : 1.0,
+                blue : 0.0,
+                alpha : 1.0
+            }
+        });
+
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([0, 255, 0, 255]);
+    });
+
+    it("adds and renders a polyline", function() {
+        polylines.add({
+            positions : [{
+                x : 0.0,
+                y : -1.0,
+                z : 0.0
+            },
+            {
+                x : 0.0,
+                y : 1.0,
+                z : 0.0
+            }],
+            color : {
+                red : 0.0,
+                green : 1.0,
+                blue : 0.0,
+                alpha : 1.0
+            }
+        });
+
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([0, 255, 0, 255]);
+
+        polylines.add({
+            positions : [{
+                x : 0.5,
+                y : -1.0,
+                z : 0.0
+            },
+            {
+                x : 0.5,
+                y : 1.0,
+                z : 0.0
+            }],
+            color : {
+                red : 0.0,
+                green : 0.0,
+                blue : 1.0,
+                alpha : 1.0
+            }
+        });
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([0, 0, 255, 255]);
+    });
+
+    it("removes and renders a polyline", function() {
+        polylines.add({
+            positions : [{
+                x : 0.0,
+                y : -1.0,
+                z : 0.0
+            },
+            {
+                x : 0.0,
+                y : 1.0,
+                z : 0.0
+            }],
+            color : {
+                red : 1.0,
+                green : 0.0,
+                blue : 0.0,
+                alpha : 1.0
+            }
+        });
+        var bluePolyline = polylines.add({
+            positions : [{
+                x : 0.5,
+                y : -1.0,
+                z : 0.0
+            },
+            {
+                x : 0.5,
+                y : 1.0,
+                z : 0.0
+            }],
+            color : {
+                red : 0.0,
+                green : 0.0,
+                blue : 1.0,
+                alpha : 1.0
+            }
+        });
+
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([0, 0, 255, 255]);
+
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.remove(bluePolyline);
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
+    });
+
+    it("removes all polylines and renders", function() {
+        polylines.add({
+            positions : [{
+                x : 0.0,
+                y : -1.0,
+                z : 0.0
+            },
+            {
+                x : 0.0,
+                y : 1.0,
+                z : 0.0
+            }],
+            color : {
+                red : 1.0,
+                green : 0.0,
+                blue : 0.0,
+                alpha : 1.0
+            }
+        });
+
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
+
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.removeAll();
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+    });
+
+    it("removes all polylines, adds a polyline, and renders", function() {
+        polylines.add({
+            positions : [{
+                x : 0.0,
+                y : -1.0,
+                z : 0.0
+            },
+            {
+                x : 0.0,
+                y : 1.0,
+                z : 0.0
+            }],
+            color : {
+                red : 1.0,
+                green : 0.0,
+                blue : 0.0,
+                alpha : 1.0
+            }
+        });
+
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
+
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.removeAll();
+        polylines.add({
+            positions : [{
+                x : 0.0,
+                y : -1.0,
+                z : 0.0
+            },
+            {
+                x : 0.0,
+                y : 1.0,
+                z : 0.0
+            }],
+            color : {
+                red : 0.0,
+                green : 0.0,
+                blue : 1.0,
+                alpha : 1.0
+            }
+        });
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([0, 0, 255, 255]);
+    });
+
 });
