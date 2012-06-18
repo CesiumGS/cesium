@@ -138,7 +138,6 @@ defineSuite([
 
         DynamicPoint.mergeProperties(targetObject, objectToMerge);
 
-        expect(targetObject.point.image).toEqual(targetObject.point.image);
         expect(targetObject.point.scale).toEqual(targetObject.point.scale);
         expect(targetObject.point.horizontalOrigin).toEqual(targetObject.point.horizontalOrigin);
         expect(targetObject.point.verticalOrigin).toEqual(targetObject.point.verticalOrigin);

@@ -138,7 +138,6 @@ defineSuite([
 
         DynamicPolyline.mergeProperties(targetObject, objectToMerge);
 
-        expect(targetObject.polyline.image).toEqual(targetObject.polyline.image);
         expect(targetObject.polyline.scale).toEqual(targetObject.polyline.scale);
         expect(targetObject.polyline.horizontalOrigin).toEqual(targetObject.polyline.horizontalOrigin);
         expect(targetObject.polyline.verticalOrigin).toEqual(targetObject.polyline.verticalOrigin);
