@@ -15,12 +15,14 @@
 
 package com.agi;
 
+import java.awt.Point;
 import java.awt.Transparency;
 import java.awt.color.ColorSpace;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.ComponentColorModel;
 import java.awt.image.DataBuffer;
+import java.awt.image.DataBufferInt;
 import java.awt.image.DataBufferUShort;
 import java.awt.image.Raster;
 import java.awt.image.WritableRaster;
@@ -71,26 +73,24 @@ public final class TiffToPngHandler extends AbstractHandler {
 		float[] pixels = new float[sourceImage.getWidth() * sourceImage.getHeight()];
 		sourceRaster.getSamples(0, 0, sourceImage.getWidth(), sourceImage.getHeight(), 0, pixels);
 
-		final int bias = 1000;
+		//final int bias = 1000;
 
-		short[] shortPixels = new short[sourceImage.getWidth() * sourceImage.getHeight()];
-		for (int i = 0; i < shortPixels.length; ++i) {
-			int value = Math.round(pixels[i]) + bias;
-			shortPixels[i] = (short)value;
+		BufferedImage result = new BufferedImage(sourceImage.getWidth(), sourceImage.getHeight(), BufferedImage.TYPE_INT_ARGB);
+		DataBufferInt buffer = (DataBufferInt)result.getRaster().getDataBuffer();
+		
+		for (int i = 0; i < pixels.length; ++i) {
+			// When we read pixels in Javascript using canvas.getImageData(), the bytes are ordered
+			// Red-Green-Blue-Alpha.   In our result image, the integer is organized
+			// Alpha-Blue-Green-Red which corresponds to big-endian 0xAARRGGBB.
+			// floatToRawIntBits puts the sign in the most significant bit of the integer,
+			// which means the sign bit goes into alpha.  But to m4atch the order on the client,
+			// we want the sign bit in red.  So shift 8 bits to the right and add the prior
+			// least significant byte to the most significant position.
+			int pixelValue = Float.floatToRawIntBits(pixels[i]);
+			buffer.setElem(i, (pixelValue >> 8) | ((pixelValue & 0xFF) << 24));
 		}
-		
-		ColorModel colorModel = new ComponentColorModel(
-	            ColorSpace.getInstance(ColorSpace.CS_GRAY),
-	            new int[]{16},
-	            false,
-	            false,
-	            Transparency.OPAQUE,
-	            DataBuffer.TYPE_USHORT);
-		
-		DataBufferUShort db = new DataBufferUShort(shortPixels, shortPixels.length);
-		
-		WritableRaster raster = Raster.createInterleavedRaster(db, sourceImage.getWidth(), sourceImage.getHeight(), sourceImage.getWidth(), 1, new int[1], null);
-		return new BufferedImage(colorModel, raster, false, null);
+
+		return result;
 	}
 	
 	public TiffToPngHandler(String allowedHostList, String upstreamProxyHost, Integer upstreamProxyPort, String noUpstreamProxyHostList) throws Exception {
