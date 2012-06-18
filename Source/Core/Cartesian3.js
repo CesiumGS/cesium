@@ -1,10 +1,8 @@
 /*global define*/
 define([
-        './Cartesian2',
-        './Spherical'
+        './Cartesian2'
        ], function(
-         Cartesian2,
-         Spherical) {
+         Cartesian2) {
     "use strict";
 
     /**
@@ -19,7 +17,6 @@ define([
      * @param {Number} x The x-coordinate for the Cartesian type.
      * @param {Number} y The y-coordinate for the Cartesian type.
      * @param {Number} z The z-coordinate for the Cartesian type.
-     * @param {Boolean} [normalize=false] True if you would like the Cartesian to be normalized;
      *
      * @see Cartesian2
      * @see Cartesian4
@@ -117,9 +114,9 @@ define([
     };
 
     /**
-     * Returns the provided Cartesian's magnitude squared..
+     * Returns the provided Cartesian's magnitude squared.
      *
-     * @param {Cartesian3} cartesian3 The Cartesian to used.
+     * @param {Cartesian3} cartesian3 The Cartesian to use.
      *
      * @memberof Cartesian3
      * @return {Number} The magnitude squared.
@@ -131,7 +128,7 @@ define([
     /**
      * Returns the provided Cartesian's magnitude (length).
      *
-     * @param {Cartesian3} cartesian3 The Cartesian to used.
+     * @param {Cartesian3} cartesian3 The Cartesian to use.
      *
      * @memberof Cartesian3
      * @return {Number} The magnitude.
@@ -146,7 +143,7 @@ define([
      * @param {Cartesian3} cartesian3 The cartesian to be normalized.
      *
      * @memberof Cartesian3
-     * @return {Cartesian3} The provided Cartesian instance modified so that it is normalized.
+     * @return {Cartesian3} The provided Cartesian instance modified that it is normalized.
      */
     Cartesian3.normalize = function(cartesian3) {
         var magnitude = Cartesian3.magnitude(cartesian3);
