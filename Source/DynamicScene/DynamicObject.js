@@ -21,10 +21,12 @@ define([
         }
 
         this.id = id;
+        this._cachedAvailabilityDate = undefined;
+        this._cachedAvailabilityValue = undefined;
 
         //Add standard CZML properties.  Even though they won't all be used
-        //for each object, having the superset directly will allow the compiler
-        //to greatly optimize this class.  Any changes to this list should
+        //for each object, having the superset explicitly listed here will allow the
+        //compiler to greatly optimize this class.  Any changes to this list should
         //coincide with changes to CzmlStandard.updaters
         this.billboard = undefined;
         this.cone = undefined;
@@ -37,8 +39,6 @@ define([
         this.orientation = undefined;
         this.vertexPositions = undefined;
         this.availability = undefined;
-        this._cachedAvailabilityDate = undefined;
-        this._cachedAvailabilityValue = undefined;
     }
 
     DynamicObject.prototype.isAvailable = function(time) {
@@ -52,12 +52,6 @@ define([
         return this._cachedAvailabilityValue = this.availability.contains(time);
     };
 
-    DynamicObject.prototype._setAvailability = function(availability) {
-        this.availability = availability;
-        this._cachedAvailabilityDate = undefined;
-        this._cachedAvailabilityValue = undefined;
-    };
-
     DynamicObject.processCzmlPacketPosition = function(dynamicObject, packet, buffer, sourceUri) {
         var positionData = packet.position;
         if (typeof positionData !== 'undefined') {
@@ -66,8 +60,8 @@ define([
                 dynamicObject.position = position;
                 return true;
             }
-            return false;
         }
+        return false;
     };
 
     DynamicObject.processCzmlPacketOrientation = function(dynamicObject, packet, dynamicObjectCollection) {
@@ -86,8 +80,8 @@ define([
                 dynamicObject.vertexPositions = vertexPositions;
                 return true;
             }
-            return false;
         }
+        return false;
     };
 
     DynamicObject.processCzmlPacketAvailability = function(dynamicObject, packet, buffer, sourceUri) {
@@ -114,6 +108,12 @@ define([
         dynamicObject.orientation = undefined;
         dynamicObject.vertexPositions = undefined;
         dynamicObject._setAvailability(undefined);
+    };
+
+    DynamicObject.prototype._setAvailability = function(availability) {
+        this.availability = availability;
+        this._cachedAvailabilityDate = undefined;
+        this._cachedAvailabilityValue = undefined;
     };
 
     return DynamicObject;
