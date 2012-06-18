@@ -34,7 +34,7 @@ define(function() {
      * @param {Spherical} spherical The spherical to be normalized.
      * @return {Spherical} The instances passed in, now normalized.
      */
-    Spherical.prototype.normalize = function(spherical) {
+    Spherical.normalize = function(spherical) {
         spherical.magnitude = 1.0;
         return spherical;
     };

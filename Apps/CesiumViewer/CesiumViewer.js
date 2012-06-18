@@ -43,7 +43,7 @@ function(dom,
     /*global console*/
 
     var visualizers;
-    var clock = new Clock(new JulianDate(), undefined, undefined, ClockStep.SYSTEM_CLOCK, ClockRange.LOOP, 256);
+    var clock = new Clock(new JulianDate(), undefined, undefined, ClockStep.SYSTEM_CLOCK_DEPENDENT, ClockRange.LOOP, 256);
     var timeline;
     var transitioner;
 
