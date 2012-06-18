@@ -41,8 +41,8 @@
                 host : 'elevation.arcgisonline.com',
                 folder : 'WorldElevation',
                 service : 'DTMEllipsoidal',
-                token : 'DGJSOGtTzERNdu-c_h2VhU4QsgOcUf5R1whWIuPdc1EQ3H9-8fSrb10-I_CAgCv_rlreK2gSVQ4y1HXeVkO9PQ..',
-                proxy : new Cesium.DefaultProxy('/proxy/')
+                token : '2G0dIXqmsH4zKVl7BZqNdsLUHKpCDfetelnSAZPkcC4CeHaL32TezkF9-x3blRiq_30O4FAYFv7ujgydVW-HDQ..',
+                proxy : new Cesium.DefaultProxy('/tiffToPng/')
             });
 
             primitives.getCentralBody().dayTileProvider = arcgisimage;

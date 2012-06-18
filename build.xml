@@ -378,6 +378,6 @@ if (oldContents !== contents) {
 		 upstreamProxyPort: the port number of the upstream proxy, default 80
 		 noUpstreamProxyHostList: A comma-separated list of hosts that will not use the upstreamProxy
 		-->
-		<server proxyContextPath="/proxy" allowedHostList="*.arcgisonline.com,tile.openstreetmap.org,otile1.mqcdn.com,oatile1.mqcdn.com,tile.stamen.com,*.virtualearth.net" port="8080" baseDir="${basedir}" />
+		<server proxyContextPath="/proxy" tiffToPngContextPath="/tiffToPng" allowedHostList="*.arcgisonline.com,tile.openstreetmap.org,otile1.mqcdn.com,oatile1.mqcdn.com,tile.stamen.com,*.virtualearth.net" port="8080" baseDir="${basedir}" />
 	</target>
 </project>

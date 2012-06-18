@@ -219,7 +219,7 @@ define([
 
         var bbox = xStart + '%2C' + yStart + '%2C' + xStop + '%2C' + yStop;
 
-        var url = this._url + '/exportImage?format=png&f=image&size=256%2C256&bbox=' + bbox;
+        var url = this._url + '/exportImage?format=tiff&f=image&size=256%2C256&bbox=' + bbox;
         if (this.token) {
             url += '&token=' + this.token;
         }

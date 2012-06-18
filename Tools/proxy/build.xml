@@ -29,9 +29,10 @@
 			<classpath>
 				<path refid="classpath" />
 				<pathelement location="${jar.file}" />
+		        <pathelement location="jai_imageio.jar" />
 			</classpath>
 		</taskdef>
 
-		<server contextPath="/proxy" allowedHostList="dev.virtualearth.net" port="8080" baseDir="." />
+		<server proxyContextPath="/proxy" tiffToPngContextPath="/tiffToPng" allowedHostList="localhost,*.arcgisonline.com,dev.virtualearth.net" port="8080" baseDir="." />
 	</target>
 </project>
