@@ -102,7 +102,7 @@ define([
         this._createVertexArray = false;
         this._morphTime = 0.0;
         this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
-        this._cachedPositions = [];
+        this._cachedVertices = [];
         /**
          * The 4x4 transformation matrix that transforms each polyline in this collection from model to world coordinates.
          * When this is the identity matrix, the polylines are drawn in world coordinates, i.e., Earth's WGS84 coordinates.
@@ -716,18 +716,21 @@ define([
 
             var buffer = this._getIndexBuffer(context);
             var vafWriters = this._vaf.writers;
-            var index = 0;
-            for(var t = 0; t < this._cachedPositions.length; t++){
-                var position = this._cachedPositions[t];
+            var modelMatrix = this._modelMatrix;
+            var ellipsoid = this._projection.getEllipsoid();
+            for(var t = 0; t < this._cachedVertices.length; t++){
+                var vertex = this._cachedVertices[t];
+                var position = vertex._position;
+                var color = vertex._color;
+                var pickColor = vertex._pickId;
                 vafWriters[attributeIndices.position3D](t, position.x, position.y, position.z);
-            }
-            for ( var i = 0; i < length; ++i) {
-                var polyline = this._polylines[i];
-                polyline._clean(); // In case it needed an update.
-                this._writePolyline(context, vafWriters, polyline, index);
-                index += polyline.getPositions().length;
-            }
+                vafWriters[attributeIndices.color](t, color.red * 255, color.green * 255, color.blue * 255, color.alpha * 255);
+                var p = modelMatrix.multiplyWithVector(new Cartesian4(position.x, position.y, position.z, 1.0));
+                p = this._projection.project(ellipsoid.toCartographic3(p.getXYZ()));
+                vafWriters[attributeIndices.position2D](t, p.x, p.y, p.z);
+                vafWriters[attributeIndices.pickColor](t, pickColor.red, pickColor.green, pickColor.blue, 255);
 
+            }
             this._vaf.commit(buffer, buffer.getNumberOfIndices());
         }
         this._polylinesToUpdate = [];
@@ -783,46 +786,6 @@ define([
         for(var j = 0; j < length; ++j){
             vafWriters[attributeIndices.pickColor](index + j, color.red, color.green, color.blue, 255);
         }
-    };
-
-    PolylineCollection.prototype._writeColor = function(context, vafWriters, polyline, index) {
-        var positions = polyline.getPositions();
-        var length = positions.length;
-        var color = polyline.getColor();
-        for(var j = 0; j < length; ++j){
-            vafWriters[attributeIndices.color](index + j, color.red * 255, color.green * 255, color.blue * 255, color.alpha * 255);
-        }
-    };
-
-    PolylineCollection.prototype._write2D = function(context, vafWriters, polyline, index) {
-        var positions = polyline.getPositions();
-        //TODO not the right place, should be down in polyline during setPositions
-        // var segments = PolylinePipeline.wrapLongitude(projection.getEllipsoid(), positions);
-        var length = positions.length;
-        var modelMatrix = this._modelMatrix;
-        var ellipsoid = this._projection.getEllipsoid();
-        for(var j = 0; j < length; ++j){
-            var position = positions[j];
-            var p = modelMatrix.multiplyWithVector(new Cartesian4(position.x, position.y, position.z, 1.0));
-            p = this._projection.project(ellipsoid.toCartographic3(p.getXYZ()));
-            vafWriters[attributeIndices.position2D](index + j, p.x, p.y, p.z);
-        }
-    };
-
-    PolylineCollection.prototype._writePosition = function(context, vafWriters, polyline, index) {
-        var positions = polyline.getPositions();
-        var length = positions.length;
-        for(var j = 0; j < length; ++j){
-            var position = positions[j];
-            vafWriters[attributeIndices.position3D](index + j, position.x, position.y, position.z);
-        }
-    };
-
-    PolylineCollection.prototype._writePolyline = function(context, vafWriters, polyline, index){
-        //this._writePosition(context, vafWriters, polyline, index);
-        this._writeColor(context, vafWriters, polyline, index);
-        this._write2D(context, vafWriters, polyline, index);
-        this._writePickColor(context, vafWriters, polyline, index);
     };
 
     PolylineCollection.prototype._clampWidth = function(context, value) {
@@ -882,21 +845,19 @@ define([
 
         var polylines = this._polylines;
         var polylineIndices = [];
-        var i = 0;
         var length = polylines.length;
-        var index = 0;
-        for(i = 0; i < length; ++i){
-            var positions = polylines[i].getPositions();
+        for(var i = 0; i < length; ++i){
+            var polyline = polylines[i];
+            var positions = polyline.getPositions();
             var posLength = positions.length;
             for(var j = 0; j < posLength - 1; ++j){
                 var position1 = positions[j];
                 var position2 = positions[j + 1];
-                var index1 = PolylineCollection._getPositionIndex(position1, this._cachedPositions);
-                var index2 = PolylineCollection._getPositionIndex(position2, this._cachedPositions);
+                var index1 = PolylineCollection._getVerticesIndex(position1, polyline, this._cachedVertices, context);
+                var index2 = PolylineCollection._getVerticesIndex(position2, polyline, this._cachedVertices, context);
                 polylineIndices.push(index1);
                 polylineIndices.push(index2);
             }
-            index += posLength;
         }
 
         var indices = new Uint16Array(polylineIndices);
@@ -905,15 +866,21 @@ define([
         return c.indexBuffer;
     };
 
-    PolylineCollection._getPositionIndex = function(position, positions) {
-        var length = positions.length;
+    PolylineCollection._getVerticesIndex = function(position, polyline, vertices, context) {
+        var temp = new VertexData({
+            color : polyline.getColor(),
+            outlineColor : polyline.getOutlineColor(),
+            pickId : polyline.getPickId(context).unnormalizedRgb,
+            position : position
+        });
+        var length = vertices.length;
         for(var i = 0; i < length; ++i){
-            var tempPos = positions[i];
-            if(tempPos.x === position.x && tempPos.y === position.y && tempPos.z === position.z){
+            var cached = vertices[i];
+            if(temp.equals(cached)){
                 return i;
             }
         }
-        positions.push(position);
+        vertices.push(temp);
         return length;
     };
 
@@ -925,6 +892,21 @@ define([
                 polylines[i]._destroy();
             }
         }
+    };
+
+    function VertexData(template){
+        this._color = template.color;
+        this._outlineColor = template.outlineColor;
+        this._position = template.position;
+        this._pickId = template.pickId;
+    }
+
+    VertexData.prototype.equals = function(other){
+        var position = this._position;
+        var otherPosition = other._position;
+        return this._color === other._color &&
+               this._outlineColor === other._outlineColor &&
+               position.x === otherPosition.x && position.y === otherPosition.y && position.z === otherPosition.z;
     };
 
     return PolylineCollection;
