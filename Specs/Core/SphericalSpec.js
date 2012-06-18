@@ -10,54 +10,43 @@ defineSuite([
     "use strict";
     /*global it,expect*/
 
-    it('construct0', function() {
+    it('Default constructing sets properties to their expected values.', function() {
         var v = new Spherical();
         expect(v.clock).toEqual(0);
         expect(v.cone).toEqual(0);
         expect(v.magnitude).toEqual(1.0);
     });
 
-    it('construct1', function() {
-        var v = new Spherical(1);
-        expect(v.clock).toEqual(1);
-        expect(v.cone).toEqual(0);
-        expect(v.magnitude).toEqual(1.0);
-    });
-
-    it('construct2', function() {
-        var v = new Spherical(1, 2);
-        expect(v.clock).toEqual(1);
-        expect(v.cone).toEqual(2);
-        expect(v.magnitude).toEqual(1.0);
-    });
-
-    it('construct3', function() {
+    it('Construtor parameters are assigned to the appropriate properties', function() {
         var v = new Spherical(1, 2, 3);
         expect(v.clock).toEqual(1);
         expect(v.cone).toEqual(2);
         expect(v.magnitude).toEqual(3);
     });
 
-    it('clone', function() {
+    it('Cloning copies all properties', function() {
         var v = new Spherical(1, 2, 3);
         var w = v.clone();
-        expect(v.equals(w)).toBeTruthy();
+        expect(v.equals(w)).toEqual(true);
     });
 
-    it('normalize', function() {
+    it('Normalizing sets magntitude to 1.0', function() {
         var v = new Spherical(0, 2, 3).normalize();
         expect(v.clock).toEqual(0);
         expect(v.cone).toEqual(2);
         expect(v.magnitude).toEqual(1);
     });
 
-    it('equalsEpsilon', function() {
-        expect(new Spherical(1, 2, 1).equalsEpsilon(new Spherical(1, 2, 1), 0)).toBeTruthy();
-        expect(new Spherical(1, 2, 1).equalsEpsilon(new Spherical(1, 2, 2), 1)).toBeTruthy();
-        expect(new Spherical(1, 2, 1).equalsEpsilon(new Spherical(1, 2, 3), 1)).toBeFalsy();
+    it('equalsEpsilon returns true for expected values.', function() {
+        expect(new Spherical(1, 2, 1).equalsEpsilon(new Spherical(1, 2, 1), 0)).toEqual(true);
+        expect(new Spherical(1, 2, 1).equalsEpsilon(new Spherical(1, 2, 2), 1)).toEqual(true);
     });
 
-    it('toString', function() {
+    it('equalsEpsilon returns false for expected values.', function() {
+        expect(new Spherical(1, 2, 1).equalsEpsilon(new Spherical(1, 2, 3), 1)).toEqual(false);
+    });
+
+    it('toString returns the expected format.', function() {
         var v = new Spherical(1, 2, 3);
         expect(v.toString()).toEqual('(1, 2, 3)');
     });
