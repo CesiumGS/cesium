@@ -137,7 +137,7 @@ define([
 
         var material = dynamicPyramid.material;
         if (typeof material !== 'undefined') {
-            pyramid.material = material.applyToMaterial(time, pyramid.material);
+            pyramid.material = material.applyToMaterial(time, this._scene, pyramid.material);
         }
 
         var property = dynamicPyramid.intersectionColor;

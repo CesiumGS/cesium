@@ -106,7 +106,7 @@ define([
 
         var material = dynamicPolygon.material;
         if (typeof material !== 'undefined') {
-            polygon.material = material.applyToMaterial(time, polygon.material, this._scene);
+            polygon.material = material.applyToMaterial(time, this._scene, polygon.material);
         }
     };
 

@@ -2,26 +2,26 @@
 define(function() {
     "use strict";
 
-    function ReferenceProperty(buffer, targetObjectId, targetPropertyName) {
+    function ReferenceProperty(dynamicObjectCollection, targetObjectId, targetPropertyName) {
         this.targetProperty = undefined;
-        this.buffer = buffer;
+        this.dynamicObjectCollection = dynamicObjectCollection;
         this.targetObjectId = targetObjectId;
         this.targetPropertyName = targetPropertyName;
     }
 
-    ReferenceProperty.fromString = function(buffer, referenceString) {
+    ReferenceProperty.fromString = function(dynamicObjectCollection, referenceString) {
         var parts = referenceString.split('.');
         if (parts.length === 2) {
             var objectId = parts[0];
             var property = parts[1];
-            return new ReferenceProperty(buffer, objectId, property);
+            return new ReferenceProperty(dynamicObjectCollection, objectId, property);
         }
     };
 
     ReferenceProperty.prototype.resolve = function() {
         var targetProperty = this.targetProperty;
         if (typeof targetProperty === 'undefined') {
-            var resolveBuffer = this.buffer.parent || this.buffer;
+            var resolveBuffer = this.dynamicObjectCollection.parent || this.dynamicObjectCollection;
             var targetObject = resolveBuffer.getObject(this.targetObjectId);
             if (typeof targetObject !== 'undefined') {
                 targetProperty = targetObject[this.targetPropertyName];

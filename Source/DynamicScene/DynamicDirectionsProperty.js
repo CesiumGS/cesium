@@ -92,17 +92,17 @@ define([
         return newProperty;
     };
 
-    DynamicDirectionsProperty.prototype.addIntervals = function(czmlIntervals, buffer, constrainedInterval) {
+    DynamicDirectionsProperty.prototype.addIntervals = function(czmlIntervals, dynamicObjectCollection, constrainedInterval) {
         if (Array.isArray(czmlIntervals)) {
             for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
-                this.addInterval(czmlIntervals[i], buffer, constrainedInterval);
+                this.addInterval(czmlIntervals[i], dynamicObjectCollection, constrainedInterval);
             }
         } else {
-            this.addInterval(czmlIntervals, buffer, constrainedInterval);
+            this.addInterval(czmlIntervals, dynamicObjectCollection, constrainedInterval);
         }
     };
 
-    DynamicDirectionsProperty.prototype.addInterval = function(czmlInterval, buffer, constrainedInterval) {
+    DynamicDirectionsProperty.prototype.addInterval = function(czmlInterval, dynamicObjectCollection, constrainedInterval) {
         var iso8601Interval = czmlInterval.interval;
         if (typeof iso8601Interval === 'undefined') {
             iso8601Interval = Iso8601.MAXIMUM_INTERVAL.clone();
@@ -129,9 +129,9 @@ define([
             existingInterval.data = new PositionHolder(czmlInterval);
         } else {
             var properties = [];
-            properties.buffer = buffer;
+            properties.dynamicObjectCollection = dynamicObjectCollection;
             for ( var i = 0, len = references.length; i < len; i++) {
-                properties.push(ReferenceProperty.fromString(buffer, references[i]));
+                properties.push(ReferenceProperty.fromString(dynamicObjectCollection, references[i]));
             }
             existingInterval.data = properties;
         }

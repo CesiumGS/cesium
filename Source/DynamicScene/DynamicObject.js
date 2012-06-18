@@ -52,10 +52,10 @@ define([
         return this._cachedAvailabilityValue = this.availability.contains(time);
     };
 
-    DynamicObject.processCzmlPacketPosition = function(dynamicObject, packet, buffer, sourceUri) {
+    DynamicObject.processCzmlPacketPosition = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var positionData = packet.position;
         if (typeof positionData !== 'undefined') {
-            var position = DynamicPositionProperty.processCzmlPacket(positionData, buffer, sourceUri, dynamicObject.position);
+            var position = DynamicPositionProperty.processCzmlPacket(positionData, dynamicObjectCollection, sourceUri, dynamicObject.position);
             if (typeof dynamicObject.position === 'undefined') {
                 dynamicObject.position = position;
                 return true;
@@ -72,10 +72,10 @@ define([
         return false;
     };
 
-    DynamicObject.processCzmlPacketVertexPositions = function(dynamicObject, packet, buffer, sourceUri) {
+    DynamicObject.processCzmlPacketVertexPositions = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var vertexPositionsData = packet.vertexPositions;
         if (typeof vertexPositionsData !== 'undefined') {
-            var vertexPositions = DynamicVertexPositionsProperty.processCzmlPacket(vertexPositionsData, buffer, sourceUri, dynamicObject.vertexPositions);
+            var vertexPositions = DynamicVertexPositionsProperty.processCzmlPacket(vertexPositionsData, dynamicObjectCollection, sourceUri, dynamicObject.vertexPositions);
             if (typeof dynamicObject.vertexPositions === 'undefined') {
                 dynamicObject.vertexPositions = vertexPositions;
                 return true;
@@ -84,7 +84,7 @@ define([
         return false;
     };
 
-    DynamicObject.processCzmlPacketAvailability = function(dynamicObject, packet, buffer, sourceUri) {
+    DynamicObject.processCzmlPacketAvailability = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var availability = packet.availability;
         if (typeof availability !== 'undefined') {
             var interval = TimeInterval.fromIso8601(availability);

@@ -5,7 +5,6 @@ define(function() {
     function TimelineHighlightRange(color, heightInPx) {
         this._color = color;
         this._height = heightInPx;
-        this._buffer = undefined;
     }
 
     TimelineHighlightRange.prototype.getHeight = function() {

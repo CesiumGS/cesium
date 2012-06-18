@@ -33,7 +33,7 @@ define([
         this._cachedInterval = undefined;
     }
 
-    DynamicPositionProperty.processCzmlPacket = function(czmlIntervals, buffer, sourceUri, existingProperty) {
+    DynamicPositionProperty.processCzmlPacket = function(czmlIntervals, dynamicObjectCollection, sourceUri, existingProperty) {
         if (typeof czmlIntervals === 'undefined') {
             return existingProperty;
         }
@@ -43,22 +43,22 @@ define([
             existingProperty = new DynamicPositionProperty();
         }
 
-        existingProperty.addIntervals(czmlIntervals, buffer, sourceUri);
+        existingProperty.addIntervals(czmlIntervals, dynamicObjectCollection, sourceUri);
 
         return existingProperty;
     };
 
-    DynamicPositionProperty.prototype.addIntervals = function(czmlIntervals, buffer, sourceUri) {
+    DynamicPositionProperty.prototype.addIntervals = function(czmlIntervals, dynamicObjectCollection, sourceUri) {
         if (Array.isArray(czmlIntervals)) {
             for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
-                this.addInterval(czmlIntervals[i], buffer, sourceUri);
+                this.addInterval(czmlIntervals[i], dynamicObjectCollection, sourceUri);
             }
         } else {
-            this.addInterval(czmlIntervals, buffer, sourceUri);
+            this.addInterval(czmlIntervals, dynamicObjectCollection, sourceUri);
         }
     };
 
-    DynamicPositionProperty.prototype.addInterval = function(czmlInterval, buffer, sourceUri) {
+    DynamicPositionProperty.prototype.addInterval = function(czmlInterval, dynamicObjectCollection, sourceUri) {
         this._cachedTime = undefined;
         this._cachedInterval = undefined;
 
@@ -113,7 +113,7 @@ define([
 
         //We could handle the data, add it to the propery.
         if (typeof unwrappedInterval !== 'undefined') {
-            property.addIntervalUnwrapped(iso8601Interval.start, iso8601Interval.stop, czmlInterval, unwrappedInterval, buffer, sourceUri);
+            property.addIntervalUnwrapped(iso8601Interval.start, iso8601Interval.stop, czmlInterval, unwrappedInterval, dynamicObjectCollection, sourceUri);
         }
     };
 

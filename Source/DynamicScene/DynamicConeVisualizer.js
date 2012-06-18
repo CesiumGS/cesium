@@ -176,25 +176,25 @@ define([
             cone.dynamicConeVisualizerLastPosition = position;
             cone.dynamicConeVisualizerLastOrientation = orientation;
         }
-
+        var scene = this._scene;
         var material = dynamicCone.capMaterial;
         if (typeof material !== 'undefined') {
-            cone.capMaterial = material.applyToMaterial(time, cone.capMaterial);
+            cone.capMaterial = material.applyToMaterial(time, scene, cone.capMaterial);
         }
 
         material = dynamicCone.innerMaterial;
         if (typeof material !== 'undefined') {
-            cone.innerMaterial = material.applyToMaterial(time, cone.innerMaterial);
+            cone.innerMaterial = material.applyToMaterial(time, scene, cone.innerMaterial);
         }
 
         material = dynamicCone.outerMaterial;
         if (typeof material !== 'undefined') {
-            cone.outerMaterial = material.applyToMaterial(time, cone.outerMaterial);
+            cone.outerMaterial = material.applyToMaterial(time, scene, cone.outerMaterial);
         }
 
         material = dynamicCone.silhouetteMaterial;
         if (typeof material !== 'undefined') {
-            cone.silhouetteMaterial = material.applyToMaterial(time, cone.silhouetteMaterial);
+            cone.silhouetteMaterial = material.applyToMaterial(time, scene, cone.silhouetteMaterial);
         }
 
         property = dynamicCone.intersectionColor;
