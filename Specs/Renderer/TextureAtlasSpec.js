@@ -462,6 +462,7 @@ defineSuite([
     it('throws without images', function() {
         expect(function() {
             atlas = new TextureAtlas(context, [], PixelFormat.RGBA, 0, 2);
+            atlas.addImages([]);
         }).toThrow();
     });
 

@@ -9,6 +9,13 @@ define([
         PixelFormat) {
     "use strict";
 
+    function TextureCoordinate(x0, x1, y0, y1) {
+        this.x0 = x0 || 0.0; // Left
+        this.x1 = x1 || 0.0; // Right
+        this.y0 = y0 || 0.0; // Bottom
+        this.y1 = y1 || 0.0; // Top
+    }
+
     function TextureAtlasNode(x0, x1, y0, y1, child1, child2, imageID) {
         this.x0 = x0 || 0.0; // Left
         this.x1 = x1 || 0.0; // Right
@@ -28,7 +35,8 @@ define([
      * @name TextureAtlas
      *
      * @param {Context} context The context that will be used to create the texture.
-     * @param {Array} images An array of {@link Image} to be added to the texture atlas.
+     * @param {Array} images An optional array of {@link Image} to be added to the texture atlas. Equivalent to
+     * calling addImages.
      * @param {PixelFormat}[pixelFormat = PixelFormat.RGBA] Pixel format for the texture atlas.
      * @param {Number}[borderWidthInPixels = 1] Spacing in pixels between adjacent images.
      * @param {Number}[scalingFactor = 2] Amount of padding added to the texture atlas when the texture is rebuilt.
@@ -49,11 +57,6 @@ define([
             throw new DeveloperError('context is required.');
         }
 
-        // Images
-        if (typeof images === 'undefined' || (images.length < 1)) {
-            throw new DeveloperError('images is required and must have length greater than zero.');
-        }
-
         // Pixel Format
         pixelFormat = (typeof pixelFormat === 'undefined') ? PixelFormat.RGBA : pixelFormat;
 
@@ -69,6 +72,7 @@ define([
             throw new DeveloperError('scalingFactor must be greater than or equal to one.');
         }
 
+        // Initial values
         this._context = context;
         this._borderWidthInPixels = borderWidthInPixels;
         this._scalingFactor = scalingFactor;
@@ -77,8 +81,10 @@ define([
         this._texture = undefined;
         this._root = undefined;
 
-        this._createNewAtlas(images);
-        this.addImages(images);
+        // Add initial images if there are any.
+        if (typeof images !== 'undefined' && (images.length > 0)) {
+            this.addImages(images);
+        }
     }
 
     // Private function.
@@ -119,16 +125,10 @@ define([
         var sizeRatio = oldAtlasSize / atlasSize;
 
         // Create new node structure, putting the old root node in the bottom left.
-        var nodeBottomRight = new TextureAtlasNode(
-            oldAtlasSize + this._borderWidthInPixels, atlasSize, 0.0, oldAtlasSize);
-        var nodeBottomHalf = new TextureAtlasNode(
-            0.0, atlasSize, 0.0, oldAtlasSize,
-            nodeBottomRight, this._root);
-        var nodeTopHalf = new TextureAtlasNode(
-            0.0, atlasSize, oldAtlasSize + this._borderWidthInPixels, atlasSize);
-        var nodeMain = new TextureAtlasNode(
-            0.0, atlasSize, 0.0, atlasSize,
-            nodeTopHalf, nodeBottomHalf);
+        var nodeBottomRight = new TextureAtlasNode(oldAtlasSize + this._borderWidthInPixels, atlasSize, 0.0, oldAtlasSize);
+        var nodeBottomHalf = new TextureAtlasNode(0.0, atlasSize, 0.0, oldAtlasSize, nodeBottomRight, this._root);
+        var nodeTopHalf = new TextureAtlasNode(0.0, atlasSize, oldAtlasSize + this._borderWidthInPixels, atlasSize);
+        var nodeMain = new TextureAtlasNode(0.0, atlasSize, 0.0, atlasSize, nodeTopHalf, nodeBottomHalf);
         this._root = nodeMain;
 
         // Resize texture coordinates.
@@ -142,7 +142,7 @@ define([
             texCoord.y1 *= sizeRatio;
         }
 
-        //  Copy larger texture.
+        // Copy larger texture.
         var newTexture = this._context.createTexture2D({
             width : atlasSize,
             height : atlasSize,
@@ -231,6 +231,11 @@ define([
             throw new DeveloperError('image must be defined.');
         }
 
+        // Create new atlas if it hasn't been created.
+        if (typeof this._root === 'undefined') {
+            this._createNewAtlas([image]);
+        }
+
         var node = this._addImageToNode(this._root, image);
         var index = (typeof arguments[1] === 'undefined') ? this.getNumImages() : arguments[1];
 
@@ -241,14 +246,12 @@ define([
 
             // Add texture coordinates and write to texture
             var atlasSize = this._texture.getWidth();
-            this._textureCoordinates[index] = {
-                // Lower left
-                x0: node.x0 / atlasSize,
-                y0: node.y0 / atlasSize,
-                // Upper right
-                x1: node.x1 / atlasSize,
-                y1: node.y1 / atlasSize
-            };
+            this._textureCoordinates[index] = new TextureCoordinate(
+                node.x0 / atlasSize, // Left
+                node.x1 / atlasSize, // Right
+                node.y0 / atlasSize, // Bottom
+                node.y1 / atlasSize // Top
+            );
             this._texture.copyFrom(image, node.x0, node.y0);
         }
         // No node found, must resize the texture atlas.
@@ -256,12 +259,15 @@ define([
             this._resizeAtlas(Math.max(image.height, image.width));
             this.addImage(image, index);
         }
+
+        // Return the image's index.
+        return index;
     };
 
     /**
      * Adds an array of images to the texture atlas. Can be called any number of times.
      * When adding multiple images to the atlas at once, addImages has better performance
-     * than multiple addImage.
+     * than multiple calls to addImage.
      *
      * @memberof TextureAtlas
      *
@@ -274,6 +280,11 @@ define([
         // Check if image array is valid.
         if (typeof images === 'undefined' || (images.length < 1)) {
             throw new DeveloperError('images is required and must have length greater than zero.');
+        }
+
+        // Create new atlas if it hasn't been created.
+        if (typeof this._root === 'undefined') {
+            this._createNewAtlas(images);
         }
 
         // Store images in containers that have index.
@@ -299,6 +310,9 @@ define([
             var annotatedImage = annotatedImages[i];
             this.addImage(annotatedImage.image, annotatedImage.index);
         }
+
+        // Return index of the first added image.
+        return oldNumberOfImages;
     };
 
     /**
@@ -325,14 +339,12 @@ define([
 
         for (var i = 0; i < numSubRegions; ++i) {
             var thisRegion = subRegions[i];
-            this._textureCoordinates.push({
-                // Lower Left
-                x0 : baseRegion.x0 + (thisRegion.x / atlasSize),
-                y0 : baseRegion.y1 - ((thisRegion.y + thisRegion.height) / atlasSize),
-                // Upper Right
-                x1 : baseRegion.x0 + ((thisRegion.x + thisRegion.width) / atlasSize),
-                y1 : baseRegion.y1 - (thisRegion.y / atlasSize)
-            });
+            this._textureCoordinates.push(new TextureCoordinate(
+                baseRegion.x0 + (thisRegion.x / atlasSize), // Left
+                baseRegion.x0 + ((thisRegion.x + thisRegion.width) / atlasSize), // Right
+                baseRegion.y1 - ((thisRegion.y + thisRegion.height) / atlasSize), // Bottom
+                baseRegion.y1 - (thisRegion.y / atlasSize) // Top
+            ));
         }
 
         return numTextureCoordinates;
