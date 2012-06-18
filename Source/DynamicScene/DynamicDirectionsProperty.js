@@ -5,7 +5,9 @@ define([
         '../Core/TimeIntervalCollection',
         '../Core/Cartesian3',
         '../Core/Spherical',
+        '../Core/CoordinateConversions',
         '../Core/Math',
+        '../Core/Iso8601',
         './ReferenceProperty',
         './DynamicPositionProperty'
     ], function(
@@ -14,7 +16,9 @@ define([
         TimeIntervalCollection,
         Cartesian3,
         Spherical,
+        CoordinateConversions,
         CesiumMath,
+        Iso8601,
         ReferenceProperty,
         DynamicPositionProperty) {
     "use strict";
@@ -46,7 +50,7 @@ define([
             this.spherical = sphericals;
             var cartesians = this.cartesian;
             for ( var i = 0, len = cartesians.length; i < len; i++) {
-                sphericals[i].push(Spherical.fromCartesian3(cartesians[i]));
+                sphericals[i].push(CoordinateConversions.cartesian3ToSpherical(cartesians[i]));
             }
         }
         return sphericals;
@@ -59,7 +63,7 @@ define([
             this.cartesian = cartesians;
             var sphericals = this.spherical;
             for ( var i = 0, len = sphericals.length; i < len; i++) {
-                cartesians[i].push(Cartesian3.fromSpherical(sphericals[i]));
+                cartesians[i].push(CoordinateConversions.sphericalToCartesian3(sphericals[i]));
             }
         }
         return cartesians;
@@ -101,7 +105,7 @@ define([
     DynamicDirectionsProperty.prototype.addInterval = function(czmlInterval, buffer, sourceUri) {
         var iso8601Interval = czmlInterval.interval;
         if (typeof iso8601Interval === 'undefined') {
-            iso8601Interval = TimeInterval.INFINITE.clone();
+            iso8601Interval = Iso8601.MAXIMUM_INTERVAL.clone();
         } else {
             iso8601Interval = TimeInterval.fromIso8601(iso8601Interval);
         }
@@ -129,6 +133,7 @@ define([
         }
     };
 
+    //CZML_TODO: Caching and existing instace.
     DynamicDirectionsProperty.prototype.getValueSpherical = function(time) {
         var interval = this._propertyIntervals.findIntervalContainingDate(time);
         if (typeof interval === 'undefined') {

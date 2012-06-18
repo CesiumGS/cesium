@@ -14,11 +14,11 @@ require({
         name : 'Core',
         location : 'Source/Core'
     }, {
-        name : 'Controls',
-        location : 'Source/Controls'
+        name : 'Widgets',
+        location : 'Source/Widgets'
     }, {
-        name : 'CesiumDojo',
-        location : 'Source/Dojo'
+        name : 'DojoWidgets',
+        location : 'Source/DojoWidgets'
     }, {
         name : 'DynamicScene',
         location : 'Source/DynamicScene'
@@ -39,7 +39,7 @@ require({
         location : 'Apps/CesiumViewer'
     }]
 }, [
-    'CesiumDojo/checkForChromeFrame',
+    'DojoWidgets/checkForChromeFrame',
     'dojo/parser',
     'dojo/dom-class',
     'dojo/_base/window',
@@ -48,7 +48,7 @@ require({
     'dijit/form/ToggleButton',
     'dijit/form/DropDownButton',
     'dijit/TooltipDialog',
-    'CesiumDojo/TimelineWidget',
+    'DojoWidgets/TimelineWidget',
     'CesiumViewer/CesiumViewer',
     'dojo/domReady!'
 ], function(

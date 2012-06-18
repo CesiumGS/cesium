@@ -12,7 +12,7 @@ define(function() {
             return false;
         },
 
-        createValue : function(unwrappedInterval) {
+        getValue : function(unwrappedInterval) {
             return unwrappedInterval;
         }
     };

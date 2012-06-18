@@ -32,7 +32,7 @@ define([
         if(typeof existingMaterial === 'undefined' || !(existingMaterial instanceof ColorMaterial)) {
             existingMaterial = new ColorMaterial();
         }
-        existingMaterial.color = this.color.getValue(time);
+        existingMaterial.color = this.color.getValue(time, existingMaterial.color);
         return existingMaterial;
     };
 

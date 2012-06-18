@@ -4,13 +4,14 @@ define(['dojo/dom',
         'dojo/_base/event',
         'dojo/io-query',
         'dijit/registry',
-        'CesiumDojo/CesiumWidget',
-        'CesiumDojo/loadCzmlFromUrl',
+        'DojoWidgets/CesiumWidget',
+        'DojoWidgets/getJson',
         'Core/DefaultProxy',
         'Core/JulianDate',
         'Core/Clock',
         'Core/ClockStep',
         'Core/ClockRange',
+        'Core/Iso8601',
         'Core/FullScreen',
         'Core/Ellipsoid',
         'Core/Transforms',
@@ -24,12 +25,13 @@ function(dom,
          ioQuery,
          registry,
          CesiumWidget,
-         loadCzmlFromUrl,
+         getJson,
          DefaultProxy,
          JulianDate,
          Clock,
          ClockStep,
          ClockRange,
+         Iso8601,
          FullScreen,
          Ellipsoid,
          Transforms,
@@ -60,9 +62,10 @@ function(dom,
 
     function setTimeFromBuffer() {
         var i, object, len;
-        var startTime = JulianDate.MAXIMUM_VALUE;
-        var stopTime = JulianDate.MINIMUM_VALUE;
+        var startTime = Iso8601.MAXIMUM_VALUE;
+        var stopTime = Iso8601.MINIMUM_VALUE;
         var dynamicObjects = dynamicObjectCollection.getObjects();
+
         for (i = 0, len = dynamicObjects.length; i < len; i++) {
             object = dynamicObjects[i];
             if (typeof object.availability !== 'undefined') {
@@ -75,7 +78,7 @@ function(dom,
             }
         }
 
-        if (startTime === JulianDate.MAXIMUM_VALUE) {
+        if (startTime === Iso8601.MAXIMUM_VALUE) {
             for (i = 0, len = dynamicObjects.length; i < len; i++) {
                 object = dynamicObjects[i];
                 if (typeof object.position !== 'undefined') {
@@ -107,6 +110,10 @@ function(dom,
         var f = files[0];
         var reader = new FileReader();
         reader.onload = function(evt) {
+            //CZML_TODO visualizers.removeAll(); is not really needed here, but right now visualizers
+            //cache data indefinitely and removeAll is the only way to get rid of it.
+            //while there are no visual differences, removeAll cleans the cache and improves performance
+            visualizers.removeAll();
             dynamicObjectCollection.clear();
             dynamicObjectCollection.processCzml(JSON.parse(evt.target.result), f.name);
             setTimeFromBuffer();
@@ -171,8 +178,10 @@ function(dom,
             }
 
             if (typeof queryObject.source !== 'undefined') {
-                dynamicObjectCollection.clear();
-                loadCzmlFromUrl(dynamicObjectCollection, queryObject.source, setTimeFromBuffer);
+                getJson(queryObject.source).then(function(czmlData) {
+                    dynamicObjectCollection.processCzml(czmlData, queryObject.source);
+                    setTimeFromBuffer();
+                });
             }
 
             if (typeof queryObject.lookAt !== 'undefined') {

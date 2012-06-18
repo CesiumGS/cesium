@@ -1,13 +1,10 @@
 /*global define*/
 define(['../Core/Cartographic3',
-        '../Core/Ellipsoid',
         '../Core/Math'],
 function(Cartographic3,
-         Ellipsoid,
          CesiumMath) {
     "use strict";
 
-    var wgs84 = Ellipsoid.WGS84;
     var doublesPerValue = 3;
 
     var CzmlCartographic3 = {
@@ -25,10 +22,10 @@ function(Cartographic3,
                             cartographic[i] = cartographicDegrees[i];
                             cartographic[i + 1] = CesiumMath.toRadians(cartographicDegrees[i + 1]);
                             cartographic[i + 2] = CesiumMath.toRadians(cartographicDegrees[i + 2]);
-                            cartographic[i + 3] = CesiumMath.toRadians(cartographicDegrees[i + 3]);
+                            cartographic[i + 3] = cartographicDegrees[i + 3];
                         }
                     } else {
-                        cartographic = [CesiumMath.toRadians(cartographicDegrees[0]), CesiumMath.toRadians(cartographicDegrees[1]), CesiumMath.toRadians(cartographicDegrees[2])];
+                        cartographic = [CesiumMath.toRadians(cartographicDegrees[0]), CesiumMath.toRadians(cartographicDegrees[1]), cartographicDegrees[2]];
                     }
                 }
             }
@@ -40,37 +37,35 @@ function(Cartographic3,
             return Array.isArray(unwrappedInterval) && unwrappedInterval.length > doublesPerValue;
         },
 
-        packValuesForInterpolation : function(sourceArray, destinationArray, firstIndex, lastIndex) {
-            var sourceIndex = firstIndex * doublesPerValue;
-            var destinationIndex = 0;
-            var stop = (lastIndex + 1) * doublesPerValue;
-
-            while (sourceIndex < stop) {
-                destinationArray[destinationIndex] = sourceArray[sourceIndex];
-                sourceIndex++;
-                destinationIndex++;
+        getValue : function(unwrappedInterval, existingInstance) {
+            if (typeof existingInstance === 'undefined') {
+                existingInstance = new Cartographic3();
             }
+            existingInstance.longitude = unwrappedInterval[0];
+            existingInstance.latitude = unwrappedInterval[1];
+            existingInstance.height = unwrappedInterval[2];
+            return existingInstance;
         },
 
-        createValue : function(unwrappedInterval) {
-            return new Cartographic3(unwrappedInterval[0], unwrappedInterval[1], unwrappedInterval[2]);
+        getValueFromArray : function(array, startingIndex, existingInstance) {
+            if (typeof existingInstance === 'undefined') {
+                existingInstance = new Cartographic3();
+            }
+            existingInstance.longitude = array[startingIndex];
+            existingInstance.latitude = array[startingIndex + 1];
+            existingInstance.height = array[startingIndex + 2];
+            return existingInstance;
         },
 
-        createValueFromArray : function(array, startingIndex) {
-            return new Cartographic3(array[startingIndex], array[startingIndex + 1], array[startingIndex + 2]);
+        getValueFromInterpolationResult : function(array, existingInstance) {
+            if (typeof existingInstance === 'undefined') {
+                existingInstance = new Cartographic3();
+            }
+            existingInstance.longitude = array[0];
+            existingInstance.latitude = array[1];
+            existingInstance.height = array[2];
+            return existingInstance;
         },
-
-        createValueFromInterpolationResult : function(array) {
-            return new Cartographic3(array[0], array[1], array[2]);
-        },
-
-        convertToCartographic3 : function(cartographic3) {
-            return cartographic3;
-        },
-
-        convertToCartesian3 : function(cartographic3) {
-            return wgs84.toCartesian(cartographic3);
-        }
     };
 
     return CzmlCartographic3;

@@ -16,14 +16,17 @@ define(['../Core/Color'], function(Color) {
                     if (this.isSampled(rgba)) {
                         rgbaf = [];
                         for ( var i = 0, len = rgba.length; i < len; i += 5) {
-                            rgbaf[i] = rgba[i];
-                            rgbaf[i + 1] = rgba[i + 1] / 255.0;
-                            rgbaf[i + 2] = rgba[i + 2] / 255.0;
-                            rgbaf[i + 3] = rgba[i + 3] / 255.0;
-                            rgbaf[i + 4] = rgba[i + 4] / 255.0;
+                            rgbaf.push(rgba[i]);
+                            rgbaf.push(Color.byteToFloat(rgba[i + 1]));
+                            rgbaf.push(Color.byteToFloat(rgba[i + 2]));
+                            rgbaf.push(Color.byteToFloat(rgba[i + 3]));
+                            rgbaf.push(Color.byteToFloat(rgba[i + 4]));
                         }
                     } else {
-                        rgbaf = [rgba[0] / 255.0, rgba[1] / 255.0, rgba[2] / 255.0, rgba[3] / 255.0];
+                        rgbaf = [Color.byteToFloat(rgba[0]),
+                                 Color.byteToFloat(rgba[1]),
+                                 Color.byteToFloat(rgba[2]),
+                                 Color.byteToFloat(rgba[3])];
                     }
                 }
             }
@@ -35,28 +38,37 @@ define(['../Core/Color'], function(Color) {
             return Array.isArray(unwrappedInterval) && unwrappedInterval.length > doublesPerValue;
         },
 
-        packValuesForInterpolation : function(sourceArray, destinationArray, firstIndex, lastIndex) {
-            var sourceIndex = firstIndex * doublesPerValue;
-            var destinationIndex = 0;
-            var stop = (lastIndex + 1) * doublesPerValue;
-
-            while (sourceIndex < stop) {
-                destinationArray[destinationIndex] = sourceArray[sourceIndex];
-                sourceIndex++;
-                destinationIndex++;
+        getValue : function(unwrappedInterval, existingInstance) {
+            if (typeof existingInstance === 'undefined') {
+                existingInstance = new Color();
             }
+            existingInstance.red = unwrappedInterval[0];
+            existingInstance.green = unwrappedInterval[1];
+            existingInstance.blue = unwrappedInterval[2];
+            existingInstance.alpha = unwrappedInterval[3];
+            return existingInstance;
         },
 
-        createValue : function(unwrappedInterval) {
-            return new Color(unwrappedInterval[0], unwrappedInterval[1], unwrappedInterval[2], unwrappedInterval[3]);
+        getValueFromArray : function(array, startingIndex, existingInstance) {
+            if (typeof existingInstance === 'undefined') {
+                existingInstance = new Color();
+            }
+            existingInstance.red = array[startingIndex];
+            existingInstance.green = array[startingIndex + 1];
+            existingInstance.blue = array[startingIndex + 2];
+            existingInstance.alpha = array[startingIndex + 3];
+            return existingInstance;
         },
 
-        createValueFromArray : function(array, startingIndex) {
-            return new Color(array[startingIndex], array[startingIndex + 1], array[startingIndex + 2], array[startingIndex + 3]);
-        },
-
-        createValueFromInterpolationResult : function(array) {
-            return new Color(array[0], array[1], array[2], array[3]);
+        getValueFromInterpolationResult : function(array, existingInstance) {
+            if (typeof existingInstance === 'undefined') {
+                existingInstance = new Color();
+            }
+            existingInstance.red = array[0];
+            existingInstance.green = array[1];
+            existingInstance.blue = array[2];
+            existingInstance.alpha = array[3];
+            return existingInstance;
         }
     };
     return CzmlColor;

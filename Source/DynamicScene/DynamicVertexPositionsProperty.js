@@ -6,6 +6,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartographic3',
         '../Core/Math',
+        '../Core/Iso8601',
         '../Core/Ellipsoid',
         './ReferenceProperty',
         './DynamicPositionProperty'
@@ -16,6 +17,7 @@ define([
         Cartesian3,
         Cartographic3,
         CesiumMath,
+        Iso8601,
         Ellipsoid,
         ReferenceProperty,
         DynamicPositionProperty) {
@@ -97,7 +99,7 @@ define([
     DynamicVertexPositionsProperty.prototype.addInterval = function(czmlInterval, buffer, sourceUri) {
         var iso8601Interval = czmlInterval.interval;
         if (typeof iso8601Interval === 'undefined') {
-            iso8601Interval = TimeInterval.INFINITE.clone();
+            iso8601Interval = Iso8601.MAXIMUM_INTERVAL.clone();
         } else {
             iso8601Interval = TimeInterval.fromIso8601(iso8601Interval);
         }
@@ -124,6 +126,7 @@ define([
         }
     };
 
+    //CZML_TODO: Caching and existing instace.
     DynamicVertexPositionsProperty.prototype.getValueCartographic = function(time) {
         var interval = this._propertyIntervals.findIntervalContainingDate(time);
         if (typeof interval === 'undefined') {

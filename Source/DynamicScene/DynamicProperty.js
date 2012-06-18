@@ -3,6 +3,7 @@ define([
         '../Core/JulianDate',
         '../Core/TimeInterval',
         '../Core/TimeIntervalCollection',
+        '../Core/Iso8601',
         '../Core/binarySearch',
         '../Core/HermitePolynomialApproximation',
         '../Core/LinearApproximation',
@@ -11,6 +12,7 @@ define([
         JulianDate,
         TimeInterval,
         TimeIntervalCollection,
+        Iso8601,
         binarySearch,
         HermitePolynomialApproximation,
         LinearApproximation,
@@ -18,13 +20,23 @@ define([
     "use strict";
 
     var interpolators = {
-        HERMITE : HermitePolynomialApproximation,
-        LAGRANGE : LagrangePolynomialApproximation,
-        LINEAR : LinearApproximation
-    };
+            HERMITE : HermitePolynomialApproximation,
+            LAGRANGE : LagrangePolynomialApproximation,
+            LINEAR : LinearApproximation
+        };
 
+    function IntervalData() {
+        this.interpolationAlgorithm = LinearApproximation;
+        this.numberOfPoints = LinearApproximation.getRequiredDataPoints(1);
+        this.interpolationDegree = 1;
+        this.times = undefined;
+        this.values = undefined;
+        this.isSampled = false;
+        this.xTable = undefined;
+        this.yTable = undefined;
+    }
 
-    function convertDate(date, epoch) {
+    function czmlDateToJulianDate(date, epoch) {
         if (typeof date === 'string') {
             return JulianDate.fromIso601(date);
         }
@@ -34,6 +46,8 @@ define([
     function DynamicProperty(valueType) {
         this.valueType = valueType;
         this._intervals = new TimeIntervalCollection();
+        this._cachedDate = undefined;
+        this._cachedInterval = undefined;
     }
 
     DynamicProperty.processCzmlPacket = function(parentObject, propertyName, valueType, czmlIntervals, constrainedInterval, dynamicObjectCollection) {
@@ -58,7 +72,7 @@ define([
     DynamicProperty._mergeNewSamples = function(epoch, times, values, newData, doublesPerValue, valueType) {
         var newDataIndex = 0, i, prevItem, timesInsertionPoint, valuesInsertionPoint, timesSpliceArgs, valuesSpliceArgs, currentTime, nextTime;
         while (newDataIndex < newData.length) {
-            currentTime = convertDate(newData[newDataIndex], epoch);
+            currentTime = czmlDateToJulianDate(newData[newDataIndex], epoch);
             timesInsertionPoint = binarySearch(times, currentTime, JulianDate.compare);
 
             if (timesInsertionPoint < 0) {
@@ -71,7 +85,7 @@ define([
                 prevItem = undefined;
                 nextTime = times[timesInsertionPoint + 1];
                 while (newDataIndex < newData.length) {
-                    currentTime = convertDate(newData[newDataIndex], epoch);
+                    currentTime = czmlDateToJulianDate(newData[newDataIndex], epoch);
 
                     //CZML_TODO We can probably further optimize here by dealing with the special cases of ===,
                     //rather than bailing, though the case probably happens so infrequently, that not checking may be faster
@@ -114,7 +128,7 @@ define([
     DynamicProperty.prototype.addInterval = function(czmlInterval, buffer, constrainedInterval) {
         var iso8601Interval = czmlInterval.interval;
         if (typeof iso8601Interval === 'undefined') {
-            iso8601Interval = TimeInterval.INFINITE;
+            iso8601Interval = Iso8601.MAXIMUM_INTERVAL;
         } else {
             iso8601Interval = TimeInterval.fromIso8601(iso8601Interval);
         }
@@ -130,16 +144,13 @@ define([
     DynamicProperty.prototype.addIntervalUnwrapped = function(start, stop, czmlInterval, unwrappedInterval, buffer) {
         var thisIntervals = this._intervals;
         var existingInterval = thisIntervals.findInterval(start, stop);
+        this._cachedDate = undefined;
+        this._cachedInterval = undefined;
 
         var intervalData;
         if (typeof existingInterval === 'undefined') {
-            intervalData = {
-                interpolationAlgorithm : LinearApproximation,
-                numberOfPoints : LinearApproximation.getRequiredDataPoints(1)
-            };
-
-            existingInterval = new TimeInterval(start, stop, true, true);
-            existingInterval.data = intervalData;
+            intervalData = new IntervalData();
+            existingInterval = new TimeInterval(start, stop, true, true, intervalData);
             thisIntervals.addInterval(existingInterval);
         } else {
             intervalData = existingInterval.data;
@@ -156,7 +167,6 @@ define([
             var interpolationDegree = czmlInterval.interpolationDegree;
             if (interpolationAlgorithm && interpolationDegree) {
                 intervalData.interpolationDegree = interpolationDegree;
-                intervalData.numberOfPoints = interpolationAlgorithm.getRequiredDataPoints(interpolationDegree);
                 intervalData.xTable = undefined;
                 intervalData.yTable = undefined;
             }
@@ -171,85 +181,108 @@ define([
                 epoch = JulianDate.fromIso8601(epoch);
             }
             DynamicProperty._mergeNewSamples(epoch, intervalData.times, intervalData.values, unwrappedInterval, thisValueType.doublesPerValue, thisValueType);
+            intervalData.numberOfPoints = Math.min(intervalData.interpolationAlgorithm.getRequiredDataPoints(intervalData.interpolationDegree), intervalData.times.length);
         } else {
             //Packet itself is a constant value
             intervalData.times = undefined;
-            intervalData.values = thisValueType.createValue(unwrappedInterval);
+            intervalData.values = unwrappedInterval;
             intervalData.isSampled = false;
         }
     };
 
-    DynamicProperty.prototype.getValue = function(time) {
+    DynamicProperty.prototype.getValue = function(time, existingInstance) {
+        var interval = this._cachedInterval;
         var thisValueType = this.valueType;
-        var interval = this._intervals.findIntervalContainingDate(time);
+        var doublesPerValue = thisValueType.doublesPerValue;
 
-        if (typeof interval !== 'undefined') {
-            var intervalData = interval.data;
-            var times = intervalData.times;
-            var values = intervalData.values;
-            if (intervalData.isSampled && times.length >= 0 && values.length > 0) {
-                var index = binarySearch(times, time, JulianDate.compare);
+        if (this._cachedDate !== time) {
+            this._cachedDate = time;
+            if (typeof interval === 'undefined' || !interval.contains(time)) {
+                interval = this._intervals.findIntervalContainingDate(time);
+                this._cachedInterval = interval;
+                if (typeof interval === 'undefined') {
+                    return undefined;
+                }
+            }
+        }
 
-                if (index < 0) {
-                    index = ~index;
+        var intervalData = interval.data;
+        var times = intervalData.times;
+        var values = intervalData.values;
+        if (intervalData.isSampled && times.length >= 0 && values.length > 0) {
+            var index = binarySearch(times, time, JulianDate.compare);
 
-                    if (index >= times.length) {
-                        index = times.length - 1;
+            if (index < 0) {
+                index = ~index;
+
+                if (index >= times.length) {
+                    index = times.length - 1;
+                }
+
+                var firstIndex = 0;
+                var lastIndex = times.length - 1;
+
+                var degree = intervalData.numberOfPoints - 1;
+                var pointsInCollection = lastIndex - firstIndex + 1;
+
+                if (pointsInCollection < degree + 1) {
+                    // Use the entire range.
+                } else {
+                    var computedFirstIndex = index - ((degree / 2) | 0) - 1;
+                    if (computedFirstIndex < firstIndex) {
+                        computedFirstIndex = firstIndex;
                     }
-
-                    var firstIndex = 0;
-                    var lastIndex = times.length - 1;
-
-                    var degree = intervalData.numberOfPoints - 1;
-                    var pointsInCollection = lastIndex - firstIndex + 1;
-
-                    if (pointsInCollection < degree + 1) {
-                        // Use the entire range.
-                    } else {
-                        var computedFirstIndex = index - ((degree / 2) | 0) - 1;
+                    var computedLastIndex = computedFirstIndex + degree;
+                    if (computedLastIndex > lastIndex) {
+                        computedLastIndex = lastIndex;
+                        computedFirstIndex = computedLastIndex - degree;
                         if (computedFirstIndex < firstIndex) {
                             computedFirstIndex = firstIndex;
                         }
-                        var computedLastIndex = computedFirstIndex + degree;
-                        if (computedLastIndex > lastIndex) {
-                            computedLastIndex = lastIndex;
-                            computedFirstIndex = computedLastIndex - degree;
-                            if (computedFirstIndex < firstIndex) {
-                                computedFirstIndex = firstIndex;
-                            }
-                        }
-
-                        firstIndex = computedFirstIndex;
-                        lastIndex = computedLastIndex;
                     }
 
-                    var length = lastIndex - firstIndex + 1;
-
-                    var doublesPerInterpolationValue = thisValueType.doublesPerInterpolationValue, xTable = intervalData.xTable, yTable = intervalData.yTable;
-
-                    if (typeof xTable === 'undefined') {
-                        xTable = intervalData.xTable = new Array(intervalData.numberOfPoints);
-                        yTable = intervalData.yTable = new Array(intervalData.numberOfPoints * doublesPerInterpolationValue);
-                    }
-
-                    // Build the tables
-                    for ( var i = 0; i < length; ++i) {
-                        xTable[i] = times[lastIndex].getSecondsDifference(times[firstIndex + i]);
-                    }
-                    thisValueType.packValuesForInterpolation(values, yTable, firstIndex, lastIndex);
-
-                    // Interpolate!
-                    var x = times[lastIndex].getSecondsDifference(time);
-                    var interpolationFunction = intervalData.interpolationAlgorithm.interpolateOrderZero;
-                    var result = interpolationFunction(x, xTable, yTable, doublesPerInterpolationValue);
-
-                    return thisValueType.createValueFromInterpolationResult(result, values, firstIndex, lastIndex);
+                    firstIndex = computedFirstIndex;
+                    lastIndex = computedLastIndex;
                 }
-                return thisValueType.createValueFromArray(intervalData.values, index * thisValueType.doublesPerValue);
+
+                var length = lastIndex - firstIndex + 1;
+
+                var doublesPerInterpolationValue = thisValueType.doublesPerInterpolationValue;
+                var xTable = intervalData.xTable;
+                var yTable = intervalData.yTable;
+
+                if (typeof xTable === 'undefined') {
+                    xTable = intervalData.xTable = new Array(intervalData.numberOfPoints);
+                    yTable = intervalData.yTable = new Array(intervalData.numberOfPoints * doublesPerInterpolationValue);
+                }
+
+                // Build the tables
+                for ( var i = 0; i < length; ++i) {
+                    xTable[i] = times[lastIndex].getSecondsDifference(times[firstIndex + i]);
+                }
+                var packFunction = thisValueType.packValuesForInterpolation;
+                if (typeof packFunction !== 'undefined') {
+                    packFunction(values, yTable, firstIndex, lastIndex);
+                } else {
+                    var destinationIndex = 0;
+                    var sourceIndex = firstIndex * doublesPerValue;
+                    var stop = (lastIndex + 1) * doublesPerValue;
+
+                    while (sourceIndex < stop) {
+                        yTable[destinationIndex] = values[sourceIndex];
+                        sourceIndex++;
+                        destinationIndex++;
+                    }
+                }
+
+                // Interpolate!
+                var x = times[lastIndex].getSecondsDifference(time);
+                var result = intervalData.interpolationAlgorithm.interpolateOrderZero(x, xTable, yTable, doublesPerInterpolationValue);
+                return thisValueType.getValueFromInterpolationResult(result, existingInstance, values, firstIndex, lastIndex);
             }
-            return intervalData.values;
+            return thisValueType.getValueFromArray(intervalData.values, index * doublesPerValue, existingInstance);
         }
-        return undefined;
+        return thisValueType.getValue(intervalData.values, existingInstance);
     };
 
     return DynamicProperty;

@@ -1,10 +1,8 @@
 /*global define*/
 define([
-        './Cartesian2',
-        './Spherical'
+        './Cartesian2'
        ], function(
-         Cartesian2,
-         Spherical) {
+         Cartesian2) {
     "use strict";
 
     /**
@@ -19,12 +17,11 @@ define([
      * @param {Number} x The x-coordinate for the Cartesian type.
      * @param {Number} y The y-coordinate for the Cartesian type.
      * @param {Number} z The z-coordinate for the Cartesian type.
-     * @param {Boolean} [normalize=false] True if you would like the Cartesian to be normalized;
      *
      * @see Cartesian2
      * @see Cartesian4
      */
-    function Cartesian3(x, y, z, normalize) {
+    function Cartesian3(x, y, z) {
        /**
          * DOC_TBA
          *
@@ -54,47 +51,7 @@ define([
          * @see Cartesian3.y
          */
         this.z = (typeof z !== 'undefined') ? z : 0.0;
-
-        if (normalize) {
-            var magnitude = this.magnitude();
-            if (magnitude > 0) {
-                this.x = this.x / magnitude;
-                this.y = this.y / magnitude;
-                this.z = this.z / magnitude;
-            }
-        }
     }
-
-    /**
-     * DOC_TBA
-     *
-     */
-    Cartesian3.fromSpherical = function(spherical) {
-        var clock = spherical.clock;
-        var cone = spherical.cone;
-        var magnitude = spherical.magnitude;
-        var radial = magnitude * Math.sin(cone);
-        var x = radial * Math.cos(clock);
-        var y = radial * Math.sin(clock);
-        var z = magnitude * Math.cos(cone);
-        return new Cartesian3(x, y, z);
-    };
-
-    /**
-     * DOC_TBA
-     *
-     */
-    Cartesian3.toSpherical = function(cartesian3) {
-        return Spherical.fromCartesian3(cartesian3);
-    };
-
-    /**
-     * DOC_TBA
-     *
-     */
-    Cartesian3.prototype.toSpherical = function() {
-        return Spherical.fromCartesian3(this);
-    };
 
     /**
      * Returns a duplicate of a Cartesian3.
@@ -157,6 +114,50 @@ define([
     };
 
     /**
+     * Returns the provided Cartesian's magnitude squared.
+     *
+     * @param {Cartesian3} cartesian3 The Cartesian to use.
+     *
+     * @memberof Cartesian3
+     * @return {Number} The magnitude squared.
+     */
+    Cartesian3.magnitudeSquared = function(cartesian3) {
+        return cartesian3.x * cartesian3.x + cartesian3.y * cartesian3.y + cartesian3.z * cartesian3.z;
+    };
+
+    /**
+     * Returns the provided Cartesian's magnitude (length).
+     *
+     * @param {Cartesian3} cartesian3 The Cartesian to use.
+     *
+     * @memberof Cartesian3
+     * @return {Number} The magnitude.
+     */
+    Cartesian3.magnitude = function(cartesian3) {
+        return Math.sqrt(Cartesian3.magnitudeSquared(cartesian3));
+    };
+
+    /**
+     * Modifies the provided Cartesian so that it is normalized.
+     *
+     * @param {Cartesian3} cartesian3 The cartesian to be normalized.
+     *
+     * @memberof Cartesian3
+     * @return {Cartesian3} The provided Cartesian instance modified that it is normalized.
+     */
+    Cartesian3.normalize = function(cartesian3) {
+        var magnitude = Cartesian3.magnitude(cartesian3);
+        if (magnitude > 0) {
+            cartesian3.x = cartesian3.x / magnitude;
+            cartesian3.y = cartesian3.y / magnitude;
+            cartesian3.z = cartesian3.z / magnitude;
+        } else {
+            cartesian3.x = cartesian3.y = cartesian3.z = 0;
+        }
+        return cartesian3;
+    };
+
+    /**
      * Returns the Cartesian's x and y components as a Cartesian2.
      *
      * @memberof Cartesian3
@@ -174,7 +175,7 @@ define([
      * @return {Number} The squared magnitude.
      */
     Cartesian3.prototype.magnitudeSquared = function() {
-        return this.x * this.x + this.y * this.y + this.z * this.z;
+        return Cartesian3.magnitudeSquared(this);
     };
 
     /**
@@ -184,7 +185,7 @@ define([
      * @return {Number} The magnitude.
      */
     Cartesian3.prototype.magnitude = function() {
-        return Math.sqrt(this.magnitudeSquared());
+        return Cartesian3.magnitude(this);
     };
 
     /**
@@ -194,11 +195,7 @@ define([
      * @return {Cartesian3} The normalized Cartesian.
      */
     Cartesian3.prototype.normalize = function() {
-        var magnitude = this.magnitude();
-        if (magnitude > 0) {
-            return new Cartesian3(this.x / magnitude, this.y / magnitude, this.z / magnitude);
-        }
-        return Cartesian3.ZERO;
+        return Cartesian3.normalize(Cartesian3.clone(this));
     };
 
     /**

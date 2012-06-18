@@ -56,6 +56,18 @@ define([
         }
     };
 
+    var show;
+    var position;
+    var fillColor;
+    var outlineColor;
+    var style;
+    var text;
+    var font;
+    var eyeOffset;
+    var pixelOffset;
+    var scale;
+    var verticalOrigin;
+    var horizontalOrigin;
     DynamicLabelVisualizer.prototype.updateObject = function(time, dynamicObject) {
         var dynamicLabel = dynamicObject.label;
         if (typeof dynamicLabel === 'undefined') {
@@ -76,7 +88,7 @@ define([
         var objectId = dynamicObject.id;
         var showProperty = dynamicLabel.show;
         var labelVisualizerIndex = dynamicObject.labelVisualizerIndex;
-        var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
+        show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time, show));
 
         if (!show) {
             //don't bother creating or updating anything else
@@ -119,85 +131,85 @@ define([
 
         label.setShow(show);
 
-        var value = textProperty.getValue(time);
-        if (typeof value !== 'undefined') {
-            label.setText(value);
+        text = textProperty.getValue(time, text);
+        if (typeof text !== 'undefined') {
+            label.setText(text);
         }
 
-        value = positionProperty.getValueCartesian(time);
-        if (typeof value !== 'undefined') {
-            label.setPosition(value);
+        position = positionProperty.getValueCartesian(time);//, position);
+        if (typeof position !== 'undefined') {
+            label.setPosition(position);
         }
 
         var property = dynamicLabel.scale;
         if (typeof property !== 'undefined') {
-            value = property.getValue(time);
-            if (typeof value !== 'undefined') {
-                label.setScale(value);
+            scale = property.getValue(time, scale);
+            if (typeof scale !== 'undefined') {
+                label.setScale(scale);
             }
         }
 
         property = dynamicLabel.font;
         if (typeof property !== 'undefined') {
-            value = property.getValue(time);
-            if (typeof value !== 'undefined') {
-                label.setFont(value);
+            font = property.getValue(time, font);
+            if (typeof font !== 'undefined') {
+                label.setFont(font);
             }
         }
 
         property = dynamicLabel.fillColor;
         if (typeof property !== 'undefined') {
-            value = property.getValue(time);
-            if (typeof value !== 'undefined') {
-                label.setFillColor(value);
+            fillColor = property.getValue(time, fillColor);
+            if (typeof fillColor !== 'undefined') {
+                label.setFillColor(fillColor);
             }
         }
 
         property = dynamicLabel.outlineColor;
         if (typeof property !== 'undefined') {
-            value = property.getValue(time);
-            if (typeof value !== 'undefined') {
-                label.setOutlineColor(value);
+            outlineColor = property.getValue(time, outlineColor);
+            if (typeof outlineColor !== 'undefined') {
+                label.setOutlineColor(outlineColor);
             }
         }
 
         property = dynamicLabel.style;
         if (typeof property !== 'undefined') {
-            value = property.getValue(time);
-            if (typeof value !== 'undefined') {
-                label.setStyle(value);
+            style = property.getValue(time, style);
+            if (typeof style !== 'undefined') {
+                label.setStyle(style);
             }
         }
 
         property = dynamicLabel.pixelOffset;
         if (typeof property !== 'undefined') {
-            value = property.getValue(time);
-            if (typeof value !== 'undefined') {
-                label.setPixelOffset(value);
+            pixelOffset = property.getValue(time, pixelOffset);
+            if (typeof pixelOffset !== 'undefined') {
+                label.setPixelOffset(pixelOffset);
             }
         }
 
         property = dynamicLabel.eyeOffset;
         if (typeof property !== 'undefined') {
-            value = property.getValue(time);
-            if (typeof value !== 'undefined') {
-                label.setEyeOffset(value);
+            eyeOffset = property.getValue(time, eyeOffset);
+            if (typeof eyeOffset !== 'undefined') {
+                label.setEyeOffset(eyeOffset);
             }
         }
 
         property = dynamicLabel.horizontalOrigin;
         if (typeof property !== 'undefined') {
-            value = property.getValue(time);
-            if (typeof value !== 'undefined') {
-                label.setHorizontalOrigin(value);
+            horizontalOrigin = property.getValue(time, horizontalOrigin);
+            if (typeof horizontalOrigin !== 'undefined') {
+                label.setHorizontalOrigin(horizontalOrigin);
             }
         }
 
         property = dynamicLabel.verticalOrigin;
         if (typeof property !== 'undefined') {
-            value = property.getValue(time);
-            if (typeof value !== 'undefined') {
-                label.setVerticalOrigin(value);
+            verticalOrigin = property.getValue(time, verticalOrigin);
+            if (typeof verticalOrigin !== 'undefined') {
+                label.setVerticalOrigin(verticalOrigin);
             }
         }
     };

@@ -40,22 +40,6 @@ defineSuite([
         expect(v.z).toEqual(3);
     });
 
-    it('construct normalized', function() {
-        var v = new Cartesian3(1, 0, 0, true);
-        expect(v.x).toEqual(1);
-        expect(v.y).toEqual(0);
-        expect(v.z).toEqual(0);
-
-        v = new Cartesian3(1, 2, 3, true);
-        expect(v.magnitude()).toEqual(1);
-
-        v = new Cartesian3(0, 0, 0, true);
-        expect(v.x).toEqual(0);
-        expect(v.y).toEqual(0);
-        expect(v.z).toEqual(0);
-        expect(v.magnitude()).toEqual(0);
-    });
-
     it('clone', function() {
         var v = new Cartesian3(1, 2, 3);
         var w = v.clone();
@@ -207,21 +191,5 @@ defineSuite([
     it('toString', function() {
         var v = new Cartesian3(1, 2, 3);
         expect(v.toString()).toEqual('(1, 2, 3)');
-    });
-
-    it('toSpherical', function() {
-        var fortyFiveDegrees = Math.PI / 4.0;
-        var sixtyDegrees = Math.PI / 3.0;
-        var cartesian = new Cartesian3(1.0, Math.sqrt(3.0), -2.0);
-        var spherical = new Spherical(sixtyDegrees, fortyFiveDegrees + Math.PI / 2.0, Math.sqrt(8.0));
-        expect(spherical).toEqualEpsilon(Cartesian3.toSpherical(cartesian), CesiumMath.EPSILON15);
-    });
-
-    it('fromSpherical', function() {
-        var fortyFiveDegrees = Math.PI / 4.0;
-        var sixtyDegrees = Math.PI / 3.0;
-        var cartesian = new Cartesian3(1.0, Math.sqrt(3.0), -2.0);
-        var spherical = new Spherical(sixtyDegrees, fortyFiveDegrees + Math.PI / 2.0, Math.sqrt(8.0));
-        expect(cartesian).toEqualEpsilon(Cartesian3.fromSpherical(spherical), CesiumMath.EPSILON15);
     });
 });

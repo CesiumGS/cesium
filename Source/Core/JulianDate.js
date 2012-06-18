@@ -517,28 +517,6 @@ function(DeveloperError,
         return a._secondsOfDay - b._secondsOfDay;
     };
 
-    //TODO These values are currently arbitrary and not really the true min/max
-    //They represent the min/max vales representable by a 4 digit ISO8601 date,
-    //the kind currently used by CZML.
-
-    /**
-     * An immutable JulianDate instance initialized to the minimum value.
-     *
-     * @memberof JulianDate
-     *
-     * @see JulianDate#MAXIMUM_VALUE
-     */
-    JulianDate.MINIMUM_VALUE = Object.freeze(JulianDate.fromDate(new Date(Date.UTC(-1, 0, 1, 0, 0, 0))), TimeStandard.TAI);
-
-    /**
-     * An immutable JulianDate instance initialized to the maximum value.
-     *
-     * @memberof JulianDate
-     *
-     * @see JulianDate#MINIMUM_VALUE
-     */
-    JulianDate.MAXIMUM_VALUE = Object.freeze(JulianDate.fromDate(new Date(Date.UTC(10000, 0, 0, 0, 0, 0))), TimeStandard.TAI);
-
     /**
      * Returns the time standard used to construct this JulianDate.
      *

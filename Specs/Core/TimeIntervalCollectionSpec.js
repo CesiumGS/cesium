@@ -10,7 +10,19 @@ defineSuite([
     "use strict";
     /*global it,expect*/
 
-    it('construction', function() {
+    function TestObject(value) {
+        this.value = value;
+    }
+
+    TestObject.equals = function(lhs, rhs) {
+        return lhs.value === rhs.value;
+    };
+
+    TestObject.merge = function(lhs, rhs) {
+        return new TestObject(lhs.value + rhs.value);
+    };
+
+    it('constructing a default interval collection has expected property values.', function() {
         var intervals = new TimeIntervalCollection();
         expect(intervals.getLength()).toEqual(0);
         expect(intervals.getStart()).toBeUndefined();
@@ -18,40 +30,102 @@ defineSuite([
         expect(intervals.isEmpty()).toEqual(true);
     });
 
-    it('contains', function() {
+    it('contains works for a simple interval collection.', function() {
         var intervals = new TimeIntervalCollection();
         var interval1 = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2), true, false);
+        var interval2 = new TimeInterval(JulianDate.fromTotalDays(2), JulianDate.fromTotalDays(3), false, true);
+        intervals.addInterval(interval1);
+        intervals.addInterval(interval2);
+        expect(intervals.contains(JulianDate.fromTotalDays(0.5))).toEqual(false);
+        expect(intervals.contains(JulianDate.fromTotalDays(1.5))).toEqual(true);
+        expect(intervals.contains(JulianDate.fromTotalDays(2.0))).toEqual(false);
+        expect(intervals.contains(JulianDate.fromTotalDays(2.5))).toEqual(true);
+        expect(intervals.contains(JulianDate.fromTotalDays(3.0))).toEqual(true);
+        expect(intervals.contains(JulianDate.fromTotalDays(3.5))).toEqual(false);
+    });
+
+    it('contains works for a endpoints of a closed interval collection.', function() {
+        var intervals = new TimeIntervalCollection();
+        var interval1 = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2), true, true);
         intervals.addInterval(interval1);
         expect(intervals.contains(interval1.start)).toEqual(true);
+        expect(intervals.contains(interval1.stop)).toEqual(true);
+    });
+
+    it('contains works for a endpoints of an open interval collection.', function() {
+        var intervals = new TimeIntervalCollection();
+        var interval1 = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2), false, false);
+        intervals.addInterval(interval1);
+        expect(intervals.contains(interval1.start)).toEqual(false);
         expect(intervals.contains(interval1.stop)).toEqual(false);
     });
 
-    it('indexOf', function() {
+    it('indexOf finds the correct interval for a valid date', function() {
         var intervals = new TimeIntervalCollection();
         var interval1 = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2), true, false);
+        var interval2 = new TimeInterval(JulianDate.fromTotalDays(2), JulianDate.fromTotalDays(3), false, true);
         intervals.addInterval(interval1);
-        expect(intervals.indexOf(interval1.start)).toEqual(0);
-        expect(intervals.indexOf(interval1.stop) < 0).toEqual(true);
+        intervals.addInterval(interval2);
+        expect(intervals.indexOf(JulianDate.fromTotalDays(2.5))).toEqual(1);
     });
 
-    it('get', function() {
+    it('indexOf returns complement of index of the interval that a missing date would come before', function() {
         var intervals = new TimeIntervalCollection();
         var interval1 = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2), true, false);
+        var interval2 = new TimeInterval(JulianDate.fromTotalDays(2), JulianDate.fromTotalDays(3), false, true);
         intervals.addInterval(interval1);
-        expect(intervals.get(0)).toEqual(interval1);
+        intervals.addInterval(interval2);
+        expect(intervals.indexOf(JulianDate.fromTotalDays(2))).toEqual(~1);
+    });
+
+    it('indexOf returns complement of collection length if the date is after all intervals.', function() {
+        var intervals = new TimeIntervalCollection();
+        var interval1 = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2), true, false);
+        var interval2 = new TimeInterval(JulianDate.fromTotalDays(2), JulianDate.fromTotalDays(3), false, true);
+        intervals.addInterval(interval1);
+        intervals.addInterval(interval2);
+        expect(intervals.indexOf(JulianDate.fromTotalDays(4))).toEqual(~2);
+    });
+
+    it('get returns the interval at the correct index', function() {
+        var intervals = new TimeIntervalCollection();
+        var interval1 = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2), false, false);
+        var interval2 = new TimeInterval(JulianDate.fromTotalDays(2), JulianDate.fromTotalDays(3), false, false);
+        var interval3 = new TimeInterval(JulianDate.fromTotalDays(4), JulianDate.fromTotalDays(5), false, false);
+        intervals.addInterval(interval1);
+        intervals.addInterval(interval2);
+        intervals.addInterval(interval3);
+        expect(intervals.get(1)).toEqual(interval2);
+    });
+
+    it('get is undefined for a out of range index', function() {
+        var intervals = new TimeIntervalCollection();
         expect(intervals.get(1)).toBeUndefined();
     });
 
-    it('findInterval', function() {
+    it('findInterval works when looking for an exact interval', function() {
         var intervals = new TimeIntervalCollection();
-        var interval1 = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2), true, false);
+        var interval1 = new TimeInterval(JulianDate.fromTotalDays(0), JulianDate.fromTotalDays(1), false, false, 1);
+        var interval2 = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2), true, false, 2);
+        var interval3 = new TimeInterval(JulianDate.fromTotalDays(2), JulianDate.fromTotalDays(3), false, false, 3);
         intervals.addInterval(interval1);
-        expect(intervals.findInterval(interval1.start, interval1.stop)).toEqual(interval1);
-        expect(intervals.findInterval(interval1.start, interval1.stop, true, false)).toEqual(interval1);
-        expect(intervals.findInterval(interval1.start, interval1.stop, false, true)).toBeUndefined();
+        intervals.addInterval(interval2);
+        intervals.addInterval(interval3);
+        expect(intervals.findInterval(interval2.start, interval2.stop, true, false)).toEqual(interval2);
     });
 
-    it('getStart & getStop', function() {
+    it('findInterval works when you do not care about end points', function() {
+        var intervals = new TimeIntervalCollection();
+        var interval1 = new TimeInterval(JulianDate.fromTotalDays(0), JulianDate.fromTotalDays(1), false, false, 1);
+        var interval2 = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2), true, false, 2);
+        var interval3 = new TimeInterval(JulianDate.fromTotalDays(2), JulianDate.fromTotalDays(3), false, false, 3);
+        intervals.addInterval(interval1);
+        intervals.addInterval(interval2);
+        intervals.addInterval(interval3);
+        expect(intervals.findInterval(interval2.start, interval2.stop)).toEqual(interval2);
+    });
+
+    it('getStart & getStop return expected values.', function() {
         var intervals = new TimeIntervalCollection();
         var interval1 = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2), true, false);
         var interval2 = new TimeInterval(JulianDate.fromTotalDays(2), JulianDate.fromTotalDays(3), true, false);
@@ -61,18 +135,15 @@ defineSuite([
         expect(intervals.getStop()).toEqual(interval2.stop);
     });
 
-    it('isEmpty and clear', function() {
+    it('isEmpty and clear return expected values', function() {
         var intervals = new TimeIntervalCollection();
-        expect(intervals.isEmpty()).toEqual(true);
-
         intervals.addInterval(new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2), true, false));
         expect(intervals.isEmpty()).toEqual(false);
-
         intervals.clear();
         expect(intervals.isEmpty()).toEqual(true);
     });
 
-    it('getLength', function() {
+    it('getLength returns the correct interval length when adding intervals with different data', function() {
         var intervals = new TimeIntervalCollection();
         expect(intervals.getLength()).toEqual(0);
 
@@ -86,9 +157,8 @@ defineSuite([
         expect(intervals.getLength()).toEqual(0);
     });
 
-    it('getLength same data', function() {
+    it('getLength returns the correct length after two intervals with the same data are merged.', function() {
         var intervals = new TimeIntervalCollection();
-        expect(intervals.getLength()).toEqual(0);
 
         intervals.addInterval(new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(4), true, true, 1));
         expect(intervals.getLength()).toEqual(1);
@@ -100,7 +170,7 @@ defineSuite([
         expect(intervals.getLength()).toEqual(0);
     });
 
-    it('addInterval/findIntervalContainingDate non-overlapping', function() {
+    it('addInterval and findIntervalContainingDate work when using non-overlapping intervals', function() {
         var interval1 = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2), true, true, 1);
         var interval2 = new TimeInterval(JulianDate.fromTotalDays(2), JulianDate.fromTotalDays(3), false, true, 2);
         var interval3 = new TimeInterval(JulianDate.fromTotalDays(4), JulianDate.fromTotalDays(5), true, true, 3);
@@ -140,7 +210,7 @@ defineSuite([
         expect(intervals.findIntervalContainingDate(interval3.stop).equals(interval3)).toEqual(true);
     });
 
-    it('addInterval/findIntervalContainingDate overlapping', function() {
+    it('addInterval and findIntervalContainingDate work when using overlapping intervals', function() {
         var interval1 = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2.5), true, true, 1);
         var interval2 = new TimeInterval(JulianDate.fromTotalDays(2), JulianDate.fromTotalDays(3), false, true, 2);
         var interval3 = new TimeInterval(interval1.start, interval2.stop, true, true, 3);
@@ -181,47 +251,51 @@ defineSuite([
         expect(intervals.findIntervalContainingDate(interval3.stop).data).toEqual(3);
     });
 
-    function testCompare(lhs, rhs) {
-        return lhs.value === rhs.value;
-    }
-
-    it('addInterval dataComparer', function() {
+    it('addInterval correctly intervals that have the same data when using equalsCallback', function() {
         var intervals = new TimeIntervalCollection();
-        expect(intervals.getLength()).toEqual(0);
 
-        var interval1 = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(4), true, true, {value : 2});
-        var interval2 = new TimeInterval(JulianDate.fromTotalDays(2), JulianDate.fromTotalDays(3), false, false, {value : 2});
-        var interval3 = new TimeInterval(JulianDate.fromTotalDays(3), JulianDate.fromTotalDays(4), true, true, {value : 3});
+        var interval1 = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(4), true, true, new TestObject(2));
+        var interval2 = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(3), true, false, new TestObject(2));
+        var interval3 = new TimeInterval(JulianDate.fromTotalDays(3), JulianDate.fromTotalDays(4), false, true, new TestObject(2));
+        var interval4 = new TimeInterval(JulianDate.fromTotalDays(3), JulianDate.fromTotalDays(4), true, true, new TestObject(3));
 
-        intervals.addInterval(interval1, testCompare);
+        intervals.addInterval(interval1, TestObject.equals);
         expect(intervals.getLength()).toEqual(1);
         expect(intervals.getStart()).toEqual(interval1.start);
         expect(intervals.getStop()).toEqual(interval1.stop);
+        expect(intervals.get(0).data.value).toEqual(2);
 
-        intervals.addInterval(interval2, testCompare);
+        intervals.addInterval(interval2, TestObject.equals);
         expect(intervals.getLength()).toEqual(1);
         expect(intervals.getStart()).toEqual(interval1.start);
         expect(intervals.getStop()).toEqual(interval1.stop);
+        expect(intervals.get(0).data.value).toEqual(2);
 
-        intervals.addInterval(interval3, testCompare);
+        intervals.addInterval(interval3, TestObject.equals);
+        expect(intervals.getLength()).toEqual(1);
+        expect(intervals.getStart()).toEqual(interval1.start);
+        expect(intervals.getStop()).toEqual(interval1.stop);
+        expect(intervals.get(0).data.value).toEqual(2);
+
+        intervals.addInterval(interval4, TestObject.equals);
         expect(intervals.getLength()).toEqual(2);
         expect(intervals.getStart()).toEqual(interval1.start);
         expect(intervals.getStop()).toEqual(interval1.stop);
         expect(intervals.get(0).start).toEqual(interval1.start);
-        expect(intervals.get(0).stop).toEqual(interval3.start);
+        expect(intervals.get(0).stop).toEqual(interval4.start);
         expect(intervals.get(0).isStartIncluded).toEqual(true);
         expect(intervals.get(0).isStopIncluded).toEqual(false);
+        expect(intervals.get(0).data.value).toEqual(2);
 
-        expect(intervals.get(1).start).toEqual(interval3.start);
-        expect(intervals.get(1).stop).toEqual(interval3.stop);
+        expect(intervals.get(1).start).toEqual(interval4.start);
+        expect(intervals.get(1).stop).toEqual(interval4.stop);
         expect(intervals.get(1).isStartIncluded).toEqual(true);
         expect(intervals.get(1).isStopIncluded).toEqual(true);
+        expect(intervals.get(1).data.value).toEqual(3);
     });
 
-    it('removeInterval', function() {
+    it('removeInterval leaves a hole', function() {
         var intervals = new TimeIntervalCollection();
-        expect(intervals.getLength()).toEqual(0);
-
         var interval = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(4), true, true);
         var removedInterval = new TimeInterval(JulianDate.fromTotalDays(2), JulianDate.fromTotalDays(3), true, false);
         intervals.addInterval(interval);
@@ -237,8 +311,197 @@ defineSuite([
         expect(intervals.get(1).stop).toEqual(interval.stop);
         expect(intervals.get(1).isStartIncluded).toEqual(true);
         expect(intervals.get(1).isStopIncluded).toEqual(true);
+    });
 
-        expect(intervals.removeInterval(removedInterval)).toEqual(false);
+    it('removeInterval with an interval of the exact same size works..', function() {
+        var intervals = new TimeIntervalCollection();
+        var interval = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(4), true, false);
+
+        intervals.addInterval(interval);
+        expect(intervals.getLength()).toEqual(1);
+        expect(intervals.get(0).start).toEqual(interval.start);
+        expect(intervals.get(0).stop).toEqual(interval.stop);
+        expect(intervals.get(0).isStartIncluded).toEqual(true);
+        expect(intervals.get(0).isStopIncluded).toEqual(false);
+
+        intervals.removeInterval(interval);
+        expect(intervals.getLength()).toEqual(0);
+    });
+
+    it('removeInterval with an empty interval has no affect.', function() {
+        var intervals = new TimeIntervalCollection();
+        var interval = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(4), true, true);
+        intervals.addInterval(interval);
+
+        expect(intervals.getLength()).toEqual(1);
+        expect(intervals.get(0).start).toEqual(interval.start);
+        expect(intervals.get(0).stop).toEqual(interval.stop);
+        expect(intervals.get(0).isStartIncluded).toEqual(true);
+        expect(intervals.get(0).isStopIncluded).toEqual(true);
+
         expect(intervals.removeInterval(TimeInterval.EMPTY)).toEqual(false);
+
+        expect(intervals.getLength()).toEqual(1);
+        expect(intervals.get(0).start).toEqual(interval.start);
+        expect(intervals.get(0).stop).toEqual(interval.stop);
+        expect(intervals.get(0).isStartIncluded).toEqual(true);
+        expect(intervals.get(0).isStopIncluded).toEqual(true);
+    });
+
+    it('removeInterval takes isStartIncluded and isStopIncluded into account', function() {
+        var intervals = new TimeIntervalCollection();
+
+        var interval = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(4), true, true);
+        var removedInterval = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(4), false, false);
+        intervals.addInterval(interval);
+        expect(intervals.removeInterval(removedInterval)).toEqual(true);
+
+        expect(intervals.getLength()).toEqual(2);
+        expect(intervals.get(0).start).toEqual(interval.start);
+        expect(intervals.get(0).stop).toEqual(interval.start);
+        expect(intervals.get(0).isStartIncluded).toEqual(true);
+        expect(intervals.get(0).isStopIncluded).toEqual(true);
+
+        expect(intervals.get(1).start).toEqual(interval.stop);
+        expect(intervals.get(1).stop).toEqual(interval.stop);
+        expect(intervals.get(1).isStartIncluded).toEqual(true);
+        expect(intervals.get(1).isStopIncluded).toEqual(true);
+    });
+
+    it('intersectInterval works with an empty interval', function() {
+        var intervals = new TimeIntervalCollection();
+        intervals.addInterval(new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(4), true, true));
+        intervals = intervals.intersectInterval(TimeInterval.EMPTY);
+        expect(intervals.getLength()).toEqual(0);
+    });
+
+    it('intersectInterval works non-overlapping intervals', function() {
+        var lhsIntervals = new TimeIntervalCollection();
+        lhsIntervals.addInterval(new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2), true, false));
+        var rhsIntervals = new TimeIntervalCollection();
+        rhsIntervals.addInterval(new TimeInterval(JulianDate.fromTotalDays(2), JulianDate.fromTotalDays(3), true, true));
+        expect(lhsIntervals.intersectInterval(rhsIntervals).getLength()).toEqual(0);
+    });
+
+    it('intersectInterval works with intersecting intervals an no merge callback', function() {
+        var intervals = new TimeIntervalCollection();
+
+        var interval = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(4), true, true);
+        var intersectInterval = new TimeInterval(JulianDate.fromTotalDays(2), JulianDate.fromTotalDays(3), false, false);
+        intervals.addInterval(interval);
+
+        var intersectedIntervals = intervals.intersectInterval(intersectInterval);
+
+        expect(intersectedIntervals.getLength()).toEqual(1);
+        expect(intersectedIntervals.get(0).start).toEqual(intersectInterval.start);
+        expect(intersectedIntervals.get(0).stop).toEqual(intersectInterval.stop);
+        expect(intersectedIntervals.get(0).isStartIncluded).toEqual(false);
+        expect(intersectedIntervals.get(0).isStopIncluded).toEqual(false);
+    });
+
+    it('intersectInterval works with intersecting intervals an a merge callback', function() {
+        var intervals = new TimeIntervalCollection();
+
+        var interval = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(4), true, true, new TestObject(1));
+        var intersectInterval = new TimeInterval(JulianDate.fromTotalDays(2), JulianDate.fromTotalDays(3), false, false, new TestObject(2));
+        intervals.addInterval(interval);
+
+        var intersectedIntervals = intervals.intersectInterval(intersectInterval, TestObject.equals, TestObject.merge);
+
+        expect(intersectedIntervals.getLength()).toEqual(1);
+        expect(intersectedIntervals.get(0).start).toEqual(intersectInterval.start);
+        expect(intersectedIntervals.get(0).stop).toEqual(intersectInterval.stop);
+        expect(intersectedIntervals.get(0).isStartIncluded).toEqual(false);
+        expect(intersectedIntervals.get(0).isStopIncluded).toEqual(false);
+        expect(intersectedIntervals.get(0).data.value).toEqual(3);
+    });
+
+    it('intersect works with intersecting intervals an a merge callback', function() {
+        var intervals = new TimeIntervalCollection();
+        var interval = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(4), true, true, new TestObject(1));
+        intervals.addInterval(interval);
+
+        var intervals2 = new TimeIntervalCollection();
+        var interval2 = new TimeInterval(JulianDate.fromTotalDays(2), JulianDate.fromTotalDays(3), false, false, new TestObject(2));
+        intervals2.addInterval(interval2);
+
+        var intersectedIntervals = intervals.intersect(intervals2, TestObject.equals, TestObject.merge);
+
+        expect(intersectedIntervals.getLength()).toEqual(1);
+        expect(intersectedIntervals.get(0).start).toEqual(intervals2.getStart());
+        expect(intersectedIntervals.get(0).stop).toEqual(intervals2.getStop());
+        expect(intersectedIntervals.get(0).isStartIncluded).toEqual(false);
+        expect(intersectedIntervals.get(0).isStopIncluded).toEqual(false);
+        expect(intersectedIntervals.get(0).data.value).toEqual(3);
+    });
+
+    it('get throws with undefined', function() {
+        var intervals = new TimeIntervalCollection();
+        expect(function() {
+            intervals.get(undefined);
+        }).toThrow();
+    });
+
+    it('get throws with NaN', function() {
+        var intervals = new TimeIntervalCollection();
+        expect(function() {
+            intervals.get(NaN);
+        }).toThrow();
+    });
+
+    it('get throws with non-number', function() {
+        var intervals = new TimeIntervalCollection();
+        expect(function() {
+            intervals.get({});
+        }).toThrow();
+    });
+
+    it('findIntervalContainingDate throws with undefined date', function() {
+        var intervals = new TimeIntervalCollection();
+        expect(function() {
+            intervals.findIntervalContainingDate(undefined);
+        }).toThrow();
+    });
+
+    it('contains throws with undefined date', function() {
+        var intervals = new TimeIntervalCollection();
+        expect(function() {
+            intervals.contains(undefined);
+        }).toThrow();
+    });
+
+    it('indexOf throws with undefined date', function() {
+        var intervals = new TimeIntervalCollection();
+        expect(function() {
+            intervals.indexOf(undefined);
+        }).toThrow();
+    });
+
+    it('addInterval throws with undefined interval', function() {
+        var intervals = new TimeIntervalCollection();
+        expect(function() {
+            intervals.addInterval(undefined, TestObject.equals);
+        }).toThrow();
+    });
+
+    it('removeInterval throws with undefined', function() {
+        var intervals = new TimeIntervalCollection();
+        expect(function() {
+            intervals.removeInterval(undefined);
+        }).toThrow();
+    });
+
+    it('intersect throws with undefined interval', function() {
+        var intervals = new TimeIntervalCollection();
+        expect(function() {
+            intervals.intersect(undefined);
+        }).toThrow();
+    });
+
+    it('intersectInterval throws with undefined interval', function() {
+        var intervals = new TimeIntervalCollection();
+        expect(function() {
+            intervals.intersectInterval(undefined);
+        }).toThrow();
     });
 });

@@ -1,5 +1,8 @@
 /*global define*/
-define(['../Core/Cartesian2'], function(Cartesian2) {
+define([
+        '../Core/Cartesian2'
+       ], function(
+         Cartesian2) {
     "use strict";
 
     var doublesPerValue = 2;
@@ -16,28 +19,31 @@ define(['../Core/Cartesian2'], function(Cartesian2) {
             return Array.isArray(unwrappedInterval) && unwrappedInterval.length > doublesPerValue;
         },
 
-        packValuesForInterpolation : function(sourceArray, destinationArray, firstIndex, lastIndex) {
-            var sourceIndex = firstIndex * doublesPerValue;
-            var destinationIndex = 0;
-            var stop = (lastIndex + 1) * doublesPerValue;
-
-            while (sourceIndex < stop) {
-                destinationArray[destinationIndex] = sourceArray[sourceIndex];
-                sourceIndex++;
-                destinationIndex++;
+        getValue : function(unwrappedInterval, existingInstance) {
+            if (typeof existingInstance === 'undefined') {
+                existingInstance = new Cartesian2();
             }
+            existingInstance.x = unwrappedInterval[0];
+            existingInstance.y = unwrappedInterval[1];
+            return existingInstance;
         },
 
-        createValue : function(unwrappedInterval) {
-            return new Cartesian2(unwrappedInterval[0], unwrappedInterval[1]);
+        getValueFromArray : function(array, startingIndex, existingInstance) {
+            if (typeof existingInstance === 'undefined') {
+                existingInstance = new Cartesian2();
+            }
+            existingInstance.x = array[startingIndex];
+            existingInstance.y = array[startingIndex + 1];
+            return existingInstance;
         },
 
-        createValueFromArray : function(array, startingIndex) {
-            return new Cartesian2(array[startingIndex], array[startingIndex + 1]);
-        },
-
-        createValueFromInterpolationResult : function(array) {
-            return new Cartesian2(array[0], array[1]);
+        getValueFromInterpolationResult : function(array, existingInstance) {
+            if (typeof existingInstance === 'undefined') {
+                existingInstance = new Cartesian2();
+            }
+            existingInstance.x = array[0];
+            existingInstance.y = array[1];
+            return existingInstance;
         }
     };
 

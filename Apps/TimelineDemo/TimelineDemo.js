@@ -3,7 +3,7 @@ define(['dojo',
         'dijit/dijit',
         'Core/Clock',
         'Core/JulianDate',
-        'Controls/Timeline'
+        'Widgets/Timeline'
     ], function(
          dojo,
          dijit,

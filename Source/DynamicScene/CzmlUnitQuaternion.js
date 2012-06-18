@@ -9,6 +9,12 @@ define([
 
     var doublesPerCartesian = 3;
     var doublesPerQuaternion = 4;
+    var identity = new Quaternion(0, 0, 0, 1);
+    var axis = new Cartesian3();
+    var rotationVector = new Cartesian3();
+    var tmpQuaternion = new Quaternion();
+    var quaternion0 = new Quaternion();
+    var quaternion0Conjugate = new Quaternion();
 
     var CzmlUnitQuaternion = {
         doublesPerValue : doublesPerQuaternion,
@@ -23,59 +29,82 @@ define([
         },
 
         packValuesForInterpolation : function(sourceArray, destinationArray, firstIndex, lastIndex) {
-            var quaternion0Conjugate = CzmlUnitQuaternion.createValueFromArray(sourceArray, lastIndex * doublesPerQuaternion).conjugate();
+            Quaternion.conjugate(CzmlUnitQuaternion.getValueFromArray(sourceArray, lastIndex * doublesPerQuaternion, quaternion0Conjugate));
 
             for ( var i = 0, len = lastIndex - firstIndex + 1; i < len; i++) {
                 var offset = i * doublesPerCartesian;
-                var value = CzmlUnitQuaternion.createValueFromArray(sourceArray, (firstIndex + i) * doublesPerQuaternion);
-                var difference = value.multiply(quaternion0Conjugate).normalize();
+                CzmlUnitQuaternion.getValueFromArray(sourceArray, (firstIndex + i) * doublesPerQuaternion, tmpQuaternion);
 
-                if (difference.w < 0) {
-                    difference = difference.negate();
+                Quaternion.multiply(tmpQuaternion, quaternion0Conjugate, tmpQuaternion);
+
+                if (tmpQuaternion.w < 0) {
+                    tmpQuaternion = tmpQuaternion.negate();
                 }
 
-                if (difference.x === 0 && difference.y === 0 && difference.z === 0) {
-                    destinationArray[offset] = 0;
-                    destinationArray[offset + 1] = 0;
-                    destinationArray[offset + 2] = 0;
-                } else {
-                    var axis = new Cartesian3(difference.x, difference.y, difference.z);
-                    var magnitude = axis.magnitude();
-                    var angle = 2 * Math.atan2(magnitude, difference.w);
-                    var axisX = axis.x / magnitude;
-                    var axisY = axis.y / magnitude;
-                    var axisZ = axis.z / magnitude;
-
-                    destinationArray[offset] = axisX * angle;
-                    destinationArray[offset + 1] = axisY * angle;
-                    destinationArray[offset + 2] = axisZ * angle;
-                }
+                Quaternion.getAxis(tmpQuaternion, axis);
+                var angle = tmpQuaternion.getAngle();
+                destinationArray[offset] = axis.x * angle;
+                destinationArray[offset + 1] = axis.y * angle;
+                destinationArray[offset + 2] = axis.z * angle;
             }
         },
 
-        createValue : function(unwrappedInterval) {
-            return new Quaternion(unwrappedInterval[0], unwrappedInterval[1], unwrappedInterval[2], unwrappedInterval[3], true);
+        getValue : function(unwrappedInterval, existingInstance) {
+            if (typeof existingInstance === 'undefined') {
+                existingInstance = new Quaternion();
+            }
+            existingInstance.x = unwrappedInterval[0];
+            existingInstance.y = unwrappedInterval[1];
+            existingInstance.z = unwrappedInterval[2];
+            existingInstance.w = unwrappedInterval[3];
+            return Quaternion.normalize(existingInstance);
         },
 
-        createValueFromArray : function(array, startingIndex) {
-            return new Quaternion(array[startingIndex], array[startingIndex + 1], array[startingIndex + 2], array[startingIndex + 3], true);
+        getValueFromArray : function(array, startingIndex, existingInstance) {
+            if (typeof existingInstance === 'undefined') {
+                existingInstance = new Quaternion();
+            }
+            existingInstance.x = array[startingIndex];
+            existingInstance.y = array[startingIndex + 1];
+            existingInstance.z = array[startingIndex + 2];
+            existingInstance.w = array[startingIndex + 3];
+            return Quaternion.normalize(existingInstance);
         },
 
-        createValueFromInterpolationResult : function(array, sourceArray, firstIndex, lastIndex) {
-            var rotationVector = new Cartesian3(array[0], array[1], array[2]);
+        getValueFromInterpolationResult : function(array, existingInstance, sourceArray, firstIndex, lastIndex) {
+            if (typeof existingInstance === 'undefined') {
+                existingInstance = new Quaternion();
+            }
+            rotationVector.x = array[0];
+            rotationVector.y = array[1];
+            rotationVector.z = array[2];
             var magnitude = rotationVector.magnitude();
 
-            var quaternion0 = CzmlUnitQuaternion.createValueFromArray(sourceArray, lastIndex * doublesPerQuaternion);
+            CzmlUnitQuaternion.getValueFromArray(sourceArray, lastIndex * doublesPerQuaternion, quaternion0);
 
             var difference;
             if (magnitude === 0) {
-                difference = new Quaternion(0, 0, 0, 1);
+                difference = identity;
             } else {
-                difference = Quaternion.fromAxisAngle(rotationVector, magnitude);
+                //CZML_TODO Quaternion.fromAxisAngle creates a new instance of
+                //both Quaternion and Cartesian, so we comment it out and
+                //implement our own in place below.
+                //difference = Quaternion.fromAxisAngle(rotationVector, magnitude);
+
+                //Optimized Quaternion.fromAxisAngle
+                var halfAngle = magnitude / 2.0;
+                var s = Math.sin(halfAngle);
+                var c = Math.cos(halfAngle);
+                Cartesian3.normalize(rotationVector);
+                difference = tmpQuaternion;
+                difference.x = rotationVector.x * s;
+                difference.y = rotationVector.y * s;
+                difference.z = rotationVector.z * s;
+                difference.w = c;
             }
 
-            return difference.multiply(quaternion0).normalize();
-        }
+            return Quaternion.normalize(Quaternion.multiply(difference, quaternion0, existingInstance));
+        },
     };
 
     return CzmlUnitQuaternion;

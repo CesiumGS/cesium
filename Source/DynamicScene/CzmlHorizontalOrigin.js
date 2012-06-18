@@ -14,7 +14,7 @@ define(['../Scene/HorizontalOrigin'
             return false;
         },
 
-        createValue : function(unwrappedInterval) {
+        getValue : function(unwrappedInterval) {
             return HorizontalOrigin[unwrappedInterval];
         }
     };

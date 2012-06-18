@@ -6,7 +6,7 @@
 			</glslToJavascript>
 
 			<createCesiumJs output="${sourceDirectory}/Cesium.js">
-				<fileset dir="${sourceDirectory}" includes="**/*.js" excludes="Dojo/**,Controls/**,Cesium.js,main.js" />
+				<fileset dir="${sourceDirectory}" includes="**/*.js" excludes="DojoWidgets/**,Widgets/**,Cesium.js,main.js" />
 			</createCesiumJs>
 
 			<createSpecList output="${specsDirectory}/SpecList.js">

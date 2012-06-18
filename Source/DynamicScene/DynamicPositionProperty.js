@@ -1,24 +1,36 @@
 /*global define*/
 define([
+        '../Core/Ellipsoid',
         '../Core/JulianDate',
         '../Core/TimeInterval',
         '../Core/TimeIntervalCollection',
+        '../Core/Iso8601',
+        '../Core/Cartesian3',
+        '../Core/Cartographic3',
         './CzmlCartesian3',
         './CzmlCartographic3',
         './DynamicProperty'
     ], function(
+        Ellipsoid,
         JulianDate,
         TimeInterval,
         TimeIntervalCollection,
+        Iso8601,
+        Cartesian3,
+        Cartographic3,
         CzmlCartesian3,
         CzmlCartographic3,
         DynamicProperty) {
     "use strict";
 
+    var wgs84 = Ellipsoid.WGS84;
+
     function DynamicPositionProperty() {
         this._dynamicProperties = [];
         this._propertyIntervals = new TimeIntervalCollection();
         this._potentialTypes = [CzmlCartesian3, CzmlCartographic3];
+        this._cachedTime = undefined;
+        this._cachedInterval = undefined;
     }
 
     DynamicPositionProperty.processCzmlPacket = function(czmlIntervals, buffer, sourceUri, existingProperty) {
@@ -47,9 +59,12 @@ define([
     };
 
     DynamicPositionProperty.prototype.addInterval = function(czmlInterval, buffer, sourceUri) {
+        this._cachedTime = undefined;
+        this._cachedInterval = undefined;
+
         var iso8601Interval = czmlInterval.interval, property, valueType, unwrappedInterval;
         if (typeof iso8601Interval === 'undefined') {
-            iso8601Interval = TimeInterval.INFINITE.clone();
+            iso8601Interval = Iso8601.MAXIMUM_INTERVAL.clone();
         } else {
             iso8601Interval = TimeInterval.fromIso8601(iso8601Interval);
         }
@@ -102,28 +117,52 @@ define([
         }
     };
 
-    DynamicPositionProperty.prototype.getValueCartographic = function(time) {
-        var interval = this._propertyIntervals.findIntervalContainingDate(time);
+    DynamicPositionProperty.prototype.getValueCartographic = function(time, existingInstance) {
+        var interval = this._cachedInterval;
+        if (this._cachedTime !== time) {
+            this._cachedTime = time;
+            if (typeof interval === 'undefined' || !interval.contains(time)) {
+                interval = this._propertyIntervals.findIntervalContainingDate(time);
+                this._cachedInterval = interval;
+            }
+        }
+
         if (typeof interval === 'undefined') {
             return undefined;
         }
         var property = interval.data;
-        var result = property.getValue(time);
+        var valueType = property.valueType;
+        if (valueType === CzmlCartographic3) {
+            return property.getValue(time, existingInstance);
+        }
+        var result = interval.cachedValue = property.getValue(time, interval.cachedValue);
         if (typeof result !== undefined) {
-            result = property.valueType.convertToCartographic3(result);
+            result = wgs84.toCartographic3(result);
         }
         return result;
     };
 
-    DynamicPositionProperty.prototype.getValueCartesian = function(time) {
-        var interval = this._propertyIntervals.findIntervalContainingDate(time);
+    DynamicPositionProperty.prototype.getValueCartesian = function(time, existingInstance) {
+        var interval = this._cachedInterval;
+        if (this._cachedTime !== time) {
+            this._cachedTime = time;
+            if (typeof interval === 'undefined' || !interval.contains(time)) {
+                interval = this._propertyIntervals.findIntervalContainingDate(time);
+                this._cachedInterval = interval;
+            }
+        }
+
         if (typeof interval === 'undefined') {
             return undefined;
         }
         var property = interval.data;
-        var result = property.getValue(time);
+        var valueType = property.valueType;
+        if (valueType === CzmlCartesian3) {
+            return property.getValue(time, existingInstance);
+        }
+        var result = interval.cachedValue = property.getValue(time, interval.cachedValue);
         if (typeof result !== undefined) {
-            result = property.valueType.convertToCartesian3(result);
+            result = wgs84.toCartesian(result);
         }
         return result;
     };

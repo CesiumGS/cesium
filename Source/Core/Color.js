@@ -10,11 +10,51 @@ define(function() {
      * @name Color
      */
     function Color(red, green, blue, alpha) {
-        this.red = red;
-        this.green = green;
-        this.blue = blue;
-        this.alpha = alpha;
+        this.red = typeof red === 'undefined' ? 1.0 : red;
+        this.green = typeof green === 'undefined' ? 1.0 : green;
+        this.blue = typeof blue === 'undefined' ? 1.0 : blue;
+        this.alpha = typeof alpha === 'undefined' ? 1.0 : alpha;
     }
+
+    Color.byteToFloat = function(number) {
+        return number / 255.0;
+    };
+
+    Color.floatToByte = function(number) {
+        return number === 1.0 ? 255.0 : (number * 256.0) | 0;
+    };
+
+    Color.equals = function(lhs, rhs) {
+        return lhs.red === rhs.red &&
+               lhs.green === rhs.green &&
+               lhs.blue === rhs.blue &&
+               lhs.alpha === rhs.alpha;
+    };
+
+    Color.equalsEpsilon = function(lhs, rhs, epsilon) {
+        return (Math.abs(lhs.red - rhs.red) <= epsilon) &&
+               (Math.abs(lhs.green - rhs.green) <= epsilon) &&
+               (Math.abs(lhs.blue - rhs.blue) <= epsilon) &&
+               (Math.abs(lhs.alpha - rhs.alpha) <= epsilon);
+    };
+
+    Color.prototype.equals = function(other) {
+        return Color.equals(this, other);
+    };
+
+    Color.prototype.equalsEpsilon = function(other, epsilon) {
+        return Color.equalsEpsilon(this, other, epsilon);
+    };
+
+    /**
+     * Returns a string containing a CSS color value for this color.
+     */
+    Color.prototype.toCSSColor = function() {
+        var r = Color.floatToByte(this.red);
+        var g = Color.floatToByte(this.green);
+        var b = Color.floatToByte(this.blue);
+        return 'rgba(' + r + ',' + g + ',' + b + ',' + this.alpha + ')';
+    };
 
     /**
      * An immutable Color instance initialized to white, RGBA (1.0, 1.0, 1.0, 1.0).
@@ -71,16 +111,6 @@ define(function() {
      * @memberof Color
      */
     Color.CYAN = Object.freeze(new Color(0.0, 1.0, 1.0, 1.0));
-
-    /**
-     * Returns a string containing a CSS color value for this color.
-     */
-    Color.prototype.toCSSColor = function() {
-        var r = this.red * 255 | 0;
-        var g = this.green * 255 | 0;
-        var b = this.blue * 255 | 0;
-        return 'rgba(' + r + ',' + g + ',' + b + ',' + this.alpha + ')';
-    };
 
     return Color;
 });

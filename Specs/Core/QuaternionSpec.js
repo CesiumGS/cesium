@@ -38,14 +38,6 @@ defineSuite([
         expect(q.w).toEqual(3.0);
     });
 
-    it('construct normalized', function() {
-        var q = new Quaternion(0.0, 2.0, 0.0, 0.0, true);
-        expect(q.x).toEqual(0.0);
-        expect(q.y).toEqual(1.0);
-        expect(q.z).toEqual(0.0);
-        expect(q.w).toEqual(0.0);
-    });
-
     it('clone', function() {
         var q = new Quaternion(1.0, 2.0, 3.0, 4.0);
         var r = q.clone();

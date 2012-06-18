@@ -18,9 +18,9 @@ define([
 
         if (typeof position !== 'undefined' && typeof orientation !== 'undefined' && (position !== sensor.dynamicPyramidVisualizerLastPosition || orientation !== sensor.dynamicPyramidVisualizerLastOrientation)) {
             var w = orientation.w,
-            x = -orientation.x,
-            y = -orientation.y,
-            z = -orientation.z,
+            x = orientation.x,
+            y = orientation.y,
+            z = orientation.z,
             x2 = x * x,
             xy = x * y,
             xz = x * z,

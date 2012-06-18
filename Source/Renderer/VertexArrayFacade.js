@@ -164,7 +164,7 @@ define([
         }
 
         // Verify all attribute names are unique
-        var uniqueIndices = {};
+        var uniqueIndices = new Array(attrs.length);
         for ( var j = 0; j < attrs.length; ++j) {
             var index = attrs[j].index;
             if (uniqueIndices[index]) {
@@ -236,7 +236,7 @@ define([
         VertexArrayFacade._resize(this._dynamic, this._size);
 
         // Reserving invalidates the writers, so if client's cache them, they need to invalidate their cache.
-        this.writers = {};
+        this.writers = [];
         VertexArrayFacade._appendWriters(this.writers, this._static);
         VertexArrayFacade._appendWriters(this.writers, this._stream);
         VertexArrayFacade._appendWriters(this.writers, this._dynamic);
