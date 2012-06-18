@@ -19,6 +19,7 @@ require({
         'dojo/dom',
         'dojo/dom-class',
         'dojo/dom-construct',
+        'dojo/io-query',
         'dojo/_base/fx',
         'dojo/_base/window',
         'dojo/_base/xhr',
@@ -46,6 +47,7 @@ require({
             dom,
             domClass,
             domConstruct,
+            ioQuery,
             fx,
             win,
             xhr,
@@ -180,20 +182,63 @@ require({
             logOutput.parentNode.scrollTop = logOutput.clientHeight + 8 - logOutput.parentNode.clientHeight;
         }
 
+        function loadFromGallery(link) {
+            xhr.get({
+                url: 'gallery/' + link,
+                handleAs: 'text',
+                error: function(error) {
+                    var ele = document.createElement('span');
+                    ele.className = 'consoleError';
+                    ele.textContent = error + '\n';
+                    appendConsole(ele);
+                }
+            }).then(function (value) {
+                var pos = value.indexOf('<body');
+                pos = value.indexOf('>', pos);
+                var body = value.substring(pos + 2);
+                pos = body.indexOf('<script id="cesium_sandcastle_script">');
+                var pos2 = body.lastIndexOf('</script>');
+                if ((pos <= 0) || (pos2 <= pos)) {
+                    var ele = document.createElement('span');
+                    ele.className = 'consoleError';
+                    ele.textContent = 'Error reading source file: ' + link + '\n';
+                    appendConsole(ele);
+                } else {
+                    var script = body.substring(pos + 38, pos2 - 1);
+                    while (script.charAt(0) < 32) {
+                        script = script.substring(1);
+                    }
+                    jsEditor.setValue(script);
+                    htmlEditor.setValue(body.substring(0, pos - 1));
+                    CodeMirror.commands.runCesium();
+                }
+            });
+        }
+
+        var queryObject = {};
+        if (window.location.search) {
+            queryObject = ioQuery.queryToObject(window.location.search.substring(1));
+        }
+
         // The iframe (bucket.html) sends this message on load.
         // This triggers the code to be injected into the iframe.
         window.addEventListener('message', function (e) {
             if (e.data === 'reload') {
                 logOutput.innerHTML = "";
                 //CodeMirror.cesiumWindow = bucketFrame.contentWindow;
-                var bucketDoc = bucketFrame.contentDocument;
-                var bodyEle = bucketDoc.createElement('div');
-                bodyEle.innerHTML = htmlEditor.getValue();
-                bucketDoc.body.appendChild(bodyEle);
-                var jsEle = bucketDoc.createElement('script');
-                jsEle.type = 'text/javascript';
-                jsEle.textContent = jsEditor.getValue();
-                bucketDoc.body.appendChild(jsEle);
+                if (typeof queryObject.src !== 'undefined') {
+                    loadFromGallery(queryObject.src);
+                    queryObject.src = undefined;
+                } else {
+                    var bucketDoc = bucketFrame.contentDocument;
+                    var bodyEle = bucketDoc.createElement('div');
+                    bodyEle.innerHTML = htmlEditor.getValue();
+                    bucketDoc.body.appendChild(bodyEle);
+                    var jsEle = bucketDoc.createElement('script');
+                    jsEle.type = 'text/javascript';
+                    jsEle.textContent = jsEditor.getValue();
+                    bucketDoc.body.appendChild(jsEle);
+                }
             } else if (typeof e.data.log !== 'undefined') {
                 var ele = document.createElement('span');
                 ele.textContent = e.data.log + "\n";
