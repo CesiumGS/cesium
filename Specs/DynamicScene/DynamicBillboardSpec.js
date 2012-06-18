@@ -26,13 +26,13 @@ defineSuite([
 
     it('processCzmlPacket adds data for infinite billboard.', function() {
         var billboardPacket = {
-            "billboard" : {
+            billboard : {
                 image : "http://someImage.com/image",
                 scale : 1.0,
                 horizontalOrigin : "CENTER",
                 verticalOrigin : "CENTER",
                 color : {
-                    "rgbaf" : [1.0, 1.0, 1.0, 1.0]
+                    rgbaf : [1.0, 1.0, 1.0, 1.0]
                 },
                 eyeOffset : {
                     cartesian : [3.0, 4.0, 5.0]
@@ -154,7 +154,6 @@ defineSuite([
         objectToMerge.billboard.show = 8;
 
         var targetObject = new DynamicObject('targetObject');
-        targetObject.billboard = new DynamicBillboard();
 
         DynamicBillboard.mergeProperties(targetObject, objectToMerge);
 

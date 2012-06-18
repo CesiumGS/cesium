@@ -225,7 +225,6 @@ defineSuite([
         objectToMerge.silhouetteMaterial = 12;
 
         var targetObject = new DynamicObject('targetObject');
-        targetObject.cone = new DynamicCone();
 
         DynamicCone.mergeProperties(targetObject, objectToMerge);
 

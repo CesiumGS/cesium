@@ -184,7 +184,6 @@ defineSuite([
         objectToMerge.show = 11;
 
         var targetObject = new DynamicObject('targetObject');
-        targetObject.label = new DynamicLabel();
 
         DynamicLabel.mergeProperties(targetObject, objectToMerge);
 
