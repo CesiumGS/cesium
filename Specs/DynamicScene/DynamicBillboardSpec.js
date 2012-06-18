@@ -26,23 +26,23 @@ defineSuite([
 
     it('processCzmlPacket adds data for infinite billboard.', function() {
         var billboardPacket = {
-                "billboard" : {
-                    image : "http://someImage.com/image",
-                    scale : 1.0,
-                    horizontalOrigin : "CENTER",
-                    verticalOrigin : "CENTER",
-                    color : {
-                        "rgbaf" : [1.0, 1.0, 1.0, 1.0]
-                    },
-                    eyeOffset : {
-                        cartesian : [3.0, 4.0, 5.0]
-                    },
-                    pixelOffset : {
-                        cartesian2 : [1.0, 2.0]
-                    },
-                    show : true
-                }
-            };
+            "billboard" : {
+                image : "http://someImage.com/image",
+                scale : 1.0,
+                horizontalOrigin : "CENTER",
+                verticalOrigin : "CENTER",
+                color : {
+                    "rgbaf" : [1.0, 1.0, 1.0, 1.0]
+                },
+                eyeOffset : {
+                    cartesian : [3.0, 4.0, 5.0]
+                },
+                pixelOffset : {
+                    cartesian2 : [1.0, 2.0]
+                },
+                show : true
+            }
+        };
 
         var dynamicObject = new DynamicObject('dynamicObject');
         DynamicBillboard.processCzmlPacket(dynamicObject, billboardPacket);
@@ -52,45 +52,45 @@ defineSuite([
         expect(dynamicObject.billboard.scale.getValue(Iso8601.MINIMUM_VALUE)).toEqual(billboardPacket.billboard.scale);
         expect(dynamicObject.billboard.horizontalOrigin.getValue(Iso8601.MINIMUM_VALUE)).toEqual(HorizontalOrigin.CENTER);
         expect(dynamicObject.billboard.verticalOrigin.getValue(Iso8601.MINIMUM_VALUE)).toEqual(VerticalOrigin.CENTER);
-        expect(Color.WHITE.equals(dynamicObject.billboard.color.getValue(Iso8601.MINIMUM_VALUE))).toEqual(true);
+        expect(dynamicObject.billboard.color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(1.0, 1.0, 1.0, 1.0));
         expect(dynamicObject.billboard.eyeOffset.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(3.0, 4.0, 5.0));
         expect(dynamicObject.billboard.pixelOffset.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian2(1.0, 2.0));
         expect(dynamicObject.billboard.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
     });
 
     it('processCzmlPacket adds data for constrained billboard.', function() {
-        var constrainedBillboardPacket = {
-                "billboard" : {
-                    interval : "2000-01-01/2001-01-01",
-                    image : "http://someImage.com/image",
-                    scale : 1.0,
-                    horizontalOrigin : "CENTER",
-                    verticalOrigin : "CENTER",
-                    color : {
-                        "rgbaf" : [1.0, 1.0, 1.0, 1.0]
-                    },
-                    eyeOffset : {
-                        cartesian : [3.0, 4.0, 5.0]
-                    },
-                    pixelOffset : {
-                        cartesian2 : [1.0, 2.0]
-                    },
-                    show : true
-                }
-            };
+        var billboardPacket = {
+            billboard : {
+                interval : "2000-01-01/2001-01-01",
+                image : "http://someImage.com/image",
+                scale : 1.0,
+                horizontalOrigin : "CENTER",
+                verticalOrigin : "CENTER",
+                color : {
+                    rgbaf : [1.0, 1.0, 1.0, 1.0]
+                },
+                eyeOffset : {
+                    cartesian : [3.0, 4.0, 5.0]
+                },
+                pixelOffset : {
+                    cartesian2 : [1.0, 2.0]
+                },
+                show : true
+            }
+        };
 
-        var validTime = TimeInterval.fromIso8601(constrainedBillboardPacket.billboard.interval).start;
+        var validTime = TimeInterval.fromIso8601(billboardPacket.billboard.interval).start;
         var invalidTime = validTime.addSeconds(-1);
 
         var dynamicObject = new DynamicObject('dynamicObject');
-        DynamicBillboard.processCzmlPacket(dynamicObject, constrainedBillboardPacket);
+        DynamicBillboard.processCzmlPacket(dynamicObject, billboardPacket);
 
         expect(dynamicObject.billboard).toBeDefined();
-        expect(dynamicObject.billboard.image.getValue(validTime)).toEqual(constrainedBillboardPacket.billboard.image);
-        expect(dynamicObject.billboard.scale.getValue(validTime)).toEqual(constrainedBillboardPacket.billboard.scale);
+        expect(dynamicObject.billboard.image.getValue(validTime)).toEqual(billboardPacket.billboard.image);
+        expect(dynamicObject.billboard.scale.getValue(validTime)).toEqual(billboardPacket.billboard.scale);
         expect(dynamicObject.billboard.horizontalOrigin.getValue(validTime)).toEqual(HorizontalOrigin.CENTER);
         expect(dynamicObject.billboard.verticalOrigin.getValue(validTime)).toEqual(VerticalOrigin.CENTER);
-        expect(Color.WHITE.equals(dynamicObject.billboard.color.getValue(validTime))).toEqual(true);
+        expect(dynamicObject.billboard.color.getValue(validTime)).toEqual(new Color(1.0, 1.0, 1.0, 1.0));
         expect(dynamicObject.billboard.eyeOffset.getValue(validTime)).toEqual(new Cartesian3(3.0, 4.0, 5.0));
         expect(dynamicObject.billboard.pixelOffset.getValue(validTime)).toEqual(new Cartesian2(1.0, 2.0));
         expect(dynamicObject.billboard.show.getValue(validTime)).toEqual(true);
