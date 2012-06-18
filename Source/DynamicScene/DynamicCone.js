@@ -32,10 +32,10 @@ define([
 
     DynamicCone.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var coneData = packet.cone;
+        var coneUpdated = false;
         if (typeof coneData !== 'undefined') {
-
             var cone = dynamicObject.cone;
-            var coneUpdated = typeof cone === 'undefined';
+            coneUpdated = typeof cone === 'undefined';
             if (coneUpdated) {
                 dynamicObject.cone = cone = new DynamicCone();
             }
@@ -58,6 +58,7 @@ define([
             coneUpdated = DynamicMaterialProperty.processCzmlPacket(cone, 'outerMaterial', coneData.outerMaterial, interval, dynamicObjectCollection) || coneUpdated;
             coneUpdated = DynamicMaterialProperty.processCzmlPacket(cone, 'silhouetteMaterial', coneData.silhouetteMaterial, interval, dynamicObjectCollection) || coneUpdated;
         }
+        return coneUpdated;
     };
 
     DynamicCone.mergeProperties = function(targetObject, objectToMerge) {

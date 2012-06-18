@@ -52,7 +52,7 @@ defineSuite([
         };
 
         var dynamicObject = new DynamicObject('dynamicObject');
-        DynamicLabel.processCzmlPacket(dynamicObject, labelPacket);
+        expect(DynamicLabel.processCzmlPacket(dynamicObject, labelPacket)).toEqual(true);
         expect(dynamicObject.label).toBeDefined();
         expect(dynamicObject.label.text.getValue(Iso8601.MINIMUM_VALUE)).toEqual(labelPacket.label.text);
         expect(dynamicObject.label.font.getValue(Iso8601.MINIMUM_VALUE)).toEqual(labelPacket.label.font);
@@ -97,7 +97,7 @@ defineSuite([
         var invalidTime = validTime.addSeconds(-1);
 
         var dynamicObject = new DynamicObject('dynamicObject');
-        DynamicLabel.processCzmlPacket(dynamicObject, labelPacket);
+        expect(DynamicLabel.processCzmlPacket(dynamicObject, labelPacket)).toEqual(true);
         expect(dynamicObject.label).toBeDefined();
         expect(dynamicObject.label.text.getValue(validTime)).toEqual(labelPacket.label.text);
         expect(dynamicObject.label.font.getValue(validTime)).toEqual(labelPacket.label.font);
@@ -122,6 +122,13 @@ defineSuite([
         expect(dynamicObject.label.pixelOffset.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.label.scale.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.label.show.getValue(invalidTime)).toBeUndefined();
+    });
+
+    it('processCzmlPacket returns false if no data.', function() {
+        var packet = {};
+        var dynamicObject = new DynamicObject('dynamicObject');
+        expect(DynamicLabel.processCzmlPacket(dynamicObject, packet)).toEqual(false);
+        expect(dynamicObject.label).toBeUndefined();
     });
 
     it('mergeProperties does not change a fully configured label', function() {

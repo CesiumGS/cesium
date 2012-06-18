@@ -31,7 +31,7 @@ defineSuite([
         };
 
         var dynamicObject = new DynamicObject('dynamicObject');
-        DynamicPolygon.processCzmlPacket(dynamicObject, polygonPacket);
+        expect(DynamicPolygon.processCzmlPacket(dynamicObject, polygonPacket)).toEqual(true);
 
         expect(dynamicObject.polygon).toBeDefined();
         expect(dynamicObject.polygon.material.getValue(Iso8601.MINIMUM_VALUE).color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
@@ -57,7 +57,7 @@ defineSuite([
         var invalidTime = validTime.addSeconds(-1);
 
         var dynamicObject = new DynamicObject('dynamicObject');
-        DynamicPolygon.processCzmlPacket(dynamicObject, polygonPacket);
+        expect(DynamicPolygon.processCzmlPacket(dynamicObject, polygonPacket)).toEqual(true);
 
         expect(dynamicObject.polygon).toBeDefined();
         expect(dynamicObject.polygon.material.getValue(validTime).color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
@@ -65,6 +65,13 @@ defineSuite([
 
         expect(dynamicObject.polygon.material.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.polygon.show.getValue(invalidTime)).toBeUndefined();
+    });
+
+    it('processCzmlPacket returns false if no data.', function() {
+        var packet = {};
+        var dynamicObject = new DynamicObject('dynamicObject');
+        expect(DynamicPolygon.processCzmlPacket(dynamicObject, packet)).toEqual(false);
+        expect(dynamicObject.polygon).toBeUndefined();
     });
 
     it('mergeProperties does not change a fully configured polygon', function() {

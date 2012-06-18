@@ -45,7 +45,7 @@ defineSuite([
         };
 
         var dynamicObject = new DynamicObject('dynamicObject');
-        DynamicBillboard.processCzmlPacket(dynamicObject, billboardPacket);
+        expect(DynamicBillboard.processCzmlPacket(dynamicObject, billboardPacket)).toEqual(true);
 
         expect(dynamicObject.billboard).toBeDefined();
         expect(dynamicObject.billboard.image.getValue(Iso8601.MINIMUM_VALUE)).toEqual(billboardPacket.billboard.image);
@@ -83,7 +83,7 @@ defineSuite([
         var invalidTime = validTime.addSeconds(-1);
 
         var dynamicObject = new DynamicObject('dynamicObject');
-        DynamicBillboard.processCzmlPacket(dynamicObject, billboardPacket);
+        expect(DynamicBillboard.processCzmlPacket(dynamicObject, billboardPacket)).toEqual(true);
 
         expect(dynamicObject.billboard).toBeDefined();
         expect(dynamicObject.billboard.image.getValue(validTime)).toEqual(billboardPacket.billboard.image);
@@ -104,6 +104,13 @@ defineSuite([
         expect(dynamicObject.billboard.eyeOffset.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.billboard.pixelOffset.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.billboard.show.getValue(invalidTime)).toBeUndefined();
+    });
+
+    it('processCzmlPacket returns false if no data.', function() {
+        var packet = {};
+        var dynamicObject = new DynamicObject('dynamicObject');
+        expect(DynamicBillboard.processCzmlPacket(dynamicObject, packet)).toEqual(false);
+        expect(dynamicObject.billboard).toBeUndefined();
     });
 
     it('mergeProperties does not change a fully configured billboard', function() {

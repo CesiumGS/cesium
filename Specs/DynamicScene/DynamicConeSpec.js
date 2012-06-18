@@ -69,7 +69,7 @@ defineSuite([
         };
 
         var dynamicObject = new DynamicObject('dynamicObject');
-        DynamicCone.processCzmlPacket(dynamicObject, conePacket);
+        expect(DynamicCone.processCzmlPacket(dynamicObject, conePacket)).toEqual(true);
 
         expect(dynamicObject.cone).toBeDefined();
         expect(dynamicObject.cone.innerHalfAngle.getValue(Iso8601.MINIMUM_VALUE)).toEqual(conePacket.cone.innerHalfAngle);
@@ -135,7 +135,7 @@ defineSuite([
         var invalidTime = validTime.addSeconds(-1);
 
         var dynamicObject = new DynamicObject('dynamicObject');
-        DynamicCone.processCzmlPacket(dynamicObject, conePacket);
+        expect(DynamicCone.processCzmlPacket(dynamicObject, conePacket)).toEqual(true);
 
         expect(dynamicObject.cone).toBeDefined();
         expect(dynamicObject.cone.innerHalfAngle.getValue(validTime)).toEqual(conePacket.cone.innerHalfAngle);
@@ -163,6 +163,13 @@ defineSuite([
         expect(dynamicObject.cone.outerMaterial.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.cone.silhouetteMaterial.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.cone.intersectionColor.getValue(invalidTime)).toBeUndefined();
+    });
+
+    it('processCzmlPacket returns false if no data.', function() {
+        var packet = {};
+        var dynamicObject = new DynamicObject('dynamicObject');
+        expect(DynamicCone.processCzmlPacket(dynamicObject, packet)).toEqual(false);
+        expect(dynamicObject.cone).toBeUndefined();
     });
 
     it('mergeProperties does not change a fully configured cone', function() {

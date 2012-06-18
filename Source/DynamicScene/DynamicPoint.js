@@ -23,10 +23,11 @@ define([
 
     DynamicPoint.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection) {
         var pointData = packet.point;
+        var pointUpdated = false;
         if (typeof pointData !== 'undefined') {
 
             var point = dynamicObject.point;
-            var pointUpdated = typeof point === 'undefined';
+            pointUpdated = typeof point === 'undefined';
             if (pointUpdated) {
                 dynamicObject.point = point = new DynamicPoint();
             }
@@ -41,9 +42,8 @@ define([
             pointUpdated = DynamicProperty.processCzmlPacket(point, 'outlineColor', CzmlColor, pointData.outlineColor, interval, dynamicObjectCollection) || pointUpdated;
             pointUpdated = DynamicProperty.processCzmlPacket(point, 'outlineWidth', CzmlNumber, pointData.outlineWidth, interval, dynamicObjectCollection) || pointUpdated;
             pointUpdated = DynamicProperty.processCzmlPacket(point, 'show', CzmlBoolean, pointData.show, interval, dynamicObjectCollection) || pointUpdated;
-
-            return pointUpdated;
         }
+        return pointUpdated;
     };
 
     DynamicPoint.mergeProperties = function(targetObject, objectToMerge) {

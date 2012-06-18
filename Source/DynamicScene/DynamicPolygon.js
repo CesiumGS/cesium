@@ -18,10 +18,10 @@ define([
 
     DynamicPolygon.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection) {
         var polygonData = packet.polygon;
+        var polygonUpdated = false;
         if (typeof polygonData !== 'undefined') {
-
             var polygon = dynamicObject.polygon;
-            var polygonUpdated = typeof polygon === 'undefined';
+            polygonUpdated = typeof polygon === 'undefined';
             if (polygonUpdated) {
                 dynamicObject.polygon = polygon = new DynamicPolygon();
             }
@@ -33,8 +33,8 @@ define([
 
             polygonUpdated = DynamicProperty.processCzmlPacket(polygon, 'show', CzmlBoolean, polygonData.show, interval, dynamicObjectCollection) || polygonUpdated;
             polygonUpdated = DynamicMaterialProperty.processCzmlPacket(polygon, 'material', polygonData.material, interval, dynamicObjectCollection) || polygonUpdated;
-            return polygonUpdated;
         }
+        return polygonUpdated;
     };
 
     DynamicPolygon.mergeProperties = function(targetObject, objectToMerge) {

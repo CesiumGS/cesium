@@ -41,7 +41,7 @@ defineSuite([
         };
 
         var dynamicObject = new DynamicObject('dynamicObject');
-        DynamicPyramid.processCzmlPacket(dynamicObject, pyramidPacket);
+        expect(DynamicPyramid.processCzmlPacket(dynamicObject, pyramidPacket)).toEqual(true);
 
         expect(dynamicObject.pyramid).toBeDefined();
         expect(dynamicObject.pyramid.directions.getValueSpherical(Iso8601.MINIMUM_VALUE)).toEqualArray(
@@ -81,7 +81,7 @@ defineSuite([
         var invalidTime = validTime.addSeconds(-1);
 
         var dynamicObject = new DynamicObject('dynamicObject');
-        DynamicPyramid.processCzmlPacket(dynamicObject, pyramidPacket);
+        expect(DynamicPyramid.processCzmlPacket(dynamicObject, pyramidPacket)).toEqual(true);
 
         expect(dynamicObject.pyramid).toBeDefined();
         expect(dynamicObject.pyramid.directions.getValueSpherical(validTime)).toEqualArray(
@@ -99,6 +99,13 @@ defineSuite([
         expect(dynamicObject.pyramid.showIntersection.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.pyramid.material.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.pyramid.intersectionColor.getValue(invalidTime)).toBeUndefined();
+    });
+
+    it('processCzmlPacket returns false if no data.', function() {
+        var packet = {};
+        var dynamicObject = new DynamicObject('dynamicObject');
+        expect(DynamicPyramid.processCzmlPacket(dynamicObject, packet)).toEqual(false);
+        expect(dynamicObject.pyramid).toBeUndefined();
     });
 
     it('mergeProperties does not change a fully configured pyramid', function() {

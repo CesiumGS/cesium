@@ -41,10 +41,11 @@ define([
 
     DynamicLabel.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var labelData = packet.label;
+        var labelUpdated = false;
         if (typeof labelData !== 'undefined') {
 
             var label = dynamicObject.label;
-            var labelUpdated = typeof label === 'undefined';
+            labelUpdated = typeof label === 'undefined';
             if (labelUpdated) {
                 dynamicObject.label = label = new DynamicLabel();
             }
@@ -65,8 +66,8 @@ define([
             labelUpdated = DynamicProperty.processCzmlPacket(label, 'verticalOrigin', CzmlVerticalOrigin, labelData.verticalOrigin, interval, dynamicObjectCollection) || labelUpdated;
             labelUpdated = DynamicProperty.processCzmlPacket(label, 'eyeOffset', CzmlCartesian3, labelData.eyeOffset, interval, dynamicObjectCollection) || labelUpdated;
             labelUpdated = DynamicProperty.processCzmlPacket(label, 'pixelOffset', CzmlCartesian2, labelData.pixelOffset, interval, dynamicObjectCollection) || labelUpdated;
-            return labelUpdated;
         }
+        return labelUpdated;
     };
 
     DynamicLabel.mergeProperties = function(targetObject, objectToMerge) {

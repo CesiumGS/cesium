@@ -23,10 +23,11 @@ function(
 
     DynamicPolyline.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection) {
         var polylineData = packet.polyline;
+        var polylineUpdated = false;
         if (typeof polylineData !== 'undefined') {
 
             var polyline = dynamicObject.polyline;
-            var polylineUpdated = typeof polyline === 'undefined';
+            polylineUpdated = typeof polyline === 'undefined';
             if (polylineUpdated) {
                 dynamicObject.polyline = polyline = new DynamicPolyline();
             }
@@ -41,9 +42,8 @@ function(
             polylineUpdated = DynamicProperty.processCzmlPacket(polyline, 'outlineWidth', CzmlNumber, polylineData.outlineWidth, interval, dynamicObjectCollection) || polylineUpdated;
             polylineUpdated = DynamicProperty.processCzmlPacket(polyline, 'show', CzmlBoolean, polylineData.show, interval, dynamicObjectCollection) || polylineUpdated;
             polylineUpdated = DynamicProperty.processCzmlPacket(polyline, 'width', CzmlNumber, polylineData.width, interval, dynamicObjectCollection) || polylineUpdated;
-
-            return polylineUpdated;
         }
+        return polylineUpdated;
     };
 
     DynamicPolyline.mergeProperties = function(targetObject, objectToMerge) {

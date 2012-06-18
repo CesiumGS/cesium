@@ -32,7 +32,7 @@ defineSuite([
         };
 
         var dynamicObject = new DynamicObject('dynamicObject');
-        DynamicPoint.processCzmlPacket(dynamicObject, pointPacket);
+        expect(DynamicPoint.processCzmlPacket(dynamicObject, pointPacket)).toEqual(true);
 
         expect(dynamicObject.point).toBeDefined();
         expect(dynamicObject.point.color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
@@ -62,7 +62,7 @@ defineSuite([
         var invalidTime = validTime.addSeconds(-1);
 
         var dynamicObject = new DynamicObject('dynamicObject');
-        DynamicPoint.processCzmlPacket(dynamicObject, pointPacket);
+        expect(DynamicPoint.processCzmlPacket(dynamicObject, pointPacket)).toEqual(true);
 
         expect(dynamicObject.point).toBeDefined();
         expect(dynamicObject.point.color.getValue(validTime)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
@@ -76,6 +76,13 @@ defineSuite([
         expect(dynamicObject.point.outlineColor.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.point.outlineWidth.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.point.show.getValue(invalidTime)).toBeUndefined();
+    });
+
+    it('processCzmlPacket returns false if no data.', function() {
+        var packet = {};
+        var dynamicObject = new DynamicObject('dynamicObject');
+        expect(DynamicPoint.processCzmlPacket(dynamicObject, packet)).toEqual(false);
+        expect(dynamicObject.point).toBeUndefined();
     });
 
     it('mergeProperties does not change a fully configured point', function() {
