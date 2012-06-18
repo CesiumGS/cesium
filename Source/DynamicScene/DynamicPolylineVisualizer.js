@@ -144,7 +144,6 @@ define([
         var i, len;
         for (i = 0, len = this._polylineCollection.length; i < len; i++) {
             this._primitives.remove(this._polylineCollection[i]);
-            this._polylineCollection[i].destroy();
         }
 
         var dynamicObjects = this._dynamicObjectCollection.getObjects();

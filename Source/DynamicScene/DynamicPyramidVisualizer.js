@@ -4,46 +4,16 @@ define([
         '../Core/Color',
         '../Core/Matrix4',
         '../Scene/CustomSensorVolume',
-        '../Scene/ColorMaterial'
+        '../Scene/ColorMaterial',
+        './DynamicConeVisualizer'
        ], function(
          destroyObject,
          Color,
          Matrix4,
          CustomSensorVolume,
-         ColorMaterial) {
+         ColorMaterial,
+         DynamicConeVisualizer) {
     "use strict";
-
-    var setModelMatrix = function(sensor, position, orientation)
-    {
-        position = position || sensor.dynamicPyramidVisualizerLastPosition;
-        orientation = orientation || sensor.dynamicPyramidVisualizerLastOrientation;
-
-        if (typeof position !== 'undefined' && typeof orientation !== 'undefined' && (position !== sensor.dynamicPyramidVisualizerLastPosition || orientation !== sensor.dynamicPyramidVisualizerLastOrientation)) {
-            var w = orientation.w,
-            x = orientation.x,
-            y = orientation.y,
-            z = orientation.z,
-            x2 = x * x,
-            xy = x * y,
-            xz = x * z,
-            xw = x * w,
-            y2 = y * y,
-            yz = y * z,
-            yw = y * w,
-            z2 = z * z,
-            zw = z * w,
-            w2 = w * w;
-
-            sensor.modelMatrix = new Matrix4(
-                                    x2 - y2 - z2 + w2,  2 * (xy + zw),      2 * (xz - yw),      position.x,
-                                    2 * (xy - zw),      -x2 + y2 - z2 + w2, 2 * (yz + xw),      position.y,
-                                    2 * (xz + yw),      2 * (yz - xw),      -x2 - y2 + z2 + w2, position.z,
-                                    0,                  0,                  0,                  1);
-
-            sensor.dynamicPyramidVisualizerLastPosition = position;
-            sensor.dynamicPyramidVisualizerLastOrientation = orientation;
-        }
-    };
 
     function DynamicPyramidVisualizer(scene, dynamicObjectCollection) {
         this._scene = scene;
@@ -153,7 +123,17 @@ define([
             pyramid.last_directions = value;
         }
 
-        setModelMatrix(pyramid, positionProperty.getValueCartesian(time), orientationProperty.getValue(time));
+        var position = positionProperty.getValueCartesian(time) || pyramid.dynamicPyramidVisualizerLastPosition;
+        var orientation = orientationProperty.getValue(time) || pyramid.dynamicPyramidVisualizerLastOrientation;
+
+        if (typeof position !== 'undefined' &&
+            typeof orientation !== 'undefined' &&
+            (position !== pyramid.dynamicPyramidVisualizerLastPosition ||
+             orientation !== pyramid.dynamicPyramidVisualizerLastOrientation)) {
+            pyramid.modelMatrix = DynamicConeVisualizer._computeModelMatrix(position, orientation);
+            pyramid.dynamicPyramidVisualizerLastPosition = position;
+            pyramid.dynamicPyramidVisualizerLastOrientation = orientation;
+        }
 
         var material = dynamicPyramid.material;
         if (typeof material !== 'undefined') {
@@ -181,7 +161,6 @@ define([
         var i, len;
         for (i = 0, len = this._pyramidCollection.length; i < len; i++) {
             this._primitives.remove(this._pyramidCollection[i]);
-            this._pyramidCollection[i].destroy();
         }
 
         var dynamicObjects = this._dynamicObjectCollection.getObjects();

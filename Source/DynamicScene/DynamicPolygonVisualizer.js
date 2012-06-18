@@ -114,7 +114,6 @@ define([
         var i, len;
         for (i = 0, len = this._polygonCollection.length; i < len; i++) {
             this._primitives.remove(this._polygonCollection[i]);
-            this._polygonCollection[i].destroy();
         }
 
         var dynamicObjects = this._dynamicObjectCollection.getObjects();

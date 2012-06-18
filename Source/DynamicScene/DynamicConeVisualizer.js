@@ -15,38 +15,6 @@ define([
          ColorMaterial) {
     "use strict";
 
-    var setModelMatrix = function(sensor, position, orientation)
-    {
-        position = position || sensor.dynamicConeVisualizerLastPosition;
-        orientation = orientation || sensor.dynamicConeVisualizerLastOrientation;
-
-        if (typeof position !== 'undefined' && typeof orientation !== 'undefined' && (position !== sensor.dynamicConeVisualizerLastPosition || orientation !== sensor.dynamicConeVisualizerLastOrientation)) {
-            var w = orientation.w,
-            x = orientation.x,
-            y = orientation.y,
-            z = orientation.z,
-            x2 = x * x,
-            xy = x * y,
-            xz = x * z,
-            xw = x * w,
-            y2 = y * y,
-            yz = y * z,
-            yw = y * w,
-            z2 = z * z,
-            zw = z * w,
-            w2 = w * w;
-
-            sensor.modelMatrix = new Matrix4(
-                                    x2 - y2 - z2 + w2,  2 * (xy + zw),      2 * (xz - yw),      position.x,
-                                    2 * (xy - zw),      -x2 + y2 - z2 + w2, 2 * (yz + xw),      position.y,
-                                    2 * (xz + yw),      2 * (yz - xw),      -x2 - y2 + z2 + w2, position.z,
-                                    0,                  0,                  0,                  1);
-
-            sensor.dynamicConeVisualizerLastPosition = position;
-            sensor.dynamicConeVisualizerLastOrientation = orientation;
-        }
-    };
-
     function DynamicConeVisualizer(scene, dynamicObjectCollection) {
         this._scene = scene;
         this._unusedIndexes = [];
@@ -197,7 +165,17 @@ define([
             }
         }
 
-        setModelMatrix(cone, positionProperty.getValueCartesian(time), orientationProperty.getValue(time));
+        var position = positionProperty.getValueCartesian(time) || cone.dynamicConeVisualizerLastPosition;
+        var orientation = orientationProperty.getValue(time) || cone.dynamicConeVisualizerLastOrientation;
+
+        if (typeof position !== 'undefined' &&
+            typeof orientation !== 'undefined' &&
+            (position !== cone.dynamicConeVisualizerLastPosition ||
+             orientation !== cone.dynamicConeVisualizerLastOrientation)) {
+            cone.modelMatrix = DynamicConeVisualizer._computeModelMatrix(position, orientation);
+            cone.dynamicConeVisualizerLastPosition = position;
+            cone.dynamicConeVisualizerLastOrientation = orientation;
+        }
 
         var material = dynamicCone.capMaterial;
         if (typeof material !== 'undefined') {
@@ -232,7 +210,6 @@ define([
         var i, len;
         for (i = 0, len = this._coneCollection.length; i < len; i++) {
             this._primitives.remove(this._coneCollection[i]);
-            this._coneCollection[i].destroy();
         }
 
         var dynamicObjects = this._dynamicObjectCollection.getObjects();
@@ -297,6 +274,29 @@ define([
     DynamicConeVisualizer.prototype.destroy = function() {
         this.removeAll();
         return destroyObject(this);
+    };
+
+    DynamicConeVisualizer._computeModelMatrix = function(position, orientation) {
+        var w = orientation.w,
+        x = orientation.x,
+        y = orientation.y,
+        z = orientation.z,
+        x2 = x * x,
+        xy = x * y,
+        xz = x * z,
+        xw = x * w,
+        y2 = y * y,
+        yz = y * z,
+        yw = y * w,
+        z2 = z * z,
+        zw = z * w,
+        w2 = w * w;
+
+        return new Matrix4(
+                x2 - y2 - z2 + w2,  2 * (xy + zw),      2 * (xz - yw),      position.x,
+                2 * (xy - zw),      -x2 + y2 - z2 + w2, 2 * (yz + xw),      position.y,
+                2 * (xz + yw),      2 * (yz - xw),      -x2 - y2 + z2 + w2, position.z,
+                0,                  0,                  0,                  1);
     };
 
     return DynamicConeVisualizer;
