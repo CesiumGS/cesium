@@ -14,7 +14,7 @@ require({
             location: '../Examples/Sandcastle'
         }]
     }, [
-        'Dojo/CesiumWidget',
+        'DojoWidgets/CesiumWidget',
         'dojo/parser',
         'dojo/dom',
         'dojo/dom-class',
