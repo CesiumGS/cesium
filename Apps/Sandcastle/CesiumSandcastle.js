@@ -11,7 +11,7 @@ require({
             location: '../ThirdParty/dojo-release-1.7.2-src/dojox'
         }, {
             name: 'Sandcastle',
-            location: '../Examples/Sandcastle'
+            location: '../Apps/Sandcastle'
         }]
     }, [
         'DojoWidgets/CesiumWidget',
@@ -78,7 +78,7 @@ require({
         });
 
         xhr.get({
-            url: 'bucket.html',
+            url: 'bucket/bucket.html',
             handleAs: 'text'
         }).then(function (value) {
             var pos = value.indexOf('<body');
@@ -236,7 +236,9 @@ require({
             var octetBlobURL = getURL.createObjectURL(octetBlob);
             dom.byId('saveAsFile').href = octetBlobURL;
 
-            html = html.replace('<head>', '<head>\n    <base href="' + window.location.href + '">');
+            var baseHref = window.location.href, pos = baseHref.lastIndexOf('/');
+            baseHref = baseHref.substring(0, pos) + '/gallery/';
+            html = html.replace('<head>', '<head>\n    <base href="' + baseHref + '">');
             var htmlBB = new BlobBuilder();
             htmlBB.append(html);
             var htmlBlob = htmlBB.getBlob("text/html;charset=utf-8");

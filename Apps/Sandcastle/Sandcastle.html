@@ -92,7 +92,7 @@
             <div id="jsContainer" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: 'JavaScript code'">
             <textarea id="code" name="code">
 require({
-    baseUrl : '../..',
+    baseUrl : '../../..',
     packages: [
         { name: 'dojo', location: 'ThirdParty/dojo-release-1.7.2-src/dojo' },
         { name: 'dijit', location: 'ThirdParty/dojo-release-1.7.2-src/dijit' },
@@ -183,11 +183,11 @@ require({
 
     var cb = new Cesium.CentralBody(ellipsoid);
     cb.dayTileProvider = bing;
-    cb.nightImageSource = "../../Images/land_ocean_ice_lights_2048.jpg";
-    cb.specularMapSource = "../../Images/earthspec1k.jpg";
+    cb.nightImageSource = "../../../Images/land_ocean_ice_lights_2048.jpg";
+    cb.specularMapSource = "../../../Images/earthspec1k.jpg";
     if (scene.getContext().getMaximumTextureSize() > 2048) {
-        cb.cloudsMapSource = "../../Images/earthcloudmaptrans.jpg";
-        cb.bumpMapSource = "../../Images/earthbump1k.jpg";
+        cb.cloudsMapSource = "../../../Images/earthcloudmaptrans.jpg";
+        cb.bumpMapSource = "../../../Images/earthbump1k.jpg";
     }
     cb.showSkyAtmosphere = true;
     cb.showGroundAtmosphere = true;
@@ -330,7 +330,7 @@ body {
         </div>
         <div id="cesiumContainer" data-dojo-type="dijit.layout.TabContainer" data-dojo-props="region: 'center', tabPosition: 'bottom'">
             <div id="bucketPane" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: 'Cesium'">
-                <iframe id="bucketFrame" src="bucket.html" class="fullFrame"></iframe>
+                <iframe id="bucketFrame" src="bucket/bucket.html" class="fullFrame"></iframe>
             </div>
         </div>
         <div class="bottomPanel" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="region: 'bottom', splitter: true" style="height: 75px;" tabindex="10">
