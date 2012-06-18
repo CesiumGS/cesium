@@ -56,7 +56,7 @@ function(
             }
 
             targetPolyline.color = targetPolyline.color || polylineToMerge.color;
-            targetPolyline.pixelSize = targetPolyline.pixelSize || polylineToMerge.pixelSize;
+            targetPolyline.width = targetPolyline.width || polylineToMerge.width;
             targetPolyline.outlineColor = targetPolyline.outlineColor || polylineToMerge.outlineColor;
             targetPolyline.outlineWidth = targetPolyline.outlineWidth || polylineToMerge.outlineWidth;
             targetPolyline.show = targetPolyline.show || polylineToMerge.show;
