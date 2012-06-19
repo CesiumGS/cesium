@@ -38,7 +38,7 @@ define([
 
     function czmlDateToJulianDate(date, epoch) {
         if (typeof date === 'string') {
-            return JulianDate.fromIso601(date);
+            return JulianDate.fromIso8601(date);
         }
         return epoch.addSeconds(date);
     }
