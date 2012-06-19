@@ -12,3 +12,7 @@ vec3 agi_getMaterialNormalComponent(MaterialHelperInput helperInput)
     
     return normalEC;
 }
+float agi_getMaterialSpecularComponent(MaterialHelperInput helperInput)
+{
+    return 0.1;
+}

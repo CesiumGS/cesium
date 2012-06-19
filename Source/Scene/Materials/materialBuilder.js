@@ -30,7 +30,7 @@ define(['../../Core/DeveloperError'], function(DeveloperError) {
         materialSpecularComponentHeader :
         "float agi_getMaterialSpecularComponent(MaterialHelperInput helperInput)",
         materialSpecularComponentBody :
-        "{\n return 0.1; \n}\n",
+        "{\n return 0.0; \n}\n",
 
         // Emission
         // x,y,z : emission color, in other words per-object ambient light

@@ -21,3 +21,7 @@ vec3 agi_getMaterialNormalComponent(MaterialHelperInput helperInput)
     vec3 normalEC = helperInput.tangentToEyeMatrix * normalTangentSpace;
     return normalEC;
 }
+float agi_getMaterialSpecularComponent(MaterialHelperInput helperInput)
+{
+    return 0.1;
+}
