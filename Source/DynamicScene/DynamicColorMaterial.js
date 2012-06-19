@@ -23,7 +23,7 @@ define([
             if (typeof existingMaterial === 'undefined') {
                 existingMaterial = new DynamicColorMaterial();
             }
-            DynamicProperty.processCzmlPacket(existingMaterial, 'color', CzmlColor, materialData.color, constrainedInterval, dynamicObjectCollection);
+            DynamicProperty.processCzmlPacket(existingMaterial, 'color', CzmlColor, materialData.color, undefined, dynamicObjectCollection);
         }
         return existingMaterial;
     };

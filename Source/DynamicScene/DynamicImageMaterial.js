@@ -26,7 +26,7 @@ define([
             if (typeof existingMaterial === 'undefined') {
                 existingMaterial = new DynamicImageMaterial();
             }
-            DynamicProperty.processCzmlPacket(existingMaterial, 'image', CzmlString, materialData.image, constrainedInterval, dynamicObjectCollection);
+            DynamicProperty.processCzmlPacket(existingMaterial, 'image', CzmlString, materialData.image, undefined, dynamicObjectCollection);
         }
         return existingMaterial;
     };
