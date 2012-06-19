@@ -111,9 +111,9 @@ define([
             }
         }
 
-        //We could handle the data, add it to the propery.
+        //We could handle the data, add it to the property.
         if (typeof unwrappedInterval !== 'undefined') {
-            property.addIntervalUnwrapped(iso8601Interval.start, iso8601Interval.stop, czmlInterval, unwrappedInterval);
+            property.addIntervalUnwrapped(iso8601Interval.start, iso8601Interval.stop, unwrappedInterval, czmlInterval.epoch, czmlInterval.interpolationAlgorithm, czmlInterval.interpolationDegree);
         }
     };
 

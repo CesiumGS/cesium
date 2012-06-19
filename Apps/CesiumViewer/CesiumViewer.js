@@ -178,7 +178,7 @@ function(dom,
             var scene = widget.scene;
 
             transitioner = new SceneTransitioner(scene);
-            visualizers = CzmlStandard.createVisualizers(scene, dynamicObjectCollection);
+            visualizers = CzmlStandard.createVisualizerCollection(scene, dynamicObjectCollection);
             widget.enableStatistics(true);
 
             var queryObject = {};

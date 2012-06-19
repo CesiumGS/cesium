@@ -86,9 +86,6 @@ define([
                 nextTime = times[timesInsertionPoint + 1];
                 while (newDataIndex < newData.length) {
                     currentTime = czmlDateToJulianDate(newData[newDataIndex], epoch);
-
-                    //CZML_TODO We can probably further optimize here by dealing with the special cases of ===,
-                    //rather than bailing, though the case probably happens so infrequently, that not checking may be faster
                     if ((typeof prevItem !== 'undefined' && JulianDate.compare(prevItem, currentTime) >= 0) ||
                         (typeof nextTime !== 'undefined' && JulianDate.compare(currentTime, nextTime) >= 0)) {
                         break;
@@ -138,10 +135,10 @@ define([
         }
 
         var unwrappedInterval = this.valueType.unwrapInterval(czmlInterval);
-        this.addIntervalUnwrapped(iso8601Interval.start, iso8601Interval.stop, czmlInterval, unwrappedInterval);
+        this.addIntervalUnwrapped(iso8601Interval.start, iso8601Interval.stop, unwrappedInterval, czmlInterval.epoch, czmlInterval.interpolationAlgorithm, czmlInterval.interpolationDegree);
     };
 
-    DynamicProperty.prototype.addIntervalUnwrapped = function(start, stop, czmlInterval, unwrappedInterval) {
+    DynamicProperty.prototype.addIntervalUnwrapped = function(start, stop, unwrappedInterval, epoch, interpolationAlgorithmType, interpolationDegree) {
         var thisIntervals = this._intervals;
         var existingInterval = thisIntervals.findInterval(start, stop);
         this._cachedDate = undefined;
@@ -159,13 +156,11 @@ define([
         var thisValueType = this.valueType;
         if (thisValueType.isSampled(unwrappedInterval)) {
             var interpolationAlgorithm;
-            var interpolationAlgorithmType = czmlInterval.interpolationAlgorithm;
-            if (interpolationAlgorithmType) {
+            if (typeof interpolationAlgorithmType !== 'undefined') {
                 interpolationAlgorithm = interpolators[interpolationAlgorithmType];
                 intervalData.interpolationAlgorithm = interpolationAlgorithm;
             }
-            var interpolationDegree = czmlInterval.interpolationDegree;
-            if (interpolationAlgorithm && interpolationDegree) {
+            if (typeof interpolationAlgorithm !== 'undefined '&& typeof interpolationDegree !== 'undefined') {
                 intervalData.interpolationDegree = interpolationDegree;
                 intervalData.xTable = undefined;
                 intervalData.yTable = undefined;
@@ -176,7 +171,6 @@ define([
                 intervalData.values = [];
                 intervalData.isSampled = true;
             }
-            var epoch = czmlInterval.epoch;
             if (typeof epoch !== 'undefined') {
                 epoch = JulianDate.fromIso8601(epoch);
             }

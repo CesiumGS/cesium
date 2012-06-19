@@ -17,7 +17,7 @@ define([
         this._array = [];
         this.parent = undefined;
 
-        this.objectsUpdated = new Event();
+        this.objectPropertiesChanged = new Event();
         this.objectsRemoved = new Event();
     }
 
@@ -61,7 +61,7 @@ define([
         }
 
         if (updatedObjects.length > 0) {
-            this.objectsUpdated.raiseEvent(this, updatedObjects);
+            this.objectPropertiesChanged.raiseEvent(this, updatedObjects);
         }
 
         return updatedObjects;

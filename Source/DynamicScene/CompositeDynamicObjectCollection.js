@@ -19,7 +19,7 @@ define([
         this._collections = [];
         this._mergeFunctions = mergeFunctions || CzmlStandard.mergers;
         this._undefinedFunctions = undefinedFunctions || CzmlStandard.cleaners;
-        this.objectsUpdated = new Event();
+        this.objectPropertiesChanged = new Event();
         this.objectsRemoved = new Event();
 
         if (typeof collections !== 'undefined') {
@@ -42,7 +42,7 @@ define([
         }
 
         dynamicObjectCollection.parent = this;
-        dynamicObjectCollection.objectsUpdated.addEventListener(CompositeDynamicObjectCollection.prototype._onObjectsUpdated, this);
+        dynamicObjectCollection.objectPropertiesChanged.addEventListener(CompositeDynamicObjectCollection.prototype._onObjectPropertiesChanged, this);
         this._collections.push(dynamicObjectCollection);
     };
 
@@ -57,7 +57,7 @@ define([
         thisCollections.splice(index, 0, dynamicObjectCollection);
 
         dynamicObjectCollection.parent = this;
-        dynamicObjectCollection.objectsUpdated.addEventListener(CompositeDynamicObjectCollection.prototype._onObjectsUpdated, this);
+        dynamicObjectCollection.objectPropertiesChanged.addEventListener(CompositeDynamicObjectCollection.prototype._onObjectPropertiesChanged, this);
     };
 
     CompositeDynamicObjectCollection.prototype.insertCollectionBefore = function(beforeDynamicObjectCollection, dynamicObjectCollection) {
@@ -83,7 +83,7 @@ define([
         var thisCollections = this._collections;
         thisCollections.splice(thisCollections.indexOf(dynamicObjectCollection), 1);
         dynamicObjectCollection.parent = undefined;
-        dynamicObjectCollection.objectsUpdated.removeEventListener(CompositeDynamicObjectCollection.prototype._onObjectsUpdated);
+        dynamicObjectCollection.objectPropertiesChanged.removeEventListener(CompositeDynamicObjectCollection.prototype._onObjectPropertiesChanged);
     };
 
     CompositeDynamicObjectCollection.prototype.getLength = function() {
@@ -140,7 +140,7 @@ define([
         }
     };
 
-    CompositeDynamicObjectCollection.prototype._onObjectsUpdated = function(dynamicObjectCollection, updatedObjects) {
+    CompositeDynamicObjectCollection.prototype._onObjectPropertiesChanged = function(dynamicObjectCollection, updatedObjects) {
         var thisMergeFunctions = this._mergeFunctions;
         var thisUndefinedFunctions = this._undefinedFunctions;
         var thisCollections = this._collections;
@@ -171,7 +171,7 @@ define([
             }
         }
         if (compositeObjects.length > 0) {
-            this.objectsUpdated.raiseEvent(this, compositeObjects);
+            this.objectPropertiesChanged.raiseEvent(this, compositeObjects);
         }
     };
 
