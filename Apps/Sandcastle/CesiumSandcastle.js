@@ -80,7 +80,7 @@ require({
         });
 
         xhr.get({
-            url: 'bucket/bucket.html',
+            url: 'templates/bucket.html',
             handleAs: 'text'
         }).then(function (value) {
             var pos = value.indexOf('<body');
