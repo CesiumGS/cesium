@@ -190,7 +190,7 @@ define([
         }
     };
 
-    DynamicProperty.prototype.getValue = function(time, existingInstance) {
+    DynamicProperty.prototype.getValue = function(time, result) {
         var interval = this._cachedInterval;
         var thisValueType = this.valueType;
         var doublesPerValue = thisValueType.doublesPerValue;
@@ -277,12 +277,12 @@ define([
 
                 // Interpolate!
                 var x = times[lastIndex].getSecondsDifference(time);
-                var result = intervalData.interpolationAlgorithm.interpolateOrderZero(x, xTable, yTable, doublesPerInterpolationValue);
-                return thisValueType.getValueFromInterpolationResult(result, existingInstance, values, firstIndex, lastIndex);
+                var interpolationResult = intervalData.interpolationAlgorithm.interpolateOrderZero(x, xTable, yTable, doublesPerInterpolationValue);
+                return thisValueType.getValueFromInterpolationResult(interpolationResult, result, values, firstIndex, lastIndex);
             }
-            return thisValueType.getValueFromArray(intervalData.values, index * doublesPerValue, existingInstance);
+            return thisValueType.getValueFromArray(intervalData.values, index * doublesPerValue, result);
         }
-        return thisValueType.getValue(intervalData.values, existingInstance);
+        return thisValueType.getValue(intervalData.values, result);
     };
 
     return DynamicProperty;

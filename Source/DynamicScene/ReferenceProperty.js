@@ -31,24 +31,24 @@ define(function() {
         return targetProperty;
     };
 
-    ReferenceProperty.prototype.getValue = function(time, existingInstance) {
+    ReferenceProperty.prototype.getValue = function(time, result) {
         var targetProperty = this.resolve();
-        return typeof targetProperty !== 'undefined' ? targetProperty.getValue(time, existingInstance) : undefined;
+        return typeof targetProperty !== 'undefined' ? targetProperty.getValue(time, result) : undefined;
     };
 
-    ReferenceProperty.prototype.getValueCartographic = function(time, existingInstance) {
+    ReferenceProperty.prototype.getValueCartographic = function(time, result) {
         var targetProperty = this.resolve();
-        return typeof targetProperty !== 'undefined' ? targetProperty.getValueCartographic(time, existingInstance) : undefined;
+        return typeof targetProperty !== 'undefined' ? targetProperty.getValueCartographic(time, result) : undefined;
     };
 
-    ReferenceProperty.prototype.getValueCartesian = function(time, existingInstance) {
+    ReferenceProperty.prototype.getValueCartesian = function(time, result) {
         var targetProperty = this.resolve();
-        return typeof targetProperty !== 'undefined' ? targetProperty.getValueCartesian(time, existingInstance) : undefined;
+        return typeof targetProperty !== 'undefined' ? targetProperty.getValueCartesian(time, result) : undefined;
     };
 
-    ReferenceProperty.prototype.getValueSpherical = function(time, existingInstance) {
+    ReferenceProperty.prototype.getValueSpherical = function(time, result) {
         var targetProperty = this.resolve();
-        return typeof targetProperty !== 'undefined' ? targetProperty.getValueSpherical(time, existingInstance) : undefined;
+        return typeof targetProperty !== 'undefined' ? targetProperty.getValueSpherical(time, result) : undefined;
     };
 
     return ReferenceProperty;

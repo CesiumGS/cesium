@@ -37,34 +37,34 @@ function(Cartographic3,
             return Array.isArray(unwrappedInterval) && unwrappedInterval.length > doublesPerValue;
         },
 
-        getValue : function(unwrappedInterval, existingInstance) {
-            if (typeof existingInstance === 'undefined') {
-                existingInstance = new Cartographic3();
+        getValue : function(unwrappedInterval, result) {
+            if (typeof result === 'undefined') {
+                result = new Cartographic3();
             }
-            existingInstance.longitude = unwrappedInterval[0];
-            existingInstance.latitude = unwrappedInterval[1];
-            existingInstance.height = unwrappedInterval[2];
-            return existingInstance;
+            result.longitude = unwrappedInterval[0];
+            result.latitude = unwrappedInterval[1];
+            result.height = unwrappedInterval[2];
+            return result;
         },
 
-        getValueFromArray : function(array, startingIndex, existingInstance) {
-            if (typeof existingInstance === 'undefined') {
-                existingInstance = new Cartographic3();
+        getValueFromArray : function(array, startingIndex, result) {
+            if (typeof result === 'undefined') {
+                result = new Cartographic3();
             }
-            existingInstance.longitude = array[startingIndex];
-            existingInstance.latitude = array[startingIndex + 1];
-            existingInstance.height = array[startingIndex + 2];
-            return existingInstance;
+            result.longitude = array[startingIndex];
+            result.latitude = array[startingIndex + 1];
+            result.height = array[startingIndex + 2];
+            return result;
         },
 
-        getValueFromInterpolationResult : function(array, existingInstance) {
-            if (typeof existingInstance === 'undefined') {
-                existingInstance = new Cartographic3();
+        getValueFromInterpolationResult : function(array, result) {
+            if (typeof result === 'undefined') {
+                result = new Cartographic3();
             }
-            existingInstance.longitude = array[0];
-            existingInstance.latitude = array[1];
-            existingInstance.height = array[2];
-            return existingInstance;
+            result.longitude = array[0];
+            result.latitude = array[1];
+            result.height = array[2];
+            return result;
         },
     };
 

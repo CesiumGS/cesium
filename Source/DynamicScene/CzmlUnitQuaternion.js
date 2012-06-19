@@ -50,31 +50,31 @@ define([
             }
         },
 
-        getValue : function(unwrappedInterval, existingInstance) {
-            if (typeof existingInstance === 'undefined') {
-                existingInstance = new Quaternion();
+        getValue : function(unwrappedInterval, result) {
+            if (typeof result === 'undefined') {
+                result = new Quaternion();
             }
-            existingInstance.x = unwrappedInterval[0];
-            existingInstance.y = unwrappedInterval[1];
-            existingInstance.z = unwrappedInterval[2];
-            existingInstance.w = unwrappedInterval[3];
-            return existingInstance.normalize(existingInstance);
+            result.x = unwrappedInterval[0];
+            result.y = unwrappedInterval[1];
+            result.z = unwrappedInterval[2];
+            result.w = unwrappedInterval[3];
+            return result.normalize(result);
         },
 
-        getValueFromArray : function(array, startingIndex, existingInstance) {
-            if (typeof existingInstance === 'undefined') {
-                existingInstance = new Quaternion();
+        getValueFromArray : function(array, startingIndex, result) {
+            if (typeof result === 'undefined') {
+                result = new Quaternion();
             }
-            existingInstance.x = array[startingIndex];
-            existingInstance.y = array[startingIndex + 1];
-            existingInstance.z = array[startingIndex + 2];
-            existingInstance.w = array[startingIndex + 3];
-            return existingInstance.normalize(existingInstance);
+            result.x = array[startingIndex];
+            result.y = array[startingIndex + 1];
+            result.z = array[startingIndex + 2];
+            result.w = array[startingIndex + 3];
+            return result.normalize(result);
         },
 
-        getValueFromInterpolationResult : function(array, existingInstance, sourceArray, firstIndex, lastIndex) {
-            if (typeof existingInstance === 'undefined') {
-                existingInstance = new Quaternion();
+        getValueFromInterpolationResult : function(array, result, sourceArray, firstIndex, lastIndex) {
+            if (typeof result === 'undefined') {
+                result = new Quaternion();
             }
             rotationVector.x = array[0];
             rotationVector.y = array[1];
@@ -89,7 +89,7 @@ define([
                 Quaternion.fromAxisAngle(rotationVector, magnitude, tmpQuaternion);
             }
 
-            return existingInstance.normalize(tmpQuaternion.multiply(quaternion0, existingInstance));
+            return result.normalize(tmpQuaternion.multiply(quaternion0, result));
         },
     };
 

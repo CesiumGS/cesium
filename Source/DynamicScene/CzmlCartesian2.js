@@ -19,31 +19,31 @@ define([
             return Array.isArray(unwrappedInterval) && unwrappedInterval.length > doublesPerValue;
         },
 
-        getValue : function(unwrappedInterval, existingInstance) {
-            if (typeof existingInstance === 'undefined') {
-                existingInstance = new Cartesian2();
+        getValue : function(unwrappedInterval, result) {
+            if (typeof result === 'undefined') {
+                result = new Cartesian2();
             }
-            existingInstance.x = unwrappedInterval[0];
-            existingInstance.y = unwrappedInterval[1];
-            return existingInstance;
+            result.x = unwrappedInterval[0];
+            result.y = unwrappedInterval[1];
+            return result;
         },
 
-        getValueFromArray : function(array, startingIndex, existingInstance) {
-            if (typeof existingInstance === 'undefined') {
-                existingInstance = new Cartesian2();
+        getValueFromArray : function(array, startingIndex, result) {
+            if (typeof result === 'undefined') {
+                result = new Cartesian2();
             }
-            existingInstance.x = array[startingIndex];
-            existingInstance.y = array[startingIndex + 1];
-            return existingInstance;
+            result.x = array[startingIndex];
+            result.y = array[startingIndex + 1];
+            return result;
         },
 
-        getValueFromInterpolationResult : function(array, existingInstance) {
-            if (typeof existingInstance === 'undefined') {
-                existingInstance = new Cartesian2();
+        getValueFromInterpolationResult : function(array, result) {
+            if (typeof result === 'undefined') {
+                result = new Cartesian2();
             }
-            existingInstance.x = array[0];
-            existingInstance.y = array[1];
-            return existingInstance;
+            result.x = array[0];
+            result.y = array[1];
+            return result;
         }
     };
 

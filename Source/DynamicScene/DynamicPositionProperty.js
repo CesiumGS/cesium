@@ -117,7 +117,7 @@ define([
         }
     };
 
-    DynamicPositionProperty.prototype.getValueCartographic = function(time, existingInstance) {
+    DynamicPositionProperty.prototype.getValueCartographic = function(time, result) {
         var interval = this._cachedInterval;
         if (this._cachedTime !== time) {
             this._cachedTime = time;
@@ -133,16 +133,16 @@ define([
         var property = interval.data;
         var valueType = property.valueType;
         if (valueType === CzmlCartographic3) {
-            return property.getValue(time, existingInstance);
+            return property.getValue(time, result);
         }
-        var result = interval.cachedValue = property.getValue(time, interval.cachedValue);
+        result = interval.cachedValue = property.getValue(time, interval.cachedValue);
         if (typeof result !== 'undefined') {
             result = wgs84.toCartographic3(result);
         }
         return result;
     };
 
-    DynamicPositionProperty.prototype.getValueCartesian = function(time, existingInstance) {
+    DynamicPositionProperty.prototype.getValueCartesian = function(time, result) {
         var interval = this._cachedInterval;
         if (this._cachedTime !== time) {
             this._cachedTime = time;
@@ -158,9 +158,9 @@ define([
         var property = interval.data;
         var valueType = property.valueType;
         if (valueType === CzmlCartesian3) {
-            return property.getValue(time, existingInstance);
+            return property.getValue(time, result);
         }
-        var result = interval.cachedValue = property.getValue(time, interval.cachedValue);
+        result = interval.cachedValue = property.getValue(time, interval.cachedValue);
         if (typeof result !== 'undefined') {
             result = wgs84.toCartesian(result);
         }

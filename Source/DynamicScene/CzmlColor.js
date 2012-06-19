@@ -38,37 +38,37 @@ define(['../Core/Color'], function(Color) {
             return Array.isArray(unwrappedInterval) && unwrappedInterval.length > doublesPerValue;
         },
 
-        getValue : function(unwrappedInterval, existingInstance) {
-            if (typeof existingInstance === 'undefined') {
-                existingInstance = new Color();
+        getValue : function(unwrappedInterval, result) {
+            if (typeof result === 'undefined') {
+                result = new Color();
             }
-            existingInstance.red = unwrappedInterval[0];
-            existingInstance.green = unwrappedInterval[1];
-            existingInstance.blue = unwrappedInterval[2];
-            existingInstance.alpha = unwrappedInterval[3];
-            return existingInstance;
+            result.red = unwrappedInterval[0];
+            result.green = unwrappedInterval[1];
+            result.blue = unwrappedInterval[2];
+            result.alpha = unwrappedInterval[3];
+            return result;
         },
 
-        getValueFromArray : function(array, startingIndex, existingInstance) {
-            if (typeof existingInstance === 'undefined') {
-                existingInstance = new Color();
+        getValueFromArray : function(array, startingIndex, result) {
+            if (typeof result === 'undefined') {
+                result = new Color();
             }
-            existingInstance.red = array[startingIndex];
-            existingInstance.green = array[startingIndex + 1];
-            existingInstance.blue = array[startingIndex + 2];
-            existingInstance.alpha = array[startingIndex + 3];
-            return existingInstance;
+            result.red = array[startingIndex];
+            result.green = array[startingIndex + 1];
+            result.blue = array[startingIndex + 2];
+            result.alpha = array[startingIndex + 3];
+            return result;
         },
 
-        getValueFromInterpolationResult : function(array, existingInstance) {
-            if (typeof existingInstance === 'undefined') {
-                existingInstance = new Color();
+        getValueFromInterpolationResult : function(array, result) {
+            if (typeof result === 'undefined') {
+                result = new Color();
             }
-            existingInstance.red = array[0];
-            existingInstance.green = array[1];
-            existingInstance.blue = array[2];
-            existingInstance.alpha = array[3];
-            return existingInstance;
+            result.red = array[0];
+            result.green = array[1];
+            result.blue = array[2];
+            result.alpha = array[3];
+            return result;
         }
     };
     return CzmlColor;
