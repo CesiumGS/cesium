@@ -63,9 +63,21 @@
                 Suggest (Ctrl-Space)
             </div>
             <span data-dojo-type="dijit.ToolbarSeparator"></span>
+            <div data-dojo-type="dijit.form.DropDownButton" data-dojo-props="iconClass: 'dijitFolderOpened', showLabel: true">
+                <span>Load</span>
+                <div data-dojo-type="dijit.TooltipDialog" data-dojo-props="class: 'popDownDialog'">
+                    <p>Any unsaved changes will be lost.</p>
+                    <a class="linkButton" href="index.html">
+                        <span data-dojo-type="Sandcastle.LinkButton">
+                            Return to Gallery
+                        </span>
+                    </a>
+                </div>
+            </div>
+            <span data-dojo-type="dijit.ToolbarSeparator"></span>
             <div data-dojo-type="dijit.form.DropDownButton" data-dojo-props="iconClass: 'dijitIconSave', showLabel: true">
                 <span>Save As</span>
-                <div id="dropDownSaveAs" data-dojo-type="dijit.TooltipDialog" data-dojo-props="class: 'saveAsDialog'">
+                <div id="dropDownSaveAs" data-dojo-type="dijit.TooltipDialog" data-dojo-props="class: 'popDownDialog'">
                     <p>You must save the file to this folder:
                         <code>Apps/Sandcastle/gallery/*.html</code></p>
                     <p>Some browsers require you to manually rename

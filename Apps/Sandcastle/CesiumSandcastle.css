@@ -81,13 +81,13 @@ html, body {
     height: 100%;
     -moz-transition-property: -moz-transform;
     -moz-transition-duration: 0.5s;
-    -moz-transform-origin: 50% 50%;
+    -moz-transform-origin: 200px 150px;
     -webkit-transition-property: -webkit-transform;
     -webkit-transition-duration: 0.5s;
-    -webkit-transform-origin: 50% 50%;
+    -webkit-transform-origin: 200px 150px;
     transition-property: transform;
     transition-duration: 0.5s;
-    transform-origin: 50% 50%;
+    transform-origin: 200px 150px;
 }
 
 .makeThumbnail {
@@ -98,7 +98,7 @@ html, body {
     transform: scale(0.25);
 }
 
-.saveAsDialog {
+.popDownDialog {
     width: 360px;
 }
 
