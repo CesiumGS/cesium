@@ -99,7 +99,7 @@ define([
      * @exception {DeveloperError} <code>description.server</code> is required.
      *
      * @see SingleTileProvider
-     * @see ArcGISTileProvider
+     * @see ArcGISMapServerTileProvider
      * @see OpenStreetMapTileProvider
      * @see CompositeTileProvider
      *

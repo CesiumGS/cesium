@@ -38,7 +38,7 @@ define([
      * @exception {DeveloperError} description.zoom is required.
      *
      * @see SingleTileProvider
-     * @see ArcGISTileProvider
+     * @see ArcGISMapServerTileProvider
      * @see OpenStreetMapTileProvider
      * @see BingMapsTileProvider
      */

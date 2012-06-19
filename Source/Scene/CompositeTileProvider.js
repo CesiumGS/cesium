@@ -22,7 +22,7 @@ define([
      * @exception {DeveloperError} camera is required.
      *
      * @see SingleTileProvider
-     * @see ArcGISTileProvider
+     * @see ArcGISMapServerTileProvider
      * @see OpenStreetMapTileProvider
      * @see BingMapsTileProvider
      *

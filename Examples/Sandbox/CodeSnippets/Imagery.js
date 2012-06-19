@@ -20,7 +20,7 @@
     Sandbox.ArcGIS = function (scene, ellipsoid, primitives) {
         this.code = function () {
             // ArcGIS World Street Maps
-            var arcgis = new Cesium.ArcGISTileProvider({
+            var arcgis = new Cesium.ArcGISMapServerTileProvider({
                 host : 'server.arcgisonline.com',
                 root : 'ArcGIS/rest',
                 service : 'World_Street_Map',

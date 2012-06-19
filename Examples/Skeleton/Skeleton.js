@@ -31,6 +31,15 @@ require({
         proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
     }));
     cb.getImageLayers().add(road);
+
+    var esri = new Cesium.ImageryLayer(cb, new Cesium.ArcGISMapServerTileProvider({
+        host : 'server.arcgisonline.com',
+        root : 'ArcGIS/rest',
+        service : 'World_Street_Map',
+        proxy : new Cesium.DefaultProxy('/proxy/')
+    }));
+    cb.getImageLayers().add(esri);
+
     cb.nightImageSource = '../../Images/land_ocean_ice_lights_2048.jpg';
     cb.specularMapSource = '../../Images/earthspec1k.jpg';
     if (scene.getContext().getMaximumTextureSize() > 2048) {
@@ -75,6 +84,14 @@ require({
     handler.setKeyAction(function() {
         cb.getImageLayers().lower(aerial);
     }, '2');
+
+    handler.setKeyAction(function() {
+        cb.getImageLayers().raise(esri);
+    }, '3');
+
+    handler.setKeyAction(function() {
+        cb.getImageLayers().lower(esri);
+    }, '4');
 
     canvas.oncontextmenu = function() {
         return false;

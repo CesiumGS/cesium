@@ -22,7 +22,7 @@ define([
      *
      * @exception {DeveloperError} url is required.
      *
-     * @see ArcGISTileProvider
+     * @see ArcGISMapServerTileProvider
      * @see BingMapsTileProvider
      * @see OpenStreetMapTileProvider
      * @see CompositeTileProvider

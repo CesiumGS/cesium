@@ -16,7 +16,7 @@ define([
     /**
      * Provides tile images hosted by an ArcGIS Server.
      *
-     * @name ArcGISTileProvider
+     * @name ArcGISMapServerTileProvider
      * @constructor
      *
      * @param {String} description.host The ArcGIS Server host name.
@@ -38,12 +38,12 @@ define([
      *
      * @example
      * // ArcGIS World Street Maps tile provider
-     * var esri = new ArcGISTileProvider({
+     * var esri = new ArcGISMapServerTileProvider({
      *     host : 'server.arcgisonline.com',
      *     service : 'World_Street_Map'
      * });
      */
-    function ArcGISTileProvider(description) {
+    function ArcGISMapServerTileProvider(description) {
         var desc = description || {};
         var instance = desc.instance || 'arcgis/rest';
 
@@ -170,7 +170,7 @@ define([
     /**
      * Loads the image for <code>tile</code>.
      *
-     * @memberof ArcGISTileProvider
+     * @memberof ArcGISMapServerTileProvider
      *
      * @param {Tile} tile The tile to load the image for.
      * @param {Function} onload A function that will be called when the image is finished loading.
@@ -179,7 +179,7 @@ define([
      * @exception {DeveloperError} <code>tile.zoom</code> is less than <code>zoomMin</code>
      * or greater than <code>zoomMax</code>.
      */
-    ArcGISTileProvider.prototype.loadTileImage = function(tile, onload, onerror) {
+    ArcGISMapServerTileProvider.prototype.loadTileImage = function(tile, onload, onerror) {
         if (tile.zoom < this.zoomMin || tile.zoom > this.zoomMax) {
             throw new DeveloperError('tile.zoom must be between in [zoomMin, zoomMax].');
         }
@@ -201,11 +201,11 @@ define([
 
     /**
      * DOC_TBA
-     * @memberof ArcGISTileProvider
+     * @memberof ArcGISMapServerTileProvider
      */
-    ArcGISTileProvider.prototype.getLogo = function() {
+    ArcGISMapServerTileProvider.prototype.getLogo = function() {
         return (this._logoLoaded) ? this._logo : undefined;
     };
 
-    return ArcGISTileProvider;
+    return ArcGISMapServerTileProvider;
 });

@@ -24,7 +24,7 @@ define([
      *
      * @see SingleTileProvider
      * @see BingMapsTileProvider
-     * @see ArcGISTileProvider
+     * @see ArcGISMapServerTileProvider
      * @see CompositeTileProvider
      *
      * @see <a href='http://wiki.openstreetmap.org/wiki/Main_Page'>OpenStreetMap Wiki</a>
