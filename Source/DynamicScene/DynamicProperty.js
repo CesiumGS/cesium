@@ -260,10 +260,8 @@ define([
                 for ( var i = 0; i < length; ++i) {
                     xTable[i] = times[lastIndex].getSecondsDifference(times[firstIndex + i]);
                 }
-                var packFunction = thisValueType.packValuesForInterpolation;
-                if (typeof packFunction !== 'undefined') {
-                    packFunction(values, yTable, firstIndex, lastIndex);
-                } else {
+                var specializedPackFunction = thisValueType.packValuesForInterpolation;
+                if (typeof specializedPackFunction === 'undefined') {
                     var destinationIndex = 0;
                     var sourceIndex = firstIndex * doublesPerValue;
                     var stop = (lastIndex + 1) * doublesPerValue;
@@ -273,12 +271,19 @@ define([
                         sourceIndex++;
                         destinationIndex++;
                     }
+                } else {
+                    specializedPackFunction(values, yTable, firstIndex, lastIndex);
                 }
 
                 // Interpolate!
                 var x = times[lastIndex].getSecondsDifference(time);
                 var interpolationResult = intervalData.interpolationAlgorithm.interpolateOrderZero(x, xTable, yTable, doublesPerInterpolationValue);
-                return thisValueType.getValueFromInterpolationResult(interpolationResult, result, values, firstIndex, lastIndex);
+
+                var specializedGetFunction = thisValueType.getValueFromInterpolationResult;
+                if (typeof specializedGetFunction === 'undefined') {
+                    return thisValueType.getValueFromArray(interpolationResult, 0, result);
+                }
+                return specializedGetFunction(interpolationResult, result, values, firstIndex, lastIndex);
             }
             return thisValueType.getValueFromArray(intervalData.values, index * doublesPerValue, result);
         }

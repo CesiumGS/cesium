@@ -29,8 +29,4 @@ defineSuite([
     it('getValueFromArray', function() {
         expect(CzmlNumber.getValueFromArray(sampledNumberInterval.number, 2)).toEqual(sampledNumberInterval.number[2]);
     });
-
-    it('getValueFromInterpolationResult', function() {
-        expect(CzmlNumber.getValueFromInterpolationResult([simpleNumber])).toEqual(simpleNumber);
-    });
 });

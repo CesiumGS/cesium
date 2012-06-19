@@ -38,8 +38,4 @@ defineSuite([
     it('getValueFromArray', function() {
         expect(CzmlUnitSpherical.getValueFromArray(sampledSphericalInterval.unitSpherical, 4)).toEqual(spherical2);
     });
-
-    it('getValueFromInterpolationResult', function() {
-        expect(CzmlUnitSpherical.getValueFromInterpolationResult(constantSphericalInterval.unitSpherical)).toEqual(spherical1);
-    });
 });

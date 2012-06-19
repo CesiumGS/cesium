@@ -36,8 +36,4 @@ defineSuite([
     it('getValueFromArray', function() {
         expect(CzmlCartesian3.getValueFromArray(sampledCartesianInterval.cartesian, 5)).toEqual(cartesian2);
     });
-
-    it('getValueFromInterpolationResult', function() {
-        expect(CzmlCartesian3.getValueFromInterpolationResult(constantCartesianInterval.cartesian)).toEqual(cartesian1);
-    });
 });
