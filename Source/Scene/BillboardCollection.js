@@ -93,7 +93,7 @@ define([
      * @example
      * // Create a billboard collection with two billboards
      * var billboards = new BillboardCollection();
-     * var textureAtlas = new TextureAtlas(scene.getContext(), images);
+     * var atlas = context.createTextureAtlas({images : images});
      * billboards.setTextureAtlas(atlas);
      * billboards.add({
      *   position : { x : 1.0, y : 2.0, z : 3.0 }
@@ -104,7 +104,7 @@ define([
      */
     function BillboardCollection() {
         this._textureAtlas = undefined;
-        this._textureAtlasCoordinatesSize = undefined;
+        this._textureAtlasNumberOfImages = undefined;
         this._destroyTextureAtlas = true;
         this._sp = undefined;
         this._rs = undefined;
@@ -448,8 +448,8 @@ define([
      * // added to the collection.
      * var billboards = new BillboardCollection();
      * var images = [image0, image1];
-     * var textureAtlas = new TextureAtlas(scene.getContext(), images);
-     * billboards.setTextureAtlas(textureAtlas);
+     * var atlas = context.createTextureAtlas({images : images});
+     * billboards.setTextureAtlas(atlas);
      * billboards.add({
      *   // ...
      *   imageIndex : 0
@@ -502,7 +502,7 @@ define([
      * @example
      * // Destroy a billboard collection but not its texture atlas.
      *
-     * var atlas = new TextureAtlas(...);
+     * var atlas = context.createTextureAtlas({images : images});
      * billboards.setTextureAtlas(atlas);
      * billboards.setDestroyTextureAtlas(false);
      * billboards = billboards.destroy();
@@ -794,14 +794,14 @@ define([
         var i = (billboard._index * 4);
         var imageRectangle = textureAtlasCoordinates[billboard.getImageIndex()];
         var imageSize = {
-            x : imageRectangle.x1 - imageRectangle.x0,
-            y : imageRectangle.y1 - imageRectangle.y0
+            x : imageRectangle.topRight.x - imageRectangle.bottomLeft.x,
+            y : imageRectangle.topRight.y - imageRectangle.bottomLeft.y
         };
 
-        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 0, imageRectangle.x0 * 65535, imageRectangle.y0 * 65535, imageSize.x * 65535, imageSize.y * 65535); // Lower Left
-        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 1, imageRectangle.x1 * 65535, imageRectangle.y0 * 65535, imageSize.x * 65535, imageSize.y * 65535); // Lower Right
-        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 2, imageRectangle.x1 * 65535, imageRectangle.y1 * 65535, imageSize.x * 65535, imageSize.y * 65535); // Upper Right
-        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 3, imageRectangle.x0 * 65535, imageRectangle.y1 * 65535, imageSize.x * 65535, imageSize.y * 65535); // Upper Left
+        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 0, imageRectangle.bottomLeft.x * 65535, imageRectangle.bottomLeft.y * 65535, imageSize.x * 65535, imageSize.y * 65535); // Lower Left
+        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 1, imageRectangle.topRight.x * 65535, imageRectangle.bottomLeft.y * 65535, imageSize.x * 65535, imageSize.y * 65535); // Lower Right
+        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 2, imageRectangle.topRight.x * 65535, imageRectangle.topRight.y * 65535, imageSize.x * 65535, imageSize.y * 65535); // Upper Right
+        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 3, imageRectangle.bottomLeft.x * 65535, imageRectangle.topRight.y * 65535, imageSize.x * 65535, imageSize.y * 65535); // Upper Left
     };
 
     BillboardCollection.prototype._writeBillboard = function(context, textureAtlasCoordinates, vafWriters, billboard) {
@@ -918,10 +918,10 @@ define([
         var length = billboards.length;
         var properties = this._propertiesChanged;
 
-
         var textureAtlasCoordinates = this._textureAtlas.getTextureCoordinates();
-        var textureAtlasChanged = this._textureAtlasCoordinatesSize !== textureAtlasCoordinates.length;
-        this._textureAtlasCoordinatesSize = textureAtlasCoordinates.length;
+        var numberOfImages = this._textureAtlas.getNumberOfImages();
+        var textureAtlasChanged = this._textureAtlasNumberOfImages !== numberOfImages;
+        this._textureAtlasNumberOfImages = numberOfImages;
 
         var vafWriters;
 

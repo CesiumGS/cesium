@@ -7,7 +7,7 @@
             var image = new Image();
             image.onload = function() {
                 var billboards = new Cesium.BillboardCollection(undefined);
-                var textureAtlas = new Cesium.TextureAtlas(scene.getContext(), [image]);
+                var textureAtlas = scene.getContext().createTextureAtlas({image : image});
                 billboards.setTextureAtlas(textureAtlas);
                 billboards.add({
                     position : ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic2(-75.59777, 40.03883)),
@@ -33,7 +33,7 @@
                 var billboards = new Cesium.BillboardCollection(undefined);
                 var images = [this.images['Images/logoColor.png'],
                               this.images['Images/facility.gif']];
-                var textureAtlas = new Cesium.TextureAtlas(scene.getContext(), images);
+                var textureAtlas = scene.getContext().createTextureAtlas({images : images});
                 billboards.setTextureAtlas(textureAtlas);
 
                 billboards.add({
@@ -75,7 +75,7 @@
             context2D.fill();
 
             var billboards = new Cesium.BillboardCollection(undefined);
-            var textureAtlas = new Cesium.TextureAtlas(scene.getContext(), [canvas]);
+            var textureAtlas = scene.getContext().createTextureAtlas({image : canvas});
             billboards.setTextureAtlas(textureAtlas);
             billboards.add({
                 position : ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic2(-75.59777, 40.03883)),
@@ -103,7 +103,7 @@
             var image = new Image();
             image.onload = function() {
                 var billboards = new Cesium.BillboardCollection(undefined);
-                var textureAtlas = new Cesium.TextureAtlas(scene.getContext(), [image], Cesium.PixelFormat.RGBA, 0, 2);
+                var textureAtlas = scene.getContext().createTextureAtlas({image : image, borderWidthInPixels : 0});
                 // Break one image full of markers into many subregions.
                 textureAtlas.addSubRegions(0, [
                     // Dots, small to large, imageIndex 1 to 6
@@ -199,7 +199,7 @@
             var image = new Image();
             image.onload = function() {
                 var billboards = new Cesium.BillboardCollection(undefined);
-                var textureAtlas = new Cesium.TextureAtlas(scene.getContext(), [image]);
+                var textureAtlas = scene.getContext().createTextureAtlas({image : image});
                 billboards.setTextureAtlas(textureAtlas);
                 billboards.add({
                     show : true, // default
@@ -223,7 +223,7 @@
             var image = new Image();
             image.onload = function() {
                 var billboards = new Cesium.BillboardCollection(undefined);
-                var textureAtlas = new Cesium.TextureAtlas(scene.getContext(), [image]);
+                var textureAtlas = scene.getContext().createTextureAtlas({image : image});
                 billboards.setTextureAtlas(textureAtlas);
                 // add() returns a Billboard object containing functions to change
                 // the billboard's position and appearance.
@@ -248,7 +248,7 @@
             image.onload = function() {
 
                 var billboards = new Cesium.BillboardCollection(undefined);
-                var textureAtlas = new Cesium.TextureAtlas(scene.getContext(), [image]);
+                var textureAtlas = scene.getContext().createTextureAtlas({image : image});
                 billboards.setTextureAtlas(textureAtlas);
 
                 var center = ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic2(-75.59777, 40.03883));

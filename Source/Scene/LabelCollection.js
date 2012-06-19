@@ -411,10 +411,10 @@ define([
         if (this._updateTextureAtlas) {
             this._updateTextureAtlas = false;
 
-            //This block of code determines which subset of images are new to the texture atlas.
+            //Determines which subset of images are new to the texture atlas.
             var textureAtlas = this._billboardCollection.getTextureAtlas();
             var images = this._canvasContainer.getItems();
-            var numImagesOld = (typeof textureAtlas !== 'undefined') ? textureAtlas.getNumImages() : 0;
+            var numImagesOld = (typeof textureAtlas !== 'undefined') ? textureAtlas.getNumberOfImages() : 0;
             var numImagesNew = images.length;
             var newImages = images.slice(numImagesOld);
             var difference = numImagesNew - numImagesOld;
@@ -422,14 +422,14 @@ define([
             // First time creating texture atlas or removing images from the texture atlas.
             if ((numImagesOld === 0 && numImagesNew > 0) || difference < 0) {
                 textureAtlas = textureAtlas && textureAtlas.destroy();
-                textureAtlas = new TextureAtlas(context, images);
+                textureAtlas = context.createTextureAtlas({images : images});
                 this._billboardCollection.setTextureAtlas(textureAtlas);
             }
             // Adding one new image to the texture atlas.
             else if (difference === 1) {
                 textureAtlas.addImage(newImages[0]);
             }
-            // Adding new images to the texture atlas.
+            // Adding multiple new images to the texture atlas.
             else if (difference > 1) {
                 textureAtlas.addImages(newImages);
             }

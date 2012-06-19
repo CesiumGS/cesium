@@ -1495,6 +1495,24 @@ define([
     };
 
     /**
+     * Creates a new texture atlas with this context.
+     * See {@link TextureAtlas} for suitable values for the 'description' object literal.
+     *
+     * @memberof Context
+     *
+     * @param {Object} description Consists of values used to construct the texture atlas.
+     *
+     * @returns {TextureAtlas} The new texture atlas.
+     *
+     * @see TextureAtlas
+     */
+    Context.prototype.createTextureAtlas = function(description) {
+        description = description || {};
+        description.context = this;
+        return new TextureAtlas(description);
+    };
+
+    /**
      * DOC_TBA.
      *
      * description.source can be {ImageData}, {HTMLImageElement}, {HTMLCanvasElement}, or {HTMLVideoElement}.

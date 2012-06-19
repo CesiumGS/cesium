@@ -2,55 +2,73 @@
 define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
+        '../Core/Cartesian2',
         './PixelFormat'
     ], function(
         DeveloperError,
         destroyObject,
+        Cartesian2,
         PixelFormat) {
     "use strict";
 
-    function TextureCoordinate(x0, x1, y0, y1) {
-        this.x0 = x0 || 0.0; // Left
-        this.x1 = x1 || 0.0; // Right
-        this.y0 = y0 || 0.0; // Bottom
-        this.y1 = y1 || 0.0; // Top
+    // Texture coordinates from 0.0 to 1.0
+    function TextureCoordinate(bottomLeft, topRight) {
+        this.bottomLeft = (typeof bottomLeft !== 'undefined') ? bottomLeft : new Cartesian2();
+        this.topRight = (typeof topRight !== 'undefined') ? topRight : new Cartesian2();
     }
 
-    function TextureAtlasNode(x0, x1, y0, y1, child1, child2, imageID) {
-        this.x0 = x0 || 0.0; // Left
-        this.x1 = x1 || 0.0; // Right
-        this.y0 = y0 || 0.0; // Bottom
-        this.y1 = y1 || 0.0; // Top
-        this.child1 = child1;
-        this.child2 = child2;
-        this.imageID = imageID;
+    // The atlas is made up of regions of space called nodes that contain images or child nodes.
+    function TextureAtlasNode(bottomLeft, topRight, childNode1, childNode2, imageIndex) {
+        this.bottomLeft = (typeof bottomLeft !== 'undefined') ? bottomLeft : new Cartesian2();
+        this.topRight = (typeof topRight !== 'undefined') ? topRight : new Cartesian2();
+        this.childNode1 = childNode1;
+        this.childNode2 = childNode2;
+        this.imageIndex = imageIndex;
     }
 
     /**
-     * A TextureAtlas stores multiple images in one large texture and keeps
+     * A TextureAtlas stores multiple images in one square texture and keeps
      * track of the texture coordinates for each image. TextureAtlas is dynamic,
-     * meaning new images can be added at any point in time. For best performance
-     * and minimum atlas size, call addImages instead of multiple addImage in a row.
+     * meaning new images can be added at any point in time.
+     * Calling addImages is more space-efficient than calling addImage multiple times.
+     * Texture coordinates are subject to change if the texture atlas resizes, so it is
+     * important to check {@link TextureAtlas#getNumberOfImages} before using old values.
+     *
+     * The texture atlas uses an object literal called description in its constructor.
+     * description.context is the context in which the texture gets created.
+     * description.pixelFormat is the pixel format of the texture.
+     * description.borderWidthInPixels is the amount of spacing between adjacent images in pixels.
+     * description.initialSize is the initial side length of the texture.
+     * description.images is an optional array of images to be added to the atlas. Same as calling addImages(images).
+     * description.image is an optional single image to be added to the atlas. Same as calling addImage(image).
+     *
+     * Default values for description:
+     * context : undefined,
+     * pixelFormat : PixelFormat.RGBA,
+     * borderWidthInPixels : 1,
+     * initialSize : 16,
+     * images : undefined,
+     * image : undefined
      *
      * @name TextureAtlas
      *
-     * @param {Context} context The context that will be used to create the texture.
-     * @param {Array} images An optional array of {@link Image} to be added to the texture atlas. Equivalent to
-     * calling addImages.
-     * @param {PixelFormat}[pixelFormat = PixelFormat.RGBA] Pixel format for the texture atlas.
-     * @param {Number}[borderWidthInPixels = 1] Spacing in pixels between adjacent images.
-     * @param {Number}[scalingFactor = 2] Amount of padding added to the texture atlas when the texture is rebuilt.
-     * For example, if the texture atlas is constructed with an image of width and height 10 and scalingFactor of 2,
-     * the final texture will be 20x20 with 75% of the atlas empty. Integer values only.
+     * @param {Object} description Consists of values used to construct the texture atlas.
      *
      * @internalConstructor
      *
      * @exception {DeveloperError} context is required.
-     * @exception {DeveloperError} images is required and must have length greater than zero.
      * @exception {DeveloperError} borderWidthInPixels must be greater than or equal to zero.
-     * @exception {DeveloperError} scalingFactor must be greater than or equal to one.
+     * @exception {DeveloperError} initialSize must be greater than zero.
+     *
      */
-    function TextureAtlas(context, images, pixelFormat, borderWidthInPixels, scalingFactor) {
+    function TextureAtlas(description) {
+        description = (typeof description !== 'undefined') ? description : {};
+        var context = description.context;
+        var pixelFormat = description.pixelFormat;
+        var borderWidthInPixels = description.borderWidthInPixels;
+        var initialSize = description.initialSize;
+        var images = description.images;
+        var image = description.image;
 
         // Context
         if (typeof context === 'undefined') {
@@ -58,136 +76,112 @@ define([
         }
 
         // Pixel Format
-        pixelFormat = (typeof pixelFormat === 'undefined') ? PixelFormat.RGBA : pixelFormat;
+        pixelFormat = (typeof pixelFormat !== 'undefined') ? pixelFormat : PixelFormat.RGBA;
 
         // Border
-        borderWidthInPixels = (typeof borderWidthInPixels === 'undefined') ? 1 : borderWidthInPixels;
+        borderWidthInPixels = (typeof borderWidthInPixels !== 'undefined') ? borderWidthInPixels : 1.0;
         if (borderWidthInPixels < 0) {
             throw new DeveloperError('borderWidthInPixels must be greater than or equal to zero.');
         }
 
-        // Scaling Factor
-        scalingFactor = (typeof scalingFactor === 'undefined') ? 2 : Math.floor(scalingFactor);
-        if (scalingFactor < 1) {
-            throw new DeveloperError('scalingFactor must be greater than or equal to one.');
+        // Initial size
+        initialSize = (typeof initialSize !== 'undefined') ? initialSize : 16.0;
+        if (initialSize < 1) {
+            throw new DeveloperError('initialSize must be greater than zero.');
         }
 
-        // Initial values
         this._context = context;
-        this._borderWidthInPixels = borderWidthInPixels;
-        this._scalingFactor = scalingFactor;
         this._pixelFormat = pixelFormat;
+        this._borderWidthInPixels = borderWidthInPixels;
         this._textureCoordinates = [];
-        this._texture = undefined;
-        this._root = undefined;
+
+        // Create initial texture and root.
+        this._resizeAtlas(initialSize);
 
         // Add initial images if there are any.
         if (typeof images !== 'undefined' && (images.length > 0)) {
             this.addImages(images);
         }
+        if (typeof image !== 'undefined') {
+            this.addImage(image);
+        }
     }
 
-    // Private function.
-    // _createNewAtlas generates the initial texture atlas.
-    TextureAtlas.prototype._createNewAtlas = function (images) {
-        // Compute atlas size
-        var that = this;
-        var atlasSize = (function(images) {
-            var numberOfImages = images.length;
-            var totalWidth = 0;
-            var totalHeight = 0;
-            for ( var i = 0; i < numberOfImages; ++i) {
-                var image = images[i];
-                totalWidth += image.width;
-                totalHeight += image.height;
-            }
-            var borderSize = (numberOfImages - 1.0) * that._borderWidthInPixels;
-            return that._scalingFactor * (borderSize + Math.max(totalWidth, totalHeight));
-        }(images));
-
-        // Create the texture with atlasSize.
-        this._texture = this._context.createTexture2D({
-            width : atlasSize,
-            height : atlasSize,
-            pixelFormat : this._pixelFormat
-        });
-
-        // Create new root node
-        this._root = new TextureAtlasNode(0.0, atlasSize, 0.0, atlasSize);
-    };
-
-    // Private function.
-    // _resizeAtlas builds a larger texture and copies the old texture to the new one.
+    // Builds a larger texture and copies the old texture into the new one.
     TextureAtlas.prototype._resizeAtlas = function (sizeIncrease) {
         // Determine new atlas size
-        var oldAtlasSize = this._texture.getWidth();
-        var atlasSize = this._scalingFactor * (oldAtlasSize + sizeIncrease + this._borderWidthInPixels);
-        var sizeRatio = oldAtlasSize / atlasSize;
+        var numImages = this.getNumberOfImages();
+        if(numImages > 0) {
+            var oldAtlasSize = this._texture.getWidth();
+            var scalingFactor = 2.0;
+            var atlasSize = scalingFactor * (oldAtlasSize + sizeIncrease + this._borderWidthInPixels);
+            var sizeRatio = oldAtlasSize / atlasSize;
 
-        // Create new node structure, putting the old root node in the bottom left.
-        var nodeBottomRight = new TextureAtlasNode(oldAtlasSize + this._borderWidthInPixels, atlasSize, 0.0, oldAtlasSize);
-        var nodeBottomHalf = new TextureAtlasNode(0.0, atlasSize, 0.0, oldAtlasSize, nodeBottomRight, this._root);
-        var nodeTopHalf = new TextureAtlasNode(0.0, atlasSize, oldAtlasSize + this._borderWidthInPixels, atlasSize);
-        var nodeMain = new TextureAtlasNode(0.0, atlasSize, 0.0, atlasSize, nodeTopHalf, nodeBottomHalf);
-        this._root = nodeMain;
+            // Create new node structure, putting the old root node in the bottom left.
+            var nodeBottomRight = new TextureAtlasNode(new Cartesian2(oldAtlasSize + this._borderWidthInPixels, 0.0), new Cartesian2(atlasSize, oldAtlasSize));
+            var nodeBottomHalf = new TextureAtlasNode(new Cartesian2(0.0, 0.0), new Cartesian2(atlasSize, oldAtlasSize), this._root, nodeBottomRight);
+            var nodeTopHalf = new TextureAtlasNode(new Cartesian2(0.0, oldAtlasSize + this._borderWidthInPixels), new Cartesian2(atlasSize, atlasSize));
+            var nodeMain = new TextureAtlasNode(new Cartesian2(0.0, 0.0), new Cartesian2(atlasSize, atlasSize), nodeBottomHalf, nodeTopHalf);
+            this._root = nodeMain;
 
-        // Resize texture coordinates.
-        var i;
-        var numImages = this.getNumImages();
-        for (i = 0; i < numImages; i++) {
-            var texCoord = this._textureCoordinates[i];
-            texCoord.x0 *= sizeRatio;
-            texCoord.x1 *= sizeRatio;
-            texCoord.y0 *= sizeRatio;
-            texCoord.y1 *= sizeRatio;
+            // Resize texture coordinates.
+            for (var i = 0; i < this._textureCoordinates.length; i++) {
+                var texCoord = this._textureCoordinates[i];
+                if (typeof texCoord !== 'undefined') {
+                    texCoord.bottomLeft.x *= sizeRatio;
+                    texCoord.bottomLeft.y *= sizeRatio;
+                    texCoord.topRight.x *= sizeRatio;
+                    texCoord.topRight.y *= sizeRatio;
+                }
+            }
+
+            // Copy larger texture.
+            var newTexture = this._context.createTexture2D({
+                width : atlasSize,
+                height : atlasSize,
+                pixelFormat : this._pixelFormat
+            });
+
+            // Copy old texture into new using an fbo.
+            var framebuffer = this._context.createFramebuffer({colorTexture:this._texture});
+            framebuffer._bind();
+            newTexture.copyFromFramebuffer(0, 0, 0, 0, oldAtlasSize, oldAtlasSize);
+            framebuffer._unBind();
+            framebuffer.destroy();
+            this._texture = newTexture;
         }
-
-        // Copy larger texture.
-        var newTexture = this._context.createTexture2D({
-            width : atlasSize,
-            height : atlasSize,
-            pixelFormat : this._pixelFormat
-        });
-
-        // Copy old texture into new using an fbo.
-        var framebuffer = this._context.createFramebuffer({colorTexture:this._texture});
-        framebuffer._bind();
-        newTexture.copyFromFramebuffer(0, 0, 0, 0, oldAtlasSize, oldAtlasSize);
-        framebuffer._unBind();
-        framebuffer.destroy();
-
-        // Set new texture.
-        this._texture = newTexture;
+        else {
+            var initialSize = sizeIncrease;
+            this._texture = this._context.createTexture2D({width : initialSize, height : initialSize, pixelFormat : this._pixelFormat});
+            this._root = new TextureAtlasNode(new Cartesian2(0.0, 0.0), new Cartesian2(initialSize, initialSize));
+        }
     };
 
-    // Private function.
     // A recursive function that finds the best place to insert
     // a new image based on existing image 'nodes'.
     // Inspired by: http://blackpawn.com/texts/lightmaps/default.html
-    TextureAtlas.prototype._addImageToNode = function (node, image) {
-
-        // If node is not defined, return.
+    TextureAtlas.prototype._findNode = function (node, image) {
         if (typeof node === 'undefined') {
-            return;
+            return undefined;
         }
 
         // If a leaf node
-        if (typeof node.child1 === 'undefined' &&
-            typeof node.child2 === 'undefined') {
+        if (typeof node.childNode1 === 'undefined' &&
+            typeof node.childNode2 === 'undefined') {
 
             // Node already contains an image, don't add to it.
-            if (typeof node.imageID !== 'undefined') {
-                return;
+            if (typeof node.imageIndex !== 'undefined') {
+                return undefined;
             }
 
-            var nodeWidth = node.x1 - node.x0;
-            var nodeHeight = node.y1 - node.y0;
+            var nodeWidth = node.topRight.x - node.bottomLeft.x;
+            var nodeHeight = node.topRight.y - node.bottomLeft.y;
             var widthDifference = nodeWidth - image.width;
             var heightDifference = nodeHeight - image.height;
 
             // Node is smaller than the image.
             if (widthDifference < 0 || heightDifference < 0) {
-                return;
+                return undefined;
             }
 
             // If the node is the same size as the image, return the node
@@ -195,103 +189,113 @@ define([
                 return node;
             }
 
-            // Vertical split (child1 = left half, child2 = right half).
-            var bw = this._borderWidthInPixels;
+            // Vertical split (childNode1 = left half, childNode2 = right half).
             if (widthDifference > heightDifference) {
-                node.child1 = new TextureAtlasNode(node.x0, node.x0 + image.width, node.y0, node.y1);
-                node.child2 = new TextureAtlasNode(node.x0 + image.width + bw, node.x1, node.y0, node.y1);
+                node.childNode1 = new TextureAtlasNode(new Cartesian2(node.bottomLeft.x, node.bottomLeft.y), new Cartesian2(node.bottomLeft.x + image.width, node.topRight.y));
+                // Only make a second child if the border gives enough space.
+                var childNode2BottomLeftX = node.bottomLeft.x + image.width + this._borderWidthInPixels;
+                if (childNode2BottomLeftX < node.topRight.x) {
+                    node.childNode2 = new TextureAtlasNode(new Cartesian2(childNode2BottomLeftX, node.bottomLeft.y), new Cartesian2(node.topRight.x, node.topRight.y));
+                }
             }
-            // Horizontal split (child1 = bottom half, child2 = top half).
+            // Horizontal split (childNode1 = bottom half, childNode2 = top half).
             else {
-                node.child1 = new TextureAtlasNode(node.x0, node.x1, node.y0, node.y0 + image.height);
-                node.child2 = new TextureAtlasNode(node.x0, node.x1, node.y0 + image.height + bw, node.y1);
+                node.childNode1 = new TextureAtlasNode(new Cartesian2(node.bottomLeft.x, node.bottomLeft.y), new Cartesian2(node.topRight.x, node.bottomLeft.y + image.height));
+                // Only make a second child if the border gives enough space.
+                var childNode2BottomLeftY = node.bottomLeft.y + image.height + this._borderWidthInPixels;
+                if (childNode2BottomLeftY < node.topRight.y) {
+                    node.childNode2 = new TextureAtlasNode(new Cartesian2(node.bottomLeft.x, childNode2BottomLeftY), new Cartesian2(node.topRight.x, node.topRight.y));
+                }
             }
-
-            return this._addImageToNode(node.child1, image);
+            return this._findNode(node.childNode1, image);
         }
 
         // If not a leaf node
-        return this._addImageToNode(node.child1, image) ||
-               this._addImageToNode(node.child2, image);
+        return this._findNode(node.childNode1, image) ||
+               this._findNode(node.childNode2, image);
+    };
+
+    // Adds image of given index to the texture atlas. Called from addImage and addImages.
+    TextureAtlas.prototype._addImage = function(image, index) {
+        var node = this._findNode(this._root, image);
+
+        // Found a node that can hold the image.
+        if (typeof node !== 'undefined'){
+            node.imageIndex = index;
+
+            // Add texture coordinate and write to texture
+            var atlasSize = this._texture.getWidth();
+            this._textureCoordinates[index] = new TextureCoordinate(
+                new Cartesian2(node.bottomLeft.x / atlasSize, node.bottomLeft.y / atlasSize),
+                new Cartesian2(node.topRight.x / atlasSize, node.topRight.y / atlasSize)
+            );
+            this._texture.copyFrom(image, node.bottomLeft.x, node.bottomLeft.y);
+        }
+        // No node found, must resize the texture atlas.
+        else {
+            var sizeIncrease = Math.max(image.height, image.width);
+            this._resizeAtlas(sizeIncrease);
+            this._addImage(image, index);
+        }
     };
 
     /**
-     * Adds an image to the texture atlas. Can be called any number of times.
-     * Call addImages when adding multiple images at once.
+     * Adds an image to the texture atlas.
+     * Calling addImages is more space-efficient than calling addImage multiple times.
+     * Texture coordinates are subject to change if the texture atlas resizes, so it is
+     * important to check {@link TextureAtlas#getNumberOfImages} before using old values.
      *
      * @memberof TextureAtlas
      *
      * @param {Image} image An {@link Image} to be added to the texture atlas.
      *
-     * @exception {DeveloperError} image must be defined.
+     * @returns {Number} The index of the newly added image.
+     *
+     * @exception {DeveloperError} image is required.
+     * @exception {DeveloperError} maximum texture size exceeded.
+     *
+     * @see TextureAtlas#addImages
+     *
      */
     TextureAtlas.prototype.addImage = function(image) {
-        // Check if the image is defined.
         if (typeof image === 'undefined') {
-            throw new DeveloperError('image must be defined.');
+            throw new DeveloperError('image is required.');
         }
 
-        // Create new atlas if it hasn't been created.
-        if (typeof this._root === 'undefined') {
-            this._createNewAtlas([image]);
-        }
-
-        var node = this._addImageToNode(this._root, image);
-        var index = (typeof arguments[1] === 'undefined') ? this.getNumImages() : arguments[1];
-
-        // Found a node that can hold the image.
-        if (typeof node !== 'undefined'){
-            // Set node's ID to show it contains an image
-            node.imageID = index;
-
-            // Add texture coordinates and write to texture
-            var atlasSize = this._texture.getWidth();
-            this._textureCoordinates[index] = new TextureCoordinate(
-                node.x0 / atlasSize, // Left
-                node.x1 / atlasSize, // Right
-                node.y0 / atlasSize, // Bottom
-                node.y1 / atlasSize // Top
-            );
-            this._texture.copyFrom(image, node.x0, node.y0);
-        }
-        // No node found, must resize the texture atlas.
-        else {
-            this._resizeAtlas(Math.max(image.height, image.width));
-            this.addImage(image, index);
-        }
-
-        // Return the image's index.
+        var index = this.getNumberOfImages();
+        this._addImage(image, index);
         return index;
     };
 
     /**
-     * Adds an array of images to the texture atlas. Can be called any number of times.
-     * When adding multiple images to the atlas at once, addImages has better performance
-     * than multiple calls to addImage.
+     * Adds an array of images to the texture atlas.
+     * Calling addImages is more space-efficient than calling addImage multiple times.
+     * Texture coordinates are subject to change if the texture atlas resizes, so it is
+     * important to check {@link TextureAtlas#getNumberOfImages} before using old values.
      *
      * @memberof TextureAtlas
      *
      * @param {Array} images An array of {@link Image} to be added to the texture atlas.
      *
+     * @returns {Number} The first index of the newly added images.
+     *
      * @exception {DeveloperError} images is required and must have length greater than zero.
+     * @exception {DeveloperError} maximum texture size exceeded.
+     *
+     * @see TextureAtlas#addImage
+     *
      */
     TextureAtlas.prototype.addImages = function(images) {
-
         // Check if image array is valid.
         if (typeof images === 'undefined' || (images.length < 1)) {
             throw new DeveloperError('images is required and must have length greater than zero.');
         }
 
-        // Create new atlas if it hasn't been created.
-        if (typeof this._root === 'undefined') {
-            this._createNewAtlas(images);
-        }
-
-        // Store images in containers that have index.
+        // Store images in containers that have an index.
         var i;
         var annotatedImages = [];
         var numberOfImages = images.length;
-        var oldNumberOfImages = this.getNumImages();
+        var oldNumberOfImages = this.getNumberOfImages();
         for (i = 0; i < numberOfImages; ++i) {
             annotatedImages.push({
                 image : images[i],
@@ -308,12 +312,13 @@ define([
         // Add images to the texture atlas.
         for (i = 0; i < numberOfImages; ++i) {
             var annotatedImage = annotatedImages[i];
-            this.addImage(annotatedImage.image, annotatedImage.index);
+            this._addImage(annotatedImage.image, annotatedImage.index);
         }
 
         // Return index of the first added image.
         return oldNumberOfImages;
     };
+
 
     /**
      * Add a set of sub-regions of one atlas image as additional image indices.
@@ -323,36 +328,42 @@ define([
      * @param {Number} index The index of the source image that will be broken into sub-regions.
      * @param {Array} subRegions An array of {@link Rectangle} sub-regions measured in pixels from the upper-left.
      *
-     * @return {Number} The index of the first newly-added region.
+     * @returns {Number} The index of the first newly-added region.
      *
      * @exception {DeveloperError} invalid image index.
      */
     TextureAtlas.prototype.addSubRegions = function(index, subRegions) {
         var atlasSize = this._texture.getWidth();
-        var numTextureCoordinates = this._textureCoordinates.length;
+        var numImages = this.getNumberOfImages();
         var numSubRegions = subRegions.length;
 
-        if ((index < 0) || (index >= numTextureCoordinates)) {
+        if ((index < 0) || (index >= numImages)) {
             throw new DeveloperError('invalid image index.');
         }
-        var baseRegion = this._textureCoordinates[index];
 
+        var baseRegion = this._textureCoordinates[index];
         for (var i = 0; i < numSubRegions; ++i) {
             var thisRegion = subRegions[i];
             this._textureCoordinates.push(new TextureCoordinate(
-                baseRegion.x0 + (thisRegion.x / atlasSize), // Left
-                baseRegion.x0 + ((thisRegion.x + thisRegion.width) / atlasSize), // Right
-                baseRegion.y1 - ((thisRegion.y + thisRegion.height) / atlasSize), // Bottom
-                baseRegion.y1 - (thisRegion.y / atlasSize) // Top
+                new Cartesian2(
+                    baseRegion.bottomLeft.x + (thisRegion.x / atlasSize),
+                    baseRegion.bottomLeft.y + (thisRegion.y / atlasSize)
+                ),
+                new Cartesian2(
+                    baseRegion.bottomLeft.x + ((thisRegion.x + thisRegion.width) / atlasSize),
+                    baseRegion.bottomLeft.y + ((thisRegion.y + thisRegion.height) / atlasSize)
+                )
             ));
         }
-
-        return numTextureCoordinates;
+        return numImages;
     };
 
     /**
-     * Returns the spacing between adjacent images in pixels
+     * Returns the amount of spacing between adjacent images in pixels.
+     *
      * @memberof TextureAtlas
+     *
+     * @returns {Number} The border width in pixels.
      */
     TextureAtlas.prototype.getBorderWidthInPixels = function() {
         return this._borderWidthInPixels;
@@ -360,8 +371,14 @@ define([
 
     /**
      * Returns an array of texture coordinates for all the images is the texture atlas.
-     * The array is in the order that the corresponding images were added to the atlas.
+     * A texture coordinate is composed of {@link Cartesian2} bottomLeft and topRight members.
+     * The coordinates are in the order that the corresponding images were added to the atlas.
+     *
      * @memberof TextureAtlas
+     *
+     * @returns {Array} The texture coordinates.
+     *
+     * @see Cartesian2
      */
     TextureAtlas.prototype.getTextureCoordinates = function() {
         return this._textureCoordinates;
@@ -369,28 +386,27 @@ define([
 
     /**
      * Returns the texture that all of the images are being written to.
+     *
      * @memberof TextureAtlas
+     *
+     * @returns {@link Texture} The texture used by the texture atlas.
      */
     TextureAtlas.prototype.getTexture = function() {
         return this._texture;
     };
 
     /**
-     * Returns the number of images in the texture atlas.
+     * Returns the number of images in the texture atlas. This value increases
+     * every time addImage or addImages is called.
+     * Texture coordinates are subject to change if the texture atlas resizes, so it is
+     * important to check {@link TextureAtlas#getNumberOfImages} before using old values.
+     *
      * @memberof TextureAtlas
+     *
+     * @returns {Number} The number of images in the texture atlas.
      */
-    TextureAtlas.prototype.getNumImages = function() {
+    TextureAtlas.prototype.getNumberOfImages = function() {
         return this._textureCoordinates.length;
-    };
-
-    /**
-     * Returns the amount of padding added to the texture atlas when the texture is rebuilt.
-     * For example, if the texture atlas is constructed with an image of width and height 10 and scalingFactor of 2,
-     * the final texture will be 20x20 with 75% of the atlas empty. Integer values only.
-     * @memberof TextureAtlas
-     */
-    TextureAtlas.prototype.getScalingFactor = function() {
-        return this._scalingFactor;
     };
 
     /**
@@ -401,7 +417,7 @@ define([
      *
      * @memberof TextureAtlas
      *
-     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
      * @see TextureAtlas#destroy
      */
@@ -419,7 +435,7 @@ define([
      *
      * @memberof TextureAtlas
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
