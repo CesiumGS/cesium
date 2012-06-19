@@ -101,16 +101,16 @@ define([
          */
         computeCircleBoundary : function(ellipsoid, center, radius, granularity) {
             if (!ellipsoid || !center || !radius) {
-                throw new DeveloperError("ellipsoid, center, and radius are required.");
+                throw new DeveloperError('ellipsoid, center, and radius are required.');
             }
 
             if (radius <= 0.0) {
-                throw new DeveloperError("radius must be greater than zero.", "radius");
+                throw new DeveloperError('radius must be greater than zero.');
             }
 
             granularity = granularity || CesiumMath.toRadians(1.0);
             if (granularity <= 0.0) {
-                throw new DeveloperError("granularity must be greater than zero.", "granularity");
+                throw new DeveloperError('granularity must be greater than zero.');
             }
 
             return this.computeEllipseBoundary(ellipsoid, center, radius, radius, 0, granularity);
@@ -152,18 +152,18 @@ define([
          */
         computeEllipseBoundary : function(ellipsoid, center, semiMajorAxis, semiMinorAxis, bearing, granularity) {
             if (!ellipsoid || !center || !semiMajorAxis || !semiMinorAxis) {
-                throw new DeveloperError("ellipsoid, center, semiMajorAxis, and semiMinorAxis are required.");
+                throw new DeveloperError('ellipsoid, center, semiMajorAxis, and semiMinorAxis are required.');
             }
 
             if (semiMajorAxis <= 0.0 || semiMinorAxis <= 0.0) {
-                throw new DeveloperError("Semi-major and semi-minor axes must be greater than zero.");
+                throw new DeveloperError('Semi-major and semi-minor axes must be greater than zero.');
             }
 
             bearing = bearing || 0.0;
             granularity = granularity || CesiumMath.toRadians(1.0);
 
             if (granularity <= 0.0) {
-                throw new DeveloperError("granularity must be greater than zero.", "granularity");
+                throw new DeveloperError('granularity must be greater than zero.', 'granularity');
             }
 
             if (semiMajorAxis < semiMinorAxis) {

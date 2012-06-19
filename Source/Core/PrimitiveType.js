@@ -14,49 +14,49 @@ define(['./Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        POINTS : new Enumeration(0x0000, "POINTS"),
+        POINTS : new Enumeration(0x0000, 'POINTS'),
         /**
          * DOC_TBA
          *
          * @constant
          * @type {Enumeration}
          */
-        LINES : new Enumeration(0x0001, "LINES"),
+        LINES : new Enumeration(0x0001, 'LINES'),
         /**
          * DOC_TBA
          *
          * @constant
          * @type {Enumeration}
          */
-        LINE_LOOP : new Enumeration(0x0002, "LINE_LOOP"),
+        LINE_LOOP : new Enumeration(0x0002, 'LINE_LOOP'),
         /**
          * DOC_TBA
          *
          * @constant
          * @type {Enumeration}
          */
-        LINE_STRIP : new Enumeration(0x0003, "LINE_STRIP"),
+        LINE_STRIP : new Enumeration(0x0003, 'LINE_STRIP'),
         /**
          * DOC_TBA
          *
          * @constant
          * @type {Enumeration}
          */
-        TRIANGLES : new Enumeration(0x0004, "TRIANGLES"),
+        TRIANGLES : new Enumeration(0x0004, 'TRIANGLES'),
         /**
          * DOC_TBA
          *
          * @constant
          * @type {Enumeration}
          */
-        TRIANGLE_STRIP : new Enumeration(0x0005, "TRIANGLE_STRIP"),
+        TRIANGLE_STRIP : new Enumeration(0x0005, 'TRIANGLE_STRIP'),
         /**
          * DOC_TBA
          *
          * @constant
          * @type {Enumeration}
          */
-        TRIANGLE_FAN : new Enumeration(0x0006, "TRIANGLE_FAN"),
+        TRIANGLE_FAN : new Enumeration(0x0006, 'TRIANGLE_FAN'),
 
         /**
          * DOC_TBA

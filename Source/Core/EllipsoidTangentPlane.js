@@ -41,7 +41,7 @@ define([
      */
     EllipsoidTangentPlane.create = function(ellipsoid, positions) {
         if (!ellipsoid || !positions) {
-            throw new DeveloperError("ellipsoid and positions are required.");
+            throw new DeveloperError('ellipsoid and positions are required.');
         }
 
         var box = new AxisAlignedBoundingBox(positions);
@@ -55,7 +55,7 @@ define([
      */
     EllipsoidTangentPlane.prototype.projectPointsOntoPlane = function(positions) {
         if (!positions) {
-            throw new DeveloperError("positions is required.", "positions");
+            throw new DeveloperError('positions is required.');
         }
 
         var positionsOnPlane = [];
@@ -93,7 +93,7 @@ define([
      */
     EllipsoidTangentPlane.prototype.projectPointsOntoEllipsoid = function(positions) {
         if (!positions) {
-            throw new DeveloperError("positions is required.", "positions");
+            throw new DeveloperError('positions is required.');
         }
 
         var positionsOnEllipsoid = [];

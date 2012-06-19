@@ -55,7 +55,7 @@ define([
          */
         eastNorthUpToFixedFrame : function(position, ellipsoid) {
             if (!position) {
-                throw new DeveloperError("position is required.", "position");
+                throw new DeveloperError('position is required.');
             }
 
             ellipsoid = ellipsoid || Ellipsoid.WGS84;
@@ -109,7 +109,7 @@ define([
          */
         northEastDownToFixedFrame : function(position, ellipsoid) {
             if (!position) {
-                throw new DeveloperError("position is required.", "position");
+                throw new DeveloperError('position is required.');
             }
 
             ellipsoid = ellipsoid || Ellipsoid.WGS84;
@@ -156,15 +156,15 @@ define([
          */
         pointToWindowCoordinates : function (modelViewProjectionMatrix, viewportTransformation, point) {
             if (typeof modelViewProjectionMatrix === 'undefined') {
-                throw new DeveloperError("modelViewProjectionMatrix is required.", "modelViewProjectionMatrix");
+                throw new DeveloperError('modelViewProjectionMatrix is required.');
             }
 
             if (typeof viewportTransformation === 'undefined') {
-                throw new DeveloperError("viewportTransformation is required.", "viewportTransformation");
+                throw new DeveloperError('viewportTransformation is required.');
             }
 
             if (typeof point === 'undefined') {
-                throw new DeveloperError("point is required.", "point");
+                throw new DeveloperError('point is required.');
             }
 
             var pnt = new Cartesian4(point.x, point.y, point.z, 1.0);

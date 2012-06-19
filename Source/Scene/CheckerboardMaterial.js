@@ -63,7 +63,7 @@ define(['../Shaders/CheckerboardMaterial'], function(ShadersCheckerboardMaterial
     }
 
     CheckerboardMaterial.prototype._getShaderSource = function() {
-        return "#line 0\n" + ShadersCheckerboardMaterial;
+        return '#line 0\n' + ShadersCheckerboardMaterial;
     };
 
     return CheckerboardMaterial;

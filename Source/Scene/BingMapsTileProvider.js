@@ -6,22 +6,22 @@
 
    MICROSOFT LIMITED PUBLIC LICENSE
 
-   This license governs use of code marked as "sample" or "example" available on
+   This license governs use of code marked as 'sample' or 'example' available on
    this web site without a license agreement, as provided under the section above
-   titled "NOTICE SPECIFIC TO SOFTWARE AVAILABLE ON THIS WEB SITE." If you use
-   such code (the "software"), you accept this license. If you do not accept the
+   titled 'NOTICE SPECIFIC TO SOFTWARE AVAILABLE ON THIS WEB SITE.' If you use
+   such code (the 'software'), you accept this license. If you do not accept the
    license, do not use the software.
 
    1. Definitions
 
-   The terms "reproduce," "reproduction," "derivative works," and "distribution"
+   The terms 'reproduce,' 'reproduction,' 'derivative works,' and 'distribution'
    have the same meaning here as under U.S. copyright law.
 
-   A "contribution" is the original software, or any additions or changes to the software.
+   A 'contribution' is the original software, or any additions or changes to the software.
 
-   A "contributor" is any person that distributes its contribution under this license.
+   A 'contributor' is any person that distributes its contribution under this license.
 
-   "Licensed patents" are a contributor's patent claims that read directly on its contribution.
+   'Licensed patents' are a contributor's patent claims that read directly on its contribution.
 
    2. Grant of Rights
 
@@ -57,7 +57,7 @@
    compiled or object code form, you may only do so under a license that
    complies with this license.
 
-   (E) The software is licensed "as-is." You bear the risk of using it. The
+   (E) The software is licensed 'as-is.' You bear the risk of using it. The
    contributors give no express warranties, guarantees or conditions. You may
    have additional consumer rights under your local laws which this license
    cannot change. To the extent permitted under your local laws, the contributors
@@ -92,7 +92,7 @@ define([
      * @constructor
      *
      * @param {String} description.server The name of the Bing Maps server hosting the imagery.
-     * @param {String} [description.key] An optional Bing Maps key, which can be created at <a href="https://www.bingmapsportal.com/">https://www.bingmapsportal.com/</a>.
+     * @param {String} [description.key] An optional Bing Maps key, which can be created at <a href='https://www.bingmapsportal.com/'>https://www.bingmapsportal.com/</a>.
      * @param {Enumeration} [description.mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps imagery to load.
      * @param {Object} [description.proxy=undefined] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
      *
@@ -103,23 +103,23 @@ define([
      * @see OpenStreetMapTileProvider
      * @see CompositeTileProvider
      *
-     * @see <a href="http://msdn.microsoft.com/en-us/library/ff701713.aspx">Bing Maps REST Services</a>
-     * @see <a href="http://www.w3.org/TR/cors/">Cross-Origin Resource Sharing</a>
+     * @see <a href='http://msdn.microsoft.com/en-us/library/ff701713.aspx'>Bing Maps REST Services</a>
+     * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
      *
      * @example
      * // Bing Maps tile provider
      * var bing = new BingMapsTileProvider({
-     *     server : "dev.virtualearth.net",
+     *     server : 'dev.virtualearth.net',
      *     mapStyle : BingMapsStyle.AERIAL
      * });
      */
     function BingMapsTileProvider(description) {
         var desc = description || {};
-        var key = desc.key || "AquXz3981-1ND5jGs8qQn7R7YUP8qkWi77yZSVM7o3nIvzb-Mg0W2Ta57xuUyywX";
+        var key = desc.key || 'AquXz3981-1ND5jGs8qQn7R7YUP8qkWi77yZSVM7o3nIvzb-Mg0W2Ta57xuUyywX';
         var mapStyle = desc.mapStyle || BingMapsStyle.AERIAL;
 
         if (typeof desc.server === 'undefined') {
-            throw new DeveloperError("description.server is required.", "description.server");
+            throw new DeveloperError('description.server is required.');
         }
 
         /**
@@ -224,13 +224,13 @@ define([
      * @param {Number} y The tile's y coordinate.
      * @param {Number} zoom The tile's zoom level.
      *
-     * @see <a href="http://msdn.microsoft.com/en-us/library/bb259689.aspx">Bing Maps Tile System</a>
+     * @see <a href='http://msdn.microsoft.com/en-us/library/bb259689.aspx'>Bing Maps Tile System</a>
      * @see BingMapsTileProvider#quadKeyToTileXY
      */
     BingMapsTileProvider.tileXYToQuadKey = function(x, y, zoom) {
-        var quadkey = "";
+        var quadkey = '';
         for ( var i = zoom; i > 0; --i) {
-            var digit = "0".charCodeAt(0);
+            var digit = '0'.charCodeAt(0);
             var mask = 1 << (i - 1);
             if ((x & mask) !== 0) {
                 digit++;
@@ -251,7 +251,7 @@ define([
      *
      * @param {String} quadkey The tile's quad key
      *
-     * @see <a href="http://msdn.microsoft.com/en-us/library/bb259689.aspx">Bing Maps Tile System</a>
+     * @see <a href='http://msdn.microsoft.com/en-us/library/bb259689.aspx'>Bing Maps Tile System</a>
      * @see BingMapsTileProvider#tileXYToQuadKey
      */
     BingMapsTileProvider.quadKeyToTileXY = function(quadkey) {
@@ -288,7 +288,7 @@ define([
 
             var url = resource.imageUrl;
             url = url.replace('{subdomain}', resource.imageUrlSubdomains[0]);
-            url = url.replace('{culture}', "");
+            url = url.replace('{culture}', '');
             that._url = url;
 
             that.tileWidth = resource.imageWidth;
@@ -301,7 +301,7 @@ define([
             });
             that._deferredQueue = [];
         }, {
-            callbackParameterName : "jsonp",
+            callbackParameterName : 'jsonp',
             proxy: this._proxy
         });
     };
@@ -330,7 +330,7 @@ define([
         }
 
         if (tile.zoom < this.zoomMin || tile.zoom > this.zoomMax) {
-            throw new DeveloperError("The zoom must be between in [zoomMin, zoomMax].", "tile.zoom");
+            throw new DeveloperError('tile.zoom must be between in [zoomMin, zoomMax].');
         }
 
         var image = new Image();
@@ -408,7 +408,7 @@ define([
                 centerPoint : lat + ',' + lon,
                 zoomLevel : tile.zoom
             },
-            callbackParameterName : "jsonp",
+            callbackParameterName : 'jsonp',
             proxy : this._proxy
         });
 

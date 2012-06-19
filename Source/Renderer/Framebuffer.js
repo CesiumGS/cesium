@@ -199,9 +199,9 @@ define([
          * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
          *
          * @see Framebuffer.isDestroyed
-         * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteFramebuffers.xml">glDeleteFramebuffers</a>
-         * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteTextures.xml">glDeleteTextures</a>
-         * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteRenderbuffers.xml">glDeleteRenderbuffers</a>
+         * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteFramebuffers.xml'>glDeleteFramebuffers</a>
+         * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteTextures.xml'>glDeleteTextures</a>
+         * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteRenderbuffers.xml'>glDeleteRenderbuffers</a>
          *
          * @example
          * // Destroying the framebuffer implicitly calls destroy for each of its attachments.

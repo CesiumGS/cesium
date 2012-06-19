@@ -13,15 +13,15 @@ define([
 
     /**
      * Creates an Occluder derived from an object's position and radius, as well as the camera position.
-     * The occluder can be used to determine wether or not other objects are visible or hidden behind the
+     * The occluder can be used to determine whether or not other objects are visible or hidden behind the
      * visible horizon defined by the occluder and camera position.
      *
      * @name Occluder
      *
-     * @param {BoundingSphere} occluderBS The bounding sphere surrounding the occluder.
+     * @param {BoundingSphere} occluderBoundingSphere The bounding sphere surrounding the occluder.
      * @param {Cartesian3} cameraPosition The coordinate of the viewer/camera.
      *
-     * @exception {DeveloperError} <code>occluderBS</code> is required.
+     * @exception {DeveloperError} <code>occluderBoundingSphere</code> is required.
      * @exception {DeveloperError} <code>cameraPosition</code> is required.
      *
      * @constructor
@@ -29,43 +29,28 @@ define([
      * @example
      * // Construct an occluder one unit away from the origin with a radius of one.
      * var cameraPosition = new Cartesian3.ZERO;
-     * var occluderBS = new BoundingSphere(new Cartesian3(0, 0, -1), 1);
-     * var occluder = new Occluder(occluderBS, cameraPosition);
+     * var occluderBoundingSphere = new BoundingSphere(new Cartesian3(0, 0, -1), 1);
+     * var occluder = new Occluder(occluderBoundingSphere, cameraPosition);
      */
-    function Occluder(occluderBS, cameraPosition) {
-        if (!occluderBS) {
-            throw new DeveloperError("occluder bounding sphere is required.", "occluderPBS");
+    function Occluder(occluderBoundingSphere, cameraPosition) {
+        if (!occluderBoundingSphere) {
+            throw new DeveloperError('occluderBoundingSphere is required.');
         }
+
         if (!cameraPosition) {
-            throw new DeveloperError("camera position is required.", "cameraPosition");
+            throw new DeveloperError('camera position is required.');
         }
 
-        var cameraPos = Cartesian3.clone(cameraPosition);
-        var occluderPosition = occluderBS.center.clone();
-        var occluderRadius = occluderBS.radius;
+        this._occluderPosition = occluderBoundingSphere.center.clone();
+        this._occluderRadius = occluderBoundingSphere.radius;
 
-        var cameraToOccluderVec = occluderPosition.subtract(cameraPosition);
-        var invCameraToOccluderDistance = cameraToOccluderVec.magnitudeSquared();
-        var occluderRadiusSqrd = occluderRadius * occluderRadius;
-        var horizonDistance;
-        var horizonPlaneNormal;
-        var horizonPlanePosition;
-        if (invCameraToOccluderDistance > occluderRadiusSqrd) {
-            horizonDistance = Math.sqrt(invCameraToOccluderDistance - occluderRadiusSqrd);
-            invCameraToOccluderDistance = 1.0 / Math.sqrt(invCameraToOccluderDistance);
-            horizonPlaneNormal = cameraToOccluderVec.multiplyWithScalar(invCameraToOccluderDistance);
-            var nearPlaneDistance = horizonDistance * horizonDistance * invCameraToOccluderDistance;
-            horizonPlanePosition = cameraPos.add(horizonPlaneNormal.multiplyWithScalar(nearPlaneDistance));
-        } else {
-            horizonDistance = Number.MAX_VALUE;
-        }
+        this._horizonDistance = 0.0;
+        this._horizonPlaneNormal = undefined;
+        this._horizonPlanePosition = undefined;
+        this._cameraPosition = undefined;
 
-        this._occluderPosition = occluderPosition;
-        this._occluderRadius = occluderRadius;
-        this._cameraPosition = cameraPos.clone();
-        this._horizonDistance = horizonDistance;
-        this._horizonPlaneNormal = horizonPlaneNormal;
-        this._horizonPlanePosition = horizonPlanePosition;
+        // setCameraPosition fills in the above values
+        this.setCameraPosition(cameraPosition);
     }
 
     /**
@@ -86,6 +71,37 @@ define([
      */
     Occluder.prototype.getRadius = function() {
         return this._occluderRadius;
+    };
+
+    /**
+     * Sets the position of the camera.
+     *
+     * @param {Cartesian3} cameraPosition The new position of the camera.
+     */
+    Occluder.prototype.setCameraPosition = function(cameraPosition) {
+        cameraPosition = Cartesian3.clone(cameraPosition);
+
+        var cameraToOccluderVec = this._occluderPosition.subtract(cameraPosition);
+        var invCameraToOccluderDistance = cameraToOccluderVec.magnitudeSquared();
+        var occluderRadiusSqrd = this._occluderRadius * this._occluderRadius;
+
+        var horizonDistance;
+        var horizonPlaneNormal;
+        var horizonPlanePosition;
+        if (invCameraToOccluderDistance > occluderRadiusSqrd) {
+            horizonDistance = Math.sqrt(invCameraToOccluderDistance - occluderRadiusSqrd);
+            invCameraToOccluderDistance = 1.0 / Math.sqrt(invCameraToOccluderDistance);
+            horizonPlaneNormal = cameraToOccluderVec.multiplyWithScalar(invCameraToOccluderDistance);
+            var nearPlaneDistance = horizonDistance * horizonDistance * invCameraToOccluderDistance;
+            horizonPlanePosition = cameraPosition.add(horizonPlaneNormal.multiplyWithScalar(nearPlaneDistance));
+        } else {
+            horizonDistance = Number.MAX_VALUE;
+        }
+
+        this._horizonDistance = horizonDistance;
+        this._horizonPlaneNormal = horizonPlaneNormal;
+        this._horizonPlanePosition = horizonPlanePosition;
+        this._cameraPosition = cameraPosition;
     };
 
     /**
@@ -222,48 +238,48 @@ define([
      *
      * @memberof Occluder
      *
-     * @param {BoundingSphere} occluderBS The bounding sphere surrounding the occluder.
+     * @param {BoundingSphere} occluderBoundingSphere The bounding sphere surrounding the occluder.
      * @param {Cartesian3} occludeePosition The point where the occludee (bounding sphere of radius 0) is located.
      * @param {Array} positions List of altitude points on the horizon near the surface of the occluder.
      *
      * @exception {DeveloperError} <code>positions</code> is a required, non-empty array.
-     * @exception {DeveloperError} <code>occluderBS</code> is required.
-     * @exception {DeveloperError} <code>occludeePosition</code> must have a value other than <code>occluderBS.center</code>.
+     * @exception {DeveloperError} <code>occluderBoundingSphere</code> is required.
+     * @exception {DeveloperError} <code>occludeePosition</code> must have a value other than <code>occluderBoundingSphere.center</code>.
      *
      * @return {Object} An object containing two attributes: <code>occludeePoint</code> and <code>valid</code>
      * which is a boolean value.
      *
      * @example
      * var cameraPosition = new Cartesian3(0, 0, 0);
-     * var occluderBS = new BoundingSphere(new Cartesian3(0, 0, -8), 2);
-     * var occluder = new Occluder(occluderBS, cameraPosition);
+     * var occluderBoundingSphere = new BoundingSphere(new Cartesian3(0, 0, -8), 2);
+     * var occluder = new Occluder(occluderBoundingSphere, cameraPosition);
      * var positions = [new Cartesian3(-0.25, 0, -5.3), new Cartesian3(0.25, 0, -5.3)];
      * var tileOccluderSphere = new BoundingSphere(positions);
      * var occludeePosition = tileOccluderSphere.center;
-     * var occludeePt = occluder.getOccludeePoint(occluderBS, occludeePosition, positions);
+     * var occludeePt = occluder.getOccludeePoint(occluderBoundingSphere, occludeePosition, positions);
      *
      */
-    Occluder.getOccludeePoint = function(occluderBS, occludeePosition, positions) {
+    Occluder.getOccludeePoint = function(occluderBoundingSphere, occludeePosition, positions) {
         // Validate input data
-        if (!occluderBS) {
-            throw new DeveloperError("Argument occluderBS is required.", "occluderBS");
+        if (!occluderBoundingSphere) {
+            throw new DeveloperError('occluderBoundingSphere is required.');
         }
 
         if (!positions) {
-            throw new DeveloperError("Argument positions is required.", "positions");
+            throw new DeveloperError('positions is required.');
         }
 
         if (positions.length === 0) {
-            throw new DeveloperError("Argument positions must contain at least one element", "positions");
+            throw new DeveloperError('positions must contain at least one element');
         }
 
         var occludeePos = Cartesian3.clone(occludeePosition);
-        var occluderPosition = occluderBS.center.clone();
-        var occluderRadius = occluderBS.radius;
+        var occluderPosition = occluderBoundingSphere.center.clone();
+        var occluderRadius = occluderBoundingSphere.radius;
         var numPositions = positions.length;
 
         if (occluderPosition.equals(occludeePosition)) {
-            throw new DeveloperError("Argument occludeePosition must be different than argument occluderBS's center point", "occludeePosition");
+            throw new DeveloperError('occludeePosition must be different than occluderBoundingSphere.center');
         }
 
         var valid = true;
@@ -275,14 +291,14 @@ define([
         //For each position, determine the horizon intersection. Choose the position and intersection
         //that results in the greatest angle with the occcluder plane.
         var aRotationVector = Occluder._anyRotationVector(occluderPosition, occluderPlaneNormal, occluderPlaneD);
-        var dot = Occluder._horizonToPlaneNormalDotProduct(occluderBS, occluderPlaneNormal, occluderPlaneD, aRotationVector, positions[0]);
+        var dot = Occluder._horizonToPlaneNormalDotProduct(occluderBoundingSphere, occluderPlaneNormal, occluderPlaneD, aRotationVector, positions[0]);
         if (!dot) {
             //The position is inside the mimimum radius, which is invalid
             valid = false;
         }
         var tempDot;
         for ( var i = 1; i < numPositions; ++i) {
-            tempDot = Occluder._horizonToPlaneNormalDotProduct(occluderBS, occluderPlaneNormal, occluderPlaneD, aRotationVector, positions[i]);
+            tempDot = Occluder._horizonToPlaneNormalDotProduct(occluderBoundingSphere, occluderPlaneNormal, occluderPlaneD, aRotationVector, positions[i]);
             if (!tempDot) {
                 //The position is inside the minimum radius, which is invalid
                 valid = false;

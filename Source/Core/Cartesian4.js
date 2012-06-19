@@ -39,7 +39,7 @@ define([
          * @see Cartesian4.z
          * @see Cartesian4.w
          */
-        this.x = (typeof x !== "undefined") ? x : 0.0;
+        this.x = (typeof x !== 'undefined') ? x : 0.0;
 
         /**
          * DOC_TBA
@@ -50,7 +50,7 @@ define([
          * @see Cartesian4.z
          * @see Cartesian4.w
          */
-        this.y = (typeof y !== "undefined") ? y : 0.0;
+        this.y = (typeof y !== 'undefined') ? y : 0.0;
 
         /**
          * DOC_TBA
@@ -61,7 +61,7 @@ define([
          * @see Cartesian4.y
          * @see Cartesian4.w
          */
-        this.z = (typeof z !== "undefined") ? z : 0.0;
+        this.z = (typeof z !== 'undefined') ? z : 0.0;
 
         /**
          * DOC_TBA
@@ -72,7 +72,7 @@ define([
          * @see Cartesian4.y
          * @see Cartesian4.z
          */
-        this.w = (typeof w !== "undefined") ? w : 0.0;
+        this.w = (typeof w !== 'undefined') ? w : 0.0;
     }
 
     /**
@@ -351,7 +351,7 @@ define([
      * @return {String} A string representing this instance.
      */
     Cartesian4.prototype.toString = function() {
-        return "(" + this.x + ", " + this.y + ", " + this.z + ", " + this.w + ")";
+        return '(' + this.x + ', ' + this.y + ', ' + this.z + ', ' + this.w + ')';
     };
 
     return Cartesian4;

@@ -41,7 +41,11 @@ void main()
     vec3 normalEC = normalize(agi_normal * agi_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0)));  // normalized surface normal in eye coordiantes
     vec3 positionToEyeEC = normalize(-v_positionEC);                                                        // normalized position-to-eye vector in eye coordinates
 
+#ifdef AFFECTED_BY_LIGHTING
     float intensity = agi_lightIntensity(normalEC, agi_sunDirectionEC, positionToEyeEC);
+#else
+    float intensity = 1.0;
+#endif
 
     vec4 color = getColor();
     gl_FragColor = vec4(intensity * color.rgb, color.a);

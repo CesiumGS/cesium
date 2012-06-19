@@ -3,7 +3,7 @@ defineSuite(['Core/createGuid'], function(createGuid) {
     "use strict";
     /*global it,expect*/
 
-    it("creates GUIDs", function() {
+    it('creates GUIDs', function() {
         var isGuidRegex = /^(\{){0,1}[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}(\}){0,1}$/;
 
         //Create three GUIDs

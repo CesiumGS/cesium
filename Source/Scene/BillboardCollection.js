@@ -65,8 +65,8 @@ define([
      * A renderable collection of billboards.  Billboards are viewport-aligned
      * images positioned in the 3D scene.
      * <br /><br />
-     * <div align="center">
-     * <img src="images/Billboard.png" width="400" height="300" /><br />
+     * <div align='center'>
+     * <img src='images/Billboard.png' width='400' height='300' /><br />
      * Example billboards
      * </div>
      * <br /><br />
@@ -142,15 +142,16 @@ define([
         this.modelMatrix = Matrix4.IDENTITY;
         this._modelMatrix = Matrix4.IDENTITY;
 
+        this._mode = SceneMode.SCENE3D;
+        this._projection = undefined;
+
         /**
-         * DOC_TBA
+         * The current morph transition time between 2D/Columbus View and 3D,
+         * with 0.0 being 2D or Columbus View and 1.0 being 3D.
          *
          * @type Number
          */
-        this.morphTime = 0.0;
-
-        this._mode = SceneMode.SCENE3D;
-        this._projection = undefined;
+        this.morphTime = this._mode.morphTime;
 
         // The buffer usage for each attribute is determined based on the usage of the attribute over time.
         this._buffersUsage = [
@@ -378,8 +379,8 @@ define([
      * }
      */
     BillboardCollection.prototype.get = function(index) {
-        if (typeof index === "undefined") {
-            throw new DeveloperError("index is required.", "index");
+        if (typeof index === 'undefined') {
+            throw new DeveloperError('index is required.');
         }
 
         this._removeBillboards();
@@ -810,23 +811,6 @@ define([
         this._writeTextureCoordinatesAndImageSize(context, textureAtlasCoordinates, vafWriters, billboard);
     };
 
-    ///////////////////////////////////////////////////////////////////////////
-
-    BillboardCollection.prototype._syncMorphTime = function(mode) {
-        switch (mode) {
-        case SceneMode.SCENE3D:
-            this.morphTime = 1.0;
-            break;
-
-        case SceneMode.SCENE2D:
-        case SceneMode.COLUMBUS_VIEW:
-            this.morphTime = 0.0;
-            break;
-
-        // MORPHING - don't change it
-        }
-    };
-
     BillboardCollection.prototype._updateScene2D = function(projection, billboards) {
         var length = billboards.length;
 
@@ -860,7 +844,6 @@ define([
     BillboardCollection.prototype._updateMode = function(sceneState) {
         var mode = sceneState.mode;
         var projection = sceneState.scene2D.projection;
-        this._syncMorphTime(mode);
 
         var billboards;
         var length;
@@ -1045,7 +1028,7 @@ define([
 
         this._spPick = context.getShaderCache().getShaderProgram(
                 BillboardCollectionVS,
-                "#define RENDER_FOR_PICK 1\n" + BillboardCollectionFS,
+                '#define RENDER_FOR_PICK 1\n' + BillboardCollectionFS,
                 attributeIndices);
 
         this.updateForPick = function(context) {

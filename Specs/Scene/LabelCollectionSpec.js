@@ -57,12 +57,12 @@ defineSuite([
         destroyContext(context);
     });
 
-    it("default constructs a label", function() {
+    it('default constructs a label', function() {
         var l = labels.add();
         expect(l.getShow()).toEqual(true);
         expect(l.getPosition().equals(Cartesian3.ZERO)).toEqual(true);
-        expect(l.getText()).toEqual("");
-        expect(l.getFont()).toEqual("30px sans-serif");
+        expect(l.getText()).toEqual('');
+        expect(l.getFont()).toEqual('30px sans-serif');
         expect(l.getFillColor().red).toEqual(1.0);
         expect(l.getFillColor().green).toEqual(1.0);
         expect(l.getFillColor().blue).toEqual(1.0);
@@ -79,12 +79,12 @@ defineSuite([
         expect(l.getScale()).toEqual(1.0);
     });
 
-    it("explicitly constructs a label", function() {
+    it('explicitly constructs a label', function() {
         var l = labels.add({
             show : false,
             position : new Cartesian3(1.0, 2.0, 3.0),
-            text : "abc",
-            font : "24px Helvetica",
+            text : 'abc',
+            font : '24px Helvetica',
             fillColor : {
                 red : 2.0,
                 green : 3.0,
@@ -113,8 +113,8 @@ defineSuite([
 
         expect(l.getShow()).toEqual(false);
         expect(l.getPosition().equals(new Cartesian3(1.0, 2.0, 3.0))).toEqual(true);
-        expect(l.getText()).toEqual("abc");
-        expect(l.getFont()).toEqual("24px Helvetica");
+        expect(l.getText()).toEqual('abc');
+        expect(l.getFont()).toEqual('24px Helvetica');
         expect(l.getFillColor().red).toEqual(2.0);
         expect(l.getFillColor().green).toEqual(3.0);
         expect(l.getFillColor().blue).toEqual(4.0);
@@ -131,12 +131,12 @@ defineSuite([
         expect(l.getScale()).toEqual(2.0);
     });
 
-    it("sets a labels's properties", function() {
+    it('sets label properties', function() {
         var l = labels.add();
         l.setShow(false);
         l.setPosition(new Cartesian3(1.0, 2.0, 3.0));
-        l.setText("abc");
-        l.setFont("24px Helvetica");
+        l.setText('abc');
+        l.setFont('24px Helvetica');
         l.setFillColor({
             red : 2.0,
             green : 3.0,
@@ -158,8 +158,8 @@ defineSuite([
 
         expect(l.getShow()).toEqual(false);
         expect(l.getPosition().equals(new Cartesian3(1.0, 2.0, 3.0))).toEqual(true);
-        expect(l.getText()).toEqual("abc");
-        expect(l.getFont()).toEqual("24px Helvetica");
+        expect(l.getText()).toEqual('abc');
+        expect(l.getFont()).toEqual('24px Helvetica');
         expect(l.getFillColor().red).toEqual(2.0);
         expect(l.getFillColor().green).toEqual(3.0);
         expect(l.getFillColor().blue).toEqual(4.0);
@@ -176,27 +176,27 @@ defineSuite([
         expect(l.getScale()).toEqual(2.0);
     });
 
-    it("can specify font using units other than pixels", function() {
+    it('can specify font using units other than pixels', function() {
         var l = labels.add({
             font : '12pt Arial',
-            text : "Hello"
+            text : 'Hello'
         });
         var dimension = l._billboards[0]._labelDimension;
         expect(dimension.height).toBeGreaterThan(0);
     });
 
-    it("sets a removed label's property", function() {
+    it('sets removed label property', function() {
         var l = labels.add();
         labels.remove(l);
         l.setShow(false);
         expect(l.getShow()).toEqual(false);
     });
 
-    it("has zero labels when constructed", function() {
+    it('has zero labels when constructed', function() {
         expect(labels.getLength()).toEqual(0);
     });
 
-    it("adds a label", function() {
+    it('adds a label', function() {
         var l = labels.add({
             position : {
                 x : 1.0,
@@ -209,7 +209,7 @@ defineSuite([
         expect(labels.get(0).equals(l)).toEqual(true);
     });
 
-    it("removes the first label", function() {
+    it('removes the first label', function() {
         var one = labels.add({
             position : {
                 x : 1.0,
@@ -233,7 +233,7 @@ defineSuite([
         expect(labels.get(0).equals(two)).toEqual(true);
     });
 
-    it("removes the last label", function() {
+    it('removes the last label', function() {
         var one = labels.add({
             position : {
                 x : 1.0,
@@ -257,7 +257,7 @@ defineSuite([
         expect(labels.get(0).equals(one)).toEqual(true);
     });
 
-    it("removes the same label twice", function() {
+    it('removes the same label twice', function() {
         var l = labels.add({
             position : {
                 x : 1.0,
@@ -274,7 +274,7 @@ defineSuite([
         expect(labels.getLength()).toEqual(0);
     });
 
-    it("removes null", function() {
+    it('removes null', function() {
         labels.add({
             position : {
                 x : 1.0,
@@ -288,7 +288,7 @@ defineSuite([
         expect(labels.getLength()).toEqual(1);
     });
 
-    it("adds and removes labels", function() {
+    it('adds and removes labels', function() {
         var one = labels.add({
             position : {
                 x : 1.0,
@@ -320,7 +320,7 @@ defineSuite([
         expect(labels.get(1).equals(three)).toEqual(true);
     });
 
-    it("removes all labels", function() {
+    it('removes all labels', function() {
         labels.add({
             position : {
                 x : 1.0,
@@ -341,14 +341,14 @@ defineSuite([
         expect(labels.getLength()).toEqual(0);
     });
 
-    it("contains a label", function() {
+    it('contains a label', function() {
         var l = labels.add();
         labels.add(l);
 
         expect(labels.contains(l)).toEqual(true);
     });
 
-    it("doesn't contain a label", function() {
+    it('does not contain a label', function() {
         var l0 = labels.add();
         var l1 = labels.add();
 
@@ -359,15 +359,15 @@ defineSuite([
         expect(labels.contains(l0)).toEqual(false);
     });
 
-    it("doesn't contain undefined", function() {
+    it('does not contain undefined', function() {
         expect(labels.contains()).toEqual(false);
     });
 
-    it("gets default buffer usage", function() {
+    it('gets default buffer usage', function() {
         expect(labels.bufferUsage).toEqual(BufferUsage.STATIC_DRAW);
     });
 
-    it("doesn't render when constructed", function() {
+    it('does not render when constructed', function() {
         context.clear();
         expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
 
@@ -376,14 +376,14 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
     });
 
-    it("modifies and removes a label, then renders", function() {
+    it('modifies and removes a label, then renders', function() {
         var l = labels.add({
             position : {
                 x : 0.0,
                 y : 0.0,
                 z : 0.0
             },
-            text : "x",
+            text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
         });
@@ -393,7 +393,7 @@ defineSuite([
                 y : 0.0,
                 z : 0.0
             },
-            text : "o",
+            text : 'o',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
         });
@@ -420,14 +420,14 @@ defineSuite([
         expect((p[3] === 0) || (p[3] === 255)).toEqual(true); // ANGLE Workaround:  Blending or texture alpha channel is buggy
     });
 
-    it("renders a label", function() {
+    it('renders a label', function() {
         labels.add({
             position : {
                 x : 0.0,
                 y : 0.0,
                 z : 0.0
             },
-            text : "x",
+            text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
         });
@@ -440,14 +440,14 @@ defineSuite([
         expect(context.readPixels()).not.toEqualArray([0, 0, 0, 0]);
     });
 
-    it("adds and renders a label", function() {
+    it('adds and renders a label', function() {
         labels.add({
             position : {
                 x : 0.0,
                 y : 0.0,
                 z : 0.0
             },
-            text : "x",
+            text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
         });
@@ -465,7 +465,7 @@ defineSuite([
                 y : 0.0,
                 z : 0.0
             }, // Closer to viewer
-            text : "x",
+            text : 'x',
             fillColor : {
                 red : 1.0,
                 green : 0.0,
@@ -481,14 +481,14 @@ defineSuite([
         expect(context.readPixels()).not.toEqualArray([0, 0, 0, 0]); // Not the most precise check
     });
 
-    it("removes and renders a label", function() {
+    it('removes and renders a label', function() {
         var l = labels.add({
             position : {
                 x : 0.0,
                 y : 0.0,
                 z : 0.0
             },
-            text : "x",
+            text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
         });
@@ -509,14 +509,14 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
     });
 
-    it("removes all labels and renders", function() {
+    it('removes all labels and renders', function() {
         labels.add({
             position : {
                 x : 0.0,
                 y : 0.0,
                 z : 0.0
             },
-            text : "x",
+            text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
         });
@@ -537,14 +537,14 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
     });
 
-    it("removes all labels, adds a label, and renders", function() {
+    it('removes all labels, adds a label, and renders', function() {
         labels.add({
             position : {
                 x : 0.0,
                 y : 0.0,
                 z : 0.0
             },
-            text : "x",
+            text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
         });
@@ -566,7 +566,7 @@ defineSuite([
                 y : 0.0,
                 z : 0.0
             },
-            text : "x",
+            text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
         });
@@ -576,14 +576,14 @@ defineSuite([
         expect(context.readPixels()).not.toEqualArray([0, 0, 0, 0]);
     });
 
-    it("renders with a different buffer usage", function() {
+    it('renders with a different buffer usage', function() {
         labels.add({
             position : {
                 x : 0.0,
                 y : 0.0,
                 z : 0.0
             },
-            text : "x",
+            text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
         });
@@ -604,14 +604,14 @@ defineSuite([
         expect(context.readPixels()).not.toEqualArray([0, 0, 0, 0]);
     });
 
-    it("renders using label's show property", function() {
+    it('renders using show property', function() {
         var l = labels.add({
             position : {
                 x : 0.0,
                 y : 0.0,
                 z : 0.0
             },
-            text : "x",
+            text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
         });
@@ -637,14 +637,14 @@ defineSuite([
         expect(context.readPixels()).not.toEqualArray([0, 0, 0, 0]);
     });
 
-    it("renders using label's position property", function() {
+    it('renders using position property', function() {
         var l = labels.add({
             position : {
                 x : 0.0,
                 y : 0.0,
                 z : 0.0
             },
-            text : "x",
+            text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
         });
@@ -678,14 +678,14 @@ defineSuite([
         expect(context.readPixels()).not.toEqualArray([0, 0, 0, 0]);
     });
 
-    it("renders using label's scale property", function() {
+    it('renders using scale property', function() {
         var l = labels.add({
             position : {
                 x : 0.0,
                 y : 0.0,
                 z : 0.0
             },
-            text : "x",
+            text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
         });
@@ -711,14 +711,14 @@ defineSuite([
         expect(context.readPixels()).not.toEqualArray([0, 0, 0, 0]);
     });
 
-    it("is picked", function() {
+    it('is picked', function() {
         var l = labels.add({
             position : {
                 x : 0.0,
                 y : 0.0,
                 z : 0.0
             },
-            text : "x",
+            text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
         });
@@ -729,7 +729,7 @@ defineSuite([
         expect(pickedObject).toEqual(l);
     });
 
-    it("is not picked", function() {
+    it('is not picked', function() {
         labels.add({
             show : false,
             position : {
@@ -737,7 +737,7 @@ defineSuite([
                 y : 0.0,
                 z : 0.0
             },
-            text : "x",
+            text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
         });
@@ -748,7 +748,7 @@ defineSuite([
         expect(pickedObject).not.toBeDefined();
     });
 
-    it("computes screen space position (1)", function() {
+    it('computes screen space position (1)', function() {
         var l = labels.add({
             position : {
                 x : 0.0,
@@ -760,7 +760,7 @@ defineSuite([
         expect(l.computeScreenSpacePosition(us).equals(new Cartesian2(0.5, 0.5)));
     });
 
-    it("computes screen space position (2)", function() {
+    it('computes screen space position (2)', function() {
         var l = labels.add({
             position : {
                 x : 0.0,
@@ -776,7 +776,7 @@ defineSuite([
         expect(l.computeScreenSpacePosition(us).equals(new Cartesian2(1.5, 2.5)));
     });
 
-    it("computes screen space position (3)", function() {
+    it('computes screen space position (3)', function() {
         var l = labels.add({
             position : {
                 x : 0.0,
@@ -795,7 +795,7 @@ defineSuite([
         expect(p.y).toBeGreaterThan(0.5);
     });
 
-    it("throws when computing screen space position when not in a collection", function() {
+    it('throws when computing screen space position when not in a collection', function() {
         var l = labels.add();
         labels.remove(l);
 
@@ -804,7 +804,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("throws when computing screen space position without uniform state", function() {
+    it('throws when computing screen space position without uniform state', function() {
         var l = labels.add();
 
         expect(function() {
@@ -812,14 +812,14 @@ defineSuite([
         }).toThrow();
     });
 
-    it("equals another label", function() {
+    it('equals another label', function() {
         var l = labels.add({
             position : {
                 x : 1.0,
                 y : 2.0,
                 z : 3.0
             },
-            text : "equals"
+            text : 'equals'
         });
         var l2 = labels.add({
             position : {
@@ -827,13 +827,13 @@ defineSuite([
                 y : 2.0,
                 z : 3.0
             },
-            text : "equals"
+            text : 'equals'
         });
 
         expect(l.equals(l2)).toEqual(true);
     });
 
-    it("doesn't equal another label", function() {
+    it('does not equal another label', function() {
         var l = labels.add({
             position : {
                 x : 1.0,
@@ -852,35 +852,35 @@ defineSuite([
         expect(l.equals(l2)).toEqual(false);
     });
 
-    it("doesn't equal null", function() {
+    it('does not equal null', function() {
         var l = labels.add({});
         expect(l.equals(null)).toBeFalsy();
     });
 
-    it("throws when accessing without an index", function() {
+    it('throws when accessing without an index', function() {
         expect(function() {
             labels.get();
         }).toThrow();
     });
 
-    it("cache should have distinct entries", function() {
+    it('cache should have distinct entries', function() {
         labels.add({
-            text : "a"
+            text : 'a'
         });
         expect(labels._canvasContainer.getItems().length).toEqual(1);
         labels.add({
-            text : "a"
+            text : 'a'
         });
         expect(labels._canvasContainer.getItems().length).toEqual(1);
         labels.add({
-            text : "ab"
+            text : 'ab'
         });
         expect(labels._canvasContainer.getItems().length).toEqual(2);
         var label = labels.add({
-            text : "abc"
+            text : 'abc'
         });
         expect(labels._canvasContainer.getItems().length).toEqual(3);
-        label.setFont("30px arial");
+        label.setFont('30px arial');
         expect(labels._canvasContainer.getItems().length).toEqual(6);
         label.setStyle(LabelStyle.OUTLINE);
         expect(labels._canvasContainer.getItems().length).toEqual(9);
@@ -901,26 +901,26 @@ defineSuite([
         label.setVerticalOrigin(VerticalOrigin.CENTER);
         expect(labels._canvasContainer.getItems().length).toEqual(18);
         //even though we originally started with 30px sans-serif, other properties used to create the id have changed
-        label.setFont("30px sans-serif");
+        label.setFont('30px sans-serif');
         expect(labels._canvasContainer.getItems().length).toEqual(21);
     });
 
-    it("billboards should equal number of characters", function() {
+    it('billboards should equal number of characters', function() {
         var label = labels.add({
-            text : "abc"
+            text : 'abc'
         });
         expect(label._billboards.length).toEqual(3);
-        label.setText("abcd");
+        label.setText('abcd');
         expect(label._billboards.length).toEqual(4);
-        label.setText("");
+        label.setText('');
         expect(label._billboards.length).toEqual(0);
         label = labels.add();
         expect(label._billboards.length).toEqual(0);
     });
 
-    it("pixelOffsets of billboards should should be correct when verticalOrigin is changed", function() {
+    it('pixelOffsets of billboards should should be correct when verticalOrigin is changed', function() {
         var label = labels.add({
-            text : "apl"
+            text : 'apl'
         });
         var y0 = label._billboards[0]._pixelOffset.y;
         var y1 = label._billboards[1]._pixelOffset.y;
@@ -936,9 +936,9 @@ defineSuite([
         expect(label._billboards[2]._pixelOffset.y).toEqual(y2);
     });
 
-    it("pixelOffsets of billboards should should be correct when verticalOrigin and scale are changed", function() {
+    it('pixelOffsets of billboards should should be correct when verticalOrigin and scale are changed', function() {
         var label = labels.add({
-            text : "apl"
+            text : 'apl'
         });
         var x0 = label._billboards[0]._pixelOffset.x;
         var y0 = label._billboards[0]._pixelOffset.y;
@@ -970,9 +970,9 @@ defineSuite([
         expect(label._billboards[2]._pixelOffset.y).toBeGreaterThan(y2);
     });
 
-    it("pixelOffsets of billboards should should be correct when HorizontalOrigin is changed", function() {
+    it('pixelOffsets of billboards should should be correct when HorizontalOrigin is changed', function() {
         var label = labels.add({
-            text : "apl"
+            text : 'apl'
         });
         var x0 = label._billboards[0]._pixelOffset.x;
         label.setHorizontalOrigin(HorizontalOrigin.CENTER);
@@ -989,9 +989,9 @@ defineSuite([
         expect(label._billboards[2]._pixelOffset.x).toBeLessThan(centerX2);
     });
 
-    it("pixelOffsets of billboards should should be correct when HorizontalOrigin and scale are changed", function() {
+    it('pixelOffsets of billboards should should be correct when HorizontalOrigin and scale are changed', function() {
         var label = labels.add({
-            text : "apl"
+            text : 'apl'
         });
         var x0 = label._billboards[0]._pixelOffset.x;
         var x1 = label._billboards[1]._pixelOffset.x;
@@ -1014,9 +1014,9 @@ defineSuite([
         expect(label._billboards[2]._pixelOffset.x).toBeLessThan(centerX2);
     });
 
-    it("pixelOffsets of billboards should should be correct when verticalOrigin, scale and pixelOffset are changed", function() {
+    it('pixelOffsets of billboards should should be correct when verticalOrigin, scale and pixelOffset are changed', function() {
         var label = labels.add({
-            text : "apl"
+            text : 'apl'
         });
         var x0 = label._billboards[0]._pixelOffset.x;
         var y0 = label._billboards[0]._pixelOffset.y;
@@ -1052,9 +1052,9 @@ defineSuite([
         expect(label._billboards[2]._pixelOffset.y).toBeGreaterThan(y2);
     });
 
-    it("pixelOffsets of billboards should should be correct when fontsize changes", function() {
+    it('pixelOffsets of billboards should should be correct when fontsize changes', function() {
         var label = labels.add({
-            text : "apl"
+            text : 'apl'
         });
         var x0 = label._billboards[0]._pixelOffset.x;
         var y0 = label._billboards[0]._pixelOffset.y;
@@ -1062,7 +1062,7 @@ defineSuite([
         var y1 = label._billboards[1]._pixelOffset.y;
         var x2 = label._billboards[2]._pixelOffset.x;
         var y2 = label._billboards[2]._pixelOffset.y;
-        label.setFont("20px sans-serif");
+        label.setFont('20px sans-serif');
         expect(label._billboards[0]._pixelOffset.x).toEqual(x0);
         expect(label._billboards[0]._pixelOffset.y).toEqual(y0);
         expect(label._billboards[1]._pixelOffset.x).toBeLessThan(x1);
@@ -1071,11 +1071,11 @@ defineSuite([
         expect(label._billboards[2]._pixelOffset.y).toEqual(y2);
     });
 
-    it("pixelOffset should equal if set by constructor or properties", function() {
+    it('pixelOffset should equal if set by constructor or properties', function() {
         var label = labels.add({
-            text : "apl",
+            text : 'apl',
             scale : 2,
-            font : "20px sans-serif",
+            font : '20px sans-serif',
             verticalOrigin : VerticalOrigin.CENTER,
             pixelOffset : {
                 x : 10,
@@ -1083,9 +1083,9 @@ defineSuite([
             }
         });
         var propLabel = labels.add();
-        propLabel.setText("apl");
+        propLabel.setText('apl');
         propLabel.setScale(2);
-        propLabel.setFont("20px sans-serif");
+        propLabel.setFont('20px sans-serif');
         propLabel.setVerticalOrigin(VerticalOrigin.CENTER);
         propLabel.setPixelOffset({
             x : 10,
@@ -1099,9 +1099,9 @@ defineSuite([
         expect(label._billboards[2]._pixelOffset.y).toEqual(propLabel._billboards[2]._pixelOffset.y);
     });
 
-    it("pixelOffsets should not change if position changes", function() {
+    it('pixelOffsets should not change if position changes', function() {
         var label = labels.add({
-            text : "apl"
+            text : 'apl'
         });
         var x0 = label._billboards[0]._pixelOffset.x;
         var y0 = label._billboards[0]._pixelOffset.y;
@@ -1122,9 +1122,9 @@ defineSuite([
         expect(label._billboards[2]._pixelOffset.y).toEqual(y2);
     });
 
-    it("scale does not change billboard dimension", function() {
+    it('scale does not change billboard dimension', function() {
         var label = labels.add({
-            text : "apl"
+            text : 'apl'
         });
         var dimension = label._billboards[0]._labelDimension;
         var width = dimension.width;
@@ -1138,9 +1138,9 @@ defineSuite([
 
     });
 
-    it("font size changes billboard dimension", function() {
+    it('font size changes billboard dimension', function() {
         var label = labels.add({
-            text : "apl"
+            text : 'apl'
         });
         var dimension = label._billboards[0]._labelDimension;
         var width = dimension.width;
@@ -1149,7 +1149,7 @@ defineSuite([
         expect(dimension.width).toEqual(16);
         expect(dimension.height).toEqual(16);
         expect(dimension.descent).toEqual(-1);
-        label.setFont("20px sans-serif");
+        label.setFont('20px sans-serif');
         dimension = label._billboards[0]._labelDimension;
         expect(dimension.width).toBeLessThan(width);
         expect(dimension.height).toBeLessThan(height);

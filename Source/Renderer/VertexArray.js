@@ -29,7 +29,7 @@ define([
                 try {
                     this._addAttribute(attributes[i], i);
                 } catch (e) {
-                    throw new DeveloperError(e.message, "attributes");
+                    throw new DeveloperError(e.message);
                 }
             }
         }
@@ -39,7 +39,7 @@ define([
         for ( var j = 0; j < this._attributes.length; ++j) {
             var index = this._attributes[j].index;
             if (uniqueIndices[index]) {
-                throw new DeveloperError("Index " + index + " is used by more than one attribute.", "attributes");
+                throw new DeveloperError('Index ' + index + ' is used by more than one attribute.');
             }
 
             uniqueIndices[index] = true;
@@ -48,11 +48,11 @@ define([
 
     VertexArray.prototype._addAttribute = function(attribute, index) {
         if (!attribute.vertexBuffer && !attribute.value) {
-            throw new DeveloperError("attribute must have a vertexBuffer or a value.");
+            throw new DeveloperError('attribute must have a vertexBuffer or a value.');
         }
 
         if (attribute.vertexBuffer && attribute.value) {
-            throw new DeveloperError("attribute cannot have both a vertexBuffer and a value.  It must have either a vertexBuffer property defining per-vertex data or a value property defining data for all vertices.");
+            throw new DeveloperError('attribute cannot have both a vertexBuffer and a value.  It must have either a vertexBuffer property defining per-vertex data or a value property defining data for all vertices.');
         }
 
         var componentsPerAttribute = attribute.value ? attribute.value.length : attribute.componentsPerAttribute;
@@ -62,28 +62,28 @@ define([
             (componentsPerAttribute !== 3) &&
             (componentsPerAttribute !== 4)) {
             if (attribute.value) {
-                throw new DeveloperError("attribute.value.length must be in the range [1, 4].");
+                throw new DeveloperError('attribute.value.length must be in the range [1, 4].');
             }
 
-            throw new DeveloperError("attribute.componentsPerAttribute must be in the range [1, 4].");
+            throw new DeveloperError('attribute.componentsPerAttribute must be in the range [1, 4].');
         }
 
         if (attribute.componentDatatype) {
             var datatype = attribute.componentDatatype;
             if (!ComponentDatatype.validate(datatype)) {
-                throw new DeveloperError("attribute must have a valid componentDatatype or not specify it.");
+                throw new DeveloperError('attribute must have a valid componentDatatype or not specify it.');
             }
         }
 
         if (attribute.strideInBytes && (attribute.strideInBytes > 255)) {
             // WebGL limit.  Not in GL ES.
-            throw new DeveloperError("attribute must have a strideInBytes less than or equal to 255 or not specify it.");
+            throw new DeveloperError('attribute must have a strideInBytes less than or equal to 255 or not specify it.');
         }
 
         // Shallow copy the attribute; we do not want to copy the vertex buffer.
         var attr = {
-            index : (typeof attribute.index === "undefined") ? index : attribute.index,
-            enabled : (typeof attribute.enabled === "undefined") ? true : attribute.enabled,
+            index : (typeof attribute.index === 'undefined') ? index : attribute.index,
+            enabled : (typeof attribute.enabled === 'undefined') ? true : attribute.enabled,
             vertexBuffer : attribute.vertexBuffer,
             value : attribute.value ? attribute.value.slice() : undefined,
             componentsPerAttribute : componentsPerAttribute,
@@ -147,8 +147,8 @@ define([
      * @exception {DeveloperError} This vertex array was destroyed, i.e., destroy() was called.
      */
     VertexArray.prototype.getAttribute = function(index) {
-        if (typeof index === "undefined") {
-            throw new DeveloperError("index is required.", "index");
+        if (typeof index === 'undefined') {
+            throw new DeveloperError('index is required.');
         }
 
         return this._attributes[index];
@@ -180,17 +180,17 @@ define([
     VertexArray.prototype.addAttribute = function(attribute) {
         if (attribute) {
             var attributes = this._attributes;
-            var index = (typeof attribute.index === "undefined") ? attributes.length : attribute.index;
+            var index = (typeof attribute.index === 'undefined') ? attributes.length : attribute.index;
             for ( var i = 0; i < attributes.length; ++i) {
                 if (index === attributes[i].index) {
-                    throw new DeveloperError("Index " + index + " is already in use.", "attribute");
+                    throw new DeveloperError('Index ' + index + ' is already in use.');
                 }
             }
 
             try {
                 this._addAttribute(attribute, index);
             } catch (e) {
-                throw new DeveloperError(e.message, "attribute");
+                throw new DeveloperError(e.message);
             }
         }
     };
@@ -207,8 +207,8 @@ define([
      */
     VertexArray.prototype.removeAttribute = function(attribute) {
         if (attribute) {
-            if (typeof attribute.index === "undefined") {
-                throw new DeveloperError("Attribute must have an index.", "attribute");
+            if (typeof attribute.index === 'undefined') {
+                throw new DeveloperError('Attribute must have an index.');
             }
 
             var attributes = this._attributes;
@@ -331,7 +331,7 @@ define([
      *
      * @see VertexArray#isDestroyed
      * @see Buffer#getVertexArrayDestroyable
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteBuffers.xml">glDeleteBuffers</a>
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteBuffers.xml'>glDeleteBuffers</a>
      *
      * @example
      * // Destroying the vertex array implicitly calls destroy for each of its vertex

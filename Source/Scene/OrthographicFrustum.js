@@ -101,20 +101,20 @@ define([
 
     OrthographicFrustum.prototype._update = function() {
         if (this.left === null || this.right === null || this.top === null || this.bottom === null || this.near === null || this.far === null) {
-            throw new DeveloperError("The frustum parameters are not set.", "left, right, top, bottom, near, or far");
+            throw new DeveloperError('left, right, top, bottom, near, or far frustum parameters are not set.');
         }
 
         if (this.left !== this._left || this.right !== this._right || this.top !== this._top || this.bottom !== this._bottom || this.near !== this._near || this.far !== this._far) {
             if (this.left > this.right) {
-                throw new DeveloperError("right must be greater than left.", "right");
+                throw new DeveloperError('right must be greater than left.');
             }
 
             if (this.bottom > this.top) {
-                throw new DeveloperError("top must be greater than bottom.", "top");
+                throw new DeveloperError('top must be greater than bottom.');
             }
 
             if (this.near < 0 || this.near > this.far) {
-                throw new DeveloperError("near must be greater than zero and less than far.", "near");
+                throw new DeveloperError('near must be greater than zero and less than far.');
             }
 
             this._left = this.left;
@@ -147,15 +147,15 @@ define([
      */
     OrthographicFrustum.prototype.getPlanes = function(position, direction, up) {
         if (!position) {
-            throw new DeveloperError("position is required.", "position");
+            throw new DeveloperError('position is required.');
         }
 
         if (!direction) {
-            throw new DeveloperError("direction is required.", "direction");
+            throw new DeveloperError('direction is required.');
         }
 
         if (!up) {
-            throw new DeveloperError("up is required.", "up");
+            throw new DeveloperError('up is required.');
         }
 
         var pos = Cartesian3.clone(position);

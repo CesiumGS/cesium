@@ -63,7 +63,7 @@ define(['../Shaders/DotMaterial'], function(ShadersDotMaterial) {
     }
 
     DotMaterial.prototype._getShaderSource = function() {
-        return "#line 0\n" + ShadersDotMaterial;
+        return '#line 0\n' + ShadersDotMaterial;
     };
 
     return DotMaterial;

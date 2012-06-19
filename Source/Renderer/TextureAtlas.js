@@ -29,18 +29,18 @@ define([
      */
     function TextureAtlas(context, images, pixelFormat, borderWidthInPixels) {
         if (!context) {
-            throw new DeveloperError("context is required.", "images");
+            throw new DeveloperError('context is required.');
         }
 
         if (!images || (images.length < 1)) {
-            throw new DeveloperError("images is required and must have length greater than zero.", "images");
+            throw new DeveloperError('images is required and must have length greater than zero.');
         }
 
-        pixelFormat = (typeof pixelFormat === "undefined") ? PixelFormat.RGBA : pixelFormat;
-        borderWidthInPixels = (typeof borderWidthInPixels === "undefined") ? 1 : borderWidthInPixels;
+        pixelFormat = (typeof pixelFormat === 'undefined') ? PixelFormat.RGBA : pixelFormat;
+        borderWidthInPixels = (typeof borderWidthInPixels === 'undefined') ? 1 : borderWidthInPixels;
 
         if (borderWidthInPixels < 0) {
-            throw new DeveloperError("borderWidthInPixels must be greater than or equal to zero.", "borderWidthInPixels");
+            throw new DeveloperError('borderWidthInPixels must be greater than or equal to zero.');
         }
 
         var annotatedImages = [];
@@ -152,7 +152,7 @@ define([
         var numSubRegions = subRegions.length;
 
         if ((index < 0) || (index >= numTextureCoordinates)) {
-            throw new DeveloperError("invalid image index.", "index");
+            throw new DeveloperError('invalid image index.');
         }
         var baseRegion = this._textureCoordinates[index];
 

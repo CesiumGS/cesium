@@ -54,11 +54,11 @@ define(['./DeveloperError'], function(DeveloperError) {
 
     Rectangle.createAxisAlignedBoundingRectangle = function(positions) {
         if (typeof positions === 'undefined') {
-            throw new DeveloperError("positions is required.", "positions");
+            throw new DeveloperError('positions is required.');
         }
 
         if (typeof positions.length === 'undefined' || positions.length <= 0) {
-            throw new DeveloperError("The length of positions must be greater than zero.", "positions");
+            throw new DeveloperError('The length of positions must be greater than zero.');
         }
 
         var length = positions.length;
@@ -147,7 +147,7 @@ define(['./DeveloperError'], function(DeveloperError) {
      * @return {String} A string representing this rectangle.
      */
     Rectangle.prototype.toString = function() {
-        return "(" + this.x + ", " + this.y + ", " + this.width + ", " + this.height + ")";
+        return '(' + this.x + ', ' + this.y + ', ' + this.width + ', ' + this.height + ')';
     };
 
     /**

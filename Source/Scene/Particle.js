@@ -16,10 +16,10 @@ define([
         template = template || {};
         template.position = template.position || Cartesian3.ZERO;
         template.velocity = template.velocity || Cartesian3.ZERO; // initial velocity
-        template.mass = (typeof template.mass === "undefined") ? 1.0 : template.mass;
+        template.mass = (typeof template.mass === 'undefined') ? 1.0 : template.mass;
 
         if (template.mass < 0) {
-            throw new DeveloperError("template.mass must be positive.", "template");
+            throw new DeveloperError('template.mass must be positive.');
         }
 
         this.position = new Cartesian3(template.position.x, template.position.y, template.position.z);

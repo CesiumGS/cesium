@@ -33,13 +33,13 @@ defineSuite([
         pool = new Texture2DPool(fakeContext);
     });
 
-    it("throws when constructed without context", function() {
+    it('throws when constructed without context', function() {
         expect(function() {
             return new Texture2DPool();
         }).toThrow();
     });
 
-    it("creates textures from the context on demand", function() {
+    it('creates textures from the context on demand', function() {
         var description = {
             width : 1,
             height : 1
@@ -50,7 +50,7 @@ defineSuite([
         expect(texture).toBeDefined();
     });
 
-    it("creates textures of different sizes", function() {
+    it('creates textures of different sizes', function() {
         var texture1 = pool.createTexture2D({
             width : 1,
             height : 1
@@ -64,7 +64,7 @@ defineSuite([
         expect(texture2.getWidth()).toEqual(2);
     });
 
-    it("returns textures to the pool when they are destroyed", function() {
+    it('returns textures to the pool when they are destroyed', function() {
         var texture1 = pool.createTexture2D({
             width : 1,
             height : 1
@@ -80,7 +80,7 @@ defineSuite([
         expect(texture2 === texture1).toEqual(true);
     });
 
-    it("destroys free textures when the pool is destroyed", function() {
+    it('destroys free textures when the pool is destroyed', function() {
         var texture1 = pool.createTexture2D({
             width : 1,
             height : 1

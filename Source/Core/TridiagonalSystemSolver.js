@@ -46,29 +46,29 @@ define(['./DeveloperError'], function(DeveloperError) {
      */
     TridiagonalSystemSolver.solve = function(lower, diagonal, upper, right) {
         if (!lower || !(lower instanceof Array)) {
-            throw new DeveloperError("The array lower is required.", "lower");
+            throw new DeveloperError('The array lower is required.');
         }
 
         if (!diagonal || !(diagonal instanceof Array)) {
-            throw new DeveloperError("The array diagonal is required.", "diagonal");
+            throw new DeveloperError('The array diagonal is required.');
         }
 
         if (!upper || !(upper instanceof Array)) {
-            throw new DeveloperError("The array upper is required.", "upper");
+            throw new DeveloperError('The array upper is required.');
         }
 
         if (!right || !(right instanceof Array)) {
-            throw new DeveloperError("The array right is required.", "right");
+            throw new DeveloperError('The array right is required.');
         }
 
         if (diagonal.length !== right.length) {
-            throw new DeveloperError("diagonal and right must have the same lengths.", "diagonal or right");
+            throw new DeveloperError('diagonal and right must have the same lengths.');
         }
 
         if (lower.length !== upper.length) {
-            throw new DeveloperError("lower and upper must have the same lengths.", "lower or upper");
+            throw new DeveloperError('lower and upper must have the same lengths.');
         } else if (lower.length !== diagonal.length - 1) {
-            throw new DeveloperError("lower and upper must be one less than the length of diagonal.", "lower or upper");
+            throw new DeveloperError('lower and upper must be one less than the length of diagonal.');
         }
 
         var c = [], d = [], x = [];

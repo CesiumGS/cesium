@@ -6,7 +6,7 @@
         this.code = function () {
             // Bing Maps
             var bing = new Cesium.BingMapsTileProvider({
-                server : "dev.virtualearth.net",
+                server : 'dev.virtualearth.net',
                 mapStyle : Cesium.BingMapsStyle.AERIAL,
                 // Some versions of Safari support WebGL, but don't correctly implement
                 // cross-origin image loading, so we need to load Bing imagery using a proxy.
@@ -86,7 +86,7 @@
     Sandbox.Single = function (scene, ellipsoid, primitives) {
         this.code = function () {
             // Single texture
-            var single = new Cesium.SingleTileProvider("Images/NE2_50M_SR_W_4096.jpg");
+            var single = new Cesium.SingleTileProvider('Images/NE2_50M_SR_W_4096.jpg');
 
             primitives.getCentralBody().dayTileProvider = single;
         };
@@ -96,7 +96,7 @@
         this.code = function () {
             // Bing Maps
             var bing = new Cesium.BingMapsTileProvider({
-                server : "dev.virtualearth.net",
+                server : 'dev.virtualearth.net',
                 mapStyle : Cesium.BingMapsStyle.AERIAL,
                 // Some versions of Safari support WebGL, but don't correctly implement
                 // cross-origin image loading, so we need to load Bing imagery using a proxy.
@@ -104,7 +104,7 @@
             });
 
             // Single texture
-            var single = new Cesium.SingleTileProvider("Images/NE2_50M_SR_W_4096.jpg");
+            var single = new Cesium.SingleTileProvider('Images/NE2_50M_SR_W_4096.jpg');
 
             // Composite tile provider
             var composite = new Cesium.CompositeTileProvider([{

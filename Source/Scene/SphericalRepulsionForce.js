@@ -15,10 +15,10 @@ define([
     function SphericalRepulsionForce(template) {
         template = template || {};
         template.center = template.center || Cartesian3.ZERO;
-        template.radius = (typeof template.radius === "undefined") ? 1.0 : template.radius;
+        template.radius = (typeof template.radius === 'undefined') ? 1.0 : template.radius;
 
         if (template.radius < 0) {
-            throw new DeveloperError("template.radius must be nonnegative.", "template");
+            throw new DeveloperError('template.radius must be nonnegative.');
         }
 
         this.center = new Cartesian3(template.center.x, template.center.y, template.center.z);
