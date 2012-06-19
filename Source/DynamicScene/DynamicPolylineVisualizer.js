@@ -47,8 +47,6 @@ define([
         }
     };
 
-    var color;
-    var outlineColor;
     DynamicPolylineVisualizer.prototype.updateObject = function(time, dynamicObject) {
         var dynamicPolyline = dynamicObject.polyline;
         if (typeof dynamicPolyline === 'undefined') {
@@ -111,18 +109,12 @@ define([
 
         var property = dynamicPolyline.color;
         if (typeof property !== 'undefined') {
-            color = property.getValue(time, color);
-            if (typeof color !== 'undefined') {
-                polyline.color = color;
-            }
+            property.getValue(time, polyline.color);
         }
 
         property = dynamicPolyline.outlineColor;
         if (typeof property !== 'undefined') {
-            outlineColor = property.getValue(time, outlineColor);
-            if (typeof outlineColor !== 'undefined') {
-                polyline.outlineColor = outlineColor;
-            }
+            property.getValue(time, polyline.outlineColor);
         }
 
         property = dynamicPolyline.outlineWidth;
