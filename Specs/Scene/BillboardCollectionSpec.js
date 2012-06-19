@@ -458,7 +458,6 @@ defineSuite([
         billboards.render(context, us);
         expect(context.readPixels()).toEqualArray([0, 255, 0, 255]);
 
-        /*
         billboards.add({
             position : {
                 x : -0.5,
@@ -470,7 +469,7 @@ defineSuite([
 
         billboards.update(context, sceneState);
         billboards.render(context, us);
-        expect(context.readPixels()).toEqualArray([0, 0, 255, 255]);*/
+        expect(context.readPixels()).toEqualArray([0, 0, 255, 255]);
     });
 
     it('removes and renders a billboard', function() {
