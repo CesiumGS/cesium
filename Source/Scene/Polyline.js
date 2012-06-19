@@ -94,7 +94,8 @@ define([
     var WIDTH_INDEX = Polyline.WIDTH_INDEX = 3;
     var OUTLINE_WIDTH_INDEX = Polyline.OUTLINE_WIDTH_INDEX = 4;
     var OUTLINE_COLOR_INDEX = Polyline.OUTLINE_COLOR_INDEX = 5;
-    Polyline.NUMBER_OF_PROPERTIES = 6;
+    var POSITION_SIZE_INDEX = Polyline.POSITION_SIZE_INDEX = 6;
+    Polyline.NUMBER_OF_PROPERTIES = 7;
 
     /**
      * Returns true if this billboard will be shown.  Call {@link Billboard#setShow}
@@ -159,6 +160,9 @@ define([
     Polyline.prototype.setPositions = function(value) {
         if (typeof value === 'undefined' || value.length < 2) {
             throw new DeveloperError('value must be an array with more than one element.', 'value');
+        }
+        if(this._positions.length !== value.length){
+            this._makeDirty(POSITION_SIZE_INDEX);
         }
         this._positions = value;
         this._makeDirty(POSITION_INDEX);

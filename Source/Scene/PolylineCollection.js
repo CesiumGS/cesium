@@ -44,9 +44,13 @@ define([
     var SHOW_INDEX = Polyline.SHOW_INDEX;
     var POSITION_INDEX = Polyline.POSITION_INDEX;
     var COLOR_INDEX = Polyline.COLOR_INDEX;
-    var WIDTH_INDEX = Polyline.WIDTH_INDEX;
-    var OUTLINE_WIDTH_INDEX = Polyline.OUTLINE_WIDTH_INDEX;
-    var OUTLINE_COLOR_INDEX = Polyline.OUTLINE_COLOR_INDEX;
+    //uncomment when ANGLE supports these.
+    //var WIDTH_INDEX = Polyline.WIDTH_INDEX;
+    //var OUTLINE_WIDTH_INDEX = Polyline.OUTLINE_WIDTH_INDEX;
+    //var OUTLINE_COLOR_INDEX = Polyline.OUTLINE_COLOR_INDEX;
+    //POSITION_SIZE_CHANGE is needed for when the polyline's position array changes size.
+    //When it does we need to recreate the indicesBuffer.
+    var POSITION_SIZE_INDEX = Polyline.POSITION_SIZE_INDEX;
     var NUMBER_OF_PROPERTIES = Polyline.NUMBER_OF_PROPERTIES;
 
     // PERFORMANCE_IDEA:  Use vertex compression so we don't run out of
@@ -222,6 +226,7 @@ define([
         this._drawUniformsThree = undefined;
         this._vaf = null;
         this._writePositions = undefined;
+        this._indicesBuffer = undefined;
     }
 
     /**
@@ -331,7 +336,7 @@ define([
     PolylineCollection.prototype.removeAll = function() {
         this._destroyPolylines();
         this._polylines = [];
-        this._polylinesToUpdate = [];
+        this._polylinesToUpdate.length = 0;
         this._polylinesRemoved = false;
 
         this._createVertexArray = true;
@@ -427,8 +432,9 @@ define([
 
         // PERFORMANCE_IDEA: Better heuristic to avoid ping-ponging.  What about DYNAMIC_STREAM?
         var properties = this._propertiesChanged;
-        for ( var k = 0; k < NUMBER_OF_PROPERTIES; ++k) {
-            var newUsage = (properties[k] === 0) ? BufferUsage.STATIC_DRAW : BufferUsage.STREAM_DRAW;
+        //subtract 1 from NUMBER_OF_PROPERTIES because we don't care about POSITION_SIZE_INDEX property change.
+        for ( var k = 0; k < NUMBER_OF_PROPERTIES - 1; ++k) {
+            var newUsage = (properties[k] === 0) ? buffersUsage[k] : BufferUsage.STREAM_DRAW;
             usageChanged = usageChanged || (buffersUsage[k] !== newUsage);
             buffersUsage[k] = newUsage;
         }
@@ -598,18 +604,41 @@ define([
 
         this._removePolylines();
         this._updateMode(sceneState);
-
+        var properties = this._propertiesChanged;
         if (this._createVertexArray || this.computeNewBuffersUsage()){
-            this._update(context, sceneState);
-        }else{
+            this._update(context);
+        }else {
+            // Polylines were modified, but no polylines were added or removed.
+
             var polylinesToUpdate = this._polylinesToUpdate;
             var updateLength = polylinesToUpdate.length;
-            if(updateLength){
-                var properties = this._propertiesChanged;
-                for ( var k = 0; k < NUMBER_OF_PROPERTIES; ++k) {
-                    properties[k] = 0;
+            if (updateLength) {
+                var writers = [];
+
+                //if a polyline's size changes, we need to recompute the indicesBuffer
+                if (properties[POSITION_SIZE_INDEX]) {
+                    this._update(context);
+                    return;
                 }
+
+                if(properties[POSITION_INDEX]){
+                    writers.push(this._writePositions);
+                }
+
+                if (properties[COLOR_INDEX]) {
+                    writers.push(this._writeColor);
+                }
+
+                var vafWriters = this._vaf.writers;
+                for ( var h = 0; h < updateLength; ++h) {
+                    PolylineCollection._writeToVAF(polylinesToUpdate[h], vafWriters, writers, context, this);
+                }
+                this._vaf.endSubCommits();
+                this._polylinesToUpdate.length = 0;
             }
+        }
+        for ( var k = 0; k < NUMBER_OF_PROPERTIES; ++k) {
+            properties[k] = 0;
         }
     };
 
@@ -681,7 +710,28 @@ define([
     /**
      * @private
      */
-    PolylineCollection.prototype._update = function(context, sceneState) {
+    PolylineCollection._writeToVAF = function(polyline, vafWriters, writers, context, collection){
+        polyline._clean();
+        var polylineIndex = polyline._index;
+        var pIndex = 0;
+        var polylines = this._polylines;
+        for(var jj = 0; jj < polylineIndex; ++jj){
+            pIndex += polylines[jj].getPositions().length;
+        }
+        var positions = polyline.getPositions();
+        var posLength = positions.length;
+        for ( var o = 0; o < writers.length; ++o) {
+            for (var i = 0; i < posLength; ++i){
+                writers[o](vafWriters, pIndex + i, polyline, positions[i], context, collection);
+            }
+        }
+        collection._vaf.subCommit(pIndex, posLength);
+    };
+
+    /**
+     * @private
+     */
+    PolylineCollection.prototype._update = function(context) {
         this._createVertexArray = false;
         this._vaf = this._vaf && this._vaf.destroy();
         var polylines = this._polylines;
@@ -715,28 +765,54 @@ define([
                 usage : BufferUsage.STATIC_DRAW
             }], sizeInVertices);
 
-            var buffer = this._getIndexBuffer(context);
+            var buffer = this._createIndexBuffer(context);
             var vafWriters = this._vaf.writers;
 
-            for(var t = 0; t < this._cachedVertices.length; t++){
-                var vertex = this._cachedVertices[t];
-                var position = vertex._position;
-                var color = vertex._color;
-                var pickColor = vertex._pickId;
-                this._writePositions(vafWriters, t, position, this);
-                vafWriters[attributeIndices.color](t, color.red * 255, color.green * 255, color.blue * 255, color.alpha * 255);
-                vafWriters[attributeIndices.pickColor](t, pickColor.red, pickColor.green, pickColor.blue, 255);
+            var index = 0;
+            for(var i = 0; i < this._polylines.length; ++i){
+                var polyline = this._polylines[i];
+                polyline._clean();
+                var positions = polyline.getPositions();
+                for(var t = 0; t < positions.length; ++t){
+                    var position = positions[t];
+                    this._writePositions(vafWriters, index, polyline, position, context, this);
+                    this._writeColor(vafWriters, index, polyline);
+                    this._writePickColor(vafWriters, index, polyline, position, context);
+                    index++;
+                }
             }
             this._vaf.commit(buffer, buffer.getNumberOfIndices());
         }
-        this._polylinesToUpdate = [];
+        this._polylinesToUpdate.length = 0;
     };
 
-    PolylineCollection.prototype._write3D = function(vafWriters, index, position){
+    /**
+     * @private
+     */
+    PolylineCollection.prototype._writeColor = function(vafWriters, index, polyline){
+        var color = polyline.getColor();
+        vafWriters[attributeIndices.color](index, color.red * 255, color.green * 255, color.blue * 255, color.alpha * 255);
+    };
+
+    /**
+     * @private
+     */
+    PolylineCollection.prototype._writePickColor = function(vafWriters, index, polyline, position, context){
+        var pickColor = polyline.getPickId(context).unnormalizedRgb;
+        vafWriters[attributeIndices.pickColor](index, pickColor.red, pickColor.green, pickColor.blue, 255);
+    };
+
+    /**
+     * @private
+     */
+    PolylineCollection.prototype._write3D = function(vafWriters, index, polyline, position){
         vafWriters[attributeIndices.position3D](index, position.x, position.y, position.z);
     };
 
-    PolylineCollection.prototype._write2D = function(vafWriters, index, position, collection){
+    /**
+     * @private
+     */
+    PolylineCollection.prototype._write2D = function(vafWriters, index, polyline, position, context, collection){
         var modelMatrix = collection._modelMatrix;
         var ellipsoid = collection._projection.getEllipsoid();
         var p = modelMatrix.multiplyWithVector(new Cartesian4(position.x, position.y, position.z, 1.0));
@@ -744,6 +820,9 @@ define([
         vafWriters[attributeIndices.position2D](index, p.x, p.y, p.z);
     };
 
+    /**
+     * @private
+     */
     PolylineCollection.prototype._updateMode = function(sceneState) {
         var mode = sceneState.mode;
         var projection = sceneState.scene2D.projection;
@@ -776,6 +855,9 @@ define([
         }
     };
 
+    /**
+     * @private
+     */
     PolylineCollection.prototype._getModelMatrix = function(mode) {
         switch (mode) {
         case SceneMode.SCENE3D:
@@ -790,13 +872,9 @@ define([
         }
     };
 
-    PolylineCollection.prototype._clampWidth = function(context, value) {
-        var min = context.getMinimumAliasedLineWidth();
-        var max = context.getMaximumAliasedLineWidth();
-
-        return Math.min(Math.max(value, min), max);
-    };
-
+    /**
+     * @private
+     */
     PolylineCollection.prototype._syncMorphTime = function(mode) {
         switch (mode) {
             case SceneMode.SCENE3D:
@@ -815,6 +893,9 @@ define([
         }
     };
 
+    /**
+     * @private
+     */
     PolylineCollection.prototype._removePolylines = function() {
         if (this._polylinesRemoved) {
             this._polylinesRemoved = false;
@@ -834,58 +915,42 @@ define([
         }
     };
 
+    /**
+     * @private
+     */
     PolylineCollection.prototype._updatePolyline = function(polyline, propertyChanged) {
         if (!polyline._isDirty()) {
             this._polylinesToUpdate.push(polyline);
         }
-
         ++this._propertiesChanged[propertyChanged];
     };
 
-    PolylineCollection.prototype._getIndexBuffer = function(context) {
-        var c = {};
-        this._cachedVertices.length = 0;
+    /**
+     * @private
+     */
+    PolylineCollection.prototype._createIndexBuffer = function(context) {
         var polylines = this._polylines;
         var polylineIndices = [];
         var length = polylines.length;
+        var index = 0;
         for(var i = 0; i < length; ++i){
-            var polyline = polylines[i];
-            var positions = polyline.getPositions();
-            var posLength = positions.length;
+            var posLength = polylines[i].getPositions().length;
             for(var j = 0; j < posLength - 1; ++j){
-                var position1 = positions[j];
-                var position2 = positions[j + 1];
-                var index1 = PolylineCollection._getVerticesIndex(position1, polyline, this._cachedVertices, context);
-                var index2 = PolylineCollection._getVerticesIndex(position2, polyline, this._cachedVertices, context);
-                polylineIndices.push(index1);
-                polylineIndices.push(index2);
+                polylineIndices.push(index++);
+                polylineIndices.push(index);
             }
+            index++;
         }
 
         var indices = new Uint16Array(polylineIndices);
-        c.indexBuffer = context.createIndexBuffer(indices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
-        c.indexBuffer.setVertexArrayDestroyable(false);
-        return c.indexBuffer;
+        this._indicesBuffer = context.createIndexBuffer(indices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+        this._indicesBuffer.setVertexArrayDestroyable(false);
+        return this._indicesBuffer;
     };
 
-    PolylineCollection._getVerticesIndex = function(position, polyline, vertices, context) {
-        var temp = new VertexData({
-            color : polyline.getColor(),
-            outlineColor : polyline.getOutlineColor(),
-            pickId : polyline.getPickId(context).unnormalizedRgb,
-            position : position
-        });
-        var length = vertices.length;
-        for(var i = 0; i < length; ++i){
-            var cached = vertices[i];
-            if(temp.equals(cached)){
-                return i;
-            }
-        }
-        vertices.push(temp);
-        return length;
-    };
-
+    /**
+     * @private
+     */
     PolylineCollection.prototype._destroyPolylines = function() {
         var polylines = this._polylines;
         var length = polylines.length;
@@ -894,21 +959,6 @@ define([
                 polylines[i]._destroy();
             }
         }
-    };
-
-    function VertexData(template){
-        this._color = template.color;
-        this._outlineColor = template.outlineColor;
-        this._position = template.position;
-        this._pickId = template.pickId;
-    }
-
-    VertexData.prototype.equals = function(other){
-        var position = this._position;
-        var otherPosition = other._position;
-        return this._color === other._color &&
-               this._outlineColor === other._outlineColor &&
-               position.x === otherPosition.x && position.y === otherPosition.y && position.z === otherPosition.z;
     };
 
     return PolylineCollection;
