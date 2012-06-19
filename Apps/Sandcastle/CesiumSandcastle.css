@@ -93,9 +93,9 @@ html, body {
 .makeThumbnail {
     width: 900px;
     height: 600px;
-    -moz-transform: scale(0.2);
-    -webkit-transform: scale(0.2);
-    transform: scale(0.2);
+    -moz-transform: scale(0.25);
+    -webkit-transform: scale(0.25);
+    transform: scale(0.25);
 }
 
 .saveAsDialog {
