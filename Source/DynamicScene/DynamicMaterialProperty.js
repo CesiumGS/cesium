@@ -21,51 +21,42 @@ define([
     }
 
     DynamicMaterialProperty.processCzmlPacket = function(parentObject, propertyName, czmlIntervals, constrainedInterval, dynamicObjectCollection) {
-        var newProperty = false;
         var existingProperty = parentObject[propertyName];
-        if (typeof czmlIntervals === 'undefined') {
-            return existingProperty;
+        var propertyUpdated = typeof czmlIntervals !== 'undefined';
+        if (propertyUpdated) {
+            if (typeof existingProperty === 'undefined') {
+                existingProperty = new DynamicMaterialProperty();
+                parentObject[propertyName] = existingProperty;
+            }
+            existingProperty.addIntervals(czmlIntervals, dynamicObjectCollection, constrainedInterval);
         }
-
-        //At this point we will definitely have a value, so if one doesn't exist, create it.
-        if (typeof existingProperty === 'undefined') {
-            existingProperty = new DynamicMaterialProperty();
-            parentObject[propertyName] = existingProperty;
-            newProperty = true;
-        }
-
-        existingProperty.addIntervals(czmlIntervals, dynamicObjectCollection, constrainedInterval);
-
-        return newProperty;
+        return propertyUpdated;
     };
 
     DynamicMaterialProperty.prototype.getValue = function(time) {
         var value = this._intervals.findIntervalContainingDate(time);
-        if (typeof value !== 'undefined') {
-            return value.data;
-        }
-        return undefined;
+        return typeof value !== 'undefined' ? value.data : undefined;
     };
 
-    DynamicMaterialProperty.prototype.addIntervals = function(czmlIntervals, buffer, sourceUri, constrainedInterval) {
-        if (Array.isArray(czmlIntervals)) {
-            for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
-                this.addInterval(czmlIntervals[i], buffer, sourceUri, constrainedInterval);
-            }
-        } else {
-            this.addInterval(czmlIntervals, buffer, sourceUri, constrainedInterval);
-        }
-    };
-
-    DynamicMaterialProperty.prototype.applyToMaterial = function(time, existingMaterial, scene) {
+    DynamicMaterialProperty.prototype.applyToMaterial = function(time, scene, existingMaterial) {
         var material = this.getValue(time);
         if (typeof material !== 'undefined') {
-            return material.applyToMaterial(time, existingMaterial, scene);
+            return material.applyToMaterial(time, scene, existingMaterial);
         }
         return existingMaterial;
     };
 
-    DynamicMaterialProperty.prototype.addInterval = function(czmlInterval, buffer, sourceUri, constrainedInterval) {
+    DynamicMaterialProperty.prototype.addIntervals = function(czmlIntervals, dynamicObjectCollection, constrainedInterval) {
+        if (Array.isArray(czmlIntervals)) {
+            for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
+                this.addInterval(czmlIntervals[i], dynamicObjectCollection, constrainedInterval);
+            }
+        } else {
+            this.addInterval(czmlIntervals, dynamicObjectCollection, constrainedInterval);
+        }
+    };
+
+    DynamicMaterialProperty.prototype.addInterval = function(czmlInterval, dynamicObjectCollection, constrainedInterval) {
         var iso8601Interval = czmlInterval.interval, property, material;
         if (typeof iso8601Interval === 'undefined') {
             iso8601Interval = Iso8601.MAXIMUM_INTERVAL.clone();
@@ -108,7 +99,7 @@ define([
 
         //We could handle the data, add it to the property.
         if (foundMaterial) {
-            existingInterval.data = material.processCzmlPacket(czmlInterval, buffer, existingInterval.data);
+            existingInterval.data = material.processCzmlPacket(czmlInterval, dynamicObjectCollection, existingInterval.data, constrainedInterval);
         }
     };
 

@@ -17,7 +17,7 @@ define([
         return typeof czmlInterval.solidColor !== 'undefined';
     };
 
-    DynamicColorMaterial.processCzmlPacket = function(czmlInterval, dynamicObjectCollection, existingMaterial) {
+    DynamicColorMaterial.processCzmlPacket = function(czmlInterval, dynamicObjectCollection, existingMaterial, constrainedInterval) {
         var materialData = czmlInterval.solidColor;
         if (typeof materialData !== 'undefined') {
             if (typeof existingMaterial === 'undefined') {
@@ -28,8 +28,8 @@ define([
         return existingMaterial;
     };
 
-    DynamicColorMaterial.prototype.applyToMaterial = function(time, existingMaterial) {
-        if(typeof existingMaterial === 'undefined' || !(existingMaterial instanceof ColorMaterial)) {
+    DynamicColorMaterial.prototype.applyToMaterial = function(time, scene, existingMaterial) {
+        if (typeof existingMaterial === 'undefined' || !(existingMaterial instanceof ColorMaterial)) {
             existingMaterial = new ColorMaterial();
         }
         existingMaterial.color = this.color.getValue(time, existingMaterial.color);

@@ -1,47 +1,19 @@
 /*global define*/
 define([
+        '../Core/destroyObject',
         '../Core/Color',
         '../Core/Matrix4',
         '../Scene/CustomSensorVolume',
-        '../Scene/ColorMaterial'
+        '../Scene/ColorMaterial',
+        './DynamicConeVisualizer'
        ], function(
-        Color,
-        Matrix4,
-        CustomSensorVolume,
-        ColorMaterial) {
+         destroyObject,
+         Color,
+         Matrix4,
+         CustomSensorVolume,
+         ColorMaterial,
+         DynamicConeVisualizer) {
     "use strict";
-
-    var setModelMatrix = function(sensor,  position, orientation)
-    {
-        position = position || sensor.dynamicPyramidVisualizerLastPosition;
-        orientation = orientation || sensor.dynamicPyramidVisualizerLastOrientation;
-
-        if (typeof position !== 'undefined' && typeof orientation !== 'undefined' && (position !== sensor.dynamicPyramidVisualizerLastPosition || orientation !== sensor.dynamicPyramidVisualizerLastOrientation)) {
-            var w = orientation.w,
-            x = orientation.x,
-            y = orientation.y,
-            z = orientation.z,
-            x2 = x * x,
-            xy = x * y,
-            xz = x * z,
-            xw = x * w,
-            y2 = y * y,
-            yz = y * z,
-            yw = y * w,
-            z2 = z * z,
-            zw = z * w,
-            w2 = w * w;
-
-            sensor.modelMatrix = new Matrix4(
-                                    x2 - y2 - z2 + w2,  2 * (xy + zw),      2 * (xz - yw),      position.x,
-                                    2 * (xy - zw),      -x2 + y2 - z2 + w2, 2 * (yz + xw),      position.y,
-                                    2 * (xz + yw),      2 * (yz - xw),      -x2 - y2 + z2 + w2, position.z,
-                                    0,                  0,                  0,                  1);
-
-            sensor.dynamicPyramidVisualizerLastPosition = position;
-            sensor.dynamicPyramidVisualizerLastOrientation = orientation;
-        }
-    };
 
     function DynamicPyramidVisualizer(scene, dynamicObjectCollection) {
         this._scene = scene;
@@ -81,6 +53,8 @@ define([
         }
     };
 
+    var position;
+    var orientation;
     DynamicPyramidVisualizer.prototype.updateObject = function(time, dynamicObject) {
         var dynamicPyramid = dynamicObject.pyramid;
         if (typeof dynamicPyramid === 'undefined') {
@@ -145,32 +119,42 @@ define([
 
         pyramid.show = true;
 
-        var value = directionsProperty.getValueSpherical(time);
-        if (typeof value !== 'undefined' && pyramid.last_directions !== value) {
-            pyramid.setDirections(value);
-            pyramid.last_directions = value;
+        var directions = directionsProperty.getValueSpherical(time);
+        if (typeof directions !== 'undefined' && pyramid.last_directions !== directions) {
+            pyramid.setDirections(directions);
+            pyramid.last_directions = directions;
         }
 
-        setModelMatrix(pyramid, positionProperty.getValueCartesian(time), orientationProperty.getValue(time));
+        position = positionProperty.getValueCartesian(time, position) || pyramid.dynamicPyramidVisualizerLastPosition;
+        orientation = orientationProperty.getValue(time, orientation) || pyramid.dynamicPyramidVisualizerLastOrientation;
+
+        if (typeof position !== 'undefined' &&
+            typeof orientation !== 'undefined' &&
+            (!position.equals(pyramid.dynamicPyramidVisualizerLastPosition) ||
+             !orientation.equals(pyramid.dynamicPyramidVisualizerLastOrientation))) {
+            pyramid.modelMatrix = DynamicConeVisualizer._computeModelMatrix(position, orientation);
+            position.clone(pyramid.dynamicPyramidVisualizerLastPosition);
+            orientation.clone(pyramid.dynamicPyramidVisualizerLastOrientation);
+        }
 
         var material = dynamicPyramid.material;
         if (typeof material !== 'undefined') {
-            pyramid.material = material.applyToMaterial(time, pyramid.material);
+            pyramid.material = material.applyToMaterial(time, this._scene, pyramid.material);
         }
 
         var property = dynamicPyramid.intersectionColor;
         if (typeof property !== 'undefined') {
-            value = property.getValue(time);
-            if (typeof value !== 'undefined') {
-                pyramid.intersectionColor = value;
+            var intersectionColor = property.getValue(time, intersectionColor);
+            if (typeof intersectionColor !== 'undefined') {
+                pyramid.intersectionColor = intersectionColor;
             }
         }
 
         property = dynamicPyramid.radius;
         if (typeof property !== 'undefined') {
-            value = property.getValue(time);
-            if (typeof value !== 'undefined') {
-                pyramid.radius = value;
+            var radius = property.getValue(time, radius);
+            if (typeof radius !== 'undefined') {
+                pyramid.radius = radius;
             }
         }
     };
@@ -205,6 +189,45 @@ define([
         }
     };
 
+    /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * <br /><br />
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     *
+     * @memberof DynamicPyramidVisualizer
+     *
+     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     *
+     * @see DynamicPyramidVisualizer#destroy
+     */
+    DynamicPyramidVisualizer.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <br /><br />
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     *
+     * @memberof DynamicPyramidVisualizer
+     *
+     * @return {undefined}
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     * @see DynamicPyramidVisualizer#isDestroyed
+     *
+     * @example
+     * visualizer = visualizer && visualizer.destroy();
+     */
+    DynamicPyramidVisualizer.prototype.destroy = function() {
+        this.removeAll();
+        return destroyObject(this);
+    };
 
     return DynamicPyramidVisualizer;
 });

@@ -16,34 +16,97 @@ define(function() {
         this.alpha = typeof alpha === 'undefined' ? 1.0 : alpha;
     }
 
+    /**
+     * Converts a 'byte' color component in the range of 0 to 255 into
+     * a 'float' color component range of 0 to 1.0.
+     *
+     * @param {Number} number The number to be converted.
+     *
+     * @memberof Color
+     */
     Color.byteToFloat = function(number) {
         return number / 255.0;
     };
 
+    /**
+     * Converts a 'float' color component in the range of 0 to 1.0 into
+     * a 'byte' color component range of 0 to 255.
+     *
+     * @param {Number} number The number to be converted.
+     *
+     * @memberof Color
+     */
     Color.floatToByte = function(number) {
         return number === 1.0 ? 255.0 : (number * 256.0) | 0;
     };
 
-    Color.equals = function(lhs, rhs) {
-        return lhs.red === rhs.red &&
-               lhs.green === rhs.green &&
-               lhs.blue === rhs.blue &&
-               lhs.alpha === rhs.alpha;
+    /**
+     * Returns a duplicate of a Color.
+     *
+     * @param {Color} color The Color to clone.
+     *
+     * @param {Color} [result] The object to store the result in, if undefined a new instance will be created.
+     *
+     * @return {Color} The modified result parameter or a new instance if result was undefined.
+     */
+    Color.clone = function(color, result) {
+        if (typeof result === 'undefined') {
+            return new Color(this.red, this.green, this.blue, this.alpha);
+        }
+        result.red = color.red;
+        result.green = color.green;
+        result.blue = color.blue;
+        result.alpha = color.alpha;
+        return result;
     };
 
-    Color.equalsEpsilon = function(lhs, rhs, epsilon) {
-        return (Math.abs(lhs.red - rhs.red) <= epsilon) &&
-               (Math.abs(lhs.green - rhs.green) <= epsilon) &&
-               (Math.abs(lhs.blue - rhs.blue) <= epsilon) &&
-               (Math.abs(lhs.alpha - rhs.alpha) <= epsilon);
+    /**
+     * Returns a duplicate of a Color instance.
+     *
+     * @memberof Color
+     *
+     * @param {Color} [result] The object to store the result in, if undefined a new instance will be created.
+     *
+     * @return {Color} The modified result parameter or a new instance if result was undefined.
+     */
+    Color.prototype.clone = function(result) {
+        return Color.clone(this, result);
     };
 
+    /**
+     * Returns true if this Color equals other componentwise.
+     *
+     * @memberof Color
+     * @param {Color} other The Color to compare for equality.
+     * @return {Boolean} <code>true</code> if the Colors are equal componentwise; otherwise, <code>false</code>.
+     */
     Color.prototype.equals = function(other) {
-        return Color.equals(this, other);
+        return (this === other) ||
+        (typeof this !== 'undefined' &&
+         typeof other !== 'undefined' &&
+         this.red === other.red &&
+         this.green === other.green &&
+         this.blue === other.blue &&
+         this.alpha === other.alpha);
     };
 
+    /**
+     * Returns <code>true</code> if this Color equals other componentwise within the specified epsilon.
+     *
+     * @memberof Color
+     *
+     * @param {Color} other The Color to compare for equality.
+     * @param {Number} [epsilon=0.0] The epsilon to use for equality testing.
+     *
+     * @return {Boolean} <code>true</code> if the Colors are equal within the specified epsilon; otherwise, <code>false</code>.
+     */
     Color.prototype.equalsEpsilon = function(other, epsilon) {
-        return Color.equalsEpsilon(this, other, epsilon);
+        return (this === other) ||
+                ((typeof other !== 'undefined') &&
+                 (Math.abs(this.red - other.red) <= epsilon) &&
+                 (Math.abs(this.green - other.green) <= epsilon) &&
+                 (Math.abs(this.blue - other.blue) <= epsilon) &&
+                 (Math.abs(this.alpha - other.alpha) <= epsilon));
     };
 
     /**

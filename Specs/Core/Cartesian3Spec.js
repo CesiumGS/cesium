@@ -2,12 +2,10 @@
 defineSuite([
          'Core/Cartesian3',
          'Core/Cartesian2',
-         'Core/Spherical',
          'Core/Math'
      ], function(
          Cartesian3,
          Cartesian2,
-         Spherical,
          CesiumMath) {
     "use strict";
     /*global it,expect*/
@@ -94,11 +92,6 @@ defineSuite([
         var v = new Cartesian3(0, 2, 0).normalize();
         expect(v.x).toEqual(0);
         expect(v.y).toEqual(1);
-        expect(v.z).toEqual(0);
-
-        v = new Cartesian3(0, 0, 0).normalize();
-        expect(v.x).toEqual(0);
-        expect(v.y).toEqual(0);
         expect(v.z).toEqual(0);
     });
 

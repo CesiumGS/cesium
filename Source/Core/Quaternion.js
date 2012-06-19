@@ -11,6 +11,9 @@ define([
         Matrix3) {
     "use strict";
 
+    //Cached temp variable used by Quaternion.fromAxisAngle;
+    var fromAxisAngleCartesian;
+
     /**
      * DOC_TBA
      *
@@ -83,167 +86,6 @@ define([
     };
 
     /**
-     * Modifies the provided quaternion to be its conjugate.
-     *
-     * @param The quaternion to conjugate.
-     *
-     * @returns The same instance that is passed into it, modified to be its conjugate.
-     *
-     * @memberof Quaternion
-     *
-     */
-    Quaternion.conjugate = function(quaternion) {
-        quaternion.x = -quaternion.x;
-        quaternion.y = -quaternion.y;
-        quaternion.z = -quaternion.z;
-        return quaternion;
-    };
-
-    /**
-     * Returns the quaternion's norm squared.
-     *
-     * @memberof Quaternion
-     *
-     * @param The quaternion to use.
-     *
-     * @return {Number} The norm squared.
-     *
-     * @see Quaternion#norm
-     */
-    Quaternion.normSquared = function(quaternion) {
-        return quaternion.x * quaternion.x + quaternion.y * quaternion.y + quaternion.z * quaternion.z + quaternion.w * quaternion.w;
-    };
-
-    /**
-     * Returns the quaternion's norm.
-     *
-     * @memberof Quaternion
-     *
-     * @param The quaternion to use.
-     *
-     * @return {Number} The norm.
-     *
-     * @see Quaternion#normSquared
-     */
-    Quaternion.norm = function(quaternion) {
-        return Math.sqrt(Quaternion.normSquared(quaternion));
-    };
-
-    /**
-     * Modifies the provided quaternion to be normalized.
-     *
-     * @memberof Quaternion
-     *
-     * @param The quaternion to use.
-     *
-     * @returns {Quaternion} The same instance as the provided quaternion in its normalized form.
-     */
-    Quaternion.normalize = function(quaternion) {
-        var inverseMagnitude = 1.0 / Quaternion.norm(quaternion);
-        quaternion.x *= inverseMagnitude;
-        quaternion.y *= inverseMagnitude;
-        quaternion.z *= inverseMagnitude;
-        quaternion.w *= inverseMagnitude;
-        return quaternion;
-    };
-
-    /**
-     * Modifies the provided quaternion to be its inverse.
-     *
-     * @memberof Quaternion
-     *
-     * @param The quaternion to use.
-     *
-     * @returns {Quaternion} The same instance as the provided quaternion modified to be its inverse..
-     */
-    Quaternion.inverse = function(quaternion) {
-        var normSquared = Quaternion.normSquared(quaternion);
-        return Quaternion.conjugate(Quaternion.multiplyWithScalar(quaternion, 1.0 / normSquared));
-    };
-
-    /**
-     * Given three parameters, computes the the product of the first two quaternions,
-     * and stores the result in the third.  The result is also returned.  It is safe
-     * to pass either of the first two parameters as the third parameter.
-     *
-     * @memberof Quaternion
-     *
-     * @param {Quaternion} lhs The first quaternion.
-     * @param {Quaternion} rhs The second quaternion.
-     * @param {Quaternion} result The quaternion in which the result will be stored.
-     *
-     * @return {Quaternion} The third parameter, which has been modified to contain the result.
-     *
-     * @see Quaternion#dot
-     */
-    Quaternion.multiply = function(lhs, rhs, result) {
-        var lhsX = lhs.x;
-        var lhsY = lhs.y;
-        var lhsZ = lhs.z;
-        var lhsW = lhs.w;
-
-        var rhsX = rhs.x;
-        var rhsY = rhs.y;
-        var rhsZ = rhs.z;
-        var rhsW = rhs.w;
-
-        result.x = lhsY * rhsZ - lhsZ * rhsY + lhsX * rhsW + lhsW * rhsX;
-        result.y = lhsZ * rhsX - lhsX * rhsZ + lhsY * rhsW + lhsW * rhsY;
-        result.z = lhsX * rhsY - lhsY * rhsX + lhsZ * rhsW + lhsW * rhsZ;
-        result.w = lhsW * rhsW - lhsX * rhsX - lhsY * rhsY - lhsZ * rhsZ;
-        return result;
-    };
-
-    /**
-     * Modifies the supplied quaternion to be scaled by a scalar.
-     *
-     * @memberof Quaternion
-     *
-     * @param {Quaternion} quaternion The quaternion to scale.
-     * @param {Number} scalar The scalar that is multiplied with the provided quaternion.
-     *
-     * @return {Quaternion} The first parameter instance, scaled by the scalar.
-     *
-     * @see Quaternion#divideByScalar
-     */
-    Quaternion.multiplyWithScalar = function(quaternion, scalar) {
-        quaternion.x = quaternion.x * scalar;
-        quaternion.y = quaternion.y * scalar;
-        quaternion.z = quaternion.z * scalar;
-        quaternion.w = quaternion.w * scalar;
-        return quaternion;
-    };
-
-    /**
-     * Given a unit quaternion which represents a rotation, stores the axis of rotation
-     * into the supplied Cartesian.
-     *
-     * @memberof Quaternion
-     *
-     * @param {Quaternion} quaternion The unit quaternion representing the rotation.
-     * @param {Cartesian3} cartesian3 The cartesian to be modified to contain the axis of rotation.
-     *
-     * @return {Cartesian3} The same cartesian which was passed in, now modified to contain the axis of rotation.
-     *
-     * @see Quaternion#getAngle
-     * @see Quaternion.fromAxisAngle
-     */
-    Quaternion.getAxis = function(quaternion, cartesian3) {
-        if (Math.abs(quaternion.w - 1.0) < CesiumMath.EPSILON6) {
-            cartesian3.x = 0;
-            cartesian3.y = 0;
-            cartesian3.z = 0;
-            return cartesian3;
-        }
-
-        var scalar = 1.0 / Math.sqrt(1.0 - (quaternion.w * quaternion.w));
-        cartesian3.x = quaternion.x * scalar;
-        cartesian3.y = quaternion.y * scalar;
-        cartesian3.z = quaternion.z * scalar;
-        return cartesian3;
-    };
-
-    /**
      * An immutable Quaternion instance initialized to (0.0, 0.0, 0.0, 0.0).
      *
      * @memberof Quaternion
@@ -262,10 +104,19 @@ define([
      *
      * @memberof Quaternion
      *
-     * @return {Quaternion} The conjugate of this quaternion.
+     * @param {Quaternion} [result] The object to store the result into, if undefined a new instance will be created.
+     *
+     * @return {Quaternion} The modified result parameter or a new instance if result was undefined.
      */
-    Quaternion.prototype.conjugate = function() {
-        return Quaternion.conjugate(Quaternion.clone(this));
+    Quaternion.prototype.conjugate = function(result) {
+        if (typeof result === 'undefined') {
+            result = new Quaternion();
+        }
+        result.x = -this.x;
+        result.y = -this.y;
+        result.z = -this.z;
+        result.w = this.w;
+        return result;
     };
 
     /**
@@ -278,7 +129,7 @@ define([
      * @see Quaternion#norm
      */
     Quaternion.prototype.normSquared = function() {
-        return Quaternion.normSquared(this);
+        return this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w;
     };
 
     /**
@@ -291,7 +142,7 @@ define([
      * @see Quaternion#normSquared
      */
     Quaternion.prototype.norm = function() {
-        return Quaternion.norm(this);
+        return Math.sqrt(this.normSquared());
     };
 
     /**
@@ -299,10 +150,20 @@ define([
      *
      * @memberof Quaternion
      *
-     * @returns {Quaternion} This quaternion normalized.
+     * @param {Quaternion} [result] The object to store the result into, if undefined a new instance will be created.
+     *
+     * @return {Quaternion} The modified result parameter or a new instance if result was undefined.
      */
-    Quaternion.prototype.normalize = function() {
-        return Quaternion.normalize(Quaternion.clone(this));
+    Quaternion.prototype.normalize = function(result) {
+        if (typeof result === 'undefined') {
+            result = new Quaternion();
+        }
+        var inverseMagnitude = 1.0 / this.norm();
+        result.x = this.x * inverseMagnitude;
+        result.y = this.y * inverseMagnitude;
+        result.z = this.z * inverseMagnitude;
+        result.w = this.w * inverseMagnitude;
+        return result;
     };
 
     /**
@@ -310,10 +171,13 @@ define([
      *
      * @memberof Quaternion
      *
-     * @return {Quaternion} The inverse.
+     * @param {Quaternion} [result] The object to store the result into, if undefined a new instance will be created.
+     *
+     * @return {Quaternion} The modified result parameter or a new instance if result was undefined.
      */
-    Quaternion.prototype.inverse = function() {
-        return Quaternion.inverse(Quaternion.clone(this));
+    Quaternion.prototype.inverse = function(result) {
+        var normSquared = this.normSquared();
+        return this.conjugate(result).multiplyWithScalar(1.0 / normSquared, result);
     };
 
     /**
@@ -378,13 +242,31 @@ define([
      * @memberof Quaternion
      *
      * @param {Quaternion} other The quaternion to multiply with <code>this</code>.
+     * @param {Quaternion} [result] The object to store the result into, if undefined a new instance will be created.
      *
-     * @return {Quaternion} The product two quaternions, <code>this</code> and <code>other</code>.
+     * @return {Quaternion} The modified result parameter or a new instance if result was undefined.
      *
      * @see Quaternion#dot
      */
-    Quaternion.prototype.multiply = function(other) {
-        return Quaternion.multiply(this, other, new Quaternion());
+    Quaternion.prototype.multiply = function(other, result) {
+        var lhsX = this.x;
+        var lhsY = this.y;
+        var lhsZ = this.z;
+        var lhsW = this.w;
+
+        var rhsX = other.x;
+        var rhsY = other.y;
+        var rhsZ = other.z;
+        var rhsW = other.w;
+
+        if (typeof result === 'undefined') {
+            result = new Quaternion();
+        }
+        result.x = lhsY * rhsZ - lhsZ * rhsY + lhsX * rhsW + lhsW * rhsX;
+        result.y = lhsZ * rhsX - lhsX * rhsZ + lhsY * rhsW + lhsW * rhsY;
+        result.z = lhsX * rhsY - lhsY * rhsX + lhsZ * rhsW + lhsW * rhsZ;
+        result.w = lhsW * rhsW - lhsX * rhsX - lhsY * rhsY - lhsZ * rhsZ;
+        return result;
     };
 
     /**
@@ -393,13 +275,21 @@ define([
      * @memberof Quaternion
      *
      * @param {Number} scalar The scalar that is multiplied with <code>this</code>.
+     * @param {Quaternion} [result] The object to store the result into, if undefined a new instance will be created.
      *
-     * @return {Quaternion} This quaternion scaled by a scalar.
+     * @return {Quaternion} The modified result parameter or a new instance if result was undefined.
      *
      * @see Quaternion#divideByScalar
      */
-    Quaternion.prototype.multiplyWithScalar = function(scalar) {
-        return Quaternion.multiplyWithScalar(Quaternion.clone(this), scalar);
+    Quaternion.prototype.multiplyWithScalar = function(scalar, result) {
+        if (typeof result === 'undefined') {
+            result = new Quaternion();
+        }
+        result.x = this.x * scalar;
+        result.y = this.y * scalar;
+        result.z = this.z * scalar;
+        result.w = this.w * scalar;
+        return result;
     };
 
     /**
@@ -442,8 +332,22 @@ define([
      * @see Quaternion#getAngle
      * @see Quaternion.fromAxisAngle
      */
-    Quaternion.prototype.getAxis = function() {
-        return Quaternion.getAxis(this, new Cartesian3());
+    Quaternion.prototype.getAxis = function(result) {
+        if (typeof result === 'undefined') {
+            result = new Cartesian3();
+        }
+
+        var w = this.w;
+        if (Math.abs(w - 1.0) < CesiumMath.EPSILON6) {
+            result.x = result.y = result.z = 0;
+            return result;
+        }
+
+        var scalar = 1.0 / Math.sqrt(1.0 - (w * w));
+        result.x = this.x * scalar;
+        result.y = this.y * scalar;
+        result.z = this.z * scalar;
+        return result;
     };
 
     /**
@@ -593,7 +497,7 @@ define([
      * @return {Quaternion} A copy of this quaternion.
      */
     Quaternion.prototype.clone = function() {
-        return Quaternion.clone(this);
+        return new Quaternion(this.x, this.y, this.z, this.w);
     };
 
     /**
@@ -646,19 +550,26 @@ define([
      *
      * @param {Cartesian3} axis The axis of rotation.
      * @param {Number} angle The angle in degrees to rotate around the axis.
+     * @param {Quaternion} [result] The object to store the result into, if undefined a new instance will be created.
      *
-     * @return {Quaternion} The quaternion representing the rotation.
+     * @return {Quaternion} The modified result parameter or a new instance if result was undefined.
      *
      * @see Quaternion#getAxis
      * @see Quaternion#getAngle
      * @see Matrix3.fromAxisAngle
      */
-    Quaternion.fromAxisAngle = function(axis, angle) {
+    Quaternion.fromAxisAngle = function(axis, angle, result) {
+        if (typeof result === 'undefined') {
+            result = new Quaternion();
+        }
         var halfAngle = angle / 2.0;
         var s = Math.sin(halfAngle);
-        var c = Math.cos(halfAngle);
-        var nAxis = axis.magnitude() === 1.0 ? axis : axis.normalize();
-        return new Quaternion(nAxis.x * s, nAxis.y * s, nAxis.z * s, c);
+        var nAxis = axis.magnitude() === 1.0 ? axis : axis.normalize(fromAxisAngleCartesian);
+        result.x = nAxis.x * s;
+        result.y = nAxis.y * s;
+        result.z = nAxis.z * s;
+        result.w = Math.cos(halfAngle);
+        return result;
     };
 
     /**
@@ -775,5 +686,5 @@ define([
                 Math.cos(theta));
     };
 
-   return Quaternion;
+    return Quaternion;
 });

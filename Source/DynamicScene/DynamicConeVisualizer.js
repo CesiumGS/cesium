@@ -1,49 +1,19 @@
 /*global define*/
 define([
+        '../Core/destroyObject',
         '../Core/Color',
         '../Core/Math',
         '../Core/Matrix4',
         '../Scene/ComplexConicSensorVolume',
         '../Scene/ColorMaterial'
        ], function(
+         destroyObject,
          Color,
          CesiumMath,
          Matrix4,
          ComplexConicSensorVolume,
          ColorMaterial) {
     "use strict";
-
-    var setModelMatrix = function(sensor,  position, orientation)
-    {
-        position = position || sensor.dynamicConeVisualizerLastPosition;
-        orientation = orientation || sensor.dynamicConeVisualizerLastOrientation;
-
-        if (typeof position !== 'undefined' && typeof orientation !== 'undefined' && (position !== sensor.dynamicConeVisualizerLastPosition || orientation !== sensor.dynamicConeVisualizerLastOrientation)) {
-            var w = orientation.w,
-            x = orientation.x,
-            y = orientation.y,
-            z = orientation.z,
-            x2 = x * x,
-            xy = x * y,
-            xz = x * z,
-            xw = x * w,
-            y2 = y * y,
-            yz = y * z,
-            yw = y * w,
-            z2 = z * z,
-            zw = z * w,
-            w2 = w * w;
-
-            sensor.modelMatrix = new Matrix4(
-                                    x2 - y2 - z2 + w2,  2 * (xy + zw),      2 * (xz - yw),      position.x,
-                                    2 * (xy - zw),      -x2 + y2 - z2 + w2, 2 * (yz + xw),      position.y,
-                                    2 * (xz + yw),      2 * (yz - xw),      -x2 - y2 + z2 + w2, position.z,
-                                    0,                  0,                  0,                  1);
-
-            sensor.dynamicConeVisualizerLastPosition = position;
-            sensor.dynamicConeVisualizerLastOrientation = orientation;
-        }
-    };
 
     function DynamicConeVisualizer(scene, dynamicObjectCollection) {
         this._scene = scene;
@@ -83,6 +53,9 @@ define([
         }
     };
 
+    var position;
+    var orientation;
+    var intersectionColor;
     DynamicConeVisualizer.prototype.updateObject = function(time, dynamicObject) {
         var dynamicCone = dynamicObject.cone;
         if (typeof dynamicCone === 'undefined') {
@@ -160,68 +133,72 @@ define([
         }
 
         cone.show = true;
-        var value;
         var property = dynamicCone.minimumClockAngle;
         if (typeof property !== 'undefined') {
-            value = property.getValue(time);
-            if (typeof value !== 'undefined') {
-                cone.minimumClockAngle = value;
+            var minimumClockAngle = property.getValue(time);
+            if (typeof minimumClockAngle !== 'undefined') {
+                cone.minimumClockAngle = minimumClockAngle;
             }
         }
 
-        value = maximumClockAngleProperty.getValue(time) || Math.pi;
-        if (typeof value !== 'undefined') {
-            cone.maximumClockAngle = value;
-        }
+        cone.maximumClockAngle = maximumClockAngleProperty.getValue(time) || Math.pi;
 
         property = dynamicCone.innerHalfAngle;
         if (typeof property !== 'undefined') {
-            value = property.getValue(time);
-            if (typeof value !== 'undefined') {
-                cone.innerHalfAngle = value;
+            var innerHalfAngle = property.getValue(time);
+            if (typeof innerHalfAngle !== 'undefined') {
+                cone.innerHalfAngle = innerHalfAngle;
             }
         }
 
-        value = outerHalfAngleProperty.getValue(time) || Math.pi;
-        if (typeof value !== 'undefined') {
-            cone.outerHalfAngle = value;
-        }
+        cone.outerHalfAngle = outerHalfAngleProperty.getValue(time) || Math.pi;
 
         property = dynamicCone.radius;
         if (typeof property !== 'undefined') {
-            value = property.getValue(time);
-            if (typeof value !== 'undefined') {
-                cone.radius = value;
+            var radius = property.getValue(time);
+            if (typeof radius !== 'undefined') {
+                cone.radius = radius;
             }
         }
 
-        setModelMatrix(cone, positionProperty.getValueCartesian(time), orientationProperty.getValue(time));
+        position = positionProperty.getValueCartesian(time, position) || cone.dynamicConeVisualizerLastPosition;
+        orientation = orientationProperty.getValue(time, orientation) || cone.dynamicConeVisualizerLastOrientation;
 
+        if (typeof position !== 'undefined' &&
+            typeof orientation !== 'undefined' &&
+            (!position.equals(cone.dynamicConeVisualizerLastPosition) ||
+             !orientation.equals(cone.dynamicConeVisualizerLastOrientation))) {
+            cone.modelMatrix = DynamicConeVisualizer._computeModelMatrix(position, orientation);
+            position.clone(cone.dynamicConeVisualizerLastPosition);
+            orientation.clone(cone.dynamicConeVisualizerLastOrientation);
+        }
+
+        var scene = this._scene;
         var material = dynamicCone.capMaterial;
         if (typeof material !== 'undefined') {
-            cone.capMaterial = material.applyToMaterial(time, cone.capMaterial);
+            cone.capMaterial = material.applyToMaterial(time, scene, cone.capMaterial);
         }
 
         material = dynamicCone.innerMaterial;
         if (typeof material !== 'undefined') {
-            cone.innerMaterial = material.applyToMaterial(time, cone.innerMaterial);
+            cone.innerMaterial = material.applyToMaterial(time, scene, cone.innerMaterial);
         }
 
         material = dynamicCone.outerMaterial;
         if (typeof material !== 'undefined') {
-            cone.outerMaterial = material.applyToMaterial(time, cone.outerMaterial);
+            cone.outerMaterial = material.applyToMaterial(time, scene, cone.outerMaterial);
         }
 
         material = dynamicCone.silhouetteMaterial;
         if (typeof material !== 'undefined') {
-            cone.silhouetteMaterial = material.applyToMaterial(time, cone.silhouetteMaterial);
+            cone.silhouetteMaterial = material.applyToMaterial(time, scene, cone.silhouetteMaterial);
         }
 
         property = dynamicCone.intersectionColor;
         if (typeof property !== 'undefined') {
-            value = property.getValue(time);
-            if (typeof value !== 'undefined') {
-                cone.intersectionColor = value;
+            intersectionColor = property.getValue(time, intersectionColor);
+            if (typeof intersectionColor !== 'undefined') {
+                cone.intersectionColor = intersectionColor;
             }
         }
     };
@@ -254,6 +231,69 @@ define([
                 dynamicObject.coneVisualizerIndex = undefined;
             }
         }
+    };
+
+    /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * <br /><br />
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     *
+     * @memberof DynamicConeVisualizer
+     *
+     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     *
+     * @see DynamicConeVisualizer#destroy
+     */
+    DynamicConeVisualizer.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <br /><br />
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     *
+     * @memberof DynamicConeVisualizer
+     *
+     * @return {undefined}
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     * @see DynamicConeVisualizer#isDestroyed
+     *
+     * @example
+     * visualizer = visualizer && visualizer.destroy();
+     */
+    DynamicConeVisualizer.prototype.destroy = function() {
+        this.removeAll();
+        return destroyObject(this);
+    };
+
+    DynamicConeVisualizer._computeModelMatrix = function(position, orientation) {
+        var w = orientation.w,
+        x = orientation.x,
+        y = orientation.y,
+        z = orientation.z,
+        x2 = x * x,
+        xy = x * y,
+        xz = x * z,
+        xw = x * w,
+        y2 = y * y,
+        yz = y * z,
+        yw = y * w,
+        z2 = z * z,
+        zw = z * w,
+        w2 = w * w;
+
+        return new Matrix4(
+                x2 - y2 - z2 + w2,  2 * (xy + zw),      2 * (xz - yw),      position.x,
+                2 * (xy - zw),      -x2 + y2 - z2 + w2, 2 * (yz + xw),      position.y,
+                2 * (xz + yw),      2 * (yz - xw),      -x2 - y2 + z2 + w2, position.z,
+                0,                  0,                  0,                  1);
     };
 
     return DynamicConeVisualizer;

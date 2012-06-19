@@ -1,9 +1,13 @@
 /*global define document canvas*/
-define(['../Renderer/TextureAtlas',
+define([
+        '../Core/destroyObject',
         '../Core/Color',
-        '../Scene/BillboardCollection'],
-function(TextureAtlas,
+        '../Renderer/TextureAtlas',
+        '../Scene/BillboardCollection'
+       ], function(
+         destroyObject,
          Color,
+         TextureAtlas,
          BillboardCollection) {
     "use strict";
 
@@ -48,12 +52,9 @@ function(TextureAtlas,
         }
     };
 
-    var show;
     var color;
     var position;
-    var pixelSize;
     var outlineColor;
-    var outlineWidth;
     DynamicPointVisualizer.prototype.updateObject = function(time, dynamicObject) {
         var dynamicPoint = dynamicObject.point;
         if (typeof dynamicPoint === 'undefined') {
@@ -69,7 +70,7 @@ function(TextureAtlas,
         var objectId = dynamicObject.id;
         var showProperty = dynamicPoint.show;
         var pointVisualizerIndex = dynamicObject.pointVisualizerIndex;
-        show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time, show));
+        var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
 
         if (!show) {
             //don't bother creating or updating anything else
@@ -84,7 +85,6 @@ function(TextureAtlas,
 
         var needRedraw = false;
         if (typeof pointVisualizerIndex === 'undefined') {
-            needRedraw = true;
             var unusedIndexes = this._unusedIndexes;
             var length = unusedIndexes.length;
             if (length > 0) {
@@ -98,10 +98,11 @@ function(TextureAtlas,
             billboard.id = objectId;
 
             // CZML_TODO Determine official defaults
-            billboard.point_color = Color.WHITE;
-            billboard.point_outlineColor = Color.BLACK;
+            billboard.point_color = Color.WHITE.clone(billboard.point_color);
+            billboard.point_outlineColor = Color.BLACK.clone(billboard.point_outlineColor);
             billboard.point_outlineWidth = 2;
             billboard.point_pixelSize = 3;
+            needRedraw = true;
         } else {
             billboard = this._billboardCollection.get(pointVisualizerIndex);
         }
@@ -133,7 +134,7 @@ function(TextureAtlas,
 
         property = dynamicPoint.outlineWidth;
         if (typeof property !== 'undefined') {
-            outlineWidth = property.getValue(time, outlineWidth);
+            var outlineWidth = property.getValue(time);
             if (billboard.point_outlineWidth !== outlineWidth) {
                 billboard.point_outlineWidth = outlineWidth;
                 needRedraw = true;
@@ -142,7 +143,7 @@ function(TextureAtlas,
 
         property = dynamicPoint.pixelSize;
         if (typeof property !== 'undefined') {
-            pixelSize = property.getValue(time, pixelSize);
+            var pixelSize = property.getValue(time);
             if (billboard.point_pixelSize !== pixelSize) {
                 billboard.point_pixelSize = pixelSize;
                 needRedraw = true;
@@ -150,28 +151,22 @@ function(TextureAtlas,
         }
 
         if (needRedraw) {
-            var cssColor = color ? color.toCSSColor() : '#FFFFFF';
-            var cssOutlineColor = outlineColor ? outlineColor.toCSSColor() : '#000000';
-            pixelSize = pixelSize || 3;
-            outlineWidth = outlineWidth || 2;
-
-            var textureId = JSON.stringify({
-                color : cssColor,
-                pixelSize : pixelSize,
-                outlineColor : cssOutlineColor,
-                outlineWidth : outlineWidth
-            });
+            var cssColor = billboard.point_color ? billboard.point_color.toCSSColor() : '#FFFFFF';
+            var cssOutlineColor = billboard.point_outlineColor ? billboard.point_outlineColor.toCSSColor() : '#000000';
+            var cssPixelSize = billboard.point_pixelSize || 3;
+            var cssOutlineWidth = billboard.point_outlineWidth || 2;
+            var textureId = JSON.stringify([cssColor, cssPixelSize, cssOutlineColor, cssOutlineWidth]);
 
             this._textureAtlas.addTextureFromFunction(textureId, function(id, loadedCallback) {
                 var canvas = document.createElement('canvas');
 
-                var length = pixelSize + (2 * outlineWidth);
+                var length = cssPixelSize + (2 * cssOutlineWidth);
                 canvas.height = canvas.width = length;
 
                 var context2D = canvas.getContext('2d');
                 context2D.clearRect(0, 0, length, length);
 
-                if (outlineWidth) {
+                if (cssOutlineWidth !== 0) {
                     context2D.beginPath();
                     context2D.arc(length / 2, length / 2, length / 2, 0, 2 * Math.PI, true);
                     context2D.closePath();
@@ -180,7 +175,7 @@ function(TextureAtlas,
                 }
 
                 context2D.beginPath();
-                context2D.arc(length / 2, length / 2, pixelSize / 2, 0, 2 * Math.PI, true);
+                context2D.arc(length / 2, length / 2, cssPixelSize / 2, 0, 2 * Math.PI, true);
                 context2D.closePath();
                 context2D.fillStyle = cssColor;
                 context2D.fill();
@@ -223,6 +218,49 @@ function(TextureAtlas,
                 thisUnusedIndexes.push(pointVisualizerIndex);
             }
         }
+    };
+
+    /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * <br /><br />
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     *
+     * @memberof DynamicPointVisualizer
+     *
+     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     *
+     * @see DynamicPointVisualizer#destroy
+     */
+    DynamicPointVisualizer.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <br /><br />
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     *
+     * @memberof DynamicPointVisualizer
+     *
+     * @return {undefined}
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     * @see DynamicPointVisualizer#isDestroyed
+     *
+     * @example
+     * visualizer = visualizer && visualizer.destroy();
+     */
+    DynamicPointVisualizer.prototype.destroy = function() {
+        this.removeAll();
+        this._scene.getPrimitives().remove(this._billboardCollection);
+        this._billboardCollection.destroy();
+        this._textureAtlas.destroy();
+        return destroyObject(this);
     };
 
     return DynamicPointVisualizer;

@@ -46,8 +46,4 @@ defineSuite([
     it('getValueFromArray', function() {
         expect(CzmlColor.getValueFromArray(sampledRgbafInterval.rgbaf, 6)).toEqual(color2);
     });
-
-    it('getValueFromInterpolationResult', function() {
-        expect(CzmlColor.getValueFromInterpolationResult(constantRgbafInterval.rgbaf)).toEqual(color1);
-    });
 });

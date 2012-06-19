@@ -22,6 +22,8 @@ defineSuite([
     "use strict";
     /*global it,expect*/
 
+    //CZML_TODO Implement real tests
+
     it('Works with uninterpolatable values.', function() {
         var dynamicProperty = new DynamicProperty(CzmlBoolean);
 

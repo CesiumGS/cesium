@@ -71,7 +71,7 @@ define([
         this._propertyIntervals = new TimeIntervalCollection();
     }
 
-    DynamicVertexPositionsProperty.processCzmlPacket = function(czmlIntervals, buffer, sourceUri, existingProperty) {
+    DynamicVertexPositionsProperty.processCzmlPacket = function(czmlIntervals, dynamicObjectCollection, sourceUri, existingProperty) {
         if (typeof czmlIntervals === 'undefined') {
             return existingProperty;
         }
@@ -81,22 +81,22 @@ define([
             existingProperty = new DynamicVertexPositionsProperty();
         }
 
-        existingProperty.addIntervals(czmlIntervals, buffer, sourceUri);
+        existingProperty.addIntervals(czmlIntervals, dynamicObjectCollection, sourceUri);
 
         return existingProperty;
     };
 
-    DynamicVertexPositionsProperty.prototype.addIntervals = function(czmlIntervals, buffer, sourceUri) {
+    DynamicVertexPositionsProperty.prototype.addIntervals = function(czmlIntervals, dynamicObjectCollection, sourceUri) {
         if (Array.isArray(czmlIntervals)) {
             for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
-                this.addInterval(czmlIntervals[i], buffer, sourceUri);
+                this.addInterval(czmlIntervals[i], dynamicObjectCollection, sourceUri);
             }
         } else {
-            this.addInterval(czmlIntervals, buffer, sourceUri);
+            this.addInterval(czmlIntervals, dynamicObjectCollection, sourceUri);
         }
     };
 
-    DynamicVertexPositionsProperty.prototype.addInterval = function(czmlInterval, buffer, sourceUri) {
+    DynamicVertexPositionsProperty.prototype.addInterval = function(czmlInterval, dynamicObjectCollection, sourceUri) {
         var iso8601Interval = czmlInterval.interval;
         if (typeof iso8601Interval === 'undefined') {
             iso8601Interval = Iso8601.MAXIMUM_INTERVAL.clone();
@@ -120,7 +120,7 @@ define([
         } else {
             var properties = [];
             for ( var i = 0, len = references.length; i < len; i++) {
-                properties.push(ReferenceProperty.fromString(buffer, references[i]));
+                properties.push(ReferenceProperty.fromString(dynamicObjectCollection, references[i]));
             }
             existingInterval.data = properties;
         }

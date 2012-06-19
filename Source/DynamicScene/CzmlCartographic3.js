@@ -1,16 +1,52 @@
 /*global define*/
-define(['../Core/Cartographic3',
-        '../Core/Math'],
-function(Cartographic3,
+define([
+        '../Core/Cartographic3',
+        '../Core/Math'
+       ], function(
+         Cartographic3,
          CesiumMath) {
     "use strict";
 
     var doublesPerValue = 3;
 
+    /**
+     * Provides methods for working with a Cartographic3 defined in CZML.
+     *
+     * @exports CzmlCartographic3
+     *
+     * @see Cartographic3
+     * @see DynamicProperty
+     * @see DynamicPositionProperty
+     * @see CzmlBoolean
+     * @see CzmlCartesian2
+     * @see CzmlCartesian3
+     * @see CzmlColor
+     * @see CzmlHorizontalOrigin
+     * @see CzmlLabelStyle
+     * @see CzmlNumber
+     * @see CzmlString
+     * @see CzmlUnitCartesian3
+     * @see CzmlUnitQuaternion
+     * @see CzmlUnitSpherical
+     * @see CzmlVerticalOrigin
+     */
     var CzmlCartographic3 = {
+        /**
+         * The number of doubles per packed Cartographic3 value.
+         */
         doublesPerValue : doublesPerValue,
+
+        /**
+         * The number of doubles per packed value used for interpolation.
+         */
         doublesPerInterpolationValue : doublesPerValue,
 
+        /**
+         * Returns the packed Cartographic3 representation contained within the provided CZML interval
+         * or undefined if the interval does not contain Cartographic3 data.
+         *
+         * @param {Object} czmlInterval The CZML interval to unwrap.
+         */
         unwrapInterval : function(czmlInterval) {
             var cartographic = czmlInterval.cartographicRadians;
             if (typeof cartographic === 'undefined') {
@@ -33,39 +69,50 @@ function(Cartographic3,
             return cartographic;
         },
 
+        /**
+         * Returns true if this interval represents data that should be interpolated by the client
+         * or false if it's a single value.
+         *
+         * @param {Object} unwrappedInterval The result of CzmlCartographic3.unwrapInterval.
+         */
         isSampled : function(unwrappedInterval) {
             return Array.isArray(unwrappedInterval) && unwrappedInterval.length > doublesPerValue;
         },
 
-        getValue : function(unwrappedInterval, existingInstance) {
-            if (typeof existingInstance === 'undefined') {
-                existingInstance = new Cartographic3();
+        /**
+         * Given a non-sampled unwrapped interval, returns a Cartographic3 instance of the data.
+         *
+         * @param {Object} unwrappedInterval The result of CzmlCartographic3.unwrapInterval.
+         * @param {Cartographic3} result The object to store the result in, if undefined a new instance will be created.
+         * @returns The modified result parameter or a new Cartographic3 instance if result was not defined.
+         */
+        getValue : function(unwrappedInterval, result) {
+            if (typeof result === 'undefined') {
+                result = new Cartographic3();
             }
-            existingInstance.longitude = unwrappedInterval[0];
-            existingInstance.latitude = unwrappedInterval[1];
-            existingInstance.height = unwrappedInterval[2];
-            return existingInstance;
+            result.longitude = unwrappedInterval[0];
+            result.latitude = unwrappedInterval[1];
+            result.height = unwrappedInterval[2];
+            return result;
         },
 
-        getValueFromArray : function(array, startingIndex, existingInstance) {
-            if (typeof existingInstance === 'undefined') {
-                existingInstance = new Cartographic3();
+        /**
+         * Given a packed array of longitude, latitude, and height values, extracts a Cartographic3 instance.
+         *
+         * @param {Array} array A packed array of Cartographic3 values, where every three elements represents a Cartographic3.
+         * @param {Number} startingIndex The index into the array that contains the longitude value of the Cartographic3 you would like.
+         * @param {Cartographic3} result The object to store the result in, if undefined a new instance will be created.
+         * @returns The modified result parameter or a new Cartographic3 instance if result was not defined.
+         */
+        getValueFromArray : function(array, startingIndex, result) {
+            if (typeof result === 'undefined') {
+                result = new Cartographic3();
             }
-            existingInstance.longitude = array[startingIndex];
-            existingInstance.latitude = array[startingIndex + 1];
-            existingInstance.height = array[startingIndex + 2];
-            return existingInstance;
-        },
-
-        getValueFromInterpolationResult : function(array, existingInstance) {
-            if (typeof existingInstance === 'undefined') {
-                existingInstance = new Cartographic3();
-            }
-            existingInstance.longitude = array[0];
-            existingInstance.latitude = array[1];
-            existingInstance.height = array[2];
-            return existingInstance;
-        },
+            result.longitude = array[startingIndex];
+            result.latitude = array[startingIndex + 1];
+            result.height = array[startingIndex + 2];
+            return result;
+        }
     };
 
     return CzmlCartographic3;

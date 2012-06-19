@@ -16,32 +16,81 @@ define([
     var quaternion0 = new Quaternion();
     var quaternion0Conjugate = new Quaternion();
 
+    /**
+     * Provides methods for working with a unit Quaternion defined in CZML.
+     *
+     * @exports CzmlUnitQuaternion
+     *
+     * @see Cartesian3
+     * @see DynamicProperty
+     * @see CzmlBoolean
+     * @see CzmlCartesian2
+     * @see CzmlCartesian3
+     * @see CzmlCartographic3
+     * @see CzmlColor
+     * @see CzmlHorizontalOrigin
+     * @see CzmlLabelStyle
+     * @see CzmlNumber
+     * @see CzmlString
+     * @see CzmlUnitCartesian3
+     * @see CzmlUnitSpherical
+     * @see CzmlVerticalOrigin
+     */
     var CzmlUnitQuaternion = {
+        /**
+         * The number of doubles per packed Quaternion value.
+         */
         doublesPerValue : doublesPerQuaternion,
+
+        /**
+         * The number of doubles per packed value used for interpolation.
+         */
         doublesPerInterpolationValue : doublesPerCartesian,
 
+        /**
+         * Returns the packed Quaternion representation contained within the provided CZML interval
+         * or undefined if the interval does not contain Quaternion data.
+         *
+         * @param {Object} czmlInterval The CZML interval to unwrap.
+         */
         unwrapInterval : function(czmlInterval) {
             return czmlInterval.unitQuaternion;
         },
 
+        /**
+         * Returns true if this interval represents data that should be interpolated by the client
+         * or false if it's a single value.
+         *
+         * @param {Object} unwrappedInterval The result of CzmlUnitQuaternion.unwrapInterval.
+         */
         isSampled : function(unwrappedInterval) {
             return Array.isArray(unwrappedInterval) && unwrappedInterval.length > doublesPerQuaternion;
         },
 
+        /**
+         * Given a packed array of x, y, z, and w values, creates a packed array of
+         * Cartesian3 axis-angle rotations suitable for interpolation.
+         *
+         * @param {Array} sourceArray The packed array of quaternion values.
+         * @param {Array} destinationArray The array to store the packed axis-angle rotations.
+         * @param {Number} firstIndex The index of the first element to be packed.
+         * @param {Number} lastIndex The index of the last element to be packed.
+         */
         packValuesForInterpolation : function(sourceArray, destinationArray, firstIndex, lastIndex) {
-            Quaternion.conjugate(CzmlUnitQuaternion.getValueFromArray(sourceArray, lastIndex * doublesPerQuaternion, quaternion0Conjugate));
+            CzmlUnitQuaternion.getValueFromArray(sourceArray, lastIndex * doublesPerQuaternion, quaternion0Conjugate);
+            quaternion0Conjugate.conjugate(quaternion0Conjugate);
 
             for ( var i = 0, len = lastIndex - firstIndex + 1; i < len; i++) {
                 var offset = i * doublesPerCartesian;
                 CzmlUnitQuaternion.getValueFromArray(sourceArray, (firstIndex + i) * doublesPerQuaternion, tmpQuaternion);
 
-                Quaternion.multiply(tmpQuaternion, quaternion0Conjugate, tmpQuaternion);
+                tmpQuaternion.multiply(quaternion0Conjugate, tmpQuaternion);
 
                 if (tmpQuaternion.w < 0) {
                     tmpQuaternion = tmpQuaternion.negate();
                 }
 
-                Quaternion.getAxis(tmpQuaternion, axis);
+                tmpQuaternion.getAxis(axis);
                 var angle = tmpQuaternion.getAngle();
                 destinationArray[offset] = axis.x * angle;
                 destinationArray[offset + 1] = axis.y * angle;
@@ -49,31 +98,57 @@ define([
             }
         },
 
-        getValue : function(unwrappedInterval, existingInstance) {
-            if (typeof existingInstance === 'undefined') {
-                existingInstance = new Quaternion();
+        /**
+         * Given a non-sampled unwrapped interval, returns a Quaternion instance of the data.
+         *
+         * @param {Object} unwrappedInterval The result of CzmlUnitQuaternion.unwrapInterval.
+         * @param {Cartesian3} result The object to store the result in, if undefined a new instance will be created.
+         * @returns The modified result parameter or a new Quaternion instance if result was not defined.
+         */
+        getValue : function(unwrappedInterval, result) {
+            if (typeof result === 'undefined') {
+                result = new Quaternion();
             }
-            existingInstance.x = unwrappedInterval[0];
-            existingInstance.y = unwrappedInterval[1];
-            existingInstance.z = unwrappedInterval[2];
-            existingInstance.w = unwrappedInterval[3];
-            return Quaternion.normalize(existingInstance);
+            result.x = unwrappedInterval[0];
+            result.y = unwrappedInterval[1];
+            result.z = unwrappedInterval[2];
+            result.w = unwrappedInterval[3];
+            return result.normalize(result);
         },
 
-        getValueFromArray : function(array, startingIndex, existingInstance) {
-            if (typeof existingInstance === 'undefined') {
-                existingInstance = new Quaternion();
+        /**
+         * Given a packed array of x, y, z, and w values, extracts a Quaternion instance.
+         *
+         * @param {Array} array A packed array of Quaternion values, where every four elements represents a Cartesian3.
+         * @param {Number} startingIndex The index into the array that contains the x value of the Quaternion you would like.
+         * @param {Cartesian3} result The object to store the result in, if undefined a new instance will be created.
+         * @returns The modified result parameter or a new Quaternion instance if result was not defined.
+         */
+        getValueFromArray : function(array, startingIndex, result) {
+            if (typeof result === 'undefined') {
+                result = new Quaternion();
             }
-            existingInstance.x = array[startingIndex];
-            existingInstance.y = array[startingIndex + 1];
-            existingInstance.z = array[startingIndex + 2];
-            existingInstance.w = array[startingIndex + 3];
-            return Quaternion.normalize(existingInstance);
+            result.x = array[startingIndex];
+            result.y = array[startingIndex + 1];
+            result.z = array[startingIndex + 2];
+            result.w = array[startingIndex + 3];
+            return result.normalize(result);
         },
 
-        getValueFromInterpolationResult : function(array, existingInstance, sourceArray, firstIndex, lastIndex) {
-            if (typeof existingInstance === 'undefined') {
-                existingInstance = new Quaternion();
+        /**
+         * Given a packed array of axis-angle rotations returned from CzmlUnitQuaternion.packValuesForInterpolation,
+         * converts the desired index into a unit Quaternion.
+         *
+         * @param {Array} array The array containing the packed axis-angle rotations.
+         * @param {Quaternion} result The object to store the result in, if undefined a new instance will be created.
+         * @param {Array} sourceArray The source array of the original quaternion values previously passed to CzmlUnitQuaternion.packValuesForInterpolation.
+         * @param {Number} firstIndex The index previously passed to CzmlUnitQuaternion.packValuesForInterpolation.
+         * @param {Number} lastIndex The index previously passed to CzmlUnitQuaternion.packValuesForInterpolation
+         * @returns
+         */
+        getValueFromInterpolationResult : function(array, result, sourceArray, firstIndex, lastIndex) {
+            if (typeof result === 'undefined') {
+                result = new Quaternion();
             }
             rotationVector.x = array[0];
             rotationVector.y = array[1];
@@ -82,28 +157,13 @@ define([
 
             CzmlUnitQuaternion.getValueFromArray(sourceArray, lastIndex * doublesPerQuaternion, quaternion0);
 
-            var difference;
             if (magnitude === 0) {
-                difference = identity;
+                tmpQuaternion = identity;
             } else {
-                //CZML_TODO Quaternion.fromAxisAngle creates a new instance of
-                //both Quaternion and Cartesian, so we comment it out and
-                //implement our own in place below.
-                //difference = Quaternion.fromAxisAngle(rotationVector, magnitude);
-
-                //Optimized Quaternion.fromAxisAngle
-                var halfAngle = magnitude / 2.0;
-                var s = Math.sin(halfAngle);
-                var c = Math.cos(halfAngle);
-                Cartesian3.normalize(rotationVector);
-                difference = tmpQuaternion;
-                difference.x = rotationVector.x * s;
-                difference.y = rotationVector.y * s;
-                difference.z = rotationVector.z * s;
-                difference.w = c;
+                Quaternion.fromAxisAngle(rotationVector, magnitude, tmpQuaternion);
             }
 
-            return Quaternion.normalize(Quaternion.multiply(difference, quaternion0, existingInstance));
+            return result.normalize(tmpQuaternion.multiply(quaternion0, result));
         },
     };
 

@@ -22,7 +22,9 @@ defineSuite([
     "use strict";
     /*global it,expect*/
 
-    it('applyChanges works with Existing buffers', function() {
+    //CZML_TODO Implement real tests
+
+    it('applyChanges works with Existing dynamicObjectCollections', function() {
 
         var dynamicObjectCollection1 = new DynamicObjectCollection();
         var dynamicObjectCollection2 = new DynamicObjectCollection();
@@ -62,7 +64,7 @@ defineSuite([
         expect(object.billboard.horizontalOrigin.getValue(new JulianDate())).toEqual(HorizontalOrigin.CENTER);
     });
 
-    it('Data updates as underlying buffers update', function() {
+    it('Data updates as underlying dynamicObjectCollections update', function() {
         var dynamicObjectCollection1 = new DynamicObjectCollection();
         var dynamicObjectCollection2 = new DynamicObjectCollection();
 

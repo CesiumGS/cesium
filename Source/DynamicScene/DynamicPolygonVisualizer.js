@@ -1,8 +1,10 @@
 /*global define*/
 define([
+        '../Core/destroyObject',
         '../Scene/Polygon',
         '../Scene/ColorMaterial'
-    ], function(
+       ], function(
+         destroyObject,
          Polygon,
          ColorMaterial) {
     "use strict";
@@ -104,7 +106,7 @@ define([
 
         var material = dynamicPolygon.material;
         if (typeof material !== 'undefined') {
-            polygon.material = material.applyToMaterial(time, polygon.material, this._scene);
+            polygon.material = material.applyToMaterial(time, this._scene, polygon.material);
         }
     };
 
@@ -136,6 +138,46 @@ define([
                 dynamicObject.polygonVisualizerIndex = undefined;
             }
         }
+    };
+
+    /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * <br /><br />
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     *
+     * @memberof DynamicPolygonVisualizer
+     *
+     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     *
+     * @see DynamicPolygonVisualizer#destroy
+     */
+    DynamicPolygonVisualizer.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <br /><br />
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     *
+     * @memberof DynamicPolygonVisualizer
+     *
+     * @return {undefined}
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     * @see DynamicPolygonVisualizer#isDestroyed
+     *
+     * @example
+     * visualizer = visualizer && visualizer.destroy();
+     */
+    DynamicPolygonVisualizer.prototype.destroy = function() {
+        this.removeAll();
+        return destroyObject(this);
     };
 
     return DynamicPolygonVisualizer;

@@ -21,10 +21,12 @@ define([
         }
 
         this.id = id;
+        this._cachedAvailabilityDate = undefined;
+        this._cachedAvailabilityValue = undefined;
 
         //Add standard CZML properties.  Even though they won't all be used
-        //for each object, having the superset directly will allow the compiler
-        //to greatly optimize this class.  Any changes to this list should
+        //for each object, having the superset explicitly listed here will allow the
+        //compiler to greatly optimize this class.  Any changes to this list should
         //coincide with changes to CzmlStandard.updaters
         this.billboard = undefined;
         this.cone = undefined;
@@ -37,8 +39,6 @@ define([
         this.orientation = undefined;
         this.vertexPositions = undefined;
         this.availability = undefined;
-        this._cachedAvailabilityDate = undefined;
-        this._cachedAvailabilityValue = undefined;
     }
 
     DynamicObject.prototype.isAvailable = function(time) {
@@ -52,22 +52,16 @@ define([
         return this._cachedAvailabilityValue = this.availability.contains(time);
     };
 
-    DynamicObject.prototype._setAvailability = function(availability) {
-        this.availability = availability;
-        this._cachedAvailabilityDate = undefined;
-        this._cachedAvailabilityValue = undefined;
-    };
-
-    DynamicObject.processCzmlPacketPosition = function(dynamicObject, packet, buffer, sourceUri) {
+    DynamicObject.processCzmlPacketPosition = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var positionData = packet.position;
         if (typeof positionData !== 'undefined') {
-            var position = DynamicPositionProperty.processCzmlPacket(positionData, buffer, sourceUri, dynamicObject.position);
+            var position = DynamicPositionProperty.processCzmlPacket(positionData, dynamicObjectCollection, sourceUri, dynamicObject.position);
             if (typeof dynamicObject.position === 'undefined') {
                 dynamicObject.position = position;
                 return true;
             }
-            return false;
         }
+        return false;
     };
 
     DynamicObject.processCzmlPacketOrientation = function(dynamicObject, packet, dynamicObjectCollection) {
@@ -78,19 +72,19 @@ define([
         return false;
     };
 
-    DynamicObject.processCzmlPacketVertexPositions = function(dynamicObject, packet, buffer, sourceUri) {
+    DynamicObject.processCzmlPacketVertexPositions = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var vertexPositionsData = packet.vertexPositions;
         if (typeof vertexPositionsData !== 'undefined') {
-            var vertexPositions = DynamicVertexPositionsProperty.processCzmlPacket(vertexPositionsData, buffer, sourceUri, dynamicObject.vertexPositions);
+            var vertexPositions = DynamicVertexPositionsProperty.processCzmlPacket(vertexPositionsData, dynamicObjectCollection, sourceUri, dynamicObject.vertexPositions);
             if (typeof dynamicObject.vertexPositions === 'undefined') {
                 dynamicObject.vertexPositions = vertexPositions;
                 return true;
             }
-            return false;
         }
+        return false;
     };
 
-    DynamicObject.processCzmlPacketAvailability = function(dynamicObject, packet, buffer, sourceUri) {
+    DynamicObject.processCzmlPacketAvailability = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var availability = packet.availability;
         if (typeof availability !== 'undefined') {
             var interval = TimeInterval.fromIso8601(availability);
@@ -114,6 +108,12 @@ define([
         dynamicObject.orientation = undefined;
         dynamicObject.vertexPositions = undefined;
         dynamicObject._setAvailability(undefined);
+    };
+
+    DynamicObject.prototype._setAvailability = function(availability) {
+        this.availability = availability;
+        this._cachedAvailabilityDate = undefined;
+        this._cachedAvailabilityValue = undefined;
     };
 
     return DynamicObject;

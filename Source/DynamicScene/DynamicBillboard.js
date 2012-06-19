@@ -35,11 +35,12 @@ define([
     }
 
     DynamicBillboard.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+        var billboardUpdated = false;
         var billboardData = packet.billboard;
         if (typeof billboardData !== 'undefined') {
 
             var billboard = dynamicObject.billboard;
-            var billboardUpdated = typeof billboard === 'undefined';
+            billboardUpdated = typeof billboard === 'undefined';
             if (billboardUpdated) {
                 dynamicObject.billboard = billboard = new DynamicBillboard();
             }
@@ -58,9 +59,8 @@ define([
             billboardUpdated = DynamicProperty.processCzmlPacket(billboard, 'show', CzmlBoolean, billboardData.show, interval, dynamicObjectCollection) || billboardUpdated;
             billboardUpdated = DynamicProperty.processCzmlPacket(billboard, 'verticalOrigin', CzmlVerticalOrigin, billboardData.verticalOrigin, interval, dynamicObjectCollection) || billboardUpdated;
             billboardUpdated = DynamicProperty.processCzmlPacket(billboard, 'color', CzmlColor, billboardData.color, interval, dynamicObjectCollection) || billboardUpdated;
-
-            return billboardUpdated;
         }
+        return billboardUpdated;
     };
 
     DynamicBillboard.mergeProperties = function(targetObject, objectToMerge) {

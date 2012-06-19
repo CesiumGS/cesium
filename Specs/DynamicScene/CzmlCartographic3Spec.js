@@ -49,8 +49,4 @@ defineSuite([
     it('getValueFromArray', function() {
         expect(CzmlCartographic3.getValueFromArray(sampledCartographicInterval.cartographicRadians, 5)).toEqual(cartographic2);
     });
-
-    it('getValueFromInterpolationResult', function() {
-        expect(CzmlCartographic3.getValueFromInterpolationResult(constantCartographicInterval.cartographicRadians)).toEqual(cartographic1);
-    });
 });

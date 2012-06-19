@@ -28,10 +28,11 @@ define([
 
     DynamicPyramid.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection) {
         var pyramidData = packet.pyramid;
+        var pyramidUpdated = false;
         if (typeof pyramidData !== 'undefined') {
 
             var pyramid = dynamicObject.pyramid;
-            var pyramidUpdated = typeof pyramid === 'undefined';
+            pyramidUpdated = typeof pyramid === 'undefined';
             if (pyramidUpdated) {
                 dynamicObject.pyramid = pyramid = new DynamicPyramid();
             }
@@ -47,9 +48,8 @@ define([
             pyramidUpdated = DynamicProperty.processCzmlPacket(pyramid, 'showIntersection', CzmlBoolean, pyramidData.showIntersection, interval, dynamicObjectCollection) || pyramidUpdated;
             pyramidUpdated = DynamicProperty.processCzmlPacket(pyramid, 'intersectionColor', CzmlColor, pyramidData.intersectionColor, interval, dynamicObjectCollection) || pyramidUpdated;
             pyramidUpdated = DynamicMaterialProperty.processCzmlPacket(pyramid, 'material', pyramidData.material, interval, dynamicObjectCollection) || pyramidUpdated;
-
-            return pyramidUpdated;
         }
+        return pyramidUpdated;
     };
 
     DynamicPyramid.mergeProperties = function(targetObject, objectToMerge) {

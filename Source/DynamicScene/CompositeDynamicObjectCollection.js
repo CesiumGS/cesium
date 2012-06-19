@@ -31,7 +31,7 @@ define([
     }
 
     CompositeDynamicObjectCollection.prototype.addCollection = function(dynamicObjectCollection) {
-        if (!(dynamicObjectCollection instanceof DynamicObjectCollection)) {
+        if (typeof dynamicObjectCollection === 'undefined') {
             throw new DeveloperError();
         }
         if (this._collections.indexOf(dynamicObjectCollection) !== -1) {
@@ -47,7 +47,7 @@ define([
     };
 
     CompositeDynamicObjectCollection.prototype.insertCollection = function(index, dynamicObjectCollection) {
-        if (!(dynamicObjectCollection instanceof DynamicObjectCollection)) {
+        if (typeof dynamicObjectCollection === 'undefined') {
             throw new DeveloperError();
         }
         if (this._collections.indexOf(dynamicObjectCollection) !== -1) {

@@ -13,14 +13,14 @@ define([
 
     function DynamicImageMaterial(id) {
         this.image = undefined;
-        this._sources = {};
+        this._textures = {};
     }
 
     DynamicImageMaterial.isMaterial = function(czmlInterval) {
         return typeof czmlInterval.image !== 'undefined';
     };
 
-    DynamicImageMaterial.processCzmlPacket = function(czmlInterval, dynamicObjectCollection, existingMaterial) {
+    DynamicImageMaterial.processCzmlPacket = function(czmlInterval, dynamicObjectCollection, existingMaterial, constrainedInterval) {
         var materialData = czmlInterval.image;
         if (typeof materialData !== 'undefined') {
             if (typeof existingMaterial === 'undefined') {
@@ -31,24 +31,29 @@ define([
         return existingMaterial;
     };
 
-    //CZML_TODO image.src race condition.
-    DynamicImageMaterial.prototype.applyToMaterial = function(time, existingMaterial, scene) {
-        if(typeof existingMaterial === 'undefined' || !(existingMaterial instanceof DiffuseMapMaterial)) {
+    //CZML_TODO There is a race condition here if an image loads after it is no longer needed.
+    DynamicImageMaterial.prototype.applyToMaterial = function(time, scene, existingMaterial) {
+        if (typeof existingMaterial === 'undefined' || !(existingMaterial instanceof DiffuseMapMaterial)) {
             existingMaterial = new DiffuseMapMaterial();
         }
-        var source = this.image.getValue(time);
-        var sourceHolder = this._sources[source];
-        if(!sourceHolder){
+        var url = this.image.getValue(time);
+        var textures = this._textures;
+        var texture = textures[url];
+        if (!texture) {
             var image = new Image();
-            var sources = this._sources;
-            image.src = source;
-            existingMaterial.texture = scene.getContext().createTexture2D({
-                source : image,
-                pixelFormat : PixelFormat.RGB
-            });
-            sources[source] = existingMaterial.texture;
-        }else if(existingMaterial.texture !== sourceHolder){
-            existingMaterial.texture = sourceHolder;
+            image.onload = function() {
+                var innerTexture = textures[url];
+                if (typeof innerTexture === 'undefined') {
+                    textures[url] = innerTexture = scene.getContext().createTexture2D({
+                        source : image,
+                        pixelFormat : PixelFormat.RGB
+                    });
+                }
+                existingMaterial.texture = innerTexture;
+            };
+            image.src = url;
+        } else if (existingMaterial.texture !== texture) {
+            existingMaterial.texture = texture;
         }
 
         return existingMaterial;

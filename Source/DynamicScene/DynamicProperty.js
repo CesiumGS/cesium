@@ -115,17 +115,17 @@ define([
         }
     };
 
-    DynamicProperty.prototype.addIntervals = function(czmlIntervals, buffer, constrainedInterval) {
+    DynamicProperty.prototype.addIntervals = function(czmlIntervals, dynamicObjectCollection, constrainedInterval) {
         if (Array.isArray(czmlIntervals)) {
             for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
-                this.addInterval(czmlIntervals[i], buffer, constrainedInterval);
+                this.addInterval(czmlIntervals[i], dynamicObjectCollection, constrainedInterval);
             }
         } else {
-            this.addInterval(czmlIntervals, buffer, constrainedInterval);
+            this.addInterval(czmlIntervals, dynamicObjectCollection, constrainedInterval);
         }
     };
 
-    DynamicProperty.prototype.addInterval = function(czmlInterval, buffer, constrainedInterval) {
+    DynamicProperty.prototype.addInterval = function(czmlInterval, dynamicObjectCollection, constrainedInterval) {
         var iso8601Interval = czmlInterval.interval;
         if (typeof iso8601Interval === 'undefined') {
             iso8601Interval = Iso8601.MAXIMUM_INTERVAL;
@@ -138,10 +138,10 @@ define([
         }
 
         var unwrappedInterval = this.valueType.unwrapInterval(czmlInterval);
-        this.addIntervalUnwrapped(iso8601Interval.start, iso8601Interval.stop, czmlInterval, unwrappedInterval, buffer);
+        this.addIntervalUnwrapped(iso8601Interval.start, iso8601Interval.stop, czmlInterval, unwrappedInterval, dynamicObjectCollection);
     };
 
-    DynamicProperty.prototype.addIntervalUnwrapped = function(start, stop, czmlInterval, unwrappedInterval, buffer) {
+    DynamicProperty.prototype.addIntervalUnwrapped = function(start, stop, czmlInterval, unwrappedInterval, dynamicObjectCollection) {
         var thisIntervals = this._intervals;
         var existingInterval = thisIntervals.findInterval(start, stop);
         this._cachedDate = undefined;
@@ -190,7 +190,7 @@ define([
         }
     };
 
-    DynamicProperty.prototype.getValue = function(time, existingInstance) {
+    DynamicProperty.prototype.getValue = function(time, result) {
         var interval = this._cachedInterval;
         var thisValueType = this.valueType;
         var doublesPerValue = thisValueType.doublesPerValue;
@@ -260,10 +260,8 @@ define([
                 for ( var i = 0; i < length; ++i) {
                     xTable[i] = times[lastIndex].getSecondsDifference(times[firstIndex + i]);
                 }
-                var packFunction = thisValueType.packValuesForInterpolation;
-                if (typeof packFunction !== 'undefined') {
-                    packFunction(values, yTable, firstIndex, lastIndex);
-                } else {
+                var specializedPackFunction = thisValueType.packValuesForInterpolation;
+                if (typeof specializedPackFunction === 'undefined') {
                     var destinationIndex = 0;
                     var sourceIndex = firstIndex * doublesPerValue;
                     var stop = (lastIndex + 1) * doublesPerValue;
@@ -273,16 +271,23 @@ define([
                         sourceIndex++;
                         destinationIndex++;
                     }
+                } else {
+                    specializedPackFunction(values, yTable, firstIndex, lastIndex);
                 }
 
                 // Interpolate!
                 var x = times[lastIndex].getSecondsDifference(time);
-                var result = intervalData.interpolationAlgorithm.interpolateOrderZero(x, xTable, yTable, doublesPerInterpolationValue);
-                return thisValueType.getValueFromInterpolationResult(result, existingInstance, values, firstIndex, lastIndex);
+                var interpolationResult = intervalData.interpolationAlgorithm.interpolateOrderZero(x, xTable, yTable, doublesPerInterpolationValue);
+
+                var specializedGetFunction = thisValueType.getValueFromInterpolationResult;
+                if (typeof specializedGetFunction === 'undefined') {
+                    return thisValueType.getValueFromArray(interpolationResult, 0, result);
+                }
+                return specializedGetFunction(interpolationResult, result, values, firstIndex, lastIndex);
             }
-            return thisValueType.getValueFromArray(intervalData.values, index * doublesPerValue, existingInstance);
+            return thisValueType.getValueFromArray(intervalData.values, index * doublesPerValue, result);
         }
-        return thisValueType.getValue(intervalData.values, existingInstance);
+        return thisValueType.getValue(intervalData.values, result);
     };
 
     return DynamicProperty;

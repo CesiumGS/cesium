@@ -43,7 +43,7 @@ function(dom,
     /*global console*/
 
     var visualizers;
-    var clock = new Clock(new JulianDate(), undefined, undefined, ClockStep.SYSTEM_CLOCK, ClockRange.LOOP, 256);
+    var clock = new Clock(new JulianDate(), undefined, undefined, ClockStep.SYSTEM_CLOCK_DEPENDENT, ClockRange.LOOP, 256);
     var timeline;
     var transitioner;
 
@@ -54,6 +54,7 @@ function(dom,
     var timeLabel;
     var lastTimeLabelUpdate;
     var cameraCenteredObjectID;
+    var cameraCenteredObjectIDPosition;
     var lastCameraCenteredObjectID;
 
     function updateSpeedIndicator() {
@@ -61,6 +62,14 @@ function(dom,
     }
 
     function setTimeFromBuffer() {
+        var animReverse = registry.byId('animReverse');
+        var animPause = registry.byId('animPause');
+        var animPlay = registry.byId('animPlay');
+        animating = false;
+        animReverse.set('checked', false);
+        animPause.set('checked', true);
+        animPlay.set('checked', false);
+
         var i, object, len;
         var startTime = Iso8601.MAXIMUM_VALUE;
         var stopTime = Iso8601.MINIMUM_VALUE;
@@ -149,8 +158,8 @@ function(dom,
             if (cameraCenteredObjectID) {
                 var dynamicObject = dynamicObjectCollection.getObject(cameraCenteredObjectID);
                 if (dynamicObject && dynamicObject.position) {
-                    var position = dynamicObject.position.getValueCartesian(currentTime);
-                    if (typeof position !== 'undefined') {
+                    cameraCenteredObjectIDPosition = dynamicObject.position.getValueCartesian(currentTime, cameraCenteredObjectIDPosition);
+                    if (typeof cameraCenteredObjectIDPosition !== 'undefined') {
                         // If we're centering on an object for the first time, zoom to within 2km of it.
                         if (lastCameraCenteredObjectID !== cameraCenteredObjectID) {
                             lastCameraCenteredObjectID = cameraCenteredObjectID;
@@ -158,7 +167,7 @@ function(dom,
                             camera.position = camera.position.normalize().multiplyWithScalar(5000.0);
                         }
 
-                        var transform = Transforms.eastNorthUpToFixedFrame(position, widget.ellipsoid);
+                        var transform = Transforms.eastNorthUpToFixedFrame(cameraCenteredObjectIDPosition, widget.ellipsoid);
                         this.spindleCameraController.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
                     }
                 }

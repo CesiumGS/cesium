@@ -1,8 +1,10 @@
 /*global define*/
 define([
+        '../Core/destroyObject',
         '../Core/Color',
         '../Scene/Polyline'
        ], function(
+         destroyObject,
          Color,
          Polyline) {
     "use strict";
@@ -89,8 +91,8 @@ define([
             polyline.id = objectId;
 
             // CZML_TODO Determine official defaults
-            polyline.color = Color.WHITE;
-            polyline.outlineColor = Color.BLACK;
+            polyline.color = Color.WHITE.clone(polyline.color);
+            polyline.outlineColor = Color.BLACK.clone(polyline.outlineColor);
             polyline.outlineWidth = 1;
             polyline.width = 1;
         } else {
@@ -99,41 +101,35 @@ define([
 
         polyline.show = true;
 
-        var value = vertexPositionsProperty.getValueCartesian(time);
-        if (typeof value !== 'undefined' && polyline.last_position !== value) {
-            polyline.setPositions(value);
-            polyline.last_position = value;
+        var vertexPositions = vertexPositionsProperty.getValueCartesian(time);
+        if (typeof vertexPositions !== 'undefined' && polyline.last_position !== vertexPositions) {
+            polyline.setPositions(vertexPositions);
+            polyline.last_position = vertexPositions;
         }
 
         var property = dynamicPolyline.color;
         if (typeof property !== 'undefined') {
-            value = property.getValue(time);
-            if (typeof value !== 'undefined') {
-                polyline.color = value;
-            }
+            property.getValue(time, polyline.color);
         }
 
         property = dynamicPolyline.outlineColor;
         if (typeof property !== 'undefined') {
-            value = property.getValue(time);
-            if (typeof value !== 'undefined') {
-                polyline.outlineColor = value;
-            }
+            property.getValue(time, polyline.outlineColor);
         }
 
         property = dynamicPolyline.outlineWidth;
         if (typeof property !== 'undefined') {
-            value = property.getValue(time);
-            if (typeof value !== 'undefined') {
-                polyline.outlineWidth = value;
+            var outlineWidth = property.getValue(time);
+            if (typeof outlineWidth !== 'undefined') {
+                polyline.outlineWidth = outlineWidth;
             }
         }
 
         property = dynamicPolyline.width;
         if (typeof property !== 'undefined') {
-            value = property.getValue(time);
-            if (typeof value !== 'undefined') {
-                polyline.width = value;
+            var width = property.getValue(time);
+            if (typeof width !== 'undefined') {
+                polyline.width = width;
             }
         }
     };
@@ -166,6 +162,46 @@ define([
                 dynamicObject.polylineVisualizerIndex = undefined;
             }
         }
+    };
+
+    /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * <br /><br />
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     *
+     * @memberof DynamicPolylineVisualizer
+     *
+     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     *
+     * @see DynamicPolylineVisualizer#destroy
+     */
+    DynamicPolylineVisualizer.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <br /><br />
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     *
+     * @memberof DynamicPolylineVisualizer
+     *
+     * @return {undefined}
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     * @see DynamicPolylineVisualizer#isDestroyed
+     *
+     * @example
+     * visualizer = visualizer && visualizer.destroy();
+     */
+    DynamicPolylineVisualizer.prototype.destroy = function() {
+        this.removeAll();
+        return destroyObject(this);
     };
 
     return DynamicPolylineVisualizer;
