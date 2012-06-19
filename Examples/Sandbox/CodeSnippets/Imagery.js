@@ -21,9 +21,7 @@
         this.code = function () {
             // ArcGIS World Street Maps
             var arcgis = new Cesium.ArcGISMapServerTileProvider({
-                host : 'server.arcgisonline.com',
-                root : 'ArcGIS/rest',
-                service : 'World_Street_Map',
+                url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
                 proxy : new Cesium.DefaultProxy('/proxy/')
             });
 
