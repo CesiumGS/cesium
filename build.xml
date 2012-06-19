@@ -12,6 +12,10 @@
 			<createSpecList output="${specsDirectory}/SpecList.js">
 				<fileset dir="${specsDirectory}" includes="**/*.js" excludes="*.js" />
 			</createSpecList>
+
+			<createGalleryList output="${galleryDirectory}/gallery-index.js">
+				<fileset dir="${galleryDirectory}" includes="**/*.html" />
+			</createGalleryList>
 		</parallel>
 	</target>
 
@@ -71,6 +75,7 @@
 	<property name="sourceDirectory" location="Source" />
 	<property name="shadersDirectory" location="${sourceDirectory}/Shaders" />
 	<property name="examplesDirectory" location="Examples" />
+	<property name="galleryDirectory" location="Apps/Sandcastle/gallery" />
 	<property name="specsDirectory" location="Specs" />
 	<property name="imagesDirectory" location="Images" />
 	<property name="toolsDirectory" location="Tools" />
@@ -247,6 +252,49 @@ if (new File(output).exists()) {
 }
 
 var contents = 'var specs = [' + specs.join(',') + '];';
+
+if (oldContents !== contents) {
+  var writer = new FileWriter(output);
+  writer.write(contents);
+  writer.close();
+}
+]]>
+	</scriptdef>
+
+	<scriptdef name="createGalleryList" language="javascript">
+		<attribute name="output" />
+		<element name="fileset" type="fileset" />
+		<![CDATA[
+importClass(java.io.File);
+importClass(java.io.FileReader);
+importClass(java.io.FileWriter);
+importClass(Packages.org.apache.tools.ant.util.FileUtils);
+
+var demos = [];
+
+var filesets = elements.get("fileset");
+for (var i = 0, len = filesets.size(); i < len; i++) {
+  var fileset = filesets.get(i);
+  var basedir  = fileset.getDir(project);
+  var filenames = fileset.getDirectoryScanner(project).getIncludedFiles();
+
+  for (var j = 0, len2 = filenames.length; j < len2; j++) {
+    var relativePath = filenames[j];
+    var demo = relativePath.substring(0, relativePath.lastIndexOf('.')).replace('\\', '/');
+    var thumbnail = new File(basedir, demo + '.jpg').exists() ? (", 'img':'" + demo + ".jpg'") : '';
+    demos.push("\n\t{'name':'" + demo + "'" + thumbnail + "}");
+  }
+}
+
+var output = attributes.get("output");
+if (new File(output).exists()) {
+  var reader = new FileReader(output);
+  var oldContents = String(FileUtils.readFully(reader));
+  reader.close();
+}
+
+var contents = '// This file is automatically rebuilt by the Cesium build process.\n' +
+    'var gallery_demos = [' + demos.join(',') + '\n];';
 
 if (oldContents !== contents) {
   var writer = new FileWriter(output);
