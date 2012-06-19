@@ -19,14 +19,10 @@ define([
      * @name ArcGISMapServerTileProvider
      * @constructor
      *
-     * @param {String} description.host The ArcGIS Server host name.
-     * @param {String} [description.instance='/arcgis/rest'] The instance name.
-     * @param {String} [description.folder=undefined] The folder where the service is located.
-     * @param {String} description.service The service name.
+     * @param {String} description.url The URL of the ArcGIS MapServer service.
      * @param {Object} [description.proxy=undefined] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
      *
-     * @exception {DeveloperError} <code>description.host</code> is required.
-     * @exception {DeveloperError} <code>description.service</code> is required.
+     * @exception {DeveloperError} <code>description.url</code> is required.
      *
      * @see SingleTileProvider
      * @see BingMapsTileProvider
@@ -45,47 +41,16 @@ define([
      */
     function ArcGISMapServerTileProvider(description) {
         var desc = description || {};
-        var instance = desc.instance || 'arcgis/rest';
 
-        if (!desc.host) {
-            throw new DeveloperError('description.host is required.');
+        if (!desc.url) {
+            throw new DeveloperError('description.url is required.');
         }
 
-        if (!desc.service) {
-            throw new DeveloperError('description.service is required.');
-        }
-
-        this._url = 'http://' + desc.host + '/' + instance + '/services/';
-
-        if (desc.folder) {
-            this._url += desc.folder + '/';
-        }
-
-        this._url += desc.service + '/MapServer';
-
         /**
-         * The ArcGIS Server host name.
+         * The URL of the ArcGIS MapServer.
          * @type {String}
          */
-        this.host = desc.host;
-
-        /**
-         * The instance name. The default value is '/arcgis/rest'.
-         * @type {String}
-         */
-        this.instance = instance;
-
-        /**
-         * The folder where the service is located.
-         * @type {String}
-         */
-        this.folder = desc.folder;
-
-        /**
-         * The service name.
-         * @type {String}
-         */
-        this.service = desc.service;
+        this.url = desc.url;
 
         this._proxy = desc.proxy;
 
@@ -144,7 +109,7 @@ define([
         this._logoLoaded = false;
 
         var that = this;
-        jsonp(this._url, function(data) {
+        jsonp(this.url, function(data) {
             var credit = data.copyrightText;
 
             var canvas = document.createElement('canvas');
@@ -189,7 +154,7 @@ define([
         image.onerror = onerror;
         image.crossOrigin = '';
 
-        var url = this._url + '/tile/' + tile.zoom + '/' + tile.y + '/' + tile.x;
+        var url = this.url + '/tile/' + tile.zoom + '/' + tile.y + '/' + tile.x;
         if (typeof this._proxy !== 'undefined') {
             url = this._proxy.getURL(url);
         }
