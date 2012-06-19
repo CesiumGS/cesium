@@ -1251,29 +1251,41 @@ define([
 
     CentralBody.prototype._createScissorRectangle = function(description) {
         var quad = description.quad;
+
         var upperLeft = new Cartesian3(quad[0], quad[1], quad[2]);
+        var lowerLeft = new Cartesian3(quad[3], quad[4], quad[5]);
+        var upperRight = new Cartesian3(quad[6], quad[7], quad[8]);
         var lowerRight = new Cartesian3(quad[9], quad[10], quad[11]);
+
         var mvp = description.modelViewProjection;
-        var clip = description.viewportTransformation;
+        var vt = description.viewportTransformation;
 
-        var center = upperLeft.add(lowerRight).multiplyWithScalar(0.5);
-        var centerScreen = mvp.multiplyWithVector(new Cartesian4(center.x, center.y, center.z, 1.0));
-        centerScreen = centerScreen.multiplyWithScalar(1.0 / centerScreen.w);
-        var centerClip = clip.multiplyWithVector(centerScreen).getXYZ();
+        upperLeft = Transforms.pointToWindowCoordinates(mvp, vt, upperLeft);
+        lowerLeft = Transforms.pointToWindowCoordinates(mvp, vt, lowerLeft);
+        upperRight = Transforms.pointToWindowCoordinates(mvp, vt, upperRight);
+        lowerRight = Transforms.pointToWindowCoordinates(mvp, vt, lowerRight);
 
-        var surfaceScreen = mvp.multiplyWithVector(new Cartesian4(upperLeft.x, upperLeft.y, upperLeft.z, 1.0));
-        surfaceScreen = surfaceScreen.multiplyWithScalar(1.0 / surfaceScreen.w);
-        var surfaceClip = clip.multiplyWithVector(surfaceScreen).getXYZ();
+        var diag1 = upperRight.subtract(lowerLeft);
+        var diag2 = upperLeft.subtract(lowerRight);
 
-        var radius = Math.ceil(surfaceClip.subtract(centerClip).magnitude());
-        var diameter = 2.0 * radius;
+        var x = (lowerLeft.x < lowerRight.x) ? Math.min(lowerLeft.x, upperLeft.x) : Math.min(lowerRight.x, upperRight.x);
+        var y = (lowerLeft.y < upperLeft.y) ? Math.min(lowerLeft.y, lowerRight.y) : Math.min(upperLeft.y, upperRight.y);
 
-        return {
-            x : Math.floor(centerClip.x) - radius,
-            y : Math.floor(centerClip.y) - radius,
-            width : diameter,
-            height : diameter
-        };
+        var width = Math.max(Math.abs(diag1.x), Math.abs(diag2.x));
+        var height = Math.max(Math.abs(diag1.y), Math.abs(diag2.y));
+
+        // If the sky atmosphere is visible, the scissor test will remove the sky atmosphere
+        // where the rectangle and the projected ellipse intersect.
+        // So add some extra pixels to the scissor rectangle when the sky atmosphere is turned on.
+        if (this.showSkyAtmosphere) {
+            var errorPixels = 10;
+            x -= errorPixels;
+            y -= errorPixels;
+            width += errorPixels;
+            height += errorPixels;
+        }
+
+        return new Rectangle(x, y, width, height);
     };
 
     CentralBody.prototype._computeDepthQuad = function(sceneState) {
@@ -1687,8 +1699,7 @@ define([
         // update scisor/depth plane
         var depthQuad = this._computeDepthQuad(sceneState);
 
-        // TODO: re-enable scissorTest
-        /*if (mode === SceneMode.SCENE3D) {
+        if (mode === SceneMode.SCENE3D) {
             var uniformState = context.getUniformState();
             var mvp = uniformState.getModelViewProjection();
             var scissorTest = {
@@ -1704,7 +1715,7 @@ define([
             this._rsDepth.scissorTest = scissorTest;
             this._quadV.renderState.scissorTest = scissorTest;
             this._quadH.renderState.scissorTest = scissorTest;
-        }*/
+        }
 
         // depth plane
         if (!this._vaDepth) {
