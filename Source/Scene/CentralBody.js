@@ -1281,8 +1281,8 @@ define([
             var errorPixels = 10;
             x -= errorPixels;
             y -= errorPixels;
-            width += errorPixels;
-            height += errorPixels;
+            width += 2.0 * errorPixels;
+            height += 2.0 * errorPixels;
         }
 
         return new Rectangle(x, y, width, height);
