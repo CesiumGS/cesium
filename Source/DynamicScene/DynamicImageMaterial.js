@@ -20,13 +20,13 @@ define([
         return typeof czmlInterval.image !== 'undefined';
     };
 
-    DynamicImageMaterial.processCzmlPacket = function(czmlInterval, dynamicObjectCollection, existingMaterial, constrainedInterval) {
+    DynamicImageMaterial.processCzmlPacket = function(czmlInterval, existingMaterial, constrainedInterval) {
         var materialData = czmlInterval.image;
         if (typeof materialData !== 'undefined') {
             if (typeof existingMaterial === 'undefined') {
                 existingMaterial = new DynamicImageMaterial();
             }
-            DynamicProperty.processCzmlPacket(existingMaterial, 'image', CzmlString, materialData.image, undefined, dynamicObjectCollection);
+            DynamicProperty.processCzmlPacket(existingMaterial, 'image', CzmlString, materialData.image);
         }
         return existingMaterial;
     };

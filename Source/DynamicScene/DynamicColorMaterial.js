@@ -17,13 +17,13 @@ define([
         return typeof czmlInterval.solidColor !== 'undefined';
     };
 
-    DynamicColorMaterial.processCzmlPacket = function(czmlInterval, dynamicObjectCollection, existingMaterial, constrainedInterval) {
+    DynamicColorMaterial.processCzmlPacket = function(czmlInterval, existingMaterial, constrainedInterval) {
         var materialData = czmlInterval.solidColor;
         if (typeof materialData !== 'undefined') {
             if (typeof existingMaterial === 'undefined') {
                 existingMaterial = new DynamicColorMaterial();
             }
-            DynamicProperty.processCzmlPacket(existingMaterial, 'color', CzmlColor, materialData.color, undefined, dynamicObjectCollection);
+            DynamicProperty.processCzmlPacket(existingMaterial, 'color', CzmlColor, materialData.color);
         }
         return existingMaterial;
     };

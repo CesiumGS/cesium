@@ -48,16 +48,16 @@ define([
         }
     };
 
-    DynamicObjectCollection.prototype.processCzml = function(packets, sourceUri) {
+    DynamicObjectCollection.prototype.processCzml = function(packets) {
         var updatedObjects = [];
         var updatedObjectsHash = {};
 
         if (Array.isArray(packets)) {
             for ( var i = 0, len = packets.length; i < len; i++) {
-                this._processCzmlPacket(packets[i], sourceUri, updatedObjects, updatedObjectsHash);
+                this._processCzmlPacket(packets[i], updatedObjects, updatedObjectsHash);
             }
         } else {
-            this._processCzmlPacket(packets, sourceUri, updatedObjects, updatedObjectsHash);
+            this._processCzmlPacket(packets, updatedObjects, updatedObjectsHash);
         }
 
         if (updatedObjects.length > 0) {
@@ -67,7 +67,7 @@ define([
         return updatedObjects;
     };
 
-    DynamicObjectCollection.prototype._processCzmlPacket = function(packet, sourceUri, updatedObjects, updatedObjectsHash) {
+    DynamicObjectCollection.prototype._processCzmlPacket = function(packet, updatedObjects, updatedObjectsHash) {
         var objectId = packet.id;
         var thisUpdaterFunctions = this._updaterFunctions;
         if (typeof objectId === 'undefined') {
@@ -76,7 +76,7 @@ define([
 
         var object = this.getOrCreateObject(objectId);
         for ( var i = thisUpdaterFunctions.length - 1; i > -1; i--) {
-            if (thisUpdaterFunctions[i](object, packet, this, sourceUri) && typeof updatedObjectsHash[objectId] === 'undefined') {
+            if (thisUpdaterFunctions[i](object, packet, this) && typeof updatedObjectsHash[objectId] === 'undefined') {
                 updatedObjectsHash[objectId] = true;
                 updatedObjects.push(object);
             }

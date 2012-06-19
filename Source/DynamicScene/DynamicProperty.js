@@ -50,7 +50,7 @@ define([
         this._cachedInterval = undefined;
     }
 
-    DynamicProperty.processCzmlPacket = function(parentObject, propertyName, valueType, czmlIntervals, constrainedInterval, dynamicObjectCollection) {
+    DynamicProperty.processCzmlPacket = function(parentObject, propertyName, valueType, czmlIntervals, constrainedInterval) {
         var newProperty = false;
         var existingProperty = parentObject[propertyName];
         if (typeof czmlIntervals === 'undefined') {
@@ -64,7 +64,7 @@ define([
             newProperty = true;
         }
 
-        existingProperty.addIntervals(czmlIntervals, dynamicObjectCollection, constrainedInterval);
+        existingProperty.addIntervals(czmlIntervals, constrainedInterval);
 
         return newProperty;
     };
@@ -115,17 +115,17 @@ define([
         }
     };
 
-    DynamicProperty.prototype.addIntervals = function(czmlIntervals, dynamicObjectCollection, constrainedInterval) {
+    DynamicProperty.prototype.addIntervals = function(czmlIntervals, constrainedInterval) {
         if (Array.isArray(czmlIntervals)) {
             for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
-                this.addInterval(czmlIntervals[i], dynamicObjectCollection, constrainedInterval);
+                this.addInterval(czmlIntervals[i], constrainedInterval);
             }
         } else {
-            this.addInterval(czmlIntervals, dynamicObjectCollection, constrainedInterval);
+            this.addInterval(czmlIntervals, constrainedInterval);
         }
     };
 
-    DynamicProperty.prototype.addInterval = function(czmlInterval, dynamicObjectCollection, constrainedInterval) {
+    DynamicProperty.prototype.addInterval = function(czmlInterval, constrainedInterval) {
         var iso8601Interval = czmlInterval.interval;
         if (typeof iso8601Interval === 'undefined') {
             iso8601Interval = Iso8601.MAXIMUM_INTERVAL;
@@ -138,10 +138,10 @@ define([
         }
 
         var unwrappedInterval = this.valueType.unwrapInterval(czmlInterval);
-        this.addIntervalUnwrapped(iso8601Interval.start, iso8601Interval.stop, czmlInterval, unwrappedInterval, dynamicObjectCollection);
+        this.addIntervalUnwrapped(iso8601Interval.start, iso8601Interval.stop, czmlInterval, unwrappedInterval);
     };
 
-    DynamicProperty.prototype.addIntervalUnwrapped = function(start, stop, czmlInterval, unwrappedInterval, dynamicObjectCollection) {
+    DynamicProperty.prototype.addIntervalUnwrapped = function(start, stop, czmlInterval, unwrappedInterval) {
         var thisIntervals = this._intervals;
         var existingInterval = thisIntervals.findInterval(start, stop);
         this._cachedDate = undefined;

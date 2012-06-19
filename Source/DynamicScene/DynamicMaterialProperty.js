@@ -20,7 +20,7 @@ define([
         this._potentialMaterials = [DynamicColorMaterial, DynamicImageMaterial];
     }
 
-    DynamicMaterialProperty.processCzmlPacket = function(parentObject, propertyName, czmlIntervals, constrainedInterval, dynamicObjectCollection) {
+    DynamicMaterialProperty.processCzmlPacket = function(parentObject, propertyName, czmlIntervals, constrainedInterval) {
         var existingProperty = parentObject[propertyName];
         var propertyUpdated = typeof czmlIntervals !== 'undefined';
         if (propertyUpdated) {
@@ -28,7 +28,7 @@ define([
                 existingProperty = new DynamicMaterialProperty();
                 parentObject[propertyName] = existingProperty;
             }
-            existingProperty.addIntervals(czmlIntervals, dynamicObjectCollection, constrainedInterval);
+            existingProperty.addIntervals(czmlIntervals, constrainedInterval);
         }
         return propertyUpdated;
     };
@@ -46,17 +46,17 @@ define([
         return existingMaterial;
     };
 
-    DynamicMaterialProperty.prototype.addIntervals = function(czmlIntervals, dynamicObjectCollection, constrainedInterval) {
+    DynamicMaterialProperty.prototype.addIntervals = function(czmlIntervals, constrainedInterval) {
         if (Array.isArray(czmlIntervals)) {
             for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
-                this.addInterval(czmlIntervals[i], dynamicObjectCollection, constrainedInterval);
+                this.addInterval(czmlIntervals[i], constrainedInterval);
             }
         } else {
-            this.addInterval(czmlIntervals, dynamicObjectCollection, constrainedInterval);
+            this.addInterval(czmlIntervals, constrainedInterval);
         }
     };
 
-    DynamicMaterialProperty.prototype.addInterval = function(czmlInterval, dynamicObjectCollection, constrainedInterval) {
+    DynamicMaterialProperty.prototype.addInterval = function(czmlInterval, constrainedInterval) {
         var iso8601Interval = czmlInterval.interval, property, material;
         if (typeof iso8601Interval === 'undefined') {
             iso8601Interval = Iso8601.MAXIMUM_INTERVAL.clone();
@@ -99,7 +99,7 @@ define([
 
         //We could handle the data, add it to the property.
         if (foundMaterial) {
-            existingInterval.data = material.processCzmlPacket(czmlInterval, dynamicObjectCollection, existingInterval.data, constrainedInterval);
+            existingInterval.data = material.processCzmlPacket(czmlInterval, existingInterval.data, constrainedInterval);
         }
     };
 
