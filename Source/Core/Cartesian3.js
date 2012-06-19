@@ -56,11 +56,20 @@ define([
     /**
      * Returns a duplicate of a Cartesian3.
      *
-     * @param {Cartesian3} cartesian The cartesian to clone.
-     * @return {Cartesian3} A new Cartesian3 instance.
+     * @param {Cartesian3} cartesian The Cartesian to clone.
+     *
+     * @param {Cartesian} [result] The object to store the result in, if undefined a new instance will be created.
+     *
+     * @return {Cartesian3} The modified result parameter or a new instance if result was undefined.
      */
-    Cartesian3.clone = function(cartesian) {
-        return new Cartesian3(cartesian.x, cartesian.y, cartesian.z);
+    Cartesian3.clone = function(cartesian, result) {
+        if (typeof result === 'undefined') {
+            return new Cartesian3(cartesian.x, cartesian.y, cartesian.z);
+        }
+        result.x = cartesian.x;
+        result.y = cartesian.y;
+        result.z = cartesian.z;
+        return result;
     };
 
     /**
@@ -114,50 +123,6 @@ define([
     };
 
     /**
-     * Returns the provided Cartesian's magnitude squared.
-     *
-     * @param {Cartesian3} cartesian3 The Cartesian to use.
-     *
-     * @memberof Cartesian3
-     * @return {Number} The magnitude squared.
-     */
-    Cartesian3.magnitudeSquared = function(cartesian3) {
-        return cartesian3.x * cartesian3.x + cartesian3.y * cartesian3.y + cartesian3.z * cartesian3.z;
-    };
-
-    /**
-     * Returns the provided Cartesian's magnitude (length).
-     *
-     * @param {Cartesian3} cartesian3 The Cartesian to use.
-     *
-     * @memberof Cartesian3
-     * @return {Number} The magnitude.
-     */
-    Cartesian3.magnitude = function(cartesian3) {
-        return Math.sqrt(Cartesian3.magnitudeSquared(cartesian3));
-    };
-
-    /**
-     * Modifies the provided Cartesian so that it is normalized.
-     *
-     * @param {Cartesian3} cartesian3 The cartesian to be normalized.
-     *
-     * @memberof Cartesian3
-     * @return {Cartesian3} The provided Cartesian instance modified that it is normalized.
-     */
-    Cartesian3.normalize = function(cartesian3) {
-        var magnitude = Cartesian3.magnitude(cartesian3);
-        if (magnitude > 0) {
-            cartesian3.x = cartesian3.x / magnitude;
-            cartesian3.y = cartesian3.y / magnitude;
-            cartesian3.z = cartesian3.z / magnitude;
-        } else {
-            cartesian3.x = cartesian3.y = cartesian3.z = 0;
-        }
-        return cartesian3;
-    };
-
-    /**
      * Returns the Cartesian's x and y components as a Cartesian2.
      *
      * @memberof Cartesian3
@@ -175,7 +140,7 @@ define([
      * @return {Number} The squared magnitude.
      */
     Cartesian3.prototype.magnitudeSquared = function() {
-        return Cartesian3.magnitudeSquared(this);
+        return this.x * this.x + this.y * this.y + this.z * this.z;
     };
 
     /**
@@ -185,17 +150,31 @@ define([
      * @return {Number} The magnitude.
      */
     Cartesian3.prototype.magnitude = function() {
-        return Cartesian3.magnitude(this);
+        return Math.sqrt(this.magnitudeSquared());
     };
 
     /**
      * Returns this Cartesian normalized.
      *
      * @memberof Cartesian3
-     * @return {Cartesian3} The normalized Cartesian.
+     *
+     * @param {Cartesian} [result] The object to store the result in, if undefined a new instance will be created.
+     *
+     * @return {Cartesian3} The modified result parameter or a new instance if result was undefined.
      */
-    Cartesian3.prototype.normalize = function() {
-        return Cartesian3.normalize(Cartesian3.clone(this));
+    Cartesian3.prototype.normalize = function(result) {
+        if (typeof result === 'undefined') {
+            result = new Cartesian3();
+        }
+        var magnitude = this.magnitude();
+        if (magnitude > 0) {
+            result.x = this.x / magnitude;
+            result.y = this.y / magnitude;
+            result.z = this.z / magnitude;
+        } else {
+            result.x = result.y = result.z = 0;
+        }
+        return result;
     };
 
     /**
@@ -409,10 +388,13 @@ define([
      * Returns a duplicate of a Cartesian3 instance.
      *
      * @memberof Cartesian3
-     * @return {Cartesian3} A new copy of the Cartesian3 instance received as an argument.
+     *
+     * @param {Cartesian} [result] The object to store the result in, if undefined a new instance will be created.
+     *
+     * @return {Cartesian3} The modified result parameter or a new instance if result was undefined.
      */
-    Cartesian3.prototype.clone = function() {
-        return new Cartesian3(this.x, this.y, this.z);
+    Cartesian3.prototype.clone = function(result) {
+        return Cartesian3.clone(this, result);
     };
 
     /**
@@ -423,7 +405,7 @@ define([
      * @return {Boolean} <code>true</code> if the Cartesians are equal componentwise; otherwise, <code>false</code>.
      */
     Cartesian3.prototype.equals = function(other) {
-        return (this.x === other.x) && (this.y === other.y) && (this.z === other.z);
+        return (typeof other !== 'undefined') && (this.x === other.x) && (this.y === other.y) && (this.z === other.z);
     };
 
     /**
@@ -438,7 +420,8 @@ define([
      */
     Cartesian3.prototype.equalsEpsilon = function(other, epsilon) {
         epsilon = epsilon || 0.0;
-        return (Math.abs(this.x - other.x) <= epsilon) &&
+        return (typeof other !== 'undefined') &&
+               (Math.abs(this.x - other.x) <= epsilon) &&
                (Math.abs(this.y - other.y) <= epsilon) &&
                (Math.abs(this.z - other.z) <= epsilon);
     };

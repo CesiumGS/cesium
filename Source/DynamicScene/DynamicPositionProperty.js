@@ -136,7 +136,7 @@ define([
             return property.getValue(time, existingInstance);
         }
         var result = interval.cachedValue = property.getValue(time, interval.cachedValue);
-        if (typeof result !== undefined) {
+        if (typeof result !== 'undefined') {
             result = wgs84.toCartographic3(result);
         }
         return result;
@@ -161,7 +161,7 @@ define([
             return property.getValue(time, existingInstance);
         }
         var result = interval.cachedValue = property.getValue(time, interval.cachedValue);
-        if (typeof result !== undefined) {
+        if (typeof result !== 'undefined') {
             result = wgs84.toCartesian(result);
         }
         return result;

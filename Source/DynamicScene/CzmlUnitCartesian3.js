@@ -24,7 +24,7 @@ function(Cartesian3) {
             existingInstance.x = unwrappedInterval[0];
             existingInstance.y = unwrappedInterval[1];
             existingInstance.z = unwrappedInterval[2];
-            return Cartesian3.normalize(existingInstance);
+            return existingInstance.normalize(existingInstance);
         },
 
         getValueFromArray : function(array, startingIndex, existingInstance) {
@@ -34,7 +34,7 @@ function(Cartesian3) {
             existingInstance.x = array[startingIndex];
             existingInstance.y = array[startingIndex + 1];
             existingInstance.z = array[startingIndex + 2];
-            return Cartesian3.normalize(existingInstance);
+            return existingInstance.normalize(existingInstance);
         },
 
         getValueFromInterpolationResult : function(array, existingInstance) {
@@ -44,7 +44,7 @@ function(Cartesian3) {
             existingInstance.x = array[0];
             existingInstance.y = array[1];
             existingInstance.z = array[2];
-            return Cartesian3.normalize(existingInstance);
+            return existingInstance.normalize(existingInstance);
         },
     };
 

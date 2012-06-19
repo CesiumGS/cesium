@@ -77,15 +77,10 @@ define([
         }
     };
 
-    var show;
-    var textureValue;
     var position;
     var color;
     var eyeOffset;
     var pixelOffset;
-    var scale;
-    var verticalOrigin;
-    var horizontalOrigin;
     DynamicBillboardVisualizer.prototype.updateObject = function(time, dynamicObject) {
         var dynamicBillboard = dynamicObject.billboard;
         if (typeof dynamicBillboard === 'undefined') {
@@ -106,7 +101,7 @@ define([
         var objectId = dynamicObject.id;
         var showProperty = dynamicBillboard.show;
         var billboardVisualizerIndex = dynamicObject.billboardVisualizerIndex;
-        show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time, show));
+        var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
 
         if (!show) {
             //don't bother creating or updating anything else
@@ -147,7 +142,7 @@ define([
             billboard = this._billboardCollection.get(billboardVisualizerIndex);
         }
 
-        textureValue = textureProperty.getValue(time, textureValue);
+        var textureValue = textureProperty.getValue(time);
         if (textureValue !== billboard.vizTexture) {
             billboard.vizTexture = textureValue;
             billboard.vizTextureAvailable = false;
@@ -191,7 +186,7 @@ define([
 
         property = dynamicBillboard.scale;
         if (typeof property !== 'undefined') {
-            scale = property.getValue(time, scale);
+            var scale = property.getValue(time);
             if (typeof scale !== 'undefined') {
                 billboard.setScale(scale);
             }
@@ -199,7 +194,7 @@ define([
 
         property = dynamicBillboard.horizontalOrigin;
         if (typeof property !== 'undefined') {
-            horizontalOrigin = property.getValue(time, horizontalOrigin);
+            var horizontalOrigin = property.getValue(time);
             if (typeof horizontalOrigin !== 'undefined') {
                 billboard.setHorizontalOrigin(horizontalOrigin);
             }
@@ -207,7 +202,7 @@ define([
 
         property = dynamicBillboard.verticalOrigin;
         if (typeof property !== 'undefined') {
-            verticalOrigin = property.getValue(time, verticalOrigin);
+            var verticalOrigin = property.getValue(time);
             if (typeof verticalOrigin !== 'undefined') {
                 billboard.setVerticalOrigin(verticalOrigin);
             }

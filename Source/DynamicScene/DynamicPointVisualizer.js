@@ -52,12 +52,9 @@ define([
         }
     };
 
-    var show;
     var color;
     var position;
-    var pixelSize;
     var outlineColor;
-    var outlineWidth;
     DynamicPointVisualizer.prototype.updateObject = function(time, dynamicObject) {
         var dynamicPoint = dynamicObject.point;
         if (typeof dynamicPoint === 'undefined') {
@@ -73,7 +70,7 @@ define([
         var objectId = dynamicObject.id;
         var showProperty = dynamicPoint.show;
         var pointVisualizerIndex = dynamicObject.pointVisualizerIndex;
-        show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time, show));
+        var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
 
         if (!show) {
             //don't bother creating or updating anything else
@@ -88,7 +85,6 @@ define([
 
         var needRedraw = false;
         if (typeof pointVisualizerIndex === 'undefined') {
-            needRedraw = true;
             var unusedIndexes = this._unusedIndexes;
             var length = unusedIndexes.length;
             if (length > 0) {
@@ -102,10 +98,11 @@ define([
             billboard.id = objectId;
 
             // CZML_TODO Determine official defaults
-            billboard.point_color = Color.WHITE;
-            billboard.point_outlineColor = Color.BLACK;
+            billboard.point_color = Color.WHITE.clone(billboard.point_color);
+            billboard.point_outlineColor = Color.BLACK.clone(billboard.point_outlineColor);
             billboard.point_outlineWidth = 2;
             billboard.point_pixelSize = 3;
+            needRedraw = true;
         } else {
             billboard = this._billboardCollection.get(pointVisualizerIndex);
         }
@@ -137,7 +134,7 @@ define([
 
         property = dynamicPoint.outlineWidth;
         if (typeof property !== 'undefined') {
-            outlineWidth = property.getValue(time, outlineWidth);
+            var outlineWidth = property.getValue(time);
             if (billboard.point_outlineWidth !== outlineWidth) {
                 billboard.point_outlineWidth = outlineWidth;
                 needRedraw = true;
@@ -146,7 +143,7 @@ define([
 
         property = dynamicPoint.pixelSize;
         if (typeof property !== 'undefined') {
-            pixelSize = property.getValue(time, pixelSize);
+            var pixelSize = property.getValue(time);
             if (billboard.point_pixelSize !== pixelSize) {
                 billboard.point_pixelSize = pixelSize;
                 needRedraw = true;
@@ -154,28 +151,22 @@ define([
         }
 
         if (needRedraw) {
-            var cssColor = color ? color.toCSSColor() : '#FFFFFF';
-            var cssOutlineColor = outlineColor ? outlineColor.toCSSColor() : '#000000';
-            pixelSize = pixelSize || 3;
-            outlineWidth = outlineWidth || 2;
-
-            var textureId = JSON.stringify({
-                color : cssColor,
-                pixelSize : pixelSize,
-                outlineColor : cssOutlineColor,
-                outlineWidth : outlineWidth
-            });
+            var cssColor = billboard.point_color ? billboard.point_color.toCSSColor() : '#FFFFFF';
+            var cssOutlineColor = billboard.point_outlineColor ? billboard.point_outlineColor.toCSSColor() : '#000000';
+            var cssPixelSize = billboard.point_pixelSize || 3;
+            var cssOutlineWidth = billboard.point_outlineWidth || 2;
+            var textureId = JSON.stringify([cssColor, cssPixelSize, cssOutlineColor, cssOutlineWidth]);
 
             this._textureAtlas.addTextureFromFunction(textureId, function(id, loadedCallback) {
                 var canvas = document.createElement('canvas');
 
-                var length = pixelSize + (2 * outlineWidth);
+                var length = cssPixelSize + (2 * cssOutlineWidth);
                 canvas.height = canvas.width = length;
 
                 var context2D = canvas.getContext('2d');
                 context2D.clearRect(0, 0, length, length);
 
-                if (outlineWidth) {
+                if (cssOutlineWidth !== 0) {
                     context2D.beginPath();
                     context2D.arc(length / 2, length / 2, length / 2, 0, 2 * Math.PI, true);
                     context2D.closePath();
@@ -184,7 +175,7 @@ define([
                 }
 
                 context2D.beginPath();
-                context2D.arc(length / 2, length / 2, pixelSize / 2, 0, 2 * Math.PI, true);
+                context2D.arc(length / 2, length / 2, cssPixelSize / 2, 0, 2 * Math.PI, true);
                 context2D.closePath();
                 context2D.fillStyle = cssColor;
                 context2D.fill();

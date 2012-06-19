@@ -53,6 +53,8 @@ define([
         }
     };
 
+    var position;
+    var orientation;
     DynamicPyramidVisualizer.prototype.updateObject = function(time, dynamicObject) {
         var dynamicPyramid = dynamicObject.pyramid;
         if (typeof dynamicPyramid === 'undefined') {
@@ -117,22 +119,22 @@ define([
 
         pyramid.show = true;
 
-        var value = directionsProperty.getValueSpherical(time);
-        if (typeof value !== 'undefined' && pyramid.last_directions !== value) {
-            pyramid.setDirections(value);
-            pyramid.last_directions = value;
+        var directions = directionsProperty.getValueSpherical(time);
+        if (typeof directions !== 'undefined' && pyramid.last_directions !== directions) {
+            pyramid.setDirections(directions);
+            pyramid.last_directions = directions;
         }
 
-        var position = positionProperty.getValueCartesian(time) || pyramid.dynamicPyramidVisualizerLastPosition;
-        var orientation = orientationProperty.getValue(time) || pyramid.dynamicPyramidVisualizerLastOrientation;
+        position = positionProperty.getValueCartesian(time, position) || pyramid.dynamicPyramidVisualizerLastPosition;
+        orientation = orientationProperty.getValue(time, orientation) || pyramid.dynamicPyramidVisualizerLastOrientation;
 
         if (typeof position !== 'undefined' &&
             typeof orientation !== 'undefined' &&
-            (position !== pyramid.dynamicPyramidVisualizerLastPosition ||
-             orientation !== pyramid.dynamicPyramidVisualizerLastOrientation)) {
+            (!position.equals(pyramid.dynamicPyramidVisualizerLastPosition) ||
+             !orientation.equals(pyramid.dynamicPyramidVisualizerLastOrientation))) {
             pyramid.modelMatrix = DynamicConeVisualizer._computeModelMatrix(position, orientation);
-            pyramid.dynamicPyramidVisualizerLastPosition = position;
-            pyramid.dynamicPyramidVisualizerLastOrientation = orientation;
+            position.clone(pyramid.dynamicPyramidVisualizerLastPosition);
+            orientation.clone(pyramid.dynamicPyramidVisualizerLastOrientation);
         }
 
         var material = dynamicPyramid.material;
@@ -142,17 +144,17 @@ define([
 
         var property = dynamicPyramid.intersectionColor;
         if (typeof property !== 'undefined') {
-            value = property.getValue(time);
-            if (typeof value !== 'undefined') {
-                pyramid.intersectionColor = value;
+            var intersectionColor = property.getValue(time, intersectionColor);
+            if (typeof intersectionColor !== 'undefined') {
+                pyramid.intersectionColor = intersectionColor;
             }
         }
 
         property = dynamicPyramid.radius;
         if (typeof property !== 'undefined') {
-            value = property.getValue(time);
-            if (typeof value !== 'undefined') {
-                pyramid.radius = value;
+            var radius = property.getValue(time, radius);
+            if (typeof radius !== 'undefined') {
+                pyramid.radius = radius;
             }
         }
     };

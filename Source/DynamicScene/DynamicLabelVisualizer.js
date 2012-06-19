@@ -58,18 +58,11 @@ define([
         }
     };
 
-    var show;
     var position;
     var fillColor;
     var outlineColor;
-    var style;
-    var text;
-    var font;
     var eyeOffset;
     var pixelOffset;
-    var scale;
-    var verticalOrigin;
-    var horizontalOrigin;
     DynamicLabelVisualizer.prototype.updateObject = function(time, dynamicObject) {
         var dynamicLabel = dynamicObject.label;
         if (typeof dynamicLabel === 'undefined') {
@@ -90,7 +83,7 @@ define([
         var objectId = dynamicObject.id;
         var showProperty = dynamicLabel.show;
         var labelVisualizerIndex = dynamicObject.labelVisualizerIndex;
-        show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time, show));
+        var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
 
         if (!show) {
             //don't bother creating or updating anything else
@@ -133,19 +126,19 @@ define([
 
         label.setShow(show);
 
-        text = textProperty.getValue(time, text);
+        var text = textProperty.getValue(time);
         if (typeof text !== 'undefined') {
             label.setText(text);
         }
 
-        position = positionProperty.getValueCartesian(time);//, position);
+        position = positionProperty.getValueCartesian(time, position);
         if (typeof position !== 'undefined') {
             label.setPosition(position);
         }
 
         var property = dynamicLabel.scale;
         if (typeof property !== 'undefined') {
-            scale = property.getValue(time, scale);
+            var scale = property.getValue(time);
             if (typeof scale !== 'undefined') {
                 label.setScale(scale);
             }
@@ -153,7 +146,7 @@ define([
 
         property = dynamicLabel.font;
         if (typeof property !== 'undefined') {
-            font = property.getValue(time, font);
+            var font = property.getValue(time);
             if (typeof font !== 'undefined') {
                 label.setFont(font);
             }
@@ -177,7 +170,7 @@ define([
 
         property = dynamicLabel.style;
         if (typeof property !== 'undefined') {
-            style = property.getValue(time, style);
+            var style = property.getValue(time);
             if (typeof style !== 'undefined') {
                 label.setStyle(style);
             }
@@ -201,7 +194,7 @@ define([
 
         property = dynamicLabel.horizontalOrigin;
         if (typeof property !== 'undefined') {
-            horizontalOrigin = property.getValue(time, horizontalOrigin);
+            var horizontalOrigin = property.getValue(time);
             if (typeof horizontalOrigin !== 'undefined') {
                 label.setHorizontalOrigin(horizontalOrigin);
             }
@@ -209,7 +202,7 @@ define([
 
         property = dynamicLabel.verticalOrigin;
         if (typeof property !== 'undefined') {
-            verticalOrigin = property.getValue(time, verticalOrigin);
+            var verticalOrigin = property.getValue(time);
             if (typeof verticalOrigin !== 'undefined') {
                 label.setVerticalOrigin(verticalOrigin);
             }

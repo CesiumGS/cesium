@@ -47,6 +47,8 @@ define([
         }
     };
 
+    var color;
+    var outlineColor;
     DynamicPolylineVisualizer.prototype.updateObject = function(time, dynamicObject) {
         var dynamicPolyline = dynamicObject.polyline;
         if (typeof dynamicPolyline === 'undefined') {
@@ -91,8 +93,8 @@ define([
             polyline.id = objectId;
 
             // CZML_TODO Determine official defaults
-            polyline.color = Color.WHITE;
-            polyline.outlineColor = Color.BLACK;
+            polyline.color = Color.WHITE.clone(polyline.color);
+            polyline.outlineColor = Color.BLACK.clone(polyline.outlineColor);
             polyline.outlineWidth = 1;
             polyline.width = 1;
         } else {
@@ -101,41 +103,41 @@ define([
 
         polyline.show = true;
 
-        var value = vertexPositionsProperty.getValueCartesian(time);
-        if (typeof value !== 'undefined' && polyline.last_position !== value) {
-            polyline.setPositions(value);
-            polyline.last_position = value;
+        var vertexPositions = vertexPositionsProperty.getValueCartesian(time);
+        if (typeof vertexPositions !== 'undefined' && polyline.last_position !== vertexPositions) {
+            polyline.setPositions(vertexPositions);
+            polyline.last_position = vertexPositions;
         }
 
         var property = dynamicPolyline.color;
         if (typeof property !== 'undefined') {
-            value = property.getValue(time);
-            if (typeof value !== 'undefined') {
-                polyline.color = value;
+            color = property.getValue(time, color);
+            if (typeof color !== 'undefined') {
+                polyline.color = color;
             }
         }
 
         property = dynamicPolyline.outlineColor;
         if (typeof property !== 'undefined') {
-            value = property.getValue(time);
-            if (typeof value !== 'undefined') {
-                polyline.outlineColor = value;
+            outlineColor = property.getValue(time, outlineColor);
+            if (typeof outlineColor !== 'undefined') {
+                polyline.outlineColor = outlineColor;
             }
         }
 
         property = dynamicPolyline.outlineWidth;
         if (typeof property !== 'undefined') {
-            value = property.getValue(time);
-            if (typeof value !== 'undefined') {
-                polyline.outlineWidth = value;
+            var outlineWidth = property.getValue(time);
+            if (typeof outlineWidth !== 'undefined') {
+                polyline.outlineWidth = outlineWidth;
             }
         }
 
         property = dynamicPolyline.width;
         if (typeof property !== 'undefined') {
-            value = property.getValue(time);
-            if (typeof value !== 'undefined') {
-                polyline.width = value;
+            var width = property.getValue(time);
+            if (typeof width !== 'undefined') {
+                polyline.width = width;
             }
         }
     };

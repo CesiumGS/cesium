@@ -29,19 +29,20 @@ define([
         },
 
         packValuesForInterpolation : function(sourceArray, destinationArray, firstIndex, lastIndex) {
-            Quaternion.conjugate(CzmlUnitQuaternion.getValueFromArray(sourceArray, lastIndex * doublesPerQuaternion, quaternion0Conjugate));
+            CzmlUnitQuaternion.getValueFromArray(sourceArray, lastIndex * doublesPerQuaternion, quaternion0Conjugate);
+            quaternion0Conjugate.conjugate(quaternion0Conjugate);
 
             for ( var i = 0, len = lastIndex - firstIndex + 1; i < len; i++) {
                 var offset = i * doublesPerCartesian;
                 CzmlUnitQuaternion.getValueFromArray(sourceArray, (firstIndex + i) * doublesPerQuaternion, tmpQuaternion);
 
-                Quaternion.multiply(tmpQuaternion, quaternion0Conjugate, tmpQuaternion);
+                tmpQuaternion.multiply(quaternion0Conjugate, tmpQuaternion);
 
                 if (tmpQuaternion.w < 0) {
                     tmpQuaternion = tmpQuaternion.negate();
                 }
 
-                Quaternion.getAxis(tmpQuaternion, axis);
+                tmpQuaternion.getAxis(axis);
                 var angle = tmpQuaternion.getAngle();
                 destinationArray[offset] = axis.x * angle;
                 destinationArray[offset + 1] = axis.y * angle;
@@ -57,7 +58,7 @@ define([
             existingInstance.y = unwrappedInterval[1];
             existingInstance.z = unwrappedInterval[2];
             existingInstance.w = unwrappedInterval[3];
-            return Quaternion.normalize(existingInstance);
+            return existingInstance.normalize(existingInstance);
         },
 
         getValueFromArray : function(array, startingIndex, existingInstance) {
@@ -68,7 +69,7 @@ define([
             existingInstance.y = array[startingIndex + 1];
             existingInstance.z = array[startingIndex + 2];
             existingInstance.w = array[startingIndex + 3];
-            return Quaternion.normalize(existingInstance);
+            return existingInstance.normalize(existingInstance);
         },
 
         getValueFromInterpolationResult : function(array, existingInstance, sourceArray, firstIndex, lastIndex) {
@@ -82,28 +83,13 @@ define([
 
             CzmlUnitQuaternion.getValueFromArray(sourceArray, lastIndex * doublesPerQuaternion, quaternion0);
 
-            var difference;
             if (magnitude === 0) {
-                difference = identity;
+                tmpQuaternion = identity;
             } else {
-                //CZML_TODO Quaternion.fromAxisAngle creates a new instance of
-                //both Quaternion and Cartesian, so we comment it out and
-                //implement our own in place below.
-                //difference = Quaternion.fromAxisAngle(rotationVector, magnitude);
-
-                //Optimized Quaternion.fromAxisAngle
-                var halfAngle = magnitude / 2.0;
-                var s = Math.sin(halfAngle);
-                var c = Math.cos(halfAngle);
-                Cartesian3.normalize(rotationVector);
-                difference = tmpQuaternion;
-                difference.x = rotationVector.x * s;
-                difference.y = rotationVector.y * s;
-                difference.z = rotationVector.z * s;
-                difference.w = c;
+                Quaternion.fromAxisAngle(rotationVector, magnitude, tmpQuaternion);
             }
 
-            return Quaternion.normalize(Quaternion.multiply(difference, quaternion0, existingInstance));
+            return existingInstance.normalize(tmpQuaternion.multiply(quaternion0, existingInstance));
         },
     };
 

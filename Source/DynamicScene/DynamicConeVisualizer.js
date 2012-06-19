@@ -53,6 +53,9 @@ define([
         }
     };
 
+    var position;
+    var orientation;
+    var intersectionColor;
     DynamicConeVisualizer.prototype.updateObject = function(time, dynamicObject) {
         var dynamicCone = dynamicObject.cone;
         if (typeof dynamicCone === 'undefined') {
@@ -130,52 +133,46 @@ define([
         }
 
         cone.show = true;
-        var value;
         var property = dynamicCone.minimumClockAngle;
         if (typeof property !== 'undefined') {
-            value = property.getValue(time);
-            if (typeof value !== 'undefined') {
-                cone.minimumClockAngle = value;
+            var minimumClockAngle = property.getValue(time);
+            if (typeof minimumClockAngle !== 'undefined') {
+                cone.minimumClockAngle = minimumClockAngle;
             }
         }
 
-        value = maximumClockAngleProperty.getValue(time) || Math.pi;
-        if (typeof value !== 'undefined') {
-            cone.maximumClockAngle = value;
-        }
+        cone.maximumClockAngle = maximumClockAngleProperty.getValue(time) || Math.pi;
 
         property = dynamicCone.innerHalfAngle;
         if (typeof property !== 'undefined') {
-            value = property.getValue(time);
-            if (typeof value !== 'undefined') {
-                cone.innerHalfAngle = value;
+            var innerHalfAngle = property.getValue(time);
+            if (typeof innerHalfAngle !== 'undefined') {
+                cone.innerHalfAngle = innerHalfAngle;
             }
         }
 
-        value = outerHalfAngleProperty.getValue(time) || Math.pi;
-        if (typeof value !== 'undefined') {
-            cone.outerHalfAngle = value;
-        }
+        cone.outerHalfAngle = outerHalfAngleProperty.getValue(time) || Math.pi;
 
         property = dynamicCone.radius;
         if (typeof property !== 'undefined') {
-            value = property.getValue(time);
-            if (typeof value !== 'undefined') {
-                cone.radius = value;
+            var radius = property.getValue(time);
+            if (typeof radius !== 'undefined') {
+                cone.radius = radius;
             }
         }
 
-        var position = positionProperty.getValueCartesian(time) || cone.dynamicConeVisualizerLastPosition;
-        var orientation = orientationProperty.getValue(time) || cone.dynamicConeVisualizerLastOrientation;
+        position = positionProperty.getValueCartesian(time, position) || cone.dynamicConeVisualizerLastPosition;
+        orientation = orientationProperty.getValue(time, orientation) || cone.dynamicConeVisualizerLastOrientation;
 
         if (typeof position !== 'undefined' &&
             typeof orientation !== 'undefined' &&
-            (position !== cone.dynamicConeVisualizerLastPosition ||
-             orientation !== cone.dynamicConeVisualizerLastOrientation)) {
+            (!position.equals(cone.dynamicConeVisualizerLastPosition) ||
+             !orientation.equals(cone.dynamicConeVisualizerLastOrientation))) {
             cone.modelMatrix = DynamicConeVisualizer._computeModelMatrix(position, orientation);
-            cone.dynamicConeVisualizerLastPosition = position;
-            cone.dynamicConeVisualizerLastOrientation = orientation;
+            position.clone(cone.dynamicConeVisualizerLastPosition);
+            orientation.clone(cone.dynamicConeVisualizerLastOrientation);
         }
+
         var scene = this._scene;
         var material = dynamicCone.capMaterial;
         if (typeof material !== 'undefined') {
@@ -199,9 +196,9 @@ define([
 
         property = dynamicCone.intersectionColor;
         if (typeof property !== 'undefined') {
-            value = property.getValue(time);
-            if (typeof value !== 'undefined') {
-                cone.intersectionColor = value;
+            intersectionColor = property.getValue(time, intersectionColor);
+            if (typeof intersectionColor !== 'undefined') {
+                cone.intersectionColor = intersectionColor;
             }
         }
     };
