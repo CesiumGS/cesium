@@ -72,6 +72,13 @@ define([
          * @see Projections
          */
         this.projection = Projections.WGS84;
+
+        /**
+         * True if the tile provider is ready for use; otherwise, false.
+         *
+         * @type {Boolean}
+         */
+        this.ready = true;
     }
 
     /**

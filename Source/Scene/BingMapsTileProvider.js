@@ -197,6 +197,13 @@ define([
          */
         this.projection = Projections.MERCATOR;
 
+        /**
+         * True if the tile provider is ready for use; otherwise, false.
+         *
+         * @type {Boolean}
+         */
+        this.ready = true;
+
         this._url = undefined;
         this._deferredQueue = [];
         this._requestTemplate();

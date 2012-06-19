@@ -150,16 +150,7 @@ define([
 
         description = defaultValue(description, {});
 
-        var maxExtent = defaultValue(description.maxExtent, tileProvider.maxExtent);
-        maxExtent = defaultValue(maxExtent, Extent.MAX_VALUE);
-
-        this._maxExtent = maxExtent;
-
-        var rootTile = this._rootTile = new Tile({
-            extent : maxExtent,
-            zoom : 0,
-            ellipsoid : centralBody.getEllipsoid()
-        });
+        this._maxExtent = description.maxExtent;
 
         // reusable stack used during update for tile tree traversal
         var tileStack = this._tileStack = [];
@@ -212,23 +203,37 @@ define([
         this.pixelError2D = 2.0;
 
         //preload tiles
-        var zoomLimit = Math.max(Math.min(this._preloadZoomLimit, tileProvider.zoomMax), tileProvider.zoomMin);
+        if (tileProvider.ready) {
 
-        tileStack.push(rootTile);
-        while (tileStack.length > 0) {
-            var tile = tileStack.pop();
+            var maxExtent = defaultValue(description.maxExtent, tileProvider.maxExtent);
+            maxExtent = defaultValue(maxExtent, Extent.MAX_VALUE);
 
-            if (tile.zoom <= zoomLimit) {
-                tileLoadList.append(tile);
-                loadImageForTile(this, tile);
-            }
+            this._maxExtent = maxExtent;
 
-            if (tile.zoom < zoomLimit) {
-                var children = tile.getChildren();
-                for ( var i = 0, len = children.length; i < len; i++) {
-                    tileStack.push(children[i]);
+            var rootTile = this._rootTile = new Tile({
+                extent : maxExtent,
+                zoom : 0,
+                ellipsoid : centralBody.getEllipsoid()
+            });
+
+            var zoomLimit = Math.max(Math.min(this._preloadZoomLimit, tileProvider.zoomMax), tileProvider.zoomMin);
+
+            tileStack.push(rootTile);
+            while (tileStack.length > 0) {
+                var tile = tileStack.pop();
+
+                if (tile.zoom <= zoomLimit) {
+                    tileLoadList.append(tile);
+                    loadImageForTile(this, tile);
                 }
-            }
+
+                if (tile.zoom < zoomLimit) {
+                    var children = tile.getChildren();
+                    for ( var i = 0, len = children.length; i < len; i++) {
+                        tileStack.push(children[i]);
+                    }
+                }
+        }
         }
     }
 
@@ -242,6 +247,9 @@ define([
     var activeTileImageRequests = 0;
 
     function loadImageForTile(layer, tile) {
+        if (!layer._tileProvider.ready) {
+            return;
+        }
         if (!tileNeedsImageLoad(layer, tile)) {
             return;
         }
@@ -492,6 +500,23 @@ define([
      * @private
      */
     ImageryLayer.prototype.update = function(context, sceneState) {
+        if (!this._tileProvider.ready) {
+            return;
+        }
+
+        if (typeof this._rootTile === 'undefined') {
+            var tileProvider = this._tileProvider;
+            var maxExtent = defaultValue(this._maxExtent, tileProvider.maxExtent);
+            maxExtent = defaultValue(maxExtent, Extent.MAX_VALUE);
+
+            this._maxExtent = maxExtent;
+            this._rootTile = new Tile({
+                extent : maxExtent,
+                zoom : 0,
+                ellipsoid : this._centralBody.getEllipsoid()
+            });
+        }
+
         var minTileDistance = this._minTileDistance;
         if (typeof minTileDistance === 'undefined' || minTileDistance.needsUpdate(context, sceneState)) {
             this._minTileDistance = minTileDistance = createMinTileDistanceFunction(this, context, sceneState);
@@ -747,6 +772,10 @@ define([
     }
 
     ImageryLayer.prototype.render = function(context) {
+        if (!this._tileProvider.ready) {
+            return;
+        }
+
         var tilesToRender = this._tilesToRender;
 
         if (tilesToRender.length === 0) {
@@ -838,7 +867,9 @@ define([
      * imageryLayer = imageryLayer && imageryLayer.destroy();
      */
     ImageryLayer.prototype.destroy = function() {
-        this._rootTile.destroy();
+        if (typeof this._rootTile !== 'undefined') {
+            this._rootTile.destroy();
+        }
 
         return destroyObject(this);
     };

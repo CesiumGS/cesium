@@ -54,48 +54,41 @@ define([
 
         this._proxy = desc.proxy;
 
-        // TODO: Get this information from the server
-
         /**
          * The cartographic extent of the base tile, with north, south, east and
          * west properties in radians.
          *
          * @type {Extent}
          */
-        this.maxExtent = new Extent(
-            -CesiumMath.PI,
-            CesiumMath.toRadians(-85.05112878),
-            CesiumMath.PI,
-            CesiumMath.toRadians(85.05112878)
-        );
+        this.maxExtent = undefined;
 
         /**
          * The width of every image loaded.
          *
          * @type {Number}
          */
-        this.tileWidth = 256;
+        this.tileWidth = undefined;
 
         /**
          * The height of every image loaded.
          *
          * @type {Number}
          */
-        this.tileHeight = 256;
+        this.tileHeight = undefined;
 
         /**
          * The maximum zoom level that can be requested.
          *
          * @type {Number}
          */
-        this.zoomMax = 19;
+        this.zoomMax = undefined;
 
         /**
          * The minimum zoom level that can be requested.
          *
          * @type {Number}
          */
-        this.zoomMin = 0;
+        this.zoomMin = undefined;
 
         /**
          * The map projection of the image.
@@ -103,13 +96,44 @@ define([
          * @type {Enumeration}
          * @see Projections
          */
-        this.projection = Projections.MERCATOR;
+        this.projection = undefined;
 
-        this._logo = undefined;
-        this._logoLoaded = false;
+        /**
+         * True if the tile provider is ready for use; otherwise, false.
+         *
+         * @type {Boolean}
+         */
+        this.ready = false;
 
+        // Grab the details of this MapServer.
         var that = this;
         jsonp(this.url, function(data) {
+            // Grab tile details.
+            that.tileWidth = data.tileInfo.rows;
+            that.tileHeight = data.tileInfo.cols;
+
+            if (data.tileInfo.spatialReference.wkid === 102100) {
+                that.projection = Projections.MERCATOR;
+                // TODO: Determine extent from service description.
+                that.maxExtent = new Extent(
+                        -CesiumMath.PI,
+                        CesiumMath.toRadians(-85.05112878),
+                        CesiumMath.PI,
+                        CesiumMath.toRadians(85.05112878)
+                    );
+            } else if (data.tileInfo.spatialReference.wkid === 4326) {
+                that.projection = Projections.WGS84;
+                that.maxExtent = new Extent(
+                        CesiumMath.toRadians(data.tileInfo.fullExtent.xmin),
+                        CesiumMath.toRadians(data.tileInfo.fullExtent.ymin),
+                        CesiumMath.toRadians(data.tileInfo.fullExtent.xmax),
+                        CesiumMath.toRadians(data.tileInfo.fullExtent.ymax));
+            }
+
+            that.zoomMin = 0;
+            that.zoomMax = data.tileInfo.lods.length - 1;
+
+            // Create the copyright message.
             var credit = data.copyrightText;
 
             var canvas = document.createElement('canvas');
@@ -124,12 +148,22 @@ define([
 
             that._logo = canvas;
             that._logoLoaded = true;
+
+            that.ready = typeof that.tileWidth !== 'undefined' &&
+                         typeof that.tileHeight !== 'undefined' &&
+                         typeof that.projection !== 'undefined' &&
+                         typeof that.maxExtent !== 'undefined' &&
+                         typeof that.zoomMin !== 'undefined' &&
+                         typeof that.zoomMax !== 'undefined';
         }, {
             parameters : {
                 f : 'json'
             },
             proxy : this._proxy
         });
+
+        this._logo = undefined;
+        this._logoLoaded = false;
     }
 
     /**

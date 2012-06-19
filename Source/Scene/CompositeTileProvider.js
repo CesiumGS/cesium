@@ -100,6 +100,13 @@ define([
          */
         this.tileHeight = Number.MAX_VALUE;
 
+        /**
+         * True if the tile provider is ready for use; otherwise, false.
+         *
+         * @type {Boolean}
+         */
+        this.ready = true;
+
         // TODO: good idea?
         for ( var i = 0; i < this._list.length; ++i) {
             var provider = this._list[i].provider;
