@@ -23,7 +23,8 @@
         this.code = function () {
             Cesium.Chain.run(
                 Cesium.Jobs.downloadImage('Images/logoColor.png'),
-                Cesium.Jobs.downloadImage('Images/facility.gif')).thenRun(
+                Cesium.Jobs.downloadImage('Images/facility.gif'),
+                Cesium.Jobs.downloadImage('Images/Satellite.png')).thenRun(
             function () {
                 // Once both images are downloaded, they are combined into one image,
                 // called a texture atlas, which is assigned to a billboard-collection.
@@ -32,7 +33,8 @@
 
                 var billboards = new Cesium.BillboardCollection(undefined);
                 var images = [this.images['Images/logoColor.png'],
-                              this.images['Images/facility.gif']];
+                              this.images['Images/facility.gif'],
+                              this.images['Images/Satellite.png']];
                 var textureAtlas = scene.getContext().createTextureAtlas({images : images});
                 billboards.setTextureAtlas(textureAtlas);
 
@@ -48,7 +50,7 @@
 
                 billboards.add({
                     position : ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic2(-80.12, 25.46)),
-                    imageIndex : 1  // Facility
+                    imageIndex : 2  // Facility
                 });
 
                 primitives.add(billboards);

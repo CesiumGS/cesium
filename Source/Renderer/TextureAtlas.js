@@ -96,7 +96,8 @@ define([
         this._textureCoordinates = [];
 
         // Create initial texture and root.
-        this._resizeAtlas(initialSize);
+        this._texture = this._context.createTexture2D({width : initialSize, height : initialSize, pixelFormat : this._pixelFormat});
+        this._root = new TextureAtlasNode(new Cartesian2(0.0, 0.0), new Cartesian2(initialSize, initialSize));
 
         // Add initial images if there are any.
         if (typeof images !== 'undefined' && (images.length > 0)) {
@@ -108,12 +109,13 @@ define([
     }
 
     // Builds a larger texture and copies the old texture into the new one.
-    TextureAtlas.prototype._resizeAtlas = function (sizeIncrease) {
-        // Determine new atlas size
+    TextureAtlas.prototype._resizeAtlas = function (image) {
         var numImages = this.getNumberOfImages();
+        var scalingFactor = 2.0;
+        var sizeIncrease = Math.max(image.height, image.width);
+
         if(numImages > 0) {
             var oldAtlasSize = this._texture.getWidth();
-            var scalingFactor = 2.0;
             var atlasSize = scalingFactor * (oldAtlasSize + sizeIncrease + this._borderWidthInPixels);
             var sizeRatio = oldAtlasSize / atlasSize;
 
@@ -150,8 +152,10 @@ define([
             framebuffer.destroy();
             this._texture = newTexture;
         }
+        // First image exceeds initialSize
         else {
-            var initialSize = sizeIncrease;
+            var initialSize = scalingFactor * (sizeIncrease + this._borderWidthInPixels);
+            this._texture = this._texture && this._texture.destroy();
             this._texture = this._context.createTexture2D({width : initialSize, height : initialSize, pixelFormat : this._pixelFormat});
             this._root = new TextureAtlasNode(new Cartesian2(0.0, 0.0), new Cartesian2(initialSize, initialSize));
         }
@@ -233,8 +237,7 @@ define([
         }
         // No node found, must resize the texture atlas.
         else {
-            var sizeIncrease = Math.max(image.height, image.width);
-            this._resizeAtlas(sizeIncrease);
+            this._resizeAtlas(image);
             this._addImage(image, index);
         }
     };
