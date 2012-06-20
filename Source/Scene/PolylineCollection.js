@@ -604,6 +604,13 @@ define([
 
         this._removePolylines();
         this._updateMode(sceneState);
+        var useDepthTest = (this._morphTime !== 0.0);
+        var rsOne = this._rsOne;
+        rsOne.depthMask = !useDepthTest;
+        rsOne.depthTest.enabled = useDepthTest;
+        this._rsTwo.depthTest.enabled = useDepthTest;
+        this._rsThree.depthTest.enabled = useDepthTest;
+
         var properties = this._propertiesChanged;
         if (this._createVertexArray || this.computeNewBuffersUsage()){
             this._update(context);
