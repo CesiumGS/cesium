@@ -98,7 +98,7 @@ define([
         this._minimumRotateRate = 1.0 / 5000.0;
 
         this._spinHandler = new CameraEventHandler(canvas, CameraEventType.LEFT_DRAG);
-        this._zoomHandler = new CameraEventHandler(canvas, CameraEventType.RIGHT_DRAG);
+        this._zoomHandler = new CameraEventHandler(canvas, CameraEventType.MIDDLE_DRAG);
         this._zoomWheel = new CameraEventHandler(canvas, CameraEventType.WHEEL);
 
         this._lastInertiaSpinMovement = undefined;

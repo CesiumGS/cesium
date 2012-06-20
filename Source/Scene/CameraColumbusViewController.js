@@ -56,12 +56,13 @@ define([
         // TODO: Shouldn't change private variables like this, need to be able to change event modifiers
         //       on controllers.
         this._spindleController._spinHandler = this._spindleController._spinHandler && this._spindleController._spinHandler.destroy();
+        this._spindleController._spinHandler = new CameraEventHandler(canvas, CameraEventType.RIGHT_DRAG);
+        this._spindleController.mouseConstrainedZAxis = true;
 
         this._freeLookController = new CameraFreeLookController(canvas, camera);
         this._freeLookController.horizontalRotationAxis = Cartesian3.UNIT_Z;
 
         this._transform = this._camera.transform.clone();
-
         this._lastInertiaTranslateMovement = undefined;
     }
 
@@ -83,6 +84,8 @@ define([
         this._spindleController.update();
         this._freeLookController.update();
 
+        this._updateReferenceFrame();
+
         return true;
     };
 
@@ -99,8 +102,6 @@ define([
 
         var diff = startPlanePos.subtract(endPlanePos);
         camera.position = camera.position.add(diff);
-
-        this._updateReferenceFrame();
     };
 
     CameraColumbusViewController.prototype._updateReferenceFrame = function() {
