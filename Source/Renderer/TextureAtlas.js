@@ -329,8 +329,6 @@ define([
      * @param {Array} subRegions An array of {@link Rectangle} sub-regions measured in pixels from the bottom-left.
      *
      * @returns {Number} The index of the first newly-added region.
-     *
-     * @exception {DeveloperError} invalid image index.
      */
     TextureAtlas.prototype.addSubRegions = function(image, subRegions) {
         var index = this.addImage(image);
