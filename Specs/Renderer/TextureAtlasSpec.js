@@ -763,8 +763,48 @@ defineSuite([
 
         atlas = context.createTextureAtlas({borderWidthInPixels : 0, initialSize : 1});
 
-        var index = atlas.addImage(greenImage);
-        atlas.addSubRegions(index, [
+        atlas.addSubRegions(greenImage, [
+            { x:0.0, y:0.0, width:0.5, height:0.5 },
+            { x:0.0, y:0.5, width:0.5, height:0.5 },
+            { x:0.5, y:0.0, width:0.5, height:0.5 },
+            { x:0.5, y:0.5, width:0.5, height:0.5 }
+        ]);
+
+        var coordinates = atlas.getTextureCoordinates();
+
+        expect(coordinates[0].bottomLeft.x).toEqual(0.0);
+        expect(coordinates[0].bottomLeft.y).toEqual(0.0);
+        expect(coordinates[0].topRight.x).toEqual(1.0);
+        expect(coordinates[0].topRight.y).toEqual(1.0);
+
+        expect(coordinates[1].bottomLeft.x).toEqual(0.0);
+        expect(coordinates[1].bottomLeft.y).toEqual(0.0);
+        expect(coordinates[1].topRight.x).toEqual(0.5);
+        expect(coordinates[1].topRight.y).toEqual(0.5);
+
+        expect(coordinates[2].bottomLeft.x).toEqual(0.0);
+        expect(coordinates[2].bottomLeft.y).toEqual(0.5);
+        expect(coordinates[2].topRight.x).toEqual(0.5);
+        expect(coordinates[2].topRight.y).toEqual(1.0);
+
+        expect(coordinates[3].bottomLeft.x).toEqual(0.5);
+        expect(coordinates[3].bottomLeft.y).toEqual(0.0);
+        expect(coordinates[3].topRight.x).toEqual(1.0);
+        expect(coordinates[3].topRight.y).toEqual(0.5);
+
+        expect(coordinates[4].bottomLeft.x).toEqual(0.5);
+        expect(coordinates[4].bottomLeft.y).toEqual(0.5);
+        expect(coordinates[4].topRight.x).toEqual(1.0);
+        expect(coordinates[4].topRight.y).toEqual(1.0);
+
+        expect(atlas.getNumberOfImages()).toEqual(5);
+    });
+
+    it('creates an atlas that resizes with subregions', function() {
+
+        atlas = context.createTextureAtlas({borderWidthInPixels : 0, initialSize : 1});
+
+        atlas.addSubRegions(greenImage, [
             { x:0.0, y:0.0, width:0.5, height:0.5 },
             { x:0.0, y:0.5, width:0.5, height:0.5 },
             { x:0.5, y:0.0, width:0.5, height:0.5 },
@@ -831,23 +871,8 @@ defineSuite([
         expect(coordinates[5].bottomLeft.y).toEqual(0.0);
         expect(coordinates[5].topRight.x).toEqual(0.5);
         expect(coordinates[5].topRight.y).toEqual(0.25);
-    });
 
-    it('creates an atlas that resizes with subregions', function() {
-
-        atlas = context.createTextureAtlas({borderWidthInPixels : 0, initialSize : 1});
-
-        var index = atlas.addImage(greenImage);
-        atlas.addSubRegions(index, [
-            { x:0.0, y:0.0, width:0.5, height:0.5 },
-            { x:0.0, y:0.5, width:0.5, height:0.5 },
-            { x:0.5, y:0.0, width:0.5, height:0.5 },
-            { x:0.5, y:0.5, width:0.5, height:0.5 }
-        ]);
-
-
-
-        expect(atlas.getNumberOfImages()).toEqual(5);
+        expect(atlas.getNumberOfImages()).toEqual(6);
     });
 
     it('throws without image', function() {

@@ -321,37 +321,35 @@ define([
 
 
     /**
-     * Add a set of sub-regions of one atlas image as additional image indices.
+     * Add a set of sub-regions to one atlas image as additional image indices.
      *
      * @memberof TextureAtlas
      *
-     * @param {Number} index The index of the source image that will be broken into sub-regions.
-     * @param {Array} subRegions An array of {@link Rectangle} sub-regions measured in pixels from the upper-left.
+     * @param {Image} image An {@link Image} to be added to the texture atlas.
+     * @param {Array} subRegions An array of {@link Rectangle} sub-regions measured in pixels from the bottom-left.
      *
      * @returns {Number} The index of the first newly-added region.
      *
      * @exception {DeveloperError} invalid image index.
      */
-    TextureAtlas.prototype.addSubRegions = function(index, subRegions) {
+    TextureAtlas.prototype.addSubRegions = function(image, subRegions) {
+        var index = this.addImage(image);
+
         var atlasSize = this._texture.getWidth();
         var numImages = this.getNumberOfImages();
         var numSubRegions = subRegions.length;
-
-        if ((index < 0) || (index >= numImages)) {
-            throw new DeveloperError('invalid image index.');
-        }
 
         var baseRegion = this._textureCoordinates[index];
         for (var i = 0; i < numSubRegions; ++i) {
             var thisRegion = subRegions[i];
             this._textureCoordinates.push(new TextureCoordinate(
                 new Cartesian2(
-                    baseRegion.bottomLeft.x + (thisRegion.x / atlasSize),
-                    baseRegion.bottomLeft.y + (thisRegion.y / atlasSize)
+                    (baseRegion.bottomLeft.x + (thisRegion.x / atlasSize)),
+                    (baseRegion.bottomLeft.y + (thisRegion.y / atlasSize))
                 ),
                 new Cartesian2(
-                    baseRegion.bottomLeft.x + ((thisRegion.x + thisRegion.width) / atlasSize),
-                    baseRegion.bottomLeft.y + ((thisRegion.y + thisRegion.height) / atlasSize)
+                    (baseRegion.bottomLeft.x + ((thisRegion.x + thisRegion.width) / atlasSize)),
+                    (baseRegion.bottomLeft.y + ((thisRegion.y + thisRegion.height) / atlasSize))
                 )
             ));
         }
