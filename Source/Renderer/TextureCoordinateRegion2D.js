@@ -38,7 +38,7 @@ define([
             throw new DeveloperError('bottomLeft and topRight must be in the range [(0.0, 0.0), (1.0, 1.0)].');
         }
 
-        if (bottomLeft.x >= topRight.x || bottomLeft.y >= topRight.y) {
+        if (bottomLeft.x > topRight.x || bottomLeft.y > topRight.y) {
             throw new DeveloperError('bottomLeft must be smaller than topRight.');
         }
 
