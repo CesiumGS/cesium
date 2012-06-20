@@ -3,19 +3,15 @@ define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Cartesian2',
+        '../Renderer/TextureCoordinateRegion2D',
         './PixelFormat'
     ], function(
         DeveloperError,
         destroyObject,
         Cartesian2,
+        TextureCoordinateRegion2D,
         PixelFormat) {
     "use strict";
-
-    // Texture coordinates from 0.0 to 1.0
-    function TextureCoordinate(bottomLeft, topRight) {
-        this.bottomLeft = (typeof bottomLeft !== 'undefined') ? bottomLeft : new Cartesian2();
-        this.topRight = (typeof topRight !== 'undefined') ? topRight : new Cartesian2();
-    }
 
     // The atlas is made up of regions of space called nodes that contain images or child nodes.
     function TextureAtlasNode(bottomLeft, topRight, childNode1, childNode2, imageIndex) {
@@ -221,6 +217,10 @@ define([
 
     // Adds image of given index to the texture atlas. Called from addImage and addImages.
     TextureAtlas.prototype._addImage = function(image, index) {
+        if (typeof image === 'undefined') {
+            throw new DeveloperError('image is required.');
+        }
+
         var node = this._findNode(this._root, image);
 
         // Found a node that can hold the image.
@@ -229,7 +229,7 @@ define([
 
             // Add texture coordinate and write to texture
             var atlasSize = this._texture.getWidth();
-            this._textureCoordinates[index] = new TextureCoordinate(
+            this._textureCoordinates[index] = new TextureCoordinateRegion2D(
                 new Cartesian2(node.bottomLeft.x / atlasSize, node.bottomLeft.y / atlasSize),
                 new Cartesian2(node.topRight.x / atlasSize, node.topRight.y / atlasSize)
             );
@@ -255,16 +255,11 @@ define([
      * @returns {Number} The index of the newly added image.
      *
      * @exception {DeveloperError} image is required.
-     * @exception {DeveloperError} maximum texture size exceeded.
      *
      * @see TextureAtlas#addImages
      *
      */
     TextureAtlas.prototype.addImage = function(image) {
-        if (typeof image === 'undefined') {
-            throw new DeveloperError('image is required.');
-        }
-
         var index = this.getNumberOfImages();
         this._addImage(image, index);
         return index;
@@ -283,7 +278,6 @@ define([
      * @returns {Number} The first index of the newly added images.
      *
      * @exception {DeveloperError} images is required and must have length greater than zero.
-     * @exception {DeveloperError} maximum texture size exceeded.
      *
      * @see TextureAtlas#addImage
      *
@@ -332,6 +326,8 @@ define([
      * @param {Array} subRegions An array of {@link Rectangle} sub-regions measured in pixels from the bottom-left.
      *
      * @returns {Number} The index of the first newly-added region.
+     *
+     * @exception {DeveloperError} image is required.
      */
     TextureAtlas.prototype.addSubRegions = function(image, subRegions) {
         var index = this.addImage(image);
@@ -343,7 +339,7 @@ define([
         var baseRegion = this._textureCoordinates[index];
         for (var i = 0; i < numSubRegions; ++i) {
             var thisRegion = subRegions[i];
-            this._textureCoordinates.push(new TextureCoordinate(
+            this._textureCoordinates.push(new TextureCoordinateRegion2D(
                 new Cartesian2(
                     (baseRegion.bottomLeft.x + (thisRegion.x / atlasSize)),
                     (baseRegion.bottomLeft.y + (thisRegion.y / atlasSize))
@@ -369,15 +365,14 @@ define([
     };
 
     /**
-     * Returns an array of texture coordinates for all the images is the texture atlas.
-     * A texture coordinate is composed of {@link Cartesian2} bottomLeft and topRight members.
+     * Returns an array of {@link TextureCoordinateRegion2D} for all the images in the texture atlas.
      * The coordinates are in the order that the corresponding images were added to the atlas.
      *
      * @memberof TextureAtlas
      *
      * @returns {Array} The texture coordinates.
      *
-     * @see Cartesian2
+     * @see TextureCoordinateRegion2D
      */
     TextureAtlas.prototype.getTextureCoordinates = function() {
         return this._textureCoordinates;
