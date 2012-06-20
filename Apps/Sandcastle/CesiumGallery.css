@@ -46,3 +46,36 @@ a.linkButton, a.linkButton:visited {
 a.linkButton:focus, a.linkButton:hover {
     text-decoration: none;
 }
+
+.demoTile {
+    margin: 4px;
+    position: relative;
+    top: 0;
+    left: 0;
+}
+
+.insetButtons {
+    display: block;
+    position: absolute;
+    top: 110px;
+    left: 40px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 7px;
+    padding: 5px;
+    opacity: 0;
+    -moz-transition: opacity 0.2s;
+    -webkit-transition: opacity 0.2s;
+    transition: opacity 0.2s;
+}
+
+.demoTile:hover .insetButtons, .demoTile:focus .insetButtons {
+    opacity: 1;
+}
+
+.demoTile .dijitButtonNode, .demoTile .dijitButtonNode * {
+    cursor: default;
+}
+
+.insetButtons .dijitButtonNode, .insetButtons .dijitButtonNode * {
+    cursor: pointer;
+}
