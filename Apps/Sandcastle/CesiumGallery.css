@@ -27,9 +27,15 @@ html, body {
 }
 
 h1 {
-    margin: 1em;
+    margin: 0 0 1em;
     text-align: center;
     font-size: 18pt;
+}
+
+h1 img {
+    display: block;
+    border: none;
+    margin: 0 auto;
 }
 
 a.linkButton, a.linkButton:visited {
