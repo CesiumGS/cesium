@@ -1,3 +1,4 @@
+/*global require,gallery_demos*/
 require({
         baseUrl: '../../Source',
         packages: [{
@@ -38,7 +39,9 @@ require({
         if (typeof gallery_demos === 'undefined') {
             dom.byId('demos').textContent = 'No demos found, please run the build script.';
         } else {
-            var i, len = gallery_demos.length, demos = dom.byId('demos');
+            var i;
+            var len = gallery_demos.length;
+            var demos = dom.byId('demos');
 
             for (i = 0; i < len; ++i) {
                 var button = document.createElement('a');

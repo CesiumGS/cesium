@@ -1,3 +1,4 @@
+/*global require,CodeMirror*/
 require({
         baseUrl: '../../Source',
         packages: [{
@@ -24,6 +25,7 @@ require({
         'dojo/_base/window',
         'dojo/_base/xhr',
         'dijit/registry',
+        'dijit/layout/ContentPane',
         'dijit/form/Button',
         'dijit/form/DropDownButton',
         'dijit/form/ToggleButton',
@@ -35,7 +37,6 @@ require({
         'dijit/PopupMenuBarItem',
         'dijit/MenuItem',
         'dijit/layout/BorderContainer',
-        'dijit/layout/ContentPane',
         'dijit/layout/TabContainer',
         'dijit/Toolbar',
         'dijit/ToolbarSeparator',
@@ -51,7 +52,8 @@ require({
             fx,
             win,
             xhr,
-            registry
+            registry,
+            ContentPane
     ) {
         "use strict";
         parser.parse();
@@ -68,10 +70,16 @@ require({
             registry.byId('buttonSaveAs').set('disabled', true);
         }
 
-        var jsEditor, htmlEditor, suggestButton = registry.byId('buttonSuggest');
-        var docTimer, docTabs = {}, cesiumContainer = registry.byId('cesiumContainer');
-        var docNode = dojo.byId('docPopup'), docMessage = dojo.byId('docPopupMessage');
+        var jsEditor;
+        var htmlEditor;
+        var suggestButton = registry.byId('buttonSuggest');
+        var docTimer;
+        var docTabs = {};
+        var cesiumContainer = registry.byId('cesiumContainer');
+        var docNode = dom.byId('docPopup');
+        var docMessage = dom.byId('docPopupMessage');
         var local = { 'docTypes': [],  'headers': "<html><head></head><body>"};
+
         xhr.get({
             url: '../../Build/Documentation/types.txt',
             handleAs: 'json'
@@ -90,7 +98,7 @@ require({
 
         function openDocTab(title, link) {
             if (typeof docTabs[title] === 'undefined') {
-                docTabs[title] = new dijit.layout.ContentPane({
+                docTabs[title] = new ContentPane({
                     title: title,
                     focused: true,
                     content: '<iframe class="fullFrame" src="' + link + '"></iframe>',
@@ -117,6 +125,12 @@ require({
 
         function showDocPopup () {
             var selectedText = jsEditor.getSelection();
+
+            var onDocClick = function () {
+                openDocTab(this.textContent, this.href);
+                return false;
+            };
+
             if (selectedText && selectedText in local.docTypes && typeof local.docTypes[selectedText].push === 'function') {
                 var member, ele, i, len = local.docTypes[selectedText].length;
                 docMessage.innerHTML = '';
@@ -126,10 +140,7 @@ require({
                     ele.target = "_blank";
                     ele.textContent = member.replace('.html', '').replace('module-', '').replace('#', '.');
                     ele.href = '../../Build/Documentation/' + member;
-                    ele.onclick = function () {
-                        openDocTab(this.textContent, this.href);
-                        return false;
-                    };
+                    ele.onclick = onDocClick;
                     docMessage.appendChild(ele);
                 }
                 jsEditor.addWidget(jsEditor.getCursor(true), docNode);
@@ -145,9 +156,9 @@ require({
             docTimer = window.setTimeout(showDocPopup, 500);
         }
 
-        var bucketFrame = document.getElementById('bucketFrame'),
-            logOutput = document.getElementById('logOutput'),
-            bucketPane = registry.byId('bucketPane');
+        var bucketFrame = document.getElementById('bucketFrame');
+        var logOutput = document.getElementById('logOutput');
+        var bucketPane = registry.byId('bucketPane');
 
         CodeMirror.commands.runCesium = function() {
             //CodeMirror.cesiumWindow = undefined;
@@ -223,6 +234,7 @@ require({
         // The iframe (bucket.html) sends this message on load.
         // This triggers the code to be injected into the iframe.
         window.addEventListener('message', function (e) {
+            var ele;
             if (e.data === 'reload') {
                 logOutput.innerHTML = "";
                 //CodeMirror.cesiumWindow = bucketFrame.contentWindow;
@@ -240,11 +252,11 @@ require({
                     bucketDoc.body.appendChild(jsEle);
                 }
             } else if (typeof e.data.log !== 'undefined') {
-                var ele = document.createElement('span');
+                ele = document.createElement('span');
                 ele.textContent = e.data.log + "\n";
                 appendConsole(ele);
             } else if (typeof e.data.error !== 'undefined') {
-                var ele = document.createElement('span');
+                ele = document.createElement('span');
                 ele.className = 'consoleError';
                 ele.textContent = e.data.error + "\n";
                 appendConsole(ele);

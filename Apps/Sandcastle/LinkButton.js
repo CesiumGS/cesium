@@ -1,3 +1,4 @@
+/*global define*/
 define([
         'dojo/_base/declare',
         'dojo/dom-class', // domClass.toggle
@@ -12,6 +13,7 @@ define([
         _CssStateMixin,
         _TemplatedMixin,
         template) {
+        "use strict";
 
         return declare('Sandcastle.LinkButton', [_WidgetBase, _TemplatedMixin, _CssStateMixin], {
             baseClass: "dijitButton",
