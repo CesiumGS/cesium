@@ -437,7 +437,7 @@ define([
         var ray = this.getPickRay(windowPosition);
         var intersection = IntersectionTests.rayEllipsoid(ray.position, ray.direction, ellipsoid);
         if (!intersection) {
-            return null;
+            return undefined;
         }
 
         var iPt = ray.position.add(ray.direction.multiplyWithScalar(intersection.start));

@@ -1,7 +1,6 @@
 /*global define*/
 define([
         '../Core/destroyObject',
-        '../Core/FAR',
         '../Core/Ellipsoid',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
@@ -13,7 +12,6 @@ define([
         './CameraHelpers'
     ], function(
         destroyObject,
-        FAR,
         Ellipsoid,
         Cartesian3,
         Cartesian4,
@@ -44,10 +42,6 @@ define([
          * @type Number
          */
         this.inertiaTranslate = 0.9;
-
-        this._translateFactor = 1.0;
-        this._minimumZoomRate = 20.0;
-        this._maximumZoomRate = FAR;
 
         this._translateHandler = new CameraEventHandler(canvas, CameraEventType.LEFT_DRAG);
 

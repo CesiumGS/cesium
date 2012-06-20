@@ -255,8 +255,7 @@ define([
             var camera = scene.getCamera();
             var controllers = camera.getControllers();
             controllers.removeAll();
-            controllers.addSpindle();
-            controllers.addFreeLook();
+            controllers.addCentralBody();
 
             camera.frustum = this._camera3D.frustum.clone();
             camera.transform = Matrix4.IDENTITY;
