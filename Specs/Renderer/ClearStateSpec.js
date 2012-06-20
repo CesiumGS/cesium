@@ -2,7 +2,7 @@
 defineSuite([
          '../Specs/createContext',
          '../Specs/destroyContext'
-     ], "Renderer/ClearState", function(
+     ], 'Renderer/ClearState', function(
          createContext,
          destroyContext) {
     "use strict";
@@ -18,7 +18,7 @@ defineSuite([
         destroyContext(context);
     });
 
-    it("creates with defaults", function() {
+    it('creates with defaults', function() {
         var defaultCS = {
             scissorTest : {
                 enabled : false,
@@ -74,7 +74,7 @@ defineSuite([
         expect(cs.stencil).toEqual(defaultCS.stencil);
     });
 
-    it("creates with all clear states", function() {
+    it('creates with all clear states', function() {
         var c = {
             scissorTest : {
                 enabled : true,
@@ -130,7 +130,7 @@ defineSuite([
         expect(cs.stencil).toEqual(c.stencil);
     });
 
-    it("creates with some clear states", function() {
+    it('creates with some clear states', function() {
         var c = {
             scissorTest : {
                 enabled : true
@@ -162,7 +162,7 @@ defineSuite([
         expect(cs.stencil).toEqual(defaultCS.stencil);
     });
 
-    it("fails to create (negative scissorTest.rectangle.width)", function() {
+    it('fails to create (negative scissorTest.rectangle.width)', function() {
         expect(function() {
             context.createClearState({
                 scissorTest : {
@@ -177,7 +177,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("fails to create (negative scissorTest.rectangle.height)", function() {
+    it('fails to create (negative scissorTest.rectangle.height)', function() {
         expect(function() {
             context.createClearState({
                 scissorTest : {

@@ -24,8 +24,8 @@ define([
      * properties can be changed at any time by calling the billboard's corresponding
      * <code>set</code> function, e.g., {@link Billboard#setShow}.
      * <br /><br />
-     * <div align="center">
-     * <img src="images/Billboard.png" width="400" height="300" /><br />
+     * <div align='center'>
+     * <img src='images/Billboard.png' width='400' height='300' /><br />
      * Example billboards
      * </div>
      *
@@ -55,14 +55,14 @@ define([
 
         var position = b.position ? new Cartesian3(b.position.x, b.position.y, b.position.z) : Cartesian3.ZERO.clone();
 
-        this._show = (typeof b.show === "undefined") ? true : b.show;
+        this._show = (typeof b.show === 'undefined') ? true : b.show;
         this._position = position;
         this._actualPosition = position.clone(); // For columbus view and 2D
         this._pixelOffset = b.pixelOffset ? new Cartesian2(b.pixelOffset.x, b.pixelOffset.y) : Cartesian2.ZERO.clone();
         this._eyeOffset = b.eyeOffset ? new Cartesian3(b.eyeOffset.x, b.eyeOffset.y, b.eyeOffset.z) : Cartesian3.ZERO.clone();
         this._horizontalOrigin = b.horizontalOrigin || HorizontalOrigin.CENTER;
         this._verticalOrigin = b.verticalOrigin || VerticalOrigin.CENTER;
-        this._scale = (typeof b.scale === "undefined") ? 1.0 : b.scale;
+        this._scale = (typeof b.scale === 'undefined') ? 1.0 : b.scale;
         this._imageIndex = b.imageIndex || 0;
         this._color = {
             red : color.red,
@@ -138,7 +138,7 @@ define([
      * @see Billboard#getShow
      */
     Billboard.prototype.setShow = function(value) {
-        if ((typeof value !== "undefined") && (this._show !== value)) {
+        if ((typeof value !== 'undefined') && (this._show !== value)) {
             this._show = value;
             this._makeDirty(SHOW_INDEX);
         }
@@ -186,7 +186,7 @@ define([
     Billboard.prototype.setPosition = function(value) {
         var p = this._position;
 
-        if ((typeof value !== "undefined") && ((p.x !== value.x) || (p.y !== value.y) || (p.z !== value.z))) {
+        if ((typeof value !== 'undefined') && ((p.x !== value.x) || (p.y !== value.y) || (p.z !== value.z))) {
             p.x = value.x;
             p.y = value.y;
             p.z = value.z;
@@ -237,10 +237,10 @@ define([
      * changing it after calling <code>setPixelOffset</code> does not affect the billboard's pixel
      * offset; an explicit call to <code>setPixelOffset</code> is required.
      * <br /><br />
-     * <div align="center">
-     * <table border="0" cellpadding="5"><tr>
-     * <td align="center"><code>default</code><br/><img src="images/Billboard.setPixelOffset.default.png" width="250" height="188" /></td>
-     * <td align="center"><code>b.setPixelOffset({ x : 50, y : -25 });</code><br/><img src="images/Billboard.setPixelOffset.x50y-25.png" width="250" height="188" /></td>
+     * <div align='center'>
+     * <table border='0' cellpadding='5'><tr>
+     * <td align='center'><code>default</code><br/><img src='images/Billboard.setPixelOffset.default.png' width='250' height='188' /></td>
+     * <td align='center'><code>b.setPixelOffset({ x : 50, y : -25 });</code><br/><img src='images/Billboard.setPixelOffset.x50y-25.png' width='250' height='188' /></td>
      * </tr></table>
      * The billboard's origin is indicated by the yellow point.
      * </div>
@@ -255,7 +255,7 @@ define([
     Billboard.prototype.setPixelOffset = function(value) {
         var p = this._pixelOffset;
 
-        if ((typeof value !== "undefined") && ((p.x !== value.x) || (p.y !== value.y))) {
+        if ((typeof value !== 'undefined') && ((p.x !== value.x) || (p.y !== value.y))) {
             p.x = value.x;
             p.y = value.y;
             this._makeDirty(PIXEL_OFFSET_INDEX);
@@ -292,10 +292,10 @@ define([
      * Below, the billboard is positioned at the center of the Earth but an eye offset makes it always
      * appear on top of the Earth regardless of the viewer's or Earth's orientation.
      * <br /><br />
-     * <div align="center">
-     * <table border="0" cellpadding="5"><tr>
-     * <td align="center"><img src="images/Billboard.setEyeOffset.one.png" width="250" height="188" /></td>
-     * <td align="center"><img src="images/Billboard.setEyeOffset.two.png" width="250" height="188" /></td>
+     * <div align='center'>
+     * <table border='0' cellpadding='5'><tr>
+     * <td align='center'><img src='images/Billboard.setEyeOffset.one.png' width='250' height='188' /></td>
+     * <td align='center'><img src='images/Billboard.setEyeOffset.two.png' width='250' height='188' /></td>
      * </tr></table>
      * <code>b.setEyeOffset({ x : 0.0, y : 8000000.0, z : 0.0 });</code><br /><br />
      * </div>
@@ -309,7 +309,7 @@ define([
     Billboard.prototype.setEyeOffset = function(value) {
         var e = this._eyeOffset;
 
-        if ((typeof value !== "undefined") && ((e.x !== value.x) || (e.y !== value.y) || (e.z !== value.z))) {
+        if ((typeof value !== 'undefined') && ((e.x !== value.x) || (e.y !== value.y) || (e.z !== value.z))) {
             e.x = value.x;
             e.y = value.y;
             e.z = value.z;
@@ -334,8 +334,8 @@ define([
      * Sets the horizontal origin of this billboard, which determines if the billboard is
      * to the left, center, or right of its position.
      * <br /><br />
-     * <div align="center">
-     * <img src="images/Billboard.setHorizontalOrigin.png" width="400" height="300" /><br />
+     * <div align='center'>
+     * <img src='images/Billboard.setHorizontalOrigin.png' width='400' height='300' /><br />
      * </div>
      *
      * @memberof Billboard
@@ -351,7 +351,7 @@ define([
      * b.setVerticalOrigin(VerticalOrigin.BOTTOM);
      */
     Billboard.prototype.setHorizontalOrigin = function(value) {
-        if ((typeof value !== "undefined") && (this._horizontalOrigin !== value)) {
+        if ((typeof value !== 'undefined') && (this._horizontalOrigin !== value)) {
             this._horizontalOrigin = value;
             this._makeDirty(HORIZONTAL_ORIGIN_INDEX);
         }
@@ -374,8 +374,8 @@ define([
      * Sets the vertical origin of this billboard, which determines if the billboard is
      * to the above, below, or at the center of its position.
      * <br /><br />
-     * <div align="center">
-     * <img src="images/Billboard.setVerticalOrigin.png" width="400" height="300" /><br />
+     * <div align='center'>
+     * <img src='images/Billboard.setVerticalOrigin.png' width='400' height='300' /><br />
      * </div>
      *
      * @memberof Billboard
@@ -391,7 +391,7 @@ define([
      * b.setVerticalOrigin(VerticalOrigin.BOTTOM);
      */
     Billboard.prototype.setVerticalOrigin = function(value) {
-        if ((typeof value !== "undefined") && (this._verticalOrigin !== value)) {
+        if ((typeof value !== 'undefined') && (this._verticalOrigin !== value)) {
             this._verticalOrigin = value;
             this._makeDirty(VERTICAL_ORIGIN_INDEX);
         }
@@ -416,8 +416,8 @@ define([
      * <code>1.0</code> enlarges the billboard; a positive scale less than <code>1.0</code> shrinks
      * the billboard.
      * <br /><br />
-     * <div align="center">
-     * <img src="images/Billboard.setScale.png" width="400" height="300" /><br/>
+     * <div align='center'>
+     * <img src='images/Billboard.setScale.png' width='400' height='300' /><br/>
      * From left to right in the above image, the scales are <code>0.5</code>, <code>1.0</code>,
      * and <code>2.0</code>.
      * </div>
@@ -430,7 +430,7 @@ define([
      * @see Billboard#setImageIndex
      */
     Billboard.prototype.setScale = function(value) {
-        if ((typeof value !== "undefined") && (this._scale !== value)) {
+        if ((typeof value !== 'undefined') && (this._scale !== value)) {
             this._scale = value;
             this._makeDirty(SCALE_INDEX);
         }
@@ -457,7 +457,7 @@ define([
      * @see BillboardCollection#setTextureAtlas
      */
     Billboard.prototype.setImageIndex = function(value) {
-        if ((typeof value !== "undefined") && (this._imageIndex !== value)) {
+        if ((typeof value !== 'undefined') && (this._imageIndex !== value)) {
             this._imageIndex = value;
             this._makeDirty(IMAGE_INDEX_INDEX);
         }
@@ -484,10 +484,10 @@ define([
      * colored billboards.  Second, the color's alpha component can be used to make the billboard translucent as shown below.
      * An alpha of <code>0.0</code> makes the billboard transparent, and <code>1.0</code> makes the billboard opaque.
      * <br /><br />
-     * <div align="center">
-     * <table border="0" cellpadding="5"><tr>
-     * <td align="center"><code>default</code><br/><img src="images/Billboard.setColor.Alpha255.png" width="250" height="188" /></td>
-     * <td align="center"><code>alpha : 0.5</code><br/><img src="images/Billboard.setColor.Alpha127.png" width="250" height="188" /></td>
+     * <div align='center'>
+     * <table border='0' cellpadding='5'><tr>
+     * <td align='center'><code>default</code><br/><img src='images/Billboard.setColor.Alpha255.png' width='250' height='188' /></td>
+     * <td align='center'><code>alpha : 0.5</code><br/><img src='images/Billboard.setColor.Alpha127.png' width='250' height='188' /></td>
      * </tr></table>
      * </div>
      * <br />
@@ -522,7 +522,7 @@ define([
     Billboard.prototype.setColor = function(value) {
         var c = this._color;
 
-        if ((typeof value !== "undefined") &&
+        if ((typeof value !== 'undefined') &&
             ((c.red !== value.red) || (c.green !== value.green) || (c.blue !== value.blue) || (c.alpha !== value.alpha))) {
 
             c.red = value.red;
@@ -584,11 +584,11 @@ define([
      */
     Billboard.prototype.computeScreenSpacePosition = function(uniformState) {
         if (!this._collection) {
-            throw new DeveloperError("Billboard must be in a collection.  Was it removed?");
+            throw new DeveloperError('Billboard must be in a collection.  Was it removed?');
         }
 
         if (!uniformState) {
-            throw new DeveloperError("uniformState is required.", "uniformState");
+            throw new DeveloperError('uniformState is required.');
         }
 
         return Billboard._computeScreenSpacePosition(this._collection.modelMatrix, this._actualPosition, this._eyeOffset, this._pixelOffset, uniformState);

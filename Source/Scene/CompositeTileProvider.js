@@ -30,10 +30,10 @@ define([
      * // Create a CompositeTileProvider from a SingleTileProvider and BingMapsTileProvider
      *
      * // Single
-     *  var single = new SingleTileProvider("Images/NE2_50M_SR_W_4096.jpg");
+     *  var single = new SingleTileProvider('Images/NE2_50M_SR_W_4096.jpg');
      *  // Bing Maps
      *  var bing = new BingMapsTileProvider({
-     *      server : "dev.virtualearth.net",
+     *      server : 'dev.virtualearth.net',
      *      mapStyle : BingMapsStyle.AERIAL
      *  });
      *  // Composite
@@ -45,11 +45,11 @@ define([
      */
     function CompositeTileProvider(list, camera, ellipsoid) {
         if (!list) {
-            throw new DeveloperError("A non-empty list is required.", "list");
+            throw new DeveloperError('A non-empty list is required.');
         }
 
         if (!camera) {
-            throw new DeveloperError("camera is required.", "camera");
+            throw new DeveloperError('camera is required.');
         }
 
         this._camera = camera;
@@ -119,10 +119,10 @@ define([
 
     CompositeTileProvider._compare = function(a, b) {
         // if height isn't provided, default to 0.0
-        if (typeof a.height === "undefined") {
+        if (typeof a.height === 'undefined') {
             a.height = 0.0;
         }
-        if (typeof b.height === "undefined") {
+        if (typeof b.height === 'undefined') {
             b.height = 0.0;
         }
         return b.height - a.height;
@@ -169,7 +169,7 @@ define([
      */
     CompositeTileProvider.prototype.loadTileImage = function(tile, onload, onerror, oninvalid) {
         if (tile.zoom < this.zoomMin || tile.zoom > this.zoomMax) {
-            throw new DeveloperError("The zoom must be between in [zoomMin, zoomMax].", "tile.zoom");
+            throw new DeveloperError('tile.zoom must be between in [zoomMin, zoomMax].');
         }
 
         var height = this._camera.position.magnitude() - this._radius;
@@ -181,7 +181,7 @@ define([
             image = provider.loadTileImage(tile, onload, onerror, oninvalid);
             tile.projection = provider.projection;
         } else {
-            if (oninvalid && typeof oninvalid === "function") {
+            if (oninvalid && typeof oninvalid === 'function') {
                 oninvalid();
             }
         }

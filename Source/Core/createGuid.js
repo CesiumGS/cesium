@@ -5,7 +5,7 @@ define(function() {
     /**
      * Creates a Globally unique identifier (GUID) string.  A GUID is 128 bits long, and can guarantee uniqueness across space and time.
      *
-     * @see <a href="http://www.ietf.org/rfc/rfc4122.txt">RFC 4122 A Universally Unique IDentifier (UUID) URN Namespace</a>
+     * @see <a href='http://www.ietf.org/rfc/rfc4122.txt'>RFC 4122 A Universally Unique IDentifier (UUID) URN Namespace</a>
      *
      * @example
      * this.guid = createGuid();

@@ -14,7 +14,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        CLAMP : new Enumeration(0x812F, "CLAMP"),
+        CLAMP : new Enumeration(0x812F, 'CLAMP'),
 
         /**
          * DOC_TBA
@@ -22,7 +22,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        REPEAT : new Enumeration(0x2901, "REPEAT"),
+        REPEAT : new Enumeration(0x2901, 'REPEAT'),
 
         /**
          * DOC_TBA
@@ -30,7 +30,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        MIRRORED_REPEAT : new Enumeration(0x8370, "MIRRORED_REPEAT"),
+        MIRRORED_REPEAT : new Enumeration(0x8370, 'MIRRORED_REPEAT'),
 
         /**
          * DOC_TBA

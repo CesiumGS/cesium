@@ -8,7 +8,7 @@ defineSuite([
     "use strict";
     /*global it,expect,describe,beforeEach*/
 
-    describe("LRU", function() {
+    describe('LRU', function() {
         var LRU = CachePolicy.LRU;
 
         var Key = function(value) {
@@ -38,19 +38,19 @@ defineSuite([
             }));
         });
 
-        it("constructor throws on invalid fetch function", function() {
+        it('constructor throws on invalid fetch function', function() {
             expect(function() {
                 return new LRU();
             }).toThrow();
 
             expect(function() {
                 return new LRU({
-                    fetchFunc : "not-a-function"
+                    fetchFunc : 'not-a-function'
                 });
             }).toThrow();
         });
 
-        it("hit is in cache", function() {
+        it('hit is in cache', function() {
             var keys = [];
             var i = 0;
             for (; i < limit; ++i) {
@@ -66,7 +66,7 @@ defineSuite([
             expect(lastRemoved === null).toEqual(true);
         });
 
-        it("miss replaces lru", function() {
+        it('miss replaces lru', function() {
             var keys = [];
             var i = 0;
             for (; i < limit + 1; ++i) {

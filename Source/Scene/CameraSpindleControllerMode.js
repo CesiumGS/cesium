@@ -17,7 +17,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        ROTATE : new Enumeration(0, "ROTATE"),
+        ROTATE : new Enumeration(0, 'ROTATE'),
 
         /**
          * This mode will cause the controller to rotate around an ellipsoid such that
@@ -27,7 +27,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        PAN : new Enumeration(1, "PAN"),
+        PAN : new Enumeration(1, 'PAN'),
 
         /**
          * This mode will choose the best mode for the mouse input.
@@ -35,7 +35,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        AUTO : new Enumeration(2, "AUTO")
+        AUTO : new Enumeration(2, 'AUTO')
     };
 
     return CameraSpindleControllerMode;

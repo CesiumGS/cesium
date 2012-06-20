@@ -14,7 +14,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        DONT_CARE : new Enumeration(0x1100, "DONT_CARE"),
+        DONT_CARE : new Enumeration(0x1100, 'DONT_CARE'),
 
         /**
          * DOC_TBA
@@ -22,7 +22,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        FASTEST : new Enumeration(0x1101, "FASTEST"),
+        FASTEST : new Enumeration(0x1101, 'FASTEST'),
 
         /**
          * DOC_TBA
@@ -30,7 +30,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        NICEST : new Enumeration(0x1102, "NICEST"),
+        NICEST : new Enumeration(0x1102, 'NICEST'),
 
         /**
          * DOC_TBA

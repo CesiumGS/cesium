@@ -11,7 +11,7 @@ define(['Core/DeveloperError'
      *
      * @exports FullScreen
      *
-     * @see <a href="http://dvcs.w3.org/hg/fullscreen/raw-file/tip/Overview.html">W3C Fullscreen Living Specification</a>
+     * @see <a href='http://dvcs.w3.org/hg/fullscreen/raw-file/tip/Overview.html'>W3C Fullscreen Living Specification</a>
      */
     var FullScreen = {
         /**

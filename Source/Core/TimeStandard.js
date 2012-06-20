@@ -71,13 +71,13 @@ define(['require', './DeveloperError', './binarySearch', './LeapSecond'], functi
          */
         convertTaiToUtc : function(julianDate) {
             if (!julianDate) {
-                throw new DeveloperError("julianDate is required.", "julianDate");
+                throw new DeveloperError('julianDate is required.');
             }
             if (julianDate.getTimeStandard() === TimeStandard.UTC) {
                 return julianDate;
             }
             if (julianDate.getTimeStandard() !== TimeStandard.TAI) {
-                throw new DeveloperError("julianDate is not in the TAI time standard.", "julianDate");
+                throw new DeveloperError('julianDate is not in the TAI time standard.');
             }
 
             // treat the request date as if it were UTC, and search for the most recent leap second.
@@ -128,19 +128,19 @@ define(['require', './DeveloperError', './binarySearch', './LeapSecond'], functi
          * @return {JulianDate} A Julian date representing the input date in the TAI time standard.
          *
          * @example
-         * var date = new Date("July 11, 2011 12:00:00 UTC");
+         * var date = new Date('July 11, 2011 12:00:00 UTC');
          * var julianDateUtc = JulianDate.fromDate(date, TimeStandard.UTC);
          * var julianDateTai = TimeStandard.convertUtcToTai(julianDateUtc);
          */
         convertUtcToTai : function(julianDate) {
             if (!julianDate) {
-                throw new DeveloperError("julianDate is required.", "julianDate");
+                throw new DeveloperError('julianDate is required.');
             }
             if (julianDate.getTimeStandard() === TimeStandard.TAI) {
                 return julianDate;
             }
             if (julianDate.getTimeStandard() !== TimeStandard.UTC) {
-                throw new DeveloperError("julianDate is not in the UTC time standard.", "julianDate");
+                throw new DeveloperError('julianDate is not in the UTC time standard.');
             }
 
             var newDate = julianDate.addSeconds(julianDate.getTaiMinusUtc());

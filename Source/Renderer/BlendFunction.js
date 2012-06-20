@@ -14,7 +14,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        ZERO : new Enumeration(0, "ZERO"),
+        ZERO : new Enumeration(0, 'ZERO'),
 
         /**
          * DOC_TBA
@@ -22,7 +22,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        ONE : new Enumeration(1, "ONE"),
+        ONE : new Enumeration(1, 'ONE'),
 
         /**
          * DOC_TBA
@@ -30,7 +30,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        SOURCE_COLOR : new Enumeration(0x0300, "SOURCE_COLOR"), // WebGL: SRC_COLOR
+        SOURCE_COLOR : new Enumeration(0x0300, 'SOURCE_COLOR'), // WebGL: SRC_COLOR
 
         /**
          * DOC_TBA
@@ -38,7 +38,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        ONE_MINUS_SOURCE_COLOR : new Enumeration(0x0301, "ONE_MINUS_SOURCE_COLOR"), // WebGL: ONE_MINUS_SRC_COLOR
+        ONE_MINUS_SOURCE_COLOR : new Enumeration(0x0301, 'ONE_MINUS_SOURCE_COLOR'), // WebGL: ONE_MINUS_SRC_COLOR
 
         /**
          * DOC_TBA
@@ -46,7 +46,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        DESTINATION_COLOR : new Enumeration(0x0306, "DESTINATION_COLOR"), // WebGL: DEST_COLOR
+        DESTINATION_COLOR : new Enumeration(0x0306, 'DESTINATION_COLOR'), // WebGL: DEST_COLOR
 
         /**
          * DOC_TBA
@@ -54,7 +54,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        ONE_MINUS_DESTINATION_COLOR : new Enumeration(0x0307, "ONE_MINUS_DESTINATION_COLOR"), // WebGL: ONE_MINUS_DEST_COLOR
+        ONE_MINUS_DESTINATION_COLOR : new Enumeration(0x0307, 'ONE_MINUS_DESTINATION_COLOR'), // WebGL: ONE_MINUS_DEST_COLOR
 
         /**
          * DOC_TBA
@@ -62,7 +62,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        SOURCE_ALPHA : new Enumeration(0x0302, "SOURCE_ALPHA"), // WebGL: SRC_ALPHA
+        SOURCE_ALPHA : new Enumeration(0x0302, 'SOURCE_ALPHA'), // WebGL: SRC_ALPHA
 
         /**
          * DOC_TBA
@@ -70,7 +70,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        ONE_MINUS_SOURCE_ALPHA : new Enumeration(0x0303, "ONE_MINUS_SOURCE_ALPHA"), // WebGL: ONE_MINUS_SRC_ALPHA
+        ONE_MINUS_SOURCE_ALPHA : new Enumeration(0x0303, 'ONE_MINUS_SOURCE_ALPHA'), // WebGL: ONE_MINUS_SRC_ALPHA
 
         /**
          * DOC_TBA
@@ -78,7 +78,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        DESTINATION_ALPHA : new Enumeration(0x0304, "DESTINATION_ALPHA"), // WebGL: DST_ALPHA
+        DESTINATION_ALPHA : new Enumeration(0x0304, 'DESTINATION_ALPHA'), // WebGL: DST_ALPHA
 
         /**
          * DOC_TBA
@@ -86,7 +86,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        ONE_MINUS_DESTINATION_ALPHA : new Enumeration(0x0305, "ONE_MINUS_DESTINATION_ALPHA"), // WebGL: ONE_MINUS_DST_ALPHA
+        ONE_MINUS_DESTINATION_ALPHA : new Enumeration(0x0305, 'ONE_MINUS_DESTINATION_ALPHA'), // WebGL: ONE_MINUS_DST_ALPHA
 
         /**
          * DOC_TBA
@@ -94,7 +94,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        CONSTANT_COLOR : new Enumeration(0x8001, "CONSTANT_COLOR"),
+        CONSTANT_COLOR : new Enumeration(0x8001, 'CONSTANT_COLOR'),
 
         /**
          * DOC_TBA
@@ -102,7 +102,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        ONE_MINUS_CONSTANT_COLOR : new Enumeration(0x8002, "ONE_MINUS_CONSTANT_COLOR"),
+        ONE_MINUS_CONSTANT_COLOR : new Enumeration(0x8002, 'ONE_MINUS_CONSTANT_COLOR'),
 
         /**
          * DOC_TBA
@@ -110,7 +110,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        CONSTANT_ALPHA : new Enumeration(0x8003, "CONSTANT_ALPHA"),
+        CONSTANT_ALPHA : new Enumeration(0x8003, 'CONSTANT_ALPHA'),
 
         /**
          * DOC_TBA
@@ -118,7 +118,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        ONE_MINUS_CONSTANT_ALPHA : new Enumeration(0x8004, "ONE_MINUS_CONSTANT_ALPHA"),
+        ONE_MINUS_CONSTANT_ALPHA : new Enumeration(0x8004, 'ONE_MINUS_CONSTANT_ALPHA'),
 
         /**
          * DOC_TBA
@@ -126,7 +126,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        SOURCE_ALPHA_SATURATE : new Enumeration(0x0308, "SOURCE_ALPHA_SATURATE"), // WebGL: SRC_ALPHA_SATURATE
+        SOURCE_ALPHA_SATURATE : new Enumeration(0x0308, 'SOURCE_ALPHA_SATURATE'), // WebGL: SRC_ALPHA_SATURATE
 
         /**
          * DOC_TBA

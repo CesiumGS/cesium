@@ -13,19 +13,19 @@ define([
      * @exports Projections
      */
     var Projections = {
-        WGS84 : new Enumeration(0, "WGS84", {
+        WGS84 : new Enumeration(0, 'WGS84', {
             toWgs84 : function(extent, image) {
                 return image;
             }
         }),
-        MERCATOR : new Enumeration(1, "MERCATOR", {
+        MERCATOR : new Enumeration(1, 'MERCATOR', {
             toWgs84 : function(extent, image) {
-                if (!extent || typeof extent.north === "undefined" || typeof extent.south === "undefined") {
-                    throw new DeveloperError("extent, extent.north and extent.south are required.", "extent");
+                if (!extent || typeof extent.north === 'undefined' || typeof extent.south === 'undefined') {
+                    throw new DeveloperError('extent, extent.north and extent.south are required.');
                 }
 
                 if (!image) {
-                    throw new DeveloperError("image is required.", "image");
+                    throw new DeveloperError('image is required.');
                 }
 
                 var width = parseInt(image.width, 10);
@@ -33,10 +33,10 @@ define([
                 var wRowBytes = width * 4; // Always 4 bytes per pixel.
 
                 // draw image to canvas and get the pixels
-                var canvas = document.createElement("canvas");
+                var canvas = document.createElement('canvas');
                 canvas.width = width;
                 canvas.height = height;
-                var context = canvas.getContext("2d");
+                var context = canvas.getContext('2d');
                 context.drawImage(image, 0, 0);
                 var fromPixels = context.getImageData(0, 0, width, height).data;
 

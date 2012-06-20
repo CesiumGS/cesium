@@ -14,7 +14,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        FRONT : new Enumeration(0x0404, "FRONT"),
+        FRONT : new Enumeration(0x0404, 'FRONT'),
 
         /**
          * DOC_TBA
@@ -22,7 +22,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        BACK : new Enumeration(0x0405, "BACK"),
+        BACK : new Enumeration(0x0405, 'BACK'),
 
         /**
          * DOC_TBA
@@ -30,7 +30,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        FRONT_AND_BACK : new Enumeration(0x0408, "FRONT_AND_BACK"),
+        FRONT_AND_BACK : new Enumeration(0x0408, 'FRONT_AND_BACK'),
 
         /**
          * DOC_TBA

@@ -29,7 +29,7 @@ define([
      */
     function SingleTileProvider(url, proxy) {
         if (typeof url === 'undefined') {
-            throw new DeveloperError("url is required.", "url");
+            throw new DeveloperError('url is required.');
         }
 
         this._url = url;
@@ -88,7 +88,7 @@ define([
      */
     SingleTileProvider.prototype.loadTileImage = function(tile, onload, onerror) {
         if (tile.zoom < this.zoomMin || tile.zoom > this.zoomMax) {
-            throw new DeveloperError("The zoom must be between in [zoomMin, zoomMax].", "tile.zoom");
+            throw new DeveloperError('tile.zoom must be between in [zoomMin, zoomMax].');
         }
 
         var image = new Image();

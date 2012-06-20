@@ -4,12 +4,16 @@ Change Log
 Beta Releases
 -------------
 
-### b6 - TBA
+### b6 - 06/18/2012
 
 * Breaking changes:
     * Changed `Tipsify.tipsify` and `Tipsify.calculateACMR` to accept an object literal instead of three separate arguments. Supplying a maximum index and cache size is now optional.
+    * `CentralBody` no longer requires a camera as the first parameter.
 * Added `CentralBody.northPoleColor` and `CentralBody.southPoleColor` to fill in the poles if they are not covered by a texture.
 * Added `Polygon.configureExtent` to create a polygon defined by west, south, east, and north values.
+* Added functions to `Camera` to provide position and directions in world coordinates.
+* Added `showThroughEllipsoid` to `CustomSensorVolume` and `RectangularPyramidSensorVolume` to allow sensors to draw through Earth.
+* Added `affectedByLighting` to `CentralBody` and `Polygon` to turn lighting on/off for these objects.
 
 ### b5 - 05/15/2012
 

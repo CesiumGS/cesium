@@ -15,8 +15,8 @@ define(function() {
      * @example
      * // Create an object with two enumerations.
      * var filter = {
-     *     NEAREST : new Enumeration(0x2600, "NEAREST"),
-     *     LINEAR : new Enumeration(0x2601, "LINEAR")
+     *     NEAREST : new Enumeration(0x2600, 'NEAREST'),
+     *     LINEAR : new Enumeration(0x2601, 'LINEAR')
      * };
      */
     function Enumeration(value, name, properties) {

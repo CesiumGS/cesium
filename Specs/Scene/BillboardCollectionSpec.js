@@ -69,22 +69,22 @@ defineSuite([
         destroyContext(context);
     });
 
-    it("initialize suite", function() {
+    it('initialize suite', function() {
         greenImage = new Image();
-        greenImage.src = "./Data/Images/Green.png";
+        greenImage.src = './Data/Images/Green.png';
 
         blueImage = new Image();
-        blueImage.src = "./Data/Images/Blue.png";
+        blueImage.src = './Data/Images/Blue.png';
 
         whiteImage = new Image();
-        whiteImage.src = "./Data/Images/White.png";
+        whiteImage.src = './Data/Images/White.png';
 
         waitsFor(function() {
             return greenImage.complete && blueImage.complete && whiteImage.complete;
-        }, "Load .png file(s) for billboard collection test.", 3000);
+        }, 'Load .png file(s) for billboard collection test.', 3000);
     });
 
-    it("default constructs a billboard", function() {
+    it('default constructs a billboard', function() {
         var b = billboards.add();
         expect(b.getShow()).toEqual(true);
         expect(b.getPosition().equals(Cartesian3.ZERO)).toEqual(true);
@@ -100,7 +100,7 @@ defineSuite([
         expect(b.getColor().alpha).toEqual(1.0);
     });
 
-    it("explicitly constructs a billboard", function() {
+    it('explicitly constructs a billboard', function() {
         var b = billboards.add({
             show : false,
             position : new Cartesian3(1.0, 2.0, 3.0),
@@ -132,7 +132,7 @@ defineSuite([
         expect(b.getColor().alpha).toEqual(4.0);
     });
 
-    it("set's a billboard's properties", function() {
+    it('set billboard properties', function() {
         var b = billboards.add();
         b.setShow(false);
         b.setPosition(new Cartesian3(1.0, 2.0, 3.0));
@@ -163,18 +163,18 @@ defineSuite([
         expect(b.getColor().alpha).toEqual(4.0);
     });
 
-    it("set's a removed billboard's property", function() {
+    it('set a removed billboard property', function() {
         var b = billboards.add();
         billboards.remove(b);
         b.setShow(false);
         expect(b.getShow()).toEqual(false);
     });
 
-    it("has zero billboards when constructed", function() {
+    it('has zero billboards when constructed', function() {
         expect(billboards.getLength()).toEqual(0);
     });
 
-    it("adds a billboard", function() {
+    it('adds a billboard', function() {
         var b = billboards.add({
             position : {
                 x : 1.0,
@@ -187,7 +187,7 @@ defineSuite([
         expect(billboards.get(0).equals(b)).toEqual(true);
     });
 
-    it("removes the first billboard", function() {
+    it('removes the first billboard', function() {
         var one = billboards.add({
             position : {
                 x : 1.0,
@@ -211,7 +211,7 @@ defineSuite([
         expect(billboards.get(0).equals(two)).toEqual(true);
     });
 
-    it("removes the last billboard", function() {
+    it('removes the last billboard', function() {
         var one = billboards.add({
             position : {
                 x : 1.0,
@@ -235,7 +235,7 @@ defineSuite([
         expect(billboards.get(0).equals(one)).toEqual(true);
     });
 
-    it("removes the same billboard twice", function() {
+    it('removes the same billboard twice', function() {
         var b = billboards.add({
             position : {
                 x : 1.0,
@@ -252,7 +252,7 @@ defineSuite([
         expect(billboards.getLength()).toEqual(0);
     });
 
-    it("removes null", function() {
+    it('removes null', function() {
         billboards.add({
             position : {
                 x : 1.0,
@@ -266,7 +266,7 @@ defineSuite([
         expect(billboards.getLength()).toEqual(1);
     });
 
-    it("adds and removes billboards", function() {
+    it('adds and removes billboards', function() {
         var one = billboards.add({
             position : {
                 x : 1.0,
@@ -298,7 +298,7 @@ defineSuite([
         expect(billboards.get(1).equals(three)).toEqual(true);
     });
 
-    it("removes all billboards", function() {
+    it('removes all billboards', function() {
         billboards.add({
             position : {
                 x : 1.0,
@@ -319,14 +319,14 @@ defineSuite([
         expect(billboards.getLength()).toEqual(0);
     });
 
-    it("contains a billboard", function() {
+    it('contains a billboard', function() {
         var b = billboards.add();
         billboards.add(b);
 
         expect(billboards.contains(b)).toEqual(true);
     });
 
-    it("doesn't contain a billboard", function() {
+    it('does not contain a billboard', function() {
         var b0 = billboards.add();
         var b1 = billboards.add();
 
@@ -337,11 +337,11 @@ defineSuite([
         expect(billboards.contains(b0)).toEqual(false);
     });
 
-    it("doesn't contain undefined", function() {
+    it('does not contain undefined', function() {
         expect(billboards.contains()).toBeFalsy();
     });
 
-    it("sets and gets a texture atlas", function() {
+    it('sets and gets a texture atlas', function() {
         expect(billboards.getTextureAtlas()).not.toBeDefined();
 
         var atlas = createTextureAtlas([greenImage]);
@@ -349,7 +349,7 @@ defineSuite([
         expect(billboards.getTextureAtlas()).toEqual(atlas);
     });
 
-    it("destroys a texture atlas", function() {
+    it('destroys a texture atlas', function() {
         var b = new BillboardCollection();
         expect(b.getDestroyTextureAtlas()).toEqual(true);
 
@@ -360,7 +360,7 @@ defineSuite([
         expect(atlas.isDestroyed()).toEqual(true);
     });
 
-    it("doesn't destroy a texture atlas", function() {
+    it('does not destroy a texture atlas', function() {
         var b = new BillboardCollection();
         b.setDestroyTextureAtlas(false);
 
@@ -371,7 +371,7 @@ defineSuite([
         expect(atlas.isDestroyed()).toEqual(false);
     });
 
-    it("doesn't render when constructed", function() {
+    it('does not render when constructed', function() {
         context.clear();
         expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
 
@@ -380,7 +380,7 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
     });
 
-    it("modifies and removes a billboard, then renders", function() {
+    it('modifies and removes a billboard, then renders', function() {
         billboards.setTextureAtlas(createTextureAtlas([greenImage, blueImage]));
         var b = billboards.add({
             position : {
@@ -417,7 +417,7 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([0, 0, 255, 255]);
     });
 
-    it("renders a green billboard", function() {
+    it('renders a green billboard', function() {
         billboards.setTextureAtlas(createTextureAtlas([greenImage]));
         billboards.add({
             position : {
@@ -436,7 +436,7 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([0, 255, 0, 255]);
     });
 
-    it("adds and renders a billboard", function() {
+    it('adds and renders a billboard', function() {
         billboards.setTextureAtlas(createTextureAtlas([greenImage, blueImage]));
         billboards.add({
             position : {
@@ -468,7 +468,7 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([0, 0, 255, 255]);
     });
 
-    it("removes and renders a billboard", function() {
+    it('removes and renders a billboard', function() {
         billboards.setTextureAtlas(createTextureAtlas([greenImage, blueImage]));
         billboards.add({
             position : {
@@ -503,7 +503,7 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([0, 255, 0, 255]);
     });
 
-    it("removes all billboards and renders", function() {
+    it('removes all billboards and renders', function() {
         billboards.setTextureAtlas(createTextureAtlas([greenImage]));
         billboards.add({
             position : {
@@ -530,7 +530,7 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
     });
 
-    it("removes all billboards, adds a billboard, and renders", function() {
+    it('removes all billboards, adds a billboard, and renders', function() {
         billboards.setTextureAtlas(createTextureAtlas([greenImage, blueImage]));
         billboards.add({
             position : {
@@ -566,7 +566,7 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([0, 0, 255, 255]);
     });
 
-    it("renders with a different texture atlas", function() {
+    it('renders with a different texture atlas', function() {
         billboards.setTextureAtlas(createTextureAtlas([greenImage]));
         billboards.add({
             position : {
@@ -593,7 +593,7 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([0, 0, 255, 255]);
     });
 
-    it("renders with a different buffer usage", function() {
+    it('renders with a different buffer usage', function() {
         billboards.setTextureAtlas(createTextureAtlas([greenImage]));
         billboards.add({
             position : {
@@ -619,7 +619,7 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([0, 255, 0, 255]);
     });
 
-    it("renders using billboard's show property", function() {
+    it('renders using billboard show property', function() {
         billboards.setTextureAtlas(createTextureAtlas([greenImage, blueImage]));
         var greenBillboard = billboards.add({
             position : {
@@ -657,7 +657,7 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([0, 0, 255, 255]);
     });
 
-    it("renders using billboard's position property", function() {
+    it('renders using billboard position property', function() {
         billboards.setTextureAtlas(createTextureAtlas([greenImage]));
         var b = billboards.add({
             position : {
@@ -697,7 +697,7 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([0, 255, 0, 255]);
     });
 
-    it("renders using billboard's scale property", function() {
+    it('renders using billboard scale property', function() {
         billboards.setTextureAtlas(createTextureAtlas([greenImage]));
         var b = billboards.add({
             position : {
@@ -729,7 +729,7 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([0, 255, 0, 255]);
     });
 
-    it("renders using billboard's imageIndex property", function() {
+    it('renders using billboard imageIndex property', function() {
         billboards.setTextureAtlas(createTextureAtlas([greenImage, blueImage]));
         var b = billboards.add({
             position : {
@@ -756,7 +756,7 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([0, 0, 255, 255]);
     });
 
-    it("renders using billboard's color property", function() {
+    it('renders using billboard color property', function() {
         billboards.setTextureAtlas(createTextureAtlas([whiteImage]));
         var b = billboards.add({
             position : {
@@ -802,7 +802,7 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([0, 255, 0, 255]);
     });
 
-    it("updates 10% of billboards", function() {
+    it('updates 10% of billboards', function() {
         billboards.setTextureAtlas(createTextureAtlas([whiteImage]));
         for ( var i = 0; i < 10; ++i) {
             billboards.add({
@@ -851,7 +851,7 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
     });
 
-    it("renders more than 16K billboards", function() {
+    it('renders more than 16K billboards', function() {
         billboards.setTextureAtlas(createTextureAtlas([whiteImage]));
         for ( var i = 0; i < 16 * 1024; ++i) {
             billboards.add({
@@ -884,7 +884,7 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
     });
 
-    it("is picked", function() {
+    it('is picked', function() {
         billboards.setTextureAtlas(createTextureAtlas([whiteImage]));
         var b = billboards.add({
             position : {
@@ -901,7 +901,7 @@ defineSuite([
         expect(pickedObject).toEqual(b);
     });
 
-    it("is not picked", function() {
+    it('is not picked', function() {
         billboards.setTextureAtlas(createTextureAtlas([whiteImage]));
         billboards.add({
             show : false,
@@ -919,7 +919,7 @@ defineSuite([
         expect(pickedObject).not.toBeDefined();
     });
 
-    it("computes screen space position (1)", function() {
+    it('computes screen space position (1)', function() {
         var b = billboards.add({
             position : {
                 x : 0.0,
@@ -931,7 +931,7 @@ defineSuite([
         expect(b.computeScreenSpacePosition(us).equals(new Cartesian2(0.5, 0.5)));
     });
 
-    it("computes screen space position (2)", function() {
+    it('computes screen space position (2)', function() {
         var b = billboards.add({
             position : {
                 x : 0.0,
@@ -947,7 +947,7 @@ defineSuite([
         expect(b.computeScreenSpacePosition(us).equals(new Cartesian2(1.5, 2.5)));
     });
 
-    it("computes screen space position (3)", function() {
+    it('computes screen space position (3)', function() {
         var b = billboards.add({
             position : {
                 x : 0.0,
@@ -966,7 +966,7 @@ defineSuite([
         expect(p.y).toBeGreaterThan(0.5);
     });
 
-    it("throws when computing screen space position when not in a collection", function() {
+    it('throws when computing screen space position when not in a collection', function() {
         var b = billboards.add({
             position : {
                 x : 0.0,
@@ -981,7 +981,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("throws when computing screen space position without uniform state", function() {
+    it('throws when computing screen space position without uniform state', function() {
         var b = billboards.add();
 
         expect(function() {
@@ -989,7 +989,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("equals another billboard", function() {
+    it('equals another billboard', function() {
         var b = billboards.add({
             position : {
                 x : 1.0,
@@ -1020,7 +1020,7 @@ defineSuite([
         expect(b.equals(b2)).toEqual(true);
     });
 
-    it("doesn't equal another billboard", function() {
+    it('does not equal another billboard', function() {
         var b = billboards.add({
             position : {
                 x : 1.0,
@@ -1039,12 +1039,12 @@ defineSuite([
         expect(b.equals(b2)).toEqual(false);
     });
 
-    it("doesn't equal null", function() {
+    it('does not equal null', function() {
         var b = billboards.add({});
         expect(b.equals(null)).toBeFalsy();
     });
 
-    it("throws when accessing without an index", function() {
+    it('throws when accessing without an index', function() {
         expect(function() {
             billboards.get();
         }).toThrow();

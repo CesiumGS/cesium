@@ -14,15 +14,15 @@
                 });
                 primitives.add(billboards);
             };
-            image.src = "Images/logoColor.png";
+            image.src = 'Images/logoColor.png';
         };
     };
 
     Sandbox.SeveralBillboards = function (scene, ellipsoid, primitives) {
         this.code = function () {
             Cesium.Chain.run(
-                Cesium.Jobs.downloadImage("Images/logoColor.png"),
-                Cesium.Jobs.downloadImage("Images/facility.gif")).thenRun(
+                Cesium.Jobs.downloadImage('Images/logoColor.png'),
+                Cesium.Jobs.downloadImage('Images/facility.gif')).thenRun(
             function () {
                 // Once both images are downloaded, they are combined into one image,
                 // called a texture atlas, which is assigned to a billboard-collection.
@@ -31,8 +31,8 @@
 
                 var billboards = new Cesium.BillboardCollection(undefined);
                 billboards.setTextureAtlas(scene.getContext().createTextureAtlas([
-                    this.images["Images/logoColor.png"],
-                    this.images["Images/facility.gif"]
+                    this.images['Images/logoColor.png'],
+                    this.images['Images/facility.gif']
                 ]));
 
                 billboards.add({
@@ -63,14 +63,14 @@
             //
             // The 2D canvas can draw much more than circles.  See:
             // https://developer.mozilla.org/en/Canvas_tutorial
-            var canvas = document.createElement("canvas");
+            var canvas = document.createElement('canvas');
             canvas.width = 16;
             canvas.height = 16;
-            var context2D = canvas.getContext("2d");
+            var context2D = canvas.getContext('2d');
             context2D.beginPath();
             context2D.arc(8, 8, 8, 0, Cesium.Math.TWO_PI, true);
             context2D.closePath();
-            context2D.fillStyle="rgb(255, 255, 255)";
+            context2D.fillStyle='rgb(255, 255, 255)';
             context2D.fill();
 
             var billboards = new Cesium.BillboardCollection(undefined);
@@ -189,7 +189,7 @@
                 });
                 primitives.add(billboards);
             };
-            image.src = "Images/whiteShapes.png";
+            image.src = 'Images/whiteShapes.png';
         };
     };
 
@@ -212,7 +212,7 @@
                 });
                 primitives.add(billboards);
             };
-            image.src = "Images/logoColor.png";
+            image.src = 'Images/logoColor.png';
         };
     };
 
@@ -236,7 +236,7 @@
 
                 primitives.add(billboards);
             };
-            image.src = "Images/logoColor.png";
+            image.src = 'Images/logoColor.png';
         };
     };
 
@@ -255,7 +255,7 @@
                 billboards.add({ position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0) }); // up
                 primitives.add(billboards);
             };
-            image.src = "Images/facility.gif";
+            image.src = 'Images/facility.gif';
         };
     };
 

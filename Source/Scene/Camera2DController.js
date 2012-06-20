@@ -207,7 +207,7 @@ define([
 
         if (frustum.left === null || frustum.right === null ||
             frustum.top === null || frustum.bottom === null) {
-                throw new DeveloperError("The camera frustum is expected to be orthographic for 2D camera control.", "frustum");
+                throw new DeveloperError('The camera frustum is expected to be orthographic for 2D camera control.');
         }
 
         var newRight = frustum.right - moveRate;
@@ -279,7 +279,7 @@ define([
 
        if (frustum.left === null || frustum.right === null ||
            frustum.top === null || frustum.bottom === null) {
-               throw new DeveloperError("The camera frustum is expected to be orthographic for 2D camera control.", "frustum");
+               throw new DeveloperError('The camera frustum is expected to be orthographic for 2D camera control.');
        }
 
        var width = this._canvas.clientWidth;

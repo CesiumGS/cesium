@@ -32,19 +32,28 @@ define([
          * <code>true</code> if this sensor will be shown; otherwise, <code>false</code>
          *
          * @type Boolean
-         *
-         * @see RectangularPyramidSensorVolume#showIntersection
          */
-        this.show = (typeof t.show === "undefined") ? true : t.show;
+        this.show = (typeof t.show === 'undefined') ? true : t.show;
 
         /**
          * DOC_TBA
          *
          * @type Boolean
-         *
-         * @see RectangularPyramidSensorVolume#show
          */
-        this.showIntersection = (typeof t.showIntersection === "undefined") ? true : t.showIntersection;
+        this.showIntersection = (typeof t.showIntersection === 'undefined') ? true : t.showIntersection;
+
+        /**
+         * <p>
+         * Determines if a sensor intersecting the ellipsoid is drawn through the ellipsoid and potentially out
+         * to the other side, or if the part of the sensor intersecting the ellipsoid stops at the ellipsoid.
+         * </p>
+         * <p>
+         * The default is <code>false</code>, meaning the sensor will not go through the ellipsoid.
+         * </p>
+         *
+         * @type Boolean
+         */
+        this.showThroughEllipsoid = (typeof t.showThroughEllipsoid === 'undefined') ? false : t.showThroughEllipsoid;
 
         /**
          * The 4x4 transformation matrix that transforms this sensor from model to world coordinates.  In it's model
@@ -53,8 +62,8 @@ define([
          * cross section.  This matrix is available to GLSL vertex and fragment shaders via
          * {@link agi_model} and derived uniforms.
          * <br /><br />
-         * <div align="center">
-         * <img src="images/RectangularPyramidSensorVolume.setModelMatrix.png" /><br />
+         * <div align='center'>
+         * <img src='images/RectangularPyramidSensorVolume.setModelMatrix.png' /><br />
          * Model coordinate system for a sensor
          * </div>
          *
@@ -82,7 +91,7 @@ define([
          *
          * @type Number
          */
-        this.radius = (typeof t.radius === "undefined") ? Number.POSITIVE_INFINITY : t.radius;
+        this.radius = (typeof t.radius === 'undefined') ? Number.POSITIVE_INFINITY : t.radius;
 
         /**
          * DOC_TBA
@@ -91,7 +100,7 @@ define([
          *
          * @see RectangularPyramidSensorVolume#yHalfAngle
          */
-        this.xHalfAngle = (typeof t.xHalfAngle === "undefined") ? CesiumMath.PI_OVER_TWO : t.xHalfAngle;
+        this.xHalfAngle = (typeof t.xHalfAngle === 'undefined') ? CesiumMath.PI_OVER_TWO : t.xHalfAngle;
         this._xHalfAngle = undefined;
 
         /**
@@ -101,7 +110,7 @@ define([
          *
          * @see RectangularPyramidSensorVolume#xHalfAngle
          */
-        this.yHalfAngle = (typeof t.yHalfAngle === "undefined") ? CesiumMath.PI_OVER_TWO : t.yHalfAngle;
+        this.yHalfAngle = (typeof t.yHalfAngle === 'undefined') ? CesiumMath.PI_OVER_TWO : t.yHalfAngle;
         this._yHalfAngle = undefined;
 
         /**
@@ -124,7 +133,7 @@ define([
          *
          * @type Number
          */
-        this.erosion = (typeof t.erosion === "undefined") ? 1.0 : t.erosion;
+        this.erosion = (typeof t.erosion === 'undefined') ? 1.0 : t.erosion;
 
         t._pickIdThis = t._pickIdThis || this;
         this._customSensor = new CustomSensorVolume(t);
@@ -140,13 +149,14 @@ define([
      */
     RectangularPyramidSensorVolume.prototype.update = function(context, sceneState) {
         if ((this.xHalfAngle > CesiumMath.PI_OVER_TWO) || (this.yHalfAngle > CesiumMath.PI_OVER_TWO)) {
-            throw new DeveloperError("this.xHalfAngle and this.yHalfAngle must each be less than or equal to 90 degrees.");
+            throw new DeveloperError('this.xHalfAngle and this.yHalfAngle must each be less than or equal to 90 degrees.');
         }
 
         var s = this._customSensor;
 
         s.show = this.show;
         s.showIntersection = this.showIntersection;
+        s.showThroughEllipsoid = this.showThroughEllipsoid;
         s.modelMatrix = this.modelMatrix;
         s.bufferUsage = this.bufferUsage;
         s.radius = this.radius;

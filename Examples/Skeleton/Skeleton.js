@@ -7,27 +7,27 @@ require({
     //are actually used, instead of requiring the Cesium module, which
     //includes everything.
 
-    var canvas = document.getElementById("glCanvas");
+    var canvas = document.getElementById('glCanvas');
     var ellipsoid = Cesium.Ellipsoid.WGS84; // Used in many Sandbox examples
     var scene = new Cesium.Scene(canvas);
     var primitives = scene.getPrimitives();
 
     // Bing Maps
     var bing = new Cesium.BingMapsTileProvider({
-        server : "dev.virtualearth.net",
+        server : 'dev.virtualearth.net',
         mapStyle : Cesium.BingMapsStyle.AERIAL,
         // Some versions of Safari support WebGL, but don't correctly implement
         // cross-origin image loading, so we need to load Bing imagery using a proxy.
         proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
     });
 
-    var cb = new Cesium.CentralBody(scene.getCamera(), ellipsoid);
+    var cb = new Cesium.CentralBody(ellipsoid);
     cb.dayTileProvider = bing;
-    cb.nightImageSource = "../../Images/land_ocean_ice_lights_2048.jpg";
-    cb.specularMapSource = "../../Images/earthspec1k.jpg";
+    cb.nightImageSource = '../../Images/land_ocean_ice_lights_2048.jpg';
+    cb.specularMapSource = '../../Images/earthspec1k.jpg';
     if (scene.getContext().getMaximumTextureSize() > 2048) {
-        cb.cloudsMapSource = "../../Images/earthcloudmaptrans.jpg";
-        cb.bumpMapSource = "../../Images/earthbump1k.jpg";
+        cb.cloudsMapSource = '../../Images/earthcloudmaptrans.jpg';
+        cb.bumpMapSource = '../../Images/earthbump1k.jpg';
     }
     cb.showSkyAtmosphere = true;
     cb.showGroundAtmosphere = true;
@@ -63,7 +63,7 @@ require({
     handler.setKeyAction(function() {
         /* ... */
         // Handler for key press
-    }, "1");
+    }, '1');
 
     handler.setMouseAction(function(movement) {
         /* ... */

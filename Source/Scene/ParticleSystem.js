@@ -113,7 +113,7 @@ define([
     ParticleSystem.prototype.setState = function(state) {
         if (state) {
             if (state.length !== this.getDimension()) {
-                throw new DeveloperError("The dimensions of the state vector does not equal the dimensions of this particle system.  Call getDimension().", "state");
+                throw new DeveloperError('The dimensions of the state vector does not equal the dimensions of this particle system.  Call getDimension().');
             }
 
             var particles = this.particles;

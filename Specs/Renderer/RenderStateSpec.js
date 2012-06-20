@@ -9,7 +9,7 @@ defineSuite([
          'Renderer/DepthFunction',
          'Renderer/StencilFunction',
          'Renderer/StencilOperation'
-     ], "Renderer/RenderState", function(
+     ], 'Renderer/RenderState', function(
          createContext,
          destroyContext,
          WindingOrder,
@@ -32,7 +32,7 @@ defineSuite([
         destroyContext(context);
     });
 
-    it("creates with defaults", function() {
+    it('creates with defaults', function() {
         var defaultRS = {
             frontFace : WindingOrder.COUNTER_CLOCKWISE,
             cull : {
@@ -162,7 +162,7 @@ defineSuite([
         expect(rs.dither).toEqual(defaultRS.dither);
     });
 
-    it("creates with all render states", function() {
+    it('creates with all render states', function() {
         var r = {
             frontFace : WindingOrder.CLOCKWISE,
             cull : {
@@ -292,7 +292,7 @@ defineSuite([
         expect(rs.dither).toEqual(r.dither);
     });
 
-    it("creates with some render states", function() {
+    it('creates with some render states', function() {
         var r = {
             frontFace : WindingOrder.CLOCKWISE,
             depthRange : {
@@ -354,25 +354,25 @@ defineSuite([
         expect(rs.dither).toEqual(defaultRS.dither);
     });
 
-    it("fails to create (frontFace)", function() {
+    it('fails to create (frontFace)', function() {
         expect(function() {
             context.createRenderState({
-                frontFace : "invalid value"
+                frontFace : 'invalid value'
             });
         }).toThrow();
     });
 
-    it("fails to create (cull.face)", function() {
+    it('fails to create (cull.face)', function() {
         expect(function() {
             context.createRenderState({
                 cull : {
-                    face : "invalid value"
+                    face : 'invalid value'
                 }
             });
         }).toThrow();
     });
 
-    it("fails to create (small lineWidth)", function() {
+    it('fails to create (small lineWidth)', function() {
         expect(function() {
             context.createRenderState({
                 lineWidth : context.getMinimumAliasedLineWidth() - 1
@@ -380,7 +380,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("fails to create (large lineWidth)", function() {
+    it('fails to create (large lineWidth)', function() {
         expect(function() {
             context.createRenderState({
                 lineWidth : context.getMaximumAliasedLineWidth() + 1
@@ -388,7 +388,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("fails to create (negative scissorTest.rectangle.width)", function() {
+    it('fails to create (negative scissorTest.rectangle.width)', function() {
         expect(function() {
             context.createRenderState({
                 scissorTest : {
@@ -403,7 +403,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("fails to create (negative scissorTest.rectangle.height)", function() {
+    it('fails to create (negative scissorTest.rectangle.height)', function() {
         expect(function() {
             context.createRenderState({
                 scissorTest : {
@@ -418,7 +418,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("fails to create (near > far)", function() {
+    it('fails to create (near > far)', function() {
         expect(function() {
             context.createRenderState({
                 depthRange : {
@@ -429,7 +429,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("fails to create (near < 0)", function() {
+    it('fails to create (near < 0)', function() {
         expect(function() {
             context.createRenderState({
                 depthRange : {
@@ -439,7 +439,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("fails to create (far > 1)", function() {
+    it('fails to create (far > 1)', function() {
         expect(function() {
             context.createRenderState({
                 depthRange : {
@@ -449,17 +449,17 @@ defineSuite([
         }).toThrow();
     });
 
-    it("fails to create (depthTest.func)", function() {
+    it('fails to create (depthTest.func)', function() {
         expect(function() {
             context.createRenderState({
                 depthTest : {
-                    func : "invalid value"
+                    func : 'invalid value'
                 }
             });
         }).toThrow();
     });
 
-    it("fails to create (blending.color < 0)", function() {
+    it('fails to create (blending.color < 0)', function() {
         expect(function() {
             context.createRenderState({
                 blending : {
@@ -474,7 +474,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("fails to create (blending.color > 1)", function() {
+    it('fails to create (blending.color > 1)', function() {
         expect(function() {
             context.createRenderState({
                 blending : {
@@ -489,152 +489,152 @@ defineSuite([
         }).toThrow();
     });
 
-    it("fails to create (blend.equationRgb)", function() {
+    it('fails to create (blend.equationRgb)', function() {
         expect(function() {
             context.createRenderState({
                 blending : {
-                    equationRgb : "invalid value"
+                    equationRgb : 'invalid value'
                 }
             });
         }).toThrow();
     });
 
-    it("fails to create (blend.equationAlpha)", function() {
+    it('fails to create (blend.equationAlpha)', function() {
         expect(function() {
             context.createRenderState({
                 blending : {
-                    equationAlpha : "invalid value"
+                    equationAlpha : 'invalid value'
                 }
             });
         }).toThrow();
     });
 
-    it("fails to create (blend.functionSourceRgb)", function() {
+    it('fails to create (blend.functionSourceRgb)', function() {
         expect(function() {
             context.createRenderState({
                 blending : {
-                    functionSourceRgb : "invalid value"
+                    functionSourceRgb : 'invalid value'
                 }
             });
         }).toThrow();
     });
 
-    it("fails to create (blend.functionSourceAlpha)", function() {
+    it('fails to create (blend.functionSourceAlpha)', function() {
         expect(function() {
             context.createRenderState({
                 blending : {
-                    functionSourceAlpha : "invalid value"
+                    functionSourceAlpha : 'invalid value'
                 }
             });
         }).toThrow();
     });
 
-    it("fails to create (blend.functionDestinationRgb)", function() {
+    it('fails to create (blend.functionDestinationRgb)', function() {
         expect(function() {
             context.createRenderState({
                 blending : {
-                    functionDestinationRgb : "invalid value"
+                    functionDestinationRgb : 'invalid value'
                 }
             });
         }).toThrow();
     });
 
-    it("fails to create (blend.functionDestinationAlpha)", function() {
+    it('fails to create (blend.functionDestinationAlpha)', function() {
         expect(function() {
             context.createRenderState({
                 blending : {
-                    functionDestinationAlpha : "invalid value"
+                    functionDestinationAlpha : 'invalid value'
                 }
             });
         }).toThrow();
     });
 
-    it("fails to create (stencilTest.frontFunction)", function() {
+    it('fails to create (stencilTest.frontFunction)', function() {
         expect(function() {
             context.createRenderState({
                 stencilTest : {
-                    frontFunction : "invalid value"
+                    frontFunction : 'invalid value'
                 }
             });
         }).toThrow();
     });
 
-    it("fails to create (stencilTest.backFunction)", function() {
+    it('fails to create (stencilTest.backFunction)', function() {
         expect(function() {
             context.createRenderState({
                 stencilTest : {
-                    backFunction : "invalid value"
+                    backFunction : 'invalid value'
                 }
             });
         }).toThrow();
     });
 
-    it("fails to create (stencilTest.frontOperation.fail)", function() {
+    it('fails to create (stencilTest.frontOperation.fail)', function() {
         expect(function() {
             context.createRenderState({
                 stencilTest : {
                     frontOperation : {
-                        fail : "invalid value"
+                        fail : 'invalid value'
                     }
                 }
             });
         }).toThrow();
     });
 
-    it("fails to create (stencilTest.frontOperation.zFail)", function() {
+    it('fails to create (stencilTest.frontOperation.zFail)', function() {
         expect(function() {
             context.createRenderState({
                 stencilTest : {
                     frontOperation : {
-                        zFail : "invalid value"
+                        zFail : 'invalid value'
                     }
                 }
             });
         }).toThrow();
     });
 
-    it("fails to create (stencilTest.frontOperation.zPass)", function() {
+    it('fails to create (stencilTest.frontOperation.zPass)', function() {
         expect(function() {
             context.createRenderState({
                 stencilTest : {
                     frontOperation : {
-                        zPass : "invalid value"
+                        zPass : 'invalid value'
                     }
                 }
             });
         }).toThrow();
     });
 
-    it("fails to create (stencilTest.backOperation.fail)", function() {
+    it('fails to create (stencilTest.backOperation.fail)', function() {
         expect(function() {
             context.createRenderState({
                 stencilTest : {
                     backOperation : {
-                        fail : "invalid value"
+                        fail : 'invalid value'
                     }
                 }
             });
         }).toThrow();
     });
 
-    it("fails to create (stencilTest.backOperation.zFail)", function() {
+    it('fails to create (stencilTest.backOperation.zFail)', function() {
         expect(function() {
             context.createRenderState({
                 stencilTest : {
                     backOperation : {
-                        zFail : "invalid value"
+                        zFail : 'invalid value'
                     }
                 }
             });
         }).toThrow();
     });
 
-    it("fails to create (stencilTest.backOperation.zPass)", function() {
+    it('fails to create (stencilTest.backOperation.zPass)', function() {
         expect(function() {
             context.createRenderState({
                 stencilTest : {
                     backOperation : {
-                        zPass : "invalid value"
+                        zPass : 'invalid value'
                     }
                 }
             });

@@ -179,8 +179,8 @@ define([
         desc.relativeToCenter = (desc.relativeToCenter) ? Cartesian3.clone(desc.relativeToCenter) : Cartesian3.ZERO;
         desc.boundaryWidth = desc.boundaryWidth || 0; // NOTE: may want to expose in the future.
         desc.interleave = false;
-        desc.positionName = desc.positionName || "position";
-        desc.textureCoordName = desc.textureCoordName || "textureCoordinates";
+        desc.positionName = desc.positionName || 'position';
+        desc.textureCoordName = desc.textureCoordName || 'textureCoordinates';
 
         var vertices = [];
         var indices = [];
@@ -320,8 +320,8 @@ define([
         Extent.validate(desc.extent);
 
         desc.ellipsoid = desc.ellipsoid || Ellipsoid.WGS84;
-        desc.granularity = (typeof desc.granularity !== "undefined" && desc.granularity > 0.0) ? desc.granularity : 0.1;
-        desc.altitude = (typeof desc.altitude !== "undefined" && desc.altitude > 0.0) ? desc.altitude : 0.0;
+        desc.granularity = (typeof desc.granularity !== 'undefined' && desc.granularity > 0.0) ? desc.granularity : 0.1;
+        desc.altitude = (typeof desc.altitude !== 'undefined' && desc.altitude > 0.0) ? desc.altitude : 0.0;
         desc.relativeToCenter = (desc.relativeToCenter) ? Cartesian3.clone(desc.relativeToCenter) : Cartesian3.ZERO;
         desc.boundaryWidth = desc.boundaryWidth || 0; // NOTE: may want to expose in the future.
 

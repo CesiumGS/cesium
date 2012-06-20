@@ -479,7 +479,7 @@ define([
      */
     UniformState.prototype.setSunPosition = function(sunPosition) {
         if (!sunPosition) {
-            throw new DeveloperError("sunPosition is required.", "sunPosition");
+            throw new DeveloperError('sunPosition is required.');
         }
 
         this._sunPosition = sunPosition;
