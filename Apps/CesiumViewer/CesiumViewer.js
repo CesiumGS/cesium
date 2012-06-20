@@ -18,7 +18,8 @@ define(['dojo/dom',
         'Scene/SceneTransitioner',
         'Scene/BingMapsStyle',
         'DynamicScene/CzmlStandard',
-        'DynamicScene/DynamicObjectCollection'],
+        'DynamicScene/DynamicObjectCollection',
+        'DynamicScene/VisualizerCollection',],
 function(dom,
          on,
          event,
@@ -38,7 +39,8 @@ function(dom,
          SceneTransitioner,
          BingMapsStyle,
          CzmlStandard,
-         DynamicObjectCollection) {
+         DynamicObjectCollection,
+         VisualizerCollection) {
     "use strict";
     /*global console*/
 
@@ -178,7 +180,7 @@ function(dom,
             var scene = widget.scene;
 
             transitioner = new SceneTransitioner(scene);
-            visualizers = CzmlStandard.createVisualizerCollection(scene, dynamicObjectCollection);
+            visualizers = VisualizerCollection.createCzmlStandardCollection(scene, dynamicObjectCollection);
             widget.enableStatistics(true);
 
             var queryObject = {};

@@ -1,22 +1,10 @@
 /*global define*/
 define([
         '../Core/destroyObject',
-        './DynamicBillboardVisualizer',
-        './DynamicConeVisualizer',
-        './DynamicLabelVisualizer',
-        './DynamicPointVisualizer',
-        './DynamicPolygonVisualizer',
-        './DynamicPolylineVisualizer',
-        './DynamicPyramidVisualizer'
+        './CzmlStandard'
        ], function(
          destroyObject,
-         DynamicBillboardVisualizer,
-         DynamicConeVisualizer,
-         DynamicLabelVisualizer,
-         DynamicPointVisualizer,
-         DynamicPolygonVisualizer,
-         DynamicPolylineVisualizer,
-         DynamicPyramidVisualizer) {
+         CzmlStandard) {
     "use strict";
 
     function VisualizerCollection(visualizers, dynamicObjectCollection) {
@@ -29,17 +17,10 @@ define([
      * Creates a new VisualizerCollection which includes all standard visualizers.
      *
      * @see VisualizerCollection
-     * @see CzmlStandard#createCzmlStandardVisualizerCollection
+     * @see CzmlStandard#createVisualizerCollection
      */
     VisualizerCollection.createCzmlStandardCollection = function(scene, dynamicObjectCollection) {
-        return new VisualizerCollection([new DynamicBillboardVisualizer(scene),
-                                         new DynamicConeVisualizer(scene),
-                                         new DynamicLabelVisualizer(scene),
-                                         new DynamicPointVisualizer(scene),
-                                         new DynamicPolygonVisualizer(scene),
-                                         new DynamicPolylineVisualizer(scene),
-                                         new DynamicPyramidVisualizer(scene)],
-                                         dynamicObjectCollection);
+        return new VisualizerCollection(CzmlStandard.createDefaultVisualizers(scene), dynamicObjectCollection);
     };
 
     VisualizerCollection.prototype.getVisualizers = function() {
