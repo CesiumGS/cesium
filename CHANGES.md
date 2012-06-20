@@ -7,21 +7,19 @@ Beta Releases
 ### b7 - xx/xx/2012
 
 * Breaking changes:
-   * ...
-* ...
+   * `TextureAtlas` takes an object literal in its constructor instead of separate parameters.
+* `TextureAtlas` is now dynamic. Images can be added asynchronously and the atlas will automatically resize when it reaches full capacity.
 
 ### b6 - 06/18/2012
 
 * Breaking changes:
     * Changed `Tipsify.tipsify` and `Tipsify.calculateACMR` to accept an object literal instead of three separate arguments. Supplying a maximum index and cache size is now optional.
     * `CentralBody` no longer requires a camera as the first parameter.
-    * `TextureAtlas` takes an object literal in its constructor instead of separate parameters.
 * Added `CentralBody.northPoleColor` and `CentralBody.southPoleColor` to fill in the poles if they are not covered by a texture.
 * Added `Polygon.configureExtent` to create a polygon defined by west, south, east, and north values.
 * Added functions to `Camera` to provide position and directions in world coordinates.
 * Added `showThroughEllipsoid` to `CustomSensorVolume` and `RectangularPyramidSensorVolume` to allow sensors to draw through Earth.
 * Added `affectedByLighting` to `CentralBody` and `Polygon` to turn lighting on/off for these objects.
-* `TextureAtlas` is now dynamic. Images can be added asynchronously and the atlas will automatically resize when it reaches full capacity.
 
 ### b5 - 05/15/2012
 
