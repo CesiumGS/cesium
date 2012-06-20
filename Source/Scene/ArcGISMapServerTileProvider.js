@@ -124,10 +124,10 @@ define([
             } else if (data.tileInfo.spatialReference.wkid === 4326) {
                 that.projection = Projections.WGS84;
                 that.maxExtent = new Extent(
-                        CesiumMath.toRadians(data.tileInfo.fullExtent.xmin),
-                        CesiumMath.toRadians(data.tileInfo.fullExtent.ymin),
-                        CesiumMath.toRadians(data.tileInfo.fullExtent.xmax),
-                        CesiumMath.toRadians(data.tileInfo.fullExtent.ymax));
+                        CesiumMath.toRadians(data.fullExtent.xmin),
+                        CesiumMath.toRadians(data.fullExtent.ymin),
+                        CesiumMath.toRadians(data.fullExtent.xmax),
+                        CesiumMath.toRadians(data.fullExtent.ymax));
             }
 
             that.zoomMin = 0;
