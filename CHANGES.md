@@ -4,13 +4,7 @@ Change Log
 Beta Releases
 -------------
 
-### b7 - xx/xx/2012
-
-* Breaking changes:
-   * ...
-* ...
-
-### b6 - 06/18/2012
+### b6a - 06/20/2012
 
 * Breaking changes:
     * Changed `Tipsify.tipsify` and `Tipsify.calculateACMR` to accept an object literal instead of three separate arguments. Supplying a maximum index and cache size is now optional.
