@@ -31,12 +31,12 @@ define([
      * important to check {@link TextureAtlas#getNumberOfImages} before using old values.
      *
      * The texture atlas uses an object literal called description in its constructor.
-     * description.context is the context in which the texture gets created.
-     * description.pixelFormat is the pixel format of the texture.
+     * description.context is the {@link Context} in which the texture gets created.
+     * description.pixelFormat is the {@link PixelFormat} of the texture.
      * description.borderWidthInPixels is the amount of spacing between adjacent images in pixels.
      * description.initialSize is the initial side length of the texture.
-     * description.images is an optional array of images to be added to the atlas. Same as calling addImages(images).
-     * description.image is an optional single image to be added to the atlas. Same as calling addImage(image).
+     * description.images is an optional array of {@link Image} to be added to the atlas. Same as calling addImages(images).
+     * description.image is an optional single {@link Image} to be added to the atlas. Same as calling addImage(image).
      *
      * Default values for description:
      * context : undefined,

@@ -1501,6 +1501,20 @@ define([
      * @memberof Context
      *
      * @param {Object} description Consists of values used to construct the texture atlas.
+     * description.context is the {@link Context} in which the texture gets created.
+     * description.pixelFormat is the {@link PixelFormat} of the texture.
+     * description.borderWidthInPixels is the amount of spacing between adjacent images in pixels.
+     * description.initialSize is the initial side length of the texture.
+     * description.images is an optional array of {@link Image} to be added to the atlas. Same as calling addImages(images).
+     * description.image is an optional single {@link Image} to be added to the atlas. Same as calling addImage(image).
+     *
+     * Default values for description:
+     * context : undefined,
+     * pixelFormat : PixelFormat.RGBA,
+     * borderWidthInPixels : 1,
+     * initialSize : 16,
+     * images : undefined,
+     * image : undefined
      *
      * @returns {TextureAtlas} The new texture atlas.
      *

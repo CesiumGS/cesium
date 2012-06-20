@@ -7,8 +7,16 @@ Beta Releases
 ### b7 - xx/xx/2012
 
 * Breaking changes:
-   * `TextureAtlas` takes an object literal in its constructor instead of separate parameters.
-* `TextureAtlas` is now dynamic. Images can be added asynchronously and the atlas will automatically resize when it reaches full capacity.
+   * `TextureAtlas` takes an object literal in its constructor instead of separate parameters. 
+    Code that previously looked like:
+
+        new TextureAtlas(context, images, pixelFormat, borderWidthInPixels);
+
+    should now look like:
+
+        new TextureAtlas({context : c, images : i, pixelFormat : pf, borderWidthInPixels : bw});
+
+* Added `addImage` to `TextureAtlas` so images can be added to a texture atlas after it is constructed.
 
 ### b6 - 06/18/2012
 
