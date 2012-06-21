@@ -59,7 +59,6 @@ define([
         }
 
         var polygon;
-        var objectId = dynamicObject.id;
         var showProperty = dynamicPolygon.show;
         var polygonVisualizerIndex = dynamicObject.polygonVisualizerIndex;
         var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
@@ -88,7 +87,7 @@ define([
                 this._primitives.add(polygon);
             }
             dynamicObject.polygonVisualizerIndex = polygonVisualizerIndex;
-            polygon.id = objectId;
+            polygon.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
             polygon.material = new ColorMaterial();

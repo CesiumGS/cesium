@@ -9,7 +9,7 @@ define([
         './DynamicPolyline',
         './DynamicPyramid',
         './DynamicBillboardVisualizer',
-        './DynamicConeVisualizerUsingCustomSensor', //'./DynamicConeVisualizer',
+        './DynamicConeVisualizerUsingCustomSensor', //CZML_TODO Replace with './DynamicConeVisualizer', once ComplexConicSensor works.
         './DynamicLabelVisualizer',
         './DynamicPointVisualizer',
         './DynamicPolygonVisualizer',

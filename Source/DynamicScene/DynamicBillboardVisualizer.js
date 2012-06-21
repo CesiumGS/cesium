@@ -98,7 +98,6 @@ define([
         }
 
         var billboard;
-        var objectId = dynamicObject.id;
         var showProperty = dynamicBillboard.show;
         var billboardVisualizerIndex = dynamicObject.billboardVisualizerIndex;
         var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
@@ -127,7 +126,7 @@ define([
                 billboard = this._billboardCollection.add();
             }
             dynamicObject.billboardVisualizerIndex = billboardVisualizerIndex;
-            billboard.id = objectId;
+            billboard.dynamicObject = dynamicObject;
             billboard.vizTexture = undefined;
             billboard.vizTextureAvailable = false;
 

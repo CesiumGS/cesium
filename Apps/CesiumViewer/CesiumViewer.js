@@ -126,8 +126,8 @@ function(dom,
     }
 
     function onObjectRightClickSelected(selectedObject) {
-        if (selectedObject && selectedObject.id) {
-            cameraCenteredObjectID = selectedObject.id;
+        if (selectedObject && selectedObject.dynamicObject) {
+            cameraCenteredObjectID = selectedObject.dynamicObject.id;
         } else {
             cameraCenteredObjectID = undefined;
         }

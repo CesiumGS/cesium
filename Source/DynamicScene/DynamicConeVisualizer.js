@@ -83,7 +83,6 @@ define([
         }
 
         var cone;
-        var objectId = dynamicObject.id;
         var showProperty = dynamicCone.show;
         var coneVisualizerIndex = dynamicObject.coneVisualizerIndex;
         var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
@@ -114,7 +113,7 @@ define([
                 this._primitives.add(cone);
             }
             dynamicObject.coneVisualizerIndex = coneVisualizerIndex;
-            cone.id = objectId;
+            cone.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
             cone.capMaterial = new ColorMaterial();

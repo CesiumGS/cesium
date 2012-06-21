@@ -80,7 +80,6 @@ define([
         }
 
         var label;
-        var objectId = dynamicObject.id;
         var showProperty = dynamicLabel.show;
         var labelVisualizerIndex = dynamicObject.labelVisualizerIndex;
         var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
@@ -107,7 +106,7 @@ define([
                 label = this._labelCollection.add();
             }
             dynamicObject.labelVisualizerIndex = labelVisualizerIndex;
-            label.id = objectId;
+            label.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
             label.setText('');

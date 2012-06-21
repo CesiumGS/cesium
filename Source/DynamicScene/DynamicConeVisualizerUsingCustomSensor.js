@@ -17,6 +17,12 @@ define([
          ColorMaterial) {
     "use strict";
 
+    //CZML_TODO DynamicConeVisualizerUsingCustomSensor is a temporary workaround
+    //because ComplexConicSensor has major performance issues.  As soon as
+    //ComplexConicSensor is working, this class can be deleted and
+    //DynamicConeVisualizer is a drop in replacement that already does things
+    //"the right way".
+
     function computeDirections(minimumClockAngle, maximumClockAngle, innerHalfAngle, outerHalfAngle) {
         var angle;
         var directions = [];
@@ -114,7 +120,6 @@ define([
         }
 
         var cone;
-        var objectId = dynamicObject.id;
         var showProperty = dynamicCone.show;
         var coneVisualizerIndex = dynamicObject.coneVisualizerIndex;
         var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
@@ -146,7 +151,7 @@ define([
                 this._primitives.add(cone);
             }
             dynamicObject.coneVisualizerIndex = coneVisualizerIndex;
-            cone.id = objectId;
+            cone.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
             cone.capMaterial = new ColorMaterial();
@@ -267,41 +272,10 @@ define([
         }
     };
 
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @memberof DynamicConeVisualizerUsingCustomSensor
-     *
-     * @return {Boolean} True if this object was destroyed; otherwise, false.
-     *
-     * @see DynamicConeVisualizerUsingCustomSensor#destroy
-     */
     DynamicConeVisualizerUsingCustomSensor.prototype.isDestroyed = function() {
         return false;
     };
 
-    /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof DynamicConeVisualizerUsingCustomSensor
-     *
-     * @return {undefined}
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see DynamicConeVisualizerUsingCustomSensor#isDestroyed
-     *
-     * @example
-     * visualizer = visualizer && visualizer.destroy();
-     */
     DynamicConeVisualizerUsingCustomSensor.prototype.destroy = function() {
         this.removeAll();
         return destroyObject(this);

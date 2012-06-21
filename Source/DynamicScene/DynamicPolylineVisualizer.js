@@ -59,7 +59,6 @@ define([
         }
 
         var polyline;
-        var objectId = dynamicObject.id;
         var showProperty = dynamicPolyline.show;
         var polylineVisualizerIndex = dynamicObject.polylineVisualizerIndex;
         var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
@@ -88,7 +87,7 @@ define([
                 this._primitives.add(polyline);
             }
             dynamicObject.polylineVisualizerIndex = polylineVisualizerIndex;
-            polyline.id = objectId;
+            polyline.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
             polyline.color = Color.WHITE.clone(polyline.color);

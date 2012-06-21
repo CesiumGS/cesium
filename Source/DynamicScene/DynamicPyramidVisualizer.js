@@ -77,7 +77,6 @@ define([
         }
 
         var pyramid;
-        var objectId = dynamicObject.id;
         var showProperty = dynamicPyramid.show;
         var pyramidVisualizerIndex = dynamicObject.pyramidVisualizerIndex;
         var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
@@ -106,7 +105,7 @@ define([
                 this._primitives.add(pyramid);
             }
             dynamicObject.pyramidVisualizerIndex = pyramidVisualizerIndex;
-            pyramid.id = objectId;
+            pyramid.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
             pyramid.radius = Number.POSITIVE_INFINITY;

@@ -67,7 +67,6 @@ define([
         }
 
         var billboard;
-        var objectId = dynamicObject.id;
         var showProperty = dynamicPoint.show;
         var pointVisualizerIndex = dynamicObject.pointVisualizerIndex;
         var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
@@ -95,7 +94,7 @@ define([
                 billboard = this._billboardCollection.add();
             }
             dynamicObject.pointVisualizerIndex = pointVisualizerIndex;
-            billboard.id = objectId;
+            billboard.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
             billboard.point_color = Color.WHITE.clone(billboard.point_color);
