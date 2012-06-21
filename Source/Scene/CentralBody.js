@@ -312,7 +312,7 @@ define([
          * @see CentralBody#showNight
          */
         this.showDay = true;
-        this._showDay = false;
+        this._defineShowDay = undefined;
 
         /**
          * When <code>true</code>, the night texture is shown on the side of the central body not illuminated by the sun.
@@ -333,7 +333,7 @@ define([
          * cb.nightImageSource = 'night.jpg';
          */
         this.showNight = true;
-        this._showNight = false;
+        this._defineShowNight = undefined;
 
         /**
          * When <code>true</code>, diffuse-lit clouds are shown on the central body.  When {@link CentralBody#showNight}
@@ -353,7 +353,7 @@ define([
          * cb.cloudsMapSource = 'clouds.jpg';
          */
         this.showClouds = true;
-        this._showClouds = false;
+        this._defineShowClouds = undefined;
 
         /**
          * When <code>true</code>, clouds on the daytime side of the globe cast approximate shadows.  The
@@ -377,7 +377,7 @@ define([
          * cb.cloudsMapSource = 'clouds.jpg';
          */
         this.showCloudShadows = true;
-        this._showCloudShadows = false;
+        this._defineShowCloudShadows = undefined;
 
         /**
          * When <code>true</code>, a specular map (also called a gloss map) is used so only the ocean receives specular light.
@@ -397,7 +397,7 @@ define([
          * cb.specularMapSource = 'specular.jpg';
          */
         this.showSpecular = true;
-        this._showSpecular = false;
+        this._defineShowSpecular = undefined;
 
         /**
          * When <code>true</code>, a bump map is used to add lighting detail to the mountainous areas of the central body.
@@ -420,7 +420,7 @@ define([
          * cb.bumpMapSource = 'bump.jpg';
          */
         this.showBumps = true;
-        this._showBumps = false;
+        this._defineShowBumps = undefined;
 
         /**
          * When <code>true</code>, shows a line on the central body where day meets night.
@@ -434,7 +434,7 @@ define([
          * @see CentralBody#dayNightBlendDelta
          */
         this.showTerminator = false;
-        this._showTerminator = false;
+        this._defineShowTerminator = undefined;
 
         /**
          * When {@link CentralBody#showBumps} is <code>true</code>, <code>bumpMapNormalZ</code> controls the
@@ -1178,74 +1178,79 @@ define([
 
         var recompileShader = typeof this._sp === 'undefined' || typeof this._spPoles === 'undefined';
 
-        if (this._showDay !== this.showDay) {
+        var defineShowDay = this.showDay && this._imageLayers.getLength() > 0;
+        if (this._defineShowDay !== defineShowDay) {
             recompileShader = true;
-            this._showDay = this.showDay;
+            this._defineShowDay = defineShowDay;
         }
 
-        if (this._showNight !== this.showNight) {
+        var defineShowNight = this.showNight && typeof this._nightTexture !== 'undefined';
+        if (this._defineShowNight !== defineShowNight) {
             recompileShader = true;
-            this._showNight = this.showNight;
+            this._defineShowNight = defineShowNight;
         }
 
-        if (this._showClouds !== this.showClouds) {
+        var defineShowClouds = this.showClouds && typeof this._cloudsTexture !== 'undefined';
+        if (this._defineShowClouds !== defineShowClouds) {
             recompileShader = true;
-            this._showClouds = this.showClouds;
+            this._defineShowClouds = defineShowClouds;
         }
 
-        if (this._showCloudShadows !== this.showCloudShadows) {
+        var defineShowCloudShadows = this.showCloudShadows && typeof this._cloudsTexture !== 'undefined';
+        if (this._defineShowCloudShadows !== defineShowCloudShadows) {
             recompileShader = true;
-            this._showCloudShadows = this.showCloudShadows;
+            this._defineShowCloudShadows = defineShowCloudShadows;
         }
 
-        if (this._showSpecular !== this.showSpecular) {
+        var defineShowSpecular = this._showSpecular && typeof this._specularTexture !== 'undefined';
+        if (this._defineShowSpecular !== defineShowSpecular) {
             recompileShader = true;
-            this._showSpecular = this.showSpecular;
+            this._defineShowSpecular = defineShowSpecular;
         }
 
-        if (this._showBumps !== this.showBumps) {
+        var defineShowBumps = this._showBumps && typeof this._bumpTexture !== 'undefined';
+        if (this._defineShowBumps !== defineShowBumps) {
             recompileShader = true;
-            this._showBumps = this.showBumps;
+            this._defineShowBumps = defineShowBumps;
         }
 
-        if (this._showTerminator !== this.showTerminator) {
+        var defineShowTerminator = this.showTerminator;
+        if (this._defineShowTerminator !== defineShowTerminator) {
             recompileShader = true;
-            this._showTerminator = this.showTerminator;
+            this._defineShowTerminator = defineShowTerminator;
         }
 
-        if (this._affectedByLighting !== this.affectedByLighting) {
+        var defineAffectedByLighting = this.affectedByLighting;
+        if (this._defineAffectedByLighting !== defineAffectedByLighting) {
             recompileShader = true;
-            this._affectedByLighting = this.affectedByLighting;
+            this._defineAffectedByLighting = defineAffectedByLighting;
         }
 
         if (recompileShader) {
             var fsPrepend = '';
 
-            if (this._showDay) {
+            if (defineShowDay) {
                 fsPrepend += '#define SHOW_DAY 1\n';
             }
-            if (this._showNight && typeof this._nightTexture !== 'undefined') {
+            if (defineShowNight) {
                 fsPrepend += '#define SHOW_NIGHT 1\n';
             }
-            if (this._showNight && typeof this._nightTexture !== 'undefined') {
-                fsPrepend += '#define SHOW_NIGHT 1\n';
-            }
-            if (this._showClouds && typeof this._cloudsTexture !== 'undefined') {
+            if (defineShowClouds) {
                 fsPrepend += '#define SHOW_CLOUDS 1\n';
             }
-            if (this._showCloudShadows && typeof this._cloudsTexture !== 'undefined') {
+            if (defineShowCloudShadows) {
                 fsPrepend += '#define SHOW_CLOUD_SHADOWS 1\n';
             }
-            if (this._showSpecular && typeof this._specularTexture !== 'undefined') {
+            if (defineShowSpecular) {
                 fsPrepend += '#define SHOW_SPECULAR 1\n';
             }
-            if (this._showBumps && typeof this._bumpTexture !== 'undefined') {
+            if (defineShowBumps) {
                 fsPrepend += '#define SHOW_BUMPS 1\n';
             }
-            if (this._showTerminator) {
+            if (defineShowTerminator) {
                 fsPrepend += '#define SHOW_TERMINATOR 1\n';
             }
-            if (this._affectedByLighting) {
+            if (defineAffectedByLighting) {
                 fsPrepend += '#define AFFECTED_BY_LIGHTING 1\n';
             }
 
