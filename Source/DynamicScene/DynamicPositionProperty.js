@@ -33,7 +33,7 @@ define([
         this._cachedInterval = undefined;
     }
 
-    DynamicPositionProperty.processCzmlPacket = function(czmlIntervals, dynamicObjectCollection, sourceUri, existingProperty) {
+    DynamicPositionProperty.processCzmlPacket = function(czmlIntervals, existingProperty) {
         if (typeof czmlIntervals === 'undefined') {
             return existingProperty;
         }
@@ -43,22 +43,22 @@ define([
             existingProperty = new DynamicPositionProperty();
         }
 
-        existingProperty.addIntervals(czmlIntervals, dynamicObjectCollection, sourceUri);
+        existingProperty.addIntervals(czmlIntervals);
 
         return existingProperty;
     };
 
-    DynamicPositionProperty.prototype.addIntervals = function(czmlIntervals, dynamicObjectCollection, sourceUri) {
+    DynamicPositionProperty.prototype.addIntervals = function(czmlIntervals) {
         if (Array.isArray(czmlIntervals)) {
             for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
-                this.addInterval(czmlIntervals[i], dynamicObjectCollection, sourceUri);
+                this.addInterval(czmlIntervals[i]);
             }
         } else {
-            this.addInterval(czmlIntervals, dynamicObjectCollection, sourceUri);
+            this.addInterval(czmlIntervals);
         }
     };
 
-    DynamicPositionProperty.prototype.addInterval = function(czmlInterval, dynamicObjectCollection, sourceUri) {
+    DynamicPositionProperty.prototype.addInterval = function(czmlInterval) {
         this._cachedTime = undefined;
         this._cachedInterval = undefined;
 
@@ -111,9 +111,9 @@ define([
             }
         }
 
-        //We could handle the data, add it to the propery.
+        //We could handle the data, add it to the property.
         if (typeof unwrappedInterval !== 'undefined') {
-            property.addIntervalUnwrapped(iso8601Interval.start, iso8601Interval.stop, czmlInterval, unwrappedInterval, dynamicObjectCollection, sourceUri);
+            property.addIntervalUnwrapped(iso8601Interval.start, iso8601Interval.stop, unwrappedInterval, czmlInterval.epoch, czmlInterval.interpolationAlgorithm, czmlInterval.interpolationDegree);
         }
     };
 

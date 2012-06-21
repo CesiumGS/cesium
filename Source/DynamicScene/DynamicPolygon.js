@@ -11,12 +11,42 @@ define([
          DynamicMaterialProperty) {
     "use strict";
 
+    /**
+     * Represents a time-dynamic polygon, typically used in conjunction with DynamicPolygonVisualizer and
+     * DynamicObjectCollection to visualize CZML.
+     *
+     * @name DynamicPolygon
+     * @constructor
+     *
+     * @see DynamicObject
+     * @see DynamicProperty
+     * @see DynamicObjectCollection
+     * @see DynamicPolygonVisualizer
+     * @see VisualizerCollection
+     * @see Polygon
+     * @see CzmlStandard
+     */
     function DynamicPolygon() {
         this.show = undefined;
         this.material = undefined;
     }
 
-    DynamicPolygon.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection) {
+    /**
+     * Processes a single CZML packet and merges its data into the provided DynamicObject's polygon.
+     * If the DynamicObject does not have a polygon, one is created.  This method is not
+     * normally called directly, but is part of the array of CZML processing functions that is
+     * passed into the DynamicObjectCollection constructor.
+     *
+     * @param dynamicObject The DynamicObject which will contain the polygon data.
+     * @param packet The CZML packet to process.
+     * @returns {Boolean} true if any new properties were created while processing the packet, false otherwise.
+     *
+     * @see DynamicObject
+     * @see DynamicProperty
+     * @see DynamicObjectCollection
+     * @see CzmlStandard#updaters
+     */
+    DynamicPolygon.processCzmlPacket = function(dynamicObject, packet) {
         var polygonData = packet.polygon;
         var polygonUpdated = false;
         if (typeof polygonData !== 'undefined') {
@@ -31,12 +61,23 @@ define([
                 interval = TimeInterval.fromIso8601(interval);
             }
 
-            polygonUpdated = DynamicProperty.processCzmlPacket(polygon, 'show', CzmlBoolean, polygonData.show, interval, dynamicObjectCollection) || polygonUpdated;
-            polygonUpdated = DynamicMaterialProperty.processCzmlPacket(polygon, 'material', polygonData.material, interval, dynamicObjectCollection) || polygonUpdated;
+            polygonUpdated = DynamicProperty.processCzmlPacket(polygon, 'show', CzmlBoolean, polygonData.show, interval) || polygonUpdated;
+            polygonUpdated = DynamicMaterialProperty.processCzmlPacket(polygon, 'material', polygonData.material, interval) || polygonUpdated;
         }
         return polygonUpdated;
     };
 
+    /**
+     * Given two DynamicObjects, takes the polygon properties from the second
+     * and assigns them to the first, assuming such a property did not already exist.
+     * This method is not normally called directly, but is part of the array of CZML processing
+     * functions that is passed into the CompositeDynamicObjectCollection constructor.
+     *
+     * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
+     * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
+     *
+     * @see CzmlStandard
+     */
     DynamicPolygon.mergeProperties = function(targetObject, objectToMerge) {
         var polygonToMerge = objectToMerge.polygon;
         if (typeof polygonToMerge !== 'undefined') {
@@ -51,6 +92,15 @@ define([
         }
     };
 
+    /**
+     * Given a DynamicObject, undefines the polygon associated with it.
+     * This method is not normally called directly, but is part of the array of CZML processing
+     * functions that is passed into the CompositeDynamicObjectCollection constructor.
+     *
+     * @param {DynamicObject} dynamicObject The DynamicObject to remove the polygon from.
+     *
+     * @see CzmlStandard
+     */
     DynamicPolygon.undefineProperties = function(dynamicObject) {
         dynamicObject.polygon = undefined;
     };

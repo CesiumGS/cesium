@@ -1,12 +1,16 @@
 /*global define*/
 define([
         '../Core/Event',
+        '../Core/Iso8601',
+        '../Core/TimeInterval',
         '../Core/DeveloperError',
         './DynamicObject',
         './DynamicObjectCollection',
         './CzmlStandard'
     ], function(
         Event,
+        Iso8601,
+        TimeInterval,
         DeveloperError,
         DynamicObject,
         DynamicObjectCollection,
@@ -19,7 +23,7 @@ define([
         this._collections = [];
         this._mergeFunctions = mergeFunctions || CzmlStandard.mergers;
         this._undefinedFunctions = undefinedFunctions || CzmlStandard.cleaners;
-        this.objectsUpdated = new Event();
+        this.objectPropertiesChanged = new Event();
         this.objectsRemoved = new Event();
 
         if (typeof collections !== 'undefined') {
@@ -29,6 +33,29 @@ define([
             this.applyChanges();
         }
     }
+
+    DynamicObjectCollection.prototype.computeAvailability = function() {
+        var startTime = Iso8601.MAXIMUM_VALUE;
+        var stopTime = Iso8601.MINIMUM_VALUE;
+        var i;
+        var len;
+        var collection;
+        var collections = this._collections;
+        for (i = 0, len = collections.length; i < len; i++) {
+            collection = collections[i];
+            var availability = collection.computeAvailability();
+            if (availability.start.lessThan(startTime)) {
+                startTime = collection.availability.start;
+            }
+            if (availability.stop.greaterThan(stopTime)) {
+                stopTime = collection.availability.stop;
+            }
+        }
+        if (startTime !== Iso8601.MAXIMUM_VALUE && stopTime !== Iso8601.MINIMUM_VALUE) {
+            return new TimeInterval(startTime, stopTime, true, true);
+        }
+        return new TimeInterval(Iso8601.MINIMUM_VALUE, Iso8601.MAXIMUM_VALUE, true, true);
+    };
 
     CompositeDynamicObjectCollection.prototype.addCollection = function(dynamicObjectCollection) {
         if (typeof dynamicObjectCollection === 'undefined') {
@@ -42,7 +69,7 @@ define([
         }
 
         dynamicObjectCollection.parent = this;
-        dynamicObjectCollection.objectsUpdated.addEventListener(CompositeDynamicObjectCollection.prototype._onObjectsUpdated, this);
+        dynamicObjectCollection.objectPropertiesChanged.addEventListener(CompositeDynamicObjectCollection.prototype._onObjectPropertiesChanged, this);
         this._collections.push(dynamicObjectCollection);
     };
 
@@ -57,7 +84,7 @@ define([
         thisCollections.splice(index, 0, dynamicObjectCollection);
 
         dynamicObjectCollection.parent = this;
-        dynamicObjectCollection.objectsUpdated.addEventListener(CompositeDynamicObjectCollection.prototype._onObjectsUpdated, this);
+        dynamicObjectCollection.objectPropertiesChanged.addEventListener(CompositeDynamicObjectCollection.prototype._onObjectPropertiesChanged, this);
     };
 
     CompositeDynamicObjectCollection.prototype.insertCollectionBefore = function(beforeDynamicObjectCollection, dynamicObjectCollection) {
@@ -83,7 +110,7 @@ define([
         var thisCollections = this._collections;
         thisCollections.splice(thisCollections.indexOf(dynamicObjectCollection), 1);
         dynamicObjectCollection.parent = undefined;
-        dynamicObjectCollection.objectsUpdated.removeEventListener(CompositeDynamicObjectCollection.prototype._onObjectsUpdated);
+        dynamicObjectCollection.objectPropertiesChanged.removeEventListener(CompositeDynamicObjectCollection.prototype._onObjectPropertiesChanged);
     };
 
     CompositeDynamicObjectCollection.prototype.getLength = function() {
@@ -140,7 +167,7 @@ define([
         }
     };
 
-    CompositeDynamicObjectCollection.prototype._onObjectsUpdated = function(dynamicObjectCollection, updatedObjects) {
+    CompositeDynamicObjectCollection.prototype._onObjectPropertiesChanged = function(dynamicObjectCollection, updatedObjects) {
         var thisMergeFunctions = this._mergeFunctions;
         var thisUndefinedFunctions = this._undefinedFunctions;
         var thisCollections = this._collections;
@@ -171,7 +198,7 @@ define([
             }
         }
         if (compositeObjects.length > 0) {
-            this.objectsUpdated.raiseEvent(this, compositeObjects);
+            this.objectPropertiesChanged.raiseEvent(this, compositeObjects);
         }
     };
 

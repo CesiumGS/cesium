@@ -18,7 +18,8 @@ define(['dojo/dom',
         'Scene/SceneTransitioner',
         'Scene/BingMapsStyle',
         'DynamicScene/CzmlStandard',
-        'DynamicScene/DynamicObjectCollection'],
+        'DynamicScene/DynamicObjectCollection',
+        'DynamicScene/VisualizerCollection',],
 function(dom,
          on,
          event,
@@ -38,7 +39,8 @@ function(dom,
          SceneTransitioner,
          BingMapsStyle,
          CzmlStandard,
-         DynamicObjectCollection) {
+         DynamicObjectCollection,
+         VisualizerCollection) {
     "use strict";
     /*global console*/
 
@@ -75,17 +77,9 @@ function(dom,
         var stopTime = Iso8601.MINIMUM_VALUE;
         var dynamicObjects = dynamicObjectCollection.getObjects();
 
-        for (i = 0, len = dynamicObjects.length; i < len; i++) {
-            object = dynamicObjects[i];
-            if (typeof object.availability !== 'undefined') {
-                if (object.availability.start.lessThan(startTime)) {
-                    startTime = object.availability.start;
-                }
-                if (object.availability.stop.greaterThan(stopTime)) {
-                    stopTime = object.availability.stop;
-                }
-            }
-        }
+        var availability = dynamicObjectCollection.computeAvailability();
+        startTime = availability.start;
+        stopTime = availability.stop;
 
         if (startTime === Iso8601.MAXIMUM_VALUE) {
             for (i = 0, len = dynamicObjects.length; i < len; i++) {
@@ -178,7 +172,7 @@ function(dom,
             var scene = widget.scene;
 
             transitioner = new SceneTransitioner(scene);
-            visualizers = CzmlStandard.createVisualizers(scene, dynamicObjectCollection);
+            visualizers = VisualizerCollection.createCzmlStandardCollection(scene, dynamicObjectCollection);
             widget.enableStatistics(true);
 
             var queryObject = {};

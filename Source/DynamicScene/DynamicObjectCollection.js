@@ -2,11 +2,15 @@
 define([
         '../Core/Event',
         '../Core/createGuid',
+        '../Core/TimeInterval',
+        '../Core/Iso8601',
         './DynamicObject',
         './CzmlStandard'
        ], function(
         Event,
         createGuid,
+        TimeInterval,
+        Iso8601,
         DynamicObject,
         CzmlStandard) {
     "use strict";
@@ -17,9 +21,33 @@ define([
         this._array = [];
         this.parent = undefined;
 
-        this.objectsUpdated = new Event();
+        this.objectPropertiesChanged = new Event();
         this.objectsRemoved = new Event();
     }
+
+    DynamicObjectCollection.prototype.computeAvailability = function() {
+        var startTime = Iso8601.MAXIMUM_VALUE;
+        var stopTime = Iso8601.MINIMUM_VALUE;
+        var i;
+        var len;
+        var object;
+        var dynamicObjects = this._array;
+        for (i = 0, len = dynamicObjects.length; i < len; i++) {
+            object = dynamicObjects[i];
+            if (typeof object.availability !== 'undefined') {
+                if (object.availability.start.lessThan(startTime)) {
+                    startTime = object.availability.start;
+                }
+                if (object.availability.stop.greaterThan(stopTime)) {
+                    stopTime = object.availability.stop;
+                }
+            }
+        }
+        if (startTime !== Iso8601.MAXIMUM_VALUE && stopTime !== Iso8601.MINIMUM_VALUE) {
+            return new TimeInterval(startTime, stopTime, true, true);
+        }
+        return new TimeInterval(Iso8601.MINIMUM_VALUE, Iso8601.MAXIMUM_VALUE, true, true);
+    };
 
     DynamicObjectCollection.prototype.getObject = function(id) {
         return this._hash[id];
@@ -48,26 +76,26 @@ define([
         }
     };
 
-    DynamicObjectCollection.prototype.processCzml = function(packets, sourceUri) {
+    DynamicObjectCollection.prototype.processCzml = function(packets) {
         var updatedObjects = [];
         var updatedObjectsHash = {};
 
         if (Array.isArray(packets)) {
             for ( var i = 0, len = packets.length; i < len; i++) {
-                this._processCzmlPacket(packets[i], sourceUri, updatedObjects, updatedObjectsHash);
+                this._processCzmlPacket(packets[i], updatedObjects, updatedObjectsHash);
             }
         } else {
-            this._processCzmlPacket(packets, sourceUri, updatedObjects, updatedObjectsHash);
+            this._processCzmlPacket(packets, updatedObjects, updatedObjectsHash);
         }
 
         if (updatedObjects.length > 0) {
-            this.objectsUpdated.raiseEvent(this, updatedObjects);
+            this.objectPropertiesChanged.raiseEvent(this, updatedObjects);
         }
 
         return updatedObjects;
     };
 
-    DynamicObjectCollection.prototype._processCzmlPacket = function(packet, sourceUri, updatedObjects, updatedObjectsHash) {
+    DynamicObjectCollection.prototype._processCzmlPacket = function(packet, updatedObjects, updatedObjectsHash) {
         var objectId = packet.id;
         var thisUpdaterFunctions = this._updaterFunctions;
         if (typeof objectId === 'undefined') {
@@ -76,7 +104,7 @@ define([
 
         var object = this.getOrCreateObject(objectId);
         for ( var i = thisUpdaterFunctions.length - 1; i > -1; i--) {
-            if (thisUpdaterFunctions[i](object, packet, this, sourceUri) && typeof updatedObjectsHash[objectId] === 'undefined') {
+            if (thisUpdaterFunctions[i](object, packet, this) && typeof updatedObjectsHash[objectId] === 'undefined') {
                 updatedObjectsHash[objectId] = true;
                 updatedObjects.push(object);
             }

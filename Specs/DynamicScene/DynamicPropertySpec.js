@@ -4,27 +4,27 @@ defineSuite([
          'Core/JulianDate',
          'DynamicScene/CzmlBoolean',
          'DynamicScene/CzmlNumber',
-         'DynamicScene/CzmlCartesian3',
          'DynamicScene/CzmlUnitQuaternion',
          'Core/Quaternion',
          'Core/Math',
-         'DynamicScene/CzmlCartesian2'
+         'Core/LinearApproximation',
+         'Core/HermitePolynomialApproximation',
+         'Core/LagrangePolynomialApproximation'
      ], function(
          DynamicProperty,
          JulianDate,
          CzmlBoolean,
          CzmlNumber,
-         CzmlCartesian3,
          CzmlUnitQuaternion,
          Quaternion,
          CesiumMath,
-         CzmlCartesian2) {
+         LinearApproximation,
+         HermitePolynomialApproximation,
+         LagrangePolynomialApproximation) {
     "use strict";
     /*global it,expect*/
 
-    //CZML_TODO Implement real tests
-
-    it('Works with uninterpolatable values.', function() {
+    it('Works with uninterpolatable value types.', function() {
         var dynamicProperty = new DynamicProperty(CzmlBoolean);
 
         var booleanConstant = true;
@@ -78,9 +78,11 @@ defineSuite([
 
         expect(property.getValue(epoch)).toEqual(0);
         expect(property.getValue(epoch.addSeconds(4))).toEqual(4);
+        //Look inside to verify it's using LinearApproximation
+        expect(property._intervals.get(0).data.interpolationAlgorithm).toEqual(LinearApproximation);
     });
 
-    it('Works with interpolatable values (specified linear interpolator).', function() {
+    it('Works with interpolatable value types (specified linear interpolator).', function() {
         var iso8601Epoch = '2012-04-18T15:59:00Z';
         var epoch = JulianDate.fromIso8601(iso8601Epoch);
 
@@ -95,104 +97,52 @@ defineSuite([
 
         expect(property.getValue(epoch)).toEqual(0);
         expect(property.getValue(epoch.addSeconds(4))).toEqual(4);
+        //Look inside to verify it's using LinearApproximation
+        expect(property._intervals.get(0).data.interpolationAlgorithm).toEqual(LinearApproximation);
     });
 
-    it('Works with Cartesian3 interpolatable values (specified linear interpolator).', function() {
+    it('Works with interpolatable value types (specified lagrange interpolator).', function() {
         var iso8601Epoch = '2012-04-18T15:59:00Z';
         var epoch = JulianDate.fromIso8601(iso8601Epoch);
 
-        var property = new DynamicProperty(CzmlCartesian3);
+        var property = new DynamicProperty(CzmlNumber);
         var czmlInterval = {
             epoch : iso8601Epoch,
-            cartesian : [0, 0, 1, 2, 10, 10, 11, 12, 20, 21, 22, 23],
-            interpolationAlgorithm : 'LINEAR',
-            interpolationDegree : 1
+            number : [0, 0, 10, 10, 20, 20, 30, 30, 40, 40, 50, 50],
+            interpolationAlgorithm : 'LAGRANGE',
+            interpolationDegree : 5
         };
         property.addIntervals(czmlInterval);
 
-        var result = property.getValue(epoch);
-        expect(result.x).toEqual(0);
-        expect(result.y).toEqual(1);
-        expect(result.z).toEqual(2);
+        expect(property.getValue(epoch)).toEqual(0);
+        expect(property.getValue(epoch.addSeconds(5))).toEqual(5);
 
-        result = property.getValue(epoch.addSeconds(4));
-        expect(result.x).toEqual(4);
-        expect(result.y).toEqual(5);
-        expect(result.z).toEqual(6);
+        //Look inside to verify it's using LaGrange
+        expect(property._intervals.get(0).data.interpolationAlgorithm).toEqual(LagrangePolynomialApproximation);
     });
 
-    it('Works with static Cartesian3 values.', function() {
+
+    it('Works with interpolatable value types (specified hermite interpolator).', function() {
         var iso8601Epoch = '2012-04-18T15:59:00Z';
         var epoch = JulianDate.fromIso8601(iso8601Epoch);
 
-        var property = new DynamicProperty(CzmlCartesian3);
-        var czmlInterval = {
-            cartesian : [0, 1, 2]
-        };
-        property.addIntervals(czmlInterval);
-
-        var result = property.getValue(epoch);
-        expect(result.x).toEqual(0);
-        expect(result.y).toEqual(1);
-        expect(result.z).toEqual(2);
-    });
-
-    it('Works with static Quaternion values.', function() {
-        var iso8601Epoch = '2012-04-18T15:59:00Z';
-        var epoch = JulianDate.fromIso8601(iso8601Epoch);
-
-        var reference = new Quaternion(1, 2, 3, 4).normalize();
-        var property = new DynamicProperty(CzmlUnitQuaternion);
-        var czmlInterval = {
-            unitQuaternion : [reference.x, reference.y, reference.z, reference.w]
-        };
-        property.addIntervals(czmlInterval);
-
-        var result = property.getValue(epoch);
-        expect(result.x).toEqualEpsilon(reference.x, CesiumMath.EPSILON14);
-        expect(result.y).toEqualEpsilon(reference.y, CesiumMath.EPSILON14);
-        expect(result.z).toEqualEpsilon(reference.z, CesiumMath.EPSILON14);
-        expect(result.w).toEqualEpsilon(reference.w, CesiumMath.EPSILON14);
-    });
-
-    it('Works with Cartesian2 interpolatable values (specified linear interpolator).', function() {
-        var iso8601Epoch = '2012-04-18T15:59:00Z';
-        var epoch = JulianDate.fromIso8601(iso8601Epoch);
-
-        var property = new DynamicProperty(CzmlCartesian2);
+        var property = new DynamicProperty(CzmlNumber);
         var czmlInterval = {
             epoch : iso8601Epoch,
-            cartesian2 : [0, 0, 1, 10, 10, 11, 12, 21, 22],
-            interpolationAlgorithm : 'LINEAR',
-            interpolationDegree : 1
+            number : [0, 0, 10, 10, 20, 20, 30, 30, 40, 40, 50, 50],
+            interpolationAlgorithm : 'HERMITE',
+            interpolationDegree : 3
         };
         property.addIntervals(czmlInterval);
 
-        var result = property.getValue(epoch);
-        expect(result.x).toEqual(0);
-        expect(result.y).toEqual(1);
+        expect(property.getValue(epoch)).toEqual(0);
+        expect(property.getValue(epoch.addSeconds(4))).toEqual(4);
 
-        result = property.getValue(epoch.addSeconds(4));
-        expect(result.x).toEqual(4);
-        expect(result.y).toEqual(5);
+        //Look inside to verify it's using Hermite
+        expect(property._intervals.get(0).data.interpolationAlgorithm).toEqual(HermitePolynomialApproximation);
     });
 
-    it('Works with static Cartesian2 values.', function() {
-        var iso8601Epoch = '2012-04-18T15:59:00Z';
-        var epoch = JulianDate.fromIso8601(iso8601Epoch);
-
-        var property = new DynamicProperty(CzmlCartesian2);
-        var czmlInterval = {
-            cartesian2 : [0, 1]
-        };
-        property.addIntervals(czmlInterval);
-
-        var result = property.getValue(epoch);
-        expect(result.x).toEqual(0);
-        expect(result.y).toEqual(1);
-    });
-
-    it('Works with Quaternion interpolatable values (specified linear interpolator).', function() {
+    it('Works with custom packed value types.', function() {
         var iso8601Epoch = '2012-04-18T15:59:00Z';
         var epoch = JulianDate.fromIso8601(iso8601Epoch);
 
@@ -236,6 +186,24 @@ defineSuite([
 
         DynamicProperty._mergeNewSamples(epoch, times, values, newData, 1);
         DynamicProperty._mergeNewSamples(epoch, times, values, newData2, 1);
+
+        expect(times).toEqualArray(expectedTimes, JulianDate.compare);
+        expect(values).toEqualArray(expectedValues);
+    });
+
+    it('_mergeNewSamples works for ISO8601 dates', function() {
+        var times = [];
+        var values = [];
+        var epoch = JulianDate.fromIso8601('2010-01-01T12:00:00');
+
+        var newData = ['2010-01-01T12:00:00', 'a', '2010-01-01T12:00:01', 'b', '2010-01-01T12:00:02', 'c'];
+        var newData2 = ['2010-01-01T12:00:03', 'd', '2010-01-01T12:00:04', 'e', '2010-01-01T12:00:05', 'f'];
+
+        var expectedTimes = [epoch.addSeconds(0), epoch.addSeconds(1), epoch.addSeconds(2), epoch.addSeconds(3), epoch.addSeconds(4), epoch.addSeconds(5)];
+        var expectedValues = ['a', 'b', 'c', 'd', 'e', 'f'];
+
+        DynamicProperty._mergeNewSamples(undefined, times, values, newData, 1);
+        DynamicProperty._mergeNewSamples(undefined, times, values, newData2, 1);
 
         expect(times).toEqualArray(expectedTimes, JulianDate.compare);
         expect(values).toEqualArray(expectedValues);

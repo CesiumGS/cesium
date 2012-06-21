@@ -38,7 +38,7 @@ define([
 
     function czmlDateToJulianDate(date, epoch) {
         if (typeof date === 'string') {
-            return JulianDate.fromIso601(date);
+            return JulianDate.fromIso8601(date);
         }
         return epoch.addSeconds(date);
     }
@@ -50,7 +50,7 @@ define([
         this._cachedInterval = undefined;
     }
 
-    DynamicProperty.processCzmlPacket = function(parentObject, propertyName, valueType, czmlIntervals, constrainedInterval, dynamicObjectCollection) {
+    DynamicProperty.processCzmlPacket = function(parentObject, propertyName, valueType, czmlIntervals, constrainedInterval) {
         var newProperty = false;
         var existingProperty = parentObject[propertyName];
         if (typeof czmlIntervals === 'undefined') {
@@ -64,7 +64,7 @@ define([
             newProperty = true;
         }
 
-        existingProperty.addIntervals(czmlIntervals, dynamicObjectCollection, constrainedInterval);
+        existingProperty.addIntervals(czmlIntervals, constrainedInterval);
 
         return newProperty;
     };
@@ -86,9 +86,6 @@ define([
                 nextTime = times[timesInsertionPoint + 1];
                 while (newDataIndex < newData.length) {
                     currentTime = czmlDateToJulianDate(newData[newDataIndex], epoch);
-
-                    //CZML_TODO We can probably further optimize here by dealing with the special cases of ===,
-                    //rather than bailing, though the case probably happens so infrequently, that not checking may be faster
                     if ((typeof prevItem !== 'undefined' && JulianDate.compare(prevItem, currentTime) >= 0) ||
                         (typeof nextTime !== 'undefined' && JulianDate.compare(currentTime, nextTime) >= 0)) {
                         break;
@@ -115,17 +112,17 @@ define([
         }
     };
 
-    DynamicProperty.prototype.addIntervals = function(czmlIntervals, dynamicObjectCollection, constrainedInterval) {
+    DynamicProperty.prototype.addIntervals = function(czmlIntervals, constrainedInterval) {
         if (Array.isArray(czmlIntervals)) {
             for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
-                this.addInterval(czmlIntervals[i], dynamicObjectCollection, constrainedInterval);
+                this.addInterval(czmlIntervals[i], constrainedInterval);
             }
         } else {
-            this.addInterval(czmlIntervals, dynamicObjectCollection, constrainedInterval);
+            this.addInterval(czmlIntervals, constrainedInterval);
         }
     };
 
-    DynamicProperty.prototype.addInterval = function(czmlInterval, dynamicObjectCollection, constrainedInterval) {
+    DynamicProperty.prototype.addInterval = function(czmlInterval, constrainedInterval) {
         var iso8601Interval = czmlInterval.interval;
         if (typeof iso8601Interval === 'undefined') {
             iso8601Interval = Iso8601.MAXIMUM_INTERVAL;
@@ -138,10 +135,10 @@ define([
         }
 
         var unwrappedInterval = this.valueType.unwrapInterval(czmlInterval);
-        this.addIntervalUnwrapped(iso8601Interval.start, iso8601Interval.stop, czmlInterval, unwrappedInterval, dynamicObjectCollection);
+        this.addIntervalUnwrapped(iso8601Interval.start, iso8601Interval.stop, unwrappedInterval, czmlInterval.epoch, czmlInterval.interpolationAlgorithm, czmlInterval.interpolationDegree);
     };
 
-    DynamicProperty.prototype.addIntervalUnwrapped = function(start, stop, czmlInterval, unwrappedInterval, dynamicObjectCollection) {
+    DynamicProperty.prototype.addIntervalUnwrapped = function(start, stop, unwrappedInterval, epoch, interpolationAlgorithmType, interpolationDegree) {
         var thisIntervals = this._intervals;
         var existingInterval = thisIntervals.findInterval(start, stop);
         this._cachedDate = undefined;
@@ -159,13 +156,11 @@ define([
         var thisValueType = this.valueType;
         if (thisValueType.isSampled(unwrappedInterval)) {
             var interpolationAlgorithm;
-            var interpolationAlgorithmType = czmlInterval.interpolationAlgorithm;
-            if (interpolationAlgorithmType) {
+            if (typeof interpolationAlgorithmType !== 'undefined') {
                 interpolationAlgorithm = interpolators[interpolationAlgorithmType];
                 intervalData.interpolationAlgorithm = interpolationAlgorithm;
             }
-            var interpolationDegree = czmlInterval.interpolationDegree;
-            if (interpolationAlgorithm && interpolationDegree) {
+            if (typeof interpolationAlgorithm !== 'undefined '&& typeof interpolationDegree !== 'undefined') {
                 intervalData.interpolationDegree = interpolationDegree;
                 intervalData.xTable = undefined;
                 intervalData.yTable = undefined;
@@ -176,7 +171,6 @@ define([
                 intervalData.values = [];
                 intervalData.isSampled = true;
             }
-            var epoch = czmlInterval.epoch;
             if (typeof epoch !== 'undefined') {
                 epoch = JulianDate.fromIso8601(epoch);
             }
@@ -200,10 +194,11 @@ define([
             if (typeof interval === 'undefined' || !interval.contains(time)) {
                 interval = this._intervals.findIntervalContainingDate(time);
                 this._cachedInterval = interval;
-                if (typeof interval === 'undefined') {
-                    return undefined;
-                }
             }
+        }
+
+        if (typeof interval === 'undefined') {
+            return undefined;
         }
 
         var intervalData = interval.data;

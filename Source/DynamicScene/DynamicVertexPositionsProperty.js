@@ -71,7 +71,7 @@ define([
         this._propertyIntervals = new TimeIntervalCollection();
     }
 
-    DynamicVertexPositionsProperty.processCzmlPacket = function(czmlIntervals, dynamicObjectCollection, sourceUri, existingProperty) {
+    DynamicVertexPositionsProperty.processCzmlPacket = function(czmlIntervals, dynamicObjectCollection, existingProperty) {
         if (typeof czmlIntervals === 'undefined') {
             return existingProperty;
         }
@@ -81,22 +81,22 @@ define([
             existingProperty = new DynamicVertexPositionsProperty();
         }
 
-        existingProperty.addIntervals(czmlIntervals, dynamicObjectCollection, sourceUri);
+        existingProperty.addIntervals(czmlIntervals, dynamicObjectCollection);
 
         return existingProperty;
     };
 
-    DynamicVertexPositionsProperty.prototype.addIntervals = function(czmlIntervals, dynamicObjectCollection, sourceUri) {
+    DynamicVertexPositionsProperty.prototype.addIntervals = function(czmlIntervals, dynamicObjectCollection) {
         if (Array.isArray(czmlIntervals)) {
             for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
-                this.addInterval(czmlIntervals[i], dynamicObjectCollection, sourceUri);
+                this.addInterval(czmlIntervals[i], dynamicObjectCollection);
             }
         } else {
-            this.addInterval(czmlIntervals, dynamicObjectCollection, sourceUri);
+            this.addInterval(czmlIntervals, dynamicObjectCollection);
         }
     };
 
-    DynamicVertexPositionsProperty.prototype.addInterval = function(czmlInterval, dynamicObjectCollection, sourceUri) {
+    DynamicVertexPositionsProperty.prototype.addInterval = function(czmlInterval, dynamicObjectCollection) {
         var iso8601Interval = czmlInterval.interval;
         if (typeof iso8601Interval === 'undefined') {
             iso8601Interval = Iso8601.MAXIMUM_INTERVAL.clone();

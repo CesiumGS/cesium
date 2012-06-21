@@ -50,9 +50,13 @@
 			<include name="Source/**" />
 			<include name="Specs/**" />
 			<include name="ThirdParty/**" />
-			<include name="CHANGES" />
+
+			<!-- Remove this once we're upgraded to 1.7.2 -->
+			<exclude name="ThirdParty/dojo-release-1.7.2-src/**" />
+
 			<include name="index.html" />
-			<include name="LICENSE" />
+			<include name="LICENSE.md" />
+			<include name="CHANGES.md" />
 			<include name="README.md" />
 		</zip>
 	</target>
@@ -71,7 +75,7 @@
 	<property name="build.minification" value="false" />
 
 	<!-- Inputs -->
-	<property name="version" value="b6" />
+	<property name="version" value="b6a" />
 	<property name="sourceDirectory" location="Source" />
 	<property name="shadersDirectory" location="${sourceDirectory}/Shaders" />
 	<property name="examplesDirectory" location="Examples" />

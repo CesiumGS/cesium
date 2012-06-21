@@ -52,10 +52,10 @@ define([
         return this._cachedAvailabilityValue = this.availability.contains(time);
     };
 
-    DynamicObject.processCzmlPacketPosition = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+    DynamicObject.processCzmlPacketPosition = function(dynamicObject, packet) {
         var positionData = packet.position;
         if (typeof positionData !== 'undefined') {
-            var position = DynamicPositionProperty.processCzmlPacket(positionData, dynamicObjectCollection, sourceUri, dynamicObject.position);
+            var position = DynamicPositionProperty.processCzmlPacket(positionData, dynamicObject.position);
             if (typeof dynamicObject.position === 'undefined') {
                 dynamicObject.position = position;
                 return true;
@@ -64,18 +64,18 @@ define([
         return false;
     };
 
-    DynamicObject.processCzmlPacketOrientation = function(dynamicObject, packet, dynamicObjectCollection) {
+    DynamicObject.processCzmlPacketOrientation = function(dynamicObject, packet) {
         var orientationData = packet.orientation;
         if (typeof orientationData !== 'undefined') {
-            return DynamicProperty.processCzmlPacket(dynamicObject, 'orientation', CzmlUnitQuaternion, orientationData, undefined, dynamicObjectCollection);
+            return DynamicProperty.processCzmlPacket(dynamicObject, 'orientation', CzmlUnitQuaternion, orientationData);
         }
         return false;
     };
 
-    DynamicObject.processCzmlPacketVertexPositions = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+    DynamicObject.processCzmlPacketVertexPositions = function(dynamicObject, packet, dynamicObjectCollection) {
         var vertexPositionsData = packet.vertexPositions;
         if (typeof vertexPositionsData !== 'undefined') {
-            var vertexPositions = DynamicVertexPositionsProperty.processCzmlPacket(vertexPositionsData, dynamicObjectCollection, sourceUri, dynamicObject.vertexPositions);
+            var vertexPositions = DynamicVertexPositionsProperty.processCzmlPacket(vertexPositionsData, dynamicObjectCollection, dynamicObject.vertexPositions);
             if (typeof dynamicObject.vertexPositions === 'undefined') {
                 dynamicObject.vertexPositions = vertexPositions;
                 return true;
@@ -84,7 +84,7 @@ define([
         return false;
     };
 
-    DynamicObject.processCzmlPacketAvailability = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+    DynamicObject.processCzmlPacketAvailability = function(dynamicObject, packet) {
         var availability = packet.availability;
         if (typeof availability !== 'undefined') {
             var interval = TimeInterval.fromIso8601(availability);

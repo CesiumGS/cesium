@@ -1,8 +1,10 @@
 /*global define*/
 define([
-        '../Core/destroyObject'
+        '../Core/destroyObject',
+        './CzmlStandard'
        ], function(
-         destroyObject) {
+         destroyObject,
+         CzmlStandard) {
     "use strict";
 
     function VisualizerCollection(visualizers, dynamicObjectCollection) {
@@ -10,6 +12,16 @@ define([
         this._dynamicObjectCollection = undefined;
         this.setDynamicObjectCollection(dynamicObjectCollection);
     }
+
+    /**
+     * Creates a new VisualizerCollection which includes all standard visualizers.
+     *
+     * @see VisualizerCollection
+     * @see CzmlStandard#createVisualizerCollection
+     */
+    VisualizerCollection.createCzmlStandardCollection = function(scene, dynamicObjectCollection) {
+        return new VisualizerCollection(CzmlStandard.createDefaultVisualizers(scene), dynamicObjectCollection);
+    };
 
     VisualizerCollection.prototype.getVisualizers = function() {
         var visualizers = this._visualizers;
