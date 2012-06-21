@@ -1,10 +1,12 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/DeveloperError',
         '../Core/Extent',
         '../Core/Math',
         './Projections'
     ], function(
+        defaultValue,
         DeveloperError,
         Extent,
         CesiumMath,
@@ -37,20 +39,14 @@ define([
      * });
      */
     function OpenStreetMapTileProvider(description) {
-        var desc = description || {};
+        description = defaultValue(description, {});
 
-        this._url = desc.url || 'http://tile.openstreetmap.org/';
-        this._fileExtension = desc.fileExtension || 'png';
-
-        /**
-         * A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
-         * @type {Object}
-         */
-        this._proxy = desc.proxy;
-
-        this._credit = desc.credit || 'MapQuest, Open Street Map and contributors, CC-BY-SA';
+        this._url = defaultValue(description.url, 'http://tile.openstreetmap.org/');
+        this._fileExtension = defaultValue(description.fileExtension, 'png');
+        this._proxy = description.proxy;
 
         // TODO: should not hard-code, get from server?
+        this._credit = defaultValue(description.credit, 'MapQuest, Open Street Map and contributors, CC-BY-SA');
 
         /**
          * The cartographic extent of the base tile, with north, south, east and
@@ -58,12 +54,10 @@ define([
          *
          * @type {Extent}
          */
-        this.maxExtent = new Extent(
-            -CesiumMath.PI,
-            CesiumMath.toRadians(-85.05112878),
-            CesiumMath.PI,
-            CesiumMath.toRadians(85.05112878)
-        );
+        this.maxExtent = new Extent(-CesiumMath.PI,
+                                    CesiumMath.toRadians(-85.05112878),
+                                    CesiumMath.PI,
+                                    CesiumMath.toRadians(85.05112878));
 
         /**
          * The width of every image loaded.

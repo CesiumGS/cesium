@@ -754,7 +754,11 @@ define([
             return;
         }
 
-        var baseTileProviderMaxExtent = baseLayer.getTileProvider().maxExtent;
+        var baseTileProvider = baseLayer.getTileProvider();
+        if (!baseTileProvider.ready) {
+            return;
+        }
+        var baseTileProviderMaxExtent = baseTileProvider.maxExtent;
 
         var viewProjMatrix = context.getUniformState().getViewProjection();
         var viewportTransformation = context.getUniformState().getViewportTransformation();

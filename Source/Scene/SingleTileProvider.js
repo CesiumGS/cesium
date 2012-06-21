@@ -42,12 +42,7 @@ define([
          * @constant
          * @type {Extent}
          */
-        this.maxExtent = new Extent(
-            -CesiumMath.PI,
-            -CesiumMath.PI_OVER_TWO,
-            CesiumMath.PI,
-            CesiumMath.PI_OVER_TWO
-        );
+        this.maxExtent = Extent.MAX_VALUE;
 
         /**
          * The maximum zoom level that can be requested.

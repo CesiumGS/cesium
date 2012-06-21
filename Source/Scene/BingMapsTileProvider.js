@@ -70,6 +70,7 @@
  */
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/DeveloperError',
         '../Core/Extent',
         '../Core/Math',
@@ -77,6 +78,7 @@ define([
         './BingMapsStyle',
         './Projections'
     ], function(
+        defaultValue,
         DeveloperError,
         Extent,
         CesiumMath,
@@ -114,39 +116,37 @@ define([
      * });
      */
     function BingMapsTileProvider(description) {
-        var desc = description || {};
-        var key = desc.key || 'AquXz3981-1ND5jGs8qQn7R7YUP8qkWi77yZSVM7o3nIvzb-Mg0W2Ta57xuUyywX';
-        var mapStyle = desc.mapStyle || BingMapsStyle.AERIAL;
+        description = defaultValue(description, {});
 
-        if (typeof desc.server === 'undefined') {
+        if (typeof description.server === 'undefined') {
             throw new DeveloperError('description.server is required.');
         }
+
+        var server = description.server;
 
         /**
          * The name of the Bing Maps server hosting the imagery.
          * @type {String}
          */
-        this.server = desc.server;
-        this._server = desc.server;
+        this.server = server;
+
+        var key = defaultValue(description.key, 'AquXz3981-1ND5jGs8qQn7R7YUP8qkWi77yZSVM7o3nIvzb-Mg0W2Ta57xuUyywX');
 
         /**
          * The Bing Maps key.
          * @type {String}
          */
         this.key = key;
-        this._key = key;
+
+        var mapStyle = defaultValue(description.mapStyle, BingMapsStyle.AERIAL);
 
         /**
          * The type of Bing Maps imagery to load.
          * @type {Enumeration}
          */
         this.mapStyle = mapStyle;
-        this._mapStyle = mapStyle;
 
-        this._proxy = desc.proxy;
-
-        // TODO: The following 5 properties should be set in _requestTemplate.
-        //       The may be needed before the response so for now set the default values.
+        this._proxy = description.proxy;
 
         /**
          * The cartographic extent of the base tile, with north, south, east and
@@ -154,40 +154,38 @@ define([
          *
          * @type {Extent}
          */
-        this.maxExtent = new Extent(
-            -CesiumMath.PI,
-            CesiumMath.toRadians(-85.05112878),
-            CesiumMath.PI,
-            CesiumMath.toRadians(85.05112878)
-        );
+        this.maxExtent = new Extent(-CesiumMath.PI,
+                                    CesiumMath.toRadians(-85.05112878),
+                                    CesiumMath.PI,
+                                    CesiumMath.toRadians(85.05112878));
 
         /**
          * The width of every image loaded.
          *
          * @type {Number}
          */
-        this.tileWidth = 256;
+        this.tileWidth = undefined;
 
         /**
          * The height of every image loaded.
          *
          * @type {Number}
          */
-        this.tileHeight = 256;
+        this.tileHeight = undefined;
 
         /**
          * The maximum zoom level that can be requested.
          *
          * @type {Number}
          */
-        this.zoomMax = 23;
+        this.zoomMax = undefined;
 
         /**
          * The minimum zoom level that can be requested.
          *
          * @type {Number}
          */
-        this.zoomMin = 1;
+        this.zoomMin = undefined;
 
         /**
          * The map projection of the image.
@@ -202,23 +200,31 @@ define([
          *
          * @type {Boolean}
          */
-        this.ready = true;
+        this.ready = false;
 
-        this._url = undefined;
-        this._deferredQueue = [];
-        this._requestTemplate();
-    }
+        this._imageUrlTemplate = undefined;
+        this._imageUrlSubdomains = undefined;
+        this._imageUrlSubdomainIndex = 0;
 
-    //for a given tile, if we have an element with the same tile in the queue, return the element.
-    function findInDeferredQueue(deferredQueue, tile) {
-        for ( var i = 0, len = deferredQueue.length; i < len; ++i) {
-            var element = deferredQueue[i];
-            var t = element.tile;
-            if (t.zoom === tile.zoom && t.x === tile.x && t.y === tile.y) {
-                return element;
-            }
-        }
-        return undefined;
+        //tiles only need BasicMetadata which is a smaller result
+        this._tileMetadataUrl = 'http://' + server + '/REST/v1/Imagery/BasicMetadata/' + mapStyle.imagerySetName + '?key=' + key;
+
+        var metadataUrl = 'http://' + server + '/REST/v1/Imagery/Metadata/' + mapStyle.imagerySetName + '?key=' + key;
+        var that = this;
+        jsonp(metadataUrl, function(data) {
+            var resource = data.resourceSets[0].resources[0];
+
+            that._imageUrlSubdomains = resource.imageUrlSubdomains;
+            that._imageUrlTemplate = resource.imageUrl.replace('{culture}', '');
+            that.tileWidth = resource.imageWidth;
+            that.tileHeight = resource.imageHeight;
+            that.zoomMin = resource.zoomMin;
+            that.zoomMax = resource.zoomMax;
+            that.ready = true;
+        }, {
+            callbackParameterName : 'jsonp',
+            proxy : this._proxy
+        });
     }
 
     /**
@@ -284,35 +290,6 @@ define([
         return result;
     };
 
-    BingMapsTileProvider.prototype._getMetadataUrl = function() {
-        return 'http://' + this.server + '/REST/v1/Imagery/Metadata/' + this.mapStyle.imagerySetName + '?key=' + this.key;
-    };
-
-    BingMapsTileProvider.prototype._requestTemplate = function() {
-        var that = this;
-        jsonp(this._getMetadataUrl(), function(data) {
-            var resource = data.resourceSets[0].resources[0];
-
-            var url = resource.imageUrl;
-            url = url.replace('{subdomain}', resource.imageUrlSubdomains[0]);
-            url = url.replace('{culture}', '');
-            that._url = url;
-
-            that.tileWidth = resource.imageWidth;
-            that.tileHeight = resource.imageHeight;
-            that.zoomMin = resource.zoomMin;
-            that.zoomMax = resource.zoomMax;
-
-            that._deferredQueue.forEach(function(element) {
-                that._loadImage(element);
-            });
-            that._deferredQueue = [];
-        }, {
-            callbackParameterName : 'jsonp',
-            proxy: this._proxy
-        });
-    };
-
     /**
      * Loads the image for <code>tile</code>.
      *
@@ -327,86 +304,33 @@ define([
      * or greater than <code>zoomMax</code>.
      */
     BingMapsTileProvider.prototype.loadTileImage = function(tile, onload, onerror, oninvalid) {
-        if (this.server !== this._server || this.key !== this._key || this.mapStyle !== this._mapStyle) {
-            this._server = this.server;
-            this._key = this.key;
-            this._mapStyle = this.mapStyle;
-
-            this._url = undefined;
-            this._requestTemplate();
-        }
-
         if (tile.zoom < this.zoomMin || tile.zoom > this.zoomMax) {
             throw new DeveloperError('tile.zoom must be between in [zoomMin, zoomMax].');
         }
 
-        var image = new Image();
-        var element = {
-            tile : tile,
-            onload : onload,
-            onerror : onerror,
-            oninvalid : oninvalid,
-            image : image
-        };
-
-        if (typeof this._url === 'undefined') {
-            var existingElement = findInDeferredQueue(this._deferredQueue, tile);
-            if (typeof existingElement === 'undefined') {
-                this._deferredQueue.push(element);
-                return image;
-            }
-
-            //add the callbacks to the existing element so both are called
-            existingElement.onload = combineFunctions(existingElement.onload, onload);
-            existingElement.onerror = combineFunctions(existingElement.onerror, onerror);
-            existingElement.oninvalid = combineFunctions(existingElement.oninvalid, oninvalid);
-            return existingElement.image;
-        }
-
-        this._loadImage(element);
-        return image;
-    };
-
-    function combineFunctions(a, b) {
-        if (typeof a !== 'function' && typeof b !== 'function') {
-            return undefined;
-        }
-        if (typeof a !== 'function' && typeof b === 'function') {
-            return b;
-        }
-        if (typeof a === 'function' && typeof b !== 'function') {
-            return a;
-        }
-        return function() {
-            a();
-            b();
-        };
-    }
-
-    BingMapsTileProvider.prototype._loadImage = function(element) {
-        var tile = element.tile;
         var lat = CesiumMath.toDegrees((tile.extent.north + tile.extent.south) * 0.5);
         var lon = CesiumMath.toDegrees((tile.extent.east + tile.extent.west) * 0.5);
         var zoomResponse = false;
         var validZoom = false;
         var loaded = false;
 
-        jsonp(this._getMetadataUrl(), function(data) {
-            if (typeof data.resourceSets[0] === 'undefined') {
-                if (typeof element.onerror === 'function') {
-                    element.onerror();
+        jsonp(this._tileMetadataUrl, function(data) {
+            var resourceSet = data.resourceSets[0];
+            if (typeof resourceSet === 'undefined') {
+                if (typeof onerror === 'function') {
+                    onerror();
                 }
                 return;
             }
 
-            var resource = data.resourceSets[0].resources[0];
+            var resource = resourceSet.resources[0];
             if (resource.vintageStart && resource.vintageEnd) {
                 validZoom = true;
-                if (loaded && typeof element.onload === 'function') {
-                    element.onload();
+                if (loaded && typeof onload === 'function') {
+                    onload();
                 }
-            } else if (typeof element.oninvalid === 'function') {
-                element.oninvalid();
+            } else if (typeof oninvalid === 'function') {
+                oninvalid();
             }
 
             zoomResponse = true;
@@ -419,23 +343,32 @@ define([
             proxy : this._proxy
         });
 
-        var image = element.image;
+        var image = new Image();
         image.onload = function() {
-            if (zoomResponse && validZoom && typeof element.onload === 'function') {
-                element.onload();
+            if (zoomResponse && validZoom && typeof onload === 'function') {
+                onload();
             }
             loaded = true;
         };
-        image.onerror = element.onerror;
+        image.onerror = onerror;
         image.crossOrigin = '';
 
         var quadkey = BingMapsTileProvider.tileXYToQuadKey(tile.x, tile.y, tile.zoom);
-        var url = this._url.replace('{quadkey}', quadkey);
+        var imageUrl = this._imageUrlTemplate.replace('{quadkey}', quadkey);
+
+        var subdomains = this._imageUrlSubdomains;
+        var index = this._imageUrlSubdomainIndex++;
+        if (index >= subdomains.length) {
+            index = this._imageUrlSubdomainIndex = 0;
+        }
+        imageUrl = imageUrl.replace('{subdomain}', subdomains[index]);
+
         if (typeof this._proxy !== 'undefined') {
-            url = this._proxy.getURL(url);
+            imageUrl = this._proxy.getURL(imageUrl);
         }
 
-        image.src = url;
+        image.src = imageUrl;
+        return image;
     };
 
     /**

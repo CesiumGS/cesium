@@ -1,11 +1,13 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/DeveloperError',
         '../Core/Extent',
         '../Core/Math',
         '../Core/jsonp',
         './Projections'
     ], function(
+        defaultValue,
         DeveloperError,
         Extent,
         CesiumMath,
@@ -35,14 +37,13 @@ define([
      * @example
      * // ArcGIS World Street Maps tile provider
      * var esri = new ArcGISMapServerTileProvider({
-     *     host : 'server.arcgisonline.com',
-     *     service : 'World_Street_Map'
+     *     url: 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
      * });
      */
     function ArcGISMapServerTileProvider(description) {
-        var desc = description || {};
+        description = defaultValue(description, {});
 
-        if (!desc.url) {
+        if (typeof description.url === 'undefined') {
             throw new DeveloperError('description.url is required.');
         }
 
@@ -50,9 +51,9 @@ define([
          * The URL of the ArcGIS MapServer.
          * @type {String}
          */
-        this.url = desc.url;
+        this.url = description.url;
 
-        this._proxy = desc.proxy;
+        this._proxy = description.proxy;
 
         /**
          * The cartographic extent of the base tile, with north, south, east and
@@ -115,19 +116,16 @@ define([
             if (data.tileInfo.spatialReference.wkid === 102100) {
                 that.projection = Projections.MERCATOR;
                 // TODO: Determine extent from service description.
-                that.maxExtent = new Extent(
-                        -CesiumMath.PI,
-                        CesiumMath.toRadians(-85.05112878),
-                        CesiumMath.PI,
-                        CesiumMath.toRadians(85.05112878)
-                    );
+                that.maxExtent = new Extent(-CesiumMath.PI,
+                                            CesiumMath.toRadians(-85.05112878),
+                                            CesiumMath.PI,
+                                            CesiumMath.toRadians(85.05112878));
             } else if (data.tileInfo.spatialReference.wkid === 4326) {
                 that.projection = Projections.WGS84;
-                that.maxExtent = new Extent(
-                        CesiumMath.toRadians(data.fullExtent.xmin),
-                        CesiumMath.toRadians(data.fullExtent.ymin),
-                        CesiumMath.toRadians(data.fullExtent.xmax),
-                        CesiumMath.toRadians(data.fullExtent.ymax));
+                that.maxExtent = new Extent(CesiumMath.toRadians(data.fullExtent.xmin),
+                                            CesiumMath.toRadians(data.fullExtent.ymin),
+                                            CesiumMath.toRadians(data.fullExtent.xmax),
+                                            CesiumMath.toRadians(data.fullExtent.ymax));
             }
 
             that.zoomMin = 0;
@@ -203,7 +201,7 @@ define([
      * @memberof ArcGISMapServerTileProvider
      */
     ArcGISMapServerTileProvider.prototype.getLogo = function() {
-        return (this._logoLoaded) ? this._logo : undefined;
+        return this._logoLoaded ? this._logo : undefined;
     };
 
     return ArcGISMapServerTileProvider;
