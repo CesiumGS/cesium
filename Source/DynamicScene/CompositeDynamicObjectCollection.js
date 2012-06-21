@@ -1,12 +1,16 @@
 /*global define*/
 define([
         '../Core/Event',
+        '../Core/Iso8601',
+        '../Core/TimeInterval',
         '../Core/DeveloperError',
         './DynamicObject',
         './DynamicObjectCollection',
         './CzmlStandard'
     ], function(
         Event,
+        Iso8601,
+        TimeInterval,
         DeveloperError,
         DynamicObject,
         DynamicObjectCollection,
@@ -29,6 +33,29 @@ define([
             this.applyChanges();
         }
     }
+
+    DynamicObjectCollection.prototype.computeAvailability = function() {
+        var startTime = Iso8601.MAXIMUM_VALUE;
+        var stopTime = Iso8601.MINIMUM_VALUE;
+        var i;
+        var len;
+        var collection;
+        var collections = this._collections;
+        for (i = 0, len = collections.length; i < len; i++) {
+            collection = collections[i];
+            var availability = collection.computeAvailability();
+            if (availability.start.lessThan(startTime)) {
+                startTime = collection.availability.start;
+            }
+            if (availability.stop.greaterThan(stopTime)) {
+                stopTime = collection.availability.stop;
+            }
+        }
+        if (startTime !== Iso8601.MAXIMUM_VALUE && stopTime !== Iso8601.MINIMUM_VALUE) {
+            return new TimeInterval(startTime, stopTime, true, true);
+        }
+        return new TimeInterval(Iso8601.MINIMUM_VALUE, Iso8601.MAXIMUM_VALUE, true, true);
+    };
 
     CompositeDynamicObjectCollection.prototype.addCollection = function(dynamicObjectCollection) {
         if (typeof dynamicObjectCollection === 'undefined') {

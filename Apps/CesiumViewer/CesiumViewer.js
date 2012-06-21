@@ -77,17 +77,9 @@ function(dom,
         var stopTime = Iso8601.MINIMUM_VALUE;
         var dynamicObjects = dynamicObjectCollection.getObjects();
 
-        for (i = 0, len = dynamicObjects.length; i < len; i++) {
-            object = dynamicObjects[i];
-            if (typeof object.availability !== 'undefined') {
-                if (object.availability.start.lessThan(startTime)) {
-                    startTime = object.availability.start;
-                }
-                if (object.availability.stop.greaterThan(stopTime)) {
-                    stopTime = object.availability.stop;
-                }
-            }
-        }
+        var availability = dynamicObjectCollection.computeAvailability();
+        startTime = availability.start;
+        stopTime = availability.stop;
 
         if (startTime === Iso8601.MAXIMUM_VALUE) {
             for (i = 0, len = dynamicObjects.length; i < len; i++) {

@@ -2,11 +2,15 @@
 define([
         '../Core/Event',
         '../Core/createGuid',
+        '../Core/TimeInterval',
+        '../Core/Iso8601',
         './DynamicObject',
         './CzmlStandard'
        ], function(
         Event,
         createGuid,
+        TimeInterval,
+        Iso8601,
         DynamicObject,
         CzmlStandard) {
     "use strict";
@@ -20,6 +24,30 @@ define([
         this.objectPropertiesChanged = new Event();
         this.objectsRemoved = new Event();
     }
+
+    DynamicObjectCollection.prototype.computeAvailability = function() {
+        var startTime = Iso8601.MAXIMUM_VALUE;
+        var stopTime = Iso8601.MINIMUM_VALUE;
+        var i;
+        var len;
+        var object;
+        var dynamicObjects = this._array;
+        for (i = 0, len = dynamicObjects.length; i < len; i++) {
+            object = dynamicObjects[i];
+            if (typeof object.availability !== 'undefined') {
+                if (object.availability.start.lessThan(startTime)) {
+                    startTime = object.availability.start;
+                }
+                if (object.availability.stop.greaterThan(stopTime)) {
+                    stopTime = object.availability.stop;
+                }
+            }
+        }
+        if (startTime !== Iso8601.MAXIMUM_VALUE && stopTime !== Iso8601.MINIMUM_VALUE) {
+            return new TimeInterval(startTime, stopTime, true, true);
+        }
+        return new TimeInterval(Iso8601.MINIMUM_VALUE, Iso8601.MAXIMUM_VALUE, true, true);
+    };
 
     DynamicObjectCollection.prototype.getObject = function(id) {
         return this._hash[id];
