@@ -9,7 +9,7 @@ define([
         './DynamicPolyline',
         './DynamicPyramid',
         './DynamicBillboardVisualizer',
-        './DynamicConeVisualizer',
+        './DynamicConeVisualizerUsingCustomSensor', //'./DynamicConeVisualizer',
         './DynamicLabelVisualizer',
         './DynamicPointVisualizer',
         './DynamicPolygonVisualizer',
