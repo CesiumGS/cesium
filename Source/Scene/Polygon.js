@@ -27,7 +27,6 @@ define([
         '../Shaders/PolygonFS',
         '../Shaders/PolygonVSPick',
         '../Shaders/PolygonFSPick',
-        '../Shaders/Materials/materialHelperInput'
     ], function(
         DeveloperError,
         combine,
@@ -55,8 +54,7 @@ define([
         PolygonVS,
         PolygonFS,
         PolygonVSPick,
-        PolygonFSPick,
-        materialHelperInput) {
+        PolygonFSPick) {
     "use strict";
 
     var attributeIndices = {
@@ -500,8 +498,6 @@ define([
                 var fsSource =
                     "#line 0\n" +
                     ShadersNoise +
-                    "#line 0\n" +
-                    materialHelperInput +
                     "#line 0\n" +
                     this.material._getShaderSource() +
                     "#line 0\n" +

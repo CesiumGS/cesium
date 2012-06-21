@@ -365,31 +365,81 @@ mat3 agi_eastNorthUpToEyeCoordinates(vec3 positionMC, vec3 normalEC)
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Fast phong light computation
+ * Used as input to every material's agi_getMaterial function. 
+ * Only set the values the material is expected to use.
+ *
+ * Member variables:
+ * s: 1D texture coordinates.
+ * st: 2D texture coordinates.
+ * str: 3D texture coordinates.
+ * normalEC: The unperturbed surface normal in eye coordinates.
+ * tangentToEyeMatrix: Matrix for converting a tangent space normal to eye space.
+ * positionToEyeWC: Direction from the fragment to the eye.
+ * positionMC: position in model coordinates.
+ *
+ * @name agi_materialInput
+ * @glslStruct
+ */
+struct agi_materialInput
+{
+    float s;
+    vec2 st;
+    vec3 str;
+    mat3 tangentToEyeMatrix;
+    vec3 positionToEyeWC;
+    vec3 normalEC;
+    vec3 positionMC;
+};
+
+/**
+ * Holds material information that can be used for lighting.
+ * Returned by all agi_getMaterial functions.
+ *
+ * @name agi_material
+ * @glslStruct
+ */
+struct agi_material
+{
+    vec3 diffuseComponent;
+    float specularComponent;
+    vec3 normalComponent;
+    vec3 emissionComponent;
+    float alphaComponent;
+};
+
+/**
+ * Fast phong light computation.
  *
  * @name agi_lightValuePhong
  * @glslFunction
+ *
+ * @param {vec3} toLight Direction to light in eye coordinates.
+ * @param {vec3} toEye Direction to eye in eye coordinates.
+ * @param {agi_material} material Material value used for light computation.
+ *
+ * @returns {vec4} Final rgba light value.
+ *
+ * @see agi_material
  */
 
-vec4 agi_lightValuePhong(vec3 toLight, vec3 toEye, vec3 normal, vec4 diffuseComponent, float specularComponent, vec3 emissionComponent)
+vec4 agi_lightValuePhong(vec3 toLight, vec3 toEye, agi_material material)
 {
-    //x, y, z : diffuse ambient
-    //w : specular strength
-    vec4 ambientLight = vec4(0.0, 0.0, 0.0, 0.5);
-    
-    //Diffuse values
-    vec3 diffuseColor = diffuseComponent.xyz;
-    float alpha = diffuseComponent.w;
-    
-    //Specular value
-    float specularIntensity = specularComponent + agi_epsilon7;
+    vec3 diffuseColor = material.diffuseComponent;
+    float specularIntensity = material.specularComponent + agi_epsilon7;
+    vec3 normal = material.normalComponent;
+    vec3 emissionColor = material.emissionComponent;
+    float alpha = material.alphaComponent;
 
     vec3 toReflectedLight = reflect(-toLight, normal);
     float diffuseAmount = max(dot(toLight, normal), 0.0);
     float specularAmount = max(dot(toReflectedLight, toEye), 0.0);
     specularAmount = pow(specularAmount, 1.0 / (specularIntensity / 10.0));
 
-    vec3 lighting = ambientLight.xyz + emissionComponent;
+    //x, y, z : diffuse ambient
+    //w : specular strength
+    vec4 ambientLight = vec4(0.0, 0.0, 0.0, 0.5);
+    
+    vec3 lighting = ambientLight.xyz + emissionColor;
     lighting += diffuseColor * diffuseAmount;
     lighting += specularAmount * ambientLight.w;
     lighting = clamp(lighting, 0.0, 1.0);
@@ -403,21 +453,24 @@ vec4 agi_lightValuePhong(vec3 toLight, vec3 toEye, vec3 normal, vec4 diffuseComp
  *
  * @name agi_lightValueGaussian
  * @glslFunction
+ *
+ * @param {vec3} toLight Direction to light in eye coordinates.
+ * @param {vec3} toEye Direction to eye in eye coordinates.
+ * @param {agi_material} material Material value used for light computation.
+ *
+ * @returns {vec4} Final rgba light value.
+ *
+ * @see agi_material
  */
 
-vec4 agi_lightValueGaussian(vec3 toLight, vec3 toEye, vec3 normal, vec4 diffuseComponent, float specularComponent, vec3 emissionComponent)
+vec4 agi_lightValueGaussian(vec3 toLight, vec3 toEye, agi_material material)
 {
-    //x, y, z : diffuse ambient
-    //w : specular strength
-    vec4 ambientLight = vec4(0.0, 0.0, 0.0, 0.5);
-    
-    //Diffuse values
-    vec3 diffuseColor = diffuseComponent.xyz;
-    float alpha = diffuseComponent.w;
-    
-    //Specular value
-    float specularIntensity = specularComponent + agi_epsilon7;
-    
+    vec3 diffuseColor = material.diffuseComponent;
+    float specularIntensity = material.specularComponent + agi_epsilon7;
+    vec3 normal = material.normalComponent;
+    vec3 emissionColor = material.emissionComponent;
+    float alpha = material.alphaComponent;
+
     float cosAngIncidence = max(dot(normal, toLight), 0.0);
     vec3 halfAngle = normalize(toLight + toEye);
     float angleNormalHalf = acos(dot(halfAngle, normal));
@@ -426,7 +479,11 @@ vec4 agi_lightValueGaussian(vec3 toLight, vec3 toEye, vec3 normal, vec4 diffuseC
     float gaussianTerm = exp(exponent);
     gaussianTerm = cosAngIncidence != 0.0 ? gaussianTerm : 0.0;
 
-    vec3 lighting = ambientLight.xyz + emissionComponent;
+    //x, y, z : diffuse ambient
+    //w : specular strength
+    vec4 ambientLight = vec4(0.0, 0.0, 0.0, 0.5);
+    
+    vec3 lighting = ambientLight.xyz + emissionColor;
     lighting += diffuseColor * cosAngIncidence;
     lighting += gaussianTerm * ambientLight.w;
     lighting = clamp(lighting, 0.0, 1.0);

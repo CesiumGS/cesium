@@ -17,7 +17,6 @@ define([
         '../Shaders/SensorVolume',
         '../Shaders/CustomSensorVolumeVS',
         '../Shaders/CustomSensorVolumeFS',
-        '../Shaders/Materials/materialHelperInput',
         './SceneMode'
     ], function(
         DeveloperError,
@@ -37,7 +36,6 @@ define([
         ShadersSensorVolume,
         CustomSensorVolumeVS,
         CustomSensorVolumeFS,
-        materialHelperInput,
         SceneMode) {
     "use strict";
 
@@ -345,8 +343,6 @@ define([
                 var fsSource =
                     "#line 0\n" +
                     ShadersNoise +
-                    "#line 0\n" +
-                    materialHelperInput +
                     "#line 0\n" +
                     ShadersSensorVolume +
                     "#line 0\n" +

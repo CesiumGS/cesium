@@ -2,12 +2,12 @@ uniform vec4 u_lightColor;
 uniform vec4 u_darkColor;
 uniform vec2 u_repeat;
 
-// x,y,z : diffuse color
-// w : alpha
-vec4 agi_getMaterialDiffuseComponent(MaterialHelperInput helperInput)
+agi_material agi_getMaterial(agi_materialInput materialInput)
 {
+    agi_material material = agi_getDefaultMaterial(materialInput);
+
     // Fuzz Factor - Controls blurriness between light and dark colors
-    vec2 st = helperInput.st;
+    vec2 st = materialInput.st;
     const float fuzz = 0.03;
     
     // From Stefan Gustavson's Procedural Textures in GLSL in OpenGL Insights
@@ -29,5 +29,8 @@ vec4 agi_getMaterialDiffuseComponent(MaterialHelperInput helperInput)
     
     vec4 midColor = (u_lightColor + u_darkColor) / 2.0;
     vec4 currentColor = mix(u_lightColor, u_darkColor, b);
-    return mix(midColor, currentColor, val1);
+    
+    material.diffuseComponent = mix(midColor, currentColor, val1).rgb;
+    
+    return material;
 }

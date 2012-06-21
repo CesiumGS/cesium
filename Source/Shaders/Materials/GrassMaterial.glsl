@@ -2,11 +2,11 @@ uniform vec4 u_grassColor;
 uniform vec4 u_dirtColor;
 uniform float u_patchiness;
 
-// x,y,z : diffuse color
-// w : alpha
-vec4 agi_getMaterialDiffuseComponent(MaterialHelperInput helperInput)
+agi_material agi_getMaterial(agi_materialInput materialInput)
 {
-    vec2 st = helperInput.st;
+    agi_material material = agi_getDefaultMaterial(materialInput);
+    
+    vec2 st = materialInput.st;
     float noise1 = (agi_snoise(st * u_patchiness * 1.0)) * 1.0;
     float noise2 = (agi_snoise(st * u_patchiness * 2.0)) * 0.5;
     float noise3 = (agi_snoise(st * u_patchiness * 4.0)) * 0.25;
@@ -20,7 +20,9 @@ vec4 agi_getMaterialDiffuseComponent(MaterialHelperInput helperInput)
     float stripeNoise = min(verticalNoise, horizontalNoise);
  
     color += stripeNoise;
-    
     color.w = 1.0;
-    return color;
+    
+    material.diffuseComponent = color.rgb;
+    
+    return material;
 }

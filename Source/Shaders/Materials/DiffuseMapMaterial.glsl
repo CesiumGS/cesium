@@ -1,9 +1,11 @@
 uniform sampler2D u_texture;
 uniform vec2 u_repeat;
 
-// x,y,z : diffuse color
-// w : alpha
-vec4 agi_getMaterialDiffuseComponent(MaterialHelperInput helperInput)
+agi_material agi_getMaterial(agi_materialInput materialInput)
 {
-    return texture2D(u_texture, fract(u_repeat * helperInput.st));
+    agi_material material = agi_getDefaultMaterial(materialInput);
+
+    material.diffuseComponent = texture2D(u_texture, fract(u_repeat * materialInput.st)).rgb;
+    
+    return material;
 }

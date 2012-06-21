@@ -1,8 +1,30 @@
 uniform vec4 u_color;
 
-// x,y,z : diffuse color
-// w : alpha
-vec4 agi_getMaterialDiffuseComponent(MaterialHelperInput helperInput)
+/**
+ * Calculates material properties. The returned material should use the default material as a base.
+ *
+ * @name agi_getMaterial
+ * @glslFunction 
+ *
+ * @param {agi_materialInput} input The input used to construct the material.
+ * 
+ * @returns {agi_material} The material.
+ *
+ * @example
+ * agi_material material = agi_getDefaultMaterial(materialInput);
+ * material.diffuseComponent = vec3(1.0, 0.0, 0.0);
+ * return material;
+ *
+ * @see agi_materialInput
+ * @see agi_material
+ * @see agi_getDefaultMaterial
+ */
+ 
+agi_material agi_getMaterial(agi_materialInput materialInput)
 {
-    return u_color;
+    agi_material material = agi_getDefaultMaterial(materialInput);
+    
+    material.diffuseComponent = u_color.rgb;
+    
+    return material;
 }

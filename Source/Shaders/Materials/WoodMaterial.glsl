@@ -7,13 +7,12 @@ uniform float u_grainThreshold;
 uniform vec2 u_noiseScale;
 uniform float u_grainFrequency;
 
-// x,y,z : diffuse color
-// w : alpha
-vec4 agi_getMaterialDiffuseComponent(MaterialHelperInput helperInput)
+agi_material agi_getMaterial(agi_materialInput materialInput)
 {
-    //Based on wood shader from OpenGL Shading Language (3rd edition) pg. 455
+    agi_material material = agi_getDefaultMaterial(materialInput);
     
-    vec2 st = helperInput.st;
+    //Based on wood shader from OpenGL Shading Language (3rd edition) pg. 455
+    vec2 st = materialInput.st;
     
     vec2 noisevec;
     noisevec.x = agi_snoise(st * u_noiseScale.x);
@@ -32,7 +31,10 @@ vec4 agi_getMaterialDiffuseComponent(MaterialHelperInput helperInput)
     //streaks
     r = abs(agi_snoise(vec2(st.x * u_grainFrequency, st.y * u_grainFrequency * 0.02))) * 0.2;
     color += u_lightWoodColor * r;
-
-    color.w = 1.0;
-    return color;
+    
+    color.a = 1.0;
+    
+    material.diffuseComponent = color.rgb;
+    
+    return material;
 }

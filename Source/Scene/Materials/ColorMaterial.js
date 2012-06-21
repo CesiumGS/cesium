@@ -1,10 +1,10 @@
 /*global define*/
 define([
-        '../../Shaders/Materials/ColorMaterial',
-        '../../Scene/Materials/materialBuilder'
+        '../../Shaders/Materials/Material',
+        '../../Shaders/Materials/ColorMaterial'
     ], function(
-        ShadersColorMaterial,
-        materialBuilder) {
+        ShadersMaterial,
+        ShadersColorMaterial) {
     "use strict";
 
     /**
@@ -35,7 +35,10 @@ define([
     }
 
     ColorMaterial.prototype._getShaderSource = function() {
-        return materialBuilder.constructMaterial(ShadersColorMaterial);
+        return "#line 0\n" +
+               ShadersMaterial +
+               "#line 0\n" +
+               ShadersColorMaterial;
     };
 
     return ColorMaterial;

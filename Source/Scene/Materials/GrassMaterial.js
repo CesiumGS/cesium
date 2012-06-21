@@ -1,12 +1,12 @@
 /*global define*/
 define([
         '../../Shaders/Noise',
-        '../../Shaders/Materials/GrassMaterial',
-        '../../Scene/Materials/materialBuilder'
+        '../../Shaders/Materials/Material',
+        '../../Shaders/Materials/GrassMaterial'
     ], function (
         ShadersNoise,
-        ShadersGrassMaterial,
-        materialBuilder) {
+        ShadersMaterial,
+        ShadersGrassMaterial) {
     "use strict";
 
     /**
@@ -65,7 +65,12 @@ define([
     }
 
     GrassMaterial.prototype._getShaderSource = function() {
-        return materialBuilder.constructMaterial(ShadersGrassMaterial, ShadersNoise);
+        return "#line 0\n" +
+               ShadersNoise +
+               "#line 0\n" +
+               ShadersMaterial +
+               "#line 0\n" +
+               ShadersGrassMaterial;
     };
 
     return GrassMaterial;

@@ -22,7 +22,6 @@ define([
         '../Shaders/SensorVolume',
         '../Shaders/ComplexConicSensorVolumeVS',
         '../Shaders/ComplexConicSensorVolumeFS',
-        '../Shaders/Materials/materialHelperInput',
         './SceneMode'
     ], function(
         DeveloperError,
@@ -47,7 +46,6 @@ define([
         ShadersSensorVolume,
         ComplexConicSensorVolumeVS,
         ComplexConicSensorVolumeFS,
-        materialHelperInput,
         SceneMode) {
     "use strict";
 
@@ -395,8 +393,6 @@ define([
                     "#line 0\n" +
                     ShadersSensorVolume +
                     "#line 0\n" +
-                    materialHelperInput +
-                    "#line 0\n" +
                     material._getShaderSource() +
                     "#line 0\n" +
                     ComplexConicSensorVolumeFS;
@@ -456,8 +452,6 @@ define([
                 ShadersConstructiveSolidGeometry +
                 "#line 0\n" +
                 ShadersSensorVolume +
-                "#line 0\n" +
-                materialHelperInput +
                 "#line 0\n" +
                 ComplexConicSensorVolumeFS;
 

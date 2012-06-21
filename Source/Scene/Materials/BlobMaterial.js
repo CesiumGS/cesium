@@ -1,12 +1,12 @@
 /*global define*/
 define([
         '../../Shaders/Noise',
-        '../../Shaders/Materials/BlobMaterial',
-        '../../Scene/Materials/materialBuilder'
+        '../../Shaders/Materials/Material',
+        '../../Shaders/Materials/BlobMaterial'
     ], function(
         ShadersNoise,
-        ShadersBlobMaterial,
-        materialBuilder) {
+        ShadersMaterial,
+        ShadersBlobMaterial) {
     "use strict";
 
     /**
@@ -61,7 +61,12 @@ define([
     }
 
     BlobMaterial.prototype._getShaderSource = function() {
-        return materialBuilder.constructMaterial(ShadersBlobMaterial, ShadersNoise);
+        return "#line 0\n" +
+               ShadersNoise +
+               "#line 0\n" +
+               ShadersMaterial +
+               "#line 0\n" +
+               ShadersBlobMaterial;
     };
 
     return BlobMaterial;

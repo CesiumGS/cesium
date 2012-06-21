@@ -1,11 +1,10 @@
 /*global define*/
 define([
-        '../../Shaders/Materials/HorizontalStripeMaterial',
-        '../../Scene/Materials/materialBuilder'
+        '../../Shaders/Materials/Material',
+        '../../Shaders/Materials/HorizontalStripeMaterial'
     ], function(
-        ShadersHorizontalStripeMaterial,
-        materialBuilder
-        ) {
+        ShadersMaterial,
+        ShadersHorizontalStripeMaterial) {
     "use strict";
 
     /**
@@ -69,7 +68,10 @@ define([
     }
 
     HorizontalStripeMaterial.prototype._getShaderSource = function() {
-        return materialBuilder.constructMaterial(ShadersHorizontalStripeMaterial);
+        return "#line 0\n" +
+               ShadersMaterial +
+               "#line 0\n" +
+               ShadersHorizontalStripeMaterial;
     };
 
     return HorizontalStripeMaterial;

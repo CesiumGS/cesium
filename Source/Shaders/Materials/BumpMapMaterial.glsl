@@ -1,10 +1,11 @@
 uniform sampler2D u_texture;
 uniform vec2 u_repeat;
 
-//x,y,z : normal in eye space
-vec3 agi_getMaterialNormalComponent(MaterialHelperInput helperInput)
+agi_material agi_getMaterial(agi_materialInput materialInput)
 {
-    vec2 st = helperInput.st;
+    agi_material material = agi_getDefaultMaterial(materialInput);
+
+    vec2 st = materialInput.st;
     
     vec2 centerPixel = fract(u_repeat * st);
     float centerBump = texture2D(u_texture, centerPixel).x;
@@ -18,10 +19,12 @@ vec3 agi_getMaterialNormalComponent(MaterialHelperInput helperInput)
     float topBump = texture2D(u_texture, leftPixel).x;
     
     vec3 normalTangentSpace = normalize(vec3(centerBump - rightBump, centerBump - topBump, 1.0));
-    vec3 normalEC = helperInput.tangentToEyeMatrix * normalTangentSpace;
-    return normalEC;
-}
-float agi_getMaterialSpecularComponent(MaterialHelperInput helperInput)
-{
-    return 0.1;
+    vec3 normalEC = materialInput.tangentToEyeMatrix * normalTangentSpace;
+    
+    // TODO: Will remove the diffuse and specular later.
+    material.diffuseComponent = vec3(0.2, 0.2, 0.2);
+    material.specularComponent = 0.1;
+    material.normalComponent = normalEC;
+    
+    return material;
 }

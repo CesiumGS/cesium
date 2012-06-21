@@ -1,12 +1,12 @@
 /*global define*/
 define([
         '../../Shaders/Noise',
-        '../../Shaders/Materials/FacetMaterial',
-        '../../Scene/Materials/materialBuilder'
+        '../../Shaders/Materials/Material',
+        '../../Shaders/Materials/FacetMaterial'
     ], function(
         ShadersNoise,
-        ShadersFacetMaterial,
-        materialBuilder){
+        ShadersMaterial,
+        ShadersFacetMaterial){
     "use strict";
 
     /**
@@ -61,7 +61,12 @@ define([
     }
 
     FacetMaterial.prototype._getShaderSource = function() {
-        return materialBuilder.constructMaterial(ShadersFacetMaterial, ShadersNoise);
+        return "#line 0\n" +
+               ShadersNoise +
+               "#line 0\n" +
+               ShadersMaterial +
+               "#line 0\n" +
+               ShadersFacetMaterial;
     };
 
     return FacetMaterial;

@@ -1,12 +1,12 @@
 /*global define*/
 define([
         '../../Core/DeveloperError',
-        '../../Shaders/Materials/BumpMapMaterial',
-        '../../Scene/Materials/materialBuilder'
+        '../../Shaders/Materials/Material',
+        '../../Shaders/Materials/BumpMapMaterial'
     ], function(
         DeveloperError,
-        ShadersBumpMapMaterial,
-        materialBuilder) {
+        ShadersMaterial,
+        ShadersBumpMapMaterial) {
     "use strict";
 
     /**
@@ -57,7 +57,10 @@ define([
     }
 
     BumpMapMaterial.prototype._getShaderSource = function() {
-        return materialBuilder.constructMaterial(ShadersBumpMapMaterial);
+        return "#line 0\n" +
+                ShadersMaterial +
+                "#line 0\n" +
+                ShadersBumpMapMaterial;
     };
 
     return BumpMapMaterial;

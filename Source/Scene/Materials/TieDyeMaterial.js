@@ -1,12 +1,12 @@
 /*global define*/
 define([
         '../../Shaders/Noise',
-        '../../Shaders/Materials/TieDyeMaterial',
-        '../../Scene/Materials/materialBuilder'
+        '../../Shaders/Materials/Material',
+        '../../Shaders/Materials/TieDyeMaterial'
     ], function(
         ShadersNoise,
-        ShadersTieDyeMaterial,
-        materialBuilder){
+        ShadersMaterial,
+        ShadersTieDyeMaterial){
     "use strict";
 
     /**
@@ -61,7 +61,12 @@ define([
     }
 
     TieDyeMaterial.prototype._getShaderSource = function() {
-        return materialBuilder.constructMaterial(ShadersTieDyeMaterial, ShadersNoise);
+        return "#line 0\n" +
+               ShadersNoise +
+               "#line 0\n" +
+               ShadersMaterial +
+               "#line 0\n" +
+               ShadersTieDyeMaterial;
     };
 
     return TieDyeMaterial;

@@ -1,12 +1,12 @@
 /*global define*/
 define([
         '../../Core/DeveloperError',
-        '../../Shaders/Materials/ReflectionMaterial',
-        '../../Scene/Materials/materialBuilder'
+        '../../Shaders/Materials/Material',
+        '../../Shaders/Materials/ReflectionMaterial'
     ], function(
         DeveloperError,
-        ShadersReflectionMaterial,
-        materialBuilder) {
+        ShadersMaterial,
+        ShadersReflectionMaterial) {
     "use strict";
 
     /**
@@ -46,7 +46,10 @@ define([
     }
 
     ReflectionMaterial.prototype._getShaderSource = function() {
-        return materialBuilder.constructMaterial(ShadersReflectionMaterial);
+        return "#line 0\n" +
+               ShadersMaterial +
+               "#line 0\n" +
+               ShadersReflectionMaterial;
     };
 
     return ReflectionMaterial;

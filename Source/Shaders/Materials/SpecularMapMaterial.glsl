@@ -1,7 +1,11 @@
 uniform sampler2D u_texture;
 uniform vec2 u_repeat;
 
-float agi_getMaterialSpecularComponent(MaterialHelperInput helperInput)
+agi_material agi_getMaterial(agi_materialInput materialInput)
 {
-    return texture2D(u_texture, fract(u_repeat * helperInput.st)).x;
+    agi_material material = agi_getDefaultMaterial(materialInput);
+    
+    material.specularComponent = texture2D(u_texture, fract(u_repeat * materialInput.st)).r;
+    
+    return material;
 }

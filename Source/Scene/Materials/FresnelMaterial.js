@@ -1,12 +1,12 @@
 /*global define*/
 define([
         '../../Core/DeveloperError',
-        '../../Shaders/Materials/FresnelMaterial',
-        '../../Scene/Materials/materialBuilder'
+        '../../Shaders/Materials/Material',
+        '../../Shaders/Materials/FresnelMaterial'
     ], function(
         DeveloperError,
-        ShadersFresnelMaterial,
-        materialBuilder) {
+        ShadersMaterial,
+        ShadersFresnelMaterial) {
     "use strict";
 
     /**
@@ -63,7 +63,10 @@ define([
     }
 
     FresnelMaterial.prototype._getShaderSource = function() {
-        return materialBuilder.constructMaterial(ShadersFresnelMaterial);
+        return "#line 0\n" +
+               ShadersMaterial +
+               "#line 0\n" +
+               ShadersFresnelMaterial;
     };
 
     return FresnelMaterial;
