@@ -17,19 +17,18 @@ varying vec3 v_sensorAxisEC;
 
 #ifndef RENDER_FOR_PICK
 
-agi_materialInput getagi_materialInput(float sensorRadius, vec3 pointEC, vec3 normalEC)
+agi_materialInput getMaterialInput(float sensorRadius, vec3 pointEC, vec3 normalEC)
 {
     agi_materialInput materialInput;
 
     vec3 pointMC = (agi_inverseModelView * vec4(pointEC, 1.0)).xyz;
     vec3 positionToEyeEC = normalize(-v_positionEC);
     materialInput.positionToEyeWC = normalize(vec3(agi_inverseView * vec4(positionToEyeEC, 0.0))); 
-    
-    materialInput.zDistance = pointMC.z;                                    // 1D distance
-    materialInput.st = sensor2dTextureCoordinates(sensorRadius, pointMC);   // 2D texture coordinates
-    materialInput.str = pointMC / sensorRadius;                             // 3D texture coordinates
-    
     materialInput.normalEC = normalEC;
+    
+    materialInput.st = sensor2dTextureCoordinates(sensorRadius, pointMC);
+    materialInput.str = pointMC / sensorRadius; 
+    materialInput.positionMC = pointMC;
     
     return materialInput;
 }
@@ -37,68 +36,48 @@ vec4 getOuterColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
 {
     sensorErode(sensorRadius, pointEC);
     
-    agi_materialInput materialInput = getagi_materialInput(sensorRadius, pointEC, normalEC);
-    
-    //Get different material values from material shader
-    vec3 normalComponent = agi_getOuterMaterialNormalComponent(materialInput);
-    vec4 diffuseComponent = agi_getOuterMaterialDiffuseComponent(materialInput);
-    float specularComponent = agi_getOuterMaterialSpecularComponent(materialInput);
-    vec3 emissionComponent = agi_getOuterMaterialEmissionComponent(materialInput);
+    agi_materialInput materialInput = getMaterialInput(sensorRadius, pointEC, normalEC);
+    agi_material material = agi_getOuterMaterial(materialInput);
     
     //Final
     vec3 positionToEyeEC = normalize(-v_positionEC);
-    return agi_lightValuePhong(agi_sunDirectionEC, positionToEyeEC, normalComponent, diffuseComponent, specularComponent, emissionComponent);
+    return agi_lightValuePhong(agi_sunDirectionEC, positionToEyeEC, material);
 }
 
 vec4 getInnerColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
 {
     sensorErode(sensorRadius, pointEC);
     
-    agi_materialInput materialInput = getagi_materialInput(sensorRadius, pointEC, normalEC);
-    
-    //Get different material values from material shader
-    vec3 normalComponent = agi_getInnerMaterialNormalComponent(materialInput);
-    vec4 diffuseComponent = agi_getInnerMaterialDiffuseComponent(materialInput);
-    float specularComponent = agi_getInnerMaterialSpecularComponent(materialInput);
-    vec3 emissionComponent = agi_getInnerMaterialEmissionComponent(materialInput);
+    agi_materialInput materialInput = getMaterialInput(sensorRadius, pointEC, normalEC);
+    agi_material material = agi_getInnerMaterial(materialInput);
     
     //Final
     vec3 positionToEyeEC = normalize(-v_positionEC);
-    return agi_lightValuePhong(agi_sunDirectionEC, positionToEyeEC, normalComponent, diffuseComponent, specularComponent, emissionComponent);
+    return agi_lightValuePhong(agi_sunDirectionEC, positionToEyeEC, material);
 }
 
 vec4 getCapColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
 {
     sensorErode(sensorRadius, pointEC);
     
-    agi_materialInput materialInput = getagi_materialInput(sensorRadius, pointEC, normalEC);
-    
-    //Get different material values from material shader
-    vec3 normalComponent = agi_getCapMaterialNormalComponent(materialInput);
-    vec4 diffuseComponent = agi_getCapMaterialDiffuseComponent(materialInput);
-    float specularComponent = agi_getCapMaterialSpecularComponent(materialInput);
-    vec3 emissionComponent = agi_getCapMaterialEmissionComponent(materialInput);
+    agi_materialInput materialInput = getMaterialInput(sensorRadius, pointEC, normalEC);
+    agi_material material = agi_getCapMaterial(materialInput);
     
     //Final
     vec3 positionToEyeEC = normalize(-v_positionEC);
-    return agi_lightValuePhong(agi_sunDirectionEC, positionToEyeEC, normalComponent, diffuseComponent, specularComponent, emissionComponent);
+    return agi_lightValuePhong(agi_sunDirectionEC, positionToEyeEC, material);
 }
 
 vec4 getSilhouetteColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
 {
     sensorErode(sensorRadius, pointEC);
     
-    agi_materialInput materialInput = getagi_materialInput(sensorRadius, pointEC, normalEC);
-    
-    //Get different material values from material shader
-    vec3 normalComponent = agi_getSilhouetteMaterialNormalComponent(materialInput);
-    vec4 diffuseComponent = agi_getSilhouetteMaterialDiffuseComponent(materialInput);
-    float specularComponent = agi_getSilhouetteMaterialSpecularComponent(materialInput);
-    vec3 emissionComponent = agi_getSilhouetteMaterialEmissionComponent(materialInput);
+    agi_materialInput materialInput = getMaterialInput(sensorRadius, pointEC, normalEC);
+    agi_material material = agi_getSilhouetteMaterial(materialInput);
     
     //Final
     vec3 positionToEyeEC = normalize(-v_positionEC);
-    return agi_lightValuePhong(agi_sunDirectionEC, positionToEyeEC, normalComponent, diffuseComponent, specularComponent, emissionComponent);
+    return agi_lightValuePhong(agi_sunDirectionEC, positionToEyeEC, material);
 }
 
 #endif

@@ -300,14 +300,14 @@ define([
         var replaceMaterialMethods = function(source, type)
         {
             var finalSource = source;
-            var materialProperties = ["Normal", "Diffuse", "Specular", "Emission"];
-            for(var i = 0; i < materialProperties.length; i++)
-            {
-                var property = materialProperties[i];
-                var origName = "agi_getMaterial" + property + "Component";
-                var newName = "agi_get" + type + "Material" + property + "Component";
-                finalSource = finalSource.replace(new RegExp(origName, "g"), newName);
-            }
+            var origName = "agi_getMaterial";
+            var newName = "agi_get" + type + "Material";
+            finalSource = finalSource.replace(new RegExp(origName, "g"), newName);
+
+            origName = "agi_getDefaultMaterial";
+            newName = "agi_get" + type + "DefaultMaterial";
+            finalSource = finalSource.replace(new RegExp(origName, "g"), newName);
+
             return finalSource;
         };
 

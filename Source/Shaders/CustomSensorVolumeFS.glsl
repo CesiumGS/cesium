@@ -20,24 +20,22 @@ vec4 getColor(float sensorRadius, vec3 pointEC)
 {
     sensorErode(sensorRadius, pointEC);
     
-    vec3 pointMC = (agi_inverseModelView * vec4(pointEC, 1.0)).xyz;
-
     agi_materialInput materialInput;
-    materialInput.zDistance = pointMC.z;                                    // 1D distance
-    materialInput.st = sensor2dTextureCoordinates(sensorRadius, pointMC);   // 2D texture coordinates
-    materialInput.str = pointMC / sensorRadius;                             // 3D texture coordinates
+    
+    vec3 pointMC = (agi_inverseModelView * vec4(pointEC, 1.0)).xyz;                                
+    materialInput.st = sensor2dTextureCoordinates(sensorRadius, pointMC);   
+    materialInput.str = pointMC / sensorRadius;
+    materialInput.positionMC = pointMC;               
     
     vec3 positionToEyeEC = normalize(-v_positionEC);
+    materialInput.positionToEyeWC = positionToEyeEC;
+    
     vec3 normalEC = normalize(v_normalEC);
     normalEC = mix(normalEC, -normalEC, step(normalEC.z, 0.0));  // Normal facing viewer
     materialInput.normalEC = normalEC;
     
-    vec3 normalComponent = agi_getMaterialNormalComponent(materialInput);
-    vec4 diffuseComponent = agi_getMaterialDiffuseComponent(materialInput);
-    float specularComponent = agi_getMaterialSpecularComponent(materialInput);
-    vec3 emissionComponent = agi_getMaterialEmissionComponent(materialInput);
-    
-    return agi_lightValuePhong(agi_sunDirectionEC, positionToEyeEC, normalComponent, diffuseComponent, specularComponent, emissionComponent);
+    agi_material material = agi_getMaterial(materialInput);
+    return agi_lightValuePhong(agi_sunDirectionEC, positionToEyeEC, material);
 }
 
 #endif

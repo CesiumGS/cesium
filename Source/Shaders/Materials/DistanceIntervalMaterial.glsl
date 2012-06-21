@@ -3,18 +3,20 @@ uniform float u_distances[NUMBER_OF_DISTANCES];
 
 agi_material agi_getMaterial(agi_materialInput materialInput)
 {
+    agi_material material = agi_getDefaultMaterial(materialInput);
+
     vec4 color = vec4(0.0);
     
     for (int i = 0; i < NUMBER_OF_DISTANCES; ++i)
     {
-	    if (materialInput.zDistance < u_distances[i])
+	    if (materialInput.positionMC.z < u_distances[i])
 	    {
 		    color = u_colors[i];
 		    break;
 	    }
     }
     
-    material.alphaComponent = color.rgb;
+    material.diffuseComponent = color.rgb;
      
     return material;
 }
