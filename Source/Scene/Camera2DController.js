@@ -297,12 +297,40 @@ define([
        end.y = (2.0 / height) * (height - movement.endPosition.y) - 1.0;
        end.y = (end.y * (frustum.top - frustum.bottom) + frustum.top + frustum.bottom) * 0.5;
 
+       var camera = this._camera;
+       var right = camera.right;
+       var up = camera.up;
+       var position;
+       var newPosition;
+
        var distance = start.subtract(end);
        if (distance.x !== 0) {
-           this.moveRight(distance.x);
+           position = camera.position;
+           newPosition = position.add(right.multiplyWithScalar(distance.x));
+
+           var maxX = this._ellipsoid.getRadii().x * Math.PI;
+           if (newPosition.x > maxX) {
+               newPosition.x = maxX;
+           }
+           if (newPosition.x < -maxX) {
+               newPosition.x = -maxX;
+           }
+
+           camera.position = newPosition;
        }
        if (distance.y !== 0) {
-           this.moveUp(distance.y);
+           position = camera.position;
+           newPosition = position.add(up.multiplyWithScalar(distance.y));
+
+           var maxY = this._ellipsoid.getRadii().z * CesiumMath.PI_OVER_TWO;
+           if (newPosition.y > maxY) {
+               newPosition.y = maxY;
+           }
+           if (newPosition.y < -maxY) {
+               newPosition.y = -maxY;
+           }
+
+           camera.position = newPosition;
        }
    };
 
