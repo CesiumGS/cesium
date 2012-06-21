@@ -213,7 +213,7 @@ define([
         var newRight = frustum.right - moveRate;
         var newLeft = frustum.left + moveRate;
 
-        var maxRight = this._ellipsoid.getRadii().x * Math.PI;
+        var maxRight = this._ellipsoid.getRadii().x * Math.PI * 2;
         if (newRight > maxRight) {
             newRight = maxRight;
             newLeft = -newRight;
