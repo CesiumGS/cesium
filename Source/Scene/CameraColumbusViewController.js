@@ -4,6 +4,7 @@ define([
         '../Core/Ellipsoid',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/Math',
         '../Core/Matrix4',
         './CameraEventHandler',
         './CameraEventType',
@@ -15,6 +16,7 @@ define([
         Ellipsoid,
         Cartesian3,
         Cartesian4,
+        CesiumMath,
         Matrix4,
         CameraEventHandler,
         CameraEventType,
@@ -30,9 +32,10 @@ define([
      * @name CameraColumbusViewController
      * @constructor
      */
-    function CameraColumbusViewController(canvas, camera) {
+    function CameraColumbusViewController(canvas, camera, ellipsoid) {
         this._canvas = canvas;
         this._camera = camera;
+        this._ellipsoid = ellipsoid || Ellipsoid.WGS84;
 
         /**
          * A parameter in the range <code>[0, 1]</code> used to determine how long
@@ -113,6 +116,21 @@ define([
         var cameraPosition = new Cartesian4(camera.position.x, camera.position.y, camera.position.z, 1.0);
         var positionWC = camera.transform.multiplyWithVector(cameraPosition);
         camera.transform = this._transform.clone();
+
+        var maxX = this._ellipsoid.getRadii().x * Math.PI;
+        if (centerWC.y > maxX) {
+            positionWC.y -= centerWC.y - maxX;
+        } else if (centerWC.y < -maxX) {
+            positionWC.y += -maxX - centerWC.y;
+        }
+
+        var maxY = this._ellipsoid.getRadii().z * CesiumMath.PI_OVER_TWO;
+        if (centerWC.z > maxY) {
+            positionWC.z -= centerWC.z - maxY;
+        } else if (centerWC.z < -maxY) {
+            positionWC.z += -maxY - centerWC.z;
+        }
+
         camera.position = camera.getInverseTransform().multiplyWithVector(positionWC).getXYZ();
     };
 
