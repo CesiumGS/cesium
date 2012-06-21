@@ -7,7 +7,8 @@ define([
         '../Core/Cartesian2',
         '../Core/Ellipsoid',
         '../Core/Extent',
-        './TileState'
+        './TileState',
+        './MercatorTilingScheme'
     ], function(
         defaultValue,
         destroyObject,
@@ -16,7 +17,8 @@ define([
         Cartesian2,
         Ellipsoid,
         Extent,
-        TileState) {
+        TileState,
+        MercatorTilingScheme) {
     "use strict";
 
     /**
@@ -151,6 +153,8 @@ define([
         this._height = 0;
     }
 
+    var mercator = new MercatorTilingScheme();
+
     /**
      * Converts an extent and zoom level into tile x, y coordinates.
      *
@@ -163,16 +167,7 @@ define([
      * @return {Cartesian2} An object with x and y properties.
      */
     Tile.extentToTileXY = function(extent, zoom) {
-        var sinN = Math.sin(extent.north);
-        var k = CesiumMath.TWO_PI - Math.log((1.0 + sinN) / (1.0 - sinN));
-        var y = k * (1 << zoom) / (4.0 * Math.PI);
-        y = Math.round(y);
-
-        k = 1.0 << (zoom - 1.0);
-        var x = (extent.west + Math.PI) * k / Math.PI;
-        x = Math.round(x);
-
-        return new Cartesian2(x, y);
+        return mercator.extentToTileXY(extent, zoom);
     };
 
     /**
@@ -188,23 +183,7 @@ define([
      * west properties in radians.
      */
     Tile.tileXYToExtent = function(x, y, zoom) {
-        if (x === 0 && y === 0 && zoom === 0) {
-            return new Extent(-CesiumMath.PI, CesiumMath.toRadians(-85.05112878), CesiumMath.PI, CesiumMath.toRadians(85.05112878));
-        }
-
-        // Lat
-        var invZoom = 4.0 * Math.PI / (1 << zoom);
-        var k = Math.exp(CesiumMath.TWO_PI - (y * invZoom));
-        var north = Math.asin((k - 1.0) / (k + 1.0));
-        k = Math.exp(CesiumMath.TWO_PI - ((y + 1) * invZoom));
-        var south = Math.asin((k - 1.0) / (k + 1.0));
-
-        // Lon
-        invZoom = Math.PI / (1 << (zoom - 1.0));
-        var west = x * invZoom - Math.PI;
-        var east = (x + 1.0) * invZoom - Math.PI;
-
-        return new Extent(west, south, east, north);
+        return mercator.tileXYToExtent(x, y, zoom);
     };
 
     /**

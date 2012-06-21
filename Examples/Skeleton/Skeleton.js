@@ -44,8 +44,10 @@ require({
         cb.cloudsMapSource = '../../Images/earthcloudmaptrans.jpg';
         cb.bumpMapSource = '../../Images/earthbump1k.jpg';
     }
-    cb.showSkyAtmosphere = true;
-    cb.showGroundAtmosphere = true;
+    cb.showSkyAtmosphere = false;
+    cb.showGroundAtmosphere = false;
+    cb.showNight = false;
+    cb.affectedByLighting = false;
     primitives.setCentralBody(cb);
 
     scene.getCamera().frustum.near = 1.0;
