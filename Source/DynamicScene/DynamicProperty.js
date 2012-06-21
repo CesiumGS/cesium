@@ -194,10 +194,11 @@ define([
             if (typeof interval === 'undefined' || !interval.contains(time)) {
                 interval = this._intervals.findIntervalContainingDate(time);
                 this._cachedInterval = interval;
-                if (typeof interval === 'undefined') {
-                    return undefined;
-                }
             }
+        }
+
+        if (typeof interval === 'undefined') {
+            return undefined;
         }
 
         var intervalData = interval.data;
