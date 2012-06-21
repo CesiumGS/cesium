@@ -1496,25 +1496,15 @@ define([
 
     /**
      * Creates a new texture atlas with this context.
-     * See {@link TextureAtlas} for suitable values for the 'description' object literal.
      *
      * @memberof Context
      *
-     * @param {Object} description Consists of values used to construct the texture atlas.
-     * description.context is the {@link Context} in which the texture gets created.
-     * description.pixelFormat is the {@link PixelFormat} of the texture.
-     * description.borderWidthInPixels is the amount of spacing between adjacent images in pixels.
-     * description.initialSize is the initial side length of the texture.
-     * description.images is an optional array of {@link Image} to be added to the atlas. Same as calling addImages(images).
-     * description.image is an optional single {@link Image} to be added to the atlas. Same as calling addImage(image).
-     *
-     * Default values for description:
-     * context : undefined,
-     * pixelFormat : PixelFormat.RGBA,
-     * borderWidthInPixels : 1,
-     * initialSize : 16,
-     * images : undefined,
-     * image : undefined
+     * @param {Context} description.context The context in which the texture gets created.
+     * @param {PixelFormat} [description.pixelFormat = PixelFormat.RGBA] The pixel format of the texture.
+     * @param {Number} [description.borderWidthInPixels = 1] The amount of spacing between adjacent images in pixels.
+     * @param {Cartesian2} [description.initialSize = new Cartesian2(16.0, 16.0)] The initial side lengths of the texture.
+     * @param {Array} description.images Optional array of {@link Image} to be added to the atlas. Same as calling addImages(images).
+     * @param {Image} description.image Optional single image to be added to the atlas. Same as calling addImage(image).
      *
      * @returns {TextureAtlas} The new texture atlas.
      *

@@ -43,7 +43,7 @@ defineSuite([
     var whiteImage;
 
     function createTextureAtlas(images) {
-        var atlas = context.createTextureAtlas({images : images, borderWidthInPixels : 1, initialSize : 3});
+        var atlas = context.createTextureAtlas({images : images, borderWidthInPixels : 1, initialSize : new Cartesian2(3, 3)});
 
         // ANGLE Workaround
         atlas.getTexture().setSampler(context.createSampler({
