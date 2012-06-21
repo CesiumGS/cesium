@@ -141,10 +141,10 @@ define([
          *
          * @param {Array} array The array containing the packed axis-angle rotations.
          * @param {Quaternion} result The object to store the result in, if undefined a new instance will be created.
-         * @param {Array} sourceArray The source array of the original quaternion values previously passed to CzmlUnitQuaternion.packValuesForInterpolation.
+         * @param {Array} sourceArray The source array of the original Quaternion values previously passed to CzmlUnitQuaternion.packValuesForInterpolation.
          * @param {Number} firstIndex The index previously passed to CzmlUnitQuaternion.packValuesForInterpolation.
          * @param {Number} lastIndex The index previously passed to CzmlUnitQuaternion.packValuesForInterpolation
-         * @returns
+         * @returns The modified result parameter or a new Quaternion instance if result was not defined.
          */
         getValueFromInterpolationResult : function(array, result, sourceArray, firstIndex, lastIndex) {
             if (typeof result === 'undefined') {
