@@ -1,9 +1,11 @@
 /*global define*/
 define([
         './JulianDate',
+        './TimeStandard',
         './DeveloperError'
     ], function(
         JulianDate,
+        TimeStandard,
         DeveloperError) {
     "use strict";
 
@@ -103,7 +105,7 @@ define([
      * @memberof TimeInterval
      *
      */
-    TimeInterval.EMPTY = Object.freeze(new TimeInterval(new JulianDate(0, 0), new JulianDate(0, 0), false, false));
+    TimeInterval.EMPTY = Object.freeze(new TimeInterval(new JulianDate(0, 0, TimeStandard.TAI), new JulianDate(0, 0, TimeStandard.TAI), false, false));
 
     /**
      * Computes an interval which is the intersection of this interval with another while

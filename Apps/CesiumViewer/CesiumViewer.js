@@ -11,6 +11,7 @@ define(['dojo/dom',
         'Core/Clock',
         'Core/ClockStep',
         'Core/ClockRange',
+        'Core/TimeStandard',
         'Core/Iso8601',
         'Core/FullScreen',
         'Core/Ellipsoid',
@@ -32,6 +33,7 @@ function(dom,
          Clock,
          ClockStep,
          ClockRange,
+         TimeStandard,
          Iso8601,
          FullScreen,
          Ellipsoid,
@@ -45,7 +47,7 @@ function(dom,
     /*global console*/
 
     var visualizers;
-    var clock = new Clock(new JulianDate(), undefined, undefined, ClockStep.SYSTEM_CLOCK_DEPENDENT, ClockRange.LOOP, 256);
+    var clock = new Clock(TimeStandard.convertUtcToTai(new JulianDate()), undefined, undefined, ClockStep.SYSTEM_CLOCK_DEPENDENT, ClockRange.LOOP, 256);
     var timeline;
     var transitioner;
 

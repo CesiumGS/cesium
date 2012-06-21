@@ -17,12 +17,12 @@ define([
         CzmlStandard) {
     "use strict";
 
-    function CompositeDynamicObjectCollection(collections, mergeFunctions, undefinedFunctions) {
+    function CompositeDynamicObjectCollection(collections, mergeFunctions, cleaners) {
         this._hash = {};
         this._array = [];
         this._collections = [];
         this._mergeFunctions = mergeFunctions || CzmlStandard.mergers;
-        this._undefinedFunctions = undefinedFunctions || CzmlStandard.cleaners;
+        this._cleaners = cleaners || CzmlStandard.cleaners;
         this.objectPropertiesChanged = new Event();
         this.objectsRemoved = new Event();
 
@@ -169,7 +169,7 @@ define([
 
     CompositeDynamicObjectCollection.prototype._onObjectPropertiesChanged = function(dynamicObjectCollection, updatedObjects) {
         var thisMergeFunctions = this._mergeFunctions;
-        var thisUndefinedFunctions = this._undefinedFunctions;
+        var thisCleaners = this._cleaners;
         var thisCollections = this._collections;
 
         var updatedObject, compositeObject, compositeObjects = [];
@@ -177,8 +177,8 @@ define([
             updatedObject = updatedObjects[i];
             compositeObject = this.getObject(updatedObject.id);
             if (typeof compositeObject !== 'undefined') {
-                for ( var iDeleteFuncs = thisUndefinedFunctions.length - 1; iDeleteFuncs > -1; iDeleteFuncs--) {
-                    var deleteFunc = thisUndefinedFunctions[iDeleteFuncs];
+                for ( var iDeleteFuncs = thisCleaners.length - 1; iDeleteFuncs > -1; iDeleteFuncs--) {
+                    var deleteFunc = thisCleaners[iDeleteFuncs];
                     deleteFunc(compositeObject);
                 }
             } else {
