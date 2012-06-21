@@ -81,7 +81,8 @@ function(dom,
         startTime = availability.start;
         stopTime = availability.stop;
 
-        if (startTime === Iso8601.MAXIMUM_VALUE) {
+        //Minor hack to start at a reasonable spot.
+        if (startTime.equals(Iso8601.MINIMUM_VALUE)) {
             for (i = 0, len = dynamicObjects.length; i < len; i++) {
                 object = dynamicObjects[i];
                 if (typeof object.position !== 'undefined') {
