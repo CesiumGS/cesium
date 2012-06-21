@@ -50,7 +50,7 @@ define([
         // TODO: Shouldn't change private variables like this, need to be able to change event modifiers
         //       on controllers.
         this._spindleController._spinHandler = this._spindleController._spinHandler && this._spindleController._spinHandler.destroy();
-        this._spindleController._spinHandler = new CameraEventHandler(canvas, CameraEventType.RIGHT_DRAG);
+        this._spindleController._spinHandler = new CameraEventHandler(canvas, CameraEventType.MIDDLE_DRAG);
         this._spindleController.mouseConstrainedZAxis = true;
 
         this._freeLookController = new CameraFreeLookController(canvas, camera);

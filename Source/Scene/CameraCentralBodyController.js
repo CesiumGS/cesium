@@ -36,7 +36,7 @@ define([
         this._freeLookController = new CameraFreeLookController(canvas, camera);
         this._freeLookController.horizontalRotationAxis = Cartesian3.UNIT_Z;
 
-        this._rotateHandler = new CameraEventHandler(canvas, CameraEventType.RIGHT_DRAG);
+        this._rotateHandler = new CameraEventHandler(canvas, CameraEventType.MIDDLE_DRAG);
 
         this._transform = Matrix4.IDENTITY;
     }

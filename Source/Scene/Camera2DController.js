@@ -73,9 +73,9 @@ define([
         this._maximumZoomRate = FAR;
 
         this._translateHandler = new CameraEventHandler(canvas, CameraEventType.LEFT_DRAG);
-        this._zoomHandler = new CameraEventHandler(canvas, CameraEventType.MIDDLE_DRAG);
+        this._zoomHandler = new CameraEventHandler(canvas, CameraEventType.RIGHT_DRAG);
         this._zoomWheel = new CameraEventHandler(canvas, CameraEventType.WHEEL);
-        this._twistHandler = new CameraEventHandler(canvas, CameraEventType.RIGHT_DRAG);
+        this._twistHandler = new CameraEventHandler(canvas, CameraEventType.MIDDLE_DRAG);
 
         this._lastInertiaTranslateMovement = undefined;
         this._lastInertiaZoomMovement = undefined;
