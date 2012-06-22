@@ -52,7 +52,7 @@ define(['dojo',
     }
 
     function makeTimeline(startJulian, scrubJulian, endJulian) {
-        clock = new Clock(startJulian, endJulian);
+        clock = new Clock(startJulian, undefined, undefined, undefined, startJulian, endJulian);
 
         timeline = new Timeline('time1', clock);
         timeline.addEventListener('settime', handleSetTime, false);

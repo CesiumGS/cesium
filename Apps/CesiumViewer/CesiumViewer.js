@@ -47,7 +47,7 @@ function(dom,
     /*global console*/
 
     var visualizers;
-    var clock = new Clock(TimeStandard.convertUtcToTai(new JulianDate()), undefined, undefined, ClockStep.SYSTEM_CLOCK_DEPENDENT, ClockRange.LOOP, 256);
+    var clock = new Clock(new JulianDate(), ClockStep.SYSTEM_CLOCK_DEPENDENT, 256);
     var timeline;
     var transitioner;
 
@@ -74,42 +74,19 @@ function(dom,
         animPause.set('checked', true);
         animPlay.set('checked', false);
 
-        var i, object, len;
-        var startTime = Iso8601.MAXIMUM_VALUE;
-        var stopTime = Iso8601.MINIMUM_VALUE;
-        var dynamicObjects = dynamicObjectCollection.getObjects();
-
         var availability = dynamicObjectCollection.computeAvailability();
-        startTime = availability.start;
-        stopTime = availability.stop;
-
-        //Minor hack to start at a reasonable spot.
-        if (startTime.equals(Iso8601.MINIMUM_VALUE)) {
-            for (i = 0, len = dynamicObjects.length; i < len; i++) {
-                object = dynamicObjects[i];
-                if (typeof object.position !== 'undefined') {
-                    var intervals = object.position._propertyIntervals;
-                    if (typeof intervals !== 'undefined' && intervals._intervals[0].data._intervals._intervals[0].data.isSampled) {
-                        var firstTime = intervals._intervals[0].data._intervals._intervals[0].data.times[0];
-                        if (typeof firstTime !== 'undefined') {
-                            startTime = firstTime;
-                            stopTime = firstTime.addDays(1);
-                            break;
-                        }
-                    }
-                }
-            }
+        if (availability.start.equals(Iso8601.MINIMUM_VALUE)) {
+            clock.startTime = new JulianDate();
+            clock.stopTime = clock.startTime.addDays(1);
+            clock.clockRange = ClockRange.UNBOUNDED;
+        } else {
+            clock.startTime = availability.start;
+            clock.stopTime = availability.stop;
+            clock.clockRange = ClockRange.LOOP;
         }
 
-        if (startTime.equals(Iso8601.MINIMUM_VALUE)) {
-            startTime = new JulianDate();
-            stopTime = startTime.addDays(1);
-        }
-
-        clock.startTime = startTime;
-        clock.stopTime = stopTime;
-        clock.currentTime = startTime;
-        timeline.zoomTo(startTime, stopTime);
+        clock.currentTime = clock.startTime;
+        timeline.zoomTo(clock.startTime, clock.stopTime);
         updateSpeedIndicator();
     }
 
@@ -237,17 +214,6 @@ function(dom,
                 animPlay.set('checked', false);
             });
 
-            on(animReverse, 'Click', function() {
-                if (clock.multiplier > 0) {
-                    clock.multiplier = -clock.multiplier;
-                }
-                animating = true;
-                animReverse.set('checked', true);
-                animPause.set('checked', false);
-                animPlay.set('checked', false);
-                updateSpeedIndicator();
-            });
-
             on(animPause, 'Click', function() {
                 animating = false;
                 animReverse.set('checked', false);
@@ -255,15 +221,27 @@ function(dom,
                 animPlay.set('checked', false);
             });
 
+            function play() {
+                animating = true;
+                clock.tick(0);
+                animReverse.set('checked', true);
+                animPause.set('checked', false);
+                animPlay.set('checked', false);
+                updateSpeedIndicator();
+            }
+
+            on(animReverse, 'Click', function() {
+                if (clock.multiplier > 0) {
+                    clock.multiplier = -clock.multiplier;
+                }
+                play();
+            });
+
             on(animPlay, 'Click', function() {
                 if (clock.multiplier < 0) {
                     clock.multiplier = -clock.multiplier;
                 }
-                animating = true;
-                animReverse.set('checked', false);
-                animPause.set('checked', false);
-                animPlay.set('checked', true);
-                updateSpeedIndicator();
+                play();
             });
 
             on(registry.byId('animSlow'), 'Click', function() {

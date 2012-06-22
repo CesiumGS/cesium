@@ -498,7 +498,7 @@ define(['./TimelineTrack',
         var dy = e.wheelDeltaY || e.wheelDelta || (-e.detail);
         timelineWheelDelta = Math.max(Math.min(Math.abs(dy), timelineWheelDelta), 1);
         dy /= timelineWheelDelta;
-        this.zoomFrom(Math.pow(1.05, dy));
+        this.zoomFrom(Math.pow(1.05, -dy));
     };
 
     Timeline.prototype._handleTouchStart = function(e) {
