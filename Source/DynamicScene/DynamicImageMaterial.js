@@ -14,10 +14,11 @@ define([
     "use strict";
 
     //CZML_TODO Cesium doesn't currently provide any sort of 'default' texture or image
-    //when you default construct things.  This means that as soon as we create
+    //when you default construct something with a texture.  This means that as soon as we create
     //our image material, we have to assign a texture to it or else we will crash
     //on the next draw.  Once we change Cesium to have built in texture defaults,
-    //this code can be removed.
+    //this code can be removed.  If we decide Cesium shouldn't have built in defaults,
+    //this code should be changes so at least all CZML visualization has defaults.
     function createDefaultImage() {
         var canvas = document.createElement('canvas');
         canvas.height = "64";

@@ -1,19 +1,19 @@
 /*global define*/
 define([
+        '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Color',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
-        '../Renderer/TextureAtlas',
         '../Scene/BillboardCollection',
         '../Scene/HorizontalOrigin',
         '../Scene/VerticalOrigin'
     ], function(
+        DeveloperError,
         destroyObject,
         Color,
         Cartesian2,
         Cartesian3,
-        TextureAtlas,
         BillboardCollection,
         HorizontalOrigin,
         VerticalOrigin) {
@@ -36,26 +36,69 @@ define([
         };
     }
 
+    /**
+     * A DynamicObject visualizer which maps the DynamicBillboard instance
+     * in DynamicObject.billboard to a Billboard primitive.
+     *
+     * @param {Scene} scene The scene the primitives will be rendered in.
+     * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.
+     *
+     * @exception {DeveloperError} scene is required.
+     *
+     * @see DynamicBillboard
+     * @see Scene
+     * @see DynamicObject
+     * @see DynamicObjectCollection
+     * @see CompositeDynamicObjectCollection
+     * @see VisualizerCollection
+     * @see DynamicConeVisualizer
+     * @see DynamicConeVisualizerUsingCustomSensor
+     * @see DynamicLabelVisualizer
+     * @see DynamicPointVisualizer
+     * @see DynamicPolygonVisualizer
+     * @see DynamicPolylineVisualizer
+     * @see DynamicPyramidVisualizer
+     *
+     */
     function DynamicBillboardVisualizer(scene, dynamicObjectCollection) {
+        if (typeof scene === 'undefined') {
+            throw new DeveloperError('scene is required.');
+        }
+
         this._scene = scene;
         this._unusedIndexes = [];
         this._dynamicObjectCollection = undefined;
 
         var billboardCollection = this._billboardCollection = new BillboardCollection();
-        var atlas = this._textureAtlas = new TextureAtlas(scene.getContext());
+        var atlas = this._textureAtlas = scene.getContext().createTextureAtlas();
         billboardCollection.setTextureAtlas(atlas);
         scene.getPrimitives().add(billboardCollection);
         this.setDynamicObjectCollection(dynamicObjectCollection);
     }
 
+    /**
+     * Returns the scene being used by this visualizer.
+     *
+     * @returns {Scene} The scene being used by this visualizer.
+     */
     DynamicBillboardVisualizer.prototype.getScene = function() {
         return this._scene;
     };
 
+    /**
+     * Gets the DynamicObjectCollection being visualized.
+     *
+     * @returns {DynamicObjectCollection} The DynamicObjectCollection being visualized.
+     */
     DynamicBillboardVisualizer.prototype.getDynamicObjectCollection = function() {
         return this._dynamicObjectCollection;
     };
 
+    /**
+     * Sets the DynamicObjectCollection to visualize.
+     *
+     * @param dynamicObjectCollection The DynamicObjectCollection to visualizer.
+     */
     DynamicBillboardVisualizer.prototype.setDynamicObjectCollection = function(dynamicObjectCollection) {
         var oldCollection = this._dynamicObjectCollection;
         if (oldCollection !== dynamicObjectCollection) {
@@ -70,18 +113,88 @@ define([
         }
     };
 
+    /**
+     * Updates all of the primitives created by this visualizer to match their
+     * DynamicObject counterpart at the given time.
+     *
+     * @param {JulianDate} time The time to update to.
+     *
+     * @exception {DeveloperError} time is required.
+     */
     DynamicBillboardVisualizer.prototype.update = function(time) {
-        var dynamicObjects = this._dynamicObjectCollection.getObjects();
-        for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
-            this.updateObject(time, dynamicObjects[i]);
+        if (typeof time === 'undefined') {
+            throw new DeveloperError('time is requied.');
         }
+        if (typeof this._dynamicObjectCollection !== 'undefined') {
+            var dynamicObjects = this._dynamicObjectCollection.getObjects();
+            for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
+                this._updateObject(time, dynamicObjects[i]);
+            }
+        }
+    };
+
+    /**
+     * Removes all primitives from the scene.
+     */
+    DynamicBillboardVisualizer.prototype.removeAll = function() {
+        if (typeof this._dynamicObjectCollection !== 'undefined') {
+            this._unusedIndexes = [];
+            this._billboardCollection.removeAll();
+            var dynamicObjects = this._dynamicObjectCollection.getObjects();
+            for ( var i = dynamicObjects.length - 1; i > -1; i--) {
+                dynamicObjects[i].billboardVisualizerIndex = undefined;
+            }
+        }
+    };
+
+    /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * <br /><br />
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     *
+     * @memberof DynamicBillboardVisualizer
+     *
+     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     *
+     * @see DynamicBillboardVisualizer#destroy
+     */
+    DynamicBillboardVisualizer.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <br /><br />
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     *
+     * @memberof DynamicBillboardVisualizer
+     *
+     * @return {undefined}
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     * @see DynamicBillboardVisualizer#isDestroyed
+     *
+     * @example
+     * visualizer = visualizer && visualizer.destroy();
+     */
+    DynamicBillboardVisualizer.prototype.destroy = function() {
+        this.removeAll();
+        this._scene.getPrimitives().remove(this._billboardCollection);
+        this._billboardCollection.destroy();
+        this._textureAtlas.destroy();
+        return destroyObject(this);
     };
 
     var position;
     var color;
     var eyeOffset;
     var pixelOffset;
-    DynamicBillboardVisualizer.prototype.updateObject = function(time, dynamicObject) {
+    DynamicBillboardVisualizer.prototype._updateObject = function(time, dynamicObject) {
         var dynamicBillboard = dynamicObject.billboard;
         if (typeof dynamicBillboard === 'undefined') {
             return;
@@ -208,15 +321,6 @@ define([
         }
     };
 
-    DynamicBillboardVisualizer.prototype.removeAll = function() {
-        this._unusedIndexes = [];
-        this._billboardCollection.removeAll();
-        var dynamicObjects = this._dynamicObjectCollection.getObjects();
-        for ( var i = dynamicObjects.length - 1; i > -1; i--) {
-            dynamicObjects[i].billboardVisualizerIndex = undefined;
-        }
-    };
-
     DynamicBillboardVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, dynamicObjects) {
         var thisBillboardCollection = this._billboardCollection;
         var thisUnusedIndexes = this._unusedIndexes;
@@ -232,49 +336,6 @@ define([
                 thisUnusedIndexes.push(billboardVisualizerIndex);
             }
         }
-    };
-
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @memberof DynamicBillboardVisualizer
-     *
-     * @return {Boolean} True if this object was destroyed; otherwise, false.
-     *
-     * @see DynamicBillboardVisualizer#destroy
-     */
-    DynamicBillboardVisualizer.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof DynamicBillboardVisualizer
-     *
-     * @return {undefined}
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see DynamicBillboardVisualizer#isDestroyed
-     *
-     * @example
-     * visualizer = visualizer && visualizer.destroy();
-     */
-    DynamicBillboardVisualizer.prototype.destroy = function() {
-        this.removeAll();
-        this._scene.getPrimitives().remove(this._billboardCollection);
-        this._billboardCollection.destroy();
-        this._textureAtlas.destroy();
-        return destroyObject(this);
     };
 
     return DynamicBillboardVisualizer;

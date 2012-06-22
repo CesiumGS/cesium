@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Color',
         '../Core/Matrix4',
@@ -7,6 +8,7 @@ define([
         '../Scene/ColorMaterial',
         './DynamicConeVisualizer'
        ], function(
+         DeveloperError,
          destroyObject,
          Color,
          Matrix4,
@@ -15,6 +17,30 @@ define([
          DynamicConeVisualizer) {
     "use strict";
 
+    /**
+     * A DynamicObject visualizer which maps the DynamicPyramid instance
+     * in DynamicObject.pyramid to a Pyramid primitive.
+     *
+     * @param {Scene} scene The scene the primitives will be rendered in.
+     * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.
+     *
+     * @exception {DeveloperError} scene is required.
+     *
+     * @see DynamicPyramid
+     * @see Scene
+     * @see DynamicObject
+     * @see DynamicObjectCollection
+     * @see CompositeDynamicObjectCollection
+     * @see VisualizerCollection
+     * @see DynamicBillboardVisualizer
+     * @see DynamicConeVisualizer
+     * @see DynamicConeVisualizerUsingCustomSensorr
+     * @see DynamicLabelVisualizer
+     * @see DynamicPointVisualizer
+     * @see DynamicPolygonVisualizer
+     * @see DynamicPolylineVisualizer
+     *
+     */
     function DynamicPyramidVisualizer(scene, dynamicObjectCollection) {
         this._scene = scene;
         this._unusedIndexes = [];
@@ -24,14 +50,29 @@ define([
         this.setDynamicObjectCollection(dynamicObjectCollection);
     }
 
+    /**
+     * Returns the scene being used by this visualizer.
+     *
+     * @returns {Scene} The scene being used by this visualizer.
+     */
     DynamicPyramidVisualizer.prototype.getScene = function() {
         return this._scene;
     };
 
+    /**
+     * Gets the DynamicObjectCollection being visualized.
+     *
+     * @returns {DynamicObjectCollection} The DynamicObjectCollection being visualized.
+     */
     DynamicPyramidVisualizer.prototype.getDynamicObjectCollection = function() {
         return this._dynamicObjectCollection;
     };
 
+    /**
+     * Sets the DynamicObjectCollection to visualize.
+     *
+     * @param dynamicObjectCollection The DynamicObjectCollection to visualizer.
+     */
     DynamicPyramidVisualizer.prototype.setDynamicObjectCollection = function(dynamicObjectCollection) {
         var oldCollection = this._dynamicObjectCollection;
         if (oldCollection !== dynamicObjectCollection) {
@@ -46,16 +87,87 @@ define([
         }
     };
 
+    /**
+     * Updates all of the primitives created by this visualizer to match their
+     * DynamicObject counterpart at the given time.
+     *
+     * @param {JulianDate} time The time to update to.
+     *
+     * @exception {DeveloperError} time is required.
+     */
     DynamicPyramidVisualizer.prototype.update = function(time) {
-        var dynamicObjects = this._dynamicObjectCollection.getObjects();
-        for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
-            this.updateObject(time, dynamicObjects[i]);
+        if (typeof time === 'undefined') {
+            throw new DeveloperError('time is requied.');
         }
+        if (typeof this._dynamicObjectCollection !== 'undefined') {
+            var dynamicObjects = this._dynamicObjectCollection.getObjects();
+            for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
+                this._updateObject(time, dynamicObjects[i]);
+            }
+        }
+    };
+
+    /**
+     * Removes all primitives from the scene.
+     */
+    DynamicPyramidVisualizer.prototype.removeAll = function() {
+        var i, len;
+        for (i = 0, len = this._pyramidCollection.length; i < len; i++) {
+            this._primitives.remove(this._pyramidCollection[i]);
+        }
+
+        var dynamicObjects = this._dynamicObjectCollection.getObjects();
+        for (i = dynamicObjects.length - 1; i > -1; i--) {
+            dynamicObjects[i].pyramidVisualizerIndex = undefined;
+        }
+
+        this._unusedIndexes = [];
+        this._pyramidCollection = [];
+    };
+
+    /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * <br /><br />
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     *
+     * @memberof DynamicPyramidVisualizer
+     *
+     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     *
+     * @see DynamicPyramidVisualizer#destroy
+     */
+    DynamicPyramidVisualizer.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <br /><br />
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     *
+     * @memberof DynamicPyramidVisualizer
+     *
+     * @return {undefined}
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     * @see DynamicPyramidVisualizer#isDestroyed
+     *
+     * @example
+     * visualizer = visualizer && visualizer.destroy();
+     */
+    DynamicPyramidVisualizer.prototype.destroy = function() {
+        this.removeAll();
+        return destroyObject(this);
     };
 
     var position;
     var orientation;
-    DynamicPyramidVisualizer.prototype.updateObject = function(time, dynamicObject) {
+    DynamicPyramidVisualizer.prototype._updateObject = function(time, dynamicObject) {
         var dynamicPyramid = dynamicObject.pyramid;
         if (typeof dynamicPyramid === 'undefined') {
             return;
@@ -158,21 +270,6 @@ define([
         }
     };
 
-    DynamicPyramidVisualizer.prototype.removeAll = function() {
-        var i, len;
-        for (i = 0, len = this._pyramidCollection.length; i < len; i++) {
-            this._primitives.remove(this._pyramidCollection[i]);
-        }
-
-        var dynamicObjects = this._dynamicObjectCollection.getObjects();
-        for (i = dynamicObjects.length - 1; i > -1; i--) {
-            dynamicObjects[i].pyramidVisualizerIndex = undefined;
-        }
-
-        this._unusedIndexes = [];
-        this._pyramidCollection = [];
-    };
-
     DynamicPyramidVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, dynamicObjects) {
         var thisPyramidCollection = this._pyramidCollection;
         var thisUnusedIndexes = this._unusedIndexes;
@@ -186,46 +283,6 @@ define([
                 dynamicObject.pyramidVisualizerIndex = undefined;
             }
         }
-    };
-
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @memberof DynamicPyramidVisualizer
-     *
-     * @return {Boolean} True if this object was destroyed; otherwise, false.
-     *
-     * @see DynamicPyramidVisualizer#destroy
-     */
-    DynamicPyramidVisualizer.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof DynamicPyramidVisualizer
-     *
-     * @return {undefined}
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see DynamicPyramidVisualizer#isDestroyed
-     *
-     * @example
-     * visualizer = visualizer && visualizer.destroy();
-     */
-    DynamicPyramidVisualizer.prototype.destroy = function() {
-        this.removeAll();
-        return destroyObject(this);
     };
 
     return DynamicPyramidVisualizer;

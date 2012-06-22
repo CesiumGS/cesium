@@ -31,18 +31,54 @@ define([
      * @see CzmlDefaults
      */
     function DynamicCone() {
-        this.capMaterial = undefined;
-        this.innerHalfAngle = undefined;
-        this.innerMaterial = undefined;
-        this.intersectionColor = undefined;
-        this.maximumClockAngle = undefined;
+        /**
+         * A DynamicProperty of type CzmlNumber which determines the cone's minimum clock-angle.
+         */
         this.minimumClockAngle = undefined;
+        /**
+         * A DynamicProperty of type CzmlNumber which determines the cone's maximum clock-angle.
+         */
+        this.maximumClockAngle = undefined;
+        /**
+         * A DynamicProperty of type CzmlNumber which determines the cone's inner half-angle.
+         */
+        this.innerHalfAngle = undefined;
+        /**
+         * A DynamicProperty of type CzmlNumber which determines the cone's outer half-angle.
+         */
         this.outerHalfAngle = undefined;
+        /**
+         * A DynamicMaterialProperty which determines the cone's cap material.
+         */
+        this.capMaterial = undefined;
+        /**
+         * A DynamicMaterialProperty which determines the cone's inner material.
+         */
+        this.innerMaterial = undefined;
+        /**
+         * A DynamicMaterialProperty which determines the cone's outer material.
+         */
         this.outerMaterial = undefined;
-        this.radius = undefined;
-        this.show = undefined;
-        this.showIntersection = undefined;
+        /**
+         * A DynamicMaterialProperty which determines the cone's silhouette material.
+         */
         this.silhouetteMaterial = undefined;
+        /**
+         * A DynamicProperty of type CzmlColor which determines the color of the line formed by the intersection of the cone and other central bodies.
+         */
+        this.intersectionColor = undefined;
+        /**
+         * A DynamicProperty of type CzmlBoolean which determines the cone's intersection visibility
+         */
+        this.showIntersection = undefined;
+        /**
+         * A DynamicProperty of type CzmlNumber which determines the cone's radius.
+         */
+        this.radius = undefined;
+        /**
+         * A DynamicProperty of type CzmlBoolean which determines the cone's visibility
+         */
+        this.show = undefined;
     }
 
     /**
