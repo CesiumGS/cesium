@@ -47,9 +47,9 @@ define([
      * normally called directly, but is part of the array of CZML processing functions that is
      * passed into the DynamicObjectCollection constructor.
      *
-     * @param dynamicObject The DynamicObject which will contain the pyramid data.
-     * @param packet The CZML packet to process.
-     * @param dynamicObjectCollection The DynamicObjectCollection to which the DynamicObject belongs.
+     * @param {DynamicObject} dynamicObject The DynamicObject which will contain the pyramid data.
+     * @param {Object} packet The CZML packet to process.
+     * @param {DynamicObject} dynamicObjectCollection The DynamicObjectCollection to which the DynamicObject belongs.
      *
      * @returns {Boolean} true if any new properties were created while processing the packet, false otherwise.
      *

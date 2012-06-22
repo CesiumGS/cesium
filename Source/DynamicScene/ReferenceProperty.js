@@ -8,7 +8,7 @@ define([
     function resolve(referenceProperty) {
         var targetProperty = referenceProperty._targetProperty;
         if (typeof targetProperty === 'undefined') {
-            var resolveBuffer = referenceProperty._dynamicObjectCollection.parent || referenceProperty._dynamicObjectCollection;
+            var resolveBuffer = referenceProperty._dynamicObjectCollection.compositeCollection || referenceProperty._dynamicObjectCollection;
             var targetObject = resolveBuffer.getObject(referenceProperty._targetObjectId);
             if (typeof targetObject !== 'undefined') {
                 targetProperty = targetObject[referenceProperty._targetPropertyName];
@@ -64,7 +64,7 @@ define([
      * be used to resolve it and a string indicating the target object id and property,
      * delineated by a period.
      *
-     * @param dynamicObjectCollection
+     * @param {DynamicObject} dynamicObjectCollection
      * @param referenceString
      *
      * @exception {DeveloperError} dynamicObjectCollection is required.

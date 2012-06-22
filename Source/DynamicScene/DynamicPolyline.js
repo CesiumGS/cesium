@@ -42,8 +42,8 @@ function(
      * normally called directly, but is part of the array of CZML processing functions that is
      * passed into the DynamicObjectCollection constructor.
      *
-     * @param dynamicObject The DynamicObject which will contain the polyline data.
-     * @param packet The CZML packet to process.
+     * @param {DynamicObject} dynamicObject The DynamicObject which will contain the polyline data.
+     * @param {Object} packet The CZML packet to process.
      * @returns {Boolean} true if any new properties were created while processing the packet, false otherwise.
      *
      * @see DynamicObject

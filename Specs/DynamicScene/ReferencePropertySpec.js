@@ -93,7 +93,7 @@ defineSuite([
     it('Resolves getValue property on parent collection', function() {
         var parent = new DynamicObjectCollection();
         var dynamicObjectCollection = new DynamicObjectCollection();
-        dynamicObjectCollection.parent = parent;
+        dynamicObjectCollection.compositeCollection = parent;
         createTestObject(parent, 'getValue');
         var property = ReferenceProperty.fromString(dynamicObjectCollection, testObjectLink);
         var result = {};
