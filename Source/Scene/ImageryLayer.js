@@ -230,7 +230,13 @@ define([
 
         var tileProvider = layer._tileProvider;
 
-        var isAvailable = tileProvider.isTileAvailable(tile);
+        // start loading tile
+        tile.state = TileState.IMAGE_LOADING;
+
+        var isAvailable = tile._isAvailable;
+        if (typeof isAvailable === 'undefined') {
+            isAvailable = tile._isAvailable = tileProvider.isTileAvailable(tile);
+        }
         var image = when(tileProvider.getTileImageUrl(tile), function(imageUrl) {
             var isDataUri = /^data:/.test(imageUrl);
 
@@ -244,6 +250,8 @@ define([
                 //and we have no way to cancel an image load once it starts, but we need
                 //to be able to reorder pending image requests
                 if (activeRequestsForHostname > 6) {
+                    // cancel loading tile
+                    tile.state = TileState.UNLOADED;
                     return undefined;
                 }
 
@@ -260,9 +268,6 @@ define([
             image.onerror = function() {
                 deferred.reject();
             };
-
-            // start loading tile
-            tile.state = TileState.IMAGE_LOADING;
 
             image.src = imageUrl;
 
