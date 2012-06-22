@@ -73,7 +73,7 @@ define([
          */
         this.inertiaZoom = 0.8;
 
-        this._zoomFactor = 5.0;
+        this._zoomFactor = 1.5;
         this._translateFactor = 1.0;
         this._minimumZoomRate = 20.0;
         this._maximumZoomRate = FAR;
