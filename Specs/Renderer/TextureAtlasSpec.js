@@ -184,10 +184,15 @@ defineSuite([
         var texture = atlas.getTexture();
         var tallGreenCoords = atlas.getTextureCoordinates()[0];
 
-        expect(draw.apply(this, [texture, {
+        var pixels = draw.apply(this, [texture, {
             x : (tallGreenCoords.x + tallGreenCoords.width / 2.0),
             y : (tallGreenCoords.y + tallGreenCoords.height / 2.0)
-        }])).toEqualArray([0, 255, 0, 255]);
+        }]);
+
+        expect((pixels[0] === 0) || (pixels[0] === 1)).toEqual(true); // Workaround:  Firefox on Windows
+        expect(pixels[1]).toEqual(255);
+        expect(pixels[2]).toEqual(0);
+        expect(pixels[3]).toEqual(255);
     });
 
     it('creates a two image atlas', function() {
@@ -632,15 +637,25 @@ defineSuite([
         var texture = atlas.getTexture();
         var coordinates = atlas.getTextureCoordinates();
 
-        expect(draw.apply(this, [texture, {
+        var pixels1 = draw.apply(this, [texture, {
             x : (coordinates[0].x + coordinates[0].width / 2.0),
             y : (coordinates[0].y + coordinates[0].height / 2.0)
-        }])).toEqualArray([0, 255, 0, 255]);
+        }]);
 
-        expect(draw.apply(this, [texture, {
+        var pixels2 = draw.apply(this, [texture, {
             x : (coordinates[1].x + coordinates[1].width / 2.0),
             y : (coordinates[1].y + coordinates[1].height / 2.0)
-        }])).toEqualArray([0, 255, 0, 255]);
+        }]);
+
+        expect((pixels1[0] === 0) || (pixels1[0] === 1)).toEqual(true); // Workaround:  Firefox on Windows
+        expect(pixels1[1]).toEqual(255);
+        expect(pixels1[2]).toEqual(0);
+        expect(pixels1[3]).toEqual(255);
+
+        expect((pixels2[0] === 0) || (pixels2[0] === 1)).toEqual(true); // Workaround:  Firefox on Windows
+        expect(pixels2[1]).toEqual(255);
+        expect(pixels2[2]).toEqual(0);
+        expect(pixels2[3]).toEqual(255);
     });
 
     it('creates an atlas that dynamically resizes twice', function() {
@@ -845,10 +860,15 @@ defineSuite([
             y : (coordinates[2].y + coordinates[2].height / 2.0)
         }])).toEqualArray([0, 0, 255, 255]);
 
-        expect(draw.apply(this, [texture, {
+        var pixels = draw.apply(this, [texture, {
             x : (coordinates[3].x + coordinates[3].width / 2.0),
             y : (coordinates[3].y + coordinates[3].height / 2.0)
-        }])).toEqualArray([0, 255, 0, 255]);
+        }]);
+
+        expect((pixels[0] === 0) || (pixels[0] === 1)).toEqual(true); // Workaround:  Firefox on Windows
+        expect(pixels[1]).toEqual(255);
+        expect(pixels[2]).toEqual(0);
+        expect(pixels[3]).toEqual(255);
     });
 
     it('creates an atlas with subregions', function() {
