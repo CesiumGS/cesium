@@ -108,5 +108,53 @@ defineSuite([
                 }
             }
         });
+
+        it('tiles are numbered from the northwest corner.', function() {
+            var tilingScheme = new GeographicTilingScheme({
+                rootTilesX: 2,
+                rootTilesY: 2
+            });
+            var northwest = tilingScheme.tileXYToExtent(0, 0, 1);
+            var northeast = tilingScheme.tileXYToExtent(1, 0, 1);
+            var southeast = tilingScheme.tileXYToExtent(1, 1, 1);
+            var southwest = tilingScheme.tileXYToExtent(0, 1, 1);
+
+            expect(northeast.north).toEqual(northwest.north);
+            expect(northeast.south).toEqual(northwest.south);
+            expect(southeast.north).toEqual(southwest.north);
+            expect(southeast.south).toEqual(southwest.south);
+
+            expect(northwest.west).toEqual(southwest.west);
+            expect(northwest.east).toEqual(southwest.east);
+            expect(northeast.west).toEqual(southeast.west);
+            expect(northeast.east).toEqual(southeast.east);
+
+            expect(northeast.north).toBeGreaterThan(southeast.north);
+            expect(northeast.south).toBeGreaterThan(southeast.south);
+            expect(northwest.north).toBeGreaterThan(southwest.north);
+            expect(northwest.south).toBeGreaterThan(southwest.south);
+
+            expect(northeast.east).toBeGreaterThan(northwest.east);
+            expect(northeast.west).toBeGreaterThan(northwest.west);
+            expect(southeast.east).toBeGreaterThan(southwest.east);
+            expect(southeast.west).toBeGreaterThan(southwest.west);
+        });
+
+        it('adjacent tiles have overlapping coordinates', function() {
+            var tilingScheme = new GeographicTilingScheme({
+                rootTilesX: 2,
+                rootTilesY: 2
+            });
+            var northwest = tilingScheme.tileXYToExtent(0, 0, 1);
+            var northeast = tilingScheme.tileXYToExtent(1, 0, 1);
+            var southeast = tilingScheme.tileXYToExtent(1, 1, 1);
+            var southwest = tilingScheme.tileXYToExtent(0, 1, 1);
+
+            expect(northeast.south).toEqualEpsilon(southeast.north, CesiumMath.EPSILON15);
+            expect(northwest.south).toEqualEpsilon(southwest.north, CesiumMath.EPSILON15);
+
+            expect(northeast.west).toEqualEpsilon(northwest.east, CesiumMath.EPSILON15);
+            expect(southeast.west).toEqualEpsilon(southwest.east, CesiumMath.EPSILON15);
+        });
     });
 });
