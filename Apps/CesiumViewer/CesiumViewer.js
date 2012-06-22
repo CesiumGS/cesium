@@ -147,7 +147,10 @@ function(dom,
                         }
 
                         var transform = Transforms.eastNorthUpToFixedFrame(cameraCenteredObjectIDPosition, widget.ellipsoid);
-                        this.spindleCameraController.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
+                        var controllers = widget.scene.getCamera().getControllers();
+                        controllers.removeAll();
+                        var spindleController = controllers.addSpindle();
+                        spindleController.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
                     }
                 }
             }

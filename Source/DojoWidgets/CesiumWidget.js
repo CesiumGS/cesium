@@ -215,9 +215,7 @@ define([
             camera.frustum.near = 0.0002 * maxRadii;
             camera.frustum.far = 50.0 * maxRadii;
 
-            this.spindleCameraController = camera.getControllers().addSpindle(ellipsoid);
-            this.spindleCameraController.mouseConstrainedZAxis = true;
-            this.freelookCameraController = camera.getControllers().addFreeLook(ellipsoid);
+            this.centralBodyCameraController = camera.getControllers().addCentralBody();
 
             var handler = new EventHandler(canvas);
             handler.setMouseAction(lang.hitch(this, '_handleLeftClick'), MouseEventType.LEFT_CLICK);
@@ -248,9 +246,7 @@ define([
 
             var controllers = camera.getControllers();
             controllers.removeAll();
-            this.spindleCameraController = controllers.addSpindle(this.ellipsoid);
-            this.spindleCameraController.constrainedZAxis = true;
-            this.freelookCameraController = controllers.addFreeLook(this.ellipsoid);
+            this.centralBodyCameraController = controllers.addCentralBody();
         },
 
         areCloudsAvailable : function() {
