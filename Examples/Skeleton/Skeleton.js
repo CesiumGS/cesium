@@ -56,14 +56,9 @@ require({
     }());
 
     ///////////////////////////////////////////////////////////////////////////
-    // Example keyboard and Mouse handlers
+    // Example Mouse handlers
 
     var handler = new Cesium.EventHandler(canvas);
-
-    handler.setKeyAction(function() {
-        /* ... */
-        // Handler for key press
-    }, '1');
 
     handler.setMouseAction(function(movement) {
         /* ... */
