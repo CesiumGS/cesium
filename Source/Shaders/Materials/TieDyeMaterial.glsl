@@ -9,7 +9,7 @@ agi_material agi_getMaterial(agi_materialInput materialInput)
     vec3 scaled = materialInput.str * u_frequency;
     float t = abs(agi_snoise(scaled));
     
-    material.diffuseComponent = mix(u_lightColor, u_darkColor, t).rgb;
+    material.diffuse = mix(u_lightColor, u_darkColor, t).rgb;
     
     return material;
 }

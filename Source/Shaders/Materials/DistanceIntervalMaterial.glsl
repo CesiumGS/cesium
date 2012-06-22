@@ -16,7 +16,7 @@ agi_material agi_getMaterial(agi_materialInput materialInput)
 	    }
     }
     
-    material.diffuseComponent = color.rgb;
+    material.diffuse = color.rgb;
      
     return material;
 }

@@ -35,7 +35,7 @@ agi_material agi_getMaterial(agi_materialInput materialInput)
     float mortarNoise = max(agi_snoise(mortarScaled) * u_mortarRoughness, 0.0);
     color.rgb += mortarNoise * (1.0 - useBrickFinal); 
 
-    material.diffuseComponent = color.rgb;
+    material.diffuse = color.rgb;
     
     return material;
 }

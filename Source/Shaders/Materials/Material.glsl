@@ -17,11 +17,11 @@
 agi_material agi_getDefaultMaterial(agi_materialInput materialInput)
 {
     agi_material material;
-    material.diffuseComponent = vec3(0.0, 0.0, 0.0);
-    material.specularComponent = 0.0;
-    material.normalComponent = materialInput.normalEC;
-    material.emissionComponent = vec3(0.0, 0.0, 0.0);
-    material.alphaComponent = 1.0;
+    material.diffuse = vec3(0.0, 0.0, 0.0);
+    material.specular = 0.0;
+    material.normal = materialInput.normalEC;
+    material.emission = vec3(0.0, 0.0, 0.0);
+    material.alpha = 1.0;
     return material;
 }
 

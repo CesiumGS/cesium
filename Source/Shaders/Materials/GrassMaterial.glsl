@@ -22,7 +22,7 @@ agi_material agi_getMaterial(agi_materialInput materialInput)
     color += stripeNoise;
     color.w = 1.0;
     
-    material.diffuseComponent = color.rgb;
+    material.diffuse = color.rgb;
     
     return material;
 }

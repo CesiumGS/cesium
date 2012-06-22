@@ -12,7 +12,7 @@ uniform vec4 u_color;
  *
  * @example
  * agi_material material = agi_getDefaultMaterial(materialInput);
- * material.diffuseComponent = vec3(1.0, 0.0, 0.0);
+ * material.diffuse = vec3(1.0, 0.0, 0.0);
  * return material;
  *
  * @see agi_materialInput
@@ -24,8 +24,8 @@ agi_material agi_getMaterial(agi_materialInput materialInput)
 {
     agi_material material = agi_getDefaultMaterial(materialInput);
     
-    material.diffuseComponent = u_color.rgb;
-    material.alphaComponent = u_color.a;
+    material.diffuse = u_color.rgb;
+    material.alpha = u_color.a;
     
     return material;
 }

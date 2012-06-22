@@ -366,7 +366,6 @@ mat3 agi_eastNorthUpToEyeCoordinates(vec3 positionMC, vec3 normalEC)
 
 /**
  * Used as input to every material's agi_getMaterial function. 
- * Only set the values the material is expected to use.
  *
  * Member variables:
  * s: 1D texture coordinates.
@@ -400,11 +399,11 @@ struct agi_materialInput
  */
 struct agi_material
 {
-    vec3 diffuseComponent;
-    float specularComponent;
-    vec3 normalComponent;
-    vec3 emissionComponent;
-    float alphaComponent;
+    vec3 diffuse;
+    float specular;
+    vec3 normal;
+    vec3 emission;
+    float alpha;
 };
 
 /**
@@ -424,11 +423,11 @@ struct agi_material
 
 vec4 agi_lightValuePhong(vec3 toLight, vec3 toEye, agi_material material)
 {
-    vec3 diffuseColor = material.diffuseComponent;
-    float specularIntensity = material.specularComponent + agi_epsilon7;
-    vec3 normal = material.normalComponent;
-    vec3 emissionColor = material.emissionComponent;
-    float alpha = material.alphaComponent;
+    vec3 diffuseColor = material.diffuse;
+    float specularIntensity = material.specular + agi_epsilon7;
+    vec3 normal = material.normal;
+    vec3 emissionColor = material.emission;
+    float alpha = material.alpha;
 
     vec3 toReflectedLight = reflect(-toLight, normal);
     float diffuseAmount = max(dot(toLight, normal), 0.0);
@@ -465,11 +464,11 @@ vec4 agi_lightValuePhong(vec3 toLight, vec3 toEye, agi_material material)
 
 vec4 agi_lightValueGaussian(vec3 toLight, vec3 toEye, agi_material material)
 {
-    vec3 diffuseColor = material.diffuseComponent;
-    float specularIntensity = material.specularComponent + agi_epsilon7;
-    vec3 normal = material.normalComponent;
-    vec3 emissionColor = material.emissionComponent;
-    float alpha = material.alphaComponent;
+    vec3 diffuseColor = material.diffuse;
+    float specularIntensity = material.specular + agi_epsilon7;
+    vec3 normal = material.normal;
+    vec3 emissionColor = material.emission;
+    float alpha = material.alpha;
 
     float cosAngIncidence = max(dot(normal, toLight), 0.0);
     vec3 halfAngle = normalize(toLight + toEye);

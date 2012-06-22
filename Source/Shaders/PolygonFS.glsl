@@ -45,7 +45,7 @@ void main()
     #ifdef AFFECTED_BY_LIGHTING
     color = agi_lightValuePhong(agi_sunDirectionEC, positionToEyeEC, material);
     #else
-    color = vec4(material.diffuseComponent, material.alphaComponent);
+    color = vec4(material.diffuse, material.alpha);
     #endif
     
     gl_FragColor = color;

@@ -10,7 +10,7 @@ agi_material agi_getMaterial(agi_materialInput materialInput)
     vec2 F = agi_cellular(materialInput.st * u_repeat);
     float t = 0.1 + (F.y - F.x);
         
-    material.diffuseComponent = mix(u_lightColor, u_darkColor, t).rgb;
+    material.diffuse = mix(u_lightColor, u_darkColor, t).rgb;
     
     return material;
 }

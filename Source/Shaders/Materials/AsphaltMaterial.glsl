@@ -18,7 +18,7 @@ agi_material agi_getMaterial(agi_materialInput materialInput)
     noise = pow(noise, 5.0) * u_roughness;
     color += noise;
 
-    material.diffuseComponent = color.rgb;
+    material.diffuse = color.rgb;
     
     return material;
 }

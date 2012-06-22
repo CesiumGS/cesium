@@ -19,7 +19,7 @@ agi_material agi_getMaterial(agi_materialInput materialInput)
     val1 = val1 * (1.0 - val2);
     val1 = val1 * val1 * (3.0 - (2.0 * val1));
     
-    material.diffuseComponent = mix(u_lightColor, u_darkColor, val1).rgb;
+    material.diffuse = mix(u_lightColor, u_darkColor, val1).rgb;
     
     return material;
 }

@@ -12,7 +12,7 @@ agi_material agi_getMaterial(agi_materialInput materialInput)
     vec4 color = u_cementColor + noise;
     color.w = 1.0;
     
-    material.diffuseComponent = color.rgb;
+    material.diffuse = color.rgb;
     
     return material;
 }

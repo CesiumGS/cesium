@@ -5,7 +5,7 @@ agi_material agi_getMaterial(agi_materialInput materialInput)
 {
     agi_material material = agi_getDefaultMaterial(materialInput);
 
-    material.diffuseComponent = texture2D(u_texture, fract(u_repeat * materialInput.st)).rgb;
+    material.diffuse = texture2D(u_texture, fract(u_repeat * materialInput.st)).rgb;
     
     return material;
 }
