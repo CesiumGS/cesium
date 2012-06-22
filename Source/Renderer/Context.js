@@ -1495,10 +1495,25 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Creates a new texture atlas with this context.
+     *
+     * @memberof Context
+     *
+     * @param {Context} description.context The context in which the texture gets created.
+     * @param {PixelFormat} [description.pixelFormat = PixelFormat.RGBA] The pixel format of the texture.
+     * @param {Number} [description.borderWidthInPixels = 1] The amount of spacing between adjacent images in pixels.
+     * @param {Cartesian2} [description.initialSize = new Cartesian2(16.0, 16.0)] The initial side lengths of the texture.
+     * @param {Array} description.images Optional array of {@link Image} to be added to the atlas. Same as calling addImages(images).
+     * @param {Image} description.image Optional single image to be added to the atlas. Same as calling addImage(image).
+     *
+     * @returns {TextureAtlas} The new texture atlas.
+     *
+     * @see TextureAtlas
      */
-    Context.prototype.createTextureAtlas = function(images, pixelFormat, borderWidthInPixels) {
-        return new TextureAtlas(this, images, pixelFormat, borderWidthInPixels);
+    Context.prototype.createTextureAtlas = function(description) {
+        description = description || {};
+        description.context = this;
+        return new TextureAtlas(description);
     };
 
     /**
