@@ -89,6 +89,12 @@ define([
 
         this._frustum = this._camera.frustum.clone();
         this._animationCollection = new AnimationCollection();
+
+        this._maxZoomOut = 2.0;
+        this._frustum.right *= this._maxZoomOut;
+        this._frustum.left *= this._maxZoomOut;
+        this._frustum.top *= this._maxZoomOut;
+        this._frustum.bottom *= this._maxZoomOut;
     }
 
     /**
@@ -222,7 +228,7 @@ define([
         var newRight = frustum.right - moveRate;
         var newLeft = frustum.left + moveRate;
 
-        var maxRight = this._ellipsoid.getRadii().x * Math.PI * 2.0;
+        var maxRight = this._ellipsoid.getRadii().x * Math.PI * 2.5;
         if (newRight > maxRight) {
             newRight = maxRight;
             newLeft = -newRight;
@@ -330,8 +336,8 @@ define([
         }
 
         if (!translate.isButtonDown() && !rightZoom.isButtonDown() &&
-                this._camera.frustum.right > this._ellipsoid.getRadii().x * Math.PI &&
-                !this._lastInertiaZoomMovement && Tween.getAll().length == 0) {
+                this._camera.frustum.right > this._frustum.right &&
+                !this._lastInertiaZoomMovement && Tween.getAll().length === 0) {
             this._addCorrectFrustumAnimation();
         }
 
