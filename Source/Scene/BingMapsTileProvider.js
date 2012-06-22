@@ -200,8 +200,8 @@ define([
          * @see GeographicTilingScheme
          */
         this.tilingScheme = new MercatorTilingScheme({
-            rootTilesX: 2,
-            rootTilesY: 2
+            numberOfLevelZeroTilesX: 2,
+            numberOfLevelZeroTilesY: 2
         });
 
         /**

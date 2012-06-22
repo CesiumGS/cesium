@@ -13,8 +13,8 @@ defineSuite([
     describe('Conversions from cartographic extent to tile indices and back', function() {
         it('extentToTileXY identifies extent of single root tile', function() {
             var tilingScheme = new GeographicTilingScheme({
-                rootTilesX : 1,
-                rootTilesY : 1
+                numberOfLevelZeroTilesX : 1,
+                numberOfLevelZeroTilesY : 1
             });
             var tile = tilingScheme.extentToTileXY(tilingScheme.extent, 0);
             expect(tile.x).toEqual(0);
@@ -23,8 +23,8 @@ defineSuite([
 
         it('tileXYToExtent returns full extent for single root tile.', function() {
             var tilingScheme = new GeographicTilingScheme({
-                rootTilesX : 1,
-                rootTilesY : 1
+                numberOfLevelZeroTilesX : 1,
+                numberOfLevelZeroTilesY : 1
             });
             var extent = tilingScheme.tileXYToExtent(0, 0, 0);
             expect(extent.west).toEqualEpsilon(tilingScheme.extent.west, CesiumMath.EPSILON10);
@@ -35,8 +35,8 @@ defineSuite([
 
         it('tileXYToExtent for single root tile can be passed back into extentToTileXY.', function() {
             var tilingScheme = new GeographicTilingScheme({
-                rootTilesX : 1,
-                rootTilesY : 1
+                numberOfLevelZeroTilesX : 1,
+                numberOfLevelZeroTilesY : 1
             });
             var extent = tilingScheme.tileXYToExtent(0, 0, 0);
             var tile = tilingScheme.extentToTileXY(extent, 0);
@@ -46,8 +46,8 @@ defineSuite([
 
         it('tileXYToExtent for (2, 1) root tiles can be passed back into extentToTileXY.', function() {
             var tilingScheme = new GeographicTilingScheme({
-                rootTilesX : 2,
-                rootTilesY : 1
+                numberOfLevelZeroTilesX : 2,
+                numberOfLevelZeroTilesY : 1
             });
 
             var extent00 = tilingScheme.tileXYToExtent(0, 0, 0);
@@ -63,8 +63,8 @@ defineSuite([
 
         it('tileXYToExtent for (2, 2) root tiles can be passed back into extentToTileXY.', function() {
             var tilingScheme = new GeographicTilingScheme({
-                rootTilesX : 2,
-                rootTilesY : 2
+                numberOfLevelZeroTilesX : 2,
+                numberOfLevelZeroTilesY : 2
             });
 
             for (var x = 0; x < 2; ++x) {
@@ -79,8 +79,8 @@ defineSuite([
 
         it('tileXYToExtent for first level tiles can be passed back into extentToTileXY.', function() {
             var tilingScheme = new GeographicTilingScheme({
-                rootTilesX : 1,
-                rootTilesY : 1
+                numberOfLevelZeroTilesX : 1,
+                numberOfLevelZeroTilesY : 1
             });
 
             for (var x = 0; x < 2; ++x) {
@@ -95,8 +95,8 @@ defineSuite([
 
         it('tileXYToExtent for first level tiles can be passed back into extentToTileXY when root has (2,2) tiles.', function() {
             var tilingScheme = new GeographicTilingScheme({
-                rootTilesX : 2,
-                rootTilesY : 2
+                numberOfLevelZeroTilesX : 2,
+                numberOfLevelZeroTilesY : 2
             });
 
             for (var x = 0; x < 4; ++x) {
@@ -111,8 +111,8 @@ defineSuite([
 
         it('tiles are numbered from the northwest corner.', function() {
             var tilingScheme = new GeographicTilingScheme({
-                rootTilesX: 2,
-                rootTilesY: 2
+                numberOfLevelZeroTilesX: 2,
+                numberOfLevelZeroTilesY: 2
             });
             var northwest = tilingScheme.tileXYToExtent(0, 0, 1);
             var northeast = tilingScheme.tileXYToExtent(1, 0, 1);
@@ -142,8 +142,8 @@ defineSuite([
 
         it('adjacent tiles have overlapping coordinates', function() {
             var tilingScheme = new GeographicTilingScheme({
-                rootTilesX: 2,
-                rootTilesY: 2
+                numberOfLevelZeroTilesX: 2,
+                numberOfLevelZeroTilesY: 2
             });
             var northwest = tilingScheme.tileXYToExtent(0, 0, 1);
             var northeast = tilingScheme.tileXYToExtent(1, 0, 1);

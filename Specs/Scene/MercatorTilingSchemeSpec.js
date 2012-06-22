@@ -37,8 +37,8 @@ defineSuite([
 
         it('tileXYToExtent for (2, 1) root tiles can be passed back into extentToTileXY.', function() {
             var tilingScheme = new MercatorTilingScheme({
-                rootTilesX : 2,
-                rootTilesY : 1
+                numberOfLevelZeroTilesX : 2,
+                numberOfLevelZeroTilesY : 1
             });
 
             var extent00 = tilingScheme.tileXYToExtent(0, 0, 0);
@@ -54,8 +54,8 @@ defineSuite([
 
         it('tileXYToExtent for (2, 2) root tiles can be passed back into extentToTileXY.', function() {
             var tilingScheme = new MercatorTilingScheme({
-                rootTilesX : 2,
-                rootTilesY : 2
+                numberOfLevelZeroTilesX : 2,
+                numberOfLevelZeroTilesY : 2
             });
 
             for (var x = 0; x < 2; ++x) {
@@ -83,8 +83,8 @@ defineSuite([
 
         it('tileXYToExtent for first level tiles can be passed back into extentToTileXY when root has (2,2) tiles.', function() {
             var tilingScheme = new MercatorTilingScheme({
-                rootTilesX : 2,
-                rootTilesY : 2
+                numberOfLevelZeroTilesX : 2,
+                numberOfLevelZeroTilesY : 2
             });
 
             for (var x = 0; x < 4; ++x) {

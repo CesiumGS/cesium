@@ -70,8 +70,8 @@ define([
          * @see GeographicTilingScheme
          */
         this.tilingScheme = new GeographicTilingScheme({
-            rootTilesX: 1,
-            rootTilesY: 1
+            numberOfLevelZeroTilesX: 1,
+            numberOfLevelZeroTilesY: 1
         });
 
         /**
