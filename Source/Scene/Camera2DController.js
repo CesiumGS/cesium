@@ -7,9 +7,12 @@ define([
         '../Core/Quaternion',
         '../Core/Ellipsoid',
         '../Core/Cartesian2',
+        '../Core/JulianDate',
         './CameraEventHandler',
         './CameraEventType',
-        './CameraHelpers'
+        './CameraHelpers',
+        './AnimationCollection',
+        '../ThirdParty/Tween'
     ], function(
         DeveloperError,
         destroyObject,
@@ -18,9 +21,12 @@ define([
         Quaternion,
         Ellipsoid,
         Cartesian2,
+        JulianDate,
         CameraEventHandler,
         CameraEventType,
-        CameraHelpers) {
+        CameraHelpers,
+        AnimationCollection,
+        Tween) {
     "use strict";
 
     var move = CameraHelpers.move;
@@ -77,9 +83,12 @@ define([
         this._zoomWheel = new CameraEventHandler(canvas, CameraEventType.WHEEL);
         this._twistHandler = new CameraEventHandler(canvas, CameraEventType.MIDDLE_DRAG);
 
-        this._lastInertiaTranslateMovement = undefined;
         this._lastInertiaZoomMovement = undefined;
+        this._lastInertiaTranslateMovement = undefined;
         this._lastInertiaWheelZoomMovement = undefined;
+
+        this._frustum = this._camera.frustum.clone();
+        this._animationCollection = new AnimationCollection();
     }
 
     /**
@@ -213,7 +222,7 @@ define([
         var newRight = frustum.right - moveRate;
         var newLeft = frustum.left + moveRate;
 
-        var maxRight = this._ellipsoid.getRadii().x * Math.PI * 2;
+        var maxRight = this._ellipsoid.getRadii().x * Math.PI * 2.0;
         if (newRight > maxRight) {
             newRight = maxRight;
             newLeft = -newRight;
@@ -241,6 +250,35 @@ define([
         this.zoomIn(-rate || -this._zoomRate);
     };
 
+    Camera2DController.prototype._addCorrectFrustumAnimation = function() {
+        var camera = this._camera;
+        var frustum = camera.frustum;
+        var top = frustum.top;
+        var bottom = frustum.bottom;
+        var right = frustum.right;
+        var left = frustum.left;
+
+        var startFrustum = this._frustum;
+
+        var update2D = function(value) {
+            camera.frustum.top = CesiumMath.lerp(top, startFrustum.top, value.time);
+            camera.frustum.bottom = CesiumMath.lerp(bottom, startFrustum.bottom, value.time);
+            camera.frustum.right = CesiumMath.lerp(right, startFrustum.right, value.time);
+            camera.frustum.left = CesiumMath.lerp(left, startFrustum.left, value.time);
+        };
+
+        this._animationCollection.add({
+            easingFunction : Tween.Easing.Exponential.EaseOut,
+            startValue : {
+                time : 0.0
+            },
+            stopValue : {
+                time : 1.0
+            },
+            onUpdate : update2D
+        });
+    };
+
     /**
      * @private
      */
@@ -251,6 +289,10 @@ define([
         var translating = translate.isMoving() && translate.getMovement();
         var rightZooming = rightZoom.isMoving();
         var wheelZooming = wheelZoom.isMoving();
+
+        if (translate.isButtonDown() || rightZoom.isButtonDown() || wheelZooming) {
+            this._animationCollection.removeAll();
+        }
 
         if (translating) {
             this._translate(translate.getMovement());
@@ -277,6 +319,23 @@ define([
         if (this._twistHandler.isMoving()) {
             this._twist(this._twistHandler.getMovement());
         }
+
+        var ts = rightZoom.getButtonPressTime();
+        var tr = rightZoom.getButtonReleaseTime();
+        var threshold = ts && tr && ts.getSecondsDifference(tr);
+        var now = new JulianDate();
+        var fromNow = tr && tr.getSecondsDifference(now);
+        if ((ts && tr && threshold > 0.4) || fromNow > 2.0) { // TODO: These two magic numbers come from CameraHelpers.maintainInertia
+            this._lastInertiaZoomMovement = undefined;
+        }
+
+        if (!translate.isButtonDown() && !rightZoom.isButtonDown() &&
+                this._camera.frustum.right > this._ellipsoid.getRadii().x * Math.PI &&
+                !this._lastInertiaZoomMovement && Tween.getAll().length == 0) {
+            this._addCorrectFrustumAnimation();
+        }
+
+        this._animationCollection.update();
 
         return true;
     };
