@@ -7,7 +7,7 @@ define([
         '../Core/Quaternion',
         '../Core/Ellipsoid',
         '../Core/Cartesian2',
-        '../Core/JulianDate',
+        '../Core/Cartesian3',
         './CameraEventHandler',
         './CameraEventType',
         './CameraHelpers',
@@ -21,7 +21,7 @@ define([
         Quaternion,
         Ellipsoid,
         Cartesian2,
-        JulianDate,
+        Cartesian3,
         CameraEventHandler,
         CameraEventType,
         CameraHelpers,
@@ -89,12 +89,20 @@ define([
 
         this._frustum = this._camera.frustum.clone();
         this._animationCollection = new AnimationCollection();
+        this._zoomAnimation = undefined;
+        this._translateAnimation = undefined;
 
-        this._maxZoomOut = 2.0;
-        this._frustum.right *= this._maxZoomOut;
-        this._frustum.left *= this._maxZoomOut;
-        this._frustum.top *= this._maxZoomOut;
-        this._frustum.bottom *= this._maxZoomOut;
+        var maxZoomOut = 2.0;
+        this._frustum.right *= maxZoomOut;
+        this._frustum.left *= maxZoomOut;
+        this._frustum.top *= maxZoomOut;
+        this._frustum.bottom *= maxZoomOut;
+
+        this._cameraMaxX = this._ellipsoid.getRadii().x * Math.PI;
+        this._cameraMaxY = this._ellipsoid.getRadii().y * CesiumMath.PI_OVER_TWO;
+
+        this._maxZoomFactor = 2.5;
+        this._maxTranslateFactor = 1.5;
     }
 
     /**
@@ -228,7 +236,7 @@ define([
         var newRight = frustum.right - moveRate;
         var newLeft = frustum.left + moveRate;
 
-        var maxRight = this._ellipsoid.getRadii().x * Math.PI * 2.5;
+        var maxRight = this._cameraMaxX * this._maxZoomFactor;
         if (newRight > maxRight) {
             newRight = maxRight;
             newLeft = -newRight;
@@ -256,7 +264,7 @@ define([
         this.zoomIn(-rate || -this._zoomRate);
     };
 
-    Camera2DController.prototype._addCorrectFrustumAnimation = function() {
+    Camera2DController.prototype._addCorrectZoomAnimation = function() {
         var camera = this._camera;
         var frustum = camera.frustum;
         var top = frustum.top;
@@ -273,7 +281,40 @@ define([
             camera.frustum.left = CesiumMath.lerp(left, startFrustum.left, value.time);
         };
 
-        this._animationCollection.add({
+        this._zoomAnimation = this._animationCollection.add({
+            easingFunction : Tween.Easing.Exponential.EaseOut,
+            startValue : {
+                time : 0.0
+            },
+            stopValue : {
+                time : 1.0
+            },
+            onUpdate : update2D
+        });
+    };
+
+    Camera2DController.prototype._addCorrectTranslateAnimation = function() {
+        var camera = this._camera;
+        var currentPosition = camera.position;
+        var translatedPosition = currentPosition.clone();
+
+        if (translatedPosition.x > this._cameraMaxX) {
+            translatedPosition.x = this._cameraMaxX;
+        } else if (translatedPosition.x < -this._cameraMaxX) {
+            translatedPosition.x = -this._cameraMaxX;
+        }
+
+        if (translatedPosition.y > this._cameraMaxY) {
+            translatedPosition.y = this._cameraMaxY;
+        } else if (translatedPosition.y < -this._cameraMaxY) {
+            translatedPosition.y = -this._cameraMaxY;
+        }
+
+        var update2D = function(value) {
+            camera.position = currentPosition.lerp(translatedPosition, value.time);
+        };
+
+        this._translateAnimation = this._animationCollection.add({
             easingFunction : Tween.Easing.Exponential.EaseOut,
             startValue : {
                 time : 0.0
@@ -326,19 +367,21 @@ define([
             this._twist(this._twistHandler.getMovement());
         }
 
-        var ts = rightZoom.getButtonPressTime();
-        var tr = rightZoom.getButtonReleaseTime();
-        var threshold = ts && tr && ts.getSecondsDifference(tr);
-        var now = new JulianDate();
-        var fromNow = tr && tr.getSecondsDifference(now);
-        if ((ts && tr && threshold > 0.4) || fromNow > 2.0) { // TODO: These two magic numbers come from CameraHelpers.maintainInertia
-            this._lastInertiaZoomMovement = undefined;
-        }
+        if (!translate.isButtonDown() && !rightZoom.isButtonDown()) {
+            var animations = Tween.getAll();
 
-        if (!translate.isButtonDown() && !rightZoom.isButtonDown() &&
-                this._camera.frustum.right > this._frustum.right &&
-                !this._lastInertiaZoomMovement && Tween.getAll().length === 0) {
-            this._addCorrectFrustumAnimation();
+            if (this._camera.frustum.right > this._frustum.right &&
+                !this._lastInertiaZoomMovement && animations.indexOf(this._zoomAnimation) === -1) {
+                this._addCorrectZoomAnimation();
+            }
+
+            var position = this._camera.position;
+            var translateX = position.x < -this._cameraMaxX || position.x > this._cameraMaxX;
+            var translateY = position.y < -this._cameraMaxY || position.y > this._cameraMaxY;
+            if ((translateX || translateY) && !this._lastInertiaTranslateMovement &&
+                    animations.indexOf(this._translateAnimation) === -1) {
+                this._addCorrectTranslateAnimation();
+            }
         }
 
         this._animationCollection.update();
@@ -380,7 +423,7 @@ define([
            position = camera.position;
            newPosition = position.add(right.multiplyWithScalar(distance.x));
 
-           var maxX = this._ellipsoid.getRadii().x * Math.PI;
+           var maxX = this._cameraMaxX * this._maxTranslateFactor;
            if (newPosition.x > maxX) {
                newPosition.x = maxX;
            }
@@ -394,7 +437,7 @@ define([
            position = camera.position;
            newPosition = position.add(up.multiplyWithScalar(distance.y));
 
-           var maxY = this._ellipsoid.getRadii().z * CesiumMath.PI_OVER_TWO;
+           var maxY = this._cameraMaxY * this._maxTranslateFactor;
            if (newPosition.y > maxY) {
                newPosition.y = maxY;
            }
