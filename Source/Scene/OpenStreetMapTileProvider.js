@@ -83,13 +83,6 @@ define([
         this.zoomMax = 18;
 
         /**
-         * The minimum zoom level that can be requested.
-         *
-         * @type {Number}
-         */
-        this.zoomMin = 0;
-
-        /**
          * The map projection of the image.
          *
          * @type {Enumeration}
@@ -125,12 +118,12 @@ define([
      * @param {Function} onload A function that will be called when the image is finished loading.
      * @param {Function} onerror A function that will be called if there is an error loading the image.
      *
-     * @exception {DeveloperError} <code>tile.zoom</code> is less than <code>zoomMin</code>
+     * @exception {DeveloperError} <code>tile.zoom</code> is less than zero
      * or greater than <code>zoomMax</code>.
      */
     OpenStreetMapTileProvider.prototype.loadTileImage = function(tile, onload, onerror) {
-        if (tile.zoom < this.zoomMin || tile.zoom > this.zoomMax) {
-            throw new DeveloperError('tile.zoom must be between in [zoomMin, zoomMax].');
+        if (tile.zoom < 0 || tile.zoom > this.zoomMax) {
+            throw new DeveloperError('tile.zoom must be in the range [0, zoomMax].');
         }
 
         var image = new Image();

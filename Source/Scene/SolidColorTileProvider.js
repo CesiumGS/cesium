@@ -66,13 +66,6 @@ define([
         this.zoomMax = maxLevel;
 
         /**
-         * The minimum zoom level that can be requested.
-         *
-         * @type {Number}
-         */
-        this.zoomMin = 0;
-
-        /**
          * The map projection of the image.
          *
          * @type {Enumeration}

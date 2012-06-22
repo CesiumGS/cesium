@@ -185,13 +185,6 @@ define([
         this.zoomMax = undefined;
 
         /**
-         * The minimum zoom level that can be requested.
-         *
-         * @type {Number}
-         */
-        this.zoomMin = undefined;
-
-        /**
          * The map projection of the image.
          *
          * @type {Enumeration}
@@ -207,8 +200,8 @@ define([
          * @see GeographicTilingScheme
          */
         this.tilingScheme = new MercatorTilingScheme({
-            rootTilesX: 1, // TODO: Bing Maps actually has 2 tiles in each direction at the root,
-            rootTilesY: 1  // but hacks elsewhere mean we need to use one.  Clean this up.
+            rootTilesX: 2,
+            rootTilesY: 2
         });
 
         /**
@@ -233,9 +226,7 @@ define([
 
             that.tileWidth = resource.imageWidth;
             that.tileHeight = resource.imageHeight;
-            // TODO: does this need to be adjusted?
-            that.zoomMin = resource.zoomMin;
-            that.zoomMax = resource.zoomMax;
+            that.zoomMax = resource.zoomMax - 1;
             that._imageUrlSubdomains = resource.imageUrlSubdomains;
             that._imageUrlTemplate = resource.imageUrl.replace('{culture}', '');
             that.ready = true;
@@ -257,6 +248,7 @@ define([
      * @see BingMapsTileProvider#quadKeyToTileXY
      */
     BingMapsTileProvider.tileXYToQuadKey = function(x, y, zoom) {
+        ++zoom;
         var quadkey = '';
         for ( var i = zoom; i > 0; --i) {
             var digit = '0'.charCodeAt(0);
@@ -287,7 +279,7 @@ define([
         var result = {
             x : 0,
             y : 0,
-            zoom : quadkey.length
+            zoom : quadkey.length - 1
         };
 
         for ( var i = result.zoom; i > 0; --i) {
@@ -323,7 +315,7 @@ define([
         return when(jsonp(this._tileMetadataUrl, {
             parameters : {
                 centerPoint : lat + ',' + lon,
-                zoomLevel : tile.zoom
+                zoomLevel : tile.zoom + 1
             },
             callbackParameterName : 'jsonp',
             proxy : this._proxy

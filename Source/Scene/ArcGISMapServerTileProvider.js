@@ -89,13 +89,6 @@ define([
         this.zoomMax = undefined;
 
         /**
-         * The minimum zoom level that can be requested.
-         *
-         * @type {Number}
-         */
-        this.zoomMin = undefined;
-
-        /**
          * The map projection of the image.
          *
          * @type {Enumeration}
@@ -148,7 +141,6 @@ define([
                                             CesiumMath.toRadians(data.fullExtent.ymax));
             }
 
-            that.zoomMin = 0;
             that.zoomMax = data.tileInfo.lods.length - 1;
 
             // Create the copyright message.

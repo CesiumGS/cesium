@@ -71,14 +71,6 @@ define([
         this.maxExtent = this._list[0].provider.maxExtent;
 
         /**
-         * The minimum zoom level that can be requested.
-         *
-         * @constant
-         * @type {Number}
-         */
-        this.zoomMin = this._list[0].provider.zoomMin;
-
-        /**
          * The maximum zoom level that can be requested.
          *
          * @constant
@@ -171,12 +163,12 @@ define([
      * @param {Function} onerror A function that will be called if there is an error loading the image.
      * @param {Function} oninvalid A function that will be called if the image loaded is not valid.
      *
-     * @exception {DeveloperError} <code>tile.zoom</code> is less than <code>zoomMin</code>
+     * @exception {DeveloperError} <code>tile.zoom</code> is less than zero
      * or greater than <code>zoomMax</code>.
      */
     CompositeTileProvider.prototype.loadTileImage = function(tile, onload, onerror, oninvalid) {
-        if (tile.zoom < this.zoomMin || tile.zoom > this.zoomMax) {
-            throw new DeveloperError('tile.zoom must be between in [zoomMin, zoomMax].');
+        if (tile.zoom < 0 || tile.zoom > this.zoomMax) {
+            throw new DeveloperError('tile.zoom must in the range [0, zoomMax].');
         }
 
         var height = this._camera.position.magnitude() - this._radius;
@@ -184,7 +176,7 @@ define([
         var provider = this._list[this._currentProviderIndex].provider;
         var image = null;
 
-        if (tile.zoom >= provider.zoomMin && tile.zoom <= provider.zoomMax) {
+        if (tile.zoom <= provider.zoomMax) {
             image = provider.loadTileImage(tile, onload, onerror, oninvalid);
             tile.projection = provider.projection;
         } else {

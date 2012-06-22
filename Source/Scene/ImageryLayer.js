@@ -233,23 +233,6 @@ define([
         // start loading tile
         tile.state = TileState.IMAGE_LOADING;
 
-        if (tileProvider.zoomMin !== 0 && tile.zoom === 0) {
-            // Some tile servers, like Bing, don't have a base image for the entire central body.
-            // Create a 1x1 image that will never get rendered.
-            var canvas = document.createElement("canvas");
-            canvas.width = 1;
-            canvas.height = 1;
-
-            tile._width = 1;
-            tile._height = 1;
-            tile._image = canvas;
-            tile._projection = Projections.WGS84;
-
-            // no need to re-project
-            tile.state = TileState.TEXTURE_LOADING;
-            return;
-        }
-
         var isAvailable = tileProvider.isTileAvailable(tile);
         var image = when(tileProvider.getTileImageUrl(tile), function(imageUrl) {
             var isDataUri = /^data:/.test(imageUrl);
@@ -404,9 +387,6 @@ define([
 
     function refine(layer, tile, context, sceneState) {
         var tileProvider = layer._tileProvider;
-        if (tile.zoom < tileProvider.zoomMin) {
-            return true;
-        }
 
         if (sceneState.mode === SceneMode.SCENE2D) {
             return refine2D(layer, tile, context, sceneState);
