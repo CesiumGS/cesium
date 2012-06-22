@@ -64,7 +64,7 @@ define([
             newProperty = true;
         }
 
-        existingProperty.addIntervals(czmlIntervals, constrainedInterval);
+        existingProperty.addCzmlIntervals(czmlIntervals, constrainedInterval);
 
         return newProperty;
     };
@@ -112,17 +112,17 @@ define([
         }
     };
 
-    DynamicProperty.prototype.addIntervals = function(czmlIntervals, constrainedInterval) {
+    DynamicProperty.prototype.addCzmlIntervals = function(czmlIntervals, constrainedInterval) {
         if (Array.isArray(czmlIntervals)) {
             for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
-                this.addInterval(czmlIntervals[i], constrainedInterval);
+                this.addCzmlInterval(czmlIntervals[i], constrainedInterval);
             }
         } else {
-            this.addInterval(czmlIntervals, constrainedInterval);
+            this.addCzmlInterval(czmlIntervals, constrainedInterval);
         }
     };
 
-    DynamicProperty.prototype.addInterval = function(czmlInterval, constrainedInterval) {
+    DynamicProperty.prototype.addCzmlInterval = function(czmlInterval, constrainedInterval) {
         var iso8601Interval = czmlInterval.interval;
         if (typeof iso8601Interval === 'undefined') {
             iso8601Interval = Iso8601.MAXIMUM_INTERVAL;
@@ -135,10 +135,12 @@ define([
         }
 
         var unwrappedInterval = this.valueType.unwrapInterval(czmlInterval);
-        this.addIntervalUnwrapped(iso8601Interval.start, iso8601Interval.stop, unwrappedInterval, czmlInterval.epoch, czmlInterval.interpolationAlgorithm, czmlInterval.interpolationDegree);
+        if (typeof unwrappedInterval !== 'undefined') {
+            this.addCzmlIntervalUnwrapped(iso8601Interval.start, iso8601Interval.stop, unwrappedInterval, czmlInterval.epoch, czmlInterval.interpolationAlgorithm, czmlInterval.interpolationDegree);
+        }
     };
 
-    DynamicProperty.prototype.addIntervalUnwrapped = function(start, stop, unwrappedInterval, epoch, interpolationAlgorithmType, interpolationDegree) {
+    DynamicProperty.prototype.addCzmlIntervalUnwrapped = function(start, stop, unwrappedInterval, epoch, interpolationAlgorithmType, interpolationDegree) {
         var thisIntervals = this._intervals;
         var existingInterval = thisIntervals.findInterval(start, stop);
         this._cachedDate = undefined;

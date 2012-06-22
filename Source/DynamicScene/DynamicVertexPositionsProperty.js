@@ -81,22 +81,22 @@ define([
             existingProperty = new DynamicVertexPositionsProperty();
         }
 
-        existingProperty.addIntervals(czmlIntervals, dynamicObjectCollection);
+        existingProperty.addCzmlIntervals(czmlIntervals, dynamicObjectCollection);
 
         return existingProperty;
     };
 
-    DynamicVertexPositionsProperty.prototype.addIntervals = function(czmlIntervals, dynamicObjectCollection) {
+    DynamicVertexPositionsProperty.prototype.addCzmlIntervals = function(czmlIntervals, dynamicObjectCollection) {
         if (Array.isArray(czmlIntervals)) {
             for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
-                this.addInterval(czmlIntervals[i], dynamicObjectCollection);
+                this.addCzmlInterval(czmlIntervals[i], dynamicObjectCollection);
             }
         } else {
-            this.addInterval(czmlIntervals, dynamicObjectCollection);
+            this.addCzmlInterval(czmlIntervals, dynamicObjectCollection);
         }
     };
 
-    DynamicVertexPositionsProperty.prototype.addInterval = function(czmlInterval, dynamicObjectCollection) {
+    DynamicVertexPositionsProperty.prototype.addCzmlInterval = function(czmlInterval, dynamicObjectCollection) {
         var iso8601Interval = czmlInterval.interval;
         if (typeof iso8601Interval === 'undefined') {
             iso8601Interval = Iso8601.MAXIMUM_INTERVAL.clone();

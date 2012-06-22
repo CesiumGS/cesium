@@ -230,7 +230,7 @@ define([
         var scene = this._scene;
         var material = dynamicCone.outerMaterial;
         if (typeof material !== 'undefined') {
-            cone.material = material.applyToMaterial(time, scene, cone.material);
+            cone.material = material.getValue(time, scene, cone.material);
         }
 
         property = dynamicCone.intersectionColor;

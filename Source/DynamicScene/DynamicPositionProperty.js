@@ -43,22 +43,22 @@ define([
             existingProperty = new DynamicPositionProperty();
         }
 
-        existingProperty.addIntervals(czmlIntervals);
+        existingProperty.addCzmlIntervals(czmlIntervals);
 
         return existingProperty;
     };
 
-    DynamicPositionProperty.prototype.addIntervals = function(czmlIntervals) {
+    DynamicPositionProperty.prototype.addCzmlIntervals = function(czmlIntervals) {
         if (Array.isArray(czmlIntervals)) {
             for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
-                this.addInterval(czmlIntervals[i]);
+                this.addCzmlInterval(czmlIntervals[i]);
             }
         } else {
-            this.addInterval(czmlIntervals);
+            this.addCzmlInterval(czmlIntervals);
         }
     };
 
-    DynamicPositionProperty.prototype.addInterval = function(czmlInterval) {
+    DynamicPositionProperty.prototype.addCzmlInterval = function(czmlInterval) {
         this._cachedTime = undefined;
         this._cachedInterval = undefined;
 
@@ -113,7 +113,7 @@ define([
 
         //We could handle the data, add it to the property.
         if (typeof unwrappedInterval !== 'undefined') {
-            property.addIntervalUnwrapped(iso8601Interval.start, iso8601Interval.stop, unwrappedInterval, czmlInterval.epoch, czmlInterval.interpolationAlgorithm, czmlInterval.interpolationDegree);
+            property.addCzmlIntervalUnwrapped(iso8601Interval.start, iso8601Interval.stop, unwrappedInterval, czmlInterval.epoch, czmlInterval.interpolationAlgorithm, czmlInterval.interpolationDegree);
         }
     };
 

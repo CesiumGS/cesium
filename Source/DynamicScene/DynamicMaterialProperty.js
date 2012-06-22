@@ -28,35 +28,31 @@ define([
                 existingProperty = new DynamicMaterialProperty();
                 parentObject[propertyName] = existingProperty;
             }
-            existingProperty.addIntervals(czmlIntervals, constrainedInterval);
+            existingProperty.addCzmlIntervals(czmlIntervals, constrainedInterval);
         }
         return propertyUpdated;
     };
 
-    DynamicMaterialProperty.prototype.getValue = function(time) {
+    DynamicMaterialProperty.prototype.getValue = function(time, scene, existingMaterial) {
         var value = this._intervals.findIntervalContainingDate(time);
-        return typeof value !== 'undefined' ? value.data : undefined;
-    };
-
-    DynamicMaterialProperty.prototype.applyToMaterial = function(time, scene, existingMaterial) {
-        var material = this.getValue(time);
+        var material = typeof value !== 'undefined' ? value.data : undefined;
         if (typeof material !== 'undefined') {
-            return material.applyToMaterial(time, scene, existingMaterial);
+            return material.getValue(time, scene, existingMaterial);
         }
         return existingMaterial;
     };
 
-    DynamicMaterialProperty.prototype.addIntervals = function(czmlIntervals, constrainedInterval) {
+    DynamicMaterialProperty.prototype.addCzmlIntervals = function(czmlIntervals, constrainedInterval) {
         if (Array.isArray(czmlIntervals)) {
             for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
-                this.addInterval(czmlIntervals[i], constrainedInterval);
+                this.addCzmlInterval(czmlIntervals[i], constrainedInterval);
             }
         } else {
-            this.addInterval(czmlIntervals, constrainedInterval);
+            this.addCzmlInterval(czmlIntervals, constrainedInterval);
         }
     };
 
-    DynamicMaterialProperty.prototype.addInterval = function(czmlInterval, constrainedInterval) {
+    DynamicMaterialProperty.prototype.addCzmlInterval = function(czmlInterval, constrainedInterval) {
         var iso8601Interval = czmlInterval.interval, property, material;
         if (typeof iso8601Interval === 'undefined') {
             iso8601Interval = Iso8601.MAXIMUM_INTERVAL.clone();
@@ -99,7 +95,7 @@ define([
 
         //We could handle the data, add it to the property.
         if (foundMaterial) {
-            existingInterval.data = material.processCzmlPacket(czmlInterval, existingInterval.data, constrainedInterval);
+            existingInterval.data = material.processCzmlPacket(czmlInterval, existingInterval.data);
         }
     };
 
