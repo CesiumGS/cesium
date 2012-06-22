@@ -25,18 +25,18 @@ require({
     cb.dayTileProvider = bing;
     cb.nightImageSource = '../../Images/land_ocean_ice_lights_2048.jpg';
     cb.specularMapSource = '../../Images/earthspec1k.jpg';
-    if (scene.getContext().getMaximumTextureSize() > 2048) {
-        cb.cloudsMapSource = '../../Images/earthcloudmaptrans.jpg';
-        cb.bumpMapSource = '../../Images/earthbump1k.jpg';
-    }
-    cb.showSkyAtmosphere = true;
-    cb.showGroundAtmosphere = true;
+    //if (scene.getContext().getMaximumTextureSize() > 2048) {
+    //    cb.cloudsMapSource = '../../Images/earthcloudmaptrans.jpg';
+    //    cb.bumpMapSource = '../../Images/earthbump1k.jpg';
+    //}
+    //cb.showSkyAtmosphere = true;
+    //cb.showGroundAtmosphere = true;
     primitives.setCentralBody(cb);
 
     scene.getCamera().frustum.near = 1.0;
+    scene.getCamera().getControllers().addCentralBody();
 
-    scene.getCamera().getControllers().addSpindle();
-    scene.getCamera().getControllers().addFreeLook();
+    var transitioner = new Cesium.SceneTransitioner(scene, ellipsoid);
 
     ///////////////////////////////////////////////////////////////////////////
     // Add examples from the Sandbox here:
@@ -58,12 +58,17 @@ require({
     ///////////////////////////////////////////////////////////////////////////
     // Example keyboard and Mouse handlers
 
-    var handler = new Cesium.EventHandler(canvas);
+    var handler = new Cesium.EventHandler(document);
 
     handler.setKeyAction(function() {
-        /* ... */
-        // Handler for key press
+        transitioner.morphTo2D();
     }, '1');
+    handler.setKeyAction(function() {
+        transitioner.morphToColumbusView();
+    }, '2');
+    handler.setKeyAction(function() {
+        transitioner.morphTo3D();
+    }, '3');
 
     handler.setMouseAction(function(movement) {
         /* ... */

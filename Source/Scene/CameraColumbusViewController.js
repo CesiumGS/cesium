@@ -1,10 +1,10 @@
 /*global define*/
 define([
         '../Core/destroyObject',
-        '../Core/FAR',
         '../Core/Ellipsoid',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/Math',
         '../Core/Matrix4',
         './CameraEventHandler',
         './CameraEventType',
@@ -13,10 +13,10 @@ define([
         './CameraHelpers'
     ], function(
         destroyObject,
-        FAR,
         Ellipsoid,
         Cartesian3,
         Cartesian4,
+        CesiumMath,
         Matrix4,
         CameraEventHandler,
         CameraEventType,
@@ -32,9 +32,10 @@ define([
      * @name CameraColumbusViewController
      * @constructor
      */
-    function CameraColumbusViewController(canvas, camera) {
+    function CameraColumbusViewController(canvas, camera, ellipsoid) {
         this._canvas = canvas;
         this._camera = camera;
+        this._ellipsoid = ellipsoid || Ellipsoid.WGS84;
 
         /**
          * A parameter in the range <code>[0, 1]</code> used to determine how long
@@ -45,10 +46,6 @@ define([
          */
         this.inertiaTranslate = 0.9;
 
-        this._translateFactor = 1.0;
-        this._minimumZoomRate = 20.0;
-        this._maximumZoomRate = FAR;
-
         this._translateHandler = new CameraEventHandler(canvas, CameraEventType.LEFT_DRAG);
 
         this._spindleController = new CameraSpindleController(canvas, camera, Ellipsoid.UNIT_SPHERE);
@@ -56,12 +53,13 @@ define([
         // TODO: Shouldn't change private variables like this, need to be able to change event modifiers
         //       on controllers.
         this._spindleController._spinHandler = this._spindleController._spinHandler && this._spindleController._spinHandler.destroy();
+        this._spindleController._spinHandler = new CameraEventHandler(canvas, CameraEventType.MIDDLE_DRAG);
+        this._spindleController.mouseConstrainedZAxis = true;
 
         this._freeLookController = new CameraFreeLookController(canvas, camera);
         this._freeLookController.horizontalRotationAxis = Cartesian3.UNIT_Z;
 
         this._transform = this._camera.transform.clone();
-
         this._lastInertiaTranslateMovement = undefined;
     }
 
@@ -83,6 +81,8 @@ define([
         this._spindleController.update();
         this._freeLookController.update();
 
+        this._updateReferenceFrame();
+
         return true;
     };
 
@@ -99,8 +99,6 @@ define([
 
         var diff = startPlanePos.subtract(endPlanePos);
         camera.position = camera.position.add(diff);
-
-        this._updateReferenceFrame();
     };
 
     CameraColumbusViewController.prototype._updateReferenceFrame = function() {
@@ -118,6 +116,21 @@ define([
         var cameraPosition = new Cartesian4(camera.position.x, camera.position.y, camera.position.z, 1.0);
         var positionWC = camera.transform.multiplyWithVector(cameraPosition);
         camera.transform = this._transform.clone();
+
+        var maxX = this._ellipsoid.getRadii().x * Math.PI;
+        if (centerWC.y > maxX) {
+            positionWC.y -= centerWC.y - maxX;
+        } else if (centerWC.y < -maxX) {
+            positionWC.y += -maxX - centerWC.y;
+        }
+
+        var maxY = this._ellipsoid.getRadii().z * CesiumMath.PI_OVER_TWO;
+        if (centerWC.z > maxY) {
+            positionWC.z -= centerWC.z - maxY;
+        } else if (centerWC.z < -maxY) {
+            positionWC.z += -maxY - centerWC.z;
+        }
+
         camera.position = camera.getInverseTransform().multiplyWithVector(positionWC).getXYZ();
     };
 

@@ -7,9 +7,12 @@ define([
         '../Core/Quaternion',
         '../Core/Ellipsoid',
         '../Core/Cartesian2',
+        '../Core/Cartesian3',
         './CameraEventHandler',
         './CameraEventType',
-        './CameraHelpers'
+        './CameraHelpers',
+        './AnimationCollection',
+        '../ThirdParty/Tween'
     ], function(
         DeveloperError,
         destroyObject,
@@ -18,9 +21,12 @@ define([
         Quaternion,
         Ellipsoid,
         Cartesian2,
+        Cartesian3,
         CameraEventHandler,
         CameraEventType,
-        CameraHelpers) {
+        CameraHelpers,
+        AnimationCollection,
+        Tween) {
     "use strict";
 
     var move = CameraHelpers.move;
@@ -77,9 +83,26 @@ define([
         this._zoomWheel = new CameraEventHandler(canvas, CameraEventType.WHEEL);
         this._twistHandler = new CameraEventHandler(canvas, CameraEventType.MIDDLE_DRAG);
 
-        this._lastInertiaTranslateMovement = undefined;
         this._lastInertiaZoomMovement = undefined;
+        this._lastInertiaTranslateMovement = undefined;
         this._lastInertiaWheelZoomMovement = undefined;
+
+        this._frustum = this._camera.frustum.clone();
+        this._animationCollection = new AnimationCollection();
+        this._zoomAnimation = undefined;
+        this._translateAnimation = undefined;
+
+        var maxZoomOut = 2.0;
+        this._frustum.right *= maxZoomOut;
+        this._frustum.left *= maxZoomOut;
+        this._frustum.top *= maxZoomOut;
+        this._frustum.bottom *= maxZoomOut;
+
+        this._cameraMaxX = this._ellipsoid.getRadii().x * Math.PI;
+        this._cameraMaxY = this._ellipsoid.getRadii().y * CesiumMath.PI_OVER_TWO;
+
+        this._maxZoomFactor = 2.5;
+        this._maxTranslateFactor = 1.5;
     }
 
     /**
@@ -212,6 +235,13 @@ define([
 
         var newRight = frustum.right - moveRate;
         var newLeft = frustum.left + moveRate;
+
+        var maxRight = this._cameraMaxX * this._maxZoomFactor;
+        if (newRight > maxRight) {
+            newRight = maxRight;
+            newLeft = -newRight;
+        }
+
         if (newRight > newLeft) {
             var ratio = frustum.top / frustum.right;
             frustum.right = newRight;
@@ -234,6 +264,68 @@ define([
         this.zoomIn(-rate || -this._zoomRate);
     };
 
+    Camera2DController.prototype._addCorrectZoomAnimation = function() {
+        var camera = this._camera;
+        var frustum = camera.frustum;
+        var top = frustum.top;
+        var bottom = frustum.bottom;
+        var right = frustum.right;
+        var left = frustum.left;
+
+        var startFrustum = this._frustum;
+
+        var update2D = function(value) {
+            camera.frustum.top = CesiumMath.lerp(top, startFrustum.top, value.time);
+            camera.frustum.bottom = CesiumMath.lerp(bottom, startFrustum.bottom, value.time);
+            camera.frustum.right = CesiumMath.lerp(right, startFrustum.right, value.time);
+            camera.frustum.left = CesiumMath.lerp(left, startFrustum.left, value.time);
+        };
+
+        this._zoomAnimation = this._animationCollection.add({
+            easingFunction : Tween.Easing.Exponential.EaseOut,
+            startValue : {
+                time : 0.0
+            },
+            stopValue : {
+                time : 1.0
+            },
+            onUpdate : update2D
+        });
+    };
+
+    Camera2DController.prototype._addCorrectTranslateAnimation = function() {
+        var camera = this._camera;
+        var currentPosition = camera.position;
+        var translatedPosition = currentPosition.clone();
+
+        if (translatedPosition.x > this._cameraMaxX) {
+            translatedPosition.x = this._cameraMaxX;
+        } else if (translatedPosition.x < -this._cameraMaxX) {
+            translatedPosition.x = -this._cameraMaxX;
+        }
+
+        if (translatedPosition.y > this._cameraMaxY) {
+            translatedPosition.y = this._cameraMaxY;
+        } else if (translatedPosition.y < -this._cameraMaxY) {
+            translatedPosition.y = -this._cameraMaxY;
+        }
+
+        var update2D = function(value) {
+            camera.position = currentPosition.lerp(translatedPosition, value.time);
+        };
+
+        this._translateAnimation = this._animationCollection.add({
+            easingFunction : Tween.Easing.Exponential.EaseOut,
+            startValue : {
+                time : 0.0
+            },
+            stopValue : {
+                time : 1.0
+            },
+            onUpdate : update2D
+        });
+    };
+
     /**
      * @private
      */
@@ -244,6 +336,10 @@ define([
         var translating = translate.isMoving() && translate.getMovement();
         var rightZooming = rightZoom.isMoving();
         var wheelZooming = wheelZoom.isMoving();
+
+        if (translate.isButtonDown() || rightZoom.isButtonDown() || wheelZooming) {
+            this._animationCollection.removeAll();
+        }
 
         if (translating) {
             this._translate(translate.getMovement());
@@ -271,6 +367,25 @@ define([
             this._twist(this._twistHandler.getMovement());
         }
 
+        if (!translate.isButtonDown() && !rightZoom.isButtonDown()) {
+            var animations = Tween.getAll();
+
+            if (this._camera.frustum.right > this._frustum.right &&
+                !this._lastInertiaZoomMovement && animations.indexOf(this._zoomAnimation) === -1) {
+                this._addCorrectZoomAnimation();
+            }
+
+            var position = this._camera.position;
+            var translateX = position.x < -this._cameraMaxX || position.x > this._cameraMaxX;
+            var translateY = position.y < -this._cameraMaxY || position.y > this._cameraMaxY;
+            if ((translateX || translateY) && !this._lastInertiaTranslateMovement &&
+                    animations.indexOf(this._translateAnimation) === -1) {
+                this._addCorrectTranslateAnimation();
+            }
+        }
+
+        this._animationCollection.update();
+
         return true;
     };
 
@@ -297,12 +412,40 @@ define([
        end.y = (2.0 / height) * (height - movement.endPosition.y) - 1.0;
        end.y = (end.y * (frustum.top - frustum.bottom) + frustum.top + frustum.bottom) * 0.5;
 
+       var camera = this._camera;
+       var right = camera.right;
+       var up = camera.up;
+       var position;
+       var newPosition;
+
        var distance = start.subtract(end);
        if (distance.x !== 0) {
-           this.moveRight(distance.x);
+           position = camera.position;
+           newPosition = position.add(right.multiplyWithScalar(distance.x));
+
+           var maxX = this._cameraMaxX * this._maxTranslateFactor;
+           if (newPosition.x > maxX) {
+               newPosition.x = maxX;
+           }
+           if (newPosition.x < -maxX) {
+               newPosition.x = -maxX;
+           }
+
+           camera.position = newPosition;
        }
        if (distance.y !== 0) {
-           this.moveUp(distance.y);
+           position = camera.position;
+           newPosition = position.add(up.multiplyWithScalar(distance.y));
+
+           var maxY = this._cameraMaxY * this._maxTranslateFactor;
+           if (newPosition.y > maxY) {
+               newPosition.y = maxY;
+           }
+           if (newPosition.y < -maxY) {
+               newPosition.y = -maxY;
+           }
+
+           camera.position = newPosition;
        }
    };
 

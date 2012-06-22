@@ -39,13 +39,9 @@ define([
         var ts = handler.getButtonPressTime();
         var tr = handler.getButtonReleaseTime();
         var threshold = ts && tr && ts.getSecondsDifference(tr);
-        if (ts && tr && threshold < inertiaMaxClickTimeThreshold) {
-            var now = new JulianDate();
-            var fromNow = tr.getSecondsDifference(now);
-            if (fromNow > inertiaMaxTimeThreshold) {
-                return;
-            }
-
+        var now = new JulianDate();
+        var fromNow = tr && tr.getSecondsDifference(now);
+        if (ts && tr && threshold < inertiaMaxClickTimeThreshold && fromNow <= inertiaMaxTimeThreshold) {
             var d = decay(fromNow, decayCoef);
 
             if (!object[lastMovementName]) {
@@ -81,6 +77,8 @@ define([
             if (!handler.isButtonDown()) {
                 action.apply(object, [object[lastMovementName]]);
             }
+        } else {
+            object[lastMovementName] = undefined;
         }
     }
 
