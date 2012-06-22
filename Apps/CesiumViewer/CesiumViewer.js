@@ -144,13 +144,16 @@ function(dom,
                             lastCameraCenteredObjectID = cameraCenteredObjectID;
                             var camera = widget.scene.getCamera();
                             camera.position = camera.position.normalize().multiplyWithScalar(5000.0);
+
+                            var controllers = camera.getControllers();
+                            controllers.removeAll();
+                            this.spindleController = controllers.addSpindle();
                         }
 
-                        var transform = Transforms.eastNorthUpToFixedFrame(cameraCenteredObjectIDPosition, widget.ellipsoid);
-                        var controllers = widget.scene.getCamera().getControllers();
-                        controllers.removeAll();
-                        var spindleController = controllers.addSpindle();
-                        spindleController.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
+                        if (typeof this.spindleController !== 'undefined' && !this.spindleController.isDestroyed()) {
+                            var transform = Transforms.eastNorthUpToFixedFrame(cameraCenteredObjectIDPosition, widget.ellipsoid);
+                            this.spindleController.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
+                        }
                     }
                 }
             }
