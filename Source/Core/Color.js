@@ -1,5 +1,5 @@
 /*global define*/
-define(function() {
+define(['./defaultValue'], function(defaultValue) {
     "use strict";
 
     /**
@@ -8,16 +8,23 @@ define(function() {
      *
      * @constructor
      * @name Color
+     *
+     * @param {Number} [red=0.0] The red value, from 0.0 to 1.0.
+     * @param {Number} [green=0.0] The red value, from 0.0 to 1.0.
+     * @param {Number} [blue=0.0] The red value, from 0.0 to 1.0.
+     * @param {Number} [alpha=1.0] The red value, from 0.0 to 1.0.
      */
     function Color(red, green, blue, alpha) {
-        this.red = red;
-        this.green = green;
-        this.blue = blue;
-        this.alpha = alpha;
+        this.red = defaultValue(red, 0.0);
+        this.green = defaultValue(green, 0.0);
+        this.blue = defaultValue(blue, 0.0);
+        this.alpha = defaultValue(alpha, 1.0);
     }
 
     /**
      * Returns a string containing a CSS color value for this color.
+     *
+     * @see <a href="http://www.w3.org/TR/css3-color/#rgba-color">CSS RGBA color values</a>
      */
     Color.prototype.toCSSColor = function() {
         var r = this.red * 255 | 0;

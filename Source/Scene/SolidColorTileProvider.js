@@ -1,11 +1,15 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/DeveloperError',
+        '../Core/Color',
         '../Core/Extent',
         '../Core/Math',
         './Projections'
     ], function(
+        defaultValue,
         DeveloperError,
+        Color,
         Extent,
         CesiumMath,
         Projections) {
@@ -18,41 +22,17 @@ define([
      * @name SolidColorTileProvider
      * @constructor
      *
-     * @param {Number} [maxZoom=23] The maximum zoom level to generate tiles.
+     * @param {Number} [maxLevel=23] The maximum level to generate tiles for.
      *
      * @see SingleTileProvider
      * @see BingMapsTileProvider
      * @see OpenStreetMapTileProvider
      * @see CompositeTileProvider
      */
-    function SolidColorTileProvider(maxZoom) {
-        var width = 256;
-        var height = 256;
-        maxZoom = maxZoom || 23;
+    function SolidColorTileProvider(maxLevel) {
+        maxLevel = defaultValue(maxLevel, 23);
 
-        this._images = [];
-        for (var i = 0; i <= maxZoom; ++i) {
-            var color = { r : 0, g : 0, b : 0 };
-            var x = i / maxZoom;
-            if (x < 0.25) {
-                // blue to cyan
-                color.g = Math.floor(255.0 * 4.0 * x);
-                color.b = 255;
-            } else if (x < 0.5) {
-                // cyan to green
-                color.g = 255;
-                color.b = Math.floor(256.0 - 4.0 * x);
-            } else if (x < 0.75) {
-                // green to yellow
-                color.r = Math.floor(255.0 * 4.0 * x - 255.0 * 2.0);
-                color.g = 255;
-            } else {
-                // yellow to red
-                color.r = 255;
-                color.g = Math.floor(255.0 * 4.0 * (1.0 - x));
-            }
-            this._images.push(this._createImage(color, width, height));
-        }
+        this._canvases = [];
 
         /**
          * The cartographic extent of the base tile, with north, south, east and
@@ -60,33 +40,28 @@ define([
          *
          * @type {Extent}
          */
-        this.maxExtent = new Extent(
-            -CesiumMath.PI,
-            -CesiumMath.PI_OVER_TWO,
-            CesiumMath.PI,
-            CesiumMath.PI_OVER_TWO
-        );
+        this.maxExtent = Extent.MAX_VALUE;
 
         /**
          * The width of every image loaded.
          *
          * @type {Number}
          */
-        this.tileWidth = width;
+        this.tileWidth = 256;
 
         /**
          * The height of every image loaded.
          *
          * @type {Number}
          */
-        this.tileHeight = height;
+        this.tileHeight = 256;
 
         /**
          * The maximum zoom level that can be requested.
          *
          * @type {Number}
          */
-        this.zoomMax = maxZoom;
+        this.zoomMax = maxLevel;
 
         /**
          * The minimum zoom level that can be requested.
@@ -111,39 +86,67 @@ define([
         this.ready = true;
     }
 
-    SolidColorTileProvider.prototype._createImage = function(color, width, height) {
-        var canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-
-        var context = canvas.getContext('2d');
-        context.fillStyle = 'rgba(' + color.r + ', ' + color.g + ', ' + color.b + ', 1.0)';
-        context.fillRect(0, 0, width, height);
-
-        return canvas;
+    /**
+     * Determine whether a the image for a given tile is valid and should be displayed.
+     *
+     * @memberof SolidColorTileProvider
+     *
+     * @param tile The tile to check.
+     *
+     * @return {Boolean|Promise} Either a boolean, or a Promise for a boolean if the
+     *                           process of checking is asynchronous.
+     */
+    SolidColorTileProvider.prototype.isTileAvailable = function(tile) {
+        return true;
     };
 
     /**
-     * Loads the image for <code>tile</code>.
+     * Build a URL to retrieve the image for a tile.
      *
      * @memberof SolidColorTileProvider
      *
      * @param {Tile} tile The tile to load the image for.
-     * @param {Function} onload A function that will be called when the image is finished loading.
-     * @param {Function} onerror A function that will be called if there is an error loading the image.
      *
-     * @exception {DeveloperError} <code>tile.zoom</code> must be in [<code>zoomMin</code>, <code>zoomMax</code>].
+     * @return {String|Promise} Either a string containing the URL, or a Promise for a string
+     *                          if the URL needs to be built asynchronously.
      */
-    SolidColorTileProvider.prototype.loadTileImage = function(tile, onload, onerror) {
-        if (tile.zoom < this.zoomMin || tile.zoom > this.zoomMax) {
-            throw new DeveloperError('tile.zoom must be in [zoomMin, zoomMax].');
+    SolidColorTileProvider.prototype.getTileImageUrl = function(tile) {
+        var level = tile.zoom;
+        var canvas = this._canvases[level];
+        if (typeof canvas === 'undefined') {
+            canvas = document.createElement('canvas');
+            canvas.width = this.tileWidth;
+            canvas.height = this.tileHeight;
+
+            var color = new Color();
+
+            var x = level / this.zoomMax;
+            if (x < 0.25) {
+                // blue to cyan
+                color.green = 4.0 * x;
+                color.blue = 255;
+            } else if (x < 0.5) {
+                // cyan to green
+                color.green = 255;
+                color.blue = 2.0 - 4.0 * x;
+            } else if (x < 0.75) {
+                // green to yellow
+                color.red = 4.0 * x - 2.0;
+                color.green = 255;
+            } else {
+                // yellow to red
+                color.red = 255;
+                color.green = 4.0 * (1.0 - x);
+            }
+
+            var context = canvas.getContext('2d');
+            context.fillStyle = color.toCSSColor();
+            context.fillRect(0, 0, canvas.width, canvas.height);
+
+            this._canvases[level] = canvas;
         }
 
-        if (typeof onload === 'function') {
-            onload();
-        }
-
-        return this._images[tile.zoom];
+        return canvas.toDataURL();
     };
 
     return SolidColorTileProvider;

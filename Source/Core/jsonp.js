@@ -1,5 +1,12 @@
 /*global define*/
-define(['./DeveloperError'], function(DeveloperError) {
+define([
+        './defaultValue',
+        './DeveloperError',
+        '../ThirdParty/when'
+    ], function(
+        defaultValue,
+        DeveloperError,
+        when) {
     "use strict";
 
     function pushQueryParameter(array, name, value) {
@@ -10,21 +17,20 @@ define(['./DeveloperError'], function(DeveloperError) {
      * Requests a resource using JSONP.
      *
      * @param {String} url The URL to request.
-     * @param {Function} callback The callback function to call, passing the requested resource as the single parameter.
      * @param {Object} [options.parameters] Any extra query parameters to append to the URL.
      * @param {String} [options.callbackParameterName='callback'] The callback parameter name that the server expects.
      * @param {Object} [options.proxy] A proxy to use for the request. This object is expected to have a getURL function which returns the proxied URL, if needed.
+     *
+     * @returns {Promise} a promise that will resolve to the requested data when loaded.
      */
-    function jsonp(url, callback, options) {
+    function jsonp(url, options) {
         if (typeof url === 'undefined') {
             throw new DeveloperError('url is required.');
         }
 
-        if (typeof callback === 'undefined') {
-            throw new DeveloperError('callback is required.');
-        }
+        options = defaultValue(options, {});
 
-        options = typeof options !== 'undefined' ? options : {};
+        var deferred = when.defer();
 
         //generate a unique function name
         var functionName;
@@ -34,7 +40,7 @@ define(['./DeveloperError'], function(DeveloperError) {
 
         //assign a function with that name in the global scope
         window[functionName] = function(data) {
-            callback(data);
+            deferred.resolve(data);
 
             try {
                 delete window[functionName];
@@ -43,16 +49,14 @@ define(['./DeveloperError'], function(DeveloperError) {
             }
         };
 
-        var callbackParameterName = typeof options.callbackParameterName !== 'undefined' ? options.callbackParameterName : 'callback';
+        var callbackParameterName = defaultValue(options.callbackParameterName, 'callback');
         var queryParts = [];
         pushQueryParameter(queryParts, callbackParameterName, functionName);
 
-        var parameters = options.parameters;
-        if (typeof parameters !== 'undefined') {
-            for ( var name in parameters) {
-                if (parameters.hasOwnProperty(name)) {
-                    pushQueryParameter(queryParts, name, parameters[name]);
-                }
+        var parameters = defaultValue(options.parameters, {});
+        for ( var name in parameters) {
+            if (parameters.hasOwnProperty(name)) {
+                pushQueryParameter(queryParts, name, parameters[name]);
             }
         }
 
@@ -82,6 +86,8 @@ define(['./DeveloperError'], function(DeveloperError) {
         };
 
         head.appendChild(script);
+
+        return deferred.promise;
     }
 
     return jsonp;

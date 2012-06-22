@@ -28,7 +28,8 @@ define([
         './Tile',
         './TileState',
         './Projections',
-        './SceneMode'
+        './SceneMode',
+        '../ThirdParty/when'
     ], function(
         combine,
         defaultValue,
@@ -58,7 +59,8 @@ define([
         Tile,
         TileState,
         Projections,
-        SceneMode) {
+        SceneMode,
+        when) {
     "use strict";
 
     function TileLoadList() {
@@ -153,13 +155,13 @@ define([
         this._maxExtent = description.maxExtent;
 
         // reusable stack used during update for tile tree traversal
-        var tileStack = this._tileStack = [];
+        this._tileStack = [];
 
         // reusable array of tile built by update for rendering
         this._tilesToRender = [];
 
         // a doubly linked list of tiles that need to be loaded, maintained in priority order
-        var tileLoadList = this._tileLoadList = new TileLoadList();
+        this._tileLoadList = new TileLoadList();
 
         this._minTileDistance = undefined;
         this._preloadZoomLimit = 1;
@@ -201,40 +203,6 @@ define([
          * @type {Number}
          */
         this.pixelError2D = 2.0;
-
-        //preload tiles
-        if (tileProvider.ready) {
-
-            var maxExtent = defaultValue(description.maxExtent, tileProvider.maxExtent);
-            maxExtent = defaultValue(maxExtent, Extent.MAX_VALUE);
-
-            this._maxExtent = maxExtent;
-
-            var rootTile = this._rootTile = new Tile({
-                extent : maxExtent,
-                zoom : 0,
-                ellipsoid : centralBody.getEllipsoid()
-            });
-
-            var zoomLimit = Math.max(Math.min(this._preloadZoomLimit, tileProvider.zoomMax), tileProvider.zoomMin);
-
-            tileStack.push(rootTile);
-            while (tileStack.length > 0) {
-                var tile = tileStack.pop();
-
-                if (tile.zoom <= zoomLimit) {
-                    tileLoadList.append(tile);
-                    loadImageForTile(this, tile);
-                }
-
-                if (tile.zoom < zoomLimit) {
-                    var children = tile.getChildren();
-                    for ( var i = 0, len = children.length; i < len; i++) {
-                        tileStack.push(children[i]);
-                    }
-                }
-        }
-        }
     }
 
     /**
@@ -244,26 +212,26 @@ define([
         return this._tileProvider;
     };
 
-    var activeTileImageRequests = 0;
+    var anchor;
+    function getHostname(url) {
+        if (typeof anchor === 'undefined') {
+            anchor = document.createElement('a');
+        }
+        anchor.href = url;
+        return anchor.hostname;
+    }
+
+    var activeTileImageRequests = {};
 
     function loadImageForTile(layer, tile) {
-        if (!layer._tileProvider.ready) {
-            return;
-        }
         if (!tileNeedsImageLoad(layer, tile)) {
             return;
         }
 
-        if (activeTileImageRequests >= 10) {
-            //cap image requests globally, because the browser itself is capped, and we have no way to cancel
-            //an image load once it starts, but we need to be able to reorder pending image requests
-            return;
-        }
+        var tileProvider = layer._tileProvider;
 
         // start loading tile
         tile.state = TileState.IMAGE_LOADING;
-
-        var tileProvider = layer._tileProvider;
 
         if (tileProvider.zoomMin !== 0 && tile.zoom === 0) {
             // Some tile servers, like Bing, don't have a base image for the entire central body.
@@ -282,36 +250,74 @@ define([
             return;
         }
 
-        activeTileImageRequests++;
+        var isAvailable = tileProvider.isTileAvailable(tile);
+        var image = when(tileProvider.getTileImageUrl(tile), function(imageUrl) {
+            var isDataUri = /^data:/.test(imageUrl);
 
-        var onload = function() {
+            var image = new Image();
+
+            if (!isDataUri) {
+                var hostname = getHostname(imageUrl);
+                var activeRequestsForHostname = defaultValue(activeTileImageRequests[hostname], 0);
+
+                //cap image requests per hostname, because the browser itself is capped,
+                //and we have no way to cancel an image load once it starts, but we need
+                //to be able to reorder pending image requests
+                if (activeRequestsForHostname > 6) {
+                    return undefined;
+                }
+
+                activeTileImageRequests[hostname] = activeRequestsForHostname + 1;
+                image.hostname = hostname;
+
+                image.crossOrigin = '';
+            }
+
+            var deferred = when.defer();
+            image.onload = function() {
+                deferred.resolve(image);
+            };
+            image.onerror = function() {
+                deferred.reject();
+            };
+            image.src = imageUrl;
+
+            return deferred.promise;
+        });
+
+        when.all([isAvailable, image], function(values) {
+            var isAvailable = values[0];
+            if (!isAvailable) {
+                tile.state = TileState.IMAGE_INVALID;
+                tile._image = undefined;
+                return;
+            }
+            var image = values[1];
+
+            if (typeof image === 'undefined') {
+                return;
+            }
+
+            activeTileImageRequests[image.hostname]--;
+
             tile._failCount = 0;
             layer._tileFailCount = 0;
             layer._lastFailedTime = 0;
 
-            tile._width = tile._image.width;
-            tile._height = tile._image.height;
-
             tile.state = TileState.REPROJECTING;
-            activeTileImageRequests--;
-        };
 
-        var onerror = function() {
+            tile._image = image;
+            tile._width = image.width;
+            tile._height = image.height;
+        }, function() {
             tile._failCount++;
             layer._tileFailCount++;
             layer._lastFailedTime = Date.now();
 
             tile.state = TileState.IMAGE_FAILED;
-            activeTileImageRequests--;
-        };
-
-        var oninvalid = function() {
-            tile.state = TileState.IMAGE_INVALID;
             tile._image = undefined;
-            activeTileImageRequests--;
-        };
+        });
 
-        tile._image = tileProvider.loadTileImage(tile, onload, onerror, oninvalid);
         tile._width = tileProvider.tileWidth;
         tile._height = tileProvider.tileHeight;
 
@@ -511,7 +517,8 @@ define([
 
             this._maxExtent = maxExtent;
             this._rootTile = new Tile({
-                extent : maxExtent,
+                x : 0,
+                y : 0,
                 zoom : 0,
                 ellipsoid : this._centralBody.getEllipsoid()
             });

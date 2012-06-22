@@ -108,7 +108,12 @@ define([
 
         // Grab the details of this MapServer.
         var that = this;
-        jsonp(this.url, function(data) {
+        jsonp(this.url, {
+            parameters : {
+                f : 'json'
+            },
+            proxy : this._proxy
+        }).then(function(data) {
             // Grab tile details.
             that.tileWidth = data.tileInfo.rows;
             that.tileHeight = data.tileInfo.cols;
@@ -145,55 +150,45 @@ define([
             context.fillText(credit, 0, 0);
 
             that._logo = canvas;
-            that._logoLoaded = true;
-
-            that.ready = typeof that.tileWidth !== 'undefined' &&
-                         typeof that.tileHeight !== 'undefined' &&
-                         typeof that.projection !== 'undefined' &&
-                         typeof that.maxExtent !== 'undefined' &&
-                         typeof that.zoomMin !== 'undefined' &&
-                         typeof that.zoomMax !== 'undefined';
-        }, {
-            parameters : {
-                f : 'json'
-            },
-            proxy : this._proxy
+            that.ready = true;
         });
 
         this._logo = undefined;
-        this._logoLoaded = false;
     }
 
     /**
-     * Loads the image for <code>tile</code>.
+     * Determine whether a the image for a given tile is valid and should be displayed.
+     *
+     * @memberof ArcGISMapServerTileProvider
+     *
+     * @param tile The tile to check.
+     *
+     * @return {Boolean|Promise} Either a boolean, or a Promise for a boolean if the
+     *                           process of checking is asynchronous.
+     */
+    ArcGISMapServerTileProvider.prototype.isTileAvailable = function(tile) {
+        //TODO: any way to tell if a tile says 'Map data not yet available'?
+        return true;
+    };
+
+    /**
+     * Build a URL to retrieve the image for a tile.
      *
      * @memberof ArcGISMapServerTileProvider
      *
      * @param {Tile} tile The tile to load the image for.
-     * @param {Function} onload A function that will be called when the image is finished loading.
-     * @param {Function} onerror A function that will be called if there is an error loading the image.
      *
-     * @exception {DeveloperError} <code>tile.zoom</code> is less than <code>zoomMin</code>
-     * or greater than <code>zoomMax</code>.
+     * @return {String|Promise} Either a string containing the URL, or a Promise for a string
+     *                          if the URL needs to be built asynchronously.
      */
-    ArcGISMapServerTileProvider.prototype.loadTileImage = function(tile, onload, onerror) {
-        if (tile.zoom < this.zoomMin || tile.zoom > this.zoomMax) {
-            throw new DeveloperError('tile.zoom must be between in [zoomMin, zoomMax].');
-        }
-
-        var image = new Image();
-        image.onload = onload;
-        image.onerror = onerror;
-        image.crossOrigin = '';
-
+    ArcGISMapServerTileProvider.prototype.getTileImageUrl = function(tile) {
         var url = this.url + '/tile/' + tile.zoom + '/' + tile.y + '/' + tile.x;
+
         if (typeof this._proxy !== 'undefined') {
             url = this._proxy.getURL(url);
         }
 
-        image.src = url;
-
-        return image;
+        return url;
     };
 
     /**
@@ -201,7 +196,7 @@ define([
      * @memberof ArcGISMapServerTileProvider
      */
     ArcGISMapServerTileProvider.prototype.getLogo = function() {
-        return this._logoLoaded ? this._logo : undefined;
+        return this._logo;
     };
 
     return ArcGISMapServerTileProvider;

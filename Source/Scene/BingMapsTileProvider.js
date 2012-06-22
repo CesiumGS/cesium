@@ -76,7 +76,8 @@ define([
         '../Core/Math',
         '../Core/jsonp',
         './BingMapsStyle',
-        './Projections'
+        './Projections',
+        '../ThirdParty/when'
     ], function(
         defaultValue,
         DeveloperError,
@@ -84,7 +85,8 @@ define([
         CesiumMath,
         jsonp,
         BingMapsStyle,
-        Projections) {
+        Projections,
+        when) {
     "use strict";
 
     /**
@@ -202,28 +204,27 @@ define([
          */
         this.ready = false;
 
-        this._imageUrlTemplate = undefined;
         this._imageUrlSubdomains = undefined;
-        this._imageUrlSubdomainIndex = 0;
 
         //tiles only need BasicMetadata which is a smaller result
         this._tileMetadataUrl = 'http://' + server + '/REST/v1/Imagery/BasicMetadata/' + mapStyle.imagerySetName + '?key=' + key;
 
         var metadataUrl = 'http://' + server + '/REST/v1/Imagery/Metadata/' + mapStyle.imagerySetName + '?key=' + key;
         var that = this;
-        jsonp(metadataUrl, function(data) {
+        this._imageUrlTemplate = when(jsonp(metadataUrl, {
+            callbackParameterName : 'jsonp',
+            proxy : this._proxy
+        }), function(data) {
             var resource = data.resourceSets[0].resources[0];
 
-            that._imageUrlSubdomains = resource.imageUrlSubdomains;
-            that._imageUrlTemplate = resource.imageUrl.replace('{culture}', '');
             that.tileWidth = resource.imageWidth;
             that.tileHeight = resource.imageHeight;
             that.zoomMin = resource.zoomMin;
             that.zoomMax = resource.zoomMax;
+            that._imageUrlSubdomains = resource.imageUrlSubdomains;
+            that._imageUrlTemplate = resource.imageUrl.replace('{culture}', '');
             that.ready = true;
-        }, {
-            callbackParameterName : 'jsonp',
-            proxy : this._proxy
+            return that._imageUrlTemplate;
         });
     }
 
@@ -291,84 +292,64 @@ define([
     };
 
     /**
-     * Loads the image for <code>tile</code>.
+     * Determine whether a the image for a given tile is valid and should be displayed.
      *
      * @memberof BingMapsTileProvider
      *
-     * @param {Tile} tile The tile to load the image for.
-     * @param {Function} onload A function that will be called when the image is finished loading.
-     * @param {Function} onerror A function that will be called if there is an error loading the image.
-     * @param {Function} oninvalid A function that will be called if the image loaded is not valid.
+     * @param tile The tile to check.
      *
-     * @exception {DeveloperError} <code>tile.zoom</code> is less than <code>zoomMin</code>
-     * or greater than <code>zoomMax</code>.
+     * @return {Boolean|Promise} Either a boolean, or a Promise for a boolean if the
+     *                           process of checking is asynchronous.
      */
-    BingMapsTileProvider.prototype.loadTileImage = function(tile, onload, onerror, oninvalid) {
-        if (tile.zoom < this.zoomMin || tile.zoom > this.zoomMax) {
-            throw new DeveloperError('tile.zoom must be between in [zoomMin, zoomMax].');
-        }
-
+    BingMapsTileProvider.prototype.isTileAvailable = function(tile) {
         var lat = CesiumMath.toDegrees((tile.extent.north + tile.extent.south) * 0.5);
         var lon = CesiumMath.toDegrees((tile.extent.east + tile.extent.west) * 0.5);
-        var zoomResponse = false;
-        var validZoom = false;
-        var loaded = false;
 
-        jsonp(this._tileMetadataUrl, function(data) {
-            var resourceSet = data.resourceSets[0];
-            if (typeof resourceSet === 'undefined') {
-                if (typeof onerror === 'function') {
-                    onerror();
-                }
-                return;
-            }
-
-            var resource = resourceSet.resources[0];
-            if (resource.vintageStart && resource.vintageEnd) {
-                validZoom = true;
-                if (loaded && typeof onload === 'function') {
-                    onload();
-                }
-            } else if (typeof oninvalid === 'function') {
-                oninvalid();
-            }
-
-            zoomResponse = true;
-        }, {
+        return when(jsonp(this._tileMetadataUrl, {
             parameters : {
                 centerPoint : lat + ',' + lon,
                 zoomLevel : tile.zoom
             },
             callbackParameterName : 'jsonp',
             proxy : this._proxy
-        });
-
-        var image = new Image();
-        image.onload = function() {
-            if (zoomResponse && validZoom && typeof onload === 'function') {
-                onload();
+        }), function(data) {
+            var resourceSet = data.resourceSets[0];
+            if (typeof resourceSet === 'undefined') {
+                return false;
             }
-            loaded = true;
-        };
-        image.onerror = onerror;
-        image.crossOrigin = '';
 
+            var resource = resourceSet.resources[0];
+            return typeof resource.vintageStart !== 'undefined' && typeof resource.vintageEnd !== 'undefined';
+        });
+    };
+
+    /**
+     * Build a URL to retrieve the image for a tile.
+     *
+     * @memberof BingMapsTileProvider
+     *
+     * @param {Tile} tile The tile to load the image for.
+     *
+     * @return {String|Promise} Either a string containing the URL, or a Promise for a string
+     *                          if the URL needs to be built asynchronously.
+     */
+    BingMapsTileProvider.prototype.getTileImageUrl = function(tile) {
         var quadkey = BingMapsTileProvider.tileXYToQuadKey(tile.x, tile.y, tile.zoom);
-        var imageUrl = this._imageUrlTemplate.replace('{quadkey}', quadkey);
 
         var subdomains = this._imageUrlSubdomains;
-        var index = this._imageUrlSubdomainIndex++;
-        if (index >= subdomains.length) {
-            index = this._imageUrlSubdomainIndex = 0;
-        }
-        imageUrl = imageUrl.replace('{subdomain}', subdomains[index]);
+        var proxy = this._proxy;
+        return when(this._imageUrlTemplate, function(urlTemplate) {
+            var imageUrl = urlTemplate.replace('{quadkey}', quadkey);
 
-        if (typeof this._proxy !== 'undefined') {
-            imageUrl = this._proxy.getURL(imageUrl);
-        }
+            var index = (tile.x + tile.y) % subdomains.length;
+            imageUrl = imageUrl.replace('{subdomain}', subdomains[index]);
 
-        image.src = imageUrl;
-        return image;
+            if (typeof proxy !== 'undefined') {
+                imageUrl = proxy.getURL(imageUrl);
+            }
+
+            return imageUrl;
+        });
     };
 
     /**
