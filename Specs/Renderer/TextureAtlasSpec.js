@@ -965,6 +965,28 @@ defineSuite([
         expect(coordinates[5].height).toEqual(1.0 / atlasHeight);
     });
 
+    it('GUID changes when atlas is modified', function() {
+        atlas = context.createTextureAtlas();
+        var guid1 = atlas.getGUID();
+
+        atlas.addImage(greenImage);
+        var guid2 = atlas.getGUID();
+        expect(guid1).toNotEqual(guid2);
+
+        atlas.addImages([blueImage, greenImage]);
+        var guid3 = atlas.getGUID();
+        expect(guid2).toNotEqual(guid3);
+
+        atlas.addSubRegions(greenImage, [
+            { x:0.0, y:0.0, width:0.5, height:0.5 },
+            { x:0.0, y:0.5, width:0.5, height:0.5 },
+            { x:0.5, y:0.0, width:0.5, height:0.5 },
+            { x:0.5, y:0.5, width:0.5, height:0.5 }
+        ]);
+        var guid4 = atlas.getGUID();
+        expect(guid3).toNotEqual(guid4);
+    });
+
     it('throws without image', function() {
        expect(function() {
            atlas = context.createTextureAtlas();

@@ -104,7 +104,7 @@ define([
      */
     function BillboardCollection() {
         this._textureAtlas = undefined;
-        this._textureAtlasNumberOfImages = undefined;
+        this._textureAtlasGUID = undefined;
         this._destroyTextureAtlas = true;
         this._sp = undefined;
         this._rs = undefined;
@@ -918,9 +918,9 @@ define([
         var properties = this._propertiesChanged;
 
         var textureAtlasCoordinates = this._textureAtlas.getTextureCoordinates();
-        var numberOfImages = this._textureAtlas.getNumberOfImages();
-        var textureAtlasChanged = this._textureAtlasNumberOfImages !== numberOfImages;
-        this._textureAtlasNumberOfImages = numberOfImages;
+        var textureAtlasGUID = this._textureAtlas.getGUID();
+        var textureAtlasChanged = this._textureAtlasGUID !== textureAtlasGUID;
+        this._textureAtlasGUID = textureAtlasGUID;
 
         var vafWriters;
 

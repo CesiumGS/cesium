@@ -4,12 +4,14 @@ define([
         '../Core/destroyObject',
         '../Core/Cartesian2',
         '../Core/Rectangle',
+        '../Core/createGuid',
         './PixelFormat'
     ], function(
         DeveloperError,
         destroyObject,
         Cartesian2,
         Rectangle,
+        createGuid,
         PixelFormat) {
     "use strict";
 
@@ -28,7 +30,7 @@ define([
      * meaning new images can be added at any point in time.
      * Calling addImages is more space-efficient than calling addImage multiple times.
      * Texture coordinates are subject to change if the texture atlas resizes, so it is
-     * important to check {@link TextureAtlas#getNumberOfImages} before using old values.
+     * important to check {@link TextureAtlas#getGUID} before using old values.
      *
      * @name TextureAtlas
      *
@@ -79,6 +81,7 @@ define([
         this._pixelFormat = pixelFormat;
         this._borderWidthInPixels = borderWidthInPixels;
         this._textureCoordinates = [];
+        this._guid = createGuid();
 
         // Create initial texture and root.
         this._texture = this._context.createTexture2D({width : initialSize.x, height : initialSize.y, pixelFormat : this._pixelFormat});
@@ -240,7 +243,7 @@ define([
      * Adds an image to the texture atlas.
      * Calling addImages is more space-efficient than calling addImage multiple times.
      * Texture coordinates are subject to change if the texture atlas resizes, so it is
-     * important to check {@link TextureAtlas#getNumberOfImages} before using old values.
+     * important to check {@link TextureAtlas#getGUID} before using old values.
      *
      * @memberof TextureAtlas
      *
@@ -256,6 +259,9 @@ define([
     TextureAtlas.prototype.addImage = function(image) {
         var index = this.getNumberOfImages();
         this._addImage(image, index);
+
+        this._guid = createGuid();
+
         return index;
     };
 
@@ -263,7 +269,7 @@ define([
      * Adds an array of images to the texture atlas.
      * Calling addImages is more space-efficient than calling addImage multiple times.
      * Texture coordinates are subject to change if the texture atlas resizes, so it is
-     * important to check {@link TextureAtlas#getNumberOfImages} before using old values.
+     * important to check {@link TextureAtlas#getGUID} before using old values.
      *
      * @memberof TextureAtlas
      *
@@ -306,6 +312,8 @@ define([
             this._addImage(annotatedImage.image, annotatedImage.index);
         }
 
+        this._guid = createGuid();
+
         // Return index of the first added image.
         return oldNumberOfImages;
     };
@@ -341,6 +349,9 @@ define([
                 thisRegion.height / atlasHeight
             ));
         }
+
+        this._guid = createGuid();
+
         return numImages;
     };
 
@@ -385,7 +396,7 @@ define([
      * Returns the number of images in the texture atlas. This value increases
      * every time addImage or addImages is called.
      * Texture coordinates are subject to change if the texture atlas resizes, so it is
-     * important to check {@link TextureAtlas#getNumberOfImages} before using old values.
+     * important to check {@link TextureAtlas#getGUID} before using old values.
      *
      * @memberof TextureAtlas
      *
@@ -393,6 +404,20 @@ define([
      */
     TextureAtlas.prototype.getNumberOfImages = function() {
         return this._textureCoordinates.length;
+    };
+
+    /**
+     * Returns the atlas' globally unique identifier (GUID).
+     * The GUID changes whenever the texture atlas is modified.
+     * Classes that use a texture atlas should check if the GUID
+     * has changed before processing the atlas data.
+     *
+     * @memberof TextureAtlas
+     *
+     * @returns {String} The globally unique identifier (GUID).
+     */
+    TextureAtlas.prototype.getGUID = function() {
+        return this._guid;
     };
 
     /**
