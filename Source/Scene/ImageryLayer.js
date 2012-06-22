@@ -230,9 +230,6 @@ define([
 
         var tileProvider = layer._tileProvider;
 
-        // start loading tile
-        tile.state = TileState.IMAGE_LOADING;
-
         var isAvailable = tileProvider.isTileAvailable(tile);
         var image = when(tileProvider.getTileImageUrl(tile), function(imageUrl) {
             var isDataUri = /^data:/.test(imageUrl);
@@ -263,6 +260,10 @@ define([
             image.onerror = function() {
                 deferred.reject();
             };
+
+            // start loading tile
+            tile.state = TileState.IMAGE_LOADING;
+
             image.src = imageUrl;
 
             return deferred.promise;
