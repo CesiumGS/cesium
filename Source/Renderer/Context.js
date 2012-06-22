@@ -70,40 +70,40 @@ define([
     "use strict";
 
     function _errorToString(gl, error) {
-        var message = "OpenGL Error:  ";
+        var message = 'OpenGL Error:  ';
         switch (error) {
         case gl.INVALID_ENUM:
-            message += "Invalid enumeration";
+            message += 'Invalid enumeration';
             break;
         case gl.INVALID_VALUE:
-            message += "Invalid value";
+            message += 'Invalid value';
             break;
         case gl.INVALID_OPERATION:
-            message += "Invalid operation";
+            message += 'Invalid operation';
             break;
         case gl.OUT_OF_MEMORY:
-            message += "Out of memory";
+            message += 'Out of memory';
             break;
         case gl.CONTEXT_LOST_WEBGL:
-            message += "Context lost";
+            message += 'Context lost';
             break;
         default:
-            message += "Unknown";
+            message += 'Unknown';
         }
 
         return message;
     }
 
     function _createErrorMessage(gl, glFunc, glFuncArguments, error) {
-        var message = _errorToString(gl, error) + ": " + glFunc.name + "(";
+        var message = _errorToString(gl, error) + ': ' + glFunc.name + '(';
 
         for ( var i = 0; i < glFuncArguments.length; ++i) {
             if (i !== 0) {
-                message += ", ";
+                message += ', ';
             }
             message += glFuncArguments[i];
         }
-        message += ");";
+        message += ');';
 
         return message;
     }
@@ -139,7 +139,7 @@ define([
             var property = gl[propertyName];
 
             // wrap any functions we encounter, otherwise just copy the property to the wrapper.
-            if (typeof property === "function") {
+            if (typeof property === 'function') {
                 glWrapper[propertyName] = wrapFunction(property);
             } else {
                 glWrapper[propertyName] = property;
@@ -161,11 +161,11 @@ define([
      */
     function Context(canvas, options) {
         if (!window.WebGLRenderingContext) {
-            throw new RuntimeError("The browser does not support WebGL.  Visit http://get.webgl.org.");
+            throw new RuntimeError('The browser does not support WebGL.  Visit http://get.webgl.org.');
         }
 
         if (!canvas) {
-            throw new DeveloperError("canvas is required.", "canvas");
+            throw new DeveloperError('canvas is required.');
         }
 
         this._canvas = canvas;
@@ -180,10 +180,10 @@ define([
             options.alpha = false;
         }
 
-        this._originalGLContext = canvas.getContext("webgl", options) || canvas.getContext("experimental-webgl", options);
+        this._originalGLContext = canvas.getContext('webgl', options) || canvas.getContext('experimental-webgl', options);
 
         if (!this._originalGLContext) {
-            throw new RuntimeError("The browser supports WebGL, but initialization failed.");
+            throw new RuntimeError('The browser supports WebGL, but initialization failed.');
         }
 
         // Validation and logging disabled by default for speed.
@@ -224,9 +224,9 @@ define([
         this._viewport = gl.getParameter(gl.VIEWPORT);
 
         // Query and initialize extensions
-        var textureFilterAnisotropic = gl.getExtension("WEBKIT_EXT_texture_filter_anisotropic") || gl.getExtension("MOZ_EXT_texture_filter_anisotropic");
+        var textureFilterAnisotropic = gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic') || gl.getExtension('MOZ_EXT_texture_filter_anisotropic');
 
-        this._standardDerivatives = gl.getExtension("OES_standard_derivatives");
+        this._standardDerivatives = gl.getExtension('OES_standard_derivatives');
         this._textureFilterAnisotropic = textureFilterAnisotropic;
         this._maximumTextureFilterAnisotropy = textureFilterAnisotropic ? gl.getParameter(textureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1.0;
 
@@ -511,12 +511,12 @@ define([
      * });
      */
     Context.prototype.setViewport = function(viewport) {
-        if ((typeof viewport === "undefined") ||
-            (typeof viewport.x === "undefined") ||
-            (typeof viewport.y === "undefined") ||
-            (typeof viewport.width === "undefined") ||
-            (typeof viewport.height === "undefined")) {
-            throw new DeveloperError("A viewport with x, y, width, and height properties is required.", "viewport");
+        if ((typeof viewport === 'undefined') ||
+            (typeof viewport.x === 'undefined') ||
+            (typeof viewport.y === 'undefined') ||
+            (typeof viewport.width === 'undefined') ||
+            (typeof viewport.height === 'undefined')) {
+            throw new DeveloperError('A viewport with x, y, width, and height properties is required.');
         }
 
         var x = viewport.x;
@@ -525,19 +525,19 @@ define([
         var h = viewport.height;
 
         if (w < 0) {
-            throw new DeveloperError("viewport.width must be greater than or equal to zero.", "viewport");
+            throw new DeveloperError('viewport.width must be greater than or equal to zero.');
         }
 
         if (w > this.getMaximumViewportWidth()) {
-            throw new RuntimeError("viewport.width must be less than or equal to the maximum viewport width (" + this.getMaximumViewportWidth().toString() + ").  Check getMaximumViewportWidth().", "viewport");
+            throw new RuntimeError('viewport.width must be less than or equal to the maximum viewport width (' + this.getMaximumViewportWidth().toString() + ').  Check getMaximumViewportWidth().');
         }
 
         if (h < 0) {
-            throw new DeveloperError("viewport.height must be greater than or equal to zero.", "viewport");
+            throw new DeveloperError('viewport.height must be greater than or equal to zero.');
         }
 
         if (h > this.getMaximumViewportHeight()) {
-            throw new RuntimeError("viewport.height must be less than or equal to the maximum viewport height (" + this.getMaximumViewportHeight().toString() + ").  Check getMaximumViewportHeight().", "viewport");
+            throw new RuntimeError('viewport.height must be less than or equal to the maximum viewport height (' + this.getMaximumViewportHeight().toString() + ').  Check getMaximumViewportHeight().');
         }
 
         var v = this._viewport;
@@ -556,7 +556,7 @@ define([
      * @memberof Context
      *
      * @returns {String} The WebGL version or release number.
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glGetString.xml">glGetString</a> with <code>VERSION</code>.
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGetString.xml'>glGetString</a> with <code>VERSION</code>.
      */
     Context.prototype.getVersion = function() {
         return this._version;
@@ -568,7 +568,7 @@ define([
      * @memberof Context
      *
      * @returns {String} The version or release number for the shading language.
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glGetString.xml">glGetString</a> with <code>SHADING_LANGUAGE_VERSION</code>.
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGetString.xml'>glGetString</a> with <code>SHADING_LANGUAGE_VERSION</code>.
      */
     Context.prototype.getShadingLanguageVersion = function() {
         return this._shadingLanguageVersion;
@@ -580,7 +580,7 @@ define([
      * @memberof Context
      *
      * @returns {String} The company responsible for the WebGL implementation.
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glGetString.xml">glGetString</a> with <code>VENDOR</code>.
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGetString.xml'>glGetString</a> with <code>VENDOR</code>.
      */
     Context.prototype.getVendor = function() {
         return this._vendor;
@@ -588,15 +588,15 @@ define([
 
     /**
      * Returns the name of the renderer/configuration/hardware platform. For example, this may be the model of the
-     * video card, e.g., "GeForce 8800 GTS/PCI/SSE2", or the browser-dependent name of the GL implementation, e.g.
-     * "Mozilla" or "ANGLE."
+     * video card, e.g., 'GeForce 8800 GTS/PCI/SSE2', or the browser-dependent name of the GL implementation, e.g.
+     * 'Mozilla' or 'ANGLE.'
      *
      * @memberof Context
      *
      * @returns {String} The name of the renderer.
      *
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glGetString.xml">glGetString</a> with <code>RENDERER</code>.
-     * @see <a href="http://code.google.com/p/angleproject/">ANGLE</a>
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGetString.xml'>glGetString</a> with <code>RENDERER</code>.
+     * @see <a href='http://code.google.com/p/angleproject/'>ANGLE</a>
      */
     Context.prototype.getRenderer = function() {
         return this._renderer;
@@ -608,7 +608,7 @@ define([
      * @memberof Context
      *
      * @returns {Number} The number of red bits per component in the color buffer.
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml">glGet</a> with <code>RED_BITS</code>.
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml'>glGet</a> with <code>RED_BITS</code>.
      */
     Context.prototype.getRedBits = function() {
         return this._redBits;
@@ -620,7 +620,7 @@ define([
      * @memberof Context
      *
      * @returns {Number} The number of green bits per component in the color buffer.
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml">glGet</a> with <code>GREEN_BITS</code>.
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml'>glGet</a> with <code>GREEN_BITS</code>.
      */
     Context.prototype.getGreenBits = function() {
         return this._greenBits;
@@ -632,7 +632,7 @@ define([
      * @memberof Context
      *
      * @returns {Number} The number of blue bits per component in the color buffer.
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml">glGet</a> with <code>BLUE_BITS</code>.
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml'>glGet</a> with <code>BLUE_BITS</code>.
      */
     Context.prototype.getBlueBits = function() {
         return this._blueBits;
@@ -647,7 +647,7 @@ define([
      * @memberof Context
      *
      * @returns {Number} The number of alpha bits per component in the color buffer.
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml">glGet</a> with <code>ALPHA_BITS</code>.
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml'>glGet</a> with <code>ALPHA_BITS</code>.
      */
     Context.prototype.getAlphaBits = function() {
         return this._alphaBits;
@@ -660,7 +660,7 @@ define([
      * @memberof Context
      *
      * @returns {Number} The number of depth bits per pixel in the default bound framebuffer.
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml">glGet</a> with <code>DEPTH_BITS</code>.
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml'>glGet</a> with <code>DEPTH_BITS</code>.
      */
     Context.prototype.getDepthBits = function() {
         return this._depthBits;
@@ -672,7 +672,7 @@ define([
      * @memberof Context
      *
      * @returns {Number} The number of stencil bits per pixel in the default bound framebuffer.
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml">glGet</a> with <code>STENCIL_BITS</code>.
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml'>glGet</a> with <code>STENCIL_BITS</code>.
      */
     Context.prototype.getStencilBits = function() {
         return this._stencilBits;
@@ -689,7 +689,7 @@ define([
      *
      * @see Context#getMaximumTextureImageUnits
      * @see Context#getMaximumVertexTextureImageUnits
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml">glGet</a> with <code>MAX_COMBINED_TEXTURE_IMAGE_UNITS</code>.
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml'>glGet</a> with <code>MAX_COMBINED_TEXTURE_IMAGE_UNITS</code>.
      */
     Context.prototype.getMaximumCombinedTextureImageUnits = function() {
         return this._maximumCombinedTextureImageUnits;
@@ -705,7 +705,7 @@ define([
      *
      * @see Context#createCubeMap
      * @see Context#getMaximumTextureSize
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml">glGet</a> with <code>MAX_CUBE_MAP_TEXTURE_SIZE</code>.
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml'>glGet</a> with <code>MAX_CUBE_MAP_TEXTURE_SIZE</code>.
      */
     Context.prototype.getMaximumCubeMapSize = function() {
         return this._maximumCubeMapSize;
@@ -720,7 +720,7 @@ define([
      * @returns {Number} The maximum number of <code>vec4</code>, <code>ivec4</code>, and <code>bvec4</code> uniforms that can be used by a fragment shader.
      *
      * @see Context#getMaximumVertexUniformVectors
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml">glGet</a> with <code>MAX_FRAGMENT_UNIFORM_VECTORS</code>.
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml'>glGet</a> with <code>MAX_FRAGMENT_UNIFORM_VECTORS</code>.
      */
     Context.prototype.getMaximumFragmentUniformVectors = function() {
         return this._maximumFragmentUniformVectors;
@@ -735,7 +735,7 @@ define([
      *
      * @see Context#getMaximumCombinedTextureImageUnits
      * @see Context#getMaximumVertexTextureImageUnits
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml">glGet</a> with <code>MAX_TEXTURE_IMAGE_UNITS</code>.
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml'>glGet</a> with <code>MAX_TEXTURE_IMAGE_UNITS</code>.
      */
     Context.prototype.getMaximumTextureImageUnits = function() {
         return this._maximumTextureImageUnits;
@@ -750,7 +750,7 @@ define([
      * @returns {Number} The maximum renderbuffer width and height.
      *
      * @see Context#createRenderbuffer
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml">glGet</a> with <code>MAX_RENDERBUFFER_SIZE</code>.
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml'>glGet</a> with <code>MAX_RENDERBUFFER_SIZE</code>.
      */
     Context.prototype.getMaximumRenderbufferSize = function() {
         return this._maximumRenderbufferSize;
@@ -766,7 +766,7 @@ define([
      *
      * @see Context#createTexture2D
      * @see Context#getMaximumCubeMapSize
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml">glGet</a> with <code>MAX_TEXTURE_SIZE</code>.
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml'>glGet</a> with <code>MAX_TEXTURE_SIZE</code>.
      */
     Context.prototype.getMaximumTextureSize = function() {
         return this._maximumTextureSize;
@@ -780,7 +780,7 @@ define([
      *
      * @returns {Number} Returns the maximum number of <code>vec4</code> varying variables.
      *
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml">glGet</a> with <code>MAX_VARYING_VECTORS</code>.
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml'>glGet</a> with <code>MAX_VARYING_VECTORS</code>.
      */
     Context.prototype.getMaximumVaryingVectors = function() {
         return this._maximumVaryingVectors;
@@ -794,7 +794,7 @@ define([
      * @returns {Number} The maximum number of <code>vec4</code> vertex attributes.
      *
      * @see Context#createVertexArray
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml">glGet</a> with <code>MAX_VERTEX_ATTRIBS</code>.
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml'>glGet</a> with <code>MAX_VERTEX_ATTRIBS</code>.
      */
     Context.prototype.getMaximumVertexAttributes = function() {
         return this._maximumVertexAttributes;
@@ -810,7 +810,7 @@ define([
      *
      * @see Context#getMaximumCombinedTextureImageUnits
      * @see Context#getMaximumTextureImageUnits
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml">glGet</a> with <code>MAX_VERTEX_TEXTURE_IMAGE_UNITS</code>.
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml'>glGet</a> with <code>MAX_VERTEX_TEXTURE_IMAGE_UNITS</code>.
      */
     Context.prototype.getMaximumVertexTextureImageUnits = function() {
         return this._maximumVertexTextureImageUnits;
@@ -825,7 +825,7 @@ define([
      * @returns {Number} The maximum number of <code>vec4</code>, <code>ivec4</code>, and <code>bvec4</code> uniforms that can be used by a vertex shader.
      *
      * @see Context#getMaximumFragmentUniformVectors
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml">glGet</a> with <code>MAX_VERTEX_UNIFORM_VECTORS</code>.
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml'>glGet</a> with <code>MAX_VERTEX_UNIFORM_VECTORS</code>.
      */
     Context.prototype.getMaximumVertexUniformVectors = function() {
         return this._maximumVertexUniformVectors;
@@ -839,7 +839,7 @@ define([
      * @returns {Number} The minimum aliased line in pixels.
      *
      * @see Context#getMaximumAliasedLineWidth
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml">glGet</a> with <code>ALIASED_LINE_WIDTH_RANGE</code>.
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml'>glGet</a> with <code>ALIASED_LINE_WIDTH_RANGE</code>.
      */
     Context.prototype.getMinimumAliasedLineWidth = function() {
         return this._aliasedLineWidthRange[0];
@@ -853,7 +853,7 @@ define([
      * @returns {Number} The maximum aliased line in pixels.
      *
      * @see Context#getMinimumAliasedLineWidth
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml">glGet</a> with <code>ALIASED_LINE_WIDTH_RANGE</code>.
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml'>glGet</a> with <code>ALIASED_LINE_WIDTH_RANGE</code>.
      */
     Context.prototype.getMaximumAliasedLineWidth = function() {
         return this._aliasedLineWidthRange[1];
@@ -867,7 +867,7 @@ define([
      * @returns {Number} The minimum aliased point size in pixels.
      *
      * @see Context#getMaximumAliasedPointSize
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml">glGet</a> with <code>ALIASED_POINT_SIZE_RANGE</code>.
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml'>glGet</a> with <code>ALIASED_POINT_SIZE_RANGE</code>.
      */
     Context.prototype.getMinimumAliasedPointSize = function() {
         return this._aliasedPointSizeRange[0];
@@ -881,7 +881,7 @@ define([
      * @returns {Number} The maximum aliased point size in pixels.
      *
      * @see Context#getMinimumAliasedPointSize
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml">glGet</a> with <code>ALIASED_POINT_SIZE_RANGE</code>.
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml'>glGet</a> with <code>ALIASED_POINT_SIZE_RANGE</code>.
      */
     Context.prototype.getMaximumAliasedPointSize = function() {
         return this._aliasedPointSizeRange[1];
@@ -895,7 +895,7 @@ define([
      * @returns {Number} The maximum supported width of the viewport.
      *
      * @see Context#getMaximumViewportHeight
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml">glGet</a> with <code>MAX_VIEWPORT_DIMS</code>.
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml'>glGet</a> with <code>MAX_VIEWPORT_DIMS</code>.
      */
     Context.prototype.getMaximumViewportWidth = function() {
         return this._maximumViewportDimensions[0];
@@ -909,7 +909,7 @@ define([
      * @returns {Number} The maximum supported height of the viewport.
      *
      * @see Context#getMaximumViewportHeight
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml">glGet</a> with <code>MAX_VIEWPORT_DIMS</code>.
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml'>glGet</a> with <code>MAX_VIEWPORT_DIMS</code>.
      */
     Context.prototype.getMaximumViewportHeight = function() {
         return this._maximumViewportDimensions[1];
@@ -925,7 +925,7 @@ define([
      *
      * @returns {Boolean} <code>true</code> if OES_standard_derivatives is supported; otherwise, <code>false</code>.
      *
-     * @see <a href="http://www.khronos.org/registry/gles/extensions/OES/OES_standard_derivatives.txt">OES_standard_derivatives</a>
+     * @see <a href='http://www.khronos.org/registry/gles/extensions/OES/OES_standard_derivatives.txt'>OES_standard_derivatives</a>
      */
     Context.prototype.getStandardDerivatives = function() {
         return !!this._standardDerivatives;
@@ -938,7 +938,7 @@ define([
      *
      * @returns {Boolean} <code>true</code> if EXT_texture_filter_anisotropic is supported; otherwise, <code>false</code>.
      *
-     * @see <a href="http://www.khronos.org/registry/webgl/extensions/EXT_texture_filter_anisotropic/">EXT_texture_filter_anisotropic</a>
+     * @see <a href='http://www.khronos.org/registry/webgl/extensions/EXT_texture_filter_anisotropic/'>EXT_texture_filter_anisotropic</a>
      */
     Context.prototype.getTextureFilterAnisotropic = function() {
         return !!this._textureFilterAnisotropic;
@@ -1081,34 +1081,34 @@ define([
      * @see Context#draw
      * @see Context#createVertexArray
      * @see Context#getShaderCache
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glCreateShader.xml">glCreateShader</a>
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glShaderSource.xml">glShaderSource</a>
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glCompileShader.xml">glCompileShader</a>
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glCreateProgram.xml">glCreateProgram</a>
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glAttachShader.xml">glAttachShader</a>
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glLinkProgram.xml">glLinkProgram</a>
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glGetShaderiv.xml">glGetShaderiv</a>
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glGetActiveUniform.xml">glGetActiveUniform</a>
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glGetUniformLocation.xml">glGetUniformLocation</a>
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glGetUniform.xml">glGetUniform</a>
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glBindAttribLocation.xml">glBindAttribLocation</a>
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glGetActiveAttrib.xml">glGetActiveAttrib</a>
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glGetAttribLocation.xml">glGetAttribLocation</a>
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glCreateShader.xml'>glCreateShader</a>
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glShaderSource.xml'>glShaderSource</a>
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glCompileShader.xml'>glCompileShader</a>
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glCreateProgram.xml'>glCreateProgram</a>
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glAttachShader.xml'>glAttachShader</a>
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glLinkProgram.xml'>glLinkProgram</a>
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGetShaderiv.xml'>glGetShaderiv</a>
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGetActiveUniform.xml'>glGetActiveUniform</a>
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGetUniformLocation.xml'>glGetUniformLocation</a>
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGetUniform.xml'>glGetUniform</a>
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glBindAttribLocation.xml'>glBindAttribLocation</a>
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGetActiveAttrib.xml'>glGetActiveAttrib</a>
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGetAttribLocation.xml'>glGetAttribLocation</a>
      *
      * @example
      * // Example 1. Create a shader program allowing the GL to determine
      * // attribute indices.
-     * var vs = "attribute vec4 position; void main() { gl_Position = position; }";
-     * var fs = "void main() { gl_FragColor = vec4(1.0); }";
+     * var vs = 'attribute vec4 position; void main() { gl_Position = position; }';
+     * var fs = 'void main() { gl_FragColor = vec4(1.0); }';
      * var sp = context.createShaderProgram(vs, fs);
      *
      * ////////////////////////////////////////////////////////////////////////////////
      *
      * // Example 2. Create a shader program with explicit attribute indices.
-     * var vs = "attribute vec4 position;" +
-     *          "attribute vec3 normal;" +
-     *          "void main() { ... }";
-     * var fs = "void main() { gl_FragColor = vec4(1.0); }";
+     * var vs = 'attribute vec4 position;' +
+     *          'attribute vec3 normal;' +
+     *          'void main() { ... }';
+     * var fs = 'void main() { gl_FragColor = vec4(1.0); }';
      * var attributes = {
      *     position : 0,
      *     normal   : 1
@@ -1122,18 +1122,18 @@ define([
     Context.prototype._createBuffer = function(gl, bufferTarget, arrayViewOrSizeInBytes, usage) {
         var sizeInBytes;
 
-        if (typeof arrayViewOrSizeInBytes === "object") {
+        if (typeof arrayViewOrSizeInBytes === 'object') {
             sizeInBytes = arrayViewOrSizeInBytes.byteLength;
         } else {
             sizeInBytes = arrayViewOrSizeInBytes;
         }
 
         if (sizeInBytes <= 0) {
-            throw new DeveloperError("The size in bytes must be greater than zero.", "arrayViewOrSizeInBytes");
+            throw new DeveloperError('arrayViewOrSizeInBytes must be greater than zero.');
         }
 
         if (!BufferUsage.validate(usage)) {
-            throw new DeveloperError("Invalid usage.", "usage");
+            throw new DeveloperError('usage is invalid');
         }
 
         var buffer = gl.createBuffer();
@@ -1162,9 +1162,9 @@ define([
      *
      * @see Context#createVertexArray
      * @see Context#createIndexBuffer
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glGenBuffer.xml">glGenBuffer</a>
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glBindBuffer.xml">glBindBuffer</a> with <code>ARRAY_BUFFER</code>
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glBufferData.xml">glBufferData</a> with <code>ARRAY_BUFFER</code>
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGenBuffer.xml'>glGenBuffer</a>
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glBindBuffer.xml'>glBindBuffer</a> with <code>ARRAY_BUFFER</code>
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glBufferData.xml'>glBufferData</a> with <code>ARRAY_BUFFER</code>
      *
      * @example
      * // Example 1. Create a dynamic vertex buffer 16 bytes in size.
@@ -1205,9 +1205,9 @@ define([
      * @see Context#createVertexBuffer
      * @see Context#draw
      * @see VertexArray
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glGenBuffer.xml">glGenBuffer</a>
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glBindBuffer.xml">glBindBuffer</a> with <code>ELEMENT_ARRAY_BUFFER</code>
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glBufferData.xml">glBufferData</a> with <code>ELEMENT_ARRAY_BUFFER</code>
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGenBuffer.xml'>glGenBuffer</a>
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glBindBuffer.xml'>glBindBuffer</a> with <code>ELEMENT_ARRAY_BUFFER</code>
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glBufferData.xml'>glBufferData</a> with <code>ELEMENT_ARRAY_BUFFER</code>
      *
      * @example
      * // Example 1. Create a stream index buffer of unsigned shorts that is
@@ -1230,7 +1230,7 @@ define([
         } else if (indexDatatype === IndexDatatype.UNSIGNED_SHORT) {
             bytesPerIndex = Uint16Array.BYTES_PER_ELEMENT;
         } else {
-            throw new DeveloperError("Invalid indexDatatype.", "indexDatatype");
+            throw new DeveloperError('Invalid indexDatatype.');
         }
 
         var buffer = this._createBuffer(gl, gl.ELEMENT_ARRAY_BUFFER, arrayViewOrSizeInBytes, usage);
@@ -1365,41 +1365,41 @@ define([
      */
     Context.prototype.createTexture2D = function(description) {
         if (!description) {
-            throw new DeveloperError("description is required.", "description");
+            throw new DeveloperError('description is required.');
         }
 
         var source = description.source;
         var width = typeof source !== 'undefined' ? source.width : description.width;
         var height = typeof source !== 'undefined' ? source.height : description.height;
 
-        if (typeof width === "undefined" || typeof height === "undefined") {
-            throw new DeveloperError("description requires a source field to create an initialized texture or width and height fields to create a blank texture.", "description");
+        if (typeof width === 'undefined' || typeof height === 'undefined') {
+            throw new DeveloperError('description requires a source field to create an initialized texture or width and height fields to create a blank texture.');
         }
 
         if (width <= 0) {
-            throw new DeveloperError("Width must be greater than zero.", "description");
+            throw new DeveloperError('Width must be greater than zero.');
         }
 
         if (width > this._maximumTextureSize) {
-            throw new DeveloperError("Width must be less than or equal to the maximum texture size (" + this._maximumTextureSize + ").  Check getMaximumTextureSize().", "description");
+            throw new DeveloperError('Width must be less than or equal to the maximum texture size (' + this._maximumTextureSize + ').  Check getMaximumTextureSize().');
         }
 
         if (height <= 0) {
-            throw new DeveloperError("Height must be greater than zero.", "description");
+            throw new DeveloperError('Height must be greater than zero.');
         }
 
         if (height > this._maximumTextureSize) {
-            throw new DeveloperError("Height must be less than or equal to the maximum texture size (" + this._maximumTextureSize + ").  Check getMaximumTextureSize().", "description");
+            throw new DeveloperError('Height must be less than or equal to the maximum texture size (' + this._maximumTextureSize + ').  Check getMaximumTextureSize().');
         }
 
         var pixelFormat = description.pixelFormat || PixelFormat.RGBA;
         if (!PixelFormat.validate(pixelFormat)) {
-            throw new DeveloperError("Invalid description.pixelFormat.", "description");
+            throw new DeveloperError('Invalid description.pixelFormat.');
         }
 
         var pixelDatatype = description.pixelDatatype || PixelDatatype.UNSIGNED_BYTE;
         if (!PixelDatatype.validate(pixelDatatype)) {
-            throw new DeveloperError("Invalid description.pixelDatatype.", "description");
+            throw new DeveloperError('Invalid description.pixelDatatype.');
         }
 
         // Use premultiplied alpha for opaque textures should perform better on Chrome:
@@ -1458,23 +1458,23 @@ define([
     Context.prototype.createTexture2DFromFramebuffer = function(pixelFormat, framebufferXOffset, framebufferYOffset, width, height) {
         pixelFormat = pixelFormat || PixelFormat.RGB;
         if (!PixelFormat.validate(pixelFormat)) {
-            throw new DeveloperError("Invalid pixelFormat.", "pixelFormat");
+            throw new DeveloperError('Invalid pixelFormat.');
         }
 
         if (framebufferXOffset < 0) {
-            throw new DeveloperError("framebufferXOffset must be greater than or equal to zero.", "framebufferXOffset");
+            throw new DeveloperError('framebufferXOffset must be greater than or equal to zero.');
         }
 
         if (framebufferYOffset < 0) {
-            throw new DeveloperError("framebufferYOffset must be greater than or equal to zero.", "framebufferYOffset");
+            throw new DeveloperError('framebufferYOffset must be greater than or equal to zero.');
         }
 
         if (framebufferXOffset + width > this._canvas.clientWidth) {
-            throw new DeveloperError("framebufferXOffset + width must be less than or equal to getCanvas().clientWidth");
+            throw new DeveloperError('framebufferXOffset + width must be less than or equal to getCanvas().clientWidth');
         }
 
         if (framebufferYOffset + height > this._canvas.clientHeight) {
-            throw new DeveloperError("framebufferYOffset + height must be less than or equal to getCanvas().clientHeight.");
+            throw new DeveloperError('framebufferYOffset + height must be less than or equal to getCanvas().clientHeight.');
         }
 
         framebufferXOffset = framebufferXOffset || 0;
@@ -1526,7 +1526,7 @@ define([
      */
     Context.prototype.createCubeMap = function(description) {
         if (!description) {
-            throw new DeveloperError("description is required.", "description");
+            throw new DeveloperError('description is required.');
         }
 
         var source = description.source;
@@ -1537,7 +1537,7 @@ define([
             var faces = [source.positiveX, source.negativeX, source.positiveY, source.negativeY, source.positiveZ, source.negativeZ];
 
             if (!faces[0] || !faces[1] || !faces[2] || !faces[3] || !faces[4] || !faces[5]) {
-                throw new DeveloperError("description.source requires positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ faces.", "description");
+                throw new DeveloperError('description.source requires positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ faces.');
             }
 
             width = faces[0].width;
@@ -1545,7 +1545,7 @@ define([
 
             for ( var i = 1; i < 6; ++i) {
                 if ((Number(faces[i].width) !== width) || (Number(faces[i].height) !== height)) {
-                    throw new DeveloperError("Each face in description.source must have the same width and height.", "description");
+                    throw new DeveloperError('Each face in description.source must have the same width and height.');
                 }
             }
         } else {
@@ -1553,32 +1553,32 @@ define([
             height = description.height;
         }
 
-        if (typeof width === "undefined" || typeof height === "undefined") {
-            throw new DeveloperError("description requires a source field to create an initialized cube map or width and height fields to create a blank cube map.", "description");
+        if (typeof width === 'undefined' || typeof height === 'undefined') {
+            throw new DeveloperError('description requires a source field to create an initialized cube map or width and height fields to create a blank cube map.');
         }
 
         if (width !== height) {
-            throw new DeveloperError("Width must equal height.", "description");
+            throw new DeveloperError('Width must equal height.');
         }
 
         var size = width;
 
         if (size <= 0) {
-            throw new DeveloperError("Width and height must be greater than zero.", "description");
+            throw new DeveloperError('Width and height must be greater than zero.');
         }
 
         if (size > this._maximumCubeMapSize) {
-            throw new DeveloperError("Width and height must be less than or equal to the maximum cube map size (" + this._maximumCubeMapSize + ").  Check getMaximumCubeMapSize().", "description");
+            throw new DeveloperError('Width and height must be less than or equal to the maximum cube map size (' + this._maximumCubeMapSize + ').  Check getMaximumCubeMapSize().');
         }
 
         var pixelFormat = description.pixelFormat || PixelFormat.RGBA;
         if (!PixelFormat.validate(pixelFormat)) {
-            throw new DeveloperError("Invalid description.pixelFormat.", "description");
+            throw new DeveloperError('Invalid description.pixelFormat.');
         }
 
         var pixelDatatype = description.pixelDatatype || PixelDatatype.UNSIGNED_BYTE;
         if (!PixelDatatype.validate(pixelDatatype)) {
-            throw new DeveloperError("Invalid description.pixelDatatype.", "description");
+            throw new DeveloperError('Invalid description.pixelDatatype.');
         }
 
         // Use premultiplied alpha for opaque textures should perform better on Chrome:
@@ -1643,15 +1643,15 @@ define([
     Context.prototype.createFramebuffer = function(description) {
         if (description) {
             if (description.depthRenderbuffer && description.depthStencilRenderbuffer) {
-                throw new DeveloperError("Cannot have both a depth and depth-stencil attachment.", "description");
+                throw new DeveloperError('Cannot have both a depth and depth-stencil attachment.');
             }
 
             if (description.stencilRenderbuffer && description.depthStencilRenderbuffer) {
-                throw new DeveloperError("Cannot have both a stencil and depth-stencil attachment.", "description");
+                throw new DeveloperError('Cannot have both a stencil and depth-stencil attachment.');
             }
 
             if (description.depthRenderbuffer && description.stencilRenderbuffer) {
-                throw new DeveloperError("Cannot have both a depth and stencil attachment.", "description");
+                throw new DeveloperError('Cannot have both a depth and stencil attachment.');
             }
         }
         return new Framebuffer(this._gl, description);
@@ -1677,29 +1677,29 @@ define([
     Context.prototype.createRenderbuffer = function(description) {
         description = description || {};
         var format = description.format || RenderbufferFormat.RGBA4;
-        var width = (typeof description.width === "undefined") ? this._canvas.clientWidth : description.width;
-        var height = (typeof description.height === "undefined") ? this._canvas.clientHeight : description.height;
+        var width = (typeof description.width === 'undefined') ? this._canvas.clientWidth : description.width;
+        var height = (typeof description.height === 'undefined') ? this._canvas.clientHeight : description.height;
 
 
         var gl = this._gl;
         if (!RenderbufferFormat.validate(format)) {
-            throw new DeveloperError("Invalid format.", "description");
+            throw new DeveloperError('Invalid format.');
         }
 
         if (width <= 0) {
-            throw new DeveloperError("Width must be greater than zero.", "description");
+            throw new DeveloperError('Width must be greater than zero.');
         }
 
         if (width > this.getMaximumRenderbufferSize()) {
-            throw new DeveloperError("Width must be less than or equal to the maximum renderbuffer size (" + this.getMaximumRenderbufferSize() + ").  Check getMaximumRenderbufferSize().", "description");
+            throw new DeveloperError('Width must be less than or equal to the maximum renderbuffer size (' + this.getMaximumRenderbufferSize() + ').  Check getMaximumRenderbufferSize().');
         }
 
         if (height <= 0) {
-            throw new DeveloperError("Height must be greater than zero.", "description");
+            throw new DeveloperError('Height must be greater than zero.');
         }
 
         if (height > this.getMaximumRenderbufferSize()) {
-            throw new DeveloperError("Height must be less than or equal to the maximum renderbuffer size (" + this.getMaximumRenderbufferSize() + ").  Check getMaximumRenderbufferSize().", "description");
+            throw new DeveloperError('Height must be less than or equal to the maximum renderbuffer size (' + this.getMaximumRenderbufferSize() + ').  Check getMaximumRenderbufferSize().');
         }
 
         return new Renderbuffer(gl, format, width, height);
@@ -1753,122 +1753,122 @@ define([
         var sampleCoverage = rs.sampleCoverage || {};
 
         var r = {
-            frontFace : (typeof rs.frontFace === "undefined") ? WindingOrder.COUNTER_CLOCKWISE : rs.frontFace,
+            frontFace : (typeof rs.frontFace === 'undefined') ? WindingOrder.COUNTER_CLOCKWISE : rs.frontFace,
             cull : {
-                enabled : (typeof cull.enabled === "undefined") ? false : cull.enabled,
-                face : (typeof cull.face === "undefined") ? CullFace.BACK : cull.face
+                enabled : (typeof cull.enabled === 'undefined') ? false : cull.enabled,
+                face : (typeof cull.face === 'undefined') ? CullFace.BACK : cull.face
             },
-            lineWidth : (typeof rs.lineWidth === "undefined") ? 1 : rs.lineWidth,
+            lineWidth : (typeof rs.lineWidth === 'undefined') ? 1 : rs.lineWidth,
             polygonOffset : {
-                enabled : (typeof polygonOffset.enabled === "undefined") ? false : polygonOffset.enabled,
-                factor : (typeof polygonOffset.factor === "undefined") ? 0 : polygonOffset.factor,
-                units : (typeof polygonOffset.units === "undefined") ? 0 : polygonOffset.units
+                enabled : (typeof polygonOffset.enabled === 'undefined') ? false : polygonOffset.enabled,
+                factor : (typeof polygonOffset.factor === 'undefined') ? 0 : polygonOffset.factor,
+                units : (typeof polygonOffset.units === 'undefined') ? 0 : polygonOffset.units
             },
             scissorTest : {
-                enabled : (typeof scissorTest.enabled === "undefined") ? false : scissorTest.enabled,
+                enabled : (typeof scissorTest.enabled === 'undefined') ? false : scissorTest.enabled,
                 rectangle : {
-                    x : (typeof scissorTestRectangle.x === "undefined") ? 0 : scissorTestRectangle.x,
-                    y : (typeof scissorTestRectangle.y === "undefined") ? 0 : scissorTestRectangle.y,
-                    width : (typeof scissorTestRectangle.width === "undefined") ? 0 : scissorTestRectangle.width,
-                    height : (typeof scissorTestRectangle.height === "undefined") ? 0 : scissorTestRectangle.height
+                    x : (typeof scissorTestRectangle.x === 'undefined') ? 0 : scissorTestRectangle.x,
+                    y : (typeof scissorTestRectangle.y === 'undefined') ? 0 : scissorTestRectangle.y,
+                    width : (typeof scissorTestRectangle.width === 'undefined') ? 0 : scissorTestRectangle.width,
+                    height : (typeof scissorTestRectangle.height === 'undefined') ? 0 : scissorTestRectangle.height
                 }
             },
             depthRange : {
-                near : (typeof depthRange.near === "undefined") ? 0 : depthRange.near,
-                far : (typeof depthRange.far === "undefined") ? 1 : depthRange.far
+                near : (typeof depthRange.near === 'undefined') ? 0 : depthRange.near,
+                far : (typeof depthRange.far === 'undefined') ? 1 : depthRange.far
             },
             depthTest : {
-                enabled : (typeof depthTest.enabled === "undefined") ? false : depthTest.enabled,
-                func : (typeof depthTest.func === "undefined") ? DepthFunction.LESS : depthTest.func // func, because function is a JavaScript keyword
+                enabled : (typeof depthTest.enabled === 'undefined') ? false : depthTest.enabled,
+                func : (typeof depthTest.func === 'undefined') ? DepthFunction.LESS : depthTest.func // func, because function is a JavaScript keyword
             },
             colorMask : {
-                red : (typeof colorMask.red === "undefined") ? true : colorMask.red,
-                green : (typeof colorMask.green === "undefined") ? true : colorMask.green,
-                blue : (typeof colorMask.blue === "undefined") ? true : colorMask.blue,
-                alpha : (typeof colorMask.alpha === "undefined") ? true : colorMask.alpha
+                red : (typeof colorMask.red === 'undefined') ? true : colorMask.red,
+                green : (typeof colorMask.green === 'undefined') ? true : colorMask.green,
+                blue : (typeof colorMask.blue === 'undefined') ? true : colorMask.blue,
+                alpha : (typeof colorMask.alpha === 'undefined') ? true : colorMask.alpha
             },
-            depthMask : (typeof rs.depthMask === "undefined") ? true : rs.depthMask,
-            stencilMask : (typeof rs.stencilMask === "undefined") ? ~0 : rs.stencilMask,
+            depthMask : (typeof rs.depthMask === 'undefined') ? true : rs.depthMask,
+            stencilMask : (typeof rs.stencilMask === 'undefined') ? ~0 : rs.stencilMask,
             blending : {
-                enabled : (typeof blending.enabled === "undefined") ? false : blending.enabled,
+                enabled : (typeof blending.enabled === 'undefined') ? false : blending.enabled,
                 color : {
-                    red : (typeof blendingColor.red === "undefined") ? 0 : blendingColor.red,
-                    green : (typeof blendingColor.green === "undefined") ? 0 : blendingColor.green,
-                    blue : (typeof blendingColor.blue === "undefined") ? 0 : blendingColor.blue,
-                    alpha : (typeof blendingColor.alpha === "undefined") ? 0 : blendingColor.alpha
+                    red : (typeof blendingColor.red === 'undefined') ? 0 : blendingColor.red,
+                    green : (typeof blendingColor.green === 'undefined') ? 0 : blendingColor.green,
+                    blue : (typeof blendingColor.blue === 'undefined') ? 0 : blendingColor.blue,
+                    alpha : (typeof blendingColor.alpha === 'undefined') ? 0 : blendingColor.alpha
                 },
-                equationRgb : (typeof blending.equationRgb === "undefined") ? BlendEquation.ADD : blending.equationRgb,
-                equationAlpha : (typeof blending.equationAlpha === "undefined") ? BlendEquation.ADD : blending.equationAlpha,
-                functionSourceRgb : (typeof blending.functionSourceRgb === "undefined") ? BlendFunction.ONE : blending.functionSourceRgb,
-                functionSourceAlpha : (typeof blending.functionSourceAlpha === "undefined") ? BlendFunction.ONE : blending.functionSourceAlpha,
-                functionDestinationRgb : (typeof blending.functionDestinationRgb === "undefined") ? BlendFunction.ZERO : blending.functionDestinationRgb,
-                functionDestinationAlpha : (typeof blending.functionDestinationAlpha === "undefined") ? BlendFunction.ZERO : blending.functionDestinationAlpha
+                equationRgb : (typeof blending.equationRgb === 'undefined') ? BlendEquation.ADD : blending.equationRgb,
+                equationAlpha : (typeof blending.equationAlpha === 'undefined') ? BlendEquation.ADD : blending.equationAlpha,
+                functionSourceRgb : (typeof blending.functionSourceRgb === 'undefined') ? BlendFunction.ONE : blending.functionSourceRgb,
+                functionSourceAlpha : (typeof blending.functionSourceAlpha === 'undefined') ? BlendFunction.ONE : blending.functionSourceAlpha,
+                functionDestinationRgb : (typeof blending.functionDestinationRgb === 'undefined') ? BlendFunction.ZERO : blending.functionDestinationRgb,
+                functionDestinationAlpha : (typeof blending.functionDestinationAlpha === 'undefined') ? BlendFunction.ZERO : blending.functionDestinationAlpha
             },
             stencilTest : {
-                enabled : (typeof stencilTest.enabled === "undefined") ? false : stencilTest.enabled,
-                frontFunction : (typeof stencilTest.frontFunction === "undefined") ? StencilFunction.ALWAYS : stencilTest.frontFunction,
-                backFunction : (typeof stencilTest.backFunction === "undefined") ? StencilFunction.ALWAYS : stencilTest.backFunction,
-                reference : (typeof stencilTest.reference === "undefined") ? 0 : stencilTest.reference,
-                mask : (typeof stencilTest.mask === "undefined") ? ~0 : stencilTest.mask,
+                enabled : (typeof stencilTest.enabled === 'undefined') ? false : stencilTest.enabled,
+                frontFunction : (typeof stencilTest.frontFunction === 'undefined') ? StencilFunction.ALWAYS : stencilTest.frontFunction,
+                backFunction : (typeof stencilTest.backFunction === 'undefined') ? StencilFunction.ALWAYS : stencilTest.backFunction,
+                reference : (typeof stencilTest.reference === 'undefined') ? 0 : stencilTest.reference,
+                mask : (typeof stencilTest.mask === 'undefined') ? ~0 : stencilTest.mask,
                 frontOperation : {
-                    fail : (typeof stencilTestFrontOperation.fail === "undefined") ? StencilOperation.KEEP : stencilTestFrontOperation.fail,
-                    zFail : (typeof stencilTestFrontOperation.zFail === "undefined") ? StencilOperation.KEEP : stencilTestFrontOperation.zFail,
-                    zPass : (typeof stencilTestFrontOperation.zPass === "undefined") ? StencilOperation.KEEP : stencilTestFrontOperation.zPass
+                    fail : (typeof stencilTestFrontOperation.fail === 'undefined') ? StencilOperation.KEEP : stencilTestFrontOperation.fail,
+                    zFail : (typeof stencilTestFrontOperation.zFail === 'undefined') ? StencilOperation.KEEP : stencilTestFrontOperation.zFail,
+                    zPass : (typeof stencilTestFrontOperation.zPass === 'undefined') ? StencilOperation.KEEP : stencilTestFrontOperation.zPass
                 },
                 backOperation : {
-                    fail : (typeof stencilTestBackOperation.fail === "undefined") ? StencilOperation.KEEP : stencilTestBackOperation.fail,
-                    zFail : (typeof stencilTestBackOperation.zFail === "undefined") ? StencilOperation.KEEP : stencilTestBackOperation.zFail,
-                    zPass : (typeof stencilTestBackOperation.zPass === "undefined") ? StencilOperation.KEEP : stencilTestBackOperation.zPass
+                    fail : (typeof stencilTestBackOperation.fail === 'undefined') ? StencilOperation.KEEP : stencilTestBackOperation.fail,
+                    zFail : (typeof stencilTestBackOperation.zFail === 'undefined') ? StencilOperation.KEEP : stencilTestBackOperation.zFail,
+                    zPass : (typeof stencilTestBackOperation.zPass === 'undefined') ? StencilOperation.KEEP : stencilTestBackOperation.zPass
                 }
             },
             // TODO:  Also need point_size and point_size_enable for ColladaFX
             // TODO:  Also need sample_alpha_to_coverage_enable for ColladaFX
             sampleCoverage : {
-                enabled : (typeof sampleCoverage.enabled === "undefined") ? false : sampleCoverage.enabled,
-                value : (typeof sampleCoverage.value === "undefined") ? 1.0 : sampleCoverage.value,
-                invert : (typeof sampleCoverage.invert === "undefined") ? false : sampleCoverage.invert
+                enabled : (typeof sampleCoverage.enabled === 'undefined') ? false : sampleCoverage.enabled,
+                value : (typeof sampleCoverage.value === 'undefined') ? 1.0 : sampleCoverage.value,
+                invert : (typeof sampleCoverage.invert === 'undefined') ? false : sampleCoverage.invert
             },
-            dither : (typeof rs.dither === "undefined") ? true : rs.dither
+            dither : (typeof rs.dither === 'undefined') ? true : rs.dither
         };
 
         // Validate
 
         if (!WindingOrder.validate(r.frontFace)) {
-            throw new DeveloperError("Invalid renderState.frontFace.", "renderState");
+            throw new DeveloperError('Invalid renderState.frontFace.');
         }
 
         if (!CullFace.validate(r.cull.face)) {
-            throw new DeveloperError("Invalid renderState.cull.face.", "renderState");
+            throw new DeveloperError('Invalid renderState.cull.face.');
         }
 
         if ((r.lineWidth < this._aliasedLineWidthRange[0]) ||
             (r.lineWidth > this._aliasedLineWidthRange[1])) {
-            throw new RuntimeError("renderState.lineWidth is out of range.  Check getMinimumAliasedLineWidth() and getMaximumAliasedLineWidth().", "renderState");
+            throw new RuntimeError('renderState.lineWidth is out of range.  Check getMinimumAliasedLineWidth() and getMaximumAliasedLineWidth().');
         }
 
         if ((r.scissorTest.rectangle.width < 0) ||
             (r.scissorTest.rectangle.height < 0)) {
-            throw new DeveloperError("renderState.scissorTest.rectangle.width and renderState.scissorTest.rectangle.height must be greater than or equal to zero.", "renderState");
+            throw new DeveloperError('renderState.scissorTest.rectangle.width and renderState.scissorTest.rectangle.height must be greater than or equal to zero.');
         }
 
         if (r.depthRange.near > r.depthRange.far) {
             // WebGL specific - not an error in GL ES
-            throw new DeveloperError("renderState.depthRange.near can't be greater than renderState.depthRange.far.", "renderState");
+            throw new DeveloperError('renderState.depthRange.near can not be greater than renderState.depthRange.far.');
         }
 
         if (r.depthRange.near < 0) {
             // Would be clamped by GL
-            throw new DeveloperError("renderState.depthRange.near must be greater than or equal to zero.", "renderState");
+            throw new DeveloperError('renderState.depthRange.near must be greater than or equal to zero.');
         }
 
         if (r.depthRange.far > 1) {
             // Would be clamped by GL
-            throw new DeveloperError("renderState.depthRange.far must be less than or equal to one.", "renderState");
+            throw new DeveloperError('renderState.depthRange.far must be less than or equal to one.');
         }
 
 
         if (!DepthFunction.validate(r.depthTest.func)) {
-            throw new DeveloperError("Invalid renderState.depthTest.func.", "renderState");
+            throw new DeveloperError('Invalid renderState.depthTest.func.');
         }
 
         if ((r.blending.color.red < 0.0) || (r.blending.color.red > 1.0) ||
@@ -1876,63 +1876,63 @@ define([
             (r.blending.color.blue < 0.0) || (r.blending.color.blue > 1.0) ||
             (r.blending.color.alpha < 0.0) || (r.blending.color.alpha > 1.0)) {
             // Would be clamped by GL
-            throw new DeveloperError("renderState.blending.color components must be greater than or equal to zero and less than or equal to one.", "renderState");
+            throw new DeveloperError('renderState.blending.color components must be greater than or equal to zero and less than or equal to one.');
         }
 
         if (!BlendEquation.validate(r.blending.equationRgb)) {
-            throw new DeveloperError("Invalid renderState.blending.equationRgb.", "renderState");
+            throw new DeveloperError('Invalid renderState.blending.equationRgb.');
         }
 
         if (!BlendEquation.validate(r.blending.equationAlpha)) {
-            throw new DeveloperError("Invalid renderState.blending.equationAlpha.", "renderState");
+            throw new DeveloperError('Invalid renderState.blending.equationAlpha.');
         }
 
         if (!BlendFunction.validate(r.blending.functionSourceRgb)) {
-            throw new DeveloperError("Invalid renderState.blending.functionSourceRgb.", "renderState");
+            throw new DeveloperError('Invalid renderState.blending.functionSourceRgb.');
         }
 
         if (!BlendFunction.validate(r.blending.functionSourceAlpha)) {
-            throw new DeveloperError("Invalid renderState.blending.functionSourceAlpha.", "renderState");
+            throw new DeveloperError('Invalid renderState.blending.functionSourceAlpha.');
         }
 
         if (!BlendFunction.validate(r.blending.functionDestinationRgb)) {
-            throw new DeveloperError("Invalid renderState.blending.functionDestinationRgb.", "renderState");
+            throw new DeveloperError('Invalid renderState.blending.functionDestinationRgb.');
         }
 
         if (!BlendFunction.validate(r.blending.functionDestinationAlpha)) {
-            throw new DeveloperError("Invalid renderState.blending.functionDestinationAlpha.", "renderState");
+            throw new DeveloperError('Invalid renderState.blending.functionDestinationAlpha.');
         }
 
         if (!StencilFunction.validate(r.stencilTest.frontFunction)) {
-            throw new DeveloperError("Invalid renderState.stencilTest.frontFunction.", "renderState");
+            throw new DeveloperError('Invalid renderState.stencilTest.frontFunction.');
         }
 
         if (!StencilFunction.validate(r.stencilTest.backFunction)) {
-            throw new DeveloperError("Invalid renderState.stencilTest.backFunction.", "renderState");
+            throw new DeveloperError('Invalid renderState.stencilTest.backFunction.');
         }
 
         if (!StencilOperation.validate(r.stencilTest.frontOperation.fail)) {
-            throw new DeveloperError("Invalid renderState.stencilTest.frontOperation.fail.", "renderState");
+            throw new DeveloperError('Invalid renderState.stencilTest.frontOperation.fail.');
         }
 
         if (!StencilOperation.validate(r.stencilTest.frontOperation.zFail)) {
-            throw new DeveloperError("Invalid renderState.stencilTest.frontOperation.zFail.", "renderState");
+            throw new DeveloperError('Invalid renderState.stencilTest.frontOperation.zFail.');
         }
 
         if (!StencilOperation.validate(r.stencilTest.frontOperation.zPass)) {
-            throw new DeveloperError("Invalid renderState.stencilTest.frontOperation.zPass.", "renderState");
+            throw new DeveloperError('Invalid renderState.stencilTest.frontOperation.zPass.');
         }
 
         if (!StencilOperation.validate(r.stencilTest.backOperation.fail)) {
-            throw new DeveloperError("Invalid renderState.stencilTest.backOperation.fail.", "renderState");
+            throw new DeveloperError('Invalid renderState.stencilTest.backOperation.fail.');
         }
 
         if (!StencilOperation.validate(r.stencilTest.backOperation.zFail)) {
-            throw new DeveloperError("Invalid renderState.stencilTest.backOperation.zFail.", "renderState");
+            throw new DeveloperError('Invalid renderState.stencilTest.backOperation.zFail.');
         }
 
         if (!StencilOperation.validate(r.stencilTest.backOperation.zPass)) {
-            throw new DeveloperError("Invalid renderState.stencilTest.backOperation.zPass.", "renderState");
+            throw new DeveloperError('Invalid renderState.stencilTest.backOperation.zPass.');
         }
 
         return r;
@@ -1957,27 +1957,27 @@ define([
             wrapT : sampler.wrapT || TextureWrap.CLAMP,
             minificationFilter : sampler.minificationFilter || TextureMinificationFilter.LINEAR,
             magnificationFilter : sampler.magnificationFilter || TextureMagnificationFilter.LINEAR,
-            maximumAnisotropy : (typeof sampler.maximumAnisotropy !== "undefined") ? sampler.maximumAnisotropy : 1.0
+            maximumAnisotropy : (typeof sampler.maximumAnisotropy !== 'undefined') ? sampler.maximumAnisotropy : 1.0
         };
 
         if (!TextureWrap.validate(s.wrapS)) {
-            throw new DeveloperError("Invalid sampler.wrapS.", "sampler");
+            throw new DeveloperError('Invalid sampler.wrapS.');
         }
 
         if (!TextureWrap.validate(s.wrapT)) {
-            throw new DeveloperError("Invalid sampler.wrapT.", "sampler");
+            throw new DeveloperError('Invalid sampler.wrapT.');
         }
 
         if (!TextureMinificationFilter.validate(s.minificationFilter)) {
-            throw new DeveloperError("Invalid sampler.minificationFilter.", "sampler");
+            throw new DeveloperError('Invalid sampler.minificationFilter.');
         }
 
         if (!TextureMagnificationFilter.validate(s.magnificationFilter)) {
-            throw new DeveloperError("Invalid sampler.magnificationFilter.", "sampler");
+            throw new DeveloperError('Invalid sampler.magnificationFilter.');
         }
 
         if (s.maximumAnisotropy < 1.0) {
-            throw new DeveloperError("sampler.maximumAnisotropy must be greater than or equal to one.", "sampler");
+            throw new DeveloperError('sampler.maximumAnisotropy must be greater than or equal to one.');
         }
 
         return s;
@@ -2005,7 +2005,7 @@ define([
         var stencil = cs.stencil;
 
         // Clear everything if nothing is specified
-        if ((typeof color === "undefined") && (typeof depth === "undefined") && (typeof stencil === "undefined")) {
+        if ((typeof color === 'undefined') && (typeof depth === 'undefined') && (typeof stencil === 'undefined')) {
             color = this._defaultClearColor;
             depth = this._defaultClearDepth;
             stencil = this._defaultClearStencil;
@@ -2013,23 +2013,23 @@ define([
 
         var c = {
             scissorTest : {
-                enabled : (typeof scissorTest.enabled === "undefined") ? false : scissorTest.enabled,
+                enabled : (typeof scissorTest.enabled === 'undefined') ? false : scissorTest.enabled,
                 rectangle : {
-                    x : (typeof scissorTestRectangle.x === "undefined") ? 0 : scissorTestRectangle.x,
-                    y : (typeof scissorTestRectangle.y === "undefined") ? 0 : scissorTestRectangle.y,
-                    width : (typeof scissorTestRectangle.width === "undefined") ? 0 : scissorTestRectangle.width,
-                    height : (typeof scissorTestRectangle.height === "undefined") ? 0 : scissorTestRectangle.height
+                    x : (typeof scissorTestRectangle.x === 'undefined') ? 0 : scissorTestRectangle.x,
+                    y : (typeof scissorTestRectangle.y === 'undefined') ? 0 : scissorTestRectangle.y,
+                    width : (typeof scissorTestRectangle.width === 'undefined') ? 0 : scissorTestRectangle.width,
+                    height : (typeof scissorTestRectangle.height === 'undefined') ? 0 : scissorTestRectangle.height
                 }
             },
             colorMask : {
-                red : (typeof colorMask.red === "undefined") ? true : colorMask.red,
-                green : (typeof colorMask.green === "undefined") ? true : colorMask.green,
-                blue : (typeof colorMask.blue === "undefined") ? true : colorMask.blue,
-                alpha : (typeof colorMask.alpha === "undefined") ? true : colorMask.alpha
+                red : (typeof colorMask.red === 'undefined') ? true : colorMask.red,
+                green : (typeof colorMask.green === 'undefined') ? true : colorMask.green,
+                blue : (typeof colorMask.blue === 'undefined') ? true : colorMask.blue,
+                alpha : (typeof colorMask.alpha === 'undefined') ? true : colorMask.alpha
             },
-            depthMask : (typeof cs.depthMask === "undefined") ? true : cs.depthMask,
-            stencilMask : (typeof cs.stencilMask === "undefined") ? ~0 : cs.stencilMask,
-            dither : (typeof cs.dither === "undefined") ? true : cs.dither,
+            depthMask : (typeof cs.depthMask === 'undefined') ? true : cs.depthMask,
+            stencilMask : (typeof cs.stencilMask === 'undefined') ? ~0 : cs.stencilMask,
+            dither : (typeof cs.dither === 'undefined') ? true : cs.dither,
 
             framebuffer : cs.framebuffer,
 
@@ -2044,7 +2044,7 @@ define([
         };
 
         if ((c.scissorTest.rectangle.width < 0) || (c.scissorTest.rectangle.height < 0)) {
-            throw new DeveloperError("clearState.scissorTest.rectangle.width and clearState.scissorTest.rectangle.height must be greater than or equal to zero.", "clearState");
+            throw new DeveloperError('clearState.scissorTest.rectangle.width and clearState.scissorTest.rectangle.height must be greater than or equal to zero.');
         }
 
         return c;
@@ -2060,16 +2060,16 @@ define([
 
                 switch (status) {
                 case gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-                    message = "Framebuffer is not complete.  Incomplete attachment: at least one attachment point with a renderbuffer or texture attached has its attached object no longer in existence or has an attached image with a width or height of zero, or the color attachment point has a non-color-renderable image attached, or the depth attachment point has a non-depth-renderable image attached, or the stencil attachment point has a non-stencil-renderable image attached.  Color-renderable formats include GL_RGBA4, GL_RGB5_A1, and GL_RGB565. GL_DEPTH_COMPONENT16 is the only depth-renderable format. GL_STENCIL_INDEX8 is the only stencil-renderable format.";
+                    message = 'Framebuffer is not complete.  Incomplete attachment: at least one attachment point with a renderbuffer or texture attached has its attached object no longer in existence or has an attached image with a width or height of zero, or the color attachment point has a non-color-renderable image attached, or the depth attachment point has a non-depth-renderable image attached, or the stencil attachment point has a non-stencil-renderable image attached.  Color-renderable formats include GL_RGBA4, GL_RGB5_A1, and GL_RGB565. GL_DEPTH_COMPONENT16 is the only depth-renderable format. GL_STENCIL_INDEX8 is the only stencil-renderable format.';
                     break;
                 case gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
-                    message = "Framebuffer is not complete.  Incomplete dimensions: not all attached images have the same width and height.";
+                    message = 'Framebuffer is not complete.  Incomplete dimensions: not all attached images have the same width and height.';
                     break;
                 case gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-                    message = "Framebuffer is not complete.  Missing attachment: no images are attached to the framebuffer.";
+                    message = 'Framebuffer is not complete.  Missing attachment: no images are attached to the framebuffer.';
                     break;
                 case gl.FRAMEBUFFER_UNSUPPORTED:
-                    message = "Framebuffer is not complete.  Unsupported: the combination of internal formats of the attached images violates an implementation-dependent set of restrictions.";
+                    message = 'Framebuffer is not complete.  Unsupported: the combination of internal formats of the attached images violates an implementation-dependent set of restrictions.';
                     break;
                 }
 
@@ -2096,7 +2096,7 @@ define([
         var d = clearState.depth;
         var s = clearState.stencil;
 
-        if (typeof c !== "undefined") {
+        if (typeof c !== 'undefined') {
             if (c.red !== this._clearColor.red ||
                 c.green !== this._clearColor.green ||
                 c.blue !== this._clearColor.blue ||
@@ -2111,7 +2111,7 @@ define([
             bitmask |= gl.COLOR_BUFFER_BIT;
         }
 
-        if (typeof d !== "undefined") {
+        if (typeof d !== 'undefined') {
             if (d !== this._clearDepth) {
                 this._clearDepth = d;
                 gl.clearDepth(d);
@@ -2119,7 +2119,7 @@ define([
             bitmask |= gl.DEPTH_BUFFER_BIT;
         }
 
-        if (typeof s !== "undefined") {
+        if (typeof s !== 'undefined') {
             if (s !== this._clearStencil) {
                 this._clearStencil = s;
                 gl.clearStencil(s);
@@ -2154,7 +2154,7 @@ define([
             gl.validateProgram(program);
 
             if (!gl.getProgramParameter(program, gl.VALIDATE_STATUS)) {
-                throw new DeveloperError("Program validation failed.  Link log: " + gl.getProgramInfoLog(program));
+                throw new DeveloperError('Program validation failed.  Link log: ' + gl.getProgramInfoLog(program));
             }
         }
     };
@@ -2210,12 +2210,12 @@ define([
      * @memberof Context
      */
     Context.prototype.beginDraw = function(drawArguments) {
-        if (typeof drawArguments === "undefined") {
-            throw new DeveloperError("drawArguments is required.", "drawArguments");
+        if (typeof drawArguments === 'undefined') {
+            throw new DeveloperError('drawArguments is required.');
         }
 
         if (!drawArguments.shaderProgram) {
-            throw new DeveloperError("drawArguments.shaderProgram is required.", "drawArguments");
+            throw new DeveloperError('drawArguments.shaderProgram is required.');
         }
 
         var framebuffer = drawArguments.framebuffer;
@@ -2226,7 +2226,7 @@ define([
             if (rs.depthTest.enabled &&
                 !framebuffer.getDepthRenderbuffer() &&
                 !framebuffer.getDepthStencilRenderbuffer()) {
-                throw new DeveloperError("The depth test can't be enabled (drawArguments.renderState.depthTest.enabled) because the framebuffer (drawArguments.framebuffer) doesn't have a depth or depth-stencil renderbuffer.", "drawArguments");
+                throw new DeveloperError('The depth test can not be enabled (drawArguments.renderState.depthTest.enabled) because the framebuffer (drawArguments.framebuffer) does not have a depth or depth-stencil renderbuffer.');
             }
         }
 
@@ -2250,21 +2250,21 @@ define([
      */
     Context.prototype.continueDraw = function(drawArguments) {
         var sp = this._currentSp;
-        if (typeof sp === "undefined") {
-            throw new DeveloperError("beginDraw must be called before continueDraw.");
+        if (typeof sp === 'undefined') {
+            throw new DeveloperError('beginDraw must be called before continueDraw.');
         }
 
-        if (typeof drawArguments === "undefined") {
-            throw new DeveloperError("drawArguments is required.", "drawArguments");
+        if (typeof drawArguments === 'undefined') {
+            throw new DeveloperError('drawArguments is required.');
         }
 
         var primitiveType = drawArguments.primitiveType;
         if (!PrimitiveType.validate(primitiveType)) {
-            throw new DeveloperError("drawArguments.primitiveType is required and must be valid.", "drawArguments");
+            throw new DeveloperError('drawArguments.primitiveType is required and must be valid.');
         }
 
         if (!drawArguments.vertexArray) {
-            throw new DeveloperError("drawArguments.vertexArray is required.", "drawArguments");
+            throw new DeveloperError('drawArguments.vertexArray is required.');
         }
 
         var va = drawArguments.vertexArray;
@@ -2282,7 +2282,7 @@ define([
         }
 
         if (offset < 0) {
-            throw new DeveloperError("drawArguments.offset must be omitted or greater than or equal to zero.", "drawArguments");
+            throw new DeveloperError('drawArguments.offset must be omitted or greater than or equal to zero.');
         }
 
         if (count > 0) {
@@ -2332,11 +2332,11 @@ define([
         var framebuffer = readState.framebuffer || null;
 
         if (width <= 0) {
-            throw new DeveloperError("readState.width must be greater than zero.", "readState");
+            throw new DeveloperError('readState.width must be greater than zero.');
         }
 
         if (height <= 0) {
-            throw new DeveloperError("readState.height must be greater than zero.", "readState");
+            throw new DeveloperError('readState.height must be greater than zero.');
         }
 
         var pixels = new Uint8Array(4 * width * height);
@@ -2392,11 +2392,11 @@ define([
 
                 if (currentNumberOfVertices !== numberOfVertices) {
                     throw new RuntimeError(
-                        "Each attribute list must have the same number of vertices.  " +
-                        "Attribute '" + names[j] + "' has a different number of vertices " +
-                        "(" + currentNumberOfVertices.toString() + ")" +
-                        " than attribute '" + names[0] +
-                        "' (" + numberOfVertices.toString() + ").");
+                        'Each attribute list must have the same number of vertices.  ' +
+                        'Attribute ' + names[j] + ' has a different number of vertices ' +
+                        '(' + currentNumberOfVertices.toString() + ')' +
+                        ' than attribute ' + names[0] +
+                        ' (' + numberOfVertices.toString() + ').');
                 }
             }
         }
@@ -2610,7 +2610,7 @@ define([
         if (mesh.indexLists) {
             indexLists = mesh.indexLists;
             if (indexLists.length !== 1) {
-                throw new DeveloperError("The mesh must have zero or one index lists.  This mesh has " + indexLists.length.toString() + " index lists.");
+                throw new DeveloperError('The mesh must have zero or one index lists.  This mesh has ' + indexLists.length.toString() + ' index lists.');
             }
         }
 
@@ -2662,7 +2662,7 @@ define([
 
         function rgbToObjectIndex(unnormalizedRgb) {
             // TODO:  Use alpha?
-            var index = "r" + unnormalizedRgb.red + "g" + unnormalizedRgb.green + "b" + unnormalizedRgb.blue;
+            var index = 'r' + unnormalizedRgb.red + 'g' + unnormalizedRgb.green + 'b' + unnormalizedRgb.blue;
             return index;
         }
 
@@ -2675,7 +2675,7 @@ define([
                     nextRgb.green = 0;
 
                     if (++nextRgb.red === 256) {
-                        throw new RuntimeError("Out of unique Rgb colors.");
+                        throw new RuntimeError('Out of unique Rgb colors.');
                     }
                 }
             }

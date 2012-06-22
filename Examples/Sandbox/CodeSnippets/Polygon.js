@@ -80,7 +80,7 @@
                     })
                 });
             };
-            image.src = "../../Images/Cesium_Logo_Color.jpg";
+            image.src = '../../Images/Cesium_Logo_Color.jpg';
 
             primitives.add(polygon);
         };
@@ -111,7 +111,7 @@
                     })
                 });
             };
-            image.src = "../../Images/alpha_map.png";
+            image.src = '../../Images/alpha_map.png';
 
             primitives.add(polygon);
         };
@@ -142,7 +142,7 @@
                     })
                 });
             };
-            image.src = "../../Images/alpha_map.png";
+            image.src = '../../Images/alpha_map.png';
 
             primitives.add(polygon);
         };
@@ -173,7 +173,7 @@
                     })
                 });
             };
-            image.src = "../../Images/earthbump1k.jpg";
+            image.src = '../../Images/earthbump1k.jpg';
 
             primitives.add(polygon);
         };
@@ -204,7 +204,7 @@
                     })
                 });
             };
-            image.src = "../../Images/earthnormalmap.jpg";
+            image.src = '../../Images/earthnormalmap.jpg';
 
             primitives.add(polygon);
         };
@@ -225,27 +225,27 @@
             };
 
             //Load cube map images at once
-            var imageFolder = "../../Images/";
-            var cubeMapFolder = imageFolder + "PalmTreesCubeMap/";
-            var cubeMapFileExtension = ".jpg";
+            var imageFolder = '../../Images/';
+            var cubeMapFolder = imageFolder + 'PalmTreesCubeMap/';
+            var cubeMapFileExtension = '.jpg';
             Cesium.Chain.run(
-                Cesium.Jobs.downloadImage(cubeMapFolder + "posx" + cubeMapFileExtension),
-                Cesium.Jobs.downloadImage(cubeMapFolder + "negx" + cubeMapFileExtension),
-                Cesium.Jobs.downloadImage(cubeMapFolder + "posy" + cubeMapFileExtension),
-                Cesium.Jobs.downloadImage(cubeMapFolder + "negy" + cubeMapFileExtension),
-                Cesium.Jobs.downloadImage(cubeMapFolder + "posz" + cubeMapFileExtension),
-                Cesium.Jobs.downloadImage(cubeMapFolder + "negz" + cubeMapFileExtension)
+                Cesium.Jobs.downloadImage(cubeMapFolder + 'posx' + cubeMapFileExtension),
+                Cesium.Jobs.downloadImage(cubeMapFolder + 'negx' + cubeMapFileExtension),
+                Cesium.Jobs.downloadImage(cubeMapFolder + 'posy' + cubeMapFileExtension),
+                Cesium.Jobs.downloadImage(cubeMapFolder + 'negy' + cubeMapFileExtension),
+                Cesium.Jobs.downloadImage(cubeMapFolder + 'posz' + cubeMapFileExtension),
+                Cesium.Jobs.downloadImage(cubeMapFolder + 'negz' + cubeMapFileExtension)
             ).thenRun(
             function() {
                 polygon.material = new Cesium.ReflectionMaterial({
                     cubeMap : scene.getContext().createCubeMap({
                         source : {
-                            positiveX : this.images[cubeMapFolder + "posx" + cubeMapFileExtension],
-                            negativeX : this.images[cubeMapFolder + "negx" + cubeMapFileExtension],
-                            positiveY : this.images[cubeMapFolder + "negy" + cubeMapFileExtension],
-                            negativeY : this.images[cubeMapFolder + "posy" + cubeMapFileExtension],
-                            positiveZ : this.images[cubeMapFolder + "posz" + cubeMapFileExtension],
-                            negativeZ : this.images[cubeMapFolder + "negz" + cubeMapFileExtension]
+                            positiveX : this.images[cubeMapFolder + 'posx' + cubeMapFileExtension],
+                            negativeX : this.images[cubeMapFolder + 'negx' + cubeMapFileExtension],
+                            positiveY : this.images[cubeMapFolder + 'negy' + cubeMapFileExtension],
+                            negativeY : this.images[cubeMapFolder + 'posy' + cubeMapFileExtension],
+                            positiveZ : this.images[cubeMapFolder + 'posz' + cubeMapFileExtension],
+                            negativeZ : this.images[cubeMapFolder + 'negz' + cubeMapFileExtension]
                         },
                         pixelFormat : Cesium.PixelFormat.RGB
                     }),
@@ -271,27 +271,27 @@
             };
 
             //Load cube map images at once
-            var imageFolder = "../../Images/";
-            var cubeMapFolder = imageFolder + "PalmTreesCubeMap/";
-            var cubeMapFileExtension = ".jpg";
+            var imageFolder = '../../Images/';
+            var cubeMapFolder = imageFolder + 'PalmTreesCubeMap/';
+            var cubeMapFileExtension = '.jpg';
             Cesium.Chain.run(
-                Cesium.Jobs.downloadImage(cubeMapFolder + "posx" + cubeMapFileExtension),
-                Cesium.Jobs.downloadImage(cubeMapFolder + "negx" + cubeMapFileExtension),
-                Cesium.Jobs.downloadImage(cubeMapFolder + "posy" + cubeMapFileExtension),
-                Cesium.Jobs.downloadImage(cubeMapFolder + "negy" + cubeMapFileExtension),
-                Cesium.Jobs.downloadImage(cubeMapFolder + "posz" + cubeMapFileExtension),
-                Cesium.Jobs.downloadImage(cubeMapFolder + "negz" + cubeMapFileExtension)
+                Cesium.Jobs.downloadImage(cubeMapFolder + 'posx' + cubeMapFileExtension),
+                Cesium.Jobs.downloadImage(cubeMapFolder + 'negx' + cubeMapFileExtension),
+                Cesium.Jobs.downloadImage(cubeMapFolder + 'posy' + cubeMapFileExtension),
+                Cesium.Jobs.downloadImage(cubeMapFolder + 'negy' + cubeMapFileExtension),
+                Cesium.Jobs.downloadImage(cubeMapFolder + 'posz' + cubeMapFileExtension),
+                Cesium.Jobs.downloadImage(cubeMapFolder + 'negz' + cubeMapFileExtension)
             ).thenRun(
             function() {
                 polygon.material = new Cesium.RefractionMaterial({
                     cubeMap : scene.getContext().createCubeMap({
                         source : {
-                            positiveX : this.images[cubeMapFolder + "posx" + cubeMapFileExtension],
-                            negativeX : this.images[cubeMapFolder + "negx" + cubeMapFileExtension],
-                            positiveY : this.images[cubeMapFolder + "negy" + cubeMapFileExtension],
-                            negativeY : this.images[cubeMapFolder + "posy" + cubeMapFileExtension],
-                            positiveZ : this.images[cubeMapFolder + "posz" + cubeMapFileExtension],
-                            negativeZ : this.images[cubeMapFolder + "negz" + cubeMapFileExtension]
+                            positiveX : this.images[cubeMapFolder + 'posx' + cubeMapFileExtension],
+                            negativeX : this.images[cubeMapFolder + 'negx' + cubeMapFileExtension],
+                            positiveY : this.images[cubeMapFolder + 'negy' + cubeMapFileExtension],
+                            negativeY : this.images[cubeMapFolder + 'posy' + cubeMapFileExtension],
+                            positiveZ : this.images[cubeMapFolder + 'posz' + cubeMapFileExtension],
+                            negativeZ : this.images[cubeMapFolder + 'negz' + cubeMapFileExtension]
                         },
                         pixelFormat : Cesium.PixelFormat.RGB
                     }),
@@ -318,27 +318,27 @@
             };
 
             //Load cube map images at once
-            var imageFolder = "../../Images/";
-            var cubeMapFolder = imageFolder + "PalmTreesCubeMap/";
-            var cubeMapFileExtension = ".jpg";
+            var imageFolder = '../../Images/';
+            var cubeMapFolder = imageFolder + 'PalmTreesCubeMap/';
+            var cubeMapFileExtension = '.jpg';
             Cesium.Chain.run(
-                Cesium.Jobs.downloadImage(cubeMapFolder + "posx" + cubeMapFileExtension),
-                Cesium.Jobs.downloadImage(cubeMapFolder + "negx" + cubeMapFileExtension),
-                Cesium.Jobs.downloadImage(cubeMapFolder + "posy" + cubeMapFileExtension),
-                Cesium.Jobs.downloadImage(cubeMapFolder + "negy" + cubeMapFileExtension),
-                Cesium.Jobs.downloadImage(cubeMapFolder + "posz" + cubeMapFileExtension),
-                Cesium.Jobs.downloadImage(cubeMapFolder + "negz" + cubeMapFileExtension)
+                Cesium.Jobs.downloadImage(cubeMapFolder + 'posx' + cubeMapFileExtension),
+                Cesium.Jobs.downloadImage(cubeMapFolder + 'negx' + cubeMapFileExtension),
+                Cesium.Jobs.downloadImage(cubeMapFolder + 'posy' + cubeMapFileExtension),
+                Cesium.Jobs.downloadImage(cubeMapFolder + 'negy' + cubeMapFileExtension),
+                Cesium.Jobs.downloadImage(cubeMapFolder + 'posz' + cubeMapFileExtension),
+                Cesium.Jobs.downloadImage(cubeMapFolder + 'negz' + cubeMapFileExtension)
             ).thenRun(
             function() {
                 polygon.material = new Cesium.FresnelMaterial({
                     cubeMap : scene.getContext().createCubeMap({
                         source : {
-                            positiveX : this.images[cubeMapFolder + "posx" + cubeMapFileExtension],
-                            negativeX : this.images[cubeMapFolder + "negx" + cubeMapFileExtension],
-                            positiveY : this.images[cubeMapFolder + "negy" + cubeMapFileExtension],
-                            negativeY : this.images[cubeMapFolder + "posy" + cubeMapFileExtension],
-                            positiveZ : this.images[cubeMapFolder + "posz" + cubeMapFileExtension],
-                            negativeZ : this.images[cubeMapFolder + "negz" + cubeMapFileExtension]
+                            positiveX : this.images[cubeMapFolder + 'posx' + cubeMapFileExtension],
+                            negativeX : this.images[cubeMapFolder + 'negx' + cubeMapFileExtension],
+                            positiveY : this.images[cubeMapFolder + 'negy' + cubeMapFileExtension],
+                            negativeY : this.images[cubeMapFolder + 'posy' + cubeMapFileExtension],
+                            positiveZ : this.images[cubeMapFolder + 'posz' + cubeMapFileExtension],
+                            negativeZ : this.images[cubeMapFolder + 'negz' + cubeMapFileExtension]
                         },
                         pixelFormat : Cesium.PixelFormat.RGB
                     }),
@@ -665,7 +665,7 @@
             });
             primitives.add(polygon);
 
-            scene.getAnimations().addProperty(polygon, "erosion", 0.0, 1.0);
+            scene.getAnimations().addProperty(polygon, 'erosion', 0.0, 1.0);
         };
     };
 
@@ -703,7 +703,7 @@
             });
             primitives.add(polygon);
 
-            scene.getAnimations().addProperty(polygon, "height", 2000000.0, 0.0);
+            scene.getAnimations().addProperty(polygon, 'height', 2000000.0, 0.0);
         };
     };
 

@@ -31,30 +31,30 @@ defineSuite([
         destroyContext(context);
     });
 
-    it("initialize suite", function() {
+    it('initialize suite', function() {
         greenImage = new Image();
-        greenImage.src = "./Data/Images/Green.png";
+        greenImage.src = './Data/Images/Green.png';
 
         tallGreenImage = new Image();
-        tallGreenImage.src = "./Data/Images/Green1x4.png";
+        tallGreenImage.src = './Data/Images/Green1x4.png';
 
         blueImage = new Image();
-        blueImage.src = "./Data/Images/Blue.png";
+        blueImage.src = './Data/Images/Blue.png';
 
         waitsFor(function() {
             return greenImage.complete && tallGreenImage.complete && blueImage.complete;
-        }, "Load .png file(s) for texture atlas test.", 3000);
+        }, 'Load .png file(s) for texture atlas test.', 3000);
     });
 
     var draw = function(texture, textureCoordinate, expectedColorArray) {
-        var vs = "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
+        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs =
-            "uniform sampler2D u_texture;" +
-            "void main() { " +
-            "  gl_FragColor = texture2D(u_texture, vec2(" +
-                textureCoordinate.x.toString() + ", " + textureCoordinate.y.toString() +
-            "  )); " +
-            "}";
+            'uniform sampler2D u_texture;' +
+            'void main() { ' +
+            '  gl_FragColor = texture2D(u_texture, vec2(' +
+                textureCoordinate.x.toString() + ', ' + textureCoordinate.y.toString() +
+            '  )); ' +
+            '}';
         var sp = context.createShaderProgram(vs, fs, {
             position : 0
         });
@@ -82,7 +82,7 @@ defineSuite([
         return context.readPixels();
     };
 
-    it("creates a single image atlas", function() {
+    it('creates a single image atlas', function() {
         atlas = context.createTextureAtlas([greenImage], PixelFormat.RGBA, 0);
         var texture = atlas.getTexture();
         var coordinates = atlas.getTextureCoordinates();
@@ -100,7 +100,7 @@ defineSuite([
         expect(coordinates[0].y1).toEqual(1);
     });
 
-    it("renders a single image atlas", function() {
+    it('renders a single image atlas', function() {
         atlas = context.createTextureAtlas([greenImage], PixelFormat.RGBA, 0);
 
         expect(draw.apply(this, [atlas.getTexture(), {
@@ -109,7 +109,7 @@ defineSuite([
         }])).toEqualArray([0, 255, 0, 255]);
     });
 
-    it("creates a two image atlas", function() {
+    it('creates a two image atlas', function() {
         atlas = context.createTextureAtlas([greenImage, blueImage], PixelFormat.RGBA, 0);
         var texture = atlas.getTexture();
         var coordinates = atlas.getTextureCoordinates();
@@ -129,7 +129,7 @@ defineSuite([
         expect(coordinates[1].y1).toEqual(1.0);
     });
 
-    it("renders a two image atlas", function() {
+    it('renders a two image atlas', function() {
         atlas = context.createTextureAtlas([greenImage, blueImage], PixelFormat.RGBA, 0);
 
         var texture = atlas.getTexture();
@@ -147,7 +147,7 @@ defineSuite([
         }])).toEqualArray([0, 0, 255, 255]);
     });
 
-    it("renders a four image atlas", function() {
+    it('renders a four image atlas', function() {
         atlas = context.createTextureAtlas([greenImage, blueImage, blueImage, greenImage], PixelFormat.RGBA, 0);
         expect(atlas.getTextureCoordinates().length).toEqual(4);
 
@@ -178,7 +178,7 @@ defineSuite([
         }])).toEqualArray([0, 255, 0, 255]);
     });
 
-    it("creates an atlas with different image heights", function() {
+    it('creates an atlas with different image heights', function() {
         atlas = context.createTextureAtlas([blueImage, tallGreenImage], PixelFormat.RGBA, 0);
         var texture = atlas.getTexture();
         var coordinates = atlas.getTextureCoordinates();
@@ -191,7 +191,7 @@ defineSuite([
         expect(coordinates[1].y0).toEqual(coordinates[1].y0);
     });
 
-    it("renders an atlas with different image heights", function() {
+    it('renders an atlas with different image heights', function() {
         atlas = context.createTextureAtlas([blueImage, tallGreenImage], PixelFormat.RGBA, 0);
 
         var texture = atlas.getTexture();
@@ -213,19 +213,19 @@ defineSuite([
         expect(pixels[3]).toEqual(255);
     });
 
-    it("throws without images", function() {
+    it('throws without images', function() {
         expect(function() {
             atlas = context.createTextureAtlas();
         }).toThrow();
     });
 
-    it("throws with a negative borderWidthInPixels", function() {
+    it('throws with a negative borderWidthInPixels', function() {
         expect(function() {
             atlas = context.createTextureAtlas([greenImage, blueImage], PixelFormat.RGBA, -1);
         }).toThrow();
     });
 
-    it("throws without context", function() {
+    it('throws without context', function() {
         expect(function() {
             return new TextureAtlas();
         }).toThrow();

@@ -29,7 +29,7 @@ void main()
     materialInput.st = v_textureCoordinates;
     materialInput.str = vec3(v_textureCoordinates, 0.0);
     materialInput.positionMC = v_positionMC;
-
+    
     //Convert tangent space material normal to eye space
     materialInput.normalEC = normalize(agi_normal * agi_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0)));  
     materialInput.tangentToEyeMatrix = agi_eastNorthUpToEyeCoordinates(v_positionMC, materialInput.normalEC);
@@ -40,5 +40,13 @@ void main()
 
     erode(materialInput.str);
     agi_material material = agi_getMaterial(materialInput);
-    gl_FragColor = agi_lightValuePhong(agi_sunDirectionEC, positionToEyeEC, material);
+    
+    vec4 color; 
+    #ifdef AFFECTED_BY_LIGHTING
+    color = agi_lightValuePhong(agi_sunDirectionEC, positionToEyeEC, material);
+    #else
+    color = vec4(material.diffuseComponent, material.alphaComponent);
+    #endif
+    
+    gl_FragColor = color;
 }

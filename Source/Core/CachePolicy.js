@@ -33,14 +33,14 @@ define([
     CachePolicy.LRU = function(description) {
         var desc = description || {};
 
-        if (!desc.fetchFunc || typeof desc.fetchFunc !== "function") {
-            throw new DeveloperError("description.fetchFunc is a required function.", "description.fetchFunc");
+        if (!desc.fetchFunc || typeof desc.fetchFunc !== 'function') {
+            throw new DeveloperError('description.fetchFunc is a required function.');
         }
 
         this._limit = desc.limit || 128;
         this._count = 0;
         this._fetchFunc = desc.fetchFunc;
-        this._removeFunc = (typeof desc.removeFunc === "function") ? desc.removeFunc : null;
+        this._removeFunc = (typeof desc.removeFunc === 'function') ? desc.removeFunc : null;
     };
 
     /**

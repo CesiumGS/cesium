@@ -17,22 +17,22 @@ define([
      * @param {Object} policy A cache replacement policy.
      *
      * @exception {DeveloperError} policy is required.
-     * @exception {DeveloperError} policy must have a fetch function.
-     * @exception {DeveloperError} policy must have a miss function.
+     * @exception {DeveloperError} policy.hit must be a function.
+     * @exception {DeveloperError} policy.miss must be a function.
      *
      * @see CachePolicy.LRU
      */
     function Cache(policy) {
         if (!policy) {
-            throw new DeveloperError("policy is required.", "policy");
+            throw new DeveloperError('policy is required.');
         }
 
-        if (!policy.hit || typeof policy.hit !== "function") {
-            throw new DeveloperError("policy must have a hit function.", "policy.hit");
+        if (!policy.hit || typeof policy.hit !== 'function') {
+            throw new DeveloperError('policy.hit must be a function.');
         }
 
-        if (!policy.miss || typeof policy.miss !== "function") {
-            throw new DeveloperError("policy must have a miss function.", "policy.miss");
+        if (!policy.miss || typeof policy.miss !== 'function') {
+            throw new DeveloperError('policy.miss must be a function.');
         }
 
         this._cache = {};
@@ -48,8 +48,8 @@ define([
      * @param {Object} key The key of the object to remove from the cache.
      *
      * @exception {DeveloperError} key is required.
-     * @exception {DeveloperError} key must be a string, have a string property called "key", or
-     * have a function called "getKey" that returns a string.
+     * @exception {DeveloperError} key must be a string, have a string property called 'key', or
+     * have a function called 'getKey' that returns a string.
      *
      * @return {Object} The object stored in the cache at <code>key</code>.
      *
@@ -57,7 +57,7 @@ define([
      */
     Cache.prototype.find = function(key) {
         if (!key) {
-            throw new DeveloperError("key is required.", "key");
+            throw new DeveloperError('key is required.');
         }
 
         var name = key;
@@ -66,7 +66,7 @@ define([
         }
 
         if (!name) {
-            throw new DeveloperError("key must be a string, or an object with a string key property or getKey function.", "key");
+            throw new DeveloperError('key must be a string, or an object with a string key property or getKey function.');
         }
 
         var element = this._cache[name];

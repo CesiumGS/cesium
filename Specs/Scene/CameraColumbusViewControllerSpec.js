@@ -28,12 +28,12 @@ defineSuite([
         controller = controller && !controller.isDestroyed() && controller.destroy();
     });
 
-    it("updateReferenceFrame", function() {
+    it('updateReferenceFrame', function() {
         controller._updateReferenceFrame();
         expect(camera.position.equalsEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON10)).toEqual(true);
     });
 
-    it("isDestroyed", function() {
+    it('isDestroyed', function() {
         expect(controller.isDestroyed()).toEqual(false);
         controller.destroy();
         expect(controller.isDestroyed()).toEqual(true);

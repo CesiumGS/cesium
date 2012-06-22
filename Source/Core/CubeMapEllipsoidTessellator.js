@@ -31,10 +31,10 @@ define([
      */
     CubeMapEllipsoidTessellator.compute = function(ellipsoid, numberOfPartitions, attributeName) {
         if (numberOfPartitions <= 0) {
-            throw new DeveloperError("numberOfPartitions must be greater than zero.", "numberOfPartitions");
+            throw new DeveloperError('numberOfPartitions must be greater than zero.');
         }
 
-        attributeName = attributeName || "position";
+        attributeName = attributeName || 'position';
 
         var positions = [];
         var indices = [];

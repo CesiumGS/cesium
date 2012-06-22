@@ -495,7 +495,7 @@
             });
             primitives.add(sensors);
 
-            scene.getAnimations().addProperty(sensor, "erosion", 0.0, 1.0);
+            scene.getAnimations().addProperty(sensor, 'erosion', 0.0, 1.0);
         };
 
         this.camera = camera;

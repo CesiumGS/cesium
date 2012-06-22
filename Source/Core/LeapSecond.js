@@ -36,14 +36,14 @@ define([
      *
      * @example
      * // Example 1. Construct a LeapSecond using a JulianDate
-     * var date = new Date("January 1, 1990 00:00:00 UTC");
+     * var date = new Date('January 1, 1990 00:00:00 UTC');
      * var leapSecond = new LeapSecond(JulianDate.fromDate(date), 25.0);
      * var offset = leapSecond.offset;    // 25.0
      *
      * //////////////////////////////////////////////////////////////////
      *
      * // Example 2. Construct a LeapSecond using a date string
-     * var date = "January 1, 1990 00:00:00 UTC";
+     * var date = 'January 1, 1990 00:00:00 UTC';
      * var leapSecond = new LeapSecond(date, 25.0);
      */
     function LeapSecond(date, offset) {
@@ -51,10 +51,10 @@ define([
         var totalTaiOffsetFromUtc;
 
         if (!date) {
-            throw new DeveloperError("date is required.");
+            throw new DeveloperError('date is required.');
         }
         if (typeof offset === 'undefined') {
-            throw new DeveloperError("offset is required.");
+            throw new DeveloperError('offset is required.');
         }
 
         if (typeof date === 'object') {
@@ -106,11 +106,11 @@ define([
      * // Set the list of leap seconds using user defined data.
      * var data = [
      *     {
-     *          date: "January 1, 1972 00:00:00 UTC",
+     *          date: 'January 1, 1972 00:00:00 UTC',
      *          offset: 10.0
      *     },
      *     {
-     *          date: "July 1, 1972 00:00:00 UTC",
+     *          date: 'July 1, 1972 00:00:00 UTC',
      *          offset: 11.0
      *     }
      * ];
@@ -119,7 +119,7 @@ define([
      */
     LeapSecond.setLeapSeconds = function(data) {
         if (!data) {
-            throw new DeveloperError("data is required.", "data");
+            throw new DeveloperError('data is required.');
         }
 
         LeapSecond._leapSeconds = [];
@@ -144,32 +144,32 @@ define([
         if (!LeapSecond._leapSeconds) {
             LeapSecond._leapSeconds =
                 [
-                     new LeapSecond("January 1, 1972 00:00:00 UTC", 10),
-                     new LeapSecond("July 1, 1972 00:00:00 UTC", 11),
-                     new LeapSecond("January 1, 1973 00:00:00 UTC", 12),
-                     new LeapSecond("January 1, 1974 00:00:00 UTC", 13),
-                     new LeapSecond("January 1, 1975 00:00:00 UTC", 14),
-                     new LeapSecond("January 1, 1976 00:00:00 UTC", 15),
-                     new LeapSecond("January 1, 1977 00:00:00 UTC", 16),
-                     new LeapSecond("January 1, 1978 00:00:00 UTC", 17),
-                     new LeapSecond("January 1, 1979 00:00:00 UTC", 18),
-                     new LeapSecond("January 1, 1980 00:00:00 UTC", 19),
-                     new LeapSecond("July 1, 1981 00:00:00 UTC", 20),
-                     new LeapSecond("July 1, 1982 00:00:00 UTC", 21),
-                     new LeapSecond("July 1, 1983 00:00:00 UTC", 22),
-                     new LeapSecond("July 1, 1985 00:00:00 UTC", 23),
-                     new LeapSecond("January 1, 1988 00:00:00 UTC", 24),
-                     new LeapSecond("January 1, 1990 00:00:00 UTC", 25),
-                     new LeapSecond("January 1, 1991 00:00:00 UTC", 26),
-                     new LeapSecond("July 1, 1992 00:00:00 UTC", 27),
-                     new LeapSecond("July 1, 1993 00:00:00 UTC", 28),
-                     new LeapSecond("July 1, 1994 00:00:00 UTC", 29),
-                     new LeapSecond("January 1, 1996 00:00:00 UTC", 30),
-                     new LeapSecond("July 1, 1997 00:00:00 UTC", 31),
-                     new LeapSecond("January 1, 1999 00:00:00 UTC", 32),
-                     new LeapSecond("January 1, 2006 00:00:00 UTC", 33),
-                     new LeapSecond("January 1, 2009 00:00:00 UTC", 34),
-                     new LeapSecond("July 1, 2012 00:00:00 UTC", 35)
+                     new LeapSecond('January 1, 1972 00:00:00 UTC', 10),
+                     new LeapSecond('July 1, 1972 00:00:00 UTC', 11),
+                     new LeapSecond('January 1, 1973 00:00:00 UTC', 12),
+                     new LeapSecond('January 1, 1974 00:00:00 UTC', 13),
+                     new LeapSecond('January 1, 1975 00:00:00 UTC', 14),
+                     new LeapSecond('January 1, 1976 00:00:00 UTC', 15),
+                     new LeapSecond('January 1, 1977 00:00:00 UTC', 16),
+                     new LeapSecond('January 1, 1978 00:00:00 UTC', 17),
+                     new LeapSecond('January 1, 1979 00:00:00 UTC', 18),
+                     new LeapSecond('January 1, 1980 00:00:00 UTC', 19),
+                     new LeapSecond('July 1, 1981 00:00:00 UTC', 20),
+                     new LeapSecond('July 1, 1982 00:00:00 UTC', 21),
+                     new LeapSecond('July 1, 1983 00:00:00 UTC', 22),
+                     new LeapSecond('July 1, 1985 00:00:00 UTC', 23),
+                     new LeapSecond('January 1, 1988 00:00:00 UTC', 24),
+                     new LeapSecond('January 1, 1990 00:00:00 UTC', 25),
+                     new LeapSecond('January 1, 1991 00:00:00 UTC', 26),
+                     new LeapSecond('July 1, 1992 00:00:00 UTC', 27),
+                     new LeapSecond('July 1, 1993 00:00:00 UTC', 28),
+                     new LeapSecond('July 1, 1994 00:00:00 UTC', 29),
+                     new LeapSecond('January 1, 1996 00:00:00 UTC', 30),
+                     new LeapSecond('July 1, 1997 00:00:00 UTC', 31),
+                     new LeapSecond('January 1, 1999 00:00:00 UTC', 32),
+                     new LeapSecond('January 1, 2006 00:00:00 UTC', 33),
+                     new LeapSecond('January 1, 2009 00:00:00 UTC', 34),
+                     new LeapSecond('July 1, 2012 00:00:00 UTC', 35)
                  ];
         }
         return LeapSecond._leapSeconds;
@@ -185,7 +185,7 @@ define([
      * @return {Boolean} <code>true</code> if the leap seconds are equal; otherwise, <code>false</code>.
      *
      * @example
-     * var date = new Date("January 1, 1990 00:00:00 UTC");
+     * var date = new Date('January 1, 1990 00:00:00 UTC');
      * var leapSecond1 = new LeapSecond(JulianDate.fromDate(date), 25.0);
      * var leapSecond2 = new LeapSecond(JulianDate.fromDate(date), 25.0);
      * leapSecond1.equals(leapSecond2);     // true
@@ -211,7 +211,7 @@ define([
      * @see JulianDate#isAfter
      *
      * @example
-     * var date = new Date("January 1, 2006 00:00:00 UTC");
+     * var date = new Date('January 1, 2006 00:00:00 UTC');
      * var leapSecond1 = new LeapSecond(JulianDate.fromDate(date), 33.0);
      * var leapSecond2 = new LeapSecond(JulianDate.fromDate(date), 34.0);
      * LeapSecond.compareLeapSecondDate(leapSecond1, leapSecond2);    // returns 0

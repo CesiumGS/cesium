@@ -12,7 +12,7 @@ defineSuite([
          'Renderer/DepthFunction',
          'Renderer/StencilFunction',
          'Renderer/StencilOperation'
-     ], "Renderer/Draw", function(
+     ], 'Renderer/Draw', function(
          createContext,
          destroyContext,
          IndexDatatype,
@@ -48,9 +48,9 @@ defineSuite([
         destroyContext(context);
     });
 
-    it("draws a white point", function() {
-        var vs = "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-        var fs = "void main() { gl_FragColor = vec4(1.0); }";
+    it('draws a white point', function() {
+        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
         va = context.createVertexArray();
@@ -71,9 +71,9 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
     });
 
-    it("draws a white point with an index buffer", function() {
-        var vs = "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-        var fs = "void main() { gl_FragColor = vec4(1.0); }";
+    it('draws a white point with an index buffer', function() {
+        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
         va = context.createVertexArray();
@@ -98,17 +98,17 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
     });
 
-    it("draws a red point with two vertex buffers", function() {
+    it('draws a red point with two vertex buffers', function() {
         var vs =
-            "attribute vec4 position;" +
-            "attribute mediump float intensity;" +
-            "varying mediump float fs_intensity;" +
-            "void main() {" +
-            "  gl_PointSize = 1.0; " +
-            "  gl_Position = position;" +
-            "  fs_intensity = intensity;" +
-            "}";
-        var fs = "varying mediump float fs_intensity; void main() { gl_FragColor = vec4(fs_intensity, 0.0, 0.0, 1.0); }";
+            'attribute vec4 position;' +
+            'attribute mediump float intensity;' +
+            'varying mediump float fs_intensity;' +
+            'void main() {' +
+            '  gl_PointSize = 1.0; ' +
+            '  gl_Position = position;' +
+            '  fs_intensity = intensity;' +
+            '}';
+        var fs = 'varying mediump float fs_intensity; void main() { gl_FragColor = vec4(fs_intensity, 0.0, 0.0, 1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
         va = context.createVertexArray();
@@ -134,17 +134,17 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
     });
 
-    it("draws a red point with one interleaved vertex buffers", function() {
+    it('draws a red point with one interleaved vertex buffers', function() {
         var vs =
-            "attribute vec4 position;" +
-            "attribute mediump float intensity;" +
-            "varying mediump float fs_intensity;" +
-            "void main() {" +
-            "  gl_PointSize = 1.0; " +
-            "  gl_Position = position;" +
-            "  fs_intensity = intensity;" +
-            "}";
-        var fs = "varying mediump float fs_intensity; void main() { gl_FragColor = vec4(fs_intensity, 0.0, 0.0, 1.0); }";
+            'attribute vec4 position;' +
+            'attribute mediump float intensity;' +
+            'varying mediump float fs_intensity;' +
+            'void main() {' +
+            '  gl_PointSize = 1.0; ' +
+            '  gl_Position = position;' +
+            '  fs_intensity = intensity;' +
+            '}';
+        var fs = 'varying mediump float fs_intensity; void main() { gl_FragColor = vec4(fs_intensity, 0.0, 0.0, 1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
         var stride = 5 * Float32Array.BYTES_PER_ELEMENT;
@@ -177,9 +177,9 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
     });
 
-    it("draws with stencil test", function() {
-        var vs = "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-        var fs = "void main() { gl_FragColor = vec4(1.0); }";
+    it('draws with stencil test', function() {
+        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
         va = context.createVertexArray();
@@ -232,9 +232,9 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
     });
 
-    it("draws with color mask", function() {
-        var vs = "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-        var fs = "void main() { gl_FragColor = vec4(1.0); }";
+    it('draws with color mask', function() {
+        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
         va = context.createVertexArray();
@@ -281,9 +281,9 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([255, 0, 255, 0]);
     });
 
-    it("draws with additive blending", function() {
-        var vs = "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-        var fs = "void main() { gl_FragColor = vec4(0.5); }";
+    it('draws with additive blending', function() {
+        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        var fs = 'void main() { gl_FragColor = vec4(0.5); }';
         sp = context.createShaderProgram(vs, fs);
 
         va = context.createVertexArray();
@@ -323,9 +323,9 @@ defineSuite([
         expect(context.readPixels()).toEqualArrayEpsilon([254, 254, 254, 254], 1);
     });
 
-    it("draws with alpha blending", function() {
-        var vs = "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-        var fs = "void main() { gl_FragColor = vec4(1.0, 1.0, 1.0, 0.5); }";
+    it('draws with alpha blending', function() {
+        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        var fs = 'void main() { gl_FragColor = vec4(1.0, 1.0, 1.0, 0.5); }';
         sp = context.createShaderProgram(vs, fs);
 
         va = context.createVertexArray();
@@ -347,7 +347,7 @@ defineSuite([
                 blending : {
                     enabled : true,
                     equationRgb : BlendEquation.ADD,
-                    equationAlpha : BlendEquation.SUBTRACT, // Doesn't actually matter
+                    equationAlpha : BlendEquation.SUBTRACT, // does not actually matter
                     functionSourceRgb : BlendFunction.SOURCE_ALPHA,
                     functionSourceAlpha : BlendFunction.ONE, // Don't blend alpha
                     functionDestinationRgb : BlendFunction.ONE_MINUS_SOURCE_ALPHA,
@@ -365,9 +365,9 @@ defineSuite([
         expect(context.readPixels()).toEqualArrayEpsilon([191, 191, 191, 127], 2);
     });
 
-    it("draws with blend color", function() {
-        var vs = "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-        var fs = "void main() { gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); }";
+    it('draws with blend color', function() {
+        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        var fs = 'void main() { gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
         va = context.createVertexArray();
@@ -409,9 +409,9 @@ defineSuite([
         expect(context.readPixels()).toEqualArrayEpsilon([128, 128, 128, 255], 1);
     });
 
-    it("draws with culling", function() {
-        var vs = "attribute vec4 position; void main() { gl_Position = position; }";
-        var fs = "void main() { gl_FragColor = vec4(1.0); }";
+    it('draws with culling', function() {
+        var vs = 'attribute vec4 position; void main() { gl_Position = position; }';
+        var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
         va = context.createVertexArray();
@@ -454,9 +454,9 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
     });
 
-    it("draws with front face winding order", function() {
-        var vs = "attribute vec4 position; void main() { gl_Position = position; }";
-        var fs = "void main() { gl_FragColor = vec4(1.0); }";
+    it('draws with front face winding order', function() {
+        var vs = 'attribute vec4 position; void main() { gl_Position = position; }';
+        var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
         va = context.createVertexArray();
@@ -501,9 +501,9 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
     });
 
-    it("draws with the depth test", function() {
-        var vs = "attribute vec4 position; void main() { gl_Position = position; }";
-        var fs = "void main() { gl_FragColor = vec4(1.0); }";
+    it('draws with the depth test', function() {
+        var vs = 'attribute vec4 position; void main() { gl_Position = position; }';
+        var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
         va = context.createVertexArray();
@@ -556,9 +556,9 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
     });
 
-    it("draws with depth range", function() {
-        var vs = "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-        var fs = "void main() { gl_FragColor = vec4(gl_DepthRange.near, gl_DepthRange.far, 0.0, 1.0); }";
+    it('draws with depth range', function() {
+        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        var fs = 'void main() { gl_FragColor = vec4(gl_DepthRange.near, gl_DepthRange.far, 0.0, 1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
         va = context.createVertexArray();
@@ -585,9 +585,9 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([64, 191, 0, 255]);
     });
 
-    it("draws with line width", function() {
-        var vs = "attribute vec4 position; void main() { gl_Position = position; }";
-        var fs = "void main() { gl_FragColor = vec4(1.0); }";
+    it('draws with line width', function() {
+        var vs = 'attribute vec4 position; void main() { gl_Position = position; }';
+        var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
         va = context.createVertexArray();
@@ -616,9 +616,9 @@ defineSuite([
         expect(context.readPixels()).not.toEqualArray([0, 0, 0, 0]);
     });
 
-    it("draws with polygon offset", function() {
-        var vs = "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-        var fs = "void main() { gl_FragColor = vec4(1.0); }";
+    it('draws with polygon offset', function() {
+        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
         va = context.createVertexArray();
@@ -646,9 +646,9 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
     });
 
-    it("draws with sample coverage", function() {
-        var vs = "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-        var fs = "void main() { gl_FragColor = vec4(1.0); }";
+    it('draws with sample coverage', function() {
+        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
         va = context.createVertexArray();
@@ -688,9 +688,9 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
     });
 
-    it("draws with stencil test (front)", function() {
-        var vs = "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-        var fs = "void main() { gl_FragColor = vec4(1.0); }";
+    it('draws with stencil test (front)', function() {
+        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
         va = context.createVertexArray();
@@ -754,9 +754,9 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
     });
 
-    it("draws with stencil test (back)", function() {
-        var vs = "attribute vec4 position; void main() { gl_Position = position; }";
-        var fs = "void main() { gl_FragColor = vec4(1.0); }";
+    it('draws with stencil test (back)', function() {
+        var vs = 'attribute vec4 position; void main() { gl_Position = position; }';
+        var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
         va = context.createVertexArray();
@@ -822,9 +822,9 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
     });
 
-    it("draws with an offset and count", function() {
-        var vs = "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-        var fs = "void main() { gl_FragColor = vec4(1.0); }";
+    it('draws with an offset and count', function() {
+        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
         va = context.createVertexArray();
@@ -857,13 +857,13 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
     });
 
-    it("fails to draw (missing drawArguments)", function() {
+    it('fails to draw (missing drawArguments)', function() {
         expect(function() {
             context.draw();
         }).toThrow();
     });
 
-    it("fails to draw (missing shaderProgram)", function() {
+    it('fails to draw (missing shaderProgram)', function() {
         expect(function() {
             context.draw({
                 primitiveType : PrimitiveType.POINTS
@@ -871,9 +871,9 @@ defineSuite([
         }).toThrow();
     });
 
-    it("fails to draw (missing primitiveType)", function() {
-        var vs = "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-        var fs = "void main() { gl_FragColor = vec4(1.0); }";
+    it('fails to draw (missing primitiveType)', function() {
+        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
         expect(function() {
@@ -883,22 +883,22 @@ defineSuite([
         }).toThrow();
     });
 
-    it("fails to draw (primitiveType)", function() {
-        var vs = "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-        var fs = "void main() { gl_FragColor = vec4(1.0); }";
+    it('fails to draw (primitiveType)', function() {
+        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
         expect(function() {
             context.draw({
-                primitiveType : "invalid value",
+                primitiveType : 'invalid value',
                 shaderProgram : sp
             });
         }).toThrow();
     });
 
-    it("fails to draw (missing vertexArray)", function() {
-        var vs = "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-        var fs = "void main() { gl_FragColor = vec4(1.0); }";
+    it('fails to draw (missing vertexArray)', function() {
+        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
         expect(function() {
@@ -909,9 +909,9 @@ defineSuite([
         }).toThrow();
     });
 
-    it("fails to draw (negative offset)", function() {
-        var vs = "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-        var fs = "void main() { gl_FragColor = vec4(1.0); }";
+    it('fails to draw (negative offset)', function() {
+        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
         expect(function() {

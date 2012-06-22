@@ -114,7 +114,7 @@ define(function() {
      * @return {String} Returns a string representing this instance.
      */
     Cartographic3.prototype.toString = function() {
-        return "(" + this.longitude + ", " + this.latitude + ", " + this.height + ")";
+        return '(' + this.longitude + ', ' + this.latitude + ', ' + this.height + ')';
     };
 
     return Cartographic3;

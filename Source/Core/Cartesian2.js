@@ -26,7 +26,7 @@ define(function() {
          *
          * @see Cartesian2.y
          */
-        this.x = (typeof x !== "undefined") ? x : 0.0;
+        this.x = (typeof x !== 'undefined') ? x : 0.0;
 
         /**
          * DOC_TBA
@@ -35,7 +35,7 @@ define(function() {
          *
          * @see Cartesian2.x
          */
-        this.y = (typeof y !== "undefined") ? y : 0.0;
+        this.y = (typeof y !== 'undefined') ? y : 0.0;
     }
 
     /**
@@ -219,7 +219,7 @@ define(function() {
      * @return {String} A string representing this instance.
      */
     Cartesian2.prototype.toString = function() {
-        return "(" + this.x + ", " + this.y + ")";
+        return '(' + this.x + ', ' + this.y + ')';
     };
 
     return Cartesian2;

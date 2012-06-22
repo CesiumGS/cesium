@@ -28,12 +28,17 @@ void main()
         vec3 rayleighColor = atmosphereColor.rayleigh;
         
 #ifdef SHOW_DAY    
-		    vec3 startDayColor = u_color;
+        vec3 startDayColor = u_color;
 #else
-		    vec3 startDayColor = vec3(1.0);
+        vec3 startDayColor = vec3(1.0);
 #endif
 		
+#ifdef AFFECTED_BY_LIGHTING
         vec3 rgb = getCentralBodyColor(positionMC, positionEC, normalMC, normalEC, startDayColor, rayleighColor, mieColor);
+#else
+        vec3 rgb = startDayColor;
+#endif
+
         gl_FragColor = vec4(rgb, 1.0);
     }
     else

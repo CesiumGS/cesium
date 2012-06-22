@@ -46,7 +46,7 @@ define([
      */
     function CatmullRomSpline(controlPoints, firstTangent, lastTangent) {
         if (!controlPoints || !(controlPoints instanceof Array) || controlPoints.length < 3) {
-            throw new DeveloperError("An array of objects with point and time properties, with a length of at least 3, is required.", "controlPoints");
+            throw new DeveloperError('controlPoints is required and must be an array of objects with point and time properties, with a length of at least 3.');
         }
 
         this._points = controlPoints;
@@ -186,12 +186,12 @@ define([
      * var position = spline.evaluate(5.0);
      */
     CatmullRomSpline.prototype.evaluate = function(time) {
-        if (typeof time === "undefined") {
-            throw new DeveloperError("time is required.", "time");
+        if (typeof time === 'undefined') {
+            throw new DeveloperError('time is required.');
         }
 
         if (time < this._points[0].time || time > this._points[this._points.length - 1].time) {
-            throw new DeveloperError("time is out of range.", "time");
+            throw new DeveloperError('time is out of range.');
         }
 
         var i = this._findIndex(time);

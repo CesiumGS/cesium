@@ -61,7 +61,7 @@ define([
     }
 
     FacetMaterial.prototype._getShaderSource = function() {
-        return "#line 0\n" +
+        return '#line 0\n' +
                ShadersNoise +
                "#line 0\n" +
                ShadersMaterial +

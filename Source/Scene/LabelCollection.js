@@ -31,7 +31,7 @@ define([
         var canvas = label._createCanvas(charValue);
         this._sources[id] = canvas;
         canvas.index = this._sourcesArray.push(canvas) - 1;
-        if (typeof canvasCreated !== "undefined") {
+        if (typeof canvasCreated !== 'undefined') {
             canvasCreated();
         }
         return canvas.index;
@@ -46,7 +46,7 @@ define([
     };
 
     CanvasContainer.prototype._contains = function(id) {
-        return typeof this._sources[id] !== "undefined";
+        return typeof this._sources[id] !== 'undefined';
     };
 
     CanvasContainer.prototype._getCanvas = function(id) {
@@ -57,8 +57,8 @@ define([
      * A renderable collection of labels.  Labels are viewport-aligned text positioned in the 3D scene.
      * Each label can have a different font, color, scale, etc.
      * <br /><br />
-     * <div align="center">
-     * <img src="images/Label.png" width="400" height="300" /><br />
+     * <div align='center'>
+     * <img src='images/Label.png' width='400' height='300' /><br />
      * Example labels
      * </div>
      * <br /><br />
@@ -85,11 +85,11 @@ define([
      * var labels = new LabelCollection();
      * labels.add({
      *   position : { x : 1.0, y : 2.0, z : 3.0 },
-     *   text : "A label"
+     *   text : 'A label'
      * });
      * labels.add({
      *   position : { x : 4.0, y : 5.0, z : 6.0 },
-     *   text : "Another label"
+     *   text : 'Another label'
      * });
      */
     function LabelCollection() {
@@ -116,29 +116,30 @@ define([
          * labels.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
          * labels.add({
          *   position : new Cartesian3(0.0, 0.0, 0.0),
-         *   text     : "Center"
+         *   text     : 'Center'
          * });
          * labels.add({
          *   position : new Cartesian3(1000000.0, 0.0, 0.0),
-         *   text     : "East"
+         *   text     : 'East'
          * });
          * labels.add({
          *   position : new Cartesian3(0.0, 1000000.0, 0.0),
-         *   text     : "North"
+         *   text     : 'North'
          * });
          * labels.add({
          *   position : new Cartesian3(0.0, 0.0, 1000000.0),
-         *   text     : "Up"
+         *   text     : 'Up'
          * });
          */
         this.modelMatrix = Matrix4.IDENTITY;
 
         /**
-         * DOC_TBA
+         * The current morph transition time between 2D/Columbus View and 3D,
+         * with 0.0 being 2D or Columbus View and 1.0 being 3D.
          *
          * @type Number
          */
-        this.morphTime = 0.0;
+        this.morphTime = 1.0;
 
         /**
          * The usage hint for the collection's vertex buffer.
@@ -190,10 +191,10 @@ define([
      * var l = labels.add({
      *   show : true,
      *   position : Cartesian3.ZERO,
-     *   text : "",
-     *   font : "30px sans-serif",
-     *   fillColor : "white",
-     *   outlineColor : "white",
+     *   text : '',
+     *   font : '30px sans-serif',
+     *   fillColor : 'white',
+     *   outlineColor : 'white',
      *   style : LabelStyle.FILL,
      *   pixelOffset : Cartesian2.ZERO,
      *   eyeOffset : Cartesian3.ZERO,
@@ -208,8 +209,8 @@ define([
      *   position : ellipsoid.toCartesian(
      *     CesiumMath.cartographic3ToRadians(
      *       new Cartographic3(longitude, latitude, height))),
-     *   text : "Hello World",
-     *   font : "24px Helvetica",
+     *   text : 'Hello World',
+     *   font : '24px Helvetica',
      * });
      */
     LabelCollection.prototype.add = function(label) {
@@ -358,8 +359,8 @@ define([
      * }
      */
     LabelCollection.prototype.get = function(index) {
-        if (typeof index === "undefined") {
-            throw new DeveloperError("index is required.", "index");
+        if (typeof index === 'undefined') {
+            throw new DeveloperError('index is required.');
         }
 
         this._removeLabels();

@@ -46,11 +46,11 @@ defineSuite([
         destroyContext(context);
     });
 
-    it("gets default show", function() {
+    it('gets default show', function() {
         expect(polyline.show).toEqual(true);
     });
 
-    it("sets positions", function() {
+    it('sets positions', function() {
         var positions = [new Cartesian3(1.0, 2.0, 3.0), new Cartesian3(4.0, 5.0, 6.0)];
 
         expect(polyline.getPositions()).not.toBeDefined();
@@ -59,15 +59,15 @@ defineSuite([
         expect(polyline.getPositions()).toEqualArray(positions);
     });
 
-    it("gets the default width", function() {
+    it('gets the default width', function() {
         expect(polyline.width).toEqual(2);
     });
 
-    it("gets the default outline-width", function() {
+    it('gets the default outline-width', function() {
         expect(polyline.outlineWidth).toEqual(5);
     });
 
-    it("gets the default color", function() {
+    it('gets the default color', function() {
         expect(polyline.color).toEqualProperties({
             red : 0.0,
             green : 0.0,
@@ -76,7 +76,7 @@ defineSuite([
         });
     });
 
-    it("gets the default outline-color", function() {
+    it('gets the default outline-color', function() {
         expect(polyline.outlineColor).toEqualProperties({
             red : 1.0,
             green : 1.0,
@@ -85,15 +85,15 @@ defineSuite([
         });
     });
 
-    it("gets default bufferusage", function() {
+    it('gets default bufferusage', function() {
         expect(polyline.bufferUsage).toEqual(BufferUsage.STATIC_DRAW);
     });
 
-    it("updates", function() {
+    it('updates', function() {
         polyline.update(context, sceneState);
     });
 
-    it("renders", function() {
+    it('renders', function() {
         polyline.setPositions([new Cartesian3(0.0, -1.0, 0.0), new Cartesian3(0.0, 1.0, 0.0)]);
 
         polyline.color = {
@@ -117,7 +117,7 @@ defineSuite([
         expect(context.readPixels()).not.toEqualArray([0, 0, 0, 0]);
     });
 
-    it("doesn't renders", function() {
+    it('does not renders', function() {
         polyline.setPositions([new Cartesian3(0.0, -1.0, 0.0), new Cartesian3(0.0, 1.0, 0.0)]);
 
         polyline.color = {
@@ -142,7 +142,7 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
     });
 
-    it("is picked", function() {
+    it('is picked', function() {
         polyline.setPositions([new Cartesian3(0.0, -1.0, 0.0), new Cartesian3(0.0, 1.0, 0.0)]);
 
         polyline.update(context, sceneState);
@@ -151,7 +151,7 @@ defineSuite([
         expect(pickedObject).toEqual(polyline);
     });
 
-    it("is not picked", function() {
+    it('is not picked', function() {
         polyline.setPositions([new Cartesian3(0.0, -1.0, 0.0), new Cartesian3(0.0, 1.0, 0.0)]);
         polyline.show = false;
 
@@ -161,7 +161,7 @@ defineSuite([
         expect(pickedObject).not.toBeDefined();
     });
 
-    it("isDestroyed", function() {
+    it('isDestroyed', function() {
         expect(polyline.isDestroyed()).toEqual(false);
         polyline.destroy();
         expect(polyline.isDestroyed()).toEqual(true);

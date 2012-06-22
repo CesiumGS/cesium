@@ -95,11 +95,11 @@ define([
      *
      * @memberof Matrix2
      * @return {Number} The element at the zero-based, column-major index.
-     * @exception {DeveloperError} Index must be between 0 and 3.
+     * @exception {DeveloperError} index must be between 0 and 3.
      */
     Matrix2.prototype.getColumnMajorValue = function(index) {
         if (index < 0 || index > 3) {
-            throw new DeveloperError("Index must be between 0 and 3.", "index");
+            throw new DeveloperError('index must be between 0 and 3.');
         }
 
         return this.values[index];
@@ -316,7 +316,7 @@ define([
                         columnMajorValues[1], columnMajorValues[3]);
             }
 
-            throw new DeveloperError("columnMajorValues must have 4 elements.", "columnMajorValues");
+            throw new DeveloperError('columnMajorValues must have 4 elements.');
         }
         return new Matrix2();
     };
@@ -373,8 +373,10 @@ define([
      * @return {Boolean} <code>true</code> if the matrices are equal element-wise; otherwise, <code>false</code>.
      */
     Matrix2.prototype.equals = function(other) {
-        for ( var i = 0; i < numberOfElements; ++i) {
-            if (this.getColumnMajorValue(i) !== other.getColumnMajorValue(i)) {
+        var thisValues = this.values;
+        var otherValues = other.values;
+        for ( var i = 0, len = thisValues.length; i < len; i++) {
+            if (thisValues[i] !== otherValues[i]) {
                 return false;
             }
         }
@@ -393,8 +395,10 @@ define([
      */
     Matrix2.prototype.equalsEpsilon = function(other, epsilon) {
         epsilon = epsilon || 0.0;
-        for ( var i = 0; i < numberOfElements; ++i) {
-            if (Math.abs(this.getColumnMajorValue(i) - other.getColumnMajorValue(i)) > epsilon) {
+        var thisValues = this.values;
+        var otherValues = other.values;
+        for ( var i = 0, len = thisValues.length; i < len; i++) {
+            if (Math.abs(thisValues[i] - otherValues[i]) > epsilon) {
                 return false;
             }
         }
@@ -409,8 +413,8 @@ define([
      * @return {String} Returns a string representing this instance.
      */
     Matrix2.prototype.toString = function() {
-        return "(" + this.getColumn0Row0() + ", " + this.getColumn1Row0() + ")\n" +
-               "(" + this.getColumn0Row1() + ", " + this.getColumn1Row1() + ")";
+        return '(' + this.getColumn0Row0() + ', ' + this.getColumn1Row0() + ')\n' +
+               '(' + this.getColumn0Row1() + ', ' + this.getColumn1Row1() + ')';
     };
 
     return Matrix2;
