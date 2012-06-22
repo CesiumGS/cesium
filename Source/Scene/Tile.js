@@ -27,13 +27,13 @@ define([
      * @name Tile
      * @constructor
      *
+     * @param {TilingScheme} description.tilingScheme The tiling scheme of which the new tile is a part,
+     * such as a {@link MercatorTilingScheme} or a {@link GeographicTilingScheme}.
      * @param {Extent} description.extent The cartographic extent of the tile, with north, south, east and
      * west properties in radians.
      * @param {Number} description.x The tile x coordinate.
      * @param {Number} description.y The tile y coordinate.
      * @param {Number} description.zoom The tile zoom level.
-     * @param {Ellipsoid} description.ellipsoid The ellipsoid whose surface the tile is on. Defaults to
-     * a WGS84 ellipsoid.
      * @param {Tile} description.parent The parent of this tile in a tile tree system.
      *
      * @exception {DeveloperError} Either description.extent or both description.x and description.y is required.
@@ -61,12 +61,16 @@ define([
             throw new DeveloperError('description.zoom is required and must be greater than or equal to zero.');
         }
 
+        if (typeof description.tilingScheme === 'undefined') {
+            throw new DeveloperError('description.tilingScheme is required.');
+        }
+
         /**
-         * The ellipsoid whose surface this tile is on.
+         * The tiling scheme used to tile the surface.
          *
-         * @type Ellipsoid
+         * @type TilingScheme
          */
-        this.ellipsoid = defaultValue(description.ellipsoid, Ellipsoid.WGS84);
+        this.tilingScheme = description.tilingScheme;
 
         /**
          * The cartographic extent of the tile, with north, south, east and
@@ -90,6 +94,7 @@ define([
          */
         this.y = undefined;
 
+        // TODO: rename to level
         /**
          * The zoom level.
          *
@@ -118,8 +123,9 @@ define([
          */
         this.state = TileState.UNLOADED;
 
+        var tilingScheme = description.tilingScheme;
         if (typeof description.extent !== 'undefined') {
-            var coords = Tile.extentToTileXY(description.extent, this.zoom);
+            var coords = tilingScheme.extentToTileXY(description.extent, this.zoom);
             this.x = coords.x;
             this.y = coords.y;
 
@@ -128,7 +134,7 @@ define([
             this.x = description.x;
             this.y = description.y;
 
-            this.extent = Tile.tileXYToExtent(this.x, this.y, this.zoom);
+            this.extent = tilingScheme.tileXYToExtent(this.x, this.y, this.zoom);
         }
 
         this._boundingSphere3D = undefined;
@@ -153,39 +159,6 @@ define([
         this._height = 0;
     }
 
-    var mercator = new MercatorTilingScheme();
-
-    /**
-     * Converts an extent and zoom level into tile x, y coordinates.
-     *
-     * @memberof Tile
-     *
-     * @param {Extent} extent The cartographic extent of the tile, with north, south, east and
-     * west properties in radians.
-     * @param {Number} zoom The tile zoom level.
-     *
-     * @return {Cartesian2} An object with x and y properties.
-     */
-    Tile.extentToTileXY = function(extent, zoom) {
-        return mercator.extentToTileXY(extent, zoom);
-    };
-
-    /**
-     * Converts tile x, y coordinates and zoom to a cartographic extent.
-     *
-     * @memberof Tile
-     *
-     * @param {Number} x The x coordinate.
-     * @param {Number} y The y coordinate.
-     * @param {Number} zoom The tile zoom level.
-     *
-     * @return {Extent} The cartographic extent of the tile, with north, south, east and
-     * west properties in radians.
-     */
-    Tile.tileXYToExtent = function(x, y, zoom) {
-        return mercator.tileXYToExtent(x, y, zoom);
-    };
-
     /**
      * Returns an array of tiles that would be at the next level of the tile tree.
      *
@@ -195,25 +168,30 @@ define([
      */
     Tile.prototype.getChildren = function() {
         if (typeof this.children === 'undefined') {
+            var tilingScheme = this.tilingScheme;
             var zoom = this.zoom + 1;
             var x = this.x * 2;
             var y = this.y * 2;
             this.children = [new Tile({
+                tilingScheme : tilingScheme,
                 x : x,
                 y : y,
                 zoom : zoom,
                 parent : this
             }), new Tile({
+                tilingScheme : tilingScheme,
                 x : x + 1,
                 y : y,
                 zoom : zoom,
                 parent : this
             }), new Tile({
+                tilingScheme : tilingScheme,
                 x : x,
                 y : y + 1,
                 zoom : zoom,
                 parent : this
             }), new Tile({
+                tilingScheme : tilingScheme,
                 x : x + 1,
                 y : y + 1,
                 zoom : zoom,
@@ -225,7 +203,7 @@ define([
     };
 
     Tile.prototype.computeMorphBounds = function(morphTime, projection) {
-        return Extent.computeMorphBoundingSphere(this.extent, this.ellipsoid, morphTime, projection);
+        return Extent.computeMorphBoundingSphere(this.extent, this.tilingScheme.ellipsoid, morphTime, projection);
     };
 
     /**
@@ -237,7 +215,7 @@ define([
      */
     Tile.prototype.get3DBoundingSphere = function() {
         if (typeof this._boundingSphere3D === 'undefined') {
-            this._boundingSphere3D = Extent.compute3DBoundingSphere(this.extent, this.ellipsoid);
+            this._boundingSphere3D = Extent.compute3DBoundingSphere(this.extent, this.tilingScheme.ellipsoid);
         }
 
         return this._boundingSphere3D;
@@ -252,7 +230,7 @@ define([
      */
     Tile.prototype.getOccludeePoint = function() {
         if (typeof this._occludeePoint === 'undefined') {
-            this._occludeePoint = Extent.computeOccludeePoint(this.extent, this.ellipsoid);
+            this._occludeePoint = Extent.computeOccludeePoint(this.extent, this.tilingScheme.ellipsoid);
         }
 
         return this._occludeePoint.valid ? this._occludeePoint.occludeePoint : undefined;

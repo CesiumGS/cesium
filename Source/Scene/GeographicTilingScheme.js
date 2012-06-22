@@ -13,19 +13,21 @@ define([
     "use strict";
 
     /**
-     * A tiling scheme for geometry referenced to a mercator projection.
+     * A tiling scheme for geometry referenced to a simple projection where longitude and latitude
+     * are directly mapped to X and Y.  This projection is commonly known as geographic, equirectangular,
+     * equidistant cylindrical, or plate carrée.
      *
-     * @name MercatorTilingScheme
+     * @name GeographicTilingScheme
      * @constructor
      *
      * @param {Ellipsoid} [description.ellipsoid=Ellipsoid.WGS84] The ellipsoid whose surface is being tiled. Defaults to
      * the WGS84 ellipsoid.
-     * @param {Number} [description.rootTilesX=1] The number of tiles in the X direction at the root of
+     * @param {Number} [description.rootTilesX=2] The number of tiles in the X direction at the root of
      * the tile tree.
      * @param {Number} [description.rootTilesY=1] The number of tiles in the Y direction at the root of
      * the tile tree.
      */
-    function MercatorTilingScheme(description) {
+    function GeographicTilingScheme(description) {
         description = description || {};
 
         /**
@@ -42,16 +44,16 @@ define([
          */
         this.extent = new Extent(
             -CesiumMath.PI,
-            CesiumMath.toRadians(-85.05112878),
+            -CesiumMath.PI_OVER_TWO,
             CesiumMath.PI,
-            CesiumMath.toRadians(85.05112878));
+            CesiumMath.PI_OVER_TWO);
 
         /**
          * The number of tiles in the X direction at the root of the tile tree.
          *
          * @type Number
          */
-        this.rootTilesX = description.rootTilesX || 1;
+        this.rootTilesX = description.rootTilesX || 2;
 
         /**
          * The number of tiles in the Y direction at the root of the tile tree.
@@ -61,7 +63,7 @@ define([
         this.rootTilesY = description.rootTilesY || 1;
     }
 
-    MercatorTilingScheme.prototype.createLevelZeroTiles = function() {
+    GeographicTilingScheme.prototype.createLevelZeroTiles = function() {
         var rootTilesX = this.rootTilesX;
         var rootTilesY = this.rootTilesY;
 
@@ -84,7 +86,7 @@ define([
     /**
      * Converts an extent and zoom level into tile x, y coordinates.
      *
-     * @memberof MercatorTilingScheme
+     * @memberof GeographicTilingScheme
      *
      * @param {Extent} extent The cartographic extent of the tile, with north, south, east and
      * west properties in radians.
@@ -92,7 +94,7 @@ define([
      *
      * @return {Object} An object with x and y properties specifying the x and y tile coordinates.
      */
-    MercatorTilingScheme.prototype.extentToTileXY = function(extent, level) {
+    GeographicTilingScheme.prototype.extentToTileXY = function(extent, level) {
         var result = {};
 
         var xTiles = this.rootTilesX << level;
@@ -101,8 +103,7 @@ define([
         var longitudeFraction = (extent.west + Math.PI) / CesiumMath.TWO_PI;
         result.x = Math.round(longitudeFraction * xTiles);
 
-        var sinLatitude = Math.sin(extent.north);
-        var latitudeFraction = 0.5 - Math.log((1.0 + sinLatitude) / (1.0 - sinLatitude)) / (4 * Math.PI);
+        var latitudeFraction = (CesiumMath.PI_OVER_TWO - extent.north) / CesiumMath.PI;
         result.y = Math.round(latitudeFraction * yTiles);
 
         return result;
@@ -111,7 +112,7 @@ define([
     /**
      * Converts tile x, y coordinates and level to a cartographic extent.
      *
-     * @memberof MercatorTilingScheme
+     * @memberof GeographicTilingScheme
      *
      * @param {Number} x The x coordinate of the tile.
      * @param {Number} y The y coordinate of the tile.
@@ -120,7 +121,7 @@ define([
      * @return {Extent} The cartographic extent of the tile, with north, south, east and
      * west properties in radians.
      */
-    MercatorTilingScheme.prototype.tileXYToExtent = function(x, y, level) {
+    GeographicTilingScheme.prototype.tileXYToExtent = function(x, y, level) {
         var xTiles = this.rootTilesX << level;
         var yTiles = this.rootTilesY << level;
 
@@ -128,13 +129,12 @@ define([
         var west = x * worldFractionPerTileX - Math.PI;
         var east = (x + 1) * worldFractionPerTileX - Math.PI;
 
-        var yFraction = 0.5 - y / yTiles;
-        var north = CesiumMath.PI_OVER_TWO - CesiumMath.TWO_PI * Math.atan(Math.exp(-yFraction * 2 * Math.PI)) / Math.PI;
-        yFraction = 0.5 - (y + 1) / yTiles;
-        var south = CesiumMath.PI_OVER_TWO - CesiumMath.TWO_PI * Math.atan(Math.exp(-yFraction * 2 * Math.PI)) / Math.PI;
+        var worldFractionPerTileY = CesiumMath.PI / yTiles;
+        var north = CesiumMath.PI_OVER_TWO - y * worldFractionPerTileY;
+        var south = CesiumMath.PI_OVER_TWO - (y + 1) * worldFractionPerTileY;
 
         return new Extent(west, south, east, north);
     };
 
-    return MercatorTilingScheme;
+    return GeographicTilingScheme;
 });

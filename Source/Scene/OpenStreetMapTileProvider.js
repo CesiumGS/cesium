@@ -4,13 +4,15 @@ define([
         '../Core/DeveloperError',
         '../Core/Extent',
         '../Core/Math',
-        './Projections'
+        './Projections',
+        './MercatorTilingScheme'
     ], function(
         defaultValue,
         DeveloperError,
         Extent,
         CesiumMath,
-        Projections) {
+        Projections,
+        MercatorTilingScheme) {
     "use strict";
 
     /**
@@ -94,6 +96,15 @@ define([
          * @see Projections
          */
         this.projection = Projections.MERCATOR;
+
+        /**
+         * The tiling scheme used by this tile provider.
+         *
+         * @type {TilingScheme}
+         * @see MercatorTilingScheme
+         * @see GeographicTilingScheme
+         */
+        this.tilingScheme = new MercatorTilingScheme();
 
         /**
          * True if the tile provider is ready for use; otherwise, false.

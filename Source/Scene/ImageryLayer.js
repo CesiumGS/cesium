@@ -510,18 +510,13 @@ define([
             return;
         }
 
-        if (typeof this._rootTile === 'undefined') {
+        if (typeof this._levelZeroTiles === 'undefined') {
             var tileProvider = this._tileProvider;
             var maxExtent = defaultValue(this._maxExtent, tileProvider.maxExtent);
             maxExtent = defaultValue(maxExtent, Extent.MAX_VALUE);
 
             this._maxExtent = maxExtent;
-            this._rootTile = new Tile({
-                x : 0,
-                y : 0,
-                zoom : 0,
-                ellipsoid : this._centralBody.getEllipsoid()
-            });
+            this._levelZeroTiles = this._tileProvider.tilingScheme.createLevelZeroTiles();
         }
 
         var minTileDistance = this._minTileDistance;
@@ -540,7 +535,7 @@ define([
         var insertionPoint = tileLoadList._head;
 
         var tileStack = this._tileStack;
-        tileStack.push(this._rootTile);
+        Array.prototype.push.apply(tileStack, this._levelZeroTiles);
         while (tileStack.length > 0) {
             tile = tileStack.pop();
 
@@ -874,8 +869,8 @@ define([
      * imageryLayer = imageryLayer && imageryLayer.destroy();
      */
     ImageryLayer.prototype.destroy = function() {
-        if (typeof this._rootTile !== 'undefined') {
-            this._rootTile.destroy();
+        if (typeof this._levelZeroTiles !== 'undefined') {
+            this._levelZeroTiles.forEach(function(tile) { tile.destroy(); });
         }
 
         return destroyObject(this);

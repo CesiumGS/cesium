@@ -5,14 +5,16 @@ define([
         '../Core/Color',
         '../Core/Extent',
         '../Core/Math',
-        './Projections'
+        './Projections',
+        './GeographicTilingScheme'
     ], function(
         defaultValue,
         DeveloperError,
         Color,
         Extent,
         CesiumMath,
-        Projections) {
+        Projections,
+        GeographicTilingScheme) {
     "use strict";
 
     /**
@@ -77,6 +79,18 @@ define([
          * @see Projections
          */
         this.projection = Projections.WGS84;
+
+        /**
+         * The tiling scheme used by this tile provider.
+         *
+         * @type {TilingScheme}
+         * @see MercatorTilingScheme
+         * @see GeographicTilingScheme
+         */
+        this.tilingScheme = new GeographicTilingScheme({
+            rootTilesX: 1,
+            rootTilesY: 1
+        });
 
         /**
          * True if the tile provider is ready for use; otherwise, false.

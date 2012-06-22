@@ -77,7 +77,8 @@ define([
         '../Core/jsonp',
         './BingMapsStyle',
         './Projections',
-        '../ThirdParty/when'
+        '../ThirdParty/when',
+        './MercatorTilingScheme'
     ], function(
         defaultValue,
         DeveloperError,
@@ -86,7 +87,8 @@ define([
         jsonp,
         BingMapsStyle,
         Projections,
-        when) {
+        when,
+        MercatorTilingScheme) {
     "use strict";
 
     /**
@@ -198,6 +200,18 @@ define([
         this.projection = Projections.MERCATOR;
 
         /**
+         * The tiling scheme used by this tile provider.
+         *
+         * @type {TilingScheme}
+         * @see MercatorTilingScheme
+         * @see GeographicTilingScheme
+         */
+        this.tilingScheme = new MercatorTilingScheme({
+            rootTilesX: 1, // TODO: Bing Maps actually has 2 tiles in each direction at the root,
+            rootTilesY: 1  // but hacks elsewhere mean we need to use one.  Clean this up.
+        });
+
+        /**
          * True if the tile provider is ready for use; otherwise, false.
          *
          * @type {Boolean}
@@ -219,6 +233,7 @@ define([
 
             that.tileWidth = resource.imageWidth;
             that.tileHeight = resource.imageHeight;
+            // TODO: does this need to be adjusted?
             that.zoomMin = resource.zoomMin;
             that.zoomMax = resource.zoomMax;
             that._imageUrlSubdomains = resource.imageUrlSubdomains;

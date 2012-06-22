@@ -5,14 +5,18 @@ define([
         '../Core/Extent',
         '../Core/Math',
         '../Core/jsonp',
-        './Projections'
+        './Projections',
+        './MercatorTilingScheme',
+        './GeographicTilingScheme'
     ], function(
         defaultValue,
         DeveloperError,
         Extent,
         CesiumMath,
         jsonp,
-        Projections) {
+        Projections,
+        MercatorTilingScheme,
+        GeographicTilingScheme) {
     "use strict";
 
     /**
@@ -100,6 +104,15 @@ define([
         this.projection = undefined;
 
         /**
+         * The tiling scheme used by this tile provider.
+         *
+         * @type {TilingScheme}
+         * @see MercatorTilingScheme
+         * @see GeographicTilingScheme
+         */
+        this.tilingScheme = undefined;
+
+        /**
          * True if the tile provider is ready for use; otherwise, false.
          *
          * @type {Boolean}
@@ -120,6 +133,7 @@ define([
 
             if (data.tileInfo.spatialReference.wkid === 102100) {
                 that.projection = Projections.MERCATOR;
+                that.tilingScheme = new MercatorTilingScheme();
                 // TODO: Determine extent from service description.
                 that.maxExtent = new Extent(-CesiumMath.PI,
                                             CesiumMath.toRadians(-85.05112878),
@@ -127,6 +141,7 @@ define([
                                             CesiumMath.toRadians(85.05112878));
             } else if (data.tileInfo.spatialReference.wkid === 4326) {
                 that.projection = Projections.WGS84;
+                that.tilingScheme = new GeographicTilingScheme();
                 that.maxExtent = new Extent(CesiumMath.toRadians(data.fullExtent.xmin),
                                             CesiumMath.toRadians(data.fullExtent.ymin),
                                             CesiumMath.toRadians(data.fullExtent.xmax),
