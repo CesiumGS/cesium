@@ -7,7 +7,7 @@ Beta Releases
 ### b7 - xx/xx/2012
 
 * Breaking changes:
-   * ...
+   * Removed keyboard input handling from `EventHandler`.
 * ...
 
 ### b6a - 06/20/2012
