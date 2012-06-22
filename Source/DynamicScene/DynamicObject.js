@@ -49,7 +49,7 @@ define([
         //Add standard CZML properties.  Even though they won't all be used
         //for each object, having the superset explicitly listed here will allow the
         //compiler to optimize this class.  It also allows us to document them.
-        // Any changes to this list should coincide with changes to CzmlStandard.updaters
+        //Any changes to this list should coincide with changes to CzmlDefaults.updaters
 
         /**
          * The availability TimeInterval, if any, associated with this object.
@@ -142,7 +142,7 @@ define([
      *
      * @see DynamicPositionProperty
      * @see DynamicObjectCollection
-     * @see CzmlStandard#updaters
+     * @see CzmlDefaults#updaters
      */
     DynamicObject.processCzmlPacketPosition = function(dynamicObject, packet) {
         var positionData = packet.position;
@@ -167,7 +167,7 @@ define([
      *
      * @see DynamicProperty
      * @see DynamicObjectCollection
-     * @see CzmlStandard#updaters
+     * @see CzmlDefaults#updaters
      */
     DynamicObject.processCzmlPacketOrientation = function(dynamicObject, packet) {
         var orientationData = packet.orientation;
@@ -189,7 +189,7 @@ define([
      *
      * @see DynamicProperty
      * @see DynamicObjectCollection
-     * @see CzmlStandard#updaters
+     * @see CzmlDefaults#updaters
      */
     DynamicObject.processCzmlPacketVertexPositions = function(dynamicObject, packet, dynamicObjectCollection) {
         var vertexPositionsData = packet.vertexPositions;
@@ -214,7 +214,7 @@ define([
      *
      * @see DynamicProperty
      * @see DynamicObjectCollection
-     * @see CzmlStandard#updaters
+     * @see CzmlDefaults#updaters
      */
     DynamicObject.processCzmlPacketAvailability = function(dynamicObject, packet) {
         var availability = packet.availability;
@@ -238,7 +238,7 @@ define([
      * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
      * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
      *
-     * @see CzmlStandard
+     * @see CzmlDefaults
      */
     DynamicObject.mergeProperties = function(targetObject, objectToMerge) {
         targetObject.position = targetObject.position || objectToMerge.position;
@@ -254,7 +254,7 @@ define([
      *
      * @param {DynamicObject} dynamicObject The DynamicObject to remove the billboard from.
      *
-     * @see CzmlStandard
+     * @see CzmlDefaults
      */
     DynamicObject.undefineProperties = function(dynamicObject) {
         dynamicObject.position = undefined;

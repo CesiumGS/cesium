@@ -39,7 +39,7 @@ define([
      * @see VisualizerCollection
      * @see Label
      * @see LabelCollection
-     * @see CzmlStandard
+     * @see CzmlDefaults
      */
     function DynamicLabel() {
         this.text = undefined;
@@ -68,7 +68,7 @@ define([
      * @see DynamicObject
      * @see DynamicProperty
      * @see DynamicObjectCollection
-     * @see CzmlStandard#updaters
+     * @see CzmlDefaults#updaters
      */
     DynamicLabel.processCzmlPacket = function(dynamicObject, packet) {
         var labelData = packet.label;
@@ -110,7 +110,7 @@ define([
      * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
      * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
      *
-     * @see CzmlStandard
+     * @see CzmlDefaults
      */
     DynamicLabel.mergeProperties = function(targetObject, objectToMerge) {
         var labelToMerge = objectToMerge.label;
@@ -142,7 +142,7 @@ define([
      *
      * @param {DynamicObject} dynamicObject The DynamicObject to remove the label from.
      *
-     * @see CzmlStandard
+     * @see CzmlDefaults
      */
     DynamicLabel.undefineProperties = function(dynamicObject) {
         dynamicObject.label = undefined;

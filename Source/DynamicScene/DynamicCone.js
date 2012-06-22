@@ -28,7 +28,7 @@ define([
      * @see DynamicConeVisualizer
      * @see VisualizerCollection
      * @see ComplexConicSensor
-     * @see CzmlStandard
+     * @see CzmlDefaults
      */
     function DynamicCone() {
         this.capMaterial = undefined;
@@ -58,7 +58,7 @@ define([
      * @see DynamicObject
      * @see DynamicProperty
      * @see DynamicObjectCollection
-     * @see CzmlStandard#updaters
+     * @see CzmlDefaults#updaters
      */
     DynamicCone.processCzmlPacket = function(dynamicObject, packet) {
         var coneData = packet.cone;
@@ -100,7 +100,7 @@ define([
      * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
      * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
      *
-     * @see CzmlStandard
+     * @see CzmlDefaults
      */
     DynamicCone.mergeProperties = function(targetObject, objectToMerge) {
         var coneToMerge = objectToMerge.cone;
@@ -133,7 +133,7 @@ define([
      *
      * @param {DynamicObject} dynamicObject The DynamicObject to remove the cone from.
      *
-     * @see CzmlStandard
+     * @see CzmlDefaults
      */
     DynamicCone.undefineProperties = function(dynamicObject) {
         dynamicObject.cone = undefined;

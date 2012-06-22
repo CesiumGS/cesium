@@ -1,20 +1,16 @@
 /*global define*/
 define([
         '../Core/Event',
-        '../Core/createGuid',
         '../Core/TimeInterval',
         '../Core/Iso8601',
         '../Core/DeveloperError',
-        './DynamicObject',
-        './CzmlStandard'
+        './DynamicObject'
        ], function(
         Event,
-        createGuid,
         TimeInterval,
         Iso8601,
         DeveloperError,
-        DynamicObject,
-        CzmlStandard) {
+        DynamicObject) {
     "use strict";
 
     /**
@@ -115,42 +111,6 @@ define([
             this.objectsRemoved.raiseEvent(this, removedObjects);
         }
     };
-
-    DynamicObjectCollection.prototype.processCzml = function(packets, sourceUri, updaterFunctions) {
-        var updatedObjects = [];
-        var updatedObjectsHash = {};
-        updaterFunctions = typeof updaterFunctions !== 'undefined' ? updaterFunctions : CzmlStandard.updaters;
-
-        if (Array.isArray(packets)) {
-            for ( var i = 0, len = packets.length; i < len; i++) {
-                processCzmlPacket(this, packets[i], updatedObjects, updatedObjectsHash, updaterFunctions);
-            }
-        } else {
-            processCzmlPacket(this, packets, updatedObjects, updatedObjectsHash, updaterFunctions);
-        }
-
-        if (updatedObjects.length > 0) {
-            this.objectPropertiesChanged.raiseEvent(this, updatedObjects);
-        }
-
-        return updatedObjects;
-    };
-
-    function processCzmlPacket(dynamicObjectCollection, packet, updatedObjects, updatedObjectsHash, updaterFunctions) {
-        var objectId = packet.id;
-        if (typeof objectId === 'undefined') {
-            objectId = createGuid();
-        }
-
-        var object = dynamicObjectCollection.getOrCreateObject(objectId);
-        for ( var i = updaterFunctions.length - 1; i > -1; i--) {
-            if (updaterFunctions[i](object, packet, dynamicObjectCollection) &&
-                typeof updatedObjectsHash[objectId] === 'undefined') {
-                updatedObjectsHash[objectId] = true;
-                updatedObjects.push(object);
-            }
-        }
-    }
 
     return DynamicObjectCollection;
 });

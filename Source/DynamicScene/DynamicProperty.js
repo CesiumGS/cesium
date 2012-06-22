@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/DeveloperError',
         '../Core/JulianDate',
         '../Core/TimeInterval',
         '../Core/TimeIntervalCollection',
@@ -9,6 +10,7 @@ define([
         '../Core/LinearApproximation',
         '../Core/LagrangePolynomialApproximation'
     ], function(
+        DeveloperError,
         JulianDate,
         TimeInterval,
         TimeIntervalCollection,
@@ -19,12 +21,24 @@ define([
         LagrangePolynomialApproximation) {
     "use strict";
 
+    //CZML_TODO This is more of an idea than a to-do, but currently DynamicProperty requires
+    //you know the type of data being loaded up-front by passing valueType.  We could take
+    //a similar approach to DynamicMaterialProperty and have a list of potential valueTypes
+    //that we check for when we encounter data.  This would make it possible to support
+    //properties that are defined in a CZML document but not part of the official spec.  This
+    //would be helpful in cases where a CZML document has $ or # links to other properties,
+    //but that property itself is not part of another to-spec CZML object.  We could still
+    //allow the user to pass a default valueType if they want to make sure the data
+    //being processed is only the data of the expected type.
+
+    //Make CZML interval types to their implementation.
     var interpolators = {
             HERMITE : HermitePolynomialApproximation,
             LAGRANGE : LagrangePolynomialApproximation,
             LINEAR : LinearApproximation
         };
 
+    //The data associated with each DynamicProperty interval.
     function IntervalData() {
         this.interpolationAlgorithm = LinearApproximation;
         this.numberOfPoints = LinearApproximation.getRequiredDataPoints(1);
@@ -36,6 +50,8 @@ define([
         this.yTable = undefined;
     }
 
+    //Converts a CZML defined data into a JulianDate, regardless of whether it was
+    //specified in epoch seconds or as an ISO8601 string.
     function czmlDateToJulianDate(date, epoch) {
         if (typeof date === 'string') {
             return JulianDate.fromIso8601(date);
@@ -44,6 +60,9 @@ define([
     }
 
     function DynamicProperty(valueType) {
+        if (typeof valueType === 'undefined') {
+            throw new DeveloperError('valueType is required.');
+        }
         this.valueType = valueType;
         this._intervals = new TimeIntervalCollection();
         this._cachedDate = undefined;

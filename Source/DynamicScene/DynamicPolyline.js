@@ -26,7 +26,7 @@ function(
      * @see DynamicPolylineVisualizer
      * @see VisualizerCollection
      * @see Polyline
-     * @see CzmlStandard
+     * @see CzmlDefaults
      */
     function DynamicPolyline() {
         this.color = undefined;
@@ -49,7 +49,7 @@ function(
      * @see DynamicObject
      * @see DynamicProperty
      * @see DynamicObjectCollection
-     * @see CzmlStandard#updaters
+     * @see CzmlDefaults#updaters
      */
     DynamicPolyline.processCzmlPacket = function(dynamicObject, packet) {
         var polylineData = packet.polyline;
@@ -85,7 +85,7 @@ function(
      * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
      * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
      *
-     * @see CzmlStandard
+     * @see CzmlDefaults
      */
     DynamicPolyline.mergeProperties = function(targetObject, objectToMerge) {
         var polylineToMerge = objectToMerge.polyline;
@@ -111,7 +111,7 @@ function(
      *
      * @param {DynamicObject} dynamicObject The DynamicObject to remove the polyline from.
      *
-     * @see CzmlStandard
+     * @see CzmlDefaults
      */
     DynamicPolyline.undefineProperties = function(dynamicObject) {
         dynamicObject.polyline = undefined;

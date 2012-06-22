@@ -18,7 +18,7 @@ define(['dojo/dom',
         'Core/Transforms',
         'Scene/SceneTransitioner',
         'Scene/BingMapsStyle',
-        'DynamicScene/CzmlStandard',
+        'DynamicScene/processCzml',
         'DynamicScene/DynamicObjectCollection',
         'DynamicScene/VisualizerCollection',],
 function(dom,
@@ -40,7 +40,7 @@ function(dom,
          Transforms,
          SceneTransitioner,
          BingMapsStyle,
-         CzmlStandard,
+         processCzml,
          DynamicObjectCollection,
          VisualizerCollection) {
     "use strict";
@@ -121,7 +121,7 @@ function(dom,
             //while there are no visual differences, removeAll cleans the cache and improves performance
             visualizers.removeAll();
             dynamicObjectCollection.clear();
-            dynamicObjectCollection.processCzml(JSON.parse(evt.target.result), f.name);
+            processCzml(JSON.parse(evt.target.result), dynamicObjectCollection, f.name);
             setTimeFromBuffer();
         };
         reader.readAsText(f);
@@ -185,7 +185,7 @@ function(dom,
 
             if (typeof queryObject.source !== 'undefined') {
                 getJson(queryObject.source).then(function(czmlData) {
-                    dynamicObjectCollection.processCzml(czmlData, queryObject.source);
+                    processCzml(czmlData, dynamicObjectCollection, queryObject.source);
                     setTimeFromBuffer();
                 });
             }

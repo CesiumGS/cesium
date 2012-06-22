@@ -8,6 +8,7 @@ defineSuite([
          'DynamicScene/DynamicPoint',
          'DynamicScene/DynamicPolyline',
          'DynamicScene/DynamicLabel',
+         'DynamicScene/processCzml',
          'Scene/HorizontalOrigin'
      ], function(
          CompositeDynamicObjectCollection,
@@ -18,6 +19,7 @@ defineSuite([
          DynamicPoint,
          DynamicPolyline,
          DynamicLabel,
+         processCzml,
          HorizontalOrigin) {
     "use strict";
     /*global it,expect*/
@@ -36,7 +38,7 @@ defineSuite([
                 'horizontalOrigin' : 'CENTER',
             }
         };
-        dynamicObjectCollection1.processCzml(czml1);
+        processCzml(czml1, dynamicObjectCollection1);
 
         var czml2 = {
             'id' : 'testBillboard',
@@ -45,7 +47,7 @@ defineSuite([
                 'scale' : 3.0,
             }
         };
-        dynamicObjectCollection2.processCzml(czml2);
+        processCzml(czml2, dynamicObjectCollection2);
 
         var compositeDynamicObjectCollection = new CompositeDynamicObjectCollection();
         compositeDynamicObjectCollection.addCollection(dynamicObjectCollection1);
@@ -80,7 +82,7 @@ defineSuite([
                 'horizontalOrigin' : 'CENTER',
             }
         };
-        dynamicObjectCollection1.processCzml(czml1);
+        processCzml(czml1, dynamicObjectCollection1);
 
         var objects = compositeDynamicObjectCollection.getObjects();
         expect(objects.length).toEqual(1);
@@ -100,7 +102,7 @@ defineSuite([
                 'scale' : 3.0,
             }
         };
-        dynamicObjectCollection2.processCzml(czml2);
+        processCzml(czml2, dynamicObjectCollection2);
 
         objects = compositeDynamicObjectCollection.getObjects();
         expect(objects.length).toEqual(1);

@@ -6,7 +6,7 @@ define([
         '../Core/DeveloperError',
         './DynamicObject',
         './DynamicObjectCollection',
-        './CzmlStandard'
+        './CzmlDefaults'
     ], function(
         Event,
         Iso8601,
@@ -14,7 +14,7 @@ define([
         DeveloperError,
         DynamicObject,
         DynamicObjectCollection,
-        CzmlStandard) {
+        CzmlDefaults) {
     "use strict";
 
     /**
@@ -35,14 +35,14 @@ define([
      *
      * @see DynamicObjectCollection
      * @see DynamicObject
-     * @see CzmlStandard
+     * @see CzmlDefaults
      */
     function CompositeDynamicObjectCollection(collections, mergeFunctions, cleanFunctions) {
         this._hash = {};
         this._array = [];
         this._collections = [];
-        this.mergeFunctions = mergeFunctions || CzmlStandard.mergers;
-        this.cleanFunctions = cleanFunctions || CzmlStandard.cleaners;
+        this.mergeFunctions = mergeFunctions || CzmlDefaults.mergers;
+        this.cleanFunctions = cleanFunctions || CzmlDefaults.cleaners;
 
         /**
          * An Event that is fired whenever DynamicObjects in the collection have properties added or removed.
