@@ -20,11 +20,12 @@ define([
     /**
      * Non-destructively composites multiple DynamicObjectCollection instances into a single collection.
      * If a DynamicObject with the same ID exists in multiple collections, it is non-destructively
-     * merged into a single object instance.  If an object has the same property in multiple
+     * merged into a single new object instance.  If an object has the same property in multiple
      * collections, the property of the DynamicObject in the last collection of the list it
      * belongs to is used.  Whenever a new collection is added or removed from the list, applyChanges
-     * must be called for it to take affect.  Any changes to the DynamicObjectCollection instances
-     * contained in this list will automatically be reflected.
+     * must be called for it to take affect; however any changes to the DynamicObjectCollection instances
+     * contained in this list will automatically be reflected.  CompositeDynamicObjectCollection can
+     * be used almost anywhere that a DynamicObjectCollection is used.
      *
      * @name CompositeDynamicObjectCollection
      * @constructor

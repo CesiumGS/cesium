@@ -40,13 +40,37 @@ define([
      * @see CzmlDefaults
      */
     function DynamicBillboard() {
+        /**
+         * A DynamicProperty of type CzmlString which determines the billboard's texture.
+         */
         this.image = undefined;
+        /**
+         * A DynamicProperty of type CzmlNumber which determines the billboard's scale.
+         */
         this.scale = undefined;
+        /**
+         * A DynamicProperty of type CzmlHorizontalOrigin which determines the billboard's horizontal origin.
+         */
         this.horizontalOrigin = undefined;
+        /**
+         * A DynamicProperty of type CzmlVerticalHorigin which determines the billboard's vertical origin.
+         */
         this.verticalOrigin = undefined;
+        /**
+         * A DynamicProperty of type CzmlColor which determines the billboard's color.
+         */
         this.color = undefined;
+        /**
+         * A DynamicProperty of type CzmlCartesian3 which determines the billboard's eye offset.
+         */
         this.eyeOffset = undefined;
+        /**
+         * A DynamicProperty of type CzmlCartesian2 which determines the billboard's pixel offset.
+         */
         this.pixelOffset = undefined;
+        /**
+         * A DynamicProperty of type CzmlBoolean which determines the billboard's visibility.
+         */
         this.show = undefined;
     }
 
