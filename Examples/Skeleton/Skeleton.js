@@ -56,24 +56,25 @@ require({
     }());
 
     ///////////////////////////////////////////////////////////////////////////
-    // Example keyboard and Mouse handlers
+    // Example Mouse handler
 
     var handler = new Cesium.EventHandler(document);
-
-    handler.setKeyAction(function() {
-        transitioner.morphTo2D();
-    }, '1');
-    handler.setKeyAction(function() {
-        transitioner.morphToColumbusView();
-    }, '2');
-    handler.setKeyAction(function() {
-        transitioner.morphTo3D();
-    }, '3');
-
     handler.setMouseAction(function(movement) {
         /* ... */
         // Use movement.startX, movement.startY, movement.endX, movement.endY
     }, Cesium.MouseEventType.MOVE);
+
+    function keydownHandler(e) {
+        var keyCode = e.keyCode;
+        if (keyCode === 51) {
+            transitioner.morphTo3D();
+        } else if (keyCode === 50) {
+            transitioner.morphToColumbusView();
+        } else if (keyCode === 49) {
+            transitioner.morphTo2D();
+        }
+    }
+    document.addEventListener('keydown', keydownHandler, false);
 
     canvas.oncontextmenu = function() {
         return false;
