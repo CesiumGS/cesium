@@ -1,11 +1,9 @@
 /*global define*/
 define([
         '../../Core/DeveloperError',
-        '../../Shaders/Materials/Material',
         '../../Shaders/Materials/BumpMapMaterial'
     ], function(
         DeveloperError,
-        ShadersMaterial,
         ShadersBumpMapMaterial) {
     "use strict";
 
@@ -58,8 +56,6 @@ define([
 
     BumpMapMaterial.prototype._getShaderSource = function() {
         return "#line 0\n" +
-                ShadersMaterial +
-                "#line 0\n" +
                 ShadersBumpMapMaterial;
     };
 

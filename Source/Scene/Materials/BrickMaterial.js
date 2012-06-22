@@ -1,11 +1,9 @@
 /*global define*/
 define([
         '../../Shaders/Noise',
-        '../../Shaders/Materials/Material',
         '../../Shaders/Materials/BrickMaterial'
     ], function (
         ShadersNoise,
-        ShadersMaterial,
         ShadersBrickMaterial) {
     "use strict";
 
@@ -109,8 +107,6 @@ define([
     BrickMaterial.prototype._getShaderSource = function() {
         return "#line 0\n" +
                ShadersNoise +
-               "#line 0\n" +
-               ShadersMaterial +
                "#line 0\n" +
                ShadersBrickMaterial;
     };

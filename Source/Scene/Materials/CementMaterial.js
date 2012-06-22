@@ -1,11 +1,9 @@
 /*global define*/
 define([
         '../../Shaders/Noise',
-        '../../Shaders/Materials/Material',
         '../../Shaders/Materials/CementMaterial'
     ], function (
         ShadersNoise,
-        ShadersMaterial,
         ShadersCementMaterial) {
     "use strict";
 
@@ -62,8 +60,6 @@ define([
     CementMaterial.prototype._getShaderSource = function() {
         return "#line 0\n" +
                ShadersNoise +
-               "#line 0\n" +
-               ShadersMaterial +
                "#line 0\n" +
                ShadersCementMaterial;
     };

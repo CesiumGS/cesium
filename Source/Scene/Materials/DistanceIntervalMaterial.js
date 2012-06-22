@@ -1,9 +1,7 @@
 /*global define*/
 define([
-        '../../Shaders/Materials/Material',
         '../../Shaders/Materials/DistanceIntervalMaterial'
     ], function(
-        ShadersMaterial,
         ShadersDistanceIntervalMaterial) {
     "use strict";
 
@@ -42,8 +40,6 @@ define([
 
     DistanceIntervalMaterial.prototype._getShaderSource = function() {
         return "#define NUMBER_OF_DISTANCES " + this.intervals.length.toString() + "\n" +
-               "#line 0\n" +
-               ShadersMaterial +
                "#line 0\n" +
                ShadersDistanceIntervalMaterial;
     };

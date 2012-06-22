@@ -1,9 +1,7 @@
 /*global define*/
 define([
-        '../../Shaders/Materials/Material',
         '../../Shaders/Materials/DotMaterial'
     ], function(
-        ShadersMaterial,
         ShadersDotMaterial) {
     "use strict";
 
@@ -69,8 +67,6 @@ define([
 
     DotMaterial.prototype._getShaderSource = function() {
         return "#line 0\n" +
-               ShadersMaterial +
-               "#line 0\n" +
                ShadersDotMaterial;
     };
 

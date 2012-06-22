@@ -1,11 +1,9 @@
 /*global define*/
 define([
         '../../Shaders/Noise',
-        '../../Shaders/Materials/Material',
         '../../Shaders/Materials/GrassMaterial'
     ], function (
         ShadersNoise,
-        ShadersMaterial,
         ShadersGrassMaterial) {
     "use strict";
 
@@ -67,8 +65,6 @@ define([
     GrassMaterial.prototype._getShaderSource = function() {
         return "#line 0\n" +
                ShadersNoise +
-               "#line 0\n" +
-               ShadersMaterial +
                "#line 0\n" +
                ShadersGrassMaterial;
     };

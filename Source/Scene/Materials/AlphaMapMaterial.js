@@ -1,11 +1,9 @@
 /*global define*/
 define([
         '../../Core/DeveloperError',
-        '../../Shaders/Materials/Material',
         '../../Shaders/Materials/AlphaMapMaterial'
     ], function(
         DeveloperError,
-        ShadersMaterial,
         ShadersAlphaMapMaterial) {
     "use strict";
 
@@ -59,8 +57,6 @@ define([
 
     AlphaMapMaterial.prototype._getShaderSource = function() {
         return "#line 0\n" +
-               ShadersMaterial +
-               "#line 0\n" +
                ShadersAlphaMapMaterial;
     };
 
