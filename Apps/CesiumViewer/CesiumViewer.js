@@ -101,6 +101,11 @@ function(dom,
             }
         }
 
+        if (startTime.equals(Iso8601.MINIMUM_VALUE)) {
+            startTime = new JulianDate();
+            stopTime = startTime.addDays(1);
+        }
+
         clock.startTime = startTime;
         clock.stopTime = stopTime;
         clock.currentTime = startTime;
