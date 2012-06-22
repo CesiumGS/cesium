@@ -5,6 +5,9 @@ define(['./DeveloperError'], function(DeveloperError) {
     /**
      * Finds an item in a sorted array.
      *
+     * @name binarySearch
+     * @function
+     *
      * @param {Array} array The sorted array to search.
      * @param {Object} itemToFind The item to find in the array.
      *
@@ -22,7 +25,6 @@ define(['./DeveloperError'], function(DeveloperError) {
      * @exception {DeveloperError} <code>array</code> is required.
      * @exception {DeveloperError} <code>toFind</code> is required.
      * @exception {DeveloperError} <code>comparator</code> is required.
-     * @exports binarySearch
      *
      * @example
      * // Create a comparator function to search through an array of numbers.

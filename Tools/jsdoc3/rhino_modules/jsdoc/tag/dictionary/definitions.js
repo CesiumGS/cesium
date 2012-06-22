@@ -263,6 +263,7 @@ exports.defineTags = function(dictionary) {
         onTagged: function(doclet, tag) {
             setDocletKindToTitle(doclet, tag);
             setDocletNameToValue(doclet, tag);
+            doclet.filename = doclet.name;
         }
     })
     .synonym('func')

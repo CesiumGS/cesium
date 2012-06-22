@@ -9,6 +9,9 @@ define(['./DeveloperError'], function(DeveloperError) {
     /**
      * Requests a resource using JSONP.
      *
+     * @name jsonp
+     * @function
+     *
      * @param {String} url The URL to request.
      * @param {Function} callback The callback function to call, passing the requested resource as the single parameter.
      * @param {Object} [options.parameters] Any extra query parameters to append to the URL.
