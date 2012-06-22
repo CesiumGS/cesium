@@ -7,14 +7,13 @@ Beta Releases
 ### b7 - xx/xx/2012
 
 * Breaking changes:
-   * `TextureAtlas` takes an object literal in its constructor instead of separate parameters. 
-    Code that previously looked like:
+   * `TextureAtlas` takes an object literal in its constructor instead of separate parameters.  Code that previously looked like:
 
-        context.createTextureAtlas(images, pixelFormat, borderWidthInPixels);
+            context.createTextureAtlas(images, pixelFormat, borderWidthInPixels);
 
-    should now look like:
+      should now look like:
 
-        context.createTextureAtlas({images : images, pixelFormat : pixelFormat, borderWidthInPixels : borderWidthInPixels});
+            context.createTextureAtlas({images : images, pixelFormat : pixelFormat, borderWidthInPixels : borderWidthInPixels});
 
 * Added `addImage` to `TextureAtlas` so images can be added to a texture atlas after it is constructed.
 
