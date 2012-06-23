@@ -33,10 +33,19 @@ defineSuite([
     var ellipsoid;
     var controller;
     var controller2;
+    var canvas;
+
+    var FakeCanvas = function() {
+        this.addEventListener = function() {};
+        this.removeEventListener = function() {};
+
+        this.clientWidth = 1024;
+        this.clientHeight = 768;
+    };
 
     beforeEach(function() {
+        canvas = new FakeCanvas();
         ellipsoid = Ellipsoid.WGS84;
-        camera = new Camera(document);
 
         moverate = 3.0;
         zoomrate = 1.0;
@@ -53,14 +62,14 @@ defineSuite([
         frustum.top = 1.0;
         frustum.bottom = -1.0;
 
-        camera = new Camera(document);
+        camera = new Camera(canvas);
         camera.position = position;
         camera.up = up;
         camera.direction = dir;
         camera.right = right;
         camera.frustum = frustum;
 
-        controller = new Camera2DController(document, camera, ellipsoid);
+        controller = new Camera2DController(canvas, camera, ellipsoid);
     });
 
     afterEach(function() {
@@ -103,9 +112,9 @@ defineSuite([
     it('translate', function() {
         controller._translate({
             startPosition : new Cartesian2(0.0, 0.0),
-            endPosition : new Cartesian2(10.0, 10.0)
+            endPosition : new Cartesian2(1000.0, 1000.0)
         });
-        expect(camera.position.equalsEpsilon(new Cartesian3(100000.0, 100000.0, 0.0))).toEqual(true);
+        expect(camera.position.equalsEpsilon(new Cartesian3(-3.9, 2.6, 0.0), CesiumMath.EPSILON2)).toEqual(true);
     });
 
     it('zoom', function() {
@@ -115,10 +124,10 @@ defineSuite([
             startPosition : new Cartesian2(0.0, 0.0),
             endPosition : new Cartesian2(0.0, 1.0)
         });
-        expect(frustum.right).toEqualEpsilon(controller._zoomRate + offset, CesiumMath.EPSILON10);
-        expect(frustum.left).toEqual(-(controller._zoomRate + offset), CesiumMath.EPSILON10);
-        expect(frustum.top).toEqual(ratio * (controller._zoomRate + offset), CesiumMath.EPSILON10);
-        expect(frustum.bottom).toEqual(-ratio * (controller._zoomRate + offset), CesiumMath.EPSILON10);
+        expect(frustum.right).toEqualEpsilon(offset, CesiumMath.EPSILON1);
+        expect(frustum.left).toEqualEpsilon(-offset, CesiumMath.EPSILON1);
+        expect(frustum.top).toEqualEpsilon(ratio * offset, CesiumMath.EPSILON1);
+        expect(frustum.bottom).toEqualEpsilon(-ratio * offset, CesiumMath.EPSILON1);
     });
 
     it('zoomOut', function() {

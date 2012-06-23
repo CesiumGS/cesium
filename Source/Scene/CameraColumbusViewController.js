@@ -54,7 +54,7 @@ define([
         //       on controllers.
         this._spindleController._spinHandler = this._spindleController._spinHandler && this._spindleController._spinHandler.destroy();
         this._spindleController._spinHandler = new CameraEventHandler(canvas, CameraEventType.MIDDLE_DRAG);
-        this._spindleController.mouseConstrainedZAxis = true;
+        this._spindleController.constrainedAxis = Cartesian3.UNIT_Z;
 
         this._freeLookController = new CameraFreeLookController(canvas, camera);
         this._freeLookController.horizontalRotationAxis = Cartesian3.UNIT_Z;
