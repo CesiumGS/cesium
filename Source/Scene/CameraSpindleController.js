@@ -69,15 +69,15 @@ define([
         this.inertiaZoom = 0.8;
 
         /**
-         * If set to true, the camera will not be able to rotate past the poles.
-         * If this is set to true while in pan mode, the position clicked on the ellipsoid
-         * while not always map directly to the cursor.
+         * If set, the camera will not be able to rotate past this axis in either direction.
+         * If this is set while in pan mode, the position clicked on the ellipsoid
+         * will not always map directly to the cursor.
          *
-         * @type Boolean
+         * @type Cartesian3
          *
          * @see CameraSpindleController#mode
          */
-        this.mouseConstrainedZAxis = false;
+        this.constrainedAxis = undefined;
 
         /**
          * Determines the rotation behavior on mouse events.
@@ -85,8 +85,6 @@ define([
          * @type CameraSpindleControllerMode
          */
         this.mode = CameraSpindleControllerMode.AUTO;
-
-        this._zAxis = Cartesian3.UNIT_Z;
 
         var radius = this._ellipsoid.getRadii().getMaximumComponent();
         this._zoomFactor = 5.0;
@@ -255,7 +253,7 @@ define([
     CameraSpindleController.prototype._moveVertical = function(angle, constrainedZ) {
         if (constrainedZ) {
             var p = this._camera.position.normalize();
-            var dot = p.dot(this._zAxis);
+            var dot = p.dot(this.constrainedAxis.normalize());
             if (CesiumMath.equalsEpsilon(1.0, Math.abs(dot), CesiumMath.EPSILON3) && dot * angle < 0.0) {
                 return;
             }
@@ -332,7 +330,7 @@ define([
 
     CameraSpindleController.prototype._moveHorizontal = function(angle, constrainedZ) {
         if (constrainedZ) {
-            this.rotate(this._zAxis, angle);
+            this.rotate(this.constrainedAxis.normalize(), angle);
         } else {
             this.rotate(this._camera.up, angle);
         }
@@ -435,13 +433,14 @@ define([
         var deltaPhi = -rotateRate * phiWindowRatio * Math.PI * 2.0;
         var deltaTheta = -rotateRate * thetaWindowRatio * Math.PI;
 
+        var constrainedAxis = typeof this.constrainedAxis !== 'undefined';
         var theta = Math.acos(position.z / rho) + deltaTheta;
-        if (this.mouseConstrainedZAxis && (theta < 0 || theta > Math.PI)) {
+        if (constrainedAxis && (theta < 0 || theta > Math.PI)) {
             deltaTheta = 0;
         }
 
-        this._moveHorizontal(deltaPhi, this.mouseConstrainedZAxis);
-        this._moveVertical(deltaTheta, this.mouseConstrainedZAxis);
+        this._moveHorizontal(deltaPhi, constrainedAxis);
+        this._moveVertical(deltaTheta, constrainedAxis);
     };
 
     CameraSpindleController.prototype._pan = function(movement) {
@@ -453,7 +452,7 @@ define([
             return;
         }
 
-        if (!this.mouseConstrainedZAxis) {
+        if (typeof this.constrainedAxis === 'undefined') {
             p0 = p0.normalize();
             p1 = p1.normalize();
             var dot = p0.dot(p1);
@@ -480,8 +479,9 @@ define([
                 deltaTheta = 0;
             }
 
-            this._moveHorizontal(deltaPhi, this.mouseConstrainedZAxis);
-            this._moveVertical(deltaTheta, this.mouseConstrainedZAxis);
+            var constrainedAxis = typeof this.constrainedAxis !== 'undefined';
+            this._moveHorizontal(deltaPhi, constrainedAxis);
+            this._moveVertical(deltaTheta, constrainedAxis);
         }
     };
 
