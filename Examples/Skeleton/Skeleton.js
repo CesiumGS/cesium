@@ -56,19 +56,9 @@ require({
     }());
 
     ///////////////////////////////////////////////////////////////////////////
-    // Example keyboard and Mouse handlers
+    // Example Mouse handlers
 
     var handler = new Cesium.EventHandler(document);
-
-    handler.setKeyAction(function() {
-        transitioner.morphTo2D();
-    }, '1');
-    handler.setKeyAction(function() {
-        transitioner.morphToColumbusView();
-    }, '2');
-    handler.setKeyAction(function() {
-        transitioner.morphTo3D();
-    }, '3');
 
     handler.setMouseAction(function(movement) {
         /* ... */

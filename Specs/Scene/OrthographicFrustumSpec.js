@@ -126,12 +126,6 @@ defineSuite([
         expect(clone.equals(frustum)).toEqual(true);
     });
 
-    it('destroys', function() {
-        expect(frustum.isDestroyed()).toEqual(false);
-        frustum.destroy();
-        expect(frustum.isDestroyed()).toEqual(true);
-    });
-
     it('throws with null plane(s)', function() {
         var frustum = new OrthographicFrustum();
         expect(function() {

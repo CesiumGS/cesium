@@ -7,7 +7,8 @@ define([
         '../Core/Cartesian3',
         '../Scene/BillboardCollection',
         '../Scene/HorizontalOrigin',
-        '../Scene/VerticalOrigin'
+        '../Scene/VerticalOrigin',
+        '../Renderer/TextureAtlasBuilder'
     ], function(
         DeveloperError,
         destroyObject,
@@ -16,7 +17,8 @@ define([
         Cartesian3,
         BillboardCollection,
         HorizontalOrigin,
-        VerticalOrigin) {
+        VerticalOrigin,
+        TextureAtlasBuilder) {
     "use strict";
 
     //Callback to create a callback so that we close over all of the proper values.
@@ -71,6 +73,7 @@ define([
 
         var billboardCollection = this._billboardCollection = new BillboardCollection();
         var atlas = this._textureAtlas = scene.getContext().createTextureAtlas();
+        this._textureAtlasBuilder = new TextureAtlasBuilder(atlas);
         billboardCollection.setTextureAtlas(atlas);
         scene.getPrimitives().add(billboardCollection);
         this.setDynamicObjectCollection(dynamicObjectCollection);
@@ -258,7 +261,7 @@ define([
         if (textureValue !== billboard.vizTexture) {
             billboard.vizTexture = textureValue;
             billboard.vizTextureAvailable = false;
-            this._textureAtlas.addTextureFromUrl(textureValue, textureReady(dynamicObject, this._billboardCollection, textureValue));
+            this._textureAtlasBuilder.addTextureFromUrl(textureValue, textureReady(dynamicObject, this._billboardCollection, textureValue));
         }
 
         billboard.setShow(billboard.vizTextureAvailable);

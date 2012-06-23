@@ -92,8 +92,8 @@ define([
      *
      * @example
      * // Create a billboard collection with two billboards
-     * var atlas = scene.getContext().createTextureAtlas(images);
      * var billboards = new BillboardCollection();
+     * var atlas = context.createTextureAtlas({images : images});
      * billboards.setTextureAtlas(atlas);
      * billboards.add({
      *   position : { x : 1.0, y : 2.0, z : 3.0 }
@@ -104,6 +104,7 @@ define([
      */
     function BillboardCollection() {
         this._textureAtlas = undefined;
+        this._textureAtlasGUID = undefined;
         this._destroyTextureAtlas = true;
         this._sp = undefined;
         this._rs = undefined;
@@ -446,8 +447,9 @@ define([
      * // Two billboards, each referring to one of the images, are then
      * // added to the collection.
      * var billboards = new BillboardCollection();
-     * billboards.setTextureAtlas(
-     *   scene.getContext().createTextureAtlas([image0, image1]));
+     * var images = [image0, image1];
+     * var atlas = context.createTextureAtlas({images : images});
+     * billboards.setTextureAtlas(atlas);
      * billboards.add({
      *   // ...
      *   imageIndex : 0
@@ -458,26 +460,11 @@ define([
      * });
      */
     BillboardCollection.prototype.setTextureAtlas = function(value) {
-        var currentAtlas = this._textureAtlas;
-        if (currentAtlas !== value) {
-            if (typeof currentAtlas !== 'undefined') {
-                currentAtlas.textureAtlasChanged.removeEventListener(this._texturesChangedCallback);
-                if (this._destroyTextureAtlas) {
-                    currentAtlas.destroy();
-                }
-            }
-
-            if (typeof value !== 'undefined') {
-                value.textureAtlasChanged.addEventListener(this._texturesChangedCallback, this);
-            }
-
+        if (this._textureAtlas !== value) {
+            this._textureAtlas = this._destroyTextureAtlas && this._textureAtlas && this._textureAtlas.destroy();
             this._textureAtlas = value;
             this._createVertexArray = true; // New per-billboard texture coordinates
         }
-    };
-
-    BillboardCollection.prototype._texturesChangedCallback = function() {
-        this._createVertexArray = true; // New per-billboard texture coordinates
     };
 
     /**
@@ -514,7 +501,8 @@ define([
      *
      * @example
      * // Destroy a billboard collection but not its texture atlas.
-     * var atlas = scene.getContext().createTextureAtlas(...);
+     *
+     * var atlas = context.createTextureAtlas({images : images});
      * billboards.setTextureAtlas(atlas);
      * billboards.setDestroyTextureAtlas(false);
      * billboards = billboards.destroy();
@@ -805,15 +793,14 @@ define([
     BillboardCollection.prototype._writeTextureCoordinatesAndImageSize = function(context, textureAtlasCoordinates, vafWriters, billboard) {
         var i = (billboard._index * 4);
         var imageRectangle = textureAtlasCoordinates[billboard.getImageIndex()];
-        var imageSize = {
-            x : imageRectangle.x1 - imageRectangle.x0,
-            y : imageRectangle.y1 - imageRectangle.y0
-        };
-
-        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 0, imageRectangle.x0 * 65535, imageRectangle.y0 * 65535, imageSize.x * 65535, imageSize.y * 65535); // Lower Left
-        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 1, imageRectangle.x1 * 65535, imageRectangle.y0 * 65535, imageSize.x * 65535, imageSize.y * 65535); // Lower Right
-        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 2, imageRectangle.x1 * 65535, imageRectangle.y1 * 65535, imageSize.x * 65535, imageSize.y * 65535); // Upper Right
-        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 3, imageRectangle.x0 * 65535, imageRectangle.y1 * 65535, imageSize.x * 65535, imageSize.y * 65535); // Upper Left
+        var bottomLeftX = imageRectangle.x;
+        var bottomLeftY = imageRectangle.y;
+        var topRightX = imageRectangle.x + imageRectangle.width;
+        var topRightY = imageRectangle.y + imageRectangle.height;
+        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 0, bottomLeftX * 65535, bottomLeftY * 65535, imageRectangle.width * 65535, imageRectangle.height * 65535); // Lower Left
+        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 1, topRightX * 65535, bottomLeftY * 65535, imageRectangle.width * 65535, imageRectangle.height * 65535); // Lower Right
+        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 2, topRightX * 65535, topRightY * 65535, imageRectangle.width * 65535, imageRectangle.height * 65535); // Upper Right
+        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 3, bottomLeftX * 65535, topRightY * 65535, imageRectangle.width * 65535, imageRectangle.height * 65535); // Upper Left
     };
 
     BillboardCollection.prototype._writeBillboard = function(context, textureAtlasCoordinates, vafWriters, billboard) {
@@ -916,15 +903,17 @@ define([
     };
 
     BillboardCollection.prototype._update = function(context, sceneState) {
-        // Can't write billboard vertices until we have texture coordinates
-        // provided by a texture atlas
         var textureAtlas = this._textureAtlas;
         if (typeof textureAtlas === 'undefined') {
+            // Can't write billboard vertices until we have texture coordinates
+            // provided by a texture atlas
             return;
         }
 
         var textureAtlasCoordinates = textureAtlas.getTextureCoordinates();
-        if (typeof textureAtlasCoordinates === 'undefined') {
+        if (textureAtlasCoordinates.length === 0) {
+            // Can't write billboard vertices until we have texture coordinates
+            // provided by a texture atlas
             return;
         }
 
@@ -936,11 +925,14 @@ define([
         var length = billboards.length;
         var properties = this._propertiesChanged;
 
+        var textureAtlasGUID = textureAtlas.getGUID();
+        var createVertexArray = this._createVertexArray || this._textureAtlasGUID !== textureAtlasGUID;
+        this._textureAtlasGUID = textureAtlasGUID;
+
         var vafWriters;
 
         // PERFORMANCE_IDEA: Round robin multiple buffers.
-
-        if (this._createVertexArray || this.computeNewBuffersUsage()) {
+        if (createVertexArray || this.computeNewBuffersUsage()) {
             this._createVertexArray = false;
 
             this._vaf = this._vaf && this._vaf.destroy();
@@ -1091,7 +1083,7 @@ define([
      * billboards = billboards && billboards.destroy();
      */
     BillboardCollection.prototype.destroy = function() {
-        this.setTextureAtlas(undefined);
+        this._textureAtlas = this._destroyTextureAtlas && this._textureAtlas && this._textureAtlas.destroy();
         this._sp = this._sp && this._sp.release();
         this._spPick = this._spPick && this._spPick.release();
         this._vaf = this._vaf && this._vaf.destroy();
