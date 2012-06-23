@@ -1,16 +1,18 @@
-/*global define document canvas*/
+/*global define*/
 define([
+        '../Core/Event',
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Color',
-        '../Renderer/TextureAtlas',
-        '../Scene/BillboardCollection'
+        '../Scene/BillboardCollection',
+        '../Renderer/TextureAtlasBuilder'
        ], function(
+         Event,
          DeveloperError,
          destroyObject,
          Color,
-         TextureAtlas,
-         BillboardCollection) {
+         BillboardCollection,
+         TextureAtlasBuilder) {
     "use strict";
 
     /**
@@ -41,9 +43,9 @@ define([
         this._scene = scene;
         this._unusedIndexes = [];
         this._dynamicObjectCollection = undefined;
-
         var billboardCollection = this._billboardCollection = new BillboardCollection();
-        var atlas = this._textureAtlas = new TextureAtlas(scene.getContext());
+        var atlas = this._textureAtlas = scene.getContext().createTextureAtlas();
+        this._textureAtlasBuilder = new TextureAtlasBuilder(atlas);
         billboardCollection.setTextureAtlas(atlas);
         scene.getPrimitives().add(billboardCollection);
         this.setDynamicObjectCollection(dynamicObjectCollection);
@@ -265,7 +267,7 @@ define([
             var cssOutlineWidth = billboard.point_outlineWidth || 2;
             var textureId = JSON.stringify([cssColor, cssPixelSize, cssOutlineColor, cssOutlineWidth]);
 
-            this._textureAtlas.addTextureFromFunction(textureId, function(id, loadedCallback) {
+            this._textureAtlasBuilder.addTextureFromFunction(textureId, function(id, loadedCallback) {
                 var canvas = document.createElement('canvas');
 
                 var length = cssPixelSize + (2 * cssOutlineWidth);

@@ -903,7 +903,15 @@ define([
     };
 
     BillboardCollection.prototype._update = function(context, sceneState) {
-        if (!this._textureAtlas) {
+        var textureAtlas = this._textureAtlas;
+        if (typeof textureAtlas === 'undefined') {
+            // Can't write billboard vertices until we have texture coordinates
+            // provided by a texture atlas
+            return;
+        }
+
+        var textureAtlasCoordinates = textureAtlas.getTextureCoordinates();
+        if (textureAtlasCoordinates.length === 0) {
             // Can't write billboard vertices until we have texture coordinates
             // provided by a texture atlas
             return;
@@ -917,16 +925,14 @@ define([
         var length = billboards.length;
         var properties = this._propertiesChanged;
 
-        var textureAtlasCoordinates = this._textureAtlas.getTextureCoordinates();
-        var textureAtlasGUID = this._textureAtlas.getGUID();
-        var textureAtlasChanged = this._textureAtlasGUID !== textureAtlasGUID;
+        var textureAtlasGUID = textureAtlas.getGUID();
+        var createVertexArray = this._createVertexArray || this._textureAtlasGUID !== textureAtlasGUID;
         this._textureAtlasGUID = textureAtlasGUID;
 
         var vafWriters;
 
         // PERFORMANCE_IDEA: Round robin multiple buffers.
-
-        if (textureAtlasChanged || this._createVertexArray || this.computeNewBuffersUsage()) {
+        if (createVertexArray || this.computeNewBuffersUsage()) {
             this._createVertexArray = false;
 
             this._vaf = this._vaf && this._vaf.destroy();
