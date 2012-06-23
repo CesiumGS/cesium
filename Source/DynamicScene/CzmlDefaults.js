@@ -1,0 +1,117 @@
+/*global define*/
+define([
+        './DynamicObject',
+        './DynamicBillboard',
+        './DynamicCone',
+        './DynamicLabel',
+        './DynamicPoint',
+        './DynamicPolygon',
+        './DynamicPolyline',
+        './DynamicPyramid',
+        './DynamicBillboardVisualizer',
+        './DynamicConeVisualizerUsingCustomSensor', //CZML_TODO Replace with './DynamicConeVisualizer', once ComplexConicSensor works.
+        './DynamicLabelVisualizer',
+        './DynamicPointVisualizer',
+        './DynamicPolygonVisualizer',
+        './DynamicPolylineVisualizer',
+        './DynamicPyramidVisualizer'
+       ], function(
+        DynamicObject,
+        DynamicBillboard,
+        DynamicCone,
+        DynamicLabel,
+        DynamicPoint,
+        DynamicPolygon,
+        DynamicPolyline,
+        DynamicPyramid,
+        DynamicBillboardVisualizer,
+        DynamicConeVisualizer,
+        DynamicLabelVisualizer,
+        DynamicPointVisualizer,
+        DynamicPolygonVisualizer,
+        DynamicPolylineVisualizer,
+        DynamicPyramidVisualizer) {
+    "use strict";
+
+    /**
+     * Helper class which provides the default set of CZML processing methods
+     * needed to visualize the complete CZML standard.  There's no reason to
+     * access this class directly, as it just holds the defaults used by
+     * DynamicObjectCollection, CompositeDynamicObjectCollection, and VisualizerCollection.
+     *
+     * @exports CzmlDefaults
+     * @see DynamicObjectCollection
+     * @see CompositeDynamicObjectCollection
+     * @see VisualizerCollection#createCzmlDefaultsCollection
+     */
+    var CzmlDefaults = {
+        //Any change to updaters needs to be reflected in the DynamicObject constructor,
+        //which has the superset of all properties created by the various updaters.
+        /**
+         * The standard set of updaters for processing CZML.  This array is the default
+         * set of updater methods used by DynamicObjectCollection.
+         * @see DynamicObjectCollection
+         */
+        updaters : [DynamicBillboard.processCzmlPacket,
+                    DynamicCone.processCzmlPacket,
+                    DynamicLabel.processCzmlPacket,
+                    DynamicPoint.processCzmlPacket,
+                    DynamicPolygon.processCzmlPacket,
+                    DynamicPolyline.processCzmlPacket,
+                    DynamicPyramid.processCzmlPacket,
+                    DynamicObject.processCzmlPacketPosition,
+                    DynamicObject.processCzmlPacketOrientation,
+                    DynamicObject.processCzmlPacketVertexPositions,
+                    DynamicObject.processCzmlPacketAvailability],
+
+        /**
+         * The standard set of mergers for processing CZML.  This array is the default
+         * set of updater methods used by CompositeDynamicObjectCollection.
+         *
+         * @see CompositeDynamicObjectCollection
+         */
+        mergers : [DynamicBillboard.mergeProperties,
+                   DynamicCone.mergeProperties,
+                   DynamicLabel.mergeProperties,
+                   DynamicPoint.mergeProperties,
+                   DynamicPolygon.mergeProperties,
+                   DynamicPolyline.mergeProperties,
+                   DynamicPyramid.mergeProperties,
+                   DynamicObject.mergeProperties],
+
+       /**
+        * The standard set of cleaners for processing CZML.  This array is the default
+        * set of updater methods used by CompositeDynamicObjectCollection.
+        *
+        * @see CompositeDynamicObjectCollection
+        */
+        cleaners : [DynamicBillboard.undefineProperties,
+                    DynamicCone.undefineProperties,
+                    DynamicLabel.undefineProperties,
+                    DynamicPoint.undefineProperties,
+                    DynamicPolygon.undefineProperties,
+                    DynamicPolyline.undefineProperties,
+                    DynamicPyramid.undefineProperties,
+                    DynamicObject.undefineProperties],
+
+        /**
+         * Creates an array containing the standard CZML visualizers,
+         * configured for the provided scene.
+         *
+         * @param scene The scene being used for visualization.
+         * @returns {Array} The CZML standard visualizers.
+         * @see VisualizerCollection#createCzmlDefaultsCollection
+         */
+        createVisualizers : function(scene) {
+            return [new DynamicBillboardVisualizer(scene),
+                    new DynamicConeVisualizer(scene),
+                    new DynamicLabelVisualizer(scene),
+                    new DynamicPointVisualizer(scene),
+                    new DynamicPolygonVisualizer(scene),
+                    new DynamicPolylineVisualizer(scene),
+                    new DynamicPyramidVisualizer(scene)];
+        }
+    };
+
+    return CzmlDefaults;
+});

@@ -34,7 +34,7 @@ defineSuite([
         expect(DynamicPolygon.processCzmlPacket(dynamicObject, polygonPacket)).toEqual(true);
 
         expect(dynamicObject.polygon).toBeDefined();
-        expect(dynamicObject.polygon.material.getValue(Iso8601.MINIMUM_VALUE).color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(dynamicObject.polygon.material.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
         expect(dynamicObject.polygon.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
     });
 
@@ -60,7 +60,7 @@ defineSuite([
         expect(DynamicPolygon.processCzmlPacket(dynamicObject, polygonPacket)).toEqual(true);
 
         expect(dynamicObject.polygon).toBeDefined();
-        expect(dynamicObject.polygon.material.getValue(validTime).color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(dynamicObject.polygon.material.getValue(validTime).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
         expect(dynamicObject.polygon.show.getValue(validTime)).toEqual(true);
 
         expect(dynamicObject.polygon.material.getValue(invalidTime)).toBeUndefined();

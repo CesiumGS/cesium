@@ -87,22 +87,22 @@ define([
             newProperty = true;
         }
 
-        existingProperty.addIntervals(czmlIntervals, dynamicObjectCollection, constrainedInterval);
+        existingProperty.addCzmlIntervals(czmlIntervals, dynamicObjectCollection, constrainedInterval);
 
         return newProperty;
     };
 
-    DynamicDirectionsProperty.prototype.addIntervals = function(czmlIntervals, dynamicObjectCollection, constrainedInterval) {
+    DynamicDirectionsProperty.prototype.addCzmlIntervals = function(czmlIntervals, dynamicObjectCollection, constrainedInterval) {
         if (Array.isArray(czmlIntervals)) {
             for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
-                this.addInterval(czmlIntervals[i], dynamicObjectCollection, constrainedInterval);
+                this.addCzmlInterval(czmlIntervals[i], dynamicObjectCollection, constrainedInterval);
             }
         } else {
-            this.addInterval(czmlIntervals, dynamicObjectCollection, constrainedInterval);
+            this.addCzmlInterval(czmlIntervals, dynamicObjectCollection, constrainedInterval);
         }
     };
 
-    DynamicDirectionsProperty.prototype.addInterval = function(czmlInterval, dynamicObjectCollection, constrainedInterval) {
+    DynamicDirectionsProperty.prototype.addCzmlInterval = function(czmlInterval, dynamicObjectCollection, constrainedInterval) {
         var iso8601Interval = czmlInterval.interval;
         if (typeof iso8601Interval === 'undefined') {
             iso8601Interval = Iso8601.MAXIMUM_INTERVAL.clone();

@@ -25,7 +25,7 @@ defineSuite([
             interpolationAlgorithm : 'LINEAR',
             interpolationDegree : 1
         };
-        property.addIntervals(czmlInterval);
+        property.addCzmlIntervals(czmlInterval);
 
         var result = property.getValueCartesian(epoch);
         expect(result.x).toEqual(100000);
@@ -58,7 +58,7 @@ defineSuite([
         var czmlInterval = {
             cartesian : [1234, 5678, 9101112]
         };
-        property.addIntervals(czmlInterval);
+        property.addCzmlIntervals(czmlInterval);
 
         var result = property.getValueCartesian(epoch);
         expect(result.x).toEqual(1234);

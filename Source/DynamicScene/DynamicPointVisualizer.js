@@ -1,16 +1,42 @@
 /*global define document canvas*/
 define([
+        '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Color',
         '../Renderer/TextureAtlas',
         '../Scene/BillboardCollection'
        ], function(
+         DeveloperError,
          destroyObject,
          Color,
          TextureAtlas,
          BillboardCollection) {
     "use strict";
 
+    /**
+     * A DynamicObject visualizer which maps the DynamicPoint instance
+     * in DynamicObject.point to a Billboard primitive with a point texture.
+     *
+     * @param {Scene} scene The scene the primitives will be rendered in.
+     * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.
+     *
+     * @exception {DeveloperError} scene is required.
+     *
+     * @see DynamicPoint
+     * @see Scene
+     * @see DynamicObject
+     * @see DynamicObjectCollection
+     * @see CompositeDynamicObjectCollection
+     * @see VisualizerCollection
+     * @see DynamicBillboardVisualizer
+     * @see DynamicConeVisualizer
+     * @see DynamicConeVisualizerUsingCustomSensorr
+     * @see DynamicLabelVisualizer
+     * @see DynamicPolygonVisualizer
+     * @see DynamicPolylineVisualizer
+     * @see DynamicPyramidVisualizer
+     *
+     */
     function DynamicPointVisualizer(scene, dynamicObjectCollection) {
         this._scene = scene;
         this._unusedIndexes = [];
@@ -23,14 +49,29 @@ define([
         this.setDynamicObjectCollection(dynamicObjectCollection);
     }
 
+    /**
+     * Returns the scene being used by this visualizer.
+     *
+     * @returns {Scene} The scene being used by this visualizer.
+     */
     DynamicPointVisualizer.prototype.getScene = function() {
         return this._scene;
     };
 
+    /**
+     * Gets the DynamicObjectCollection being visualized.
+     *
+     * @returns {DynamicObjectCollection} The DynamicObjectCollection being visualized.
+     */
     DynamicPointVisualizer.prototype.getDynamicObjectCollection = function() {
         return this._dynamicObjectCollection;
     };
 
+    /**
+     * Sets the DynamicObjectCollection to visualize.
+     *
+     * @param dynamicObjectCollection The DynamicObjectCollection to visualizer.
+     */
     DynamicPointVisualizer.prototype.setDynamicObjectCollection = function(dynamicObjectCollection) {
         var oldCollection = this._dynamicObjectCollection;
         if (oldCollection !== dynamicObjectCollection) {
@@ -45,17 +86,85 @@ define([
         }
     };
 
+    /**
+     * Updates all of the primitives created by this visualizer to match their
+     * DynamicObject counterpart at the given time.
+     *
+     * @param {JulianDate} time The time to update to.
+     *
+     * @exception {DeveloperError} time is required.
+     */
     DynamicPointVisualizer.prototype.update = function(time) {
-        var dynamicObjects = this._dynamicObjectCollection.getObjects();
-        for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
-            this.updateObject(time, dynamicObjects[i]);
+        if (typeof time === 'undefined') {
+            throw new DeveloperError('time is requied.');
         }
+        if (typeof this._dynamicObjectCollection !== 'undefined') {
+            var dynamicObjects = this._dynamicObjectCollection.getObjects();
+            for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
+                this._updateObject(time, dynamicObjects[i]);
+            }
+        }
+    };
+
+    /**
+     * Removes all primitives from the scene.
+     */
+    DynamicPointVisualizer.prototype.removeAll = function() {
+        this._unusedIndexes = [];
+        this._billboardCollection.removeAll();
+        var dynamicObjects = this._dynamicObjectCollection.getObjects();
+        for ( var i = dynamicObjects.length - 1; i > -1; i--) {
+            dynamicObjects[i].pointVisualizerIndex = undefined;
+        }
+    };
+
+    /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * <br /><br />
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     *
+     * @memberof DynamicPointVisualizer
+     *
+     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     *
+     * @see DynamicPointVisualizer#destroy
+     */
+    DynamicPointVisualizer.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <br /><br />
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     *
+     * @memberof DynamicPointVisualizer
+     *
+     * @return {undefined}
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     * @see DynamicPointVisualizer#isDestroyed
+     *
+     * @example
+     * visualizer = visualizer && visualizer.destroy();
+     */
+    DynamicPointVisualizer.prototype.destroy = function() {
+        this.removeAll();
+        this._scene.getPrimitives().remove(this._billboardCollection);
+        this._billboardCollection.destroy();
+        this._textureAtlas.destroy();
+        return destroyObject(this);
     };
 
     var color;
     var position;
     var outlineColor;
-    DynamicPointVisualizer.prototype.updateObject = function(time, dynamicObject) {
+    DynamicPointVisualizer.prototype._updateObject = function(time, dynamicObject) {
         var dynamicPoint = dynamicObject.point;
         if (typeof dynamicPoint === 'undefined') {
             return;
@@ -67,7 +176,6 @@ define([
         }
 
         var billboard;
-        var objectId = dynamicObject.id;
         var showProperty = dynamicPoint.show;
         var pointVisualizerIndex = dynamicObject.pointVisualizerIndex;
         var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
@@ -95,7 +203,7 @@ define([
                 billboard = this._billboardCollection.add();
             }
             dynamicObject.pointVisualizerIndex = pointVisualizerIndex;
-            billboard.id = objectId;
+            billboard.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
             billboard.point_color = Color.WHITE.clone(billboard.point_color);
@@ -196,15 +304,6 @@ define([
         }
     };
 
-    DynamicPointVisualizer.prototype.removeAll = function() {
-        this._unusedIndexes = [];
-        this._billboardCollection.removeAll();
-        var dynamicObjects = this._dynamicObjectCollection.getObjects();
-        for ( var i = dynamicObjects.length - 1; i > -1; i--) {
-            dynamicObjects[i].pointVisualizerIndex = undefined;
-        }
-    };
-
     DynamicPointVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, dynamicObjects) {
         var thisBillboardCollection = this._billboardCollection;
         var thisUnusedIndexes = this._unusedIndexes;
@@ -218,49 +317,6 @@ define([
                 thisUnusedIndexes.push(pointVisualizerIndex);
             }
         }
-    };
-
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @memberof DynamicPointVisualizer
-     *
-     * @return {Boolean} True if this object was destroyed; otherwise, false.
-     *
-     * @see DynamicPointVisualizer#destroy
-     */
-    DynamicPointVisualizer.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof DynamicPointVisualizer
-     *
-     * @return {undefined}
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see DynamicPointVisualizer#isDestroyed
-     *
-     * @example
-     * visualizer = visualizer && visualizer.destroy();
-     */
-    DynamicPointVisualizer.prototype.destroy = function() {
-        this.removeAll();
-        this._scene.getPrimitives().remove(this._billboardCollection);
-        this._billboardCollection.destroy();
-        this._textureAtlas.destroy();
-        return destroyObject(this);
     };
 
     return DynamicPointVisualizer;

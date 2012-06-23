@@ -24,7 +24,7 @@ define([
      * @see DynamicPolygonVisualizer
      * @see VisualizerCollection
      * @see Polygon
-     * @see CzmlStandard
+     * @see CzmlDefaults
      */
     function DynamicPolygon() {
         this.show = undefined;
@@ -37,14 +37,14 @@ define([
      * normally called directly, but is part of the array of CZML processing functions that is
      * passed into the DynamicObjectCollection constructor.
      *
-     * @param dynamicObject The DynamicObject which will contain the polygon data.
-     * @param packet The CZML packet to process.
+     * @param {DynamicObject} dynamicObject The DynamicObject which will contain the polygon data.
+     * @param {Object} packet The CZML packet to process.
      * @returns {Boolean} true if any new properties were created while processing the packet, false otherwise.
      *
      * @see DynamicObject
      * @see DynamicProperty
      * @see DynamicObjectCollection
-     * @see CzmlStandard#updaters
+     * @see CzmlDefaults#updaters
      */
     DynamicPolygon.processCzmlPacket = function(dynamicObject, packet) {
         var polygonData = packet.polygon;
@@ -76,7 +76,7 @@ define([
      * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
      * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
      *
-     * @see CzmlStandard
+     * @see CzmlDefaults
      */
     DynamicPolygon.mergeProperties = function(targetObject, objectToMerge) {
         var polygonToMerge = objectToMerge.polygon;
@@ -99,7 +99,7 @@ define([
      *
      * @param {DynamicObject} dynamicObject The DynamicObject to remove the polygon from.
      *
-     * @see CzmlStandard
+     * @see CzmlDefaults
      */
     DynamicPolygon.undefineProperties = function(dynamicObject) {
         dynamicObject.polygon = undefined;

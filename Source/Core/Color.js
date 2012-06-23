@@ -10,9 +10,21 @@ define(function() {
      * @name Color
      */
     function Color(red, green, blue, alpha) {
+        /**
+         * The red value.
+         */
         this.red = typeof red === 'undefined' ? 1.0 : red;
+        /**
+         * The green value.
+         */
         this.green = typeof green === 'undefined' ? 1.0 : green;
+        /**
+         * The blue value.
+         */
         this.blue = typeof blue === 'undefined' ? 1.0 : blue;
+        /**
+         * The alpha value.
+         */
         this.alpha = typeof alpha === 'undefined' ? 1.0 : alpha;
     }
 

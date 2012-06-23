@@ -30,7 +30,7 @@ define([
      * @see DynamicPyramidVisualizer
      * @see VisualizerCollection
      * @see CustomSensor
-     * @see CzmlStandard
+     * @see CzmlDefaults
      */
     function DynamicPyramid() {
         this.show = undefined;
@@ -47,16 +47,16 @@ define([
      * normally called directly, but is part of the array of CZML processing functions that is
      * passed into the DynamicObjectCollection constructor.
      *
-     * @param dynamicObject The DynamicObject which will contain the pyramid data.
-     * @param packet The CZML packet to process.
-     * @param dynamicObjectCollection The DynamicObjectCollection to which the DynamicObject belongs.
+     * @param {DynamicObject} dynamicObject The DynamicObject which will contain the pyramid data.
+     * @param {Object} packet The CZML packet to process.
+     * @param {DynamicObject} dynamicObjectCollection The DynamicObjectCollection to which the DynamicObject belongs.
      *
      * @returns {Boolean} true if any new properties were created while processing the packet, false otherwise.
      *
      * @see DynamicObject
      * @see DynamicProperty
      * @see DynamicObjectCollection
-     * @see CzmlStandard#updaters
+     * @see CzmlDefaults#updaters
      */
     DynamicPyramid.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection) {
         var pyramidData = packet.pyramid;
@@ -93,7 +93,7 @@ define([
      * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
      * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
      *
-     * @see CzmlStandard
+     * @see CzmlDefaults
      */
     DynamicPyramid.mergeProperties = function(targetObject, objectToMerge) {
         var pyramidToMerge = objectToMerge.pyramid;
@@ -120,7 +120,7 @@ define([
      *
      * @param {DynamicObject} dynamicObject The DynamicObject to remove the pyramid from.
      *
-     * @see CzmlStandard
+     * @see CzmlDefaults
      */
     DynamicPyramid.undefineProperties = function(dynamicObject) {
         dynamicObject.pyramid = undefined;

@@ -37,16 +37,40 @@ define([
      * @see VisualizerCollection
      * @see Billboard
      * @see BillboardCollection
-     * @see CzmlStandard
+     * @see CzmlDefaults
      */
     function DynamicBillboard() {
+        /**
+         * A DynamicProperty of type CzmlString which determines the billboard's texture.
+         */
         this.image = undefined;
+        /**
+         * A DynamicProperty of type CzmlNumber which determines the billboard's scale.
+         */
         this.scale = undefined;
+        /**
+         * A DynamicProperty of type CzmlHorizontalOrigin which determines the billboard's horizontal origin.
+         */
         this.horizontalOrigin = undefined;
+        /**
+         * A DynamicProperty of type CzmlVerticalHorigin which determines the billboard's vertical origin.
+         */
         this.verticalOrigin = undefined;
+        /**
+         * A DynamicProperty of type CzmlColor which determines the billboard's color.
+         */
         this.color = undefined;
+        /**
+         * A DynamicProperty of type CzmlCartesian3 which determines the billboard's eye offset.
+         */
         this.eyeOffset = undefined;
+        /**
+         * A DynamicProperty of type CzmlCartesian2 which determines the billboard's pixel offset.
+         */
         this.pixelOffset = undefined;
+        /**
+         * A DynamicProperty of type CzmlBoolean which determines the billboard's visibility.
+         */
         this.show = undefined;
     }
 
@@ -56,14 +80,14 @@ define([
      * normally called directly, but is part of the array of CZML processing functions that is
      * passed into the DynamicObjectCollection constructor.
      *
-     * @param dynamicObject The DynamicObject which will contain the billboard data.
-     * @param packet The CZML packet to process.
+     * @param {DynamicObject} dynamicObject The DynamicObject which will contain the billboard data.
+     * @param {Object} packet The CZML packet to process.
      * @returns {Boolean} true if any new properties were created while processing the packet, false otherwise.
      *
      * @see DynamicObject
      * @see DynamicProperty
      * @see DynamicObjectCollection
-     * @see CzmlStandard#updaters
+     * @see CzmlDefaults#updaters
      */
     DynamicBillboard.processCzmlPacket = function(dynamicObject, packet) {
         var billboardUpdated = false;
@@ -101,7 +125,7 @@ define([
      * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
      * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
      *
-     * @see CzmlStandard
+     * @see CzmlDefaults
      */
     DynamicBillboard.mergeProperties = function(targetObject, objectToMerge) {
         var billboardToMerge = objectToMerge.billboard;
@@ -130,7 +154,7 @@ define([
      *
      * @param {DynamicObject} dynamicObject The DynamicObject to remove the billboard from.
      *
-     * @see CzmlStandard
+     * @see CzmlDefaults
      */
     DynamicBillboard.undefineProperties = function(dynamicObject) {
         dynamicObject.billboard = undefined;

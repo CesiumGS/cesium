@@ -31,7 +31,7 @@ define([
          *
          * @example
          * //Clock tick will stop whenever start or stop is reached.
-         * var clock = new Clock(start, stop);
+         * var clock = new Clock();
          * clock.range = ClockRange.CLAMPED;
          */
         CLAMPED : new Enumeration(1, 'CLAMPED'),
@@ -43,7 +43,7 @@ define([
          *
          * @example
          * //Clock tick will loop whenever start or stop is reached.
-         * var clock = new Clock(start, stop);
+         * var clock = new Clock();
          * clock.range = ClockRange.LOOP;
          */
         LOOP : new Enumeration(1, 'LOOP')
