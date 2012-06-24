@@ -42,16 +42,49 @@ define([
      * @see CzmlDefaults
      */
     function DynamicLabel() {
+        /**
+         * A DynamicProperty of type CzmlString which determines the label's text.
+         */
         this.text = undefined;
+        /**
+         * A DynamicProperty of type CzmlString which determines the label's font.
+         */
         this.font = undefined;
+        /**
+         * A DynamicProperty of type CzmlLabelStyle which determines the label's style.
+         */
         this.style = undefined;
+        /**
+         * A DynamicProperty of type CzmlColor which determines the label's fill color.
+         */
         this.fillColor = undefined;
+        /**
+         * A DynamicProperty of type CzmlColor which determines the label's outline color.
+         */
         this.outlineColor = undefined;
+        /**
+         * A DynamicProperty of type CzmlHorizontalOrigin which determines the label's horizontal origin.
+         */
         this.horizontalOrigin = undefined;
+        /**
+         * A DynamicProperty of type CzmlVerticalOrigin which determines the label's vertical origin.
+         */
         this.verticalOrigin = undefined;
+        /**
+         * A DynamicProperty of type CzmlCartesian3 which determines the label's eye offset.
+         */
         this.eyeOffset = undefined;
+        /**
+         * A DynamicProperty of type CzmlCartesian2 which determines the label's pixel offset.
+         */
         this.pixelOffset = undefined;
+        /**
+         * A DynamicProperty of type CzmlNumber which determines the label's scale.
+         */
         this.scale = undefined;
+        /**
+         * A DynamicProperty of type CzmlBoolean which determines the label's visibility.
+         */
         this.show = undefined;
     }
 

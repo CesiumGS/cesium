@@ -27,7 +27,13 @@ define([
      * @see CzmlDefaults
      */
     function DynamicPolygon() {
+        /**
+         * A DynamicProperty of type CzmlBoolean which determines the polygon's visibility.
+         */
         this.show = undefined;
+        /**
+         * A DynamicMaterialProperty which determines the polygon's material.
+         */
         this.material = undefined;
     }
 

@@ -46,12 +46,12 @@ define([
         this.cleanFunctions = cleanFunctions || CzmlDefaults.cleaners;
 
         /**
-         * An Event that is fired whenever DynamicObjects in the collection have properties added or removed.
+         * An {@link Event} that is fired whenever DynamicObjects in the collection have properties added.
          */
         this.objectPropertiesChanged = new Event();
 
         /**
-         * An Event that is fired whenever DynamicObjects are removed from the collection.
+         * An {@link Event} that is fired whenever DynamicObjects are removed from the collection.
          */
         this.objectsRemoved = new Event();
 

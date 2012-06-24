@@ -29,10 +29,25 @@ function(
      * @see CzmlDefaults
      */
     function DynamicPolyline() {
+        /**
+         * A DynamicProperty of type CzmlColor which determines the line's color.
+         */
         this.color = undefined;
+        /**
+         * A DynamicProperty of type CzmlColor which determines the line's outline color.
+         */
         this.outlineColor = undefined;
+        /**
+         * A DynamicProperty of type CzmlNumber which determines the line's outline width.
+         */
         this.outlineWidth = undefined;
+        /**
+         * A DynamicProperty of type CzmlBoolean which determines the lines's visibility.
+         */
         this.show = undefined;
+        /**
+         * A DynamicProperty of type CzmlNumber which determines the line's width.
+         */
         this.width = undefined;
     }
 
