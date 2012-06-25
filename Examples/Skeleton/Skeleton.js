@@ -69,17 +69,17 @@ require({
 
     function keydownHandler(e) {
         switch (e.keyCode) {
-        case 51:  // "3" -> 3D globe
+        case "3".charCodeAt(0):  // "3" -> 3D globe
             cb.showSkyAtmosphere = true;
             cb.showGroundAtmosphere = true;
             transitioner.morphTo3D();
             break;
-        case 50:  // "2" -> Columbus View
+        case "2".charCodeAt(0):  // "2" -> Columbus View
             cb.showSkyAtmosphere = false;
             cb.showGroundAtmosphere = false;
             transitioner.morphToColumbusView();
             break;
-        case 49:  // "1" -> 2D map
+        case "1".charCodeAt(0):  // "1" -> 2D map
             cb.showSkyAtmosphere = false;
             cb.showGroundAtmosphere = false;
             transitioner.morphTo2D();
