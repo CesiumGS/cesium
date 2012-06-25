@@ -63,7 +63,7 @@ define(function() {
      */
     Color.clone = function(color, result) {
         if (typeof result === 'undefined') {
-            return new Color(this.red, this.green, this.blue, this.alpha);
+            return new Color(color.red, color.green, color.blue, color.alpha);
         }
         result.red = color.red;
         result.green = color.green;

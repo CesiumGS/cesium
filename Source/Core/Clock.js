@@ -95,13 +95,10 @@ define([
      * move backwards one tick.  If multiplier is negative and time is moving
      * backwards, this call will move the clock forward one tick.
      *
-     * @param {Number} [secondsToTick] optional parameter to force the clock to tick the provided number of seconds,
-     * regardless of the value of clockStep.
-     *
      * @returns {JulianDate} The new value of Clock.currentTime
      */
-    Clock.prototype.reverseTick = function(secondsToTick) {
-        return this._tick(secondsToTick, -this.multiplier);
+    Clock.prototype.reverseTick = function() {
+        return this._tick(undefined, -this.multiplier);
     };
 
     Clock.prototype._tick = function(secondsToTick, multiplier) {
