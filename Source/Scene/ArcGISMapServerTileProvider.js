@@ -8,7 +8,7 @@ define([
         '../Core/Math',
         '../Core/jsonp',
         './Projections',
-        './MercatorTilingScheme',
+        './WebMercatorTilingScheme',
         './GeographicTilingScheme',
         './DiscardMissingTileImagePolicy',
         '../ThirdParty/when',
@@ -23,7 +23,7 @@ define([
         CesiumMath,
         jsonp,
         Projections,
-        MercatorTilingScheme,
+        WebMercatorTilingScheme,
         GeographicTilingScheme,
         DiscardMissingTileImagePolicy,
         when,
@@ -119,7 +119,7 @@ define([
          * The tiling scheme used by this tile provider.
          *
          * @type {TilingScheme}
-         * @see MercatorTilingScheme
+         * @see WebMercatorTilingScheme
          * @see GeographicTilingScheme
          */
         this.tilingScheme = undefined;
@@ -155,7 +155,7 @@ define([
                                             southwest.latitude,
                                             northeast.longitude,
                                             northeast.latitude);
-                that.tilingScheme = new MercatorTilingScheme({
+                that.tilingScheme = new WebMercatorTilingScheme({
                     extent: that.maxExtent
                 });
             } else if (data.tileInfo.spatialReference.wkid === 4326) {

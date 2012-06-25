@@ -3,12 +3,12 @@ defineSuite([
          'Scene/Tile',
          'Core/Extent',
          'Core/Math',
-         'Scene/MercatorTilingScheme'
+         'Scene/WebMercatorTilingScheme'
      ], function(
          Tile,
          Extent,
          CesiumMath,
-         MercatorTilingScheme) {
+         WebMercatorTilingScheme) {
     "use strict";
     /*global document,it,expect*/
 
@@ -54,7 +54,7 @@ defineSuite([
     });
 
     it('creates extent on construction', function() {
-        var desc = {tilingScheme : new MercatorTilingScheme(), x : 0, y : 0, zoom : 0};
+        var desc = {tilingScheme : new WebMercatorTilingScheme(), x : 0, y : 0, zoom : 0};
         var tile = new Tile(desc);
         var extent = desc.tilingScheme.tileXYToExtent(desc.x, desc.y, desc.zoom);
         expect(tile.extent).toEqual(extent);
@@ -62,7 +62,7 @@ defineSuite([
 
     it('creates x, y, zoom on construction', function() {
         var desc = {
-            tilingScheme : new MercatorTilingScheme(),
+            tilingScheme : new WebMercatorTilingScheme(),
             extent : new Extent(
                     -CesiumMath.PI,
                     CesiumMath.toRadians(-85.05112878),

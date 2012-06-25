@@ -79,7 +79,7 @@ define([
         '../Core/jsonp',
         './BingMapsStyle',
         './Projections',
-        './MercatorTilingScheme',
+        './WebMercatorTilingScheme',
         './DiscardMissingTileImagePolicy',
         '../ThirdParty/when'
     ], function(
@@ -92,7 +92,7 @@ define([
         jsonp,
         BingMapsStyle,
         Projections,
-        MercatorTilingScheme,
+        WebMercatorTilingScheme,
         DiscardMissingTileImagePolicy,
         when) {
     "use strict";
@@ -202,10 +202,10 @@ define([
          * The tiling scheme used by this tile provider.
          *
          * @type {TilingScheme}
-         * @see MercatorTilingScheme
+         * @see WebMercatorTilingScheme
          * @see GeographicTilingScheme
          */
-        this.tilingScheme = new MercatorTilingScheme({
+        this.tilingScheme = new WebMercatorTilingScheme({
             numberOfLevelZeroTilesX: 2,
             numberOfLevelZeroTilesY: 2
         });

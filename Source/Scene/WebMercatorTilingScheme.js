@@ -18,9 +18,10 @@ define([
     "use strict";
 
     /**
-     * A tiling scheme for geometry referenced to a mercator projection.
+     * A tiling scheme for geometry referenced to a web mercator projection, EPSG:3857.  This is
+     * the tiling scheme used by Google Maps, Microsoft Bing Maps, and most of ESRI ArcGIS Online.
      *
-     * @name MercatorTilingScheme
+     * @name WebMercatorTilingScheme
      * @constructor
      *
      * @param {Ellipsoid} [description.ellipsoid=Ellipsoid.WGS84] The ellipsoid whose surface is being tiled. Defaults to
@@ -30,7 +31,7 @@ define([
      * @param {Number} [description.numberOfLevelZeroTilesY=1] The number of tiles in the Y direction at level zero of
      * the tile tree.
      */
-    function MercatorTilingScheme(description) {
+    function WebMercatorTilingScheme(description) {
         description = description || {};
 
         /**
@@ -68,17 +69,17 @@ define([
     /**
      * Creates the tile or tiles at level of detail zero, the coarsest, least detailed level.
      *
-     * @memberof MercatorTilingScheme
+     * @memberof WebMercatorTilingScheme
      *
      * @return {Array} An array containing the tiles at level of detail zero, starting with the
      * tile in the northwest corner of the globe and followed by the tile (if any) to its east.
      */
-    MercatorTilingScheme.prototype.createLevelZeroTiles = TilingScheme.prototype.createLevelZeroTiles;
+    WebMercatorTilingScheme.prototype.createLevelZeroTiles = TilingScheme.prototype.createLevelZeroTiles;
 
     /**
      * Converts an extent and zoom level into tile x, y coordinates.
      *
-     * @memberof MercatorTilingScheme
+     * @memberof WebMercatorTilingScheme
      *
      * @param {Extent} extent The cartographic extent of the tile, with north, south, east and
      * west properties in radians.
@@ -86,7 +87,7 @@ define([
      *
      * @return {Cartesian2} The integer x and y tile coordinates.
      */
-    MercatorTilingScheme.prototype.extentToTileXY = function(extent, level) {
+    WebMercatorTilingScheme.prototype.extentToTileXY = function(extent, level) {
         var xTiles = this.numberOfLevelZeroTilesX << level;
         var yTiles = this.numberOfLevelZeroTilesY << level;
 
@@ -103,7 +104,7 @@ define([
     /**
      * Converts tile x, y coordinates and level to a cartographic extent.
      *
-     * @memberof MercatorTilingScheme
+     * @memberof WebMercatorTilingScheme
      *
      * @param {Number} x The integer x coordinate of the tile.
      * @param {Number} y The integer y coordinate of the tile.
@@ -112,7 +113,7 @@ define([
      * @return {Extent} The cartographic extent of the tile, with north, south, east and
      * west properties in radians.
      */
-    MercatorTilingScheme.prototype.tileXYToExtent = function(x, y, level) {
+    WebMercatorTilingScheme.prototype.tileXYToExtent = function(x, y, level) {
         var xTiles = this.numberOfLevelZeroTilesX << level;
         var yTiles = this.numberOfLevelZeroTilesY << level;
 
@@ -128,5 +129,5 @@ define([
         return new Extent(west, south, east, north);
     };
 
-    return MercatorTilingScheme;
+    return WebMercatorTilingScheme;
 });

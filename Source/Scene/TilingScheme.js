@@ -23,7 +23,7 @@ define([
      * @param {Number} [description.numberOfLevelZeroTilesY] The number of tiles in the Y direction at the root of
      * the tile tree.
      *
-     * @see MercatorTilingScheme
+     * @see WebMercatorTilingScheme
      * @see GeographicTilingScheme
      */
     function TilingScheme(description) {
@@ -55,7 +55,7 @@ define([
          */
         this.numberOfLevelZeroTilesY = undefined;
 
-        throw new DeveloperError('This type should not be instantiated directly.  Instead, use MercatorTilingScheme or GeographicTilingScheme.');
+        throw new DeveloperError('This type should not be instantiated directly.  Instead, use WebMercatorTilingScheme or GeographicTilingScheme.');
     }
 
     /**
@@ -99,7 +99,7 @@ define([
      * @return {Cartesian2} The integer x and y tile coordinates.
      */
     TilingScheme.prototype.extentToTileXY = function(extent, level) {
-        throw new DeveloperError('This method should not called directly.  Instead, use the equivalent on MercatorTilingScheme or GeographicTilingScheme.');
+        throw new DeveloperError('This method should not called directly.  Instead, use the equivalent on WebMercatorTilingScheme or GeographicTilingScheme.');
     };
 
     /**
@@ -115,7 +115,7 @@ define([
      * west properties in radians.
      */
     TilingScheme.prototype.tileXYToExtent = function(x, y, level) {
-        throw new DeveloperError('This method should not called directly.  Instead, use the equivalent on MercatorTilingScheme or GeographicTilingScheme.');
+        throw new DeveloperError('This method should not called directly.  Instead, use the equivalent on WebMercatorTilingScheme or GeographicTilingScheme.');
     };
 
     return TilingScheme;
