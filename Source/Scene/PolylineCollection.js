@@ -271,23 +271,14 @@ define([
     };
 
     PolylineCollection.prototype._addToMap = function(p){
-        p._index = 0;
-        var hash = 'OL' + p.getOutlineWidth() + 'W' + p.getWidth();
+        var outlineWidth = p.getOutlineWidth(),
+            width = p.getWidth();
+        var hash = 'OL' + outlineWidth + 'W' + width;
         var value = this._polylines[hash];
         if(typeof value === 'undefined'){
-            value = this._polylines[hash] = {
-                    width:p.getWidth(),
-                    outlineWidth:p.getOutlineWidth,
-                    polylines:[p],
-                    vaf:undefined,
-                    polylinesToUpdate: []
-            };
+            value = this._polylines[hash] = new PolylinesWrapper(outlineWidth, width);
         }
-        else{
-            p._index = value.polylines.length;
-            value.polylines.push(p);
-        }
-        p._map = value;
+        value.addPolyline(p);
         this._createVertexArray = true;
     };
 
@@ -332,7 +323,7 @@ define([
     PolylineCollection.prototype._removeFromMap = function(polyline){
         var hash = 'OL' + polyline.getOutlineWidth() + 'W' + polyline.getWidth();
         this._polylines[hash].polylines[polyline._index] = null;
-        polyline._map = null;
+        polyline._wrapper = null;
         this._polylinesRemoved = true;
         this._createVertexArray = true;
     };
@@ -586,9 +577,10 @@ define([
             for(var x in polylines){
                 var obj = polylines[x];
                 var vafWriters = obj.vaf.writers;
-                var length = obj.polylinesToUpdate.length;
+                var polylinesToUpdate = obj.polylinesToUpdate;
+                var length = polylinesToUpdate.length;
                 for(var i = 0; i < length; ++i){
-                    PolylineCollection._writeToVAF(obj.polylinesToUpdate[i], vafWriters, writers, context, this);
+                    PolylineCollection._writeToVAF(polylinesToUpdate[i], vafWriters, writers, context, this);
                 }
                 obj.vaf.endSubCommits();
                 obj.polylinesToUpdate.length = 0;
@@ -663,9 +655,10 @@ define([
      */
     PolylineCollection._writeToVAF = function(polyline, vafWriters, writers, context, collection){
         polyline._clean();
+        var wrapper = polyline._wrapper;
         var polylineIndex = polyline._index;
         var pIndex = 0;
-        var polylines = polyline._map.polylines;
+        var polylines = wrapper.polylines;
         for(var jj = 0; jj < polylineIndex; ++jj){
             pIndex += polylines[jj].getPositions().length;
         }
@@ -676,7 +669,7 @@ define([
                 writers[o](vafWriters, pIndex + i, polyline, positions[i], context, collection);
             }
         }
-        polyline._map.vaf.subCommit(pIndex, posLength);
+        wrapper.vaf.subCommit(pIndex, posLength);
     };
 
     /**
@@ -717,7 +710,7 @@ define([
             });
             rsOne.depthMask = !useDepthTest;
             rsOne.depthTest.enabled = useDepthTest;
-            rsOne.lineWidth = obj.polylines[0].getOutlineWidth();
+            rsOne.lineWidth = obj.outlineWidth;
             obj.rsOne = rsOne;
             var rsTwo = obj.rsTwo || context.createRenderState({
                 lineWidth : 1,
@@ -742,7 +735,7 @@ define([
                 }
             });
             rsTwo.depthTest.enabled = useDepthTest;
-            rsTwo.lineWidth = obj.polylines[0].getWidth();
+            rsTwo.lineWidth = obj.width;
             obj.rsTwo = rsTwo;
             var rsThree = obj.rsThree || context.createRenderState({
                 lineWidth : 1,
@@ -766,7 +759,7 @@ define([
                     }
                 }
             });
-            rsThree.lineWidth = obj.polylines[0].getOutlineWidth();
+            rsThree.lineWidth = obj.outlineWidth;
             rsThree.depthTest.enabled = useDepthTest;
             obj.rsThree = rsThree;
             var sizeInVertices = 0;
@@ -999,6 +992,24 @@ define([
                 }
             }
         }
+    };
+
+    function PolylinesWrapper(outlineWidth, width){
+        this.width = width;
+        this.outlineWidth = outlineWidth;
+        this.polylines = [];
+        this.vaf = undefined;
+        this.polylinesToUpdate = [];
+        this.rsOne = undefined;
+        this.rsTwo = undefined;
+        this.rsThree = undefined;
+    }
+
+    PolylinesWrapper.prototype.addPolyline = function(p){
+        var polylines = this.polylines;
+        p._index = polylines.length;
+        polylines.push(p);
+        p._wrapper = this;
     };
 
     return PolylineCollection;

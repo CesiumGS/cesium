@@ -336,8 +336,8 @@ define([
 
     Polyline.prototype._makeDirty = function(propertyChanged) {
         if (!this._isDirty()) {
-            if(this._map){
-                this._map.polylinesToUpdate.push(this);
+            if(this._wrapper){
+                this._wrapper.polylinesToUpdate.push(this);
                 var c = this._collection;
                 if (c) {
                     c._updatePolyline(propertyChanged);
