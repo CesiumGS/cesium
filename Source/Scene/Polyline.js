@@ -52,8 +52,8 @@ define([
 
         this._positions = [];
         if(typeof p.positions !== 'undefined'){
-            this.setPositions(p.positions);
-    }
+            this._positions = p.positions;
+        }
         this._show = (typeof p.show === 'undefined') ? true : p.show;
         this._width = (typeof p.width === 'undefined') ? 1.0 : p.width;
         this._outlineWidth = (typeof p.outlineWidth === 'undefined') ? 1.0 : p.outlineWidth;
@@ -62,31 +62,31 @@ define([
             green : 1.0,
             blue : 1.0,
             alpha : 1.0
-    };
+        };
         this._color = {
                 red : color.red,
                 green : color.green,
                 blue : color.blue,
                 alpha : color.alpha
-    };
+        };
         var outlineColor = p.outlineColor ||{
             red : 1.0,
             green : 1.0,
             blue : 1.0,
             alpha : 1.0
-    };
+        };
         this._outlineColor = {
             red : outlineColor.red,
             green : outlineColor.green,
             blue : outlineColor.blue,
             alpha : outlineColor.alpha
-    };
+        };
 
         this._collection = polylineCollection;
         this._dirty = false;
         this._pickId = undefined;
         this._pickIdThis = p._pickIdThis;
-        }
+    }
 
     var SHOW_INDEX = Polyline.SHOW_INDEX = 0;
     var POSITION_INDEX = Polyline.POSITION_INDEX = 1;
