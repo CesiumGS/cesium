@@ -233,61 +233,40 @@ define([
         // start loading tile
         tile.state = TileState.IMAGE_LOADING;
 
-        var isAvailable = tile._isAvailable;
-        if (typeof isAvailable === 'undefined') {
-            isAvailable = tile._isAvailable = tileProvider.isTileAvailable(tile);
-        }
-        var image = when(tileProvider.getTileImageUrl(tile), function(imageUrl) {
-            var isDataUri = /^data:/.test(imageUrl);
+        var hostname;
+        var postpone = false;
+        when(tileProvider.buildTileImageUrl(tile), function(imageUrl) {
+            hostname = getHostname(imageUrl);
 
-            var image = new Image();
-
-            if (!isDataUri) {
-                var hostname = getHostname(imageUrl);
+            if (hostname !== '') {
                 var activeRequestsForHostname = defaultValue(activeTileImageRequests[hostname], 0);
 
                 //cap image requests per hostname, because the browser itself is capped,
                 //and we have no way to cancel an image load once it starts, but we need
                 //to be able to reorder pending image requests
                 if (activeRequestsForHostname > 6) {
-                    // cancel loading tile
+                    // postpone loading tile
                     tile.state = TileState.UNLOADED;
+                    postpone = true;
                     return undefined;
                 }
 
                 activeTileImageRequests[hostname] = activeRequestsForHostname + 1;
-                image.hostname = hostname;
-
-                image.crossOrigin = '';
             }
 
-            var deferred = when.defer();
-            image.onload = function() {
-                deferred.resolve(image);
-            };
-            image.onerror = function() {
-                deferred.reject();
-            };
+            return tileProvider.loadTileImage(tile, imageUrl);
+        }).then(function(image) {
+            activeTileImageRequests[hostname]--;
 
-            image.src = imageUrl;
+            if (postpone) {
+                return;
+            }
 
-            return deferred.promise;
-        });
-
-        when.all([isAvailable, image], function(values) {
-            var isAvailable = values[0];
-            if (!isAvailable) {
+            if (typeof image === 'undefined') {
                 tile.state = TileState.IMAGE_INVALID;
                 tile._image = undefined;
                 return;
             }
-            var image = values[1];
-
-            if (typeof image === 'undefined') {
-                return;
-            }
-
-            activeTileImageRequests[image.hostname]--;
 
             tile._failCount = 0;
             layer._tileFailCount = 0;
@@ -392,8 +371,6 @@ define([
     }
 
     function refine(layer, tile, context, sceneState) {
-        var tileProvider = layer._tileProvider;
-
         if (sceneState.mode === SceneMode.SCENE2D) {
             return refine2D(layer, tile, context, sceneState);
         }

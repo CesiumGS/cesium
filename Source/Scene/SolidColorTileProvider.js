@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/loadImage',
         '../Core/DeveloperError',
         '../Core/Color',
         '../Core/Extent',
@@ -9,6 +10,7 @@ define([
         './GeographicTilingScheme'
     ], function(
         defaultValue,
+        loadImage,
         DeveloperError,
         Color,
         Extent,
@@ -117,7 +119,7 @@ define([
      * @return {String|Promise} Either a string containing the URL, or a Promise for a string
      *                          if the URL needs to be built asynchronously.
      */
-    SolidColorTileProvider.prototype.getTileImageUrl = function(tile) {
+    SolidColorTileProvider.prototype.buildTileImageUrl = function(tile) {
         var level = tile.zoom;
         var canvas = this._canvases[level];
         if (typeof canvas === 'undefined') {
@@ -154,6 +156,24 @@ define([
         }
 
         return canvas.toDataURL();
+    };
+
+    /**
+     * Load the image for a given tile.
+     *
+     * @memberof SolidColorTileProvider
+     *
+     * @param {Tile} tile The tile to load the image for.
+     * @param {String} [tileImageUrl] The tile image URL, if already known.
+     *
+     * @return A promise for the image that will resolve when the image is available.
+     */
+    SolidColorTileProvider.prototype.loadTileImage = function(tile, tileImageUrl) {
+        if (typeof tileImageUrl === 'undefined') {
+            tileImageUrl = this.buildTileImageUrl(tile);
+        }
+
+        return loadImage(tileImageUrl);
     };
 
     return SolidColorTileProvider;

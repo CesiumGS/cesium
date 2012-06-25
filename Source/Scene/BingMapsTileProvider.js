@@ -71,24 +71,30 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/loadImage',
         '../Core/DeveloperError',
+        '../Core/Cartesian2',
         '../Core/Extent',
         '../Core/Math',
         '../Core/jsonp',
         './BingMapsStyle',
         './Projections',
-        '../ThirdParty/when',
-        './MercatorTilingScheme'
+        './MercatorTilingScheme',
+        './DiscardMissingTileImagePolicy',
+        '../ThirdParty/when'
     ], function(
         defaultValue,
+        loadImage,
         DeveloperError,
+        Cartesian2,
         Extent,
         CesiumMath,
         jsonp,
         BingMapsStyle,
         Projections,
-        when,
-        MercatorTilingScheme) {
+        MercatorTilingScheme,
+        DiscardMissingTileImagePolicy,
+        when) {
     "use strict";
 
     /**
@@ -213,9 +219,6 @@ define([
 
         this._imageUrlSubdomains = undefined;
 
-        //tiles only need BasicMetadata which is a smaller result
-        this._tileMetadataUrl = 'http://' + server + '/REST/v1/Imagery/BasicMetadata/' + mapStyle.imagerySetName + '?key=' + key;
-
         var metadataUrl = 'http://' + server + '/REST/v1/Imagery/Metadata/' + mapStyle.imagerySetName + '?key=' + key;
         var that = this;
         this._imageUrlTemplate = when(jsonp(metadataUrl, {
@@ -230,7 +233,22 @@ define([
             that._imageUrlSubdomains = resource.imageUrlSubdomains;
             that._imageUrlTemplate = resource.imageUrl.replace('{culture}', '');
             that.ready = true;
+
             return that._imageUrlTemplate;
+        });
+
+        this._discardPolicy = when(this._imageUrlTemplate, function(template) {
+            // assume that the tile at (0,0) at the maximum zoom is missing.
+            var missingTileUrl = that.buildTileImageUrl({
+                x : 0,
+                y : 0,
+                zoom : that.zoomMax
+            });
+            var pixelsToCheck = [new Cartesian2(0, 0), new Cartesian2(120, 140), new Cartesian2(130, 160), new Cartesian2(200, 50), new Cartesian2(200, 200)];
+
+            return when(missingTileUrl, function(missingImageUrl) {
+                return new DiscardMissingTileImagePolicy(missingImageUrl, pixelsToCheck);
+            });
         });
     }
 
@@ -299,38 +317,6 @@ define([
     };
 
     /**
-     * Determine whether a the image for a given tile is valid and should be displayed.
-     *
-     * @memberof BingMapsTileProvider
-     *
-     * @param tile The tile to check.
-     *
-     * @return {Boolean|Promise} Either a boolean, or a Promise for a boolean if the
-     *                           process of checking is asynchronous.
-     */
-    BingMapsTileProvider.prototype.isTileAvailable = function(tile) {
-        var lat = CesiumMath.toDegrees((tile.extent.north + tile.extent.south) * 0.5);
-        var lon = CesiumMath.toDegrees((tile.extent.east + tile.extent.west) * 0.5);
-
-        return when(jsonp(this._tileMetadataUrl, {
-            parameters : {
-                centerPoint : lat + ',' + lon,
-                zoomLevel : tile.zoom + 1
-            },
-            callbackParameterName : 'jsonp',
-            proxy : this._proxy
-        }), function(data) {
-            var resourceSet = data.resourceSets[0];
-            if (typeof resourceSet === 'undefined') {
-                return false;
-            }
-
-            var resource = resourceSet.resources[0];
-            return typeof resource.vintageStart !== 'undefined' && typeof resource.vintageEnd !== 'undefined';
-        });
-    };
-
-    /**
      * Build a URL to retrieve the image for a tile.
      *
      * @memberof BingMapsTileProvider
@@ -340,22 +326,46 @@ define([
      * @return {String|Promise} Either a string containing the URL, or a Promise for a string
      *                          if the URL needs to be built asynchronously.
      */
-    BingMapsTileProvider.prototype.getTileImageUrl = function(tile) {
-        var quadkey = BingMapsTileProvider.tileXYToQuadKey(tile.x, tile.y, tile.zoom);
-
+    BingMapsTileProvider.prototype.buildTileImageUrl = function(tile) {
         var subdomains = this._imageUrlSubdomains;
         var proxy = this._proxy;
-        return when(this._imageUrlTemplate, function(urlTemplate) {
-            var imageUrl = urlTemplate.replace('{quadkey}', quadkey);
 
-            var index = (tile.x + tile.y) % subdomains.length;
-            imageUrl = imageUrl.replace('{subdomain}', subdomains[index]);
+        return when(this._imageUrlTemplate, function(urlTemplate) {
+            var quadkey = BingMapsTileProvider.tileXYToQuadKey(tile.x, tile.y, tile.zoom);
+            var subdomainIndex = (tile.x + tile.y) % subdomains.length;
+
+            var imageUrl = urlTemplate.replace('{quadkey}', quadkey);
+            imageUrl = imageUrl.replace('{subdomain}', subdomains[subdomainIndex]);
 
             if (typeof proxy !== 'undefined') {
                 imageUrl = proxy.getURL(imageUrl);
             }
 
             return imageUrl;
+        });
+    };
+
+    /**
+     * Load the image for a given tile.
+     *
+     * @memberof BingMapsTileProvider
+     *
+     * @param {Tile} tile The tile to load the image for.
+     * @param {String} [tileImageUrl] The tile image URL, if already known.
+     *
+     * @return A promise for the image that will resolve when the image is available.
+     */
+    BingMapsTileProvider.prototype.loadTileImage = function(tile, tileImageUrl) {
+        if (typeof tileImageUrl === 'undefined') {
+            tileImageUrl = this.buildTileImageUrl(tile);
+        }
+
+        var image = when(tileImageUrl, loadImage);
+
+        return when(this._discardPolicy, function(discardPolicy) {
+            return discardPolicy.shouldDiscardTileImage(image);
+        }).then(function(shouldDiscard) {
+            return shouldDiscard ? undefined : image;
         });
     };
 

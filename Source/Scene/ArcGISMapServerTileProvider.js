@@ -1,22 +1,30 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/loadImage',
         '../Core/DeveloperError',
+        '../Core/Cartesian2',
         '../Core/Extent',
         '../Core/Math',
         '../Core/jsonp',
         './Projections',
         './MercatorTilingScheme',
-        './GeographicTilingScheme'
+        './GeographicTilingScheme',
+        './DiscardMissingTileImagePolicy',
+        '../ThirdParty/when'
     ], function(
         defaultValue,
+        loadImage,
         DeveloperError,
+        Cartesian2,
         Extent,
         CesiumMath,
         jsonp,
         Projections,
         MercatorTilingScheme,
-        GeographicTilingScheme) {
+        GeographicTilingScheme,
+        DiscardMissingTileImagePolicy,
+        when) {
     "use strict";
 
     /**
@@ -112,14 +120,18 @@ define([
          */
         this.ready = false;
 
+        this._logo = undefined;
+
         // Grab the details of this MapServer.
-        var that = this;
-        jsonp(this.url, {
+        var metadata = jsonp(this.url, {
             parameters : {
                 f : 'json'
             },
             proxy : this._proxy
-        }).then(function(data) {
+        });
+
+        var that = this;
+        var isReady = when(metadata, function(data) {
             // Grab tile details.
             that.tileWidth = data.tileInfo.rows;
             that.tileHeight = data.tileInfo.cols;
@@ -144,8 +156,6 @@ define([
             that.zoomMax = data.tileInfo.lods.length - 1;
 
             // Create the copyright message.
-            var credit = data.copyrightText;
-
             var canvas = document.createElement('canvas');
             canvas.width = 800.0;
             canvas.height = 20.0;
@@ -154,29 +164,28 @@ define([
             context.fillStyle = '#fff';
             context.font = '12px sans-serif';
             context.textBaseline = 'top';
-            context.fillText(credit, 0, 0);
+            context.fillText(data.copyrightText, 0, 0);
 
             that._logo = canvas;
             that.ready = true;
+
+            return true;
         });
 
-        this._logo = undefined;
-    }
+        this._discardPolicy = when(isReady, function() {
+            // assume that the tile at (0,0) at the maximum zoom is missing.
+            var missingTileUrl = that.buildTileImageUrl({
+                x : 0,
+                y : 0,
+                zoom : that.zoomMax
+            });
+            var pixelsToCheck = [new Cartesian2(0, 0), new Cartesian2(200, 20), new Cartesian2(20, 200), new Cartesian2(80, 110), new Cartesian2(160, 130)];
 
-    /**
-     * Determine whether a the image for a given tile is valid and should be displayed.
-     *
-     * @memberof ArcGISMapServerTileProvider
-     *
-     * @param tile The tile to check.
-     *
-     * @return {Boolean|Promise} Either a boolean, or a Promise for a boolean if the
-     *                           process of checking is asynchronous.
-     */
-    ArcGISMapServerTileProvider.prototype.isTileAvailable = function(tile) {
-        //TODO: any way to tell if a tile says 'Map data not yet available'?
-        return true;
-    };
+            return when(missingTileUrl, function(missingImageUrl) {
+                return new DiscardMissingTileImagePolicy(missingImageUrl, pixelsToCheck);
+            });
+        });
+    }
 
     /**
      * Build a URL to retrieve the image for a tile.
@@ -188,7 +197,7 @@ define([
      * @return {String|Promise} Either a string containing the URL, or a Promise for a string
      *                          if the URL needs to be built asynchronously.
      */
-    ArcGISMapServerTileProvider.prototype.getTileImageUrl = function(tile) {
+    ArcGISMapServerTileProvider.prototype.buildTileImageUrl = function(tile) {
         var url = this.url + '/tile/' + tile.zoom + '/' + tile.y + '/' + tile.x;
 
         if (typeof this._proxy !== 'undefined') {
@@ -196,6 +205,30 @@ define([
         }
 
         return url;
+    };
+
+    /**
+     * Load the image for a given tile.
+     *
+     * @memberof ArcGISMapServerTileProvider
+     *
+     * @param {Tile} tile The tile to load the image for.
+     * @param {String} [tileImageUrl] The tile image URL, if already known.
+     *
+     * @return A promise for the image that will resolve when the image is available.
+     */
+    ArcGISMapServerTileProvider.prototype.loadTileImage = function(tile, tileImageUrl) {
+        if (typeof tileImageUrl === 'undefined') {
+            tileImageUrl = this.buildTileImageUrl(tile);
+        }
+
+        var image = when(tileImageUrl, loadImage);
+
+        return when(this._discardPolicy, function(discardPolicy) {
+            return discardPolicy.shouldDiscardTileImage(image);
+        }).then(function(shouldDiscard) {
+            return shouldDiscard ? undefined : image;
+        });
     };
 
     /**
