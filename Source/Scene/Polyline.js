@@ -160,13 +160,13 @@ define([
     Polyline.prototype.setPositions = function(value) {
         if (typeof value === 'undefined' || value.length < 2) {
             throw new DeveloperError('value must be an array with more than one element.', 'value');
-            }
+        }
         if(this._positions.length !== value.length){
             this._makeDirty(POSITION_SIZE_INDEX);
-            }
+        }
         this._positions = value;
         this._makeDirty(POSITION_INDEX);
-        };
+    };
 
 
     Polyline.prototype.getColor = function() {
@@ -231,8 +231,9 @@ define([
         var width = this._width;
 
         if ((typeof value !== 'undefined') && (value !== width)) {
-
+            this._collection._removeFromMap(this);
             this._width = value;
+            this._collection._addToMap(this);
             this._makeDirty(WIDTH_INDEX);
         }
     };
@@ -281,8 +282,9 @@ define([
         var width = this._outlineWidth;
 
         if ((typeof value !== 'undefined') && (value !== width)) {
-
+            this._collection._removeFromMap(this);
             this._outlineWidth = value;
+            this._collection._addToMap(this);
             this._makeDirty(OUTLINE_WIDTH_INDEX);
         }
     };
@@ -333,22 +335,20 @@ define([
     };
 
     Polyline.prototype._makeDirty = function(propertyChanged) {
-        var c = this._collection;
-        if (c) {
-            c._updatePolyline(this, propertyChanged);
-            this._dirty = true;
+        if (!this._isDirty()) {
+            if(this._map){
+                this._map.polylinesToUpdate.push(this);
+                var c = this._collection;
+                if (c) {
+                    c._updatePolyline(propertyChanged);
+                    this._dirty = true;
+                }
+            }
         }
     };
 
     Polyline.prototype._destroy = function() {
-        var polylines = this._polylines;
-        var length = polylines ? polylines.length : 0;
-        var polylineCollection = this._collection;
-        for ( var i = 0; i < length; i++) {
-            polylineCollection.remove(polylines[i]);
-        }
         this._pickId = this._pickId && this._pickId.destroy();
-        this._polylines = undefined;
         this._collection = undefined;
     };
 

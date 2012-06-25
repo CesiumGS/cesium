@@ -2,7 +2,6 @@ attribute vec3 position2D;
 attribute vec3 position3D;
 attribute vec4 color;
 attribute vec4 pickColor;
-attribute vec4 outlineColor;
 
 varying vec4 v_color;
 varying vec4 v_outlineColor;
@@ -22,6 +21,5 @@ void main()
 
     gl_Position = agi_modelViewProjection * p;                      // position in clip coordinates
     v_color = color;
-    v_outlineColor = outlineColor;
     v_pickColor = pickColor;
 }

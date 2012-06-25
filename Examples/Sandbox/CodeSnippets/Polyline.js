@@ -35,14 +35,15 @@
                 new Cesium.Cartographic2(-77.02, 38.53),  // Washington, D.C.
                 new Cesium.Cartographic2(-80.50, 35.14),  // Charlotte
                 new Cesium.Cartographic2(-80.12, 25.46)   // Miami
-            ])});
+            ]),
+            width:2});
 
             polylines.add({positions:ellipsoid.cartographicDegreesToCartesians([
                 new Cesium.Cartographic2(-73.10, 37.57),
                 new Cesium.Cartographic2(-75.02, 36.53),
                 new Cesium.Cartographic2(-78.50, 33.14),
                 new Cesium.Cartographic2(-78.12, 23.46)
-            ])});
+            ]), width:4});
 
             primitives.add(polylines);
         };
