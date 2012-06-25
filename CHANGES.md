@@ -17,6 +17,22 @@ Beta Releases
             context.createTextureAtlas({images : images, pixelFormat : pixelFormat, borderWidthInPixels : borderWidthInPixels});
 
 * Added `addImage` to `TextureAtlas` so images can be added to a texture atlas after it is constructed.
+* Added new materials:
+    * `AlphaMapMaterial`
+    * `AsphaltMaterial`
+    * `BrickMaterial`
+    * `BumpMapMaterial`
+    * `CementMaterial`
+    * `EmissionMapMaterial`
+    * `FresnelMaterial`
+    * `GrassMaterial`
+    * `NormalMapMaterial`
+    * `ReflectionMaterial`
+    * `RefractionMaterial`
+    * `SpecularMapMaterial`
+    * `WoodMaterial`
+
+
 
 ### b6a - 06/20/2012
 
@@ -24,7 +40,7 @@ Beta Releases
     * Changed `Tipsify.tipsify` and `Tipsify.calculateACMR` to accept an object literal instead of three separate arguments. Supplying a maximum index and cache size is now optional.
 * Added new materials:
     * `DiffuseMapMaterial`
-    * `CentralBody` no longer requires a camera as the first parameter.
+* `CentralBody` no longer requires a camera as the first parameter.
 * Added `CentralBody.northPoleColor` and `CentralBody.southPoleColor` to fill in the poles if they are not covered by a texture.
 * Added `Polygon.configureExtent` to create a polygon defined by west, south, east, and north values.
 * Added functions to `Camera` to provide position and directions in world coordinates.
