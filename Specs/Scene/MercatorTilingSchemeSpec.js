@@ -8,7 +8,7 @@ defineSuite([
          Extent,
          CesiumMath) {
     "use strict";
-    /*global document,it,expect*/
+    /*global document,describe,it,expect*/
 
     describe('Conversions from cartographic extent to tile indices and back', function() {
         it('extentToTileXY identifies extent of single root tile', function() {
