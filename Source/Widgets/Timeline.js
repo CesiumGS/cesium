@@ -437,7 +437,6 @@ define(['./TimelineTrack',
             this._scrubElement.style.left = scrubX.toString() + 'px';
             this._needleEle.style.left = xPos.toString() + 'px';
         }
-        this._clock.currentTime = this._scrubJulian;
 
         var evt = document.createEvent('Event');
         evt.initEvent('settime', true, true);

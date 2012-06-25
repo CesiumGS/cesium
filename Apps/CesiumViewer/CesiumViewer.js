@@ -180,10 +180,19 @@ function(dom,
                 cameraCenteredObjectID = queryObject.lookAt;
             }
 
+            function onTimelineScrub(e) {
+                clock.currentTime = e.timeJulian;
+                animating = false;
+                animReverse.set('checked', false);
+                animPause.set('checked', true);
+                animPlay.set('checked', false);
+            }
+
             var timelineWidget = registry.byId('mainTimeline');
             timelineWidget.clock = clock;
             timelineWidget.setupCallback = function(t) {
                 timeline = t;
+                timeline.addEventListener('settime', onTimelineScrub, false);
                 timeline.zoomTo(clock.startTime, clock.stopTime);
             };
 

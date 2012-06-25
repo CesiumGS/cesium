@@ -22,6 +22,7 @@ define(['dojo',
     function handleSetTime(e) {
         if (typeof timeline !== 'undefined') {
             var scrubJulian = e.timeJulian;
+            clock.currentTime = scrubJulian;
             var date = scrubJulian.toDate();
             document.getElementById('mousePos').innerHTML = date.toUTCString();
         }
