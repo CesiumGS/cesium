@@ -10,7 +10,9 @@ define([
         './CameraEventType',
         './CameraSpindleController',
         './CameraFreeLookController',
-        './CameraHelpers'
+        './CameraHelpers',
+        './AnimationCollection',
+        '../ThirdParty/Tween'
     ], function(
         destroyObject,
         Ellipsoid,
@@ -22,7 +24,9 @@ define([
         CameraEventType,
         CameraSpindleController,
         CameraFreeLookController,
-        CameraHelpers) {
+        CameraHelpers,
+        AnimationCollection,
+        Tween) {
     "use strict";
 
     var maintainInertia = CameraHelpers.maintainInertia;
@@ -61,6 +65,12 @@ define([
 
         this._transform = this._camera.transform.clone();
         this._lastInertiaTranslateMovement = undefined;
+
+        this._animationCollection = new AnimationCollection();
+        this._translateAnimation = undefined;
+
+        this._mapWidth = this._ellipsoid.getRadii().x * Math.PI;
+        this._mapHeight = this._ellipsoid.getRadii().y * CesiumMath.PI_OVER_TWO;
     }
 
     /**
@@ -69,6 +79,10 @@ define([
     CameraColumbusViewController.prototype.update = function() {
         var translate = this._translateHandler;
         var translating = translate.isMoving() && translate.getMovement();
+
+        if (translate.isButtonDown() || this._spindleController._zoomHandler.isButtonDown() || this._spindleController._spinHandler.isButtonDown()) {
+            this._animationCollection.removeAll();
+        }
 
         if (translating) {
             this._translate(translate.getMovement());
@@ -81,9 +95,44 @@ define([
         this._spindleController.update();
         this._freeLookController.update();
 
-        this._updateReferenceFrame();
+        this._correctPosition();
+        this._animationCollection.update();
 
         return true;
+    };
+
+    CameraColumbusViewController.prototype._addCorrectTranslateAnimation = function(position, center, maxX, maxY) {
+        var newPosition = position.clone();
+
+        if (center.y > maxX) {
+            newPosition.y -= center.y - maxX;
+        } else if (center.y < -maxX) {
+            newPosition.y += -maxX - center.y;
+        }
+
+        if (center.z > maxY) {
+            newPosition.z -= center.z - maxY;
+        } else if (center.z < -maxY) {
+            newPosition.z += -maxY - center.z;
+        }
+
+        var camera = this._camera;
+        var updateCV = function(value) {
+            var interp = position.lerp(newPosition, value.time);
+            var pos = new Cartesian4(interp.x, interp.y, interp.z, 1.0);
+            camera.position = camera.getInverseTransform().multiplyWithVector(pos).getXYZ();
+        };
+
+        this._translateAnimation = this._animationCollection.add({
+            easingFunction : Tween.Easing.Exponential.EaseOut,
+            startValue : {
+                time : 0.0
+            },
+            stopValue : {
+                time : 1.0
+            },
+            onUpdate : updateCV
+        });
     };
 
     CameraColumbusViewController.prototype._translate = function(movement) {
@@ -101,9 +150,9 @@ define([
         camera.position = camera.position.add(diff);
     };
 
-    CameraColumbusViewController.prototype._updateReferenceFrame = function() {
+    CameraColumbusViewController.prototype._correctPosition = function()
+    {
         var camera = this._camera;
-
         var position = camera.position;
         var direction = camera.direction;
 
@@ -117,14 +166,36 @@ define([
         var positionWC = camera.transform.multiplyWithVector(cameraPosition);
         camera.transform = this._transform.clone();
 
-        var maxX = this._ellipsoid.getRadii().x * Math.PI;
+        var tanPhi = Math.tan(this._camera.frustum.fovy * 0.5);
+        var tanTheta = this._camera.frustum.aspectRatio * tanPhi;
+        var distToC = positionWC.subtract(centerWC).magnitude();
+        var dWidth = tanTheta * distToC;
+        var dHeight = tanPhi * distToC;
+
+        var maxX = Math.max(dWidth - this._mapWidth, this._mapWidth);
+        var maxY = Math.max(dHeight - this._mapHeight, this._mapHeight);
+
+        if (!this._translateHandler.isButtonDown()) {
+            var animations = Tween.getAll();
+
+            var translateX = centerWC.y < -maxX || centerWC.y > maxX;
+            var translateY = centerWC.z < -maxY || centerWC.z > maxY;
+            if ((translateX || translateY) && !this._lastInertiaTranslateMovement) {
+                if (animations.indexOf(this._translateAnimation) === -1) {
+                    this._animationCollection.removeAll();
+                }
+                this._addCorrectTranslateAnimation(positionWC.getXYZ(), centerWC.getXYZ(), maxX, maxY);
+            }
+        }
+
+        maxX = maxX + this._mapWidth * 0.5;
         if (centerWC.y > maxX) {
             positionWC.y -= centerWC.y - maxX;
         } else if (centerWC.y < -maxX) {
             positionWC.y += -maxX - centerWC.y;
         }
 
-        var maxY = this._ellipsoid.getRadii().z * CesiumMath.PI_OVER_TWO;
+        maxY = maxY + this._mapHeight * 0.5;
         if (centerWC.z > maxY) {
             positionWC.z -= centerWC.z - maxY;
         } else if (centerWC.z < -maxY) {
