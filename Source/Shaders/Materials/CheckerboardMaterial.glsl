@@ -32,8 +32,6 @@ agi_material agi_getMaterial(agi_materialInput materialInput)
     
     vec4 color = mix(midColor, currentColor, val1);
     material.diffuse = color.rgb;
-    
-    // TODO: Will remove the alpha later.
     material.alpha = color.a;
     
     return material;

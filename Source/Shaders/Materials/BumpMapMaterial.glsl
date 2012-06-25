@@ -18,12 +18,12 @@ agi_material agi_getMaterial(agi_materialInput materialInput)
     vec2 leftPixel = fract(u_repeat * (st + vec2(0.0, 1.0 / windowHeight)));
     float topBump = texture2D(u_texture, leftPixel).x;
     
-    vec3 normalTangentSpace = normalize(vec3(centerBump - rightBump, centerBump - topBump, 1.0));
+    vec3 normalTangentSpace = normalize(vec3(centerBump - rightBump, centerBump - topBump, 0.2));
     vec3 normalEC = materialInput.tangentToEyeMatrix * normalTangentSpace;
     
     // TODO: Will remove the diffuse and specular later.
     material.diffuse = vec3(0.2, 0.2, 0.2);
-    material.specular = 0.1;
+    material.specular = 0.01;
     material.normal = normalEC;
     
     return material;
