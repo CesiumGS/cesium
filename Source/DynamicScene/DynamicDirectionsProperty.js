@@ -136,7 +136,6 @@ define([
         }
 
         return intervalData.getValueSpherical();
-
     };
 
     /**
