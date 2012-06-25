@@ -451,19 +451,21 @@ agi_material agi_getDefaultMaterial(agi_materialInput materialInput)
 vec4 agi_lightValuePhong(vec3 toLight, vec3 toEye, agi_material material)
 {
     vec3 diffuseColor = material.diffuse;
-    float specularIntensity = material.specular + agi_epsilon7;
+    float specularIntensity = material.specular;
     vec3 normal = material.normal;
     vec3 emissionColor = material.emission;
     float alpha = material.alpha;
 
+    float cosAngIncidence = clamp(dot(normal, toLight), 0.0, 1.0);    
     vec3 toReflectedLight = reflect(-toLight, normal);
-    float diffuseAmount = max(dot(toLight, normal), 0.0);
-    float specularAmount = max(dot(toReflectedLight, toEye), 0.0);
-    specularAmount = pow(specularAmount, 1.0 / (specularIntensity / 10.0));
+    float diffuseAmount = clamp(dot(toLight, normal), 0.0, 1.0);
+    float specularAmount = clamp(dot(toReflectedLight, toEye), 0.0, 1.0);
+    specularAmount = cosAngIncidence != 0.0 ? specularAmount : 0.0;
+    specularAmount = specularIntensity != 0.0 ? pow(specularAmount, 1.0/specularIntensity) : 0.0;
 
     //x, y, z : diffuse ambient
     //w : specular strength
-    vec4 ambientLight = vec4(0.0, 0.0, 0.0, 0.5);
+    vec4 ambientLight = vec4(0.0, 0.0, 0.0, 1.0);
     
     vec3 lighting = ambientLight.xyz + emissionColor;
     lighting += diffuseColor * diffuseAmount;
