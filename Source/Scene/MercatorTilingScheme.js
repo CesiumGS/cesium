@@ -45,11 +45,10 @@ define([
          *
          * @type Extent
          */
-        this.extent = new Extent(
-            -CesiumMath.PI,
-            CesiumMath.toRadians(-85.05112878),
-            CesiumMath.PI,
-            CesiumMath.toRadians(85.05112878));
+        this.extent = description.extent || new Extent(-CesiumMath.PI,
+                                                       CesiumMath.toRadians(-85.05112878),
+                                                       CesiumMath.PI,
+                                                       CesiumMath.toRadians(85.05112878));
 
         /**
          * The number of tiles in the X direction at level zero of the tile tree.

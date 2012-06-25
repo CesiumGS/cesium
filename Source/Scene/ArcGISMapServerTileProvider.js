@@ -11,7 +11,9 @@ define([
         './MercatorTilingScheme',
         './GeographicTilingScheme',
         './DiscardMissingTileImagePolicy',
-        '../ThirdParty/when'
+        '../ThirdParty/when',
+        '../Core/Ellipsoid',
+        '../Core/Cartographic2'
     ], function(
         defaultValue,
         loadImage,
@@ -24,8 +26,17 @@ define([
         MercatorTilingScheme,
         GeographicTilingScheme,
         DiscardMissingTileImagePolicy,
-        when) {
+        when,
+        Ellipsoid,
+        Cartographic2) {
     "use strict";
+
+    function WebMercatorToCartographic(x, y) {
+        var oneOverEarthSemimajorAxis = Ellipsoid.WGS84.getOneOverRadii().x;
+        var longitude = x * oneOverEarthSemimajorAxis;
+        var latitude = CesiumMath.PI_OVER_TWO - (2.0 * Math.atan(Math.exp(-y * oneOverEarthSemimajorAxis)));
+        return new Cartographic2(longitude, latitude);
+    }
 
     /**
      * Provides tile images hosted by an ArcGIS Server.
@@ -138,19 +149,24 @@ define([
 
             if (data.tileInfo.spatialReference.wkid === 102100) {
                 that.projection = Projections.MERCATOR;
-                that.tilingScheme = new MercatorTilingScheme();
-                // TODO: Determine extent from service description.
-                that.maxExtent = new Extent(-CesiumMath.PI,
-                                            CesiumMath.toRadians(-85.05112878),
-                                            CesiumMath.PI,
-                                            CesiumMath.toRadians(85.05112878));
+                var southwest = WebMercatorToCartographic(data.fullExtent.xmin, data.fullExtent.ymin);
+                var northeast = WebMercatorToCartographic(data.fullExtent.xmax, data.fullExtent.ymax);
+                that.maxExtent = new Extent(southwest.longitude,
+                                            southwest.latitude,
+                                            northeast.longitude,
+                                            northeast.latitude);
+                that.tilingScheme = new MercatorTilingScheme({
+                    extent: that.maxExtent
+                });
             } else if (data.tileInfo.spatialReference.wkid === 4326) {
                 that.projection = Projections.WGS84;
-                that.tilingScheme = new GeographicTilingScheme();
                 that.maxExtent = new Extent(CesiumMath.toRadians(data.fullExtent.xmin),
                                             CesiumMath.toRadians(data.fullExtent.ymin),
                                             CesiumMath.toRadians(data.fullExtent.xmax),
                                             CesiumMath.toRadians(data.fullExtent.ymax));
+                that.tilingScheme = new GeographicTilingScheme({
+                    extent: that.maxExtent
+                });
             }
 
             that.zoomMax = data.tileInfo.lods.length - 1;
