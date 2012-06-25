@@ -24,15 +24,43 @@ define([
     "use strict";
 
     var wgs84 = Ellipsoid.WGS84;
+    var potentialTypes = [CzmlCartesian3, CzmlCartographic3];
 
+    /**
+     * A dynamic property which stores both Cartesian and Cartographic data
+     * and can convert and return the desired type of data for a desired time.
+     * Rather than creating instances of this object directly, it's typically
+     * created and managed via loading CZML data into a DynamicObjectCollection.
+     * Instances of this type are exposed via DynamicObject and it's sub-objects
+     * and are responsible for interpreting and interpolating the data for visualization.
+     *
+     * @name DynamicPositionProperty
+     * @internalconstructor
+     *
+     * @see DynamicObject
+     * @see DynamicProperty
+     * @see ReferenceProperty
+     * @see DynamicMaterialProperty
+     * @see DynamicDirectionsProperty
+     * @see DynamicVertexPositionsProperty
+     */
     function DynamicPositionProperty() {
         this._dynamicProperties = [];
         this._propertyIntervals = new TimeIntervalCollection();
-        this._potentialTypes = [CzmlCartesian3, CzmlCartographic3];
         this._cachedTime = undefined;
         this._cachedInterval = undefined;
     }
 
+    /**
+     * Processes the provided CZML interval and creates or modifies a DynamicProperty
+     * of the provided property name and value type on the parent object.
+     *
+     * @memberof DynamicPositionProperty
+     *
+     * @param {Object} czmlIntervals The CZML data to process.
+     * @param {DynamicPositionProperty} [existingProperty] The existing property to which to add data, of undefined, a new property will be created.
+     * @returns The existingProperty parameter or a new instance of DynamicPositionProperty if existing property was not defined.
+     */
     DynamicPositionProperty.processCzmlPacket = function(czmlIntervals, existingProperty) {
         if (typeof czmlIntervals === 'undefined') {
             return existingProperty;
@@ -43,22 +71,88 @@ define([
             existingProperty = new DynamicPositionProperty();
         }
 
-        existingProperty.addCzmlIntervals(czmlIntervals);
+        existingProperty._addCzmlIntervals(czmlIntervals);
 
         return existingProperty;
     };
 
-    DynamicPositionProperty.prototype.addCzmlIntervals = function(czmlIntervals) {
+    /**
+     * Retrieves the value of the object at the supplied time as a Cartographic3.
+     * @memberof DynamicPositionProperty
+     *
+     * @param {JulianDate} time The time for which to retrieve the value.
+     * @param {Cartographic3} [result] The object to store the result onto, if undefined a new instance will be created.
+     * @returns The modified result property, or a new instance if result was undefined.
+     */
+    DynamicPositionProperty.prototype.getValueCartographic = function(time, result) {
+        var interval = this._cachedInterval;
+        if (this._cachedTime !== time) {
+            this._cachedTime = time;
+            if (typeof interval === 'undefined' || !interval.contains(time)) {
+                interval = this._propertyIntervals.findIntervalContainingDate(time);
+                this._cachedInterval = interval;
+            }
+        }
+
+        if (typeof interval === 'undefined') {
+            return undefined;
+        }
+        var property = interval.data;
+        var valueType = property.valueType;
+        if (valueType === CzmlCartographic3) {
+            return property.getValue(time, result);
+        }
+        result = interval.cachedValue = property.getValue(time, interval.cachedValue);
+        if (typeof result !== 'undefined') {
+            result = wgs84.toCartographic3(result);
+        }
+        return result;
+    };
+
+    /**
+     * Retrieves the value of the object at the supplied time as a Cartesian3.
+     * @memberof DynamicPositionProperty
+     *
+     * @param {JulianDate} time The time for which to retrieve the value.
+     * @param {Cartesian3} [result] The object to store the result onto, if undefined a new instance will be created.
+     * @returns The modified result property, or a new instance if result was undefined.
+     */
+    DynamicPositionProperty.prototype.getValueCartesian = function(time, result) {
+        var interval = this._cachedInterval;
+        if (this._cachedTime !== time) {
+            this._cachedTime = time;
+            if (typeof interval === 'undefined' || !interval.contains(time)) {
+                interval = this._propertyIntervals.findIntervalContainingDate(time);
+                this._cachedInterval = interval;
+            }
+        }
+
+        if (typeof interval === 'undefined') {
+            return undefined;
+        }
+        var property = interval.data;
+        var valueType = property.valueType;
+        if (valueType === CzmlCartesian3) {
+            return property.getValue(time, result);
+        }
+        result = interval.cachedValue = property.getValue(time, interval.cachedValue);
+        if (typeof result !== 'undefined') {
+            result = wgs84.toCartesian(result);
+        }
+        return result;
+    };
+
+    DynamicPositionProperty.prototype._addCzmlIntervals = function(czmlIntervals) {
         if (Array.isArray(czmlIntervals)) {
             for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
-                this.addCzmlInterval(czmlIntervals[i]);
+                this._addCzmlInterval(czmlIntervals[i]);
             }
         } else {
-            this.addCzmlInterval(czmlIntervals);
+            this._addCzmlInterval(czmlIntervals);
         }
     };
 
-    DynamicPositionProperty.prototype.addCzmlInterval = function(czmlInterval) {
+    DynamicPositionProperty.prototype._addCzmlInterval = function(czmlInterval) {
         this._cachedTime = undefined;
         this._cachedInterval = undefined;
 
@@ -88,8 +182,8 @@ define([
 
         //If the new data was a different type, unwrapping fails, look for a valueType for this type.
         if (typeof unwrappedInterval === 'undefined') {
-            for ( var i = 0, len = this._potentialTypes.length; i < len; i++) {
-                valueType = this._potentialTypes[i];
+            for ( var i = 0, len = potentialTypes.length; i < len; i++) {
+                valueType = potentialTypes[i];
                 unwrappedInterval = valueType.unwrapInterval(czmlInterval);
                 if (typeof unwrappedInterval !== 'undefined') {
                     //Found a valid valueType, but lets check to see if we already have a property with that valueType
@@ -113,58 +207,8 @@ define([
 
         //We could handle the data, add it to the property.
         if (typeof unwrappedInterval !== 'undefined') {
-            property.addCzmlIntervalUnwrapped(iso8601Interval.start, iso8601Interval.stop, unwrappedInterval, czmlInterval.epoch, czmlInterval.interpolationAlgorithm, czmlInterval.interpolationDegree);
+            property._addCzmlIntervalUnwrapped(iso8601Interval.start, iso8601Interval.stop, unwrappedInterval, czmlInterval.epoch, czmlInterval.interpolationAlgorithm, czmlInterval.interpolationDegree);
         }
-    };
-
-    DynamicPositionProperty.prototype.getValueCartographic = function(time, result) {
-        var interval = this._cachedInterval;
-        if (this._cachedTime !== time) {
-            this._cachedTime = time;
-            if (typeof interval === 'undefined' || !interval.contains(time)) {
-                interval = this._propertyIntervals.findIntervalContainingDate(time);
-                this._cachedInterval = interval;
-            }
-        }
-
-        if (typeof interval === 'undefined') {
-            return undefined;
-        }
-        var property = interval.data;
-        var valueType = property.valueType;
-        if (valueType === CzmlCartographic3) {
-            return property.getValue(time, result);
-        }
-        result = interval.cachedValue = property.getValue(time, interval.cachedValue);
-        if (typeof result !== 'undefined') {
-            result = wgs84.toCartographic3(result);
-        }
-        return result;
-    };
-
-    DynamicPositionProperty.prototype.getValueCartesian = function(time, result) {
-        var interval = this._cachedInterval;
-        if (this._cachedTime !== time) {
-            this._cachedTime = time;
-            if (typeof interval === 'undefined' || !interval.contains(time)) {
-                interval = this._propertyIntervals.findIntervalContainingDate(time);
-                this._cachedInterval = interval;
-            }
-        }
-
-        if (typeof interval === 'undefined') {
-            return undefined;
-        }
-        var property = interval.data;
-        var valueType = property.valueType;
-        if (valueType === CzmlCartesian3) {
-            return property.getValue(time, result);
-        }
-        result = interval.cachedValue = property.getValue(time, interval.cachedValue);
-        if (typeof result !== 'undefined') {
-            result = wgs84.toCartesian(result);
-        }
-        return result;
     };
 
     return DynamicPositionProperty;

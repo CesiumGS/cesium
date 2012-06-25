@@ -59,6 +59,47 @@ define([
         return epoch.addSeconds(date);
     }
 
+    /**
+     * <p>
+     * DynamicProperty represents a single value that changes over time.
+     * Rather than creating instances of this object directly, it's typically
+     * created and managed via loading CZML data into a DynamicObjectCollection.
+     * Instances of this type are exposed via DynamicObject and it's sub-objects
+     * and are responsible for interpreting and interpolating the data for visualization.
+     * </p>
+     * <p>
+     * The type of value exposed by this property must be provided during construction
+     * by passing in an object which performs all the necessary operations needed to
+     * properly store, retrieve, and interpolate the data.  For more specialized needs
+     * other types of dynamic properties exist, such as DynamicMaterialProperty,
+     * which as the name implies, handles materials.
+     * </p>
+     *
+     * @name DynamicProperty
+     * @internalconstructor
+     *
+     * @param {Object} valueType A CZML type object which contains the methods needed to interpret and interpolate CZML data of the same type.
+     *
+     * @see CzmlBoolean
+     * @see CzmlCartesian2
+     * @see CzmlCartesian3
+     * @see CzmlCartographic3
+     * @see CzmlColor
+     * @see CzmlHorizontalOrigin
+     * @see CzmlLabelStyle
+     * @see CzmlNumber
+     * @see CzmlString
+     * @see CzmlUnitCartesian3
+     * @see CzmlUnitQuaternion
+     * @see CzmlUnitSpherical
+     * @see CzmlVerticalOrigin
+     * @see DynamicObject
+     * @see ReferenceProperty
+     * @see DynamicMaterialProperty
+     * @see DynamicPositionProperty
+     * @see DynamicDirectionsProperty
+     * @see DynamicVertexPositionsProperty
+     */
     function DynamicProperty(valueType) {
         if (typeof valueType === 'undefined') {
             throw new DeveloperError('valueType is required.');
@@ -69,6 +110,19 @@ define([
         this._cachedInterval = undefined;
     }
 
+    /**
+     * Processes the provided CZML interval and creates or modifies a DynamicProperty
+     * of the provided property name and value type on the parent object.
+     *
+     * @memberof DynamicProperty
+     *
+     * @param {Object} parentObject The object that contains or will contain the DynamicProperty to be created or modified.
+     * @param {String} propertyName The name of the property to be created or modified.
+     * @param {Object} valueType The type of property being processed.
+     * @param {Object} czmlIntervals The CZML data to process.
+     * @param {TimeInterval} [constrainedInterval] Constrains the processing so that any times outside of this interval are ignored.
+     * @returns true if the property was newly created, false otherwise.
+     */
     DynamicProperty.processCzmlPacket = function(parentObject, propertyName, valueType, czmlIntervals, constrainedInterval) {
         var newProperty = false;
         var existingProperty = parentObject[propertyName];
@@ -83,128 +137,19 @@ define([
             newProperty = true;
         }
 
-        existingProperty.addCzmlIntervals(czmlIntervals, constrainedInterval);
+        existingProperty._addCzmlIntervals(czmlIntervals, constrainedInterval);
 
         return newProperty;
     };
 
-    DynamicProperty._mergeNewSamples = function(epoch, times, values, newData, doublesPerValue, valueType) {
-        var newDataIndex = 0, i, prevItem, timesInsertionPoint, valuesInsertionPoint, timesSpliceArgs, valuesSpliceArgs, currentTime, nextTime;
-        while (newDataIndex < newData.length) {
-            currentTime = czmlDateToJulianDate(newData[newDataIndex], epoch);
-            timesInsertionPoint = binarySearch(times, currentTime, JulianDate.compare);
-
-            if (timesInsertionPoint < 0) {
-                //Doesn't exist, insert as many additional values as we can.
-                timesInsertionPoint = ~timesInsertionPoint;
-                timesSpliceArgs = [timesInsertionPoint, 0];
-
-                valuesInsertionPoint = timesInsertionPoint * doublesPerValue;
-                valuesSpliceArgs = [valuesInsertionPoint, 0];
-                prevItem = undefined;
-                nextTime = times[timesInsertionPoint + 1];
-                while (newDataIndex < newData.length) {
-                    currentTime = czmlDateToJulianDate(newData[newDataIndex], epoch);
-                    if ((typeof prevItem !== 'undefined' && JulianDate.compare(prevItem, currentTime) >= 0) ||
-                        (typeof nextTime !== 'undefined' && JulianDate.compare(currentTime, nextTime) >= 0)) {
-                        break;
-                    }
-                    timesSpliceArgs.push(currentTime);
-                    newDataIndex = newDataIndex + 1;
-                    for (i = 0; i < doublesPerValue; i++) {
-                        valuesSpliceArgs.push(newData[newDataIndex]);
-                        newDataIndex = newDataIndex + 1;
-                    }
-                    prevItem = currentTime;
-                }
-
-                Array.prototype.splice.apply(values, valuesSpliceArgs);
-                Array.prototype.splice.apply(times, timesSpliceArgs);
-            } else {
-                //Found an exact match
-                for (i = 0; i < doublesPerValue; i++) {
-                    newDataIndex++;
-                    values[(timesInsertionPoint * doublesPerValue) + i] = newData[newDataIndex];
-                }
-                newDataIndex++;
-            }
-        }
-    };
-
-    DynamicProperty.prototype.addCzmlIntervals = function(czmlIntervals, constrainedInterval) {
-        if (Array.isArray(czmlIntervals)) {
-            for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
-                this.addCzmlInterval(czmlIntervals[i], constrainedInterval);
-            }
-        } else {
-            this.addCzmlInterval(czmlIntervals, constrainedInterval);
-        }
-    };
-
-    DynamicProperty.prototype.addCzmlInterval = function(czmlInterval, constrainedInterval) {
-        var iso8601Interval = czmlInterval.interval;
-        if (typeof iso8601Interval === 'undefined') {
-            iso8601Interval = Iso8601.MAXIMUM_INTERVAL;
-        } else {
-            iso8601Interval = TimeInterval.fromIso8601(iso8601Interval);
-        }
-
-        if (typeof constrainedInterval !== 'undefined') {
-            iso8601Interval = iso8601Interval.intersect(constrainedInterval);
-        }
-
-        var unwrappedInterval = this.valueType.unwrapInterval(czmlInterval);
-        if (typeof unwrappedInterval !== 'undefined') {
-            this.addCzmlIntervalUnwrapped(iso8601Interval.start, iso8601Interval.stop, unwrappedInterval, czmlInterval.epoch, czmlInterval.interpolationAlgorithm, czmlInterval.interpolationDegree);
-        }
-    };
-
-    DynamicProperty.prototype.addCzmlIntervalUnwrapped = function(start, stop, unwrappedInterval, epoch, interpolationAlgorithmType, interpolationDegree) {
-        var thisIntervals = this._intervals;
-        var existingInterval = thisIntervals.findInterval(start, stop);
-        this._cachedDate = undefined;
-        this._cachedInterval = undefined;
-
-        var intervalData;
-        if (typeof existingInterval === 'undefined') {
-            intervalData = new IntervalData();
-            existingInterval = new TimeInterval(start, stop, true, true, intervalData);
-            thisIntervals.addInterval(existingInterval);
-        } else {
-            intervalData = existingInterval.data;
-        }
-
-        var thisValueType = this.valueType;
-        if (thisValueType.isSampled(unwrappedInterval)) {
-            var interpolationAlgorithm;
-            if (typeof interpolationAlgorithmType !== 'undefined') {
-                interpolationAlgorithm = interpolators[interpolationAlgorithmType];
-                intervalData.interpolationAlgorithm = interpolationAlgorithm;
-            }
-            if (typeof interpolationAlgorithm !== 'undefined '&& typeof interpolationDegree !== 'undefined') {
-                intervalData.interpolationDegree = interpolationDegree;
-                intervalData.xTable = undefined;
-                intervalData.yTable = undefined;
-            }
-
-            if (!intervalData.isSampled) {
-                intervalData.times = [];
-                intervalData.values = [];
-                intervalData.isSampled = true;
-            }
-            if (typeof epoch !== 'undefined') {
-                epoch = JulianDate.fromIso8601(epoch);
-            }
-            DynamicProperty._mergeNewSamples(epoch, intervalData.times, intervalData.values, unwrappedInterval, thisValueType.doublesPerValue, thisValueType);
-            intervalData.numberOfPoints = Math.min(intervalData.interpolationAlgorithm.getRequiredDataPoints(intervalData.interpolationDegree), intervalData.times.length);
-        } else {
-            //Packet itself is a constant value
-            intervalData.times = undefined;
-            intervalData.values = unwrappedInterval;
-            intervalData.isSampled = false;
-        }
-    };
-
+    /**
+     * Returns the value of the property at the specified time.
+     * @memberof DynamicProperty
+     *
+     * @param {JulianDate} time The time for which to retrieve the value.
+     * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
+     * @returns The modified result parameter or a new instance if the result parameter was not supplied.
+     */
     DynamicProperty.prototype.getValue = function(time, result) {
         var interval = this._cachedInterval;
         var thisValueType = this.valueType;
@@ -304,6 +249,123 @@ define([
             return thisValueType.getValueFromArray(intervalData.values, index * doublesPerValue, result);
         }
         return thisValueType.getValue(intervalData.values, result);
+    };
+
+    DynamicProperty._mergeNewSamples = function(epoch, times, values, newData, doublesPerValue, valueType) {
+        var newDataIndex = 0, i, prevItem, timesInsertionPoint, valuesInsertionPoint, timesSpliceArgs, valuesSpliceArgs, currentTime, nextTime;
+        while (newDataIndex < newData.length) {
+            currentTime = czmlDateToJulianDate(newData[newDataIndex], epoch);
+            timesInsertionPoint = binarySearch(times, currentTime, JulianDate.compare);
+
+            if (timesInsertionPoint < 0) {
+                //Doesn't exist, insert as many additional values as we can.
+                timesInsertionPoint = ~timesInsertionPoint;
+                timesSpliceArgs = [timesInsertionPoint, 0];
+
+                valuesInsertionPoint = timesInsertionPoint * doublesPerValue;
+                valuesSpliceArgs = [valuesInsertionPoint, 0];
+                prevItem = undefined;
+                nextTime = times[timesInsertionPoint + 1];
+                while (newDataIndex < newData.length) {
+                    currentTime = czmlDateToJulianDate(newData[newDataIndex], epoch);
+                    if ((typeof prevItem !== 'undefined' && JulianDate.compare(prevItem, currentTime) >= 0) ||
+                        (typeof nextTime !== 'undefined' && JulianDate.compare(currentTime, nextTime) >= 0)) {
+                        break;
+                    }
+                    timesSpliceArgs.push(currentTime);
+                    newDataIndex = newDataIndex + 1;
+                    for (i = 0; i < doublesPerValue; i++) {
+                        valuesSpliceArgs.push(newData[newDataIndex]);
+                        newDataIndex = newDataIndex + 1;
+                    }
+                    prevItem = currentTime;
+                }
+
+                Array.prototype.splice.apply(values, valuesSpliceArgs);
+                Array.prototype.splice.apply(times, timesSpliceArgs);
+            } else {
+                //Found an exact match
+                for (i = 0; i < doublesPerValue; i++) {
+                    newDataIndex++;
+                    values[(timesInsertionPoint * doublesPerValue) + i] = newData[newDataIndex];
+                }
+                newDataIndex++;
+            }
+        }
+    };
+
+    DynamicProperty.prototype._addCzmlIntervals = function(czmlIntervals, constrainedInterval) {
+        if (Array.isArray(czmlIntervals)) {
+            for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
+                this._addCzmlInterval(czmlIntervals[i], constrainedInterval);
+            }
+        } else {
+            this._addCzmlInterval(czmlIntervals, constrainedInterval);
+        }
+    };
+
+    DynamicProperty.prototype._addCzmlInterval = function(czmlInterval, constrainedInterval) {
+        var iso8601Interval = czmlInterval.interval;
+        if (typeof iso8601Interval === 'undefined') {
+            iso8601Interval = Iso8601.MAXIMUM_INTERVAL;
+        } else {
+            iso8601Interval = TimeInterval.fromIso8601(iso8601Interval);
+        }
+
+        if (typeof constrainedInterval !== 'undefined') {
+            iso8601Interval = iso8601Interval.intersect(constrainedInterval);
+        }
+
+        var unwrappedInterval = this.valueType.unwrapInterval(czmlInterval);
+        if (typeof unwrappedInterval !== 'undefined') {
+            this._addCzmlIntervalUnwrapped(iso8601Interval.start, iso8601Interval.stop, unwrappedInterval, czmlInterval.epoch, czmlInterval.interpolationAlgorithm, czmlInterval.interpolationDegree);
+        }
+    };
+
+    DynamicProperty.prototype._addCzmlIntervalUnwrapped = function(start, stop, unwrappedInterval, epoch, interpolationAlgorithmType, interpolationDegree) {
+        var thisIntervals = this._intervals;
+        var existingInterval = thisIntervals.findInterval(start, stop);
+        this._cachedDate = undefined;
+        this._cachedInterval = undefined;
+
+        var intervalData;
+        if (typeof existingInterval === 'undefined') {
+            intervalData = new IntervalData();
+            existingInterval = new TimeInterval(start, stop, true, true, intervalData);
+            thisIntervals.addInterval(existingInterval);
+        } else {
+            intervalData = existingInterval.data;
+        }
+
+        var thisValueType = this.valueType;
+        if (thisValueType.isSampled(unwrappedInterval)) {
+            var interpolationAlgorithm;
+            if (typeof interpolationAlgorithmType !== 'undefined') {
+                interpolationAlgorithm = interpolators[interpolationAlgorithmType];
+                intervalData.interpolationAlgorithm = interpolationAlgorithm;
+            }
+            if (typeof interpolationAlgorithm !== 'undefined '&& typeof interpolationDegree !== 'undefined') {
+                intervalData.interpolationDegree = interpolationDegree;
+                intervalData.xTable = undefined;
+                intervalData.yTable = undefined;
+            }
+
+            if (!intervalData.isSampled) {
+                intervalData.times = [];
+                intervalData.values = [];
+                intervalData.isSampled = true;
+            }
+            if (typeof epoch !== 'undefined') {
+                epoch = JulianDate.fromIso8601(epoch);
+            }
+            DynamicProperty._mergeNewSamples(epoch, intervalData.times, intervalData.values, unwrappedInterval, thisValueType.doublesPerValue, thisValueType);
+            intervalData.numberOfPoints = Math.min(intervalData.interpolationAlgorithm.getRequiredDataPoints(intervalData.interpolationDegree), intervalData.times.length);
+        } else {
+            //Packet itself is a constant value
+            intervalData.times = undefined;
+            intervalData.values = unwrappedInterval;
+            intervalData.isSampled = false;
+        }
     };
 
     return DynamicProperty;
