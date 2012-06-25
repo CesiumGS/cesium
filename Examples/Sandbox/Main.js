@@ -74,6 +74,7 @@
     tree.addNode('Apply a diffuse map material', [new Sandbox.DiffuseMapPolygonMaterial(scene, ellipsoid, primitives)], mat, 'Material');
     tree.addNode('Apply an alpha map material', [new Sandbox.AlphaMapPolygonMaterial(scene, ellipsoid, primitives)], mat, 'Material');
     tree.addNode('Apply a specular map material', [new Sandbox.SpecularMapPolygonMaterial(scene, ellipsoid, primitives)], mat, 'Material');
+    tree.addNode('Apply an emission map material', [new Sandbox.EmissionMapPolygonMaterial(scene, ellipsoid, primitives)], mat, 'Material');
     tree.addNode('Apply a bump map material', [new Sandbox.BumpMapPolygonMaterial(scene, ellipsoid, primitives)], mat, 'Material');
     tree.addNode('Apply a normal map material', [new Sandbox.NormalMapPolygonMaterial(scene, ellipsoid, primitives)], mat, 'Material');
     tree.addNode('Apply a reflection material', [new Sandbox.ReflectionPolygonMaterial(scene, ellipsoid, primitives)], mat, 'Material');
