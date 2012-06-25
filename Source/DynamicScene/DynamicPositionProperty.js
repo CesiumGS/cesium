@@ -52,28 +52,21 @@ define([
     }
 
     /**
-     * Processes the provided CZML interval and creates or modifies a DynamicProperty
-     * of the provided property name and value type on the parent object.
+     * Processes the provided CZML interval or intervals into this property.
      *
      * @memberof DynamicPositionProperty
      *
      * @param {Object} czmlIntervals The CZML data to process.
-     * @param {DynamicPositionProperty} [existingProperty] The existing property to which to add data, of undefined, a new property will be created.
-     * @returns The existingProperty parameter or a new instance of DynamicPositionProperty if existing property was not defined.
+     * @param {TimeInterval} [constrainedInterval] Constrains the processing so that any times outside of this interval are ignored.
      */
-    DynamicPositionProperty.processCzmlPacket = function(czmlIntervals, existingProperty) {
-        if (typeof czmlIntervals === 'undefined') {
-            return existingProperty;
+    DynamicPositionProperty.prototype.processCzmlIntervals = function(czmlIntervals, constrainedInterval) {
+        if (Array.isArray(czmlIntervals)) {
+            for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
+                this._addCzmlInterval(czmlIntervals[i], constrainedInterval);
+            }
+        } else {
+            this._addCzmlInterval(czmlIntervals, constrainedInterval);
         }
-
-        //At this point we will definitely have a value, so if one doesn't exist, create it.
-        if (typeof existingProperty === 'undefined') {
-            existingProperty = new DynamicPositionProperty();
-        }
-
-        existingProperty._addCzmlIntervals(czmlIntervals);
-
-        return existingProperty;
     };
 
     /**
@@ -142,17 +135,7 @@ define([
         return result;
     };
 
-    DynamicPositionProperty.prototype._addCzmlIntervals = function(czmlIntervals) {
-        if (Array.isArray(czmlIntervals)) {
-            for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
-                this._addCzmlInterval(czmlIntervals[i]);
-            }
-        } else {
-            this._addCzmlInterval(czmlIntervals);
-        }
-    };
-
-    DynamicPositionProperty.prototype._addCzmlInterval = function(czmlInterval) {
+    DynamicPositionProperty.prototype._addCzmlInterval = function(czmlInterval, constrainedInterval) {
         this._cachedTime = undefined;
         this._cachedInterval = undefined;
 
@@ -161,6 +144,10 @@ define([
             iso8601Interval = Iso8601.MAXIMUM_INTERVAL.clone();
         } else {
             iso8601Interval = TimeInterval.fromIso8601(iso8601Interval);
+        }
+
+        if (typeof constrainedInterval !== 'undefined') {
+            iso8601Interval = iso8601Interval.intersect(constrainedInterval);
         }
 
         //See if we already have data at that interval.

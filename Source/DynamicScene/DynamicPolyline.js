@@ -82,11 +82,50 @@ function(
                 interval = TimeInterval.fromIso8601(interval);
             }
 
-            polylineUpdated = DynamicProperty.processCzmlPacket(polyline, 'color', CzmlColor, polylineData.color, interval) || polylineUpdated;
-            polylineUpdated = DynamicProperty.processCzmlPacket(polyline, 'outlineColor', CzmlColor, polylineData.outlineColor, interval) || polylineUpdated;
-            polylineUpdated = DynamicProperty.processCzmlPacket(polyline, 'outlineWidth', CzmlNumber, polylineData.outlineWidth, interval) || polylineUpdated;
-            polylineUpdated = DynamicProperty.processCzmlPacket(polyline, 'show', CzmlBoolean, polylineData.show, interval) || polylineUpdated;
-            polylineUpdated = DynamicProperty.processCzmlPacket(polyline, 'width', CzmlNumber, polylineData.width, interval) || polylineUpdated;
+            if (typeof polylineData.color !== 'undefined') {
+                var color = polyline.color;
+                if (typeof color === 'undefined') {
+                    polyline.color = color = new DynamicProperty(CzmlColor);
+                    polylineUpdated = true;
+                }
+                color.processCzmlIntervals(polylineData.color, interval);
+            }
+
+            if (typeof polylineData.width !== 'undefined') {
+                var width = polyline.width;
+                if (typeof width === 'undefined') {
+                    polyline.width = width = new DynamicProperty(CzmlNumber);
+                    polylineUpdated = true;
+                }
+                width.processCzmlIntervals(polylineData.width, interval);
+            }
+
+            if (typeof polylineData.outlineColor !== 'undefined') {
+                var outlineColor = polyline.outlineColor;
+                if (typeof outlineColor === 'undefined') {
+                    polyline.outlineColor = outlineColor = new DynamicProperty(CzmlColor);
+                    polylineUpdated = true;
+                }
+                outlineColor.processCzmlIntervals(polylineData.outlineColor, interval);
+            }
+
+            if (typeof polylineData.outlineWidth !== 'undefined') {
+                var outlineWidth = polyline.outlineWidth;
+                if (typeof outlineWidth === 'undefined') {
+                    polyline.outlineWidth = outlineWidth = new DynamicProperty(CzmlNumber);
+                    polylineUpdated = true;
+                }
+                outlineWidth.processCzmlIntervals(polylineData.outlineWidth, interval);
+            }
+
+            if (typeof polylineData.show !== 'undefined') {
+                var show = polyline.show;
+                if (typeof show === 'undefined') {
+                    polyline.show = show = new DynamicProperty(CzmlBoolean);
+                    polylineUpdated = true;
+                }
+                show.processCzmlIntervals(polylineData.show, interval);
+            }
         }
         return polylineUpdated;
     };

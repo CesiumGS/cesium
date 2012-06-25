@@ -31,17 +31,18 @@ define([
      *
      * @param {Object} czmlInterval The interval to process.
      * @param {DynamicColorMaterial} [existingMaterial] The DynamicColorMaterial to modify.
-     * @returns The modified existingMaterial parameter or a new DynamicColorMaterial instance if existingMaterial was undefined or not a DynamicColorMaterial.
      */
-    DynamicColorMaterial.processCzmlPacket = function(czmlInterval, existingMaterial) {
+    DynamicColorMaterial.prototype.processCzmlIntervals = function(czmlInterval) {
         var materialData = czmlInterval.solidColor;
         if (typeof materialData !== 'undefined') {
-            if (typeof existingMaterial === 'undefined' || !(existingMaterial instanceof DynamicColorMaterial)) {
-                existingMaterial = new DynamicColorMaterial();
+            if (typeof materialData.color !== 'undefined') {
+                var color = this.color;
+                if (typeof color === 'undefined') {
+                    this.color = color = new DynamicProperty(CzmlColor);
+                }
+                color.processCzmlIntervals(materialData.color);
             }
-            DynamicProperty.processCzmlPacket(existingMaterial, 'color', CzmlColor, materialData.color);
         }
-        return existingMaterial;
     };
 
     /**

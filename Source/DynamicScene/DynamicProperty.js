@@ -111,35 +111,21 @@ define([
     }
 
     /**
-     * Processes the provided CZML interval and creates or modifies a DynamicProperty
-     * of the provided property name and value type on the parent object.
+     * Processes the provided CZML interval or intervals into this property.
      *
      * @memberof DynamicProperty
      *
-     * @param {Object} parentObject The object that contains or will contain the DynamicProperty to be created or modified.
-     * @param {String} propertyName The name of the property to be created or modified.
-     * @param {Object} valueType The type of property being processed.
      * @param {Object} czmlIntervals The CZML data to process.
      * @param {TimeInterval} [constrainedInterval] Constrains the processing so that any times outside of this interval are ignored.
-     * @returns true if the property was newly created, false otherwise.
      */
-    DynamicProperty.processCzmlPacket = function(parentObject, propertyName, valueType, czmlIntervals, constrainedInterval) {
-        var newProperty = false;
-        var existingProperty = parentObject[propertyName];
-        if (typeof czmlIntervals === 'undefined') {
-            return existingProperty;
+    DynamicProperty.prototype.processCzmlIntervals = function(czmlIntervals, constrainedInterval) {
+        if (Array.isArray(czmlIntervals)) {
+            for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
+                this._addCzmlInterval(czmlIntervals[i], constrainedInterval);
+            }
+        } else {
+            this._addCzmlInterval(czmlIntervals, constrainedInterval);
         }
-
-        //At this point we will definitely have a value, so if one doesn't exist, create it.
-        if (typeof existingProperty === 'undefined') {
-            existingProperty = new DynamicProperty(valueType);
-            parentObject[propertyName] = existingProperty;
-            newProperty = true;
-        }
-
-        existingProperty._addCzmlIntervals(czmlIntervals, constrainedInterval);
-
-        return newProperty;
     };
 
     /**
@@ -291,16 +277,6 @@ define([
                 }
                 newDataIndex++;
             }
-        }
-    };
-
-    DynamicProperty.prototype._addCzmlIntervals = function(czmlIntervals, constrainedInterval) {
-        if (Array.isArray(czmlIntervals)) {
-            for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
-                this._addCzmlInterval(czmlIntervals[i], constrainedInterval);
-            }
-        } else {
-            this._addCzmlInterval(czmlIntervals, constrainedInterval);
         }
     };
 

@@ -93,35 +93,22 @@ define([
     }
 
     /**
-     * Processes the provided CZML interval and creates or modifies a DynamicDirectionProperty
-     * of the provided property name and value type on the parent object.
+     * Processes the provided CZML interval or intervals into this property.
      *
      * @memberof DynamicDirectionsProperty
      *
-     * @param {Object} parentObject The object that contains or will contain the DynamicProperty to be created or modified.
-     * @param {String} propertyName The name of the property to be created or modified.
-     * @param {Object} valueType The type of property being processed.
      * @param {Object} czmlIntervals The CZML data to process.
      * @param {TimeInterval} [constrainedInterval] Constrains the processing so that any times outside of this interval are ignored.
-     * @returns true if the property was newly created, false otherwise.
+     * @param {DynamicObjectCollection} dynamicObjectCollection The DynamicObjectCollection to be used as a target for resolving links within this property.
      */
-    DynamicDirectionsProperty.processCzmlPacket = function(parentObject, propertyName, czmlIntervals, constrainedInterval, dynamicObjectCollection) {
-        var newProperty = false;
-        var existingProperty = parentObject[propertyName];
-        if (typeof czmlIntervals === 'undefined') {
-            return existingProperty;
+    DynamicDirectionsProperty.prototype.processCzmlIntervals = function(czmlIntervals, constrainedInterval, dynamicObjectCollection) {
+        if (Array.isArray(czmlIntervals)) {
+            for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
+                this._addCzmlInterval(czmlIntervals[i], constrainedInterval, dynamicObjectCollection);
+            }
+        } else {
+            this._addCzmlInterval(czmlIntervals, constrainedInterval, dynamicObjectCollection);
         }
-
-        //At this point we will definitely have a value, so if one doesn't exist, create it.
-        if (typeof existingProperty === 'undefined') {
-            existingProperty = new DynamicDirectionsProperty();
-            parentObject[propertyName] = existingProperty;
-            newProperty = true;
-        }
-
-        existingProperty._addCzmlIntervals(czmlIntervals, dynamicObjectCollection, constrainedInterval);
-
-        return newProperty;
     };
 
     /**
@@ -179,17 +166,7 @@ define([
         return intervalData.getValueCartesian();
     };
 
-    DynamicDirectionsProperty.prototype._addCzmlIntervals = function(czmlIntervals, dynamicObjectCollection, constrainedInterval) {
-        if (Array.isArray(czmlIntervals)) {
-            for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
-                this._addCzmlInterval(czmlIntervals[i], dynamicObjectCollection, constrainedInterval);
-            }
-        } else {
-            this._addCzmlInterval(czmlIntervals, dynamicObjectCollection, constrainedInterval);
-        }
-    };
-
-    DynamicDirectionsProperty.prototype._addCzmlInterval = function(czmlInterval, dynamicObjectCollection, constrainedInterval) {
+    DynamicDirectionsProperty.prototype._addCzmlInterval = function(czmlInterval, constrainedInterval, dynamicObjectCollection) {
         var iso8601Interval = czmlInterval.interval;
         if (typeof iso8601Interval === 'undefined') {
             iso8601Interval = Iso8601.MAXIMUM_INTERVAL.clone();

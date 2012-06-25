@@ -91,29 +91,22 @@ define([
     }
 
     /**
-     * Processes the provided CZML interval and creates or modifies a DynamicVertexPositionsProperty
-     * of the provided property name and value type on the parent object.
+     * Processes the provided CZML interval or intervals into this property.
      *
      * @memberof DynamicVertexPositionsProperty
      *
      * @param {Object} czmlIntervals The CZML data to process.
-     * @param {DynamicObjectCollection} dynamicObjectCollection CZML_TODO
-     * @param {DynamicVertexPositionsProperty} [existingProperty] The existing property to modify, if undefined a new instance will be created.
-     * @returns The existingProperty parameter or a new instance if existingProperty was undefined.
+     * @param {TimeInterval} [constrainedInterval] Constrains the processing so that any times outside of this interval are ignored.
+     * @param {DynamicObjectCollection} dynamicObjectCollection The DynamicObjectCollection to be used as a target for resolving links within this property.
      */
-    DynamicVertexPositionsProperty.processCzmlPacket = function(czmlIntervals, dynamicObjectCollection, existingProperty) {
-        if (typeof czmlIntervals === 'undefined') {
-            return existingProperty;
+    DynamicVertexPositionsProperty.prototype.processCzmlIntervals = function(czmlIntervals, constrainedInterval, dynamicObjectCollection) {
+        if (Array.isArray(czmlIntervals)) {
+            for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
+                this._addCzmlInterval(czmlIntervals[i], constrainedInterval, dynamicObjectCollection);
+            }
+        } else {
+            this._addCzmlInterval(czmlIntervals, constrainedInterval, dynamicObjectCollection);
         }
-
-        //At this point we will definitely have a value, so if one doesn't exist, create it.
-        if (typeof existingProperty === 'undefined') {
-            existingProperty = new DynamicVertexPositionsProperty();
-        }
-
-        existingProperty._addCzmlIntervals(czmlIntervals, dynamicObjectCollection);
-
-        return existingProperty;
     };
 
     /**
@@ -171,22 +164,16 @@ define([
         return interval_data.getValueCartesian();
     };
 
-    DynamicVertexPositionsProperty.prototype._addCzmlIntervals = function(czmlIntervals, dynamicObjectCollection) {
-        if (Array.isArray(czmlIntervals)) {
-            for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
-                this._addCzmlInterval(czmlIntervals[i], dynamicObjectCollection);
-            }
-        } else {
-            this._addCzmlInterval(czmlIntervals, dynamicObjectCollection);
-        }
-    };
-
-    DynamicVertexPositionsProperty.prototype._addCzmlInterval = function(czmlInterval, dynamicObjectCollection) {
+    DynamicVertexPositionsProperty.prototype._addCzmlInterval = function(czmlInterval, constrainedInterval, dynamicObjectCollection) {
         var iso8601Interval = czmlInterval.interval;
         if (typeof iso8601Interval === 'undefined') {
             iso8601Interval = Iso8601.MAXIMUM_INTERVAL.clone();
         } else {
             iso8601Interval = TimeInterval.fromIso8601(iso8601Interval);
+        }
+
+        if (typeof constrainedInterval !== 'undefined') {
+            iso8601Interval = iso8601Interval.intersect(constrainedInterval);
         }
 
         //See if we already have data at that interval.
