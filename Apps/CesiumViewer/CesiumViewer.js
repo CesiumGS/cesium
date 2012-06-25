@@ -64,7 +64,11 @@ function(dom,
     var lastCameraCenteredObjectID;
 
     function updateSpeedIndicator() {
-        speedIndicatorElement.innerHTML = clock.multiplier + 'x realtime';
+        if (animating) {
+            speedIndicatorElement.innerHTML = clock.multiplier + 'x realtime';
+        } else {
+            speedIndicatorElement.innerHTML = clock.multiplier + 'x realtime (currently paused)';
+        }
     }
 
     function setTimeFromBuffer() {
@@ -162,7 +166,7 @@ function(dom,
 
             transitioner = new SceneTransitioner(scene);
             visualizers = VisualizerCollection.createCzmlStandardCollection(scene, dynamicObjectCollection);
-            widget.enableStatistics(true);
+            //widget.enableStatistics(true);
 
             var queryObject = {};
             if (window.location.search) {
@@ -179,22 +183,6 @@ function(dom,
             if (typeof queryObject.lookAt !== 'undefined') {
                 cameraCenteredObjectID = queryObject.lookAt;
             }
-
-            function onTimelineScrub(e) {
-                clock.currentTime = e.timeJulian;
-                animating = false;
-                animReverse.set('checked', false);
-                animPause.set('checked', true);
-                animPlay.set('checked', false);
-            }
-
-            var timelineWidget = registry.byId('mainTimeline');
-            timelineWidget.clock = clock;
-            timelineWidget.setupCallback = function(t) {
-                timeline = t;
-                timeline.addEventListener('settime', onTimelineScrub, false);
-                timeline.zoomTo(clock.startTime, clock.stopTime);
-            };
 
             on(cesium, 'ObjectRightClickSelected', onObjectRightClickSelected);
 
@@ -225,14 +213,17 @@ function(dom,
                 animReverse.set('checked', false);
                 animPause.set('checked', true);
                 animPlay.set('checked', false);
+                updateSpeedIndicator();
             });
 
-            on(animPause, 'Click', function() {
+            function onAnimPause() {
                 animating = false;
                 animReverse.set('checked', false);
                 animPause.set('checked', true);
                 animPlay.set('checked', false);
-            });
+                updateSpeedIndicator();
+            }
+            on(animPause, 'Click', onAnimPause);
 
             function play() {
                 animating = true;
@@ -240,6 +231,7 @@ function(dom,
                 animReverse.set('checked', true);
                 animPause.set('checked', false);
                 animPlay.set('checked', false);
+                updateSpeedIndicator();
                 updateSpeedIndicator();
             }
 
@@ -266,6 +258,19 @@ function(dom,
                 clock.multiplier *= 2.0;
                 updateSpeedIndicator();
             });
+
+            function onTimelineScrub(e) {
+                clock.currentTime = e.timeJulian;
+                onAnimPause();
+            }
+
+            var timelineWidget = registry.byId('mainTimeline');
+            timelineWidget.clock = clock;
+            timelineWidget.setupCallback = function(t) {
+                timeline = t;
+                timeline.addEventListener('settime', onTimelineScrub, false);
+                timeline.zoomTo(clock.startTime, clock.stopTime);
+            };
 
             var viewHome = registry.byId('viewHome');
             var view2D = registry.byId('view2D');
@@ -327,18 +332,22 @@ function(dom,
                 cesium.centralBody.affectedByLighting = !value;
             });
 
+            var imagery = registry.byId('imagery');
             var imageryAerial = registry.byId('imageryAerial');
             var imageryAerialWithLabels = registry.byId('imageryAerialWithLabels');
             var imageryRoad = registry.byId('imageryRoad');
             var imagerySingleTile = registry.byId('imagerySingleTile');
             var imageryOptions = [imageryAerial, imageryAerialWithLabels, imageryRoad, imagerySingleTile];
+            var bingHtml = imagery.containerNode.innerHTML;
 
             function createImageryClickFunction(control, style) {
                 return function() {
                     if (style) {
                         cesium.setStreamingImageryMapStyle(style);
+                        imagery.containerNode.innerHTML = bingHtml;
                     } else {
                         cesium.enableStreamingImagery(false);
+                        imagery.containerNode.innerHTML = "Imagery";
                     }
 
                     imageryOptions.forEach(function(o) {
