@@ -31,7 +31,8 @@ define([
         this.show = true;
 
         /**
-         * The offset, relative to the bottom left corner, where the logo for imagery will be drawn.
+         * The offset, relative to the bottom left corner of the viewport,
+         * where the logo for imagery will be drawn.
          *
          * @type {Cartesian2}
          */

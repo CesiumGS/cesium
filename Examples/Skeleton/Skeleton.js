@@ -73,25 +73,32 @@ require({
     }());
 
     ///////////////////////////////////////////////////////////////////////////
-    // Example keyboard and Mouse handlers
+    // Example Mouse handlers
 
-    var handler = new Cesium.EventHandler();
+    function keydownHandler(e) {
+        switch (e.keyCode) {
+        case 81: // q
+            cb.getImageLayers().raise(aerial);
+            break;
+        case 65: // a
+            cb.getImageLayers().lower(aerial);
+            break;
+        case 87: // w
+            cb.getImageLayers().raise(road);
+            break;
+        case 83: // s
+            cb.getImageLayers().lower(road);
+            break;
+        case 69: // e
+            cb.getImageLayers().raise(esri);
+            break;
+        case 68: // d
+            cb.getImageLayers().lower(esri);
+            break;
+        }
+    }
 
-    handler.setKeyAction(function() {
-        cb.getImageLayers().raise(aerial);
-    }, '1');
-
-    handler.setKeyAction(function() {
-        cb.getImageLayers().lower(aerial);
-    }, '2');
-
-    handler.setKeyAction(function() {
-        cb.getImageLayers().raise(esri);
-    }, '3');
-
-    handler.setKeyAction(function() {
-        cb.getImageLayers().lower(esri);
-    }, '4');
+    document.addEventListener('keydown', keydownHandler, false);
 
     canvas.oncontextmenu = function() {
         return false;
@@ -100,7 +107,7 @@ require({
     ///////////////////////////////////////////////////////////////////////////
     // Example resize handler
 
-    window.onresize = function () {
+    window.onresize = function() {
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
 
@@ -112,10 +119,10 @@ require({
         canvas.height = height;
 
         scene.getContext().setViewport({
-            x: 0,
-            y: 0,
-            width: width,
-            height: height
+            x : 0,
+            y : 0,
+            width : width,
+            height : height
         });
 
         scene.getCamera().frustum.aspectRatio = width / height;

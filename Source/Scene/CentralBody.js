@@ -123,8 +123,6 @@ define([
      *
      * @name CentralBody
      * @constructor
-     *
-     * @exception {DeveloperError} camera is required.
      */
     function CentralBody(ellipsoid) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
@@ -169,14 +167,16 @@ define([
         this._drawSouthPole = false;
 
         /**
-         * DOC_TBA
+         * Determines the color of the north pole. If the day tile provider imagery does not
+         * extend over the north pole, it will be filled with this color before applying lighting.
          *
          * @type {Cartesian3}
          */
         this.northPoleColor = new Cartesian3(2.0 / 255.0, 6.0 / 255.0, 18.0 / 255.0);
 
         /**
-         * DOC_TBA
+         * Determines the color of the south pole. If the day tile provider imagery does not
+         * extend over the south pole, it will be filled with this color before applying lighting.
          *
          * @type {Cartesian3}
          */
@@ -190,14 +190,14 @@ define([
         this.show = true;
 
         /**
-         * DOC_TBA
+         * Determines if the ground atmosphere will be shown.
          *
          * @type {Boolean}
          */
         this.showGroundAtmosphere = false;
 
         /**
-         * DOC_TBA
+         * Determines if the sky atmosphere will be shown.
          *
          * @type {Boolean}
          */
@@ -478,7 +478,7 @@ define([
          *
          * @example
          * cb.showDay = true;
-         * cb.dayImageSource = 'day.jpg';
+         * cb.dayTileProvider = new Cesium.SingleTileProvider('day.jpg');
          * cb.showNight = true;
          * cb.nightImageSource = 'night.jpg';
          * cb.dayNightBlendDelta = 0.0;  // Sharp transition
@@ -486,7 +486,9 @@ define([
         this.dayNightBlendDelta = 0.05;
 
         /**
-         * DOC_TBA
+         * Changes the intensity of the night texture. A value of 1.0 is the same intensity as night texture.
+         * A value less than 1.0 makes the night texture darker. A value greater than 1.0 makes the night texture
+         * brighter. The default value is 2.0.
          *
          * @type {Number}
          */
