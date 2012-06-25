@@ -38,6 +38,8 @@ require({
     scene.getCamera().getControllers().addSpindle();
     scene.getCamera().getControllers().addFreeLook();
 
+    var transitioner = new Cesium.SceneTransitioner(scene, ellipsoid);
+
     ///////////////////////////////////////////////////////////////////////////
     // Add examples from the Sandbox here:
 
@@ -56,7 +58,7 @@ require({
     }());
 
     ///////////////////////////////////////////////////////////////////////////
-    // Example Mouse handlers
+    // Example mouse & keyboard handlers
 
     var handler = new Cesium.EventHandler(canvas);
 
@@ -64,6 +66,24 @@ require({
         /* ... */
         // Use movement.startX, movement.startY, movement.endX, movement.endY
     }, Cesium.MouseEventType.MOVE);
+
+    function keydownHandler(e) {
+        var keyCode = e.keyCode;
+        if (keyCode === 51) {          // "3" -> 3D globe
+            cb.showSkyAtmosphere = true;
+            cb.showGroundAtmosphere = true;
+            transitioner.morphTo3D();
+        } else if (keyCode === 50) {   // "2" -> Columbus View
+            cb.showSkyAtmosphere = false;
+            cb.showGroundAtmosphere = false;
+            transitioner.morphToColumbusView();
+        } else if (keyCode === 49) {   // "1" -> 2D map
+            cb.showSkyAtmosphere = false;
+            cb.showGroundAtmosphere = false;
+            transitioner.morphTo2D();
+        }
+    }
+    document.addEventListener('keydown', keydownHandler, false);
 
     canvas.oncontextmenu = function() {
         return false;
