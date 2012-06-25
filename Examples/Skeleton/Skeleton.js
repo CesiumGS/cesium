@@ -68,19 +68,24 @@ require({
     }, Cesium.MouseEventType.MOVE);
 
     function keydownHandler(e) {
-        var keyCode = e.keyCode;
-        if (keyCode === 51) {          // "3" -> 3D globe
+        switch (e.keyCode) {
+        case 51:  // "3" -> 3D globe
             cb.showSkyAtmosphere = true;
             cb.showGroundAtmosphere = true;
             transitioner.morphTo3D();
-        } else if (keyCode === 50) {   // "2" -> Columbus View
+            break;
+        case 50:  // "2" -> Columbus View
             cb.showSkyAtmosphere = false;
             cb.showGroundAtmosphere = false;
             transitioner.morphToColumbusView();
-        } else if (keyCode === 49) {   // "1" -> 2D map
+            break;
+        case 49:  // "1" -> 2D map
             cb.showSkyAtmosphere = false;
             cb.showGroundAtmosphere = false;
             transitioner.morphTo2D();
+            break;
+        default:
+            break;
         }
     }
     document.addEventListener('keydown', keydownHandler, false);
