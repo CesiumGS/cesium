@@ -1,22 +1,30 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/Materials/ColorMaterial',
-        '../Specs/renderMaterial'
+        '../Specs/renderMaterial',
+        '../Specs/createContext',
+        '../Specs/destroyContext',
+        'Renderer/PixelFormat'
     ], function(
         ColorMaterial,
-        renderMaterial) {
+        renderMaterial,
+        createContext,
+        destroyContext,
+        PixelFormat) {
     "use strict";
     /*global it,expect*/
 
-    it("draws a flat color material", function() {
+    it("draws a color material", function() {
+        var context = createContext();
         var pixel = renderMaterial(new ColorMaterial({
             color: {
-                red : 1.0,
-                green : 0.0,
-                blue : 0.0,
-                alpha : 1.0
+                red: 1.0,
+                green: 1.0,
+                blue: 0.0,
+                alpha: 0.75
             }
-        }));
+        }), context);
         expect(pixel).not.toEqualArray([0, 0, 0, 0]);
+        destroyContext(context);
     });
 });

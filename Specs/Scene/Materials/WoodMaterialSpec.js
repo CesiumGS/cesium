@@ -1,14 +1,21 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/Materials/WoodMaterial',
-        '../Specs/renderMaterial'
+        '../Specs/renderMaterial',
+        '../Specs/createContext',
+        '../Specs/destroyContext',
+        'Renderer/PixelFormat'
     ], function(
         WoodMaterial,
-        renderMaterial) {
+        renderMaterial,
+        createContext,
+        destroyContext,
+        PixelFormat) {
     "use strict";
     /*global it,expect*/
 
-    it("draws a procedural wood material", function() {
+    it("draws a wood material", function() {
+        var context = createContext();
         var pixel = renderMaterial(new WoodMaterial({
             lightWoodColor : {
                 red : 0.6,
@@ -28,7 +35,8 @@ defineSuite([
                 y : 0.5
             },
             grainFrequency : 27.0
-        }));
+        }), context);
         expect(pixel).not.toEqualArray([0, 0, 0, 0]);
+        destroyContext(context);
     });
 });

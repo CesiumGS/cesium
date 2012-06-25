@@ -1,14 +1,21 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/Materials/FacetMaterial',
-        '../Specs/renderMaterial'
+        '../Specs/renderMaterial',
+        '../Specs/createContext',
+        '../Specs/destroyContext',
+        'Renderer/PixelFormat'
     ], function(
         FacetMaterial,
-        renderMaterial) {
+        renderMaterial,
+        createContext,
+        destroyContext,
+        PixelFormat) {
     "use strict";
     /*global it,expect*/
 
-    it("draws a facet material using cellular noise", function() {
+    it("draws a facet material", function() {
+        var context = createContext();
         var pixel = renderMaterial(new FacetMaterial({
             lightColor: {
                 red: 0.25,
@@ -23,7 +30,8 @@ defineSuite([
                 alpha: 0.75
             },
             repeat : 10.0
-        }));
+        }), context);
         expect(pixel).not.toEqualArray([0, 0, 0, 0]);
+        destroyContext(context);
     });
 });

@@ -1,14 +1,21 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/Materials/DotMaterial',
-        '../Specs/renderMaterial'
+        '../Specs/renderMaterial',
+        '../Specs/createContext',
+        '../Specs/destroyContext',
+        'Renderer/PixelFormat'
     ], function(
         DotMaterial,
-        renderMaterial) {
+        renderMaterial,
+        createContext,
+        destroyContext,
+        PixelFormat) {
     "use strict";
     /*global it,expect*/
 
-    it("draws a dot pattern material", function() {
+    it("draws a dot material", function() {
+        var context = createContext();
         var pixel = renderMaterial(new DotMaterial({
             lightColor: {
                 red: 1.0,
@@ -24,7 +31,8 @@ defineSuite([
             },
             sRepeat : 5,
             tRepeat : 5
-        }));
+        }), context);
         expect(pixel).not.toEqualArray([0, 0, 0, 0]);
+        destroyContext(context);
     });
 });

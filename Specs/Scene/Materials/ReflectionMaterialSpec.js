@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/Materials/DiffuseMapMaterial',
+        'Scene/Materials/ReflectionMaterial',
         '../Specs/renderMaterial',
         '../Specs/createContext',
         '../Specs/destroyContext',
         'Renderer/PixelFormat'
     ], function(
-        DiffuseMapMaterial,
+        ReflectionMapMaterial,
         renderMaterial,
         createContext,
         destroyContext,
@@ -25,13 +25,22 @@ defineSuite([
         }, "Load .png file(s) for texture test.", 3000);
     });
 
-    it("draws a diffuse map material", function() {
+    it("draws a reflection material", function() {
         var context = createContext();
-        var pixel = renderMaterial(new DiffuseMapMaterial({
-            texture : context.createTexture2D({
-                source : greenImage,
-                pixelFormat : PixelFormat.RGBA
-            })
+        var pixel = renderMaterial(new ReflectionMapMaterial({
+            cubeMap : context.createCubeMap({
+                source : {
+                    positiveX : greenImage,
+                    negativeX : greenImage,
+                    positiveY : greenImage,
+                    negativeY : greenImage,
+                    positiveZ : greenImage,
+                    negativeZ : greenImage
+                },
+                pixelFormat : PixelFormat.RGB
+            }),
+            indexOfRefractionRatio : (1.0 / 1.1),
+            diffuseAmount : 0.0
         }), context);
         expect(pixel).not.toEqualArray([0, 0, 0, 0]);
         destroyContext(context);

@@ -1,14 +1,21 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/Materials/GrassMaterial',
-        '../Specs/renderMaterial'
+        '../Specs/renderMaterial',
+        '../Specs/createContext',
+        '../Specs/destroyContext',
+        'Renderer/PixelFormat'
     ], function(
         GrassMaterial,
-        renderMaterial) {
+        renderMaterial,
+        createContext,
+        destroyContext,
+        PixelFormat) {
     "use strict";
     /*global it,expect*/
 
-    it("draws a procedural grass material", function() {
+    it("draws a grass material", function() {
+        var context = createContext();
         var pixel = renderMaterial(new GrassMaterial({
             grassColor : {
                 red : 0.25,
@@ -23,7 +30,8 @@ defineSuite([
                 alpha : 1.0
             },
             patchiness : 1.5
-        }));
+        }), context);
         expect(pixel).not.toEqualArray([0, 0, 0, 0]);
+        destroyContext(context);
     });
 });

@@ -1,30 +1,25 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/Materials/VerticalStripeMaterial',
-        '../Specs/renderMaterial'
+        '../Specs/renderMaterial',
+        '../Specs/createContext',
+        '../Specs/destroyContext',
+        'Renderer/PixelFormat'
     ], function(
         VerticalStripeMaterial,
-        renderMaterial) {
+        renderMaterial,
+        createContext,
+        destroyContext,
+        PixelFormat) {
     "use strict";
     /*global it,expect*/
 
     it("draws a vertical stripe material", function() {
+        var context = createContext();
         var pixel = renderMaterial(new VerticalStripeMaterial({
-            lightColor : {
-                red : 1.0,
-                green : 0.0,
-                blue : 0.0,
-                alpha : 1.0
-            },
-            darkColor : {
-                red : 0.0,
-                green : 1.0,
-                blue : 0.0,
-                alpha : 1.0
-            },
-            offset : 0.0,
-            repeat : 2.0
-        }));
+            repeat : 5.0
+        }), context);
         expect(pixel).not.toEqualArray([0, 0, 0, 0]);
+        destroyContext(context);
     });
 });

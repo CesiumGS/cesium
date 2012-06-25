@@ -1,14 +1,21 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/Materials/BrickMaterial',
-        '../Specs/renderMaterial'
+        '../Specs/renderMaterial',
+        '../Specs/createContext',
+        '../Specs/destroyContext',
+        'Renderer/PixelFormat'
     ], function(
         BrickMaterial,
-        renderMaterial) {
+        renderMaterial,
+        createContext,
+        destroyContext,
+        PixelFormat) {
     "use strict";
     /*global it,expect*/
 
-    it("draws a procedural brick material", function() {
+    it("draws a brick material", function() {
+        var context = createContext();
         var pixel = renderMaterial(new BrickMaterial({
             brickColor : {
                 red: 0.6,
@@ -32,7 +39,8 @@ defineSuite([
             },
             brickRoughness : 0.2,
             mortarRoughness : 0.1
-        }));
+        }), context);
         expect(pixel).not.toEqualArray([0, 0, 0, 0]);
+        destroyContext(context);
     });
 });

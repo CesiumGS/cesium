@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/Materials/DiffuseMapMaterial',
+        'Scene/Materials/NormalMapMaterial',
         '../Specs/renderMaterial',
         '../Specs/createContext',
         '../Specs/destroyContext',
         'Renderer/PixelFormat'
     ], function(
-        DiffuseMapMaterial,
+        NormalMapMaterial,
         renderMaterial,
         createContext,
         destroyContext,
@@ -14,23 +14,23 @@ defineSuite([
     "use strict";
     /*global it,waitsFor,expect*/
 
-    var greenImage;
+    var whiteImage;
 
     it("initialize suite", function() {
-        greenImage = new Image();
-        greenImage.src = "./Data/Images/Green.png";
+        whiteImage = new Image();
+        whiteImage.src = "./Data/Images/White.png";
 
         waitsFor(function() {
-            return greenImage.complete;
+            return whiteImage.complete;
         }, "Load .png file(s) for texture test.", 3000);
     });
 
-    it("draws a diffuse map material", function() {
+    it("draws a normal map material", function() {
         var context = createContext();
-        var pixel = renderMaterial(new DiffuseMapMaterial({
+        var pixel = renderMaterial(new NormalMapMaterial({
             texture : context.createTexture2D({
-                source : greenImage,
-                pixelFormat : PixelFormat.RGBA
+                source : whiteImage,
+                pixelFormat : PixelFormat.LUMINANCE
             })
         }), context);
         expect(pixel).not.toEqualArray([0, 0, 0, 0]);

@@ -1,14 +1,21 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/Materials/AsphaltMaterial',
-        '../Specs/renderMaterial'
+        '../Specs/renderMaterial',
+        '../Specs/createContext',
+        '../Specs/destroyContext',
+        'Renderer/PixelFormat'
     ], function(
         AsphaltMaterial,
-        renderMaterial) {
+        renderMaterial,
+        createContext,
+        destroyContext,
+        PixelFormat) {
     "use strict";
     /*global it,expect*/
 
-    it("draws a procedural asphalt material", function() {
+    it("draws an asphalt material", function() {
+        var context = createContext();
         var pixel = renderMaterial(new AsphaltMaterial({
             asphaltColor : {
                 red : 0.15,
@@ -18,7 +25,8 @@ defineSuite([
             },
             bumpSize : 0.02,
             roughness : 0.2
-        }));
+        }), context);
         expect(pixel).not.toEqualArray([0, 0, 0, 0]);
+        destroyContext(context);
     });
 });
