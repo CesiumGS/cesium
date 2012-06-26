@@ -35,18 +35,18 @@ define([
     var inertiaMaxClickTimeThreshold = 0.4;
     var inertiaMaxTimeThreshold = 2.0;
 
-    function maintainInertia(handler, decayCoef, action, object, lastMovementName) {
-        var ts = handler.getButtonPressTime();
-        var tr = handler.getButtonReleaseTime();
-        var threshold = ts && tr && ts.getSecondsDifference(tr);
-        if (ts && tr && threshold < inertiaMaxClickTimeThreshold) {
+    function maintainInertia(handler, decayCoefficient, action, object, lastMovementName) {
+        var touchStarted = handler.getButtonPressTime();
+        var touchReleased = handler.getButtonReleaseTime();
+        var threshold = touchStarted && touchReleased && touchStarted.getSecondsDifference(touchReleased);
+        if (touchStarted && touchReleased && threshold < inertiaMaxClickTimeThreshold) {
             var now = new JulianDate();
-            var fromNow = tr.getSecondsDifference(now);
+            var fromNow = touchReleased.getSecondsDifference(now);
             if (fromNow > inertiaMaxTimeThreshold) {
                 return;
             }
 
-            var d = decay(fromNow, decayCoef);
+            var d = decay(fromNow, decayCoefficient);
 
             if (!object[lastMovementName]) {
                 var lastMovement = handler.getLastMovement();
@@ -81,6 +81,66 @@ define([
             if (!handler.isButtonDown()) {
                 action.apply(object, [object[lastMovementName]]);
             }
+        }
+    }
+
+    /**
+     * This function is similar to maintainInertia except that it does not require a handler.
+     * Instead, the touch start time, touch release time, and last movement are passed as arguments.
+     *
+     * @param {JulianDate} lastMovementStartTime The starting time of the movement to create inertia for.
+     * @param {JulianDate} lastMovementEndTime The ending time of the movement to create inertia for.
+     * @param {Object} lastMovement The movement to create inertia for
+     * @param {Number} decayCoefficient
+     * @param {Function} action
+     * @param {Object} object
+     * @param {String} lastMovementName
+     */
+    function createInertia(touchStarted, touchReleased, lastMovement, decayCoefficient, action, object, lastMovementName) {
+        if(touchStarted && touchReleased) {
+            touchStarted = new JulianDate(touchStarted._julianDayNumber, touchStarted._secondsOfDay, touchStarted._timeStandard);
+            touchReleased = new JulianDate(touchReleased._julianDayNumber, touchReleased._secondsOfDay, touchReleased._timeStandard);
+        }
+        var threshold = touchStarted && touchReleased && touchStarted.getSecondsDifference(touchReleased);
+        if (touchStarted && touchReleased && threshold < inertiaMaxClickTimeThreshold) {
+            var now = new JulianDate();
+            var fromNow = touchReleased.getSecondsDifference(now);
+            if (fromNow > inertiaMaxTimeThreshold) {
+                return;
+            }
+
+            var d = decay(fromNow, decayCoefficient);
+
+            if (!object[lastMovementName]) {
+                if (!lastMovement) {
+                    return;
+                }
+
+                var motionX = (lastMovement.endPosition.x - lastMovement.startPosition.x) * 0.5;
+                var motionY = (lastMovement.endPosition.y - lastMovement.startPosition.y) * 0.5;
+                object[lastMovementName] = {
+                    startPosition : new Cartesian2(lastMovement.startPosition.x, lastMovement.startPosition.y),
+                    endPosition : new Cartesian2(lastMovement.startPosition.x + motionX * d, lastMovement.startPosition.y + motionY * d),
+                    motion : new Cartesian2(motionX, motionY)
+                };
+            } else {
+                object[lastMovementName] = {
+                    startPosition : object[lastMovementName].endPosition.clone(),
+                    endPosition : new Cartesian2(
+                            object[lastMovementName].endPosition.x + object[lastMovementName].motion.x * d,
+                            object[lastMovementName].endPosition.y + object[lastMovementName].motion.y * d),
+                    motion : new Cartesian2(0.0, 0.0)
+                };
+            }
+
+            // If value from the decreasing exponential function is close to zero,
+            // the end coordinates may be NaN.
+            if (isNaN(object[lastMovementName].endPosition.x) || isNaN(object[lastMovementName].endPosition.y) || sameMousePosition(object[lastMovementName])) {
+                object[lastMovementName] = undefined;
+                return;
+            }
+
+            action.apply(object, [object[lastMovementName]]);
         }
     }
 
@@ -121,6 +181,7 @@ define([
         move : move,
         handleZoom : handleZoom,
         maintainInertia : maintainInertia,
+        createInertia : createInertia,
         zoom : zoom
     };
 });
