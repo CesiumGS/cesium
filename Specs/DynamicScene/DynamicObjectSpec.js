@@ -26,6 +26,13 @@ defineSuite([
         expect(dynamicObject.isAvailable(new JulianDate())).toEqual(true);
     });
 
+    it('isAvailable throw if no time specified.', function() {
+        var dynamicObject = new DynamicObject('someId');
+        expect(function() {
+            dynamicObject.isAvailable();
+        }).toThrow();
+    });
+
     it('constructor creates a unique id if one is not provided.', function() {
         var object = new DynamicObject();
         var object2 = new DynamicObject();
