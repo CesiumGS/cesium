@@ -112,7 +112,7 @@ define([
 
         var dynamicObjects = this._dynamicObjectCollection.getObjects();
         for (i = dynamicObjects.length - 1; i > -1; i--) {
-            dynamicObjects[i].polygonVisualizerIndex = undefined;
+            dynamicObjects[i]._polygonVisualizerIndex = undefined;
         }
 
         this._unusedIndexes = [];
@@ -172,7 +172,7 @@ define([
 
         var polygon;
         var showProperty = dynamicPolygon.show;
-        var polygonVisualizerIndex = dynamicObject.polygonVisualizerIndex;
+        var polygonVisualizerIndex = dynamicObject._polygonVisualizerIndex;
         var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
 
         if (!show) {
@@ -180,7 +180,7 @@ define([
             if (typeof polygonVisualizerIndex !== 'undefined') {
                 polygon = this._polygonCollection[polygonVisualizerIndex];
                 polygon.show = false;
-                dynamicObject.polygonVisualizerIndex = undefined;
+                dynamicObject._polygonVisualizerIndex = undefined;
                 this._unusedIndexes.push(polygonVisualizerIndex);
             }
             return;
@@ -198,7 +198,7 @@ define([
                 this._polygonCollection.push(polygon);
                 this._primitives.add(polygon);
             }
-            dynamicObject.polygonVisualizerIndex = polygonVisualizerIndex;
+            dynamicObject._polygonVisualizerIndex = polygonVisualizerIndex;
             polygon.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
@@ -210,9 +210,9 @@ define([
         polygon.show = true;
 
         var value = vertexPositionsProperty.getValueCartesian(time);
-        if (typeof value !== 'undefined' && polygon.last_position !== value) {
+        if (typeof value !== 'undefined' && polygon._visualizerPositions !== value) {
             polygon.setPositions(value);
-            polygon.last_position = value;
+            polygon._visualizerPositions = value;
         }
 
         var material = dynamicPolygon.material;
@@ -226,12 +226,12 @@ define([
         var thisUnusedIndexes = this._unusedIndexes;
         for ( var i = dynamicObjects.length - 1; i > -1; i--) {
             var dynamicObject = dynamicObjects[i];
-            var polygonVisualizerIndex = dynamicObject.polygonVisualizerIndex;
+            var polygonVisualizerIndex = dynamicObject._polygonVisualizerIndex;
             if (typeof polygonVisualizerIndex !== 'undefined') {
                 var polygon = thisPolygonCollection[polygonVisualizerIndex];
                 polygon.show = false;
                 thisUnusedIndexes.push(polygonVisualizerIndex);
-                dynamicObject.polygonVisualizerIndex = undefined;
+                dynamicObject._polygonVisualizerIndex = undefined;
             }
         }
     };

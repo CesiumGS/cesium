@@ -116,7 +116,7 @@ define([
         this._billboardCollection.removeAll();
         var dynamicObjects = this._dynamicObjectCollection.getObjects();
         for ( var i = dynamicObjects.length - 1; i > -1; i--) {
-            dynamicObjects[i].pointVisualizerIndex = undefined;
+            dynamicObjects[i]._pointVisualizerIndex = undefined;
         }
     };
 
@@ -179,7 +179,7 @@ define([
 
         var billboard;
         var showProperty = dynamicPoint.show;
-        var pointVisualizerIndex = dynamicObject.pointVisualizerIndex;
+        var pointVisualizerIndex = dynamicObject._pointVisualizerIndex;
         var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
 
         if (!show) {
@@ -187,7 +187,7 @@ define([
             if (typeof pointVisualizerIndex !== 'undefined') {
                 billboard = this._billboardCollection.get(pointVisualizerIndex);
                 billboard.setShow(false);
-                dynamicObject.pointVisualizerIndex = undefined;
+                dynamicObject._pointVisualizerIndex = undefined;
                 this._unusedIndexes.push(pointVisualizerIndex);
             }
             return;
@@ -204,14 +204,14 @@ define([
                 pointVisualizerIndex = this._billboardCollection.getLength();
                 billboard = this._billboardCollection.add();
             }
-            dynamicObject.pointVisualizerIndex = pointVisualizerIndex;
+            dynamicObject._pointVisualizerIndex = pointVisualizerIndex;
             billboard.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
-            billboard.point_color = Color.WHITE.clone(billboard.point_color);
-            billboard.point_outlineColor = Color.BLACK.clone(billboard.point_outlineColor);
-            billboard.point_outlineWidth = 2;
-            billboard.point_pixelSize = 3;
+            billboard._visualizerColor = Color.WHITE.clone(billboard._visualizerColor);
+            billboard._visualizerOutlineColor = Color.BLACK.clone(billboard._visualizerOutlineColor);
+            billboard._visualizerOutlineWidth = 2;
+            billboard._visualizerPixelSize = 3;
             needRedraw = true;
         } else {
             billboard = this._billboardCollection.get(pointVisualizerIndex);
@@ -227,8 +227,8 @@ define([
         var property = dynamicPoint.color;
         if (typeof property !== 'undefined') {
             color = property.getValue(time, color);
-            if (billboard.point_color !== color) {
-                billboard.point_color = color;
+            if (billboard._visualizerColor !== color) {
+                billboard._visualizerColor = color;
                 needRedraw = true;
             }
         }
@@ -236,8 +236,8 @@ define([
         property = dynamicPoint.outlineColor;
         if (typeof property !== 'undefined') {
             outlineColor = property.getValue(time, outlineColor);
-            if (billboard.point_outlineColor !== outlineColor) {
-                billboard.point_outlineColor = outlineColor;
+            if (billboard._visualizerOutlineColor !== outlineColor) {
+                billboard._visualizerOutlineColor = outlineColor;
                 needRedraw = true;
             }
         }
@@ -245,8 +245,8 @@ define([
         property = dynamicPoint.outlineWidth;
         if (typeof property !== 'undefined') {
             var outlineWidth = property.getValue(time);
-            if (billboard.point_outlineWidth !== outlineWidth) {
-                billboard.point_outlineWidth = outlineWidth;
+            if (billboard._visualizerOutlineWidth !== outlineWidth) {
+                billboard._visualizerOutlineWidth = outlineWidth;
                 needRedraw = true;
             }
         }
@@ -254,17 +254,17 @@ define([
         property = dynamicPoint.pixelSize;
         if (typeof property !== 'undefined') {
             var pixelSize = property.getValue(time);
-            if (billboard.point_pixelSize !== pixelSize) {
-                billboard.point_pixelSize = pixelSize;
+            if (billboard._visualizerPixelSize !== pixelSize) {
+                billboard._visualizerPixelSize = pixelSize;
                 needRedraw = true;
             }
         }
 
         if (needRedraw) {
-            var cssColor = billboard.point_color ? billboard.point_color.toCSSColor() : '#FFFFFF';
-            var cssOutlineColor = billboard.point_outlineColor ? billboard.point_outlineColor.toCSSColor() : '#000000';
-            var cssPixelSize = billboard.point_pixelSize || 3;
-            var cssOutlineWidth = billboard.point_outlineWidth || 2;
+            var cssColor = billboard._visualizerColor ? billboard._visualizerColor.toCSSColor() : '#FFFFFF';
+            var cssOutlineColor = billboard._visualizerOutlineColor ? billboard._visualizerOutlineColor.toCSSColor() : '#000000';
+            var cssPixelSize = billboard._visualizerPixelSize || 3;
+            var cssOutlineWidth = billboard._visualizerOutlineWidth || 2;
             var textureId = JSON.stringify([cssColor, cssPixelSize, cssOutlineColor, cssOutlineWidth]);
 
             this._textureAtlasBuilder.addTextureFromFunction(textureId, function(id, loadedCallback) {
@@ -311,11 +311,11 @@ define([
         var thisUnusedIndexes = this._unusedIndexes;
         for ( var i = dynamicObjects.length - 1; i > -1; i--) {
             var dynamicObject = dynamicObjects[i];
-            var pointVisualizerIndex = dynamicObject.pointVisualizerIndex;
+            var pointVisualizerIndex = dynamicObject._pointVisualizerIndex;
             if (typeof pointVisualizerIndex !== 'undefined') {
                 var billboard = thisBillboardCollection.get(pointVisualizerIndex);
                 billboard.setShow(false);
-                dynamicObject.pointVisualizerIndex = undefined;
+                dynamicObject._pointVisualizerIndex = undefined;
                 thisUnusedIndexes.push(pointVisualizerIndex);
             }
         }

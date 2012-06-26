@@ -155,7 +155,7 @@ define([
 
         var dynamicObjects = this._dynamicObjectCollection.getObjects();
         for (i = dynamicObjects.length - 1; i > -1; i--) {
-            dynamicObjects[i].coneVisualizerIndex = undefined;
+            dynamicObjects[i]._coneVisualizerIndex = undefined;
         }
 
         this._unusedIndexes = [];
@@ -233,7 +233,7 @@ define([
 
         var cone;
         var showProperty = dynamicCone.show;
-        var coneVisualizerIndex = dynamicObject.coneVisualizerIndex;
+        var coneVisualizerIndex = dynamicObject._coneVisualizerIndex;
         var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
 
         if (!show) {
@@ -241,7 +241,7 @@ define([
             if (typeof coneVisualizerIndex !== 'undefined') {
                 cone = this._coneCollection[coneVisualizerIndex];
                 cone.show = false;
-                dynamicObject.coneVisualizerIndex = undefined;
+                dynamicObject._coneVisualizerIndex = undefined;
                 this._unusedIndexes.push(coneVisualizerIndex);
             }
             return;
@@ -262,7 +262,7 @@ define([
                 this._coneCollection.push(cone);
                 this._primitives.add(cone);
             }
-            dynamicObject.coneVisualizerIndex = coneVisualizerIndex;
+            dynamicObject._coneVisualizerIndex = coneVisualizerIndex;
             cone.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
@@ -327,16 +327,16 @@ define([
             }
         }
 
-        position = positionProperty.getValueCartesian(time, position) || cone.dynamicConeVisualizerLastPosition;
-        orientation = orientationProperty.getValue(time, orientation) || cone.dynamicConeVisualizerLastOrientation;
+        position = positionProperty.getValueCartesian(time, position) || cone._visualizerPosition;
+        orientation = orientationProperty.getValue(time, orientation) || cone._visualizerOrientation;
 
         if (typeof position !== 'undefined' &&
             typeof orientation !== 'undefined' &&
-            (!position.equals(cone.dynamicConeVisualizerLastPosition) ||
-             !orientation.equals(cone.dynamicConeVisualizerLastOrientation))) {
+            (!position.equals(cone._visualizerPosition) ||
+             !orientation.equals(cone._visualizerOrientation))) {
             cone.modelMatrix = DynamicConeVisualizerUsingCustomSensor._computeModelMatrix(position, orientation);
-            position.clone(cone.dynamicConeVisualizerLastPosition);
-            orientation.clone(cone.dynamicConeVisualizerLastOrientation);
+            position.clone(cone._visualizerPosition);
+            orientation.clone(cone._visualizerOrientation);
         }
 
         var scene = this._scene;
@@ -359,12 +359,12 @@ define([
         var thisUnusedIndexes = this._unusedIndexes;
         for ( var i = dynamicObjects.length - 1; i > -1; i--) {
             var dynamicObject = dynamicObjects[i];
-            var coneVisualizerIndex = dynamicObject.coneVisualizerIndex;
+            var coneVisualizerIndex = dynamicObject._coneVisualizerIndex;
             if (typeof coneVisualizerIndex !== 'undefined') {
                 var cone = thisConeCollection[coneVisualizerIndex];
                 cone.show = false;
                 thisUnusedIndexes.push(coneVisualizerIndex);
-                dynamicObject.coneVisualizerIndex = undefined;
+                dynamicObject._coneVisualizerIndex = undefined;
             }
         }
     };

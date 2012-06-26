@@ -120,7 +120,7 @@ define([
         this._labelCollection.removeAll();
         var dynamicObjects = this._dynamicObjectCollection.getObjects();
         for ( var i = dynamicObjects.length - 1; i > -1; i--) {
-            dynamicObjects[i].labelVisualizerIndex = undefined;
+            dynamicObjects[i]._labelVisualizerIndex = undefined;
         }
     };
 
@@ -189,7 +189,7 @@ define([
 
         var label;
         var showProperty = dynamicLabel.show;
-        var labelVisualizerIndex = dynamicObject.labelVisualizerIndex;
+        var labelVisualizerIndex = dynamicObject._labelVisualizerIndex;
         var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
 
         if (!show) {
@@ -198,7 +198,7 @@ define([
                 label = this._labelCollection.get(labelVisualizerIndex);
                 label.setShow(false);
                 this._unusedIndexes.push(labelVisualizerIndex);
-                dynamicObject.labelVisualizerIndex = undefined;
+                dynamicObject._labelVisualizerIndex = undefined;
             }
             return;
         }
@@ -213,7 +213,7 @@ define([
                 labelVisualizerIndex = this._labelCollection.getLength();
                 label = this._labelCollection.add();
             }
-            dynamicObject.labelVisualizerIndex = labelVisualizerIndex;
+            dynamicObject._labelVisualizerIndex = labelVisualizerIndex;
             label.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
@@ -321,12 +321,12 @@ define([
         var thisUnusedIndexes = this._unusedIndexes;
         for ( var i = dynamicObjects.length - 1; i > -1; i--) {
             var dynamicObject = dynamicObjects[i];
-            var labelVisualizerIndex = dynamicObject.labelVisualizerIndex;
+            var labelVisualizerIndex = dynamicObject._labelVisualizerIndex;
             if (typeof labelVisualizerIndex !== 'undefined') {
                 var label = thisLabelCollection.get(labelVisualizerIndex);
                 label.setShow(false);
                 thisUnusedIndexes.push(labelVisualizerIndex);
-                dynamicObject.labelVisualizerIndex = undefined;
+                dynamicObject._labelVisualizerIndex = undefined;
             }
         }
     };
