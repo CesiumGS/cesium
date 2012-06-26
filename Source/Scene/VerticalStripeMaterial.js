@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/VerticalStripeMaterial
- */
 define(['../Shaders/VerticalStripeMaterial'], function(ShadersVerticalStripeMaterial) {
     "use strict";
 

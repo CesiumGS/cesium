@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Renderer/VertexArrayFacade
- */
 define([
         '../Core/DeveloperError',
         '../Core/destroyObject',

@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Core/Cartographic2
- */
 define(function() {
     "use strict";
 

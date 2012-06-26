@@ -5,8 +5,6 @@ define(['./DeveloperError'], function(DeveloperError) {
     /**
      * DOC_TBA
      *
-     * @exports pointInsideTriangle2D
-     *
      * @param point
      * @param p0
      * @param p1

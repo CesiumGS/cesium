@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Renderer/TextureAtlas
- */
 define([
         '../Core/DeveloperError',
         '../Core/destroyObject',

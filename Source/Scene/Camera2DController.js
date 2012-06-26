@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/Camera2DController
- */
 define([
         '../Core/DeveloperError',
         '../Core/destroyObject',

@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/CameraSpindleController
- */
 define([
         '../Core/destroyObject',
         '../Core/FAR',

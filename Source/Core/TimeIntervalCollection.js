@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Core/TimeIntervalCollection
- */
 define([
         './DeveloperError',
         './binarySearch',

@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Renderer/ShaderCache
- */
 define([
         '../Core/destroyObject'
     ], function(

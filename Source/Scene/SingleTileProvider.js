@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/SingleTileProvider
- */
 define([
         '../Core/DeveloperError',
         '../Core/Extent',

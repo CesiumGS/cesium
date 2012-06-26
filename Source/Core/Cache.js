@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Core/Cache
- */
 define([
         './DeveloperError',
         './destroyObject'

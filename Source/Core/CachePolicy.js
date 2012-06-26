@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Core/CachePolicy
- */
 define([
         './DeveloperError',
         './JulianDate'

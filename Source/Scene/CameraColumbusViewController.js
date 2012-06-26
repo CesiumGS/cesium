@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/CameraColumbusViewController
- */
 define([
         '../Core/destroyObject',
         '../Core/FAR',

@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Renderer/ShaderProgram
- */
 define([
         '../Core/DeveloperError',
         '../Core/RuntimeError',

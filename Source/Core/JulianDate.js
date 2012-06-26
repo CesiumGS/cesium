@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Core/JulianDate
- */
 define(['Core/DeveloperError',
         'Core/binarySearch',
         'Core/TimeConstants',

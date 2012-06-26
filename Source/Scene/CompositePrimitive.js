@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/CompositePrimitive
- */
 define([
         '../Core/DeveloperError',
         '../Core/destroyObject',

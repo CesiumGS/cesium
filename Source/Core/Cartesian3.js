@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Core/Cartesian3
- */
 define(['./Cartesian2'], function(Cartesian2) {
     "use strict";
 

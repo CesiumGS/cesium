@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Core/Quaternion
- */
 define([
         './Math',
         './Cartesian3',

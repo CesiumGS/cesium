@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/CompositeTileProvider
- */
 define([
         '../Core/DeveloperError',
         '../Core/Ellipsoid'

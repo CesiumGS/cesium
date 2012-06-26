@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Renderer/PickFramebuffer
- */
 define([
         '../Core/destroyObject',
         './RenderbufferFormat'

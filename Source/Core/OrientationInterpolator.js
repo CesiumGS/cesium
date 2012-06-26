@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Core/OrientationInterpolator
- */
 define([
         './DeveloperError',
         './Quaternion'

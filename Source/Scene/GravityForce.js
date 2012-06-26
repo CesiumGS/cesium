@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/GravityForce
- */
 define(['../Core/Ellipsoid'], function(Ellipsoid) {
     "use strict";
 

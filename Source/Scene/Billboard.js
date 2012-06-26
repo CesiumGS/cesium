@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/Billboard
- */
 define([
         '../Core/DeveloperError',
         '../Core/shallowEquals',

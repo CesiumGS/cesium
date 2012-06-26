@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/TieDyeMaterial
- */
 define([
         '../Shaders/Noise',
         '../Shaders/TieDyeMaterial'

@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/Label
- */
 define([
         '../Core/shallowEquals',
         '../Core/Cartesian2',

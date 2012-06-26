@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/Tile
- */
 define([
         '../Core/DeveloperError',
         '../Core/Math',

@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Core/EllipsoidTangentPlane
- */
 define([
         './DeveloperError',
         './Transforms',

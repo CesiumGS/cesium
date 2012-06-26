@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/ViewportQuad
- */
 define([
         '../Core/destroyObject',
         '../Core/Rectangle',

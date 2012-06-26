@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/DiffuseMapMaterial
- */
 define(['../Shaders/DiffuseMapMaterial'], function(ShadersDiffuseMapMaterial) {
     "use strict";
 

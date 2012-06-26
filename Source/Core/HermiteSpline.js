@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Core/HermiteSpline
- */
 define([
         './DeveloperError',
         './Matrix4',

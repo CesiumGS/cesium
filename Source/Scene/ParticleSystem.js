@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/ParticleSystem
- */
 define([
         '../Core/DeveloperError',
         '../Core/Cartesian3'

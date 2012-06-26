@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/FacetMaterial
- */
 define([
         '../Shaders/Noise',
         '../Shaders/FacetMaterial'

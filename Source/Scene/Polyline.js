@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/Polyline
- */
 define([
         '../Core/combine',
         '../Core/destroyObject',

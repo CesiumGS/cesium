@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Renderer/VertexArray
- */
 define([
         '../Core/DeveloperError',
         '../Core/destroyObject',

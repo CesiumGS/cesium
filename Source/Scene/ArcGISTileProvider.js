@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/ArcGISTileProvider
- */
 define([
         '../Core/DeveloperError',
         '../Core/Extent',

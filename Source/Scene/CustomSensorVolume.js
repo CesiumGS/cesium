@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/CustomSensorVolume
- */
 define([
         '../Core/DeveloperError',
         '../Core/combine',

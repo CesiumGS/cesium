@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/RectangularPyramidSensorVolume
- */
 define([
         '../Core/DeveloperError',
         '../Core/destroyObject',

@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Core/AxisAlignedBoundingBox
- */
 define([
         './DeveloperError',
         './Cartesian3',

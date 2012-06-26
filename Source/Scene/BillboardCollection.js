@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/BillboardCollection
- */
 define([
         '../Core/DeveloperError',
         '../Core/combine',

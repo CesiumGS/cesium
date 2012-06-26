@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/CheckerboardMaterial
- */
 define(['../Shaders/CheckerboardMaterial'], function(ShadersCheckerboardMaterial) {
     "use strict";
 

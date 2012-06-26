@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Core/Enumeration
- */
 define(function() {
     "use strict";
 

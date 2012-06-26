@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/Scene
- */
 define([
         '../Core/destroyObject',
         '../Core/EquidistantCylindricalProjection',

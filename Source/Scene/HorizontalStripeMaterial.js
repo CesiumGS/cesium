@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @alias Scene/HorizontalStripeMaterial
- */
 define(['../Shaders/HorizontalStripeMaterial'], function(ShadersHorizontalStripeMaterial) {
     "use strict";
 

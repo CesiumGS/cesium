@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Core/EventHandler
- */
 define([
         './DeveloperError',
         './destroyObject',

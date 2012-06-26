@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Core/MercatorProjection
- */
 define([
         './Math',
         './Cartesian3',

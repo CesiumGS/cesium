@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Core/CatmullRomSpline
- */
 define([
         './DeveloperError',
         './Matrix4',

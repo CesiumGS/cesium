@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/ColorMaterial
- */
 define(['../Shaders/ColorMaterial'], function(ShadersColorMaterial) {
     "use strict";
 

@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Core/DefaultProxy
- */
 define(function() {
     "use strict";
 

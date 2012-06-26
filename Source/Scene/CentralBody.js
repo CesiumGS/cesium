@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/CentralBody
- */
 define([
         '../Core/DeveloperError',
         '../Core/RuntimeError',

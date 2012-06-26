@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Core/EquidistantCylindricalProjection
- */
 define([
         './Math',
         './Cartesian3',

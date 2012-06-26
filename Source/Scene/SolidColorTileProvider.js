@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/SolidColorTileProvider
- */
 define([
         '../Core/DeveloperError',
         '../Core/Extent',

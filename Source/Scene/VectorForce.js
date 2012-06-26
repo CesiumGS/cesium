@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/VectorForce
- */
 define([
         '../Core/DeveloperError',
         '../Core/Cartesian3'

@@ -69,9 +69,6 @@
    on a Microsoft Windows operating system product.
  */
 /*global define*/
-/**
- * @exports Scene/BingMapsTileProvider
- */
 define([
         '../Core/DeveloperError',
         '../Core/Extent',

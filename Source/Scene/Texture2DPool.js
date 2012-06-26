@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/Texture2DPool
- */
 define([
         '../Core/DeveloperError',
         '../Core/destroyObject',

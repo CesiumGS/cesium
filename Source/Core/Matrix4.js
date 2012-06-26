@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Core/Matrix4
- */
 define([
         './DeveloperError',
         './RuntimeError',

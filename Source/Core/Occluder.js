@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Core/Occluder
- */
 define([
         './DeveloperError',
         './Math',

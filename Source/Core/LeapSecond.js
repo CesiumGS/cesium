@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Core/LeapSecond
- */
 define([
         'require',
         './DeveloperError'

@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Core/BoundingSphere
- */
 define([
         './DeveloperError',
         './Cartesian3',

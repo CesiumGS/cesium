@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/SpringForce
- */
 define(['../Core/DeveloperError'], function(DeveloperError) {
     "use strict";
 

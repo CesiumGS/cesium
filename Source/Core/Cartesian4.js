@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Core/Cartesian4
- */
 define([
         './Cartesian2',
         './Cartesian3'

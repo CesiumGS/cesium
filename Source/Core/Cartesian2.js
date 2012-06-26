@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Core/Cartesian2
- */
 define(function() {
     "use strict";
 

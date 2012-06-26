@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Renderer/UniformState
- */
 define([
         '../Core/DeveloperError',
         '../Core/Ellipsoid',

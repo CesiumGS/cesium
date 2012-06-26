@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Renderer/Context
- */
 define([
         '../Core/DeveloperError',
         '../Core/destroyObject',

@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Core/Matrix3
- */
 define([
         './DeveloperError',
         './Cartesian3'

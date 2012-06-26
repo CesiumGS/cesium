@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/OpenStreetMapTileProvider
- */
 define([
         '../Core/DeveloperError',
         '../Core/Extent',

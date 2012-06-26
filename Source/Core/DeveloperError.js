@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Core/DeveloperError
- */
 define(function() {
     "use strict";
 

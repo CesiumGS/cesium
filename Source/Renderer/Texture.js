@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Renderer/Texture
- */
 define([
         '../Core/DeveloperError',
         '../Core/destroyObject',

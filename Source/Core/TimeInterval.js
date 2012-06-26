@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Core/TimeInterval
- */
 define([
         './JulianDate',
         './DeveloperError'

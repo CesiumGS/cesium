@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Core/destroyObject
- */
 define(['./DeveloperError'], function(DeveloperError) {
     "use strict";
 

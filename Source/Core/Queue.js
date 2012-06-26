@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Core/Queue
- */
 define(function() {
     "use strict";
 

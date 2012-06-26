@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/SceneState
- */
 define([], function() {
     "use strict";
 

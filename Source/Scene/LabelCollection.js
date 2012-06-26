@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/LabelCollection
- */
 define([
         '../Core/DeveloperError',
         '../Core/destroyObject',

@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/ViscousDrag
- */
 define(function() {
     "use strict";
 

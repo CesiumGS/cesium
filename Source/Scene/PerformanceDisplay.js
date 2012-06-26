@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/PerformanceDisplay
- */
 define([
         '../Core/destroyObject',
         '../Core/Rectangle',

@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Renderer/CubeMap
- */
 define([
         '../Core/DeveloperError',
         '../Core/destroyObject',

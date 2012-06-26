@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/BlobMaterial
- */
 define([
         '../Shaders/Noise',
         '../Shaders/BlobMaterial'

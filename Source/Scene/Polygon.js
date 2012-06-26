@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/Polygon
- */
 define([
         '../Core/DeveloperError',
         '../Core/combine',

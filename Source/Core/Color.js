@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Core/Color
- */
 define(function() {
     "use strict";
 

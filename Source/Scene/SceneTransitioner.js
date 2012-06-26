@@ -1,7 +1,4 @@
 /*global define*/
-/*
- * @exports Scene/SceneTransitioner
- */
 define([
         '../Core/destroyObject',
         '../Core/Math',

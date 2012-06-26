@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/CameraFreeLookController
- */
 define([
         '../Core/destroyObject',
         '../Core/Math',

@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/OrthographicFrustum
- */
 define([
         '../Core/DeveloperError',
         '../Core/destroyObject',

@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/DistanceIntervalMaterial
- */
 define(['../Shaders/DistanceIntervalMaterial'], function(ShadersDistanceIntervalMaterial) {
     "use strict";
 

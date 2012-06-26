@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Core/ComponentDatatype
- */
 define(['./Enumeration'], function(Enumeration) {
     "use strict";
 

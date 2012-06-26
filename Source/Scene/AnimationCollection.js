@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/AnimationCollection
- */
 define([
         '../Core/DeveloperError',
         '../Core/clone',

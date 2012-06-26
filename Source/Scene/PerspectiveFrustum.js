@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/PerspectiveFrustum
- */
 define([
         '../Core/DeveloperError',
         '../Core/destroyObject',

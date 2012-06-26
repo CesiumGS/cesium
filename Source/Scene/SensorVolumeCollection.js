@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Scene/SensorVolumeCollection
- */
 define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
