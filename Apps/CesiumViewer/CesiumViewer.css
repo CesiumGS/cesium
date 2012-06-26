@@ -57,7 +57,7 @@ html,body {
 .cesiumLogo {
     display: block;
     position: absolute;
-    bottom: 72px;
+    bottom: 66px;
     left: 5px;
     text-decoration: none;
 }
@@ -69,8 +69,8 @@ html,body {
 .agiLogo {
     display: block;
     position: absolute;
-    bottom: 66px;
-    left: 134px;
+    bottom: 64px;
+    left: 125px;
     text-decoration: none;
 }
 .agiLogo img {
