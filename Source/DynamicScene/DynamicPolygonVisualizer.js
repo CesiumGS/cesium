@@ -217,7 +217,7 @@ define([
 
         var material = dynamicPolygon.material;
         if (typeof material !== 'undefined') {
-            polygon.material = material.getValue(time, this._scene, polygon.material);
+            polygon.material = material.getValue(time, this._scene.getContext(), polygon.material);
         }
     };
 

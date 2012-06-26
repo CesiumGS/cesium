@@ -339,10 +339,10 @@ define([
             orientation.clone(cone._visualizerOrientation);
         }
 
-        var scene = this._scene;
+        var context = this._scene.getContext();
         var material = dynamicCone.outerMaterial;
         if (typeof material !== 'undefined') {
-            cone.material = material.getValue(time, scene, cone.material);
+            cone.material = material.getValue(time, context, cone.material);
         }
 
         property = dynamicCone.intersectionColor;
