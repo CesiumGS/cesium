@@ -861,10 +861,23 @@ define([
 
             var frustum = sceneState.camera.frustum;
             var position = sceneState.camera.position;
-            var x = position.x + frustum.left;
-            var y = position.y + frustum.bottom;
-            var w = position.x + frustum.right - x;
-            var h = position.y + frustum.top - y;
+            var up = sceneState.camera.up;
+            var right = sceneState.camera.right;
+
+            var width = frustum.right - frustum.left;
+            var height = frustum.top - frustum.bottom;
+
+            var lowerLeft = position.add(right.multiplyWithScalar(frustum.left));
+            lowerLeft = lowerLeft.add(up.multiplyWithScalar(frustum.bottom));
+            var upperLeft = lowerLeft.add(up.multiplyWithScalar(height));
+            var upperRight = upperLeft.add(right.multiplyWithScalar(width));
+            var lowerRight = upperRight.add(up.multiplyWithScalar(-height));
+
+            var x = Math.min(lowerLeft.x, lowerRight.x, upperLeft.x, upperRight.x);
+            var y = Math.min(lowerLeft.y, lowerRight.y, upperLeft.y, upperRight.y);
+            var w = Math.max(lowerLeft.x, lowerRight.x, upperLeft.x, upperRight.x) - x;
+            var h = Math.max(lowerLeft.y, lowerRight.y, upperLeft.y, upperRight.y) - y;
+
             var fRect = new Rectangle(x, y, w, h);
 
             return !Rectangle.rectangleRectangleIntersect(bRect, fRect);
