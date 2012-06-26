@@ -70,13 +70,15 @@ require({
 }, [
     'Source/Cesium',
     'DojoWidgets/CesiumWidget',
+    'Core/JulianDate',
+    'Core/requestAnimationFrame',
     'dojo/on',
     'dojo/dom',
     'dojo/parser',
     'dijit/form/Button',
     'dijit/form/ToggleButton'
 ], function(
-    Cesium, CesiumWidget, on, dom, parser)
+    Cesium, CesiumWidget, JulianDate, requestAnimationFrame, on, dom, parser)
 {
     "use strict";
     parser.parse();
@@ -87,6 +89,12 @@ require({
 
     var cesiumWidget = new CesiumWidget({
         postSetup : function(widget) {
+            function update() {
+                var currentTime = new JulianDate();
+                widget.render(currentTime);
+                requestAnimationFrame(update);
+            }
+
             ///////////////////////////////////////////////////////////////////////////
             // Demo buttons:
 
@@ -112,6 +120,8 @@ require({
                     console.log('Show sky atmosphere: ' + newValue);
                 }
             }).placeAt("toolbar");
+
+            update();
         },
         onSetupError : function(widget, error) {
             console.log(error);
