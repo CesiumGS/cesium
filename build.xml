@@ -286,7 +286,8 @@ for (var i = 0, len = filesets.size(); i < len; i++) {
     var relativePath = filenames[j];
     var demo = relativePath.substring(0, relativePath.lastIndexOf('.')).replace('\\', '/');
     var thumbnail = new File(basedir, demo + '.jpg').exists() ? (", 'img':'" + demo + ".jpg'") : '';
-    demos.push("\n\t{'name':'" + demo + "'" + thumbnail + "}");
+    var fileDate = new File(basedir, demo + '.html').lastModified().toString();
+    demos.push("\n\t{'name':'" + demo + "'" + thumbnail + ", 'date':" + fileDate + '}');
   }
 }
 

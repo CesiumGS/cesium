@@ -43,6 +43,11 @@ require({
             var len = gallery_demos.length;
             var demos = dom.byId('demos');
 
+            // Sort by date descending.  This will eventually be a user option.
+            gallery_demos.sort(function(a, b) {
+                return b.date - a.date;
+            });
+
             for (i = 0; i < len; ++i) {
                 var label = gallery_demos[i].name;
                 if (typeof gallery_demos[i].img !== 'undefined') {
