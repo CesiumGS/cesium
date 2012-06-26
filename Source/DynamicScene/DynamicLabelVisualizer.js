@@ -162,7 +162,6 @@ define([
     DynamicLabelVisualizer.prototype.destroy = function() {
         this.removeAll();
         this._scene.getPrimitives().remove(this._labelCollection);
-        this._labelCollection.destroy();
         return destroyObject(this);
     };
 

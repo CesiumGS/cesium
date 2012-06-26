@@ -118,10 +118,12 @@ define([
 
         var that = this;
         getImageCallback(id, function(newImage) {
-            var index = sourceHolder.index = that.textureAtlas.addImage(newImage);
-            sourceHolder.loaded = true;
-            sourceHolder.imageLoaded.raiseEvent(index, id);
-            sourceHolder.imageLoaded = undefined;
+            if (!that.textureAtlas.isDestroyed()) {
+                var index = sourceHolder.index = that.textureAtlas.addImage(newImage);
+                sourceHolder.loaded = true;
+                sourceHolder.imageLoaded.raiseEvent(index, id);
+                sourceHolder.imageLoaded = undefined;
+            }
         });
     };
 

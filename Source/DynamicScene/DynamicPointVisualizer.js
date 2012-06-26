@@ -158,7 +158,6 @@ define([
     DynamicPointVisualizer.prototype.destroy = function() {
         this.removeAll();
         this._scene.getPrimitives().remove(this._billboardCollection);
-        this._billboardCollection.destroy();
         this._textureAtlas.destroy();
         return destroyObject(this);
     };
