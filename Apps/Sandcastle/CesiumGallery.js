@@ -1,4 +1,4 @@
-/*global require,gallery_demos*/
+/*global window,require,gallery_demos*/
 require({
         baseUrl: '../../Source',
         packages: [{
@@ -46,7 +46,8 @@ require({
             for (i = 0; i < len; ++i) {
                 var label = gallery_demos[i].name;
                 if (typeof gallery_demos[i].img !== 'undefined') {
-                    label += '<br /><img src="gallery/' + gallery_demos[i].img + '" alt="" width="225" height="150" />';
+                    label += '<br /><img src="gallery/' + window.encodeURIComponent(gallery_demos[i].img) +
+                        '" alt="" width="225" height="150" />';
                 }
                 label += '<span id="buttons_' + i + '" class="insetButtons"></span>';
 
@@ -65,7 +66,7 @@ require({
                 var editButton = document.createElement('a');
                 editButton.tabIndex = i * 3 + 2;
                 editButton.className = 'linkButton';
-                editButton.href = 'Sandcastle.html?src=' + gallery_demos[i].name + '.html';
+                editButton.href = 'Sandcastle.html?src=' + window.encodeURIComponent(gallery_demos[i].name) + '.html';
                 insetElement.appendChild(editButton);
 
                 new LinkButton({
