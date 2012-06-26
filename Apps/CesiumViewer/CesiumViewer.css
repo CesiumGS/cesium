@@ -3,6 +3,7 @@
 
 html,body {
 	height: 100%;
+	width: 100%;
 	margin: 0;
 	overflow: hidden;
 	padding: 0;
@@ -54,6 +55,30 @@ html,body {
 	background-position: -168px 0;
 }
 
+.cesiumLogo {
+	display: block;
+	position: absolute;
+	bottom: 66px;
+	left: 5px;
+	text-decoration: none;
+}
+
+.cesiumLogo img {
+	border: none;
+}
+
+.agiLogo {
+	display: block;
+	position: absolute;
+	bottom: 64px;
+	left: 125px;
+	text-decoration: none;
+}
+
+.agiLogo img {
+	border: none;
+}
+
 .animButtons {
 	display: block;
 	position: absolute;
@@ -82,46 +107,46 @@ html,body {
 }
 
 .timeLabel {
-    display: block;
-    position: absolute;
-    bottom: 31px;
-    right: 6px;
+	display: block;
+	position: absolute;
+	bottom: 31px;
+	right: 6px;
 }
 
 .viewIcon {
-    background-image: url('Images/viewControlBar.png');
-    background-repeat: no-repeat;
-    width: 24px;
-    height: 24px;
+	background-image: url('Images/viewControlBar.png');
+	background-repeat: no-repeat;
+	width: 24px;
+	height: 24px;
 }
 
 .view2D {
-    background-position: -24px 0;
+	background-position: -24px 0;
 }
 
 .view3D {
-    background-position: -48px 0;
+	background-position: -48px 0;
 }
 
 .viewColumbus {
-    background-position: -72px 0;
+	background-position: -72px 0;
 }
 
 .toggleCbLighting {
-    background-position: -96px 0;
+	background-position: -96px 0;
 }
 
 .viewFullScreen {
-    background-position: -120px 0;
+	background-position: -120px 0;
 }
 
 .viewButtons {
-    display: block;
-    position: fixed;
-    top: 5px;
-    right: 5px;
+	display: block;
+	position: fixed;
+	top: 5px;
+	right: 5px;
 }
 
 .imagerySelector {
-    display: block;
+	display: block;
 }

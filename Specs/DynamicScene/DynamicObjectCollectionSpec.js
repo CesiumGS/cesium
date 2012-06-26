@@ -2,60 +2,94 @@
 defineSuite([
          'DynamicScene/DynamicObjectCollection',
          'Core/JulianDate',
-         'DynamicScene/DynamicObject',
-         'DynamicScene/DynamicBillboard',
-         'DynamicScene/DynamicPoint',
-         'DynamicScene/DynamicPolyline',
-         'DynamicScene/DynamicLabel'
+         'Core/Iso8601',
+         'Core/TimeInterval',
+         'DynamicScene/DynamicObject'
      ], function(
          DynamicObjectCollection,
          JulianDate,
-         DynamicObject,
-         DynamicBillboard,
-         DynamicPoint,
-         DynamicPolyline,
-         DynamicLabel) {
+         Iso8601,
+         TimeInterval,
+         DynamicObject) {
     "use strict";
     /*global it,expect*/
 
-    //CZML_TODO Implement real tests
+    it('getObject throws if no id specified', function() {
+        var dynamicObjectCollection = new DynamicObjectCollection();
+        expect(function() {
+            dynamicObjectCollection.getObject();
+        }).toThrow();
+    });
 
-    it('TODO', function() {
+    it('getObject returns the correct object', function() {
+        var dynamicObjectCollection = new DynamicObjectCollection();
+        dynamicObjectCollection.getOrCreateObject('1');
+        var object2 = dynamicObjectCollection.getOrCreateObject('2');
+        dynamicObjectCollection.getOrCreateObject('3');
+        expect(dynamicObjectCollection.getObject('2')).toEqual(object2);
+    });
+
+    it('getOrCreateObject throws if no id specified', function() {
+        var dynamicObjectCollection = new DynamicObjectCollection();
+        expect(function() {
+            dynamicObjectCollection.getOrCreateObject();
+        }).toThrow();
+    });
+
+    it('getOrCreateObject creates a new object if it does not exist.', function() {
+        var dynamicObjectCollection = new DynamicObjectCollection();
+        expect(dynamicObjectCollection.getObjects().length).toEqual(0);
+        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        expect(dynamicObjectCollection.getObjects().length).toEqual(1);
+        expect(dynamicObjectCollection.getObjects()[0]).toEqual(testObject);
+    });
+
+    it('getOrCreateObject does not create a new object if it already exists.', function() {
+        var dynamicObjectCollection = new DynamicObjectCollection();
+        expect(dynamicObjectCollection.getObjects().length).toEqual(0);
+        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        expect(dynamicObjectCollection.getObjects().length).toEqual(1);
+        expect(dynamicObjectCollection.getObjects()[0]).toEqual(testObject);
+        var testObject2 = dynamicObjectCollection.getOrCreateObject('test');
+        expect(dynamicObjectCollection.getObjects().length).toEqual(1);
+        expect(dynamicObjectCollection.getObjects()[0]).toEqual(testObject);
+        expect(testObject2).toEqual(testObject);
+    });
+
+    it('computeAvailability returns infinite with no data.', function() {
+        var dynamicObjectCollection = new DynamicObjectCollection();
+        var availability = dynamicObjectCollection.computeAvailability();
+        expect(availability.start).toEqual(Iso8601.MINIMUM_VALUE);
+        expect(availability.stop).toEqual(Iso8601.MAXIMUM_VALUE);
+    });
+
+    it('computeAvailability returns intersction of collections.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
 
-        expect(typeof dynamicObjectCollection.getObject('TestFacility') === 'undefined').toBeTruthy();
+        var dynamicObject = dynamicObjectCollection.getOrCreateObject('1');
+        dynamicObject._setAvailability(TimeInterval.fromIso8601("2012-08-01/2012-08-02"));
 
-        var czml = {
-            'billboard' : {
-                'color' : {
-                    'rgba' : [0, 255, 255, 255]
-                },
-                'horizontalOrigin' : 'CENTER',
-                'image' : 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAUSURBVBhXY2DABv5DAVwOQwBZFwAeQg/xcPKgjwAAAABJRU5ErkJgggAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==',
-                'scale' : 1.0,
-                'show' : [{
-                    'interval' : '2012-04-28T16:00:00Z/2012-04-28T16:02:00Z',
-                    'boolean' : true
-                }],
-                'pixelOffset' : {
-                    'cartesian2' : [5.0, -4.0]
-                },
-                'verticalOrigin' : 'CENTER'
-            }
-        };
+        dynamicObject = dynamicObjectCollection.getOrCreateObject('2');
 
-        dynamicObjectCollection.processCzml(czml);
+        dynamicObject = dynamicObjectCollection.getOrCreateObject('3');
+        dynamicObject._setAvailability(TimeInterval.fromIso8601("2012-08-05/2012-08-06"));
 
-        var testFacility = dynamicObjectCollection.getObject(czml.id);
-        expect(typeof testFacility !== undefined).toBeTruthy();
-        expect(typeof testFacility.billboard !== undefined).toBeTruthy();
-        expect(typeof testFacility.billboard.pixelOffset !== undefined).toBeTruthy();
+        var availability = dynamicObjectCollection.computeAvailability();
+        expect(availability.start).toEqual(JulianDate.fromIso8601("2012-08-01"));
+        expect(availability.stop).toEqual(JulianDate.fromIso8601("2012-08-06"));
+    });
 
-        var pixelOffset = testFacility.billboard.pixelOffset.getValue(new JulianDate());
-        expect(pixelOffset.x).toEqual(5.0);
-        expect(pixelOffset.y).toEqual(-4.0);
+    it('clear removes all objects', function() {
+        var dynamicObjectCollection = new DynamicObjectCollection();
+        dynamicObjectCollection.getOrCreateObject('1');
+        var object2 = dynamicObjectCollection.getOrCreateObject('2');
+        dynamicObjectCollection.getOrCreateObject('3');
+        expect(dynamicObjectCollection.getObjects().length).toEqual(3);
+        expect(dynamicObjectCollection.getObject('2')).toEqual(object2);
 
-        var scale = testFacility.billboard.scale.getValue(new JulianDate());
-        expect(scale).toEqual(1.0);
+        dynamicObjectCollection.clear();
+
+        expect(dynamicObjectCollection.getObjects().length).toEqual(0);
+        expect(dynamicObjectCollection.getObject('2')).toBeUndefined();
     });
 });

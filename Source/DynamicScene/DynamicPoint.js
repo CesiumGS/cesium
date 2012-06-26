@@ -27,13 +27,28 @@ define([
      * @see VisualizerCollection
      * @see Billboard
      * @see BillboardCollection
-     * @see CzmlStandard
+     * @see CzmlDefaults
      */
     function DynamicPoint() {
+        /**
+         * A DynamicProperty of type CzmlColor which determines the point's color.
+         */
         this.color = undefined;
+        /**
+         * A DynamicProperty of type CzmlNumber which determines the point's pixel size.
+         */
         this.pixelSize = undefined;
+        /**
+         * A DynamicProperty of type CzmlColor which determines the point's outline color.
+         */
         this.outlineColor = undefined;
+        /**
+         * A DynamicProperty of type CzmlNumber which determines the point's outline width.
+         */
         this.outlineWidth = undefined;
+        /**
+         * A DynamicProperty of type CzmlBoolean which determines the point's visibility.
+         */
         this.show = undefined;
     }
 
@@ -43,14 +58,14 @@ define([
      * normally called directly, but is part of the array of CZML processing functions that is
      * passed into the DynamicObjectCollection constructor.
      *
-     * @param dynamicObject The DynamicObject which will contain the point data.
-     * @param packet The CZML packet to process.
+     * @param {DynamicObject} dynamicObject The DynamicObject which will contain the point data.
+     * @param {Object} packet The CZML packet to process.
      * @returns {Boolean} true if any new properties were created while processing the packet, false otherwise.
      *
      * @see DynamicObject
      * @see DynamicProperty
      * @see DynamicObjectCollection
-     * @see CzmlStandard#updaters
+     * @see CzmlDefaults#updaters
      */
     DynamicPoint.processCzmlPacket = function(dynamicObject, packet) {
         var pointData = packet.point;
@@ -68,11 +83,50 @@ define([
                 interval = TimeInterval.fromIso8601(interval);
             }
 
-            pointUpdated = DynamicProperty.processCzmlPacket(point, 'color', CzmlColor, pointData.color, interval) || pointUpdated;
-            pointUpdated = DynamicProperty.processCzmlPacket(point, 'pixelSize', CzmlNumber, pointData.pixelSize, interval) || pointUpdated;
-            pointUpdated = DynamicProperty.processCzmlPacket(point, 'outlineColor', CzmlColor, pointData.outlineColor, interval) || pointUpdated;
-            pointUpdated = DynamicProperty.processCzmlPacket(point, 'outlineWidth', CzmlNumber, pointData.outlineWidth, interval) || pointUpdated;
-            pointUpdated = DynamicProperty.processCzmlPacket(point, 'show', CzmlBoolean, pointData.show, interval) || pointUpdated;
+            if (typeof pointData.color !== 'undefined') {
+                var color = point.color;
+                if (typeof color === 'undefined') {
+                    point.color = color = new DynamicProperty(CzmlColor);
+                    pointUpdated = true;
+                }
+                color.processCzmlIntervals(pointData.color, interval);
+            }
+
+            if (typeof pointData.pixelSize !== 'undefined') {
+                var pixelSize = point.pixelSize;
+                if (typeof pixelSize === 'undefined') {
+                    point.pixelSize = pixelSize = new DynamicProperty(CzmlNumber);
+                    pointUpdated = true;
+                }
+                pixelSize.processCzmlIntervals(pointData.pixelSize, interval);
+            }
+
+            if (typeof pointData.outlineColor !== 'undefined') {
+                var outlineColor = point.outlineColor;
+                if (typeof outlineColor === 'undefined') {
+                    point.outlineColor = outlineColor = new DynamicProperty(CzmlColor);
+                    pointUpdated = true;
+                }
+                outlineColor.processCzmlIntervals(pointData.outlineColor, interval);
+            }
+
+            if (typeof pointData.outlineWidth !== 'undefined') {
+                var outlineWidth = point.outlineWidth;
+                if (typeof outlineWidth === 'undefined') {
+                    point.outlineWidth = outlineWidth = new DynamicProperty(CzmlNumber);
+                    pointUpdated = true;
+                }
+                outlineWidth.processCzmlIntervals(pointData.outlineWidth, interval);
+            }
+
+            if (typeof pointData.show !== 'undefined') {
+                var show = point.show;
+                if (typeof show === 'undefined') {
+                    point.show = show = new DynamicProperty(CzmlBoolean);
+                    pointUpdated = true;
+                }
+                show.processCzmlIntervals(pointData.show, interval);
+            }
         }
         return pointUpdated;
     };
@@ -86,7 +140,7 @@ define([
      * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
      * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
      *
-     * @see CzmlStandard
+     * @see CzmlDefaults
      */
     DynamicPoint.mergeProperties = function(targetObject, objectToMerge) {
         var pointToMerge = objectToMerge.point;
@@ -112,7 +166,7 @@ define([
      *
      * @param {DynamicObject} dynamicObject The DynamicObject to remove the point from.
      *
-     * @see CzmlStandard
+     * @see CzmlDefaults
      */
     DynamicPoint.undefineProperties = function(dynamicObject) {
         dynamicObject.point = undefined;

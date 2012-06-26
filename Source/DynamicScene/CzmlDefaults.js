@@ -9,7 +9,7 @@ define([
         './DynamicPolyline',
         './DynamicPyramid',
         './DynamicBillboardVisualizer',
-        './DynamicConeVisualizerUsingCustomSensor', //'./DynamicConeVisualizer',
+        './DynamicConeVisualizerUsingCustomSensor', //CZML_TODO Replace with './DynamicConeVisualizer', once ComplexConicSensor works.
         './DynamicLabelVisualizer',
         './DynamicPointVisualizer',
         './DynamicPolygonVisualizer',
@@ -39,12 +39,12 @@ define([
      * access this class directly, as it just holds the defaults used by
      * DynamicObjectCollection, CompositeDynamicObjectCollection, and VisualizerCollection.
      *
-     * @exports CzmlStandard
+     * @exports CzmlDefaults
      * @see DynamicObjectCollection
      * @see CompositeDynamicObjectCollection
-     * @see VisualizerCollection#createCzmlStandardCollection
+     * @see VisualizerCollection#createCzmlDefaultsCollection
      */
-    var CzmlStandard = {
+    var CzmlDefaults = {
         //Any change to updaters needs to be reflected in the DynamicObject constructor,
         //which has the superset of all properties created by the various updaters.
         /**
@@ -100,9 +100,9 @@ define([
          *
          * @param scene The scene being used for visualization.
          * @returns {Array} The CZML standard visualizers.
-         * @see VisualizerCollection#createCzmlStandardCollection
+         * @see VisualizerCollection#createCzmlDefaultsCollection
          */
-        createDefaultVisualizers : function(scene) {
+        createVisualizers : function(scene) {
             return [new DynamicBillboardVisualizer(scene),
                     new DynamicConeVisualizer(scene),
                     new DynamicLabelVisualizer(scene),
@@ -113,5 +113,5 @@ define([
         }
     };
 
-    return CzmlStandard;
+    return CzmlDefaults;
 });

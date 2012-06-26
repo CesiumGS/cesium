@@ -31,6 +31,21 @@ defineSuite(['Core/Color'], function(Color) {
         expect(Color.floatToByte(127 / 255)).toEqual(127);
     });
 
+    it('clone with no parameters returns a new identical copy.', function() {
+        var v = new Color(0.1, 0.2, 0.3, 0.4);
+        var v2 = v.clone();
+        expect(v).toEqual(v2);
+        expect(v === v2).toEqual(false);
+    });
+
+    it('clone with a parameter modifies the parameter.', function() {
+        var v = new Color(0.1, 0.2, 0.3, 0.4);
+        var v2 = new Color();
+        var v3 = v.clone(v2);
+        expect(v).toEqual(v2);
+        expect(v3 === v2).toEqual(true);
+    });
+
     it('equals works', function() {
         var v = new Color(0.1, 0.2, 0.3, 0.4);
         var v2 = new Color(0.1, 0.2, 0.3, 0.4);

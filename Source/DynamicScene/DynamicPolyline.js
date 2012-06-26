@@ -26,13 +26,28 @@ function(
      * @see DynamicPolylineVisualizer
      * @see VisualizerCollection
      * @see Polyline
-     * @see CzmlStandard
+     * @see CzmlDefaults
      */
     function DynamicPolyline() {
+        /**
+         * A DynamicProperty of type CzmlColor which determines the line's color.
+         */
         this.color = undefined;
+        /**
+         * A DynamicProperty of type CzmlColor which determines the line's outline color.
+         */
         this.outlineColor = undefined;
+        /**
+         * A DynamicProperty of type CzmlNumber which determines the line's outline width.
+         */
         this.outlineWidth = undefined;
+        /**
+         * A DynamicProperty of type CzmlBoolean which determines the lines's visibility.
+         */
         this.show = undefined;
+        /**
+         * A DynamicProperty of type CzmlNumber which determines the line's width.
+         */
         this.width = undefined;
     }
 
@@ -42,14 +57,14 @@ function(
      * normally called directly, but is part of the array of CZML processing functions that is
      * passed into the DynamicObjectCollection constructor.
      *
-     * @param dynamicObject The DynamicObject which will contain the polyline data.
-     * @param packet The CZML packet to process.
+     * @param {DynamicObject} dynamicObject The DynamicObject which will contain the polyline data.
+     * @param {Object} packet The CZML packet to process.
      * @returns {Boolean} true if any new properties were created while processing the packet, false otherwise.
      *
      * @see DynamicObject
      * @see DynamicProperty
      * @see DynamicObjectCollection
-     * @see CzmlStandard#updaters
+     * @see CzmlDefaults#updaters
      */
     DynamicPolyline.processCzmlPacket = function(dynamicObject, packet) {
         var polylineData = packet.polyline;
@@ -67,11 +82,50 @@ function(
                 interval = TimeInterval.fromIso8601(interval);
             }
 
-            polylineUpdated = DynamicProperty.processCzmlPacket(polyline, 'color', CzmlColor, polylineData.color, interval) || polylineUpdated;
-            polylineUpdated = DynamicProperty.processCzmlPacket(polyline, 'outlineColor', CzmlColor, polylineData.outlineColor, interval) || polylineUpdated;
-            polylineUpdated = DynamicProperty.processCzmlPacket(polyline, 'outlineWidth', CzmlNumber, polylineData.outlineWidth, interval) || polylineUpdated;
-            polylineUpdated = DynamicProperty.processCzmlPacket(polyline, 'show', CzmlBoolean, polylineData.show, interval) || polylineUpdated;
-            polylineUpdated = DynamicProperty.processCzmlPacket(polyline, 'width', CzmlNumber, polylineData.width, interval) || polylineUpdated;
+            if (typeof polylineData.color !== 'undefined') {
+                var color = polyline.color;
+                if (typeof color === 'undefined') {
+                    polyline.color = color = new DynamicProperty(CzmlColor);
+                    polylineUpdated = true;
+                }
+                color.processCzmlIntervals(polylineData.color, interval);
+            }
+
+            if (typeof polylineData.width !== 'undefined') {
+                var width = polyline.width;
+                if (typeof width === 'undefined') {
+                    polyline.width = width = new DynamicProperty(CzmlNumber);
+                    polylineUpdated = true;
+                }
+                width.processCzmlIntervals(polylineData.width, interval);
+            }
+
+            if (typeof polylineData.outlineColor !== 'undefined') {
+                var outlineColor = polyline.outlineColor;
+                if (typeof outlineColor === 'undefined') {
+                    polyline.outlineColor = outlineColor = new DynamicProperty(CzmlColor);
+                    polylineUpdated = true;
+                }
+                outlineColor.processCzmlIntervals(polylineData.outlineColor, interval);
+            }
+
+            if (typeof polylineData.outlineWidth !== 'undefined') {
+                var outlineWidth = polyline.outlineWidth;
+                if (typeof outlineWidth === 'undefined') {
+                    polyline.outlineWidth = outlineWidth = new DynamicProperty(CzmlNumber);
+                    polylineUpdated = true;
+                }
+                outlineWidth.processCzmlIntervals(polylineData.outlineWidth, interval);
+            }
+
+            if (typeof polylineData.show !== 'undefined') {
+                var show = polyline.show;
+                if (typeof show === 'undefined') {
+                    polyline.show = show = new DynamicProperty(CzmlBoolean);
+                    polylineUpdated = true;
+                }
+                show.processCzmlIntervals(polylineData.show, interval);
+            }
         }
         return polylineUpdated;
     };
@@ -85,7 +139,7 @@ function(
      * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
      * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
      *
-     * @see CzmlStandard
+     * @see CzmlDefaults
      */
     DynamicPolyline.mergeProperties = function(targetObject, objectToMerge) {
         var polylineToMerge = objectToMerge.polyline;
@@ -111,7 +165,7 @@ function(
      *
      * @param {DynamicObject} dynamicObject The DynamicObject to remove the polyline from.
      *
-     * @see CzmlStandard
+     * @see CzmlDefaults
      */
     DynamicPolyline.undefineProperties = function(dynamicObject) {
         dynamicObject.polyline = undefined;

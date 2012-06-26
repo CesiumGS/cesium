@@ -6,18 +6,21 @@ define(['dojo/dom',
         'dijit/registry',
         'DojoWidgets/CesiumWidget',
         'DojoWidgets/getJson',
+        'Core/binarySearch',
         'Core/DefaultProxy',
         'Core/JulianDate',
         'Core/Clock',
         'Core/ClockStep',
         'Core/ClockRange',
+        'Core/TimeStandard',
         'Core/Iso8601',
         'Core/FullScreen',
         'Core/Ellipsoid',
         'Core/Transforms',
+        'Core/requestAnimationFrame',
         'Scene/SceneTransitioner',
         'Scene/BingMapsStyle',
-        'DynamicScene/CzmlStandard',
+        'DynamicScene/processCzml',
         'DynamicScene/DynamicObjectCollection',
         'DynamicScene/VisualizerCollection',],
 function(dom,
@@ -27,25 +30,59 @@ function(dom,
          registry,
          CesiumWidget,
          getJson,
+         binarySearch,
          DefaultProxy,
          JulianDate,
          Clock,
          ClockStep,
          ClockRange,
+         TimeStandard,
          Iso8601,
          FullScreen,
          Ellipsoid,
          Transforms,
+         requestAnimationFrame,
          SceneTransitioner,
          BingMapsStyle,
-         CzmlStandard,
+         processCzml,
          DynamicObjectCollection,
          VisualizerCollection) {
     "use strict";
     /*global console*/
 
+
+    var typicalMultipliers = [
+        0.001,
+        0.002,
+        0.005,
+        0.01,
+        0.02,
+        0.05,
+        0.1,
+        0.25,
+        0.5,
+        1.0,
+        2.0,
+        5.0,
+        10.0,
+        15.0,
+        30.0,
+        60.0, // 1min
+        120.0, // 2min
+        300.0, // 5min
+        600.0, // 10min
+        900.0, // 15min
+        1800.0, // 30min
+        3600.0, // 1hr
+        7200.0, // 2hr
+        14400.0, // 4hr
+        21600.0, // 6hr
+        43200.0, // 12hr
+        86400.0  // 24hr
+    ];
+
     var visualizers;
-    var clock = new Clock(new JulianDate(), undefined, undefined, ClockStep.SYSTEM_CLOCK_DEPENDENT, ClockRange.LOOP, 256);
+    var clock = new Clock(new JulianDate(), ClockStep.SYSTEM_CLOCK_DEPENDENT, 60);
     var timeline;
     var transitioner;
 
@@ -60,7 +97,11 @@ function(dom,
     var lastCameraCenteredObjectID;
 
     function updateSpeedIndicator() {
-        speedIndicatorElement.innerHTML = clock.multiplier + 'x realtime';
+        if (animating) {
+            speedIndicatorElement.innerHTML = clock.multiplier + 'x realtime';
+        } else {
+            speedIndicatorElement.innerHTML = clock.multiplier + 'x realtime (currently paused)';
+        }
     }
 
     function setTimeFromBuffer() {
@@ -72,36 +113,20 @@ function(dom,
         animPause.set('checked', true);
         animPlay.set('checked', false);
 
-        var i, object, len;
-        var startTime = Iso8601.MAXIMUM_VALUE;
-        var stopTime = Iso8601.MINIMUM_VALUE;
-        var dynamicObjects = dynamicObjectCollection.getObjects();
-
         var availability = dynamicObjectCollection.computeAvailability();
-        startTime = availability.start;
-        stopTime = availability.stop;
-
-        if (startTime === Iso8601.MAXIMUM_VALUE) {
-            for (i = 0, len = dynamicObjects.length; i < len; i++) {
-                object = dynamicObjects[i];
-                if (typeof object.position !== 'undefined') {
-                    var intervals = object.position._propertyIntervals;
-                    if (typeof intervals !== 'undefined' && intervals._intervals[0].data._intervals._intervals[0].data.isSampled) {
-                        var firstTime = intervals._intervals[0].data._intervals._intervals[0].data.times[0];
-                        if (typeof firstTime !== 'undefined') {
-                            startTime = firstTime;
-                            stopTime = firstTime.addDays(1);
-                            break;
-                        }
-                    }
-                }
-            }
+        if (availability.start.equals(Iso8601.MINIMUM_VALUE)) {
+            clock.startTime = new JulianDate();
+            clock.stopTime = clock.startTime.addDays(1);
+            clock.clockRange = ClockRange.UNBOUNDED;
+        } else {
+            clock.startTime = availability.start;
+            clock.stopTime = availability.stop;
+            clock.clockRange = ClockRange.LOOP;
         }
 
-        clock.startTime = startTime;
-        clock.stopTime = stopTime;
-        clock.currentTime = startTime;
-        timeline.zoomTo(startTime, stopTime);
+        clock.multiplier = 60;
+        clock.currentTime = clock.startTime;
+        timeline.zoomTo(clock.startTime, clock.stopTime);
         updateSpeedIndicator();
     }
 
@@ -118,15 +143,15 @@ function(dom,
             //while there are no visual differences, removeAll cleans the cache and improves performance
             visualizers.removeAll();
             dynamicObjectCollection.clear();
-            dynamicObjectCollection.processCzml(JSON.parse(evt.target.result), f.name);
+            processCzml(JSON.parse(evt.target.result), dynamicObjectCollection, f.name);
             setTimeFromBuffer();
         };
         reader.readAsText(f);
     }
 
     function onObjectRightClickSelected(selectedObject) {
-        if (selectedObject && selectedObject.id) {
-            cameraCenteredObjectID = selectedObject.id;
+        if (selectedObject && selectedObject.dynamicObject) {
+            cameraCenteredObjectID = selectedObject.dynamicObject.id;
         } else {
             cameraCenteredObjectID = undefined;
         }
@@ -135,41 +160,43 @@ function(dom,
     var cesium = new CesiumWidget({
         clock : clock,
 
-        preRender : function(widget) {
-            var currentTime = animating ? clock.tick() : clock.currentTime;
-
-            if (typeof timeline !== 'undefined') {
-                timeline.updateFromClock();
-            }
-            visualizers.update(currentTime);
-
-            if (Math.abs(currentTime.getSecondsDifference(lastTimeLabelUpdate)) >= 1.0) {
-                timeLabel.innerHTML = currentTime.toDate().toUTCString();
-                lastTimeLabelUpdate = currentTime;
-            }
-
-            // Update the camera to stay centered on the selected object, if any.
-            if (cameraCenteredObjectID) {
-                var dynamicObject = dynamicObjectCollection.getObject(cameraCenteredObjectID);
-                if (dynamicObject && dynamicObject.position) {
-                    cameraCenteredObjectIDPosition = dynamicObject.position.getValueCartesian(currentTime, cameraCenteredObjectIDPosition);
-                    if (typeof cameraCenteredObjectIDPosition !== 'undefined') {
-                        // If we're centering on an object for the first time, zoom to within 2km of it.
-                        if (lastCameraCenteredObjectID !== cameraCenteredObjectID) {
-                            lastCameraCenteredObjectID = cameraCenteredObjectID;
-                            var camera = widget.scene.getCamera();
-                            camera.position = camera.position.normalize().multiplyWithScalar(5000.0);
-                        }
-
-                        var transform = Transforms.eastNorthUpToFixedFrame(cameraCenteredObjectIDPosition, widget.ellipsoid);
-                        this.spindleCameraController.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
-                    }
-                }
-            }
-        },
-
         postSetup : function(widget) {
             var scene = widget.scene;
+
+            function update() {
+                var currentTime = animating ? clock.tick() : clock.currentTime;
+
+                if (typeof timeline !== 'undefined') {
+                    timeline.updateFromClock();
+                }
+                visualizers.update(currentTime);
+
+                if (Math.abs(currentTime.getSecondsDifference(lastTimeLabelUpdate)) >= 1.0) {
+                    timeLabel.innerHTML = currentTime.toDate().toUTCString();
+                    lastTimeLabelUpdate = currentTime;
+                }
+
+                // Update the camera to stay centered on the selected object, if any.
+                if (cameraCenteredObjectID) {
+                    var dynamicObject = dynamicObjectCollection.getObject(cameraCenteredObjectID);
+                    if (dynamicObject && dynamicObject.position) {
+                        cameraCenteredObjectIDPosition = dynamicObject.position.getValueCartesian(currentTime, cameraCenteredObjectIDPosition);
+                        if (typeof cameraCenteredObjectIDPosition !== 'undefined') {
+                            // If we're centering on an object for the first time, zoom to within 2km of it.
+                            if (lastCameraCenteredObjectID !== cameraCenteredObjectID) {
+                                lastCameraCenteredObjectID = cameraCenteredObjectID;
+                                var camera = widget.scene.getCamera();
+                                camera.position = camera.position.normalize().multiplyWithScalar(5000.0);
+                            }
+
+                            var transform = Transforms.eastNorthUpToFixedFrame(cameraCenteredObjectIDPosition, widget.ellipsoid);
+                            widget.spindleCameraController.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
+                        }
+                    }
+                }
+                widget.render(currentTime);
+                requestAnimationFrame(update);
+            }
 
             transitioner = new SceneTransitioner(scene);
             visualizers = VisualizerCollection.createCzmlStandardCollection(scene, dynamicObjectCollection);
@@ -182,7 +209,7 @@ function(dom,
 
             if (typeof queryObject.source !== 'undefined') {
                 getJson(queryObject.source).then(function(czmlData) {
-                    dynamicObjectCollection.processCzml(czmlData, queryObject.source);
+                    processCzml(czmlData, dynamicObjectCollection, queryObject.source);
                     setTimeFromBuffer();
                 });
             }
@@ -190,13 +217,6 @@ function(dom,
             if (typeof queryObject.lookAt !== 'undefined') {
                 cameraCenteredObjectID = queryObject.lookAt;
             }
-
-            var timelineWidget = registry.byId('mainTimeline');
-            timelineWidget.clock = clock;
-            timelineWidget.setupCallback = function(t) {
-                timeline = t;
-                timeline.zoomTo(clock.startTime, clock.stopTime);
-            };
 
             on(cesium, 'ObjectRightClickSelected', onObjectRightClickSelected);
 
@@ -227,46 +247,96 @@ function(dom,
                 animReverse.set('checked', false);
                 animPause.set('checked', true);
                 animPlay.set('checked', false);
+                updateSpeedIndicator();
             });
+
+            function onAnimPause() {
+                animating = false;
+                animReverse.set('checked', false);
+                animPause.set('checked', true);
+                animPlay.set('checked', false);
+                updateSpeedIndicator();
+            }
+            on(animPause, 'Click', onAnimPause);
+
+            function play() {
+                animating = true;
+                clock.tick(0);
+                animReverse.set('checked', true);
+                animPause.set('checked', false);
+                animPlay.set('checked', false);
+                updateSpeedIndicator();
+                updateSpeedIndicator();
+            }
 
             on(animReverse, 'Click', function() {
                 if (clock.multiplier > 0) {
                     clock.multiplier = -clock.multiplier;
                 }
-                animating = true;
-                animReverse.set('checked', true);
-                animPause.set('checked', false);
-                animPlay.set('checked', false);
-                updateSpeedIndicator();
-            });
-
-            on(animPause, 'Click', function() {
-                animating = false;
-                animReverse.set('checked', false);
-                animPause.set('checked', true);
-                animPlay.set('checked', false);
+                play();
             });
 
             on(animPlay, 'Click', function() {
                 if (clock.multiplier < 0) {
                     clock.multiplier = -clock.multiplier;
                 }
-                animating = true;
-                animReverse.set('checked', false);
-                animPause.set('checked', false);
-                animPlay.set('checked', true);
-                updateSpeedIndicator();
+                play();
             });
 
             on(registry.byId('animSlow'), 'Click', function() {
-                clock.multiplier *= 0.5;
+                var index = binarySearch(typicalMultipliers, clock.multiplier, function(lhs, rhs) {
+                    return lhs - rhs;
+                });
+
+                if (index < 0) {
+                    index = ~index;
+                }
+                index--;
+
+                if (index === -1) {
+                    clock.multiplier *= 0.5;
+                } else if (clock.multiplier >= 0) {
+                    clock.multiplier = typicalMultipliers[index];
+                } else {
+                    clock.multiplier = -typicalMultipliers[index];
+                }
                 updateSpeedIndicator();
             });
 
             on(registry.byId('animFast'), 'Click', function() {
-                clock.multiplier *= 2.0;
+                var index = binarySearch(typicalMultipliers, clock.multiplier, function(lhs, rhs) {
+                    return lhs - rhs;
+                });
+
+                if (index < 0) {
+                    index = ~index;
+                } else {
+                    index++;
+                }
+
+                if (index === typicalMultipliers.length) {
+                    clock.multiplier *= 2.0;
+                } else if (clock.multiplier >= 0) {
+                    clock.multiplier = typicalMultipliers[index];
+                } else {
+                    clock.multiplier = -typicalMultipliers[index];
+                }
+
                 updateSpeedIndicator();
             });
+
+            function onTimelineScrub(e) {
+                clock.currentTime = e.timeJulian;
+                onAnimPause();
+            }
+
+            var timelineWidget = registry.byId('mainTimeline');
+            timelineWidget.clock = clock;
+            timelineWidget.setupCallback = function(t) {
+                timeline = t;
+                timeline.addEventListener('settime', onTimelineScrub, false);
+                timeline.zoomTo(clock.startTime, clock.stopTime);
+            };
 
             var viewHome = registry.byId('viewHome');
             var view2D = registry.byId('view2D');
@@ -328,18 +398,22 @@ function(dom,
                 cesium.centralBody.affectedByLighting = !value;
             });
 
+            var imagery = registry.byId('imagery');
             var imageryAerial = registry.byId('imageryAerial');
             var imageryAerialWithLabels = registry.byId('imageryAerialWithLabels');
             var imageryRoad = registry.byId('imageryRoad');
             var imagerySingleTile = registry.byId('imagerySingleTile');
             var imageryOptions = [imageryAerial, imageryAerialWithLabels, imageryRoad, imagerySingleTile];
+            var bingHtml = imagery.containerNode.innerHTML;
 
             function createImageryClickFunction(control, style) {
                 return function() {
                     if (style) {
                         cesium.setStreamingImageryMapStyle(style);
+                        imagery.containerNode.innerHTML = bingHtml;
                     } else {
                         cesium.enableStreamingImagery(false);
+                        imagery.containerNode.innerHTML = "Imagery";
                     }
 
                     imageryOptions.forEach(function(o) {
@@ -352,6 +426,8 @@ function(dom,
             on(imageryAerialWithLabels, 'Click', createImageryClickFunction(imageryAerialWithLabels, BingMapsStyle.AERIAL_WITH_LABELS));
             on(imageryRoad, 'Click', createImageryClickFunction(imageryRoad, BingMapsStyle.ROAD));
             on(imagerySingleTile, 'Click', createImageryClickFunction(imagerySingleTile, undefined));
+
+            update();
         },
 
         onSetupError : function(widget, error) {

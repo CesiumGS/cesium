@@ -23,13 +23,21 @@ defineSuite([
 
     it('isAvailable is always true if no availability defined.', function() {
         var dynamicObject = new DynamicObject('someId');
-        expect(dynamicObject.isAvailable()).toEqual(true);
+        expect(dynamicObject.isAvailable(new JulianDate())).toEqual(true);
     });
 
-    it('constructor throws without a valid id.', function() {
+    it('isAvailable throw if no time specified.', function() {
+        var dynamicObject = new DynamicObject('someId');
         expect(function() {
-            return new DynamicObject();
+            dynamicObject.isAvailable();
         }).toThrow();
+    });
+
+    it('constructor creates a unique id if one is not provided.', function() {
+        var object = new DynamicObject();
+        var object2 = new DynamicObject();
+        expect(object.id).toBeDefined();
+        expect(object.id).toNotEqual(object2.id);
     });
 
     it('processCzmlPacketPosition works.', function() {

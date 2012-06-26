@@ -1,5 +1,10 @@
 /*global define*/
-define(['../Shaders/ColorMaterial'], function(ShadersColorMaterial) {
+define([
+        '../Core/Color',
+        '../Shaders/ColorMaterial'
+       ], function(
+         Color,
+         ShadersColorMaterial) {
     "use strict";
 
     /**
@@ -9,17 +14,12 @@ define(['../Shaders/ColorMaterial'], function(ShadersColorMaterial) {
      * @constructor
      */
     function ColorMaterial(template) {
-        var t = template || {};
+        var color = typeof template === 'undefined' ? undefined : template.color;
 
         /**
          * DOC_TBA
          */
-        this.color = t.color || {
-            red : 1.0,
-            green : 0.0,
-            blue : 0.0,
-            alpha : 0.5
-        };
+        this.color = typeof color !== 'undefined' ? new Color(color.red, color.green, color.blue, color.alpha) : new Color(1.0, 0.0, 0.0, 0.5);
 
         var that = this;
         this._uniforms = {

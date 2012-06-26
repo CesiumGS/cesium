@@ -28,21 +28,57 @@ define([
      * @see DynamicConeVisualizer
      * @see VisualizerCollection
      * @see ComplexConicSensor
-     * @see CzmlStandard
+     * @see CzmlDefaults
      */
     function DynamicCone() {
-        this.capMaterial = undefined;
-        this.innerHalfAngle = undefined;
-        this.innerMaterial = undefined;
-        this.intersectionColor = undefined;
-        this.maximumClockAngle = undefined;
+        /**
+         * A DynamicProperty of type CzmlNumber which determines the cone's minimum clock-angle.
+         */
         this.minimumClockAngle = undefined;
+        /**
+         * A DynamicProperty of type CzmlNumber which determines the cone's maximum clock-angle.
+         */
+        this.maximumClockAngle = undefined;
+        /**
+         * A DynamicProperty of type CzmlNumber which determines the cone's inner half-angle.
+         */
+        this.innerHalfAngle = undefined;
+        /**
+         * A DynamicProperty of type CzmlNumber which determines the cone's outer half-angle.
+         */
         this.outerHalfAngle = undefined;
+        /**
+         * A DynamicMaterialProperty which determines the cone's cap material.
+         */
+        this.capMaterial = undefined;
+        /**
+         * A DynamicMaterialProperty which determines the cone's inner material.
+         */
+        this.innerMaterial = undefined;
+        /**
+         * A DynamicMaterialProperty which determines the cone's outer material.
+         */
         this.outerMaterial = undefined;
-        this.radius = undefined;
-        this.show = undefined;
-        this.showIntersection = undefined;
+        /**
+         * A DynamicMaterialProperty which determines the cone's silhouette material.
+         */
         this.silhouetteMaterial = undefined;
+        /**
+         * A DynamicProperty of type CzmlColor which determines the color of the line formed by the intersection of the cone and other central bodies.
+         */
+        this.intersectionColor = undefined;
+        /**
+         * A DynamicProperty of type CzmlBoolean which determines the cone's intersection visibility
+         */
+        this.showIntersection = undefined;
+        /**
+         * A DynamicProperty of type CzmlNumber which determines the cone's radius.
+         */
+        this.radius = undefined;
+        /**
+         * A DynamicProperty of type CzmlBoolean which determines the cone's visibility
+         */
+        this.show = undefined;
     }
 
     /**
@@ -51,14 +87,14 @@ define([
      * normally called directly, but is part of the array of CZML processing functions that is
      * passed into the DynamicObjectCollection constructor.
      *
-     * @param dynamicObject The DynamicObject which will contain the cone data.
-     * @param packet The CZML packet to process.
+     * @param {DynamicObject} dynamicObject The DynamicObject which will contain the cone data.
+     * @param {Object} packet The CZML packet to process.
      * @returns {Boolean} true if any new properties were created while processing the packet, false otherwise.
      *
      * @see DynamicObject
      * @see DynamicProperty
      * @see DynamicObjectCollection
-     * @see CzmlStandard#updaters
+     * @see CzmlDefaults#updaters
      */
     DynamicCone.processCzmlPacket = function(dynamicObject, packet) {
         var coneData = packet.cone;
@@ -75,18 +111,113 @@ define([
                 interval = TimeInterval.fromIso8601(interval);
             }
 
-            coneUpdated = DynamicProperty.processCzmlPacket(cone, 'show', CzmlBoolean, coneData.show, interval) || coneUpdated;
-            coneUpdated = DynamicProperty.processCzmlPacket(cone, 'innerHalfAngle', CzmlNumber, coneData.innerHalfAngle, interval) || coneUpdated;
-            coneUpdated = DynamicProperty.processCzmlPacket(cone, 'outerHalfAngle', CzmlNumber, coneData.outerHalfAngle, interval) || coneUpdated;
-            coneUpdated = DynamicProperty.processCzmlPacket(cone, 'minimumClockAngle', CzmlNumber, coneData.minimumClockAngle, interval) || coneUpdated;
-            coneUpdated = DynamicProperty.processCzmlPacket(cone, 'maximumClockAngle', CzmlNumber, coneData.maximumClockAngle, interval) || coneUpdated;
-            coneUpdated = DynamicProperty.processCzmlPacket(cone, 'radius', CzmlNumber, coneData.radius, interval) || coneUpdated;
-            coneUpdated = DynamicProperty.processCzmlPacket(cone, 'showIntersection', CzmlBoolean, coneData.showIntersection, interval) || coneUpdated;
-            coneUpdated = DynamicProperty.processCzmlPacket(cone, 'intersectionColor', CzmlColor, coneData.intersectionColor, interval) || coneUpdated;
-            coneUpdated = DynamicMaterialProperty.processCzmlPacket(cone, 'capMaterial', coneData.capMaterial, interval) || coneUpdated;
-            coneUpdated = DynamicMaterialProperty.processCzmlPacket(cone, 'innerMaterial', coneData.innerMaterial, interval) || coneUpdated;
-            coneUpdated = DynamicMaterialProperty.processCzmlPacket(cone, 'outerMaterial', coneData.outerMaterial, interval) || coneUpdated;
-            coneUpdated = DynamicMaterialProperty.processCzmlPacket(cone, 'silhouetteMaterial', coneData.silhouetteMaterial, interval) || coneUpdated;
+            if (typeof coneData.show !== 'undefined') {
+                var show = cone.show;
+                if (typeof show === 'undefined') {
+                    cone.show = show = new DynamicProperty(CzmlBoolean);
+                    coneUpdated = true;
+                }
+                show.processCzmlIntervals(coneData.show, interval);
+            }
+
+            if (typeof coneData.innerHalfAngle !== 'undefined') {
+                var innerHalfAngle = cone.innerHalfAngle;
+                if (typeof innerHalfAngle === 'undefined') {
+                    cone.innerHalfAngle = innerHalfAngle = new DynamicProperty(CzmlNumber);
+                    coneUpdated = true;
+                }
+                innerHalfAngle.processCzmlIntervals(coneData.innerHalfAngle, interval);
+            }
+
+            if (typeof coneData.outerHalfAngle !== 'undefined') {
+                var outerHalfAngle = cone.outerHalfAngle;
+                if (typeof outerHalfAngle === 'undefined') {
+                    cone.outerHalfAngle = outerHalfAngle = new DynamicProperty(CzmlNumber);
+                    coneUpdated = true;
+                }
+                outerHalfAngle.processCzmlIntervals(coneData.outerHalfAngle, interval);
+            }
+
+            if (typeof coneData.minimumClockAngle !== 'undefined') {
+                var minimumClockAngle = cone.minimumClockAngle;
+                if (typeof minimumClockAngle === 'undefined') {
+                    cone.minimumClockAngle = minimumClockAngle = new DynamicProperty(CzmlNumber);
+                    coneUpdated = true;
+                }
+                minimumClockAngle.processCzmlIntervals(coneData.minimumClockAngle, interval);
+            }
+
+            if (typeof coneData.maximumClockAngle !== 'undefined') {
+                var maximumClockAngle = cone.maximumClockAngle;
+                if (typeof maximumClockAngle === 'undefined') {
+                    cone.maximumClockAngle = maximumClockAngle = new DynamicProperty(CzmlNumber);
+                    coneUpdated = true;
+                }
+                maximumClockAngle.processCzmlIntervals(coneData.maximumClockAngle, interval);
+            }
+
+            if (typeof coneData.radius !== 'undefined') {
+                var radius = cone.radius;
+                if (typeof radius === 'undefined') {
+                    cone.radius = radius = new DynamicProperty(CzmlNumber);
+                    coneUpdated = true;
+                }
+                radius.processCzmlIntervals(coneData.radius, interval);
+            }
+
+            if (typeof coneData.showIntersection !== 'undefined') {
+                var showIntersection = cone.showIntersection;
+                if (typeof showIntersection === 'undefined') {
+                    cone.showIntersection = showIntersection = new DynamicProperty(CzmlBoolean);
+                    coneUpdated = true;
+                }
+                showIntersection.processCzmlIntervals(coneData.showIntersection, interval);
+            }
+
+            if (typeof coneData.intersectionColor !== 'undefined') {
+                var intersectionColor = cone.intersectionColor;
+                if (typeof intersectionColor === 'undefined') {
+                    cone.intersectionColor = intersectionColor = new DynamicProperty(CzmlColor);
+                    coneUpdated = true;
+                }
+                intersectionColor.processCzmlIntervals(coneData.intersectionColor, interval);
+            }
+
+            if (typeof coneData.capMaterial !== 'undefined') {
+                var capMaterial = cone.capMaterial;
+                if (typeof capMaterial === 'undefined') {
+                    cone.capMaterial = capMaterial = new DynamicMaterialProperty();
+                    coneUpdated = true;
+                }
+                capMaterial.processCzmlIntervals(coneData.capMaterial, interval);
+            }
+
+            if (typeof coneData.innerMaterial !== 'undefined') {
+                var innerMaterial = cone.innerMaterial;
+                if (typeof innerMaterial === 'undefined') {
+                    cone.innerMaterial = innerMaterial = new DynamicMaterialProperty();
+                    coneUpdated = true;
+                }
+                innerMaterial.processCzmlIntervals(coneData.innerMaterial, interval);
+            }
+
+            if (typeof coneData.outerMaterial !== 'undefined') {
+                var outerMaterial = cone.outerMaterial;
+                if (typeof outerMaterial === 'undefined') {
+                    cone.outerMaterial = outerMaterial = new DynamicMaterialProperty();
+                    coneUpdated = true;
+                }
+                outerMaterial.processCzmlIntervals(coneData.outerMaterial, interval);
+            }
+
+            if (typeof coneData.silhouetteMaterial !== 'undefined') {
+                var silhouetteMaterial = cone.silhouetteMaterial;
+                if (typeof silhouetteMaterial === 'undefined') {
+                    cone.silhouetteMaterial = silhouetteMaterial = new DynamicMaterialProperty();
+                    coneUpdated = true;
+                }
+                silhouetteMaterial.processCzmlIntervals(coneData.silhouetteMaterial, interval);
+            }
         }
         return coneUpdated;
     };
@@ -100,7 +231,7 @@ define([
      * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
      * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
      *
-     * @see CzmlStandard
+     * @see CzmlDefaults
      */
     DynamicCone.mergeProperties = function(targetObject, objectToMerge) {
         var coneToMerge = objectToMerge.cone;
@@ -133,7 +264,7 @@ define([
      *
      * @param {DynamicObject} dynamicObject The DynamicObject to remove the cone from.
      *
-     * @see CzmlStandard
+     * @see CzmlDefaults
      */
     DynamicCone.undefineProperties = function(dynamicObject) {
         dynamicObject.cone = undefined;

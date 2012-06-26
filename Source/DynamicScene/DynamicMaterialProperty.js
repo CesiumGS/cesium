@@ -15,49 +15,69 @@ define([
         DynamicImageMaterial) {
     "use strict";
 
+    var potentialMaterials = [DynamicColorMaterial, DynamicImageMaterial];
+
+    /**
+     * A dynamic property which stores data for multiple types of materials
+     * associated with the same property over time. Rather than creating instances
+     * of this object directly, it's typically created and managed via loading CZML
+     * data into a DynamicObjectCollection.
+     *
+     * @name DynamicMaterialProperty
+     * @internalconstructor
+     *
+     * @see DynamicObject
+     * @see DynamicProperty
+     * @see ReferenceProperty
+     * @see DynamicPositionProperty
+     * @see DynamicDirectionsProperty
+     * @see DynamicVertexPositionsProperty
+     */
     function DynamicMaterialProperty() {
         this._intervals = new TimeIntervalCollection();
-        this._potentialMaterials = [DynamicColorMaterial, DynamicImageMaterial];
     }
 
-    DynamicMaterialProperty.processCzmlPacket = function(parentObject, propertyName, czmlIntervals, constrainedInterval) {
-        var existingProperty = parentObject[propertyName];
-        var propertyUpdated = typeof czmlIntervals !== 'undefined';
-        if (propertyUpdated) {
-            if (typeof existingProperty === 'undefined') {
-                existingProperty = new DynamicMaterialProperty();
-                parentObject[propertyName] = existingProperty;
+
+    /**
+     * Processes the provided CZML interval or intervals into this property.
+     *
+     * @memberof DynamicMaterialProperty
+     *
+     * @param {Object} czmlIntervals The CZML data to process.
+     * @param {TimeInterval} [constrainedInterval] Constrains the processing so that any times outside of this interval are ignored.
+     */
+    DynamicMaterialProperty.prototype.processCzmlIntervals = function(czmlIntervals, constrainedInterval) {
+        if (Array.isArray(czmlIntervals)) {
+            for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
+                this._addCzmlInterval(czmlIntervals[i], constrainedInterval);
             }
-            existingProperty.addIntervals(czmlIntervals, constrainedInterval);
+        } else {
+            this._addCzmlInterval(czmlIntervals, constrainedInterval);
         }
-        return propertyUpdated;
     };
 
-    DynamicMaterialProperty.prototype.getValue = function(time) {
+    //CZML_TODO What to do about scene property?  Do we really need to pass it here?
+
+    /**
+     * Returns the value of the property at the specified time.
+     * @memberof DynamicMaterialProperty
+     *
+     * @param {JulianDate} time The time for which to retrieve the value.
+     * @param {Scene} [scene] The scene in which the material exists.
+     * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
+     * @returns The modified result parameter or a new instance if the result parameter was not supplied.
+     */
+    DynamicMaterialProperty.prototype.getValue = function(time, scene, existingMaterial) {
         var value = this._intervals.findIntervalContainingDate(time);
-        return typeof value !== 'undefined' ? value.data : undefined;
-    };
-
-    DynamicMaterialProperty.prototype.applyToMaterial = function(time, scene, existingMaterial) {
-        var material = this.getValue(time);
+        var material = typeof value !== 'undefined' ? value.data : undefined;
         if (typeof material !== 'undefined') {
-            return material.applyToMaterial(time, scene, existingMaterial);
+            return material.getValue(time, scene, existingMaterial);
         }
         return existingMaterial;
     };
 
-    DynamicMaterialProperty.prototype.addIntervals = function(czmlIntervals, constrainedInterval) {
-        if (Array.isArray(czmlIntervals)) {
-            for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
-                this.addInterval(czmlIntervals[i], constrainedInterval);
-            }
-        } else {
-            this.addInterval(czmlIntervals, constrainedInterval);
-        }
-    };
-
-    DynamicMaterialProperty.prototype.addInterval = function(czmlInterval, constrainedInterval) {
-        var iso8601Interval = czmlInterval.interval, property, material;
+    DynamicMaterialProperty.prototype._addCzmlInterval = function(czmlInterval, constrainedInterval) {
+        var iso8601Interval = czmlInterval.interval;
         if (typeof iso8601Interval === 'undefined') {
             iso8601Interval = Iso8601.MAXIMUM_INTERVAL.clone();
         } else {
@@ -72,34 +92,34 @@ define([
         var thisIntervals = this._intervals;
         var existingInterval = thisIntervals.findInterval(iso8601Interval.start, iso8601Interval.stop);
         var foundMaterial = false;
+        var existingMaterial;
 
         if (typeof existingInterval !== 'undefined') {
-            //If so, see if the new data is the same type.
-            property = existingInterval.data;
-            if (typeof property !== 'undefined') {
-                material = property.material;
-                foundMaterial = material.isMaterial(czmlInterval);
-            }
+            //We have an interval, but we need to make sure the
+            //new data is the same type of material as the old data.
+            existingMaterial = existingInterval.data;
+            foundMaterial = existingMaterial.isMaterial(czmlInterval);
         } else {
             //If not, create it.
             existingInterval = iso8601Interval;
             thisIntervals.addInterval(existingInterval);
         }
 
-        //If the new data was a different type, unwrapping fails, look for a handler for this type.
+        //If the new data was a different type, look for a handler for this type.
         if (foundMaterial === false) {
-            for ( var i = 0, len = this._potentialMaterials.length; i < len; i++) {
-                material = this._potentialMaterials[i];
-                foundMaterial = material.isMaterial(czmlInterval);
+            for ( var i = 0, len = potentialMaterials.length; i < len; i++) {
+                var Material = potentialMaterials[i];
+                foundMaterial = Material.isMaterial(czmlInterval);
                 if (foundMaterial) {
+                    existingInterval.data = existingMaterial = new Material();
                     break;
                 }
             }
         }
 
-        //We could handle the data, add it to the property.
+        //We could handle the data, prcess it.
         if (foundMaterial) {
-            existingInterval.data = material.processCzmlPacket(czmlInterval, existingInterval.data, constrainedInterval);
+            existingMaterial.processCzmlIntervals(czmlInterval);
         }
     };
 

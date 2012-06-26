@@ -13,43 +13,93 @@ define([
          PixelFormat) {
     "use strict";
 
-    //This is a black on white ? to be used as a "default" texture.
-    var dataUri = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAIAAABvFaqvAAAAAXNSR0I";
-    dataUri += "Ars4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsIAAA7CARUoSoAAAAAadEVYdFNvZnR3YXJl";
-    dataUri += "AFBhaW50Lk5FVCB2My41LjEwMPRyoQAAATVJREFUOE/Nk78OREAQxnWeQFRehE4jarUX0Kg0PIJK7";
-    dataUri += "QW8gUQhOolCL5FIVBqFWnE3uUkmd7vWuj/FTcXu57efb2aV249KEXHatvU8T9M05VHwAK9N04j0B6";
-    dataUri += "B1XR3Hwe/5Mk0TBDyOBe37btu2iILrhmHwLBaUZRlR4jie5xkPn6YpiiLaCsOQMfUCAju6rqO6LEv";
-    dataUri += "ef57nxFqW5VnwAuq6DnWu64pChS3U1HUtBNGBRVGIQKQ5A10ZqSRJ0BHYFzqSgoZhUFUVKBAlBPoh";
-    dataUri += "CCjQeLTD/7twshl3fd+jFyi+9yC+BKqqiigwTYcJyEHQHZqdNE3fuGvP0m3bKBdo/Ek3JI4gVLTj+";
-    dataUri += "/55TyWgIAgO51h++xmFZVkIGsfxK0cEgrC+AklnnQTy9l9knYEgF5ogKe7/QHfMiZTut7WfQwAAAABJRU5ErkJggg==";
+    //CZML_TODO Cesium doesn't currently provide any sort of 'default' texture or image
+    //when you default construct something with a texture.  This means that as soon as we create
+    //our image material, we have to assign a texture to it or else we will crash
+    //on the next draw.  Once we change Cesium to have built in texture defaults,
+    //this code can be removed.  If we decide Cesium shouldn't have built in defaults,
+    //this code should be changes so at least all CZML visualization has defaults.
+    function createDefaultImage() {
+        var canvas = document.createElement('canvas');
+        canvas.height = "64";
+        canvas.width = "64";
+
+        var context = canvas.getContext('2d');
+        context.fillStyle = '#FFFFFF';
+        context.font = '64px sans-serif';
+        context.textBaseline = 'top';
+        context.fillText('?', 16, 0);
+        context.font = '64px sans-serif';
+        context.strokeStyle = '#000000';
+        context.strokeText('?', 16, 0);
+        return canvas.toDataURL("image/png");
+    }
 
     var defaultImage = new Image();
-    defaultImage.src = dataUri;
+    defaultImage.src = createDefaultImage();
 
-    function DynamicImageMaterial(id) {
+    /**
+     * A utility class for processing CZML image materials.
+     */
+    function DynamicImageMaterial() {
         this.image = undefined;
         this.verticalRepeat = undefined;
         this.horizontalRepeat = undefined;
     }
 
+    /**
+     * Returns true if the provided CZML interval contains image material data.
+     * @param czmlInterval The CZML interval to check.
+     * @returns {Boolean} true if the interval contains CZML image material data, false otherwise.
+     */
     DynamicImageMaterial.isMaterial = function(czmlInterval) {
         return typeof czmlInterval.image !== 'undefined';
     };
 
-    DynamicImageMaterial.processCzmlPacket = function(czmlInterval, existingMaterial, constrainedInterval) {
+    /**
+     * Provided a CZML interval containing image material data, processes the
+     * interval into a new or existing instance of this class.
+     *
+     * @param {Object} czmlInterval The interval to process.
+     * @param {DynamicImageMaterial} [existingMaterial] The DynamicImageMaterial to modify.
+     * @returns The modified existingMaterial parameter or a new DynamicImageMaterial instance if existingMaterial was undefined or not a DynamicImageMaterial.
+     */
+    DynamicImageMaterial.prototype.processCzmlIntervals = function(czmlInterval) {
         var materialData = czmlInterval.image;
         if (typeof materialData !== 'undefined') {
-            if (typeof existingMaterial === 'undefined') {
-                existingMaterial = new DynamicImageMaterial();
+            if (typeof materialData.image !== 'undefined') {
+                var image = this.image;
+                if (typeof image === 'undefined') {
+                    this.image = image = new DynamicProperty(CzmlString);
+                }
+                image.processCzmlIntervals(materialData.image);
             }
-            DynamicProperty.processCzmlPacket(existingMaterial, 'image', CzmlString, materialData.image);
-            DynamicProperty.processCzmlPacket(existingMaterial, 'verticalRepeat', CzmlNumber, materialData.verticalRepeat);
-            DynamicProperty.processCzmlPacket(existingMaterial, 'horizontalRepeat', CzmlNumber, materialData.horizontalRepeat);
+            if (typeof materialData.verticalRepeat !== 'undefined') {
+                var verticalRepeat = this.verticalRepeat;
+                if (typeof verticalRepeat === 'undefined') {
+                    this.verticalRepeat = verticalRepeat = new DynamicProperty(CzmlNumber);
+                }
+                verticalRepeat.processCzmlIntervals(materialData.verticalRepeat);
+            }
+            if (typeof materialData.horizontalRepeat !== 'undefined') {
+                var horizontalRepeat = this.horizontalRepeat;
+                if (typeof horizontalRepeat === 'undefined') {
+                    this.horizontalRepeat = horizontalRepeat = new DynamicProperty(CzmlNumber);
+                }
+                horizontalRepeat.processCzmlIntervals(materialData.horizontalRepeat);
+            }
         }
-        return existingMaterial;
     };
 
-    DynamicImageMaterial.prototype.applyToMaterial = function(time, scene, existingMaterial) {
+    /**
+     * Get's a DiffuseMapMaterial that represents this dynamic material at the provided time.
+     *
+     * @param {JulianDate} time The desired time.
+     * @param {Scene} scene The scene in which this material exists.
+     * @param {DiffuseMapMaterial} [existingMaterial] An existing material to be modified.  If the material is undefined or not a DiffuseMapMaterial, a new instance is created.
+     * @returns The modified existingMaterial parameter or a new DiffuseMapMaterial instance if existingMaterial was undefined or not a DiffuseMapMaterial.
+     */
+    DynamicImageMaterial.prototype.getValue = function(time, scene, existingMaterial) {
         if (typeof existingMaterial === 'undefined' || !(existingMaterial instanceof DiffuseMapMaterial)) {
             existingMaterial = new DiffuseMapMaterial();
         }

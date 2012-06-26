@@ -24,10 +24,16 @@ define([
      * @see DynamicPolygonVisualizer
      * @see VisualizerCollection
      * @see Polygon
-     * @see CzmlStandard
+     * @see CzmlDefaults
      */
     function DynamicPolygon() {
+        /**
+         * A DynamicProperty of type CzmlBoolean which determines the polygon's visibility.
+         */
         this.show = undefined;
+        /**
+         * A DynamicMaterialProperty which determines the polygon's material.
+         */
         this.material = undefined;
     }
 
@@ -37,14 +43,14 @@ define([
      * normally called directly, but is part of the array of CZML processing functions that is
      * passed into the DynamicObjectCollection constructor.
      *
-     * @param dynamicObject The DynamicObject which will contain the polygon data.
-     * @param packet The CZML packet to process.
+     * @param {DynamicObject} dynamicObject The DynamicObject which will contain the polygon data.
+     * @param {Object} packet The CZML packet to process.
      * @returns {Boolean} true if any new properties were created while processing the packet, false otherwise.
      *
      * @see DynamicObject
      * @see DynamicProperty
      * @see DynamicObjectCollection
-     * @see CzmlStandard#updaters
+     * @see CzmlDefaults#updaters
      */
     DynamicPolygon.processCzmlPacket = function(dynamicObject, packet) {
         var polygonData = packet.polygon;
@@ -61,8 +67,23 @@ define([
                 interval = TimeInterval.fromIso8601(interval);
             }
 
-            polygonUpdated = DynamicProperty.processCzmlPacket(polygon, 'show', CzmlBoolean, polygonData.show, interval) || polygonUpdated;
-            polygonUpdated = DynamicMaterialProperty.processCzmlPacket(polygon, 'material', polygonData.material, interval) || polygonUpdated;
+            if (typeof polygonData.show !== 'undefined') {
+                var show = polygon.show;
+                if (typeof show === 'undefined') {
+                    polygon.show = show = new DynamicProperty(CzmlBoolean);
+                    polygonUpdated = true;
+                }
+                show.processCzmlIntervals(polygonData.show, interval);
+            }
+
+            if (typeof polygonData.material !== 'undefined') {
+                var material = polygon.material;
+                if (typeof material === 'undefined') {
+                    polygon.material = material = new DynamicMaterialProperty();
+                    polygonUpdated = true;
+                }
+                material.processCzmlIntervals(polygonData.material, interval);
+            }
         }
         return polygonUpdated;
     };
@@ -76,7 +97,7 @@ define([
      * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
      * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
      *
-     * @see CzmlStandard
+     * @see CzmlDefaults
      */
     DynamicPolygon.mergeProperties = function(targetObject, objectToMerge) {
         var polygonToMerge = objectToMerge.polygon;
@@ -99,7 +120,7 @@ define([
      *
      * @param {DynamicObject} dynamicObject The DynamicObject to remove the polygon from.
      *
-     * @see CzmlStandard
+     * @see CzmlDefaults
      */
     DynamicPolygon.undefineProperties = function(dynamicObject) {
         dynamicObject.polygon = undefined;

@@ -1,4 +1,4 @@
-/*global document,window,define*/
+/*global define*/
 define(['./TimelineTrack',
         './TimelineHighlightRange',
         '../Core/Clock',
@@ -10,7 +10,7 @@ define(['./TimelineTrack',
          Clock,
          ClockRange,
          JulianDate) {
-            "use strict";
+        "use strict";
 
     var timelineWheelDelta = 1e12;
 
@@ -143,8 +143,8 @@ define(['./TimelineTrack',
         return newHighlightRange;
     };
 
-    Timeline.prototype.addTrack = function(color, heightInPx) {
-        var newTrack = new TimelineTrack(color, heightInPx);
+    Timeline.prototype.addTrack = function(interval, heightInPx, color, backgroundColor) {
+        var newTrack = new TimelineTrack(interval, heightInPx, color, backgroundColor);
         this._trackList.push(newTrack);
         this.handleResize();
         return newTrack;
@@ -412,7 +412,8 @@ define(['./TimelineTrack',
 
         renderState.y = 0;
         this._trackList.forEach(function(track) {
-            renderState.y += track.render(self._context, renderState);
+            track.render(self._context, renderState);
+            renderState.y += track.height;
         });
     };
 
@@ -436,7 +437,6 @@ define(['./TimelineTrack',
             this._scrubElement.style.left = scrubX.toString() + 'px';
             this._needleEle.style.left = xPos.toString() + 'px';
         }
-        this._clock.currentTime = this._scrubJulian;
 
         var evt = document.createEvent('Event');
         evt.initEvent('settime', true, true);
@@ -498,7 +498,7 @@ define(['./TimelineTrack',
         var dy = e.wheelDeltaY || e.wheelDelta || (-e.detail);
         timelineWheelDelta = Math.max(Math.min(Math.abs(dy), timelineWheelDelta), 1);
         dy /= timelineWheelDelta;
-        this.zoomFrom(Math.pow(1.05, dy));
+        this.zoomFrom(Math.pow(1.05, -dy));
     };
 
     Timeline.prototype._handleTouchStart = function(e) {
@@ -592,7 +592,7 @@ define(['./TimelineTrack',
 
         var trackListHeight = 1;
         this._trackList.forEach(function(track) {
-            trackListHeight += track.getHeight();
+            trackListHeight += track.height;
         });
         this._trackListEle.style.height = trackListHeight.toString() + 'px';
         this._trackListEle.width = this._trackListEle.clientWidth;
