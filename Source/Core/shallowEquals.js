@@ -5,8 +5,7 @@ define(function() {
     /**
      * DOC_TBA
      *
-     * @name shallowEquals
-     * @function
+     * @exports shallowEquals
      */
     function shallowEquals(left, right) {
         if (left && !right) {

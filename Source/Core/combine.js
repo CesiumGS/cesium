@@ -5,8 +5,7 @@ define(['./DeveloperError'], function(DeveloperError) {
     /**
      * DOC_TBA
      *
-     * @name combine
-     * @function
+     * @exports combine
      *
      * @exception {DeveloperError} Duplicate member.
      */

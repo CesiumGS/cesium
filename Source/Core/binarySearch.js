@@ -5,8 +5,7 @@ define(['./DeveloperError'], function(DeveloperError) {
     /**
      * Finds an item in a sorted array.
      *
-     * @name binarySearch
-     * @function
+     * @exports binarySearch
      *
      * @param {Array} array The sorted array to search.
      * @param {Object} itemToFind The item to find in the array.
@@ -34,7 +33,7 @@ define(['./DeveloperError'], function(DeveloperError) {
      * var numbers = [0, 2, 4, 6, 8];
      * var index = binarySearch(numbers, 6, comparator); // 3
      */
-    function binarySearch(array, itemToFind, comparator) {
+    var binarySearch = function(array, itemToFind, comparator) {
         if (!array) {
             throw new DeveloperError('array is required.');
         }
@@ -64,7 +63,7 @@ define(['./DeveloperError'], function(DeveloperError) {
             return i;
         }
         return ~(high + 1);
-    }
+    };
 
     return binarySearch;
 });

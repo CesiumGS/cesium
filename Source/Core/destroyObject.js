@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Core/destroyObject
+ */
 define(['./DeveloperError'], function(DeveloperError) {
     "use strict";
 
@@ -11,8 +14,7 @@ define(['./DeveloperError'], function(DeveloperError) {
      * calls an object's <code>destroy</code> function, which then releases the native resource and calls <code>destroyObject</code> to put
      * itself in a destroyed state.
      *
-     * @name destroyObject
-     * @function
+     * @exports destroyObject
      *
      * @param {Object} object The object to destroy.
      * @param {String} [name=undefined] The message to include in the exception that is thrown if a destroyed object's function is called.

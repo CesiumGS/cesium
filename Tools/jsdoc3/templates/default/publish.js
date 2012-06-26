@@ -284,9 +284,9 @@
             //nav += '</ul>';
         }
         
-        var functionNames = find({kind: ['function'], 'memberof': {'isUndefined': true}});
-        if (functionNames.length) {
-        	functionNames.forEach(function(g) {
+        var enumerationNames = find({kind: 'enumeration'});
+        if (enumerationNames.length) {
+        	enumerationNames.forEach(function(g) {
                 if (!seen.hasOwnProperty(g.longname) ) nav += '<li>'+linkto(g.longname, g.name)+'</li>';
                 seen[g.longname] = true;
             });
@@ -357,6 +357,9 @@
             var classes = find({kind: 'class', longname: longname});
             if (classes.length) generate(classes[0].name, classes, helper.longnameToUrl[longname]);
 			
+            var enumerations = find({kind: 'enumeration', longname: longname});
+            if (enumerations.length) generate(enumerations[0].name, enumerations, helper.longnameToUrl[longname]);
+            
 			var glslTypes = find({kind: 'glsl', longname: longname});
             if (glslTypes.length) generate(glslTypes[0].name, glslTypes, helper.longnameToUrl[longname]);
 			
@@ -365,10 +368,7 @@
             
             var namespaces = find({kind: 'namespace', longname: longname});
             if (namespaces.length) generate('Namespace: '+namespaces[0].name, namespaces, helper.longnameToUrl[longname]);
-                        
-            var functions = find({kind: ['function'], 'memberof': {'isUndefined': true}, longname: longname});
-            if (functions.length) generate(functions[0].name, functions, helper.longnameToUrl[longname]);
-            
+      
 //            var constants = find({kind: 'constant', longname: longname});
 //            if (constants.length) generate('Constant: '+constants[0].name, constants, helper.longnameToUrl[longname]);        
 

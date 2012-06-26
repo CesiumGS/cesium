@@ -9,8 +9,7 @@ define(['./DeveloperError'], function(DeveloperError) {
     /**
      * Requests a resource using JSONP.
      *
-     * @name jsonp
-     * @function
+     * @exports jsonp
      *
      * @param {String} url The URL to request.
      * @param {Function} callback The callback function to call, passing the requested resource as the single parameter.
@@ -18,7 +17,7 @@ define(['./DeveloperError'], function(DeveloperError) {
      * @param {String} [options.callbackParameterName='callback'] The callback parameter name that the server expects.
      * @param {Object} [options.proxy] A proxy to use for the request. This object is expected to have a getURL function which returns the proxied URL, if needed.
      */
-    function jsonp(url, callback, options) {
+    var jsonp = function (url, callback, options) {
         if (typeof url === 'undefined') {
             throw new DeveloperError('url is required.');
         }
