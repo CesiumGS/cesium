@@ -86,12 +86,21 @@ define([
      *
      * @example
      * // Create a polyline collection with two polylines
-     * var polylines = new PolylineCollection();
-     * polylines.add({
-     *   position : { x : 1.0, y : 2.0, z : 3.0 }
-     * });
-     * polylines.add({
-     *   position : { x : 4.0, y : 5.0, z : 6.0 }
+     * var polylines = new Cesium.PolylineCollection(undefined);
+     * polylines.add({positions:ellipsoid.cartographicDegreesToCartesians([
+     *     new Cesium.Cartographic2(-75.10, 39.57),
+     *     new Cesium.Cartographic2(-77.02, 38.53),
+     *     new Cesium.Cartographic2(-80.50, 35.14),
+     *     new Cesium.Cartographic2(-80.12, 25.46)]),
+           width:2
+           });
+
+     * polylines.add({positions:ellipsoid.cartographicDegreesToCartesians([
+     *     new Cesium.Cartographic2(-73.10, 37.57),
+     *     new Cesium.Cartographic2(-75.02, 36.53),
+     *     new Cesium.Cartographic2(-78.50, 33.14),
+     *     new Cesium.Cartographic2(-78.12, 23.46)]),
+     *     width:4
      * });
      */
     function PolylineCollection() {
@@ -102,27 +111,7 @@ define([
         this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
         this._cachedVertices = [];
         this._polylines = {};
-        /**
-         * The 4x4 transformation matrix that transforms each polyline in this collection from model to world coordinates.
-         * When this is the identity matrix, the polylines are drawn in world coordinates, i.e., Earth's WGS84 coordinates.
-         * Local reference frames can be used by providing a different transformation matrix, like that returned
-         * by {@link Transforms.eastNorthUpToFixedFrame}.  This matrix is available to GLSL vertex and fragment
-         * shaders via {@link agi_model} and derived uniforms.
-         *
-         * @type Matrix4
-         *
-         * @see Transforms.eastNorthUpToFixedFrame
-         * @see agi_model
-         *
-         * @example
-         * var center = ellipsoid.cartographicDegreesToCartesian(new Cartographic2(-75.59777, 40.03883));
-         * polylines.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
-         * polylines.add({ position : new Cartesian3(0.0, 0.0, 0.0) }); // center
-         * polylines.add({ position : new Cartesian3(1000000.0, 0.0, 0.0) }); // east
-         * polylines.add({ position : new Cartesian3(0.0, 1000000.0, 0.0) }); // north
-         * polylines.add({ position : new Cartesian3(0.0, 0.0, 1000000.0) }); // up
-         * ]);
-         */
+
         this.modelMatrix = Matrix4.IDENTITY;
         this._modelMatrix = Matrix4.IDENTITY;
 
@@ -138,7 +127,6 @@ define([
          * will not change over several frames, use <code>BufferUsage.STATIC_DRAW</code>.
          * If the polyline will change every frame, use <code>BufferUsage.STREAM_DRAW</code>.
          */
-        this.bufferUsage = BufferUsage.STATIC_DRAW;
         // The buffer usage for each attribute is determined based on the usage of the attribute over time.
         this._buffersUsage = [
                               BufferUsage.STATIC_DRAW, // SHOW_INDEX
@@ -219,7 +207,6 @@ define([
         this._drawUniformsOne = undefined;
         this._drawUniformsTwo = undefined;
         this._drawUniformsThree = undefined;
-        this._vaf = null;
         this._indicesBuffer = undefined;
     }
 
@@ -246,18 +233,16 @@ define([
      *
      * @example
      * // Example 1:  Add a polyline, specifying all the default values.
-     * var b = polylines.add({
+     * var p = polylines.add({
      *   show : true,
-     *   position : new Cartesian3(0.0, 0.0, 0.0),
-     *   color : { red : 1.0, green : 1.0, blue : 1.0, alpha : 1.0 }
+     *   positions : ellipsoid.cartographicDegreesToCartesians([
+     *     new Cesium.Cartographic2(-75.10, 39.57),
+     *     new Cesium.Cartographic2(-77.02, 38.53)]),
+     *     color : { red : 1.0, green : 1.0, blue : 1.0, alpha : 1.0 },
+     *     width : 1,
+     *     outlineWidth : 2
      * });
      *
-     * // Example 2:  Specify only the polyline's cartographic position.
-     * var b = polylines.add({
-     *   position : ellipsoid.toCartesian(
-     *     CesiumMath.cartographic3ToRadians(
-     *       new Cartographic3(longitude, latitude, height)))
-     * });
      */
     PolylineCollection.prototype.add = function(polyline) {
         var p = new Polyline(polyline, this);
@@ -265,9 +250,12 @@ define([
         return p;
     };
 
+    /**
+     * @private
+     */
     PolylineCollection.prototype._addToMap = function(p){
-        var outlineWidth = p.getOutlineWidth(),
-            width = p.getWidth();
+        var outlineWidth = p.getOutlineWidth();
+        var width = p.getWidth();
         var hash = 'OL' + outlineWidth + 'W' + width;
         var value = this._polylines[hash];
         if(typeof value === 'undefined'){
@@ -302,8 +290,8 @@ define([
      * @see Polyline#setShow
      *
      * @example
-     * var b = polylines.add(...);
-     * polylines.remove(b);  // Returns true
+     * var p = polylines.add(...);
+     * polylines.remove(p);  // Returns true
      */
     PolylineCollection.prototype.remove = function(polyline) {
         if (this.contains(polyline)) {
@@ -315,10 +303,13 @@ define([
         return false;
     };
 
+    /**
+     * @private
+     */
     PolylineCollection.prototype._removeFromMap = function(polyline){
         var hash = 'OL' + polyline.getOutlineWidth() + 'W' + polyline.getWidth();
-        this._polylines[hash].polylines[polyline._index] = null;
-        polyline._wrapper = null;
+        this._polylines[hash].polylines[polyline._index] = undefined;
+        polyline._wrapper = undefined;
         this._polylinesRemoved = true;
         this._createVertexArray = true;
     };
@@ -391,8 +382,8 @@ define([
      * // Toggle the show property of every polyline in the collection
      * var len = polylines.getLength();
      * for (var i = 0; i < len; ++i) {
-     *   var b = polylines.get(i);
-     *   b.setShow(!b.getShow());
+     *   var p = polylines.get(i);
+     *   p.setShow(!p.getShow());
      * }
      */
     PolylineCollection.prototype.get = function(index) {
@@ -431,8 +422,8 @@ define([
      * // Toggle the show property of every polyline in the collection
      * var len = polylines.getLength();
      * for (var i = 0; i < len; ++i) {
-     *   var b = polylines.get(i);
-     *   b.setShow(!b.getShow());
+     *   var p = polylines.get(i);
+     *   p.setShow(!p.getShow());
      * }
      */
     PolylineCollection.prototype.getLength = function() {
@@ -446,6 +437,11 @@ define([
         return length;
     };
 
+    /**
+     * DOC_TBA
+     *
+     * @memberof PolylineCollection
+     */
     PolylineCollection.prototype.computeNewBuffersUsage = function() {
         var buffersUsage = this._buffersUsage;
         var usageChanged = false;
@@ -542,6 +538,12 @@ define([
         }
     };
 
+    /**
+     * DOC_TBA
+     *
+     * @memberof PolylineCollection
+     *
+     */
     PolylineCollection.prototype.update = function(context, sceneState) {
         if (!this._sp) {
             this._sp = context.getShaderCache().getShaderProgram(PolylineVS, PolylineFS, attributeIndices);
@@ -601,6 +603,11 @@ define([
         }
     };
 
+    /**
+     * DOC_TBA
+     *
+     * @memberof PolylineCollection
+     */
     PolylineCollection.prototype.updateForPick = function(context) {
         this._spPick = this._spPick || context.getShaderCache().getShaderProgram(
                 PolylineVS,
@@ -1016,6 +1023,9 @@ define([
         }
     };
 
+    /**
+     * @private
+     */
     function PolylinesWrapper(outlineWidth, width){
         this.width = width;
         this.outlineWidth = outlineWidth;
@@ -1028,6 +1038,9 @@ define([
         this.rsPick = undefined;
     }
 
+    /**
+     * @private
+     */
     PolylinesWrapper.prototype.addPolyline = function(p){
         var polylines = this.polylines;
         var length = polylines.length;
@@ -1045,6 +1058,9 @@ define([
         p._wrapper = this;
     };
 
+    /**
+     * @private
+     */
     PolylinesWrapper.prototype.updatePositionIndex = function(){
         var polylines = this.polylines;
         var length = polylines.length;

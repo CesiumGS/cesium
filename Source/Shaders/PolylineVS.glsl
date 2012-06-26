@@ -4,7 +4,6 @@ attribute vec4 color;
 attribute vec4 pickColor;
 
 varying vec4 v_color;
-varying vec4 v_outlineColor;
 varying vec4 v_pickColor;
 
 uniform float u_morphTime;

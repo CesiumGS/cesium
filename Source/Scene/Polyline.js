@@ -43,7 +43,7 @@ define([
      * DOC_TBA
      *
      * @name Polyline
-     * @constructor
+     * @internalConstructor
      *
      * @example
      */
@@ -52,7 +52,13 @@ define([
 
         this._positions = [];
         if(typeof p.positions !== 'undefined'){
-            this._positions = p.positions;
+            var newPositions = p.positions;
+            var length = newPositions.length;
+            var positions = this._positions;
+            for(var i = 0; i < length; ++i){
+                var position = newPositions[i];
+                positions.push(new Cartesian3(position.x, position.y, position.z));
+            }
         }
         this._show = (typeof p.show === 'undefined') ? true : p.show;
         this._width = (typeof p.width === 'undefined') ? 1.0 : p.width;
@@ -98,28 +104,28 @@ define([
     Polyline.NUMBER_OF_PROPERTIES = 7;
 
     /**
-     * Returns true if this billboard will be shown.  Call {@link Billboard#setShow}
-     * to hide or show a billboard, instead of removing it and re-adding it to the collection.
+     * Returns true if this polyline will be shown.  Call {@link Polyline#setShow}
+     * to hide or show a polyline, instead of removing it and re-adding it to the collection.
      *
-     * @memberof Billboard
+     * @memberof Polyline
      *
-     * @return {Boolean} <code>true</code> if this billboard will be shown; otherwise, <code>false</code>.
+     * @return {Boolean} <code>true</code> if this polyline will be shown; otherwise, <code>false</code>.
      *
-     * @see Billboard#setShow
+     * @see Polyline#setShow
      */
     Polyline.prototype.getShow = function() {
         return this._show;
     };
 
     /**
-     * Determines if this billboard will be shown.  Call this to hide or show a billboard, instead
+     * Determines if this polyline will be shown.  Call this to hide or show a polyline, instead
      * of removing it and re-adding it to the collection.
      *
-     * @memberof Billboard
+     * @memberof Polyline
      *
-     * @param {Boolean} value Indicates if this billboard will be shown.
+     * @param {Boolean} value Indicates if this polyline will be shown.
      *
-     * @see Billboard#getShow
+     * @see Polyline#getShow
      */
     Polyline.prototype.setShow = function(value) {
         if ((typeof value !== 'undefined') && (this._show !== value)) {
@@ -151,11 +157,11 @@ define([
      * @see Polyline#getPositions
      *
      * @example
-     * polyline.setPositions([
-     *   ellipsoid.toCartesian(new Cartographic3(...)),
-     *   ellipsoid.toCartesian(new Cartographic3(...)),
-     *   ellipsoid.toCartesian(new Cartographic3(...))
-     * ]);
+     * polyline.setPositions(
+     *   ellipsoid.toCartesians(new Cartographic3(...),
+     *                          new Cartographic3(...),
+     *                          new Cartographic3(...))
+     * );
      */
     Polyline.prototype.setPositions = function(value) {
         if (typeof value === 'undefined' || value.length < 2) {
@@ -326,16 +332,12 @@ define([
         this._dirty = false;
     };
 
-    Polyline.prototype._isDirty = function() {
-        return this._dirty;
-    };
-
     Polyline.prototype._getCollection = function(){
         return this._collection;
     };
 
     Polyline.prototype._makeDirty = function(propertyChanged) {
-        if (!this._isDirty()) {
+        if (!this._dirty) {
             if(this._wrapper){
                 this._wrapper.polylinesToUpdate.push(this);
                 var c = this._collection;
