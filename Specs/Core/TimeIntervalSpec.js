@@ -86,6 +86,11 @@ defineSuite([
         expect(interval1.contains(JulianDate.fromTotalDays(2451546.5))).toEqual(false);
     });
 
+    it('Contains works for an empty interval.', function() {
+        var interval1 = new TimeInterval(JulianDate.fromTotalDays(2451545), JulianDate.fromTotalDays(2451545), false, false);
+        expect(interval1.contains(JulianDate.fromTotalDays(2451545))).toEqual(false);
+    });
+
     it('Contains returns true at start and stop times of a closed interval', function() {
         var interval1 = new TimeInterval(JulianDate.fromTotalDays(2451545), JulianDate.fromTotalDays(2451546), true, true);
         expect(interval1.contains(JulianDate.fromTotalDays(2451545))).toEqual(true);
