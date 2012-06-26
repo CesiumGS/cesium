@@ -50,7 +50,7 @@ defineSuite([
         var compositeDynamicObjectCollection = new CompositeDynamicObjectCollection();
         expect(compositeDynamicObjectCollection.mergeFunctions).toEqual(CzmlDefaults.mergers);
         expect(compositeDynamicObjectCollection.cleanFunctions).toEqual(CzmlDefaults.cleaners);
-        expect(compositeDynamicObjectCollection.collections.length).toEqual(0);
+        expect(compositeDynamicObjectCollection.getCollections().length).toEqual(0);
         var objects = compositeDynamicObjectCollection.getObjects();
         expect(objects.length).toEqual(0);
     });
@@ -63,8 +63,8 @@ defineSuite([
         var compositeDynamicObjectCollection = new CompositeDynamicObjectCollection(collections, mergers, cleaners);
         expect(compositeDynamicObjectCollection.mergeFunctions).toEqual(mergers);
         expect(compositeDynamicObjectCollection.cleanFunctions).toEqual(cleaners);
-        expect(compositeDynamicObjectCollection.collections.length).toEqual(1);
-        expect(compositeDynamicObjectCollection.collections[0]).toEqual(collections[0]);
+        expect(compositeDynamicObjectCollection.getCollections().length).toEqual(1);
+        expect(compositeDynamicObjectCollection.getCollections()[0]).toEqual(collections[0]);
         var objects = compositeDynamicObjectCollection.getObjects();
         expect(objects.length).toEqual(1);
     });
@@ -75,7 +75,7 @@ defineSuite([
         var compositeDynamicObjectCollection = new CompositeDynamicObjectCollection(collections);
         compositeDynamicObjectCollection.clear();
 
-        expect(compositeDynamicObjectCollection.collections.length).toEqual(0);
+        expect(compositeDynamicObjectCollection.getCollections().length).toEqual(0);
         var objects = compositeDynamicObjectCollection.getObjects();
         expect(objects.length).toEqual(0);
     });
@@ -111,7 +111,7 @@ defineSuite([
         expect(availability.stop).toEqual(JulianDate.fromIso8601("2012-08-06"));
     });
 
-    it('applyChanges works with existing dynamicObjectCollections', function() {
+    it('setCollections works with existing dynamicObjectCollections', function() {
         var dynamicObjectCollection1 = new DynamicObjectCollection();
         processCzml(czml1, dynamicObjectCollection1);
 
@@ -119,9 +119,7 @@ defineSuite([
         processCzml(czml2, dynamicObjectCollection2);
 
         var compositeDynamicObjectCollection = new CompositeDynamicObjectCollection();
-        compositeDynamicObjectCollection.collections.push(dynamicObjectCollection1);
-        compositeDynamicObjectCollection.collections.push(dynamicObjectCollection2);
-        compositeDynamicObjectCollection.applyChanges();
+        compositeDynamicObjectCollection.setCollections([dynamicObjectCollection1, dynamicObjectCollection2]);
 
         var objects = compositeDynamicObjectCollection.getObjects();
         expect(objects.length).toEqual(1);
@@ -135,7 +133,7 @@ defineSuite([
         expect(object.billboard.horizontalOrigin.getValue(new JulianDate())).toEqual(HorizontalOrigin.CENTER);
     });
 
-    it('No need to call applyChanges if constructing with existing dynamicObjectCollections', function() {
+    it('Constructing with existing dynamicObjectCollections merges expected objects', function() {
         var dynamicObjectCollection1 = new DynamicObjectCollection();
         processCzml(czml1, dynamicObjectCollection1);
 
@@ -161,9 +159,7 @@ defineSuite([
         var dynamicObjectCollection2 = new DynamicObjectCollection();
 
         var compositeDynamicObjectCollection = new CompositeDynamicObjectCollection();
-        compositeDynamicObjectCollection.collections.push(dynamicObjectCollection1);
-        compositeDynamicObjectCollection.collections.push(dynamicObjectCollection2);
-        compositeDynamicObjectCollection.applyChanges();
+        compositeDynamicObjectCollection.setCollections([dynamicObjectCollection1, dynamicObjectCollection2]);
 
         var czml3 = {
             'id' : 'testBillboard',

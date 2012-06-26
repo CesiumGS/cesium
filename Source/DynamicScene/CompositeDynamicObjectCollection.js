@@ -22,10 +22,8 @@ define([
      * If a DynamicObject with the same ID exists in multiple collections, it is non-destructively
      * merged into a single new object instance.  If an object has the same property in multiple
      * collections, the property of the DynamicObject in the last collection of the list it
-     * belongs to is used.  Whenever a new collection is added or removed from the list, applyChanges
-     * must be called for it to take affect; however any changes to the DynamicObjectCollection instances
-     * contained in this list will automatically be reflected.  CompositeDynamicObjectCollection can
-     * be used almost anywhere that a DynamicObjectCollection is used.
+     * belongs to is used.  CompositeDynamicObjectCollection can be used almost anywhere that a
+     * DynamicObjectCollection is used.
      *
      * @name CompositeDynamicObjectCollection
      * @constructor
@@ -41,14 +39,7 @@ define([
     function CompositeDynamicObjectCollection(collections, mergeFunctions, cleanFunctions) {
         this._hash = {};
         this._array = [];
-        this._shadowCollections = [];
-
-        /**
-         * The array of DynamicObjectCollection instances to be composited.
-         * {@link CompositeDynamicObjectCollection#applyChanges} must be called in order
-         * for any modifications to this property to take effect.         *
-         */
-        this.collections = collections || [];
+        this._collections = [];
 
         /**
          * The array of functions which DynamicObject instances together. DOC_TBA
@@ -70,7 +61,7 @@ define([
          */
         this.objectsRemoved = new Event();
 
-        this.applyChanges();
+        this.setCollections(collections);
     }
 
     /**
@@ -87,7 +78,7 @@ define([
         var i;
         var len;
         var collection;
-        var collections = this._shadowCollections;
+        var collections = this._collections;
         for (i = 0, len = collections.length; i < len; i++) {
             collection = collections[i];
             var availability = collection.computeAvailability();
@@ -105,11 +96,26 @@ define([
     };
 
     /**
-     * Applies all necessary changes after adding or removing collections.
+     * Returns a copy of the current array of collections being composited.  Changes to this
+     * array will have no affect, to change which collections are being used, call setCollections.
+     *
+     * @see CompositeDynamicObjectCollection#setCollections
      */
-    CompositeDynamicObjectCollection.prototype.applyChanges = function() {
-        var thisCollections = this._shadowCollections;
-        if (this.collections !== thisCollections) {
+    CompositeDynamicObjectCollection.prototype.getCollections = function() {
+        return this._collections.slice();
+    };
+
+    /**
+     * Sets the array of collections to be composited.  Collections are composited
+     * last to first, so higher indices into the array take precedence over lower indices.
+     *
+     * @param {Array} collections The collections to be composited.
+     */
+    CompositeDynamicObjectCollection.prototype.setCollections = function(collections) {
+        collections = typeof collections !== 'undefined' ? collections : [];
+
+        var thisCollections = this._collections;
+        if (collections !== thisCollections) {
             var collection;
             var iCollection;
 
@@ -121,7 +127,7 @@ define([
             }
 
             //Make a copy of the new collections.
-            thisCollections = this._shadowCollections = this.collections.slice();
+            thisCollections = this._collections = collections;
 
             //Clear all existing objects and rebuild the colleciton.
             this._clearObjects();
@@ -174,8 +180,7 @@ define([
      * Clears all collections and DynamicObjects from this collection.
      */
     CompositeDynamicObjectCollection.prototype.clear = function() {
-        this.collections = [];
-        this.applyChanges();
+        this.setCollections([]);
     };
 
     CompositeDynamicObjectCollection.prototype._getOrCreateObject = function(id) {
@@ -200,7 +205,7 @@ define([
     CompositeDynamicObjectCollection.prototype._onObjectPropertiesChanged = function(dynamicObjectCollection, updatedObjects) {
         var thisMergeFunctions = this.mergeFunctions;
         var thisCleanFunctions = this.cleanFunctions;
-        var thisCollections = this._shadowCollections;
+        var thisCollections = this._collections;
 
         var updatedObject, compositeObject, compositeObjects = [];
         for ( var i = updatedObjects.length - 1; i > -1; i--) {
