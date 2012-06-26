@@ -25,12 +25,12 @@ require({
     cb.dayTileProvider = bing;
     cb.nightImageSource = '../../Images/land_ocean_ice_lights_2048.jpg';
     cb.specularMapSource = '../../Images/earthspec1k.jpg';
-    //if (scene.getContext().getMaximumTextureSize() > 2048) {
-    //    cb.cloudsMapSource = '../../Images/earthcloudmaptrans.jpg';
-    //    cb.bumpMapSource = '../../Images/earthbump1k.jpg';
-    //}
-    //cb.showSkyAtmosphere = true;
-    //cb.showGroundAtmosphere = true;
+    if (scene.getContext().getMaximumTextureSize() > 2048) {
+        cb.cloudsMapSource = '../../Images/earthcloudmaptrans.jpg';
+        cb.bumpMapSource = '../../Images/earthbump1k.jpg';
+    }
+    cb.showSkyAtmosphere = true;
+    cb.showGroundAtmosphere = true;
     primitives.setCentralBody(cb);
 
     scene.getCamera().frustum.near = 1.0;
