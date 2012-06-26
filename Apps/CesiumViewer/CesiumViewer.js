@@ -6,6 +6,7 @@ define(['dojo/dom',
         'dijit/registry',
         'DojoWidgets/CesiumWidget',
         'DojoWidgets/getJson',
+        'Core/binarySearch',
         'Core/DefaultProxy',
         'Core/JulianDate',
         'Core/Clock',
@@ -29,6 +30,7 @@ function(dom,
          registry,
          CesiumWidget,
          getJson,
+         binarySearch,
          DefaultProxy,
          JulianDate,
          Clock,
@@ -48,8 +50,39 @@ function(dom,
     "use strict";
     /*global console*/
 
+
+    var typicalMultipliers = [
+        0.001,
+        0.002,
+        0.005,
+        0.01,
+        0.02,
+        0.05,
+        0.1,
+        0.25,
+        0.5,
+        1.0,
+        2.0,
+        5.0,
+        10.0,
+        15.0,
+        30.0,
+        60.0, // 1min
+        120.0, // 2min
+        300.0, // 5min
+        600.0, // 10min
+        900.0, // 15min
+        1800.0, // 30min
+        3600.0, // 1hr
+        7200.0, // 2hr
+        14400.0, // 4hr
+        21600.0, // 6hr
+        43200.0, // 12hr
+        86400.0  // 24hr
+    ];
+
     var visualizers;
-    var clock = new Clock(new JulianDate(), ClockStep.SYSTEM_CLOCK_DEPENDENT, 256);
+    var clock = new Clock(new JulianDate(), ClockStep.SYSTEM_CLOCK_DEPENDENT, 60);
     var timeline;
     var transitioner;
 
@@ -91,6 +124,7 @@ function(dom,
             clock.clockRange = ClockRange.LOOP;
         }
 
+        clock.multiplier = 60;
         clock.currentTime = clock.startTime;
         timeline.zoomTo(clock.startTime, clock.stopTime);
         updateSpeedIndicator();
@@ -166,7 +200,7 @@ function(dom,
 
             transitioner = new SceneTransitioner(scene);
             visualizers = VisualizerCollection.createCzmlStandardCollection(scene, dynamicObjectCollection);
-            //widget.enableStatistics(true);
+            widget.enableStatistics(true);
 
             var queryObject = {};
             if (window.location.search) {
@@ -250,12 +284,44 @@ function(dom,
             });
 
             on(registry.byId('animSlow'), 'Click', function() {
-                clock.multiplier *= 0.5;
+                var index = binarySearch(typicalMultipliers, clock.multiplier, function(lhs, rhs) {
+                    return lhs - rhs;
+                });
+
+                if (index < 0) {
+                    index = ~index;
+                }
+                index--;
+
+                if (index === -1) {
+                    clock.multiplier *= 0.5;
+                } else if (clock.multiplier >= 0) {
+                    clock.multiplier = typicalMultipliers[index];
+                } else {
+                    clock.multiplier = -typicalMultipliers[index];
+                }
                 updateSpeedIndicator();
             });
 
             on(registry.byId('animFast'), 'Click', function() {
-                clock.multiplier *= 2.0;
+                var index = binarySearch(typicalMultipliers, clock.multiplier, function(lhs, rhs) {
+                    return lhs - rhs;
+                });
+
+                if (index < 0) {
+                    index = ~index;
+                } else {
+                    index++;
+                }
+
+                if (index === typicalMultipliers.length) {
+                    clock.multiplier *= 2.0;
+                } else if (clock.multiplier >= 0) {
+                    clock.multiplier = typicalMultipliers[index];
+                } else {
+                    clock.multiplier = -typicalMultipliers[index];
+                }
+
                 updateSpeedIndicator();
             });
 
