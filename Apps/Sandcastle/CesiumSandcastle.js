@@ -62,6 +62,15 @@ require({
             domConstruct.destroy('loading');
         }}).play();
 
+        var logOutput = document.getElementById('logOutput');
+        function appendConsole(className, message) {
+            var ele = document.createElement('span');
+            ele.className = className;
+            ele.textContent = message + "\n";
+            logOutput.appendChild(ele);
+            logOutput.parentNode.scrollTop = logOutput.clientHeight + 8 - logOutput.parentNode.clientHeight;
+        }
+
         // NOTE: BlobBuilder will eventually be deprecated and replaced with a direct constructor on Blob itself.
         // https://developer.mozilla.org/en/DOM/Blob
         var BlobBuilder = BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder;
@@ -82,7 +91,11 @@ require({
 
         xhr.get({
             url: '../../Build/Documentation/types.txt',
-            handleAs: 'json'
+            handleAs: 'json',
+            error: function(error) {
+                // Quiet for now, because the console will be cleared soon after this.
+                // We'll let the user know about this error further down.
+            }
         }).then(function (value) {
             local.docTypes = value;
         });
@@ -157,11 +170,9 @@ require({
         }
 
         var bucketFrame = document.getElementById('bucketFrame');
-        var logOutput = document.getElementById('logOutput');
         var bucketPane = registry.byId('bucketPane');
 
         CodeMirror.commands.runCesium = function() {
-            //CodeMirror.cesiumWindow = undefined;
             cesiumContainer.selectChild(bucketPane);
             bucketFrame.contentWindow.location.reload();
         };
@@ -187,21 +198,12 @@ require({
             extraKeys: {"F9": "runCesium"},
         });
 
-        function appendConsole(element) {
-            logOutput.appendChild(element);
-            //registry.byId("appLayout").resize();
-            logOutput.parentNode.scrollTop = logOutput.clientHeight + 8 - logOutput.parentNode.clientHeight;
-        }
-
         function loadFromGallery(link) {
             xhr.get({
                 url: 'gallery/' + link,
                 handleAs: 'text',
                 error: function(error) {
-                    var ele = document.createElement('span');
-                    ele.className = 'consoleError';
-                    ele.textContent = error + '\n';
-                    appendConsole(ele);
+                    appendConsole('consoleError', error);
                 }
             }).then(function (value) {
                 var pos = value.indexOf('<body');
@@ -234,14 +236,16 @@ require({
         // The iframe (bucket.html) sends this message on load.
         // This triggers the code to be injected into the iframe.
         window.addEventListener('message', function (e) {
-            var ele;
             if (e.data === 'reload') {
                 logOutput.innerHTML = "";
-                //CodeMirror.cesiumWindow = bucketFrame.contentWindow;
                 if (typeof queryObject.src !== 'undefined') {
+                    // This happens once on Sandcastle page load, the blank bucket.html triggers a load
+                    // of the selected demo code from the gallery, followed by a Run (F9) equivalent.
                     loadFromGallery(queryObject.src);
                     queryObject.src = undefined;
                 } else {
+                    // This happens after a Run (F9) reloads bucket.html, to inject the editor code
+                    // into the iframe, causing the demo to run there.
                     var bucketDoc = bucketFrame.contentDocument;
                     var bodyEle = bucketDoc.createElement('div');
                     bodyEle.innerHTML = htmlEditor.getValue();
@@ -250,16 +254,14 @@ require({
                     jsEle.type = 'text/javascript';
                     jsEle.textContent = jsEditor.getValue();
                     bucketDoc.body.appendChild(jsEle);
+                    if (local.docTypes.length === 0) {
+                        appendConsole('consoleError', "Documentation not available.  Please run the 'release' build script to generate Cesium documentation.");
+                    }
                 }
             } else if (typeof e.data.log !== 'undefined') {
-                ele = document.createElement('span');
-                ele.textContent = e.data.log + "\n";
-                appendConsole(ele);
+                appendConsole('consoleLog', e.data.log);
             } else if (typeof e.data.error !== 'undefined') {
-                ele = document.createElement('span');
-                ele.className = 'consoleError';
-                ele.textContent = e.data.error + "\n";
-                appendConsole(ele);
+                appendConsole('consoleError', e.data.error);
             }
         }, true);
 
@@ -301,7 +303,6 @@ require({
             var htmlBlob = htmlBB.getBlob("text/html;charset=utf-8");
             var htmlBlobURL = getURL.createObjectURL(htmlBlob);
             dom.byId('saveAsNewWindow').href = htmlBlobURL;
-
         });
 
         registry.byId('buttonThumbnail').on('change', function (newValue) {
