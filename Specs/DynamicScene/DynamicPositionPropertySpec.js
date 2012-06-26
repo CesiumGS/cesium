@@ -2,73 +2,109 @@
 defineSuite([
          'DynamicScene/DynamicPositionProperty',
          'Core/JulianDate',
-         'Core/Math',
          'Core/Ellipsoid'
      ], function(
-         DynamicPositionProperty,
-         JulianDate,
-         CesiumMath,
-         Ellipsoid) {
+          DynamicPositionProperty,
+          JulianDate,
+          Ellipsoid) {
     "use strict";
     /*global it,expect*/
 
-    //CZML_TODO Implement real tests
+    var cartesianInterval = {
+        epoch : '2012-04-18T15:59:00Z',
+        cartesian : [0, 100000, 100001, 100002, 3600, 100010, 100011, 100012, 7200, 100020, 100021, 100022],
+        interpolationAlgorithm : 'LINEAR',
+        interpolationDegree : 1
+    };
 
-    it('Works with Cartesian3 interpolatable values (specified linear interpolator).', function() {
-        var iso8601Epoch = '2012-04-18T15:59:00Z';
-        var epoch = JulianDate.fromIso8601(iso8601Epoch);
+    var cartographicInterval = {
+        cartographicRadians: ['2012-04-18T15:59:00Z', 0.1, 0.2, 1000, '2012-04-18T16:59:00Z', 0.3, 0.4, 500, '2012-04-18T17:59:00Z', 0.5, 0.6, 750],
+        interpolationAlgorithm : 'LINEAR',
+        interpolationDegree : 1
+    };
 
+    var epoch = JulianDate.fromIso8601(cartesianInterval.epoch);
+
+    it('getValueCartesian returns undefined if no data exists', function() {
         var property = new DynamicPositionProperty();
-        var czmlInterval = {
-            epoch : iso8601Epoch,
-            cartesian : [0, 100000, 100001, 100002, 10, 100010, 100011, 100012, 20, 100020, 100021, 100022],
-            interpolationAlgorithm : 'LINEAR',
-            interpolationDegree : 1
-        };
-        property.processCzmlIntervals(czmlInterval);
+        expect(property.getValueCartesian(new JulianDate())).toBeUndefined();
+    });
+
+    it('getValueCartesian throw if no time supplied', function() {
+        var property = new DynamicPositionProperty();
+        expect(function() {
+            property.getValueCartesian();
+        }).toThrow();
+    });
+
+    it('getValueCartesian works for cartesian data', function() {
+        var property = new DynamicPositionProperty();
+        property.processCzmlIntervals(cartesianInterval);
+
+        var result = property.getValueCartesian(epoch);
+        expect(result.x).toEqual(100000);
+        expect(result.y).toEqual(100001);
+        expect(result.z).toEqual(100002);
+    });
+
+    it('getValueCartographic returns undefined if no data exists', function() {
+        var property = new DynamicPositionProperty();
+        expect(property.getValueCartographic(new JulianDate())).toBeUndefined();
+    });
+
+    it('getValueCartographic throw if no time supplied', function() {
+        var property = new DynamicPositionProperty();
+        expect(function() {
+            property.getValueCartographic();
+        }).toThrow();
+    });
+
+    it('getValueCartographic works for cartesian data', function() {
+        var property = new DynamicPositionProperty();
+        property.processCzmlIntervals(cartesianInterval);
+
+        var cartographic = Ellipsoid.WGS84.toCartographic3(property.getValueCartesian(epoch));
+        var result = property.getValueCartographic(epoch);
+        expect(result.longitude).toEqual(cartographic.longitude);
+        expect(result.latitude).toEqual(cartographic.latitude);
+        expect(result.height).toEqual(cartographic.height);
+    });
+
+    it('getValueCartographic works for cartographic data', function() {
+        var property = new DynamicPositionProperty();
+        property.processCzmlIntervals(cartographicInterval);
+
+        var result = property.getValueCartographic(epoch);
+        expect(result.longitude).toEqual(0.1);
+        expect(result.latitude).toEqual(0.2);
+        expect(result.height).toEqual(1000);
+    });
+
+    it('getValueCartesian works for cartographic data', function() {
+        var property = new DynamicPositionProperty();
+        property.processCzmlIntervals(cartographicInterval);
+
+        var cartesian = Ellipsoid.WGS84.toCartesian(property.getValueCartographic(epoch));
+        var result = property.getValueCartesian(epoch);
+        expect(result.x).toEqual(cartesian.x);
+        expect(result.y).toEqual(cartesian.y);
+        expect(result.z).toEqual(cartesian.z);
+    });
+
+    it('replacing an interval with data of a different type works', function() {
+        var property = new DynamicPositionProperty();
+        property.processCzmlIntervals(cartesianInterval);
 
         var result = property.getValueCartesian(epoch);
         expect(result.x).toEqual(100000);
         expect(result.y).toEqual(100001);
         expect(result.z).toEqual(100002);
 
-        var resultCartographic = Ellipsoid.WGS84.toCartographic3(result);
+        property.processCzmlIntervals(cartographicInterval);
+
         result = property.getValueCartographic(epoch);
-        expect(result.longitude).toEqual(resultCartographic.longitude);
-        expect(result.latitude).toEqual(resultCartographic.latitude);
-        expect(result.height).toEqual(resultCartographic.height);
-
-        result = property.getValueCartesian(epoch.addSeconds(4));
-        expect(result.x).toEqual(100004);
-        expect(result.y).toEqual(100005);
-        expect(result.z).toEqual(100006);
-
-        resultCartographic = Ellipsoid.WGS84.toCartographic3(result);
-        result = property.getValueCartographic(epoch.addSeconds(4));
-        expect(result.longitude).toEqual(resultCartographic.longitude);
-        expect(result.latitude).toEqual(resultCartographic.latitude);
-        expect(result.height).toEqual(resultCartographic.height);
-    });
-
-    it('Works with static Cartesian3 values.', function() {
-        var iso8601Epoch = '2012-04-18T15:59:00Z';
-        var epoch = JulianDate.fromIso8601(iso8601Epoch);
-
-        var property = new DynamicPositionProperty();
-        var czmlInterval = {
-            cartesian : [1234, 5678, 9101112]
-        };
-        property.processCzmlIntervals(czmlInterval);
-
-        var result = property.getValueCartesian(epoch);
-        expect(result.x).toEqual(1234);
-        expect(result.y).toEqual(5678);
-        expect(result.z).toEqual(9101112);
-
-        var resultCartographic = Ellipsoid.WGS84.toCartographic3(result);
-        result = property.getValueCartographic(epoch);
-        expect(result.longitude).toEqual(resultCartographic.longitude);
-        expect(result.latitude).toEqual(resultCartographic.latitude);
-        expect(result.height).toEqual(resultCartographic.height);
+        expect(result.longitude).toEqual(0.1);
+        expect(result.latitude).toEqual(0.2);
+        expect(result.height).toEqual(1000);
     });
 });
