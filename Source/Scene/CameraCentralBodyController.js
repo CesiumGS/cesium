@@ -48,21 +48,18 @@ define([
         var rotate = this._rotateHandler;
         var rotating = rotate.isMoving() && rotate.getMovement();
 
-        if (rotating) {
-            var movement = rotate.getMovement();
-            var press = rotate.getButtonPressTime();
-            var release = rotate.getButtonReleaseTime();
-
-            if (typeof press !== 'undefined' && (typeof release === 'undefined' || press.greaterThan(release))) {
-                var center = this._camera.pickEllipsoid(this._spindleController.getEllipsoid(), movement.startPosition);
-                if (typeof center === 'undefined') {
-                    this._transform = Matrix4.IDENTITY;
-                } else {
-                    this._transform = Transforms.eastNorthUpToFixedFrame(center);
-                }
+        var rotateMovement = rotate.getMovement();
+        if (rotate.isButtonDown() && typeof this._transform === 'undefined' && rotateMovement) {
+            var center = this._camera.pickEllipsoid(this._spindleController.getEllipsoid(), rotateMovement.startPosition);
+            if (typeof center !== 'undefined') {
+                this._transform = Transforms.eastNorthUpToFixedFrame(center);
             }
+        } else if (!rotate.isButtonDown()) {
+            this._transform = undefined;
+        }
 
-            this._rotate(movement);
+        if (rotating && typeof this._transform !== 'undefined') {
+                this._rotate(rotateMovement);
         }
 
         this._spindleController.update();
