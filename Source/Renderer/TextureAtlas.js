@@ -203,7 +203,7 @@ define([
                 if (childNode2BottomLeftY < node.topRight.y) {
                     node.childNode2 = new TextureAtlasNode(new Cartesian2(node.bottomLeft.x, childNode2BottomLeftY), new Cartesian2(node.topRight.x, node.topRight.y));
                 }
-        }
+            }
             return this._findNode(node.childNode1, image);
         }
 
