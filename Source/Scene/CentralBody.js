@@ -873,10 +873,10 @@ define([
             var upperRight = upperLeft.add(right.multiplyWithScalar(width));
             var lowerRight = upperRight.add(up.multiplyWithScalar(-height));
 
-            var x = Math.min(Math.min(lowerLeft.x, lowerRight.x), Math.min(upperLeft.x, upperRight.x));
-            var y = Math.min(Math.min(lowerLeft.y, lowerRight.y), Math.min(upperLeft.y, upperRight.y));
-            var w = Math.max(Math.max(lowerLeft.x, lowerRight.x), Math.max(upperLeft.x, upperRight.x)) - x;
-            var h = Math.max(Math.max(lowerLeft.y, lowerRight.y), Math.max(upperLeft.y, upperRight.y)) - y;
+            var x = Math.min(lowerLeft.x, lowerRight.x, upperLeft.x, upperRight.x);
+            var y = Math.min(lowerLeft.y, lowerRight.y, upperLeft.y, upperRight.y);
+            var w = Math.max(lowerLeft.x, lowerRight.x, upperLeft.x, upperRight.x) - x;
+            var h = Math.max(lowerLeft.y, lowerRight.y, upperLeft.y, upperRight.y) - y;
 
             var fRect = new Rectangle(x, y, w, h);
 
