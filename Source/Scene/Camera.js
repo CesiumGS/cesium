@@ -100,7 +100,7 @@ define([
          */
         this.right = right.clone();
         this._right = right;
-        this.rightWC = right;
+        this._rightWC = right;
 
         var up = right.cross(direction);
 
@@ -404,8 +404,14 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Create a ray from the camera position through the pixel at <code>windowPosition</code>
+     * in world coordinates.
+     *
      * @memberof Camera
+     *
+     * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
+     *
+     * @return {Object} Returns the {@link Cartesian3} position and direction of the ray.
      */
     Camera.prototype.getPickRay = function(windowPosition) {
         var width = this._canvas.clientWidth;
@@ -418,26 +424,35 @@ define([
         var x = (2.0 / width) * windowPosition.x - 1.0;
         var y = (2.0 / height) * (height - windowPosition.y) - 1.0;
 
-        var nearCenter = this.position.add(this.direction.multiplyWithScalar(near));
-        var xDir = this.right.multiplyWithScalar(x * near * tanTheta);
-        var yDir = this.up.multiplyWithScalar(y * near * tanPhi);
-        var direction = nearCenter.add(xDir).add(yDir).subtract(this.position).normalize();
+        var position = this.getPositionWC();
+        var nearCenter = position.add(this.getDirectionWC().multiplyWithScalar(near));
+        var xDir = this.getRightWC().multiplyWithScalar(x * near * tanTheta);
+        var yDir = this.getUpWC().multiplyWithScalar(y * near * tanPhi);
+        var direction = nearCenter.add(xDir).add(yDir).subtract(position).normalize();
 
         return {
-            position : this.position.clone(),
+            position : position.clone(),
             direction : direction
         };
     };
 
     /**
-     * DOC_TBA
+     * Pick an ellipsoid in 3D mode.
+     *
      * @memberof Camera
+     *
+     * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to pick.
+     *
+     * @return {Cartesian3} If the ellipsoid was picked, returns the point on the surface of the ellipsoid.
+     * If the ellipsoid was not picked, returns undefined.
      */
-    Camera.prototype.pickEllipsoid = function(ellipsoid, windowPosition) {
+    Camera.prototype.pickEllipsoid = function(windowPosition, ellipsoid) {
+        ellipsoid = ellipsoid || Ellipsoid.WGS84;
         var ray = this.getPickRay(windowPosition);
         var intersection = IntersectionTests.rayEllipsoid(ray.position, ray.direction, ellipsoid);
         if (!intersection) {
-            return null;
+            return undefined;
         }
 
         var iPt = ray.position.add(ray.direction.multiplyWithScalar(intersection.start));

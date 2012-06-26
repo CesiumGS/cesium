@@ -15,6 +15,7 @@ Beta Releases
       should now look like:
 
             context.createTextureAtlas({images : images, pixelFormat : pixelFormat, borderWidthInPixels : borderWidthInPixels});
+   * `Camera.pickEllipsoid` returns the picked position in world coordinates and the ellipsoid parameter is optional.
 
 * Added `addImage` to `TextureAtlas` so images can be added to a texture atlas after it is constructed.
 
