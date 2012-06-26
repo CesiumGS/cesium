@@ -56,22 +56,34 @@ require({
     }());
 
     ///////////////////////////////////////////////////////////////////////////
-    // Example Mouse handler
+    // Example mouse & keyboard handlers
 
-    var handler = new Cesium.EventHandler(document);
+    var handler = new Cesium.EventHandler(canvas);
+
     handler.setMouseAction(function(movement) {
         /* ... */
         // Use movement.startX, movement.startY, movement.endX, movement.endY
     }, Cesium.MouseEventType.MOVE);
 
     function keydownHandler(e) {
-        var keyCode = e.keyCode;
-        if (keyCode === 51) {
+        switch (e.keyCode) {
+        case "3".charCodeAt(0):  // "3" -> 3D globe
+            cb.showSkyAtmosphere = true;
+            cb.showGroundAtmosphere = true;
             transitioner.morphTo3D();
-        } else if (keyCode === 50) {
+            break;
+        case "2".charCodeAt(0):  // "2" -> Columbus View
+            cb.showSkyAtmosphere = false;
+            cb.showGroundAtmosphere = false;
             transitioner.morphToColumbusView();
-        } else if (keyCode === 49) {
+            break;
+        case "1".charCodeAt(0):  // "1" -> 2D map
+            cb.showSkyAtmosphere = false;
+            cb.showGroundAtmosphere = false;
             transitioner.morphTo2D();
+            break;
+        default:
+            break;
         }
     }
     document.addEventListener('keydown', keydownHandler, false);
