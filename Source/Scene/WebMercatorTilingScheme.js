@@ -6,7 +6,8 @@ define([
         '../Core/Extent',
         './Tile',
         './TilingScheme',
-        '../Core/Cartesian2'
+        '../Core/Cartesian2',
+        '../Core/Cartographic2'
     ], function(
         DeveloperError,
         CesiumMath,
@@ -14,7 +15,8 @@ define([
         Extent,
         Tile,
         TilingScheme,
-        Cartesian2) {
+        Cartesian2,
+        Cartographic2) {
     "use strict";
 
     /**
@@ -42,16 +44,6 @@ define([
         this.ellipsoid = description.ellipsoid || Ellipsoid.WGS84;
 
         /**
-         * The world extent covered by this tiling scheme, in radians.
-         *
-         * @type Extent
-         */
-        this.extent = description.extent || new Extent(-CesiumMath.PI,
-                                                       CesiumMath.toRadians(-85.05112878),
-                                                       CesiumMath.PI,
-                                                       CesiumMath.toRadians(85.05112878));
-
-        /**
          * The number of tiles in the X direction at level zero of the tile tree.
          *
          * @type Number
@@ -64,6 +56,31 @@ define([
          * @type Number
          */
         this.numberOfLevelZeroTilesY = description.numberOfLevelZeroTilesY || 1;
+
+        /**
+         * The world extent covered by this tiling scheme, in radians.
+         *
+         * @type Extent
+         */
+        this.extent = undefined;
+
+        if (typeof description.extentSouthwestInMeters !== 'undefined' &&
+            typeof description.extentNortheastInMeters !== 'undefined') {
+            this._extentSouthwestInMeters = description.extentSouthwestInMeters;
+            this._extentNortheastInMeters = description.extentNortheastInMeters;
+        } else {
+            var semimajorAxisTimesPi = this.ellipsoid.getRadii().x * Math.PI;
+            this._extentSouthwestInMeters = new Cartesian2(-semimajorAxisTimesPi, -semimajorAxisTimesPi);
+            this._extentNortheastInMeters = new Cartesian2(semimajorAxisTimesPi, semimajorAxisTimesPi);
+        }
+
+        var southwest = this.webMercatorToCartographic(this._extentSouthwestInMeters.x, this._extentSouthwestInMeters.y);
+        var northeast = this.webMercatorToCartographic(this._extentNortheastInMeters.x, this._extentNortheastInMeters.y);
+        this.extent = new Extent(
+                southwest.longitude,
+                southwest.latitude,
+                northeast.longitude,
+                northeast.latitude);
     }
 
     /**
@@ -75,6 +92,20 @@ define([
      * tile in the northwest corner of the globe and followed by the tile (if any) to its east.
      */
     WebMercatorTilingScheme.prototype.createLevelZeroTiles = TilingScheme.prototype.createLevelZeroTiles;
+
+    WebMercatorTilingScheme.prototype.webMercatorToCartographic = function(x, y) {
+        var oneOverEarthSemimajorAxis = this.ellipsoid.getOneOverRadii().x;
+        var longitude = x * oneOverEarthSemimajorAxis;
+        var latitude = CesiumMath.PI_OVER_TWO - (2.0 * Math.atan(Math.exp(-y * oneOverEarthSemimajorAxis)));
+        return new Cartographic2(longitude, latitude);
+    };
+
+    WebMercatorTilingScheme.prototype.cartographicToWebMercator = function(cartographic) {
+        var semimajorAxisTimesPi = this.ellipsoid.getOneOverRadii().x * Math.PI;
+        return new Cartographic2(
+                cartographic.longitude * semimajorAxisTimesPi,
+                Math.log(Math.tan((CesiumMath.PI_OVER_TWO + lat) * 0.5)) * semimajorAxisTimesPi);
+    };
 
     /**
      * Converts an extent and zoom level into tile x, y coordinates.
@@ -117,16 +148,19 @@ define([
         var xTiles = this.numberOfLevelZeroTilesX << level;
         var yTiles = this.numberOfLevelZeroTilesY << level;
 
-        var worldFractionPerTileX = CesiumMath.TWO_PI / xTiles;
-        var west = x * worldFractionPerTileX - Math.PI;
-        var east = (x + 1) * worldFractionPerTileX - Math.PI;
+        var worldFractionPerTileX = (this._extentNortheastInMeters.x - this._extentSouthwestInMeters.x) / xTiles;
+        var west = this._extentSouthwestInMeters.x + x * worldFractionPerTileX;
+        var east = this._extentSouthwestInMeters.x + (x + 1) * worldFractionPerTileX;
 
-        var yFraction = 0.5 - y / yTiles;
-        var north = CesiumMath.PI_OVER_TWO - CesiumMath.TWO_PI * Math.atan(Math.exp(-yFraction * 2 * Math.PI)) / Math.PI;
-        yFraction = 0.5 - (y + 1) / yTiles;
-        var south = CesiumMath.PI_OVER_TWO - CesiumMath.TWO_PI * Math.atan(Math.exp(-yFraction * 2 * Math.PI)) / Math.PI;
+        var worldFractionPerTileY = (this._extentNortheastInMeters.y - this._extentSouthwestInMeters.y) / yTiles;
+        var north = this._extentNortheastInMeters.y - y * worldFractionPerTileY;
+        var south = this._extentNortheastInMeters.y - (y + 1) * worldFractionPerTileY;
 
-        return new Extent(west, south, east, north);
+        var southwest = this.webMercatorToCartographic(west, south);
+        var northeast = this.webMercatorToCartographic(east, north);
+
+        return new Extent(southwest.longitude, southwest.latitude,
+                          northeast.longitude, northeast.latitude);
     };
 
     return WebMercatorTilingScheme;

@@ -31,13 +31,6 @@ define([
         Cartographic2) {
     "use strict";
 
-    function WebMercatorToCartographic(x, y) {
-        var oneOverEarthSemimajorAxis = Ellipsoid.WGS84.getOneOverRadii().x;
-        var longitude = x * oneOverEarthSemimajorAxis;
-        var latitude = CesiumMath.PI_OVER_TWO - (2.0 * Math.atan(Math.exp(-y * oneOverEarthSemimajorAxis)));
-        return new Cartographic2(longitude, latitude);
-    }
-
     /**
      * Provides tile images hosted by an ArcGIS Server.
      *
@@ -149,14 +142,9 @@ define([
 
             if (data.tileInfo.spatialReference.wkid === 102100) {
                 that.projection = Projections.MERCATOR;
-                var southwest = WebMercatorToCartographic(data.fullExtent.xmin, data.fullExtent.ymin);
-                var northeast = WebMercatorToCartographic(data.fullExtent.xmax, data.fullExtent.ymax);
-                that.maxExtent = new Extent(southwest.longitude,
-                                            southwest.latitude,
-                                            northeast.longitude,
-                                            northeast.latitude);
                 that.tilingScheme = new WebMercatorTilingScheme({
-                    extent: that.maxExtent
+                    extentSouthwestInMeters: new Cartesian2(data.fullExtent.xmin, data.fullExtent.ymin),
+                    extentNortheastInMeters: new Cartesian2(data.fullExtent.xmax, data.fullExtent.ymax)
                 });
             } else if (data.tileInfo.spatialReference.wkid === 4326) {
                 that.projection = Projections.WGS84;

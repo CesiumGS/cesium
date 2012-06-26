@@ -778,94 +778,94 @@ define([
         var occluder = this._occluder;
 
         // handle north pole
-        if (baseTileProviderMaxExtent.north < CesiumMath.PI_OVER_TWO) {
-            extent = new Extent(-Math.PI,
-                                baseTileProviderMaxExtent.north,
-                                Math.PI,
-                                CesiumMath.PI_OVER_TWO);
-            boundingVolume = Extent.compute3DBoundingSphere(extent, this._ellipsoid);
-            frustumCull = sceneState.camera.getVisibility(boundingVolume, BoundingSphere.planeSphereIntersect) === Intersect.OUTSIDE;
-            occludeePoint = Extent.computeOccludeePoint(extent, this._ellipsoid).occludeePoint;
-            occluded = (occludeePoint && !occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !occluder.isVisible(boundingVolume);
-
-            this._drawNorthPole = !frustumCull && !occluded;
-            if (this._drawNorthPole) {
-                rect = this._computePoleQuad(sceneState, extent.north, extent.south - latitudeExtension, viewProjMatrix, viewportTransformation);
-                positions = [
-                    rect.x, rect.y,
-                    rect.x + rect.width, rect.y,
-                    rect.x + rect.width, rect.y + rect.height,
-                    rect.x, rect.y + rect.height
-                ];
-
-                if (typeof this._vaNorthPole === 'undefined') {
-                    mesh = {
-                        attributes : {
-                            position : {
-                                componentDatatype : ComponentDatatype.FLOAT,
-                                componentsPerAttribute : 2,
-                                values : positions
-                            }
-                        }
-                    };
-                    this._vaNorthPole = context.createVertexArrayFromMesh({
-                        mesh : mesh,
-                        attributeIndices : {
-                            position : 0
-                        },
-                        bufferUsage : BufferUsage.STREAM_DRAW
-                    });
-                } else {
-                    datatype = ComponentDatatype.FLOAT;
-                    this._vaNorthPole.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.toTypedArray(positions));
-                }
-            }
-        }
-
-        // handle south pole
-        if (baseTileProviderMaxExtent.south > -CesiumMath.PI_OVER_TWO) {
-            extent = new Extent(-Math.PI,
-                                -CesiumMath.PI_OVER_TWO,
-                                Math.PI,
-                                baseTileProviderMaxExtent.south);
-            boundingVolume = Extent.compute3DBoundingSphere(extent, this._ellipsoid);
-            frustumCull = sceneState.camera.getVisibility(boundingVolume, BoundingSphere.planeSphereIntersect) === Intersect.OUTSIDE;
-            occludeePoint = Extent.computeOccludeePoint(extent, this._ellipsoid).occludeePoint;
-            occluded = (occludeePoint && !occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !occluder.isVisible(boundingVolume);
-
-            this._drawSouthPole = !frustumCull && !occluded;
-            if (this._drawSouthPole) {
-                rect = this._computePoleQuad(sceneState, extent.south, extent.north + latitudeExtension, viewProjMatrix, viewportTransformation);
-                positions = [
-                     rect.x, rect.y,
-                     rect.x + rect.width, rect.y,
-                     rect.x + rect.width, rect.y + rect.height,
-                     rect.x, rect.y + rect.height
-                 ];
-
-                 if (typeof this._vaSouthPole === 'undefined') {
-                     mesh = {
-                         attributes : {
-                             position : {
-                                 componentDatatype : ComponentDatatype.FLOAT,
-                                 componentsPerAttribute : 2,
-                                 values : positions
-                             }
-                         }
-                     };
-                     this._vaSouthPole = context.createVertexArrayFromMesh({
-                         mesh : mesh,
-                         attributeIndices : {
-                             position : 0
-                         },
-                         bufferUsage : BufferUsage.STREAM_DRAW
-                     });
-                 } else {
-                     datatype = ComponentDatatype.FLOAT;
-                     this._vaSouthPole.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.toTypedArray(positions));
-                 }
-            }
-        }
+//        if (baseTileProviderMaxExtent.north < CesiumMath.PI_OVER_TWO) {
+//            extent = new Extent(-Math.PI,
+//                                baseTileProviderMaxExtent.north,
+//                                Math.PI,
+//                                CesiumMath.PI_OVER_TWO);
+//            boundingVolume = Extent.compute3DBoundingSphere(extent, this._ellipsoid);
+//            frustumCull = sceneState.camera.getVisibility(boundingVolume, BoundingSphere.planeSphereIntersect) === Intersect.OUTSIDE;
+//            occludeePoint = Extent.computeOccludeePoint(extent, this._ellipsoid).occludeePoint;
+//            occluded = (occludeePoint && !occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !occluder.isVisible(boundingVolume);
+//
+//            this._drawNorthPole = !frustumCull && !occluded;
+//            if (this._drawNorthPole) {
+//                rect = this._computePoleQuad(sceneState, extent.north, extent.south - latitudeExtension, viewProjMatrix, viewportTransformation);
+//                positions = [
+//                    rect.x, rect.y,
+//                    rect.x + rect.width, rect.y,
+//                    rect.x + rect.width, rect.y + rect.height,
+//                    rect.x, rect.y + rect.height
+//                ];
+//
+//                if (typeof this._vaNorthPole === 'undefined') {
+//                    mesh = {
+//                        attributes : {
+//                            position : {
+//                                componentDatatype : ComponentDatatype.FLOAT,
+//                                componentsPerAttribute : 2,
+//                                values : positions
+//                            }
+//                        }
+//                    };
+//                    this._vaNorthPole = context.createVertexArrayFromMesh({
+//                        mesh : mesh,
+//                        attributeIndices : {
+//                            position : 0
+//                        },
+//                        bufferUsage : BufferUsage.STREAM_DRAW
+//                    });
+//                } else {
+//                    datatype = ComponentDatatype.FLOAT;
+//                    this._vaNorthPole.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.toTypedArray(positions));
+//                }
+//            }
+//        }
+//
+//        // handle south pole
+//        if (baseTileProviderMaxExtent.south > -CesiumMath.PI_OVER_TWO) {
+//            extent = new Extent(-Math.PI,
+//                                -CesiumMath.PI_OVER_TWO,
+//                                Math.PI,
+//                                baseTileProviderMaxExtent.south);
+//            boundingVolume = Extent.compute3DBoundingSphere(extent, this._ellipsoid);
+//            frustumCull = sceneState.camera.getVisibility(boundingVolume, BoundingSphere.planeSphereIntersect) === Intersect.OUTSIDE;
+//            occludeePoint = Extent.computeOccludeePoint(extent, this._ellipsoid).occludeePoint;
+//            occluded = (occludeePoint && !occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !occluder.isVisible(boundingVolume);
+//
+//            this._drawSouthPole = !frustumCull && !occluded;
+//            if (this._drawSouthPole) {
+//                rect = this._computePoleQuad(sceneState, extent.south, extent.north + latitudeExtension, viewProjMatrix, viewportTransformation);
+//                positions = [
+//                     rect.x, rect.y,
+//                     rect.x + rect.width, rect.y,
+//                     rect.x + rect.width, rect.y + rect.height,
+//                     rect.x, rect.y + rect.height
+//                 ];
+//
+//                 if (typeof this._vaSouthPole === 'undefined') {
+//                     mesh = {
+//                         attributes : {
+//                             position : {
+//                                 componentDatatype : ComponentDatatype.FLOAT,
+//                                 componentsPerAttribute : 2,
+//                                 values : positions
+//                             }
+//                         }
+//                     };
+//                     this._vaSouthPole = context.createVertexArrayFromMesh({
+//                         mesh : mesh,
+//                         attributeIndices : {
+//                             position : 0
+//                         },
+//                         bufferUsage : BufferUsage.STREAM_DRAW
+//                     });
+//                 } else {
+//                     datatype = ComponentDatatype.FLOAT;
+//                     this._vaSouthPole.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.toTypedArray(positions));
+//                 }
+//            }
+//        }
 
         var that = this;
         var drawUniforms = {
