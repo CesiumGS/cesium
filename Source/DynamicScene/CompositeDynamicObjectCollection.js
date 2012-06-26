@@ -41,8 +41,23 @@ define([
     function CompositeDynamicObjectCollection(collections, mergeFunctions, cleanFunctions) {
         this._hash = {};
         this._array = [];
-        this._collections = [];
+        this._shadowCollections = [];
+
+        /**
+         * The array of DynamicObjectCollection instances to be composited.
+         * {@link CompositeDynamicObjectCollection#applyChanges} must be called in order
+         * for any modifications to this property to take effect.         *
+         */
+        this.collections = collections || [];
+
+        /**
+         * The array of functions which DynamicObject instances together. DOC_TBA
+         */
         this.mergeFunctions = mergeFunctions || CzmlDefaults.mergers;
+
+        /**
+         * The array of functions which remove data from a DynamicObject instance. DOC_TBA
+         */
         this.cleanFunctions = cleanFunctions || CzmlDefaults.cleaners;
 
         /**
@@ -55,12 +70,7 @@ define([
          */
         this.objectsRemoved = new Event();
 
-        if (typeof collections !== 'undefined') {
-            for ( var i = 0; i < collections.length; i++) {
-                this.addCollection(collections[i]);
-            }
-            this.applyChanges();
-        }
+        this.applyChanges();
     }
 
     /**
@@ -71,21 +81,21 @@ define([
      *
      * @returns {TimeInterval} The availability of DynamicObjects in the collection.
      */
-    DynamicObjectCollection.prototype.computeAvailability = function() {
+    CompositeDynamicObjectCollection.prototype.computeAvailability = function() {
         var startTime = Iso8601.MAXIMUM_VALUE;
         var stopTime = Iso8601.MINIMUM_VALUE;
         var i;
         var len;
         var collection;
-        var collections = this._collections;
+        var collections = this._shadowCollections;
         for (i = 0, len = collections.length; i < len; i++) {
             collection = collections[i];
             var availability = collection.computeAvailability();
             if (availability.start.lessThan(startTime)) {
-                startTime = collection.availability.start;
+                startTime = availability.start;
             }
             if (availability.stop.greaterThan(stopTime)) {
-                stopTime = collection.availability.stop;
+                stopTime = availability.stop;
             }
         }
         if (startTime !== Iso8601.MAXIMUM_VALUE && stopTime !== Iso8601.MINIMUM_VALUE) {
@@ -95,144 +105,43 @@ define([
     };
 
     /**
-     * Adds a collection.  applyChanges must be called in order for this call to take affect.
-     *
-     * @exception {DeveloperError} dynamicObjectCollection is required.
-     * @exception {DeveloperError} dynamicObjectCollection is already in this collection.
-     * @exception {DeveloperError} dynamicObjectCollection is already in another CompositeDynamicObjectCollection.
-     *
-     * @param {DynamicObjectCollection} dynamicObjectCollection The collection to add.
-     */
-    CompositeDynamicObjectCollection.prototype.addCollection = function(dynamicObjectCollection) {
-        if (typeof dynamicObjectCollection === 'undefined') {
-            throw new DeveloperError('dynamicObjectCollection is required.');
-        }
-        if (this._collections.indexOf(dynamicObjectCollection) !== -1) {
-            throw new DeveloperError('dynamicObjectCollection is already in this collection.');
-        }
-        //CZML_TODO The parent property only exists for resolving links, we may be able to
-        //remove it completely, and in turn remove this limitation.
-        if (typeof dynamicObjectCollection.compositeCollection !== 'undefined') {
-            throw new DeveloperError('dynamicObjectCollection is already in another CompositeDynamicObjectCollection.');
-        }
-
-        dynamicObjectCollection.compositeCollection = this;
-        dynamicObjectCollection.objectPropertiesChanged.addEventListener(CompositeDynamicObjectCollection.prototype._onObjectPropertiesChanged, this);
-        this._collections.push(dynamicObjectCollection);
-    };
-
-    /**
-     * Inserts a collection at the provided index.  applyChanges must be called in order
-     * for this call to take affect.
-     *
-     * @exception {DeveloperError} dynamicObjectCollection is required.
-     * @exception {DeveloperError} dynamicObjectCollection is already in this collection.
-     *
-     * @param {Number} index Inserts a collection at the provided index.
-     * @param {DynamicObjectCollection} dynamicObjectCollection The collection to add.
-     */
-    CompositeDynamicObjectCollection.prototype.insertCollection = function(index, dynamicObjectCollection) {
-        if (typeof dynamicObjectCollection === 'undefined') {
-            throw new DeveloperError('dynamicObjectCollection is required.');
-        }
-        if (this._collections.indexOf(dynamicObjectCollection) !== -1) {
-            throw new DeveloperError('dynamicObjectCollection is already in this collection.');
-        }
-        var thisCollections = this._collections;
-        thisCollections.splice(index, 0, dynamicObjectCollection);
-
-        dynamicObjectCollection.compositeCollection = this;
-        dynamicObjectCollection.objectPropertiesChanged.addEventListener(CompositeDynamicObjectCollection.prototype._onObjectPropertiesChanged, this);
-    };
-
-    /**
-     * Inserts a collection before the provided collection.  applyChanges must be called in order
-     * for this call to take affect.
-     *
-     * @exception {DeveloperError} beforeDynamicObjectCollection is required.
-     * @exception {DeveloperError} beforeDynamicObjectCollection is already in this collection.
-     *
-     * @param {DynamicObjectCollection} beforeDynamicObjectCollection The existing collection to come after the inserted collection.
-     * @param {DynamicObjectCollection} dynamicObjectCollection The collection to insert.
-     */
-    CompositeDynamicObjectCollection.prototype.insertCollectionBefore = function(beforeDynamicObjectCollection, dynamicObjectCollection) {
-        if (typeof dynamicObjectCollection === 'undefined') {
-            throw new DeveloperError('beforeDynamicObjectCollection is required');
-        }
-
-        var indexBefore = this._collections.indexOf(beforeDynamicObjectCollection);
-        if (indexBefore === -1) {
-            throw new DeveloperError('beforeDynamicObjectCollection is already in this collection.');
-        }
-        this.insertCollection(indexBefore, dynamicObjectCollection);
-    };
-
-    /**
-     * Inserts a collection after the provided collection.  applyChanges must be called in order
-     * for this call to take affect.
-     *
-     * @exception {DeveloperError} afterDynamicObjectCollection is required.
-     * @exception {DeveloperError} afterDynamicObjectCollection is already in this collection.
-     *
-     * @param {DynamicObjectCollection} afterDynamicObjectCollection The existing collection to come before the inserted collection.
-     * @param {DynamicObjectCollection} dynamicObjectCollection The collection to insert.
-     */
-    CompositeDynamicObjectCollection.prototype.insertCollectionAfter = function(afterDynamicObjectCollection, dynamicObjectCollection) {
-        if (typeof dynamicObjectCollection === 'undefined') {
-            throw new DeveloperError('afterDynamicObjectCollection is required');
-        }
-
-        var indexAfter = this._collections.indexOf(afterDynamicObjectCollection);
-        if (indexAfter === -1) {
-            throw new DeveloperError('afterDynamicObjectCollection is already in this collection.');
-        }
-        this.insertCollection(indexAfter + 1, dynamicObjectCollection);
-    };
-
-    /**
-     * Removes a collection.  applyChanges must be called in order for this call to take affect.
-     *
-     * @exception {DeveloperError} dynamicObjectCollection is required.
-     * @exception {DeveloperError} dynamicObjectCollection is already in this collection.
-     *
-     * @param {DynamicObjectCollection} dynamicObjectCollection The collection to insert.
-     */
-    CompositeDynamicObjectCollection.prototype.removeCollection = function(dynamicObjectCollection) {
-        if (typeof dynamicObjectCollection === 'undefined') {
-            throw new DeveloperError('dynamicObjectCollection is required.');
-        }
-        if (this._collections.indexOf(dynamicObjectCollection) === -1) {
-            throw new DeveloperError('dynamicObjectCollection is already in this collection.');
-        }
-        var thisCollections = this._collections;
-        thisCollections.splice(thisCollections.indexOf(dynamicObjectCollection), 1);
-        dynamicObjectCollection.compositeCollection = undefined;
-        dynamicObjectCollection.objectPropertiesChanged.removeEventListener(CompositeDynamicObjectCollection.prototype._onObjectPropertiesChanged);
-    };
-
-    /**
-     * Returns the number of collections.
-     */
-    CompositeDynamicObjectCollection.prototype.getLength = function() {
-        return this._collections.length;
-    };
-
-    /**
      * Applies all necessary changes after adding or removing collections.
      */
     CompositeDynamicObjectCollection.prototype.applyChanges = function() {
-        this._clearObjects();
-        var thisMergeFunctions = this.mergeFunctions;
-        var thisCollections = this._collections;
-        for ( var iCollection = thisCollections.length - 1; iCollection > -1; iCollection--) {
-            var currentCollection = thisCollections[iCollection];
-            var objects = currentCollection.getObjects();
-            for ( var iObjects = objects.length - 1; iObjects > -1; iObjects--) {
-                var object = objects[iObjects];
-                var compositeObject = this._getOrCreateObject(object.id);
-                for ( var iMergeFuncs = thisMergeFunctions.length - 1; iMergeFuncs > -1; iMergeFuncs--) {
-                    var mergeFunc = thisMergeFunctions[iMergeFuncs];
-                    mergeFunc(compositeObject, object);
+        var thisCollections = this._shadowCollections;
+        if (this.collections !== thisCollections) {
+            var collection;
+            var iCollection;
+
+            //Unsubscribe from old collections.
+            for (iCollection = thisCollections.length - 1; iCollection > -1; iCollection--) {
+                collection = thisCollections[iCollection];
+                collection.compositeCollection = undefined;
+                collection.objectPropertiesChanged.removeEventListener(CompositeDynamicObjectCollection.prototype._onObjectPropertiesChanged);
+            }
+
+            //Make a copy of the new collections.
+            thisCollections = this._shadowCollections = this.collections.slice();
+
+            //Clear all existing objects and rebuild the colleciton.
+            this._clearObjects();
+            var thisMergeFunctions = this.mergeFunctions;
+            for (iCollection = thisCollections.length - 1; iCollection > -1; iCollection--) {
+                collection = thisCollections[iCollection];
+
+                //Subscribe to the new collection.
+                collection.compositeCollection = this;
+                collection.objectPropertiesChanged.addEventListener(CompositeDynamicObjectCollection.prototype._onObjectPropertiesChanged, this);
+
+                //Merge all of the existing objects.
+                var objects = collection.getObjects();
+                for ( var iObjects = objects.length - 1; iObjects > -1; iObjects--) {
+                    var object = objects[iObjects];
+                    var compositeObject = this._getOrCreateObject(object.id);
+                    for ( var iMergeFuncs = thisMergeFunctions.length - 1; iMergeFuncs > -1; iMergeFuncs--) {
+                        var mergeFunc = thisMergeFunctions[iMergeFuncs];
+                        mergeFunc(compositeObject, object);
+                    }
                 }
             }
         }
@@ -265,8 +174,8 @@ define([
      * Clears all collections and DynamicObjects from this collection.
      */
     CompositeDynamicObjectCollection.prototype.clear = function() {
-        this._collections = [];
-        this._clearObjects();
+        this.collections = [];
+        this.applyChanges();
     };
 
     CompositeDynamicObjectCollection.prototype._getOrCreateObject = function(id) {
@@ -291,7 +200,7 @@ define([
     CompositeDynamicObjectCollection.prototype._onObjectPropertiesChanged = function(dynamicObjectCollection, updatedObjects) {
         var thisMergeFunctions = this.mergeFunctions;
         var thisCleanFunctions = this.cleanFunctions;
-        var thisCollections = this._collections;
+        var thisCollections = this._shadowCollections;
 
         var updatedObject, compositeObject, compositeObjects = [];
         for ( var i = updatedObjects.length - 1; i > -1; i--) {
