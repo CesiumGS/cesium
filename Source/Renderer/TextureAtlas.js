@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Renderer/TextureAtlas
+ */
 define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
@@ -14,7 +17,7 @@ define([
     /**
      * DOC_TBA
      *
-     * @name TextureAtlas
+     * @alias TextureAtlas
      *
      * @param {Context} context The context that the created texture will be used by.
      * @param {Array} images DOC_TBA
@@ -27,7 +30,7 @@ define([
      * @exception {DeveloperError} images is required and must have length greater than zero.
      * @exception {DeveloperError} borderWidthInPixels must be greater than or equal to zero.
      */
-    function TextureAtlas(context, images, pixelFormat, borderWidthInPixels) {
+    var TextureAtlas = function(context, images, pixelFormat, borderWidthInPixels) {
         if (!context) {
             throw new DeveloperError('context is required.');
         }
@@ -131,7 +134,7 @@ define([
         this._borderWidthInPixels = borderWidthInPixels;
         this._texture = texture;
         this._textureCoordinates = textureCoordinates;
-    }
+    };
 
     /**
      * Add a set of sub-regions of one atlas image as additional image indices.

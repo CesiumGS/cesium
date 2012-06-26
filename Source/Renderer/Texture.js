@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Renderer/Texture
+ */
 define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
@@ -20,13 +23,13 @@ define([
     /**
      * DOC_TBA
      *
-     * @name Texture
+     * @alias Texture
      * @internalConstructor
      *
      * @see Context#createTexture2D
      * @see Context#createTexture2DFromFramebuffer
      */
-    function Texture(gl, textureFilterAnisotropic, textureTarget, texture, pixelFormat, pixelDatatype, width, height, preMultiplyAlpha) {
+    var Texture = function(gl, textureFilterAnisotropic, textureTarget, texture, pixelFormat, pixelDatatype, width, height, preMultiplyAlpha) {
         this._gl = gl;
         this._textureFilterAnisotropic = textureFilterAnisotropic;
         this._textureTarget = textureTarget;
@@ -40,7 +43,7 @@ define([
         this._sampler = undefined;
 
         this.setSampler();
-    }
+    };
 
     /**
      * DOC_TBA

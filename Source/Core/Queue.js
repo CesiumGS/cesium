@@ -9,6 +9,7 @@ define(function() {
      * A queue that can enqueue items at the end, and dequeue items from the front.
      *
      * @alias Queue
+     * @constructor
      */
     var Queue = function() {
         this._array = [];

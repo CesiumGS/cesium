@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Renderer/Context
+ */
 define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
@@ -152,14 +155,14 @@ define([
     /**
      * DOC_TBA
      *
-     * @name Context
+     * @alias Context
      * @constructor
      *
      * @exception {RuntimeError} The browser does not support WebGL.  Visit http://get.webgl.org.
      * @exception {RuntimeError} The browser supports WebGL, but initialization failed.
      * @exception {DeveloperError} canvas is required.
      */
-    function Context(canvas, options) {
+    var Context = function(canvas, options) {
         if (!window.WebGLRenderingContext) {
             throw new RuntimeError('The browser does not support WebGL.  Visit http://get.webgl.org.');
         }
@@ -251,7 +254,7 @@ define([
         this._us = new UniformState(this);
         this._currentFramebuffer = undefined;
         this._currentSp = undefined;
-    }
+    };
 
     Context.prototype._enableOrDisable = function(glEnum, enable) {
         if (enable) {

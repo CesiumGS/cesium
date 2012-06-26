@@ -1,7 +1,4 @@
 /*global define*/
-/**
- * @exports Core/CubeMapEllipsoidTessellator
- */
 define([
         './DeveloperError',
         './Cartesian3',
@@ -17,7 +14,7 @@ define([
     /**
      * DOC_TBA
      *
-     * @alias CubeMapEllipsoidTessellator
+     * @exports CubeMapEllipsoidTessellator
      *
      * @see BoxTessellator
      */
@@ -25,8 +22,6 @@ define([
 
     /**
      * DOC_TBA
-     *
-     * @memberof CubeMapEllipsoidTessellator
      *
      * @param {Ellipsoid} ellipsoid DOC_TBA.
      * @param {Number} numberOfPartitions DOC_TBA.

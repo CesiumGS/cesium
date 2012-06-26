@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Renderer/Buffer
+ */
 define([
         '../Core/DeveloperError',
         '../Core/destroyObject'
@@ -10,20 +13,20 @@ define([
     /**
      * DOC_TBA
      *
-     * @name Buffer
+     * @alias Buffer
      * @internalConstructor
      *
      * @see Context#createVertexBuffer
      * @see Context#createIndexBuffer
      */
-    function Buffer(gl, bufferTarget, sizeInBytes, usage, buffer) {
+    var Buffer = function(gl, bufferTarget, sizeInBytes, usage, buffer) {
         this._gl = gl;
         this._bufferTarget = bufferTarget;
         this._sizeInBytes = sizeInBytes;
         this._usage = usage;
         this._buffer = buffer;
         this._vertexArrayDestroyable = true;
-    }
+    };
 
     /**
      * DOC_TBA

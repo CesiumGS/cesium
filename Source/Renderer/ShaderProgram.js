@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Renderer/ShaderProgram
+ */
 define([
         '../Core/DeveloperError',
         '../Core/RuntimeError',
@@ -187,7 +190,7 @@ define([
      * automatic uniforms; they are implicitly declared and automatically assigned to in
      * <code>Context.draw</code> based on the {@link UniformState}.
      *
-     * @name Uniform
+     * @alias Uniform
      * @internalConstructor
      *
      * @see Uniform#value
@@ -232,14 +235,14 @@ define([
      * sp.getAllUniforms()['u_struct.f'].value = 1.0;
      * sp.getAllUniforms()['u_struct.v'].value = new Cartesian4(1.0, 2.0, 3.0, 4.0);
      */
-    function Uniform(_gl, activeUniform, _uniformName, _location, uniformValue) {
+    var Uniform = function(_gl, activeUniform, _uniformName, _location, uniformValue) {
         /**
          * The value of the uniform.  The datatype depends on the datatype used in the
          * GLSL declaration as explained in the {@link Uniform} help and shown
          * in the examples below.
          *
          * @field
-         * @name Uniform#value
+         * @alias Uniform#value
          *
          * @see Context#createTexture2D
          *
@@ -276,7 +279,7 @@ define([
          *
          * @returns {String} The name of the uniform.
          * @function
-         * @name Uniform#getName
+         * @alias Uniform#getName
          *
          * @example
          * // GLSL: uniform mat4 u_mvp;
@@ -292,7 +295,7 @@ define([
          *
          * @returns {UniformDatatype} The datatype of the uniform.
          * @function
-         * @name Uniform#getDatatype
+         * @alias Uniform#getDatatype
          *
          * @see UniformDatatype
          *
@@ -394,15 +397,18 @@ define([
                 return textureUnitIndex + 1;
             };
         }
-    }
+    };
 
-    /*
+    /**
      * Uniform and UniformArray have the same documentation.  It is just an implementation
      * detail that they are two different types.
      *
-     * @name UniformArray
+     * @alias UniformArray
+     * @constructor
+     *
+     * @see Uniform
      */
-    function UniformArray(_gl, activeUniform, _uniformName, locations, value) {
+    var UniformArray = function(_gl, activeUniform, _uniformName, locations, value) {
         this.value = value;
 
         var _locations = locations;
@@ -535,18 +541,18 @@ define([
                 return textureUnitIndex + _locations.length;
             };
         }
-    }
+    };
 
     /**
      * DOC_TBA
      *
-     * @name ShaderProgram
+     * @alias ShaderProgram
      * @internalConstructor
      *
      * @see Context#createShaderProgram
      * @see Context#getShaderCache
      */
-    function ShaderProgram(gl, logShaderCompilation, builtInGlslFunctions, vertexShaderSource, fragmentShaderSource, attributeLocations) {
+    var ShaderProgram = function(gl, logShaderCompilation, builtInGlslFunctions, vertexShaderSource, fragmentShaderSource, attributeLocations) {
         var getAllAutomaticUniforms = function() {
             var uniforms = {
                 /**
@@ -558,7 +564,7 @@ define([
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @name agi_viewport
+                 * @alias agi_viewport
                  * @glslUniform
                  *
                  * @see Context#getViewport
@@ -620,7 +626,7 @@ define([
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @name agi_viewportOrthographic
+                 * @alias agi_viewportOrthographic
                  * @glslUniform
                  *
                  * @see UniformState#getViewportOrthographic
@@ -681,7 +687,7 @@ define([
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @name agi_viewportTransformation
+                 * @alias agi_viewportTransformation
                  * @glslUniform
                  *
                  * @see UniformState#getViewportTransformation
@@ -735,7 +741,7 @@ define([
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @name agi_model
+                 * @alias agi_model
                  * @glslUniform
                  *
                  * @see UniformState#getModel
@@ -784,7 +790,7 @@ define([
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @name agi_inverseView
+                 * @alias agi_inverseView
                  * @glslUniform
                  *
                  * @see UniformState#getInverseView
@@ -824,7 +830,7 @@ define([
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @name agi_view
+                 * @alias agi_view
                  * @glslUniform
                  *
                  * @see UniformState#getView
@@ -867,7 +873,7 @@ define([
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @name agi_projection
+                 * @alias agi_projection
                  * @glslUniform
                  *
                  * @see UniformState#getProjection
@@ -909,7 +915,7 @@ define([
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @name agi_inverseProjection
+                 * @alias agi_inverseProjection
                  * @glslUniform
                  *
                  * @see UniformState#getInverseProjection
@@ -951,7 +957,7 @@ define([
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @name agi_infiniteProjection
+                 * @alias agi_infiniteProjection
                  * @glslUniform
                  *
                  * @see UniformState#getInfiniteProjection
@@ -994,7 +1000,7 @@ define([
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @name agi_modelView
+                 * @alias agi_modelView
                  * @glslUniform
                  *
                  * @see UniformState#getModelView
@@ -1039,7 +1045,7 @@ define([
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @name agi_inverseModelView
+                 * @alias agi_inverseModelView
                  * @glslUniform
                  *
                  * @see UniformState#getInverseModelView
@@ -1079,7 +1085,7 @@ define([
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @name agi_viewProjection
+                 * @alias agi_viewProjection
                  * @glslUniform
                  *
                  * @see UniformState#getViewProjection
@@ -1124,7 +1130,7 @@ define([
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @name agi_modelViewProjection
+                 * @alias agi_modelViewProjection
                  * @glslUniform
                  *
                  * @see UniformState#getModelViewProjection
@@ -1174,7 +1180,7 @@ define([
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @name agi_modelViewInfiniteProjection
+                 * @alias agi_modelViewInfiniteProjection
                  * @glslUniform
                  *
                  * @see UniformState#getModelViewInfiniteProjection
@@ -1222,7 +1228,7 @@ define([
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @name agi_normal
+                 * @alias agi_normal
                  * @glslUniform
                  *
                  * @see UniformState#getNormal
@@ -1263,7 +1269,7 @@ define([
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @name agi_inverseNormal
+                 * @alias agi_inverseNormal
                  * @glslUniform
                  *
                  * @see UniformState#getInverseNormal
@@ -1304,7 +1310,7 @@ define([
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @name agi_sunDirectionEC
+                 * @alias agi_sunDirectionEC
                  * @glslUniform
                  *
                  * @see UniformState#getSunDirectionEC
@@ -1343,7 +1349,7 @@ define([
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @name agi_sunDirectionWC
+                 * @alias agi_sunDirectionWC
                  * @glslUniform
                  *
                  * @see UniformState#getSunDirectionWC
@@ -1378,7 +1384,7 @@ define([
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @name agi_viewerPositionWC
+                 * @alias agi_viewerPositionWC
                  * @glslUniform
                  *
                  * @example
@@ -1499,7 +1505,7 @@ define([
                 /**
                  * A built-in GLSL floating-point constant for <code>Math.PI</code>.
                  *
-                 * @name agi_pi
+                 * @alias agi_pi
                  * @glslConstant
                  *
                  * @see CesiumMath.PI
@@ -1516,7 +1522,7 @@ define([
                 /**
                  * A built-in GLSL floating-point constant for <code>1/pi</code>.
                  *
-                 * @name agi_oneOverPi
+                 * @alias agi_oneOverPi
                  * @glslConstant
                  *
                  * @see CesiumMath.ONE_OVER_PI
@@ -1533,7 +1539,7 @@ define([
                 /**
                  * A built-in GLSL floating-point constant for <code>pi/2</code>.
                  *
-                 * @name agi_piOverTwo
+                 * @alias agi_piOverTwo
                  * @glslConstant
                  *
                  * @see CesiumMath.PI_OVER_TWO
@@ -1550,7 +1556,7 @@ define([
                 /**
                  * A built-in GLSL floating-point constant for <code>pi/3</code>.
                  *
-                 * @name agi_piOverThree
+                 * @alias agi_piOverThree
                  * @glslConstant
                  *
                  * @see CesiumMath.PI_OVER_THREE
@@ -1567,7 +1573,7 @@ define([
                 /**
                  * A built-in GLSL floating-point constant for <code>pi/4</code>.
                  *
-                 * @name agi_piOverFour
+                 * @alias agi_piOverFour
                  * @glslConstant
                  *
                  * @see CesiumMath.PI_OVER_FOUR
@@ -1584,7 +1590,7 @@ define([
                 /**
                  * A built-in GLSL floating-point constant for <code>pi/6</code>.
                  *
-                 * @name agi_piOverSix
+                 * @alias agi_piOverSix
                  * @glslConstant
                  *
                  * @see CesiumMath.PI_OVER_SIX
@@ -1601,7 +1607,7 @@ define([
                 /**
                  * A built-in GLSL floating-point constant for <code>3pi/2</code>.
                  *
-                 * @name agi_threePiOver2
+                 * @alias agi_threePiOver2
                  * @glslConstant
                  *
                  * @see CesiumMath.THREE_PI_OVER_TWO
@@ -1618,7 +1624,7 @@ define([
                 /**
                  * A built-in GLSL floating-point constant for <code>2pi</code>.
                  *
-                 * @name agi_twoPi
+                 * @alias agi_twoPi
                  * @glslConstant
                  *
                  * @see CesiumMath.TWO_PI
@@ -1635,7 +1641,7 @@ define([
                 /**
                  * A built-in GLSL floating-point constant for <code>1/2pi</code>.
                  *
-                 * @name agi_oneOverTwoPi
+                 * @alias agi_oneOverTwoPi
                  * @glslConstant
                  *
                  * @see CesiumMath.ONE_OVER_TWO_PI
@@ -1652,7 +1658,7 @@ define([
                 /**
                  * A built-in GLSL floating-point constant for converting degrees to radians.
                  *
-                 * @name agi_radiansPerDegree
+                 * @alias agi_radiansPerDegree
                  * @glslConstant
                  *
                  * @see CesiumMath.RADIANS_PER_DEGREE
@@ -1669,7 +1675,7 @@ define([
                 /**
                  * A built-in GLSL floating-point constant for converting radians to degrees.
                  *
-                 * @name agi_degreesPerRadian
+                 * @alias agi_degreesPerRadian
                  * @glslConstant
                  *
                  * @see CesiumMath.DEGREES_PER_RADIAN
@@ -2058,7 +2064,7 @@ define([
         };
 
         return null;
-    }
+    };
 
     return ShaderProgram;
 });
