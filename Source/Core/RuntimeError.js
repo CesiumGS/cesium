@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Core/RuntimeError
+ */
 define(function() {
     "use strict";
 
@@ -11,14 +14,14 @@ define(function() {
      * to a developer error, e.g., invalid argument, that usually indicates a bug in the
      * calling code.
      *
-     * @name RuntimeError
+     * @alias RuntimeError
      *
      * @param {String} [message=undefined] The error message for this exception.
      *
      * @see DeveloperError
      * @constructor
      */
-    function RuntimeError(message) {
+    var RuntimeError = function(message) {
         /**
          * 'RuntimeError' indicating that this exception was thrown due to a runtime error.
          *
@@ -33,7 +36,7 @@ define(function() {
          * @type String
          */
         this.message = message;
-    }
+    };
 
     return RuntimeError;
 });

@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Core/DefaultProxy
+ */
 define(function() {
     "use strict";
 
@@ -6,17 +9,19 @@ define(function() {
      * A simple proxy that appends the desired resource as the sole query parameter
      * to the given proxy URL.
      *
-     * @name DefaultProxy
+     * @alias DefaultProxy
      * @constructor
      *
      * @param {String} proxy The proxy URL that will be used to requests all resources.
      */
-    function DefaultProxy(proxy) {
+    var DefaultProxy = function(proxy) {
         this.proxy = proxy;
-    }
+    };
 
     /**
      * Get the final URL to use to request a given resource.
+     *
+     * @memberof DefaultProxy
      *
      * @param {String} resource The resource to request.
      */

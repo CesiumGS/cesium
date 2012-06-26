@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Core/LeapSecond
+ */
 define([
         'require',
         './DeveloperError'
@@ -19,7 +22,7 @@ define([
      * Describes a single leap second, which is constructed from a {@link JulianDate} and a
      * numerical offset representing the number of seconds between the TAI and UTC time standards.
      *
-     * @name LeapSecond
+     * @alias LeapSecond
      * @constructor
      *
      * @param {JulianDate} date A Julian date representing the time of the leap second.
@@ -46,7 +49,7 @@ define([
      * var date = 'January 1, 1990 00:00:00 UTC';
      * var leapSecond = new LeapSecond(date, 25.0);
      */
-    function LeapSecond(date, offset) {
+    var LeapSecond = function(date, offset) {
         var julianDate;
         var totalTaiOffsetFromUtc;
 
@@ -78,7 +81,7 @@ define([
          * @type {Number}
          */
         this.offset = totalTaiOffsetFromUtc;
-    }
+    };
 
     /**
      * Sets the list of currently known leap seconds from user provided data.

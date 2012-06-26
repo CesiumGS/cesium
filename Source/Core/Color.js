@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Core/Color
+ */
 define(function() {
     "use strict";
 
@@ -7,17 +10,18 @@ define(function() {
      * which range from <code>0</code> (no intensity) to <code>1.0</code> (full intensity).
      *
      * @constructor
-     * @name Color
+     * @alias Color
      */
-    function Color(red, green, blue, alpha) {
+    var Color = function(red, green, blue, alpha) {
         this.red = red;
         this.green = green;
         this.blue = blue;
         this.alpha = alpha;
-    }
+    };
 
     /**
      * Returns a string containing a CSS color value for this color.
+     * @memberof Color
      */
     Color.prototype.toCSSColor = function() {
         var r = this.red * 255 | 0;

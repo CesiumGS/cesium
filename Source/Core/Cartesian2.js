@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Core/Cartesian2
+ */
 define(function() {
     "use strict";
 
@@ -8,7 +11,7 @@ define(function() {
      * If either <code>x</code> or <code>y</code> is undefined, then the corresponding
      * component will be initialized to 0.0.
      *
-     * @name Cartesian2
+     * @alias Cartesian2
      * @constructor
      *
      * @param {Number} x The x-coordinate for the Cartesian type.
@@ -17,7 +20,7 @@ define(function() {
      * @see Cartesian3
      * @see Cartesian4
      */
-    function Cartesian2(x, y) {
+    var Cartesian2 = function(x, y) {
 
         /**
          * DOC_TBA
@@ -36,7 +39,7 @@ define(function() {
          * @see Cartesian2.x
          */
         this.y = (typeof y !== 'undefined') ? y : 0.0;
-    }
+    };
 
     /**
      * Returns a duplicate of a Cartesian2.

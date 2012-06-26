@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Core/DeveloperError
+ */
 define(function() {
     "use strict";
 
@@ -12,14 +15,14 @@ define(function() {
      * be thrown at runtime, e.g., out of memory, that the calling code should be prepared
      * to catch.
      *
-     * @name DeveloperError
+     * @alias DeveloperError
      *
      * @param {String} [message=undefined] The error message for this exception.
      *
      * @see RuntimeError
      * @constructor
      */
-    function DeveloperError(message) {
+    var DeveloperError = function(message) {
         /**
          * 'DeveloperError' indicating that this exception was thrown due to a developer error.
          *
@@ -34,7 +37,7 @@ define(function() {
          * @type String
          */
         this.message = message;
-    }
+    };
 
     return DeveloperError;
 });

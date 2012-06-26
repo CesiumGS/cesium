@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Core/EquidistantCylindricalProjection
+ */
 define([
         './Math',
         './Cartesian3',
@@ -11,12 +14,12 @@ define([
 
     /**
      * DOC_TBA
-     * @name EquidistantCylindricalProjection
+     * @alias EquidistantCylindricalProjection
      * @constructor
      *
      * @immutable
      */
-    function EquidistantCylindricalProjection(ellipsoid) {
+    var EquidistantCylindricalProjection = function(ellipsoid) {
         ellipsoid = ellipsoid || Ellipsoid.WGS84;
 
         var radii = ellipsoid.getRadii();
@@ -24,7 +27,7 @@ define([
         this._ellipsoid = ellipsoid;
         this._halfEquatorCircumference = Math.PI * (Math.max(radii.x, radii.y));
         this._quarterPolarCircumference = 0.5 * Math.PI * radii.z;
-    }
+    };
 
     /*
      * DOC_TBA

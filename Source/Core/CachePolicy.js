@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Core/CachePolicy
+ */
 define([
         './DeveloperError',
         './JulianDate'
@@ -10,7 +13,7 @@ define([
     /**
      * Defines cache replacement policies.
      *
-     * @name CachePolicy
+     * @exports CachePolicy
      *
      * @see Cache
      */
@@ -20,9 +23,6 @@ define([
      * Least recently used cache replacement policy that replaces the least recently used
      * item from the cache first.
      *
-     * @name CachePolicy.LRU
-     *
-     * @constructor
      *
      * @param {Function} description.fetchFunc A function that given the key will return an object to store in the cache.
      * @param {Function} description.removeFunc A optional function that will be called when the object will be removed from the cache.
@@ -47,8 +47,6 @@ define([
      * This function is called by the cache when an object is requested and is stored in the cache.
      * Updates the object as used recently.
      *
-     * @memberof CachePolicy.LRU
-     *
      * @param {Object} object The value stored in the cache that was requested by its key.
      */
     CachePolicy.LRU.prototype.hit = function(object) {
@@ -59,8 +57,6 @@ define([
     /**
      * This function is called by the cache when an object is requested and is not stored in the cache.
      * Replaces the LRU object with the object returned by the fetch function given to the constructor.
-     *
-     * @memberof CachePolicy.LRU
      *
      * @param {String} name The string name used as a key into the hash.
      * @param {Object} key The object that was used as a key into the cache;

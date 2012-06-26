@@ -3,9 +3,9 @@ define(function() {
     "use strict";
 
     /**
-     * DOC_TBA
-     *
      * Distance from the Sun to Pluto in meters.
+     *
+     * @exports FAR
      */
     var FAR = 5906376272000.0;
 

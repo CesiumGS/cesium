@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Core/Matrix4
+ */
 define([
         './DeveloperError',
         './RuntimeError',
@@ -28,7 +31,7 @@ define([
      * When called with sixteen numeric arguments in row-major order, these arguments define the elements of the matrix.
      * </p>
      *
-     * @name Matrix4
+     * @alias Matrix4
      * @constructor
      * @immutable
      *
@@ -36,7 +39,7 @@ define([
      * @see Matrix2
      * @see Matrix3
      */
-    function Matrix4() {
+    var Matrix4 = function() {
         var values = this.values = []; // Column-major
         values.length = numberOfElements;
 
@@ -108,7 +111,7 @@ define([
             values[14] = arguments[11];// Column 3, Row 2
             values[15] = arguments[15];// Column 3, Row 3
         }
-    }
+    };
 
     /**
      * Returns the element at column 0, row 0.

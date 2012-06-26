@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Scene/CentralBody
+ */
 define([
         '../Core/DeveloperError',
         '../Core/RuntimeError',
@@ -53,7 +56,8 @@ define([
         '../Shaders/GroundAtmosphere',
         '../Shaders/SkyAtmosphereFS',
         '../Shaders/SkyAtmosphereVS'
-    ], function(
+    ],
+    function(
         DeveloperError,
         RuntimeError,
         combine,
@@ -178,14 +182,14 @@ define([
     /**
      * DOC_TBA
      *
-     * @param {Ellipsoid} [ellipsoid=WGS84 Ellipsoid] Determines the size and shape of the central body.
-     *
-     * @name CentralBody
+     * @alias CentralBody
      * @constructor
+     *
+     * @param {Ellipsoid} [ellipsoid=WGS84 Ellipsoid] Determines the size and shape of the central body.
      *
      * @exception {DeveloperError} camera is required.
      */
-    function CentralBody(ellipsoid) {
+    var CentralBody = function(ellipsoid) {
         ellipsoid = ellipsoid || Ellipsoid.WGS84;
 
         this._ellipsoid = ellipsoid;
@@ -344,6 +348,8 @@ define([
          * <p>
          * The default is <code>true</code>.
          * </p>
+         *
+         * @default true
          */
         this.affectedByLighting = true;
         this._affectedByLighting = true;
@@ -757,7 +763,7 @@ define([
         // PERFORMANCE_IDEA:  Only combine these if showing the atmosphere.  Maybe this is too much of a micro-optimization.
         // http://jsperf.com/object-property-access-propcount
         this._drawUniforms = combine(uniforms, atmosphereUniforms);
-    }
+    };
 
     /**
      * DOC_TBA

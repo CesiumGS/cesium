@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Core/Cache
+ */
 define([
         './DeveloperError',
         './destroyObject'
@@ -10,7 +13,7 @@ define([
     /**
      * A software cache implementation.
      *
-     * @name Cache
+     * @alias Cache
      *
      * @constructor
      *
@@ -22,7 +25,7 @@ define([
      *
      * @see CachePolicy.LRU
      */
-    function Cache(policy) {
+    var Cache = function(policy) {
         if (!policy) {
             throw new DeveloperError('policy is required.');
         }
@@ -37,7 +40,7 @@ define([
 
         this._cache = {};
         this._policy = policy;
-    }
+    };
 
     /**
      * Returns the object at key in the cache. It is the responsibility of the cache replacement policy

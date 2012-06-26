@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Core/Matrix3
+ */
 define([
         './DeveloperError',
         './Cartesian3'
@@ -19,7 +22,7 @@ define([
      * When called with nine numeric arguments in row-major order, these arguments define the elements of the matrix.
      * </p>
      *
-     * @name Matrix3
+     * @alias Matrix3
      * @constructor
      * @immutable
      *
@@ -28,7 +31,7 @@ define([
      * @see Matrix4
      * @see Quaternion
      */
-    function Matrix3() {
+    var Matrix3 = function() {
         var values = this.values = []; // Column-major
         values.length = numberOfElements;
 
@@ -61,7 +64,7 @@ define([
             values[7] = arguments[5]; // Column 2, Row 1
             values[8] = arguments[8]; // Column 2, Row 2
         }
-    }
+    };
 
     /**
      * Returns the element at column 0, row 0.

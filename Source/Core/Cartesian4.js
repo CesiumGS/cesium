@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Core/Cartesian4
+ */
 define([
         './Cartesian2',
         './Cartesian3'
@@ -17,7 +20,7 @@ define([
      * When called with four numeric arguments; x, y, z, and w; the Cartesian is initialized to (x, y, z, w).
      * </p>
      *
-     * @name Cartesian4
+     * @alias Cartesian4
      * @constructor
      *
      * @param {Number} x The x-coordinate for the Cartesian type.
@@ -28,7 +31,7 @@ define([
      * @see Cartesian2
      * @see Cartesian3
      */
-    function Cartesian4(x, y, z, w) {
+    var Cartesian4 = function(x, y, z, w) {
 
         /**
          * DOC_TBA
@@ -73,7 +76,7 @@ define([
          * @see Cartesian4.z
          */
         this.w = (typeof w !== 'undefined') ? w : 0.0;
-    }
+    };
 
     /**
      * Returns a duplicate of a Cartesian4.

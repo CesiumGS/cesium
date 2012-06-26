@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Core/EventHandler
+ */
 define([
         './DeveloperError',
         './destroyObject',
@@ -19,12 +22,12 @@ define([
      * Handles user input events. Custom functions can be added to be executed on
      * when the user enters input.
      *
-     * @name EventHandler
+     * @alias EventHandler
      *
      * @param {DOC_TBA} element The element to add events to. Defaults to document.
      * @constructor
      */
-    function EventHandler(element) {
+    var EventHandler = function(element) {
         this._keyEvents = {};
 
         this._mouseEvents = {};
@@ -68,7 +71,7 @@ define([
         this._element = element || document;
 
         this._register();
-    }
+    };
 
     EventHandler.prototype._getPosition = function(event) {
         if (this._element === document) {

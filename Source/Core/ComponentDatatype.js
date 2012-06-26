@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Core/ComponentDatatype
+ */
 define(['./Enumeration'], function(Enumeration) {
     "use strict";
 
@@ -14,7 +17,7 @@ define(['./Enumeration'], function(Enumeration) {
     /**
      * DOC_TBA
      *
-     * @name ComponentDatatype
+     * @alias ComponentDatatype
      * @enumeration
      */
     var ComponentDatatype = {};

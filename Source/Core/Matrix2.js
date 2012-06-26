@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Core/Matrix2
+ */
 define([
         './DeveloperError',
         './Cartesian2'
@@ -19,14 +22,14 @@ define([
      * When called with four numeric arguments which define the matrix elements in row-major order; column0Row0, column1Row0, column0Row1, and column1Row1; the matrix is initialized to [column0Row0, column0Row1] [column1Row0, column1Row1].
      * </p>
      *
-     * @name Matrix2
+     * @alias Matrix2
      * @constructor
      * @immutable
      *
      * @see Matrix3
      * @see Matrix4
      */
-    function Matrix2() {
+    var Matrix2 = function() {
         var values = this.values = []; // Column-major
         values.length = numberOfElements;
 
@@ -48,7 +51,7 @@ define([
             values[2] = arguments[1]; // Column 0, Row 0
             values[3] = arguments[3]; // Column 1, Row 1
         }
-    }
+    };
 
     /**
      * Returns the element at column 0, row 0.

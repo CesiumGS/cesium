@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Core/Enumeration
+ */
 define(function() {
     "use strict";
 
@@ -10,7 +13,7 @@ define(function() {
      * @param {String} [name=undefined] The name of the enumeration for debugging purposes.
      * @param {Object} [properties=undefined] An object containing extra properties to be added to the enumeration.
      *
-     * @name Enumeration
+     * @alias Enumeration
      * @constructor
      * @example
      * // Create an object with two enumerations.
@@ -19,7 +22,7 @@ define(function() {
      *     LINEAR : new Enumeration(0x2601, 'LINEAR')
      * };
      */
-    function Enumeration(value, name, properties) {
+    var Enumeration = function(value, name, properties) {
         /**
          * The numeric value of the enumeration.
          * @type Number
