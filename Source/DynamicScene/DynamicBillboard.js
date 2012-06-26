@@ -103,15 +103,78 @@ define([
             if (typeof interval !== 'undefined') {
                 interval = TimeInterval.fromIso8601(interval);
             }
-            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, 'color', CzmlColor, billboardData.color, interval) || billboardUpdated;
-            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, 'eyeOffset', CzmlCartesian3, billboardData.eyeOffset, interval) || billboardUpdated;
-            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, 'horizontalOrigin', CzmlHorizontalOrigin, billboardData.horizontalOrigin, interval) || billboardUpdated;
-            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, 'image', CzmlString, billboardData.image, interval) || billboardUpdated;
-            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, 'pixelOffset', CzmlCartesian2, billboardData.pixelOffset, interval) || billboardUpdated;
-            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, 'scale', CzmlNumber, billboardData.scale, interval) || billboardUpdated;
-            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, 'show', CzmlBoolean, billboardData.show, interval) || billboardUpdated;
-            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, 'verticalOrigin', CzmlVerticalOrigin, billboardData.verticalOrigin, interval) || billboardUpdated;
-            billboardUpdated = DynamicProperty.processCzmlPacket(billboard, 'color', CzmlColor, billboardData.color, interval) || billboardUpdated;
+
+            if (typeof billboardData.color !== 'undefined') {
+                var color = billboard.color;
+                if (typeof color === 'undefined') {
+                    billboard.color = color = new DynamicProperty(CzmlColor);
+                    billboardUpdated = true;
+                }
+                color.processCzmlIntervals(billboardData.color, interval);
+            }
+
+            if (typeof billboardData.eyeOffset !== 'undefined') {
+                var eyeOffset = billboard.eyeOffset;
+                if (typeof eyeOffset === 'undefined') {
+                    billboard.eyeOffset = eyeOffset = new DynamicProperty(CzmlCartesian3);
+                    billboardUpdated = true;
+                }
+                eyeOffset.processCzmlIntervals(billboardData.eyeOffset, interval);
+            }
+
+            if (typeof billboardData.horizontalOrigin !== 'undefined') {
+                var horizontalOrigin = billboard.horizontalOrigin;
+                if (typeof horizontalOrigin === 'undefined') {
+                    billboard.horizontalOrigin = horizontalOrigin = new DynamicProperty(CzmlHorizontalOrigin);
+                    billboardUpdated = true;
+                }
+                horizontalOrigin.processCzmlIntervals(billboardData.horizontalOrigin, interval);
+            }
+
+            if (typeof billboardData.image !== 'undefined') {
+                var image = billboard.image;
+                if (typeof image === 'undefined') {
+                    billboard.image = image = new DynamicProperty(CzmlString);
+                    billboardUpdated = true;
+                }
+                image.processCzmlIntervals(billboardData.image, interval);
+            }
+
+            if (typeof billboardData.pixelOffset !== 'undefined') {
+                var pixelOffset = billboard.pixelOffset;
+                if (typeof pixelOffset === 'undefined') {
+                    billboard.pixelOffset = pixelOffset = new DynamicProperty(CzmlCartesian2);
+                    billboardUpdated = true;
+                }
+                pixelOffset.processCzmlIntervals(billboardData.pixelOffset, interval);
+            }
+
+            if (typeof billboardData.scale !== 'undefined') {
+                var scale = billboard.scale;
+                if (typeof scale === 'undefined') {
+                    billboard.scale = scale = new DynamicProperty(CzmlNumber);
+                    billboardUpdated = true;
+                }
+                scale.processCzmlIntervals(billboardData.scale, interval);
+            }
+
+            if (typeof billboardData.show !== 'undefined') {
+                var show = billboard.show;
+                if (typeof show === 'undefined') {
+                    billboard.show = show = new DynamicProperty(CzmlBoolean);
+                    billboardUpdated = true;
+                }
+                show.processCzmlIntervals(billboardData.show, interval);
+            }
+
+            if (typeof billboardData.verticalOrigin !== 'undefined') {
+                var verticalOrigin = billboard.verticalOrigin;
+                if (typeof verticalOrigin === 'undefined') {
+                    billboard.verticalOrigin = verticalOrigin = new DynamicProperty(CzmlVerticalOrigin);
+                    billboardUpdated = true;
+                }
+                verticalOrigin.processCzmlIntervals(billboardData.verticalOrigin, interval);
+            }
         }
         return billboardUpdated;
     };

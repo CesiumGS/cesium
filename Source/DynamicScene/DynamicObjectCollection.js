@@ -19,8 +19,20 @@ define([
     function DynamicObjectCollection() {
         this._hash = {};
         this._array = [];
+
+        /**
+         * The CompositeDynamicObjectCollection, if any, that this collection is in.
+         */
         this.compositeCollection = undefined;
+
+        /**
+         * An {@link Event} that is fired whenever DynamicObjects in the collection have properties added.
+         */
         this.objectPropertiesChanged = new Event();
+
+        /**
+         * An {@link Event} that is fired whenever DynamicObjects are removed from the collection.
+         */
         this.objectsRemoved = new Event();
     }
 

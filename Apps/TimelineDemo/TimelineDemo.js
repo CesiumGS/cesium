@@ -2,13 +2,17 @@
 define(['dojo',
         'dijit/dijit',
         'Core/Clock',
+        'Core/Color',
         'Core/JulianDate',
+        'Core/TimeInterval',
         'Widgets/Timeline'
     ], function(
          dojo,
          dijit,
          Clock,
+         Color,
          JulianDate,
+         TimeInterval,
          Timeline) {
     "use strict";
 
@@ -16,16 +20,15 @@ define(['dojo',
     var timeline, clock;
 
     function handleSetTime(e) {
-        var scrubJulian = e.timeJulian;
-        var date = scrubJulian.toDate();
-        document.getElementById('mousePos').innerHTML = '<br/>' + timeline.makeLabel(date) + '<br/>' + date.toUTCString() + '<br/>' + date.toString() + '<br/>' + dojo.date.stamp.toISOString(date) +
-                '<br/>' + scrubJulian.getTotalDays();
-        // dojo.date.locale.format(date, {formatLength: 'full'});
+        if (typeof timeline !== 'undefined') {
+            var scrubJulian = e.timeJulian;
+            clock.currentTime = scrubJulian;
+            var date = scrubJulian.toDate();
+            document.getElementById('mousePos').innerHTML = date.toUTCString();
+        }
     }
 
     function handleSetZoom(e) {
-        dojo.byId('formatted').innerHTML = '<br/>' + e.startJulian.toDate().toUTCString() + '<br/>' + e.endJulian.toDate().toUTCString();
-
         var span = timeline._timeBarSecondsSpan, spanUnits = 'sec';
         if (span > 31536000) {
             span /= 31536000;
@@ -47,8 +50,8 @@ define(['dojo',
             spanUnits = 'minutes';
         }
 
-        dojo.byId('julian').innerHTML = '<br/>start=' + e.startJulian.getTotalDays() + '<br/>&nbsp; end=' + e.endJulian.getTotalDays() + '<br/><br/>span = ' + span + ' ' + spanUnits +
-                '<br/>&nbsp; &nbsp; &nbsp; &nbsp;' + timeline._timeBarSecondsSpan + ' sec';
+        dojo.byId('formatted').innerHTML = '<br/>Start: ' + e.startJulian.toDate().toUTCString() + '<br/>Stop: ' + e.endJulian.toDate().toUTCString() + '<br/>Span: ' + span + ' ' + spanUnits;
+        document.getElementById('mousePos').innerHTML = clock.currentTime.toDate().toUTCString();
     }
 
     function makeTimeline(startJulian, scrubJulian, endJulian) {
@@ -58,9 +61,10 @@ define(['dojo',
         timeline.addEventListener('settime', handleSetTime, false);
         timeline.addEventListener('setzoom', handleSetZoom, false);
 
-        timeline.addTrack('#ff8888', 8);
-        timeline.addTrack('#88ff88', 8);
-        timeline.addTrack('#8888ff', 8);
+        timeline.addTrack(new TimeInterval(startJulian, startJulian.addSeconds(60*60)), 8, Color.RED, new Color(0.75, 0.75, 0.75, 0.5));
+        timeline.addTrack(new TimeInterval(endJulian.addSeconds(-60*60), endJulian), 8, Color.GREEN);
+        var middle = startJulian.getSecondsDifference(endJulian) / 4;
+        timeline.addTrack(new TimeInterval(startJulian.addSeconds(middle), startJulian.addSeconds(middle * 3)), 8, Color.BLUE, new Color(0.75, 0.75, 0.75, 0.5));
     }
 
     // Adjust start/end dates in reaction to any calendar/time clicks
@@ -80,13 +84,10 @@ define(['dojo',
         if (startJulian && endJulian) {
             if (!timeline) {
                 makeTimeline(startJulian, startJulian, endJulian);
-                handleSetZoom({
-                    'startJulian' : startJulian,
-                    'endJulian' : endJulian
-                });
-            } else {
-                timeline.zoomTo(startJulian, endJulian);
             }
+            clock.startTime = startJulian;
+            clock.stopTime = endJulian;
+            timeline.zoomTo(startJulian, endJulian);
         }
     }
 
@@ -116,20 +117,19 @@ define(['dojo',
         newDatesSelected();
     }
 
-    function testThings() {
-        //var testDate = new JulianDate(new Date);
-        //console.log(testDate);
-
+    dojo.ready(function() {
         dojo.connect(dijit.byId('startCal'), 'onChange', newStartDateSelected);
         dojo.connect(dijit.byId('endCal'), 'onChange', newEndDateSelected);
         dojo.connect(dijit.byId('startTimeSel'), 'onChange', newStartTimeSelected);
         dojo.connect(dijit.byId('endTimeSel'), 'onChange', newEndTimeSelected);
 
-        dijit.byId('startTimeSel').set('value', 'T12:00:00');
-        dijit.byId('endTimeSel').set('value', 'T12:00:00');
-        dijit.byId('startCal').set('value', '2010-08-12');
-        dijit.byId('endCal').set('value', '2011-08-12');
-    }
+        dijit.byId('startTimeSel').set('value', 'T00:00:00');
+        dijit.byId('endTimeSel').set('value', 'T24:00:00');
 
-    dojo.ready(testThings);
+        var now = new Date();
+        var today = now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate();
+        var tomorrow = now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + (now.getDate() + 1);
+        dijit.byId('startCal').set('value', today);
+        dijit.byId('endCal').set('value', tomorrow);
+    });
 });

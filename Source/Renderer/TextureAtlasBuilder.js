@@ -15,21 +15,35 @@ define([
         this.loaded = false;
     }
 
+    /**
+     * A utility class which dynamically builds a TextureAtlas by associating
+     * a unique identifier with each texture as it is added.  If a texture with
+     * the same id is needed later, the existing index is returne, rather than
+     * adding multiple copies of the same texture.
+     *
+     * @name TextureAtlasBuilder
+     * @constructor
+     *
+     * @see TextureAtlas
+     */
     function TextureAtlasBuilder(textureAtlas) {
-        this._textureAtlas = textureAtlas;
-        this._imagesHash = {};
+        if (typeof textureAtlas === 'undefined') {
+            throw new DeveloperError('textureAtlas is required.');
+        }
+        this.textureAtlas = textureAtlas;
+        this._idHash = {};
     }
 
     /**
      * Retrieves the image from the specified url and adds it to the atlas.
-     * The supplied callback is triggered with the index of the next texture.
+     * The supplied callback is triggered with the index of the texture.
      * If the url is already in the atlas, the atlas is unchanged and the callback
-     * is triggered immediately.
+     * is triggered immediately with the existing index.
      *
      * @memberof TextureAtlasBuilder
      *
      * @param {String} url The url of the image to add to the atlas.
-     * @param {Function} textureAvailableCallback DOC_TBA.
+     * @param {Function} textureAvailableCallback A function taking the image index as it's only parameter.
      *
      * @exception {DeveloperError} url is required.
      * @exception {DeveloperError} textureAvailableCallback is required.
@@ -57,16 +71,16 @@ define([
      * <p>
      * This function is useful for dynamically generated textures that are shared
      * across many billboards.  Only the first billboard will actually create the texture
-     * while subsequent billboards will re-use the existing one.  One example of this is
-     * the LabelCollection, which uses the canvas to render individual letters and share
-     * them across words.
+     * while subsequent billboards will re-use the existing one.
      * </p>
      *
      * @memberof TextureAtlasBuilder
      *
      * @param {String} id The id of the image to add to the atlas.
-     * @param {Function} getImageCallback DOC_TBA.
-     * @param {Function} textureAvailableCallback DOC_TBA.
+     * @param {Function} getImageCallback A function which takes two parameters; first the id of the image to
+     * retrieve and second, a function to call when the image is ready.  The function takes the image as its
+     * only parameter.
+     * @param {Function} textureAvailableCallback A function taking the image index as it's only parameter.
      *
      * @exception {DeveloperError} id is required.
      * @exception {DeveloperError} getImageCallback is required.
@@ -85,7 +99,7 @@ define([
             throw new DeveloperError('textureAvailableCallback is required.');
         }
 
-        var sourceHolder = this._imagesHash[id];
+        var sourceHolder = this._idHash[id];
         if (typeof sourceHolder !== 'undefined') {
             //we're already aware of this source
             if (sourceHolder.loaded) {
@@ -99,12 +113,12 @@ define([
         }
 
         //not in atlas, create the source, which may be async
-        this._imagesHash[id] = sourceHolder = new SourceHolder();
+        this._idHash[id] = sourceHolder = new SourceHolder();
         sourceHolder.imageLoaded.addEventListener(textureAvailableCallback);
 
         var that = this;
         getImageCallback(id, function(newImage) {
-            var index = sourceHolder.index = that._textureAtlas.addImage(newImage);
+            var index = sourceHolder.index = that.textureAtlas.addImage(newImage);
             sourceHolder.loaded = true;
             sourceHolder.imageLoaded.raiseEvent(index, id);
             sourceHolder.imageLoaded = undefined;

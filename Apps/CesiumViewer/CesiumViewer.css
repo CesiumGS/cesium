@@ -54,6 +54,29 @@ html,body {
 	background-position: -168px 0;
 }
 
+.cesiumLogo {
+    display: block;
+    position: absolute;
+    bottom: 72px;
+    left: 5px;
+    text-decoration: none;
+}
+
+.cesiumLogo img {
+    border: none;
+}
+
+.agiLogo {
+    display: block;
+    position: absolute;
+    bottom: 66px;
+    left: 134px;
+    text-decoration: none;
+}
+.agiLogo img {
+    border: none;
+}
+
 .animButtons {
 	display: block;
 	position: absolute;

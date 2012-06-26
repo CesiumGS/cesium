@@ -12,7 +12,6 @@ define([
         '../Core/SunPosition',
         '../Core/EventHandler',
         '../Core/MouseEventType',
-        '../Core/requestAnimationFrame',
         '../Core/Cartesian2',
         '../Core/JulianDate',
         '../Core/DefaultProxy',
@@ -36,7 +35,6 @@ define([
         SunPosition,
         EventHandler,
         MouseEventType,
-        requestAnimationFrame,
         Cartesian2,
         JulianDate,
         DefaultProxy,
@@ -51,7 +49,6 @@ define([
 
     return declare('Cesium.CesiumWidget', [_WidgetBase, _TemplatedMixin], {
         templateString : template,
-        clock : undefined,
         preRender : undefined,
         postSetup : undefined,
         useStreamingImagery : true,
@@ -299,31 +296,10 @@ define([
             }
         },
 
-        render : function() {
-            if (typeof this.preRender !== 'undefined') {
-                this.preRender(this);
-            }
-
-            var clock = this.clock;
-
-            var time;
-            if (typeof clock !== 'undefined') {
-                time = clock.currentTime;
-            } else {
-                time = new JulianDate();
-            }
-
+        render : function(time) {
             var scene = this.scene;
             scene.setSunPosition(SunPosition.compute(time).position);
             scene.render();
-
-            var renderHitched = this._renderHitched;
-            if (typeof renderHitched === 'undefined') {
-                renderHitched = lang.hitch(this, 'render');
-                this._renderHitched = renderHitched;
-            }
-
-            requestAnimationFrame(renderHitched);
         },
 
         _configureCentralBodyImagery : function() {

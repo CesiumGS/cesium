@@ -46,20 +46,20 @@ defineSuite([
             boolean : true
         }];
 
-        dynamicProperty.addCzmlIntervals(booleanConstant);
+        dynamicProperty.processCzmlIntervals(booleanConstant);
         expect(dynamicProperty.getValue(new JulianDate())).toEqual(true);
 
-        dynamicProperty.addCzmlIntervals(booleanVerbose);
+        dynamicProperty.processCzmlIntervals(booleanVerbose);
         expect(dynamicProperty.getValue(new JulianDate())).toEqual(false);
 
-        dynamicProperty.addCzmlIntervals(booleanInterval);
+        dynamicProperty.processCzmlIntervals(booleanInterval);
         expect(dynamicProperty.getValue(JulianDate.fromIso8601('2012-04-18T15:59:00Z'))).toEqual(false);
         expect(dynamicProperty.getValue(JulianDate.fromIso8601('2012-04-18T16:00:00Z'))).toEqual(true);
         expect(dynamicProperty.getValue(JulianDate.fromIso8601('2012-04-19T16:00:00Z'))).toEqual(true);
         expect(dynamicProperty.getValue(JulianDate.fromIso8601('2012-04-19T16:01:00Z'))).toEqual(false);
 
-        dynamicProperty.addCzmlIntervals(booleanIntervalArray);
-        dynamicProperty.addCzmlIntervals(booleanVerbose);
+        dynamicProperty.processCzmlIntervals(booleanIntervalArray);
+        dynamicProperty.processCzmlIntervals(booleanVerbose);
         expect(dynamicProperty.getValue(JulianDate.fromIso8601('2012-04-18T16:00:00Z'))).toEqual(false);
         expect(dynamicProperty.getValue(JulianDate.fromIso8601('2012-04-18T17:30:00Z'))).toEqual(false);
         expect(dynamicProperty.getValue(JulianDate.fromIso8601('2012-04-18T16:06:00Z'))).toEqual(false);
@@ -74,7 +74,7 @@ defineSuite([
             epoch : iso8601Epoch,
             number : [0, 0, 10, 10, 20, 20]
         };
-        property.addCzmlIntervals(czmlInterval);
+        property.processCzmlIntervals(czmlInterval);
 
         expect(property.getValue(epoch)).toEqual(0);
         expect(property.getValue(epoch.addSeconds(4))).toEqual(4);
@@ -93,7 +93,7 @@ defineSuite([
             interpolationAlgorithm : 'LINEAR',
             interpolationDegree : 1
         };
-        property.addCzmlIntervals(czmlInterval);
+        property.processCzmlIntervals(czmlInterval);
 
         expect(property.getValue(epoch)).toEqual(0);
         expect(property.getValue(epoch.addSeconds(4))).toEqual(4);
@@ -112,7 +112,7 @@ defineSuite([
             interpolationAlgorithm : 'LAGRANGE',
             interpolationDegree : 5
         };
-        property.addCzmlIntervals(czmlInterval);
+        property.processCzmlIntervals(czmlInterval);
 
         expect(property.getValue(epoch)).toEqual(0);
         expect(property.getValue(epoch.addSeconds(5))).toEqual(5);
@@ -133,7 +133,7 @@ defineSuite([
             interpolationAlgorithm : 'HERMITE',
             interpolationDegree : 3
         };
-        property.addCzmlIntervals(czmlInterval);
+        property.processCzmlIntervals(czmlInterval);
 
         expect(property.getValue(epoch)).toEqual(0);
         expect(property.getValue(epoch.addSeconds(4))).toEqual(4);
@@ -154,7 +154,7 @@ defineSuite([
             interpolationAlgorithm : 'LINEAR',
             interpolationDegree : 1
         };
-        property.addCzmlIntervals(czmlInterval);
+        property.processCzmlIntervals(czmlInterval);
 
         var result = property.getValue(epoch);
         expect(result.x).toEqual(1);

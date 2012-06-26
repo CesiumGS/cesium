@@ -11,7 +11,7 @@
     content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
 
 <title>Cesium Viewer</title>
-
+<link rel="shortcut icon" href="../../Images/favicon.ico" type="image/x-icon" />
 <link rel="stylesheet" href="CesiumViewer.css" media="screen">
 
 <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../ThirdParty/dojo-release-1.7.2-src/dojo/dojo.js"></script>
@@ -21,19 +21,6 @@
     <div id="cesiumContainer"></div>
     <div data-dojo-type="dijit.form.Button" id="timeLabel" data-dojo-props="class: 'timeLabel', showLabel: true">Time</div>
     <div class="viewButtons">
-        <div id="imagery" data-dojo-type="dijit.form.DropDownButton" data-dojo-props="showLabel: true">
-            <span>Imagery</span>
-            <div data-dojo-type="dijit.TooltipDialog">
-                <span data-dojo-type="dijit.form.ToggleButton" id="imageryAerial"
-                    data-dojo-props="class: 'imagerySelector', showLabel: true, checked: true"> Bing Maps Aerial
-                </span> <span data-dojo-type="dijit.form.ToggleButton" id="imageryAerialWithLabels"
-                    data-dojo-props="class: 'imagerySelector', showLabel: true"> Bing Maps Aerial with Labels </span> <span
-                    data-dojo-type="dijit.form.ToggleButton" id="imageryRoad"
-                    data-dojo-props="class: 'imagerySelector', showLabel: true"> Bing Maps Road </span> <span
-                    data-dojo-type="dijit.form.ToggleButton" id="imagerySingleTile"
-                    data-dojo-props="class: 'imagerySelector', showLabel: true"> No Streaming Imagery </span>
-            </div>
-        </div>
         <div id="viewHome" data-dojo-type="dijit.form.Button" data-dojo-props="iconClass: 'viewIcon', showLabel: false">
             Home View</div>
         <div id="view2D" data-dojo-type="dijit.form.ToggleButton"
@@ -46,7 +33,26 @@
             data-dojo-props="iconClass: 'viewIcon toggleCbLighting', showLabel: false, checked: false">Toggle Lighting</div>
         <div id="viewFullScreen" data-dojo-type="dijit.form.Button"
             data-dojo-props="iconClass: 'viewIcon viewFullScreen', showLabel: false">Toggle Full Screen</div>
+        <div id="imagery" data-dojo-type="dijit.form.DropDownButton" data-dojo-props="showLabel: true">
+            <span><a><img
+                    src="../../Images/Bing_Logo_51x19_White.png"
+                    alt="Bing" width="64" height="24" /></a></span>
+            <div data-dojo-type="dijit.TooltipDialog">
+                <span data-dojo-type="dijit.form.ToggleButton" id="imageryAerial"
+                    data-dojo-props="class: 'imagerySelector', showLabel: true, checked: true"> Bing Maps Aerial
+                </span> <span data-dojo-type="dijit.form.ToggleButton" id="imageryAerialWithLabels"
+                    data-dojo-props="class: 'imagerySelector', showLabel: true"> Bing Maps Aerial with Labels </span> <span
+                    data-dojo-type="dijit.form.ToggleButton" id="imageryRoad"
+                    data-dojo-props="class: 'imagerySelector', showLabel: true"> Bing Maps Road </span> <span
+                    data-dojo-type="dijit.form.ToggleButton" id="imagerySingleTile"
+                    data-dojo-props="class: 'imagerySelector', showLabel: true"> No Streaming Imagery </span>
+            </div>
+        </div>
     </div>
+    <a class="cesiumLogo" href="http://cesium.agi.com/" target="_top"><img
+        src="../../Images/Cesium_Logo_overlay.png" alt="Cesium" width="118" height="26" /></a>
+    <a class="agiLogo" href="http://www.agi.com/" target="_top"><img src="../../Images/AGILogo3_overlay.png"
+        alt="AGI" width="79" height="37" /></a>
     <div class="animButtons">
         <div id="animReset" data-dojo-type="dijit.form.Button"
             data-dojo-props="iconClass: 'animationIcon', showLabel: false">Reset</div>

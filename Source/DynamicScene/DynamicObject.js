@@ -145,15 +145,17 @@ define([
      * @see CzmlDefaults#updaters
      */
     DynamicObject.processCzmlPacketPosition = function(dynamicObject, packet) {
+        var propertyCreated = false;
         var positionData = packet.position;
         if (typeof positionData !== 'undefined') {
-            var position = DynamicPositionProperty.processCzmlPacket(positionData, dynamicObject.position);
-            if (typeof dynamicObject.position === 'undefined') {
-                dynamicObject.position = position;
-                return true;
+            var position = dynamicObject.position;
+            propertyCreated = typeof position === 'undefined';
+            if (propertyCreated) {
+                dynamicObject.position = position = new DynamicPositionProperty();
             }
+            position.processCzmlIntervals(positionData);
         }
-        return false;
+        return propertyCreated;
     };
 
     /**
@@ -170,11 +172,17 @@ define([
      * @see CzmlDefaults#updaters
      */
     DynamicObject.processCzmlPacketOrientation = function(dynamicObject, packet) {
+        var propertyCreated = false;
         var orientationData = packet.orientation;
         if (typeof orientationData !== 'undefined') {
-            return DynamicProperty.processCzmlPacket(dynamicObject, 'orientation', CzmlUnitQuaternion, orientationData);
+            var orientation = dynamicObject.orientation;
+            propertyCreated = typeof orientation === 'undefined';
+            if (propertyCreated) {
+                dynamicObject.orientation = orientation = new DynamicProperty(CzmlUnitQuaternion);
+            }
+            orientation.processCzmlIntervals(orientationData);
         }
-        return false;
+        return propertyCreated;
     };
 
     /**
@@ -192,15 +200,17 @@ define([
      * @see CzmlDefaults#updaters
      */
     DynamicObject.processCzmlPacketVertexPositions = function(dynamicObject, packet, dynamicObjectCollection) {
+        var propertyCreated = false;
         var vertexPositionsData = packet.vertexPositions;
         if (typeof vertexPositionsData !== 'undefined') {
-            var vertexPositions = DynamicVertexPositionsProperty.processCzmlPacket(vertexPositionsData, dynamicObjectCollection, dynamicObject.vertexPositions);
-            if (typeof dynamicObject.vertexPositions === 'undefined') {
-                dynamicObject.vertexPositions = vertexPositions;
-                return true;
+            var vertexPositions = dynamicObject.vertexPositions;
+            propertyCreated = typeof dynamicObject.vertexPositions === 'undefined';
+            if (propertyCreated) {
+                dynamicObject.vertexPositions = vertexPositions = new DynamicVertexPositionsProperty();
             }
+            vertexPositions.processCzmlIntervals(vertexPositionsData, undefined, dynamicObjectCollection);
         }
-        return false;
+        return propertyCreated;
     };
 
     /**
@@ -217,15 +227,16 @@ define([
      * @see CzmlDefaults#updaters
      */
     DynamicObject.processCzmlPacketAvailability = function(dynamicObject, packet) {
+        var propertyCreated = false;
         var availability = packet.availability;
         if (typeof availability !== 'undefined') {
             var interval = TimeInterval.fromIso8601(availability);
             if (typeof interval !== 'undefined') {
+                propertyCreated = typeof dynamicObject.availability === 'undefined';
                 dynamicObject._setAvailability(interval);
             }
-            return true;
         }
-        return false;
+        return propertyCreated;
     };
 
 

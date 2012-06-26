@@ -27,7 +27,13 @@ define([
      * @see CzmlDefaults
      */
     function DynamicPolygon() {
+        /**
+         * A DynamicProperty of type CzmlBoolean which determines the polygon's visibility.
+         */
         this.show = undefined;
+        /**
+         * A DynamicMaterialProperty which determines the polygon's material.
+         */
         this.material = undefined;
     }
 
@@ -61,8 +67,23 @@ define([
                 interval = TimeInterval.fromIso8601(interval);
             }
 
-            polygonUpdated = DynamicProperty.processCzmlPacket(polygon, 'show', CzmlBoolean, polygonData.show, interval) || polygonUpdated;
-            polygonUpdated = DynamicMaterialProperty.processCzmlPacket(polygon, 'material', polygonData.material, interval) || polygonUpdated;
+            if (typeof polygonData.show !== 'undefined') {
+                var show = polygon.show;
+                if (typeof show === 'undefined') {
+                    polygon.show = show = new DynamicProperty(CzmlBoolean);
+                    polygonUpdated = true;
+                }
+                show.processCzmlIntervals(polygonData.show, interval);
+            }
+
+            if (typeof polygonData.material !== 'undefined') {
+                var material = polygon.material;
+                if (typeof material === 'undefined') {
+                    polygon.material = material = new DynamicMaterialProperty();
+                    polygonUpdated = true;
+                }
+                material.processCzmlIntervals(polygonData.material, interval);
+            }
         }
         return polygonUpdated;
     };

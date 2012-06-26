@@ -16,6 +16,7 @@ define(['dojo/dom',
         'Core/FullScreen',
         'Core/Ellipsoid',
         'Core/Transforms',
+        'Core/requestAnimationFrame',
         'Scene/SceneTransitioner',
         'Scene/BingMapsStyle',
         'DynamicScene/processCzml',
@@ -38,6 +39,7 @@ function(dom,
          FullScreen,
          Ellipsoid,
          Transforms,
+         requestAnimationFrame,
          SceneTransitioner,
          BingMapsStyle,
          processCzml,
@@ -62,7 +64,11 @@ function(dom,
     var lastCameraCenteredObjectID;
 
     function updateSpeedIndicator() {
-        speedIndicatorElement.innerHTML = clock.multiplier + 'x realtime';
+        if (animating) {
+            speedIndicatorElement.innerHTML = clock.multiplier + 'x realtime';
+        } else {
+            speedIndicatorElement.innerHTML = clock.multiplier + 'x realtime (currently paused)';
+        }
     }
 
     function setTimeFromBuffer() {
@@ -120,51 +126,53 @@ function(dom,
     var cesium = new CesiumWidget({
         clock : clock,
 
-        preRender : function(widget) {
-            var currentTime = animating ? clock.tick() : clock.currentTime;
-
-            if (typeof timeline !== 'undefined') {
-                timeline.updateFromClock();
-            }
-            visualizers.update(currentTime);
-
-            if (Math.abs(currentTime.getSecondsDifference(lastTimeLabelUpdate)) >= 1.0) {
-                timeLabel.innerHTML = currentTime.toDate().toUTCString();
-                lastTimeLabelUpdate = currentTime;
-            }
-
-            // Update the camera to stay centered on the selected object, if any.
-            if (cameraCenteredObjectID) {
-                var dynamicObject = dynamicObjectCollection.getObject(cameraCenteredObjectID);
-                if (dynamicObject && dynamicObject.position) {
-                    cameraCenteredObjectIDPosition = dynamicObject.position.getValueCartesian(currentTime, cameraCenteredObjectIDPosition);
-                    if (typeof cameraCenteredObjectIDPosition !== 'undefined') {
-                        // If we're centering on an object for the first time, zoom to within 2km of it.
-                        if (lastCameraCenteredObjectID !== cameraCenteredObjectID) {
-                            lastCameraCenteredObjectID = cameraCenteredObjectID;
-                            var camera = widget.scene.getCamera();
-                            camera.position = camera.position.normalize().multiplyWithScalar(5000.0);
-
-                            var controllers = camera.getControllers();
-                            controllers.removeAll();
-                            this.spindleController = controllers.addSpindle();
-                        }
-
-                        if (typeof this.spindleController !== 'undefined' && !this.spindleController.isDestroyed()) {
-                            var transform = Transforms.eastNorthUpToFixedFrame(cameraCenteredObjectIDPosition, widget.ellipsoid);
-                            this.spindleController.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
-                        }
-                    }
-                }
-            }
-        },
-
         postSetup : function(widget) {
             var scene = widget.scene;
 
+            function update() {
+                var currentTime = animating ? clock.tick() : clock.currentTime;
+
+                if (typeof timeline !== 'undefined') {
+                    timeline.updateFromClock();
+                }
+                visualizers.update(currentTime);
+
+                if (Math.abs(currentTime.getSecondsDifference(lastTimeLabelUpdate)) >= 1.0) {
+                    timeLabel.innerHTML = currentTime.toDate().toUTCString();
+                    lastTimeLabelUpdate = currentTime;
+                }
+
+                // Update the camera to stay centered on the selected object, if any.
+                if (cameraCenteredObjectID) {
+                    var dynamicObject = dynamicObjectCollection.getObject(cameraCenteredObjectID);
+                    if (dynamicObject && dynamicObject.position) {
+                        cameraCenteredObjectIDPosition = dynamicObject.position.getValueCartesian(currentTime, cameraCenteredObjectIDPosition);
+                        if (typeof cameraCenteredObjectIDPosition !== 'undefined') {
+                            // If we're centering on an object for the first time, zoom to within 2km of it.
+                            if (lastCameraCenteredObjectID !== cameraCenteredObjectID) {
+                                lastCameraCenteredObjectID = cameraCenteredObjectID;
+                                var camera = widget.scene.getCamera();
+                                camera.position = camera.position.normalize().multiplyWithScalar(5000.0);
+
+                                var controllers = camera.getControllers();
+                                controllers.removeAll();
+                                this.spindleController = controllers.addSpindle();
+                            }
+
+                            if (typeof this.spindleController !== 'undefined' && !this.spindleController.isDestroyed()) {
+                                var transform = Transforms.eastNorthUpToFixedFrame(cameraCenteredObjectIDPosition, widget.ellipsoid);
+                                this.spindleController.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
+                            }
+                        }
+                    }
+                }
+                widget.render(currentTime);
+                requestAnimationFrame(update);
+            }
+
             transitioner = new SceneTransitioner(scene);
             visualizers = VisualizerCollection.createCzmlStandardCollection(scene, dynamicObjectCollection);
-            widget.enableStatistics(true);
+            //widget.enableStatistics(true);
 
             var queryObject = {};
             if (window.location.search) {
@@ -181,13 +189,6 @@ function(dom,
             if (typeof queryObject.lookAt !== 'undefined') {
                 cameraCenteredObjectID = queryObject.lookAt;
             }
-
-            var timelineWidget = registry.byId('mainTimeline');
-            timelineWidget.clock = clock;
-            timelineWidget.setupCallback = function(t) {
-                timeline = t;
-                timeline.zoomTo(clock.startTime, clock.stopTime);
-            };
 
             on(cesium, 'ObjectRightClickSelected', onObjectRightClickSelected);
 
@@ -218,14 +219,17 @@ function(dom,
                 animReverse.set('checked', false);
                 animPause.set('checked', true);
                 animPlay.set('checked', false);
+                updateSpeedIndicator();
             });
 
-            on(animPause, 'Click', function() {
+            function onAnimPause() {
                 animating = false;
                 animReverse.set('checked', false);
                 animPause.set('checked', true);
                 animPlay.set('checked', false);
-            });
+                updateSpeedIndicator();
+            }
+            on(animPause, 'Click', onAnimPause);
 
             function play() {
                 animating = true;
@@ -233,6 +237,7 @@ function(dom,
                 animReverse.set('checked', true);
                 animPause.set('checked', false);
                 animPlay.set('checked', false);
+                updateSpeedIndicator();
                 updateSpeedIndicator();
             }
 
@@ -259,6 +264,19 @@ function(dom,
                 clock.multiplier *= 2.0;
                 updateSpeedIndicator();
             });
+
+            function onTimelineScrub(e) {
+                clock.currentTime = e.timeJulian;
+                onAnimPause();
+            }
+
+            var timelineWidget = registry.byId('mainTimeline');
+            timelineWidget.clock = clock;
+            timelineWidget.setupCallback = function(t) {
+                timeline = t;
+                timeline.addEventListener('settime', onTimelineScrub, false);
+                timeline.zoomTo(clock.startTime, clock.stopTime);
+            };
 
             var viewHome = registry.byId('viewHome');
             var view2D = registry.byId('view2D');
@@ -320,18 +338,22 @@ function(dom,
                 cesium.centralBody.affectedByLighting = !value;
             });
 
+            var imagery = registry.byId('imagery');
             var imageryAerial = registry.byId('imageryAerial');
             var imageryAerialWithLabels = registry.byId('imageryAerialWithLabels');
             var imageryRoad = registry.byId('imageryRoad');
             var imagerySingleTile = registry.byId('imagerySingleTile');
             var imageryOptions = [imageryAerial, imageryAerialWithLabels, imageryRoad, imagerySingleTile];
+            var bingHtml = imagery.containerNode.innerHTML;
 
             function createImageryClickFunction(control, style) {
                 return function() {
                     if (style) {
                         cesium.setStreamingImageryMapStyle(style);
+                        imagery.containerNode.innerHTML = bingHtml;
                     } else {
                         cesium.enableStreamingImagery(false);
+                        imagery.containerNode.innerHTML = "Imagery";
                     }
 
                     imageryOptions.forEach(function(o) {
@@ -344,6 +366,8 @@ function(dom,
             on(imageryAerialWithLabels, 'Click', createImageryClickFunction(imageryAerialWithLabels, BingMapsStyle.AERIAL_WITH_LABELS));
             on(imageryRoad, 'Click', createImageryClickFunction(imageryRoad, BingMapsStyle.ROAD));
             on(imagerySingleTile, 'Click', createImageryClickFunction(imagerySingleTile, undefined));
+
+            update();
         },
 
         onSetupError : function(widget, error) {
