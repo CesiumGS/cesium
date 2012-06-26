@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Scene/SensorVolumeCollection
+ */
 define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
@@ -16,12 +19,12 @@ define([
     /**
      * DOC_TBA
      *
-     * @name SensorVolumeCollection
+     * @alias SensorVolumeCollection
      * @constructor
      */
-    function SensorVolumeCollection() {
+    var SensorVolumeCollection = function() {
         this._sensors = [];
-    }
+    };
 
     /**
      * DOC_TBA

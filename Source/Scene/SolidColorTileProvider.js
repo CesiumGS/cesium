@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Scene/SolidColorTileProvider
+ */
 define([
         '../Core/DeveloperError',
         '../Core/Extent',
@@ -15,7 +18,7 @@ define([
      * Provides tile images with a different solid color for each zoom level.
      * Useful for debugging or testing different {@link CentralBody} options.
      *
-     * @name SolidColorTileProvider
+     * @alias SolidColorTileProvider
      * @constructor
      *
      * @param {Number} [maxZoom=23] The maximum zoom level to generate tiles.
@@ -25,7 +28,7 @@ define([
      * @see OpenStreetMapTileProvider
      * @see CompositeTileProvider
      */
-    function SolidColorTileProvider(maxZoom) {
+    var SolidColorTileProvider = function(maxZoom) {
         var width = 256;
         var height = 256;
         maxZoom = maxZoom || 23;
@@ -102,7 +105,7 @@ define([
          * @see Projections
          */
         this.projection = Projections.WGS84;
-    }
+    };
 
     SolidColorTileProvider.prototype._createImage = function(color, width, height) {
         var canvas = document.createElement('canvas');

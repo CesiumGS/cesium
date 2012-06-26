@@ -1,12 +1,29 @@
 /*global define*/
+/**
+ * @exports Scene/ViscousDrag
+ */
 define(function() {
     "use strict";
 
-    function ViscousDrag(coefficientOfDrag) {
+    /**
+     * DOC_TBA
+     *
+     * @alias ViscousDrag
+     * @constructor
+     *
+     * @param {Number} coefficientOfDrag
+     */
+    var ViscousDrag = function(coefficientOfDrag) {
         // TODO:  throw if coefficient is negative?  Zero (no drag) is OK, I guess.
         this.coefficientOfDrag = coefficientOfDrag || 1.0;
-    }
+    };
 
+    /**
+     * DOC_TBA
+     * @memberof ViscousDrag
+     *
+     * @param particles
+     */
     ViscousDrag.prototype.apply = function(particles) {
         if (particles) {
             var negativeCoefficientOfDrag = -this.coefficientOfDrag;

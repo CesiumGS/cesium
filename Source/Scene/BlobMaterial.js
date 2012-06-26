@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Scene/BlobMaterial
+ */
 define([
         '../Shaders/Noise',
         '../Shaders/BlobMaterial'
@@ -10,10 +13,10 @@ define([
     /**
      * DOC_TBA
      *
-     * @name BlobMaterial
+     * @alias BlobMaterial
      * @constructor
      */
-    function BlobMaterial(template) {
+    var BlobMaterial = function(template) {
         var t = template || {};
 
         /**
@@ -55,7 +58,7 @@ define([
                 return that.repeat;
             }
         };
-    }
+    };
 
     BlobMaterial.prototype._getShaderSource = function() {
         return '#line 0\n' +

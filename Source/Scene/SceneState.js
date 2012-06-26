@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Scene/SceneState
+ */
 define([], function() {
     "use strict";
 
@@ -6,10 +9,10 @@ define([], function() {
      * State information about the current scene.  An instance of this class
      * is provided to update functions.
      *
-     * @name SceneState
+     * @alias SceneState
      * @constructor
      */
-    function SceneState() {
+    var SceneState = function() {
         /**
          * The current mode of the scene.
          *
@@ -28,7 +31,7 @@ define([], function() {
          * The current camera.
          */
         this.camera = undefined;
-    }
+    };
 
     return SceneState;
 });

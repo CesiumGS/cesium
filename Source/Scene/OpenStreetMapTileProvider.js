@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Scene/OpenStreetMapTileProvider
+ */
 define([
         '../Core/DeveloperError',
         '../Core/Extent',
@@ -14,7 +17,7 @@ define([
     /**
      * Provides tile images hosted by OpenStreetMap.
      *
-     * @name OpenStreetMapTileProvider
+     * @alias OpenStreetMapTileProvider
      * @constructor
      *
      * @param {String} description.url The OpenStreetMap url.
@@ -36,7 +39,7 @@ define([
      *     url : 'http://tile.openstreetmap.org/'
      * });
      */
-    function OpenStreetMapTileProvider(description) {
+    var OpenStreetMapTileProvider = function(description) {
         var desc = description || {};
 
         this._url = desc.url || 'http://tile.openstreetmap.org/';
@@ -102,7 +105,7 @@ define([
         this.projection = Projections.MERCATOR;
 
         this._logo = undefined;
-    }
+    };
 
     /**
      * Loads the image for <code>tile</code>.

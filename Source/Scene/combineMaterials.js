@@ -4,8 +4,9 @@ define(function() {
 
     /**
      * DOC_TBA
+     * @exports combineMaterials
      */
-    function combineMaterials() {
+    var combineMaterials = function() {
         var unforms = {};
         var concatenatedSource = '';
         var duplicateUniforms = {};
@@ -51,7 +52,7 @@ define(function() {
                 return concatenatedSource;
             }
         };
-    }
+    };
 
     return combineMaterials;
 });

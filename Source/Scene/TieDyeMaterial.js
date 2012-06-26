@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Scene/TieDyeMaterial
+ */
 define([
         '../Shaders/Noise',
         '../Shaders/TieDyeMaterial'
@@ -10,10 +13,10 @@ define([
     /**
      * DOC_TBA
      *
-     * @name TieDyeMaterial
+     * @alias TieDyeMaterial
      * @constructor
      */
-    function TieDyeMaterial(template) {
+    var TieDyeMaterial = function(template) {
         var t = template || {};
 
         /**
@@ -55,7 +58,7 @@ define([
                 return that.frequency;
             }
         };
-    }
+    };
 
     TieDyeMaterial.prototype._getShaderSource = function() {
         return '#line 0\n' +

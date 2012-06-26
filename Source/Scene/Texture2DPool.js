@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Scene/Texture2DPool
+ */
 define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
@@ -42,21 +45,21 @@ define([
      * <br/><br/>
      * Texture pools are useful when textures are being created and destroyed repeatedly.
      *
-     * @name Texture2DPool
+     * @alias Texture2DPool
      * @constructor
      *
      * @param {Context} context The context to use to create textures when needed.
      *
      * @see Texture
      */
-    function Texture2DPool(context) {
+    var Texture2DPool = function(context) {
         if (typeof context === 'undefined') {
             throw new DeveloperError('context is required.');
         }
 
         this._context = context;
         this._free = {};
-    }
+    };
 
     /**
      * Create a texture.  This function takes the same arguments as {@link Context#createTexture2D},

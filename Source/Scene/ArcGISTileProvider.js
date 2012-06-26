@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Scene/ArcGISTileProvider
+ */
 define([
         '../Core/DeveloperError',
         '../Core/Extent',
@@ -16,7 +19,7 @@ define([
     /**
      * Provides tile images hosted by an ArcGIS Server.
      *
-     * @name ArcGISTileProvider
+     * @alias ArcGISTileProvider
      * @constructor
      *
      * @param {String} description.host The ArcGIS Server host name.
@@ -43,7 +46,7 @@ define([
      *     service : 'World_Street_Map'
      * });
      */
-    function ArcGISTileProvider(description) {
+    var ArcGISTileProvider = function(description) {
         var desc = description || {};
         var instance = desc.instance || 'arcgis/rest';
 
@@ -165,7 +168,7 @@ define([
             },
             proxy : this._proxy
         });
-    }
+    };
 
     /**
      * Loads the image for <code>tile</code>.

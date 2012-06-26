@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Scene/Camera2DController
+ */
 define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
@@ -31,7 +34,7 @@ define([
      * A type that defines camera behavior: movement of the position in the direction
      * of the camera's axes and manipulating a camera's orthographic frustum for a zooming effect.
      *
-     * @name Camera2DController
+     * @alias Camera2DController
      *
      * @param {HTMLCanvasElement} canvas An HTML canvas element used for its dimensions
      * and for listening on user events.
@@ -40,7 +43,7 @@ define([
      *
      * @internalConstructor
      */
-    function Camera2DController(canvas, camera, ellipsoid) {
+    var Camera2DController = function(canvas, camera, ellipsoid) {
         ellipsoid = ellipsoid || Ellipsoid.WGS84;
 
         this._canvas = canvas;
@@ -80,7 +83,7 @@ define([
         this._lastInertiaTranslateMovement = undefined;
         this._lastInertiaZoomMovement = undefined;
         this._lastInertiaWheelZoomMovement = undefined;
-    }
+    };
 
     /**
      * DOC_TBA

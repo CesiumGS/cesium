@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Scene/Scene
+ */
 define([
         '../Core/destroyObject',
         '../Core/EquidistantCylindricalProjection',
@@ -24,10 +27,10 @@ define([
     /**
      * DOC_TBA
      *
-     * @name Scene
+     * @alias Scene
      * @constructor
      */
-    function Scene(canvas) {
+    var Scene = function(canvas) {
         var context = new Context(canvas);
 
         this._sceneState = new SceneState();
@@ -75,7 +78,7 @@ define([
          * @type Number
          */
         this.morphTime = 1.0;
-    }
+    };
 
     /**
      * DOC_TBA

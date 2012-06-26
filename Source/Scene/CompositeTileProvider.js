@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Scene/CompositeTileProvider
+ */
 define([
         '../Core/DeveloperError',
         '../Core/Ellipsoid'
@@ -10,7 +13,7 @@ define([
     /**
      * A container for tile providers that will change based of the altitude of the camera.
      *
-     * @name CompositeTileProvider
+     * @alias CompositeTileProvider
      * @constructor
      *
      * @param {Array} list An array of objects with provider and height attributes. The height attribute determines
@@ -43,7 +46,7 @@ define([
      *  ], scene.getCamera(), ellipsoid);
      *
      */
-    function CompositeTileProvider(list, camera, ellipsoid) {
+    var CompositeTileProvider = function(list, camera, ellipsoid) {
         if (!list) {
             throw new DeveloperError('A non-empty list is required.');
         }
@@ -115,7 +118,7 @@ define([
         if (this.tileHeight === Number.MAX_VALUE) {
             this.tileHeight = null;
         }
-    }
+    };
 
     CompositeTileProvider._compare = function(a, b) {
         // if height isn't provided, default to 0.0

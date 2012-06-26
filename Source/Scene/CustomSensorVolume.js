@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Scene/CustomSensorVolume
+ */
 define([
         '../Core/DeveloperError',
         '../Core/combine',
@@ -47,12 +50,12 @@ define([
     /**
      * DOC_TBA
      *
-     * @name CustomSensorVolume
+     * @alias CustomSensorVolume
      * @constructor
      *
      * @see SensorVolumeCollection#addCustom
      */
-    function CustomSensorVolume(template) {
+    var CustomSensorVolume = function(template) {
         var t = template || {};
 
         this._va = undefined;
@@ -182,7 +185,7 @@ define([
         this._pickUniforms = null;
 
         this._mode = SceneMode.SCENE3D;
-    }
+    };
 
     /**
      * DOC_TBA

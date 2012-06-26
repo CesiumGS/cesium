@@ -69,6 +69,9 @@
    on a Microsoft Windows operating system product.
  */
 /*global define*/
+/**
+ * @exports Scene/BingMapsTileProvider
+ */
 define([
         '../Core/DeveloperError',
         '../Core/Extent',
@@ -88,7 +91,7 @@ define([
     /**
      * Uses the Bing Map imagery API to load images for tiles.
      *
-     * @name BingMapsTileProvider
+     * @alias BingMapsTileProvider
      * @constructor
      *
      * @param {String} description.server The name of the Bing Maps server hosting the imagery.
@@ -113,7 +116,7 @@ define([
      *     mapStyle : BingMapsStyle.AERIAL
      * });
      */
-    function BingMapsTileProvider(description) {
+    var BingMapsTileProvider = function(description) {
         var desc = description || {};
         var key = desc.key || 'AquXz3981-1ND5jGs8qQn7R7YUP8qkWi77yZSVM7o3nIvzb-Mg0W2Ta57xuUyywX';
         var mapStyle = desc.mapStyle || BingMapsStyle.AERIAL;
@@ -200,7 +203,7 @@ define([
         this._url = undefined;
         this._deferredQueue = [];
         this._requestTemplate();
-    }
+    };
 
     //for a given tile, if we have an element with the same tile in the queue, return the element.
     function findInDeferredQueue(deferredQueue, tile) {

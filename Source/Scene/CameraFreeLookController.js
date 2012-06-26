@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Scene/CameraFreeLookController
+ */
 define([
         '../Core/destroyObject',
         '../Core/Math',
@@ -27,7 +30,7 @@ define([
      * A type that defines camera behavior: movement of the position in the direction
      * of the camera's axes and rotation of the axes keeping the position stationary.
      *
-     * @name CameraFreeLookController
+     * @alias CameraFreeLookController
      *
      * @param {HTMLCanvasElement} canvas An HTML canvas element used for its dimensions
      * and for listening on user events.
@@ -35,7 +38,7 @@ define([
      *
      * @internalConstructor
      */
-    function CameraFreeLookController(canvas, camera) {
+    var CameraFreeLookController = function(canvas, camera) {
         this._canvas = canvas;
         this._camera = camera;
         this._handler = new CameraEventHandler(canvas, CameraEventType.LEFT_DRAG, EventModifier.SHIFT);
@@ -52,7 +55,7 @@ define([
          * DOC_TBD
          */
         this.horizontalRotationAxis = undefined;
-    }
+    };
 
     /**
      * Translates the camera's position by <code>rate</code> along the camera's view vector.

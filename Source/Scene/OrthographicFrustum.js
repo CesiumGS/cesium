@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Scene/OrthographicFrustum
+ */
 define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
@@ -19,7 +22,7 @@ define([
      * define the unit vector normal to the plane, and the w component is the distance of the
      * plane from the origin/camera position.
      *
-     * @name OrthographicFrustum
+     * @alias OrthographicFrustum
      * @constructor
      *
      * @example
@@ -33,7 +36,7 @@ define([
      * frustum.near = 0.01 * maxRadii;
      * frustum.far = 50.0 * maxRadii;
      */
-    function OrthographicFrustum() {
+    var OrthographicFrustum = function() {
         /**
          * DOC_TBA
          *
@@ -83,7 +86,7 @@ define([
         this._far = null;
 
         this._orthographicMatrix = null;
-    }
+    };
 
     /**
      * Returns the orthographic projection matrix computed from the view frustum.

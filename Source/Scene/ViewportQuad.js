@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Scene/ViewportQuad
+ */
 define([
         '../Core/destroyObject',
         '../Core/Rectangle',
@@ -22,10 +25,10 @@ define([
     /**
      * DOC_TBA
      *
-     * @name ViewportQuad
+     * @alias ViewportQuad
      * @constructor
      */
-    function ViewportQuad(rectangle) {
+    var ViewportQuad = function(rectangle) {
         this.renderState = null;
         this._sp = null;
         this._va = null;
@@ -50,7 +53,7 @@ define([
                 return that._texture;
             }
         };
-    }
+    };
 
     /**
      * DOC_TBA

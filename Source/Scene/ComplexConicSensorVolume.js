@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Scene/ComplexConicSensorVolume
+ */
 define([
         '../Core/DeveloperError',
         '../Core/combine',
@@ -56,12 +59,12 @@ define([
     /**
      * DOC_TBA
      *
-     * @name ComplexConicSensorVolume
+     * @alias ComplexConicSensorVolume
      * @constructor
      *
      * @see SensorVolumeCollection#addComplexConic
      */
-    function ComplexConicSensorVolume(template) {
+    var ComplexConicSensorVolume = function(template) {
         var t = template || {};
 
         this._va = undefined;
@@ -243,7 +246,7 @@ define([
         this._drawUniforms = null;
         this._pickUniforms = null;
         this._mode = SceneMode.SCENE3D;
-    }
+    };
 
     ComplexConicSensorVolume.prototype._getBoundingVolume = function() {
         var r = isFinite(this.radius) ? this.radius : FAR;

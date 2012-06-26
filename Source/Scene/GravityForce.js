@@ -1,18 +1,21 @@
 /*global define*/
+/**
+ * @exports Scene/GravityForce
+ */
 define(['../Core/Ellipsoid'], function(Ellipsoid) {
     "use strict";
 
     /**
      * DOC_TBA
      *
-     * @name GravityForce
+     * @alias GravityForce
      * @constructor
      */
-    function GravityForce(template) {
+    var GravityForce = function(template) {
         template = template || {};
         this.ellipsoid = template.ellipsoid || Ellipsoid.WGS84;
         this.gravitationalConstant = template.gravitationalConstant || 1.0;
-    }
+    };
 
     /**
      * DOC_TBA

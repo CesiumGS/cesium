@@ -1,4 +1,7 @@
 /*global define*/
+/*
+ * @exports Scene/SceneTransitioner
+ */
 define([
         '../Core/destroyObject',
         '../Core/Math',
@@ -32,10 +35,10 @@ define([
     /**
      * DOC_TBA
      *
-     * @name SceneTransitioner
+     * @alias SceneTransitioner
      * @constructor
      */
-    function SceneTransitioner(scene, ellipsoid) {
+    var SceneTransitioner = function(scene, ellipsoid) {
         this._scene = scene;
         this._ellipsoid = ellipsoid || Ellipsoid.WGS84;
         var canvas = scene.getCanvas();
@@ -125,7 +128,7 @@ define([
          * @type {Boolean}
          */
         this.endMorphOnMouseInput = true;
-    }
+    };
 
     //immediately set the morph time of all objects in the scene
     function setMorphTime(scene, morphTime) {

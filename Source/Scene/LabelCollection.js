@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Scene/LabelCollection
+ */
 define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
@@ -65,7 +68,7 @@ define([
      * Labels are added and removed from the collection using {@link LabelCollection#add}
      * and {@link LabelCollection#remove}.
      *
-     * @name LabelCollection
+     * @alias LabelCollection
      * @constructor
      *
      * @performance For best performance, prefer a few collections, each with many labels, to
@@ -92,7 +95,7 @@ define([
      *   text : 'Another label'
      * });
      */
-    function LabelCollection() {
+    var LabelCollection = function() {
         this._billboardCollection = new BillboardCollection();
         this._labels = [];
         this._labelsRemoved = false;
@@ -154,7 +157,7 @@ define([
          * <code>BufferUsage.DYNAMIC_DRAW</code>.
          */
         this.bufferUsage = BufferUsage.STATIC_DRAW;
-    }
+    };
 
     LabelCollection.prototype._getCollection = function() {
         return this._billboardCollection;

@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Scene/FacetMaterial
+ */
 define([
         '../Shaders/Noise',
         '../Shaders/FacetMaterial'
@@ -10,10 +13,10 @@ define([
     /**
      * DOC_TBA
      *
-     * @name FacetMaterial
+     * @alias FacetMaterial
      * @constructor
      */
-    function FacetMaterial(template) {
+    var FacetMaterial = function(template) {
         var t = template || {};
 
         /**
@@ -55,7 +58,7 @@ define([
                 return that.repeat;
             }
         };
-    }
+    };
 
     FacetMaterial.prototype._getShaderSource = function() {
         return '#line 0\n' +

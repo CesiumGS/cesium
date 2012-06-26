@@ -1,4 +1,7 @@
 /*global define*/
+/**
+ * @exports Scene/BillboardCollection
+ */
 define([
         '../Core/DeveloperError',
         '../Core/combine',
@@ -74,7 +77,7 @@ define([
      * and {@link BillboardCollection#remove}.  All billboards in a collection reference images
      * from the same texture atlas, which is assigned using {@link BillboardCollection#setTextureAtlas}.
      *
-     * @name BillboardCollection
+     * @alias BillboardCollection
      * @constructor
      *
      * @performance For best performance, prefer a few collections, each with many billboards, to
@@ -102,7 +105,7 @@ define([
      *   position : { x : 4.0, y : 5.0, z : 6.0 }
      * });
      */
-    function BillboardCollection() {
+    var BillboardCollection = function() {
         this._textureAtlas = undefined;
         this._destroyTextureAtlas = true;
         this._sp = undefined;
@@ -187,7 +190,7 @@ define([
             }
         });
         this._uniforms = undefined;
-    }
+    };
 
     /**
      * Creates and adds a billboard with the specified initial properties to the collection.
