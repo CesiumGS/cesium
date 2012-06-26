@@ -639,7 +639,7 @@ define([
         var self = this;
 
         var onCanvasCreated = function() {
-            self._setCreateTextureAtlas(true);
+            self._setUpdateTextureAtlas(true);
         };
 
         for (i = 0; i < length; i++) {
@@ -821,8 +821,8 @@ define([
         }
     };
 
-    Label.prototype._setCreateTextureAtlas = function(value) {
-        this._labelCollection._setCreateTextureAtlas(value);
+    Label.prototype._setUpdateTextureAtlas = function(value) {
+        this._labelCollection._setUpdateTextureAtlas(value);
     };
 
     return Label;

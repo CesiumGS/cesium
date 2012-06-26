@@ -8,6 +8,7 @@ define([
         '../Core/Matrix4',
         '../Renderer/BufferUsage',
         '../Renderer/PixelFormat',
+        '../Renderer/TextureAtlas',
         './BillboardCollection',
         './Label'
     ], function(
@@ -16,6 +17,7 @@ define([
         Matrix4,
         BufferUsage,
         PixelFormat,
+        TextureAtlas,
         BillboardCollection,
         Label) {
     "use strict";
@@ -99,7 +101,7 @@ define([
         this._billboardCollection = new BillboardCollection();
         this._labels = [];
         this._labelsRemoved = false;
-        this._createTextureAtlas = false;
+        this._updateTextureAtlas = false;
         this._canvasContainer = new CanvasContainer();
 
         /**
@@ -163,8 +165,8 @@ define([
         return this._billboardCollection;
     };
 
-    LabelCollection.prototype._setCreateTextureAtlas = function(value) {
-        this._createTextureAtlas = value;
+    LabelCollection.prototype._setUpdateTextureAtlas = function(value) {
+        this._updateTextureAtlas = value;
     };
 
     /**
@@ -179,7 +181,7 @@ define([
      *
      * @performance Calling <code>add</code> is expected constant time.  However, when
      * {@link LabelCollection#update} is called, the collection's vertex buffer
-     * and texture atlas are rewritten; these operations are <code>O(n)</code> and also incur
+     * is rewritten; this operations is <code>O(n)</code> and also incurs
      * CPU to GPU overhead.  For best performance, add as many billboards as possible before
      * calling <code>update</code>.
      *
@@ -288,7 +290,7 @@ define([
         this._destroyLabels();
         this._labels = [];
         this._labelsRemoved = false;
-        this._createTextureAtlas = true;
+        this._updateTextureAtlas = true;
     };
 
     LabelCollection.prototype._removeLabels = function() {
@@ -409,12 +411,31 @@ define([
         this._billboardCollection.bufferUsage = this.bufferUsage;
         this._removeLabels();
 
-        if (this._createTextureAtlas) {
-            this._createTextureAtlas = false;
+        if (this._updateTextureAtlas) {
+            this._updateTextureAtlas = false;
 
-            // The previous texture atlas is implicitly destroyed by the billboard collection.
-            var textureAtlas = (this._labels.length > 0) ? context.createTextureAtlas(this._canvasContainer.getItems(), PixelFormat.RGBA, 1) : null;
-            this._billboardCollection.setTextureAtlas(textureAtlas);
+            //Determines which subset of images are new to the texture atlas.
+            var textureAtlas = this._billboardCollection.getTextureAtlas();
+            var images = this._canvasContainer.getItems();
+            var numImagesOld = (typeof textureAtlas !== 'undefined') ? textureAtlas.getNumberOfImages() : 0;
+            var numImagesNew = images.length;
+            var newImages = images.slice(numImagesOld);
+            var difference = numImagesNew - numImagesOld;
+
+            // First time creating texture atlas or removing images from the texture atlas.
+            if ((numImagesOld === 0 && numImagesNew > 0) || difference < 0) {
+                textureAtlas = textureAtlas && textureAtlas.destroy();
+                textureAtlas = context.createTextureAtlas({images : images});
+                this._billboardCollection.setTextureAtlas(textureAtlas);
+            }
+            // Adding one new image to the texture atlas.
+            else if (difference === 1) {
+                textureAtlas.addImage(newImages[0]);
+            }
+            // Adding multiple new images to the texture atlas.
+            else if (difference > 1) {
+                textureAtlas.addImages(newImages);
+            }
         }
 
         this._billboardCollection.update(context, sceneState);
