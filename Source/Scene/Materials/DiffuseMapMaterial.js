@@ -42,7 +42,6 @@ define([
          * type {String}
          */
         this.channels = t.channels || 'rgb';
-        this.channels = this.channels.toLowerCase();
         this.shaderSource = this._replaceChannels(ShadersDiffuseMapMaterial, this.channels, 3);
 
         var that = this;
@@ -64,6 +63,7 @@ define([
     }
 
     DiffuseMapMaterial.prototype._replaceChannels = function(source, channels, numChannels) {
+        this.channels = this.channels.toLowerCase();
         if (channels.length !== numChannels) {
             throw new DeveloperError('Number of texture channels should be: ' + numChannels);
         }

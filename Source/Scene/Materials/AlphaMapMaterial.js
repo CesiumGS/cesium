@@ -44,7 +44,6 @@ define([
          * type {String}
          */
         this.channels = t.channels || 'r';
-        this.channels = this.channels.toLowerCase();
         this.shaderSource = this._replaceChannels(ShadersAlphaMapMaterial, this.channels, 1);
 
         var that = this;
@@ -65,6 +64,7 @@ define([
     }
 
     AlphaMapMaterial.prototype._replaceChannels = function(source, channels, numChannels) {
+        this.channels = this.channels.toLowerCase();
         if (channels.length !== numChannels) {
             throw new DeveloperError('Number of texture channels should be: ' + numChannels);
         }
