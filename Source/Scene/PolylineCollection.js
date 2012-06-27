@@ -10,9 +10,9 @@ define([
         '../Core/ComponentDatatype',
         '../Core/IndexDatatype',
         '../Core/PrimitiveType',
+        '../Core/PolylinePipeline',
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
-        '../Renderer/VertexArrayFacade',
         './SceneMode',
         './Polyline',
         '../Shaders/PolylineVS',
@@ -30,9 +30,9 @@ define([
         ComponentDatatype,
         IndexDatatype,
         PrimitiveType,
+        PolylinePipeline,
         BlendingState,
         BufferUsage,
-        VertexArrayFacade,
         SceneMode,
         Polyline,
         PolylineVS,
@@ -44,6 +44,7 @@ define([
     var SHOW_INDEX = Polyline.SHOW_INDEX;
     var POSITION_INDEX = Polyline.POSITION_INDEX;
     var COLOR_INDEX = Polyline.COLOR_INDEX;
+    var OUTLINE_COLOR_INDEX = Polyline.OUTLINE_COLOR_INDEX;
     //POSITION_SIZE_CHANGE is needed for when the polyline's position array changes size.
     //When it does we need to recreate the indicesBuffer.
     var POSITION_SIZE_INDEX = Polyline.POSITION_SIZE_INDEX;
@@ -474,37 +475,36 @@ define([
     PolylineCollection.prototype.render = function(context) {
         var polylines = this._polylines;
         if(polylines){
-            for(var x in polylines){
-                var obj = polylines[x];
-                if(obj.vaf && obj.vaf.va){
-                    var va = obj.vaf.va;
-                    var length = va.length;
-                    for ( var i = 0; i < length; ++i) {
-                        context.draw({
-                            primitiveType : PrimitiveType.LINES,
-                            count : va[i].indicesCount,
-                            shaderProgram : this._sp,
-                            uniformMap : this._drawUniformsOne,
-                            vertexArray : va[i].va,
-                            renderState : obj.rsOne
-                        });
-                        context.draw({
-                            primitiveType : PrimitiveType.LINES,
-                            count : va[i].indicesCount,
-                            shaderProgram : this._sp,
-                            uniformMap : this._drawUniformsTwo,
-                            vertexArray : va[i].va,
-                            renderState : obj.rsTwo
-                        });
-                        context.draw({
-                            primitiveType : PrimitiveType.LINES,
-                            count : va[i].indicesCount,
-                            shaderProgram : this._sp,
-                            uniformMap : this._drawUniformsThree,
-                            vertexArray : va[i].va,
-                            renderState : obj.rsThree
-                        });
-                    }
+            if(this._va && this._vaOutlineColor){
+                for(var x in polylines){
+                    var obj = polylines[x];
+                    context.draw({
+                        primitiveType : PrimitiveType.LINES,
+                        count : obj.count,
+                        offset : obj.offset,
+                        shaderProgram : this._sp,
+                        uniformMap : this._drawUniformsOne,
+                        vertexArray : this._vaOutlineColor,
+                        renderState : obj.rsOne
+                    });
+                    context.draw({
+                        primitiveType : PrimitiveType.LINES,
+                        count : obj.count,
+                        offset : obj.offset,
+                        shaderProgram : this._sp,
+                        uniformMap : this._drawUniformsTwo,
+                        vertexArray : this._va,
+                        renderState : obj.rsTwo
+                    });
+                    context.draw({
+                        primitiveType : PrimitiveType.LINES,
+                        count : obj.count,
+                        offset : obj.offset,
+                        shaderProgram : this._sp,
+                        uniformMap : this._drawUniformsThree,
+                        vertexArray : this._vaOutlineColor,
+                        renderState : obj.rsThree
+                    });
                 }
             }
         }
@@ -584,18 +584,7 @@ define([
             }
 
             this._polylinesUpdated = false;
-            var polylines = this._polylines;
-            for(var x in polylines){
-                var obj = polylines[x];
-                var vafWriters = obj.vaf.writers;
-                var polylinesToUpdate = obj.polylinesToUpdate;
-                var length = polylinesToUpdate.length;
-                for(var i = 0; i < length; ++i){
-                    PolylineCollection._writeToVAF(polylinesToUpdate[i], vafWriters, writers, context, this);
-                }
-                obj.vaf.endSubCommits();
-                obj.polylinesToUpdate.length = 0;
-            }
+
         }
 
         for ( var k = 0; k < NUMBER_OF_PROPERTIES; ++k) {
@@ -671,208 +660,115 @@ define([
     /**
      * @private
      */
-    PolylineCollection._writeToVAF = function(polyline, vafWriters, writers, context, collection){
-        polyline._clean();
-        var pIndex = polyline._positionIndex;
-        var positions = polyline.getPositions();
-        var posLength = positions.length;
-        for ( var o = 0; o < writers.length; ++o) {
-            for (var i = 0; i < posLength; ++i){
-                writers[o](vafWriters, pIndex + i, polyline, positions[i], context, collection);
-            }
-        }
-        polyline._wrapper.vaf.subCommit(pIndex, posLength);
-    };
-
-    /**
-     * @private
-     */
     PolylineCollection.prototype._update = function(context) {
         this._createVertexArray = false;
+        this._createVertexBuffers(context);
+    };
+
+    PolylineCollection.prototype._createVertexBuffers = function(context){
+        var positions = [];
+        var colors = [];
+        var outlineColors = [];
+        var indices = [];
+        var index = 0;
+        var offset = 0;
         var useDepthTest = (this._morphTime !== 0.0);
-        var polylines = this._polylines;
-        var writePositions = undefined;
-        if(this._mode === SceneMode.SCENE2D){
-            writePositions = this._write2D;
-        }
-        else if(this._mode === SceneMode.SCENE3D){
-            writePositions = this._write3D;
-        }
-        else if(this._mode === SceneMode.ColumbusView){
-            writePositions = this._writePositions;
-        }
-        for(var x in polylines){
-            var obj = polylines[x];
-            var rsOne = obj.rsOne || context.createRenderState({
-                colorMask : {
-                    red : false,
-                    green : false,
-                    blue : false,
-                    alpha : false
-                },
-                lineWidth : 1,
-                blending : BlendingState.ALPHA_BLEND,
-                stencilTest : {
-                    enabled : true,
-                    frontFunction : StencilFunction.ALWAYS,
-                    backFunction : StencilFunction.ALWAYS,
-                    reference : 0,
-                    mask : ~0,
-                    frontOperation : {
-                        fail : StencilOperation.REPLACE,
-                        zFail : StencilOperation.REPLACE,
-                        zPass : StencilOperation.REPLACE
-                    },
-                    backOperation : {
-                        fail : StencilOperation.REPLACE,
-                        zFail : StencilOperation.REPLACE,
-                        zPass : StencilOperation.REPLACE
+        for(var x in this._polylines){
+            var obj = this._polylines[x];
+            obj.createRenderState(context, useDepthTest);
+            var polylines = obj.getPolylines(this._mode, this._projection, this._modelMatrix);
+            var length = polylines.length;
+            obj.count = 0;
+            obj.offset = offset;
+            for(var i = 0; i < length; ++i){
+                var polyline = polylines[i];
+                var color = polyline.getColor();
+                var outlineColor = polyline.getOutlineColor();
+                var polylinePositions = polyline.getPositions();
+                var posLength = polylinePositions.length;
+                obj.count += (posLength - 1) * 2;
+                for(var j = 0; j < posLength; ++j){
+                    var position = polylinePositions[j];
+                    positions.push(position.x);
+                    positions.push(position.y);
+                    positions.push(position.z);
+                    colors.push(color.red *255);
+                    colors.push(color.green *255);
+                    colors.push(color.blue *255);
+                    colors.push(color.alpha *255);
+                    outlineColors.push(outlineColor.red *255);
+                    outlineColors.push(outlineColor.green *255);
+                    outlineColors.push(outlineColor.blue *255);
+                    outlineColors.push(outlineColor.alpha *255);
+                    if(j !== posLength - 1){
+                        indices.push(index + j);
+                        indices.push(index + j + 1);
                     }
                 }
-            });
-            rsOne.depthMask = !useDepthTest;
-            rsOne.depthTest.enabled = useDepthTest;
-            rsOne.lineWidth = obj.outlineWidth;
-            obj.rsOne = rsOne;
-            var rsTwo = obj.rsTwo || context.createRenderState({
-                lineWidth : 1,
-                depthMask : false,
-                blending : BlendingState.ALPHA_BLEND,
-                stencilTest : {
-                    enabled : true,
-                    frontFunction : StencilFunction.ALWAYS,
-                    backFunction : StencilFunction.ALWAYS,
-                    reference : 1,
-                    mask : ~0,
-                    frontOperation : {
-                        fail : StencilOperation.KEEP,
-                        zFail : StencilOperation.KEEP,
-                        zPass : StencilOperation.REPLACE
-                    },
-                    backOperation : {
-                        fail : StencilOperation.KEEP,
-                        zFail : StencilOperation.KEEP,
-                        zPass : StencilOperation.REPLACE
-                    }
-                }
-            });
-            rsTwo.depthTest.enabled = useDepthTest;
-            rsTwo.lineWidth = obj.width;
-            obj.rsTwo = rsTwo;
-            var rsThree = obj.rsThree || context.createRenderState({
-                lineWidth : 1,
-                depthMask : false,
-                blending : BlendingState.ALPHA_BLEND,
-                stencilTest : {
-                    enabled : true,
-                    frontFunction : StencilFunction.NOT_EQUAL,
-                    backFunction : StencilFunction.NOT_EQUAL,
-                    reference : 1,
-                    mask : ~0,
-                    frontOperation : {
-                        fail : StencilOperation.KEEP,
-                        zFail : StencilOperation.KEEP,
-                        zPass : StencilOperation.KEEP
-                    },
-                    backOperation : {
-                        fail : StencilOperation.KEEP,
-                        zFail : StencilOperation.KEEP,
-                        zPass : StencilOperation.KEEP
-                    }
-                }
-            });
-            rsThree.lineWidth = obj.outlineWidth;
-            rsThree.depthTest.enabled = useDepthTest;
-            obj.rsThree = rsThree;
-            var sizeInVertices = 0;
-            var length = obj.polylines.length;
-            for(var j = 0; j < length; j++){
-                sizeInVertices += obj.polylines[j].getPositions().length;
+                index += posLength;
+                offset += obj.count;
             }
-			obj.vaf = obj.vaf && obj.vaf.destroy();
-            obj.vaf = new VertexArrayFacade(context,[{
-                index : attributeIndices.position3D,
-                componentsPerAttribute : 3,
-                componentDatatype : ComponentDatatype.FLOAT,
-                usage : this._buffersUsage[POSITION_INDEX]
-            },  {
-                index : attributeIndices.position2D,
-                componentsPerAttribute : 3,
-                componentDatatype : ComponentDatatype.FLOAT,
-                usage : this._buffersUsage[POSITION_INDEX]
-            }, {
-                index : attributeIndices.color,
-                componentsPerAttribute : 4,
-                normalize:true,
-                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                usage : this._buffersUsage[COLOR_INDEX]
-            }, {
-                index : attributeIndices.pickColor,
-                componentsPerAttribute : 4,
-                normalize:true,
-                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                usage : BufferUsage.STATIC_DRAW
-            }], sizeInVertices);
-            var indicesBuffer = this._createIndexBuffer(context, obj.polylines);
-            var vafWriters = obj.vaf.writers;
-
-            var index = 0;
-            for(var i = 0; i < obj.polylines.length; ++i){
-                var polyline = obj.polylines[i];
-                polyline._clean();
-                var positions = polyline.getPositions();
-                for(var t = 0; t < positions.length; ++t){
-                    var position = positions[t];
-                    writePositions(vafWriters, index, polyline, position, context, this);
-                    this._writeColor(vafWriters, index, polyline);
-                    this._writePickColor(vafWriters, index, polyline, position, context);
-                    index++;
-                }
-            }
-            obj.vaf.commit(indicesBuffer, indicesBuffer.getNumberOfIndices());
         }
-    };
+        var positionArray = new Float32Array(positions);
+        var outlineColorArray = new Uint8Array(outlineColors);
+        var colorArray = new Uint8Array(colors);
+        var indicesArray = new Uint16Array(indices);
 
-    /**
-     * @private
-     */
-    PolylineCollection.prototype._writeColor = function(vafWriters, index, polyline){
-        var color = polyline.getColor();
-        vafWriters[attributeIndices.color](index, color.red * 255, color.green * 255, color.blue * 255, color.alpha * 255);
-    };
+        var positionBuffer = context.createVertexBuffer(positionArray, this._buffersUsage[POSITION_INDEX]);
+        var outlineColorBuffer = context.createVertexBuffer(outlineColorArray, this._buffersUsage[OUTLINE_COLOR_INDEX]);
+        var colorBuffer = context.createVertexBuffer(colorArray, this._buffersUsage[COLOR_INDEX]);
 
-    /**
-     * @private
-     */
-    PolylineCollection.prototype._writePickColor = function(vafWriters, index, polyline, position, context){
-        var pickColor = polyline.getPickId(context).unnormalizedRgb;
-        vafWriters[attributeIndices.pickColor](index, pickColor.red, pickColor.green, pickColor.blue, 255);
-    };
+        var attributes = [{
+            index : attributeIndices.position3D,
+            componentsPerAttribute : 3,
+            componentDatatype : ComponentDatatype.FLOAT
+        },  {
+            index : attributeIndices.position2D,
+            componentsPerAttribute : 3,
+            componentDatatype : ComponentDatatype.FLOAT
+        }, {
+            index : attributeIndices.color,
+            componentsPerAttribute : 4,
+            normalize:true,
+            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+            vertexBuffer : colorBuffer
+        }];
 
-    /**
-     * @private
-     */
-    PolylineCollection.prototype._writePositions = function(vafWriters, index, polyline, position, context, collection){
-        this._write3D(vafWriters, index, polyline, position);
-        this._write2D(vafWriters, index, polyline, position, context, collection);
-    };
+        this._indexBuffer = context.createIndexBuffer(indicesArray, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+        this._indexBuffer.setVertexArrayDestroyable(false);
 
-    /**
-     * @private
-     */
-    PolylineCollection.prototype._write3D = function(vafWriters, index, polyline, position){
-        vafWriters[attributeIndices.position3D](index, position.x, position.y, position.z);
-    };
+        var attributesOutlineColor = [{
+            index : attributeIndices.position3D,
+            componentsPerAttribute : 3,
+            componentDatatype : ComponentDatatype.FLOAT
+        },  {
+            index : attributeIndices.position2D,
+            componentsPerAttribute : 3,
+            componentDatatype : ComponentDatatype.FLOAT
+        }, {
+            index : attributeIndices.color,
+            componentsPerAttribute : 4,
+            normalize:true,
+            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+            vertexBuffer : outlineColorBuffer
+        }];
 
-    /**
-     * @private
-     */
-    PolylineCollection.prototype._write2D = function(vafWriters, index, polyline, position, context, collection){
-        var modelMatrix = collection._modelMatrix;
-        var ellipsoid = collection._projection.getEllipsoid();
-        var p = modelMatrix.multiplyWithVector(new Cartesian4(position.x, position.y, position.z, 1.0));
-        p = collection._projection.project(ellipsoid.toCartographic3(p.getXYZ()));
-        vafWriters[attributeIndices.position2D](index, p.x, p.y, p.z);
+        if(this._mode === SceneMode.SCENE3D){
+            attributes[0].vertexBuffer = positionBuffer;
+            attributes[1].value = [0.0, 0.0];
+            attributesOutlineColor[0].vertexBuffer = positionBuffer;
+            attributesOutlineColor[1].value = [0.0, 0.0];
+        } else{
+            attributes[0].value = [0.0, 0.0, 0.0];
+            attributes[1].vertexBuffer = positionBuffer;
+            attributesOutlineColor[0].value = [0.0, 0.0, 0.0];
+            attributesOutlineColor[1].vertexBuffer = positionBuffer;
+        }
+
+        this._va = context.createVertexArray(attributes);
+        this._va.setIndexBuffer(this._indexBuffer);
+        this._vaOutlineColor = context.createVertexArray(attributesOutlineColor);
+        this._vaOutlineColor.setIndexBuffer(this._indexBuffer);
     };
 
     /**
@@ -1072,6 +968,120 @@ define([
                 index += polyline.getPositions().length;
             }
         }
+    };
+
+    PolylinesWrapper.prototype.createRenderState = function(context, useDepthTest){
+        var rsOne = this.rsOne || context.createRenderState({
+            colorMask : {
+                red : false,
+                green : false,
+                blue : false,
+                alpha : false
+            },
+            lineWidth : 1,
+            blending : BlendingState.ALPHA_BLEND,
+            stencilTest : {
+                enabled : true,
+                frontFunction : StencilFunction.ALWAYS,
+                backFunction : StencilFunction.ALWAYS,
+                reference : 0,
+                mask : ~0,
+                frontOperation : {
+                    fail : StencilOperation.REPLACE,
+                    zFail : StencilOperation.REPLACE,
+                    zPass : StencilOperation.REPLACE
+                },
+                backOperation : {
+                    fail : StencilOperation.REPLACE,
+                    zFail : StencilOperation.REPLACE,
+                    zPass : StencilOperation.REPLACE
+                }
+            }
+        });
+        rsOne.depthMask = !useDepthTest;
+        rsOne.depthTest.enabled = useDepthTest;
+        rsOne.lineWidth = this.outlineWidth;
+        this.rsOne = rsOne;
+        var rsTwo = this.rsTwo || context.createRenderState({
+            lineWidth : 1,
+            depthMask : false,
+            blending : BlendingState.ALPHA_BLEND,
+            stencilTest : {
+                enabled : true,
+                frontFunction : StencilFunction.ALWAYS,
+                backFunction : StencilFunction.ALWAYS,
+                reference : 1,
+                mask : ~0,
+                frontOperation : {
+                    fail : StencilOperation.KEEP,
+                    zFail : StencilOperation.KEEP,
+                    zPass : StencilOperation.REPLACE
+                },
+                backOperation : {
+                    fail : StencilOperation.KEEP,
+                    zFail : StencilOperation.KEEP,
+                    zPass : StencilOperation.REPLACE
+                }
+            }
+        });
+        rsTwo.depthTest.enabled = useDepthTest;
+        rsTwo.lineWidth = this.width;
+        this.rsTwo = rsTwo;
+        var rsThree = this.rsThree || context.createRenderState({
+            lineWidth : 1,
+            depthMask : false,
+            blending : BlendingState.ALPHA_BLEND,
+            stencilTest : {
+                enabled : true,
+                frontFunction : StencilFunction.NOT_EQUAL,
+                backFunction : StencilFunction.NOT_EQUAL,
+                reference : 1,
+                mask : ~0,
+                frontOperation : {
+                    fail : StencilOperation.KEEP,
+                    zFail : StencilOperation.KEEP,
+                    zPass : StencilOperation.KEEP
+                },
+                backOperation : {
+                    fail : StencilOperation.KEEP,
+                    zFail : StencilOperation.KEEP,
+                    zPass : StencilOperation.KEEP
+                }
+            }
+        });
+        rsThree.lineWidth = this.outlineWidth;
+        rsThree.depthTest.enabled = useDepthTest;
+        this.rsThree = rsThree;
+    };
+
+    PolylinesWrapper.prototype.getPolylines = function(mode, projection, modelMatrix){
+        if(mode === SceneMode.SCENE3D){
+            return this.polylines;
+        }
+        var polylines = [];
+        var ellipsoid = projection.getEllipsoid();
+        var length = this.polylines.length;
+        for(var j = 0; j < length; ++j){
+            var polyline = this.polylines[j];
+            var segments = PolylinePipeline.wrapLongitude(projection.getEllipsoid(), polyline.getPositions());
+            var numberOfSegments = segments.length;
+            for (var i = 0; i < numberOfSegments; ++i) {
+                var tmpPolyline = new Polyline({color:polyline.getColor(), outlineColor:polyline.getOutlineColor()});
+                var positions = [];
+                var segment =  segments[i];
+                var segmentLength = segment.length;
+                var startN = ((i === 0) || (segmentLength === 2)) ? 0 : 1;
+                for(var n = startN; n < segmentLength; ++n){
+                    var position = segment[n].cartesian;
+                    var p = modelMatrix.multiplyWithVector(new Cartesian4(position.x, position.y, position.z, 1.0));
+                    positions.push(projection.project(ellipsoid.toCartographic3(p.getXYZ())));
+                }
+                tmpPolyline.setPositions(positions);
+                polylines.push(tmpPolyline);
+            }
+
+        }
+        return polylines;
     };
 
     return PolylineCollection;
