@@ -27,11 +27,11 @@ define([
             //By the time the texture was loaded, the billboard might already be
             //gone or have been assigned a different texture.  Look it up again
             //and check.
-            var currentIndex = dynamicObject.billboardVisualizerIndex;
+            var currentIndex = dynamicObject._billboardVisualizerIndex;
             if (typeof currentIndex !== 'undefined') {
                 var cbBillboard = billboardCollection.get(currentIndex);
-                if (cbBillboard.vizTexture === textureValue) {
-                    cbBillboard.vizTextureAvailable = true;
+                if (cbBillboard._visualizerUrl === textureValue) {
+                    cbBillboard._visualizerTextureAvailable = true;
                     cbBillboard.setImageIndex(imageIndex);
                 }
             }
@@ -107,7 +107,7 @@ define([
         if (oldCollection !== dynamicObjectCollection) {
             if (typeof oldCollection !== 'undefined') {
                 oldCollection.objectsRemoved.removeEventListener(DynamicBillboardVisualizer.prototype._onObjectsRemoved);
-                this.removeAll();
+                this.removeAllPrimitives();
             }
             this._dynamicObjectCollection = dynamicObjectCollection;
             if (typeof dynamicObjectCollection !== 'undefined') {
@@ -139,13 +139,13 @@ define([
     /**
      * Removes all primitives from the scene.
      */
-    DynamicBillboardVisualizer.prototype.removeAll = function() {
+    DynamicBillboardVisualizer.prototype.removeAllPrimitives = function() {
         if (typeof this._dynamicObjectCollection !== 'undefined') {
             this._unusedIndexes = [];
             this._billboardCollection.removeAll();
             var dynamicObjects = this._dynamicObjectCollection.getObjects();
             for ( var i = dynamicObjects.length - 1; i > -1; i--) {
-                dynamicObjects[i].billboardVisualizerIndex = undefined;
+                dynamicObjects[i]._billboardVisualizerIndex = undefined;
             }
         }
     };
@@ -186,10 +186,8 @@ define([
      * visualizer = visualizer && visualizer.destroy();
      */
     DynamicBillboardVisualizer.prototype.destroy = function() {
-        this.removeAll();
+        this.removeAllPrimitives();
         this._scene.getPrimitives().remove(this._billboardCollection);
-        this._billboardCollection.destroy();
-        this._textureAtlas.destroy();
         return destroyObject(this);
     };
 
@@ -215,7 +213,7 @@ define([
 
         var billboard;
         var showProperty = dynamicBillboard.show;
-        var billboardVisualizerIndex = dynamicObject.billboardVisualizerIndex;
+        var billboardVisualizerIndex = dynamicObject._billboardVisualizerIndex;
         var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
 
         if (!show) {
@@ -223,9 +221,9 @@ define([
             if (typeof billboardVisualizerIndex !== 'undefined') {
                 billboard = this._billboardCollection.get(billboardVisualizerIndex);
                 billboard.setShow(false);
-                billboard.vizTexture = undefined;
-                billboard.vizTextureAvailable = false;
-                dynamicObject.billboardVisualizerIndex = undefined;
+                billboard._visualizerUrl = undefined;
+                billboard._visualizerTextureAvailable = false;
+                dynamicObject._billboardVisualizerIndex = undefined;
                 this._unusedIndexes.push(billboardVisualizerIndex);
             }
             return;
@@ -241,10 +239,10 @@ define([
                 billboardVisualizerIndex = this._billboardCollection.getLength();
                 billboard = this._billboardCollection.add();
             }
-            dynamicObject.billboardVisualizerIndex = billboardVisualizerIndex;
+            dynamicObject._billboardVisualizerIndex = billboardVisualizerIndex;
             billboard.dynamicObject = dynamicObject;
-            billboard.vizTexture = undefined;
-            billboard.vizTextureAvailable = false;
+            billboard._visualizerUrl = undefined;
+            billboard._visualizerTextureAvailable = false;
 
             // CZML_TODO Determine official defaults
             billboard.setColor(Color.WHITE);
@@ -258,14 +256,14 @@ define([
         }
 
         var textureValue = textureProperty.getValue(time);
-        if (textureValue !== billboard.vizTexture) {
-            billboard.vizTexture = textureValue;
-            billboard.vizTextureAvailable = false;
+        if (textureValue !== billboard._visualizerUrl) {
+            billboard._visualizerUrl = textureValue;
+            billboard._visualizerTextureAvailable = false;
             this._textureAtlasBuilder.addTextureFromUrl(textureValue, textureReady(dynamicObject, this._billboardCollection, textureValue));
         }
 
-        billboard.setShow(billboard.vizTextureAvailable);
-        if (!billboard.vizTextureAvailable) {
+        billboard.setShow(billboard._visualizerTextureAvailable);
+        if (!billboard._visualizerTextureAvailable) {
             return;
         }
 
@@ -329,13 +327,13 @@ define([
         var thisUnusedIndexes = this._unusedIndexes;
         for ( var i = dynamicObjects.length - 1; i > -1; i--) {
             var dynamicObject = dynamicObjects[i];
-            var billboardVisualizerIndex = dynamicObject.billboardVisualizerIndex;
+            var billboardVisualizerIndex = dynamicObject._billboardVisualizerIndex;
             if (typeof billboardVisualizerIndex !== 'undefined') {
                 var billboard = thisBillboardCollection.get(billboardVisualizerIndex);
                 billboard.setShow(false);
-                billboard.vizTexture = undefined;
-                billboard.vizTextureAvailable = false;
-                dynamicObject.billboardVisualizerIndex = undefined;
+                billboard._visualizerUrl = undefined;
+                billboard._visualizerTextureAvailable = false;
+                dynamicObject._billboardVisualizerIndex = undefined;
                 thisUnusedIndexes.push(billboardVisualizerIndex);
             }
         }

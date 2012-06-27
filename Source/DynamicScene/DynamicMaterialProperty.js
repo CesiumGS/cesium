@@ -56,22 +56,20 @@ define([
         }
     };
 
-    //CZML_TODO What to do about scene property?  Do we really need to pass it here?
-
     /**
      * Returns the value of the property at the specified time.
      * @memberof DynamicMaterialProperty
      *
      * @param {JulianDate} time The time for which to retrieve the value.
-     * @param {Scene} [scene] The scene in which the material exists.
+     * @param {Context} [context] The context in which the material exists.
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns The modified result parameter or a new instance if the result parameter was not supplied.
      */
-    DynamicMaterialProperty.prototype.getValue = function(time, scene, existingMaterial) {
+    DynamicMaterialProperty.prototype.getValue = function(time, context, existingMaterial) {
         var value = this._intervals.findIntervalContainingDate(time);
         var material = typeof value !== 'undefined' ? value.data : undefined;
         if (typeof material !== 'undefined') {
-            return material.getValue(time, scene, existingMaterial);
+            return material.getValue(time, context, existingMaterial);
         }
         return existingMaterial;
     };

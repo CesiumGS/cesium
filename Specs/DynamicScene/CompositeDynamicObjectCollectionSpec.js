@@ -57,7 +57,7 @@ defineSuite([
 
     it('constructor sets expected properties from parameters.', function() {
         var collections = [new DynamicObjectCollection()];
-        collections[0].getOrCreateObject("bob");
+        collections[0].getOrCreateObject('bob');
         var mergers = [];
         var cleaners = [];
         var compositeDynamicObjectCollection = new CompositeDynamicObjectCollection(collections, mergers, cleaners);
@@ -71,7 +71,7 @@ defineSuite([
 
     it('clear removes objects and collections.', function() {
         var collections = [new DynamicObjectCollection()];
-        collections[0].getOrCreateObject("bob");
+        collections[0].getOrCreateObject('bob');
         var compositeDynamicObjectCollection = new CompositeDynamicObjectCollection(collections);
         compositeDynamicObjectCollection.clear();
 
@@ -97,18 +97,18 @@ defineSuite([
     it('computeAvailability returns intersction of collections.', function() {
         var collection1 = new DynamicObjectCollection();
         var dynamicObject = collection1.getOrCreateObject('1');
-        dynamicObject._setAvailability(TimeInterval.fromIso8601("2012-08-01/2012-08-02"));
+        dynamicObject._setAvailability(TimeInterval.fromIso8601('2012-08-01/2012-08-02'));
         dynamicObject = collection1.getOrCreateObject('2');
 
         var collection2 = new DynamicObjectCollection();
         dynamicObject = collection2.getOrCreateObject('3');
-        dynamicObject._setAvailability(TimeInterval.fromIso8601("2012-08-05/2012-08-06"));
+        dynamicObject._setAvailability(TimeInterval.fromIso8601('2012-08-05/2012-08-06'));
 
         var compositeDynamicObjectCollection = new CompositeDynamicObjectCollection([collection1, collection2]);
 
         var availability = compositeDynamicObjectCollection.computeAvailability();
-        expect(availability.start).toEqual(JulianDate.fromIso8601("2012-08-01"));
-        expect(availability.stop).toEqual(JulianDate.fromIso8601("2012-08-06"));
+        expect(availability.start).toEqual(JulianDate.fromIso8601('2012-08-01'));
+        expect(availability.stop).toEqual(JulianDate.fromIso8601('2012-08-06'));
     });
 
     it('setCollections works with existing dynamicObjectCollections', function() {

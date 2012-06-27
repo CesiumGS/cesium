@@ -44,7 +44,7 @@ defineSuite([
 
     it('fromString throws if missing dynamicObjectCollection parameter', function() {
         expect(function(){
-            return ReferenceProperty.fromString(undefined, "object.property");
+            return ReferenceProperty.fromString(undefined, 'object.property');
         }).toThrow();
     });
 

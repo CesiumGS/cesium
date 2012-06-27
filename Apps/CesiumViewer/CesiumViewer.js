@@ -6,7 +6,6 @@ define(['dojo/dom',
         'dijit/registry',
         'DojoWidgets/CesiumWidget',
         'DojoWidgets/getJson',
-        'Core/binarySearch',
         'Core/DefaultProxy',
         'Core/JulianDate',
         'Core/Clock',
@@ -22,7 +21,8 @@ define(['dojo/dom',
         'Scene/BingMapsStyle',
         'DynamicScene/processCzml',
         'DynamicScene/DynamicObjectCollection',
-        'DynamicScene/VisualizerCollection',],
+        'DynamicScene/VisualizerCollection',
+        './AnimationController'],
 function(dom,
          on,
          event,
@@ -30,7 +30,6 @@ function(dom,
          registry,
          CesiumWidget,
          getJson,
-         binarySearch,
          DefaultProxy,
          JulianDate,
          Clock,
@@ -46,49 +45,21 @@ function(dom,
          BingMapsStyle,
          processCzml,
          DynamicObjectCollection,
-         VisualizerCollection) {
+         VisualizerCollection,
+         AnimationController) {
     "use strict";
     /*global console*/
 
-
-    var typicalMultipliers = [
-        0.001,
-        0.002,
-        0.005,
-        0.01,
-        0.02,
-        0.05,
-        0.1,
-        0.25,
-        0.5,
-        1.0,
-        2.0,
-        5.0,
-        10.0,
-        15.0,
-        30.0,
-        60.0, // 1min
-        120.0, // 2min
-        300.0, // 5min
-        600.0, // 10min
-        900.0, // 15min
-        1800.0, // 30min
-        3600.0, // 1hr
-        7200.0, // 2hr
-        14400.0, // 4hr
-        21600.0, // 6hr
-        43200.0, // 12hr
-        86400.0  // 24hr
-    ];
-
     var visualizers;
-    var clock = new Clock(new JulianDate(), ClockStep.SYSTEM_CLOCK_DEPENDENT, 60);
+    var clock = new Clock({
+        currentTime : new JulianDate(),
+        clockStep : ClockStep.SYSTEM_CLOCK_DEPENDENT,
+        multiplier : 60
+    });
+    var animationController = new AnimationController(clock);
     var timeline;
     var transitioner;
-
     var dynamicObjectCollection = new DynamicObjectCollection();
-
-    var animating = true;
     var speedIndicatorElement;
     var timeLabel;
     var lastTimeLabelUpdate;
@@ -97,7 +68,7 @@ function(dom,
     var lastCameraCenteredObjectID;
 
     function updateSpeedIndicator() {
-        if (animating) {
+        if (animationController.isAnimating()) {
             speedIndicatorElement.innerHTML = clock.multiplier + 'x realtime';
         } else {
             speedIndicatorElement.innerHTML = clock.multiplier + 'x realtime (currently paused)';
@@ -108,7 +79,6 @@ function(dom,
         var animReverse = registry.byId('animReverse');
         var animPause = registry.byId('animPause');
         var animPlay = registry.byId('animPlay');
-        animating = false;
         animReverse.set('checked', false);
         animPause.set('checked', true);
         animPlay.set('checked', false);
@@ -138,10 +108,10 @@ function(dom,
         var f = files[0];
         var reader = new FileReader();
         reader.onload = function(evt) {
-            //CZML_TODO visualizers.removeAll(); is not really needed here, but right now visualizers
+            //CZML_TODO visualizers.removeAllPrimitives(); is not really needed here, but right now visualizers
             //cache data indefinitely and removeAll is the only way to get rid of it.
             //while there are no visual differences, removeAll cleans the cache and improves performance
-            visualizers.removeAll();
+            visualizers.removeAllPrimitives();
             dynamicObjectCollection.clear();
             processCzml(JSON.parse(evt.target.result), dynamicObjectCollection, f.name);
             setTimeFromBuffer();
@@ -164,7 +134,7 @@ function(dom,
             var scene = widget.scene;
 
             function update() {
-                var currentTime = animating ? clock.tick() : clock.currentTime;
+                var currentTime = animationController.update();
 
                 if (typeof timeline !== 'undefined') {
                     timeline.updateFromClock();
@@ -248,8 +218,7 @@ function(dom,
             var animPlay = registry.byId('animPlay');
 
             on(registry.byId('animReset'), 'Click', function() {
-                clock.currentTime = clock.startTime;
-                animating = false;
+                animationController.reset();
                 animReverse.set('checked', false);
                 animPause.set('checked', true);
                 animPlay.set('checked', false);
@@ -257,77 +226,38 @@ function(dom,
             });
 
             function onAnimPause() {
-                animating = false;
+                animationController.pause();
                 animReverse.set('checked', false);
                 animPause.set('checked', true);
                 animPlay.set('checked', false);
                 updateSpeedIndicator();
             }
+
             on(animPause, 'Click', onAnimPause);
 
-            function play() {
-                animating = true;
-                clock.tick(0);
+            on(animReverse, 'Click', function() {
+                animationController.playReverse();
                 animReverse.set('checked', true);
                 animPause.set('checked', false);
                 animPlay.set('checked', false);
                 updateSpeedIndicator();
-                updateSpeedIndicator();
-            }
-
-            on(animReverse, 'Click', function() {
-                if (clock.multiplier > 0) {
-                    clock.multiplier = -clock.multiplier;
-                }
-                play();
             });
 
             on(animPlay, 'Click', function() {
-                if (clock.multiplier < 0) {
-                    clock.multiplier = -clock.multiplier;
-                }
-                play();
+                animationController.play();
+                animReverse.set('checked', false);
+                animPause.set('checked', true);
+                animPlay.set('checked', false);
+                updateSpeedIndicator();
             });
 
             on(registry.byId('animSlow'), 'Click', function() {
-                var index = binarySearch(typicalMultipliers, clock.multiplier, function(lhs, rhs) {
-                    return lhs - rhs;
-                });
-
-                if (index < 0) {
-                    index = ~index;
-                }
-                index--;
-
-                if (index === -1) {
-                    clock.multiplier *= 0.5;
-                } else if (clock.multiplier >= 0) {
-                    clock.multiplier = typicalMultipliers[index];
-                } else {
-                    clock.multiplier = -typicalMultipliers[index];
-                }
+                animationController.slower();
                 updateSpeedIndicator();
             });
 
             on(registry.byId('animFast'), 'Click', function() {
-                var index = binarySearch(typicalMultipliers, clock.multiplier, function(lhs, rhs) {
-                    return lhs - rhs;
-                });
-
-                if (index < 0) {
-                    index = ~index;
-                } else {
-                    index++;
-                }
-
-                if (index === typicalMultipliers.length) {
-                    clock.multiplier *= 2.0;
-                } else if (clock.multiplier >= 0) {
-                    clock.multiplier = typicalMultipliers[index];
-                } else {
-                    clock.multiplier = -typicalMultipliers[index];
-                }
-
+                animationController.faster();
                 updateSpeedIndicator();
             });
 
@@ -419,7 +349,7 @@ function(dom,
                         imagery.containerNode.innerHTML = bingHtml;
                     } else {
                         cesium.enableStreamingImagery(false);
-                        imagery.containerNode.innerHTML = "Imagery";
+                        imagery.containerNode.innerHTML = 'Imagery';
                     }
 
                     imageryOptions.forEach(function(o) {

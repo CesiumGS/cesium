@@ -13,9 +13,9 @@ define(function() {
      * @param {Number} [magnitude=1.0] The linear coordinate measured from the origin.
      */
     function Spherical(clock, cone, magnitude) {
-        this.clock = clock || 0.0;
-        this.cone = cone || 0.0;
-        this.magnitude = magnitude || 1.0;
+        this.clock = typeof clock === 'undefined' ? 0.0 : clock;
+        this.cone = typeof cone === 'undefined' ? 0.0 : cone;
+        this.magnitude = typeof magnitude === 'undefined' ? 1.0 : magnitude;
     }
 
     /**
@@ -60,38 +60,38 @@ define(function() {
      * Returns true if the first spherical is equal to the second spherical, false otherwise.
      * @memberof Spherical
      *
-     * @param {Spherical} lhs The first Spherical to be compared.
-     * @param {Spherical} rhs The second Spherical to be compared.
+     * @param {Spherical} left The first Spherical to be compared.
+     * @param {Spherical} right The second Spherical to be compared.
      *
      * @return true if the first spherical is equal to the second spherical, false otherwise.
      */
-    Spherical.equals = function(lhs, rhs) {
-        return (lhs === rhs) ||
-               ((typeof lhs !== 'undefined') &&
-                (typeof rhs !== 'undefined') &&
-                (lhs.clock === rhs.clock) &&
-                (lhs.cone === rhs.cone) &&
-                (lhs.magnitude === rhs.magnitude));
+    Spherical.equals = function(left, right) {
+        return (left === right) ||
+               ((typeof left !== 'undefined') &&
+                (typeof right !== 'undefined') &&
+                (left.clock === right.clock) &&
+                (left.cone === right.cone) &&
+                (left.magnitude === right.magnitude));
     };
 
     /**
      * Returns true if the first spherical is within the provided epsilon of the second spherical, false otherwise.
      * @memberof Spherical
      *
-     * @param {Spherical} lhs The first Spherical to be compared.
-     * @param {Spherical} rhs The second Spherical to be compared.
+     * @param {Spherical} left The first Spherical to be compared.
+     * @param {Spherical} right The second Spherical to be compared.
      * @param {Number} [epsilon=0.0] The epsilon to compare against.
      *
      * @return true if the first spherical is within the provided epsilon of the second spherical, false otherwise.
      */
-    Spherical.equalsEpsilon = function(lhs, rhs, epsilon) {
-        epsilon = epsilon || 0.0;
-        return (lhs === rhs) ||
-               ((typeof lhs !== 'undefined') &&
-                (typeof rhs !== 'undefined') &&
-                (Math.abs(lhs.clock - rhs.clock) <= epsilon) &&
-                (Math.abs(lhs.cone - rhs.cone) <= epsilon) &&
-                (Math.abs(lhs.magnitude - rhs.magnitude) <= epsilon));
+    Spherical.equalsEpsilon = function(left, right, epsilon) {
+        epsilon = typeof epsilon === 'undefined' ? 0.0 : epsilon;
+        return (left === right) ||
+               ((typeof left !== 'undefined') &&
+                (typeof right !== 'undefined') &&
+                (Math.abs(left.clock - right.clock) <= epsilon) &&
+                (Math.abs(left.cone - right.cone) <= epsilon) &&
+                (Math.abs(left.magnitude - right.magnitude) <= epsilon));
     };
 
     /**

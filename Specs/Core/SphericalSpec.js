@@ -17,8 +17,8 @@ defineSuite([
         this.magnitude = magnitude;
     }
 
-    NotSpherical.areEqual = function(lhs, rhs) {
-        return lhs.clock === rhs.clock && lhs.cone === rhs.cone && lhs.magnitude === rhs.magnitude;
+    NotSpherical.areEqual = function(left, right) {
+        return left.clock === right.clock && left.cone === right.cone && left.magnitude === right.magnitude;
     };
 
     it('Default constructing sets properties to their expected values.', function() {

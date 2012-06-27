@@ -21,8 +21,8 @@ define([
     //this code should be changes so at least all CZML visualization has defaults.
     function createDefaultImage() {
         var canvas = document.createElement('canvas');
-        canvas.height = "64";
-        canvas.width = "64";
+        canvas.height = '64';
+        canvas.width = '64';
 
         var context = canvas.getContext('2d');
         context.fillStyle = '#FFFFFF';
@@ -32,7 +32,7 @@ define([
         context.font = '64px sans-serif';
         context.strokeStyle = '#000000';
         context.strokeText('?', 16, 0);
-        return canvas.toDataURL("image/png");
+        return canvas.toDataURL('image/png');
     }
 
     var defaultImage = new Image();
@@ -95,11 +95,11 @@ define([
      * Get's a DiffuseMapMaterial that represents this dynamic material at the provided time.
      *
      * @param {JulianDate} time The desired time.
-     * @param {Scene} scene The scene in which this material exists.
+     * @param {Context} context The context in which this material exists.
      * @param {DiffuseMapMaterial} [existingMaterial] An existing material to be modified.  If the material is undefined or not a DiffuseMapMaterial, a new instance is created.
      * @returns The modified existingMaterial parameter or a new DiffuseMapMaterial instance if existingMaterial was undefined or not a DiffuseMapMaterial.
      */
-    DynamicImageMaterial.prototype.getValue = function(time, scene, existingMaterial) {
+    DynamicImageMaterial.prototype.getValue = function(time, context, existingMaterial) {
         if (typeof existingMaterial === 'undefined' || !(existingMaterial instanceof DiffuseMapMaterial)) {
             existingMaterial = new DiffuseMapMaterial();
         }
@@ -130,7 +130,7 @@ define([
                 var image = new Image();
                 image.onload = function() {
                     if (existingMaterial.currentUrl === url) {
-                        existingMaterial.texture = scene.getContext().createTexture2D({
+                        existingMaterial.texture = context.createTexture2D({
                             source : image
                         });
                     }
@@ -139,7 +139,7 @@ define([
             }
         }
         if (!existingMaterial.texture) {
-            existingMaterial.texture = scene.getContext().createTexture2D({
+            existingMaterial.texture = context.createTexture2D({
                 source : defaultImage
             });
         }

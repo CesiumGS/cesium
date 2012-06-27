@@ -89,7 +89,7 @@ defineSuite([
     it('processCzmlPacket adds data for constrained cone.', function() {
         var conePacket = {
             cone : {
-                interval : "2000-01-01/2001-01-01",
+                interval : '2000-01-01/2001-01-01',
                 innerHalfAngle : 1.0,
                 outerHalfAngle : 1.1,
                 minimumClockAngle : 1.2,

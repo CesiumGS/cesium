@@ -12,7 +12,6 @@ defineSuite([
     "use strict";
     /*global it,expect*/
 
-    //CZML_TODO Mock the Date() object in order to test real-time behavior
     it('constructor sets default parameters', function() {
         var clock = new Clock();
         expect(clock.stopTime.equals(clock.startTime.addDays(1))).toEqual(true);
@@ -29,7 +28,14 @@ defineSuite([
         var step = ClockStep.TICK_DEPENDENT;
         var range = ClockRange.LOOP;
         var multiplier = 1.5;
-        var clock = new Clock(currentTime, step, multiplier, start, stop, range);
+        var clock = new Clock({
+            currentTime : currentTime,
+            clockStep : step,
+            multiplier : multiplier,
+            startTime : start,
+            stopTime : stop,
+            clockRange : range
+        });
         expect(start.equals(clock.startTime)).toEqual(true);
         expect(stop.equals(clock.stopTime)).toEqual(true);
         expect(currentTime.equals(clock.currentTime)).toEqual(true);
@@ -45,7 +51,14 @@ defineSuite([
         var step = ClockStep.TICK_DEPENDENT;
         var range = ClockRange.LOOP;
         var multiplier = 1.5;
-        var clock = new Clock(currentTime, step, multiplier, start, stop, range);
+        var clock = new Clock({
+            currentTime : currentTime,
+            clockStep : step,
+            multiplier : multiplier,
+            startTime : start,
+            stopTime : stop,
+            clockRange : range
+        });
         expect(currentTime.equals(clock.currentTime)).toEqual(true);
 
         currentTime = currentTime.addSeconds(multiplier);
@@ -64,7 +77,14 @@ defineSuite([
         var step = ClockStep.TICK_DEPENDENT;
         var range = ClockRange.LOOP;
         var multiplier = -1.5;
-        var clock = new Clock(currentTime, step, multiplier, start, stop, range);
+        var clock = new Clock({
+            currentTime : currentTime,
+            clockStep : step,
+            multiplier : multiplier,
+            startTime : start,
+            stopTime : stop,
+            clockRange : range
+        });
         expect(currentTime.equals(clock.currentTime)).toEqual(true);
 
         currentTime = currentTime.addSeconds(multiplier);
@@ -83,7 +103,14 @@ defineSuite([
         var step = ClockStep.TICK_DEPENDENT;
         var range = ClockRange.UNBOUNDED;
         var multiplier = 1.5;
-        var clock = new Clock(currentTime, step, multiplier, start, stop, range);
+        var clock = new Clock({
+            currentTime : currentTime,
+            clockStep : step,
+            multiplier : multiplier,
+            startTime : start,
+            stopTime : stop,
+            clockRange : range
+        });
         expect(currentTime.equals(clock.currentTime)).toEqual(true);
 
         currentTime = currentTime.addSeconds(multiplier);
@@ -102,7 +129,14 @@ defineSuite([
         var step = ClockStep.TICK_DEPENDENT;
         var range = ClockRange.UNBOUNDED;
         var multiplier = -1.5;
-        var clock = new Clock(currentTime, step, multiplier, start, stop, range);
+        var clock = new Clock({
+            currentTime : currentTime,
+            clockStep : step,
+            multiplier : multiplier,
+            startTime : start,
+            stopTime : stop,
+            clockRange : range
+        });
         expect(currentTime.equals(clock.currentTime)).toEqual(true);
 
         currentTime = currentTime.addSeconds(multiplier);
@@ -121,7 +155,14 @@ defineSuite([
         var step = ClockStep.TICK_DEPENDENT;
         var range = ClockRange.LOOP;
         var multiplier = 1.5;
-        var clock = new Clock(currentTime, step, multiplier, start, stop, range);
+        var clock = new Clock({
+            currentTime : currentTime,
+            clockStep : step,
+            multiplier : multiplier,
+            startTime : start,
+            stopTime : stop,
+            clockRange : range
+        });
         expect(currentTime.equals(clock.currentTime)).toEqual(true);
 
         currentTime = start.addSeconds(multiplier);
@@ -140,7 +181,14 @@ defineSuite([
         var step = ClockStep.TICK_DEPENDENT;
         var range = ClockRange.LOOP;
         var multiplier = -1.5;
-        var clock = new Clock(currentTime, step, multiplier, start, stop, range);
+        var clock = new Clock({
+            currentTime : currentTime,
+            clockStep : step,
+            multiplier : multiplier,
+            startTime : start,
+            stopTime : stop,
+            clockRange : range
+        });
         expect(currentTime.equals(clock.currentTime)).toEqual(true);
 
         currentTime = stop.addSeconds(multiplier);
@@ -160,7 +208,14 @@ defineSuite([
         var step = ClockStep.TICK_DEPENDENT;
         var range = ClockRange.CLAMPED;
         var multiplier = 100.0;
-        var clock = new Clock(currentTime, step, multiplier, start, stop, range);
+        var clock = new Clock({
+            currentTime : currentTime,
+            clockStep : step,
+            multiplier : multiplier,
+            startTime : start,
+            stopTime : stop,
+            clockRange : range
+        });
 
         expect(currentTime.equals(clock.currentTime)).toEqual(true);
         expect(stop.equals(clock.tick())).toEqual(true);
@@ -175,7 +230,14 @@ defineSuite([
         var step = ClockStep.TICK_DEPENDENT;
         var range = ClockRange.CLAMPED;
         var multiplier = -100.0;
-        var clock = new Clock(currentTime, step, multiplier, start, stop, range);
+        var clock = new Clock({
+            currentTime : currentTime,
+            clockStep : step,
+            multiplier : multiplier,
+            startTime : start,
+            stopTime : stop,
+            clockRange : range
+        });
 
         expect(currentTime.equals(clock.currentTime)).toEqual(true);
         expect(start.equals(clock.tick())).toEqual(true);
@@ -189,7 +251,14 @@ defineSuite([
         var step = ClockStep.TICK_DEPENDENT;
         var range = ClockRange.UNBOUNDED;
         var multiplier = 1.5;
-        var clock = new Clock(currentTime, step, multiplier, start, stop, range);
+        var clock = new Clock({
+            currentTime : currentTime,
+            clockStep : step,
+            multiplier : multiplier,
+            startTime : start,
+            stopTime : stop,
+            clockRange : range
+        });
 
         expect(currentTime.equals(clock.currentTime)).toEqual(true);
         currentTime = currentTime.addSeconds(multiplier);
@@ -207,7 +276,14 @@ defineSuite([
         var step = ClockStep.SYSTEM_CLOCK_DEPENDENT;
         var range = ClockRange.UNBOUNDED;
         var multiplier = 10000;
-        var clock = new Clock(currentTime, step, multiplier, start, stop, range);
+        var clock = new Clock({
+            currentTime : currentTime,
+            clockStep : step,
+            multiplier : multiplier,
+            startTime : start,
+            stopTime : stop,
+            clockRange : range
+        });
 
         expect(currentTime.equals(clock.currentTime)).toEqual(true);
         currentTime = currentTime.addSeconds(5);
@@ -221,9 +297,11 @@ defineSuite([
     it('throws if start time is after stop time.', function() {
         var start = JulianDate.fromTotalDays(1);
         var stop = JulianDate.fromTotalDays(0);
-        var currentTime = JulianDate.fromTotalDays(0);
         expect(function() {
-            return new Clock(currentTime, ClockStep.TICK_DEPENDENT, 1.5, start, stop);
+            return new Clock({
+                startTime : start,
+                stopTime : stop,
+            });
         }).toThrow();
     });
 });

@@ -1,6 +1,12 @@
-/*global define require CFInstall document*/
-define(['dojo/dom-construct', 'dijit/Dialog'], function(domConstruct, Dialog) {
+/*global define*/
+define([
+        'dojo/dom-construct',
+        'dijit/Dialog'
+       ], function(
+         domConstruct,
+         Dialog) {
     "use strict";
+    /*global require,CFInstall*/
 
     function promptForInstall() {
         var dialog = new Dialog({

@@ -6,10 +6,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Spherical',
         '../Core/CoordinateConversions',
-        '../Core/Math',
         '../Core/Iso8601',
-        './ReferenceProperty',
-        './DynamicPositionProperty'
     ], function(
         JulianDate,
         TimeInterval,
@@ -17,10 +14,7 @@ define([
         Cartesian3,
         Spherical,
         CoordinateConversions,
-        CesiumMath,
-        Iso8601,
-        ReferenceProperty,
-        DynamicPositionProperty) {
+        Iso8601) {
     "use strict";
 
     function ValueHolder(czmlInterval) {
@@ -50,7 +44,7 @@ define([
             this.spherical = sphericals;
             var cartesians = this.cartesian;
             for ( var i = 0, len = cartesians.length; i < len; i++) {
-                sphericals[i].push(CoordinateConversions.cartesian3ToSpherical(cartesians[i]));
+                sphericals.push(CoordinateConversions.cartesian3ToSpherical(cartesians[i]));
             }
         }
         return sphericals;
@@ -63,7 +57,7 @@ define([
             this.cartesian = cartesians;
             var sphericals = this.spherical;
             for ( var i = 0, len = sphericals.length; i < len; i++) {
-                cartesians[i].push(CoordinateConversions.sphericalToCartesian3(sphericals[i]));
+                cartesians.push(CoordinateConversions.sphericalToCartesian3(sphericals[i]));
             }
         }
         return cartesians;
@@ -123,19 +117,7 @@ define([
         if (typeof interval === 'undefined') {
             return undefined;
         }
-        var intervalData = interval.data;
-        if (Array.isArray(intervalData)) {
-            var result = [];
-            for ( var i = 0, len = intervalData.length; i < len; i++) {
-                var value = intervalData[i].getValueSpherical(time);
-                if (typeof value !== 'undefined') {
-                    result.push(value);
-                }
-            }
-            return result;
-        }
-
-        return intervalData.getValueSpherical();
+        return interval.data.getValueSpherical();
     };
 
     /**
@@ -150,19 +132,7 @@ define([
         if (typeof interval === 'undefined') {
             return undefined;
         }
-        var intervalData = interval.data;
-        if (Array.isArray(intervalData)) {
-            var result = [];
-            for ( var i = 0, len = intervalData.length; i < len; i++) {
-                var value = intervalData[i].getValueCartesian(time);
-                if (typeof value !== 'undefined') {
-                    result.push(value);
-                }
-            }
-            return result;
-        }
-
-        return intervalData.getValueCartesian();
+        return interval.data.getValueCartesian();
     };
 
     DynamicDirectionsProperty.prototype._addCzmlInterval = function(czmlInterval, constrainedInterval, dynamicObjectCollection) {
@@ -187,17 +157,7 @@ define([
             thisIntervals.addInterval(existingInterval);
         }
 
-        var references = czmlInterval.references;
-        if (typeof references === 'undefined') {
-            existingInterval.data = new ValueHolder(czmlInterval);
-        } else {
-            var properties = [];
-            properties.dynamicObjectCollection = dynamicObjectCollection;
-            for ( var i = 0, len = references.length; i < len; i++) {
-                properties.push(ReferenceProperty.fromString(dynamicObjectCollection, references[i]));
-            }
-            existingInterval.data = properties;
-        }
+        existingInterval.data = new ValueHolder(czmlInterval);
     };
 
     return DynamicDirectionsProperty;

@@ -44,12 +44,12 @@ define([
         /**
          * The array of functions which DynamicObject instances together. DOC_TBA
          */
-        this.mergeFunctions = mergeFunctions || CzmlDefaults.mergers;
+        this.mergeFunctions = typeof mergeFunctions === 'undefined' ? CzmlDefaults.mergers : mergeFunctions;
 
         /**
          * The array of functions which remove data from a DynamicObject instance. DOC_TBA
          */
-        this.cleanFunctions = cleanFunctions || CzmlDefaults.cleaners;
+        this.cleanFunctions = typeof cleanFunctions === 'undefined' ? CzmlDefaults.cleaners : cleanFunctions;
 
         /**
          * An {@link Event} that is fired whenever DynamicObjects in the collection have properties added.

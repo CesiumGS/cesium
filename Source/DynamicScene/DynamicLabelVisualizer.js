@@ -83,7 +83,7 @@ define([
         if (oldCollection !== dynamicObjectCollection) {
             if (typeof oldCollection !== 'undefined') {
                 oldCollection.objectsRemoved.removeEventListener(DynamicLabelVisualizer.prototype._onObjectsRemoved);
-                this.removeAll();
+                this.removeAllPrimitives();
             }
             this._dynamicObjectCollection = dynamicObjectCollection;
             if (typeof dynamicObjectCollection !== 'undefined') {
@@ -115,12 +115,14 @@ define([
     /**
      * Removes all primitives from the scene.
      */
-    DynamicLabelVisualizer.prototype.removeAll = function() {
+    DynamicLabelVisualizer.prototype.removeAllPrimitives = function() {
         this._unusedIndexes = [];
         this._labelCollection.removeAll();
-        var dynamicObjects = this._dynamicObjectCollection.getObjects();
-        for ( var i = dynamicObjects.length - 1; i > -1; i--) {
-            dynamicObjects[i].labelVisualizerIndex = undefined;
+        if (typeof this._dynamicObjectCollection !== 'undefined') {
+            var dynamicObjects = this._dynamicObjectCollection.getObjects();
+            for ( var i = dynamicObjects.length - 1; i > -1; i--) {
+                dynamicObjects[i]._labelVisualizerIndex = undefined;
+            }
         }
     };
 
@@ -160,9 +162,8 @@ define([
      * visualizer = visualizer && visualizer.destroy();
      */
     DynamicLabelVisualizer.prototype.destroy = function() {
-        this.removeAll();
+        this.removeAllPrimitives();
         this._scene.getPrimitives().remove(this._labelCollection);
-        this._labelCollection.destroy();
         return destroyObject(this);
     };
 
@@ -189,7 +190,7 @@ define([
 
         var label;
         var showProperty = dynamicLabel.show;
-        var labelVisualizerIndex = dynamicObject.labelVisualizerIndex;
+        var labelVisualizerIndex = dynamicObject._labelVisualizerIndex;
         var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
 
         if (!show) {
@@ -198,7 +199,7 @@ define([
                 label = this._labelCollection.get(labelVisualizerIndex);
                 label.setShow(false);
                 this._unusedIndexes.push(labelVisualizerIndex);
-                dynamicObject.labelVisualizerIndex = undefined;
+                dynamicObject._labelVisualizerIndex = undefined;
             }
             return;
         }
@@ -213,7 +214,7 @@ define([
                 labelVisualizerIndex = this._labelCollection.getLength();
                 label = this._labelCollection.add();
             }
-            dynamicObject.labelVisualizerIndex = labelVisualizerIndex;
+            dynamicObject._labelVisualizerIndex = labelVisualizerIndex;
             label.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
@@ -321,12 +322,12 @@ define([
         var thisUnusedIndexes = this._unusedIndexes;
         for ( var i = dynamicObjects.length - 1; i > -1; i--) {
             var dynamicObject = dynamicObjects[i];
-            var labelVisualizerIndex = dynamicObject.labelVisualizerIndex;
+            var labelVisualizerIndex = dynamicObject._labelVisualizerIndex;
             if (typeof labelVisualizerIndex !== 'undefined') {
                 var label = thisLabelCollection.get(labelVisualizerIndex);
                 label.setShow(false);
                 thisUnusedIndexes.push(labelVisualizerIndex);
-                dynamicObject.labelVisualizerIndex = undefined;
+                dynamicObject._labelVisualizerIndex = undefined;
             }
         }
     };

@@ -78,7 +78,7 @@ define([
         if (oldCollection !== dynamicObjectCollection) {
             if (typeof oldCollection !== 'undefined') {
                 oldCollection.objectsRemoved.removeEventListener(DynamicPyramidVisualizer.prototype._onObjectsRemoved);
-                this.removeAll();
+                this.removeAllPrimitives();
             }
             this._dynamicObjectCollection = dynamicObjectCollection;
             if (typeof dynamicObjectCollection !== 'undefined') {
@@ -110,15 +110,17 @@ define([
     /**
      * Removes all primitives from the scene.
      */
-    DynamicPyramidVisualizer.prototype.removeAll = function() {
+    DynamicPyramidVisualizer.prototype.removeAllPrimitives = function() {
         var i, len;
         for (i = 0, len = this._pyramidCollection.length; i < len; i++) {
             this._primitives.remove(this._pyramidCollection[i]);
         }
 
-        var dynamicObjects = this._dynamicObjectCollection.getObjects();
-        for (i = dynamicObjects.length - 1; i > -1; i--) {
-            dynamicObjects[i].pyramidVisualizerIndex = undefined;
+        if (typeof this._dynamicObjectCollection !== 'undefined') {
+            var dynamicObjects = this._dynamicObjectCollection.getObjects();
+            for (i = dynamicObjects.length - 1; i > -1; i--) {
+                dynamicObjects[i]._pyramidVisualizerIndex = undefined;
+            }
         }
 
         this._unusedIndexes = [];
@@ -161,7 +163,7 @@ define([
      * visualizer = visualizer && visualizer.destroy();
      */
     DynamicPyramidVisualizer.prototype.destroy = function() {
-        this.removeAll();
+        this.removeAllPrimitives();
         return destroyObject(this);
     };
 
@@ -190,7 +192,7 @@ define([
 
         var pyramid;
         var showProperty = dynamicPyramid.show;
-        var pyramidVisualizerIndex = dynamicObject.pyramidVisualizerIndex;
+        var pyramidVisualizerIndex = dynamicObject._pyramidVisualizerIndex;
         var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
 
         if (!show) {
@@ -198,7 +200,7 @@ define([
             if (typeof pyramidVisualizerIndex !== 'undefined') {
                 pyramid = this._pyramidCollection[pyramidVisualizerIndex];
                 pyramid.show = false;
-                dynamicObject.pyramidVisualizerIndex = undefined;
+                dynamicObject._pyramidVisualizerIndex = undefined;
                 this._unusedIndexes.push(pyramidVisualizerIndex);
             }
             return;
@@ -216,7 +218,7 @@ define([
                 this._pyramidCollection.push(pyramid);
                 this._primitives.add(pyramid);
             }
-            dynamicObject.pyramidVisualizerIndex = pyramidVisualizerIndex;
+            dynamicObject._pyramidVisualizerIndex = pyramidVisualizerIndex;
             pyramid.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
@@ -231,26 +233,26 @@ define([
         pyramid.show = true;
 
         var directions = directionsProperty.getValueSpherical(time);
-        if (typeof directions !== 'undefined' && pyramid.last_directions !== directions) {
+        if (typeof directions !== 'undefined' && pyramid._visualizerDirections !== directions) {
             pyramid.setDirections(directions);
-            pyramid.last_directions = directions;
+            pyramid._visualizerDirections = directions;
         }
 
-        position = positionProperty.getValueCartesian(time, position) || pyramid.dynamicPyramidVisualizerLastPosition;
-        orientation = orientationProperty.getValue(time, orientation) || pyramid.dynamicPyramidVisualizerLastOrientation;
+        position = positionProperty.getValueCartesian(time, position) || pyramid._visualizerPosition;
+        orientation = orientationProperty.getValue(time, orientation) || pyramid._visualizerOrientation;
 
         if (typeof position !== 'undefined' &&
             typeof orientation !== 'undefined' &&
-            (!position.equals(pyramid.dynamicPyramidVisualizerLastPosition) ||
-             !orientation.equals(pyramid.dynamicPyramidVisualizerLastOrientation))) {
+            (!position.equals(pyramid._visualizerPosition) ||
+             !orientation.equals(pyramid._visualizerOrientation))) {
             pyramid.modelMatrix = DynamicConeVisualizer._computeModelMatrix(position, orientation);
-            position.clone(pyramid.dynamicPyramidVisualizerLastPosition);
-            orientation.clone(pyramid.dynamicPyramidVisualizerLastOrientation);
+            position.clone(pyramid._visualizerPosition);
+            orientation.clone(pyramid._visualizerOrientation);
         }
 
         var material = dynamicPyramid.material;
         if (typeof material !== 'undefined') {
-            pyramid.material = material.getValue(time, this._scene, pyramid.material);
+            pyramid.material = material.getValue(time, this._scene.getContext(), pyramid.material);
         }
 
         var property = dynamicPyramid.intersectionColor;
@@ -275,12 +277,12 @@ define([
         var thisUnusedIndexes = this._unusedIndexes;
         for ( var i = dynamicObjects.length - 1; i > -1; i--) {
             var dynamicObject = dynamicObjects[i];
-            var pyramidVisualizerIndex = dynamicObject.pyramidVisualizerIndex;
+            var pyramidVisualizerIndex = dynamicObject._pyramidVisualizerIndex;
             if (typeof pyramidVisualizerIndex !== 'undefined') {
                 var pyramid = thisPyramidCollection[pyramidVisualizerIndex];
                 pyramid.show = false;
                 thisUnusedIndexes.push(pyramidVisualizerIndex);
-                dynamicObject.pyramidVisualizerIndex = undefined;
+                dynamicObject._pyramidVisualizerIndex = undefined;
             }
         }
     };

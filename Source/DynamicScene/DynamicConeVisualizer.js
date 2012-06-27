@@ -78,7 +78,7 @@ define([
         if (oldCollection !== dynamicObjectCollection) {
             if (typeof oldCollection !== 'undefined') {
                 oldCollection.objectsRemoved.removeEventListener(DynamicConeVisualizer.prototype._onObjectsRemoved);
-                this.removeAll();
+                this.removeAllPrimitives();
             }
             this._dynamicObjectCollection = dynamicObjectCollection;
             if (typeof dynamicObjectCollection !== 'undefined') {
@@ -110,17 +110,18 @@ define([
     /**
      * Removes all primitives from the scene.
      */
-    DynamicConeVisualizer.prototype.removeAll = function() {
+    DynamicConeVisualizer.prototype.removeAllPrimitives = function() {
         var i, len;
         for (i = 0, len = this._coneCollection.length; i < len; i++) {
             this._primitives.remove(this._coneCollection[i]);
         }
 
-        var dynamicObjects = this._dynamicObjectCollection.getObjects();
-        for (i = dynamicObjects.length - 1; i > -1; i--) {
-            dynamicObjects[i].coneVisualizerIndex = undefined;
+        if (typeof this._dynamicObjectCollection !== 'undefined') {
+            var dynamicObjects = this._dynamicObjectCollection.getObjects();
+            for (i = dynamicObjects.length - 1; i > -1; i--) {
+                dynamicObjects[i]._coneVisualizerIndex = undefined;
+            }
         }
-
         this._unusedIndexes = [];
         this._coneCollection = [];
     };
@@ -161,7 +162,7 @@ define([
      * visualizer = visualizer && visualizer.destroy();
      */
     DynamicConeVisualizer.prototype.destroy = function() {
-        this.removeAll();
+        this.removeAllPrimitives();
         return destroyObject(this);
     };
 
@@ -171,16 +172,6 @@ define([
     DynamicConeVisualizer.prototype._updateObject = function(time, dynamicObject) {
         var dynamicCone = dynamicObject.cone;
         if (typeof dynamicCone === 'undefined') {
-            return;
-        }
-
-        var maximumClockAngleProperty = dynamicCone.maximumClockAngle;
-        if (typeof maximumClockAngleProperty === 'undefined') {
-            return;
-        }
-
-        var outerHalfAngleProperty = dynamicCone.outerHalfAngle;
-        if (typeof outerHalfAngleProperty === 'undefined') {
             return;
         }
 
@@ -196,7 +187,7 @@ define([
 
         var cone;
         var showProperty = dynamicCone.show;
-        var coneVisualizerIndex = dynamicObject.coneVisualizerIndex;
+        var coneVisualizerIndex = dynamicObject._coneVisualizerIndex;
         var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
 
         if (!show) {
@@ -204,7 +195,7 @@ define([
             if (typeof coneVisualizerIndex !== 'undefined') {
                 cone = this._coneCollection[coneVisualizerIndex];
                 cone.show = false;
-                dynamicObject.coneVisualizerIndex = undefined;
+                dynamicObject._coneVisualizerIndex = undefined;
                 this._unusedIndexes.push(coneVisualizerIndex);
             }
             return;
@@ -219,12 +210,10 @@ define([
             } else {
                 coneVisualizerIndex = this._coneCollection.length;
                 cone = new ComplexConicSensorVolume();
-                cone.innerHalfAngle = 0;
-                cone.minimumClockAngle = 0;
                 this._coneCollection.push(cone);
                 this._primitives.add(cone);
             }
-            dynamicObject.coneVisualizerIndex = coneVisualizerIndex;
+            dynamicObject._coneVisualizerIndex = coneVisualizerIndex;
             cone.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
@@ -252,7 +241,15 @@ define([
             }
         }
 
-        cone.maximumClockAngle = maximumClockAngleProperty.getValue(time) || Math.pi;
+        property = dynamicCone.maximumClockAngle;
+        if (typeof property !== 'undefined') {
+            var maximumClockAngle = property.getValue(time);
+            if (typeof maximumClockAngle !== 'undefined') {
+                cone.maximumClockAngle = maximumClockAngle;
+            } else {
+                cone.maximumClockAngle = Math.pi;
+            }
+        }
 
         property = dynamicCone.innerHalfAngle;
         if (typeof property !== 'undefined') {
@@ -262,7 +259,15 @@ define([
             }
         }
 
-        cone.outerHalfAngle = outerHalfAngleProperty.getValue(time) || Math.pi;
+        property = dynamicCone.outerHalfAngle;
+        if (typeof property !== 'undefined') {
+            var outerHalfAngle = property.getValue(time);
+            if (typeof outerHalfAngle !== 'undefined') {
+                cone.outerHalfAngle = outerHalfAngle;
+            } else {
+                cone.outerHalfAngle = Math.pi;
+            }
+        }
 
         property = dynamicCone.radius;
         if (typeof property !== 'undefined') {
@@ -272,37 +277,37 @@ define([
             }
         }
 
-        position = positionProperty.getValueCartesian(time, position) || cone.dynamicConeVisualizerLastPosition;
-        orientation = orientationProperty.getValue(time, orientation) || cone.dynamicConeVisualizerLastOrientation;
+        position = positionProperty.getValueCartesian(time, position) || cone._visualizerPosition;
+        orientation = orientationProperty.getValue(time, orientation) || cone._visualizerOrientation;
 
         if (typeof position !== 'undefined' &&
             typeof orientation !== 'undefined' &&
-            (!position.equals(cone.dynamicConeVisualizerLastPosition) ||
-             !orientation.equals(cone.dynamicConeVisualizerLastOrientation))) {
+            (!position.equals(cone._visualizerPosition) ||
+             !orientation.equals(cone._visualizerOrientation))) {
             cone.modelMatrix = DynamicConeVisualizer._computeModelMatrix(position, orientation);
-            position.clone(cone.dynamicConeVisualizerLastPosition);
-            orientation.clone(cone.dynamicConeVisualizerLastOrientation);
+            position.clone(cone._visualizerPosition);
+            orientation.clone(cone._visualizerOrientation);
         }
 
-        var scene = this._scene;
+        var context = this._scene.getContext();
         var material = dynamicCone.capMaterial;
         if (typeof material !== 'undefined') {
-            cone.capMaterial = material.getValue(time, scene, cone.capMaterial);
+            cone.capMaterial = material.getValue(time, context, cone.capMaterial);
         }
 
         material = dynamicCone.innerMaterial;
         if (typeof material !== 'undefined') {
-            cone.innerMaterial = material.getValue(time, scene, cone.innerMaterial);
+            cone.innerMaterial = material.getValue(time, context, cone.innerMaterial);
         }
 
         material = dynamicCone.outerMaterial;
         if (typeof material !== 'undefined') {
-            cone.outerMaterial = material.getValue(time, scene, cone.outerMaterial);
+            cone.outerMaterial = material.getValue(time, context, cone.outerMaterial);
         }
 
         material = dynamicCone.silhouetteMaterial;
         if (typeof material !== 'undefined') {
-            cone.silhouetteMaterial = material.getValue(time, scene, cone.silhouetteMaterial);
+            cone.silhouetteMaterial = material.getValue(time, context, cone.silhouetteMaterial);
         }
 
         property = dynamicCone.intersectionColor;
@@ -319,12 +324,12 @@ define([
         var thisUnusedIndexes = this._unusedIndexes;
         for ( var i = dynamicObjects.length - 1; i > -1; i--) {
             var dynamicObject = dynamicObjects[i];
-            var coneVisualizerIndex = dynamicObject.coneVisualizerIndex;
+            var coneVisualizerIndex = dynamicObject._coneVisualizerIndex;
             if (typeof coneVisualizerIndex !== 'undefined') {
                 var cone = thisConeCollection[coneVisualizerIndex];
                 cone.show = false;
                 thisUnusedIndexes.push(coneVisualizerIndex);
-                dynamicObject.coneVisualizerIndex = undefined;
+                dynamicObject._coneVisualizerIndex = undefined;
             }
         }
     };

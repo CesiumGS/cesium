@@ -72,7 +72,7 @@ define([
         if (oldCollection !== dynamicObjectCollection) {
             if (typeof oldCollection !== 'undefined') {
                 oldCollection.objectsRemoved.removeEventListener(DynamicPolylineVisualizer.prototype._onObjectsRemoved);
-                this.removeAll();
+                this.removeAllPrimitives();
             }
             this._dynamicObjectCollection = dynamicObjectCollection;
             if (typeof dynamicObjectCollection !== 'undefined') {
@@ -104,15 +104,17 @@ define([
     /**
      * Removes all primitives from the scene.
      */
-    DynamicPolylineVisualizer.prototype.removeAll = function() {
+    DynamicPolylineVisualizer.prototype.removeAllPrimitives = function() {
         var i, len;
         for (i = 0, len = this._polylineCollection.length; i < len; i++) {
             this._primitives.remove(this._polylineCollection[i]);
         }
 
-        var dynamicObjects = this._dynamicObjectCollection.getObjects();
-        for (i = dynamicObjects.length - 1; i > -1; i--) {
-            dynamicObjects[i].polylineVisualizerIndex = undefined;
+        if (typeof this._dynamicObjectCollection !== 'undefined') {
+            var dynamicObjects = this._dynamicObjectCollection.getObjects();
+            for (i = dynamicObjects.length - 1; i > -1; i--) {
+                dynamicObjects[i]._polylineVisualizerIndex = undefined;
+            }
         }
 
         this._unusedIndexes = [];
@@ -155,7 +157,7 @@ define([
      * visualizer = visualizer && visualizer.destroy();
      */
     DynamicPolylineVisualizer.prototype.destroy = function() {
-        this.removeAll();
+        this.removeAllPrimitives();
         return destroyObject(this);
     };
 
@@ -172,7 +174,7 @@ define([
 
         var polyline;
         var showProperty = dynamicPolyline.show;
-        var polylineVisualizerIndex = dynamicObject.polylineVisualizerIndex;
+        var polylineVisualizerIndex = dynamicObject._polylineVisualizerIndex;
         var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
 
         if (!show) {
@@ -180,7 +182,7 @@ define([
             if (typeof polylineVisualizerIndex !== 'undefined') {
                 polyline = this._polylineCollection[polylineVisualizerIndex];
                 polyline.show = false;
-                dynamicObject.polylineVisualizerIndex = undefined;
+                dynamicObject._polylineVisualizerIndex = undefined;
                 this._unusedIndexes.push(polylineVisualizerIndex);
             }
             return;
@@ -198,7 +200,7 @@ define([
                 this._polylineCollection.push(polyline);
                 this._primitives.add(polyline);
             }
-            dynamicObject.polylineVisualizerIndex = polylineVisualizerIndex;
+            dynamicObject._polylineVisualizerIndex = polylineVisualizerIndex;
             polyline.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
@@ -213,19 +215,19 @@ define([
         polyline.show = true;
 
         var vertexPositions = vertexPositionsProperty.getValueCartesian(time);
-        if (typeof vertexPositions !== 'undefined' && polyline.last_position !== vertexPositions) {
+        if (typeof vertexPositions !== 'undefined' && polyline._visualizerPositions !== vertexPositions) {
             polyline.setPositions(vertexPositions);
-            polyline.last_position = vertexPositions;
+            polyline._visualizerPositions = vertexPositions;
         }
 
         var property = dynamicPolyline.color;
         if (typeof property !== 'undefined') {
-            property.getValue(time, polyline.color);
+            polyline.color = property.getValue(time, polyline.color);
         }
 
         property = dynamicPolyline.outlineColor;
         if (typeof property !== 'undefined') {
-            property.getValue(time, polyline.outlineColor);
+            polyline.outlineColor = property.getValue(time, polyline.outlineColor);
         }
 
         property = dynamicPolyline.outlineWidth;
@@ -250,12 +252,12 @@ define([
         var thisUnusedIndexes = this._unusedIndexes;
         for ( var i = dynamicObjects.length - 1; i > -1; i--) {
             var dynamicObject = dynamicObjects[i];
-            var polylineVisualizerIndex = dynamicObject.polylineVisualizerIndex;
+            var polylineVisualizerIndex = dynamicObject._polylineVisualizerIndex;
             if (typeof polylineVisualizerIndex !== 'undefined') {
                 var polyline = thisPolylineCollection[polylineVisualizerIndex];
                 polyline.show = false;
                 thisUnusedIndexes.push(polylineVisualizerIndex);
-                dynamicObject.polylineVisualizerIndex = undefined;
+                dynamicObject._polylineVisualizerIndex = undefined;
             }
         }
     };

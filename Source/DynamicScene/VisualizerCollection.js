@@ -7,6 +7,17 @@ define([
          CzmlDefaults) {
     "use strict";
 
+    /**
+     * A collection of visualizers which makes it easy to manage and
+     * update them in unison.
+     *
+     * @constructor
+     *
+     * @param {Object} The array of visualizers to use.
+     * @param {DynamicObjectCollection} The objects to be visualized.
+     *
+     * @see CzmlDefaults#createVisualizers
+     */
     function VisualizerCollection(visualizers, dynamicObjectCollection) {
         this._visualizers = visualizers || [];
         this._dynamicObjectCollection = undefined;
@@ -16,13 +27,21 @@ define([
     /**
      * Creates a new VisualizerCollection which includes all standard visualizers.
      *
-     * @see VisualizerCollection
+     * @memberof VisualizerCollection
+     *
+     * @param {Scene} The scene where visualization will take place.
+     * @param {DynamicObjectCollection} The objects to be visualized.
+     *
      * @see CzmlDefaults#createVisualizers
      */
     VisualizerCollection.createCzmlStandardCollection = function(scene, dynamicObjectCollection) {
         return new VisualizerCollection(CzmlDefaults.createVisualizers(scene), dynamicObjectCollection);
     };
 
+    /**
+     * Gets a copy of the array of visualizers in the collection.
+     * @returns {Array} the array of visualizers in the collection.
+     */
     VisualizerCollection.prototype.getVisualizers = function() {
         var visualizers = this._visualizers;
         var result = [];
@@ -32,6 +51,12 @@ define([
         return result;
     };
 
+    /**
+     * Sets the array of visualizers in the collection.
+     *
+     * @param {Array} visualizers The new array of visualizers.  This array can partially overlap with visualizers currently in the collection.
+     * @param {Boolean} destroyOldVisualizers If true, visualizers no longer in the collection will be destroyed.
+     */
     VisualizerCollection.prototype.setVisualizers = function(visualizers, destroyOldVisualizers) {
         destroyOldVisualizers = (typeof destroyOldVisualizers !== 'undefined') ? destroyOldVisualizers : true;
 
@@ -53,10 +78,18 @@ define([
         }
     };
 
+    /**
+     * Gets the DynamicObjectCollection being visualized.
+     * @returns the DynamicObjectCollection being visualized
+     */
     VisualizerCollection.prototype.getDynamicObjectCollection = function() {
         return this._dynamicObjectCollection;
     };
 
+    /**
+     * Sets the DynamicObjectCollection being visualized.
+     * @param {DynamicObjectCollection} dynamicObjectCollection the DynamicObjectCollection being visualized.
+     */
     VisualizerCollection.prototype.setDynamicObjectCollection = function(dynamicObjectCollection) {
         var oldCollection = this._dynamicObjectCollection;
         if (oldCollection !== dynamicObjectCollection) {
@@ -68,6 +101,10 @@ define([
         }
     };
 
+    /**
+     * Updates all visualizers to the provided time.
+     * @param {JulianDate} time The time to updated to.
+     */
     VisualizerCollection.prototype.update = function(time) {
         var visualizers = this._visualizers;
         for ( var i = visualizers.length - 1; i > -1; i--) {
@@ -75,10 +112,13 @@ define([
         }
     };
 
-    VisualizerCollection.prototype.removeAll = function() {
+    /**
+     * Removes all primitives from visualization.
+     */
+    VisualizerCollection.prototype.removeAllPrimitives = function() {
         var visualizers = this._visualizers;
         for ( var i = visualizers.length - 1; i > -1; i--) {
-            visualizers[i].removeAll();
+            visualizers[i].removeAllPrimitives();
         }
     };
 
@@ -119,7 +159,7 @@ define([
      */
     VisualizerCollection.prototype.destroy = function(destroyVisualizers) {
         destroyVisualizers = (typeof destroyVisualizers !== 'undefined') ? destroyVisualizers : true;
-        this.removeAll();
+        this.removeAllPrimitives();
         if (destroyVisualizers === true) {
             var visualizers = this._visualizers;
             for ( var i = visualizers.length - 1; i > -1; i--) {

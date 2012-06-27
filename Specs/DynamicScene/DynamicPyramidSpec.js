@@ -57,7 +57,7 @@ defineSuite([
     it('processCzmlPacket adds data for constrained pyramid.', function() {
         var pyramidPacket = {
             pyramid : {
-                interval : "2000-01-01/2001-01-01",
+                interval : '2000-01-01/2001-01-01',
                 directions : {
                     unitSpherical : [1.0, 2.0, 3.0, 4.0]
                 },

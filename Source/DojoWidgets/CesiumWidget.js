@@ -262,8 +262,8 @@ define([
                 this._performanceDisplay = new PerformanceDisplay();
                 this.scene.getPrimitives().add(this._performanceDisplay);
             } else if (typeof this._performanceDisplay !== 'undefined' && !showStatistics) {
-                this._performanceDisplay = undefined;
                 this.scene.getPrimitives().remove(this._performanceDisplay);
+                this._performanceDisplay = undefined;
             }
         },
 

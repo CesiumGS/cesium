@@ -12,7 +12,7 @@ define([
     "use strict";
 
     //Cached temp variable used by Quaternion.fromAxisAngle;
-    var fromAxisAngleCartesian;
+    var fromAxisAngleCartesian = new Cartesian3();
 
     /**
      * DOC_TBA
@@ -249,23 +249,23 @@ define([
      * @see Quaternion#dot
      */
     Quaternion.prototype.multiply = function(other, result) {
-        var lhsX = this.x;
-        var lhsY = this.y;
-        var lhsZ = this.z;
-        var lhsW = this.w;
+        var leftX = this.x;
+        var leftY = this.y;
+        var leftZ = this.z;
+        var leftW = this.w;
 
-        var rhsX = other.x;
-        var rhsY = other.y;
-        var rhsZ = other.z;
-        var rhsW = other.w;
+        var rightX = other.x;
+        var rightY = other.y;
+        var rightZ = other.z;
+        var rightW = other.w;
 
         if (typeof result === 'undefined') {
             result = new Quaternion();
         }
-        result.x = lhsY * rhsZ - lhsZ * rhsY + lhsX * rhsW + lhsW * rhsX;
-        result.y = lhsZ * rhsX - lhsX * rhsZ + lhsY * rhsW + lhsW * rhsY;
-        result.z = lhsX * rhsY - lhsY * rhsX + lhsZ * rhsW + lhsW * rhsZ;
-        result.w = lhsW * rhsW - lhsX * rhsX - lhsY * rhsY - lhsZ * rhsZ;
+        result.x = leftY * rightZ - leftZ * rightY + leftX * rightW + leftW * rightX;
+        result.y = leftZ * rightX - leftX * rightZ + leftY * rightW + leftW * rightY;
+        result.z = leftX * rightY - leftY * rightX + leftZ * rightW + leftW * rightZ;
+        result.w = leftW * rightW - leftX * rightX - leftY * rightY - leftZ * rightZ;
         return result;
     };
 
