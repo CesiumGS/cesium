@@ -403,17 +403,7 @@ define([
         return this._rightWC;
     };
 
-    /**
-     * Create a ray from the camera position through the pixel at <code>windowPosition</code>
-     * in world coordinates.
-     *
-     * @memberof Camera
-     *
-     * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
-     *
-     * @return {Object} Returns the {@link Cartesian3} position and direction of the ray.
-     */
-    Camera.prototype.getPickRay = function(windowPosition) {
+    Camera.prototype._getPickRayPerspective = function(windowPosition) {
         var width = this._canvas.clientWidth;
         var height = this._canvas.clientHeight;
 
@@ -436,6 +426,44 @@ define([
         };
     };
 
+    Camera.prototype._getPickRayOrthographic = function(windowPosition) {
+        var width = this._canvas.clientWidth;
+        var height = this._canvas.clientHeight;
+
+        var x = (2.0 / width) * windowPosition.x - 1.0;
+        x *= (this.frustum.right - this.frustum.left) * 0.5;
+        var y = (2.0 / height) * (height - windowPosition.y) - 1.0;
+        y *= (this.frustum.top - this.frustum.bottom) * 0.5;
+
+        var position = this.position.clone();
+        position.x += x;
+        position.y += y;
+
+        return {
+            position : position,
+            direction : this.getDirectionWC()
+        };
+    };
+
+    /**
+     * Create a ray from the camera position through the pixel at <code>windowPosition</code>
+     * in world coordinates.
+     *
+     * @memberof Camera
+     *
+     * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
+     *
+     * @return {Object} Returns the {@link Cartesian3} position and direction of the ray.
+     */
+    Camera.prototype.getPickRay = function(windowPosition) {
+        var frustum = this.frustum;
+        if (typeof frustum.aspectRatio !== 'undefined' && typeof frustum.fovy !== 'undefined' && typeof frustum.near !== 'undefined') {
+            return this._getPickRayPerspective(windowPosition);
+        }
+
+        return this._getPickRayOrthographic(windowPosition);
+    };
+
     /**
      * Pick an ellipsoid in 3D mode.
      *
@@ -449,7 +477,7 @@ define([
      */
     Camera.prototype.pickEllipsoid = function(windowPosition, ellipsoid) {
         ellipsoid = ellipsoid || Ellipsoid.WGS84;
-        var ray = this.getPickRay(windowPosition);
+        var ray = this._getPickRayPerspective(windowPosition);
         var intersection = IntersectionTests.rayEllipsoid(ray.position, ray.direction, ellipsoid);
         if (!intersection) {
             return undefined;
@@ -457,6 +485,55 @@ define([
 
         var iPt = ray.position.add(ray.direction.multiplyWithScalar(intersection.start));
         return iPt;
+    };
+
+    /**
+     * Pick the map in 2D mode.
+     *
+     * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
+     * @param {DOC_TBA} projection DOC_TBA
+     *
+     * @return {Cartesian3} If the map was picked, returns the point on the surface of the map.
+     * If the map was not picked, returns undefined.
+     */
+    Camera.prototype.pickMap2D = function(windowPosition, projection) {
+        var ray = this._getPickRayOrthographic(windowPosition);
+        var position = ray.position;
+        position.z = 0.0;
+        var cart = projection.unproject(position);
+
+        if (cart.latitude < -CesiumMath.PI_OVER_TWO || cart.latitude > CesiumMath.PI_OVER_TWO ||
+                cart.longitude < - Math.PI || cart.longitude > Math.PI) {
+            return undefined;
+        }
+
+        return projection.getEllipsoid().toCartesian(cart);
+    };
+
+    /**
+     * Pick the map in Columbus View mode.
+     *
+     * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
+     * @param {DOC_TBA} projection DOC_TBA
+     * @returns {Cartesian3} If the map was picked, returns the point on the surface of the map.
+     * If the map was not picked, returns undefined.
+     */
+    Camera.prototype.pickMapColumbusView = function(windowPosition, projection) {
+        var ray = this._getPickRayPerspective(windowPosition);
+
+        var scalar = -ray.position.x / ray.direction.x;
+        var position = ray.position.add(ray.direction.multiplyWithScalar(scalar));
+        position = this.getInverseTransform().multiplyWithVector(new Cartesian4(position.x, position.y, position.z, 1.0)).getXYZ();
+
+        var cart = projection.unproject(position);
+
+        if (cart.latitude < -CesiumMath.PI_OVER_TWO || cart.latitude > CesiumMath.PI_OVER_TWO ||
+                cart.longitude < - Math.PI || cart.longitude > Math.PI) {
+            return undefined;
+        }
+
+        position = projection.getEllipsoid().toCartesian(cart);
+        return position;
     };
 
     /**

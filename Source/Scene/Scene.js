@@ -224,6 +224,25 @@ define([
      * DOC_TBA
      * @memberof Scene
      */
+    Scene.prototype.pickEllipsoid = function(windowPosition, ellipsoid) {
+        ellipsoid = ellipsoid || Ellipsoid.WGS84;
+
+        var p;
+        if (this.mode === SceneMode.SCENE3D) {
+            p = this._camera.pickEllipsoid(windowPosition, ellipsoid);
+        } else if (this.mode === SceneMode.SCENE2D) {
+            p = this._camera.pickMap2D(windowPosition, this.scene2D.projection);
+        } else if (this.mode === SceneMode.COLUMBUS_VIEW) {
+            p = this._camera.pickMapColumbusView(windowPosition, this.scene2D.projection);
+        }
+
+        return p;
+    };
+
+    /**
+     * DOC_TBA
+     * @memberof Scene
+     */
     Scene.prototype.isDestroyed = function() {
         return false;
     };

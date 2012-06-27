@@ -11,7 +11,7 @@
             handler = new Cesium.EventHandler(scene.getCanvas());
             handler.setMouseAction(
                 function (movement) {
-                    var p = scene.getCamera().pickEllipsoid(movement.endPosition, ellipsoid);
+                    var p = scene.pickEllipsoid(movement.endPosition, ellipsoid);
                     if (p) {
                         var d = Cesium.Math.cartographic2ToDegrees(ellipsoid.toCartographic2(p));
                         label.setShow(true);
