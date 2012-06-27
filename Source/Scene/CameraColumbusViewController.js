@@ -175,31 +175,33 @@ define([
         var maxX = Math.max(dWidth - this._mapWidth, this._mapWidth);
         var maxY = Math.max(dHeight - this._mapHeight, this._mapHeight);
 
-        if (!this._translateHandler.isButtonDown()) {
-            var animations = Tween.getAll();
+        if (positionWC.x < -maxX || positionWC.x > maxX || positionWC.y < -maxY || positionWC.y > maxY) {
+            if (!this._translateHandler.isButtonDown()) {
+                var animations = Tween.getAll();
 
-            var translateX = centerWC.y < -maxX || centerWC.y > maxX;
-            var translateY = centerWC.z < -maxY || centerWC.z > maxY;
-            if ((translateX || translateY) && !this._lastInertiaTranslateMovement) {
-                if (animations.indexOf(this._translateAnimation) === -1) {
-                    this._animationCollection.removeAll();
+                var translateX = centerWC.y < -maxX || centerWC.y > maxX;
+                var translateY = centerWC.z < -maxY || centerWC.z > maxY;
+                if ((translateX || translateY) && !this._lastInertiaTranslateMovement) {
+                    if (animations.indexOf(this._translateAnimation) === -1) {
+                        this._animationCollection.removeAll();
+                    }
+                    this._addCorrectTranslateAnimation(positionWC.getXYZ(), centerWC.getXYZ(), maxX, maxY);
                 }
-                this._addCorrectTranslateAnimation(positionWC.getXYZ(), centerWC.getXYZ(), maxX, maxY);
             }
-        }
 
-        maxX = maxX + this._mapWidth * 0.5;
-        if (centerWC.y > maxX) {
-            positionWC.y -= centerWC.y - maxX;
-        } else if (centerWC.y < -maxX) {
-            positionWC.y += -maxX - centerWC.y;
-        }
+            maxX = maxX + this._mapWidth * 0.5;
+            if (centerWC.y > maxX) {
+                positionWC.y -= centerWC.y - maxX;
+            } else if (centerWC.y < -maxX) {
+                positionWC.y += -maxX - centerWC.y;
+            }
 
-        maxY = maxY + this._mapHeight * 0.5;
-        if (centerWC.z > maxY) {
-            positionWC.z -= centerWC.z - maxY;
-        } else if (centerWC.z < -maxY) {
-            positionWC.z += -maxY - centerWC.z;
+            maxY = maxY + this._mapHeight * 0.5;
+            if (centerWC.z > maxY) {
+                positionWC.z -= centerWC.z - maxY;
+            } else if (centerWC.z < -maxY) {
+                positionWC.z += -maxY - centerWC.z;
+            }
         }
 
         camera.position = camera.getInverseTransform().multiplyWithVector(positionWC).getXYZ();
