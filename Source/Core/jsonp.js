@@ -84,7 +84,7 @@ define(['./DeveloperError'], function(DeveloperError) {
         };
 
         head.appendChild(script);
-    }
+    };
 
     return jsonp;
 });

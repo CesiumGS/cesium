@@ -31,7 +31,7 @@ define([
 
         this._points = controlPoints;
         this._lastTimeIndex = 0;
-    }
+    };
 
     /**
      * Returns the array of control points.

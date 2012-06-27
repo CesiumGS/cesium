@@ -39,7 +39,7 @@ define(function() {
                 }
             }
         }
-    }
+    };
 
     /**
      * Returns the numeric value of the enumeration.

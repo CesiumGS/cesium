@@ -24,7 +24,7 @@ define([
      * @param {DOC_TBA} element The element to add events to. Defaults to document.
      * @constructor
      */
-    function EventHandler(element) {
+    var EventHandler = function(element) {
         this._mouseEvents = {};
         for ( var button in MouseEventType) {
             if (MouseEventType.hasOwnProperty(button)) {
