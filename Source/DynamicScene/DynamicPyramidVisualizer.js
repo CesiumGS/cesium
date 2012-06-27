@@ -116,9 +116,11 @@ define([
             this._primitives.remove(this._pyramidCollection[i]);
         }
 
-        var dynamicObjects = this._dynamicObjectCollection.getObjects();
-        for (i = dynamicObjects.length - 1; i > -1; i--) {
-            dynamicObjects[i]._pyramidVisualizerIndex = undefined;
+        if (typeof this._dynamicObjectCollection !== 'undefined') {
+            var dynamicObjects = this._dynamicObjectCollection.getObjects();
+            for (i = dynamicObjects.length - 1; i > -1; i--) {
+                dynamicObjects[i]._pyramidVisualizerIndex = undefined;
+            }
         }
 
         this._unusedIndexes = [];

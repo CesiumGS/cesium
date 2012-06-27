@@ -110,9 +110,11 @@ define([
             this._primitives.remove(this._polygonCollection[i]);
         }
 
-        var dynamicObjects = this._dynamicObjectCollection.getObjects();
-        for (i = dynamicObjects.length - 1; i > -1; i--) {
-            dynamicObjects[i]._polygonVisualizerIndex = undefined;
+        if (typeof this._dynamicObjectCollection !== 'undefined') {
+            var dynamicObjects = this._dynamicObjectCollection.getObjects();
+            for (i = dynamicObjects.length - 1; i > -1; i--) {
+                dynamicObjects[i]._polygonVisualizerIndex = undefined;
+            }
         }
 
         this._unusedIndexes = [];
@@ -170,12 +172,15 @@ define([
             return;
         }
 
+        var vertexPositions = vertexPositionsProperty.getValueCartesian(time);
+
         var polygon;
         var showProperty = dynamicPolygon.show;
         var polygonVisualizerIndex = dynamicObject._polygonVisualizerIndex;
         var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
 
-        if (!show) {
+
+        if (!show || typeof vertexPositions === 'undefined' || vertexPositions.length < 3) {
             //don't bother creating or updating anything else
             if (typeof polygonVisualizerIndex !== 'undefined') {
                 polygon = this._polygonCollection[polygonVisualizerIndex];
@@ -209,10 +214,9 @@ define([
 
         polygon.show = true;
 
-        var value = vertexPositionsProperty.getValueCartesian(time);
-        if (typeof value !== 'undefined' && polygon._visualizerPositions !== value) {
-            polygon.setPositions(value);
-            polygon._visualizerPositions = value;
+        if (polygon._visualizerPositions !== vertexPositions) {
+            polygon.setPositions(vertexPositions);
+            polygon._visualizerPositions = vertexPositions;
         }
 
         var material = dynamicPolygon.material;

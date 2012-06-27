@@ -1,30 +1,34 @@
 /*global defineSuite*/
 defineSuite([
+             'DynamicScene/DynamicPyramidVisualizer',
              'DynamicScene/DynamicConeVisualizer',
              '../Specs/createContext',
              '../Specs/destroyContext',
              '../Specs/MockProperty',
-             'DynamicScene/DynamicCone',
+             'DynamicScene/DynamicPyramid',
              'DynamicScene/DynamicObjectCollection',
              'DynamicScene/DynamicObject',
              'Scene/ColorMaterial',
              'Core/JulianDate',
              'Core/Quaternion',
              'Core/Cartesian3',
+             'Core/Spherical',
              'Core/Color',
              'Scene/Scene',
             ], function(
+              DynamicPyramidVisualizer,
               DynamicConeVisualizer,
               createContext,
               destroyContext,
               MockProperty,
-              DynamicCone,
+              DynamicPyramid,
               DynamicObjectCollection,
               DynamicObject,
               ColorMaterial,
               JulianDate,
               Quaternion,
               Cartesian3,
+              Spherical,
               Color,
               Scene) {
     "use strict";
@@ -47,41 +51,41 @@ defineSuite([
 
     it('constructor throws if no scene is passed.', function() {
         expect(function() {
-            return new DynamicConeVisualizer();
+            return new DynamicPyramidVisualizer();
         }).toThrow();
     });
 
     it('constructor sets expected parameters.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicConeVisualizer(scene, dynamicObjectCollection);
+        visualizer = new DynamicPyramidVisualizer(scene, dynamicObjectCollection);
         expect(visualizer.getScene()).toEqual(scene);
         expect(visualizer.getDynamicObjectCollection()).toEqual(dynamicObjectCollection);
     });
 
     it('update throws if no time specified.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicConeVisualizer(scene, dynamicObjectCollection);
+        visualizer = new DynamicPyramidVisualizer(scene, dynamicObjectCollection);
         expect(function() {
             visualizer.update();
         }).toThrow();
     });
 
     it('update does nothing if no dynamicObjectCollection.', function() {
-        visualizer = new DynamicConeVisualizer(scene);
+        visualizer = new DynamicPyramidVisualizer(scene);
         visualizer.update(new JulianDate());
     });
 
     it('isDestroy returns false until destroyed.', function() {
-        visualizer = new DynamicConeVisualizer(scene);
+        visualizer = new DynamicPyramidVisualizer(scene);
         expect(visualizer.isDestroyed()).toEqual(false);
         visualizer.destroy();
         expect(visualizer.isDestroyed()).toEqual(true);
         visualizer = undefined;
     });
 
-    it('object with no cone does not create a primitive.', function() {
+    it('object with no pyramid does not create a primitive.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicConeVisualizer(scene, dynamicObjectCollection);
+        visualizer = new DynamicPyramidVisualizer(scene, dynamicObjectCollection);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
@@ -92,85 +96,69 @@ defineSuite([
 
     it('object with no position does not create a primitive.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicConeVisualizer(scene, dynamicObjectCollection);
+        visualizer = new DynamicPyramidVisualizer(scene, dynamicObjectCollection);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.orientation = new MockProperty(new Quaternion(0, 0, 0, 1));
-        var cone = testObject.cone = new DynamicCone();
-        cone.maximumClockAngle = new MockProperty(1);
-        cone.outerHalfAngle = new MockProperty(1);
+        var pyramid = testObject.pyramid = new DynamicPyramid();
+        pyramid.directions = new MockProperty([new Spherical(0, 0, 0), new Spherical(1, 0, 0), new Spherical(2, 0, 0), new Spherical(3, 0, 0)]);
         visualizer.update(new JulianDate());
         expect(scene.getPrimitives().getLength()).toEqual(0);
     });
 
     it('object with no orientation does not create a primitive.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicConeVisualizer(scene, dynamicObjectCollection);
+        visualizer = new DynamicPyramidVisualizer(scene, dynamicObjectCollection);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
-        var cone = testObject.cone = new DynamicCone();
-        cone.maximumClockAngle = new MockProperty(1);
-        cone.outerHalfAngle = new MockProperty(1);
+        var pyramid = testObject.pyramid = new DynamicPyramid();
+        pyramid.directions = new MockProperty([new Spherical(0, 0, 0), new Spherical(1, 0, 0), new Spherical(2, 0, 0), new Spherical(3, 0, 0)]);
         visualizer.update(new JulianDate());
         expect(scene.getPrimitives().getLength()).toEqual(0);
     });
 
-    it('A DynamicCone causes a ComplexConicSensor to be created and updated.', function() {
+    it('A DynamicPyramid causes a CustomSensor to be created and updated.', function() {
         var time = new JulianDate();
         var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicConeVisualizer(scene, dynamicObjectCollection);
+        visualizer = new DynamicPyramidVisualizer(scene, dynamicObjectCollection);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
         testObject.orientation = new MockProperty(new Quaternion(0, 0, 0, 1));
 
-        var cone = testObject.cone = new DynamicCone();
-        cone.minimumClockAngle = new MockProperty(0.1);
-        cone.maximumClockAngle = new MockProperty(0.2);
-        cone.innerHalfAngle = new MockProperty(0.3);
-        cone.outerHalfAngle = new MockProperty(0.4);
-        cone.intersectionColor = new MockProperty(new Color(0.1, 0.2, 0.3, 0.4));
-        cone.showIntersection = new MockProperty(true);
-        cone.radius = new MockProperty(123.5);
-        cone.show = new MockProperty(true);
-        cone.capMaterial = new MockProperty(new ColorMaterial(Color.RED));
-        cone.innerMaterial = new MockProperty(new ColorMaterial(Color.WHITE));
-        cone.outerMaterial = new MockProperty(new ColorMaterial(Color.BLUE));
-        cone.silhouetteMaterial = new MockProperty(new ColorMaterial(Color.YELLOW));
+        var pyramid = testObject.pyramid = new DynamicPyramid();
+        pyramid.directions = new MockProperty([new Spherical(0, 0, 0), new Spherical(1, 0, 0), new Spherical(2, 0, 0), new Spherical(3, 0, 0)]);
+        pyramid.intersectionColor = new MockProperty(new Color(0.1, 0.2, 0.3, 0.4));
+        pyramid.showIntersection = new MockProperty(true);
+        pyramid.radius = new MockProperty(123.5);
+        pyramid.show = new MockProperty(true);
+        pyramid.material = new MockProperty(new ColorMaterial(Color.RED));
         visualizer.update(time);
 
         expect(scene.getPrimitives().getLength()).toEqual(1);
-        var c = scene.getPrimitives().get(0);
-        expect(c.minimumClockAngle).toEqual(testObject.cone.minimumClockAngle.getValue(time));
-        expect(c.maximumClockAngle).toEqual(testObject.cone.maximumClockAngle.getValue(time));
-        expect(c.innerHalfAngle).toEqual(testObject.cone.innerHalfAngle.getValue(time));
-        expect(c.outerHalfAngle).toEqual(testObject.cone.outerHalfAngle.getValue(time));
-        expect(c.intersectionColor).toEqual(testObject.cone.intersectionColor.getValue(time));
-        expect(c.showIntersection).toEqual(testObject.cone.showIntersection.getValue(time));
-        expect(c.radius).toEqual(testObject.cone.radius.getValue(time));
-        expect(c.show).toEqual(testObject.cone.show.getValue(time));
-        expect(c.capMaterial).toEqual(testObject.cone.capMaterial.getValue(time));
-        expect(c.innerMaterial).toEqual(testObject.cone.innerMaterial.getValue(time));
-        expect(c.outerMaterial).toEqual(testObject.cone.outerMaterial.getValue(time));
-        expect(c.silhouetteMaterial).toEqual(testObject.cone.silhouetteMaterial.getValue(time));
-        expect(c.modelMatrix).toEqual(DynamicConeVisualizer._computeModelMatrix(testObject.position.getValueCartesian(time), testObject.orientation.getValue(time)));
+        var p = scene.getPrimitives().get(0);
+        expect(p.intersectionColor).toEqual(testObject.pyramid.intersectionColor.getValue(time));
+        expect(p.showIntersection).toEqual(testObject.pyramid.showIntersection.getValue(time));
+        expect(p.radius).toEqual(testObject.pyramid.radius.getValue(time));
+        expect(p.show).toEqual(testObject.pyramid.show.getValue(time));
+        expect(p.material).toEqual(testObject.pyramid.material.getValue(time));
+        expect(p.modelMatrix).toEqual(DynamicConeVisualizer._computeModelMatrix(testObject.position.getValueCartesian(time), testObject.orientation.getValue(time)));
 
-        cone.show.value = false;
+        pyramid.show.value = false;
         visualizer.update(time);
-        expect(c.show).toEqual(testObject.cone.show.getValue(time));
+        expect(p.show).toEqual(testObject.pyramid.show.getValue(time));
     });
 
-    it('clear hides cones.', function() {
+    it('clear hides pyramids.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicConeVisualizer(scene, dynamicObjectCollection);
+        visualizer = new DynamicPyramidVisualizer(scene, dynamicObjectCollection);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
         testObject.orientation = new MockProperty(new Quaternion(0, 0, 0, 1));
-        var cone = testObject.cone = new DynamicCone();
-        cone.maximumClockAngle = new MockProperty(1);
-        cone.outerHalfAngle = new MockProperty(1);
+        var pyramid = testObject.pyramid = new DynamicPyramid();
+        pyramid.directions = new MockProperty([new Spherical(0, 0, 0), new Spherical(1, 0, 0), new Spherical(2, 0, 0), new Spherical(3, 0, 0)]);
 
         var time = new JulianDate();
         expect(scene.getPrimitives().getLength()).toEqual(0);
@@ -185,14 +173,13 @@ defineSuite([
 
     it('Visualizer sets dynamicObject property.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicConeVisualizer(scene, dynamicObjectCollection);
+        visualizer = new DynamicPyramidVisualizer(scene, dynamicObjectCollection);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
         testObject.orientation = new MockProperty(new Quaternion(0, 0, 0, 1));
-        var cone = testObject.cone = new DynamicCone();
-        cone.maximumClockAngle = new MockProperty(1);
-        cone.outerHalfAngle = new MockProperty(1);
+        var pyramid = testObject.pyramid = new DynamicPyramid();
+        pyramid.directions = new MockProperty([new Spherical(0, 0, 0), new Spherical(1, 0, 0), new Spherical(2, 0, 0), new Spherical(3, 0, 0)]);
 
         var time = new JulianDate();
         visualizer.update(time);
@@ -204,31 +191,29 @@ defineSuite([
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
         testObject.orientation = new MockProperty(new Quaternion(0, 0, 0, 1));
-        var cone = testObject.cone = new DynamicCone();
-        cone.maximumClockAngle = new MockProperty(1);
-        cone.outerHalfAngle = new MockProperty(1);
+        var pyramid = testObject.pyramid = new DynamicPyramid();
+        pyramid.directions = new MockProperty([new Spherical(0, 0, 0), new Spherical(1, 0, 0), new Spherical(2, 0, 0), new Spherical(3, 0, 0)]);
 
         var dynamicObjectCollection2 = new DynamicObjectCollection();
         var testObject2 = dynamicObjectCollection2.getOrCreateObject('test2');
         testObject2.position = new MockProperty(new Cartesian3(5678, 9101112, 1234));
         testObject2.orientation = new MockProperty(new Quaternion(1, 0, 0, 0));
-        var cone2 = testObject2.cone = new DynamicCone();
-        cone2.maximumClockAngle = new MockProperty(0.12);
-        cone2.outerHalfAngle = new MockProperty(1.1);
+        var pyramid2 = testObject2.pyramid = new DynamicPyramid();
+        pyramid2.directions = new MockProperty([new Spherical(3, 0, 0), new Spherical(2, 0, 0), new Spherical(1, 0, 0), new Spherical(0.5, 0, 0)]);
 
-        visualizer = new DynamicConeVisualizer(scene, dynamicObjectCollection);
+        visualizer = new DynamicPyramidVisualizer(scene, dynamicObjectCollection);
 
         var time = new JulianDate();
 
         visualizer.update(time);
         expect(scene.getPrimitives().getLength()).toEqual(1);
-        var conePrimitive = scene.getPrimitives().get(0);
-        expect(conePrimitive.dynamicObject).toEqual(testObject);
+        var pyramidPrimitive = scene.getPrimitives().get(0);
+        expect(pyramidPrimitive.dynamicObject).toEqual(testObject);
 
         visualizer.setDynamicObjectCollection(dynamicObjectCollection2);
         visualizer.update(time);
         expect(scene.getPrimitives().getLength()).toEqual(1);
-        conePrimitive = scene.getPrimitives().get(0);
-        expect(conePrimitive.dynamicObject).toEqual(testObject2);
+        pyramidPrimitive = scene.getPrimitives().get(0);
+        expect(pyramidPrimitive.dynamicObject).toEqual(testObject2);
     });
 });

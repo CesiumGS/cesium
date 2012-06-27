@@ -14,7 +14,7 @@ defineSuite([
              'Core/Color',
              'Scene/Scene',
             ], function(
-              DynamicConeVisualizer,
+              DynamicConeVisualizerUsingCustomSensor,
               createContext,
               destroyContext,
               MockProperty,
@@ -47,32 +47,32 @@ defineSuite([
 
     it('constructor throws if no scene is passed.', function() {
         expect(function() {
-            return new DynamicConeVisualizer();
+            return new DynamicConeVisualizerUsingCustomSensor();
         }).toThrow();
     });
 
     it('constructor sets expected parameters.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicConeVisualizer(scene, dynamicObjectCollection);
+        visualizer = new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjectCollection);
         expect(visualizer.getScene()).toEqual(scene);
         expect(visualizer.getDynamicObjectCollection()).toEqual(dynamicObjectCollection);
     });
 
     it('update throws if no time specified.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicConeVisualizer(scene, dynamicObjectCollection);
+        visualizer = new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjectCollection);
         expect(function() {
             visualizer.update();
         }).toThrow();
     });
 
     it('update does nothing if no dynamicObjectCollection.', function() {
-        visualizer = new DynamicConeVisualizer(scene);
+        visualizer = new DynamicConeVisualizerUsingCustomSensor(scene);
         visualizer.update(new JulianDate());
     });
 
     it('isDestroy returns false until destroyed.', function() {
-        visualizer = new DynamicConeVisualizer(scene);
+        visualizer = new DynamicConeVisualizerUsingCustomSensor(scene);
         expect(visualizer.isDestroyed()).toEqual(false);
         visualizer.destroy();
         expect(visualizer.isDestroyed()).toEqual(true);
@@ -81,7 +81,7 @@ defineSuite([
 
     it('object with no cone does not create a primitive.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicConeVisualizer(scene, dynamicObjectCollection);
+        visualizer = new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjectCollection);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
@@ -92,7 +92,7 @@ defineSuite([
 
     it('object with no position does not create a primitive.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicConeVisualizer(scene, dynamicObjectCollection);
+        visualizer = new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjectCollection);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.orientation = new MockProperty(new Quaternion(0, 0, 0, 1));
@@ -105,7 +105,7 @@ defineSuite([
 
     it('object with no orientation does not create a primitive.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicConeVisualizer(scene, dynamicObjectCollection);
+        visualizer = new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjectCollection);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
@@ -119,7 +119,7 @@ defineSuite([
     it('A DynamicCone causes a ComplexConicSensor to be created and updated.', function() {
         var time = new JulianDate();
         var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicConeVisualizer(scene, dynamicObjectCollection);
+        visualizer = new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjectCollection);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
@@ -151,6 +151,7 @@ defineSuite([
         expect(c.radius).toEqual(testObject.cone.radius.getValue(time));
         expect(c.show).toEqual(testObject.cone.show.getValue(time));
         expect(c.material).toEqual(testObject.cone.outerMaterial.getValue(time));
+        expect(c.modelMatrix).toEqual(DynamicConeVisualizerUsingCustomSensor._computeModelMatrix(testObject.position.getValueCartesian(time), testObject.orientation.getValue(time)));
 
         cone.show.value = false;
         visualizer.update(time);
@@ -159,7 +160,7 @@ defineSuite([
 
     it('clear hides cones.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicConeVisualizer(scene, dynamicObjectCollection);
+        visualizer = new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjectCollection);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
@@ -181,7 +182,7 @@ defineSuite([
 
     it('Visualizer sets dynamicObject property.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicConeVisualizer(scene, dynamicObjectCollection);
+        visualizer = new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjectCollection);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
@@ -212,7 +213,7 @@ defineSuite([
         cone2.maximumClockAngle = new MockProperty(0.12);
         cone2.outerHalfAngle = new MockProperty(1.1);
 
-        visualizer = new DynamicConeVisualizer(scene, dynamicObjectCollection);
+        visualizer = new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjectCollection);
 
         var time = new JulianDate();
 

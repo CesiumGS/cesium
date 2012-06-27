@@ -14,5 +14,9 @@ define(function() {
         return this.value;
     };
 
+    MockProperty.prototype.getValueSpherical = function() {
+        return this.value;
+    };
+
     return MockProperty;
 });
