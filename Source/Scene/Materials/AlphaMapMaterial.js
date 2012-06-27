@@ -38,11 +38,19 @@ define([
          */
         this.tRepeat = t.tRepeat || 1.0;
 
+        /**
+         * Channels used for sampling the texture.
+         *
+         * type {String}
+         */
+        this.channels = t.channels || 'r';
+        this.shaderSource = this._replaceChannels(ShadersAlphaMapMaterial, this.channels, 1);
+
         var that = this;
         this._uniforms = {
             u_texture : function() {
                 if (typeof that.texture === 'undefined') {
-                    throw new DeveloperError("Alpha map texture required.");
+                    throw new DeveloperError('Alpha map texture required.');
                 }
                 return that.texture;
             },
@@ -55,9 +63,19 @@ define([
         };
     }
 
+    AlphaMapMaterial.prototype._replaceChannels = function(source, channels, numChannels) {
+        if (channels.length !== numChannels) {
+            throw new DeveloperError('Number of texture channels should be: ' + numChannels);
+        }
+        if (channels.search(/[^rgba]/) !== -1) {
+            throw new DeveloperError('Channels should only contain r, g, b, or a');
+        }
+        return source.replace('alpha_map_material_channels', channels);
+    };
+
     AlphaMapMaterial.prototype._getShaderSource = function() {
-        return "#line 0\n" +
-               ShadersAlphaMapMaterial;
+        return '#line 0\n' +
+               this.shaderSource;
     };
 
     return AlphaMapMaterial;

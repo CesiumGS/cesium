@@ -299,16 +299,9 @@ define([
 
         var replaceMaterialMethods = function(source, type)
         {
-            var finalSource = source;
             var origName = 'agi_getMaterial';
             var newName = 'agi_get' + type + 'Material';
-            finalSource = finalSource.replace(new RegExp(origName, 'g'), newName);
-
-            origName = 'agi_getDefaultMaterial';
-            newName = 'agi_get' + type + 'DefaultMaterial';
-            finalSource = finalSource.replace(new RegExp(origName, 'g'), newName);
-
-            return finalSource;
+            return source.replace(new RegExp(origName, 'g'), newName);
         };
 
         return combineMaterials({
