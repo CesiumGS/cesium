@@ -116,11 +116,12 @@ define([
             this._primitives.remove(this._coneCollection[i]);
         }
 
-        var dynamicObjects = this._dynamicObjectCollection.getObjects();
-        for (i = dynamicObjects.length - 1; i > -1; i--) {
-            dynamicObjects[i]._coneVisualizerIndex = undefined;
+        if (typeof this._dynamicObjectCollection !== 'undefined') {
+            var dynamicObjects = this._dynamicObjectCollection.getObjects();
+            for (i = dynamicObjects.length - 1; i > -1; i--) {
+                dynamicObjects[i]._coneVisualizerIndex = undefined;
+            }
         }
-
         this._unusedIndexes = [];
         this._coneCollection = [];
     };
@@ -174,16 +175,6 @@ define([
             return;
         }
 
-        var maximumClockAngleProperty = dynamicCone.maximumClockAngle;
-        if (typeof maximumClockAngleProperty === 'undefined') {
-            return;
-        }
-
-        var outerHalfAngleProperty = dynamicCone.outerHalfAngle;
-        if (typeof outerHalfAngleProperty === 'undefined') {
-            return;
-        }
-
         var positionProperty = dynamicObject.position;
         if (typeof positionProperty === 'undefined') {
             return;
@@ -219,8 +210,6 @@ define([
             } else {
                 coneVisualizerIndex = this._coneCollection.length;
                 cone = new ComplexConicSensorVolume();
-                cone.innerHalfAngle = 0;
-                cone.minimumClockAngle = 0;
                 this._coneCollection.push(cone);
                 this._primitives.add(cone);
             }
@@ -252,7 +241,15 @@ define([
             }
         }
 
-        cone.maximumClockAngle = maximumClockAngleProperty.getValue(time) || Math.pi;
+        property = dynamicCone.maximumClockAngle;
+        if (typeof property !== 'undefined') {
+            var maximumClockAngle = property.getValue(time);
+            if (typeof maximumClockAngle !== 'undefined') {
+                cone.maximumClockAngle = maximumClockAngle;
+            } else {
+                cone.maximumClockAngle = Math.pi;
+            }
+        }
 
         property = dynamicCone.innerHalfAngle;
         if (typeof property !== 'undefined') {
@@ -262,7 +259,15 @@ define([
             }
         }
 
-        cone.outerHalfAngle = outerHalfAngleProperty.getValue(time) || Math.pi;
+        property = dynamicCone.outerHalfAngle;
+        if (typeof property !== 'undefined') {
+            var outerHalfAngle = property.getValue(time);
+            if (typeof outerHalfAngle !== 'undefined') {
+                cone.outerHalfAngle = outerHalfAngle;
+            } else {
+                cone.outerHalfAngle = Math.pi;
+            }
+        }
 
         property = dynamicCone.radius;
         if (typeof property !== 'undefined') {

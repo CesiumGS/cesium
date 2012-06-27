@@ -153,9 +153,11 @@ define([
             this._primitives.remove(this._coneCollection[i]);
         }
 
-        var dynamicObjects = this._dynamicObjectCollection.getObjects();
-        for (i = dynamicObjects.length - 1; i > -1; i--) {
-            dynamicObjects[i]._coneVisualizerIndex = undefined;
+        if (typeof this._dynamicObjectCollection !== 'undefined') {
+            var dynamicObjects = this._dynamicObjectCollection.getObjects();
+            for (i = dynamicObjects.length - 1; i > -1; i--) {
+                dynamicObjects[i]._coneVisualizerIndex = undefined;
+            }
         }
 
         this._unusedIndexes = [];
@@ -266,17 +268,14 @@ define([
             cone.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
-            cone.capMaterial = new ColorMaterial();
             cone.innerHalfAngle = 0;
             cone.outerHalfAngle = Math.PI;
-            cone.innerMaterial = new ColorMaterial();
+            cone.material = new ColorMaterial();
             cone.intersectionColor = Color.YELLOW;
             cone.minimumClockAngle = -CesiumMath.TWO_PI;
             cone.maximumClockAngle =  CesiumMath.TWO_PI;
-            cone.outerMaterial = new ColorMaterial();
             cone.radius = Number.POSITIVE_INFINITY;
             cone.showIntersection = true;
-            cone.silhouetteMaterial = new ColorMaterial();
         } else {
             cone = this._coneCollection[coneVisualizerIndex];
         }

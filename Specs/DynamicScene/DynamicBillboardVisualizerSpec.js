@@ -3,6 +3,7 @@ defineSuite([
              'DynamicScene/DynamicBillboardVisualizer',
              '../Specs/createContext',
              '../Specs/destroyContext',
+             '../Specs/MockProperty',
              'DynamicScene/DynamicBillboard',
              'DynamicScene/DynamicObjectCollection',
              'DynamicScene/DynamicObject',
@@ -18,6 +19,7 @@ defineSuite([
               DynamicBillboardVisualizer,
               createContext,
               destroyContext,
+              MockProperty,
               DynamicBillboard,
               DynamicObjectCollection,
               DynamicObject,
@@ -35,18 +37,6 @@ defineSuite([
     var context;
     var scene;
     var visualizer;
-
-    function MockProperty(value) {
-        this.value = value;
-    }
-
-    MockProperty.prototype.getValue = function() {
-        return this.value;
-    };
-
-    MockProperty.prototype.getValueCartesian = function() {
-        return this.value;
-    };
 
     beforeEach(function() {
         context = createContext();
@@ -87,6 +77,14 @@ defineSuite([
         visualizer.update(new JulianDate());
     });
 
+    it('isDestroy returns false until destroyed.', function() {
+        visualizer = new DynamicBillboardVisualizer(scene);
+        expect(visualizer.isDestroyed()).toEqual(false);
+        visualizer.destroy();
+        expect(visualizer.isDestroyed()).toEqual(true);
+        visualizer = undefined;
+    });
+
     it('object with no billboard does not create a billboard.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         visualizer = new DynamicBillboardVisualizer(scene, dynamicObjectCollection);
@@ -124,14 +122,6 @@ defineSuite([
         visualizer.update(new JulianDate());
         var billboardCollection = scene.getPrimitives().get(0);
         expect(billboardCollection.getLength()).toEqual(0);
-    });
-
-    it('isDestroy returns false until destroyed.', function() {
-        visualizer = new DynamicBillboardVisualizer(scene);
-        expect(visualizer.isDestroyed()).toEqual(false);
-        visualizer.destroy();
-        expect(visualizer.isDestroyed()).toEqual(true);
-        visualizer = undefined;
     });
 
     it('A DynamicBillboard causes a Billboard to be created and updated.', function() {
@@ -269,7 +259,7 @@ defineSuite([
         expect(bb.dynamicObject).toEqual(testObject);
     });
 
-    it('Visualizer sets dynamicObject property.', function() {
+    it('setDynamicObjectCollection removes old objects and add new ones.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
