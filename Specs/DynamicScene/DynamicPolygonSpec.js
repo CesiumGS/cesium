@@ -41,7 +41,7 @@ defineSuite([
     it('processCzmlPacket adds data for constrained polygon.', function() {
         var polygonPacket = {
             polygon : {
-                interval : "2000-01-01/2001-01-01",
+                interval : '2000-01-01/2001-01-01',
                 material : {
                     solidColor : {
                         color : {

@@ -19,11 +19,11 @@ defineSuite([
     /*global it,expect*/
 
     var sphericalInterval = {
-        "unitSpherical" : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
+        unitSpherical : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
     };
 
     var cartesianInterval = {
-        "unitCartesian" : [1, 0, 0, 0, 1, 0, 0, 0, 1]
+        unitCartesian : [1, 0, 0, 0, 1, 0, 0, 0, 1]
     };
 
     it('getValueCartesian returns undefined if no data exists', function() {

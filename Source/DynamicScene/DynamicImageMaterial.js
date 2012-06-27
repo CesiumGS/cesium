@@ -21,8 +21,8 @@ define([
     //this code should be changes so at least all CZML visualization has defaults.
     function createDefaultImage() {
         var canvas = document.createElement('canvas');
-        canvas.height = "64";
-        canvas.width = "64";
+        canvas.height = '64';
+        canvas.width = '64';
 
         var context = canvas.getContext('2d');
         context.fillStyle = '#FFFFFF';
@@ -32,7 +32,7 @@ define([
         context.font = '64px sans-serif';
         context.strokeStyle = '#000000';
         context.strokeText('?', 16, 0);
-        return canvas.toDataURL("image/png");
+        return canvas.toDataURL('image/png');
     }
 
     var defaultImage = new Image();

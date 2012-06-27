@@ -6,10 +6,10 @@ defineSuite([
     "use strict";
     /*global it,expect*/
 
-    var simpleString = "some Value";
+    var simpleString = 'some Value';
 
     var constantStringInterval = {
-        string : "some other value"
+        string : 'some other value'
     };
 
     it('unwrapInterval', function() {

@@ -17,29 +17,29 @@ defineSuite([
     /*global it,expect*/
 
     var cartographicRadiansInterval = {
-        "cartographicRadians" : [1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, ]
+        cartographicRadians : [1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, ]
     };
 
     var cartographicDegreesInterval = {
-        "cartographicDegrees" : [10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7, 10.8, 10.9, ]
+        cartographicDegrees : [10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7, 10.8, 10.9, ]
     };
 
     var cartesianInterval = {
-        "cartesian" : [10000, 10002, 10003, 10004, 10005, 10006, 10007, 10008, 10009, ]
+        cartesian : [10000, 10002, 10003, 10004, 10005, 10006, 10007, 10008, 10009, ]
     };
 
     var testObjects = [{
-        id : "test1",
+        id : 'test1',
         position : {
             cartesian : [100000, 100001, 100003]
         }
     }, {
-        id : "test2",
+        id : 'test2',
         position : {
             cartesian : [100004, 100005, 100006]
         }
     }, {
-        id : "test3",
+        id : 'test3',
         position : {
             interval : '2012-04-18T15:59:00Z/2012-04-18T15:59:00Z',
             cartesian : [100007, 100008, 100009]
@@ -47,7 +47,7 @@ defineSuite([
     }];
 
     var referenceInterval = {
-        "references" : ["test1.position", "test2.position", "test3.position"]
+        references : ['test1.position', 'test2.position', 'test3.position']
     };
 
     it('getValueCartesian returns undefined if no data exists', function() {

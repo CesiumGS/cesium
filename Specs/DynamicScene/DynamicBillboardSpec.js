@@ -27,10 +27,10 @@ defineSuite([
     it('processCzmlPacket adds data for infinite billboard.', function() {
         var billboardPacket = {
             billboard : {
-                image : "http://someImage.com/image",
+                image : 'http://someImage.com/image',
                 scale : 1.0,
-                horizontalOrigin : "CENTER",
-                verticalOrigin : "CENTER",
+                horizontalOrigin : 'CENTER',
+                verticalOrigin : 'CENTER',
                 color : {
                     rgbaf : [1.0, 1.0, 1.0, 1.0]
                 },
@@ -61,11 +61,11 @@ defineSuite([
     it('processCzmlPacket adds data for constrained billboard.', function() {
         var billboardPacket = {
             billboard : {
-                interval : "2000-01-01/2001-01-01",
-                image : "http://someImage.com/image",
+                interval : '2000-01-01/2001-01-01',
+                image : 'http://someImage.com/image',
                 scale : 1.0,
-                horizontalOrigin : "CENTER",
-                verticalOrigin : "CENTER",
+                horizontalOrigin : 'CENTER',
+                verticalOrigin : 'CENTER',
                 color : {
                     rgbaf : [1.0, 1.0, 1.0, 1.0]
                 },

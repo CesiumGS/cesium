@@ -67,16 +67,16 @@ defineSuite([
         var dynamicObjectCollection = new DynamicObjectCollection();
 
         var dynamicObject = dynamicObjectCollection.getOrCreateObject('1');
-        dynamicObject._setAvailability(TimeInterval.fromIso8601("2012-08-01/2012-08-02"));
+        dynamicObject._setAvailability(TimeInterval.fromIso8601('2012-08-01/2012-08-02'));
 
         dynamicObject = dynamicObjectCollection.getOrCreateObject('2');
 
         dynamicObject = dynamicObjectCollection.getOrCreateObject('3');
-        dynamicObject._setAvailability(TimeInterval.fromIso8601("2012-08-05/2012-08-06"));
+        dynamicObject._setAvailability(TimeInterval.fromIso8601('2012-08-05/2012-08-06'));
 
         var availability = dynamicObjectCollection.computeAvailability();
-        expect(availability.start).toEqual(JulianDate.fromIso8601("2012-08-01"));
-        expect(availability.stop).toEqual(JulianDate.fromIso8601("2012-08-06"));
+        expect(availability.start).toEqual(JulianDate.fromIso8601('2012-08-01'));
+        expect(availability.stop).toEqual(JulianDate.fromIso8601('2012-08-06'));
     });
 
     it('clear removes all objects', function() {

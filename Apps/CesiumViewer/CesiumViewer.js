@@ -339,7 +339,7 @@ function(dom,
                         imagery.containerNode.innerHTML = bingHtml;
                     } else {
                         cesium.enableStreamingImagery(false);
-                        imagery.containerNode.innerHTML = "Imagery";
+                        imagery.containerNode.innerHTML = 'Imagery';
                     }
 
                     imageryOptions.forEach(function(o) {
