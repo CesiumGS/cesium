@@ -48,6 +48,13 @@ define([
          */
         this.patchiness = t.patchiness || 1.5;
 
+        /**
+         * The glsl shader source
+         *
+         * type {String}
+         */
+        this.shaderSource = ShadersGrassMaterial;
+
         var that = this;
         this._uniforms = {
             u_grassColor : function() {
@@ -66,7 +73,7 @@ define([
         return "#line 0\n" +
                ShadersNoise +
                "#line 0\n" +
-               ShadersGrassMaterial;
+               this.shaderSource;
     };
 
     return GrassMaterial;

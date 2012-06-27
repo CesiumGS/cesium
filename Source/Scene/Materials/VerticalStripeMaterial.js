@@ -48,6 +48,13 @@ define([
          */
         this.repeat = t.repeat || 10.0;
 
+        /**
+         * The glsl shader source
+         *
+         * type {String}
+         */
+        this.shaderSource = ShadersVerticalStripeMaterial;
+
         var that = this;
         this._uniforms = {
             u_lightColor : function() {
@@ -67,7 +74,7 @@ define([
 
     VerticalStripeMaterial.prototype._getShaderSource = function() {
         return "#line 0\n" +
-               ShadersVerticalStripeMaterial;
+               this.shaderSource;
     };
 
     return VerticalStripeMaterial;

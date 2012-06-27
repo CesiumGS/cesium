@@ -24,6 +24,13 @@ define([
             alpha : 0.5
         };
 
+        /**
+         * The glsl shader source
+         *
+         * type {String}
+         */
+        this.shaderSource = ShadersColorMaterial;
+
         var that = this;
         this._uniforms = {
             u_color : function() {
@@ -34,7 +41,7 @@ define([
 
     ColorMaterial.prototype._getShaderSource = function() {
         return "#line 0\n" +
-               ShadersColorMaterial;
+               this.shaderSource;
     };
 
     return ColorMaterial;

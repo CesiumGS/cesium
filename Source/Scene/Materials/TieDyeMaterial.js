@@ -44,6 +44,13 @@ define([
          */
         this.frequency = t.frequency || 5.0;
 
+        /**
+         * The glsl shader source
+         *
+         * type {String}
+         */
+        this.shaderSource = ShadersTieDyeMaterial;
+
         var that = this;
         this._uniforms = {
             u_lightColor : function() {
@@ -62,7 +69,7 @@ define([
         return '#line 0\n' +
                ShadersNoise +
                "#line 0\n" +
-               ShadersTieDyeMaterial;
+               this.shaderSource;
     };
 
     return TieDyeMaterial;

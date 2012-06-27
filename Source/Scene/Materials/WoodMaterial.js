@@ -67,6 +67,13 @@ define([
         */
        this.grainFrequency = t.grainFrequency || 27.0;
 
+       /**
+        * The glsl shader source
+        *
+        * type {String}
+        */
+       this.shaderSource = ShadersWoodMaterial;
+
        var that = this;
        this._uniforms = {
            u_lightWoodColor : function() {
@@ -94,7 +101,7 @@ define([
        return "#line 0\n" +
               ShadersNoise +
               "#line 0\n" +
-              ShadersWoodMaterial;
+              this.shaderSource;
    };
 
     return WoodMaterial;

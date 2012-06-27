@@ -1,5 +1,3 @@
-uniform vec4 u_color;
-
 /**
  * Calculates material properties. The returned material should use the default material as a base.
  *
@@ -19,6 +17,8 @@ uniform vec4 u_color;
  * @see agi_material
  * @see agi_getDefaultMaterial
  */
+ 
+uniform vec4 u_color;
  
 agi_material agi_getMaterial(agi_materialInput materialInput)
 {

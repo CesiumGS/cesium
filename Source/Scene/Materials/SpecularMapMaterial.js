@@ -43,6 +43,12 @@ define([
          * type {String}
          */
         this.channels = t.channels || 'r';
+
+        /**
+         * The glsl shader source
+         *
+         * type {String}
+         */
         this.shaderSource = this._replaceChannels(ShadersSpecularMapMaterial, this.channels, 1);
 
         var that = this;

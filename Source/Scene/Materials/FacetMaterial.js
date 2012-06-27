@@ -44,6 +44,13 @@ define([
          */
         this.repeat = t.repeat || 20.0;
 
+        /**
+         * The glsl shader source
+         *
+         * type {String}
+         */
+        this.shaderSource = ShadersFacetMaterial;
+
         var that = this;
         this._uniforms = {
             u_lightColor : function() {
@@ -62,7 +69,7 @@ define([
         return '#line 0\n' +
                ShadersNoise +
                "#line 0\n" +
-               ShadersFacetMaterial;
+               this.shaderSource;
     };
 
     return FacetMaterial;

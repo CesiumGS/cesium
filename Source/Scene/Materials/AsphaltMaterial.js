@@ -44,6 +44,13 @@ define([
          */
         this.roughness = t.roughness || 0.2;
 
+        /**
+         * The glsl shader source
+         *
+         * type {String}
+         */
+        this.shaderSource = ShadersAsphaltMaterial;
+
         var that = this;
         this._uniforms = {
             u_asphaltColor : function() {
@@ -62,7 +69,7 @@ define([
         return "#line 0\n" +
                ShadersNoise +
                "#line 0\n" +
-               ShadersAsphaltMaterial;
+               this.shaderSource;
     };
 
     return AsphaltMaterial;

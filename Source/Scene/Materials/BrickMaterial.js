@@ -81,6 +81,13 @@ define([
          */
         this.mortarRoughness = t.mortarRoughness || 0.1;
 
+        /**
+         * The glsl shader source
+         *
+         * type {String}
+         */
+        this.shaderSource = ShadersBrickMaterial;
+
         var that = this;
         this._uniforms = {
             u_brickColor : function() {
@@ -108,7 +115,7 @@ define([
         return "#line 0\n" +
                ShadersNoise +
                "#line 0\n" +
-               ShadersBrickMaterial;
+               this.shaderSource;
     };
 
     return BrickMaterial;

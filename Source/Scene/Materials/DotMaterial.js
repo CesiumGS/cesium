@@ -48,6 +48,13 @@ define([
          */
         this.tRepeat = t.tRepeat || 10.0;
 
+        /**
+         * The glsl shader source
+         *
+         * type {String}
+         */
+        this.shaderSource = ShadersDotMaterial;
+
         var that = this;
         this._uniforms = {
             u_lightColor : function() {
@@ -67,7 +74,7 @@ define([
 
     DotMaterial.prototype._getShaderSource = function() {
         return "#line 0\n" +
-               ShadersDotMaterial;
+               this.shaderSource;
     };
 
     return DotMaterial;

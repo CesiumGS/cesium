@@ -43,6 +43,13 @@ define([
          */
         this.roughness = t.roughness || 0.3;
 
+        /**
+         * The glsl shader source
+         *
+         * type {String}
+         */
+        this.shaderSource = ShadersCementMaterial;
+
         var that = this;
         this._uniforms = {
             u_cementColor : function() {
@@ -61,7 +68,7 @@ define([
         return "#line 0\n" +
                ShadersNoise +
                "#line 0\n" +
-               ShadersCementMaterial;
+               this.shaderSource;
     };
 
     return CementMaterial;
