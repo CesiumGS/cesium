@@ -37,6 +37,15 @@ define([
          */
         this.tRepeat = t.tRepeat || 1.0;
 
+        /**
+         * Channels used for sampling the texture.
+         *
+         * type {String}
+         */
+        this.channels = t.channels || 'r';
+        this.channels = this.channels.toLowerCase();
+        this.shaderSource = this._replaceChannels(ShadersSpecularMapMaterial, this.channels, 1);
+
         var that = this;
         this._uniforms = {
             u_texture : function() {
@@ -54,9 +63,19 @@ define([
         };
     }
 
+    SpecularMapMaterial.prototype._replaceChannels = function(source, channels, numChannels) {
+        if (channels.length !== numChannels) {
+            throw new DeveloperError('Number of texture channels should be: ' + numChannels);
+        }
+        if (channels.search(/[^rgba]/) !== -1) {
+            throw new DeveloperError('Channels should only contain r, g, b, or a');
+        }
+        return source.replace(new RegExp('specular_map_material_channels', 'g'), channels);
+    };
+
     SpecularMapMaterial.prototype._getShaderSource = function() {
         return "#line 0\n" +
-               ShadersSpecularMapMaterial;
+               this.shaderSource;
     };
 
     return SpecularMapMaterial;

@@ -43,6 +43,16 @@ define([
          */
         this.diffuseAmount = t.diffuseAmount;
 
+        /**
+         * Channels used for sampling the texture.
+         *
+         * type {String}
+         */
+        this.channels = t.channels || 'rgb';
+        this.channels = this.channels.toLowerCase();
+        this.shaderSource = this._replaceChannels(ShadersFresnelMaterial, this.channels, 3);
+
+
         var that = this;
         this._uniforms = {
             u_cubeMap : function() {
@@ -60,9 +70,19 @@ define([
         };
     }
 
+    FresnelMaterial.prototype._replaceChannels = function(source, channels, numChannels) {
+        if (channels.length !== numChannels) {
+            throw new DeveloperError('Number of texture channels should be: ' + numChannels);
+        }
+        if (channels.search(/[^rgba]/) !== -1) {
+            throw new DeveloperError('Channels should only contain r, g, b, or a');
+        }
+        return source.replace(new RegExp('fresnel_material_channels', 'g'), channels);
+    };
+
     FresnelMaterial.prototype._getShaderSource = function() {
         return "#line 0\n" +
-               ShadersFresnelMaterial;
+               this.shaderSource;
     };
 
     return FresnelMaterial;

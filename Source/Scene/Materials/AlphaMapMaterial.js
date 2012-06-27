@@ -44,6 +44,7 @@ define([
          * type {String}
          */
         this.channels = t.channels || 'r';
+        this.channels = this.channels.toLowerCase();
         this.shaderSource = this._replaceChannels(ShadersAlphaMapMaterial, this.channels, 1);
 
         var that = this;
@@ -70,7 +71,7 @@ define([
         if (channels.search(/[^rgba]/) !== -1) {
             throw new DeveloperError('Channels should only contain r, g, b, or a');
         }
-        return source.replace('alpha_map_material_channels', channels);
+        return source.replace(new RegExp('alpha_map_material_channels', 'g'), channels);
     };
 
     AlphaMapMaterial.prototype._getShaderSource = function() {
