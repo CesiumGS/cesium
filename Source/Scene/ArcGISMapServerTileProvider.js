@@ -8,10 +8,12 @@ define([
         '../Core/Math',
         '../Core/jsonp',
         './Projections',
-        './MercatorTilingScheme',
+        './WebMercatorTilingScheme',
         './GeographicTilingScheme',
         './DiscardMissingTileImagePolicy',
-        '../ThirdParty/when'
+        '../ThirdParty/when',
+        '../Core/Ellipsoid',
+        '../Core/Cartographic2'
     ], function(
         defaultValue,
         loadImage,
@@ -21,10 +23,12 @@ define([
         CesiumMath,
         jsonp,
         Projections,
-        MercatorTilingScheme,
+        WebMercatorTilingScheme,
         GeographicTilingScheme,
         DiscardMissingTileImagePolicy,
-        when) {
+        when,
+        Ellipsoid,
+        Cartographic2) {
     "use strict";
 
     /**
@@ -108,7 +112,7 @@ define([
          * The tiling scheme used by this tile provider.
          *
          * @type {TilingScheme}
-         * @see MercatorTilingScheme
+         * @see WebMercatorTilingScheme
          * @see GeographicTilingScheme
          */
         this.tilingScheme = undefined;
@@ -136,21 +140,32 @@ define([
             that.tileWidth = data.tileInfo.rows;
             that.tileHeight = data.tileInfo.cols;
 
-            if (data.tileInfo.spatialReference.wkid === 102100) {
+            var tileInfo = data.tileInfo;
+
+            if (tileInfo.spatialReference.wkid === 102100) {
+                var levelZeroResolution = tileInfo.lods[0].resolution;
+                var rows = tileInfo.rows;
+                var cols = tileInfo.cols;
+                var west = tileInfo.origin.x;
+                var north = tileInfo.origin.y;
+                var east = west + levelZeroResolution * cols;
+                var south = north - levelZeroResolution * rows;
+
                 that.projection = Projections.MERCATOR;
-                that.tilingScheme = new MercatorTilingScheme();
-                // TODO: Determine extent from service description.
-                that.maxExtent = new Extent(-CesiumMath.PI,
-                                            CesiumMath.toRadians(-85.05112878),
-                                            CesiumMath.PI,
-                                            CesiumMath.toRadians(85.05112878));
+                that.tilingScheme = new WebMercatorTilingScheme({
+                    extentSouthwestInMeters: new Cartesian2(west, south),
+                    extentNortheastInMeters: new Cartesian2(east, north)
+                });
+                that.maxExtent = that.tilingScheme.extent;
             } else if (data.tileInfo.spatialReference.wkid === 4326) {
                 that.projection = Projections.WGS84;
-                that.tilingScheme = new GeographicTilingScheme();
                 that.maxExtent = new Extent(CesiumMath.toRadians(data.fullExtent.xmin),
                                             CesiumMath.toRadians(data.fullExtent.ymin),
                                             CesiumMath.toRadians(data.fullExtent.xmax),
                                             CesiumMath.toRadians(data.fullExtent.ymax));
+                that.tilingScheme = new GeographicTilingScheme({
+                    extent: that.maxExtent
+                });
             }
 
             that.zoomMax = data.tileInfo.lods.length - 1;
