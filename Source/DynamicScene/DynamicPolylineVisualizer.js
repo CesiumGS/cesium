@@ -110,9 +110,11 @@ define([
             this._primitives.remove(this._polylineCollection[i]);
         }
 
-        var dynamicObjects = this._dynamicObjectCollection.getObjects();
-        for (i = dynamicObjects.length - 1; i > -1; i--) {
-            dynamicObjects[i]._polylineVisualizerIndex = undefined;
+        if (typeof this._dynamicObjectCollection !== 'undefined') {
+            var dynamicObjects = this._dynamicObjectCollection.getObjects();
+            for (i = dynamicObjects.length - 1; i > -1; i--) {
+                dynamicObjects[i]._polylineVisualizerIndex = undefined;
+            }
         }
 
         this._unusedIndexes = [];
@@ -220,12 +222,12 @@ define([
 
         var property = dynamicPolyline.color;
         if (typeof property !== 'undefined') {
-            property.getValue(time, polyline.color);
+            polyline.color = property.getValue(time, polyline.color);
         }
 
         property = dynamicPolyline.outlineColor;
         if (typeof property !== 'undefined') {
-            property.getValue(time, polyline.outlineColor);
+            polyline.outlineColor = property.getValue(time, polyline.outlineColor);
         }
 
         property = dynamicPolyline.outlineWidth;

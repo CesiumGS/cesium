@@ -114,9 +114,11 @@ define([
     DynamicPointVisualizer.prototype.removeAll = function() {
         this._unusedIndexes = [];
         this._billboardCollection.removeAll();
-        var dynamicObjects = this._dynamicObjectCollection.getObjects();
-        for ( var i = dynamicObjects.length - 1; i > -1; i--) {
-            dynamicObjects[i]._pointVisualizerIndex = undefined;
+        if (typeof this._dynamicObjectCollection !== 'undefined') {
+            var dynamicObjects = this._dynamicObjectCollection.getObjects();
+            for ( var i = dynamicObjects.length - 1; i > -1; i--) {
+                dynamicObjects[i]._pointVisualizerIndex = undefined;
+            }
         }
     };
 
@@ -158,7 +160,6 @@ define([
     DynamicPointVisualizer.prototype.destroy = function() {
         this.removeAll();
         this._scene.getPrimitives().remove(this._billboardCollection);
-        this._textureAtlas.destroy();
         return destroyObject(this);
     };
 
