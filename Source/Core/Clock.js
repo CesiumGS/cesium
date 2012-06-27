@@ -5,12 +5,12 @@ define([
         './ClockStep',
         './ClockRange',
         './TimeStandard'
-    ], function(
-        DeveloperError,
-        JulianDate,
-        ClockStep,
-        ClockRange,
-        TimeStandard) {
+       ], function(
+         DeveloperError,
+         JulianDate,
+         ClockStep,
+         ClockRange,
+         TimeStandard) {
     "use strict";
 
     /**
@@ -18,29 +18,93 @@ define([
      *
      * @name Clock
      *
-     * @param {JulianDate} [currentTime=new JulianDate()] The initial time of the clock.
-     * @param {ClockStep} [clockStep=ClockStep.SYSTEM_CLOCK_DEPENDENT] Determines if clock time is frame dependent.
-     * @param {Number} [multiplier=1.0] Determines how fast the clock should animate, negative values allow for animating backwards.
-     * @param {JulianDate} [startTime=currentTime.addDays(-0.5)] The start time to use if the clock is to be bounded to a fixed time.
-     * @param {JulianDate} [stopTime=startTime.addDays(1.0)] The stop time to use if the clock is to be bounded to a fixed time.
-     * @param {ClockRange} [clockRange=ClockRange.UNBOUNDED] Determines if and how the clock should be constrained to the start and stop times.
+     * @param {Object} [template] The template object containing the properties to be set on the clock.
+     *
+     * @exception {DeveloperError} startTime must come before stopTime.
      *
      * @constructor
      *
      * @see ClockStep
      * @see ClockRange
+     *
+     * @example
+     * //Create a clock that loops on Christmas day 2012.
+     * //currentTime will default to startTime.
+     * var clock = new Clock({
+     *    startTime : JulianDate.fromIso8601("12-25-2012");
+     *    stopTime : JulianDate.fromIso8601("12-26-2012");
+     *    clockRange : ClockRange.LOOP;
+     * });
      */
-    var Clock = function(currentTime, clockStep, multiplier, startTime, stopTime, clockRange) {
+    var Clock = function(template) {
+        var t = template;
+        if (typeof t === 'undefined') {
+            t = {};
+        }
+
+        var startTime = t.startTime;
+        var startTimeUndefined = typeof startTime === 'undefined';
+
+        var stopTime = t.stopTime;
+        var stopTimeUndefined = typeof stopTime === 'undefined';
+
+        var currentTime = t.currentTime;
+        var currentTimeUndefined = typeof currentTime === 'undefined';
+
+        if (startTimeUndefined && stopTimeUndefined && currentTimeUndefined) {
+            currentTime = new JulianDate();
+            startTime = currentTime.addDays(-0.5);
+            stopTime = currentTime.addDays(0.5);
+        } else if (startTimeUndefined && stopTimeUndefined) {
+            startTime = currentTime.addDays(-0.5);
+            stopTime = currentTime.addDays(0.5);
+        } else if (startTimeUndefined && currentTimeUndefined) {
+            startTime = stopTime.addDays(-1.0);
+            currentTime = stopTime.addDays(0.5);
+        } else if (currentTimeUndefined && stopTimeUndefined) {
+            currentTime = startTime.addDays(0.5);
+            stopTime = startTime.addDays(1.0);
+        } else if (currentTimeUndefined) {
+            currentTime = startTime.addSeconds(startTime.secondsDifference(stopTime));
+        } else if (stopTimeUndefined) {
+            stopTime = currentTime.addDays(0.5);
+        } else if (startTimeUndefined) {
+            startTime = currentTime.addDays(-0.5);
+        }
+
+        if (startTime.greaterThan(stopTime)) {
+            throw new DeveloperError('startTime must come before stopTime.');
+        }
+
+        var multiplier = t.multiplier;
+        if (typeof multiplier === 'undefined') {
+            multiplier = 1.0;
+        }
+
+        var clockStep = t.clockStep;
+        if (typeof clockStep === 'undefined') {
+            clockStep = ClockStep.SYSTEM_CLOCK_DEPENDENT;
+        }
+
+        var clockRange = t.clockRange;
+        if (typeof clockRange === 'undefined') {
+            clockRange = ClockRange.UNBOUNDED;
+        }
+
+        /**
+         * The start time of the clock.
+         */
+        this.startTime = TimeStandard.convertUtcToTai(startTime);
+
+        /**
+         * The stop time of the clock.
+         */
+        this.stopTime = TimeStandard.convertUtcToTai(stopTime);
+
         /**
          * The current time.
          */
-        this.currentTime = currentTime || new JulianDate();
-        this.currentTime = TimeStandard.convertUtcToTai(this.currentTime);
-
-        /**
-         *Determines if clock time is frame dependent or system clock dependent.
-         */
-        this.clockStep = clockStep || ClockStep.SYSTEM_CLOCK_DEPENDENT;
+        this.currentTime = currentTime;
 
         /**
          * Determines how fast the clock should animate, negative values allow for animating backwards.
@@ -48,31 +112,17 @@ define([
          * For ClockStep.SYSTEM_CLOCK_DEPENDENT this value is multiplied by the elapsed system time
          * between each tick.
          */
-        this.multiplier = multiplier || 1.0;
+        this.multiplier = multiplier;
 
-        var startTimeSpecified = typeof startTime !== 'undefined';
-        var stopTimeSpecified = typeof stopTime !== 'undefined';
+        /**
+         *Determines if clock time is frame dependent or system clock dependent.
+         */
+        this.clockStep = clockStep;
 
         /**
          * Determines if and how the clock should be constrained to the start and stop times.
          */
-        this.clockRange = typeof clockRange !== 'undefined' ? clockRange : ClockRange.UNBOUNDED;
-
-        /**
-         * The start time of the clock.
-         */
-        this.startTime = startTimeSpecified ? startTime : this.currentTime.addDays(-0.5);
-        this.startTime = TimeStandard.convertUtcToTai(this.startTime);
-
-        /**
-         * The stop time of the clock.
-         */
-        this.stopTime = stopTimeSpecified ? stopTime : this.startTime.addDays(1);
-        this.stopTime = TimeStandard.convertUtcToTai(this.stopTime);
-
-        if (this.startTime.greaterThanOrEquals(this.stopTime)) {
-            throw new DeveloperError('startTime must be earlier than stopTime');
-        }
+        this.clockRange = clockRange;
 
         this._lastCpuTime = new Date().getTime();
     };

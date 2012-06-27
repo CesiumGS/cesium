@@ -18,7 +18,7 @@ Beta Releases
 
 * Added `addImage` to `TextureAtlas` so images can be added to a texture atlas after it is constructed.
 * Added `Event`, a new utility class which makes it easy for objects to expose event properties.
-* Added `TextureAtasBuilder`,a new utility class which makes it easy to build a TextureAtlas asynchronously.
+* Added `TextureAtlasBuilder`,a new utility class which makes it easy to build a TextureAtlas asynchronously.
 * Added 'Clock', a simple clock for keeping track of simulated time.
 * Added 'LagrangePolynomialApproximation', 'HermitePolynomialApproximation', and 'LinearApproximation' interpolation algorithms.
 * Added 'CoordinateConversions', a new static class where most coordinate conversion methods will be stored.

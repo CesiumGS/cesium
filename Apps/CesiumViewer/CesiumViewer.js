@@ -51,7 +51,11 @@ function(dom,
     /*global console*/
 
     var visualizers;
-    var clock = new Clock(new JulianDate(), ClockStep.SYSTEM_CLOCK_DEPENDENT, 60);
+    var clock = new Clock({
+        currentTime : new JulianDate(),
+        clockStep : ClockStep.SYSTEM_CLOCK_DEPENDENT,
+        multiplier : 60
+    });
     var animationController = new AnimationController(clock);
     var timeline;
     var transitioner;

@@ -50,8 +50,8 @@ define([
     AnimationController.prototype.slower = function() {
         var clock = this.clock;
         var multiplier = clock.multiplier > 0 ? clock.multiplier : -clock.multiplier;
-        var index = binarySearch(typicalMultipliers, multiplier, function(lhs, rhs) {
-            return lhs - rhs;
+        var index = binarySearch(typicalMultipliers, multiplier, function(left, right) {
+            return left - right;
         });
 
         if (index < 0) {
@@ -71,8 +71,8 @@ define([
     AnimationController.prototype.faster = function() {
         var clock = this.clock;
         var multiplier = clock.multiplier > 0 ? clock.multiplier : -clock.multiplier;
-        var index = binarySearch(typicalMultipliers, multiplier, function(lhs, rhs) {
-            return lhs - rhs;
+        var index = binarySearch(typicalMultipliers, multiplier, function(left, right) {
+            return left - right;
         });
 
         if (index < 0) {
