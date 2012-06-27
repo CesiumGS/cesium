@@ -515,7 +515,8 @@ define([
      *
      * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
      * @param {DOC_TBA} projection DOC_TBA
-     * @returns {Cartesian3} If the map was picked, returns the point on the surface of the map.
+     *
+     * @return {Cartesian3} If the map was picked, returns the point on the surface of the map.
      * If the map was not picked, returns undefined.
      */
     Camera.prototype.pickMapColumbusView = function(windowPosition, projection) {

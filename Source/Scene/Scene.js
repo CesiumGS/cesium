@@ -221,8 +221,15 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Pick an ellipsoid or map in 3D mode.
+     *
      * @memberof Scene
+     *
+     * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to pick.
+     *
+     * @return {Cartesian3} If the ellipsoid or map was picked, returns the point on the surface of the ellipsoid or map
+     * in world coordinates. If the ellipsoid or map was not picked, returns undefined.
      */
     Scene.prototype.pickEllipsoid = function(windowPosition, ellipsoid) {
         ellipsoid = ellipsoid || Ellipsoid.WGS84;

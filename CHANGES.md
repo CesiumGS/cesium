@@ -18,6 +18,7 @@ Beta Releases
    * `Camera.pickEllipsoid` returns the picked position in world coordinates and the ellipsoid parameter is optional.
 
 * Added `addImage` to `TextureAtlas` so images can be added to a texture atlas after it is constructed.
+* Added 'pickEllipsoid` to `Scene` that will pick the either the ellipsoid or the map depending on the current `SceneMode`.
 
 ### b6a - 06/20/2012
 
