@@ -31,6 +31,7 @@ define([
         '../Renderer/DepthFunction',
         '../Renderer/PixelFormat',
         './ImageryLayerCollection',
+        './WebMercatorTilingScheme',
         './Projections',
         './Tile',
         './TileState',
@@ -81,6 +82,7 @@ define([
         DepthFunction,
         PixelFormat,
         ImageryLayerCollection,
+        WebMercatorTilingScheme,
         Projections,
         Tile,
         TileState,
@@ -102,19 +104,9 @@ define([
     "use strict";
 
     function TileCache(maxTextureSize) {
-        this._texturePool = new TexturePool();
         this._maxTextureSize = maxTextureSize;
         this._tiles = [];
     }
-
-    //remove this
-    TileCache.prototype.getTexture = function(context, tile) {
-        return this._texturePool.createTexture2D(context, {
-            width : tile._width,
-            height : tile._height,
-            pixelFormat : PixelFormat.RGB
-        });
-    };
 
     /**
      * DOC_TBA
@@ -124,15 +116,23 @@ define([
      * @name CentralBody
      * @constructor
      */
-    function CentralBody(ellipsoid) {
+    function CentralBody(ellipsoid, tilingScheme) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-
         this._ellipsoid = ellipsoid;
+
         this._occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), Cartesian3.ZERO);
 
-        this._imageLayers = new ImageryLayerCollection();
+        tilingScheme = defaultValue(tilingScheme, new WebMercatorTilingScheme({
+            ellipsoid : ellipsoid,
+            numberOfLevelZeroTilesX : 2,
+            numberOfLevelZeroTilesY : 2
+        }));
+        this._tilingScheme = tilingScheme;
 
+        this._levelZeroTiles = tilingScheme.createLevelZeroTiles();
+        this._imageLayers = new ImageryLayerCollection();
         this._tileCache = new TileCache(128 * 1024 * 1024);
+        this._texturePool = new TexturePool();
 
         this._spWithoutAtmosphere = undefined;
         this._spGroundFromSpace = undefined;

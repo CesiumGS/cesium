@@ -22,6 +22,7 @@ define([
         '../Core/Rectangle',
         '../Renderer/BufferUsage',
         '../Renderer/MipmapHint',
+        '../Renderer/PixelFormat',
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
@@ -53,6 +54,7 @@ define([
         Rectangle,
         BufferUsage,
         MipmapHint,
+        PixelFormat,
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
@@ -140,6 +142,11 @@ define([
         }
     };
 
+    var layerID = 0;
+    function nextLayerID() {
+        return layerID++;
+    }
+
     /**
      * An imagery layer that display tiled image data from a single tile provider
      * on a central body.
@@ -150,9 +157,14 @@ define([
         this._centralBody = centralBody;
         this._tileProvider = tileProvider;
 
+        this._id = nextLayerID();
+
         description = defaultValue(description, {});
 
-        this._maxExtent = description.maxExtent;
+        var maxExtent = defaultValue(description.maxExtent, tileProvider.maxExtent);
+        maxExtent = defaultValue(maxExtent, Extent.MAX_VALUE);
+
+        this._maxExtent = maxExtent;
 
         // reusable stack used during update for tile tree traversal
         this._tileStack = [];
@@ -161,7 +173,7 @@ define([
         this._tilesToRender = [];
 
         // a doubly linked list of tiles that need to be loaded, maintained in priority order
-        this._tileLoadList = new TileLoadList();
+        this._tileImageryLoadList = new TileLoadList();
 
         this._minTileDistance = undefined;
         this._preloadZoomLimit = 1;
@@ -212,6 +224,18 @@ define([
         return this._tileProvider;
     };
 
+    function getTileImagery(layer, tile) {
+        var tileImagery = tile._imagery[layer._id];
+        if (typeof tileImagery === 'undefined') {
+            tileImagery = {
+                tile : tile,
+                state : TileState.UNLOADED
+            };
+            tile._imagery[layer._id] = tileImagery;
+        }
+        return tileImagery;
+    }
+
     var anchor;
     function getHostname(url) {
         if (typeof anchor === 'undefined') {
@@ -223,19 +247,24 @@ define([
 
     var activeTileImageRequests = {};
 
-    function loadImageForTile(layer, tile) {
-        if (!tileNeedsImageLoad(layer, tile)) {
+    function loadTileImagery(layer, tileImagery) {
+        if (!tileNeedsImageLoad(layer, tileImagery)) {
             return;
         }
 
         var tileProvider = layer._tileProvider;
 
         // start loading tile
-        tile.state = TileState.IMAGE_LOADING;
+        tileImagery.state = TileState.IMAGE_LOADING;
+        var tile = tileImagery.tile;
 
         var hostname;
         var postpone = false;
-        when(tileProvider.buildTileImageUrl(tile), function(imageUrl) {
+        var x = tile.x;
+        var y = tile.y;
+        var zoom = tile.zoom + layer._zoomOffset;
+
+        when(tileProvider.buildTileImageUrl(x, y, zoom), function(imageUrl) {
             hostname = getHostname(imageUrl);
 
             if (hostname !== '') {
@@ -246,7 +275,7 @@ define([
                 //to be able to reorder pending image requests
                 if (activeRequestsForHostname > 6) {
                     // postpone loading tile
-                    tile.state = TileState.UNLOADED;
+                    tileImagery.state = TileState.UNLOADED;
                     postpone = true;
                     return undefined;
                 }
@@ -254,7 +283,7 @@ define([
                 activeTileImageRequests[hostname] = activeRequestsForHostname + 1;
             }
 
-            return tileProvider.loadTileImage(tile, imageUrl);
+            return tileProvider.loadTileImage(imageUrl);
         }).then(function(image) {
             activeTileImageRequests[hostname]--;
 
@@ -263,49 +292,44 @@ define([
             }
 
             if (typeof image === 'undefined') {
-                tile.state = TileState.IMAGE_INVALID;
-                tile._image = undefined;
+                tileImagery.state = TileState.IMAGE_INVALID;
                 return;
             }
 
-            tile._failCount = 0;
+            tileImagery._failCount = 0;
             layer._tileFailCount = 0;
             layer._lastFailedTime = 0;
 
-            tile.state = TileState.REPROJECTING;
+            tileImagery.state = TileState.REPROJECTING;
 
-            tile._image = image;
-            tile._width = image.width;
-            tile._height = image.height;
+            tileImagery._image = image;
+            tileImagery._width = image.width;
+            tileImagery._height = image.height;
         }, function() {
-            tile._failCount++;
+            tileImagery._failCount++;
             layer._tileFailCount++;
             layer._lastFailedTime = Date.now();
 
-            tile.state = TileState.IMAGE_FAILED;
-            tile._image = undefined;
+            tileImagery.state = TileState.IMAGE_FAILED;
         });
 
-        tile._width = tileProvider.tileWidth;
-        tile._height = tileProvider.tileHeight;
-
-        if (typeof tile._projection === 'undefined') {
-            tile._projection = tileProvider.projection;
-        }
+        tileImagery._width = tileProvider.tileWidth;
+        tileImagery._height = tileProvider.tileHeight;
+        tileImagery._projection = tileProvider.projection;
     }
 
-    function tileNeedsImageLoad(layer, tile) {
-        if (tile.state === TileState.UNLOADED) {
+    function tileNeedsImageLoad(layer, tileImagery) {
+        if (tileImagery.state === TileState.UNLOADED) {
             return true;
         }
 
         // only retry failed tiles
-        if (tile.state !== TileState.IMAGE_FAILED) {
+        if (tileImagery.state !== TileState.IMAGE_FAILED) {
             return false;
         }
 
         // delay retry until enough time has passed
-        var timeSinceFailure = (Date.now() - tile._lastFailTime) / 1000;
+        var timeSinceFailure = (Date.now() - tileImagery._lastFailTime) / 1000;
         if (timeSinceFailure < layer.failedTileRetryTime) {
             return false;
         }
@@ -316,24 +340,45 @@ define([
         }
 
         // don't retry if the tile has failed too many times
-        if (tile._failCount >= layer.perTileMaxFailCount) {
+        if (tileImagery._failCount >= layer.perTileMaxFailCount) {
             return false;
         }
 
         return true;
     }
 
-    function refine3D(layer, tile, context, sceneState) {
-        var boundingVolume = getTileBoundingSphere(layer, tile, sceneState);
-        var cameraPosition = sceneState.camera.getPositionWC();
-        var direction = sceneState.camera.getDirectionWC();
+    function shouldRefine(layer, tile, context, sceneState) {
+        var camera = sceneState.camera;
 
-        var texturePixelError = layer.pixelError3D;
-        if (texturePixelError <= 0.0) {
-            texturePixelError = 1.0;
+        if (sceneState.mode === SceneMode.SCENE2D) {
+            var frustum = camera.frustum;
+            var projection = sceneState.scene2D.projection;
+            var viewport = context.getViewport();
+            var viewportWidth = viewport.width;
+            var viewportHeight = viewport.height;
+
+            var pixelError2D = (layer.pixelError2D > 0.0) ? layer.pixelError2D : 1.0;
+
+            var a = projection.project(new Cartographic2(tile.extent.west, tile.extent.north)).getXY();
+            var b = projection.project(new Cartographic2(tile.extent.east, tile.extent.south)).getXY();
+            var diagonal = a.subtract(b);
+            var texelSize = Math.max(diagonal.x, diagonal.y) / Math.max(tile.width, tile.height);
+            var pixelSize = Math.max(frustum.top - frustum.bottom, frustum.right - frustum.left) / Math.max(viewportWidth, viewportHeight);
+
+            if (texelSize > pixelSize * pixelError2D) {
+                return true;
+            }
+
+            return false;
         }
 
-        var dmin = layer._minTileDistance(tile.zoom, texturePixelError);
+        var boundingVolume = getTileBoundingSphere(layer, tile, sceneState);
+        var cameraPosition = camera.getPositionWC();
+        var direction = camera.getDirectionWC();
+
+        var pixelError3D = (layer.pixelError3D > 0.0) ? layer.pixelError3D : 1.0;
+        var zoom = tile.zoom + layer._zoomOffset;
+        var dmin = layer._minTileDistance(zoom, pixelError3D);
 
         var toCenter = boundingVolume.center.subtract(cameraPosition);
         var toSphere = toCenter.normalize().multiplyWithScalar(toCenter.magnitude() - boundingVolume.radius);
@@ -344,38 +389,6 @@ define([
         }
 
         return false;
-    }
-
-    function refine2D(layer, tile, context, sceneState) {
-        var camera = sceneState.camera;
-        var frustum = camera.frustum;
-        var pixelError = layer.pixelError2D;
-        var projection = sceneState.scene2D.projection;
-        var viewport = context.getViewport();
-        var viewportWidth = viewport.width;
-        var viewportHeight = viewport.height;
-
-        var texturePixelError = (pixelError > 0.0) ? pixelError : 1.0;
-
-        var a = projection.project(new Cartographic2(tile.extent.west, tile.extent.north)).getXY();
-        var b = projection.project(new Cartographic2(tile.extent.east, tile.extent.south)).getXY();
-        var diagonal = a.subtract(b);
-        var texelSize = Math.max(diagonal.x, diagonal.y) / Math.max(tile.width, tile.height);
-        var pixelSize = Math.max(frustum.top - frustum.bottom, frustum.right - frustum.left) / Math.max(viewportWidth, viewportHeight);
-
-        if (texelSize > pixelSize * texturePixelError) {
-            return true;
-        }
-
-        return false;
-    }
-
-    function refine(layer, tile, context, sceneState) {
-        if (sceneState.mode === SceneMode.SCENE2D) {
-            return refine2D(layer, tile, context, sceneState);
-        }
-
-        return refine3D(layer, tile, context, sceneState);
     }
 
     function getTileBoundingSphere(layer, tile, sceneState) {
@@ -469,17 +482,9 @@ define([
      * @private
      */
     ImageryLayer.prototype.update = function(context, sceneState) {
-        if (!this._tileProvider.ready) {
+        var tileProvider = this._tileProvider;
+        if (!tileProvider.ready) {
             return;
-        }
-
-        if (typeof this._levelZeroTiles === 'undefined') {
-            var tileProvider = this._tileProvider;
-            var maxExtent = defaultValue(this._maxExtent, tileProvider.maxExtent);
-            maxExtent = defaultValue(maxExtent, Extent.MAX_VALUE);
-
-            this._maxExtent = maxExtent;
-            this._levelZeroTiles = this._tileProvider.tilingScheme.createLevelZeroTiles();
         }
 
         var minTileDistance = this._minTileDistance;
@@ -487,18 +492,28 @@ define([
             this._minTileDistance = minTileDistance = createMinTileDistanceFunction(this, context, sceneState);
         }
 
-        var zoomMax = this._tileProvider.zoomMax;
+        // TODO: remove this offset calculation
+        if (typeof this._zoomOffset === 'undefined') {
+            this._zoomOffset = 0;
+            var zeroTileDifference = this._centralBody._tilingScheme.numberOfLevelZeroTilesX - tileProvider.tilingScheme.numberOfLevelZeroTilesX;
+            while (zeroTileDifference > 0) {
+                this._zoomOffset++;
+                zeroTileDifference = zeroTileDifference >> 1;
+            }
+        }
 
+        var zoomMax = tileProvider.zoomMax;
         var now = Date.now();
 
         // start loading tiles and build render list
         var tile;
+        var tileImagery;
 
-        var tileLoadList = this._tileLoadList;
-        var insertionPoint = tileLoadList._head;
+        var tileImageryLoadList = this._tileImageryLoadList;
+        var insertionPoint = tileImageryLoadList._head;
 
         var tileStack = this._tileStack;
-        Array.prototype.push.apply(tileStack, this._levelZeroTiles);
+        Array.prototype.push.apply(tileStack, this._centralBody._levelZeroTiles);
         while (tileStack.length > 0) {
             tile = tileStack.pop();
 
@@ -506,14 +521,15 @@ define([
                 continue;
             }
 
-            if (tile.state !== TileState.TEXTURE_LOADED) {
-                tileLoadList.insertBefore(insertionPoint, tile);
+            tileImagery = getTileImagery(this, tile);
+
+            if (tileImagery.state !== TileState.TEXTURE_LOADED) {
+                tileImageryLoadList.insertBefore(insertionPoint, tileImagery);
             }
 
-            tile._lastUsedTime = now;
-
-            var renderTile = tile.state === TileState.TEXTURE_LOADED;
-            if (tile.zoom < zoomMax && refine(this, tile, context, sceneState)) {
+            var renderTile = tileImagery.state === TileState.TEXTURE_LOADED;
+            var zoom = tile.zoom + this._zoomOffset;
+            if (zoom < zoomMax && shouldRefine(this, tile, context, sceneState)) {
                 var allChildrenLoaded = true;
 
                 var children = tile.getChildren();
@@ -539,25 +555,30 @@ define([
         var startTime = Date.now();
         var timeSlice = 10;
 
-        tile = tileLoadList._head;
-        while (typeof tile !== 'undefined') {
+        tileImagery = tileImageryLoadList._head;
+        while (typeof tileImagery !== 'undefined') {
             if (Date.now() - startTime > timeSlice) {
                 break;
             }
 
-            loadImageForTile(this, tile);
+            loadTileImagery(this, tileImagery);
 
-            if (tile.state === TileState.REPROJECTING) {
-                tile._image = tile._projection.toWgs84(tile.extent, tile._image);
-                tile._projection = Projections.WGS84;
-                tile.state = TileState.TEXTURE_LOADING;
+            if (tileImagery.state === TileState.REPROJECTING) {
+                tileImagery._image = tileImagery._projection.toWgs84(tileImagery.tile.extent, tileImagery._image);
+                tileImagery._projection = Projections.WGS84;
+                tileImagery.state = TileState.TEXTURE_LOADING;
             }
 
-            if (tile.state === TileState.TEXTURE_LOADING) {
-                tile._texture = this._centralBody._tileCache.getTexture(context, tile);
-                tile._texture.copyFrom(tile._image);
-                tile._texture.generateMipmap(MipmapHint.NICEST);
-                tile._texture.setSampler({
+            if (tileImagery.state === TileState.TEXTURE_LOADING) {
+                tileImagery._texture = this._centralBody._texturePool.createTexture2D(context, {
+                    width : tileImagery._width,
+                    height : tileImagery._height,
+                    pixelFormat : PixelFormat.RGB
+                });
+
+                tileImagery._texture.copyFrom(tileImagery._image);
+                tileImagery._texture.generateMipmap(MipmapHint.NICEST);
+                tileImagery._texture.setSampler({
                     wrapS : TextureWrap.CLAMP,
                     wrapT : TextureWrap.CLAMP,
                     minificationFilter : TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
@@ -566,13 +587,13 @@ define([
                     // TODO: Remove Chrome work around
                     maximumAnisotropy : context.getMaximumTextureFilterAnisotropy() || 8
                 });
-                tile.state = TileState.TEXTURE_LOADED;
-                tile._image = undefined;
+                tileImagery.state = TileState.TEXTURE_LOADED;
+                tileImagery._image = undefined;
 
-                tileLoadList.remove(tile);
+                tileImageryLoadList.remove(tileImagery);
             }
 
-            tile = tile._next;
+            tileImagery = tileImagery._next;
         }
     };
 
@@ -703,15 +724,7 @@ define([
 
             tile._extentVA = context.createVertexArray(attributes, indexBuffer);
 
-            var intensity = 0.0;
-            if (typeof layer._tileProvider.getIntensity === 'function') {
-                intensity = layer._tileProvider.getIntensity(tile);
-            }
-
-            var drawUniforms = {
-                u_dayTexture : function() {
-                    return tile._texture;
-                },
+            tile._drawUniforms = {
                 u_center3D : function() {
                     return rtc;
                 },
@@ -728,9 +741,32 @@ define([
                     return tile.mode;
                 }
             };
-            tile._drawUniforms = combine(drawUniforms, layer._centralBody._drawUniforms);
 
             tile._mode = mode;
+        }
+
+        var tileImagery = getTileImagery(layer, tile);
+        if (typeof tileImagery._drawUniforms === 'undefined') {
+            var intensity = 0.0;
+            if (typeof layer._tileProvider.getIntensity === 'function') {
+                intensity = layer._tileProvider.getIntensity(tile);
+            }
+
+            var drawUniforms = {
+                u_dayTexture : function() {
+                    return tileImagery._texture;
+                },
+                u_dayIntensity : function() {
+                    return intensity;
+                }
+            };
+            Object.keys(tile._drawUniforms).forEach(function(key) {
+                drawUniforms[key] = function() {
+                    return tile._drawUniforms[key]();
+                };
+            });
+
+            tileImagery._drawUniforms = combine(drawUniforms, layer._centralBody._drawUniforms);
         }
 
         layer._tilesToRender.push(tile);
@@ -784,10 +820,12 @@ define([
             mvrtc.setColumn3(centerEye);
             tile.modelView = mvrtc;
 
+            var tileImagery = getTileImagery(this, tile);
+
             context.continueDraw({
                 primitiveType : PrimitiveType.TRIANGLES,
                 vertexArray : tile._extentVA,
-                uniformMap : tile._drawUniforms
+                uniformMap : tileImagery._drawUniforms
             });
         }
 
@@ -832,10 +870,6 @@ define([
      * imageryLayer = imageryLayer && imageryLayer.destroy();
      */
     ImageryLayer.prototype.destroy = function() {
-        if (typeof this._levelZeroTiles !== 'undefined') {
-            this._levelZeroTiles.forEach(function(tile) { tile.destroy(); });
-        }
-
         return destroyObject(this);
     };
 

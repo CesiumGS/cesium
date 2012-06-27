@@ -239,11 +239,7 @@ define([
 
         this._discardPolicy = when(this._imageUrlTemplate, function(template) {
             // assume that the tile at (0,0) at the maximum zoom is missing.
-            var missingTileUrl = that.buildTileImageUrl({
-                x : 0,
-                y : 0,
-                zoom : that.zoomMax
-            });
+            var missingTileUrl = that.buildTileImageUrl(0, 0, that.zoomMax);
             var pixelsToCheck = [new Cartesian2(0, 0), new Cartesian2(120, 140), new Cartesian2(130, 160), new Cartesian2(200, 50), new Cartesian2(200, 200)];
 
             return when(missingTileUrl, function(missingImageUrl) {
@@ -321,18 +317,20 @@ define([
      *
      * @memberof BingMapsTileProvider
      *
-     * @param {Tile} tile The tile to load the image for.
+     * @param {Number} x The x coordinate of the tile image.
+     * @param {Number} y The y coordinate of the tile image.
+     * @param {Number} zoom The zoom level of the tile image.
      *
      * @return {String|Promise} Either a string containing the URL, or a Promise for a string
      *                          if the URL needs to be built asynchronously.
      */
-    BingMapsTileProvider.prototype.buildTileImageUrl = function(tile) {
+    BingMapsTileProvider.prototype.buildTileImageUrl = function(x, y, zoom) {
         var subdomains = this._imageUrlSubdomains;
         var proxy = this._proxy;
 
         return when(this._imageUrlTemplate, function(urlTemplate) {
-            var quadkey = BingMapsTileProvider.tileXYToQuadKey(tile.x, tile.y, tile.zoom);
-            var subdomainIndex = (tile.x + tile.y) % subdomains.length;
+            var quadkey = BingMapsTileProvider.tileXYToQuadKey(x, y, zoom);
+            var subdomainIndex = (x + y) % subdomains.length;
 
             var imageUrl = urlTemplate.replace('{quadkey}', quadkey);
             imageUrl = imageUrl.replace('{subdomain}', subdomains[subdomainIndex]);
@@ -350,16 +348,11 @@ define([
      *
      * @memberof BingMapsTileProvider
      *
-     * @param {Tile} tile The tile to load the image for.
-     * @param {String} [tileImageUrl] The tile image URL, if already known.
+     * @param {String} [tileImageUrl] The tile image URL.
      *
      * @return A promise for the image that will resolve when the image is available.
      */
-    BingMapsTileProvider.prototype.loadTileImage = function(tile, tileImageUrl) {
-        if (typeof tileImageUrl === 'undefined') {
-            tileImageUrl = this.buildTileImageUrl(tile);
-        }
-
+    BingMapsTileProvider.prototype.loadTileImage = function(tileImageUrl) {
         var image = when(tileImageUrl, loadImage);
 
         return when(this._discardPolicy, function(discardPolicy) {

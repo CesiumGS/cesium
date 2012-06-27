@@ -114,14 +114,15 @@ define([
      *
      * @memberof SolidColorTileProvider
      *
-     * @param {Tile} tile The tile to load the image for.
+     * @param {Number} x The x coordinate of the tile image.
+     * @param {Number} y The y coordinate of the tile image.
+     * @param {Number} zoom The zoom level of the tile image.
      *
      * @return {String|Promise} Either a string containing the URL, or a Promise for a string
      *                          if the URL needs to be built asynchronously.
      */
-    SolidColorTileProvider.prototype.buildTileImageUrl = function(tile) {
-        var level = tile.zoom;
-        var canvas = this._canvases[level];
+    SolidColorTileProvider.prototype.buildTileImageUrl = function(x, y, zoom) {
+        var canvas = this._canvases[zoom];
         if (typeof canvas === 'undefined') {
             canvas = document.createElement('canvas');
             canvas.width = this.tileWidth;
@@ -129,7 +130,7 @@ define([
 
             var color = new Color();
 
-            var x = level / this.zoomMax;
+            x = zoom / this.zoomMax;
             if (x < 0.25) {
                 // blue to cyan
                 color.green = 4.0 * x;
@@ -152,7 +153,7 @@ define([
             context.fillStyle = color.toCSSColor();
             context.fillRect(0, 0, canvas.width, canvas.height);
 
-            this._canvases[level] = canvas;
+            this._canvases[zoom] = canvas;
         }
 
         return canvas.toDataURL();
@@ -163,16 +164,11 @@ define([
      *
      * @memberof SolidColorTileProvider
      *
-     * @param {Tile} tile The tile to load the image for.
-     * @param {String} [tileImageUrl] The tile image URL, if already known.
+     * @param {String} [tileImageUrl] The tile image URL.
      *
      * @return A promise for the image that will resolve when the image is available.
      */
-    SolidColorTileProvider.prototype.loadTileImage = function(tile, tileImageUrl) {
-        if (typeof tileImageUrl === 'undefined') {
-            tileImageUrl = this.buildTileImageUrl(tile);
-        }
-
+    SolidColorTileProvider.prototype.loadTileImage = function(tileImageUrl) {
         return loadImage(tileImageUrl);
     };
 

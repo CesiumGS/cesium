@@ -1,20 +1,22 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/DeveloperError',
         '../Core/Math',
+        '../Core/Cartesian2',
         '../Core/Ellipsoid',
         '../Core/Extent',
         './Tile',
-        './TilingScheme',
-        '../Core/Cartesian2'
+        './TilingScheme'
     ], function(
+        defaultValue,
         DeveloperError,
         CesiumMath,
+        Cartesian2,
         Ellipsoid,
         Extent,
         Tile,
-        TilingScheme,
-        Cartesian2) {
+        TilingScheme) {
     "use strict";
 
     /**
@@ -33,39 +35,38 @@ define([
      * the tile tree.
      */
     function GeographicTilingScheme(description) {
-        description = description || {};
+        description = defaultValue(description, {});
 
         /**
          * The ellipsoid whose surface is being tiled.
          *
          * @type Ellipsoid
          */
-        this.ellipsoid = description.ellipsoid || Ellipsoid.WGS84;
+        this.ellipsoid = defaultValue(description.ellipsoid, Ellipsoid.WGS84);
 
         /**
          * The world extent covered by this tiling scheme, in radians.
          *
          * @type Extent
          */
-        this.extent = new Extent(
-            -CesiumMath.PI,
-            -CesiumMath.PI_OVER_TWO,
-            CesiumMath.PI,
-            CesiumMath.PI_OVER_TWO);
+        this.extent = new Extent(-CesiumMath.PI,
+                                 -CesiumMath.PI_OVER_TWO,
+                                 CesiumMath.PI,
+                                 CesiumMath.PI_OVER_TWO);
 
         /**
          * The number of tiles in the X direction at level zero of the tile tree.
          *
          * @type Number
          */
-        this.numberOfLevelZeroTilesX = description.numberOfLevelZeroTilesX || 2;
+        this.numberOfLevelZeroTilesX = defaultValue(description.numberOfLevelZeroTilesX, 2);
 
         /**
          * The number of tiles in the Y direction at level zero of the tile tree.
          *
          * @type Number
          */
-        this.numberOfLevelZeroTilesY = description.numberOfLevelZeroTilesY || 1;
+        this.numberOfLevelZeroTilesY = defaultValue(description.numberOfLevelZeroTilesY, 1);
     }
 
     /**

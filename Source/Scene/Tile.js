@@ -107,19 +107,26 @@ define([
         this.children = undefined;
 
         /**
-         * The state of this tile.
-         *
-         * @type TileState
-         */
-        this.state = TileState.UNLOADED;
-
-        /**
          * The cartographic extent of the tile, with north, south, east and
          * west properties in radians.
          *
          * @type Extent
          */
         this.extent = this.tilingScheme.tileXYToExtent(this.x, this.y, this.zoom);
+
+        var tilingScheme = description.tilingScheme;
+        if (typeof description.extent !== 'undefined') {
+            var coords = tilingScheme.extentToTileXY(description.extent, this.zoom);
+            this.x = coords.x;
+            this.y = coords.y;
+
+            this.extent = description.extent;
+        } else {
+            this.x = description.x;
+            this.y = description.y;
+
+            this.extent = tilingScheme.tileXYToExtent(this.x, this.y, this.zoom);
+        }
 
         this._boundingSphere3D = undefined;
         this._occludeePoint = undefined;
@@ -131,16 +138,8 @@ define([
         this._previous = undefined;
         this._next = undefined;
 
-        this._image = undefined;
-        this._texture = undefined;
+        this._imagery = {};
         this._extentVA = undefined;
-
-        this._failCount = 0;
-        this._lastFailTime = 0;
-        this._lastUsedTime = 0;
-
-        this._width = 0;
-        this._height = 0;
     }
 
     /**
@@ -294,7 +293,10 @@ define([
      */
     Tile.prototype.destroy = function() {
         this._extentVA = this._extentVA && this._extentVA.destroy();
-        this._texture = this._texture && this._texture.destroy();
+        Object.keys(this._imagery).forEach(function(key) {
+            var tileImagery = this._imagery[key];
+            tileImagery._texture = tileImagery._texture && tileImagery._texture.destroy();
+        });
 
         if (typeof this.children !== 'undefined') {
             while (this.children.length > 0) {

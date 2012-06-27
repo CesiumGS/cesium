@@ -189,11 +189,7 @@ define([
 
         this._discardPolicy = when(isReady, function() {
             // assume that the tile at (0,0) at the maximum zoom is missing.
-            var missingTileUrl = that.buildTileImageUrl({
-                x : 0,
-                y : 0,
-                zoom : that.zoomMax
-            });
+            var missingTileUrl = that.buildTileImageUrl(0, 0, that.zoomMax);
             var pixelsToCheck = [new Cartesian2(0, 0), new Cartesian2(200, 20), new Cartesian2(20, 200), new Cartesian2(80, 110), new Cartesian2(160, 130)];
 
             return when(missingTileUrl, function(missingImageUrl) {
@@ -207,13 +203,15 @@ define([
      *
      * @memberof ArcGISMapServerTileProvider
      *
-     * @param {Tile} tile The tile to load the image for.
+     * @param {Number} x The x coordinate of the tile image.
+     * @param {Number} y The y coordinate of the tile image.
+     * @param {Number} zoom The zoom level of the tile image.
      *
      * @return {String|Promise} Either a string containing the URL, or a Promise for a string
      *                          if the URL needs to be built asynchronously.
      */
-    ArcGISMapServerTileProvider.prototype.buildTileImageUrl = function(tile) {
-        var url = this.url + '/tile/' + tile.zoom + '/' + tile.y + '/' + tile.x;
+    ArcGISMapServerTileProvider.prototype.buildTileImageUrl = function(x, y, zoom) {
+        var url = this.url + '/tile/' + zoom + '/' + y + '/' + x;
 
         if (typeof this._proxy !== 'undefined') {
             url = this._proxy.getURL(url);
@@ -227,16 +225,11 @@ define([
      *
      * @memberof ArcGISMapServerTileProvider
      *
-     * @param {Tile} tile The tile to load the image for.
-     * @param {String} [tileImageUrl] The tile image URL, if already known.
+     * @param {String} [tileImageUrl] The tile image URL.
      *
      * @return A promise for the image that will resolve when the image is available.
      */
-    ArcGISMapServerTileProvider.prototype.loadTileImage = function(tile, tileImageUrl) {
-        if (typeof tileImageUrl === 'undefined') {
-            tileImageUrl = this.buildTileImageUrl(tile);
-        }
-
+    ArcGISMapServerTileProvider.prototype.loadTileImage = function(tileImageUrl) {
         var image = when(tileImageUrl, loadImage);
 
         return when(this._discardPolicy, function(discardPolicy) {
