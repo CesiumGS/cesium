@@ -66,7 +66,7 @@ define([
          * The tiling scheme used by this tile provider.
          *
          * @type {TilingScheme}
-         * @see MercatorTilingScheme
+         * @see WebMercatorTilingScheme
          * @see GeographicTilingScheme
          */
         this.tilingScheme = new GeographicTilingScheme({

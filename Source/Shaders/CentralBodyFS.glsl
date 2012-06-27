@@ -13,8 +13,15 @@ void main()
     vec3 normalMC = normalize(agi_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0)));   // normalized surface normal in model coordinates
     vec3 normalEC = normalize(agi_normal * normalMC);                                           // normalized surface normal in eye coordiantes
     
-#ifdef SHOW_DAY    
+#ifdef SHOW_DAY
     vec3 startDayColor = texture2D(u_dayTexture, v_textureCoordinates).rgb;
+#ifdef SHOW_TILE_BOUNDARIES
+    if (v_textureCoordinates.x < (1.0/256.0) || v_textureCoordinates.x > (255.0/256.0) ||
+        v_textureCoordinates.y < (1.0/256.0) || v_textureCoordinates.y > (255.0/256.0))
+    {
+        startDayColor = vec3(1.0, 0.0, 0.0);
+    }
+#endif
 #else
     vec3 startDayColor = vec3(1.0);
 #endif

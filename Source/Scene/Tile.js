@@ -8,7 +8,7 @@ define([
         '../Core/Ellipsoid',
         '../Core/Extent',
         './TileState',
-        './MercatorTilingScheme'
+        './WebMercatorTilingScheme'
     ], function(
         defaultValue,
         destroyObject,
@@ -18,7 +18,7 @@ define([
         Ellipsoid,
         Extent,
         TileState,
-        MercatorTilingScheme) {
+        WebMercatorTilingScheme) {
     "use strict";
 
     /**
@@ -28,7 +28,7 @@ define([
      * @constructor
      *
      * @param {TilingScheme} description.tilingScheme The tiling scheme of which the new tile is a part,
-     * such as a {@link MercatorTilingScheme} or a {@link GeographicTilingScheme}.
+     * such as a {@link WebMercatorTilingScheme} or a {@link GeographicTilingScheme}.
      * @param {Extent} description.extent The cartographic extent of the tile, with north, south, east and
      * west properties in radians.
      * @param {Number} description.x The tile x coordinate.
