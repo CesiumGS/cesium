@@ -24,7 +24,7 @@
       },
       "pixelOffset":{
         "cartesian2":[
-          5.0,-4.0
+          12.0,0.0
         ]
       },
       "scale":1.0,
@@ -64,7 +64,7 @@
       },
       "pixelOffset":{
         "cartesian2":[
-          6.0,-4.0
+          12.0,0.0
         ]
       },
       "scale":1.0,
@@ -401,7 +401,7 @@
       },
       "pixelOffset":{
         "cartesian2":[
-          6.0,-4.0
+          12.0,0.0
         ]
       },
       "scale":1.0,
@@ -744,7 +744,7 @@
       },
       "pixelOffset":{
         "cartesian2":[
-          6.0,-4.0
+          23.0,0.0
         ]
       },
       "scale":1.0,

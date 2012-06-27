@@ -78,7 +78,7 @@ define([
         if (oldCollection !== dynamicObjectCollection) {
             if (typeof oldCollection !== 'undefined') {
                 oldCollection.objectsRemoved.removeEventListener(DynamicConeVisualizer.prototype._onObjectsRemoved);
-                this.removeAll();
+                this.removeAllPrimitives();
             }
             this._dynamicObjectCollection = dynamicObjectCollection;
             if (typeof dynamicObjectCollection !== 'undefined') {
@@ -110,7 +110,7 @@ define([
     /**
      * Removes all primitives from the scene.
      */
-    DynamicConeVisualizer.prototype.removeAll = function() {
+    DynamicConeVisualizer.prototype.removeAllPrimitives = function() {
         var i, len;
         for (i = 0, len = this._coneCollection.length; i < len; i++) {
             this._primitives.remove(this._coneCollection[i]);
@@ -162,7 +162,7 @@ define([
      * visualizer = visualizer && visualizer.destroy();
      */
     DynamicConeVisualizer.prototype.destroy = function() {
-        this.removeAll();
+        this.removeAllPrimitives();
         return destroyObject(this);
     };
 

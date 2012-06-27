@@ -83,7 +83,7 @@ define([
         if (oldCollection !== dynamicObjectCollection) {
             if (typeof oldCollection !== 'undefined') {
                 oldCollection.objectsRemoved.removeEventListener(DynamicLabelVisualizer.prototype._onObjectsRemoved);
-                this.removeAll();
+                this.removeAllPrimitives();
             }
             this._dynamicObjectCollection = dynamicObjectCollection;
             if (typeof dynamicObjectCollection !== 'undefined') {
@@ -115,7 +115,7 @@ define([
     /**
      * Removes all primitives from the scene.
      */
-    DynamicLabelVisualizer.prototype.removeAll = function() {
+    DynamicLabelVisualizer.prototype.removeAllPrimitives = function() {
         this._unusedIndexes = [];
         this._labelCollection.removeAll();
         if (typeof this._dynamicObjectCollection !== 'undefined') {
@@ -162,7 +162,7 @@ define([
      * visualizer = visualizer && visualizer.destroy();
      */
     DynamicLabelVisualizer.prototype.destroy = function() {
-        this.removeAll();
+        this.removeAllPrimitives();
         this._scene.getPrimitives().remove(this._labelCollection);
         return destroyObject(this);
     };

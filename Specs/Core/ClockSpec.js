@@ -12,7 +12,6 @@ defineSuite([
     "use strict";
     /*global it,expect*/
 
-    //CZML_TODO Mock the Date() object in order to test real-time behavior
     it('constructor sets default parameters', function() {
         var clock = new Clock();
         expect(clock.stopTime.equals(clock.startTime.addDays(1))).toEqual(true);

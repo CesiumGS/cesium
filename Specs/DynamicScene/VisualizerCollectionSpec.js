@@ -11,7 +11,7 @@ defineSuite([
     function MockVisualizer() {
         this.updateTime = undefined;
         this.isDestroyed = false;
-        this.removeAllCalled = false;
+        this.removeAllPrimitivesCalled = false;
     }
 
     MockVisualizer.prototype.setDynamicObjectCollection = function(dynamicObjectCollection) {
@@ -22,8 +22,8 @@ defineSuite([
         this.updateTime = time;
     };
 
-    MockVisualizer.prototype.removeAll = function() {
-        this.removeAllCalled = true;
+    MockVisualizer.prototype.removeAllPrimitives = function() {
+        this.removeAllPrimitivesCalled = true;
     };
 
     MockVisualizer.prototype.destroy = function() {
@@ -128,12 +128,12 @@ defineSuite([
         expect(mockVisualizer.updateTime).toEqual(updateTime);
     });
 
-    it('removeAll calls removeAll on underlying visualizers', function() {
+    it('removeAllPrimitives calls removeAllPrimitives on underlying visualizers', function() {
         var mockVisualizer = new MockVisualizer();
         var mockCollection = new MockDynamicObjectCollection();
 
         var visualizers = new VisualizerCollection([mockVisualizer], mockCollection);
-        visualizers.removeAll();
-        expect(mockVisualizer.removeAllCalled).toEqual(true);
+        visualizers.removeAllPrimitives();
+        expect(mockVisualizer.removeAllPrimitivesCalled).toEqual(true);
     });
 });

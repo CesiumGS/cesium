@@ -107,7 +107,7 @@ define([
         if (oldCollection !== dynamicObjectCollection) {
             if (typeof oldCollection !== 'undefined') {
                 oldCollection.objectsRemoved.removeEventListener(DynamicBillboardVisualizer.prototype._onObjectsRemoved);
-                this.removeAll();
+                this.removeAllPrimitives();
             }
             this._dynamicObjectCollection = dynamicObjectCollection;
             if (typeof dynamicObjectCollection !== 'undefined') {
@@ -139,7 +139,7 @@ define([
     /**
      * Removes all primitives from the scene.
      */
-    DynamicBillboardVisualizer.prototype.removeAll = function() {
+    DynamicBillboardVisualizer.prototype.removeAllPrimitives = function() {
         if (typeof this._dynamicObjectCollection !== 'undefined') {
             this._unusedIndexes = [];
             this._billboardCollection.removeAll();
@@ -186,7 +186,7 @@ define([
      * visualizer = visualizer && visualizer.destroy();
      */
     DynamicBillboardVisualizer.prototype.destroy = function() {
-        this.removeAll();
+        this.removeAllPrimitives();
         this._scene.getPrimitives().remove(this._billboardCollection);
         return destroyObject(this);
     };

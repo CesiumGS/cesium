@@ -79,7 +79,7 @@ define([
         if (oldCollection !== dynamicObjectCollection) {
             if (typeof oldCollection !== 'undefined') {
                 oldCollection.objectsRemoved.removeEventListener(DynamicPointVisualizer.prototype._onObjectsRemoved);
-                this.removeAll();
+                this.removeAllPrimitives();
             }
             this._dynamicObjectCollection = dynamicObjectCollection;
             if (typeof dynamicObjectCollection !== 'undefined') {
@@ -111,7 +111,7 @@ define([
     /**
      * Removes all primitives from the scene.
      */
-    DynamicPointVisualizer.prototype.removeAll = function() {
+    DynamicPointVisualizer.prototype.removeAllPrimitives = function() {
         this._unusedIndexes = [];
         this._billboardCollection.removeAll();
         if (typeof this._dynamicObjectCollection !== 'undefined') {
@@ -158,7 +158,7 @@ define([
      * visualizer = visualizer && visualizer.destroy();
      */
     DynamicPointVisualizer.prototype.destroy = function() {
-        this.removeAll();
+        this.removeAllPrimitives();
         this._scene.getPrimitives().remove(this._billboardCollection);
         return destroyObject(this);
     };

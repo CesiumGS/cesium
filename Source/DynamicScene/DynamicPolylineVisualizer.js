@@ -72,7 +72,7 @@ define([
         if (oldCollection !== dynamicObjectCollection) {
             if (typeof oldCollection !== 'undefined') {
                 oldCollection.objectsRemoved.removeEventListener(DynamicPolylineVisualizer.prototype._onObjectsRemoved);
-                this.removeAll();
+                this.removeAllPrimitives();
             }
             this._dynamicObjectCollection = dynamicObjectCollection;
             if (typeof dynamicObjectCollection !== 'undefined') {
@@ -104,7 +104,7 @@ define([
     /**
      * Removes all primitives from the scene.
      */
-    DynamicPolylineVisualizer.prototype.removeAll = function() {
+    DynamicPolylineVisualizer.prototype.removeAllPrimitives = function() {
         var i, len;
         for (i = 0, len = this._polylineCollection.length; i < len; i++) {
             this._primitives.remove(this._polylineCollection[i]);
@@ -157,7 +157,7 @@ define([
      * visualizer = visualizer && visualizer.destroy();
      */
     DynamicPolylineVisualizer.prototype.destroy = function() {
-        this.removeAll();
+        this.removeAllPrimitives();
         return destroyObject(this);
     };
 
