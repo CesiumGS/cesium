@@ -709,66 +709,68 @@ define([
                 offset += obj.count;
             }
         }
-        var positionArray = new Float32Array(positions);
-        var outlineColorArray = new Uint8Array(outlineColors);
-        var colorArray = new Uint8Array(colors);
-        var indicesArray = new Uint16Array(indices);
+        if(positions.length > 0){
+            var positionArray = new Float32Array(positions);
+            var outlineColorArray = new Uint8Array(outlineColors);
+            var colorArray = new Uint8Array(colors);
+            var indicesArray = new Uint16Array(indices);
 
-        var positionBuffer = context.createVertexBuffer(positionArray, this._buffersUsage[POSITION_INDEX]);
-        var outlineColorBuffer = context.createVertexBuffer(outlineColorArray, this._buffersUsage[OUTLINE_COLOR_INDEX]);
-        var colorBuffer = context.createVertexBuffer(colorArray, this._buffersUsage[COLOR_INDEX]);
+            var positionBuffer = context.createVertexBuffer(positionArray, this._buffersUsage[POSITION_INDEX]);
+            var outlineColorBuffer = context.createVertexBuffer(outlineColorArray, this._buffersUsage[OUTLINE_COLOR_INDEX]);
+            var colorBuffer = context.createVertexBuffer(colorArray, this._buffersUsage[COLOR_INDEX]);
 
-        var attributes = [{
-            index : attributeIndices.position3D,
-            componentsPerAttribute : 3,
-            componentDatatype : ComponentDatatype.FLOAT
-        },  {
-            index : attributeIndices.position2D,
-            componentsPerAttribute : 3,
-            componentDatatype : ComponentDatatype.FLOAT
-        }, {
-            index : attributeIndices.color,
-            componentsPerAttribute : 4,
-            normalize:true,
-            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-            vertexBuffer : colorBuffer
-        }];
+            var attributes = [{
+                index : attributeIndices.position3D,
+                componentsPerAttribute : 3,
+                componentDatatype : ComponentDatatype.FLOAT
+            },  {
+                index : attributeIndices.position2D,
+                componentsPerAttribute : 3,
+                componentDatatype : ComponentDatatype.FLOAT
+            }, {
+                index : attributeIndices.color,
+                componentsPerAttribute : 4,
+                normalize:true,
+                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                vertexBuffer : colorBuffer
+            }];
 
-        this._indexBuffer = context.createIndexBuffer(indicesArray, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
-        this._indexBuffer.setVertexArrayDestroyable(false);
+            this._indexBuffer = context.createIndexBuffer(indicesArray, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+            this._indexBuffer.setVertexArrayDestroyable(false);
 
-        var attributesOutlineColor = [{
-            index : attributeIndices.position3D,
-            componentsPerAttribute : 3,
-            componentDatatype : ComponentDatatype.FLOAT
-        },  {
-            index : attributeIndices.position2D,
-            componentsPerAttribute : 3,
-            componentDatatype : ComponentDatatype.FLOAT
-        }, {
-            index : attributeIndices.color,
-            componentsPerAttribute : 4,
-            normalize:true,
-            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-            vertexBuffer : outlineColorBuffer
-        }];
+            var attributesOutlineColor = [{
+                index : attributeIndices.position3D,
+                componentsPerAttribute : 3,
+                componentDatatype : ComponentDatatype.FLOAT
+            },  {
+                index : attributeIndices.position2D,
+                componentsPerAttribute : 3,
+                componentDatatype : ComponentDatatype.FLOAT
+            }, {
+                index : attributeIndices.color,
+                componentsPerAttribute : 4,
+                normalize:true,
+                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                vertexBuffer : outlineColorBuffer
+            }];
 
-        if(this._mode === SceneMode.SCENE3D){
-            attributes[0].vertexBuffer = positionBuffer;
-            attributes[1].value = [0.0, 0.0];
-            attributesOutlineColor[0].vertexBuffer = positionBuffer;
-            attributesOutlineColor[1].value = [0.0, 0.0];
-        } else{
-            attributes[0].value = [0.0, 0.0, 0.0];
-            attributes[1].vertexBuffer = positionBuffer;
-            attributesOutlineColor[0].value = [0.0, 0.0, 0.0];
-            attributesOutlineColor[1].vertexBuffer = positionBuffer;
+            if(this._mode === SceneMode.SCENE3D){
+                attributes[0].vertexBuffer = positionBuffer;
+                attributes[1].value = [0.0, 0.0];
+                attributesOutlineColor[0].vertexBuffer = positionBuffer;
+                attributesOutlineColor[1].value = [0.0, 0.0];
+            } else{
+                attributes[0].value = [0.0, 0.0, 0.0];
+                attributes[1].vertexBuffer = positionBuffer;
+                attributesOutlineColor[0].value = [0.0, 0.0, 0.0];
+                attributesOutlineColor[1].vertexBuffer = positionBuffer;
+            }
+
+            this._va = context.createVertexArray(attributes);
+            this._va.setIndexBuffer(this._indexBuffer);
+            this._vaOutlineColor = context.createVertexArray(attributesOutlineColor);
+            this._vaOutlineColor.setIndexBuffer(this._indexBuffer);
         }
-
-        this._va = context.createVertexArray(attributes);
-        this._va.setIndexBuffer(this._indexBuffer);
-        this._vaOutlineColor = context.createVertexArray(attributesOutlineColor);
-        this._vaOutlineColor.setIndexBuffer(this._indexBuffer);
     };
 
     /**
