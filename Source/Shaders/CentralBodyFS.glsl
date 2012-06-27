@@ -14,17 +14,14 @@ void main()
     vec3 normalEC = normalize(agi_normal * normalMC);                                           // normalized surface normal in eye coordiantes
     
 #ifdef SHOW_DAY
-    vec3 startDayColor;
-    if (v_textureCoordinates.x < 0.01 || v_textureCoordinates.x > 0.99 ||
-        v_textureCoordinates.y < 0.01 || v_textureCoordinates.y > 0.99)
+    vec3 startDayColor = texture2D(u_dayTexture, v_textureCoordinates).rgb;
+#ifdef SHOW_TILE_BOUNDARIES
+    if (v_textureCoordinates.x < (1.0/256.0) || v_textureCoordinates.x > (255.0/256.0) ||
+        v_textureCoordinates.y < (1.0/256.0) || v_textureCoordinates.y > (255.0/256.0))
     {
         startDayColor = vec3(1.0, 0.0, 0.0);
     }
-    else
-    {
-        startDayColor = texture2D(u_dayTexture, v_textureCoordinates).rgb;
-    } 
-    
+#endif
 #else
     vec3 startDayColor = vec3(1.0);
 #endif
