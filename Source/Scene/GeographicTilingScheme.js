@@ -79,30 +79,6 @@ define([
     GeographicTilingScheme.prototype.createLevelZeroTiles = TilingScheme.prototype.createLevelZeroTiles;
 
     /**
-     * Converts an extent and zoom level into tile x, y coordinates.
-     *
-     * @memberof GeographicTilingScheme
-     *
-     * @param {Extent} extent The cartographic extent of the tile, with north, south, east and
-     * west properties in radians.
-     * @param {Number} level The tile level-of-detail.  Zero is the least detailed.
-     *
-     * @return {Cartesian2} The integer x and y tile coordinates.
-     */
-    GeographicTilingScheme.prototype.extentToTileXY = function(extent, level) {
-        var xTiles = this.numberOfLevelZeroTilesX << level;
-        var yTiles = this.numberOfLevelZeroTilesY << level;
-
-        var longitudeFraction = (extent.west + Math.PI) / CesiumMath.TWO_PI;
-        var x = Math.round(longitudeFraction * xTiles);
-
-        var latitudeFraction = (CesiumMath.PI_OVER_TWO - extent.north) / CesiumMath.PI;
-        var y = Math.round(latitudeFraction * yTiles);
-
-        return new Cartesian2(x, y);
-    };
-
-    /**
      * Converts tile x, y coordinates and level to a cartographic extent.
      *
      * @memberof GeographicTilingScheme

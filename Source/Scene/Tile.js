@@ -29,8 +29,6 @@ define([
      *
      * @param {TilingScheme} description.tilingScheme The tiling scheme of which the new tile is a part,
      * such as a {@link WebMercatorTilingScheme} or a {@link GeographicTilingScheme}.
-     * @param {Extent} description.extent The cartographic extent of the tile, with north, south, east and
-     * west properties in radians.
      * @param {Number} description.x The tile x coordinate.
      * @param {Number} description.y The tile y coordinate.
      * @param {Number} description.zoom The tile zoom level.
@@ -73,26 +71,18 @@ define([
         this.tilingScheme = description.tilingScheme;
 
         /**
-         * The cartographic extent of the tile, with north, south, east and
-         * west properties in radians.
-         *
-         * @type Extent
-         */
-        this.extent = undefined;
-
-        /**
          * The x coordinate.
          *
          * @type Number
          */
-        this.x = undefined;
+        this.x = description.x;
 
         /**
          * The y coordinate.
          *
          * @type Number
          */
-        this.y = undefined;
+        this.y = description.y;
 
         // TODO: rename to level
         /**
@@ -123,19 +113,13 @@ define([
          */
         this.state = TileState.UNLOADED;
 
-        var tilingScheme = description.tilingScheme;
-        if (typeof description.extent !== 'undefined') {
-            var coords = tilingScheme.extentToTileXY(description.extent, this.zoom);
-            this.x = coords.x;
-            this.y = coords.y;
-
-            this.extent = description.extent;
-        } else {
-            this.x = description.x;
-            this.y = description.y;
-
-            this.extent = tilingScheme.tileXYToExtent(this.x, this.y, this.zoom);
-        }
+        /**
+         * The cartographic extent of the tile, with north, south, east and
+         * west properties in radians.
+         *
+         * @type Extent
+         */
+        this.extent = this.tilingScheme.tileXYToExtent(this.x, this.y, this.zoom);
 
         this._boundingSphere3D = undefined;
         this._occludeePoint = undefined;

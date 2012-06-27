@@ -88,21 +88,6 @@ define([
     };
 
     /**
-     * Converts an extent and zoom level into tile x, y coordinates.
-     *
-     * @memberof TilingScheme
-     *
-     * @param {Extent} extent The cartographic extent of the tile, with north, south, east and
-     * west properties in radians.
-     * @param {Number} level The tile level-of-detail.  Zero is the least detailed.
-     *
-     * @return {Cartesian2} The integer x and y tile coordinates.
-     */
-    TilingScheme.prototype.extentToTileXY = function(extent, level) {
-        throw new DeveloperError('This method should not called directly.  Instead, use the equivalent on WebMercatorTilingScheme or GeographicTilingScheme.');
-    };
-
-    /**
      * Converts tile x, y coordinates and level to a cartographic extent.
      *
      * @memberof TilingScheme

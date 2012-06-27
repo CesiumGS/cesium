@@ -126,31 +126,6 @@ define([
     };
 
     /**
-     * Converts an extent and zoom level into tile x, y coordinates.
-     *
-     * @memberof WebMercatorTilingScheme
-     *
-     * @param {Extent} extent The cartographic extent of the tile, with north, south, east and
-     * west properties in radians.
-     * @param {Number} level The tile level-of-detail.  Zero is the least detailed.
-     *
-     * @return {Cartesian2} The integer x and y tile coordinates.
-     */
-    WebMercatorTilingScheme.prototype.extentToTileXY = function(extent, level) {
-        var xTiles = this.numberOfLevelZeroTilesX << level;
-        var yTiles = this.numberOfLevelZeroTilesY << level;
-
-        var longitudeFraction = (extent.west + Math.PI) / CesiumMath.TWO_PI;
-        var x = Math.round(longitudeFraction * xTiles);
-
-        var sinLatitude = Math.sin(extent.north);
-        var latitudeFraction = 0.5 - Math.log((1.0 + sinLatitude) / (1.0 - sinLatitude)) / (4 * Math.PI);
-        var y = Math.round(latitudeFraction * yTiles);
-
-        return new Cartesian2(x, y);
-    };
-
-    /**
      * Converts tile x, y coordinates and level to a cartographic extent.
      *
      * @memberof WebMercatorTilingScheme
