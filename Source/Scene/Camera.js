@@ -523,9 +523,8 @@ define([
 
         var scalar = -ray.position.x / ray.direction.x;
         var position = ray.position.add(ray.direction.multiplyWithScalar(scalar));
-        position = this.getInverseTransform().multiplyWithVector(new Cartesian4(position.x, position.y, position.z, 1.0)).getXYZ();
 
-        var cart = projection.unproject(position);
+        var cart = projection.unproject(new Cartesian3(position.y, position.z, 0.0));
 
         if (cart.latitude < -CesiumMath.PI_OVER_TWO || cart.latitude > CesiumMath.PI_OVER_TWO ||
                 cart.longitude < - Math.PI || cart.longitude > Math.PI) {
