@@ -18,7 +18,7 @@ define([
     /**
      * A utility class which dynamically builds a TextureAtlas by associating
      * a unique identifier with each texture as it is added.  If a texture with
-     * the same id is needed later, the existing index is returne, rather than
+     * the same id is needed later, the existing index is returned, rather than
      * adding multiple copies of the same texture.
      *
      * @name TextureAtlasBuilder
