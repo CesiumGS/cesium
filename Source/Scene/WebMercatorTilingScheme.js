@@ -93,6 +93,16 @@ define([
      */
     WebMercatorTilingScheme.prototype.createLevelZeroTiles = TilingScheme.prototype.createLevelZeroTiles;
 
+    /**
+     * Converts web mercator X, Y coordinates, expressed in meters, to a {@link Cartographic2}
+     * containing geodetic ellipsoid coordinates.
+     *
+     * @memberof WebMercatorTilingScheme
+     *
+     * @param {Number} x The web mercator X coordinate in meters.
+     * @param {Number} y The web mercator Y coordinate in meters.
+     * @return {Cartographic2} The equivalent cartographic coordinates.
+     */
     WebMercatorTilingScheme.prototype.webMercatorToCartographic = function(x, y) {
         var oneOverEarthSemimajorAxis = this.ellipsoid.getOneOverRadii().x;
         var longitude = x * oneOverEarthSemimajorAxis;
@@ -100,11 +110,19 @@ define([
         return new Cartographic2(longitude, latitude);
     };
 
-    WebMercatorTilingScheme.prototype.cartographicToWebMercator = function(cartographic) {
-        var semimajorAxisTimesPi = this.ellipsoid.getOneOverRadii().x * Math.PI;
-        return new Cartographic2(
-                cartographic.longitude * semimajorAxisTimesPi,
-                Math.log(Math.tan((CesiumMath.PI_OVER_TWO + lat) * 0.5)) * semimajorAxisTimesPi);
+    /**
+     * Converts geodetic ellipsoid coordinates to the equivalent web mercator X, Y coordinates
+     * expressed in meters and returned in a {@link Cartesian2}.
+     *
+     * @param {Number} longitude The cartographic longitude coordinate in radians.
+     * @param {Number} latitude The cartographic latitude coordinate in radians.
+     * @returns {Cartesian2} The equivalent web mercator X, Y coordinates, in meters.
+     */
+    WebMercatorTilingScheme.prototype.cartographicToWebMercator = function(longitude, latitude) {
+        var semimajorAxis = this.ellipsoid.getRadii().x;
+        return new Cartesian2(
+                longitude * semimajorAxis,
+                Math.log(Math.tan((CesiumMath.PI_OVER_TWO + latitude) * 0.5)) * semimajorAxis);
     };
 
     /**
