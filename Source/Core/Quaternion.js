@@ -564,10 +564,10 @@ define([
         }
         var halfAngle = angle / 2.0;
         var s = Math.sin(halfAngle);
-        var nAxis = axis.magnitude() === 1.0 ? axis : axis.normalize(fromAxisAngleCartesian);
-        result.x = nAxis.x * s;
-        result.y = nAxis.y * s;
-        result.z = nAxis.z * s;
+        axis.normalize(fromAxisAngleCartesian);
+        result.x = fromAxisAngleCartesian.x * s;
+        result.y = fromAxisAngleCartesian.y * s;
+        result.z = fromAxisAngleCartesian.z * s;
         result.w = Math.cos(halfAngle);
         return result;
     };

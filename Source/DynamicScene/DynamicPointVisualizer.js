@@ -264,10 +264,10 @@ define([
         }
 
         if (needRedraw) {
-            var cssColor = billboard._visualizerColor ? billboard._visualizerColor.toCSSColor() : '#FFFFFF';
-            var cssOutlineColor = billboard._visualizerOutlineColor ? billboard._visualizerOutlineColor.toCSSColor() : '#000000';
-            var cssPixelSize = billboard._visualizerPixelSize || 3;
-            var cssOutlineWidth = billboard._visualizerOutlineWidth || 2;
+            var cssColor = typeof billboard._visualizerColor !== 'undefined' ? billboard._visualizerColor.toCSSColor() : '#FFFFFF';
+            var cssOutlineColor = typeof billboard._visualizerOutlineColor !== 'undefined' ? billboard._visualizerOutlineColor.toCSSColor() : '#000000';
+            var cssPixelSize = typeof billboard._visualizerPixelSize !== 'undefined' ? billboard._visualizerPixelSize : 3;
+            var cssOutlineWidth = typeof billboard._visualizerOutlineWidth !== 'undefined' ? billboard._visualizerOutlineWidth : 2;
             var textureId = JSON.stringify([cssColor, cssPixelSize, cssOutlineColor, cssOutlineWidth]);
 
             this._textureAtlasBuilder.addTextureFromFunction(textureId, function(id, loadedCallback) {
