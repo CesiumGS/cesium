@@ -19,7 +19,7 @@ define([
      * define the unit vector normal to the plane, and the w component is the distance of the
      * plane from the origin/camera position.
      *
-     * @name PerspectiveFrustum
+     * @alias PerspectiveFrustum
      * @constructor
      *
      * @example
@@ -29,7 +29,7 @@ define([
      * frustum.near = 1.0;
      * frustum.far = 2.0;
      */
-    function PerspectiveFrustum() {
+    var PerspectiveFrustum = function() {
         /**
          * The angle of the field of view, in radians.
          *
@@ -64,7 +64,7 @@ define([
 
         this._perspectiveMatrix = null;
         this._infinitePerspective = null;
-    }
+    };
 
     /**
      * Returns the perspective projection matrix computed from the view frustum.

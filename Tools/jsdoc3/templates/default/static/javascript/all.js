@@ -506,9 +506,9 @@ codeview.classFilter = ( function() {
 
 		search = search.toLowerCase()
         
-        var numDocLinks = document.links.length;
-        for (i = 3; i < numDocLinks; i++) {
-            var currentLink = document.links[i];
+        var links = document.getElementById("ClassList").getElementsByTagName('a');
+        for (i = 0; i < links.length; i++) {
+            var currentLink = links[i];
             var prefix = ((currentLink.href).split('?'))[0];
             var anchorIndex = currentLink.href.indexOf('#');
             if (search.length === 0) {

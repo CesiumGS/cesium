@@ -116,6 +116,8 @@ for (var i = 0; i < filesets.size(); i++) {
   var basedir  = fileset.getDir(project);
   var filenames = fileset.getDirectoryScanner(project).getIncludedFiles();
 
+  var glslDoc = "";	
+  	
   for (var j = 0; j < filenames.length; j++) {
     var filename = filenames[j];
 
@@ -130,7 +132,12 @@ for (var i = 0; i < filesets.size(); i++) {
     reader.close();
 
     contents = contents.replace(/\r\n/gm, '\n');
-
+	
+    var docComments = contents.match(/\/\*\*[\s\S]*?\*\//gm) || [];
+    if (docComments.length > 0) {
+        glslDoc = glslDoc + docComments.join('\n');
+    }		
+			
     var copyrightComments = contents.match(/\/\*\!(?:.|\n)*?\*\//gm) || [];
 
     if (stripComments) {
@@ -151,6 +158,11 @@ for (var i = 0; i < filesets.size(); i++) {
     writer.write(contents);
     writer.close();
   }
+		
+  var glslDocFile = new File(destination, 'glslComments.js');
+  var glslDocWriter = new FileWriter(glslDocFile);
+  glslDocWriter.write(glslDoc);
+  glslDocWriter.close();
 }
 ]]>
 	</scriptdef>

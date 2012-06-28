@@ -5,7 +5,7 @@ define(['./DeveloperError'], function(DeveloperError) {
     /**
      * DOC_TBA
      *
-     * @name Rectangle
+     * @alias Rectangle
      *
      * @param {Number} [x=0.0] The x coordinate of the rectangle.
      * @param {Number} [y=0.0] The y coordinate of the rectangle.
@@ -14,7 +14,7 @@ define(['./DeveloperError'], function(DeveloperError) {
      *
      * @constructor
      */
-    function Rectangle(x, y, width, height) {
+    var Rectangle = function(x, y, width, height) {
         /**
          * The x coordinate of the rectangle
          *
@@ -50,8 +50,17 @@ define(['./DeveloperError'], function(DeveloperError) {
          * @see Rectangle.width
          */
         this.height = height || 0.0;
-    }
+    };
 
+    /**
+     * DOC_TBA
+     *
+     * @memberof Rectangle
+     *
+     * @param {Array} positions
+     *
+     * @return {Rectangle} An axis aligned rectangle bounding the positions.
+     */
     Rectangle.createAxisAlignedBoundingRectangle = function(positions) {
         if (typeof positions === 'undefined') {
             throw new DeveloperError('positions is required.');

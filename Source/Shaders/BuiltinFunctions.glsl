@@ -501,7 +501,7 @@ const agi_raySegment agi_emptyRaySegment = agi_raySegment(-agi_infinity, -agi_in
 /**
  * DOC_TBA
  *
- * @name agi_emptyRaySegment
+ * @name agi_fullRaySegment
  * @glslConstant 
  */
 const agi_raySegment agi_fullRaySegment = agi_raySegment(0.0, agi_infinity);
