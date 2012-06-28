@@ -339,20 +339,20 @@ define([
     };
 
     DynamicConeVisualizer._computeModelMatrix = function(position, orientation) {
-        var w = orientation.w,
-        x = orientation.x,
-        y = orientation.y,
-        z = orientation.z,
-        x2 = x * x,
-        xy = x * y,
-        xz = x * z,
-        xw = x * w,
-        y2 = y * y,
-        yz = y * z,
-        yw = y * w,
-        z2 = z * z,
-        zw = z * w,
-        w2 = w * w;
+        var w = orientation.w;
+        var x = orientation.x;
+        var y = orientation.y;
+        var z = orientation.z;
+        var x2 = x * x;
+        var xy = x * y;
+        var xz = x * z;
+        var xw = x * w;
+        var y2 = y * y;
+        var yz = y * z;
+        var yw = y * w;
+        var z2 = z * z;
+        var zw = z * w;
+        var w2 = w * w;
 
         return new Matrix4(
                 x2 - y2 - z2 + w2,  2 * (xy + zw),      2 * (xz - yw),      position.x,

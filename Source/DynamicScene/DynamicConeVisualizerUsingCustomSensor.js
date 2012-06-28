@@ -7,7 +7,8 @@ define([
         '../Core/Matrix4',
         '../Core/Spherical',
         '../Scene/CustomSensorVolume',
-        '../Scene/ColorMaterial'
+        '../Scene/ColorMaterial',
+        './DynamicConeVisualizer'
        ], function(
          DeveloperError,
          destroyObject,
@@ -16,7 +17,8 @@ define([
          Matrix4,
          Spherical,
          CustomSensorVolume,
-         ColorMaterial) {
+         ColorMaterial,
+         DynamicConeVisualizer) {
     "use strict";
 
     //CZML_TODO DynamicConeVisualizerUsingCustomSensor is a temporary workaround
@@ -336,7 +338,7 @@ define([
             typeof orientation !== 'undefined' &&
             (!position.equals(cone._visualizerPosition) ||
              !orientation.equals(cone._visualizerOrientation))) {
-            cone.modelMatrix = DynamicConeVisualizerUsingCustomSensor._computeModelMatrix(position, orientation);
+            cone.modelMatrix = DynamicConeVisualizer._computeModelMatrix(position, orientation);
             position.clone(cone._visualizerPosition);
             orientation.clone(cone._visualizerOrientation);
         }
@@ -369,29 +371,6 @@ define([
                 dynamicObject._coneVisualizerIndex = undefined;
             }
         }
-    };
-
-    DynamicConeVisualizerUsingCustomSensor._computeModelMatrix = function(position, orientation) {
-        var w = orientation.w,
-        x = orientation.x,
-        y = orientation.y,
-        z = orientation.z,
-        x2 = x * x,
-        xy = x * y,
-        xz = x * z,
-        xw = x * w,
-        y2 = y * y,
-        yz = y * z,
-        yw = y * w,
-        z2 = z * z,
-        zw = z * w,
-        w2 = w * w;
-
-        return new Matrix4(
-                x2 - y2 - z2 + w2,  2 * (xy + zw),      2 * (xz - yw),      position.x,
-                2 * (xy - zw),      -x2 + y2 - z2 + w2, 2 * (yz + xw),      position.y,
-                2 * (xz + yw),      2 * (yz - xw),      -x2 - y2 + z2 + w2, position.z,
-                0,                  0,                  0,                  1);
     };
 
     return DynamicConeVisualizerUsingCustomSensor;

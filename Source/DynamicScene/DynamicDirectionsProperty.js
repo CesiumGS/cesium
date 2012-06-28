@@ -16,9 +16,10 @@ define([
     "use strict";
 
     function ValueHolder(czmlInterval) {
-        var i, len, values = [], tmp;
-
-        tmp = czmlInterval.unitSpherical;
+        var i;
+        var len;
+        var values = [];
+        var tmp = czmlInterval.unitSpherical;
         if (typeof tmp !== 'undefined') {
             for (i = 0, len = tmp.length; i < len; i += 2) {
                 values.push(new Spherical(tmp[i], tmp[i + 1]));
