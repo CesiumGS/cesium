@@ -88,6 +88,7 @@ define([
             alpha : outlineColor.alpha
         };
 
+        this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
         this._collection = polylineCollection;
         this._dirty = false;
         this._pickId = undefined;
@@ -97,11 +98,10 @@ define([
     var SHOW_INDEX = Polyline.SHOW_INDEX = 0;
     var POSITION_INDEX = Polyline.POSITION_INDEX = 1;
     var COLOR_INDEX = Polyline.COLOR_INDEX = 2;
-    var WIDTH_INDEX = Polyline.WIDTH_INDEX = 3;
-    var OUTLINE_WIDTH_INDEX = Polyline.OUTLINE_WIDTH_INDEX = 4;
-    var OUTLINE_COLOR_INDEX = Polyline.OUTLINE_COLOR_INDEX = 5;
-    var POSITION_SIZE_INDEX = Polyline.POSITION_SIZE_INDEX = 6;
-    Polyline.NUMBER_OF_PROPERTIES = 7;
+    var OUTLINE_COLOR_INDEX = Polyline.OUTLINE_COLOR_INDEX = 3;
+    var POSITION_SIZE_INDEX = Polyline.POSITION_SIZE_INDEX = 4;
+    Polyline.NUMBER_OF_PROPERTIES = 5;
+    var NUMBER_OF_PROPERTIES = Polyline.NUMBER_OF_PROPERTIES;
 
     /**
      * Returns true if this polyline will be shown.  Call {@link Polyline#setShow}
@@ -240,7 +240,6 @@ define([
             this._collection._removeFromMap(this);
             this._width = value;
             this._collection._addToMap(this);
-            this._makeDirty(WIDTH_INDEX);
         }
     };
 
@@ -291,7 +290,6 @@ define([
             this._collection._removeFromMap(this);
             this._outlineWidth = value;
             this._collection._addToMap(this);
-            this._makeDirty(OUTLINE_WIDTH_INDEX);
         }
     };
 
@@ -330,21 +328,27 @@ define([
 
     Polyline.prototype._clean = function() {
         this._dirty = false;
+        var properties = this._propertiesChanged;
+        for ( var k = 0; k < NUMBER_OF_PROPERTIES - 1; ++k) {
+            properties[k] = 0;
+        }
     };
 
     Polyline.prototype._getCollection = function(){
         return this._collection;
     };
 
+    Polyline.prototype._getChangedProperties = function(){
+      return this._propertiesChanged;
+    };
+
     Polyline.prototype._makeDirty = function(propertyChanged) {
         if (!this._dirty) {
-            if(this._wrapper){
-                this._wrapper.polylinesToUpdate.push(this);
-                var c = this._collection;
-                if (c) {
-                    c._updatePolyline(propertyChanged);
-                    this._dirty = true;
-                }
+            ++this._propertiesChanged[propertyChanged];
+            var c = this._collection;
+            if (c) {
+                c._updatePolyline(propertyChanged, this);
+                this._dirty = true;
             }
         }
     };

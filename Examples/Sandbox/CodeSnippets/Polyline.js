@@ -43,7 +43,14 @@
                 new Cesium.Cartographic2(-75.02, 36.53),
                 new Cesium.Cartographic2(-78.50, 33.14),
                 new Cesium.Cartographic2(-78.12, 23.46)
-            ]), width:4});
+            ]),
+            width:4,
+            color:{
+                red:1.0,
+                green:0.0,
+                blue:0.0,
+                alpha:1.0
+            }});
 
             primitives.add(polylines);
         };

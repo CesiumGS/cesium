@@ -1,10 +1,8 @@
 attribute vec3 position2D;
 attribute vec3 position3D;
 attribute vec4 color;
-attribute vec4 pickColor;
 
 varying vec4 v_color;
-varying vec4 v_pickColor;
 
 uniform float u_morphTime;
 
@@ -20,5 +18,4 @@ void main()
 
     gl_Position = agi_modelViewProjection * p;                      // position in clip coordinates
     v_color = color;
-    v_pickColor = pickColor;
 }
