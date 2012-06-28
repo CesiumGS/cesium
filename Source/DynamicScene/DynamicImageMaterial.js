@@ -19,7 +19,7 @@ define([
     //on the next draw.  Once we change Cesium to have built in texture defaults,
     //this code can be removed.  If we decide Cesium shouldn't have built in defaults,
     //this code should be changes so at least all CZML visualization has defaults.
-    function createDefaultImage() {
+    function createDefaultTexture() {
         var canvas = document.createElement('canvas');
         canvas.height = '64';
         canvas.width = '64';
@@ -35,8 +35,7 @@ define([
         return canvas.toDataURL('image/png');
     }
 
-    var defaultImage = new Image();
-    defaultImage.src = createDefaultImage();
+    var defaultTexture = createDefaultTexture();
 
     /**
      * A utility class for processing CZML image materials.
@@ -144,7 +143,7 @@ define([
         }
         if (!existingMaterial.texture) {
             existingMaterial.texture = context.createTexture2D({
-                source : defaultImage
+                source : defaultTexture
             });
         }
         return existingMaterial;
