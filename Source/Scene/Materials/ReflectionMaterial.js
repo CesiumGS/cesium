@@ -27,7 +27,7 @@ define([
         /**
          * Reflectivity controls how strong the reflection is from 0.0 to 1.0
          */
-        this.reflectivity = t.reflectivity;
+        this.reflectivity = t.reflectivity || 1.0;
 
         /**
          * The glsl shader source

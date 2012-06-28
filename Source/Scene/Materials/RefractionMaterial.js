@@ -30,12 +30,12 @@ define([
          * For example, if the ray is going between air and water the value is
          * (refractiveIndexAir / refractiveIndexWater), or (1.0 / 1.33)
          */
-        this.indexOfRefractionRatio = t.indexOfRefractionRatio;
+        this.indexOfRefractionRatio = t.indexOfRefractionRatio || (1.0 / 1.1);
 
         /**
          * Refractivity controls how strong the refraction is from 0.0 to 1.0
          */
-        this.refractivity = t.refractivity;
+        this.refractivity = t.refractivity || 1.0;
 
         /**
          * The glsl shader source

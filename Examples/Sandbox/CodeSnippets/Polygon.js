@@ -59,10 +59,10 @@
         this.code = function() {
             var polygon = new Cesium.Polygon(undefined);
             polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic2(-80.0, 27.0),
-                new Cesium.Cartographic2(-70.0, 27.0),
-                new Cesium.Cartographic2(-70.0, 36.0),
-                new Cesium.Cartographic2(-80.0, 36.0)
+                new Cesium.Cartographic2(-80.0, 30.0),
+                new Cesium.Cartographic2(-70.0, 30.0),
+                new Cesium.Cartographic2(-70.0, 33.0),
+                new Cesium.Cartographic2(-80.0, 33.0)
             ]));
             polygon.material.color = {
                 red: 1.0,
@@ -71,36 +71,52 @@
                 alpha: 1.0
             };
 
-            //Load all images at once
-            var diffuseMap1FilePath = '../../Images/land_ocean_ice_lights_2048.jpg';
-            var diffuseMap2FilePath = '../../Images/NE2_50M_SR_W_2048.jpg';
-            var blendMapFilePath = '../../Images/earthspec1k.jpg';
+            //Load cube map images at once
+            var imageFolder = '../../Images/';
+            var cubeMapFolder = imageFolder + 'PalmTreesCubeMap/';
+            var cubeMapFileExtension = '.jpg';
+            var diffuseMapFilePath = imageFolder + 'Cesium_Logo_Color.jpg';
+            var blendMapFilePath = imageFolder + 'alpha_map.png';
             Cesium.Chain.run(
-                Cesium.Jobs.downloadImage(diffuseMap1FilePath),
-                Cesium.Jobs.downloadImage(diffuseMap2FilePath),
+                Cesium.Jobs.downloadImage(cubeMapFolder + 'posx' + cubeMapFileExtension),
+                Cesium.Jobs.downloadImage(cubeMapFolder + 'negx' + cubeMapFileExtension),
+                Cesium.Jobs.downloadImage(cubeMapFolder + 'posy' + cubeMapFileExtension),
+                Cesium.Jobs.downloadImage(cubeMapFolder + 'negy' + cubeMapFileExtension),
+                Cesium.Jobs.downloadImage(cubeMapFolder + 'posz' + cubeMapFileExtension),
+                Cesium.Jobs.downloadImage(cubeMapFolder + 'negz' + cubeMapFileExtension),
+                Cesium.Jobs.downloadImage(diffuseMapFilePath),
                 Cesium.Jobs.downloadImage(blendMapFilePath)
             ).thenRun(
             function() {
-                var diffuseMap1Texture = scene.getContext().createTexture2D({
-                    source : this.images[diffuseMap1FilePath]
+                var cubeMap = scene.getContext().createCubeMap({
+                    source : {
+                        positiveX : this.images[cubeMapFolder + 'posx' + cubeMapFileExtension],
+                        negativeX : this.images[cubeMapFolder + 'negx' + cubeMapFileExtension],
+                        positiveY : this.images[cubeMapFolder + 'negy' + cubeMapFileExtension],
+                        negativeY : this.images[cubeMapFolder + 'posy' + cubeMapFileExtension],
+                        positiveZ : this.images[cubeMapFolder + 'posz' + cubeMapFileExtension],
+                        negativeZ : this.images[cubeMapFolder + 'negz' + cubeMapFileExtension]
+                    },
+                    pixelFormat : Cesium.PixelFormat.RGB
                 });
-                var diffuseMap2Texture = scene.getContext().createTexture2D({
-                    source : this.images[diffuseMap2FilePath]
+                var diffuseMapTexture = scene.getContext().createTexture2D({
+                    source : this.images[diffuseMapFilePath]
                 });
                 var blendMapTexture = scene.getContext().createTexture2D({
-                   source : this.images[blendMapFilePath]
+                    source : this.images[blendMapFilePath]
                 });
                 polygon.material = new Cesium.CompositeMaterial({
                     'materials' : [{
-                        'id' : 'diffuseMap1',
-                        'type' : 'DiffuseMapMaterial',
-                        'texture' : diffuseMap1Texture,
+                        'id' : 'reflectionMap',
+                        'type' : 'ReflectionMaterial',
+                        'cubeMap' : cubeMap,
+                        'reflectivity' : 1.0,
                         'channels' : 'RGB'
                     },
                     {
-                        'id' : 'diffuseMap2',
+                        'id' : 'diffuseMap',
                         'type' : 'DiffuseMapMaterial',
-                        'texture' : diffuseMap2Texture,
+                        'texture' : diffuseMapTexture,
                         'channels' : 'RGB'
                     },
                     {
@@ -110,7 +126,7 @@
                         'channels' : 'R'
                     }],
                     'components' : {
-                        'diffuse' : 'mix(diffuseMap1, diffuseMap2, mixer)',
+                        'diffuse' : 'mix(reflectionMap, diffuseMap, mixer)',
                     }
                 });
                 primitives.add(polygon);
