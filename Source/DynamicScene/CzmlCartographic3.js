@@ -58,21 +58,21 @@ define([
                 return undefined;
             }
 
-            if (this.isSampled(cartographicDegrees)) {
-                var len = cartographicDegrees.length;
-                cartographic = new Array(len);
-                for ( var i = 0; i < len; i += 4) {
-                    cartographic[i] = cartographicDegrees[i];
-                    cartographic[i + 1] = CesiumMath.toRadians(cartographicDegrees[i + 1]);
-                    cartographic[i + 2] = CesiumMath.toRadians(cartographicDegrees[i + 2]);
-                    cartographic[i + 3] = cartographicDegrees[i + 3];
-                }
-                return cartographic;
+            if (!this.isSampled(cartographicDegrees)) {
+                return [CesiumMath.toRadians(cartographicDegrees[0]),
+                        CesiumMath.toRadians(cartographicDegrees[1]),
+                        cartographicDegrees[2]];
             }
 
-            return [CesiumMath.toRadians(cartographicDegrees[0]),
-                    CesiumMath.toRadians(cartographicDegrees[1]),
-                    cartographicDegrees[2]];
+            var len = cartographicDegrees.length;
+            cartographic = new Array(len);
+            for ( var i = 0; i < len; i += 4) {
+                cartographic[i] = cartographicDegrees[i];
+                cartographic[i + 1] = CesiumMath.toRadians(cartographicDegrees[i + 1]);
+                cartographic[i + 2] = CesiumMath.toRadians(cartographicDegrees[i + 2]);
+                cartographic[i + 3] = cartographicDegrees[i + 3];
+            }
+            return cartographic;
         },
 
         /**

@@ -56,23 +56,23 @@ define([
                 return undefined;
             }
 
-            if (this.isSampled(rgba)) {
-                var len = rgba.length;
-                rgbaf = new Array(len);
-                for ( var i = 0; i < len; i += 5) {
-                    rgbaf[i] = rgba[i];
-                    rgbaf[i + 1] = Color.byteToFloat(rgba[i + 1]);
-                    rgbaf[i + 2] = Color.byteToFloat(rgba[i + 2]);
-                    rgbaf[i + 3] = Color.byteToFloat(rgba[i + 3]);
-                    rgbaf[i + 4] = Color.byteToFloat(rgba[i + 4]);
-                }
-                return rgbaf;
+            if (!this.isSampled(rgba)) {
+                return [Color.byteToFloat(rgba[0]),
+                        Color.byteToFloat(rgba[1]),
+                        Color.byteToFloat(rgba[2]),
+                        Color.byteToFloat(rgba[3])];
             }
 
-            return [Color.byteToFloat(rgba[0]),
-                    Color.byteToFloat(rgba[1]),
-                    Color.byteToFloat(rgba[2]),
-                    Color.byteToFloat(rgba[3])];
+            var len = rgba.length;
+            rgbaf = new Array(len);
+            for ( var i = 0; i < len; i += 5) {
+                rgbaf[i] = rgba[i];
+                rgbaf[i + 1] = Color.byteToFloat(rgba[i + 1]);
+                rgbaf[i + 2] = Color.byteToFloat(rgba[i + 2]);
+                rgbaf[i + 3] = Color.byteToFloat(rgba[i + 3]);
+                rgbaf[i + 4] = Color.byteToFloat(rgba[i + 4]);
+            }
+            return rgbaf;
         },
 
         /**
