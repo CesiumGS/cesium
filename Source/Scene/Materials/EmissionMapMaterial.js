@@ -39,18 +39,12 @@ define([
         this.tRepeat = t.tRepeat || 1.0;
 
         /**
-         * Channels used for sampling the texture.
-         *
-         * type {String}
-         */
-        this.channels = t.channels || 'rgb';
-
-        /**
          * The glsl shader source
          *
          * type {String}
          */
-        this.shaderSource = this._replaceChannels(ShadersEmissionMapMaterial, this.channels, 3);
+        var channels = t.channels || 'rgb';
+        this.shaderSource = this._replaceChannels(ShadersEmissionMapMaterial, channels, 3);
 
         var that = this;
         this._uniforms = {
@@ -70,7 +64,7 @@ define([
     }
 
     EmissionMapMaterial.prototype._replaceChannels = function(source, channels, numChannels) {
-        this.channels = this.channels.toLowerCase();
+        channels = channels.toLowerCase();
         if (channels.length !== numChannels) {
             throw new DeveloperError('Number of texture channels should be: ' + numChannels);
         }

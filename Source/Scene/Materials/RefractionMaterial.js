@@ -38,18 +38,12 @@ define([
         this.refractivity = t.refractivity;
 
         /**
-         * Channels used for sampling the texture.
-         *
-         * type {String}
-         */
-        this.channels = t.channels || 'rgb';
-
-        /**
          * The glsl shader source
          *
          * type {String}
          */
-        this.shaderSource = this._replaceChannels(ShadersRefractionMaterial, this.channels, 3);
+        var channels = t.channels || 'rgb';
+        this.shaderSource = this._replaceChannels(ShadersRefractionMaterial, channels, 3);
 
 
         var that = this;
@@ -70,7 +64,7 @@ define([
     }
 
     RefractionMaterial.prototype._replaceChannels = function(source, channels, numChannels) {
-        this.channels = this.channels.toLowerCase();
+        channels = channels.toLowerCase();
         if (channels.length !== numChannels) {
             throw new DeveloperError('Number of texture channels should be: ' + numChannels);
         }

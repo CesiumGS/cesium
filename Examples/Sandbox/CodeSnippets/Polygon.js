@@ -55,6 +55,69 @@
         };
     };
 
+    Sandbox.CompositeMaterial = function (scene, ellipsoid, primitives) {
+        this.code = function() {
+            var polygon = new Cesium.Polygon(undefined);
+            polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
+                new Cesium.Cartographic2(-80.0, 27.0),
+                new Cesium.Cartographic2(-70.0, 27.0),
+                new Cesium.Cartographic2(-70.0, 36.0),
+                new Cesium.Cartographic2(-80.0, 36.0)
+            ]));
+            polygon.material.color = {
+                red: 1.0,
+                green: 1.0,
+                blue: 1.0,
+                alpha: 1.0
+            };
+
+            //Load all images at once
+            var diffuseMap1FilePath = '../../Images/land_ocean_ice_lights_2048.jpg';
+            var diffuseMap2FilePath = '../../Images/NE2_50M_SR_W_2048.jpg';
+            var blendMapFilePath = '../../Images/earthspec1k.jpg';
+            Cesium.Chain.run(
+                Cesium.Jobs.downloadImage(diffuseMap1FilePath),
+                Cesium.Jobs.downloadImage(diffuseMap2FilePath),
+                Cesium.Jobs.downloadImage(blendMapFilePath)
+            ).thenRun(
+            function() {
+                var diffuseMap1Texture = scene.getContext().createTexture2D({
+                    source : this.images[diffuseMap1FilePath]
+                });
+                var diffuseMap2Texture = scene.getContext().createTexture2D({
+                    source : this.images[diffuseMap2FilePath]
+                });
+                var blendMapTexture = scene.getContext().createTexture2D({
+                   source : this.images[blendMapFilePath]
+                });
+                polygon.material = new Cesium.CompositeMaterial({
+                    'materials' : [{
+                        'id' : 'diffuseMap1',
+                        'type' : 'DiffuseMapMaterial',
+                        'texture' : diffuseMap1Texture,
+                        'channels' : 'RGB'
+                    },
+                    {
+                        'id' : 'diffuseMap2',
+                        'type' : 'DiffuseMapMaterial',
+                        'texture' : diffuseMap2Texture,
+                        'channels' : 'RGB'
+                    },
+                    {
+                        'id' : 'mixer',
+                        'type' : 'BlendMap',
+                        'texture' : blendMapTexture,
+                        'channels' : 'R'
+                    }],
+                    'components' : {
+                        'diffuse' : 'mix(diffuseMap1, diffuseMap2, mixer)',
+                    }
+                });
+                primitives.add(polygon);
+            });
+        };
+    };
+
     Sandbox.DiffuseMapPolygonMaterial = function (scene, ellipsoid, primitives) {
         this.code = function() {
             var polygon = new Cesium.Polygon(undefined);

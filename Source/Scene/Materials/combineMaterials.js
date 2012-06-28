@@ -5,14 +5,14 @@ define(function() {
     /**
      * DOC_TBA
      */
-    function combineMaterials() {
+    function combineMaterials(materialTemplates) {
         var unforms = {};
         var concatenatedSource = '';
         var duplicateUniforms = {};
 
-        var length = arguments.length;
+        var length = materialTemplates.length;
         for ( var i = 0; i < length; ++i) {
-            var material = arguments[i].material;
+            var material = materialTemplates[i].material;
             var materialSource = material._getShaderSource();
             var materialUniforms = material._uniforms;
 
@@ -38,8 +38,8 @@ define(function() {
                 }
             }
 
-            if (arguments[i].sourceTransform) {
-                materialSource = arguments[i].sourceTransform(materialSource);
+            if (materialTemplates[i].sourceTransform) {
+                materialSource = materialTemplates[i].sourceTransform(materialSource);
             }
 
             concatenatedSource += '#line 0\n' + materialSource;

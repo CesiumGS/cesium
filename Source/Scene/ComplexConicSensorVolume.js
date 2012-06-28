@@ -304,27 +304,30 @@ define([
             return source.replace(new RegExp(origName, 'g'), newName);
         };
 
-        return combineMaterials({
+        return combineMaterials([{
             material : this.outerMaterial,
             sourceTransform : function(source) {
                 return replaceMaterialMethods(source, 'Outer');
             }
-        }, {
+        },
+        {
             material : this.innerMaterial,
             sourceTransform : function(source) {
                 return replaceMaterialMethods(source, 'Inner');
             }
-        }, {
+        },
+        {
             material : this.capMaterial,
             sourceTransform : function(source) {
                 return replaceMaterialMethods(source, 'Cap');
             }
-        }, {
+        },
+        {
             material : this.silhouetteMaterial,
             sourceTransform : function(source) {
                 return replaceMaterialMethods(source, 'Silhouette');
             }
-        });
+        }]);
     };
 
     /**
