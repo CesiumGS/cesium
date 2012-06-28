@@ -5,7 +5,6 @@ define([
         '../Core/TimeIntervalCollection',
         '../Core/Cartesian3',
         '../Core/Spherical',
-        '../Core/CoordinateConversions',
         '../Core/Iso8601',
     ], function(
         JulianDate,
@@ -13,7 +12,6 @@ define([
         TimeIntervalCollection,
         Cartesian3,
         Spherical,
-        CoordinateConversions,
         Iso8601) {
     "use strict";
 
@@ -44,7 +42,7 @@ define([
             this.spherical = sphericals;
             var cartesians = this.cartesian;
             for ( var i = 0, len = cartesians.length; i < len; i++) {
-                sphericals.push(CoordinateConversions.cartesian3ToSpherical(cartesians[i]));
+                sphericals.push(Spherical.fromCartesian3(cartesians[i]));
             }
         }
         return sphericals;
@@ -57,7 +55,7 @@ define([
             this.cartesian = cartesians;
             var sphericals = this.spherical;
             for ( var i = 0, len = sphericals.length; i < len; i++) {
-                cartesians.push(CoordinateConversions.sphericalToCartesian3(sphericals[i]));
+                cartesians.push(Cartesian3.fromSpherical(sphericals[i]));
             }
         }
         return cartesians;

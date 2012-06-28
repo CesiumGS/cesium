@@ -19,6 +19,29 @@ define(function() {
     }
 
     /**
+     * Converts the provided Cartesian3 into Spherical coordinates.
+     * @memberof Spherical
+     *
+     * @param {Cartesian3} cartesian3 The Cartesian3 to be converted to Spherical.
+     * @param {Spherical} [spherical] The object in which the result will be stored, if undefined a new instance will be created.
+     *
+     * @returns The modified result parameter, or a new instance if none was provided.
+     */
+    Spherical.fromCartesian3 = function(cartesian3, result) {
+        if (typeof result === 'undefined') {
+            result = new Spherical();
+        }
+        var x = cartesian3.x;
+        var y = cartesian3.y;
+        var z = cartesian3.z;
+        var radialSquared = x * x + y * y;
+        result.clock = Math.atan2(y, x);
+        result.cone = Math.atan2(Math.sqrt(radialSquared), z);
+        result.magnitude = Math.sqrt(radialSquared + z * z);
+        return result;
+    };
+
+    /**
      * Creates a duplicate of a Spherical.
      * @memberof Spherical
      *
