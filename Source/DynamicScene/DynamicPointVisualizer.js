@@ -40,6 +40,9 @@ define([
      *
      */
     function DynamicPointVisualizer(scene, dynamicObjectCollection) {
+        if (typeof scene === 'undefined') {
+            throw new DeveloperError('scene is required.');
+        }
         this._scene = scene;
         this._unusedIndexes = [];
         this._dynamicObjectCollection = undefined;
