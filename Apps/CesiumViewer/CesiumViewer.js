@@ -54,7 +54,7 @@ function(dom,
     var clock = new Clock({
         currentTime : new JulianDate(),
         clockStep : ClockStep.SYSTEM_CLOCK_DEPENDENT,
-        multiplier : 60
+        multiplier : 1
     });
     var animationController = new AnimationController(clock);
     var timeline;
@@ -170,7 +170,7 @@ function(dom,
 
             transitioner = new SceneTransitioner(scene);
             visualizers = VisualizerCollection.createCzmlStandardCollection(scene, dynamicObjectCollection);
-            widget.enableStatistics(true);
+            //widget.enableStatistics(true);
 
             var queryObject = {};
             if (window.location.search) {

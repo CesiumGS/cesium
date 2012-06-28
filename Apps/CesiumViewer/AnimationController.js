@@ -9,7 +9,7 @@ define([
 
     function AnimationController(clock) {
         this.clock = clock;
-        this._animating = false;
+        this._animating = true;
     }
 
     AnimationController.prototype.isAnimating = function() {

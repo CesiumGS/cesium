@@ -42,7 +42,7 @@ define(function() {
          */
         unwrapInterval : function(czmlInterval) {
             var result = czmlInterval.number;
-            return typeof result === 'undefined' ? +czmlInterval : result;
+            return typeof result === 'undefined' ? czmlInterval : result;
         },
 
         /**

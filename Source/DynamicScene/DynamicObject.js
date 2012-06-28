@@ -145,16 +145,17 @@ define([
      * @see CzmlDefaults#updaters
      */
     DynamicObject.processCzmlPacketPosition = function(dynamicObject, packet) {
-        var propertyCreated = false;
         var positionData = packet.position;
-        if (typeof positionData !== 'undefined') {
-            var position = dynamicObject.position;
-            propertyCreated = typeof position === 'undefined';
-            if (propertyCreated) {
-                dynamicObject.position = position = new DynamicPositionProperty();
-            }
-            position.processCzmlIntervals(positionData);
+        if (typeof positionData === 'undefined') {
+            return false;
         }
+
+        var position = dynamicObject.position;
+        var propertyCreated = typeof position === 'undefined';
+        if (propertyCreated) {
+            dynamicObject.position = position = new DynamicPositionProperty();
+        }
+        position.processCzmlIntervals(positionData);
         return propertyCreated;
     };
 
@@ -172,16 +173,17 @@ define([
      * @see CzmlDefaults#updaters
      */
     DynamicObject.processCzmlPacketOrientation = function(dynamicObject, packet) {
-        var propertyCreated = false;
         var orientationData = packet.orientation;
-        if (typeof orientationData !== 'undefined') {
-            var orientation = dynamicObject.orientation;
-            propertyCreated = typeof orientation === 'undefined';
-            if (propertyCreated) {
-                dynamicObject.orientation = orientation = new DynamicProperty(CzmlUnitQuaternion);
-            }
-            orientation.processCzmlIntervals(orientationData);
+        if (typeof orientationData === 'undefined') {
+            return false;
         }
+
+        var orientation = dynamicObject.orientation;
+        var propertyCreated = typeof orientation === 'undefined';
+        if (propertyCreated) {
+            dynamicObject.orientation = orientation = new DynamicProperty(CzmlUnitQuaternion);
+        }
+        orientation.processCzmlIntervals(orientationData);
         return propertyCreated;
     };
 
@@ -200,16 +202,17 @@ define([
      * @see CzmlDefaults#updaters
      */
     DynamicObject.processCzmlPacketVertexPositions = function(dynamicObject, packet, dynamicObjectCollection) {
-        var propertyCreated = false;
         var vertexPositionsData = packet.vertexPositions;
-        if (typeof vertexPositionsData !== 'undefined') {
-            var vertexPositions = dynamicObject.vertexPositions;
-            propertyCreated = typeof dynamicObject.vertexPositions === 'undefined';
-            if (propertyCreated) {
-                dynamicObject.vertexPositions = vertexPositions = new DynamicVertexPositionsProperty();
-            }
-            vertexPositions.processCzmlIntervals(vertexPositionsData, undefined, dynamicObjectCollection);
+        if (typeof vertexPositionsData === 'undefined') {
+            return false;
         }
+
+        var vertexPositions = dynamicObject.vertexPositions;
+        var propertyCreated = typeof dynamicObject.vertexPositions === 'undefined';
+        if (propertyCreated) {
+            dynamicObject.vertexPositions = vertexPositions = new DynamicVertexPositionsProperty();
+        }
+        vertexPositions.processCzmlIntervals(vertexPositionsData, undefined, dynamicObjectCollection);
         return propertyCreated;
     };
 
@@ -227,14 +230,16 @@ define([
      * @see CzmlDefaults#updaters
      */
     DynamicObject.processCzmlPacketAvailability = function(dynamicObject, packet) {
-        var propertyCreated = false;
         var availability = packet.availability;
-        if (typeof availability !== 'undefined') {
-            var interval = TimeInterval.fromIso8601(availability);
-            if (typeof interval !== 'undefined') {
-                propertyCreated = typeof dynamicObject.availability === 'undefined';
-                dynamicObject._setAvailability(interval);
-            }
+        if (typeof availability === 'undefined') {
+            return false;
+        }
+
+        var propertyCreated = false;
+        var interval = TimeInterval.fromIso8601(availability);
+        if (typeof interval !== 'undefined') {
+            propertyCreated = typeof dynamicObject.availability === 'undefined';
+            dynamicObject._setAvailability(interval);
         }
         return propertyCreated;
     };

@@ -42,12 +42,12 @@ define([
         this._collections = [];
 
         /**
-         * The array of functions which DynamicObject instances together. DOC_TBA
+         * The array of functions which merge DynamicObject instances together.
          */
         this.mergeFunctions = typeof mergeFunctions === 'undefined' ? CzmlDefaults.mergers : mergeFunctions;
 
         /**
-         * The array of functions which remove data from a DynamicObject instance. DOC_TBA
+         * The array of functions which remove data from a DynamicObject instance.
          */
         this.cleanFunctions = typeof cleanFunctions === 'undefined' ? CzmlDefaults.cleaners : cleanFunctions;
 

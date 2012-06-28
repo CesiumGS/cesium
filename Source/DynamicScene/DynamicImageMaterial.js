@@ -66,28 +66,32 @@ define([
      */
     DynamicImageMaterial.prototype.processCzmlIntervals = function(czmlInterval) {
         var materialData = czmlInterval.image;
-        if (typeof materialData !== 'undefined') {
-            if (typeof materialData.image !== 'undefined') {
-                var image = this.image;
-                if (typeof image === 'undefined') {
-                    this.image = image = new DynamicProperty(CzmlString);
-                }
-                image.processCzmlIntervals(materialData.image);
+        if (typeof materialData === 'undefined') {
+            return;
+        }
+
+        if (typeof materialData.image !== 'undefined') {
+            var image = this.image;
+            if (typeof image === 'undefined') {
+                this.image = image = new DynamicProperty(CzmlString);
             }
-            if (typeof materialData.verticalRepeat !== 'undefined') {
-                var verticalRepeat = this.verticalRepeat;
-                if (typeof verticalRepeat === 'undefined') {
-                    this.verticalRepeat = verticalRepeat = new DynamicProperty(CzmlNumber);
-                }
-                verticalRepeat.processCzmlIntervals(materialData.verticalRepeat);
+            image.processCzmlIntervals(materialData.image);
+        }
+
+        if (typeof materialData.verticalRepeat !== 'undefined') {
+            var verticalRepeat = this.verticalRepeat;
+            if (typeof verticalRepeat === 'undefined') {
+                this.verticalRepeat = verticalRepeat = new DynamicProperty(CzmlNumber);
             }
-            if (typeof materialData.horizontalRepeat !== 'undefined') {
-                var horizontalRepeat = this.horizontalRepeat;
-                if (typeof horizontalRepeat === 'undefined') {
-                    this.horizontalRepeat = horizontalRepeat = new DynamicProperty(CzmlNumber);
-                }
-                horizontalRepeat.processCzmlIntervals(materialData.horizontalRepeat);
+            verticalRepeat.processCzmlIntervals(materialData.verticalRepeat);
+        }
+
+        if (typeof materialData.horizontalRepeat !== 'undefined') {
+            var horizontalRepeat = this.horizontalRepeat;
+            if (typeof horizontalRepeat === 'undefined') {
+                this.horizontalRepeat = horizontalRepeat = new DynamicProperty(CzmlNumber);
             }
+            horizontalRepeat.processCzmlIntervals(materialData.horizontalRepeat);
         }
     };
 
