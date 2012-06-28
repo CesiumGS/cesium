@@ -126,7 +126,6 @@ void agi_insertAt(inout agi_raySegmentCollection collection, agi_raySegment segm
  * DOC_TBA
  *
  * @name agi_insertAt
- * @glslFunction
  *
  */
 void agi_insertAt(inout agi_raySegmentCollection collection, agi_raySegmentCollection segments, int index)
@@ -189,7 +188,6 @@ void agi_complement(agi_raySegment segment, out agi_raySegmentCollection collect
  * DOC_TBA
  *
  * @name agi_complement
- * @glslFunction
  *
  */
 agi_raySegmentCollection agi_complement(agi_raySegmentCollection collection)
@@ -287,7 +285,7 @@ agi_raySegmentCollection agi_union(agi_raySegment left, agi_raySegment right)
  * @returns {agi_raySegment} The intersection of <code>left</code> and <code>right</code>.
  * 
  * @see agi_unionRaySegments
- * @see agi_subtract  
+ * @see agi_subtraction  
  * @see agi_isEmpty
  *
  * @example
@@ -442,7 +440,7 @@ agi_raySegmentCollection agi_intersection(agi_raySegmentCollection left, agi_ray
  * 
  * @returns {agi_raySegmentCollection} The time intervals resulting from <code>outer - inner</code>.
  *
- * @see agi_intersect
+ * @see agi_intersection
  * @see agi_unionRaySegments
  *
  * @example
