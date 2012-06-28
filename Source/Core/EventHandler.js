@@ -19,12 +19,12 @@ define([
      * Handles user input events. Custom functions can be added to be executed on
      * when the user enters input.
      *
-     * @name EventHandler
+     * @alias EventHandler
      *
      * @param {DOC_TBA} element The element to add events to. Defaults to document.
      * @constructor
      */
-    function EventHandler(element) {
+    var EventHandler = function(element) {
         this._mouseEvents = {};
         for ( var button in MouseEventType) {
             if (MouseEventType.hasOwnProperty(button)) {
@@ -33,7 +33,7 @@ define([
         }
 
         this._modifiedMouseEvents = {};
-        for (var modifier in EventModifier) {
+        for ( var modifier in EventModifier) {
             if (EventModifier.hasOwnProperty(modifier)) {
                 this._modifiedMouseEvents[modifier] = {};
                 for (button in MouseEventType) {
@@ -65,7 +65,7 @@ define([
         this._element = element || document;
 
         this._register();
-    }
+    };
 
     EventHandler.prototype._getPosition = function(event) {
         if (this._element === document) {

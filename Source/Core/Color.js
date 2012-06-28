@@ -7,9 +7,9 @@ define(function() {
      * which range from <code>0</code> (no intensity) to <code>1.0</code> (full intensity).
      *
      * @constructor
-     * @name Color
+     * @alias Color
      */
-    function Color(red, green, blue, alpha) {
+    var Color = function(red, green, blue, alpha) {
         /**
          * The red value.
          */
@@ -26,7 +26,6 @@ define(function() {
          * The alpha value.
          */
         this.alpha = typeof alpha === 'undefined' ? 1.0 : alpha;
-    }
 
     /**
      * Converts a 'byte' color component in the range of 0 to 255 into
@@ -123,6 +122,7 @@ define(function() {
 
     /**
      * Returns a string containing a CSS color value for this color.
+     * @memberof Color
      */
     Color.prototype.toCSSColor = function() {
         var r = Color.floatToByte(this.red);

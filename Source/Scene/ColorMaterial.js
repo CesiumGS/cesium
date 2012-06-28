@@ -10,10 +10,10 @@ define([
     /**
      * DOC_TBA
      *
-     * @name ColorMaterial
+     * @alias ColorMaterial
      * @constructor
      */
-    function ColorMaterial(template) {
+    var ColorMaterial = function(template) {
         var color = typeof template === 'undefined' ? undefined : template.color;
 
         /**
@@ -27,7 +27,7 @@ define([
                 return that.color;
             }
         };
-    }
+    };
 
     ColorMaterial.prototype._getShaderSource = function() {
         return '#line 0\n' + ShadersColorMaterial;
