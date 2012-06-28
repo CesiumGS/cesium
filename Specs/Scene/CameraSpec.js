@@ -143,6 +143,12 @@ defineSuite([
         expect(expected.equals(camera.getInverseTransform())).toEqual(true);
     });
 
+    it('get pick ray throws without a position', function() {
+        expect(function () {
+            camera.getPickRay();
+        }).toThrow();
+    });
+
     it('get pick ray perspective', function() {
         camera.frustum.fovy = CesiumMath.PI_OVER_TWO;
 
@@ -173,6 +179,12 @@ defineSuite([
         expect(ray.direction.equals(camera.direction)).toEqual(true);
     });
 
+    it('pick ellipsoid thows without a position', function() {
+        expect(function() {
+            camera.pickEllipsoid();
+        }).toThrow();
+    });
+
     it('pick ellipsoid', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var maxRadii = ellipsoid.getMaximumRadius();
@@ -196,6 +208,18 @@ defineSuite([
 
         p = camera.pickEllipsoid(Cartesian2.ZERO, ellipsoid);
         expect(typeof p === 'undefined').toEqual(true);
+    });
+
+    it('pick map in 2D thows without a position', function() {
+        expect(function() {
+            camera.pickMap2D();
+        }).toThrow();
+    });
+
+    it('pick map in 2D thows without a projection', function() {
+        expect(function() {
+            camera.pickMap2D(Cartesian2.ZERO);
+        }).toThrow();
     });
 
     it('pick map in 2D', function() {
@@ -223,6 +247,18 @@ defineSuite([
 
         p = camera.pickMap2D(Cartesian2.ZERO, projection);
         expect(typeof p === 'undefined').toEqual(true);
+    });
+
+    it('pick map in columbus view thows without a position', function() {
+        expect(function() {
+            camera.pickMapColumbusView();
+        }).toThrow();
+    });
+
+    it('pick map in columbus view thows without a projection', function() {
+        expect(function() {
+            camera.pickMapColumbusView(Cartesian2.ZERO);
+        }).toThrow();
     });
 
     it('pick map in columbus view', function() {

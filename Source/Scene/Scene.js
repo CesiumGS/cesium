@@ -228,10 +228,16 @@ define([
      * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to pick.
      *
+     * @exception {DeveloperError} windowPosition is required.
+     *
      * @return {Cartesian3} If the ellipsoid or map was picked, returns the point on the surface of the ellipsoid or map
      * in world coordinates. If the ellipsoid or map was not picked, returns undefined.
      */
     Scene.prototype.pickEllipsoid = function(windowPosition, ellipsoid) {
+        if (typeof windowPosition === 'undefined') {
+            throw new DeveloperError('windowPosition is required.');
+        }
+
         ellipsoid = ellipsoid || Ellipsoid.WGS84;
 
         var p;

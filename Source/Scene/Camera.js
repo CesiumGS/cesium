@@ -434,7 +434,7 @@ define([
         var y = (2.0 / height) * (height - windowPosition.y) - 1.0;
         y *= (this.frustum.top - this.frustum.bottom) * 0.5;
 
-        var position = this.position.clone();
+        var position = this.getPositionWC().clone();
         position.x += x;
         position.y += y;
 
@@ -449,9 +449,15 @@ define([
      *
      * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
      *
+     * @exception {DeveloperError} windowPosition is required.
+     *
      * @return {Object} Returns the {@link Cartesian3} position and direction of the ray.
      */
     Camera.prototype.getPickRay = function(windowPosition) {
+        if (typeof windowPosition === 'undefined') {
+            throw new DeveloperError('windowPosition is required.');
+        }
+
         var frustum = this.frustum;
         if (typeof frustum.aspectRatio !== 'undefined' && typeof frustum.fovy !== 'undefined' && typeof frustum.near !== 'undefined') {
             return this._getPickRayPerspective(windowPosition);
@@ -468,10 +474,16 @@ define([
      * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to pick.
      *
+     * @exception {DeveloperError} windowPosition is required.
+     *
      * @return {Cartesian3} If the ellipsoid was picked, returns the point on the surface of the ellipsoid.
      * If the ellipsoid was not picked, returns undefined.
      */
     Camera.prototype.pickEllipsoid = function(windowPosition, ellipsoid) {
+        if (typeof windowPosition === 'undefined') {
+            throw new DeveloperError('windowPosition is required.');
+        }
+
         ellipsoid = ellipsoid || Ellipsoid.WGS84;
         var ray = this._getPickRayPerspective(windowPosition);
         var intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid);
@@ -489,10 +501,21 @@ define([
      * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
      * @param {DOC_TBA} projection DOC_TBA
      *
+     * @exception {DeveloperError} windowPosition is required.
+     * @exception {DeveloperError} projection is required.
+     *
      * @return {Cartesian3} If the map was picked, returns the point on the surface of the map.
      * If the map was not picked, returns undefined.
      */
     Camera.prototype.pickMap2D = function(windowPosition, projection) {
+        if (typeof windowPosition === 'undefined') {
+            throw new DeveloperError('windowPosition is required.');
+        }
+
+        if (typeof projection === 'undefined') {
+            throw new DeveloperError('projection is required.');
+        }
+
         var ray = this._getPickRayOrthographic(windowPosition);
         var position = ray.origin;
         position.z = 0.0;
@@ -512,12 +535,22 @@ define([
      * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
      * @param {DOC_TBA} projection DOC_TBA
      *
+     * @exception {DeveloperError} windowPosition is required.
+     * @exception {DeveloperError} projection is required.
+     *
      * @return {Cartesian3} If the map was picked, returns the point on the surface of the map.
      * If the map was not picked, returns undefined.
      */
     Camera.prototype.pickMapColumbusView = function(windowPosition, projection) {
-        var ray = this._getPickRayPerspective(windowPosition);
+        if (typeof windowPosition === 'undefined') {
+            throw new DeveloperError('windowPosition is required.');
+        }
 
+        if (typeof projection === 'undefined') {
+            throw new DeveloperError('projection is required.');
+        }
+
+        var ray = this._getPickRayPerspective(windowPosition);
         var scalar = -ray.origin.x / ray.direction.x;
         var position = ray.getPoint(scalar);
 
