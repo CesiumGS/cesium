@@ -37,13 +37,6 @@ agi_raySegmentCollection agi_raySegmentCollectionNew()
     return i;
 }
 
-/**
- * DOC_TBA
- *
- * @name agi_raySegmentCollectionNew
- * @glslFunction
- *
- */
 agi_raySegmentCollection agi_raySegmentCollectionNew(agi_raySegment segment)
 {
     agi_raySegment intervals[agi_raySegmentCollectionCapacity];
@@ -52,13 +45,6 @@ agi_raySegmentCollection agi_raySegmentCollectionNew(agi_raySegment segment)
     return i;
 }
 
-/**
- * DOC_TBA
- *
- * @name agi_raySegmentCollectionNew
- * @glslFunction
- *
- */
 agi_raySegmentCollection agi_raySegmentCollectionNew(agi_raySegment first, agi_raySegment second)
 {
     agi_raySegment intervals[agi_raySegmentCollectionCapacity];
@@ -122,12 +108,6 @@ void agi_insertAt(inout agi_raySegmentCollection collection, agi_raySegment segm
     ++collection.count;
 }
 
-/**
- * DOC_TBA
- *
- * @name agi_insertAt
- *
- */
 void agi_insertAt(inout agi_raySegmentCollection collection, agi_raySegmentCollection segments, int index)
 {
     if (segments.count == 1)
@@ -184,12 +164,6 @@ void agi_complement(agi_raySegment segment, out agi_raySegmentCollection collect
     }        
 }
 
-/**
- * DOC_TBA
- *
- * @name agi_complement
- *
- */
 agi_raySegmentCollection agi_complement(agi_raySegmentCollection collection)
 {
     if (collection.count == 0)
@@ -312,11 +286,6 @@ agi_raySegment agi_intersection(agi_raySegment left, agi_raySegment right)
     return s;
 }
 
-/**
- * DOC_TBA
- *
- * @name agi_intersection
- */
 agi_raySegmentCollection agi_intersection(agi_raySegmentCollection left, agi_raySegment right)
 {
     if (left.count == 1)
@@ -358,11 +327,6 @@ agi_raySegmentCollection agi_intersection(agi_raySegmentCollection left, agi_ray
     return result;
 }
 
-/**
- * DOC_TBA
- *
- * @name agi_intersection
- */
 agi_raySegmentCollection agi_intersection(agi_raySegmentCollection left, agi_raySegmentCollection right)
 {
     if (right.count == 1)
