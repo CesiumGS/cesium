@@ -17,7 +17,7 @@ function(
      * Represents a time-dynamic polyline, typically used in conjunction with DynamicPolylineVisualizer and
      * DynamicObjectCollection to visualize CZML.
      *
-     * @name DynamicPolyline
+     * @alias DynamicPolyline
      * @constructor
      *
      * @see DynamicObject

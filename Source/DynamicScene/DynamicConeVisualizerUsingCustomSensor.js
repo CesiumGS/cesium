@@ -59,6 +59,8 @@ define([
     /**
      * A DynamicObject visualizer which maps the DynamicCone instance
      * in DynamicObject.cone to a CustomSensor primitive.
+     * @alias DynamicConeVisualizerUsingCustomSensor
+     * @constructor
      *
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.

@@ -36,8 +36,8 @@ define([
      * Instances of this type are exposed via DynamicObject and it's sub-objects
      * and are responsible for interpreting and interpolating the data for visualization.
      *
-     * @name DynamicPositionProperty
-     * @internalconstructor
+     * @alias DynamicPositionProperty
+     * @constructor
      *
      * @see DynamicObject
      * @see DynamicProperty

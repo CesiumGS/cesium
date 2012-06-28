@@ -41,6 +41,8 @@ define([
     /**
      * A DynamicObject visualizer which maps the DynamicBillboard instance
      * in DynamicObject.billboard to a Billboard primitive.
+     * @alias DynamicBillboardVisualizer
+     * @constructor
      *
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.

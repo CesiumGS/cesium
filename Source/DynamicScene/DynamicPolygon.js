@@ -15,7 +15,7 @@ define([
      * Represents a time-dynamic polygon, typically used in conjunction with DynamicPolygonVisualizer and
      * DynamicObjectCollection to visualize CZML.
      *
-     * @name DynamicPolygon
+     * @alias DynamicPolygon
      * @constructor
      *
      * @see DynamicObject

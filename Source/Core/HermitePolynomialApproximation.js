@@ -50,6 +50,7 @@ define(['./Math'
 
     /**
      * Functions for performing Hermite interpolation.
+     * @exports HermitePolynomialApproximation
      *
      * @see LinearApproximation
      * @see LagrangePolynomialApproximation

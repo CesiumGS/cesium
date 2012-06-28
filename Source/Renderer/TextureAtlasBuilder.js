@@ -21,7 +21,7 @@ define([
      * the same id is needed later, the existing index is returned, rather than
      * adding multiple copies of the same texture.
      *
-     * @name TextureAtlasBuilder
+     * @alias TextureAtlasBuilder
      * @constructor
      *
      * @see TextureAtlas

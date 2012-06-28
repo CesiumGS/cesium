@@ -23,7 +23,7 @@ define([
      * or may not exist yet.  It is up to the caller to know which kind of property
      * is being linked to.
      *
-     * @name ReferenceProperty
+     * @alias ReferenceProperty
      * @constructor
      *
      * @param {DynamicObjectCollection} dynamicObjectCollection The object collection which will be used to resolve the reference.

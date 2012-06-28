@@ -15,6 +15,8 @@ define([
 
     /**
      * A collection of DynamicObject instances.
+     * @alias DynamicObjectCollection
+     * @constructor
      */
     function DynamicObjectCollection() {
         this._hash = {};

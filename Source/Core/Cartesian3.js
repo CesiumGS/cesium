@@ -55,10 +55,10 @@ define([
 
     /**
      * Converts the provided Spherical into Cartesian3 coordinates.
+     * @memberof Cartesian3
      *
      * @param {Spherical} spherical The Spherical to be converted to Cartesian3.
      * @param {Cartesian3} [cartesian3] The object in which the result will be stored, if undefined a new instance will be created.
-     *
      * @returns The modified result parameter, or a new instance if none was provided.
      */
     Cartesian3.fromSpherical = function(spherical, result) {
@@ -77,11 +77,10 @@ define([
 
     /**
      * Returns a duplicate of a Cartesian3.
+     * @memberof Cartesian3
      *
      * @param {Cartesian3} cartesian The Cartesian to clone.
-     *
      * @param {Cartesian} [result] The object to store the result in, if undefined a new instance will be created.
-     *
      * @return {Cartesian3} The modified result parameter or a new instance if result was undefined.
      */
     Cartesian3.clone = function(cartesian, result) {
@@ -177,11 +176,9 @@ define([
 
     /**
      * Returns this Cartesian normalized.
-     *
      * @memberof Cartesian3
      *
      * @param {Cartesian} [result] The object to store the result in, if undefined a new instance will be created.
-     *
      * @return {Cartesian3} The modified result parameter or a new instance if result was undefined.
      */
     Cartesian3.prototype.normalize = function(result) {
@@ -408,11 +405,9 @@ define([
 
     /**
      * Returns a duplicate of a Cartesian3 instance.
-     *
      * @memberof Cartesian3
      *
      * @param {Cartesian} [result] The object to store the result in, if undefined a new instance will be created.
-     *
      * @return {Cartesian3} The modified result parameter or a new instance if result was undefined.
      */
     Cartesian3.prototype.clone = function(result) {
@@ -421,8 +416,8 @@ define([
 
     /**
      * Returns true if this Cartesian equals other componentwise.
-     *
      * @memberof Cartesian3
+     *
      * @param {Cartesian3} other The Cartesian to compare for equality.
      * @return {Boolean} <code>true</code> if the Cartesians are equal componentwise; otherwise, <code>false</code>.
      */

@@ -71,8 +71,8 @@ define([
      * and are responsible for interpreting and interpolating the data for visualization.
      * </p>
      *
-     * @name DynamicDirectionsProperty
-     * @internalconstructor
+     * @alias DynamicDirectionsProperty
+     * @constructor
      *
      * @see DynamicObject
      * @see DynamicProperty

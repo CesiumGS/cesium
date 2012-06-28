@@ -74,9 +74,8 @@ define([
      * created and managed via loading CZML data into a DynamicObjectCollection.
      * Instances of this type are exposed via DynamicObject and it's sub-objects
      * and are responsible for interpreting and interpolating the data for visualization.
-     * </p>
      *
-     * @name DynamicDirectionsProperty
+     * @alias DynamicDirectionsProperty
      * @internalconstructor
      *
      * @see DynamicObject

@@ -29,7 +29,7 @@ define([
      * Represents a time-dynamic label, typically used in conjunction with DynamicLabelVisualizer and
      * DynamicObjectCollection to visualize CZML.
      *
-     * @name DynamicLabel
+     * @alias DynamicLabel
      * @constructor
      *
      * @see DynamicObject

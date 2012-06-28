@@ -25,7 +25,7 @@ define([
      * belongs to is used.  CompositeDynamicObjectCollection can be used almost anywhere that a
      * DynamicObjectCollection is used.
      *
-     * @name CompositeDynamicObjectCollection
+     * @alias CompositeDynamicObjectCollection
      * @constructor
      *
      * @param {Array} [collections] The initial list of DynamicObjectCollection instances to merge.

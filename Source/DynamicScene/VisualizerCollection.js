@@ -12,7 +12,7 @@ define([
     /**
      * A collection of visualizers which makes it easy to manage and
      * update them in unison.
-     *
+     * @alias VisualizerCollection
      * @constructor
      *
      * @param {Object} The array of visualizers to use.

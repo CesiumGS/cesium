@@ -21,7 +21,7 @@ define([
      * Represents a time-dynamic pyramid, typically used in conjunction with DynamicPyramidVisualizer and
      * DynamicObjectCollection to visualize CZML.
      *
-     * @name DynamicPyramid
+     * @alias DynamicPyramid
      * @constructor
      *
      * @see DynamicObject

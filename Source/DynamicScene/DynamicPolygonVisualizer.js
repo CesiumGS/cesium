@@ -14,6 +14,8 @@ define([
     /**
      * A DynamicObject visualizer which maps the DynamicPolygon instance
      * in DynamicObject.polygon to a Polygon primitive.
+     * @alias DynamicPolygonVisualizer
+     * @constructor
      *
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.

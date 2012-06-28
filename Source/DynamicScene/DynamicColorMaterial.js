@@ -11,6 +11,8 @@ define([
 
     /**
      * A utility class for processing CZML color materials.
+     * @alias DynamicColorMaterial
+     * @constructor
      */
     function DynamicColorMaterial() {
         this.color = undefined;

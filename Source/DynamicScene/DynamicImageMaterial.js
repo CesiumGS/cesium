@@ -39,6 +39,8 @@ define([
 
     /**
      * A utility class for processing CZML image materials.
+     * @alias DynamicImageMaterial
+     * @constructor
      */
     function DynamicImageMaterial() {
         this.image = undefined;

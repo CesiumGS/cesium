@@ -18,6 +18,8 @@ define([
     /**
      * A DynamicObject visualizer which maps the DynamicPoint instance
      * in DynamicObject.point to a Billboard primitive with a point texture.
+     * @alias DynamicPointVisualizer
+     * @constructor
      *
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.

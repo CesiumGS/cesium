@@ -24,6 +24,8 @@ define([
     /**
      * A DynamicObject visualizer which maps the DynamicLabel instance
      * in DynamicObject.label to a Label primitive.
+     * @alias DynamicLabelVisualizer
+     * @constructor
      *
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.

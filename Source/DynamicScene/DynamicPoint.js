@@ -17,7 +17,7 @@ define([
      * Represents a time-dynamic point, typically used in conjunction with DynamicPointVisualizer and
      * DynamicObjectCollection to visualize CZML.
      *
-     * @name DynamicPoint
+     * @alias DynamicPoint
      * @constructor
      *
      * @see DynamicObject

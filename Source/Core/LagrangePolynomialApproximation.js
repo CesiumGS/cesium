@@ -4,6 +4,7 @@ define(function() {
 
     /**
      * Functions for performing Lagrange interpolation.
+     * @exports LagrangePolynomialApproximation
      *
      * @see LinearApproximation
      * @see HermitePolynomialApproximation

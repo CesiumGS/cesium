@@ -27,7 +27,7 @@ define([
      * Represents a time-dynamic billboard, typically used in conjunction with DynamicBillboardVisualizer and
      * DynamicObjectCollection to visualize CZML.
      *
-     * @name DynamicBillboard
+     * @alias DynamicBillboard
      * @constructor
      *
      * @see DynamicObject

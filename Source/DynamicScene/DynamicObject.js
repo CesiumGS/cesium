@@ -21,6 +21,8 @@ define([
      * DynamicObject instances are the primary data store for processed CZML data.
      * They are used primarily by the visualizers to create and maintain graphic
      * primitives that represent the DynamicObject's properties at a specific time.
+     * @alias DynamicObject
+     * @constructor
      *
      * @param {Object} [id] A unique identifier for this object.  If no id is provided, a GUID is generated.
      *

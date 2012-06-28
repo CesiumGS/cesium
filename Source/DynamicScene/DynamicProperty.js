@@ -75,8 +75,8 @@ define([
      * which as the name implies, handles materials.
      * </p>
      *
-     * @name DynamicProperty
-     * @internalconstructor
+     * @alias DynamicProperty
+     * @constructor
      *
      * @param {Object} valueType A CZML type object which contains the methods needed to interpret and interpolate CZML data of the same type.
      *

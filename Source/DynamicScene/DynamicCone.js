@@ -19,7 +19,7 @@ define([
      * Represents a time-dynamic cone, typically used in conjunction with DynamicConeVisualizer and
      * DynamicObjectCollection to visualize CZML.
      *
-     * @name DynamicCone
+     * @alias DynamicCone
      * @constructor
      *
      * @see DynamicObject

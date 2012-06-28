@@ -5,7 +5,7 @@ define(function() {
     /**
      * A set of curvilinear 3-dimensional coordinates.
      *
-     * @name Spherical
+     * @alias Spherical
      * @constructor
      *
      * @param {Number} [clock=0.0] The angular coordinate lying in the xy-plane measured from the positive x-axis and toward the positive y-axis.

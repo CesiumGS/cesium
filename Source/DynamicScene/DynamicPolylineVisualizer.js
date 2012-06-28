@@ -14,6 +14,8 @@ define([
     /**
      * A DynamicObject visualizer which maps the DynamicPolyline instance
      * in DynamicObject.polyline to a Polyline primitive.
+     * @alias DynamicPolylineVisualizer
+     * @constructor
      *
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.

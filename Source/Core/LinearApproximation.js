@@ -8,6 +8,7 @@ define([
 
     /**
      * Functions for performing linear interpolation.
+     * @exports LinearApproximation
      *
      * @see LagrangePolynomialApproximation
      * @see HermitePolynomialApproximation
