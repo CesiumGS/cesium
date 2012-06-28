@@ -84,7 +84,11 @@ define([
         this._guid = createGuid();
 
         // Create initial texture and root.
-        this._texture = this._context.createTexture2D({width : initialSize.x, height : initialSize.y, pixelFormat : this._pixelFormat});
+        this._texture = this._context.createTexture2D({
+            width : initialSize.x,
+            height : initialSize.y,
+            pixelFormat : this._pixelFormat
+        });
         this._root = new TextureAtlasNode(new Cartesian2(0.0, 0.0), new Cartesian2(initialSize.x, initialSize.y));
 
         // Add initial images if there are any.
@@ -94,7 +98,7 @@ define([
         if (typeof image !== 'undefined') {
             this.addImage(image);
         }
-        }
+    };
 
     // Builds a larger texture and copies the old texture into the new one.
     TextureAtlas.prototype._resizeAtlas = function (image) {

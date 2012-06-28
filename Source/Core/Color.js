@@ -26,6 +26,7 @@ define(function() {
          * The alpha value.
          */
         this.alpha = typeof alpha === 'undefined' ? 1.0 : alpha;
+    };
 
     /**
      * Converts a 'byte' color component in the range of 0 to 255 into
