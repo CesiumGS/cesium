@@ -39,7 +39,7 @@ define([
      * define the unit vector normal to the plane, and the w component is the distance of the
      * plane from the origin/camera position.
      *
-     * @name Camera
+     * @alias Camera
      *
      * @exception {DeveloperError} canvas is required.
      *
@@ -56,7 +56,7 @@ define([
      * camera.near = 1.0;
      * camera.far = 2.0;
      */
-    function Camera(canvas) {
+    var Camera = function(canvas) {
         if (!canvas) {
             throw new DeveloperError('canvas is required.');
         }
@@ -134,7 +134,7 @@ define([
 
         this._canvas = canvas;
         this._controllers = new CameraControllerCollection(this, canvas);
-    }
+    };
 
     /**
      * DOC_TBA

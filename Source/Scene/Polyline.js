@@ -249,7 +249,7 @@ define([
     /**
      * DOC_TBA
      *
-     * @name Polyline
+     * @alias Polyline
      * @constructor
      *
      * @example
@@ -272,7 +272,7 @@ define([
      *   ellipsoid.toCartesian(new Cartographic3(...))
      * ]);
      */
-    function Polyline() {
+    var Polyline = function() {
         this._sp = undefined;
         this._spGroundTrack = undefined;
         this._spHeightTrack = undefined;
@@ -582,7 +582,7 @@ define([
 
             _positions : undefined
         };
-    }
+    };
 
     Polyline.prototype._getModelMatrix = function(mode) {
         switch (mode) {

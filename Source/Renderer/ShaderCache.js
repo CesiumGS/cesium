@@ -8,17 +8,17 @@ define([
     /**
      * DOC_TBA
      *
-     * @name ShaderCache
+     * @alias ShaderCache
      *
      * @internalConstructor
      *
      * @see Context#getShaderCache
      */
-    function ShaderCache(context) {
+    var ShaderCache = function(context) {
         this._context = context;
         this._shaders = {};
         this._shadersToRelease = {};
-    }
+    };
 
     /**
      * DOC_TBA

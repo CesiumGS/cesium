@@ -161,7 +161,7 @@
 	    data.orderBy(['longname', 'version', 'since']);
         
         // kinds of containers
-        var globals = find( {kind: ['member', 'function', 'constant', 'typedef'], memberof: {isUndefined: true}} ),
+        var globals = find( {kind: ['member', 'constant', 'typedef'], memberof: {isUndefined: true}} ),
             modules = find({kind: 'module'}),
             externals = find({kind: 'external'}),
             mixins = find({kind: 'mixin'}),
@@ -283,9 +283,17 @@
             });
             //nav += '</ul>';
         }
-		
-        var glslNames = find({kind: 'glsl'});
+        
+        var enumerationNames = find({kind: 'enumeration'});
+        if (enumerationNames.length) {
+        	enumerationNames.forEach(function(g) {
+                if (!seen.hasOwnProperty(g.longname) ) nav += '<li>'+linkto(g.longname, g.name)+'</li>';
+                seen[g.longname] = true;
+            });
+        }
+        
         nav += '</div><div id="glslItems">';	// End classItems div, start GLSL div
+        var glslNames = find({kind: 'glsl'});
         if (glslNames.length) {
             glslNames.forEach(function(g) {
                 if ( !seen.hasOwnProperty(g.longname) ) nav += '<li>'+linkto(g.longname, g.name)+'</li>';
@@ -325,9 +333,9 @@
             nav += '</ul>';
         }
         
-        var globalNames = find({kind: ['members', 'function', 'constant', 'typedef'], 'memberof': {'isUndefined': true}});
+        var globalNames = find({kind: ['function', 'constant', 'typedef'], 'memberof': {'isUndefined': true}});
         if (globalNames.length) {
-            nav += '<h3>Global</h3><ul>';
+            //nav += '<h3>Global</h3><ul>';
             globalNames.forEach(function(g) {
                 if ( g.kind !== 'typedef' && !seen.hasOwnProperty(g.longname) ) nav += '<li>'+linkto(g.longname, g.name)+'</li>';
                 seen[g.longname] = true;
@@ -335,7 +343,7 @@
             
             nav += '</ul>';
         }
- */		
+*/
         // add template helpers
         view.find = find;
         view.linkto = linkto;
@@ -349,6 +357,9 @@
             var classes = find({kind: 'class', longname: longname});
             if (classes.length) generate(classes[0].name, classes, helper.longnameToUrl[longname]);
 			
+            var enumerations = find({kind: 'enumeration', longname: longname});
+            if (enumerations.length) generate(enumerations[0].name, enumerations, helper.longnameToUrl[longname]);
+            
 			var glslTypes = find({kind: 'glsl', longname: longname});
             if (glslTypes.length) generate(glslTypes[0].name, glslTypes, helper.longnameToUrl[longname]);
 			
@@ -356,8 +367,8 @@
             if (modules.length) generate(modules[0].name, modules, helper.longnameToUrl[longname]);
             
             var namespaces = find({kind: 'namespace', longname: longname});
-            if (namespaces.length) generate('Namespace: '+namespaces[0].name, namespaces, helper.longnameToUrl[longname]);        
-            
+            if (namespaces.length) generate('Namespace: '+namespaces[0].name, namespaces, helper.longnameToUrl[longname]);
+      
 //            var constants = find({kind: 'constant', longname: longname});
 //            if (constants.length) generate('Constant: '+constants[0].name, constants, helper.longnameToUrl[longname]);        
 
@@ -368,7 +379,7 @@
             if (externals.length) generate('External: '+externals[0].name, externals, helper.longnameToUrl[longname]);
         }
 
-        //if (globals.length) generate('Global', [{kind: 'globalobj'}], 'global.html');
+        // if (globals.length) generate('Global', [{kind: 'globalobj'}], 'global.html');
         
         view.layout = 'index.tmpl';
         var indexHtml = view.render('empty.tmpl', { title: 'Cesium Documentation' });

@@ -12,11 +12,11 @@ define([
     /**
      * DOC_TBA
      *
-     * @name AnimationCollection
+     * @alias AnimationCollection
      * @constructor
      */
-    function AnimationCollection() {
-    }
+    var AnimationCollection = function() {
+    };
 
     /**
      * DOC_TBA

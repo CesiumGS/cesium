@@ -14,7 +14,7 @@ define([
     /**
      * DOC_TBA
      *
-     * @name CompositePrimitive
+     * @alias CompositePrimitive
      * @constructor
      *
      * @example
@@ -34,7 +34,7 @@ define([
      * parent.add(children);    // Add composite
      * parent.add(labels);      // Add regular primitive
      */
-    function CompositePrimitive() {
+    var CompositePrimitive = function() {
         this._centralBody = null;
         this._primitives = [];
         this._guid = createGuid();
@@ -74,7 +74,7 @@ define([
          * @type Boolean
          */
         this.show = true;
-    }
+    };
 
     /**
      * DOC_TBA

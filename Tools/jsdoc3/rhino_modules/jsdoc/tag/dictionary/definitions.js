@@ -258,11 +258,11 @@ exports.defineTags = function(dictionary) {
             doclet.fires.push(tag.value);
         }
     });
-    
+        
     dictionary.defineTag('function', {
         onTagged: function(doclet, tag) {
             setDocletKindToTitle(doclet, tag);
-            setDocletNameToValue(doclet, tag);
+            setDocletNameToValue(doclet, tag); 
         }
     })
     .synonym('func')

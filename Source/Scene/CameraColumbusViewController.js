@@ -29,10 +29,10 @@ define([
 
     /**
      * DOC_TBD
-     * @name CameraColumbusViewController
+     * @alias CameraColumbusViewController
      * @constructor
      */
-    function CameraColumbusViewController(canvas, camera) {
+    var CameraColumbusViewController = function(canvas, camera) {
         this._canvas = canvas;
         this._camera = camera;
 
@@ -63,7 +63,7 @@ define([
         this._transform = this._camera.transform.clone();
 
         this._lastInertiaTranslateMovement = undefined;
-    }
+    };
 
     /**
      * @private

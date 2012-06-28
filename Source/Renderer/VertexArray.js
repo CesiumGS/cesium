@@ -12,14 +12,14 @@ define([
     /**
      * DOC_TBA
      *
-     * @name VertexArray
+     * @alias VertexArray
      *
      * @internalConstructor
      *
      * @see {@link Context#createVertexArray}
      * @see {@link Context#createVertexArrayFromMesh}
      */
-    function VertexArray(gl, attributes, indexBuffer) {
+    var VertexArray = function(gl, attributes, indexBuffer) {
         this._gl = gl;
         this._attributes = [];
         this._indexBuffer = indexBuffer;
@@ -44,7 +44,7 @@ define([
 
             uniqueIndices[index] = true;
         }
-    }
+    };
 
     VertexArray.prototype._addAttribute = function(attribute, index) {
         if (!attribute.vertexBuffer && !attribute.value) {
