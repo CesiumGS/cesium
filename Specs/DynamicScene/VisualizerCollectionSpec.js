@@ -1,10 +1,18 @@
 /*global defineSuite*/
 defineSuite([
              'DynamicScene/VisualizerCollection',
-             'Core/JulianDate'
+             'Core/JulianDate',
+             'DynamicScene/CzmlDefaults',
+             'Scene/Scene',
+             '../Specs/createContext',
+             '../Specs/destroyContext'
             ], function(
               VisualizerCollection,
-              JulianDate) {
+              JulianDate,
+              CzmlDefaults,
+              Scene,
+              createContext,
+              destroyContext) {
     "use strict";
     /*global it,expect*/
 
@@ -48,6 +56,30 @@ defineSuite([
         expect(visualizers.getVisualizers().length).toEqual(1);
         expect(visualizers.getDynamicObjectCollection()).toEqual(mockCollection);
         expect(mockVisualizer.mockCollection).toEqual(mockCollection);
+    });
+
+    it('createCzmlStandardCollection uses CzmlDefaults', function() {
+        var context = createContext();
+        var scene = new Scene(context.getCanvas());
+        var visualizers = VisualizerCollection.createCzmlStandardCollection(scene);
+        var expected = CzmlDefaults.createVisualizers(scene);
+
+        //Simple sanity check to make sure VisualizerCollection is using the correct defaults.
+        var collection = visualizers.getVisualizers();
+        for ( var i = 0; i < expected.length; i++) {
+            expect(collection[i].prototype).toEqual(expected[i].prototype);
+            expected[i].destroy();
+        }
+
+        visualizers = visualizers && visualizers.destroy();
+        scene = scene && scene.destroy();
+        destroyContext(context);
+    });
+
+    it('createCzmlStandardCollection throws without a scene', function() {
+        expect(function() {
+            return VisualizerCollection.createCzmlStandardCollection(undefined, new MockDynamicObjectCollection());
+        }).toThrow();
     });
 
     it('Constructor assigns expected paramters to properies', function() {

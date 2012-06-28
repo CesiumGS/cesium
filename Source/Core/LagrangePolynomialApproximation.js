@@ -3,7 +3,7 @@ define(function() {
     "use strict";
 
     /**
-     * Methods for performing Lagrange interpolation.
+     * Functions for performing Lagrange interpolation.
      *
      * @see LinearApproximation
      * @see HermitePolynomialApproximation
@@ -64,7 +64,10 @@ define(function() {
      *
      */
     LagrangePolynomialApproximation.interpolateOrderZero = function(x, xTable, yTable, yStride) {
-        var i, j, length = xTable.length, result = new Array(yStride);
+        var i;
+        var j;
+        var length = xTable.length;
+        var result = new Array(yStride);
 
         for (i = 0; i < yStride; i++) {
             result[i] = 0;

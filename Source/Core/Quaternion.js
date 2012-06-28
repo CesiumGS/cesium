@@ -11,9 +11,6 @@ define([
         Matrix3) {
     "use strict";
 
-    //Cached temp variable used by Quaternion.fromAxisAngle;
-    var fromAxisAngleCartesian = new Cartesian3();
-
     /**
      * DOC_TBA
      *
@@ -542,6 +539,9 @@ define([
     Quaternion.prototype.toString = function() {
         return '(' + this.x + ', ' + this.y + ', ' + this.z + ', ' + this.w + ')';
     };
+
+    //Cached temp variable used by Quaternion.fromAxisAngle.
+    var fromAxisAngleCartesian = new Cartesian3();
 
     /**
      * Creates a quaternion representing a rotation around an axis.

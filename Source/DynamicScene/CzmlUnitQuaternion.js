@@ -20,7 +20,7 @@ define([
      *
      * @exports CzmlUnitQuaternion
      *
-     * @see Cartesian3
+     * @see Quaternion
      * @see DynamicProperty
      * @see CzmlBoolean
      * @see CzmlCartesian2

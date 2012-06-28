@@ -1,8 +1,10 @@
 /*global define*/
 define([
+        '../Core/DeveloperError',
         '../Core/destroyObject',
         './CzmlDefaults'
        ], function(
+         DeveloperError,
          destroyObject,
          CzmlDefaults) {
     "use strict";
@@ -32,9 +34,14 @@ define([
      * @param {Scene} The scene where visualization will take place.
      * @param {DynamicObjectCollection} The objects to be visualized.
      *
+     * @exception {DeveloperError} scene is required.
+     *
      * @see CzmlDefaults#createVisualizers
      */
     VisualizerCollection.createCzmlStandardCollection = function(scene, dynamicObjectCollection) {
+        if (typeof scene === 'undefined') {
+            throw new DeveloperError('scene is required.');
+        }
         return new VisualizerCollection(CzmlDefaults.createVisualizers(scene), dynamicObjectCollection);
     };
 
