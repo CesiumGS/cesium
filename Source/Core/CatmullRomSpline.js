@@ -19,7 +19,7 @@ define([
      * except the first and last, are computed using the previous and next control points.
      * Catmull-Rom splines are in the class C<sup>1</sup>.
      *
-     * @name CatmullRomSpline
+     * @alias CatmullRomSpline
      * @constructor
      *
      * @param {Array} controlPoints The array of control points. Each element of the array should be an object with <code>point</code> and <code>time</code> properties.
@@ -44,7 +44,7 @@ define([
      * ];
      * var spline = new CatmullRomSpline(controlPoints);
      */
-    function CatmullRomSpline(controlPoints, firstTangent, lastTangent) {
+    var CatmullRomSpline = function(controlPoints, firstTangent, lastTangent) {
         if (!controlPoints || !(controlPoints instanceof Array) || controlPoints.length < 3) {
             throw new DeveloperError('controlPoints is required and must be an array of objects with point and time properties, with a length of at least 3.');
         }
@@ -80,7 +80,7 @@ define([
                            .add(controlPointn2)
                            .multiplyWithScalar(0.5);
         }
-    }
+    };
 
     CatmullRomSpline.catmullRomCoefficientMatrix = new Matrix4(
             -0.5,  1.0, -0.5,  0.0,

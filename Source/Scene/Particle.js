@@ -9,10 +9,10 @@ define([
 
     /**
      * DOC_TBA
-     * @name Particle
+     * @alias Particle
      * @constructor
      */
-    function Particle(template) {
+    var Particle = function(template) {
         template = template || {};
         template.position = template.position || Cartesian3.ZERO;
         template.velocity = template.velocity || Cartesian3.ZERO; // initial velocity
@@ -26,7 +26,7 @@ define([
         this.velocity = new Cartesian3(template.velocity.x, template.velocity.y, template.velocity.z);
         this.mass = template.mass;
         this.force = Cartesian3.ZERO; // force accumulator
-    }
+    };
 
     return Particle;
 });

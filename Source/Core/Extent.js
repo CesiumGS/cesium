@@ -24,7 +24,7 @@ define([
     /**
      * Two-dimensional coordinates given in latitude and longitude.
      *
-     * @name Extent
+     * @alias Extent
      * @constructor
      *
      * @param {Number} north The northernmost latitude in the range [-Pi/2, Pi/2].
@@ -34,7 +34,7 @@ define([
      *
      * @exception {DeveloperError} One of the parameters is out of range.
      */
-    function Extent(west, south, east, north) {
+    var Extent = function(west, south, east, north) {
         /**
          * The northernmost latitude.
          *
@@ -64,7 +64,7 @@ define([
         this.east = east;
 
         Extent.validate(this);
-    }
+    };
 
     /**
      * Returns a duplicate of this Extent.
