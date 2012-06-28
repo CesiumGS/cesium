@@ -120,13 +120,14 @@
                         'channels' : 'RGB'
                     },
                     {
-                        'id' : 'mixer',
+                        'id' : 'blender',
                         'type' : 'BlendMap',
                         'texture' : blendMapTexture,
                         'channels' : 'R'
                     }],
                     'components' : {
-                        'diffuse' : 'mix(reflectionMap, diffuseMap, mixer)',
+                        'diffuse' : 'mix(reflectionMap, diffuseMap, blender)',
+                        'alpha' : 'blender'
                     }
                 });
                 primitives.add(polygon);

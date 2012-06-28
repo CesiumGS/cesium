@@ -76,48 +76,6 @@ define([
      *
      * Example composite material in JSON:
      *
-     * Behavior: Mix a ReflectionMaterial and DiffuseMapMaterial with a BlendMap:
-     *
-     * 'compositeMaterial' : {
-     *     'materials' : [
-     *         {
-     *             'id' : 'reflection',
-     *             'type' : 'ReflectionMaterial',
-     *             'positiveX' : 'reflection1.png',
-     *             'negativeX' : 'reflection2.png',
-     *             'positiveY' : 'reflection3.png',
-     *             'negativeY' : 'reflection4.png',
-     *             'positiveZ' : 'reflection5.png',
-     *             'negativeZ' : 'reflection6.png',
-     *              'channels' : 'RGB'
-     *         },
-     *         {
-     *             'id' : 'diffuse',
-     *             'type' : 'DiffuseMapMaterial',
-     *             'image' : 'diffuse.png',
-     *             'channels' : 'RGB'
-     *         },
-     *         {
-     *             'id' : 'mixer',
-     *             'type' : 'BlendMaterial',
-     *             'image' : 'mixer.png',
-     *             'channels' : 'R'
-     *         },
-     *         {
-     *             'id' : 'alphamap',
-     *             'type' : 'AlphaMapMaterial',
-     *             'image' : 'diffuse.png',
-     *             'channels' : 'A'
-     *         }
-     *     ],
-     *
-     *     'components' : {
-     *         'diffuse' : 'mix(reflection, diffuse, mixer)'
-     *         'alpha' : 'alphamap'
-     *     }
-     * }
-     *
-     *
      * @name CompositeMaterial
      * @constructor
      */
