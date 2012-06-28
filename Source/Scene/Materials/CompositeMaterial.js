@@ -1,8 +1,6 @@
 /*global define*/
 define([
         '../../Core/DeveloperError',
-        '../../Core/Jobs',
-        '../../ThirdParty/Chain',
         './combineMaterials',
         './BlendMap',
         './AlphaMapMaterial',
@@ -30,8 +28,6 @@ define([
         './WoodMaterial'
     ], function(
         DeveloperError,
-        Jobs,
-        Chain,
         combineMaterials,
         BlendMap,
         AlphaMapMaterial,
@@ -69,12 +65,8 @@ define([
      * either be one of the traditional materials or a BlendMap. A BlendMap samples from a
      * texture and returns a float that can be used to alter material values.
      * 'components' is a sequence of material properties including 'diffuse', 'specular',
-     * 'normal', 'emission', and 'alpha'. Each component has a corresponding expression that
-     * combines different materials to reach the desired effect. These expressions can use
-     * any valid glsl math functions or operations. If a component is not specified, the value
-     * from agi_getDefaultMaterial is used.
-     *
-     * Example composite material in JSON:
+     * 'normal', 'emission', and 'alpha'. Each component's value is expressed with glsl syntax
+     * that can include material ids. If a component is not specified, agi_getDefaultMaterial is used.
      *
      * @name CompositeMaterial
      * @constructor
@@ -90,6 +82,7 @@ define([
         // to distinguish materials from each other.
         var i;
         var materialContainers = [];
+
         for (i = 0; i < materialTemplates.length; i++) {
             var materialTemplate = materialTemplates[i];
             var material = this._materialFactory._constructMaterial(materialTemplate.type, materialTemplate);
