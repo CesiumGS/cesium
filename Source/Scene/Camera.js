@@ -10,6 +10,7 @@ define([
         '../Core/Cartesian4',
         '../Core/Cartographic3',
         '../Core/Matrix4',
+        '../Core/Ray',
         './CameraControllerCollection',
         './PerspectiveFrustum'
     ], function(
@@ -23,6 +24,7 @@ define([
         Cartesian4,
         Cartographic3,
         Matrix4,
+        Ray,
         CameraControllerCollection,
         PerspectiveFrustum) {
     "use strict";
@@ -420,10 +422,7 @@ define([
         var yDir = this.getUpWC().multiplyWithScalar(y * near * tanPhi);
         var direction = nearCenter.add(xDir).add(yDir).subtract(position).normalize();
 
-        return {
-            position : position.clone(),
-            direction : direction
-        };
+        return new Ray(position.clone(), direction);
     };
 
     Camera.prototype._getPickRayOrthographic = function(windowPosition) {
@@ -439,10 +438,7 @@ define([
         position.x += x;
         position.y += y;
 
-        return {
-            position : position,
-            direction : this.getDirectionWC()
-        };
+        return new Ray(position, this.getDirectionWC());
     };
 
     /**
@@ -478,12 +474,12 @@ define([
     Camera.prototype.pickEllipsoid = function(windowPosition, ellipsoid) {
         ellipsoid = ellipsoid || Ellipsoid.WGS84;
         var ray = this._getPickRayPerspective(windowPosition);
-        var intersection = IntersectionTests.rayEllipsoid(ray.position, ray.direction, ellipsoid);
+        var intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid);
         if (!intersection) {
             return undefined;
         }
 
-        var iPt = ray.position.add(ray.direction.multiplyWithScalar(intersection.start));
+        var iPt = ray.getPoint(intersection.start);
         return iPt;
     };
 
@@ -498,7 +494,7 @@ define([
      */
     Camera.prototype.pickMap2D = function(windowPosition, projection) {
         var ray = this._getPickRayOrthographic(windowPosition);
-        var position = ray.position;
+        var position = ray.origin;
         position.z = 0.0;
         var cart = projection.unproject(position);
 
@@ -522,8 +518,8 @@ define([
     Camera.prototype.pickMapColumbusView = function(windowPosition, projection) {
         var ray = this._getPickRayPerspective(windowPosition);
 
-        var scalar = -ray.position.x / ray.direction.x;
-        var position = ray.position.add(ray.direction.multiplyWithScalar(scalar));
+        var scalar = -ray.origin.x / ray.direction.x;
+        var position = ray.getPoint(scalar);
 
         var cart = projection.unproject(new Cartesian3(position.y, position.z, 0.0));
 

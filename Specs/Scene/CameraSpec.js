@@ -150,7 +150,7 @@ defineSuite([
         var ray = camera.getPickRay(windowCoord);
 
         var expectedDirection = new Cartesian3(1.0, 1.0, -1.0).normalize();
-        expect(ray.position.equals(camera.position)).toEqual(true);
+        expect(ray.origin.equals(camera.position)).toEqual(true);
         expect(ray.direction.equalsEpsilon(expectedDirection, CesiumMath.EPSILON15)).toEqual(true);
     });
 
@@ -169,7 +169,7 @@ defineSuite([
 
         var cameraPosition = camera.position;
         var expectedPosition = new Cartesian3(cameraPosition.x + 2.0, cameraPosition.y + 2, cameraPosition.z);
-        expect(ray.position.equalsEpsilon(expectedPosition, CesiumMath.EPSILON14)).toEqual(true);
+        expect(ray.origin.equalsEpsilon(expectedPosition, CesiumMath.EPSILON14)).toEqual(true);
         expect(ray.direction.equals(camera.direction)).toEqual(true);
     });
 
