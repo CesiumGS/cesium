@@ -64,7 +64,7 @@ define([
 
         var i;
         var thisVisualizers = this._visualizers;
-        if (destroyOldVisualizers === true) {
+        if (destroyOldVisualizers) {
             for (i = thisVisualizers.length - 1; i > -1; i--) {
                 var visualizer = thisVisualizers[i];
                 if (visualizers.indexOf(visualizer) === -1) {
@@ -162,7 +162,7 @@ define([
     VisualizerCollection.prototype.destroy = function(destroyVisualizers) {
         destroyVisualizers = (typeof destroyVisualizers !== 'undefined') ? destroyVisualizers : true;
         this.removeAllPrimitives();
-        if (destroyVisualizers === true) {
+        if (destroyVisualizers) {
             var visualizers = this._visualizers;
             for ( var i = visualizers.length - 1; i > -1; i--) {
                 visualizers[i].destroy();

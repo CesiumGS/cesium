@@ -31,7 +31,7 @@ define([
     //allow the user to pass a default valueType if they want to make sure the data
     //being processed is only the data of the expected type.
 
-    //Make CZML interval types to their implementation.
+    //Map CZML interval types to their implementation.
     var interpolators = {
             HERMITE : HermitePolynomialApproximation,
             LAGRANGE : LagrangePolynomialApproximation,
