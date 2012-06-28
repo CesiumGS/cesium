@@ -102,7 +102,7 @@ define([
      * @see CompositeDynamicObjectCollection#setCollections
      */
     CompositeDynamicObjectCollection.prototype.getCollections = function() {
-        return this._collections.slice();
+        return this._collections.slice(0);
     };
 
     /**

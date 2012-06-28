@@ -85,7 +85,7 @@ define([
             index : (typeof attribute.index === 'undefined') ? index : attribute.index,
             enabled : (typeof attribute.enabled === 'undefined') ? true : attribute.enabled,
             vertexBuffer : attribute.vertexBuffer,
-            value : attribute.value ? attribute.value.slice() : undefined,
+            value : attribute.value ? attribute.value.slice(0) : undefined,
             componentsPerAttribute : componentsPerAttribute,
             componentDatatype : attribute.componentDatatype || ComponentDatatype.FLOAT,
             normalize : attribute.normalize || false,

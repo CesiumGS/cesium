@@ -50,12 +50,7 @@ define([
      * @returns {Array} the array of visualizers in the collection.
      */
     VisualizerCollection.prototype.getVisualizers = function() {
-        var visualizers = this._visualizers;
-        var result = [];
-        for ( var i = visualizers.length - 1; i > -1; i--) {
-            result.push(visualizers[i]);
-        }
-        return result;
+        return this._visualizers.slice(0);
     };
 
     /**
