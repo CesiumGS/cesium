@@ -53,6 +53,9 @@ define([
         this._rightMouseButtonDown = false;
         this._rightPressTime = undefined;
         this._rightReleaseTime = undefined;
+        this._shiftDown = false;
+        this._ctrlDown = false;
+        this._altDown = false;
         this._seenAnyTouchEvents = false;
         this._lastMouseX = 0;
         this._lastMouseY = 0;
@@ -215,6 +218,27 @@ define([
     };
 
     /**
+     * Returns <code>true</code> if the given modifier is pressed and <code>false</code> otherwise.
+     *
+     * @memberof EventHandler
+     *
+     * @param {EventModifier} modifier The event modifier.
+     *
+     * @returns {Boolean} <code>true</code> if the given modifier is pressed and <code>false</code> otherwise.
+     */
+    EventHandler.prototype.isModifierDown = function(modifier) {
+        switch (modifier) {
+        case EventModifier.SHIFT:
+            return this._shiftDown;
+        case EventModifier.CTRL:
+            return this._ctrlDown;
+        case EventModifier.ALT:
+            return this._altDown;
+        }
+        return false;
+    };
+
+    /**
      * Set a function to be executed on a mouse event.
      *
      * @memberof EventHandler
@@ -281,7 +305,7 @@ define([
             return mouseEvents[type.name];
         }
 
-        return null;
+        return undefined;
     };
 
     /**
@@ -324,7 +348,21 @@ define([
             return EventModifier.ALT;
         }
 
-        return null;
+        return undefined;
+    };
+
+    EventHandler.prototype._setModifierDown = function(modifier) {
+        switch (modifier) {
+        case EventModifier.SHIFT:
+            this._shiftDown = true;
+            break;
+        case EventModifier.CTRL:
+            this._ctrlDown = true;
+            break;
+        case EventModifier.ALT:
+            this._altDown = true;
+            break;
+        }
     };
 
     EventHandler.prototype._handleMouseDown = function(event) {
@@ -337,6 +375,8 @@ define([
         }
 
         var modifier = this._getModifier(event);
+        this._setModifierDown(modifier);
+
         var action;
 
         // IE_TODO:  On some versions of IE, the left-button is 1, and the right-button is 4.
@@ -410,6 +450,10 @@ define([
                 position : new Cartesian2(pos.x, pos.y)
             });
         }
+
+        this._shiftDown = false;
+        this._ctrlDown = false;
+        this._altDown = false;
     };
 
     EventHandler.prototype._handleMouseMove = function(event) {

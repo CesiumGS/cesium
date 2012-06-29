@@ -145,6 +145,7 @@ defineSuite([
             clientY : 1
         });
         expect(actualCoords).toEqual(expectedCoords);
+        expect(handler.isRightMouseButtonDown()).toEqual(true);
 
         expect(handler.getMouseAction(MouseEventType.RIGHT_DOWN) === mouseDown).toEqual(true);
 
@@ -173,6 +174,7 @@ defineSuite([
             clientY : 1
         });
         expect(actualCoords).toEqual(expectedCoords);
+        expect(handler.isRightMouseButtonDown()).toEqual(false);
 
         expect(handler.getMouseAction(MouseEventType.RIGHT_UP) === mouseDown).toEqual(true);
 
@@ -184,6 +186,7 @@ defineSuite([
         });
 
         expect(actualCoords).toEqual(expectedCoords);
+        expect(handler.isRightMouseButtonDown()).toEqual(true);
     });
 
     it('mouse right click', function() {
@@ -239,6 +242,7 @@ defineSuite([
             clientY : 1
         });
         expect(actualCoords).toEqual(expectedCoords);
+        expect(handler.isLeftMouseButtonDown()).toEqual(true);
 
         expect(handler.getMouseAction(MouseEventType.LEFT_DOWN) === mouseDown).toEqual(true);
 
@@ -267,6 +271,7 @@ defineSuite([
             clientY : 1
         });
         expect(actualCoords).toEqual(expectedCoords);
+        expect(handler.isLeftMouseButtonDown()).toEqual(false);
 
         expect(handler.getMouseAction(MouseEventType.LEFT_UP) === mouseDown).toEqual(true);
 
@@ -278,6 +283,7 @@ defineSuite([
         });
 
         expect(actualCoords).toEqual(expectedCoords);
+        expect(handler.isLeftMouseButtonDown()).toEqual(true);
     });
 
     it('mouse left click', function() {
@@ -333,6 +339,7 @@ defineSuite([
             clientY : 1
         });
         expect(actualCoords).toEqual(expectedCoords);
+        expect(handler.isMiddleMouseButtonDown()).toEqual(true);
 
         expect(handler.getMouseAction(MouseEventType.MIDDLE_DOWN) === mouseDown).toEqual(true);
 
@@ -361,6 +368,7 @@ defineSuite([
             clientY : 1
         });
         expect(actualCoords).toEqual(expectedCoords);
+        expect(handler.isMiddleMouseButtonDown()).toEqual(false);
 
         expect(handler.getMouseAction(MouseEventType.MIDDLE_UP) === mouseDown).toEqual(true);
 
@@ -372,6 +380,7 @@ defineSuite([
         });
 
         expect(actualCoords).toEqual(expectedCoords);
+        expect(handler.isMiddleMouseButtonDown()).toEqual(true);
     });
 
     it('mouse middle click', function() {
@@ -581,6 +590,8 @@ defineSuite([
             shiftKey : true
         });
         expect(actualCoords).toEqual(expectedCoords);
+        expect(handler.isRightMouseButtonDown()).toEqual(true);
+        expect(handler.isModifierDown(EventModifier.SHIFT)).toEqual(true);
 
         expect(handler.getMouseAction(MouseEventType.RIGHT_DOWN, EventModifier.SHIFT) === mouseDown).toEqual(true);
 
@@ -611,6 +622,8 @@ defineSuite([
             shiftKey : true
         });
         expect(actualCoords).toEqual(expectedCoords);
+        expect(handler.isRightMouseButtonDown()).toEqual(false);
+        expect(handler.isModifierDown(EventModifier.SHIFT)).toEqual(false);
 
         expect(handler.getMouseAction(MouseEventType.RIGHT_UP, EventModifier.SHIFT) === mouseDown).toEqual(true);
 
@@ -623,6 +636,8 @@ defineSuite([
         });
 
         expect(actualCoords).toEqual(expectedCoords);
+        expect(handler.isRightMouseButtonDown()).toEqual(true);
+        expect(handler.isModifierDown(EventModifier.SHIFT)).toEqual(true);
     });
 
     it('modified mouse right click', function() {
@@ -683,6 +698,8 @@ defineSuite([
             altKey : true
         });
         expect(actualCoords).toEqual(expectedCoords);
+        expect(handler.isLeftMouseButtonDown()).toEqual(true);
+        expect(handler.isModifierDown(EventModifier.ALT)).toEqual(true);
 
         expect(handler.getMouseAction(MouseEventType.LEFT_DOWN, EventModifier.ALT) === mouseDown).toEqual(true);
 
@@ -713,6 +730,8 @@ defineSuite([
             altKey : true
         });
         expect(actualCoords).toEqual(expectedCoords);
+        expect(handler.isLeftMouseButtonDown()).toEqual(false);
+        expect(handler.isModifierDown(EventModifier.ALT)).toEqual(false);
 
         expect(handler.getMouseAction(MouseEventType.LEFT_UP, EventModifier.ALT) === mouseDown).toEqual(true);
 
@@ -725,6 +744,8 @@ defineSuite([
         });
 
         expect(actualCoords).toEqual(expectedCoords);
+        expect(handler.isLeftMouseButtonDown()).toEqual(true);
+        expect(handler.isModifierDown(EventModifier.ALT)).toEqual(true);
     });
 
     it('modified mouse left click', function() {
@@ -785,6 +806,8 @@ defineSuite([
             ctrlKey : true
         });
         expect(actualCoords).toEqual(expectedCoords);
+        expect(handler.isMiddleMouseButtonDown()).toEqual(true);
+        expect(handler.isModifierDown(EventModifier.CTRL)).toEqual(true);
 
         expect(handler.getMouseAction(MouseEventType.MIDDLE_DOWN, EventModifier.CTRL) === mouseDown).toEqual(true);
 
@@ -815,6 +838,8 @@ defineSuite([
             ctrlKey : true
         });
         expect(actualCoords).toEqual(expectedCoords);
+        expect(handler.isMiddleMouseButtonDown()).toEqual(false);
+        expect(handler.isModifierDown(EventModifier.CTRL)).toEqual(false);
 
         expect(handler.getMouseAction(MouseEventType.MIDDLE_UP, EventModifier.CTRL) === mouseDown).toEqual(true);
 
@@ -827,6 +852,8 @@ defineSuite([
         });
 
         expect(actualCoords).toEqual(expectedCoords);
+        expect(handler.isMiddleMouseButtonDown()).toEqual(true);
+        expect(handler.isModifierDown(EventModifier.CTRL)).toEqual(true);
     });
 
     it('modified mouse middle click', function() {
@@ -959,6 +986,50 @@ defineSuite([
         });
 
         expect(actualCoords).toEqual(expectedCoords);
+    });
+
+    it('get left press time', function() {
+        handler.setMouseAction(function(event) {}, MouseEventType.LEFT_DOWN);
+        element.fireEvents('mousedown', {
+            button : 0,
+            clientX : 1,
+            clientY : 1
+        });
+
+        expect(handler.getLeftPressTime()).toBeDefined();
+    });
+
+    it('get left release time', function() {
+        handler.setMouseAction(function(event) {}, MouseEventType.LEFT_DOWN);
+        element.fireEvents('mouseup', {
+            button : 0,
+            clientX : 1,
+            clientY : 1
+        });
+
+        expect(handler.getLeftReleaseTime()).toBeDefined();
+    });
+
+    it('get right press time', function() {
+        handler.setMouseAction(function(event) {}, MouseEventType.RIGHT_DOWN);
+        element.fireEvents('mousedown', {
+            button : 2,
+            clientX : 1,
+            clientY : 1
+        });
+
+        expect(handler.getRightPressTime()).toBeDefined();
+    });
+
+    it('get right release time', function() {
+        handler.setMouseAction(function(event) {}, MouseEventType.RIGHT_DOWN);
+        element.fireEvents('mouseup', {
+            button : 2,
+            clientX : 1,
+            clientY : 1
+        });
+
+        expect(handler.getRightReleaseTime()).toBeDefined();
     });
 
     it('get middle press time', function() {
