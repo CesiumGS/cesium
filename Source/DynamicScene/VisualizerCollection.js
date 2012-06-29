@@ -1,8 +1,10 @@
 /*global define*/
 define([
+        '../Core/DeveloperError',
         '../Core/destroyObject',
         './CzmlDefaults'
        ], function(
+         DeveloperError,
          destroyObject,
          CzmlDefaults) {
     "use strict";
@@ -10,7 +12,7 @@ define([
     /**
      * A collection of visualizers which makes it easy to manage and
      * update them in unison.
-     *
+     * @alias VisualizerCollection
      * @constructor
      *
      * @param {Object} The array of visualizers to use.
@@ -18,11 +20,11 @@ define([
      *
      * @see CzmlDefaults#createVisualizers
      */
-    function VisualizerCollection(visualizers, dynamicObjectCollection) {
+    var VisualizerCollection = function(visualizers, dynamicObjectCollection) {
         this._visualizers = visualizers || [];
         this._dynamicObjectCollection = undefined;
         this.setDynamicObjectCollection(dynamicObjectCollection);
-    }
+    };
 
     /**
      * Creates a new VisualizerCollection which includes all standard visualizers.
@@ -32,9 +34,14 @@ define([
      * @param {Scene} The scene where visualization will take place.
      * @param {DynamicObjectCollection} The objects to be visualized.
      *
+     * @exception {DeveloperError} scene is required.
+     *
      * @see CzmlDefaults#createVisualizers
      */
     VisualizerCollection.createCzmlStandardCollection = function(scene, dynamicObjectCollection) {
+        if (typeof scene === 'undefined') {
+            throw new DeveloperError('scene is required.');
+        }
         return new VisualizerCollection(CzmlDefaults.createVisualizers(scene), dynamicObjectCollection);
     };
 
@@ -43,12 +50,7 @@ define([
      * @returns {Array} the array of visualizers in the collection.
      */
     VisualizerCollection.prototype.getVisualizers = function() {
-        var visualizers = this._visualizers;
-        var result = [];
-        for ( var i = visualizers.length - 1; i > -1; i--) {
-            result.push(visualizers[i]);
-        }
-        return result;
+        return this._visualizers.slice(0);
     };
 
     /**
@@ -62,7 +64,7 @@ define([
 
         var i;
         var thisVisualizers = this._visualizers;
-        if (destroyOldVisualizers === true) {
+        if (destroyOldVisualizers) {
             for (i = thisVisualizers.length - 1; i > -1; i--) {
                 var visualizer = thisVisualizers[i];
                 if (visualizers.indexOf(visualizer) === -1) {
@@ -160,7 +162,7 @@ define([
     VisualizerCollection.prototype.destroy = function(destroyVisualizers) {
         destroyVisualizers = (typeof destroyVisualizers !== 'undefined') ? destroyVisualizers : true;
         this.removeAllPrimitives();
-        if (destroyVisualizers === true) {
+        if (destroyVisualizers) {
             var visualizers = this._visualizers;
             for ( var i = visualizers.length - 1; i > -1; i--) {
                 visualizers[i].destroy();

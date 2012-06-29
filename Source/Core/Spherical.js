@@ -5,18 +5,41 @@ define(function() {
     /**
      * A set of curvilinear 3-dimensional coordinates.
      *
-     * @name Spherical
+     * @alias Spherical
      * @constructor
      *
      * @param {Number} [clock=0.0] The angular coordinate lying in the xy-plane measured from the positive x-axis and toward the positive y-axis.
      * @param {Number} [cone=0.0] The angular coordinate measured from the positive z-axis and toward the negative z-axis.
      * @param {Number} [magnitude=1.0] The linear coordinate measured from the origin.
      */
-    function Spherical(clock, cone, magnitude) {
+    var Spherical = function(clock, cone, magnitude) {
         this.clock = typeof clock === 'undefined' ? 0.0 : clock;
         this.cone = typeof cone === 'undefined' ? 0.0 : cone;
         this.magnitude = typeof magnitude === 'undefined' ? 1.0 : magnitude;
-    }
+    };
+
+    /**
+     * Converts the provided Cartesian3 into Spherical coordinates.
+     * @memberof Spherical
+     *
+     * @param {Cartesian3} cartesian3 The Cartesian3 to be converted to Spherical.
+     * @param {Spherical} [spherical] The object in which the result will be stored, if undefined a new instance will be created.
+     *
+     * @returns The modified result parameter, or a new instance if none was provided.
+     */
+    Spherical.fromCartesian3 = function(cartesian3, result) {
+        if (typeof result === 'undefined') {
+            result = new Spherical();
+        }
+        var x = cartesian3.x;
+        var y = cartesian3.y;
+        var z = cartesian3.z;
+        var radialSquared = x * x + y * y;
+        result.clock = Math.atan2(y, x);
+        result.cone = Math.atan2(Math.sqrt(radialSquared), z);
+        result.magnitude = Math.sqrt(radialSquared + z * z);
+        return result;
+    };
 
     /**
      * Creates a duplicate of a Spherical.

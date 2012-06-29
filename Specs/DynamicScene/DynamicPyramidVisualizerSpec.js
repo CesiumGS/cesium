@@ -1,7 +1,7 @@
 /*global defineSuite*/
 defineSuite([
              'DynamicScene/DynamicPyramidVisualizer',
-             'DynamicScene/DynamicConeVisualizer',
+             'Core/Matrix4',
              '../Specs/createContext',
              '../Specs/destroyContext',
              '../Specs/MockProperty',
@@ -17,7 +17,7 @@ defineSuite([
              'Scene/Scene',
             ], function(
               DynamicPyramidVisualizer,
-              DynamicConeVisualizer,
+              Matrix4,
               createContext,
               destroyContext,
               MockProperty,
@@ -143,7 +143,7 @@ defineSuite([
         expect(p.radius).toEqual(testObject.pyramid.radius.getValue(time));
         expect(p.show).toEqual(testObject.pyramid.show.getValue(time));
         expect(p.material).toEqual(testObject.pyramid.material.getValue(time));
-        expect(p.modelMatrix).toEqual(DynamicConeVisualizer._computeModelMatrix(testObject.position.getValueCartesian(time), testObject.orientation.getValue(time)));
+        expect(p.modelMatrix).toEqual(new Matrix4(testObject.orientation.getValue(time).conjugate().toRotationMatrix(), testObject.position.getValueCartesian(time)));
 
         pyramid.show.value = false;
         visualizer.update(time);

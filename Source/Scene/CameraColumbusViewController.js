@@ -33,10 +33,10 @@ define([
 
     /**
      * DOC_TBD
-     * @name CameraColumbusViewController
+     * @alias CameraColumbusViewController
      * @constructor
      */
-    function CameraColumbusViewController(canvas, camera, ellipsoid) {
+    var CameraColumbusViewController = function(canvas, camera, ellipsoid) {
         this._canvas = canvas;
         this._camera = camera;
         this._ellipsoid = ellipsoid || Ellipsoid.WGS84;
@@ -71,7 +71,7 @@ define([
 
         this._mapWidth = this._ellipsoid.getRadii().x * Math.PI;
         this._mapHeight = this._ellipsoid.getRadii().y * CesiumMath.PI_OVER_TWO;
-    }
+    };
 
     /**
      * @private

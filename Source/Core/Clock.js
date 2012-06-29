@@ -15,21 +15,19 @@ define([
 
     /**
      * A simple clock for keeping track of simulated time.
-     *
-     * @name Clock
+     * @alias Clock
+     * @constructor
      *
      * @param {Object} [template] The template object containing the properties to be set on the clock.
-     *
      * @exception {DeveloperError} startTime must come before stopTime.
-     *
-     * @constructor
      *
      * @see ClockStep
      * @see ClockRange
+     * @see JulianDate
      *
      * @example
-     * //Create a clock that loops on Christmas day 2012.
-     * //currentTime will default to startTime.
+     * //Create a clock that loops on Christmas day 2012 and runs
+     * //in real-time.  currentTime will default to startTime.
      * var clock = new Clock({
      *    startTime : JulianDate.fromIso8601("12-25-2012");
      *    stopTime : JulianDate.fromIso8601("12-26-2012");
@@ -93,34 +91,40 @@ define([
 
         /**
          * The start time of the clock.
+         * @type JulianDate
          */
         this.startTime = TimeStandard.convertUtcToTai(startTime);
 
         /**
          * The stop time of the clock.
+         * @type JulianDate
          */
         this.stopTime = TimeStandard.convertUtcToTai(stopTime);
 
         /**
          * The current time.
+         * @type JulianDate
          */
-        this.currentTime = currentTime;
+        this.currentTime = TimeStandard.convertUtcToTai(currentTime);
 
         /**
-         * Determines how fast the clock should animate, negative values allow for animating backwards.
-         * For ClockStep.TICK_DEPENDENT this is the number of seconds for each tick.
-         * For ClockStep.SYSTEM_CLOCK_DEPENDENT this value is multiplied by the elapsed system time
-         * between each tick.
+         * Determines how much time advances when tick is called, negative values allow for advancing backwards.
+         * If <code>clockStep</code> is set to ClockStep.TICK_DEPENDENT this is the number of seconds to advance.
+         * If <code>clockStep</code> is set to ClockStep.SYSTEM_CLOCK_DEPENDENT this value is multiplied by the
+         * elapsed system time since the last call to tick.
+         * @type Number
          */
         this.multiplier = multiplier;
 
         /**
-         *Determines if clock time is frame dependent or system clock dependent.
+         * Determines if calls to <code>tick</code> are frame dependent or system clock dependent.
+         * @type ClockStep
          */
         this.clockStep = clockStep;
 
         /**
-         * Determines if and how the clock should be constrained to the start and stop times.
+         * Determines how tick should behave when <code>startTime</code> or <code>stopTime</code> is reached.
+         * @type ClockRange
          */
         this.clockRange = clockRange;
 
@@ -129,21 +133,21 @@ define([
 
     /**
      * Advances the clock from the currentTime based on the current configuration options.
+     * @memberof Clock
      *
      * @param {Number} [secondsToTick] optional parameter to force the clock to tick the provided number of seconds,
-     * regardless of the value of clockStep.
-     *
-     * @returns {JulianDate} The new value of Clock.currentTime
+     * regardless of the value of <code>clockStep</code> and <code>multiplier</code>.
+     * @returns {JulianDate} The new value of the <code>currentTime<code> property.
      */
     Clock.prototype.tick = function(secondsToTick) {
         return this._tick(secondsToTick, this.multiplier);
     };
 
     /**
-     * Advances the clock in the opposite direction of the current multiplier.
-     * If multiplier is positive and time is moving forward, this call will
-     * move backwards one tick.  If multiplier is negative and time is moving
-     * backwards, this call will move the clock forward one tick.
+     * Advances the clock in the opposite direction of the current <code>multiplier<code>.
+     * If <code>multiplier<code> is positive this will advance the clock backwards one tick.
+     * If <code>multiplier<code> is negative this will advance the clock forward one tick.
+     * @memberof Clock
      *
      * @returns {JulianDate} The new value of Clock.currentTime
      */

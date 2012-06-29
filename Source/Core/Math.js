@@ -1,11 +1,13 @@
 /*global define*/
 define([
+        './DeveloperError',
         './Cartesian2',
         './Cartesian3',
         './Cartographic2',
         './Cartographic3'
     ],
     function(
+        DeveloperError,
         Cartesian2,
         Cartesian3,
         Cartographic2,
@@ -13,8 +15,8 @@ define([
     "use strict";
 
     /**
-     * @exports CesiumMath
      * Math functions.
+     * @exports CesiumMath
      */
     var CesiumMath = {};
 
@@ -504,16 +506,19 @@ define([
      * //Compute 7!, which is equal to 5040
      * var computedFactorial = CesiumMath.factorial(7);
      *
+     * @exception {DeveloperError} number greater than or equal to 0 is required.
      */
     CesiumMath.factorial = function(n) {
+        if (typeof n !== 'number' || n < 0) {
+            throw new DeveloperError('number greater than or equal to 0 is required.');
+        }
+
         var length = factorials.length;
         if (n >= length) {
             var sum = factorials[length - 1];
             for ( var i = length; i <= n; i++) {
                 factorials.push(sum * i);
             }
-        } else if (n < 0) {
-            return undefined;
         }
         return factorials[n];
     };

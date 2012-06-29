@@ -41,6 +41,8 @@ define([
     /**
      * A DynamicObject visualizer which maps the DynamicBillboard instance
      * in DynamicObject.billboard to a Billboard primitive.
+     * @alias DynamicBillboardVisualizer
+     * @constructor
      *
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.
@@ -62,7 +64,7 @@ define([
      * @see DynamicPyramidVisualizer
      *
      */
-    function DynamicBillboardVisualizer(scene, dynamicObjectCollection) {
+    var DynamicBillboardVisualizer = function(scene, dynamicObjectCollection) {
         if (typeof scene === 'undefined') {
             throw new DeveloperError('scene is required.');
         }
@@ -77,7 +79,7 @@ define([
         billboardCollection.setTextureAtlas(atlas);
         scene.getPrimitives().add(billboardCollection);
         this.setDynamicObjectCollection(dynamicObjectCollection);
-    }
+    };
 
     /**
      * Returns the scene being used by this visualizer.

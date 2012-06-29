@@ -31,7 +31,7 @@ define([
     //allow the user to pass a default valueType if they want to make sure the data
     //being processed is only the data of the expected type.
 
-    //Make CZML interval types to their implementation.
+    //Map CZML interval types to their implementation.
     var interpolators = {
             HERMITE : HermitePolynomialApproximation,
             LAGRANGE : LagrangePolynomialApproximation,
@@ -75,8 +75,8 @@ define([
      * which as the name implies, handles materials.
      * </p>
      *
-     * @name DynamicProperty
-     * @internalconstructor
+     * @alias DynamicProperty
+     * @constructor
      *
      * @param {Object} valueType A CZML type object which contains the methods needed to interpret and interpolate CZML data of the same type.
      *
@@ -100,7 +100,7 @@ define([
      * @see DynamicDirectionsProperty
      * @see DynamicVertexPositionsProperty
      */
-    function DynamicProperty(valueType) {
+    var DynamicProperty = function(valueType) {
         if (typeof valueType === 'undefined') {
             throw new DeveloperError('valueType is required.');
         }
@@ -108,7 +108,7 @@ define([
         this._intervals = new TimeIntervalCollection();
         this._cachedDate = undefined;
         this._cachedInterval = undefined;
-    }
+    };
 
     /**
      * Processes the provided CZML interval or intervals into this property.

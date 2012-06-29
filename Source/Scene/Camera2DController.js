@@ -37,7 +37,7 @@ define([
      * A type that defines camera behavior: movement of the position in the direction
      * of the camera's axes and manipulating a camera's orthographic frustum for a zooming effect.
      *
-     * @name Camera2DController
+     * @alias Camera2DController
      *
      * @param {HTMLCanvasElement} canvas An HTML canvas element used for its dimensions
      * and for listening on user events.
@@ -46,7 +46,7 @@ define([
      *
      * @internalConstructor
      */
-    function Camera2DController(canvas, camera, ellipsoid) {
+    var Camera2DController = function(canvas, camera, ellipsoid) {
         ellipsoid = ellipsoid || Ellipsoid.WGS84;
 
         this._canvas = canvas;
@@ -103,7 +103,7 @@ define([
 
         this._maxZoomFactor = 2.5;
         this._maxTranslateFactor = 1.5;
-    }
+    };
 
     /**
      * DOC_TBA

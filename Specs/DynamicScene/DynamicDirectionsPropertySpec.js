@@ -5,16 +5,18 @@ defineSuite([
          'DynamicScene/processCzml',
          'DynamicScene/CzmlDefaults',
          'Core/JulianDate',
-         'Core/Math',
-         'Core/CoordinateConversions'
+         'Core/Cartesian3',
+         'Core/Spherical',
+         'Core/Math'
      ], function(
           DynamicDirectionsProperty,
           DynamicObjectCollection,
           processCzml,
           CzmlDefaults,
           JulianDate,
-          CesiumMath,
-          CoordinateConversions) {
+          Cartesian3,
+          Spherical,
+          CesiumMath) {
     "use strict";
     /*global it,expect*/
 
@@ -63,7 +65,7 @@ defineSuite([
 
         var expected = property.getValueSpherical(new JulianDate());
         for ( var i = expected.length - 1; i > -1; i--) {
-            expected[i] = CoordinateConversions.sphericalToCartesian3(expected[i]);
+            expected[i] = Cartesian3.fromSpherical(expected[i]);
         }
 
         expect(result.length).toEqual(3);
@@ -87,7 +89,7 @@ defineSuite([
 
         var expected = property.getValueCartesian(new JulianDate());
         for ( var i = expected.length - 1; i > -1; i--) {
-            expected[i] = CoordinateConversions.cartesian3ToSpherical(expected[i]);
+            expected[i] = Spherical.fromCartesian3(expected[i]);
         }
 
         expect(result.length).toEqual(3);

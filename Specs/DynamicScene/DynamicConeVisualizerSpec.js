@@ -12,6 +12,7 @@ defineSuite([
              'Core/Quaternion',
              'Core/Cartesian3',
              'Core/Color',
+             'Core/Matrix4',
              'Scene/Scene',
             ], function(
               DynamicConeVisualizer,
@@ -26,6 +27,7 @@ defineSuite([
               Quaternion,
               Cartesian3,
               Color,
+              Matrix4,
               Scene) {
     "use strict";
     /*global it,expect,beforeEach,afterEach,waitsFor,runs*/
@@ -154,7 +156,7 @@ defineSuite([
         expect(c.innerMaterial).toEqual(testObject.cone.innerMaterial.getValue(time));
         expect(c.outerMaterial).toEqual(testObject.cone.outerMaterial.getValue(time));
         expect(c.silhouetteMaterial).toEqual(testObject.cone.silhouetteMaterial.getValue(time));
-        expect(c.modelMatrix).toEqual(DynamicConeVisualizer._computeModelMatrix(testObject.position.getValueCartesian(time), testObject.orientation.getValue(time)));
+        expect(c.modelMatrix).toEqual(new Matrix4(testObject.orientation.getValue(time).conjugate().toRotationMatrix(), testObject.position.getValueCartesian(time)));
 
         cone.show.value = false;
         visualizer.update(time);

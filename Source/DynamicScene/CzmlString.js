@@ -30,7 +30,7 @@ define(function() {
          */
         unwrapInterval : function(czmlInterval) {
             var result = czmlInterval.string;
-            return typeof result === 'undefined' ? String(czmlInterval) : String(result);
+            return typeof result === 'undefined' ? czmlInterval : result;
         },
 
         /**

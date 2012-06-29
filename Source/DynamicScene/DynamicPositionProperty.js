@@ -36,8 +36,8 @@ define([
      * Instances of this type are exposed via DynamicObject and it's sub-objects
      * and are responsible for interpreting and interpolating the data for visualization.
      *
-     * @name DynamicPositionProperty
-     * @internalconstructor
+     * @alias DynamicPositionProperty
+     * @constructor
      *
      * @see DynamicObject
      * @see DynamicProperty
@@ -46,12 +46,12 @@ define([
      * @see DynamicDirectionsProperty
      * @see DynamicVertexPositionsProperty
      */
-    function DynamicPositionProperty() {
+    var DynamicPositionProperty = function() {
         this._dynamicProperties = [];
         this._propertyIntervals = new TimeIntervalCollection();
         this._cachedTime = undefined;
         this._cachedInterval = undefined;
-    }
+    };
 
     /**
      * Processes the provided CZML interval or intervals into this property.

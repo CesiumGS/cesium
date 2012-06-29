@@ -11,13 +11,10 @@ define([
         Matrix3) {
     "use strict";
 
-    //Cached temp variable used by Quaternion.fromAxisAngle;
-    var fromAxisAngleCartesian = new Cartesian3();
-
     /**
      * DOC_TBA
      *
-     * @name Quaternion
+     * @alias Quaternion
      *
      * @constructor
      *
@@ -28,7 +25,7 @@ define([
      *
      * @see Matrix3
      */
-    function Quaternion(x, y, z, w) {
+    var Quaternion = function(x, y, z, w) {
 
         /**
          * The x coordinate.
@@ -73,7 +70,7 @@ define([
          * @see Quaternion.z
          */
         this.w = (typeof w !== 'undefined') ? w : 0.0;
-    }
+    };
 
     /**
      * Returns a duplicate of a Quaternion.
@@ -543,6 +540,9 @@ define([
         return '(' + this.x + ', ' + this.y + ', ' + this.z + ', ' + this.w + ')';
     };
 
+    //Cached temp variable used by Quaternion.fromAxisAngle.
+    var fromAxisAngleCartesian = new Cartesian3();
+
     /**
      * Creates a quaternion representing a rotation around an axis.
      *
@@ -564,10 +564,10 @@ define([
         }
         var halfAngle = angle / 2.0;
         var s = Math.sin(halfAngle);
-        var nAxis = axis.magnitude() === 1.0 ? axis : axis.normalize(fromAxisAngleCartesian);
-        result.x = nAxis.x * s;
-        result.y = nAxis.y * s;
-        result.z = nAxis.z * s;
+        axis.normalize(fromAxisAngleCartesian);
+        result.x = fromAxisAngleCartesian.x * s;
+        result.y = fromAxisAngleCartesian.y * s;
+        result.z = fromAxisAngleCartesian.z * s;
         result.w = Math.cos(halfAngle);
         return result;
     };

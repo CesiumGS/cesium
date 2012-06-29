@@ -35,6 +35,14 @@ html,body {
 	height: 24px;
 }
 
+.bingIcon {
+    background-image: url('../../Images/Bing_Logo_51x19_White.png');
+    background-repeat: no-repeat;
+    background-position:center; 
+    width: 51px;
+    height: 24px;
+}
+
 .animReverse {
 	background-position: -24px 0;
 }
@@ -64,18 +72,6 @@ html,body {
 }
 
 .cesiumLogo img {
-	border: none;
-}
-
-.agiLogo {
-	display: block;
-	position: absolute;
-	bottom: 64px;
-	left: 125px;
-	text-decoration: none;
-}
-
-.agiLogo img {
 	border: none;
 }
 

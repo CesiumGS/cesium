@@ -11,10 +11,12 @@ define([
 
     /**
      * A utility class for processing CZML color materials.
+     * @alias DynamicColorMaterial
+     * @constructor
      */
-    function DynamicColorMaterial() {
+    var DynamicColorMaterial = function() {
         this.color = undefined;
-    }
+    };
 
     /**
      * Returns true if the provided CZML interval contains color material data.

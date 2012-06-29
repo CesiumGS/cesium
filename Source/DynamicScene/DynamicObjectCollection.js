@@ -15,8 +15,10 @@ define([
 
     /**
      * A collection of DynamicObject instances.
+     * @alias DynamicObjectCollection
+     * @constructor
      */
-    function DynamicObjectCollection() {
+    var DynamicObjectCollection = function() {
         this._hash = {};
         this._array = [];
 
@@ -34,7 +36,7 @@ define([
          * An {@link Event} that is fired whenever DynamicObjects are removed from the collection.
          */
         this.objectsRemoved = new Event();
-    }
+    };
 
     /**
      * Computes the maximum availability of the DynamicObjects in the collection.

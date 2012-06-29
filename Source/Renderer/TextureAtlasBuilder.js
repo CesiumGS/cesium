@@ -21,18 +21,18 @@ define([
      * the same id is needed later, the existing index is returned, rather than
      * adding multiple copies of the same texture.
      *
-     * @name TextureAtlasBuilder
+     * @alias TextureAtlasBuilder
      * @constructor
      *
      * @see TextureAtlas
      */
-    function TextureAtlasBuilder(textureAtlas) {
+    var TextureAtlasBuilder  = function(textureAtlas) {
         if (typeof textureAtlas === 'undefined') {
             throw new DeveloperError('textureAtlas is required.');
         }
         this.textureAtlas = textureAtlas;
         this._idHash = {};
-    }
+    };
 
     /**
      * Retrieves the image from the specified url and adds it to the atlas.

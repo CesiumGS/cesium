@@ -74,9 +74,8 @@ define([
      * created and managed via loading CZML data into a DynamicObjectCollection.
      * Instances of this type are exposed via DynamicObject and it's sub-objects
      * and are responsible for interpreting and interpolating the data for visualization.
-     * </p>
      *
-     * @name DynamicDirectionsProperty
+     * @alias DynamicVertexPositionsProperty
      * @internalconstructor
      *
      * @see DynamicObject
@@ -86,9 +85,9 @@ define([
      * @see DynamicPositionProperty
      * @see DynamicDirectionsProperty
      */
-    function DynamicVertexPositionsProperty() {
+    var DynamicVertexPositionsProperty = function() {
         this._propertyIntervals = new TimeIntervalCollection();
-    }
+    };
 
     /**
      * Processes the provided CZML interval or intervals into this property.

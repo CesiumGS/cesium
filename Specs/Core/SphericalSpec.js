@@ -35,6 +35,21 @@ defineSuite([
         expect(v.magnitude).toEqual(3);
     });
 
+    var fortyFiveDegrees = Math.PI / 4.0;
+    var sixtyDegrees = Math.PI / 3.0;
+    var cartesian = new Cartesian3(1.0, Math.sqrt(3.0), -2.0);
+    var spherical = new Spherical(sixtyDegrees, fortyFiveDegrees + Math.PI / 2.0, Math.sqrt(8.0));
+
+    it('Can convert Cartesian3 to a new spherical instance', function() {
+        expect(spherical).toEqualEpsilon(Spherical.fromCartesian3(cartesian), CesiumMath.EPSILON15);
+    });
+
+    it('Can convert Cartesian3 to an existing spherical instance', function() {
+        var existing = new Spherical();
+        expect(spherical).toEqualEpsilon(Spherical.fromCartesian3(cartesian, existing), CesiumMath.EPSILON15);
+        expect(spherical).toEqualEpsilon(existing, CesiumMath.EPSILON15);
+    });
+
     it('Cloning with no result parameter returns a new instance.', function() {
         var v = new Spherical(1, 2, 3);
         var w = v.clone();

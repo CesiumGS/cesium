@@ -84,7 +84,7 @@ function(DeveloperError,
      * two UTC dates that are on opposite sides of a leap second will correctly take the leap second into
      * account.</p>
      *
-     * @name JulianDate
+     * @alias JulianDate
      * @constructor
      * @immutable
      *
@@ -107,7 +107,7 @@ function(DeveloperError,
      * var secondsOfDay = 21600;        // 06:00:00
      * var julianDate = new JulianDate(julianDayNumber, secondsOfDay, TimeStandard.UTC);
      */
-    function JulianDate(julianDayNumber, julianSecondsOfDay, timeStandard) {
+    var JulianDate = function(julianDayNumber, julianSecondsOfDay, timeStandard) {
         var wholeDays, secondsOfDay;
 
         //If any of the properties are defined, then we are constructing from components.
@@ -154,7 +154,7 @@ function(DeveloperError,
         this._julianDayNumber = wholeDays;
         this._secondsOfDay = secondsOfDay;
         this._timeStandard = timeStandard;
-    }
+    };
 
     /**
      * Creates an immutable JulianDate instance from a JavaScript Date object.

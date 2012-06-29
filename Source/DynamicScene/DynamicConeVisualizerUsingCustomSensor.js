@@ -57,6 +57,8 @@ define([
     /**
      * A DynamicObject visualizer which maps the DynamicCone instance
      * in DynamicObject.cone to a CustomSensor primitive.
+     * @alias DynamicConeVisualizerUsingCustomSensor
+     * @constructor
      *
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.
@@ -78,14 +80,17 @@ define([
      * @see DynamicPyramidVisualizer
      *
      */
-    function DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjectCollection) {
+    var DynamicConeVisualizerUsingCustomSensor = function(scene, dynamicObjectCollection) {
+        if (typeof scene === 'undefined') {
+            throw new DeveloperError('scene is required.');
+        }
         this._scene = scene;
         this._unusedIndexes = [];
         this._primitives = scene.getPrimitives();
         this._coneCollection = [];
         this._dynamicObjectCollection = undefined;
         this.setDynamicObjectCollection(dynamicObjectCollection);
-    }
+    };
 
     /**
      * Returns the scene being used by this visualizer.
@@ -333,7 +338,7 @@ define([
             typeof orientation !== 'undefined' &&
             (!position.equals(cone._visualizerPosition) ||
              !orientation.equals(cone._visualizerOrientation))) {
-            cone.modelMatrix = DynamicConeVisualizerUsingCustomSensor._computeModelMatrix(position, orientation);
+            cone.modelMatrix = new Matrix4(orientation.conjugate(orientation).toRotationMatrix(), position);
             position.clone(cone._visualizerPosition);
             orientation.clone(cone._visualizerOrientation);
         }
@@ -366,29 +371,6 @@ define([
                 dynamicObject._coneVisualizerIndex = undefined;
             }
         }
-    };
-
-    DynamicConeVisualizerUsingCustomSensor._computeModelMatrix = function(position, orientation) {
-        var w = orientation.w,
-        x = orientation.x,
-        y = orientation.y,
-        z = orientation.z,
-        x2 = x * x,
-        xy = x * y,
-        xz = x * z,
-        xw = x * w,
-        y2 = y * y,
-        yz = y * z,
-        yw = y * w,
-        z2 = z * z,
-        zw = z * w,
-        w2 = w * w;
-
-        return new Matrix4(
-                x2 - y2 - z2 + w2,  2 * (xy + zw),      2 * (xz - yw),      position.x,
-                2 * (xy - zw),      -x2 + y2 - z2 + w2, 2 * (yz + xw),      position.y,
-                2 * (xz + yw),      2 * (yz - xw),      -x2 - y2 + z2 + w2, position.z,
-                0,                  0,                  0,                  1);
     };
 
     return DynamicConeVisualizerUsingCustomSensor;

@@ -14,6 +14,8 @@ define([
     /**
      * A DynamicObject visualizer which maps the DynamicPolygon instance
      * in DynamicObject.polygon to a Polygon primitive.
+     * @alias DynamicPolygonVisualizer
+     * @constructor
      *
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.
@@ -35,14 +37,17 @@ define([
      * @see DynamicPyramidVisualizer
      *
      */
-    function DynamicPolygonVisualizer(scene, dynamicObjectCollection) {
+    var DynamicPolygonVisualizer = function(scene, dynamicObjectCollection) {
+        if (typeof scene === 'undefined') {
+            throw new DeveloperError('scene is required.');
+        }
         this._scene = scene;
         this._unusedIndexes = [];
         this._primitives = scene.getPrimitives();
         this._polygonCollection = [];
         this._dynamicObjectCollection = undefined;
         this.setDynamicObjectCollection(dynamicObjectCollection);
-    }
+    };
 
     /**
      * Returns the scene being used by this visualizer.

@@ -19,7 +19,7 @@ define([
     //on the next draw.  Once we change Cesium to have built in texture defaults,
     //this code can be removed.  If we decide Cesium shouldn't have built in defaults,
     //this code should be changes so at least all CZML visualization has defaults.
-    function createDefaultImage() {
+    function createDefaultTexture() {
         var canvas = document.createElement('canvas');
         canvas.height = '64';
         canvas.width = '64';
@@ -35,17 +35,18 @@ define([
         return canvas.toDataURL('image/png');
     }
 
-    var defaultImage = new Image();
-    defaultImage.src = createDefaultImage();
+    var defaultTexture = createDefaultTexture();
 
     /**
      * A utility class for processing CZML image materials.
+     * @alias DynamicImageMaterial
+     * @constructor
      */
-    function DynamicImageMaterial() {
+    var DynamicImageMaterial = function() {
         this.image = undefined;
         this.verticalRepeat = undefined;
         this.horizontalRepeat = undefined;
-    }
+    };
 
     /**
      * Returns true if the provided CZML interval contains image material data.
@@ -66,28 +67,32 @@ define([
      */
     DynamicImageMaterial.prototype.processCzmlIntervals = function(czmlInterval) {
         var materialData = czmlInterval.image;
-        if (typeof materialData !== 'undefined') {
-            if (typeof materialData.image !== 'undefined') {
-                var image = this.image;
-                if (typeof image === 'undefined') {
-                    this.image = image = new DynamicProperty(CzmlString);
-                }
-                image.processCzmlIntervals(materialData.image);
+        if (typeof materialData === 'undefined') {
+            return;
+        }
+
+        if (typeof materialData.image !== 'undefined') {
+            var image = this.image;
+            if (typeof image === 'undefined') {
+                this.image = image = new DynamicProperty(CzmlString);
             }
-            if (typeof materialData.verticalRepeat !== 'undefined') {
-                var verticalRepeat = this.verticalRepeat;
-                if (typeof verticalRepeat === 'undefined') {
-                    this.verticalRepeat = verticalRepeat = new DynamicProperty(CzmlNumber);
-                }
-                verticalRepeat.processCzmlIntervals(materialData.verticalRepeat);
+            image.processCzmlIntervals(materialData.image);
+        }
+
+        if (typeof materialData.verticalRepeat !== 'undefined') {
+            var verticalRepeat = this.verticalRepeat;
+            if (typeof verticalRepeat === 'undefined') {
+                this.verticalRepeat = verticalRepeat = new DynamicProperty(CzmlNumber);
             }
-            if (typeof materialData.horizontalRepeat !== 'undefined') {
-                var horizontalRepeat = this.horizontalRepeat;
-                if (typeof horizontalRepeat === 'undefined') {
-                    this.horizontalRepeat = horizontalRepeat = new DynamicProperty(CzmlNumber);
-                }
-                horizontalRepeat.processCzmlIntervals(materialData.horizontalRepeat);
+            verticalRepeat.processCzmlIntervals(materialData.verticalRepeat);
+        }
+
+        if (typeof materialData.horizontalRepeat !== 'undefined') {
+            var horizontalRepeat = this.horizontalRepeat;
+            if (typeof horizontalRepeat === 'undefined') {
+                this.horizontalRepeat = horizontalRepeat = new DynamicProperty(CzmlNumber);
             }
+            horizontalRepeat.processCzmlIntervals(materialData.horizontalRepeat);
         }
     };
 
@@ -140,7 +145,7 @@ define([
         }
         if (!existingMaterial.texture) {
             existingMaterial.texture = context.createTexture2D({
-                source : defaultImage
+                source : defaultTexture
             });
         }
         return existingMaterial;

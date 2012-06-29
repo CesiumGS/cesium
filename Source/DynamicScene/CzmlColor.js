@@ -47,27 +47,31 @@ define([
          */
         unwrapInterval : function(czmlInterval) {
             var rgbaf = czmlInterval.rgbaf;
-            if (typeof rgbaf === 'undefined') {
-                var rgba = czmlInterval.rgba;
-                if (typeof rgba !== 'undefined') {
-                    if (this.isSampled(rgba)) {
-                        rgbaf = [];
-                        for ( var i = 0, len = rgba.length; i < len; i += 5) {
-                            rgbaf.push(rgba[i]);
-                            rgbaf.push(Color.byteToFloat(rgba[i + 1]));
-                            rgbaf.push(Color.byteToFloat(rgba[i + 2]));
-                            rgbaf.push(Color.byteToFloat(rgba[i + 3]));
-                            rgbaf.push(Color.byteToFloat(rgba[i + 4]));
-                        }
-                    } else {
-                        rgbaf = [Color.byteToFloat(rgba[0]),
-                                 Color.byteToFloat(rgba[1]),
-                                 Color.byteToFloat(rgba[2]),
-                                 Color.byteToFloat(rgba[3])];
-                    }
-                }
+            if (typeof rgbaf !== 'undefined') {
+                return rgbaf;
             }
 
+            var rgba = czmlInterval.rgba;
+            if (typeof rgba === 'undefined') {
+                return undefined;
+            }
+
+            if (!this.isSampled(rgba)) {
+                return [Color.byteToFloat(rgba[0]),
+                        Color.byteToFloat(rgba[1]),
+                        Color.byteToFloat(rgba[2]),
+                        Color.byteToFloat(rgba[3])];
+            }
+
+            var len = rgba.length;
+            rgbaf = new Array(len);
+            for ( var i = 0; i < len; i += 5) {
+                rgbaf[i] = rgba[i];
+                rgbaf[i + 1] = Color.byteToFloat(rgba[i + 1]);
+                rgbaf[i + 2] = Color.byteToFloat(rgba[i + 2]);
+                rgbaf[i + 3] = Color.byteToFloat(rgba[i + 3]);
+                rgbaf[i + 4] = Color.byteToFloat(rgba[i + 4]);
+            }
             return rgbaf;
         },
 

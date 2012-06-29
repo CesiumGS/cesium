@@ -17,13 +17,13 @@ define([
 
     /**
      * DOC_TBA
-     * @name EllipsoidTangentPlane
+     * @alias EllipsoidTangentPlane
      * @constructor
      *
      * @param {Ellipsoid} ellipsoid
      * @param {Cartesian3} origin
      */
-    function EllipsoidTangentPlane(ellipsoid, origin) {
+    var EllipsoidTangentPlane = function (ellipsoid, origin) {
         var o = Cartesian3.clone(origin);
         var eastNorthUp = Transforms.eastNorthUpToFixedFrame(o, ellipsoid);
 
@@ -33,7 +33,7 @@ define([
         this.normal = eastNorthUp.getColumn2().getXYZ();
         this.d = -o.dot(o);
         this.ellipsoid = ellipsoid;
-    }
+    };
 
     /**
      * DOC_TBA

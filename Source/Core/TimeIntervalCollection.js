@@ -18,16 +18,16 @@ define([
     /**
      * A non-overlapping collection of TimeIntervals sorted by start date.
      *
-     * @name TimeIntervalCollection
+     * @alias TimeIntervalCollection
      * @constructor
      *
      * @see TimeInterval
      * @see JulianDate
      *
      */
-     function TimeIntervalCollection() {
+     var TimeIntervalCollection = function() {
         this._intervals = [];
-    }
+    };
 
     /**
      * Gets the interval at the specified index.

@@ -12,7 +12,7 @@ define([
      * Smoothly interpolates orientation, represented by <code>Quaternion</code>s, over time.
      * For example, this can be used to set a camera's axes along a path.
      *
-     * @name OrientationInterpolator
+     * @alias OrientationInterpolator
      * @constructor
      *
      * @param {Array} controlPoints An array, of at least length 2, of objects with <code>orientation</code> and
@@ -24,14 +24,14 @@ define([
      * @see CatmullRomSpline
      * @see HermiteSpline
      */
-    function OrientationInterpolator(controlPoints) {
+    var OrientationInterpolator = function(controlPoints) {
         if (!controlPoints || !(controlPoints instanceof Array) || controlPoints.length < 2) {
             throw new DeveloperError('controlPoints is required. It must be an array with at least a length of 3.');
         }
 
         this._points = controlPoints;
         this._lastTimeIndex = 0;
-    }
+    };
 
     /**
      * Returns the array of control points.

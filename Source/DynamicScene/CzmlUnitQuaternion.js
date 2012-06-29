@@ -9,7 +9,6 @@ define([
 
     var doublesPerCartesian = 3;
     var doublesPerQuaternion = 4;
-    var identity = new Quaternion(0, 0, 0, 1);
     var axis = new Cartesian3();
     var rotationVector = new Cartesian3();
     var tmpQuaternion = new Quaternion();
@@ -21,7 +20,7 @@ define([
      *
      * @exports CzmlUnitQuaternion
      *
-     * @see Cartesian3
+     * @see Quaternion
      * @see DynamicProperty
      * @see CzmlBoolean
      * @see CzmlCartesian2
@@ -158,7 +157,9 @@ define([
             CzmlUnitQuaternion.getValueFromArray(sourceArray, lastIndex * doublesPerQuaternion, quaternion0);
 
             if (magnitude === 0) {
-                tmpQuaternion = identity;
+                //Can't just use Quaternion.IDENTITY here because tmpQuaternion may be modified in the future.
+                tmpQuaternion.x = tmpQuaternion.y = tmpQuaternion.z = 0.0;
+                tmpQuaternion.w = 1.0;
             } else {
                 Quaternion.fromAxisAngle(rotationVector, magnitude, tmpQuaternion);
             }

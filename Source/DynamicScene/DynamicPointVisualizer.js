@@ -18,6 +18,8 @@ define([
     /**
      * A DynamicObject visualizer which maps the DynamicPoint instance
      * in DynamicObject.point to a Billboard primitive with a point texture.
+     * @alias DynamicPointVisualizer
+     * @constructor
      *
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.
@@ -39,7 +41,10 @@ define([
      * @see DynamicPyramidVisualizer
      *
      */
-    function DynamicPointVisualizer(scene, dynamicObjectCollection) {
+    var DynamicPointVisualizer = function(scene, dynamicObjectCollection) {
+        if (typeof scene === 'undefined') {
+            throw new DeveloperError('scene is required.');
+        }
         this._scene = scene;
         this._unusedIndexes = [];
         this._dynamicObjectCollection = undefined;
@@ -49,7 +54,7 @@ define([
         billboardCollection.setTextureAtlas(atlas);
         scene.getPrimitives().add(billboardCollection);
         this.setDynamicObjectCollection(dynamicObjectCollection);
-    }
+    };
 
     /**
      * Returns the scene being used by this visualizer.
@@ -261,10 +266,10 @@ define([
         }
 
         if (needRedraw) {
-            var cssColor = billboard._visualizerColor ? billboard._visualizerColor.toCSSColor() : '#FFFFFF';
-            var cssOutlineColor = billboard._visualizerOutlineColor ? billboard._visualizerOutlineColor.toCSSColor() : '#000000';
-            var cssPixelSize = billboard._visualizerPixelSize || 3;
-            var cssOutlineWidth = billboard._visualizerOutlineWidth || 2;
+            var cssColor = typeof billboard._visualizerColor !== 'undefined' ? billboard._visualizerColor.toCSSColor() : '#FFFFFF';
+            var cssOutlineColor = typeof billboard._visualizerOutlineColor !== 'undefined' ? billboard._visualizerOutlineColor.toCSSColor() : '#000000';
+            var cssPixelSize = typeof billboard._visualizerPixelSize !== 'undefined' ? billboard._visualizerPixelSize : 3;
+            var cssOutlineWidth = typeof billboard._visualizerOutlineWidth !== 'undefined' ? billboard._visualizerOutlineWidth : 2;
             var textureId = JSON.stringify([cssColor, cssPixelSize, cssOutlineColor, cssOutlineWidth]);
 
             this._textureAtlasBuilder.addTextureFromFunction(textureId, function(id, loadedCallback) {
@@ -290,16 +295,7 @@ define([
                 context2D.fillStyle = cssColor;
                 context2D.fill();
 
-                var imageData = context2D.getImageData(0, 0, canvas.width, canvas.height);
-                var pixels = imageData.data;
-                var limit = canvas.width * canvas.height * 4;
-                for ( var i = 3; i < limit; i += 4) {
-                    if (pixels[i] < 200) {
-                        pixels[i] = 0;
-                    }
-                }
-
-                loadedCallback(imageData);
+                loadedCallback(canvas);
             }, function(imageIndex) {
                 billboard.setImageIndex(imageIndex);
             });

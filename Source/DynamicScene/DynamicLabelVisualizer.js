@@ -24,6 +24,8 @@ define([
     /**
      * A DynamicObject visualizer which maps the DynamicLabel instance
      * in DynamicObject.label to a Label primitive.
+     * @alias DynamicLabelVisualizer
+     * @constructor
      *
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.
@@ -45,7 +47,10 @@ define([
      * @see DynamicPyramidVisualizer
      *
      */
-    function DynamicLabelVisualizer(scene, dynamicObjectCollection) {
+    var DynamicLabelVisualizer = function(scene, dynamicObjectCollection) {
+        if (typeof scene === 'undefined') {
+            throw new DeveloperError('scene is required.');
+        }
         this._scene = scene;
         this._unusedIndexes = [];
         this._dynamicObjectCollection = undefined;
@@ -53,7 +58,7 @@ define([
         var labelCollection = this._labelCollection = new LabelCollection();
         scene.getPrimitives().add(labelCollection);
         this.setDynamicObjectCollection(dynamicObjectCollection);
-    }
+    };
 
     /**
      * Returns the scene being used by this visualizer.

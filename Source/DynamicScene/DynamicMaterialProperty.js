@@ -23,7 +23,7 @@ define([
      * of this object directly, it's typically created and managed via loading CZML
      * data into a DynamicObjectCollection.
      *
-     * @name DynamicMaterialProperty
+     * @alias DynamicMaterialProperty
      * @internalconstructor
      *
      * @see DynamicObject
@@ -33,9 +33,9 @@ define([
      * @see DynamicDirectionsProperty
      * @see DynamicVertexPositionsProperty
      */
-    function DynamicMaterialProperty() {
+    var DynamicMaterialProperty = function() {
         this._intervals = new TimeIntervalCollection();
-    }
+    };
 
 
     /**

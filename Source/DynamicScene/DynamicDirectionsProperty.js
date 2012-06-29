@@ -5,7 +5,6 @@ define([
         '../Core/TimeIntervalCollection',
         '../Core/Cartesian3',
         '../Core/Spherical',
-        '../Core/CoordinateConversions',
         '../Core/Iso8601',
     ], function(
         JulianDate,
@@ -13,14 +12,14 @@ define([
         TimeIntervalCollection,
         Cartesian3,
         Spherical,
-        CoordinateConversions,
         Iso8601) {
     "use strict";
 
     function ValueHolder(czmlInterval) {
-        var i, len, values = [], tmp;
-
-        tmp = czmlInterval.unitSpherical;
+        var i;
+        var len;
+        var values = [];
+        var tmp = czmlInterval.unitSpherical;
         if (typeof tmp !== 'undefined') {
             for (i = 0, len = tmp.length; i < len; i += 2) {
                 values.push(new Spherical(tmp[i], tmp[i + 1]));
@@ -44,7 +43,7 @@ define([
             this.spherical = sphericals;
             var cartesians = this.cartesian;
             for ( var i = 0, len = cartesians.length; i < len; i++) {
-                sphericals.push(CoordinateConversions.cartesian3ToSpherical(cartesians[i]));
+                sphericals.push(Spherical.fromCartesian3(cartesians[i]));
             }
         }
         return sphericals;
@@ -57,7 +56,7 @@ define([
             this.cartesian = cartesians;
             var sphericals = this.spherical;
             for ( var i = 0, len = sphericals.length; i < len; i++) {
-                cartesians.push(CoordinateConversions.sphericalToCartesian3(sphericals[i]));
+                cartesians.push(Cartesian3.fromSpherical(sphericals[i]));
             }
         }
         return cartesians;
@@ -72,8 +71,8 @@ define([
      * and are responsible for interpreting and interpolating the data for visualization.
      * </p>
      *
-     * @name DynamicDirectionsProperty
-     * @internalconstructor
+     * @alias DynamicDirectionsProperty
+     * @constructor
      *
      * @see DynamicObject
      * @see DynamicProperty
@@ -82,9 +81,9 @@ define([
      * @see DynamicPositionProperty
      * @see DynamicVertexPositionsProperty
      */
-    function DynamicDirectionsProperty() {
+    var DynamicDirectionsProperty = function() {
         this._propertyIntervals = new TimeIntervalCollection();
-    }
+    };
 
     /**
      * Processes the provided CZML interval or intervals into this property.

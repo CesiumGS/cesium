@@ -5,21 +5,21 @@ define([
         '../Core/Color',
         '../Core/Matrix4',
         '../Scene/CustomSensorVolume',
-        '../Scene/ColorMaterial',
-        './DynamicConeVisualizer'
+        '../Scene/ColorMaterial'
        ], function(
          DeveloperError,
          destroyObject,
          Color,
          Matrix4,
          CustomSensorVolume,
-         ColorMaterial,
-         DynamicConeVisualizer) {
+         ColorMaterial) {
     "use strict";
 
     /**
      * A DynamicObject visualizer which maps the DynamicPyramid instance
      * in DynamicObject.pyramid to a Pyramid primitive.
+     * @alias DynamicPyramidVisualizer
+     * @constructor
      *
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.
@@ -41,14 +41,17 @@ define([
      * @see DynamicPolylineVisualizer
      *
      */
-    function DynamicPyramidVisualizer(scene, dynamicObjectCollection) {
+    var DynamicPyramidVisualizer = function(scene, dynamicObjectCollection) {
+        if (typeof scene === 'undefined') {
+            throw new DeveloperError('scene is required.');
+        }
         this._scene = scene;
         this._unusedIndexes = [];
         this._primitives = scene.getPrimitives();
         this._pyramidCollection = [];
         this._dynamicObjectCollection = undefined;
         this.setDynamicObjectCollection(dynamicObjectCollection);
-    }
+    };
 
     /**
      * Returns the scene being used by this visualizer.
@@ -245,7 +248,7 @@ define([
             typeof orientation !== 'undefined' &&
             (!position.equals(pyramid._visualizerPosition) ||
              !orientation.equals(pyramid._visualizerOrientation))) {
-            pyramid.modelMatrix = DynamicConeVisualizer._computeModelMatrix(position, orientation);
+            pyramid.modelMatrix = new Matrix4(orientation.conjugate(orientation).toRotationMatrix(), position);
             position.clone(pyramid._visualizerPosition);
             orientation.clone(pyramid._visualizerOrientation);
         }
