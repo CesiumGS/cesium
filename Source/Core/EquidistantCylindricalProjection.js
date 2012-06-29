@@ -2,21 +2,23 @@
 define([
         './Math',
         './Cartesian3',
+        './Cartographic3',
         './Ellipsoid'
     ], function(
         CesiumMath,
         Cartesian3,
+        Cartographic3,
         Ellipsoid) {
     "use strict";
 
     /**
      * DOC_TBA
-     * @name EquidistantCylindricalProjection
+     * @alias EquidistantCylindricalProjection
      * @constructor
      *
      * @immutable
      */
-    function EquidistantCylindricalProjection(ellipsoid) {
+    var EquidistantCylindricalProjection = function(ellipsoid) {
         ellipsoid = ellipsoid || Ellipsoid.WGS84;
 
         var radii = ellipsoid.getRadii();
@@ -24,9 +26,9 @@ define([
         this._ellipsoid = ellipsoid;
         this._halfEquatorCircumference = Math.PI * (Math.max(radii.x, radii.y));
         this._quarterPolarCircumference = 0.5 * Math.PI * radii.z;
-    }
+    };
 
-    /*
+    /**
      * DOC_TBA
      * @memberof EquidistantCylindricalProjection
      */
@@ -34,7 +36,7 @@ define([
         return this._ellipsoid;
     };
 
-    /*
+    /**
      * DOC_TBA
      * @memberof EquidistantCylindricalProjection
      */
@@ -45,6 +47,17 @@ define([
 
         // Actually this is the special case of equidistant cylindrical called the plate carree
         return new Cartesian3(lon * this._halfEquatorCircumference, lat * this._quarterPolarCircumference, cartographic.height);
+    };
+
+    /**
+     * DOC_TBA
+     * @memberof EquidistantCylindricalProjection
+     */
+    EquidistantCylindricalProjection.prototype.unproject = function(cartesian) {
+        var lon = cartesian.x / this._halfEquatorCircumference;
+        var lat = cartesian.y / this._quarterPolarCircumference;
+
+        return new Cartographic3(lon * Math.PI, lat * CesiumMath.PI_OVER_TWO, cartesian.z);
     };
 
     return EquidistantCylindricalProjection;

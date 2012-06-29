@@ -118,7 +118,7 @@ define([
     /**
      * DOC_TBA
      *
-     * @name Polygon
+     * @alias Polygon
      * @constructor
      *
      * @example
@@ -135,7 +135,7 @@ define([
      *   ellipsoid.toCartesian(new Cartographic2(...))
      * ]);
      */
-    function Polygon() {
+    var Polygon = function() {
         this._sp = undefined;
         this._rs = undefined;
 
@@ -269,7 +269,7 @@ define([
         };
         this._pickUniforms = undefined;
         this._drawUniforms = undefined;
-    }
+    };
 
     /**
      * DOC_TBA

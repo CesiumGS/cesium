@@ -32,7 +32,7 @@ define([
      * Texture coordinates are subject to change if the texture atlas resizes, so it is
      * important to check {@link TextureAtlas#getGUID} before using old values.
      *
-     * @name TextureAtlas
+     * @alias TextureAtlas
      *
      * @param {Context} description.context The context in which the texture gets created.
      * @param {PixelFormat} [description.pixelFormat = PixelFormat.RGBA] The pixel format of the texture.
@@ -48,7 +48,7 @@ define([
      * @exception {DeveloperError} initialSize must be greater than zero.
      *
      */
-    function TextureAtlas(description) {
+    var TextureAtlas = function(description) {
         description = (typeof description !== 'undefined') ? description : {};
         var context = description.context;
         var pixelFormat = description.pixelFormat;
@@ -94,7 +94,7 @@ define([
         if (typeof image !== 'undefined') {
             this.addImage(image);
         }
-    }
+        }
 
     // Builds a larger texture and copies the old texture into the new one.
     TextureAtlas.prototype._resizeAtlas = function (image) {
@@ -124,14 +124,14 @@ define([
                     texCoord.width *= widthRatio;
                     texCoord.height *= heightRatio;
                 }
-            }
+        }
 
             // Copy larger texture.
             var newTexture = this._context.createTexture2D({
                 width : atlasWidth,
                 height : atlasHeight,
                 pixelFormat : this._pixelFormat
-            });
+        });
 
             // Copy old texture into new using an fbo.
             var framebuffer = this._context.createFramebuffer({colorTexture:this._texture});
@@ -140,7 +140,7 @@ define([
             framebuffer._unBind();
             framebuffer.destroy();
             this._texture = newTexture;
-        }
+            }
         // First image exceeds initialSize
         else {
             var initialWidth = scalingFactor * (image.width + this._borderWidthInPixels);
@@ -263,7 +263,7 @@ define([
         this._guid = createGuid();
 
         return index;
-    };
+            };
 
     /**
      * Adds an array of images to the texture atlas.
@@ -310,7 +310,7 @@ define([
         for (i = 0; i < numberOfImages; ++i) {
             var annotatedImage = annotatedImages[i];
             this._addImage(annotatedImage.image, annotatedImage.index);
-        }
+    }
 
         this._guid = createGuid();
 

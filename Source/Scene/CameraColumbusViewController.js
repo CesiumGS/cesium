@@ -33,10 +33,10 @@ define([
 
     /**
      * DOC_TBD
-     * @name CameraColumbusViewController
+     * @alias CameraColumbusViewController
      * @constructor
      */
-    function CameraColumbusViewController(canvas, camera, ellipsoid) {
+    var CameraColumbusViewController = function(canvas, camera, ellipsoid) {
         this._canvas = canvas;
         this._camera = camera;
         this._ellipsoid = ellipsoid || Ellipsoid.WGS84;
@@ -71,7 +71,7 @@ define([
 
         this._mapWidth = this._ellipsoid.getRadii().x * Math.PI;
         this._mapHeight = this._ellipsoid.getRadii().y * CesiumMath.PI_OVER_TWO;
-    }
+    };
 
     /**
      * @private
@@ -141,10 +141,19 @@ define([
         var startRay = camera.getPickRay(movement.startPosition);
         var endRay = camera.getPickRay(movement.endPosition);
 
-        var scalar = -startRay.position.z / startRay.direction.z;
-        var startPlanePos = startRay.position.add(startRay.direction.multiplyWithScalar(scalar));
-        scalar = -endRay.position.z / endRay.direction.z;
-        var endPlanePos = endRay.position.add(endRay.direction.multiplyWithScalar(scalar));
+        var position = new Cartesian4(startRay.origin.x, startRay.origin.y, startRay.origin.z, 1.0);
+        position = camera.getInverseTransform().multiplyWithVector(position).getXYZ();
+        var direction = new Cartesian4(startRay.direction.x, startRay.direction.y, startRay.direction.z, 0.0);
+        direction = camera.getInverseTransform().multiplyWithVector(direction).getXYZ();
+        var scalar = -position.z / direction.z;
+        var startPlanePos = position.add(direction.multiplyWithScalar(scalar));
+
+        position = new Cartesian4(endRay.origin.x, endRay.origin.y, endRay.origin.z, 1.0);
+        position = camera.getInverseTransform().multiplyWithVector(position).getXYZ();
+        direction = new Cartesian4(endRay.direction.x, endRay.direction.y, endRay.direction.z, 0.0);
+        direction = camera.getInverseTransform().multiplyWithVector(direction).getXYZ();
+        scalar = -position.z / direction.z;
+        var endPlanePos = position.add(direction.multiplyWithScalar(scalar));
 
         var diff = startPlanePos.subtract(endPlanePos);
         camera.position = camera.position.add(diff);

@@ -10,13 +10,13 @@ define([
     /**
      * DOC_TBA
      *
-     * @name Framebuffer
+     * @alias Framebuffer
      *
      * @see Context#createFramebuffer
      *
      * @internalConstructor
      */
-    function Framebuffer(_gl, description) {
+    var Framebuffer = function(_gl, description) {
         var _framebuffer;
         var _colorTexture;
         var _colorRenderbuffer;
@@ -26,7 +26,6 @@ define([
 
         /**
         * DOC_TBA.
-        * @memberof Framebuffer
         * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
         */
         this.setColorTexture = function(texture) {
@@ -44,7 +43,6 @@ define([
 
         /**
         * DOC_TBA.
-        * @memberof Framebuffer
         * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
         */
         this.getColorTexture = function() {
@@ -53,7 +51,6 @@ define([
 
         /**
          * DOC_TBA.
-         * @memberof Framebuffer
          * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
          */
         this.setColorRenderbuffer = function(renderbuffer) {
@@ -70,7 +67,6 @@ define([
 
         /**
          * DOC_TBA.
-         * @memberof Framebuffer
          * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
          */
         this.getColorRenderbuffer = function() {
@@ -79,7 +75,6 @@ define([
 
         /**
         * DOC_TBA.
-        * @memberof Framebuffer
         * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
         */
         this.setDepthRenderbuffer = function(renderbuffer) {
@@ -96,7 +91,6 @@ define([
 
         /**
         * DOC_TBA.
-        * @memberof Framebuffer
         * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
         */
         this.getDepthRenderbuffer = function() {
@@ -105,7 +99,6 @@ define([
 
         /**
         * DOC_TBA.
-        * @memberof Framebuffer
         * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
         */
         this.setStencilRenderbuffer = function(renderbuffer) {
@@ -122,7 +115,6 @@ define([
 
         /**
         * DOC_TBA.
-        * @memberof Framebuffer
         * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
         */
         this.getStencilRenderbuffer = function() {
@@ -131,7 +123,6 @@ define([
 
         /**
         * DOC_TBA.
-        * @memberof Framebuffer
         * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
         */
         this.setDepthStencilRenderbuffer = function(renderbuffer) {
@@ -148,7 +139,6 @@ define([
 
         /**
         * DOC_TBA.
-        * @memberof Framebuffer
         * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
         */
         this.getDepthStencilRenderbuffer = function() {
@@ -168,8 +158,6 @@ define([
          * <br /><br />
          * If this object was destroyed, it should not be used; calling any function other than
          * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-         *
-         * @memberof Framebuffer
          *
          * @return {Boolean} True if this object was destroyed; otherwise, false.
          *
@@ -191,8 +179,6 @@ define([
          * assign the return value (<code>undefined</code>) to the object as done in the example.
          * <br /><br />
          * This will fail if the color attachment is a face in a cube map texture.
-         *
-         * @memberof Framebuffer
          *
          * @return {undefined}
          *
@@ -246,7 +232,7 @@ define([
                 this.setDepthStencilRenderbuffer(description.depthStencilRenderbuffer);
             }
         }
-    }
+    };
 
     return Framebuffer;
 });

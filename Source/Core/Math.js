@@ -13,8 +13,8 @@ define([
     "use strict";
 
     /**
-     * @exports CesiumMath
      * Math functions.
+     * @exports CesiumMath
      */
     var CesiumMath = {};
 

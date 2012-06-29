@@ -14,7 +14,7 @@ define([
     /**
      * DOC_TBA
      *
-     * @name Quaternion
+     * @alias Quaternion
      *
      * @constructor
      *
@@ -25,7 +25,7 @@ define([
      *
      * @see Matrix3
      */
-    function Quaternion(x, y, z, w) {
+    var Quaternion = function(x, y, z, w) {
 
         /**
          * The x coordinate.
@@ -70,7 +70,7 @@ define([
          * @see Quaternion.z
          */
         this.w = (typeof w !== 'undefined') ? w : 0.0;
-    }
+    };
 
     /**
      * Returns a duplicate of a Quaternion.
