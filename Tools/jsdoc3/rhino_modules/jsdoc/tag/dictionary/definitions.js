@@ -235,6 +235,7 @@ exports.defineTags = function(dictionary) {
             
             doclet.addTag('alias', modName);
             doclet.addTag('kind', 'module');
+            doclet.longname = modName;
          }
     });
     
