@@ -50,7 +50,7 @@ define([
 
         var rotateMovement = rotate.getMovement();
         if (rotate.isButtonDown() && typeof this._transform === 'undefined' && rotateMovement) {
-            var center = this._camera.pickEllipsoid(this._spindleController.getEllipsoid(), rotateMovement.startPosition);
+            var center = this._camera.pickEllipsoid(rotateMovement.startPosition, this._spindleController.getEllipsoid());
             if (typeof center !== 'undefined') {
                 this._transform = Transforms.eastNorthUpToFixedFrame(center);
             }
