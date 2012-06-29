@@ -5,28 +5,21 @@ define([
         '../Core/TimeIntervalCollection',
         '../Core/Cartesian3',
         '../Core/Spherical',
-        '../Core/CoordinateConversions',
-        '../Core/Math',
         '../Core/Iso8601',
-        './ReferenceProperty',
-        './DynamicPositionProperty'
     ], function(
         JulianDate,
         TimeInterval,
         TimeIntervalCollection,
         Cartesian3,
         Spherical,
-        CoordinateConversions,
-        CesiumMath,
-        Iso8601,
-        ReferenceProperty,
-        DynamicPositionProperty) {
+        Iso8601) {
     "use strict";
 
     function ValueHolder(czmlInterval) {
-        var i, len, values = [], tmp;
-
-        tmp = czmlInterval.unitSpherical;
+        var i;
+        var len;
+        var values = [];
+        var tmp = czmlInterval.unitSpherical;
         if (typeof tmp !== 'undefined') {
             for (i = 0, len = tmp.length; i < len; i += 2) {
                 values.push(new Spherical(tmp[i], tmp[i + 1]));
@@ -50,7 +43,7 @@ define([
             this.spherical = sphericals;
             var cartesians = this.cartesian;
             for ( var i = 0, len = cartesians.length; i < len; i++) {
-                sphericals[i].push(CoordinateConversions.cartesian3ToSpherical(cartesians[i]));
+                sphericals.push(Spherical.fromCartesian3(cartesians[i]));
             }
         }
         return sphericals;
@@ -63,7 +56,7 @@ define([
             this.cartesian = cartesians;
             var sphericals = this.spherical;
             for ( var i = 0, len = sphericals.length; i < len; i++) {
-                cartesians[i].push(CoordinateConversions.sphericalToCartesian3(sphericals[i]));
+                cartesians.push(Cartesian3.fromSpherical(sphericals[i]));
             }
         }
         return cartesians;
@@ -78,8 +71,8 @@ define([
      * and are responsible for interpreting and interpolating the data for visualization.
      * </p>
      *
-     * @name DynamicDirectionsProperty
-     * @internalconstructor
+     * @alias DynamicDirectionsProperty
+     * @constructor
      *
      * @see DynamicObject
      * @see DynamicProperty
@@ -88,9 +81,9 @@ define([
      * @see DynamicPositionProperty
      * @see DynamicVertexPositionsProperty
      */
-    function DynamicDirectionsProperty() {
+    var DynamicDirectionsProperty = function() {
         this._propertyIntervals = new TimeIntervalCollection();
-    }
+    };
 
     /**
      * Processes the provided CZML interval or intervals into this property.
@@ -123,19 +116,7 @@ define([
         if (typeof interval === 'undefined') {
             return undefined;
         }
-        var intervalData = interval.data;
-        if (Array.isArray(intervalData)) {
-            var result = [];
-            for ( var i = 0, len = intervalData.length; i < len; i++) {
-                var value = intervalData[i].getValueSpherical(time);
-                if (typeof value !== 'undefined') {
-                    result.push(value);
-                }
-            }
-            return result;
-        }
-
-        return intervalData.getValueSpherical();
+        return interval.data.getValueSpherical();
     };
 
     /**
@@ -150,19 +131,7 @@ define([
         if (typeof interval === 'undefined') {
             return undefined;
         }
-        var intervalData = interval.data;
-        if (Array.isArray(intervalData)) {
-            var result = [];
-            for ( var i = 0, len = intervalData.length; i < len; i++) {
-                var value = intervalData[i].getValueCartesian(time);
-                if (typeof value !== 'undefined') {
-                    result.push(value);
-                }
-            }
-            return result;
-        }
-
-        return intervalData.getValueCartesian();
+        return interval.data.getValueCartesian();
     };
 
     DynamicDirectionsProperty.prototype._addCzmlInterval = function(czmlInterval, constrainedInterval, dynamicObjectCollection) {
@@ -187,17 +156,7 @@ define([
             thisIntervals.addInterval(existingInterval);
         }
 
-        var references = czmlInterval.references;
-        if (typeof references === 'undefined') {
-            existingInterval.data = new ValueHolder(czmlInterval);
-        } else {
-            var properties = [];
-            properties.dynamicObjectCollection = dynamicObjectCollection;
-            for ( var i = 0, len = references.length; i < len; i++) {
-                properties.push(ReferenceProperty.fromString(dynamicObjectCollection, references[i]));
-            }
-            existingInterval.data = properties;
-        }
+        existingInterval.data = new ValueHolder(czmlInterval);
     };
 
     return DynamicDirectionsProperty;

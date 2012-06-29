@@ -20,12 +20,12 @@ define([
     /**
      * DOC_TBA
      *
-     * @name RectangularPyramidSensorVolume
+     * @alias RectangularPyramidSensorVolume
      * @constructor
      *
      * @see SensorVolumeCollection#addRectangularPyramid
      */
-    function RectangularPyramidSensorVolume(template) {
+    var RectangularPyramidSensorVolume = function(template) {
         var t = template || {};
 
         /**
@@ -137,7 +137,7 @@ define([
 
         t._pickIdThis = t._pickIdThis || this;
         this._customSensor = new CustomSensorVolume(t);
-    }
+    };
 
     /**
      * DOC_TBA

@@ -10,7 +10,7 @@ define([
      * This class is usually instantiated inside of a container class and
      * exposed as a property for others to subscribe to.
      *
-     * @name Event
+     * @alias Event
      * @constructor
      *
      * @example
@@ -31,12 +31,9 @@ define([
     }
 
     /**
-     * <p>
      * Registers a callback function to be executed whenever the event is raised.
      * An optional scope can be provided to serve as the <code>this</code> pointer
      * in which the function will execute.
-     * </p>
-     *
      * @memberof Event
      *
      * @param {Function} listener The function to be executed when the event is raised.
@@ -66,10 +63,7 @@ define([
     };
 
     /**
-     * <p>
      * Unregisters a previously registered callback.
-     * </p>
-     *
      * @memberof Event
      *
      * @param {Function} listener The function to be unregistered.
@@ -97,17 +91,13 @@ define([
     };
 
     /**
-     * <p>
      * Raises the event by calling each registered listener with all supplied arguments.
-     * </p>
-     *
      * @memberof Event
      *
      * @param {*} arguments This method takes any number of parameters and passes them through to the listener functions.
      *
      * @see Event#addEventListener
      * @see Event#removeEventListener
-     *
      */
     Event.prototype.raiseEvent = function() {
         var listeners = this._listeners;

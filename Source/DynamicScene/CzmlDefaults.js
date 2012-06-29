@@ -40,6 +40,7 @@ define([
      * DynamicObjectCollection, CompositeDynamicObjectCollection, and VisualizerCollection.
      *
      * @exports CzmlDefaults
+     *
      * @see DynamicObjectCollection
      * @see CompositeDynamicObjectCollection
      * @see VisualizerCollection#createCzmlDefaultsCollection

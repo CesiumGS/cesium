@@ -13,7 +13,7 @@ define([
      * An interval defined by a start date and a stop date.  The end points are optionally included
      * in the interval.  The interval should be treated as immutable.
      *
-     * @name TimeInterval
+     * @alias TimeInterval
      * @constructor
      *
      * @param {JulianDate} start The start date of the interval.
@@ -33,7 +33,7 @@ define([
      * // Construct an Timeinterval closed on one end with a Color payload.
      * var interval = new TimeInterval(JulianDate.fromTotalDays(1000), JulianDate.fromTotalDays(1001), true, false, Color.WHITE);
      */
-    function TimeInterval(start, stop, isStartIncluded, isStopIncluded, data) {
+    var TimeInterval = function(start, stop, isStartIncluded, isStopIncluded, data) {
         if (typeof start === 'undefined') {
             throw new DeveloperError('start must be specified.');
         }
@@ -52,13 +52,31 @@ define([
 
         var stopComparedToStart = JulianDate.compare(stop, start);
 
+        /**
+         * The start time of the interval.
+         */
         this.start = start;
+        /**
+         * The stop time of the interval.
+         */
         this.stop = stop;
+        /**
+         * The data associated with this interval.
+         */
         this.data = data;
+        /**
+         * Indicates if <code>start</code> is included in the interval or not.
+         */
         this.isStartIncluded = isStartIncluded;
+        /**
+         * Indicates if <code>stop</code> is included in the interval or not.
+         */
         this.isStopIncluded = isStopIncluded;
+        /**
+         * Indicates if the interval is empty.
+         */
         this.isEmpty = stopComparedToStart < 0 || (stopComparedToStart === 0 && (!isStartIncluded || !isStopIncluded));
-    }
+    };
 
     /**
      * Creates an immutable TimeInterval from an ISO 8601 interval string.

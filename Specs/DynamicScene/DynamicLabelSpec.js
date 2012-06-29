@@ -70,7 +70,7 @@ defineSuite([
     it('processCzmlPacket adds data for constrained label.', function() {
         var labelPacket = {
             label : {
-                interval : "2000-01-01/2001-01-01",
+                interval : '2000-01-01/2001-01-01',
                 text : 'TestFacility',
                 font : '10pt Lucida Console',
                 style : 'FILL',

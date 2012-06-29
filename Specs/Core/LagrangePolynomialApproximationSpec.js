@@ -6,7 +6,10 @@ defineSuite([
     "use strict";
     /*global it,expect*/
 
-    it('should match the results produced by Components', function() {
+    //The results of these specs were validated against STK Components
+    //an aerospace SDK available from Analytical Graphics. www.agi.com/components/
+
+    it('interpolation produces correct results.', function() {
         var xTable = [0, 60, 120, 180, 240, 300, 360, 420];
         var yTable = [
                       13378137.0000000, 0.000000000, 0,
@@ -25,7 +28,7 @@ defineSuite([
         expect(result).toEqualArrayEpsilon(expectedResult, 1e-15);
     });
 
-    it('getRequiredDataPoints', function() {
+    it('getRequiredDataPoints should be 1 more than degree, except for 0, which requires 2', function() {
         expect(LagrangePolynomialApproximation.getRequiredDataPoints(0)).toEqual(2);
         expect(LagrangePolynomialApproximation.getRequiredDataPoints(1)).toEqual(2);
         expect(LagrangePolynomialApproximation.getRequiredDataPoints(2)).toEqual(3);

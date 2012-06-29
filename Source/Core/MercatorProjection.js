@@ -10,13 +10,13 @@ define([
     "use strict";
 
     /**
-     * @name MercatorProjection
+     * @alias MercatorProjection
      *
      * @constructor
      *
      * @immutable
      */
-    function MercatorProjection(ellipsoid) {
+    var MercatorProjection = function(ellipsoid) {
         ellipsoid = ellipsoid || Ellipsoid.WGS84;
 
         var radii = ellipsoid.getRadii();
@@ -24,9 +24,9 @@ define([
         this._ellipsoid = ellipsoid;
         this._halfEquatorCircumference = Math.PI * (Math.max(radii.x, radii.y));
         this._quarterPolarCircumference = 0.5 * Math.PI * radii.z;
-    }
+    };
 
-    /*
+    /**
      * DOC_TBA
      * @memberof MercatorProjection
      */

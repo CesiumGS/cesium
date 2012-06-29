@@ -27,6 +27,7 @@ define([
     /**
      * Processes the provided CZML, creating or updating DynamicObject instances for each
      * corresponding CZML identifier.
+     * @exports processCzml
      *
      * @param {Object} czml The parsed CZML object to be processed.
      * @param {DynamicObjectCollection} dynamicObjectCollection The collection to create or updated objects within.
@@ -39,13 +40,13 @@ define([
      * @returns An array containing all DynamicObject instances that were created or updated.
      *
      * @example
-     * var url = 'http://someUrl.com/myCzmlFile.czm';
+     * var url = 'http://someUrl.com/myCzmlFile.czml';
      * var dynamicObjectCollection = new DynamicObjectCollection();
      * getJson(url).then(function(czml) {
      *     processCzml(czml, dynamicObjectCollection, url);
      * });
      */
-    function processCzml(czml, dynamicObjectCollection, sourceUri, updaterFunctions) {
+    var processCzml = function(czml, dynamicObjectCollection, sourceUri, updaterFunctions) {
         if (typeof czml === 'undefined') {
             throw new DeveloperError('czml is required.');
         }
@@ -70,7 +71,7 @@ define([
         }
 
         return updatedObjects;
-    }
+    };
 
     return processCzml;
 });

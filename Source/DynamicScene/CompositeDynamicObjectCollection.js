@@ -25,7 +25,7 @@ define([
      * belongs to is used.  CompositeDynamicObjectCollection can be used almost anywhere that a
      * DynamicObjectCollection is used.
      *
-     * @name CompositeDynamicObjectCollection
+     * @alias CompositeDynamicObjectCollection
      * @constructor
      *
      * @param {Array} [collections] The initial list of DynamicObjectCollection instances to merge.
@@ -36,20 +36,20 @@ define([
      * @see DynamicObject
      * @see CzmlDefaults
      */
-    function CompositeDynamicObjectCollection(collections, mergeFunctions, cleanFunctions) {
+    var CompositeDynamicObjectCollection = function(collections, mergeFunctions, cleanFunctions) {
         this._hash = {};
         this._array = [];
         this._collections = [];
 
         /**
-         * The array of functions which DynamicObject instances together. DOC_TBA
+         * The array of functions which merge DynamicObject instances together.
          */
-        this.mergeFunctions = mergeFunctions || CzmlDefaults.mergers;
+        this.mergeFunctions = typeof mergeFunctions === 'undefined' ? CzmlDefaults.mergers : mergeFunctions;
 
         /**
-         * The array of functions which remove data from a DynamicObject instance. DOC_TBA
+         * The array of functions which remove data from a DynamicObject instance.
          */
-        this.cleanFunctions = cleanFunctions || CzmlDefaults.cleaners;
+        this.cleanFunctions = typeof cleanFunctions === 'undefined' ? CzmlDefaults.cleaners : cleanFunctions;
 
         /**
          * An {@link Event} that is fired whenever DynamicObjects in the collection have properties added.
@@ -62,13 +62,14 @@ define([
         this.objectsRemoved = new Event();
 
         this.setCollections(collections);
-    }
+    };
 
     /**
      * Computes the maximum availability of the DynamicObjects in the collection.
      * If the collection contains a mix of infinitely available data and non-infinite data,
      * It will return the interval pertaining to the non-infinite data only.  If all
      * data is infinite, an infinite interval will be returned.
+     * @memberof CompositeDynamicObjectCollection
      *
      * @returns {TimeInterval} The availability of DynamicObjects in the collection.
      */
@@ -98,16 +99,18 @@ define([
     /**
      * Returns a copy of the current array of collections being composited.  Changes to this
      * array will have no affect, to change which collections are being used, call setCollections.
+     * @memberof CompositeDynamicObjectCollection
      *
      * @see CompositeDynamicObjectCollection#setCollections
      */
     CompositeDynamicObjectCollection.prototype.getCollections = function() {
-        return this._collections.slice();
+        return this._collections.slice(0);
     };
 
     /**
      * Sets the array of collections to be composited.  Collections are composited
      * last to first, so higher indices into the array take precedence over lower indices.
+     * @memberof CompositeDynamicObjectCollection
      *
      * @param {Array} collections The collections to be composited.
      */
@@ -155,11 +158,12 @@ define([
 
     /**
      * Gets an object with the specified id.
+     * @memberof CompositeDynamicObjectCollection
+     *
      * @param {Object} id The id of the object to retrieve.
+     * @returns The DynamicObject with the provided id, or undefined if no such object exists.
      *
      * @exception {DeveloperError} id is required.
-     *
-     * @returns The DynamicObject with the provided id, or undefined if no such object exists.
      */
     CompositeDynamicObjectCollection.prototype.getObject = function(id) {
         if (typeof id === 'undefined') {
@@ -170,6 +174,8 @@ define([
 
     /**
      * Gets the array of DynamicObject instances in this composite collection.
+     * @memberof CompositeDynamicObjectCollection
+     *
      * @returns {Array} the array of DynamicObject instances in this composite collection.
      */
     CompositeDynamicObjectCollection.prototype.getObjects = function() {
@@ -178,6 +184,7 @@ define([
 
     /**
      * Clears all collections and DynamicObjects from this collection.
+     * @memberof CompositeDynamicObjectCollection
      */
     CompositeDynamicObjectCollection.prototype.clear = function() {
         this.setCollections([]);

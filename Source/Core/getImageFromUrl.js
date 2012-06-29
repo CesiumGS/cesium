@@ -6,6 +6,7 @@ define(['./DeveloperError'
 
     /**
      * Asynchronously loads the provided url into an Image.
+     * @exports getImageFromUrl
      *
      * @param {String} url The url of the image to retrieve.  Both data and cross-origin urls are supported.
      * @param {Function} onLoad The function to call once the image is loaded.
@@ -24,7 +25,7 @@ define(['./DeveloperError'
      *     //logoImage loaded and ready for use.
      * });
      */
-    function getImageFromUrl(url, onLoad, onError, onAbort) {
+    var getImageFromUrl = function(url, onLoad, onError, onAbort) {
         if (typeof url !== 'string') {
             throw new DeveloperError('url is a required string parameter.');
         }
@@ -65,7 +66,7 @@ define(['./DeveloperError'
 
         image.src = url;
         return image;
-    }
+    };
 
     return getImageFromUrl;
 });

@@ -17,8 +17,8 @@ defineSuite([
         this.magnitude = magnitude;
     }
 
-    NotSpherical.areEqual = function(lhs, rhs) {
-        return lhs.clock === rhs.clock && lhs.cone === rhs.cone && lhs.magnitude === rhs.magnitude;
+    NotSpherical.areEqual = function(left, right) {
+        return left.clock === right.clock && left.cone === right.cone && left.magnitude === right.magnitude;
     };
 
     it('Default constructing sets properties to their expected values.', function() {
@@ -33,6 +33,21 @@ defineSuite([
         expect(v.clock).toEqual(1);
         expect(v.cone).toEqual(2);
         expect(v.magnitude).toEqual(3);
+    });
+
+    var fortyFiveDegrees = Math.PI / 4.0;
+    var sixtyDegrees = Math.PI / 3.0;
+    var cartesian = new Cartesian3(1.0, Math.sqrt(3.0), -2.0);
+    var spherical = new Spherical(sixtyDegrees, fortyFiveDegrees + Math.PI / 2.0, Math.sqrt(8.0));
+
+    it('Can convert Cartesian3 to a new spherical instance', function() {
+        expect(spherical).toEqualEpsilon(Spherical.fromCartesian3(cartesian), CesiumMath.EPSILON15);
+    });
+
+    it('Can convert Cartesian3 to an existing spherical instance', function() {
+        var existing = new Spherical();
+        expect(spherical).toEqualEpsilon(Spherical.fromCartesian3(cartesian, existing), CesiumMath.EPSILON15);
+        expect(spherical).toEqualEpsilon(existing, CesiumMath.EPSILON15);
     });
 
     it('Cloning with no result parameter returns a new instance.', function() {

@@ -45,7 +45,7 @@ defineSuite([
     it('processCzmlPacket adds data for constrained polyline.', function() {
         var polylinePacket = {
             polyline : {
-                interval : "2000-01-01/2001-01-01",
+                interval : '2000-01-01/2001-01-01',
                 color : {
                     rgbaf : [0.1, 0.1, 0.1, 0.1]
                 },

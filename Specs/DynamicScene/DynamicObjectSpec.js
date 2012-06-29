@@ -42,8 +42,8 @@ defineSuite([
 
     it('processCzmlPacketPosition works.', function() {
         var packet = {
-            "position" : {
-                "cartesian" : [1.0, 2.0, 3.0]
+            'position' : {
+                'cartesian' : [1.0, 2.0, 3.0]
             }
         };
 
@@ -61,8 +61,8 @@ defineSuite([
 
     it('processCzmlPacketOrientation works.', function() {
         var packet = {
-            "orientation" : {
-                "unitQuaternion" : [0.0, 0.0, 0.0, 1.0]
+            'orientation' : {
+                'unitQuaternion' : [0.0, 0.0, 0.0, 1.0]
             }
         };
 
@@ -80,8 +80,8 @@ defineSuite([
 
     it('processCzmlPacketVertexPositions works.', function() {
         var packet = {
-            "vertexPositions" : {
-                "cartesian" : [1.0, 2.0, 3.0, 5.0, 6.0, 7.0]
+            'vertexPositions' : {
+                'cartesian' : [1.0, 2.0, 3.0, 5.0, 6.0, 7.0]
             }
         };
 
@@ -99,7 +99,7 @@ defineSuite([
 
     it('processCzmlPacketAvailability works.', function() {
         var packet = {
-            availability : "2000-01-01/2001-01-01"
+            availability : '2000-01-01/2001-01-01'
         };
 
         var dynamicObject = new DynamicObject('dynamicObject');
@@ -118,7 +118,7 @@ defineSuite([
 
     it('isAvailable works.', function() {
         var packet = {
-            availability : "2000-01-01/2001-01-01"
+            availability : '2000-01-01/2001-01-01'
         };
 
         var dynamicObject = new DynamicObject('dynamicObject');
@@ -133,7 +133,7 @@ defineSuite([
 
     it('isAvailable caching works.', function() {
         var packet = {
-            availability : "2000-01-01/2001-01-01"
+            availability : '2000-01-01/2001-01-01'
         };
 
         var dynamicObject = new DynamicObject('dynamicObject');

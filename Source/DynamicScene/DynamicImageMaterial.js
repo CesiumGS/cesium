@@ -19,10 +19,10 @@ define([
     //on the next draw.  Once we change Cesium to have built in texture defaults,
     //this code can be removed.  If we decide Cesium shouldn't have built in defaults,
     //this code should be changes so at least all CZML visualization has defaults.
-    function createDefaultImage() {
+    function createDefaultTexture() {
         var canvas = document.createElement('canvas');
-        canvas.height = "64";
-        canvas.width = "64";
+        canvas.height = '64';
+        canvas.width = '64';
 
         var context = canvas.getContext('2d');
         context.fillStyle = '#FFFFFF';
@@ -32,20 +32,21 @@ define([
         context.font = '64px sans-serif';
         context.strokeStyle = '#000000';
         context.strokeText('?', 16, 0);
-        return canvas.toDataURL("image/png");
+        return canvas.toDataURL('image/png');
     }
 
-    var defaultImage = new Image();
-    defaultImage.src = createDefaultImage();
+    var defaultTexture = createDefaultTexture();
 
     /**
      * A utility class for processing CZML image materials.
+     * @alias DynamicImageMaterial
+     * @constructor
      */
-    function DynamicImageMaterial() {
+    var DynamicImageMaterial = function() {
         this.image = undefined;
         this.verticalRepeat = undefined;
         this.horizontalRepeat = undefined;
-    }
+    };
 
     /**
      * Returns true if the provided CZML interval contains image material data.
@@ -66,28 +67,32 @@ define([
      */
     DynamicImageMaterial.prototype.processCzmlIntervals = function(czmlInterval) {
         var materialData = czmlInterval.image;
-        if (typeof materialData !== 'undefined') {
-            if (typeof materialData.image !== 'undefined') {
-                var image = this.image;
-                if (typeof image === 'undefined') {
-                    this.image = image = new DynamicProperty(CzmlString);
-                }
-                image.processCzmlIntervals(materialData.image);
+        if (typeof materialData === 'undefined') {
+            return;
+        }
+
+        if (typeof materialData.image !== 'undefined') {
+            var image = this.image;
+            if (typeof image === 'undefined') {
+                this.image = image = new DynamicProperty(CzmlString);
             }
-            if (typeof materialData.verticalRepeat !== 'undefined') {
-                var verticalRepeat = this.verticalRepeat;
-                if (typeof verticalRepeat === 'undefined') {
-                    this.verticalRepeat = verticalRepeat = new DynamicProperty(CzmlNumber);
-                }
-                verticalRepeat.processCzmlIntervals(materialData.verticalRepeat);
+            image.processCzmlIntervals(materialData.image);
+        }
+
+        if (typeof materialData.verticalRepeat !== 'undefined') {
+            var verticalRepeat = this.verticalRepeat;
+            if (typeof verticalRepeat === 'undefined') {
+                this.verticalRepeat = verticalRepeat = new DynamicProperty(CzmlNumber);
             }
-            if (typeof materialData.horizontalRepeat !== 'undefined') {
-                var horizontalRepeat = this.horizontalRepeat;
-                if (typeof horizontalRepeat === 'undefined') {
-                    this.horizontalRepeat = horizontalRepeat = new DynamicProperty(CzmlNumber);
-                }
-                horizontalRepeat.processCzmlIntervals(materialData.horizontalRepeat);
+            verticalRepeat.processCzmlIntervals(materialData.verticalRepeat);
+        }
+
+        if (typeof materialData.horizontalRepeat !== 'undefined') {
+            var horizontalRepeat = this.horizontalRepeat;
+            if (typeof horizontalRepeat === 'undefined') {
+                this.horizontalRepeat = horizontalRepeat = new DynamicProperty(CzmlNumber);
             }
+            horizontalRepeat.processCzmlIntervals(materialData.horizontalRepeat);
         }
     };
 
@@ -95,11 +100,11 @@ define([
      * Get's a DiffuseMapMaterial that represents this dynamic material at the provided time.
      *
      * @param {JulianDate} time The desired time.
-     * @param {Scene} scene The scene in which this material exists.
+     * @param {Context} context The context in which this material exists.
      * @param {DiffuseMapMaterial} [existingMaterial] An existing material to be modified.  If the material is undefined or not a DiffuseMapMaterial, a new instance is created.
      * @returns The modified existingMaterial parameter or a new DiffuseMapMaterial instance if existingMaterial was undefined or not a DiffuseMapMaterial.
      */
-    DynamicImageMaterial.prototype.getValue = function(time, scene, existingMaterial) {
+    DynamicImageMaterial.prototype.getValue = function(time, context, existingMaterial) {
         if (typeof existingMaterial === 'undefined' || !(existingMaterial instanceof DiffuseMapMaterial)) {
             existingMaterial = new DiffuseMapMaterial();
         }
@@ -130,7 +135,7 @@ define([
                 var image = new Image();
                 image.onload = function() {
                     if (existingMaterial.currentUrl === url) {
-                        existingMaterial.texture = scene.getContext().createTexture2D({
+                        existingMaterial.texture = context.createTexture2D({
                             source : image
                         });
                     }
@@ -139,8 +144,8 @@ define([
             }
         }
         if (!existingMaterial.texture) {
-            existingMaterial.texture = scene.getContext().createTexture2D({
-                source : defaultImage
+            existingMaterial.texture = context.createTexture2D({
+                source : defaultTexture
             });
         }
         return existingMaterial;

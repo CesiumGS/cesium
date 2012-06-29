@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/JulianDate',
         '../Core/TimeInterval',
@@ -11,6 +12,7 @@ define([
         './CzmlCartographic3',
         './DynamicProperty'
     ], function(
+        DeveloperError,
         Ellipsoid,
         JulianDate,
         TimeInterval,
@@ -34,8 +36,8 @@ define([
      * Instances of this type are exposed via DynamicObject and it's sub-objects
      * and are responsible for interpreting and interpolating the data for visualization.
      *
-     * @name DynamicPositionProperty
-     * @internalconstructor
+     * @alias DynamicPositionProperty
+     * @constructor
      *
      * @see DynamicObject
      * @see DynamicProperty
@@ -44,12 +46,12 @@ define([
      * @see DynamicDirectionsProperty
      * @see DynamicVertexPositionsProperty
      */
-    function DynamicPositionProperty() {
+    var DynamicPositionProperty = function() {
         this._dynamicProperties = [];
         this._propertyIntervals = new TimeIntervalCollection();
         this._cachedTime = undefined;
         this._cachedInterval = undefined;
-    }
+    };
 
     /**
      * Processes the provided CZML interval or intervals into this property.
@@ -78,6 +80,10 @@ define([
      * @returns The modified result property, or a new instance if result was undefined.
      */
     DynamicPositionProperty.prototype.getValueCartographic = function(time, result) {
+        if (typeof time === 'undefined') {
+            throw new DeveloperError('time is required.');
+        }
+
         var interval = this._cachedInterval;
         if (this._cachedTime !== time) {
             this._cachedTime = time;
@@ -111,6 +117,10 @@ define([
      * @returns The modified result property, or a new instance if result was undefined.
      */
     DynamicPositionProperty.prototype.getValueCartesian = function(time, result) {
+        if (typeof time === 'undefined') {
+            throw new DeveloperError('time is required.');
+        }
+
         var interval = this._cachedInterval;
         if (this._cachedTime !== time) {
             this._cachedTime = time;
@@ -173,6 +183,7 @@ define([
                 valueType = potentialTypes[i];
                 unwrappedInterval = valueType.unwrapInterval(czmlInterval);
                 if (typeof unwrappedInterval !== 'undefined') {
+                    property = undefined;
                     //Found a valid valueType, but lets check to see if we already have a property with that valueType
                     for ( var q = 0, lenQ = this._dynamicProperties.length; q < lenQ; q++) {
                         if (this._dynamicProperties[q].valueType === valueType) {
@@ -184,9 +195,9 @@ define([
                     if (typeof property === 'undefined') {
                         property = new DynamicProperty(valueType);
                         this._dynamicProperties.push(property);
+                        //Save the property in our interval.
+                        existingInterval.data = property;
                     }
-                    //Save the property in our interval.
-                    existingInterval.data = property;
                     break;
                 }
             }
@@ -194,7 +205,8 @@ define([
 
         //We could handle the data, add it to the property.
         if (typeof unwrappedInterval !== 'undefined') {
-            property._addCzmlIntervalUnwrapped(iso8601Interval.start, iso8601Interval.stop, unwrappedInterval, czmlInterval.epoch, czmlInterval.interpolationAlgorithm, czmlInterval.interpolationDegree);
+            property._addCzmlIntervalUnwrapped(iso8601Interval.start, iso8601Interval.stop, unwrappedInterval, czmlInterval.epoch, czmlInterval.interpolationAlgorithm,
+                    czmlInterval.interpolationDegree);
         }
     };
 

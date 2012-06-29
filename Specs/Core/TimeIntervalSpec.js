@@ -8,8 +8,8 @@ defineSuite([
     "use strict";
     /*global it,expect*/
 
-    function mergeByAdd(lhs, rhs) {
-        return lhs + rhs;
+    function mergeByAdd(left, right) {
+        return left + right;
     }
 
     it('Construction correctly sets all properties.', function() {

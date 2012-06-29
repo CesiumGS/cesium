@@ -6,7 +6,8 @@ define([
     "use strict";
 
     /**
-     * Constants related to the behavior of Clock.tick().
+     * Constants to determine how much time advances with each call
+     * to {@link Clock#tick}.
      *
      * @exports ClockStep
      *
@@ -15,26 +16,14 @@ define([
      */
     var ClockStep = {
         /**
-         * Clock.tick() advances the current time by a fixed step, which is the number of
-         * seconds specified by Clock.multiplier.
-         *
-         * @example
-         * //Each call to tick advances the clock 60 seconds.
-         * var clock = new Clock();
-         * clock.step = ClockStep.TICK_DEPENDENT;
-         * clock.multiplier = 60.0;
+         * {@link Clock#tick} advances the current time by a fixed step,
+         * which is the number of seconds specified by {@link Clock#multiplier}.
          */
         TICK_DEPENDENT : new Enumeration(0, 'TICK_DEPENDENT'),
 
         /**
-         * Clock.tick() advances the current time by an amount of system clock time elapsed,
-         * multiplied by the value of Clock.multiplier, since the last call to Clock.tick()
-         *
-         * @example
-         * //Each call to tick advances the clock at twice the rate of real-time.
-         * var clock = new Clock();
-         * clock.step = SYSTEM_CLOCK_DEPENDENT;
-         * clock.multiplier = 2.0;
+         * {@link Clock#tick} advances the current time by the amount of system
+         * time elapsed since the previous call multiplied by {@link Clock#multiplier}.
          */
         SYSTEM_CLOCK_DEPENDENT : new Enumeration(1, 'SYSTEM_CLOCK_DEPENDENT')
     };

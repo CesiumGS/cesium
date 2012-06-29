@@ -14,6 +14,8 @@ define([
     /**
      * A DynamicObject visualizer which maps the DynamicPolygon instance
      * in DynamicObject.polygon to a Polygon primitive.
+     * @alias DynamicPolygonVisualizer
+     * @constructor
      *
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.
@@ -35,14 +37,17 @@ define([
      * @see DynamicPyramidVisualizer
      *
      */
-    function DynamicPolygonVisualizer(scene, dynamicObjectCollection) {
+    var DynamicPolygonVisualizer = function(scene, dynamicObjectCollection) {
+        if (typeof scene === 'undefined') {
+            throw new DeveloperError('scene is required.');
+        }
         this._scene = scene;
         this._unusedIndexes = [];
         this._primitives = scene.getPrimitives();
         this._polygonCollection = [];
         this._dynamicObjectCollection = undefined;
         this.setDynamicObjectCollection(dynamicObjectCollection);
-    }
+    };
 
     /**
      * Returns the scene being used by this visualizer.
@@ -72,7 +77,7 @@ define([
         if (oldCollection !== dynamicObjectCollection) {
             if (typeof oldCollection !== 'undefined') {
                 oldCollection.objectsRemoved.removeEventListener(DynamicPolygonVisualizer.prototype._onObjectsRemoved);
-                this.removeAll();
+                this.removeAllPrimitives();
             }
             this._dynamicObjectCollection = dynamicObjectCollection;
             if (typeof dynamicObjectCollection !== 'undefined') {
@@ -104,15 +109,17 @@ define([
     /**
      * Removes all primitives from the scene.
      */
-    DynamicPolygonVisualizer.prototype.removeAll = function() {
+    DynamicPolygonVisualizer.prototype.removeAllPrimitives = function() {
         var i, len;
         for (i = 0, len = this._polygonCollection.length; i < len; i++) {
             this._primitives.remove(this._polygonCollection[i]);
         }
 
-        var dynamicObjects = this._dynamicObjectCollection.getObjects();
-        for (i = dynamicObjects.length - 1; i > -1; i--) {
-            dynamicObjects[i].polygonVisualizerIndex = undefined;
+        if (typeof this._dynamicObjectCollection !== 'undefined') {
+            var dynamicObjects = this._dynamicObjectCollection.getObjects();
+            for (i = dynamicObjects.length - 1; i > -1; i--) {
+                dynamicObjects[i]._polygonVisualizerIndex = undefined;
+            }
         }
 
         this._unusedIndexes = [];
@@ -155,7 +162,7 @@ define([
      * visualizer = visualizer && visualizer.destroy();
      */
     DynamicPolygonVisualizer.prototype.destroy = function() {
-        this.removeAll();
+        this.removeAllPrimitives();
         return destroyObject(this);
     };
 
@@ -170,17 +177,20 @@ define([
             return;
         }
 
+        var vertexPositions = vertexPositionsProperty.getValueCartesian(time);
+
         var polygon;
         var showProperty = dynamicPolygon.show;
-        var polygonVisualizerIndex = dynamicObject.polygonVisualizerIndex;
+        var polygonVisualizerIndex = dynamicObject._polygonVisualizerIndex;
         var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
 
-        if (!show) {
+
+        if (!show || typeof vertexPositions === 'undefined' || vertexPositions.length < 3) {
             //don't bother creating or updating anything else
             if (typeof polygonVisualizerIndex !== 'undefined') {
                 polygon = this._polygonCollection[polygonVisualizerIndex];
                 polygon.show = false;
-                dynamicObject.polygonVisualizerIndex = undefined;
+                dynamicObject._polygonVisualizerIndex = undefined;
                 this._unusedIndexes.push(polygonVisualizerIndex);
             }
             return;
@@ -198,7 +208,7 @@ define([
                 this._polygonCollection.push(polygon);
                 this._primitives.add(polygon);
             }
-            dynamicObject.polygonVisualizerIndex = polygonVisualizerIndex;
+            dynamicObject._polygonVisualizerIndex = polygonVisualizerIndex;
             polygon.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
@@ -209,15 +219,14 @@ define([
 
         polygon.show = true;
 
-        var value = vertexPositionsProperty.getValueCartesian(time);
-        if (typeof value !== 'undefined' && polygon.last_position !== value) {
-            polygon.setPositions(value);
-            polygon.last_position = value;
+        if (polygon._visualizerPositions !== vertexPositions) {
+            polygon.setPositions(vertexPositions);
+            polygon._visualizerPositions = vertexPositions;
         }
 
         var material = dynamicPolygon.material;
         if (typeof material !== 'undefined') {
-            polygon.material = material.getValue(time, this._scene, polygon.material);
+            polygon.material = material.getValue(time, this._scene.getContext(), polygon.material);
         }
     };
 
@@ -226,12 +235,12 @@ define([
         var thisUnusedIndexes = this._unusedIndexes;
         for ( var i = dynamicObjects.length - 1; i > -1; i--) {
             var dynamicObject = dynamicObjects[i];
-            var polygonVisualizerIndex = dynamicObject.polygonVisualizerIndex;
+            var polygonVisualizerIndex = dynamicObject._polygonVisualizerIndex;
             if (typeof polygonVisualizerIndex !== 'undefined') {
                 var polygon = thisPolygonCollection[polygonVisualizerIndex];
                 polygon.show = false;
                 thisUnusedIndexes.push(polygonVisualizerIndex);
-                dynamicObject.polygonVisualizerIndex = undefined;
+                dynamicObject._polygonVisualizerIndex = undefined;
             }
         }
     };

@@ -7,7 +7,8 @@ define([
 
 
     /**
-     * Methods for performing linear interpolation.
+     * Functions for performing linear interpolation.
+     * @exports LinearApproximation
      *
      * @see LagrangePolynomialApproximation
      * @see HermitePolynomialApproximation
@@ -23,11 +24,13 @@ define([
      *
      * @param degree The desired degree of interpolation.
      *
+     * @exception {DeveloperError} Linear interpolation can only generate a first degree polynomial.
+     *
      * @returns The number of required data points needed for the desired degree of interpolation.
      */
     LinearApproximation.getRequiredDataPoints = function(degree) {
         if (degree !== 1) {
-            throw 'Linear interpolation can only generate a first degree polynomial.';
+            throw new DeveloperError('Linear interpolation can only generate a first degree polynomial.');
         }
         return 2;
     };

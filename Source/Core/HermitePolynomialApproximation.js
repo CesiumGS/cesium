@@ -7,7 +7,10 @@ define(['./Math'
     var factorial = CesiumMath.factorial;
 
     function calculateCoefficientTerm(x, zIndices, xTable, derivOrder, termOrder, reservedIndices) {
-        var result = 0, i, j, reserved;
+        var result = 0;
+        var reserved;
+        var i;
+        var j;
 
         if (derivOrder > 0) {
             for (i = 0; i < termOrder; i++) {
@@ -46,7 +49,8 @@ define(['./Math'
     }
 
     /**
-     * Methods for performing Hermite interpolation.
+     * Functions for performing Hermite interpolation.
+     * @exports HermitePolynomialApproximation
      *
      * @see LinearApproximation
      * @see LagrangePolynomialApproximation

@@ -57,6 +57,8 @@ define([
     /**
      * A DynamicObject visualizer which maps the DynamicCone instance
      * in DynamicObject.cone to a CustomSensor primitive.
+     * @alias DynamicConeVisualizerUsingCustomSensor
+     * @constructor
      *
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.
@@ -78,14 +80,17 @@ define([
      * @see DynamicPyramidVisualizer
      *
      */
-    function DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjectCollection) {
+    var DynamicConeVisualizerUsingCustomSensor = function(scene, dynamicObjectCollection) {
+        if (typeof scene === 'undefined') {
+            throw new DeveloperError('scene is required.');
+        }
         this._scene = scene;
         this._unusedIndexes = [];
         this._primitives = scene.getPrimitives();
         this._coneCollection = [];
         this._dynamicObjectCollection = undefined;
         this.setDynamicObjectCollection(dynamicObjectCollection);
-    }
+    };
 
     /**
      * Returns the scene being used by this visualizer.
@@ -115,7 +120,7 @@ define([
         if (oldCollection !== dynamicObjectCollection) {
             if (typeof oldCollection !== 'undefined') {
                 oldCollection.objectsRemoved.removeEventListener(DynamicConeVisualizerUsingCustomSensor.prototype._onObjectsRemoved);
-                this.removeAll();
+                this.removeAllPrimitives();
             }
             this._dynamicObjectCollection = dynamicObjectCollection;
             if (typeof dynamicObjectCollection !== 'undefined') {
@@ -147,15 +152,17 @@ define([
     /**
      * Removes all primitives from the scene.
      */
-    DynamicConeVisualizerUsingCustomSensor.prototype.removeAll = function() {
+    DynamicConeVisualizerUsingCustomSensor.prototype.removeAllPrimitives = function() {
         var i, len;
         for (i = 0, len = this._coneCollection.length; i < len; i++) {
             this._primitives.remove(this._coneCollection[i]);
         }
 
-        var dynamicObjects = this._dynamicObjectCollection.getObjects();
-        for (i = dynamicObjects.length - 1; i > -1; i--) {
-            dynamicObjects[i].coneVisualizerIndex = undefined;
+        if (typeof this._dynamicObjectCollection !== 'undefined') {
+            var dynamicObjects = this._dynamicObjectCollection.getObjects();
+            for (i = dynamicObjects.length - 1; i > -1; i--) {
+                dynamicObjects[i]._coneVisualizerIndex = undefined;
+            }
         }
 
         this._unusedIndexes = [];
@@ -198,7 +205,7 @@ define([
      * visualizer = visualizer && visualizer.destroy();
      */
     DynamicConeVisualizerUsingCustomSensor.prototype.destroy = function() {
-        this.removeAll();
+        this.removeAllPrimitives();
         return destroyObject(this);
     };
 
@@ -233,7 +240,7 @@ define([
 
         var cone;
         var showProperty = dynamicCone.show;
-        var coneVisualizerIndex = dynamicObject.coneVisualizerIndex;
+        var coneVisualizerIndex = dynamicObject._coneVisualizerIndex;
         var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
 
         if (!show) {
@@ -241,7 +248,7 @@ define([
             if (typeof coneVisualizerIndex !== 'undefined') {
                 cone = this._coneCollection[coneVisualizerIndex];
                 cone.show = false;
-                dynamicObject.coneVisualizerIndex = undefined;
+                dynamicObject._coneVisualizerIndex = undefined;
                 this._unusedIndexes.push(coneVisualizerIndex);
             }
             return;
@@ -262,21 +269,18 @@ define([
                 this._coneCollection.push(cone);
                 this._primitives.add(cone);
             }
-            dynamicObject.coneVisualizerIndex = coneVisualizerIndex;
+            dynamicObject._coneVisualizerIndex = coneVisualizerIndex;
             cone.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
-            cone.capMaterial = new ColorMaterial();
             cone.innerHalfAngle = 0;
             cone.outerHalfAngle = Math.PI;
-            cone.innerMaterial = new ColorMaterial();
+            cone.material = new ColorMaterial();
             cone.intersectionColor = Color.YELLOW;
             cone.minimumClockAngle = -CesiumMath.TWO_PI;
             cone.maximumClockAngle =  CesiumMath.TWO_PI;
-            cone.outerMaterial = new ColorMaterial();
             cone.radius = Number.POSITIVE_INFINITY;
             cone.showIntersection = true;
-            cone.silhouetteMaterial = new ColorMaterial();
         } else {
             cone = this._coneCollection[coneVisualizerIndex];
         }
@@ -327,22 +331,22 @@ define([
             }
         }
 
-        position = positionProperty.getValueCartesian(time, position) || cone.dynamicConeVisualizerLastPosition;
-        orientation = orientationProperty.getValue(time, orientation) || cone.dynamicConeVisualizerLastOrientation;
+        position = positionProperty.getValueCartesian(time, position) || cone._visualizerPosition;
+        orientation = orientationProperty.getValue(time, orientation) || cone._visualizerOrientation;
 
         if (typeof position !== 'undefined' &&
             typeof orientation !== 'undefined' &&
-            (!position.equals(cone.dynamicConeVisualizerLastPosition) ||
-             !orientation.equals(cone.dynamicConeVisualizerLastOrientation))) {
-            cone.modelMatrix = DynamicConeVisualizerUsingCustomSensor._computeModelMatrix(position, orientation);
-            position.clone(cone.dynamicConeVisualizerLastPosition);
-            orientation.clone(cone.dynamicConeVisualizerLastOrientation);
+            (!position.equals(cone._visualizerPosition) ||
+             !orientation.equals(cone._visualizerOrientation))) {
+            cone.modelMatrix = new Matrix4(orientation.conjugate(orientation).toRotationMatrix(), position);
+            position.clone(cone._visualizerPosition);
+            orientation.clone(cone._visualizerOrientation);
         }
 
-        var scene = this._scene;
+        var context = this._scene.getContext();
         var material = dynamicCone.outerMaterial;
         if (typeof material !== 'undefined') {
-            cone.material = material.getValue(time, scene, cone.material);
+            cone.material = material.getValue(time, context, cone.material);
         }
 
         property = dynamicCone.intersectionColor;
@@ -359,37 +363,14 @@ define([
         var thisUnusedIndexes = this._unusedIndexes;
         for ( var i = dynamicObjects.length - 1; i > -1; i--) {
             var dynamicObject = dynamicObjects[i];
-            var coneVisualizerIndex = dynamicObject.coneVisualizerIndex;
+            var coneVisualizerIndex = dynamicObject._coneVisualizerIndex;
             if (typeof coneVisualizerIndex !== 'undefined') {
                 var cone = thisConeCollection[coneVisualizerIndex];
                 cone.show = false;
                 thisUnusedIndexes.push(coneVisualizerIndex);
-                dynamicObject.coneVisualizerIndex = undefined;
+                dynamicObject._coneVisualizerIndex = undefined;
             }
         }
-    };
-
-    DynamicConeVisualizerUsingCustomSensor._computeModelMatrix = function(position, orientation) {
-        var w = orientation.w,
-        x = orientation.x,
-        y = orientation.y,
-        z = orientation.z,
-        x2 = x * x,
-        xy = x * y,
-        xz = x * z,
-        xw = x * w,
-        y2 = y * y,
-        yz = y * z,
-        yw = y * w,
-        z2 = z * z,
-        zw = z * w,
-        w2 = w * w;
-
-        return new Matrix4(
-                x2 - y2 - z2 + w2,  2 * (xy + zw),      2 * (xz - yw),      position.x,
-                2 * (xy - zw),      -x2 + y2 - z2 + w2, 2 * (yz + xw),      position.y,
-                2 * (xz + yw),      2 * (yz - xw),      -x2 - y2 + z2 + w2, position.z,
-                0,                  0,                  0,                  1);
     };
 
     return DynamicConeVisualizerUsingCustomSensor;

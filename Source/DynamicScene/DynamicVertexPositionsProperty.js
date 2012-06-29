@@ -28,28 +28,28 @@ define([
     function ValueHolder(czmlInterval) {
         var i, len, values = [], tmp;
 
-        tmp = czmlInterval.cartographicRadians;
-        if (typeof tmp !== 'undefined') {
-            for (i = 0, len = tmp.length; i < len; i += 3) {
-                values.push(new Cartographic3(tmp[i], tmp[i + 1], tmp[i + 2]));
-            }
-            this.cartographic = values;
-        }
-
-        tmp = czmlInterval.cartographicDegrees;
-        if (typeof tmp !== 'undefined') {
-            for (i = 0, len = tmp.length; i < len; i += 3) {
-                values.push(new Cartographic3(CesiumMath.toRadians(tmp[i]), CesiumMath.toRadians(tmp[i + 1]), CesiumMath.toRadians(tmp[i + 2])));
-            }
-            this.cartographic = values;
-        }
-
         tmp = czmlInterval.cartesian;
         if (typeof tmp !== 'undefined') {
             for (i = 0, len = tmp.length; i < len; i += 3) {
                 values.push(new Cartesian3(tmp[i], tmp[i + 1], tmp[i + 2]));
             }
             this.cartesian = values;
+        } else {
+            tmp = czmlInterval.cartographicRadians;
+            if (typeof tmp !== 'undefined') {
+                for (i = 0, len = tmp.length; i < len; i += 3) {
+                    values.push(new Cartographic3(tmp[i], tmp[i + 1], tmp[i + 2]));
+                }
+                this.cartographic = values;
+            } else {
+                tmp = czmlInterval.cartographicDegrees;
+                if (typeof tmp !== 'undefined') {
+                    for (i = 0, len = tmp.length; i < len; i += 3) {
+                        values.push(new Cartographic3(CesiumMath.toRadians(tmp[i]), CesiumMath.toRadians(tmp[i + 1]), tmp[i + 2]));
+                    }
+                    this.cartographic = values;
+                }
+            }
         }
     }
 
@@ -74,9 +74,8 @@ define([
      * created and managed via loading CZML data into a DynamicObjectCollection.
      * Instances of this type are exposed via DynamicObject and it's sub-objects
      * and are responsible for interpreting and interpolating the data for visualization.
-     * </p>
      *
-     * @name DynamicDirectionsProperty
+     * @alias DynamicVertexPositionsProperty
      * @internalconstructor
      *
      * @see DynamicObject
@@ -86,9 +85,9 @@ define([
      * @see DynamicPositionProperty
      * @see DynamicDirectionsProperty
      */
-    function DynamicVertexPositionsProperty() {
+    var DynamicVertexPositionsProperty = function() {
         this._propertyIntervals = new TimeIntervalCollection();
-    }
+    };
 
     /**
      * Processes the provided CZML interval or intervals into this property.

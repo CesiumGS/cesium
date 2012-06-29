@@ -18,21 +18,21 @@ define([
     /**
      * A utility class which dynamically builds a TextureAtlas by associating
      * a unique identifier with each texture as it is added.  If a texture with
-     * the same id is needed later, the existing index is returne, rather than
+     * the same id is needed later, the existing index is returned, rather than
      * adding multiple copies of the same texture.
      *
-     * @name TextureAtlasBuilder
+     * @alias TextureAtlasBuilder
      * @constructor
      *
      * @see TextureAtlas
      */
-    function TextureAtlasBuilder(textureAtlas) {
+    var TextureAtlasBuilder  = function(textureAtlas) {
         if (typeof textureAtlas === 'undefined') {
             throw new DeveloperError('textureAtlas is required.');
         }
         this.textureAtlas = textureAtlas;
         this._idHash = {};
-    }
+    };
 
     /**
      * Retrieves the image from the specified url and adds it to the atlas.
@@ -118,10 +118,12 @@ define([
 
         var that = this;
         getImageCallback(id, function(newImage) {
-            var index = sourceHolder.index = that.textureAtlas.addImage(newImage);
-            sourceHolder.loaded = true;
-            sourceHolder.imageLoaded.raiseEvent(index, id);
-            sourceHolder.imageLoaded = undefined;
+            if (!that.textureAtlas.isDestroyed()) {
+                var index = sourceHolder.index = that.textureAtlas.addImage(newImage);
+                sourceHolder.loaded = true;
+                sourceHolder.imageLoaded.raiseEvent(index, id);
+                sourceHolder.imageLoaded = undefined;
+            }
         });
     };
 

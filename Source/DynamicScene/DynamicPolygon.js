@@ -15,7 +15,7 @@ define([
      * Represents a time-dynamic polygon, typically used in conjunction with DynamicPolygonVisualizer and
      * DynamicObjectCollection to visualize CZML.
      *
-     * @name DynamicPolygon
+     * @alias DynamicPolygon
      * @constructor
      *
      * @see DynamicObject
@@ -26,7 +26,7 @@ define([
      * @see Polygon
      * @see CzmlDefaults
      */
-    function DynamicPolygon() {
+    var DynamicPolygon = function() {
         /**
          * A DynamicProperty of type CzmlBoolean which determines the polygon's visibility.
          */
@@ -35,7 +35,7 @@ define([
          * A DynamicMaterialProperty which determines the polygon's material.
          */
         this.material = undefined;
-    }
+    };
 
     /**
      * Processes a single CZML packet and merges its data into the provided DynamicObject's polygon.
@@ -54,36 +54,38 @@ define([
      */
     DynamicPolygon.processCzmlPacket = function(dynamicObject, packet) {
         var polygonData = packet.polygon;
+        if (typeof polygonData === 'undefined') {
+            return false;
+        }
+
         var polygonUpdated = false;
-        if (typeof polygonData !== 'undefined') {
-            var polygon = dynamicObject.polygon;
-            polygonUpdated = typeof polygon === 'undefined';
-            if (polygonUpdated) {
-                dynamicObject.polygon = polygon = new DynamicPolygon();
-            }
+        var polygon = dynamicObject.polygon;
+        polygonUpdated = typeof polygon === 'undefined';
+        if (polygonUpdated) {
+            dynamicObject.polygon = polygon = new DynamicPolygon();
+        }
 
-            var interval = polygonData.interval;
-            if (typeof interval !== 'undefined') {
-                interval = TimeInterval.fromIso8601(interval);
-            }
+        var interval = polygonData.interval;
+        if (typeof interval !== 'undefined') {
+            interval = TimeInterval.fromIso8601(interval);
+        }
 
-            if (typeof polygonData.show !== 'undefined') {
-                var show = polygon.show;
-                if (typeof show === 'undefined') {
-                    polygon.show = show = new DynamicProperty(CzmlBoolean);
-                    polygonUpdated = true;
-                }
-                show.processCzmlIntervals(polygonData.show, interval);
+        if (typeof polygonData.show !== 'undefined') {
+            var show = polygon.show;
+            if (typeof show === 'undefined') {
+                polygon.show = show = new DynamicProperty(CzmlBoolean);
+                polygonUpdated = true;
             }
+            show.processCzmlIntervals(polygonData.show, interval);
+        }
 
-            if (typeof polygonData.material !== 'undefined') {
-                var material = polygon.material;
-                if (typeof material === 'undefined') {
-                    polygon.material = material = new DynamicMaterialProperty();
-                    polygonUpdated = true;
-                }
-                material.processCzmlIntervals(polygonData.material, interval);
+        if (typeof polygonData.material !== 'undefined') {
+            var material = polygon.material;
+            if (typeof material === 'undefined') {
+                polygon.material = material = new DynamicMaterialProperty();
+                polygonUpdated = true;
             }
+            material.processCzmlIntervals(polygonData.material, interval);
         }
         return polygonUpdated;
     };

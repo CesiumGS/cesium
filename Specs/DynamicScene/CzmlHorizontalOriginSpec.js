@@ -8,10 +8,10 @@ defineSuite([
     "use strict";
     /*global it,expect*/
 
-    var simpleHorizontalOrigin = "CENTER";
+    var simpleHorizontalOrigin = 'CENTER';
 
     var constantHorizontalOriginInterval = {
-        horizontalOrigin : "LEFT"
+        horizontalOrigin : 'LEFT'
     };
 
     it('unwrapInterval', function() {

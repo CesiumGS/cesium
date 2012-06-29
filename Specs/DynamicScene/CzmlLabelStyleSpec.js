@@ -8,10 +8,10 @@ defineSuite([
     "use strict";
     /*global it,expect*/
 
-    var simpleLabelStyle = "FILL";
+    var simpleLabelStyle = 'FILL';
 
     var constantLabelStyleInterval = {
-        labelStyle : "OUTLINE"
+        labelStyle : 'OUTLINE'
     };
 
     it('unwrapInterval', function() {
