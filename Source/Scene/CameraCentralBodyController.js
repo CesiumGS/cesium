@@ -34,7 +34,6 @@ define([
 
         this._spindleController = new CameraSpindleController(canvas, camera, ellipsoid);
         this._freeLookController = new CameraFreeLookController(canvas, camera);
-        this._freeLookController.horizontalRotationAxis = Cartesian3.UNIT_Z;
 
         this._rotateHandler = new CameraEventHandler(canvas, CameraEventType.MIDDLE_DRAG);
 
@@ -50,7 +49,7 @@ define([
 
         var rotateMovement = rotate.getMovement();
         if (rotate.isButtonDown() && typeof this._transform === 'undefined' && rotateMovement) {
-            var center = this._camera.pickEllipsoid(this._spindleController.getEllipsoid(), rotateMovement.startPosition);
+            var center = this._camera.pickEllipsoid(rotateMovement.startPosition, this._spindleController.getEllipsoid());
             if (typeof center !== 'undefined') {
                 this._transform = Transforms.eastNorthUpToFixedFrame(center);
             }

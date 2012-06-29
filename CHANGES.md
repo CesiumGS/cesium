@@ -15,6 +15,15 @@ Beta Releases
       should now look like:
 
             context.createTextureAtlas({images : images, pixelFormat : pixelFormat, borderWidthInPixels : borderWidthInPixels});
+            
+   * `Camera.pickEllipsoid` returns the picked position in world coordinates and the ellipsoid parameter is optional. Prefer the new `Scene.pickEllipsoid` method. For example, change
+   
+            var position = camera.pickEllipsoid(ellipsoid, windowPosition);
+      to:
+            
+            var position = scene.pickEllipsoid(windowPosition, ellipsoid);
+            
+   * `Camera.getPickRay` now returns the new `Ray` type instead of an object with position and direction properties.
 
 * Added `addImage` to `TextureAtlas` so images can be added to a texture atlas after it is constructed.
 * Added `Event`, a new utility class which makes it easy for objects to expose event properties.
@@ -29,6 +38,7 @@ Beta Releases
 * Added a new Timeline control to the widgets directory.
 * Added a new DojoWidgets directory, to contain dojo-specific widgets.
 * Added new Timeline and Cesium dojo widgets.
+* Added `Scene.pickEllipsoid`, which picks either the ellipsoid or the map depending on the current `SceneMode`.
 
 ### b6a - 06/20/2012
 
