@@ -13,9 +13,6 @@ agi_material agi_getMaterial(agi_materialInput materialInput)
     
     vec3 normalEC = materialInput.tangentToEyeMatrix * normalTangentSpace;
     
-    // TODO: Will remove the diffuse and specular later.
-    material.diffuse = vec3(0.2, 0.2, 0.2);
-    material.specular = 0.01;
     material.normal = normalEC;
     
     return material;

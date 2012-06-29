@@ -1,9 +1,11 @@
 /*global define*/
 define([
         '../../Core/DeveloperError',
+        './replaceMaterialChannels',
         '../../Shaders/Materials/ReflectionMaterial'
     ], function(
         DeveloperError,
+        replaceMaterialChannels,
         ShadersReflectionMaterial) {
     "use strict";
 
@@ -27,15 +29,15 @@ define([
         /**
          * Reflectivity controls how strong the reflection is from 0.0 to 1.0
          */
-        this.reflectivity = t.reflectivity || 1.0;
+        this.reflectivity = (typeof t.reflectivity !== 'undefined') ? t.reflectivity : 1.0;
 
         /**
-         * The glsl shader source
+         * Channels used for sampling the texture.
          *
          * type {String}
          */
-        var channels = t.channels || 'rgb';
-        this.shaderSource = this._replaceChannels(ShadersReflectionMaterial, channels, 3);
+        this.channels = t.channels || 'rgb';
+        this.shaderSource = replaceMaterialChannels(ShadersReflectionMaterial, 'reflection_material_channels', this.channels, 3);
 
         var that = this;
         this._uniforms = {
@@ -50,17 +52,6 @@ define([
             }
         };
     }
-
-    ReflectionMaterial.prototype._replaceChannels = function(source, channels, numChannels) {
-        channels = channels.toLowerCase();
-        if (channels.length !== numChannels) {
-            throw new DeveloperError('Number of texture channels should be: ' + numChannels);
-        }
-        if (channels.search(/[^rgba]/) !== -1) {
-            throw new DeveloperError('Channels should only contain r, g, b, or a');
-        }
-        return source.replace(new RegExp('reflection_material_channels', 'g'), channels);
-    };
 
     ReflectionMaterial.prototype._getShaderSource = function() {
         return "#line 0\n" +

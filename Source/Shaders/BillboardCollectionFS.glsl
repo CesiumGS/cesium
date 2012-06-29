@@ -8,7 +8,7 @@ void main()
 {
     vec4 color = texture2D(u_atlas, v_textureCoordinates) * v_color;
 
-    if (color.b == 0.0)
+    if (color.a == 0.0)
     {
         discard;
     }

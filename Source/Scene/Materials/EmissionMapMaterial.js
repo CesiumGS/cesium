@@ -1,9 +1,11 @@
 /*global define*/
 define([
         '../../Core/DeveloperError',
+        './replaceMaterialChannels',
         '../../Shaders/Materials/EmissionMapMaterial'
     ], function(
         DeveloperError,
+        replaceMaterialChannels,
         ShadersEmissionMapMaterial) {
     "use strict";
 
@@ -39,12 +41,12 @@ define([
         this.tRepeat = t.tRepeat || 1.0;
 
         /**
-         * The glsl shader source
+         * Channels used for sampling the texture.
          *
          * type {String}
          */
-        var channels = t.channels || 'rgb';
-        this.shaderSource = this._replaceChannels(ShadersEmissionMapMaterial, channels, 3);
+        this.channels = t.channels || 'rgb';
+        this.shaderSource = replaceMaterialChannels(ShadersEmissionMapMaterial, 'emission_map_material_channels', this.channels, 3);
 
         var that = this;
         this._uniforms = {
@@ -62,17 +64,6 @@ define([
             }
         };
     }
-
-    EmissionMapMaterial.prototype._replaceChannels = function(source, channels, numChannels) {
-        channels = channels.toLowerCase();
-        if (channels.length !== numChannels) {
-            throw new DeveloperError('Number of texture channels should be: ' + numChannels);
-        }
-        if (channels.search(/[^rgba]/) !== -1) {
-            throw new DeveloperError('Channels should only contain r, g, b, or a');
-        }
-        return source.replace(new RegExp('emission_map_material_channels', 'g'), channels);
-    };
 
     EmissionMapMaterial.prototype._getShaderSource = function() {
         return "#line 0\n" +

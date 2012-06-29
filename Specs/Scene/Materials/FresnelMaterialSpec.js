@@ -39,8 +39,7 @@ defineSuite([
                 },
                 pixelFormat : PixelFormat.RGB
             }),
-            indexOfRefractionRatio : (1.0 / 1.1),
-            diffuseAmount : 0.0
+            indexOfRefractionRatio : (1.0 / 1.1)
         }), context);
         expect(pixel).not.toEqualArray([0, 0, 0, 0]);
         destroyContext(context);

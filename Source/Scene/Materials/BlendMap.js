@@ -1,9 +1,11 @@
 /*global define*/
 define([
         '../../Core/DeveloperError',
+        './replaceMaterialChannels',
         '../../Shaders/Materials/BlendMap'
     ], function(
         DeveloperError,
+        replaceMaterialChannels,
         ShadersBlendMap) {
     "use strict";
 
@@ -40,12 +42,12 @@ define([
         this.tRepeat = t.tRepeat || 1.0;
 
         /**
-         * The glsl shader source
+         * Channels used for sampling the texture.
          *
          * type {String}
          */
-        var channels = t.channels || 'r';
-        this.shaderSource = this._replaceChannels(ShadersBlendMap, channels, 1);
+        this.channels = t.channels || 'r';
+        this.shaderSource = replaceMaterialChannels(ShadersBlendMap, 'blend_map_channels', this.channels, 1);
 
         var that = this;
         this._uniforms = {
@@ -63,17 +65,6 @@ define([
             }
         };
     }
-
-    BlendMap.prototype._replaceChannels = function(source, channels, numChannels) {
-        channels = channels.toLowerCase();
-        if (channels.length !== numChannels) {
-            throw new DeveloperError('Number of texture channels should be: ' + numChannels);
-        }
-        if (channels.search(/[^rgba]/) !== -1) {
-            throw new DeveloperError('Channels should only contain r, g, b, or a');
-        }
-        return source.replace(new RegExp('blend_map_channels', 'g'), channels);
-    };
 
     BlendMap.prototype._getShaderSource = function() {
         return "#line 0\n" +

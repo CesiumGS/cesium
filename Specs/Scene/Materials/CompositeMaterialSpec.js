@@ -17,19 +17,19 @@ defineSuite([
     var greenImage;
     var blueImage;
 
-    it("initialize suite", function() {
+    it('initialize suite', function() {
         greenImage = new Image();
-        greenImage.src = "./Data/Images/Green.png";
+        greenImage.src = './Data/Images/Green.png';
 
         blueImage = new Image();
-        blueImage.src = "./Data/Images/Blue.png";
+        blueImage.src = './Data/Images/Blue.png';
 
         waitsFor(function() {
             return greenImage.complete && blueImage.complete;
-        }, "Load .png file(s) for texture test.", 3000);
+        }, 'Load .png file(s) for texture test.', 3000);
     });
 
-    it("renders a diffuse composite material", function() {
+    it('renders a diffuse composite material', function() {
         var context = createContext();
 
         var greenTexture = context.createTexture2D({
@@ -50,7 +50,7 @@ defineSuite([
                 'texture' : blueTexture
             }],
             'components' : {
-                'diffuse' : '(diffuseMap1 + diffuseMap2) / 2.0'
+                'diffuse' : '(diffuseMap1.diffuse + diffuseMap2.diffuse) / 2.0'
             }
         }), context);
 
@@ -62,7 +62,7 @@ defineSuite([
         destroyContext(context);
     });
 
-    it("renders an alpha composite material", function() {
+    it('renders an alpha composite material', function() {
         var context = createContext();
 
         var pixel = renderMaterial(new CompositeMaterial({
@@ -75,5 +75,45 @@ defineSuite([
         expect(pixel).not.toEqual([0,0,0,0]);
 
         destroyContext(context);
+    });
+
+    it('throws with invalid channel length', function() {
+        expect(function() {
+            var context = createContext();
+            var greenTexture = context.createTexture2D({
+                source : greenImage
+            });
+            return new CompositeMaterial({
+                'materials' : [{
+                    'id' : 'diffuseMap1',
+                    'type' : 'DiffuseMapMaterial',
+                    'texture' : greenTexture,
+                    'channels' : 'rrggbb'
+                }],
+                'components' : {
+                    'diffuse' : 'diffuseMap1'
+                }
+            });
+        }).toThrow();
+    });
+
+    it('throws with invalid channel values', function() {
+        expect(function() {
+            var context = createContext();
+            var greenTexture = context.createTexture2D({
+                source : greenImage
+            });
+            return new CompositeMaterial({
+                'materials' : [{
+                    'id' : 'diffuseMap1',
+                    'type' : 'DiffuseMapMaterial',
+                    'texture' : greenTexture,
+                    'channels' : 'inv'
+                }],
+                'components' : {
+                    'diffuse' : 'diffuseMap1'
+                }
+            });
+        }).toThrow();
     });
 });

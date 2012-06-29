@@ -64,7 +64,7 @@ defineSuite([
                 'texture' : grayTexture
             }],
             'components' : {
-                'diffuse' : 'mix(diffuseMap1, diffuseMap2, blender)',
+                'diffuse' : 'mix(diffuseMap1.diffuse, diffuseMap2.diffuse, blender)',
             }
         }), context);
 

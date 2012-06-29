@@ -1,6 +1,5 @@
 uniform samplerCube u_cubeMap;
 uniform float u_indexOfRefractionRatio;
-uniform float u_diffuseAmount;
 
 agi_material agi_getMaterial(agi_materialInput materialInput)
 {
@@ -22,7 +21,6 @@ agi_material agi_getMaterial(agi_materialInput materialInput)
     float cosAngIncidence = max(dot(normalWC, materialInput.positionToEyeWC), 0.0);
     
     vec3 finalColor = mix(reflectedValue, refractedValue, cosAngIncidence);
-    finalColor *= (1.0 - u_diffuseAmount);
     
     material.diffuse = finalColor;
     

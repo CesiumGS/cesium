@@ -1,9 +1,11 @@
 /*global define*/
 define([
         '../../Core/DeveloperError',
+        './replaceMaterialChannels',
         '../../Shaders/Materials/RefractionMaterial'
     ], function(
         DeveloperError,
+        replaceMaterialChannels,
         ShadersRefractionMaterial) {
     "use strict";
 
@@ -35,16 +37,15 @@ define([
         /**
          * Refractivity controls how strong the refraction is from 0.0 to 1.0
          */
-        this.refractivity = t.refractivity || 1.0;
+        this.refractivity = (typeof t.refractivity !== 'undefined') ? t.refractivity : 1.0;
 
         /**
-         * The glsl shader source
+         * Channels used for sampling the texture.
          *
          * type {String}
          */
-        var channels = t.channels || 'rgb';
-        this.shaderSource = this._replaceChannels(ShadersRefractionMaterial, channels, 3);
-
+        this.channels = t.channels || 'rgb';
+        this.shaderSource = replaceMaterialChannels(ShadersRefractionMaterial, 'refraction_material_channels', this.channels, 3);
 
         var that = this;
         this._uniforms = {
@@ -62,17 +63,6 @@ define([
             }
         };
     }
-
-    RefractionMaterial.prototype._replaceChannels = function(source, channels, numChannels) {
-        channels = channels.toLowerCase();
-        if (channels.length !== numChannels) {
-            throw new DeveloperError('Number of texture channels should be: ' + numChannels);
-        }
-        if (channels.search(/[^rgba]/) !== -1) {
-            throw new DeveloperError('Channels should only contain r, g, b, or a');
-        }
-        return source.replace(new RegExp('refraction_material_channels', 'g'), channels);
-    };
 
     RefractionMaterial.prototype._getShaderSource = function() {
         return "#line 0\n" +

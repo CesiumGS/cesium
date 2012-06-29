@@ -70,6 +70,31 @@ define([
      *
      * @name CompositeMaterial
      * @constructor
+     *
+     * @example
+     * Blends a reflection map and a diffuse map with a blend map:
+     * var material = new CompositeMaterial({
+     *     'materials' : [{
+     *         'id' : 'reflectionMap',
+     *         'type' : 'ReflectionMaterial',
+     *         'cubeMap' : cubeMap,
+     *         'reflectivity' : 1.0
+     *     },
+     *     {
+     *         'id' : 'diffuseMap',
+     *         'type' : 'DiffuseMapMaterial',
+     *         'texture' : diffuseMapTexture
+     *     },
+     *     {
+     *         'id' : 'blender',
+     *         'type' : 'BlendMap',
+     *         'texture' : blendMapTexture
+     *     }],
+     *     'components' : {
+     *         'diffuse' : 'mix(reflectionMap.diffuse, diffuseMap.diffuse, blender)',
+     *         'alpha' : '0.5'
+     *     }
+     * });
      */
     function CompositeMaterial(template) {
         var materialTemplates = template.materials;
@@ -78,16 +103,16 @@ define([
         // var images = this._getAllImages(materialTemplates);
 
         // Construct a material out of each material template in JSON.
-        // Add the material id to agi_getMaterial or agi_getBlendAmount
+        // Add the material id to agi_getMaterial or agi_getBlendFactor
         // to distinguish materials from each other.
         var i;
         var materialContainers = [];
 
         for (i = 0; i < materialTemplates.length; i++) {
             var materialTemplate = materialTemplates[i];
-            var material = this._materialFactory._constructMaterial(materialTemplate.type, materialTemplate);
+            var material = this._materialFactory.constructMaterial(materialTemplate.type, materialTemplate);
 
-            var originalMethodName = (materialTemplate.type === 'BlendMap') ? 'agi_getBlendAmount' : 'agi_getMaterial';
+            var originalMethodName = (materialTemplate.type === 'BlendMap') ? 'agi_getBlendFactor' : 'agi_getMaterial';
             var newMethodName = originalMethodName + '_' + materialTemplate.id;
             material.shaderSource = material.shaderSource.replace(originalMethodName, newMethodName);
 
@@ -109,11 +134,11 @@ define([
 
         // Loop over all the components ('diffuse', 'normal', etc) in the template and
         // replace the material ids from each component expression with their expanded forms.
-        // Example: 'diffuse' : 'mix(reflection, diffuseMap, blender)'
+        // Example: 'diffuse' : 'mix(reflection.diffuse, diffuseMap.diffuse, blender)'
         // Becomes: material.diffuse = mix(
         //              agi_getMaterial_reflection(materialInput).diffuse,
         //              agi_getMaterial_diffuseMap(materialInput).diffuse,
-        //              agi_getBlendAmount_blender());
+        //              agi_getBlendFactor_blender(materialInput));
 
         var components = template.components;
         for (var component in components) {
@@ -125,9 +150,6 @@ define([
                     if (expression.indexOf(materialContainer.id) !== -1) {
                         // Material id found, replace with expanded form.
                         var expandedMethod = materialContainer.methodName + '(materialInput)';
-                        if (materialContainer.type !== 'BlendMap'){
-                            expandedMethod += "." + component;
-                        }
                         expression = expression.replace(materialContainer.id, expandedMethod);
                     }
                 }
@@ -182,7 +204,7 @@ define([
             'VerticalStripeMaterial' : VerticalStripeMaterial,
             'WoodMaterial' : WoodMaterial
         },
-        _constructMaterial : function(name, template) {
+        constructMaterial : function(name, template) {
             if (this._materials.hasOwnProperty(name) === false) {
                 throw new DeveloperError('Material with type ' + name + ' does not exist.');
             }
