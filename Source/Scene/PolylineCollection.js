@@ -122,11 +122,11 @@ define([
          * @type BufferUsage
          *
          * @performance If <code>bufferUsage</code> changes, the next time
-         * {@link Polyline#update} is called, the polyline's vertex buffer
+         * {@link PolylineCollection#update} is called, the polylineCollection's vertex buffer
          * is rewritten - an <code>O(n)</code> operation that also incurs CPU to GPU overhead.
-         * For best performance, it is important to provide the proper usage hint.  If the polyline
+         * For best performance, it is important to provide the proper usage hint.  If the polylineCollection
          * will not change over several frames, use <code>BufferUsage.STATIC_DRAW</code>.
-         * If the polyline will change every frame, use <code>BufferUsage.STREAM_DRAW</code>.
+         * If the PolylineCollection will change every frame, use <code>BufferUsage.STREAM_DRAW</code>.
          */
         // The buffer usage for each attribute is determined based on the usage of the attribute over time.
         this._buffersUsage = [
@@ -225,10 +225,9 @@ define([
      *
      * @return {Polyline} The polyline that was added to the collection.
      *
-     * @performance Calling <code>add</code> is expected constant time.  However, when
-     * {@link PolylineCollection#update} is called, the collection's vertex buffer
-     * is rewritten - an <code>O(n)</code> operation that also incurs CPU to GPU overhead.  For
-     * best performance, add as many polylines as possible before calling <code>update</code>.
+     * @performance After calling <code>add</code>, {@link PolylineCollection#update} is called and
+     * the collection's vertex buffer is rewritten - an <code>O(n)</code> operation that also incurs CPU to GPU overhead.
+     * For best performance, add as many polylines as possible before calling <code>update</code>.
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
@@ -280,10 +279,9 @@ define([
      *
      * @return {Boolean} <code>true</code> if the polyline was removed; <code>false</code> if the polyline was not found in the collection.
      *
-     * @performance Calling <code>remove</code> is expected constant time.  However, when
-     * {@link PolylineCollection#update} is called, the collection's vertex buffer
-     * is rewritten - an <code>O(n)</code> operation that also incurs CPU to GPU overhead.  For
-     * best performance, remove as many polylines as possible before calling <code>update</code>.
+     * @performance After calling <code>remove</code>, {@link PolylineCollection#update} is called and
+     * the collection's vertex buffer is rewritten - an <code>O(n)</code> operation that also incurs CPU to GPU overhead.
+     * For best performance, remove as many polylines as possible before calling <code>update</code>.
      * If you intend to temporarily hide a polyline, it is usually more efficient to call
      * {@link Polyline#setShow} instead of removing and re-adding the polyline.
      *
@@ -353,7 +351,7 @@ define([
      *
      * @memberof PolylineCollection
      *
-     * @param {Object} polyline DOC_TBA
+     * @param {Object} polyline
      *
      * @see PolylineCollection#get
      */
@@ -374,7 +372,7 @@ define([
      *
      * @return {Polyline} The polyline at the specified index.
      *
-     * @performance Expected constant time.  If polylines were removed from the collection and
+     * @performance If polylines were removed from the collection and
      * {@link PolylineCollection#update} was not called, an implicit <code>O(n)</code>
      * operation is performed.
      *
@@ -415,7 +413,7 @@ define([
      *
      * @return {Number} The number of polylines in this collection.
      *
-     * @performance Expected constant time.  If polylines were removed from the collection and
+     * @performance If polylines were removed from the collection and
      * {@link PolylineCollection#update} was not called, an implicit <code>O(n)</code>
      * operation is performed.
      *
@@ -1025,6 +1023,9 @@ define([
         this.numberOfPositions = index;
     };
 
+    /**
+     * @private
+     */
     PolylinesWrapper.prototype.createRenderState = function(context, useDepthTest){
         var rsOne = this.rsOne || context.createRenderState({
             colorMask : {
@@ -1109,6 +1110,9 @@ define([
         this.rsThree = rsThree;
     };
 
+    /**
+     * @private
+     */
     PolylinesWrapper.prototype.getPolylines = function(mode, projection, modelMatrix){
         if(mode === SceneMode.SCENE3D){
             return this.polylines;
