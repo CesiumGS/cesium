@@ -49,7 +49,7 @@ define(['./Cartesian3', './DeveloperError'], function(Cartesian3, DeveloperError
      * @returns {Cartesian3} The point along the ray.
      *
      * @example
-     * Get the first intersection point of a ray and an ellipsoid.
+     * //Get the first intersection point of a ray and an ellipsoid.
      * var intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid);
      * var point = ray.getPoint(intersection.start);
      */
