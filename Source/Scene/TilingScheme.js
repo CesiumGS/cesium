@@ -55,6 +55,15 @@ define([
          */
         this.numberOfLevelZeroTilesY = undefined;
 
+        /**
+         * The maximum error, in meters, that can exist in the surface geometry at tile level zero.
+         * Tile level one is assumed to have half this error, level two is assumed to have
+         * half the error of level one, and so on down the tile pyramid.
+         *
+         * @type Number
+         */
+        this.levelZeroMaximumGeometricError = undefined;
+
         throw new DeveloperError('This type should not be instantiated directly.  Instead, use WebMercatorTilingScheme or GeographicTilingScheme.');
     }
 
