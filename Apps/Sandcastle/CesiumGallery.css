@@ -76,6 +76,8 @@ a.linkButton:focus, a.linkButton:hover {
     cursor: default;
 }
 
-.insetButtons .dijitButtonNode, .insetButtons .dijitButtonNode * {
+.insetButtons .dijitButtonNode,
+.insetButtons .dijitButtonNode *,
+.demoTile .dijitButtonNode img {
     cursor: pointer;
 }

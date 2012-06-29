@@ -18,6 +18,7 @@ require({
         'dojo/parser',
         'dojo/dom',
         'dojo/dom-construct',
+        'dojo/on',
         'dojo/_base/window',
         'dojo/_base/xhr',
         'Sandcastle/LinkButton',
@@ -27,6 +28,7 @@ require({
             parser,
             dom,
             domConstruct,
+            on,
             win,
             xhr,
             LinkButton,
@@ -48,11 +50,15 @@ require({
                 return b.date - a.date;
             });
 
+            var onThumbnailClick = function (e) {
+                window.location = this.parentNode.getElementsByTagName('a')[0].href;
+            };
+
             for (i = 0; i < len; ++i) {
                 var label = gallery_demos[i].name;
                 if (typeof gallery_demos[i].img !== 'undefined') {
                     label += '<br /><img src="gallery/' + window.encodeURIComponent(gallery_demos[i].img) +
-                        '" alt="" width="225" height="150" />';
+                        '" alt="" width="225" height="150" id="thumb_' + i + '" />';
                 }
                 label += '<span id="buttons_' + i + '" class="insetButtons"></span>';
 
@@ -77,6 +83,8 @@ require({
                 new LinkButton({
                     'label': '<span class="dijitReset dijitInline dijitIcon dijitIconEdit"></span> Code'
                 }).placeAt(codeButton);
+
+                on(dom.byId('thumb_' + i), 'click', onThumbnailClick);
 
                 var runButton = document.createElement('a');
                 runButton.tabIndex = i * 3 + 3;
