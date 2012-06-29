@@ -290,7 +290,7 @@ define([
             typeof orientation !== 'undefined' &&
             (!position.equals(cone._visualizerPosition) ||
              !orientation.equals(cone._visualizerOrientation))) {
-            cone.modelMatrix = DynamicConeVisualizer._computeModelMatrix(position, orientation);
+            cone.modelMatrix = new Matrix4(orientation.conjugate(orientation).toRotationMatrix(), position);
             position.clone(cone._visualizerPosition);
             orientation.clone(cone._visualizerOrientation);
         }
@@ -338,29 +338,6 @@ define([
                 dynamicObject._coneVisualizerIndex = undefined;
             }
         }
-    };
-
-    DynamicConeVisualizer._computeModelMatrix = function(position, orientation) {
-        var w = orientation.w;
-        var x = orientation.x;
-        var y = orientation.y;
-        var z = orientation.z;
-        var x2 = x * x;
-        var xy = x * y;
-        var xz = x * z;
-        var xw = x * w;
-        var y2 = y * y;
-        var yz = y * z;
-        var yw = y * w;
-        var z2 = z * z;
-        var zw = z * w;
-        var w2 = w * w;
-
-        return new Matrix4(
-                x2 - y2 - z2 + w2,  2 * (xy + zw),      2 * (xz - yw),      position.x,
-                2 * (xy - zw),      -x2 + y2 - z2 + w2, 2 * (yz + xw),      position.y,
-                2 * (xz + yw),      2 * (yz - xw),      -x2 - y2 + z2 + w2, position.z,
-                0,                  0,                  0,                  1);
     };
 
     return DynamicConeVisualizer;

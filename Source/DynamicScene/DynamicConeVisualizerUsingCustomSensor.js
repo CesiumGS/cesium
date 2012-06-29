@@ -7,8 +7,7 @@ define([
         '../Core/Matrix4',
         '../Core/Spherical',
         '../Scene/CustomSensorVolume',
-        '../Scene/ColorMaterial',
-        './DynamicConeVisualizer'
+        '../Scene/ColorMaterial'
        ], function(
          DeveloperError,
          destroyObject,
@@ -17,8 +16,7 @@ define([
          Matrix4,
          Spherical,
          CustomSensorVolume,
-         ColorMaterial,
-         DynamicConeVisualizer) {
+         ColorMaterial) {
     "use strict";
 
     //CZML_TODO DynamicConeVisualizerUsingCustomSensor is a temporary workaround
@@ -340,7 +338,7 @@ define([
             typeof orientation !== 'undefined' &&
             (!position.equals(cone._visualizerPosition) ||
              !orientation.equals(cone._visualizerOrientation))) {
-            cone.modelMatrix = DynamicConeVisualizer._computeModelMatrix(position, orientation);
+            cone.modelMatrix = new Matrix4(orientation.conjugate(orientation).toRotationMatrix(), position);
             position.clone(cone._visualizerPosition);
             orientation.clone(cone._visualizerOrientation);
         }

@@ -5,16 +5,14 @@ define([
         '../Core/Color',
         '../Core/Matrix4',
         '../Scene/CustomSensorVolume',
-        '../Scene/ColorMaterial',
-        './DynamicConeVisualizer'
+        '../Scene/ColorMaterial'
        ], function(
          DeveloperError,
          destroyObject,
          Color,
          Matrix4,
          CustomSensorVolume,
-         ColorMaterial,
-         DynamicConeVisualizer) {
+         ColorMaterial) {
     "use strict";
 
     /**
@@ -250,7 +248,7 @@ define([
             typeof orientation !== 'undefined' &&
             (!position.equals(pyramid._visualizerPosition) ||
              !orientation.equals(pyramid._visualizerOrientation))) {
-            pyramid.modelMatrix = DynamicConeVisualizer._computeModelMatrix(position, orientation);
+            pyramid.modelMatrix = new Matrix4(orientation.conjugate(orientation).toRotationMatrix(), position);
             position.clone(pyramid._visualizerPosition);
             orientation.clone(pyramid._visualizerOrientation);
         }

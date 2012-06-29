@@ -157,7 +157,9 @@ define([
             CzmlUnitQuaternion.getValueFromArray(sourceArray, lastIndex * doublesPerQuaternion, quaternion0);
 
             if (magnitude === 0) {
-                tmpQuaternion = Quaternion.IDENTITY;
+                //Can't just use Quaternion.IDENTITY here because tmpQuaternion may be modified in the future.
+                tmpQuaternion.x = tmpQuaternion.y = tmpQuaternion.z = 0.0;
+                tmpQuaternion.w = 1.0;
             } else {
                 Quaternion.fromAxisAngle(rotationVector, magnitude, tmpQuaternion);
             }
