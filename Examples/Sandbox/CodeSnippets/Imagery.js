@@ -10,7 +10,7 @@
                 mapStyle : Cesium.BingMapsStyle.AERIAL,
                 // Some versions of Safari support WebGL, but don't correctly implement
                 // cross-origin image loading, so we need to load Bing imagery using a proxy.
-                proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/CesiumViewer/Proxy.ashx')
+                proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/Proxy.ashx')
             });
 
             primitives.getCentralBody().dayTileProvider = bing;
@@ -24,7 +24,7 @@
                 host : 'server.arcgisonline.com',
                 root : 'ArcGIS/rest',
                 service : 'World_Street_Map',
-                proxy : new Cesium.DefaultProxy('/CesiumViewer/Proxy.ashx')
+                proxy : new Cesium.DefaultProxy('/Proxy.ashx')
             });
 
             primitives.getCentralBody().dayTileProvider = arcgis;
@@ -35,7 +35,7 @@
         this.code = function () {
             // OpenStreetMaps
             var osm = new Cesium.OpenStreetMapTileProvider({
-                proxy : new Cesium.DefaultProxy('/CesiumViewer/Proxy.ashx')
+                proxy : new Cesium.DefaultProxy('/Proxy.ashx')
             });
 
             primitives.getCentralBody().dayTileProvider = osm;
@@ -47,7 +47,7 @@
             // MapQuest OpenStreetMaps
             var mqOsm = new Cesium.OpenStreetMapTileProvider({
                 url : 'http://otile1.mqcdn.com/tiles/1.0.0/osm/',
-                proxy : new Cesium.DefaultProxy('/CesiumViewer/Proxy.ashx')
+                proxy : new Cesium.DefaultProxy('/Proxy.ashx')
             });
 
             primitives.getCentralBody().dayTileProvider = mqOsm;
@@ -59,7 +59,7 @@
             // MapQuest Aerial OpenStreetMaps
             var mqAerialOsm = new Cesium.OpenStreetMapTileProvider({
                 url : 'http://oatile1.mqcdn.com/naip/',
-                proxy : new Cesium.DefaultProxy('/CesiumViewer/Proxy.ashx')
+                proxy : new Cesium.DefaultProxy('/Proxy.ashx')
             });
 
             primitives.getCentralBody().dayTileProvider = mqAerialOsm;
@@ -75,7 +75,7 @@
             var layer = new Cesium.OpenStreetMapTileProvider({
                 url : 'http://tile.stamen.com/toner/',
                 fileExtension : 'jpg',
-                proxy : new Cesium.DefaultProxy('/CesiumViewer/Proxy.ashx'),
+                proxy : new Cesium.DefaultProxy('/Proxy.ashx'),
                 credit : 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'
             });
 
@@ -100,7 +100,7 @@
                 mapStyle : Cesium.BingMapsStyle.AERIAL,
                 // Some versions of Safari support WebGL, but don't correctly implement
                 // cross-origin image loading, so we need to load Bing imagery using a proxy.
-                proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/CesiumViewer/Proxy.ashx')
+                proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/Proxy.ashx')
             });
 
             // Single texture
