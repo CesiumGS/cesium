@@ -221,6 +221,38 @@ define([
     };
 
     /**
+     * Pick an ellipsoid or map in 3D mode.
+     *
+     * @memberof Scene
+     *
+     * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to pick.
+     *
+     * @exception {DeveloperError} windowPosition is required.
+     *
+     * @return {Cartesian3} If the ellipsoid or map was picked, returns the point on the surface of the ellipsoid or map
+     * in world coordinates. If the ellipsoid or map was not picked, returns undefined.
+     */
+    Scene.prototype.pickEllipsoid = function(windowPosition, ellipsoid) {
+        if (typeof windowPosition === 'undefined') {
+            throw new DeveloperError('windowPosition is required.');
+        }
+
+        ellipsoid = ellipsoid || Ellipsoid.WGS84;
+
+        var p;
+        if (this.mode === SceneMode.SCENE3D) {
+            p = this._camera.pickEllipsoid(windowPosition, ellipsoid);
+        } else if (this.mode === SceneMode.SCENE2D) {
+            p = this._camera.pickMap2D(windowPosition, this.scene2D.projection);
+        } else if (this.mode === SceneMode.COLUMBUS_VIEW) {
+            p = this._camera.pickMapColumbusView(windowPosition, this.scene2D.projection);
+        }
+
+        return p;
+    };
+
+    /**
      * DOC_TBA
      * @memberof Scene
      */
