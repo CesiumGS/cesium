@@ -11,6 +11,7 @@ define([
         '../Core/Ellipsoid',
         '../Core/SunPosition',
         '../Core/EventHandler',
+        '../Core/FeatureDetection',
         '../Core/MouseEventType',
         '../Core/Cartesian2',
         '../Core/JulianDate',
@@ -34,6 +35,7 @@ define([
         Ellipsoid,
         SunPosition,
         EventHandler,
+        FeatureDetection,
         MouseEventType,
         Cartesian2,
         JulianDate,
@@ -308,7 +310,10 @@ define([
             if (this.useStreamingImagery) {
                 centralBody.dayTileProvider = new BingMapsTileProvider({
                     server : 'dev.virtualearth.net',
-                    mapStyle : this.mapStyle
+                    mapStyle : this.mapStyle,
+                    // Some versions of Safari support WebGL, but don't correctly implement
+                    // cross-origin image loading, so we need to load Bing imagery using a proxy.
+                    proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/proxy/')
                 });
             } else {
                 centralBody.dayTileProvider = new SingleTileProvider(this.dayImageUrl);
