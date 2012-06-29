@@ -403,7 +403,7 @@ define([
 
     CameraSpindleController.prototype._spin = function(movement) {
         if (this.mode === CameraSpindleControllerMode.AUTO) {
-            var point = this._camera.pickEllipsoid(this._ellipsoid, movement.startPosition);
+            var point = this._camera.pickEllipsoid(movement.startPosition, this._ellipsoid);
             if (point) {
                 this._pan(movement);
             } else {
@@ -446,8 +446,8 @@ define([
 
     CameraSpindleController.prototype._pan = function(movement) {
         var camera = this._camera;
-        var p0 = camera.pickEllipsoid(this._ellipsoid, movement.startPosition);
-        var p1 = camera.pickEllipsoid(this._ellipsoid, movement.endPosition);
+        var p0 = camera.pickEllipsoid(movement.startPosition, this._ellipsoid);
+        var p1 = camera.pickEllipsoid(movement.endPosition, this._ellipsoid);
 
         if (!p0 || !p1) {
             return;

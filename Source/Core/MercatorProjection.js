@@ -2,10 +2,12 @@
 define([
         './Math',
         './Cartesian3',
+        './Cartographic3',
         './Ellipsoid'
     ], function(
         CesiumMath,
         Cartesian3,
+        Cartographic3,
         Ellipsoid) {
     "use strict";
 
@@ -45,6 +47,19 @@ define([
 
         // TODO: Deal with latitude outside ~(-85, 85) degrees
         return new Cartesian3(lon * this._halfEquatorCircumference, Math.log((1.0 + Math.sin(lat)) / Math.cos(lat)) * this._quarterPolarCircumference, cartographic.height);
+    };
+
+    /**
+     * DOC_TBA
+     * @memberof MercatorProjection
+     */
+    MercatorProjection.prototype.unproject = function(cartesian) {
+        var lon = cartesian.x / this._halfEquatorCircumference;
+
+        var lat = Math.exp(cartesian.y / this._quarterPolarCircumference);
+        lat = 2.0 * Math.atan((lat - 1.0) / (lat + 1.0));
+
+        return new Cartographic3(lon * Math.PI, lat * CesiumMath.PI_OVER_TWO, cartesian.z);
     };
 
     return MercatorProjection;
