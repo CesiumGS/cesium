@@ -88,7 +88,10 @@ define([
             this._translate(translate.getMovement());
         }
 
-        if (!translating && this.inertiaTranslate < 1.0) {
+        var killInertia = this._spindleController._spinHandler.isButtonDown() || this._spindleController._zoomHandler.isButtonDown() ||
+                this._spindleController._zoomWheel.isButtonDown() || this._freeLookController._handler.isButtonDown();
+
+        if (!killInertia && !translating && this.inertiaTranslate < 1.0) {
             maintainInertia(translate, this.inertiaTranslate, this._translate, this, '_lastInertiaTranslateMovement');
         }
 
