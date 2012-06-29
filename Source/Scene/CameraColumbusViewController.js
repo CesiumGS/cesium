@@ -60,9 +60,6 @@ define([
         this._spindleController._spinHandler = new CameraEventHandler(canvas, CameraEventType.MIDDLE_DRAG);
         this._spindleController.constrainedAxis = Cartesian3.UNIT_Z;
 
-        this._freeLookController = new CameraFreeLookController(canvas, camera);
-        this._freeLookController.horizontalRotationAxis = Cartesian3.UNIT_Z;
-
         this._transform = this._camera.transform.clone();
         this._lastInertiaTranslateMovement = undefined;
 
@@ -88,15 +85,11 @@ define([
             this._translate(translate.getMovement());
         }
 
-        var killInertia = this._spindleController._spinHandler.isButtonDown() || this._spindleController._zoomHandler.isButtonDown() ||
-                this._spindleController._zoomWheel.isButtonDown() || this._freeLookController._handler.isButtonDown();
-
-        if (!killInertia && !translating && this.inertiaTranslate < 1.0) {
+        if (!translating && this.inertiaTranslate < 1.0) {
             maintainInertia(translate, this.inertiaTranslate, this._translate, this, '_lastInertiaTranslateMovement');
         }
 
         this._spindleController.update();
-        this._freeLookController.update();
 
         this._correctPosition();
         this._animationCollection.update();
@@ -256,7 +249,6 @@ define([
     CameraColumbusViewController.prototype.destroy = function() {
         this._translateHandler = this._translateHandler && this._translateHandler.destroy();
         this._spindleController = this._spindleController && this._spindleController.destroy();
-        this._freeLookController = this._freeLookController && this._freeLookController.destroy();
         return destroyObject(this);
     };
 
