@@ -10,6 +10,7 @@ define([
         '../Core/IndexDatatype',
         '../Core/PrimitiveType',
         '../Core/PolylinePipeline',
+        '../Core/Color',
         '../Renderer/BufferUsage',
         '../Renderer/BlendingState',
         '../Renderer/StencilFunction',
@@ -29,6 +30,7 @@ define([
         IndexDatatype,
         PrimitiveType,
         PolylinePipeline,
+        Color,
         BufferUsage,
         BlendingState,
         StencilFunction,
@@ -69,24 +71,15 @@ define([
             blue : 1.0,
             alpha : 1.0
         };
-        this._color = {
-                red : color.red,
-                green : color.green,
-                blue : color.blue,
-                alpha : color.alpha
-        };
+        this._color = new Color(color.red, color.green, color.blue, color.alpha);
+
         var outlineColor = p.outlineColor ||{
             red : 1.0,
             green : 1.0,
             blue : 1.0,
             alpha : 1.0
         };
-        this._outlineColor = {
-            red : outlineColor.red,
-            green : outlineColor.green,
-            blue : outlineColor.blue,
-            alpha : outlineColor.alpha
-        };
+        this._outlineColor = new Color(outlineColor.red, outlineColor.green, outlineColor.blue, outlineColor.alpha);
 
         this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
         this._collection = polylineCollection;
@@ -185,11 +178,7 @@ define([
 
         if ((typeof value !== 'undefined') &&
             ((c.red !== value.red) || (c.green !== value.green) || (c.blue !== value.blue) || (c.alpha !== value.alpha))) {
-
-            c.red = value.red;
-            c.green = value.green;
-            c.blue = value.blue;
-            c.alpha = value.alpha;
+            this._color = new Color(value.red, value.green, value.blue, value.alpha);
             this._makeDirty(COLOR_INDEX);
         }
     };
@@ -303,11 +292,7 @@ define([
 
         if ((typeof value !== 'undefined') &&
             ((c.red !== value.red) || (c.green !== value.green) || (c.blue !== value.blue) || (c.alpha !== value.alpha))) {
-
-            c.red = value.red;
-            c.green = value.green;
-            c.blue = value.blue;
-            c.alpha = value.alpha;
+            this._outlineColor = new Color(value.red, value.green, value.blue, value.alpha);
             this._makeDirty(OUTLINE_COLOR_INDEX);
         }
     };
