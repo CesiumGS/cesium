@@ -11,10 +11,10 @@ define([
      * A procedural facet material generated with cellular noise.
      * Has the appearance of a grid similar to a honeycomb.
      *
-     * @name FacetMaterial
+     * @alias FacetMaterial
      * @constructor
      */
-    function FacetMaterial(template) {
+    var FacetMaterial = function(template) {
         var t = template || {};
 
         /**
@@ -63,7 +63,7 @@ define([
                 return that.repeat;
             }
         };
-    }
+    };
 
     FacetMaterial.prototype._getShaderSource = function() {
         return '#line 0\n' +

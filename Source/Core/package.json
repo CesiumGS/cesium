@@ -1,0 +1,6 @@
+{
+	"name": "Core",
+	"description": "Cesium Core",
+	"version": "0.6.0",
+	"dojoBuild": "Core.profile.js"
+}

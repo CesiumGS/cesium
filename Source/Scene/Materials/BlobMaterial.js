@@ -11,10 +11,10 @@ define([
      * Procedural blob material generated with cellular noise.
      * Resembles water, but clumped in a cell pattern.
      *
-     * @name BlobMaterial
+     * @alias BlobMaterial
      * @constructor
      */
-    function BlobMaterial(template) {
+    var BlobMaterial = function(template) {
         var t = template || {};
 
         /**
@@ -63,7 +63,7 @@ define([
                 return that.repeat;
             }
         };
-    }
+    };
 
     BlobMaterial.prototype._getShaderSource = function() {
         return '#line 0\n' +

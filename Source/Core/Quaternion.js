@@ -14,7 +14,7 @@ define([
     /**
      * DOC_TBA
      *
-     * @name Quaternion
+     * @alias Quaternion
      *
      * @constructor
      *
@@ -25,7 +25,7 @@ define([
      *
      * @see Matrix3
      */
-    function Quaternion(x, y, z, w) {
+    var Quaternion = function(x, y, z, w) {
 
         /**
          * The x coordinate.
@@ -70,7 +70,7 @@ define([
          * @see Quaternion.z
          */
         this.w = (typeof w !== 'undefined') ? w : 0.0;
-    }
+    };
 
     /**
      * Returns a duplicate of a Quaternion.
@@ -101,10 +101,19 @@ define([
      *
      * @memberof Quaternion
      *
-     * @return {Quaternion} The conjugate of this quaternion.
+     * @param {Quaternion} [result] The object to store the result into, if undefined a new instance will be created.
+     *
+     * @return {Quaternion} The modified result parameter or a new instance if result was undefined.
      */
-    Quaternion.prototype.conjugate = function() {
-        return new Quaternion(-this.x, -this.y, -this.z, this.w);
+    Quaternion.prototype.conjugate = function(result) {
+        if (typeof result === 'undefined') {
+            result = new Quaternion();
+        }
+        result.x = -this.x;
+        result.y = -this.y;
+        result.z = -this.z;
+        result.w = this.w;
+        return result;
     };
 
     /**
@@ -138,15 +147,20 @@ define([
      *
      * @memberof Quaternion
      *
-     * @returns {Quaternion} This quaternion normalized.
+     * @param {Quaternion} [result] The object to store the result into, if undefined a new instance will be created.
+     *
+     * @return {Quaternion} The modified result parameter or a new instance if result was undefined.
      */
-    Quaternion.prototype.normalize = function() {
+    Quaternion.prototype.normalize = function(result) {
+        if (typeof result === 'undefined') {
+            result = new Quaternion();
+        }
         var inverseMagnitude = 1.0 / this.norm();
-        return new Quaternion(
-                this.x * inverseMagnitude,
-                this.y * inverseMagnitude,
-                this.z * inverseMagnitude,
-                this.w * inverseMagnitude);
+        result.x = this.x * inverseMagnitude;
+        result.y = this.y * inverseMagnitude;
+        result.z = this.z * inverseMagnitude;
+        result.w = this.w * inverseMagnitude;
+        return result;
     };
 
     /**
@@ -154,10 +168,13 @@ define([
      *
      * @memberof Quaternion
      *
-     * @return {Quaternion} The inverse.
+     * @param {Quaternion} [result] The object to store the result into, if undefined a new instance will be created.
+     *
+     * @return {Quaternion} The modified result parameter or a new instance if result was undefined.
      */
-    Quaternion.prototype.inverse = function() {
-        return this.conjugate().multiplyWithScalar(1.0 / this.normSquared());
+    Quaternion.prototype.inverse = function(result) {
+        var normSquared = this.normSquared();
+        return this.conjugate(result).multiplyWithScalar(1.0 / normSquared, result);
     };
 
     /**
@@ -222,17 +239,31 @@ define([
      * @memberof Quaternion
      *
      * @param {Quaternion} other The quaternion to multiply with <code>this</code>.
+     * @param {Quaternion} [result] The object to store the result into, if undefined a new instance will be created.
      *
-     * @return {Quaternion} The product two quaternions, <code>this</code> and <code>other</code>.
+     * @return {Quaternion} The modified result parameter or a new instance if result was undefined.
      *
      * @see Quaternion#dot
      */
-    Quaternion.prototype.multiply = function(other) {
-        return new Quaternion(
-                this.y * other.z - this.z * other.y + this.x * other.w + this.w * other.x,
-                this.z * other.x - this.x * other.z + this.y * other.w + this.w * other.y,
-                this.x * other.y - this.y * other.x + this.z * other.w + this.w * other.z,
-                this.w * other.w - this.x * other.x - this.y * other.y - this.z * other.z);
+    Quaternion.prototype.multiply = function(other, result) {
+        var leftX = this.x;
+        var leftY = this.y;
+        var leftZ = this.z;
+        var leftW = this.w;
+
+        var rightX = other.x;
+        var rightY = other.y;
+        var rightZ = other.z;
+        var rightW = other.w;
+
+        if (typeof result === 'undefined') {
+            result = new Quaternion();
+        }
+        result.x = leftY * rightZ - leftZ * rightY + leftX * rightW + leftW * rightX;
+        result.y = leftZ * rightX - leftX * rightZ + leftY * rightW + leftW * rightY;
+        result.z = leftX * rightY - leftY * rightX + leftZ * rightW + leftW * rightZ;
+        result.w = leftW * rightW - leftX * rightX - leftY * rightY - leftZ * rightZ;
+        return result;
     };
 
     /**
@@ -241,13 +272,21 @@ define([
      * @memberof Quaternion
      *
      * @param {Number} scalar The scalar that is multiplied with <code>this</code>.
+     * @param {Quaternion} [result] The object to store the result into, if undefined a new instance will be created.
      *
-     * @return {Quaternion} This quaternion scaled by a scalar.
+     * @return {Quaternion} The modified result parameter or a new instance if result was undefined.
      *
      * @see Quaternion#divideByScalar
      */
-    Quaternion.prototype.multiplyWithScalar = function(scalar) {
-        return new Quaternion(this.x * scalar, this.y * scalar, this.z * scalar, this.w * scalar);
+    Quaternion.prototype.multiplyWithScalar = function(scalar, result) {
+        if (typeof result === 'undefined') {
+            result = new Quaternion();
+        }
+        result.x = this.x * scalar;
+        result.y = this.y * scalar;
+        result.z = this.z * scalar;
+        result.w = this.w * scalar;
+        return result;
     };
 
     /**
@@ -290,13 +329,22 @@ define([
      * @see Quaternion#getAngle
      * @see Quaternion.fromAxisAngle
      */
-    Quaternion.prototype.getAxis = function() {
-        if (Math.abs(this.w - 1.0) < CesiumMath.EPSILON6) {
-            return Cartesian3.ZERO;
+    Quaternion.prototype.getAxis = function(result) {
+        if (typeof result === 'undefined') {
+            result = new Cartesian3();
         }
 
-        var scalar = 1.0 / Math.sqrt(1.0 - (this.w * this.w));
-        return new Cartesian3(this.x * scalar, this.y * scalar, this.z * scalar);
+        var w = this.w;
+        if (Math.abs(w - 1.0) < CesiumMath.EPSILON6) {
+            result.x = result.y = result.z = 0;
+            return result;
+        }
+
+        var scalar = 1.0 / Math.sqrt(1.0 - (w * w));
+        result.x = this.x * scalar;
+        result.y = this.y * scalar;
+        result.z = this.z * scalar;
+        return result;
     };
 
     /**
@@ -492,6 +540,9 @@ define([
         return '(' + this.x + ', ' + this.y + ', ' + this.z + ', ' + this.w + ')';
     };
 
+    //Cached temp variable used by Quaternion.fromAxisAngle.
+    var fromAxisAngleCartesian = new Cartesian3();
+
     /**
      * Creates a quaternion representing a rotation around an axis.
      *
@@ -499,21 +550,26 @@ define([
      *
      * @param {Cartesian3} axis The axis of rotation.
      * @param {Number} angle The angle in degrees to rotate around the axis.
+     * @param {Quaternion} [result] The object to store the result into, if undefined a new instance will be created.
      *
-     * @return {Quaternion} The quaternion representing the rotation.
+     * @return {Quaternion} The modified result parameter or a new instance if result was undefined.
      *
      * @see Quaternion#getAxis
      * @see Quaternion#getAngle
      * @see Matrix3.fromAxisAngle
      */
-    Quaternion.fromAxisAngle = function(axis, angle) {
-        var a = Cartesian3.clone(axis);
+    Quaternion.fromAxisAngle = function(axis, angle, result) {
+        if (typeof result === 'undefined') {
+            result = new Quaternion();
+        }
         var halfAngle = angle / 2.0;
         var s = Math.sin(halfAngle);
-        var c = Math.cos(halfAngle);
-        var nAxis = a.normalize();
-
-        return new Quaternion(nAxis.x * s, nAxis.y * s, nAxis.z * s, c);
+        axis.normalize(fromAxisAngleCartesian);
+        result.x = fromAxisAngleCartesian.x * s;
+        result.y = fromAxisAngleCartesian.y * s;
+        result.z = fromAxisAngleCartesian.z * s;
+        result.w = Math.cos(halfAngle);
+        return result;
     };
 
     /**
@@ -630,5 +686,5 @@ define([
                 Math.cos(theta));
     };
 
-   return Quaternion;
+    return Quaternion;
 });

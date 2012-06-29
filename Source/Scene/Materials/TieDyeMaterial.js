@@ -11,10 +11,10 @@ define([
      * Procedural tie-dye material generated with simplex noise.
      * The effect is created by taking the absolute value of the noise value.
      *
-     * @name TieDyeMaterial
+     * @alias TieDyeMaterial
      * @constructor
      */
-    function TieDyeMaterial(template) {
+    var TieDyeMaterial = function(template) {
         var t = template || {};
 
         /**
@@ -63,7 +63,7 @@ define([
                 return that.frequency;
             }
         };
-    }
+    };
 
     TieDyeMaterial.prototype._getShaderSource = function() {
         return '#line 0\n' +

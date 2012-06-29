@@ -15,14 +15,14 @@ define([
     /**
      * DOC_TBA
      *
-     * @name ParticleSystem
+     * @alias ParticleSystem
      * @constructor
      */
-    function ParticleSystem() {
+    var ParticleSystem = function() {
         this.particles = [];
         this.forces = [];
         this.time = 0.0;
-    }
+    };
 
     ParticleSystem.prototype._clearForces = function() {
         var particles = this.particles;

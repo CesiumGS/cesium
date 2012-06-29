@@ -8,10 +8,10 @@ define([
     /**
      * DOC_TBA
      *
-     * @name DistanceIntervalMaterial
+     * @alias DistanceIntervalMaterial
      * @constructor
      */
-    function DistanceIntervalMaterial(template) {
+    var DistanceIntervalMaterial = function(template) {
         var t = template || {};
 
         /**
@@ -43,7 +43,7 @@ define([
                 return colors;
             }
         };
-    }
+    };
 
     DistanceIntervalMaterial.prototype._getShaderSource = function() {
         return "#define NUMBER_OF_DISTANCES " + this.intervals.length.toString() + "\n" +

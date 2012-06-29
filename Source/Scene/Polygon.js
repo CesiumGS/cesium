@@ -26,7 +26,7 @@ define([
         '../Shaders/PolygonVS',
         '../Shaders/PolygonFS',
         '../Shaders/PolygonVSPick',
-        '../Shaders/PolygonFSPick',
+        '../Shaders/PolygonFSPick'
     ], function(
         DeveloperError,
         combine,
@@ -50,7 +50,7 @@ define([
         VertexLayout,
         ColorMaterial,
         SceneMode,
-        ShadersNoise,
+        Noise,
         PolygonVS,
         PolygonFS,
         PolygonVSPick,
@@ -118,7 +118,7 @@ define([
     /**
      * DOC_TBA
      *
-     * @name Polygon
+     * @alias Polygon
      * @constructor
      *
      * @example
@@ -135,7 +135,7 @@ define([
      *   ellipsoid.toCartesian(new Cartographic2(...))
      * ]);
      */
-    function Polygon() {
+    var Polygon = function() {
         this._sp = undefined;
         this._rs = undefined;
 
@@ -269,7 +269,7 @@ define([
         };
         this._pickUniforms = undefined;
         this._drawUniforms = undefined;
-    }
+    };
 
     /**
      * DOC_TBA
@@ -515,7 +515,7 @@ define([
 
             var fsSource =
                 '#line 0\n' +
-                ShadersNoise +
+                Noise +
                 '#line 0\n' +
                 this._material._getShaderSource() +
                 (this._affectedByLighting ? '#define AFFECTED_BY_LIGHTING 1\n' : '') +

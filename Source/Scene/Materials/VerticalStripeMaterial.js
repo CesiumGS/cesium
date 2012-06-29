@@ -8,10 +8,10 @@ define([
     /**
      * Alternating light and dark vertical stripes.
      *
-     * @name VerticalStripeMaterial
+     * @alias VerticalStripeMaterial
      * @constructor
      */
-    function VerticalStripeMaterial(template) {
+    var VerticalStripeMaterial = function(template) {
         var t = template || {};
 
         /**
@@ -70,7 +70,7 @@ define([
                 return that.repeat;
             }
         };
-    }
+    };
 
     VerticalStripeMaterial.prototype._getShaderSource = function() {
         return "#line 0\n" +

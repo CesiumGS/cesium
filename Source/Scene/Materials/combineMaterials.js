@@ -4,6 +4,7 @@ define(function() {
 
     /**
      * DOC_TBA
+     * @exports combineMaterials
      */
     function combineMaterials(materialTemplates) {
         var unforms = {};

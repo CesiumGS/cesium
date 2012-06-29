@@ -5,6 +5,8 @@ define(['Core/DeveloperError'], function(DeveloperError) {
     /**
      * Determines if a given date is a leap year.
      *
+     * @exports isLeapYear
+     *
      * @param {Number} year The year to be tested.
      *
      * @return {Boolean} True if <code>year</code> is a leap yer.

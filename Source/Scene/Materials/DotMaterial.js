@@ -8,10 +8,10 @@ define([
     /**
      * A pattern of dots organized by row and column.
      *
-     * @name DotMaterial
+     * @alias DotMaterial
      * @constructor
      */
-    function DotMaterial(template) {
+    var DotMaterial = function(template) {
         var t = template || {};
 
         /**
@@ -70,7 +70,7 @@ define([
                 };
             }
         };
-    }
+    };
 
     DotMaterial.prototype._getShaderSource = function() {
         return "#line 0\n" +

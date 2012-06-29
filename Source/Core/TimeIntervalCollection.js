@@ -11,23 +11,23 @@ define([
          JulianDate) {
     "use strict";
 
-    function compareIntervalStartTimes(lhs, rhs) {
-        return JulianDate.compare(lhs.start, rhs.start);
+    function compareIntervalStartTimes(left, right) {
+        return JulianDate.compare(left.start, right.start);
     }
 
     /**
      * A non-overlapping collection of TimeIntervals sorted by start date.
      *
-     * @name TimeIntervalCollection
+     * @alias TimeIntervalCollection
      * @constructor
      *
      * @see TimeInterval
      * @see JulianDate
      *
      */
-     function TimeIntervalCollection() {
+     var TimeIntervalCollection = function() {
         this._intervals = [];
-    }
+    };
 
     /**
      * Gets the interval at the specified index.

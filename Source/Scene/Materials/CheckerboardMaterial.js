@@ -8,10 +8,10 @@ define([
     /**
      * Checkerboard material with alternating light and dark colors.
      *
-     * @name CheckerboardMaterial
+     * @alias CheckerboardMaterial
      * @constructor
      */
-    function CheckerboardMaterial(template) {
+    var CheckerboardMaterial = function(template) {
         var t = template || {};
 
         /**
@@ -70,7 +70,7 @@ define([
                 };
             }
         };
-    }
+    };
 
     CheckerboardMaterial.prototype._getShaderSource = function() {
         return "#line 0\n" +

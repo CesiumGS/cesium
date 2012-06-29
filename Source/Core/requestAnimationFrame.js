@@ -6,6 +6,8 @@ define(function() {
      * A browser-independent function to request a new animation frame.  This is used to create
      * an application's draw loop as shown in the example below.
      *
+     * @exports requestAnimationFrame
+     *
      * @param {Object} callback The function to call when animation is ready.
      *
      * @example
