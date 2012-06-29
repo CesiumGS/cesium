@@ -28,7 +28,7 @@ define([
      * When called with sixteen numeric arguments in row-major order, these arguments define the elements of the matrix.
      * </p>
      *
-     * @name Matrix4
+     * @alias Matrix4
      * @constructor
      * @immutable
      *
@@ -36,7 +36,7 @@ define([
      * @see Matrix2
      * @see Matrix3
      */
-    function Matrix4() {
+    var Matrix4 = function() {
         var values = this.values = []; // Column-major
         values.length = numberOfElements;
 
@@ -108,7 +108,7 @@ define([
             values[14] = arguments[11];// Column 3, Row 2
             values[15] = arguments[15];// Column 3, Row 3
         }
-    }
+    };
 
     /**
      * Returns the element at column 0, row 0.
@@ -291,11 +291,11 @@ define([
      *
      * @memberof Matrix4
      * @return {Number} The element at the zero-based, column-major index.
-     * @exception {DeveloperError} Index must be between 0 and 15.
+     * @exception {DeveloperError} index must be between 0 and 15.
      */
     Matrix4.prototype.getColumnMajorValue = function(index) {
         if (index < 0 || index > 15) {
-            throw new DeveloperError("Index must be between 0 and 15.", "index");
+            throw new DeveloperError('index must be between 0 and 15.');
         }
 
         return this.values[index];
@@ -630,7 +630,7 @@ define([
                         columnMajorValues[3], columnMajorValues[7], columnMajorValues[11], columnMajorValues[15]);
             }
 
-            throw new DeveloperError("columnMajorValues must have 16 elements.", "columnMajorValues");
+            throw new DeveloperError('columnMajorValues must have 16 elements.');
         }
 
         return new Matrix4();
@@ -728,19 +728,19 @@ define([
      */
     Matrix4.createPerspectiveFieldOfView = function(fovy, aspect, zNear, zFar) {
         if (fovy <= 0.0 || fovy > Math.PI) {
-            throw new DeveloperError("fovy must be in [0, PI).", "fovy");
+            throw new DeveloperError('fovy must be in [0, PI).');
         }
 
         if (aspect <= 0.0) {
-            throw new DeveloperError("aspect must be greater than zero.", "aspect");
+            throw new DeveloperError('aspect must be greater than zero.');
         }
 
         if (zNear <= 0.0) {
-            throw new DeveloperError("zNear must be greater than zero.", "zNear");
+            throw new DeveloperError('zNear must be greater than zero.');
         }
 
         if (zFar <= 0.0) {
-            throw new DeveloperError("zFar must be greater than zero.", "zFar");
+            throw new DeveloperError('zFar must be greater than zero.');
         }
 
         var bottom = Math.tan(fovy * 0.5);
@@ -865,7 +865,7 @@ define([
         v.width = v.width || 0.0;
         v.height = v.height || 0.0;
         nearDepthRange = nearDepthRange || 0.0;
-        farDepthRange = (typeof farDepthRange === "undefined") ? 1.0 : farDepthRange;
+        farDepthRange = (typeof farDepthRange === 'undefined') ? 1.0 : farDepthRange;
 
         var halfWidth = v.width * 0.5;
         var halfHeight = v.height * 0.5;
@@ -1101,7 +1101,7 @@ define([
         det = src[0] * dst[0] + src[1] * dst[1] + src[2] * dst[2] + src[3] * dst[3];
 
         if (Math.abs(det) < CesiumMath.EPSILON20) {
-            throw new RuntimeError("This matrix is not invertible because its determinate is zero.");
+            throw new RuntimeError('This matrix is not invertible because its determinate is zero.');
         }
 
         // calculate matrix inverse
@@ -1316,8 +1316,10 @@ define([
      * @return {Boolean} <code>true</code> if the matrices are equal element-wise; otherwise, <code>false</code>.
      */
     Matrix4.prototype.equals = function(other) {
-        for ( var i = 0; i < numberOfElements; ++i) {
-            if (this.getColumnMajorValue(i) !== other.getColumnMajorValue(i)) {
+        var thisValues = this.values;
+        var otherValues = other.values;
+        for ( var i = 0, len = thisValues.length; i < len; i++) {
+            if (thisValues[i] !== otherValues[i]) {
                 return false;
             }
         }
@@ -1336,8 +1338,10 @@ define([
      */
     Matrix4.prototype.equalsEpsilon = function(other, epsilon) {
         epsilon = epsilon || 0.0;
-        for ( var i = 0; i < numberOfElements; ++i) {
-            if (Math.abs(this.getColumnMajorValue(i) - other.getColumnMajorValue(i)) > epsilon) {
+        var thisValues = this.values;
+        var otherValues = other.values;
+        for ( var i = 0, len = thisValues.length; i < len; i++) {
+            if (Math.abs(thisValues[i] - otherValues[i]) > epsilon) {
                 return false;
             }
         }
@@ -1352,10 +1356,10 @@ define([
      * @return {String} Returns a string representing this instance.
      */
     Matrix4.prototype.toString = function() {
-        return "(" + this.getColumn0Row0() + ", " + this.getColumn1Row0() + ", " + this.getColumn2Row0() + ", " + this.getColumn3Row0() + ")\n" +
-               "(" + this.getColumn0Row1() + ", " + this.getColumn1Row1() + ", " + this.getColumn2Row1() + ", " + this.getColumn3Row1() + ")\n" +
-               "(" + this.getColumn0Row2() + ", " + this.getColumn1Row2() + ", " + this.getColumn2Row2() + ", " + this.getColumn3Row2() + ")\n" +
-               "(" + this.getColumn0Row3() + ", " + this.getColumn1Row3() + ", " + this.getColumn2Row3() + ", " + this.getColumn3Row3() + ")";
+        return '(' + this.getColumn0Row0() + ', ' + this.getColumn1Row0() + ', ' + this.getColumn2Row0() + ', ' + this.getColumn3Row0() + ')\n' +
+               '(' + this.getColumn0Row1() + ', ' + this.getColumn1Row1() + ', ' + this.getColumn2Row1() + ', ' + this.getColumn3Row1() + ')\n' +
+               '(' + this.getColumn0Row2() + ', ' + this.getColumn1Row2() + ', ' + this.getColumn2Row2() + ', ' + this.getColumn3Row2() + ')\n' +
+               '(' + this.getColumn0Row3() + ', ' + this.getColumn1Row3() + ', ' + this.getColumn2Row3() + ', ' + this.getColumn3Row3() + ')';
     };
 
     return Matrix4;

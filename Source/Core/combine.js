@@ -5,6 +5,8 @@ define(['./DeveloperError'], function(DeveloperError) {
     /**
      * DOC_TBA
      *
+     * @exports combine
+     *
      * @exception {DeveloperError} Duplicate member.
      */
     function combine() {
@@ -17,7 +19,7 @@ define(['./DeveloperError'], function(DeveloperError) {
             for ( var key in object) {
                 if (object.hasOwnProperty(key)) {
                     if (composite[key]) {
-                        throw new DeveloperError("Duplicate member: " + key);
+                        throw new DeveloperError('Duplicate member: ' + key);
                     }
 
                     composite[key] = object[key];

@@ -87,7 +87,7 @@ define([
                 return UniformDatatype.SAMPLER_CUBE;
             };
         default:
-            throw new RuntimeError("Unrecognized uniform type: " + activeUniformType);
+            throw new RuntimeError('Unrecognized uniform type: ' + activeUniformType);
         }
     }
 
@@ -105,7 +105,7 @@ define([
      * The datatype of the <code>value</code> property depends on the datatype
      * used in the GLSL declaration as shown in the examples in the table below.
      * <br /><br />
-     * <table border="1">
+     * <table border='1'>
      * <tr>
      * <td>GLSL</td>
      * <td>JavaScript</td>
@@ -187,7 +187,7 @@ define([
      * automatic uniforms; they are implicitly declared and automatically assigned to in
      * <code>Context.draw</code> based on the {@link UniformState}.
      *
-     * @name Uniform
+     * @alias Uniform
      * @internalConstructor
      *
      * @see Uniform#value
@@ -202,15 +202,15 @@ define([
      * // Example 1. Create a shader program and set its
      * // one uniform, a 4x4 matrix, to the identity matrix
      * var vs =
-     *   "attribute vec4 position; " +
-     *   "uniform mat4 u_mvp; " +
-     *   "void main() { gl_Position = u_mvp * position; }";
+     *   'attribute vec4 position; ' +
+     *   'uniform mat4 u_mvp; ' +
+     *   'void main() { gl_Position = u_mvp * position; }';
      * var fs = // ...
      * var sp = context.createShaderProgram(vs, fs);
      *
      * var mvp = sp.getAllUniforms().u_mvp;
-     * console.log(mvp.getName());           // "u_mvp"
-     * console.log(mvp.getDatatype().name);  // "FLOAT_MATRIX4"
+     * console.log(mvp.getName());           // 'u_mvp'
+     * console.log(mvp.getDatatype().name);  // 'FLOAT_MATRIX4'
      * mvp.value = Matrix4.IDENTITY;
      *
      * //////////////////////////////////////////////////////////////////////
@@ -229,17 +229,17 @@ define([
      *
      * // Example 3. Setting values for members of a GLSL struct
      * // GLSL:  uniform struct { float f; vec4 v; } u_struct;
-     * sp.getAllUniforms()["u_struct.f"].value = 1.0;
-     * sp.getAllUniforms()["u_struct.v"].value = new Cartesian4(1.0, 2.0, 3.0, 4.0);
+     * sp.getAllUniforms()['u_struct.f'].value = 1.0;
+     * sp.getAllUniforms()['u_struct.v'].value = new Cartesian4(1.0, 2.0, 3.0, 4.0);
      */
-    function Uniform(_gl, activeUniform, _uniformName, _location, uniformValue) {
+    var Uniform = function(_gl, activeUniform, _uniformName, _location, uniformValue) {
         /**
          * The value of the uniform.  The datatype depends on the datatype used in the
          * GLSL declaration as explained in the {@link Uniform} help and shown
          * in the examples below.
          *
          * @field
-         * @name Uniform#value
+         * @alias Uniform#value
          *
          * @see Context#createTexture2D
          *
@@ -266,8 +266,8 @@ define([
          * ];
          *
          * // GLSL:  uniform struct { float f; vec4 v; } u_struct;
-         * sp.getAllUniforms()["u_struct.f"].value = 1.0;
-         * sp.getAllUniforms()["u_struct.v"].value = new Cartesian4(1.0, 2.0, 3.0, 4.0);
+         * sp.getAllUniforms()['u_struct.f'].value = 1.0;
+         * sp.getAllUniforms()['u_struct.v'].value = new Cartesian4(1.0, 2.0, 3.0, 4.0);
          */
         this.value = uniformValue;
 
@@ -276,11 +276,11 @@ define([
          *
          * @returns {String} The name of the uniform.
          * @function
-         * @name Uniform#getName
+         * @alias Uniform#getName
          *
          * @example
          * // GLSL: uniform mat4 u_mvp;
-         * console.log(sp.getAllUniforms().u_mvp.getName());  // "u_mvp"
+         * console.log(sp.getAllUniforms().u_mvp.getName());  // 'u_mvp'
          */
         this.getName = function() {
             return _uniformName;
@@ -292,13 +292,13 @@ define([
          *
          * @returns {UniformDatatype} The datatype of the uniform.
          * @function
-         * @name Uniform#getDatatype
+         * @alias Uniform#getDatatype
          *
          * @see UniformDatatype
          *
          * @example
          * // GLSL: uniform mat4 u_mvp;
-         * console.log(sp.getAllUniforms().u_mvp.getDatatype().name);  // "FLOAT_MATRIX4"
+         * console.log(sp.getAllUniforms().u_mvp.getDatatype().name);  // 'FLOAT_MATRIX4'
          */
         this.getDatatype = getUniformDatatype(_gl, activeUniform.type);
 
@@ -326,12 +326,12 @@ define([
                 return function() {
                     var v = this.value;
 
-                    if (typeof v.red !== "undefined") {
+                    if (typeof v.red !== 'undefined') {
                         _gl.uniform4f(_location, v.red, v.green, v.blue, v.alpha);
-                    } else if (typeof v.x !== "undefined") {
+                    } else if (typeof v.x !== 'undefined') {
                         _gl.uniform4f(_location, v.x, v.y, v.z, v.w);
                     } else {
-                        throw new DeveloperError("Invalid vec4 value.");
+                        throw new DeveloperError('Invalid vec4 value.');
                     }
                 };
             case _gl.SAMPLER_2D:
@@ -374,7 +374,7 @@ define([
                     _gl.uniformMatrix4fv(_location, false, this.value.values);
                 };
             default:
-                throw new RuntimeError("Unrecognized uniform type: " + activeUniform.type);
+                throw new RuntimeError('Unrecognized uniform type: ' + activeUniform.type);
             }
         }();
 
@@ -394,15 +394,18 @@ define([
                 return textureUnitIndex + 1;
             };
         }
-    }
+    };
 
-    /*
+    /**
      * Uniform and UniformArray have the same documentation.  It is just an implementation
      * detail that they are two different types.
      *
-     * @name UniformArray
+     * @alias UniformArray
+     * @constructor
+     *
+     * @see Uniform
      */
-    function UniformArray(_gl, activeUniform, _uniformName, locations, value) {
+    var UniformArray = function(_gl, activeUniform, _uniformName, locations, value) {
         this.value = value;
 
         var _locations = locations;
@@ -447,12 +450,12 @@ define([
                     for ( var i = 0; i < _locations.length; ++i) {
                         var v = this.value[i];
 
-                        if (typeof v.red !== "undefined") {
+                        if (typeof v.red !== 'undefined') {
                             _gl.uniform4f(_locations[i], v.red, v.green, v.blue, v.alpha);
-                        } else if (typeof v.x !== "undefined") {
+                        } else if (typeof v.x !== 'undefined') {
                             _gl.uniform4f(_locations[i], v.x, v.y, v.z, v.w);
                         } else {
-                            throw new DeveloperError("Invalid vec4 value.");
+                            throw new DeveloperError('Invalid vec4 value.');
                         }
                     }
                 };
@@ -510,7 +513,7 @@ define([
                     }
                 };
             default:
-                throw new RuntimeError("Unrecognized uniform type: " + activeUniform.type);
+                throw new RuntimeError('Unrecognized uniform type: ' + activeUniform.type);
             }
         }();
 
@@ -535,18 +538,18 @@ define([
                 return textureUnitIndex + _locations.length;
             };
         }
-    }
+    };
 
     /**
      * DOC_TBA
      *
-     * @name ShaderProgram
+     * @alias ShaderProgram
      * @internalConstructor
      *
      * @see Context#createShaderProgram
      * @see Context#getShaderCache
      */
-    function ShaderProgram(gl, logShaderCompilation, builtInGlslFunctions, vertexShaderSource, fragmentShaderSource, attributeLocations) {
+    var ShaderProgram = function(gl, logShaderCompilation, builtInGlslFunctions, vertexShaderSource, fragmentShaderSource, attributeLocations) {
         var getAllAutomaticUniforms = function() {
             var uniforms = {
                 /**
@@ -558,7 +561,7 @@ define([
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @name agi_viewport
+                 * @alias agi_viewport
                  * @glslUniform
                  *
                  * @see Context#getViewport
@@ -620,7 +623,7 @@ define([
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @name agi_viewportOrthographic
+                 * @alias agi_viewportOrthographic
                  * @glslUniform
                  *
                  * @see UniformState#getViewportOrthographic
@@ -681,7 +684,7 @@ define([
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @name agi_viewportTransformation
+                 * @alias agi_viewportTransformation
                  * @glslUniform
                  *
                  * @see UniformState#getViewportTransformation
@@ -735,7 +738,7 @@ define([
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @name agi_model
+                 * @alias agi_model
                  * @glslUniform
                  *
                  * @see UniformState#getModel
@@ -784,7 +787,7 @@ define([
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @name agi_inverseView
+                 * @alias agi_inverseView
                  * @glslUniform
                  *
                  * @see UniformState#getInverseView
@@ -824,7 +827,7 @@ define([
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @name agi_view
+                 * @alias agi_view
                  * @glslUniform
                  *
                  * @see UniformState#getView
@@ -867,7 +870,7 @@ define([
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @name agi_projection
+                 * @alias agi_projection
                  * @glslUniform
                  *
                  * @see UniformState#getProjection
@@ -909,7 +912,7 @@ define([
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @name agi_inverseProjection
+                 * @alias agi_inverseProjection
                  * @glslUniform
                  *
                  * @see UniformState#getInverseProjection
@@ -951,7 +954,7 @@ define([
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @name agi_infiniteProjection
+                 * @alias agi_infiniteProjection
                  * @glslUniform
                  *
                  * @see UniformState#getInfiniteProjection
@@ -994,7 +997,7 @@ define([
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @name agi_modelView
+                 * @alias agi_modelView
                  * @glslUniform
                  *
                  * @see UniformState#getModelView
@@ -1039,7 +1042,7 @@ define([
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @name agi_inverseModelView
+                 * @alias agi_inverseModelView
                  * @glslUniform
                  *
                  * @see UniformState#getInverseModelView
@@ -1079,7 +1082,7 @@ define([
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @name agi_viewProjection
+                 * @alias agi_viewProjection
                  * @glslUniform
                  *
                  * @see UniformState#getViewProjection
@@ -1124,7 +1127,7 @@ define([
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @name agi_modelViewProjection
+                 * @alias agi_modelViewProjection
                  * @glslUniform
                  *
                  * @see UniformState#getModelViewProjection
@@ -1174,7 +1177,7 @@ define([
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @name agi_modelViewInfiniteProjection
+                 * @alias agi_modelViewInfiniteProjection
                  * @glslUniform
                  *
                  * @see UniformState#getModelViewInfiniteProjection
@@ -1222,7 +1225,7 @@ define([
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @name agi_normal
+                 * @alias agi_normal
                  * @glslUniform
                  *
                  * @see UniformState#getNormal
@@ -1263,7 +1266,7 @@ define([
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @name agi_inverseNormal
+                 * @alias agi_inverseNormal
                  * @glslUniform
                  *
                  * @see UniformState#getInverseNormal
@@ -1304,7 +1307,7 @@ define([
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @name agi_sunDirectionEC
+                 * @alias agi_sunDirectionEC
                  * @glslUniform
                  *
                  * @see UniformState#getSunDirectionEC
@@ -1343,7 +1346,7 @@ define([
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @name agi_sunDirectionWC
+                 * @alias agi_sunDirectionWC
                  * @glslUniform
                  *
                  * @see UniformState#getSunDirectionWC
@@ -1378,7 +1381,7 @@ define([
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @name agi_viewerPositionWC
+                 * @alias agi_viewerPositionWC
                  * @glslUniform
                  *
                  * @example
@@ -1414,9 +1417,9 @@ define([
 
         function extractShaderVersion(source) {
             // This will fail if the first #version is actually in a comment.
-            var index = source.indexOf("#version");
+            var index = source.indexOf('#version');
             if (index !== -1) {
-                var newLineIndex = source.indexOf("\n", index);
+                var newLineIndex = source.indexOf('\n', index);
 
                 // We could throw an exception if there is not a new line after
                 // #version, but the GLSL compiler will catch it.
@@ -1428,7 +1431,7 @@ define([
                     // are not off by one.  There can be only one #version directive
                     // and it must appear at the top of the source, only preceded by
                     // whitespace and comments.
-                    var modified = source.substring(0, index) + "//" + source.substring(index);
+                    var modified = source.substring(0, index) + '//' + source.substring(index);
 
                     return {
                         versionDirective : version,
@@ -1438,20 +1441,20 @@ define([
             }
 
             return {
-                versionDirective : "", // defaults to #version 100
+                versionDirective : '', // defaults to #version 100
                 modifiedSource : source // no modifications required
             };
         }
 
         function getAutomaticUniformDeclaration(uniforms, uniform) {
             var factory = uniforms[uniform];
-            var declaration = "uniform " + factory.getDatatype().getGLSL() + " " + uniform;
+            var declaration = 'uniform ' + factory.getDatatype().getGLSL() + ' ' + uniform;
 
             var size = factory.getSize();
             if (size === 1) {
-                declaration += ";";
+                declaration += ';';
             } else {
-                declaration += "[" + size.toString() + "];";
+                declaration += '[' + size.toString() + '];';
             }
 
             return declaration;
@@ -1474,9 +1477,9 @@ define([
                     if (index !== -1) {
                         modifiedSource =
                             modifiedSource.substring(0, index) +
-                            "/*" +
+                            '/*' +
                             modifiedSource.substring(index, declaration.length) +
-                            "*/" +
+                            '*/' +
                             modifiedSource.substring(index + declaration.length);
                     }
                 }
@@ -1487,11 +1490,11 @@ define([
 
         function getFragmentShaderPrecision() {
             // TODO: Performance?
-            return "#ifdef GL_FRAGMENT_PRECISION_HIGH \n" +
-                   "  precision highp float; \n" +
-                   "#else \n" +
-                   "  precision mediump float; \n" +
-                   "#endif \n\n";
+            return '#ifdef GL_FRAGMENT_PRECISION_HIGH \n' +
+                   '  precision highp float; \n' +
+                   '#else \n' +
+                   '  precision mediump float; \n' +
+                   '#endif \n\n';
         }
 
         function getBuiltinConstants() {
@@ -1499,7 +1502,7 @@ define([
                 /**
                  * A built-in GLSL floating-point constant for <code>Math.PI</code>.
                  *
-                 * @name agi_pi
+                 * @alias agi_pi
                  * @glslConstant
                  *
                  * @see CesiumMath.PI
@@ -1516,7 +1519,7 @@ define([
                 /**
                  * A built-in GLSL floating-point constant for <code>1/pi</code>.
                  *
-                 * @name agi_oneOverPi
+                 * @alias agi_oneOverPi
                  * @glslConstant
                  *
                  * @see CesiumMath.ONE_OVER_PI
@@ -1533,7 +1536,7 @@ define([
                 /**
                  * A built-in GLSL floating-point constant for <code>pi/2</code>.
                  *
-                 * @name agi_piOverTwo
+                 * @alias agi_piOverTwo
                  * @glslConstant
                  *
                  * @see CesiumMath.PI_OVER_TWO
@@ -1550,7 +1553,7 @@ define([
                 /**
                  * A built-in GLSL floating-point constant for <code>pi/3</code>.
                  *
-                 * @name agi_piOverThree
+                 * @alias agi_piOverThree
                  * @glslConstant
                  *
                  * @see CesiumMath.PI_OVER_THREE
@@ -1567,7 +1570,7 @@ define([
                 /**
                  * A built-in GLSL floating-point constant for <code>pi/4</code>.
                  *
-                 * @name agi_piOverFour
+                 * @alias agi_piOverFour
                  * @glslConstant
                  *
                  * @see CesiumMath.PI_OVER_FOUR
@@ -1584,7 +1587,7 @@ define([
                 /**
                  * A built-in GLSL floating-point constant for <code>pi/6</code>.
                  *
-                 * @name agi_piOverSix
+                 * @alias agi_piOverSix
                  * @glslConstant
                  *
                  * @see CesiumMath.PI_OVER_SIX
@@ -1601,7 +1604,7 @@ define([
                 /**
                  * A built-in GLSL floating-point constant for <code>3pi/2</code>.
                  *
-                 * @name agi_threePiOver2
+                 * @alias agi_threePiOver2
                  * @glslConstant
                  *
                  * @see CesiumMath.THREE_PI_OVER_TWO
@@ -1618,7 +1621,7 @@ define([
                 /**
                  * A built-in GLSL floating-point constant for <code>2pi</code>.
                  *
-                 * @name agi_twoPi
+                 * @alias agi_twoPi
                  * @glslConstant
                  *
                  * @see CesiumMath.TWO_PI
@@ -1635,7 +1638,7 @@ define([
                 /**
                  * A built-in GLSL floating-point constant for <code>1/2pi</code>.
                  *
-                 * @name agi_oneOverTwoPi
+                 * @alias agi_oneOverTwoPi
                  * @glslConstant
                  *
                  * @see CesiumMath.ONE_OVER_TWO_PI
@@ -1652,7 +1655,7 @@ define([
                 /**
                  * A built-in GLSL floating-point constant for converting degrees to radians.
                  *
-                 * @name agi_radiansPerDegree
+                 * @alias agi_radiansPerDegree
                  * @glslConstant
                  *
                  * @see CesiumMath.RADIANS_PER_DEGREE
@@ -1669,7 +1672,7 @@ define([
                 /**
                  * A built-in GLSL floating-point constant for converting radians to degrees.
                  *
-                 * @name agi_degreesPerRadian
+                 * @alias agi_degreesPerRadian
                  * @glslConstant
                  *
                  * @see CesiumMath.DEGREES_PER_RADIAN
@@ -1684,27 +1687,27 @@ define([
                 agi_degreesPerRadian : CesiumMath.DEGREES_PER_RADIAN.toString()
             };
 
-            var glslConstants = "";
+            var glslConstants = '';
             for ( var name in constants) {
                 if (constants.hasOwnProperty(name)) {
-                    glslConstants += "const float " + name + " = " + constants[name] + "; \n";
+                    glslConstants += 'const float ' + name + ' = ' + constants[name] + '; \n';
                 }
             }
-            glslConstants += " \n";
+            glslConstants += ' \n';
 
             return glslConstants;
         }
 
         function getAutomaticUniforms() {
-            var automatics = "";
+            var automatics = '';
 
             var uniforms = getAllAutomaticUniforms();
             for ( var uniform in uniforms) {
                 if (uniforms.hasOwnProperty(uniform)) {
-                    automatics += getAutomaticUniformDeclaration(uniforms, uniform) + " \n";
+                    automatics += getAutomaticUniformDeclaration(uniforms, uniform) + ' \n';
                 }
             }
-            automatics += "\n";
+            automatics += '\n';
 
             return automatics;
         }
@@ -1720,8 +1723,8 @@ define([
             // Functions after constants and uniforms because functions depend on them.
             var definitions = getBuiltinConstants() +
                               getAutomaticUniforms() +
-                              builtInGlslFunctions + "\n\n" +
-                              "#line 0 \n";
+                              builtInGlslFunctions + '\n\n' +
+                              '#line 0 \n';
 
             getShaderDefinitions = function() {
                 return definitions;
@@ -1748,13 +1751,13 @@ define([
             var vsLog = gl.getShaderInfoLog(vertexShader);
 
             if (logShaderCompilation && vsLog && vsLog.length) {
-                console.log("[GL] Vertex shader compile log: " + vsLog);
+                console.log('[GL] Vertex shader compile log: ' + vsLog);
             }
 
             if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
                 gl.deleteShader(vertexShader);
-                console.error("[GL] Vertex shader compile log: " + vsLog);
-                throw new RuntimeError("Vertex shader failed to compile.  Compile log: " + vsLog);
+                console.error('[GL] Vertex shader compile log: ' + vsLog);
+                throw new RuntimeError('Vertex shader failed to compile.  Compile log: ' + vsLog);
             }
 
             var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
@@ -1763,14 +1766,14 @@ define([
             var fsLog = gl.getShaderInfoLog(fragmentShader);
 
             if (logShaderCompilation && fsLog && fsLog.length) {
-                console.log("[GL] Fragment shader compile log: " + fsLog);
+                console.log('[GL] Fragment shader compile log: ' + fsLog);
             }
 
             if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
                 gl.deleteShader(vertexShader);
                 gl.deleteShader(fragmentShader);
-                console.error("[GL] Fragment shader compile log: " + fsLog);
-                throw new RuntimeError("Fragment shader failed to compile.  Compile log: " + fsLog);
+                console.error('[GL] Fragment shader compile log: ' + fsLog);
+                throw new RuntimeError('Fragment shader failed to compile.  Compile log: ' + fsLog);
             }
 
             var program = gl.createProgram();
@@ -1792,13 +1795,13 @@ define([
             var linkLog = gl.getProgramInfoLog(program);
 
             if (logShaderCompilation && linkLog && linkLog.length) {
-                console.log("[GL] Shader program link log: " + linkLog);
+                console.log('[GL] Shader program link log: ' + linkLog);
             }
 
             if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
                 gl.deleteProgram(program);
-                console.error("[GL] Shader program link log: " + linkLog);
-                throw new RuntimeError("Program failed to link.  Link log: " + linkLog);
+                console.error('[GL] Shader program link log: ' + linkLog);
+                throw new RuntimeError('Program failed to link.  Link log: ' + linkLog);
             }
 
             return program;
@@ -1829,12 +1832,12 @@ define([
 
             for ( var i = 0; i < numberOfUniforms; ++i) {
                 var activeUniform = gl.getActiveUniform(program, i);
-                var suffix = "[0]";
+                var suffix = '[0]';
                 var uniformName =
                     activeUniform.name.indexOf(suffix, activeUniform.name.length - suffix.length) !== -1 ? activeUniform.name.slice(0, activeUniform.name.length - 3) : activeUniform.name;
 
                 // Ignore GLSL built-in uniforms returned in Firefox.
-                if (uniformName.indexOf("gl_") !== 0) {
+                if (uniformName.indexOf('gl_') !== 0) {
                     if (activeUniform.size === 1) {
                         // Single uniform
                         var location = gl.getUniformLocation(program, uniformName);
@@ -1853,7 +1856,7 @@ define([
                         var locations = [];
                         var value = [];
                         for ( var j = 0; j < activeUniform.size; ++j) {
-                            var loc = gl.getUniformLocation(program, uniformName + "[" + j + "]");
+                            var loc = gl.getUniformLocation(program, uniformName + '[' + j + ']');
                             locations.push(loc);
                             value.push(gl.getUniform(program, loc));
                         }
@@ -2035,8 +2038,8 @@ define([
          * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
          *
          * @see ShaderProgram.isDestroyed
-         * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteShader.xml">glDeleteShader</a>
-         * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteProgram.xml">glDeleteProgram</a>
+         * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteShader.xml'>glDeleteShader</a>
+         * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteProgram.xml'>glDeleteProgram</a>
          *
          * @example
          * shaderProgram = shaderProgram && shaderProgram.destroy();
@@ -2058,7 +2061,7 @@ define([
         };
 
         return null;
-    }
+    };
 
     return ShaderProgram;
 });

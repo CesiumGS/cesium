@@ -1,11 +1,13 @@
 /*global define*/
 define([
+        './DeveloperError',
         './Cartesian2',
         './Cartesian3',
         './Cartographic2',
         './Cartographic3'
     ],
     function(
+        DeveloperError,
         Cartesian2,
         Cartesian3,
         Cartographic2,
@@ -13,8 +15,8 @@ define([
     "use strict";
 
     /**
-     * @exports CesiumMath
      * Math functions.
+     * @exports CesiumMath
      */
     var CesiumMath = {};
 
@@ -485,6 +487,40 @@ define([
     CesiumMath.equalsEpsilon = function(left, right, epsilon) {
         epsilon = epsilon || 0.0;
         return Math.abs(left - right) <= epsilon;
+    };
+
+    var factorials = [1];
+
+    /**
+     * Computes the factorial of the provided number.
+     *
+     * @memberof CesiumMath
+     *
+     * @param {Number} n The number whose factorial is to be computed.
+     *
+     * @return {Number} The factorial of the provided number or undefined if the number is less than 0.
+     *
+     * @see <a href='http://en.wikipedia.org/wiki/Factorial'>Factorial on Wikipedia</a>.
+     *
+     * @example
+     * //Compute 7!, which is equal to 5040
+     * var computedFactorial = CesiumMath.factorial(7);
+     *
+     * @exception {DeveloperError} number greater than or equal to 0 is required.
+     */
+    CesiumMath.factorial = function(n) {
+        if (typeof n !== 'number' || n < 0) {
+            throw new DeveloperError('number greater than or equal to 0 is required.');
+        }
+
+        var length = factorials.length;
+        if (n >= length) {
+            var sum = factorials[length - 1];
+            for ( var i = length; i <= n; i++) {
+                factorials.push(sum * i);
+            }
+        }
+        return factorials[n];
     };
 
     return CesiumMath;

@@ -11,12 +11,12 @@ define(function() {
      * When called with two numeric arguments; longitude, latitude, and height; the position is initialized to (longitude, latitude, height).
      * </p>
      *
-     * @name Cartographic3
+     * @alias Cartographic3
      * @constructor
      *
      * @see Cartographic2
      */
-    function Cartographic3() {
+    var Cartographic3 = function() {
         var longitude = 0.0;
         var latitude = 0.0;
         var height = 0.0;
@@ -57,7 +57,7 @@ define(function() {
          * @type Number
          */
         this.height = height;
-    }
+    };
 
     /**
      * An immutable Cartographic3 instance initialized to (0.0, 0.0, 0.0).
@@ -114,7 +114,7 @@ define(function() {
      * @return {String} Returns a string representing this instance.
      */
     Cartographic3.prototype.toString = function() {
-        return "(" + this.longitude + ", " + this.latitude + ", " + this.height + ")";
+        return '(' + this.longitude + ', ' + this.latitude + ', ' + this.height + ')';
     };
 
     return Cartographic3;

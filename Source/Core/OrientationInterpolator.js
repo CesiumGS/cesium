@@ -12,27 +12,26 @@ define([
      * Smoothly interpolates orientation, represented by <code>Quaternion</code>s, over time.
      * For example, this can be used to set a camera's axes along a path.
      *
-     * @name OrientationInterpolator
+     * @alias OrientationInterpolator
      * @constructor
      *
      * @param {Array} controlPoints An array, of at least length 2, of objects with <code>orientation</code> and
      * <code>time</code> properties.
      *
-     * @exception {DeveloperError} controlPoints is required.
-     * @exception {DeveloperError} controlPoints must be an array of at least length 2.
+     * @exception {DeveloperError} controlPoints is required. It must be an array with at least a length of 3.
      *
      * @see Quaternion
      * @see CatmullRomSpline
      * @see HermiteSpline
      */
-    function OrientationInterpolator(controlPoints) {
+    var OrientationInterpolator = function(controlPoints) {
         if (!controlPoints || !(controlPoints instanceof Array) || controlPoints.length < 2) {
-            throw new DeveloperError("controlPoints is required. It must be an array with at least a length of 3.", "controlPoints");
+            throw new DeveloperError('controlPoints is required. It must be an array with at least a length of 3.');
         }
 
         this._points = controlPoints;
         this._lastTimeIndex = 0;
-    }
+    };
 
     /**
      * Returns the array of control points.
@@ -92,12 +91,12 @@ define([
      * @return {Quaternion} The orientation at the given <code>time</code>.
      */
     OrientationInterpolator.prototype.evaluate = function(time) {
-        if (typeof time === "undefined") {
-            throw new DeveloperError("time is required.", "time");
+        if (typeof time === 'undefined') {
+            throw new DeveloperError('time is required.');
         }
 
         if (time < this._points[0].time || time > this._points[this._points.length - 1].time) {
-            throw new DeveloperError("time is out of range.", "time");
+            throw new DeveloperError('time is out of range.');
         }
 
         var i = this._findIndex(time);

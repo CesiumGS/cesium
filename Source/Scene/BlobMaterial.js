@@ -10,10 +10,10 @@ define([
     /**
      * DOC_TBA
      *
-     * @name BlobMaterial
+     * @alias BlobMaterial
      * @constructor
      */
-    function BlobMaterial(template) {
+    var BlobMaterial = function(template) {
         var t = template || {};
 
         /**
@@ -55,12 +55,12 @@ define([
                 return that.repeat;
             }
         };
-    }
+    };
 
     BlobMaterial.prototype._getShaderSource = function() {
-        return "#line 0\n" +
+        return '#line 0\n' +
                ShadersNoise +
-               "#line 0\n" +
+               '#line 0\n' +
                ShadersBlobMaterial;
     };
 

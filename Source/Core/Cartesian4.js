@@ -17,7 +17,7 @@ define([
      * When called with four numeric arguments; x, y, z, and w; the Cartesian is initialized to (x, y, z, w).
      * </p>
      *
-     * @name Cartesian4
+     * @alias Cartesian4
      * @constructor
      *
      * @param {Number} x The x-coordinate for the Cartesian type.
@@ -28,7 +28,7 @@ define([
      * @see Cartesian2
      * @see Cartesian3
      */
-    function Cartesian4(x, y, z, w) {
+    var Cartesian4 = function(x, y, z, w) {
 
         /**
          * DOC_TBA
@@ -39,7 +39,7 @@ define([
          * @see Cartesian4.z
          * @see Cartesian4.w
          */
-        this.x = (typeof x !== "undefined") ? x : 0.0;
+        this.x = (typeof x !== 'undefined') ? x : 0.0;
 
         /**
          * DOC_TBA
@@ -50,7 +50,7 @@ define([
          * @see Cartesian4.z
          * @see Cartesian4.w
          */
-        this.y = (typeof y !== "undefined") ? y : 0.0;
+        this.y = (typeof y !== 'undefined') ? y : 0.0;
 
         /**
          * DOC_TBA
@@ -61,7 +61,7 @@ define([
          * @see Cartesian4.y
          * @see Cartesian4.w
          */
-        this.z = (typeof z !== "undefined") ? z : 0.0;
+        this.z = (typeof z !== 'undefined') ? z : 0.0;
 
         /**
          * DOC_TBA
@@ -72,8 +72,8 @@ define([
          * @see Cartesian4.y
          * @see Cartesian4.z
          */
-        this.w = (typeof w !== "undefined") ? w : 0.0;
-    }
+        this.w = (typeof w !== 'undefined') ? w : 0.0;
+    };
 
     /**
      * Returns a duplicate of a Cartesian4.
@@ -351,7 +351,7 @@ define([
      * @return {String} A string representing this instance.
      */
     Cartesian4.prototype.toString = function() {
-        return "(" + this.x + ", " + this.y + ", " + this.z + ", " + this.w + ")";
+        return '(' + this.x + ', ' + this.y + ', ' + this.z + ', ' + this.w + ')';
     };
 
     return Cartesian4;

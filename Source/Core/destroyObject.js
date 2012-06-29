@@ -11,6 +11,8 @@ define(['./DeveloperError'], function(DeveloperError) {
      * calls an object's <code>destroy</code> function, which then releases the native resource and calls <code>destroyObject</code> to put
      * itself in a destroyed state.
      *
+     * @exports destroyObject
+     *
      * @param {Object} object The object to destroy.
      * @param {String} [name=undefined] The message to include in the exception that is thrown if a destroyed object's function is called.
      *
@@ -24,14 +26,14 @@ define(['./DeveloperError'], function(DeveloperError) {
      * };
      */
     function destroyObject(object, message) {
-        message = message || "This object was destroyed, i.e., destroy() was called.";
+        message = message || 'This object was destroyed, i.e., destroy() was called.';
 
         function throwOnDestroyed() {
             throw new DeveloperError(message);
         }
 
         for ( var key in object) {
-            if (typeof object[key] === "function") {
+            if (typeof object[key] === 'function') {
                 object[key] = throwOnDestroyed;
             } else {
                 delete object[key];

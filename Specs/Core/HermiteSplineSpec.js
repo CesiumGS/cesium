@@ -27,7 +27,7 @@ defineSuite([
         }];
     });
 
-    it("constructor throws an exception with invalid control points", function() {
+    it('constructor throws an exception with invalid control points', function() {
         expect(function() {
             return new HermiteSpline();
         }).toThrow();
@@ -41,19 +41,19 @@ defineSuite([
         }).toThrow();
     });
 
-    it("get control points", function() {
+    it('get control points', function() {
         var hs = new HermiteSpline(points);
         expect(hs.getControlPoints()).toEqual(points);
     });
 
-    it("evaluate fails with undefined time", function() {
+    it('evaluate fails with undefined time', function() {
         var hs = new HermiteSpline(points);
         expect(function() {
             hs.evaluate();
         }).toThrow();
     });
 
-    it("evaluate fails with time out of range", function() {
+    it('evaluate fails with time out of range', function() {
         var hs = new HermiteSpline(points);
 
         expect(function() {
@@ -65,7 +65,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("evaluate can jump around in time", function() {
+    it('evaluate can jump around in time', function() {
         var hs = new HermiteSpline(points);
 
         expect(hs.evaluate(points[0].time).equals(points[0].point)).toEqual(true);
@@ -101,7 +101,7 @@ defineSuite([
         };
     };
 
-    it("natural cubic spline", function() {
+    it('natural cubic spline', function() {
         points = [{
             point : new Cartesian3(1.0, 0.0, 0.0),
             time : 0.0
@@ -128,7 +128,7 @@ defineSuite([
         }
     });
 
-    it("clamped cubic spline", function() {
+    it('clamped cubic spline', function() {
         points = [{
             point : new Cartesian3(1.0, 0.0, 0.0),
             time : 0.0,

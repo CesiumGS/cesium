@@ -29,7 +29,7 @@ define([
             var onInterpolation = template.onInterpolation; // Can be undefined
 
             if (resolution.x <= 1 || resolution.y <= 1) {
-                throw new DeveloperError("Resolution must be greater than one in both the x and y directions.");
+                throw new DeveloperError('Resolution must be greater than one in both the x and y directions.');
             }
 
             var i;

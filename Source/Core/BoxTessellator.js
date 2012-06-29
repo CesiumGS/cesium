@@ -14,6 +14,7 @@ define([
     /**
      * DOC_TBA
      *
+     * @alias BoxTessellator
      * @exports BoxTessellator
      *
      * @see CubeMapEllipsoidTessellator
@@ -37,7 +38,7 @@ define([
                 var dimensions = template.dimensions || new Cartesian3(1.0, 1.0, 1.0);
 
                 if (dimensions.x < 0 || dimensions.y < 0 || dimensions.z < 0) {
-                    throw new DeveloperError("All dimensions components must be greater than or equal to zero.");
+                    throw new DeveloperError('All dimensions components must be greater than or equal to zero.');
                 }
 
                 var corner = dimensions.multiplyWithScalar(0.5);

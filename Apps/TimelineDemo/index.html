@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+<title>Timeline Demo</title>
+<style type="text/css">
+@import url('../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css');
+@import url('../../Source/Widgets/Timeline.css');
+
+body {
+	font-family: "Open Sans", "Trebuchet MS", Sans-Serif;
+	font-size: 15px;
+}
+
+.dateTimeBlock {
+	display: block;
+	float: left;
+	margin-right: 10px;
+	border: solid 1px #000;
+	border-radius: 25px;
+}
+
+.info {
+	display: block;
+	float: left;
+	margin-right: 10px;
+	font-family: Monospace;
+}
+
+.timeSel {
+	padding: 10px 20px;
+}
+
+.dateTimeBlock .dijitCalendarContainer {
+	margin: 5px auto 15px auto;
+}
+
+.clear {
+	clear: both;
+}
+
+.myTimeline {
+	display: block;
+	width: 90%;
+	height: 51px;
+	margin: 20px auto;
+}
+
+.usage {
+    display: block;
+    float: right;
+    width: 250px;
+    padding: 7px;
+    border: solid 1px #aaa;
+    border-radius: 5px;
+    margin: 10px 15px;
+}
+
+.usage h2 {
+    margin: 0 0 5px;
+    padding: 0;
+    border-bottom: solid 1px #aaa;
+    text-align: center;
+}
+
+.action {
+    font-family: monospace;
+    text-align: right;
+    white-space: nowrap;
+    padding-right: 5px;
+}
+
+table {
+    border: none;
+    border-collapse: collapse;
+}
+
+tr {
+    border-top: solid 1px #ddd;
+}
+</style>
+<script data-dojo-config="async: 1, tlmSiblingOfDojo: 0"
+    src="../../ThirdParty/dojo-release-1.7.2-src/dojo/dojo.js"></script>
+<script type="text/javascript" src="boot.js"></script>
+</head>
+<body class="claro">
+    <div class="usage">
+        <h2>Usage</h2>
+        <p>The following mouse actions are available on the time bar itself, inside the area
+        with the tic marks and time labels.  All dragging is horizontal, not vertical.</p>
+        <table>
+        <tr><td class="action">Left-click</td><td>Jump to time</td></tr>
+        <tr><td class="action">Left-drag</td><td>Scroll through time</td></tr>
+        <tr><td class="action">Right-drag</td><td>Zoom</td></tr>
+        <tr><td class="action">Wheel-spin</td><td>Zoom</td></tr>
+        <tr><td class="action">Middle-drag</td><td>Pan, only after zooming in.</td></tr>
+        </table>
+    </div>
+    <h1>Timeline Demo</h1>
+    <p>This is a simple demo of the Cesium Timeline widget. Select a start and end date below to set the start and
+        end dates of the widget. You can click on the upper part of the widget to move to the time at that location. You
+        can also click and drag the mouse back and forth to change time dynamically. The current time is shown at the
+        bottom. You can also use the mouse wheel to zoom in and out, dynamically adjusting the visible time span.</p>
+    <p>The colored bars show the ability for us to specify important intervals of time.  Eventually these
+    bars will gain additional functionality, such as click notification and pop-up menus.</p>
+    <div class="startStopBlock">
+        <div class="dateTimeBlock">
+            <div class="timeSel">
+                Start time: <input type="text" id="startTimeSel"
+                    data-dojo-type="dijit.form.TimeTextBox" required="true" />
+            </div>
+            <div id="startCal" data-dojo-type="dijit.Calendar"></div>
+        </div>
+        <div class="dateTimeBlock">
+            <div class="timeSel">
+                End time: <input type="text" id="endTimeSel"
+                    data-dojo-type="dijit.form.TimeTextBox" required="true" />
+            </div>
+            <div id="endCal" data-dojo-type="dijit.Calendar"></div>
+        </div>
+        <div class="info">
+            <p>
+                Visible Timespan: <span id="formatted">(none)</span>
+            </p>
+        </div>
+        <div class="clear"></div>
+    </div>
+
+    <div id="time1" class="myTimeline"></div>
+
+    <p class="info">
+        Tick position: <span id="mousePos"></span>
+    </p>
+
+</body>
+</html>

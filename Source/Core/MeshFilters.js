@@ -166,7 +166,7 @@ define([
                 var attribute = mesh.attributes[property];
                 var num = attribute.values.length / attribute.componentsPerAttribute;
                 if ((numberOfVertices !== num) && (numberOfVertices !== -1)) {
-                    throw new DeveloperError("All mesh attribute lists must have the same number of attributes.");
+                    throw new DeveloperError('All mesh attribute lists must have the same number of attributes.');
                 }
                 numberOfVertices = num;
             }
@@ -222,7 +222,7 @@ define([
                         } else {
                             tempIndex = indicesIn[intoIndicesIn];
                             if (tempIndex >= numVertices) {
-                                throw new DeveloperError("Input indices contains a value greater than or equal to the number of vertices");
+                                throw new DeveloperError('Input indices contains a value greater than or equal to the number of vertices');
                             }
                             indexCrossReferenceOldToNew[tempIndex] = nextIndex;
 
@@ -279,7 +279,7 @@ define([
      *
      * @see MeshFilters.reorderForPreVertexCache
      * @see Tipsify
-     * @see <a href="http://gfx.cs.princeton.edu/pubs/Sander_2007_%3ETR/tipsy.pdf">
+     * @see <a href='http://gfx.cs.princeton.edu/pubs/Sander_2007_%3ETR/tipsy.pdf'>
      * Fast Triangle Reordering for Vertex Locality and Reduced Overdraw</a>
      * by Sander, Nehab, and Barczak
      *
@@ -314,7 +314,7 @@ define([
         var length = indexLists.length;
         for ( var i = 0; i < length; ++i) {
             if (indexLists[i].primitiveType !== PrimitiveType.TRIANGLES) {
-                throw new DeveloperError("The mesh's index-lists must have PrimitiveType equal to PrimitiveType.TRIANGLES.");
+                throw new DeveloperError('indexLists must have PrimitiveType equal to PrimitiveType.TRIANGLES.');
             }
         }
     };
@@ -398,7 +398,7 @@ define([
                         var x2 = originalIndices[j + 2];
 
                         var i0 = oldToNewIndex[x0];
-                        if (typeof i0 === "undefined") {
+                        if (typeof i0 === 'undefined') {
                             i0 = currentIndex++;
                             oldToNewIndex[x0] = i0;
 
@@ -406,7 +406,7 @@ define([
                         }
 
                         var i1 = oldToNewIndex[x1];
-                        if (typeof i1 === "undefined") {
+                        if (typeof i1 === 'undefined') {
                             i1 = currentIndex++;
                             oldToNewIndex[x1] = i1;
 
@@ -414,7 +414,7 @@ define([
                         }
 
                         var i2 = oldToNewIndex[x2];
-                        if (typeof i2 === "undefined") {
+                        if (typeof i2 === 'undefined') {
                             i2 = currentIndex++;
                             oldToNewIndex[x2] = i2;
 

@@ -4,12 +4,52 @@ Change Log
 Beta Releases
 -------------
 
-### b6 - TBA
+### b7 - xx/xx/2012
+
+* Breaking changes:
+   * Removed keyboard input handling from `EventHandler`.
+   * `TextureAtlas` takes an object literal in its constructor instead of separate parameters.  Code that previously looked like:
+
+            context.createTextureAtlas(images, pixelFormat, borderWidthInPixels);
+
+      should now look like:
+
+            context.createTextureAtlas({images : images, pixelFormat : pixelFormat, borderWidthInPixels : borderWidthInPixels});
+            
+   * `Camera.pickEllipsoid` returns the picked position in world coordinates and the ellipsoid parameter is optional. Prefer the new `Scene.pickEllipsoid` method. For example, change
+   
+            var position = camera.pickEllipsoid(ellipsoid, windowPosition);
+      to:
+            
+            var position = scene.pickEllipsoid(windowPosition, ellipsoid);
+            
+   * `Camera.getPickRay` now returns the new `Ray` type instead of an object with position and direction properties.
+
+* Added `addImage` to `TextureAtlas` so images can be added to a texture atlas after it is constructed.
+* Added `Scene.pickEllipsoid`, which picks either the ellipsoid or the map depending on the current `SceneMode`.
+* Added `Event`, a new utility class which makes it easy for objects to expose event properties.
+* Added `TextureAtlasBuilder`,a new utility class which makes it easy to build a TextureAtlas asynchronously.
+* Added 'Clock', a simple clock for keeping track of simulated time.
+* Added 'LagrangePolynomialApproximation', 'HermitePolynomialApproximation', and 'LinearApproximation' interpolation algorithms.
+* Added 'CoordinateConversions', a new static class where most coordinate conversion methods will be stored.
+* Added 'Spherical' coordinate type
+* Added a new DynamicScene layer for time-dynamic, data-driven visualization.  This include CZML processing.  For more details see https://github.com/AnalyticalGraphicsInc/cesium/wiki/Architecture and https://github.com/AnalyticalGraphicsInc/cesium/wiki/CZML-in-Cesium.
+* Added a new application, Cesium Viewer, for viewing CZML files and otherwise exploring the globe.
+* Added a new Widgets directory, to contain common re-usable Cesium related controls.
+* Added a new Timeline control to the widgets directory.
+* Added a new DojoWidgets directory, to contain dojo-specific widgets.
+* Added new Timeline and Cesium dojo widgets.
+
+### b6a - 06/20/2012
 
 * Breaking changes:
     * Changed `Tipsify.tipsify` and `Tipsify.calculateACMR` to accept an object literal instead of three separate arguments. Supplying a maximum index and cache size is now optional.
+    * `CentralBody` no longer requires a camera as the first parameter.
 * Added `CentralBody.northPoleColor` and `CentralBody.southPoleColor` to fill in the poles if they are not covered by a texture.
 * Added `Polygon.configureExtent` to create a polygon defined by west, south, east, and north values.
+* Added functions to `Camera` to provide position and directions in world coordinates.
+* Added `showThroughEllipsoid` to `CustomSensorVolume` and `RectangularPyramidSensorVolume` to allow sensors to draw through Earth.
+* Added `affectedByLighting` to `CentralBody` and `Polygon` to turn lighting on/off for these objects.
 
 ### b5 - 05/15/2012
 

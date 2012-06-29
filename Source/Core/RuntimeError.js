@@ -11,21 +11,21 @@ define(function() {
      * to a developer error, e.g., invalid argument, that usually indicates a bug in the
      * calling code.
      *
-     * @name RuntimeError
+     * @alias RuntimeError
      *
      * @param {String} [message=undefined] The error message for this exception.
      *
      * @see DeveloperError
      * @constructor
      */
-    function RuntimeError(message) {
+    var RuntimeError = function(message) {
         /**
-         * "RuntimeError" indicating that this exception was thrown due to a runtime error.
+         * 'RuntimeError' indicating that this exception was thrown due to a runtime error.
          *
          * @constant
          * @type String
          */
-        this.name = "RuntimeError";
+        this.name = 'RuntimeError';
 
         /**
          * The explanation for why this exception was thrown.
@@ -33,7 +33,7 @@ define(function() {
          * @type String
          */
         this.message = message;
-    }
+    };
 
     return RuntimeError;
 });

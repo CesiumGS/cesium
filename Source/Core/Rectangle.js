@@ -5,7 +5,7 @@ define(['./DeveloperError'], function(DeveloperError) {
     /**
      * DOC_TBA
      *
-     * @name Rectangle
+     * @alias Rectangle
      *
      * @param {Number} [x=0.0] The x coordinate of the rectangle.
      * @param {Number} [y=0.0] The y coordinate of the rectangle.
@@ -14,7 +14,7 @@ define(['./DeveloperError'], function(DeveloperError) {
      *
      * @constructor
      */
-    function Rectangle(x, y, width, height) {
+    var Rectangle = function(x, y, width, height) {
         /**
          * The x coordinate of the rectangle
          *
@@ -50,15 +50,24 @@ define(['./DeveloperError'], function(DeveloperError) {
          * @see Rectangle.width
          */
         this.height = height || 0.0;
-    }
+    };
 
+    /**
+     * DOC_TBA
+     *
+     * @memberof Rectangle
+     *
+     * @param {Array} positions
+     *
+     * @return {Rectangle} An axis aligned rectangle bounding the positions.
+     */
     Rectangle.createAxisAlignedBoundingRectangle = function(positions) {
         if (typeof positions === 'undefined') {
-            throw new DeveloperError("positions is required.", "positions");
+            throw new DeveloperError('positions is required.');
         }
 
         if (typeof positions.length === 'undefined' || positions.length <= 0) {
-            throw new DeveloperError("The length of positions must be greater than zero.", "positions");
+            throw new DeveloperError('The length of positions must be greater than zero.');
         }
 
         var length = positions.length;
@@ -147,7 +156,7 @@ define(['./DeveloperError'], function(DeveloperError) {
      * @return {String} A string representing this rectangle.
      */
     Rectangle.prototype.toString = function() {
-        return "(" + this.x + ", " + this.y + ", " + this.width + ", " + this.height + ")";
+        return '(' + this.x + ', ' + this.y + ', ' + this.width + ', ' + this.height + ')';
     };
 
     /**

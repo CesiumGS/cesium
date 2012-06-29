@@ -19,7 +19,7 @@ define([
      * When called with nine numeric arguments in row-major order, these arguments define the elements of the matrix.
      * </p>
      *
-     * @name Matrix3
+     * @alias Matrix3
      * @constructor
      * @immutable
      *
@@ -28,7 +28,7 @@ define([
      * @see Matrix4
      * @see Quaternion
      */
-    function Matrix3() {
+    var Matrix3 = function() {
         var values = this.values = []; // Column-major
         values.length = numberOfElements;
 
@@ -61,7 +61,7 @@ define([
             values[7] = arguments[5]; // Column 2, Row 1
             values[8] = arguments[8]; // Column 2, Row 2
         }
-    }
+    };
 
     /**
      * Returns the element at column 0, row 0.
@@ -158,11 +158,11 @@ define([
      *
      * @memberof Matrix3
      * @return {Number} The element at the zero-based, column-major index.
-     * @exception {DeveloperError} Index must be between 0 and 8.
+     * @exception {DeveloperError} index must be between 0 and 8.
      */
     Matrix3.prototype.getColumnMajorValue = function(index) {
         if (index < 0 || index > 8) {
-            throw new DeveloperError("Index must be between 0 and 8.", "index");
+            throw new DeveloperError('index must be between 0 and 8.');
         }
 
         return this.values[index];
@@ -462,7 +462,7 @@ define([
                         columnMajorValues[2], columnMajorValues[5], columnMajorValues[8]);
             }
 
-            throw new DeveloperError("columnMajorValues must have 9 elements.", "columnMajorValues");
+            throw new DeveloperError('columnMajorValues must have 9 elements.');
         }
         return new Matrix3();
     };
@@ -615,8 +615,10 @@ define([
      * @return {Boolean} <code>true</code> if the matrices are equal element-wise; otherwise, <code>false</code>.
      */
     Matrix3.prototype.equals = function(other) {
-        for ( var i = 0; i < numberOfElements; ++i) {
-            if (this.getColumnMajorValue(i) !== other.getColumnMajorValue(i)) {
+        var thisValues = this.values;
+        var otherValues = other.values;
+        for ( var i = 0, len = thisValues.length; i < len; i++) {
+            if (thisValues[i] !== otherValues[i]) {
                 return false;
             }
         }
@@ -632,8 +634,10 @@ define([
      */
     Matrix3.prototype.equalsEpsilon = function(other, epsilon) {
         epsilon = epsilon || 0.0;
-        for ( var i = 0; i < numberOfElements; ++i) {
-            if (Math.abs(this.getColumnMajorValue(i) - other.getColumnMajorValue(i)) > epsilon) {
+        var thisValues = this.values;
+        var otherValues = other.values;
+        for ( var i = 0, len = thisValues.length; i < len; i++) {
+            if (Math.abs(thisValues[i] - otherValues[i]) > epsilon) {
                 return false;
             }
         }
@@ -648,9 +652,9 @@ define([
      * @return {String} Returns a string representing this instance.
      */
     Matrix3.prototype.toString = function() {
-        return "(" + this.getColumn0Row0() + ", " + this.getColumn1Row0() + ", " + this.getColumn2Row0() + ")\n" +
-               "(" + this.getColumn0Row1() + ", " + this.getColumn1Row1() + ", " + this.getColumn2Row1() + ")\n" +
-               "(" + this.getColumn0Row2() + ", " + this.getColumn1Row2() + ", " + this.getColumn2Row2() + ")";
+        return '(' + this.getColumn0Row0() + ', ' + this.getColumn1Row0() + ', ' + this.getColumn2Row0() + ')\n' +
+               '(' + this.getColumn0Row1() + ', ' + this.getColumn1Row1() + ', ' + this.getColumn2Row1() + ')\n' +
+               '(' + this.getColumn0Row2() + ', ' + this.getColumn1Row2() + ', ' + this.getColumn2Row2() + ')';
     };
 
     /**

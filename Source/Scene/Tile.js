@@ -14,7 +14,7 @@ define([
     /**
      * A single piece of a uniformly subdivided image mapped to the surface of an ellipsoid.
      *
-     * @name Tile
+     * @alias Tile
      * @constructor
      *
      * @param {Extent} description.extent The cartographic extent of the tile, with north, south, east and
@@ -34,18 +34,18 @@ define([
      * @see OpenStreetMapTileProvider
      * @see BingMapsTileProvider
      */
-    function Tile(description) {
+    var Tile = function(description) {
         if (!description) {
-            throw new DeveloperError("description is required.", "description");
+            throw new DeveloperError('description is required.');
         }
 
-        if (typeof description.extent === "undefined" &&
-            (typeof description.x === "undefined" || typeof description.y === "undefined")) {
-            throw new DeveloperError("Either description.extent is required or description.x and description.y are required.", "description");
+        if (typeof description.extent === 'undefined' &&
+            (typeof description.x === 'undefined' || typeof description.y === 'undefined')) {
+            throw new DeveloperError('Either description.extent is required or description.x and description.y are required.');
         }
 
-        if (typeof description.zoom === "undefined" || description.zoom < 0) {
-            throw new DeveloperError("description.zoom is required an must be greater than zero.", "description.zoom");
+        if (typeof description.zoom === 'undefined' || description.zoom < 0) {
+            throw new DeveloperError('description.zoom is required an must be greater than zero.');
         }
 
         /**
@@ -109,7 +109,7 @@ define([
             this.y = description.y;
 
             if (this.x < 0 || this.y < 0) {
-                throw new DeveloperError("description.x and description.y must be greater than zero.", "description");
+                throw new DeveloperError('description.x and description.y must be greater than zero.');
             }
 
             this.extent = Tile.tileXYToExtent(this.x, this.y, this.zoom);
@@ -121,7 +121,7 @@ define([
         this._projection = undefined;
         this._boundingSphere2D = undefined;
         this._boundingRectangle = undefined;
-    }
+    };
 
     /**
      * Converts an extent and zoom level into tile x, y coordinates.

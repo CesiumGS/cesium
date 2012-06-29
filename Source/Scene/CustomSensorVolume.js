@@ -47,12 +47,12 @@ define([
     /**
      * DOC_TBA
      *
-     * @name CustomSensorVolume
+     * @alias CustomSensorVolume
      * @constructor
      *
      * @see SensorVolumeCollection#addCustom
      */
-    function CustomSensorVolume(template) {
+    var CustomSensorVolume = function(template) {
         var t = template || {};
 
         this._va = undefined;
@@ -67,19 +67,28 @@ define([
          * <code>true</code> if this sensor will be shown; otherwise, <code>false</code>
          *
          * @type Boolean
-         *
-         * @see CustomSensorVolume#showIntersection
          */
-        this.show = (typeof t.show === "undefined") ? true : t.show;
+        this.show = (typeof t.show === 'undefined') ? true : t.show;
 
         /**
          * DOC_TBA
          *
          * @type Boolean
-         *
-         * @see CustomSensorVolume#show
          */
-        this.showIntersection = (typeof t.showIntersection === "undefined") ? true : t.showIntersection;
+        this.showIntersection = (typeof t.showIntersection === 'undefined') ? true : t.showIntersection;
+
+        /**
+         * <p>
+         * Determines if a sensor intersecting the ellipsoid is drawn through the ellipsoid and potentially out
+         * to the other side, or if the part of the sensor intersecting the ellipsoid stops at the ellipsoid.
+         * </p>
+         * <p>
+         * The default is <code>false</code>, meaning the sensor will not go through the ellipsoid.
+         * </p>
+         *
+         * @type Boolean
+         */
+        this.showThroughEllipsoid = (typeof t.showThroughEllipsoid === 'undefined') ? false : t.showThroughEllipsoid;
 
         /**
          * The 4x4 transformation matrix that transforms this sensor from model to world coordinates.  In it's model
@@ -89,8 +98,8 @@ define([
          * This matrix is available to GLSL vertex and fragment shaders via
          * {@link agi_model} and derived uniforms.
          * <br /><br />
-         * <div align="center">
-         * <img src="images/CustomSensorVolume.setModelMatrix.png" /><br />
+         * <div align='center'>
+         * <img src='images/CustomSensorVolume.setModelMatrix.png' /><br />
          * Model coordinate system for a custom sensor
          * </div>
          *
@@ -119,7 +128,7 @@ define([
          *
          * @type Number
          */
-        this.radius = (typeof t.radius === "undefined") ? Number.POSITIVE_INFINITY : t.radius;
+        this.radius = (typeof t.radius === 'undefined') ? Number.POSITIVE_INFINITY : t.radius;
 
         this._directions = undefined;
         this._directionsDirty = false;
@@ -146,12 +155,15 @@ define([
          *
          * @type Number
          */
-        this.erosion = (typeof t.erosion === "undefined") ? 1.0 : t.erosion;
+        this.erosion = (typeof t.erosion === 'undefined') ? 1.0 : t.erosion;
 
         var that = this;
         this._uniforms = {
             u_model : function() {
                 return that.modelMatrix;
+            },
+            u_showThroughEllipsoid : function() {
+                return that.showThroughEllipsoid;
             },
             u_showIntersection : function() {
                 return that.showIntersection;
@@ -170,7 +182,7 @@ define([
         this._pickUniforms = null;
 
         this._mode = SceneMode.SCENE3D;
-    }
+    };
 
     /**
      * DOC_TBA
@@ -297,7 +309,7 @@ define([
         }
 
         if (this.radius < 0.0) {
-            throw new DeveloperError("this.radius must be greater than or equal to zero.");
+            throw new DeveloperError('this.radius must be greater than or equal to zero.');
         }
 
         if (this.show) {
@@ -319,25 +331,31 @@ define([
                     depthMask : false
                 });
             }
+            // This would be better served by depth testing with a depth buffer that does not
+            // include the ellipsoid depth - or a g-buffer containing an ellipsoid mask
+            // so we can selectively depth test.
+            this._rs.depthTest.enabled = !this.showThroughEllipsoid;
 
             // Recompile shader when material changes
             if (!this._material || (this._material !== this.material)) {
-                this._material = this.material || new ColorMaterial();
+
+                this.material = this.material || new ColorMaterial();
+                this._material = this.material;
 
                 var fsSource =
-                    "#line 0\n" +
+                    '#line 0\n' +
                     ShadersNoise +
-                    "#line 0\n" +
+                    '#line 0\n' +
                     ShadersSensorVolume +
-                    "#line 0\n" +
-                    this.material._getShaderSource() +
-                    "#line 0\n" +
+                    '#line 0\n' +
+                    this._material._getShaderSource() +
+                    '#line 0\n' +
                     CustomSensorVolumeFS;
 
                 this._sp = this._sp && this._sp.release();
                 this._sp = context.getShaderCache().getShaderProgram(CustomSensorVolumeVS, fsSource, attributeIndices);
 
-                this._drawUniforms = combine(this._uniforms, this.material._uniforms);
+                this._drawUniforms = combine(this._uniforms, this._material._uniforms);
             }
 
             // Recreate vertex buffer when directions change
@@ -378,10 +396,10 @@ define([
         if (this._mode === SceneMode.SCENE3D && this.show && this._va) {
             // Since this ignores all other materials, if a material does discard, the sensor will still be picked.
             var fsSource =
-                "#define RENDER_FOR_PICK 1\n" +
-                "#line 0\n" +
+                '#define RENDER_FOR_PICK 1\n' +
+                '#line 0\n' +
                 ShadersSensorVolume +
-                "#line 0\n" +
+                '#line 0\n' +
                 CustomSensorVolumeFS;
 
             this._spPick = context.getShaderCache().getShaderProgram(CustomSensorVolumeVS, fsSource, attributeIndices);

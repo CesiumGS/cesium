@@ -5,10 +5,10 @@ define(['../Shaders/DotMaterial'], function(ShadersDotMaterial) {
     /**
      * DOC_TBA
      *
-     * @name DotMaterial
+     * @alias DotMaterial
      * @constructor
      */
-    function DotMaterial(template) {
+    var DotMaterial = function(template) {
         var t = template || {};
 
         /**
@@ -60,10 +60,10 @@ define(['../Shaders/DotMaterial'], function(ShadersDotMaterial) {
                 };
             }
         };
-    }
+    };
 
     DotMaterial.prototype._getShaderSource = function() {
-        return "#line 0\n" + ShadersDotMaterial;
+        return '#line 0\n' + ShadersDotMaterial;
     };
 
     return DotMaterial;

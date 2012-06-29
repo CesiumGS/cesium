@@ -8,7 +8,7 @@ define(function() {
      * If either <code>x</code> or <code>y</code> is undefined, then the corresponding
      * component will be initialized to 0.0.
      *
-     * @name Cartesian2
+     * @alias Cartesian2
      * @constructor
      *
      * @param {Number} x The x-coordinate for the Cartesian type.
@@ -17,7 +17,7 @@ define(function() {
      * @see Cartesian3
      * @see Cartesian4
      */
-    function Cartesian2(x, y) {
+    var Cartesian2 = function(x, y) {
 
         /**
          * DOC_TBA
@@ -26,7 +26,7 @@ define(function() {
          *
          * @see Cartesian2.y
          */
-        this.x = (typeof x !== "undefined") ? x : 0.0;
+        this.x = (typeof x !== 'undefined') ? x : 0.0;
 
         /**
          * DOC_TBA
@@ -35,8 +35,8 @@ define(function() {
          *
          * @see Cartesian2.x
          */
-        this.y = (typeof y !== "undefined") ? y : 0.0;
-    }
+        this.y = (typeof y !== 'undefined') ? y : 0.0;
+    };
 
     /**
      * Returns a duplicate of a Cartesian2.
@@ -219,7 +219,7 @@ define(function() {
      * @return {String} A string representing this instance.
      */
     Cartesian2.prototype.toString = function() {
-        return "(" + this.x + ", " + this.y + ")";
+        return '(' + this.x + ', ' + this.y + ')';
     };
 
     return Cartesian2;

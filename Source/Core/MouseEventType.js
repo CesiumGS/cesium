@@ -14,7 +14,7 @@ define(['./Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        LEFT_DOWN : new Enumeration(0, "LEFT_DOWN"),
+        LEFT_DOWN : new Enumeration(0, 'LEFT_DOWN'),
 
         /**
          * Represents a mouse left button up event.
@@ -22,7 +22,7 @@ define(['./Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        LEFT_UP : new Enumeration(1, "LEFT_UP"),
+        LEFT_UP : new Enumeration(1, 'LEFT_UP'),
 
         /**
          * Represents a mouse left click event.
@@ -30,7 +30,7 @@ define(['./Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        LEFT_CLICK : new Enumeration(2, "LEFT_CLICK"),
+        LEFT_CLICK : new Enumeration(2, 'LEFT_CLICK'),
 
         /**
          * Represents a mouse left double click event.
@@ -38,7 +38,7 @@ define(['./Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        LEFT_DOUBLE_CLICK : new Enumeration(3, "LEFT_DOUBLE_CLICK"),
+        LEFT_DOUBLE_CLICK : new Enumeration(3, 'LEFT_DOUBLE_CLICK'),
 
         /**
          * Represents a mouse left button down event.
@@ -46,7 +46,7 @@ define(['./Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        RIGHT_DOWN : new Enumeration(5, "RIGHT_DOWN"),
+        RIGHT_DOWN : new Enumeration(5, 'RIGHT_DOWN'),
 
         /**
          * Represents a mouse right button up event.
@@ -54,7 +54,7 @@ define(['./Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        RIGHT_UP : new Enumeration(6, "RIGHT_UP"),
+        RIGHT_UP : new Enumeration(6, 'RIGHT_UP'),
 
         /**
          * Represents a mouse right click event.
@@ -62,7 +62,7 @@ define(['./Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        RIGHT_CLICK : new Enumeration(7, "RIGHT_CLICK"),
+        RIGHT_CLICK : new Enumeration(7, 'RIGHT_CLICK'),
 
         /**
          * Represents a mouse right double click event.
@@ -70,7 +70,7 @@ define(['./Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        RIGHT_DOUBLE_CLICK : new Enumeration(8, "RIGHT_DOUBLE_CLICK"),
+        RIGHT_DOUBLE_CLICK : new Enumeration(8, 'RIGHT_DOUBLE_CLICK'),
 
         /**
          * Represents a mouse middle button down event.
@@ -78,7 +78,7 @@ define(['./Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        MIDDLE_DOWN : new Enumeration(10, "MIDDLE_DOWN"),
+        MIDDLE_DOWN : new Enumeration(10, 'MIDDLE_DOWN'),
 
         /**
          * Represents a mouse middle button up event.
@@ -86,7 +86,7 @@ define(['./Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        MIDDLE_UP : new Enumeration(11, "MIDDLE_UP"),
+        MIDDLE_UP : new Enumeration(11, 'MIDDLE_UP'),
 
         /**
          * Represents a mouse middle click event.
@@ -94,7 +94,7 @@ define(['./Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        MIDDLE_CLICK : new Enumeration(12, "MIDDLE_CLICK"),
+        MIDDLE_CLICK : new Enumeration(12, 'MIDDLE_CLICK'),
 
         /**
          * Represents a mouse middle double click event.
@@ -102,7 +102,7 @@ define(['./Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        MIDDLE_DOUBLE_CLICK : new Enumeration(13, "MIDDLE_DOUBLE_CLICK"),
+        MIDDLE_DOUBLE_CLICK : new Enumeration(13, 'MIDDLE_DOUBLE_CLICK'),
 
         /**
          * Represents a mouse move event.
@@ -110,7 +110,7 @@ define(['./Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        MOVE : new Enumeration(15, "MOVE"),
+        MOVE : new Enumeration(15, 'MOVE'),
 
         /**
          * Represents a mouse wheel event.
@@ -118,7 +118,7 @@ define(['./Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        WHEEL : new Enumeration(16, "WHEEL")
+        WHEEL : new Enumeration(16, 'WHEEL')
     };
 
     return MouseEventType;

@@ -10,7 +10,7 @@ define([
     /**
      * DOC_TBA
      *
-     * @name Renderbuffer
+     * @alias Renderbuffer
      * @internalConstructor
      *
      * @see Context#createRenderbuffer
@@ -87,7 +87,7 @@ define([
          * @exception {DeveloperError} This shader renderbuffer destroyed, i.e., destroy() was called.
          *
          * @see Renderbuffer.isDestroyed
-         * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteRenderbuffers.xml">glDeleteRenderbuffers</a>
+         * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteRenderbuffers.xml'>glDeleteRenderbuffers</a>
          *
          * @example
          * renderbuffer = renderbuffer && renderbuffer.destroy();

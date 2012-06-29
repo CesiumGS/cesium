@@ -16,11 +16,11 @@ define([
     /**
      * DOC_TBA
      *
-     * @name UniformState
+     * @alias UniformState
      *
      * @internalConstructor
      */
-    function UniformState(context) {
+    var UniformState = function(context) {
         this._context = context;
         this._viewport = {
             x : 0,
@@ -52,7 +52,7 @@ define([
         this._inverseNormalDirty = true;
         this._sunDirectionECDirty = true;
         this._sunDirectionWCDirty = true;
-    }
+    };
 
     /**
      * DOC_TBA
@@ -479,7 +479,7 @@ define([
      */
     UniformState.prototype.setSunPosition = function(sunPosition) {
         if (!sunPosition) {
-            throw new DeveloperError("sunPosition is required.", "sunPosition");
+            throw new DeveloperError('sunPosition is required.');
         }
 
         this._sunPosition = sunPosition;

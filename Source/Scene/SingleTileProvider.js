@@ -14,7 +14,7 @@ define([
     /**
      * Provides a single, top-level tile.
      *
-     * @name SingleTileProvider
+     * @alias SingleTileProvider
      * @constructor
      *
      * @param {String} url The url for the tile.
@@ -27,9 +27,9 @@ define([
      * @see OpenStreetMapTileProvider
      * @see CompositeTileProvider
      */
-    function SingleTileProvider(url, proxy) {
+    var SingleTileProvider = function(url, proxy) {
         if (typeof url === 'undefined') {
-            throw new DeveloperError("url is required.", "url");
+            throw new DeveloperError('url is required.');
         }
 
         this._url = url;
@@ -72,7 +72,7 @@ define([
          * @see Projections
          */
         this.projection = Projections.WGS84;
-    }
+    };
 
     /**
      * Loads the top-level tile.
@@ -88,7 +88,7 @@ define([
      */
     SingleTileProvider.prototype.loadTileImage = function(tile, onload, onerror) {
         if (tile.zoom < this.zoomMin || tile.zoom > this.zoomMax) {
-            throw new DeveloperError("The zoom must be between in [zoomMin, zoomMax].", "tile.zoom");
+            throw new DeveloperError('tile.zoom must be between in [zoomMin, zoomMax].');
         }
 
         var image = new Image();

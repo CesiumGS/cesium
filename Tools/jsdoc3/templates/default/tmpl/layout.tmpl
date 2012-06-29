@@ -29,6 +29,13 @@
     <link rel="stylesheet" href="styles/shThemeDefault.css" media="all"></link>
     <script src="javascript/shCore.js"></script>
     <script src="javascript/shBrushJScript.js"></script>
+    <script type="text/javascript">
+        var resetFilter = function() {
+            document.filterForm.classFilter.value = '';
+            document.filterForm.submit();
+            return false;
+          }
+    </script>
 </head>
 
 <body onload="document.filterForm.classFilter.focus(); document.filterForm.classFilter.value=((window.location.search).split('='))[1] || document.getElementById('ClassFilter').value; ">
@@ -40,9 +47,9 @@
             <a href="index.html">top</a>
         </div>
         <div class="indexLinks">
-            <a id="allLink">all</a>
-            <a id="jsIndexLink">js</a>
-            <a id="glslIndexLink">glsl</a>
+            <a id="allLink" href="javascript: void(0); resetFilter();">all</a>
+            <a id="jsIndexLink" href="javascript: void(0); resetFilter();">js</a>
+            <a id="glslIndexLink" href="javascript: void(0); resetFilter();">glsl</a>
         </div>
         <div class="divider"></div>
         <form name="filterForm" method="get">
@@ -80,9 +87,9 @@
     }
     var searchTerm = ((window.location.search).split('='))[1];
     if(searchTerm){
-        var numDocLinks = document.links.length;
-        for (i = 0; i < numDocLinks; i++) {
-            var currentLink = document.links[i];
+        var links = document.getElementById("ClassList").getElementsByTagName('a');
+        for (i = 0; i < links.length; i++) {
+            var currentLink = links[i];
             var anchorIndex = currentLink.href.indexOf('#');
             if(anchorIndex !== -1) {
                 currentLink.href = currentLink.href.slice(0, anchorIndex) + "?classFilter=" + searchTerm + currentLink.href.slice(anchorIndex);

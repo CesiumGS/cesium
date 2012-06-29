@@ -5,25 +5,27 @@ define([
         './AxisAlignedBoundingBox',
         './IntersectionTests',
         './Cartesian2',
-        './Cartesian3'
+        './Cartesian3',
+        './Ray'
     ], function(
         DeveloperError,
         Transforms,
         AxisAlignedBoundingBox,
         IntersectionTests,
         Cartesian2,
-        Cartesian3) {
+        Cartesian3,
+        Ray) {
     "use strict";
 
     /**
      * DOC_TBA
-     * @name EllipsoidTangentPlane
+     * @alias EllipsoidTangentPlane
      * @constructor
      *
      * @param {Ellipsoid} ellipsoid
      * @param {Cartesian3} origin
      */
-    function EllipsoidTangentPlane(ellipsoid, origin) {
+    var EllipsoidTangentPlane = function (ellipsoid, origin) {
         var o = Cartesian3.clone(origin);
         var eastNorthUp = Transforms.eastNorthUpToFixedFrame(o, ellipsoid);
 
@@ -33,7 +35,7 @@ define([
         this.normal = eastNorthUp.getColumn2().getXYZ();
         this.d = -o.dot(o);
         this.ellipsoid = ellipsoid;
-    }
+    };
 
     /**
      * DOC_TBA
@@ -41,7 +43,7 @@ define([
      */
     EllipsoidTangentPlane.create = function(ellipsoid, positions) {
         if (!ellipsoid || !positions) {
-            throw new DeveloperError("ellipsoid and positions are required.");
+            throw new DeveloperError('ellipsoid and positions are required.');
         }
 
         var box = new AxisAlignedBoundingBox(positions);
@@ -55,7 +57,7 @@ define([
      */
     EllipsoidTangentPlane.prototype.projectPointsOntoPlane = function(positions) {
         if (!positions) {
-            throw new DeveloperError("positions is required.", "positions");
+            throw new DeveloperError('positions is required.');
         }
 
         var positionsOnPlane = [];
@@ -78,7 +80,7 @@ define([
     EllipsoidTangentPlane.prototype.projectPointOntoPlane = function(position) {
         if (position) {
             var pos = Cartesian3.clone(position);
-            var intersectionPoint = IntersectionTests.rayPlane(pos, pos.normalize(), this.normal, this.d);
+            var intersectionPoint = IntersectionTests.rayPlane(new Ray(pos, pos.normalize()), this.normal, this.d);
 
             if (intersectionPoint) {
                 var v = intersectionPoint.subtract(this.origin);
@@ -93,7 +95,7 @@ define([
      */
     EllipsoidTangentPlane.prototype.projectPointsOntoEllipsoid = function(positions) {
         if (!positions) {
-            throw new DeveloperError("positions is required.", "positions");
+            throw new DeveloperError('positions is required.');
         }
 
         var positionsOnEllipsoid = [];

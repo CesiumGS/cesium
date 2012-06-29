@@ -10,6 +10,7 @@ define([
         '../Core/Cartesian4',
         '../Core/Cartographic3',
         '../Core/Matrix4',
+        '../Core/Ray',
         './CameraControllerCollection',
         './PerspectiveFrustum'
     ], function(
@@ -23,6 +24,7 @@ define([
         Cartesian4,
         Cartographic3,
         Matrix4,
+        Ray,
         CameraControllerCollection,
         PerspectiveFrustum) {
     "use strict";
@@ -37,7 +39,7 @@ define([
      * define the unit vector normal to the plane, and the w component is the distance of the
      * plane from the origin/camera position.
      *
-     * @name Camera
+     * @alias Camera
      *
      * @exception {DeveloperError} canvas is required.
      *
@@ -54,12 +56,10 @@ define([
      * camera.near = 1.0;
      * camera.far = 2.0;
      */
-    function Camera(canvas) {
-        if(!canvas) {
-            throw new DeveloperError("canvas is required.", "canvas");
+    var Camera = function(canvas) {
+        if (!canvas) {
+            throw new DeveloperError('canvas is required.');
         }
-
-        var maxRadii = Ellipsoid.WGS84.getRadii().getMaximumComponent();
 
         /**
          * DOC_TBA
@@ -70,42 +70,50 @@ define([
         this._transform = this.transform.clone();
         this._invTransform = Matrix4.IDENTITY;
 
+        var maxRadii = Ellipsoid.WGS84.getRadii().getMaximumComponent();
         var position = new Cartesian3(0.0, -2.0, 1.0).normalize().multiplyWithScalar(2.0 * maxRadii);
-        var direction = Cartesian3.ZERO.subtract(position).normalize();
-        var right = direction.cross(Cartesian3.UNIT_Z).normalize();
-        var up = right.cross(direction);
 
         /**
          * The position of the camera.
          *
          * @type {Cartesian3}
          */
-        this.position = position;
-        this._position = position.clone();
+        this.position = position.clone();
+        this._position = position;
+        this._positionWC = position;
+
+        var direction = Cartesian3.ZERO.subtract(position).normalize();
 
         /**
          * The view direction of the camera.
          *
          * @type {Cartesian3}
          */
-        this.direction = direction;
-        this._direction = direction.clone();
+        this.direction = direction.clone();
+        this._direction = direction;
+        this._directionWC = direction;
 
-        /**
-         * The up direction of the camera.
-         *
-         * @type {Cartesian3}
-         */
-        this.up = up;
-        this._up = up.clone();
+        var right = direction.cross(Cartesian3.UNIT_Z).normalize();
 
         /**
          * The right direction of the camera.
          *
          * @type {Cartesian3}
          */
-        this.right = right;
-        this._right = right.clone();
+        this.right = right.clone();
+        this._right = right;
+        this._rightWC = right;
+
+        var up = right.cross(direction);
+
+        /**
+         * The up direction of the camera.
+         *
+         * @type {Cartesian3}
+         */
+        this.up = up.clone();
+        this._up = up;
+        this._upWC = up;
 
         /**
          * DOC_TBA
@@ -122,12 +130,11 @@ define([
         this._invViewMatrix = undefined;
         this._updateViewMatrix();
 
-        this._planes = undefined;
-        this._updatePlanes();
+        this._planes = this.frustum.getPlanes(this._positionWC, this._directionWC, this._upWC);
 
         this._canvas = canvas;
         this._controllers = new CameraControllerCollection(this, canvas);
-    }
+    };
 
     /**
      * DOC_TBA
@@ -157,16 +164,16 @@ define([
      */
     Camera.prototype.lookAt = function() {
         var eye, target, up;
-        if(arguments.length === 1) {
+        if (arguments.length === 1) {
             var param = arguments[0];
-            if(param.eye && param.target && param.up) {
+            if (param.eye && param.target && param.up) {
                 eye = param.eye;
                 target = param.target;
                 up = param.up;
             } else {
                 return;
             }
-        } else if(arguments.length === 3) {
+        } else if (arguments.length === 3) {
             eye = arguments[0];
             target = arguments[1];
             up = arguments[2];
@@ -199,7 +206,7 @@ define([
         east = CesiumMath.negativePiToPi(east);
 
         // If we go across the International Date Line
-        if(west > east) {
+        if (west > east) {
             east += CesiumMath.TWO_PI;
         }
 
@@ -211,7 +218,7 @@ define([
         var screenViewDistanceX;
         var screenViewDistanceY;
         var tempVec;
-        if(this._canvas.clientWidth >= this._canvas.clientHeight) {
+        if (this._canvas.clientWidth >= this._canvas.clientHeight) {
             tempVec = eastVector.subtract(centerVector);
             screenViewDistanceX = Math.sqrt(tempVec.dot(tempVec) * invTanHalfPerspectiveAngle);
             tempVec = northVector.subtract(centerVector);
@@ -230,65 +237,94 @@ define([
         this.up = this.right.cross(this.direction);
     };
 
-    Camera.prototype._orthonormalizeAxes = function() {
-        this._direction = this._direction.normalize();
-
-        var invUpMag = 1.0 / this._up.magnitudeSquared();
-        var scalar = this._up.dot(this._direction) * invUpMag;
-        var w0 = this._direction.multiplyWithScalar(scalar);
-        this._up = this._up.subtract(w0).normalize();
-
-        this._right = this._direction.cross(this._up);
-    };
-
     Camera.prototype._updateViewMatrix = function() {
         var r = this._right;
         var u = this._up;
         var d = this._direction;
         var e = this._position;
 
-        this._viewMatrix = new Matrix4(r.x, r.y, r.z, -r.dot(e), u.x, u.y, u.z, -u.dot(e), -d.x, -d.y, -d.z, d.dot(e), 0.0, 0.0, 0.0, 1.0);
-        this._viewMatrix = this._viewMatrix.multiplyWithMatrix(this._invTransform);
+        var viewMatrix = new Matrix4( r.x,  r.y,  r.z, -r.dot(e),
+                                      u.x,  u.y,  u.z, -u.dot(e),
+                                     -d.x, -d.y, -d.z,  d.dot(e),
+                                      0.0,  0.0,  0.0,      1.0);
+        this._viewMatrix = viewMatrix.multiplyWithMatrix(this._invTransform);
 
         this._invViewMatrix = this._viewMatrix.inverseTransformation();
     };
 
-    Camera.prototype._updatePlanes = function() {
-        var position = new Cartesian4(this._position.x, this._position.y, this._position.z, 1.0);
-        position = this._transform.multiplyWithVector(position).getXYZ();
-
-        var direction = new Cartesian4(this._direction.x, this._direction.y, this._direction.z, 0.0);
-        direction = this._transform.multiplyWithVector(direction).getXYZ();
-
-        var up = new Cartesian4(this._up.x, this._up.y, this._up.z, 0.0);
-        up = this._transform.multiplyWithVector(up).getXYZ();
-
-        this._planes = this.frustum.getPlanes(position, direction, up);
-    };
-
     Camera.prototype._update = function() {
-        if ((this.position && !this.position.equals(this._position)) || (this.direction && !this.direction.equals(this._direction)) || (this.up && !this.up.equals(this._up)) ||
-                (this.right && !this.right.equals(this._right)) || (this.transform && !this.transform.equals(this._transform))) {
+        var position = this._position;
+        var positionChanged = !position.equals(this.position);
+        if (positionChanged) {
+            position = this._position = this.position.clone();
+        }
 
-            this._position = this.position && this.position.clone();
-            this._direction = this.direction && this.direction.clone();
-            this._up = this.up && this.up.clone();
-            this._right = this.right && this.right.clone();
-            this._transform = this.transform && this.transform.clone();
+        var direction = this._direction;
+        var directionChanged = !direction.equals(this.direction);
+        if (directionChanged) {
+            direction = this._direction = this.direction.clone();
+        }
+
+        var up = this._up;
+        var upChanged = !up.equals(this.up);
+        if (upChanged) {
+            up = this._up = this.up.clone();
+        }
+
+        var right = this._right;
+        var rightChanged = !right.equals(this.right);
+        if (rightChanged) {
+            right = this._right = this.right.clone();
+        }
+
+        var transform = this._transform;
+        var transformChanged = !transform.equals(this.transform);
+        if (transformChanged) {
+            transform = this._transform = this.transform.clone();
+
             this._invTransform = this._transform.inverseTransformation();
+        }
 
-            var det = this._direction.dot(this._up.cross(this._right));
-            if(Math.abs(1.0 - det) > CesiumMath.EPSILON2) {
-                this._orthonormalizeAxes();
+        if (positionChanged || transformChanged) {
+            this._positionWC = transform.multiplyWithVector(new Cartesian4(position.x, position.y, position.z, 1.0)).getXYZ();
+        }
+
+        if (directionChanged || transformChanged) {
+            this._directionWC = transform.multiplyWithVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)).getXYZ();
+        }
+
+        if (upChanged || transformChanged) {
+            this._upWC = transform.multiplyWithVector(new Cartesian4(up.x, up.y, up.z, 0.0)).getXYZ();
+        }
+
+        if (rightChanged || transformChanged) {
+            this._rightWC = transform.multiplyWithVector(new Cartesian4(right.x, right.y, right.z, 0.0)).getXYZ();
+        }
+
+        if (positionChanged || directionChanged || upChanged || transformChanged) {
+            this._planes = this.frustum.getPlanes(this._positionWC, this._directionWC, this._upWC);
+        }
+
+        if (directionChanged || upChanged || rightChanged) {
+            var det = direction.dot(up.cross(right));
+            if (Math.abs(1.0 - det) > CesiumMath.EPSILON2) {
+                //orthonormalize axes
+                direction = this._direction = direction.normalize();
+                this.direction = direction.clone();
+
+                var invUpMag = 1.0 / up.magnitudeSquared();
+                var scalar = up.dot(direction) * invUpMag;
+                var w0 = direction.multiplyWithScalar(scalar);
+                up = this._up = up.subtract(w0).normalize();
+                this.up = up.clone();
+
+                right = this._right = direction.cross(up);
+                this.right = right.clone();
             }
+        }
 
-            this.position = this._position.clone();
-            this.direction = this._direction.clone();
-            this.up = this._up.clone();
-            this.right = this._right.clone();
-
+        if (positionChanged || directionChanged || upChanged || rightChanged || transformChanged) {
             this._updateViewMatrix();
-            this._updatePlanes();
         }
     };
 
@@ -330,10 +366,46 @@ define([
     };
 
     /**
-     * DOC_TBA
-     * @memberof Camera
+     * The position of the camera in world coordinates.
+     *
+     * @type {Cartesian3}
      */
-    Camera.prototype.getPickRay = function(windowPosition) {
+    Camera.prototype.getPositionWC = function() {
+        this._update();
+        return this._positionWC;
+    };
+
+    /**
+     * The view direction of the camera in world coordinates.
+     *
+     * @type {Cartesian3}
+     */
+    Camera.prototype.getDirectionWC = function() {
+        this._update();
+        return this._directionWC;
+    };
+
+    /**
+     * The up direction of the camera in world coordinates.
+     *
+     * @type {Cartesian3}
+     */
+    Camera.prototype.getUpWC = function() {
+        this._update();
+        return this._upWC;
+    };
+
+    /**
+     * The right direction of the camera in world coordinates.
+     *
+     * @type {Cartesian3}
+     */
+    Camera.prototype.getRightWC = function() {
+        this._update();
+        return this._rightWC;
+    };
+
+    Camera.prototype._getPickRayPerspective = function(windowPosition) {
         var width = this._canvas.clientWidth;
         var height = this._canvas.clientHeight;
 
@@ -344,30 +416,153 @@ define([
         var x = (2.0 / width) * windowPosition.x - 1.0;
         var y = (2.0 / height) * (height - windowPosition.y) - 1.0;
 
-        var nearCenter = this.position.add(this.direction.multiplyWithScalar(near));
-        var xDir = this.right.multiplyWithScalar(x * near * tanTheta);
-        var yDir = this.up.multiplyWithScalar(y * near * tanPhi);
-        var direction = nearCenter.add(xDir).add(yDir).subtract(this.position).normalize();
+        var position = this.getPositionWC();
+        var nearCenter = position.add(this.getDirectionWC().multiplyWithScalar(near));
+        var xDir = this.getRightWC().multiplyWithScalar(x * near * tanTheta);
+        var yDir = this.getUpWC().multiplyWithScalar(y * near * tanPhi);
+        var direction = nearCenter.add(xDir).add(yDir).subtract(position).normalize();
 
-        return {
-            position : this.position.clone(),
-            direction : direction
-        };
+        return new Ray(position.clone(), direction);
+    };
+
+    Camera.prototype._getPickRayOrthographic = function(windowPosition) {
+        var width = this._canvas.clientWidth;
+        var height = this._canvas.clientHeight;
+
+        var x = (2.0 / width) * windowPosition.x - 1.0;
+        x *= (this.frustum.right - this.frustum.left) * 0.5;
+        var y = (2.0 / height) * (height - windowPosition.y) - 1.0;
+        y *= (this.frustum.top - this.frustum.bottom) * 0.5;
+
+        var position = this.getPositionWC().clone();
+        position.x += x;
+        position.y += y;
+
+        return new Ray(position, this.getDirectionWC());
     };
 
     /**
-     * DOC_TBA
+     * Create a ray from the camera position through the pixel at <code>windowPosition</code>
+     * in world coordinates.
+     *
      * @memberof Camera
+     *
+     * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
+     *
+     * @exception {DeveloperError} windowPosition is required.
+     *
+     * @return {Object} Returns the {@link Cartesian3} position and direction of the ray.
      */
-    Camera.prototype.pickEllipsoid = function(ellipsoid, windowPosition) {
-        var ray = this.getPickRay(windowPosition);
-        var intersection = IntersectionTests.rayEllipsoid(ray.position, ray.direction, ellipsoid);
-        if(!intersection) {
-            return null;
+    Camera.prototype.getPickRay = function(windowPosition) {
+        if (typeof windowPosition === 'undefined') {
+            throw new DeveloperError('windowPosition is required.');
         }
 
-        var iPt = ray.position.add(ray.direction.multiplyWithScalar(intersection.start));
+        var frustum = this.frustum;
+        if (typeof frustum.aspectRatio !== 'undefined' && typeof frustum.fovy !== 'undefined' && typeof frustum.near !== 'undefined') {
+            return this._getPickRayPerspective(windowPosition);
+        }
+
+        return this._getPickRayOrthographic(windowPosition);
+    };
+
+    /**
+     * Pick an ellipsoid in 3D mode.
+     *
+     * @memberof Camera
+     *
+     * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to pick.
+     *
+     * @exception {DeveloperError} windowPosition is required.
+     *
+     * @return {Cartesian3} If the ellipsoid was picked, returns the point on the surface of the ellipsoid.
+     * If the ellipsoid was not picked, returns undefined.
+     */
+    Camera.prototype.pickEllipsoid = function(windowPosition, ellipsoid) {
+        if (typeof windowPosition === 'undefined') {
+            throw new DeveloperError('windowPosition is required.');
+        }
+
+        ellipsoid = ellipsoid || Ellipsoid.WGS84;
+        var ray = this._getPickRayPerspective(windowPosition);
+        var intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid);
+        if (!intersection) {
+            return undefined;
+        }
+
+        var iPt = ray.getPoint(intersection.start);
         return iPt;
+    };
+
+    /**
+     * Pick the map in 2D mode.
+     *
+     * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
+     * @param {DOC_TBA} projection DOC_TBA
+     *
+     * @exception {DeveloperError} windowPosition is required.
+     * @exception {DeveloperError} projection is required.
+     *
+     * @return {Cartesian3} If the map was picked, returns the point on the surface of the map.
+     * If the map was not picked, returns undefined.
+     */
+    Camera.prototype.pickMap2D = function(windowPosition, projection) {
+        if (typeof windowPosition === 'undefined') {
+            throw new DeveloperError('windowPosition is required.');
+        }
+
+        if (typeof projection === 'undefined') {
+            throw new DeveloperError('projection is required.');
+        }
+
+        var ray = this._getPickRayOrthographic(windowPosition);
+        var position = ray.origin;
+        position.z = 0.0;
+        var cart = projection.unproject(position);
+
+        if (cart.latitude < -CesiumMath.PI_OVER_TWO || cart.latitude > CesiumMath.PI_OVER_TWO ||
+                cart.longitude < - Math.PI || cart.longitude > Math.PI) {
+            return undefined;
+        }
+
+        return projection.getEllipsoid().toCartesian(cart);
+    };
+
+    /**
+     * Pick the map in Columbus View mode.
+     *
+     * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
+     * @param {DOC_TBA} projection DOC_TBA
+     *
+     * @exception {DeveloperError} windowPosition is required.
+     * @exception {DeveloperError} projection is required.
+     *
+     * @return {Cartesian3} If the map was picked, returns the point on the surface of the map.
+     * If the map was not picked, returns undefined.
+     */
+    Camera.prototype.pickMapColumbusView = function(windowPosition, projection) {
+        if (typeof windowPosition === 'undefined') {
+            throw new DeveloperError('windowPosition is required.');
+        }
+
+        if (typeof projection === 'undefined') {
+            throw new DeveloperError('projection is required.');
+        }
+
+        var ray = this._getPickRayPerspective(windowPosition);
+        var scalar = -ray.origin.x / ray.direction.x;
+        var position = ray.getPoint(scalar);
+
+        var cart = projection.unproject(new Cartesian3(position.y, position.z, 0.0));
+
+        if (cart.latitude < -CesiumMath.PI_OVER_TWO || cart.latitude > CesiumMath.PI_OVER_TWO ||
+                cart.longitude < - Math.PI || cart.longitude > Math.PI) {
+            return undefined;
+        }
+
+        position = projection.getEllipsoid().toCartesian(cart);
+        return position;
     };
 
     /**
@@ -387,11 +582,11 @@ define([
         this._update();
         var planes = this._planes;
         var intersecting = false;
-        for(var k = 0; k < planes.length; k++) {
+        for ( var k = 0; k < planes.length; k++) {
             var result = planeIntersectTest(object, planes[k]);
-            if(result === Intersect.OUTSIDE) {
+            if (result === Intersect.OUTSIDE) {
                 return Intersect.OUTSIDE;
-            } else if(result === Intersect.INTERSECTING) {
+            } else if (result === Intersect.INTERSECTING) {
                 intersecting = true;
             }
         }

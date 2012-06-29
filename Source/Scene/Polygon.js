@@ -118,7 +118,7 @@ define([
     /**
      * DOC_TBA
      *
-     * @name Polygon
+     * @alias Polygon
      * @constructor
      *
      * @example
@@ -135,7 +135,7 @@ define([
      *   ellipsoid.toCartesian(new Cartographic2(...))
      * ]);
      */
-    function Polygon() {
+    var Polygon = function() {
         this._sp = undefined;
         this._rs = undefined;
 
@@ -211,6 +211,20 @@ define([
         this._bufferUsage = BufferUsage.STATIC_DRAW;
 
         /**
+         * <p>
+         * Determines if the polygon is affected by lighting, i.e., if the polygon is bright on the
+         * day side of the globe, and dark on the night side.  When <code>true</code>, the polygon
+         * is affected by lighting; when <code>false</code>, the polygon is uniformly shaded regardless
+         * of the sun position.
+         * </p>
+         * <p>
+         * The default is <code>true</code>.
+         * </p>
+         */
+        this.affectedByLighting = true;
+        this._affectedByLighting = true;
+
+        /**
          * DOC_TBA
          */
         this.material = new ColorMaterial({
@@ -230,15 +244,16 @@ define([
          */
         this.erosion = 1.0;
 
+        this._mode = SceneMode.SCENE3D;
+        this._projection = undefined;
+
         /**
-         * DOC_TBA
+         * The current morph transition time between 2D/Columbus View and 3D,
+         * with 0.0 being 2D or Columbus View and 1.0 being 3D.
          *
          * @type Number
          */
-        this.morphTime = 1.0;
-
-        this._mode = SceneMode.SCENE3D;
-        this._projection = undefined;
+        this.morphTime = this._mode.morphTime;
 
         var that = this;
         this._uniforms = {
@@ -254,7 +269,7 @@ define([
         };
         this._pickUniforms = undefined;
         this._drawUniforms = undefined;
-    }
+    };
 
     /**
      * DOC_TBA
@@ -292,7 +307,7 @@ define([
     Polygon.prototype.setPositions = function(positions, height) {
         // positions can be undefined
         if (typeof positions !== 'undefined' && (positions.length < 3)) {
-            throw new DeveloperError("At least three positions are required.", "positions");
+            throw new DeveloperError('At least three positions are required.');
         }
         this.height = height || 0.0;
         this._extent = undefined;
@@ -399,35 +414,12 @@ define([
         return meshes;
     };
 
-    Polygon._isModeTransition = function(oldMode, newMode) {
-        // SCENE2D, COLUMBUS_VIEW, and MORPHING use the same rendering path, so a
-        // transition only occurs when switching from/to SCENE3D
-        return ((oldMode !== newMode) &&
-                ((oldMode === SceneMode.SCENE3D) ||
-                 (newMode === SceneMode.SCENE3D)));
-    };
-
     Polygon.prototype._getGranularity = function(mode) {
         if (mode === SceneMode.SCENE3D) {
             return this.scene3D.granularity || this.granularity;
         }
 
         return this.scene2D.granularity || this.granularity;
-    };
-
-    Polygon.prototype._syncMorphTime = function(mode) {
-        switch (mode) {
-        case SceneMode.SCENE3D:
-            this.morphTime = 1.0;
-            break;
-
-        case SceneMode.SCENE2D:
-        case SceneMode.COLUMBUS_VIEW:
-            this.morphTime = 0.0;
-            break;
-
-        // MORPHING - don't change it
-        }
     };
 
     /**
@@ -444,70 +436,96 @@ define([
      * @see Polygon#render
      */
     Polygon.prototype.update = function(context, sceneState) {
-
         if (!this.ellipsoid) {
-            throw new DeveloperError("this.ellipsoid must be defined.");
+            throw new DeveloperError('this.ellipsoid must be defined.');
         }
 
         var mode = sceneState.mode;
         var granularity = this._getGranularity(mode);
 
         if (granularity < 0.0) {
-            throw new DeveloperError("this.granularity and scene2D/scene3D overrides must be greater than zero.");
+            throw new DeveloperError('this.granularity and scene2D/scene3D overrides must be greater than zero.');
         }
 
-        if (this.show) {
-            this._syncMorphTime(mode);
+        if (!this.show) {
+            return;
+        }
+
+        if (this._ellipsoid !== this.ellipsoid) {
+            this._createVertexArray = true;
+            this._ellipsoid = this.ellipsoid;
+        }
+
+        if (this._height !== this.height) {
+            this._createVertexArray = true;
+            this._height = this.height;
+        }
+
+        if (this._granularity !== granularity) {
+            this._createVertexArray = true;
+            this._granularity = granularity;
+        }
+
+        if (this._bufferUsage !== this.bufferUsage) {
+            this._createVertexArray = true;
+            this._bufferUsage = this.bufferUsage;
+        }
+
+        var projection = sceneState.scene2D.projection;
+        if (this._projection !== projection) {
+            this._createVertexArray = true;
+            this._projection = projection;
+        }
+
+        if (this._mode !== mode) {
+            // SCENE2D, COLUMBUS_VIEW, and MORPHING use the same rendering path, so a
+            // transition only occurs when switching from/to SCENE3D
+            this._createVertexArray = this._mode === SceneMode.SCENE3D || mode === SceneMode.SCENE3D;
             this._mode = mode;
 
-            var projection = sceneState.scene2D.projection;
-
-            if (this._createVertexArray ||
-                    (this._ellipsoid !== this.ellipsoid) ||
-                    (this._height !== this.height) ||
-                    (this._granularity !== granularity) ||
-                    (this._bufferUsage !== this.bufferUsage) ||
-                    (Polygon._isModeTransition(this._mode, mode)) ||
-                    (this._projection !== projection)) {
-                this._createVertexArray = false;
-                this._ellipsoid = this.ellipsoid;
-                this._height = this.height;
-                this._granularity = granularity;
-                this._bufferUsage = this.bufferUsage;
-
-                this._projection = projection;
-
-                this._vertices.update(context, this._createMeshes(), this.bufferUsage);
+            if (typeof mode.morphTime !== 'undefined') {
+                this.morphTime = mode.morphTime;
             }
+        }
 
-            if (!this._rs) {
-                // TODO: Should not need this in 2D/columbus view, but is hiding a triangulation issue.
-                this._rs = context.createRenderState({
-                    cull : {
-                        enabled : true,
-                        face : CullFace.BACK
-                    },
-                    blending : BlendingState.ALPHA_BLEND
-                });
-            }
+        if (this._createVertexArray) {
+            this._createVertexArray = false;
+            this._vertices.update(context, this._createMeshes(), this.bufferUsage);
+        }
 
-            // Recompile shader when material changes
-            if (!this._material || (this._material !== this.material)) {
-                this._material = this.material || new ColorMaterial();
+        if (!this._rs) {
+            // TODO: Should not need this in 2D/columbus view, but is hiding a triangulation issue.
+            this._rs = context.createRenderState({
+                cull : {
+                    enabled : true,
+                    face : CullFace.BACK
+                },
+                blending : BlendingState.ALPHA_BLEND
+            });
+        }
 
-                var fsSource =
-                    "#line 0\n" +
-                    Noise +
-                    "#line 0\n" +
-                    this.material._getShaderSource() +
-                    "#line 0\n" +
-                    PolygonFS;
+        // Recompile shader when material or lighting changes
+        if (typeof this._material === 'undefined' ||
+            this._material !== this.material ||
+            this._affectedByLighting !== this.affectedByLighting) {
 
-                this._sp = this._sp && this._sp.release();
-                this._sp = context.getShaderCache().getShaderProgram(PolygonVS, fsSource, attributeIndices);
+            this.material = this.material || new ColorMaterial();
+            this._material = this.material;
+            this._affectedByLighting = this.affectedByLighting;
 
-                this._drawUniforms = combine(this._uniforms, this.material._uniforms);
-            }
+            var fsSource =
+                '#line 0\n' +
+                Noise +
+                '#line 0\n' +
+                this._material._getShaderSource() +
+                (this._affectedByLighting ? '#define AFFECTED_BY_LIGHTING 1\n' : '') +
+                '#line 0\n' +
+                PolygonFS;
+
+            this._sp = this._sp && this._sp.release();
+            this._sp = context.getShaderCache().getShaderProgram(PolygonVS, fsSource, attributeIndices);
+
+            this._drawUniforms = combine(this._uniforms, this._material._uniforms);
         }
     };
 

@@ -11,15 +11,15 @@
             handler = new Cesium.EventHandler(scene.getCanvas());
             handler.setMouseAction(
                 function (movement) {
-                    var p = scene.getCamera().pickEllipsoid(ellipsoid, movement.endPosition);
+                    var p = scene.pickEllipsoid(movement.endPosition, ellipsoid);
                     if (p) {
                         var d = Cesium.Math.cartographic2ToDegrees(ellipsoid.toCartographic2(p));
                         label.setShow(true);
-                        label.setText("(" + d.longitude.toFixed(2) + ", " + d.latitude.toFixed(2) + ")");
+                        label.setText('(' + d.longitude.toFixed(2) + ', ' + d.latitude.toFixed(2) + ')');
                         label.setPosition(p);
                     }
                     else {
-                        label.setText("");
+                        label.setText('');
                     }
                 },
                 Cesium.MouseEventType.MOVE
@@ -63,14 +63,15 @@
             var image = new Image();
             image.onload = function() {
                 var billboards = new Cesium.BillboardCollection(undefined);
-                billboards.setTextureAtlas(scene.getContext().createTextureAtlas([image]));
+                var textureAtlas = scene.getContext().createTextureAtlas({image : image});
+                billboards.setTextureAtlas(textureAtlas);
                 billboard = billboards.add({
                     position : ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic2(-75.59777, 40.03883)),
                     imageIndex : 0
                 });
                 primitives.add(billboards);
             };
-            image.src = "Images/logoColor.png";
+            image.src = 'Images/Cesium_Logo_overlay.png';
         };
 
         this.clear = function () {
@@ -156,7 +157,8 @@
             var image = new Image();
             image.onload = function() {
                 var billboards = new Cesium.BillboardCollection(undefined);
-                billboards.setTextureAtlas(scene.getContext().createTextureAtlas([image]));
+                var textureAtlas = scene.getContext().createTextureAtlas({image : image});
+                billboards.setTextureAtlas(textureAtlas);
                 billboard = billboards.add({
                     position : ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic2(-75.59777, 40.03883)),
                     imageIndex : 0
@@ -164,7 +166,7 @@
                 billboard.highlighted = true;
                 primitives.add(billboards);
             };
-            image.src = "Images/logoColor.png";
+            image.src = 'Images/Cesium_Logo_overlay.png';
         };
 
         this.clear = function () {
@@ -298,7 +300,7 @@
                         // Prevent multiple erosions
                         eroding = true;
 
-                        scene.getAnimations().addProperty(sensor, "erosion", 1.0, 0.0, {
+                        scene.getAnimations().addProperty(sensor, 'erosion', 1.0, 0.0, {
                             onComplete : function() {
                                 sensors.remove(sensor);
                             }

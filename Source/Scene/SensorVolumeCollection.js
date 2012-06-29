@@ -16,12 +16,12 @@ define([
     /**
      * DOC_TBA
      *
-     * @name SensorVolumeCollection
+     * @alias SensorVolumeCollection
      * @constructor
      */
-    function SensorVolumeCollection() {
+    var SensorVolumeCollection = function() {
         this._sensors = [];
-    }
+    };
 
     /**
      * DOC_TBA
@@ -123,8 +123,8 @@ define([
      * @see SensorVolumeCollection#getLength
      */
     SensorVolumeCollection.prototype.get = function(index) {
-        if (typeof index === "undefined") {
-            throw new DeveloperError("index is required.", "index");
+        if (typeof index === 'undefined') {
+            throw new DeveloperError('index is required.');
         }
 
         return this._sensors[index];

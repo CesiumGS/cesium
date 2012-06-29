@@ -19,35 +19,29 @@ define([
         /**
          * DOC_TBA
          *
-         * @param {Cartesian3} rayOrigin DOC_TBA
-         * @param {Cartesian3} rayDirection DOC_TBA
+         * @param {Ray} ray DOC_TBA
          * @param {Cartesian3} planeNormal DOC_TBA
          * @param {Number} planeD DOC_TBA
          *
-         * @exception {DeveloperError} rayOrigin is required.
-         * @exception {DeveloperError} rayDirection is required.
+         * @exception {DeveloperError} ray is required.
          * @exception {DeveloperError} planeNormal is required.
          * @exception {DeveloperError} planeD is required.
          */
-        rayPlane : function(rayOrigin, rayDirection, planeNormal, planeD) {
-            if (!rayOrigin) {
-                throw new DeveloperError("rayOrigin is required.", "rayOrigin");
+        rayPlane : function(ray, planeNormal, planeD) {
+            if (typeof ray === 'undefined') {
+                throw new DeveloperError('ray is required.');
             }
 
-            if (!rayDirection) {
-                throw new DeveloperError("rayDirection is required.", "rayDirection");
+            if (typeof planeNormal === 'undefined') {
+                throw new DeveloperError('planeNormal is required.');
             }
 
-            if (!planeNormal) {
-                throw new DeveloperError("planeNormal is required.", "planeNormal");
+            if (typeof planeD === 'undefined') {
+                throw new DeveloperError('planeD is required.');
             }
 
-            if (!planeD) {
-                throw new DeveloperError("planeD is required.", "planeD");
-            }
-
-            var origin = Cartesian3.clone(rayOrigin);
-            var direction = Cartesian3.clone(rayDirection);
+            var origin = Cartesian3.clone(ray.origin);
+            var direction = Cartesian3.clone(ray.direction);
             var normal = Cartesian3.clone(planeNormal);
 
             var denominator = normal.dot(direction);
@@ -66,22 +60,27 @@ define([
             return origin.add(direction.multiplyWithScalar(t));
         },
 
-        rayEllipsoid : function(rayOrigin, rayDirection, ellipsoid) {
-            if (!rayOrigin) {
-                throw new DeveloperError("rayOrigin is required.", "rayOrigin");
+        /**
+         * DOC_TBA
+         *
+         * @param {Ray} ray DOC_TBA
+         * @param {Ellipsoid} ellipsoid DOC_TBA
+         *
+         * @exception {DeveloperError} ray is required.
+         * @exception {DeveloperError} ellipsoid is required.
+         */
+        rayEllipsoid : function(ray, ellipsoid) {
+            if (typeof ray === 'undefined') {
+                throw new DeveloperError('ray is required.');
             }
 
-            if (!rayDirection) {
-                throw new DeveloperError("rayDirection is required.", "rayDirection");
-            }
-
-            if (!ellipsoid) {
-                throw new DeveloperError("ellipsoid is required.", "ellipsoid");
+            if (typeof ellipsoid === 'undefined') {
+                throw new DeveloperError('ellipsoid is required.');
             }
 
             var inverseRadii = ellipsoid.getOneOverRadii();
-            var q = inverseRadii.multiplyComponents(rayOrigin);
-            var w = inverseRadii.multiplyComponents(rayDirection);
+            var q = inverseRadii.multiplyComponents(ray.origin);
+            var w = inverseRadii.multiplyComponents(ray.direction);
 
             var q2 = q.magnitudeSquared();
             var qw = q.dot(w);

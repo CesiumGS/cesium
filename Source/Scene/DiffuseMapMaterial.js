@@ -6,10 +6,10 @@ define(['../Shaders/DiffuseMapMaterial'], function(ShadersDiffuseMapMaterial) {
      *
      * DOC_TBA
      *
-     * @name DiffuseMapMaterial
+     * @alias DiffuseMapMaterial
      * @constructor
      */
-    function DiffuseMapMaterial(template) {
+    var DiffuseMapMaterial = function(template) {
         var t = template || {};
 
         /**
@@ -39,10 +39,10 @@ define(['../Shaders/DiffuseMapMaterial'], function(ShadersDiffuseMapMaterial) {
                 };
             }
         };
-    }
+    };
 
     DiffuseMapMaterial.prototype._getShaderSource = function() {
-        return "#line 0\n" + ShadersDiffuseMapMaterial;
+        return '#line 0\n' + ShadersDiffuseMapMaterial;
     };
 
     return DiffuseMapMaterial;

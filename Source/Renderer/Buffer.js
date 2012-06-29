@@ -10,20 +10,20 @@ define([
     /**
      * DOC_TBA
      *
-     * @name Buffer
+     * @alias Buffer
      * @internalConstructor
      *
      * @see Context#createVertexBuffer
      * @see Context#createIndexBuffer
      */
-    function Buffer(gl, bufferTarget, sizeInBytes, usage, buffer) {
+    var Buffer = function(gl, bufferTarget, sizeInBytes, usage, buffer) {
         this._gl = gl;
         this._bufferTarget = bufferTarget;
         this._sizeInBytes = sizeInBytes;
         this._usage = usage;
         this._buffer = buffer;
         this._vertexArrayDestroyable = true;
-    }
+    };
 
     /**
      * DOC_TBA
@@ -38,13 +38,13 @@ define([
      */
     Buffer.prototype.copyFromArrayView = function(arrayView, offsetInBytes) {
         if (!arrayView) {
-            throw new DeveloperError("arrayView is required.", "arrayView");
+            throw new DeveloperError('arrayView is required.');
         }
 
         offsetInBytes = offsetInBytes || 0;
 
         if (offsetInBytes + arrayView.byteLength > this._sizeInBytes) {
-            throw new DeveloperError("This buffer is not large enough.");
+            throw new DeveloperError('This buffer is not large enough.');
         }
 
         var gl = this._gl;
@@ -127,7 +127,7 @@ define([
      * @exception {DeveloperError} This buffer was destroyed, i.e., destroy() was called.
      *
      * @see Buffer#isDestroyed
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteBuffers.xml">glDeleteBuffers</a>
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteBuffers.xml'>glDeleteBuffers</a>
      *
      * @example
      * buffer = buffer && buffer.destroy();

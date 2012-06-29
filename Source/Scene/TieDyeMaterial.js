@@ -10,10 +10,10 @@ define([
     /**
      * DOC_TBA
      *
-     * @name TieDyeMaterial
+     * @alias TieDyeMaterial
      * @constructor
      */
-    function TieDyeMaterial(template) {
+    var TieDyeMaterial = function(template) {
         var t = template || {};
 
         /**
@@ -55,12 +55,12 @@ define([
                 return that.frequency;
             }
         };
-    }
+    };
 
     TieDyeMaterial.prototype._getShaderSource = function() {
-        return "#line 0\n" +
+        return '#line 0\n' +
                ShadersNoise +
-               "#line 0\n" +
+               '#line 0\n' +
                ShadersTieDyeMaterial;
     };
 

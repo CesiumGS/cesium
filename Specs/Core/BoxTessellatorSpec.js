@@ -8,7 +8,7 @@ defineSuite([
     "use strict";
     /*global it,expect*/
 
-    it("compute0", function() {
+    it('compute0', function() {
         expect(function() {
             return BoxTessellator.compute({
                 dimensions : new Cartesian3(1, 2, -1)
@@ -16,7 +16,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it("compute1", function() {
+    it('compute1', function() {
         var m = BoxTessellator.compute({
             dimensions : new Cartesian3(1, 2, 3)
         });
@@ -25,7 +25,7 @@ defineSuite([
         expect(m.indexLists[0].values.length).toEqual(12 * 3);
     });
 
-    it("compute2", function() {
+    it('compute2', function() {
         expect(function() {
             return BoxTessellator.compute({
                 minimumCorner : new Cartesian3(0, 0, 0),

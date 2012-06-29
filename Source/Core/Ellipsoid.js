@@ -15,26 +15,26 @@ define([
 
     /**
      * DOC_TBA
-     * @name Ellipsoid
+     * @alias Ellipsoid
      *
      * @param {Cartesian3} radii The ellipsoid's radius in the x, y, and z ds.
      *
      * @constructor
      * @immutable
      *
-     * @exception {DeveloperError} One argument is required.
+     * @exception {DeveloperError} radii is required.
      * @exception {DeveloperError} All radii components must be greater than or equal to zero.
      */
-    function Ellipsoid() {
+    var Ellipsoid = function(radii) {
         if (arguments.length === 0) {
-            throw new DeveloperError("One argument is required.");
+            throw new DeveloperError('radii is required.');
         }
 
-        if (arguments[0].x < 0 || arguments[0].y < 0 || arguments[0].z < 0) {
-            throw new DeveloperError("All radii components must be greater than or equal to zero.", "radii");
+        if (radii.x < 0 || radii.y < 0 || radii.z < 0) {
+            throw new DeveloperError('All radii components must be greater than or equal to zero.');
         }
 
-        var radii = Cartesian3.clone(arguments[0]);
+        radii = Cartesian3.clone(radii);
         var x = radii.x;
         var y = radii.y;
         var z = radii.z;
@@ -56,7 +56,7 @@ define([
                 1.0 / (x * x),
                 1.0 / (y * y),
                 1.0 / (z * z));
-    }
+    };
 
     /**
      * DOC_TBA

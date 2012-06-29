@@ -12,22 +12,21 @@ define(function() {
      * be thrown at runtime, e.g., out of memory, that the calling code should be prepared
      * to catch.
      *
-     * @name DeveloperError
+     * @alias DeveloperError
      *
      * @param {String} [message=undefined] The error message for this exception.
-     * @param {String} [parameter=undefined] The name of the function argument that caused the exception.
      *
      * @see RuntimeError
      * @constructor
      */
-    function DeveloperError(message, parameter) {
+    var DeveloperError = function(message) {
         /**
-         * "DeveloperError" indicating that this exception was thrown due to a developer error.
+         * 'DeveloperError' indicating that this exception was thrown due to a developer error.
          *
          * @constant
          * @type String
          */
-        this.name = "DeveloperError";
+        this.name = 'DeveloperError';
 
         /**
          * The explanation for why this exception was thrown.
@@ -35,14 +34,7 @@ define(function() {
          * @type String
          */
         this.message = message;
-
-        /**
-         * The name of the function argument that caused this exception.
-         *
-         * @type String
-         */
-        this.parameter = parameter;
-    }
+    };
 
     return DeveloperError;
 });

@@ -12,27 +12,27 @@ defineSuite([
     "use strict";
     /*global it,expect*/
 
-    it("compute0", function() {
+    it('compute0', function() {
         expect(function() {
             return CubeMapEllipsoidTessellator.compute(Ellipsoid.UNIT_SPHERE, -1);
         }).toThrow();
     });
 
-    it("compute1", function() {
+    it('compute1', function() {
         var m = CubeMapEllipsoidTessellator.compute(Ellipsoid.UNIT_SPHERE, 1);
 
         expect(m.attributes.position.values.length).toEqual(3 * 8);
         expect(m.indexLists[0].values.length).toEqual(12 * 3);
     });
 
-    it("compute2", function() {
+    it('compute2', function() {
         var m = CubeMapEllipsoidTessellator.compute(Ellipsoid.UNIT_SPHERE, 2);
 
         expect(m.attributes.position.values.length).toEqual(3 * (8 + 6 + 12));
         expect(m.indexLists[0].values.length).toEqual(2 * 3 * 4 * 6);
     });
 
-    it("compute3", function() {
+    it('compute3', function() {
         var m = CubeMapEllipsoidTessellator.compute(Ellipsoid.UNIT_SPHERE, 3);
 
         var position = m.attributes.position.values;

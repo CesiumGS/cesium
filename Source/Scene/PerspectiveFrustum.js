@@ -19,7 +19,7 @@ define([
      * define the unit vector normal to the plane, and the w component is the distance of the
      * plane from the origin/camera position.
      *
-     * @name PerspectiveFrustum
+     * @alias PerspectiveFrustum
      * @constructor
      *
      * @example
@@ -29,7 +29,7 @@ define([
      * frustum.near = 1.0;
      * frustum.far = 2.0;
      */
-    function PerspectiveFrustum() {
+    var PerspectiveFrustum = function() {
         /**
          * The angle of the field of view, in radians.
          *
@@ -64,7 +64,7 @@ define([
 
         this._perspectiveMatrix = null;
         this._infinitePerspective = null;
-    }
+    };
 
     /**
      * Returns the perspective projection matrix computed from the view frustum.
@@ -94,20 +94,20 @@ define([
 
     PerspectiveFrustum.prototype._update = function() {
         if (this.fovy === null || this.aspectRatio === null || this.near === null || this.far === null) {
-            throw new DeveloperError("The frustum parameters are not set.", "fovy, aspectRatio, near, or far");
+            throw new DeveloperError('fovy, aspectRatio, near, or far parameters are not set.');
         }
 
         if (this.fovy !== this._fovy || this.aspectRatio !== this._aspectRatio || this.near !== this._near || this.far !== this._far) {
             if (this.fovy < 0 || this.fovy >= Math.PI) {
-                throw new DeveloperError("fovy must be in the range [0, PI).", "fovy");
+                throw new DeveloperError('fovy must be in the range [0, PI).');
             }
 
             if (this.aspectRatio < 0) {
-                throw new DeveloperError("aspectRatio must be positive.", "aspectRatio");
+                throw new DeveloperError('aspectRatio must be positive.');
             }
 
             if (this.near < 0 || this.near > this.far) {
-                throw new DeveloperError("near must be greater than zero and less than far.", "near");
+                throw new DeveloperError('near must be greater than zero and less than far.');
             }
 
             this._fovy = this.fovy;
@@ -146,15 +146,15 @@ define([
      */
     PerspectiveFrustum.prototype.getPlanes = function(position, direction, up) {
         if (!position) {
-            throw new DeveloperError("position is required.", "position");
+            throw new DeveloperError('position is required.');
         }
 
         if (!direction) {
-            throw new DeveloperError("direction is required.", "direction");
+            throw new DeveloperError('direction is required.');
         }
 
         if (!up) {
-            throw new DeveloperError("up is required.", "up");
+            throw new DeveloperError('up is required.');
         }
 
         var pos = Cartesian3.clone(position);
@@ -233,44 +233,6 @@ define([
      */
     PerspectiveFrustum.prototype.equals = function(other) {
         return (this.fovy === other.fovy && this.aspectRatio === other.aspectRatio && this.near === other.near && this.far === other.far);
-    };
-
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @memberof PerspectiveFrustum
-     *
-     * @return {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
-     *
-     * @see PerspectiveFrustum#destroy
-     */
-    PerspectiveFrustum.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    /**
-     * Removes keyboard listeners held by this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof PerspectiveFrustum
-     *
-     * @return {undefined}
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see PerspectiveFrustum#isDestroyed
-     *
-     * @example
-     * frustum = frustum && frustum.destroy();
-     */
-    PerspectiveFrustum.prototype.destroy = function() {
-        return destroyObject(this);
     };
 
     return PerspectiveFrustum;

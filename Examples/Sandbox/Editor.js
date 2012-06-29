@@ -11,11 +11,11 @@
      */
     Sandbox.Editor = function(id) {
         define('ace/mode/cesium', function(require, exports, module) {
-            var oop = require("pilot/oop");
-            var TextMode = require("ace/mode/text").Mode;
-            var Tokenizer = require("ace/tokenizer").Tokenizer;
-            var WorkerClient = require("ace/worker/worker_client").WorkerClient;
-            var CesiumHighlightRules = require("ace/mode/cesium_highlight_rules").CesiumHighlightRules;
+            var oop = require('pilot/oop');
+            var TextMode = require('ace/mode/text').Mode;
+            var Tokenizer = require('ace/tokenizer').Tokenizer;
+            var WorkerClient = require('ace/worker/worker_client').WorkerClient;
+            var CesiumHighlightRules = require('ace/mode/cesium_highlight_rules').CesiumHighlightRules;
 
             var Mode = function() {
                 this.$tokenizer = new Tokenizer(new CesiumHighlightRules().getRules());
@@ -25,18 +25,18 @@
                 // Create a worker to enable jslint
                 this.createWorker = function(session) {
                     var doc = session.getDocument();
-                    var worker = new WorkerClient(["ace", "pilot"], "worker-javascript.js", "ace/mode/javascript_worker", "JavaScriptWorker");
-                    worker.call("setValue", [doc.getValue()]);
+                    var worker = new WorkerClient(['ace', 'pilot'], 'worker-javascript.js', 'ace/mode/javascript_worker', 'JavaScriptWorker');
+                    worker.call('setValue', [doc.getValue()]);
 
-                    doc.on("change", function(e) {
+                    doc.on('change', function(e) {
                         e.range = {
                             start : e.data.range.start,
                             end : e.data.range.end
                         };
-                        worker.emit("change", e);
+                        worker.emit('change', e);
                     });
 
-                    worker.on("jslint", function(results) {
+                    worker.on('jslint', function(results) {
                         var errors = [];
                         for ( var i = 0; i < results.data.length; i++) {
                             var error = results.data[i];
@@ -45,7 +45,7 @@
                                     row : error.line - 1,
                                     column : error.character - 1,
                                     text : error.reason,
-                                    type : "warning",
+                                    type : 'warning',
                                     lint : error
                                 });
                             }
@@ -53,11 +53,11 @@
                         session.setAnnotations(errors);
                     });
 
-                    worker.on("narcissus", function(e) {
+                    worker.on('narcissus', function(e) {
                         session.setAnnotations([e.data]);
                     });
 
-                    worker.on("terminate", function() {
+                    worker.on('terminate', function() {
                         session.clearAnnotations();
                     });
 
@@ -70,13 +70,13 @@
         });
 
         define('ace/mode/cesium_highlight_rules', function(require, exports, module) {
-            var oop = require("pilot/oop");
-            var JavaScriptHighlightRules = require("ace/mode/javascript_highlight_rules").JavaScriptHighlightRules;
+            var oop = require('pilot/oop');
+            var JavaScriptHighlightRules = require('ace/mode/javascript_highlight_rules').JavaScriptHighlightRules;
             var CesiumHighlightRules = function() {
                 this.$rules = new JavaScriptHighlightRules().getRules();
                 this.$rules.start.unshift({
-                    token : "variable.language",
-                    regex : "Cesium.?[A-Za-z0-9]*"
+                    token : 'variable.language',
+                    regex : 'Cesium.?[A-Za-z0-9]*'
                 });
             };
             oop.inherits(CesiumHighlightRules, JavaScriptHighlightRules);
@@ -84,7 +84,7 @@
         });
 
         var editor = ace.edit(id);
-        var CesiumMode = require("ace/mode/cesium").Mode;
+        var CesiumMode = require('ace/mode/cesium').Mode;
         editor.getSession().setMode(new CesiumMode());
         editor.renderer.setShowPrintMargin(false);
         editor.getSession().setUseSoftTabs(true);
@@ -144,9 +144,9 @@
             var docLink = document.getElementById('docLink');
             var selection = editor.getSession().doc.getTextRange(editor.getSelectionRange());
             if (selection.match(/Cesium\.?[A-za-z0-9]*/)) {
-                docLink.href = "../../Documentation/symbols/" + selection + ".html";
+                docLink.href = '../../Documentation/symbols/' + selection + '.html';
             } else {
-                docLink.href = "../../Documentation/index.html?classFilter=" + selection;
+                docLink.href = '../../Documentation/index.html?classFilter=' + selection;
             }
         });
     };

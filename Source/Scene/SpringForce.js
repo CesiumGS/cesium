@@ -4,14 +4,18 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
 
     /**
      * DOC_TBA
-     * @name SpringForce
+     * @alias SpringForce
      * @constructor
+     *
+     * @param {Object} template
+     *
+     * @exception {DeveloperError} template.particleOne and template.particleTwo are required.
      */
-    function SpringForce(template) {
+    var SpringForce = function(template) {
         template = template || {};
 
         if (!template.particleOne || !template.particleTwo) {
-            throw new DeveloperError("template.particleOne and template.particleTwo are required.", "template");
+            throw new DeveloperError('template.particleOne and template.particleTwo are required.');
         }
 
         this.particleOne = template.particleOne;
@@ -19,10 +23,10 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
 
         // TODO: Throw if these are negative
 
-        this.restLength = (typeof template.restLength === "undefined") ? 1.0 : template.restLength;
-        this.springConstant = (typeof template.springConstant === "undefined") ? 1.0 : template.springConstant;
-        this.dampingConstant = (typeof template.dampingConstant === "undefined") ? 1.0 : template.dampingConstant;
-    }
+        this.restLength = (typeof template.restLength === 'undefined') ? 1.0 : template.restLength;
+        this.springConstant = (typeof template.springConstant === 'undefined') ? 1.0 : template.springConstant;
+        this.dampingConstant = (typeof template.dampingConstant === 'undefined') ? 1.0 : template.dampingConstant;
+    };
 
     /**
      * DOC_TBA

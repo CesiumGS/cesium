@@ -21,7 +21,7 @@ define([
      * A type that defines camera behavior: the camera will follow a path from the
      * current position of the camera to an end point around an ellipsoid.
      *
-     * @name CameraFlightController
+     * @alias CameraFlightController
      * @internalConstructor
      *
      * @param {HTMLCanvasElement} canvas An HTML canvas element used to listen for user events.
@@ -32,7 +32,7 @@ define([
      *
      * @see CameraControllerCollection#addFlight
      */
-    function CameraFlightController(canvas, camera, ellipsoid, destination, duration, complete) {
+    var CameraFlightController = function(canvas, camera, ellipsoid, destination, duration, complete) {
         // get minimum altitude from which the whole ellipsoid is visible
         var radius = ellipsoid.getRadii().getMaximumComponent();
 
@@ -62,7 +62,7 @@ define([
         this._handler.setMouseAction(cancelFlight, MouseEventType.LEFT_DOWN);
         this._handler.setMouseAction(cancelFlight, MouseEventType.RIGHT_DOWN);
         this._handler.setMouseAction(cancelFlight, MouseEventType.MIDDLE_DOWN);
-    }
+    };
 
     CameraFlightController.prototype._createPath = function(ellipsoid, altitude, endPoint, duration) {
         var start = this._camera.position;
@@ -175,7 +175,7 @@ define([
     };
 
     /**
-     * Removes keyboard listeners held by this object.
+     * Removes mouse listeners held by this object.
      * <br /><br />
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,

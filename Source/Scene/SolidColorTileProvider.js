@@ -15,7 +15,7 @@ define([
      * Provides tile images with a different solid color for each zoom level.
      * Useful for debugging or testing different {@link CentralBody} options.
      *
-     * @name SolidColorTileProvider
+     * @alias SolidColorTileProvider
      * @constructor
      *
      * @param {Number} [maxZoom=23] The maximum zoom level to generate tiles.
@@ -25,7 +25,7 @@ define([
      * @see OpenStreetMapTileProvider
      * @see CompositeTileProvider
      */
-    function SolidColorTileProvider(maxZoom) {
+    var SolidColorTileProvider = function(maxZoom) {
         var width = 256;
         var height = 256;
         maxZoom = maxZoom || 23;
@@ -102,15 +102,15 @@ define([
          * @see Projections
          */
         this.projection = Projections.WGS84;
-    }
+    };
 
     SolidColorTileProvider.prototype._createImage = function(color, width, height) {
-        var canvas = document.createElement("canvas");
+        var canvas = document.createElement('canvas');
         canvas.width = width;
         canvas.height = height;
 
-        var context = canvas.getContext("2d");
-        context.fillStyle = "rgba(" + color.r + ", " + color.g + ", " + color.b + ", 1.0)";
+        var context = canvas.getContext('2d');
+        context.fillStyle = 'rgba(' + color.r + ', ' + color.g + ', ' + color.b + ', 1.0)';
         context.fillRect(0, 0, width, height);
 
         return canvas;
@@ -129,10 +129,10 @@ define([
      */
     SolidColorTileProvider.prototype.loadTileImage = function(tile, onload, onerror) {
         if (tile.zoom < this.zoomMin || tile.zoom > this.zoomMax) {
-            throw new DeveloperError("tile.zoom must be in [zoomMin, zoomMax].", "tile.zoom");
+            throw new DeveloperError('tile.zoom must be in [zoomMin, zoomMax].');
         }
 
-        if (typeof onload === "function") {
+        if (typeof onload === 'function') {
             onload();
         }
 

@@ -23,7 +23,7 @@ define([
      * as its radius.
      * </p>
      *
-     * @name BoundingSphere
+     * @alias BoundingSphere
      *
      * @param {Array} positions List of points that the bounding sphere will enclose.  Each point must have <code>x</code>, <code>y</code>, and <code>z</code> properties.
      * @param {Number} radius An optional parameter, only to be supplied if <code>positions</code> contains a single point.
@@ -31,7 +31,7 @@ define([
      * @exception {DeveloperError} <code>positions</code> is required.
      *
      * @see AxisAlignedBoundingBox
-     * @see <a href="http://blogs.agi.com/insight3d/index.php/2008/02/04/a-bounding/">Bounding Sphere computation article</a>
+     * @see <a href='http://blogs.agi.com/insight3d/index.php/2008/02/04/a-bounding/'>Bounding Sphere computation article</a>
      *
      * @constructor
      * @immutable
@@ -44,9 +44,9 @@ define([
      * // Compute the same bounding sphere using a center point and a radius.
      * var sphere = new BoundingSphere(new Cartesian3(0, 0, 0), 2);
      */
-    function BoundingSphere(positions, radius) {
+    var BoundingSphere = function(positions, radius) {
         if (!positions) {
-            throw new DeveloperError("positions is required.", "positions");
+            throw new DeveloperError('positions is required.');
         }
 
         if ((arguments.length === 2) && (typeof arguments[1] === 'number')) {
@@ -179,7 +179,7 @@ define([
                 this.radius = naiveRadius;
             }
         }
-    }
+    };
 
     /**
      * DOC_TBA

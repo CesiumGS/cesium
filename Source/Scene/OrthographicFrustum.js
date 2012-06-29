@@ -19,7 +19,7 @@ define([
      * define the unit vector normal to the plane, and the w component is the distance of the
      * plane from the origin/camera position.
      *
-     * @name OrthographicFrustum
+     * @alias OrthographicFrustum
      * @constructor
      *
      * @example
@@ -33,7 +33,7 @@ define([
      * frustum.near = 0.01 * maxRadii;
      * frustum.far = 50.0 * maxRadii;
      */
-    function OrthographicFrustum() {
+    var OrthographicFrustum = function() {
         /**
          * DOC_TBA
          *
@@ -83,7 +83,7 @@ define([
         this._far = null;
 
         this._orthographicMatrix = null;
-    }
+    };
 
     /**
      * Returns the orthographic projection matrix computed from the view frustum.
@@ -101,20 +101,20 @@ define([
 
     OrthographicFrustum.prototype._update = function() {
         if (this.left === null || this.right === null || this.top === null || this.bottom === null || this.near === null || this.far === null) {
-            throw new DeveloperError("The frustum parameters are not set.", "left, right, top, bottom, near, or far");
+            throw new DeveloperError('left, right, top, bottom, near, or far frustum parameters are not set.');
         }
 
         if (this.left !== this._left || this.right !== this._right || this.top !== this._top || this.bottom !== this._bottom || this.near !== this._near || this.far !== this._far) {
             if (this.left > this.right) {
-                throw new DeveloperError("right must be greater than left.", "right");
+                throw new DeveloperError('right must be greater than left.');
             }
 
             if (this.bottom > this.top) {
-                throw new DeveloperError("top must be greater than bottom.", "top");
+                throw new DeveloperError('top must be greater than bottom.');
             }
 
             if (this.near < 0 || this.near > this.far) {
-                throw new DeveloperError("near must be greater than zero and less than far.", "near");
+                throw new DeveloperError('near must be greater than zero and less than far.');
             }
 
             this._left = this.left;
@@ -147,15 +147,15 @@ define([
      */
     OrthographicFrustum.prototype.getPlanes = function(position, direction, up) {
         if (!position) {
-            throw new DeveloperError("position is required.", "position");
+            throw new DeveloperError('position is required.');
         }
 
         if (!direction) {
-            throw new DeveloperError("direction is required.", "direction");
+            throw new DeveloperError('direction is required.');
         }
 
         if (!up) {
-            throw new DeveloperError("up is required.", "up");
+            throw new DeveloperError('up is required.');
         }
 
         var pos = Cartesian3.clone(position);
@@ -226,44 +226,6 @@ define([
                 this.bottom === other.bottom &&
                 this.near === other.near &&
                 this.far === other.far);
-    };
-
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @memberof OrthographicFrustum
-     *
-     * @return {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
-     *
-     * @see OrthographicFrustum#destroy
-     */
-    OrthographicFrustum.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    /**
-     * Removes keyboard listeners held by this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof OrthographicFrustum
-     *
-     * @return {undefined}
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see OrthographicFrustum#isDestroyed
-     *
-     * @example
-     * frustum = frustum && frustum.destroy();
-     */
-    OrthographicFrustum.prototype.destroy = function() {
-        return destroyObject(this);
     };
 
     return OrthographicFrustum;

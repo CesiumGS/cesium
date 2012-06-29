@@ -10,18 +10,18 @@ define([
     /**
      * DOC_TBA
      *
-     * @name PickFramebuffer
+     * @alias PickFramebuffer
      * @internalConstructor
      *
      * @see Context#createPickFramebuffer
      * @see Context#pick
      */
-    function PickFramebuffer(context) {
+    var PickFramebuffer = function(context) {
         this._context = context;
         this._fb = null;
         this._width = 0;
         this._height = 0;
-    }
+    };
 
     /**
      * DOC_TBA

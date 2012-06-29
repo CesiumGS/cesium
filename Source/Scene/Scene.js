@@ -3,31 +3,36 @@ define([
         '../Core/destroyObject',
         '../Core/EquidistantCylindricalProjection',
         '../Core/Ellipsoid',
+        '../Core/DeveloperError',
         '../Renderer/Context',
         './Camera',
         './CompositePrimitive',
         './AnimationCollection',
-        './SceneMode'
+        './SceneMode',
+        './SceneState'
     ], function(
         destroyObject,
         EquidistantCylindricalProjection,
         Ellipsoid,
+        DeveloperError,
         Context,
         Camera,
         CompositePrimitive,
         AnimationCollection,
-        SceneMode) {
+        SceneMode,
+        SceneState) {
     "use strict";
 
     /**
      * DOC_TBA
      *
-     * @name Scene
+     * @alias Scene
      * @constructor
      */
-    function Scene(canvas) {
+    var Scene = function(canvas) {
         var context = new Context(canvas);
 
+        this._sceneState = new SceneState();
         this._canvas = canvas;
         this._context = context;
         this._primitives = new CompositePrimitive();
@@ -49,7 +54,9 @@ define([
         this._shaderFrameCount = 0;
 
         /**
-         * DOC_TBA
+         * The current mode of the scene.
+         *
+         * @type SceneMode
          */
         this.mode = SceneMode.SCENE3D;
 
@@ -58,11 +65,19 @@ define([
          */
         this.scene2D = {
             /**
-             * DOC_TBA
+             * The projection to use in 2D mode.
              */
             projection : new EquidistantCylindricalProjection(Ellipsoid.WGS84)
         };
-    }
+
+        /**
+         * The current morph transition time between 2D/Columbus View and 3D,
+         * with 0.0 being 2D or Columbus View and 1.0 being 3D.
+         *
+         * @type Number
+         */
+        this.morphTime = 1.0;
+    };
 
     /**
      * DOC_TBA
@@ -167,10 +182,12 @@ define([
             this._animate();
         }
 
-        this._primitives.update(this._context, {
-            mode : this.mode,
-            scene2D : this.scene2D
-        });
+        var sceneState = this._sceneState;
+        sceneState.mode = this.mode;
+        sceneState.scene2D = this.scene2D;
+        sceneState.camera = camera;
+
+        this._primitives.update(this._context, sceneState);
     };
 
     /**
@@ -203,6 +220,38 @@ define([
             x : windowPosition.x,
             y : (this._canvas.clientHeight - windowPosition.y)
         });
+    };
+
+    /**
+     * Pick an ellipsoid or map in 3D mode.
+     *
+     * @memberof Scene
+     *
+     * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to pick.
+     *
+     * @exception {DeveloperError} windowPosition is required.
+     *
+     * @return {Cartesian3} If the ellipsoid or map was picked, returns the point on the surface of the ellipsoid or map
+     * in world coordinates. If the ellipsoid or map was not picked, returns undefined.
+     */
+    Scene.prototype.pickEllipsoid = function(windowPosition, ellipsoid) {
+        if (typeof windowPosition === 'undefined') {
+            throw new DeveloperError('windowPosition is required.');
+        }
+
+        ellipsoid = ellipsoid || Ellipsoid.WGS84;
+
+        var p;
+        if (this.mode === SceneMode.SCENE3D) {
+            p = this._camera.pickEllipsoid(windowPosition, ellipsoid);
+        } else if (this.mode === SceneMode.SCENE2D) {
+            p = this._camera.pickMap2D(windowPosition, this.scene2D.projection);
+        } else if (this.mode === SceneMode.COLUMBUS_VIEW) {
+            p = this._camera.pickMapColumbusView(windowPosition, this.scene2D.projection);
+        }
+
+        return p;
     };
 
     /**

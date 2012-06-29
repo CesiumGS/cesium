@@ -18,12 +18,12 @@ define([
     /**
      * DOC_TBA
      *
-     * @name CubeMap
+     * @alias CubeMap
      * @internalConstructor
      *
      * @see Context#createCubeMap
      */
-    function CubeMap(gl, textureFilterAnisotropic, textureTarget, texture, pixelFormat, pixelDatatype, size, preMultiplyAlpha) {
+    var CubeMap = function(gl, textureFilterAnisotropic, textureTarget, texture, pixelFormat, pixelDatatype, size, preMultiplyAlpha) {
         this._gl = gl;
         this._textureFilterAnisotropic = textureFilterAnisotropic;
         this._textureTarget = textureTarget;
@@ -35,12 +35,10 @@ define([
         this._sampler = undefined;
 
         this.setSampler();
-    }
+    };
 
     /**
      * DOC_TBA
-     *
-     * @memberof CubeMap
      *
      * @param {Object} source The source {ImageData}, {HTMLImageElement}, {HTMLCanvasElement}, or {HTMLVideoElement}.
      * @param {Number} xOffset optional
@@ -55,7 +53,7 @@ define([
      */
     CubeMap.prototype._copyFrom = function(targetFace, source, xOffset, yOffset) {
         if (!source) {
-            throw new DeveloperError("source is required.", "source");
+            throw new DeveloperError('source is required.');
         }
 
         xOffset = xOffset || 0;
@@ -65,19 +63,19 @@ define([
         var height = source.height;
 
         if (xOffset < 0) {
-            throw new DeveloperError("xOffset must be greater than or equal to zero.", "xOffset");
+            throw new DeveloperError('xOffset must be greater than or equal to zero.');
         }
 
         if (yOffset < 0) {
-            throw new DeveloperError("yOffset must be greater than or equal to zero.", "yOffset");
+            throw new DeveloperError('yOffset must be greater than or equal to zero.');
         }
 
         if (xOffset + width > this._size) {
-            throw new DeveloperError("xOffset + source.width must be less than or equal to getWidth().");
+            throw new DeveloperError('xOffset + source.width must be less than or equal to getWidth().');
         }
 
         if (yOffset + height > this._size) {
-            throw new DeveloperError("yOffset + source.height must be less than or equal to getHeight().");
+            throw new DeveloperError('yOffset + source.height must be less than or equal to getHeight().');
         }
 
         var gl = this._gl;
@@ -101,8 +99,6 @@ define([
 
     /**
      * DOC_TBA
-     *
-     * @memberof CubeMap
      *
      * @param {Number} xOffset optional
      * @param {Number} yOffset optional
@@ -128,27 +124,27 @@ define([
         height = height || this._size;
 
         if (xOffset < 0) {
-            throw new DeveloperError("xOffset must be greater than or equal to zero.", "xOffset");
+            throw new DeveloperError('xOffset must be greater than or equal to zero.');
         }
 
         if (yOffset < 0) {
-            throw new DeveloperError("yOffset must be greater than or equal to zero.", "yOffset");
+            throw new DeveloperError('yOffset must be greater than or equal to zero.');
         }
 
         if (framebufferXOffset < 0) {
-            throw new DeveloperError("framebufferXOffset must be greater than or equal to zero.", "framebufferXOffset");
+            throw new DeveloperError('framebufferXOffset must be greater than or equal to zero.');
         }
 
         if (framebufferYOffset < 0) {
-            throw new DeveloperError("framebufferYOffset must be greater than or equal to zero.", "framebufferYOffset");
+            throw new DeveloperError('framebufferYOffset must be greater than or equal to zero.');
         }
 
         if (xOffset + width > this._size) {
-            throw new DeveloperError("xOffset + source.width must be less than or equal to getWidth().");
+            throw new DeveloperError('xOffset + source.width must be less than or equal to getWidth().');
         }
 
         if (yOffset + height > this._size) {
-            throw new DeveloperError("yOffset + source.height must be less than or equal to getHeight().");
+            throw new DeveloperError('yOffset + source.height must be less than or equal to getHeight().');
         }
 
         var gl = this._gl;
@@ -317,19 +313,19 @@ define([
      *
      * @param {MipmapHint} hint optional.
      *
-     * @exception {DeveloperError} Invalid hint.
+     * @exception {DeveloperError} hint is invalid.
      * @exception {DeveloperError} This CubeMap's width must be a power of two to call generateMipmap().
      * @exception {DeveloperError} This CubeMap's height must be a power of two to call generateMipmap().
      * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
      */
     CubeMap.prototype.generateMipmap = function(hint) {
         if ((this._size > 1) && (this._size % 2 !== 0)) {
-            throw new DeveloperError("This CubeMap's width and height must be a power of two to call generateMipmap().");
+            throw new DeveloperError('width and height must be a power of two to call generateMipmap().');
         }
 
         hint = hint || MipmapHint.DONT_CARE;
         if (!MipmapHint.validate(hint)) {
-            throw new DeveloperError("Invalid hint.", "hint");
+            throw new DeveloperError('hint is invalid.');
         }
 
         var gl = this._gl;
@@ -488,7 +484,7 @@ define([
      * @exception {DeveloperError} This cube map was destroyed, i.e., destroy() was called.
      *
      * @see CubeMap.isDestroyed
-     * @see <a href="http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteTextures.xml">glDeleteTextures</a>
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteTextures.xml'>glDeleteTextures</a>
      *
      * @example
      * cubeMap = cubeMap && cubeMap.destroy();

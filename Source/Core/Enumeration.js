@@ -10,16 +10,16 @@ define(function() {
      * @param {String} [name=undefined] The name of the enumeration for debugging purposes.
      * @param {Object} [properties=undefined] An object containing extra properties to be added to the enumeration.
      *
-     * @name Enumeration
+     * @alias Enumeration
      * @constructor
      * @example
      * // Create an object with two enumerations.
      * var filter = {
-     *     NEAREST : new Enumeration(0x2600, "NEAREST"),
-     *     LINEAR : new Enumeration(0x2601, "LINEAR")
+     *     NEAREST : new Enumeration(0x2600, 'NEAREST'),
+     *     LINEAR : new Enumeration(0x2601, 'LINEAR')
      * };
      */
-    function Enumeration(value, name, properties) {
+    var Enumeration = function(value, name, properties) {
         /**
          * The numeric value of the enumeration.
          * @type Number
@@ -39,7 +39,7 @@ define(function() {
                 }
             }
         }
-    }
+    };
 
     /**
      * Returns the numeric value of the enumeration.

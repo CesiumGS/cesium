@@ -5,6 +5,7 @@ define([
         '../Core/Matrix4',
         '../Renderer/BufferUsage',
         '../Renderer/PixelFormat',
+        '../Renderer/TextureAtlas',
         './BillboardCollection',
         './Label'
     ], function(
@@ -13,6 +14,7 @@ define([
         Matrix4,
         BufferUsage,
         PixelFormat,
+        TextureAtlas,
         BillboardCollection,
         Label) {
     "use strict";
@@ -31,7 +33,7 @@ define([
         var canvas = label._createCanvas(charValue);
         this._sources[id] = canvas;
         canvas.index = this._sourcesArray.push(canvas) - 1;
-        if (typeof canvasCreated !== "undefined") {
+        if (typeof canvasCreated !== 'undefined') {
             canvasCreated();
         }
         return canvas.index;
@@ -46,7 +48,7 @@ define([
     };
 
     CanvasContainer.prototype._contains = function(id) {
-        return typeof this._sources[id] !== "undefined";
+        return typeof this._sources[id] !== 'undefined';
     };
 
     CanvasContainer.prototype._getCanvas = function(id) {
@@ -57,15 +59,15 @@ define([
      * A renderable collection of labels.  Labels are viewport-aligned text positioned in the 3D scene.
      * Each label can have a different font, color, scale, etc.
      * <br /><br />
-     * <div align="center">
-     * <img src="images/Label.png" width="400" height="300" /><br />
+     * <div align='center'>
+     * <img src='images/Label.png' width='400' height='300' /><br />
      * Example labels
      * </div>
      * <br /><br />
      * Labels are added and removed from the collection using {@link LabelCollection#add}
      * and {@link LabelCollection#remove}.
      *
-     * @name LabelCollection
+     * @alias LabelCollection
      * @constructor
      *
      * @performance For best performance, prefer a few collections, each with many labels, to
@@ -85,18 +87,18 @@ define([
      * var labels = new LabelCollection();
      * labels.add({
      *   position : { x : 1.0, y : 2.0, z : 3.0 },
-     *   text : "A label"
+     *   text : 'A label'
      * });
      * labels.add({
      *   position : { x : 4.0, y : 5.0, z : 6.0 },
-     *   text : "Another label"
+     *   text : 'Another label'
      * });
      */
-    function LabelCollection() {
+    var LabelCollection = function() {
         this._billboardCollection = new BillboardCollection();
         this._labels = [];
         this._labelsRemoved = false;
-        this._createTextureAtlas = false;
+        this._updateTextureAtlas = false;
         this._canvasContainer = new CanvasContainer();
 
         /**
@@ -116,29 +118,30 @@ define([
          * labels.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
          * labels.add({
          *   position : new Cartesian3(0.0, 0.0, 0.0),
-         *   text     : "Center"
+         *   text     : 'Center'
          * });
          * labels.add({
          *   position : new Cartesian3(1000000.0, 0.0, 0.0),
-         *   text     : "East"
+         *   text     : 'East'
          * });
          * labels.add({
          *   position : new Cartesian3(0.0, 1000000.0, 0.0),
-         *   text     : "North"
+         *   text     : 'North'
          * });
          * labels.add({
          *   position : new Cartesian3(0.0, 0.0, 1000000.0),
-         *   text     : "Up"
+         *   text     : 'Up'
          * });
          */
         this.modelMatrix = Matrix4.IDENTITY;
 
         /**
-         * DOC_TBA
+         * The current morph transition time between 2D/Columbus View and 3D,
+         * with 0.0 being 2D or Columbus View and 1.0 being 3D.
          *
          * @type Number
          */
-        this.morphTime = 0.0;
+        this.morphTime = 1.0;
 
         /**
          * The usage hint for the collection's vertex buffer.
@@ -153,14 +156,14 @@ define([
          * <code>BufferUsage.DYNAMIC_DRAW</code>.
          */
         this.bufferUsage = BufferUsage.STATIC_DRAW;
-    }
+    };
 
     LabelCollection.prototype._getCollection = function() {
         return this._billboardCollection;
     };
 
-    LabelCollection.prototype._setCreateTextureAtlas = function(value) {
-        this._createTextureAtlas = value;
+    LabelCollection.prototype._setUpdateTextureAtlas = function(value) {
+        this._updateTextureAtlas = value;
     };
 
     /**
@@ -175,7 +178,7 @@ define([
      *
      * @performance Calling <code>add</code> is expected constant time.  However, when
      * {@link LabelCollection#update} is called, the collection's vertex buffer
-     * and texture atlas are rewritten; these operations are <code>O(n)</code> and also incur
+     * is rewritten; this operations is <code>O(n)</code> and also incurs
      * CPU to GPU overhead.  For best performance, add as many billboards as possible before
      * calling <code>update</code>.
      *
@@ -190,10 +193,10 @@ define([
      * var l = labels.add({
      *   show : true,
      *   position : Cartesian3.ZERO,
-     *   text : "",
-     *   font : "30px sans-serif",
-     *   fillColor : "white",
-     *   outlineColor : "white",
+     *   text : '',
+     *   font : '30px sans-serif',
+     *   fillColor : 'white',
+     *   outlineColor : 'white',
      *   style : LabelStyle.FILL,
      *   pixelOffset : Cartesian2.ZERO,
      *   eyeOffset : Cartesian3.ZERO,
@@ -208,8 +211,8 @@ define([
      *   position : ellipsoid.toCartesian(
      *     CesiumMath.cartographic3ToRadians(
      *       new Cartographic3(longitude, latitude, height))),
-     *   text : "Hello World",
-     *   font : "24px Helvetica",
+     *   text : 'Hello World',
+     *   font : '24px Helvetica',
      * });
      */
     LabelCollection.prototype.add = function(label) {
@@ -284,7 +287,7 @@ define([
         this._destroyLabels();
         this._labels = [];
         this._labelsRemoved = false;
-        this._createTextureAtlas = true;
+        this._updateTextureAtlas = true;
     };
 
     LabelCollection.prototype._removeLabels = function() {
@@ -358,8 +361,8 @@ define([
      * }
      */
     LabelCollection.prototype.get = function(index) {
-        if (typeof index === "undefined") {
-            throw new DeveloperError("index is required.", "index");
+        if (typeof index === 'undefined') {
+            throw new DeveloperError('index is required.');
         }
 
         this._removeLabels();
@@ -405,12 +408,31 @@ define([
         this._billboardCollection.bufferUsage = this.bufferUsage;
         this._removeLabels();
 
-        if (this._createTextureAtlas) {
-            this._createTextureAtlas = false;
+        if (this._updateTextureAtlas) {
+            this._updateTextureAtlas = false;
 
-            // The previous texture atlas is implicitly destroyed by the billboard collection.
-            var textureAtlas = (this._labels.length > 0) ? context.createTextureAtlas(this._canvasContainer.getItems(), PixelFormat.RGBA, 1) : null;
-            this._billboardCollection.setTextureAtlas(textureAtlas);
+            //Determines which subset of images are new to the texture atlas.
+            var textureAtlas = this._billboardCollection.getTextureAtlas();
+            var images = this._canvasContainer.getItems();
+            var numImagesOld = (typeof textureAtlas !== 'undefined') ? textureAtlas.getNumberOfImages() : 0;
+            var numImagesNew = images.length;
+            var newImages = images.slice(numImagesOld);
+            var difference = numImagesNew - numImagesOld;
+
+            // First time creating texture atlas or removing images from the texture atlas.
+            if ((numImagesOld === 0 && numImagesNew > 0) || difference < 0) {
+                textureAtlas = textureAtlas && textureAtlas.destroy();
+                textureAtlas = context.createTextureAtlas({images : images});
+                this._billboardCollection.setTextureAtlas(textureAtlas);
+            }
+            // Adding one new image to the texture atlas.
+            else if (difference === 1) {
+                textureAtlas.addImage(newImages[0]);
+            }
+            // Adding multiple new images to the texture atlas.
+            else if (difference > 1) {
+                textureAtlas.addImages(newImages);
+            }
         }
 
         this._billboardCollection.update(context, sceneState);

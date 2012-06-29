@@ -15,14 +15,14 @@ define([
     /**
      * DOC_TBA
      *
-     * @name ParticleSystem
+     * @alias ParticleSystem
      * @constructor
      */
-    function ParticleSystem() {
+    var ParticleSystem = function() {
         this.particles = [];
         this.forces = [];
         this.time = 0.0;
-    }
+    };
 
     ParticleSystem.prototype._clearForces = function() {
         var particles = this.particles;
@@ -113,7 +113,7 @@ define([
     ParticleSystem.prototype.setState = function(state) {
         if (state) {
             if (state.length !== this.getDimension()) {
-                throw new DeveloperError("The dimensions of the state vector does not equal the dimensions of this particle system.  Call getDimension().", "state");
+                throw new DeveloperError('The dimensions of the state vector does not equal the dimensions of this particle system.  Call getDimension().');
             }
 
             var particles = this.particles;

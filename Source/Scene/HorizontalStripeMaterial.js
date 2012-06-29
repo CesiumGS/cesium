@@ -5,10 +5,10 @@ define(['../Shaders/HorizontalStripeMaterial'], function(ShadersHorizontalStripe
     /**
      * DOC_TBA
      *
-     * @name HorizontalStripeMaterial
+     * @alias HorizontalStripeMaterial
      * @constructor
      */
-    function HorizontalStripeMaterial(template) {
+    var HorizontalStripeMaterial = function(template) {
         var t = template || {};
 
         /**
@@ -60,10 +60,10 @@ define(['../Shaders/HorizontalStripeMaterial'], function(ShadersHorizontalStripe
                 return that.repeat;
             }
         };
-    }
+    };
 
     HorizontalStripeMaterial.prototype._getShaderSource = function() {
-        return "#line 0\n" + ShadersHorizontalStripeMaterial;
+        return '#line 0\n' + ShadersHorizontalStripeMaterial;
     };
 
     return HorizontalStripeMaterial;
