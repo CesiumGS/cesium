@@ -5,7 +5,7 @@ define(['../Shaders/DotMaterial'], function(ShadersDotMaterial) {
     /**
      * DOC_TBA
      *
-     * @name DotMaterial
+     * @alias DotMaterial
      * @constructor
      */
     var DotMaterial = function(template) {

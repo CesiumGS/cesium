@@ -27,6 +27,18 @@ Beta Releases
 
 * Added `addImage` to `TextureAtlas` so images can be added to a texture atlas after it is constructed.
 * Added `Scene.pickEllipsoid`, which picks either the ellipsoid or the map depending on the current `SceneMode`.
+* Added `Event`, a new utility class which makes it easy for objects to expose event properties.
+* Added `TextureAtlasBuilder`,a new utility class which makes it easy to build a TextureAtlas asynchronously.
+* Added 'Clock', a simple clock for keeping track of simulated time.
+* Added 'LagrangePolynomialApproximation', 'HermitePolynomialApproximation', and 'LinearApproximation' interpolation algorithms.
+* Added 'CoordinateConversions', a new static class where most coordinate conversion methods will be stored.
+* Added 'Spherical' coordinate type
+* Added a new DynamicScene layer for time-dynamic, data-driven visualization.  This include CZML processing.  For more details see https://github.com/AnalyticalGraphicsInc/cesium/wiki/Architecture and https://github.com/AnalyticalGraphicsInc/cesium/wiki/CZML-in-Cesium.
+* Added a new application, Cesium Viewer, for viewing CZML files and otherwise exploring the globe.
+* Added a new Widgets directory, to contain common re-usable Cesium related controls.
+* Added a new Timeline control to the widgets directory.
+* Added a new DojoWidgets directory, to contain dojo-specific widgets.
+* Added new Timeline and Cesium dojo widgets.
 
 ### b6a - 06/20/2012
 

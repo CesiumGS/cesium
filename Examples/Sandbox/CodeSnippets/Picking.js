@@ -71,7 +71,7 @@
                 });
                 primitives.add(billboards);
             };
-            image.src = 'Images/logoColor.png';
+            image.src = 'Images/Cesium_Logo_overlay.png';
         };
 
         this.clear = function () {
@@ -166,7 +166,7 @@
                 billboard.highlighted = true;
                 primitives.add(billboards);
             };
-            image.src = 'Images/logoColor.png';
+            image.src = 'Images/Cesium_Logo_overlay.png';
         };
 
         this.clear = function () {

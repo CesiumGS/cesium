@@ -16,7 +16,7 @@ define(['./Cartesian3', './DeveloperError'], function(Cartesian3, DeveloperError
      */
     var Ray = function(origin, direction) {
         if (typeof origin === 'undefined') {
-            throw new DeveloperException('origin is required');
+            throw new DeveloperError('origin is required');
         }
 
         if (typeof direction === 'undefined') {

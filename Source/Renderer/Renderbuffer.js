@@ -10,7 +10,7 @@ define([
     /**
      * DOC_TBA
      *
-     * @name Renderbuffer
+     * @alias Renderbuffer
      * @internalConstructor
      *
      * @see Context#createRenderbuffer

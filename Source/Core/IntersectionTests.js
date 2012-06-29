@@ -74,7 +74,7 @@ define([
                 throw new DeveloperError('ray is required.');
             }
 
-            if (typeof ellipsoid == 'undefined') {
+            if (typeof ellipsoid === 'undefined') {
                 throw new DeveloperError('ellipsoid is required.');
             }
 
