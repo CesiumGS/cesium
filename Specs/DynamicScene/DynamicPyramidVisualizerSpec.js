@@ -2,8 +2,8 @@
 defineSuite([
              'DynamicScene/DynamicPyramidVisualizer',
              'Core/Matrix4',
-             '../Specs/createContext',
-             '../Specs/destroyContext',
+             '../Specs/createScene',
+             '../Specs/destroyScene',
              '../Specs/MockProperty',
              'DynamicScene/DynamicPyramid',
              'DynamicScene/DynamicObjectCollection',
@@ -18,8 +18,8 @@ defineSuite([
             ], function(
               DynamicPyramidVisualizer,
               Matrix4,
-              createContext,
-              destroyContext,
+              createScene,
+              destroyScene,
               MockProperty,
               DynamicPyramid,
               DynamicObjectCollection,
@@ -34,19 +34,16 @@ defineSuite([
     "use strict";
     /*global it,expect,beforeEach,afterEach,waitsFor,runs*/
 
-    var context;
     var scene;
     var visualizer;
 
     beforeEach(function() {
-        context = createContext();
-        scene = new Scene(context.getCanvas());
+        scene = createScene();
     });
 
     afterEach(function() {
         visualizer = visualizer && visualizer.destroy();
-        scene = scene && scene.destroy();
-        destroyContext(context);
+        destroyScene(scene);
     });
 
     it('constructor throws if no scene is passed.', function() {

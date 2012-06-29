@@ -131,7 +131,7 @@ defineSuite([
     it('rayEllipsoid inside intersection', function() {
         var unitSphere = Ellipsoid.UNIT_SPHERE;
 
-        var ray = new Ray(Cartesian3.ZERO, new Cartesian3(0.0, 0.0, 1.0))
+        var ray = new Ray(Cartesian3.ZERO, new Cartesian3(0.0, 0.0, 1.0));
         var intersections = IntersectionTests.rayEllipsoid(ray, unitSphere);
         expect(intersections.start).toEqualEpsilon(0.0, CesiumMath.EPSILON14);
         expect(intersections.stop).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
