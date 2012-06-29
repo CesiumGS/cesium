@@ -4,7 +4,7 @@
 	<?js
             var self = this;
 			names.forEach(function(name, i) { ?>
-		<span class="param-type"><?js= self.htmlsafe(name) ?></span> <?js if (i < names.length-1) { ?>|<?js } ?>
+		<span class="param-type"><?js= self.linkto(name, self.htmlsafe(name)) ?></span> <?js if (i < names.length-1) { ?>|<?js } ?>
 		<?js }); ?>
 		<?js } } ?> <?js= description ?>
 </div>
