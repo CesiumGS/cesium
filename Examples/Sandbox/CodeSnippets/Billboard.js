@@ -15,14 +15,14 @@
                 });
                 primitives.add(billboards);
             };
-            image.src = 'Images/logoColor.png';
+            image.src = 'Images/Cesium_Logo_overlay.png';
         };
     };
 
     Sandbox.SeveralBillboards = function (scene, ellipsoid, primitives) {
         this.code = function () {
             Cesium.Chain.run(
-                Cesium.Jobs.downloadImage('Images/logoColor.png'),
+                Cesium.Jobs.downloadImage('Images/Cesium_Logo_overlay.png'),
                 Cesium.Jobs.downloadImage('Images/facility.gif')).thenRun(
             function () {
                 // Once both images are downloaded, they are combined into one image,
@@ -31,7 +31,7 @@
                 // references an image in the texture atlas.
 
                 var billboards = new Cesium.BillboardCollection(undefined);
-                var images = [this.images['Images/logoColor.png'],
+                var images = [this.images['Images/Cesium_Logo_overlay.png'],
                               this.images['Images/facility.gif']];
                 var textureAtlas = scene.getContext().createTextureAtlas({images : images});
                 billboards.setTextureAtlas(textureAtlas);
@@ -214,7 +214,7 @@
                 });
                 primitives.add(billboards);
             };
-            image.src = 'Images/logoColor.png';
+            image.src = 'Images/Cesium_Logo_overlay.png';
         };
     };
 
@@ -238,7 +238,7 @@
 
                 primitives.add(billboards);
             };
-            image.src = 'Images/logoColor.png';
+            image.src = 'Images/Cesium_Logo_overlay.png';
         };
     };
 

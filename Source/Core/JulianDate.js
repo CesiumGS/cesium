@@ -445,11 +445,11 @@ function(DeveloperError,
 
         //Now create the JulianDate components from the Gregorian date and actually create our instance.
         var components = computeJulianDateComponents(year, month, day, hours, minutes, seconds, milliseconds);
-        var result = new JulianDate(components[0], components[1], TimeStandard.UTC);
+        var result = TimeStandard.convertUtcToTai(new JulianDate(components[0], components[1], TimeStandard.UTC));
 
         //If we were on a leap second, add it back.
         if (isLeapSecond) {
-            result = TimeStandard.convertUtcToTai(result).addSeconds(1);
+            result = result.addSeconds(1);
         }
 
         return result;

@@ -163,7 +163,7 @@ define([
             granularity = granularity || CesiumMath.toRadians(1.0);
 
             if (granularity <= 0.0) {
-                throw new DeveloperError('granularity must be greater than zero.', 'granularity');
+                throw new DeveloperError('granularity must be greater than zero.');
             }
 
             if (semiMajorAxis < semiMinorAxis) {

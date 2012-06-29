@@ -1,5 +1,8 @@
 /*global define*/
-define(['./Cartesian2'], function(Cartesian2) {
+define([
+        './Cartesian2'
+       ], function(
+         Cartesian2) {
     "use strict";
 
     /**
@@ -51,13 +54,43 @@ define(['./Cartesian2'], function(Cartesian2) {
     };
 
     /**
-     * Returns a duplicate of a Cartesian3.
+     * Converts the provided Spherical into Cartesian3 coordinates.
+     * @memberof Cartesian3
      *
-     * @param {Cartesian3} cartesian The cartesian to clone.
-     * @return {Cartesian3} A new Cartesian3 instance.
+     * @param {Spherical} spherical The Spherical to be converted to Cartesian3.
+     * @param {Cartesian3} [cartesian3] The object in which the result will be stored, if undefined a new instance will be created.
+     * @returns The modified result parameter, or a new instance if none was provided.
      */
-    Cartesian3.clone = function(cartesian) {
-        return new Cartesian3(cartesian.x, cartesian.y, cartesian.z);
+    Cartesian3.fromSpherical = function(spherical, result) {
+        if (typeof result === 'undefined') {
+            result = new Cartesian3();
+        }
+        var clock = spherical.clock;
+        var cone = spherical.cone;
+        var magnitude = spherical.magnitude;
+        var radial = magnitude * Math.sin(cone);
+        result.x = radial * Math.cos(clock);
+        result.y = radial * Math.sin(clock);
+        result.z = magnitude * Math.cos(cone);
+        return result;
+    };
+
+    /**
+     * Returns a duplicate of a Cartesian3.
+     * @memberof Cartesian3
+     *
+     * @param {Cartesian3} cartesian The Cartesian to clone.
+     * @param {Cartesian} [result] The object to store the result in, if undefined a new instance will be created.
+     * @return {Cartesian3} The modified result parameter or a new instance if result was undefined.
+     */
+    Cartesian3.clone = function(cartesian, result) {
+        if (typeof result === 'undefined') {
+            return new Cartesian3(cartesian.x, cartesian.y, cartesian.z);
+        }
+        result.x = cartesian.x;
+        result.y = cartesian.y;
+        result.z = cartesian.z;
+        return result;
     };
 
     /**
@@ -143,13 +176,24 @@ define(['./Cartesian2'], function(Cartesian2) {
 
     /**
      * Returns this Cartesian normalized.
-     *
      * @memberof Cartesian3
-     * @return {Cartesian3} The normalized Cartesian.
+     *
+     * @param {Cartesian} [result] The object to store the result in, if undefined a new instance will be created.
+     * @return {Cartesian3} The modified result parameter or a new instance if result was undefined.
      */
-    Cartesian3.prototype.normalize = function() {
+    Cartesian3.prototype.normalize = function(result) {
+        if (typeof result === 'undefined') {
+            result = new Cartesian3();
+        }
         var magnitude = this.magnitude();
-        return new Cartesian3(this.x / magnitude, this.y / magnitude, this.z / magnitude);
+        if (magnitude > 0) {
+            result.x = this.x / magnitude;
+            result.y = this.y / magnitude;
+            result.z = this.z / magnitude;
+        } else {
+            result.x = result.y = result.z = 0;
+        }
+        return result;
     };
 
     /**
@@ -361,23 +405,24 @@ define(['./Cartesian2'], function(Cartesian2) {
 
     /**
      * Returns a duplicate of a Cartesian3 instance.
-     *
      * @memberof Cartesian3
-     * @return {Cartesian3} A new copy of the Cartesian3 instance received as an argument.
+     *
+     * @param {Cartesian} [result] The object to store the result in, if undefined a new instance will be created.
+     * @return {Cartesian3} The modified result parameter or a new instance if result was undefined.
      */
-    Cartesian3.prototype.clone = function() {
-        return new Cartesian3(this.x, this.y, this.z);
+    Cartesian3.prototype.clone = function(result) {
+        return Cartesian3.clone(this, result);
     };
 
     /**
      * Returns true if this Cartesian equals other componentwise.
-     *
      * @memberof Cartesian3
+     *
      * @param {Cartesian3} other The Cartesian to compare for equality.
      * @return {Boolean} <code>true</code> if the Cartesians are equal componentwise; otherwise, <code>false</code>.
      */
     Cartesian3.prototype.equals = function(other) {
-        return (this.x === other.x) && (this.y === other.y) && (this.z === other.z);
+        return (typeof other !== 'undefined') && (this.x === other.x) && (this.y === other.y) && (this.z === other.z);
     };
 
     /**
@@ -392,7 +437,8 @@ define(['./Cartesian2'], function(Cartesian2) {
      */
     Cartesian3.prototype.equalsEpsilon = function(other, epsilon) {
         epsilon = epsilon || 0.0;
-        return (Math.abs(this.x - other.x) <= epsilon) &&
+        return (typeof other !== 'undefined') &&
+               (Math.abs(this.x - other.x) <= epsilon) &&
                (Math.abs(this.y - other.y) <= epsilon) &&
                (Math.abs(this.z - other.z) <= epsilon);
     };
