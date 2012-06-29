@@ -34,7 +34,6 @@ define([
 
         this._spindleController = new CameraSpindleController(canvas, camera, ellipsoid);
         this._freeLookController = new CameraFreeLookController(canvas, camera);
-        this._freeLookController.horizontalRotationAxis = Cartesian3.UNIT_Z;
 
         this._rotateHandler = new CameraEventHandler(canvas, CameraEventType.MIDDLE_DRAG);
 
