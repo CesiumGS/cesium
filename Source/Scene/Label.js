@@ -198,10 +198,9 @@ define([
 
     /**
      * DOC_TBA
+     * CSS font-family
      *
      * @memberof Label
-     *
-     * CSS font-family
      *
      * @see Label#getFont
      * @see Label#setFillColor
