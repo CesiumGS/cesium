@@ -8,7 +8,7 @@ defineSuite([
     /*global it,expect*/
     it('should produce correct results', function() {
         var xTable = [2.0, 4.0];
-        var yTable = [2.0, 3.0, 4.0, 34.0, ];
+        var yTable = [2.0, 3.0, 4.0, 34.0];
 
         var results = LinearApproximation.interpolateOrderZero(3.0, xTable, yTable, 2);
 

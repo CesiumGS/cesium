@@ -29,7 +29,8 @@ define(function() {
          * @param {Object} czmlInterval The CZML interval to unwrap.
          */
         unwrapInterval : function(czmlInterval) {
-            var result = czmlInterval.boolean;
+            /*jshint sub:true*/
+            var result = czmlInterval['boolean']; // boolean is a JS reserved word
             return typeof result === 'undefined' ? czmlInterval : result;
         },
 

@@ -4,15 +4,15 @@ defineSuite([
              'Core/JulianDate',
              'DynamicScene/CzmlDefaults',
              'Scene/Scene',
-             '../Specs/createContext',
-             '../Specs/destroyContext'
+             '../Specs/createScene',
+             '../Specs/destroyScene'
             ], function(
               VisualizerCollection,
               JulianDate,
               CzmlDefaults,
               Scene,
-              createContext,
-              destroyContext) {
+              createScene,
+              destroyScene) {
     "use strict";
     /*global it,expect*/
 
@@ -59,8 +59,7 @@ defineSuite([
     });
 
     it('createCzmlStandardCollection uses CzmlDefaults', function() {
-        var context = createContext();
-        var scene = new Scene(context.getCanvas());
+        var scene = createScene();
         var visualizers = VisualizerCollection.createCzmlStandardCollection(scene);
         var expected = CzmlDefaults.createVisualizers(scene);
 
@@ -72,8 +71,7 @@ defineSuite([
         }
 
         visualizers = visualizers && visualizers.destroy();
-        scene = scene && scene.destroy();
-        destroyContext(context);
+        destroyScene(scene);
     });
 
     it('createCzmlStandardCollection throws without a scene', function() {

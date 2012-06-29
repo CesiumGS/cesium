@@ -165,7 +165,7 @@ define([
             }
 
             return result.normalize(tmpQuaternion.multiply(quaternion0, result));
-        },
+        }
     };
 
     return CzmlUnitQuaternion;

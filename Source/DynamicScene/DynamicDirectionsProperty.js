@@ -5,7 +5,7 @@ define([
         '../Core/TimeIntervalCollection',
         '../Core/Cartesian3',
         '../Core/Spherical',
-        '../Core/Iso8601',
+        '../Core/Iso8601'
     ], function(
         JulianDate,
         TimeInterval,

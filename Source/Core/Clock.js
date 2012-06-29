@@ -105,7 +105,7 @@ define([
          * The current time.
          * @type JulianDate
          */
-        this.currentTime = currentTime;
+        this.currentTime = TimeStandard.convertUtcToTai(currentTime);
 
         /**
          * Determines how much time advances when tick is called, negative values allow for advancing backwards.

@@ -1,10 +1,10 @@
 /*global define*/
-define(function() {
+define(['../Specs/destroyCanvas'], function(destroyCanvas) {
     "use strict";
 
     function destroyContext(context) {
         if (context) {
-            document.body.removeChild(context.getCanvas());
+            destroyCanvas(context.getCanvas());
             context = context.destroy();
         }
     }
