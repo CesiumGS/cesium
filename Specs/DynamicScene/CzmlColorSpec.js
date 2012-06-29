@@ -1,7 +1,7 @@
 /*global defineSuite*/
 defineSuite([
              'DynamicScene/CzmlColor',
-             'Core/Color',
+             'Core/Color'
             ], function(
               CzmlColor,
               Color) {

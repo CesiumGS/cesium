@@ -13,7 +13,7 @@ defineSuite([
              'Core/Quaternion',
              'Core/Cartesian3',
              'Core/Color',
-             'Scene/Scene',
+             'Scene/Scene'
             ], function(
               DynamicConeVisualizerUsingCustomSensor,
               Matrix4,

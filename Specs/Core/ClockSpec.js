@@ -300,7 +300,7 @@ defineSuite([
         expect(function() {
             return new Clock({
                 startTime : start,
-                stopTime : stop,
+                stopTime : stop
             });
         }).toThrow();
     });

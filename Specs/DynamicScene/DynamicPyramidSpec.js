@@ -36,7 +36,7 @@ defineSuite([
                 },
                 intersectionColor : {
                     rgbaf : [0.5, 0.5, 0.5, 0.5]
-                },
+                }
             }
         };
 
@@ -73,7 +73,7 @@ defineSuite([
                 },
                 intersectionColor : {
                     rgbaf : [0.5, 0.5, 0.5, 0.5]
-                },
+                }
             }
         };
 

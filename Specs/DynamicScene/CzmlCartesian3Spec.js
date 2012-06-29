@@ -1,7 +1,7 @@
 /*global defineSuite*/
 defineSuite([
              'DynamicScene/CzmlCartesian3',
-             'Core/Cartesian3',
+             'Core/Cartesian3'
             ], function(
               CzmlCartesian3,
               Cartesian3) {

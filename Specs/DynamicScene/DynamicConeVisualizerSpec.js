@@ -13,7 +13,7 @@ defineSuite([
              'Core/Cartesian3',
              'Core/Color',
              'Core/Matrix4',
-             'Scene/Scene',
+             'Scene/Scene'
             ], function(
               DynamicConeVisualizer,
               createContext,

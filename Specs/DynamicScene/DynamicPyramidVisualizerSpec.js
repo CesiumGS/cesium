@@ -14,7 +14,7 @@ defineSuite([
              'Core/Cartesian3',
              'Core/Spherical',
              'Core/Color',
-             'Scene/Scene',
+             'Scene/Scene'
             ], function(
               DynamicPyramidVisualizer,
               Matrix4,

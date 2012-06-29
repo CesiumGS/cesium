@@ -4,7 +4,7 @@ define([
         './CzmlString',
         './CzmlNumber',
         '../Scene/DiffuseMapMaterial',
-        '../Renderer/PixelFormat',
+        '../Renderer/PixelFormat'
     ], function(
          DynamicProperty,
          CzmlString,
