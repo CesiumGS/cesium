@@ -1,8 +1,8 @@
 /*global defineSuite*/
 defineSuite([
              'DynamicScene/DynamicPointVisualizer',
-             '../Specs/createContext',
-             '../Specs/destroyContext',
+             '../Specs/createScene',
+             '../Specs/destroyScene',
              '../Specs/MockProperty',
              'DynamicScene/DynamicPoint',
              'DynamicScene/DynamicObjectCollection',
@@ -14,8 +14,8 @@ defineSuite([
              'Scene/BillboardCollection'
             ], function(
               DynamicPointVisualizer,
-              createContext,
-              destroyContext,
+              createScene,
+              destroyScene,
               MockProperty,
               DynamicPoint,
               DynamicObjectCollection,
@@ -28,19 +28,16 @@ defineSuite([
     "use strict";
     /*global it,expect,beforeEach,afterEach,waitsFor,runs*/
 
-    var context;
     var scene;
     var visualizer;
 
     beforeEach(function() {
-        context = createContext();
-        scene = new Scene(context.getCanvas());
+        scene = createScene();
     });
 
     afterEach(function() {
         visualizer = visualizer && visualizer.destroy();
-        scene = scene && scene.destroy();
-        destroyContext(context);
+        destroyScene(scene);
     });
 
     it('constructor throws if no scene is passed.', function() {

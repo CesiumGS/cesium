@@ -1,6 +1,6 @@
 /*global define*/
 define([
-        'Core/binarySearch',
+        'Core/binarySearch'
        ], function(binarySearch) {
     "use strict";
 

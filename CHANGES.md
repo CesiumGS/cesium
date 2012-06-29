@@ -26,6 +26,7 @@ Beta Releases
    * `Camera.getPickRay` now returns the new `Ray` type instead of an object with position and direction properties.
 
 * Added `addImage` to `TextureAtlas` so images can be added to a texture atlas after it is constructed.
+* Added `Scene.pickEllipsoid`, which picks either the ellipsoid or the map depending on the current `SceneMode`.
 * Added `Event`, a new utility class which makes it easy for objects to expose event properties.
 * Added `TextureAtlasBuilder`,a new utility class which makes it easy to build a TextureAtlas asynchronously.
 * Added 'Clock', a simple clock for keeping track of simulated time.
@@ -38,7 +39,6 @@ Beta Releases
 * Added a new Timeline control to the widgets directory.
 * Added a new DojoWidgets directory, to contain dojo-specific widgets.
 * Added new Timeline and Cesium dojo widgets.
-* Added `Scene.pickEllipsoid`, which picks either the ellipsoid or the map depending on the current `SceneMode`.
 
 ### b6a - 06/20/2012
 

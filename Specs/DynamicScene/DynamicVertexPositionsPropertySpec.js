@@ -17,15 +17,15 @@ defineSuite([
     /*global it,expect*/
 
     var cartographicRadiansInterval = {
-        cartographicRadians : [1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, ]
+        cartographicRadians : [1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9]
     };
 
     var cartographicDegreesInterval = {
-        cartographicDegrees : [10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7, 10.8, 10.9, ]
+        cartographicDegrees : [10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7, 10.8, 10.9]
     };
 
     var cartesianInterval = {
-        cartesian : [10000, 10002, 10003, 10004, 10005, 10006, 10007, 10008, 10009, ]
+        cartesian : [10000, 10002, 10003, 10004, 10005, 10006, 10007, 10008, 10009]
     };
 
     var testObjects = [{

@@ -34,7 +34,7 @@ defineSuite([
         'id' : 'testBillboard',
         'billboard' : {
             'show' : true,
-            'horizontalOrigin' : 'CENTER',
+            'horizontalOrigin' : 'CENTER'
         }
     };
 
@@ -42,7 +42,7 @@ defineSuite([
         'id' : 'testBillboard',
         'billboard' : {
             'rotation' : 2.0,
-            'scale' : 3.0,
+            'scale' : 3.0
         }
     };
 
@@ -165,7 +165,7 @@ defineSuite([
             'id' : 'testBillboard',
             'billboard' : {
                 'show' : true,
-                'horizontalOrigin' : 'CENTER',
+                'horizontalOrigin' : 'CENTER'
             }
         };
         processCzml(czml3, dynamicObjectCollection1);
@@ -185,7 +185,7 @@ defineSuite([
             'id' : 'testBillboard',
             'billboard' : {
                 'horizontalOrigin' : 'TOP',
-                'scale' : 3.0,
+                'scale' : 3.0
             }
         };
         processCzml(czml4, dynamicObjectCollection2);

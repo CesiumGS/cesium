@@ -8,9 +8,6 @@ require({
         name : 'dijit',
         location : 'ThirdParty/dojo-release-1.7.2-src/dijit'
     }, {
-        name : 'dojox',
-        location : 'ThirdParty/dojo-release-1.7.2-src/dojox'
-    }, {
         name : 'Core',
         location : 'Source/Core'
     }, {
@@ -57,6 +54,7 @@ require({
     domClass,
     win) {
     "use strict";
+
     checkForChromeFrame();
     parser.parse();
     domClass.remove(win.body(), 'loading');
