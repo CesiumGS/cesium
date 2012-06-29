@@ -68,15 +68,15 @@ require({
 
                 var insetElement = dom.byId('buttons_' + i);
 
-                var editButton = document.createElement('a');
-                editButton.tabIndex = i * 3 + 2;
-                editButton.className = 'linkButton';
-                editButton.href = 'Sandcastle.html?src=' + window.encodeURIComponent(gallery_demos[i].name) + '.html';
-                insetElement.appendChild(editButton);
+                var codeButton = document.createElement('a');
+                codeButton.tabIndex = i * 3 + 2;
+                codeButton.className = 'linkButton';
+                codeButton.href = 'Sandcastle.html?src=' + window.encodeURIComponent(gallery_demos[i].name) + '.html';
+                insetElement.appendChild(codeButton);
 
                 new LinkButton({
-                    'label': '<span class="dijitReset dijitInline dijitIcon dijitIconEdit"></span> Edit'
-                }).placeAt(editButton);
+                    'label': '<span class="dijitReset dijitInline dijitIcon dijitIconEdit"></span> Code'
+                }).placeAt(codeButton);
 
                 var runButton = document.createElement('a');
                 runButton.tabIndex = i * 3 + 3;

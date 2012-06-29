@@ -58,7 +58,7 @@ a.linkButton:focus, a.linkButton:hover {
     display: block;
     position: absolute;
     top: 110px;
-    left: 40px;
+    left: 34px;
     background: rgba(255, 255, 255, 0.8);
     border-radius: 7px;
     padding: 5px;
