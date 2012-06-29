@@ -532,7 +532,7 @@ define([
                         uniformMap : this._pickUniforms,
                         vertexArray : this._vaPickColor,
                         renderState : obj.rsPick,
-                        framebufer: framebuffer
+                        framebuffer: framebuffer
                     });
                 }
             }
@@ -540,7 +540,10 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Commits changes to properties before rendering by updating the object's WebGL resources.
+     * This must be called before calling {@link PolylineCollection#render} in order to realize
+     * changes to PolylineCollection positions and properties.
+     *
      *
      * @memberof PolylineCollection
      *
@@ -628,13 +631,12 @@ define([
                     polyline._clean();
                 }
             }
-            for ( var k = 0; k < NUMBER_OF_PROPERTIES; ++k) {
-                properties[k] = 0;
-            }
             polylinesToUpdate.length = 0;
             this._polylinesUpdated = false;
         }
-
+        for ( var k = 0; k < NUMBER_OF_PROPERTIES; ++k) {
+            properties[k] = 0;
+        }
     };
 
     /**
@@ -650,7 +652,8 @@ define([
             var obj = polylines[x];
             var rs = obj.rsPick || context.createRenderState();
             rs.depthTest.enabled = useDepthTest;
-            rs.lineWidth = obj.outlineWidth;
+            rs.lineWidth = obj.width;
+            rs.depthMask = !useDepthTest;
             obj.rsPick = rs;
         }
     };
@@ -751,6 +754,7 @@ define([
                         indices.push(index + j + 1);
                     }
                 }
+                polyline._clean();
                 index += posLength;
                 offset += obj.count;
             }
@@ -955,28 +959,6 @@ define([
     /**
      * @private
      */
-    PolylineCollection.prototype._createIndexBuffer = function(context, polylines) {
-        var polylineIndices = [];
-        var length = polylines.length;
-        var index = 0;
-        for(var i = 0; i < length; ++i){
-            var posLength = polylines[i].getPositions().length;
-            for(var j = 0; j < posLength - 1; ++j){
-                polylineIndices.push(index++);
-                polylineIndices.push(index);
-            }
-            index++;
-        }
-
-        var indices = new Uint16Array(polylineIndices);
-        var buffer = context.createIndexBuffer(indices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
-        buffer.setVertexArrayDestroyable(false);
-        return buffer;
-    };
-
-    /**
-     * @private
-     */
     PolylineCollection.prototype._destroyPolylines = function() {
         var polylines = this._polylines;
         for(var x in polylines){
@@ -1000,7 +982,6 @@ define([
         this.outlineWidth = outlineWidth;
         this.numberOfPositions = 0;
         this.polylines = [];
-        this.vaf = undefined;
         this.rsOne = undefined;
         this.rsTwo = undefined;
         this.rsThree = undefined;

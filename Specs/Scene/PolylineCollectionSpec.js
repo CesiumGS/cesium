@@ -629,4 +629,323 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([0, 0, 255, 255]);
     });
 
+    it('renders using polyline positions property', function() {
+        var p = polylines.add({
+            positions : [{
+                x : 0.0,
+                y : -1.0,
+                z : 0.0
+            },
+            {
+                x : 0.0,
+                y : 1.0,
+                z : 0.0
+            }]
+        });
+
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
+
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        p.setPositions([{
+            x : -2.0,
+            y : -1.0,
+            z : 0.0
+        },
+        {
+            x : -2.0,
+            y : 1.0,
+            z : 0.0
+        }]); // Behind viewer
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        p.setPositions([{
+            x : 0.0,
+            y : -1.0,
+            z : 0.0
+        },
+        {
+            x : 0.0,
+            y : 1.0,
+            z : 0.0
+        }]); // Back in front of viewer
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
+    });
+
+    it('renders using polyline color property', function() {
+        var p = polylines.add({
+            positions : [{
+                x : 0.0,
+                y : -1.0,
+                z : 0.0
+            },
+            {
+                x : 0.0,
+                y : 1.0,
+                z : 0.0
+            }]
+        });
+
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
+
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        p.setColor({
+            red : 1.0,
+            green : 0.0,
+            blue : 1.0,
+            alpha : 1.0
+        });
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([255, 0, 255, 255]);
+
+        // Update a second time since it goes through a different vertex array update path
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        p.setColor({
+            red : 0.0,
+            green : 1.0,
+            blue : 0.0,
+            alpha : 1.0
+        });
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([0, 255, 0, 255]);
+    });
+
+    it('renders using polyline outlineColor property', function() {
+        var p = polylines.add({
+            positions : [{
+                x : 0.0,
+                y : -1.0,
+                z : 0.0
+            },
+            {
+                x : 0.0,
+                y : 1.0,
+                z : 0.0
+            }],
+            outlineWidth:2
+        });
+
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
+
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        p.setOutlineColor({
+            red : 1.0,
+            green : 0.0,
+            blue : 1.0,
+            alpha : 1.0
+        });
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
+
+        // Update a second time since it goes through a different vertex array update path
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        p.setOutlineColor({
+            red : 0.0,
+            green : 1.0,
+            blue : 0.0,
+            alpha : 1.0
+        });
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
+    });
+
+    it('changes polyline width property', function() {
+        var p1 = polylines.add({
+            positions : [{
+                x : 0.0,
+                y : -1.0,
+                z : 0.0
+            },
+            {
+                x : 0.0,
+                y : 1.0,
+                z : 0.0
+            }]
+        });
+        var p2 = polylines.add({
+            positions : [{
+                x : 0.0,
+                y : -1.0,
+                z : 0.0
+            },
+            {
+                x : 0.0,
+                y : 1.0,
+                z : 0.0
+            }]
+        });
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
+
+        p1.setWidth(2);
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
+
+        p2.setWidth(2);
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
+
+        p1.setWidth(1);
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
+
+    });
+
+    it('changes polyline outlinewidth property', function() {
+        var p1 = polylines.add({
+            positions : [{
+                x : 0.0,
+                y : -1.0,
+                z : 0.0
+            },
+            {
+                x : 0.0,
+                y : 1.0,
+                z : 0.0
+            }]
+        });
+        var p2 = polylines.add({
+            positions : [{
+                x : 0.0,
+                y : -1.0,
+                z : 0.0
+            },
+            {
+                x : 0.0,
+                y : 1.0,
+                z : 0.0
+            }]
+        });
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
+
+        p1.setOutlineWidth(2);
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
+
+        p2.setOutlineWidth(2);
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
+
+        p1.setOutlineWidth(1);
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
+
+    });
+
+    it('is picked', function() {
+        var p = polylines.add({
+            positions : [{
+                x : 0.0,
+                y : -1.0,
+                z : 0.0
+            },
+            {
+                x : 0.0,
+                y : 1.0,
+                z : 0.0
+            }]
+        });
+
+        polylines.update(context, sceneState);
+
+        var pickedObject = pick(context, polylines, 0, 0);
+        expect(pickedObject).toEqual(p);
+    });
+
+    it('is not picked', function() {
+        polylines.add({
+            positions : [{
+                x : -1.0,
+                y : -1.0,
+                z : 0.0
+            },
+            {
+                x : -1.0,
+                y : 1.0,
+                z : 0.0
+            }]
+        });
+
+        polylines.update(context, sceneState);
+
+        var pickedObject = pick(context, polylines, 0, 0);
+        expect(pickedObject).not.toBeDefined();
+    });
+
+    it('does not equal null', function() {
+        var p = polylines.add({});
+        expect(p.equals(null)).toBeFalsy();
+    });
+
+    it('throws when setting positions with a null value', function() {
+        expect(function() {
+            var p = polylines.add({
+                positions : [{
+                    x : 0.0,
+                    y : -1.0,
+                    z : 0.0
+                },
+                {
+                    x : 0.0,
+                    y : 1.0,
+                    z : 0.0
+                }]
+            });
+            p.setPositions(null);
+        }).toThrow();
+    });
+
+    it('throws when accessing without an index', function() {
+        expect(function() {
+            polylines.get();
+        }).toThrow();
+    });
+
 });

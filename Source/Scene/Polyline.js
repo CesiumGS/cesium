@@ -152,6 +152,7 @@ define([
      *
      * @memberof Polyline
      *
+     * @exception {DeveloperError} value must not be undefined.
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      * @see Polyline#getPositions
@@ -164,8 +165,8 @@ define([
      * );
      */
     Polyline.prototype.setPositions = function(value) {
-        if (typeof value === 'undefined' || value.length < 2) {
-            throw new DeveloperError('value must be an array with more than one element.', 'value');
+        if (typeof value === 'undefined') {
+            throw new DeveloperError('value must not be undefined.', 'value');
         }
         if(this._positions.length !== value.length){
             this._makeDirty(POSITION_SIZE_INDEX);
@@ -343,8 +344,8 @@ define([
     };
 
     Polyline.prototype._makeDirty = function(propertyChanged) {
+        ++this._propertiesChanged[propertyChanged];
         if (!this._dirty) {
-            ++this._propertiesChanged[propertyChanged];
             var c = this._collection;
             if (c) {
                 c._updatePolyline(propertyChanged, this);
