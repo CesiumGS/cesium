@@ -28,7 +28,7 @@ function(
      * @see Polyline
      * @see CzmlDefaults
      */
-    function DynamicPolyline() {
+    var DynamicPolyline = function() {
         /**
          * A DynamicProperty of type CzmlColor which determines the line's color.
          */
@@ -49,7 +49,7 @@ function(
          * A DynamicProperty of type CzmlNumber which determines the line's width.
          */
         this.width = undefined;
-    }
+    };
 
     /**
      * Processes a single CZML packet and merges its data into the provided DynamicObject's polyline.

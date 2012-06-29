@@ -41,7 +41,7 @@ define([
      * @see DynamicPyramidVisualizer
      *
      */
-    function DynamicPointVisualizer(scene, dynamicObjectCollection) {
+    var DynamicPointVisualizer = function(scene, dynamicObjectCollection) {
         if (typeof scene === 'undefined') {
             throw new DeveloperError('scene is required.');
         }
@@ -54,7 +54,7 @@ define([
         billboardCollection.setTextureAtlas(atlas);
         scene.getPrimitives().add(billboardCollection);
         this.setDynamicObjectCollection(dynamicObjectCollection);
-    }
+    };
 
     /**
      * Returns the scene being used by this visualizer.
@@ -295,16 +295,7 @@ define([
                 context2D.fillStyle = cssColor;
                 context2D.fill();
 
-                var imageData = context2D.getImageData(0, 0, canvas.width, canvas.height);
-                var pixels = imageData.data;
-                var limit = canvas.width * canvas.height * 4;
-                for ( var i = 3; i < limit; i += 4) {
-                    if (pixels[i] < 200) {
-                        pixels[i] = 0;
-                    }
-                }
-
-                loadedCallback(imageData);
+                loadedCallback(canvas);
             }, function(imageIndex) {
                 billboard.setImageIndex(imageIndex);
             });

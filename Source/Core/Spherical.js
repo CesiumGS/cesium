@@ -12,11 +12,11 @@ define(function() {
      * @param {Number} [cone=0.0] The angular coordinate measured from the positive z-axis and toward the negative z-axis.
      * @param {Number} [magnitude=1.0] The linear coordinate measured from the origin.
      */
-    function Spherical(clock, cone, magnitude) {
+    var Spherical = function(clock, cone, magnitude) {
         this.clock = typeof clock === 'undefined' ? 0.0 : clock;
         this.cone = typeof cone === 'undefined' ? 0.0 : cone;
         this.magnitude = typeof magnitude === 'undefined' ? 1.0 : magnitude;
-    }
+    };
 
     /**
      * Converts the provided Cartesian3 into Spherical coordinates.

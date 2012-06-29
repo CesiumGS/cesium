@@ -43,7 +43,7 @@ define([
      * @see DynamicPolylineVisualizer
      *
      */
-    function DynamicPyramidVisualizer(scene, dynamicObjectCollection) {
+    var DynamicPyramidVisualizer = function(scene, dynamicObjectCollection) {
         if (typeof scene === 'undefined') {
             throw new DeveloperError('scene is required.');
         }
@@ -53,7 +53,7 @@ define([
         this._pyramidCollection = [];
         this._dynamicObjectCollection = undefined;
         this.setDynamicObjectCollection(dynamicObjectCollection);
-    }
+    };
 
     /**
      * Returns the scene being used by this visualizer.

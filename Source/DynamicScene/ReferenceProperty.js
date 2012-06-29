@@ -42,7 +42,7 @@ define([
      * @see DynamicObjectCollection
      * @see CompositeDynamicObjectCollection
      */
-    function ReferenceProperty(dynamicObjectCollection, targetObjectId, targetPropertyName) {
+    var ReferenceProperty = function(dynamicObjectCollection, targetObjectId, targetPropertyName) {
         if (typeof dynamicObjectCollection === 'undefined') {
             throw new DeveloperError('dynamicObjectCollection is required.');
         }
@@ -57,7 +57,7 @@ define([
         this._dynamicObjectCollection = dynamicObjectCollection;
         this._targetObjectId = targetObjectId;
         this._targetPropertyName = targetPropertyName;
-    }
+    };
 
     /**
      * Creates a new reference property given the dynamic object collection that will

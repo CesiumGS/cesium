@@ -41,7 +41,7 @@ define([
      * @see LabelCollection
      * @see CzmlDefaults
      */
-    function DynamicLabel() {
+    var DynamicLabel = function() {
         /**
          * A DynamicProperty of type CzmlString which determines the label's text.
          */
@@ -86,7 +86,7 @@ define([
          * A DynamicProperty of type CzmlBoolean which determines the label's visibility.
          */
         this.show = undefined;
-    }
+    };
 
     /**
      * Processes a single CZML packet and merges its data into the provided DynamicObject's label.

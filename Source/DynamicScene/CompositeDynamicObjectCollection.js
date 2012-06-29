@@ -36,7 +36,7 @@ define([
      * @see DynamicObject
      * @see CzmlDefaults
      */
-    function CompositeDynamicObjectCollection(collections, mergeFunctions, cleanFunctions) {
+    var CompositeDynamicObjectCollection = function(collections, mergeFunctions, cleanFunctions) {
         this._hash = {};
         this._array = [];
         this._collections = [];
@@ -62,13 +62,14 @@ define([
         this.objectsRemoved = new Event();
 
         this.setCollections(collections);
-    }
+    };
 
     /**
      * Computes the maximum availability of the DynamicObjects in the collection.
      * If the collection contains a mix of infinitely available data and non-infinite data,
      * It will return the interval pertaining to the non-infinite data only.  If all
      * data is infinite, an infinite interval will be returned.
+     * @memberof CompositeDynamicObjectCollection
      *
      * @returns {TimeInterval} The availability of DynamicObjects in the collection.
      */
@@ -98,6 +99,7 @@ define([
     /**
      * Returns a copy of the current array of collections being composited.  Changes to this
      * array will have no affect, to change which collections are being used, call setCollections.
+     * @memberof CompositeDynamicObjectCollection
      *
      * @see CompositeDynamicObjectCollection#setCollections
      */
@@ -108,6 +110,7 @@ define([
     /**
      * Sets the array of collections to be composited.  Collections are composited
      * last to first, so higher indices into the array take precedence over lower indices.
+     * @memberof CompositeDynamicObjectCollection
      *
      * @param {Array} collections The collections to be composited.
      */
@@ -155,11 +158,12 @@ define([
 
     /**
      * Gets an object with the specified id.
+     * @memberof CompositeDynamicObjectCollection
+     *
      * @param {Object} id The id of the object to retrieve.
+     * @returns The DynamicObject with the provided id, or undefined if no such object exists.
      *
      * @exception {DeveloperError} id is required.
-     *
-     * @returns The DynamicObject with the provided id, or undefined if no such object exists.
      */
     CompositeDynamicObjectCollection.prototype.getObject = function(id) {
         if (typeof id === 'undefined') {
@@ -170,6 +174,8 @@ define([
 
     /**
      * Gets the array of DynamicObject instances in this composite collection.
+     * @memberof CompositeDynamicObjectCollection
+     *
      * @returns {Array} the array of DynamicObject instances in this composite collection.
      */
     CompositeDynamicObjectCollection.prototype.getObjects = function() {
@@ -178,6 +184,7 @@ define([
 
     /**
      * Clears all collections and DynamicObjects from this collection.
+     * @memberof CompositeDynamicObjectCollection
      */
     CompositeDynamicObjectCollection.prototype.clear = function() {
         this.setCollections([]);

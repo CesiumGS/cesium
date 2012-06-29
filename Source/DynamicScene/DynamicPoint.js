@@ -29,7 +29,7 @@ define([
      * @see BillboardCollection
      * @see CzmlDefaults
      */
-    function DynamicPoint() {
+    var DynamicPoint = function() {
         /**
          * A DynamicProperty of type CzmlColor which determines the point's color.
          */
@@ -50,7 +50,7 @@ define([
          * A DynamicProperty of type CzmlBoolean which determines the point's visibility.
          */
         this.show = undefined;
-    }
+    };
 
     /**
      * Processes a single CZML packet and merges its data into the provided DynamicObject's point.

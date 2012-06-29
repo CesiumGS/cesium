@@ -46,12 +46,12 @@ define([
      * @see DynamicDirectionsProperty
      * @see DynamicVertexPositionsProperty
      */
-    function DynamicPositionProperty() {
+    var DynamicPositionProperty = function() {
         this._dynamicProperties = [];
         this._propertyIntervals = new TimeIntervalCollection();
         this._cachedTime = undefined;
         this._cachedInterval = undefined;
-    }
+    };
 
     /**
      * Processes the provided CZML interval or intervals into this property.

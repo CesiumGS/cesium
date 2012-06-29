@@ -20,11 +20,11 @@ define([
      *
      * @see CzmlDefaults#createVisualizers
      */
-    function VisualizerCollection(visualizers, dynamicObjectCollection) {
+    var VisualizerCollection = function(visualizers, dynamicObjectCollection) {
         this._visualizers = visualizers || [];
         this._dynamicObjectCollection = undefined;
         this.setDynamicObjectCollection(dynamicObjectCollection);
-    }
+    };
 
     /**
      * Creates a new VisualizerCollection which includes all standard visualizers.

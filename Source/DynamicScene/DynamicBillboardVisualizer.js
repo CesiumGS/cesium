@@ -64,7 +64,7 @@ define([
      * @see DynamicPyramidVisualizer
      *
      */
-    function DynamicBillboardVisualizer(scene, dynamicObjectCollection) {
+    var DynamicBillboardVisualizer = function(scene, dynamicObjectCollection) {
         if (typeof scene === 'undefined') {
             throw new DeveloperError('scene is required.');
         }
@@ -79,7 +79,7 @@ define([
         billboardCollection.setTextureAtlas(atlas);
         scene.getPrimitives().add(billboardCollection);
         this.setDynamicObjectCollection(dynamicObjectCollection);
-    }
+    };
 
     /**
      * Returns the scene being used by this visualizer.

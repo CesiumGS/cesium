@@ -33,9 +33,9 @@ define([
      * @see DynamicDirectionsProperty
      * @see DynamicVertexPositionsProperty
      */
-    function DynamicMaterialProperty() {
+    var DynamicMaterialProperty = function() {
         this._intervals = new TimeIntervalCollection();
-    }
+    };
 
 
     /**

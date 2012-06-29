@@ -26,7 +26,7 @@ define([
      * @see Polygon
      * @see CzmlDefaults
      */
-    function DynamicPolygon() {
+    var DynamicPolygon = function() {
         /**
          * A DynamicProperty of type CzmlBoolean which determines the polygon's visibility.
          */
@@ -35,7 +35,7 @@ define([
          * A DynamicMaterialProperty which determines the polygon's material.
          */
         this.material = undefined;
-    }
+    };
 
     /**
      * Processes a single CZML packet and merges its data into the provided DynamicObject's polygon.

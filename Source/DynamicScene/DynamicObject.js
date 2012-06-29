@@ -39,7 +39,7 @@ define([
      * @see DynamicPolyline
      * @see DynamicPyramid
      */
-    function DynamicObject(id) {
+    var DynamicObject = function(id) {
         this._cachedAvailabilityDate = undefined;
         this._cachedAvailabilityValue = undefined;
 
@@ -111,7 +111,7 @@ define([
          * The DynamicVertexPositionsProperty, if any, associated with this object.
          */
         this.vertexPositions = undefined;
-    }
+    };
 
     /**
      * Given a time, returns true if this object should have data during that time.

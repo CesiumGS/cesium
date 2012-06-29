@@ -26,13 +26,13 @@ define([
      *
      * @see TextureAtlas
      */
-    function TextureAtlasBuilder(textureAtlas) {
+    var TextureAtlasBuilder  = function(textureAtlas) {
         if (typeof textureAtlas === 'undefined') {
             throw new DeveloperError('textureAtlas is required.');
         }
         this.textureAtlas = textureAtlas;
         this._idHash = {};
-    }
+    };
 
     /**
      * Retrieves the image from the specified url and adds it to the atlas.

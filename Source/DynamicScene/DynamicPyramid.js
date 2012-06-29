@@ -32,14 +32,14 @@ define([
      * @see CustomSensor
      * @see CzmlDefaults
      */
-    function DynamicPyramid() {
+    var DynamicPyramid = function() {
         this.show = undefined;
         this.directions = undefined;
         this.radius = undefined;
         this.showIntersection = undefined;
         this.intersectionColor = undefined;
         this.material = undefined;
-    }
+    };
 
     /**
      * Processes a single CZML packet and merges its data into the provided DynamicObject's pyramid.

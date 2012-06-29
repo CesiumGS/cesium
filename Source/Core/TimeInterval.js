@@ -52,11 +52,29 @@ define([
 
         var stopComparedToStart = JulianDate.compare(stop, start);
 
+        /**
+         * The start time of the interval.
+         */
         this.start = start;
+        /**
+         * The stop time of the interval.
+         */
         this.stop = stop;
+        /**
+         * The data associated with this interval.
+         */
         this.data = data;
+        /**
+         * Indicates if <code>start</code> is included in the interval or not.
+         */
         this.isStartIncluded = isStartIncluded;
+        /**
+         * Indicates if <code>stop</code> is included in the interval or not.
+         */
         this.isStopIncluded = isStopIncluded;
+        /**
+         * Indicates if the interval is empty.
+         */
         this.isEmpty = stopComparedToStart < 0 || (stopComparedToStart === 0 && (!isStartIncluded || !isStopIncluded));
     };
 

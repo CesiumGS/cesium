@@ -42,11 +42,11 @@ define([
      * @alias DynamicImageMaterial
      * @constructor
      */
-    function DynamicImageMaterial() {
+    var DynamicImageMaterial = function() {
         this.image = undefined;
         this.verticalRepeat = undefined;
         this.horizontalRepeat = undefined;
-    }
+    };
 
     /**
      * Returns true if the provided CZML interval contains image material data.

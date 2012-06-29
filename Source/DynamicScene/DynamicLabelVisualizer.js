@@ -47,7 +47,7 @@ define([
      * @see DynamicPyramidVisualizer
      *
      */
-    function DynamicLabelVisualizer(scene, dynamicObjectCollection) {
+    var DynamicLabelVisualizer = function(scene, dynamicObjectCollection) {
         if (typeof scene === 'undefined') {
             throw new DeveloperError('scene is required.');
         }
@@ -58,7 +58,7 @@ define([
         var labelCollection = this._labelCollection = new LabelCollection();
         scene.getPrimitives().add(labelCollection);
         this.setDynamicObjectCollection(dynamicObjectCollection);
-    }
+    };
 
     /**
      * Returns the scene being used by this visualizer.

@@ -100,7 +100,7 @@ define([
      * @see DynamicDirectionsProperty
      * @see DynamicVertexPositionsProperty
      */
-    function DynamicProperty(valueType) {
+    var DynamicProperty = function(valueType) {
         if (typeof valueType === 'undefined') {
             throw new DeveloperError('valueType is required.');
         }
@@ -108,7 +108,7 @@ define([
         this._intervals = new TimeIntervalCollection();
         this._cachedDate = undefined;
         this._cachedInterval = undefined;
-    }
+    };
 
     /**
      * Processes the provided CZML interval or intervals into this property.

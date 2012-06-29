@@ -30,7 +30,7 @@ define([
      * @see ComplexConicSensor
      * @see CzmlDefaults
      */
-    function DynamicCone() {
+    var DynamicCone = function() {
         /**
          * A DynamicProperty of type CzmlNumber which determines the cone's minimum clock-angle.
          */
@@ -79,7 +79,7 @@ define([
          * A DynamicProperty of type CzmlBoolean which determines the cone's visibility
          */
         this.show = undefined;
-    }
+    };
 
     /**
      * Processes a single CZML packet and merges its data into the provided DynamicObject's cone.

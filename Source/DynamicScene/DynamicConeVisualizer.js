@@ -43,7 +43,7 @@ define([
      * @see DynamicPyramidVisualizer
      *
      */
-    function DynamicConeVisualizer(scene, dynamicObjectCollection) {
+    var DynamicConeVisualizer = function(scene, dynamicObjectCollection) {
         if (typeof scene === 'undefined') {
             throw new DeveloperError('scene is required.');
         }
@@ -54,7 +54,7 @@ define([
         this._coneCollection = [];
         this._dynamicObjectCollection = undefined;
         this.setDynamicObjectCollection(dynamicObjectCollection);
-    }
+    };
 
     /**
      * Returns the scene being used by this visualizer.
