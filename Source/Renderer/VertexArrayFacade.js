@@ -328,7 +328,7 @@ define([
      *
      * @memberof VertexArrayFacade
      */
-    VertexArrayFacade.prototype.commit = function(indexBuffer, indicesCount) {
+    VertexArrayFacade.prototype.commit = function(indexBuffer) {
         var recreateVA = false;
         recreateVA = this._commit(this._static) || recreateVA;
         recreateVA = this._commit(this._stream) || recreateVA;
@@ -352,7 +352,7 @@ define([
 
                 va.push({
                     va : this._context.createVertexArray(attributes, indexBuffer),
-                    indicesCount : (typeof indicesCount === 'undefined') ? 1.5 * ((k !== (numberOfVertexArrays - 1)) ? sixtyFourK : (this._size % sixtyFourK)) : indicesCount
+                    indicesCount : 1.5 * ((k !== (numberOfVertexArrays - 1)) ? sixtyFourK : (this._size % sixtyFourK))
                 // TODO: not hardcode 1.5
                 });
             }
