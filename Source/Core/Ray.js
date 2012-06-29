@@ -23,7 +23,18 @@ define(['./Cartesian3', './DeveloperError'], function(Cartesian3, DeveloperError
             throw new DeveloperError('direction is required');
         }
 
+        /**
+         * The origin of the ray.
+         *
+         * @type {Cartesian3}
+         */
         this.origin = origin;
+
+        /**
+         * The direction of the ray.
+         *
+         * @type {Cartesian3}
+         */
         this.direction = direction.normalize();
     };
 
@@ -36,6 +47,11 @@ define(['./Cartesian3', './DeveloperError'], function(Cartesian3, DeveloperError
      * @param {Number} [t=0.0] A scalar value.
      *
      * @returns {Cartesian3} The point along the ray.
+     *
+     * @example
+     * Get the first intersection point of a ray and an ellipsoid.
+     * var intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid);
+     * var point = ray.getPoint(intersection.start);
      */
     Ray.prototype.getPoint = function(t) {
         t = (typeof t === 'undefined') ? 0.0 : t;

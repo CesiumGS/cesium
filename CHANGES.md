@@ -22,6 +22,8 @@ Beta Releases
       to:
             
             var position = scene.pickEllipsoid(windowPosition, ellipsoid);
+            
+   * `Camera.getPickRay` returns the new `Ray` type.
 
 * Added `addImage` to `TextureAtlas` so images can be added to a texture atlas after it is constructed.
 * Added `Scene.pickEllipsoid`, which picks either the ellipsoid or the map depending on the current `SceneMode`.

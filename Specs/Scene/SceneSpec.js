@@ -9,8 +9,8 @@ defineSuite([
          'Core/Math',
          'Scene/OrthographicFrustum',
          'Scene/SceneMode',
-         '../Specs/createCanvas',
-         '../Specs/destroyCanvas'
+         '../Specs/createScene',
+         '../Specs/destroyScene'
      ], function(
          Scene,
          Cartesian2,
@@ -21,46 +21,43 @@ defineSuite([
          CesiumMath,
          OrthographicFrustum,
          SceneMode,
-         createCanvas,
-         destroyCanvas) {
+         createScene,
+         destroyScene) {
     "use strict";
     /*global it,expect,beforeEach,afterEach*/
 
-    var canvas;
     var scene;
 
     beforeEach(function() {
-        canvas = createCanvas();
-        scene = new Scene(canvas);
+        scene = createScene();
     });
 
     afterEach(function() {
-        scene = scene && !scene.isDestroyed() && scene.destroy();
-        destroyCanvas(canvas);
+        destroyScene(scene);
     });
 
     it('get canvas', function() {
-        expect(scene.getCanvas()).toEqual(canvas);
+        expect(scene.getCanvas()).toBeDefined();
     });
 
     it('get context', function() {
-        expect(scene.getContext()).not.toBeNull();
+        expect(scene.getContext()).toBeDefined();
     });
 
     it('get primitives', function() {
-        expect(scene.getPrimitives()).not.toBeNull();
+        expect(scene.getPrimitives()).toBeDefined();
     });
 
     it('get camera', function() {
-        expect(scene.getCamera()).not.toBeNull();
+        expect(scene.getCamera()).toBeDefined();
     });
 
     it('get uniform state', function() {
-        expect(scene.getUniformState()).not.toBeNull();
+        expect(scene.getUniformState()).toBeDefined();
     });
 
     it('get animations', function() {
-        expect(scene.getAnimations()).not.toBeNull();
+        expect(scene.getAnimations()).toBeDefined();
     });
 
     it('get and set sun position', function() {
@@ -76,6 +73,7 @@ defineSuite([
     });
 
     it('pick ellipsoid 0', function() {
+        var canvas = scene.getCanvas();
         canvas.width = 1024;
         canvas.height = 768;
 
@@ -90,6 +88,7 @@ defineSuite([
     });
 
     it('pick ellipsoid 1', function() {
+        var canvas = scene.getCanvas();
         canvas.width = 1024;
         canvas.height = 768;
 
@@ -105,6 +104,7 @@ defineSuite([
     });
 
     it('pick ellipsoid 2', function() {
+        var canvas = scene.getCanvas();
         canvas.width = 1024;
         canvas.height = 768;
 
@@ -137,7 +137,7 @@ defineSuite([
 
     it('isDestroyed', function() {
         expect(scene.isDestroyed()).toEqual(false);
-        scene.destroy();
+        destroyScene(scene);
         expect(scene.isDestroyed()).toEqual(true);
     });
 });
