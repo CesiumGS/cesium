@@ -17,6 +17,7 @@ define([
         'Core/FullScreen',
         'Core/Ellipsoid',
         'Core/Transforms',
+        'Core/Cartesian3',
         'Core/requestAnimationFrame',
         'Scene/SceneTransitioner',
         'Scene/BingMapsStyle',
@@ -42,6 +43,7 @@ define([
         FullScreen,
         Ellipsoid,
         Transforms,
+        Cartesian3,
         requestAnimationFrame,
         SceneTransitioner,
         BingMapsStyle,
@@ -164,6 +166,7 @@ define([
                                 var controllers = camera.getControllers();
                                 controllers.removeAll();
                                 spindleController = controllers.addSpindle();
+                                spindleController.constrainedAxis = Cartesian3.UNIT_Z;
                             }
 
                             if (typeof spindleController !== 'undefined' && !spindleController.isDestroyed()) {
