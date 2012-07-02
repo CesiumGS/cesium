@@ -631,37 +631,7 @@ define([
             var attributeIndices = layer._centralBody._attributeIndices;
 
             if (mode === SceneMode.SCENE3D) {
-                var buffers = ExtentTessellator.computeBuffers({
-                    ellipsoid : ellipsoid,
-                    extent : tile.extent,
-                    granularity : gran,
-                    generateTextureCoords : true,
-                    interleave : true,
-                    relativeToCenter : rtc
-                });
-
-                typedArray = datatype.toTypedArray(buffers.vertices);
-                buffer = context.createVertexBuffer(typedArray, usage);
-                stride = 5 * datatype.sizeInBytes;
-                attributes = [{
-                    index : attributeIndices.position3D,
-                    vertexBuffer : buffer,
-                    componentDatatype : datatype,
-                    componentsPerAttribute : 3,
-                    offsetInBytes : 0,
-                    strideInBytes : stride
-                }, {
-                    index : attributeIndices.textureCoordinates,
-                    vertexBuffer : buffer,
-                    componentDatatype : datatype,
-                    componentsPerAttribute : 2,
-                    offsetInBytes : 3 * datatype.sizeInBytes,
-                    strideInBytes : stride
-                }, {
-                    index : attributeIndices.position2D,
-                    value : [0.0, 0.0]
-                }];
-                indexBuffer = context.createIndexBuffer(new Uint16Array(buffers.indices), usage, IndexDatatype.UNSIGNED_SHORT);
+                layer._centralBody._terrain.createTileGeometry(context, tile);
             } else {
                 var vertices = [];
                 var width = tile.extent.east - tile.extent.west;
@@ -720,9 +690,9 @@ define([
                 }];
 
                 indexBuffer = context.createIndexBuffer(new Uint16Array(mesh.indexLists[0].values), usage, IndexDatatype.UNSIGNED_SHORT);
-            }
 
-            tile._extentVA = context.createVertexArray(attributes, indexBuffer);
+                tile._extentVA = context.createVertexArray(attributes, indexBuffer);
+            }
 
             tile._drawUniforms = {
                 u_center3D : function() {

@@ -63,10 +63,11 @@ define([
 
         // Create vertex and index buffers for this extent.
         // TODO: do this in a web worker?
-        var center = ellipsoid.toCartesian(new Cartographic3(
-                (extent.east - extent.west) / 2.0,
-                (extent.north - extent.south) / 2.0,
-                0.0));
+//        var center = ellipsoid.toCartesian(new Cartographic3(
+//                (extent.east - extent.west) / 2.0,
+//                (extent.north - extent.south) / 2.0,
+//                0.0));
+        var center = tile.get3DBoundingSphere().center;
         var buffers = ExtentTessellator.computeBuffers({
             ellipsoid : ellipsoid,
             extent : extent,
