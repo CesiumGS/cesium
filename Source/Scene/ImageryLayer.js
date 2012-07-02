@@ -614,9 +614,6 @@ define([
 
             tile._extentVA = tile._extentVA && tile._extentVA.destroy();
 
-            var rtc = tile.get3DBoundingSphere().center;
-            var projectedRTC = tile.get2DBoundingSphere(projection).center.clone();
-
             if (mode === SceneMode.SCENE3D) {
                 layer._centralBody._terrain.createTileEllipsoidGeometry(context, tile);
             } else {
