@@ -75,6 +75,18 @@ html,body {
 	border: none;
 }
 
+.agiLogo {
+    display: block;
+    position: absolute;
+    bottom: 64px;
+    left: 125px;
+    text-decoration: none;
+}
+
+.agiLogo img {
+    border: none;
+}
+
 .animButtons {
 	display: block;
 	position: absolute;
