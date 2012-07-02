@@ -182,14 +182,10 @@ define([
 
         if (positionWC.x < -maxX || positionWC.x > maxX || positionWC.y < -maxY || positionWC.y > maxY) {
             if (!this._translateHandler.isButtonDown()) {
-                var animations = Tween.getAll();
-
                 var translateX = centerWC.y < -maxX || centerWC.y > maxX;
                 var translateY = centerWC.z < -maxY || centerWC.z > maxY;
-                if ((translateX || translateY) && !this._lastInertiaTranslateMovement) {
-                    if (animations.indexOf(this._translateAnimation) === -1) {
-                        this._animationCollection.removeAll();
-                    }
+                if ((translateX || translateY) && !this._lastInertiaTranslateMovement &&
+                        !this._animationCollection.contains(this._translateAnimation)) {
                     this._addCorrectTranslateAnimation(positionWC.getXYZ(), centerWC.getXYZ(), maxX, maxY);
                 }
             }

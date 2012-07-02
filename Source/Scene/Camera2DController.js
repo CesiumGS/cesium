@@ -368,10 +368,8 @@ define([
         }
 
         if (!translate.isButtonDown() && !rightZoom.isButtonDown()) {
-            var animations = Tween.getAll();
-
             if (this._camera.frustum.right > this._frustum.right &&
-                !this._lastInertiaZoomMovement && animations.indexOf(this._zoomAnimation) === -1) {
+                !this._lastInertiaZoomMovement && !this._animationCollection.contains(this._zoomAnimation)) {
                 this._addCorrectZoomAnimation();
             }
 
@@ -379,7 +377,7 @@ define([
             var translateX = position.x < -this._cameraMaxX || position.x > this._cameraMaxX;
             var translateY = position.y < -this._cameraMaxY || position.y > this._cameraMaxY;
             if ((translateX || translateY) && !this._lastInertiaTranslateMovement &&
-                    animations.indexOf(this._translateAnimation) === -1) {
+                    !this._animationCollection.contains(this._translateAnimation)) {
                 this._addCorrectTranslateAnimation();
             }
         }
