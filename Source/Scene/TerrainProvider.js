@@ -43,7 +43,7 @@ define([
             position2D : 2
         };
 
-    TerrainProvider.createTileGeometryFromBuffers = function(context, tile, buffers) {
+    TerrainProvider.createTileEllipsoidGeometryFromBuffers = function(context, tile, buffers) {
         var datatype = ComponentDatatype.FLOAT;
         var typedArray = datatype.toTypedArray(buffers.vertices);
         var buffer = context.createVertexBuffer(typedArray, BufferUsage.STATIC_DRAW);
@@ -71,15 +71,75 @@ define([
         tile._extentVA = context.createVertexArray(attributes, indexBuffer);
     };
 
+    TerrainProvider.createTilePlaneGeometryFromBuffers = function(context, tile, buffers) {
+        var datatype = ComponentDatatype.FLOAT;
+        var usage = BufferUsage.STATIC_DRAW;
+
+        var typedArray = datatype.toTypedArray(buffers.vertices);
+        var buffer = context.createVertexBuffer(typedArray, usage);
+        var stride = 7 * datatype.sizeInBytes;
+        var attributes = [{
+            index : TerrainProvider.attributeIndices.position3D,
+            vertexBuffer : buffer,
+            componentDatatype : datatype,
+            componentsPerAttribute : 3,
+            offsetInBytes : 0,
+            strideInBytes : stride
+        }, {
+            index : TerrainProvider.attributeIndices.textureCoordinates,
+            vertexBuffer : buffer,
+            componentDatatype : datatype,
+            componentsPerAttribute : 2,
+            offsetInBytes : 3 * datatype.sizeInBytes,
+            strideInBytes : stride
+        }, {
+            index : TerrainProvider.attributeIndices.position2D,
+            vertexBuffer : buffer,
+            componentDatatype : datatype,
+            componentsPerAttribute : 2,
+            offsetInBytes : 5 * datatype.sizeInBytes,
+            strideInBytes : stride
+        }];
+
+        var indexBuffer = context.createIndexBuffer(new Uint16Array(buffers.indices), usage, IndexDatatype.UNSIGNED_SHORT);
+
+        tile._extentVA = context.createVertexArray(attributes, indexBuffer);
+    };
+
     /**
-     * Populates a {@link Tile} with surface geometry from this tile provider.
+     * Populates a {@link Tile} with ellipsoid-mapped surface geometry from this
+     * tile provider.
      *
      * @memberof TerrainProvider
      *
+     * @param {Context} context The rendered context to use to create renderer resources.
      * @param {Tile} tile The tile to populate with surface geometry.
-     * @returns {Promise} TODO: what are we promising?  Some sort of indication of success?
+     * @returns {Boolean|Promise} A boolean value indicating whether the tile was successfully
+     * populated with geometry, or a promise for such a value in the future.
      */
-    TerrainProvider.prototype.createTileGeometry = function(tile) {
+    TerrainProvider.prototype.createTileEllipsoidGeometry = function(context, tile) {
+        // Is there a limit on 'level' of the tile that can be passed in?  It seems
+        // natural to have a maxLevel, but this would cause problems if we have hi-res imagery
+        // and low-res terrain.  So I'd say we can continue to refine terrain tiles arbitrarily
+        // until both the terrain and all the imagery layers have no more detail to give.  In that
+        // case, this method is expected to be able to produce geometry for an arbitrarily-deep
+        // tile tree.
+        throw new DeveloperError('This type should not be instantiated directly.');
+    };
+
+    /**
+     * Populates a {@link Tile} with plane-mapped surface geometry from this
+     * tile provider.
+     *
+     * @memberof TerrainProvider
+     *
+     * @param {Context} context The rendered context to use to create renderer resources.
+     * @param {Tile} tile The tile to populate with surface geometry.
+     * @param {Projection} projection The map projection to use.
+     * @returns {Boolean|Promise} A boolean value indicating whether the tile was successfully
+     * populated with geometry, or a promise for such a value in the future.
+     */
+    TerrainProvider.prototype.createTilePlaneGeometry = function(context, tile, projection) {
         // Is there a limit on 'level' of the tile that can be passed in?  It seems
         // natural to have a maxLevel, but this would cause problems if we have hi-res imagery
         // and low-res terrain.  So I'd say we can continue to refine terrain tiles arbitrarily

@@ -614,84 +614,13 @@ define([
 
             tile._extentVA = tile._extentVA && tile._extentVA.destroy();
 
-            var ellipsoid = layer._centralBody._ellipsoid;
             var rtc = tile.get3DBoundingSphere().center;
             var projectedRTC = tile.get2DBoundingSphere(projection).center.clone();
 
-            var gran = (tile.zoom > 0) ? 0.05 * (1.0 / tile.zoom * 2.0) : 0.05; // seems like a good value after testing it for what looks good
-
-            var typedArray;
-            var buffer;
-            var stride;
-            var attributes;
-            var indexBuffer;
-            var datatype = ComponentDatatype.FLOAT;
-            var usage = BufferUsage.STATIC_DRAW;
-
-            var attributeIndices = layer._centralBody._attributeIndices;
-
             if (mode === SceneMode.SCENE3D) {
-                layer._centralBody._terrain.createTileGeometry(context, tile);
+                layer._centralBody._terrain.createTileEllipsoidGeometry(context, tile);
             } else {
-                var vertices = [];
-                var width = tile.extent.east - tile.extent.west;
-                var height = tile.extent.north - tile.extent.south;
-                var lonScalar = 1.0 / width;
-                var latScalar = 1.0 / height;
-
-                var mesh = PlaneTessellator.compute({
-                    resolution : {
-                        x : Math.max(Math.ceil(width / gran), 2.0),
-                        y : Math.max(Math.ceil(height / gran), 2.0)
-                    },
-                    onInterpolation : function(time) {
-                        var lonLat = new Cartographic2(
-                                CesiumMath.lerp(tile.extent.west, tile.extent.east, time.x),
-                                CesiumMath.lerp(tile.extent.south, tile.extent.north, time.y));
-
-                        var p = ellipsoid.toCartesian(lonLat).subtract(rtc);
-                        vertices.push(p.x, p.y, p.z);
-
-                        var u = (lonLat.longitude - tile.extent.west) * lonScalar;
-                        var v = (lonLat.latitude - tile.extent.south) * latScalar;
-                        vertices.push(u, v);
-
-                        // TODO: This will not work if the projection's ellipsoid is different
-                        // than the central body's ellipsoid.  Throw an exception?
-                        var projectedLonLat = projection.project(lonLat).subtract(projectedRTC);
-                        vertices.push(projectedLonLat.x, projectedLonLat.y);
-                    }
-                });
-
-                typedArray = datatype.toTypedArray(vertices);
-                buffer = context.createVertexBuffer(typedArray, usage);
-                stride = 7 * datatype.sizeInBytes;
-                attributes = [{
-                    index : attributeIndices.position3D,
-                    vertexBuffer : buffer,
-                    componentDatatype : datatype,
-                    componentsPerAttribute : 3,
-                    offsetInBytes : 0,
-                    strideInBytes : stride
-                }, {
-                    index : attributeIndices.textureCoordinates,
-                    vertexBuffer : buffer,
-                    componentDatatype : datatype,
-                    componentsPerAttribute : 2,
-                    offsetInBytes : 3 * datatype.sizeInBytes,
-                    strideInBytes : stride
-                }, {
-                    index : attributeIndices.position2D,
-                    vertexBuffer : buffer,
-                    componentDatatype : datatype,
-                    componentsPerAttribute : 2,
-                    offsetInBytes : 5 * datatype.sizeInBytes,
-                    strideInBytes : stride
-                }];
-
-                indexBuffer = context.createIndexBuffer(new Uint16Array(mesh.indexLists[0].values), usage, IndexDatatype.UNSIGNED_SHORT);
-
-                tile._extentVA = context.createVertexArray(attributes, indexBuffer);
+                layer._centralBody._terrain.createTilePlaneGeometry(context, tile, projection);
             }
 
             tile._drawUniforms = {
