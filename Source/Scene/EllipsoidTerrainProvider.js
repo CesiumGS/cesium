@@ -1,10 +1,18 @@
 /*global define*/
 define([
         '../Core/DeveloperError',
-        '../Core/defaultValue'
+        '../Core/defaultValue',
+        './WebMercatorTilingScheme',
+        '../Core/Cartographic3',
+        '../Core/ExtentTessellator',
+        './TerrainProvider'
     ], function(
         DeveloperError,
-        defaultValue) {
+        defaultValue,
+        WebMercatorTilingScheme,
+        Cartographic3,
+        ExtentTessellator,
+        TerrainProvider) {
     "use strict";
 
     /**
@@ -26,7 +34,7 @@ define([
          *
          * @type TilingScheme
          */
-        this.tilingScheme = defaultValue(tilingScheme, new MercatorTilingScheme());
+        this.tilingScheme = defaultValue(tilingScheme, new WebMercatorTilingScheme());
     }
 
     /**
@@ -35,9 +43,10 @@ define([
      * @memberof TerrainProvider
      *
      * @param {Tile} tile The tile to populate with surface geometry.
-     * @returns {Promise} TODO: what are we promising?  Some sort of indication of success?
+     * @returns {Boolean|Promise} A boolean value indicating whether the tile was successfully
+     * populated with geometry, or a promise for such a value in the future.
      */
-    EllipsoidTerrainProvider.prototype.createTileGeometry = function(tile) {
+    EllipsoidTerrainProvider.prototype.createTileGeometry = function(context, tile) {
         var tilingScheme = this.tilingScheme;
         var ellipsoid = tilingScheme.ellipsoid;
         var extent = tile.extent;
@@ -46,10 +55,7 @@ define([
         // The more vertices we use to tessellate the extent, the less geometric error
         // in the tile.  We only need to use enough vertices to be at or below the
         // geometric error expected for this level.
-        //
-        var levelZeroMaxError = tilingScheme.levelZeroMaximumGeometricError;
-        var errorDivisor = 1 << level;
-        var maxErrorMeters = levelZeroMaxError / errorDivisor;
+        var maxErrorMeters = tilingScheme.getLevelMaximumGeometricError(level);
 
         // Convert the max error in meters to radians at the equator.
         // TODO: we should take the latitude into account to avoid over-tessellation near the poles.
@@ -69,32 +75,8 @@ define([
             interleave : true,
             relativeToCenter : center
         });
-
-        var datatype = ComponentDatatype.FLOAT;
-        typedArray = datatype.toTypedArray(buffers.vertices);
-        buffer = context.createVertexBuffer(typedArray, usage);
-        stride = 5 * datatype.sizeInBytes;
-        attributes = [{
-            index : attributeIndices.position3D,
-            vertexBuffer : buffer,
-            componentDatatype : datatype,
-            componentsPerAttribute : 3,
-            offsetInBytes : 0,
-            strideInBytes : stride
-        }, {
-            index : attributeIndices.textureCoordinates,
-            vertexBuffer : buffer,
-            componentDatatype : datatype,
-            componentsPerAttribute : 2,
-            offsetInBytes : 3 * datatype.sizeInBytes,
-            strideInBytes : stride
-        }, {
-            index : attributeIndices.position2D,
-            value : [0.0, 0.0]
-        }];
-        indexBuffer = context.createIndexBuffer(new Uint16Array(buffers.indices), usage, IndexDatatype.UNSIGNED_SHORT);
-
-        tile._extentVA = context.createVertexArray(attributes, indexBuffer);
+        TerrainProvider.createTileGeometryFromBuffers(context, tile, buffers);
+        return true;
     };
 
     return EllipsoidTerrainProvider;

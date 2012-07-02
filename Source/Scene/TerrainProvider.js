@@ -1,8 +1,14 @@
 /*global define*/
 define([
-        '../Core/DeveloperError'
+        '../Core/DeveloperError',
+        '../Core/ComponentDatatype',
+        '../Renderer/BufferUsage',
+        '../Core/IndexDatatype'
     ], function(
-        DeveloperError) {
+        DeveloperError,
+        ComponentDatatype,
+        BufferUsage,
+        IndexDatatype) {
     "use strict";
 
     /**
@@ -25,6 +31,45 @@ define([
 
         throw new DeveloperError('This type should not be instantiated directly.');
     }
+
+    /**
+     * Specifies the indices of the attributes of the terrain geometry.
+     *
+     * @memberof TerrainProvider
+     */
+    TerrainProvider.attributeIndices = {
+            position3D : 0,
+            textureCoordinates : 1,
+            position2D : 2
+        };
+
+    TerrainProvider.createTileGeometryFromBuffers = function(context, tile, buffers) {
+        var datatype = ComponentDatatype.FLOAT;
+        var typedArray = datatype.toTypedArray(buffers.vertices);
+        var buffer = context.createVertexBuffer(typedArray, BufferUsage.STATIC_DRAW);
+        var stride = 5 * datatype.sizeInBytes;
+        var attributes = [{
+            index : TerrainProvider.attributeIndices.position3D,
+            vertexBuffer : buffer,
+            componentDatatype : datatype,
+            componentsPerAttribute : 3,
+            offsetInBytes : 0,
+            strideInBytes : stride
+        }, {
+            index : TerrainProvider.attributeIndices.textureCoordinates,
+            vertexBuffer : buffer,
+            componentDatatype : datatype,
+            componentsPerAttribute : 2,
+            offsetInBytes : 3 * datatype.sizeInBytes,
+            strideInBytes : stride
+        }, {
+            index : TerrainProvider.attributeIndices.position2D,
+            value : [0.0, 0.0]
+        }];
+        var indexBuffer = context.createIndexBuffer(new Uint16Array(buffers.indices), BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+
+        tile._extentVA = context.createVertexArray(attributes, indexBuffer);
+    };
 
     /**
      * Populates a {@link Tile} with surface geometry from this tile provider.

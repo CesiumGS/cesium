@@ -49,7 +49,8 @@ define([
         '../Shaders/CentralBodyFSPole',
         '../Shaders/GroundAtmosphere',
         '../Shaders/SkyAtmosphereFS',
-        '../Shaders/SkyAtmosphereVS'
+        '../Shaders/SkyAtmosphereVS',
+        './EllipsoidTerrainProvider'
     ], function(
         combine,
         defaultValue,
@@ -100,7 +101,8 @@ define([
         CentralBodyFSPole,
         GroundAtmosphere,
         SkyAtmosphereFS,
-        SkyAtmosphereVS) {
+        SkyAtmosphereVS,
+        EllipsoidTerrainProvider) {
     "use strict";
 
     function TileCache(maxTextureSize) {
@@ -127,7 +129,8 @@ define([
             numberOfLevelZeroTilesX : 2,
             numberOfLevelZeroTilesY : 2
         }));
-        this._tilingScheme = tilingScheme;
+        var terrain = new EllipsoidTerrainProvider(tilingScheme);
+        this._terrain = terrain;
 
         this._levelZeroTiles = tilingScheme.createLevelZeroTiles();
         this._imageLayers = new ImageryLayerCollection();

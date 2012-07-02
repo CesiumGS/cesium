@@ -68,6 +68,18 @@ define([
     }
 
     /**
+     * Gets the maximum geometric error allowed in a tile at a given level.
+     *
+     * @memberof TilingScheme
+     *
+     * @param {Number} level The tile level for which to get the maximum geometric error.
+     * @returns {Number}
+     */
+    TilingScheme.prototype.getLevelMaximumGeometricError = function(level) {
+        return this.levelZeroMaximumGeometricError / (1 << level);
+    };
+
+    /**
      * Creates the tile or tiles at level of detail zero, the coarsest, least detailed level.
      *
      * @memberof TilingScheme

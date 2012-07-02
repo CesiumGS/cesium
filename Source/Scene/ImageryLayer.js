@@ -495,7 +495,7 @@ define([
         // TODO: remove this offset calculation
         if (typeof this._zoomOffset === 'undefined') {
             this._zoomOffset = 0;
-            var zeroTileDifference = this._centralBody._tilingScheme.numberOfLevelZeroTilesX - tileProvider.tilingScheme.numberOfLevelZeroTilesX;
+            var zeroTileDifference = this._centralBody._terrain.tilingScheme.numberOfLevelZeroTilesX - tileProvider.tilingScheme.numberOfLevelZeroTilesX;
             while (zeroTileDifference > 0) {
                 this._zoomOffset++;
                 zeroTileDifference = zeroTileDifference >> 1;
