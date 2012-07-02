@@ -110,7 +110,7 @@ define([
                     that._update = false;
                 }
                 that._pressTime = new JulianDate();
-                that._releaseTime = that._wheelStart.addSeconds(Math.abs(arcLength) * 0.005);
+                that._releaseTime = that._pressTime.addSeconds(Math.abs(arcLength) * 0.005);
             }, MouseEventType.WHEEL, moveModifier);
         }
     };
