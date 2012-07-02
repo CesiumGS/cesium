@@ -622,26 +622,6 @@ define([
             } else {
                 layer._centralBody._terrain.createTilePlaneGeometry(context, tile, projection);
             }
-
-            tile._drawUniforms = {
-                u_center3D : function() {
-                    return rtc;
-                },
-                u_center2D : function() {
-                    return (projectedRTC) ? projectedRTC.getXY() : Cartesian2.ZERO;
-                },
-                u_modifiedModelView : function() {
-                    return tile.modelView;
-                },
-                u_dayIntensity : function() {
-                    return intensity;
-                },
-                u_mode : function() {
-                    return tile.mode;
-                }
-            };
-
-            tile._mode = mode;
         }
 
         var tileImagery = getTileImagery(layer, tile);

@@ -617,6 +617,9 @@ define([
             u_nightIntensity : function() {
                 return that.nightIntensity;
             },
+            u_mode : function() {
+                return that._mode;
+            },
             u_morphTime : function() {
                 return that.morphTime;
             }

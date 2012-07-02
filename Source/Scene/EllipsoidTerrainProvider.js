@@ -8,7 +8,8 @@ define([
         './TerrainProvider',
         '../Core/PlaneTessellator',
         '../Core/Cartographic2',
-        '../Core/Math'
+        '../Core/Math',
+        '../Core/Cartesian2'
     ], function(
         DeveloperError,
         defaultValue,
@@ -18,7 +19,8 @@ define([
         TerrainProvider,
         PlaneTessellator,
         Cartographic2,
-        CesiumMath) {
+        CesiumMath,
+        Cartesian2) {
     "use strict";
 
     /**
@@ -75,24 +77,39 @@ define([
         var ellipsoid = tilingScheme.ellipsoid;
         var extent = tile.extent;
 
-        var maxErrorRadians = computeDesiredGranularity(tilingScheme, tile);
+        var granularity = computeDesiredGranularity(tilingScheme, tile);
 
-        // Create vertex and index buffers for this extent.
-        // TODO: do this in a web worker?
+        // Determine the center for RTC rendering.
 //        var center = ellipsoid.toCartesian(new Cartographic3(
 //                (extent.east - extent.west) / 2.0,
 //                (extent.north - extent.south) / 2.0,
 //                0.0));
         var center = tile.get3DBoundingSphere().center;
+
+        // Create vertex and index buffers for this extent.
+        // TODO: do this in a web worker?
         var buffers = ExtentTessellator.computeBuffers({
             ellipsoid : ellipsoid,
             extent : extent,
-            granularity : maxErrorRadians,
+            granularity : granularity,
             generateTextureCoords : true,
             interleave : true,
             relativeToCenter : center
         });
         TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers);
+
+        tile._drawUniforms = {
+                u_center3D : function() {
+                    return center;
+                },
+                u_center2D : function() {
+                    return Cartesian2.ZERO;
+                },
+                u_modifiedModelView : function() {
+                    return tile.modelView;
+                }
+            };
+
         return true;
     };
 
@@ -113,7 +130,7 @@ define([
         var ellipsoid = tilingScheme.ellipsoid;
         var extent = tile.extent;
 
-        var maxErrorRadians = computeDesiredGranularity(tilingScheme, tile);
+        var granularity = computeDesiredGranularity(tilingScheme, tile);
 
         var vertices = [];
         var width = tile.extent.east - tile.extent.west;
@@ -126,8 +143,8 @@ define([
 
         var mesh = PlaneTessellator.compute({
             resolution : {
-                x : Math.max(Math.ceil(width / maxErrorRadians), 2.0),
-                y : Math.max(Math.ceil(height / maxErrorRadians), 2.0)
+                x : Math.max(Math.ceil(width / granularity), 2.0),
+                y : Math.max(Math.ceil(height / granularity), 2.0)
             },
             onInterpolation : function(time) {
                 var lonLat = new Cartographic2(
@@ -152,6 +169,20 @@ define([
             vertices: vertices,
             indices: mesh.indexLists[0].values
         });
+
+
+        tile._drawUniforms = {
+            u_center3D : function() {
+                return center;
+            },
+            u_center2D : function() {
+                return (projectedRTC) ? projectedRTC.getXY() : Cartesian2.ZERO;
+            },
+            u_modifiedModelView : function() {
+                return tile.modelView;
+            }
+        };
+
         return true;
     };
 
