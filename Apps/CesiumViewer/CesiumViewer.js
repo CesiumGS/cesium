@@ -59,6 +59,7 @@ define([
         multiplier : 1
     });
     var animationController = new AnimationController(clock);
+    var spindleController;
     var timeline;
     var transitioner;
     var dynamicObjectCollection = new DynamicObjectCollection();
@@ -162,12 +163,12 @@ define([
 
                                 var controllers = camera.getControllers();
                                 controllers.removeAll();
-                                this.spindleController = controllers.addSpindle();
+                                spindleController = controllers.addSpindle();
                             }
 
-                            if (typeof this.spindleController !== 'undefined' && !this.spindleController.isDestroyed()) {
+                            if (typeof spindleController !== 'undefined' && !spindleController.isDestroyed()) {
                                 var transform = Transforms.eastNorthUpToFixedFrame(cameraCenteredObjectIDPosition, widget.ellipsoid);
-                                this.spindleController.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
+                                spindleController.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
                             }
                         }
                     }
