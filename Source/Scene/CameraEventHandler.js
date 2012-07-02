@@ -6,7 +6,6 @@ define([
         '../Core/EventHandler',
         '../Core/MouseEventType',
         '../Core/Cartesian2',
-        '../Core/JulianDate',
         './CameraEventType'
     ], function(
         DeveloperError,
@@ -15,7 +14,6 @@ define([
         EventHandler,
         MouseEventType,
         Cartesian2,
-        JulianDate,
         CameraEventType) {
     "use strict";
 
@@ -75,12 +73,12 @@ define([
             this._eventHandler.setMouseAction(function(movement) {
                 that._lastMovement = null;
                 that._isDown = true;
-                that._pressTime = new JulianDate();
+                that._pressTime = new Date();
             }, down, moveModifier);
 
             this._eventHandler.setMouseAction(function(movement) {
                 that._isDown = false;
-                that._releaseTime = new JulianDate();
+                that._releaseTime = new Date();
             }, up, moveModifier);
 
             this._eventHandler.setMouseAction(function(movement) {
@@ -109,8 +107,8 @@ define([
                     that._lastMovement = that._movement; // This looks unusual, but its needed for wheel inertia.
                     that._update = false;
                 }
-                that._pressTime = new JulianDate();
-                that._releaseTime = that._pressTime.addSeconds(Math.abs(arcLength) * 0.005);
+                that._pressTime = new Date();
+                that._releaseTime = new Date(that._pressTime.getTime() + Math.abs(arcLength) * 5.0);
             }, MouseEventType.WHEEL, moveModifier);
         }
     };
@@ -167,7 +165,7 @@ define([
      *
      * @memberof CameraEventHandler
      *
-     * @return {JulianDate} DOC_TBA
+     * @return {Date} DOC_TBA
      *
      */
     CameraEventHandler.prototype.getButtonPressTime = function() {
@@ -179,7 +177,7 @@ define([
      *
      * @memberof CameraEventHandler
      *
-     * @return {JulianDate} DOC_TBA
+     * @return {Date} DOC_TBA
      *
      */
     CameraEventHandler.prototype.getButtonReleaseTime = function() {
