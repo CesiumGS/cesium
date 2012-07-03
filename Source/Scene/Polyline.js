@@ -1,8 +1,44 @@
 /*global define*/
-define(['../Core/DeveloperError', '../Core/combine', '../Core/destroyObject', '../Core/Cartesian3', '../Core/Cartesian4', '../Core/Matrix4', '../Core/ComponentDatatype', '../Core/IndexDatatype',
-        '../Core/PrimitiveType', '../Core/PolylinePipeline', '../Core/Color', '../Renderer/BufferUsage', '../Renderer/BlendingState', '../Renderer/StencilFunction', '../Renderer/StencilOperation',
-        './SceneMode', '../Shaders/PolylineVS', '../Shaders/PolylineFS', '../Core/shallowEquals'], function(DeveloperError, combine, destroyObject, Cartesian3, Cartesian4, Matrix4, ComponentDatatype,
-        IndexDatatype, PrimitiveType, PolylinePipeline, Color, BufferUsage, BlendingState, StencilFunction, StencilOperation, SceneMode, PolylineVS, PolylineFS, shallowEquals) {
+define([
+        '../Core/DeveloperError',
+        '../Core/combine',
+        '../Core/destroyObject',
+        '../Core/Cartesian3',
+        '../Core/Cartesian4',
+        '../Core/Matrix4',
+        '../Core/ComponentDatatype',
+        '../Core/IndexDatatype',
+        '../Core/PrimitiveType',
+        '../Core/PolylinePipeline',
+        '../Core/Color',
+        '../Renderer/BufferUsage',
+        '../Renderer/BlendingState',
+        '../Renderer/StencilFunction',
+        '../Renderer/StencilOperation',
+        './SceneMode',
+        '../Shaders/PolylineVS',
+        '../Shaders/PolylineFS',
+        '../Core/shallowEquals'
+], function(
+        DeveloperError,
+        combine,
+        destroyObject,
+        Cartesian3,
+        Cartesian4,
+        Matrix4,
+        ComponentDatatype,
+        IndexDatatype,
+        PrimitiveType,
+        PolylinePipeline,
+        Color,
+        BufferUsage,
+        BlendingState,
+        StencilFunction,
+        StencilOperation,
+        SceneMode,
+        PolylineVS,
+        PolylineFS,
+        shallowEquals) {
     "use strict";
 
     /**
