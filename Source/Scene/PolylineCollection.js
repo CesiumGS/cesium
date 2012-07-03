@@ -527,7 +527,7 @@ define([
 
             //if a polyline's size changes, we need to recompute the indicesBuffer
             //if we're not in scene3d, we have to recompute the indicesbuffer since some polylines could be across the IDL.
-            //TODO: optimize. check if positions size changes
+            //PERFORMANCE_IDEA: optimize. check if positions size changes
             if (properties[POSITION_SIZE_INDEX] || (properties[POSITION_INDEX] && this._mode != SceneMode.SCENE3D)) {
                 this._createVertexArrays(context);
             }
@@ -564,10 +564,10 @@ define([
                         var positions = polyline.getPositions();
                         var colors = [];
                         for(var j = 0; j < positions.length; ++j){
-                            colors.push(color.red *255);
-                            colors.push(color.green *255);
-                            colors.push(color.blue *255);
-                            colors.push(color.alpha *255);
+                            colors.push(Color.floatToByte(color.red));
+                            colors.push(Color.floatToByte(color.green));
+                            colors.push(Color.floatToByte(color.blue));
+                            colors.push(Color.floatToByte(color.alpha));
                         }
                         var vb = this._colorBuffer;
                         vb.copyFromArrayView(new Uint8Array(colors), 4 * positionIndex);
@@ -577,10 +577,10 @@ define([
                         var positions = polyline.getPositions();
                         var colors = [];
                         for(var j = 0; j < positions.length; ++j){
-                            colors.push(color.red *255);
-                            colors.push(color.green *255);
-                            colors.push(color.blue *255);
-                            colors.push(color.alpha *255);
+                            colors.push(Color.floatToByte(color.red));
+                            colors.push(Color.floatToByte(color.green));
+                            colors.push(Color.floatToByte(color.blue));
+                            colors.push(Color.floatToByte(color.alpha));
                         }
                         var vb = this._outlineColorBuffer;
                         vb.copyFromArrayView(new Uint8Array(colors), 4 * positionIndex);
@@ -908,13 +908,9 @@ define([
                         attributesPickColor[0].value = [0.0, 0.0, 0.0];
                         attributesPickColor[1].vertexBuffer = this._positionBuffer;
                     }
-                    var va = context.createVertexArray(attributes);
-                    var vaOutlineColor = context.createVertexArray(attributesOutlineColor);
-                    var vaPickColor = context.createVertexArray(attributesPickColor);
-
-                    va.setIndexBuffer(indexBuffer);
-                    vaOutlineColor.setIndexBuffer(indexBuffer);
-                    vaPickColor.setIndexBuffer(indexBuffer);
+                    var va = context.createVertexArray(attributes, indexBuffer);
+                    var vaOutlineColor = context.createVertexArray(attributesOutlineColor, indexBuffer);
+                    var vaPickColor = context.createVertexArray(attributesPickColor, indexBuffer);
 
                     this._colorVertexArrays.push({va:va, wrappers:wrappers[k]});
                     this._outlineColorVertexArrays.push({va:vaOutlineColor, wrappers:wrappers[k]});
