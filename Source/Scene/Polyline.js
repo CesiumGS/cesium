@@ -46,8 +46,6 @@ define([
      *
      * @alias Polyline
      * @internalConstructor
-     *
-     * @example
      */
     var Polyline = function(polylineTemplate, polylineCollection) {
         var p = polylineTemplate || {};

@@ -158,7 +158,7 @@ defineSuite([
         });
 
         expect(polylines.getLength()).toEqual(1);
-        expect(polylines.get(0).equals(p)).toEqual(true);
+        expect(polylines.get(0) === p).toEqual(true);
     });
 
     it("removes the first polyline", function() {
@@ -190,7 +190,7 @@ defineSuite([
         expect(polylines.remove(one)).toEqual(true);
 
         expect(polylines.getLength()).toEqual(1);
-        expect(polylines.get(0).equals(two)).toEqual(true);
+        expect(polylines.get(0) === two).toEqual(true);
     });
 
     it("removes the last polyline", function() {
@@ -222,7 +222,7 @@ defineSuite([
         expect(polylines.remove(two)).toEqual(true);
 
         expect(polylines.getLength()).toEqual(1);
-        expect(polylines.get(0).equals(one)).toEqual(true);
+        expect(polylines.get(0) === one).toEqual(true);
     });
 
     it("removes the same polyline twice", function() {
@@ -288,8 +288,8 @@ defineSuite([
             }]
         });
         expect(polylines.getLength()).toEqual(2);
-        expect(polylines.get(0).equals(one)).toEqual(true);
-        expect(polylines.get(1).equals(two)).toEqual(true);
+        expect(polylines.get(0) === one).toEqual(true);
+        expect(polylines.get(1) === two).toEqual(true);
 
         expect(polylines.remove(two)).toEqual(true);
         var three = polylines.add({
@@ -304,8 +304,8 @@ defineSuite([
             }]
         });
         expect(polylines.getLength()).toEqual(2);
-        expect(polylines.get(0).equals(one)).toEqual(true);
-        expect(polylines.get(1).equals(three)).toEqual(true);
+        expect(polylines.get(0) === one).toEqual(true);
+        expect(polylines.get(1) === three).toEqual(true);
     });
 
     it("removes all polylines", function() {
@@ -1054,7 +1054,7 @@ defineSuite([
 
     it('does not equal null', function() {
         var p = polylines.add({});
-        expect(p.equals(null)).toBeFalsy();
+        expect(p === null).toBeFalsy();
     });
 
     it('throws when setting positions with a null value', function() {

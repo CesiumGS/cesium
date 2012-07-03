@@ -206,8 +206,8 @@ define([
             polyline.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
-            polyline.setColor(Color.WHITE.clone(polyline.getColor()));
-            polyline.setOutlineColor(Color.BLACK.clone(polyline.getOutlineColor()));
+            polyline.setColor(Color.WHITE);
+            polyline.setOutlineColor(Color.BLACK);
             polyline.setOutlineWidth(1);
             polyline.setWidth(1);
         } else {
