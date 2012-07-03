@@ -94,11 +94,11 @@ define([
         this.tileHeight = undefined;
 
         /**
-         * The maximum zoom level that can be requested.
+         * The maximum level-of-detail that can be requested.
          *
          * @type {Number}
          */
-        this.zoomMax = undefined;
+        this.maxLevel = undefined;
 
         /**
          * The map projection of the image.
@@ -168,7 +168,7 @@ define([
                 });
             }
 
-            that.zoomMax = data.tileInfo.lods.length - 1;
+            that.maxLevel = data.tileInfo.lods.length - 1;
 
             // Create the copyright message.
             var canvas = document.createElement('canvas');
@@ -188,8 +188,8 @@ define([
         });
 
         this._discardPolicy = when(isReady, function() {
-            // assume that the tile at (0,0) at the maximum zoom is missing.
-            var missingTileUrl = that.buildTileImageUrl(0, 0, that.zoomMax);
+            // assume that the tile at (0,0) at the maximum LOD is missing.
+            var missingTileUrl = that.buildTileImageUrl(0, 0, that.maxLevel);
             var pixelsToCheck = [new Cartesian2(0, 0), new Cartesian2(200, 20), new Cartesian2(20, 200), new Cartesian2(80, 110), new Cartesian2(160, 130)];
 
             return when(missingTileUrl, function(missingImageUrl) {
@@ -205,13 +205,13 @@ define([
      *
      * @param {Number} x The x coordinate of the tile image.
      * @param {Number} y The y coordinate of the tile image.
-     * @param {Number} zoom The zoom level of the tile image.
+     * @param {Number} level The level-of-detail of the tile image.
      *
      * @return {String|Promise} Either a string containing the URL, or a Promise for a string
      *                          if the URL needs to be built asynchronously.
      */
-    ArcGISMapServerTileProvider.prototype.buildTileImageUrl = function(x, y, zoom) {
-        var url = this.url + '/tile/' + zoom + '/' + y + '/' + x;
+    ArcGISMapServerTileProvider.prototype.buildTileImageUrl = function(x, y, level) {
+        var url = this.url + '/tile/' + level + '/' + y + '/' + x;
 
         if (typeof this._proxy !== 'undefined') {
             url = this._proxy.getURL(url);

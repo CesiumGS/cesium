@@ -31,11 +31,11 @@ define([
      * such as a {@link WebMercatorTilingScheme} or a {@link GeographicTilingScheme}.
      * @param {Number} description.x The tile x coordinate.
      * @param {Number} description.y The tile y coordinate.
-     * @param {Number} description.zoom The tile zoom level.
+     * @param {Number} description.level The tile level-of-detail.
      * @param {Tile} description.parent The parent of this tile in a tile tree system.
      *
      * @exception {DeveloperError} Either description.extent or both description.x and description.y is required.
-     * @exception {DeveloperError} description.zoom is required.
+     * @exception {DeveloperError} description.level is required.
      *
      * @see SingleTileProvider
      * @see ArcGISMapServerTileProvider
@@ -55,8 +55,8 @@ define([
             throw new DeveloperError('description.x and description.y must be greater than or equal to zero.');
         }
 
-        if (typeof description.zoom === 'undefined' || description.zoom < 0) {
-            throw new DeveloperError('description.zoom is required and must be greater than or equal to zero.');
+        if (typeof description.level === 'undefined' || description.zoom < 0) {
+            throw new DeveloperError('description.level is required and must be greater than or equal to zero.');
         }
 
         if (typeof description.tilingScheme === 'undefined') {
@@ -84,13 +84,12 @@ define([
          */
         this.y = description.y;
 
-        // TODO: rename to level
         /**
-         * The zoom level.
+         * The level-of-detail, where zero is the coarsest, least-detailed.
          *
          * @type Number
          */
-        this.zoom = description.zoom;
+        this.level = description.level;
 
         /**
          * The parent of this tile in a tile tree system.
@@ -112,11 +111,18 @@ define([
          *
          * @type Extent
          */
-        this.extent = this.tilingScheme.tileXYToExtent(this.x, this.y, this.zoom);
+        this.extent = this.tilingScheme.tileXYToExtent(this.x, this.y, this.level);
+
+        /**
+         * The {@link VertexArray} defining the geometry of this tile.
+         *
+         * @type VertexArray
+         */
+        this.vertexArray = undefined;
 
         var tilingScheme = description.tilingScheme;
         if (typeof description.extent !== 'undefined') {
-            var coords = tilingScheme.extentToTileXY(description.extent, this.zoom);
+            var coords = tilingScheme.extentToTileXY(description.extent, this.level);
             this.x = coords.x;
             this.y = coords.y;
 
@@ -125,7 +131,7 @@ define([
             this.x = description.x;
             this.y = description.y;
 
-            this.extent = tilingScheme.tileXYToExtent(this.x, this.y, this.zoom);
+            this.extent = tilingScheme.tileXYToExtent(this.x, this.y, this.level);
         }
 
         this._boundingSphere3D = undefined;
@@ -139,7 +145,6 @@ define([
         this._next = undefined;
 
         this._imagery = {};
-        this._extentVA = undefined;
     }
 
     /**
@@ -152,32 +157,32 @@ define([
     Tile.prototype.getChildren = function() {
         if (typeof this.children === 'undefined') {
             var tilingScheme = this.tilingScheme;
-            var zoom = this.zoom + 1;
+            var level = this.level + 1;
             var x = this.x * 2;
             var y = this.y * 2;
             this.children = [new Tile({
                 tilingScheme : tilingScheme,
                 x : x,
                 y : y,
-                zoom : zoom,
+                level : level,
                 parent : this
             }), new Tile({
                 tilingScheme : tilingScheme,
                 x : x + 1,
                 y : y,
-                zoom : zoom,
+                level : level,
                 parent : this
             }), new Tile({
                 tilingScheme : tilingScheme,
                 x : x,
                 y : y + 1,
-                zoom : zoom,
+                level : level,
                 parent : this
             }), new Tile({
                 tilingScheme : tilingScheme,
                 x : x + 1,
                 y : y + 1,
-                zoom : zoom,
+                level : level,
                 parent : this
             })];
         }
@@ -292,7 +297,7 @@ define([
      * tile = tile && tile.destroy();
      */
     Tile.prototype.destroy = function() {
-        this._extentVA = this._extentVA && this._extentVA.destroy();
+        this.vertexArray = this.vertexArray && this.vertexArray.destroy();
         Object.keys(this._imagery).forEach(function(key) {
             var tileImagery = this._imagery[key];
             tileImagery._texture = tileImagery._texture && tileImagery._texture.destroy();

@@ -20,7 +20,7 @@ define([
     "use strict";
 
     /**
-     * Provides tile images with a different solid color for each zoom level.
+     * Provides tile images with a different solid color for each level.
      * Useful for debugging or testing different {@link CentralBody} options.
      *
      * @name SolidColorTileProvider
@@ -61,11 +61,11 @@ define([
         this.tileHeight = 256;
 
         /**
-         * The maximum zoom level that can be requested.
+         * The maximum level-of-detail that can be requested.
          *
          * @type {Number}
          */
-        this.zoomMax = maxLevel;
+        this.maxLevel = maxLevel;
 
         /**
          * The map projection of the image.
@@ -116,13 +116,13 @@ define([
      *
      * @param {Number} x The x coordinate of the tile image.
      * @param {Number} y The y coordinate of the tile image.
-     * @param {Number} zoom The zoom level of the tile image.
+     * @param {Number} level The level-of-detail of the tile image.
      *
      * @return {String|Promise} Either a string containing the URL, or a Promise for a string
      *                          if the URL needs to be built asynchronously.
      */
-    SolidColorTileProvider.prototype.buildTileImageUrl = function(x, y, zoom) {
-        var canvas = this._canvases[zoom];
+    SolidColorTileProvider.prototype.buildTileImageUrl = function(x, y, level) {
+        var canvas = this._canvases[level];
         if (typeof canvas === 'undefined') {
             canvas = document.createElement('canvas');
             canvas.width = this.tileWidth;
@@ -130,7 +130,7 @@ define([
 
             var color = new Color();
 
-            x = zoom / this.zoomMax;
+            x = level / this.maxLevel;
             if (x < 0.25) {
                 // blue to cyan
                 color.green = 4.0 * x;
@@ -153,7 +153,7 @@ define([
             context.fillStyle = color.toCSSColor();
             context.fillRect(0, 0, canvas.width, canvas.height);
 
-            this._canvases[zoom] = canvas;
+            this._canvases[level] = canvas;
         }
 
         return canvas.toDataURL();

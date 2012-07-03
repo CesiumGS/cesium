@@ -184,11 +184,11 @@ define([
         this.tileHeight = undefined;
 
         /**
-         * The maximum zoom level that can be requested.
+         * The maximum level-of-detail that can be requested.
          *
          * @type {Number}
          */
-        this.zoomMax = undefined;
+        this.maxLevel = undefined;
 
         /**
          * The map projection of the image.
@@ -229,7 +229,7 @@ define([
 
             that.tileWidth = resource.imageWidth;
             that.tileHeight = resource.imageHeight;
-            that.zoomMax = resource.zoomMax - 1;
+            that.maxLevel = resource.zoomMax - 1;
             that._imageUrlSubdomains = resource.imageUrlSubdomains;
             that._imageUrlTemplate = resource.imageUrl.replace('{culture}', '');
             that.ready = true;
@@ -238,8 +238,8 @@ define([
         });
 
         this._discardPolicy = when(this._imageUrlTemplate, function(template) {
-            // assume that the tile at (0,0) at the maximum zoom is missing.
-            var missingTileUrl = that.buildTileImageUrl(0, 0, that.zoomMax);
+            // assume that the tile at (0,0) at the maximum level is missing.
+            var missingTileUrl = that.buildTileImageUrl(0, 0, that.maxLevel);
             var pixelsToCheck = [new Cartesian2(0, 0), new Cartesian2(120, 140), new Cartesian2(130, 160), new Cartesian2(200, 50), new Cartesian2(200, 200)];
 
             return when(missingTileUrl, function(missingImageUrl) {
@@ -249,22 +249,22 @@ define([
     }
 
     /**
-     * Converts a tiles (x, y, zoom) position into a quadkey used to request an image
+     * Converts a tiles (x, y, level) position into a quadkey used to request an image
      * from a Bing Maps server.
      *
      * @memberof BingMapsTileProvider
      *
      * @param {Number} x The tile's x coordinate.
      * @param {Number} y The tile's y coordinate.
-     * @param {Number} zoom The tile's zoom level.
+     * @param {Number} level The tile's zoom level.
      *
      * @see <a href='http://msdn.microsoft.com/en-us/library/bb259689.aspx'>Bing Maps Tile System</a>
      * @see BingMapsTileProvider#quadKeyToTileXY
      */
-    BingMapsTileProvider.tileXYToQuadKey = function(x, y, zoom) {
-        ++zoom;
+    BingMapsTileProvider.tileXYToQuadKey = function(x, y, level) {
+        ++level;
         var quadkey = '';
-        for ( var i = zoom; i > 0; --i) {
+        for ( var i = level; i > 0; --i) {
             var digit = '0'.charCodeAt(0);
             var mask = 1 << (i - 1);
             if ((x & mask) !== 0) {
@@ -280,7 +280,7 @@ define([
 
     /**
      * Converts a tile's quadkey used to request an image from a Bing Maps server into the
-     * (x, y, zoom) position.
+     * (x, y, level) position.
      *
      * @memberof BingMapsTileProvider
      *
@@ -293,10 +293,10 @@ define([
         var result = {
             x : 0,
             y : 0,
-            zoom : quadkey.length - 1
+            level : quadkey.length - 1
         };
 
-        for ( var i = result.zoom; i > 0; --i) {
+        for ( var i = result.level; i > 0; --i) {
             var mask = 1 << (i - 1);
             var c = quadkey[result.lod - i];
             if (c === '1') {
@@ -319,17 +319,17 @@ define([
      *
      * @param {Number} x The x coordinate of the tile image.
      * @param {Number} y The y coordinate of the tile image.
-     * @param {Number} zoom The zoom level of the tile image.
+     * @param {Number} level The level-of-detail of the tile image.
      *
      * @return {String|Promise} Either a string containing the URL, or a Promise for a string
      *                          if the URL needs to be built asynchronously.
      */
-    BingMapsTileProvider.prototype.buildTileImageUrl = function(x, y, zoom) {
+    BingMapsTileProvider.prototype.buildTileImageUrl = function(x, y, level) {
         var subdomains = this._imageUrlSubdomains;
         var proxy = this._proxy;
 
         return when(this._imageUrlTemplate, function(urlTemplate) {
-            var quadkey = BingMapsTileProvider.tileXYToQuadKey(x, y, zoom);
+            var quadkey = BingMapsTileProvider.tileXYToQuadKey(x, y, level);
             var subdomainIndex = (x + y) % subdomains.length;
 
             var imageUrl = urlTemplate.replace('{quadkey}', quadkey);
@@ -367,7 +367,7 @@ define([
      * @memberof BingMapsTileProvider
      */
     BingMapsTileProvider.prototype.getIntensity = function(tile) {
-        if ((this.mapStyle === BingMapsStyle.AERIAL || this.mapStyle === BingMapsStyle.AERIAL_WITH_LABELS) && tile.zoom <= 8.0) {
+        if ((this.mapStyle === BingMapsStyle.AERIAL || this.mapStyle === BingMapsStyle.AERIAL_WITH_LABELS) && tile.level <= 8.0) {
             return 1.0;
         }
         return 0.1;

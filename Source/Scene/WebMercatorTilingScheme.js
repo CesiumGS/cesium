@@ -151,7 +151,7 @@ define([
      *
      * @param {Number} x The integer x coordinate of the tile.
      * @param {Number} y The integer y coordinate of the tile.
-     * @param {Number} zoom The tile level-of-detail.  Zero is the least detailed.
+     * @param {Number} level The tile level-of-detail.  Zero is the least detailed.
      *
      * @return {Extent} The cartographic extent of the tile, with north, south, east and
      * west properties in radians.

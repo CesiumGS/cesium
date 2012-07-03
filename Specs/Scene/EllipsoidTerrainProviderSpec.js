@@ -26,7 +26,7 @@ defineSuite([
             var tile = tiles[0];
 
             expect(terrain.createTileGeometry(context, tile)).toEqual(true);
-            expect(tile._extentVA).not.toBeNull();
+            expect(tile.vertexArray).not.toBeNull();
 
             destroyContext(context);
         });

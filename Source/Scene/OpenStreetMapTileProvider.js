@@ -76,11 +76,11 @@ define([
         this.tileHeight = 256;
 
         /**
-         * The maximum zoom level that can be requested.
+         * The maximum level-of-detail that can be requested.
          *
          * @type {Number}
          */
-        this.zoomMax = 18;
+        this.maxLevel = 18;
 
         /**
          * The map projection of the image.
@@ -118,12 +118,12 @@ define([
      * @param {Function} onload A function that will be called when the image is finished loading.
      * @param {Function} onerror A function that will be called if there is an error loading the image.
      *
-     * @exception {DeveloperError} <code>tile.zoom</code> is less than zero
-     * or greater than <code>zoomMax</code>.
+     * @exception {DeveloperError} <code>tile.level</code> is less than zero
+     * or greater than <code>maxLevel</code>.
      */
     OpenStreetMapTileProvider.prototype.loadTileImage = function(tile, onload, onerror) {
-        if (tile.zoom < 0 || tile.zoom > this.zoomMax) {
-            throw new DeveloperError('tile.zoom must be in the range [0, zoomMax].');
+        if (tile.level < 0 || tile.level > this.maxLevel) {
+            throw new DeveloperError('tile.level must be in the range [0, maxLevel].');
         }
 
         var image = new Image();
@@ -131,7 +131,7 @@ define([
         image.onerror = onerror;
         image.crossOrigin = '';
 
-        var url = this._url + tile.zoom + '/' + tile.x + '/' + tile.y + '.' + this._fileExtension;
+        var url = this._url + tile.level + '/' + tile.x + '/' + tile.y + '.' + this._fileExtension;
         if (typeof this._proxy !== 'undefined') {
             url = this._proxy.getURL(url);
         }

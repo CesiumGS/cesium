@@ -47,12 +47,12 @@ define([
         this.maxExtent = Extent.MAX_VALUE;
 
         /**
-         * The maximum zoom level that can be requested.
+         * The maximum level-of-detail that can be requested.
          *
          * @constant
          * @type {Number}
          */
-        this.zoomMax = 0;
+        this.maxLevel = 0;
 
         /**
          * The map projection of the image.
@@ -91,11 +91,11 @@ define([
      * @param {Function} onload A function that will be called when the image is finished loading.
      * @param {Function} onerror A function that will be called if there is an error loading the image.
      *
-     * @exception {DeveloperError} <code>tile.zoom</code> is less than zero
-     * or greater than <code>zoomMax</code>.
+     * @exception {DeveloperError} <code>tile.level</code> is less than zero
+     * or greater than <code>maxLevel</code>.
      */
     SingleTileProvider.prototype.loadTileImage = function(tile, onload, onerror) {
-        if (tile.zoom < 0 || tile.zoom > this.zoomMax) {
+        if (tile.level < 0 || tile.level > this.maxLevel) {
             throw new DeveloperError('tile.zoom must be in the range [0, zoomMax].');
         }
 

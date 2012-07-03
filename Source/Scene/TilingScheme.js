@@ -100,7 +100,7 @@ define([
                     tilingScheme: this,
                     x: x,
                     y: y,
-                    zoom: 0
+                    level: 0
                 });
             }
         }

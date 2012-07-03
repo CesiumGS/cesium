@@ -176,7 +176,7 @@ define([
         this._tileImageryLoadList = new TileLoadList();
 
         this._minTileDistance = undefined;
-        this._preloadZoomLimit = 1;
+        this._preloadLevelLimit = 1;
         this._tileFailCount = 0;
 
         /**
@@ -262,9 +262,9 @@ define([
         var postpone = false;
         var x = tile.x;
         var y = tile.y;
-        var zoom = tile.zoom + layer._zoomOffset;
+        var level = tile.level + layer._levelOffset;
 
-        when(tileProvider.buildTileImageUrl(x, y, zoom), function(imageUrl) {
+        when(tileProvider.buildTileImageUrl(x, y, level), function(imageUrl) {
             hostname = getHostname(imageUrl);
 
             if (hostname !== '') {
@@ -377,8 +377,8 @@ define([
         var direction = camera.getDirectionWC();
 
         var pixelError3D = (layer.pixelError3D > 0.0) ? layer.pixelError3D : 1.0;
-        var zoom = tile.zoom + layer._zoomOffset;
-        var dmin = layer._minTileDistance(zoom, pixelError3D);
+        var level = tile.level + layer._levelOffset;
+        var dmin = layer._minTileDistance(level, pixelError3D);
 
         var toCenter = boundingVolume.center.subtract(cameraPosition);
         var toSphere = toCenter.normalize().multiplyWithScalar(toCenter.magnitude() - boundingVolume.radius);
@@ -457,8 +457,8 @@ define([
         var dmin = texelSize * invPixelSizePerDistance;
         dmin *= layer._centralBody.getEllipsoid().getMaximumRadius();
 
-        var func = function(zoom, pixelError) {
-            return (dmin / pixelError) * Math.exp(-0.693147181 * zoom);
+        var func = function(level, pixelError) {
+            return (dmin / pixelError) * Math.exp(-0.693147181 * level);
         };
 
         func.needsUpdate = function(context, sceneState) {
@@ -493,16 +493,16 @@ define([
         }
 
         // TODO: remove this offset calculation
-        if (typeof this._zoomOffset === 'undefined') {
-            this._zoomOffset = 0;
+        if (typeof this._levelOffset === 'undefined') {
+            this._levelOffset = 0;
             var zeroTileDifference = this._centralBody._terrain.tilingScheme.numberOfLevelZeroTilesX - tileProvider.tilingScheme.numberOfLevelZeroTilesX;
             while (zeroTileDifference > 0) {
-                this._zoomOffset++;
+                this._levelOffset++;
                 zeroTileDifference = zeroTileDifference >> 1;
             }
         }
 
-        var zoomMax = tileProvider.zoomMax;
+        var maxLevel = tileProvider.maxLevel;
         var now = Date.now();
 
         // start loading tiles and build render list
@@ -528,8 +528,8 @@ define([
             }
 
             var renderTile = tileImagery.state === TileState.TEXTURE_LOADED;
-            var zoom = tile.zoom + this._zoomOffset;
-            if (zoom < zoomMax && shouldRefine(this, tile, context, sceneState)) {
+            var level = tile.level + this._levelOffset;
+            if (level < maxLevel && shouldRefine(this, tile, context, sceneState)) {
                 var allChildrenLoaded = true;
 
                 var children = tile.getChildren();
@@ -606,13 +606,13 @@ define([
         var projection = sceneState.scene2D.projection;
 
         // create vertex array the first time it is needed or when morphing
-        if (!tile._extentVA ||
-            tile._extentVA.isDestroyed() ||
+        if (!tile.vertexArray ||
+            tile.vertexArray.isDestroyed() ||
             layer._centralBody._isModeTransition(layer._centralBody._mode, mode) ||
             tile._mode !== mode ||
             layer._centralBody._projection !== projection) {
 
-            tile._extentVA = tile._extentVA && tile._extentVA.destroy();
+            tile.vertexArray = tile.vertexArray && tile.vertexArray.destroy();
 
             if (mode === SceneMode.SCENE3D) {
                 layer._centralBody._terrain.createTileEllipsoidGeometry(context, tile);
@@ -667,7 +667,7 @@ define([
 
         // TODO: remove once multi-frustum/depth testing is implemented
         tilesToRender.sort(function(a, b) {
-            return a.zoom - b.zoom;
+            return a.level - b.level;
         });
 
         var uniformState = context.getUniformState();
@@ -700,7 +700,7 @@ define([
 
             context.continueDraw({
                 primitiveType : PrimitiveType.TRIANGLES,
-                vertexArray : tile._extentVA,
+                vertexArray : tile.vertexArray,
                 uniformMap : tileImagery._drawUniforms
             });
         }

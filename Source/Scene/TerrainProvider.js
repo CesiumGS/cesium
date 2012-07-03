@@ -68,7 +68,7 @@ define([
         }];
         var indexBuffer = context.createIndexBuffer(new Uint16Array(buffers.indices), BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
 
-        tile._extentVA = context.createVertexArray(attributes, indexBuffer);
+        tile.vertexArray = context.createVertexArray(attributes, indexBuffer);
     };
 
     TerrainProvider.createTilePlaneGeometryFromBuffers = function(context, tile, buffers) {
@@ -103,7 +103,7 @@ define([
 
         var indexBuffer = context.createIndexBuffer(new Uint16Array(buffers.indices), usage, IndexDatatype.UNSIGNED_SHORT);
 
-        tile._extentVA = context.createVertexArray(attributes, indexBuffer);
+        tile.vertexArray = context.createVertexArray(attributes, indexBuffer);
     };
 
     /**
