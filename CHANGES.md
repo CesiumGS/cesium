@@ -33,6 +33,7 @@ Beta Releases
             spindleController.constrainedAxis = Cartesian3.UNIT_Z;
    
    * The free look feature has been removed from `CameraColumbusViewController` in favor of rotating about the point clicked on the map with the middle mouse button.
+   * The `Camera2DController` constructor and `CameraControllerCollection.add2D` now require a projection instead of an ellipsoid.
 
 * Added `addImage` to `TextureAtlas` so images can be added to a texture atlas after it is constructed.
 * Added `Scene.pickEllipsoid`, which picks either the ellipsoid or the map depending on the current `SceneMode`.

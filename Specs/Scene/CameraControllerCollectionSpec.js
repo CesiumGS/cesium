@@ -4,13 +4,15 @@ defineSuite([
          'Scene/Camera',
          'Scene/CameraFreeLookController',
          'Core/Cartographic3',
-         'Core/Ellipsoid'
+         'Core/Ellipsoid',
+         'Core/MercatorProjection'
      ], function(
          CameraControllerCollection,
          Camera,
          CameraFreeLookController,
          Cartographic3,
-         Ellipsoid) {
+         Ellipsoid,
+         MercatorProjection) {
     "use strict";
     /*global document,describe,it,expect,beforeEach,afterEach*/
 
@@ -28,7 +30,8 @@ defineSuite([
 
     it('add2D', function() {
         expect(function() {
-            collection.add2D();
+            var mercator = new MercatorProjection();
+            collection.add2D(mercator);
         }).not.toThrow();
         expect(collection.getLength()).toEqual(1);
     });
@@ -87,8 +90,8 @@ defineSuite([
     });
 
     it('update', function() {
-        collection.add2D();
-        collection.addColumbusView();
+        collection.addSpindle();
+        collection.addFreeLook();
         expect(function() {
             collection.update();
         }).not.toThrow();

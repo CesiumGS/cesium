@@ -7,6 +7,8 @@ defineSuite([
          'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/Ellipsoid',
+         'Core/EquidistantCylindricalProjection',
+         'Core/MercatorProjection',
          'Core/Math',
          'Core/Transforms'
      ], function(
@@ -17,6 +19,8 @@ defineSuite([
          Cartesian2,
          Cartesian3,
          Ellipsoid,
+         EquidistantCylindricalProjection,
+         MercatorProjection,
          CesiumMath,
          Transforms) {
     "use strict";
@@ -31,6 +35,7 @@ defineSuite([
     var moverate;
     var zoomrate;
     var ellipsoid;
+    var projection;
     var controller;
     var controller2;
     var canvas;
@@ -69,7 +74,9 @@ defineSuite([
         camera.right = right;
         camera.frustum = frustum;
 
-        controller = new Camera2DController(canvas, camera, ellipsoid);
+        projection = new EquidistantCylindricalProjection(ellipsoid);
+
+        controller = new Camera2DController(canvas, camera, projection);
     });
 
     afterEach(function() {
@@ -77,16 +84,34 @@ defineSuite([
         controller2 = controller2 && !controller2.isDestroyed() && controller2.destroy();
     });
 
-    it('setReferenceFrame', function() {
-        var transform = Transforms.eastNorthUpToFixedFrame(ellipsoid.cartographicDegreesToCartesian(new Cartographic2(-75.0, 40.0)));
-        controller.setReferenceFrame(transform, ellipsoid);
-        expect(controller.getEllipsoid()).toBe(ellipsoid);
-        expect(controller._camera.transform).toBe(transform);
+    it('constructor throws without a canvas', function() {
+        expect(function() {
+            return new Camera2DController();
+        }).toThrow();
     });
 
-    it('setEllipsoid', function() {
-        controller.setEllipsoid(Ellipsoid.UNIT_SPHERE);
-        expect(controller.getEllipsoid().equals(Ellipsoid.UNIT_SPHERE)).toEqual(true);
+    it('constructor throws without a camera', function() {
+        expect(function() {
+            return new Camera2DController(canvas);
+        }).toThrow();
+    });
+
+    it('constructor throws without a projection', function() {
+        expect(function() {
+            return new Camera2DController(canvas, camera);
+        }).toThrow();
+    });
+
+    it('setProjection throws without a projection', function() {
+        expect(function() {
+            controller.setProjection();
+        }).toThrow();
+    });
+
+    it('setProjection', function() {
+        var mercator = new MercatorProjection(ellipsoid);
+        controller.setProjection(mercator);
+        expect(controller.getProjection()).toEqual(mercator);
     });
 
     it('moveUp', function() {
@@ -149,7 +174,7 @@ defineSuite([
     it('zoomIn throws with null OrthogrphicFrustum properties', function() {
         var camera = new Camera(document);
         camera.frustum = new OrthographicFrustum();
-        controller2 = new Camera2DController(document, camera, ellipsoid);
+        controller2 = new Camera2DController(document, camera, projection);
         expect(function () {
             controller2.zoomIn(moverate);
         }).toThrow();

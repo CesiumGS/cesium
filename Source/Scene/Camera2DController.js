@@ -5,9 +5,7 @@ define([
         '../Core/FAR',
         '../Core/Math',
         '../Core/Quaternion',
-        '../Core/Ellipsoid',
         '../Core/Cartesian2',
-        '../Core/Cartesian3',
         '../Core/Cartographic3',
         './CameraEventHandler',
         './CameraEventType',
@@ -20,9 +18,7 @@ define([
         FAR,
         CesiumMath,
         Quaternion,
-        Ellipsoid,
         Cartesian2,
-        Cartesian3,
         Cartographic3,
         CameraEventHandler,
         CameraEventType,
@@ -44,14 +40,30 @@ define([
      * @param {HTMLCanvasElement} canvas An HTML canvas element used for its dimensions
      * and for listening on user events.
      * @param {Camera} camera The camera to use.
-     * @param {Ellipsoid} [ellipsoid=WGS84 Ellipsoid] DOC_TBA.
+     * @param {DOC_TBA} projection The projection of the map the camera is moving around..
+     *
+     * @exception {DeveloperError} canvas is required.
+     * @exception {DeveloperError} camera is required.
+     * @exception {DeveloperError} projection is required.
      *
      * @internalConstructor
      */
     var Camera2DController = function(canvas, camera, projection) {
+        if (typeof canvas === 'undefined') {
+            throw new DeveloperError('canvas is required.');
+        }
+
+        if (typeof camera === 'undefined') {
+            throw new DeveloperError('camera is required.');
+        }
+
+        if (typeof projection === 'undefined') {
+            throw new DeveloperError('projection is required.');
+        }
+
         this._canvas = canvas;
         this._camera = camera;
-        this._ellipsoid = projection.getEllipsoid();
+        this._projection = projection;
         this._zoomRate = 100000.0;
         this._moveRate = 100000.0;
 
@@ -105,59 +117,36 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Returns the projection of the map that the camera is moving around.
      *
      * @memberof Camera2DController
      *
-     * @param {Matrix4} transform DOC_TBA
-     * @param {Ellipsoid} ellipsoid DOC_TBA
+     * @returns {DOC_TBA} The projection of the map that the camera is moving around.
      *
-     * @example
-     * // Example 1.
-     * // Change the reference frame to one centered at a point on the ellipsoid's surface.
-     * // Set the 2D controller's ellipsoid to a unit sphere for easy rotation around that point.
-     * var center = ellipsoid.cartographicDegreesToCartesian(new Cartographic2(-75.59777, 40.03883));
-     * var transform = Transforms.eastNorthUpToFixedFrame(center);
-     * scene.getCamera().getControllers().get(0).setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
-     *
-     * // Example 2.
-     * // Reset to the defaults.
-     * scene.getCamera().getControllers().get(0).setReferenceFrame(Matrix4.IDENTITY);
-     *
+     * @see Camera2DController#setProjection
      */
-    Camera2DController.prototype.setReferenceFrame = function (transform, ellipsoid) {
-        this._camera.transform = transform;
-        this.setEllipsoid(ellipsoid);
+    Camera2DController.prototype.getProjection = function() {
+        return this._projection;
     };
 
     /**
-     * Returns the ellipsoid that the camera is moving around.
+     * Sets the projection of the map that the camera is moving around.
      *
      * @memberof Camera2DController
      *
-     * @returns {Ellipsoid} The ellipsoid that the camera is moving around.
+     * @param {DOC_TBA} projection The projection of the map that the camera is moving around.
      *
-     * @see Camera2DController#setEllipsoid
+     * @exception {DeveloperError} projection is required.
+     *
+     * @see Camera2DController#getProjection
      */
-    Camera2DController.prototype.getEllipsoid = function() {
-        return this._ellipsoid;
-    };
+    Camera2DController.prototype.setProjection = function(projection) {
+        if (typeof projection === 'undefined') {
+            throw new DeveloperError('projection is required.');
+        }
 
-    /**
-     * Sets the ellipsoid that the camera is moving around.
-     *
-     * @memberof Camera2DController
-     *
-     * @param {Ellipsoid} [ellipsoid] The ellipsoid that the camera is moving around.
-     *
-     * @see Camera2DController#getEllipsoid
-     */
-    Camera2DController.prototype.setEllipsoid = function(ellipsoid) {
-        ellipsoid = ellipsoid || Ellipsoid.WGS84;
-
-        var radius = ellipsoid.getRadii().getMaximumComponent();
-        this._ellipsoid = ellipsoid;
-        this._rateAdjustment = radius;
+        this._projection = projection;
+        this._maxCoord = projection.project(new Cartographic3(Math.PI, CesiumMath.toRadians(85.05112878)));
     };
 
     /**
