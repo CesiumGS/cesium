@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/Color',
         '../Core/shallowEquals',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -9,6 +10,7 @@ define([
         './HorizontalOrigin',
         './VerticalOrigin'
     ], function(
+        Color,
         shallowEquals,
         Cartesian2,
         Cartesian3,
@@ -38,18 +40,8 @@ define([
 
         this._text = l.text || '';
         this._font = l.font || '30px sans-serif';
-        this._fillColor = l.fillColor || {
-            red : 1.0,
-            green : 1.0,
-            blue : 1.0,
-            alpha : 1.0
-        };
-        this._outlineColor = l.outlineColor || {
-            red : 0.0,
-            green : 0.0,
-            blue : 0.0,
-            alpha : 1.0
-        };
+        this._fillColor = (typeof l.fillColor !== 'undefined') ? Color.clone(l.fillColor) : new Color(1.0, 1.0, 1.0, 1.0);
+        this._outlineColor = (typeof l.outlineColor !== 'undefined') ? Color.clone(l.outlineColor) : new Color(0.0, 0.0, 0.0, 1.0);
         this._style = l.style || LabelStyle.FILL;
         this._verticalOrigin = l.verticalOrigin || VerticalOrigin.BOTTOM;
         this._horizontalOrigin = l.horizontalOrigin || HorizontalOrigin.LEFT;

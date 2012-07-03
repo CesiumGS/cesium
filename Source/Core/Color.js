@@ -5,6 +5,10 @@ define(function() {
     /**
      * A color, specified using red, green, blue, and alpha values,
      * which range from <code>0</code> (no intensity) to <code>1.0</code> (full intensity).
+     * @param {Number} [red=1.0] The red component.
+     * @param {Number} [green=1.0] The green component.
+     * @param {Number} [blue=1.0] The blue component.
+     * @param {Number} [alpha=1.0] The alpha component.
      *
      * @constructor
      * @alias Color
@@ -26,6 +30,26 @@ define(function() {
          * The alpha component.
          */
         this.alpha = typeof alpha === 'undefined' ? 1.0 : alpha;
+    };
+
+    /**
+     * Creates a new Color specified using red, green, blue, and alpha values
+     * that are in the range of 0 to 255, converting them internally to a
+     * range of 0.0 to 1.0.
+     * @memberof Color
+     *
+     * @param {Number} [red=255] The red component.
+     * @param {Number} [green=255] The green component.
+     * @param {Number} [blue=255] The blue component.
+     * @param {Number} [alpha=255] The alpha component.
+     * @returns {Color} A new color instance.
+     */
+    Color.fromBytes = function(red, green, blue, alpha) {
+        red = typeof red === 'undefined' ? 255.0 : red;
+        green = typeof green === 'undefined' ? 255.0 : green;
+        blue = typeof blue === 'undefined' ? 255.0 : blue;
+        alpha = typeof alpha === 'undefined' ? 255.0 : alpha;
+        return new Color(red / 255.0, green / 255.0, blue / 255.0, alpha / 255.0);
     };
 
     /**

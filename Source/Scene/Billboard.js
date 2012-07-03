@@ -2,6 +2,7 @@
 define([
         '../Core/DeveloperError',
         '../Core/shallowEquals',
+        '../Core/Color',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
@@ -10,6 +11,7 @@ define([
     ], function(
         DeveloperError,
         shallowEquals,
+        Color,
         Cartesian2,
         Cartesian3,
         Cartesian4,
@@ -46,15 +48,8 @@ define([
      */
     var Billboard = function(billboardTemplate, collection) {
         var b = billboardTemplate || {};
-        var color = b.color || {
-            red : 1.0,
-            green : 1.0,
-            blue : 1.0,
-            alpha : 1.0
-        };
-
+        var color = (typeof b.color !== 'undefined') ? new Color(b.color.red, b.color.green, b.color.blue, b.color.alpha) : new Color(1.0, 1.0, 1.0, 1.0);
         var position = b.position ? new Cartesian3(b.position.x, b.position.y, b.position.z) : Cartesian3.ZERO.clone();
-
         this._show = (typeof b.show === 'undefined') ? true : b.show;
         this._position = position;
         this._actualPosition = position.clone(); // For columbus view and 2D
@@ -64,12 +59,7 @@ define([
         this._verticalOrigin = b.verticalOrigin || VerticalOrigin.CENTER;
         this._scale = (typeof b.scale === 'undefined') ? 1.0 : b.scale;
         this._imageIndex = b.imageIndex || 0;
-        this._color = {
-            red : color.red,
-            green : color.green,
-            blue : color.blue,
-            alpha : color.alpha
-        };
+        this._color = color.clone();
         this._pickId = undefined;
         this._pickIdThis = b._pickIdThis;
 
