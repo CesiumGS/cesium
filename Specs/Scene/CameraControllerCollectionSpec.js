@@ -2,17 +2,13 @@
 defineSuite([
          'Scene/CameraControllerCollection',
          'Scene/Camera',
-         'Scene/Camera2DController',
          'Scene/CameraFreeLookController',
-         'Scene/CameraSpindleController',
          'Core/Cartographic3',
          'Core/Ellipsoid'
      ], function(
          CameraControllerCollection,
          Camera,
-         Camera2DController,
          CameraFreeLookController,
-         CameraSpindleController,
          Cartographic3,
          Ellipsoid) {
     "use strict";

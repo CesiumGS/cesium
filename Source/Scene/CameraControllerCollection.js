@@ -47,8 +47,8 @@ define([
      * @see CameraControllerCollection#addSpindle
      * @see CameraControllerCollection#addColumbusView
      */
-    CameraControllerCollection.prototype.add2D = function(ellipsoid) {
-        var twoD = new Camera2DController(this._canvas, this._camera, ellipsoid);
+    CameraControllerCollection.prototype.add2D = function(projection) {
+        var twoD = new Camera2DController(this._canvas, this._camera, projection);
         this._controllers.push(twoD);
         return twoD;
     };

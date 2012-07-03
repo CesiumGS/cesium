@@ -8,6 +8,7 @@ define([
         '../Core/Ellipsoid',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
+        '../Core/Cartographic3',
         './CameraEventHandler',
         './CameraEventType',
         './CameraHelpers',
@@ -22,6 +23,7 @@ define([
         Ellipsoid,
         Cartesian2,
         Cartesian3,
+        Cartographic3,
         CameraEventHandler,
         CameraEventType,
         CameraHelpers,
@@ -46,12 +48,10 @@ define([
      *
      * @internalConstructor
      */
-    var Camera2DController = function(canvas, camera, ellipsoid) {
-        ellipsoid = ellipsoid || Ellipsoid.WGS84;
-
+    var Camera2DController = function(canvas, camera, projection) {
         this._canvas = canvas;
         this._camera = camera;
-        this._ellipsoid = ellipsoid;
+        this._ellipsoid = projection.getEllipsoid();
         this._zoomRate = 100000.0;
         this._moveRate = 100000.0;
 
@@ -98,8 +98,7 @@ define([
         this._frustum.top *= maxZoomOut;
         this._frustum.bottom *= maxZoomOut;
 
-        this._cameraMaxX = this._ellipsoid.getRadii().x * Math.PI;
-        this._cameraMaxY = this._ellipsoid.getRadii().y * CesiumMath.PI_OVER_TWO;
+        this._maxCoord = projection.project(new Cartographic3(Math.PI, CesiumMath.toRadians(85.05112878)));
 
         this._maxZoomFactor = 2.5;
         this._maxTranslateFactor = 1.5;
@@ -236,7 +235,7 @@ define([
         var newRight = frustum.right - moveRate;
         var newLeft = frustum.left + moveRate;
 
-        var maxRight = this._cameraMaxX * this._maxZoomFactor;
+        var maxRight = this._maxCoord.x * this._maxZoomFactor;
         if (newRight > maxRight) {
             newRight = maxRight;
             newLeft = -newRight;
@@ -298,16 +297,16 @@ define([
         var currentPosition = camera.position;
         var translatedPosition = currentPosition.clone();
 
-        if (translatedPosition.x > this._cameraMaxX) {
-            translatedPosition.x = this._cameraMaxX;
-        } else if (translatedPosition.x < -this._cameraMaxX) {
-            translatedPosition.x = -this._cameraMaxX;
+        if (translatedPosition.x > this._maxCoord.x) {
+            translatedPosition.x = this._maxCoord.x;
+        } else if (translatedPosition.x < -this._maxCoord.x) {
+            translatedPosition.x = -this._maxCoord.x;
         }
 
-        if (translatedPosition.y > this._cameraMaxY) {
-            translatedPosition.y = this._cameraMaxY;
-        } else if (translatedPosition.y < -this._cameraMaxY) {
-            translatedPosition.y = -this._cameraMaxY;
+        if (translatedPosition.y > this._maxCoord.y) {
+            translatedPosition.y = this._maxCoord.y;
+        } else if (translatedPosition.y < -this._maxCoord.y) {
+            translatedPosition.y = -this._maxCoord.y;
         }
 
         var update2D = function(value) {
@@ -374,8 +373,8 @@ define([
             }
 
             var position = this._camera.position;
-            var translateX = position.x < -this._cameraMaxX || position.x > this._cameraMaxX;
-            var translateY = position.y < -this._cameraMaxY || position.y > this._cameraMaxY;
+            var translateX = position.x < -this._maxCoord.x || position.x > this._maxCoord.x;
+            var translateY = position.y < -this._maxCoord.y || position.y > this._maxCoord.y;
             if ((translateX || translateY) && !this._lastInertiaTranslateMovement &&
                     !this._animationCollection.contains(this._translateAnimation)) {
                 this._addCorrectTranslateAnimation();
@@ -399,16 +398,12 @@ define([
        var height = this._canvas.clientHeight;
 
        var start = new Cartesian2();
-       start.x = (2.0 / width) * movement.startPosition.x - 1.0;
-       start.x = (start.x * (frustum.right - frustum.left) + frustum.right + frustum.left) * 0.5;
-       start.y = (2.0 / height) * (height - movement.startPosition.y) - 1.0;
-       start.y = (start.y * (frustum.top - frustum.bottom) + frustum.top + frustum.bottom) * 0.5;
+       start.x = (movement.startPosition.x / width) * (frustum.right - frustum.left) + frustum.left;
+       start.y = ((height - movement.startPosition.y) / height) * (frustum.top - frustum.bottom) + frustum.bottom;
 
        var end = new Cartesian2();
-       end.x = (2.0 / width) * movement.endPosition.x - 1.0;
-       end.x = (end.x * (frustum.right - frustum.left) + frustum.right + frustum.left) * 0.5;
-       end.y = (2.0 / height) * (height - movement.endPosition.y) - 1.0;
-       end.y = (end.y * (frustum.top - frustum.bottom) + frustum.top + frustum.bottom) * 0.5;
+       end.x = (movement.endPosition.x / width) * (frustum.right - frustum.left) + frustum.left;
+       end.y = ((height - movement.endPosition.y) / height) * (frustum.top - frustum.bottom) + frustum.bottom;
 
        var camera = this._camera;
        var right = camera.right;
@@ -421,7 +416,7 @@ define([
            position = camera.position;
            newPosition = position.add(right.multiplyWithScalar(distance.x));
 
-           var maxX = this._cameraMaxX * this._maxTranslateFactor;
+           var maxX = this._maxCoord.x * this._maxTranslateFactor;
            if (newPosition.x > maxX) {
                newPosition.x = maxX;
            }
@@ -435,7 +430,7 @@ define([
            position = camera.position;
            newPosition = position.add(up.multiplyWithScalar(distance.y));
 
-           var maxY = this._cameraMaxY * this._maxTranslateFactor;
+           var maxY = this._maxCoord.y * this._maxTranslateFactor;
            if (newPosition.y > maxY) {
                newPosition.y = maxY;
            }
