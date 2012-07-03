@@ -60,6 +60,9 @@ define([
         this._spindleController._spinHandler = new CameraEventHandler(canvas, CameraEventType.MIDDLE_DRAG);
         this._spindleController.constrainedAxis = Cartesian3.UNIT_Z;
 
+        this._freeLookController = new CameraFreeLookController(canvas, camera);
+        this._freeLookController.horizontalRotationAxis = Cartesian3.UNIT_Z;
+
         this._transform = this._camera.transform.clone();
         this._lastInertiaTranslateMovement = undefined;
 
@@ -77,7 +80,8 @@ define([
         var translate = this._translateHandler;
         var translating = translate.isMoving() && translate.getMovement();
 
-        if (translate.isButtonDown() || this._spindleController._zoomHandler.isButtonDown() || this._spindleController._spinHandler.isButtonDown()) {
+        if (translate.isButtonDown() || this._spindleController._zoomHandler.isButtonDown() ||
+                this._spindleController._spinHandler.isButtonDown() || this._freeLookController._handler.isButtonDown()) {
             this._animationCollection.removeAll();
         }
 
@@ -90,6 +94,7 @@ define([
         }
 
         this._spindleController.update();
+        this._freeLookController.update();
 
         this._correctPosition();
         this._animationCollection.update();
@@ -161,15 +166,28 @@ define([
         var position = camera.position;
         var direction = camera.direction;
 
-        var scalar = -position.z / direction.z;
-        var center = position.add(direction.multiplyWithScalar(scalar));
-        center = new Cartesian4(center.x, center.y, center.z, 1.0);
-        var centerWC = camera.transform.multiplyWithVector(center);
-        this._transform.setColumn3(centerWC);
+        var centerWC;
+        var positionWC;
 
-        var cameraPosition = new Cartesian4(camera.position.x, camera.position.y, camera.position.z, 1.0);
-        var positionWC = camera.transform.multiplyWithVector(cameraPosition);
-        camera.transform = this._transform.clone();
+        if (direction.dot(Cartesian3.UNIT_Z) >= 0) {
+            centerWC = Cartesian4.UNIT_W;
+            this._transform.setColumn3(centerWC);
+
+            var cameraPosition = new Cartesian4(camera.position.x, camera.position.y, camera.position.z, 1.0);
+            positionWC = camera.transform.multiplyWithVector(cameraPosition);
+
+            camera.transform = this._transform.clone();
+        } else {
+            var scalar = -position.z / direction.z;
+            var center = position.add(direction.multiplyWithScalar(scalar));
+            center = new Cartesian4(center.x, center.y, center.z, 1.0);
+            centerWC = camera.transform.multiplyWithVector(center);
+            this._transform.setColumn3(centerWC);
+
+            var cameraPosition = new Cartesian4(camera.position.x, camera.position.y, camera.position.z, 1.0);
+            positionWC = camera.transform.multiplyWithVector(cameraPosition);
+            camera.transform = this._transform.clone();
+        }
 
         var tanPhi = Math.tan(this._camera.frustum.fovy * 0.5);
         var tanTheta = this._camera.frustum.aspectRatio * tanPhi;
@@ -245,6 +263,7 @@ define([
     CameraColumbusViewController.prototype.destroy = function() {
         this._translateHandler = this._translateHandler && this._translateHandler.destroy();
         this._spindleController = this._spindleController && this._spindleController.destroy();
+        this._freeLookController = this._freeLookController && this._freeLookController.destroy();
         return destroyObject(this);
     };
 
