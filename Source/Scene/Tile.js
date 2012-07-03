@@ -22,7 +22,8 @@ define([
     "use strict";
 
     /**
-     * A single piece of a uniformly subdivided image mapped to the surface of an ellipsoid.
+     * A node in the quadtree representing the surface of a {@link CentralBody}.  A tile holds the surface
+     * geometry for its horizontal extent and zero or more imagery textures overlayed on the geometry.
      *
      * @name Tile
      * @constructor
@@ -210,7 +211,7 @@ define([
     };
 
     /**
-     * A point that when visible means the geometry for this tile is visible.
+     * Computes a point that when visible means the geometry for this tile is visible.
      *
      * @memberof Tile
      *

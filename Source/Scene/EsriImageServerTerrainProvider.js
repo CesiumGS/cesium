@@ -24,10 +24,10 @@ define([
     "use strict";
 
     /**
-     * A very simple {@link TerrainProvider} that produces geometry by tessellating an ellipsoidal
-     * surface.
+     * A {@link TerrainProvider} that produces geometry by tessellating height maps retrieved from an ESRI
+     * ImageServer.
      *
-     * @alias EllipsoidTerrainProvider
+     * @alias EsriImageServerTerrainProvider
      * @constructor
      *
      * @param {TilingScheme} [tilingScheme] The tiling scheme indicating how the ellipsoidal
@@ -36,7 +36,7 @@ define([
      *
      * @see TerrainProvider
      */
-    function EllipsoidTerrainProvider(tilingScheme) {
+    function EsriImageServerTerrainProvider(tilingScheme) {
         /**
          * The tiling scheme used to tile the surface.
          *
@@ -65,14 +65,21 @@ define([
      * Populates a {@link Tile} with ellipsoid-mapped surface geometry from this
      * tile provider.
      *
-     * @memberof EllipsoidTerrainProvider
+     * @memberof EsriImageServerTerrainProvider
      *
      * @param {Context} context The rendered context to use to create renderer resources.
      * @param {Tile} tile The tile to populate with surface geometry.
      * @returns {Boolean|Promise} A boolean value indicating whether the tile was successfully
      * populated with geometry, or a promise for such a value in the future.
      */
-    EllipsoidTerrainProvider.prototype.createTileEllipsoidGeometry = function(context, tile) {
+    EsriImageServerTerrainProvider.prototype.createTileEllipsoidGeometry = function(context, tile) {
+        // Creating the geometry will require a request to the ImageServer, which will complete
+        // asynchronously.  The question is, what do we do in the meantime?  The best thing to do is
+        // to use terrain associated with the parent tile.  Ideally, we would be able to render
+        // high-res imagery attached to low-res terrain.  In some ways, this is similar to the need
+        // described in TerrainProvider of creating geometry for tiles at a higher level than
+        // the terrain source actually provides.
+
         var tilingScheme = this.tilingScheme;
         var ellipsoid = tilingScheme.ellipsoid;
         var extent = tile.extent;
@@ -118,7 +125,7 @@ define([
      * Populates a {@link Tile} with plane-mapped surface geometry from this
      * tile provider.
      *
-     * @memberof EllipsoidTerrainProvider
+     * @memberof EsriImageServerTerrainProvider
      *
      * @param {Context} context The rendered context to use to create renderer resources.
      * @param {Tile} tile The tile to populate with surface geometry.
@@ -126,7 +133,7 @@ define([
      * @returns {Boolean|Promise} A boolean value indicating whether the tile was successfully
      * populated with geometry, or a promise for such a value in the future.
      */
-    EllipsoidTerrainProvider.prototype.createTilePlaneGeometry = function(context, tile, projection) {
+    EsriImageServerTerrainProvider.prototype.createTilePlaneGeometry = function(context, tile, projection) {
         var tilingScheme = this.tilingScheme;
         var ellipsoid = tilingScheme.ellipsoid;
         var extent = tile.extent;
@@ -187,5 +194,5 @@ define([
         return true;
     };
 
-    return EllipsoidTerrainProvider;
+    return EsriImageServerTerrainProvider;
 });
