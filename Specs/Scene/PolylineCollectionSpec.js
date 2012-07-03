@@ -368,6 +368,139 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
     });
 
+    it('renders 64K vertexes of same polyline', function() {
+        var positions = [];
+        for ( var i = 0; i < 64 * 1024; ++i) {
+            positions.push({x:0, y:-1, z:0});
+            positions.push({x:0, y:1, z:0});
+        }
+
+        polylines.add({
+            positions : positions,
+            color:{red:1, green:0, blue:0, alpha:1}
+        });
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
+    });
+
+    it('renders more than 64K vertexes of same polyline', function() {
+        var positions = [];
+        for ( var i = 0; i < 64 * 1024; ++i) {
+            positions.push({x:0, y:-1, z:0});
+            positions.push({x:0, y:1, z:0});
+        }
+        positions.push({x:0, y:-1, z:0});
+        positions.push({x:0, y:1, z:0});
+
+        polylines.add({
+            positions : positions,
+            color:{red:1, green:0, blue:0, alpha:1}
+        });
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
+    });
+
+    it('renders more than 64K vertexes of different polylines', function() {
+        var positions = [];
+        for ( var i = 0; i < 64 * 1024; ++i) {
+            positions.push({x:-1, y:-1, z:0});
+            positions.push({x:-1, y:1, z:0});
+        }
+
+        polylines.add({
+            positions : positions,
+            color:{red:1, green:0, blue:0, alpha:1}
+        });
+        positions = [];
+
+        positions.push({x:0, y:-1, z:0});
+        positions.push({x:0, y:1, z:0});
+        polylines.add({
+           positions:positions,
+           color:{red:0, green:1, blue:0, alpha:1}
+        });
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([0, 255, 0, 255]);
+    });
+
+    it('renders more than 64K vertexes of different polylines of different widths', function() {
+        var positions = [];
+        for ( var i = 0; i < 64 * 1024 - 2; ++i) {
+            positions.push({x:-1, y:-1, z:0});
+            positions.push({x:-1, y:1, z:0});
+        }
+
+        polylines.add({
+            positions : positions,
+            color:{red:1, green:0, blue:0, alpha:1}
+        });
+        positions = [];
+
+        positions.push({x:0, y:-1, z:0});
+        positions.push({x:0, y:1, z:0});
+        positions.push({x:0, y:-1, z:0});
+        positions.push({x:0, y:1, z:0});
+        polylines.add({
+           positions:positions,
+           width:5,
+           color:{red:0, green:1, blue:0, alpha:1}
+        });
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([0, 255, 0, 255]);
+    });
+
+    it('does not render', function() {
+        var p = polylines.add({
+            positions : [{
+                x : 0.0,
+                y : -1.0,
+                z : 0.0
+            },
+            {
+                x : 0.0,
+                y : 1.0,
+                z : 0.0
+            }],
+            color : {
+                red : 1.0,
+                green : 0.0,
+                blue : 0.0,
+                alpha : 1.0
+            }
+        });
+
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).not.toEqualArray([0, 0, 0, 0]);
+        p.setShow(false);
+
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+    });
+
     it("modifies and removes a polyline, then renders", function() {
         var p = polylines.add({
             positions : [{

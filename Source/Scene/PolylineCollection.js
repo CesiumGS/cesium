@@ -56,7 +56,8 @@ define([
         position3D : 0,
         position2D : 1,
         color : 2,
-        pickColor : 3
+        pickColor : 3,
+        show : 4
     };
 
     /**
@@ -210,9 +211,14 @@ define([
         this._drawUniformsThree = undefined;
         this._indicesBuffer = undefined;
         this._polylinesToUpdate = [];
-        this._va = undefined;
-        this._vaOutlineColor = undefined;
-        this._vaPickColor = undefined;
+        this._va = [];
+        this._vaOutlineColor = [];
+        this._vaPickColor = [];
+        this._positionBuffer = undefined;
+        this._outlineColorBuffer = undefined;
+        this._colorBuffer = undefined;
+        this._pickColorBuffer = undefined;
+        this._showBuffer = undefined;
     }
 
     /**
@@ -477,35 +483,40 @@ define([
     PolylineCollection.prototype.render = function(context) {
         var polylines = this._polylines;
         if(polylines){
-            if(this._va && this._vaOutlineColor){
-                for(var x in polylines){
-                    var obj = polylines[x];
+            var length = this._va.length;
+            for(var i = 0; i < length; ++i){
+                var va = this._va[i];
+                var vaOutlineColor = this._vaOutlineColor[i];
+                var wrappers = this._va[i].wrappers;
+                var wrapperLength = wrappers.length;
+                for(var j = 0; j < wrapperLength; ++j){
+                    var placeHolder = wrappers[j];
                     context.draw({
                         primitiveType : PrimitiveType.LINES,
-                        count : obj.count,
-                        offset : obj.offset,
+                        count : placeHolder.count,
+                        offset : placeHolder.offset,
                         shaderProgram : this._sp,
                         uniformMap : this._drawUniformsOne,
-                        vertexArray : this._vaOutlineColor,
-                        renderState : obj.rsOne
+                        vertexArray : vaOutlineColor.va,
+                        renderState : placeHolder.obj.rsOne
                     });
                     context.draw({
                         primitiveType : PrimitiveType.LINES,
-                        count : obj.count,
-                        offset : obj.offset,
+                        count : placeHolder.count,
+                        offset : placeHolder.offset,
                         shaderProgram : this._sp,
                         uniformMap : this._drawUniformsTwo,
-                        vertexArray : this._va,
-                        renderState : obj.rsTwo
+                        vertexArray : va.va,
+                        renderState : placeHolder.obj.rsTwo
                     });
                     context.draw({
                         primitiveType : PrimitiveType.LINES,
-                        count : obj.count,
-                        offset : obj.offset,
+                        count : placeHolder.count,
+                        offset : placeHolder.offset,
                         shaderProgram : this._sp,
                         uniformMap : this._drawUniformsThree,
-                        vertexArray : this._vaOutlineColor,
-                        renderState : obj.rsThree
+                        vertexArray : vaOutlineColor.va,
+                        renderState : placeHolder.obj.rsThree
                     });
                 }
             }
@@ -519,17 +530,21 @@ define([
     PolylineCollection.prototype.renderForPick = function(context, framebuffer) {
         var polylines = this._polylines;
         if(polylines){
-            if(this._vaPickColor){
-                for(var x in polylines){
-                    var obj = polylines[x];
+            var length = this._vaPickColor.length;
+            for(var i = 0; i < length; ++i){
+                var vaPickColor = this._vaPickColor[i];
+                var wrappers = vaPickColor.wrappers;
+                var wrapperLength = wrappers.length;
+                for(var j = 0; j < wrapperLength; ++j){
+                    var placeHolder = wrappers[j];
                     context.draw({
                         primitiveType : PrimitiveType.LINES,
-                        count : obj.count,
-                        offset : obj.offset,
+                        count : placeHolder.count,
+                        offset : placeHolder.offset,
                         shaderProgram : this._sp,
                         uniformMap : this._pickUniforms,
-                        vertexArray : this._vaPickColor,
-                        renderState : obj.rsPick,
+                        vertexArray : vaPickColor.va,
+                        renderState : placeHolder.obj.rsPick,
                         framebuffer: framebuffer
                     });
                 }
@@ -550,11 +565,8 @@ define([
         if (!this._sp) {
             this._sp = context.getShaderCache().getShaderProgram(PolylineVS, PolylineFS, attributeIndices);
         }
-
         this._removePolylines();
         this._updateMode(sceneState);
-
-
         var properties = this._propertiesChanged;
         if (this._createVertexArray || this.computeNewBuffersUsage()){
             this._createVertexArray = false;
@@ -593,12 +605,8 @@ define([
                             positions.push(position.z);
                         }
                         var positionsArray = new Float32Array(positions);
-                        var vb = this._va.getAttribute(0).vertexBuffer;
+                        var vb = this._positionBuffer;
                         vb.copyFromArrayView(positionsArray, 12 * positionIndex);
-                        var vbOutlineColor = this._vaOutlineColor.getAttribute(0).vertexBuffer;
-                        vbOutlineColor.copyFromArrayView(positionsArray, 12 * positionIndex);
-                        var vbPickColor = this._vaPickColor.getAttribute(0).vertexBuffer;
-                        vbPickColor.copyFromArrayView(positionsArray, 12 * positionIndex);
                     }
                     if (properties[COLOR_INDEX]) {
                         var color = polyline.getColor();
@@ -610,7 +618,7 @@ define([
                             colors.push(color.blue *255);
                             colors.push(color.alpha *255);
                         }
-                        var vb = this._va.getAttribute(2).vertexBuffer;
+                        var vb = this._colorBuffer;
                         vb.copyFromArrayView(new Uint8Array(colors), 4 * positionIndex);
                     }
                     if(properties[OUTLINE_COLOR_INDEX]){
@@ -623,8 +631,18 @@ define([
                             colors.push(color.blue *255);
                             colors.push(color.alpha *255);
                         }
-                        var vb = this._vaOutlineColor.getAttribute(2).vertexBuffer;
+                        var vb = this._outlineColorBuffer;
                         vb.copyFromArrayView(new Uint8Array(colors), 4 * positionIndex);
+                    }
+                    if(properties[SHOW_INDEX]){
+                        var show = polyline.getShow();
+                        var positions = polyline.getPositions();
+                        var shows = [];
+                        for(var j = 0; j < positions.length; ++j){
+                            shows.push(show);
+                        }
+                        var vb = this._showBuffer;
+                        vb.copyFromArrayView(new Uint8Array(shows), positionIndex);
                     }
                     polyline._clean();
                 }
@@ -643,7 +661,6 @@ define([
      * @memberof PolylineCollection
      */
     PolylineCollection.prototype.updateForPick = function(context) {
-
         var useDepthTest = (this._morphTime !== 0.0);
         var polylines = this._polylines;
         for(var x in polylines){
@@ -693,9 +710,14 @@ define([
      */
     PolylineCollection.prototype.destroy = function() {
         this._sp = this._sp && this._sp.release();
-        this._va = this._va && this._va.destroy();
-        this._vaPickColor = this._vaPickColor && this._vaPickColor.destroy();
-        this._vaOutlineColor = this._vaOutlineColor && this._vaOutlineColor.destroy();
+        for(var t = 0; t < this._va.length;++t){
+            this._va[t].va.destroy();
+            this._vaPickColor[t].va.destroy();
+            this._vaOutlineColor[t].va.destroy();
+        }
+        this._va.length = 0;
+        this._vaPickColor.length = 0;
+        this._vaOutlineColor.length = 0;
         this._destroyPolylines();
         return destroyObject(this);
     };
@@ -704,37 +726,57 @@ define([
      * @private
      */
     PolylineCollection.prototype._createVertexArrays = function(context){
-        this._va = this._va && this._va.destroy();
-        this._vaPickColor = this._vaPickColor && this._vaPickColor.destroy();
-        this._vaOutlineColor = this._vaOutlineColor && this._vaOutlineColor.destroy();
+        for(var t = 0; t < this._va.length;++t){
+            this._va[t].va.destroy();
+            this._vaPickColor[t].va.destroy();
+            this._vaOutlineColor[t].va.destroy();
+        }
+        this._va.length = 0;
+        this._vaPickColor.length = 0;
+        this._vaOutlineColor.length = 0;
         var positions = [];
         var colors = [];
         var outlineColors = [];
+        var visibilities = [];
         var pickColors = [];
+        //stores all of the individual indices arrays.
+        var totalIndices = [];
         var indices = [];
-        var index = 0;
+
+        //used to determine the vertexBuffer offset if the indicesArray goes over 64k.
+        //if it's the same polyline while it goes over 64k, the offset needs to backtrack componentsPerAttribute * componentDatatype bytes
+        //so that the polyline looks contiguous.
+        //if the polyline ends at the 64k mark, then the offset is just 64k * componentsPerAttribute * componentDatatype
+        var vertexBufferOffset = [0];
+        totalIndices.push(indices);
         var offset = 0;
+        var sixtyFourK = (64 * 1024);
         var useDepthTest = (this._morphTime !== 0.0);
+        var wrappers = [[]];
+        var vaCount = 0;
+        var indicesCount = 0;
         for(var x in this._polylines){
             var obj = this._polylines[x];
             obj.createRenderState(context, useDepthTest);
             var polylines = obj.getPolylines(this._mode, this._projection, this._modelMatrix);
             var length = polylines.length;
-            obj.count = 0;
-            obj.offset = offset;
+            var placeHolder = {obj:obj, offset:offset, count:0};
+            var count = 0;
+            wrappers[vaCount].push(placeHolder);
             for(var i = 0; i < length; ++i){
                 var polyline = polylines[i];
                 var color = polyline.getColor();
+                var show = polyline.getShow();
                 var outlineColor = polyline.getOutlineColor();
                 var polylinePositions = polyline.getPositions();
                 var pickColor = polyline.getPickId(context).unnormalizedRgb;
                 var posLength = polylinePositions.length;
-                obj.count += (posLength - 1) * 2;
                 for(var j = 0; j < posLength; ++j){
                     var position = polylinePositions[j];
                     positions.push(position.x);
                     positions.push(position.y);
                     positions.push(position.z);
+                    visibilities.push(show);
                     colors.push(color.red *255);
                     colors.push(color.green *255);
                     colors.push(color.blue *255);
@@ -748,100 +790,165 @@ define([
                     pickColors.push(pickColor.blue);
                     pickColors.push(255);
                     if(j !== posLength - 1){
-                        indices.push(index + j);
-                        indices.push(index + j + 1);
+                        if(indicesCount === sixtyFourK - 1){
+                            indicesCount = 0;
+                            indices = [];
+                            vertexBufferOffset.push(1);
+                            totalIndices.push(indices);
+                            vaCount++;
+                            placeHolder.count = count;
+                            count = 0;
+                            offset = 0;
+                            placeHolder = {obj:obj, offset:0, count: 0};
+                            wrappers[vaCount] = [placeHolder];
+                        }
+                        count += 2;
+                        indices.push(indicesCount++);
+                        indices.push(indicesCount);
                     }
                 }
+                indicesCount++;
                 polyline._clean();
-                index += posLength;
-                offset += obj.count;
+                offset += count;
             }
+            if(indicesCount >= sixtyFourK - 1){
+                offset = 0;
+                vertexBufferOffset.push(0);
+                indicesCount = 0;
+                indices = [];
+                vaCount++;
+                wrappers[vaCount] = [];
+                totalIndices.push(indices);
+            }
+            placeHolder.count = count;
         }
         if(positions.length > 0){
             var positionArray = new Float32Array(positions);
             var outlineColorArray = new Uint8Array(outlineColors);
             var colorArray = new Uint8Array(colors);
             var pickColorArray = new Uint8Array(pickColors);
-            var indicesArray = new Uint16Array(indices);
+            var showArray = new Uint8Array(visibilities);
 
-            this._indexBuffer = context.createIndexBuffer(indicesArray, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
-            this._indexBuffer.setVertexArrayDestroyable(false);
+            this._positionBuffer = context.createVertexBuffer(positionArray, this._buffersUsage[POSITION_INDEX]);
+            this._outlineColorBuffer = context.createVertexBuffer(outlineColorArray, this._buffersUsage[OUTLINE_COLOR_INDEX]);
+            this._colorBuffer = context.createVertexBuffer(colorArray, this._buffersUsage[COLOR_INDEX]);
+            this._pickColorBuffer = context.createVertexBuffer(pickColorArray, BufferUsage.STATIC_DRAW);
+            this._showBuffer = context.createVertexBuffer(showArray, this._buffersUsage[SHOW_INDEX]);
+            var vbo = 0;
+            var numberOfIndicesArrays = totalIndices.length;
+            for ( var k = 0; k < numberOfIndicesArrays; ++k) {
+                var indices = totalIndices[k];
+                if(indices.length > 0){
+                    var indicesArray = new Uint16Array(indices);
+                    var indexBuffer = context.createIndexBuffer(indicesArray, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+                    indexBuffer.setVertexArrayDestroyable(false);
+                    vbo += vertexBufferOffset[k];
+                    var vertexPositionBufferOffset = k * (12 * sixtyFourK) - vbo * 12;//componentsPerAttribute(3) * componentDatatype(4)
+                    var vertexColorBufferOffset = k * (4 * sixtyFourK) - vbo * 4;//componentsPerAttribute(4) * componentDatatype(1)
+                    var vertexShowBufferOffset = k *  sixtyFourK - vbo;//componentsPerAttribute(1) * componentDatatype(1)
+                    var attributes = [{
+                        index : attributeIndices.position3D,
+                        componentsPerAttribute : 3,
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        offsetInBytes : vertexPositionBufferOffset
+                    },  {
+                        index : attributeIndices.position2D,
+                        componentsPerAttribute : 3,
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        offsetInBytes : vertexPositionBufferOffset
+                    }, {
+                        index : attributeIndices.color,
+                        componentsPerAttribute : 4,
+                        normalize:true,
+                        componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                        vertexBuffer : this._colorBuffer,
+                        offsetInBytes : vertexColorBufferOffset
+                    },{
+                        index : attributeIndices.show,
+                        componentsPerAttribute : 1,
+                        componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                        vertexBuffer : this._showBuffer,
+                        offsetInBytes : vertexShowBufferOffset
+                    }];
 
-            var positionBuffer = context.createVertexBuffer(positionArray, this._buffersUsage[POSITION_INDEX]);
-            var outlineColorBuffer = context.createVertexBuffer(outlineColorArray, this._buffersUsage[OUTLINE_COLOR_INDEX]);
-            var colorBuffer = context.createVertexBuffer(colorArray, this._buffersUsage[COLOR_INDEX]);
-            var pickColorBuffer = context.createVertexBuffer(pickColorArray, BufferUsage.STATIC_DRAW);
+                    var attributesOutlineColor = [{
+                        index : attributeIndices.position3D,
+                        componentsPerAttribute : 3,
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        offsetInBytes : vertexPositionBufferOffset
+                    },  {
+                        index : attributeIndices.position2D,
+                        componentsPerAttribute : 3,
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        offsetInBytes : vertexPositionBufferOffset
+                    }, {
+                        index : attributeIndices.color,
+                        componentsPerAttribute : 4,
+                        normalize:true,
+                        componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                        vertexBuffer : this._outlineColorBuffer,
+                        offsetInBytes : vertexColorBufferOffset
+                    },{
+                        index : attributeIndices.show,
+                        componentsPerAttribute : 1,
+                        componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                        vertexBuffer : this._showBuffer,
+                        offsetInBytes : vertexShowBufferOffset
+                    }];
 
-            var attributes = [{
-                index : attributeIndices.position3D,
-                componentsPerAttribute : 3,
-                componentDatatype : ComponentDatatype.FLOAT
-            },  {
-                index : attributeIndices.position2D,
-                componentsPerAttribute : 3,
-                componentDatatype : ComponentDatatype.FLOAT
-            }, {
-                index : attributeIndices.color,
-                componentsPerAttribute : 4,
-                normalize:true,
-                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                vertexBuffer : colorBuffer
-            }];
+                    var attributesPickColor = [{
+                        index : attributeIndices.position3D,
+                        componentsPerAttribute : 3,
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        offsetInBytes : vertexPositionBufferOffset
+                    },  {
+                        index : attributeIndices.position2D,
+                        componentsPerAttribute : 3,
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        offsetInBytes : vertexPositionBufferOffset
+                    }, {
+                        index : attributeIndices.color,
+                        componentsPerAttribute : 4,
+                        normalize:true,
+                        componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                        vertexBuffer : this._pickColorBuffer,
+                        offsetInBytes : vertexColorBufferOffset
+                    },{
+                        index : attributeIndices.show,
+                        componentsPerAttribute : 1,
+                        componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                        vertexBuffer : this._showBuffer,
+                        offsetInBytes : vertexShowBufferOffset
+                    }];
 
-            var attributesOutlineColor = [{
-                index : attributeIndices.position3D,
-                componentsPerAttribute : 3,
-                componentDatatype : ComponentDatatype.FLOAT
-            },  {
-                index : attributeIndices.position2D,
-                componentsPerAttribute : 3,
-                componentDatatype : ComponentDatatype.FLOAT
-            }, {
-                index : attributeIndices.color,
-                componentsPerAttribute : 4,
-                normalize:true,
-                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                vertexBuffer : outlineColorBuffer
-            }];
+                    if(this._mode === SceneMode.SCENE3D){
+                        attributes[0].vertexBuffer = this._positionBuffer;
+                        attributes[1].value = [0.0, 0.0];
+                        attributesOutlineColor[0].vertexBuffer = this._positionBuffer;
+                        attributesOutlineColor[1].value = [0.0, 0.0];
+                        attributesPickColor[0].vertexBuffer = this._positionBuffer;
+                        attributesPickColor[1].value = [0.0, 0.0];
+                    } else{
+                        attributes[0].value = [0.0, 0.0, 0.0];
+                        attributes[1].vertexBuffer = this._positionBuffer;
+                        attributesOutlineColor[0].value = [0.0, 0.0, 0.0];
+                        attributesOutlineColor[1].vertexBuffer = this._positionBuffer;
+                        attributesPickColor[0].value = [0.0, 0.0, 0.0];
+                        attributesPickColor[1].vertexBuffer = this._positionBuffer;
+                    }
+                    var va = context.createVertexArray(attributes);
+                    var vaOutlineColor = context.createVertexArray(attributesOutlineColor);
+                    var vaPickColor = context.createVertexArray(attributesPickColor);
 
-            var attributesPickColor = [{
-                index : attributeIndices.position3D,
-                componentsPerAttribute : 3,
-                componentDatatype : ComponentDatatype.FLOAT
-            },  {
-                index : attributeIndices.position2D,
-                componentsPerAttribute : 3,
-                componentDatatype : ComponentDatatype.FLOAT
-            }, {
-                index : attributeIndices.color,
-                componentsPerAttribute : 4,
-                normalize:true,
-                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                vertexBuffer : pickColorBuffer
-            }];
+                    va.setIndexBuffer(indexBuffer);
+                    vaOutlineColor.setIndexBuffer(indexBuffer);
+                    vaPickColor.setIndexBuffer(indexBuffer);
 
-            if(this._mode === SceneMode.SCENE3D){
-                attributes[0].vertexBuffer = positionBuffer;
-                attributes[1].value = [0.0, 0.0];
-                attributesOutlineColor[0].vertexBuffer = positionBuffer;
-                attributesOutlineColor[1].value = [0.0, 0.0];
-                attributesPickColor[0].vertexBuffer = positionBuffer;
-                attributesPickColor[1].value = [0.0, 0.0];
-            } else{
-                attributes[0].value = [0.0, 0.0, 0.0];
-                attributes[1].vertexBuffer = positionBuffer;
-                attributesOutlineColor[0].value = [0.0, 0.0, 0.0];
-                attributesOutlineColor[1].vertexBuffer = positionBuffer;
-                attributesPickColor[0].value = [0.0, 0.0, 0.0];
-                attributesPickColor[1].vertexBuffer = positionBuffer;
+                    this._va.push({va:va, wrappers:wrappers[k]});
+                    this._vaOutlineColor.push({va:vaOutlineColor, wrappers:wrappers[k]});
+                    this._vaPickColor.push({va:vaPickColor, wrappers:wrappers[k]});
+                }
             }
-
-            this._va = context.createVertexArray(attributes);
-            this._va.setIndexBuffer(this._indexBuffer);
-            this._vaOutlineColor = context.createVertexArray(attributesOutlineColor);
-            this._vaOutlineColor.setIndexBuffer(this._indexBuffer);
-            this._vaPickColor = context.createVertexArray(attributesPickColor);
-            this._vaPickColor.setIndexBuffer(this._indexBuffer);
         }
     };
 
