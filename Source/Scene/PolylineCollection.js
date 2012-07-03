@@ -50,8 +50,6 @@ define([
     var POSITION_SIZE_INDEX = Polyline.POSITION_SIZE_INDEX;
     var NUMBER_OF_PROPERTIES = Polyline.NUMBER_OF_PROPERTIES;
 
-    // PERFORMANCE_IDEA:  Use vertex compression so we don't run out of
-    // vec4 attributes (WebGL minimum: 8)
     var attributeIndices = {
         position3D : 0,
         position2D : 1,
@@ -61,8 +59,7 @@ define([
     };
 
     /**
-     * A renderable collection of polylines.  Polylines are viewport-aligned
-     * images positioned in the 3D scene.
+     * A renderable collection of polylines.
      * <br /><br />
      * <div align="center">
      * <img src="images/Polyline.png" width="400" height="300" /><br />
@@ -574,7 +571,7 @@ define([
         }else if(this._polylinesUpdated){
             // Polylines were modified, but no polylines were added or removed.
 
-          //if a polyline's size changes, we need to recompute the indicesBuffer
+            //if a polyline's size changes, we need to recompute the indicesBuffer
             //if we're not in scene3d, we have to recompute the indicesbuffer since some polylines could be across the IDL.
             //TODO: optimize. check if positions size changes
             if (properties[POSITION_SIZE_INDEX] || (properties[POSITION_INDEX] && this._mode != SceneMode.SCENE3D)) {
