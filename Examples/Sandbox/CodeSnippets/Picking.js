@@ -11,7 +11,7 @@
             handler = new Cesium.EventHandler(scene.getCanvas());
             handler.setMouseAction(
                 function (movement) {
-                    var p = scene.getCamera().pickEllipsoid(ellipsoid, movement.endPosition);
+                    var p = scene.pickEllipsoid(movement.endPosition, ellipsoid);
                     if (p) {
                         var d = Cesium.Math.cartographic2ToDegrees(ellipsoid.toCartographic2(p));
                         label.setShow(true);
@@ -71,7 +71,7 @@
                 });
                 primitives.add(billboards);
             };
-            image.src = 'Images/logoColor.png';
+            image.src = 'Images/Cesium_Logo_overlay.png';
         };
 
         this.clear = function () {
@@ -166,7 +166,7 @@
                 billboard.highlighted = true;
                 primitives.add(billboards);
             };
-            image.src = 'Images/logoColor.png';
+            image.src = 'Images/Cesium_Logo_overlay.png';
         };
 
         this.clear = function () {

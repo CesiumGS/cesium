@@ -144,12 +144,6 @@ defineSuite([
         expect(frustum.equals(frustum2)).toEqual(true);
     });
 
-    it('destroys', function() {
-        expect(frustum.isDestroyed()).toEqual(false);
-        frustum.destroy();
-        expect(frustum.isDestroyed()).toEqual(true);
-    });
-
     it('throws with null frustum parameters', function() {
         var frustum = new PerspectiveFrustum();
         expect(function() {

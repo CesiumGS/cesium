@@ -24,7 +24,7 @@ define([
     /**
      * DOC_TBA
      *
-     * @name CameraControllerCollection
+     * @alias CameraControllerCollection
      * @internalConstructor
      *
      * @see Camera#getControllers

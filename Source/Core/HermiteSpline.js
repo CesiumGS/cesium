@@ -21,7 +21,7 @@ define([
      *
      * Natural and clamped cubic splines are in the class C<sup>2</sup>.
      *
-     * @name HermiteSpline
+     * @alias HermiteSpline
      * @constructor
      *
      * @param {Array} controlPoints An array, of at least length 3, of objects with <code>point</code>,
@@ -63,7 +63,7 @@ define([
      *
      * var spline = new HermiteSpline(controlPoints);
      */
-    function HermiteSpline(controlPoints) {
+    var HermiteSpline = function(controlPoints) {
         if (!controlPoints || !(controlPoints instanceof Array) || controlPoints.length < 3) {
             throw new DeveloperError('controlPoints is required. It must be an array with at least a length of 3.');
         }
@@ -77,7 +77,7 @@ define([
         } else if (this._points[0].tangent && !this._points[1].tangent && this._points[this._points.length - 1].tangent && !this._points[this._points.length - 2].tangent) {
             this._generateClamped();
         }
-    }
+    };
 
     HermiteSpline.hermiteCoefficientMatrix = new Matrix4(
              2.0, -3.0,  0.0,  1.0,

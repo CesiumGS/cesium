@@ -14,6 +14,7 @@ define([
     /**
      * DOC_TBA
      *
+     * @alias BoxTessellator
      * @exports BoxTessellator
      *
      * @see CubeMapEllipsoidTessellator

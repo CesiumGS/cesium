@@ -31,7 +31,7 @@ define([
      * A type that defines camera behavior: the camera's position and axes will be rotated around the center
      * of the camera's reference frame.
      *
-     * @name CameraSpindleController
+     * @alias CameraSpindleController
      *
      * @param {HTMLCanvasElement} canvas An HTML canvas element used for its dimensions
      * and for listening on user events.
@@ -40,7 +40,7 @@ define([
      *
      * @internalConstructor
      */
-    function CameraSpindleController(canvas, camera, ellipsoid) {
+    var CameraSpindleController = function(canvas, camera, ellipsoid) {
         ellipsoid = ellipsoid || Ellipsoid.WGS84;
 
         this._canvas = canvas;
@@ -104,7 +104,7 @@ define([
         this._lastInertiaSpinMovement = undefined;
         this._lastInertiaZoomMovement = undefined;
         this._lastInertiaWheelZoomMovement = undefined;
-    }
+    };
 
     /**
      * DOC_TBA
@@ -403,7 +403,7 @@ define([
 
     CameraSpindleController.prototype._spin = function(movement) {
         if (this.mode === CameraSpindleControllerMode.AUTO) {
-            var point = this._camera.pickEllipsoid(this._ellipsoid, movement.startPosition);
+            var point = this._camera.pickEllipsoid(movement.startPosition, this._ellipsoid);
             if (point) {
                 this._pan(movement);
             } else {
@@ -446,8 +446,8 @@ define([
 
     CameraSpindleController.prototype._pan = function(movement) {
         var camera = this._camera;
-        var p0 = camera.pickEllipsoid(this._ellipsoid, movement.startPosition);
-        var p1 = camera.pickEllipsoid(this._ellipsoid, movement.endPosition);
+        var p0 = camera.pickEllipsoid(movement.startPosition, this._ellipsoid);
+        var p1 = camera.pickEllipsoid(movement.endPosition, this._ellipsoid);
 
         if (!p0 || !p1) {
             return;

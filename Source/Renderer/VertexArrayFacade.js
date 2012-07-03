@@ -14,7 +14,7 @@ define([
     /**
      * DOC_TBA
      *
-     * @name VertexArrayFacade
+     * @alias VertexArrayFacade
      *
      * @constructor
      *
@@ -25,7 +25,7 @@ define([
      * @exception {DeveloperError} Attribute must have a valid usage or not specify it.
      * @exception {DeveloperError} Index n is used by more than one attribute.
      */
-    function VertexArrayFacade(context, attributes, sizeInVertices) {
+    var VertexArrayFacade = function(context, attributes, sizeInVertices) {
         if (!context) {
             throw new DeveloperError('context is required.');
         }
@@ -128,7 +128,7 @@ define([
         this.va = undefined;
 
         this.resize(sizeInVertices);
-    }
+    };
 
     VertexArrayFacade._verifyAttributes = function(attributes) {
         var attrs = [];
