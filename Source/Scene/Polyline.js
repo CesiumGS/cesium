@@ -44,12 +44,12 @@ define([
     /**
      * DOC_TBA
      *
-     * @name Polyline
+     * @alias Polyline
      * @internalConstructor
      *
      * @example
      */
-    function Polyline(polylineTemplate, polylineCollection) {
+    var Polyline = function(polylineTemplate, polylineCollection) {
         var p = polylineTemplate || {};
 
         this._positions = [];
@@ -60,7 +60,7 @@ define([
             for(var i = 0; i < length; ++i){
                 var position = newPositions[i];
                 positions.push(new Cartesian3(position.x, position.y, position.z));
-            }
+    }
         }
         this._show = (typeof p.show === 'undefined') ? true : p.show;
         this._width = (typeof p.width === 'undefined') ? 1.0 : p.width;
@@ -70,7 +70,7 @@ define([
             green : 1.0,
             blue : 1.0,
             alpha : 1.0
-        };
+    };
         this._color = new Color(color.red, color.green, color.blue, color.alpha);
 
         var outlineColor = p.outlineColor ||{
@@ -78,7 +78,7 @@ define([
             green : 1.0,
             blue : 1.0,
             alpha : 1.0
-        };
+    };
         this._outlineColor = new Color(outlineColor.red, outlineColor.green, outlineColor.blue, outlineColor.alpha);
 
         this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
@@ -86,7 +86,7 @@ define([
         this._dirty = false;
         this._pickId = undefined;
         this._pickIdThis = p._pickIdThis;
-    }
+        }
 
     var SHOW_INDEX = Polyline.SHOW_INDEX = 0;
     var POSITION_INDEX = Polyline.POSITION_INDEX = 1;
@@ -124,7 +124,7 @@ define([
         if ((typeof value !== 'undefined') && (this._show !== value)) {
             this._show = value;
             this._makeDirty(SHOW_INDEX);
-        }
+            }
     };
 
     /**
@@ -140,14 +140,14 @@ define([
         return this._positions;
     };
 
-    /**
+        /**
      * DOC_TBA
      *
      * @memberof Polyline
      *
      * @exception {DeveloperError} value must not be undefined.
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
+         *
      * @see Polyline#getPositions
      *
      * @example
@@ -156,22 +156,22 @@ define([
      *                          new Cartographic3(...),
      *                          new Cartographic3(...))
      * );
-     */
+         */
     Polyline.prototype.setPositions = function(value) {
         if (typeof value === 'undefined') {
             throw new DeveloperError('value must not be undefined.', 'value');
-        }
+            }
         if(this._positions.length !== value.length){
             this._makeDirty(POSITION_SIZE_INDEX);
-        }
+            }
         this._positions = value;
         this._makeDirty(POSITION_INDEX);
-    };
+        };
 
 
     Polyline.prototype.getColor = function() {
         return this._color;
-    };
+        };
 
     Polyline.prototype.setColor = function(value){
         var c = this._color;
@@ -180,7 +180,7 @@ define([
             ((c.red !== value.red) || (c.green !== value.green) || (c.blue !== value.blue) || (c.alpha !== value.alpha))) {
             this._color = new Color(value.red, value.green, value.blue, value.alpha);
             this._makeDirty(COLOR_INDEX);
-        }
+            }
     };
 
         /**
@@ -231,10 +231,10 @@ define([
             this._width = value;
             this._collection._addToMap(this);
         }
-    };
+        };
 
-    /**
-     * DOC_TBA
+        /**
+         * DOC_TBA
      * <br /><br />
      * The actual width used is clamped to the minimum and maximum width supported by the WebGL implementation.
      * These can be queried with {@link Context#getMinimumAliasedLineWidth} and
@@ -245,34 +245,34 @@ define([
      * @see Polyline#outlineWidth
      * @see Context#getMinimumAliasedLineWidth
      * @see Context#getMaximumAliasedLineWidth
-     *
+         *
      * @example
      * // 3 pixel total width, 1 pixel interior width
      * polyline.width = 1.0;
      * polyline.outlineWidth = 3.0;
-     */
+         */
     Polyline.prototype.getOutlineWidth = function() {
         return this._outlineWidth;
-    };
+        };
 
-    /**
+        /**
      * DOC_TBA
      * <br /><br />
      * The actual width used is clamped to the minimum and maximum width supported by the WebGL implementation.
      * These can be queried with {@link Context#getMinimumAliasedLineWidth} and
      * {@link Context#getMaximumAliasedLineWidth}.
-     *
+         *
      * @type Number
-     *
+         *
      * @see Polyline#outlineWidth
      * @see Context#getMinimumAliasedLineWidth
      * @see Context#getMaximumAliasedLineWidth
-     *
-     * @example
+         *
+         * @example
      * // 3 pixel total width, 1 pixel interior width
      * polyline.width = 1.0;
      * polyline.outlineWidth = 3.0;
-     */
+                 */
     Polyline.prototype.setOutlineWidth = function(value){
         var width = this._outlineWidth;
 
@@ -280,12 +280,12 @@ define([
             this._collection._removeFromMap(this);
             this._outlineWidth = value;
             this._collection._addToMap(this);
-        }
-    };
+            }
+        };
 
     Polyline.prototype.getOutlineColor = function() {
         return this._outlineColor;
-    };
+        };
 
     Polyline.prototype.setOutlineColor = function(value){
         var c = this._outlineColor;
@@ -335,7 +335,7 @@ define([
             if (c) {
                 c._updatePolyline(propertyChanged, this);
                 this._dirty = true;
-            }
+        }
         }
     };
 

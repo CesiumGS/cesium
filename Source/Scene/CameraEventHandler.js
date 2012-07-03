@@ -22,7 +22,7 @@ define([
     /**
      * DOC_TBA
      *
-     * @name CameraEventHandler
+     * @alias CameraEventHandler
      *
      * @param {HTMLCanvasElement} canvas DOC_TBA
      * @param {CameraEventType} moveType DOC_TBA
@@ -35,7 +35,7 @@ define([
      *
      * @see EventHandler
      */
-    function CameraEventHandler(canvas, moveType, moveModifier) {
+    var CameraEventHandler = function(canvas, moveType, moveModifier) {
         if (!canvas) {
             throw new DeveloperError('description.canvas is required.');
         }
@@ -118,14 +118,14 @@ define([
                 that._wheelEnd = that._wheelStart.addSeconds(Math.abs(arcLength) * 0.005);
             }, MouseEventType.WHEEL, moveModifier);
         }
-    }
+    };
 
     /**
      * DOC_TBA
      *
      * @memberof CameraEventHandler
      *
-     * @return {Object} DOC_TBA
+     * @return {boolean} DOC_TBA
      */
     CameraEventHandler.prototype.isMoving = function() {
         return !this._update;
@@ -221,7 +221,7 @@ define([
     };
 
     /**
-     * Removes mouse and keyboard listeners held by this object.
+     * Removes mouse listeners held by this object.
      * <br /><br />
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,

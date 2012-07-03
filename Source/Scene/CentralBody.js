@@ -178,14 +178,13 @@ define([
     /**
      * DOC_TBA
      *
-     * @param {Ellipsoid} [ellipsoid=WGS84 Ellipsoid] Determines the size and shape of the central body.
-     *
-     * @name CentralBody
+     * @alias CentralBody
      * @constructor
      *
-     * @exception {DeveloperError} camera is required.
+     * @param {Ellipsoid} [ellipsoid=WGS84 Ellipsoid] Determines the size and shape of the central body.
+     *
      */
-    function CentralBody(ellipsoid) {
+    var CentralBody = function(ellipsoid) {
         ellipsoid = ellipsoid || Ellipsoid.WGS84;
 
         this._ellipsoid = ellipsoid;
@@ -221,23 +220,28 @@ define([
         this._lastFailedTime = undefined;
 
         /**
-         * DOC_TBA
+         * The maximum number of tiles that can fail consecutively before the
+         * central body will stop loading tiles.
          *
          * @type {Number}
+         * @default 3
          */
         this.perTileMaxFailCount = 3;
 
         /**
-         * DOC_TBA
+         * The maximum number of failures allowed for each tile before the
+         * central body will stop loading a failing tile.
          *
          * @type {Number}
+         * @default 30
          */
         this.maxTileFailCount = 30;
 
         /**
-         * DOC_TBA
+         * The number of seconds between attempts to retry a failing tile.
          *
          * @type {Number}
+         * @default 30.0
          */
         this.failedTileRetryTime = 30.0;
 
@@ -274,21 +278,25 @@ define([
         this._drawSouthPole = false;
 
         /**
-         * DOC_TBA
+         * Determines the color of the north pole. If the day tile provider imagery does not
+         * extend over the north pole, it will be filled with this color before applying lighting.
          *
          * @type {Cartesian3}
          */
         this.northPoleColor = new Cartesian3(2.0 / 255.0, 6.0 / 255.0, 18.0 / 255.0);
 
         /**
-         * DOC_TBA
+         * Determines the color of the south pole. If the day tile provider imagery does not
+         * extend over the south pole, it will be filled with this color before applying lighting.
          *
          * @type {Cartesian3}
          */
         this.southPoleColor = new Cartesian3(1.0, 1.0, 1.0);
 
         /**
-         * DOC_TBA
+         * Determines the position of the day tile provider logo. The day tile provider logo
+         * is displayed in the bottom left corner of the viewport. This is used to offset the
+         * position of the logo.
          *
          * @type {Cartesian2}
          */
@@ -303,6 +311,7 @@ define([
          * DOC_TBA
          *
          * @type {Number}
+         * @default 5.0
          */
         this.pixelError3D = 5.0;
 
@@ -310,6 +319,7 @@ define([
          * DOC_TBA
          *
          * @type {Number}
+         * @default 2.0
          */
         this.pixelError2D = 2.0;
 
@@ -317,20 +327,23 @@ define([
          * Determines if the central body will be shown.
          *
          * @type {Boolean}
+         * @default true
          */
         this.show = true;
 
         /**
-         * DOC_TBA
+         * Determines if the ground atmosphere will be shown.
          *
          * @type {Boolean}
+         * @default false
          */
         this.showGroundAtmosphere = false;
 
         /**
-         * DOC_TBA
+         * Determines if the sky atmosphere will be shown.
          *
          * @type {Boolean}
+         * @default false
          */
         this.showSkyAtmosphere = false;
 
@@ -344,6 +357,8 @@ define([
          * <p>
          * The default is <code>true</code>.
          * </p>
+         *
+         * @default true
          */
         this.affectedByLighting = true;
         this._affectedByLighting = true;
@@ -447,6 +462,8 @@ define([
          *
          * @see CentralBody#dayTileProvider
          * @see CentralBody#showNight
+         *
+         * @default true
          */
         this.showDay = true;
         this._showDay = false;
@@ -464,6 +481,8 @@ define([
          * @see CentralBody#nightImageSource
          * @see CentralBody#showDay
          * @see CentralBody#dayNightBlendDelta
+         *
+         * @default true
          *
          * @example
          * cb.showNight = true;
@@ -484,6 +503,8 @@ define([
          * @see CentralBody#cloudsMapSource
          * @see CentralBody#showCloudShadows
          * @see CentralBody#showNight
+         *
+         * @default true
          *
          * @example
          * cb.showClouds = true;
@@ -508,6 +529,8 @@ define([
          * @see CentralBody#cloudsMapSource
          * @see CentralBody#showClouds
          *
+         * @default true
+         *
          * @example
          * cb.showClouds = true;
          * cb.showCloudShadows = true;
@@ -528,6 +551,8 @@ define([
          * @type {Boolean}
          *
          * @see CentralBody#specularMapSource
+         *
+         * @default true
          *
          * @example
          * cb.showSpecular = true;
@@ -552,6 +577,8 @@ define([
          * @see CentralBody#bumpMapSource
          * @see CentralBody#bumpMapNormalZ
          *
+         * @default true
+         *
          * @example
          * cb.showBumps = true;
          * cb.bumpMapSource = 'bump.jpg';
@@ -569,6 +596,8 @@ define([
          *
          * @see CentralBody#showNight
          * @see CentralBody#dayNightBlendDelta
+         *
+         * @default false
          */
         this.showTerminator = false;
         this._showTerminator = false;
@@ -587,6 +616,8 @@ define([
          * @type {Number}
          *
          * @see CentralBody#showBumps
+         *
+         * @default 0.5
          *
          * @example
          * cb.showBumps = true;
@@ -613,9 +644,11 @@ define([
          * @see CentralBody#showNight
          * @see CentralBody#showTerminator
          *
+         * @default 0.05
+         *
          * @example
          * cb.showDay = true;
-         * cb.dayImageSource = 'day.jpg';
+         * cb.dayTileProvider = new Cesium.SingleTileProvider('day.jpg');
          * cb.showNight = true;
          * cb.nightImageSource = 'night.jpg';
          * cb.dayNightBlendDelta = 0.0;  // Sharp transition
@@ -623,9 +656,13 @@ define([
         this.dayNightBlendDelta = 0.05;
 
         /**
-         * DOC_TBA
+         * Changes the intensity of the night texture. A value of 1.0 is the same intensity as night texture.
+         * A value less than 1.0 makes the night texture darker. A value greater than 1.0 makes the night texture
+         * brighter. The default value is 2.0.
          *
          * @type {Number}
+         *
+         * @default 2.0
          */
         this.nightIntensity = 2.0;
 
@@ -634,6 +671,8 @@ define([
          * with 0.0 being 2D or Columbus View and 1.0 being 3D.
          *
          * @type Number
+         *
+         * @default 1.0
          */
         this.morphTime = 1.0;
 
@@ -757,7 +796,7 @@ define([
         // PERFORMANCE_IDEA:  Only combine these if showing the atmosphere.  Maybe this is too much of a micro-optimization.
         // http://jsperf.com/object-property-access-propcount
         this._drawUniforms = combine(uniforms, atmosphereUniforms);
-    }
+    };
 
     /**
      * DOC_TBA
@@ -855,10 +894,23 @@ define([
 
             var frustum = sceneState.camera.frustum;
             var position = sceneState.camera.position;
-            var x = position.x + frustum.left;
-            var y = position.y + frustum.bottom;
-            var w = position.x + frustum.right - x;
-            var h = position.y + frustum.top - y;
+            var up = sceneState.camera.up;
+            var right = sceneState.camera.right;
+
+            var width = frustum.right - frustum.left;
+            var height = frustum.top - frustum.bottom;
+
+            var lowerLeft = position.add(right.multiplyWithScalar(frustum.left));
+            lowerLeft = lowerLeft.add(up.multiplyWithScalar(frustum.bottom));
+            var upperLeft = lowerLeft.add(up.multiplyWithScalar(height));
+            var upperRight = upperLeft.add(right.multiplyWithScalar(width));
+            var lowerRight = upperRight.add(up.multiplyWithScalar(-height));
+
+            var x = Math.min(lowerLeft.x, lowerRight.x, upperLeft.x, upperRight.x);
+            var y = Math.min(lowerLeft.y, lowerRight.y, upperLeft.y, upperRight.y);
+            var w = Math.max(lowerLeft.x, lowerRight.x, upperLeft.x, upperRight.x) - x;
+            var h = Math.max(lowerLeft.y, lowerRight.y, upperLeft.y, upperRight.y) - y;
+
             var fRect = new Rectangle(x, y, w, h);
 
             return !Rectangle.rectangleRectangleIntersect(bRect, fRect);

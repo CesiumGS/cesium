@@ -8,7 +8,8 @@ exports.defineTags = function(dictionary) {
 
 	dictionary.defineTag('enumeration', {
         onTagged: function(doclet, tag) {
-            doclet.addTag('kind', 'class');
+            doclet.addTag('kind', 'enumeration');
+            doclet.filename = doclet.name;
         }
     });
 	

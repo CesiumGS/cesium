@@ -15,7 +15,7 @@ define([
 
     /**
      * DOC_TBA
-     * @name Ellipsoid
+     * @alias Ellipsoid
      *
      * @param {Cartesian3} radii The ellipsoid's radius in the x, y, and z ds.
      *
@@ -25,7 +25,7 @@ define([
      * @exception {DeveloperError} radii is required.
      * @exception {DeveloperError} All radii components must be greater than or equal to zero.
      */
-    function Ellipsoid(radii) {
+    var Ellipsoid = function(radii) {
         if (arguments.length === 0) {
             throw new DeveloperError('radii is required.');
         }
@@ -56,7 +56,7 @@ define([
                 1.0 / (x * x),
                 1.0 / (y * y),
                 1.0 / (z * z));
-    }
+    };
 
     /**
      * DOC_TBA

@@ -19,14 +19,12 @@ define([
      * Handles user input events. Custom functions can be added to be executed on
      * when the user enters input.
      *
-     * @name EventHandler
+     * @alias EventHandler
      *
      * @param {DOC_TBA} element The element to add events to. Defaults to document.
      * @constructor
      */
-    function EventHandler(element) {
-        this._keyEvents = {};
-
+    var EventHandler = function(element) {
         this._mouseEvents = {};
         for ( var button in MouseEventType) {
             if (MouseEventType.hasOwnProperty(button)) {
@@ -34,15 +32,8 @@ define([
             }
         }
 
-        this._modifiedKeyEvents = {};
-        for ( var modifier in EventModifier) {
-            if (EventModifier.hasOwnProperty(modifier)) {
-                this._modifiedKeyEvents[modifier] = {};
-            }
-        }
-
         this._modifiedMouseEvents = {};
-        for (modifier in EventModifier) {
+        for ( var modifier in EventModifier) {
             if (EventModifier.hasOwnProperty(modifier)) {
                 this._modifiedMouseEvents[modifier] = {};
                 for (button in MouseEventType) {
@@ -54,8 +45,14 @@ define([
         }
 
         this._leftMouseButtonDown = false;
+        this._leftPressTime = undefined;
+        this._leftReleaseTime = undefined;
         this._middleMouseButtonDown = false;
+        this._middlePressTime = undefined;
+        this._middleReleaseTime = undefined;
         this._rightMouseButtonDown = false;
+        this._rightPressTime = undefined;
+        this._rightReleaseTime = undefined;
         this._seenAnyTouchEvents = false;
         this._lastMouseX = 0;
         this._lastMouseY = 0;
@@ -68,7 +65,7 @@ define([
         this._element = element || document;
 
         this._register();
-    }
+    };
 
     EventHandler.prototype._getPosition = function(event) {
         if (this._element === document) {
@@ -215,121 +212,6 @@ define([
      */
     EventHandler.prototype.getRightReleaseTime = function() {
         return this._rightReleaseTime;
-    };
-
-    /**
-     * Set a function to be executed when a key is entered.
-     *
-     * @memberof EventHandler
-     *
-     * @param {Function} action Function to be executed when <code>key</code> is pressed.
-     * @param {Character} key The key that is pressed.
-     * @param {Enumeration} modifier A EventModifier key that is held when <code>key</code> is pressed.
-     *
-     * @exception {DeveloperError} action is required.
-     * @exception {DeveloperError} key is required.
-     *
-     * @see EventHandler#getKeyAction
-     * @see EventHandler#removeKeyAction
-     *
-     * @example
-     * // Set the camera to a 'home' position when 'h' is pressed.
-     * customHandler.setKeyAction(
-     *    function() {
-     *        var position = new Cartesian3(2.0 * Ellipsoid.WGS84.getRadii().getMaximumComponent(), 0.0, 0.0);
-     *        var dir = Cartesian3.ZERO.subtract(position).normalize();
-     *        var up = Cartesian3.UNIT_Z;
-     *        camera.position = position;
-     *        camera.direction = dir;
-     *        camera.up = up;
-     *    },
-     *    'h'
-     * );
-     */
-    EventHandler.prototype.setKeyAction = function(action, key, modifier) {
-        if (!action) {
-            throw new DeveloperError('action is required.');
-        }
-
-        if (!key) {
-            throw new DeveloperError('key is required.');
-        }
-
-        var keyEvents;
-        if (modifier && modifier.name) {
-            keyEvents = this._modifiedKeyEvents[modifier.name];
-        } else {
-            keyEvents = this._keyEvents;
-        }
-
-        if (keyEvents) {
-            var ucKey = key.toUpperCase();
-            keyEvents[ucKey] = action;
-        }
-    };
-
-    /**
-     * Returns the function executed when <code>key</code> is pressed.
-     *
-     * @memberof EventHandler
-     *
-     * @param {Character} key The key
-     * @param {Enumeration} The modifier.
-     *
-     * @exception {DeveloperError} key is required.
-     *
-     * @see EventHandler#setKeyAction
-     * @see EventHandler#removeKeyAction
-     */
-    EventHandler.prototype.getKeyAction = function(key, modifier) {
-        if (!key) {
-            throw new DeveloperError('key is required.');
-        }
-
-        var keyEvents;
-        if (modifier && modifier.name) {
-            keyEvents = this._modifiedKeyEvents[modifier.name];
-        } else {
-            keyEvents = this._keyEvents;
-        }
-
-        var ucKey = key.toUpperCase();
-        if (keyEvents && keyEvents[ucKey]) {
-            return keyEvents[ucKey];
-        }
-
-        return null;
-    };
-
-    /**
-     * Removes the function executed when <code>key</code> is pressed.
-     *
-     * @memberof EventHandler
-     *
-     * @param {Character} key The key
-     * @param {Enumeration} The modifier.
-     *
-     * @exception {DeveloperError} key is required.
-     *
-     * @see EventHandler#setKeyAction
-     * @see EventHandler#getKeyAction
-     */
-    EventHandler.prototype.removeKeyAction = function(key, modifier) {
-        if (!key) {
-            throw new DeveloperError('key is required.');
-        }
-
-        var keyEvents;
-        if (modifier && modifier.name) {
-            keyEvents = this._modifiedKeyEvents[modifier.name];
-        } else {
-            keyEvents = this._keyEvents;
-        }
-
-        var ucKey = key.toUpperCase();
-        if (keyEvents && keyEvents[ucKey]) {
-            delete keyEvents[ucKey];
-        }
     };
 
     /**
@@ -655,15 +537,6 @@ define([
         }
     };
 
-    EventHandler.prototype._handleKeyDown = function(event) {
-        var modifier = this._getModifier(event);
-        var key = String.fromCharCode(event.keyCode);
-        var action = this.getKeyAction(key, modifier);
-        if (action) {
-            action();
-        }
-    };
-
     EventHandler.prototype._handleMouseWheel = function(event) {
         // Some browsers use event.detail to count the number of clicks. The sign
         // of the integer is the direction the wheel is scrolled. In that case, convert
@@ -738,13 +611,6 @@ define([
             onDoc : false,
             action : function(e) {
                 that._handleMouseDblClick(e);
-            }
-        });
-        this._callbacks.push({
-            name : 'keydown',
-            onDoc : false,
-            action : function(e) {
-                that._handleKeyDown(e);
             }
         });
         this._callbacks.push({
@@ -823,7 +689,7 @@ define([
     };
 
     /**
-     * Removes mouse and keyboard listeners held by this object.
+     * Removes mouse listeners held by this object.
      * <br /><br />
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,

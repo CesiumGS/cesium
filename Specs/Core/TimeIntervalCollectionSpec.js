@@ -14,12 +14,12 @@ defineSuite([
         this.value = value;
     }
 
-    TestObject.equals = function(lhs, rhs) {
-        return lhs.value === rhs.value;
+    TestObject.equals = function(left, right) {
+        return left.value === right.value;
     };
 
-    TestObject.merge = function(lhs, rhs) {
-        return new TestObject(lhs.value + rhs.value);
+    TestObject.merge = function(left, right) {
+        return new TestObject(left.value + right.value);
     };
 
     it('constructing a default interval collection has expected property values.', function() {
@@ -376,11 +376,11 @@ defineSuite([
     });
 
     it('intersectInterval works non-overlapping intervals', function() {
-        var lhsIntervals = new TimeIntervalCollection();
-        lhsIntervals.addInterval(new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2), true, false));
-        var rhsIntervals = new TimeIntervalCollection();
-        rhsIntervals.addInterval(new TimeInterval(JulianDate.fromTotalDays(2), JulianDate.fromTotalDays(3), true, true));
-        expect(lhsIntervals.intersectInterval(rhsIntervals).getLength()).toEqual(0);
+        var leftIntervals = new TimeIntervalCollection();
+        leftIntervals.addInterval(new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2), true, false));
+        var rightIntervals = new TimeIntervalCollection();
+        rightIntervals.addInterval(new TimeInterval(JulianDate.fromTotalDays(2), JulianDate.fromTotalDays(3), true, true));
+        expect(leftIntervals.intersectInterval(rightIntervals).getLength()).toEqual(0);
     });
 
     it('intersectInterval works with intersecting intervals an no merge callback', function() {

@@ -105,31 +105,6 @@ defineSuite([
         handler = !handler.isDestroyed() && handler.destroy();
     });
 
-    it('setting key events require an action', function() {
-        expect(function() {
-            handler.setKeyAction();
-        }).toThrow();
-    });
-
-    it('setting key events require a key', function() {
-        expect(function() {
-            handler.setKeyAction(function() {
-            });
-        }).toThrow();
-    });
-
-    it('getting key events require a key', function() {
-        expect(function() {
-            handler.getKeyAction();
-        }).toThrow();
-    });
-
-    it('removing key events require a key', function() {
-        expect(function() {
-            handler.removeKeyAction();
-        }).toThrow();
-    });
-
     it('setting mouse events require an action', function() {
         expect(function() {
             handler.setMouseAction();
@@ -153,54 +128,6 @@ defineSuite([
         expect(function() {
             handler.removeMouseAction();
         }).toThrow();
-    });
-
-    it('key events', function() {
-        var keyPressed = false;
-
-        var keyPressedFunction = function() {
-            keyPressed = !keyPressed;
-        };
-
-        handler.setKeyAction(keyPressedFunction, 'a');
-        element.fireEvents('keydown', {
-            keyCode : 'a'.charCodeAt(0)
-        });
-        expect(keyPressed).toEqual(true);
-
-        expect(handler.getKeyAction('a') === keyPressedFunction).toEqual(true);
-
-        handler.removeKeyAction('a');
-        element.fireEvents('keyDown', {
-            keyCode : 'a'.charCodeAt(0)
-        });
-
-        expect(keyPressed).toEqual(true);
-    });
-
-    it('modified key events', function() {
-        var modifiedKeyPressed = false;
-
-        var modfiedKeyPressedFunction = function() {
-            modifiedKeyPressed = !modifiedKeyPressed;
-        };
-
-        handler.setKeyAction(modfiedKeyPressedFunction, 'b', EventModifier.CTRL);
-        element.fireEvents('keydown', {
-            keyCode : 'b'.charCodeAt(0),
-            ctrlKey : true
-        });
-        expect(modifiedKeyPressed).toEqual(true);
-
-        expect(handler.getKeyAction('b', EventModifier.CTRL) === modfiedKeyPressedFunction).toEqual(true);
-
-        handler.removeKeyAction('b', EventModifier.CTRL);
-        element.fireEvents('keyDown', {
-            keyCode : 'b'.charCodeAt(0),
-            ctrlKey : true
-        });
-
-        expect(modifiedKeyPressed).toEqual(true);
     });
 
     it('mouse right down', function() {

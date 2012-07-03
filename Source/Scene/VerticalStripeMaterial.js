@@ -5,10 +5,10 @@ define(['../Shaders/VerticalStripeMaterial'], function(ShadersVerticalStripeMate
     /**
      * DOC_TBA
      *
-     * @name VerticalStripeMaterial
+     * @alias VerticalStripeMaterial
      * @constructor
      */
-    function VerticalStripeMaterial(template) {
+    var VerticalStripeMaterial = function(template) {
         var t = template || {};
 
         /**
@@ -60,7 +60,7 @@ define(['../Shaders/VerticalStripeMaterial'], function(ShadersVerticalStripeMate
                 return that.repeat;
             }
         };
-    }
+    };
 
     VerticalStripeMaterial.prototype._getShaderSource = function() {
         return '#line 0\n' + ShadersVerticalStripeMaterial;

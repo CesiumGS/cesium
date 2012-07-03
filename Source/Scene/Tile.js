@@ -14,7 +14,7 @@ define([
     /**
      * A single piece of a uniformly subdivided image mapped to the surface of an ellipsoid.
      *
-     * @name Tile
+     * @alias Tile
      * @constructor
      *
      * @param {Extent} description.extent The cartographic extent of the tile, with north, south, east and
@@ -34,7 +34,7 @@ define([
      * @see OpenStreetMapTileProvider
      * @see BingMapsTileProvider
      */
-    function Tile(description) {
+    var Tile = function(description) {
         if (!description) {
             throw new DeveloperError('description is required.');
         }
@@ -121,7 +121,7 @@ define([
         this._projection = undefined;
         this._boundingSphere2D = undefined;
         this._boundingRectangle = undefined;
-    }
+    };
 
     /**
      * Converts an extent and zoom level into tile x, y coordinates.

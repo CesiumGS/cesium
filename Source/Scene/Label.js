@@ -22,7 +22,7 @@ define([
     /**
      * DOC_TBA
      *
-     * @name Label
+     * @alias Label
      * @internalConstructor
      *
      * @see LabelCollection
@@ -31,7 +31,7 @@ define([
      *
      * @see <a href='http://www.whatwg.org/specs/web-apps/current-work/#2dcontext'>HTML canvas 2D context</a>
      */
-    function Label(labelTemplate, labelCollection) {
+    var Label = function(labelTemplate, labelCollection) {
         var l = labelTemplate || {};
         var show = (typeof l.show === 'undefined') ? true : l.show;
         var billboardCollection = labelCollection._getCollection();
@@ -65,7 +65,7 @@ define([
         this._billboards = undefined;
 
         this._createBillboards();
-    }
+    };
 
     /**
      * Returns true if this label will be shown.  Call {@link Label#setShow}
@@ -198,10 +198,9 @@ define([
 
     /**
      * DOC_TBA
+     * CSS font-family
      *
      * @memberof Label
-     *
-     * CSS font-family
      *
      * @see Label#getFont
      * @see Label#setFillColor
@@ -636,7 +635,7 @@ define([
         var self = this;
 
         var onCanvasCreated = function() {
-            self._setCreateTextureAtlas(true);
+            self._setUpdateTextureAtlas(true);
         };
 
         for (i = 0; i < length; i++) {
@@ -818,8 +817,8 @@ define([
         }
     };
 
-    Label.prototype._setCreateTextureAtlas = function(value) {
-        this._labelCollection._setCreateTextureAtlas(value);
+    Label.prototype._setUpdateTextureAtlas = function(value) {
+        this._labelCollection._setUpdateTextureAtlas(value);
     };
 
     return Label;

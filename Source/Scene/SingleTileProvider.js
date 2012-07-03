@@ -14,7 +14,7 @@ define([
     /**
      * Provides a single, top-level tile.
      *
-     * @name SingleTileProvider
+     * @alias SingleTileProvider
      * @constructor
      *
      * @param {String} url The url for the tile.
@@ -27,7 +27,7 @@ define([
      * @see OpenStreetMapTileProvider
      * @see CompositeTileProvider
      */
-    function SingleTileProvider(url, proxy) {
+    var SingleTileProvider = function(url, proxy) {
         if (typeof url === 'undefined') {
             throw new DeveloperError('url is required.');
         }
@@ -72,7 +72,7 @@ define([
          * @see Projections
          */
         this.projection = Projections.WGS84;
-    }
+    };
 
     /**
      * Loads the top-level tile.

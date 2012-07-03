@@ -18,12 +18,12 @@ define([
     /**
      * DOC_TBA
      *
-     * @name CubeMap
+     * @alias CubeMap
      * @internalConstructor
      *
      * @see Context#createCubeMap
      */
-    function CubeMap(gl, textureFilterAnisotropic, textureTarget, texture, pixelFormat, pixelDatatype, size, preMultiplyAlpha) {
+    var CubeMap = function(gl, textureFilterAnisotropic, textureTarget, texture, pixelFormat, pixelDatatype, size, preMultiplyAlpha) {
         this._gl = gl;
         this._textureFilterAnisotropic = textureFilterAnisotropic;
         this._textureTarget = textureTarget;
@@ -35,12 +35,10 @@ define([
         this._sampler = undefined;
 
         this.setSampler();
-    }
+    };
 
     /**
      * DOC_TBA
-     *
-     * @memberof CubeMap
      *
      * @param {Object} source The source {ImageData}, {HTMLImageElement}, {HTMLCanvasElement}, or {HTMLVideoElement}.
      * @param {Number} xOffset optional
@@ -101,8 +99,6 @@ define([
 
     /**
      * DOC_TBA
-     *
-     * @memberof CubeMap
      *
      * @param {Number} xOffset optional
      * @param {Number} yOffset optional

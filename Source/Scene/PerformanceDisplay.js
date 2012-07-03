@@ -15,7 +15,7 @@ define([
      * Draws a display in the top left corner of the scene displaying FPS (frames per second),
      * averaged over 1 second intervals, as well as unaveraged frame time.
      *
-     * @name PerformanceDisplay
+     * @alias PerformanceDisplay
      * @constructor
      *
      * @param {Color} [description.fpsColor] The color of the FPS graph.
@@ -27,7 +27,7 @@ define([
      * @example
      * scene.getPrimitives().add(new PerformanceDisplay());
      */
-    function PerformanceDisplay(description) {
+    var PerformanceDisplay = function(description) {
         if (typeof description === 'undefined') {
             description = {};
         }
@@ -65,7 +65,7 @@ define([
         this._time = undefined;
         this._texture = undefined;
         this._viewportHeight = 0;
-    }
+    };
 
     /**
      * Update the display.  This function should only be called once per frame, because

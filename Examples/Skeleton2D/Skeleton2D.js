@@ -63,17 +63,17 @@ require({
         Cesium.requestAnimationFrame(tick);
     }());
 
-    var handler = new Cesium.EventHandler();
-
-    handler.setKeyAction(function() {
-        transitioner.morphTo3D();
-    }, '1');
-    handler.setKeyAction(function() {
-        transitioner.morphTo2D();
-    }, '2');
-    handler.setKeyAction(function() {
-        transitioner.morphToColumbusView();
-    }, '3');
+    function keydownHandler(e) {
+        var keyCode = e.keyCode;
+        if (keyCode === 51) {
+            transitioner.morphTo3D();
+        } else if (keyCode === 50) {
+            transitioner.morphToColumbusView();
+        } else if (keyCode === 49) {
+            transitioner.morphTo2D();
+        }
+    }
+    document.addEventListener('keydown', keydownHandler, false);
 
     canvas3D.oncontextmenu = canvas2D.oncontextmenu = function() {
         return false;

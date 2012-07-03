@@ -8,8 +8,8 @@ defineSuite([
     "use strict";
     /*global it,expect*/
 
-    function mergeByAdd(lhs, rhs) {
-        return lhs + rhs;
+    function mergeByAdd(left, right) {
+        return left + right;
     }
 
     it('Construction correctly sets all properties.', function() {
@@ -84,6 +84,11 @@ defineSuite([
         var interval1 = new TimeInterval(JulianDate.fromTotalDays(2451545), JulianDate.fromTotalDays(2451546), true, true);
         expect(interval1.contains(JulianDate.fromTotalDays(2451545.5))).toEqual(true);
         expect(interval1.contains(JulianDate.fromTotalDays(2451546.5))).toEqual(false);
+    });
+
+    it('Contains works for an empty interval.', function() {
+        var interval1 = new TimeInterval(JulianDate.fromTotalDays(2451545), JulianDate.fromTotalDays(2451545), false, false);
+        expect(interval1.contains(JulianDate.fromTotalDays(2451545))).toEqual(false);
     });
 
     it('Contains returns true at start and stop times of a closed interval', function() {
