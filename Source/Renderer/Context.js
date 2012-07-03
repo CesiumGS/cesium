@@ -1788,12 +1788,12 @@ define([
                 enabled : (typeof depthTest.enabled === 'undefined') ? false : depthTest.enabled,
                 func : (typeof depthTest.func === 'undefined') ? DepthFunction.LESS : depthTest.func // func, because function is a JavaScript keyword
             },
-            colorMask : new Color(
-                (typeof colorMask.red === 'undefined') ? true : colorMask.red,
-                (typeof colorMask.green === 'undefined') ? true : colorMask.green,
-                (typeof colorMask.blue === 'undefined') ? true : colorMask.blue,
-                (typeof colorMask.alpha === 'undefined') ? true : colorMask.alpha
-            ),
+            colorMask : {
+                red : (typeof colorMask.red === 'undefined') ? true : colorMask.red,
+                green : (typeof colorMask.green === 'undefined') ? true : colorMask.green,
+                blue : (typeof colorMask.blue === 'undefined') ? true : colorMask.blue,
+                alpha : (typeof colorMask.alpha === 'undefined') ? true : colorMask.alpha
+            },
             depthMask : (typeof rs.depthMask === 'undefined') ? true : rs.depthMask,
             stencilMask : (typeof rs.stencilMask === 'undefined') ? ~0 : rs.stencilMask,
             blending : {
@@ -2028,19 +2028,19 @@ define([
                     height : (typeof scissorTestRectangle.height === 'undefined') ? 0 : scissorTestRectangle.height
                 }
             },
-            colorMask : new Color(
-                (typeof colorMask.red === 'undefined') ? true : colorMask.red,
-                (typeof colorMask.green === 'undefined') ? true : colorMask.green,
-                (typeof colorMask.blue === 'undefined') ? true : colorMask.blue,
-                (typeof colorMask.alpha === 'undefined') ? true : colorMask.alpha
-            ),
+            colorMask : {
+                red : (typeof colorMask.red === 'undefined') ? true : colorMask.red,
+                green : (typeof colorMask.green === 'undefined') ? true : colorMask.green,
+                blue : (typeof colorMask.blue === 'undefined') ? true : colorMask.blue,
+                alpha : (typeof colorMask.alpha === 'undefined') ? true : colorMask.alpha
+            },
             depthMask : (typeof cs.depthMask === 'undefined') ? true : cs.depthMask,
             stencilMask : (typeof cs.stencilMask === 'undefined') ? ~0 : cs.stencilMask,
             dither : (typeof cs.dither === 'undefined') ? true : cs.dither,
 
             framebuffer : cs.framebuffer,
 
-            color : new Color(color.red, color.green, color.blue, color.alpha),
+            color : Color.clone(color),
             depth : depth,
             stencil : stencil
         };
@@ -2099,15 +2099,8 @@ define([
         var s = clearState.stencil;
 
         if (typeof c !== 'undefined') {
-            if (c.red !== this._clearColor.red ||
-                c.green !== this._clearColor.green ||
-                c.blue !== this._clearColor.blue ||
-                c.alpha !== this._clearColor.alpha) {
-                this._clearColor.red = c.red;
-                this._clearColor.green = c.green;
-                this._clearColor.blue = c.blue;
-                this._clearColor.alpha = c.alpha;
-
+            if (!Color.equals(this._clearColor, c)) {
+                Color.clone(c, this._clearColor);
                 gl.clearColor(c.red, c.green, c.blue, c.alpha);
             }
             bitmask |= gl.COLOR_BUFFER_BIT;

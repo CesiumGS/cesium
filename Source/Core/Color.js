@@ -96,6 +96,25 @@ define(function() {
     };
 
     /**
+     * Returns true if the first Color equals the second color.
+     * @memberof Color
+     *
+     * @param {Color} left The first Color to compare for equality.
+     * @param {Color} right The second Color to compare for equality.
+     * @return {Boolean} <code>true</code> if the Colors are equal; otherwise, <code>false</code>.
+     */
+    Color.equals = function(left, right) {
+        return (left === right) ||
+               (typeof left !== 'undefined' &&
+                typeof right !== 'undefined' &&
+                left.red === right.red &&
+                left.green === right.green &&
+                left.blue === right.blue &&
+                left.alpha === right.alpha);
+
+    };
+
+    /**
      * Returns a duplicate of a Color instance.
      * @memberof Color
      *
@@ -107,20 +126,14 @@ define(function() {
     };
 
     /**
-     * Returns true if this Color equals other componentwise.
+     * Returns true if this Color equals other.
      * @memberof Color
      *
      * @param {Color} other The Color to compare for equality.
-     * @return {Boolean} <code>true</code> if the Colors are equal componentwise; otherwise, <code>false</code>.
+     * @return {Boolean} <code>true</code> if the Colors are equal; otherwise, <code>false</code>.
      */
     Color.prototype.equals = function(other) {
-        return (this === other) ||
-        (typeof this !== 'undefined' &&
-         typeof other !== 'undefined' &&
-         this.red === other.red &&
-         this.green === other.green &&
-         this.blue === other.blue &&
-         this.alpha === other.alpha);
+        return Color.equals(this, other);
     };
 
     /**

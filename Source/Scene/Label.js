@@ -230,9 +230,8 @@ define([
      */
     Label.prototype.setFillColor = function(value) {
         var c = this._fillColor;
-        if ((typeof value !== 'undefined') &&
-            (c.red !== value.red || c.green !== value.green || c.blue !== value.blue || c.alpha !== value.alpha)) {
-            this._fillColor = value;
+        if ((typeof value !== 'undefined') && !Color.equals(c, value)) {
+            Color.clone(value, this._fillColor);
             this._createBillboards();
         }
     };
@@ -261,9 +260,8 @@ define([
      */
     Label.prototype.setOutlineColor = function(value) {
         var c = this._outlineColor;
-        if ((typeof value !== 'undefined') &&
-            (c.red !== value.red || c.green !== value.green || c.blue !== value.blue || c.alpha !== value.alpha)) {
-            this._outlineColor = value;
+        if ((typeof value !== 'undefined') && !Color.equals(c, value)) {
+            Color.clone(value, this._outlineColor);
             this._createBillboards();
         }
     };

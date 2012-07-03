@@ -48,21 +48,19 @@ define([
      */
     var Billboard = function(billboardTemplate, collection) {
         var b = billboardTemplate || {};
-        var color = (typeof b.color !== 'undefined') ? new Color(b.color.red, b.color.green, b.color.blue, b.color.alpha) : new Color(1.0, 1.0, 1.0, 1.0);
         var position = b.position ? new Cartesian3(b.position.x, b.position.y, b.position.z) : Cartesian3.ZERO.clone();
-        this._show = (typeof b.show === 'undefined') ? true : b.show;
         this._position = position;
         this._actualPosition = position.clone(); // For columbus view and 2D
+        this._show = (typeof b.show === 'undefined') ? true : b.show;
         this._pixelOffset = b.pixelOffset ? new Cartesian2(b.pixelOffset.x, b.pixelOffset.y) : Cartesian2.ZERO.clone();
         this._eyeOffset = b.eyeOffset ? new Cartesian3(b.eyeOffset.x, b.eyeOffset.y, b.eyeOffset.z) : Cartesian3.ZERO.clone();
         this._horizontalOrigin = b.horizontalOrigin || HorizontalOrigin.CENTER;
         this._verticalOrigin = b.verticalOrigin || VerticalOrigin.CENTER;
         this._scale = (typeof b.scale === 'undefined') ? 1.0 : b.scale;
         this._imageIndex = b.imageIndex || 0;
-        this._color = color.clone();
+        this._color = (typeof b.color !== 'undefined') ? Color.clone(b.color) : new Color(1.0, 1.0, 1.0, 1.0);
         this._pickId = undefined;
         this._pickIdThis = b._pickIdThis;
-
         this._collection = collection;
         this._dirty = false;
     };
@@ -512,13 +510,8 @@ define([
     Billboard.prototype.setColor = function(value) {
         var c = this._color;
 
-        if ((typeof value !== 'undefined') &&
-            ((c.red !== value.red) || (c.green !== value.green) || (c.blue !== value.blue) || (c.alpha !== value.alpha))) {
-
-            c.red = value.red;
-            c.green = value.green;
-            c.blue = value.blue;
-            c.alpha = value.alpha;
+        if ((typeof value !== 'undefined') && !Color.equals(c, value)) {
+            Color.clone(value, c);
             this._makeDirty(COLOR_INDEX);
         }
     };
