@@ -165,8 +165,9 @@ define([
             this._makeDirty(POSITION_SIZE_INDEX);
         }
         var positions = [];
+        var length = value.length;
         for ( var i = 0; i < length; ++i) {
-            var position = newPositions[i];
+            var position = value[i];
             positions.push(new Cartesian3(position.x, position.y, position.z));
         }
         this._positions = positions;
