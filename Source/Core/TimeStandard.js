@@ -1,5 +1,5 @@
 /*global define*/
-define(['require', './DeveloperError', './binarySearch', './LeapSecond'], function(require, DeveloperError, binarySearch, LeapSecond) {
+define(['require', './DeveloperError', './binarySearch'], function(require, DeveloperError, binarySearch) {
     "use strict";
 
     var JulianDate = function(a, b, c) {
@@ -7,6 +7,13 @@ define(['require', './DeveloperError', './binarySearch', './LeapSecond'], functi
         //we need to require JulianDate later and replace our reference
         JulianDate = require('./JulianDate');
         return new JulianDate(a, b, c);
+    };
+
+    var LeapSecond = function(a, b) {
+        //because of the circular reference between LeapSecond and TimeStandard,
+        //we need to require LeapSecond later and replace our reference
+        LeapSecond = require('./LeapSecond');
+        return new LeapSecond(a, b);
     };
 
     /**
