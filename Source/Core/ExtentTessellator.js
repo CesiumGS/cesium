@@ -64,6 +64,7 @@ define([
         var j;
         var rows = 0;
         var cols = 0;
+        var cartPosition = new Cartographic3(0.0, 0.0, altitude);
 
         for (i = boundExtent.north;; i = i - granularity) {
             if (i < boundExtent.south) {
@@ -76,9 +77,10 @@ define([
                     j = boundExtent.east;
                 }
 
-                var cartPosition = new Cartographic3(j, i, altitude);
-                var position = ellipsoid.toCartesian(cartPosition).subtract(relativeToCenter);
-                vertices.push(position.x, position.y, position.z);
+                cartPosition.longitude = j;
+                cartPosition.latitude = i;
+                var position = ellipsoid.toCartesian(cartPosition);
+                vertices.push(position.x - relativeToCenter.x, position.y - relativeToCenter.y, position.z - relativeToCenter.z);
 
                 if (genTexCoords) {
                     var u = (j - extent.west) * lonScalar;
