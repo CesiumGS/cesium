@@ -16,6 +16,26 @@ function(DeveloperError,
     var daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
     var daysInLeapFeburary = 29;
 
+    function setComponents(wholeDays, secondsOfDay, standard, julianDate) {
+        var extraDays = (secondsOfDay / TimeConstants.SECONDS_PER_DAY) | 0;
+        wholeDays += extraDays;
+        secondsOfDay -= TimeConstants.SECONDS_PER_DAY * extraDays;
+
+        if (secondsOfDay < 0) {
+            wholeDays--;
+            secondsOfDay += TimeConstants.SECONDS_PER_DAY;
+        }
+
+        if (typeof julianDate === 'undefined') {
+            return new JulianDate(wholeDays, secondsOfDay, standard);
+        }
+
+        julianDate._julianDayNumber = wholeDays;
+        julianDate._secondsOfDay = secondsOfDay;
+        julianDate._timeStandard = standard;
+        return julianDate;
+    }
+
     function computeJulianDateComponents(year, month, day, hour, minute, second, millisecond) {
         // Algorithm from page 604 of the Explanatory Supplement to the
         // Astronomical Almanac (Seidelmann 1992).
@@ -138,22 +158,12 @@ function(DeveloperError,
             wholeDays = components[0];
             secondsOfDay = components[1];
             timeStandard = TimeStandard.UTC;
-            this._date = date;
         }
 
-        // Normalize so that the number of seconds is >= 0 and < a day.
-        var extraDays = (secondsOfDay / TimeConstants.SECONDS_PER_DAY) | 0;
-        wholeDays += extraDays;
-        secondsOfDay -= TimeConstants.SECONDS_PER_DAY * extraDays;
-
-        if (secondsOfDay < 0) {
-            wholeDays--;
-            secondsOfDay += TimeConstants.SECONDS_PER_DAY;
-        }
-
-        this._julianDayNumber = wholeDays;
-        this._secondsOfDay = secondsOfDay;
-        this._timeStandard = timeStandard;
+        this._julianDayNumber = undefined;
+        this._secondsOfDay = undefined;
+        this._timeStandard = undefined;
+        setComponents(wholeDays, secondsOfDay, timeStandard, this);
     };
 
     /**
@@ -190,9 +200,7 @@ function(DeveloperError,
         }
 
         var components = computeJulianDateComponentsFromDate(date);
-        var result = new JulianDate(components[0], components[1], timeStandard);
-        result._date = date;
-        return result;
+        return new JulianDate(components[0], components[1], timeStandard);
     };
 
     /**
@@ -449,7 +457,7 @@ function(DeveloperError,
 
         //If we were on a leap second, add it back.
         if (isLeapSecond) {
-            result = result.addSeconds(1);
+            result.addSeconds(1, result);
         }
 
         return result;
@@ -591,6 +599,7 @@ function(DeveloperError,
         return this._secondsOfDay;
     };
 
+    var scratch = new JulianDate();
     /**
      * Creates a new JavaScript Date object equivalent to the Julian date
      * (accurate to the nearest millisecond in the UTC time standard).
@@ -600,55 +609,52 @@ function(DeveloperError,
      * @return {Date} A new JavaScript Date equivalent to this Julian date.
      */
     JulianDate.prototype.toDate = function() {
-        if (typeof this._date === 'undefined') {
-            var julianDayNumber = this._julianDayNumber;
-            var secondsOfDay = this._secondsOfDay;
-            if (this._timeStandard === TimeStandard.TAI) {
-                var julianDateTai = TimeStandard.convertTaiToUtc(this);
+        var julianDayNumber = this._julianDayNumber;
+        var secondsOfDay = this._secondsOfDay;
+        if (this._timeStandard === TimeStandard.TAI) {
+            var julianDateTai = TimeStandard.convertTaiToUtc(this);
 
-                //If julianDateTai is null, we are at a leap second, which can't be represented in UTC.
-                //Since JavaScript has no concept of leap seconds, we add a second to match how Date would represent it.
-                if (typeof julianDateTai === 'undefined') {
-                    julianDateTai = TimeStandard.convertTaiToUtc(this.addSeconds(1));
-                }
-                julianDayNumber = julianDateTai._julianDayNumber;
-                secondsOfDay = julianDateTai._secondsOfDay;
+            //If julianDateTai is null, we are at a leap second, which can't be represented in UTC.
+            //Since JavaScript has no concept of leap seconds, we add a second to match how Date would represent it.
+            if (typeof julianDateTai === 'undefined') {
+                julianDateTai = TimeStandard.convertTaiToUtc(this.addSeconds(1, scratch));
             }
-            if (secondsOfDay >= 43200.0) {
-                julianDayNumber += 1;
-            }
-
-            // Algorithm from page 604 of the Explanatory Supplement to the
-            // Astronomical Almanac (Seidelmann 1992).
-            var L = (julianDayNumber + 68569) | 0;
-            var N = (4 * L / 146097) | 0;
-            L = (L - (((146097 * N + 3) / 4) | 0)) | 0;
-            var I = ((4000 * (L + 1)) / 1461001) | 0;
-            L = (L - (((1461 * I) / 4) | 0) + 31) | 0;
-            var J = ((80 * L) / 2447) | 0;
-            var day = (L - (((2447 * J) / 80) | 0)) | 0;
-            L = (J / 11) | 0;
-            var month = (J + 2 - 12 * L) | 0;
-            var year = (100 * (N - 49) + I + L) | 0;
-
-            month--; // month field is zero-indexed
-
-            var hours = (secondsOfDay / TimeConstants.SECONDS_PER_HOUR) | 0;
-            var remainingSeconds = secondsOfDay - (hours * TimeConstants.SECONDS_PER_HOUR);
-            var minutes = (remainingSeconds / TimeConstants.SECONDS_PER_MINUTE) | 0;
-            remainingSeconds = remainingSeconds - (minutes * TimeConstants.SECONDS_PER_MINUTE);
-            var seconds = remainingSeconds | 0;
-            var milliseconds = ((remainingSeconds - seconds) / TimeConstants.SECONDS_PER_MILLISECOND) | 0;
-
-            // JulianDates are noon-based
-            hours += 12;
-            if (hours > 23) {
-                hours -= 24;
-            }
-
-            this._date = new Date(Date.UTC(year, month, day, hours, minutes, seconds, milliseconds));
+            julianDayNumber = julianDateTai._julianDayNumber;
+            secondsOfDay = julianDateTai._secondsOfDay;
         }
-        return new Date(this._date.getTime());
+        if (secondsOfDay >= 43200.0) {
+            julianDayNumber += 1;
+        }
+
+        // Algorithm from page 604 of the Explanatory Supplement to the
+        // Astronomical Almanac (Seidelmann 1992).
+        var L = (julianDayNumber + 68569) | 0;
+        var N = (4 * L / 146097) | 0;
+        L = (L - (((146097 * N + 3) / 4) | 0)) | 0;
+        var I = ((4000 * (L + 1)) / 1461001) | 0;
+        L = (L - (((1461 * I) / 4) | 0) + 31) | 0;
+        var J = ((80 * L) / 2447) | 0;
+        var day = (L - (((2447 * J) / 80) | 0)) | 0;
+        L = (J / 11) | 0;
+        var month = (J + 2 - 12 * L) | 0;
+        var year = (100 * (N - 49) + I + L) | 0;
+
+        month--; // month field is zero-indexed
+
+        var hours = (secondsOfDay / TimeConstants.SECONDS_PER_HOUR) | 0;
+        var remainingSeconds = secondsOfDay - (hours * TimeConstants.SECONDS_PER_HOUR);
+        var minutes = (remainingSeconds / TimeConstants.SECONDS_PER_MINUTE) | 0;
+        remainingSeconds = remainingSeconds - (minutes * TimeConstants.SECONDS_PER_MINUTE);
+        var seconds = remainingSeconds | 0;
+        var milliseconds = ((remainingSeconds - seconds) / TimeConstants.SECONDS_PER_MILLISECOND) | 0;
+
+        // JulianDates are noon-based
+        hours += 12;
+        if (hours > 23) {
+            hours -= 24;
+        }
+
+        return new Date(Date.UTC(year, month, day, hours, minutes, seconds, milliseconds));
     };
 
     /**
@@ -760,8 +766,7 @@ function(DeveloperError,
                 lastDate = leapSeconds[index].julianDate;
                 indexOffset = leapSeconds[index].offset;
             }
-            var taiCutoff = new JulianDate(lastDate.getJulianDayNumber(), lastDate.getSecondsOfDay());
-            taiCutoff = taiCutoff.addSeconds(indexOffset);
+            var taiCutoff = new JulianDate(lastDate.getJulianDayNumber(), lastDate.getSecondsOfDay() + indexOffset);
             if (this.lessThan(taiCutoff)) {
                 --index;
             }
@@ -796,12 +801,12 @@ function(DeveloperError,
      * var start = JulianDate.fromDate(date);
      * var end = start.addSeconds(95);      // July 4, 2011 @ 12:01:35 UTC
      */
-    JulianDate.prototype.addSeconds = function(duration) {
+    JulianDate.prototype.addSeconds = function(duration, result) {
         if (duration === null || isNaN(duration)) {
             throw new DeveloperError('duration is required and must be a number.');
         }
         var newSecondsOfDay = this._secondsOfDay + duration;
-        return new JulianDate(this._julianDayNumber, newSecondsOfDay, this._timeStandard);
+        return setComponents(this._julianDayNumber, newSecondsOfDay, this._timeStandard, result);
     };
 
     /**
@@ -827,12 +832,12 @@ function(DeveloperError,
      * var start = JulianDate.fromDate(date);
      * var end = start.addMinutes(65);      // July 4, 2011 @ 13:05 UTC
      */
-    JulianDate.prototype.addMinutes = function(duration) {
+    JulianDate.prototype.addMinutes = function(duration, result) {
         if (duration === null || isNaN(duration)) {
             throw new DeveloperError('duration is required and must be a number.');
         }
         var newSecondsOfDay = this._secondsOfDay + (duration * TimeConstants.SECONDS_PER_MINUTE);
-        return new JulianDate(this._julianDayNumber, newSecondsOfDay, this._timeStandard);
+        return setComponents(this._julianDayNumber, newSecondsOfDay, this._timeStandard, result);
     };
 
     /**
@@ -858,12 +863,12 @@ function(DeveloperError,
      * var start = JulianDate.fromDate(date);
      * var end = start.addHours(6);         // July 4, 2011 @ 18:00 UTC
      */
-    JulianDate.prototype.addHours = function(duration) {
+    JulianDate.prototype.addHours = function(duration, result) {
         if (duration === null || isNaN(duration)) {
             throw new DeveloperError('duration is required and must be a number.');
         }
         var newSecondsOfDay = this._secondsOfDay + (duration * TimeConstants.SECONDS_PER_HOUR);
-        return new JulianDate(this._julianDayNumber, newSecondsOfDay, this._timeStandard);
+        return setComponents(this._julianDayNumber, newSecondsOfDay, this._timeStandard, result);
     };
 
     /**
@@ -889,12 +894,12 @@ function(DeveloperError,
      * var start = JulianDate.fromDate(date);
      * var end = start.addDays(5);         // July 9, 2011 @ 12:00 UTC
      */
-    JulianDate.prototype.addDays = function(duration) {
+    JulianDate.prototype.addDays = function(duration, result) {
         if (duration === null || isNaN(duration)) {
             throw new DeveloperError('duration is required and must be a number.');
         }
         var newJulianDayNumber = this._julianDayNumber + duration;
-        return new JulianDate(newJulianDayNumber, this._secondsOfDay, this._timeStandard);
+        return setComponents(newJulianDayNumber, this._secondsOfDay, this._timeStandard, result);
     };
 
     /**
