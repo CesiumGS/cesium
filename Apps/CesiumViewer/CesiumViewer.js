@@ -242,8 +242,8 @@ define([
             on(animPlay, 'Click', function() {
                 animationController.play();
                 animReverse.set('checked', false);
-                animPause.set('checked', true);
-                animPlay.set('checked', false);
+                animPause.set('checked', false);
+                animPlay.set('checked', true);
                 updateSpeedIndicator();
             });
 
