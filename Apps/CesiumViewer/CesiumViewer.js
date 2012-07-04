@@ -73,7 +73,7 @@ define([
         if (animationController.isAnimating()) {
             speedIndicatorElement.innerHTML = clock.multiplier + 'x realtime';
         } else {
-            speedIndicatorElement.innerHTML = clock.multiplier + 'x realtime (currently paused)';
+            speedIndicatorElement.innerHTML = clock.multiplier + 'x realtime (paused)';
         }
     }
 
@@ -242,8 +242,8 @@ define([
             on(animPlay, 'Click', function() {
                 animationController.play();
                 animReverse.set('checked', false);
-                animPause.set('checked', true);
-                animPlay.set('checked', false);
+                animPause.set('checked', false);
+                animPlay.set('checked', true);
                 updateSpeedIndicator();
             });
 
