@@ -619,6 +619,9 @@ define([
             } else {
                 layer._centralBody._terrain.createTilePlaneGeometry(context, tile, projection);
             }
+
+            // TODO: can we get rid of this?
+            tile._mode = mode;
         }
 
         var tileImagery = getTileImagery(layer, tile);
