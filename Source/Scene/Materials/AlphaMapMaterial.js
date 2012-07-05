@@ -46,7 +46,7 @@ define([
          * type {String}
          */
         this.channels = t.channels || 'r';
-        this.shaderSource = replaceMaterialChannels(ShadersAlphaMapMaterial, 'alpha_map_material_channels', this.channels, 1);
+        this._shaderSource = replaceMaterialChannels(ShadersAlphaMapMaterial, 'alpha_map_material_channels', this.channels, 1);
 
         var that = this;
         this._uniforms = {
@@ -67,7 +67,7 @@ define([
 
     AlphaMapMaterial.prototype._getShaderSource = function() {
         return '#line 0\n' +
-               this.shaderSource;
+               this._shaderSource;
     };
 
     return AlphaMapMaterial;

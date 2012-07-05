@@ -1,7 +1,6 @@
 /*global define*/
 define([
         '../../Core/DeveloperError',
-        '../../Core/clone',
         '../../Core/createGuid',
         '../../Core/Jobs',
         '../../ThirdParty/Chain',
@@ -32,7 +31,6 @@ define([
         './WoodMaterial'
     ], function(
         DeveloperError,
-        clone,
         createGuid,
         Jobs,
         Chain,
@@ -64,62 +62,76 @@ define([
     "use strict";
 
     /**
-     * CompositeMaterial is different than other materials in that it
-     * combines multiple base materials into one. A CompositeMaterial is
-     * specified in JSON and contains 'id', 'textures', 'materials', and 'components' fields.
-     * 'id' is an optional string identifier for the composite material's name.
-     * If an id is provided, the composite material can be used by other composite materials.
-     * 'textures' is a series of id and image path pairs. Check example below for constructing
+     * CompositeMaterial combines multiple base materials into one using a JSON format that
+     * contains 'id', 'textures', 'materials', and 'components' fields.
+     * 'id' is an optional string identifier. If provided, other composite materials
+     * can use this composite material as a building block by treating the id as a material type.
+     * 'textures' is a series of id and image path pairs. Check the example below for constructing
      * 2D textures and cube maps.
      * 'materials' is a series of material containers. Each material container has
      * an identifier (e.g. 'diffuseMap1') followed by a material type (e.g. 'DiffuseMapMaterial')
      * and all of the necessary material properties to instantiate the material. The material type can
      * either be one of the traditional materials or a BlendMap. A BlendMap samples from a
-     * texture and returns a float that can be used to alter material values. A texture value may be
-     * referenced by a texture id from the 'textures' field.
+     * texture and returns a float that can be used to alter material values. A material that needs a
+     * texture or cube map as input should use the appropriate texture id from 'textures'.
      * 'components' is a sequence of material properties including 'diffuse', 'specular',
-     * 'normal', 'emission', and 'alpha'. Each component's value is expressed with glsl syntax
-     * that can include material ids from the 'materials' field.
-     * If a component is not specified, agi_getDefaultMaterial is used.
+     * 'normal', 'emission', and 'alpha'. Each component has a glsl-style expression that includes
+     * material ids from the 'materials' field. If a component is not specified, the value from
+     * agi_getDefaultMaterial is used.
      *
      * @name CompositeMaterial
      * @constructor
      *
      * @example
-
-     * polygon.material = new Cesium.CompositeMaterial(scene.getContext(), {
-     *    'id' : 'CompositeMaterial1',
-     *    'textures' : {
-     *        'cesium_logo_texture' : '../../Images/Cesium_Logo_Color.jpg',
-     *        'alpha_map_texture' : '../../Images/alpha_map.png',
-     *        'cube_map' : {
-     *            'positiveX' : '../../Images/PalmTreesCubeMap/posx.jpg',
-     *            'negativeX' : '../../Images/PalmTreesCubeMap/negx.jpg',
-     *            'positiveY' : '../../Images/PalmTreesCubeMap/negy.jpg',
-     *            'negativeY' : '../../Images/PalmTreesCubeMap/posy.jpg',
-     *            'positiveZ' : '../../Images/PalmTreesCubeMap/posz.jpg',
-     *            'negativeZ' : '../../Images/PalmTreesCubeMap/negz.jpg'
-     *        }
-     *    },
-     *    'materials' : {
-     *        'reflection' : {
-     *            'type' : 'ReflectionMaterial',
-     *            'cubeMap' : 'cube_map'
-     *        },
-     *        'diffuseMap' : {
-     *            'type' : 'DiffuseMapMaterial',
-     *            'texture' : 'cesium_logo_texture'
-     *        },
-     *        'blend_map' : {
-     *            'type' : 'BlendMap',
-     *            'texture' : 'alpha_map_texture'
-     *        }
-     *    },
-     *    'components' : {
-     *        'diffuse' : '(reflection.diffuse + diffuseMap.diffuse) / 2.0',
-     *        'specular' : 'blend_map / 100.0'
-     *    }
+     *
+     * var helperComposite = new CompositeMaterial(context, {
+     *     'id' : 'CompositeMaterialReflection',
+     *     'textures' : {
+     *         'palm_tree_cube_map' : {
+     *             'positiveX' : '../../Images/PalmTreesCubeMap/posx.jpg',
+     *             'negativeX' : '../../Images/PalmTreesCubeMap/negx.jpg',
+     *             'positiveY' : '../../Images/PalmTreesCubeMap/negy.jpg',
+     *             'negativeY' : '../../Images/PalmTreesCubeMap/posy.jpg',
+     *             'positiveZ' : '../../Images/PalmTreesCubeMap/posz.jpg',
+     *             'negativeZ' : '../../Images/PalmTreesCubeMap/negz.jpg'
+     *         }
+     *     },
+     *     'materials' : {
+     *         'reflection' : {
+     *             'type' : 'ReflectionMaterial',
+     *             'cubeMap' : 'palm_tree_cube_map'
+     *         }
+     *     },
+     *     'components' : {
+     *         'diffuse' : 'reflection.diffuse'
+     *     }
      * });
+     * polygon.material = new CompositeMaterial(context, {
+     *     'textures' : {
+     *         'cesium_logo_texture' : '../../Images/Cesium_Logo_Color.jpg',
+     *         'alpha_map_texture' : '../../Images/alpha_map.png'
+     *     },
+     *     'materials' : {
+     *         'reflection' : {
+     *             'type' : 'CompositeMaterialReflection'
+     *         },
+     *         'diffuseMap' : {
+     *             'type' : 'DiffuseMapMaterial',
+     *             'texture' : 'cesium_logo_texture'
+     *         },
+     *         'blend_map' : {
+     *             'type' : 'BlendMap',
+     *             'texture' : 'alpha_map_texture'
+     *         }
+     *     },
+     *     'components' : {
+     *         'diffuse' : '(reflection.diffuse + diffuseMap.diffuse) / 2.0',
+     *         'specular' : 'blend_map / 100.0',
+     *         'alpha' : 0.9
+     *     }
+     * });
+     *
+     * @see BlendMap
      */
 
     function CompositeMaterial(context, template) {
@@ -132,102 +144,87 @@ define([
         this.materialComponents = t.components || {};
         this.texturesToMaterialsMap = {};
 
-        // Only process if it has a components field
-        if (typeof this.materialComponents !== 'undefined') {
-            var materialContainers = this._constructMaterials();
-            var combinedMaterial = combineMaterials(materialContainers);
-            var shaderSource = combinedMaterial._getShaderSource();
-            this._finalizeTextures();
+        var materialContainers = this._constructMaterials();
+        var combinedMaterial = combineMaterials(materialContainers);
+        this._uniforms = combinedMaterial._uniforms;
+        this._finalizeTextures();
 
-            // Build the method definition
-            shaderSource += '#line 0\n';
-            shaderSource += 'agi_material agi_getMaterial(agi_materialInput materialInput)\n{\n';
-            shaderSource += 'agi_material material = agi_getDefaultMaterial(materialInput);\n';
+        // Build the method definition
+        var shaderSource = combinedMaterial._getShaderSource();
+        shaderSource += '#line 0\n';
+        shaderSource += 'agi_material agi_getMaterial(agi_materialInput materialInput)\n{\n';
+        shaderSource += 'agi_material material = agi_getDefaultMaterial(materialInput);\n';
 
-            // Loop over all the components ('diffuse', 'normal', etc) in the template and
-            // replace the material ids from each component expression with their expanded forms.
-            // Example: 'diffuse' : 'mix(reflection.diffuse, diffuseMap.diffuse, blender)'
-            // Becomes: material.diffuse = mix(
-            //     agi_getMaterial_reflection_{guid}(materialInput).diffuse,
-            //     agi_getMaterial_diffuseMap_{guid}(materialInput).diffuse,
-            //     agi_getBlendFactor_blender_{guid}(materialInput));
+        // Loop over all the components ('diffuse', 'normal', etc) in the template and
+        // replace the material ids from each component expression with their expanded forms.
+        // Example: 'diffuse' : 'mix(reflection.diffuse, diffuseMap.diffuse, blender)'
+        // Becomes: material.diffuse = mix(
+        //     agi_getMaterial_reflection_{guid}(materialInput).diffuse,
+        //     agi_getMaterial_diffuseMap_{guid}(materialInput).diffuse,
+        //     agi_getBlendFactor_blender_{guid}(materialInput));
 
-            for (var component in this.materialComponents) {
-                if (this.materialComponents.hasOwnProperty(component)) {
-                    var expression = this.materialComponents[component];
-                    // Replace each material id with the expanded method call.
-                    for (var i = 0; i < materialContainers.length; i++) {
-                        var materialContainer = materialContainers[i];
-                        if (expression.indexOf(materialContainer.id) !== -1) {
-                            var expandedMethod = materialContainer.methodName + '(materialInput)';
-                            expression = expression.replace(new RegExp(materialContainer.id, 'g'), expandedMethod);
-                        }
-                    }
-                    shaderSource += 'material.' + component + ' = ' + expression + ';\n';
+        // http://stackoverflow.com/questions/641407/javascript-negative-lookbehind-equivalent
+        var replaceMaterialID = function (expandedMethod) {
+            return function($0, $1) {
+                return $1 ? $0 : expandedMethod;
+            };
+        };
+        // Replace each material id with the expanded glsl method call for each component expression.
+        for (var component in this.materialComponents) {
+            if (this.materialComponents.hasOwnProperty(component)) {
+                var expression = this.materialComponents[component];
+                for (var i = 0; i < materialContainers.length; i++) {
+                    var materialContainer = materialContainers[i];
+                    var expandedMethod = materialContainer.methodName + '(materialInput)';
+                    var replaceRegExp = new RegExp('([._a-zA-Z0-9])?' + materialContainer.id + '([^.])?', 'g');
+                    expression = expression.replace(replaceRegExp, replaceMaterialID(expandedMethod));
                 }
+                shaderSource += 'material.' + component + ' = ' + expression + ';\n';
             }
+        }
+        shaderSource += 'return material;\n}\n';
+        this._shaderSource = shaderSource;
 
-            shaderSource += 'return material;\n}\n';
-            this.shaderSource = shaderSource;
-            this._uniforms = combinedMaterial._uniforms;
-
-            // Register composite material to factory if id is provided.
-            if (typeof this.compositeMaterialID !== 'undefined') {
-                this._materialFactory._compositeMaterials[this.compositeMaterialID] = this;
-            }
+        // Register composite material to factory if id is provided.
+        if (typeof this.compositeMaterialID !== 'undefined') {
+            this._materialFactory._compositeMaterials[this.compositeMaterialID] = this;
         }
     }
 
     // Convert all the material templates to materials.
     CompositeMaterial.prototype._constructMaterials = function() {
         var materialContainers = [];
-        if (typeof this.materialTemplates !== 'undefined') {
-            for (var materialID in this.materialTemplates) {
-                if(this.materialTemplates.hasOwnProperty(materialID)) {
-                    // Create a unique method name.
-                    var materialTemplate = this.materialTemplates[materialID];
-                    var originalMethodName = (materialTemplate.type === 'BlendMap') ? 'agi_getBlendFactor' : 'agi_getMaterial';
-                    var guid = createGuid().replace(new RegExp('-', 'g'), '');
-                    var newMethodName = originalMethodName + '_' + materialID + '_' + guid;
+        for (var materialID in this.materialTemplates) {
+            if(this.materialTemplates.hasOwnProperty(materialID)) {
+                // Create a unique method name.
+                var materialTemplate = this.materialTemplates[materialID];
+                var originalMethodName = (materialTemplate.type === 'BlendMap') ? 'agi_getBlendFactor' : 'agi_getMaterial';
+                var guid = createGuid().replace(new RegExp('-', 'g'), '').slice(0,4);
+                var newMethodName = originalMethodName + '_' + materialID + '_' + guid;
 
-                    // Register material with textures so it can be updated once the texture loads.
-                    // Replaces a textureID with a texture object.
-                    if (typeof this.textureTemplates !== 'undefined') {
-                        for (var materialProperty in materialTemplate) {
-                            if (materialTemplate.hasOwnProperty(materialProperty)) {
-                                var value = materialTemplate[materialProperty];
-                                if (this.textureTemplates.hasOwnProperty(value)) {
-                                    // Register texture that the material is referencing.
-                                    var textureID = value;
-                                    this.texturesToMaterialsMap[textureID] = this.texturesToMaterialsMap[textureID] || [];
-                                    this.texturesToMaterialsMap[textureID].push({'id' : materialID, 'property' : materialProperty});
+                // Register material with textures so it can be updated once the texture loads and
+                // replace the textureID with a texture object.
+                for (var materialProperty in materialTemplate) {
+                    if (materialTemplate.hasOwnProperty(materialProperty)) {
+                        var value = materialTemplate[materialProperty];
+                        if (this.textureTemplates.hasOwnProperty(value) && (typeof value._texture === 'undefined')) {
+                            // Register material so that when the texture loads the material is updated.
+                            var textureID = value;
+                            this.texturesToMaterialsMap[textureID] = this.texturesToMaterialsMap[textureID] || [];
+                            this.texturesToMaterialsMap[textureID].push({'id' : materialID, 'property' : materialProperty});
 
-                                    // Give the material a default texture while the real one loads.
-                                    var defaultTexture;
-                                    var textureType = typeof this.textureTemplates[textureID];
-                                    if (textureType === 'string') {
-                                        defaultTexture = this.context.getDefaultTexture();
-                                    }
-                                    else if (textureType === 'object') {
-                                        defaultTexture = this.context.getDefaultCubeMap();
-                                    }
-                                    materialTemplate[materialProperty] = defaultTexture;
-                                }
-                            }
+                            // Give the material a default texture while the real one loads.
+                            var textureType = typeof this.textureTemplates[textureID];
+                            materialTemplate[materialProperty] = (textureType === 'string') ?
+                                this.context.getDefaultTexture() : this.context.getDefaultCubeMap();
                         }
                     }
-
-                    // Construct material
-                    var material = this._materialFactory.constructMaterial(materialTemplate.type, materialTemplate);
-                    material.shaderSource = material.shaderSource.replace(new RegExp(originalMethodName, 'g'), newMethodName);
-                    this[materialID] = material;
-
-                    materialContainers.push({
-                       id : materialID,
-                       material : material,
-                       methodName : newMethodName
-                    });
                 }
+                // Construct material
+                var material = this._materialFactory.constructMaterial(materialTemplate.type, materialTemplate);
+                material._shaderSource = material._shaderSource.replace(new RegExp(originalMethodName, 'g'), newMethodName);
+                materialContainers.push({'id' : materialID, 'material' : material, 'methodName' : newMethodName});
+                this[materialID] = material;
             }
         }
         return materialContainers;
@@ -275,7 +272,7 @@ define([
                     image.onload = onloadTexture(image, textureID);
                     image.src = this.textureTemplates[textureID];
                 }
-                else if (textureType === 'object') {
+                else {
                     // Cube map
                     var cubeMapData = this.textureTemplates[textureID];
                     Chain.run(
@@ -334,7 +331,7 @@ define([
 
     CompositeMaterial.prototype._getShaderSource = function() {
         return '#line 0\n' +
-               this.shaderSource;
+               this._shaderSource;
     };
 
     return CompositeMaterial;

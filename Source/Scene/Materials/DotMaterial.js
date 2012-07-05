@@ -53,7 +53,7 @@ define([
          *
          * type {String}
          */
-        this.shaderSource = ShadersDotMaterial;
+        this._shaderSource = ShadersDotMaterial;
 
         var that = this;
         this._uniforms = {
@@ -74,7 +74,7 @@ define([
 
     DotMaterial.prototype._getShaderSource = function() {
         return "#line 0\n" +
-               this.shaderSource;
+               this._shaderSource;
     };
 
     return DotMaterial;

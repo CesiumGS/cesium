@@ -33,7 +33,7 @@ define([
          *
          * type {String}
          */
-        this.shaderSource = ShadersDistanceIntervalMaterial;
+        this._shaderSource = ShadersDistanceIntervalMaterial;
 
         this._uniforms = {
             u_distances : function() {
@@ -48,7 +48,7 @@ define([
     DistanceIntervalMaterial.prototype._getShaderSource = function() {
         return "#define NUMBER_OF_DISTANCES " + this.intervals.length.toString() + "\n" +
                "#line 0\n" +
-               this.shaderSource;
+               this._shaderSource;
     };
 
     return DistanceIntervalMaterial;

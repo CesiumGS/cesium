@@ -45,7 +45,7 @@ define([
          * type {String}
          */
         this.channels = t.channels || 'rgb';
-        this.shaderSource = replaceMaterialChannels(ShadersRefractionMaterial, 'refraction_material_channels', this.channels, 3);
+        this._shaderSource = replaceMaterialChannels(ShadersRefractionMaterial, 'refraction_material_channels', this.channels, 3);
 
         var that = this;
         this._uniforms = {
@@ -66,7 +66,7 @@ define([
 
     RefractionMaterial.prototype._getShaderSource = function() {
         return "#line 0\n" +
-               this.shaderSource;
+               this._shaderSource;
     };
 
     return RefractionMaterial;

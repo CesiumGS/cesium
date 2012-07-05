@@ -48,7 +48,7 @@ define([
          *
          * type {String}
          */
-        this.shaderSource = ShadersCementMaterial;
+        this._shaderSource = ShadersCementMaterial;
 
         var that = this;
         this._uniforms = {
@@ -68,7 +68,7 @@ define([
         return "#line 0\n" +
                ShadersNoise +
                "#line 0\n" +
-               this.shaderSource;
+               this._shaderSource;
     };
 
     return CementMaterial;

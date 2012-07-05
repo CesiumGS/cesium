@@ -45,7 +45,7 @@ define([
          * type {String}
          */
         this.channels = t.channels || 'r';
-        this.shaderSource = replaceMaterialChannels(ShadersSpecularMapMaterial, 'specular_map_material_channels', this.channels, 1);
+        this._shaderSource = replaceMaterialChannels(ShadersSpecularMapMaterial, 'specular_map_material_channels', this.channels, 1);
 
         var that = this;
         this._uniforms = {
@@ -66,7 +66,7 @@ define([
 
     SpecularMapMaterial.prototype._getShaderSource = function() {
         return "#line 0\n" +
-               this.shaderSource;
+               this._shaderSource;
     };
 
     return SpecularMapMaterial;

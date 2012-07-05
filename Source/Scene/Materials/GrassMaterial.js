@@ -53,7 +53,7 @@ define([
          *
          * type {String}
          */
-        this.shaderSource = ShadersGrassMaterial;
+        this._shaderSource = ShadersGrassMaterial;
 
         var that = this;
         this._uniforms = {
@@ -73,7 +73,7 @@ define([
         return "#line 0\n" +
                ShadersNoise +
                "#line 0\n" +
-               this.shaderSource;
+               this._shaderSource;
     };
 
     return GrassMaterial;

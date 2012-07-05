@@ -53,7 +53,7 @@ define([
          *
          * type {String}
          */
-        this.shaderSource = ShadersHorizontalStripeMaterial;
+        this._shaderSource = ShadersHorizontalStripeMaterial;
 
         var that = this;
         this._uniforms = {
@@ -74,7 +74,7 @@ define([
 
     HorizontalStripeMaterial.prototype._getShaderSource = function() {
         return "#line 0\n" +
-               this.shaderSource;
+               this._shaderSource;
     };
 
     return HorizontalStripeMaterial;

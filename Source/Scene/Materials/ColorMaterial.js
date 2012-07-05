@@ -26,7 +26,7 @@ define([
          *
          * type {String}
          */
-        this.shaderSource = ShadersColorMaterial;
+        this._shaderSource = ShadersColorMaterial;
 
         var that = this;
         this._uniforms = {
@@ -38,7 +38,7 @@ define([
 
     ColorMaterial.prototype._getShaderSource = function() {
         return "#line 0\n" +
-               this.shaderSource;
+               this._shaderSource;
     };
 
     return ColorMaterial;

@@ -47,7 +47,7 @@ define([
          * type {String}
          */
         this.channels = t.channels || 'r';
-        this.shaderSource = replaceMaterialChannels(ShadersBlendMap, 'blend_map_channels', this.channels, 1);
+        this._shaderSource = replaceMaterialChannels(ShadersBlendMap, 'blend_map_channels', this.channels, 1);
 
         var that = this;
         this._uniforms = {
@@ -68,7 +68,7 @@ define([
 
     BlendMap.prototype._getShaderSource = function() {
         return "#line 0\n" +
-               this.shaderSource;
+               this._shaderSource;
     };
 
     return BlendMap;
