@@ -29,7 +29,7 @@ define([
      * Example billboards
      * </div>
      *
-     * @name Billboard
+     * @alias Billboard
      *
      * @performance Calling any <code>get</code> function, e.g., {@link Billboard#getShow}, is constant time.
      * Calling a <code>set</code> function, e.g., {@link Billboard#setShow}, is constant time but results in
@@ -44,7 +44,7 @@ define([
      *
      * @internalConstructor
      */
-    function Billboard(billboardTemplate, collection) {
+    var Billboard = function(billboardTemplate, collection) {
         var b = billboardTemplate || {};
         var color = b.color || {
             red : 1.0,
@@ -75,7 +75,7 @@ define([
 
         this._collection = collection;
         this._dirty = false;
-    }
+    };
 
     var SHOW_INDEX = Billboard.SHOW_INDEX = 0;
     var POSITION_INDEX = Billboard.POSITION_INDEX = 1;

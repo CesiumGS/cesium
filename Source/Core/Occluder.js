@@ -16,7 +16,7 @@ define([
      * The occluder can be used to determine whether or not other objects are visible or hidden behind the
      * visible horizon defined by the occluder and camera position.
      *
-     * @name Occluder
+     * @alias Occluder
      *
      * @param {BoundingSphere} occluderBoundingSphere The bounding sphere surrounding the occluder.
      * @param {Cartesian3} cameraPosition The coordinate of the viewer/camera.
@@ -32,7 +32,7 @@ define([
      * var occluderBoundingSphere = new BoundingSphere(new Cartesian3(0, 0, -1), 1);
      * var occluder = new Occluder(occluderBoundingSphere, cameraPosition);
      */
-    function Occluder(occluderBoundingSphere, cameraPosition) {
+    var Occluder = function(occluderBoundingSphere, cameraPosition) {
         if (!occluderBoundingSphere) {
             throw new DeveloperError('occluderBoundingSphere is required.');
         }
@@ -51,7 +51,7 @@ define([
 
         // setCameraPosition fills in the above values
         this.setCameraPosition(cameraPosition);
-    }
+    };
 
     /**
      * Returns the position of the occluder.

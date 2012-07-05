@@ -5,10 +5,10 @@ define(['../Shaders/CheckerboardMaterial'], function(ShadersCheckerboardMaterial
     /**
      * DOC_TBA
      *
-     * @name CheckerboardMaterial
+     * @alias CheckerboardMaterial
      * @constructor
      */
-    function CheckerboardMaterial(template) {
+    var CheckerboardMaterial = function(template) {
         var t = template || {};
 
         /**
@@ -60,7 +60,7 @@ define(['../Shaders/CheckerboardMaterial'], function(ShadersCheckerboardMaterial
                 };
             }
         };
-    }
+    };
 
     CheckerboardMaterial.prototype._getShaderSource = function() {
         return '#line 0\n' + ShadersCheckerboardMaterial;

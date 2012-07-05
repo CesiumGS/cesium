@@ -19,14 +19,14 @@ define([
      * When called with four numeric arguments which define the matrix elements in row-major order; column0Row0, column1Row0, column0Row1, and column1Row1; the matrix is initialized to [column0Row0, column0Row1] [column1Row0, column1Row1].
      * </p>
      *
-     * @name Matrix2
+     * @alias Matrix2
      * @constructor
      * @immutable
      *
      * @see Matrix3
      * @see Matrix4
      */
-    function Matrix2() {
+    var Matrix2 = function() {
         var values = this.values = []; // Column-major
         values.length = numberOfElements;
 
@@ -48,7 +48,7 @@ define([
             values[2] = arguments[1]; // Column 0, Row 0
             values[3] = arguments[3]; // Column 1, Row 1
         }
-    }
+    };
 
     /**
      * Returns the element at column 0, row 0.
@@ -373,8 +373,10 @@ define([
      * @return {Boolean} <code>true</code> if the matrices are equal element-wise; otherwise, <code>false</code>.
      */
     Matrix2.prototype.equals = function(other) {
-        for ( var i = 0; i < numberOfElements; ++i) {
-            if (this.getColumnMajorValue(i) !== other.getColumnMajorValue(i)) {
+        var thisValues = this.values;
+        var otherValues = other.values;
+        for ( var i = 0, len = thisValues.length; i < len; i++) {
+            if (thisValues[i] !== otherValues[i]) {
                 return false;
             }
         }
@@ -393,8 +395,10 @@ define([
      */
     Matrix2.prototype.equalsEpsilon = function(other, epsilon) {
         epsilon = epsilon || 0.0;
-        for ( var i = 0; i < numberOfElements; ++i) {
-            if (Math.abs(this.getColumnMajorValue(i) - other.getColumnMajorValue(i)) > epsilon) {
+        var thisValues = this.values;
+        var otherValues = other.values;
+        for ( var i = 0, len = thisValues.length; i < len; i++) {
+            if (Math.abs(thisValues[i] - otherValues[i]) > epsilon) {
                 return false;
             }
         }

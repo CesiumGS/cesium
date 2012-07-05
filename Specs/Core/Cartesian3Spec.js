@@ -38,6 +38,25 @@ defineSuite([
         expect(v.z).toEqual(3);
     });
 
+    var fortyFiveDegrees = Math.PI / 4.0;
+    var sixtyDegrees = Math.PI / 3.0;
+    var cartesian = new Cartesian3(1.0, Math.sqrt(3.0), -2.0);
+    var spherical = {
+        clock : sixtyDegrees,
+        cone : (fortyFiveDegrees + Math.PI / 2.0),
+        magnitude : Math.sqrt(8.0)
+    };
+
+    it('convert Spherical to a new Cartesian3 instance', function() {
+        expect(cartesian).toEqualEpsilon(Cartesian3.fromSpherical(spherical), CesiumMath.EPSILON15);
+    });
+
+    it('convert Spherical to an existing Cartesian3 instance', function() {
+        var existing = new Cartesian3();
+        expect(cartesian).toEqualEpsilon(Cartesian3.fromSpherical(spherical, existing), CesiumMath.EPSILON15);
+        expect(cartesian).toEqualEpsilon(existing, CesiumMath.EPSILON15);
+    });
+
     it('clone', function() {
         var v = new Cartesian3(1, 2, 3);
         var w = v.clone();
