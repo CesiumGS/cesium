@@ -262,7 +262,7 @@ define([
 
         var dot = startX.dot(endX);
         var angle = 0.0;
-        var axis = (this.horizontalRotationAxis) ? this.horizontalRotationAxis : camera.position;
+        var axis = (typeof this.horizontalRotationAxis !== 'undefined') ? this.horizontalRotationAxis : camera.up;
         axis = (movement.startPosition.x > movement.endPosition.x) ? axis : axis.negate();
         axis = axis.normalize();
         if (dot < 1.0) { // dot is in [0, 1]
