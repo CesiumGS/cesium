@@ -251,6 +251,26 @@ define([
         this._us = new UniformState(this);
         this._currentFramebuffer = undefined;
         this._currentSp = undefined;
+
+        // Set up default texture and cube map
+        var that = this;
+        var whiteImage = new Image();
+        whiteImage.onload = function() {
+            that._defaultTexture = that.createTexture2D({
+                source : whiteImage
+            });
+            that._defaultCubeMap = that.createCubeMap({
+                source : {
+                    positiveX : whiteImage,
+                    negativeX : whiteImage,
+                    positiveY : whiteImage,
+                    negativeY : whiteImage,
+                    positiveZ : whiteImage,
+                    negativeZ : whiteImage
+                }
+            });
+        };
+        whiteImage.src = '../../Images/White.png';
     };
 
     Context.prototype._enableOrDisable = function(glEnum, enable) {
@@ -1052,6 +1072,28 @@ define([
      */
     Context.prototype.setLogShaderCompilation = function(value) {
         this._logShaderCompilation = value;
+    };
+
+    /**
+     * Returns a texture made with a 1x1 white image.
+     *
+     * @return {Texture}
+     *
+     * @memberof Context
+     */
+    Context.prototype.getDefaultTexture = function() {
+        return this._defaultTexture;
+    };
+
+    /**
+     * Returns a cube map made with a 1x1 white image for each face.
+     *
+     * @return {CubeMap}
+     *
+     * @memberof Context
+     */
+    Context.prototype.getDefaultCubeMap = function() {
+        return this._defaultCubeMap;
     };
 
     /**

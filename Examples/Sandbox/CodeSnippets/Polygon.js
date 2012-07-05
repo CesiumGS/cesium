@@ -71,64 +71,53 @@
                 alpha: 1.0
             };
 
-            //Load cube map images at once
-            var imageFolder = '../../Images/';
-            var cubeMapFolder = imageFolder + 'PalmTreesCubeMap/';
-            var cubeMapFileExtension = '.jpg';
-            var diffuseMapFilePath = imageFolder + 'Cesium_Logo_Color.jpg';
-            var blendMapFilePath = imageFolder + 'alpha_map.png';
-            Cesium.Chain.run(
-                Cesium.Jobs.downloadImage(cubeMapFolder + 'posx' + cubeMapFileExtension),
-                Cesium.Jobs.downloadImage(cubeMapFolder + 'negx' + cubeMapFileExtension),
-                Cesium.Jobs.downloadImage(cubeMapFolder + 'posy' + cubeMapFileExtension),
-                Cesium.Jobs.downloadImage(cubeMapFolder + 'negy' + cubeMapFileExtension),
-                Cesium.Jobs.downloadImage(cubeMapFolder + 'posz' + cubeMapFileExtension),
-                Cesium.Jobs.downloadImage(cubeMapFolder + 'negz' + cubeMapFileExtension),
-                Cesium.Jobs.downloadImage(diffuseMapFilePath),
-                Cesium.Jobs.downloadImage(blendMapFilePath)
-            ).thenRun(
-            function() {
-                var cubeMap = scene.getContext().createCubeMap({
-                    source : {
-                        positiveX : this.images[cubeMapFolder + 'posx' + cubeMapFileExtension],
-                        negativeX : this.images[cubeMapFolder + 'negx' + cubeMapFileExtension],
-                        positiveY : this.images[cubeMapFolder + 'negy' + cubeMapFileExtension],
-                        negativeY : this.images[cubeMapFolder + 'posy' + cubeMapFileExtension],
-                        positiveZ : this.images[cubeMapFolder + 'posz' + cubeMapFileExtension],
-                        negativeZ : this.images[cubeMapFolder + 'negz' + cubeMapFileExtension]
-                    },
-                    pixelFormat : Cesium.PixelFormat.RGB
-                });
-                var diffuseMapTexture = scene.getContext().createTexture2D({
-                    source : this.images[diffuseMapFilePath]
-                });
-                var blendMapTexture = scene.getContext().createTexture2D({
-                    source : this.images[blendMapFilePath]
-                });
-                polygon.material = new Cesium.CompositeMaterial({
-                    'materials' : [{
-                        'id' : 'reflectionMap',
-                        'type' : 'ReflectionMaterial',
-                        'cubeMap' : cubeMap,
-                        'reflectivity' : 1.0,
-                    },
-                    {
-                        'id' : 'diffuseMap',
-                        'type' : 'DiffuseMapMaterial',
-                        'texture' : diffuseMapTexture,
-                    },
-                    {
-                        'id' : 'blender',
-                        'type' : 'BlendMap',
-                        'texture' : blendMapTexture,
-                    }],
-                    'components' : {
-                        'diffuse' : 'mix(reflectionMap.diffuse, diffuseMap.diffuse, blender)',
-                        'alpha' : 'blender'
+            var helperComposite = new Cesium.CompositeMaterial(scene.getContext(), {
+                'id' : 'CompositeMaterialReflection',
+                'textures' : {
+                    'palm_tree_cube_map' : {
+                        'positiveX' : '../../Images/PalmTreesCubeMap/posx.jpg',
+                        'negativeX' : '../../Images/PalmTreesCubeMap/negx.jpg',
+                        'positiveY' : '../../Images/PalmTreesCubeMap/negy.jpg',
+                        'negativeY' : '../../Images/PalmTreesCubeMap/posy.jpg',
+                        'positiveZ' : '../../Images/PalmTreesCubeMap/posz.jpg',
+                        'negativeZ' : '../../Images/PalmTreesCubeMap/negz.jpg'
                     }
-                });
-                primitives.add(polygon);
+                },
+                'materials' : {
+                    'reflection' : {
+                        'type' : 'ReflectionMaterial',
+                        'cubeMap' : 'palm_tree_cube_map'
+                    }
+                },
+                'components' : {
+                    'diffuse' : 'reflection.diffuse'
+                }
             });
+            polygon.material = new Cesium.CompositeMaterial(scene.getContext(), {
+                'textures' : {
+                    'cesium_logo_texture' : '../../Images/Cesium_Logo_Color.jpg',
+                    'alpha_map_texture' : '../../Images/alpha_map.png'
+                },
+                'materials' : {
+                    'reflection' : {
+                        'type' : 'CompositeMaterialReflection'
+                    },
+                    'diffuseMap' : {
+                        'type' : 'DiffuseMapMaterial',
+                        'texture' : 'cesium_logo_texture'
+                    },
+                    'blend_map' : {
+                        'type' : 'BlendMap',
+                        'texture' : 'alpha_map_texture'
+                    }
+                },
+                'components' : {
+                    'diffuse' : '(reflection.diffuse + diffuseMap.diffuse) / 2.0',
+                    'specular' : 'blend_map / 100.0'
+                }
+            });
+
+            primitives.add(polygon);
         };
     };
 
@@ -152,8 +141,7 @@
             image.onload = function() {
                 polygon.material = new Cesium.DiffuseMapMaterial({
                     texture : scene.getContext().createTexture2D({
-                        source : image,
-                        pixelFormat : Cesium.PixelFormat.RGBA
+                        source : image
                     })
                 });
             };
@@ -268,39 +256,29 @@
                 alpha: 1.0
             };
 
-            //Load images at once
-            var imageFolder = '../../Images/';
-            var bumpMapFilePath = imageFolder + 'earthbump1k.jpg';
-            var blendMapFilePath = imageFolder + 'earthspec1k.jpg';
-            Cesium.Chain.run(
-                Cesium.Jobs.downloadImage(bumpMapFilePath),
-                Cesium.Jobs.downloadImage(blendMapFilePath)
-            ).thenRun(function() {
-                var bumpMapTexture = scene.getContext().createTexture2D({
-                    source: this.images[bumpMapFilePath]
-                });
-                var blendMapTexture = scene.getContext().createTexture2D({
-                    source: this.images[blendMapFilePath]
-                });
-                polygon.material = new Cesium.CompositeMaterial({
-                    'materials': [{
-                        'id': 'bumpMap',
-                        'type': 'BumpMapMaterial',
-                        'texture': bumpMapTexture
-                    }, {
-                        'id': 'blender',
-                        'type': 'BlendMap',
-                        'texture': blendMapTexture
-                    }],
-                    'components': {
-                        'diffuse': 'mix(vec3(0.0, 0.5, 0.0), vec3(0.0, 0.0, 0.5), blender)',
-                        'normal': 'bumpMap.normal',
-                        'alpha': '(1.0 - blender * 0.4)',
-                        'specular': '(1.0 - blender) * (1.0 / 200.0)'
+            polygon.material = new Cesium.CompositeMaterial(scene.getContext(), {
+                'textures' : {
+                    'bumpMapTexture' : '../../Images/earthbump1k.jpg',
+                    'blendMapTexture' : '../../Images/earthspec1k.jpg'
+                },
+                'materials' : {
+                    'bumpMap' : {
+                        'type' : 'BumpMapMaterial',
+                        'texture' : 'bumpMapTexture'
+                    },
+                    'blendMap' : {
+                        'type' : 'BlendMap',
+                        'texture' : 'blendMapTexture'
                     }
-                });
-                primitives.add(polygon);
+                },
+                'components': {
+                    'diffuse': 'mix(vec3(0.0, 0.5, 0.0), vec3(0.0, 0.0, 0.5), blendMap)',
+                    'normal': 'bumpMap.normal',
+                    'alpha': '(1.0 - blendMap * 0.4)',
+                    'specular': '(1.0 - blendMap) * (1.0 / 200.0)'
+                }
             });
+            primitives.add(polygon);
         };
     };
 
@@ -316,39 +294,29 @@
                 alpha: 1.0
             };
 
-            //Load images at once
-            var imageFolder = '../../Images/';
-            var normalMapFilePath = imageFolder + 'earthnormalmap.jpg';
-            var blendMapFilePath = imageFolder + 'earthspec1k.jpg';
-            Cesium.Chain.run(
-                Cesium.Jobs.downloadImage(normalMapFilePath),
-                Cesium.Jobs.downloadImage(blendMapFilePath)
-            ).thenRun(function() {
-                var normalMapTexture = scene.getContext().createTexture2D({
-                    source: this.images[normalMapFilePath]
-                });
-                var blendMapTexture = scene.getContext().createTexture2D({
-                    source: this.images[blendMapFilePath]
-                });
-                polygon.material = new Cesium.CompositeMaterial({
-                    'materials': [{
-                        'id': 'normalMap',
-                        'type': 'NormalMapMaterial',
-                        'texture': normalMapTexture
-                    }, {
-                        'id': 'blender',
-                        'type': 'BlendMap',
-                        'texture': blendMapTexture
-                    }],
-                    'components': {
-                        'diffuse': 'mix(vec3(0.0, 0.5, 0.0), vec3(0.0, 0.0, 0.5), blender)',
-                        'normal': 'normalMap.normal',
-                        'alpha': '(1.0 - blender * 0.4)',
-                        'specular': '(1.0 - blender) * (1.0 / 200.0)'
+            polygon.material = new Cesium.CompositeMaterial(scene.getContext(), {
+                'textures' : {
+                    'normalMapTexture' : '../../Images/earthnormalmap.jpg',
+                    'blendMapTexture' : '../../Images/earthspec1k.jpg'
+                },
+                'materials' : {
+                    'normalMap' : {
+                        'type' : 'NormalMapMaterial',
+                        'texture' : 'normalMapTexture'
+                    },
+                    'blendMap' : {
+                        'type' : 'BlendMap',
+                        'texture' : 'blendMapTexture'
                     }
-                });
-                primitives.add(polygon);
+                },
+                'components' : {
+                    'diffuse': 'mix(vec3(0.0, 0.5, 0.0), vec3(0.0, 0.0, 0.5), blendMap)',
+                    'normal': 'normalMap.normal',
+                    'alpha': '(1.0 - blendMap * 0.4)',
+                    'specular': '(1.0 - blendMap) * (1.0 / 200.0)'
+                }
             });
+            primitives.add(polygon);
         };
     };
 
@@ -500,36 +468,30 @@
                 new Cesium.Cartographic2(-70.0, 40.0),
                 new Cesium.Cartographic2(-80.0, 40.0)
             ]));
-            polygon.material = new Cesium.CompositeMaterial({
-                'materials' : [{
-                    'id' : 'brick',
-                    'type' : 'BrickMaterial',
-                    'brickColor' : {
-                        red: 0.6,
-                        green: 0.3,
-                        blue: 0.1,
-                        alpha: 1.0
-                    },
-                    'mortarColor' : {
-                        red : 0.8,
-                        green : 0.8,
-                        blue : 0.7,
-                        alpha : 1.0
-                    },
-                    'brickSize' : {
-                        x : 0.30,
-                        y : 0.15
-                    },
-                    'brickPct' : {
-                        x : 0.90,
-                        y : 0.85
-                    },
-                    'brickRoughness' : 0.2,
-                    'mortarRoughness' : 0.1
-                }],
-                'components' : {
-                    'diffuse' : 'brick.diffuse'
-                }
+
+            polygon.material = new Cesium.BrickMaterial({
+                brickColor : {
+                    red: 0.6,
+                    green: 0.3,
+                    blue: 0.1,
+                    alpha: 1.0
+                },
+                mortarColor : {
+                    red : 0.8,
+                    green : 0.8,
+                    blue : 0.7,
+                    alpha : 1.0
+                },
+                brickSize : {
+                    x : 0.30,
+                    y : 0.15
+                },
+                brickPct : {
+                    x : 0.90,
+                    y : 0.85
+                },
+                brickRoughness : 0.2,
+                mortarRoughness : 0.1
             });
 
             primitives.add(polygon);

@@ -4,8 +4,6 @@ uniform vec2 u_repeat;
 agi_material agi_getMaterial(agi_materialInput materialInput)
 {
     agi_material material = agi_getDefaultMaterial(materialInput);
-    vec4 value = texture2D(u_texture, fract(u_repeat * materialInput.st));
-
-    material.diffuse = value.diffuse_map_material_channels;
+    material.diffuse = texture2D(u_texture, fract(u_repeat * materialInput.st)).diffuse_map_material_channels;
     return material;
 }

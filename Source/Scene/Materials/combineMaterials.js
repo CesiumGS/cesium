@@ -19,23 +19,15 @@ define(function() {
 
             for ( var name in materialUniforms) {
                 if (materialUniforms.hasOwnProperty(name)) {
-                    if (unforms[name]) {
+                    var uniqueName = name;
+                    while (unforms[uniqueName]) {
                         // Rename uniform
                         var count = duplicateUniforms[name] || 1;
-                        var uniqueName = '_agi_' + name + count.toString();
-
-                        // PERFORMANCE_IDEA:  We could cache the RegExp for duplicate uniforms
-                        // or see if a pure JavaScript search-and-replace is faster.
-
-                        // This could rename other things like GLSL comments and other identifiers
-                        // with the same name.
-                        materialSource = materialSource.replace(new RegExp(name, 'g'), uniqueName);
-                        unforms[uniqueName] = materialUniforms[name];
-
+                        uniqueName = '_agi_' + name + count.toString();
                         duplicateUniforms[name] = count + 1;
-                    } else {
-                        unforms[name] = materialUniforms[name];
                     }
+                    materialSource = materialSource.replace(new RegExp(name, 'g'), uniqueName);
+                    unforms[uniqueName] = materialUniforms[name];
                 }
             }
 
