@@ -75,18 +75,21 @@ define([
          *
          * @type TilingScheme
          */
-        this.tilingScheme = new GeographicTilingScheme();
-        this.projection = Projections.WGS84;
+        this.tilingScheme = new WebMercatorTilingScheme();
+        this.projection = Projections.MERCATOR;
         this.maxLevel = 25;
 
         this._proxy = description.proxy;
 
         // Grab the details of this ImageServer.
-        var metadata = jsonp(this.url, {
+        var url = this.url;
+        if (this.token) {
+            url += '?token=' + this.token;
+        }
+        var metadata = jsonp(url, {
             parameters : {
                 f : 'json'
-            },
-            proxy : this._proxy
+            }
         });
 
         var that = this;
@@ -192,7 +195,7 @@ define([
         var yStop = -CesiumMath.PI_OVER_TWO + yDelta * (tileY + 1);
 
         var bbox = xStart + '%2C' + yStart + '%2C' + xStop + '%2C' + yStop;
-        var url = this.url + '/exportImage?format=tiff&f=image&size=256%2C256&bbox=' + bbox;
+        var url = this.url + '/exportImage?format=tiff&f=image&size=256%2C256&bboxSR=4326&imageSR=4326&bbox=' + bbox;
         if (this.token) {
             url += '&token=' + this.token;
         }
@@ -210,13 +213,15 @@ define([
             var canvas = document.createElement('canvas');
             canvas.width = width;
             canvas.height = height;
-            var context = canvas.getContext('2d');
-            context.globalCompositeOperation = 'copy';
-            context.drawImage(image, 0, 0);
-            var pixels = context.getImageData(0, 0, width, height).data;
+            var context2d = canvas.getContext('2d');
+            context2d.globalCompositeOperation = 'copy';
+            context2d.drawImage(image, 0, 0);
+            var pixels = context2d.getImageData(0, 0, width, height).data;
 
             var buffers = HeightmapTessellator.computeBuffers({
                 heightmap: pixels,
+                width: width,
+                height: height,
                 heightScale: 1000.0,
                 heightOffset: 1000.0,
                 bytesPerHeight: 3,

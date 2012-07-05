@@ -44,10 +44,9 @@ define([
         var height = desc.height;
 
         var extent = desc.extent.clone();
-        var boundExtent = desc.boundaryExtent;
         var ellipsoid = desc.ellipsoid;
-        var granularityX = (boundExtent.east - boundExtent.west) / width;
-        var granularityY = (boundExtent.north - boundExtent.south) / height;
+        var granularityX = (extent.east - extent.west) / width;
+        var granularityY = (extent.north - extent.south) / height;
         var genTexCoords = desc.generateTextureCoords;
         var interleave = desc.interleave;
         var relativeToCenter = desc.relativeToCenter;
@@ -56,23 +55,25 @@ define([
         var texCoords = desc.texCoords;
         var indices = desc.indices;
 
-        if (boundExtent.south > boundExtent.north) {
-            boundExtent.north += CesiumMath.TWO_PI;
-            extent.north += CesiumMath.TWO_PI;
-        }
+        var radiiSquared = ellipsoid.getRadiiSquared();
+        var radiiSquaredX = radiiSquared.x;
+        var radiiSquaredY = radiiSquared.y;
+        var radiiSquaredZ = radiiSquared.z;
 
-        if (boundExtent.west > boundExtent.east) {
-            boundExtent.east += CesiumMath.TWO_PI;
-            extent.east += CesiumMath.TWO_PI;
-        }
-
-        var cartPosition = new Cartographic3(0.0, 0.0, 0.0);
+        var cos = Math.cos;
+        var sin = Math.sin;
+        var sqrt = Math.sqrt;
 
         for (var row = 0; row < height; ++row) {
-            cartPosition.latitude = boundExtent.north - granularityY * row;
+            var latitude = extent.north - granularityY * row;
+            var cosLatitude = cos(latitude);
+            var nZ = sin(latitude);
+            var kZ = radiiSquaredZ * nZ;
+
+            var v = (height - row - 1) / (height - 1);
 
             for (var col = 0; col < width; ++col) {
-                cartPosition.longitude = boundExtent.west + granularityX * col;
+                var longitude = extent.west + granularityX * col;
 
                 var terrainOffset = row * (width * strideBytes) + col * strideBytes;
                 var heightSample = (heightmap[terrainOffset] << 16) +
@@ -81,18 +82,32 @@ define([
                 if (bytesPerHeight === 4) {
                     heightSample = (heightSample << 8) + heightmap[terrainOffset + 3];
                 }
-                cartPosition.height = heightSample / heightScale - heightOffset;
+                heightSample = heightSample / heightScale - heightOffset;
 
-                var position = ellipsoid.toCartesian(cartPosition);
-                vertices.push(position.x - relativeToCenter.x, position.y - relativeToCenter.y, position.z - relativeToCenter.z);
+                var nX = cosLatitude * cos(longitude);
+                var nY = cosLatitude * sin(longitude);
+
+                var kX = radiiSquaredX * nX;
+                var kY = radiiSquaredY * nY;
+
+                var gamma = sqrt((kX * nX) + (kY * nY) + (kZ * nZ));
+
+                var rSurfaceX = kX / gamma;
+                var rSurfaceY = kY / gamma;
+                var rSurfaceZ = kZ / gamma;
+
+                vertices.push(rSurfaceX + nX * heightSample - relativeToCenter.x);
+                vertices.push(rSurfaceY + nY * heightSample - relativeToCenter.y);
+                vertices.push(rSurfaceZ + nZ * heightSample - relativeToCenter.z);
 
                 if (genTexCoords) {
                     var u = col / (width - 1);
-                    var v = (height - row - 1) / (height - 1);
                     if (interleave) {
-                        vertices.push(u, v);
+                        vertices.push(u);
+                        vertices.push(v);
                     } else {
-                        texCoords.push(u, v);
+                        texCoords.push(u);
+                        texCoords.push(v);
                     }
                 }
             }

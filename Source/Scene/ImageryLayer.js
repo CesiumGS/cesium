@@ -538,7 +538,7 @@ define([
 
                     tileStack.push(child);
 
-                    allChildrenLoaded = allChildrenLoaded && child.vertexArray && child.state === TileState.TEXTURE_LOADED;
+                    allChildrenLoaded = allChildrenLoaded && typeof child.vertexArray !== 'undefined';
                 }
 
                 if (allChildrenLoaded) {
@@ -606,18 +606,30 @@ define([
         var projection = sceneState.scene2D.projection;
 
         // create vertex array the first time it is needed or when morphing
-        if (!tile.vertexArray ||
-            tile.vertexArray.isDestroyed() ||
-            layer._centralBody._isModeTransition(layer._centralBody._mode, mode) ||
-            tile._mode !== mode ||
-            layer._centralBody._projection !== projection) {
+        if (tile.vertexArray &&
+            (tile.vertexArray.isDestroyed() ||
+             layer._centralBody._isModeTransition(layer._centralBody._mode, mode) ||
+             tile._mode !== mode ||
+             layer._centralBody._projection !== projection)) {
 
-            tile.vertexArray = tile.vertexArray && tile.vertexArray.destroy();
+            tile.vertexArray = tile.vertexArray.destroy();
+            tile.loading = false;
+        }
 
-            if (mode === SceneMode.SCENE3D) {
-                layer._centralBody._terrain.createTileEllipsoidGeometry(context, tile);
-            } else {
-                layer._centralBody._terrain.createTilePlaneGeometry(context, tile, projection);
+        if (!tile.vertexArray) {
+            // TODO: hacktastic!
+            if (!tile.loading) {
+                tile.loading = true;
+
+                if (mode === SceneMode.SCENE3D) {
+                    when(layer._centralBody._terrain.createTileEllipsoidGeometry(context, tile), function() {
+                        tile.loading = false;
+                    });
+                } else {
+                    when(layer._centralBody._terrain.createTilePlaneGeometry(context, tile, projection), function() {
+                        tile.loading = false;
+                    });
+                }
             }
 
             // TODO: can we get rid of this?
@@ -668,7 +680,15 @@ define([
 
         // TODO: remove this hack.  It's needed because a beginDraw/endDraw without
         // a continueDraw throws an exception.
-        if (tilesToRender.length == 1 && !tilesToRender[0].vertexArray) {
+        var somethingToRender = false;
+        for (var i = 0; i < tilesToRender.length; ++i) {
+            if (tilesToRender[i].vertexArray) {
+                somethingToRender = true;
+                break;
+            }
+        }
+
+        if (!somethingToRender) {
             return;
         }
 

@@ -14,6 +14,7 @@ import org.eclipse.jetty.server.nio.SelectChannelConnector;
 
 public class ServerTask extends Task {
 	private String proxyContextPath;
+	private String tiffToPngContextPath;
 	private String allowedHostList;
 	private int port;
 	private File baseDir;
@@ -33,6 +34,10 @@ public class ServerTask extends Task {
 			ContextHandler proxyContextHandler = new ContextHandler(this.proxyContextPath);
 			proxyContextHandler.setHandler(proxyHandler);
 
+			TiffToPngHandler tiffToPngHandler = new TiffToPngHandler(this.allowedHostList, this.upstreamProxyHost, this.upstreamProxyPort, this.noUpstreamProxyHostList);
+			ContextHandler tiffToPngContextHandler = new ContextHandler(this.tiffToPngContextPath);
+			tiffToPngContextHandler.setHandler(tiffToPngHandler);
+
 			ResourceHandler resourceHandler = new ResourceHandler();
 			resourceHandler.setDirectoriesListed(true);
 			resourceHandler.setWelcomeFiles(new String[] {
@@ -46,6 +51,7 @@ public class ServerTask extends Task {
 			ContextHandlerCollection contexts = new ContextHandlerCollection();
 			contexts.setHandlers(new Handler[] {
 					proxyContextHandler,
+					tiffToPngContextHandler,
 					resourceContextHandler
 			});
 
@@ -62,6 +68,10 @@ public class ServerTask extends Task {
 
 	public void setProxyContextPath(String value) {
 		this.proxyContextPath = value;
+	}
+
+	public void setTiffToPngContextPath(String value) {
+		this.tiffToPngContextPath = value;
 	}
 
 	public void setAllowedHostList(String value) {
