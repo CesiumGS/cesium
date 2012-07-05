@@ -11,7 +11,12 @@ define([
         '../Core/Math',
         '../Core/Cartesian2',
         '../Core/loadImage',
-        '../ThirdParty/when'
+        '../ThirdParty/when',
+        './Projections',
+        '../Core/Extent',
+        './GeographicTilingScheme',
+        '../Core/HeightmapTessellator',
+        '../Core/jsonp'
     ], function(
         DeveloperError,
         defaultValue,
@@ -24,7 +29,12 @@ define([
         CesiumMath,
         Cartesian2,
         loadImage,
-        when) {
+        when,
+        Projections,
+        Extent,
+        GeographicTilingScheme,
+        HeightmapTessellator,
+        jsonp) {
     "use strict";
 
     /**
@@ -34,19 +44,91 @@ define([
      * @alias EsriImageServerTerrainProvider
      * @constructor
      *
-     * @param {TilingScheme} [tilingScheme] The tiling scheme indicating how the ellipsoidal
-     * surface is broken into tiles.  If this parameter is not provided, a
-     * {@link MercatorTilingScheme} on the surface of the WGS84 ellipsoid is used.
+     * @param {String} description.url The URL of the ArcGIS ImageServer service.
+     * @param {String} [description.token] The authorization token to use to connect to the service.
+     * @param {Object} [description.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
      *
      * @see TerrainProvider
      */
-    function EsriImageServerTerrainProvider(tilingScheme) {
+    function EsriImageServerTerrainProvider(description) {
+        description = defaultValue(description, {});
+
+        if (typeof description.url === 'undefined') {
+            throw new DeveloperError('description.url is required.');
+        }
+
+        /**
+         * The URL of the ArcGIS ImageServer.
+         * @type {String}
+         */
+        this.url = description.url;
+
+        /**
+         * The authorization token to use to connect to the service.
+         *
+         * @type {String}
+         */
+        this.token = description.token;
+
         /**
          * The tiling scheme used to tile the surface.
          *
          * @type TilingScheme
          */
-        this.tilingScheme = defaultValue(tilingScheme, new WebMercatorTilingScheme());
+        this.tilingScheme = new GeographicTilingScheme();
+        this.projection = Projections.WGS84;
+        this.maxLevel = 25;
+
+        this._proxy = description.proxy;
+
+        // Grab the details of this ImageServer.
+        var metadata = jsonp(this.url, {
+            parameters : {
+                f : 'json'
+            },
+            proxy : this._proxy
+        });
+
+        var that = this;
+        when(metadata, function(data) {
+            var extentData = data.extent;
+
+            /*if (extentData.spatialReference.wkid === 102100) {
+                that.projection = Projections.MERCATOR;
+                that._extentSouthwestInMeters = new Cartesian2(extentData.xmin, extentData.ymin);
+                that._extentNortheastInMeters = new Cartesian2(extentData.xmax, extentData.ymax);
+                that.tilingScheme = new WebMercatorTilingScheme({
+                    extentSouthwestInMeters: that._extentSouthwestInMeters,
+                    extentNortheastInMeters: that._extentNortheastInMeters
+                });
+            } if (extentData.spatialReference.wkid === 4326) {
+                that.projection = Projections.WGS84;
+                var extent = new Extent(CesiumMath.toRadians(extentData.xmin),
+                                        CesiumMath.toRadians(extentData.ymin),
+                                        CesiumMath.toRadians(extentData.xmax),
+                                        CesiumMath.toRadians(extentData.ymax));
+                that.tilingScheme = new GeographicTilingScheme({
+                    extent: extent
+                });
+            }
+
+            // The server can pretty much provide any level we ask for by interpolating.
+            that.maxLevel = 25;*/
+
+            // Create the copyright message.
+            var canvas = document.createElement('canvas');
+            canvas.width = 800.0;
+            canvas.height = 20.0;
+
+            var context = canvas.getContext('2d');
+            context.fillStyle = '#fff';
+            context.font = '12px sans-serif';
+            context.textBaseline = 'top';
+            context.fillText(data.copyrightText, 0, 0);
+
+            that._logo = canvas;
+            that.ready = true;
+        });
     }
 
     function computeDesiredGranularity(tilingScheme, tile) {
@@ -93,9 +175,60 @@ define([
         // intensive, though, which is why we probably won't want to do it while waiting for the
         // actual data to load.  We could also potentially add fractal detail when subdividing.
 
-        var url = '...';
-        return when(loadImage(url, true), function(image) {
+        var tilingScheme = this.tilingScheme;
+        var level = tile.level;
+        var tilesInXDirection = tilingScheme.numberOfLevelZeroTilesX << level;
+        var tilesInYDirection = tilingScheme.numberOfLevelZeroTilesY << level;
 
+        var xDelta = CesiumMath.TWO_PI / tilesInXDirection;
+        var yDelta = CesiumMath.PI / tilesInYDirection;
+
+        var tileY = tilesInYDirection - tile.y - 1;
+
+        var xStart = -CesiumMath.PI + xDelta * tile.x;
+        var xStop = -CesiumMath.PI + xDelta * (tile.x + 1);
+
+        var yStart = -CesiumMath.PI_OVER_TWO + yDelta * tileY;
+        var yStop = -CesiumMath.PI_OVER_TWO + yDelta * (tileY + 1);
+
+        var bbox = xStart + '%2C' + yStart + '%2C' + xStop + '%2C' + yStop;
+        var url = this.url + '/exportImage?format=tiff&f=image&size=256%2C256&bbox=' + bbox;
+        if (this.token) {
+            url += '&token=' + this.token;
+        }
+        if (typeof this._proxy !== 'undefined') {
+            url = this._proxy.getURL(url);
+        }
+        return when(loadImage(url, true), function(image) {
+            var ellipsoid = tilingScheme.ellipsoid;
+            var extent = tile.extent;
+            var center = tile.get3DBoundingSphere().center;
+
+            // Get the height data from the image by copying it to a canvas.
+            var width = image.width;
+            var height = image.height;
+            var canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            var context = canvas.getContext('2d');
+            context.globalCompositeOperation = 'copy';
+            context.drawImage(image, 0, 0);
+            var pixels = context.getImageData(0, 0, width, height).data;
+
+            var buffers = HeightmapTessellator.computeBuffers({
+                heightmap: pixels,
+                heightScale: 1000.0,
+                heightOffset: 1000.0,
+                bytesPerHeight: 3,
+                strideBytes: 4,
+                ellipsoid : ellipsoid,
+                extent : extent,
+                generateTextureCoords : true,
+                interleave : true,
+                relativeToCenter : center
+            });
+            TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers);
+            return true;
         });
     };
 

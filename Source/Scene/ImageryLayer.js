@@ -538,7 +538,7 @@ define([
 
                     tileStack.push(child);
 
-                    allChildrenLoaded = allChildrenLoaded && child.state === TileState.TEXTURE_LOADED;
+                    allChildrenLoaded = allChildrenLoaded && child.vertexArray && child.state === TileState.TEXTURE_LOADED;
                 }
 
                 if (allChildrenLoaded) {
@@ -666,6 +666,12 @@ define([
             return;
         }
 
+        // TODO: remove this hack.  It's needed because a beginDraw/endDraw without
+        // a continueDraw throws an exception.
+        if (tilesToRender.length == 1 && !tilesToRender[0].vertexArray) {
+            return;
+        }
+
         context.beginDraw({
             framebuffer : this._centralBody._fb,
             shaderProgram : this._centralBody._sp,
@@ -684,6 +690,9 @@ define([
         // render tiles to FBO
         for ( var i = 0, len = tilesToRender.length; i < len; i++) {
             var tile = tilesToRender[i];
+            if (!tile.vertexArray) {
+                continue;
+            }
 
             var rtc;
             if (morphTime === 1.0) {

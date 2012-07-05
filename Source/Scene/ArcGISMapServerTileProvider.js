@@ -136,11 +136,10 @@ define([
 
         var that = this;
         var isReady = when(metadata, function(data) {
-            // Grab tile details.
-            that.tileWidth = data.tileInfo.rows;
-            that.tileHeight = data.tileInfo.cols;
-
             var tileInfo = data.tileInfo;
+
+            that.tileWidth = tileInfo.rows;
+            that.tileHeight = tileInfo.cols;
 
             if (tileInfo.spatialReference.wkid === 102100) {
                 var levelZeroResolution = tileInfo.lods[0].resolution;
