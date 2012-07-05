@@ -110,7 +110,7 @@ define([
         this._frustum.top *= maxZoomOut;
         this._frustum.bottom *= maxZoomOut;
 
-        this._maxCoord = projection.project(new Cartographic3(Math.PI, CesiumMath.toRadians(85.05112878)));
+        this._maxCoord = projection.project(new Cartographic3(Math.PI, CesiumMath.PI_OVER_TWO, 0.0));
 
         this._maxZoomFactor = 2.5;
         this._maxTranslateFactor = 1.5;
