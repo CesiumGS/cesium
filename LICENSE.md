@@ -97,6 +97,7 @@ https://github.com/Pomax/fontmetrics.js
 ### Microsoft
 
 http://msdn.microsoft.com/en-us/library/bb259689.aspx
+
 http://msdn.microsoft.com/en-us/cc300389.aspx#O
 
 > Copyright (c) 2006-2009 Microsoft Corporation.  All rights reserved.
@@ -354,6 +355,8 @@ http://ace.ajax.org/
 >          the notices in the Source Code files of the Original Code. You should
 >          use the text of this Exhibit A rather than the text found in the
 >          Original Code Source Code for Your Modifications.]
+
+### Dojo Toolkit
 
 http://dojotoolkit.org/
 
