@@ -74,7 +74,7 @@ define([
      * and {@link BillboardCollection#remove}.  All billboards in a collection reference images
      * from the same texture atlas, which is assigned using {@link BillboardCollection#setTextureAtlas}.
      *
-     * @name BillboardCollection
+     * @alias BillboardCollection
      * @constructor
      *
      * @performance For best performance, prefer a few collections, each with many billboards, to
@@ -102,7 +102,7 @@ define([
      *   position : { x : 4.0, y : 5.0, z : 6.0 }
      * });
      */
-    function BillboardCollection() {
+    var BillboardCollection = function() {
         this._textureAtlas = undefined;
         this._textureAtlasGUID = undefined;
         this._destroyTextureAtlas = true;
@@ -188,7 +188,7 @@ define([
             }
         });
         this._uniforms = undefined;
-    }
+    };
 
     /**
      * Creates and adds a billboard with the specified initial properties to the collection.
@@ -903,7 +903,15 @@ define([
     };
 
     BillboardCollection.prototype._update = function(context, sceneState) {
-        if (!this._textureAtlas) {
+        var textureAtlas = this._textureAtlas;
+        if (typeof textureAtlas === 'undefined') {
+            // Can't write billboard vertices until we have texture coordinates
+            // provided by a texture atlas
+            return;
+        }
+
+        var textureAtlasCoordinates = textureAtlas.getTextureCoordinates();
+        if (textureAtlasCoordinates.length === 0) {
             // Can't write billboard vertices until we have texture coordinates
             // provided by a texture atlas
             return;
@@ -917,16 +925,14 @@ define([
         var length = billboards.length;
         var properties = this._propertiesChanged;
 
-        var textureAtlasCoordinates = this._textureAtlas.getTextureCoordinates();
-        var textureAtlasGUID = this._textureAtlas.getGUID();
-        var textureAtlasChanged = this._textureAtlasGUID !== textureAtlasGUID;
+        var textureAtlasGUID = textureAtlas.getGUID();
+        var createVertexArray = this._createVertexArray || this._textureAtlasGUID !== textureAtlasGUID;
         this._textureAtlasGUID = textureAtlasGUID;
 
         var vafWriters;
 
         // PERFORMANCE_IDEA: Round robin multiple buffers.
-
-        if (textureAtlasChanged || this._createVertexArray || this.computeNewBuffersUsage()) {
+        if (createVertexArray || this.computeNewBuffersUsage()) {
             this._createVertexArray = false;
 
             this._vaf = this._vaf && this._vaf.destroy();

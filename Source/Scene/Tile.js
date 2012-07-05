@@ -25,7 +25,7 @@ define([
      * A node in the quadtree representing the surface of a {@link CentralBody}.  A tile holds the surface
      * geometry for its horizontal extent and zero or more imagery textures overlayed on the geometry.
      *
-     * @name Tile
+     * @alias Tile
      * @constructor
      *
      * @param {TilingScheme} description.tilingScheme The tiling scheme of which the new tile is a part,
@@ -43,7 +43,7 @@ define([
      * @see OpenStreetMapTileProvider
      * @see BingMapsTileProvider
      */
-    function Tile(description) {
+    var Tile = function(description) {
         if (typeof description === 'undefined') {
             throw new DeveloperError('description is required.');
         }
@@ -146,7 +146,7 @@ define([
         this._next = undefined;
 
         this._imagery = {};
-    }
+    };
 
     /**
      * Returns an array of tiles that would be at the next level of the tile tree.

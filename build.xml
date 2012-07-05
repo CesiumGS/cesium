@@ -6,7 +6,14 @@
 			</glslToJavascript>
 
 			<createCesiumJs output="${sourceDirectory}/Cesium.js">
-				<fileset dir="${sourceDirectory}" includes="**/*.js" excludes="Cesium.js,main.js" />
+				<fileset dir="${sourceDirectory}">
+					<include name="**/*.js" />
+					<exclude name="DojoWidgets/**" />
+					<exclude name="Widgets/**" />
+					<exclude name="Cesium.js" />
+					<exclude name="main.js" />
+					<exclude name="**/*.profile.js" />
+				</fileset>
 			</createCesiumJs>
 
 			<createSpecList output="${specsDirectory}/SpecList.js">
@@ -28,6 +35,7 @@
 			<param name="build.minification" value="true" />
 		</antcall>
 		<antcall target="generateDocumentation" />
+		<antcall target="buildApps" />
 	</target>
 
 	<target name="instrumentForCoverage" description="A debug build instrumented for JSCoverage (currently Windows only)." depends="build">
@@ -40,15 +48,12 @@
 	<target name="makeZipFile" description="Builds a zip file containing all release files." depends="release">
 		<zip destfile="Cesium-${version}.zip" basedir="${basedir}">
 			<include name="Build/**" />
+			<include name="Apps/**" />
 			<include name="Examples/**" />
 			<include name="Images/**" />
 			<include name="Source/**" />
 			<include name="Specs/**" />
 			<include name="ThirdParty/**" />
-
-			<!-- Remove this once we're upgraded to 1.7.2 -->
-			<exclude name="ThirdParty/dojo-release-1.7.2-src/**" />
-
 			<include name="index.html" />
 			<include name="LICENSE.md" />
 			<include name="CHANGES.md" />
@@ -60,7 +65,7 @@
 		<delete includeEmptyDirs="true" failonerror="false">
 			<fileset dir="${buildDirectory}" defaultexcludes="false" />
 			<fileset dir="${instrumentedDirectory}" defaultexcludes="false" />
-			<fileset dir="${shadersDirectory}" includes="*.js" />
+			<fileset dir="${shadersDirectory}" includes="*.js" excludes="*.profile.js" />
 			<fileset dir="${specsDirectory}" includes="SpecList.js" />
 			<fileset dir="." includes="Cesium-*.zip" />
 		</delete>
@@ -84,6 +89,7 @@
 	<property name="documentationImagesDirectory" location="Documentation/Images" />
 	<property name="jsdoc3Directory" location="${toolsDirectory}/jsdoc3" />
 	<property name="webProxyDirectory" location="${toolsDirectory}/proxy" />
+	<property name="dojoPath" location="${thirdPartyDirectory}/dojo-release-1.7.2-src" />
 
 	<!-- Outputs -->
 	<property name="buildDirectory" location="Build" />
@@ -116,6 +122,8 @@ for (var i = 0; i < filesets.size(); i++) {
   var basedir  = fileset.getDir(project);
   var filenames = fileset.getDirectoryScanner(project).getIncludedFiles();
 
+  var glslDoc = "";	
+  	
   for (var j = 0; j < filenames.length; j++) {
     var filename = filenames[j];
 
@@ -130,7 +138,12 @@ for (var i = 0; i < filesets.size(); i++) {
     reader.close();
 
     contents = contents.replace(/\r\n/gm, '\n');
-
+	
+    var docComments = contents.match(/\/\*\*[\s\S]*?\*\//gm) || [];
+    if (docComments.length > 0) {
+        glslDoc = glslDoc + docComments.join('\n');
+    }		
+			
     var copyrightComments = contents.match(/\/\*\!(?:.|\n)*?\*\//gm) || [];
 
     if (stripComments) {
@@ -151,6 +164,11 @@ for (var i = 0; i < filesets.size(); i++) {
     writer.write(contents);
     writer.close();
   }
+		
+  var glslDocFile = new File(destination, 'glslComments.js');
+  var glslDocWriter = new FileWriter(glslDocFile);
+  glslDocWriter.write(glslDoc);
+  glslDocWriter.close();
 }
 ]]>
 	</scriptdef>
@@ -383,5 +401,67 @@ if (oldContents !== contents) {
 		 noUpstreamProxyHostList: A comma-separated list of hosts that will not use the upstreamProxy
 		-->
 		<server proxyContextPath="/proxy" allowedHostList="*.arcgisonline.com,tile.openstreetmap.org,otile1.mqcdn.com,oatile1.mqcdn.com,tile.stamen.com,*.virtualearth.net" port="8080" baseDir="${basedir}" />
+	</target>
+
+	<target name="buildApps">
+		<antcall target="buildApp">
+			<param name="app.path" value="Apps/CesiumViewer" />
+		</antcall>
+	</target>
+
+	<target name="buildApp">
+		<java classname="org.mozilla.javascript.tools.shell.Main" fork="true">
+			<classpath>
+				<pathelement location="${dojoPath}/util/shrinksafe/js.jar" />
+				<pathelement location="${dojoPath}/util/closureCompiler/compiler.jar " />
+			</classpath>
+			<sysproperty key="java.util.logging.config.file" value="${toolsDirectory}/dojoBuildLogging.properties" />
+			<arg line="${dojoPath}/dojo/dojo.js" />
+			<arg line="baseUrl=${dojoPath}/dojo" />
+			<arg line="load=build" />
+			<arg line="--require ${app.path}/boot.js" />
+			<arg line="--profile ${app.path}/CesiumViewer.profile.js" />
+		</java>
+
+		<delete>
+			<fileset dir="${buildDirectory}/${app.path}" includes="**/*.uncompressed.js" />
+		</delete>
+
+		<copy todir="${buildDirectory}/${app.path}">
+			<fileset dir=".">
+				<include name="Images/*" />
+			</fileset>
+		</copy>
+
+		<replace dir="${buildDirectory}/${app.path}" summary="true">
+			<include name="index.html" />
+			<include name="*.css" />
+			<replacefilter token="../../" value="" />
+			<replacefilter token="ThirdParty/dojo-release-1.7.2-src/" value="" />
+			<replacefilter token="Source/" value="" />
+		</replace>
+
+		<replace dir="${buildDirectory}/${app.path}" summary="true">
+			<replacefilter token="ThirdParty/dojo-release-1.7.2-src/" value="" />
+			<include name="boot.js" />
+			<include name="dojo/dojo.js" />
+		</replace>
+
+		<fileset dir="${buildDirectory}/${app.path}" id="jsFiles">
+			<include name="boot.js" />
+			<include name="dojo/dojo.js" />
+		</fileset>
+
+		<replaceregexp match="(location\s*:\s*[&quot;'])Source/" flags="g" replace="\1">
+			<fileset refid="jsFiles" />
+		</replaceregexp>
+
+		<replaceregexp match="(location\s*:\s*[&quot;'])${app.path}" flags="g" replace="\1.">
+			<fileset refid="jsFiles" />
+		</replaceregexp>
+
+		<replaceregexp match="(baseUrl\s*:\s*[&quot;'])../.." flags="g" replace="\1.">
+			<fileset refid="jsFiles" />
+		</replaceregexp>
 	</target>
 </project>

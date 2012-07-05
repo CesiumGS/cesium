@@ -42,14 +42,14 @@ define([
      * <br/><br/>
      * Texture pools are useful when textures are being created and destroyed repeatedly.
      *
-     * @name TexturePool
+     * @alias Texture2DPool
      * @constructor
      *
      * @see Texture
      */
-    function TexturePool(context) {
+    var TexturePool = function() {
         this._free = {};
-    }
+    };
 
     /**
      * Create a texture.  This function takes the same arguments as {@link Context#createTexture2D},

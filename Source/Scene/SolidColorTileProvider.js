@@ -23,7 +23,7 @@ define([
      * Provides tile images with a different solid color for each level.
      * Useful for debugging or testing different {@link CentralBody} options.
      *
-     * @name SolidColorTileProvider
+     * @alias SolidColorTileProvider
      * @constructor
      *
      * @param {Number} [maxLevel=23] The maximum level to generate tiles for.
@@ -33,7 +33,7 @@ define([
      * @see OpenStreetMapTileProvider
      * @see CompositeTileProvider
      */
-    function SolidColorTileProvider(maxLevel) {
+    var SolidColorTileProvider = function(maxLevel) {
         maxLevel = defaultValue(maxLevel, 23);
 
         this._canvases = [];
@@ -93,7 +93,7 @@ define([
          * @type {Boolean}
          */
         this.ready = true;
-    }
+    };
 
     /**
      * Determine whether a the image for a given tile is valid and should be displayed.
@@ -147,7 +147,7 @@ define([
                 // yellow to red
                 color.red = 255;
                 color.green = 4.0 * (1.0 - x);
-            }
+        }
 
             var context = canvas.getContext('2d');
             context.fillStyle = color.toCSSColor();

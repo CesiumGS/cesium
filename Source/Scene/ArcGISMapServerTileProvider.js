@@ -34,7 +34,7 @@ define([
     /**
      * Provides tile images hosted by an ArcGIS Server.
      *
-     * @name ArcGISMapServerTileProvider
+     * @alias ArcGISMapServerTileProvider
      * @constructor
      *
      * @param {String} description.url The URL of the ArcGIS MapServer service.
@@ -56,7 +56,7 @@ define([
      *     url: 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
      * });
      */
-    function ArcGISMapServerTileProvider(description) {
+    var ArcGISMapServerTileProvider = function(description) {
         description = defaultValue(description, {});
 
         if (typeof description.url === 'undefined') {
@@ -196,7 +196,7 @@ define([
                 return new DiscardMissingTileImagePolicy(missingImageUrl, pixelsToCheck);
             });
         });
-    }
+    };
 
     /**
      * Build a URL to retrieve the image for a tile.

@@ -3,6 +3,7 @@ define([
         '../Core/destroyObject',
         '../Core/EquidistantCylindricalProjection',
         '../Core/Ellipsoid',
+        '../Core/DeveloperError',
         '../Renderer/Context',
         './Camera',
         './CompositePrimitive',
@@ -13,6 +14,7 @@ define([
         destroyObject,
         EquidistantCylindricalProjection,
         Ellipsoid,
+        DeveloperError,
         Context,
         Camera,
         CompositePrimitive,
@@ -24,10 +26,10 @@ define([
     /**
      * DOC_TBA
      *
-     * @name Scene
+     * @alias Scene
      * @constructor
      */
-    function Scene(canvas) {
+    var Scene = function(canvas) {
         var context = new Context(canvas);
 
         this._sceneState = new SceneState();
@@ -75,7 +77,7 @@ define([
          * @type Number
          */
         this.morphTime = 1.0;
-    }
+    };
 
     /**
      * DOC_TBA
@@ -218,6 +220,38 @@ define([
             x : windowPosition.x,
             y : (this._canvas.clientHeight - windowPosition.y)
         });
+    };
+
+    /**
+     * Pick an ellipsoid or map in 3D mode.
+     *
+     * @memberof Scene
+     *
+     * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to pick.
+     *
+     * @exception {DeveloperError} windowPosition is required.
+     *
+     * @return {Cartesian3} If the ellipsoid or map was picked, returns the point on the surface of the ellipsoid or map
+     * in world coordinates. If the ellipsoid or map was not picked, returns undefined.
+     */
+    Scene.prototype.pickEllipsoid = function(windowPosition, ellipsoid) {
+        if (typeof windowPosition === 'undefined') {
+            throw new DeveloperError('windowPosition is required.');
+        }
+
+        ellipsoid = ellipsoid || Ellipsoid.WGS84;
+
+        var p;
+        if (this.mode === SceneMode.SCENE3D) {
+            p = this._camera.pickEllipsoid(windowPosition, ellipsoid);
+        } else if (this.mode === SceneMode.SCENE2D) {
+            p = this._camera.pickMap2D(windowPosition, this.scene2D.projection);
+        } else if (this.mode === SceneMode.COLUMBUS_VIEW) {
+            p = this._camera.pickMapColumbusView(windowPosition, this.scene2D.projection);
+        }
+
+        return p;
     };
 
     /**

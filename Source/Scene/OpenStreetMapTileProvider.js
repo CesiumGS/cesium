@@ -18,7 +18,7 @@ define([
     /**
      * Provides tile images hosted by OpenStreetMap.
      *
-     * @name OpenStreetMapTileProvider
+     * @alias OpenStreetMapTileProvider
      * @constructor
      *
      * @param {String} description.url The OpenStreetMap url.
@@ -40,7 +40,7 @@ define([
      *     url : 'http://tile.openstreetmap.org/'
      * });
      */
-    function OpenStreetMapTileProvider(description) {
+    var OpenStreetMapTileProvider = function(description) {
         description = defaultValue(description, {});
 
         this._url = defaultValue(description.url, 'http://tile.openstreetmap.org/');
@@ -57,8 +57,8 @@ define([
          * @type {Extent}
          */
         this.maxExtent = new Extent(-CesiumMath.PI,
-                                    CesiumMath.toRadians(-85.05112878),
-                                    CesiumMath.PI,
+            CesiumMath.toRadians(-85.05112878),
+            CesiumMath.PI,
                                     CesiumMath.toRadians(85.05112878));
 
         /**
@@ -107,7 +107,7 @@ define([
         this.ready = true;
 
         this._logo = undefined;
-    }
+    };
 
     /**
      * Loads the image for <code>tile</code>.

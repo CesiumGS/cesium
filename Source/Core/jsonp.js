@@ -16,6 +16,8 @@ define([
     /**
      * Requests a resource using JSONP.
      *
+     * @exports jsonp
+     *
      * @param {String} url The URL to request.
      * @param {Object} [options.parameters] Any extra query parameters to append to the URL.
      * @param {String} [options.callbackParameterName='callback'] The callback parameter name that the server expects.
@@ -23,7 +25,7 @@ define([
      *
      * @returns {Promise} a promise that will resolve to the requested data when loaded.
      */
-    function jsonp(url, options) {
+    var jsonp = function(url, options) {
         if (typeof url === 'undefined') {
             throw new DeveloperError('url is required.');
         }
@@ -88,7 +90,7 @@ define([
         head.appendChild(script);
 
         return deferred.promise;
-    }
+    };
 
     return jsonp;
 });

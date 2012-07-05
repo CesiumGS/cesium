@@ -10,11 +10,11 @@ define(function() {
      * When called with two numeric arguments, longitude and latitude, the position is initialized to (longitude, latitude).
      * </p>
      *
-     * @name Cartographic2
+     * @alias Cartographic2
      * @constructor
      * @see Cartographic3
      */
-    function Cartographic2() {
+    var Cartographic2 = function() {
         var longitude = 0.0;
         var latitude = 0.0;
 
@@ -43,7 +43,7 @@ define(function() {
          * @see Cartographic2#longitude
          */
         this.latitude = latitude;
-    }
+    };
 
     /**
      * An immutable Cartographic2 instance initialized to (0.0, 0.0).

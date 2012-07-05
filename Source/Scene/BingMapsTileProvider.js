@@ -100,7 +100,7 @@ define([
     /**
      * Uses the Bing Map imagery API to load images for tiles.
      *
-     * @name BingMapsTileProvider
+     * @alias BingMapsTileProvider
      * @constructor
      *
      * @param {String} description.server The name of the Bing Maps server hosting the imagery.
@@ -125,7 +125,7 @@ define([
      *     mapStyle : BingMapsStyle.AERIAL
      * });
      */
-    function BingMapsTileProvider(description) {
+    var BingMapsTileProvider = function(description) {
         description = defaultValue(description, {});
 
         if (typeof description.server === 'undefined') {
@@ -165,8 +165,8 @@ define([
          * @type {Extent}
          */
         this.maxExtent = new Extent(-CesiumMath.PI,
-                                    CesiumMath.toRadians(-85.05112878),
-                                    CesiumMath.PI,
+            CesiumMath.toRadians(-85.05112878),
+            CesiumMath.PI,
                                     CesiumMath.toRadians(85.05112878));
 
         /**
@@ -246,7 +246,7 @@ define([
                 return new DiscardMissingTileImagePolicy(missingImageUrl, pixelsToCheck);
             });
         });
-    }
+    };
 
     /**
      * Converts a tiles (x, y, level) position into a quadkey used to request an image

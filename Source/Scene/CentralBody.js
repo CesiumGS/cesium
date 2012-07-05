@@ -108,17 +108,18 @@ define([
     function TileCache(maxTextureSize) {
         this._maxTextureSize = maxTextureSize;
         this._tiles = [];
-    }
+        }
 
     /**
      * DOC_TBA
      *
+     * @alias CentralBody
+     * @constructor
+     *
      * @param {Ellipsoid} [ellipsoid=WGS84 Ellipsoid] Determines the size and shape of the central body.
      *
-     * @name CentralBody
-     * @constructor
      */
-    function CentralBody(ellipsoid, tilingScheme) {
+    var CentralBody = function(ellipsoid, tilingScheme) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         this._ellipsoid = ellipsoid;
 
@@ -189,6 +190,7 @@ define([
          * Determines if the central body will be shown.
          *
          * @type {Boolean}
+         * @default true
          */
         this.show = true;
 
@@ -196,6 +198,7 @@ define([
          * Determines if the ground atmosphere will be shown.
          *
          * @type {Boolean}
+         * @default false
          */
         this.showGroundAtmosphere = false;
 
@@ -203,6 +206,7 @@ define([
          * Determines if the sky atmosphere will be shown.
          *
          * @type {Boolean}
+         * @default false
          */
         this.showSkyAtmosphere = false;
 
@@ -216,6 +220,8 @@ define([
          * <p>
          * The default is <code>true</code>.
          * </p>
+         *
+         * @default true
          */
         this.affectedByLighting = true;
         this._affectedByLighting = true;
@@ -313,6 +319,8 @@ define([
          *
          * @see CentralBody#dayTileProvider
          * @see CentralBody#showNight
+         *
+         * @default true
          */
         this.showDay = true;
         this._defineShowDay = undefined;
@@ -330,6 +338,8 @@ define([
          * @see CentralBody#nightImageSource
          * @see CentralBody#showDay
          * @see CentralBody#dayNightBlendDelta
+         *
+         * @default true
          *
          * @example
          * cb.showNight = true;
@@ -350,6 +360,8 @@ define([
          * @see CentralBody#cloudsMapSource
          * @see CentralBody#showCloudShadows
          * @see CentralBody#showNight
+         *
+         * @default true
          *
          * @example
          * cb.showClouds = true;
@@ -374,6 +386,8 @@ define([
          * @see CentralBody#cloudsMapSource
          * @see CentralBody#showClouds
          *
+         * @default true
+         *
          * @example
          * cb.showClouds = true;
          * cb.showCloudShadows = true;
@@ -394,6 +408,8 @@ define([
          * @type {Boolean}
          *
          * @see CentralBody#specularMapSource
+         *
+         * @default true
          *
          * @example
          * cb.showSpecular = true;
@@ -418,6 +434,8 @@ define([
          * @see CentralBody#bumpMapSource
          * @see CentralBody#bumpMapNormalZ
          *
+         * @default true
+         *
          * @example
          * cb.showBumps = true;
          * cb.bumpMapSource = 'bump.jpg';
@@ -435,6 +453,8 @@ define([
          *
          * @see CentralBody#showNight
          * @see CentralBody#dayNightBlendDelta
+         *
+         * @default false
          */
         this.showTerminator = false;
         this._defineShowTerminator = undefined;
@@ -453,6 +473,8 @@ define([
          * @type {Number}
          *
          * @see CentralBody#showBumps
+         *
+         * @default 0.5
          *
          * @example
          * cb.showBumps = true;
@@ -479,6 +501,8 @@ define([
          * @see CentralBody#showNight
          * @see CentralBody#showTerminator
          *
+         * @default 0.05
+         *
          * @example
          * cb.showDay = true;
          * cb.dayTileProvider = new Cesium.SingleTileProvider('day.jpg');
@@ -494,6 +518,8 @@ define([
          * brighter. The default value is 2.0.
          *
          * @type {Number}
+         *
+         * @default 2.0
          */
         this.nightIntensity = 2.0;
 
@@ -502,6 +528,8 @@ define([
          * with 0.0 being 2D or Columbus View and 1.0 being 3D.
          *
          * @type Number
+         *
+         * @default 1.0
          */
         this.morphTime = 1.0;
 
@@ -628,7 +656,7 @@ define([
         // PERFORMANCE_IDEA:  Only combine these if showing the atmosphere.  Maybe this is too much of a micro-optimization.
         // http://jsperf.com/object-property-access-propcount
         this._drawUniforms = combine(uniforms, atmosphereUniforms);
-    }
+    };
 
     CentralBody.prototype._attributeIndices = {
         position3D : 0,
@@ -747,9 +775,9 @@ define([
         var halfHeight = halfWidth;
 
         return new Rectangle(Math.floor(center.x) - halfWidth,
-                             Math.floor(center.y) - halfHeight,
-                             halfWidth * 2.0,
-                             halfHeight * 2.0);
+                Math.floor(center.y) - halfHeight,
+                halfWidth * 2.0,
+                halfHeight * 2.0);
     };
 
     CentralBody.prototype._getBaseLayer = function() {
@@ -787,7 +815,7 @@ define([
         if (baseTileProviderMaxExtent.north < CesiumMath.PI_OVER_TWO) {
             extent = new Extent(-Math.PI,
                                 baseTileProviderMaxExtent.north,
-                                Math.PI,
+                Math.PI,
                                 CesiumMath.PI_OVER_TWO);
             boundingVolume = Extent.compute3DBoundingSphere(extent, this._ellipsoid);
             frustumCull = sceneState.camera.getVisibility(boundingVolume, BoundingSphere.planeSphereIntersect) === Intersect.OUTSIDE;
@@ -831,8 +859,8 @@ define([
         // handle south pole
         if (baseTileProviderMaxExtent.south > -CesiumMath.PI_OVER_TWO) {
             extent = new Extent(-Math.PI,
-                                -CesiumMath.PI_OVER_TWO,
-                                Math.PI,
+                -CesiumMath.PI_OVER_TWO,
+                Math.PI,
                                 baseTileProviderMaxExtent.south);
             boundingVolume = Extent.compute3DBoundingSphere(extent, this._ellipsoid);
             frustumCull = sceneState.camera.getVisibility(boundingVolume, BoundingSphere.planeSphereIntersect) === Intersect.OUTSIDE;
@@ -1099,8 +1127,8 @@ define([
 
         if (!this._spDepth) {
             this._spDepth = shaderCache.getShaderProgram(CentralBodyVSDepth, CentralBodyFSDepth, {
-                position : 0
-            });
+                        position : 0
+                    });
         }
 
         var that = this;
@@ -1268,9 +1296,9 @@ define([
 
             vs =
                 '#line 0\n' +
-                GroundAtmosphere +
+                 GroundAtmosphere +
                 '#line 0\n' +
-                CentralBodyVS;
+                 CentralBodyVS;
 
             fs =
                 fsPrepend +

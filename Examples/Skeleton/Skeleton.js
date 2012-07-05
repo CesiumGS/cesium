@@ -55,6 +55,8 @@ require({
     scene.getCamera().getControllers().addSpindle();
     scene.getCamera().getControllers().addFreeLook();
 
+    var transitioner = new Cesium.SceneTransitioner(scene, ellipsoid);
+
     ///////////////////////////////////////////////////////////////////////////
     // Add examples from the Sandbox here:
 
@@ -73,27 +75,42 @@ require({
     }());
 
     ///////////////////////////////////////////////////////////////////////////
-    // Example Mouse handlers
+    // Example mouse & keyboard handlers
 
     function keydownHandler(e) {
         switch (e.keyCode) {
-        case 81: // q
+        case 'Q'.charCodeAt(0):
             cb.getImageLayers().raise(aerial);
             break;
-        case 65: // a
+        case 'A'.charCodeAt(0):
             cb.getImageLayers().lower(aerial);
             break;
-        case 87: // w
+        case 'W'.charCodeAt(0):
             cb.getImageLayers().raise(road);
             break;
-        case 83: // s
+        case 'S'.charCodeAt(0):
             cb.getImageLayers().lower(road);
             break;
-        case 69: // e
+        case 'E'.charCodeAt(0):
             cb.getImageLayers().raise(esri);
             break;
-        case 68: // d
+        case 'D'.charCodeAt(0):
             cb.getImageLayers().lower(esri);
+            break;
+        case "3".charCodeAt(0):  // "3" -> 3D globe
+            cb.showSkyAtmosphere = true;
+            cb.showGroundAtmosphere = true;
+            transitioner.morphTo3D();
+            break;
+        case "2".charCodeAt(0):  // "2" -> Columbus View
+            cb.showSkyAtmosphere = false;
+            cb.showGroundAtmosphere = false;
+            transitioner.morphToColumbusView();
+            break;
+        case "1".charCodeAt(0):  // "1" -> 2D map
+            cb.showSkyAtmosphere = false;
+            cb.showGroundAtmosphere = false;
+            transitioner.morphTo2D();
             break;
         }
     }

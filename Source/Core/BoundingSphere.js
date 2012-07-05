@@ -23,7 +23,7 @@ define([
      * as its radius.
      * </p>
      *
-     * @name BoundingSphere
+     * @alias BoundingSphere
      *
      * @param {Array} positions List of points that the bounding sphere will enclose.  Each point must have <code>x</code>, <code>y</code>, and <code>z</code> properties.
      * @param {Number} radius An optional parameter, only to be supplied if <code>positions</code> contains a single point.
@@ -44,7 +44,7 @@ define([
      * // Compute the same bounding sphere using a center point and a radius.
      * var sphere = new BoundingSphere(new Cartesian3(0, 0, 0), 2);
      */
-    function BoundingSphere(positions, radius) {
+    var BoundingSphere = function(positions, radius) {
         if (!positions) {
             throw new DeveloperError('positions is required.');
         }
@@ -179,7 +179,7 @@ define([
                 this.radius = naiveRadius;
             }
         }
-    }
+    };
 
     /**
      * DOC_TBA

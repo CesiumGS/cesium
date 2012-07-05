@@ -22,6 +22,8 @@ define([
      * which then releases the native resource and calls <code>destroyObject</code> to put itself
      * in a destroyed state.
      *
+     * @exports destroyObject
+     *
      * @param {Object} object The object to destroy.
      * @param {String} [message] The message to include in the exception that is thrown if
      *                           a destroyed object's function is called.

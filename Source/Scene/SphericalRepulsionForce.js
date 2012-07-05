@@ -9,7 +9,7 @@ define([
 
     /**
      * DOC_TBA
-     * @name SphericalRepulsionForce
+     * @alias SphericalRepulsionForce
      * @constructor
      */
     function SphericalRepulsionForce(template) {
