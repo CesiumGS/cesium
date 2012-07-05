@@ -1,48 +1,17 @@
 /*global define*/
 define([
         '../Core/DeveloperError',
-        '../Core/combine',
         '../Core/destroyObject',
         '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/Matrix4',
-        '../Core/ComponentDatatype',
-        '../Core/IndexDatatype',
-        '../Core/PrimitiveType',
-        '../Core/PolylinePipeline',
-        '../Core/Color',
-        '../Renderer/BufferUsage',
-        '../Renderer/BlendingState',
-        '../Renderer/StencilFunction',
-        '../Renderer/StencilOperation',
-        './SceneMode',
-        '../Shaders/PolylineVS',
-        '../Shaders/PolylineFS',
-        '../Core/shallowEquals'
+        '../Core/Color'
 ], function(
         DeveloperError,
-        combine,
         destroyObject,
         Cartesian3,
-        Cartesian4,
-        Matrix4,
-        ComponentDatatype,
-        IndexDatatype,
-        PrimitiveType,
-        PolylinePipeline,
-        Color,
-        BufferUsage,
-        BlendingState,
-        StencilFunction,
-        StencilOperation,
-        SceneMode,
-        PolylineVS,
-        PolylineFS,
-        shallowEquals) {
+        Color) {
     "use strict";
 
     /**
-     * DOC_TBA
      *
      * @alias Polyline
      * @internalConstructor
@@ -51,6 +20,7 @@ define([
         var p = polylineTemplate || {};
 
         this._positions = [];
+        this._actualPositions = [];
         if (typeof p.positions !== 'undefined') {
             var newPositions = p.positions;
             var length = newPositions.length;
@@ -59,6 +29,7 @@ define([
                 var position = newPositions[i];
                 positions.push(new Cartesian3(position.x, position.y, position.z));
             }
+            this._actualPositions = positions;
         }
         this._show = (typeof p.show === 'undefined') ? true : p.show;
         this._width = (typeof p.width === 'undefined') ? 1.0 : p.width;
@@ -91,7 +62,9 @@ define([
     var COLOR_INDEX = Polyline.COLOR_INDEX = 2;
     var OUTLINE_COLOR_INDEX = Polyline.OUTLINE_COLOR_INDEX = 3;
     var POSITION_SIZE_INDEX = Polyline.POSITION_SIZE_INDEX = 4;
-    Polyline.NUMBER_OF_PROPERTIES = 5;
+    var WIDTH_INDEX = Polyline.WIDTH_INDEX = 5;
+    var OUTLINE_WIDTH_INDEX = Polyline.OUTLINE_WIDTH_INDEX = 6;
+    Polyline.NUMBER_OF_PROPERTIES = 7;
     var NUMBER_OF_PROPERTIES = Polyline.NUMBER_OF_PROPERTIES;
 
     /**
@@ -126,7 +99,7 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Returns the polyline's positions.
      *
      * @memberof Polyline
      *
@@ -139,7 +112,7 @@ define([
     };
 
     /**
-    * DOC_TBA
+    * Defines the positions of the polyline.
     *
     * @memberof Polyline
     *
@@ -157,7 +130,7 @@ define([
      */
     Polyline.prototype.setPositions = function(value) {
         if (typeof value === 'undefined') {
-            throw new DeveloperError('value must not be undefined.', 'value');
+            throw new DeveloperError('value must not be undefined.');
         }
         if (this._positions.length !== value.length) {
             this._makeDirty(POSITION_SIZE_INDEX);
@@ -169,13 +142,36 @@ define([
             positions.push(new Cartesian3(position.x, position.y, position.z));
         }
         this._positions = positions;
+        this._actualPositions = positions;
         this._makeDirty(POSITION_INDEX);
     };
 
+    /**
+     * Returns the color of the polyline.
+     *
+     * @memberof Polyline
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     * @return {Color}
+     *
+     * @see Polyline#setColor
+     */
     Polyline.prototype.getColor = function() {
         return this._color;
     };
 
+    /**
+     * Sets the color of the polyline.
+     *
+     * @memberof Polyline
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     * @param {Color} value. The color of the polyline.
+     *
+     * @see Polyline#getColor
+     */
     Polyline.prototype.setColor = function(value) {
         var c = this._color;
 
@@ -186,7 +182,6 @@ define([
     };
 
     /**
-     * DOC_TBA
      * <br /><br />
      * The actual width used is clamped to the minimum and maximum width supported by the WebGL implementation.
      * These can be queried with {@link Context#getMinimumAliasedLineWidth} and
@@ -208,7 +203,6 @@ define([
     };
 
     /**
-     * DOC_TBA
      * <br /><br />
      * The actual width used is clamped to the minimum and maximum width supported by the WebGL implementation.
      * These can be queried with {@link Context#getMinimumAliasedLineWidth} and
@@ -229,14 +223,12 @@ define([
         var width = this._width;
 
         if ((typeof value !== 'undefined') && (value !== width)) {
-            this._collection._removeFromMap(this);
             this._width = value;
-            this._collection._addToMap(this);
+            this._makeDirty(WIDTH_INDEX);
         }
     };
 
     /**
-     * DOC_TBA
     * <br /><br />
     * The actual width used is clamped to the minimum and maximum width supported by the WebGL implementation.
     * These can be queried with {@link Context#getMinimumAliasedLineWidth} and
@@ -258,7 +250,6 @@ define([
     };
 
     /**
-    * DOC_TBA
     * <br /><br />
     * The actual width used is clamped to the minimum and maximum width supported by the WebGL implementation.
     * These can be queried with {@link Context#getMinimumAliasedLineWidth} and
@@ -279,16 +270,37 @@ define([
         var width = this._outlineWidth;
 
         if ((typeof value !== 'undefined') && (value !== width)) {
-            this._collection._removeFromMap(this);
             this._outlineWidth = value;
-            this._collection._addToMap(this);
+            this._makeDirty(OUTLINE_WIDTH_INDEX);
         }
     };
 
+    /**
+     * Returns the outline color of the polyline.
+     *
+     * @memberof Polyline
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     * @return {Color}
+     *
+     * @see Polyline#setOutlineColor
+     */
     Polyline.prototype.getOutlineColor = function() {
         return this._outlineColor;
     };
 
+    /**
+     * Returns the outline color of the polyline.
+     *
+     * @memberof Polyline
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     * @return {Color}
+     *
+     * @see Polyline#setOutlineColor
+     */
     Polyline.prototype.setOutlineColor = function(value) {
         var c = this._outlineColor;
 
@@ -301,6 +313,24 @@ define([
     Polyline.prototype.getPickId = function(context) {
         this._pickId = this._pickId || context.createPickId(this._pickIdThis || this);
         return this._pickId;
+    };
+
+    Polyline.prototype._setActualPositions = function(value){
+        var length = value.length;
+        var positions = [];
+        for (var i = 0; i < length; ++i) {
+            var position = value[i];
+            positions.push(new Cartesian3(position.x, position.y, position.z));
+        }
+        this._actualPositions = positions;
+    };
+
+    Polyline.prototype._getActualPositions = function(){
+      return this._actualPositions;
+    };
+
+    Polyline.prototype._resetActualPositions = function(){
+        this._actualPositions = this._positions;
     };
 
     Polyline.prototype._clean = function() {

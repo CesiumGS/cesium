@@ -91,15 +91,23 @@
     };
 
     Sandbox.PolylineWidth = function (scene, ellipsoid, primitives) {
-        this.code = function () {
+        this.code = function() {
             var polylines = new Cesium.PolylineCollection(undefined);
-            var polyline = polylines.add({positions:ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic2(-75.10, 39.57),  // Philadelphia
-                new Cesium.Cartographic2(-80.12, 25.46)   // Miami
-            ])});
+            var polyline = polylines.add({
+                positions : ellipsoid.cartographicDegreesToCartesians([
+                   new Cesium.Cartographic2(-75.10, 39.57), // Philadelphia
+                   new Cesium.Cartographic2(-80.12, 25.46) // Miami
+                ]),
+                color : {
+                    red : 1.0,
+                    green : 0.0,
+                    blue : 0.0,
+                    alpha : 1.0
+                }
+            });
 
-            polyline.setWidth(5);          // Request 5 pixels interior
-            polyline.setOutlineWidth(10);  // Request 10 pixels total
+            polyline.setWidth(5); // Request 5 pixels interior
+            polyline.setOutlineWidth(10); // Request 10 pixels total
 
             primitives.add(polylines);
         };
