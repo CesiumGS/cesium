@@ -634,13 +634,17 @@ define([
                 },
                 u_dayIntensity : function() {
                     return intensity;
+                },
+                u_center3D : function() {
+                    return tile.get3DBoundingSphere().center;
+                },
+                u_center2D : function() {
+                    return tile.get2DBoundingSphere(projection).center;
+                },
+                u_modifiedModelView : function() {
+                    return tile.modelView;
                 }
             };
-            Object.keys(tile._drawUniforms).forEach(function(key) {
-                drawUniforms[key] = function() {
-                    return tile._drawUniforms[key]();
-                };
-            });
 
             tileImagery._drawUniforms = combine(drawUniforms, layer._centralBody._drawUniforms);
         }
@@ -680,10 +684,10 @@ define([
 
             var rtc;
             if (morphTime === 1.0) {
-                rtc = tile._drawUniforms.u_center3D();
+                rtc = tile.get3DBoundingSphere().center;
                 tile.mode = 0;
             } else if (morphTime === 0.0) {
-                var center = tile._drawUniforms.u_center2D();
+                var center = tile.get2DBoundingSphere(projection).center;
                 rtc = new Cartesian3(0.0, center.x, center.y);
                 tile.mode = 1;
             } else {

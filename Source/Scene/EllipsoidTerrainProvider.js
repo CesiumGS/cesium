@@ -99,7 +99,7 @@ define([
         TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers);
 
         // TODO: does each tile really need its own collection of uniforms?
-        tile._drawUniforms = {
+        /*tile._drawUniforms = {
                 u_center3D : function() {
                     return center;
                 },
@@ -109,7 +109,7 @@ define([
                 u_modifiedModelView : function() {
                     return tile.modelView;
                 }
-            };
+            };*/
 
         return true;
     };

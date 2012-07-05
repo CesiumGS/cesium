@@ -9,7 +9,9 @@ define([
         '../Core/PlaneTessellator',
         '../Core/Cartographic2',
         '../Core/Math',
-        '../Core/Cartesian2'
+        '../Core/Cartesian2',
+        '../Core/loadImage',
+        '../ThirdParty/when'
     ], function(
         DeveloperError,
         defaultValue,
@@ -20,7 +22,9 @@ define([
         PlaneTessellator,
         Cartographic2,
         CesiumMath,
-        Cartesian2) {
+        Cartesian2,
+        loadImage,
+        when) {
     "use strict";
 
     /**
@@ -80,45 +84,19 @@ define([
         // described in TerrainProvider of creating geometry for tiles at a higher level than
         // the terrain source actually provides.
 
-        var tilingScheme = this.tilingScheme;
-        var ellipsoid = tilingScheme.ellipsoid;
-        var extent = tile.extent;
+        // In the short term, for simplicity:
+        // 1. If a tile has geometry available but it has not yet been loaded, don't render the tile until
+        //    the geometry has been loaded.
+        // 2. If a tile does not have geometry available at all, do not render it or its siblings.
+        // Longer term, #1 may be acceptable, but #2 won't be for the reasons described above.
+        // To address #2, we can subdivide a mesh into its four children.  This will be fairly CPU
+        // intensive, though, which is why we probably won't want to do it while waiting for the
+        // actual data to load.  We could also potentially add fractal detail when subdividing.
 
-        var granularity = computeDesiredGranularity(tilingScheme, tile);
+        var url = '...';
+        return when(loadImage(url, true), function(image) {
 
-        // Determine the center for RTC rendering.
-//        var center = ellipsoid.toCartesian(new Cartographic3(
-//                (extent.east - extent.west) / 2.0,
-//                (extent.north - extent.south) / 2.0,
-//                0.0));
-        var center = tile.get3DBoundingSphere().center;
-
-        // Create vertex and index buffers for this extent.
-        // TODO: do this in a web worker?
-        var buffers = ExtentTessellator.computeBuffers({
-            ellipsoid : ellipsoid,
-            extent : extent,
-            granularity : granularity,
-            generateTextureCoords : true,
-            interleave : true,
-            relativeToCenter : center
         });
-        TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers);
-
-        // TODO: does each tile really need its own collection of uniforms?
-        tile._drawUniforms = {
-                u_center3D : function() {
-                    return center;
-                },
-                u_center2D : function() {
-                    return Cartesian2.ZERO;
-                },
-                u_modifiedModelView : function() {
-                    return tile.modelView;
-                }
-            };
-
-        return true;
     };
 
     /**
@@ -134,64 +112,7 @@ define([
      * populated with geometry, or a promise for such a value in the future.
      */
     EsriImageServerTerrainProvider.prototype.createTilePlaneGeometry = function(context, tile, projection) {
-        var tilingScheme = this.tilingScheme;
-        var ellipsoid = tilingScheme.ellipsoid;
-        var extent = tile.extent;
-
-        var granularity = computeDesiredGranularity(tilingScheme, tile);
-
-        var vertices = [];
-        var width = tile.extent.east - tile.extent.west;
-        var height = tile.extent.north - tile.extent.south;
-        var lonScalar = 1.0 / width;
-        var latScalar = 1.0 / height;
-
-        var center = tile.get3DBoundingSphere().center;
-        var projectedRTC = tile.get2DBoundingSphere(projection).center.clone();
-
-        var mesh = PlaneTessellator.compute({
-            resolution : {
-                x : Math.max(Math.ceil(width / granularity), 2.0),
-                y : Math.max(Math.ceil(height / granularity), 2.0)
-            },
-            onInterpolation : function(time) {
-                var lonLat = new Cartographic2(
-                        CesiumMath.lerp(extent.west, extent.east, time.x),
-                        CesiumMath.lerp(extent.south, extent.north, time.y));
-
-                var p = ellipsoid.toCartesian(lonLat).subtract(center);
-                vertices.push(p.x, p.y, p.z);
-
-                var u = (lonLat.longitude - extent.west) * lonScalar;
-                var v = (lonLat.latitude - extent.south) * latScalar;
-                vertices.push(u, v);
-
-                // TODO: This will not work if the projection's ellipsoid is different
-                // than the central body's ellipsoid.  Throw an exception?
-                var projectedLonLat = projection.project(lonLat).subtract(projectedRTC);
-                vertices.push(projectedLonLat.x, projectedLonLat.y);
-            }
-        });
-
-        TerrainProvider.createTilePlaneGeometryFromBuffers(context, tile, {
-            vertices: vertices,
-            indices: mesh.indexLists[0].values
-        });
-
-
-        tile._drawUniforms = {
-            u_center3D : function() {
-                return center;
-            },
-            u_center2D : function() {
-                return (projectedRTC) ? projectedRTC.getXY() : Cartesian2.ZERO;
-            },
-            u_modifiedModelView : function() {
-                return tile.modelView;
-            }
-        };
-
-        return true;
+        throw new DeveloperError('Not supported yet.');
     };
 
     return EsriImageServerTerrainProvider;
