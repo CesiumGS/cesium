@@ -84,13 +84,17 @@
                     }
                 },
                 'materials' : {
-                    'reflection' : {
+                    'd' : {
                         'type' : 'ReflectionMaterial',
+                        'cubeMap' : 'palm_tree_cube_map'
+                    },
+                    'dd' : {
+                        'type' : 'RefractionMaterial',
                         'cubeMap' : 'palm_tree_cube_map'
                     }
                 },
                 'components' : {
-                    'diffuse' : 'reflection.diffuse'
+                    'diffuse' : '(d.diffuse + dd.diffuse)/2.0'
                 }
             });
             polygon.material = new Cesium.CompositeMaterial(scene.getContext(), {

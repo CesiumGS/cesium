@@ -253,24 +253,25 @@ define([
         this._currentSp = undefined;
 
         // Set up default texture and cube map
-        var that = this;
-        var whiteImage = new Image();
-        whiteImage.onload = function() {
-            that._defaultTexture = that.createTexture2D({
-                source : whiteImage
-            });
-            that._defaultCubeMap = that.createCubeMap({
-                source : {
-                    positiveX : whiteImage,
-                    negativeX : whiteImage,
-                    positiveY : whiteImage,
-                    negativeY : whiteImage,
-                    positiveZ : whiteImage,
-                    negativeZ : whiteImage
-                }
-            });
-        };
-        whiteImage.src = '../../Images/White.png';
+        var drawCanvas = document.createElement('canvas');
+        var context = drawCanvas.getContext('2d');
+        var whiteImage = context.createImageData(1,1);
+        for(var i = 0; i < 4; i++) {
+            whiteImage.data[i] = 255;
+        }
+        this._defaultTexture = this.createTexture2D({
+            source : whiteImage
+        });
+        this._defaultCubeMap = this.createCubeMap({
+            source : {
+                positiveX : whiteImage,
+                negativeX : whiteImage,
+                positiveY : whiteImage,
+                negativeY : whiteImage,
+                positiveZ : whiteImage,
+                negativeZ : whiteImage
+            }
+        });
     };
 
     Context.prototype._enableOrDisable = function(glEnum, enable) {

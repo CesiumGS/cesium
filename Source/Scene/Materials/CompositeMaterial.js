@@ -147,7 +147,6 @@ define([
         var materialContainers = this._constructMaterials();
         var combinedMaterial = combineMaterials(materialContainers);
         this._uniforms = combinedMaterial._uniforms;
-        this._finalizeTextures();
 
         // Build the method definition
         var shaderSource = combinedMaterial._getShaderSource();
@@ -187,7 +186,7 @@ define([
 
         // Register composite material to factory if id is provided.
         if (typeof this.compositeMaterialID !== 'undefined') {
-            this._materialFactory._compositeMaterials[this.compositeMaterialID] = this;
+            this._materialFactory._compositeMaterials[this.compositeMaterialID] = t;
         }
     }
 
@@ -204,19 +203,18 @@ define([
 
                 // Register material with textures so it can be updated once the texture loads and
                 // replace the textureID with a texture object.
+                var materialTextureData = [];
                 for (var materialProperty in materialTemplate) {
                     if (materialTemplate.hasOwnProperty(materialProperty)) {
-                        var value = materialTemplate[materialProperty];
-                        if (this.textureTemplates.hasOwnProperty(value) && (typeof value._texture === 'undefined')) {
-                            // Register material so that when the texture loads the material is updated.
-                            var textureID = value;
-                            this.texturesToMaterialsMap[textureID] = this.texturesToMaterialsMap[textureID] || [];
-                            this.texturesToMaterialsMap[textureID].push({'id' : materialID, 'property' : materialProperty});
-
-                            // Give the material a default texture while the real one loads.
-                            var textureType = typeof this.textureTemplates[textureID];
-                            materialTemplate[materialProperty] = (textureType === 'string') ?
-                                this.context.getDefaultTexture() : this.context.getDefaultCubeMap();
+                        var pathAttribution = '__path__';
+                        var texturePath = this.textureTemplates[materialTemplate[materialProperty]] || materialTemplate[materialProperty + pathAttribution];
+                        if (typeof texturePath !== 'undefined') {
+                            materialTextureData.push({'property' : materialProperty, 'path' : texturePath});
+                            materialTemplate[materialProperty + pathAttribution] = texturePath;
+                            if (typeof materialTemplate[materialProperty]._texture === 'undefined') {
+                                materialTemplate[materialProperty] = ((typeof texturePath) === 'string') ?
+                                    this.context.getDefaultTexture() : this.context.getDefaultCubeMap();
+                            }
                         }
                     }
                 }
@@ -225,65 +223,84 @@ define([
                 material._shaderSource = material._shaderSource.replace(new RegExp(originalMethodName, 'g'), newMethodName);
                 materialContainers.push({'id' : materialID, 'material' : material, 'methodName' : newMethodName});
                 this[materialID] = material;
+
+                // Register textures to materials when they load.
+                for (var i = 0; i < materialTextureData.length; i++) {
+                    var data = materialTextureData[i];
+                    this._texturePool.registerTextureToMaterial(material, data.property, data.path, this.context);
+                }
             }
         }
         return materialContainers;
     };
 
-    CompositeMaterial.prototype._finalizeTextures = function() {
-        var that = this;
-        var onloadTexture = function (image, textureID) {
-            return function() {
-                var texture = that.context.createTexture2D({source : image});
-                var materials = that.texturesToMaterialsMap[textureID];
-                for (var i = 0; i < materials.length; i++) {
-                    var material = materials[i];
-                    that[material.id][material.property] = texture;
-                }
-            };
-        };
-        var onloadCubeMap = function (textureID) {
-            return function() {
-                var cubeMapData = that.textureTemplates[textureID];
-                var cubeMap = that.context.createCubeMap({
-                    source : {
-                        positiveX : this.images[cubeMapData.positiveX],
-                        negativeX : this.images[cubeMapData.negativeX],
-                        positiveY : this.images[cubeMapData.positiveY],
-                        negativeY : this.images[cubeMapData.negativeY],
-                        positiveZ : this.images[cubeMapData.positiveZ],
-                        negativeZ : this.images[cubeMapData.negativeZ]
+    CompositeMaterial.prototype._texturePool = {
+        _pathsToMaterials : {},
+        _pathsToTextures : {},
+        _getFullPath : function(texturePath) {
+            var path = texturePath;
+            if (typeof path !== 'string') {
+                path = texturePath.positiveX + texturePath.negativeX +
+                       texturePath.positiveY + texturePath.negativeY +
+                       texturePath.positiveZ + texturePath.negativeZ;
+            }
+            return path;
+        },
+        registerTextureToMaterial : function(material, property, texturePath, context) {
+            var that = this;
+            var path = this._getFullPath(texturePath);
+            var texture = this._pathsToTextures[path];
+            if (typeof texture === 'undefined') {
+                this._pathsToMaterials[path] = this._pathsToMaterials[path] || [];
+                this._pathsToMaterials[path].push({'material' : material, 'property' : property});
+                if (this._pathsToMaterials[path].length === 1) {
+                    if (typeof texturePath === 'string') {
+                        // Load 2D texture
+                        var image = new Image();
+                        image.onload = function() {
+                            texture = context.createTexture2D({source : image});
+                            that._pathsToTextures[path] = texture;
+                            var materialContainers = that._pathsToMaterials[path];
+                            for (var i = 0; i < materialContainers.length; i++) {
+                                var materialContainer = materialContainers[i];
+                                materialContainer.material[materialContainer.property] = texture;
+                            }
+                        };
+                        image.src = path;
                     }
-                });
-                var materials = that.texturesToMaterialsMap[textureID];
-                for (var i = 0; i < materials.length; i++) {
-                    var material = materials[i];
-                    that[material.id][material.property] = cubeMap;
+                    else {
+                        // Load cube map
+                        Chain.run(
+                            Jobs.downloadImage(texturePath.positiveX),
+                            Jobs.downloadImage(texturePath.negativeX),
+                            Jobs.downloadImage(texturePath.positiveY),
+                            Jobs.downloadImage(texturePath.negativeY),
+                            Jobs.downloadImage(texturePath.positiveZ),
+                            Jobs.downloadImage(texturePath.negativeZ)
+                        ).thenRun(function() {
+                            texture = context.createCubeMap({
+                                source : {
+                                    positiveX : this.images[texturePath.positiveX],
+                                    negativeX : this.images[texturePath.negativeX],
+                                    positiveY : this.images[texturePath.positiveY],
+                                    negativeY : this.images[texturePath.negativeY],
+                                    positiveZ : this.images[texturePath.positiveZ],
+                                    negativeZ : this.images[texturePath.negativeZ]
+                                }
+                            });
+                            that._pathsToTextures[path] = texture;
+                            var materialContainers = that._pathsToMaterials[path];
+                            for (var i = 0; i < materialContainers.length; i++) {
+                                var materialContainer = materialContainers[i];
+                                materialContainer.material[materialContainer.property] = texture;
+                            }
+                        });
+                    }
                 }
-            };
-        };
-
-        for (var textureID in this.texturesToMaterialsMap) {
-            if (this.texturesToMaterialsMap.hasOwnProperty(textureID)) {
-                var textureType = typeof this.textureTemplates[textureID];
-                if (textureType === 'string') {
-                    // Texture
-                    var image = new Image();
-                    image.onload = onloadTexture(image, textureID);
-                    image.src = this.textureTemplates[textureID];
-                }
-                else {
-                    // Cube map
-                    var cubeMapData = this.textureTemplates[textureID];
-                    Chain.run(
-                        Jobs.downloadImage(cubeMapData.positiveX),
-                        Jobs.downloadImage(cubeMapData.negativeX),
-                        Jobs.downloadImage(cubeMapData.positiveY),
-                        Jobs.downloadImage(cubeMapData.negativeY),
-                        Jobs.downloadImage(cubeMapData.positiveZ),
-                        Jobs.downloadImage(cubeMapData.negativeZ)
-                    ).thenRun(onloadCubeMap(textureID));
-                }
+            }
+            else if(material[property] !== texture) {
+                // Texture had already been created
+                material[property] = texture;
             }
         }
     };
@@ -321,7 +338,7 @@ define([
                 return (new this._materials[name](template));
             }
             else if (this._compositeMaterials.hasOwnProperty(name) === true) {
-                return this._compositeMaterials[name];
+                return new CompositeMaterial(undefined, this._compositeMaterials[name]);
             }
             else {
                 throw new DeveloperError('Material with type ' + name + ' does not exist.');
