@@ -95,7 +95,7 @@ require({
     ///////////////////////////////////////////////////////////////////////////
     // Example resize handler
 
-    window.onresize = function () {
+    var onResize = function () {
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
 
@@ -115,5 +115,6 @@ require({
 
         scene.getCamera().frustum.aspectRatio = width / height;
     };
-    window.onresize();
+    window.addEventListener('resize', onResize, false);
+    onResize();
 });
