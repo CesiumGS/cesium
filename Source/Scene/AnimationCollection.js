@@ -198,7 +198,7 @@ define([
      * @memberof AnimationCollection
      */
     AnimationCollection.prototype.remove = function(animation) {
-        if (animation) {
+        if (typeof animation !== 'undefined') {
             var count = Tween.getAll().length;
             Tween.remove(animation._tween);
 
@@ -214,6 +214,17 @@ define([
      */
     AnimationCollection.prototype.removeAll = function() {
         Tween.removeAll();
+    };
+
+    /**
+     * DOC_TBA
+     * @memberof Animationcollection
+     */
+    AnimationCollection.prototype.contains = function(animation) {
+        if (typeof animation !== 'undefined') {
+            return Tween.getAll().indexOf(animation) !== -1;
+        }
+        return false;
     };
 
     /**

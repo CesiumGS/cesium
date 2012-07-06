@@ -34,9 +34,7 @@ require({
     primitives.setCentralBody(cb);
 
     scene.getCamera().frustum.near = 1.0;
-
-    scene.getCamera().getControllers().addSpindle();
-    scene.getCamera().getControllers().addFreeLook();
+    scene.getCamera().getControllers().addCentralBody();
 
     var transitioner = new Cesium.SceneTransitioner(scene, ellipsoid);
 

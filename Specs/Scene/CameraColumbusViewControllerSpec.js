@@ -28,8 +28,8 @@ defineSuite([
         controller = controller && !controller.isDestroyed() && controller.destroy();
     });
 
-    it('updateReferenceFrame', function() {
-        controller._updateReferenceFrame();
+    it('correct position', function() {
+        controller._correctPosition();
         expect(camera.position.equalsEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON10)).toEqual(true);
     });
 
