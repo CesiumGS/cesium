@@ -178,7 +178,7 @@ function(DeveloperError,
             if (typeof timeStandard === 'undefined') {
                 //use UTC if not supplied
                 timeStandard = TimeStandard.UTC;
-            } else if (!TimeStandard.isKnownStandard(timeStandard)) {
+            } else if ((timeStandard !== TimeStandard.UTC) && (timeStandard !== TimeStandard.TAI)) {
                 throw new DeveloperError('timeStandard is not a known TimeStandard.');
             }
 

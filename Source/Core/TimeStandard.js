@@ -24,19 +24,7 @@ define(function() {
          * Represents the International Atomic Time (TAI) time standard.
          * TAI is the principal time standard to which the other time standards are related.
          */
-        TAI : 1,
-
-        /**
-         * Determines if the provided value is a valid TimeStandard.
-         *
-         * @param {Object} [timeStandard] The value to be checked.
-         *
-         * @return {Boolean} <code>true</code> if the provided value is a valid <code>TimeStandard</code>.
-         *
-         */
-        isKnownStandard : function(timeStandard) {
-            return (timeStandard === TimeStandard.UTC) || (timeStandard === TimeStandard.TAI);
-        }
+        TAI : 1
     };
 
     return TimeStandard;
