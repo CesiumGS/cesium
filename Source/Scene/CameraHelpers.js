@@ -1,12 +1,10 @@
 /*global define*/
 define([
         '../Core/Math',
-        '../Core/Cartesian2',
-        '../Core/JulianDate'
+        '../Core/Cartesian2'
     ], function(
         CesiumMath,
-        Cartesian2,
-        JulianDate) {
+        Cartesian2) {
     "use strict";
 
     function move(camera, direction, rate) {
@@ -38,14 +36,10 @@ define([
     function maintainInertia(handler, decayCoef, action, object, lastMovementName) {
         var ts = handler.getButtonPressTime();
         var tr = handler.getButtonReleaseTime();
-        var threshold = ts && tr && ts.getSecondsDifference(tr);
-        if (ts && tr && threshold < inertiaMaxClickTimeThreshold) {
-            var now = new JulianDate();
-            var fromNow = tr.getSecondsDifference(now);
-            if (fromNow > inertiaMaxTimeThreshold) {
-                return;
-            }
-
+        var threshold = ts && tr && ((tr.getTime() - ts.getTime()) / 1000.0);
+        var now = new Date();
+        var fromNow = tr && ((now.getTime() - tr.getTime()) / 1000.0);
+        if (ts && tr && threshold < inertiaMaxClickTimeThreshold && fromNow <= inertiaMaxTimeThreshold) {
             var d = decay(fromNow, decayCoef);
 
             if (!object[lastMovementName]) {
@@ -81,6 +75,8 @@ define([
             if (!handler.isButtonDown()) {
                 action.apply(object, [object[lastMovementName]]);
             }
+        } else {
+            object[lastMovementName] = undefined;
         }
     }
 

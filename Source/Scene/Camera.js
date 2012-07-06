@@ -434,7 +434,7 @@ define([
         var y = (2.0 / height) * (height - windowPosition.y) - 1.0;
         y *= (this.frustum.top - this.frustum.bottom) * 0.5;
 
-        var position = this.getPositionWC().clone();
+        var position = this.position.clone();
         position.x += x;
         position.y += y;
 

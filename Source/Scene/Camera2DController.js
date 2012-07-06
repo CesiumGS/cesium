@@ -5,22 +5,26 @@ define([
         '../Core/FAR',
         '../Core/Math',
         '../Core/Quaternion',
-        '../Core/Ellipsoid',
         '../Core/Cartesian2',
+        '../Core/Cartographic3',
         './CameraEventHandler',
         './CameraEventType',
-        './CameraHelpers'
+        './CameraHelpers',
+        './AnimationCollection',
+        '../ThirdParty/Tween'
     ], function(
         DeveloperError,
         destroyObject,
         FAR,
         CesiumMath,
         Quaternion,
-        Ellipsoid,
         Cartesian2,
+        Cartographic3,
         CameraEventHandler,
         CameraEventType,
-        CameraHelpers) {
+        CameraHelpers,
+        AnimationCollection,
+        Tween) {
     "use strict";
 
     var move = CameraHelpers.move;
@@ -36,16 +40,30 @@ define([
      * @param {HTMLCanvasElement} canvas An HTML canvas element used for its dimensions
      * and for listening on user events.
      * @param {Camera} camera The camera to use.
-     * @param {Ellipsoid} [ellipsoid=WGS84 Ellipsoid] DOC_TBA.
+     * @param {DOC_TBA} projection The projection of the map the camera is moving around..
+     *
+     * @exception {DeveloperError} canvas is required.
+     * @exception {DeveloperError} camera is required.
+     * @exception {DeveloperError} projection is required.
      *
      * @internalConstructor
      */
-    var Camera2DController = function(canvas, camera, ellipsoid) {
-        ellipsoid = ellipsoid || Ellipsoid.WGS84;
+    var Camera2DController = function(canvas, camera, projection) {
+        if (typeof canvas === 'undefined') {
+            throw new DeveloperError('canvas is required.');
+        }
+
+        if (typeof camera === 'undefined') {
+            throw new DeveloperError('camera is required.');
+        }
+
+        if (typeof projection === 'undefined') {
+            throw new DeveloperError('projection is required.');
+        }
 
         this._canvas = canvas;
         this._camera = camera;
-        this._ellipsoid = ellipsoid;
+        this._projection = projection;
         this._zoomRate = 100000.0;
         this._moveRate = 100000.0;
 
@@ -67,7 +85,7 @@ define([
          */
         this.inertiaZoom = 0.8;
 
-        this._zoomFactor = 5.0;
+        this._zoomFactor = 1.5;
         this._translateFactor = 1.0;
         this._minimumZoomRate = 20.0;
         this._maximumZoomRate = FAR;
@@ -77,65 +95,58 @@ define([
         this._zoomWheel = new CameraEventHandler(canvas, CameraEventType.WHEEL);
         this._twistHandler = new CameraEventHandler(canvas, CameraEventType.MIDDLE_DRAG);
 
-        this._lastInertiaTranslateMovement = undefined;
         this._lastInertiaZoomMovement = undefined;
+        this._lastInertiaTranslateMovement = undefined;
         this._lastInertiaWheelZoomMovement = undefined;
+
+        this._frustum = this._camera.frustum.clone();
+        this._animationCollection = new AnimationCollection();
+        this._zoomAnimation = undefined;
+        this._translateAnimation = undefined;
+
+        var maxZoomOut = 2.0;
+        this._frustum.right *= maxZoomOut;
+        this._frustum.left *= maxZoomOut;
+        this._frustum.top *= maxZoomOut;
+        this._frustum.bottom *= maxZoomOut;
+
+        this._maxCoord = projection.project(new Cartographic3(Math.PI, CesiumMath.PI_OVER_TWO, 0.0));
+
+        this._maxZoomFactor = 2.5;
+        this._maxTranslateFactor = 1.5;
     };
 
     /**
-     * DOC_TBA
+     * Returns the projection of the map that the camera is moving around.
      *
      * @memberof Camera2DController
      *
-     * @param {Matrix4} transform DOC_TBA
-     * @param {Ellipsoid} ellipsoid DOC_TBA
+     * @returns {DOC_TBA} The projection of the map that the camera is moving around.
      *
-     * @example
-     * // Example 1.
-     * // Change the reference frame to one centered at a point on the ellipsoid's surface.
-     * // Set the 2D controller's ellipsoid to a unit sphere for easy rotation around that point.
-     * var center = ellipsoid.cartographicDegreesToCartesian(new Cartographic2(-75.59777, 40.03883));
-     * var transform = Transforms.eastNorthUpToFixedFrame(center);
-     * scene.getCamera().getControllers().get(0).setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
-     *
-     * // Example 2.
-     * // Reset to the defaults.
-     * scene.getCamera().getControllers().get(0).setReferenceFrame(Matrix4.IDENTITY);
-     *
+     * @see Camera2DController#setProjection
      */
-    Camera2DController.prototype.setReferenceFrame = function (transform, ellipsoid) {
-        this._camera.transform = transform;
-        this.setEllipsoid(ellipsoid);
+    Camera2DController.prototype.getProjection = function() {
+        return this._projection;
     };
 
     /**
-     * Returns the ellipsoid that the camera is moving around.
+     * Sets the projection of the map that the camera is moving around.
      *
      * @memberof Camera2DController
      *
-     * @returns {Ellipsoid} The ellipsoid that the camera is moving around.
+     * @param {DOC_TBA} projection The projection of the map that the camera is moving around.
      *
-     * @see Camera2DController#setEllipsoid
+     * @exception {DeveloperError} projection is required.
+     *
+     * @see Camera2DController#getProjection
      */
-    Camera2DController.prototype.getEllipsoid = function() {
-        return this._ellipsoid;
-    };
+    Camera2DController.prototype.setProjection = function(projection) {
+        if (typeof projection === 'undefined') {
+            throw new DeveloperError('projection is required.');
+        }
 
-    /**
-     * Sets the ellipsoid that the camera is moving around.
-     *
-     * @memberof Camera2DController
-     *
-     * @param {Ellipsoid} [ellipsoid] The ellipsoid that the camera is moving around.
-     *
-     * @see Camera2DController#getEllipsoid
-     */
-    Camera2DController.prototype.setEllipsoid = function(ellipsoid) {
-        ellipsoid = ellipsoid || Ellipsoid.WGS84;
-
-        var radius = ellipsoid.getRadii().getMaximumComponent();
-        this._ellipsoid = ellipsoid;
-        this._rateAdjustment = radius;
+        this._projection = projection;
+        this._maxCoord = projection.project(new Cartographic3(Math.PI, CesiumMath.toRadians(85.05112878)));
     };
 
     /**
@@ -212,6 +223,13 @@ define([
 
         var newRight = frustum.right - moveRate;
         var newLeft = frustum.left + moveRate;
+
+        var maxRight = this._maxCoord.x * this._maxZoomFactor;
+        if (newRight > maxRight) {
+            newRight = maxRight;
+            newLeft = -newRight;
+        }
+
         if (newRight > newLeft) {
             var ratio = frustum.top / frustum.right;
             frustum.right = newRight;
@@ -234,6 +252,68 @@ define([
         this.zoomIn(-rate || -this._zoomRate);
     };
 
+    Camera2DController.prototype._addCorrectZoomAnimation = function() {
+        var camera = this._camera;
+        var frustum = camera.frustum;
+        var top = frustum.top;
+        var bottom = frustum.bottom;
+        var right = frustum.right;
+        var left = frustum.left;
+
+        var startFrustum = this._frustum;
+
+        var update2D = function(value) {
+            camera.frustum.top = CesiumMath.lerp(top, startFrustum.top, value.time);
+            camera.frustum.bottom = CesiumMath.lerp(bottom, startFrustum.bottom, value.time);
+            camera.frustum.right = CesiumMath.lerp(right, startFrustum.right, value.time);
+            camera.frustum.left = CesiumMath.lerp(left, startFrustum.left, value.time);
+        };
+
+        this._zoomAnimation = this._animationCollection.add({
+            easingFunction : Tween.Easing.Exponential.EaseOut,
+            startValue : {
+                time : 0.0
+            },
+            stopValue : {
+                time : 1.0
+            },
+            onUpdate : update2D
+        });
+    };
+
+    Camera2DController.prototype._addCorrectTranslateAnimation = function() {
+        var camera = this._camera;
+        var currentPosition = camera.position;
+        var translatedPosition = currentPosition.clone();
+
+        if (translatedPosition.x > this._maxCoord.x) {
+            translatedPosition.x = this._maxCoord.x;
+        } else if (translatedPosition.x < -this._maxCoord.x) {
+            translatedPosition.x = -this._maxCoord.x;
+        }
+
+        if (translatedPosition.y > this._maxCoord.y) {
+            translatedPosition.y = this._maxCoord.y;
+        } else if (translatedPosition.y < -this._maxCoord.y) {
+            translatedPosition.y = -this._maxCoord.y;
+        }
+
+        var update2D = function(value) {
+            camera.position = currentPosition.lerp(translatedPosition, value.time);
+        };
+
+        this._translateAnimation = this._animationCollection.add({
+            easingFunction : Tween.Easing.Exponential.EaseOut,
+            startValue : {
+                time : 0.0
+            },
+            stopValue : {
+                time : 1.0
+            },
+            onUpdate : update2D
+        });
+    };
+
     /**
      * @private
      */
@@ -244,6 +324,10 @@ define([
         var translating = translate.isMoving() && translate.getMovement();
         var rightZooming = rightZoom.isMoving();
         var wheelZooming = wheelZoom.isMoving();
+
+        if (translate.isButtonDown() || rightZoom.isButtonDown() || wheelZooming) {
+            this._animationCollection.removeAll();
+        }
 
         if (translating) {
             this._translate(translate.getMovement());
@@ -271,6 +355,23 @@ define([
             this._twist(this._twistHandler.getMovement());
         }
 
+        if (!translate.isButtonDown() && !rightZoom.isButtonDown()) {
+            if (this._camera.frustum.right > this._frustum.right &&
+                !this._lastInertiaZoomMovement && !this._animationCollection.contains(this._zoomAnimation)) {
+                this._addCorrectZoomAnimation();
+            }
+
+            var position = this._camera.position;
+            var translateX = position.x < -this._maxCoord.x || position.x > this._maxCoord.x;
+            var translateY = position.y < -this._maxCoord.y || position.y > this._maxCoord.y;
+            if ((translateX || translateY) && !this._lastInertiaTranslateMovement &&
+                    !this._animationCollection.contains(this._translateAnimation)) {
+                this._addCorrectTranslateAnimation();
+            }
+        }
+
+        this._animationCollection.update();
+
         return true;
     };
 
@@ -286,23 +387,47 @@ define([
        var height = this._canvas.clientHeight;
 
        var start = new Cartesian2();
-       start.x = (2.0 / width) * movement.startPosition.x - 1.0;
-       start.x = (start.x * (frustum.right - frustum.left) + frustum.right + frustum.left) * 0.5;
-       start.y = (2.0 / height) * (height - movement.startPosition.y) - 1.0;
-       start.y = (start.y * (frustum.top - frustum.bottom) + frustum.top + frustum.bottom) * 0.5;
+       start.x = (movement.startPosition.x / width) * (frustum.right - frustum.left) + frustum.left;
+       start.y = ((height - movement.startPosition.y) / height) * (frustum.top - frustum.bottom) + frustum.bottom;
 
        var end = new Cartesian2();
-       end.x = (2.0 / width) * movement.endPosition.x - 1.0;
-       end.x = (end.x * (frustum.right - frustum.left) + frustum.right + frustum.left) * 0.5;
-       end.y = (2.0 / height) * (height - movement.endPosition.y) - 1.0;
-       end.y = (end.y * (frustum.top - frustum.bottom) + frustum.top + frustum.bottom) * 0.5;
+       end.x = (movement.endPosition.x / width) * (frustum.right - frustum.left) + frustum.left;
+       end.y = ((height - movement.endPosition.y) / height) * (frustum.top - frustum.bottom) + frustum.bottom;
+
+       var camera = this._camera;
+       var right = camera.right;
+       var up = camera.up;
+       var position;
+       var newPosition;
 
        var distance = start.subtract(end);
        if (distance.x !== 0) {
-           this.moveRight(distance.x);
+           position = camera.position;
+           newPosition = position.add(right.multiplyWithScalar(distance.x));
+
+           var maxX = this._maxCoord.x * this._maxTranslateFactor;
+           if (newPosition.x > maxX) {
+               newPosition.x = maxX;
+           }
+           if (newPosition.x < -maxX) {
+               newPosition.x = -maxX;
+           }
+
+           camera.position = newPosition;
        }
        if (distance.y !== 0) {
-           this.moveUp(distance.y);
+           position = camera.position;
+           newPosition = position.add(up.multiplyWithScalar(distance.y));
+
+           var maxY = this._maxCoord.y * this._maxTranslateFactor;
+           if (newPosition.y > maxY) {
+               newPosition.y = maxY;
+           }
+           if (newPosition.y < -maxY) {
+               newPosition.y = -maxY;
+           }
+
+           camera.position = newPosition;
        }
    };
 
