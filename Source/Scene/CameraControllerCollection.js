@@ -8,7 +8,8 @@ define([
         './CameraFlightController',
         './CameraSpindleController',
         './CameraFreeLookController',
-        './CameraColumbusViewController'
+        './CameraColumbusViewController',
+        './CameraCentralBodyController'
     ], function(
         DeveloperError,
         destroyObject,
@@ -18,7 +19,8 @@ define([
         CameraFlightController,
         CameraSpindleController,
         CameraFreeLookController,
-        CameraColumbusViewController) {
+        CameraColumbusViewController,
+        CameraCentralBodyController) {
     "use strict";
 
     /**
@@ -45,8 +47,8 @@ define([
      * @see CameraControllerCollection#addSpindle
      * @see CameraControllerCollection#addColumbusView
      */
-    CameraControllerCollection.prototype.add2D = function(ellipsoid) {
-        var twoD = new Camera2DController(this._canvas, this._camera, ellipsoid);
+    CameraControllerCollection.prototype.add2D = function(projection) {
+        var twoD = new Camera2DController(this._canvas, this._camera, projection);
         this._controllers.push(twoD);
         return twoD;
     };
@@ -118,6 +120,12 @@ define([
 		var flightController = new CameraFlightController(this._canvas, this._camera, ellipsoid, destination, duration, complete);
 		this._controllers.push(flightController);
 		return flightController;
+    };
+
+    CameraControllerCollection.prototype.addCentralBody = function() {
+        var cb = new CameraCentralBodyController(this._canvas, this._camera);
+        this._controllers.push(cb);
+        return cb;
     };
 
     /**

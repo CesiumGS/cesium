@@ -190,12 +190,12 @@ define([
             this._destroyMorphHandler();
 
             var camera = scene.getCamera();
-            var controllers = camera.getControllers();
-            controllers.removeAll();
-            controllers.add2D(this._ellipsoid);
-
             camera.frustum = this._camera2D.frustum.clone();
             camera.transform = this._camera2D.transform.clone();
+
+            var controllers = camera.getControllers();
+            controllers.removeAll();
+            controllers.add2D(scene.scene2D.projection);
 
             // TODO: Match incoming columbus-view or 3D position
             camera.position = this._camera2D.position.clone();
@@ -255,8 +255,7 @@ define([
             var camera = scene.getCamera();
             var controllers = camera.getControllers();
             controllers.removeAll();
-            controllers.addSpindle();
-            controllers.addFreeLook();
+            controllers.addCentralBody();
 
             camera.frustum = this._camera3D.frustum.clone();
             camera.transform = Matrix4.IDENTITY;

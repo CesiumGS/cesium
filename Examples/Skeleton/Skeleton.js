@@ -34,9 +34,7 @@ require({
     primitives.setCentralBody(cb);
 
     scene.getCamera().frustum.near = 1.0;
-
-    scene.getCamera().getControllers().addSpindle();
-    scene.getCamera().getControllers().addFreeLook();
+    scene.getCamera().getControllers().addCentralBody();
 
     var transitioner = new Cesium.SceneTransitioner(scene, ellipsoid);
 
@@ -97,7 +95,7 @@ require({
     ///////////////////////////////////////////////////////////////////////////
     // Example resize handler
 
-    window.onresize = function () {
+    var onResize = function () {
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
 
@@ -117,5 +115,6 @@ require({
 
         scene.getCamera().frustum.aspectRatio = width / height;
     };
-    window.onresize();
+    window.addEventListener('resize', onResize, false);
+    onResize();
 });
