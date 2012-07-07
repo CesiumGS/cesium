@@ -222,7 +222,7 @@ define([
      *   verticalOrigin : VerticalOrigin.CENTER,
      *   scale : 1.0,
      *   imageIndex : 0,
-     *   color : { red : 1.0, green : 1.0, blue : 1.0, alpha : 1.0 }
+     *   color : new Color(1.0, 1.0, 1.0, 1.0)
      * });
      *
      * // Example 2:  Specify only the billboard's cartographic position.
