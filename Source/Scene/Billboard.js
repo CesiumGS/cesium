@@ -49,9 +49,10 @@ define([
     var Billboard = function(billboardTemplate, collection) {
         var b = billboardTemplate || {};
         var position = b.position ? new Cartesian3(b.position.x, b.position.y, b.position.z) : Cartesian3.ZERO.clone();
+
+        this._show = (typeof b.show === 'undefined') ? true : b.show;
         this._position = position;
         this._actualPosition = position.clone(); // For columbus view and 2D
-        this._show = (typeof b.show === 'undefined') ? true : b.show;
         this._pixelOffset = b.pixelOffset ? new Cartesian2(b.pixelOffset.x, b.pixelOffset.y) : Cartesian2.ZERO.clone();
         this._eyeOffset = b.eyeOffset ? new Cartesian3(b.eyeOffset.x, b.eyeOffset.y, b.eyeOffset.z) : Cartesian3.ZERO.clone();
         this._horizontalOrigin = b.horizontalOrigin || HorizontalOrigin.CENTER;
