@@ -20,7 +20,6 @@ define([
         var p = polylineTemplate || {};
 
         this._positions = [];
-        this._actualPositions = [];
         if (typeof p.positions !== 'undefined') {
             var newPositions = p.positions;
             var length = newPositions.length;
@@ -29,7 +28,6 @@ define([
                 var position = newPositions[i];
                 positions.push(new Cartesian3(position.x, position.y, position.z));
             }
-            this._actualPositions = positions;
         }
         this._show = (typeof p.show === 'undefined') ? true : p.show;
         this._width = (typeof p.width === 'undefined') ? 1.0 : p.width;
@@ -142,7 +140,6 @@ define([
             positions.push(new Cartesian3(position.x, position.y, position.z));
         }
         this._positions = positions;
-        this._actualPositions = positions;
         this._makeDirty(POSITION_INDEX);
     };
 
@@ -313,24 +310,6 @@ define([
     Polyline.prototype.getPickId = function(context) {
         this._pickId = this._pickId || context.createPickId(this._pickIdThis || this);
         return this._pickId;
-    };
-
-    Polyline.prototype._setActualPositions = function(value){
-        var length = value.length;
-        var positions = [];
-        for (var i = 0; i < length; ++i) {
-            var position = value[i];
-            positions.push(new Cartesian3(position.x, position.y, position.z));
-        }
-        this._actualPositions = positions;
-    };
-
-    Polyline.prototype._getActualPositions = function(){
-      return this._actualPositions;
-    };
-
-    Polyline.prototype._resetActualPositions = function(){
-        this._actualPositions = this._positions;
     };
 
     Polyline.prototype._clean = function() {

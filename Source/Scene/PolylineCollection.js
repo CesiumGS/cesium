@@ -49,6 +49,7 @@ define([
     //When it does, we need to recreate the indicesBuffer.
     var POSITION_SIZE_INDEX = Polyline.POSITION_SIZE_INDEX;
     var NUMBER_OF_PROPERTIES = Polyline.NUMBER_OF_PROPERTIES;
+    var SIXTYFOURK = 64 * 1024;
 
     var attributeIndices = {
         position3D : 0,
@@ -106,7 +107,7 @@ define([
         this._polylinesUpdated = false;
         this._polylinesRemoved = false;
         this._createVertexArray = false;
-        this._morphTime = 0.0;
+        this.morphTime = 1.0;
         this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
         this._polylines = [];
         this._polylineBuckets = {};
@@ -141,22 +142,22 @@ define([
 
         var drawUniformsOne = {
             u_morphTime : function() {
-                return that._morphTime;
+                return that.morphTime;
             }
         };
         var drawUniformsTwo = {
             u_morphTime : function() {
-                return that._morphTime;
+                return that.morphTime;
             }
         };
         var drawUniformsThree = {
             u_morphTime : function() {
-                return that._morphTime;
+                return that.morphTime;
             }
         };
         var pickUniforms = {
             u_morphTime : function() {
-                return that._morphTime;
+                return that.morphTime;
             }
         };
 
@@ -437,7 +438,7 @@ define([
                         shaderProgram : this._sp,
                         uniformMap : this._drawUniformsOne,
                         vertexArray : vaOutlineColor.va,
-                        renderState : bucketLocator.bucket.rsOne
+                        renderState : bucketLocator.rsOne
                     });
                     context.draw({
                         primitiveType : PrimitiveType.LINES,
@@ -446,7 +447,7 @@ define([
                         shaderProgram : this._sp,
                         uniformMap : this._drawUniformsTwo,
                         vertexArray : vaColor.va,
-                        renderState : bucketLocator.bucket.rsTwo
+                        renderState : bucketLocator.rsTwo
                     });
                     context.draw({
                         primitiveType : PrimitiveType.LINES,
@@ -455,7 +456,7 @@ define([
                         shaderProgram : this._sp,
                         uniformMap : this._drawUniformsThree,
                         vertexArray : vaOutlineColor.va,
-                        renderState : bucketLocator.bucket.rsThree
+                        renderState : bucketLocator.rsThree
                     });
                 }
             }
@@ -483,7 +484,7 @@ define([
                         shaderProgram : this._sp,
                         uniformMap : this._pickUniforms,
                         vertexArray : vaPickColor.va,
-                        renderState : bucketLocator.bucket.rsPick,
+                        renderState : bucketLocator.rsPick,
                         framebuffer : framebuffer
                     });
                 }
@@ -507,25 +508,30 @@ define([
         this._removePolylines();
         this._updateMode(sceneState);
         var properties = this._propertiesChanged;
-        if (this._createVertexArray || this._computeNewBuffersUsage() || properties[WIDTH_INDEX] || properties[OUTLINE_WIDTH_INDEX]) {
+        if (this._createVertexArray ||
+                this._computeNewBuffersUsage() ||
+                properties[WIDTH_INDEX] ||
+                properties[OUTLINE_WIDTH_INDEX]) {
             this._createVertexArray = false;
             this._createVertexArrays(context);
         } else if (this._polylinesUpdated) {
             // Polylines were modified, but no polylines were added or removed.
-            var createVertex = false;
             var polylinesToUpdate = this._polylinesToUpdate;
-            if(properties[POSITION_INDEX] && this._mode != SceneMode.SCENE3D){
-                var length = polylinesToUpdate.length;
-                for ( var i = 0; i < length; ++i) {
+            var createVertex = false;
+            if(this._mode !== SceneMode.SCENE3D){
+                var updateLength = polylinesToUpdate.length;
+                for(var i = 0; i < updateLength; ++i){
                     var polyline = polylinesToUpdate[i];
-                    var positionLength = polyline._bucket.getLengthOfPositions(this._mode, this._projection);
-                    if(positionLength !== polyline._bucket.lengthOfPositions){
-                        createVertex = true;
-                        break;
+                    if(polyline._getChangedProperties()[POSITION_INDEX]){
+                        var bucket = polyline._bucket;
+                        if(bucket.getLengthOfPositionsInBucket() !== bucket.lengthOfPositions){
+                            createVertex = true;
+                            break;
+                        }
                     }
                 }
             }
-          //if a polyline's size changes, we need to recompute the indicesBuffer
+            //if a polyline's size changes, we need to recompute the indicesBuffer
             if (properties[POSITION_SIZE_INDEX] || createVertex) {
                 this._createVertexArrays(context);
             } else {
@@ -536,69 +542,22 @@ define([
                     var bucket = polyline._bucket;
                     var positionIndex = 0;
                     for ( var x in this._polylineBuckets) {
-                        if (this._polylineBuckets[x] === bucket)
+                        if (this._polylineBuckets[x] === bucket){
+                            if (properties[POSITION_INDEX]) {
+                                bucket.writePositionsUpdate(positionIndex, polyline, this._positionBuffer);
+                            }
+                            if (properties[COLOR_INDEX]) {
+                                bucket.writeColorUpdate(positionIndex, polyline, this._colorBuffer);
+                            }
+                            if (properties[OUTLINE_COLOR_INDEX]) {
+                                bucket.writeColorUpdate(positionIndex, polyline, this._outlineColorBuffer);
+                            }
+                            if (properties[SHOW_INDEX]) {
+                                bucket.writeShowUpdate(positionIndex, polyline, this._showBuffer);
+                            }
                             break;
-                        positionIndex += this._polylineBuckets[x].getLengthOfPositions(this._mode, this._projection);
-                    }
-                    var index = 0;
-                    var positions = polyline._getActualPositions();
-                    var positionsLength = positions.length;
-                    if (properties[POSITION_INDEX]) {
-                        var positionsArray = new Float32Array(positionsLength * 3);
-                        for ( var j = 0; j < positionsLength; ++j) {
-                            var position = positions[j];
-                            positionsArray[index] = position.x;
-                            positionsArray[index + 1] = position.y;
-                            positionsArray[index + 2] = position.z;
-                            index += 3;
                         }
-                        var vb = this._positionBuffer;
-                        vb.copyFromArrayView(positionsArray, 12 * positionIndex);
-                    }
-                    index = 0;
-                    if (properties[COLOR_INDEX]) {
-                        var color = polyline.getColor();
-                        var red = Color.floatToByte(color.red);
-                        var green = Color.floatToByte(color.green);
-                        var blue = Color.floatToByte(color.blue);
-                        var alpha = Color.floatToByte(color.alpha);
-                        var colorsArray = new Uint8Array(positionsLength * 4);
-                        for ( var j = 0; j < positionsLength; ++j) {
-                            colorsArray[index] = red;
-                            colorsArray[index + 1] = green;
-                            colorsArray[index + 2] = blue;
-                            colorsArray[index + 3] = alpha;
-                            index += 4;
-                        }
-                        var vb = this._colorBuffer;
-                        vb.copyFromArrayView(colorsArray, 4 * positionIndex);
-                    }
-                    index = 0;
-                    if (properties[OUTLINE_COLOR_INDEX]) {
-                        var color = polyline.getOutlineColor();
-                        var red = Color.floatToByte(color.red);
-                        var green = Color.floatToByte(color.green);
-                        var blue = Color.floatToByte(color.blue);
-                        var alpha = Color.floatToByte(color.alpha);
-                        var colorsArray = new Uint8Array(positionsLength * 4);
-                        for ( var j = 0; j < positionsLength; ++j) {
-                            colorsArray[index] = red;
-                            colorsArray[index + 1] = green;
-                            colorsArray[index + 2] = blue;
-                            colorsArray[index + 3] = alpha;
-                            index += 4;
-                        }
-                        var vb = this._outlineColorBuffer;
-                        vb.copyFromArrayView(colorsArray, 4 * positionIndex);
-                    }
-                    if (properties[SHOW_INDEX]) {
-                        var show = polyline.getShow();
-                        var showArray = new Uint8Array(positionsLength);
-                        for ( var j = 0; j < positionsLength; ++j) {
-                            showArray[j] = show;
-                        }
-                        var vb = this._showBuffer;
-                        vb.copyFromArrayView(showArray, positionIndex);
+                        positionIndex += this._polylineBuckets[x].lengthOfPositions;
                     }
                     polyline._clean();
                 }
@@ -617,13 +576,13 @@ define([
      * @memberof PolylineCollection
      */
     PolylineCollection.prototype.updateForPick = function(context) {
-        var useDepthTest = (this._morphTime !== 0.0);
+        var useDepthTest = (this.morphTime !== 0.0);
         var polylineBuckets = this._polylineBuckets;
         for ( var x in polylineBuckets) {
             var obj = polylineBuckets[x];
             var rs = obj.rsPick || context.createRenderState();
             rs.depthTest.enabled = useDepthTest;
-            rs.lineWidth = obj.width;
+            rs.lineWidth = obj.width + obj.outlineWidth;
             rs.depthMask = !useDepthTest;
             obj.rsPick = rs;
         }
@@ -671,17 +630,6 @@ define([
         return destroyObject(this);
     };
 
-    PolylineCollection.prototype._addToMap = function(p) {
-        var outlineWidth = p.getOutlineWidth();
-        var width = p.getWidth();
-        var hash = 'OL' + outlineWidth + 'W' + width;
-        var value = this._polylineBuckets[hash];
-        if (typeof value === 'undefined') {
-            value = this._polylineBuckets[hash] = new PolylineBucket(outlineWidth, width);
-        }
-        value.addPolyline(p);
-    };
-
     PolylineCollection.prototype._computeNewBuffersUsage = function() {
         var buffersUsage = this._buffersUsage;
         var usageChanged = false;
@@ -712,16 +660,13 @@ define([
         var vertexBufferOffset = [0];
         totalIndices.push(indices);
         var offset = 0;
-        var sixtyFourK = 64 * 1024;
-        var useDepthTest = (this._morphTime !== 0.0);
+        var useDepthTest = (this.morphTime !== 0.0);
         var vertexArrayBuckets = [[]];
-        var vaCount = 0;
-        var indicesCount = 0;
         var totalLength = 0;
         for ( var x in this._polylineBuckets) {
             var bucket = this._polylineBuckets[x];
             bucket.updateRenderState(context, useDepthTest);
-            var lengthOfPositions = bucket.getLengthOfPositions(this._mode, this._projection);
+            var lengthOfPositions = bucket.getLengthOfPositionsInBucket();
             bucket.lengthOfPositions = lengthOfPositions;
             totalLength += lengthOfPositions;
         }
@@ -731,78 +676,31 @@ define([
             var colorArray = new Uint8Array(totalLength * 4);
             var pickColorArray = new Uint8Array(totalLength * 4);
             var showArray = new Uint8Array(totalLength);
+            var position3DArray = undefined;
+
             var positionIndex = 0;
             var colorIndex = 0;
             var showIndex = 0;
             for ( var x in this._polylineBuckets) {
                 var bucket = this._polylineBuckets[x];
-                var polylines = bucket.getPolylines(this._mode, this._projection, this._modelMatrix);
-                var count = 0;
-                var bucketLocator = new VertexArrayBucketLocator(count, offset, bucket);
-                vertexArrayBuckets[vaCount].push(bucketLocator);
-                var length = polylines.length;
-                for ( var i = 0; i < length; ++i) {
-                    var polyline = polylines[i];
-                    var color = polyline.getColor();
-                    var show = polyline.getShow();
-                    var positions = polyline._getActualPositions();
-                    var outlineColor = polyline.getOutlineColor();
-                    var pickColor = polyline.getPickId(context).unnormalizedRgb;
-                    var positionsLength = positions.length;
-                    for ( var j = 0; j < positionsLength; ++j) {
-                        var position = positions[j];
-                        positionArray[positionIndex] = position.x;
-                        positionArray[positionIndex + 1] = position.y;
-                        positionArray[positionIndex + 2] = position.z;
-                        outlineColorArray[colorIndex] = Color.floatToByte(outlineColor.red);
-                        outlineColorArray[colorIndex + 1] = Color.floatToByte(outlineColor.green);
-                        outlineColorArray[colorIndex + 2] = Color.floatToByte(outlineColor.blue);
-                        outlineColorArray[colorIndex + 3] = Color.floatToByte(outlineColor.alpha);
-                        colorArray[colorIndex] = Color.floatToByte(color.red);
-                        colorArray[colorIndex + 1] = Color.floatToByte(color.green);
-                        colorArray[colorIndex + 2] = Color.floatToByte(color.blue);
-                        colorArray[colorIndex + 3] = Color.floatToByte(color.alpha);
-                        pickColorArray[colorIndex] = pickColor.red;
-                        pickColorArray[colorIndex + 1] = pickColor.green;
-                        pickColorArray[colorIndex + 2] = pickColor.blue;
-                        pickColorArray[colorIndex + 3] = 255;
-                        showArray[showIndex++] = show;
-                        positionIndex += 3;
-                        colorIndex += 4;
-                        if (j !== positionsLength - 1) {
-                            if (indicesCount === sixtyFourK - 1) {
-                                vertexBufferOffset.push(1);
-                                indicesCount = 0;
-                                indices = [];
-                                totalIndices.push(indices);
-                                vaCount++;
-                                bucketLocator.count = count;
-                                count = 0;
-                                offset = 0;
-                                bucketLocator = new VertexArrayBucketLocator(0, 0, bucket);
-                                vertexArrayBuckets[vaCount] = [bucketLocator];
-                            }
-                            count += 2;
-                            indices.push(indicesCount++);
-                            indices.push(indicesCount);
-                        }
+                bucket.write(positionArray, colorArray, outlineColorArray, pickColorArray, showArray, positionIndex, showIndex, colorIndex, context);
+                if(this._mode === SceneMode.MORPHING){
+                    if(typeof position3DArray === 'undefined'){
+                        position3DArray = new Float32Array(totalLength * 3);
                     }
-                    indicesCount++;
-                    polyline._clean();
-                    offset += count;
+                    bucket.writeForMorph(position3DArray, positionIndex);
                 }
-                if (indicesCount >= sixtyFourK - 1) {
-                    offset = 0;
-                    vertexBufferOffset.push(0);
-                    indicesCount = 0;
-                    indices = [];
-                    vaCount++;
-                    vertexArrayBuckets[vaCount] = [];
-                    totalIndices.push(indices);
-                }
-                bucketLocator.count = count;
+                var bucketLength = bucket.lengthOfPositions;
+                positionIndex +=  bucketLength * 3;
+                showIndex += bucketLength;
+                colorIndex += bucketLength * 4;
+                offset += bucket.updateIndices(totalIndices, vertexBufferOffset, vertexArrayBuckets, offset);
             }
             this._positionBuffer = context.createVertexBuffer(positionArray, this._buffersUsage[POSITION_INDEX]);
+            var position3DBuffer = undefined;
+            if(typeof position3DArray !== 'undefined'){
+                position3DBuffer = context.createVertexBuffer(position3DArray, this._buffersUsage[POSITION_INDEX]);
+            }
             this._outlineColorBuffer = context.createVertexBuffer(outlineColorArray, this._buffersUsage[OUTLINE_COLOR_INDEX]);
             this._colorBuffer = context.createVertexBuffer(colorArray, this._buffersUsage[COLOR_INDEX]);
             this._pickColorBuffer = context.createVertexBuffer(pickColorArray, BufferUsage.STATIC_DRAW);
@@ -818,9 +716,9 @@ define([
                     var indexBuffer = context.createIndexBuffer(indicesArray, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
                     indexBuffer.setVertexArrayDestroyable(false);
                     vbo += vertexBufferOffset[k];
-                    var vertexPositionBufferOffset = k * (positionSizeInBytes * sixtyFourK) - vbo * positionSizeInBytes;//componentsPerAttribute(3) * componentDatatype(4)
-                    var vertexColorBufferOffset = k * (colorSizeInBytes * sixtyFourK) - vbo * colorSizeInBytes;
-                    var vertexShowBufferOffset = k * sixtyFourK - vbo;
+                    var vertexPositionBufferOffset = k * (positionSizeInBytes * SIXTYFOURK) - vbo * positionSizeInBytes;//componentsPerAttribute(3) * componentDatatype(4)
+                    var vertexColorBufferOffset = k * (colorSizeInBytes * SIXTYFOURK) - vbo * colorSizeInBytes;
+                    var vertexShowBufferOffset = k * SIXTYFOURK - vbo;
                     var attributes = [{
                         index : attributeIndices.position3D,
                         componentsPerAttribute : 3,
@@ -903,12 +801,19 @@ define([
                         attributesOutlineColor[1].value = [0.0, 0.0];
                         attributesPickColor[0].vertexBuffer = this._positionBuffer;
                         attributesPickColor[1].value = [0.0, 0.0];
-                    } else {
+                    } else if(this._mode === SceneMode.SCENE2D || this._mode === SceneMode.COLUMBUS_VIEW){
                         attributes[0].value = [0.0, 0.0, 0.0];
                         attributes[1].vertexBuffer = this._positionBuffer;
                         attributesOutlineColor[0].value = [0.0, 0.0, 0.0];
                         attributesOutlineColor[1].vertexBuffer = this._positionBuffer;
                         attributesPickColor[0].value = [0.0, 0.0, 0.0];
+                        attributesPickColor[1].vertexBuffer = this._positionBuffer;
+                    } else{
+                        attributes[0].vertexBuffer = position3DBuffer;
+                        attributes[1].vertexBuffer = this._positionBuffer;
+                        attributesOutlineColor[0].vertexBuffer = position3DBuffer;
+                        attributesOutlineColor[1].vertexBuffer = this._positionBuffer;
+                        attributesPickColor[0].vertexBuffer = position3DBuffer;
                         attributesPickColor[1].vertexBuffer = this._positionBuffer;
                     }
                     var va = context.createVertexArray(attributes, indexBuffer);
@@ -937,16 +842,25 @@ define([
         var polylines = this._polylines;
         var length = polylines.length;
         for(var i = 0; i < length; ++i){
-            this._addToMap(polylines[i]);
+            var p = polylines[i];
+            var outlineWidth = p.getOutlineWidth();
+            var width = p.getWidth();
+            var hash = 'OL' + outlineWidth + 'W' + width;
+            var value = this._polylineBuckets[hash];
+            if (typeof value === 'undefined') {
+                value = this._polylineBuckets[hash] = new PolylineBucket(outlineWidth, width, this._mode, this._projection, this._modelMatrix);
+            }
+            value.addPolyline(p);
         }
     };
 
     PolylineCollection.prototype._updateMode = function(sceneState) {
         var mode = sceneState.mode;
         var projection = sceneState.scene2D.projection;
-
+        if (this._mode !== mode && typeof mode.morphTime !== 'undefined') {
+            this.morphTime = mode.morphTime;
+        }
         if (this._mode !== mode || (this._projection !== projection) || (!this._modelMatrix.equals(this.modelMatrix))) {
-            this._syncMorphTime(mode);
             this._mode = mode;
             this._projection = projection;
             this._modelMatrix = this.modelMatrix.clone();
@@ -980,24 +894,6 @@ define([
 
         case SceneMode.MORPHING:
             return Matrix4.IDENTITY;
-        }
-    };
-
-    PolylineCollection.prototype._syncMorphTime = function(mode) {
-        switch (mode) {
-        case SceneMode.SCENE3D:
-            this._morphTime = 1.0;
-            break;
-
-        case SceneMode.SCENE2D:
-        case SceneMode.COLUMBUS_VIEW:
-            this._morphTime = 0.0;
-            break;
-        case SceneMode.MORPHING:
-            if (typeof mode.morphTime !== 'undefined') {
-                this._morphTime = mode.morphTime;
-            }
-            break;
         }
     };
 
@@ -1054,13 +950,16 @@ define([
     function VertexArrayBucketLocator(count, offset, bucket) {
         this.count = count;
         this.offset = offset;
-        this.bucket = bucket;
+        this.rsOne = bucket.rsOne;
+        this.rsTwo = bucket.rsTwo;
+        this.rsThree = bucket.rsThree;
+        this.rsPick = bucket.rsPick;
     }
 
     /**
      * @private
      */
-    var PolylineBucket = function(outlineWidth, width) {
+    var PolylineBucket = function(outlineWidth, width, mode, projection, modelMatrix) {
         this.width = width;
         this.outlineWidth = outlineWidth;
         this.polylines = [];
@@ -1069,6 +968,10 @@ define([
         this.rsTwo = undefined;
         this.rsThree = undefined;
         this.rsPick = undefined;
+        this.mode = mode;
+        this.projection = projection;
+        this.ellipsoid = projection.getEllipsoid();
+        this.modelMatrix = modelMatrix;
     };
 
     /**
@@ -1113,7 +1016,7 @@ define([
         });
         rsOne.depthMask = !useDepthTest;
         rsOne.depthTest.enabled = useDepthTest;
-        rsOne.lineWidth = this.outlineWidth;
+        rsOne.lineWidth = this.width + this.outlineWidth;
         this.rsOne = rsOne;
         var rsTwo = this.rsTwo || context.createRenderState({
             lineWidth : 1,
@@ -1162,73 +1065,302 @@ define([
                 }
             }
         });
-        rsThree.lineWidth = this.outlineWidth;
+        rsThree.lineWidth = this.width + this.outlineWidth;
         rsThree.depthTest.enabled = useDepthTest;
         this.rsThree = rsThree;
     };
 
-    PolylineBucket.prototype.getLengthOfPositions = function(mode, projection){
+    /**
+     * @private
+     */
+    PolylineBucket.prototype.getLengthOfPositionsInBucket = function(){
         var totalLength = 0;
         var polylines = this.polylines;
-        if(mode === SceneMode.SCENE3D){
-            var length = this.polylines.length;
-            for(var i = 0; i < length; ++i){
-               totalLength += polylines[i].getPositions().length;
-            }
+        var length = polylines.length;
+        for(var i = 0; i < length; ++i){
+            totalLength += this._getPolylinePositionsLength(polylines[i]);
         }
-        else{
-            var length = polylines.length;
-            for(var j = 0; j < length; ++j){
-                var polyline = polylines[j];
-                var positions = polyline.getPositions();
-                var segments = PolylinePipeline.wrapLongitude(projection.getEllipsoid(), positions);
-                if(segments.length === 1){
-                    totalLength += positions.length;
-                }else{
-                    var numberOfSegments = segments.length;
-                    for ( var i = 0; i < numberOfSegments; ++i) {
-                        var startN = ((i === 0) || (segmentLength === 2)) ? 0 : 1;
-                        totalLength += segmentLength - startN;
-                    }
-                }
-            }
-        }
-        this.totalLength = totalLength;
         return totalLength;
     };
 
     /**
      * @private
      */
-    PolylineBucket.prototype.getPolylines = function(mode, projection, modelMatrix) {
+    PolylineBucket.prototype._getPolylinePositionsLength = function(polyline){
+        if(this.mode == SceneMode.SCENE3D){
+            return polyline.getPositions().length;
+        }
+        var ellipsoid = this.ellipsoid;
+        var positions = polyline.getPositions();
+        var segments = PolylinePipeline.wrapLongitude(ellipsoid, positions);
+        polyline._segments = segments;
+        var numberOfSegments = segments.length;
+        var length = 0;
+        for ( var i = 0; i < numberOfSegments; ++i) {
+            var segment = segments[i];
+            var segmentLength = segment.length;
+            var startN = ((i === 0) || (segmentLength === 2)) ? 0 : 1;
+            length += segmentLength - startN;
+        }
+        return length;
+    };
+
+    /**
+     * @private
+     */
+    PolylineBucket.prototype.write = function(positionArray, colorArray, outlineColorArray, pickColorArray, showArray, positionIndex, showIndex, colorIndex, context){
         var polylines = this.polylines;
         var length = polylines.length;
-        if (mode === SceneMode.SCENE3D) {
-            for(var i = 0; i < length; ++i){
-                polylines[i]._resetActualPositions();
+        for ( var i = 0; i < length; ++i) {
+            var polyline = polylines[i];
+            var color = polyline.getColor();
+            var show = polyline.getShow();
+            var outlineColor = polyline.getOutlineColor();
+            var pickColor = polyline.getPickId(context).unnormalizedRgb;
+            var positions = this._getPositions(polyline);
+            var positionsLength = positions.length;
+            for ( var j = 0; j < positionsLength; ++j) {
+                var position = positions[j];
+                positionArray[positionIndex] = position.x;
+                positionArray[positionIndex + 1] = position.y;
+                positionArray[positionIndex + 2] = position.z;
+                outlineColorArray[colorIndex] = Color.floatToByte(outlineColor.red);
+                outlineColorArray[colorIndex + 1] = Color.floatToByte(outlineColor.green);
+                outlineColorArray[colorIndex + 2] = Color.floatToByte(outlineColor.blue);
+                outlineColorArray[colorIndex + 3] = Color.floatToByte(outlineColor.alpha);
+                colorArray[colorIndex] = Color.floatToByte(color.red);
+                colorArray[colorIndex + 1] = Color.floatToByte(color.green);
+                colorArray[colorIndex + 2] = Color.floatToByte(color.blue);
+                colorArray[colorIndex + 3] = Color.floatToByte(color.alpha);
+                pickColorArray[colorIndex] = pickColor.red;
+                pickColorArray[colorIndex + 1] = pickColor.green;
+                pickColorArray[colorIndex + 2] = pickColor.blue;
+                pickColorArray[colorIndex + 3] = 255;
+                showArray[showIndex++] = show;
+                positionIndex += 3;
+                colorIndex += 4;
             }
         }
-        else{
-            var ellipsoid = projection.getEllipsoid();
-            for ( var j = 0; j < length; ++j) {
-                var polyline = polylines[j];
-                var segments = PolylinePipeline.wrapLongitude(projection.getEllipsoid(), polyline.getPositions());
-                var numberOfSegments = segments.length;
-                var positions = [];
-                for ( var i = 0; i < numberOfSegments; ++i) {
-                    var segment = segments[i];
-                    var segmentLength = segment.length;
-                    var startN = ((i === 0) || (segmentLength === 2)) ? 0 : 1;
-                    for ( var n = startN; n < segmentLength; ++n) {
-                        var position = segment[n].cartesian;
-                        var p = modelMatrix.multiplyWithVector(new Cartesian4(position.x, position.y, position.z, 1.0));
-                        positions.push(projection.project(ellipsoid.toCartographic3(p.getXYZ())));
+    };
+
+    /**
+     * @private
+     */
+    PolylineBucket.prototype.writeForMorph = function(positionArray, positionIndex){
+        var polylines = this.polylines;
+        var length = polylines.length;
+        for ( var i = 0; i < length; ++i) {
+            var polyline = polylines[i];
+            var positions = polyline.getPositions();
+            var segments = PolylinePipeline.wrapLongitude(this.ellipsoid, positions);
+            var numberOfSegments = segments.length;
+            for ( var j = 0; j < numberOfSegments; ++j) {
+                var segment = segments[j];
+                var segmentLength = segment.length;
+                var startN = ((j === 0) || (segmentLength === 2)) ? 0 : 1;
+                for ( var n = startN; n < segmentLength; ++n) {
+                    positionArray[positionIndex] = positions[segment[n].index].x;
+                    positionArray[positionIndex + 1] = positions[segment[n].index].y;
+                    positionArray[positionIndex + 2] = positions[segment[n].index].z;
+                    positionIndex += 3;
+                }
+            }
+        }
+    };
+
+    /**
+     * @private
+     */
+    PolylineBucket.prototype.updateIndices = function(totalIndices, vertexBufferOffset, vertexArrayBuckets, offset){
+        var vaCount = vertexArrayBuckets.length - 1;
+        var bucketLocator = new VertexArrayBucketLocator(0, offset, this);
+        vertexArrayBuckets[vaCount].push(bucketLocator);
+        var count = 0;
+        var indices = totalIndices[totalIndices.length - 1];
+        var indicesCount = 0;
+        if(indices.length > 0){
+            indicesCount = indices[indices.length - 1] + 1;
+        }
+        var polylines = this.polylines;
+        var length = polylines.length;
+        if(this.mode === SceneMode.SCENE3D){
+            for ( var i = 0; i < length; ++i) {
+                var polyline = polylines[i];
+                var positions = polyline.getPositions();
+                var positionsLength = positions.length;
+                for ( var j = 0; j < positionsLength; ++j) {
+                    if (j !== positionsLength - 1) {
+                        if (indicesCount === SIXTYFOURK - 1) {
+                            vertexBufferOffset.push(1);
+                            indices = [];
+                            totalIndices.push(indices);
+                            indicesCount = 0;
+                            vaCount++;
+                            bucketLocator.count = count;
+                            count = 0;
+                            offset = 0;
+                            bucketLocator = new VertexArrayBucketLocator(0, 0, this);
+                            vertexArrayBuckets[vaCount] = [bucketLocator];
+                        }
+                        count += 2;
+                        indices.push(indicesCount++);
+                        indices.push(indicesCount);
                     }
                 }
-                polyline._setActualPositions(positions);
+                indicesCount++;
+                polyline._clean();
+                offset += count;
+            }
+        }else{
+            for ( var i = 0; i < length; ++i) {
+                var polyline = polylines[i];
+                var segments = polyline._segments;
+                var numberOfSegments = segments.length;
+                for ( var k = 0; k < numberOfSegments; ++k) {
+                    var segment = segments[k];
+                    var segmentLength = segment.length;
+                    var startN = ((k === 0) || (segmentLength === 2)) ? 0 : 1;
+                    for ( var n = startN; n < segmentLength; ++n) {
+                        if (n !== segmentLength - 1) {
+                            if (indicesCount === SIXTYFOURK - 1) {
+                                vertexBufferOffset.push(1);
+                                indices = [];
+                                totalIndices.push(indices);
+                                indicesCount = 0;
+                                vaCount++;
+                                bucketLocator.count = count;
+                                count = 0;
+                                offset = 0;
+                                bucketLocator = new VertexArrayBucketLocator(0, 0, this);
+                                vertexArrayBuckets[vaCount] = [bucketLocator];
+                            }
+                            count += 2;
+                            indices.push(indicesCount++);
+                            indices.push(indicesCount);
+                        }
+                    }
+                    if(k !== numberOfSegments - 1){
+                        indicesCount++;
+                    }
+                }
+                indicesCount++;
+                polyline._clean();
+                offset += count;
             }
         }
-        return polylines;
+        if (indicesCount >= SIXTYFOURK - 1) {
+            offset = 0;
+            vertexBufferOffset.push(0);
+            indicesCount = 0;
+            indices = [];
+            vaCount++;
+            vertexArrayBuckets[vaCount] = [];
+            totalIndices.push(indices);
+        }
+        bucketLocator.count = count;
+        return offset;
+    };
+
+    /**
+     * @private
+     */
+    PolylineBucket.prototype._getPolylineStartIndex = function(polyline){
+        var polylines = this.polylines;
+        var positionIndex = 0;
+        var length = polylines.length;
+        for(var i = 0; i < length; ++i){
+            var p = polylines[i];
+            if(p === polyline){
+                break;
+            }
+            positionIndex += this._getPolylinePositionsLength(p);
+        }
+        return positionIndex;
+    };
+
+    /**
+     * @private
+     */
+    PolylineBucket.prototype._getPositions = function(polyline){
+        if(this.mode == SceneMode.SCENE3D){
+            return polyline.getPositions();
+        }
+        var ellipsoid = this.ellipsoid;
+        var projection = this.projection;
+        var newPositions = [];
+        var modelMatrix = this.modelMatrix;
+        var segments = polyline._segments;
+        var numberOfSegments = segments.length;
+
+        for ( var i = 0; i < numberOfSegments; ++i) {
+            var segment = segments[i];
+            var segmentLength = segment.length;
+            var startN = ((i === 0) || (segmentLength === 2)) ? 0 : 1;
+            for ( var n = startN; n < segmentLength; ++n) {
+                var position = segment[n].cartesian;
+                var p = modelMatrix.multiplyWithVector(new Cartesian4(position.x, position.y, position.z, 1.0));
+                newPositions.push(projection.project(ellipsoid.toCartographic3(p.getXYZ())));
+            }
+        }
+        return newPositions;
+    };
+
+    /**
+     * @private
+     */
+    PolylineBucket.prototype.writePositionsUpdate = function(positionIndex, polyline, buffer){
+        var positionsLength = this._getPolylinePositionsLength(polyline);
+        positionIndex += this._getPolylineStartIndex(polyline);
+        var positionsArray = new Float32Array(positionsLength * 3);
+        var index = 0;
+        var positions = this._getPositions(polyline);
+        for(var i = 0; i < positionsLength; ++i){
+            var position = positions[i];
+            positionsArray[index] = position.x;
+            positionsArray[index + 1] = position.y;
+            positionsArray[index + 2] = position.z;
+            index += 3;
+        }
+
+        buffer.copyFromArrayView(positionsArray, 12 * positionIndex);
+    };
+
+    /**
+     * @private
+     */
+    PolylineBucket.prototype.writeColorUpdate = function(positionIndex, polyline, buffer){
+        var positionsLength = this._getPolylinePositionsLength(polyline);
+        positionIndex += this._getPolylineStartIndex(polyline);
+
+        var index = 0;
+        var color = polyline.getColor();
+        var red = Color.floatToByte(color.red);
+        var green = Color.floatToByte(color.green);
+        var blue = Color.floatToByte(color.blue);
+        var alpha = Color.floatToByte(color.alpha);
+        var colorsArray = new Uint8Array(positionsLength * 4);
+        for ( var j = 0; j < positionsLength; ++j) {
+            colorsArray[index] = red;
+            colorsArray[index + 1] = green;
+            colorsArray[index + 2] = blue;
+            colorsArray[index + 3] = alpha;
+            index += 4;
+        }
+        buffer.copyFromArrayView(colorsArray, 4 * positionIndex);
+    };
+
+    /**
+     * @private
+     */
+    PolylineBucket.prototype.writeShowUpdate = function(positionIndex, polyline, buffer){
+        var positionsLength = this._getPolylinePositionsLength(polyline);
+        positionIndex += this._getPolylineStartIndex(polyline);
+        var show = polyline.getShow();
+        var showArray = new Uint8Array(positionsLength);
+        for ( var j = 0; j < positionsLength; ++j) {
+            showArray[j] = show;
+        }
+        buffer.copyFromArrayView(showArray, positionIndex);
     };
 
     return PolylineCollection;
