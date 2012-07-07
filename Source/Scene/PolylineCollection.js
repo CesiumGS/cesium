@@ -536,28 +536,31 @@ define([
                 this._createVertexArrays(context);
             } else {
                 var length = polylinesToUpdate.length;
+                var polylineBuckets = this._polylineBuckets;
                 for ( var i = 0; i < length; ++i) {
                     var polyline = polylinesToUpdate[i];
                     properties = polyline._getChangedProperties();
                     var bucket = polyline._bucket;
                     var positionIndex = 0;
-                    for ( var x in this._polylineBuckets) {
-                        if (this._polylineBuckets[x] === bucket){
-                            if (properties[POSITION_INDEX]) {
-                                bucket.writePositionsUpdate(positionIndex, polyline, this._positionBuffer);
+                    for ( var x in polylineBuckets) {
+                        if(polylineBuckets.hasOwnProperty(x)){
+                            if (polylineBuckets[x] === bucket){
+                                if (properties[POSITION_INDEX]) {
+                                    bucket.writePositionsUpdate(positionIndex, polyline, this._positionBuffer);
+                                }
+                                if (properties[COLOR_INDEX]) {
+                                    bucket.writeColorUpdate(positionIndex, polyline, this._colorBuffer);
+                                }
+                                if (properties[OUTLINE_COLOR_INDEX]) {
+                                    bucket.writeColorUpdate(positionIndex, polyline, this._outlineColorBuffer);
+                                }
+                                if (properties[SHOW_INDEX]) {
+                                    bucket.writeShowUpdate(positionIndex, polyline, this._showBuffer);
+                                }
+                                break;
                             }
-                            if (properties[COLOR_INDEX]) {
-                                bucket.writeColorUpdate(positionIndex, polyline, this._colorBuffer);
-                            }
-                            if (properties[OUTLINE_COLOR_INDEX]) {
-                                bucket.writeColorUpdate(positionIndex, polyline, this._outlineColorBuffer);
-                            }
-                            if (properties[SHOW_INDEX]) {
-                                bucket.writeShowUpdate(positionIndex, polyline, this._showBuffer);
-                            }
-                            break;
+                            positionIndex += polylineBuckets[x].lengthOfPositions;
                         }
-                        positionIndex += this._polylineBuckets[x].lengthOfPositions;
                     }
                     polyline._clean();
                 }
@@ -579,12 +582,14 @@ define([
         var useDepthTest = (this.morphTime !== 0.0);
         var polylineBuckets = this._polylineBuckets;
         for ( var x in polylineBuckets) {
-            var obj = polylineBuckets[x];
-            var rs = obj.rsPick || context.createRenderState();
-            rs.depthTest.enabled = useDepthTest;
-            rs.lineWidth = obj.width + obj.outlineWidth;
-            rs.depthMask = !useDepthTest;
-            obj.rsPick = rs;
+            if(polylineBuckets.hasOwnProperty(x)){
+                var obj = polylineBuckets[x];
+                var rs = obj.rsPick || context.createRenderState();
+                rs.depthTest.enabled = useDepthTest;
+                rs.lineWidth = obj.width + obj.outlineWidth;
+                rs.depthMask = !useDepthTest;
+                obj.rsPick = rs;
+            }
         }
     };
 
@@ -663,12 +668,15 @@ define([
         var useDepthTest = (this.morphTime !== 0.0);
         var vertexArrayBuckets = [[]];
         var totalLength = 0;
-        for ( var x in this._polylineBuckets) {
-            var bucket = this._polylineBuckets[x];
-            bucket.updateRenderState(context, useDepthTest);
-            var lengthOfPositions = bucket.getLengthOfPositionsInBucket();
-            bucket.lengthOfPositions = lengthOfPositions;
-            totalLength += lengthOfPositions;
+        var polylineBuckets = this._polylineBuckets;
+        for ( var x in polylineBuckets) {
+            if(polylineBuckets.hasOwnProperty(x)){
+                var bucket = polylineBuckets[x];
+                bucket.updateRenderState(context, useDepthTest);
+                var lengthOfPositions = bucket.getLengthOfPositionsInBucket();
+                bucket.lengthOfPositions = lengthOfPositions;
+                totalLength += lengthOfPositions;
+            }
         }
         if (totalLength > 0) {
             var positionArray = new Float32Array(totalLength * 3);
@@ -681,20 +689,22 @@ define([
             var positionIndex = 0;
             var colorIndex = 0;
             var showIndex = 0;
-            for ( var x in this._polylineBuckets) {
-                var bucket = this._polylineBuckets[x];
-                bucket.write(positionArray, colorArray, outlineColorArray, pickColorArray, showArray, positionIndex, showIndex, colorIndex, context);
-                if(this._mode === SceneMode.MORPHING){
-                    if(typeof position3DArray === 'undefined'){
-                        position3DArray = new Float32Array(totalLength * 3);
+            for ( var x in polylineBuckets) {
+                if(polylineBuckets.hasOwnProperty(x)){
+                    var bucket = polylineBuckets[x];
+                    bucket.write(positionArray, colorArray, outlineColorArray, pickColorArray, showArray, positionIndex, showIndex, colorIndex, context);
+                    if(this._mode === SceneMode.MORPHING){
+                        if(typeof position3DArray === 'undefined'){
+                            position3DArray = new Float32Array(totalLength * 3);
+                        }
+                        bucket.writeForMorph(position3DArray, positionIndex);
                     }
-                    bucket.writeForMorph(position3DArray, positionIndex);
+                    var bucketLength = bucket.lengthOfPositions;
+                    positionIndex +=  bucketLength * 3;
+                    showIndex += bucketLength;
+                    colorIndex += bucketLength * 4;
+                    offset += bucket.updateIndices(totalIndices, vertexBufferOffset, vertexArrayBuckets, offset);
                 }
-                var bucketLength = bucket.lengthOfPositions;
-                positionIndex +=  bucketLength * 3;
-                showIndex += bucketLength;
-                colorIndex += bucketLength * 4;
-                offset += bucket.updateIndices(totalIndices, vertexBufferOffset, vertexArrayBuckets, offset);
             }
             this._positionBuffer = context.createVertexBuffer(positionArray, this._buffersUsage[POSITION_INDEX]);
             var position3DBuffer = undefined;
@@ -838,7 +848,7 @@ define([
     };
 
     PolylineCollection.prototype._sortPolylinesIntoBuckets = function(){
-        this._polylineBuckets = {};
+        var polylineBuckets = this._polylineBuckets = {};
         var polylines = this._polylines;
         var length = polylines.length;
         for(var i = 0; i < length; ++i){
@@ -846,9 +856,9 @@ define([
             var outlineWidth = p.getOutlineWidth();
             var width = p.getWidth();
             var hash = 'OL' + outlineWidth + 'W' + width;
-            var value = this._polylineBuckets[hash];
+            var value = polylineBuckets[hash];
             if (typeof value === 'undefined') {
-                value = this._polylineBuckets[hash] = new PolylineBucket(outlineWidth, width, this._mode, this._projection, this._modelMatrix);
+                value = polylineBuckets[hash] = new PolylineBucket(outlineWidth, width, this._mode, this._projection, this._modelMatrix);
             }
             value.addPolyline(p);
         }

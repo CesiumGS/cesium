@@ -32,21 +32,13 @@ define([
         this._show = (typeof p.show === 'undefined') ? true : p.show;
         this._width = (typeof p.width === 'undefined') ? 1.0 : p.width;
         this._outlineWidth = (typeof p.outlineWidth === 'undefined') ? 1.0 : p.outlineWidth;
-        var color = p.color || {
-            red : 1.0,
-            green : 1.0,
-            blue : 1.0,
-            alpha : 1.0
-        };
-        this._color = new Color(color.red, color.green, color.blue, color.alpha);
+        this._color = (typeof p.color === 'undefined') ?
+                new Color(1.0, 1.0, 1.0, 1.0) :
+                new Color(p.color.red, p.color.green, p.color.blue, p.color.alpha);
 
-        var outlineColor = p.outlineColor || {
-            red : 1.0,
-            green : 1.0,
-            blue : 1.0,
-            alpha : 1.0
-        };
-        this._outlineColor = new Color(outlineColor.red, outlineColor.green, outlineColor.blue, outlineColor.alpha);
+        this._outlineColor = (typeof p.outlineColor === 'undefined') ?
+                new Color(1.0, 1.0, 1.0, 1.0) :
+                new Color(p.outlineColor.red, p.outlineColor.green, p.outlineColor.blue, p.outlineColor.alpha);
 
         this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
         this._collection = polylineCollection;
