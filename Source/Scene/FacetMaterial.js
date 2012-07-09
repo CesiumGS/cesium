@@ -1,8 +1,10 @@
 /*global define*/
 define([
+        '../Core/Color',
         '../Shaders/Noise',
         '../Shaders/FacetMaterial'
     ], function(
+        Color,
         ShadersNoise,
         ShadersFacetMaterial){
     "use strict";
@@ -19,22 +21,12 @@ define([
         /**
          * DOC_TBA
          */
-        this.lightColor = t.lightColor || {
-            red : 1.0,
-            green : 1.0,
-            blue : 1.0,
-            alpha : 0.5
-        };
+        this.lightColor = (typeof t.lightColor !== 'undefined') ? Color.clone(t.lightColor) : new Color(1.0, 1.0, 1.0, 0.5);
 
         /**
          * DOC_TBA
          */
-        this.darkColor = t.darkColor || {
-            red : 0.0,
-            green : 0.0,
-            blue : 1.0,
-            alpha : 0.5
-        };
+        this.darkColor = (typeof t.darkColor !== 'undefined') ? Color.clone(t.darkColor) : new Color(0.0, 0.0, 1.0, 0.5);
 
         /**
          * DOC_TBA

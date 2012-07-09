@@ -5,16 +5,14 @@ define([
         '../Core/MouseEventType',
         '../Core/Quaternion',
         '../Core/Cartesian3',
-        '../Core/HermiteSpline',
-        '../Core/JulianDate'
+        '../Core/HermiteSpline'
     ], function(
         destroyObject,
         EventHandler,
         MouseEventType,
         Quaternion,
         Cartesian3,
-        HermiteSpline,
-        JulianDate) {
+        HermiteSpline) {
     "use strict";
 
     /**
@@ -47,8 +45,8 @@ define([
         var altitude = dm - radius;
 
         this._camera = camera;
-        this._start = new JulianDate();
-        this._end = this._start.addSeconds(duration);
+        this._start = new Date();
+        this._end = new Date(this._start.getTime() + duration * 1000);
         this._path = this._createPath(ellipsoid, altitude, destination, duration);
         this._canceled = false;
         this._complete = complete;
@@ -135,16 +133,16 @@ define([
      * @private
      */
     CameraFlightController.prototype.update = function() {
-        var time = new JulianDate(),
+        var time = new Date(),
             diff,
             position,
             normal,
             tangent,
             target;
 
-        var now = time.greaterThan(this._end) ? this._end : time;
+        var now = (time.getTime() > this._end.getTime()) ? this._end : time;
 
-        diff = this._start.getSecondsDifference(now);
+        diff = ( now.getTime() - this._start.getTime()) / 1000.0;
         position = this._path.evaluate(diff);
         normal = Cartesian3.UNIT_Z.cross(position).normalize();
         tangent = position.cross(normal).normalize();

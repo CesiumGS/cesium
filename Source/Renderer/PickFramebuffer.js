@@ -1,9 +1,11 @@
 /*global define*/
 define([
         '../Core/destroyObject',
+        '../Core/Color',
         './RenderbufferFormat'
     ], function(
         destroyObject,
+        Color,
         RenderbufferFormat) {
     "use strict";
 
@@ -49,12 +51,7 @@ define([
         // Clear to black.  Since this is the background color, no objects will be black
         context.clear(context.createClearState({
             framebuffer : this._fb,
-            color : {
-                red : 0.0,
-                green : 0.0,
-                blue : 0.0,
-                alpha : 1.0
-            },
+            color : new Color(0.0, 0.0, 0.0, 1.0),
             depth : 1.0,
             stencil : 0
         }));
@@ -77,12 +74,7 @@ define([
                 framebuffer : this._fb
             });
 
-            return this._context.getObjectByPickId({
-                red : pixels[0],
-                green : pixels[1],
-                blue : pixels[2],
-                alpha : pixels[3]
-            });
+            return this._context.getObjectByPickId(new Color(pixels[0], pixels[1], pixels[2], pixels[3]));
         }
 
         return undefined;
