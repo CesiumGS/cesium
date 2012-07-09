@@ -51,6 +51,7 @@ body {
 <div id="toolbar">Loading, please wait...</div>
 
 <script id="cesium_sandcastle_script">
+/*global require,document,window,console*/
 require({
     baseUrl : '../../..',
     packages: [
@@ -74,7 +75,7 @@ require({
     'dijit/form/Button',
     'dijit/form/ToggleButton'
 ], function(
-    Cesium, on, dom, parser)
+    Cesium, on, dom, parser, Button, ToggleButton)
 {
     "use strict";
 
@@ -129,9 +130,9 @@ require({
     ///////////////////////////////////////////////////////////////////////////
     // Demo buttons:
 
-    dojo.byId("toolbar").innerHTML = "Demo buttons: ";
+    dom.byId("toolbar").innerHTML = "Demo buttons: ";
 
-    var button1 = new dijit.form.ToggleButton({
+    var button1 = new ToggleButton({
         label: "Ground Atmosphere",
         iconClass: 'dijitCheckBoxIcon',
         checked: cb.showGroundAtmosphere,
@@ -141,7 +142,7 @@ require({
         }
     }).placeAt("toolbar");
 
-    var button2 = new dijit.form.ToggleButton({
+    var button2 = new ToggleButton({
         label: "Sky Atmosphere",
         iconClass: 'dijitCheckBoxIcon',
         checked: cb.showSkyAtmosphere,

@@ -51,6 +51,7 @@ body {
 <div id="toolbar">Loading, please wait...</div>
 
 <script id="cesium_sandcastle_script">
+/*global require,document,window,console*/
 require({
     baseUrl : '../../..',
     packages: [
@@ -73,9 +74,14 @@ require({
     'dojo/parser',
     'dijit/form/Button',
     'dijit/form/ToggleButton'
-], function(
-    Cesium, on, dom, parser)
-{
+], function (
+    Cesium,
+    on,
+    dom,
+    parser,
+    Button,
+    ToggleButton
+) {
     "use strict";
 
     //A real application should require only the subset of modules that
@@ -121,9 +127,9 @@ require({
     ///////////////////////////////////////////////////////////////////////////
     // Demo buttons:
 
-    dojo.byId("toolbar").innerHTML = "Demo buttons: ";
+    dom.byId("toolbar").innerHTML = "Demo buttons: ";
 
-    var button1 = new dijit.form.ToggleButton({
+    var button1 = new ToggleButton({
         label: "Ground Atmosphere",
         iconClass: 'dijitCheckBoxIcon',
         checked: cb.showGroundAtmosphere,
@@ -133,7 +139,7 @@ require({
         }
     }).placeAt("toolbar");
 
-    var button2 = new dijit.form.ToggleButton({
+    var button2 = new ToggleButton({
         label: "Sky Atmosphere",
         iconClass: 'dijitCheckBoxIcon',
         checked: cb.showSkyAtmosphere,
@@ -145,7 +151,7 @@ require({
 
     ///////////////////////////////////////////////////////////////////////////
 
-    scene.setAnimation(function() {
+    scene.setAnimation(function () {
         //scene.setSunPosition(scene.getCamera().position);
         scene.setSunPosition(Cesium.SunPosition.compute().position);
 
@@ -162,12 +168,12 @@ require({
 
     var handler = new Cesium.EventHandler(canvas);
 
-    handler.setMouseAction(function(movement) {
+    handler.setMouseAction(function (movement) {
         // INSERT CODE HERE: Handler for left-click
         // ...
     }, Cesium.MouseEventType.LEFT_CLICK);
 
-    handler.setMouseAction(function(movement) {
+    handler.setMouseAction(function (movement) {
         // INSERT CODE HERE: Handler for mouse move
         // Use movement.startX, movement.startY, movement.endX, movement.endY
         // ...
@@ -199,7 +205,7 @@ require({
     document.addEventListener('keydown', keydownHandler, false);
 
     // Prevent right-click from opening a context menu.
-    canvas.oncontextmenu = function() {
+    canvas.oncontextmenu = function () {
         return false;
     };
 

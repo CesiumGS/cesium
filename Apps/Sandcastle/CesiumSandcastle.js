@@ -1,4 +1,4 @@
-/*global require,CodeMirror*/
+/*global require,CodeMirror,JSLINT*/
 require({
         baseUrl: '../../Source',
         packages: [{
@@ -89,6 +89,8 @@ require({
         var docMessage = dom.byId('docPopupMessage');
         var local = { 'docTypes': [],  'headers': "<html><head></head><body>"};
         var errorLines = [];
+        var lintOptions = { 'vars': true, 'white': true };
+        var lintTimer;
 
         xhr.get({
             url: '../../Build/Documentation/types.txt',
@@ -173,17 +175,47 @@ require({
         var bucketFrame = document.getElementById('bucketFrame');
         var bucketPane = registry.byId('bucketPane');
 
-        function clearAllErrors(cm) {
-            var line;
+        var abbrDiv = document.createElement('div');
+        var abbrEle = document.createElement('abbr');
+        abbrDiv.appendChild(abbrEle);
+
+        function makeLineLabel(msg, line) {
+            abbrEle.title = msg;
+            abbrEle.textContent = line.toString();
+            return abbrDiv.innerHTML;
+        }
+
+        function clearAllErrors() {
+            var line, lint, lints, i, len;
+            lintTimer = undefined;
             while (errorLines.length > 0) {
                 line = errorLines.pop();
-                cm.setLineClass(line, null);
-                cm.clearMarker(line);
+                jsEditor.setLineClass(line, null);
+                jsEditor.clearMarker(line);
+            }
+            if (!JSLINT(jsEditor.getValue(), lintOptions)) {
+                lints = JSLINT.errors;
+                len = lints.length;
+                for (i = 0; i < len; ++i) {
+                    lint = lints[i];
+                    if ((lint !== null) && (typeof lint.reason !== 'undefined') && (lint.line > 0)) {
+                        line = jsEditor.setMarker(lint.line - 1, makeLineLabel(lint.reason, lint.line), "lintMarker");
+                        jsEditor.setLineClass(line, "lintLine");
+                        errorLines.push(line);
+                    }
+                }
             }
         }
 
+        function scheduleLint() {
+            if (typeof lintTimer !== 'undefined') {
+                window.clearTimeout(lintTimer);
+            }
+            lintTimer = setTimeout(clearAllErrors, 550);
+        }
+
         CodeMirror.commands.runCesium = function(cm) {
-            clearAllErrors(cm);
+            clearAllErrors();
             cesiumContainer.selectChild(bucketPane);
             bucketFrame.contentWindow.location.reload();
         };
@@ -199,7 +231,7 @@ require({
             indentUnit: 4,
             extraKeys: {"Ctrl-Space": "autocomplete", "F9": "runCesium"},
             onCursorActivity: onCursorActivity,
-            onChange: clearAllErrors
+            onChange: scheduleLint
         });
 
         htmlEditor = CodeMirror.fromTextArea(document.getElementById("htmlBody"), {
@@ -276,7 +308,7 @@ require({
             } else if (typeof e.data.error !== 'undefined') {
                 appendConsole('consoleError', e.data.error);
                 if (typeof e.data.lineNumber !== 'undefined') {
-                    line = jsEditor.setMarker(e.data.lineNumber - 1, '<abbr title="' + e.data.rawErrorMsg + '">' + e.data.lineNumber + '</abbr>', "errorMarker");
+                    line = jsEditor.setMarker(e.data.lineNumber - 1, makeLineLabel(e.data.rawErrorMsg, e.data.lineNumber), "errorMarker");
                     jsEditor.setLineClass(line, "errorLine");
                     errorLines.push(line);
                 }
