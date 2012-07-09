@@ -26,34 +26,34 @@ function(DeveloperError,
         var index = binarySearch(leapSeconds, toFind, LeapSecond.compareLeapSecondDate);
         if (index < 0) {
             index = ~index;
-            --index;
         }
-        var leapSecond;
-        // now we have the index of the most recent leap second that is after the requested date.
-        if (index >= 0) {
-            leapSecond = leapSeconds[index];
-            var mostRecentOffset = leapSecond.offset;
-            var leapSecondDate = leapSecond.julianDate;
 
-            if (julianDate.getJulianDayNumber() === leapSecondDate.getJulianDayNumber()) {
-                // if the requested date is on the day of the leap second, we may have to adjust
-                var secondsSinceLeapSecond = julianDate.getSecondsOfDay() - leapSecondDate.getSecondsOfDay();
-                if (secondsSinceLeapSecond >= mostRecentOffset - 1 && secondsSinceLeapSecond < mostRecentOffset) {
-                    // if the requested date is during the moment of a leap second, then we cannot convert to UTC
-                    return undefined;
-                }
-
-                if (secondsSinceLeapSecond < mostRecentOffset) {
-                    // The leap second we found is actually after the desired date, as a result of simply treating
-                    // the TAI date as if it were UTC. So, use the previous leap second instead.
-                    --index;
-                }
-            }
-            julianDate.addSeconds(-leapSeconds[index].offset, result);
-        } else {
-            julianDate.addSeconds(-leapSeconds[0].offset, result);
+        //All times before our first leap second get the first offset.
+        if (index === 0) {
+            return julianDate.addSeconds(-leapSeconds[0].offset, result);
         }
-        return result;
+
+        //All times after our leap second get the last offset.
+        if (index >= leapSeconds.length) {
+            return julianDate.addSeconds(-leapSeconds[index - 1].offset, result);
+        }
+
+        var leapSecond = leapSeconds[index];
+        var leapSecondDate = leapSecond.julianDate;
+        var difference = julianDate.getSecondsDifference(leapSecondDate);
+
+        //The date is in our leap second table, so just use it..
+        if (difference === 0) {
+            return julianDate.addSeconds(-leapSeconds[index].offset, result);
+        }
+
+        //Otherwise if the requested date is during the moment of a leap second, then we cannot convert to UTC
+        if (difference <= 1.0) {
+            return undefined;
+        }
+
+        //Index is the first leap second after the date we're converting, but what we need the index before..
+        return julianDate.addSeconds(-leapSeconds[--index].offset, result);
     }
 
     function setComponents(wholeDays, secondsOfDay, julianDate) {
@@ -540,17 +540,10 @@ function(DeveloperError,
      *                   a is greater than b, and zero if a and b are equal.
      */
     JulianDate.compare = function(a, b) {
-        // If the days aren't even close, don't bother thinking about the time standard.
-        var dayDifference = (a._julianDayNumber - b._julianDayNumber) | 0;
-        if (dayDifference > 1 || dayDifference < -1) {
-            return dayDifference;
-        }
-        //Recompute dayDifference after changing time standards.
-        dayDifference = (a._julianDayNumber - b._julianDayNumber);
+        var dayDifference = (a._julianDayNumber - b._julianDayNumber);
         if (dayDifference !== 0) {
             return dayDifference;
         }
-
         return a._secondsOfDay - b._secondsOfDay;
     };
 
@@ -624,7 +617,7 @@ function(DeveloperError,
         //we can just add second and re-convert.
         var julianDateTai = convertTaiToUtc(this, toDateScratch);
         if (typeof julianDateTai === 'undefined') {
-            toDateScratch = this.addSeconds(1, toDateScratch);
+            this.addSeconds(1, toDateScratch);
             julianDateTai = convertTaiToUtc(toDateScratch, toDateScratch);
         }
 
@@ -742,20 +735,9 @@ function(DeveloperError,
             index = ~index;
             --index;
             if (index < 0) {
-                return 10.0;
+                index = 0;
             }
         }
-
-        var lastDate = leapSeconds[index].julianDate;
-        var taiCutoff = lastDate.addSeconds(leapSeconds[index].offset);
-        if (this.lessThan(taiCutoff)) {
-            --index;
-        }
-
-        if (index < 0) {
-            return 10.0;
-        }
-
         return leapSeconds[index].offset;
     };
 

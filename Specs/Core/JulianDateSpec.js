@@ -162,10 +162,10 @@ function(JulianDate,
     });
 
     it('Construct a date from a JavaScript Date in different TimeStandard', function() {
-        var taiDate = new Date('September 1, 2011 12:00:00');
+        var taiDate = new Date('September 1, 2012 12:00:35');
         var taiJulianDate = JulianDate.fromDate(taiDate, TimeStandard.TAI);
 
-        var utcDate = new Date('September 1, 2011 11:59:26');
+        var utcDate = new Date('September 1, 2012 12:00:00');
         var utcJulianDate = JulianDate.fromDate(utcDate, TimeStandard.UTC);
 
         expect(taiJulianDate.equalsEpsilon(utcJulianDate, CesiumMath.EPSILON20)).toEqual(true);
@@ -771,9 +771,34 @@ function(JulianDate,
         expect(javascriptDate.getUTCMilliseconds()).toEqualEpsilon(500, 10);
     });
 
+    it('toDate works a second before a leap second', function() {
+        var expectedDate = new Date('6/30/1997 11:59:59 PM UTC');
+        var date = new JulianDate(2450630, 43229.0, TimeStandard.TAI).toDate();
+        expect(date).toEqual(expectedDate);
+    });
+
     it('toDate works on a leap second', function() {
-        var date = new JulianDate(2454832, 43233, TimeStandard.TAI).toDate();
-        expect(date).toEqual(new Date('1/1/2009 12:00:00 AM UTC'));
+        var expectedDate = new Date('7/1/1997 12:00:00 AM UTC');
+        var date = new JulianDate(2450630, 43230.0, TimeStandard.TAI).toDate();
+        expect(date).toEqual(expectedDate);
+    });
+
+    it('toDate works a second after a leap second', function() {
+        var expectedDate = new Date('7/1/1997 12:00:00 AM UTC');
+        var date = new JulianDate(2450630, 43231.0, TimeStandard.TAI).toDate();
+        expect(date).toEqual(expectedDate);
+    });
+
+    it('toDate works on date before any leap seconds', function() {
+        var expectedDate = new Date('09/10/1968 12:00:00 AM UTC');
+        var date = new JulianDate(2440109, 43210.0, TimeStandard.TAI).toDate();
+        expect(date).toEqual(expectedDate);
+    });
+
+    it('toDate works on date later than all leap seconds', function() {
+        var expectedDate = new Date('11/17/2039 12:00:00 AM UTC');
+        var date = new JulianDate(2466109, 43235.0, TimeStandard.TAI).toDate();
+        expect(date).toEqual(expectedDate);
     });
 
     it('getSecondsDifference works in UTC', function() {
@@ -1036,10 +1061,9 @@ function(JulianDate,
     });
 
     it('equalsEpsilon works', function() {
-        var original = new JulianDate();
-        var clone = JulianDate.fromDate(original.toDate());
-        clone = clone.addSeconds(0.01);
-        expect(original.equalsEpsilon(clone, CesiumMath.EPSILON1)).toEqual(true);
+        var date = new JulianDate();
+        var datePlusOne = date.addSeconds(0.01);
+        expect(date.equalsEpsilon(datePlusOne, CesiumMath.EPSILON1)).toEqual(true);
     });
 
     it('getTaiMinusUtc works between TAI and UTC (1)', function() {
@@ -1062,4 +1086,20 @@ function(JulianDate,
         var difference = jd.getTaiMinusUtc();
         expect(difference).toEqual(10);
     });
+
+    it('getTaiMinusUtc works a second before a leap second', function() {
+        var date = new JulianDate(2456109, 43233.0, TimeStandard.TAI);
+        expect(date.getTaiMinusUtc()).toEqual(34);
+    });
+
+    it('getTaiMinusUtc works on a leap second', function() {
+        var date = new JulianDate(2456109, 43234.0, TimeStandard.TAI);
+        expect(date.getTaiMinusUtc()).toEqual(34);
+    });
+
+    it('getTaiMinusUtc works a second after a leap second', function() {
+        var date = new JulianDate(2456109, 43235.0, TimeStandard.TAI);
+        expect(date.getTaiMinusUtc()).toEqual(35);
+    });
+
 });

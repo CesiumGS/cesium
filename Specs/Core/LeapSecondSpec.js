@@ -31,14 +31,14 @@ defineSuite([
 
     it('can get the TAI offset for an index (in range)', function() {
         var leapSeconds = LeapSecond.leapSeconds;
-        var toFind = new LeapSecond(JulianDate.fromDate(new Date('January 1, 1973 00:00:00 UTC')), 12.0);
+        var toFind = new LeapSecond(new JulianDate(2441683, 43212.0, TimeStandard.TAI), 12.0);
         var index = binarySearch(leapSeconds, toFind, LeapSecond.compareLeapSecondDate);
         expect(LeapSecond.leapSeconds[index].offset).toEqual(12.0);
     });
 
     it('can get the Julian date for an index (in range)', function() {
         var leapSeconds = LeapSecond.leapSeconds;
-        var toFind = new LeapSecond(JulianDate.fromDate(new Date('July 1, 1972 00:00:00 UTC')), 0.0);
+        var toFind = new LeapSecond(new JulianDate(2441317, 43210.0, TimeStandard.TAI), 0.0);
         var index = binarySearch(leapSeconds, toFind, LeapSecond.compareLeapSecondDate);
         expect(leapSeconds[index].julianDate).toEqual(toFind.julianDate);
     });
