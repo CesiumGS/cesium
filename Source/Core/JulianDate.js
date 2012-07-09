@@ -38,21 +38,21 @@ function(DeveloperError,
             return julianDate.addSeconds(-leapSeconds[index - 1].offset, result);
         }
 
-        var leapSecond = leapSeconds[index];
-        var leapSecondDate = leapSecond.julianDate;
-        var difference = julianDate.getSecondsDifference(leapSecondDate);
+        //Compute the difference between the found leap second and the time we are converting.
+        var difference = julianDate.getSecondsDifference(leapSeconds[index].leapSecond.julianDate);
 
-        //The date is in our leap second table, so just use it..
         if (difference === 0) {
+            //The date is in our leap second table.
             return julianDate.addSeconds(-leapSeconds[index].offset, result);
         }
 
-        //Otherwise if the requested date is during the moment of a leap second, then we cannot convert to UTC
         if (difference <= 1.0) {
+            //The requested date is during the moment of a leap second, then we cannot convert to UTC
             return undefined;
         }
 
-        //Index is the first leap second after the date we're converting, but what we need the index before..
+        //The time is in between two leap seconds, undex is the leap second after the date
+        //we're converting, so we subtract one to get the correct LeapSecond instance.
         return julianDate.addSeconds(-leapSeconds[--index].offset, result);
     }
 
@@ -126,14 +126,14 @@ function(DeveloperError,
     var iso8601ErrorMessage = 'Valid ISO 8601 date string required.';
 
     /**
-     * Constructs an immutable JulianDate instance from a Julian day number and the number of seconds elapsed
+     * Constructs a JulianDate instance from a Julian day number and the number of seconds elapsed
      * into that day as well as the time standard the parameters are in.  Passing no parameters will
      * construct a JulianDate that represents the current system time.
      *
      * An astronomical Julian Date is the number of days since noon on January 1, -4712 (4713 BC).
      * For increased precision, this class stores the whole number part of the date and the seconds
      * part of the date in separate components.  In order to be safe for arithmetic and represent
-     * the moment of a leap second, the date is always stored in the International Atomic Time standard
+     * leap seconds, the date is always stored in the International Atomic Time standard
      * {@link TimeStandard.TAI}.
      *
      * @alias JulianDate
@@ -206,7 +206,7 @@ function(DeveloperError,
     };
 
     /**
-     * Creates an immutable JulianDate instance from a JavaScript Date object.
+     * Creates a JulianDate instance from a JavaScript Date object.
      * While the JavaScript Date object defaults to the system's local time zone,
      * the Julian date is computed using the UTC values.
      * <br/>
@@ -243,7 +243,7 @@ function(DeveloperError,
     };
 
     /**
-     * Creates an immutable JulianDate instance from an ISO 8601 date string.  Unlike Date.parse,
+     * Creates a JulianDate instance from an ISO 8601 date string.  Unlike Date.parse,
      * this method properly accounts for all valid formats defined by the ISO 8601
      * specification.  It also properly handles leap seconds and sub-millisecond times.
      *
@@ -501,7 +501,7 @@ function(DeveloperError,
     };
 
     /**
-     * Creates an immutable JulianDate instance from a single number representing the Julian day and fractional day.
+     * Creates a JulianDate instance from a single number representing the Julian day and fractional day.
      *
      * @memberof JulianDate
      *
@@ -661,7 +661,7 @@ function(DeveloperError,
 
     /**
      * Computes the number of seconds that have elapsed from this Julian date to the <code>other</code>
-     * Julian date, taking leap seconds into account.
+     * Julian date.
      *
      * @memberof JulianDate
      *
@@ -685,7 +685,7 @@ function(DeveloperError,
 
     /**
      * Computes the number of minutes that have elapsed from this Julian date to the <code>other</code>
-     * Julian date, taking leap seconds into account.
+     * Julian date.
      *
      * @memberof JulianDate
      *
