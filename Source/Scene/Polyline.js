@@ -34,11 +34,11 @@ define([
         this._outlineWidth = (typeof p.outlineWidth === 'undefined') ? 1.0 : p.outlineWidth;
         this._color = (typeof p.color === 'undefined') ?
                 new Color(1.0, 1.0, 1.0, 1.0) :
-                new Color(p.color.red, p.color.green, p.color.blue, p.color.alpha);
+                Color.clone(p.color);
 
         this._outlineColor = (typeof p.outlineColor === 'undefined') ?
                 new Color(1.0, 1.0, 1.0, 1.0) :
-                new Color(p.outlineColor.red, p.outlineColor.green, p.outlineColor.blue, p.outlineColor.alpha);
+                Color.clone(p.outlineColor);
 
         this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
         this._collection = polylineCollection;
