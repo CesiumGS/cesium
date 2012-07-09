@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/DeveloperError',
+        '../Core/Color',
         '../Core/combine',
         '../Core/destroyObject',
         '../Core/FAR',
@@ -20,6 +21,7 @@ define([
         './SceneMode'
     ], function(
         DeveloperError,
+        Color,
         combine,
         destroyObject,
         FAR,
@@ -143,12 +145,7 @@ define([
         /**
          * DOC_TBA
          */
-        this.intersectionColor = t.intersectionColor || {
-            red : 1.0,
-            green : 1.0,
-            blue : 0.0,
-            alpha : 1.0
-        };
+        this.intersectionColor = (typeof t.intersectionColor !== 'undefined') ? Color.clone(t.intersectionColor) : new Color(1.0, 1.0, 0.0, 1.0);
 
         /**
          * DOC_TBA

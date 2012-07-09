@@ -11,6 +11,7 @@ define([
         '../Core/Ellipsoid',
         '../Core/SunPosition',
         '../Core/EventHandler',
+        '../Core/FeatureDetection',
         '../Core/MouseEventType',
         '../Core/Cartesian2',
         '../Core/JulianDate',
@@ -34,6 +35,7 @@ define([
         Ellipsoid,
         SunPosition,
         EventHandler,
+        FeatureDetection,
         MouseEventType,
         Cartesian2,
         JulianDate,
@@ -212,9 +214,7 @@ define([
             camera.frustum.near = 0.0002 * maxRadii;
             camera.frustum.far = 50.0 * maxRadii;
 
-            this.spindleCameraController = camera.getControllers().addSpindle(ellipsoid);
-            this.spindleCameraController.mouseConstrainedZAxis = true;
-            this.freelookCameraController = camera.getControllers().addFreeLook(ellipsoid);
+            this.centralBodyCameraController = camera.getControllers().addCentralBody();
 
             var handler = new EventHandler(canvas);
             handler.setMouseAction(lang.hitch(this, '_handleLeftClick'), MouseEventType.LEFT_CLICK);
@@ -245,9 +245,7 @@ define([
 
             var controllers = camera.getControllers();
             controllers.removeAll();
-            this.spindleCameraController = controllers.addSpindle(this.ellipsoid);
-            this.spindleCameraController.constrainedZAxis = true;
-            this.freelookCameraController = controllers.addFreeLook(this.ellipsoid);
+            this.centralBodyCameraController = controllers.addCentralBody();
         },
 
         areCloudsAvailable : function() {
@@ -312,7 +310,10 @@ define([
             if (this.useStreamingImagery) {
                 centralBody.dayTileProvider = new BingMapsTileProvider({
                     server : 'dev.virtualearth.net',
-                    mapStyle : this.mapStyle
+                    mapStyle : this.mapStyle,
+                    // Some versions of Safari support WebGL, but don't correctly implement
+                    // cross-origin image loading, so we need to load Bing imagery using a proxy.
+                    proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/proxy/')
                 });
             } else {
                 centralBody.dayTileProvider = new SingleTileProvider(this.dayImageUrl);
