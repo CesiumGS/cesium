@@ -447,6 +447,283 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
     });
 
+    it('renders a polyline with no positions', function() {
+        var positions = [];
+        for ( var i = 0; i < 100; ++i) {
+            positions.push({x:0, y:-1, z:0});
+            positions.push({x:0, y:1, z:0});
+        }
+
+        polylines.add({
+            positions : positions,
+            color:{red:1, green:0, blue:0, alpha:1}
+        });
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
+
+        polylines.add({
+            positions : [],
+            color:{red:0, green:1, blue:0, alpha:1}
+        });
+
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
+
+    });
+
+    it('renders an updated polyline with no positions using setPositions', function() {
+        var positions = [];
+        for ( var i = 0; i < 100; ++i) {
+            positions.push({x:0, y:-1, z:0});
+            positions.push({x:0, y:1, z:0});
+        }
+
+        polylines.add({
+            positions : positions,
+            color:{red:1, green:0, blue:0, alpha:1}
+        });
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
+
+        var p2 = polylines.add({
+            positions : [],
+            color:{red:0, green:1, blue:0, alpha:1}
+        });
+
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
+
+        //recreates vertex array because buffer usage changed
+        p2.setPositions([]);
+
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
+
+        //should call PolylineCollection.writePositionsUpdate
+        p2.setPositions([]);
+
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
+
+    });
+
+    it('renders an updated polyline with no positions using setShow', function() {
+        var positions = [];
+        for ( var i = 0; i < 100; ++i) {
+            positions.push({x:0, y:-1, z:0});
+            positions.push({x:0, y:1, z:0});
+        }
+
+        polylines.add({
+            positions : positions,
+            color:{red:1, green:0, blue:0, alpha:1}
+        });
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
+
+        var p2 = polylines.add({
+            positions : [],
+            color:{red:0, green:1, blue:0, alpha:1}
+        });
+
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
+
+        //recreates vertex array because buffer usage changed
+        p2.setShow(false);
+
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
+
+        //should call PolylineCollection.writeShowUpdate
+        p2.setShow(true);
+
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
+
+    });
+
+    it('renders an updated polyline with no positions using setColor', function() {
+        var positions = [];
+        for ( var i = 0; i < 100; ++i) {
+            positions.push({x:0, y:-1, z:0});
+            positions.push({x:0, y:1, z:0});
+        }
+
+        polylines.add({
+            positions : positions,
+            color:{red:1, green:0, blue:0, alpha:1}
+        });
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
+
+        var p2 = polylines.add({
+            positions : [],
+            color:{red:0, green:1, blue:0, alpha:1}
+        });
+
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
+
+        //recreates vertex array because buffer usage changed
+        p2.setColor({red:1.0, blue:1.0, green:0.1, alpha:1.0});
+
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
+
+        //should call PolylineCollection.writeColorUpdate
+        p2.setColor({red:1.0, blue:0.5, green:0.1, alpha:1.0});
+
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
+    });
+
+    it('changes buffer usage after 100 iterations of not changing', function() {
+        var positions = [];
+        for ( var i = 0; i < 100; ++i) {
+            positions.push({x:0, y:-1, z:0});
+            positions.push({x:0, y:1, z:0});
+        }
+
+        var p = polylines.add({
+            positions : positions,
+            color:{red:1, green:0, blue:0, alpha:1}
+        });
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+
+        expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
+
+        // changes buffer usage, recreates vertex arrays
+        p.setPositions(positions);
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        for(var j = 0; j < 101; ++j){
+            polylines.update(context, sceneState);
+            polylines.render(context, us);
+        }
+        expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
+
+    });
+
+    it('renders an updated polyline with no positions using setOutlineColor', function() {
+        var positions = [];
+        for ( var i = 0; i < 100; ++i) {
+            positions.push({x:0, y:-1, z:0});
+            positions.push({x:0, y:1, z:0});
+        }
+
+        polylines.add({
+            positions : positions,
+            color:{red:1, green:0, blue:0, alpha:1}
+        });
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
+
+        var p2 = polylines.add({
+            positions : [],
+            color:{red:0, green:1, blue:0, alpha:1}
+        });
+
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
+
+        //recreates vertex array because buffer usage changed
+        p2.setOutlineColor({red:1.0, blue:1.0, green:0.1, alpha:1.0});
+
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
+
+        //should call PolylineCollection.writeColorUpdate
+        p2.setOutlineColor({red:1.0, blue:0.5, green:0.1, alpha:1.0});
+
+        context.clear();
+        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
+    });
+
     it('renders more than 64K vertexes of different polylines', function() {
         var positions = [];
         for ( var i = 0; i < 64 * 1024; ++i) {

@@ -34,6 +34,7 @@ Beta Releases
    
    * The free look feature has been removed from `CameraColumbusViewController` in favor of rotating about the point clicked on the map with the middle mouse button.
    * The `Camera2DController` constructor and `CameraControllerCollection.add2D` now require a projection instead of an ellipsoid.
+   * 'Polyline' is no longer externally creatable. To create a 'Polyline' use the 'PolylineCollection.add' method. 
 
 * Added `addImage` to `TextureAtlas` so images can be added to a texture atlas after it is constructed.
 * Added `Scene.pickEllipsoid`, which picks either the ellipsoid or the map depending on the current `SceneMode`.
@@ -53,6 +54,7 @@ Beta Releases
     * The left mouse button rotates around the central body.
     * The right mouse button and mouse wheel zoom in and out.
     * The middle mouse button rotates around the point clicked on the central body.
+* Added 'PolylineCollection' to manage numerous polylines. 'PolylineCollection' dramatically improves rendering speed when using polylines.
 
 ### b6a - 06/20/2012
 

@@ -117,12 +117,12 @@ define([
 
         // The buffer usage for each attribute is determined based on the usage of the attribute over time.
         this._buffersUsage = [
-                              BufferUsage.STATIC_DRAW, // SHOW_INDEX
-                              BufferUsage.STATIC_DRAW, // POSITION_INDEX
-                              BufferUsage.STATIC_DRAW, // COLOR_INDEX
-                              BufferUsage.STATIC_DRAW, // OUTLINE_COLOR_INDEX
-                              BufferUsage.STATIC_DRAW, // WIDTH_INDEX
-                              BufferUsage.STATIC_DRAW // OUTLINE_WIDTH_INDEX
+                              {bufferUsage: BufferUsage.STATIC_DRAW, frameCount:0},// SHOW_INDEX
+                              {bufferUsage: BufferUsage.STATIC_DRAW, frameCount:0}, // POSITION_INDEX
+                              {bufferUsage: BufferUsage.STATIC_DRAW, frameCount:0}, // COLOR_INDEX
+                              {bufferUsage: BufferUsage.STATIC_DRAW, frameCount:0}, // OUTLINE_COLOR_INDEX
+                              {bufferUsage: BufferUsage.STATIC_DRAW, frameCount:0}, // WIDTH_INDEX
+                              {bufferUsage: BufferUsage.STATIC_DRAW, frameCount:0} // OUTLINE_WIDTH_INDEX
         ];
 
         this._mode = undefined;
@@ -626,15 +626,31 @@ define([
         var buffersUsage = this._buffersUsage;
         var usageChanged = false;
 
-        // PERFORMANCE_IDEA: Better heuristic to avoid ping-ponging.  What about DYNAMIC_STREAM?
         var properties = this._propertiesChanged;
         //subtract 1 from NUMBER_OF_PROPERTIES because we don't care about POSITION_SIZE_INDEX property change.
         for ( var k = 0; k < NUMBER_OF_PROPERTIES - 1; ++k) {
-            var newUsage = (properties[k] === 0) ? buffersUsage[k] : BufferUsage.STREAM_DRAW;
-            usageChanged = usageChanged || (buffersUsage[k] !== newUsage);
-            buffersUsage[k] = newUsage;
+            var bufferUsage = buffersUsage[k];
+            if(properties[k]){
+                if(bufferUsage.bufferUsage !== BufferUsage.STREAM_DRAW){
+                    usageChanged = true;
+                    bufferUsage.bufferUsage = BufferUsage.STREAM_DRAW;
+                    bufferUsage.frameCount = 100;
+                }
+                else{
+                    bufferUsage.frameCount = 100;
+                }
+            } else {
+                if(bufferUsage.bufferUsage !== BufferUsage.STATIC_DRAW){
+                    if(bufferUsage.frameCount === 0){
+                        usageChanged = true;
+                        bufferUsage.bufferUsage = BufferUsage.STATIC_DRAW;
+                    }
+                    else{
+                        bufferUsage.frameCount--;
+                    }
+                }
+            }
         }
-
         return usageChanged;
     };
 
@@ -696,15 +712,15 @@ define([
                     offset += bucket.updateIndices(totalIndices, vertexBufferOffset, vertexArrayBuckets, offset);
                 }
             }
-            this._positionBuffer = context.createVertexBuffer(positionArray, this._buffersUsage[POSITION_INDEX]);
+            this._positionBuffer = context.createVertexBuffer(positionArray, this._buffersUsage[POSITION_INDEX].bufferUsage);
             var position3DBuffer;
             if (typeof position3DArray !== 'undefined') {
-                position3DBuffer = context.createVertexBuffer(position3DArray, this._buffersUsage[POSITION_INDEX]);
+                position3DBuffer = context.createVertexBuffer(position3DArray, this._buffersUsage[POSITION_INDEX].bufferUsage);
             }
-            this._outlineColorBuffer = context.createVertexBuffer(outlineColorArray, this._buffersUsage[OUTLINE_COLOR_INDEX]);
-            this._colorBuffer = context.createVertexBuffer(colorArray, this._buffersUsage[COLOR_INDEX]);
+            this._outlineColorBuffer = context.createVertexBuffer(outlineColorArray, this._buffersUsage[OUTLINE_COLOR_INDEX].bufferUsage);
+            this._colorBuffer = context.createVertexBuffer(colorArray, this._buffersUsage[COLOR_INDEX].bufferUsage);
             this._pickColorBuffer = context.createVertexBuffer(pickColorArray, BufferUsage.STATIC_DRAW);
-            this._showBuffer = context.createVertexBuffer(showArray, this._buffersUsage[SHOW_INDEX]);
+            this._showBuffer = context.createVertexBuffer(showArray, this._buffersUsage[SHOW_INDEX].bufferUsage);
             var colorSizeInBytes = 4 * Uint8Array.BYTES_PER_ELEMENT;
             var positionSizeInBytes = 3 * Float32Array.BYTES_PER_ELEMENT;
             var vbo = 0;
