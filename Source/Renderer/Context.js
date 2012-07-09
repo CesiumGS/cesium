@@ -2,6 +2,7 @@
 define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
+        '../Core/Color',
         '../Core/IndexDatatype',
         '../Core/RuntimeError',
         '../Core/PrimitiveType',
@@ -36,6 +37,7 @@ define([
     ], function(
         DeveloperError,
         destroyObject,
+        Color,
         IndexDatatype,
         RuntimeError,
         PrimitiveType,
@@ -231,20 +233,10 @@ define([
         this._maximumTextureFilterAnisotropy = textureFilterAnisotropic ? gl.getParameter(textureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1.0;
 
         var cc = gl.getParameter(gl.COLOR_CLEAR_VALUE);
-        this._clearColor = {
-            red : cc[0],
-            green : cc[1],
-            blue : cc[2],
-            alpha : cc[3]
-        };
+        this._clearColor = new Color(cc[0], cc[1], cc[2], cc[3]);
         this._clearDepth = gl.getParameter(gl.DEPTH_CLEAR_VALUE);
         this._clearStencil = gl.getParameter(gl.STENCIL_CLEAR_VALUE);
-        this._defaultClearColor = {
-            red : cc[0],
-            green : cc[1],
-            blue : cc[2],
-            alpha : cc[3]
-        };
+        this._defaultClearColor = new Color(cc[0], cc[1], cc[2], cc[3]);
         this._defaultClearDepth = this._clearDepth;
         this._defaultClearStencil = this._clearStencil;
 
@@ -1806,12 +1798,12 @@ define([
             stencilMask : (typeof rs.stencilMask === 'undefined') ? ~0 : rs.stencilMask,
             blending : {
                 enabled : (typeof blending.enabled === 'undefined') ? false : blending.enabled,
-                color : {
-                    red : (typeof blendingColor.red === 'undefined') ? 0 : blendingColor.red,
-                    green : (typeof blendingColor.green === 'undefined') ? 0 : blendingColor.green,
-                    blue : (typeof blendingColor.blue === 'undefined') ? 0 : blendingColor.blue,
-                    alpha : (typeof blendingColor.alpha === 'undefined') ? 0 : blendingColor.alpha
-                },
+                color : new Color(
+                    (typeof blendingColor.red === 'undefined') ? 0.0 : blendingColor.red,
+                    (typeof blendingColor.green === 'undefined') ? 0.0 : blendingColor.green,
+                    (typeof blendingColor.blue === 'undefined') ? 0.0 : blendingColor.blue,
+                    (typeof blendingColor.alpha === 'undefined') ? 0.0 : blendingColor.alpha
+                ),
                 equationRgb : (typeof blending.equationRgb === 'undefined') ? BlendEquation.ADD : blending.equationRgb,
                 equationAlpha : (typeof blending.equationAlpha === 'undefined') ? BlendEquation.ADD : blending.equationAlpha,
                 functionSourceRgb : (typeof blending.functionSourceRgb === 'undefined') ? BlendFunction.ONE : blending.functionSourceRgb,
@@ -2048,12 +2040,7 @@ define([
 
             framebuffer : cs.framebuffer,
 
-            color : {
-                red : color.red,
-                green : color.green,
-                blue : color.blue,
-                alpha : color.alpha
-            },
+            color : Color.clone(color),
             depth : depth,
             stencil : stencil
         };
@@ -2112,15 +2099,8 @@ define([
         var s = clearState.stencil;
 
         if (typeof c !== 'undefined') {
-            if (c.red !== this._clearColor.red ||
-                c.green !== this._clearColor.green ||
-                c.blue !== this._clearColor.blue ||
-                c.alpha !== this._clearColor.alpha) {
-                this._clearColor.red = c.red;
-                this._clearColor.green = c.green;
-                this._clearColor.blue = c.blue;
-                this._clearColor.alpha = c.alpha;
-
+            if (!Color.equals(this._clearColor, c)) {
+                Color.clone(c, this._clearColor);
                 gl.clearColor(c.red, c.green, c.blue, c.alpha);
             }
             bitmask |= gl.COLOR_BUFFER_BIT;
@@ -2669,11 +2649,7 @@ define([
      */
     Context.prototype.createPickId = function(object) {
         var objects = {};
-        var nextRgb = {
-            red : 0,
-            green : 0,
-            blue : 0
-        };
+        var nextRgb = new Color(0, 0, 0, 0);
 
         function rgbToObjectIndex(unnormalizedRgb) {
             // TODO:  Use alpha?
@@ -2696,17 +2672,8 @@ define([
             }
 
             var pickId = {
-                unnormalizedRgb : {
-                    red : nextRgb.red,
-                    green : nextRgb.green,
-                    blue : nextRgb.blue
-                },
-                normalizedRgba : {
-                    red : nextRgb.red / 255.0,
-                    green : nextRgb.green / 255.0,
-                    blue : nextRgb.blue / 255.0,
-                    alpha : 1.0
-                },
+                unnormalizedRgb : new Color(nextRgb.red, nextRgb.green, nextRgb.blue, 1.0),
+                normalizedRgba : Color.fromBytes(nextRgb.red, nextRgb.green, nextRgb.blue, 255.0),
                 destroy : function() {
                     // TODO: Remove from objects
                     return null;

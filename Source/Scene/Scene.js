@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/Color',
         '../Core/destroyObject',
         '../Core/EquidistantCylindricalProjection',
         '../Core/Ellipsoid',
@@ -11,6 +12,7 @@ define([
         './SceneMode',
         './SceneState'
     ], function(
+        Color,
         destroyObject,
         EquidistantCylindricalProjection,
         Ellipsoid,
@@ -39,12 +41,7 @@ define([
         this._pickFramebuffer = undefined;
         this._camera = new Camera(canvas);
         this._clearState = context.createClearState({
-            color : {
-                red : 0.0,
-                green : 0.0,
-                blue : 0.0,
-                alpha : 1.0
-            },
+            color : Color.BLACK,
             depth : 1.0
         });
 
