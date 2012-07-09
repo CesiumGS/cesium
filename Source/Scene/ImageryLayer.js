@@ -645,8 +645,17 @@ define([
             }
 
             var drawUniforms = {
-                u_dayTexture : function() {
-                    return tileImagery._texture;
+                u_numberOfDayTextures : function() {
+                    return 1;
+                },
+                u_dayTextures : function() {
+                    return [tileImagery._texture, tileImagery._texture, tileImagery._texture, tileImagery._texture, tileImagery._texture, tileImagery._texture, tileImagery._texture, tileImagery._texture];
+                },
+                u_dayTextureTranslation : function() {
+                    return [new Cartesian2(0.0, 0.0), new Cartesian2(0.0, 0.0), new Cartesian2(0.0, 0.0), new Cartesian2(0.0, 0.0), new Cartesian2(0.0, 0.0), new Cartesian2(0.0, 0.0), new Cartesian2(0.0, 0.0), new Cartesian2(0.0, 0.0)];
+                },
+                u_dayTextureScale : function() {
+                    return [new Cartesian2(1.0, 1.0), new Cartesian2(1.0, 1.0), new Cartesian2(1.0, 1.0), new Cartesian2(1.0, 1.0), new Cartesian2(1.0, 1.0), new Cartesian2(1.0, 1.0), new Cartesian2(1.0, 1.0), new Cartesian2(1.0, 1.0)];
                 },
                 u_dayIntensity : function() {
                     return intensity;

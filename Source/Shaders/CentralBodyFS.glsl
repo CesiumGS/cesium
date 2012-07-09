@@ -1,4 +1,7 @@
-uniform sampler2D u_dayTexture;
+uniform int u_numberOfDayTextures;
+uniform sampler2D u_dayTextures[8];
+uniform vec2 u_dayTextureTranslation[8];
+uniform vec2 u_dayTextureScale[8];
 
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
@@ -14,7 +17,19 @@ void main()
     vec3 normalEC = normalize(agi_normal * normalMC);                                           // normalized surface normal in eye coordiantes
     
 #ifdef SHOW_DAY
-    vec3 startDayColor = texture2D(u_dayTexture, v_textureCoordinates).rgb;
+    vec3 startDayColor = vec3(0.0, 0.0, 0.0);
+    for (int i = 0; i < 8; ++i)
+    {
+        if (i >= u_numberOfDayTextures)
+            break;
+        vec2 textureCoordinates = v_textureCoordinates * u_dayTextureScale[i] + u_dayTextureTranslation[i];
+        if (textureCoordinates.x >= 0.0 && textureCoordinates.x <= 1.0 &&
+            textureCoordinates.y >= 0.0 && textureCoordinates.y <= 1.0)
+        {
+	        vec4 color = texture2D(u_dayTextures[i], textureCoordinates);
+	        startDayColor = mix(startDayColor, color.rgb, color.a);
+        } 
+    }
 #ifdef SHOW_TILE_BOUNDARIES
     if (v_textureCoordinates.x < (1.0/256.0) || v_textureCoordinates.x > (255.0/256.0) ||
         v_textureCoordinates.y < (1.0/256.0) || v_textureCoordinates.y > (255.0/256.0))

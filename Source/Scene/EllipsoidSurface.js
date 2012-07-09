@@ -2,6 +2,7 @@
 define([
         '../Core/defaultValue',
         '../Core/destroyObject',
+        '../Core/Cartesian4',
         '../Core/DeveloperError',
         '../Core/Math',
         './ImageryLayerCollection',
@@ -11,6 +12,7 @@ define([
     ], function(
         defaultValue,
         destroyObject,
+        Cartesian4,
         DeveloperError,
         CesiumMath,
         ImageryLayerCollection,
@@ -30,6 +32,7 @@ define([
         this.imageryCollection = description.imageryCollection;
         this.maxScreenSpaceError = defaultValue(description.maxScreenSpaceError, 2);
 
+        this._centralBody = description.centralBody;
         this._levelZeroTiles = undefined;
         this._renderList = [];
         this._tileLoadQueue = new TileLoadQueue();
@@ -40,6 +43,110 @@ define([
             that._tilingScheme = tilingScheme;
             that._levelZeroTiles = tilingScheme.createLevelZeroTiles();
         });
+    };
+
+    EllipsoidSurface.prototype.update = function(context, sceneState) {
+        if (typeof this._levelZeroTiles === 'undefined') {
+            return;
+        }
+
+        this._tileLoadQueue.markInsertionPoint();
+
+        var levelZeroTiles = this._levelZeroTiles;
+        for (var i = 0, len = levelZeroTiles.length; i < len; ++i) {
+            var tile = levelZeroTiles[i];
+            if (tile.ready) {
+                updateTile(this, context, sceneState, tile);
+            } else {
+                queueTileLoad(this, tile);
+            }
+        }
+
+        processTileLoadQueue(this);
+    };
+
+
+    EllipsoidSurface.prototype.render = function(context, framebuffer, shaderProgram, renderState) {
+        var renderList = this._renderList;
+        if (renderList.length === 0) {
+            return;
+        }
+
+        context.beginDraw({
+            framebuffer : framebuffer,
+            shaderProgram : shaderProgram,
+            renderState : renderState
+        });
+
+        var uniformState = context.getUniformState();
+        var mv = uniformState.getModelView();
+
+        var uniformMap = {
+        };
+
+        for (var i = 0, len = renderList.length; i < len; i++) {
+            var tile = renderList[i];
+
+            var rtc = tile.get3DBoundingSphere().center;
+
+            var centerEye = mv.multiplyWithVector(new Cartesian4(rtc.x, rtc.y, rtc.z, 1.0));
+            var mvrtc = mv.clone();
+            mvrtc.setColumn3(centerEye);
+            tile.modelView = mvrtc;
+
+            var tileImagery = getTileImagery(this, tile);
+
+            context.continueDraw({
+                primitiveType : PrimitiveType.TRIANGLES,
+                vertexArray : tile.vertexArray,
+                uniformMap : tileImagery._drawUniforms
+            });
+        }
+
+        tilesToRender.length = 0;
+
+        context.endDraw();
+    };
+
+    /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * <br /><br />
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     *
+     * @memberof EllipsoidSurface
+     *
+     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     *
+     * @see EllipsoidSurface#destroy
+     */
+    EllipsoidSurface.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <br /><br />
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     *
+     * @memberof EllipsoidSurface
+     *
+     * @return {undefined}
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     * @see EllipsoidSurface#isDestroyed
+     */
+    EllipsoidSurface.prototype.destroy = function() {
+        when(this.levelZeroTiles, function(levelZeroTiles) {
+            for (var i = 0; i < levelZeroTiles.length; ++i) {
+                levelZeroTiles[i].destroy();
+            }
+        });
+        return destroyObject(this);
     };
 
     function updateTile(surface, context, sceneState, tile) {
@@ -165,72 +272,6 @@ define([
             tile = next;
         }
     }
-
-    EllipsoidSurface.prototype.update = function(context, sceneState) {
-        if (typeof this._levelZeroTiles === 'undefined') {
-            return;
-        }
-
-        this._tileLoadQueue.markInsertionPoint();
-
-        var levelZeroTiles = this._levelZeroTiles;
-        for (var i = 0, len = levelZeroTiles.length; i < len; ++i) {
-            var tile = levelZeroTiles[i];
-            if (tile.ready) {
-                updateTile(this, context, sceneState, tile);
-            } else {
-                queueTileLoad(this, tile);
-            }
-        }
-
-        processTileLoadQueue(this);
-    };
-
-
-    EllipsoidSurface.prototype.render = function(context) {
-
-    };
-
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @memberof EllipsoidSurface
-     *
-     * @return {Boolean} True if this object was destroyed; otherwise, false.
-     *
-     * @see EllipsoidSurface#destroy
-     */
-    EllipsoidSurface.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof EllipsoidSurface
-     *
-     * @return {undefined}
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see EllipsoidSurface#isDestroyed
-     */
-    EllipsoidSurface.prototype.destroy = function() {
-        when(this.levelZeroTiles, function(levelZeroTiles) {
-            for (var i = 0; i < levelZeroTiles.length; ++i) {
-                levelZeroTiles[i].destroy();
-            }
-        });
-        return destroyObject(this);
-    };
 
     function TileLoadQueue() {
         this.head = undefined;

@@ -8,8 +8,7 @@ define([
         '../Core/Ellipsoid',
         '../Core/Extent',
         './TileState',
-        './WebMercatorTilingScheme',
-        './TileState'
+        './WebMercatorTilingScheme'
     ], function(
         defaultValue,
         destroyObject,
@@ -19,8 +18,7 @@ define([
         Ellipsoid,
         Extent,
         TileState,
-        WebMercatorTilingScheme,
-        TileState) {
+        WebMercatorTilingScheme) {
     "use strict";
 
     /**
