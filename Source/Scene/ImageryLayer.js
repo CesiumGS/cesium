@@ -518,6 +518,7 @@ define([
             tile = tileStack.pop();
 
             if (cull(this, tile, sceneState)) {
+                tile.destroyVertexArray();
                 continue;
             }
 

@@ -150,6 +150,17 @@ define([
         return maxErrorRadians;
     }
 
+    var loading = 0;
+    var loaded = 0;
+
+    var worker = new Worker('/Workerizer.js');
+    worker.onmessage = function(event) {
+        tasks[event.data.id](event.data.data);
+        delete tasks[event.data.id];
+    };
+    var tasks = [];
+    var nextTask = 0;
+
     /**
      * Populates a {@link Tile} with ellipsoid-mapped surface geometry from this
      * tile provider.
@@ -162,6 +173,10 @@ define([
      * populated with geometry, or a promise for such a value in the future.
      */
     EsriImageServerTerrainProvider.prototype.createTileEllipsoidGeometry = function(context, tile) {
+        ++loading;
+        if ((loading % 10) == 0) {
+            console.log('loading: ' + loading);
+        }
         // Creating the geometry will require a request to the ImageServer, which will complete
         // asynchronously.  The question is, what do we do in the meantime?  The best thing to do is
         // to use terrain associated with the parent tile.  Ideally, we would be able to render
@@ -194,7 +209,7 @@ define([
         var yStart = -CesiumMath.PI_OVER_TWO + yDelta * tileY;
         var yStop = -CesiumMath.PI_OVER_TWO + yDelta * (tileY + 1);
 
-        var bbox = xStart + '%2C' + yStart + '%2C' + xStop + '%2C' + yStop;
+        var bbox = CesiumMath.toDegrees(xStart) + '%2C' + CesiumMath.toDegrees(yStart) + '%2C' + CesiumMath.toDegrees(xStop) + '%2C' + CesiumMath.toDegrees(yStop);
         var url = this.url + '/exportImage?format=tiff&f=image&size=256%2C256&bboxSR=4326&imageSR=4326&bbox=' + bbox;
         if (this.token) {
             url += '&token=' + this.token;
@@ -218,7 +233,12 @@ define([
             context2d.drawImage(image, 0, 0);
             var pixels = context2d.getImageData(0, 0, width, height).data;
 
-            var buffers = HeightmapTessellator.computeBuffers({
+            var deferred = when.defer();
+            var taskID = nextTask++;
+            tasks[taskID] = deferred.resolve;
+
+            worker.postMessage({
+                id: taskID,
                 heightmap: pixels,
                 width: width,
                 height: height,
@@ -232,8 +252,29 @@ define([
                 interleave : true,
                 relativeToCenter : center
             });
-            TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers);
-            return true;
+
+            return when(deferred, function(buffers) {
+                TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers);
+                ++loaded;
+                if ((loaded % 10) == 0) {
+                    console.log('loaded: ' + loaded);
+                }
+                return true;
+            });
+//            var buffers = HeightmapTessellator.computeBuffers({
+//                heightmap: pixels,
+//                width: width,
+//                height: height,
+//                heightScale: 1000.0,
+//                heightOffset: 1000.0,
+//                bytesPerHeight: 3,
+//                strideBytes: 4,
+//                ellipsoid : ellipsoid,
+//                extent : extent,
+//                generateTextureCoords : true,
+//                interleave : true,
+//                relativeToCenter : center
+//            });
         });
     };
 
