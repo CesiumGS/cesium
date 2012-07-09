@@ -195,7 +195,7 @@ require({
             lineNumbers: true,
             matchBrackets: true,
             indentUnit: 4,
-            extraKeys: {"F9": "runCesium"},
+            extraKeys: {"F9": "runCesium"}
         });
 
         function loadFromGallery(link) {

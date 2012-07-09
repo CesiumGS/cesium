@@ -93,7 +93,7 @@ require({
                 insetElement.appendChild(runButton);
 
                 new LinkButton({
-                    'label': '<span class="dijitReset dijitInline dijitIcon dijitIconFunction"></span> Run',
+                    'label': '<span class="dijitReset dijitInline dijitIcon dijitIconFunction"></span> Run'
                 }).placeAt(runButton);
             }
         }
