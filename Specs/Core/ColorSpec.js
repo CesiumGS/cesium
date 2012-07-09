@@ -19,6 +19,22 @@ defineSuite(['Core/Color'], function(Color) {
         expect(v.alpha).toEqual(0.4);
     });
 
+    it('fromBytes without arguments produces expected defaults', function() {
+        var v = new Color();
+        expect(v.red).toEqual(1.0);
+        expect(v.green).toEqual(1.0);
+        expect(v.blue).toEqual(1.0);
+        expect(v.alpha).toEqual(1.0);
+    });
+
+    it('fromBytes with arguments sets property values', function() {
+        var v = Color.fromBytes(0, 255, 51, 102);
+        expect(v.red).toEqual(0.0);
+        expect(v.green).toEqual(1.0);
+        expect(v.blue).toEqual(0.2);
+        expect(v.alpha).toEqual(0.4);
+    });
+
     it('byteToFloat works in all cases', function() {
         expect(Color.byteToFloat(0)).toEqual(0);
         expect(Color.byteToFloat(255)).toEqual(1.0);

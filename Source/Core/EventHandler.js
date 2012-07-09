@@ -45,14 +45,8 @@ define([
         }
 
         this._leftMouseButtonDown = false;
-        this._leftPressTime = undefined;
-        this._leftReleaseTime = undefined;
         this._middleMouseButtonDown = false;
-        this._middlePressTime = undefined;
-        this._middleReleaseTime = undefined;
         this._rightMouseButtonDown = false;
-        this._rightPressTime = undefined;
-        this._rightReleaseTime = undefined;
         this._seenAnyTouchEvents = false;
         this._lastMouseX = 0;
         this._lastMouseY = 0;
@@ -80,138 +74,6 @@ define([
             x : event.clientX - rect.left,
             y : event.clientY - rect.top
         };
-    };
-
-    /**
-     * Returns <code>true</code> if the left mouse button is pressed and <code>false</code> otherwise.
-     *
-     * @memberof EventHandler
-     *
-     * @return {Boolean} <code>true</code> if the left mouse button is pressed and <code>false</code> otherwise.
-     *
-     * @see EventHandler#isMiddleMouseButtonDown
-     * @see EventHandler#isRightMouseButtonDown
-     */
-    EventHandler.prototype.isLeftMouseButtonDown = function() {
-        return this._leftMouseButtonDown;
-    };
-
-    /**
-     * Returns the last time that the left mouse button was pressed.
-     *
-     * @memberof EventHandler
-     *
-     * @return {JulianDate} The time the left mouse button was pressed.
-     *
-     * @see EventHandler#getLeftReleaseTime
-     * @see EventHandler#getRightPressTime
-     * @see EventHandler#getMiddlePressTime
-     */
-    EventHandler.prototype.getLeftPressTime = function() {
-        return this._leftPressTime;
-    };
-
-    /**
-     * Returns the last time that the left mouse button was released.
-     *
-     * @memberof EventHandler
-     *
-     * @return {JulianDate} The time the left mouse button was released.
-     *
-     * @see EventHandler#getLeftPressTime
-     * @see EventHandler#getRightReleaseTime
-     * @see EventHandler#getMiddleReleaseTime
-     */
-    EventHandler.prototype.getLeftReleaseTime = function() {
-        return this._leftReleaseTime;
-    };
-
-    /**
-     * Returns <code>true</code> if the middle mouse button is pressed and <code>false</code> otherwise.
-     *
-     * @memberof EventHandler
-     *
-     * @return {Boolean} <code>true</code> if the middle mouse button is pressed and <code>false</code> otherwise.
-     *
-     * @see EventHandler#isMiddleMouseButtonDown
-     * @see EventHandler#isLeftMouseButtonDown
-     */
-    EventHandler.prototype.isMiddleMouseButtonDown = function() {
-        return this._middleMouseButtonDown;
-    };
-
-    /**
-     * Returns the last time that the middle mouse button was pressed.
-     *
-     * @memberof EventHandler
-     *
-     * @return {JulianDate} The time the middle mouse button was pressed.
-     *
-     * @see EventHandler#getMiddleReleaseTime
-     * @see EventHandler#getRightPressTime
-     * @see EventHandler#getLeftPressTime
-     */
-    EventHandler.prototype.getMiddlePressTime = function() {
-        return this._middlePressTime;
-    };
-
-    /**
-     * Returns the last time that the middle mouse button was released.
-     *
-     * @memberof EventHandler
-     *
-     * @return {JulianDate} The time the middle mouse button was released.
-     *
-     * @see EventHandler#getMiddlePressTime
-     * @see EventHandler#getRightReleaseTime
-     * @see EventHandler#getLeftReleaseTime
-     */
-    EventHandler.prototype.getMiddleReleaseTime = function() {
-        return this._middleReleaseTime;
-    };
-
-    /**
-     * Returns <code>true</code> if the right mouse button is pressed and <code>false</code> otherwise.
-     *
-     * @memberof EventHandler
-     *
-     * @return {Boolean} <code>true</code> if the right mouse button is pressed and <code>false</code> otherwise.
-     *
-     * @see EventHandler#isMiddleMouseButtonDown
-     * @see EventHandler#isLeftMouseButtonDown
-     */
-    EventHandler.prototype.isRightMouseButtonDown = function() {
-        return this._rightMouseButtonDown;
-    };
-
-    /**
-     * Returns the last time that the right mouse button was pressed.
-     *
-     * @memberof EventHandler
-     *
-     * @return {JulianDate} The time the right mouse button was pressed.
-     *
-     * @see EventHandler#getRightReleaseTime
-     * @see EventHandler#getLeftPressTime
-     * @see EventHandler#getMiddlePressTime
-     */
-    EventHandler.prototype.getRightPressTime = function() {
-        return this._rightPressTime;
-    };
-
-    /**
-     * Returns the last time that the right mouse button was released.
-     *
-     * @memberof EventHandler
-     *
-     * @return {JulianDate} The time the right mouse button was released.
-     *
-     * @see EventHandler#getRightPressTime
-     * @see EventHandler#getLeftReleaseTime
-     * @see EventHandler#getMiddleReleaseTime
-     */
-    EventHandler.prototype.getRightReleaseTime = function() {
-        return this._rightReleaseTime;
     };
 
     /**
@@ -281,7 +143,7 @@ define([
             return mouseEvents[type.name];
         }
 
-        return null;
+        return undefined;
     };
 
     /**
@@ -324,7 +186,7 @@ define([
             return EventModifier.ALT;
         }
 
-        return null;
+        return undefined;
     };
 
     EventHandler.prototype._handleMouseDown = function(event) {
@@ -345,15 +207,12 @@ define([
         // constants somewhere?
         if (event.button === 0) {
             this._leftMouseButtonDown = true;
-            this._leftPressTime = new JulianDate();
             action = this.getMouseAction(MouseEventType.LEFT_DOWN, modifier);
         } else if (event.button === 1) {
             this._middleMouseButtonDown = true;
-            this._middlePressTime = new JulianDate();
             action = this.getMouseAction(MouseEventType.MIDDLE_DOWN, modifier);
         } else if (event.button === 2) {
             this._rightMouseButtonDown = true;
-            this._rightPressTime = new JulianDate();
             action = this.getMouseAction(MouseEventType.RIGHT_DOWN, modifier);
         }
 
@@ -378,17 +237,14 @@ define([
         // constants somewhere?
         if (event.button === 0) {
             this._leftMouseButtonDown = false;
-            this._leftReleaseTime = new JulianDate();
             action = this.getMouseAction(MouseEventType.LEFT_UP, modifier);
             clickAction = this.getMouseAction(MouseEventType.LEFT_CLICK, modifier);
         } else if (event.button === 1) {
             this._middleMouseButtonDown = false;
-            this._middleReleaseTime = new JulianDate();
             action = this.getMouseAction(MouseEventType.MIDDLE_UP, modifier);
             clickAction = this.getMouseAction(MouseEventType.MIDDLE_CLICK, modifier);
         } else if (event.button === 2) {
             this._rightMouseButtonDown = false;
-            this._rightReleaseTime = new JulianDate();
             action = this.getMouseAction(MouseEventType.RIGHT_UP, modifier);
             clickAction = this.getMouseAction(MouseEventType.RIGHT_CLICK, modifier);
         }
@@ -456,7 +312,6 @@ define([
             var action;
 
             this._leftMouseButtonDown = true;
-            this._leftPressTime = new JulianDate();
             action = this.getMouseAction(MouseEventType.LEFT_DOWN, modifier);
 
             if (action) {
@@ -478,7 +333,6 @@ define([
 
         if (this._leftMouseButtonDown) {
             this._leftMouseButtonDown = false;
-            this._leftReleaseTime = new JulianDate();
             action = this.getMouseAction(MouseEventType.LEFT_UP, modifier);
             clickAction = this.getMouseAction(MouseEventType.LEFT_CLICK, modifier);
         }
