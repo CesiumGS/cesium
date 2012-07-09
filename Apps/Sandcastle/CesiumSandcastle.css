@@ -127,3 +127,18 @@ a.linkButton:focus, a.linkButton:hover {
     padding: 0;
     overflow: hidden;
 }
+
+.CodeMirror pre.errorMarker {
+    color: #222;
+    font-weight: bold;
+    background: #F42;
+    border-radius: 3px;
+}
+
+.CodeMirror pre.errorLine {
+    background: rgba(200, 50, 0, 0.2);
+}
+
+.CodeMirror-gutter-text {
+    cursor: default;
+}

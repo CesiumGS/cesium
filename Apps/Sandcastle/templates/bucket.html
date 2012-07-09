@@ -33,10 +33,13 @@
     };
 
     window.onerror = function (errorMsg, url, lineNumber) {
+        var rawErrorMsg = errorMsg;
         if (typeof lineNumber !== 'undefined') {
             errorMsg += ' (on line ' + lineNumber + ')';
+            window.parent.postMessage({ 'error': errorMsg, 'url': url, 'lineNumber': lineNumber, 'rawErrorMsg': rawErrorMsg }, "*");
+        } else {
+            window.parent.postMessage({ 'error': errorMsg, 'url': url }, "*");
         }
-        window.parent.postMessage({ 'error': errorMsg, 'url': url, 'lineNumber': lineNumber }, "*");
         console.originalError.apply(console, [ errorMsg ]);
         return false;
     }

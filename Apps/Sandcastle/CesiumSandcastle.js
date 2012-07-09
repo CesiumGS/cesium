@@ -88,6 +88,7 @@ require({
         var docNode = dom.byId('docPopup');
         var docMessage = dom.byId('docPopupMessage');
         var local = { 'docTypes': [],  'headers': "<html><head></head><body>"};
+        var errorLines = [];
 
         xhr.get({
             url: '../../Build/Documentation/types.txt',
@@ -172,7 +173,17 @@ require({
         var bucketFrame = document.getElementById('bucketFrame');
         var bucketPane = registry.byId('bucketPane');
 
-        CodeMirror.commands.runCesium = function() {
+        function clearAllErrors(cm) {
+            var line;
+            while (errorLines.length > 0) {
+                line = errorLines.pop();
+                cm.setLineClass(line, null);
+                cm.clearMarker(line);
+            }
+        }
+
+        CodeMirror.commands.runCesium = function(cm) {
+            clearAllErrors(cm);
             cesiumContainer.selectChild(bucketPane);
             bucketFrame.contentWindow.location.reload();
         };
@@ -187,7 +198,8 @@ require({
             matchBrackets: true,
             indentUnit: 4,
             extraKeys: {"Ctrl-Space": "autocomplete", "F9": "runCesium"},
-            onCursorActivity: onCursorActivity
+            onCursorActivity: onCursorActivity,
+            onChange: clearAllErrors
         });
 
         htmlEditor = CodeMirror.fromTextArea(document.getElementById("htmlBody"), {
@@ -223,7 +235,7 @@ require({
                     }
                     jsEditor.setValue(script);
                     htmlEditor.setValue(body.substring(0, pos - 1));
-                    CodeMirror.commands.runCesium();
+                    CodeMirror.commands.runCesium(jsEditor);
                 }
             });
         }
@@ -236,6 +248,7 @@ require({
         // The iframe (bucket.html) sends this message on load.
         // This triggers the code to be injected into the iframe.
         window.addEventListener('message', function (e) {
+            var line;
             if (e.data === 'reload') {
                 logOutput.innerHTML = "";
                 if (typeof queryObject.src !== 'undefined') {
@@ -262,6 +275,11 @@ require({
                 appendConsole('consoleLog', e.data.log);
             } else if (typeof e.data.error !== 'undefined') {
                 appendConsole('consoleError', e.data.error);
+                if (typeof e.data.lineNumber !== 'undefined') {
+                    line = jsEditor.setMarker(e.data.lineNumber - 1, '<abbr title="' + e.data.rawErrorMsg + '">' + e.data.lineNumber + '</abbr>', "errorMarker");
+                    jsEditor.setLineClass(line, "errorLine");
+                    errorLines.push(line);
+                }
             }
         }, true);
 
@@ -277,7 +295,7 @@ require({
 
         // Clicking the 'Run' button simply reloads the iframe.
         registry.byId('buttonRun').on('click', function () {
-            CodeMirror.commands.runCesium();
+            CodeMirror.commands.runCesium(jsEditor);
         });
 
         registry.byId('buttonSuggest').on('click', function () {
