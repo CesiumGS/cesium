@@ -8,7 +8,8 @@ define([
         '../Core/Ellipsoid',
         '../Core/Extent',
         './TileState',
-        './WebMercatorTilingScheme'
+        './WebMercatorTilingScheme',
+        './TileState'
     ], function(
         defaultValue,
         destroyObject,
@@ -18,7 +19,8 @@ define([
         Ellipsoid,
         Extent,
         TileState,
-        WebMercatorTilingScheme) {
+        WebMercatorTilingScheme,
+        TileState) {
     "use strict";
 
     /**
@@ -146,6 +148,10 @@ define([
         this._next = undefined;
 
         this._imagery = {};
+
+        this.state = TileState.UNLOADED;
+        this.geometry = undefined;
+        this.transformedGeometry = undefined;
     };
 
     /**

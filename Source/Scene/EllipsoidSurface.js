@@ -158,7 +158,7 @@ define([
 
             var next = tile._next;
 
-            if (!doneLoading) {
+            if (doneLoading) {
                 tileLoadQueue.remove(tile);
             }
 
