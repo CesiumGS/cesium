@@ -22,7 +22,7 @@ function(DeveloperError,
 
     function convertTaiToUtc(julianDate, result) {
         var toFind = new LeapSecond(julianDate, 0.0);
-        var leapSeconds = LeapSecond.leapSeconds;
+        var leapSeconds = LeapSecond.getLeapSeconds();
         var index = binarySearch(leapSeconds, toFind, LeapSecond.compareLeapSecondDate);
         if (index < 0) {
             index = ~index;
@@ -506,7 +506,7 @@ function(DeveloperError,
      * @memberof JulianDate
      *
      * @param {Number} totalDays The combined Julian Day Number and fractional day.
-     * @param {TimeStandard} timeStandard Indicates the time standard in which the first parameter is defined.
+     * @param {TimeStandard} [timeStandard = TimeStandard.UTC] Indicates the time standard in which the first parameter is defined.
      *
      * @return {JulianDate} The new {@Link JulianDate} instance.
      *
@@ -729,7 +729,7 @@ function(DeveloperError,
      */
     JulianDate.prototype.getTaiMinusUtc = function() {
         var toFind = new LeapSecond(this, 0.0);
-        var leapSeconds = LeapSecond.leapSeconds;
+        var leapSeconds = LeapSecond.getLeapSeconds();
         var index = binarySearch(leapSeconds, toFind, LeapSecond.compareLeapSecondDate);
         if (index < 0) {
             index = ~index;
@@ -747,11 +747,12 @@ function(DeveloperError,
      *
      * @memberof JulianDate
      *
-     * @param {Number} duration An integer number of seconds to add or subtract.
+     * @param {Number} seconds The number of seconds to add or subtract.
+     * @param {JulianDate} [result] The JulianDate to store the result into.
      *
-     * @return {JulianDate} A new Julian date object
+     * @return {JulianDate} The modified result parameter or a new JulianDate instance if it was not provided.
      *
-     * @exception {DeveloperError} duration is required and must be a number.
+     * @exception {DeveloperError} seconds is required and must be a number.
      *
      * @see JulianDate#addMinutes
      * @see JulianDate#addHours
@@ -764,12 +765,11 @@ function(DeveloperError,
      * var start = JulianDate.fromDate(date);
      * var end = start.addSeconds(95);      // July 4, 2011 @ 12:01:35 UTC
      */
-    JulianDate.prototype.addSeconds = function(duration, result) {
-        if (duration === null || isNaN(duration)) {
-            throw new DeveloperError('duration is required and must be a number.');
+    JulianDate.prototype.addSeconds = function(seconds, result) {
+        if (seconds === null || isNaN(seconds)) {
+            throw new DeveloperError('seconds is required and must be a number.');
         }
-        var newSecondsOfDay = this._secondsOfDay + duration;
-        return setComponents(this._julianDayNumber, newSecondsOfDay, result);
+        return setComponents(this._julianDayNumber, this._secondsOfDay + seconds, result);
     };
 
     /**
@@ -795,12 +795,12 @@ function(DeveloperError,
      * var start = JulianDate.fromDate(date);
      * var end = start.addMinutes(65);      // July 4, 2011 @ 13:05 UTC
      */
-    JulianDate.prototype.addMinutes = function(duration, result) {
+    JulianDate.prototype.addMinutes = function(duration) {
         if (duration === null || isNaN(duration)) {
             throw new DeveloperError('duration is required and must be a number.');
         }
         var newSecondsOfDay = this._secondsOfDay + (duration * TimeConstants.SECONDS_PER_MINUTE);
-        return setComponents(this._julianDayNumber, newSecondsOfDay, result);
+        return new JulianDate(this._julianDayNumber, newSecondsOfDay, this._timeStandard);
     };
 
     /**
@@ -826,12 +826,12 @@ function(DeveloperError,
      * var start = JulianDate.fromDate(date);
      * var end = start.addHours(6);         // July 4, 2011 @ 18:00 UTC
      */
-    JulianDate.prototype.addHours = function(duration, result) {
+    JulianDate.prototype.addHours = function(duration) {
         if (duration === null || isNaN(duration)) {
             throw new DeveloperError('duration is required and must be a number.');
         }
         var newSecondsOfDay = this._secondsOfDay + (duration * TimeConstants.SECONDS_PER_HOUR);
-        return setComponents(this._julianDayNumber, newSecondsOfDay, result);
+        return new JulianDate(this._julianDayNumber, newSecondsOfDay, this._timeStandard);
     };
 
     /**
@@ -857,12 +857,12 @@ function(DeveloperError,
      * var start = JulianDate.fromDate(date);
      * var end = start.addDays(5);         // July 9, 2011 @ 12:00 UTC
      */
-    JulianDate.prototype.addDays = function(duration, result) {
+    JulianDate.prototype.addDays = function(duration) {
         if (duration === null || isNaN(duration)) {
             throw new DeveloperError('duration is required and must be a number.');
         }
         var newJulianDayNumber = this._julianDayNumber + duration;
-        return setComponents(newJulianDayNumber, this._secondsOfDay, result);
+        return new JulianDate(newJulianDayNumber, this._secondsOfDay, this._timeStandard);
     };
 
     /**
@@ -1005,35 +1005,35 @@ function(DeveloperError,
 
     //To avoid circular dependancies, we load the default list of leap seconds
     //here, rather than in the LeapSecond class itself.
-    if (typeof LeapSecond.leapSeconds === 'undefined' || LeapSecond.leapSeconds.length === 0) {
-        LeapSecond.leapSeconds = [
-                                  new LeapSecond(new JulianDate(2441317, 43210.0, TimeStandard.TAI), 10), // January 1, 1972 00:00:00 UTC
-                                  new LeapSecond(new JulianDate(2441499, 43211.0, TimeStandard.TAI), 11), // July 1, 1972 00:00:00 UTC
-                                  new LeapSecond(new JulianDate(2441683, 43212.0, TimeStandard.TAI), 12), // January 1, 1973 00:00:00 UTC
-                                  new LeapSecond(new JulianDate(2442048, 43213.0, TimeStandard.TAI), 13), // January 1, 1974 00:00:00 UTC
-                                  new LeapSecond(new JulianDate(2442413, 43214.0, TimeStandard.TAI), 14), // January 1, 1975 00:00:00 UTC
-                                  new LeapSecond(new JulianDate(2442778, 43215.0, TimeStandard.TAI), 15), // January 1, 1976 00:00:00 UTC
-                                  new LeapSecond(new JulianDate(2443144, 43216.0, TimeStandard.TAI), 16), // January 1, 1977 00:00:00 UTC
-                                  new LeapSecond(new JulianDate(2443509, 43217.0, TimeStandard.TAI), 17), // January 1, 1978 00:00:00 UTC
-                                  new LeapSecond(new JulianDate(2443874, 43218.0, TimeStandard.TAI), 18), // January 1, 1979 00:00:00 UTC
-                                  new LeapSecond(new JulianDate(2444239, 43219.0, TimeStandard.TAI), 19), // January 1, 1980 00:00:00 UTC
-                                  new LeapSecond(new JulianDate(2444786, 43220.0, TimeStandard.TAI), 20), // July 1, 1981 00:00:00 UTC
-                                  new LeapSecond(new JulianDate(2445151, 43221.0, TimeStandard.TAI), 21), // July 1, 1982 00:00:00 UTC
-                                  new LeapSecond(new JulianDate(2445516, 43222.0, TimeStandard.TAI), 22), // July 1, 1983 00:00:00 UTC
-                                  new LeapSecond(new JulianDate(2446247, 43223.0, TimeStandard.TAI), 23), // July 1, 1985 00:00:00 UTC
-                                  new LeapSecond(new JulianDate(2447161, 43224.0, TimeStandard.TAI), 24), // January 1, 1988 00:00:00 UTC
-                                  new LeapSecond(new JulianDate(2447892, 43225.0, TimeStandard.TAI), 25), // January 1, 1990 00:00:00 UTC
-                                  new LeapSecond(new JulianDate(2448257, 43226.0, TimeStandard.TAI), 26), // January 1, 1991 00:00:00 UTC
-                                  new LeapSecond(new JulianDate(2448804, 43227.0, TimeStandard.TAI), 27), // July 1, 1992 00:00:00 UTC
-                                  new LeapSecond(new JulianDate(2449169, 43228.0, TimeStandard.TAI), 28), // July 1, 1993 00:00:00 UTC
-                                  new LeapSecond(new JulianDate(2449534, 43229.0, TimeStandard.TAI), 29), // July 1, 1994 00:00:00 UTC
-                                  new LeapSecond(new JulianDate(2450083, 43230.0, TimeStandard.TAI), 30), // January 1, 1996 00:00:00 UTC
-                                  new LeapSecond(new JulianDate(2450630, 43231.0, TimeStandard.TAI), 31), // July 1, 1997 00:00:00 UTC
-                                  new LeapSecond(new JulianDate(2451179, 43232.0, TimeStandard.TAI), 32), // January 1, 1999 00:00:00 UTC
-                                  new LeapSecond(new JulianDate(2453736, 43233.0, TimeStandard.TAI), 33), // January 1, 2006 00:00:00 UTC
-                                  new LeapSecond(new JulianDate(2454832, 43234.0, TimeStandard.TAI), 34), // January 1, 2009 00:00:00 UTC
-                                  new LeapSecond(new JulianDate(2456109, 43235.0, TimeStandard.TAI), 35)  // July 1, 2012 00:00:00 UTC
-                                 ];
+    if (LeapSecond.getLeapSeconds().length === 0) {
+        LeapSecond.setLeapSeconds([
+                                   new LeapSecond(new JulianDate(2441317, 43210.0, TimeStandard.TAI), 10), // January 1, 1972 00:00:00 UTC
+                                   new LeapSecond(new JulianDate(2441499, 43211.0, TimeStandard.TAI), 11), // July 1, 1972 00:00:00 UTC
+                                   new LeapSecond(new JulianDate(2441683, 43212.0, TimeStandard.TAI), 12), // January 1, 1973 00:00:00 UTC
+                                   new LeapSecond(new JulianDate(2442048, 43213.0, TimeStandard.TAI), 13), // January 1, 1974 00:00:00 UTC
+                                   new LeapSecond(new JulianDate(2442413, 43214.0, TimeStandard.TAI), 14), // January 1, 1975 00:00:00 UTC
+                                   new LeapSecond(new JulianDate(2442778, 43215.0, TimeStandard.TAI), 15), // January 1, 1976 00:00:00 UTC
+                                   new LeapSecond(new JulianDate(2443144, 43216.0, TimeStandard.TAI), 16), // January 1, 1977 00:00:00 UTC
+                                   new LeapSecond(new JulianDate(2443509, 43217.0, TimeStandard.TAI), 17), // January 1, 1978 00:00:00 UTC
+                                   new LeapSecond(new JulianDate(2443874, 43218.0, TimeStandard.TAI), 18), // January 1, 1979 00:00:00 UTC
+                                   new LeapSecond(new JulianDate(2444239, 43219.0, TimeStandard.TAI), 19), // January 1, 1980 00:00:00 UTC
+                                   new LeapSecond(new JulianDate(2444786, 43220.0, TimeStandard.TAI), 20), // July 1, 1981 00:00:00 UTC
+                                   new LeapSecond(new JulianDate(2445151, 43221.0, TimeStandard.TAI), 21), // July 1, 1982 00:00:00 UTC
+                                   new LeapSecond(new JulianDate(2445516, 43222.0, TimeStandard.TAI), 22), // July 1, 1983 00:00:00 UTC
+                                   new LeapSecond(new JulianDate(2446247, 43223.0, TimeStandard.TAI), 23), // July 1, 1985 00:00:00 UTC
+                                   new LeapSecond(new JulianDate(2447161, 43224.0, TimeStandard.TAI), 24), // January 1, 1988 00:00:00 UTC
+                                   new LeapSecond(new JulianDate(2447892, 43225.0, TimeStandard.TAI), 25), // January 1, 1990 00:00:00 UTC
+                                   new LeapSecond(new JulianDate(2448257, 43226.0, TimeStandard.TAI), 26), // January 1, 1991 00:00:00 UTC
+                                   new LeapSecond(new JulianDate(2448804, 43227.0, TimeStandard.TAI), 27), // July 1, 1992 00:00:00 UTC
+                                   new LeapSecond(new JulianDate(2449169, 43228.0, TimeStandard.TAI), 28), // July 1, 1993 00:00:00 UTC
+                                   new LeapSecond(new JulianDate(2449534, 43229.0, TimeStandard.TAI), 29), // July 1, 1994 00:00:00 UTC
+                                   new LeapSecond(new JulianDate(2450083, 43230.0, TimeStandard.TAI), 30), // January 1, 1996 00:00:00 UTC
+                                   new LeapSecond(new JulianDate(2450630, 43231.0, TimeStandard.TAI), 31), // July 1, 1997 00:00:00 UTC
+                                   new LeapSecond(new JulianDate(2451179, 43232.0, TimeStandard.TAI), 32), // January 1, 1999 00:00:00 UTC
+                                   new LeapSecond(new JulianDate(2453736, 43233.0, TimeStandard.TAI), 33), // January 1, 2006 00:00:00 UTC
+                                   new LeapSecond(new JulianDate(2454832, 43234.0, TimeStandard.TAI), 34), // January 1, 2009 00:00:00 UTC
+                                   new LeapSecond(new JulianDate(2456109, 43235.0, TimeStandard.TAI), 35)  // July 1, 2012 00:00:00 UTC
+                                 ]);
     }
 
     return JulianDate;
