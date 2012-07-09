@@ -13,8 +13,6 @@ define([
      * @constructor
      *
      * @param {JulianDate} date A Julian date representing the time of the leap second.
-     * Additionally, this parameter may be a {String} containing the date of the leap second
-     * (in the format used to construct a Javascript Date object).
      * @param {Number} totalTaiOffsetFromUtc The cumulative difference, in seconds, between the TAI and
      * UTC standards at the time of this leap second.
      *
@@ -61,8 +59,33 @@ define([
     };
 
     /**
-     * Returns a list of leap seconds. If {@link LeapSecond.setLeapSeconds} has not yet been called,
-     * then a list of leap seconds that was available when this library was released is returned.
+     * Sets the list of leap seconds used throughout Cesium.
+     *
+     * @memberof LeapSecond
+     *
+     * @param {Array} leapSeconds An array of {@link LeapSecond} objects.
+     * @exception {DeveloperErrpr} leapSeconds is required and must be an array.
+     *
+     * @see LeapSecond.setLeapSeconds
+     *
+     * @example
+     * LeapSecond.setleapSeconds([
+     *                            new LeapSecond(new JulianDate(2453736, 43233.0, TimeStandard.TAI), 33), // January 1, 2006 00:00:00 UTC
+     *                            new LeapSecond(new JulianDate(2454832, 43234.0, TimeStandard.TAI), 34), // January 1, 2009 00:00:00 UTC
+     *                            new LeapSecond(new JulianDate(2456109, 43235.0, TimeStandard.TAI), 35)  // July 1, 2012 00:00:00 UTC
+     *                           ]);
+     */
+    LeapSecond.setLeapSeconds = function(leapSeconds) {
+        if (!Array.isArray(leapSeconds)) {
+            throw new DeveloperError("leapSeconds is required and must be an array.");
+        }
+        LeapSecond._leapSeconds = leapSeconds;
+        LeapSecond._leapSeconds.sort(LeapSecond.compareLeapSecondDate);
+    };
+
+    /**
+     * Returns a copy of the array of leap seconds used throughout Cesium. By default, this is the
+     * official list of leap seconds that was available when Cesium was released.
      *
      * @memberof LeapSecond
      *
@@ -70,7 +93,9 @@ define([
      *
      * @see LeapSecond.setLeapSeconds
      */
-    LeapSecond.leapSeconds = [];
+    LeapSecond.getLeapSeconds = function(leapSeconds) {
+        return LeapSecond._leapSeconds;
+    };
 
     /**
      * Checks whether two leap seconds are equivalent to each other.
@@ -126,6 +151,8 @@ define([
         }
         return 0;
     };
+
+    LeapSecond._leapSeconds = [];
 
     return LeapSecond;
 });
