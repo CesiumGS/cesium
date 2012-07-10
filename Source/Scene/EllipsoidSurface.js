@@ -5,6 +5,7 @@ define([
         '../Core/Cartesian4',
         '../Core/DeveloperError',
         '../Core/Math',
+        '../Core/PrimitiveType',
         './ImageryLayerCollection',
         './TileState',
         './TileImagery',
@@ -15,6 +16,7 @@ define([
         Cartesian4,
         DeveloperError,
         CesiumMath,
+        PrimitiveType,
         ImageryLayerCollection,
         TileState,
         TileImagery,
@@ -27,7 +29,7 @@ define([
      * @param {Number} [description.maxScreenSpaceError=2]
      */
     var EllipsoidSurface = function(description) {
-        // TODO: make sure all this exists.
+        // TODO: make sure description has these properties.
         this.terrain = description.terrain;
         this.imageryCollection = description.imageryCollection;
         this.maxScreenSpaceError = defaultValue(description.maxScreenSpaceError, 2);
@@ -81,31 +83,73 @@ define([
         var uniformState = context.getUniformState();
         var mv = uniformState.getModelView();
 
+        var center3D;
+        var modifiedModelView;
+
+        var numberOfDayTextures;
+        var dayTextures = new Array(8);
+        var dayTextureTranslation = new Array(8);
+        var dayTextureScale = new Array(8);
+
         var uniformMap = {
+            u_center3D : function() {
+                return center3D;
+            },
+            u_modifiedModelView : function() {
+                return modifiedModelView;
+            },
+            u_numberOfDayTextures : function() {
+                return numberOfDayTextures;
+            },
+            u_dayTextures : function() {
+                return dayTextures;
+            },
+            u_dayTextureTranslation : function() {
+                return dayTextureTranslation;
+            },
+            u_dayTextureScale : function() {
+                return dayTextureScale;
+            }
         };
 
         for (var i = 0, len = renderList.length; i < len; i++) {
             var tile = renderList[i];
 
             var rtc = tile.get3DBoundingSphere().center;
+            center3D = rtc;
 
             var centerEye = mv.multiplyWithVector(new Cartesian4(rtc.x, rtc.y, rtc.z, 1.0));
+            // PERFORMANCE_TODO: use a scratch matrix instead of cloning for every tile.
             var mvrtc = mv.clone();
             mvrtc.setColumn3(centerEye);
-            tile.modelView = mvrtc;
+            modifiedModelView = mvrtc;
 
-            var tileImagery = getTileImagery(this, tile);
+            var imageryCollection = tile.imagery;
+
+            numberOfDayTextures = 0;
+            for (var imageryIndex = 0, imageryLen = imageryCollection.length; imageryIndex < imageryLen; ++imageryIndex) {
+                var imagery = imageryCollection[imageryIndex];
+                if (!imagery) {
+                    continue;
+                }
+
+                dayTextures[numberOfDayTextures] = imagery.texture;
+                dayTextureTranslation[numberOfDayTextures] = imagery.textureTranslation;
+                dayTextureScale[numberOfDayTextures] = imagery.textureScale;
+
+                ++numberOfDayTextures;
+            }
 
             context.continueDraw({
                 primitiveType : PrimitiveType.TRIANGLES,
                 vertexArray : tile.vertexArray,
-                uniformMap : tileImagery._drawUniforms
+                uniformMap : uniformMap
             });
         }
 
-        tilesToRender.length = 0;
-
         context.endDraw();
+
+        renderList.length = 0;
     };
 
     /**
@@ -160,7 +204,7 @@ define([
                 surface._renderList.push(tile);
             } else {
                 var children = tile.children;
-                // TODO: traverse children front-to-back
+                // PERFORMANCE_TODO: traverse children front-to-back
                 for (var i = 0, len = children.length; i < len; ++i) {
                     updateTile(surface, context, sceneState, children[i]);
                 }
@@ -172,7 +216,7 @@ define([
     }
 
     function isTileVisible(tile) {
-        // TODO: implement culling.
+        // PERFORMANCE_TODO: implement culling.
         return true;
     }
 
@@ -192,7 +236,7 @@ define([
         var frustum = camera.frustum;
         var fovy = frustum.fovy;
 
-        // TODO: factor out stuff that's constant across tiles.
+        // PERFORMANCE_TODO: factor out stuff that's constant across tiles.
         return (maxGeometricError * viewportHeight) / (2 * distance * Math.tan(0.5 * fovy));
     }
 
@@ -266,6 +310,7 @@ define([
             var next = tile._next;
 
             if (doneLoading) {
+                tile.ready = true;
                 tileLoadQueue.remove(tile);
             }
 
