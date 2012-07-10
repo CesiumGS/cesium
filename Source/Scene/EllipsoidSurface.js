@@ -74,12 +74,6 @@ define([
             return;
         }
 
-        context.beginDraw({
-            framebuffer : framebuffer,
-            shaderProgram : shaderProgram,
-            renderState : renderState
-        });
-
         var uniformState = context.getUniformState();
         var mv = uniformState.getModelView();
 
@@ -111,6 +105,12 @@ define([
                 return dayTextureScale;
             }
         };
+
+        context.beginDraw({
+            framebuffer : framebuffer,
+            shaderProgram : shaderProgram,
+            renderState : renderState
+        });
 
         for (var i = 0, len = renderList.length; i < len; i++) {
             var tile = renderList[i];
