@@ -511,7 +511,7 @@ define([
                     var changedProperties = polyline._getChangedProperties();
                     if (changedProperties[POSITION_INDEX]) {
                         bucket = polyline._bucket;
-                        if (bucket.getLengthOfPositionsInBucket() !== bucket.lengthOfPositions) {
+                        if (bucket.getPolylinePositionsLength(polyline) !== polyline._actualLength) {
                             createVertexArrays = true;
                             break;
                         }
@@ -679,9 +679,7 @@ define([
             if (polylineBuckets.hasOwnProperty(x)) {
                 bucket = polylineBuckets[x];
                 bucket.updateRenderState(context, useDepthTest);
-                var lengthOfPositions = bucket.getLengthOfPositionsInBucket();
-                bucket.lengthOfPositions = lengthOfPositions;
-                totalLength += lengthOfPositions;
+                totalLength += bucket.lengthOfPositions;
             }
         }
         if (totalLength > 0) {
@@ -996,6 +994,8 @@ define([
     PolylineBucket.prototype.addPolyline = function(p) {
         var polylines = this.polylines;
         polylines.push(p);
+        p._actualLength = this.getPolylinePositionsLength(p);
+        this.lengthOfPositions += p._actualLength;
         p._bucket = this;
     };
 
@@ -1089,20 +1089,7 @@ define([
     /**
      * @private
      */
-    PolylineBucket.prototype.getLengthOfPositionsInBucket = function() {
-        var totalLength = 0;
-        var polylines = this.polylines;
-        var length = polylines.length;
-        for ( var i = 0; i < length; ++i) {
-            totalLength += this._getPolylinePositionsLength(polylines[i]);
-        }
-        return totalLength;
-    };
-
-    /**
-     * @private
-     */
-    PolylineBucket.prototype._getPolylinePositionsLength = function(polyline) {
+    PolylineBucket.prototype.getPolylinePositionsLength = function(polyline) {
         if (this.mode === SceneMode.SCENE3D) {
             return polyline.getPositions().length;
         }
@@ -1328,7 +1315,7 @@ define([
             if (p === polyline) {
                 break;
             }
-            positionIndex += this._getPolylinePositionsLength(p);
+            positionIndex += p._actualLength;
         }
         return positionIndex;
     };
@@ -1364,7 +1351,7 @@ define([
      * @private
      */
     PolylineBucket.prototype.writePositionsUpdate = function(positionIndex, polyline, buffer) {
-        var positionsLength = this._getPolylinePositionsLength(polyline);
+        var positionsLength = polyline._actualLength;
         if (positionsLength) {
             positionIndex += this._getPolylineStartIndex(polyline);
             var positionsArray = new Float32Array(positionsLength * 3);
@@ -1386,7 +1373,7 @@ define([
      * @private
      */
     PolylineBucket.prototype.writeColorUpdate = function(positionIndex, polyline, buffer) {
-        var positionsLength = this._getPolylinePositionsLength(polyline);
+        var positionsLength = polyline._actualLength;
         if (positionsLength) {
             positionIndex += this._getPolylineStartIndex(polyline);
 
@@ -1412,7 +1399,7 @@ define([
      * @private
      */
     PolylineBucket.prototype.writeShowUpdate = function(positionIndex, polyline, buffer) {
-        var positionsLength = this._getPolylinePositionsLength(polyline);
+        var positionsLength = polyline._actualLength;
         if (positionsLength) {
             positionIndex += this._getPolylineStartIndex(polyline);
             var show = polyline.getShow();
