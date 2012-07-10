@@ -1,4 +1,4 @@
-/*global require,CodeMirror,JSLINT*/
+/*global require,CodeMirror,JSHINT*/
 require({
         baseUrl: '../../Source',
         packages: [{
@@ -89,8 +89,8 @@ require({
         var docMessage = dom.byId('docPopupMessage');
         var local = { 'docTypes': [],  'headers': "<html><head></head><body>"};
         var errorLines = [];
-        var lintOptions = { 'vars': true, 'white': true };
-        var lintTimer;
+        var hintOptions = {};
+        var hintTimer;
 
         xhr.get({
             url: '../../Build/Documentation/types.txt',
@@ -186,32 +186,32 @@ require({
         }
 
         function clearAllErrors() {
-            var line, lint, lints, i, len;
-            lintTimer = undefined;
+            var line, hint, hints, i, len;
+            hintTimer = undefined;
             while (errorLines.length > 0) {
                 line = errorLines.pop();
                 jsEditor.setLineClass(line, null);
                 jsEditor.clearMarker(line);
             }
-            if (!JSLINT(jsEditor.getValue(), lintOptions)) {
-                lints = JSLINT.errors;
-                len = lints.length;
+            if (!JSHINT(jsEditor.getValue(), hintOptions)) {
+                hints = JSHINT.errors;
+                len = hints.length;
                 for (i = 0; i < len; ++i) {
-                    lint = lints[i];
-                    if ((lint !== null) && (typeof lint.reason !== 'undefined') && (lint.line > 0)) {
-                        line = jsEditor.setMarker(lint.line - 1, makeLineLabel(lint.reason, lint.line), "lintMarker");
-                        jsEditor.setLineClass(line, "lintLine");
+                    hint = hints[i];
+                    if ((hint !== null) && (typeof hint.reason !== 'undefined') && (hint.line > 0)) {
+                        line = jsEditor.setMarker(hint.line - 1, makeLineLabel(hint.reason, hint.line), "hintMarker");
+                        jsEditor.setLineClass(line, "hintLine");
                         errorLines.push(line);
                     }
                 }
             }
         }
 
-        function scheduleLint() {
-            if (typeof lintTimer !== 'undefined') {
-                window.clearTimeout(lintTimer);
+        function scheduleHint() {
+            if (typeof hintTimer !== 'undefined') {
+                window.clearTimeout(hintTimer);
             }
-            lintTimer = setTimeout(clearAllErrors, 550);
+            hintTimer = setTimeout(clearAllErrors, 550);
         }
 
         CodeMirror.commands.runCesium = function(cm) {
@@ -231,7 +231,7 @@ require({
             indentUnit: 4,
             extraKeys: {"Ctrl-Space": "autocomplete", "F9": "runCesium"},
             onCursorActivity: onCursorActivity,
-            onChange: scheduleLint
+            onChange: scheduleHint
         });
 
         htmlEditor = CodeMirror.fromTextArea(document.getElementById("htmlBody"), {

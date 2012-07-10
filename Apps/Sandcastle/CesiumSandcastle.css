@@ -139,14 +139,14 @@ a.linkButton:focus, a.linkButton:hover {
     background: rgba(200, 50, 0, 0.2);
 }
 
-.CodeMirror pre.lintMarker {
+.CodeMirror pre.hintMarker {
     color: #222;
     font-weight: bold;
     background: #FE2;
     border-radius: 3px;
 }
 
-.CodeMirror pre.lintLine {
+.CodeMirror pre.hintLine {
     background: rgba(200, 200, 0, 0.2);
 }
 
