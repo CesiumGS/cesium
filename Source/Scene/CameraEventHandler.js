@@ -6,7 +6,6 @@ define([
         '../Core/EventHandler',
         '../Core/MouseEventType',
         '../Core/Cartesian2',
-        '../Core/JulianDate',
         './CameraEventType'
     ], function(
         DeveloperError,
@@ -15,7 +14,6 @@ define([
         EventHandler,
         MouseEventType,
         Cartesian2,
-        JulianDate,
         CameraEventType) {
     "use strict";
 
@@ -36,46 +34,37 @@ define([
      * @see EventHandler
      */
     var CameraEventHandler = function(canvas, moveType, moveModifier) {
-        if (!canvas) {
+        if (typeof canvas === 'undefined') {
             throw new DeveloperError('description.canvas is required.');
         }
 
-        if (!moveType) {
+        if (typeof moveType === 'undefined') {
             throw new DeveloperError('moveType is required.');
         }
 
         this._eventHandler = new EventHandler(canvas);
 
-        this._eventDownFunc = null;
-        this._eventPressTimeFunc = null;
-        this._eventReleaseTimeFunc = null;
-
         this._update = true;
-        this._movement = null;
-        this._lastMovement = null;
+        this._movement = undefined;
+        this._lastMovement = undefined;
+        this._isDown = false;
+        this._pressTime = undefined;
+        this._releaseTime = undefined;
 
         var that = this;
 
         if (moveType !== CameraEventType.WHEEL) {
             var down;
+            var up;
             if (moveType === CameraEventType.LEFT_DRAG) {
                 down = MouseEventType.LEFT_DOWN;
-
-                this._eventDownFunc = this._eventHandler.isLeftMouseButtonDown;
-                this._eventPressTimeFunc = this._eventHandler.getLeftPressTime;
-                this._eventReleaseTimeFunc = this._eventHandler.getLeftReleaseTime;
+                up = MouseEventType.LEFT_UP;
             } else if (moveType === CameraEventType.RIGHT_DRAG) {
                 down = MouseEventType.RIGHT_DOWN;
-
-                this._eventDownFunc = this._eventHandler.isRightMouseButtonDown;
-                this._eventPressTimeFunc = this._eventHandler.getRightPressTime;
-                this._eventReleaseTimeFunc = this._eventHandler.getRightReleaseTime;
+                up = MouseEventType.RIGHT_UP;
             } else if (moveType === CameraEventType.MIDDLE_DRAG) {
                 down = MouseEventType.MIDDLE_DOWN;
-
-                this._eventDownFunc = this._eventHandler.isMiddleMouseButtonDown;
-                this._eventPressTimeFunc = this._eventHandler.getMiddlePressTime;
-                this._eventReleaseTimeFunc = this._eventHandler.getRightReleaseTime;
+                up = MouseEventType.MIDDLE_UP;
             } else {
                 this._eventHandler = this._eventHandler && this._eventHandler.destroy();
                 throw new DeveloperError('moveType must be of type CameraEventType.');
@@ -83,10 +72,17 @@ define([
 
             this._eventHandler.setMouseAction(function(movement) {
                 that._lastMovement = null;
+                that._isDown = true;
+                that._pressTime = new Date();
             }, down, moveModifier);
 
             this._eventHandler.setMouseAction(function(movement) {
-                if (that._eventDownFunc.call(that._eventHandler)) {
+                that._isDown = false;
+                that._releaseTime = new Date();
+            }, up, moveModifier);
+
+            this._eventHandler.setMouseAction(function(movement) {
+                if (that._isDown) {
                     if (!that._update) {
                         that._movement.endPosition = movement.endPosition.clone();
                     } else {
@@ -97,9 +93,6 @@ define([
                 }
             }, MouseEventType.MOVE, moveModifier);
         } else {
-            this._wheelStart = null;
-            this._wheelEnd = null;
-
             this._eventHandler.setMouseAction(function(delta) {
                 // TODO: magic numbers
                 var arcLength = 2 * CesiumMath.toRadians(delta);
@@ -114,8 +107,8 @@ define([
                     that._lastMovement = that._movement; // This looks unusual, but its needed for wheel inertia.
                     that._update = false;
                 }
-                that._wheelStart = new JulianDate();
-                that._wheelEnd = that._wheelStart.addSeconds(Math.abs(arcLength) * 0.005);
+                that._pressTime = new Date();
+                that._releaseTime = new Date(that._pressTime.getTime() + Math.abs(arcLength) * 5.0);
             }, MouseEventType.WHEEL, moveModifier);
         }
     };
@@ -125,7 +118,7 @@ define([
      *
      * @memberof CameraEventHandler
      *
-     * @return {boolean} DOC_TBA
+     * @return {Boolean} DOC_TBA
      */
     CameraEventHandler.prototype.isMoving = function() {
         return !this._update;
@@ -160,14 +153,11 @@ define([
      *
      * @memberof CameraEventHandler
      *
-     * @return {Object} DOC_TBA
+     * @return {Boolean} DOC_TBA
      *
      */
     CameraEventHandler.prototype.isButtonDown = function() {
-        if (this._eventDownFunc) {
-            return this._eventDownFunc.call(this._eventHandler);
-        }
-        return false;
+        return this._isDown;
     };
 
     /**
@@ -175,16 +165,11 @@ define([
      *
      * @memberof CameraEventHandler
      *
-     * @return {Object} DOC_TBA
+     * @return {Date} DOC_TBA
      *
      */
     CameraEventHandler.prototype.getButtonPressTime = function() {
-        if (this._eventPressTimeFunc) {
-            return this._eventPressTimeFunc.call(this._eventHandler);
-        } else if (this._wheelStart) {
-            return this._wheelStart;
-        }
-        return null;
+        return this._pressTime;
     };
 
     /**
@@ -192,16 +177,11 @@ define([
      *
      * @memberof CameraEventHandler
      *
-     * @return {Object} DOC_TBA
+     * @return {Date} DOC_TBA
      *
      */
     CameraEventHandler.prototype.getButtonReleaseTime = function() {
-        if (this._eventReleaseTimeFunc) {
-            return this._eventReleaseTimeFunc.call(this._eventHandler);
-        } else if (this._wheelEnd) {
-            return this._wheelEnd;
-        }
-        return null;
+        return this._releaseTime;
     };
 
     /**

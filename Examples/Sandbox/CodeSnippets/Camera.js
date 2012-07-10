@@ -32,7 +32,7 @@
             var transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
 
             var spindle = scene.getCamera().getControllers().get(0);
-            spindle.mouseConstrainedZAxis = true;
+            spindle.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
             spindle.setReferenceFrame(transform, Cesium.Ellipsoid.UNIT_SPHERE);
 
             // draw x axis in red
@@ -75,7 +75,6 @@
         this.clear = function() {
             var spindle = scene.getCamera().getControllers().get(0);
             spindle.setReferenceFrame(Cesium.Matrix4.IDENTITY);
-            spindle.mouseConstrainedZAxis = false;
         };
     };
 

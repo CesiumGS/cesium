@@ -961,28 +961,6 @@ defineSuite([
         expect(actualCoords).toEqual(expectedCoords);
     });
 
-    it('get middle press time', function() {
-        handler.setMouseAction(function(event) {}, MouseEventType.MIDDLE_DOWN);
-        element.fireEvents('mousedown', {
-            button : 1,
-            clientX : 1,
-            clientY : 1
-        });
-
-        expect(handler.getMiddlePressTime()).toBeDefined();
-    });
-
-    it('get middle release time', function() {
-        handler.setMouseAction(function(event) {}, MouseEventType.MIDDLE_DOWN);
-        element.fireEvents('mouseup', {
-            button : 1,
-            clientX : 1,
-            clientY : 1
-        });
-
-        expect(handler.getMiddleReleaseTime()).toBeDefined();
-    });
-
     it('modified mouse move', function() {
         var actualMove = {
             startPosition : new Cartesian2(0, 0),
