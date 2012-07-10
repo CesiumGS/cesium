@@ -38,6 +38,7 @@ define([
         './SceneMode',
         './TexturePool',
         './ViewportQuad',
+        './EllipsoidSurface',
         '../Shaders/CentralBodyVS',
         '../Shaders/CentralBodyFS',
         '../Shaders/CentralBodyFSCommon',
@@ -92,6 +93,7 @@ define([
         SceneMode,
         TexturePool,
         ViewportQuad,
+        EllipsoidSurface,
         CentralBodyVS,
         CentralBodyFS,
         CentralBodyFSCommon,
@@ -123,11 +125,13 @@ define([
      * @param {Ellipsoid} [ellipsoid=WGS84 Ellipsoid] Determines the size and shape of the central body.
      *
      */
-    var CentralBody = function(ellipsoid, tilingScheme) {
+    var CentralBody = function(ellipsoid, tilingScheme, imageryLayerCollection) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         this._ellipsoid = ellipsoid;
 
         this._occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), Cartesian3.ZERO);
+
+        this._imageLayers = defaultValue(imageryLayerCollection, new ImageryLayerCollection());
 
         tilingScheme = defaultValue(tilingScheme, new WebMercatorTilingScheme({
             ellipsoid : ellipsoid,
@@ -141,9 +145,12 @@ define([
 //            proxy: new DefaultProxy('/tiffToPng/')
 //        });
         this._terrain = terrain;
+        this._surface = new EllipsoidSurface({
+           terrain : terrain,
+           imageryCollection : this._imageLayers
+        });
 
-        this._levelZeroTiles = terrain.tilingScheme.createLevelZeroTiles();
-        this._imageLayers = new ImageryLayerCollection();
+        //this._levelZeroTiles = terrain.tilingScheme.createLevelZeroTiles();
         this._tileCache = new TileCache(128 * 1024 * 1024);
         this._texturePool = new TexturePool();
 
@@ -1389,7 +1396,8 @@ define([
         // TODO: refactor
         this._fillPoles(context, sceneState);
 
-        this._imageLayers.update(context, sceneState);
+        //this._imageLayers.update(context, sceneState);
+        this._surface.update(context, sceneState);
 
         this._mode = mode;
         this._projection = projection;
@@ -1423,7 +1431,12 @@ define([
                 });
             }
 
-            this._imageLayers.render(context);
+            //this._imageLayers.render(context);
+            this._surface.render(context, {
+                framebuffer : this._fb,
+                shaderProgram : this._sp,
+                renderState : this._rsColor
+            });
 
             // render quad with vertical gaussian blur with second-pass texture attached to FBO
             this._quadV.render(context);

@@ -145,7 +145,9 @@ define([
         this._previous = undefined;
         this._next = undefined;
 
+        // TODO: get rid of _imagery.
         this._imagery = {};
+        this.imagery = [];
 
         this.state = TileState.UNLOADED;
         this.geometry = undefined;

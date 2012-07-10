@@ -34,7 +34,6 @@ define([
         this.imageryCollection = description.imageryCollection;
         this.maxScreenSpaceError = defaultValue(description.maxScreenSpaceError, 2);
 
-        this._centralBody = description.centralBody;
         this._levelZeroTiles = undefined;
         this._renderList = [];
         this._tileLoadQueue = new TileLoadQueue();
@@ -57,18 +56,47 @@ define([
         var levelZeroTiles = this._levelZeroTiles;
         for (var i = 0, len = levelZeroTiles.length; i < len; ++i) {
             var tile = levelZeroTiles[i];
-            if (tile.ready) {
-                updateTile(this, context, sceneState, tile);
-            } else {
+            if (!tile.doneLoading) {
                 queueTileLoad(this, tile);
+            }
+            if (tile.renderable) {
+                addBestAvailableTilesToRenderList(this, context, sceneState, tile);
             }
         }
 
-        processTileLoadQueue(this);
+        processTileLoadQueue(this, context, sceneState);
     };
 
+    var uniformMap = {
+        u_center3D : function() {
+            return this.center3D;
+        },
+        u_modifiedModelView : function() {
+            return this.modifiedModelView;
+        },
+        u_numberOfDayTextures : function() {
+            return this.numberOfDayTextures;
+        },
+        u_dayTextures : function() {
+            return this.dayTextures;
+        },
+        u_dayTextureTranslation : function() {
+            return this.dayTextureTranslation;
+        },
+        u_dayTextureScale : function() {
+            return this.dayTextureScale;
+        },
 
-    EllipsoidSurface.prototype.render = function(context, framebuffer, shaderProgram, renderState) {
+        center3D : undefined,
+        modifiedModelView : undefined,
+
+        numberOfDayTextures : 0,
+        dayTextures : new Array(8),
+        dayTextureTranslation : new Array(8),
+        dayTextureScale : new Array(8)
+    };
+
+    EllipsoidSurface.prototype.render = function(context, drawArguments) {
         var renderList = this._renderList;
         if (renderList.length === 0) {
             return;
@@ -77,74 +105,47 @@ define([
         var uniformState = context.getUniformState();
         var mv = uniformState.getModelView();
 
-        var center3D;
-        var modifiedModelView;
-
-        var numberOfDayTextures;
-        var dayTextures = new Array(8);
-        var dayTextureTranslation = new Array(8);
-        var dayTextureScale = new Array(8);
-
-        var uniformMap = {
-            u_center3D : function() {
-                return center3D;
-            },
-            u_modifiedModelView : function() {
-                return modifiedModelView;
-            },
-            u_numberOfDayTextures : function() {
-                return numberOfDayTextures;
-            },
-            u_dayTextures : function() {
-                return dayTextures;
-            },
-            u_dayTextureTranslation : function() {
-                return dayTextureTranslation;
-            },
-            u_dayTextureScale : function() {
-                return dayTextureScale;
-            }
-        };
-
-        context.beginDraw({
-            framebuffer : framebuffer,
-            shaderProgram : shaderProgram,
-            renderState : renderState
-        });
+        context.beginDraw(drawArguments);
 
         for (var i = 0, len = renderList.length; i < len; i++) {
             var tile = renderList[i];
 
             var rtc = tile.get3DBoundingSphere().center;
-            center3D = rtc;
+            uniformMap.center3D = rtc;
 
             var centerEye = mv.multiplyWithVector(new Cartesian4(rtc.x, rtc.y, rtc.z, 1.0));
             // PERFORMANCE_TODO: use a scratch matrix instead of cloning for every tile.
             var mvrtc = mv.clone();
             mvrtc.setColumn3(centerEye);
-            modifiedModelView = mvrtc;
+            uniformMap.modifiedModelView = mvrtc;
 
             var imageryCollection = tile.imagery;
 
-            numberOfDayTextures = 0;
+            // TODO: clear out uniformMap.dayTextures?
+
+            var numberOfDayTextures = 0;
             for (var imageryIndex = 0, imageryLen = imageryCollection.length; imageryIndex < imageryLen; ++imageryIndex) {
                 var imagery = imageryCollection[imageryIndex];
-                if (!imagery) {
+                if (!imagery || imagery.state !== TileState.READY) {
                     continue;
                 }
 
-                dayTextures[numberOfDayTextures] = imagery.texture;
-                dayTextureTranslation[numberOfDayTextures] = imagery.textureTranslation;
-                dayTextureScale[numberOfDayTextures] = imagery.textureScale;
+                uniformMap.dayTextures[numberOfDayTextures] = imagery.texture;
+                uniformMap.dayTextureTranslation[numberOfDayTextures] = imagery.textureTranslation;
+                uniformMap.dayTextureScale[numberOfDayTextures] = imagery.textureScale;
 
                 ++numberOfDayTextures;
             }
 
-            context.continueDraw({
-                primitiveType : PrimitiveType.TRIANGLES,
-                vertexArray : tile.vertexArray,
-                uniformMap : uniformMap
-            });
+            if (numberOfDayTextures !== 0) {
+                uniformMap.numberOfDayTextures = numberOfDayTextures;
+
+                context.continueDraw({
+                    primitiveType : PrimitiveType.TRIANGLES,
+                    vertexArray : tile.vertexArray,
+                    uniformMap : uniformMap
+                });
+            }
         }
 
         context.endDraw();
@@ -193,24 +194,24 @@ define([
         return destroyObject(this);
     };
 
-    function updateTile(surface, context, sceneState, tile) {
+    function addBestAvailableTilesToRenderList(surface, context, sceneState, tile) {
         if (!isTileVisible(tile)) {
             return;
         }
 
-        if (loadAllChildren(surface, tile)) {
-            // All children are loaded.
+        if (queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, tile)) {
+            // All children are renderable.
             if (screenSpaceError(surface, tile) < surface.maxScreenSpaceError) {
                 surface._renderList.push(tile);
             } else {
                 var children = tile.children;
                 // PERFORMANCE_TODO: traverse children front-to-back
                 for (var i = 0, len = children.length; i < len; ++i) {
-                    updateTile(surface, context, sceneState, children[i]);
+                    addBestAvailableTilesToRenderList(surface, context, sceneState, children[i]);
                 }
             }
         } else {
-            // At least one child is not ready, so render this tile.
+            // At least one child is not renderable, so render this tile.
             surface._renderList.push(tile);
         }
     }
@@ -240,19 +241,21 @@ define([
         return (maxGeometricError * viewportHeight) / (2 * distance * Math.tan(0.5 * fovy));
     }
 
-    function loadAllChildren(surface, tile) {
-        var allLoaded = true;
+    function queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, tile) {
+        var allRenderable = true;
 
-        var children = tile.children;
+        var children = tile.getChildren();
         for (var i = 0, len = children.length; i < len; ++i) {
             var child = children[i];
-            if (!child.ready) {
+            if (!child.doneLoading) {
                 queueTileLoad(surface, child);
-                allLoaded = false;
+            }
+            if (!child.renderable) {
+                allRenderable = false;
             }
         }
 
-        return allLoaded;
+        return allRenderable;
     }
 
     function queueTileLoad(surface, tile) {
@@ -271,8 +274,8 @@ define([
                 tile.state = TileState.TRANSITIONING;
                 surface.terrain.requestTileGeometry(tile);
 
-                for (i = 0, len = surface.imageryCollection.length; i < len; ++i) {
-                    surface.imageryCollection[i].createTileImagerySkeletons(tile);
+                for (i = 0, len = surface.imageryCollection.getLength(); i < len; ++i) {
+                    surface.imageryCollection.get(i).createTileImagerySkeletons(tile);
                 }
             }
             if (tile.state === TileState.RECEIVED) {
@@ -285,12 +288,11 @@ define([
             }
             // TODO: what about the FAILED and INVALID states?
 
-            var doneLoading = tile.State === TileState.READY;
+            var doneLoading = tile.state === TileState.READY;
 
             for (i = 0, len = tileImageryCollection.length; i < len; ++i) {
                 var tileImagery = tileImageryCollection[i];
-                // TODO: what if surface.imageryCollection is modified?
-                var imageryProvider = surface.imageryCollection[i];
+                var imageryProvider = tileImagery.imageryProvider;
 
                 if (tileImagery.state === TileState.UNLOADED) {
                     tileImagery.state = TileState.TRANSITIONING;
@@ -310,7 +312,8 @@ define([
             var next = tile._next;
 
             if (doneLoading) {
-                tile.ready = true;
+                tile.renderable = true;
+                tile.doneLoading = true;
                 tileLoadQueue.remove(tile);
             }
 
@@ -369,7 +372,17 @@ define([
         }
 
         if (typeof insertionPoint === 'undefined') {
-            this.append(item);
+            if (typeof this.head === 'undefined') {
+                item._previous = undefined;
+                item._next = undefined;
+                this.head = item;
+                this.tail = item;
+            } else {
+                item._previous = this.tail;
+                item._next = undefined;
+                this.tail._next = item;
+                this.tail = item;
+            }
             return;
         }
 
