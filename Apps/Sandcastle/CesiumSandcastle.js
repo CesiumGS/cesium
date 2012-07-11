@@ -273,9 +273,14 @@ require({
             lineNumbers: true,
             matchBrackets: true,
             indentUnit: 4,
-            extraKeys: {"Ctrl-Space": "autocomplete", "F9": "runCesium"},
             onCursorActivity: onCursorActivity,
-            onChange: scheduleHint
+            onChange: scheduleHint,
+            extraKeys: {
+                "Ctrl-Space": "autocomplete",
+                "F9": "runCesium",
+                "Tab": "indentMore",
+                "Shift-Tab": "indentLess"
+            }
         });
 
         htmlEditor = CodeMirror.fromTextArea(document.getElementById("htmlBody"), {
@@ -283,7 +288,11 @@ require({
             lineNumbers: true,
             matchBrackets: true,
             indentUnit: 4,
-            extraKeys: {"F9": "runCesium"}
+            extraKeys: {
+                "F9": "runCesium",
+                "Tab": "indentMore",
+                "Shift-Tab": "indentLess"
+            }
         });
 
         function loadFromGallery(link) {
