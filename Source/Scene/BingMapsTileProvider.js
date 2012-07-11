@@ -159,15 +159,15 @@ define([
         this._proxy = description.proxy;
 
         /**
-         * The cartographic extent of the base tile, with north, south, east and
-         * west properties in radians.
+         * The cartographic extent of this provider's imagery,
+         * with north, south, east and west properties in radians.
          *
          * @type {Extent}
          */
-        this.maxExtent = new Extent(-CesiumMath.PI,
-            CesiumMath.toRadians(-85.05112878),
-            CesiumMath.PI,
-                                    CesiumMath.toRadians(85.05112878));
+        this.extent = new Extent(-CesiumMath.PI,
+                                 CesiumMath.toRadians(-85.05112878),
+                                 CesiumMath.PI,
+                                 CesiumMath.toRadians(85.05112878));
 
         /**
          * The width of every image loaded.

@@ -186,6 +186,14 @@ define([
         return positions;
     }
 
+    Extent.prototype.intersectWith = function(otherExtent) {
+        var north = Math.min(this.north, otherExtent.north);
+        var east = Math.min(this.east, otherExtent.east);
+        var south = Math.max(this.south, otherExtent.south);
+        var west = Math.max(this.west, otherExtent.west);
+        return new Extent(west, south, east, north);
+    };
+
     /**
      * DOC_TBA
      *
@@ -274,6 +282,34 @@ define([
         var center = new Cartesian3((2.0 * rect.x + rect.width) * 0.5, (2.0 * rect.y + rect.height) * 0.5, 0.0);
         var radius = Math.sqrt(rect.width * rect.width + rect.height * rect.height) * 0.5;
         return new BoundingSphere(center, radius);
+    };
+
+    /**
+     * Gets a {@link Cartographic2} containing the southwest corner of this extent.
+     */
+    Extent.prototype.getSouthwest = function() {
+        return new Cartographic2(this.west, this.south);
+    };
+
+    /**
+     * Gets a {@link Cartographic2} containing the northwest corner of this extent.
+     */
+    Extent.prototype.getNorthwest = function() {
+        return new Cartographic2(this.west, this.north);
+    };
+
+    /**
+     * Gets a {@link Cartographic2} containing the northeast corner of this extent.
+     */
+    Extent.prototype.getNortheast = function() {
+        return new Cartographic2(this.east, this.north);
+    };
+
+    /**
+     * Gets a {@link Cartographic2} containing the southeast corner of this extent.
+     */
+    Extent.prototype.getSoutheast = function() {
+        return new Cartographic2(this.east, this.south);
     };
 
     /**

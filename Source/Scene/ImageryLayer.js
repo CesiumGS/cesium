@@ -27,6 +27,7 @@ define([
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
         './Tile',
+        './TileImagery',
         './TileState',
         './Projections',
         './SceneMode',
@@ -59,6 +60,7 @@ define([
         TextureMinificationFilter,
         TextureWrap,
         Tile,
+        TileImagery,
         TileState,
         Projections,
         SceneMode,
@@ -153,18 +155,20 @@ define([
      *
      * @name ImageryLayer
      */
-    function ImageryLayer(centralBody, tileProvider, description) {
+    function ImageryLayer(centralBody, imageryProvider, description) {
         this._centralBody = centralBody;
-        this._tileProvider = tileProvider;
+        this.imageryProvider = imageryProvider;
 
         this._id = nextLayerID();
 
         description = defaultValue(description, {});
 
-        var maxExtent = defaultValue(description.maxExtent, tileProvider.maxExtent);
-        maxExtent = defaultValue(maxExtent, Extent.MAX_VALUE);
+        var extent = defaultValue(description.extent, imageryProvider.extent);
+        extent = defaultValue(extent, Extent.MAX_VALUE);
 
-        this._maxExtent = maxExtent;
+        this.maxScreenSpaceError = defaultValue(description.maxScreenSpaceError, 1);
+
+        this.extent = extent;
 
         // reusable stack used during update for tile tree traversal
         this._tileStack = [];
@@ -217,11 +221,22 @@ define([
         this.pixelError2D = 2.0;
     }
 
-    /**
-     * Gets the tile provider used by this layer.
-     */
-    ImageryLayer.prototype.getTileProvider = function() {
-        return this._tileProvider;
+    ImageryLayer.prototype.createTileImagerySkeletons = function(tile, geometryTilingScheme) {
+        var imageryTilingScheme = this.imageryProvider.tilingScheme;
+
+        var extent = tile.extent.intersectWith(this.imageryProvider.extent);
+        //TODO: calculate level correctly
+        var level = tile.level + 1;
+
+        var northwestTileCoordinates = imageryTilingScheme.positionToTileXY(extent.getNorthwest(), level);
+        var southeastTileCoordinates = imageryTilingScheme.positionToTileXY(extent.getSoutheast(), level);
+
+        for ( var i = northwestTileCoordinates.x; i <= southeastTileCoordinates.x; i++) {
+            for ( var j = northwestTileCoordinates.y; j <= southeastTileCoordinates.y; j++) {
+                //TODO: compute texture translation and scale
+                tile.imagery.push(new TileImagery(this, i, j, level));
+            }
+        }
     };
 
     function getTileImagery(layer, tile) {
@@ -252,7 +267,7 @@ define([
             return;
         }
 
-        var tileProvider = layer._tileProvider;
+        var tileProvider = layer.imageryProvider;
 
         // start loading tile
         tileImagery.state = TileState.IMAGE_LOADING;
@@ -433,8 +448,8 @@ define([
     }
 
     function createMinTileDistanceFunction(layer, context, sceneState) {
-        var tileProvider = layer._tileProvider;
-        var extent = layer._maxExtent;
+        var tileProvider = layer.imageryProvider;
+        var extent = layer.extent;
 
         var frustum = sceneState.camera.frustum;
         var fovy = frustum.fovy;
@@ -482,7 +497,7 @@ define([
      * @private
      */
     ImageryLayer.prototype.update = function(context, sceneState) {
-        var tileProvider = this._tileProvider;
+        var tileProvider = this.imageryProvider;
         if (!tileProvider.ready) {
             return;
         }
@@ -640,8 +655,8 @@ define([
         var tileImagery = getTileImagery(layer, tile);
         if (typeof tileImagery._drawUniforms === 'undefined') {
             var intensity = 0.0;
-            if (typeof layer._tileProvider.getIntensity === 'function') {
-                intensity = layer._tileProvider.getIntensity(tile);
+            if (typeof layer.imageryProvider.getIntensity === 'function') {
+                intensity = layer.imageryProvider.getIntensity(tile);
             }
 
             var drawUniforms = {
@@ -678,7 +693,7 @@ define([
     }
 
     ImageryLayer.prototype.render = function(context) {
-        if (!this._tileProvider.ready) {
+        if (!this.imageryProvider.ready) {
             return;
         }
 

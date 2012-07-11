@@ -39,12 +39,12 @@ define([
         this._canvases = [];
 
         /**
-         * The cartographic extent of the base tile, with north, south, east and
-         * west properties in radians.
+         * The cartographic extent of this provider's imagery,
+         * with north, south, east and west properties in radians.
          *
          * @type {Extent}
          */
-        this.maxExtent = Extent.MAX_VALUE;
+        this.extent = Extent.MAX_VALUE;
 
         /**
          * The width of every image loaded.

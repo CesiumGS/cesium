@@ -38,13 +38,13 @@ define([
         this._proxy = proxy;
 
         /**
-         * The cartographic extent of the base tile, with north, south, east and
-         * west properties in radians.
+         * The cartographic extent of this provider's imagery,
+         * with north, south, east and west properties in radians.
          *
          * @constant
          * @type {Extent}
          */
-        this.maxExtent = Extent.MAX_VALUE;
+        this.extent = Extent.MAX_VALUE;
 
         /**
          * The maximum level-of-detail that can be requested.

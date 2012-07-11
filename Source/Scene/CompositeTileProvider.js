@@ -62,13 +62,13 @@ define([
         this._currentProviderIndex = 0;
 
         /**
-         * The cartographic extent of the base tile, with north, south, east and
-         * west properties in radians.
+         * The cartographic extent of this provider's imagery,
+         * with north, south, east and west properties in radians.
          *
          * @constant
          * @type {Extent}
          */
-        this.maxExtent = this._list[0].provider.maxExtent;
+        this.extent = this._list[0].provider.extent;
 
         /**
          * The maximum level that can be requested.

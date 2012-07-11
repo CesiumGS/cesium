@@ -806,11 +806,11 @@ define([
             return;
         }
 
-        var baseTileProvider = baseLayer.getTileProvider();
+        var baseTileProvider = baseLayer.imageryProvider;
         if (!baseTileProvider.ready) {
             return;
         }
-        var baseTileProviderMaxExtent = baseTileProvider.maxExtent;
+        var baseTileProviderMaxExtent = baseTileProvider.extent;
 
         var viewProjMatrix = context.getUniformState().getViewProjection();
         var viewportTransformation = context.getUniformState().getViewportTransformation();
@@ -925,7 +925,7 @@ define([
             u_dayIntensity : function() {
                 var baseLayer = that._getBaseLayer();
                 if (typeof baseLayer !== 'undefined') {
-                    var baseTileProvider = baseLayer.getTileProvider();
+                    var baseTileProvider = baseLayer.imageryProvider;
                     if (typeof baseTileProvider.getPoleIntensity === 'function') {
                         return baseTileProvider.getPoleIntensity();
                     }
@@ -1432,7 +1432,7 @@ define([
             }
 
             //this._imageLayers.render(context);
-            this._surface.render(context, {
+            this._surface.render(context, this._drawUniforms, {
                 framebuffer : this._fb,
                 shaderProgram : this._sp,
                 renderState : this._rsColor

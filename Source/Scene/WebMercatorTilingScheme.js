@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/DeveloperError',
         '../Core/Math',
         '../Core/Ellipsoid',
@@ -9,6 +10,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartographic2'
     ], function(
+        defaultValue,
         DeveloperError,
         CesiumMath,
         Ellipsoid,
@@ -34,14 +36,14 @@ define([
      * the tile tree.
      */
     function WebMercatorTilingScheme(description) {
-        description = description || {};
+        description = defaultValue(description, {});
 
         /**
          * The ellipsoid whose surface is being tiled.
          *
          * @type Ellipsoid
          */
-        this.ellipsoid = description.ellipsoid || Ellipsoid.WGS84;
+        this.ellipsoid = defaultValue(description.ellipsoid, Ellipsoid.WGS84);
 
         /**
          * The number of tiles in the X direction at level zero of the tile tree.
@@ -107,7 +109,7 @@ define([
      *
      * @memberof WebMercatorTilingScheme
      *
-     * @return {Array} An array containing the tiles at level of detail zero, starting with the
+     * @returns {Array} An array containing the tiles at level of detail zero, starting with the
      * tile in the northwest corner of the globe and followed by the tile (if any) to its east.
      */
     WebMercatorTilingScheme.prototype.createLevelZeroTiles = TilingScheme.prototype.createLevelZeroTiles;
@@ -120,7 +122,7 @@ define([
      *
      * @param {Number} x The web mercator X coordinate in meters.
      * @param {Number} y The web mercator Y coordinate in meters.
-     * @return {Cartographic2} The equivalent cartographic coordinates.
+     * @returns {Cartographic2} The equivalent cartographic coordinates.
      */
     WebMercatorTilingScheme.prototype.webMercatorToCartographic = function(x, y) {
         var oneOverEarthSemimajorAxis = this.ellipsoid.getOneOverRadii().x;
@@ -130,8 +132,8 @@ define([
     };
 
     /**
-     * Converts geodetic ellipsoid coordinates to the equivalent web mercator X, Y coordinates
-     * expressed in meters and returned in a {@link Cartesian2}.
+     * Converts geodetic ellipsoid coordinates to the equivalent web mercator
+     * X, Y coordinates expressed in meters and returned in a {@link Cartesian2}.
      *
      * @param {Number} longitude The cartographic longitude coordinate in radians.
      * @param {Number} latitude The cartographic latitude coordinate in radians.
@@ -153,26 +155,69 @@ define([
      * @param {Number} y The integer y coordinate of the tile.
      * @param {Number} level The tile level-of-detail.  Zero is the least detailed.
      *
-     * @return {Extent} The cartographic extent of the tile, with north, south, east and
+     * @returns {Extent} The cartographic extent of the tile, with north, south, east and
      * west properties in radians.
      */
     WebMercatorTilingScheme.prototype.tileXYToExtent = function(x, y, level) {
         var xTiles = this.numberOfLevelZeroTilesX << level;
         var yTiles = this.numberOfLevelZeroTilesY << level;
 
-        var worldFractionPerTileX = (this._extentNortheastInMeters.x - this._extentSouthwestInMeters.x) / xTiles;
-        var west = this._extentSouthwestInMeters.x + x * worldFractionPerTileX;
-        var east = this._extentSouthwestInMeters.x + (x + 1) * worldFractionPerTileX;
+        var xTileWidth = (this._extentNortheastInMeters.x - this._extentSouthwestInMeters.x) / xTiles;
+        var west = this._extentSouthwestInMeters.x + x * xTileWidth;
+        var east = this._extentSouthwestInMeters.x + (x + 1) * xTileWidth;
 
-        var worldFractionPerTileY = (this._extentNortheastInMeters.y - this._extentSouthwestInMeters.y) / yTiles;
-        var north = this._extentNortheastInMeters.y - y * worldFractionPerTileY;
-        var south = this._extentNortheastInMeters.y - (y + 1) * worldFractionPerTileY;
+        var yTileHeight = (this._extentNortheastInMeters.y - this._extentSouthwestInMeters.y) / yTiles;
+        var north = this._extentNortheastInMeters.y - y * yTileHeight;
+        var south = this._extentNortheastInMeters.y - (y + 1) * yTileHeight;
 
         var southwest = this.webMercatorToCartographic(west, south);
         var northeast = this.webMercatorToCartographic(east, north);
 
         return new Extent(southwest.longitude, southwest.latitude,
                           northeast.longitude, northeast.latitude);
+    };
+
+    /**
+     * Calculates the tile x, y coordinates of the tile containing
+     * a given cartographic position.
+     *
+     * @memberof WebMercatorTilingScheme
+     *
+     * @param {Cartographic2} position The position.
+     * @param {Number} level The tile level-of-detail.  Zero is the least detailed.
+     *
+     * @returns {Cartesian2} The x, y coordinate of the tile containing the position.
+     */
+    WebMercatorTilingScheme.prototype.positionToTileXY = function(position, level) {
+        if (position.latitude > this.extent.north ||
+            position.latitude < this.extent.south ||
+            position.longitude < this.extent.west ||
+            position.longitude > this.extent.east) {
+            // outside the bounds of the tiling scheme
+            return undefined;
+        }
+
+        var xTiles = this.numberOfLevelZeroTilesX << level;
+        var yTiles = this.numberOfLevelZeroTilesY << level;
+
+        var overallWidth = this._extentNortheastInMeters.x - this._extentSouthwestInMeters.x;
+        var xTileWidth = overallWidth / xTiles;
+        var overallHeight = this._extentNortheastInMeters.y - this._extentSouthwestInMeters.y;
+        var yTileHeight = overallHeight / yTiles;
+
+        var webMercatorPosition = this.cartographicToWebMercator(position.longitude, position.latitude);
+        var distanceFromWest = webMercatorPosition.x - this._extentSouthwestInMeters.x;
+        var distanceFromNorth = this._extentNortheastInMeters.y - webMercatorPosition.y;
+
+        var xTileCoordinate = distanceFromWest / xTileWidth | 0;
+        if (xTileCoordinate >= xTiles) {
+            xTileCoordinate = xTiles - 1;
+        }
+        var yTileCoordinate = distanceFromNorth / yTileHeight | 0;
+        if (yTileCoordinate >= yTiles) {
+            yTileCoordinate = yTiles - 1;
+        }
+        return new Cartesian2(xTileCoordinate, yTileCoordinate);
     };
 
     return WebMercatorTilingScheme;

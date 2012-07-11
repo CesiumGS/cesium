@@ -7,7 +7,13 @@ define([
         '../Core/Extent',
         '../Core/Math',
         '../Core/jsonp',
+        '../Renderer/MipmapHint',
+        '../Renderer/PixelFormat',
+        '../Renderer/TextureMagnificationFilter',
+        '../Renderer/TextureMinificationFilter',
+        '../Renderer/TextureWrap',
         './Projections',
+        './TileState',
         './WebMercatorTilingScheme',
         './GeographicTilingScheme',
         './DiscardMissingTileImagePolicy',
@@ -22,7 +28,13 @@ define([
         Extent,
         CesiumMath,
         jsonp,
+        MipmapHint,
+        PixelFormat,
+        TextureMagnificationFilter,
+        TextureMinificationFilter,
+        TextureWrap,
         Projections,
+        TileState,
         WebMercatorTilingScheme,
         GeographicTilingScheme,
         DiscardMissingTileImagePolicy,
@@ -72,12 +84,12 @@ define([
         this._proxy = description.proxy;
 
         /**
-         * The cartographic extent of the base tile, with north, south, east and
-         * west properties in radians.
+         * The cartographic extent of this provider's imagery,
+         * with north, south, east and west properties in radians.
          *
          * @type {Extent}
          */
-        this.maxExtent = undefined;
+        this.extent = undefined;
 
         /**
          * The width of every image loaded.
@@ -155,15 +167,15 @@ define([
                     extentSouthwestInMeters: new Cartesian2(west, south),
                     extentNortheastInMeters: new Cartesian2(east, north)
                 });
-                that.maxExtent = that.tilingScheme.extent;
+                that.extent = that.tilingScheme.extent;
             } else if (data.tileInfo.spatialReference.wkid === 4326) {
                 that.projection = Projections.WGS84;
-                that.maxExtent = new Extent(CesiumMath.toRadians(data.fullExtent.xmin),
+                that.extent = new Extent(CesiumMath.toRadians(data.fullExtent.xmin),
                                             CesiumMath.toRadians(data.fullExtent.ymin),
                                             CesiumMath.toRadians(data.fullExtent.xmax),
                                             CesiumMath.toRadians(data.fullExtent.ymax));
                 that.tilingScheme = new GeographicTilingScheme({
-                    extent: that.maxExtent
+                    extent: that.extent
                 });
             }
 
@@ -238,6 +250,44 @@ define([
         });
     };
 
+    ArcGISMapServerTileProvider.prototype.requestImagery = function(tileImagery) {
+        var url = this.buildTileImageUrl(tileImagery.x, tileImagery.y, tileImagery.level);
+        when(this.loadTileImage(url), function(image) {
+            if (typeof image === 'undefined') {
+                tileImagery.state = TileState.IMAGE_INVALID;
+                return;
+            }
+
+            tileImagery.state = TileState.RECEIVED;
+
+            tileImagery.image = image;
+        });
+    };
+
+    ArcGISMapServerTileProvider.prototype.transformImagery = function(context, tileImagery) {
+        tileImagery.transformedImage = this.projection.toWgs84(tileImagery.extent, tileImagery.image);
+        tileImagery.image = undefined;
+        tileImagery.state = TileState.TRANSFORMED;
+    };
+
+    ArcGISMapServerTileProvider.prototype.createResources = function(context, tileImagery) {
+        tileImagery.texture = context.createTexture2D({
+            source : tileImagery.transformedImage
+        });
+
+        tileImagery.texture.generateMipmap(MipmapHint.NICEST);
+        tileImagery.texture.setSampler({
+            wrapS : TextureWrap.CLAMP,
+            wrapT : TextureWrap.CLAMP,
+            minificationFilter : TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
+            magnificationFilter : TextureMagnificationFilter.LINEAR,
+
+            // TODO: Remove Chrome work around
+            maximumAnisotropy : context.getMaximumTextureFilterAnisotropy() || 8
+        });
+        tileImagery.transformedImage = undefined;
+        tileImagery.state = TileState.READY;
+    };
     /**
      * DOC_TBA
      * @memberof ArcGISMapServerTileProvider

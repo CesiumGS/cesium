@@ -10,12 +10,15 @@ defineSuite([
          CesiumMath,
          Cartographic2) {
     "use strict";
-    /*global document,describe,it,expect*/
+    /*global document,describe,it,expect,beforeEach*/
+
+    var tilingScheme;
+    beforeEach(function() {
+        tilingScheme = new WebMercatorTilingScheme();
+    });
 
     describe('Conversions between Cartographic and Web Mercator coordinates', function() {
         it('webMercatorToCartographic is correct at corners', function() {
-            var tilingScheme = new WebMercatorTilingScheme();
-
             var southwest = tilingScheme.webMercatorToCartographic(-20037508.342787, -20037508.342787);
             expect(southwest.longitude).toEqualEpsilon(-Math.PI, CesiumMath.EPSILON12);
             expect(southwest.latitude).toEqualEpsilon(CesiumMath.toRadians(-85.05112878), CesiumMath.EPSILON11);
@@ -34,8 +37,6 @@ defineSuite([
         });
 
         it('cartographicToWebMercator is correct at corners.', function() {
-            var tilingScheme = new WebMercatorTilingScheme();
-
             var maxLatitude = CesiumMath.toRadians(85.05112878);
 
             var southwest = tilingScheme.cartographicToWebMercator(-Math.PI, -maxLatitude);
@@ -56,10 +57,8 @@ defineSuite([
         });
 
         it('cartographicToWebMercator y goes to infinity at poles.', function() {
-            var tilingScheme = new WebMercatorTilingScheme();
-
             var southPole = tilingScheme.cartographicToWebMercator(0.0, -CesiumMath.PI_OVER_TWO);
-            expect(southPole.y).toEqual(-1/0);
+            expect(southPole.y).toEqual(-1 / 0);
 
             // Well, at the north pole it doesn't actually return infinity because
             // Math.tan(Math.PI/2) evaluates to 16331778728383844 instead of positive
@@ -71,7 +70,6 @@ defineSuite([
 
     describe('Conversions from tile indices to cartographic extents', function() {
         it('tileXYToExtent returns full extent for single root tile.', function() {
-            var tilingScheme = new WebMercatorTilingScheme();
             var extent = tilingScheme.tileXYToExtent(0, 0, 0);
             expect(extent.west).toEqualEpsilon(tilingScheme.extent.west, CesiumMath.EPSILON10);
             expect(extent.south).toEqualEpsilon(tilingScheme.extent.south, CesiumMath.EPSILON10);
@@ -80,7 +78,6 @@ defineSuite([
         });
 
         it('tiles are numbered from the northwest corner.', function() {
-            var tilingScheme = new WebMercatorTilingScheme();
             var northwest = tilingScheme.tileXYToExtent(0, 0, 1);
             var northeast = tilingScheme.tileXYToExtent(1, 0, 1);
             var southeast = tilingScheme.tileXYToExtent(1, 1, 1);
@@ -108,7 +105,6 @@ defineSuite([
         });
 
         it('adjacent tiles have overlapping coordinates', function() {
-            var tilingScheme = new WebMercatorTilingScheme();
             var northwest = tilingScheme.tileXYToExtent(0, 0, 1);
             var northeast = tilingScheme.tileXYToExtent(1, 0, 1);
             var southeast = tilingScheme.tileXYToExtent(1, 1, 1);
@@ -119,6 +115,84 @@ defineSuite([
 
             expect(northeast.west).toEqualEpsilon(northwest.east, CesiumMath.EPSILON15);
             expect(southeast.west).toEqualEpsilon(southwest.east, CesiumMath.EPSILON15);
+        });
+    });
+
+    describe('Conversions from cartographic positions to tile indices', function() {
+        it('calculates correct tile indices for 4 corners at level 0', function() {
+            var coordinates;
+
+            coordinates = tilingScheme.positionToTileXY(tilingScheme.extent.getSouthwest(), 0);
+            expect(coordinates.x).toEqual(0);
+            expect(coordinates.y).toEqual(0);
+
+            coordinates = tilingScheme.positionToTileXY(tilingScheme.extent.getNorthwest(), 0);
+            expect(coordinates.x).toEqual(0);
+            expect(coordinates.y).toEqual(0);
+
+            coordinates = tilingScheme.positionToTileXY(tilingScheme.extent.getNortheast(), 0);
+            expect(coordinates.x).toEqual(0);
+            expect(coordinates.y).toEqual(0);
+
+            coordinates = tilingScheme.positionToTileXY(tilingScheme.extent.getSoutheast(), 0);
+            expect(coordinates.x).toEqual(0);
+            expect(coordinates.y).toEqual(0);
+        });
+
+        it('calculates correct tile indices for 4 corners at level 1', function() {
+            var coordinates;
+
+            coordinates = tilingScheme.positionToTileXY(tilingScheme.extent.getSouthwest(), 1);
+            expect(coordinates.x).toEqual(0);
+            expect(coordinates.y).toEqual(1);
+
+            coordinates = tilingScheme.positionToTileXY(tilingScheme.extent.getNorthwest(), 1);
+            expect(coordinates.x).toEqual(0);
+            expect(coordinates.y).toEqual(0);
+
+            coordinates = tilingScheme.positionToTileXY(tilingScheme.extent.getNortheast(), 1);
+            expect(coordinates.x).toEqual(1);
+            expect(coordinates.y).toEqual(0);
+
+            coordinates = tilingScheme.positionToTileXY(tilingScheme.extent.getSoutheast(), 1);
+            expect(coordinates.x).toEqual(1);
+            expect(coordinates.y).toEqual(1);
+        });
+
+        it('calculates correct tile indices for the center at level 1', function() {
+            var coordinates;
+
+            coordinates = tilingScheme.positionToTileXY(new Cartographic2(0, 0), 1);
+            expect(coordinates.x).toEqual(1);
+            expect(coordinates.y).toEqual(1);
+        });
+
+        it('calculates correct tile indices for the center at level 2', function() {
+            var coordinates;
+
+            coordinates = tilingScheme.positionToTileXY(new Cartographic2(0, 0), 2);
+            expect(coordinates.x).toEqual(2);
+            expect(coordinates.y).toEqual(2);
+        });
+
+        it('calculates correct tile indices around the center at level 2', function() {
+            var coordinates;
+
+            coordinates = tilingScheme.positionToTileXY(new Cartographic2(-0.05, -0.05), 2);
+            expect(coordinates.x).toEqual(1);
+            expect(coordinates.y).toEqual(2);
+
+            coordinates = tilingScheme.positionToTileXY(new Cartographic2(-0.05, 0.05), 2);
+            expect(coordinates.x).toEqual(1);
+            expect(coordinates.y).toEqual(1);
+
+            coordinates = tilingScheme.positionToTileXY(new Cartographic2(0.05, 0.05), 2);
+            expect(coordinates.x).toEqual(2);
+            expect(coordinates.y).toEqual(1);
+
+            coordinates = tilingScheme.positionToTileXY(new Cartographic2(0.05, -0.05), 2);
+            expect(coordinates.x).toEqual(2);
+            expect(coordinates.y).toEqual(2);
         });
     });
 });
