@@ -16,7 +16,6 @@
     <link rel="Stylesheet" href="../../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css" type="text/css">
 </head>
 <body class="claro">
-
 <style>
 body {
     background: #000;
@@ -39,13 +38,6 @@ body {
     height: 100%;
     z-index: -1;
 }
-#toolbar {
-    background: rgba(0, 0, 0, 0.5);
-    border: solid 1px rgba(0, 0, 0, 0.9);
-    margin: 5px;
-    padding: 2px 5px;
-    border-radius: 5px;
-}
 </style>
 
 <div id="cesiumContainer" class="fullSize"></div>
@@ -53,30 +45,12 @@ body {
 <script id="cesium_sandcastle_script">
 /*global require,document,window,console*/
 require({
-    baseUrl : '../../..',
-    packages: [
-        { name: 'dojo', location: 'ThirdParty/dojo-release-1.7.2-src/dojo' },
-        { name: 'dijit', location: 'ThirdParty/dojo-release-1.7.2-src/dijit' },
-        { name: 'dojox', location: 'ThirdParty/dojo-release-1.7.2-src/dojox' },
-        { name: 'Source', location: 'Source' },
-        { name: 'Core', location: 'Source/Core' },
-        { name: 'Controls', location: 'Source/Controls' },
-        { name: 'DynamicScene', location: 'Source/DynamicScene' },
-        { name: 'Renderer', location: 'Source/Renderer' },
-        { name: 'Scene', location: 'Source/Scene' },
-        { name: 'Shaders', location: 'Source/Shaders' },
-        { name: 'ThirdParty', location: 'Source/ThirdParty' }
-    ]
+    baseUrl : '../../../Source'
 }, [
-    'Source/Cesium',
-    'dojo/on',
-    'dojo/dom',
-    'dojo/parser',
-    'dijit/form/Button',
-    'dijit/form/ToggleButton'
-], function(
-    Cesium, on, dom, parser)
-{
+    'Cesium'
+], function (
+    Cesium
+) {
     "use strict";
 
     var canvas = document.createElement('canvas');
@@ -88,7 +62,7 @@ require({
 
     // Bing Maps
     var bing = new Cesium.BingMapsTileProvider({
-        server : "dev.virtualearth.net",
+        server : 'dev.virtualearth.net',
         mapStyle : Cesium.BingMapsStyle.AERIAL,
         // Some versions of Safari support WebGL, but don't correctly implement
         // cross-origin image loading, so we need to load Bing imagery using a proxy.
@@ -97,20 +71,16 @@ require({
 
     var cb = new Cesium.CentralBody(ellipsoid);
     cb.dayTileProvider = bing;
-    cb.nightImageSource = "../../../Images/land_ocean_ice_lights_2048.jpg";
-    cb.specularMapSource = "../../../Images/earthspec1k.jpg";
-    if (scene.getContext().getMaximumTextureSize() > 2048) {
-        cb.cloudsMapSource = "../../../Images/earthcloudmaptrans.jpg";
-        cb.bumpMapSource = "../../../Images/earthbump1k.jpg";
-    }
+    cb.nightImageSource = '../../../Images/land_ocean_ice_lights_2048.jpg';
+    cb.specularMapSource = '../../../Images/earthspec1k.jpg';
     cb.showSkyAtmosphere = true;
     cb.showGroundAtmosphere = true;
     primitives.setCentralBody(cb);
 
-    scene.getCamera().getControllers().addSpindle();
-    scene.getCamera().getControllers().addFreeLook();
+    scene.getCamera().getControllers().addCentralBody();
 
     ///////////////////////////////////////////////////////////////////////////
+    // Circles & Ellipses examples
 
     // Fill circle
     var circle = new Cesium.Polygon();
@@ -155,7 +125,6 @@ require({
         Cesium.requestAnimationFrame(tick);
     }());
 
-
     // Prevent right-click from opening a context menu.
     canvas.oncontextmenu = function() {
         return false;
@@ -164,9 +133,9 @@ require({
     ///////////////////////////////////////////////////////////////////////////
     // Example resize handler
 
-    window.onresize = function () {
-        var width = canvas.clientWidth,
-            height = canvas.clientHeight;
+    var onResize = function () {
+        var width = canvas.clientWidth;
+        var height = canvas.clientHeight;
 
         if (canvas.width === width && canvas.height === height) {
             return;
@@ -184,7 +153,8 @@ require({
 
         scene.getCamera().frustum.aspectRatio = width / height;
     };
-    window.onresize();
+    window.addEventListener('resize', onResize, false);
+    onResize();
 });
 
 </script>
