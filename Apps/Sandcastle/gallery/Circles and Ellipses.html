@@ -93,14 +93,14 @@ require({
     var outline = new Cesium.Polyline();
 	outline.setPositions(Cesium.Shapes.computeCircleBoundary(
         ellipsoid, ellipsoid.cartographicDegreesToCartesian(
-            new Cesium.Cartographic2(-75.0, 40.0)), 300000.0));
+            new Cesium.Cartographic2(-82.0, 37.0)), 300000.0));
     primitives.add(outline);
     
     // Apply a material to a filled circle
     var circle2 = new Cesium.Polygon();
     circle2.setPositions(Cesium.Shapes.computeCircleBoundary(
         ellipsoid, ellipsoid.cartographicDegreesToCartesian(
-            new Cesium.Cartographic2(-75.0, 35.0)), 100000.0));
+            new Cesium.Cartographic2(-90.0, 35.0)), 400000.0));
     // Any polygon-compatible material can be used
     circle2.material = new Cesium.TieDyeMaterial();
     primitives.add(circle2);
@@ -109,7 +109,8 @@ require({
     var ellipse = new Cesium.Polygon();
     ellipse.setPositions(Cesium.Shapes.computeEllipseBoundary(
         ellipsoid, ellipsoid.cartographicDegreesToCartesian(
-            new Cesium.Cartographic2(-75.0, 30.0)), 500000.0, 300000.0, Cesium.Math.toRadians(60)));
+            new Cesium.Cartographic2(-78.0, 32.5)), 500000.0,
+                250000.0, Cesium.Math.toRadians(60)));
     primitives.add(ellipse);
 
     ///////////////////////////////////////////////////////////////////////////
