@@ -101,23 +101,23 @@ require({
 
     var cb = new Cesium.CentralBody(ellipsoid);
     cb.dayTileProvider = bing;
-    cb.nightImageSource = "../../../Images/land_ocean_ice_lights_2048.jpg";
-    cb.specularMapSource = "../../../Images/earthspec1k.jpg";
+    cb.nightImageSource = '../../../Images/land_ocean_ice_lights_2048.jpg';
+    cb.specularMapSource = '../../../Images/earthspec1k.jpg';
     if (scene.getContext().getMaximumTextureSize() > 2048) {
-        cb.cloudsMapSource = "../../../Images/earthcloudmaptrans.jpg";
-        cb.bumpMapSource = "../../../Images/earthbump1k.jpg";
+        cb.cloudsMapSource = '../../../Images/earthcloudmaptrans.jpg';
+        cb.bumpMapSource = '../../../Images/earthbump1k.jpg';
     }
     cb.showSkyAtmosphere = true;
     cb.showGroundAtmosphere = true;
     primitives.setCentralBody(cb);
 
     scene.getCamera().frustum.near = 1.0;
+    scene.getCamera().getControllers().addCentralBody();
 
-    scene.getCamera().getControllers().addSpindle();
-    scene.getCamera().getControllers().addFreeLook();
+    var transitioner = new Cesium.SceneTransitioner(scene, ellipsoid);
 
     ///////////////////////////////////////////////////////////////////////////
-    // Add examples from the Sandbox here:
+    // Polyline demos
 
 	var polyline = new Cesium.Polyline();
 	polyline.setPositions(ellipsoid.cartographicDegreesToCartesians([
@@ -155,7 +155,6 @@ require({
     ///////////////////////////////////////////////////////////////////////////
 
     scene.setAnimation(function() {
-        //scene.setSunPosition(scene.getCamera().position);
         scene.setSunPosition(Cesium.SunPosition.compute().position);
 
         // INSERT CODE HERE to update primitives based on changes to animation time, camera parameters, etc.
@@ -190,9 +189,9 @@ require({
     ///////////////////////////////////////////////////////////////////////////
     // Example resize handler
 
-    window.onresize = function () {
-        var width = canvas.clientWidth,
-            height = canvas.clientHeight;
+    var onResize = function () {
+        var width = canvas.clientWidth;
+        var height = canvas.clientHeight;
 
         if (canvas.width === width && canvas.height === height) {
             return;
@@ -210,7 +209,8 @@ require({
 
         scene.getCamera().frustum.aspectRatio = width / height;
     };
-    window.onresize();
+    window.addEventListener('resize', onResize, false);
+    onResize();
 
     console.log('Cesium started.');
 });
