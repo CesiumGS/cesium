@@ -514,17 +514,16 @@ define([
                 ++right;
             } else {
                 // The following will return an intersection whose data is 'merged' if the callback is defined
-                var intersection = TimeInterval.EMPTY;
                 if (typeof mergeCallback !== 'undefined' ||
-                    ((typeof equalsCallback !== 'undefined' && equalsCallback(leftInterval, rightInterval)) ||
-                     (typeof equalsCallback === 'undefined' && rightInterval.data === leftInterval.data))) {
-                    intersection = leftInterval.intersect(rightInterval, mergeCallback);
-                }
+                   ((typeof equalsCallback !== 'undefined' && equalsCallback(leftInterval, rightInterval)) ||
+                    (typeof equalsCallback === 'undefined' && rightInterval.data === leftInterval.data))) {
 
-                if (!intersection.isEmpty) {
-                    // Since we start with an empty collection for 'result', and there are no overlapping intervals in 'this' (as a rule),
-                    // the 'intersection' will never overlap with a previous interval in 'result'.  So, no need to do any additional 'merging'.
-                    result.addInterval(intersection, equalsCallback);
+                    var intersection = leftInterval.intersect(rightInterval, mergeCallback);
+                    if (!intersection.isEmpty) {
+                        // Since we start with an empty collection for 'result', and there are no overlapping intervals in 'this' (as a rule),
+                        // the 'intersection' will never overlap with a previous interval in 'result'.  So, no need to do any additional 'merging'.
+                        result.addInterval(intersection, equalsCallback);
+                    }
                 }
 
                 if (leftInterval.stop.lessThan(rightInterval.stop) ||

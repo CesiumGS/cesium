@@ -6,7 +6,6 @@ define([
         './Matrix4',
         './Cartesian3',
         './Cartesian4',
-        './TimeStandard',
         './TimeConstants',
         './Ellipsoid'
     ],
@@ -17,7 +16,6 @@ define([
         Matrix4,
         Cartesian3,
         Cartesian4,
-        TimeStandard,
         TimeConstants,
         Ellipsoid) {
     "use strict";
