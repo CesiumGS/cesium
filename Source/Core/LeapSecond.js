@@ -7,14 +7,13 @@ define([
 
     /**
      * Describes a single leap second, which is constructed from a {@link JulianDate} and a
-     * numerical offset representing the number of seconds between the TAI and UTC time standards.
+     * numerical offset representing the number of seconds TAI is ahead of the UTC time standard.
      *
      * @alias LeapSecond
      * @constructor
      *
      * @param {JulianDate} date A Julian date representing the time of the leap second.
-     * @param {Number} totalTaiOffsetFromUtc The cumulative difference, in seconds, between the TAI and
-     * UTC standards at the time of this leap second.
+     * @param {Number} offset The cumulative number of seconds, that TAI is ahead of UTC at provided date.
      *
      * @exception {DeveloperError} <code>date</code> is required.
      * @exception {DeveloperError} <code>offset</code> is required.
@@ -39,7 +38,7 @@ define([
             throw new DeveloperError('date is required.');
         }
 
-        if (typeof offset === 'undefined') {
+        if (typeof offset !== 'number') {
             throw new DeveloperError('offset is required.');
         }
 
