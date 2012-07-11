@@ -23,13 +23,34 @@ function(JulianDate,
         expect(defaultDate.equalsEpsilon(dateNow, 5)).toEqual(true);
     });
 
-    it('Construct a date from basic components', function() {
+    it('Construct a date from basic TAI components', function() {
         var dayNumber = 12;
         var seconds = 12.5;
         var timeStandard = TimeStandard.TAI;
         var julianDate = new JulianDate(dayNumber, seconds, timeStandard);
         expect(julianDate.getJulianDayNumber()).toEqual(dayNumber);
         expect(julianDate.getSecondsOfDay()).toEqual(seconds);
+    });
+
+    it('Construct a date from UTC components just before a leap second', function() {
+        var expected = new JulianDate(2443874, 43216, TimeStandard.TAI);
+        var julianDate = new JulianDate(2443874, 43199.0, TimeStandard.UTC);
+        expect(julianDate.getJulianDayNumber()).toEqual(expected.getJulianDayNumber());
+        expect(julianDate.getSecondsOfDay()).toEqual(expected.getSecondsOfDay());
+    });
+
+    it('Construct a date from UTC components equivalent to a LeapSecond table entry', function() {
+        var expected = new JulianDate(2443874, 43218, TimeStandard.TAI);
+        var julianDate = new JulianDate(2443874, 43200.0, TimeStandard.UTC);
+        expect(julianDate.getJulianDayNumber()).toEqual(expected.getJulianDayNumber());
+        expect(julianDate.getSecondsOfDay()).toEqual(expected.getSecondsOfDay());
+    });
+
+    it('Construct a date from UTC components just after a leap second', function() {
+        var expected = new JulianDate(2443874, 43219, TimeStandard.TAI);
+        var julianDate = new JulianDate(2443874, 43201.0, TimeStandard.UTC);
+        expect(julianDate.getJulianDayNumber()).toEqual(expected.getJulianDayNumber());
+        expect(julianDate.getSecondsOfDay()).toEqual(expected.getSecondsOfDay());
     });
 
     it('Construct a date from basic components with more seconds than a day', function() {
@@ -1065,41 +1086,30 @@ function(JulianDate,
         var datePlusOne = date.addSeconds(0.01);
         expect(date.equalsEpsilon(datePlusOne, CesiumMath.EPSILON1)).toEqual(true);
     });
-
-    it('getTaiMinusUtc works between TAI and UTC (1)', function() {
-        var date = new Date('July 11, 2011 12:00:00 UTC');
-        var jd = JulianDate.fromDate(date, TimeStandard.TAI);
-        var difference = jd.getTaiMinusUtc();
-        expect(difference).toEqual(34);
-    });
-
-    it('getTaiMinusUtc works between TAI and UTC (2)', function() {
-        var date = new Date('July 11, 1979 12:00:00 UTC');
-        var jd = JulianDate.fromDate(date, TimeStandard.TAI);
-        var difference = jd.getTaiMinusUtc();
-        expect(difference).toEqual(18);
-    });
-
-    it('getTaiMinusUtc works between TAI and UTC (3)', function() {
+    it('getUtcOffset works before all leap seconds', function() {
         var date = new Date('July 11, 1970 12:00:00 UTC');
         var jd = JulianDate.fromDate(date, TimeStandard.TAI);
-        var difference = jd.getTaiMinusUtc();
+        var difference = jd.getUtcOffset();
         expect(difference).toEqual(10);
     });
 
-    it('getTaiMinusUtc works a second before a leap second', function() {
+    it('getUtcOffset works a second before a leap second', function() {
         var date = new JulianDate(2456109, 43233.0, TimeStandard.TAI);
-        expect(date.getTaiMinusUtc()).toEqual(34);
+        expect(date.getUtcOffset()).toEqual(34);
     });
 
-    it('getTaiMinusUtc works on a leap second', function() {
+    it('getUtcOffset works on a leap second', function() {
         var date = new JulianDate(2456109, 43234.0, TimeStandard.TAI);
-        expect(date.getTaiMinusUtc()).toEqual(34);
+        expect(date.getUtcOffset()).toEqual(34);
     });
 
-    it('getTaiMinusUtc works a second after a leap second', function() {
+    it('getUtcOffset works a second after a leap second', function() {
         var date = new JulianDate(2456109, 43235.0, TimeStandard.TAI);
-        expect(date.getTaiMinusUtc()).toEqual(35);
+        expect(date.getUtcOffset()).toEqual(35);
     });
 
+    it('getUtcOffset works after all leap seconds', function() {
+        var date = new JulianDate(2556109, 43235.0, TimeStandard.TAI);
+        expect(date.getUtcOffset()).toEqual(35);
+    });
 });

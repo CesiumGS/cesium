@@ -17,7 +17,33 @@ function(DeveloperError,
     var daysInLeapFeburary = 29;
 
     function convertUtcToTai(julianDate) {
-        julianDate.addSeconds(julianDate.getTaiMinusUtc(), julianDate);
+        //Even though julianDate is in UTC, we'll treat it as TAI and
+        //search the leap second table for it.
+        var toFind = new LeapSecond(julianDate, 0.0);
+        var leapSeconds = LeapSecond.getLeapSeconds();
+        var index = binarySearch(leapSeconds, toFind, LeapSecond.compareLeapSecondDate);
+
+        if (index < 0) {
+            index = ~index;
+        }
+
+        if (index >= leapSeconds.length) {
+            index = leapSeconds.length - 1;
+        }
+
+        var offset = leapSeconds[index].offset;
+        if (index > 0) {
+            //Now we have the index of the closest leap second that comes before our UTC time.
+            //However, if the difference between the UTC date being converted and the TAI
+            //defined leap second is greater than the offset, we are off by one.
+            var difference = julianDate.getSecondsDifference(leapSeconds[index].julianDate);
+            if (difference > offset) {
+                index--;
+                offset = leapSeconds[index].offset;
+            }
+        }
+
+        julianDate.addSeconds(offset, julianDate);
     }
 
     function convertTaiToUtc(julianDate, result) {
@@ -39,7 +65,7 @@ function(DeveloperError,
         }
 
         //Compute the difference between the found leap second and the time we are converting.
-        var difference = julianDate.getSecondsDifference(leapSeconds[index].leapSecond.julianDate);
+        var difference = julianDate.getSecondsDifference(leapSeconds[index].julianDate);
 
         if (difference === 0) {
             //The date is in our leap second table.
@@ -126,8 +152,8 @@ function(DeveloperError,
     var iso8601ErrorMessage = 'Valid ISO 8601 date string required.';
 
     /**
-     * Constructs a JulianDate instance from a Julian day number and the number of seconds elapsed
-     * into that day as well as the time standard the parameters are in.  Passing no parameters will
+     * Constructs a JulianDate instance from a Julian day number, the number of seconds elapsed
+     * into that day, and the time standard which the parameters are in.  Passing no parameters will
      * construct a JulianDate that represents the current system time.
      *
      * An astronomical Julian Date is the number of days since noon on January 1, -4712 (4713 BC).
@@ -209,7 +235,6 @@ function(DeveloperError,
      * Creates a JulianDate instance from a JavaScript Date object.
      * While the JavaScript Date object defaults to the system's local time zone,
      * the Julian date is computed using the UTC values.
-     * <br/>
      *
      * @memberof JulianDate
      *
@@ -615,14 +640,14 @@ function(DeveloperError,
         //Attempt to convert to UTC; if we are on a leap second, this will
         //return undefined.  Since JavaScript Date doesn't support leap second
         //we can just add second and re-convert.
-        var julianDateTai = convertTaiToUtc(this, toDateScratch);
-        if (typeof julianDateTai === 'undefined') {
+        var thisUtc = convertTaiToUtc(this, toDateScratch);
+        if (typeof thisUtc === 'undefined') {
             this.addSeconds(1, toDateScratch);
-            julianDateTai = convertTaiToUtc(toDateScratch, toDateScratch);
+            thisUtc = convertTaiToUtc(toDateScratch, toDateScratch);
         }
 
-        var julianDayNumber = julianDateTai._julianDayNumber;
-        var secondsOfDay = julianDateTai._secondsOfDay;
+        var julianDayNumber = thisUtc._julianDayNumber;
+        var secondsOfDay = thisUtc._secondsOfDay;
 
         if (secondsOfDay >= 43200.0) {
             julianDayNumber += 1;
@@ -701,33 +726,25 @@ function(DeveloperError,
      * var difference = start.getMinutesDifference(end);    // 1441.0 minutes
      */
     JulianDate.prototype.getMinutesDifference = function(other) {
-        var julianDate1 = this;
-        var julianDate2 = other;
-        var dayDifference = (julianDate2.getJulianDayNumber() - julianDate1.getJulianDayNumber()) * TimeConstants.MINUTES_PER_DAY;
-        var timeDifference = (julianDate2.getSecondsOfDay() - julianDate1.getSecondsOfDay()) / TimeConstants.SECONDS_PER_MINUTE;
-        return (dayDifference + timeDifference);
+        return this.getSecondsDifference(other) / TimeConstants.SECONDS_PER_MINUTE;
     };
 
     /**
-     * Returns the difference in seconds between the TAI and UTC time standards
-     * for this Julian date.
+     * Returns the number of seconds this TAI date is ahead of UTC.
      *
      * @memberof JulianDate
      *
-     * @return {Number} The difference in seconds between the TAI and UTC time standards for this date.
-     *
-     * @performance Expected <code>O(log n)</code>, where <code>n</code> is the number of elements
-     * in the list of existing leap seconds returned by {@link LeapSecond.getLeapSeconds}.
+     * @return {Number} The number of seconds this TAI date is ahead of UTC
      *
      * @see LeapSecond
      * @see TimeStandard
      *
      * @example
-     * var date = new Date('July 11, 2011 12:00:00 UTC');
-     * var julianDate = JulianDate.fromDate(date, TimeStandard.TAI);
-     * var difference = julianDate.getTaiMinusUtc();    // 34
+     * var date = new Date('August 1, 2012 12:00:00 UTC');
+     * var julianDate = JulianDate.fromDate(date);
+     * var difference = julianDate.getUtcOffset(); //35
      */
-    JulianDate.prototype.getTaiMinusUtc = function() {
+    JulianDate.prototype.getUtcOffset = function() {
         var toFind = new LeapSecond(this, 0.0);
         var leapSeconds = LeapSecond.getLeapSeconds();
         var index = binarySearch(leapSeconds, toFind, LeapSecond.compareLeapSecondDate);
@@ -800,7 +817,7 @@ function(DeveloperError,
             throw new DeveloperError('duration is required and must be a number.');
         }
         var newSecondsOfDay = this._secondsOfDay + (duration * TimeConstants.SECONDS_PER_MINUTE);
-        return new JulianDate(this._julianDayNumber, newSecondsOfDay, this._timeStandard);
+        return new JulianDate(this._julianDayNumber, newSecondsOfDay, TimeStandard.TAI);
     };
 
     /**
@@ -831,7 +848,7 @@ function(DeveloperError,
             throw new DeveloperError('duration is required and must be a number.');
         }
         var newSecondsOfDay = this._secondsOfDay + (duration * TimeConstants.SECONDS_PER_HOUR);
-        return new JulianDate(this._julianDayNumber, newSecondsOfDay, this._timeStandard);
+        return new JulianDate(this._julianDayNumber, newSecondsOfDay, TimeStandard.TAI);
     };
 
     /**
@@ -862,7 +879,7 @@ function(DeveloperError,
             throw new DeveloperError('duration is required and must be a number.');
         }
         var newJulianDayNumber = this._julianDayNumber + duration;
-        return new JulianDate(newJulianDayNumber, this._secondsOfDay, this._timeStandard);
+        return new JulianDate(newJulianDayNumber, this._secondsOfDay, TimeStandard.TAI);
     };
 
     /**
@@ -1003,7 +1020,7 @@ function(DeveloperError,
         return Math.abs(this.getSecondsDifference(other)) <= epsilon;
     };
 
-    //To avoid circular dependancies, we load the default list of leap seconds
+    //To avoid circular dependencies, we load the default list of leap seconds
     //here, rather than in the LeapSecond class itself.
     if (LeapSecond.getLeapSeconds().length === 0) {
         LeapSecond.setLeapSeconds([
