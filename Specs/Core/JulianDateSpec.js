@@ -1086,30 +1086,30 @@ function(JulianDate,
         var datePlusOne = date.addSeconds(0.01);
         expect(date.equalsEpsilon(datePlusOne, CesiumMath.EPSILON1)).toEqual(true);
     });
-    it('getUtcOffset works before all leap seconds', function() {
+    it('getTaiMinusUtc works before all leap seconds', function() {
         var date = new Date('July 11, 1970 12:00:00 UTC');
         var jd = JulianDate.fromDate(date, TimeStandard.TAI);
-        var difference = jd.getUtcOffset();
+        var difference = jd.getTaiMinusUtc();
         expect(difference).toEqual(10);
     });
 
-    it('getUtcOffset works a second before a leap second', function() {
+    it('getTaiMinusUtc works a second before a leap second', function() {
         var date = new JulianDate(2456109, 43233.0, TimeStandard.TAI);
-        expect(date.getUtcOffset()).toEqual(34);
+        expect(date.getTaiMinusUtc()).toEqual(34);
     });
 
-    it('getUtcOffset works on a leap second', function() {
+    it('getTaiMinusUtc works on a leap second', function() {
         var date = new JulianDate(2456109, 43234.0, TimeStandard.TAI);
-        expect(date.getUtcOffset()).toEqual(34);
+        expect(date.getTaiMinusUtc()).toEqual(34);
     });
 
-    it('getUtcOffset works a second after a leap second', function() {
+    it('getTaiMinusUtc works a second after a leap second', function() {
         var date = new JulianDate(2456109, 43235.0, TimeStandard.TAI);
-        expect(date.getUtcOffset()).toEqual(35);
+        expect(date.getTaiMinusUtc()).toEqual(35);
     });
 
-    it('getUtcOffset works after all leap seconds', function() {
+    it('getTaiMinusUtc works after all leap seconds', function() {
         var date = new JulianDate(2556109, 43235.0, TimeStandard.TAI);
-        expect(date.getUtcOffset()).toEqual(35);
+        expect(date.getTaiMinusUtc()).toEqual(35);
     });
 });

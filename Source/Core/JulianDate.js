@@ -743,9 +743,9 @@ function(DeveloperError,
      * @example
      * var date = new Date('August 1, 2012 12:00:00 UTC');
      * var julianDate = JulianDate.fromDate(date);
-     * var difference = julianDate.getUtcOffset(); //35
+     * var difference = julianDate.getTaiMinusUtc(); //35
      */
-    JulianDate.prototype.getUtcOffset = function() {
+    JulianDate.prototype.getTaiMinusUtc = function() {
         var toFind = new LeapSecond(this, 0.0);
         var leapSeconds = LeapSecond.getLeapSeconds();
         var index = binarySearch(leapSeconds, toFind, LeapSecond.compareLeapSecondDate);

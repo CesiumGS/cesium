@@ -38,8 +38,8 @@ define([
             throw new DeveloperError('date is required.');
         }
 
-        if (typeof offset !== 'number') {
-            throw new DeveloperError('offset is required.');
+        if (offset === null || isNaN(offset)) {
+            throw new DeveloperError('offset is required and must be a number.');
         }
 
         /*
