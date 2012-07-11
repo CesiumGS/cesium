@@ -126,6 +126,36 @@ require({
         Cesium.requestAnimationFrame(tick);
     }());
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Example pick handler
+
+    var handler = new Cesium.EventHandler(canvas);
+    var mousedOverObject;
+    var originalMaterial;
+    var selectedMaterial = new Cesium.ColorMaterial();
+
+    function onObjectHover(obj) {
+        originalMaterial = obj.material;
+        obj.material = selectedMaterial;
+    }
+
+    function onObjectExit(obj) {
+        obj.material = originalMaterial;
+    }
+
+    handler.setMouseAction(function (movement) {
+        var pickedObject = scene.pick(movement.endPosition);
+        if (mousedOverObject !== pickedObject) {
+            if (typeof mousedOverObject !== 'undefined') {
+                onObjectExit(mousedOverObject);
+            }
+            mousedOverObject = pickedObject;
+            if (typeof mousedOverObject !== 'undefined') {
+                onObjectHover(mousedOverObject);
+            }
+        }
+    }, Cesium.MouseEventType.MOVE);
+
     // Prevent right-click from opening a context menu.
     canvas.oncontextmenu = function() {
         return false;
