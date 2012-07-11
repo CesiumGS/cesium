@@ -22,14 +22,14 @@
     console.originalLog = console.log;
     console.log = function (d1) {
         console.originalLog.apply(console, arguments);
-        window.parent.postMessage({ 'log': d1.toString() }, "*");
+        window.parent.postMessage({ 'log': (typeof d1 === 'undefined') ? 'undefined' : d1.toString() }, "*");
     };
 
     console.originalError = console.error;
     console.error = function (d1) {
         // TODO: Look for d1.stack, "bucket.html:line:char"
         console.originalError.apply(console, arguments);
-        window.parent.postMessage({ 'error': d1.toString() }, "*");
+        window.parent.postMessage({ 'error': (typeof d1 === 'undefined') ? 'undefined' : d1.toString() }, "*");
     };
 
     window.onerror = function (errorMsg, url, lineNumber) {
