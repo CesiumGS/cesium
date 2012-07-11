@@ -33,9 +33,10 @@ function(DeveloperError,
 
         var offset = leapSeconds[index].offset;
         if (index > 0) {
-            //Now we have the index of the closest leap second that comes before our UTC time.
+            //Now we have the index of the closest leap second that comes on or after our UTC time.
             //However, if the difference between the UTC date being converted and the TAI
-            //defined leap second is greater than the offset, we are off by one.
+            //defined leap second is greater than the offset, we are off by one and need to use
+            //the previous leap second.
             var difference = julianDate.getSecondsDifference(leapSeconds[index].julianDate);
             if (difference > offset) {
                 index--;
