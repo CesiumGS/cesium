@@ -89,7 +89,51 @@ require({
         var docMessage = dom.byId('docPopupMessage');
         var local = { 'docTypes': [],  'headers': "<html><head></head><body>"};
         var errorLines = [];
-        var hintOptions = {};
+        var hintOptions = {
+            // These are copied from the Eclipse jsHint plugin options on the Cesium project itself.
+            // They should be kept in sync with that list of options.
+            bitwise : false,
+            curly : true,
+            eqeqeq : true,
+            forin : true,
+            immed : false,
+            latedef : true,
+            newcap : true,
+            noarg : true,
+            noempty : false,
+            nonew : true,
+            plusplus : false,
+            regexp : false,
+            undef : true,
+            strict : true,
+            trailing : false,
+            asi : false,
+            boss : false,
+            debug : false,
+            eqnull : false,
+            es5 : false,
+            esnext : false,
+            evil : false,
+            expr : false,
+            funcscope : false,
+            globalstrict : false,
+            iterator : false,
+            lastsemic : false,
+            laxbreak : false,
+            laxcomma : false,
+            loopfunc : false,
+            multistr : false,
+            onecase : false,
+            proto : false,
+            regexdash : false,
+            scripturl : false,
+            smarttabs : false,
+            shadow : false,
+            sub : false,
+            supernew : false,
+            validthis : false,
+            browser : true
+        };
         var hintTimer;
 
         xhr.get({
