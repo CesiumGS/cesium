@@ -6,6 +6,10 @@
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <title>Cesium Demo</title>
     <script>
+    var Sandcastle = {};
+    Sandcastle.declare = function () {};
+    Sandcastle.highlight = function () {};
+    Sandcastle.registered = [];
     if (window.location.protocol === 'file:') {
         if (confirm("You must host this app on a web server.\nSee contributor's guide for more info?")) {
             window.location = 'https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor%27s-Guide';
@@ -17,32 +21,65 @@
 </head>
 <body class="claro">
     <script type="text/javascript">
-    window.parent.postMessage("reload", "*");
+    window.parent.postMessage('reload', '*');
 
     console.originalLog = console.log;
     console.log = function (d1) {
         console.originalLog.apply(console, arguments);
-        window.parent.postMessage({ 'log': (typeof d1 === 'undefined') ? 'undefined' : d1.toString() }, "*");
+        window.parent.postMessage({ 'log': (typeof d1 === 'undefined') ? 'undefined' : d1.toString() }, '*');
     };
 
     console.originalError = console.error;
     console.error = function (d1) {
         // TODO: Look for d1.stack, "bucket.html:line:char"
         console.originalError.apply(console, arguments);
-        window.parent.postMessage({ 'error': (typeof d1 === 'undefined') ? 'undefined' : d1.toString() }, "*");
+        window.parent.postMessage({ 'error': (typeof d1 === 'undefined') ? 'undefined' : d1.toString() }, '*');
     };
 
     window.onerror = function (errorMsg, url, lineNumber) {
         var rawErrorMsg = errorMsg;
         if (typeof lineNumber !== 'undefined') {
             errorMsg += ' (on line ' + lineNumber + ')';
-            window.parent.postMessage({ 'error': errorMsg, 'url': url, 'lineNumber': lineNumber, 'rawErrorMsg': rawErrorMsg }, "*");
+            window.parent.postMessage({ 'error': errorMsg, 'url': url, 'lineNumber': lineNumber, 'rawErrorMsg': rawErrorMsg }, '*');
         } else {
-            window.parent.postMessage({ 'error': errorMsg, 'url': url }, "*");
+            window.parent.postMessage({ 'error': errorMsg, 'url': url }, '*');
         }
         console.originalError.apply(console, [ errorMsg ]);
         return false;
     }
+
+    Sandcastle.declare = function (obj) {
+        try {
+            var stack = new Error().stack.toString();
+            var pos = stack.indexOf('bucket.html:');
+            if (pos >= 0) {
+                var pos = stack.indexOf('bucket.html:', pos + 12);
+            }
+            var lineNumber;
+            if (pos >= 0) {
+                pos += 12;
+                lineNumber = parseInt(stack.substring(pos));
+                Sandcastle.registered.push({
+                    'obj': obj,
+                    'lineNumber': lineNumber
+                });
+            }
+        } catch (ex) { }
+    };
+
+    Sandcastle.highlight = function (obj) {
+        var len = Sandcastle.registered.length;
+        var i;
+        if (typeof obj !== 'undefined') {
+            for (i = 0; i < len; ++i) {
+                if (obj === Sandcastle.registered[i].obj) {
+                    window.parent.postMessage({ 'log': 'highlight line ' + Sandcastle.registered[i].lineNumber.toString() }, '*');
+                    return;
+                }
+            }
+        }
+        window.parent.postMessage({ 'log': 'un-highlight lines.' }, '*');
+    };
     </script>
 </body>
 </html>

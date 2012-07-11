@@ -43,7 +43,7 @@ body {
 <div id="cesiumContainer" class="fullSize"></div>
 
 <script id="cesium_sandcastle_script">
-/*global require,document,window,console*/
+/*global require,document,window,console,Sandcastle*/
 require({
     baseUrl : '../../../Source'
 }, [
@@ -84,13 +84,15 @@ require({
 
     // Fill circle
     var circle = new Cesium.Polygon();
+    Sandcastle.declare(circle);
     circle.setPositions(Cesium.Shapes.computeCircleBoundary(
         ellipsoid, ellipsoid.cartographicDegreesToCartesian(
             new Cesium.Cartographic2(-75.0, 40.0)), 300000.0));
-    primitives.add(circle);    
+    primitives.add(circle);
 
     // Outline circle
     var outline = new Cesium.Polyline();
+    Sandcastle.declare(outline);
 	outline.setPositions(Cesium.Shapes.computeCircleBoundary(
         ellipsoid, ellipsoid.cartographicDegreesToCartesian(
             new Cesium.Cartographic2(-82.0, 37.0)), 300000.0));
@@ -98,6 +100,7 @@ require({
     
     // Apply a material to a filled circle
     var circle2 = new Cesium.Polygon();
+    Sandcastle.declare(circle2);
     circle2.setPositions(Cesium.Shapes.computeCircleBoundary(
         ellipsoid, ellipsoid.cartographicDegreesToCartesian(
             new Cesium.Cartographic2(-90.0, 35.0)), 400000.0));
@@ -107,6 +110,7 @@ require({
     
     // Fill an ellipse
     var ellipse = new Cesium.Polygon();
+    Sandcastle.declare(ellipse);
     ellipse.setPositions(Cesium.Shapes.computeEllipseBoundary(
         ellipsoid, ellipsoid.cartographicDegreesToCartesian(
             new Cesium.Cartographic2(-78.0, 32.5)), 500000.0,
@@ -165,6 +169,7 @@ require({
             if (typeof mousedOverObject !== 'undefined') {
                 onObjectHover(mousedOverObject);
             }
+            Sandcastle.highlight(mousedOverObject);
         }
     }, Cesium.MouseEventType.MOVE);
 
