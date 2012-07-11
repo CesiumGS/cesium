@@ -35,6 +35,16 @@ html, body {
     height: 100%;
 }
 
+.cesiumOverlay {
+    display: block;
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 118px;
+    height: 26px;
+    background-image: url(../../Images/Cesium_Logo_overlay.png);
+}
+
 #codeContainer {
     width: 40%;
 }
