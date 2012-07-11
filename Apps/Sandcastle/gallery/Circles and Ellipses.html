@@ -131,16 +131,28 @@ require({
 
     var handler = new Cesium.EventHandler(canvas);
     var mousedOverObject;
+    var originalColor;
     var originalMaterial;
+    var selectedColor = new Cesium.Color(0.0, 1.0, 0.0);
     var selectedMaterial = new Cesium.ColorMaterial();
+    selectedMaterial.color = selectedColor;
 
     function onObjectHover(obj) {
-        originalMaterial = obj.material;
-        obj.material = selectedMaterial;
+        if (typeof obj.material !== 'undefined') {
+            originalMaterial = obj.material;
+            obj.material = selectedMaterial;
+        } else {
+            originalColor = obj.color;
+            obj.color = selectedColor;
+        }
     }
 
     function onObjectExit(obj) {
-        obj.material = originalMaterial;
+        if (typeof obj.material !== 'undefined') {
+            obj.material = originalMaterial;
+        } else {
+            obj.color = originalColor;
+        }
     }
 
     handler.setMouseAction(function (movement) {
