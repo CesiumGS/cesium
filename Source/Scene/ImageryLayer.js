@@ -270,27 +270,35 @@ define([
 
     ImageryLayer.prototype.requestImagery = function(tileImagery) {
         var imageryProvider = this.imageryProvider;
+        var hostname;
+        var postpone = false;
 
-        var url = imageryProvider.buildTileImageUrl(tileImagery.x, tileImagery.y, tileImagery.level);
-        var hostname = getHostname(url);
+        when(imageryProvider.buildTileImageUrl(tileImagery.x, tileImagery.y, tileImagery.level), function(url) {
+            hostname = getHostname(url);
 
-        if (hostname !== '') {
-            var activeRequestsForHostname = defaultValue(activeTileImageRequests[hostname], 0);
+            if (hostname !== '') {
+                var activeRequestsForHostname = defaultValue(activeTileImageRequests[hostname], 0);
 
-            //cap image requests per hostname, because the browser itself is capped,
-            //and we have no way to cancel an image load once it starts, but we need
-            //to be able to reorder pending image requests
-            if (activeRequestsForHostname > 6) {
-                // postpone loading tile
-                tileImagery.state = TileState.UNLOADED;
-                return;
+                //cap image requests per hostname, because the browser itself is capped,
+                //and we have no way to cancel an image load once it starts, but we need
+                //to be able to reorder pending image requests
+                if (activeRequestsForHostname > 6) {
+                    // postpone loading tile
+                    tileImagery.state = TileState.UNLOADED;
+                    postpone = true;
+                    return;
+                }
+
+                activeTileImageRequests[hostname] = activeRequestsForHostname + 1;
             }
 
-            activeTileImageRequests[hostname] = activeRequestsForHostname + 1;
-        }
-
-        when(imageryProvider.loadTileImage(url), function(image) {
+            return imageryProvider.loadTileImage(url);
+        }).then(function(image) {
             activeTileImageRequests[hostname]--;
+
+            if (postpone) {
+                return;
+            }
 
             tileImagery.image = image;
 
