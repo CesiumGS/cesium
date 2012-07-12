@@ -60,7 +60,7 @@ define([
         // TODO: we should take the latitude into account to avoid over-tessellation near the poles.
         var maxErrorRadians = maxErrorMeters / ellipsoid.getRadii().x;
 
-        return maxErrorRadians;
+        return maxErrorRadians * 10;
     }
 
     EllipsoidTerrainProvider.prototype.requestTileGeometry = function(tile) {
