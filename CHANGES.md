@@ -34,13 +34,9 @@ Beta Releases
    
    * The free look feature has been removed from `CameraColumbusViewController` in favor of rotating about the point clicked on the map with the middle mouse button.
    * The `Camera2DController` constructor and `CameraControllerCollection.add2D` now require a projection instead of an ellipsoid.
-   * All Cartesian2 operations now have static versions that work with any objects exposing 'x' and 'y' properties. 
-   * Cartesian3.prototype.getXY() was moved to Cartesian2.fromCartesian3
-   * Cartesian4.prototype.getXY() was moved to Cartesian2.fromCartesian4
-       
-       Code that previously looked like: cartesian3.getXY();
-       Should now look like: Cartesian2.fromCartesian3(cartesian3);
-
+   * `Cartesian3.prototype.getXY()` was replaced with `Cartesian2.fromCartesian3`.  Code that previously looked like `cartesian3.getXY();` should now look like `Cartesian2.fromCartesian3(cartesian3);`.
+   * `Cartesian4.prototype.getXY()` was replaced with `Cartesian2.fromCartesian4`.
+* All `Cartesian2` operations now have static versions that work with any objects exposing `x` and `y` properties. 
 * Added `addImage` to `TextureAtlas` so images can be added to a texture atlas after it is constructed.
 * Added `Scene.pickEllipsoid`, which picks either the ellipsoid or the map depending on the current `SceneMode`.
 * Added `Event`, a new utility class which makes it easy for objects to expose event properties.
