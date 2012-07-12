@@ -47,7 +47,7 @@ define([
         }
 
         if (typeof result === 'undefined') {
-            result = new Cartesian2();
+            return new Cartesian2(cartesian.x, cartesian.y);
         }
 
         result.x = cartesian.x;
@@ -125,12 +125,10 @@ define([
         if (typeof cartesian === 'undefined') {
             throw new DeveloperError('cartesian is required');
         }
-
-        if (typeof result === 'undefined') {
-            result = new Cartesian2();
-        }
-
         var magnitude = Cartesian2.magnitude(cartesian);
+        if (typeof result === 'undefined') {
+            return new Cartesian2(cartesian.x / magnitude, cartesian.y / magnitude);
+        }
         result.x = cartesian.x / magnitude;
         result.y = cartesian.y / magnitude;
         return result;
@@ -177,7 +175,7 @@ define([
             throw new DeveloperError('right is required');
         }
         if (typeof result === 'undefined') {
-            result = new Cartesian2();
+            return new Cartesian2(left.x + right.x, left.y + right.y);
         }
         result.x = left.x + right.x;
         result.y = left.y + right.y;
@@ -204,7 +202,7 @@ define([
             throw new DeveloperError('right is required');
         }
         if (typeof result === 'undefined') {
-            result = new Cartesian2();
+            return new Cartesian2(left.x - right.x, left.y - right.y);
         }
         result.x = left.x - right.x;
         result.y = left.y - right.y;
@@ -227,11 +225,11 @@ define([
         if (typeof cartesian === 'undefined') {
             throw new DeveloperError('cartesian is required');
         }
-        if (scalar === null || isNaN(scalar)) {
+        if (typeof scalar !== 'number') {
             throw new DeveloperError('scalar is required and must be a number.');
         }
         if (typeof result === 'undefined') {
-            result = new Cartesian2();
+            return new Cartesian2(cartesian.x * scalar,  cartesian.y * scalar);
         }
         result.x = cartesian.x * scalar;
         result.y = cartesian.y * scalar;
@@ -254,11 +252,11 @@ define([
         if (typeof cartesian === 'undefined') {
             throw new DeveloperError('cartesian is required');
         }
-        if (scalar === null || isNaN(scalar)) {
+        if (typeof scalar !== 'number') {
             throw new DeveloperError('scalar is required and must be a number.');
         }
         if (typeof result === 'undefined') {
-            result = new Cartesian2();
+            return new Cartesian2(cartesian.x / scalar, cartesian.y / scalar);
         }
         result.x = cartesian.x / scalar;
         result.y = cartesian.y / scalar;
@@ -280,7 +278,7 @@ define([
             throw new DeveloperError('cartesian is required');
         }
         if (typeof result === 'undefined') {
-            result = new Cartesian2();
+            return new Cartesian2(-cartesian.x, -cartesian.y);
         }
         result.x = -cartesian.x;
         result.y = -cartesian.y;
@@ -302,7 +300,7 @@ define([
             throw new DeveloperError('cartesian is required');
         }
         if (typeof result === 'undefined') {
-            result = new Cartesian2();
+            return new Cartesian2(Math.abs(cartesian.x), Math.abs(cartesian.y));
         }
         result.x = Math.abs(cartesian.x);
         result.y = Math.abs(cartesian.y);
@@ -340,7 +338,7 @@ define([
      * @exception {DeveloperError} epsilon is required and must be a number.
      */
     Cartesian2.equalsEpsilon = function(left, right, epsilon) {
-        if (epsilon === null || isNaN(epsilon)) {
+        if (typeof epsilon !== 'number') {
             throw new DeveloperError('epsilon is required and must be a number.');
         }
         return (left === right) ||

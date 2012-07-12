@@ -313,7 +313,7 @@ defineSuite(['Core/Cartesian2'], function(Cartesian2) {
         }).toThrow();
     });
 
-    it('static multiplyWithScalar throws with no cartesian parameter', function() {
+    it('static multiplyWithScalar throws with no scalar parameter', function() {
         expect(function() {
             Cartesian2.multiplyWithScalar(new Cartesian2(), undefined);
         }).toThrow();
@@ -325,7 +325,7 @@ defineSuite(['Core/Cartesian2'], function(Cartesian2) {
         }).toThrow();
     });
 
-    it('static divideByScalar throws with no cartesian parameter', function() {
+    it('static divideByScalar throws with no scalar parameter', function() {
         expect(function() {
             Cartesian2.divideByScalar(new Cartesian2(), undefined);
         }).toThrow();
