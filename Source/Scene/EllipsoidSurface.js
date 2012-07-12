@@ -62,6 +62,8 @@ define([
 
     var maxDepth;
     var tilesVisited;
+    var tilesCulled;
+    var tilesRendered;
 
     EllipsoidSurface.prototype.update = function(context, sceneState) {
         if (typeof this._levelZeroTiles === 'undefined') {
@@ -77,8 +79,13 @@ define([
 
         maxDepth = 0;
         tilesVisited = 0;
+        tilesCulled = 0;
+        tilesRendered = 0;
 
         this._tileLoadQueue.markInsertionPoint();
+
+        var cameraPosition = sceneState.camera.getPositionWC();
+        this._occluder.setCameraPosition(cameraPosition);
 
         var levelZeroTiles = this._levelZeroTiles;
         for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
@@ -91,8 +98,7 @@ define([
             }
         }
 
-        //console.log('Max Depth: ' + maxDepth);
-        //console.log('Tiles Visited: ' + tilesVisited);
+        console.log('Visited ' + tilesVisited + ' Rendered: ' + tilesRendered + ' Culled: ' + tilesCulled + ' Max Depth: ' + maxDepth);
 
         processTileLoadQueue(this, context, sceneState);
     };
@@ -230,18 +236,22 @@ define([
     };
 
     function addBestAvailableTilesToRenderList(surface, context, sceneState, tile) {
+        ++tilesVisited;
+
         if (!isTileVisible(surface, sceneState, tile)) {
+            ++tilesCulled;
             return;
         }
 
-        if (tile.level > maxDepth)
+        if (tile.level > maxDepth) {
             maxDepth = tile.level;
-        ++tilesVisited;
+        }
 
         if (queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, tile)) {
             // All children are renderable.
             if (screenSpaceError(surface, context, sceneState, tile) < surface.maxScreenSpaceError) {
                 surface._renderList.push(tile);
+                ++tilesRendered;
             } else {
                 var children = tile.children;
                 // PERFORMANCE_TODO: traverse children front-to-back
@@ -252,18 +262,19 @@ define([
         } else {
             // At least one child is not renderable, so render this tile.
             surface._renderList.push(tile);
+            ++tilesRendered;
         }
     }
 
     function isTileVisible(surface, sceneState, tile) {
         var boundingVolume = tile.get3DBoundingSphere();
         if (sceneState.camera.getVisibility(boundingVolume, BoundingSphere.planeSphereIntersect) === Intersect.OUTSIDE) {
-            return true;
+            return false;
         }
 
         var occludeePoint = tile.getOccludeePoint();
         var occluder = surface._occluder;
-        return (occludeePoint && !occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !occluder.isVisible(boundingVolume);
+        return (!occludeePoint || occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) && occluder.isVisible(boundingVolume);
     }
 
     function screenSpaceError(surface, context, sceneState, tile) {
@@ -275,6 +286,13 @@ define([
 
         var toCenter = boundingVolume.center.subtract(cameraPosition);
         var distance = toCenter.magnitude() - boundingVolume.radius;
+
+        if (distance < 0.0) {
+            // We're inside the bounding sphere, so the screen-space error could be enormous, but
+            // we don't really have any way to calculate it.  So return positive infinity, which will
+            // force a refine.
+            return 1.0/0.0;
+        }
 
         var viewport = context.getViewport();
         var viewportHeight = viewport.height;
