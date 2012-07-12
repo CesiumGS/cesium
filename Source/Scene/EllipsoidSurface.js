@@ -91,8 +91,8 @@ define([
             }
         }
 
-        console.log('Max Depth: ' + maxDepth);
-        console.log('Tiles Visited: ' + tilesVisited);
+        //console.log('Max Depth: ' + maxDepth);
+        //console.log('Tiles Visited: ' + tilesVisited);
 
         processTileLoadQueue(this, context, sceneState);
     };
