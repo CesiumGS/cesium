@@ -32,34 +32,6 @@ define([
     };
 
     /**
-     * Creates a Cartesian2 instance from an existing Cartesian3.
-     * @memberof Cartesian2
-     *
-     * @param {Cartesian3} cartesian The Cartesian3 instance to create a Cartesian2 instance from.
-     * @param {Cartesian2} [result] The object onto which to store the result.
-     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
-     *
-     * @exception {DeveloperError} cartesian is required.
-     */
-    Cartesian2.fromCartesian3 = function(cartesian, result) {
-        return Cartesian2.clone(cartesian, result);
-    };
-
-    /**
-     * Creates a Cartesian2 instance from an existing Cartesian4.
-     * @memberof Cartesian2
-     *
-     * @param {Cartesian4} cartesian The Cartesian4 instance to create a Cartesian2 instance from.
-     * @param {Cartesian2} [result] The object onto which to store the result.
-     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
-     *
-     * @exception {DeveloperError} cartesian is required.
-     */
-    Cartesian2.fromCartesian4 = function(cartesian, result) {
-        return Cartesian2.clone(cartesian, result);
-    };
-
-    /**
      * Duplicates a Cartesian2 instance.
      * @memberof Cartesian2
      *
@@ -82,6 +54,32 @@ define([
         result.y = cartesian.y;
         return result;
     };
+
+    /**
+     * Creates a Cartesian2 instance from an existing Cartesian3.
+     * @memberof Cartesian2
+     * @function
+     *
+     * @param {Cartesian3} cartesian The Cartesian3 instance to create a Cartesian2 instance from.
+     * @param {Cartesian2} [result] The object onto which to store the result.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     *
+     * @exception {DeveloperError} cartesian is required.
+     */
+    Cartesian2.fromCartesian3 = Cartesian2.clone;
+
+    /**
+     * Creates a Cartesian2 instance from an existing Cartesian4.
+     * @memberof Cartesian2
+     * @function
+     *
+     * @param {Cartesian4} cartesian The Cartesian4 instance to create a Cartesian2 instance from.
+     * @param {Cartesian2} [result] The object onto which to store the result.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     *
+     * @exception {DeveloperError} cartesian is required.
+     */
+    Cartesian2.fromCartesian4 = Cartesian2.clone;
 
     /**
      * Computes the provided Cartesian's squared magnitude.
