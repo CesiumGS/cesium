@@ -1,16 +1,18 @@
 /*global define*/
-define(['Core/DeveloperError',
-        'Core/binarySearch',
-        'Core/TimeConstants',
-        'Core/LeapSecond',
-        'Core/TimeStandard',
-        'Core/isLeapYear'],
-function(DeveloperError,
-         binarySearch,
-         TimeConstants,
-         LeapSecond,
-         TimeStandard,
-         isLeapYear) {
+define([
+        './DeveloperError',
+        './binarySearch',
+        './TimeConstants',
+        './LeapSecond',
+        './TimeStandard',
+        './isLeapYear'
+    ], function(
+        DeveloperError,
+        binarySearch,
+        TimeConstants,
+        LeapSecond,
+        TimeStandard,
+        isLeapYear) {
     "use strict";
 
     var daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
