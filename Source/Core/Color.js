@@ -56,6 +56,26 @@ define([
     };
 
     /**
+     * Creates a new Color specified using red, green, blue, and alpha values
+     * that are in the range of 0 to 255, converting them internally to a
+     * range of 0.0 to 1.0.
+     * @memberof Color
+     *
+     * @param {Number} [red=255] The red component.
+     * @param {Number} [green=255] The green component.
+     * @param {Number} [blue=255] The blue component.
+     * @param {Number} [alpha=255] The alpha component.
+     * @returns {Color} A new color instance.
+     */
+    Color.fromBytes = function(red, green, blue, alpha) {
+        red = typeof red === 'undefined' ? 255.0 : red;
+        green = typeof green === 'undefined' ? 255.0 : green;
+        blue = typeof blue === 'undefined' ? 255.0 : blue;
+        alpha = typeof alpha === 'undefined' ? 255.0 : alpha;
+        return new Color(red / 255.0, green / 255.0, blue / 255.0, alpha / 255.0);
+    };
+
+    /**
      * Converts a 'byte' color component in the range of 0 to 255 into
      * a 'float' color component range of 0 to 1.0.
      * @memberof Color

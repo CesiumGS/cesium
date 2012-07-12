@@ -189,15 +189,15 @@ define([
             var maxTextureSize = scene.getContext().getMaximumTextureSize();
             if (maxTextureSize < 4095) {
                 // Mobile, or low-end card
-                this.dayImageUrl = this.dayImageUrl || require.toUrl('Images//NE2_50M_SR_W_1024.jpg');
-                this.nightImageUrl = this.nightImageUrl || require.toUrl('Images//land_ocean_ice_lights_512.jpg');
+                this.dayImageUrl = this.dayImageUrl || require.toUrl('Images/NE2_50M_SR_W_1024.jpg');
+                this.nightImageUrl = this.nightImageUrl || require.toUrl('Images/land_ocean_ice_lights_512.jpg');
             } else {
                 // Desktop
-                this.dayImageUrl = this.dayImageUrl || require.toUrl('Images//NE2_50M_SR_W_4096.jpg');
-                this.nightImageUrl = this.nightImageUrl || require.toUrl('Images//land_ocean_ice_lights_2048.jpg');
-                this.specularMapUrl = this.specularMapUrl || require.toUrl('Images//earthspec1k.jpg');
-                this.cloudsMapUrl = this.cloudsMapUrl || require.toUrl('Images//earthcloudmaptrans.jpg');
-                this.bumpMapUrl = this.bumpMapUrl || require.toUrl('Images//earthbump1k.jpg');
+                this.dayImageUrl = this.dayImageUrl || require.toUrl('Images/NE2_50M_SR_W_4096.jpg');
+                this.nightImageUrl = this.nightImageUrl || require.toUrl('Images/land_ocean_ice_lights_2048.jpg');
+                this.specularMapUrl = this.specularMapUrl || require.toUrl('Images/earthspec1k.jpg');
+                this.cloudsMapUrl = this.cloudsMapUrl || require.toUrl('Images/earthcloudmaptrans.jpg');
+                this.bumpMapUrl = this.bumpMapUrl || require.toUrl('Images/earthbump1k.jpg');
             }
 
             var centralBody = this.centralBody = new CentralBody(ellipsoid);
@@ -214,9 +214,7 @@ define([
             camera.frustum.near = 0.0002 * maxRadii;
             camera.frustum.far = 50.0 * maxRadii;
 
-            this.spindleCameraController = camera.getControllers().addSpindle(ellipsoid);
-            this.spindleCameraController.mouseConstrainedZAxis = true;
-            this.freelookCameraController = camera.getControllers().addFreeLook(ellipsoid);
+            this.centralBodyCameraController = camera.getControllers().addCentralBody();
 
             var handler = new EventHandler(canvas);
             handler.setMouseAction(lang.hitch(this, '_handleLeftClick'), MouseEventType.LEFT_CLICK);
@@ -247,9 +245,7 @@ define([
 
             var controllers = camera.getControllers();
             controllers.removeAll();
-            this.spindleCameraController = controllers.addSpindle(this.ellipsoid);
-            this.spindleCameraController.constrainedZAxis = true;
-            this.freelookCameraController = controllers.addFreeLook(this.ellipsoid);
+            this.centralBodyCameraController = controllers.addCentralBody();
         },
 
         areCloudsAvailable : function() {

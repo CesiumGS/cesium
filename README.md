@@ -37,8 +37,7 @@ Check out the [CZML Guide](https://github.com/AnalyticalGraphicsInc/cesium/wiki/
 
 ### Get Started ###
 
-Check out the [wiki](https://github.com/AnalyticalGraphicsInc/cesium/wiki), including the [quick start](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Quick-Start), [architecture](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Architecture), [roadmap](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Roadmap), and [contributor's guide](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor's-Guide).
-
+Check out the [wiki](https://github.com/AnalyticalGraphicsInc/cesium/wiki), including the [features](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Features), [quick start](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Quick-Start), [architecture](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Architecture), and [contributor's guide](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor's-Guide).
 
 Join our mailing lists:
 * [Development](https://groups.google.com/d/forum/cesium-dev)

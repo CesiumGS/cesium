@@ -12,11 +12,11 @@ define([
         'Core/Clock',
         'Core/ClockStep',
         'Core/ClockRange',
-        'Core/TimeStandard',
         'Core/Iso8601',
         'Core/FullScreen',
         'Core/Ellipsoid',
         'Core/Transforms',
+        'Core/Cartesian3',
         'Core/requestAnimationFrame',
         'Scene/SceneTransitioner',
         'Scene/BingMapsStyle',
@@ -37,11 +37,11 @@ define([
         Clock,
         ClockStep,
         ClockRange,
-        TimeStandard,
         Iso8601,
         FullScreen,
         Ellipsoid,
         Transforms,
+        Cartesian3,
         requestAnimationFrame,
         SceneTransitioner,
         BingMapsStyle,
@@ -59,6 +59,7 @@ define([
         multiplier : 1
     });
     var animationController = new AnimationController(clock);
+    var spindleController;
     var timeline;
     var transitioner;
     var dynamicObjectCollection = new DynamicObjectCollection();
@@ -73,7 +74,7 @@ define([
         if (animationController.isAnimating()) {
             speedIndicatorElement.innerHTML = clock.multiplier + 'x realtime';
         } else {
-            speedIndicatorElement.innerHTML = clock.multiplier + 'x realtime (currently paused)';
+            speedIndicatorElement.innerHTML = clock.multiplier + 'x realtime (paused)';
         }
     }
 
@@ -159,10 +160,17 @@ define([
                                 lastCameraCenteredObjectID = cameraCenteredObjectID;
                                 var camera = widget.scene.getCamera();
                                 camera.position = camera.position.normalize().multiplyWithScalar(5000.0);
+
+                                var controllers = camera.getControllers();
+                                controllers.removeAll();
+                                spindleController = controllers.addSpindle();
+                                spindleController.constrainedAxis = Cartesian3.UNIT_Z;
                             }
 
-                            var transform = Transforms.eastNorthUpToFixedFrame(cameraCenteredObjectIDPosition, widget.ellipsoid);
-                            widget.spindleCameraController.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
+                            if (typeof spindleController !== 'undefined' && !spindleController.isDestroyed()) {
+                                var transform = Transforms.eastNorthUpToFixedFrame(cameraCenteredObjectIDPosition, widget.ellipsoid);
+                                spindleController.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
+                            }
                         }
                     }
                 }
@@ -242,8 +250,8 @@ define([
             on(animPlay, 'Click', function() {
                 animationController.play();
                 animReverse.set('checked', false);
-                animPause.set('checked', true);
-                animPlay.set('checked', false);
+                animPause.set('checked', false);
+                animPlay.set('checked', true);
                 updateSpeedIndicator();
             });
 

@@ -5,6 +5,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/RuntimeError',
+        '../Core/Color',
         '../Core/Math',
         '../Core/Intersect',
         '../Core/Occluder',
@@ -60,6 +61,7 @@ define([
         destroyObject,
         DeveloperError,
         RuntimeError,
+        Color,
         CesiumMath,
         Intersect,
         Occluder,
@@ -1403,6 +1405,11 @@ define([
         this._projection = projection;
     };
 
+    var clearState = {
+        framebuffer : undefined,
+        color : new Color(0.0, 0.0, 0.0, 0.0)
+    };
+
     /**
      * DOC_TBA
      * @memberof CentralBody
@@ -1410,15 +1417,8 @@ define([
     CentralBody.prototype.render = function(context) {
         if (this.show) {
             // clear FBO
-            context.clear(context.createClearState({
-                framebuffer : this._fb,
-                color : {
-                    red : 0.0,
-                    green : 0.0,
-                    blue : 0.0,
-                    alpha : 0.0
-                }
-            }));
+            clearState.framebuffer = this._fb;
+            context.clear(context.createClearState(clearState));
 
             if (this.showSkyAtmosphere) {
                 context.draw({
