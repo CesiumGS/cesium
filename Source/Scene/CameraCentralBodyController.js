@@ -112,6 +112,13 @@ define([
         this._spindleController.constrainedAxis = oldConstrainedZ;
     };
 
+    CameraCentralBodyController.prototype.moveRightWithConstrainedZ = function(angle) {
+        var oldConstrainedZ = this._spindleController.constrainedAxis;
+        this._spindleController.constrainedAxis = Cartesian3.UNIT_Z;
+        this._spindleController.moveRight(angle);
+        this._spindleController.constrainedAxis = oldConstrainedZ;
+    };
+
     /**
       * Returns true if this object was destroyed; otherwise, false.
       * <br /><br />
