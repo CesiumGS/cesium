@@ -93,12 +93,13 @@ define([
             relativeToCenter : center
         });
 
-        tile.geometry = buffers;
+        tile.transformedGeometry = buffers;
         tile.state = TileState.TRANSFORMED;
     };
 
     EllipsoidTerrainProvider.prototype.createResources = function(context, tile) {
-        TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, tile.geometry);
+        TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, tile.transformedGeometry);
+        tile.transformedGeometry = undefined;
         tile.state = TileState.READY;
     };
 

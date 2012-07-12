@@ -311,7 +311,11 @@ define([
         var tileLoadQueue = surface._tileLoadQueue;
         var tile = tileLoadQueue.head;
 
-        while (typeof tile !== 'undefined') {
+        var startTime = Date.now();
+        var timeSlice = 10;
+        var endTime = startTime + timeSlice;
+
+        while (Date.now() < endTime && typeof tile !== 'undefined') {
             var i, len;
 
             if (tile.state === TileState.UNLOADED) {
@@ -336,28 +340,28 @@ define([
             var doneLoading = tile.state === TileState.READY;
 
             var tileImageryCollection = tile.imagery;
-            for (i = 0, len = tileImageryCollection.length; i < len; ++i) {
+            for (i = 0, len = tileImageryCollection.length; Date.now() < endTime && i < len; ++i) {
                 var tileImagery = tileImageryCollection[i];
-                var imageryProvider = tileImagery.imageryLayer.imageryProvider;
+                var imageryLayer = tileImagery.imageryLayer;
 
                 if (tileImagery.state === TileState.UNLOADED) {
                     tileImagery.state = TileState.TRANSITIONING;
-                    imageryProvider.requestImagery(tileImagery);
+                    imageryLayer.requestImagery(tileImagery);
                 }
                 if (tileImagery.state === TileState.RECEIVED) {
                     tileImagery.state = TileState.TRANSITIONING;
-                    imageryProvider.transformImagery(context, tileImagery);
+                    imageryLayer.transformImagery(context, tileImagery);
                 }
                 if (tileImagery.state === TileState.TRANSFORMED) {
                     tileImagery.state = TileState.TRANSITIONING;
-                    imageryProvider.createResources(context, tileImagery);
+                    imageryLayer.createResources(context, tileImagery);
                 }
                 doneLoading = doneLoading && tileImagery.state === TileState.READY;
             }
 
             var next = tile._next;
 
-            if (doneLoading) {
+            if (i === len && doneLoading) {
                 tile.renderable = true;
                 tile.doneLoading = true;
                 tileLoadQueue.remove(tile);
