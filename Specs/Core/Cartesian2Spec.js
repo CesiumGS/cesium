@@ -5,31 +5,31 @@ defineSuite(['Core/Cartesian2'], function(Cartesian2) {
 
     it('construct with default values', function() {
         var cartesian = new Cartesian2();
-        expect(cartesian.x).toEqual(0);
-        expect(cartesian.y).toEqual(0);
+        expect(cartesian.x).toEqual(0.0);
+        expect(cartesian.y).toEqual(0.0);
     });
 
     it('construct with only an x value', function() {
-        var cartesian = new Cartesian2(1);
-        expect(cartesian.x).toEqual(1);
-        expect(cartesian.y).toEqual(0);
+        var cartesian = new Cartesian2(1.0);
+        expect(cartesian.x).toEqual(1.0);
+        expect(cartesian.y).toEqual(0.0);
     });
 
     it('construct with all values', function() {
-        var cartesian = new Cartesian2(1, 2);
-        expect(cartesian.x).toEqual(1);
-        expect(cartesian.y).toEqual(2);
+        var cartesian = new Cartesian2(1.0, 2.0);
+        expect(cartesian.x).toEqual(1.0);
+        expect(cartesian.y).toEqual(2.0);
     });
 
     it('clone without a result parameter', function() {
-        var cartesian = new Cartesian2(1, 2);
+        var cartesian = new Cartesian2(1.0, 2.0);
         var result = cartesian.clone();
         expect(cartesian === result).toEqual(false);
         expect(cartesian).toEqual(result);
     });
 
     it('clone with a result parameter', function() {
-        var cartesian = new Cartesian2(1, 2);
+        var cartesian = new Cartesian2(1.0, 2.0);
         var result = new Cartesian2();
         var returnedResult = cartesian.clone(result);
         expect(cartesian === result).toEqual(false);
@@ -37,70 +37,94 @@ defineSuite(['Core/Cartesian2'], function(Cartesian2) {
         expect(cartesian).toEqual(result);
     });
 
+    it('clone works with "this" result parameter', function() {
+        var cartesian = new Cartesian2(1.0, 2.0);
+        var returnedResult = cartesian.clone(cartesian);
+        expect(cartesian === returnedResult).toEqual(true);
+    });
+
     it('magnitudeSquared', function() {
-        var cartesian = new Cartesian2(2, 3);
+        var cartesian = new Cartesian2(2.0, 3.0);
         expect(cartesian.magnitudeSquared()).toEqual(13);
     });
 
     it('magnitude', function() {
-        var cartesian = new Cartesian2(2, 3);
-        expect(cartesian.magnitude()).toEqual(Math.sqrt(13));
+        var cartesian = new Cartesian2(2.0, 3.0);
+        expect(cartesian.magnitude()).toEqual(Math.sqrt(13.0));
     });
 
     it('normalize', function() {
-        var cartesian = new Cartesian2(2, 0).normalize();
-        expect(cartesian.x).toEqual(1);
-        expect(cartesian.y).toEqual(0);
+        var cartesian = new Cartesian2(2.0, 0.0).normalize();
+        expect(cartesian.x).toEqual(1.0);
+        expect(cartesian.y).toEqual(0.0);
     });
 
     it('dot', function() {
-        var left = new Cartesian2(2, 3);
-        var right = new Cartesian2(4, 5);
-        var expectedResult = 23;
+        var left = new Cartesian2(2.0, 3.0);
+        var right = new Cartesian2(4.0, 5.0);
+        var expectedResult = 23.0;
         var result = left.dot(right);
         expect(result).toEqual(expectedResult);
     });
 
     it('add works without a result parameter', function() {
-        var left = new Cartesian2(2, 3);
-        var right = new Cartesian2(4, 5);
-        var expectedResult = new Cartesian2(6, 8);
+        var left = new Cartesian2(2.0, 3.0);
+        var right = new Cartesian2(4.0, 5.0);
+        var expectedResult = new Cartesian2(6.0, 8.0);
         var result = left.add(right);
         expect(result).toEqual(expectedResult);
     });
 
     it('add works with a result parameter', function() {
-        var left = new Cartesian2(2, 3);
-        var right = new Cartesian2(4, 5);
+        var left = new Cartesian2(2.0, 3.0);
+        var right = new Cartesian2(4.0, 5.0);
         var result = new Cartesian2();
-        var expectedResult = new Cartesian2(6, 8);
+        var expectedResult = new Cartesian2(6.0, 8.0);
         var returnedResult = left.add(right, result);
         expect(returnedResult === result);
         expect(result).toEqual(expectedResult);
     });
 
+    it('add works with "this" result parameter', function() {
+        var left = new Cartesian2(2.0, 3.0);
+        var right = new Cartesian2(4.0, 5.0);
+        var expectedResult = new Cartesian2(6.0, 8.0);
+        var returnedResult = left.add(right, left);
+        expect(returnedResult === left);
+        expect(left).toEqual(expectedResult);
+    });
+
     it('subtract works without a result parameter', function() {
-        var left = new Cartesian2(2, 3);
-        var right = new Cartesian2(1, 5);
-        var expectedResult = new Cartesian2(1, -2);
+        var left = new Cartesian2(2.0, 3.0);
+        var right = new Cartesian2(1.0, 5.0);
+        var expectedResult = new Cartesian2(1.0, -2.0);
         var result = left.subtract(right);
         expect(result).toEqual(expectedResult);
     });
 
     it('subtract works with a result parameter', function() {
-        var left = new Cartesian2(2, 3);
-        var right = new Cartesian2(1, 5);
+        var left = new Cartesian2(2.0, 3.0);
+        var right = new Cartesian2(1.0, 5.0);
         var result = new Cartesian2();
-        var expectedResult = new Cartesian2(1, -2);
+        var expectedResult = new Cartesian2(1.0, -2.0);
         var returnedResult = left.subtract(right, result);
         expect(returnedResult === result);
         expect(result).toEqual(expectedResult);
     });
 
+    it('subtract works with this result parameter', function() {
+        var left = new Cartesian2(2.0, 3.0);
+        var right = new Cartesian2(1.0, 5.0);
+        var expectedResult = new Cartesian2(1.0, -2.0);
+        var returnedResult = left.subtract(right, left);
+        expect(returnedResult === left);
+        expect(left).toEqual(expectedResult);
+    });
+
     it('multiplyWithScalar without a result parameter', function() {
-        var cartesian = new Cartesian2(1, 2);
+        var cartesian = new Cartesian2(1.0, 2.0);
         var scalar = 2;
-        var expectedResult = new Cartesian2(2, 4);
+        var expectedResult = new Cartesian2(2.0, 4.0);
         var result = cartesian.multiplyWithScalar(scalar);
         expect(result).toEqual(expectedResult);
     });
@@ -115,6 +139,15 @@ defineSuite(['Core/Cartesian2'], function(Cartesian2) {
         expect(result).toEqual(expectedResult);
     });
 
+    it('multiplyWithScalar with "this" result parameter', function() {
+        var cartesian = new Cartesian2(1, 2);
+        var scalar = 2;
+        var expectedResult = new Cartesian2(2, 4);
+        var returnedResult = cartesian.multiplyWithScalar(scalar, cartesian);
+        expect(cartesian === returnedResult).toEqual(true);
+        expect(cartesian).toEqual(expectedResult);
+    });
+
     it('divideByScalar without a result parameter', function() {
         var cartesian = new Cartesian2(1, 2);
         var scalar = 2;
@@ -124,13 +157,22 @@ defineSuite(['Core/Cartesian2'], function(Cartesian2) {
     });
 
     it('divideByScalar with a result parameter', function() {
-        var cartesian = new Cartesian2(1, 2);
+        var cartesian = new Cartesian2(1.0, 2.0);
         var result = new Cartesian2();
         var scalar = 2;
         var expectedResult = new Cartesian2(0.5, 1.0);
         var returnedResult = cartesian.divideByScalar(scalar, result);
         expect(result === returnedResult).toEqual(true);
         expect(result).toEqual(expectedResult);
+    });
+
+    it('divideByScalar with "this" result parameter', function() {
+        var cartesian = new Cartesian2(1.0, 2.0);
+        var scalar = 2;
+        var expectedResult = new Cartesian2(0.5, 1.0);
+        var returnedResult = cartesian.divideByScalar(scalar, cartesian);
+        expect(cartesian === returnedResult).toEqual(true);
+        expect(cartesian).toEqual(expectedResult);
     });
 
     it('negate without a result parameter', function() {
@@ -149,6 +191,14 @@ defineSuite(['Core/Cartesian2'], function(Cartesian2) {
         expect(result).toEqual(expectedResult);
     });
 
+    it('negate with "this" result parameter', function() {
+        var cartesian = new Cartesian2(1.0, -2.0);
+        var expectedResult = new Cartesian2(-1.0, 2.0);
+        var returnedResult = cartesian.negate(cartesian);
+        expect(cartesian === returnedResult).toEqual(true);
+        expect(cartesian).toEqual(expectedResult);
+    });
+
     it('abs without a result parameter', function() {
         var cartesian = new Cartesian2(1.0, -2.0);
         var expectedResult = new Cartesian2(1.0, 2.0);
@@ -165,28 +215,36 @@ defineSuite(['Core/Cartesian2'], function(Cartesian2) {
         expect(result).toEqual(expectedResult);
     });
 
+    it('abs with "this" result parameter', function() {
+        var cartesian = new Cartesian2(1.0, -2.0);
+        var expectedResult = new Cartesian2(1.0, 2.0);
+        var returnedResult = cartesian.abs(cartesian);
+        expect(cartesian === returnedResult).toEqual(true);
+        expect(cartesian).toEqual(expectedResult);
+    });
+
     it('equals', function() {
-        var cartesian = new Cartesian2(1, 2);
-        expect(cartesian.equals(new Cartesian2(1, 2))).toEqual(true);
-        expect(cartesian.equals(new Cartesian2(2, 2))).toEqual(false);
-        expect(cartesian.equals(new Cartesian2(2, 1))).toEqual(false);
+        var cartesian = new Cartesian2(1.0, 2.0);
+        expect(cartesian.equals(new Cartesian2(1.0, 2.0))).toEqual(true);
+        expect(cartesian.equals(new Cartesian2(2.0, 2.0))).toEqual(false);
+        expect(cartesian.equals(new Cartesian2(2.0, 1.0))).toEqual(false);
         expect(cartesian.equals(undefined)).toEqual(false);
     });
 
     it('equalsEpsilon', function() {
-        var cartesian = new Cartesian2(1, 2);
-        expect(cartesian.equalsEpsilon(new Cartesian2(1, 2), 0)).toEqual(true);
-        expect(cartesian.equalsEpsilon(new Cartesian2(1, 2), 1)).toEqual(true);
-        expect(cartesian.equalsEpsilon(new Cartesian2(2, 2), 1)).toEqual(true);
-        expect(cartesian.equalsEpsilon(new Cartesian2(1, 3), 1)).toEqual(true);
-        expect(cartesian.equalsEpsilon(new Cartesian2(2, 2), 0.99999)).toEqual(false);
-        expect(cartesian.equalsEpsilon(new Cartesian2(1, 3), 0.99999)).toEqual(false);
+        var cartesian = new Cartesian2(1.0, 2.0);
+        expect(cartesian.equalsEpsilon(new Cartesian2(1.0, 2.0), 0.0)).toEqual(true);
+        expect(cartesian.equalsEpsilon(new Cartesian2(1.0, 2.0), 1.0)).toEqual(true);
+        expect(cartesian.equalsEpsilon(new Cartesian2(2.0, 2.0), 1.0)).toEqual(true);
+        expect(cartesian.equalsEpsilon(new Cartesian2(1.0, 3.0), 1.0)).toEqual(true);
+        expect(cartesian.equalsEpsilon(new Cartesian2(2.0, 2.0), 0.99999)).toEqual(false);
+        expect(cartesian.equalsEpsilon(new Cartesian2(1.0, 3.0), 0.99999)).toEqual(false);
         expect(cartesian.equalsEpsilon(undefined, 1)).toEqual(false);
     });
 
     it('toString', function() {
-        var cartesian = new Cartesian2(1, 2);
-        expect(cartesian.toString()).toEqual('(1, 2)');
+        var cartesian = new Cartesian2(1.123, 2.345);
+        expect(cartesian.toString()).toEqual('(1.123, 2.345)');
     });
 
     it('static clone throws with no parameter', function() {

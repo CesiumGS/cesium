@@ -10,8 +10,8 @@ define([
      * @alias Cartesian2
      * @constructor
      *
-     * @param {Number} [x=0] The X component.
-     * @param {Number} [y=0] The Y component.
+     * @param {Number} [x=0.0] The X component.
+     * @param {Number} [y=0.0] The Y component.
      *
      * @see Cartesian3
      * @see Cartesian4
@@ -56,7 +56,8 @@ define([
     };
 
     /**
-     * Creates a Cartesian2 instance from an existing Cartesian3.
+     * Creates a Cartesian2 instance from an existing Cartesian3.  This simply takes the
+     * x and y properties of the Cartesian3 and drops z.
      * @memberof Cartesian2
      * @function
      *
@@ -69,8 +70,8 @@ define([
     Cartesian2.fromCartesian3 = Cartesian2.clone;
 
     /**
-     * Creates a Cartesian2 instance from an existing Cartesian4.
-     * @memberof Cartesian2
+     * Creates a Cartesian2 instance from an existing Cartesian4.  This simply takes the
+     * x and y properties of the Cartesian4 and drops z and w.
      * @function
      *
      * @param {Cartesian4} cartesian The Cartesian4 instance to create a Cartesian2 instance from.
