@@ -166,6 +166,7 @@ define([
         var camera = this._camera;
         var position = camera.position;
         var direction = camera.direction;
+        var cameraPosition;
 
         var centerWC;
         var positionWC;
@@ -174,7 +175,7 @@ define([
             centerWC = Cartesian4.UNIT_W;
             this._transform.setColumn3(centerWC);
 
-            var cameraPosition = new Cartesian4(camera.position.x, camera.position.y, camera.position.z, 1.0);
+            cameraPosition = new Cartesian4(camera.position.x, camera.position.y, camera.position.z, 1.0);
             positionWC = camera.transform.multiplyWithVector(cameraPosition);
 
             camera.transform = this._transform.clone();
@@ -185,7 +186,7 @@ define([
             centerWC = camera.transform.multiplyWithVector(center);
             this._transform.setColumn3(centerWC);
 
-            var cameraPosition = new Cartesian4(camera.position.x, camera.position.y, camera.position.z, 1.0);
+            cameraPosition = new Cartesian4(camera.position.x, camera.position.y, camera.position.z, 1.0);
             positionWC = camera.transform.multiplyWithVector(cameraPosition);
             camera.transform = this._transform.clone();
         }

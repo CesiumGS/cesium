@@ -1,32 +1,19 @@
 /*global define*/
 define([
-        'require',
         './DeveloperError'
     ], function(
-        require,
         DeveloperError) {
     "use strict";
 
-    var JulianDate = {};
-    JulianDate.fromDate = function(a, b) {
-        //because of the circular reference between JulianDate and TimeStandard,
-        //we need to require JulianDate later and replace our reference
-        JulianDate = require('./JulianDate');
-        return JulianDate.fromDate(a, b);
-    };
-
     /**
      * Describes a single leap second, which is constructed from a {@link JulianDate} and a
-     * numerical offset representing the number of seconds between the TAI and UTC time standards.
+     * numerical offset representing the number of seconds TAI is ahead of the UTC time standard.
      *
      * @alias LeapSecond
      * @constructor
      *
      * @param {JulianDate} date A Julian date representing the time of the leap second.
-     * Additionally, this parameter may be a {String} containing the date of the leap second
-     * (in the format used to construct a Javascript Date object).
-     * @param {Number} totalTaiOffsetFromUtc The cumulative difference, in seconds, between the TAI and
-     * UTC standards at the time of this leap second.
+     * @param {Number} offset The cumulative number of seconds, that TAI is ahead of UTC at provided date.
      *
      * @exception {DeveloperError} <code>date</code> is required.
      * @exception {DeveloperError} <code>offset</code> is required.
@@ -47,22 +34,12 @@ define([
      * var leapSecond = new LeapSecond(date, 25.0);
      */
     var LeapSecond = function(date, offset) {
-        var julianDate;
-        var totalTaiOffsetFromUtc;
-
-        if (!date) {
+        if (typeof date === 'undefined') {
             throw new DeveloperError('date is required.');
         }
-        if (typeof offset === 'undefined') {
-            throw new DeveloperError('offset is required.');
-        }
 
-        if (typeof date === 'object') {
-            julianDate = date;
-            totalTaiOffsetFromUtc = offset;
-        } else if (typeof date === 'string') {
-            julianDate = JulianDate.fromDate(new Date(date));
-            totalTaiOffsetFromUtc = offset;
+        if (offset === null || isNaN(offset)) {
+            throw new DeveloperError('offset is required and must be a number.');
         }
 
         /*
@@ -70,69 +47,44 @@ define([
          *
          * @type {JulianDate}
          */
-        this.julianDate = julianDate;
+        this.julianDate = date;
         /*
          * The cumulative number of seconds between the UTC and TAI time standards at the time
          * of this leap second.
          *
          * @type {Number}
          */
-        this.offset = totalTaiOffsetFromUtc;
+        this.offset = offset;
     };
 
     /**
-     * Sets the list of currently known leap seconds from user provided data.
+     * Sets the list of leap seconds used throughout Cesium.
      *
      * @memberof LeapSecond
      *
-     * @param {Object} data An array of the form:
-     *                          [
-     *                            {
-     *                              date   : xxx,
-     *                              offset : xxx
-     *                            },
-     *                            ...
-     *                          ]
-     * <code>date</code> should be a String representing the
-     * time of the leap second (in the format used to construct a Javascript Date object), and <code>offset</code>
-     * should be a number representing the difference, in seconds, between the TAI and UTC standards at the
-     * time of this leap second.
+     * @param {Array} leapSeconds An array of {@link LeapSecond} objects.
+     * @exception {DeveloperErrpr} leapSeconds is required and must be an array.
      *
-     * @exception {DeveloperError} <code>data</code> is required.
-     *
-     * @see LeapSecond.getLeapSeconds
+     * @see LeapSecond.setLeapSeconds
      *
      * @example
-     * // Set the list of leap seconds using user defined data.
-     * var data = [
-     *     {
-     *          date: 'January 1, 1972 00:00:00 UTC',
-     *          offset: 10.0
-     *     },
-     *     {
-     *          date: 'July 1, 1972 00:00:00 UTC',
-     *          offset: 11.0
-     *     }
-     * ];
-     * LeapSecond.setLeapSeconds(data);
-     * var leapSeconds = LeapSecond.getLeapSeconds();  // An array of two LeapSeconds.
+     * LeapSecond.setleapSeconds([
+     *                            new LeapSecond(new JulianDate(2453736, 43233.0, TimeStandard.TAI), 33), // January 1, 2006 00:00:00 UTC
+     *                            new LeapSecond(new JulianDate(2454832, 43234.0, TimeStandard.TAI), 34), // January 1, 2009 00:00:00 UTC
+     *                            new LeapSecond(new JulianDate(2456109, 43235.0, TimeStandard.TAI), 35)  // July 1, 2012 00:00:00 UTC
+     *                           ]);
      */
-    LeapSecond.setLeapSeconds = function(data) {
-        if (!data) {
-            throw new DeveloperError('data is required.');
+    LeapSecond.setLeapSeconds = function(leapSeconds) {
+        if (!Array.isArray(leapSeconds)) {
+            throw new DeveloperError("leapSeconds is required and must be an array.");
         }
-
-        LeapSecond._leapSeconds = [];
-        var numObjects = data.length;
-        for ( var i = 0; i < numObjects; i++) {
-            LeapSecond._leapSeconds.push(new LeapSecond(data[i].date, data[i].offset));
-        }
+        LeapSecond._leapSeconds = leapSeconds;
         LeapSecond._leapSeconds.sort(LeapSecond.compareLeapSecondDate);
     };
 
     /**
-     * Returns a list of leap seconds. If {@link LeapSecond.setLeapSeconds} has not yet been called,
-     * then a list of leap seconds that was available when this library was released is returned.
+     * Returns a copy of the array of leap seconds used throughout Cesium. By default, this is the
+     * official list of leap seconds that was available when Cesium was released.
      *
      * @memberof LeapSecond
      *
@@ -140,38 +92,7 @@ define([
      *
      * @see LeapSecond.setLeapSeconds
      */
-    LeapSecond.getLeapSeconds = function() {
-        if (!LeapSecond._leapSeconds) {
-            LeapSecond._leapSeconds =
-                [
-                     new LeapSecond('January 1, 1972 00:00:00 UTC', 10),
-                     new LeapSecond('July 1, 1972 00:00:00 UTC', 11),
-                     new LeapSecond('January 1, 1973 00:00:00 UTC', 12),
-                     new LeapSecond('January 1, 1974 00:00:00 UTC', 13),
-                     new LeapSecond('January 1, 1975 00:00:00 UTC', 14),
-                     new LeapSecond('January 1, 1976 00:00:00 UTC', 15),
-                     new LeapSecond('January 1, 1977 00:00:00 UTC', 16),
-                     new LeapSecond('January 1, 1978 00:00:00 UTC', 17),
-                     new LeapSecond('January 1, 1979 00:00:00 UTC', 18),
-                     new LeapSecond('January 1, 1980 00:00:00 UTC', 19),
-                     new LeapSecond('July 1, 1981 00:00:00 UTC', 20),
-                     new LeapSecond('July 1, 1982 00:00:00 UTC', 21),
-                     new LeapSecond('July 1, 1983 00:00:00 UTC', 22),
-                     new LeapSecond('July 1, 1985 00:00:00 UTC', 23),
-                     new LeapSecond('January 1, 1988 00:00:00 UTC', 24),
-                     new LeapSecond('January 1, 1990 00:00:00 UTC', 25),
-                     new LeapSecond('January 1, 1991 00:00:00 UTC', 26),
-                     new LeapSecond('July 1, 1992 00:00:00 UTC', 27),
-                     new LeapSecond('July 1, 1993 00:00:00 UTC', 28),
-                     new LeapSecond('July 1, 1994 00:00:00 UTC', 29),
-                     new LeapSecond('January 1, 1996 00:00:00 UTC', 30),
-                     new LeapSecond('July 1, 1997 00:00:00 UTC', 31),
-                     new LeapSecond('January 1, 1999 00:00:00 UTC', 32),
-                     new LeapSecond('January 1, 2006 00:00:00 UTC', 33),
-                     new LeapSecond('January 1, 2009 00:00:00 UTC', 34),
-                     new LeapSecond('July 1, 2012 00:00:00 UTC', 35)
-                 ];
-        }
+    LeapSecond.getLeapSeconds = function(leapSeconds) {
         return LeapSecond._leapSeconds;
     };
 
@@ -229,6 +150,8 @@ define([
         }
         return 0;
     };
+
+    LeapSecond._leapSeconds = [];
 
     return LeapSecond;
 });
