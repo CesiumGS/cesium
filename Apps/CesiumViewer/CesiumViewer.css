@@ -158,3 +158,8 @@ html,body {
 .imagerySelector {
 	display: block;
 }
+
+.claro .dijitToggleButtonChecked .dijitButtonNode {
+    border: 1px solid #EA0;
+    box-shadow: 0 0 5px rgba(255, 170, 42, 1);
+}

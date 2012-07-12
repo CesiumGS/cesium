@@ -33,7 +33,7 @@ var Sandbox = Sandbox || {};
         primitives.setCentralBody(cb);
 
         scene.getCamera().getControllers().addSpindle();
-        scene.getCamera().getControllers().get(0).mouseConstrainedZAxis = true;
+        scene.getCamera().getControllers().get(0).constrainedAxis = Cesium.Cartesian3.UNIT_Z;
 
         scene.getCamera().getControllers().addFreeLook();
 

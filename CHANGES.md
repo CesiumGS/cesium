@@ -24,21 +24,38 @@ Beta Releases
             var position = scene.pickEllipsoid(windowPosition, ellipsoid);
             
    * `Camera.getPickRay` now returns the new `Ray` type instead of an object with position and direction properties.
+   * `CameraSpindleController.mouseConstrainedZAxis` has been removed. Instead, use `CameraSpindleController.constrainedAxis`. Code that previously looked like:
+            
+            spindleController.mouseConstrainedZAxis = true;
+            
+     should now look like:
+     
+            spindleController.constrainedAxis = Cartesian3.UNIT_Z;
+   
+   * The free look feature has been removed from `CameraColumbusViewController` in favor of rotating about the point clicked on the map with the middle mouse button.
+   * The `Camera2DController` constructor and `CameraControllerCollection.add2D` now require a projection instead of an ellipsoid.
+   * JulianDate.getTimeStandard() has been removed, dates are now always stored internally as TAI.
+   * LeapSeconds.setLeapSeconds now takes an array of LeapSecond instances instead of JSON.
+   * TimeStandard.convertUtcToTai and TimeStandard.convertTaiToUtc have been removed as they are no longer needed. 
 
 * Added `addImage` to `TextureAtlas` so images can be added to a texture atlas after it is constructed.
 * Added `Scene.pickEllipsoid`, which picks either the ellipsoid or the map depending on the current `SceneMode`.
 * Added `Event`, a new utility class which makes it easy for objects to expose event properties.
 * Added `TextureAtlasBuilder`,a new utility class which makes it easy to build a TextureAtlas asynchronously.
-* Added 'Clock', a simple clock for keeping track of simulated time.
-* Added 'LagrangePolynomialApproximation', 'HermitePolynomialApproximation', and 'LinearApproximation' interpolation algorithms.
-* Added 'CoordinateConversions', a new static class where most coordinate conversion methods will be stored.
-* Added 'Spherical' coordinate type
+* Added `Clock`, a simple clock for keeping track of simulated time.
+* Added `LagrangePolynomialApproximation`, `HermitePolynomialApproximation`, and `LinearApproximation` interpolation algorithms.
+* Added `CoordinateConversions`, a new static class where most coordinate conversion methods will be stored.
+* Added `Spherical` coordinate type
 * Added a new DynamicScene layer for time-dynamic, data-driven visualization.  This include CZML processing.  For more details see https://github.com/AnalyticalGraphicsInc/cesium/wiki/Architecture and https://github.com/AnalyticalGraphicsInc/cesium/wiki/CZML-in-Cesium.
 * Added a new application, Cesium Viewer, for viewing CZML files and otherwise exploring the globe.
 * Added a new Widgets directory, to contain common re-usable Cesium related controls.
 * Added a new Timeline control to the widgets directory.
 * Added a new DojoWidgets directory, to contain dojo-specific widgets.
 * Added new Timeline and Cesium dojo widgets.
+* Added `CameraCentralBodyController` as the new default controller to handle mouse input.
+    * The left mouse button rotates around the central body.
+    * The right mouse button and mouse wheel zoom in and out.
+    * The middle mouse button rotates around the point clicked on the central body.
 
 ### b6a - 06/20/2012
 
