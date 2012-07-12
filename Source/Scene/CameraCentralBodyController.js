@@ -104,6 +104,14 @@ define([
         camera.direction = transform.multiplyWithVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)).getXYZ();
     };
 
+    //TODO: Find a better solution for this
+    CameraCentralBodyController.prototype.moveLeftWithConstrainedZ = function(angle) {
+        var oldConstrainedZ = this._spindleController.constrainedAxis;
+        this._spindleController.constrainedAxis = Cartesian3.UNIT_Z;
+        this._spindleController.moveLeft(angle);
+        this._spindleController.constrainedAxis = oldConstrainedZ;
+    };
+
     /**
       * Returns true if this object was destroyed; otherwise, false.
       * <br /><br />
