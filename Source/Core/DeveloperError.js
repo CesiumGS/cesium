@@ -34,6 +34,32 @@ define(function() {
          * @type String
          */
         this.message = message;
+
+        try {
+            var err = new Error();
+
+            /**
+             * Error object, containing a stack trace if provided by the JavaScript engine.
+             * <br/><br/>
+             * See also: {@link https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Error}
+             *
+             * @constant
+             * @type Error
+             */
+            this.error = err;
+        } catch (ex) {}
+    };
+
+    DeveloperError.prototype.toString = function () {
+        var str = this.name + ': ' + this.message;
+        if (typeof this.error !== 'undefined') {
+            if (typeof this.error.stack !== 'undefined') {
+                str += '\n' + this.error.stack.toString();
+            } else {
+                str += '\n' + this.error.toString();
+            }
+        }
+        return str;
     };
 
     return DeveloperError;
