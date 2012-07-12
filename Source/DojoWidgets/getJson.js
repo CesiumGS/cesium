@@ -1,10 +1,10 @@
 /*global define*/
 define([
         'dojo/_base/xhr',
-        'Core/DeveloperError'
-       ], function(
-         xhr,
-         DeveloperError) {
+        '../Core/DeveloperError'
+    ], function(
+        xhr,
+        DeveloperError) {
     "use strict";
 
     /**
