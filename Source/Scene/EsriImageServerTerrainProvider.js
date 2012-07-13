@@ -152,8 +152,12 @@ define([
         return maxErrorRadians;
     }
 
-    var loading = 0;
-    var loaded = 0;
+    var requesting = 0;
+    var received = 0;
+    var transforming = 0;
+    var transformed = 0;
+    var creating = 0;
+    var ready = 0;
 
     var worker = new Worker('/Workerizer.js');
     worker.onmessage = function(event) {
@@ -163,7 +167,21 @@ define([
     var tasks = [];
     var nextTask = 0;
 
+    var requestsInFlight = 0;
+
     EsriImageServerTerrainProvider.prototype.requestTileGeometry = function(tile) {
+        if (requestsInFlight > 6) {
+            tile.state = TileState.UNLOADED;
+            return;
+        }
+
+        ++requestsInFlight;
+
+        ++requesting;
+        if ((requesting % 10) === 0) {
+            console.log('requesting: ' + requesting);
+        }
+
         var extent = this.tilingScheme.tileXYToExtent(tile.x, tile.y, tile.level);
         var bbox = CesiumMath.toDegrees(extent.west) + '%2C' + CesiumMath.toDegrees(extent.south) + '%2C' + CesiumMath.toDegrees(extent.east) + '%2C' + CesiumMath.toDegrees(extent.north);
         var url = this.url + '/exportImage?format=tiff&f=image&size=256%2C256&bboxSR=4326&imageSR=4326&bbox=' + bbox;
@@ -174,12 +192,22 @@ define([
             url = this._proxy.getURL(url);
         }
         return when(loadImage(url, true), function(image) {
+            ++received;
+            if ((received % 10) === 0) {
+                console.log('received: ' + received);
+            }
             tile.geometry = image;
             tile.state = TileState.RECEIVED;
+            --requestsInFlight;
         });
     };
 
     EsriImageServerTerrainProvider.prototype.transformGeometry = function(context, tile) {
+        ++transforming;
+        if ((transforming % 10) === 0) {
+            console.log('transforming: ' + transforming);
+        }
+
         var image = tile.geometry;
         var tilingScheme = this.tilingScheme;
         var ellipsoid = tilingScheme.ellipsoid;
@@ -218,6 +246,11 @@ define([
         });
 
         return when(deferred, function(vertices) {
+            ++transformed;
+            if ((transformed % 10) === 0) {
+                console.log('transformed: ' + transformed);
+            }
+
             tile.geometry = undefined;
             tile.transformedGeometry = {vertices: vertices, indices: TerrainProvider.getRegularGridIndices(width, height)};
             tile.state = TileState.TRANSFORMED;
@@ -225,10 +258,19 @@ define([
     };
 
     EsriImageServerTerrainProvider.prototype.createResources = function(context, tile) {
+        ++creating;
+        if ((creating % 10) === 0) {
+            console.log('creating: ' + creating);
+        }
+
         var buffers = tile.transformedGeometry;
         tile.transformedGeometry = undefined;
         TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers);
         tile.state = TileState.READY;
+        ++ready;
+        if ((ready % 10) === 0) {
+            console.log('ready: ' + ready);
+        }
     };
 
     /**

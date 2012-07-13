@@ -60,10 +60,36 @@ define([
         });
     };
 
+    function countTileStats(tile, counters) {
+        ++counters.tiles;
+        if (tile.renderable) {
+            ++counters.renderable;
+        }
+        if (typeof tile.children !== 'undefined') {
+            for (var i = 0; i < tile.children.length; ++i) {
+                countTileStats(tile.children[i], counters);
+            }
+        }
+    }
+
+    function dumpTileStats(levelZeroTiles) {
+        var counters = {
+                tiles: 0,
+                renderable: 0
+        };
+        for (var i = 0; i < levelZeroTiles.length; ++i) {
+            countTileStats(levelZeroTiles[i], counters);
+        }
+
+        console.log('tiles: ' + counters.tiles + ' renderable: ' + counters.renderable);
+    }
+
     var maxDepth;
     var tilesVisited;
     var tilesCulled;
     var tilesRendered;
+    var minimumTilesNeeded;
+    var doit = false;
 
     EllipsoidSurface.prototype.update = function(context, sceneState) {
         if (typeof this._levelZeroTiles === 'undefined') {
@@ -81,6 +107,7 @@ define([
         tilesVisited = 0;
         tilesCulled = 0;
         tilesRendered = 0;
+        minimumTilesNeeded = 0;
 
         this._tileLoadQueue.markInsertionPoint();
 
@@ -98,8 +125,11 @@ define([
             }
         }
 
-        console.log('Visited ' + tilesVisited + ' Rendered: ' + tilesRendered + ' Culled: ' + tilesCulled + ' Max Depth: ' + maxDepth);
+        //console.log('Visited ' + tilesVisited + ' Rendered: ' + tilesRendered + ' Culled: ' + tilesCulled + ' Max Depth: ' + maxDepth);
 
+        if (doit) {
+            dumpTileStats(levelZeroTiles);
+        }
         processTileLoadQueue(this, context, sceneState);
     };
 
@@ -247,22 +277,28 @@ define([
             maxDepth = tile.level;
         }
 
-        // Algorithm #1: Don't pre-load children unless we refine to them.
+        // Algorithm #1: Don't load children unless we refine to them.
         if (screenSpaceError(surface, context, sceneState, tile) < surface.maxScreenSpaceError) {
             // This tile meets SSE requirements, so render it.
             surface._renderList.push(tile);
             ++tilesRendered;
+            ++minimumTilesNeeded;
         } else if (queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, tile)) {
             // SSE is not good enough and children are loaded, so refine.
             var children = tile.children;
             // PERFORMANCE_TODO: traverse children front-to-back
+            var tilesRenderedBefore = tilesRendered;
             for (var i = 0, len = children.length; i < len; ++i) {
                 addBestAvailableTilesToRenderList(surface, context, sceneState, children[i]);
+            }
+            if (tilesRendered !== tilesRenderedBefore) {
+                ++minimumTilesNeeded;
             }
         } else {
             // SSE is not good enough but not all children are loaded, so render this tile anyway.
             surface._renderList.push(tile);
             ++tilesRendered;
+            ++minimumTilesNeeded;
         }
 
 
@@ -272,17 +308,23 @@ define([
             if (screenSpaceError(surface, context, sceneState, tile) < surface.maxScreenSpaceError) {
                 surface._renderList.push(tile);
                 ++tilesRendered;
+                ++minimumTilesNeeded;
             } else {
                 var children = tile.children;
                 // PERFORMANCE_TODO: traverse children front-to-back
+                var tilesRenderedBefore = tilesRendered;
                 for (var i = 0, len = children.length; i < len; ++i) {
                     addBestAvailableTilesToRenderList(surface, context, sceneState, children[i]);
+                }
+                if (tilesRendered !== tilesRenderedBefore) {
+                    ++minimumTilesNeeded;
                 }
             }
         } else {
             // At least one child is not renderable, so render this tile.
             surface._renderList.push(tile);
             ++tilesRendered;
+            ++minimumTilesNeeded;
         }*/
     }
 
@@ -308,7 +350,7 @@ define([
         var distance = toCenter.magnitude() - boundingVolume.radius;
 
         if (distance < 0.0) {
-            // We're inside the bounding sphere, so the screen-space error could be enormous, but
+            // The camera is inside the bounding sphere, so the screen-space error could be enormous, but
             // we don't really have any way to calculate it.  So return positive infinity, which will
             // force a refine.
             return 1.0/0.0;
@@ -356,13 +398,17 @@ define([
         while (Date.now() < endTime && typeof tile !== 'undefined') {
             var i, len;
 
+            // Transition terrain states.
             if (tile.state === TileState.UNLOADED) {
                 tile.state = TileState.TRANSITIONING;
                 surface.terrain.requestTileGeometry(tile);
 
-                for (i = 0, len = surface.imageryCollection.getLength(); i < len; ++i) {
-                    var imageryLayer = surface.imageryCollection.get(i);
-                    imageryLayer.createTileImagerySkeletons(tile, surface.terrain.tilingScheme);
+                // If we've made it past the UNLOADED state, create skeletons for the imagery.
+                if (tile.state !== TileState.UNLOADED) {
+                    for (i = 0, len = surface.imageryCollection.getLength(); i < len; ++i) {
+                        var imageryLayer = surface.imageryCollection.get(i);
+                        imageryLayer.createTileImagerySkeletons(tile, surface.terrain.tilingScheme);
+                    }
                 }
             }
             if (tile.state === TileState.RECEIVED) {
@@ -377,6 +423,7 @@ define([
 
             var doneLoading = tile.state === TileState.READY;
 
+            // Transition imagery states
             var tileImageryCollection = tile.imagery;
             for (i = 0, len = tileImageryCollection.length; Date.now() < endTime && i < len; ++i) {
                 var tileImagery = tileImageryCollection[i];
@@ -399,6 +446,7 @@ define([
 
             var next = tile._next;
 
+            // The tile becomes renderable when the terrain and all imagery data are loaded.
             if (i === len && doneLoading) {
                 tile.renderable = true;
                 tile.doneLoading = true;
