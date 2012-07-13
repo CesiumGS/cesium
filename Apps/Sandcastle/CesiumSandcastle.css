@@ -160,6 +160,17 @@ a.linkButton:focus, a.linkButton:hover {
     background: rgba(200, 200, 0, 0.2);
 }
 
+.CodeMirror pre.highlightMarker {
+    color: #222;
+    font-weight: bold;
+    background: #2E2;
+    border-radius: 3px;
+}
+
+.CodeMirror pre.highlightLine {
+    background: rgba(0, 200, 0, 0.2);
+}
+
 .CodeMirror-gutter-text {
     cursor: default;
 }

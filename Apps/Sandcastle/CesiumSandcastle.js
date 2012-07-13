@@ -89,6 +89,7 @@ require({
         var docMessage = dom.byId('docPopupMessage');
         var local = { 'docTypes': [],  'headers': "<html><head></head><body>"};
         var errorLines = [];
+        var highlightLines = [];
         var hintOptions = {
             // These are copied from the Eclipse jsHint plugin options on the Cesium project itself.
             // They should be kept in sync with that list of options.
@@ -258,6 +259,20 @@ require({
             hintTimer = setTimeout(clearAllErrors, 550);
         }
 
+        function highlightLine(lineNum) {
+            var line;
+            while (highlightLines.length > 0) {
+                line = highlightLines.pop();
+                jsEditor.setLineClass(line, null);
+                jsEditor.clearMarker(line);
+            }
+            if (lineNum > 0) {
+                line = jsEditor.setMarker(lineNum - 1, makeLineLabel('hover', lineNum), "highlightMarker");
+                jsEditor.setLineClass(line, "highlightLine");
+                highlightLines.push(line);
+            }
+        }
+
         CodeMirror.commands.runCesium = function(cm) {
             clearAllErrors();
             cesiumContainer.selectChild(bucketPane);
@@ -330,10 +345,10 @@ require({
             queryObject = ioQuery.queryToObject(window.location.search.substring(1));
         }
 
-        // The iframe (bucket.html) sends this message on load.
-        // This triggers the code to be injected into the iframe.
         window.addEventListener('message', function (e) {
             var line;
+            // The iframe (bucket.html) sends this message on load.
+            // This triggers the code to be injected into the iframe.
             if (e.data === 'reload') {
                 logOutput.innerHTML = "";
                 if (typeof queryObject.src !== 'undefined') {
@@ -357,14 +372,19 @@ require({
                     }
                 }
             } else if (typeof e.data.log !== 'undefined') {
+                // Console log messages from the iframe display in Sandcastle.
                 appendConsole('consoleLog', e.data.log);
             } else if (typeof e.data.error !== 'undefined') {
+                // Console error messages from the iframe display in Sandcastle
                 appendConsole('consoleError', e.data.error);
                 if (typeof e.data.lineNumber !== 'undefined') {
                     line = jsEditor.setMarker(e.data.lineNumber - 1, makeLineLabel(e.data.rawErrorMsg, e.data.lineNumber), "errorMarker");
                     jsEditor.setLineClass(line, "errorLine");
                     errorLines.push(line);
                 }
+            } else if (typeof e.data.highlight !== 'undefined') {
+                // Hovering objects in the embedded Cesium window.
+                highlightLine(e.data.highlight);
             }
         }, true);
 

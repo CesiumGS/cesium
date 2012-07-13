@@ -73,12 +73,12 @@
         if (typeof obj !== 'undefined') {
             for (i = 0; i < len; ++i) {
                 if (obj === Sandcastle.registered[i].obj) {
-                    window.parent.postMessage({ 'log': 'highlight line ' + Sandcastle.registered[i].lineNumber.toString() }, '*');
+                    window.parent.postMessage({ 'highlight': Sandcastle.registered[i].lineNumber }, '*');
                     return;
                 }
             }
         }
-        window.parent.postMessage({ 'log': 'un-highlight lines.' }, '*');
+        window.parent.postMessage({ 'highlight': 0 }, '*');
     };
     </script>
 </body>
