@@ -301,8 +301,32 @@ define([
             ++minimumTilesNeeded;
         }
 
+        // Algorithm #2: Pre-load children of rendered tiles.
+        /*if (screenSpaceError(surface, context, sceneState, tile) < surface.maxScreenSpaceError) {
+            // This tile meets SSE requirements, so render it.
+            surface._renderList.push(tile);
+            ++tilesRendered;
+            ++minimumTilesNeeded;
+            queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, tile);
+        } else if (queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, tile)) {
+            // SSE is not good enough and children are loaded, so refine.
+            var children = tile.children;
+            // PERFORMANCE_TODO: traverse children front-to-back
+            var tilesRenderedBefore = tilesRendered;
+            for (var i = 0, len = children.length; i < len; ++i) {
+                addBestAvailableTilesToRenderList(surface, context, sceneState, children[i]);
+            }
+            if (tilesRendered !== tilesRenderedBefore) {
+                ++minimumTilesNeeded;
+            }
+        } else {
+            // SSE is not good enough but not all children are loaded, so render this tile anyway.
+            surface._renderList.push(tile);
+            ++tilesRendered;
+            ++minimumTilesNeeded;
+        }*/
 
-        // Algorithm #2: Pre-load children of all visited nodes
+        // Algorithm #3: Pre-load children of all visited tiles
         /*if (queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, tile)) {
             // All children are renderable.
             if (screenSpaceError(surface, context, sceneState, tile) < surface.maxScreenSpaceError) {
