@@ -1,5 +1,10 @@
 /*global defineSuite*/
-defineSuite(['Core/Cartesian2'], function(Cartesian2) {
+defineSuite([
+             'Core/Cartesian2',
+             'Core/Math'
+            ], function(
+              Cartesian2,
+              CesiumMath) {
     "use strict";
     /*global it,expect*/
 
@@ -43,6 +48,26 @@ defineSuite(['Core/Cartesian2'], function(Cartesian2) {
         expect(cartesian === returnedResult).toEqual(true);
     });
 
+    it('getMaximumComponent works when X is greater', function() {
+        var cartesian = new Cartesian2(2.0, 1.0);
+        expect(cartesian.getMaximumComponent()).toEqual(cartesian.x);
+    });
+
+    it('getMaximumComponent works when Y is greater', function() {
+        var cartesian = new Cartesian2(1.0, 2.0);
+        expect(cartesian.getMaximumComponent()).toEqual(cartesian.y);
+    });
+
+    it('getMinimumComponent works when X is lesser', function() {
+        var cartesian = new Cartesian2(1.0, 2.0);
+        expect(cartesian.getMinimumComponent()).toEqual(cartesian.x);
+    });
+
+    it('getMaximumComponent works when Y is lesser', function() {
+        var cartesian = new Cartesian2(2.0, 1.0);
+        expect(cartesian.getMinimumComponent()).toEqual(cartesian.y);
+    });
+
     it('magnitudeSquared', function() {
         var cartesian = new Cartesian2(2.0, 3.0);
         expect(cartesian.magnitudeSquared()).toEqual(13);
@@ -57,6 +82,33 @@ defineSuite(['Core/Cartesian2'], function(Cartesian2) {
         var cartesian = new Cartesian2(2.0, 0.0).normalize();
         expect(cartesian.x).toEqual(1.0);
         expect(cartesian.y).toEqual(0.0);
+    });
+
+    it('multiplyComponents works without a result parameter', function() {
+        var left = new Cartesian2(2.0, 3.0);
+        var right = new Cartesian2(4.0, 5.0);
+        var expectedResult = new Cartesian2(8.0, 15.0);
+        var result = left.multiplyComponents(right);
+        expect(result).toEqual(expectedResult);
+    });
+
+    it('multiplyComponents works with a result parameter', function() {
+        var left = new Cartesian2(2.0, 3.0);
+        var right = new Cartesian2(4.0, 5.0);
+        var result = new Cartesian2();
+        var expectedResult = new Cartesian2(8.0, 15.0);
+        var returnedResult = left.multiplyComponents(right, result);
+        expect(result === returnedResult).toEqual(true);
+        expect(result).toEqual(expectedResult);
+    });
+
+    it('multiplyComponents works with "this" result parameter', function() {
+        var left = new Cartesian2(2.0, 3.0);
+        var right = new Cartesian2(4.0, 5.0);
+        var expectedResult = new Cartesian2(8.0, 15.0);
+        var returnedResult = left.multiplyComponents(right, left);
+        expect(left === returnedResult).toEqual(true);
+        expect(left).toEqual(expectedResult);
     });
 
     it('dot', function() {
@@ -223,6 +275,80 @@ defineSuite(['Core/Cartesian2'], function(Cartesian2) {
         expect(cartesian).toEqual(expectedResult);
     });
 
+    it('lerp works without a result parameter', function() {
+        var start = new Cartesian2(4.0, 8.0);
+        var end = new Cartesian2(8.0, 20.0);
+        var t = 0.25;
+        var expectedResult = new Cartesian2(5.0, 11.0);
+        var result = start.lerp(end, t);
+        expect(result).toEqual(expectedResult);
+    });
+
+    it('lerp works with a result parameter', function() {
+        var start = new Cartesian2(4.0, 8.0);
+        var end = new Cartesian2(8.0, 20.0);
+        var t = 0.25;
+        var result = new Cartesian2();
+        var expectedResult = new Cartesian2(5.0, 11.0);
+        var returnedResult = start.lerp(end, t, result);
+        expect(result === returnedResult).toEqual(true);
+        expect(result).toEqual(expectedResult);
+    });
+
+    it('lerp works with "this" result parameter', function() {
+        var start = new Cartesian2(4.0, 8.0);
+        var end = new Cartesian2(8.0, 20.0);
+        var t = 0.25;
+        var expectedResult = new Cartesian2(5.0, 11.0);
+        var returnedResult = start.lerp(end, t, start);
+        expect(start === returnedResult).toEqual(true);
+        expect(start).toEqual(expectedResult);
+    });
+
+    it('lerp extrapolate forward', function() {
+        var start = new Cartesian2(4.0, 8.0);
+        var end = new Cartesian2(8.0, 20.0);
+        var t = 2.0;
+        var expectedResult = new Cartesian2(12.0, 32.0);
+        var result = start.lerp(end, t);
+        expect(result).toEqual(expectedResult);
+    });
+
+    it('lerp extrapolate backward', function() {
+        var start = new Cartesian2(4.0, 8.0);
+        var end = new Cartesian2(8.0, 20.0);
+        var t = -1.0;
+        var expectedResult = new Cartesian2(0.0, -4.0);
+        var result = start.lerp(end, t);
+        expect(result).toEqual(expectedResult);
+    });
+
+    it('angleBetween works for right angles', function() {
+        var x = Cartesian2.UNIT_X;
+        var y = Cartesian2.UNIT_Y;
+        expect(x.angleBetween(y)).toEqual(CesiumMath.PI_OVER_TWO);
+        expect(y.angleBetween(x)).toEqual(CesiumMath.PI_OVER_TWO);
+    });
+
+    it('angleBetween works for acute angles', function() {
+        var x = new Cartesian2(0.0, 1.0);
+        var y = new Cartesian2(1.0, 1.0);
+        expect(x.angleBetween(y)).toEqualEpsilon(CesiumMath.PI_OVER_FOUR, CesiumMath.EPSILON14);
+        expect(y.angleBetween(x)).toEqualEpsilon(CesiumMath.PI_OVER_FOUR, CesiumMath.EPSILON14);
+    });
+
+    it('angleBetween works for obtuse angles', function() {
+        var x = new Cartesian2(0.0, 1.0);
+        var y = new Cartesian2(-1.0, -1.0);
+        expect(x.angleBetween(y)).toEqualEpsilon(CesiumMath.PI * 3.0 / 4.0, CesiumMath.EPSILON14);
+        expect(y.angleBetween(x)).toEqualEpsilon(CesiumMath.PI * 3.0 / 4.0, CesiumMath.EPSILON14);
+    });
+
+    it('angleBetween works for zero angles', function() {
+        var x = Cartesian2.UNIT_X;
+        expect(x.angleBetween(x)).toEqual(0.0);
+    });
+
     it('equals', function() {
         var cartesian = new Cartesian2(1.0, 2.0);
         expect(cartesian.equals(new Cartesian2(1.0, 2.0))).toEqual(true);
@@ -253,6 +379,18 @@ defineSuite(['Core/Cartesian2'], function(Cartesian2) {
         }).toThrow();
     });
 
+    it('static getMaximumComponent throws with no parameter', function() {
+        expect(function() {
+            Cartesian2.getMaximumComponent();
+        }).toThrow();
+    });
+
+    it('static getMinimumComponent throws with no parameter', function() {
+        expect(function() {
+            Cartesian2.getMinimumComponent();
+        }).toThrow();
+    });
+
     it('static magnitudeSquared throws with no parameter', function() {
         expect(function() {
             Cartesian2.magnitudeSquared();
@@ -274,6 +412,20 @@ defineSuite(['Core/Cartesian2'], function(Cartesian2) {
     it('static dot throws with no left parameter', function() {
         expect(function() {
             Cartesian2.dot(undefined, new Cartesian2());
+        }).toThrow();
+    });
+
+    it('static multiplyComponents throw with no left parameter', function() {
+        var right = new Cartesian2(4.0, 5.0);
+        expect(function() {
+            Cartesian2.multiplyComponents(undefined, right);
+        }).toThrow();
+    });
+
+    it('static multiplyComponents throw with no right parameter', function() {
+        var left = new Cartesian2(4.0, 5.0);
+        expect(function() {
+            Cartesian2.multiplyComponents(left, undefined);
         }).toThrow();
     });
 
@@ -340,6 +492,44 @@ defineSuite(['Core/Cartesian2'], function(Cartesian2) {
     it('static abs throws with no cartesian parameter', function() {
         expect(function() {
             Cartesian2.abs(undefined);
+        }).toThrow();
+    });
+
+    it('static lerp throws with no start parameter', function() {
+        var end = new Cartesian2(8.0, 20.0);
+        var t = 0.25;
+        expect(function() {
+            Cartesian2.lerp(undefined, end, t);
+        }).toThrow();
+    });
+
+    it('static lerp throws with no end parameter', function() {
+        var start = new Cartesian2(4.0, 8.0);
+        var t = 0.25;
+        expect(function() {
+            Cartesian2.lerp(start, undefined, t);
+        }).toThrow();
+    });
+
+    it('static lerp throws with no t parameter', function() {
+        var start = new Cartesian2(4.0, 8.0);
+        var end = new Cartesian2(8.0, 20.0);
+        expect(function() {
+            Cartesian2.lerp(start, end, undefined);
+        }).toThrow();
+    });
+
+    it('static angleBetween throws with no left parameter', function() {
+        var right = new Cartesian2(8.0, 20.0);
+        expect(function() {
+            Cartesian2.angleBetween(undefined, right);
+        }).toThrow();
+    });
+
+    it('static angleBetween throws with no right parameter', function() {
+        var left = new Cartesian2(4.0, 8.0);
+        expect(function() {
+            Cartesian2.angleBetween(left, undefined);
         }).toThrow();
     });
 

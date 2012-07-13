@@ -247,29 +247,6 @@ define([
     };
 
     /**
-     * Returns a unit Cartesian representing the most orthogonal axis to this Cartesian.
-     *
-     * @memberof Cartesian4
-     * @return {Cartesian4} The axis most orthogonal to this Cartesian.
-     */
-    Cartesian4.prototype.mostOrthogonalAxis = function() {
-        var x = Math.abs(this.x);
-        var y = Math.abs(this.y);
-        var z = Math.abs(this.z);
-        var w = Math.abs(this.w);
-
-        if ((x < y) && (x < z) && (x < w)) {
-            return Cartesian4.UNIT_X;
-        } else if ((y < x) && (y < z) && (y < w)) {
-            return Cartesian4.UNIT_Y;
-        } else if ((z < x) && (z < y) && (z < w)) {
-            return Cartesian4.UNIT_Z;
-        } else {
-            return Cartesian4.UNIT_W;
-        }
-    };
-
-    /**
      * Returns this Cartesian negated.
      *
      * @memberof Cartesian4
