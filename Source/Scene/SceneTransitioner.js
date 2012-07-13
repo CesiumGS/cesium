@@ -5,6 +5,7 @@ define([
         '../Core/EventHandler',
         '../Core/MouseEventType',
         '../Core/Ellipsoid',
+        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic3',
@@ -19,6 +20,7 @@ define([
         EventHandler,
         MouseEventType,
         Ellipsoid,
+        Cartesian2,
         Cartesian3,
         Cartesian4,
         Cartographic3,
@@ -461,7 +463,7 @@ define([
         }
 
         var partialDuration = (endTime - startTime) * duration;
-        if (partialDuration === 0 && startPos.getXY().subtract(endPos2D.getXY()).magnitude() !== 0) {
+        if (partialDuration === 0 && Cartesian2.magnitude(Cartesian2.subtract(startPos, endPos2D, startPos)) !== 0) {
             partialDuration = duration;
             startTime = 0.0;
             endTime = 1.0;

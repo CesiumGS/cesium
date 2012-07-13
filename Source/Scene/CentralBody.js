@@ -1174,7 +1174,7 @@ define([
                     return rtc;
                 },
                 u_center2D : function() {
-                    return (projectedRTC) ? projectedRTC.getXY() : Cartesian2.ZERO;
+                    return (projectedRTC) ? Cartesian2.fromCartesian3(projectedRTC) : Cartesian2.ZERO;
                 },
                 u_modifiedModelView : function() {
                     return tile.modelView;
@@ -1282,8 +1282,8 @@ define([
             tileHeight = provider.tileHeight;
         }
 
-        var a = projection.project(new Cartographic2(tile.extent.west, tile.extent.north)).getXY();
-        var b = projection.project(new Cartographic2(tile.extent.east, tile.extent.south)).getXY();
+        var a = projection.project(new Cartographic2(tile.extent.west, tile.extent.north));
+        var b = projection.project(new Cartographic2(tile.extent.east, tile.extent.south));
         var diagonal = a.subtract(b);
         var texelSize = Math.max(diagonal.x, diagonal.y) / Math.max(tileWidth, tileHeight);
         var pixelSize = Math.max(frustum.top - frustum.bottom, frustum.right - frustum.left) / Math.max(viewportWidth, viewportHeight);

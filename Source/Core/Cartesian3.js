@@ -1,8 +1,5 @@
 /*global define*/
-define([
-        './Cartesian2'
-       ], function(
-         Cartesian2) {
+define(function() {
     "use strict";
 
     /**
@@ -141,17 +138,6 @@ define([
         }
 
         return flat;
-    };
-
-    /**
-     * Returns the Cartesian's x and y components as a Cartesian2.
-     *
-     * @memberof Cartesian3
-     * @return {Cartesian2} The Cartesian's x and y components.
-     * @see Cartesian2
-     */
-    Cartesian3.prototype.getXY = function() {
-        return new Cartesian2(this.x, this.y);
     };
 
     /**

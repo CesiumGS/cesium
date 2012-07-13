@@ -199,12 +199,20 @@ defineSuite([
         })).toEqual(false);
     });
 
+    // The following specs test draw calls that pull from a constant attribute.
+    // Due to what I believe is a range checking bug in Firefox (Section 6.4 of
+    // the WebGL spec), an attribute backed by a buffer must also be bound,
+    // otherwise drawArrays unjustly reports an INVALID_OPERATION, hence the
+    // firefoxWorkaround attribute below.  In practice, we will always have
+    // an attribute backed by a buffer anyway.
+
     it('renders with a one-component constant value', function() {
         var vs =
             'attribute float attr;' +
+            'attribute float firefoxWorkaround;' +
             'varying vec4 v_color;' +
             'void main() { ' +
-            '  v_color = vec4(attr == 0.5);' +
+            '  v_color = vec4(attr == 0.5) + vec4(firefoxWorkaround);' +
             '  gl_PointSize = 1.0;' +
             '  gl_Position = vec4(0.0, 0.0, 0.0, 1.0);' +
             '}';
@@ -212,12 +220,17 @@ defineSuite([
             'varying vec4 v_color;' +
             'void main() { gl_FragColor = v_color; }';
         var sp = context.createShaderProgram(vs, fs, {
-            position : 0
+            attr : 0,
+            firefoxWorkaround : 1
         });
 
         var va = context.createVertexArray();
         va.addAttribute({
             value : [0.5]
+        });
+        va.addAttribute({
+            vertexBuffer : context.createVertexBuffer(Float32Array.BYTES_PER_ELEMENT, BufferUsage.STATIC_DRAW),
+            componentsPerAttribute : 1
         });
 
         context.draw({
@@ -236,9 +249,10 @@ defineSuite([
     it('renders with a two-component constant value', function() {
         var vs =
             'attribute vec2 attr;' +
+            'attribute float firefoxWorkaround;' +
             'varying vec4 v_color;' +
             'void main() { ' +
-            '  v_color = vec4(attr == vec2(0.25, 0.75));' +
+            '  v_color = vec4(attr == vec2(0.25, 0.75)) + vec4(firefoxWorkaround);' +
             '  gl_PointSize = 1.0;' +
             '  gl_Position = vec4(0.0, 0.0, 0.0, 1.0);' +
             '}';
@@ -246,12 +260,17 @@ defineSuite([
             'varying vec4 v_color;' +
             'void main() { gl_FragColor = v_color; }';
         var sp = context.createShaderProgram(vs, fs, {
-            position : 0
+            attr : 0,
+            firefoxWorkaround : 1
         });
 
         var va = context.createVertexArray();
         va.addAttribute({
             value : [0.25, 0.75]
+        });
+        va.addAttribute({
+            vertexBuffer : context.createVertexBuffer(Float32Array.BYTES_PER_ELEMENT, BufferUsage.STATIC_DRAW),
+            componentsPerAttribute : 1
         });
 
         context.draw({
@@ -270,9 +289,10 @@ defineSuite([
     it('renders with a three-component constant value', function() {
         var vs =
             'attribute vec3 attr;' +
+            'attribute float firefoxWorkaround;' +
             'varying vec4 v_color;' +
             'void main() { ' +
-            '  v_color = vec4(attr == vec3(0.25, 0.5, 0.75));' +
+            '  v_color = vec4(attr == vec3(0.25, 0.5, 0.75)) + vec4(firefoxWorkaround);' +
             '  gl_PointSize = 1.0;' +
             '  gl_Position = vec4(0.0, 0.0, 0.0, 1.0);' +
             '}';
@@ -280,12 +300,17 @@ defineSuite([
             'varying vec4 v_color;' +
             'void main() { gl_FragColor = v_color; }';
         var sp = context.createShaderProgram(vs, fs, {
-            position : 0
+            attr : 0,
+            firefoxWorkaround : 1
         });
 
         var va = context.createVertexArray();
         va.addAttribute({
             value : [0.25, 0.5, 0.75]
+        });
+        va.addAttribute({
+            vertexBuffer : context.createVertexBuffer(Float32Array.BYTES_PER_ELEMENT, BufferUsage.STATIC_DRAW),
+            componentsPerAttribute : 1
         });
 
         context.draw({
@@ -304,9 +329,10 @@ defineSuite([
     it('renders with a four-component constant value', function() {
         var vs =
             'attribute vec4 attr;' +
+            'attribute float firefoxWorkaround;' +
             'varying vec4 v_color;' +
             'void main() { ' +
-            '  v_color = vec4(attr == vec4(0.2, 0.4, 0.6, 0.8));' +
+            '  v_color = vec4(attr == vec4(0.2, 0.4, 0.6, 0.8)) + vec4(firefoxWorkaround);' +
             '  gl_PointSize = 1.0;' +
             '  gl_Position = vec4(0.0, 0.0, 0.0, 1.0);' +
             '}';
@@ -314,12 +340,17 @@ defineSuite([
             'varying vec4 v_color;' +
             'void main() { gl_FragColor = v_color; }';
         var sp = context.createShaderProgram(vs, fs, {
-            position : 0
+            attr : 0,
+            firefoxWorkaround : 1
         });
 
         var va = context.createVertexArray();
         va.addAttribute({
             value : [0.2, 0.4, 0.6, 0.8]
+        });
+        va.addAttribute({
+            vertexBuffer : context.createVertexBuffer(Float32Array.BYTES_PER_ELEMENT, BufferUsage.STATIC_DRAW),
+            componentsPerAttribute : 1
         });
 
         context.draw({
