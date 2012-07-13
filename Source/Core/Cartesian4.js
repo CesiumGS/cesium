@@ -1,9 +1,7 @@
 /*global define*/
 define([
-        './Cartesian2',
         './Cartesian3'
-    ], function(
-        Cartesian2,
+       ], function(
         Cartesian3) {
     "use strict";
 
@@ -119,17 +117,6 @@ define([
      * @memberof Cartesian4
      */
     Cartesian4.UNIT_W = Object.freeze(new Cartesian4(0.0, 0.0, 0.0, 1.0));
-
-    /**
-     * Returns the Cartesian's x and y components as a Cartesian2.
-     *
-     * @memberof Cartesian4
-     * @return {Cartesian2} The Cartesian's x and y components.
-     * @see Cartesian2
-     */
-    Cartesian4.prototype.getXY = function() {
-        return new Cartesian2(this.x, this.y);
-    };
 
     /**
      * Returns the Cartesian's x, y, and z components as a Cartesian3.

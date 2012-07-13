@@ -102,13 +102,6 @@ defineSuite([
         expect(v.w).toEqual(4);
     });
 
-    it('getXY', function() {
-        var v = new Cartesian4(1, 2, 3, 4);
-        expect(v.getXY().equals(new Cartesian2(1, 2))).toEqual(true);
-        expect(v.z).toEqual(3);
-        expect(v.w).toEqual(4);
-    });
-
     it('magnitudeSquared', function() {
         var v = new Cartesian4(2, 3, 4, 5);
         expect(v.magnitudeSquared()).toEqual(54);

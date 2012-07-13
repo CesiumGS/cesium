@@ -4,6 +4,7 @@ define([
         './Math',
         './Matrix3',
         './Matrix4',
+        './Cartesian2',
         './Cartesian3',
         './Cartesian4',
         './TimeConstants',
@@ -14,6 +15,7 @@ define([
         CesiumMath,
         Matrix3,
         Matrix4,
+        Cartesian2,
         Cartesian3,
         Cartesian4,
         TimeConstants,
@@ -169,7 +171,7 @@ define([
             pnt = modelViewProjectionMatrix.multiplyWithVector(pnt);
             pnt = pnt.multiplyWithScalar(1.0 / pnt.w);
             pnt = viewportTransformation.multiplyWithVector(pnt);
-            return pnt.getXY();
+            return Cartesian2.fromCartesian4(pnt);
         }
     };
 

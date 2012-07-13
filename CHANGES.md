@@ -37,7 +37,9 @@ Beta Releases
    * JulianDate.getTimeStandard() has been removed, dates are now always stored internally as TAI.
    * LeapSeconds.setLeapSeconds now takes an array of LeapSecond instances instead of JSON.
    * TimeStandard.convertUtcToTai and TimeStandard.convertTaiToUtc have been removed as they are no longer needed. 
-
+   * `Cartesian3.prototype.getXY()` was replaced with `Cartesian2.fromCartesian3`.  Code that previously looked like `cartesian3.getXY();` should now look like `Cartesian2.fromCartesian3(cartesian3);`.
+   * `Cartesian4.prototype.getXY()` was replaced with `Cartesian2.fromCartesian4`.
+* All `Cartesian2` operations now have static versions that work with any objects exposing `x` and `y` properties.
 * Added `addImage` to `TextureAtlas` so images can be added to a texture atlas after it is constructed.
 * Added `Scene.pickEllipsoid`, which picks either the ellipsoid or the map depending on the current `SceneMode`.
 * Added `Event`, a new utility class which makes it easy for objects to expose event properties.
