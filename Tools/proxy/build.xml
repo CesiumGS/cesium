@@ -3,10 +3,9 @@
 	<property name="build.dir" value="bin" />
 	<property name="jar.file" value="proxy.jar" />
 
-	<path id="classpath">
+	<path id="task.classpath">
 		<fileset dir="jetty" includes="*.jar" />
-		<pathelement location="../apache-ant-1.8.2/lib/ant.jar" />
-        <pathelement location="jai_imageio.jar" />
+		<pathelement location="jai_imageio-1.1/jai_imageio.jar" />
 	</path>
 
 	<target name="clean">
@@ -16,7 +15,13 @@
 
 	<target name="compile">
 		<mkdir dir="${build.dir}" />
-		<javac srcdir="${src.dir}" destdir="${build.dir}" classpathref="classpath" debug="on" includeantruntime="false" />
+		<javac destdir="${build.dir}" debug="on" includeantruntime="false">
+			<src path="${src.dir}" />
+			<classpath>
+				<path refid="task.classpath" />
+				<pathelement location="../apache-ant-1.8.2/lib/ant.jar" />
+			</classpath>
+		</javac>
 	</target>
 
 	<target name="jar" depends="compile">
@@ -28,12 +33,11 @@
 	<target name="test" depends="jar">
 		<taskdef name="server" classname="com.agi.ServerTask">
 			<classpath>
-				<path refid="classpath" />
+				<path refid="task.classpath" />
 				<pathelement location="${jar.file}" />
-		        <pathelement location="jai_imageio.jar" />
 			</classpath>
 		</taskdef>
 
-		<server proxyContextPath="/proxy" tiffToPngContextPath="/tiffToPng" allowedHostList="localhost,*.arcgisonline.com,dev.virtualearth.net" port="8080" baseDir="." />
+		<server proxyContextPath="/proxy" terrainTranscodingContextPath="/terrain" allowedHostList="localhost,*.arcgisonline.com,tile.openstreetmap.org,otile1.mqcdn.com,oatile1.mqcdn.com,tile.stamen.com,*.virtualearth.net" port="8080" baseDir="${basedir}" />
 	</target>
 </project>

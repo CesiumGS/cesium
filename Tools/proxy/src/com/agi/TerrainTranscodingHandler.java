@@ -15,14 +15,19 @@
 
 package com.agi;
 
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferInt;
+import java.awt.image.Raster;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
-import java.net.URLEncoder;
 import java.util.Enumeration;
-import java.util.HashSet;
 
+import javax.imageio.ImageIO;
+import javax.imageio.spi.IIORegistry;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -33,28 +38,23 @@ import org.eclipse.jetty.continuation.Continuation;
 import org.eclipse.jetty.continuation.ContinuationSupport;
 import org.eclipse.jetty.http.HttpHeaders;
 import org.eclipse.jetty.io.Buffer;
+import org.eclipse.jetty.io.BufferUtil;
 import org.eclipse.jetty.io.EofException;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
-public final class ProxyHandler extends AbstractHandler {
-	private final HostChecker hostChecker;
+import com.sun.media.imageioimpl.plugins.tiff.TIFFImageReaderSpi;
+import com.sun.media.imageioimpl.plugins.tiff.TIFFImageWriterSpi;
+
+public final class TerrainTranscodingHandler extends AbstractHandler {
 	private final HttpClient client;
+	private final HostChecker hostChecker;
 
-	private static final HashSet<String> dontProxyHeaders = new HashSet<String>();
-	static {
-		dontProxyHeaders.add(HttpHeaders.PROXY_CONNECTION.toLowerCase());
-		dontProxyHeaders.add(HttpHeaders.CONNECTION.toLowerCase());
-		dontProxyHeaders.add(HttpHeaders.KEEP_ALIVE.toLowerCase());
-		dontProxyHeaders.add(HttpHeaders.TRANSFER_ENCODING.toLowerCase());
-		dontProxyHeaders.add(HttpHeaders.TE.toLowerCase());
-		dontProxyHeaders.add(HttpHeaders.TRAILER.toLowerCase());
-		dontProxyHeaders.add(HttpHeaders.PROXY_AUTHORIZATION.toLowerCase());
-		dontProxyHeaders.add(HttpHeaders.PROXY_AUTHENTICATE.toLowerCase());
-		dontProxyHeaders.add(HttpHeaders.UPGRADE.toLowerCase());
-	}
+	public TerrainTranscodingHandler(HostChecker hostChecker, HttpClient client) {
+		IIORegistry registry = IIORegistry.getDefaultInstance();
+		registry.registerServiceProvider(new TIFFImageWriterSpi());
+		registry.registerServiceProvider(new TIFFImageReaderSpi());
 
-	public ProxyHandler(HostChecker hostChecker, HttpClient client) {
 		this.hostChecker = hostChecker;
 		this.client = client;
 	}
@@ -80,7 +80,6 @@ public final class ProxyHandler extends AbstractHandler {
 
 		baseRequest.setHandled(true);
 
-		final OutputStream out = response.getOutputStream();
 		final Continuation continuation = ContinuationSupport.getContinuation(request);
 		if (!continuation.isInitial()) {
 			response.sendError(HttpServletResponse.SC_GATEWAY_TIMEOUT);
@@ -88,12 +87,24 @@ public final class ProxyHandler extends AbstractHandler {
 		}
 
 		HttpExchange exchange = new HttpExchange() {
+			int bufferSize = 4096;
+			ByteArrayOutputStream responseContent;
+
 			protected void onResponseComplete() throws IOException {
+				BufferedImage png = createPng(new ByteArrayInputStream(responseContent.toByteArray()));
+
+				response.setContentType("image/png");
+
+				OutputStream outputStream = response.getOutputStream();
+				ImageIO.write(png, "PNG", outputStream);
+
 				continuation.complete();
 			}
 
 			protected void onResponseContent(Buffer content) throws IOException {
-				content.writeTo(out);
+				if (responseContent == null)
+					responseContent = new ByteArrayOutputStream(bufferSize);
+				content.writeTo(responseContent);
 			}
 
 			protected void onResponseStatus(Buffer version, int status, Buffer reason) throws IOException {
@@ -101,7 +112,11 @@ public final class ProxyHandler extends AbstractHandler {
 			}
 
 			protected void onResponseHeader(Buffer name, Buffer value) throws IOException {
-				writeProxiedHeader(request, response, name.toString(), value.toString());
+				if (HttpHeaders.CONTENT_LENGTH_BUFFER.equalsIgnoreCase(name)) {
+					bufferSize = BufferUtil.toInt(value);
+				} else if (!HttpHeaders.CONTENT_TYPE_BUFFER.equalsIgnoreCase(name)) {
+					ProxyHandler.writeProxiedHeader(request, response, name.toString(), value.toString());
+				}
 			}
 
 			protected void onConnectionFailed(Throwable ex) {
@@ -124,70 +139,38 @@ public final class ProxyHandler extends AbstractHandler {
 			}
 		};
 
-		configureExchangeForProxying(request, uri, exchange);
+		ProxyHandler.configureExchangeForProxying(request, uri, exchange);
 
 		continuation.suspend(response);
 		client.send(exchange);
 	}
 
-	public static void writeProxiedHeader(HttpServletRequest request, HttpServletResponse response, String name, String value) {
-		if (HttpHeaders.LOCATION.equalsIgnoreCase(name)) {
-			StringBuffer url = request.getRequestURL();
-			url.append("?");
-			try {
-				url.append(URLEncoder.encode(value, "UTF-8"));
-				value = url.toString();
-			} catch (UnsupportedEncodingException e) {}
-		} else if (HttpHeaders.CONTENT_TYPE.equalsIgnoreCase(name)) {
-			// some servers return incorrect mime types for JPEG data
-			value = value.replace("image/jpg", "image/jpeg");
+	private static BufferedImage createPng(InputStream tiffInput) throws IOException {
+		BufferedImage sourceImage = ImageIO.read(tiffInput);
+		Raster sourceRaster = sourceImage.getData();
+
+		float[] pixels = new float[sourceImage.getWidth() * sourceImage.getHeight()];
+		sourceRaster.getSamples(0, 0, sourceImage.getWidth(), sourceImage.getHeight(), 0, pixels);
+
+		final float bias = 1000.0f;
+
+		BufferedImage result = new BufferedImage(sourceImage.getWidth(), sourceImage.getHeight(), BufferedImage.TYPE_INT_RGB);
+		DataBufferInt buffer = (DataBufferInt) result.getRaster().getDataBuffer();
+
+		for (int i = 0; i < pixels.length; ++i) {
+			// Offset the height by 1000.0 meters to avoid negative heights.
+			float heightFloat = pixels[i] + bias;
+
+			// Convert the height to integer millimeters.
+			int height = (int) (heightFloat * 1000.0);
+
+			if (height < 0 || height >= (1 << 24))
+				throw new RuntimeException("Invalid height.");
+
+			// Encode the high byte in red, low byte in blue.
+			buffer.setElem(i, height);
 		}
 
-		if (!dontProxyHeaders.contains(name.toLowerCase())) {
-			response.addHeader(name, value);
-		}
-	}
-
-	public static void configureExchangeForProxying(HttpServletRequest request, URI uri, HttpExchange exchange) {
-		exchange.setURI(uri);
-		exchange.setMethod(request.getMethod());
-		exchange.setVersion(request.getProtocol());
-
-		String connectionHeader = request.getHeader("Connection");
-		if (connectionHeader != null) {
-			connectionHeader = connectionHeader.toLowerCase();
-			if (connectionHeader.indexOf("keep-alive") < 0 && connectionHeader.indexOf("close") < 0)
-				connectionHeader = null;
-		}
-
-		exchange.setRequestHeader("Host", uri.getHost());
-
-		Enumeration<?> headerNames = request.getHeaderNames();
-		while (headerNames.hasMoreElements()) {
-			String headerName = (String) headerNames.nextElement();
-			String lowerHeader = headerName.toLowerCase();
-
-			if (dontProxyHeaders.contains(lowerHeader))
-				continue;
-			if (connectionHeader != null && connectionHeader.indexOf(lowerHeader) >= 0)
-				continue;
-			if ("host".equals(lowerHeader))
-				continue;
-
-			Enumeration<?> values = request.getHeaders(headerName);
-			while (values.hasMoreElements()) {
-				String value = (String) values.nextElement();
-				if (value != null) {
-					exchange.setRequestHeader(headerName, value);
-				}
-			}
-		}
-
-		// Proxy headers
-		exchange.setRequestHeader("Via", "1.1 (jetty)");
-		exchange.addRequestHeader("X-Forwarded-For", request.getRemoteAddr());
-		exchange.addRequestHeader("X-Forwarded-Proto", request.getScheme());
-		exchange.addRequestHeader("X-Forwarded-Host", request.getServerName());
-		exchange.addRequestHeader("X-Forwarded-Server", request.getLocalName());
+		return result;
 	}
 }

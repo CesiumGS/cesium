@@ -1,10 +1,13 @@
 package com.agi;
 
 import java.io.File;
+import java.util.HashSet;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Task;
+import org.eclipse.jetty.client.Address;
+import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandler;
@@ -14,7 +17,7 @@ import org.eclipse.jetty.server.nio.SelectChannelConnector;
 
 public class ServerTask extends Task {
 	private String proxyContextPath;
-	private String tiffToPngContextPath;
+	private String terrainTranscodingContextPath;
 	private String allowedHostList;
 	private int port;
 	private File baseDir;
@@ -27,16 +30,37 @@ public class ServerTask extends Task {
 			Server server = new Server();
 			SelectChannelConnector connector = new SelectChannelConnector();
 			connector.setHost("localhost");
-			connector.setPort(this.port);
+			connector.setPort(port);
 			server.addConnector(connector);
 
-			ProxyHandler proxyHandler = new ProxyHandler(this.allowedHostList, this.upstreamProxyHost, this.upstreamProxyPort, this.noUpstreamProxyHostList);
+			HostChecker hostChecker = new HostChecker(allowedHostList);
+			HttpClient client = new HttpClient();
+
+			if (upstreamProxyHost != null && upstreamProxyHost.length() > 0) {
+				if (upstreamProxyPort == null)
+					upstreamProxyPort = 80;
+
+				client.setProxy(new Address(upstreamProxyHost, upstreamProxyPort));
+
+				if (noUpstreamProxyHostList != null) {
+					HashSet<String> set = new HashSet<String>();
+					for (String noUpstreamProxyHost : noUpstreamProxyHostList.split(",")) {
+						set.add(noUpstreamProxyHost.trim());
+					}
+					client.setNoProxy(set);
+				}
+			}
+
+			client.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
+			client.start();
+
+			ProxyHandler proxyHandler = new ProxyHandler(hostChecker, client);
 			ContextHandler proxyContextHandler = new ContextHandler(this.proxyContextPath);
 			proxyContextHandler.setHandler(proxyHandler);
 
-			TiffToPngHandler tiffToPngHandler = new TiffToPngHandler(this.allowedHostList, this.upstreamProxyHost, this.upstreamProxyPort, this.noUpstreamProxyHostList);
-			ContextHandler tiffToPngContextHandler = new ContextHandler(this.tiffToPngContextPath);
-			tiffToPngContextHandler.setHandler(tiffToPngHandler);
+			TerrainTranscodingHandler terrainTranscodingHandler = new TerrainTranscodingHandler(hostChecker, client);
+			ContextHandler terrainTranscodingContextHandler = new ContextHandler(this.terrainTranscodingContextPath);
+			terrainTranscodingContextHandler.setHandler(terrainTranscodingHandler);
 
 			ResourceHandler resourceHandler = new ResourceHandler();
 			resourceHandler.setDirectoriesListed(true);
@@ -51,7 +75,7 @@ public class ServerTask extends Task {
 			ContextHandlerCollection contexts = new ContextHandlerCollection();
 			contexts.setHandlers(new Handler[] {
 					proxyContextHandler,
-					tiffToPngContextHandler,
+					terrainTranscodingContextHandler,
 					resourceContextHandler
 			});
 
@@ -70,8 +94,8 @@ public class ServerTask extends Task {
 		this.proxyContextPath = value;
 	}
 
-	public void setTiffToPngContextPath(String value) {
-		this.tiffToPngContextPath = value;
+	public void setTerrainTranscodingContextPath(String value) {
+		this.terrainTranscodingContextPath = value;
 	}
 
 	public void setAllowedHostList(String value) {
