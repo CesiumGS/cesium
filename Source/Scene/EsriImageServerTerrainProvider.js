@@ -16,7 +16,8 @@ define([
         '../Core/Extent',
         './GeographicTilingScheme',
         '../Core/HeightmapTessellator',
-        '../Core/jsonp'
+        '../Core/jsonp',
+        './TileState'
     ], function(
         DeveloperError,
         defaultValue,
@@ -34,7 +35,8 @@ define([
         Extent,
         GeographicTilingScheme,
         HeightmapTessellator,
-        jsonp) {
+        jsonp,
+        TileState) {
     "use strict";
 
     /**
@@ -94,9 +96,9 @@ define([
 
         var that = this;
         when(metadata, function(data) {
-            var extentData = data.extent;
+            /*var extentData = data.extent;
 
-            /*if (extentData.spatialReference.wkid === 102100) {
+            if (extentData.spatialReference.wkid === 102100) {
                 that.projection = Projections.MERCATOR;
                 that._extentSouthwestInMeters = new Cartesian2(extentData.xmin, extentData.ymin);
                 that._extentNortheastInMeters = new Cartesian2(extentData.xmax, extentData.ymax);
@@ -155,11 +157,79 @@ define([
 
     var worker = new Worker('/Workerizer.js');
     worker.onmessage = function(event) {
-        tasks[event.data.id](event.data.data);
+        tasks[event.data.id](event.data.vertices);
         delete tasks[event.data.id];
     };
     var tasks = [];
     var nextTask = 0;
+
+    EsriImageServerTerrainProvider.prototype.requestTileGeometry = function(tile) {
+        var extent = this.tilingScheme.tileXYToExtent(tile.x, tile.y, tile.level);
+        var bbox = CesiumMath.toDegrees(extent.west) + '%2C' + CesiumMath.toDegrees(extent.south) + '%2C' + CesiumMath.toDegrees(extent.east) + '%2C' + CesiumMath.toDegrees(extent.north);
+        var url = this.url + '/exportImage?format=tiff&f=image&size=256%2C256&bboxSR=4326&imageSR=4326&bbox=' + bbox;
+        if (this.token) {
+            url += '&token=' + this.token;
+        }
+        if (typeof this._proxy !== 'undefined') {
+            url = this._proxy.getURL(url);
+        }
+        return when(loadImage(url, true), function(image) {
+            tile.geometry = image;
+            tile.state = TileState.RECEIVED;
+        });
+    };
+
+    EsriImageServerTerrainProvider.prototype.transformGeometry = function(context, tile) {
+        var image = tile.geometry;
+        var tilingScheme = this.tilingScheme;
+        var ellipsoid = tilingScheme.ellipsoid;
+        var extent = tile.extent;
+        var center = tile.get3DBoundingSphere().center;
+
+        // Get the height data from the image by copying it to a canvas.
+        var width = image.width;
+        var height = image.height;
+        var canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        var context2d = canvas.getContext('2d');
+        context2d.globalCompositeOperation = 'copy';
+        context2d.drawImage(image, 0, 0);
+        var pixels = context2d.getImageData(0, 0, width, height).data;
+
+        var deferred = when.defer();
+        var taskID = nextTask++;
+        tasks[taskID] = deferred.resolve;
+
+        worker.postMessage({
+            id: taskID,
+            heightmap: pixels,
+            width: width,
+            height: height,
+            heightScale: 1000.0,
+            heightOffset: 1000.0,
+            bytesPerHeight: 3,
+            strideBytes: 4,
+            ellipsoid : ellipsoid,
+            extent : extent,
+            generateTextureCoords : true,
+            interleave : true,
+            relativeToCenter : center
+        });
+
+        return when(deferred, function(vertices) {
+            tile.geometry = undefined;
+            tile.transformedGeometry = {vertices: vertices, indices: TerrainProvider.getRegularGridIndices(width, height)};
+            tile.state = TileState.TRANSFORMED;
+        });
+    };
+
+    EsriImageServerTerrainProvider.prototype.createResources = function(context, tile) {
+        var buffers = tile.transformedGeometry;
+        tile.transformedGeometry = undefined;
+        TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers);
+        tile.state = TileState.READY;
+    };
 
     /**
      * Populates a {@link Tile} with ellipsoid-mapped surface geometry from this
@@ -174,7 +244,7 @@ define([
      */
     EsriImageServerTerrainProvider.prototype.createTileEllipsoidGeometry = function(context, tile) {
         ++loading;
-        if ((loading % 10) == 0) {
+        if ((loading % 10) === 0) {
             console.log('loading: ' + loading);
         }
         // Creating the geometry will require a request to the ImageServer, which will complete
@@ -256,7 +326,7 @@ define([
             return when(deferred, function(buffers) {
                 TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers);
                 ++loaded;
-                if ((loaded % 10) == 0) {
+                if ((loaded % 10) === 0) {
                     console.log('loaded: ' + loaded);
                 }
                 return true;

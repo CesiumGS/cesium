@@ -1,8 +1,5 @@
-var HeightmapTessellator = {};
-
-HeightmapTessellator._computeVertices = function(description) {
-    var desc = description || {};
-
+self.onmessage = function(parameters) {
+    var desc = parameters.data;
     var heightmap = desc.heightmap;
     var heightScale = desc.heightScale;
     var heightOffset = desc.heightOffset;
@@ -15,13 +12,9 @@ HeightmapTessellator._computeVertices = function(description) {
     var ellipsoid = desc.ellipsoid;
     var granularityX = (extent.east - extent.west) / width;
     var granularityY = (extent.north - extent.south) / height;
-    var genTexCoords = desc.generateTextureCoords;
-    var interleave = desc.interleave;
     var relativeToCenter = desc.relativeToCenter;
 
-    var vertices = desc.vertices;
-    var texCoords = desc.texCoords;
-    var indices = desc.indices;
+    var vertices = desc.vertices = new Float32Array(width * height * 5);
 
     var radiiSquared = ellipsoid._radiiSquared;
     var radiiSquaredX = radiiSquared.x;
@@ -31,6 +24,8 @@ HeightmapTessellator._computeVertices = function(description) {
     var cos = Math.cos;
     var sin = Math.sin;
     var sqrt = Math.sqrt;
+
+    var vertexArrayIndex = 0;
 
     for (var row = 0; row < height; ++row) {
         var latitude = extent.north - granularityY * row;
@@ -51,7 +46,6 @@ HeightmapTessellator._computeVertices = function(description) {
                 heightSample = (heightSample << 8) + heightmap[terrainOffset + 3];
             }
             heightSample = heightSample / heightScale - heightOffset;
-            heightSample *= 10.0;
 
             var nX = cosLatitude * cos(longitude);
             var nY = cosLatitude * sin(longitude);
@@ -65,76 +59,20 @@ HeightmapTessellator._computeVertices = function(description) {
             var rSurfaceY = kY / gamma;
             var rSurfaceZ = kZ / gamma;
 
-            vertices.push(rSurfaceX + nX * heightSample - relativeToCenter.x);
-            vertices.push(rSurfaceY + nY * heightSample - relativeToCenter.y);
-            vertices.push(rSurfaceZ + nZ * heightSample - relativeToCenter.z);
+            vertices[vertexArrayIndex++] = rSurfaceX + nX * heightSample - relativeToCenter.x;
+            vertices[vertexArrayIndex++] = rSurfaceY + nY * heightSample - relativeToCenter.y;
+            vertices[vertexArrayIndex++] = rSurfaceZ + nZ * heightSample - relativeToCenter.z;
 
-            if (genTexCoords) {
-                var u = col / (width - 1);
-                if (interleave) {
-                    vertices.push(u);
-                    vertices.push(v);
-                } else {
-                    texCoords.push(u);
-                    texCoords.push(v);
-                }
-            }
+            var u = col / (width - 1);
+            vertices[vertexArrayIndex++] = u;
+            vertices[vertexArrayIndex++] = v;
         }
     }
 
-    var index = 0;
-    for (var i = 0; i < height - 1; ++i) {
-        for (var j = 0; j < width - 1; ++j) {
-            var upperLeft = index;
-            var lowerLeft = upperLeft + width;
-            var lowerRight = lowerLeft + 1;
-            var upperRight = upperLeft + 1;
-
-            indices.push(upperLeft, lowerLeft, upperRight);
-            indices.push(upperRight, lowerLeft, lowerRight);
-
-            ++index;
-        }
-        ++index;
-    }
-};
-
-HeightmapTessellator.computeBuffers = function(description) {
-    var desc = description || {};
-
-    //Extent.validate(desc.extent);
-
-    desc.ellipsoid = desc.ellipsoid;
-    desc.relativeToCenter = (desc.relativeToCenter) ? desc.relativeToCenter : {x:0,y:0,z:0};
-    desc.boundaryWidth = desc.boundaryWidth || 0; // NOTE: may want to expose in the future.
-
-    desc.vertices = [];
-    desc.texCoords = [];
-    desc.indices = [];
-//    desc.boundaryExtent = new Extent(
-//        desc.extent.west - desc.granularity * desc.boundaryWidth,
-//        desc.extent.south - desc.granularity * desc.boundaryWidth,
-//        desc.extent.east + desc.granularity * desc.boundaryWidth,
-//        desc.extent.north + desc.granularity * desc.boundaryWidth
-//    );
-
-    HeightmapTessellator._computeVertices(desc);
-
-    var result = {};
-    if (desc.interleave) {
-        result.vertices = desc.vertices;
-    } else {
-        result.positions = desc.vertices;
-        if (desc.generateTextureCoords) {
-            result.textureCoords = desc.texCoords;
-        }
-    }
-
-    result.indices = desc.indices;
-    return result;
-};
-
-self.onmessage = function(parameters) {
-    var buffers = HeightmapTessellator.computeBuffers(parameters.data);
-    self.postMessage({id: parameters.data.id, data: buffers});
+    var postMessage = self.webkitPostMessage || self.postMessage;
+    var result = {
+        id: desc.id,
+        vertices: vertices
+    };
+    postMessage(result, [result.vertices.buffer]);
 };

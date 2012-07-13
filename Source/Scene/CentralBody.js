@@ -135,17 +135,17 @@ define([
 
         this._imageLayers = defaultValue(imageryLayerCollection, new ImageryLayerCollection());
 
-        tilingScheme = defaultValue(tilingScheme, new WebMercatorTilingScheme({
-            ellipsoid : ellipsoid,
-            numberOfLevelZeroTilesX : 2,
-            numberOfLevelZeroTilesY : 2
-        }));
-        var terrain = new EllipsoidTerrainProvider(tilingScheme);
-//        var terrain = new EsriImageServerTerrainProvider({
-//            url: 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
-//            token: '16--NuJbiTB_fbQ6uOWDLbOf7XbiqTnOZgw8ycFy4DZNtfOre9LM-ya-cQLOAovWQ1SmvA1PExUSQ5m2eApW2g..',
-//            proxy: new DefaultProxy('/tiffToPng/')
-//        });
+//        tilingScheme = defaultValue(tilingScheme, new WebMercatorTilingScheme({
+//            ellipsoid : ellipsoid,
+//            numberOfLevelZeroTilesX : 2,
+//            numberOfLevelZeroTilesY : 2
+//        }));
+//        var terrain = new EllipsoidTerrainProvider(tilingScheme);
+        var terrain = new EsriImageServerTerrainProvider({
+            url: 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
+            token: '6Q-zT8vF2ZlybnY4jahOfIUZcL4VwfFVR8aPRsI0E_xZtqWwTtSfUka0MuN9Oyp6FpJmFxZEcPF5rj9SpgfqXw..',
+            proxy: new DefaultProxy('/tiffToPng/')
+        });
         this._terrain = terrain;
         this._surface = new EllipsoidSurface({
            terrain : terrain,

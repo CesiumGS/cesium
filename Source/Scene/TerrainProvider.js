@@ -43,9 +43,46 @@ define([
             position2D : 2
         };
 
+    var regularGridIndexArrays = [];
+
+    TerrainProvider.getRegularGridIndices = function(width, height) {
+        var byWidth = regularGridIndexArrays[width];
+        if (typeof byWidth === 'undefined') {
+            regularGridIndexArrays[width] = byWidth = [];
+        }
+
+        var indices = byWidth[height];
+        if (typeof indices === 'undefined') {
+            indices = byWidth[height] = new Uint16Array((width - 1) * (height - 1) * 6);
+
+            var index = 0;
+            var indicesIndex = 0;
+            for (var i = 0; i < height - 1; ++i) {
+                for (var j = 0; j < width - 1; ++j) {
+                    var upperLeft = index;
+                    var lowerLeft = upperLeft + width;
+                    var lowerRight = lowerLeft + 1;
+                    var upperRight = upperLeft + 1;
+
+                    indices[indicesIndex++] = upperLeft;
+                    indices[indicesIndex++] = lowerLeft;
+                    indices[indicesIndex++] = upperRight;
+                    indices[indicesIndex++] = upperRight;
+                    indices[indicesIndex++] = lowerLeft;
+                    indices[indicesIndex++] = lowerRight;
+
+                    ++index;
+                }
+                ++index;
+            }
+        }
+
+        return indices;
+    };
+
     TerrainProvider.createTileEllipsoidGeometryFromBuffers = function(context, tile, buffers) {
         var datatype = ComponentDatatype.FLOAT;
-        var typedArray = datatype.toTypedArray(buffers.vertices);
+        var typedArray = buffers.vertices;
         var buffer = context.createVertexBuffer(typedArray, BufferUsage.STATIC_DRAW);
         var stride = 5 * datatype.sizeInBytes;
         var attributes = [{
@@ -66,7 +103,10 @@ define([
             index : TerrainProvider.attributeIndices.position2D,
             value : [0.0, 0.0]
         }];
-        var indexBuffer = context.createIndexBuffer(new Uint16Array(buffers.indices), BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+        var indexBuffer = buffers.indices.indexBuffer;
+        if (typeof indexBuffer === 'undefined') {
+            indexBuffer = buffers.indices.indexBuffer = context.createIndexBuffer(buffers.indices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+        }
 
         tile.vertexArray = context.createVertexArray(attributes, indexBuffer);
     };

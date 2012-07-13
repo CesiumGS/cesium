@@ -226,7 +226,7 @@ define([
 
         var extent = tile.extent.intersectWith(this.imageryProvider.extent);
         //TODO: calculate level correctly
-        var imageryLevel = tile.level + 1;
+        var imageryLevel = tile.level + (geometryTilingScheme.numberOfLevelZeroTilesX === 1 ? 0 : 1);
 
         var northwestTileCoordinates = imageryTilingScheme.positionToTileXY(extent.getNorthwest(), imageryLevel);
         var southeastTileCoordinates = imageryTilingScheme.positionToTileXY(extent.getSoutheast(), imageryLevel);
