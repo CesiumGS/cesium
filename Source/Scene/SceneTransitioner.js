@@ -310,9 +310,9 @@ define([
         var frame = transform.inverseTransformation().multiplyWithMatrix(camera.transform);
         camera.transform = transform.clone();
 
-        camera.position = frame.multiplyWithVector(pos).getXYZ();
-        camera.direction = frame.multiplyWithVector(dir).getXYZ();
-        camera.up = frame.multiplyWithVector(up).getXYZ();
+        camera.position = Cartesian3.fromCartesian4(frame.multiplyWithVector(pos));
+        camera.direction = Cartesian3.fromCartesian4(frame.multiplyWithVector(dir));
+        camera.up = Cartesian3.fromCartesian4(frame.multiplyWithVector(up));
         camera.right = camera.direction.cross(camera.up);
     };
 

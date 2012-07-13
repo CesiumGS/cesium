@@ -103,11 +103,28 @@ defineSuite([
         expect(cartesian.magnitude()).toEqual(Math.sqrt(50.0));
     });
 
-    it('normalize', function() {
-        var cartesian = new Cartesian3(2.0, 0.0, 0.0).normalize();
-        expect(cartesian.x).toEqual(1.0);
-        expect(cartesian.y).toEqual(0.0);
-        expect(cartesian.z).toEqual(0.0);
+    it('normalize works without a result parameter', function() {
+        var cartesian = new Cartesian3(2.0, 0.0, 0.0);
+        var expectedResult = new Cartesian3(1.0, 0.0, 0.0);
+        var result = cartesian.normalize();
+        expect(result).toEqual(expectedResult);
+    });
+
+    it('normalize works with a result parameter', function() {
+        var cartesian = new Cartesian3(2.0, 0.0, 0.0);
+        var expectedResult = new Cartesian3(1.0, 0.0, 0.0);
+        var result = new Cartesian3();
+        var returnedResult = cartesian.normalize(result);
+        expect(result === returnedResult).toEqual(true);
+        expect(result).toEqual(expectedResult);
+    });
+
+    it('normalize works with "this" result parameter', function() {
+        var cartesian = new Cartesian3(2.0, 0.0, 0.0);
+        var expectedResult = new Cartesian3(1.0, 0.0, 0.0);
+        var returnedResult = cartesian.normalize(cartesian);
+        expect(cartesian === returnedResult).toEqual(true);
+        expect(cartesian).toEqual(expectedResult);
     });
 
     it('multiplyComponents works without a result parameter', function() {
