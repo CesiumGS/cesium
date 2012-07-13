@@ -247,7 +247,27 @@ define([
             maxDepth = tile.level;
         }
 
-        if (queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, tile)) {
+        // Algorithm #1: Don't pre-load children unless we refine to them.
+        if (screenSpaceError(surface, context, sceneState, tile) < surface.maxScreenSpaceError) {
+            // This tile meets SSE requirements, so render it.
+            surface._renderList.push(tile);
+            ++tilesRendered;
+        } else if (queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, tile)) {
+            // SSE is not good enough and children are loaded, so refine.
+            var children = tile.children;
+            // PERFORMANCE_TODO: traverse children front-to-back
+            for (var i = 0, len = children.length; i < len; ++i) {
+                addBestAvailableTilesToRenderList(surface, context, sceneState, children[i]);
+            }
+        } else {
+            // SSE is not good enough but not all children are loaded, so render this tile anyway.
+            surface._renderList.push(tile);
+            ++tilesRendered;
+        }
+
+
+        // Algorithm #2: Pre-load children of all visited nodes
+        /*if (queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, tile)) {
             // All children are renderable.
             if (screenSpaceError(surface, context, sceneState, tile) < surface.maxScreenSpaceError) {
                 surface._renderList.push(tile);
@@ -263,7 +283,7 @@ define([
             // At least one child is not renderable, so render this tile.
             surface._renderList.push(tile);
             ++tilesRendered;
-        }
+        }*/
     }
 
     function isTileVisible(surface, sceneState, tile) {
