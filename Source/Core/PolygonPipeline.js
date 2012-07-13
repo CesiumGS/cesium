@@ -384,7 +384,7 @@ define([
 
             // PERFORMANCE_IDEA Rather that waste time re-iterating the entire set of positions
             // here, all of the above code can be refactored to flatten as values are added
-            // Removing the ned for this for loop.
+            // Removing the need for this for loop.
             var length = subdividedPositions.length;
             var flattenedPositions = new Array(length * 3);
             var q = 0;
