@@ -157,6 +157,22 @@ require({
             local.headers = value.substring(0, pos + 1) + '\n';
         });
 
+        function highlightRun(light) {
+            if (light) {
+                domClass.add(registry.byId('buttonRun').domNode, 'highlightToolbarButton');
+            } else {
+                domClass.remove(registry.byId('buttonRun').domNode, 'highlightToolbarButton');
+            }
+        }
+
+        function highlightSaveAs(light) {
+            if (light) {
+                domClass.add(registry.byId('buttonSaveAs').domNode, 'highlightToolbarButton');
+            } else {
+                domClass.remove(registry.byId('buttonSaveAs').domNode, 'highlightToolbarButton');
+            }
+        }
+
         function openDocTab(title, link) {
             if (typeof docTabs[title] === 'undefined') {
                 docTabs[title] = new ContentPane({
@@ -257,6 +273,7 @@ require({
                 window.clearTimeout(hintTimer);
             }
             hintTimer = setTimeout(clearAllErrors, 550);
+            highlightRun(true);
         }
 
         function highlightLine(lineNum) {
@@ -275,6 +292,7 @@ require({
 
         CodeMirror.commands.runCesium = function(cm) {
             clearAllErrors();
+            highlightRun(false);
             cesiumContainer.selectChild(bucketPane);
             bucketFrame.contentWindow.location.reload();
         };

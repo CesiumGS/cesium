@@ -124,6 +124,11 @@ a.linkButton:focus, a.linkButton:hover {
     height: 100%;
 }
 
+.highlightToolbarButton {
+    background: #FE2;
+    border-radius: 4px;
+}
+
 .claro .bottomPanel {
     padding: 0;
     overflow: hidden;
