@@ -390,9 +390,9 @@ define([
             var q = 0;
             for (i = 0; i < length; i++) {
                 var item = subdividedPositions[i];
-                flattenedPositions[q++] = (item.x);
-                flattenedPositions[q++] = (item.y);
-                flattenedPositions[q++] = (item.z);
+                flattenedPositions[q++] = item.x;
+                flattenedPositions[q++] = item.y;
+                flattenedPositions[q++] = item.z;
             }
 
             return {

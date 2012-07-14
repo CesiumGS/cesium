@@ -664,7 +664,7 @@ define([
     };
 
     /**
-     * Computes the linear interpolation or extrapolation at t using the this cartesian
+     * Computes the linear interpolation or extrapolation at t using this Cartesian
      * and the provided cartesian.  This cartesian is assumed to be t at 0.0.
      * @memberof Cartesian2
      *
