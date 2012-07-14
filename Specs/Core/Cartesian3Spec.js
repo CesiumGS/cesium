@@ -44,7 +44,7 @@ defineSuite([
     it('clone without a result parameter', function() {
         var cartesian = new Cartesian3(1.0, 2.0, 3.0);
         var result = cartesian.clone();
-        expect(cartesian === result).toEqual(false);
+        expect(cartesian).toNotBe(result);
         expect(cartesian).toEqual(result);
     });
 
@@ -52,15 +52,15 @@ defineSuite([
         var cartesian = new Cartesian3(1.0, 2.0, 3.0);
         var result = new Cartesian3();
         var returnedResult = cartesian.clone(result);
-        expect(cartesian === result).toEqual(false);
-        expect(result === returnedResult).toEqual(true);
+        expect(cartesian).toNotBe(result);
+        expect(result).toBe(returnedResult);
         expect(cartesian).toEqual(result);
     });
 
     it('clone works with "this" result parameter', function() {
         var cartesian = new Cartesian3(1.0, 2.0, 3.0);
         var returnedResult = cartesian.clone(cartesian);
-        expect(cartesian === returnedResult).toEqual(true);
+        expect(cartesian).toBe(returnedResult);
     });
 
     it('getMaximumComponent works when X is greater', function() {
@@ -141,7 +141,7 @@ defineSuite([
         var result = new Cartesian3();
         var expectedResult = new Cartesian3(8.0, 15.0, 42.0);
         var returnedResult = left.multiplyComponents(right, result);
-        expect(result === returnedResult).toEqual(true);
+        expect(result).toBe(returnedResult);
         expect(result).toEqual(expectedResult);
     });
 
@@ -150,7 +150,7 @@ defineSuite([
         var right = new Cartesian3(4.0, 5.0, 7.0);
         var expectedResult = new Cartesian3(8.0, 15.0, 42.0);
         var returnedResult = left.multiplyComponents(right, left);
-        expect(left === returnedResult).toEqual(true);
+        expect(left).toBe(returnedResult);
         expect(left).toEqual(expectedResult);
     });
 
@@ -176,7 +176,7 @@ defineSuite([
         var result = new Cartesian3();
         var expectedResult = new Cartesian3(6.0, 8.0, 13.0);
         var returnedResult = left.add(right, result);
-        expect(returnedResult === result);
+        expect(returnedResult).toBe(result);
         expect(result).toEqual(expectedResult);
     });
 
@@ -185,7 +185,7 @@ defineSuite([
         var right = new Cartesian3(4.0, 5.0, 7.0);
         var expectedResult = new Cartesian3(6.0, 8.0, 13.0);
         var returnedResult = left.add(right, left);
-        expect(returnedResult === left);
+        expect(returnedResult).toBe(left);
         expect(left).toEqual(expectedResult);
     });
 
@@ -203,7 +203,7 @@ defineSuite([
         var result = new Cartesian3();
         var expectedResult = new Cartesian3(1.0, -2.0, -3.0);
         var returnedResult = left.subtract(right, result);
-        expect(returnedResult === result);
+        expect(returnedResult).toBe(result);
         expect(result).toEqual(expectedResult);
     });
 
@@ -212,7 +212,7 @@ defineSuite([
         var right = new Cartesian3(1.0, 5.0, 7.0);
         var expectedResult = new Cartesian3(1.0, -2.0, -3.0);
         var returnedResult = left.subtract(right, left);
-        expect(returnedResult === left);
+        expect(returnedResult).toBe(left);
         expect(left).toEqual(expectedResult);
     });
 
@@ -230,7 +230,7 @@ defineSuite([
         var scalar = 2;
         var expectedResult = new Cartesian3(2.0, 4.0, 6.0);
         var returnedResult = cartesian.multiplyWithScalar(scalar, result);
-        expect(result === returnedResult).toEqual(true);
+        expect(result).toBe(returnedResult);
         expect(result).toEqual(expectedResult);
     });
 
@@ -239,7 +239,7 @@ defineSuite([
         var scalar = 2;
         var expectedResult = new Cartesian3(2.0, 4.0, 6.0);
         var returnedResult = cartesian.multiplyWithScalar(scalar, cartesian);
-        expect(cartesian === returnedResult).toEqual(true);
+        expect(cartesian).toBe(returnedResult);
         expect(cartesian).toEqual(expectedResult);
     });
 
@@ -257,7 +257,7 @@ defineSuite([
         var scalar = 2;
         var expectedResult = new Cartesian3(0.5, 1.0, 1.5);
         var returnedResult = cartesian.divideByScalar(scalar, result);
-        expect(result === returnedResult).toEqual(true);
+        expect(result).toBe(returnedResult);
         expect(result).toEqual(expectedResult);
     });
 
@@ -266,7 +266,7 @@ defineSuite([
         var scalar = 2;
         var expectedResult = new Cartesian3(0.5, 1.0, 1.5);
         var returnedResult = cartesian.divideByScalar(scalar, cartesian);
-        expect(cartesian === returnedResult).toEqual(true);
+        expect(cartesian).toBe(returnedResult);
         expect(cartesian).toEqual(expectedResult);
     });
 
@@ -282,7 +282,7 @@ defineSuite([
         var result = new Cartesian3();
         var expectedResult = new Cartesian3(-1.0, 2.0, 5.0);
         var returnedResult = cartesian.negate(result);
-        expect(result === returnedResult).toEqual(true);
+        expect(result).toBe(returnedResult);
         expect(result).toEqual(expectedResult);
     });
 
@@ -290,7 +290,7 @@ defineSuite([
         var cartesian = new Cartesian3(1.0, -2.0, -5.0);
         var expectedResult = new Cartesian3(-1.0, 2.0, 5.0);
         var returnedResult = cartesian.negate(cartesian);
-        expect(cartesian === returnedResult).toEqual(true);
+        expect(cartesian).toBe(returnedResult);
         expect(cartesian).toEqual(expectedResult);
     });
 
@@ -306,7 +306,7 @@ defineSuite([
         var result = new Cartesian3();
         var expectedResult = new Cartesian3(1.0, 2.0, 4.0);
         var returnedResult = cartesian.abs(result);
-        expect(result === returnedResult).toEqual(true);
+        expect(result).toBe(returnedResult);
         expect(result).toEqual(expectedResult);
     });
 
@@ -314,7 +314,7 @@ defineSuite([
         var cartesian = new Cartesian3(1.0, -2.0, -4.0);
         var expectedResult = new Cartesian3(1.0, 2.0, 4.0);
         var returnedResult = cartesian.abs(cartesian);
-        expect(cartesian === returnedResult).toEqual(true);
+        expect(cartesian).toBe(returnedResult);
         expect(cartesian).toEqual(expectedResult);
     });
 
@@ -334,7 +334,7 @@ defineSuite([
         var result = new Cartesian3();
         var expectedResult = new Cartesian3(5.0, 11.0, 12.5);
         var returnedResult = start.lerp(end, t, result);
-        expect(result === returnedResult).toEqual(true);
+        expect(result).toBe(returnedResult);
         expect(result).toEqual(expectedResult);
     });
 
@@ -344,7 +344,7 @@ defineSuite([
         var t = 0.25;
         var expectedResult = new Cartesian3(5.0, 11.0, 12.5);
         var returnedResult = start.lerp(end, t, start);
-        expect(start === returnedResult).toEqual(true);
+        expect(start).toBe(returnedResult);
         expect(start).toEqual(expectedResult);
     });
 
@@ -433,7 +433,7 @@ defineSuite([
         var result = new Cartesian3();
         var expectedResult = new Cartesian3(-3, 14, -5);
         var returnedResult = left.cross(right, result);
-        expect(returnedResult === result).toEqual(true);
+        expect(returnedResult).toBe(result);
         expect(result).toEqual(expectedResult);
     });
 
@@ -442,7 +442,7 @@ defineSuite([
         var right = new Cartesian3(4, 3, 6);
         var expectedResult = new Cartesian3(-3, 14, -5);
         var returnedResult = left.cross(right, left);
-        expect(returnedResult === left).toEqual(true);
+        expect(returnedResult).toBe(left);
         expect(left).toEqual(expectedResult);
     });
 
