@@ -83,6 +83,38 @@ define([
     Cartesian2.fromCartesian4 = Cartesian2.clone;
 
     /**
+     * Computes the value of the maximum component for the supplied Cartesian.
+     * @memberof Cartesian2
+     *
+     * @param {Cartesian2} The cartesian to use.
+     * @return {Number} The value of the maximum component.
+     *
+     * @exception {DeveloperError} cartesian is required.
+     */
+    Cartesian2.getMaximumComponent = function(cartesian) {
+        if (typeof cartesian === 'undefined') {
+            throw new DeveloperError('cartesian is required');
+        }
+        return Math.max(cartesian.x, cartesian.y);
+    };
+
+    /**
+     * Computes the value of the minimum component for the supplied Cartesian.
+     * @memberof Cartesian2
+     *
+     * @param {Cartesian2} The cartesian to use.
+     * @return {Number} The value of the minimum component.
+     *
+     * @exception {DeveloperError} cartesian is required.
+     */
+    Cartesian2.getMinimumComponent = function(cartesian) {
+        if (typeof cartesian === 'undefined') {
+            throw new DeveloperError('cartesian is required');
+        }
+        return Math.min(cartesian.x, cartesian.y);
+    };
+
+    /**
      * Computes the provided Cartesian's squared magnitude.
      * @memberof Cartesian2
      *
@@ -153,6 +185,33 @@ define([
             throw new DeveloperError('right is required');
         }
         return left.x * right.x + left.y * right.y;
+    };
+
+    /**
+     * Computes the componentwise product of two Cartesians.
+     * @memberof Cartesian2
+     *
+     * @param {Cartesian2} left The first Cartesian.
+     * @param {Cartesian2} right The second Cartesian.
+     * @param {Cartesian2} [result] The object onto which to store the result.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     *
+     * @exception {DeveloperError} left is required.
+     * @exception {DeveloperError} right is required.
+     */
+    Cartesian2.multiplyComponents = function(left, right, result) {
+        if (typeof left === 'undefined') {
+            throw new DeveloperError('left is required');
+        }
+        if (typeof right === 'undefined') {
+            throw new DeveloperError('right is required');
+        }
+        if (typeof result === 'undefined') {
+            return new Cartesian2(left.x * right.x, left.y * right.y);
+        }
+        result.x = left.x * right.x;
+        result.y = left.y * right.y;
+        return result;
     };
 
     /**
@@ -307,6 +366,61 @@ define([
         return result;
     };
 
+    var lerpScratch = new Cartesian2();
+    /**
+     * Computes the linear interpolation or extrapolation at t using the provided cartesians.
+     * @memberof Cartesian2
+     *
+     * @param start The value corresponding to t at 0.0.
+     * @param end The value corresponding to t at 1.0.
+     * @param t The point along t at which to interpolate.
+     * @param {Cartesian2} [result] The object onto which to store the result.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     *
+     * @exception {DeveloperError} start is required.
+     * @exception {DeveloperError} end is required.
+     * @exception {DeveloperError} t is required and must be a number.
+     */
+    Cartesian2.lerp = function(start, end, t, result) {
+        if (typeof start === 'undefined') {
+            throw new DeveloperError('start is required.');
+        }
+        if (typeof end === 'undefined') {
+            throw new DeveloperError('end is required.');
+        }
+        if (typeof t !== 'number') {
+            throw new DeveloperError('t is required and must be a number.');
+        }
+        Cartesian2.multiplyWithScalar(end, t, lerpScratch);
+        result = Cartesian2.multiplyWithScalar(start, 1.0 - t, result);
+        return Cartesian2.add(lerpScratch, result, result);
+    };
+
+    var angleBetweenScratch = new Cartesian2();
+    var angleBetweenScratch2 = new Cartesian2();
+    /**
+     * Returns the angle, in radians, between the provided Cartesians.
+     * @memberof Cartesian2
+     *
+     * @param {Cartesian2} left The first Cartesian.
+     * @param {Cartesian2} right The second Cartesian.
+     * @return {Number} The angle between the Cartesians.
+     *
+     * @exception {DeveloperError} left is required.
+     * @exception {DeveloperError} right is required.
+     */
+    Cartesian2.angleBetween = function(left, right) {
+        if (typeof left === 'undefined') {
+            throw new DeveloperError('left is required');
+        }
+        if (typeof right === 'undefined') {
+            throw new DeveloperError('right is required');
+        }
+        Cartesian2.normalize(left, angleBetweenScratch);
+        Cartesian2.normalize(right, angleBetweenScratch2);
+        return Math.acos(Cartesian2.dot(angleBetweenScratch, angleBetweenScratch2));
+    };
+
     /**
      * Compares the provided Cartesians componentwise and returns
      * <code>true/code> if they are equal, <code>false/code> otherwise.
@@ -383,6 +497,26 @@ define([
     Cartesian2.UNIT_Y = Object.freeze(new Cartesian2(0.0, 1.0));
 
     /**
+     * Computes the value of the maximum component for this Cartesian.
+     * @memberof Cartesian2
+     *
+     * @return {Number} The value of the maximum component.
+     */
+    Cartesian2.prototype.getMaximumComponent = function() {
+        return Cartesian2.getMaximumComponent(this);
+    };
+
+    /**
+     * Computes the value of the minimum component for this Cartesian.
+     * @memberof Cartesian2
+     *
+     * @return {Number} The value of the minimum component.
+     */
+    Cartesian2.prototype.getMinimumComponent = function() {
+        return Cartesian2.getMinimumComponent(this);
+    };
+
+    /**
      * Duplicates this Cartesian2 instance.
      * @memberof Cartesian2
      *
@@ -437,6 +571,19 @@ define([
         return Cartesian2.dot(this, right);
     };
 
+    /**
+     * Computes the componentwise product of this Cartesian and the provided Cartesian.
+     * @memberof Cartesian2
+     *
+     * @param {Cartesian2} right The right hand side Cartesian.
+     * @param {Cartesian2} [result] The object onto which to store the result.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     *
+     * @exception {DeveloperError} right is required.
+     */
+    Cartesian2.prototype.multiplyComponents = function(right, result) {
+        return Cartesian2.multiplyComponents(this, right, result);
+    };
 
     /**
      * Computes the componentwise sum of this Cartesian and the provided Cartesian.
@@ -517,6 +664,37 @@ define([
     };
 
     /**
+     * Computes the linear interpolation or extrapolation at t using this Cartesian
+     * and the provided cartesian.  This cartesian is assumed to be t at 0.0.
+     * @memberof Cartesian2
+     *
+     * @param end The value corresponding to t at 1.0.
+     * @param t The point along t at which to interpolate.
+     * @param {Cartesian2} [result] The object onto which to store the result.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     *
+     * @exception {DeveloperError} end is required.
+     * @exception {DeveloperError} t is required and must be a number.
+     */
+    Cartesian2.prototype.lerp = function(end, t, result) {
+        return Cartesian2.lerp(this, end, t, result);
+    };
+
+    /**
+     * Returns the angle, in radians, between this Cartesian and the provided Cartesian.
+     * @memberof Cartesian2
+     *
+     * @param {Cartesian2} right The right hand side Cartesian.
+     * @return {Number} The angle between the Cartesians.
+     *
+     * @exception {DeveloperError} left is required.
+     * @exception {DeveloperError} right is required.
+     */
+    Cartesian2.prototype.angleBetween = function(right) {
+        return Cartesian2.angleBetween(this, right);
+    };
+
+    /**
      * Compares this Cartesian against the provided Cartesian componentwise and returns
      * <code>true/code> if they are equal, <code>false/code> otherwise.
      * @memberof Cartesian2
@@ -536,7 +714,7 @@ define([
      *
      * @param {Cartesian2} [right] The right hand side Cartesian.
      * @param {Number} epsilon The epsilon to use for equality testing.
-     * @return {Boolean} <code>true/code> if left and right are within the provided epsilon, <code>false/code> otherwise.
+     * @return {Boolean} <code>true/code> if they are within the provided epsilon, <code>false/code> otherwise.
      *
      * @exception {DeveloperError} epsilon is required and must be a number.
      */
