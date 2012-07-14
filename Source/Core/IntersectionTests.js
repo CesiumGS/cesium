@@ -13,14 +13,16 @@ define([
     "use strict";
 
  // TODO
-//  Plane class - planeNormal and planeD
+//  equals, etc. for Plane?
 //  Should ray constructor normalize?
+//  Make EllipsoidTangentPlane contain plane?
+//  Cleanup rayPlane?
 
-    function lineSegmentPlaneIntersection(p0, p1, planeNormal, planeD) {
+    function lineSegmentPlaneIntersection(p0, p1, plane) {
         var direction;
         direction = Cartesian3.subtract(p1, p0);
         Cartesian3.normalize(direction, direction);
-        return IntersectionTests.rayPlane(new Ray(p0, direction), planeNormal, planeD);
+        return IntersectionTests.rayPlane(new Ray(p0, direction), plane);
     }
 
     /**
@@ -33,29 +35,23 @@ define([
          * DOC_TBA
          *
          * @param {Ray} ray DOC_TBA
-         * @param {Cartesian3} planeNormal DOC_TBA
-         * @param {Number} planeD DOC_TBA
+         * @param {Plane} plane DOC_TBA
          *
          * @exception {DeveloperError} ray is required.
-         * @exception {DeveloperError} planeNormal is required.
-         * @exception {DeveloperError} planeD is required.
+         * @exception {DeveloperError} plane is required.
          */
-        rayPlane : function(ray, planeNormal, planeD) {
+        rayPlane : function(ray, plane) {
             if (typeof ray === 'undefined') {
                 throw new DeveloperError('ray is required.');
             }
 
-            if (typeof planeNormal === 'undefined') {
-                throw new DeveloperError('planeNormal is required.');
-            }
-
-            if (typeof planeD === 'undefined') {
-                throw new DeveloperError('planeD is required.');
+            if (typeof plane === 'undefined') {
+                throw new DeveloperError('plane is required.');
             }
 
             var origin = Cartesian3.clone(ray.origin);
             var direction = Cartesian3.clone(ray.direction);
-            var normal = Cartesian3.clone(planeNormal);
+            var normal = Cartesian3.clone(plane.normal);
 
             var denominator = normal.dot(direction);
 
@@ -64,7 +60,7 @@ define([
                 return undefined;
             }
 
-            var t = (-planeD - normal.dot(origin)) / denominator;
+            var t = (-plane.distance - normal.dot(origin)) / denominator;
 
             if (t < 0) {
                 return undefined;
@@ -193,21 +189,22 @@ define([
          * @param {Cartesian3} p0 DOC_TBA
          * @param {Cartesian3} p1 DOC_TBA
          * @param {Cartesian3} p2 DOC_TBA
-         * @param {Cartesian3} planeNormal DOC_TBA
-         * @param {Number} planeD DOC_TBA
+         * @param {Plane} plane DOC_TBA
          *
-         * @exception {DeveloperError} p0, p1, planeNormal, and plane are required.
+         * @exception {DeveloperError} p0, p1, p2, and plane are required.
          */
-        trianglePlaneIntersection : function(p0, p1, p2, planeNormal, planeD) {
+        trianglePlaneIntersection : function(p0, p1, p2, plane) {
             if ((typeof p0 === 'undefined') ||
                 (typeof p1 === 'undefined') ||
-                (typeof planeNormal === 'undefined') ||
-                (typeof planeD === 'undefined')) {
-                throw new DeveloperError('p0, p1, planeNormal, and plane are required.');
+                (typeof p2 === 'undefined') ||
+                (typeof plane === 'undefined')) {
+                throw new DeveloperError('p0, p1, p2, and plane are required.');
             }
 
             // TODO: returning triangle strips or fans?
             // TODO: Don't assume planeNormal is Cartesian3?
+            var planeNormal = plane.normal;
+            var planeD = plane.distance;
             var p0Behind = (planeNormal.dot(p0) + planeD) < 0.0;
             var p1Behind = (planeNormal.dot(p1) + planeD) < 0.0;
             var p2Behind = (planeNormal.dot(p2) + planeD) < 0.0;
@@ -221,8 +218,8 @@ define([
 
             if (numBehind === 1) {
                 if (p0Behind) {
-                    var u01 = lineSegmentPlaneIntersection(p0, p1, planeNormal, planeD);
-                    var u02 = lineSegmentPlaneIntersection(p0, p2, planeNormal, planeD);
+                    var u01 = lineSegmentPlaneIntersection(p0, p1, plane);
+                    var u02 = lineSegmentPlaneIntersection(p0, p2, plane);
 
                     return [
                         // Behind
@@ -237,8 +234,8 @@ define([
                         u01
                     ];
                 } else if (p1Behind) {
-                    var u12 = lineSegmentPlaneIntersection(p1, p2, planeNormal, planeD);
-                    var u10 = lineSegmentPlaneIntersection(p1, p0, planeNormal, planeD);
+                    var u12 = lineSegmentPlaneIntersection(p1, p2, plane);
+                    var u10 = lineSegmentPlaneIntersection(p1, p0, plane);
 
                     return [
                         // Behind
@@ -253,8 +250,8 @@ define([
                         u12
                     ];
                 } else if (p2Behind) {
-                    var u20 = lineSegmentPlaneIntersection(p2, p0, planeNormal, planeD);
-                    var u21 = lineSegmentPlaneIntersection(p2, p1, planeNormal, planeD);
+                    var u20 = lineSegmentPlaneIntersection(p2, p0, plane);
+                    var u21 = lineSegmentPlaneIntersection(p2, p1, plane);
 
                     return [
                         // Behind
@@ -271,8 +268,8 @@ define([
                 }
             } else if (numBehind === 2) {
                 if (!p0Behind) {
-                    var u10 = lineSegmentPlaneIntersection(p1, p0, planeNormal, planeD);
-                    var u20 = lineSegmentPlaneIntersection(p2, p0, planeNormal, planeD);
+                    var u10 = lineSegmentPlaneIntersection(p1, p0, plane);
+                    var u20 = lineSegmentPlaneIntersection(p2, p0, plane);
 
                     return [
                         // Behind
@@ -287,8 +284,8 @@ define([
                         u20
                     ];
                 } else if (!p1Behind) {
-                    var u21 = lineSegmentPlaneIntersection(p2, p1, planeNormal, planeD);
-                    var u01 = lineSegmentPlaneIntersection(p0, p1, planeNormal, planeD);
+                    var u21 = lineSegmentPlaneIntersection(p2, p1, plane);
+                    var u01 = lineSegmentPlaneIntersection(p0, p1, plane);
 
                     return [
                         // Behind
@@ -303,8 +300,8 @@ define([
                         u01
                     ];
                 } else if (!p2Behind) {
-                    var u02 = lineSegmentPlaneIntersection(p0, p2, planeNormal, planeD);
-                    var u12 = lineSegmentPlaneIntersection(p1, p2, planeNormal, planeD);
+                    var u02 = lineSegmentPlaneIntersection(p0, p2, plane);
+                    var u12 = lineSegmentPlaneIntersection(p1, p2, plane);
 
                     return [
                         // Behind

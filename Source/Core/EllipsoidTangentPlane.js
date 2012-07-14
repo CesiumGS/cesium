@@ -6,7 +6,8 @@ define([
         './IntersectionTests',
         './Cartesian2',
         './Cartesian3',
-        './Ray'
+        './Ray',
+        './Plane'
     ], function(
         DeveloperError,
         Transforms,
@@ -14,7 +15,8 @@ define([
         IntersectionTests,
         Cartesian2,
         Cartesian3,
-        Ray) {
+        Ray,
+        Plane) {
     "use strict";
 
     /**
@@ -80,7 +82,7 @@ define([
     EllipsoidTangentPlane.prototype.projectPointOntoPlane = function(position) {
         if (position) {
             var pos = Cartesian3.clone(position);
-            var intersectionPoint = IntersectionTests.rayPlane(new Ray(pos, pos.normalize()), this.normal, this.d);
+            var intersectionPoint = IntersectionTests.rayPlane(new Ray(pos, pos.normalize()), new Plane(this.normal, this.d));
 
             if (intersectionPoint) {
                 var v = intersectionPoint.subtract(this.origin);
