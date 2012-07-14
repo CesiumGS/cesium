@@ -168,30 +168,6 @@ defineSuite([
     ///////////////////////////////////////////////////////////////////////////
     // TODO: exceptions
 
-    it('line segment intersects plane', function() {
-       var planeNormal = Cartesian3.UNIT_X;
-       var planeD = 0.0;
-
-       var p0 = Cartesian3.UNIT_X;
-       var p1 = Cartesian3.UNIT_X.negate();
-       var p = IntersectionTests.lineSegmentPlaneIntersection(p0, p1, planeNormal, planeD);
-
-       expect(p.equals(Cartesian3.ZERO)).toEqual(true);
-    });
-
-    it('line segment does notintersects plane', function() {
-        var planeNormal = Cartesian3.UNIT_Y;
-        var planeD = 0.0;
-
-        var p0 = new Cartesian3(1.0, 1.0, 0.0);
-        var p1 = new Cartesian3(-1.0, 1.0, 0.0);
-        var p = IntersectionTests.lineSegmentPlaneIntersection(p0, p1, planeNormal, planeD);
-
-        expect(p).not.toBeDefined();
-     });
-
-    ///////////////////////////////////////////////////////////////////////////
-
     it('triangle is front of a plane', function() {
         var planeNormal = Cartesian3.UNIT_Z;
         var planeD = 0.0;

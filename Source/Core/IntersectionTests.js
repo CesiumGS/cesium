@@ -12,17 +12,23 @@ define([
         Ray) {
     "use strict";
 
+ // TODO
+//  Plane class - planeNormal and planeD
+//  Should ray constructor normalize?
+
+    function lineSegmentPlaneIntersection(p0, p1, planeNormal, planeD) {
+        var direction;
+        direction = Cartesian3.subtract(p1, p0);
+        Cartesian3.normalize(direction, direction);
+        return IntersectionTests.rayPlane(new Ray(p0, direction), planeNormal, planeD);
+    }
+
     /**
      * DOC_TBA
      *
      * @exports IntersectionTests
      */
     var IntersectionTests = {
-// TODO
-//   LineSegment class - p0 and p1
-//   Plane class - planeNormal and planeD
-//   Should ray constructor normalize?
-
         /**
          * DOC_TBA
          *
@@ -186,43 +192,6 @@ define([
          *
          * @param {Cartesian3} p0 DOC_TBA
          * @param {Cartesian3} p1 DOC_TBA
-         * @param {Cartesian3} planeNormal DOC_TBA
-         * @param {Number} planeD DOC_TBA
-         *
-         * @exception {DeveloperError} p0, p1, planeNormal, and plane are required.
-         *
-         * @return {Cartesian3} The intersection point of the line segment and the
-         * plane, or <code>undefined</code> if they do not intersect.
-         *
-         * @example
-         * // Returns Cartesian3(0.0, 0.0, 0.0)
-         * var p = IntersectionTests.lineSegmentPlaneIntersection(
-         *   new Cartesian3(-1.0, 0.0, 0.0),
-         *   new Cartesian3(1.0, 0.0, 0.0),
-         *   new Cartesian3(1.0, 0.0, 0.0),
-         *   0.0);
-         */
-        lineSegmentPlaneIntersection : function(p0, p1, planeNormal, planeD) {
-            if ((typeof p0 === 'undefined') ||
-                (typeof p1 === 'undefined') ||
-                (typeof planeNormal === 'undefined') ||
-                (typeof planeD === 'undefined')) {
-                throw new DeveloperError('p0, p1, planeNormal, and plane are required.');
-            }
-
-            // TODO: remove clone
-            var direction = Cartesian3.clone(p1);
-            direction = direction.subtract(p0);
-            direction = direction.normalize();
-
-            return IntersectionTests.rayPlane(new Ray(p0, direction), planeNormal, planeD);
-        },
-
-        /**
-         * DOC_TBA
-         *
-         * @param {Cartesian3} p0 DOC_TBA
-         * @param {Cartesian3} p1 DOC_TBA
          * @param {Cartesian3} p2 DOC_TBA
          * @param {Cartesian3} planeNormal DOC_TBA
          * @param {Number} planeD DOC_TBA
@@ -252,8 +221,8 @@ define([
 
             if (numBehind === 1) {
                 if (p0Behind) {
-                    var u01 = IntersectionTests.lineSegmentPlaneIntersection(p0, p1, planeNormal, planeD);
-                    var u02 = IntersectionTests.lineSegmentPlaneIntersection(p0, p2, planeNormal, planeD);
+                    var u01 = lineSegmentPlaneIntersection(p0, p1, planeNormal, planeD);
+                    var u02 = lineSegmentPlaneIntersection(p0, p2, planeNormal, planeD);
 
                     return [
                         // Behind
@@ -268,8 +237,8 @@ define([
                         u01
                     ];
                 } else if (p1Behind) {
-                    var u12 = IntersectionTests.lineSegmentPlaneIntersection(p1, p2, planeNormal, planeD);
-                    var u10 = IntersectionTests.lineSegmentPlaneIntersection(p1, p0, planeNormal, planeD);
+                    var u12 = lineSegmentPlaneIntersection(p1, p2, planeNormal, planeD);
+                    var u10 = lineSegmentPlaneIntersection(p1, p0, planeNormal, planeD);
 
                     return [
                         // Behind
@@ -284,8 +253,8 @@ define([
                         u12
                     ];
                 } else if (p2Behind) {
-                    var u20 = IntersectionTests.lineSegmentPlaneIntersection(p2, p0, planeNormal, planeD);
-                    var u21 = IntersectionTests.lineSegmentPlaneIntersection(p2, p1, planeNormal, planeD);
+                    var u20 = lineSegmentPlaneIntersection(p2, p0, planeNormal, planeD);
+                    var u21 = lineSegmentPlaneIntersection(p2, p1, planeNormal, planeD);
 
                     return [
                         // Behind
@@ -302,8 +271,8 @@ define([
                 }
             } else if (numBehind === 2) {
                 if (!p0Behind) {
-                    var u10 = IntersectionTests.lineSegmentPlaneIntersection(p1, p0, planeNormal, planeD);
-                    var u20 = IntersectionTests.lineSegmentPlaneIntersection(p2, p0, planeNormal, planeD);
+                    var u10 = lineSegmentPlaneIntersection(p1, p0, planeNormal, planeD);
+                    var u20 = lineSegmentPlaneIntersection(p2, p0, planeNormal, planeD);
 
                     return [
                         // Behind
@@ -318,8 +287,8 @@ define([
                         u20
                     ];
                 } else if (!p1Behind) {
-                    var u21 = IntersectionTests.lineSegmentPlaneIntersection(p2, p1, planeNormal, planeD);
-                    var u01 = IntersectionTests.lineSegmentPlaneIntersection(p0, p1, planeNormal, planeD);
+                    var u21 = lineSegmentPlaneIntersection(p2, p1, planeNormal, planeD);
+                    var u01 = lineSegmentPlaneIntersection(p0, p1, planeNormal, planeD);
 
                     return [
                         // Behind
@@ -334,8 +303,8 @@ define([
                         u01
                     ];
                 } else if (!p2Behind) {
-                    var u02 = IntersectionTests.lineSegmentPlaneIntersection(p0, p2, planeNormal, planeD);
-                    var u12 = IntersectionTests.lineSegmentPlaneIntersection(p1, p2, planeNormal, planeD);
+                    var u02 = lineSegmentPlaneIntersection(p0, p2, planeNormal, planeD);
+                    var u12 = lineSegmentPlaneIntersection(p1, p2, planeNormal, planeD);
 
                     return [
                         // Behind
