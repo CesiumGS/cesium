@@ -2,12 +2,14 @@
 define([
         './DeveloperError',
         './Math',
-        './Cartesian3'
+        './Cartesian3',
+        './Ray'
     ],
     function(
         DeveloperError,
         CesiumMath,
-        Cartesian3) {
+        Cartesian3,
+        Ray) {
     "use strict";
 
     /**
@@ -16,6 +18,11 @@ define([
      * @exports IntersectionTests
      */
     var IntersectionTests = {
+// TODO
+//   LineSegment class - p0 and p1
+//   Plane class - planeNormal and planeD
+//   Should ray constructor normalize?
+
         /**
          * DOC_TBA
          *
@@ -172,6 +179,182 @@ define([
                 // qw >= 0.0.  Looking outward or tangent.
                 return undefined;
             }
+        },
+
+        /**
+         * DOC_TBA
+         *
+         * @param {Cartesian3} p0 DOC_TBA
+         * @param {Cartesian3} p1 DOC_TBA
+         * @param {Cartesian3} planeNormal DOC_TBA
+         * @param {Number} planeD DOC_TBA
+         *
+         * @exception {DeveloperError} p0, p1, planeNormal, and plane are required.
+         *
+         * @return {Cartesian3} The intersection point of the line segment and the
+         * plane, or <code>undefined</code> if they do not intersect.
+         *
+         * @example
+         * // Returns Cartesian3(0.0, 0.0, 0.0)
+         * var p = IntersectionTests.lineSegmentPlaneIntersection(
+         *   new Cartesian3(-1.0, 0.0, 0.0),
+         *   new Cartesian3(1.0, 0.0, 0.0),
+         *   new Cartesian3(1.0, 0.0, 0.0),
+         *   0.0);
+         */
+        lineSegmentPlaneIntersection : function(p0, p1, planeNormal, planeD) {
+            if ((typeof p0 === 'undefined') ||
+                (typeof p1 === 'undefined') ||
+                (typeof planeNormal === 'undefined') ||
+                (typeof planeD === 'undefined')) {
+                throw new DeveloperError('p0, p1, planeNormal, and plane are required.');
+            }
+
+            // TODO: remove clone
+            var direction = Cartesian3.clone(p1);
+            direction = direction.subtract(p0);
+            direction = direction.normalize();
+
+            return IntersectionTests.rayPlane(new Ray(p0, direction), planeNormal, planeD);
+        },
+
+        /**
+         * DOC_TBA
+         *
+         * @param {Cartesian3} p0 DOC_TBA
+         * @param {Cartesian3} p1 DOC_TBA
+         * @param {Cartesian3} p2 DOC_TBA
+         * @param {Cartesian3} planeNormal DOC_TBA
+         * @param {Number} planeD DOC_TBA
+         *
+         * @exception {DeveloperError} p0, p1, planeNormal, and plane are required.
+         */
+        trianglePlaneIntersection : function(p0, p1, p2, planeNormal, planeD) {
+            if ((typeof p0 === 'undefined') ||
+                (typeof p1 === 'undefined') ||
+                (typeof planeNormal === 'undefined') ||
+                (typeof planeD === 'undefined')) {
+                throw new DeveloperError('p0, p1, planeNormal, and plane are required.');
+            }
+
+            // TODO: returning triangle strips or fans?
+            // TODO: Don't assume planeNormal is Cartesian3?
+            var p0Behind = (planeNormal.dot(p0) + planeD) < 0.0;
+            var p1Behind = (planeNormal.dot(p1) + planeD) < 0.0;
+            var p2Behind = (planeNormal.dot(p2) + planeD) < 0.0;
+            // Given these dots products, the calls to lineSegmentPlaneIntersection
+            // always have defined results.
+
+            var numBehind = 0;
+            numBehind += p0Behind ? 1 : 0;
+            numBehind += p1Behind ? 1 : 0;
+            numBehind += p2Behind ? 1 : 0;
+
+            if (numBehind === 1) {
+                if (p0Behind) {
+                    var u01 = IntersectionTests.lineSegmentPlaneIntersection(p0, p1, planeNormal, planeD);
+                    var u02 = IntersectionTests.lineSegmentPlaneIntersection(p0, p2, planeNormal, planeD);
+
+                    return [
+                        // Behind
+                        p0,
+                        u01,
+                        u02,
+
+                        // In front
+                        p1,
+                        p2,
+                        u02,
+                        u01
+                    ];
+                } else if (p1Behind) {
+                    var u12 = IntersectionTests.lineSegmentPlaneIntersection(p1, p2, planeNormal, planeD);
+                    var u10 = IntersectionTests.lineSegmentPlaneIntersection(p1, p0, planeNormal, planeD);
+
+                    return [
+                        // Behind
+                        p1,
+                        u12,
+                        u10,
+
+                        // In front
+                        p2,
+                        p0,
+                        u10,
+                        u12
+                    ];
+                } else if (p2Behind) {
+                    var u20 = IntersectionTests.lineSegmentPlaneIntersection(p2, p0, planeNormal, planeD);
+                    var u21 = IntersectionTests.lineSegmentPlaneIntersection(p2, p1, planeNormal, planeD);
+
+                    return [
+                        // Behind
+                        p2,
+                        u20,
+                        u21,
+
+                        // In front
+                        p0,
+                        p1,
+                        u21,
+                        u20
+                    ];
+                }
+            } else if (numBehind === 2) {
+                if (!p0Behind) {
+                    var u10 = IntersectionTests.lineSegmentPlaneIntersection(p1, p0, planeNormal, planeD);
+                    var u20 = IntersectionTests.lineSegmentPlaneIntersection(p2, p0, planeNormal, planeD);
+
+                    return [
+                        // Behind
+                        p1,
+                        p2,
+                        u20,
+                        u10,
+
+                        // In front
+                        p0,
+                        u10,
+                        u20
+                    ];
+                } else if (!p1Behind) {
+                    var u21 = IntersectionTests.lineSegmentPlaneIntersection(p2, p1, planeNormal, planeD);
+                    var u01 = IntersectionTests.lineSegmentPlaneIntersection(p0, p1, planeNormal, planeD);
+
+                    return [
+                        // Behind
+                        p2,
+                        p0,
+                        u01,
+                        u21,
+
+                        // In front
+                        p1,
+                        u21,
+                        u01
+                    ];
+                } else if (!p2Behind) {
+                    var u02 = IntersectionTests.lineSegmentPlaneIntersection(p0, p2, planeNormal, planeD);
+                    var u12 = IntersectionTests.lineSegmentPlaneIntersection(p1, p2, planeNormal, planeD);
+
+                    return [
+                        // Behind
+                        p0,
+                        p1,
+                        u12,
+                        u02,
+
+                        // In front
+                        p2,
+                        u02,
+                        u12
+                    ];
+                }
+            }
+
+            // if numBehind is 3, the triangle is completely behind the plane;
+            // otherwise, it is completely in front (numBehind is 0).
+            return undefined;
         }
     };
 
