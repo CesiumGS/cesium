@@ -39,6 +39,7 @@ Beta Releases
    * TimeStandard.convertUtcToTai and TimeStandard.convertTaiToUtc have been removed as they are no longer needed. 
    * `Cartesian3.prototype.getXY()` was replaced with `Cartesian2.fromCartesian3`.  Code that previously looked like `cartesian3.getXY();` should now look like `Cartesian2.fromCartesian3(cartesian3);`.
    * `Cartesian4.prototype.getXY()` was replaced with `Cartesian2.fromCartesian4`.
+   * `IntersectionTests.rayPlane` now takes the new `Plane` type instead of separate `planeNormal` and `planeD` arguments.
 * All `Cartesian2` operations now have static versions that work with any objects exposing `x` and `y` properties.
 * Added `addImage` to `TextureAtlas` so images can be added to a texture atlas after it is constructed.
 * Added `Scene.pickEllipsoid`, which picks either the ellipsoid or the map depending on the current `SceneMode`.
@@ -58,6 +59,8 @@ Beta Releases
     * The left mouse button rotates around the central body.
     * The right mouse button and mouse wheel zoom in and out.
     * The middle mouse button rotates around the point clicked on the central body.
+* Added `Plane` for representing the equation of a plane.
+* Added `IntersectionTests.trianglePlaneIntersection`.
 
 ### b6a - 06/20/2012
 
