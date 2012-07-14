@@ -115,7 +115,7 @@ defineSuite([
         var expectedResult = new Cartesian3(1.0, 0.0, 0.0);
         var result = new Cartesian3();
         var returnedResult = cartesian.normalize(result);
-        expect(result === returnedResult).toEqual(true);
+        expect(result).toBe(returnedResult);
         expect(result).toEqual(expectedResult);
     });
 
@@ -123,7 +123,7 @@ defineSuite([
         var cartesian = new Cartesian3(2.0, 0.0, 0.0);
         var expectedResult = new Cartesian3(1.0, 0.0, 0.0);
         var returnedResult = cartesian.normalize(cartesian);
-        expect(cartesian === returnedResult).toEqual(true);
+        expect(cartesian).toBe(returnedResult);
         expect(cartesian).toEqual(expectedResult);
     });
 
