@@ -159,7 +159,6 @@ defineSuite([
     });
 
     ///////////////////////////////////////////////////////////////////////////
-    // TODO: exceptions
 
     it('triangle is front of a plane', function() {
         var plane = new Plane(Cartesian3.UNIT_Z, 0.0);
@@ -254,6 +253,36 @@ defineSuite([
         expect(triangles.length).toEqual(4 + 3);
         expect(triangles[0].equals(p0)).toEqual(true);  // p2 is in front
         expect(triangles[1].equals(p1)).toEqual(true);
+    });
+
+    it('trianglePlaneIntersection throws without p0', function() {
+        expect(function() {
+            return IntersectionTests.trianglePlaneIntersection();
+        }).toThrow();
+    });
+
+    it('trianglePlaneIntersection throws without p1', function() {
+        var p = Cartesian3.UNIT_X;
+
+        expect(function() {
+            return IntersectionTests.trianglePlaneIntersection(p);
+        }).toThrow();
+    });
+
+    it('trianglePlaneIntersection throws without p2', function() {
+        var p = Cartesian3.UNIT_X;
+
+        expect(function() {
+            return IntersectionTests.trianglePlaneIntersection(p, p);
+        }).toThrow();
+    });
+
+    it('trianglePlaneIntersection throws without plane', function() {
+        var p = Cartesian3.UNIT_X;
+
+        expect(function() {
+            return IntersectionTests.trianglePlaneIntersection(p, p, p);
+        }).toThrow();
     });
 
 });

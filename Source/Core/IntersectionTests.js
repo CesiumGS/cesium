@@ -202,12 +202,11 @@ define([
             }
 
             // TODO: returning triangle strips or fans?
-            // TODO: Don't assume planeNormal is Cartesian3?
             var planeNormal = plane.normal;
             var planeD = plane.distance;
-            var p0Behind = (planeNormal.dot(p0) + planeD) < 0.0;
-            var p1Behind = (planeNormal.dot(p1) + planeD) < 0.0;
-            var p2Behind = (planeNormal.dot(p2) + planeD) < 0.0;
+            var p0Behind = (Cartesian3.dot(planeNormal, p0) + planeD) < 0.0;
+            var p1Behind = (Cartesian3.dot(planeNormal, p1) + planeD) < 0.0;
+            var p2Behind = (Cartesian3.dot(planeNormal, p2) + planeD) < 0.0;
             // Given these dots products, the calls to lineSegmentPlaneIntersection
             // always have defined results.
 
