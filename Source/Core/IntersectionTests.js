@@ -12,11 +12,12 @@ define([
         Ray) {
     "use strict";
 
- // TODO
-//  equals, etc. for Plane?
-//  Should ray constructor normalize?
-//  Make EllipsoidTangentPlane contain plane?
-//  Cleanup rayPlane?
+// TODO
+// equals, etc. for Plane?
+// Should ray constructor normalize?
+// Make EllipsoidTangentPlane contain plane?
+// Does extent triangulator work over IDL?
+// Tests for new wrapLongitude.
 
     function lineSegmentPlaneIntersection(p0, p1, plane) {
         var direction;
@@ -220,100 +221,94 @@ define([
                     var u01 = lineSegmentPlaneIntersection(p0, p1, plane);
                     var u02 = lineSegmentPlaneIntersection(p0, p2, plane);
 
-                    return [
-                        // Behind
-                        p0,
-                        u01,
-                        u02,
+                    return {
+                        positions : [p0, p1, p2, u01, u02 ],
+                        indices : [
+                            // Behind
+                            0, 3, 4,
 
-                        // In front
-                        p1,
-                        p2,
-                        u02,
-                        u01
-                    ];
+                            // In front
+                            1, 2, 4,
+                            1, 4, 3
+                        ]
+                    };
                 } else if (p1Behind) {
                     var u12 = lineSegmentPlaneIntersection(p1, p2, plane);
                     var u10 = lineSegmentPlaneIntersection(p1, p0, plane);
 
-                    return [
-                        // Behind
-                        p1,
-                        u12,
-                        u10,
+                    return {
+                        positions : [p0, p1, p2, u12, u10 ],
+                        indices : [
+                            // Behind
+                            1, 3, 4,
 
-                        // In front
-                        p2,
-                        p0,
-                        u10,
-                        u12
-                    ];
+                            // In front
+                            2, 0, 4,
+                            2, 4, 3
+                        ]
+                    };
                 } else if (p2Behind) {
                     var u20 = lineSegmentPlaneIntersection(p2, p0, plane);
                     var u21 = lineSegmentPlaneIntersection(p2, p1, plane);
 
-                    return [
-                        // Behind
-                        p2,
-                        u20,
-                        u21,
+                    return {
+                        positions : [p0, p1, p2, u20, u21 ],
+                        indices : [
+                            // Behind
+                            2, 3, 4,
 
-                        // In front
-                        p0,
-                        p1,
-                        u21,
-                        u20
-                    ];
+                            // In front
+                            0, 1, 4,
+                            0, 4, 3
+                        ]
+                    };
                 }
             } else if (numBehind === 2) {
                 if (!p0Behind) {
                     var u10 = lineSegmentPlaneIntersection(p1, p0, plane);
                     var u20 = lineSegmentPlaneIntersection(p2, p0, plane);
 
-                    return [
-                        // Behind
-                        p1,
-                        p2,
-                        u20,
-                        u10,
+                    return {
+                        positions : [p0, p1, p2, u10, u20 ],
+                        indices : [
+                            // Behind
+                            1, 2, 4,
+                            1, 4, 3,
 
-                        // In front
-                        p0,
-                        u10,
-                        u20
-                    ];
+                            // In front
+                            0, 3, 4
+                        ]
+                    };
                 } else if (!p1Behind) {
                     var u21 = lineSegmentPlaneIntersection(p2, p1, plane);
                     var u01 = lineSegmentPlaneIntersection(p0, p1, plane);
 
-                    return [
-                        // Behind
-                        p2,
-                        p0,
-                        u01,
-                        u21,
+                    return {
+                        positions : [p0, p1, p2, u21, u01 ],
+                        indices : [
+                            // Behind
+                            2, 0, 4,
+                            2, 4, 3,
 
-                        // In front
-                        p1,
-                        u21,
-                        u01
-                    ];
+                            // In front
+                            1, 3, 4
+                        ]
+                    };
                 } else if (!p2Behind) {
                     var u02 = lineSegmentPlaneIntersection(p0, p2, plane);
                     var u12 = lineSegmentPlaneIntersection(p1, p2, plane);
 
-                    return [
-                        // Behind
-                        p0,
-                        p1,
-                        u12,
-                        u02,
+                    return {
+                        positions : [p0, p1, p2, u02, u12 ],
+                        indices : [
+                            // Behind
+                            0, 1, 4,
+                            0, 4, 3,
 
-                        // In front
-                        p2,
-                        u02,
-                        u12
-                    ];
+                            // In front
+                            2, 3, 4
+                        ]
+                    };
                 }
             }
 

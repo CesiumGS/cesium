@@ -14,6 +14,8 @@ define(['./Cartographic3',
     var PolylinePipeline = {
         /*
          * DOC_TBA
+         *
+         * @see PolygonPipeline.wrapLongitude
          */
         wrapLongitude : function(ellipsoid, positions) {
             var segments = [];

@@ -386,6 +386,8 @@ define([
                 cleanedPositions.reverse();
             }
             var indices = PolygonPipeline.earClip2D(positions2D);
+            // PERFORMANCE_IDEA:  Checking bounding sphere with plane for quick reject
+            indices = PolygonPipeline.wrapLongitude(cleanedPositions, indices);
             mesh = PolygonPipeline.computeSubdivision(cleanedPositions, indices, this._granularity);
             // PERFORMANCE_IDEA:  Only compute texture coordinates if the material requires them.
             mesh = Polygon._appendTextureCoordinates(tangentPlane, positions2D, mesh);

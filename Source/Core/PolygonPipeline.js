@@ -7,7 +7,9 @@ define([
         './ComponentDatatype',
         './PrimitiveType',
         './Queue',
-        './WindingOrder'
+        './WindingOrder',
+        './IntersectionTests',
+        './Plane'
     ], function(
         DeveloperError,
         CesiumMath,
@@ -16,7 +18,9 @@ define([
         ComponentDatatype,
         PrimitiveType,
         Queue,
-        WindingOrder) {
+        WindingOrder,
+        IntersectionTests,
+        Plane) {
     "use strict";
 
     function DoublyLinkedList() {
@@ -245,6 +249,87 @@ define([
         },
 
         /**
+         * @see PolylinePipeline.wrapLongitude
+         *
+         * @exception {DeveloperError} positions and indices are required
+         * @exception {DeveloperError} At least three indices are required.
+         * @exception {DeveloperError} The number of indices must be divisable by three.
+         */
+        wrapLongitude : function(positions, indices) {
+            if ((typeof positions === 'undefined') ||
+                (typeof indices === 'undefined')) {
+                throw new DeveloperError('positions and indices are required.');
+            }
+
+            if (indices.length < 3) {
+                throw new DeveloperError('At least three indices are required.');
+            }
+
+            if (indices.length % 3 !== 0) {
+                throw new DeveloperError('The number of indices must be divisable by three.');
+            }
+
+            var newIndices = [];
+
+            var plane = new Plane(Cartesian3.UNIT_Y, 0.0);
+
+            var len = indices.length;
+            for (var i = 0; i < len; i += 3) {
+                var p0 = positions[indices[i]];
+                var p1 = positions[indices[i + 1]];
+                var p2 = positions[indices[i + 2]];
+
+                // In WGS84 coordinates, for a triangle approximately on the
+                // ellipsoid to cross the IDL, first it needs to be on the
+                // negative side of the plane x = 0.
+                if ((p0.x < 0.0) && (p1.x < 0.0) && (p2.x < 0.0)) {
+                    // Then it needs to intersect the plane y = 0.
+                    var triangles = IntersectionTests.trianglePlaneIntersection(p0, p1, p2, plane);
+                    if (triangles) {
+                        // TODO: remove
+                        debugger;
+
+                        var positionsLen = positions.length;
+                        // Append two new points, the intersection points of the
+                        // triangle edges and the plane.
+
+                        // TODO: raise to surface in plane
+                        positions.push(triangles.positions[3]);
+                        positions.push(triangles.positions[4]);
+
+                        // Replace triangle that crosses the IDL with three
+                        // triangles that do not cross.
+                        var subdividedIndices = triangles.indices;
+                        for (var k = 0; k < subdividedIndices.length; ++k) {
+                            // Convert from indices for the subdivided triangle
+                            // to polygon indices.  Nasty.
+                            var index = subdividedIndices[k];
+                            switch (index) {
+                                case 0:
+                                case 1:
+                                case 2:
+                                    newIndices.push(indices[i + index]);
+                                    break;
+                                case 3:
+                                case 4:
+                                    newIndices.push(positionsLen + index - 3);
+                                    break;
+                            }
+                        }
+                    }
+
+                    // PERFORMANCE_IDEA:  Given the plane y = 0, there will be lots of zeros,
+                    // so we could hardcode the triangle-plane test.  We'd avoid some allocations
+                    // too.  We could also probably check just one of the point's x components above.
+                } else {
+                    newIndices.push(indices[i], indices[i + 1], indices[i + 2]);
+                }
+            }
+
+            return newIndices;
+        },
+
+        /**
          * DOC_TBA
          *
          * @param {DOC_TBA} positions DOC_TBA
@@ -258,11 +343,11 @@ define([
          * @exception {DeveloperError} Granularity must be greater than zero.
          */
         computeSubdivision : function(positions, indices, granularity) {
-            if (!positions) {
+            if (typeof positions === 'undefined') {
                 throw new DeveloperError('positions is required.');
             }
 
-            if (!indices) {
+            if (typeof indices === 'undefined') {
                 throw new DeveloperError('indices is required.');
             }
 
