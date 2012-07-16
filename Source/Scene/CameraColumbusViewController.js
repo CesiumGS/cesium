@@ -121,7 +121,7 @@ define([
         var updateCV = function(value) {
             var interp = position.lerp(newPosition, value.time);
             var pos = new Cartesian4(interp.x, interp.y, interp.z, 1.0);
-            camera.position = camera.getInverseTransform().multiplyWithVector(pos).getXYZ();
+            camera.position = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyWithVector(pos));
         };
 
         this._translateAnimation = this._animationCollection.add({
@@ -144,16 +144,16 @@ define([
         var endRay = camera.getPickRay(movement.endPosition);
 
         var position = new Cartesian4(startRay.origin.x, startRay.origin.y, startRay.origin.z, 1.0);
-        position = camera.getInverseTransform().multiplyWithVector(position).getXYZ();
+        position = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyWithVector(position));
         var direction = new Cartesian4(startRay.direction.x, startRay.direction.y, startRay.direction.z, 0.0);
-        direction = camera.getInverseTransform().multiplyWithVector(direction).getXYZ();
+        direction = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyWithVector(direction));
         var scalar = sign * position.z / direction.z;
         var startPlanePos = position.add(direction.multiplyWithScalar(scalar));
 
         position = new Cartesian4(endRay.origin.x, endRay.origin.y, endRay.origin.z, 1.0);
-        position = camera.getInverseTransform().multiplyWithVector(position).getXYZ();
+        position = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyWithVector(position));
         direction = new Cartesian4(endRay.direction.x, endRay.direction.y, endRay.direction.z, 0.0);
-        direction = camera.getInverseTransform().multiplyWithVector(direction).getXYZ();
+        direction = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyWithVector(direction));
         scalar = sign * position.z / direction.z;
         var endPlanePos = position.add(direction.multiplyWithScalar(scalar));
 
@@ -206,7 +206,7 @@ define([
                 var translateY = centerWC.z < -maxY || centerWC.z > maxY;
                 if ((translateX || translateY) && !this._lastInertiaTranslateMovement &&
                         !this._animationCollection.contains(this._translateAnimation)) {
-                    this._addCorrectTranslateAnimation(positionWC.getXYZ(), centerWC.getXYZ(), maxX, maxY);
+                    this._addCorrectTranslateAnimation(Cartesian3.fromCartesian4(positionWC), Cartesian3.fromCartesian4(centerWC), maxX, maxY);
                 }
             }
 
@@ -225,7 +225,7 @@ define([
             }
         }
 
-        camera.position = camera.getInverseTransform().multiplyWithVector(positionWC).getXYZ();
+        camera.position = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyWithVector(positionWC));
     };
 
     /**

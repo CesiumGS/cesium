@@ -186,27 +186,6 @@ define([
     };
 
     /**
-     * DOC_TBA
-     */
-    CesiumMath.angleBetween = function(vector1, vector2) {
-        var v1 = new Cartesian3(vector1.x, vector1.y, vector1.z);
-        var v2 = new Cartesian3(vector2.x, vector2.y, vector2.z);
-
-        var magnitude1 = v1.magnitude();
-        var magnitude2 = v2.magnitude();
-
-        if ((magnitude1 < CesiumMath.EPSILON12) || (magnitude2 < CesiumMath.EPSILON12)) {
-            return 0.0;
-        }
-
-        var cross = v1.cross(v2);
-        var sinTheta = cross.magnitude();
-        var cosTheta = v1.dot(v2);
-
-        return Math.abs(Math.atan2(sinTheta, cosTheta));
-    };
-
-    /**
      * Returns the hyperbolic sine of a {@code Number}.
      * The hyperbolic sine of <em>value</em> is defined to be
      * (<em>e<sup>x</sup>&nbsp;-&nbsp;e<sup>-x</sup></em>)/2.0

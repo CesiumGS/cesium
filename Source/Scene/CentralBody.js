@@ -718,13 +718,13 @@ define([
         var center = upperLeft.add(lowerRight).multiplyWithScalar(0.5);
         var centerScreen = mvp.multiplyWithVector(new Cartesian4(center.x, center.y, center.z, 1.0));
         centerScreen = centerScreen.multiplyWithScalar(1.0 / centerScreen.w);
-        var centerClip = clip.multiplyWithVector(centerScreen).getXYZ();
+        var centerClip = clip.multiplyWithVector(centerScreen);
 
         var surfaceScreen = mvp.multiplyWithVector(new Cartesian4(upperLeft.x, upperLeft.y, upperLeft.z, 1.0));
         surfaceScreen = surfaceScreen.multiplyWithScalar(1.0 / surfaceScreen.w);
-        var surfaceClip = clip.multiplyWithVector(surfaceScreen).getXYZ();
+        var surfaceClip = clip.multiplyWithVector(surfaceScreen);
 
-        var radius = Math.ceil(surfaceClip.subtract(centerClip).magnitude());
+        var radius = Math.ceil(Cartesian3.magnitude(surfaceClip.subtract(centerClip, surfaceClip)));
         var diameter = 2.0 * radius;
 
         return new Rectangle(Math.floor(centerClip.x) - radius,

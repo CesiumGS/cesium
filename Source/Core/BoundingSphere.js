@@ -196,7 +196,7 @@ define([
     BoundingSphere.planeSphereIntersect = function(sphere, plane) {
         var center = sphere.center;
         var radius = sphere.radius;
-        var distanceToPlane = plane.getXYZ().dot(center) + plane.w;
+        var distanceToPlane = Cartesian3.dot(plane, center) + plane.w;
 
         if (distanceToPlane < -radius) {
             // The center point is OUTSIDE of the frustum
