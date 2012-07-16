@@ -205,10 +205,9 @@ define([
      *
      * @memberof Ellipsoid
      *
-     * @param {Cartographic} position DOC_TB
-     * @return {Cartesian3} DOC_TBA
+     * @param position Input is Cartographic.
      */
-    Ellipsoid.prototype.toCartesian = function(position) {
+    Ellipsoid.prototype.cartographicToCartesian = function(position) {
         var n = this.geodeticSurfaceNormalc(position);
         var k = this.getRadiiSquared().multiplyComponents(n);
         var gamma = Math.sqrt((k.x * n.x) + (k.y * n.y) + (k.z * n.z));
@@ -222,62 +221,15 @@ define([
      *
      * @memberof Ellipsoid
      *
-     * Input is array of Cartographic.
-     */
-    Ellipsoid.prototype.toCartesians = function(positions) {
-        if (positions) {
-            var cartesians = [];
-
-            var length = positions.length;
-            for ( var i = 0; i < length; ++i) {
-                cartesians.push(this.toCartesian(positions[i]));
-            }
-
-            return cartesians;
-        }
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof Ellipsoid
-     *
-     * @param position Input is Cartographic.
-     */
-    Ellipsoid.prototype.cartographicDegreesToCartesian = function(position) {
-        if (position) {
-            var cartographic = new Cartographic(
-                    CesiumMath.toRadians(position.longitude),
-                    CesiumMath.toRadians(position.latitude),
-                    position.height || 0.0);
-            return this.toCartesian(cartographic);
-        }
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof Ellipsoid
-     *
      * @param positions Input is array of Cartographic.
      */
-    Ellipsoid.prototype.cartographicDegreesToCartesians = function(positions) {
-        if (positions) {
-            var cartesians = [];
-
-            var length = positions.length;
-            for ( var i = 0; i < length; ++i) {
-                var cartographic = positions[i];
-
-                cartesians.push(this.toCartesian(
-                        new Cartographic(
-                                CesiumMath.toRadians(cartographic.longitude),
-                                CesiumMath.toRadians(cartographic.latitude),
-                                cartographic.height || 0.0)));
-            }
-
-            return cartesians;
+    Ellipsoid.prototype.cartographicArrayToCartesianArray = function(positions) {
+        var length = positions.length;
+        var cartesians = new Array(length);
+        for ( var i = 0; i < length; ++i) {
+            cartesians[i] = this.cartographicToCartesian(positions[i]);
         }
+        return cartesians;
     };
 
     /**
@@ -288,7 +240,7 @@ define([
      * @param {Cartesian3} position DOC_TBA
      * @return {Cartographic} DOC_TBA
      */
-    Ellipsoid.prototype.toCartographic = function(position) {
+    Ellipsoid.prototype.cartesianToCartographic = function(position) {
         var pos = Cartesian3.clone(position);
         var n = this.geodeticSurfaceNormal(pos);
         var p = this.scaleToGeodeticSurface(pos);
@@ -302,15 +254,13 @@ define([
      *
      * @memberof Ellipsoid
      */
-    Ellipsoid.prototype.toCartographics = function(positions) {
+    Ellipsoid.prototype.cartesianArrayToCartographicArray = function(positions) {
         if (positions) {
             var cartographics = [];
-
             var length = positions.length;
             for ( var i = 0; i < length; ++i) {
-                cartographics.push(this.toCartographic(positions[i]));
+                cartographics.push(this.cartesianToCartographic(positions[i]));
             }
-
             return cartographics;
         }
     };

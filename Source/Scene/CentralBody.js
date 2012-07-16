@@ -1120,7 +1120,7 @@ define([
                                 CesiumMath.lerp(tile.extent.west, tile.extent.east, time.x),
                                 CesiumMath.lerp(tile.extent.south, tile.extent.north, time.y));
 
-                        var p = ellipsoid.toCartesian(lonLat).subtract(rtc);
+                        var p = ellipsoid.cartographicToCartesian(lonLat).subtract(rtc);
                         vertices.push(p.x, p.y, p.z);
 
                         var u = (lonLat.longitude - tile.extent.west) * lonScalar;
@@ -1365,11 +1365,11 @@ define([
     };
 
     CentralBody.prototype._computePoleQuad = function(sceneState, maxLat, maxGivenLat, viewProjMatrix, viewportTransformation) {
-        var pt1 = this._ellipsoid.toCartesian(new Cartographic(0.0, maxGivenLat));
-        var pt2 = this._ellipsoid.toCartesian(new Cartographic(Math.PI, maxGivenLat));
+        var pt1 = this._ellipsoid.cartographicToCartesian(new Cartographic(0.0, maxGivenLat));
+        var pt2 = this._ellipsoid.cartographicToCartesian(new Cartographic(Math.PI, maxGivenLat));
         var radius = pt1.subtract(pt2).magnitude() * 0.5;
 
-        var center = this._ellipsoid.toCartesian(new Cartographic(0.0, maxLat));
+        var center = this._ellipsoid.cartographicToCartesian(new Cartographic(0.0, maxLat));
 
         var right;
         var dir = sceneState.camera.direction;
@@ -1971,7 +1971,7 @@ define([
             }
         } else {
             // after the camera passes the minimum height, there is no ground atmosphere effect
-            var showAtmosphere = this._ellipsoid.toCartographic(cameraPosition).height >= this._minGroundFromAtmosphereHeight;
+            var showAtmosphere = this._ellipsoid.cartesianToCartographic(cameraPosition).height >= this._minGroundFromAtmosphereHeight;
             if (this.showGroundAtmosphere && showAtmosphere) {
                 this._sp = this._spGroundFromAtmosphere;
                 this._spPoles = this._spPolesGroundFromAtmosphere;

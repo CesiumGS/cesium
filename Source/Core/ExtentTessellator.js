@@ -77,7 +77,7 @@ define([
                 }
 
                 var cartPosition = new Cartographic(j, i, altitude);
-                var position = ellipsoid.toCartesian(cartPosition).subtract(relativeToCenter);
+                var position = ellipsoid.cartographicToCartesian(cartPosition).subtract(relativeToCenter);
                 vertices.push(position.x, position.y, position.z);
 
                 if (genTexCoords) {

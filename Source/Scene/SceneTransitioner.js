@@ -601,7 +601,7 @@ define([
         var startUp = camera.up;
 
         var maxRadii = this._ellipsoid.getMaximumRadius();
-        var endPos = this._ellipsoid.toCartesian(new Cartographic(0.0, 0.0, 10.0));
+        var endPos = this._ellipsoid.cartographicToCartesian(new Cartographic(0.0, 0.0, 10.0));
         endPos = endPos.normalize().multiplyWithScalar(2.0 * maxRadii);
         var endDir = Cartesian3.ZERO.subtract(endPos).normalize();
         var endRight = endDir.cross(Cartesian3.UNIT_Z).normalize();

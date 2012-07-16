@@ -55,14 +55,14 @@ define([
 
     ValueHolder.prototype.getValueCartographic = function() {
         if (typeof this.cartographic === 'undefined') {
-            this.cartographic = wgs84.toCartographics(this.cartesian);
+            this.cartographic = wgs84.cartesianArrayToCartographicArray(this.cartesian);
         }
         return this.cartographic;
     };
 
     ValueHolder.prototype.getValueCartesian = function() {
         if (typeof this.cartesian === 'undefined') {
-            this.cartesian = wgs84.toCartesians(this.cartographic);
+            this.cartesian = wgs84.cartographicArrayToCartesianArray(this.cartographic);
         }
         return this.cartesian;
     };

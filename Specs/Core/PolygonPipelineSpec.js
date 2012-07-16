@@ -64,7 +64,7 @@ defineSuite([
 
     it('EllipsoidTangentPlane projects a point', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var p = ellipsoid.toCartesian(Cartographic.ZERO);
+        var p = ellipsoid.cartographicToCartesian(Cartographic.ZERO);
 
         var tangentPlane = EllipsoidTangentPlane.create(ellipsoid, [p]);
         var projectedP = tangentPlane.projectPointsOntoPlane([p]);
@@ -89,7 +89,7 @@ defineSuite([
 
     it('projectPointsOntoPlane throws without positions', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var p = ellipsoid.toCartesian(Cartographic.ZERO);
+        var p = ellipsoid.cartographicToCartesian(Cartographic.ZERO);
         var tangentPlane = EllipsoidTangentPlane.create(ellipsoid, [p]);
 
         expect(function() {

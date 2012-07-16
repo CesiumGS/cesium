@@ -132,9 +132,9 @@ define([
      *   alpha : 1.0
      * };
      * polygon.setPositions([
-     *   ellipsoid.toCartesian(new Cartographic(...)),
-     *   ellipsoid.toCartesian(new Cartographic(...)),
-     *   ellipsoid.toCartesian(new Cartographic(...))
+     *   ellipsoid.cartographicToCartesian(new Cartographic(...)),
+     *   ellipsoid.cartographicToCartesian(new Cartographic(...)),
+     *   ellipsoid.cartographicToCartesian(new Cartographic(...))
      * ]);
      */
     var Polygon = function() {
@@ -296,9 +296,9 @@ define([
      *
      * @example
      * polygon.setPositions([
-     *   ellipsoid.toCartesian(new Cartographic(...)),
-     *   ellipsoid.toCartesian(new Cartographic(...)),
-     *   ellipsoid.toCartesian(new Cartographic(...))
+     *   ellipsoid.cartographicToCartesian(new Cartographic(...)),
+     *   ellipsoid.cartographicToCartesian(new Cartographic(...)),
+     *   ellipsoid.cartographicToCartesian(new Cartographic(...))
      * ], 10.0);
      */
     Polygon.prototype.setPositions = function(positions, height) {

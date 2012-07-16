@@ -103,7 +103,7 @@ define([
         }
         result = interval.cachedValue = property.getValue(time, interval.cachedValue);
         if (typeof result !== 'undefined') {
-            result = wgs84.toCartographic(result);
+            result = wgs84.cartesianToCartographic(result);
         }
         return result;
     };
@@ -140,7 +140,7 @@ define([
         }
         result = interval.cachedValue = property.getValue(time, interval.cachedValue);
         if (typeof result !== 'undefined') {
-            result = wgs84.toCartesian(result);
+            result = wgs84.cartographicToCartesian(result);
         }
         return result;
     };

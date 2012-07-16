@@ -20,6 +20,29 @@ defineSuite([
         expect(c.height).toEqual(3);
     });
 
+    it('fromDegrees sets expected default properties', function() {
+        var c = Cartographic.fromDegrees();
+        expect(c.longitude).toEqual(0);
+        expect(c.latitude).toEqual(0);
+        expect(c.height).toEqual(0);
+    });
+
+    it('fromDegrees works without a result parameter', function() {
+        var c = Cartographic.fromDegrees(90.0, 45.0, 100.0);
+        expect(c.longitude).toEqual(Math.PI/2);
+        expect(c.latitude).toEqual(Math.PI/4);
+        expect(c.height).toEqual(100);
+    });
+
+    it('fromDegrees works with a result parameter', function() {
+        var result = new Cartographic();
+        var c = Cartographic.fromDegrees(90.0, 45.0, 100.0, result);
+        expect(result).toBe(c);
+        expect(c.longitude).toEqual(Math.PI/2);
+        expect(c.latitude).toEqual(Math.PI/4);
+        expect(c.height).toEqual(100);
+    });
+
     it('clone without a result parameter', function() {
         var cartographic = new Cartographic(1.0, 2.0, 3.0);
         var result = cartographic.clone();

@@ -211,9 +211,9 @@ define([
         }
 
         var lla = new Cartographic(0.5 * (west + east), 0.5 * (north + south), 0.0);
-        var northVector = ellipsoid.toCartesian(new Cartographic(lla.longitude, north, 0.0));
-        var eastVector = ellipsoid.toCartesian(new Cartographic(east, lla.latitude, 0.0));
-        var centerVector = ellipsoid.toCartesian(lla);
+        var northVector = ellipsoid.cartographicToCartesian(new Cartographic(lla.longitude, north, 0.0));
+        var eastVector = ellipsoid.cartographicToCartesian(new Cartographic(east, lla.latitude, 0.0));
+        var centerVector = ellipsoid.cartographicToCartesian(lla);
         var invTanHalfPerspectiveAngle = 1.0 / Math.tan(0.5 * this.frustum.fovy);
         var screenViewDistanceX;
         var screenViewDistanceY;
@@ -231,7 +231,7 @@ define([
         }
         lla.height += Math.max(screenViewDistanceX, screenViewDistanceY);
 
-        this.position = ellipsoid.toCartesian(lla);
+        this.position = ellipsoid.cartographicToCartesian(lla);
         this.direction = Cartesian3.ZERO.subtract(centerVector).normalize();
         this.right = this.direction.cross(Cartesian3.UNIT_Z).normalize();
         this.up = this.right.cross(this.direction);
@@ -526,7 +526,7 @@ define([
             return undefined;
         }
 
-        return projection.getEllipsoid().toCartesian(cart);
+        return projection.getEllipsoid().cartographicToCartesian(cart);
     };
 
     /**
@@ -561,7 +561,7 @@ define([
             return undefined;
         }
 
-        position = projection.getEllipsoid().toCartesian(cart);
+        position = projection.getEllipsoid().cartographicToCartesian(cart);
         return position;
     };
 

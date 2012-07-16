@@ -12,7 +12,7 @@
             handler.setMouseAction(function(movement) {
                 var cartesian = scene.pickEllipsoid(movement.endPosition, ellipsoid);
                 if (cartesian) {
-                    var cartographic = ellipsoid.toCartographic(cartesian);
+                    var cartographic = ellipsoid.cartesianToCartographic(cartesian);
                     label.setShow(true);
                     label.setText('(' + Cesium.Math.toDegrees(cartographic.longitude).toFixed(2) + ', ' + Cesium.Math.toDegrees(cartographic.latitude).toFixed(2) + ')');
                     label.setPosition(cartesian);
@@ -62,7 +62,7 @@
                 var textureAtlas = scene.getContext().createTextureAtlas({image : image});
                 billboards.setTextureAtlas(textureAtlas);
                 billboard = billboards.add({
-                    position : ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic(-75.59777, 40.03883)),
+                    position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
                     imageIndex : 0
                 });
                 primitives.add(billboards);
@@ -156,7 +156,7 @@
                 var textureAtlas = scene.getContext().createTextureAtlas({image : image});
                 billboards.setTextureAtlas(textureAtlas);
                 billboard = billboards.add({
-                    position : ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic(-75.59777, 40.03883)),
+                    position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
                     imageIndex : 0
                 });
                 billboard.highlighted = true;
@@ -255,8 +255,8 @@
             // Setup code
             polygon = new Cesium.Polygon(undefined);
             polygon.setPositions(Cesium.Shapes.computeCircleBoundary(
-                ellipsoid, ellipsoid.cartographicDegreesToCartesian(
-                    new Cesium.Cartographic(-75.59777, 40.03883)), 800000.0));
+                ellipsoid, ellipsoid.cartographicToCartesian(
+                        Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)), 800000.0));
             polygon.material = new Cesium.CheckerboardMaterial(undefined);
             polygon.material.lightColor = {
                 red : outside.lightColorRed,
@@ -307,7 +307,7 @@
             );
 
             // Setup code
-            var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic(-90.0, 0.0)));
+            var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
             modelMatrix = modelMatrix.multiplyWithMatrix(Cesium.Matrix4.createTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
 
             sensors = new Cesium.SensorVolumeCollection(undefined);

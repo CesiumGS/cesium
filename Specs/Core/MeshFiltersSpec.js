@@ -412,8 +412,8 @@ defineSuite([
 
         var ellipsoid = Ellipsoid.WGS84;
         var projection = new EquidistantCylindricalProjection();
-        var projectedP1 = projection.project(ellipsoid.toCartographic(p1));
-        var projectedP2 = projection.project(ellipsoid.toCartographic(p2));
+        var projectedP1 = projection.project(ellipsoid.cartesianToCartographic(p1));
+        var projectedP2 = projection.project(ellipsoid.cartesianToCartographic(p2));
 
         expect(mesh.attributes.position2D.values[0]).toEqual(projectedP1.x);
         expect(mesh.attributes.position2D.values[1]).toEqual(projectedP1.y);

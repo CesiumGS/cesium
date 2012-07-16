@@ -203,7 +203,7 @@ defineSuite([
 
         var windowCoord = new Cartesian2(canvas.clientWidth * 0.5, canvas.clientHeight * 0.5);
         var p = camera.pickEllipsoid(windowCoord, ellipsoid);
-        var c = ellipsoid.toCartographic(p);
+        var c = ellipsoid.cartesianToCartographic(p);
         expect(c.equals(new Cartographic(0.0, 0.0, 0.0))).toEqual(true);
 
         p = camera.pickEllipsoid(Cartesian2.ZERO, ellipsoid);
@@ -242,7 +242,7 @@ defineSuite([
 
         var windowCoord = new Cartesian2(canvas.clientWidth * 0.5, canvas.clientHeight * 0.5);
         var p = camera.pickMap2D(windowCoord, projection);
-        var c = ellipsoid.toCartographic(p);
+        var c = ellipsoid.cartesianToCartographic(p);
         expect(c.equals(new Cartographic(0.0, 0.0, 0.0))).toEqual(true);
 
         p = camera.pickMap2D(Cartesian2.ZERO, projection);
@@ -285,7 +285,7 @@ defineSuite([
 
         var windowCoord = new Cartesian2(canvas.clientWidth * 0.5, canvas.clientHeight * 0.5);
         var p = camera.pickMapColumbusView(windowCoord, projection);
-        var c = ellipsoid.toCartographic(p);
+        var c = ellipsoid.cartesianToCartographic(p);
         expect(c.equals(new Cartographic(0.0, 0.0, 0.0))).toEqual(true);
 
         p = camera.pickMapColumbusView(Cartesian2.ZERO, projection);
