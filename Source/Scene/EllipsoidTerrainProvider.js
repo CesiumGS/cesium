@@ -104,59 +104,6 @@ define([
     };
 
     /**
-     * Populates a {@link Tile} with ellipsoid-mapped surface geometry from this
-     * tile provider.
-     *
-     * @memberof EllipsoidTerrainProvider
-     *
-     * @param {Context} context The rendered context to use to create renderer resources.
-     * @param {Tile} tile The tile to populate with surface geometry.
-     * @returns {Boolean|Promise} A boolean value indicating whether the tile was successfully
-     * populated with geometry, or a promise for such a value in the future.
-     */
-    EllipsoidTerrainProvider.prototype.createTileEllipsoidGeometry = function(context, tile) {
-        var tilingScheme = this.tilingScheme;
-        var ellipsoid = tilingScheme.ellipsoid;
-        var extent = tile.extent;
-
-        var granularity = computeDesiredGranularity(tilingScheme, tile);
-
-        // Determine the center for RTC rendering.
-//        var center = ellipsoid.toCartesian(new Cartographic3(
-//                (extent.east - extent.west) / 2.0,
-//                (extent.north - extent.south) / 2.0,
-//                0.0));
-        var center = tile.get3DBoundingSphere().center;
-
-        // Create vertex and index buffers for this extent.
-        // TODO: do this in a web worker?
-        var buffers = ExtentTessellator.computeBuffers({
-            ellipsoid : ellipsoid,
-            extent : extent,
-            granularity : granularity,
-            generateTextureCoords : true,
-            interleave : true,
-            relativeToCenter : center
-        });
-        TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers);
-
-        // TODO: does each tile really need its own collection of uniforms?
-        /*tile._drawUniforms = {
-                u_center3D : function() {
-                    return center;
-                },
-                u_center2D : function() {
-                    return Cartesian2.ZERO;
-                },
-                u_modifiedModelView : function() {
-                    return tile.modelView;
-                }
-            };*/
-
-        return true;
-    };
-
-    /**
      * Populates a {@link Tile} with plane-mapped surface geometry from this
      * tile provider.
      *

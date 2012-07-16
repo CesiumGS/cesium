@@ -1,5 +1,7 @@
 /*global define*/
 define([
+        './defaultValue',
+        './getImagePixels',
         './DeveloperError',
         './Math',
         './Ellipsoid',
@@ -7,9 +9,10 @@ define([
         './Cartesian3',
         './Cartographic3',
         './ComponentDatatype',
-        './PrimitiveType',
-        './defaultValue'
+        './PrimitiveType'
     ], function(
+        defaultValue,
+        getImagePixels,
         DeveloperError,
         CesiumMath,
         Ellipsoid,
@@ -17,8 +20,7 @@ define([
         Cartesian3,
         Cartographic3,
         ComponentDatatype,
-        PrimitiveType,
-        defaultValue) {
+        PrimitiveType) {
     "use strict";
 
     /**
@@ -32,30 +34,49 @@ define([
      */
     var HeightmapTessellator = {};
 
-    HeightmapTessellator._computeVertices = function(description) {
-        var desc = description || {};
+    /**
+     * Compute vertices from a heightmap image.  This function is lower-level than the other
+     * functions on this class.
+     *
+     * @param description.heightmap The heightmap image, as a pixel array.
+     * @param {Number} description.heightScale DOC_TBA
+     * @param {Number} description.heightOffset DOC_TBA
+     * @param {Number} description.bytesPerHeight DOC_TBA
+     * @param {Number} description.strideBytes DOC_TBA
+     * @param {Number} description.width The width of the heightmap image.
+     * @param {Number} description.height The height of the heightmap image.
+     * @param {Extent} description.extent A cartographic extent with north, south, east and west properties in radians.
+     * @param {Boolean} description.generateTextureCoordinates Whether to generate texture coordinates.
+     * @param {Boolean} description.interleaveTextureCoordinates Whether to interleave the texture coordinates into the vertex array.
+     * @param {Cartesian3} description.relativetoCenter The positions will be computed as <code>worldPosition.subtract(relativeToCenter)</code>.
+     * @param {Cartesian3} description.radiiSquared The radii squared of the ellipsoid to use.
+     * @param {Array|Float32Array} description.vertices The array to use to store computed vertices.
+     * @param {Array|Float32Array} description.textureCoordinates The array to use to store computed texture coordinates, unless interleaved.
+     * @param {Array|Float32Array} [description.indices] The array to use to store computed indices.  If undefined, indices will be not computed.
+     */
+    HeightmapTessellator.computeVertices = function(description) {
+        description = defaultValue(description, {});
 
-        var heightmap = desc.heightmap;
-        var heightScale = desc.heightScale;
-        var heightOffset = desc.heightOffset;
-        var bytesPerHeight = desc.bytesPerHeight;
-        var strideBytes = desc.strideBytes;
-        var width = desc.width;
-        var height = desc.height;
+        var heightmap = description.heightmap;
+        var heightScale = description.heightScale;
+        var heightOffset = description.heightOffset;
+        var bytesPerHeight = description.bytesPerHeight;
+        var strideBytes = description.strideBytes;
+        var width = description.width;
+        var height = description.height;
 
-        var extent = desc.extent.clone();
-        var ellipsoid = desc.ellipsoid;
+        var extent = description.extent;
         var granularityX = (extent.east - extent.west) / width;
         var granularityY = (extent.north - extent.south) / height;
-        var genTexCoords = desc.generateTextureCoords;
-        var interleave = desc.interleave;
-        var relativeToCenter = desc.relativeToCenter;
+        var generateTextureCoordinates = description.generateTextureCoordinates;
+        var interleaveTextureCoordinates = description.interleaveTextureCoordinates;
+        var relativeToCenter = description.relativeToCenter;
 
-        var vertices = desc.vertices;
-        var texCoords = desc.texCoords;
-        var indices = desc.indices;
+        var vertices = description.vertices;
+        var textureCoordinates = description.textureCoordinates;
+        var indices = description.indices;
 
-        var radiiSquared = ellipsoid.getRadiiSquared();
+        var radiiSquared = description.radiiSquared;
         var radiiSquaredX = radiiSquared.x;
         var radiiSquaredY = radiiSquared.y;
         var radiiSquaredZ = radiiSquared.z;
@@ -64,7 +85,10 @@ define([
         var sin = Math.sin;
         var sqrt = Math.sqrt;
 
-        for (var row = 0; row < height; ++row) {
+        var vertexArrayIndex = 0;
+        var textureCoordinatesIndex = 0;
+
+        for ( var row = 0; row < height; ++row) {
             var latitude = extent.north - granularityY * row;
             var cosLatitude = cos(latitude);
             var nZ = sin(latitude);
@@ -72,16 +96,18 @@ define([
 
             var v = (height - row - 1) / (height - 1);
 
-            for (var col = 0; col < width; ++col) {
+            for ( var col = 0; col < width; ++col) {
                 var longitude = extent.west + granularityX * col;
 
                 var terrainOffset = row * (width * strideBytes) + col * strideBytes;
-                var heightSample = (heightmap[terrainOffset] << 16) +
-                             (heightmap[terrainOffset + 1] << 8) +
-                             heightmap[terrainOffset + 2];
+                var heightSample = heightmap[terrainOffset] << 16;
+                heightSample += heightmap[terrainOffset + 1] << 8;
+                heightSample += heightmap[terrainOffset + 2];
+
                 if (bytesPerHeight === 4) {
                     heightSample = (heightSample << 8) + heightmap[terrainOffset + 3];
                 }
+
                 heightSample = heightSample / heightScale - heightOffset;
 
                 var nX = cosLatitude * cos(longitude);
@@ -96,51 +122,60 @@ define([
                 var rSurfaceY = kY / gamma;
                 var rSurfaceZ = kZ / gamma;
 
-                vertices.push(rSurfaceX + nX * heightSample - relativeToCenter.x);
-                vertices.push(rSurfaceY + nY * heightSample - relativeToCenter.y);
-                vertices.push(rSurfaceZ + nZ * heightSample - relativeToCenter.z);
+                vertices[vertexArrayIndex++] = rSurfaceX + nX * heightSample - relativeToCenter.x;
+                vertices[vertexArrayIndex++] = rSurfaceY + nY * heightSample - relativeToCenter.y;
+                vertices[vertexArrayIndex++] = rSurfaceZ + nZ * heightSample - relativeToCenter.z;
 
-                if (genTexCoords) {
+                if (generateTextureCoordinates) {
                     var u = col / (width - 1);
-                    if (interleave) {
-                        vertices.push(u);
-                        vertices.push(v);
+                    if (interleaveTextureCoordinates) {
+                        vertices[vertexArrayIndex++] = u;
+                        vertices[vertexArrayIndex++] = v;
                     } else {
-                        texCoords.push(u);
-                        texCoords.push(v);
+                        textureCoordinates[textureCoordinatesIndex++] = u;
+                        textureCoordinates[textureCoordinatesIndex++] = v;
                     }
                 }
             }
         }
 
-        var index = 0;
-        for (var i = 0; i < height - 1; ++i) {
-            for (var j = 0; j < width - 1; ++j) {
-                var upperLeft = index;
-                var lowerLeft = upperLeft + width;
-                var lowerRight = lowerLeft + 1;
-                var upperRight = upperLeft + 1;
+        if (typeof indices !== 'undefined') {
+            var index = 0;
+            var indicesIndex = 0;
+            for ( var i = 0; i < height - 1; ++i) {
+                for ( var j = 0; j < width - 1; ++j) {
+                    var upperLeft = index;
+                    var lowerLeft = upperLeft + width;
+                    var lowerRight = lowerLeft + 1;
+                    var upperRight = upperLeft + 1;
 
-                indices.push(upperLeft, lowerLeft, upperRight);
-                indices.push(upperRight, lowerLeft, lowerRight);
+                    indices[indicesIndex++] = upperLeft;
+                    indices[indicesIndex++] = lowerLeft;
+                    indices[indicesIndex++] = upperRight;
+                    indices[indicesIndex++] = upperRight;
+                    indices[indicesIndex++] = lowerLeft;
+                    indices[indicesIndex++] = lowerRight;
 
+                    ++index;
+                }
                 ++index;
             }
-            ++index;
         }
     };
 
     /**
      * Creates a mesh from a heightmap.
      *
-     * @param {Ellipsoid} description.ellipsoid The ellipsoid on which the extent lies. Defaults to a WGS84 ellipsoid.
+     * @param {Image} description.image The heightmap image.
+     * @param {Number} description.heightScale DOC_TBA
+     * @param {Number} description.heightOffset DOC_TBA
+     * @param {Number} description.bytesPerHeight DOC_TBA
+     * @param {Number} description.strideBytes DOC_TBA
      * @param {Extent} description.extent A cartographic extent with north, south, east and west properties in radians.
-     * @param {Number} description.granularity The distance, in radians, between each latitude and longitude.
-     * Determines the number of positions in the buffer. Defaults to 0.1.
-     * @param {Number} description.altitude The height from the surface of the ellipsoid. Defaults to 0.
-     * @param {Boolean} description.generateTextureCoords A truthy value will cause texture coordinates to be generated.
-     * @param {Cartesian3} description.relativetoCenter If this parameter is provided, the positions will be
-     * computed as <code>worldPosition.subtract(relativeToCenter)</code>. Defaults to (0, 0, 0).
+     * @param {Boolean} description.generateTextureCoordinates Whether to generate texture coordinates.
+     * @param {Ellipsoid} [description.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the extent lies.
+     * @param {Cartesian3} [description.relativetoCenter=Cartesian3.ZERO] The positions will be computed as <code>worldPosition.subtract(relativeToCenter)</code>.
+     * @param {Number} [description.granularity=0.1] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      *
      * @exception {DeveloperError} <code>description.extent</code> is required and must have north, south, east and west attributes.
      * @exception {DeveloperError} <code>description.extent.north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
@@ -149,10 +184,8 @@ define([
      * @exception {DeveloperError} <code>description.extent.west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
      * @exception {DeveloperError} <code>description.extent.north</code> must be greater than <code>extent.south</code>.
      * @exception {DeveloperError} <code>description.extent.east</code> must be greater than <code>extent.west</code>.
-     * @exception {DeveloperError} <code>description.context</code> is required.
      *
-     * @return {Object} A mesh containing attributes for positions, possibly texture coordinates and indices
-     * from the extent for creating a vertex array.
+     * @return {Object} A mesh containing attributes for positions, possibly texture coordinates and indices from the extent for creating a vertex array.
      *
      * @see Context#createVertexArrayFromMesh
      * @see MeshFilters#createAttributeIndices
@@ -179,55 +212,62 @@ define([
      * });
      */
     HeightmapTessellator.compute = function(description) {
-        var desc = description || {};
+        description = defaultValue(description, {});
 
-        Extent.validate(desc.extent);
+        var extent = description.extent;
+        Extent.validate(extent);
 
-        desc.ellipsoid = defaultValue(desc.ellipsoid, Ellipsoid.WGS84);
-        desc.relativeToCenter = (desc.relativeToCenter) ? Cartesian3.clone(desc.relativeToCenter) : Cartesian3.ZERO;
-        desc.boundaryWidth = desc.boundaryWidth || 0; // NOTE: may want to expose in the future.
-        desc.interleave = false;
-        desc.positionName = desc.positionName || 'position';
-        desc.textureCoordName = desc.textureCoordName || 'textureCoordinates';
+        var ellipsoid = defaultValue(description.ellipsoid, Ellipsoid.WGS84);
+        description.radiiSquared = ellipsoid.getRadiiSquared();
+        description.relativeToCenter = defaultValue(description.relativeToCenter, Cartesian3.ZERO);
+
+        var image = description.image;
+        description.heightmap = getImagePixels(image);
+        description.width = image.width;
+        description.height = image.height;
 
         var vertices = [];
         var indices = [];
-        var texCoords = [];
+        var textureCoordinates = [];
 
-        desc.vertices = vertices;
-        desc.texCoords = texCoords;
-        desc.indices = indices;
-        desc.boundaryExtent = new Extent(
-            desc.extent.west - desc.granularity * desc.boundaryWidth,
-            desc.extent.south - desc.granularity * desc.boundaryWidth,
-            desc.extent.east + desc.granularity * desc.boundaryWidth,
-            desc.extent.north + desc.granularity * desc.boundaryWidth
-        );
+        description.interleaveTextureCoordinates = false;
+        description.vertices = vertices;
+        description.textureCoordinates = textureCoordinates;
+        description.indices = indices;
 
-        HeightmapTessellator._computeVertices(desc);
+        var granularity = defaultValue(description.granularity, 0.1);
+        var boundaryWidth = defaultValue(description.boundaryWidth, 0); // NOTE: may want to expose in the future.
 
-        var mesh = {};
-        mesh.attributes = {};
-        mesh.indexLists = [];
+        description.boundaryExtent = new Extent(extent.west - granularity * boundaryWidth,
+                                                extent.south - granularity * boundaryWidth,
+                                                extent.east + granularity * boundaryWidth,
+                                                extent.north + granularity * boundaryWidth);
 
-        mesh.attributes[desc.positionName] = {
+        HeightmapTessellator.computeVertices(description);
+
+        var mesh = {
+            attributes : {},
+            indexLists : [{
+                primitiveType : PrimitiveType.TRIANGLES,
+                values : indices
+            }]
+        };
+
+        var positionName = defaultValue(description.positionName, 'position');
+        mesh.attributes[positionName] = {
             componentDatatype : ComponentDatatype.FLOAT,
             componentsPerAttribute : 3,
             values : vertices
         };
 
-        if (desc.generateTextureCoords) {
-            mesh.attributes[desc.textureCoordName] = {
+        if (description.generateTextureCoordinates) {
+            var textureCoordinatesName = defaultValue(description.textureCoordinatesName, 'textureCoordinates');
+            mesh.attributes[textureCoordinatesName] = {
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 2,
-                values : texCoords
+                values : textureCoordinates
             };
         }
-
-        mesh.indexLists.push({
-            primitiveType : PrimitiveType.TRIANGLES,
-            values : indices
-        });
 
         return mesh;
     };
@@ -239,7 +279,6 @@ define([
      * @param {Extent} description.extent A cartographic extent with north, south, east and west properties in radians.
      * @param {Number} description.granularity The distance, in radians, between each latitude and longitude.
      * Determines the number of positions in the buffer. Defaults to 0.1.
-     * @param {Number} description.altitude The height from the surface of the ellipsoid. Defaults to 0.
      * @param {Boolean} description.generateTextureCoords A truthy value will cause texture coordinates to be generated.
      * @param {Boolean} description.interleave If both this parameter and <code>generateTextureCoords</code> are truthy,
      * the positions and texture coordinates will be interleaved in a single buffer.

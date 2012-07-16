@@ -1,27 +1,13 @@
 /*global define*/
 define([
         '../Core/loadImage',
+        '../Core/getImagePixels',
         '../ThirdParty/when'
     ], function(
         loadImage,
+        getImagePixels,
         when) {
     "use strict";
-
-    function imageToPixels(image, canvas) {
-        if (typeof canvas === 'undefined') {
-            canvas = document.createElement('canvas');
-        }
-
-        var width = image.width;
-        var height = image.height;
-        canvas.width = width;
-        canvas.height = height;
-
-        var context = canvas.getContext('2d');
-        context.drawImage(image, 0, 0);
-
-        return context.getImageData(0, 0, width, height).data;
-    }
 
     /**
      * A policy for discarding tile images that match a known image containing a
@@ -31,9 +17,8 @@ define([
      * @param {Array} pixelsToCheck An array of Cartesian2 pixel positions to compare against the missing image.
      */
     function DiscardMissingTileImagePolicy(missingImageUrl, pixelsToCheck) {
-        this._missingImagePixels = when(loadImage(missingImageUrl), imageToPixels);
+        this._missingImagePixels = when(loadImage(missingImageUrl), getImagePixels);
         this._pixelsToCheck = pixelsToCheck;
-        this._canvas = document.createElement('canvas');
     }
 
     /**
@@ -45,12 +30,11 @@ define([
      * @return a promise that will resolve to true if the tile should be discarded.
      */
     DiscardMissingTileImagePolicy.prototype.shouldDiscardTileImage = function(image) {
-        var canvas = this._canvas;
         var pixelsToCheck = this._pixelsToCheck;
         return when.all([this._missingImagePixels, image], function(values) {
             var missingImagePixels = values[0];
             var image = values[1];
-            var pixels = imageToPixels(image, canvas);
+            var pixels = getImagePixels(image);
             var width = image.width;
 
             for ( var i = 0, len = pixelsToCheck.length; i < len; i++) {

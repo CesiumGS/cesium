@@ -38,10 +38,10 @@ define([
      * @memberof TerrainProvider
      */
     TerrainProvider.attributeIndices = {
-            position3D : 0,
-            textureCoordinates : 1,
-            position2D : 2
-        };
+        position3D : 0,
+        textureCoordinates : 1,
+        position2D : 2
+    };
 
     var regularGridIndexArrays = [];
 
@@ -57,8 +57,8 @@ define([
 
             var index = 0;
             var indicesIndex = 0;
-            for (var i = 0; i < height - 1; ++i) {
-                for (var j = 0; j < width - 1; ++j) {
+            for ( var i = 0; i < height - 1; ++i) {
+                for ( var j = 0; j < width - 1; ++j) {
                     var upperLeft = index;
                     var lowerLeft = upperLeft + width;
                     var lowerRight = lowerLeft + 1;
@@ -146,48 +146,12 @@ define([
         tile.vertexArray = context.createVertexArray(attributes, indexBuffer);
     };
 
-    /**
-     * Populates a {@link Tile} with ellipsoid-mapped surface geometry from this
-     * tile provider.
-     *
-     * @memberof TerrainProvider
-     *
-     * @param {Context} context The rendered context to use to create renderer resources.
-     * @param {Tile} tile The tile to populate with surface geometry.
-     * @returns {Boolean|Promise} A boolean value indicating whether the tile was successfully
-     * populated with geometry, or a promise for such a value in the future.
-     */
-    TerrainProvider.prototype.createTileEllipsoidGeometry = function(context, tile) {
-        // Is there a limit on 'level' of the tile that can be passed in?  It seems
-        // natural to have a maxLevel, but this would cause problems if we have hi-res imagery
-        // and low-res terrain.  So I'd say we can continue to refine terrain tiles arbitrarily
-        // until both the terrain and all the imagery layers have no more detail to give.  In that
-        // case, this method is expected to be able to produce geometry for an arbitrarily-deep
-        // tile tree.
-        throw new DeveloperError('This type should not be instantiated directly.');
-    };
-
-    /**
-     * Populates a {@link Tile} with plane-mapped surface geometry from this
-     * tile provider.
-     *
-     * @memberof TerrainProvider
-     *
-     * @param {Context} context The rendered context to use to create renderer resources.
-     * @param {Tile} tile The tile to populate with surface geometry.
-     * @param {Projection} projection The map projection to use.
-     * @returns {Boolean|Promise} A boolean value indicating whether the tile was successfully
-     * populated with geometry, or a promise for such a value in the future.
-     */
-    TerrainProvider.prototype.createTilePlaneGeometry = function(context, tile, projection) {
-        // Is there a limit on 'level' of the tile that can be passed in?  It seems
-        // natural to have a maxLevel, but this would cause problems if we have hi-res imagery
-        // and low-res terrain.  So I'd say we can continue to refine terrain tiles arbitrarily
-        // until both the terrain and all the imagery layers have no more detail to give.  In that
-        // case, this method is expected to be able to produce geometry for an arbitrarily-deep
-        // tile tree.
-        throw new DeveloperError('This type should not be instantiated directly.');
-    };
+    // Is there a limit on 'level' of the tile that can be passed in?  It seems
+    // natural to have a maxLevel, but this would cause problems if we have hi-res imagery
+    // and low-res terrain.  So I'd say we can continue to refine terrain tiles arbitrarily
+    // until both the terrain and all the imagery layers have no more detail to give.  In that
+    // case, this method is expected to be able to produce geometry for an arbitrarily-deep
+    // tile tree.
 
     return TerrainProvider;
 });
