@@ -55,7 +55,7 @@
         };
     };
 
-    Sandbox.CompositeMaterial = function (scene, ellipsoid, primitives) {
+    Sandbox.Material = function (scene, ellipsoid, primitives) {
         this.code = function() {
             var polygon = new Cesium.Polygon(undefined);
             polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
@@ -71,53 +71,54 @@
                 alpha: 1.0
             };
 
-            var helperComposite = new Cesium.CompositeMaterial(scene.getContext(), {
-                'id' : 'CompositeMaterialReflection',
-                'textures' : {
-                    'palm_tree_cube_map' : {
-                        'positiveX' : '../../Images/PalmTreesCubeMap/posx.jpg',
-                        'negativeX' : '../../Images/PalmTreesCubeMap/negx.jpg',
-                        'positiveY' : '../../Images/PalmTreesCubeMap/negy.jpg',
-                        'negativeY' : '../../Images/PalmTreesCubeMap/posy.jpg',
-                        'positiveZ' : '../../Images/PalmTreesCubeMap/posz.jpg',
-                        'negativeZ' : '../../Images/PalmTreesCubeMap/negz.jpg'
-                    }
-                },
-                'materials' : {
-                    'd' : {
-                        'type' : 'ReflectionMaterial',
-                        'cubeMap' : 'palm_tree_cube_map'
+            var helper = new Cesium.Material({
+                'context' : scene.getContext(),
+                'template' : {
+                    'id' : 'MaterialReflection',
+                    'textures' : {
+                        'palm_tree_cube_map' : {
+                            'positiveX' : '../../Images/PalmTreesCubeMap/posx.jpg',
+                            'negativeX' : '../../Images/PalmTreesCubeMap/negx.jpg',
+                            'positiveY' : '../../Images/PalmTreesCubeMap/negy.jpg',
+                            'negativeY' : '../../Images/PalmTreesCubeMap/posy.jpg',
+                            'positiveZ' : '../../Images/PalmTreesCubeMap/posz.jpg',
+                            'negativeZ' : '../../Images/PalmTreesCubeMap/negz.jpg'
+                        }
                     },
-                    'dd' : {
-                        'type' : 'RefractionMaterial',
-                        'cubeMap' : 'palm_tree_cube_map'
+                    'materials' : {
+                        'd' : {
+                            'type' : 'ReflectionMaterial',
+                            'cubeMap' : 'palm_tree_cube_map'
+                        },
+                        'dd' : {
+                            'type' : 'RefractionMaterial',
+                            'cubeMap' : 'palm_tree_cube_map'
+                        }
+                    },
+                    'components' : {
+                        'diffuse' : '(d.diffuse + dd.diffuse)/2.0'
                     }
-                },
-                'components' : {
-                    'diffuse' : '(d.diffuse + dd.diffuse)/2.0'
                 }
             });
-            polygon.material = new Cesium.CompositeMaterial(scene.getContext(), {
-                'textures' : {
-                    'cesium_logo_texture' : '../../Images/Cesium_Logo_Color.jpg',
-                    'alpha_map_texture' : '../../Images/alpha_map.png'
-                },
-                'materials' : {
-                    'reflection' : {
-                        'type' : 'CompositeMaterialReflection'
+            polygon.material = new Cesium.Material({
+                'context' : scene.getContext(),
+                'template' : {
+                    'textures' : {
+                        'cesium_logo_texture' : '../../Images/Cesium_Logo_Color.jpg',
+                        'alpha_map_texture' : '../../Images/alpha_map.png'
                     },
-                    'diffuseMap' : {
-                        'type' : 'DiffuseMapMaterial',
-                        'texture' : 'cesium_logo_texture'
+                    'materials' : {
+                        'reflection' : {
+                            'type' : 'MaterialReflection'
+                        },
+                        'diffuseMap' : {
+                            'type' : 'DiffuseMapMaterial',
+                            'texture' : 'cesium_logo_texture'
+                        }
                     },
-                    'blend_map' : {
-                        'type' : 'BlendMap',
-                        'texture' : 'alpha_map_texture'
+                    'components' : {
+                        'diffuse' : '(reflection.diffuse + diffuseMap.diffuse) / 2.0'
                     }
-                },
-                'components' : {
-                    'diffuse' : '(reflection.diffuse + diffuseMap.diffuse) / 2.0',
-                    'specular' : 'blend_map / 100.0'
                 }
             });
 
@@ -141,15 +142,116 @@
                 alpha: 1.0
             };
 
-            var image = new Image();
-            image.onload = function() {
-                polygon.material = new Cesium.DiffuseMapMaterial({
-                    texture : scene.getContext().createTexture2D({
-                        source : image
-                    })
-                });
-            };
-            image.src = '../../Images/Cesium_Logo_Color.jpg';
+            polygon.material = new Cesium.Material({
+               'context' : scene.getContext(),
+               'template' : {
+                   'id' : 'DiffuseMapMaterial',
+                   'materials' : {
+                       'one' : {
+                           'id' : 'DiffuseMapMaterial',
+                           'uniforms' : {
+                               'u_repeat' : {
+                                   'x' : 2,
+                                   'y' : 3
+                               }
+                           }
+                       }
+                   }
+               }
+            });
+//            polygon.material = new Cesium.Material({
+//                'context' : scene.getContext(),
+//                'template' : {
+//                    'id' : 'DiffuseMapMaterial',
+//                    'textures' : {
+//                        'f' : '../../Images/Cesium_Logo_Color.jpg'
+//                    },
+//                    'uniforms' : {
+//                        'u_repeat' : {
+//                            'x' : 1,
+//                            'y' : 2
+//                        }
+//                    },
+//                    'components' : {
+//                        'diffuse' : 'texture2D(f, fract(u_repeat * materialInput.st)).rgb'
+//                    }
+//                    //'sourcePath' : 'DiffuseMapMaterial'
+//                    //'source' : 'uniform sampler2D u_texture;\n' +
+//                    //           'uniform vec2 u_repeat;\n' +
+//                    //           'agi_material agi_getMaterial(agi_materialInput materialInput)\n' +
+//                    //           '{\n' +
+//                    //           'agi_material material = agi_getDefaultMaterial(materialInput);\n' +
+//                    //           'material.diffuse = texture2D(u_texture, fract(u_repeat * materialInput.st)).rgb;\n' +
+//                    //           'return material;\n' +
+//                    //           '}\n'
+//                }
+//            });
+
+//            var otherMaterial = new Cesium.Material({
+//                'context' : scene.getContext(),
+//                'template' : {
+//                    'id' : 'RandomMaterial',
+//                    'textures' : {
+//                        'palmTreeCubeMap' : {
+//                            'positiveX' : '../../Images/PalmTreesCubeMap/posx.jpg',
+//                            'negativeX' : '../../Images/PalmTreesCubeMap/negx.jpg',
+//                            'positiveY' : '../../Images/PalmTreesCubeMap/negy.jpg',
+//                            'negativeY' : '../../Images/PalmTreesCubeMap/posy.jpg',
+//                            'positiveZ' : '../../Images/PalmTreesCubeMap/posz.jpg',
+//                            'negativeZ' : '../../Images/PalmTreesCubeMap/negz.jpg'
+//                        },
+//                        'cesiumLogoTexture' : '../../Images/Cesium_Logo_Color.jpg',
+//                        'alphaMapTexture' : '../../Images/alpha_map.png'
+//                    },
+//                    'materials' : {
+//                        'one' : {
+//                            'id' : 'DiffuseMapMaterial',
+//                            'u_texture' : 'alphaMapTexture',
+//                            'u_repeat' : {
+//                                'x' : 2,
+//                                'y' : 1
+//                            }
+//                        },
+//                        'two' : {
+//                            'id' : 'DiffuseMapMaterial',
+//                            'u_texture' : 'cesiumLogoTexture'
+//                        }
+//                    },
+//                    'uniforms' : {
+//                        'thing' : {
+//                            'type' : 'float',
+//                            'value' : 0.5
+//                        }
+//                    },
+//                    'components' : {
+//                        'diffuse' : 'thing * (one.diffuse + two.diffuse) / 2.0',
+//                        'specular' : 'one.diffuse.r / 100.0'
+//                    }
+//                }
+//            });
+//
+//            polygon.material = new Cesium.Material({
+//                'context' : scene.getContext(),
+//                'template' : {
+//                    'textures' : {
+//                        'cesiumLogoTexture' : '../../Images/Cesium_Logo_Color.jpg'
+//                    },
+//                    'materials' : {
+//                        'one' : {
+//                            'id' : 'RandomMaterial'
+//                        }
+//                    },
+//                    'uniforms' : {
+//                        'thing' : {
+//                            'type' : 'sampler2D',
+//                            'value' : 'cesiumLogoTexture'
+//                        }
+//                    },
+//                    'components' : {
+//                        'diffuse' : 'texture2D(thing, materialInput.st).bgr * one.diffuse'
+//                    }
+//                }
+//            });
 
             primitives.add(polygon);
         };
@@ -260,26 +362,29 @@
                 alpha: 1.0
             };
 
-            polygon.material = new Cesium.CompositeMaterial(scene.getContext(), {
-                'textures' : {
-                    'bumpMapTexture' : '../../Images/earthbump1k.jpg',
-                    'blendMapTexture' : '../../Images/earthspec1k.jpg'
-                },
-                'materials' : {
-                    'bumpMap' : {
-                        'type' : 'BumpMapMaterial',
-                        'texture' : 'bumpMapTexture'
+            polygon.material = new Cesium.Material({
+                'context' : scene.getContext(),
+                'template' : {
+                    'textures' : {
+                        'bumpMapTexture' : '../../Images/earthbump1k.jpg',
+                        'blendMapTexture' : '../../Images/earthspec1k.jpg'
                     },
-                    'blendMap' : {
-                        'type' : 'BlendMap',
-                        'texture' : 'blendMapTexture'
+                    'materials' : {
+                        'bumpMap' : {
+                            'type' : 'BumpMapMaterial',
+                            'texture' : 'bumpMapTexture'
+                        },
+                        'blendMap' : {
+                            'type' : 'BlendMap',
+                            'texture' : 'blendMapTexture'
+                        }
+                    },
+                    'components': {
+                        'diffuse': 'mix(vec3(0.0, 0.5, 0.0), vec3(0.0, 0.0, 0.5), blendMap)',
+                        'normal': 'bumpMap.normal',
+                        'alpha': '(1.0 - blendMap * 0.4)',
+                        'specular': '(1.0 - blendMap) * (1.0 / 200.0)'
                     }
-                },
-                'components': {
-                    'diffuse': 'mix(vec3(0.0, 0.5, 0.0), vec3(0.0, 0.0, 0.5), blendMap)',
-                    'normal': 'bumpMap.normal',
-                    'alpha': '(1.0 - blendMap * 0.4)',
-                    'specular': '(1.0 - blendMap) * (1.0 / 200.0)'
                 }
             });
             primitives.add(polygon);
@@ -298,26 +403,29 @@
                 alpha: 1.0
             };
 
-            polygon.material = new Cesium.CompositeMaterial(scene.getContext(), {
-                'textures' : {
-                    'normalMapTexture' : '../../Images/earthnormalmap.jpg',
-                    'blendMapTexture' : '../../Images/earthspec1k.jpg'
-                },
-                'materials' : {
-                    'normalMap' : {
-                        'type' : 'NormalMapMaterial',
-                        'texture' : 'normalMapTexture'
+            polygon.material = new Cesium.Material({
+                'context' : scene.getContext(),
+                'template' : {
+                    'textures' : {
+                        'normalMapTexture' : '../../Images/earthnormalmap.jpg',
+                        'blendMapTexture' : '../../Images/earthspec1k.jpg'
                     },
-                    'blendMap' : {
-                        'type' : 'BlendMap',
-                        'texture' : 'blendMapTexture'
+                    'materials' : {
+                        'normalMap' : {
+                            'type' : 'NormalMapMaterial',
+                            'texture' : 'normalMapTexture'
+                        },
+                        'blendMap' : {
+                            'type' : 'BlendMap',
+                            'texture' : 'blendMapTexture'
+                        }
+                    },
+                    'components' : {
+                        'diffuse': 'mix(vec3(0.0, 0.5, 0.0), vec3(0.0, 0.0, 0.5), blendMap)',
+                        'normal': 'normalMap.normal',
+                        'alpha': '(1.0 - blendMap * 0.4)',
+                        'specular': '(1.0 - blendMap) * (1.0 / 200.0)'
                     }
-                },
-                'components' : {
-                    'diffuse': 'mix(vec3(0.0, 0.5, 0.0), vec3(0.0, 0.0, 0.5), blendMap)',
-                    'normal': 'normalMap.normal',
-                    'alpha': '(1.0 - blendMap * 0.4)',
-                    'specular': '(1.0 - blendMap) * (1.0 / 200.0)'
                 }
             });
             primitives.add(polygon);

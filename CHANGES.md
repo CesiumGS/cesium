@@ -39,11 +39,10 @@ Beta Releases
 * Added new materials:
     * `AlphaMapMaterial`
     * `AsphaltMaterial`
-    * `BlendMap`
     * `BrickMaterial`
     * `BumpMapMaterial`
     * `CementMaterial`
-    * `CompositeMaterial`
+    * `Material`
     * `EmissionMapMaterial`
     * `FresnelMaterial`
     * `GrassMaterial`

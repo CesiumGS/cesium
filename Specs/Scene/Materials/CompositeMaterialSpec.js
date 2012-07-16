@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/Materials/CompositeMaterial',
+        'Scene/Materials/Material',
         '../Specs/renderMaterial',
         '../Specs/createContext',
         '../Specs/destroyContext',
         'Renderer/PixelFormat'
     ], function(
-        CompositeMaterial,
+        Material,
         renderMaterial,
         createContext,
         destroyContext,
@@ -38,7 +38,7 @@ defineSuite([
         var blueTexture = context.createTexture2D({
            source : blueImage
         });
-        var pixel = renderMaterial(new CompositeMaterial({
+        var pixel = renderMaterial(new Material({
             'materials' : [{
                 'id' : 'diffuseMap1',
                 'type' : 'DiffuseMapMaterial',
@@ -65,7 +65,7 @@ defineSuite([
     it('renders an alpha composite material', function() {
         var context = createContext();
 
-        var pixel = renderMaterial(new CompositeMaterial({
+        var pixel = renderMaterial(new Material({
             'materials' : [],
             'components' : {
                 'alpha' : '0.5'
@@ -83,7 +83,7 @@ defineSuite([
             var greenTexture = context.createTexture2D({
                 source : greenImage
             });
-            return new CompositeMaterial({
+            return new Material({
                 'materials' : [{
                     'id' : 'diffuseMap1',
                     'type' : 'DiffuseMapMaterial',
@@ -103,7 +103,7 @@ defineSuite([
             var greenTexture = context.createTexture2D({
                 source : greenImage
             });
-            return new CompositeMaterial({
+            return new Material({
                 'materials' : [{
                     'id' : 'diffuseMap1',
                     'type' : 'DiffuseMapMaterial',
