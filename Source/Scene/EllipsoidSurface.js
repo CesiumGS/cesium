@@ -91,6 +91,12 @@ define([
     var minimumTilesNeeded;
     var doit = false;
 
+    var lastMaxDepth = -1;
+    var lastTilesVisited = -1;
+    var lastTilesCulled = -1;
+    var lastTilesRendered = -1;
+    var lastMinimumTilesNeeded = -1;
+
     EllipsoidSurface.prototype.update = function(context, sceneState) {
         if (typeof this._levelZeroTiles === 'undefined') {
             return;
@@ -125,7 +131,18 @@ define([
             }
         }
 
-        //console.log('Visited ' + tilesVisited + ' Rendered: ' + tilesRendered + ' Culled: ' + tilesCulled + ' Max Depth: ' + maxDepth);
+        if (tilesVisited !== lastTilesVisited || tilesRendered !== lastTilesRendered ||
+            tilesCulled !== lastTilesCulled || minimumTilesNeeded !== lastMinimumTilesNeeded ||
+            maxDepth !== lastMaxDepth) {
+
+            console.log('Visited ' + tilesVisited + ' Rendered: ' + tilesRendered + ' Culled: ' + tilesCulled + ' Needed: ' + minimumTilesNeeded + ' Max Depth: ' + maxDepth);
+
+            lastTilesVisited = tilesVisited;
+            lastTilesRendered = tilesRendered;
+            lastTilesCulled = tilesCulled;
+            lastMinimumTilesNeeded = minimumTilesNeeded;
+            lastMaxDepth = maxDepth;
+        }
 
         if (doit) {
             dumpTileStats(levelZeroTiles);
