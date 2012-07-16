@@ -15,7 +15,7 @@ define(['./DeveloperError'
      * @param {Number} [w=0.0] The W component.
      *
      * @see Cartesian2
-     * @see Cartesian4
+     * @see Cartesian3
      */
     var Cartesian4 = function(x, y, z, w) {
 
