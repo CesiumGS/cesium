@@ -320,19 +320,45 @@ define([
         return destroyObject(this);
     };
 
-    Tile.prototype.destroyVertexArray = function() {
-        this.vertexArray = this.vertexArray && this.vertexArray.destroy();
-        this.vertexArray = undefined;
-//        var imagery = this._imagery;
-//        Object.keys(imagery).forEach(function(key) {
-//            var tileImagery = imagery[key];
-//            tileImagery._texture = tileImagery._texture && tileImagery._texture.destroy();
-//            tileImagery._texture = undefined;
-//        });
+    Tile.prototype.freeResources = function() {
+        this.state = TileState.UNLOADED;
+        this.doneLoading = false;
+        this.renderable = false;
+
+        if (typeof this.vertexArray !== 'undefined') {
+            var indexBuffer = this.vertexArray.getIndexBuffer();
+
+            this.vertexArray = this.vertexArray && this.vertexArray.destroy();
+            this.vertexArray = undefined;
+
+            if (!indexBuffer.isDestroyed() && typeof indexBuffer.referenceCount !== 'undefined') {
+                --indexBuffer.referenceCount;
+                if (indexBuffer.referenceCount === 0) {
+                    indexBuffer.destroy();
+                }
+            }
+        }
+
+        if (typeof this.geometry !== 'undefined' && typeof this.geometry.destroy !== 'undefined') {
+            this.geometry.destroy();
+        }
+        this.geometry = undefined;
+
+        if (typeof this.transformedGeometry !== 'undefined' && typeof this.transformedGeometry.destroy !== 'undefined') {
+            this.transformedGeometry.destroy();
+        }
+        this.transformedGeometry = undefined;
+
+        var imagery = this.imagery;
+        Object.keys(imagery).forEach(function(key) {
+            var tileImagery = imagery[key];
+            tileImagery.destroy();
+        });
+        this.imagery = [];
 
         if (typeof this.children !== 'undefined') {
             for (var i = 0; i < this.children.length; ++i) {
-                this.children[i].destroyVertexArray();
+                this.children[i].freeResources();
             }
         }
     };

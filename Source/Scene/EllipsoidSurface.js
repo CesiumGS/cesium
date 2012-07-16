@@ -15,6 +15,8 @@ define([
         './ImageryLayerCollection',
         './TileState',
         './TileImagery',
+        './TileLoadQueue',
+        './TileReplacementQueue',
         '../ThirdParty/when'
     ], function(
         combine,
@@ -32,6 +34,8 @@ define([
         ImageryLayerCollection,
         TileState,
         TileImagery,
+        TileLoadQueue,
+        TileReplacementQueue,
         when) {
     "use strict";
 
@@ -49,6 +53,7 @@ define([
         this._levelZeroTiles = undefined;
         this._renderList = [];
         this._tileLoadQueue = new TileLoadQueue();
+        this._tileReplacementQueue = new TileReplacementQueue();
         this._tilingScheme = undefined;
         this._occluder = undefined;
 
@@ -116,6 +121,7 @@ define([
         minimumTilesNeeded = 0;
 
         this._tileLoadQueue.markInsertionPoint();
+        this._tileReplacementQueue.markStartOfRenderFrame();
 
         var cameraPosition = sceneState.camera.getPositionWC();
         this._occluder.setCameraPosition(cameraPosition);
@@ -285,6 +291,8 @@ define([
     function addBestAvailableTilesToRenderList(surface, context, sceneState, tile) {
         ++tilesVisited;
 
+        surface._tileReplacementQueue.markTileRendered(tile);
+
         if (!isTileVisible(surface, sceneState, tile)) {
             ++tilesCulled;
             return;
@@ -300,7 +308,7 @@ define([
             surface._renderList.push(tile);
             ++tilesRendered;
             ++minimumTilesNeeded;
-        } else if (queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, tile)) {
+        } else if (queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, sceneState, tile)) {
             // SSE is not good enough and children are loaded, so refine.
             var children = tile.children;
             // PERFORMANCE_TODO: traverse children front-to-back
@@ -324,8 +332,8 @@ define([
             surface._renderList.push(tile);
             ++tilesRendered;
             ++minimumTilesNeeded;
-            queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, tile);
-        } else if (queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, tile)) {
+            queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, sceneState, tile);
+        } else if (queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, sceneState, tile)) {
             // SSE is not good enough and children are loaded, so refine.
             var children = tile.children;
             // PERFORMANCE_TODO: traverse children front-to-back
@@ -344,7 +352,7 @@ define([
         }*/
 
         // Algorithm #3: Pre-load children of all visited tiles
-        /*if (queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, tile)) {
+        /*if (queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, sceneState, tile)) {
             // All children are renderable.
             if (screenSpaceError(surface, context, sceneState, tile) < surface.maxScreenSpaceError) {
                 surface._renderList.push(tile);
@@ -407,12 +415,18 @@ define([
         return (maxGeometricError * viewportHeight) / (2 * distance * Math.tan(0.5 * fovy));
     }
 
-    function queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, tile) {
+    function queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, sceneState, tile) {
         var allRenderable = true;
 
         var children = tile.getChildren();
         for (var i = 0, len = children.length; i < len; ++i) {
             var child = children[i];
+            surface._tileReplacementQueue.markTileRendered(child);
+            // TODO: should we be culling here?  Technically, we don't know the
+            // bounding volume accurately until the tile geometry is loaded.
+//            if (!isTileVisible(surface, sceneState, child)) {
+//                continue;
+//            }
             if (!child.doneLoading) {
                 queueTileLoad(surface, child);
             }
@@ -444,8 +458,15 @@ define([
                 tile.state = TileState.TRANSITIONING;
                 surface.terrain.requestTileGeometry(tile);
 
-                // If we've made it past the UNLOADED state, create skeletons for the imagery.
+                // If we've made it past the UNLOADED state, add this tile to the replacement queue
+                // (replacing another tile if necessary), and create skeletons for the imagery.
                 if (tile.state !== TileState.UNLOADED) {
+                    surface._tileReplacementQueue.markTileRendered(tile);
+
+                    // TODO: Base this value on the minimum number of tiles needed,
+                    // the amount of memory available, or something else?
+                    surface._tileReplacementQueue.trimTiles(100);
+
                     for (i = 0, len = surface.imageryCollection.getLength(); i < len; ++i) {
                         var imageryLayer = surface.imageryCollection.get(i);
                         imageryLayer.createTileImagerySkeletons(tile, surface.terrain.tilingScheme);
@@ -497,85 +518,6 @@ define([
             tile = next;
         }
     }
-
-    function TileLoadQueue() {
-        this.head = undefined;
-        this.tail = undefined;
-        this._insertionPoint = undefined;
-    }
-
-    TileLoadQueue.prototype.remove = function(item) {
-        var previous = item._previous;
-        var next = item._next;
-
-        if (item === this.head) {
-            this.head = next;
-        } else {
-            previous._next = next;
-        }
-
-        if (item === this.tail) {
-            this.tail = previous;
-        } else {
-            next._previous = previous;
-        }
-
-        item._previous = undefined;
-        item._next = undefined;
-    };
-
-    TileLoadQueue.prototype.markInsertionPoint = function(item) {
-        this._insertionPoint = this.head;
-    };
-
-    TileLoadQueue.prototype.insertBeforeInsertionPoint = function(item) {
-        var insertionPoint = this._insertionPoint;
-        if (insertionPoint === item) {
-            return;
-        }
-
-        if (typeof this.head === 'undefined') {
-            // no other tiles in the list
-            item._previous = undefined;
-            item._next = undefined;
-            this.head = item;
-            this.tail = item;
-            return;
-        }
-
-        if (typeof item._previous !== 'undefined' || typeof item._next !== 'undefined') {
-            // tile already in the list, remove from its current location
-            this.remove(item);
-        }
-
-        if (typeof insertionPoint === 'undefined') {
-            if (typeof this.head === 'undefined') {
-                item._previous = undefined;
-                item._next = undefined;
-                this.head = item;
-                this.tail = item;
-            } else {
-                item._previous = this.tail;
-                item._next = undefined;
-                this.tail._next = item;
-                this.tail = item;
-            }
-            return;
-        }
-
-        var insertAfter = insertionPoint._previous;
-        item._previous = insertAfter;
-        if (typeof insertAfter !== 'undefined') {
-            insertAfter._next = item;
-        }
-
-        item._next = insertionPoint;
-        insertionPoint._previous = item;
-
-        if (insertionPoint === this.head) {
-            this.head = item;
-        }
-    };
 
     return EllipsoidSurface;
 });

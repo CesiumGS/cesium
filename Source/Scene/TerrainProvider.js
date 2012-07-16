@@ -104,8 +104,12 @@ define([
             value : [0.0, 0.0]
         }];
         var indexBuffer = buffers.indices.indexBuffer;
-        if (typeof indexBuffer === 'undefined') {
+        if (typeof indexBuffer === 'undefined' || indexBuffer.isDestroyed()) {
             indexBuffer = buffers.indices.indexBuffer = context.createIndexBuffer(buffers.indices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+            indexBuffer.setVertexArrayDestroyable(false);
+            indexBuffer.referenceCount = 1;
+        } else {
+            ++indexBuffer.referenceCount;
         }
 
         tile.vertexArray = context.createVertexArray(attributes, indexBuffer);
