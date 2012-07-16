@@ -15,6 +15,8 @@ define([
      * @param {Number} [longitude=0.0] The longitude, in radians.
      * @param {Number} [latitude=0.0] The latitude, in radians.
      * @param {Number} [height=0.0] The height, in meters, above the ellipsoid.
+     *
+     * @see Ellipsoid
      */
     var Cartographic = function(longitude, latitude, height) {
         /**

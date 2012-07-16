@@ -132,7 +132,7 @@ define([
          * @see agi_model
          *
          * @example
-         * var center = ellipsoid.cartographicToCartesian(new Cartographic(-75.59777, 40.03883));
+         * var center = ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883));
          * billboards.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
          * billboards.add({ position : new Cartesian3(0.0, 0.0, 0.0) }); // center
          * billboards.add({ position : new Cartesian3(1000000.0, 0.0, 0.0) }); // east

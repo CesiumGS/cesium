@@ -5,7 +5,6 @@ define([
         '../Core/TimeIntervalCollection',
         '../Core/Cartesian3',
         '../Core/Cartographic',
-        '../Core/Math',
         '../Core/Iso8601',
         '../Core/Ellipsoid',
         './ReferenceProperty',
@@ -16,7 +15,6 @@ define([
         TimeIntervalCollection,
         Cartesian3,
         Cartographic,
-        CesiumMath,
         Iso8601,
         Ellipsoid,
         ReferenceProperty,
@@ -45,7 +43,7 @@ define([
                 tmp = czmlInterval.cartographicDegrees;
                 if (typeof tmp !== 'undefined') {
                     for (i = 0, len = tmp.length; i < len; i += 3) {
-                        values.push(new Cartographic(CesiumMath.toRadians(tmp[i]), CesiumMath.toRadians(tmp[i + 1]), tmp[i + 2]));
+                        values.push(Cartographic.fromDegrees(tmp[i], tmp[i + 1], tmp[i + 2]));
                     }
                     this.cartographic = values;
                 }

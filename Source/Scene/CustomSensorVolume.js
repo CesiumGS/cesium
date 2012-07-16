@@ -112,7 +112,7 @@ define([
          * @example
          * // The sensor's vertex is located on the surface at -75.59777 degrees longitude and 40.03883 degrees latitude.
          * // The sensor's opens upward, along the surface normal.
-         * var center = ellipsoid.cartographicToCartesian(new Cartographic(-75.59777, 40.03883));
+         * var center = ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883));
          * sensor.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
          */
         this.modelMatrix = t.modelMatrix || Matrix4.IDENTITY;

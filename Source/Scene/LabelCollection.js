@@ -114,7 +114,7 @@ define([
          * @see agi_model
          *
          * @example
-         * var center = ellipsoid.cartographicToCartesian(new Cartographic(-75.59777, 40.03883));
+         * var center = ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883));
          * labels.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
          * labels.add({
          *   position : new Cartesian3(0.0, 0.0, 0.0),
