@@ -38,7 +38,9 @@ Beta Releases
    * LeapSeconds.setLeapSeconds now takes an array of LeapSecond instances instead of JSON.
    * TimeStandard.convertUtcToTai and TimeStandard.convertTaiToUtc have been removed as they are no longer needed. 
    * `Cartesian3.prototype.getXY()` was replaced with `Cartesian2.fromCartesian3`.  Code that previously looked like `cartesian3.getXY();` should now look like `Cartesian2.fromCartesian3(cartesian3);`.
-   * `Cartesian4.prototype.getXY()` was replaced with `Cartesian2.fromCartesian4`.
+   * `Cartesian4.prototype.getXY()` was replaced with `Cartesian2.fromCartesian4`.  Code that previously looked like `cartesian4.getXY();` should now look like `Cartesian2.fromCartesian4(cartesian4);`.
+   * `Cartesian4.prototype.getXYZ()` was replaced with `Cartesian3.fromCartesian4`.  Code that previously looked like `cartesian4.getXYZ();` should now look like `Cartesian3.fromCartesian4(cartesian4);`.
+   * `Math.angleBetween` was removed because it was a duplicate of `Cartesian3.angleBetween`.  Simply replace calls of the former to the later.
 * All `Cartesian2` operations now have static versions that work with any objects exposing `x` and `y` properties.
 * Added `addImage` to `TextureAtlas` so images can be added to a texture atlas after it is constructed.
 * Added `Scene.pickEllipsoid`, which picks either the ellipsoid or the map depending on the current `SceneMode`.

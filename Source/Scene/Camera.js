@@ -286,19 +286,19 @@ define([
         }
 
         if (positionChanged || transformChanged) {
-            this._positionWC = transform.multiplyWithVector(new Cartesian4(position.x, position.y, position.z, 1.0)).getXYZ();
+            this._positionWC = Cartesian3.fromCartesian4(transform.multiplyWithVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
         }
 
         if (directionChanged || transformChanged) {
-            this._directionWC = transform.multiplyWithVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)).getXYZ();
+            this._directionWC = Cartesian3.fromCartesian4(transform.multiplyWithVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
         }
 
         if (upChanged || transformChanged) {
-            this._upWC = transform.multiplyWithVector(new Cartesian4(up.x, up.y, up.z, 0.0)).getXYZ();
+            this._upWC = Cartesian3.fromCartesian4(transform.multiplyWithVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
         }
 
         if (rightChanged || transformChanged) {
-            this._rightWC = transform.multiplyWithVector(new Cartesian4(right.x, right.y, right.z, 0.0)).getXYZ();
+            this._rightWC = Cartesian3.fromCartesian4(transform.multiplyWithVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
         }
 
         if (positionChanged || directionChanged || upChanged || transformChanged) {

@@ -224,7 +224,7 @@ define([
             var n2 = CustomSensorVolume._toCartesian(directions[k]);
 
             // Extend position so the volume encompasses the sensor's radius.
-            var theta = Math.max(CesiumMath.angleBetween(n0, n1), CesiumMath.angleBetween(n1, n2));
+            var theta = Math.max(Cartesian3.angleBetween(n0, n1), Cartesian3.angleBetween(n1, n2));
             var distance = r / Math.cos(theta * 0.5);
             var p = n1.multiplyWithScalar(distance);
 
