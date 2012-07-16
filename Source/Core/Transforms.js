@@ -50,7 +50,7 @@ define([
          * @example
          * // Get the transform from local east-north-up at cartographic (0.0, 0.0) to Earth's fixed frame.
          * var ellipsoid = Ellipsoid.WGS84;
-         * var center = ellipsoid.cartographicDegreesToCartesian(Cartographic3.ZERO);
+         * var center = ellipsoid.cartographicDegreesToCartesian(Cartographic.ZERO);
          * var transform = Transforms.eastNorthUpToFixedFrame(center);
          */
         eastNorthUpToFixedFrame : function(position, ellipsoid) {
@@ -104,7 +104,7 @@ define([
          * @example
          * // Get the transform from local north-east-down at cartographic (0.0, 0.0) to Earth's fixed frame.
          * var ellipsoid = Ellipsoid.WGS84;
-         * var center = ellipsoid.cartographicDegreesToCartesian(Cartographic3.ZERO);
+         * var center = ellipsoid.cartographicDegreesToCartesian(Cartographic.ZERO);
          * var transform = Transforms.northEastDownToFixedFrame(center);
          */
         northEastDownToFixedFrame : function(position, ellipsoid) {

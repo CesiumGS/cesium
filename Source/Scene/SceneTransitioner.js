@@ -8,7 +8,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
-        '../Core/Cartographic3',
+        '../Core/Cartographic',
         '../Core/Matrix4',
         '../ThirdParty/Tween',
         './OrthographicFrustum',
@@ -23,7 +23,7 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
-        Cartographic3,
+        Cartographic,
         Matrix4,
         Tween,
         OrthographicFrustum,
@@ -601,7 +601,7 @@ define([
         var startUp = camera.up;
 
         var maxRadii = this._ellipsoid.getMaximumRadius();
-        var endPos = this._ellipsoid.toCartesian(new Cartographic3(0.0, 0.0, 10.0));
+        var endPos = this._ellipsoid.toCartesian(new Cartographic(0.0, 0.0, 10.0));
         endPos = endPos.normalize().multiplyWithScalar(2.0 * maxRadii);
         var endDir = Cartesian3.ZERO.subtract(endPos).normalize();
         var endRight = endDir.cross(Cartesian3.UNIT_Z).normalize();

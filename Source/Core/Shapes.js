@@ -97,7 +97,7 @@ define([
          * var polyline = new Polyline();
          * polyline.setPositions(Shapes.computeCircleBoundary(
          *   ellipsoid, ellipsoid.cartographicDegreesToCartesian(
-         *     new Cartographic3(-75.59777, 40.03883, 0.0)), 100000.0));
+         *     new Cartographic(-75.59777, 40.03883, 0.0)), 100000.0));
          */
         computeCircleBoundary : function(ellipsoid, center, radius, granularity) {
             if (!ellipsoid || !center || !radius) {
@@ -148,7 +148,7 @@ define([
          * var polygon = new Cesium.Polygon();
          * polygon.setPositions(Cesium.Shapes.computeEllipseBoundary(
          *   ellipsoid, ellipsoid.cartographicDegreesToCartesian(
-         *      new Cartographic3(-75.59777, 40.03883)), 500000.0, 300000.0, Cesium.Math.toRadians(60)));
+         *      new Cartographic(-75.59777, 40.03883)), 500000.0, 300000.0, Cesium.Math.toRadians(60)));
          */
         computeEllipseBoundary : function(ellipsoid, center, semiMajorAxis, semiMinorAxis, bearing, granularity) {
             if (!ellipsoid || !center || !semiMajorAxis || !semiMinorAxis) {

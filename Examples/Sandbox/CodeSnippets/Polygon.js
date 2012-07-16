@@ -6,11 +6,11 @@
         this.code = function () {
             var polygon = new Cesium.Polygon(undefined);
             polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic3(-72.0, 40.0),
-                new Cesium.Cartographic3(-70.0, 35.0),
-                new Cesium.Cartographic3(-75.0, 30.0),
-                new Cesium.Cartographic3(-70.0, 30.0),
-                new Cesium.Cartographic3(-68.0, 40.0)
+                new Cesium.Cartographic(-72.0, 40.0),
+                new Cesium.Cartographic(-70.0, 35.0),
+                new Cesium.Cartographic(-75.0, 30.0),
+                new Cesium.Cartographic(-70.0, 30.0),
+                new Cesium.Cartographic(-68.0, 40.0)
             ]));
 
             primitives.add(polygon);
@@ -35,11 +35,11 @@
         this.code = function () {
             var polygon = new Cesium.Polygon(undefined);
             polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic3(-72.0, 40.0),
-                new Cesium.Cartographic3(-70.0, 35.0),
-                new Cesium.Cartographic3(-75.0, 30.0),
-                new Cesium.Cartographic3(-70.0, 30.0),
-                new Cesium.Cartographic3(-68.0, 40.0)
+                new Cesium.Cartographic(-72.0, 40.0),
+                new Cesium.Cartographic(-70.0, 35.0),
+                new Cesium.Cartographic(-75.0, 30.0),
+                new Cesium.Cartographic(-70.0, 30.0),
+                new Cesium.Cartographic(-68.0, 40.0)
             ]));
 
             // The color's alpha component defines the polygon's opacity.
@@ -59,10 +59,10 @@
         this.code = function () {
             var polygon = new Cesium.Polygon(undefined);
             polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic3(-80.0, 30.0),
-                new Cesium.Cartographic3(-70.0, 30.0),
-                new Cesium.Cartographic3(-70.0, 40.0),
-                new Cesium.Cartographic3(-80.0, 40.0)
+                new Cesium.Cartographic(-80.0, 30.0),
+                new Cesium.Cartographic(-70.0, 30.0),
+                new Cesium.Cartographic(-70.0, 40.0),
+                new Cesium.Cartographic(-80.0, 40.0)
             ]));
             polygon.material = new Cesium.VerticalStripeMaterial({
                 repeat : 5.0
@@ -76,10 +76,10 @@
         this.code = function () {
             var polygon = new Cesium.Polygon(undefined);
             polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic3(-80.0, 30.0),
-                new Cesium.Cartographic3(-70.0, 30.0),
-                new Cesium.Cartographic3(-70.0, 40.0),
-                new Cesium.Cartographic3(-80.0, 40.0)
+                new Cesium.Cartographic(-80.0, 30.0),
+                new Cesium.Cartographic(-70.0, 30.0),
+                new Cesium.Cartographic(-70.0, 40.0),
+                new Cesium.Cartographic(-80.0, 40.0)
             ]));
             polygon.material = new Cesium.CheckerboardMaterial({
                 lightColor: {
@@ -106,10 +106,10 @@
         this.code = function () {
             var polygon = new Cesium.Polygon(undefined);
             polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic3(-80.0, 30.0),
-                new Cesium.Cartographic3(-70.0, 30.0),
-                new Cesium.Cartographic3(-70.0, 40.0),
-                new Cesium.Cartographic3(-80.0, 40.0)
+                new Cesium.Cartographic(-80.0, 30.0),
+                new Cesium.Cartographic(-70.0, 30.0),
+                new Cesium.Cartographic(-70.0, 40.0),
+                new Cesium.Cartographic(-80.0, 40.0)
             ]));
             polygon.material = new Cesium.DotMaterial({
                 lightColor: {
@@ -136,10 +136,10 @@
         this.code = function() {
             var polygon = new Cesium.Polygon(undefined);
             polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic3(-80.0, 30.0),
-                new Cesium.Cartographic3(-70.0, 30.0),
-                new Cesium.Cartographic3(-70.0, 33.0),
-                new Cesium.Cartographic3(-80.0, 33.0)
+                new Cesium.Cartographic(-80.0, 30.0),
+                new Cesium.Cartographic(-70.0, 30.0),
+                new Cesium.Cartographic(-70.0, 33.0),
+                new Cesium.Cartographic(-80.0, 33.0)
             ]));
 
             var image = new Image();
@@ -163,10 +163,10 @@
         this.code = function () {
             var polygon = new Cesium.Polygon(undefined);
             polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic3(-80.0, 30.0),
-                new Cesium.Cartographic3(-70.0, 30.0),
-                new Cesium.Cartographic3(-70.0, 40.0),
-                new Cesium.Cartographic3(-80.0, 40.0)
+                new Cesium.Cartographic(-80.0, 30.0),
+                new Cesium.Cartographic(-70.0, 30.0),
+                new Cesium.Cartographic(-70.0, 40.0),
+                new Cesium.Cartographic(-80.0, 40.0)
             ]));
             polygon.material = new Cesium.TieDyeMaterial({
                 lightColor: {
@@ -192,10 +192,10 @@
         this.code = function () {
             var polygon = new Cesium.Polygon(undefined);
             polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic3(-80.0, 30.0),
-                new Cesium.Cartographic3(-70.0, 30.0),
-                new Cesium.Cartographic3(-70.0, 40.0),
-                new Cesium.Cartographic3(-80.0, 40.0)
+                new Cesium.Cartographic(-80.0, 30.0),
+                new Cesium.Cartographic(-70.0, 30.0),
+                new Cesium.Cartographic(-70.0, 40.0),
+                new Cesium.Cartographic(-80.0, 40.0)
             ]));
             polygon.material = new Cesium.FacetMaterial({
                 lightColor: {
@@ -221,10 +221,10 @@
         this.code = function () {
             var polygon = new Cesium.Polygon(undefined);
             polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic3(-80.0, 30.0),
-                new Cesium.Cartographic3(-70.0, 30.0),
-                new Cesium.Cartographic3(-70.0, 40.0),
-                new Cesium.Cartographic3(-80.0, 40.0)
+                new Cesium.Cartographic(-80.0, 30.0),
+                new Cesium.Cartographic(-70.0, 30.0),
+                new Cesium.Cartographic(-70.0, 40.0),
+                new Cesium.Cartographic(-80.0, 40.0)
             ]));
             polygon.material = new Cesium.BlobMaterial({
                 repeat : 10.0
@@ -238,10 +238,10 @@
         this.code = function () {
             var polygon = new Cesium.Polygon(undefined);
             polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic3(-80.0, 30.0),
-                new Cesium.Cartographic3(-70.0, 30.0),
-                new Cesium.Cartographic3(-70.0, 40.0),
-                new Cesium.Cartographic3(-80.0, 40.0)
+                new Cesium.Cartographic(-80.0, 30.0),
+                new Cesium.Cartographic(-70.0, 30.0),
+                new Cesium.Cartographic(-70.0, 40.0),
+                new Cesium.Cartographic(-80.0, 40.0)
             ]));
             polygon.material = new Cesium.CheckerboardMaterial({
                 sRepeat : 5,
@@ -257,10 +257,10 @@
         this.code = function () {
             var polygon = new Cesium.Polygon(undefined);
             polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic3(-80.0, 30.0),
-                new Cesium.Cartographic3(-70.0, 30.0),
-                new Cesium.Cartographic3(-70.0, 40.0),
-                new Cesium.Cartographic3(-80.0, 40.0)
+                new Cesium.Cartographic(-80.0, 30.0),
+                new Cesium.Cartographic(-70.0, 30.0),
+                new Cesium.Cartographic(-70.0, 40.0),
+                new Cesium.Cartographic(-80.0, 40.0)
             ]));
             polygon.material = new Cesium.CheckerboardMaterial({
                 sRepeat : 5,
@@ -276,10 +276,10 @@
         this.code = function () {
             var polygon = new Cesium.Polygon(undefined);
             polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic3(-80.0, 30.0),
-                new Cesium.Cartographic3(-70.0, 30.0),
-                new Cesium.Cartographic3(-70.0, 40.0),
-                new Cesium.Cartographic3(-80.0, 40.0)
+                new Cesium.Cartographic(-80.0, 30.0),
+                new Cesium.Cartographic(-70.0, 30.0),
+                new Cesium.Cartographic(-70.0, 40.0),
+                new Cesium.Cartographic(-80.0, 40.0)
             ]));
             polygon.material = new Cesium.CheckerboardMaterial({
                 sRepeat : 5,

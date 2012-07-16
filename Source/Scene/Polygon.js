@@ -9,7 +9,7 @@ define([
         '../Core/Ellipsoid',
         '../Core/Rectangle',
         '../Core/Cartesian3',
-        '../Core/Cartographic3',
+        '../Core/Cartographic',
         '../Core/ComponentDatatype',
         '../Core/MeshFilters',
         '../Core/PrimitiveType',
@@ -38,7 +38,7 @@ define([
         Ellipsoid,
         Rectangle,
         Cartesian3,
-        Cartographic3,
+        Cartographic,
         ComponentDatatype,
         MeshFilters,
         PrimitiveType,
@@ -132,9 +132,9 @@ define([
      *   alpha : 1.0
      * };
      * polygon.setPositions([
-     *   ellipsoid.toCartesian(new Cartographic3(...)),
-     *   ellipsoid.toCartesian(new Cartographic3(...)),
-     *   ellipsoid.toCartesian(new Cartographic3(...))
+     *   ellipsoid.toCartesian(new Cartographic(...)),
+     *   ellipsoid.toCartesian(new Cartographic(...)),
+     *   ellipsoid.toCartesian(new Cartographic(...))
      * ]);
      */
     var Polygon = function() {
@@ -296,9 +296,9 @@ define([
      *
      * @example
      * polygon.setPositions([
-     *   ellipsoid.toCartesian(new Cartographic3(...)),
-     *   ellipsoid.toCartesian(new Cartographic3(...)),
-     *   ellipsoid.toCartesian(new Cartographic3(...))
+     *   ellipsoid.toCartesian(new Cartographic(...)),
+     *   ellipsoid.toCartesian(new Cartographic(...)),
+     *   ellipsoid.toCartesian(new Cartographic(...))
      * ], 10.0);
      */
     Polygon.prototype.setPositions = function(positions, height) {

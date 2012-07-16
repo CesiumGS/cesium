@@ -127,7 +127,7 @@ defineSuite([
         property.processCzmlIntervals(cartesianInterval);
         var result = property.getValueCartographic(new JulianDate());
 
-        var expected = Ellipsoid.WGS84.toCartographic3s(property.getValueCartesian(new JulianDate()));
+        var expected = Ellipsoid.WGS84.toCartographics(property.getValueCartesian(new JulianDate()));
 
         expect(result.length).toEqual(3);
         expect(result[0].longitude).toEqual(expected[0].longitude);

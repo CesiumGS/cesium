@@ -114,7 +114,7 @@ define([
          * @see agi_model
          *
          * @example
-         * var center = ellipsoid.cartographicDegreesToCartesian(new Cartographic3(-75.59777, 40.03883));
+         * var center = ellipsoid.cartographicDegreesToCartesian(new Cartographic(-75.59777, 40.03883));
          * labels.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
          * labels.add({
          *   position : new Cartesian3(0.0, 0.0, 0.0),
@@ -209,8 +209,7 @@ define([
      * // text, and font.
      * var l = labels.add({
      *   position : ellipsoid.toCartesian(
-     *     CesiumMath.cartographic3ToRadians(
-     *       new Cartographic3(longitude, latitude, height))),
+     *     Cartographic.fromDegrees(longitude, latitude, height))),
      *   text : 'Hello World',
      *   font : '24px Helvetica',
      * });

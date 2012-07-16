@@ -8,7 +8,7 @@ define([
         '../Core/IntersectionTests',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
-        '../Core/Cartographic3',
+        '../Core/Cartographic',
         '../Core/Matrix4',
         '../Core/Ray',
         './CameraControllerCollection',
@@ -22,7 +22,7 @@ define([
         IntersectionTests,
         Cartesian3,
         Cartesian4,
-        Cartographic3,
+        Cartographic,
         Matrix4,
         Ray,
         CameraControllerCollection,
@@ -210,9 +210,9 @@ define([
             east += CesiumMath.TWO_PI;
         }
 
-        var lla = new Cartographic3(0.5 * (west + east), 0.5 * (north + south), 0.0);
-        var northVector = ellipsoid.toCartesian(new Cartographic3(lla.longitude, north, 0.0));
-        var eastVector = ellipsoid.toCartesian(new Cartographic3(east, lla.latitude, 0.0));
+        var lla = new Cartographic(0.5 * (west + east), 0.5 * (north + south), 0.0);
+        var northVector = ellipsoid.toCartesian(new Cartographic(lla.longitude, north, 0.0));
+        var eastVector = ellipsoid.toCartesian(new Cartographic(east, lla.latitude, 0.0));
         var centerVector = ellipsoid.toCartesian(lla);
         var invTanHalfPerspectiveAngle = 1.0 / Math.tan(0.5 * this.frustum.fovy);
         var screenViewDistanceX;

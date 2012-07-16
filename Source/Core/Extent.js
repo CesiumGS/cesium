@@ -2,7 +2,7 @@
 define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
-        '../Core/Cartographic3',
+        '../Core/Cartographic',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/Math',
@@ -11,7 +11,7 @@ define([
     ], function(
         BoundingSphere,
         Cartesian3,
-        Cartographic3,
+        Cartographic,
         DeveloperError,
         Ellipsoid,
         CesiumMath,
@@ -130,7 +130,7 @@ define([
         ellipsoid = ellipsoid || Ellipsoid.WGS84;
         var positions = [];
 
-        var lla = new Cartographic3(extent.west, extent.north, 0.0);
+        var lla = new Cartographic(extent.west, extent.north, 0.0);
         positions.push(getPosition(lla, ellipsoid, time, projection));
         lla.longitude = extent.east;
         positions.push(getPosition(lla, ellipsoid, time, projection));
@@ -231,7 +231,7 @@ define([
             throw new DeveloperError('projection is required.');
         }
 
-        var lla = new Cartographic3(extent.west, extent.south);
+        var lla = new Cartographic(extent.west, extent.south);
         var lowerLeft = projection.project(lla);
         lla.longitude = extent.east;
         lla.latitude = extent.north;

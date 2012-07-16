@@ -13,7 +13,7 @@ define(function() {
      * @see CzmlBoolean
      * @see CzmlCartesian2
      * @see CzmlCartesian3
-     * @see CzmlCartographic3
+     * @see CzmlCartographic
      * @see CzmlColor
      * @see CzmlHorizontalOrigin
      * @see CzmlLabelStyle

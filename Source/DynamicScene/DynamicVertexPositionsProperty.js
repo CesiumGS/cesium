@@ -4,7 +4,7 @@ define([
         '../Core/TimeInterval',
         '../Core/TimeIntervalCollection',
         '../Core/Cartesian3',
-        '../Core/Cartographic3',
+        '../Core/Cartographic',
         '../Core/Math',
         '../Core/Iso8601',
         '../Core/Ellipsoid',
@@ -15,7 +15,7 @@ define([
         TimeInterval,
         TimeIntervalCollection,
         Cartesian3,
-        Cartographic3,
+        Cartographic,
         CesiumMath,
         Iso8601,
         Ellipsoid,
@@ -38,14 +38,14 @@ define([
             tmp = czmlInterval.cartographicRadians;
             if (typeof tmp !== 'undefined') {
                 for (i = 0, len = tmp.length; i < len; i += 3) {
-                    values.push(new Cartographic3(tmp[i], tmp[i + 1], tmp[i + 2]));
+                    values.push(new Cartographic(tmp[i], tmp[i + 1], tmp[i + 2]));
                 }
                 this.cartographic = values;
             } else {
                 tmp = czmlInterval.cartographicDegrees;
                 if (typeof tmp !== 'undefined') {
                     for (i = 0, len = tmp.length; i < len; i += 3) {
-                        values.push(new Cartographic3(CesiumMath.toRadians(tmp[i]), CesiumMath.toRadians(tmp[i + 1]), tmp[i + 2]));
+                        values.push(new Cartographic(CesiumMath.toRadians(tmp[i]), CesiumMath.toRadians(tmp[i + 1]), tmp[i + 2]));
                     }
                     this.cartographic = values;
                 }
@@ -55,7 +55,7 @@ define([
 
     ValueHolder.prototype.getValueCartographic = function() {
         if (typeof this.cartographic === 'undefined') {
-            this.cartographic = wgs84.toCartographic3s(this.cartesian);
+            this.cartographic = wgs84.toCartographics(this.cartesian);
         }
         return this.cartographic;
     };

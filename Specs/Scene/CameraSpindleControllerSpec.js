@@ -2,7 +2,7 @@
 defineSuite([
          'Scene/CameraSpindleController',
          'Core/Ellipsoid',
-         'Core/Cartographic3',
+         'Core/Cartographic',
          'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/Math',
@@ -12,7 +12,7 @@ defineSuite([
      ], function(
          CameraSpindleController,
          Ellipsoid,
-         Cartographic3,
+         Cartographic,
          Cartesian2,
          Cartesian3,
          CesiumMath,
@@ -69,7 +69,7 @@ defineSuite([
     });
 
     it('setReferenceFrame', function() {
-        var transform = Transforms.eastNorthUpToFixedFrame(Ellipsoid.UNIT_SPHERE.cartographicDegreesToCartesian(new Cartographic3(-76.0, 40.0)));
+        var transform = Transforms.eastNorthUpToFixedFrame(Ellipsoid.UNIT_SPHERE.cartographicDegreesToCartesian(new Cartographic(-76.0, 40.0)));
         csc.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
         expect(csc.getEllipsoid()).toEqual(Ellipsoid.UNIT_SPHERE);
         expect(camera.transform.equals(transform)).toEqual(true);

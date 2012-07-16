@@ -267,9 +267,9 @@ define([
      *   alpha : 0.5
      * };
      * polyline.setPositions([
-     *   ellipsoid.toCartesian(new Cartographic3(...)),
-     *   ellipsoid.toCartesian(new Cartographic3(...)),
-     *   ellipsoid.toCartesian(new Cartographic3(...))
+     *   ellipsoid.toCartesian(new Cartographic(...)),
+     *   ellipsoid.toCartesian(new Cartographic(...)),
+     *   ellipsoid.toCartesian(new Cartographic(...))
      * ]);
      */
     var Polyline = function() {
@@ -466,7 +466,7 @@ define([
          * @example
          * // The arrow points to the east, i.e., along the local x-axis.
          * var polyline = new Polyline();
-         * var center = ellipsoid.cartographicDegreesToCartesian(new Cartographic3(-75.59777, 40.03883));
+         * var center = ellipsoid.cartographicDegreesToCartesian(new Cartographic(-75.59777, 40.03883));
          * polyline.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
          * polyline.setPositions([
          *   new Cartesian3(0.0, 0.0, 0.0),
@@ -630,9 +630,9 @@ define([
      *
      * @example
      * polyline.setPositions([
-     *   ellipsoid.toCartesian(new Cartographic3(...)),
-     *   ellipsoid.toCartesian(new Cartographic3(...)),
-     *   ellipsoid.toCartesian(new Cartographic3(...))
+     *   ellipsoid.toCartesian(new Cartographic(...)),
+     *   ellipsoid.toCartesian(new Cartographic(...)),
+     *   ellipsoid.toCartesian(new Cartographic(...))
      * ]);
      */
     Polyline.prototype.setPositions = function(value) {

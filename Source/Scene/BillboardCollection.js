@@ -132,7 +132,7 @@ define([
          * @see agi_model
          *
          * @example
-         * var center = ellipsoid.cartographicDegreesToCartesian(new Cartographic3(-75.59777, 40.03883));
+         * var center = ellipsoid.cartographicDegreesToCartesian(new Cartographic(-75.59777, 40.03883));
          * billboards.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
          * billboards.add({ position : new Cartesian3(0.0, 0.0, 0.0) }); // center
          * billboards.add({ position : new Cartesian3(1000000.0, 0.0, 0.0) }); // east
@@ -228,8 +228,7 @@ define([
      * // Example 2:  Specify only the billboard's cartographic position.
      * var b = billboards.add({
      *   position : ellipsoid.toCartesian(
-     *     CesiumMath.cartographic3ToRadians(
-     *       new Cartographic3(longitude, latitude, height)))
+     *     Cartographic.fromDegrees(longitude, latitude, height))
      * });
      */
     BillboardCollection.prototype.add = function(billboard) {
@@ -819,7 +818,7 @@ define([
         for ( var i = 0; i < length; ++i) {
             var b = billboards[i];
             var p = this.modelMatrix.multiplyWithVector(new Cartesian4(b.getPosition().x, b.getPosition().y, b.getPosition().z, 1.0));
-            var projectedPoint = projection.project(projection.getEllipsoid().toCartographic3(new Cartesian3(p.x, p.y, p.z)));
+            var projectedPoint = projection.project(projection.getEllipsoid().toCartographic(new Cartesian3(p.x, p.y, p.z)));
             b._setActualPosition({
                 x : 0.0,
                 y : projectedPoint.x,
@@ -834,7 +833,7 @@ define([
         for ( var i = 0; i < length; ++i) {
             var b = billboards[i];
             var p = this.modelMatrix.multiplyWithVector(new Cartesian4(b.getPosition().x, b.getPosition().y, b.getPosition().z, 1.0));
-            var projectedPoint = projection.project(projection.getEllipsoid().toCartographic3(new Cartesian3(p.x, p.y, p.z)));
+            var projectedPoint = projection.project(projection.getEllipsoid().toCartographic(new Cartesian3(p.x, p.y, p.z)));
             b._setActualPosition({
                 x : projectedPoint.z,
                 y : projectedPoint.x,
@@ -887,7 +886,7 @@ define([
             for (i = 0; i < length; ++i) {
                 b = billboards[i];
                 var p = b.getPosition();
-                var projectedPoint = projection.project(projection.getEllipsoid().toCartographic3(p));
+                var projectedPoint = projection.project(projection.getEllipsoid().toCartographic(p));
 
                 b._setActualPosition({
                     x : CesiumMath.lerp(projectedPoint.z, p.x, this.morphTime),

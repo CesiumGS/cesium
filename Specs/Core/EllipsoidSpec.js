@@ -2,12 +2,12 @@
 defineSuite([
          'Core/Ellipsoid',
          'Core/Cartesian3',
-         'Core/Cartographic3',
+         'Core/Cartographic',
          'Core/Math'
      ], function(
          Ellipsoid,
          Cartesian3,
-         Cartographic3,
+         Cartographic,
          CesiumMath) {
     "use strict";
     /*global it,expect*/
@@ -56,62 +56,62 @@ defineSuite([
     });
 
     it('geodeticSurfaceNormalc', function() {
-        expect(Cartesian3.UNIT_X.equalsEpsilon(Ellipsoid.UNIT_SPHERE.geodeticSurfaceNormalc(Cartographic3.ZERO), CesiumMath.EPSILON10)).toEqual(true);
-        expect(Cartesian3.UNIT_Z.equalsEpsilon(Ellipsoid.UNIT_SPHERE.geodeticSurfaceNormalc(new Cartographic3(0, CesiumMath.PI_OVER_TWO, 0)), CesiumMath.EPSILON10)).toEqual(true);
+        expect(Cartesian3.UNIT_X.equalsEpsilon(Ellipsoid.UNIT_SPHERE.geodeticSurfaceNormalc(Cartographic.ZERO), CesiumMath.EPSILON10)).toEqual(true);
+        expect(Cartesian3.UNIT_Z.equalsEpsilon(Ellipsoid.UNIT_SPHERE.geodeticSurfaceNormalc(new Cartographic(0, CesiumMath.PI_OVER_TWO, 0)), CesiumMath.EPSILON10)).toEqual(true);
     });
 
     it('toCartesian', function() {
         var ellipsoid = new Ellipsoid(new Cartesian3(1, 1, 0.7));
 
-        expect(Cartesian3.UNIT_X.equalsEpsilon(ellipsoid.toCartesian(new Cartographic3(0, 0)), CesiumMath.EPSILON10)).toEqual(true);
+        expect(Cartesian3.UNIT_X.equalsEpsilon(ellipsoid.toCartesian(new Cartographic(0, 0)), CesiumMath.EPSILON10)).toEqual(true);
 
-        expect(Cartesian3.UNIT_Y.equalsEpsilon(ellipsoid.toCartesian(new Cartographic3(CesiumMath.toRadians(90), 0)), CesiumMath.EPSILON10)).toEqual(true);
+        expect(Cartesian3.UNIT_Y.equalsEpsilon(ellipsoid.toCartesian(new Cartographic(CesiumMath.toRadians(90), 0)), CesiumMath.EPSILON10)).toEqual(true);
 
-        expect(new Cartesian3(0, 0, 0.7).equalsEpsilon(ellipsoid.toCartesian(new Cartographic3(0, CesiumMath.toRadians(90))), CesiumMath.EPSILON10)).toEqual(true);
+        expect(new Cartesian3(0, 0, 0.7).equalsEpsilon(ellipsoid.toCartesian(new Cartographic(0, CesiumMath.toRadians(90))), CesiumMath.EPSILON10)).toEqual(true);
     });
 
     it('toCartesian', function() {
         var ellipsoid = new Ellipsoid(new Cartesian3(1, 1, 0.7));
 
-        expect(new Cartesian3(2, 0, 0).equalsEpsilon(ellipsoid.toCartesian(new Cartographic3(0, 0, 1)), CesiumMath.EPSILON10)).toEqual(true);
+        expect(new Cartesian3(2, 0, 0).equalsEpsilon(ellipsoid.toCartesian(new Cartographic(0, 0, 1)), CesiumMath.EPSILON10)).toEqual(true);
 
-        expect(new Cartesian3(0, 2, 0).equalsEpsilon(ellipsoid.toCartesian(new Cartographic3(CesiumMath.toRadians(90), 0, 1)), CesiumMath.EPSILON10)).toEqual(true);
+        expect(new Cartesian3(0, 2, 0).equalsEpsilon(ellipsoid.toCartesian(new Cartographic(CesiumMath.toRadians(90), 0, 1)), CesiumMath.EPSILON10)).toEqual(true);
 
-        expect(new Cartesian3(0, 0, 1.7).equalsEpsilon(ellipsoid.toCartesian(new Cartographic3(0, CesiumMath.toRadians(90), 1)), CesiumMath.EPSILON10)).toEqual(true);
+        expect(new Cartesian3(0, 0, 1.7).equalsEpsilon(ellipsoid.toCartesian(new Cartographic(0, CesiumMath.toRadians(90), 1)), CesiumMath.EPSILON10)).toEqual(true);
     });
 
     it('toCartesians', function() {
         var ellipsoid = new Ellipsoid(new Cartesian3(1, 1, 0.7));
-        var cartographics = [new Cartographic3(0, 0, 1),
-                             new Cartographic3(CesiumMath.toRadians(90), 0, 1),
-                             new Cartographic3(0, CesiumMath.toRadians(90), 1)];
+        var cartographics = [new Cartographic(0, 0, 1),
+                             new Cartographic(CesiumMath.toRadians(90), 0, 1),
+                             new Cartographic(0, CesiumMath.toRadians(90), 1)];
         var cartesians = ellipsoid.toCartesians(cartographics);
         expect(cartesians[0].equalsEpsilon(new Cartesian3(2, 0, 0), CesiumMath.EPSILON10)).toEqual(true);
         expect(cartesians[1].equalsEpsilon(new Cartesian3(0, 2, 0), CesiumMath.EPSILON10)).toEqual(true);
         expect(cartesians[2].equalsEpsilon(new Cartesian3(0, 0, 1.7), CesiumMath.EPSILON10)).toEqual(true);
     });
 
-    it('toCartographic3', function() {
+    it('toCartographic', function() {
         var ellipsoid = Ellipsoid.WGS84;
 
-        expect(Cartographic3.ZERO.equalsEpsilon(ellipsoid.toCartographic3(ellipsoid.toCartesian(Cartographic3.ZERO)), CesiumMath.EPSILON8)).toEqual(true);
+        expect(Cartographic.ZERO.equalsEpsilon(ellipsoid.toCartographic(ellipsoid.toCartesian(Cartographic.ZERO)), CesiumMath.EPSILON8)).toEqual(true);
 
-        var p = new Cartographic3(CesiumMath.toRadians(45), CesiumMath.toRadians(-60), -123.4);
-        expect(p.equalsEpsilon(ellipsoid.toCartographic3(ellipsoid.toCartesian(p)), CesiumMath.EPSILON3)).toEqual(true);
+        var p = new Cartographic(CesiumMath.toRadians(45), CesiumMath.toRadians(-60), -123.4);
+        expect(p.equalsEpsilon(ellipsoid.toCartographic(ellipsoid.toCartesian(p)), CesiumMath.EPSILON3)).toEqual(true);
 
-        var p2 = new Cartographic3(CesiumMath.toRadians(-97.3), CesiumMath.toRadians(71.2), 1188.7);
-        expect(p2.equalsEpsilon(ellipsoid.toCartographic3(ellipsoid.toCartesian(p2)), CesiumMath.EPSILON3)).toEqual(true);
+        var p2 = new Cartographic(CesiumMath.toRadians(-97.3), CesiumMath.toRadians(71.2), 1188.7);
+        expect(p2.equalsEpsilon(ellipsoid.toCartographic(ellipsoid.toCartesian(p2)), CesiumMath.EPSILON3)).toEqual(true);
     });
 
-    it('toCartographic3s', function() {
+    it('toCartographics', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var p1 = Cartographic3.ZERO;
-        var p2 = new Cartographic3(CesiumMath.toRadians(45), CesiumMath.toRadians(-60), -123.4);
-        var p3 = new Cartographic3(CesiumMath.toRadians(-97.3), CesiumMath.toRadians(71.2), 1188.7);
+        var p1 = Cartographic.ZERO;
+        var p2 = new Cartographic(CesiumMath.toRadians(45), CesiumMath.toRadians(-60), -123.4);
+        var p3 = new Cartographic(CesiumMath.toRadians(-97.3), CesiumMath.toRadians(71.2), 1188.7);
         var cartesians = [ellipsoid.toCartesian(p1),
                           ellipsoid.toCartesian(p2),
                           ellipsoid.toCartesian(p3)];
-        var cartographics = ellipsoid.toCartographic3s(cartesians);
+        var cartographics = ellipsoid.toCartographics(cartesians);
         expect(cartographics[0]).toEqualEpsilon(p1, CesiumMath.EPSILON6);
         expect(cartographics[1]).toEqualEpsilon(p2, CesiumMath.EPSILON6);
         expect(cartographics[2]).toEqualEpsilon(p3, CesiumMath.EPSILON6);
@@ -121,12 +121,12 @@ defineSuite([
         var ellipsoid = Ellipsoid.WGS84;
 
         var lon = 45, lat = -60, height = 123.4;
-        var expected = ellipsoid.toCartesian(new Cartographic3(CesiumMath.toRadians(lon), CesiumMath.toRadians(lat), height));
-        var actual = ellipsoid.cartographicDegreesToCartesian(new Cartographic3(lon, lat, height));
+        var expected = ellipsoid.toCartesian(new Cartographic(CesiumMath.toRadians(lon), CesiumMath.toRadians(lat), height));
+        var actual = ellipsoid.cartographicDegreesToCartesian(new Cartographic(lon, lat, height));
         expect(expected.equalsEpsilon(actual, CesiumMath.EPSILON8)).toEqual(true);
 
         expected = [expected];
-        actual = ellipsoid.cartographicDegreesToCartesians([new Cartographic3(lon, lat, height)]);
+        actual = ellipsoid.cartographicDegreesToCartesians([new Cartographic(lon, lat, height)]);
         expect(expected.length).toEqual(actual.length);
         expect(expected[0].equalsEpsilon(actual[0], CesiumMath.EPSILON8)).toEqual(true);
     });

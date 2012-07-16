@@ -21,10 +21,10 @@
             // Setup code
             var redPolygon = new Cesium.Polygon(undefined);
             redPolygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic3(-70.0, 30.0),
-                new Cesium.Cartographic3(-60.0, 30.0),
-                new Cesium.Cartographic3(-60.0, 40.0),
-                new Cesium.Cartographic3(-70.0, 40.0)
+                new Cesium.Cartographic(-70.0, 30.0),
+                new Cesium.Cartographic(-60.0, 30.0),
+                new Cesium.Cartographic(-60.0, 40.0),
+                new Cesium.Cartographic(-70.0, 40.0)
             ]));
             redPolygon.material.color = {
                 red : 1.0,
@@ -35,10 +35,10 @@
 
             var bluePolygon = new Cesium.Polygon(undefined);
             bluePolygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic3(-75.0, 34.0),
-                new Cesium.Cartographic3(-63.0, 34.0),
-                new Cesium.Cartographic3(-63.0, 40.0),
-                new Cesium.Cartographic3(-75.0, 40.0)
+                new Cesium.Cartographic(-75.0, 34.0),
+                new Cesium.Cartographic(-63.0, 34.0),
+                new Cesium.Cartographic(-63.0, 40.0),
+                new Cesium.Cartographic(-75.0, 40.0)
             ]));
             bluePolygon.material.color = {
                 red : 0.0,
@@ -49,10 +49,10 @@
 
             var greenPolygon = new Cesium.Polygon(undefined);
             greenPolygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic3(-67.0, 36.0),
-                new Cesium.Cartographic3(-55.0, 36.0),
-                new Cesium.Cartographic3(-55.0, 30.0),
-                new Cesium.Cartographic3(-67.0, 30.0)
+                new Cesium.Cartographic(-67.0, 36.0),
+                new Cesium.Cartographic(-55.0, 36.0),
+                new Cesium.Cartographic(-55.0, 30.0),
+                new Cesium.Cartographic(-67.0, 30.0)
             ]));
             greenPolygon.material.color = {
                 red : 0.0,
