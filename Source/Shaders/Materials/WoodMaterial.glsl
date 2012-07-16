@@ -1,9 +1,6 @@
 uniform vec4 u_lightWoodColor;
 uniform vec4 u_darkWoodColor;
 uniform float u_ringFrequency;
-uniform float u_lightGrains;
-uniform float u_darkGrains;
-uniform float u_grainThreshold;
 uniform vec2 u_noiseScale;
 uniform float u_grainFrequency;
 

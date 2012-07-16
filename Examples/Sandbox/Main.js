@@ -71,7 +71,6 @@
     tree.addNode('Draw a polygon using an extent', [new Sandbox.PolygonWithExtent(scene, ellipsoid, primitives)], pg, 'Polygon');
     var mat = tree.addNode('Materials', '', pg, 'Material');
     tree.addNode('Modify the default material', [new Sandbox.PolygonColor(scene, ellipsoid, primitives)], mat, 'Material');
-    tree.addNode('Apply a material', [new Sandbox.Material(scene, ellipsoid, primitives)], mat, 'Material');
     tree.addNode('Apply a diffuse map material', [new Sandbox.DiffuseMapPolygonMaterial(scene, ellipsoid, primitives)], mat, 'Material');
     tree.addNode('Apply an alpha map material', [new Sandbox.AlphaMapPolygonMaterial(scene, ellipsoid, primitives)], mat, 'Material');
     tree.addNode('Apply a specular map material', [new Sandbox.SpecularMapPolygonMaterial(scene, ellipsoid, primitives)], mat, 'Material');

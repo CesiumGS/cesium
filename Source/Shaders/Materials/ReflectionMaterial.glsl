@@ -1,5 +1,4 @@
 uniform samplerCube u_cubeMap;
-uniform float u_reflectivity;
 
 agi_material agi_getMaterial(agi_materialInput materialInput)
 {
@@ -8,8 +7,7 @@ agi_material agi_getMaterial(agi_materialInput materialInput)
     vec3 normalEC = material.normal;
     vec3 normalWC = normalize(vec3(agi_inverseView * vec4(normalEC, 0.0)));
     vec3 reflectedWC = reflect(materialInput.positionToEyeWC, normalWC);
-    vec3 reflectedValue = textureCube(u_cubeMap, reflectedWC).reflection_material_channels;
-    reflectedValue *= u_reflectivity;
+    vec3 reflectedValue = textureCube(u_cubeMap, reflectedWC).reflectionChannels;
     
     material.diffuse = reflectedValue;
     

@@ -4,8 +4,6 @@ uniform vec2 u_repeat;
 agi_material agi_getMaterial(agi_materialInput materialInput)
 {
     agi_material material = agi_getDefaultMaterial(materialInput);
-    vec4 value = texture2D(u_texture, fract(u_repeat * materialInput.st));
-    
-    material.emission = value.emission_map_material_channels;
+    material.emission = texture2D(u_texture, fract(u_repeat * materialInput.st)).emissionChannels;
     return material;
 }
