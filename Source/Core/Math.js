@@ -3,14 +3,12 @@ define([
         './DeveloperError',
         './Cartesian2',
         './Cartesian3',
-        './Cartographic2',
         './Cartographic3'
     ],
     function(
         DeveloperError,
         Cartesian2,
         Cartesian3,
-        Cartographic2,
         Cartographic3) {
     "use strict";
 
@@ -371,17 +369,6 @@ define([
     };
 
     /**
-     * Converts the longitude and latitude of a {@link Cartographic2} from degrees to radians.
-     * @param {Cartographic2} cartographic The cartographic position to convert in degrees.
-     * @return {Cartographic2} The corresponding cartographic position in radians.
-     */
-    CesiumMath.cartographic2ToRadians = function(cartographic) {
-        return new Cartographic2(
-                CesiumMath.toRadians(cartographic.longitude),
-                CesiumMath.toRadians(cartographic.latitude));
-    };
-
-    /**
      * Converts radians to degrees.
      * @param {Number} radians The angle to convert in radians.
      * @return {Number} The corresponding angle in degrees.
@@ -400,17 +387,6 @@ define([
                 CesiumMath.toDegrees(cartographic.longitude),
                 CesiumMath.toDegrees(cartographic.latitude),
                 cartographic.height);
-    };
-
-    /**
-     * Converts the longitude and latitude of a {@link Cartographic2} from radians to degrees.
-     * @param {Cartographic2} cartographic The cartographic position to convert in radians.
-     * @return {Cartographic2} The corresponding cartographic position in degrees.
-     */
-    CesiumMath.cartographic2ToDegrees = function(cartographic) {
-        return new Cartographic2(
-                CesiumMath.toDegrees(cartographic.longitude),
-                CesiumMath.toDegrees(cartographic.latitude));
     };
 
     /**

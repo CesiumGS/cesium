@@ -116,7 +116,7 @@ define([
      * // Example 1.
      * // Change the reference frame to one centered at a point on the ellipsoid's surface.
      * // Set the spindle controller's ellipsoid to a unit sphere for easy rotation around that point.
-     * var center = ellipsoid.cartographicDegreesToCartesian(new Cartographic2(-75.59777, 40.03883));
+     * var center = ellipsoid.cartographicDegreesToCartesian(new Cartographic3(-75.59777, 40.03883));
      * var transform = Transforms.eastNorthUpToFixedFrame(center);
      * scene.getCamera().getControllers().get(0).setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
      *

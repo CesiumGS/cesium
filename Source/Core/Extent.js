@@ -2,7 +2,6 @@
 define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
-        '../Core/Cartographic2',
         '../Core/Cartographic3',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
@@ -12,7 +11,6 @@ define([
     ], function(
         BoundingSphere,
         Cartesian3,
-        Cartographic2,
         Cartographic3,
         DeveloperError,
         Ellipsoid,
@@ -233,7 +231,7 @@ define([
             throw new DeveloperError('projection is required.');
         }
 
-        var lla = new Cartographic2(extent.west, extent.south);
+        var lla = new Cartographic3(extent.west, extent.south);
         var lowerLeft = projection.project(lla);
         lla.longitude = extent.east;
         lla.latitude = extent.north;

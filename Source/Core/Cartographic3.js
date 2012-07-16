@@ -1,62 +1,119 @@
 /*global define*/
-define(function() {
+define([
+        './DeveloperError'
+       ], function(
+         DeveloperError) {
     "use strict";
 
     /**
-     * A position defined by longitude, latitude, and height.
-     * <p>
-     * When called with no arguments, the position is initialized to (0.0, 0.0, 0.0).
-     * When called with one Cartographic2 argument, p, the position is initialized to (p.longitude, g.latitude, 0.0).
-     * When called with two numeric arguments, longitude and latitude, the position is initialized to (longitude, latitude, 0.0).
-     * When called with two numeric arguments; longitude, latitude, and height; the position is initialized to (longitude, latitude, height).
-     * </p>
-     *
+     * A position defined by latitude, longitude, and height.
      * @alias Cartographic3
      * @constructor
      *
-     * @see Cartographic2
+     * @param {Number} [longitude=0.0] The longitude, in radians.
+     * @param {Number} [latitude=0.0] The latitude, in radians.
+     * @param {Number} [height=0.0] The height, in meters, above the ellipsoid.
      */
-    var Cartographic3 = function() {
-        var longitude = 0.0;
-        var latitude = 0.0;
-        var height = 0.0;
+    var Cartographic3 = function(longitude, latitude, height) {
+        /**
+         * The longitude, in radians.
+         * @type Number
+         */
+        this.longitude = typeof longitude === 'undefined' ? 0.0 : longitude;
 
-        if (arguments.length === 1) {
-            longitude = arguments[0].longitude;
-            latitude = arguments[0].latitude;
-        } else if (arguments.length === 2) {
-            longitude = arguments[0];
-            latitude = arguments[1];
-        } else if (arguments.length > 2) {
-            longitude = arguments[0];
-            latitude = arguments[1];
-            height = arguments[2];
+        /**
+         * The latitude, in radians.
+         * @type Number
+         */
+        this.latitude = typeof latitude === 'undefined' ? 0.0 : latitude;
+
+        /**
+         * The height, in meters, above the ellipsoid.
+         * @type Number
+         */
+        this.height = typeof height === 'undefined' ? 0.0 : height;
+    };
+
+    /**
+     * Duplicates a Cartographic3 instance.
+     * @memberof Cartographic3
+     *
+     * @param {Cartographic3} cartographic The cartographic to duplicate.
+     * @param {Cartographic3} [result] The object onto which to store the result.
+     * @return {Cartographic3} The modified result parameter or a new Cartographic3 instance if none was provided.
+     *
+     * @exception {DeveloperError} cartographic is required.
+     */
+    Cartographic3.clone = function(cartographic, result) {
+        if (typeof cartographic === 'undefined') {
+            throw new DeveloperError('cartographic is required');
         }
+        if (typeof result === 'undefined') {
+            return new Cartographic3(cartographic.longitude, cartographic.latitude, cartographic.height);
+        }
+        result.longitude = cartographic.longitude;
+        result.latitude = cartographic.latitude;
+        result.height = cartographic.height;
+        return result;
+    };
 
-        /**
-         * DOC_TBA
-         *
-         * @type Number
-         *
-         * @see Cartographic2#latitude
-         */
-        this.longitude = longitude;
+    /**
+     * Compares the provided cartographics componentwise and returns
+     * <code>true/code> if they are equal, <code>false/code> otherwise.
+     * @memberof Cartographic3
+     *
+     * @param {Cartographic3} [left] The first cartographic.
+     * @param {Cartographic3} [right] The second cartographic.
+     * @return {Boolean} <code>true/code> if left and right are equal, <code>false/code> otherwise.
+     */
+    Cartographic3.equals = function(left, right) {
+        return (left === right) ||
+                ((typeof left !== 'undefined') &&
+                 (typeof right !== 'undefined') &&
+                 (left.longitude === right.longitude) &&
+                 (left.latitude === right.latitude) &&
+                 (left.height === right.height));
+    };
 
-        /**
-         * DOC_TBA
-         *
-         * @type Number
-         *
-         * @see Cartographic2#longitude
-         */
-        this.latitude = latitude;
+    /**
+     * Compares the provided cartographics componentwise and returns
+     * <code>true/code> if they are within the provided epsilon,
+     * <code>false/code> otherwise.
+     * @memberof Cartographic3
+     *
+     * @param {Cartographic3} [left] The first cartographic.
+     * @param {Cartographic3} [right] The second cartographic.
+     * @param {Number} epsilon The epsilon to use for equality testing.
+     * @return {Boolean} <code>true/code> if left and right are within the provided epsilon, <code>false/code> otherwise.
+     *
+     * @exception {DeveloperError} epsilon is required and must be a number.
+     */
+    Cartographic3.equalsEpsilon = function(left, right, epsilon) {
+        if (typeof epsilon !== 'number') {
+            throw new DeveloperError('epsilon is required and must be a number.');
+        }
+        return (left === right) ||
+               ((typeof left !== 'undefined') &&
+                (typeof right !== 'undefined') &&
+                (Math.abs(left.longitude - right.longitude) <= epsilon) &&
+                (Math.abs(left.latitude - right.latitude) <= epsilon) &&
+                (Math.abs(left.height - right.height) <= epsilon));
+    };
 
-        /**
-         * DOC_TBA
-         *
-         * @type Number
-         */
-        this.height = height;
+    /**
+     * Creates a string representing the provided cartographic in the format '(longitude, latitude, height)'.
+     * @memberof Cartographic3
+     *
+     * @param {Cartographic3} cartographic The cartographic to stringify.
+     * @return {String} A string representing the provided cartographic in the format '(longitude, latitude, height)'.
+     *
+     * @exception {DeveloperError} cartographic is required.
+     */
+    Cartographic3.toString = function(cartographic) {
+        if (typeof cartographic === 'undefined') {
+            throw new DeveloperError('cartographic is required');
+        }
+        return '(' + cartographic.longitude + ', ' + cartographic.latitude + ', ' + cartographic.height + ')';
     };
 
     /**
@@ -67,54 +124,52 @@ define(function() {
     Cartographic3.ZERO = Object.freeze(new Cartographic3(0.0, 0.0, 0.0));
 
     /**
-     * Returns a duplicate of a Cartographic3 instance.
-     *
+     * Duplicates this instance.
      * @memberof Cartographic3
-     * @return {Cartographic3} A new copy of the Cartographic3 instance received as an argument.
+     *
+     * @param {Cartographic3} [result] The object onto which to store the result.
+     * @return {Cartographic3} The modified result parameter or a new Cartographic3 instance if none was provided.
      */
-    Cartographic3.prototype.clone = function() {
-        return new Cartographic3(this.longitude, this.latitude, this.height);
+    Cartographic3.prototype.clone = function(result) {
+        return Cartographic3.clone(this, result);
     };
 
     /**
-     * Returns <code>true</code> if this instance equals other.
-     *
+     * Compares the provided against this cartographic componentwise and returns
+     * <code>true/code> if they are equal, <code>false/code> otherwise.
      * @memberof Cartographic3
      *
-     * @param {Cartographic3} other The cartographic position to compare for equality.
-     *
-     * @return {Boolean} <code>true</code> if the positions are equal; otherwise, false.
+     * @param {Cartographic3} [right] The second cartographic.
+     * @return {Boolean} <code>true/code> if left and right are equal, <code>false/code> otherwise.
      */
-    Cartographic3.prototype.equals = function(other) {
-        return (this.longitude === other.longitude) && (this.latitude === other.latitude) && (this.height === other.height);
+    Cartographic3.prototype.equals = function(right) {
+        return Cartographic3.equals(this, right);
     };
 
     /**
-     * Returns <code>true</code> if this instance equals other within the specified epsilon.
-     *
+     * Compares the provided against this cartographic componentwise and returns
+     * <code>true/code> if they are within the provided epsilon,
+     * <code>false/code> otherwise.
      * @memberof Cartographic3
      *
-     * @param {Cartographic3} other The cartographic position to compare for equality.
-     * @param {Number} [epsilon=0.0] The epsilon to use for equality testing.
+     * @param {Cartographic3} [right] The second cartographic.
+     * @param {Number} epsilon The epsilon to use for equality testing.
+     * @return {Boolean} <code>true/code> if left and right are within the provided epsilon, <code>false/code> otherwise.
      *
-     * @return {Boolean} <code>true</code> if the position are equal within the specified epsilon; otherwise, <code>false</code>.
+     * @exception {DeveloperError} epsilon is required and must be a number.
      */
-    Cartographic3.prototype.equalsEpsilon = function(other, epsilon) {
-        epsilon = epsilon || 0.0;
-        return (Math.abs(this.longitude - other.longitude) <= epsilon) &&
-               (Math.abs(this.latitude - other.latitude) <= epsilon) &&
-               (Math.abs(this.height - other.height) <= epsilon);
+    Cartographic3.prototype.equalsEpsilon = function(right, epsilon) {
+        return Cartographic3.equalsEpsilon(this, right, epsilon);
     };
 
     /**
-     * Returns a string representing this instance in the format (longitude, latitude, height).
-     *
+     * Creates a string representing this cartographic in the format '(longitude, latitude, height)'.
      * @memberof Cartographic3
      *
-     * @return {String} Returns a string representing this instance.
+     * @return {String} A string representing the provided cartographic in the format '(longitude, latitude, height)'.
      */
     Cartographic3.prototype.toString = function() {
-        return '(' + this.longitude + ', ' + this.latitude + ', ' + this.height + ')';
+        return Cartographic3.toString(this);
     };
 
     return Cartographic3;

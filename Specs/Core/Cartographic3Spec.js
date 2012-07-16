@@ -1,65 +1,89 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/Cartographic3',
-         'Core/Cartographic2'
+         'Core/Cartographic3'
      ], function(
-         Cartographic3,
-         Cartographic2) {
+         Cartographic3) {
     "use strict";
     /*global it,expect*/
 
-    it('construct0', function() {
+    it('default constructor sets expected properties', function() {
         var c = new Cartographic3();
         expect(c.longitude).toEqual(0);
         expect(c.latitude).toEqual(0);
         expect(c.height).toEqual(0);
     });
 
-    it('construct1', function() {
-        var c = new Cartographic3(new Cartographic2(1, 2));
-        expect(c.longitude).toEqual(1);
-        expect(c.latitude).toEqual(2);
-        expect(c.height).toEqual(0);
-    });
-
-    it('construct2', function() {
-        var c = new Cartographic3(1, 2);
-        expect(c.longitude).toEqual(1);
-        expect(c.latitude).toEqual(2);
-        expect(c.height).toEqual(0);
-    });
-
-    it('construct3', function() {
-        var c = new Cartographic3(1, 2, 3);
+    it('constructor sets expected properties from parameters', function() {
+        var c = new Cartographic3(1.0, 2.0, 3.0);
         expect(c.longitude).toEqual(1);
         expect(c.latitude).toEqual(2);
         expect(c.height).toEqual(3);
     });
 
-    it('getZero', function() {
-        var c = Cartographic3.ZERO;
-        expect(c.longitude).toEqual(0);
-        expect(c.latitude).toEqual(0);
-        expect(c.height).toEqual(0);
+    it('clone without a result parameter', function() {
+        var cartographic = new Cartographic3(1.0, 2.0, 3.0);
+        var result = cartographic.clone();
+        expect(cartographic).toNotBe(result);
+        expect(cartographic).toEqual(result);
     });
 
-    it('clones itself', function() {
-        var c = new Cartographic3(0, 1, 2);
-        var c2 = c.clone();
-        expect(c.equals(c2)).toEqual(true);
+    it('clone with a result parameter', function() {
+        var cartographic = new Cartographic3(1.0, 2.0, 3.0);
+        var result = new Cartographic3();
+        var returnedResult = cartographic.clone(result);
+        expect(cartographic).toNotBe(result);
+        expect(result).toBe(returnedResult);
+        expect(cartographic).toEqual(result);
+    });
 
-        ++c2.height;
-        expect(c.equals(c2)).toEqual(false);
+    it('clone works with "this" result parameter', function() {
+        var cartographic = new Cartographic3(1.0, 2.0, 3.0);
+        var returnedResult = cartographic.clone(cartographic);
+        expect(cartographic).toBe(returnedResult);
+    });
+
+    it('equals', function() {
+        var cartographic = new Cartographic3(1.0, 2.0, 3.0);
+        expect(cartographic.equals(new Cartographic3(1.0, 2.0, 3.0))).toEqual(true);
+        expect(cartographic.equals(new Cartographic3(2.0, 2.0, 3.0))).toEqual(false);
+        expect(cartographic.equals(new Cartographic3(2.0, 1.0, 3.0))).toEqual(false);
+        expect(cartographic.equals(new Cartographic3(1.0, 2.0, 4.0))).toEqual(false);
+        expect(cartographic.equals(undefined)).toEqual(false);
     });
 
     it('equalsEpsilon', function() {
-        expect(new Cartographic3(0, 2, 1).equalsEpsilon(new Cartographic3(0, 2, 1), 0)).toEqual(true);
-        expect(new Cartographic3(0, 2, 1).equalsEpsilon(new Cartographic3(0, 2, 2), 1)).toEqual(true);
-        expect(new Cartographic3(0, 2, 1).equalsEpsilon(new Cartographic3(0, 2, 3), 1)).toEqual(false);
+        var cartographic = new Cartographic3(1.0, 2.0, 3.0);
+        expect(cartographic.equalsEpsilon(new Cartographic3(1.0, 2.0, 3.0), 0.0)).toEqual(true);
+        expect(cartographic.equalsEpsilon(new Cartographic3(1.0, 2.0, 3.0), 1.0)).toEqual(true);
+        expect(cartographic.equalsEpsilon(new Cartographic3(2.0, 2.0, 3.0), 1.0)).toEqual(true);
+        expect(cartographic.equalsEpsilon(new Cartographic3(1.0, 3.0, 3.0), 1.0)).toEqual(true);
+        expect(cartographic.equalsEpsilon(new Cartographic3(1.0, 2.0, 4.0), 1.0)).toEqual(true);
+        expect(cartographic.equalsEpsilon(new Cartographic3(2.0, 2.0, 3.0), 0.99999)).toEqual(false);
+        expect(cartographic.equalsEpsilon(new Cartographic3(1.0, 3.0, 3.0), 0.99999)).toEqual(false);
+        expect(cartographic.equalsEpsilon(new Cartographic3(1.0, 2.0, 4.0), 0.99999)).toEqual(false);
+        expect(cartographic.equalsEpsilon(undefined, 1)).toEqual(false);
     });
 
     it('toString', function() {
-        var c = new Cartographic3(1, 2, 3);
-        expect(c.toString()).toEqual('(1, 2, 3)');
+        var cartographic = new Cartographic3(1.123, 2.345, 6.789);
+        expect(cartographic.toString()).toEqual('(1.123, 2.345, 6.789)');
+    });
+
+    it('static clone throws without cartographic parameter', function() {
+        expect(function() {
+            Cartographic3.clone(undefined);
+        }).toThrow();
+    });
+
+    it('static toString throws without cartographic parameter', function() {
+        expect(function() {
+            Cartographic3.toString(undefined);
+        }).toThrow();
+    });
+
+    it('equalsEpsilon throws without numeric epsilon', function() {
+        expect(function() {
+            Cartographic3.equalsEpsilon(new Cartographic3(), new Cartographic3(), {});
+        }).toThrow();
     });
 });

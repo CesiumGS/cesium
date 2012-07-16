@@ -3,13 +3,11 @@ define([
         './DeveloperError',
         './Math',
         './Cartesian3',
-        './Cartographic2',
         './Cartographic3'
     ], function(
         DeveloperError,
         CesiumMath,
         Cartesian3,
-        Cartographic2,
         Cartographic3) {
     "use strict";
 
@@ -207,7 +205,7 @@ define([
      *
      * @memberof Ellipsoid
      *
-     * @param {Cartographic3} position DOC_TBA  (or Cartographic2)
+     * @param {Cartographic3} position DOC_TB
      * @return {Cartesian3} DOC_TBA
      */
     Ellipsoid.prototype.toCartesian = function(position) {
@@ -224,7 +222,7 @@ define([
      *
      * @memberof Ellipsoid
      *
-     * Input is array of Cartographic3 or Cartographic2.
+     * Input is array of Cartographic3.
      */
     Ellipsoid.prototype.toCartesians = function(positions) {
         if (positions) {
@@ -244,7 +242,7 @@ define([
      *
      * @memberof Ellipsoid
      *
-     * @param position Input is Cartographic3 or Cartographic2.
+     * @param position Input is Cartographic3.
      */
     Ellipsoid.prototype.cartographicDegreesToCartesian = function(position) {
         if (position) {
@@ -261,7 +259,7 @@ define([
      *
      * @memberof Ellipsoid
      *
-     * @param positions Input is array of Cartographic3 or Cartographic2.
+     * @param positions Input is array of Cartographic3.
      */
     Ellipsoid.prototype.cartographicDegreesToCartesians = function(positions) {
         if (positions) {
@@ -287,32 +285,16 @@ define([
      *
      * @memberof Ellipsoid
      *
-     * @param {Cartesian3} positionOnSurface DOC_TBA
-     * @return {Cartographic2} DOC_TBA
-     */
-    Ellipsoid.prototype.toCartographic2 = function(positionOnSurface) {
-        var p = Cartesian3.clone(positionOnSurface);
-        var n = this.geodeticSurfaceNormal(p);
-        return new Cartographic2(
-                Math.atan2(n.y, n.x),
-                Math.asin(n.z / n.magnitude()));
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof Ellipsoid
-     *
      * @param {Cartesian3} position DOC_TBA
      * @return {Cartographic3} DOC_TBA
      */
     Ellipsoid.prototype.toCartographic3 = function(position) {
         var pos = Cartesian3.clone(position);
+        var n = this.geodeticSurfaceNormal(pos);
         var p = this.scaleToGeodeticSurface(pos);
         var h = position.subtract(p);
         var height = CesiumMath.sign(h.dot(pos)) * h.magnitude();
-        var c = this.toCartographic2(p);
-        return new Cartographic3(c.longitude, c.latitude, height);
+        return new Cartographic3(Math.atan2(n.y, n.x), Math.asin(n.z / n.magnitude()), height);
     };
 
     /**

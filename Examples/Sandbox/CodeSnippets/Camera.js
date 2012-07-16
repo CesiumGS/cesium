@@ -28,7 +28,7 @@
 
     Sandbox.CameraReferenceFrame = function (scene, ellipsoid, primitives) {
         this.code = function() {
-            var center = ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic2(-75.59777, 40.03883));
+            var center = ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic3(-75.59777, 40.03883));
             var transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
 
             var spindle = scene.getCamera().getControllers().get(0);
@@ -89,11 +89,11 @@
 
             var polyline = new Cesium.Polyline(undefined);
             polyline.setPositions(ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic2(-78, 38),
-                new Cesium.Cartographic2(-78, 42),
-                new Cesium.Cartographic2(-72, 42),
-                new Cesium.Cartographic2(-72, 38),
-                new Cesium.Cartographic2(-78, 38)
+                new Cesium.Cartographic3(-78, 38),
+                new Cesium.Cartographic3(-78, 42),
+                new Cesium.Cartographic3(-72, 42),
+                new Cesium.Cartographic3(-72, 38),
+                new Cesium.Cartographic3(-78, 38)
             ]));
             primitives.add(polyline);
         };

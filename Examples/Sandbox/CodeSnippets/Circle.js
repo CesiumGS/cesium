@@ -7,7 +7,7 @@
             var polyline = new Cesium.Polyline(undefined);
             polyline.setPositions(Cesium.Shapes.computeCircleBoundary(
                 ellipsoid, ellipsoid.cartographicDegreesToCartesian(
-                    new Cesium.Cartographic2(-75.59777, 40.03883)), 300000.0));
+                    new Cesium.Cartographic3(-75.59777, 40.03883)), 300000.0));
 
             primitives.add(polyline);
         };
@@ -18,7 +18,7 @@
             var polygon = new Cesium.Polygon(undefined);
             polygon.setPositions(Cesium.Shapes.computeCircleBoundary(
                 ellipsoid, ellipsoid.cartographicDegreesToCartesian(
-                    new Cesium.Cartographic2(-75.59777, 40.03883)), 300000.0));
+                    new Cesium.Cartographic3(-75.59777, 40.03883)), 300000.0));
 
             primitives.add(polygon);
         };
@@ -29,7 +29,7 @@
             var polygon = new Cesium.Polygon(undefined);
             polygon.setPositions(Cesium.Shapes.computeCircleBoundary(
                 ellipsoid, ellipsoid.cartographicDegreesToCartesian(
-                    new Cesium.Cartographic2(-75.59777, 40.03883)), 300000.0));
+                    new Cesium.Cartographic3(-75.59777, 40.03883)), 300000.0));
             // Any polygon-compatible material can be used
             polygon.material = new Cesium.TieDyeMaterial(undefined);
 
@@ -42,7 +42,7 @@
             var polygon = new Cesium.Polygon(undefined);
             polygon.setPositions(Cesium.Shapes.computeEllipseBoundary(
                 ellipsoid, ellipsoid.cartographicDegreesToCartesian(
-                    new Cesium.Cartographic2(-75.59777, 40.03883)), 500000.0, 300000.0, Cesium.Math.toRadians(60)));
+                    new Cesium.Cartographic3(-75.59777, 40.03883)), 500000.0, 300000.0, Cesium.Math.toRadians(60)));
 
             primitives.add(polygon);
         };

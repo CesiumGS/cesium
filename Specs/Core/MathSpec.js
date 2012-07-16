@@ -2,12 +2,10 @@
 defineSuite([
          'Core/Math',
          'Core/Cartesian3',
-         'Core/Cartographic2',
          'Core/Cartographic3'
      ], function(
          CesiumMath,
          Cartesian3,
-         Cartographic2,
          Cartographic3) {
     "use strict";
     /*global it,expect*/
@@ -83,12 +81,6 @@ defineSuite([
         expect(c.height).toEqual(1.0);
     });
 
-    it('cartographic2ToRadians', function() {
-        var c = CesiumMath.cartographic2ToRadians(new Cartographic2(180.0, 360.0));
-        expect(c.longitude).toEqual(Math.PI);
-        expect(c.latitude).toEqual(2.0 * Math.PI);
-    });
-
     it('toDegrees', function() {
         expect(CesiumMath.toDegrees(Math.PI)).toEqual(180.0);
     });
@@ -98,12 +90,6 @@ defineSuite([
         expect(c.longitude).toEqual(360.0);
         expect(c.latitude).toEqual(180.0);
         expect(c.height).toEqual(1.0);
-    });
-
-    it('cartographic2ToDegrees', function() {
-        var c = CesiumMath.cartographic2ToDegrees(new Cartographic2(Math.PI, 2.0 * Math.PI));
-        expect(c.longitude).toEqual(180.0);
-        expect(c.latitude).toEqual(360.0);
     });
 
     it('convertLongitudeRange (1)', function() {

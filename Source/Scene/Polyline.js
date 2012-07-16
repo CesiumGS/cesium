@@ -466,7 +466,7 @@ define([
          * @example
          * // The arrow points to the east, i.e., along the local x-axis.
          * var polyline = new Polyline();
-         * var center = ellipsoid.cartographicDegreesToCartesian(new Cartographic2(-75.59777, 40.03883));
+         * var center = ellipsoid.cartographicDegreesToCartesian(new Cartographic3(-75.59777, 40.03883));
          * polyline.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
          * polyline.setPositions([
          *   new Cartesian3(0.0, 0.0, 0.0),

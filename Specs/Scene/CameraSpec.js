@@ -5,7 +5,7 @@ defineSuite([
          'Core/BoundingSphere',
          'Core/Cartesian2',
          'Core/Cartesian3',
-         'Core/Cartographic2',
+         'Core/Cartographic3',
          'Core/Ellipsoid',
          'Core/EquidistantCylindricalProjection',
          'Core/Intersect',
@@ -20,7 +20,7 @@ defineSuite([
          BoundingSphere,
          Cartesian2,
          Cartesian3,
-         Cartographic2,
+         Cartographic3,
          Ellipsoid,
          EquidistantCylindricalProjection,
          Intersect,
@@ -203,8 +203,8 @@ defineSuite([
 
         var windowCoord = new Cartesian2(canvas.clientWidth * 0.5, canvas.clientHeight * 0.5);
         var p = camera.pickEllipsoid(windowCoord, ellipsoid);
-        var c = ellipsoid.toCartographic2(p);
-        expect(c.equals(new Cartographic2(0.0, 0.0))).toEqual(true);
+        var c = ellipsoid.toCartographic3(p);
+        expect(c.equals(new Cartographic3(0.0, 0.0, 0.0))).toEqual(true);
 
         p = camera.pickEllipsoid(Cartesian2.ZERO, ellipsoid);
         expect(typeof p === 'undefined').toEqual(true);
@@ -242,8 +242,8 @@ defineSuite([
 
         var windowCoord = new Cartesian2(canvas.clientWidth * 0.5, canvas.clientHeight * 0.5);
         var p = camera.pickMap2D(windowCoord, projection);
-        var c = ellipsoid.toCartographic2(p);
-        expect(c.equals(new Cartographic2(0.0, 0.0))).toEqual(true);
+        var c = ellipsoid.toCartographic3(p);
+        expect(c.equals(new Cartographic3(0.0, 0.0, 0.0))).toEqual(true);
 
         p = camera.pickMap2D(Cartesian2.ZERO, projection);
         expect(typeof p === 'undefined').toEqual(true);
@@ -285,8 +285,8 @@ defineSuite([
 
         var windowCoord = new Cartesian2(canvas.clientWidth * 0.5, canvas.clientHeight * 0.5);
         var p = camera.pickMapColumbusView(windowCoord, projection);
-        var c = ellipsoid.toCartographic2(p);
-        expect(c.equals(new Cartographic2(0.0, 0.0))).toEqual(true);
+        var c = ellipsoid.toCartographic3(p);
+        expect(c.equals(new Cartographic3(0.0, 0.0, 0.0))).toEqual(true);
 
         p = camera.pickMapColumbusView(Cartesian2.ZERO, projection);
         expect(typeof p === 'undefined').toEqual(true);
