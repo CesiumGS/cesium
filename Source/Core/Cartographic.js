@@ -8,7 +8,7 @@ define([
     "use strict";
 
     /**
-     * A position defined by latitude, longitude, and height.
+     * A position defined by longitude, latitude, and height.
      * @alias Cartographic
      * @constructor
      *
