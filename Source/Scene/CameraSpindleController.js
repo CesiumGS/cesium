@@ -116,7 +116,7 @@ define([
      * // Example 1.
      * // Change the reference frame to one centered at a point on the ellipsoid's surface.
      * // Set the spindle controller's ellipsoid to a unit sphere for easy rotation around that point.
-     * var center = ellipsoid.cartographicDegreesToCartesian(new Cartographic2(-75.59777, 40.03883));
+     * var center = ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883));
      * var transform = Transforms.eastNorthUpToFixedFrame(center);
      * scene.getCamera().getControllers().get(0).setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
      *
@@ -415,7 +415,7 @@ define([
     };
 
     CameraSpindleController.prototype._zoom = function(movement) {
-        handleZoom(this, movement, this._ellipsoid.toCartographic3(this._camera.position).height);
+        handleZoom(this, movement, this._ellipsoid.cartesianToCartographic(this._camera.position).height);
     };
 
    /**

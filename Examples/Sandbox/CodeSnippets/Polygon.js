@@ -5,12 +5,12 @@
     Sandbox.Polygon = function (scene, ellipsoid, primitives) {
         this.code = function () {
             var polygon = new Cesium.Polygon(undefined);
-            polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic2(-72.0, 40.0),
-                new Cesium.Cartographic2(-70.0, 35.0),
-                new Cesium.Cartographic2(-75.0, 30.0),
-                new Cesium.Cartographic2(-70.0, 30.0),
-                new Cesium.Cartographic2(-68.0, 40.0)
+            polygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([
+                Cesium.Cartographic.fromDegrees(-72.0, 40.0),
+                Cesium.Cartographic.fromDegrees(-70.0, 35.0),
+                Cesium.Cartographic.fromDegrees(-75.0, 30.0),
+                Cesium.Cartographic.fromDegrees(-70.0, 30.0),
+                Cesium.Cartographic.fromDegrees(-68.0, 40.0)
             ]));
 
             primitives.add(polygon);
@@ -34,12 +34,12 @@
     Sandbox.PolygonColor = function (scene, ellipsoid, primitives) {
         this.code = function () {
             var polygon = new Cesium.Polygon(undefined);
-            polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic2(-72.0, 40.0),
-                new Cesium.Cartographic2(-70.0, 35.0),
-                new Cesium.Cartographic2(-75.0, 30.0),
-                new Cesium.Cartographic2(-70.0, 30.0),
-                new Cesium.Cartographic2(-68.0, 40.0)
+            polygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([
+                Cesium.Cartographic.fromDegrees(-72.0, 40.0),
+                Cesium.Cartographic.fromDegrees(-70.0, 35.0),
+                Cesium.Cartographic.fromDegrees(-75.0, 30.0),
+                Cesium.Cartographic.fromDegrees(-70.0, 30.0),
+                Cesium.Cartographic.fromDegrees(-68.0, 40.0)
             ]));
 
             // The color's alpha component defines the polygon's opacity.
@@ -58,11 +58,11 @@
     Sandbox.StripePolygonMaterial = function (scene, ellipsoid, primitives) {
         this.code = function () {
             var polygon = new Cesium.Polygon(undefined);
-            polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic2(-80.0, 30.0),
-                new Cesium.Cartographic2(-70.0, 30.0),
-                new Cesium.Cartographic2(-70.0, 40.0),
-                new Cesium.Cartographic2(-80.0, 40.0)
+            polygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([
+                Cesium.Cartographic.fromDegrees(-80.0, 30.0),
+                Cesium.Cartographic.fromDegrees(-70.0, 30.0),
+                Cesium.Cartographic.fromDegrees(-70.0, 40.0),
+                Cesium.Cartographic.fromDegrees(-80.0, 40.0)
             ]));
             polygon.material = new Cesium.VerticalStripeMaterial({
                 repeat : 5.0
@@ -75,11 +75,11 @@
     Sandbox.CheckerboardPolygonMaterial = function (scene, ellipsoid, primitives) {
         this.code = function () {
             var polygon = new Cesium.Polygon(undefined);
-            polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic2(-80.0, 30.0),
-                new Cesium.Cartographic2(-70.0, 30.0),
-                new Cesium.Cartographic2(-70.0, 40.0),
-                new Cesium.Cartographic2(-80.0, 40.0)
+            polygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([
+                Cesium.Cartographic.fromDegrees(-80.0, 30.0),
+                Cesium.Cartographic.fromDegrees(-70.0, 30.0),
+                Cesium.Cartographic.fromDegrees(-70.0, 40.0),
+                Cesium.Cartographic.fromDegrees(-80.0, 40.0)
             ]));
             polygon.material = new Cesium.CheckerboardMaterial({
                 lightColor: {
@@ -105,11 +105,11 @@
     Sandbox.DotPolygonMaterial = function (scene, ellipsoid, primitives) {
         this.code = function () {
             var polygon = new Cesium.Polygon(undefined);
-            polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic2(-80.0, 30.0),
-                new Cesium.Cartographic2(-70.0, 30.0),
-                new Cesium.Cartographic2(-70.0, 40.0),
-                new Cesium.Cartographic2(-80.0, 40.0)
+            polygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([
+                Cesium.Cartographic.fromDegrees(-80.0, 30.0),
+                Cesium.Cartographic.fromDegrees(-70.0, 30.0),
+                Cesium.Cartographic.fromDegrees(-70.0, 40.0),
+                Cesium.Cartographic.fromDegrees(-80.0, 40.0)
             ]));
             polygon.material = new Cesium.DotMaterial({
                 lightColor: {
@@ -135,11 +135,11 @@
     Sandbox.DiffuseMapPolygonMaterial = function (scene, ellipsoid, primitives) {
         this.code = function() {
             var polygon = new Cesium.Polygon(undefined);
-            polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic2(-80.0, 30.0),
-                new Cesium.Cartographic2(-70.0, 30.0),
-                new Cesium.Cartographic2(-70.0, 33.0),
-                new Cesium.Cartographic2(-80.0, 33.0)
+            polygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([
+                Cesium.Cartographic.fromDegrees(-80.0, 30.0),
+                Cesium.Cartographic.fromDegrees(-70.0, 30.0),
+                Cesium.Cartographic.fromDegrees(-70.0, 33.0),
+                Cesium.Cartographic.fromDegrees(-80.0, 33.0)
             ]));
 
             var image = new Image();
@@ -162,11 +162,11 @@
     Sandbox.TieDyePolygonMaterial = function (scene, ellipsoid, primitives) {
         this.code = function () {
             var polygon = new Cesium.Polygon(undefined);
-            polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic2(-80.0, 30.0),
-                new Cesium.Cartographic2(-70.0, 30.0),
-                new Cesium.Cartographic2(-70.0, 40.0),
-                new Cesium.Cartographic2(-80.0, 40.0)
+            polygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([
+                Cesium.Cartographic.fromDegrees(-80.0, 30.0),
+                Cesium.Cartographic.fromDegrees(-70.0, 30.0),
+                Cesium.Cartographic.fromDegrees(-70.0, 40.0),
+                Cesium.Cartographic.fromDegrees(-80.0, 40.0)
             ]));
             polygon.material = new Cesium.TieDyeMaterial({
                 lightColor: {
@@ -191,11 +191,11 @@
     Sandbox.FacetPolygonMaterial = function (scene, ellipsoid, primitives) {
         this.code = function () {
             var polygon = new Cesium.Polygon(undefined);
-            polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic2(-80.0, 30.0),
-                new Cesium.Cartographic2(-70.0, 30.0),
-                new Cesium.Cartographic2(-70.0, 40.0),
-                new Cesium.Cartographic2(-80.0, 40.0)
+            polygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([
+                Cesium.Cartographic.fromDegrees(-80.0, 30.0),
+                Cesium.Cartographic.fromDegrees(-70.0, 30.0),
+                Cesium.Cartographic.fromDegrees(-70.0, 40.0),
+                Cesium.Cartographic.fromDegrees(-80.0, 40.0)
             ]));
             polygon.material = new Cesium.FacetMaterial({
                 lightColor: {
@@ -220,11 +220,11 @@
     Sandbox.BlobPolygonMaterial = function (scene, ellipsoid, primitives) {
         this.code = function () {
             var polygon = new Cesium.Polygon(undefined);
-            polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic2(-80.0, 30.0),
-                new Cesium.Cartographic2(-70.0, 30.0),
-                new Cesium.Cartographic2(-70.0, 40.0),
-                new Cesium.Cartographic2(-80.0, 40.0)
+            polygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([
+                Cesium.Cartographic.fromDegrees(-80.0, 30.0),
+                Cesium.Cartographic.fromDegrees(-70.0, 30.0),
+                Cesium.Cartographic.fromDegrees(-70.0, 40.0),
+                Cesium.Cartographic.fromDegrees(-80.0, 40.0)
             ]));
             polygon.material = new Cesium.BlobMaterial({
                 repeat : 10.0
@@ -237,11 +237,11 @@
     Sandbox.ErosionPolygonAnimation = function (scene, ellipsoid, primitives) {
         this.code = function () {
             var polygon = new Cesium.Polygon(undefined);
-            polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic2(-80.0, 30.0),
-                new Cesium.Cartographic2(-70.0, 30.0),
-                new Cesium.Cartographic2(-70.0, 40.0),
-                new Cesium.Cartographic2(-80.0, 40.0)
+            polygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([
+                Cesium.Cartographic.fromDegrees(-80.0, 30.0),
+                Cesium.Cartographic.fromDegrees(-70.0, 30.0),
+                Cesium.Cartographic.fromDegrees(-70.0, 40.0),
+                Cesium.Cartographic.fromDegrees(-80.0, 40.0)
             ]));
             polygon.material = new Cesium.CheckerboardMaterial({
                 sRepeat : 5,
@@ -256,11 +256,11 @@
     Sandbox.AlphaPolygonAnimation = function (scene, ellipsoid, primitives) {
         this.code = function () {
             var polygon = new Cesium.Polygon(undefined);
-            polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic2(-80.0, 30.0),
-                new Cesium.Cartographic2(-70.0, 30.0),
-                new Cesium.Cartographic2(-70.0, 40.0),
-                new Cesium.Cartographic2(-80.0, 40.0)
+            polygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([
+                Cesium.Cartographic.fromDegrees(-80.0, 30.0),
+                Cesium.Cartographic.fromDegrees(-70.0, 30.0),
+                Cesium.Cartographic.fromDegrees(-70.0, 40.0),
+                Cesium.Cartographic.fromDegrees(-80.0, 40.0)
             ]));
             polygon.material = new Cesium.CheckerboardMaterial({
                 sRepeat : 5,
@@ -275,11 +275,11 @@
     Sandbox.HeightPolygonAnimation = function (scene, ellipsoid, primitives) {
         this.code = function () {
             var polygon = new Cesium.Polygon(undefined);
-            polygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic2(-80.0, 30.0),
-                new Cesium.Cartographic2(-70.0, 30.0),
-                new Cesium.Cartographic2(-70.0, 40.0),
-                new Cesium.Cartographic2(-80.0, 40.0)
+            polygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([
+                Cesium.Cartographic.fromDegrees(-80.0, 30.0),
+                Cesium.Cartographic.fromDegrees(-70.0, 30.0),
+                Cesium.Cartographic.fromDegrees(-70.0, 40.0),
+                Cesium.Cartographic.fromDegrees(-80.0, 40.0)
             ]));
             polygon.material = new Cesium.CheckerboardMaterial({
                 sRepeat : 5,
