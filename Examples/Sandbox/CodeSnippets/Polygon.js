@@ -135,7 +135,17 @@
             polygon.material = new Cesium.Material({
                'context' : scene.getContext(),
                'template' : {
-                   'id' : 'DiffuseMapMaterial'
+                   'id' : 'DiffuseMapMaterial',
+                   'uniforms' : {
+                       'u_repeat' : {
+                           'x' : 1,
+                           'y' : 1
+                       },
+                       'u_texture' : '../../Images/Cesium_Logo_Color.jpg',
+                       'diffuseChannels' : 'rgb',
+                       'alphaChannel' : 'a'
+                   },
+                   'sourcePath' : 'DiffuseMapMaterial'
                }
             });
 
@@ -163,7 +173,16 @@
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
                 'template' : {
-                    'id' : 'AlphaMapMaterial'
+                    'id' : 'AlphaMapMaterial',
+                    'uniforms' : {
+                        'u_texture' : '../../Images/alpha_map.png',
+                        'alphaChannel' : 'r',
+                        'u_repeat' : {
+                            'x' : 1,
+                            'y' : 1
+                        }
+                    },
+                    'sourcePath' : 'AlphaMapMaterial'
                 }
             });
 
@@ -191,7 +210,16 @@
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
                 'template' : {
-                    'id' : 'SpecularMapMaterial'
+                    'id' : 'SpecularMapMaterial',
+                    'uniforms' : {
+                        'u_texture' : '../../Images/alpha_map.png',
+                        'specularChannel' : 'r',
+                        'u_repeat' : {
+                            'x' : 1,
+                            'y' : 1
+                        }
+                    },
+                    'sourcePath' : 'SpecularMapMaterial'
                 }
             });
 
@@ -219,7 +247,16 @@
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
                 'template' : {
-                    'id' : 'EmissionMapMaterial'
+                    'id' : 'EmissionMapMaterial',
+                    'uniforms' : {
+                        'u_texture' : '../../Images/alpha_map.png',
+                        'emissionChannels' : 'rgb',
+                        'u_repeat' : {
+                            'x' : 1,
+                            'y' : 1
+                        }
+                    },
+                    'sourcePath' : 'EmissionMapMaterial'
                 }
             });
 
@@ -244,6 +281,15 @@
                 'context' : scene.getContext(),
                 'template' : {
                     'id' : 'BumpMapMaterial',
+                    'uniforms' : {
+                        'u_texture' : '../../Images/earthbump1k.jpg',
+                        'bumpMapChannel' : 'r',
+                        'u_repeat' : {
+                            'x' : 1,
+                            'y' : 1
+                        }
+                    },
+                    'sourcePath' : 'BumpMapMaterial',
                     'components' : {
                         'diffuse' : 'vec3(0.3, 0.3, 0.3)',
                         'specular' : '0.01'
@@ -272,6 +318,15 @@
                 'context' : scene.getContext(),
                 'template' : {
                     'id' : 'NormalMapMaterial',
+                    'uniforms' : {
+                        'u_texture' : '../../Images/earthnormalmap.jpg',
+                        'normalMapChannels' : 'rgb',
+                        'u_repeat' : {
+                            'x' : 1,
+                            'y' : 1
+                        }
+                    },
+                    'sourcePath' : 'NormalMapMaterial',
                     'components' : {
                         'diffuse' : 'vec3(0.3, 0.3, 0.3)',
                         'specular' : '0.01'
@@ -303,7 +358,19 @@
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
                 'template' : {
-                    'id' : 'ReflectionMaterial'
+                    'id' : 'ReflectionMaterial',
+                    'uniforms' : {
+                        'u_cubeMap' : {
+                            'positiveX' : '../../Images/PalmTreesCubeMap/posx.jpg',
+                            'negativeX' : '../../Images/PalmTreesCubeMap/negx.jpg',
+                            'positiveY' : '../../Images/PalmTreesCubeMap/negy.jpg',
+                            'negativeY' : '../../Images/PalmTreesCubeMap/posy.jpg',
+                            'positiveZ' : '../../Images/PalmTreesCubeMap/posz.jpg',
+                            'negativeZ' : '../../Images/PalmTreesCubeMap/negz.jpg'
+                        },
+                        'reflectionChannels' : 'rgb'
+                    },
+                    'sourcePath' : 'ReflectionMaterial'
                 }
             });
 
@@ -328,7 +395,20 @@
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
                 'template' : {
-                    'id' : 'RefractionMaterial'
+                    'id' : 'RefractionMaterial',
+                    'uniforms' : {
+                        'u_cubeMap' : {
+                            'positiveX' : '../../Images/PalmTreesCubeMap/posx.jpg',
+                            'negativeX' : '../../Images/PalmTreesCubeMap/negx.jpg',
+                            'positiveY' : '../../Images/PalmTreesCubeMap/negy.jpg',
+                            'negativeY' : '../../Images/PalmTreesCubeMap/posy.jpg',
+                            'positiveZ' : '../../Images/PalmTreesCubeMap/posz.jpg',
+                            'negativeZ' : '../../Images/PalmTreesCubeMap/negz.jpg'
+                        },
+                        'refractionChannels' : 'rgb',
+                        'u_indexOfRefractionRatio' : 0.9
+                    },
+                    'sourcePath' : 'RefractionMaterial'
                 }
             });
 
@@ -353,7 +433,28 @@
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
                 'template' : {
-                    'id' : 'FresnelMaterial'
+                    'id' : 'FresnelMaterial',
+                    'uniforms' : {
+                        'palmTreeCubeMap' : {
+                            'positiveX' : '../../Images/PalmTreesCubeMap/posx.jpg',
+                            'negativeX' : '../../Images/PalmTreesCubeMap/negx.jpg',
+                            'positiveY' : '../../Images/PalmTreesCubeMap/negy.jpg',
+                            'negativeY' : '../../Images/PalmTreesCubeMap/posy.jpg',
+                            'positiveZ' : '../../Images/PalmTreesCubeMap/posz.jpg',
+                            'negativeZ' : '../../Images/PalmTreesCubeMap/negz.jpg'
+                        }
+                    },
+                    'materials' : {
+                        'reflection' : {
+                            'id' : 'ReflectionMaterial',
+                            'u_cubeMap' : 'palmTreeCubeMap'
+                        },
+                        'refraction' : {
+                            'id' : 'RefractionMaterial',
+                            'u_cubeMap' : 'palmTreeCubeMap'
+                        }
+                    },
+                    'sourcePath' : 'FresnelMaterial'
                 }
             });
 
@@ -374,7 +475,32 @@
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
                 'template' : {
-                    'id' : 'BrickMaterial'
+                    'id' : 'BrickMaterial',
+                    'uniforms' : {
+                        'u_brickColor' : {
+                            'red': 0.6,
+                            'green': 0.3,
+                            'blue': 0.1,
+                            'alpha': 1.0
+                        },
+                        'u_mortarColor' : {
+                            'red' : 0.8,
+                            'green' : 0.8,
+                            'blue' : 0.7,
+                            'alpha' : 1.0
+                        },
+                        'u_brickSize' : {
+                            'x' : 0.30,
+                            'y' : 0.15
+                        },
+                        'u_brickPct' : {
+                            'x' : 0.90,
+                            'y' : 0.85
+                        },
+                        'u_brickRoughness' : 0.2,
+                        'u_mortarRoughness' : 0.1
+                    },
+                    'sourcePath' : 'BrickMaterial'
                 }
             });
 
@@ -395,7 +521,28 @@
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
                 'template' : {
-                    'id' : 'WoodMaterial'
+                    'id' : 'WoodMaterial',
+                    'uniforms' : {
+                        'u_lightWoodColor' : {
+                            'red' : 0.6,
+                            'green' : 0.3,
+                            'blue' : 0.1,
+                            'alpha' : 1.0
+                        },
+                        'u_darkWoodColor' : {
+                            'red' : 0.4,
+                            'green' : 0.2,
+                            'blue' : 0.07,
+                            'alpha' : 1.0
+                        },
+                        'u_ringFrequency' : 3.0,
+                        'u_noiseScale' : {
+                            'x' : 0.7,
+                            'y' : 0.5
+                        },
+                        'u_grainFrequency' : 27.0
+                    },
+                    'sourcePath' : 'WoodMaterial'
                 }
             });
 
@@ -415,7 +562,18 @@
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
                 'template' : {
-                    'id' : 'AsphaltMaterial'
+                    'id' : 'AsphaltMaterial',
+                    'uniforms' : {
+                        'u_asphaltColor' : {
+                            'red' : 0.15,
+                            'green' : 0.15,
+                            'blue' : 0.15,
+                            'alpha' : 1.0
+                        },
+                        'u_bumpSize' : 0.02,
+                        'u_roughness' : 0.2
+                    },
+                    'sourcePath' : 'AsphaltMaterial'
                 }
             });
 
@@ -435,7 +593,18 @@
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
                 'template' : {
-                    'id' : 'CementMaterial'
+                    'id' : 'CementMaterial',
+                    'uniforms' : {
+                        'u_cementColor' : {
+                            'red' : 0.95,
+                            'green' : 0.95,
+                            'blue' : 0.85,
+                            'alpha' : 1.0
+                        },
+                        'u_grainScale' : 0.01,
+                        'u_roughness' : 0.3
+                    },
+                    'sourcePath' : 'CementMaterial'
                 }
             });
 
@@ -455,7 +624,23 @@
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
                 'template' : {
-                    'id' : 'GrassMaterial'
+                    'id' : 'GrassMaterial',
+                    'uniforms' : {
+                        'u_grassColor' : {
+                            'red' : 0.25,
+                            'green' : 0.4,
+                            'blue' : 0.1,
+                            'alpha' : 1.0
+                        },
+                        'u_dirtColor' : {
+                            'red' : 0.1,
+                            'green' : 0.1,
+                            'blue' : 0.1,
+                            'alpha' : 1.0
+                        },
+                        'u_patchiness' : 1.5
+                    },
+                    'sourcePath' : 'GrassMaterial'
                 }
             });
 
@@ -476,7 +661,24 @@
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
                 'template' : {
-                    'id' : 'VerticalStripeMaterial'
+                    'id' : 'VerticalStripeMaterial',
+                    'uniforms' : {
+                        'u_lightColor' : {
+                            'red' : 1.0,
+                            'green' : 1.0,
+                            'blue' : 1.0,
+                            'alpha' : 0.5
+                        },
+                        'u_darkColor' : {
+                            'red' : 0.0,
+                            'green' : 0.0,
+                            'blue' : 1.0,
+                            'alpha' : 0.5
+                        },
+                        'u_offset' : 0.0,
+                        'u_repeat' : 5.0
+                    },
+                    'sourcePath' : 'HorizontalStripeMaterial'
                 }
             });
 
@@ -497,7 +699,26 @@
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
                 'template' : {
-                    'id' : 'CheckerboardMaterial'
+                    'id' : 'CheckerboardMaterial',
+                    'uniforms' : {
+                        'u_lightColor' : {
+                            'red' : 1.0,
+                            'green' : 1.0,
+                            'blue' : 0.0,
+                            'alpha' : 0.75
+                        },
+                        'u_darkColor' : {
+                            'red' : 0.0,
+                            'green' : 1.0,
+                            'blue' : 1.0,
+                            'alpha' : 0.75
+                        },
+                        'u_repeat' : {
+                            'x' : 5.0,
+                            'y' : 5.0
+                        }
+                    },
+                    'sourcePath' : 'CheckerboardMaterial'
                 }
             });
 
@@ -518,7 +739,26 @@
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
                 'template' : {
-                    'id' : 'DotMaterial'
+                    'id' : 'DotMaterial',
+                    'uniforms' : {
+                        'u_lightColor' : {
+                            'red' : 1.0,
+                            'green' : 1.0,
+                            'blue' : 0.0,
+                            'alpha' : 0.75
+                        },
+                        'u_darkColor' : {
+                            'red' : 0.0,
+                            'green' : 1.0,
+                            'blue' : 1.0,
+                            'alpha' : 0.75
+                        },
+                        'u_repeat' : {
+                            'x' : 5.0,
+                            'y' : 5.0
+                        }
+                    },
+                    'sourcePath' : 'DotMaterial'
                 }
             });
 
@@ -539,7 +779,23 @@
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
                 'template' : {
-                    'id' : 'TieDyeMaterial'
+                    'id' : 'TieDyeMaterial',
+                    'uniforms' : {
+                        'u_lightColor' : {
+                            'red' : 1.0,
+                            'green' : 1.0,
+                            'blue' : 0.0,
+                            'alpha' : 0.75
+                        },
+                        'u_darkColor' : {
+                            'red' : 1.0,
+                            'green' : 0.0,
+                            'blue' : 0.0,
+                            'alpha' : 0.75
+                        },
+                        'u_frequency' : 5.0
+                    },
+                    'sourcePath' : 'TieDyeMaterial'
                 }
             });
 
@@ -560,7 +816,23 @@
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
                 'template' : {
-                    'id' : 'FacetMaterial'
+                    'id' : 'FacetMaterial',
+                    'uniforms' : {
+                        'u_lightColor' : {
+                            'red' : 0.25,
+                            'green' : 0.25,
+                            'blue' : 0.25,
+                            'alpha' : 0.75
+                        },
+                        'u_darkColor' : {
+                            'red' : 0.75,
+                            'green' : 0.75,
+                            'blue' : 0.75,
+                            'alpha' : 0.75
+                        },
+                        'u_frequency' : 10.0
+                    },
+                    'sourcePath' : 'FacetMaterial'
                 }
             });
 
@@ -581,7 +853,23 @@
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
                 'template' : {
-                    'id' : 'BlobMaterial'
+                    'id' : 'BlobMaterial',
+                    'uniforms' : {
+                        'u_lightColor' : {
+                            'red' : 1.0,
+                            'green' : 1.0,
+                            'blue' : 1.0,
+                            'alpha' : 0.5
+                        },
+                        'u_darkColor' : {
+                            'red' : 0.0,
+                            'green' : 0.0,
+                            'blue' : 1.0,
+                            'alpha' : 0.5
+                        },
+                        'u_frequency' : 10.0
+                    },
+                    'sourcePath' : 'BlobMaterial'
                 }
             });
 

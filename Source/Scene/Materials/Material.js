@@ -535,7 +535,7 @@ define([
         'redefine': 'true',
         'uniforms' : {
             'u_texture' : '../../Images/earthbump1k.jpg',
-            'bumpMapChannels' : 'r',
+            'bumpMapChannel' : 'r',
             'u_repeat' : {
                 'x' : 1,
                 'y' : 1
