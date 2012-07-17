@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/DeveloperError',
+        '../Core/Color',
         '../Core/combine',
         '../Core/destroyObject',
         '../Core/Cartesian2',
@@ -20,7 +21,7 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/CullFace',
         '../Renderer/VertexLayout',
-        './Materials/ColorMaterial',
+        './ColorMaterial',
         './SceneMode',
         '../Shaders/Noise',
         '../Shaders/PolygonVS',
@@ -29,6 +30,7 @@ define([
         '../Shaders/PolygonFSPick'
     ], function(
         DeveloperError,
+        Color,
         combine,
         destroyObject,
         Cartesian2,
@@ -228,12 +230,7 @@ define([
          * DOC_TBA
          */
         this.material = new ColorMaterial({
-            color : {
-                red : 1.0,
-                green : 1.0,
-                blue : 0.0,
-                alpha : 0.5
-            }
+            color : new Color(1.0, 1.0, 0.0, 0.5)
         });
         this._material = undefined;
 

@@ -1,8 +1,10 @@
 /*global define*/
 define([
-        '../../Shaders/Noise',
-        '../../Shaders/Materials/TieDyeMaterial'
+        '../Core/Color',
+        '../Shaders/Noise',
+        '../Shaders/TieDyeMaterial'
     ], function(
+        Color,
         ShadersNoise,
         ShadersTieDyeMaterial){
     "use strict";
@@ -20,22 +22,12 @@ define([
         /**
          * The light color of the tie-dye.
          */
-        this.lightColor = t.lightColor || {
-            red : 1.0,
-            green : 1.0,
-            blue : 1.0,
-            alpha : 0.5
-        };
+        this.lightColor = (typeof t.lightColor !== 'undefined') ? Color.clone(t.lightColor) : new Color(1.0, 1.0, 1.0, 0.5);
 
         /**
          * The dark color of the tie-dye.
          */
-        this.darkColor = t.darkColor || {
-            red : 0.0,
-            green : 0.0,
-            blue : 1.0,
-            alpha : 0.5
-        };
+        this.darkColor = (typeof t.darkColor !== 'undefined') ? Color.clone(t.darkColor) : new Color(0.0, 0.0, 1.0, 0.5);
 
         /**
          * Controls the noise frequency.

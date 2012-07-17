@@ -1,8 +1,10 @@
 /*global define*/
 define([
-        '../../Shaders/Noise',
-        '../../Shaders/Materials/BlobMaterial'
+        '../Core/Color',
+        '../Shaders/Noise',
+        '../Shaders/BlobMaterial'
     ], function(
+        Color,
         ShadersNoise,
         ShadersBlobMaterial) {
     "use strict";
@@ -20,22 +22,12 @@ define([
         /**
          * Color between the cells.
          */
-        this.lightColor = t.lightColor || {
-            red : 1.0,
-            green : 1.0,
-            blue : 1.0,
-            alpha : 0.5
-        };
+        this.lightColor = (typeof t.lightColor !== 'undefined') ? Color.clone(t.lightColor) : new Color(1.0, 1.0, 1.0, 0.5);
 
         /**
          * Cell color.
          */
-        this.darkColor = t.darkColor || {
-            red : 0.0,
-            green : 0.0,
-            blue : 1.0,
-            alpha : 0.5
-        };
+        this.darkColor = (typeof t.darkColor !== 'undefined') ? Color.clone(t.darkColor) : new Color(0.0, 0.0, 1.0, 0.5);
 
         /**
          * Cell frequency.

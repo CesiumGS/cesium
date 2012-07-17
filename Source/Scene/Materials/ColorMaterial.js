@@ -19,7 +19,7 @@ define([
         /**
          * Color of the material.
          */
-        this.color = typeof color !== 'undefined' ? new Color(color.red, color.green, color.blue, color.alpha) : new Color(1.0, 0.0, 0.0, 0.5);
+        this.color = typeof color !== 'undefined' ? Color.clone(color) : new Color(1.0, 0.0, 0.0, 0.5);
 
         /**
          * The glsl shader source

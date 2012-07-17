@@ -1,8 +1,10 @@
 /*global define*/
 define([
-        '../../Shaders/Materials/CheckerboardMaterial'
-    ], function(
-        ShadersCheckerboardMaterial) {
+        '../Core/Color',
+        '../Shaders/CheckerboardMaterial'
+       ], function(
+         Color,
+         ShadersCheckerboardMaterial) {
     "use strict";
 
     /**
@@ -17,22 +19,12 @@ define([
         /**
          * Light color. Adjacent to dark colors and diagonal to light colors.
          */
-        this.lightColor = t.lightColor || {
-            red : 1.0,
-            green : 1.0,
-            blue : 1.0,
-            alpha : 0.5
-        };
+        this.lightColor = (typeof t.lightColor !== 'undefined') ? Color.clone(t.lightColor) : new Color(1.0, 1.0, 1.0, 0.5);
 
         /**
          * Dark color. Adjacent to light colors and diagonal to dark colors.
          */
-        this.darkColor = t.darkColor || {
-            red : 0.0,
-            green : 0.0,
-            blue : 0.0,
-            alpha : 0.5
-        };
+        this.darkColor = (typeof t.darkColor !== 'undefined') ? Color.clone(t.darkColor) : new Color(0.0, 0.0, 0.0, 0.5);
 
         /**
          * Number of cells in the x direction.

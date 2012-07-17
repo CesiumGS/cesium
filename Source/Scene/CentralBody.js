@@ -2,6 +2,7 @@
 define([
         '../Core/DeveloperError',
         '../Core/RuntimeError',
+        '../Core/Color',
         '../Core/combine',
         '../Core/destroyObject',
         '../Core/Math',
@@ -56,6 +57,7 @@ define([
     ], function(
         DeveloperError,
         RuntimeError,
+        Color,
         combine,
         destroyObject,
         CesiumMath,
@@ -1172,7 +1174,7 @@ define([
                     return rtc;
                 },
                 u_center2D : function() {
-                    return (projectedRTC) ? projectedRTC.getXY() : Cartesian2.ZERO;
+                    return (projectedRTC) ? Cartesian2.fromCartesian3(projectedRTC) : Cartesian2.ZERO;
                 },
                 u_modifiedModelView : function() {
                     return tile.modelView;
@@ -1280,8 +1282,8 @@ define([
             tileHeight = provider.tileHeight;
         }
 
-        var a = projection.project(new Cartographic2(tile.extent.west, tile.extent.north)).getXY();
-        var b = projection.project(new Cartographic2(tile.extent.east, tile.extent.south)).getXY();
+        var a = projection.project(new Cartographic2(tile.extent.west, tile.extent.north));
+        var b = projection.project(new Cartographic2(tile.extent.east, tile.extent.south));
         var diagonal = a.subtract(b);
         var texelSize = Math.max(diagonal.x, diagonal.y) / Math.max(tileWidth, tileHeight);
         var pixelSize = Math.max(frustum.top - frustum.bottom, frustum.right - frustum.left) / Math.max(viewportWidth, viewportHeight);
@@ -1311,13 +1313,13 @@ define([
         var center = upperLeft.add(lowerRight).multiplyWithScalar(0.5);
         var centerScreen = mvp.multiplyWithVector(new Cartesian4(center.x, center.y, center.z, 1.0));
         centerScreen = centerScreen.multiplyWithScalar(1.0 / centerScreen.w);
-        var centerClip = clip.multiplyWithVector(centerScreen).getXYZ();
+        var centerClip = clip.multiplyWithVector(centerScreen);
 
         var surfaceScreen = mvp.multiplyWithVector(new Cartesian4(upperLeft.x, upperLeft.y, upperLeft.z, 1.0));
         surfaceScreen = surfaceScreen.multiplyWithScalar(1.0 / surfaceScreen.w);
-        var surfaceClip = clip.multiplyWithVector(surfaceScreen).getXYZ();
+        var surfaceClip = clip.multiplyWithVector(surfaceScreen);
 
-        var radius = Math.ceil(surfaceClip.subtract(centerClip).magnitude());
+        var radius = Math.ceil(Cartesian3.magnitude(surfaceClip.subtract(centerClip, surfaceClip)));
         var diameter = 2.0 * radius;
 
         return {
@@ -2021,6 +2023,11 @@ define([
         this._projection = projection;
     };
 
+    var clearState = {
+        framebuffer : undefined,
+        color : new Color(0.0, 0.0, 0.0, 0.0)
+    };
+
     /**
      * DOC_TBA
      * @memberof CentralBody
@@ -2028,15 +2035,8 @@ define([
     CentralBody.prototype.render = function(context) {
         if (this.show) {
             // clear FBO
-            context.clear(context.createClearState({
-                framebuffer : this._fb,
-                color : {
-                    red : 0.0,
-                    green : 0.0,
-                    blue : 0.0,
-                    alpha : 0.0
-                }
-            }));
+            clearState.framebuffer = this._fb;
+            context.clear(context.createClearState(clearState));
 
             if (this.showSkyAtmosphere) {
                 context.draw({

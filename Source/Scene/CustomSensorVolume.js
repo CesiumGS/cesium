@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/DeveloperError',
+        '../Core/Color',
         '../Core/combine',
         '../Core/destroyObject',
         '../Core/FAR',
@@ -20,6 +21,7 @@ define([
         './SceneMode'
     ], function(
         DeveloperError,
+        Color,
         combine,
         destroyObject,
         FAR,
@@ -143,12 +145,7 @@ define([
         /**
          * DOC_TBA
          */
-        this.intersectionColor = t.intersectionColor || {
-            red : 1.0,
-            green : 1.0,
-            blue : 0.0,
-            alpha : 1.0
-        };
+        this.intersectionColor = (typeof t.intersectionColor !== 'undefined') ? Color.clone(t.intersectionColor) : new Color(1.0, 1.0, 0.0, 1.0);
 
         /**
          * DOC_TBA
@@ -227,7 +224,7 @@ define([
             var n2 = CustomSensorVolume._toCartesian(directions[k]);
 
             // Extend position so the volume encompasses the sensor's radius.
-            var theta = Math.max(CesiumMath.angleBetween(n0, n1), CesiumMath.angleBetween(n1, n2));
+            var theta = Math.max(Cartesian3.angleBetween(n0, n1), Cartesian3.angleBetween(n1, n2));
             var distance = r / Math.cos(theta * 0.5);
             var p = n1.multiplyWithScalar(distance);
 

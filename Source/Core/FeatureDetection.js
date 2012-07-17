@@ -1,7 +1,8 @@
 /*global define*/
-define(['Core/FullScreen'
-       ], function(
-         FullScreen) {
+define([
+        './FullScreen'
+    ], function(
+        FullScreen) {
     "use strict";
 
     /**
