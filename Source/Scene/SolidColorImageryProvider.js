@@ -6,8 +6,10 @@ define([
         '../Core/Color',
         '../Core/Extent',
         '../Core/Math',
+        './ImageryProvider',
         './Projections',
-        './GeographicTilingScheme'
+        './GeographicTilingScheme',
+        './TileState'
     ], function(
         defaultValue,
         loadImage,
@@ -15,15 +17,17 @@ define([
         Color,
         Extent,
         CesiumMath,
+        ImageryProvider,
         Projections,
-        GeographicTilingScheme) {
+        GeographicTilingScheme,
+        TileState) {
     "use strict";
 
     /**
      * Provides tile images with a different solid color for each level.
      * Useful for debugging or testing different {@link CentralBody} options.
      *
-     * @alias SolidColorTileProvider
+     * @alias SolidColorImageryProvider
      * @constructor
      *
      * @param {Number} [maxLevel=23] The maximum level to generate tiles for.
@@ -33,7 +37,7 @@ define([
      * @see OpenStreetMapTileProvider
      * @see CompositeTileProvider
      */
-    var SolidColorTileProvider = function(maxLevel) {
+    var SolidColorImageryProvider = function(maxLevel) {
         maxLevel = defaultValue(maxLevel, 23);
 
         this._canvases = [];
@@ -83,8 +87,8 @@ define([
          * @see GeographicTilingScheme
          */
         this.tilingScheme = new GeographicTilingScheme({
-            numberOfLevelZeroTilesX: 1,
-            numberOfLevelZeroTilesY: 1
+            numberOfLevelZeroTilesX : 1,
+            numberOfLevelZeroTilesY : 1
         });
 
         /**
@@ -96,58 +100,42 @@ define([
     };
 
     /**
-     * Determine whether a the image for a given tile is valid and should be displayed.
-     *
-     * @memberof SolidColorTileProvider
-     *
-     * @param tile The tile to check.
-     *
-     * @return {Boolean|Promise} Either a boolean, or a Promise for a boolean if the
-     *                           process of checking is asynchronous.
-     */
-    SolidColorTileProvider.prototype.isTileAvailable = function(tile) {
-        return true;
-    };
-
-    /**
      * Build a URL to retrieve the image for a tile.
      *
-     * @memberof SolidColorTileProvider
-     *
-     * @param {Number} x The x coordinate of the tile image.
-     * @param {Number} y The y coordinate of the tile image.
-     * @param {Number} level The level-of-detail of the tile image.
+     * @param {Number} x The x coordinate of the tile.
+     * @param {Number} y The y coordinate of the tile.
+     * @param {Number} level The level-of-detail of the tile.
      *
      * @return {String|Promise} Either a string containing the URL, or a Promise for a string
      *                          if the URL needs to be built asynchronously.
      */
-    SolidColorTileProvider.prototype.buildImageUrl = function(x, y, level) {
+    SolidColorImageryProvider.prototype.buildImageUrl = function(x, y, level) {
         var canvas = this._canvases[level];
         if (typeof canvas === 'undefined') {
             canvas = document.createElement('canvas');
             canvas.width = this.tileWidth;
             canvas.height = this.tileHeight;
 
-            var color = new Color();
+            var color = new Color(0.0, 0.0, 0.0, 1.0);
 
             x = level / this.maxLevel;
             if (x < 0.25) {
                 // blue to cyan
                 color.green = 4.0 * x;
-                color.blue = 255;
+                color.blue = 1.0;
             } else if (x < 0.5) {
                 // cyan to green
-                color.green = 255;
+                color.green = 1.0;
                 color.blue = 2.0 - 4.0 * x;
             } else if (x < 0.75) {
                 // green to yellow
                 color.red = 4.0 * x - 2.0;
-                color.green = 255;
+                color.green = 1.0;
             } else {
                 // yellow to red
-                color.red = 255;
+                color.red = 1.0;
                 color.green = 4.0 * (1.0 - x);
-        }
+            }
 
             var context = canvas.getContext('2d');
             context.fillStyle = color.toCSSColor();
@@ -160,17 +148,45 @@ define([
     };
 
     /**
-     * Load the image for a given tile.
+     * Request the image for a given tile.
      *
-     * @memberof SolidColorTileProvider
-     *
-     * @param {String} [tileImageUrl] The tile image URL.
+     * @param {String} url The tile image URL.
      *
      * @return A promise for the image that will resolve when the image is available.
+     *         If the image is not suitable for display, the promise can resolve to undefined.
      */
-    SolidColorTileProvider.prototype.requestImage = function(tileImageUrl) {
+    SolidColorImageryProvider.prototype.requestImage = function(tileImageUrl) {
         return loadImage(tileImageUrl);
     };
 
-    return SolidColorTileProvider;
+    /**
+     * Transform the tile imagery from the format requested from the remote server
+     * into a format suitable for resource creation.  Once complete, the tile imagery
+     * state should be set to TRANSFORMED.  Alternatively, tile imagery state can be set to
+     * RECEIVED to indicate that the transformation should be attempted again next update, if the tile
+     * is still needed.
+     *
+     * @param {Context} context The context to use to create resources.
+     * @param {TileImagery} tileImagery The tile imagery to transform.
+     */
+    SolidColorImageryProvider.prototype.transformImagery = function(context, tileImagery) {
+        tileImagery.state = TileState.TRANSFORMED;
+    };
+
+    /**
+     * Create WebGL resources for the tile imagery using whatever data the transformImagery step produced.
+     * Once complete, the tile imagery state should be set to READY.  Alternatively, tile imagery state can be set to
+     * TRANSFORMED to indicate that resource creation should be attempted again next update, if the tile
+     * is still needed.
+     *
+     * @param {Context} context The context to use to create resources.
+     * @param {TileImagery} tileImagery The tile imagery to create resources for.
+     */
+    SolidColorImageryProvider.prototype.createResources = function(context, tileImagery) {
+        tileImagery.texture = ImageryProvider.createTextureFromTransformedImage(context, tileImagery.image);
+        tileImagery.image = undefined;
+        tileImagery.state = TileState.READY;
+    };
+
+    return SolidColorImageryProvider;
 });

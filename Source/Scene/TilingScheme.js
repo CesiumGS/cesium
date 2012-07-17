@@ -121,7 +121,22 @@ define([
      * west properties in radians.
      */
     TilingScheme.prototype.tileXYToExtent = function(x, y, level) {
-        throw new DeveloperError('This method should not called directly.  Instead, use the equivalent on WebMercatorTilingScheme or GeographicTilingScheme.');
+        throw new DeveloperError('This type should not be instantiated directly.');
+    };
+
+    /**
+     * Calculates the tile x, y coordinates of the tile containing
+     * a given cartographic position.
+     *
+     * @memberof TilingScheme
+     *
+     * @param {Cartographic2} position The position.
+     * @param {Number} level The tile level-of-detail.  Zero is the least detailed.
+     *
+     * @returns {Cartesian2} The x, y coordinate of the tile containing the position.
+     */
+    TilingScheme.prototype.positionToTileXY = function(position, level) {
+        throw new DeveloperError('This type should not be instantiated directly.');
     };
 
     return TilingScheme;

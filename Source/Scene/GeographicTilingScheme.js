@@ -6,7 +6,6 @@ define([
         '../Core/Cartesian2',
         '../Core/Ellipsoid',
         '../Core/Extent',
-        './Tile',
         './TilingScheme'
     ], function(
         defaultValue,
@@ -15,7 +14,6 @@ define([
         Cartesian2,
         Ellipsoid,
         Extent,
-        Tile,
         TilingScheme) {
     "use strict";
 
@@ -49,10 +47,8 @@ define([
          *
          * @type Extent
          */
-        this.extent = new Extent(-CesiumMath.PI,
-                                 -CesiumMath.PI_OVER_TWO,
-                                 CesiumMath.PI,
-                                 CesiumMath.PI_OVER_TWO);
+        this.extent = new Extent(-CesiumMath.PI, -CesiumMath.PI_OVER_TWO,
+                                 CesiumMath.PI, CesiumMath.PI_OVER_TWO);
 
         /**
          * The number of tiles in the X direction at level zero of the tile tree.
@@ -114,15 +110,53 @@ define([
         var xTiles = this.numberOfLevelZeroTilesX << level;
         var yTiles = this.numberOfLevelZeroTilesY << level;
 
-        var worldFractionPerTileX = CesiumMath.TWO_PI / xTiles;
-        var west = x * worldFractionPerTileX - Math.PI;
-        var east = (x + 1) * worldFractionPerTileX - Math.PI;
+        var xTileWidth = CesiumMath.TWO_PI / xTiles;
+        var west = x * xTileWidth - Math.PI;
+        var east = (x + 1) * xTileWidth - Math.PI;
 
-        var worldFractionPerTileY = CesiumMath.PI / yTiles;
-        var north = CesiumMath.PI_OVER_TWO - y * worldFractionPerTileY;
-        var south = CesiumMath.PI_OVER_TWO - (y + 1) * worldFractionPerTileY;
+        var yTileHeight = CesiumMath.PI / yTiles;
+        var north = CesiumMath.PI_OVER_TWO - y * yTileHeight;
+        var south = CesiumMath.PI_OVER_TWO - (y + 1) * yTileHeight;
 
         return new Extent(west, south, east, north);
+    };
+
+    /**
+     * Calculates the tile x, y coordinates of the tile containing
+     * a given cartographic position.
+     *
+     * @memberof GeographicTilingScheme
+     *
+     * @param {Cartographic2} position The position.
+     * @param {Number} level The tile level-of-detail.  Zero is the least detailed.
+     *
+     * @returns {Cartesian2} The x, y coordinate of the tile containing the position.
+     */
+    GeographicTilingScheme.prototype.positionToTileXY = function(position, level) {
+        if (position.latitude > this.extent.north ||
+            position.latitude < this.extent.south ||
+            position.longitude < this.extent.west ||
+            position.longitude > this.extent.east) {
+            // outside the bounds of the tiling scheme
+            return undefined;
+        }
+
+        var xTiles = this.numberOfLevelZeroTilesX << level;
+        var yTiles = this.numberOfLevelZeroTilesY << level;
+
+        var xTileWidth = CesiumMath.TWO_PI / xTiles;
+        var yTileHeight = Math.PI / yTiles;
+
+        var xTileCoordinate = (position.longitude + Math.PI) / xTileWidth | 0;
+        if (xTileCoordinate >= xTiles) {
+            xTileCoordinate = xTiles - 1;
+        }
+
+        var yTileCoordinate = (CesiumMath.PI_OVER_TWO - position.latitude) / yTileHeight | 0;
+        if (yTileCoordinate >= yTiles) {
+            yTileCoordinate = yTiles - 1;
+        }
+        return new Cartesian2(xTileCoordinate, yTileCoordinate);
     };
 
     return GeographicTilingScheme;

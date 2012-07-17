@@ -5,20 +5,18 @@ define([
         '../Core/Math',
         '../Core/Ellipsoid',
         '../Core/Extent',
-        './Tile',
-        './TilingScheme',
         '../Core/Cartesian2',
-        '../Core/Cartographic2'
+        '../Core/Cartographic2',
+        './TilingScheme'
     ], function(
         defaultValue,
         DeveloperError,
         CesiumMath,
         Ellipsoid,
         Extent,
-        Tile,
-        TilingScheme,
         Cartesian2,
-        Cartographic2) {
+        Cartographic2,
+        TilingScheme) {
     "use strict";
 
     /**
@@ -50,14 +48,14 @@ define([
          *
          * @type Number
          */
-        this.numberOfLevelZeroTilesX = description.numberOfLevelZeroTilesX || 1;
+        this.numberOfLevelZeroTilesX = defaultValue(description.numberOfLevelZeroTilesX, 1);
 
         /**
          * The number of tiles in the Y direction at level zero of the tile tree.
          *
          * @type Number
          */
-        this.numberOfLevelZeroTilesY = description.numberOfLevelZeroTilesY || 1;
+        this.numberOfLevelZeroTilesY = defaultValue(description.numberOfLevelZeroTilesY, 1);
 
         /**
          * The world extent covered by this tiling scheme, in radians.
@@ -87,11 +85,8 @@ define([
 
         var southwest = this.webMercatorToCartographic(this._extentSouthwestInMeters.x, this._extentSouthwestInMeters.y);
         var northeast = this.webMercatorToCartographic(this._extentNortheastInMeters.x, this._extentNortheastInMeters.y);
-        this.extent = new Extent(
-                southwest.longitude,
-                southwest.latitude,
-                northeast.longitude,
-                northeast.latitude);
+        this.extent = new Extent(southwest.longitude, southwest.latitude,
+                                 northeast.longitude, northeast.latitude);
     }
 
     /**
@@ -141,9 +136,8 @@ define([
      */
     WebMercatorTilingScheme.prototype.cartographicToWebMercator = function(longitude, latitude) {
         var semimajorAxis = this.ellipsoid.getRadii().x;
-        return new Cartesian2(
-                longitude * semimajorAxis,
-                Math.log(Math.tan((CesiumMath.PI_OVER_TWO + latitude) * 0.5)) * semimajorAxis);
+        return new Cartesian2(longitude * semimajorAxis,
+                              Math.log(Math.tan((CesiumMath.PI_OVER_TWO + latitude) * 0.5)) * semimajorAxis);
     };
 
     /**

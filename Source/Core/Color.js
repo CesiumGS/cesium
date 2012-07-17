@@ -24,7 +24,7 @@ define([
         /**
          * The green component.
          */
-        this.green = defaultValue(green);
+        this.green = defaultValue(green, 1.0);
         /**
          * The blue component.
          */

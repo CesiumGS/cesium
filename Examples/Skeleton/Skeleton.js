@@ -18,6 +18,7 @@ require({
         proxy : new Cesium.DefaultProxy('/proxy/')
     }));
     imageryLayerCollection.add(esri);
+//
 //    var aerial = new Cesium.ImageryLayer(new Cesium.BingMapsImageryProvider({
 //        server : 'dev.virtualearth.net',
 //        mapStyle : Cesium.BingMapsStyle.AERIAL,
@@ -26,9 +27,12 @@ require({
 //        proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
 //    }));
 //    imageryLayerCollection.add(aerial);
+//
+//    var color = new Cesium.ImageryLayer(new Cesium.SolidColorImageryProvider());
+//    imageryLayerCollection.add(color);
 
     var cb = new Cesium.CentralBody(ellipsoid, undefined, imageryLayerCollection);
-//
+
 //    var road = new Cesium.ImageryLayer(cb, new Cesium.BingMapsImageryProvider({
 //        server : 'dev.virtualearth.net',
 //        mapStyle : Cesium.BingMapsStyle.ROAD,
@@ -37,7 +41,6 @@ require({
 //        proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
 //    }));
 //    cb.getImageLayers().add(road);
-//
 
     cb.nightImageSource = '../../Images/land_ocean_ice_lights_2048.jpg';
     cb.specularMapSource = '../../Images/earthspec1k.jpg';
