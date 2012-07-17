@@ -91,8 +91,6 @@
             polygon.material = new Cesium.Material({
                 'context': scene.getContext(),
                 'template': {
-                    'id': 'WaterMaterial',
-                    'redefine': 'true',
                     'uniforms': {
                         'texture': '../../Images/earthspec1k.jpg',
                         'otherTexture': 'texture',
@@ -144,8 +142,6 @@
             polygon.material = new Cesium.Material({
                 'context': scene.getContext(),
                 'template': {
-                    'id': 'WaterMaterial',
-                    'redefine': 'true',
                     'uniforms': {
                         'texture': '../../Images/earthspec1k.jpg'
                     },
@@ -747,6 +743,7 @@
     };
     Sandbox.GrassPolygonMaterial = function (scene, ellipsoid, primitives) {
         this.code = function() {
+
             var polygon = new Cesium.Polygon(undefined);
             polygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([
                 Cesium.Cartographic.fromDegrees(-80.0, 30.0),

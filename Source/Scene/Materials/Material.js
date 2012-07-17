@@ -146,7 +146,9 @@ define([
                 }
                 // When the uniform type is a string, replace all tokens with its value.
                 if (uniformType === 'string') {
-                    this._replaceToken(uniformID, uniformValue, false);
+                    if (this._replaceToken(uniformID, uniformValue, false) === 0 && this.strict) {
+                        throw new DeveloperError('Shader source does not use string \'' + uniformID + '\'.');
+                    }
                 }
                 else {
                     this[uniformID] = uniformValue;
@@ -160,7 +162,9 @@ define([
                     }
 
                     // Replace uniform name with guid version.
-                    this._replaceToken(uniformID, newUniformID, true);
+                    if (this._replaceToken(uniformID, newUniformID, true) === 0 && this.strict) {
+                        throw new DeveloperError('Shader source does not use uniform \'' + uniformID + '\'.');
+                    }
 
                     // If uniform is a texture, load it.
                     if (uniformType === 'sampler2D' || uniformType === 'samplerCube') {
@@ -270,7 +274,6 @@ define([
                 }
             }
         }
-
 
         //Make sure all the component types are valid
         duplicateNames = {};
