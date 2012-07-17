@@ -143,7 +143,7 @@ define([
 //        var terrain = new EllipsoidTerrainProvider(tilingScheme);
         var terrain = new EsriImageServerTerrainProvider({
             url: 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
-            token: '73sVJ8KTqL6q2HrXg51gz8yfnl1X4CwppiFj48q7OA95pq72ZyBnHR4h0mFecBvUTrbvLCQblqrl1eaKh3NXPA..',
+            token: 'atYkcECHC1yXgZ1g8fJDxKyHY8_HbEmn_XLe79MAdSkeEg5jRYq2M3wI30K-ZLP_ObgGO_1nZ368Q9jt4u0RSQ..',
             proxy: new DefaultProxy('/terrain/')
         });
         this._terrain = terrain;
