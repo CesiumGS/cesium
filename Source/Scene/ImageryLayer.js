@@ -73,8 +73,7 @@ define([
      *
      * @name ImageryLayer
      */
-    function ImageryLayer(centralBody, imageryProvider, description) {
-        this._centralBody = centralBody;
+    function ImageryLayer(imageryProvider, description) {
         this.imageryProvider = imageryProvider;
 
         description = defaultValue(description, {});
@@ -180,7 +179,7 @@ define([
         var hostname;
         var postpone = false;
 
-        when(imageryProvider.buildTileImageUrl(tileImagery.x, tileImagery.y, tileImagery.level), function(url) {
+        when(imageryProvider.buildImageUrl(tileImagery.x, tileImagery.y, tileImagery.level), function(url) {
             hostname = getHostname(url);
 
             if (hostname !== '') {
@@ -199,7 +198,7 @@ define([
                 activeTileImageRequests[hostname] = activeRequestsForHostname + 1;
             }
 
-            return imageryProvider.loadTileImage(url);
+            return imageryProvider.requestImage(url);
         }).then(function(image) {
             activeTileImageRequests[hostname]--;
 
@@ -221,13 +220,11 @@ define([
     };
 
     ImageryLayer.prototype.transformImagery = function(context, tileImagery) {
-        var imageryProvider = this.imageryProvider;
-        imageryProvider.transformImagery(context, tileImagery);
+        this.imageryProvider.transformImagery(context, tileImagery);
     };
 
     ImageryLayer.prototype.createResources = function(context, tileImagery) {
-        var imageryProvider = this.imageryProvider;
-        imageryProvider.createResources(context, tileImagery);
+        this.imageryProvider.createResources(context, tileImagery);
     };
 
     var anchor;

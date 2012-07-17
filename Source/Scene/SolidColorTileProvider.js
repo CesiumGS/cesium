@@ -29,7 +29,7 @@ define([
      * @param {Number} [maxLevel=23] The maximum level to generate tiles for.
      *
      * @see SingleTileProvider
-     * @see BingMapsTileProvider
+     * @see BingMapsImageryProvider
      * @see OpenStreetMapTileProvider
      * @see CompositeTileProvider
      */
@@ -121,7 +121,7 @@ define([
      * @return {String|Promise} Either a string containing the URL, or a Promise for a string
      *                          if the URL needs to be built asynchronously.
      */
-    SolidColorTileProvider.prototype.buildTileImageUrl = function(x, y, level) {
+    SolidColorTileProvider.prototype.buildImageUrl = function(x, y, level) {
         var canvas = this._canvases[level];
         if (typeof canvas === 'undefined') {
             canvas = document.createElement('canvas');
@@ -168,7 +168,7 @@ define([
      *
      * @return A promise for the image that will resolve when the image is available.
      */
-    SolidColorTileProvider.prototype.loadTileImage = function(tileImageUrl) {
+    SolidColorTileProvider.prototype.requestImage = function(tileImageUrl) {
         return loadImage(tileImageUrl);
     };
 

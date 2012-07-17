@@ -34,10 +34,10 @@ define([
     "use strict";
 
     /**
-     * A {@link TerrainProvider} that produces geometry by tessellating height maps retrieved from an ESRI
-     * ImageServer.
+     * A {@link TerrainProvider} that produces geometry by tessellating height maps
+     * retrieved from an ArcGIS ImageServer.
      *
-     * @alias EsriImageServerTerrainProvider
+     * @alias ArcGisImageServerTerrainProvider
      * @constructor
      *
      * @param {String} description.url The URL of the ArcGIS ImageServer service.
@@ -46,7 +46,7 @@ define([
      *
      * @see TerrainProvider
      */
-    function EsriImageServerTerrainProvider(description) {
+    function ArcGisImageServerTerrainProvider(description) {
         description = defaultValue(description, {});
 
         if (typeof description.url === 'undefined') {
@@ -170,7 +170,15 @@ define([
     // intensive, though, which is why we probably won't want to do it while waiting for the
     // actual data to load.  We could also potentially add fractal detail when subdividing.
 
-    EsriImageServerTerrainProvider.prototype.requestTileGeometry = function(tile) {
+    /**
+     * Request the tile geometry from the remote server.  Once complete, the
+     * tile state should be set to RECEIVED.  Alternatively, tile state can be set to
+     * UNLOADED to indicate that the request should be attempted again next update, if the tile
+     * is still needed.
+     *
+     * @param {Tile} The tile to request geometry for.
+     */
+    ArcGisImageServerTerrainProvider.prototype.requestTileGeometry = function(tile) {
         if (requestsInFlight > 6) {
             tile.state = TileState.UNLOADED;
             return;
@@ -205,7 +213,17 @@ define([
 
     var taskProcessor = new TaskProcessor('createVerticesFromHeightmap');
 
-    EsriImageServerTerrainProvider.prototype.transformGeometry = function(context, tile) {
+    /**
+     * Transform the tile geometry from the format requested from the remote server
+     * into a format suitable for resource creation.  Once complete, the tile
+     * state should be set to TRANSFORMED.  Alternatively, tile state can be set to
+     * RECEIVED to indicate that the transformation should be attempted again next update, if the tile
+     * is still needed.
+     *
+     * @param {Context} context The context to use to create resources.
+     * @param {Tile} tile The tile to transform geometry for.
+     */
+    ArcGisImageServerTerrainProvider.prototype.transformGeometry = function(context, tile) {
         ++transforming;
         if ((transforming % 10) === 0) {
             console.log('transforming: ' + transforming);
@@ -232,6 +250,7 @@ define([
 
         if (typeof verticesPromise === 'undefined') {
             //postponed
+            tile.state = TileState.RECEIVED;
             return;
         }
 
@@ -250,7 +269,16 @@ define([
         });
     };
 
-    EsriImageServerTerrainProvider.prototype.createResources = function(context, tile) {
+    /**
+     * Create WebGL resources for the tile using whatever data the transformGeometry step produced.
+     * Once complete, the tile state should be set to READY.  Alternatively, tile state can be set to
+     * TRANSFORMED to indicate that resource creation should be attempted again next update, if the tile
+     * is still needed.
+     *
+     * @param {Context} context The context to use to create resources.
+     * @param {Tile} tile The tile to create resources for.
+     */
+    ArcGisImageServerTerrainProvider.prototype.createResources = function(context, tile) {
         ++creating;
         if ((creating % 10) === 0) {
             console.log('creating: ' + creating);
@@ -270,7 +298,7 @@ define([
      * Populates a {@link Tile} with plane-mapped surface geometry from this
      * tile provider.
      *
-     * @memberof EsriImageServerTerrainProvider
+     * @memberof ArcGisImageServerTerrainProvider
      *
      * @param {Context} context The rendered context to use to create renderer resources.
      * @param {Tile} tile The tile to populate with surface geometry.
@@ -278,9 +306,9 @@ define([
      * @returns {Boolean|Promise} A boolean value indicating whether the tile was successfully
      * populated with geometry, or a promise for such a value in the future.
      */
-    EsriImageServerTerrainProvider.prototype.createTilePlaneGeometry = function(context, tile, projection) {
+    ArcGisImageServerTerrainProvider.prototype.createTilePlaneGeometry = function(context, tile, projection) {
         throw new DeveloperError('Not supported yet.');
     };
 
-    return EsriImageServerTerrainProvider;
+    return ArcGisImageServerTerrainProvider;
 });

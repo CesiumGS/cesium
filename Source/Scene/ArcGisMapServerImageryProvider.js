@@ -8,14 +8,8 @@ define([
         '../Core/Cartesian2',
         '../Core/Extent',
         '../Core/Math',
-        '../Core/Ellipsoid',
-        '../Core/Cartographic2',
-        '../Renderer/MipmapHint',
-        '../Renderer/PixelFormat',
-        '../Renderer/TextureMagnificationFilter',
-        '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureWrap',
         './DiscardMissingTileImagePolicy',
+        './ImageryProvider',
         './Projections',
         './TileState',
         './WebMercatorTilingScheme',
@@ -30,14 +24,8 @@ define([
         Cartesian2,
         Extent,
         CesiumMath,
-        Ellipsoid,
-        Cartographic2,
-        MipmapHint,
-        PixelFormat,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap,
         DiscardMissingTileImagePolicy,
+        ImageryProvider,
         Projections,
         TileState,
         WebMercatorTilingScheme,
@@ -46,9 +34,9 @@ define([
     "use strict";
 
     /**
-     * Provides tile images hosted by an ArcGIS Server.
+     * Provides tiled imagery hosted by an ArcGIS server.
      *
-     * @alias ArcGISMapServerTileProvider
+     * @alias ArcGisMapServerImageryProvider
      * @constructor
      *
      * @param {String} description.url The URL of the ArcGIS MapServer service.
@@ -57,7 +45,7 @@ define([
      * @exception {DeveloperError} <code>description.url</code> is required.
      *
      * @see SingleTileProvider
-     * @see BingMapsTileProvider
+     * @see BingMapsImageryProvider
      * @see OpenStreetMapTileProvider
      * @see CompositeTileProvider
      *
@@ -66,11 +54,11 @@ define([
      *
      * @example
      * // ArcGIS World Street Maps tile provider
-     * var esri = new ArcGISMapServerTileProvider({
+     * var esri = new ArcGisMapServerImageryProvider({
      *     url: 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
      * });
      */
-    var ArcGISMapServerTileProvider = function(description) {
+    var ArcGisMapServerImageryProvider = function(description) {
         description = defaultValue(description, {});
 
         if (typeof description.url === 'undefined') {
@@ -166,18 +154,18 @@ define([
 
                 that.projection = Projections.MERCATOR;
                 that.tilingScheme = new WebMercatorTilingScheme({
-                    extentSouthwestInMeters: new Cartesian2(west, south),
-                    extentNortheastInMeters: new Cartesian2(east, north)
+                    extentSouthwestInMeters : new Cartesian2(west, south),
+                    extentNortheastInMeters : new Cartesian2(east, north)
                 });
                 that.extent = that.tilingScheme.extent;
             } else if (data.tileInfo.spatialReference.wkid === 4326) {
                 that.projection = Projections.WGS84;
                 that.extent = new Extent(CesiumMath.toRadians(data.fullExtent.xmin),
-                                            CesiumMath.toRadians(data.fullExtent.ymin),
-                                            CesiumMath.toRadians(data.fullExtent.xmax),
-                                            CesiumMath.toRadians(data.fullExtent.ymax));
+                                         CesiumMath.toRadians(data.fullExtent.ymin),
+                                         CesiumMath.toRadians(data.fullExtent.xmax),
+                                         CesiumMath.toRadians(data.fullExtent.ymax));
                 that.tilingScheme = new GeographicTilingScheme({
-                    extent: that.extent
+                    extent : that.extent
                 });
             }
 
@@ -195,7 +183,7 @@ define([
 
         this._discardPolicy = when(isReady, function() {
             // assume that the tile at (0,0) at the maximum LOD is missing.
-            var missingTileUrl = that.buildTileImageUrl(0, 0, that.maxLevel);
+            var missingTileUrl = that.buildImageUrl(0, 0, that.maxLevel);
             var pixelsToCheck = [new Cartesian2(0, 0), new Cartesian2(200, 20), new Cartesian2(20, 200), new Cartesian2(80, 110), new Cartesian2(160, 130)];
 
             return when(missingTileUrl, function(missingImageUrl) {
@@ -207,16 +195,14 @@ define([
     /**
      * Build a URL to retrieve the image for a tile.
      *
-     * @memberof ArcGISMapServerTileProvider
-     *
-     * @param {Number} x The x coordinate of the tile image.
-     * @param {Number} y The y coordinate of the tile image.
-     * @param {Number} level The level-of-detail of the tile image.
+     * @param {Number} x The x coordinate of the tile.
+     * @param {Number} y The y coordinate of the tile.
+     * @param {Number} level The level-of-detail of the tile.
      *
      * @return {String|Promise} Either a string containing the URL, or a Promise for a string
      *                          if the URL needs to be built asynchronously.
      */
-    ArcGISMapServerTileProvider.prototype.buildTileImageUrl = function(x, y, level) {
+    ArcGisMapServerImageryProvider.prototype.buildImageUrl = function(x, y, level) {
         var url = this.url + '/tile/' + level + '/' + y + '/' + x;
 
         if (typeof this._proxy !== 'undefined') {
@@ -227,16 +213,15 @@ define([
     };
 
     /**
-     * Load the image for a given tile.
+     * Request the image for a given tile.
      *
-     * @memberof ArcGISMapServerTileProvider
-     *
-     * @param {String} [tileImageUrl] The tile image URL.
+     * @param {String} url The tile image URL.
      *
      * @return A promise for the image that will resolve when the image is available.
+     *         If the image is not suitable for display, the promise can resolve to undefined.
      */
-    ArcGISMapServerTileProvider.prototype.loadTileImage = function(tileImageUrl) {
-        var image = when(tileImageUrl, loadImage);
+    ArcGisMapServerImageryProvider.prototype.requestImage = function(url) {
+        var image = loadImage(url);
 
         return when(this._discardPolicy, function(discardPolicy) {
             return discardPolicy.shouldDiscardTileImage(image);
@@ -245,51 +230,44 @@ define([
         });
     };
 
-    ArcGISMapServerTileProvider.prototype.requestImagery = function(tileImagery) {
-        var url = this.buildTileImageUrl(tileImagery.x, tileImagery.y, tileImagery.level);
-        when(this.loadTileImage(url), function(image) {
-            if (typeof image === 'undefined') {
-                tileImagery.state = TileState.IMAGE_INVALID;
-                return;
-            }
-
-            tileImagery.state = TileState.RECEIVED;
-
-            tileImagery.image = image;
-        });
-    };
-
-    ArcGISMapServerTileProvider.prototype.transformImagery = function(context, tileImagery) {
+    /**
+     * Transform the tile imagery from the format requested from the remote server
+     * into a format suitable for resource creation.  Once complete, the tile imagery
+     * state should be set to TRANSFORMED.  Alternatively, tile imagery state can be set to
+     * RECEIVED to indicate that the transformation should be attempted again next update, if the tile
+     * is still needed.
+     *
+     * @param {Context} context The context to use to create resources.
+     * @param {TileImagery} tileImagery The tile imagery to transform.
+     */
+    ArcGisMapServerImageryProvider.prototype.transformImagery = function(context, tileImagery) {
         tileImagery.transformedImage = this.projection.toWgs84(tileImagery.extent, tileImagery.image);
         tileImagery.image = undefined;
         tileImagery.state = TileState.TRANSFORMED;
     };
 
-    ArcGISMapServerTileProvider.prototype.createResources = function(context, tileImagery) {
-        tileImagery.texture = context.createTexture2D({
-            source : tileImagery.transformedImage
-        });
-
-        tileImagery.texture.generateMipmap(MipmapHint.NICEST);
-        tileImagery.texture.setSampler({
-            wrapS : TextureWrap.CLAMP,
-            wrapT : TextureWrap.CLAMP,
-            minificationFilter : TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
-            magnificationFilter : TextureMagnificationFilter.LINEAR,
-
-            // TODO: Remove Chrome work around
-            maximumAnisotropy : context.getMaximumTextureFilterAnisotropy() || 8
-        });
+    /**
+     * Create WebGL resources for the tile imagery using whatever data the transformImagery step produced.
+     * Once complete, the tile imagery state should be set to READY.  Alternatively, tile imagery state can be set to
+     * TRANSFORMED to indicate that resource creation should be attempted again next update, if the tile
+     * is still needed.
+     *
+     * @param {Context} context The context to use to create resources.
+     * @param {TileImagery} tileImagery The tile imagery to create resources for.
+     */
+    ArcGisMapServerImageryProvider.prototype.createResources = function(context, tileImagery) {
+        tileImagery.texture = ImageryProvider.createTextureFromTransformedImage(context, tileImagery.transformedImage);
         tileImagery.transformedImage = undefined;
         tileImagery.state = TileState.READY;
     };
+
     /**
      * DOC_TBA
-     * @memberof ArcGISMapServerTileProvider
+     * @memberof ArcGisMapServerImageryProvider
      */
-    ArcGISMapServerTileProvider.prototype.getLogo = function() {
+    ArcGisMapServerImageryProvider.prototype.getLogo = function() {
         return this._logo;
     };
 
-    return ArcGISMapServerTileProvider;
+    return ArcGisMapServerImageryProvider;
 });

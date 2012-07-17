@@ -22,17 +22,17 @@ define([
      * @exception {DeveloperError} camera is required.
      *
      * @see SingleTileProvider
-     * @see ArcGISMapServerTileProvider
+     * @see ArcGisMapServerImageryProvider
      * @see OpenStreetMapTileProvider
-     * @see BingMapsTileProvider
+     * @see BingMapsImageryProvider
      *
      * @example
-     * // Create a CompositeTileProvider from a SingleTileProvider and BingMapsTileProvider
+     * // Create a CompositeTileProvider from a SingleTileProvider and BingMapsImageryProvider
      *
      * // Single
      *  var single = new SingleTileProvider('Images/NE2_50M_SR_W_4096.jpg');
      *  // Bing Maps
-     *  var bing = new BingMapsTileProvider({
+     *  var bing = new BingMapsImageryProvider({
      *      server : 'dev.virtualearth.net',
      *      mapStyle : BingMapsStyle.AERIAL
      *  });
@@ -166,7 +166,7 @@ define([
      * @exception {DeveloperError} <code>level</code> is less than zero
      * or greater than <code>maxLevel</code>.
      */
-    CompositeTileProvider.prototype.loadTileImage = function(tile, onload, onerror, oninvalid) {
+    CompositeTileProvider.prototype.requestImage = function(tile, onload, onerror, oninvalid) {
         if (tile.level < 0 || tile.level > this.maxLevel) {
             throw new DeveloperError('tile.level must in the range [0, maxLevel].');
         }
@@ -177,7 +177,7 @@ define([
         var image = null;
 
         if (tile.level <= provider.maxLevel) {
-            image = provider.loadTileImage(tile, onload, onerror, oninvalid);
+            image = provider.requestImage(tile, onload, onerror, oninvalid);
             tile.projection = provider.projection;
         } else {
             if (oninvalid && typeof oninvalid === 'function') {

@@ -7,8 +7,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Ellipsoid',
         '../Core/Extent',
-        './TileState',
-        './WebMercatorTilingScheme'
+        './TileState'
     ], function(
         defaultValue,
         destroyObject,
@@ -17,19 +16,19 @@ define([
         Cartesian2,
         Ellipsoid,
         Extent,
-        TileState,
-        WebMercatorTilingScheme) {
+        TileState) {
     "use strict";
 
     /**
-     * A node in the quadtree representing the surface of a {@link CentralBody}.  A tile holds the surface
-     * geometry for its horizontal extent and zero or more imagery textures overlayed on the geometry.
+     * A node in the quadtree representing the surface of a {@link CentralBody}.
+     * A tile holds the surface geometry for its horizontal extent and zero or
+     * more imagery textures overlaid on the geometry.
      *
      * @alias Tile
      * @constructor
      *
-     * @param {TilingScheme} description.tilingScheme The tiling scheme of which the new tile is a part,
-     * such as a {@link WebMercatorTilingScheme} or a {@link GeographicTilingScheme}.
+     * @param {TilingScheme} description.tilingScheme The tiling scheme of which the new tile is a part, such as a
+     *                                                {@link WebMercatorTilingScheme} or a {@link GeographicTilingScheme}.
      * @param {Number} description.x The tile x coordinate.
      * @param {Number} description.y The tile y coordinate.
      * @param {Number} description.level The tile level-of-detail.
@@ -37,11 +36,6 @@ define([
      *
      * @exception {DeveloperError} Either description.extent or both description.x and description.y is required.
      * @exception {DeveloperError} description.level is required.
-     *
-     * @see SingleTileProvider
-     * @see ArcGISMapServerTileProvider
-     * @see OpenStreetMapTileProvider
-     * @see BingMapsTileProvider
      */
     var Tile = function(description) {
         if (typeof description === 'undefined') {

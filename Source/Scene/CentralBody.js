@@ -54,7 +54,7 @@ define([
         '../Shaders/SkyAtmosphereVS',
         './EllipsoidTerrainProvider',
         '../Core/DefaultProxy',
-        './EsriImageServerTerrainProvider'
+        './ArcGisImageServerTerrainProvider'
     ], function(
         combine,
         defaultValue,
@@ -110,7 +110,7 @@ define([
         SkyAtmosphereVS,
         EllipsoidTerrainProvider,
         DefaultProxy,
-        EsriImageServerTerrainProvider) {
+        ArcGisImageServerTerrainProvider) {
     "use strict";
 
     function TileCache(maxTextureSize) {
@@ -141,7 +141,7 @@ define([
 //            numberOfLevelZeroTilesY : 2
 //        }));
 //        var terrain = new EllipsoidTerrainProvider(tilingScheme);
-        var terrain = new EsriImageServerTerrainProvider({
+        var terrain = new ArcGisImageServerTerrainProvider({
             url: 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
             token: 'atYkcECHC1yXgZ1g8fJDxKyHY8_HbEmn_XLe79MAdSkeEg5jRYq2M3wI30K-ZLP_ObgGO_1nZ368Q9jt4u0RSQ..',
             proxy: new DefaultProxy('/terrain/')
@@ -152,7 +152,6 @@ define([
            imageryCollection : this._imageLayers
         });
 
-        //this._levelZeroTiles = terrain.tilingScheme.createLevelZeroTiles();
         this._tileCache = new TileCache(128 * 1024 * 1024);
         this._texturePool = new TexturePool();
 

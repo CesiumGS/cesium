@@ -24,8 +24,8 @@ define([
      *
      * @exception {DeveloperError} url is required.
      *
-     * @see ArcGISMapServerTileProvider
-     * @see BingMapsTileProvider
+     * @see ArcGisMapServerImageryProvider
+     * @see BingMapsImageryProvider
      * @see OpenStreetMapTileProvider
      * @see CompositeTileProvider
      */
@@ -94,7 +94,7 @@ define([
      * @exception {DeveloperError} <code>tile.level</code> is less than zero
      * or greater than <code>maxLevel</code>.
      */
-    SingleTileProvider.prototype.loadTileImage = function(tile, onload, onerror) {
+    SingleTileProvider.prototype.requestImage = function(tile, onload, onerror) {
         if (tile.level < 0 || tile.level > this.maxLevel) {
             throw new DeveloperError('tile.zoom must be in the range [0, zoomMax].');
         }

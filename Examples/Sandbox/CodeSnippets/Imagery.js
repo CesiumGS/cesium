@@ -5,7 +5,7 @@
     Sandbox.BingMaps = function (scene, ellipsoid, primitives) {
         this.code = function () {
             // Bing Maps
-            var bing = new Cesium.BingMapsTileProvider({
+            var bing = new Cesium.BingMapsImageryProvider({
                 server : 'dev.virtualearth.net',
                 mapStyle : Cesium.BingMapsStyle.AERIAL,
                 // Some versions of Safari support WebGL, but don't correctly implement
@@ -20,7 +20,7 @@
     Sandbox.ArcGIS = function (scene, ellipsoid, primitives) {
         this.code = function () {
             // ArcGIS World Street Maps
-            var arcgis = new Cesium.ArcGISMapServerTileProvider({
+            var arcgis = new Cesium.ArcGisMapServerImageryProvider({
                 url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
                 proxy : new Cesium.DefaultProxy('/proxy/')
             });
@@ -93,7 +93,7 @@
     Sandbox.CompositeTiler = function (scene, ellipsoid, primitives) {
         this.code = function () {
             // Bing Maps
-            var bing = new Cesium.BingMapsTileProvider({
+            var bing = new Cesium.BingMapsImageryProvider({
                 server : 'dev.virtualearth.net',
                 mapStyle : Cesium.BingMapsStyle.AERIAL,
                 // Some versions of Safari support WebGL, but don't correctly implement

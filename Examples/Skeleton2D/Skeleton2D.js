@@ -15,7 +15,7 @@ require({
     var canvas2D = document.getElementById('canvas2D');
     var scene2D = new Cesium.Scene(canvas2D);
 
-    var bing3D = new Cesium.BingMapsTileProvider({
+    var bing3D = new Cesium.BingMapsImageryProvider({
         server : 'dev.virtualearth.net',
         mapStyle : Cesium.BingMapsStyle.AERIAL,
         // Some versions of Safari support WebGL, but don't correctly implement
@@ -23,7 +23,7 @@ require({
         proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
     });
 
-    var bing2D = new Cesium.BingMapsTileProvider({
+    var bing2D = new Cesium.BingMapsImageryProvider({
         server : 'dev.virtualearth.net',
         mapStyle : Cesium.BingMapsStyle.AERIAL,
         // Some versions of Safari support WebGL, but don't correctly implement

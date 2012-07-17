@@ -27,8 +27,8 @@ define([
      * @param {String} [description.credit='MapQuest, Open Street Map and contributors, CC-BY-SA'] A string crediting the data source, which is displayed on the canvas.
      *
      * @see SingleTileProvider
-     * @see BingMapsTileProvider
-     * @see ArcGISMapServerTileProvider
+     * @see BingMapsImageryProvider
+     * @see ArcGisMapServerImageryProvider
      * @see CompositeTileProvider
      *
      * @see <a href='http://wiki.openstreetmap.org/wiki/Main_Page'>OpenStreetMap Wiki</a>
@@ -121,7 +121,7 @@ define([
      * @exception {DeveloperError} <code>tile.level</code> is less than zero
      * or greater than <code>maxLevel</code>.
      */
-    OpenStreetMapTileProvider.prototype.loadTileImage = function(tile, onload, onerror) {
+    OpenStreetMapTileProvider.prototype.requestImage = function(tile, onload, onerror) {
         if (tile.level < 0 || tile.level > this.maxLevel) {
             throw new DeveloperError('tile.level must be in the range [0, maxLevel].');
         }

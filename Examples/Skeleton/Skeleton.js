@@ -13,24 +13,23 @@ require({
     var primitives = scene.getPrimitives();
 
     var imageryLayerCollection = new Cesium.ImageryLayerCollection();
-    var esri = new Cesium.ImageryLayer(undefined, new Cesium.ArcGISMapServerTileProvider({
+    var esri = new Cesium.ImageryLayer(new Cesium.ArcGisMapServerImageryProvider({
         url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
         proxy : new Cesium.DefaultProxy('/proxy/')
     }));
     imageryLayerCollection.add(esri);
-
-    var cb = new Cesium.CentralBody(ellipsoid, undefined, imageryLayerCollection);
-
-//    var aerial = new Cesium.ImageryLayer(cb, new Cesium.BingMapsTileProvider({
+//    var aerial = new Cesium.ImageryLayer(new Cesium.BingMapsImageryProvider({
 //        server : 'dev.virtualearth.net',
 //        mapStyle : Cesium.BingMapsStyle.AERIAL,
 //        // Some versions of Safari support WebGL, but don't correctly implement
 //        // cross-origin image loading, so we need to load Bing imagery using a proxy.
 //        proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
 //    }));
-//    cb.getImageLayers().add(aerial);
+//    imageryLayerCollection.add(aerial);
+
+    var cb = new Cesium.CentralBody(ellipsoid, undefined, imageryLayerCollection);
 //
-//    var road = new Cesium.ImageryLayer(cb, new Cesium.BingMapsTileProvider({
+//    var road = new Cesium.ImageryLayer(cb, new Cesium.BingMapsImageryProvider({
 //        server : 'dev.virtualearth.net',
 //        mapStyle : Cesium.BingMapsStyle.ROAD,
 //        // Some versions of Safari support WebGL, but don't correctly implement

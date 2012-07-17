@@ -18,7 +18,7 @@ define([
         '../Core/DefaultProxy',
         '../Scene/Scene',
         '../Scene/CentralBody',
-        '../Scene/BingMapsTileProvider',
+        '../Scene/BingMapsImageryProvider',
         '../Scene/BingMapsStyle',
         '../Scene/SingleTileProvider',
         '../Scene/PerformanceDisplay',
@@ -42,7 +42,7 @@ define([
         DefaultProxy,
         Scene,
         CentralBody,
-        BingMapsTileProvider,
+        BingMapsImageryProvider,
         BingMapsStyle,
         SingleTileProvider,
         PerformanceDisplay,
@@ -308,7 +308,7 @@ define([
             var centralBody = this.centralBody;
 
             if (this.useStreamingImagery) {
-                centralBody.dayTileProvider = new BingMapsTileProvider({
+                centralBody.dayTileProvider = new BingMapsImageryProvider({
                     server : 'dev.virtualearth.net',
                     mapStyle : this.mapStyle,
                     // Some versions of Safari support WebGL, but don't correctly implement
