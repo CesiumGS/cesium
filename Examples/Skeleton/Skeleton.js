@@ -51,7 +51,8 @@ require({
     cb.affectedByLighting = false;
     primitives.setCentralBody(cb);
 
-    scene.getCamera().frustum.near = 1.0;
+    scene.getCamera().frustum.near = 100.0;
+    scene.getCamera().frustum.far = 10000000.0;
     scene.getCamera().getControllers().addCentralBody();
 
     var transitioner = new Cesium.SceneTransitioner(scene, ellipsoid);

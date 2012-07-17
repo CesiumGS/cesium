@@ -31,6 +31,7 @@ define([
         '../Renderer/CullFace',
         '../Renderer/DepthFunction',
         '../Renderer/PixelFormat',
+        '../Renderer/RenderbufferFormat',
         './ImageryLayerCollection',
         './WebMercatorTilingScheme',
         './Projections',
@@ -87,6 +88,7 @@ define([
         CullFace,
         DepthFunction,
         PixelFormat,
+        RenderbufferFormat,
         ImageryLayerCollection,
         WebMercatorTilingScheme,
         Projections,
@@ -980,6 +982,11 @@ define([
                     width : width,
                     height : height,
                     pixelFormat : PixelFormat.RGBA
+                }),
+                depthRenderbuffer : context.createRenderbuffer({
+                    format : RenderbufferFormat.DEPTH_COMPONENT16,
+                    width : width,
+                    height : height
                 })
             });
 
@@ -1063,6 +1070,9 @@ define([
             if (mode === SceneMode.SCENE3D) {
                 this._rsColor = context.createRenderState({ // Write color, not depth
                     cull : {
+                        enabled : true
+                    },
+                    depthTest : {
                         enabled : true
                     }
                 });
@@ -1406,7 +1416,8 @@ define([
 
     var clearState = {
         framebuffer : undefined,
-        color : new Color(0.0, 0.0, 0.0, 0.0)
+        color : new Color(0.0, 0.0, 0.0, 0.0),
+        depth : true
     };
 
     /**
