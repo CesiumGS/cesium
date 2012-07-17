@@ -47,7 +47,7 @@
                 'template' : {
                     'id' : 'ColorMaterial',
                     'uniforms' : {
-                        'u_color' : {
+                        'color' : {
                             'red' : 1,
                             'green' : 0,
                             'blue' : 0,
@@ -60,7 +60,7 @@
 
             // The color's alpha component defines the polygon's opacity.
             // 0 - completely transparent.  1.0 - completely opaque.
-            polygon.material.u_color = {
+            polygon.material.color = {
                 red : 1.0,
                 green : 0.0,
                 blue : 0.0,
@@ -101,7 +101,7 @@
                         'first': {
                             'id': 'DiffuseMapMaterial',
                             'uniforms': {
-                                'u_texture': 'texture',
+                                'texture': 'texture',
                                 'amount' : 'value'
                             },
                             'components' : {
@@ -143,46 +143,46 @@
                 'context': scene.getContext(),
                 'template': {
                     'uniforms': {
-                        'texture': '../../Images/earthspec1k.jpg'
+                        'spectexture': '../../Images/earthspec1k.jpg'
                     },
                     'materials': {
-                        'grassMaterial' : {
-                            'id' : 'GrassMaterial'
+                        'grassMaterial': {
+                            'id': 'GrassMaterial'
                         },
-                        'waterMaterial' : {
-                            'materials' : {
-                                'blobMaterial' : {
-                                    'id' : 'BlobMaterial',
-                                    'uniforms' : {
-                                        'u_lightColor' : {
-                                            'red' : 0.4,
-                                            'green' : 0.4,
-                                            'blue' : 0.8
+                        'waterMaterial': {
+                            'materials': {
+                                'blobMaterial': {
+                                    'id': 'BlobMaterial',
+                                    'uniforms': {
+                                        'lightColor': {
+                                            'red': 0.4,
+                                            'green': 0.4,
+                                            'blue': 0.8
                                         },
-                                        'u_darkColor' : {
-                                            'red' : 0.1,
-                                            'green' : 0.1,
-                                            'blue' : 0.8
+                                        'darkColor': {
+                                            'red': 0.1,
+                                            'green': 0.1,
+                                            'blue': 0.8
                                         },
-                                        'u_frequency' : 50.0
+                                        'frequency': 50.0
                                     }
                                 },
-                                'reflectionMaterial' : {
-                                    'id' : 'ReflectionMaterial'
+                                'reflectionMaterial': {
+                                    'id': 'ReflectionMaterial'
                                 }
                             },
-                            'components' : {
-                                'diffuse' : 'blobMaterial.diffuse + reflectionMaterial.diffuse * 0.1'
+                            'components': {
+                                'diffuse': 'blobMaterial.diffuse + reflectionMaterial.diffuse * 0.1'
                             }
                         },
-                        'bumpMapMaterial' : {
-                            'id' : 'BumpMapMaterial'
+                        'bumpMapMaterial': {
+                            'id': 'BumpMapMaterial'
                         }
                     },
                     'components': {
-                        'diffuse' : 'mix(grassMaterial.diffuse, waterMaterial.diffuse, texture2D(texture, materialInput.st).r)',
-                        'specular' : 'texture2D(texture, materialInput.st).r / 10.0',
-                        'normal' : 'bumpMapMaterial.normal'
+                        'diffuse': 'mix(grassMaterial.diffuse, waterMaterial.diffuse, texture2D(spectexture, materialInput.st).r)',
+                        'specular': 'texture2D(spectexture, materialInput.st).r / 10.0',
+                        'normal': 'bumpMapMaterial.normal'
                     }
                 }
             });
@@ -231,6 +231,93 @@
         };
     };
 
+    Sandbox.CompositeMaterial4 = function (scene, ellipsoid, primitives) {
+        this.code = function() {
+            var polygon = new Cesium.Polygon(undefined);
+
+            polygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([
+                Cesium.Cartographic.fromDegrees(-100.0, 20.0),
+                Cesium.Cartographic.fromDegrees(-70.0, 20.0),
+                Cesium.Cartographic.fromDegrees(-70.0, 33.0),
+                Cesium.Cartographic.fromDegrees(-100.0, 33.0)
+            ]));
+
+            polygon.material.color = {
+                red: 1.0,
+                green: 1.0,
+                blue: 1.0,
+                alpha: 1.0
+            };
+
+            polygon.material = new Cesium.Material({
+                'context': scene.getContext(),
+                'template': {
+                    'uniforms' : {
+                        'texture' : '../../Images/Cesium_Logo_Color.jpg'
+                    },
+                    'source' :
+                        'agi_material agi_getMaterial(agi_materialInput materialInput)\n{\n' +
+                        'agi_material material = agi_getDefaultMaterial(materialInput);\n' +
+                        'vec2 distanceFromCenter = abs(materialInput.st - vec2(0.5));\n' +
+                        'vec4 textureValue = texture2D(texture, pow(distanceFromCenter, vec2(0.5)));\n' +
+                        'material.diffuse = textureValue.rgb;\n' +
+                        'return material;\n}\n',
+                    'components' : {
+                    }
+                }
+            });
+
+            primitives.add(polygon);
+        };
+    };
+
+    Sandbox.CompositeMaterial5 = function (scene, ellipsoid, primitives) {
+        this.code = function() {
+            var polygon = new Cesium.Polygon(undefined);
+
+            polygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([
+                Cesium.Cartographic.fromDegrees(-80.0, 20.0),
+                Cesium.Cartographic.fromDegrees(-70.0, 20.0),
+                Cesium.Cartographic.fromDegrees(-70.0, 33.0),
+                Cesium.Cartographic.fromDegrees(-80.0, 33.0)
+            ]));
+
+            polygon.material.color = {
+                red: 1.0,
+                green: 1.0,
+                blue: 1.0,
+                alpha: 1.0
+            };
+
+            polygon.material = new Cesium.Material({
+                'context': scene.getContext(),
+                'template': {
+                    'materials' : {
+                        'grass' : {
+                            'id' : 'GrassMaterial'
+                        },
+                        'asphalt' : {
+                            'id' : 'AsphaltMaterial'
+                        },
+                        'cement' : {
+                            'id' : 'CementMaterial'
+                        }
+                    },
+                    'source' :
+                        'agi_material agi_getMaterial(agi_materialInput materialInput)\n{\n' +
+                        'agi_material material = agi_getDefaultMaterial(materialInput);\n' +
+                        'float distanceFromCenter = abs(materialInput.st - vec2(0.5)).x;\n' +
+                        'if(distanceFromCenter > 0.3){material.diffuse = grass.diffuse;}\n' +
+                        'else if(distanceFromCenter > 0.2){material.diffuse = cement.diffuse;}\n' +
+                        'else{material.diffuse = asphalt.diffuse;}\n' +
+                        'return material;\n}\n'
+                }
+            });
+
+            primitives.add(polygon);
+        };
+    };
+
     Sandbox.DiffuseMapPolygonMaterial = function (scene, ellipsoid, primitives) {
         this.code = function() {
             var polygon = new Cesium.Polygon(undefined);
@@ -253,11 +340,11 @@
                'template' : {
                    'id' : 'DiffuseMapMaterial',
                    'uniforms' : {
-                       'u_repeat' : {
+                       'repeat' : {
                            'x' : 1,
                            'y' : 1
                        },
-                       'u_texture' : '../../Images/Cesium_Logo_Color.jpg',
+                       'texture' : '../../Images/Cesium_Logo_Color.jpg',
                        'diffuseChannels' : 'rgb',
                        'alphaChannel' : 'a'
                    },
@@ -291,9 +378,9 @@
                 'template' : {
                     'id' : 'AlphaMapMaterial',
                     'uniforms' : {
-                        'u_texture' : '../../Images/alpha_map.png',
+                        'texture' : '../../Images/alpha_map.png',
                         'alphaChannel' : 'r',
-                        'u_repeat' : {
+                        'repeat' : {
                             'x' : 1,
                             'y' : 1
                         }
@@ -328,9 +415,9 @@
                 'template' : {
                     'id' : 'SpecularMapMaterial',
                     'uniforms' : {
-                        'u_texture' : '../../Images/alpha_map.png',
+                        'texture' : '../../Images/alpha_map.png',
                         'specularChannel' : 'r',
-                        'u_repeat' : {
+                        'repeat' : {
                             'x' : 1,
                             'y' : 1
                         }
@@ -365,9 +452,9 @@
                 'template' : {
                     'id' : 'EmissionMapMaterial',
                     'uniforms' : {
-                        'u_texture' : '../../Images/alpha_map.png',
+                        'texture' : '../../Images/alpha_map.png',
                         'emissionChannels' : 'rgb',
-                        'u_repeat' : {
+                        'repeat' : {
                             'x' : 1,
                             'y' : 1
                         }
@@ -402,9 +489,9 @@
                 'template' : {
                     'id' : 'BumpMapMaterial',
                     'uniforms' : {
-                        'u_texture' : '../../Images/earthbump1k.jpg',
+                        'texture' : '../../Images/earthbump1k.jpg',
                         'bumpMapChannel' : 'r',
-                        'u_repeat' : {
+                        'repeat' : {
                             'x' : 1,
                             'y' : 1
                         }
@@ -443,9 +530,9 @@
                 'template' : {
                     'id' : 'NormalMapMaterial',
                     'uniforms' : {
-                        'u_texture' : '../../Images/earthnormalmap.jpg',
+                        'texture' : '../../Images/earthnormalmap.jpg',
                         'normalMapChannels' : 'rgb',
-                        'u_repeat' : {
+                        'repeat' : {
                             'x' : 1,
                             'y' : 1
                         }
@@ -484,7 +571,7 @@
                 'template' : {
                     'id' : 'ReflectionMaterial',
                     'uniforms' : {
-                        'u_cubeMap' : {
+                        'cubeMap' : {
                             'positiveX' : '../../Images/PalmTreesCubeMap/posx.jpg',
                             'negativeX' : '../../Images/PalmTreesCubeMap/negx.jpg',
                             'positiveY' : '../../Images/PalmTreesCubeMap/negy.jpg',
@@ -524,7 +611,7 @@
                 'template' : {
                     'id' : 'RefractionMaterial',
                     'uniforms' : {
-                        'u_cubeMap' : {
+                        'cubeMap' : {
                             'positiveX' : '../../Images/PalmTreesCubeMap/posx.jpg',
                             'negativeX' : '../../Images/PalmTreesCubeMap/negx.jpg',
                             'positiveY' : '../../Images/PalmTreesCubeMap/negy.jpg',
@@ -533,7 +620,7 @@
                             'negativeZ' : '../../Images/PalmTreesCubeMap/negz.jpg'
                         },
                         'refractionChannels' : 'rgb',
-                        'u_indexOfRefractionRatio' : 0.9
+                        'indexOfRefractionRatio' : 0.9
                     },
                     'sourcePath' : 'RefractionMaterial'
                 }
@@ -577,11 +664,11 @@
                     'materials' : {
                         'reflection' : {
                             'id' : 'ReflectionMaterial',
-                            'u_cubeMap' : 'palmTreeCubeMap'
+                            'cubeMap' : 'palmTreeCubeMap'
                         },
                         'refraction' : {
                             'id' : 'RefractionMaterial',
-                            'u_cubeMap' : 'palmTreeCubeMap'
+                            'cubeMap' : 'palmTreeCubeMap'
                         }
                     },
                     'sourcePath' : 'FresnelMaterial'
@@ -607,28 +694,28 @@
                 'template' : {
                     'id' : 'BrickMaterial',
                     'uniforms' : {
-                        'u_brickColor' : {
+                        'brickColor' : {
                             'red': 0.6,
                             'green': 0.3,
                             'blue': 0.1,
                             'alpha': 1.0
                         },
-                        'u_mortarColor' : {
+                        'mortarColor' : {
                             'red' : 0.8,
                             'green' : 0.8,
                             'blue' : 0.7,
                             'alpha' : 1.0
                         },
-                        'u_brickSize' : {
+                        'brickSize' : {
                             'x' : 0.30,
                             'y' : 0.15
                         },
-                        'u_brickPct' : {
+                        'brickPct' : {
                             'x' : 0.90,
                             'y' : 0.85
                         },
-                        'u_brickRoughness' : 0.2,
-                        'u_mortarRoughness' : 0.1
+                        'brickRoughness' : 0.2,
+                        'mortarRoughness' : 0.1
                     },
                     'sourcePath' : 'BrickMaterial'
                 }
@@ -653,24 +740,24 @@
                 'template' : {
                     'id' : 'WoodMaterial',
                     'uniforms' : {
-                        'u_lightWoodColor' : {
+                        'lightWoodColor' : {
                             'red' : 0.6,
                             'green' : 0.3,
                             'blue' : 0.1,
                             'alpha' : 1.0
                         },
-                        'u_darkWoodColor' : {
+                        'darkWoodColor' : {
                             'red' : 0.4,
                             'green' : 0.2,
                             'blue' : 0.07,
                             'alpha' : 1.0
                         },
-                        'u_ringFrequency' : 3.0,
-                        'u_noiseScale' : {
+                        'ringFrequency' : 3.0,
+                        'noiseScale' : {
                             'x' : 0.7,
                             'y' : 0.5
                         },
-                        'u_grainFrequency' : 27.0
+                        'grainFrequency' : 27.0
                     },
                     'sourcePath' : 'WoodMaterial'
                 }
@@ -694,14 +781,14 @@
                 'template' : {
                     'id' : 'AsphaltMaterial',
                     'uniforms' : {
-                        'u_asphaltColor' : {
+                        'asphaltColor' : {
                             'red' : 0.15,
                             'green' : 0.15,
                             'blue' : 0.15,
                             'alpha' : 1.0
                         },
-                        'u_bumpSize' : 0.02,
-                        'u_roughness' : 0.2
+                        'bumpSize' : 0.02,
+                        'roughness' : 0.2
                     },
                     'sourcePath' : 'AsphaltMaterial'
                 }
@@ -725,14 +812,14 @@
                 'template' : {
                     'id' : 'CementMaterial',
                     'uniforms' : {
-                        'u_cementColor' : {
+                        'cementColor' : {
                             'red' : 0.95,
                             'green' : 0.95,
                             'blue' : 0.85,
                             'alpha' : 1.0
                         },
-                        'u_grainScale' : 0.01,
-                        'u_roughness' : 0.3
+                        'grainScale' : 0.01,
+                        'roughness' : 0.3
                     },
                     'sourcePath' : 'CementMaterial'
                 }
@@ -757,19 +844,19 @@
                 'template' : {
                     'id' : 'GrassMaterial',
                     'uniforms' : {
-                        'u_grassColor' : {
+                        'grassColor' : {
                             'red' : 0.25,
                             'green' : 0.4,
                             'blue' : 0.1,
                             'alpha' : 1.0
                         },
-                        'u_dirtColor' : {
+                        'dirtColor' : {
                             'red' : 0.1,
                             'green' : 0.1,
                             'blue' : 0.1,
                             'alpha' : 1.0
                         },
-                        'u_patchiness' : 1.5
+                        'patchiness' : 1.5
                     },
                     'sourcePath' : 'GrassMaterial'
                 }
@@ -794,20 +881,20 @@
                 'template' : {
                     'id' : 'VerticalStripeMaterial',
                     'uniforms' : {
-                        'u_lightColor' : {
+                        'lightColor' : {
                             'red' : 1.0,
                             'green' : 1.0,
                             'blue' : 1.0,
                             'alpha' : 0.5
                         },
-                        'u_darkColor' : {
+                        'darkColor' : {
                             'red' : 0.0,
                             'green' : 0.0,
                             'blue' : 1.0,
                             'alpha' : 0.5
                         },
-                        'u_offset' : 0.0,
-                        'u_repeat' : 5.0
+                        'offset' : 0.0,
+                        'repeat' : 5.0
                     },
                     'sourcePath' : 'VerticalStripeMaterial'
                 }
@@ -832,19 +919,19 @@
                 'template' : {
                     'id' : 'CheckerboardMaterial',
                     'uniforms' : {
-                        'u_lightColor' : {
+                        'lightColor' : {
                             'red' : 1.0,
                             'green' : 1.0,
                             'blue' : 0.0,
                             'alpha' : 0.75
                         },
-                        'u_darkColor' : {
+                        'darkColor' : {
                             'red' : 0.0,
                             'green' : 1.0,
                             'blue' : 1.0,
                             'alpha' : 0.75
                         },
-                        'u_repeat' : {
+                        'repeat' : {
                             'x' : 5.0,
                             'y' : 5.0
                         }
@@ -873,19 +960,19 @@
                 'template' : {
                     'id' : 'DotMaterial',
                     'uniforms' : {
-                        'u_lightColor' : {
+                        'lightColor' : {
                             'red' : 1.0,
                             'green' : 1.0,
                             'blue' : 0.0,
                             'alpha' : 0.75
                         },
-                        'u_darkColor' : {
+                        'darkColor' : {
                             'red' : 0.0,
                             'green' : 1.0,
                             'blue' : 1.0,
                             'alpha' : 0.75
                         },
-                        'u_repeat' : {
+                        'repeat' : {
                             'x' : 5.0,
                             'y' : 5.0
                         }
@@ -913,19 +1000,19 @@
                 'template' : {
                     'id' : 'TieDyeMaterial',
                     'uniforms' : {
-                        'u_lightColor' : {
+                        'lightColor' : {
                             'red' : 1.0,
                             'green' : 1.0,
                             'blue' : 0.0,
                             'alpha' : 0.75
                         },
-                        'u_darkColor' : {
+                        'darkColor' : {
                             'red' : 1.0,
                             'green' : 0.0,
                             'blue' : 0.0,
                             'alpha' : 0.75
                         },
-                        'u_frequency' : 5.0
+                        'frequency' : 5.0
                     },
                     'sourcePath' : 'TieDyeMaterial'
                 }
@@ -950,19 +1037,19 @@
                 'template' : {
                     'id' : 'FacetMaterial',
                     'uniforms' : {
-                        'u_lightColor' : {
+                        'lightColor' : {
                             'red' : 0.25,
                             'green' : 0.25,
                             'blue' : 0.25,
                             'alpha' : 0.75
                         },
-                        'u_darkColor' : {
+                        'darkColor' : {
                             'red' : 0.75,
                             'green' : 0.75,
                             'blue' : 0.75,
                             'alpha' : 0.75
                         },
-                        'u_frequency' : 10.0
+                        'frequency' : 10.0
                     },
                     'sourcePath' : 'FacetMaterial'
                 }
@@ -987,19 +1074,19 @@
                 'template' : {
                     'id' : 'BlobMaterial',
                     'uniforms' : {
-                        'u_lightColor' : {
+                        'lightColor' : {
                             'red' : 1.0,
                             'green' : 1.0,
                             'blue' : 1.0,
                             'alpha' : 0.5
                         },
-                        'u_darkColor' : {
+                        'darkColor' : {
                             'red' : 0.0,
                             'green' : 0.0,
                             'blue' : 1.0,
                             'alpha' : 0.5
                         },
-                        'u_frequency' : 10.0
+                        'frequency' : 10.0
                     },
                     'sourcePath' : 'BlobMaterial'
                 }

@@ -463,7 +463,7 @@ define([
         'id' : 'ColorMaterial',
         'redefine': 'true',
         'uniforms' : {
-            'u_color' : {
+            'color' : {
                 'red' : 1,
                 'green' : 0,
                 'blue' : 0,
@@ -478,11 +478,11 @@ define([
         'id' : 'DiffuseMapMaterial',
         'redefine': 'true',
         'uniforms' : {
-            'u_repeat' : {
+            'repeat' : {
                 'x' : 1,
                 'y' : 1
             },
-            'u_texture' : '../../Images/Cesium_Logo_Color.jpg',
+            'texture' : '../../Images/Cesium_Logo_Color.jpg',
             'diffuseChannels' : 'rgb',
             'alphaChannel' : 'a'
         },
@@ -494,9 +494,9 @@ define([
         'id' : 'AlphaMapMaterial',
         'redefine': 'true',
         'uniforms' : {
-            'u_texture' : '../../Images/alpha_map.png',
+            'texture' : '../../Images/alpha_map.png',
             'alphaChannel' : 'r',
-            'u_repeat' : {
+            'repeat' : {
                 'x' : 1,
                 'y' : 1
             }
@@ -509,9 +509,9 @@ define([
         'id' : 'SpecularMapMaterial',
         'redefine': 'true',
         'uniforms' : {
-            'u_texture' : '../../Images/alpha_map.png',
+            'texture' : '../../Images/alpha_map.png',
             'specularChannel' : 'r',
-            'u_repeat' : {
+            'repeat' : {
                 'x' : 1,
                 'y' : 1
             }
@@ -524,9 +524,9 @@ define([
         'id' : 'EmissionMapMaterial',
         'redefine': 'true',
         'uniforms' : {
-            'u_texture' : '../../Images/alpha_map.png',
+            'texture' : '../../Images/alpha_map.png',
             'emissionChannels' : 'rgb',
-            'u_repeat' : {
+            'repeat' : {
                 'x' : 1,
                 'y' : 1
             }
@@ -539,9 +539,9 @@ define([
         'id' : 'BumpMapMaterial',
         'redefine': 'true',
         'uniforms' : {
-            'u_texture' : '../../Images/earthbump1k.jpg',
+            'texture' : '../../Images/earthbump1k.jpg',
             'bumpMapChannel' : 'r',
-            'u_repeat' : {
+            'repeat' : {
                 'x' : 1,
                 'y' : 1
             }
@@ -554,9 +554,9 @@ define([
         'id' : 'NormalMapMaterial',
         'redefine': 'true',
         'uniforms' : {
-            'u_texture' : '../../Images/earthnormalmap.jpg',
+            'texture' : '../../Images/earthnormalmap.jpg',
             'normalMapChannels' : 'rgb',
-            'u_repeat' : {
+            'repeat' : {
                 'x' : 1,
                 'y' : 1
             }
@@ -569,7 +569,7 @@ define([
         'id' : 'ReflectionMaterial',
         'redefine': 'true',
         'uniforms' : {
-            'u_cubeMap' : {
+            'cubeMap' : {
                 'positiveX' : '../../Images/PalmTreesCubeMap/posx.jpg',
                 'negativeX' : '../../Images/PalmTreesCubeMap/negx.jpg',
                 'positiveY' : '../../Images/PalmTreesCubeMap/negy.jpg',
@@ -587,7 +587,7 @@ define([
         'id' : 'RefractionMaterial',
         'redefine': 'true',
         'uniforms' : {
-            'u_cubeMap' : {
+            'cubeMap' : {
                 'positiveX' : '../../Images/PalmTreesCubeMap/posx.jpg',
                 'negativeX' : '../../Images/PalmTreesCubeMap/negx.jpg',
                 'positiveY' : '../../Images/PalmTreesCubeMap/negy.jpg',
@@ -596,7 +596,7 @@ define([
                 'negativeZ' : '../../Images/PalmTreesCubeMap/negz.jpg'
             },
             'refractionChannels' : 'rgb',
-            'u_indexOfRefractionRatio' : 0.9
+            'indexOfRefractionRatio' : 0.9
         },
         'sourcePath' : 'RefractionMaterial'
     });
@@ -618,11 +618,11 @@ define([
         'materials' : {
             'reflection' : {
                 'id' : 'ReflectionMaterial',
-                'u_cubeMap' : 'palmTreeCubeMap'
+                'cubeMap' : 'palmTreeCubeMap'
             },
             'refraction' : {
                 'id' : 'RefractionMaterial',
-                'u_cubeMap' : 'palmTreeCubeMap'
+                'cubeMap' : 'palmTreeCubeMap'
             }
         },
         'sourcePath' : 'FresnelMaterial'
@@ -633,28 +633,28 @@ define([
         'id' : 'BrickMaterial',
         'redefine': 'true',
         'uniforms' : {
-            'u_brickColor' : {
+            'brickColor' : {
                 'red': 0.6,
                 'green': 0.3,
                 'blue': 0.1,
                 'alpha': 1.0
             },
-            'u_mortarColor' : {
+            'mortarColor' : {
                 'red' : 0.8,
                 'green' : 0.8,
                 'blue' : 0.7,
                 'alpha' : 1.0
             },
-            'u_brickSize' : {
+            'brickSize' : {
                 'x' : 0.30,
                 'y' : 0.15
             },
-            'u_brickPct' : {
+            'brickPct' : {
                 'x' : 0.90,
                 'y' : 0.85
             },
-            'u_brickRoughness' : 0.2,
-            'u_mortarRoughness' : 0.1
+            'brickRoughness' : 0.2,
+            'mortarRoughness' : 0.1
         },
         'sourcePath' : 'BrickMaterial'
     });
@@ -664,24 +664,24 @@ define([
         'id' : 'WoodMaterial',
         'redefine': 'true',
         'uniforms' : {
-            'u_lightWoodColor' : {
+            'lightWoodColor' : {
                 'red' : 0.6,
                 'green' : 0.3,
                 'blue' : 0.1,
                 'alpha' : 1.0
             },
-            'u_darkWoodColor' : {
+            'darkWoodColor' : {
                 'red' : 0.4,
                 'green' : 0.2,
                 'blue' : 0.07,
                 'alpha' : 1.0
             },
-            'u_ringFrequency' : 3.0,
-            'u_noiseScale' : {
+            'ringFrequency' : 3.0,
+            'noiseScale' : {
                 'x' : 0.7,
                 'y' : 0.5
             },
-            'u_grainFrequency' : 27.0
+            'grainFrequency' : 27.0
         },
         'sourcePath' : 'WoodMaterial'
     });
@@ -691,14 +691,14 @@ define([
         'id' : 'AsphaltMaterial',
         'redefine': 'true',
         'uniforms' : {
-            'u_asphaltColor' : {
+            'asphaltColor' : {
                 'red' : 0.15,
                 'green' : 0.15,
                 'blue' : 0.15,
                 'alpha' : 1.0
             },
-            'u_bumpSize' : 0.02,
-            'u_roughness' : 0.2
+            'bumpSize' : 0.02,
+            'roughness' : 0.2
         },
         'sourcePath' : 'AsphaltMaterial'
     });
@@ -708,14 +708,14 @@ define([
         'id' : 'CementMaterial',
         'redefine': 'true',
         'uniforms' : {
-            'u_cementColor' : {
+            'cementColor' : {
                 'red' : 0.95,
                 'green' : 0.95,
                 'blue' : 0.85,
                 'alpha' : 1.0
             },
-            'u_grainScale' : 0.01,
-            'u_roughness' : 0.3
+            'grainScale' : 0.01,
+            'roughness' : 0.3
         },
         'sourcePath' : 'CementMaterial'
     });
@@ -725,19 +725,19 @@ define([
         'id' : 'GrassMaterial',
         'redefine': 'true',
         'uniforms' : {
-            'u_grassColor' : {
+            'grassColor' : {
                 'red' : 0.25,
                 'green' : 0.4,
                 'blue' : 0.1,
                 'alpha' : 1.0
             },
-            'u_dirtColor' : {
+            'dirtColor' : {
                 'red' : 0.1,
                 'green' : 0.1,
                 'blue' : 0.1,
                 'alpha' : 1.0
             },
-            'u_patchiness' : 1.5
+            'patchiness' : 1.5
         },
         'sourcePath' : 'GrassMaterial'
     });
@@ -747,20 +747,20 @@ define([
         'id' : 'HorizontalStripeMaterial',
         'redefine': 'true',
         'uniforms' : {
-            'u_lightColor' : {
+            'lightColor' : {
                 'red' : 1.0,
                 'green' : 1.0,
                 'blue' : 1.0,
                 'alpha' : 0.5
             },
-            'u_darkColor' : {
+            'darkColor' : {
                 'red' : 0.0,
                 'green' : 0.0,
                 'blue' : 1.0,
                 'alpha' : 0.5
             },
-            'u_offset' : 0.0,
-            'u_repeat' : 5.0
+            'offset' : 0.0,
+            'repeat' : 5.0
         },
         'sourcePath' : 'HorizontalStripeMaterial'
     });
@@ -770,20 +770,20 @@ define([
         'id' : 'VerticalStripeMaterial',
         'redefine': 'true',
         'uniforms' : {
-            'u_lightColor' : {
+            'lightColor' : {
                 'red' : 1.0,
                 'green' : 1.0,
                 'blue' : 1.0,
                 'alpha' : 0.5
             },
-            'u_darkColor' : {
+            'darkColor' : {
                 'red' : 0.0,
                 'green' : 0.0,
                 'blue' : 1.0,
                 'alpha' : 0.5
             },
-            'u_offset' : 0.0,
-            'u_repeat' : 5.0
+            'offset' : 0.0,
+            'repeat' : 5.0
         },
         'sourcePath' : 'VerticalStripeMaterial'
     });
@@ -793,19 +793,19 @@ define([
         'id' : 'CheckerboardMaterial',
         'redefine': 'true',
         'uniforms' : {
-            'u_lightColor' : {
+            'lightColor' : {
                 'red' : 1.0,
                 'green' : 1.0,
                 'blue' : 0.0,
                 'alpha' : 0.75
             },
-            'u_darkColor' : {
+            'darkColor' : {
                 'red' : 0.0,
                 'green' : 1.0,
                 'blue' : 1.0,
                 'alpha' : 0.75
             },
-            'u_repeat' : {
+            'repeat' : {
                 'x' : 5.0,
                 'y' : 5.0
             }
@@ -818,19 +818,19 @@ define([
         'id' : 'DotMaterial',
         'redefine': 'true',
         'uniforms' : {
-            'u_lightColor' : {
+            'lightColor' : {
                 'red' : 1.0,
                 'green' : 1.0,
                 'blue' : 0.0,
                 'alpha' : 0.75
             },
-            'u_darkColor' : {
+            'darkColor' : {
                 'red' : 0.0,
                 'green' : 1.0,
                 'blue' : 1.0,
                 'alpha' : 0.75
             },
-            'u_repeat' : {
+            'repeat' : {
                 'x' : 5.0,
                 'y' : 5.0
             }
@@ -843,19 +843,19 @@ define([
         'id' : 'TieDyeMaterial',
         'redefine': 'true',
         'uniforms' : {
-            'u_lightColor' : {
+            'lightColor' : {
                 'red' : 1.0,
                 'green' : 1.0,
                 'blue' : 0.0,
                 'alpha' : 0.75
             },
-            'u_darkColor' : {
+            'darkColor' : {
                 'red' : 1.0,
                 'green' : 0.0,
                 'blue' : 0.0,
                 'alpha' : 0.75
             },
-            'u_frequency' : 5.0
+            'frequency' : 5.0
         },
         'sourcePath' : 'TieDyeMaterial'
     });
@@ -865,19 +865,19 @@ define([
         'id' : 'FacetMaterial',
         'redefine': 'true',
         'uniforms' : {
-            'u_lightColor' : {
+            'lightColor' : {
                 'red' : 0.25,
                 'green' : 0.25,
                 'blue' : 0.25,
                 'alpha' : 0.75
             },
-            'u_darkColor' : {
+            'darkColor' : {
                 'red' : 0.75,
                 'green' : 0.75,
                 'blue' : 0.75,
                 'alpha' : 0.75
             },
-            'u_frequency' : 10.0
+            'frequency' : 10.0
         },
         'sourcePath' : 'FacetMaterial'
     });
@@ -887,19 +887,19 @@ define([
         'id' : 'BlobMaterial',
         'redefine': 'true',
         'uniforms' : {
-            'u_lightColor' : {
+            'lightColor' : {
                 'red' : 1.0,
                 'green' : 1.0,
                 'blue' : 1.0,
                 'alpha' : 0.5
             },
-            'u_darkColor' : {
+            'darkColor' : {
                 'red' : 0.0,
                 'green' : 0.0,
                 'blue' : 1.0,
                 'alpha' : 0.5
             },
-            'u_frequency' : 10.0
+            'frequency' : 10.0
         },
         'sourcePath' : 'BlobMaterial'
     });

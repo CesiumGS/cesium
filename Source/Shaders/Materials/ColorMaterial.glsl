@@ -18,14 +18,14 @@
  * @see agi_getDefaultMaterial
  */
  
-uniform vec4 u_color;
+uniform vec4 color;
  
 agi_material agi_getMaterial(agi_materialInput materialInput)
 {
     agi_material material = agi_getDefaultMaterial(materialInput);
     
-    material.diffuse = u_color.rgb;
-    material.alpha = u_color.a;
+    material.diffuse = color.rgb;
+    material.alpha = color.a;
     
     return material;
 }
