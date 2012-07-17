@@ -70,6 +70,7 @@ define([
         var that = this;
         this.description = description || {};
         this.context = this.description.context;
+        this.strict = (typeof this.description.strict !== 'undefined') ? this.description.strict : true;
         this.template = this.description.template || {};
         this._materialID = this.template.id;
 
@@ -91,7 +92,7 @@ define([
         this._hasSourceSection = (typeof this._materialSource !== 'undefined');
         this._hasSourcePathSection = (typeof this._materialSourcePath !== 'undefined');
 
-        // Make sure the template has no obvious errors.
+        // Make sure the template has no obvious errors. More error checking happens later.
         this._checkForErrors();
 
         // If the material has a new ID, add it to the factory.
@@ -131,10 +132,8 @@ define([
         // If the source contains a texture ID, create a uniform for it.
         for (var textureID in this._materialTextures) {
             if (this._materialTextures.hasOwnProperty(textureID)) {
-                var textureUniformName = textureID + '_' + this._getNewGUID();
-                if (this._replaceToken(textureID, textureUniformName, true) > 0) {
-                    var texturePath = this._materialTextures[textureID];
-                    this._materialUniforms[textureUniformName] = texturePath;
+                if (this._replaceToken(textureID, textureID, true) > 0) {
+                    this._materialUniforms[textureID] = textureID;
                 }
             }
         }
@@ -160,7 +159,7 @@ define([
                 // When the uniform type is a string, replace all tokens with the uniformID with
                 // the associated value. Do not make it an actual uniform.
                 if (uniformType === 'string') {
-                    if (this._replaceToken(uniformID, uniformValue, false) === 0) {
+                    if (this._replaceToken(uniformID, uniformValue, false) === 0 && this.strict) {
                         throw new DeveloperError('Shader source does not use string \'' + uniformID + '\'.');
                     }
                 }
@@ -172,10 +171,11 @@ define([
                     // Add uniform declaration to source code.
                     var uniformPhrase = 'uniform ' + uniformType + ' ' + uniformID + ';\n';
                     if (this._shaderSource.indexOf(uniformPhrase) === -1) {
+                        uniformPhrase = uniformPhrase.replace(uniformID, newUniformID);
                         newShaderSource += uniformPhrase;
                     }
                     // Replace uniform name with guid version.
-                    if (this._replaceToken(uniformID, newUniformID, true) === 0) {
+                    if (this._replaceToken(uniformID, newUniformID, true) === 0 && this.strict) {
                         throw new DeveloperError('Shader source does not use uniform \'' + uniformID + '\'.');
                     }
                     // If uniform is a texture, load it.
@@ -195,19 +195,19 @@ define([
                 var materialTemplate = this._materialTemplates[materialID];
                 materialTemplate.textures = materialTemplate.textures || {};
                 this._extendObject(materialTemplate.textures, this._materialTextures);
-                var material = new Material({'context' : this.context, 'template' : materialTemplate});
+                var material = new Material({'context' : this.context, 'strict' : this.strict, 'template' : materialTemplate});
 
                 // Make the material's agi_getMaterial unique by appending a guid.
                 var originalMethodName = 'agi_getMaterial';
                 var newMethodName = originalMethodName + '_' + this._getNewGUID();
-                material._shaderSource = material._shaderSource.replace(originalMethodName, newMethodName);
+                material._replaceToken(originalMethodName, newMethodName, true);
                 this[materialID] = material;
 
                 // Replace each material id with the expanded glsl method call for each component expression.
                 // Example: material.diffuse = diffuseMap.diffuse
                 // Becomes: material.diffuse = agi_getMaterial_{guid}(materialInput).diffuse
                 var newMethodCall = newMethodName + '(materialInput)';
-                if (this._replaceToken(materialID, newMethodCall, true) === 0) {
+                if (this._replaceToken(materialID, newMethodCall, true) === 0 && this.strict) {
                     throw new DeveloperError('Shader source does not use material \'' + materialID + '\'.');
                 }
                 newShaderSource += '\n' + material._shaderSource;
@@ -264,7 +264,7 @@ define([
     Material.prototype._checkForErrors = function() {
         // Make sure there are no duplicate names
         var duplicateNames = {};
-        var groups = {'textures' : this._materialTextures, 'uniforms' : this._materialUniforms, 'materials' : this._materialTemplates};
+        var groups = {'uniforms' : this._materialUniforms, 'materials' : this._materialTemplates};
         for (var groupID in groups) {
             if (groups.hasOwnProperty(groupID)) {
                 var groupValue = groups[groupID];
