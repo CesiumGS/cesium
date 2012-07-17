@@ -17,7 +17,7 @@ define([
      * @see DynamicPositionProperty
      * @see CzmlBoolean
      * @see CzmlCartesian2
-     * @see CzmlCartographic3
+     * @see CzmlCartographic
      * @see CzmlColor
      * @see CzmlHorizontalOrigin
      * @see CzmlLabelStyle

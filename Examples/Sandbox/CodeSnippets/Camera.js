@@ -7,7 +7,7 @@
 
         this.code = function() {
             flight = scene.getCamera().getControllers().addFlight({
-                destination : ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic3(-118.26, 34.19, 100000.0)),
+                destination : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-118.26, 34.19, 100000.0)),
                 duration : 4.0
             });
         };
@@ -28,7 +28,7 @@
 
     Sandbox.CameraReferenceFrame = function (scene, ellipsoid, primitives) {
         this.code = function() {
-            var center = ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic2(-75.59777, 40.03883));
+            var center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883));
             var transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
 
             var spindle = scene.getCamera().getControllers().get(0);
@@ -88,12 +88,12 @@
             scene.getCamera().viewExtent(ellipsoid, west, south, east, north);
 
             var polyline = new Cesium.Polyline(undefined);
-            polyline.setPositions(ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic2(-78, 38),
-                new Cesium.Cartographic2(-78, 42),
-                new Cesium.Cartographic2(-72, 42),
-                new Cesium.Cartographic2(-72, 38),
-                new Cesium.Cartographic2(-78, 38)
+            polyline.setPositions(ellipsoid.cartographicArrayToCartesianArray([
+                Cesium.Cartographic.fromDegrees(-78, 38),
+                Cesium.Cartographic.fromDegrees(-78, 42),
+                Cesium.Cartographic.fromDegrees(-72, 42),
+                Cesium.Cartographic.fromDegrees(-72, 38),
+                Cesium.Cartographic.fromDegrees(-78, 38)
             ]));
             primitives.add(polyline);
         };

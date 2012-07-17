@@ -63,7 +63,7 @@ defineSuite([
         var property = new DynamicPositionProperty();
         property.processCzmlIntervals(cartesianInterval);
 
-        var cartographic = Ellipsoid.WGS84.toCartographic3(property.getValueCartesian(epoch));
+        var cartographic = Ellipsoid.WGS84.cartesianToCartographic(property.getValueCartesian(epoch));
         var result = property.getValueCartographic(epoch);
         expect(result.longitude).toEqual(cartographic.longitude);
         expect(result.latitude).toEqual(cartographic.latitude);
@@ -84,7 +84,7 @@ defineSuite([
         var property = new DynamicPositionProperty();
         property.processCzmlIntervals(cartographicInterval);
 
-        var cartesian = Ellipsoid.WGS84.toCartesian(property.getValueCartographic(epoch));
+        var cartesian = Ellipsoid.WGS84.cartographicToCartesian(property.getValueCartographic(epoch));
         var result = property.getValueCartesian(epoch);
         expect(result.x).toEqual(cartesian.x);
         expect(result.y).toEqual(cartesian.y);

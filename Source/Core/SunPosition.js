@@ -2,14 +2,14 @@
 define([
         './Math',
         './Cartesian3',
-        './Cartographic2',
+        './Cartographic',
         './Matrix3',
         './JulianDate'
     ],
     function(
         CesiumMath,
         Cartesian3,
-        Cartographic2,
+        Cartographic,
         Matrix3,
         JulianDate) {
     "use strict";
@@ -149,9 +149,9 @@ define([
                 /**
                  * The cartographic position, in radians, of the sun's position projected onto Earth.  This is accurate to within less than a degree of the true position.
                  *
-                 * @type Cartographic2
+                 * @type Cartographic
                  */
-                cartographicPosition : new Cartographic2(hourAngle, declinationAngle),
+                cartographicPosition : new Cartographic(hourAngle, declinationAngle, 0.0),
 
                 /**
                  * Returns a unit vector, in Earth's fixed frame, pointing to the sun.
