@@ -21,7 +21,7 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/CullFace',
         '../Renderer/VertexLayout',
-        './ColorMaterial',
+        './Materials/ColorMaterial',
         './SceneMode',
         '../Shaders/Noise',
         '../Shaders/PolygonVS',

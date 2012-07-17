@@ -1,7 +1,7 @@
 /*global define*/
 define([
-        '../Core/Color',
-        '../Shaders/CheckerboardMaterial'
+        '../../Core/Color',
+        '../../Shaders/Materials/CheckerboardMaterial'
        ], function(
          Color,
          ShadersCheckerboardMaterial) {

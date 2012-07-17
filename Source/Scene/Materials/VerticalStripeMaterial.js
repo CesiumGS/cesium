@@ -1,7 +1,7 @@
 /*global define*/
 define([
-        '../Core/Color',
-        '../Shaders/VerticalStripeMaterial'
+        '../../Core/Color',
+        '../../Shaders/Materials/VerticalStripeMaterial'
        ], function(
          Color,
          ShadersVerticalStripeMaterial) {

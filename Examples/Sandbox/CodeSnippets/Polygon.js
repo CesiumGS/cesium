@@ -81,47 +81,32 @@
 
             polygon.material = new Cesium.Material({
                 'context': scene.getContext(),
-                'strict' : false,
                 'template': {
                     'id': 'WaterMaterial',
-                    'textures' : {
-                        'land' : '../../Images/earthspec1k.jpg'
+                    'redefine': 'true',
+                    'uniforms': {
+                        'texture': '../../Images/earthspec1k.jpg',
+                        'otherTexture': 'texture',
+                        'value': 0.5,
+                        'otherValue': 'value'
                     },
-                    'uniforms' : {
-
-                    },
-                    'materials' : {
-                        'bumpMap' : {
-                            'id' : 'BumpMapMaterial',
-                            'uniforms' : {
-                                'u_texture' : '../../Images/earthbump1k.jpg'
-                            }
-                        },
-                        'diffuseLand' : {
-                            'id' : 'DiffuseMapMaterial',
-                            'uniforms' : {
-                                'u_texture' : '../../Images/NE2_50M_SR_W_2048.jpg'
-                            }
-                        },
-                        'fresnel' : {
-                            'id' : 'FresnelMaterial'
-                        },
-                        'blob' : {
-                            'id' : 'BlobMaterial',
+                    'materials': {
+                        'first': {
+                            'id': 'DiffuseMapMaterial',
                             'uniforms': {
-                                'u_lightColor': {
-                                    'red' : 0.1,
-                                    'green' : 0.5,
-                                    'blue' : 0.7
-                                },
-                                'u_frequency' : 30.0
+                                'u_texture': 'texture',
+                                'amount' : 'value'
+                            },
+                            'components' : {
+                                'diffuse' : 'vec3(amount, 0.0, 0.0)',
+                                'alpha' : 'amount'
                             }
                         }
                     },
-                    'components' : {
-                        'diffuse' : 'mix(diffuseLand.diffuse*vec3(1.0,1.3,1.0), mix(blob.diffuse * 0.8, fresnel.diffuse, 0.2), texture2D(land, materialInput.st).r)',
-                        'specular' : 'texture2D(land, materialInput.st).r * blob.diffuse.b/200.0',
-                        'normal' : 'bumpMap.normal'
+                    'components': {
+                        'diffuse': 'first.diffuse',
+                        'specular': 'texture2D(otherTexture, materialInput.st).r / 5.0',
+                        'alpha' : 'first.alpha'
                     }
                 }
             });

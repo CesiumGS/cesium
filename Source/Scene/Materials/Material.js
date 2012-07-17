@@ -62,7 +62,6 @@ define([
     /**
      * @name Material
      * @constructor
-     *
      * @example
      */
 
@@ -70,19 +69,19 @@ define([
         var that = this;
         this.description = description || {};
         this.context = this.description.context;
-        this.strict = (typeof this.description.strict !== 'undefined') ? this.description.strict : true;
+        this.strict = (typeof this.description.strict !== 'undefined') ? this.description.strict : false;
         this.template = this.description.template || {};
+        this._materialRedefinition = (typeof this.template.redefine !== 'undefined') ? (this.template.redefine === 'true') : false;
         this._materialID = this.template.id;
 
         // If the factory contains this material ID, build the material template off of the stored template.
-        var isOldMaterialType = this._materialFactory.hasMaterial(this._materialID);
+        var isOldMaterialType = this._materialFactory.hasMaterial(this._materialID) && (this._materialRedefinition === false);
         if (isOldMaterialType) {
             var newMaterialTemplate = clone(this._materialFactory.getMaterial(this._materialID));
             this._extendObject(this.template, newMaterialTemplate);
         }
 
         // Once the template has been established, set the member variables.
-        this._materialTextures = this.template.textures || {};
         this._materialUniforms = this.template.uniforms || {};
         this._materialTemplates = this.template.materials || {};
         this._materialComponents = this.template.components;
@@ -129,15 +128,6 @@ define([
             }
         }
 
-        // If the source contains a texture ID, create a uniform for it.
-        for (var textureID in this._materialTextures) {
-            if (this._materialTextures.hasOwnProperty(textureID)) {
-                if (this._replaceToken(textureID, textureID, true) > 0) {
-                    this._materialUniforms[textureID] = textureID;
-                }
-            }
-        }
-
         // Set up uniforms for the main material
         this._uniforms = {};
         var newShaderSource = '';
@@ -149,19 +139,14 @@ define([
         for (var uniformID in this._materialUniforms) {
             if (this._materialUniforms.hasOwnProperty(uniformID)) {
                 var uniformValue = this._materialUniforms[uniformID];
-                var textureValue = this._materialTextures[uniformValue];
-                uniformValue = textureValue || uniformValue;
-
+                uniformValue = this._materialUniforms[uniformValue] || uniformValue;
                 var uniformType = this._getUniformType(uniformValue);
                 if (typeof uniformType === 'undefined') {
                     throw new DeveloperError('Invalid uniform type for \'' + uniformID + '\'.');
                 }
-                // When the uniform type is a string, replace all tokens with the uniformID with
-                // the associated value. Do not make it an actual uniform.
+                // When the uniform type is a string, replace all tokens with its value.
                 if (uniformType === 'string') {
-                    if (this._replaceToken(uniformID, uniformValue, false) === 0 && this.strict) {
-                        throw new DeveloperError('Shader source does not use string \'' + uniformID + '\'.');
-                    }
+                    this._replaceToken(uniformID, uniformValue, false);
                 }
                 else {
                     this[uniformID] = uniformValue;
@@ -171,13 +156,12 @@ define([
                     // Add uniform declaration to source code.
                     var uniformPhrase = 'uniform ' + uniformType + ' ' + uniformID + ';\n';
                     if (this._shaderSource.indexOf(uniformPhrase) === -1) {
-                        uniformPhrase = uniformPhrase.replace(uniformID, newUniformID);
-                        newShaderSource += uniformPhrase;
+                        newShaderSource += uniformPhrase.replace(uniformID, newUniformID);
                     }
+
                     // Replace uniform name with guid version.
-                    if (this._replaceToken(uniformID, newUniformID, true) === 0 && this.strict) {
-                        throw new DeveloperError('Shader source does not use uniform \'' + uniformID + '\'.');
-                    }
+                    this._replaceToken(uniformID, newUniformID, true);
+
                     // If uniform is a texture, load it.
                     if (uniformType === 'sampler2D' || uniformType === 'samplerCube') {
                         this[uniformID] = this._texturePool.registerTextureToMaterial(this, uniformID, uniformValue, uniformType);
@@ -193,25 +177,25 @@ define([
             if (this._materialTemplates.hasOwnProperty(materialID)) {
                 // Construct the sub-material. Share texture names using extendObject.
                 var materialTemplate = this._materialTemplates[materialID];
-                materialTemplate.textures = materialTemplate.textures || {};
-                this._extendObject(materialTemplate.textures, this._materialTextures);
+                materialTemplate.uniforms = materialTemplate.uniforms || {};
+                this._extendObject(materialTemplate.uniforms, this._materialUniforms);
                 var material = new Material({'context' : this.context, 'strict' : this.strict, 'template' : materialTemplate});
+                this[materialID] = material;
 
                 // Make the material's agi_getMaterial unique by appending a guid.
                 var originalMethodName = 'agi_getMaterial';
                 var newMethodName = originalMethodName + '_' + this._getNewGUID();
                 material._replaceToken(originalMethodName, newMethodName, true);
-                this[materialID] = material;
 
-                // Replace each material id with the expanded glsl method call for each component expression.
+                // Replace each material id with an agi_getMaterial method call.
                 // Example: material.diffuse = diffuseMap.diffuse
                 // Becomes: material.diffuse = agi_getMaterial_{guid}(materialInput).diffuse
                 var newMethodCall = newMethodName + '(materialInput)';
                 if (this._replaceToken(materialID, newMethodCall, true) === 0 && this.strict) {
                     throw new DeveloperError('Shader source does not use material \'' + materialID + '\'.');
                 }
-                newShaderSource += '\n' + material._shaderSource;
                 this._extendObject(this._uniforms, material._uniforms);
+                newShaderSource += '\n' + material._shaderSource;
             }
         }
         this._shaderSource = newShaderSource + this._shaderSource;
@@ -262,6 +246,11 @@ define([
     };
 
     Material.prototype._checkForErrors = function() {
+        // Make sure source and sourcePath do not exist in the same template.
+        if (this._hasSourceSection && this._hasSourcePathSection) {
+            throw new DeveloperError('Cannot have source and sourcePath in the same template.');
+        }
+
         // Make sure there are no duplicate names
         var duplicateNames = {};
         var groups = {'uniforms' : this._materialUniforms, 'materials' : this._materialTemplates};
@@ -282,9 +271,6 @@ define([
             }
         }
 
-        if (this._hasSourceSection && this._hasSourcePathSection) {
-            throw new DeveloperError('Cannot have source and sourcePath in the same template.');
-        }
 
         //Make sure all the component types are valid
         duplicateNames = {};
@@ -470,6 +456,7 @@ define([
     // Color Material
     Material.prototype._materialFactory.addMaterial('ColorMaterial', {
         'id' : 'ColorMaterial',
+        'redefine': 'true',
         'uniforms' : {
             'u_color' : {
                 'red' : 1,
@@ -484,6 +471,7 @@ define([
     // Diffuse Map Material
     Material.prototype._materialFactory.addMaterial('DiffuseMapMaterial', {
         'id' : 'DiffuseMapMaterial',
+        'redefine': 'true',
         'uniforms' : {
             'u_repeat' : {
                 'x' : 1,
@@ -499,6 +487,7 @@ define([
     // Alpha Map Material
     Material.prototype._materialFactory.addMaterial('AlphaMapMaterial', {
         'id' : 'AlphaMapMaterial',
+        'redefine': 'true',
         'uniforms' : {
             'u_texture' : '../../Images/alpha_map.png',
             'alphaChannel' : 'r',
@@ -513,6 +502,7 @@ define([
     // Specular Map Material
     Material.prototype._materialFactory.addMaterial('SpecularMapMaterial' , {
         'id' : 'SpecularMapMaterial',
+        'redefine': 'true',
         'uniforms' : {
             'u_texture' : '../../Images/alpha_map.png',
             'specularChannel' : 'r',
@@ -527,6 +517,7 @@ define([
     // Emission Map Material
     Material.prototype._materialFactory.addMaterial('EmissionMapMaterial' , {
         'id' : 'EmissionMapMaterial',
+        'redefine': 'true',
         'uniforms' : {
             'u_texture' : '../../Images/alpha_map.png',
             'emissionChannels' : 'rgb',
@@ -541,6 +532,7 @@ define([
     // Bump Map Material
     Material.prototype._materialFactory.addMaterial('BumpMapMaterial' , {
         'id' : 'BumpMapMaterial',
+        'redefine': 'true',
         'uniforms' : {
             'u_texture' : '../../Images/earthbump1k.jpg',
             'bumpMapChannels' : 'r',
@@ -555,6 +547,7 @@ define([
     // Normal Map Material
     Material.prototype._materialFactory.addMaterial('NormalMapMaterial', {
         'id' : 'NormalMapMaterial',
+        'redefine': 'true',
         'uniforms' : {
             'u_texture' : '../../Images/earthnormalmap.jpg',
             'normalMapChannels' : 'rgb',
@@ -569,6 +562,7 @@ define([
     // Reflection Material
     Material.prototype._materialFactory.addMaterial('ReflectionMaterial', {
         'id' : 'ReflectionMaterial',
+        'redefine': 'true',
         'uniforms' : {
             'u_cubeMap' : {
                 'positiveX' : '../../Images/PalmTreesCubeMap/posx.jpg',
@@ -586,6 +580,7 @@ define([
     // Refraction Material
     Material.prototype._materialFactory.addMaterial('RefractionMaterial', {
         'id' : 'RefractionMaterial',
+        'redefine': 'true',
         'uniforms' : {
             'u_cubeMap' : {
                 'positiveX' : '../../Images/PalmTreesCubeMap/posx.jpg',
@@ -604,12 +599,25 @@ define([
     // Fresnel Material
     Material.prototype._materialFactory.addMaterial('FresnelMaterial' , {
         'id' : 'FresnelMaterial',
+        'redefine': 'true',
+        'uniforms' : {
+            'palmTreeCubeMap' : {
+                'positiveX' : '../../Images/PalmTreesCubeMap/posx.jpg',
+                'negativeX' : '../../Images/PalmTreesCubeMap/negx.jpg',
+                'positiveY' : '../../Images/PalmTreesCubeMap/negy.jpg',
+                'negativeY' : '../../Images/PalmTreesCubeMap/posy.jpg',
+                'positiveZ' : '../../Images/PalmTreesCubeMap/posz.jpg',
+                'negativeZ' : '../../Images/PalmTreesCubeMap/negz.jpg'
+            }
+        },
         'materials' : {
             'reflection' : {
-                'id' : 'ReflectionMaterial'
+                'id' : 'ReflectionMaterial',
+                'u_cubeMap' : 'palmTreeCubeMap'
             },
             'refraction' : {
-                'id' : 'RefractionMaterial'
+                'id' : 'RefractionMaterial',
+                'u_cubeMap' : 'palmTreeCubeMap'
             }
         },
         'sourcePath' : 'FresnelMaterial'
@@ -618,6 +626,7 @@ define([
     // Brick Material
     Material.prototype._materialFactory.addMaterial('BrickMaterial', {
         'id' : 'BrickMaterial',
+        'redefine': 'true',
         'uniforms' : {
             'u_brickColor' : {
                 'red': 0.6,
@@ -648,6 +657,7 @@ define([
     // Wood Material
     Material.prototype._materialFactory.addMaterial('WoodMaterial', {
         'id' : 'WoodMaterial',
+        'redefine': 'true',
         'uniforms' : {
             'u_lightWoodColor' : {
                 'red' : 0.6,
@@ -674,6 +684,7 @@ define([
     // Asphalt Material
     Material.prototype._materialFactory.addMaterial('AsphaltMaterial', {
         'id' : 'AsphaltMaterial',
+        'redefine': 'true',
         'uniforms' : {
             'u_asphaltColor' : {
                 'red' : 0.15,
@@ -690,6 +701,7 @@ define([
     // Cement Material
     Material.prototype._materialFactory.addMaterial('CementMaterial', {
         'id' : 'CementMaterial',
+        'redefine': 'true',
         'uniforms' : {
             'u_cementColor' : {
                 'red' : 0.95,
@@ -706,6 +718,7 @@ define([
     // Grass Material
     Material.prototype._materialFactory.addMaterial('GrassMaterial', {
         'id' : 'GrassMaterial',
+        'redefine': 'true',
         'uniforms' : {
             'u_grassColor' : {
                 'red' : 0.25,
@@ -727,6 +740,7 @@ define([
     // Horizontal Stripe Material
     Material.prototype._materialFactory.addMaterial('HorizontalStripeMaterial', {
         'id' : 'HorizontalStripeMaterial',
+        'redefine': 'true',
         'uniforms' : {
             'u_lightColor' : {
                 'red' : 1.0,
@@ -749,6 +763,7 @@ define([
     // Vertical Stripe Material
     Material.prototype._materialFactory.addMaterial('VerticalStripeMaterial', {
         'id' : 'VerticalStripeMaterial',
+        'redefine': 'true',
         'uniforms' : {
             'u_lightColor' : {
                 'red' : 1.0,
@@ -771,6 +786,7 @@ define([
     // Checkerboard Material
     Material.prototype._materialFactory.addMaterial('CheckerboardMaterial', {
         'id' : 'CheckerboardMaterial',
+        'redefine': 'true',
         'uniforms' : {
             'u_lightColor' : {
                 'red' : 1.0,
@@ -795,6 +811,7 @@ define([
     // Dot Material
     Material.prototype._materialFactory.addMaterial('DotMaterial', {
         'id' : 'DotMaterial',
+        'redefine': 'true',
         'uniforms' : {
             'u_lightColor' : {
                 'red' : 1.0,
@@ -819,6 +836,7 @@ define([
     // Tie-Dye Material
     Material.prototype._materialFactory.addMaterial('TieDyeMaterial', {
         'id' : 'TieDyeMaterial',
+        'redefine': 'true',
         'uniforms' : {
             'u_lightColor' : {
                 'red' : 1.0,
@@ -840,6 +858,7 @@ define([
     // Facet Material
     Material.prototype._materialFactory.addMaterial('FacetMaterial', {
         'id' : 'FacetMaterial',
+        'redefine': 'true',
         'uniforms' : {
             'u_lightColor' : {
                 'red' : 0.25,
@@ -861,6 +880,7 @@ define([
     // Blob Material
     Material.prototype._materialFactory.addMaterial('BlobMaterial', {
         'id' : 'BlobMaterial',
+        'redefine': 'true',
         'uniforms' : {
             'u_lightColor' : {
                 'red' : 1.0,

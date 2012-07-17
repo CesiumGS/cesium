@@ -1,8 +1,8 @@
 /*global define*/
 define([
-        '../Core/Color',
-        '../Shaders/Noise',
-        '../Shaders/TieDyeMaterial'
+        '../../Core/Color',
+        '../../Shaders/Noise',
+        '../../Shaders/Materials/TieDyeMaterial'
     ], function(
         Color,
         ShadersNoise,
