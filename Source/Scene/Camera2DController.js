@@ -6,7 +6,7 @@ define([
         '../Core/Math',
         '../Core/Quaternion',
         '../Core/Cartesian2',
-        '../Core/Cartographic3',
+        '../Core/Cartographic',
         './CameraEventHandler',
         './CameraEventType',
         './CameraHelpers',
@@ -19,7 +19,7 @@ define([
         CesiumMath,
         Quaternion,
         Cartesian2,
-        Cartographic3,
+        Cartographic,
         CameraEventHandler,
         CameraEventType,
         CameraHelpers,
@@ -110,7 +110,7 @@ define([
         this._frustum.top *= maxZoomOut;
         this._frustum.bottom *= maxZoomOut;
 
-        this._maxCoord = projection.project(new Cartographic3(Math.PI, CesiumMath.PI_OVER_TWO, 0.0));
+        this._maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO, 0.0));
 
         this._maxZoomFactor = 2.5;
         this._maxTranslateFactor = 1.5;
@@ -146,7 +146,7 @@ define([
         }
 
         this._projection = projection;
-        this._maxCoord = projection.project(new Cartographic3(Math.PI, CesiumMath.toRadians(85.05112878)));
+        this._maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.toRadians(85.05112878)));
     };
 
     /**

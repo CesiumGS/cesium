@@ -549,7 +549,7 @@ define([
      * @memberof Quaternion
      *
      * @param {Cartesian3} axis The axis of rotation.
-     * @param {Number} angle The angle in degrees to rotate around the axis.
+     * @param {Number} angle The angle in radians to rotate around the axis.
      * @param {Quaternion} [result] The object to store the result into, if undefined a new instance will be created.
      *
      * @return {Quaternion} The modified result parameter or a new instance if result was undefined.

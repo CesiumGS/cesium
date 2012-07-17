@@ -10,7 +10,7 @@
 
     Sandbox.RectangularPyramidSensorVolume = function (scene, ellipsoid, primitives) {
         this.code = function () {
-            var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic2(-90.0, 0.0)));
+            var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
             modelMatrix = modelMatrix.multiplyWithMatrix(Cesium.Matrix4.createTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
 
             var sensors = new Cesium.SensorVolumeCollection(undefined);
@@ -30,7 +30,7 @@
 
     Sandbox.CustomSensorVolume = function (scene, ellipsoid, primitives) {
         this.code = function () {
-            var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic2(-90.0, 0.0)));
+            var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
             modelMatrix = modelMatrix.multiplyWithMatrix(Cesium.Matrix4.createTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
 
             var directions = [];
@@ -57,7 +57,7 @@
 
     Sandbox.ConicSensorVolume = function (scene, ellipsoid, primitives) {
         this.code = function () {
-            var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic2(-90.0, 0.0)));
+            var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
             modelMatrix = modelMatrix.multiplyWithMatrix(Cesium.Matrix4.createTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
 
             var sensors = new Cesium.SensorVolumeCollection(undefined);
@@ -77,7 +77,7 @@
 
     Sandbox.ConicSensorVolumeClockAngles = function (scene, ellipsoid, primitives) {
         this.code = function () {
-            var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic2(-90.0, 0.0)));
+            var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
             modelMatrix = modelMatrix.multiplyWithMatrix(Cesium.Matrix4.createTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
 
             var sensors = new Cesium.SensorVolumeCollection(undefined);
@@ -102,7 +102,7 @@
             var sensors = new Cesium.SensorVolumeCollection(undefined);
             primitives.add(sensors);
 
-            var modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic2(-75.10, 39.57)));
+            var modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.10, 39.57)));
 
             var sensor = sensors.addComplexConic({
                 modelMatrix: modelMatrix,
@@ -146,7 +146,7 @@
 
     Sandbox.StripeSensorMaterial = function (scene, ellipsoid, primitives) {
         this.code = function () {
-            var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic2(-90.0, 0.0)));
+            var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
             modelMatrix = modelMatrix.multiplyWithMatrix(Cesium.Matrix4.createTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
 
             // Also try HorizontalStripeMaterial
@@ -221,7 +221,7 @@
 
     Sandbox.DistanceIntervalSensorMaterial = function (scene, ellipsoid, primitives) {
         this.code = function () {
-            var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic2(-90.0, 0.0)));
+            var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
             modelMatrix = modelMatrix.multiplyWithMatrix(Cesium.Matrix4.createTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
 
             var material = new Cesium.DistanceIntervalMaterial({
@@ -274,7 +274,7 @@
 
     Sandbox.CheckerboardSensorMaterial = function (scene, ellipsoid, primitives) {
         this.code = function () {
-            var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic2(-90.0, 0.0)));
+            var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
             modelMatrix = modelMatrix.multiplyWithMatrix(Cesium.Matrix4.createTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
 
             var material = new Cesium.CheckerboardMaterial({
@@ -310,7 +310,7 @@
 
     Sandbox.DotSensorMaterial = function (scene, ellipsoid, primitives) {
         this.code = function () {
-            var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic2(-90.0, 0.0)));
+            var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
             modelMatrix = modelMatrix.multiplyWithMatrix(Cesium.Matrix4.createTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
 
             var material = new Cesium.DotMaterial({
@@ -346,7 +346,7 @@
 
     Sandbox.TieDyeSensorMaterial = function (scene, ellipsoid, primitives) {
         this.code = function () {
-            var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic2(-90.0, 0.0)));
+            var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
             modelMatrix = modelMatrix.multiplyWithMatrix(Cesium.Matrix4.createTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
 
             var material = new Cesium.TieDyeMaterial(undefined);    // Use default colors
@@ -369,7 +369,7 @@
 
     Sandbox.FacetSensorMaterial = function (scene, ellipsoid, primitives) {
         this.code = function () {
-            var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic2(-90.0, 0.0)));
+            var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
             modelMatrix = modelMatrix.multiplyWithMatrix(Cesium.Matrix4.createTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
 
             var material = new Cesium.FacetMaterial(undefined); // Use default colors
@@ -392,7 +392,7 @@
 
     Sandbox.BlobSensorMaterial = function (scene, ellipsoid, primitives) {
         this.code = function () {
-            var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic2(-90.0, 0.0)));
+            var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
             modelMatrix = modelMatrix.multiplyWithMatrix(Cesium.Matrix4.createTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
 
             var material = new Cesium.BlobMaterial(undefined);  // Use default colors
@@ -420,7 +420,7 @@
             var sensors = new Cesium.SensorVolumeCollection(undefined);
             primitives.add(sensors);
 
-            var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic2(-90.0, 0.0)));
+            var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
             modelMatrix = modelMatrix.multiplyWithMatrix(Cesium.Matrix4.createTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
 
             var lightColor = {
@@ -478,7 +478,7 @@
 
     Sandbox.ErosionSensorAnimation = function (scene, ellipsoid, primitives) {
         this.code = function () {
-            var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic2(-90.0, 0.0)));
+            var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
             modelMatrix = modelMatrix.multiplyWithMatrix(Cesium.Matrix4.createTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
 
             var material = new Cesium.CheckerboardMaterial(undefined);
@@ -503,7 +503,7 @@
 
     Sandbox.AlphaSensorAnimation = function (scene, ellipsoid, primitives) {
         this.code = function () {
-            var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic2(-90.0, 0.0)));
+            var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
             modelMatrix = modelMatrix.multiplyWithMatrix(Cesium.Matrix4.createTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
 
             var material = new Cesium.CheckerboardMaterial(undefined);
@@ -528,7 +528,7 @@
 
     Sandbox.AnimateSensorStripes = function (scene, ellipsoid, primitives) {
         this.code = function () {
-            var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic2(-90.0, 0.0)));
+            var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
             modelMatrix = modelMatrix.multiplyWithMatrix(Cesium.Matrix4.createTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
 
             var material = new Cesium.HorizontalStripeMaterial(undefined);   // Use default colors

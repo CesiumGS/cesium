@@ -20,11 +20,11 @@
 
             // Setup code
             var redPolygon = new Cesium.Polygon(undefined);
-            redPolygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic2(-70.0, 30.0),
-                new Cesium.Cartographic2(-60.0, 30.0),
-                new Cesium.Cartographic2(-60.0, 40.0),
-                new Cesium.Cartographic2(-70.0, 40.0)
+            redPolygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([
+                Cesium.Cartographic.fromDegrees(-70.0, 30.0),
+                Cesium.Cartographic.fromDegrees(-60.0, 30.0),
+                Cesium.Cartographic.fromDegrees(-60.0, 40.0),
+                Cesium.Cartographic.fromDegrees(-70.0, 40.0)
             ]));
             redPolygon.material.color = {
                 red : 1.0,
@@ -34,11 +34,11 @@
             };
 
             var bluePolygon = new Cesium.Polygon(undefined);
-            bluePolygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic2(-75.0, 34.0),
-                new Cesium.Cartographic2(-63.0, 34.0),
-                new Cesium.Cartographic2(-63.0, 40.0),
-                new Cesium.Cartographic2(-75.0, 40.0)
+            bluePolygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([
+                Cesium.Cartographic.fromDegrees(-75.0, 34.0),
+                Cesium.Cartographic.fromDegrees(-63.0, 34.0),
+                Cesium.Cartographic.fromDegrees(-63.0, 40.0),
+                Cesium.Cartographic.fromDegrees(-75.0, 40.0)
             ]));
             bluePolygon.material.color = {
                 red : 0.0,
@@ -48,11 +48,11 @@
             };
 
             var greenPolygon = new Cesium.Polygon(undefined);
-            greenPolygon.setPositions(ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic2(-67.0, 36.0),
-                new Cesium.Cartographic2(-55.0, 36.0),
-                new Cesium.Cartographic2(-55.0, 30.0),
-                new Cesium.Cartographic2(-67.0, 30.0)
+            greenPolygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([
+                Cesium.Cartographic.fromDegrees(-67.0, 36.0),
+                Cesium.Cartographic.fromDegrees(-55.0, 36.0),
+                Cesium.Cartographic.fromDegrees(-55.0, 30.0),
+                Cesium.Cartographic.fromDegrees(-67.0, 30.0)
             ]));
             greenPolygon.material.color = {
                 red : 0.0,

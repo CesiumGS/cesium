@@ -1,8 +1,8 @@
 /*global define*/
-define(['./Cartographic3',
+define(['./Cartographic',
         './Cartesian3'
     ], function(
-        Cartographic3,
+        Cartographic,
         Cartesian3) {
     "use strict";
 
@@ -23,14 +23,14 @@ define(['./Cartographic3',
 
                 var currentSegment = [{
                     cartesian : Cartesian3.clone(positions[0]),
-                    cartographic : ellipsoid.toCartographic3(positions[0]),
+                    cartographic : ellipsoid.cartesianToCartographic(positions[0]),
                     index : 0
                 }];
 
                 var prev = currentSegment[0].cartographic;
 
                 for ( var i = 1; i < length; ++i) {
-                    var cur = ellipsoid.toCartographic3(positions[i]);
+                    var cur = ellipsoid.cartesianToCartographic(positions[i]);
 
                     if (Math.abs(prev.longitude - cur.longitude) > Math.PI) {
                         var interpolatedLongitude = prev.longitude < 0.0 ? -Math.PI : Math.PI;
@@ -40,23 +40,23 @@ define(['./Cartographic3',
                         var interpolatedHeight = prev.height + (cur.height - prev.height) * ratio;
 
                         currentSegment.push({
-                            cartesian : ellipsoid.toCartesian(new Cartographic3(interpolatedLongitude, interpolatedLatitude, interpolatedHeight)),
-                            cartographic : new Cartographic3(interpolatedLongitude, interpolatedLatitude, interpolatedHeight),
+                            cartesian : ellipsoid.cartographicToCartesian(new Cartographic(interpolatedLongitude, interpolatedLatitude, interpolatedHeight)),
+                            cartographic : new Cartographic(interpolatedLongitude, interpolatedLatitude, interpolatedHeight),
                             index : i
                         });
                         segments.push(currentSegment);
 
                         currentSegment = [];
                         currentSegment.push({
-                            cartesian : ellipsoid.toCartesian(new Cartographic3(-interpolatedLongitude, interpolatedLatitude, interpolatedHeight)),
-                            cartographic : new Cartographic3(-interpolatedLongitude, interpolatedLatitude, interpolatedHeight),
+                            cartesian : ellipsoid.cartographicToCartesian(new Cartographic(-interpolatedLongitude, interpolatedLatitude, interpolatedHeight)),
+                            cartographic : new Cartographic(-interpolatedLongitude, interpolatedLatitude, interpolatedHeight),
                             index : i
                         });
                     }
 
                     currentSegment.push({
                         cartesian : Cartesian3.clone(positions[i]),
-                        cartographic : ellipsoid.toCartographic3(positions[i]),
+                        cartographic : ellipsoid.cartesianToCartographic(positions[i]),
                         index : i
                     });
 
