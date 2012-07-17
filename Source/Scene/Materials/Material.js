@@ -446,12 +446,14 @@ define([
             return this._materials[materialID];
         }
     };
-
     Material.prototype._getShaderSource = function() {
         return this._shaderSource;
     };
+    Material.prototype.getID = function() {
+        return this._materialID;
+    };
 
-    // Create generic material types
+    // Create basic material types
 
     // Color Material
     Material.prototype._materialFactory.addMaterial('ColorMaterial', {
