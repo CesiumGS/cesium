@@ -798,12 +798,12 @@ define([
                 halfHeight * 2.0);
     };
 
-    CentralBody.prototype._getBaseLayer = function() {
-        return this._imageLayers.get(0);
-    };
+    function getBaseLayer(centralBody) {
+        return centralBody._imageLayers.get(0);
+    }
 
     CentralBody.prototype._fillPoles = function(context, sceneState) {
-        var baseLayer = this._getBaseLayer();
+        var baseLayer = getBaseLayer(this);
         if (typeof baseLayer === 'undefined' || sceneState.mode !== SceneMode.SCENE3D) {
             return;
         }
@@ -925,7 +925,7 @@ define([
                 return that._fb.getColorTexture();
             },
             u_dayIntensity : function() {
-                var baseLayer = that._getBaseLayer();
+                var baseLayer = getBaseLayer(that);
                 if (typeof baseLayer !== 'undefined') {
                     var baseTileProvider = baseLayer.imageryProvider;
                     if (typeof baseTileProvider.getPoleIntensity === 'function') {
@@ -1398,8 +1398,8 @@ define([
         // TODO: refactor
         this._fillPoles(context, sceneState);
 
-        //this._imageLayers.update(context, sceneState);
         this._surface.update(context, sceneState);
+        this._imageLayers.update(context, sceneState);
 
         this._mode = mode;
         this._projection = projection;
@@ -1431,7 +1431,6 @@ define([
                 });
             }
 
-            //this._imageLayers.render(context);
             this._surface.render(context, this._drawUniforms, {
                 framebuffer : this._fb,
                 shaderProgram : this._sp,
@@ -1475,6 +1474,8 @@ define([
                     renderState : this._rsDepth
                 });
             }
+
+            this._imageLayers.render(context);
         }
     };
 

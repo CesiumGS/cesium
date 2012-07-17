@@ -263,10 +263,9 @@ define([
 
         for ( var i = 0, len = layers.length; i < len; i++) {
             var layer = layers[i];
-            layer.update(context, sceneState);
 
-            if (typeof layer.getLogo === 'function') {
-                logo = layer.getLogo();
+            if (typeof layer.imageryProvider.getLogo === 'function') {
+                logo = layer.imageryProvider.getLogo();
             }
 
             if (layerLogos[i] !== logo) {
@@ -284,6 +283,7 @@ define([
         if (rebuildLogo) {
             if (typeof this._logoQuad === 'undefined') {
                 this._logoQuad = new ViewportQuad(logoRectangle);
+                this._logoQuad.enableBlending = true;
             } else {
                 this._logoQuad.setRectangle(logoRectangle);
             }
@@ -322,11 +322,6 @@ define([
     ImageryLayerCollection.prototype.render = function(context) {
         if (!this.show) {
             return;
-        }
-
-        var layers = this._layers;
-        for ( var i = 0, len = layers.length; i < len; i++) {
-            layers[i].render(context);
         }
 
         if (typeof this._logoQuad !== 'undefined') {

@@ -1,46 +1,48 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/jsonp',
         '../Core/loadImage',
+        '../Core/writeTextToCanvas',
         '../Core/DeveloperError',
         '../Core/Cartesian2',
         '../Core/Extent',
         '../Core/Math',
-        '../Core/jsonp',
+        '../Core/Ellipsoid',
+        '../Core/Cartographic2',
         '../Renderer/MipmapHint',
         '../Renderer/PixelFormat',
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
+        './DiscardMissingTileImagePolicy',
         './Projections',
         './TileState',
         './WebMercatorTilingScheme',
         './GeographicTilingScheme',
-        './DiscardMissingTileImagePolicy',
-        '../ThirdParty/when',
-        '../Core/Ellipsoid',
-        '../Core/Cartographic2'
+        '../ThirdParty/when'
     ], function(
         defaultValue,
+        jsonp,
         loadImage,
+        writeTextToCanvas,
         DeveloperError,
         Cartesian2,
         Extent,
         CesiumMath,
-        jsonp,
+        Ellipsoid,
+        Cartographic2,
         MipmapHint,
         PixelFormat,
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
+        DiscardMissingTileImagePolicy,
         Projections,
         TileState,
         WebMercatorTilingScheme,
         GeographicTilingScheme,
-        DiscardMissingTileImagePolicy,
-        when,
-        Ellipsoid,
-        Cartographic2) {
+        when) {
     "use strict";
 
     /**
@@ -182,17 +184,10 @@ define([
             that.maxLevel = data.tileInfo.lods.length - 1;
 
             // Create the copyright message.
-            var canvas = document.createElement('canvas');
-            canvas.width = 800.0;
-            canvas.height = 20.0;
+            that._logo = writeTextToCanvas(data.copyrightText, {
+                font : '12px sans-serif'
+            });
 
-            var context = canvas.getContext('2d');
-            context.fillStyle = '#fff';
-            context.font = '12px sans-serif';
-            context.textBaseline = 'top';
-            context.fillText(data.copyrightText, 0, 0);
-
-            that._logo = canvas;
             that.ready = true;
 
             return true;

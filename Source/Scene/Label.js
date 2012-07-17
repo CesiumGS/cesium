@@ -1,20 +1,20 @@
 /*global define*/
 define([
-        '../Core/Color',
         '../Core/shallowEquals',
+        '../Core/writeTextToCanvas',
+        '../Core/Color',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
-        '../ThirdParty/measureText',
         './Billboard',
         './LabelStyle',
         './HorizontalOrigin',
         './VerticalOrigin'
     ], function(
-        Color,
         shallowEquals,
+        writeTextToCanvas,
+        Color,
         Cartesian2,
         Cartesian3,
-        measureText,
         Billboard,
         LabelStyle,
         HorizontalOrigin,
@@ -643,7 +643,7 @@ define([
             var canvasContainer = this._labelCollection._canvasContainer;
             var index = canvasContainer.add(charValue, this, onCanvasCreated);
             billboard.setImageIndex(index);
-            billboard._labelDimension = canvasContainer.getItem(index)._dimension;
+            billboard._labelDimension = canvasContainer.getItem(index).dimensions;
             this._billboards.push(billboard);
         }
         this._setPixelOffsets();
@@ -661,58 +661,37 @@ define([
     };
 
     Label.prototype._createCanvas = function(charValue) {
-        var font = this._font;
-
-        var canvas = document.createElement('canvas');
-        canvas.width = canvas.height = 1;
-        canvas.style.font = font;
-        canvas.style.display = 'hidden';
-
-        var context2D = canvas.getContext('2d');
-        context2D.font = font;
-
-
-        //the vertical origin needs to be set before the measureText call. It won't work otherwise.
-        //It's magic.
+        var textBaseline;
         var verticalOrigin = this._verticalOrigin;
         if (verticalOrigin === VerticalOrigin.BOTTOM) {
-            context2D.textBaseline = 'bottom';
+            textBaseline = 'bottom';
         } else if (verticalOrigin === VerticalOrigin.TOP) {
-            context2D.textBaseline = 'top';
-        } else {// VerticalOrigin.CENTER
-            context2D.textBaseline = 'middle';
+            textBaseline = 'top';
+        } else {
+            // VerticalOrigin.CENTER
+            textBaseline = 'middle';
         }
 
-        //in order for measureText to calculate style, the canvas has to be
-        //(temporarily) added to the DOM.
-        document.body.appendChild(canvas);
-        var dimensions = measureText(context2D, charValue);
-        document.body.removeChild(canvas);
-        var baseline = dimensions.height - dimensions.ascent;
-        canvas.width = dimensions.width;
-        canvas.height = dimensions.height;
-        context2D.font = font;
-        // font must be explicitly set again after changing width and height
-        context2D.fillStyle = 'rgba(' + this._fillColor.red * 255 + ', ' + this._fillColor.green * 255 + ', ' + this._fillColor.blue * 255 + ', ' + this._fillColor.alpha + ')';
-        context2D.strokeStyle = 'rgba(' + this._outlineColor.red * 255 + ', ' + this._outlineColor.green * 255 + ', ' + this._outlineColor.blue * 255 + ', ' + this._outlineColor.alpha + ')';
-
-        var y = canvas.height - baseline;
+        var fill = false;
         var style = this._style;
-
-        canvas._dimension = {
-            width : canvas.width,
-            height : canvas.height,
-            descent : dimensions.descent
-        };
-
-        if (style === LabelStyle.FILL) {
-            context2D.fillText(charValue, 0, y);
-        } else if (style === LabelStyle.OUTLINE) {
-            context2D.strokeText(charValue, 0, y);
-        } else {// LabelStyle.FILL_AND_OUTLINE
-            context2D.fillText(charValue, 0, y);
-            context2D.strokeText(charValue, 0, y);
+        if (style === LabelStyle.FILL || style === LabelStyle.FILL_AND_OUTLINE) {
+            fill = true;
         }
+
+        var stroke = false;
+        if (style === LabelStyle.OUTLINE || style === LabelStyle.FILL_AND_OUTLINE) {
+            stroke = true;
+        }
+
+        var canvas = writeTextToCanvas(charValue, {
+            font : this._font,
+            textBaseline : textBaseline,
+            fill : fill,
+            fillColor: this._fillColor,
+            stroke : stroke,
+            strokeColor: this._outlineColor
+        });
+
         return canvas;
     };
 
