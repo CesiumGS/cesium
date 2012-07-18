@@ -10,7 +10,7 @@ defineSuite([
               ClockRange,
               JulianDate) {
     "use strict";
-    /*global it,expect*/
+    /*global it,expect,waitsFor*/
 
     it('constructor sets default parameters', function() {
         var clock = new Clock();
@@ -349,6 +349,20 @@ defineSuite([
         expect(clock.currentTime).toEqual(currentTime);
         expect(stop).toEqual(clock.tick());
         expect(stop).toEqual(clock.currentTime);
+    });
+
+    it('Ticks in real-time.', function() {
+        //We can't numerically validate the real-time clock, but we
+        //can at least make sure the code executes.
+        var clock = new Clock({
+            clockStep : ClockStep.SYSTEM_DEPENDENT
+        });
+        var time1 = clock.tick();
+
+        waitsFor(function() {
+            var time2 = clock.tick();
+            return time2.greaterThan(time1);
+        });
     });
 
     it('Tick dependant clock step stops at start animating backwards.', function() {
