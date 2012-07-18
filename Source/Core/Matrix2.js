@@ -13,50 +13,46 @@ define([
      * @alias Matrix2
      * @constructor
      *
-     * @param {Array} [values=(0.0, 0.0, 0.0, 0.0)] A column-major array containing the initial values for the matrix.
+     * @param {Number} [column0Row0=0.0] The value for column 0, row 0.
+     * @param {Number} [column1Row0=0.0] The value for column 1, row 0.
+     * @param {Number} [column0Row1=0.0] The value for column 0, row 1.
+     * @param {Number} [column1Row1=0.0] The value for column 1, row 1.
      *
-     * @exception {DeveloperError} values must be an array.
-     *
-     * @see Matrix2.fromComponents
+     * @see Matrix2.fromColumnMajor
      * @see Matrix2.fromRowMajorArray
      * @see Matrix3
      * @see Matrix4
      */
-    var Matrix2 = function(values) {
-        if (typeof values === 'undefined') {
-            values = [0, 0, 0, 0];
-        }
-        else if (!Array.isArray(values)) {
-            throw new DeveloperError('values must be an array');
-        }
-
-        this[0] = values[0];
-        this[1] = values[1];
-        this[2] = values[2];
-        this[3] = values[3];
+    var Matrix2 = function(column0Row0, column1Row0, column0Row1, column1Row1) {
+        this[0] = typeof column0Row0 === 'undefined' ? 0.0 : column0Row0;
+        this[1] = typeof column1Row0 === 'undefined' ? 0.0 : column1Row0;
+        this[2] = typeof column0Row1 === 'undefined' ? 0.0 : column0Row1;
+        this[3] = typeof column1Row1 === 'undefined' ? 0.0 : column1Row1;
     };
 
     /**
-     * Creates a Matrix2 instance from individual components.
-     * Arguments are in column-major order.
+     * Creates a Matrix2 instance from a column-major order array.
      * @memberof Matrix2
      *
-     * @param column0Row0 The value for column 0, row 0.
-     * @param column1Row0 The value for column 1, row 0.
-     * @param column0Row1 The value for column 0, row 1.
-     * @param column1Row1 The value for column 1, row 1.
+     * @param {Array} values The column-major order array.
      * @param {Matrix2} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new instance if none was provided.
+     * @returns The modified result parameter, or a new Matrix2 instance if none was provided.
+     *
+     * @exception {DeveloperError} values must be an array.
      */
-    Matrix2.fromComponents = function(column0Row0, column1Row0, column0Row1, column1Row1, result) {
-        if (typeof result === 'undefined') {
-            return new Matrix2([column0Row0, column1Row0,
-                                column0Row1, column1Row1]);
+    Matrix2.fromColumnMajorArray = function(values, result) {
+        if (!Array.isArray(values)) {
+            throw new DeveloperError('values must be an array');
         }
-        result[0] = column0Row0;
-        result[1] = column1Row0;
-        result[2] = column0Row1;
-        result[3] = column1Row1;
+
+        if (typeof result === 'undefined') {
+            return new Matrix2(values[0], values[1],
+                               values[2], values[3]);
+        }
+        result[0] = values[0];
+        result[1] = values[1];
+        result[2] = values[2];
+        result[3] = values[3];
         return result;
     };
 
@@ -77,8 +73,8 @@ define([
         }
 
         if (typeof result === 'undefined') {
-            return new Matrix2([values[0], values[2],
-                                values[1], values[3]]);
+            return new Matrix2(values[0], values[2],
+                               values[1], values[3]);
         }
         result[0] = values[0];
         result[1] = values[2];
@@ -102,7 +98,32 @@ define([
             throw new DeveloperError('matrix is required');
         }
         if (typeof result === 'undefined') {
-            return new Matrix2([matrix[0], matrix[1], matrix[2], matrix[3]]);
+            return new Matrix2(matrix[0], matrix[1],
+                               matrix[2], matrix[3]);
+        }
+        result[0] = matrix[0];
+        result[1] = matrix[1];
+        result[2] = matrix[2];
+        result[3] = matrix[3];
+        return result;
+    };
+
+    /**
+     * Creates an Array from the provided Matrix2 instance.
+     * @memberof Matrix2
+     *
+     * @param {Matrix2} matrix The matrix to use..
+     * @param {Array} [result] The Array onto which to store the result.
+     * @return {Array} The modified Array parameter or a new Array instance if none was provided.
+     *
+     * @exception {DeveloperError} matrix is required.
+     */
+    Matrix2.toArray = function(matrix, result) {
+        if (typeof matrix === 'undefined') {
+            throw new DeveloperError('matrix is required');
+        }
+        if (typeof result === 'undefined') {
+            return [matrix[0], matrix[1], matrix[2], matrix[3]];
         }
         result[0] = matrix[0];
         result[1] = matrix[1];
@@ -274,8 +295,8 @@ define([
         var column1Row1 = left[2] * right[1] + left[3] * right[3];
 
         if (typeof result === 'undefined') {
-            return new Matrix2([column0Row0, column1Row0,
-                                column0Row1, column1Row1]);
+            return new Matrix2(column0Row0, column1Row0,
+                               column0Row1, column1Row1);
         }
         result[0] = column0Row0;
         result[1] = column1Row0;
@@ -336,8 +357,8 @@ define([
         }
 
         if (typeof result === 'undefined') {
-            return new Matrix2([matrix[0] * scalar, matrix[1] * scalar,
-                                matrix[2] * scalar, matrix[3] * scalar]);
+            return new Matrix2(matrix[0] * scalar, matrix[1] * scalar,
+                               matrix[2] * scalar, matrix[3] * scalar);
         }
         result[0] = matrix[0] * scalar;
         result[1] = matrix[1] * scalar;
@@ -362,8 +383,8 @@ define([
         }
 
         if (typeof result === 'undefined') {
-            return new Matrix2([-matrix[0], -matrix[1],
-                                -matrix[2], -matrix[3]]);
+            return new Matrix2(-matrix[0], -matrix[1],
+                               -matrix[2], -matrix[3]);
         }
         result[0] = -matrix[0];
         result[1] = -matrix[1];
@@ -392,8 +413,8 @@ define([
         var column0Row1 = matrix[1];
         var column1Row1 = matrix[3];
         if (typeof result === 'undefined') {
-            return new Matrix2([column0Row0, column1Row0,
-                                column0Row1, column1Row1]);
+            return new Matrix2(column0Row0, column1Row0,
+                               column0Row1, column1Row1);
         }
         result[0] = column0Row0;
         result[1] = column1Row0;
@@ -469,7 +490,7 @@ define([
      * An immutable Matrix2 instance initialized to the identity matrix.
      * @memberof Matrix2
      */
-    Matrix2.IDENTITY = Object.freeze(Matrix2.fromComponents(1.0, 0.0, 0.0, 1.0));
+    Matrix2.IDENTITY = Object.freeze(new Matrix2(1.0, 0.0, 0.0, 1.0));
 
     /**
      * The index into Matrix2 for column 0, row 0.
@@ -520,6 +541,17 @@ define([
      */
     Matrix2.prototype.clone = function(result) {
         return Matrix2.clone(this, result);
+    };
+
+    /**
+     * Creates an Array from this Matrix2 instance.
+     * @memberof Matrix2
+     *
+     * @param {Array} [result] The Array onto which to store the result.
+     * @return {Array} The modified Array parameter or a new Array instance if none was provided.
+     */
+    Matrix2.prototype.toArray = function(result) {
+        return Matrix2.toArray(this, result);
     };
 
     /**

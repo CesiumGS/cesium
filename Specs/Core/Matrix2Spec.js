@@ -10,58 +10,57 @@ defineSuite([
 
     it('default constructor creates values array with all zeros.', function() {
         var matrix = new Matrix2();
-        expect(matrix[0]).toEqual(0.0);
-        expect(matrix[1]).toEqual(0.0);
-        expect(matrix[2]).toEqual(0.0);
-        expect(matrix[3]).toEqual(0.0);
+        expect(matrix[Matrix2.COLUMN0ROW0]).toEqual(0.0);
+        expect(matrix[Matrix2.COLUMN1ROW0]).toEqual(0.0);
+        expect(matrix[Matrix2.COLUMN0ROW1]).toEqual(0.0);
+        expect(matrix[Matrix2.COLUMN1ROW1]).toEqual(0.0);
     });
 
     it('constructor sets properties from parameters.', function() {
-        var expected = [1.0, 2.0, 3.0, 4.0];
-        var matrix = new Matrix2(expected);
-        expect(matrix[0]).toEqual(1.0);
-        expect(matrix[1]).toEqual(2.0);
-        expect(matrix[2]).toEqual(3.0);
-        expect(matrix[3]).toEqual(4.0);
-    });
-
-    it('fromComponents works without a result parameter', function() {
-        var expected = new Matrix2([1.0, 2.0, 3.0, 4.0]);
-        var matrix = Matrix2.fromComponents(1.0, 2.0, 3.0, 4.0);
-        expect(matrix).toEqual(expected);
-    });
-
-    it('fromComponents works with result parameter', function() {
-        var expected = new Matrix2([1.0, 2.0, 3.0, 4.0]);
-        var result = new Matrix2();
-        var matrix = Matrix2.fromComponents(1.0, 2.0, 3.0, 4.0, result);
-        expect(matrix).toBe(result);
-        expect(matrix).toEqual(expected);
+        var matrix = new Matrix2(1.0, 2.0, 3.0, 4.0);
+        expect(matrix[Matrix2.COLUMN0ROW0]).toEqual(1.0);
+        expect(matrix[Matrix2.COLUMN1ROW0]).toEqual(2.0);
+        expect(matrix[Matrix2.COLUMN0ROW1]).toEqual(3.0);
+        expect(matrix[Matrix2.COLUMN1ROW1]).toEqual(4.0);
     });
 
     it('fromRowMajorArray works without a result parameter', function() {
-        var expected = new Matrix2([1.0, 2.0, 3.0, 4.0]);
+        var expected = new Matrix2(1.0, 2.0, 3.0, 4.0);
         var matrix = Matrix2.fromRowMajorArray([1.0, 3.0, 2.0, 4.0]);
         expect(matrix).toEqual(expected);
     });
 
     it('fromRowMajorArray works with a result parameter', function() {
-        var expected = new Matrix2([1.0, 2.0, 3.0, 4.0]);
+        var expected = new Matrix2(1.0, 2.0, 3.0, 4.0);
         var result = new Matrix2();
         var matrix = Matrix2.fromRowMajorArray([1.0, 3.0, 2.0, 4.0], result);
         expect(matrix).toBe(result);
         expect(matrix).toEqual(expected);
     });
 
+    it('fromColumnMajorArray works without a result parameter', function() {
+        var expected = new Matrix2(1.0, 2.0, 3.0, 4.0);
+        var matrix = Matrix2.fromColumnMajorArray([1.0, 2.0, 3.0, 4.0]);
+        expect(matrix).toEqual(expected);
+    });
+
+    it('fromColumnMajorArray works with a result parameter', function() {
+        var expected = new Matrix2(1.0, 2.0, 3.0, 4.0);
+        var result = new Matrix2();
+        var matrix = Matrix2.fromColumnMajorArray([1.0, 2.0, 3.0, 4.0], result);
+        expect(matrix).toBe(result);
+        expect(matrix).toEqual(expected);
+    });
+
     it('clone works without a result parameter', function() {
-        var expected = new Matrix2([1.0, 2.0, 3.0, 4.0]);
+        var expected = new Matrix2(1.0, 2.0, 3.0, 4.0);
         var returnedResult = expected.clone();
         expect(returnedResult).toNotBe(expected);
         expect(returnedResult).toEqual(expected);
     });
 
     it('clone works with a result parameter', function() {
-        var expected = new Matrix2([1.0, 2.0, 3.0, 4.0]);
+        var expected = new Matrix2(1.0, 2.0, 3.0, 4.0);
         var result = new Matrix2();
         var returnedResult = expected.clone(result);
         expect(returnedResult).toBe(result);
@@ -69,8 +68,25 @@ defineSuite([
         expect(returnedResult).toEqual(expected);
     });
 
+
+    it('toArray works without a result parameter', function() {
+        var expected = [1.0, 2.0, 3.0, 4.0];
+        var returnedResult = Matrix2.fromColumnMajorArray(expected).toArray();
+        expect(returnedResult).toNotBe(expected);
+        expect(returnedResult).toEqualArray(expected);
+    });
+
+    it('toArray works with a result parameter', function() {
+        var expected = [1.0, 2.0, 3.0, 4.0];
+        var result = [];
+        var returnedResult = Matrix2.fromColumnMajorArray(expected).toArray(result);
+        expect(returnedResult).toBe(result);
+        expect(returnedResult).toNotBe(expected);
+        expect(returnedResult).toEqualArray(expected);
+    });
+
     it('getColumn works without a result parameter', function() {
-        var matrix = Matrix2.fromComponents(1.0, 2.0, 3.0, 4.0);
+        var matrix = new Matrix2(1.0, 2.0, 3.0, 4.0);
         var expectedColumn0 = new Cartesian2(1.0, 3.0);
         var expectedColumn1 = new Cartesian2(2.0, 4.0);
 
@@ -82,7 +98,7 @@ defineSuite([
     });
 
     it('getColumn works with a result parameter', function() {
-        var matrix = Matrix2.fromComponents(1.0, 2.0, 3.0, 4.0);
+        var matrix = new Matrix2(1.0, 2.0, 3.0, 4.0);
         var expectedColumn0 = new Cartesian2(1.0, 3.0);
         var expectedColumn1 = new Cartesian2(2.0, 4.0);
 
@@ -98,34 +114,34 @@ defineSuite([
     });
 
     it('setColumn works without a result parameter for each column', function() {
-        var matrix = Matrix2.fromComponents(1.0, 2.0, 3.0, 4.0);
+        var matrix = new Matrix2(1.0, 2.0, 3.0, 4.0);
 
-        var expected = Matrix2.fromComponents(5.0, 2.0, 6.0, 4.0);
+        var expected = new Matrix2(5.0, 2.0, 6.0, 4.0);
         var result = matrix.setColumn(0, new Cartesian2(5.0, 6.0));
         expect(result).toEqual(expected);
 
-        expected = Matrix2.fromComponents(1.0, 7.0, 3.0, 8.0);
+        expected = new Matrix2(1.0, 7.0, 3.0, 8.0);
         result = matrix.setColumn(1, new Cartesian2(7.0, 8.0));
         expect(result).toEqual(expected);
     });
 
     it('setColumn works with a result parameter for each column', function() {
-        var matrix = Matrix2.fromComponents(1.0, 2.0, 3.0, 4.0);
+        var matrix = new Matrix2(1.0, 2.0, 3.0, 4.0);
         var result = new Matrix2();
 
-        var expected = Matrix2.fromComponents(5.0, 2.0, 6.0, 4.0);
+        var expected = new Matrix2(5.0, 2.0, 6.0, 4.0);
         var returnedResult = matrix.setColumn(0, new Cartesian2(5.0, 6.0), result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expected);
 
-        expected = Matrix2.fromComponents(1.0, 7.0, 3.0, 8.0);
+        expected = new Matrix2(1.0, 7.0, 3.0, 8.0);
         returnedResult = matrix.setColumn(1, new Cartesian2(7.0, 8.0), result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expected);
     });
 
     it('getRow works without a result parameter', function() {
-        var matrix = Matrix2.fromComponents(1.0, 2.0, 3.0, 4.0);
+        var matrix = new Matrix2(1.0, 2.0, 3.0, 4.0);
         var expectedRow0 = new Cartesian2(1.0, 2.0);
         var expectedRow1 = new Cartesian2(3.0, 4.0);
 
@@ -137,7 +153,7 @@ defineSuite([
     });
 
     it('getRow works with a result parameter', function() {
-        var matrix = Matrix2.fromComponents(1.0, 2.0, 3.0, 4.0);
+        var matrix = new Matrix2(1.0, 2.0, 3.0, 4.0);
         var expectedRow0 = new Cartesian2(1.0, 2.0);
         var expectedRow1 = new Cartesian2(3.0, 4.0);
 
@@ -153,44 +169,44 @@ defineSuite([
     });
 
     it('setRow works without a result parameter for each row', function() {
-        var matrix = Matrix2.fromComponents(1.0, 2.0, 3.0, 4.0);
+        var matrix = new Matrix2(1.0, 2.0, 3.0, 4.0);
 
-        var expected = Matrix2.fromComponents(5.0, 6.0, 3.0, 4.0);
+        var expected = new Matrix2(5.0, 6.0, 3.0, 4.0);
         var result = matrix.setRow(0, new Cartesian2(5.0, 6.0));
         expect(result).toEqual(expected);
 
-        expected = Matrix2.fromComponents(1.0, 2.0, 7.0, 8.0);
+        expected = new Matrix2(1.0, 2.0, 7.0, 8.0);
         result = matrix.setRow(1, new Cartesian2(7.0, 8.0));
         expect(result).toEqual(expected);
     });
 
     it('setRow works with a result parameter for each row', function() {
-        var matrix = Matrix2.fromComponents(1.0, 2.0, 3.0, 4.0);
+        var matrix = new Matrix2(1.0, 2.0, 3.0, 4.0);
         var result = new Matrix2();
 
-        var expected = Matrix2.fromComponents(5.0, 6.0, 3.0, 4.0);
+        var expected = new Matrix2(5.0, 6.0, 3.0, 4.0);
         var returnedResult = matrix.setRow(0, new Cartesian2(5.0, 6.0), result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expected);
 
-        expected = Matrix2.fromComponents(1.0, 2.0, 7.0, 8.0);
+        expected = new Matrix2(1.0, 2.0, 7.0, 8.0);
         returnedResult = matrix.setRow(1, new Cartesian2(7.0, 8.0), result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expected);
     });
 
     it('multiply works without a result parameter', function() {
-        var left = Matrix2.fromComponents(1, 2, 3, 4);
-        var right = Matrix2.fromComponents(5, 6, 7, 8);
-        var expected = Matrix2.fromComponents(19, 22, 43, 50);
+        var left = new Matrix2(1, 2, 3, 4);
+        var right = new Matrix2(5, 6, 7, 8);
+        var expected = new Matrix2(19, 22, 43, 50);
         var result = left.multiply(right);
         expect(result).toEqual(expected);
     });
 
     it('multiply works with a result parameter', function() {
-        var left = Matrix2.fromComponents(1, 2, 3, 4);
-        var right = Matrix2.fromComponents(5, 6, 7, 8);
-        var expected = Matrix2.fromComponents(19, 22, 43, 50);
+        var left = new Matrix2(1, 2, 3, 4);
+        var right = new Matrix2(5, 6, 7, 8);
+        var expected = new Matrix2(19, 22, 43, 50);
         var result = new Matrix2();
         var returnedResult = left.multiply(right, result);
         expect(returnedResult).toBe(result);
@@ -198,16 +214,16 @@ defineSuite([
     });
 
     it('multiply works with "this" result parameter', function() {
-        var left = Matrix2.fromComponents(1, 2, 3, 4);
-        var right = Matrix2.fromComponents(5, 6, 7, 8);
-        var expected = Matrix2.fromComponents(19, 22, 43, 50);
+        var left = new Matrix2(1, 2, 3, 4);
+        var right = new Matrix2(5, 6, 7, 8);
+        var expected = new Matrix2(19, 22, 43, 50);
         var returnedResult = left.multiply(right, left);
         expect(returnedResult).toBe(left);
         expect(left).toEqual(expected);
     });
 
     it('multiplyByVector works without a result parameter', function() {
-        var left = Matrix2.fromComponents(1, 2, 3, 4);
+        var left = new Matrix2(1, 2, 3, 4);
         var right = new Cartesian2(5, 6);
         var expected = new Cartesian2(17, 39);
         var result = left.multiplyByVector(right);
@@ -215,7 +231,7 @@ defineSuite([
     });
 
     it('multiplyByVector works with a result parameter', function() {
-        var left = Matrix2.fromComponents(1, 2, 3, 4);
+        var left = new Matrix2(1, 2, 3, 4);
         var right = new Cartesian2(5, 6);
         var expected = new Cartesian2(17, 39);
         var result = new Cartesian2();
@@ -225,17 +241,17 @@ defineSuite([
     });
 
     it('multiplyByScalar works without a result parameter', function() {
-        var left = Matrix2.fromComponents(1, 2, 3, 4);
+        var left = new Matrix2(1, 2, 3, 4);
         var right = 2;
-        var expected = Matrix2.fromComponents(2, 4, 6, 8);
+        var expected = new Matrix2(2, 4, 6, 8);
         var result = left.multiplyByScalar(right);
         expect(result).toEqual(expected);
     });
 
     it('multiplyByScalar works with a result parameter', function() {
-        var left = Matrix2.fromComponents(1, 2, 3, 4);
+        var left = new Matrix2(1, 2, 3, 4);
         var right = 2;
-        var expected = Matrix2.fromComponents(2, 4, 6, 8);
+        var expected = new Matrix2(2, 4, 6, 8);
         var result = new Matrix2();
         var returnedResult = left.multiplyByScalar(right, result);
         expect(returnedResult).toBe(result);
@@ -243,15 +259,15 @@ defineSuite([
     });
 
     it('negate works without a result parameter', function() {
-        var matrix = Matrix2.fromComponents(1, 2, 3, 4);
-        var expected = Matrix2.fromComponents(-1, -2, -3, -4);
+        var matrix = new Matrix2(1, 2, 3, 4);
+        var expected = new Matrix2(-1, -2, -3, -4);
         var result = matrix.negate();
         expect(result).toEqual(expected);
     });
 
     it('negate works with a result parameter', function() {
-        var matrix = Matrix2.fromComponents(1, 2, 3, 4);
-        var expected = Matrix2.fromComponents(-1, -2, -3, -4);
+        var matrix = new Matrix2(1, 2, 3, 4);
+        var expected = new Matrix2(-1, -2, -3, -4);
         var result = new Matrix2();
         var returnedResult = matrix.negate(result);
         expect(result).toBe(returnedResult);
@@ -259,23 +275,23 @@ defineSuite([
     });
 
     it('negate works with "this" result parameter', function() {
-        var matrix = Matrix2.fromComponents(1, 2, 3, 4);
-        var expected = Matrix2.fromComponents(-1, -2, -3, -4);
+        var matrix = new Matrix2(1, 2, 3, 4);
+        var expected = new Matrix2(-1, -2, -3, -4);
         var returnedResult = matrix.negate(matrix);
         expect(matrix).toBe(returnedResult);
         expect(matrix).toEqual(expected);
     });
 
     it('transpose works without a result parameter', function() {
-        var matrix = Matrix2.fromComponents(1, 2, 3, 4);
-        var expected = Matrix2.fromComponents(1, 3, 2, 4);
+        var matrix = new Matrix2(1, 2, 3, 4);
+        var expected = new Matrix2(1, 3, 2, 4);
         var result = matrix.transpose();
         expect(result).toEqual(expected);
     });
 
     it('transpose works with a result parameter', function() {
-        var matrix = Matrix2.fromComponents(1, 2, 3, 4);
-        var expected = Matrix2.fromComponents(1, 3, 2, 4);
+        var matrix = new Matrix2(1, 2, 3, 4);
+        var expected = new Matrix2(1, 3, 2, 4);
         var result = new Matrix2();
         var returnedResult = matrix.transpose(result);
         expect(result).toBe(returnedResult);
@@ -283,32 +299,32 @@ defineSuite([
     });
 
     it('transpose works with "this" result parameter', function() {
-        var matrix = Matrix2.fromComponents(1, 2, 3, 4);
-        var expected = Matrix2.fromComponents(1, 3, 2, 4);
+        var matrix = new Matrix2(1, 2, 3, 4);
+        var expected = new Matrix2(1, 3, 2, 4);
         var returnedResult = matrix.transpose(matrix);
         expect(matrix).toBe(returnedResult);
         expect(matrix).toEqual(expected);
     });
 
     it('equals works in all cases', function() {
-        var left = Matrix2.fromComponents(1.0, 2.0, 3.0, 4.0);
-        var right = Matrix2.fromComponents(1.0, 2.0, 3.0, 4.0);
+        var left = new Matrix2(1.0, 2.0, 3.0, 4.0);
+        var right = new Matrix2(1.0, 2.0, 3.0, 4.0);
         expect(left.equals(right)).toEqual(true);
 
-        left = Matrix2.fromComponents(1.0, 2.0, 3.0, 4.0);
-        right = Matrix2.fromComponents(5.0, 2.0, 3.0, 4.0);
+        left = new Matrix2(1.0, 2.0, 3.0, 4.0);
+        right = new Matrix2(5.0, 2.0, 3.0, 4.0);
         expect(left.equals(right)).toEqual(false);
 
-        left = Matrix2.fromComponents(1.0, 2.0, 3.0, 4.0);
-        right = Matrix2.fromComponents(1.0, 6.0, 3.0, 4.0);
+        left = new Matrix2(1.0, 2.0, 3.0, 4.0);
+        right = new Matrix2(1.0, 6.0, 3.0, 4.0);
         expect(left.equals(right)).toEqual(false);
 
-        left = Matrix2.fromComponents(1.0, 2.0, 3.0, 4.0);
-        right = Matrix2.fromComponents(1.0, 2.0, 7.0, 4.0);
+        left = new Matrix2(1.0, 2.0, 3.0, 4.0);
+        right = new Matrix2(1.0, 2.0, 7.0, 4.0);
         expect(left.equals(right)).toEqual(false);
 
-        left = Matrix2.fromComponents(1.0, 2.0, 3.0, 4.0);
-        right = Matrix2.fromComponents(1.0, 2.0, 3.0, 8.0);
+        left = new Matrix2(1.0, 2.0, 3.0, 4.0);
+        right = new Matrix2(1.0, 2.0, 3.0, 8.0);
         expect(left.equals(right)).toEqual(false);
     });
 
@@ -319,27 +335,27 @@ defineSuite([
     });
 
     it('equalsEpsilon works in all cases', function() {
-        var left = Matrix2.fromComponents(1.0, 2.0, 3.0, 4.0);
-        var right = Matrix2.fromComponents(1.0, 2.0, 3.0, 4.0);
+        var left = new Matrix2(1.0, 2.0, 3.0, 4.0);
+        var right = new Matrix2(1.0, 2.0, 3.0, 4.0);
         expect(left.equalsEpsilon(right, 1.0)).toEqual(true);
 
-        left = Matrix2.fromComponents(1.0, 2.0, 3.0, 4.0);
-        right = Matrix2.fromComponents(5.0, 2.0, 3.0, 4.0);
+        left = new Matrix2(1.0, 2.0, 3.0, 4.0);
+        right = new Matrix2(5.0, 2.0, 3.0, 4.0);
         expect(left.equalsEpsilon(right, 3.9)).toEqual(false);
         expect(left.equalsEpsilon(right, 4.0)).toEqual(true);
 
-        left = Matrix2.fromComponents(1.0, 2.0, 3.0, 4.0);
-        right = Matrix2.fromComponents(1.0, 6.0, 3.0, 4.0);
+        left = new Matrix2(1.0, 2.0, 3.0, 4.0);
+        right = new Matrix2(1.0, 6.0, 3.0, 4.0);
         expect(left.equalsEpsilon(right, 3.9)).toEqual(false);
         expect(left.equalsEpsilon(right, 4.0)).toEqual(true);
 
-        left = Matrix2.fromComponents(1.0, 2.0, 3.0, 4.0);
-        right = Matrix2.fromComponents(1.0, 2.0, 7.0, 4.0);
+        left = new Matrix2(1.0, 2.0, 3.0, 4.0);
+        right = new Matrix2(1.0, 2.0, 7.0, 4.0);
         expect(left.equalsEpsilon(right, 3.9)).toEqual(false);
         expect(left.equalsEpsilon(right, 4.0)).toEqual(true);
 
-        left = Matrix2.fromComponents(1.0, 2.0, 3.0, 4.0);
-        right = Matrix2.fromComponents(1.0, 2.0, 3.0, 8.0);
+        left = new Matrix2(1.0, 2.0, 3.0, 4.0);
+        right = new Matrix2(1.0, 2.0, 3.0, 8.0);
         expect(left.equalsEpsilon(right, 3.9)).toEqual(false);
         expect(left.equalsEpsilon(right, 4.0)).toEqual(true);
     });
@@ -351,14 +367,8 @@ defineSuite([
     });
 
     it('toString', function() {
-        var matrix = Matrix2.fromComponents(1, 2, 3, 4);
+        var matrix = new Matrix2(1, 2, 3, 4);
         expect(matrix.toString()).toEqual('(1, 2)\n(3, 4)');
-    });
-
-    it('constructor Array throws with non-array parameter', function() {
-        expect(function() {
-            return new Matrix2({});
-        }).toThrow();
     });
 
     it('fromRowMajorArray throws with non-array parameter', function() {
@@ -367,9 +377,21 @@ defineSuite([
         }).toThrow();
     });
 
+    it('fromColumnMajorArray throws with non-array parameter', function() {
+        expect(function() {
+            Matrix2.fromColumnMajorArray({});
+        }).toThrow();
+    });
+
     it('static clone throws without matrix parameter', function() {
         expect(function() {
             Matrix2.clone(undefined);
+        }).toThrow();
+    });
+
+    it('static toArray throws without matrix parameter', function() {
+        expect(function() {
+            Matrix2.toArray(undefined);
         }).toThrow();
     });
 
