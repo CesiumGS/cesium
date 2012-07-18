@@ -132,7 +132,7 @@ define([
                     0.0,                            1.0, 0.0,
                     -1.0 * Math.sin(latitudeAngle), 0.0, Math.cos(latitudeAngle));
 
-            var direction = transform.multiplyWithVector(new Cartesian3(x, y, z));
+            var direction = transform.multiplyByVector(new Cartesian3(x, y, z));
             var distance = distanceToSunInAU * AU_TO_METERS;
 
             /**
@@ -144,7 +144,7 @@ define([
                  *
                  * @type Cartesian3
                  */
-                position : direction.multiplyWithScalar(distance),
+                position : direction.multiplyByScalar(distance),
 
                 /**
                  * The cartographic position, in radians, of the sun's position projected onto Earth.  This is accurate to within less than a degree of the true position.

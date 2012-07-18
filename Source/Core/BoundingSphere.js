@@ -142,7 +142,7 @@ define([
             // Find the center of the sphere found using the Naive method.
             var minBoxPt = new Cartesian3(xMin.x, yMin.y, zMin.z);
             var maxBoxPt = new Cartesian3(xMax.x, yMax.y, zMax.z);
-            var naiveCenter = (minBoxPt.add(maxBoxPt)).multiplyWithScalar(0.5);
+            var naiveCenter = (minBoxPt.add(maxBoxPt)).multiplyByScalar(0.5);
 
             // Begin 2nd pass to find naive radius and modify the ritter sphere.
             var naiveRadius = 0;

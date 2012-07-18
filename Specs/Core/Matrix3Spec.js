@@ -245,17 +245,17 @@ defineSuite([
         expect(m.transpose().transpose().equals(m)).toEqual(true);
     });
 
-    it('multiplyWithVector0', function() {
+    it('multiplyByVector0', function() {
         var m = new Matrix3(1);
         var v = new Cartesian3(1, 2, 3);
-        expect(m.multiplyWithVector(v).equals(v)).toEqual(true);
+        expect(m.multiplyByVector(v).equals(v)).toEqual(true);
     });
 
-    it('multiplyWithVector1', function() {
+    it('multiplyByVector1', function() {
         var m = new Matrix3(2);
         var v = new Cartesian3(1, 2, 3);
         var u = new Cartesian3(2, 4, 6);
-        expect(m.multiplyWithVector(v).equals(u)).toEqual(true);
+        expect(m.multiplyByVector(v).equals(u)).toEqual(true);
     });
 
     it('negate', function() {
@@ -270,14 +270,14 @@ defineSuite([
         expect(m.negate().negate().equals(m)).toEqual(true);
     });
 
-    it('multiplyWithMatrix', function() {
+    it('multiply', function() {
         var m = new Matrix3(1, 2, 3,
                             1, 2, 3,
                             1, 2, 3);
         var n = new Matrix3(6, 12, 18,
                             6, 12, 18,
                             6, 12, 18);
-        expect(m.multiplyWithMatrix(m).equals(n)).toEqual(true);
+        expect(m.multiply(m).equals(n)).toEqual(true);
     });
 
     it('rotates around Z', function() {

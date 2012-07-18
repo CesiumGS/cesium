@@ -209,29 +209,29 @@ defineSuite([
         expect(left).toEqual(expectedResult);
     });
 
-    it('multiplyWithScalar without a result parameter', function() {
+    it('multiplyByScalar without a result parameter', function() {
         var cartesian = new Cartesian4(1.0, 2.0, 3.0, 4.0);
         var scalar = 2;
         var expectedResult = new Cartesian4(2.0, 4.0, 6.0, 8.0);
-        var result = cartesian.multiplyWithScalar(scalar);
+        var result = cartesian.multiplyByScalar(scalar);
         expect(result).toEqual(expectedResult);
     });
 
-    it('multiplyWithScalar with a result parameter', function() {
+    it('multiplyByScalar with a result parameter', function() {
         var cartesian = new Cartesian4(1.0, 2.0, 3.0, 4.0);
         var result = new Cartesian4();
         var scalar = 2;
         var expectedResult = new Cartesian4(2.0, 4.0, 6.0, 8.0);
-        var returnedResult = cartesian.multiplyWithScalar(scalar, result);
+        var returnedResult = cartesian.multiplyByScalar(scalar, result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expectedResult);
     });
 
-    it('multiplyWithScalar with "this" result parameter', function() {
+    it('multiplyByScalar with "this" result parameter', function() {
         var cartesian = new Cartesian4(1.0, 2.0, 3.0, 4.0);
         var scalar = 2;
         var expectedResult = new Cartesian4(2.0, 4.0, 6.0, 8.0);
-        var returnedResult = cartesian.multiplyWithScalar(scalar, cartesian);
+        var returnedResult = cartesian.multiplyByScalar(scalar, cartesian);
         expect(cartesian).toBe(returnedResult);
         expect(cartesian).toEqual(expectedResult);
     });
@@ -475,15 +475,15 @@ defineSuite([
         }).toThrow();
     });
 
-    it('static multiplyWithScalar throws with no cartesian parameter', function() {
+    it('static multiplyByScalar throws with no cartesian parameter', function() {
         expect(function() {
-            Cartesian4.multiplyWithScalar(undefined, 2.0);
+            Cartesian4.multiplyByScalar(undefined, 2.0);
         }).toThrow();
     });
 
-    it('static multiplyWithScalar throws with no scalar parameter', function() {
+    it('static multiplyByScalar throws with no scalar parameter', function() {
         expect(function() {
-            Cartesian4.multiplyWithScalar(new Cartesian4(), undefined);
+            Cartesian4.multiplyByScalar(new Cartesian4(), undefined);
         }).toThrow();
     });
 

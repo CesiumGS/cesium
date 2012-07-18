@@ -42,7 +42,7 @@ define([
 
                 // Repel if particle is in sphere
                 if (magnitudeDifference > 0) {
-                    particle.force = particle.force.add(centerToPosition.normalize().multiplyWithScalar(magnitudeDifference));
+                    particle.force = particle.force.add(centerToPosition.normalize().multiplyByScalar(magnitudeDifference));
                 }
             }
         }

@@ -295,7 +295,7 @@ define([
         if (this._modelViewDirty) {
             this._modelViewDirty = false;
 
-            var mv = this._view.multiplyWithMatrix(this._model);
+            var mv = this._view.multiply(this._model);
             this._modelView = mv;
         }
     };
@@ -341,7 +341,7 @@ define([
         if (this._viewProjectionDirty) {
             this._viewProjectionDirty = false;
 
-            var vp = this.getProjection().multiplyWithMatrix(this.getView());
+            var vp = this.getProjection().multiply(this.getView());
             this._viewProjection = vp;
         }
     };
@@ -364,7 +364,7 @@ define([
         if (this._modelViewProjectionDirty) {
             this._modelViewProjectionDirty = false;
 
-            var mvp = this._projection.multiplyWithMatrix(this.getModelView());
+            var mvp = this._projection.multiply(this.getModelView());
             this._modelViewProjection = mvp;
         }
     };
@@ -387,7 +387,7 @@ define([
         if (this._modelViewInfiniteProjectionDirty) {
             this._modelViewInfiniteProjectionDirty = false;
 
-            var mvp = this._infiniteProjection.multiplyWithMatrix(this.getModelView());
+            var mvp = this._infiniteProjection.multiply(this.getModelView());
             this._modelViewInfiniteProjection = mvp;
         }
     };
@@ -459,7 +459,7 @@ define([
             this._sunDirectionECDirty = false;
 
             var sunPosition = new Cartesian4(this._sunPosition.x, this._sunPosition.y, this._sunPosition.z, 0.0);
-            var sunEC = this.getView().multiplyWithVector(sunPosition);
+            var sunEC = this.getView().multiplyByVector(sunPosition);
             var p = new Cartesian3(sunEC.x, sunEC.y, sunEC.z).normalize();
 
             this._sunDirectionEC = p;
