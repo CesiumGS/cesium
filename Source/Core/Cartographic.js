@@ -1,10 +1,12 @@
 /*global define*/
 define([
+        './defaultValue',
         './DeveloperError',
         './Math'
-       ], function(
-         DeveloperError,
-         CesiumMath) {
+    ], function(
+        defaultValue,
+        DeveloperError,
+        CesiumMath) {
     "use strict";
 
     /**
@@ -23,19 +25,19 @@ define([
          * The longitude, in radians.
          * @type Number
          */
-        this.longitude = typeof longitude === 'undefined' ? 0.0 : longitude;
+        this.longitude = defaultValue(longitude, 0.0);
 
         /**
          * The latitude, in radians.
          * @type Number
          */
-        this.latitude = typeof latitude === 'undefined' ? 0.0 : latitude;
+        this.latitude = defaultValue(latitude, 0.0);
 
         /**
          * The height, in meters, above the ellipsoid.
          * @type Number
          */
-        this.height = typeof height === 'undefined' ? 0.0 : height;
+        this.height = defaultValue(height, 0.0);
     };
 
     /**
@@ -51,9 +53,9 @@ define([
      * @return {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      */
     Cartographic.fromDegrees = function(longitude, latitude, height, result) {
-        longitude = typeof longitude === 'undefined' ? 0.0 : CesiumMath.toRadians(longitude);
-        latitude = typeof latitude === 'undefined' ? 0.0 : CesiumMath.toRadians(latitude);
-        height = typeof height === 'undefined' ? 0.0 : height;
+        longitude = CesiumMath.toRadians(defaultValue(longitude, 0.0));
+        latitude = CesiumMath.toRadians(defaultValue(latitude, 0.0));
+        height = defaultValue(height, 0.0);
 
         if (typeof result === 'undefined') {
             return new Cartographic(longitude, latitude, height);
