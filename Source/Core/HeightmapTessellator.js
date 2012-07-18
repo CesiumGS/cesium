@@ -66,8 +66,8 @@ define([
         var height = description.height;
 
         var extent = description.extent;
-        var granularityX = (extent.east - extent.west) / width;
-        var granularityY = (extent.north - extent.south) / height;
+        var granularityX = (extent.east - extent.west) / (width - 1);
+        var granularityY = (extent.north - extent.south) / (height - 1);
         var generateTextureCoordinates = description.generateTextureCoordinates;
         var interleaveTextureCoordinates = description.interleaveTextureCoordinates;
         var relativeToCenter = description.relativeToCenter;

@@ -1,4 +1,4 @@
-#define SHOW_TILE_BOUNDARIES
+//#define SHOW_TILE_BOUNDARIES
 uniform int u_numberOfDayTextures;
 uniform sampler2D u_dayTextures[8];
 uniform vec2 u_dayTextureTranslation[8];
