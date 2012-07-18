@@ -85,7 +85,7 @@ defineSuite([
         property.processCzmlIntervals(cartographicDegreesInterval);
         var result = property.getValueCartesian(new JulianDate());
 
-        var expected = Ellipsoid.WGS84.toCartesians(property.getValueCartographic(new JulianDate()));
+        var expected = Ellipsoid.WGS84.cartographicArrayToCartesianArray(property.getValueCartographic(new JulianDate()));
 
         expect(result.length).toEqual(3);
         expect(result[0].x).toEqual(expected[0].x);
@@ -106,7 +106,7 @@ defineSuite([
         property.processCzmlIntervals(cartographicRadiansInterval);
         var result = property.getValueCartesian(new JulianDate());
 
-        var expected = Ellipsoid.WGS84.toCartesians(property.getValueCartographic(new JulianDate()));
+        var expected = Ellipsoid.WGS84.cartographicArrayToCartesianArray(property.getValueCartographic(new JulianDate()));
 
         expect(result.length).toEqual(3);
         expect(result[0].x).toEqual(expected[0].x);
@@ -127,7 +127,7 @@ defineSuite([
         property.processCzmlIntervals(cartesianInterval);
         var result = property.getValueCartographic(new JulianDate());
 
-        var expected = Ellipsoid.WGS84.toCartographic3s(property.getValueCartesian(new JulianDate()));
+        var expected = Ellipsoid.WGS84.cartesianArrayToCartographicArray(property.getValueCartesian(new JulianDate()));
 
         expect(result.length).toEqual(3);
         expect(result[0].longitude).toEqual(expected[0].longitude);

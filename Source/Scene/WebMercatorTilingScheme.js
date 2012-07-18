@@ -6,7 +6,7 @@ define([
         '../Core/Ellipsoid',
         '../Core/Extent',
         '../Core/Cartesian2',
-        '../Core/Cartographic2',
+        '../Core/Cartographic',
         './TilingScheme'
     ], function(
         defaultValue,
@@ -15,7 +15,7 @@ define([
         Ellipsoid,
         Extent,
         Cartesian2,
-        Cartographic2,
+        Cartographic,
         TilingScheme) {
     "use strict";
 
@@ -110,20 +110,20 @@ define([
     WebMercatorTilingScheme.prototype.createLevelZeroTiles = TilingScheme.prototype.createLevelZeroTiles;
 
     /**
-     * Converts web mercator X, Y coordinates, expressed in meters, to a {@link Cartographic2}
+     * Converts web mercator X, Y coordinates, expressed in meters, to a {@link Cartographic}
      * containing geodetic ellipsoid coordinates.
      *
      * @memberof WebMercatorTilingScheme
      *
      * @param {Number} x The web mercator X coordinate in meters.
      * @param {Number} y The web mercator Y coordinate in meters.
-     * @returns {Cartographic2} The equivalent cartographic coordinates.
+     * @returns {Cartographic} The equivalent cartographic coordinates.
      */
     WebMercatorTilingScheme.prototype.webMercatorToCartographic = function(x, y) {
         var oneOverEarthSemimajorAxis = this.ellipsoid.getOneOverRadii().x;
         var longitude = x * oneOverEarthSemimajorAxis;
         var latitude = CesiumMath.PI_OVER_TWO - (2.0 * Math.atan(Math.exp(-y * oneOverEarthSemimajorAxis)));
-        return new Cartographic2(longitude, latitude);
+        return new Cartographic(longitude, latitude);
     };
 
     /**
@@ -177,7 +177,7 @@ define([
      *
      * @memberof WebMercatorTilingScheme
      *
-     * @param {Cartographic2} position The position.
+     * @param {Cartographic} position The position.
      * @param {Number} level The tile level-of-detail.  Zero is the least detailed.
      *
      * @returns {Cartesian2} The x, y coordinate of the tile containing the position.

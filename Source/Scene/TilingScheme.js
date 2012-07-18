@@ -130,7 +130,7 @@ define([
      *
      * @memberof TilingScheme
      *
-     * @param {Cartographic2} position The position.
+     * @param {Cartographic} position The position.
      * @param {Number} level The tile level-of-detail.  Zero is the least detailed.
      *
      * @returns {Cartesian2} The x, y coordinate of the tile containing the position.

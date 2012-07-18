@@ -1,28 +1,26 @@
 /*global define*/
 define([
-        '../Core/DeveloperError',
         '../Core/defaultValue',
-        './WebMercatorTilingScheme',
-        '../Core/Cartographic3',
+        '../Core/DeveloperError',
+        '../Core/Math',
+        '../Core/Cartesian2',
+        '../Core/Cartographic',
         '../Core/ExtentTessellator',
+        '../Core/PlaneTessellator',
         './TerrainProvider',
         './TileState',
-        '../Core/PlaneTessellator',
-        '../Core/Cartographic2',
-        '../Core/Math',
-        '../Core/Cartesian2'
+        './WebMercatorTilingScheme'
     ], function(
-        DeveloperError,
         defaultValue,
-        WebMercatorTilingScheme,
-        Cartographic3,
+        DeveloperError,
+        CesiumMath,
+        Cartesian2,
+        Cartographic,
         ExtentTessellator,
+        PlaneTessellator,
         TerrainProvider,
         TileState,
-        PlaneTessellator,
-        Cartographic2,
-        CesiumMath,
-        Cartesian2) {
+        WebMercatorTilingScheme) {
     "use strict";
 
     /**
@@ -75,7 +73,7 @@ define([
         var granularity = computeDesiredGranularity(tilingScheme, tile);
 
         // Determine the center for RTC rendering.
-//        var center = ellipsoid.toCartesian(new Cartographic3(
+//        var center = ellipsoid.cartographicToCartesian(new Cartographic(
 //                (extent.east - extent.west) / 2.0,
 //                (extent.north - extent.south) / 2.0,
 //                0.0));
@@ -137,11 +135,10 @@ define([
                 y : Math.max(Math.ceil(height / granularity), 2.0)
             },
             onInterpolation : function(time) {
-                var lonLat = new Cartographic2(
-                        CesiumMath.lerp(extent.west, extent.east, time.x),
-                        CesiumMath.lerp(extent.south, extent.north, time.y));
+                var lonLat = new Cartographic(CesiumMath.lerp(extent.west, extent.east, time.x),
+                                              CesiumMath.lerp(extent.south, extent.north, time.y));
 
-                var p = ellipsoid.toCartesian(lonLat).subtract(center);
+                var p = ellipsoid.cartographicToCartesian(lonLat).subtract(center);
                 vertices.push(p.x, p.y, p.z);
 
                 var u = (lonLat.longitude - extent.west) * lonScalar;

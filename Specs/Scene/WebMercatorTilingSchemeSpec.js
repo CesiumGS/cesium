@@ -3,12 +3,12 @@ defineSuite([
          'Scene/WebMercatorTilingScheme',
          'Core/Extent',
          'Core/Math',
-         'Core/Cartographic2'
+         'Core/Cartographic'
      ], function(
          WebMercatorTilingScheme,
          Extent,
          CesiumMath,
-         Cartographic2) {
+         Cartographic) {
     "use strict";
     /*global document,describe,it,expect,beforeEach*/
 
@@ -162,7 +162,7 @@ defineSuite([
         it('calculates correct tile indices for the center at level 1', function() {
             var coordinates;
 
-            coordinates = tilingScheme.positionToTileXY(new Cartographic2(0, 0), 1);
+            coordinates = tilingScheme.positionToTileXY(new Cartographic(0, 0), 1);
             expect(coordinates.x).toEqual(1);
             expect(coordinates.y).toEqual(1);
         });
@@ -170,7 +170,7 @@ defineSuite([
         it('calculates correct tile indices for the center at level 2', function() {
             var coordinates;
 
-            coordinates = tilingScheme.positionToTileXY(new Cartographic2(0, 0), 2);
+            coordinates = tilingScheme.positionToTileXY(new Cartographic(0, 0), 2);
             expect(coordinates.x).toEqual(2);
             expect(coordinates.y).toEqual(2);
         });
@@ -178,19 +178,19 @@ defineSuite([
         it('calculates correct tile indices around the center at level 2', function() {
             var coordinates;
 
-            coordinates = tilingScheme.positionToTileXY(new Cartographic2(-0.05, -0.05), 2);
+            coordinates = tilingScheme.positionToTileXY(new Cartographic(-0.05, -0.05), 2);
             expect(coordinates.x).toEqual(1);
             expect(coordinates.y).toEqual(2);
 
-            coordinates = tilingScheme.positionToTileXY(new Cartographic2(-0.05, 0.05), 2);
+            coordinates = tilingScheme.positionToTileXY(new Cartographic(-0.05, 0.05), 2);
             expect(coordinates.x).toEqual(1);
             expect(coordinates.y).toEqual(1);
 
-            coordinates = tilingScheme.positionToTileXY(new Cartographic2(0.05, 0.05), 2);
+            coordinates = tilingScheme.positionToTileXY(new Cartographic(0.05, 0.05), 2);
             expect(coordinates.x).toEqual(2);
             expect(coordinates.y).toEqual(1);
 
-            coordinates = tilingScheme.positionToTileXY(new Cartographic2(0.05, -0.05), 2);
+            coordinates = tilingScheme.positionToTileXY(new Cartographic(0.05, -0.05), 2);
             expect(coordinates.x).toEqual(2);
             expect(coordinates.y).toEqual(2);
         });

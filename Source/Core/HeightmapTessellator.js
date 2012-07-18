@@ -3,22 +3,18 @@ define([
         './defaultValue',
         './getImagePixels',
         './DeveloperError',
-        './Math',
         './Ellipsoid',
         './Extent',
         './Cartesian3',
-        './Cartographic3',
         './ComponentDatatype',
         './PrimitiveType'
     ], function(
         defaultValue,
         getImagePixels,
         DeveloperError,
-        CesiumMath,
         Ellipsoid,
         Extent,
         Cartesian3,
-        Cartographic3,
         ComponentDatatype,
         PrimitiveType) {
     "use strict";

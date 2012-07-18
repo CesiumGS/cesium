@@ -81,12 +81,12 @@ define([
 
         maxStartAlt = ellipsoid.getMaximumRadius() + abovePercentage * altitude;
 
-        var aboveEnd = endPoint.normalize().multiplyWithScalar(maxStartAlt);
-        var afterStart = start.normalize().multiplyWithScalar(maxStartAlt);
+        var aboveEnd = endPoint.normalize().multiplyByScalar(maxStartAlt);
+        var afterStart = start.normalize().multiplyByScalar(maxStartAlt);
 
         var points, axis, angle, rotation;
         if (start.magnitude() > maxStartAlt && dot > 0) {
-            var middle = start.subtract(aboveEnd).multiplyWithScalar(0.5).add(aboveEnd);
+            var middle = start.subtract(aboveEnd).multiplyByScalar(0.5).add(aboveEnd);
 
             points = [{
                 point : start
@@ -110,7 +110,7 @@ define([
             for ( var i = startCondition; i > 0.0; i = i - increment) {
                 rotation = Quaternion.fromAxisAngle(axis, i).toRotationMatrix();
                 points.push({
-                    point : rotation.multiplyWithVector(aboveEnd)
+                    point : rotation.multiplyByVector(aboveEnd)
                 });
             }
 

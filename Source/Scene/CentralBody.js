@@ -18,7 +18,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
-        '../Core/Cartographic2',
+        '../Core/Cartographic',
         '../Core/Matrix3',
         '../Core/Queue',
         '../Core/ComponentDatatype',
@@ -75,7 +75,7 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
-        Cartographic2,
+        Cartographic,
         Matrix3,
         Queue,
         ComponentDatatype,
@@ -557,7 +557,7 @@ define([
 
         this._fCameraHeight = undefined;
         this._fCameraHeight2 = undefined;
-        this._outerRadius = ellipsoid.getRadii().multiplyWithScalar(1.025).getMaximumComponent();
+        this._outerRadius = ellipsoid.getRadii().multiplyByScalar(1.025).getMaximumComponent();
 
         // TODO: Do we want to expose any of these atmosphere constants?
         var Kr = 0.0025;
@@ -716,14 +716,14 @@ define([
         var mvp = description.modelViewProjection;
         var clip = description.viewportTransformation;
 
-        var center = upperLeft.add(lowerRight).multiplyWithScalar(0.5);
-        var centerScreen = mvp.multiplyWithVector(new Cartesian4(center.x, center.y, center.z, 1.0));
-        centerScreen = centerScreen.multiplyWithScalar(1.0 / centerScreen.w);
-        var centerClip = clip.multiplyWithVector(centerScreen);
+        var center = upperLeft.add(lowerRight).multiplyByScalar(0.5);
+        var centerScreen = mvp.multiplyByVector(new Cartesian4(center.x, center.y, center.z, 1.0));
+        centerScreen = centerScreen.multiplyByScalar(1.0 / centerScreen.w);
+        var centerClip = clip.multiplyByVector(centerScreen);
 
-        var surfaceScreen = mvp.multiplyWithVector(new Cartesian4(upperLeft.x, upperLeft.y, upperLeft.z, 1.0));
-        surfaceScreen = surfaceScreen.multiplyWithScalar(1.0 / surfaceScreen.w);
-        var surfaceClip = clip.multiplyWithVector(surfaceScreen);
+        var surfaceScreen = mvp.multiplyByVector(new Cartesian4(upperLeft.x, upperLeft.y, upperLeft.z, 1.0));
+        surfaceScreen = surfaceScreen.multiplyByScalar(1.0 / surfaceScreen.w);
+        var surfaceClip = clip.multiplyByVector(surfaceScreen);
 
         var radius = Math.ceil(Cartesian3.magnitude(surfaceClip.subtract(centerClip, surfaceClip)));
         var diameter = 2.0 * radius;
@@ -742,7 +742,7 @@ define([
         var p = sceneState.camera.getPositionWC();
 
         // Find the corresponding position in the scaled space of the ellipsoid.
-        var q = d.multiplyWithVector(p);
+        var q = d.multiplyByVector(p);
 
         var qMagnitude = q.magnitude();
         var qUnit = q.normalize();
@@ -755,25 +755,25 @@ define([
         var wMagnitude = Math.sqrt(q.magnitudeSquared() - 1.0);
 
         // Compute the center and offsets.
-        var center = qUnit.multiplyWithScalar(1.0 / qMagnitude);
+        var center = qUnit.multiplyByScalar(1.0 / qMagnitude);
         var scalar = wMagnitude / qMagnitude;
-        var eastOffset = eUnit.multiplyWithScalar(scalar);
-        var northOffset = nUnit.multiplyWithScalar(scalar);
+        var eastOffset = eUnit.multiplyByScalar(scalar);
+        var northOffset = nUnit.multiplyByScalar(scalar);
 
         // A conservative measure for the longitudes would be to use the min/max longitudes of the bounding frustum.
-        var upperLeft = dInverse.multiplyWithVector(center.add(northOffset).subtract(eastOffset));
-        var upperRight = dInverse.multiplyWithVector(center.add(northOffset).add(eastOffset));
-        var lowerLeft = dInverse.multiplyWithVector(center.subtract(northOffset).subtract(eastOffset));
-        var lowerRight = dInverse.multiplyWithVector(center.subtract(northOffset).add(eastOffset));
+        var upperLeft = dInverse.multiplyByVector(center.add(northOffset).subtract(eastOffset));
+        var upperRight = dInverse.multiplyByVector(center.add(northOffset).add(eastOffset));
+        var lowerLeft = dInverse.multiplyByVector(center.subtract(northOffset).subtract(eastOffset));
+        var lowerRight = dInverse.multiplyByVector(center.subtract(northOffset).add(eastOffset));
         return [upperLeft.x, upperLeft.y, upperLeft.z, lowerLeft.x, lowerLeft.y, lowerLeft.z, upperRight.x, upperRight.y, upperRight.z, lowerRight.x, lowerRight.y, lowerRight.z];
     };
 
     CentralBody.prototype._computePoleQuad = function(sceneState, maxLat, maxGivenLat, viewProjMatrix, viewportTransformation) {
-        var pt1 = this._ellipsoid.toCartesian(new Cartographic2(0.0, maxGivenLat));
-        var pt2 = this._ellipsoid.toCartesian(new Cartographic2(Math.PI, maxGivenLat));
+        var pt1 = this._ellipsoid.cartographicToCartesian(new Cartographic(0.0, maxGivenLat));
+        var pt2 = this._ellipsoid.cartographicToCartesian(new Cartographic(Math.PI, maxGivenLat));
         var radius = pt1.subtract(pt2).magnitude() * 0.5;
 
-        var center = this._ellipsoid.toCartesian(new Cartographic2(0.0, maxLat));
+        var center = this._ellipsoid.cartographicToCartesian(new Cartographic(0.0, maxLat));
 
         var right;
         var dir = sceneState.camera.direction;
@@ -783,8 +783,8 @@ define([
             right = dir.cross(Cartesian3.UNIT_Z).normalize();
         }
 
-        var screenRight = center.add(right.multiplyWithScalar(radius));
-        var screenUp = center.add(Cartesian3.UNIT_Z.cross(right).normalize().multiplyWithScalar(radius));
+        var screenRight = center.add(right.multiplyByScalar(radius));
+        var screenUp = center.add(Cartesian3.UNIT_Z.cross(right).normalize().multiplyByScalar(radius));
 
         center = Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, center);
         screenRight = Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, screenRight);
@@ -1029,7 +1029,7 @@ define([
         if (this.showSkyAtmosphere && !this._vaSky) {
             // PERFORMANCE_IDEA:  Is 60 the right amount to tessellate?  I think scaling the original
             // geometry in a vertex is a bad idea; at least, because it introduces a draw call per tile.
-            var skyMesh = CubeMapEllipsoidTessellator.compute(new Ellipsoid(this._ellipsoid.getRadii().multiplyWithScalar(1.025)), 60);
+            var skyMesh = CubeMapEllipsoidTessellator.compute(new Ellipsoid(this._ellipsoid.getRadii().multiplyByScalar(1.025)), 60);
             this._vaSky = context.createVertexArrayFromMesh({
                 mesh : skyMesh,
                 attributeIndices : MeshFilters.createAttributeIndices(skyMesh),
@@ -1391,7 +1391,7 @@ define([
             }
         } else {
             // after the camera passes the minimum height, there is no ground atmosphere effect
-            var showAtmosphere = this._ellipsoid.toCartographic3(cameraPosition).height >= this._minGroundFromAtmosphereHeight;
+            var showAtmosphere = this._ellipsoid.cartesianToCartographic(cameraPosition).height >= this._minGroundFromAtmosphereHeight;
             if (this.showGroundAtmosphere && showAtmosphere) {
                 this._sp = this._spGroundFromAtmosphere;
                 this._spPoles = this._spPolesGroundFromAtmosphere;

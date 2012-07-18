@@ -5,7 +5,7 @@ define([
         './Ellipsoid',
         './Extent',
         './Cartesian3',
-        './Cartographic3',
+        './Cartographic',
         './ComponentDatatype',
         './PrimitiveType'
     ], function(
@@ -14,7 +14,7 @@ define([
         Ellipsoid,
         Extent,
         Cartesian3,
-        Cartographic3,
+        Cartographic,
         ComponentDatatype,
         PrimitiveType) {
     "use strict";
@@ -64,7 +64,7 @@ define([
         var j;
         var rows = 0;
         var cols = 0;
-        var cartPosition = new Cartographic3(0.0, 0.0, altitude);
+        var cartPosition = new Cartographic(0.0, 0.0, altitude);
 
         for (i = boundExtent.north;; i = i - granularity) {
             if (i < boundExtent.south) {
@@ -79,7 +79,7 @@ define([
 
                 cartPosition.longitude = j;
                 cartPosition.latitude = i;
-                var position = ellipsoid.toCartesian(cartPosition);
+                var position = ellipsoid.cartographicToCartesian(cartPosition);
                 vertices.push(position.x - relativeToCenter.x, position.y - relativeToCenter.y, position.z - relativeToCenter.z);
 
                 if (genTexCoords) {

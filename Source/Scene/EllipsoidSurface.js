@@ -207,7 +207,7 @@ define([
             var rtc = tile.get3DBoundingSphere().center;
             uniformMap.center3D = rtc;
 
-            var centerEye = mv.multiplyWithVector(new Cartesian4(rtc.x, rtc.y, rtc.z, 1.0));
+            var centerEye = mv.multiplyByVector(new Cartesian4(rtc.x, rtc.y, rtc.z, 1.0));
             // PERFORMANCE_TODO: use a scratch matrix instead of cloning for every tile.
             var mvrtc = mv.clone();
             mvrtc.setColumn3(centerEye);

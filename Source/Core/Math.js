@@ -1,17 +1,8 @@
 /*global define*/
 define([
-        './DeveloperError',
-        './Cartesian2',
-        './Cartesian3',
-        './Cartographic2',
-        './Cartographic3'
-    ],
-    function(
-        DeveloperError,
-        Cartesian2,
-        Cartesian3,
-        Cartographic2,
-        Cartographic3) {
+        './DeveloperError'
+       ], function(
+         DeveloperError) {
     "use strict";
 
     /**
@@ -359,58 +350,12 @@ define([
     };
 
     /**
-     * Converts the longitude and latitude of a {@link Cartographic3} from degrees to radians.  The height is not changed.
-     * @param {Cartographic3} cartographic The cartographic position to convert in degrees.
-     * @return {Cartographic3} The corresponding cartographic position with longitude and latitude in radians.
-     */
-    CesiumMath.cartographic3ToRadians = function(cartographic) {
-        return new Cartographic3(
-                CesiumMath.toRadians(cartographic.longitude),
-                CesiumMath.toRadians(cartographic.latitude),
-                cartographic.height);
-    };
-
-    /**
-     * Converts the longitude and latitude of a {@link Cartographic2} from degrees to radians.
-     * @param {Cartographic2} cartographic The cartographic position to convert in degrees.
-     * @return {Cartographic2} The corresponding cartographic position in radians.
-     */
-    CesiumMath.cartographic2ToRadians = function(cartographic) {
-        return new Cartographic2(
-                CesiumMath.toRadians(cartographic.longitude),
-                CesiumMath.toRadians(cartographic.latitude));
-    };
-
-    /**
      * Converts radians to degrees.
      * @param {Number} radians The angle to convert in radians.
      * @return {Number} The corresponding angle in degrees.
      */
     CesiumMath.toDegrees = function(radians) {
         return radians * CesiumMath.DEGREES_PER_RADIAN;
-    };
-
-    /**
-     * Converts the longitude and latitude of a {@link Cartographic3} from radians to degrees.  The height is not changed.
-     * @param {Cartographic3} cartographic The cartographic position to convert in radians.
-     * @return {Cartographic3} The corresponding cartographic position with longitude and latitude in degrees.
-     */
-    CesiumMath.cartographic3ToDegrees = function(cartographic) {
-        return new Cartographic3(
-                CesiumMath.toDegrees(cartographic.longitude),
-                CesiumMath.toDegrees(cartographic.latitude),
-                cartographic.height);
-    };
-
-    /**
-     * Converts the longitude and latitude of a {@link Cartographic2} from radians to degrees.
-     * @param {Cartographic2} cartographic The cartographic position to convert in radians.
-     * @return {Cartographic2} The corresponding cartographic position in degrees.
-     */
-    CesiumMath.cartographic2ToDegrees = function(cartographic) {
-        return new Cartographic2(
-                CesiumMath.toDegrees(cartographic.longitude),
-                CesiumMath.toDegrees(cartographic.latitude));
     };
 
     /**

@@ -6,7 +6,7 @@ defineSuite([
          '../Specs/sceneState',
          '../Specs/pick',
          'Core/Cartesian3',
-         'Core/Cartographic3',
+         'Core/Cartographic',
          'Core/Ellipsoid',
          'Core/Extent',
          'Core/Matrix4',
@@ -19,7 +19,7 @@ defineSuite([
          sceneState,
          pick,
          Cartesian3,
-         Cartographic3,
+         Cartographic,
          Ellipsoid,
          Extent,
          Matrix4,
@@ -39,10 +39,10 @@ defineSuite([
         p.ellipsoid = ellipsoid;
         p.granularity = CesiumMath.toRadians(20.0);
         p.setPositions([
-            ellipsoid.toCartesian(CesiumMath.cartographic3ToRadians(new Cartographic3(-50.0, -50.0, 0.0))),
-            ellipsoid.toCartesian(CesiumMath.cartographic3ToRadians(new Cartographic3(50.0, -50.0, 0.0))),
-            ellipsoid.toCartesian(CesiumMath.cartographic3ToRadians(new Cartographic3(50.0, 50.0, 0.0))),
-            ellipsoid.toCartesian(CesiumMath.cartographic3ToRadians(new Cartographic3(-50.0, 50.0, 0.0)))
+            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
+            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, -50.0, 0.0)),
+            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, 50.0, 0.0)),
+            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0))
         ]);
 
         return p;

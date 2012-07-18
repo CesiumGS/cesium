@@ -33,10 +33,10 @@ define([
 
             temp = -Math.cos(azimuth);
 
-            rotAxis = eastVec.multiplyWithScalar(temp);
+            rotAxis = eastVec.multiplyByScalar(temp);
 
             temp = Math.sin(azimuth);
-            tempVec = northVec.multiplyWithScalar(temp);
+            tempVec = northVec.multiplyByScalar(temp);
 
             rotAxis = rotAxis.add(tempVec);
 
@@ -55,9 +55,9 @@ define([
             var unitQuat = (new Quaternion(rotAxis.x * temp, rotAxis.y * temp, rotAxis.z * temp, Math.cos(angle / 2.0))).normalize();
             var rotMtx = unitQuat.toRotationMatrix();
 
-            var tmpEllipsePts = rotMtx.multiplyWithVector(unitPos);
+            var tmpEllipsePts = rotMtx.multiplyByVector(unitPos);
             var unitCart = tmpEllipsePts.normalize();
-            tmpEllipsePts = unitCart.multiplyWithScalar(mag);
+            tmpEllipsePts = unitCart.multiplyByScalar(mag);
             ellipsePts[ellipsePtsIndex] = tmpEllipsePts;
         }
     }
@@ -96,8 +96,8 @@ define([
          * // Create a polyline of a circle
          * var polyline = new Polyline();
          * polyline.setPositions(Shapes.computeCircleBoundary(
-         *   ellipsoid, ellipsoid.cartographicDegreesToCartesian(
-         *     new Cartographic2(-75.59777, 40.03883)), 100000.0));
+         *   ellipsoid, ellipsoid.cartographicToCartesian(
+         *     Cartographic.fromDegrees(-75.59777, 40.03883, 0.0)), 100000.0));
          */
         computeCircleBoundary : function(ellipsoid, center, radius, granularity) {
             if (!ellipsoid || !center || !radius) {
@@ -147,8 +147,8 @@ define([
          * // Create a filled ellipse.
          * var polygon = new Cesium.Polygon();
          * polygon.setPositions(Cesium.Shapes.computeEllipseBoundary(
-         *   ellipsoid, ellipsoid.cartographicDegreesToCartesian(
-         *      new Cesium.Cartographic2(-75.59777, 40.03883)), 500000.0, 300000.0, Cesium.Math.toRadians(60)));
+         *   ellipsoid, ellipsoid.cartographicToCartesian(
+         *      Cartographic.fromDegrees(-75.59777, 40.03883)), 500000.0, 300000.0, Cesium.Math.toRadians(60)));
          */
         computeEllipseBoundary : function(ellipsoid, center, semiMajorAxis, semiMinorAxis, bearing, granularity) {
             if (!ellipsoid || !center || !semiMajorAxis || !semiMinorAxis) {
@@ -187,7 +187,7 @@ define([
             var tempVec = new Cartesian3(0.0, 0.0, 1);
             var temp = 1.0 / mag;
 
-            var unitPos = surfPos.multiplyWithScalar(temp);
+            var unitPos = surfPos.multiplyByScalar(temp);
             var eastVec = tempVec.cross(surfPos).normalize();
             var northVec = unitPos.cross(eastVec);
 

@@ -76,23 +76,23 @@ define(['./DeveloperError'], function(DeveloperError) {
         d.length = x.length = right.length;
 
         c[0] = upper[0] / diagonal[0];
-        d[0] = right[0].multiplyWithScalar(1.0 / diagonal[0]);
+        d[0] = right[0].multiplyByScalar(1.0 / diagonal[0]);
 
         var scalar, i = 1;
         for (; i < c.length; ++i) {
             scalar = 1.0 / (diagonal[i] - c[i - 1] * lower[i - 1]);
             c[i] = upper[i] * scalar;
-            d[i] = right[i].subtract(d[i - 1].multiplyWithScalar(lower[i - 1]));
-            d[i] = d[i].multiplyWithScalar(scalar);
+            d[i] = right[i].subtract(d[i - 1].multiplyByScalar(lower[i - 1]));
+            d[i] = d[i].multiplyByScalar(scalar);
         }
 
         scalar = 1.0 / (diagonal[i] - c[i - 1] * lower[i - 1]);
-        d[i] = right[i].subtract(d[i - 1].multiplyWithScalar(lower[i - 1]));
-        d[i] = d[i].multiplyWithScalar(scalar);
+        d[i] = right[i].subtract(d[i - 1].multiplyByScalar(lower[i - 1]));
+        d[i] = d[i].multiplyByScalar(scalar);
 
         x[x.length - 1] = d[d.length - 1];
         for (i = x.length - 2; i >= 0; --i) {
-            x[i] = d[i].subtract(x[i + 1].multiplyWithScalar(c[i]));
+            x[i] = d[i].subtract(x[i + 1].multiplyByScalar(c[i]));
         }
 
         return x;

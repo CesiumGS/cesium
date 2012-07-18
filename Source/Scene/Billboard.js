@@ -521,8 +521,8 @@ define([
         // This function is basically a stripped-down JavaScript version of BillboardCollectionVS.glsl
 
         // Model to eye coordinates
-        var mv = uniformState.getView().multiplyWithMatrix(modelMatrix);
-        var positionEC = mv.multiplyWithVector(new Cartesian4(position.x, position.y, position.z, 1.0));
+        var mv = uniformState.getView().multiply(modelMatrix);
+        var positionEC = mv.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0));
 
         // Apply eye offset, e.g., agi_eyeOffset
         var zEyeOffset = eyeOffset.multiplyComponents(positionEC.normalize());
@@ -531,14 +531,14 @@ define([
         positionEC.z += zEyeOffset.z;
 
         // Eye to window coordinates, e.g., agi_eyeToWindowCoordinates
-        var q = uniformState.getProjection().multiplyWithVector(positionEC); // clip coordinates
+        var q = uniformState.getProjection().multiplyByVector(positionEC); // clip coordinates
         q.x /= q.w; // normalized device coordinates
         q.y /= q.w;
         q.z /= q.w;
-        var positionWC = uniformState.getViewportTransformation().multiplyWithVector(new Cartesian4(q.x, q.y, q.z, 1.0)); // window coordinates
+        var positionWC = uniformState.getViewportTransformation().multiplyByVector(new Cartesian4(q.x, q.y, q.z, 1.0)); // window coordinates
 
         // Apply pixel offset
-        var po = pixelOffset.multiplyWithScalar(uniformState.getHighResolutionSnapScale());
+        var po = pixelOffset.multiplyByScalar(uniformState.getHighResolutionSnapScale());
         positionWC.x += po.x;
         positionWC.y += po.y;
 

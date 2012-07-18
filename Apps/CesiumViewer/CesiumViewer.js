@@ -159,7 +159,7 @@ define([
                             if (lastCameraCenteredObjectID !== cameraCenteredObjectID) {
                                 lastCameraCenteredObjectID = cameraCenteredObjectID;
                                 var camera = widget.scene.getCamera();
-                                camera.position = camera.position.normalize().multiplyWithScalar(5000.0);
+                                camera.position = camera.position.normalize().multiplyByScalar(5000.0);
 
                                 var controllers = camera.getControllers();
                                 controllers.removeAll();

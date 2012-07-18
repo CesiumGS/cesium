@@ -3,8 +3,7 @@ define([
         '../Core/defaultValue',
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
-        '../Core/Cartographic2',
-        '../Core/Cartographic3',
+        '../Core/Cartographic',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/Math',
@@ -14,8 +13,7 @@ define([
         defaultValue,
         BoundingSphere,
         Cartesian3,
-        Cartographic2,
-        Cartographic3,
+        Cartographic,
         DeveloperError,
         Ellipsoid,
         CesiumMath,
@@ -133,12 +131,12 @@ define([
 
     function getPosition(lla, ellipsoid, time, projection) {
         if (typeof time === 'undefined' || time === 0.0 || typeof projection === 'undefined') {
-            return ellipsoid.toCartesian(lla);
+            return ellipsoid.cartographicToCartesian(lla);
         }
 
         var twod = projection.project(lla);
         twod = new Cartesian3(0.0, twod.x, twod.y);
-        return twod.lerp(ellipsoid.toCartesian(lla), time);
+        return twod.lerp(ellipsoid.cartographicToCartesian(lla), time);
     }
 
     function computePositions(extent, ellipsoid, time, projection) {
@@ -151,7 +149,7 @@ define([
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         var positions = [];
 
-        var lla = new Cartographic3(extent.west, extent.north, 0.0);
+        var lla = new Cartographic(extent.west, extent.north, 0.0);
         positions.push(getPosition(lla, ellipsoid, time, projection));
         lla.longitude = extent.east;
         positions.push(getPosition(lla, ellipsoid, time, projection));
@@ -260,7 +258,7 @@ define([
             throw new DeveloperError('projection is required.');
         }
 
-        var lla = new Cartographic2(extent.west, extent.south);
+        var lla = new Cartographic(extent.west, extent.south);
         var lowerLeft = projection.project(lla);
         lla.longitude = extent.east;
         lla.latitude = extent.north;
@@ -285,31 +283,31 @@ define([
     };
 
     /**
-     * Gets a {@link Cartographic2} containing the southwest corner of this extent.
+     * Gets a {@link Cartographic} containing the southwest corner of this extent.
      */
     Extent.prototype.getSouthwest = function() {
-        return new Cartographic2(this.west, this.south);
+        return new Cartographic(this.west, this.south);
     };
 
     /**
-     * Gets a {@link Cartographic2} containing the northwest corner of this extent.
+     * Gets a {@link Cartographic} containing the northwest corner of this extent.
      */
     Extent.prototype.getNorthwest = function() {
-        return new Cartographic2(this.west, this.north);
+        return new Cartographic(this.west, this.north);
     };
 
     /**
-     * Gets a {@link Cartographic2} containing the northeast corner of this extent.
+     * Gets a {@link Cartographic} containing the northeast corner of this extent.
      */
     Extent.prototype.getNortheast = function() {
-        return new Cartographic2(this.east, this.north);
+        return new Cartographic(this.east, this.north);
     };
 
     /**
-     * Gets a {@link Cartographic2} containing the southeast corner of this extent.
+     * Gets a {@link Cartographic} containing the southeast corner of this extent.
      */
     Extent.prototype.getSoutheast = function() {
-        return new Cartographic2(this.east, this.south);
+        return new Cartographic(this.east, this.south);
     };
 
     /**
