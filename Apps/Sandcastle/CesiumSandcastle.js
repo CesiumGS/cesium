@@ -238,11 +238,11 @@ require({
 
         var abbrDiv = document.createElement('div');
         var abbrEle = document.createElement('abbr');
+        abbrEle.textContent = '%N%';
         abbrDiv.appendChild(abbrEle);
 
-        function makeLineLabel(msg, line) {
+        function makeLineLabel(msg) {
             abbrEle.title = msg;
-            abbrEle.textContent = line.toString();
             return abbrDiv.innerHTML;
         }
 
@@ -260,7 +260,7 @@ require({
                 for (i = 0; i < len; ++i) {
                     hint = hints[i];
                     if ((hint !== null) && (typeof hint.reason !== 'undefined') && (hint.line > 0)) {
-                        line = jsEditor.setMarker(hint.line - 1, makeLineLabel(hint.reason, hint.line), "hintMarker");
+                        line = jsEditor.setMarker(hint.line - 1, makeLineLabel(hint.reason), "hintMarker");
                         jsEditor.setLineClass(line, "hintLine");
                         errorLines.push(line);
                     }
@@ -284,7 +284,7 @@ require({
                 jsEditor.clearMarker(line);
             }
             if (lineNum > 0) {
-                line = jsEditor.setMarker(lineNum - 1, makeLineLabel('hover', lineNum), "highlightMarker");
+                line = jsEditor.setMarker(lineNum - 1, makeLineLabel('hover'), "highlightMarker");
                 jsEditor.setLineClass(line, "highlightLine");
                 highlightLines.push(line);
             }
@@ -396,7 +396,7 @@ require({
                 // Console error messages from the iframe display in Sandcastle
                 appendConsole('consoleError', e.data.error);
                 if (typeof e.data.lineNumber !== 'undefined') {
-                    line = jsEditor.setMarker(e.data.lineNumber - 1, makeLineLabel(e.data.rawErrorMsg, e.data.lineNumber), "errorMarker");
+                    line = jsEditor.setMarker(e.data.lineNumber - 1, makeLineLabel(e.data.rawErrorMsg), "errorMarker");
                     jsEditor.setLineClass(line, "errorLine");
                     errorLines.push(line);
                 }
