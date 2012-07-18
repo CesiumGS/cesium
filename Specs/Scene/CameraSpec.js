@@ -116,7 +116,7 @@ defineSuite([
                                       0.0, 1.0, 0.0, -position.y,
                                       0.0, 0.0, 1.0, -position.z,
                                       0.0, 0.0, 0.0,         1.0);
-        var expected = rotation.multiplyWithMatrix(translation);
+        var expected = rotation.multiply(translation);
         expect(viewMatrix.equals(expected)).toEqual(true);
     });
 
@@ -189,7 +189,7 @@ defineSuite([
         var ellipsoid = Ellipsoid.WGS84;
         var maxRadii = ellipsoid.getMaximumRadius();
 
-        camera.position = Cartesian3.UNIT_X.multiplyWithScalar(2.0 * maxRadii);
+        camera.position = Cartesian3.UNIT_X.multiplyByScalar(2.0 * maxRadii);
         camera.direction = camera.position.negate().normalize();
         camera.up = Cartesian3.UNIT_Z;
         camera.right = camera.direction.cross(camera.up);
@@ -266,7 +266,7 @@ defineSuite([
         var projection = new EquidistantCylindricalProjection(ellipsoid);
         var maxRadii = ellipsoid.getMaximumRadius();
 
-        camera.position = new Cartesian3(0.0, -1.0, 1.0).normalize().multiplyWithScalar(5.0 * maxRadii);
+        camera.position = new Cartesian3(0.0, -1.0, 1.0).normalize().multiplyByScalar(5.0 * maxRadii);
         camera.direction = Cartesian3.ZERO.subtract(camera.position).normalize();
         camera.right = camera.direction.cross(Cartesian3.UNIT_Z).normalize();
         camera.up = camera.right.cross(camera.direction);

@@ -103,8 +103,8 @@ define([
         var length = positions.length;
         for ( var i = 0; i < length; ++i) {
             var p = this.origin;
-            p = p.add(this.xAxis.multiplyWithScalar(positions[i].x));
-            p = p.add(this.yAxis.multiplyWithScalar(positions[i].y));
+            p = p.add(this.xAxis.multiplyByScalar(positions[i].x));
+            p = p.add(this.yAxis.multiplyByScalar(positions[i].y));
 
             positionsOnEllipsoid.push(this.ellipsoid.scaleToGeocentricSurface(p));
         }

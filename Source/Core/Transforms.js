@@ -168,9 +168,9 @@ define([
             }
 
             var pnt = new Cartesian4(point.x, point.y, point.z, 1.0);
-            pnt = modelViewProjectionMatrix.multiplyWithVector(pnt);
-            pnt = pnt.multiplyWithScalar(1.0 / pnt.w);
-            pnt = viewportTransformation.multiplyWithVector(pnt);
+            pnt = modelViewProjectionMatrix.multiplyByVector(pnt);
+            pnt = pnt.multiplyByScalar(1.0 / pnt.w);
+            pnt = viewportTransformation.multiplyByVector(pnt);
             return Cartesian2.fromCartesian4(pnt);
         }
     };

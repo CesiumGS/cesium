@@ -41,7 +41,7 @@
             xAxis.color = {red : 1.0, green : 0.0, blue : 0.0, alpha : 1.0 };
             xAxis.setPositions([
                 Cesium.Cartesian3.ZERO,
-                Cesium.Cartesian3.UNIT_X.multiplyWithScalar(100000.0)
+                Cesium.Cartesian3.UNIT_X.multiplyByScalar(100000.0)
             ]);
             primitives.add(xAxis);
 
@@ -51,7 +51,7 @@
             yAxis.color = {red : 0.0, green : 1.0, blue : 0.0, alpha : 1.0 };
             yAxis.setPositions([
                 Cesium.Cartesian3.ZERO,
-                Cesium.Cartesian3.UNIT_Y.multiplyWithScalar(100000.0)
+                Cesium.Cartesian3.UNIT_Y.multiplyByScalar(100000.0)
             ]);
             primitives.add(yAxis);
 
@@ -61,13 +61,13 @@
             zAxis.color = {red : 0.0, green : 0.0, blue : 1.0, alpha : 1.0 };
             zAxis.setPositions([
                 Cesium.Cartesian3.ZERO,
-                Cesium.Cartesian3.UNIT_Z.multiplyWithScalar(100000.0)
+                Cesium.Cartesian3.UNIT_Z.multiplyByScalar(100000.0)
             ]);
             primitives.add(zAxis);
         };
 
         this.camera = {
-            eye: new Cesium.Cartesian3(1.0, 1.0, 1.0).normalize().multiplyWithScalar(200000.0),
+            eye: new Cesium.Cartesian3(1.0, 1.0, 1.0).normalize().multiplyByScalar(200000.0),
             target: Cesium.Cartesian3.ZERO,
             up: Cesium.Cartesian3.UNIT_Z
         };

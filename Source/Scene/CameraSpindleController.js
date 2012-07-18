@@ -182,9 +182,9 @@ define([
         var rotation = Quaternion.fromAxisAngle(a, turnAngle).toRotationMatrix();
 
         var camera = this._camera;
-        camera.position = rotation.multiplyWithVector(camera.position);
-        camera.direction = rotation.multiplyWithVector(camera.direction);
-        camera.up = rotation.multiplyWithVector(camera.up);
+        camera.position = rotation.multiplyByVector(camera.position);
+        camera.direction = rotation.multiplyByVector(camera.direction);
+        camera.up = rotation.multiplyByVector(camera.up);
         camera.right = camera.direction.cross(camera.up);
     };
 

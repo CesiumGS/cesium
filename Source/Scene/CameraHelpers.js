@@ -9,7 +9,7 @@ define([
 
     function move(camera, direction, rate) {
         var position = camera.position;
-        var newPosition = position.add(direction.multiplyWithScalar(rate));
+        var newPosition = position.add(direction.multiplyByScalar(rate));
         camera.position = newPosition;
     }
 
