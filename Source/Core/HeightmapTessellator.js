@@ -106,6 +106,8 @@ define([
 
                 heightSample = heightSample / heightScale - heightOffset;
 
+                //heightSample = 10000 * sin(CesiumMath.toDegrees(longitude) * 10) + 10000 * cos(CesiumMath.toDegrees(latitude) * 10);
+
                 var nX = cosLatitude * cos(longitude);
                 var nY = cosLatitude * sin(longitude);
 
