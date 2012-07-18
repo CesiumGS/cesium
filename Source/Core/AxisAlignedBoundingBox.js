@@ -95,7 +95,7 @@ define([
              *
              * @type {Cartesian3}
              */
-            this.center = (min.add(max)).multiplyWithScalar(0.5);
+            this.center = (min.add(max)).multiplyByScalar(0.5);
         } else {
             this.minimum = undefined;
             this.maximum = undefined;

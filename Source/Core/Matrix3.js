@@ -179,7 +179,7 @@ define([
      *
      * @example
      * var m = Matrix3.createScale(2.0);
-     * var v = m.multiplyWithVector(new Cartesian3(1.0, 1.0, 1.0));
+     * var v = m.multiplyByVector(new Cartesian3(1.0, 1.0, 1.0));
      * // v is (2.0, 2.0, 2.0)
      */
     Matrix3.createScale = function(scale) {
@@ -204,7 +204,7 @@ define([
      *
      * @example
      * var m = Matrix3.createNonUniformScale(new Cartesian3(1.0, 2.0, 3.0));
-     * var v = m.multiplyWithVector(new Cartesian3(1.0, 1.0, 1.0));
+     * var v = m.multiplyByVector(new Cartesian3(1.0, 1.0, 1.0));
      * // v is (1.0, 2.0, 3.0)
      */
     Matrix3.createNonUniformScale = function(scale) {
@@ -506,7 +506,7 @@ define([
      * @param {Cartesian3} vector The vector that is multiplied with this.
      * @return {Cartesian3} The transformed vector.
      */
-    Matrix3.prototype.multiplyWithVector = function(vector) {
+    Matrix3.prototype.multiplyByVector = function(vector) {
         var vX = vector.x;
         var vY = vector.y;
         var vZ = vector.z;
@@ -533,7 +533,7 @@ define([
      * @param {Matrix3} matrix The matrix that is on the right hand side of the multiplication.
      * @return {Matrix3} The multipled matrix.
      */
-    Matrix3.prototype.multiplyWithMatrix = function(matrix) {
+    Matrix3.prototype.multiply = function(matrix) {
         var col0row0 =
             this.getColumnMajorValue(0) * matrix.getColumnMajorValue(0) +
             this.getColumnMajorValue(3) * matrix.getColumnMajorValue(1) +

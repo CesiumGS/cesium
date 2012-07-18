@@ -51,7 +51,7 @@ define([
                 var delta = i / numberOfPartitions;
 
                 indices[i] = positions.length;
-                positions.push(origin.add(direction.multiplyWithScalar(delta)));
+                positions.push(origin.add(direction.multiplyByScalar(delta)));
             }
 
             return indices;
@@ -82,11 +82,11 @@ define([
                     topIndicesBuffer[numberOfPartitions] = rightBottomToTop[j];
 
                     var deltaY = j / numberOfPartitions;
-                    var offsetY = y.multiplyWithScalar(deltaY);
+                    var offsetY = y.multiplyByScalar(deltaY);
 
                     for ( var i = 1; i < numberOfPartitions; ++i) {
                         var deltaX = i / numberOfPartitions;
-                        var offsetX = x.multiplyWithScalar(deltaX);
+                        var offsetX = x.multiplyByScalar(deltaX);
 
                         topIndicesBuffer[i] = positions.length;
                         positions.push(origin.add(offsetX).add(offsetY));

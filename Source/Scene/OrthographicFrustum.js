@@ -168,29 +168,29 @@ define([
         planes.length = 6;
 
         var planePoint;
-        var nearCenter = pos.add(dir.multiplyWithScalar(this.near));
+        var nearCenter = pos.add(dir.multiplyByScalar(this.near));
 
         // Left plane
-        planePoint = nearCenter.add(right.multiplyWithScalar(this.left));
+        planePoint = nearCenter.add(right.multiplyByScalar(this.left));
         planes[0] = new Cartesian4(right.x, right.y, right.z, -right.dot(planePoint));
 
         // Right plane
-        planePoint = nearCenter.add(right.multiplyWithScalar(this.right));
+        planePoint = nearCenter.add(right.multiplyByScalar(this.right));
         planes[1] = new Cartesian4(-right.x, -right.y, -right.z, -right.negate().dot(planePoint));
 
         // Bottom plane
-        planePoint = nearCenter.add(u.multiplyWithScalar(this.bottom));
+        planePoint = nearCenter.add(u.multiplyByScalar(this.bottom));
         planes[2] = new Cartesian4(u.x, u.y, u.z, -u.dot(planePoint));
 
         // Top plane
-        planePoint = nearCenter.add(u.multiplyWithScalar(this.top));
+        planePoint = nearCenter.add(u.multiplyByScalar(this.top));
         planes[3] = new Cartesian4(-u.x, -u.y, -u.z, -u.negate().dot(planePoint));
 
         // Near plane
         planes[4] = new Cartesian4(direction.x, direction.y, direction.z, -direction.dot(nearCenter));
 
         // Far plane
-        planePoint = position.add(direction.multiplyWithScalar(this.far));
+        planePoint = position.add(direction.multiplyByScalar(this.far));
         planes[5] = new Cartesian4(-direction.x, -direction.y, -direction.z, -direction.negate().dot(planePoint));
 
         return planes;

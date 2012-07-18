@@ -218,7 +218,7 @@ define([
             // Extend position so the volume encompasses the sensor's radius.
             var theta = Math.max(Cartesian3.angleBetween(n0, n1), Cartesian3.angleBetween(n1, n2));
             var distance = r / Math.cos(theta * 0.5);
-            var p = n1.multiplyWithScalar(distance);
+            var p = n1.multiplyByScalar(distance);
 
             positions[(j * 3) + 0] = p.x;
             positions[(j * 3) + 1] = p.y;

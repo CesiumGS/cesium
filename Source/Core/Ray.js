@@ -55,7 +55,7 @@ define(['./Cartesian3', './DeveloperError'], function(Cartesian3, DeveloperError
      */
     Ray.prototype.getPoint = function(t) {
         t = (typeof t === 'undefined') ? 0.0 : t;
-        return this.origin.add(this.direction.multiplyWithScalar(t));
+        return this.origin.add(this.direction.multiplyByScalar(t));
     };
 
     return Ray;

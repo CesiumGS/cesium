@@ -299,7 +299,7 @@ define(['./DeveloperError'
      * @exception {DeveloperError} cartesian is required.
      * @exception {DeveloperError} scalar is required and must be a number.
      */
-    Cartesian3.multiplyWithScalar = function(cartesian, scalar, result) {
+    Cartesian3.multiplyByScalar = function(cartesian, scalar, result) {
         if (typeof cartesian === 'undefined') {
             throw new DeveloperError('cartesian is required');
         }
@@ -414,8 +414,8 @@ define(['./DeveloperError'
         if (typeof t !== 'number') {
             throw new DeveloperError('t is required and must be a number.');
         }
-        Cartesian3.multiplyWithScalar(end, t, lerpScratch);
-        result = Cartesian3.multiplyWithScalar(start, 1.0 - t, result);
+        Cartesian3.multiplyByScalar(end, t, lerpScratch);
+        result = Cartesian3.multiplyByScalar(start, 1.0 - t, result);
         return Cartesian3.add(lerpScratch, result, result);
     };
 
@@ -693,8 +693,8 @@ define(['./DeveloperError'
      *
      * @exception {DeveloperError} scalar is required and must be a number.
      */
-    Cartesian3.prototype.multiplyWithScalar = function(scalar, result) {
-        return Cartesian3.multiplyWithScalar(this, scalar, result);
+    Cartesian3.prototype.multiplyByScalar = function(scalar, result) {
+        return Cartesian3.multiplyByScalar(this, scalar, result);
     };
 
     /**

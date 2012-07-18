@@ -116,7 +116,7 @@ define([
      *
      * @example
      * var m = Matrix2.createScale(2.0);
-     * var v = m.multiplyWithVector(new Cartesian2(1.0, 1.0));
+     * var v = m.multiplyByVector(new Cartesian2(1.0, 1.0));
      * // v is (2.0, 2.0)
      */
     Matrix2.createScale = function(scale) {
@@ -140,7 +140,7 @@ define([
      *
      * @example
      * var m = Matrix2.createNonUniformScale(new Cartesian2(1.0, 2.0));
-     * var v = m.multiplyWithVector(new Cartesian2(1.0, 1.0));
+     * var v = m.multiplyByVector(new Cartesian2(1.0, 1.0));
      * // v is (1.0, 2.0)
      */
     Matrix2.createNonUniformScale = function(scale) {

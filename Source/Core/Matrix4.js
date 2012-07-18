@@ -647,7 +647,7 @@ define([
      *
      * @example
      * var m = Matrix4.createScale(2.0);
-     * var v = m.multiplyWithVector(new Cartesian4(1.0, 1.0, 1.0, 1.0));
+     * var v = m.multiplyByVector(new Cartesian4(1.0, 1.0, 1.0, 1.0));
      * // v is (2.0, 2.0, 2.0, 1.0)
      */
     Matrix4.createScale = function(scale) {
@@ -673,7 +673,7 @@ define([
      *
      * @example
      * var m = Matrix4.createNonUniformScale(new Cartesian3(1.0, 2.0, 3.0));
-     * var v = m.multiplyWithVector(new Cartesian4(1.0, 1.0, 1.0, 1.0));
+     * var v = m.multiplyByVector(new Cartesian4(1.0, 1.0, 1.0, 1.0));
      * // v is (1.0, 2.0, 3.0, 1.0)
      */
     Matrix4.createNonUniformScale = function(scale) {
@@ -905,7 +905,7 @@ define([
             0.0, 1.0, 0.0, -eye.y,
             0.0, 0.0, 1.0, -eye.z,
             0.0, 0.0, 0.0, 1.0);
-        return rotation.multiplyWithMatrix(translation);
+        return rotation.multiply(translation);
     };
 
     /**
@@ -987,7 +987,7 @@ define([
         var rT = this.getRotationTranspose();
 
         // T = translation, rTT = (-rT)(T)
-        var rTT = rT.negate().multiplyWithVector(this.getTranslation());
+        var rTT = rT.negate().multiplyByVector(this.getTranslation());
 
         // [ rT, rTT ]
         // [  0,  1  ]
@@ -1140,7 +1140,7 @@ define([
      * @param {Cartesian4} vector The vector that is multiplied with this.
      * @return {Cartesian4} The transformed vector.
      */
-    Matrix4.prototype.multiplyWithVector = function(vector) {
+    Matrix4.prototype.multiplyByVector = function(vector) {
         var vX = vector.x;
         var vY = vector.y;
         var vZ = vector.z;
@@ -1181,7 +1181,7 @@ define([
      * @param {Matrix4} matrix The matrix that is on the right hand side of the multiplication.
      * @return {Matrix4} The multipled matrix.
      */
-    Matrix4.prototype.multiplyWithMatrix = function(matrix) {
+    Matrix4.prototype.multiply = function(matrix) {
         var l = this.values;
         var r = matrix.values;
 
