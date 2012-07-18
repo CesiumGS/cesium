@@ -13,7 +13,7 @@ define([
      * @alias Matrix2
      * @constructor
      *
-     * @param {Array} [values] A column-major array that will represent this matrix.
+     * @param {Array} [values=(0.0, 0.0, 0.0, 0.0)] A column-major array that will represent this matrix.
      *
      * @exception {DeveloperError} values must be an array.
      *
