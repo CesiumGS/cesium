@@ -4,6 +4,9 @@ define([
         '../../Core/createGuid',
         '../../Core/Jobs',
         '../../Core/clone',
+        '../../Core/Matrix2',
+        '../../Core/Matrix3',
+        '../../Core/Matrix4',
         '../../ThirdParty/Chain',
         '../../Shaders/Materials/AlphaMapMaterial',
         '../../Shaders/Materials/AsphaltMaterial',
@@ -33,6 +36,9 @@ define([
         createGuid,
         Jobs,
         clone,
+        Matrix2,
+        Matrix3,
+        Matrix4,
         Chain,
         AlphaMapMaterial,
         AsphaltMaterial,
@@ -66,38 +72,37 @@ define([
      */
 
     function Material(description) {
-        var that = this;
-        this.description = description || {};
-        this.context = this.description.context;
-        this.strict = (typeof this.description.strict !== 'undefined') ? this.description.strict : false;
-        this.template = this.description.template || {};
-        this._materialRedefinition = (typeof this.template.redefine !== 'undefined') ? (this.template.redefine === 'true') : false;
-        this._materialID = this.template.id;
+        this._description = description || {};
+        this._context = this._description.context;
+        if (typeof this._context === 'undefined') {
+            throw new DeveloperError('context is required.');
+        }
+        this._strict = (typeof this._description.strict !== 'undefined') ? this._description.strict : false;
+        this._template = this._description.template || {};
+        this._materialID = this._template.id;
 
         // If the factory contains this material ID, build the material template off of the stored template.
-        var isOldMaterialType = this._materialFactory.hasMaterial(this._materialID) && (this._materialRedefinition === false);
+        var isOldMaterialType = this._materialFactory.hasMaterial(this._materialID);
         if (isOldMaterialType) {
             var newMaterialTemplate = clone(this._materialFactory.getMaterial(this._materialID));
-            this._extendObject(this.template, newMaterialTemplate);
+            this._extendObject(this._template, newMaterialTemplate);
         }
 
         // Once the template has been established, set the member variables.
-        this._materialUniforms = this.template.uniforms || {};
-        this._materialTemplates = this.template.materials || {};
-        this._materialComponents = this.template.components;
-        this._materialSource = this.template.source;
-        this._materialSourcePath = this.template.sourcePath;
-        this._hasComponentSection = (typeof this._materialComponents !== 'undefined');
+        this._materialUniforms = this._template.uniforms || {};
+        this._materialTemplates = this._template.materials || {};
+        this._materialComponents = this._template.components;
+        this._materialSource = this._template.source;
+        this._hasComponentsSection = (typeof this._materialComponents !== 'undefined');
         this._hasSourceSection = (typeof this._materialSource !== 'undefined');
-        this._hasSourcePathSection = (typeof this._materialSourcePath !== 'undefined');
 
         // Make sure the template has no obvious errors. More error checking happens later.
-        this._checkForErrors();
+        this._checkForTemplateErrors();
 
         // If the material has a new ID, add it to the factory.
-        var isNewMaterialType = (typeof this._materialID !== 'undefined') && (isOldMaterialType === false);
+        var isNewMaterialType = (isOldMaterialType === false) && (typeof this._materialID !== 'undefined');
         if (isNewMaterialType){
-            this._materialFactory.addMaterial(this._materialID, this.template);
+            this._materialFactory.addMaterial(this._materialID, this._template);
         }
 
         // Build the shader source for the main material.
@@ -105,101 +110,104 @@ define([
         if (this._hasSourceSection) {
             this._shaderSource += this._materialSource;
         }
-        else if (this._hasSourcePathSection) {
-            this._shaderSource += this._materialFactory.getShaderSource(this._materialSourcePath);
-        }
         else {
             this._shaderSource += 'agi_material agi_getMaterial(agi_materialInput materialInput)\n{\n';
             this._shaderSource += 'agi_material material = agi_getDefaultMaterial(materialInput);\n';
-            this._shaderSource += 'return material;\n}\n';
-        }
-        if (this._hasComponentSection) {
-            for (var component in this._materialComponents) {
-                if (this._materialComponents.hasOwnProperty(component)) {
-                    var expression = this._materialComponents[component];
-                    if (expression.length > 0) {
+            if (this._hasComponentsSection) {
+                for (var component in this._materialComponents) {
+                    if (this._materialComponents.hasOwnProperty(component)) {
+                        var expression = this._materialComponents[component];
                         var statement = 'material.' + component + ' = ' + expression + ';\n';
-                        var indexOfReturn = this._shaderSource.indexOf('return material;');
-                        var firstHalf = this._shaderSource.slice(0, indexOfReturn);
-                        var secondHalf = this._shaderSource.slice(indexOfReturn, this._shaderSource.length);
-                        this._shaderSource = firstHalf + statement + secondHalf;
+                        this._shaderSource += statement;
                     }
                 }
             }
+            this._shaderSource += 'return material;\n}\n';
         }
 
         // Set up uniforms for the main material
+        this.uniforms = {};
         this._uniforms = {};
-        var newShaderSource = '';
-        var returnUniform = function (uniformID) {
+        var returnUniform = function (material, uniformID) {
             return function() {
-                return that[uniformID];
+                return material.uniforms[uniformID];
             };
         };
         for (var uniformID in this._materialUniforms) {
             if (this._materialUniforms.hasOwnProperty(uniformID)) {
                 var uniformValue = this._materialUniforms[uniformID];
-                uniformValue = this._materialUniforms[uniformValue] || uniformValue;
                 var uniformType = this._getUniformType(uniformValue);
                 if (typeof uniformType === 'undefined') {
-                    throw new DeveloperError('Invalid uniform type for \'' + uniformID + '\'.');
+                    throw new DeveloperError('Invalid uniform type for uniform \'' + uniformID + '\'.');
                 }
                 // When the uniform type is a string, replace all tokens with its value.
                 if (uniformType === 'string') {
-                    if (this._replaceToken(uniformID, uniformValue, false) === 0 && this.strict) {
+                    if (this._replaceToken(uniformID, uniformValue, false) === 0 && this._strict) {
                         throw new DeveloperError('Shader source does not use string \'' + uniformID + '\'.');
                     }
                 }
                 else {
-                    this[uniformID] = uniformValue;
-                    var newUniformID = uniformID + '_' + this._getNewGUID();
-                    this._uniforms[newUniformID] = returnUniform(uniformID);
-
                     // Add uniform declaration to source code.
                     var uniformPhrase = 'uniform ' + uniformType + ' ' + uniformID + ';\n';
                     if (this._shaderSource.indexOf(uniformPhrase) === -1) {
-                        newShaderSource += uniformPhrase.replace(uniformID, newUniformID);
+                        this._shaderSource = uniformPhrase + this._shaderSource;
                     }
-
                     // Replace uniform name with guid version.
-                    if (this._replaceToken(uniformID, newUniformID, true) === 0 && this.strict) {
+                    var newUniformID = uniformID + '_' + this._getNewGUID();
+                    if (this._replaceToken(uniformID, newUniformID, true) === 1 && this._strict) {
                         throw new DeveloperError('Shader source does not use uniform \'' + uniformID + '\'.');
                     }
-
                     // If uniform is a texture, load it.
-                    if (uniformType === 'sampler2D' || uniformType === 'samplerCube') {
-                        this[uniformID] = this._texturePool.registerTextureToMaterial(this, uniformID, uniformValue, uniformType);
+                    if (uniformType.indexOf('sampler') !== -1) {
+                        uniformValue = this._texturePool.registerTextureToMaterial(this, uniformID, uniformValue, uniformType);
                     }
+                    // If the uniform is a matrix, create the correct matrix type from the array.
+                    else if (uniformType.indexOf('mat') !== -1) {
+                        var dimension = uniformType.slice(uniformType.length - 1);
+                        if (dimension === '2') {
+                            uniformValue = new Matrix2(uniformValue[0], uniformValue[1],
+                                                       uniformValue[2], uniformValue[3]);
+                        }
+                        else if (dimension === '3') {
+                            uniformValue = new Matrix3(uniformValue[0], uniformValue[1], uniformValue[2],
+                                                       uniformValue[3], uniformValue[4], uniformValue[5],
+                                                       uniformValue[6], uniformValue[7], uniformValue[8]);
+                        }
+                        else if (dimension === '4') {
+                            uniformValue = new Matrix4(uniformValue[0], uniformValue[1], uniformValue[2], uniformValue[3],
+                                                       uniformValue[4], uniformValue[5], uniformValue[6], uniformValue[7],
+                                                       uniformValue[8], uniformValue[9], uniformValue[10], uniformValue[11],
+                                                       uniformValue[12], uniformValue[13], uniformValue[14], uniformValue[15]);
+                        }
+                    }
+                    // Set uniform value
+                    this.uniforms[uniformID] = uniformValue;
+                    this._uniforms[newUniformID] = returnUniform(this, uniformID);
                 }
             }
         }
-        this._shaderSource = newShaderSource + this._shaderSource;
-
         // Create all sub-materials and combine source and uniforms together.
-        newShaderSource = '';
+        var newShaderSource = '';
+        this.materials = {};
         for (var materialID in this._materialTemplates) {
             if (this._materialTemplates.hasOwnProperty(materialID)) {
                 // Construct the sub-material. Share texture names using extendObject.
                 var materialTemplate = this._materialTemplates[materialID];
-                materialTemplate.uniforms = materialTemplate.uniforms || {};
-                this._extendObject(materialTemplate.uniforms, this._materialUniforms);
-                var material = new Material({'context' : this.context, 'strict' : this.strict, 'template' : materialTemplate});
-                this[materialID] = material;
+                var material = new Material({'context' : this._context, 'strict' : this._strict, 'template' : materialTemplate});
+                this._extendObject(this._uniforms, material._uniforms);
+                this.materials[materialID] = material;
 
                 // Make the material's agi_getMaterial unique by appending a guid.
                 var originalMethodName = 'agi_getMaterial';
                 var newMethodName = originalMethodName + '_' + this._getNewGUID();
                 material._replaceToken(originalMethodName, newMethodName, true);
+                newShaderSource += material._shaderSource + '\n';
 
                 // Replace each material id with an agi_getMaterial method call.
-                // Example: material.diffuse = diffuseMap.diffuse
-                // Becomes: material.diffuse = agi_getMaterial_{guid}(materialInput).diffuse
-                var newMethodCall = newMethodName + '(materialInput)';
-                if (this._replaceToken(materialID, newMethodCall, true) === 0 && this.strict) {
+                var materialMethodCall = newMethodName + '(materialInput)';
+                if (this._replaceToken(materialID, materialMethodCall, true) === 0 && this._strict) {
                     throw new DeveloperError('Shader source does not use material \'' + materialID + '\'.');
                 }
-                this._extendObject(this._uniforms, material._uniforms);
-                newShaderSource += '\n' + material._shaderSource;
             }
         }
         this._shaderSource = newShaderSource + this._shaderSource;
@@ -249,41 +257,37 @@ define([
         return count;
     };
 
-    Material.prototype._checkForErrors = function() {
-        // Make sure source and sourcePath do not exist in the same template.
-        if (this._hasSourceSection && this._hasSourcePathSection) {
-            throw new DeveloperError('Cannot have source and sourcePath in the same template.');
+    Material.prototype._checkForTemplateErrors = function() {
+        // Make sure source and components do not exist in the same template.
+        if (this._hasSourceSection && this._hasComponentsSection) {
+            throw new DeveloperError('Cannot have source and components in the same template.');
         }
-
         // Make sure there are no duplicate names
         var duplicateNames = {};
         var groups = {'uniforms' : this._materialUniforms, 'materials' : this._materialTemplates};
         for (var groupID in groups) {
             if (groups.hasOwnProperty(groupID)) {
                 var groupValue = groups[groupID];
-                if (typeof groupValue !== 'undefined') {
-                    for (var id in groupValue) {
-                        if (groupValue.hasOwnProperty(id)) {
-                            var existingGroupID = duplicateNames[id];
-                            if (typeof existingGroupID !== 'undefined') {
-                                throw new DeveloperError('Duplicate identifier \'' + id + '\' found in \'' + groupID + '\' and \'' + existingGroupID + '\'.');
-                            }
-                            duplicateNames[id] = groupID;
+                for (var id in groupValue) {
+                    if (groupValue.hasOwnProperty(id)) {
+                        var existingGroupID = duplicateNames[id];
+                        if (typeof existingGroupID !== 'undefined') {
+                            throw new DeveloperError('Duplicate identifier \'' + id + '\' found in \'' + groupID + '\' and \'' + existingGroupID + '\'.');
                         }
+                        duplicateNames[id] = groupID;
                     }
                 }
             }
         }
-
         //Make sure all the component types are valid
-        duplicateNames = {};
-        if (this._hasComponentSection) {
+        if (this._hasComponentsSection) {
+            duplicateNames = {};
             var validComponentTypes = ['diffuse', 'specular', 'normal', 'emission', 'alpha'];
             for (var component in this._materialComponents) {
                 if (this._materialComponents.hasOwnProperty(component)) {
                     var validComponent = false;
                     for (var i = 0; i < validComponentTypes.length; i++) {
-                        if (validComponentTypes[i] === component) {
+                        if (component === validComponentTypes[i]) {
                             if (typeof duplicateNames[component] !== 'undefined') {
                                 throw new DeveloperError('Duplicate component name \'' + component + '\'.');
                             }
@@ -293,7 +297,7 @@ define([
                         }
                     }
                     if (validComponent === false) {
-                        throw new DeveloperError('Component name \'' + component + '\' does not exist.');
+                        throw new DeveloperError('Component name \'' + component + '\' is not valid.');
                     }
                 }
             }
@@ -303,11 +307,14 @@ define([
     Material.prototype._getUniformType = function(uniform) {
         var uniformType = uniform.type;
         if (typeof uniformType === 'undefined') {
-            var imageMatcher = new RegExp('^(.)+\\.(gif|jpg|jpeg|tiff|png)$', 'i');
+            var imageMatcher = new RegExp('^((data:)|((.)+\\.(gif|jpg|jpeg|tiff|png)$))', 'i');
             var type = typeof uniform;
             if (type === 'string') {
-                if (imageMatcher.test(uniform)) {
+                if (imageMatcher.test(uniform) || uniform === 'agi_defaultTexture') {
                     uniformType = 'sampler2D';
+                }
+                else if (uniform === 'agi_defaultCubeMap') {
+                    uniformType = 'samplerCube';
                 }
                 else {
                     uniformType = 'string';
@@ -317,20 +324,33 @@ define([
                 uniformType = 'float';
             }
             else if (type === 'object') {
-                var numAttributes = 0;
-                for (var attribute in uniform) {
-                    if (uniform.hasOwnProperty(attribute) && attribute !== 'type') {
-                        numAttributes += 1;
+                if (uniform instanceof Array) {
+                    if (uniform.length === 4) {
+                        uniformType = 'mat2';
+                    }
+                    else if (uniform.length === 9) {
+                        uniformType = 'mat3';
+                    }
+                    else if (uniform.length === 16) {
+                        uniformType = 'mat4';
                     }
                 }
-                if (numAttributes >= 2 && numAttributes <= 4) {
-                    uniformType = 'vec' + numAttributes;
-                }
-                else if (numAttributes === 6) {
-                    if (imageMatcher.test(uniform.positiveX) && imageMatcher.test(uniform.negativeX) &&
-                        imageMatcher.test(uniform.positiveY) && imageMatcher.test(uniform.negativeY) &&
-                        imageMatcher.test(uniform.positiveZ) && imageMatcher.test(uniform.negativeZ)) {
-                        uniformType = 'samplerCube';
+                else {
+                    var numAttributes = 0;
+                    for (var attribute in uniform) {
+                        if (uniform.hasOwnProperty(attribute)) {
+                            numAttributes += 1;
+                        }
+                    }
+                    if (numAttributes >= 2 && numAttributes <= 4) {
+                        uniformType = 'vec' + numAttributes;
+                    }
+                    else if (numAttributes === 6) {
+                        if (imageMatcher.test(uniform.positiveX) && imageMatcher.test(uniform.negativeX) &&
+                            imageMatcher.test(uniform.positiveY) && imageMatcher.test(uniform.negativeY) &&
+                            imageMatcher.test(uniform.positiveZ) && imageMatcher.test(uniform.negativeZ)) {
+                            uniformType = 'samplerCube';
+                        }
                     }
                 }
             }
@@ -348,60 +368,64 @@ define([
                 var materialContainer = materialContainers[i];
                 var material = materialContainer.material;
                 var property = materialContainer.property;
-                material[property] = texture;
+                material.uniforms[property] = texture;
             }
         },
-        registerTextureToMaterial : function(material, property, texturePath, textureType) {
+        registerTextureToMaterial : function(material, property, textureInfo, textureType) {
             var that = this;
             var path;
             var texture;
             if (textureType === 'sampler2D') {
-                path = texturePath;
+                path = textureInfo;
                 texture = this._pathsToTextures[path];
                 if (typeof texture === 'undefined') {
-                    texture = material.context.getDefaultTexture();
-                    this._pathsToMaterials[path] = this._pathsToMaterials[path] || [];
-                    this._pathsToMaterials[path].push({'material' : material, 'property' : property});
-                    if (this._pathsToMaterials[path].length === 1) {
-                        Chain.run(
-                            Jobs.downloadImage(texturePath)
-                        ).thenRun(function() {
-                            texture = material.context.createTexture2D({source : this.images[texturePath]});
-                            that._updateMaterialsOnTextureLoad(texture, path);
-                        });
+                    texture = material._context.getDefaultTexture();
+                    if (textureInfo !== 'agi_defaultTexture') {
+                        this._pathsToMaterials[path] = this._pathsToMaterials[path] || [];
+                        this._pathsToMaterials[path].push({'material' : material, 'property' : property});
+                        if (this._pathsToMaterials[path].length === 1) {
+                            Chain.run(
+                                Jobs.downloadImage(path)
+                            ).thenRun(function() {
+                                texture = material._context.createTexture2D({source : this.images[path]});
+                                that._updateMaterialsOnTextureLoad(texture, path);
+                            });
+                        }
                     }
                 }
             }
             else if (textureType === 'samplerCube') {
-                path = texturePath.positiveX + texturePath.negativeX +
-                       texturePath.positiveY + texturePath.negativeY +
-                       texturePath.positiveZ + texturePath.negativeZ;
+                path = textureInfo.positiveX + textureInfo.negativeX +
+                       textureInfo.positiveY + textureInfo.negativeY +
+                       textureInfo.positiveZ + textureInfo.negativeZ;
                 texture = this._pathsToTextures[path];
                 if (typeof texture === 'undefined') {
-                    texture = material.context.getDefaultCubeMap();
-                    this._pathsToMaterials[path] = this._pathsToMaterials[path] || [];
-                    this._pathsToMaterials[path].push({'material' : material, 'property' : property});
-                    if (this._pathsToMaterials[path].length === 1) {
-                        Chain.run(
-                            Jobs.downloadImage(texturePath.positiveX),
-                            Jobs.downloadImage(texturePath.negativeX),
-                            Jobs.downloadImage(texturePath.positiveY),
-                            Jobs.downloadImage(texturePath.negativeY),
-                            Jobs.downloadImage(texturePath.positiveZ),
-                            Jobs.downloadImage(texturePath.negativeZ)
-                        ).thenRun(function() {
-                            texture = material.context.createCubeMap({
-                                source : {
-                                    positiveX : this.images[texturePath.positiveX],
-                                    negativeX : this.images[texturePath.negativeX],
-                                    positiveY : this.images[texturePath.positiveY],
-                                    negativeY : this.images[texturePath.negativeY],
-                                    positiveZ : this.images[texturePath.positiveZ],
-                                    negativeZ : this.images[texturePath.negativeZ]
-                                }
+                    texture = material._context.getDefaultCubeMap();
+                    if (textureInfo !== 'agi_defaultCubeMap') {
+                        this._pathsToMaterials[path] = this._pathsToMaterials[path] || [];
+                        this._pathsToMaterials[path].push({'material' : material, 'property' : property});
+                        if (this._pathsToMaterials[path].length === 1) {
+                            Chain.run(
+                                Jobs.downloadImage(textureInfo.positiveX),
+                                Jobs.downloadImage(textureInfo.negativeX),
+                                Jobs.downloadImage(textureInfo.positiveY),
+                                Jobs.downloadImage(textureInfo.negativeY),
+                                Jobs.downloadImage(textureInfo.positiveZ),
+                                Jobs.downloadImage(textureInfo.negativeZ)
+                            ).thenRun(function() {
+                                texture = material._context.createCubeMap({
+                                    source : {
+                                        positiveX : this.images[textureInfo.positiveX],
+                                        negativeX : this.images[textureInfo.negativeX],
+                                        positiveY : this.images[textureInfo.positiveY],
+                                        negativeY : this.images[textureInfo.negativeY],
+                                        positiveZ : this.images[textureInfo.positiveZ],
+                                        negativeZ : this.images[textureInfo.negativeZ]
+                                    }
+                                });
+                                that._updateMaterialsOnTextureLoad(texture, path);
                             });
-                            that._updateMaterialsOnTextureLoad(texture, path);
-                        });
+                        }
                     }
                 }
             }
@@ -410,35 +434,7 @@ define([
     };
 
     Material.prototype._materialFactory = {
-        _shaders : {
-            'AlphaMapMaterial' : AlphaMapMaterial,
-            'AsphaltMaterial' : AsphaltMaterial,
-            'BlobMaterial' : BlobMaterial,
-            'BrickMaterial' : BrickMaterial,
-            'BumpMapMaterial' : BumpMapMaterial,
-            'CementMaterial' : CementMaterial,
-            'CheckerboardMaterial' : CheckerboardMaterial,
-            'ColorMaterial' : ColorMaterial,
-            'DiffuseMapMaterial' : DiffuseMapMaterial,
-            'DistanceIntervalMaterial' : DistanceIntervalMaterial,
-            'DotMaterial' : DotMaterial,
-            'EmissionMapMaterial' : EmissionMapMaterial,
-            'FacetMaterial' : FacetMaterial,
-            'FresnelMaterial' : FresnelMaterial,
-            'GrassMaterial' : GrassMaterial,
-            'HorizontalStripeMaterial' : HorizontalStripeMaterial,
-            'NormalMapMaterial' : NormalMapMaterial,
-            'ReflectionMaterial' : ReflectionMaterial,
-            'RefractionMaterial' : RefractionMaterial,
-            'SpecularMapMaterial' : SpecularMapMaterial,
-            'TieDyeMaterial' : TieDyeMaterial,
-            'VerticalStripeMaterial' : VerticalStripeMaterial,
-            'WoodMaterial' : WoodMaterial
-        },
         _materials : {},
-        getShaderSource : function(name) {
-            return this._shaders[name];
-        },
         hasMaterial : function (materialID) {
             return (typeof this.getMaterial(materialID) !== 'undefined');
         },
@@ -461,7 +457,6 @@ define([
     // Color Material
     Material.prototype._materialFactory.addMaterial('ColorMaterial', {
         'id' : 'ColorMaterial',
-        'redefine': 'true',
         'uniforms' : {
             'color' : {
                 'red' : 1,
@@ -470,168 +465,148 @@ define([
                 'alpha' : 1
             }
         },
-        'sourcePath' : 'ColorMaterial'
+        'source' : ColorMaterial
     });
 
     // Diffuse Map Material
     Material.prototype._materialFactory.addMaterial('DiffuseMapMaterial', {
         'id' : 'DiffuseMapMaterial',
-        'redefine': 'true',
         'uniforms' : {
-            'repeat' : {
-                'x' : 1,
-                'y' : 1
-            },
-            'texture' : '../../Images/Cesium_Logo_Color.jpg',
+            'texture' : 'agi_defaultTexture',
             'diffuseChannels' : 'rgb',
-            'alphaChannel' : 'a'
-        },
-        'sourcePath' : 'DiffuseMapMaterial'
-    });
-
-    // Alpha Map Material
-    Material.prototype._materialFactory.addMaterial('AlphaMapMaterial', {
-        'id' : 'AlphaMapMaterial',
-        'redefine': 'true',
-        'uniforms' : {
-            'texture' : '../../Images/alpha_map.png',
-            'alphaChannel' : 'r',
             'repeat' : {
                 'x' : 1,
                 'y' : 1
             }
         },
-        'sourcePath' : 'AlphaMapMaterial'
+        'source' : DiffuseMapMaterial
+    });
+
+    // Alpha Map Material
+    Material.prototype._materialFactory.addMaterial('AlphaMapMaterial', {
+        'id' : 'AlphaMapMaterial',
+        'uniforms' : {
+            'texture' : 'agi_defaultTexture',
+            'alphaChannel' : 'a',
+            'repeat' : {
+                'x' : 1,
+                'y' : 1
+            }
+        },
+        'source' : AlphaMapMaterial
+    });
+
+    // Diffuse Alpha Map Material. Useful for textures with an alpha component.
+    Material.prototype._materialFactory.addMaterial('DiffuseAlphaMapMaterial', {
+        'id' : 'DiffuseAlphaMapMaterial',
+        'materials' : {
+            'diffuse' : {
+                'id' : 'DiffuseMapMaterial'
+            },
+            'alpha' : {
+                'id' : 'AlphaMapMaterial'
+            }
+        },
+        'components' : {
+            'diffuse' : 'diffuse.diffuse',
+            'alpha' : 'alpha.alpha'
+        }
     });
 
     // Specular Map Material
     Material.prototype._materialFactory.addMaterial('SpecularMapMaterial' , {
         'id' : 'SpecularMapMaterial',
-        'redefine': 'true',
         'uniforms' : {
-            'texture' : '../../Images/alpha_map.png',
+            'texture' : 'agi_defaultTexture',
             'specularChannel' : 'r',
             'repeat' : {
                 'x' : 1,
                 'y' : 1
             }
         },
-        'sourcePath' : 'SpecularMapMaterial'
+        'source' : SpecularMapMaterial
     });
 
     // Emission Map Material
     Material.prototype._materialFactory.addMaterial('EmissionMapMaterial' , {
         'id' : 'EmissionMapMaterial',
-        'redefine': 'true',
         'uniforms' : {
-            'texture' : '../../Images/alpha_map.png',
+            'texture' : 'agi_defaultTexture',
             'emissionChannels' : 'rgb',
             'repeat' : {
                 'x' : 1,
                 'y' : 1
             }
         },
-        'sourcePath' : 'EmissionMapMaterial'
+        'source' : EmissionMapMaterial
     });
 
     // Bump Map Material
     Material.prototype._materialFactory.addMaterial('BumpMapMaterial' , {
         'id' : 'BumpMapMaterial',
-        'redefine': 'true',
         'uniforms' : {
-            'texture' : '../../Images/earthbump1k.jpg',
+            'texture' : 'agi_defaultTexture',
             'bumpMapChannel' : 'r',
             'repeat' : {
                 'x' : 1,
                 'y' : 1
             }
         },
-        'sourcePath' : 'BumpMapMaterial'
+        'source' : BumpMapMaterial
     });
 
     // Normal Map Material
     Material.prototype._materialFactory.addMaterial('NormalMapMaterial', {
         'id' : 'NormalMapMaterial',
-        'redefine': 'true',
         'uniforms' : {
-            'texture' : '../../Images/earthnormalmap.jpg',
+            'texture' : 'agi_defaultTexture',
             'normalMapChannels' : 'rgb',
             'repeat' : {
                 'x' : 1,
                 'y' : 1
             }
         },
-        'sourcePath' : 'NormalMapMaterial'
+        'source' : NormalMapMaterial
     });
 
     // Reflection Material
     Material.prototype._materialFactory.addMaterial('ReflectionMaterial', {
         'id' : 'ReflectionMaterial',
-        'redefine': 'true',
         'uniforms' : {
-            'cubeMap' : {
-                'positiveX' : '../../Images/PalmTreesCubeMap/posx.jpg',
-                'negativeX' : '../../Images/PalmTreesCubeMap/negx.jpg',
-                'positiveY' : '../../Images/PalmTreesCubeMap/negy.jpg',
-                'negativeY' : '../../Images/PalmTreesCubeMap/posy.jpg',
-                'positiveZ' : '../../Images/PalmTreesCubeMap/posz.jpg',
-                'negativeZ' : '../../Images/PalmTreesCubeMap/negz.jpg'
-            },
+            'cubeMap' : 'agi_defaultCubeMap',
             'reflectionChannels' : 'rgb'
         },
-        'sourcePath' : 'ReflectionMaterial'
+        'source' : ReflectionMaterial
     });
 
     // Refraction Material
     Material.prototype._materialFactory.addMaterial('RefractionMaterial', {
         'id' : 'RefractionMaterial',
-        'redefine': 'true',
         'uniforms' : {
-            'cubeMap' : {
-                'positiveX' : '../../Images/PalmTreesCubeMap/posx.jpg',
-                'negativeX' : '../../Images/PalmTreesCubeMap/negx.jpg',
-                'positiveY' : '../../Images/PalmTreesCubeMap/negy.jpg',
-                'negativeY' : '../../Images/PalmTreesCubeMap/posy.jpg',
-                'positiveZ' : '../../Images/PalmTreesCubeMap/posz.jpg',
-                'negativeZ' : '../../Images/PalmTreesCubeMap/negz.jpg'
-            },
+            'cubeMap' : 'agi_defaultCubeMap',
             'refractionChannels' : 'rgb',
             'indexOfRefractionRatio' : 0.9
         },
-        'sourcePath' : 'RefractionMaterial'
+        'source' : RefractionMaterial
     });
 
     // Fresnel Material
     Material.prototype._materialFactory.addMaterial('FresnelMaterial' , {
         'id' : 'FresnelMaterial',
-        'redefine': 'true',
-        'uniforms' : {
-            'palmTreeCubeMap' : {
-                'positiveX' : '../../Images/PalmTreesCubeMap/posx.jpg',
-                'negativeX' : '../../Images/PalmTreesCubeMap/negx.jpg',
-                'positiveY' : '../../Images/PalmTreesCubeMap/negy.jpg',
-                'negativeY' : '../../Images/PalmTreesCubeMap/posy.jpg',
-                'positiveZ' : '../../Images/PalmTreesCubeMap/posz.jpg',
-                'negativeZ' : '../../Images/PalmTreesCubeMap/negz.jpg'
-            }
-        },
         'materials' : {
             'reflection' : {
-                'id' : 'ReflectionMaterial',
-                'cubeMap' : 'palmTreeCubeMap'
+                'id' : 'ReflectionMaterial'
             },
             'refraction' : {
-                'id' : 'RefractionMaterial',
-                'cubeMap' : 'palmTreeCubeMap'
+                'id' : 'RefractionMaterial'
             }
         },
-        'sourcePath' : 'FresnelMaterial'
+        'source' : FresnelMaterial
     });
 
     // Brick Material
     Material.prototype._materialFactory.addMaterial('BrickMaterial', {
         'id' : 'BrickMaterial',
-        'redefine': 'true',
         'uniforms' : {
             'brickColor' : {
                 'red': 0.6,
@@ -656,13 +631,12 @@ define([
             'brickRoughness' : 0.2,
             'mortarRoughness' : 0.1
         },
-        'sourcePath' : 'BrickMaterial'
+        'source' : BrickMaterial
     });
 
     // Wood Material
     Material.prototype._materialFactory.addMaterial('WoodMaterial', {
         'id' : 'WoodMaterial',
-        'redefine': 'true',
         'uniforms' : {
             'lightWoodColor' : {
                 'red' : 0.6,
@@ -683,13 +657,12 @@ define([
             },
             'grainFrequency' : 27.0
         },
-        'sourcePath' : 'WoodMaterial'
+        'source' : WoodMaterial
     });
 
     // Asphalt Material
     Material.prototype._materialFactory.addMaterial('AsphaltMaterial', {
         'id' : 'AsphaltMaterial',
-        'redefine': 'true',
         'uniforms' : {
             'asphaltColor' : {
                 'red' : 0.15,
@@ -700,13 +673,12 @@ define([
             'bumpSize' : 0.02,
             'roughness' : 0.2
         },
-        'sourcePath' : 'AsphaltMaterial'
+        'source' : AsphaltMaterial
     });
 
     // Cement Material
     Material.prototype._materialFactory.addMaterial('CementMaterial', {
         'id' : 'CementMaterial',
-        'redefine': 'true',
         'uniforms' : {
             'cementColor' : {
                 'red' : 0.95,
@@ -717,13 +689,12 @@ define([
             'grainScale' : 0.01,
             'roughness' : 0.3
         },
-        'sourcePath' : 'CementMaterial'
+        'source' : CementMaterial
     });
 
     // Grass Material
     Material.prototype._materialFactory.addMaterial('GrassMaterial', {
         'id' : 'GrassMaterial',
-        'redefine': 'true',
         'uniforms' : {
             'grassColor' : {
                 'red' : 0.25,
@@ -739,13 +710,12 @@ define([
             },
             'patchiness' : 1.5
         },
-        'sourcePath' : 'GrassMaterial'
+        'source' : GrassMaterial
     });
 
     // Horizontal Stripe Material
     Material.prototype._materialFactory.addMaterial('HorizontalStripeMaterial', {
         'id' : 'HorizontalStripeMaterial',
-        'redefine': 'true',
         'uniforms' : {
             'lightColor' : {
                 'red' : 1.0,
@@ -762,13 +732,12 @@ define([
             'offset' : 0.0,
             'repeat' : 5.0
         },
-        'sourcePath' : 'HorizontalStripeMaterial'
+        'source' : HorizontalStripeMaterial
     });
 
     // Vertical Stripe Material
     Material.prototype._materialFactory.addMaterial('VerticalStripeMaterial', {
         'id' : 'VerticalStripeMaterial',
-        'redefine': 'true',
         'uniforms' : {
             'lightColor' : {
                 'red' : 1.0,
@@ -785,13 +754,12 @@ define([
             'offset' : 0.0,
             'repeat' : 5.0
         },
-        'sourcePath' : 'VerticalStripeMaterial'
+        'source' : VerticalStripeMaterial
     });
 
     // Checkerboard Material
     Material.prototype._materialFactory.addMaterial('CheckerboardMaterial', {
         'id' : 'CheckerboardMaterial',
-        'redefine': 'true',
         'uniforms' : {
             'lightColor' : {
                 'red' : 1.0,
@@ -810,13 +778,12 @@ define([
                 'y' : 5.0
             }
         },
-        'sourcePath' : 'CheckerboardMaterial'
+        'source' : CheckerboardMaterial
     });
 
     // Dot Material
     Material.prototype._materialFactory.addMaterial('DotMaterial', {
         'id' : 'DotMaterial',
-        'redefine': 'true',
         'uniforms' : {
             'lightColor' : {
                 'red' : 1.0,
@@ -835,13 +802,12 @@ define([
                 'y' : 5.0
             }
         },
-        'sourcePath' : 'DotMaterial'
+        'source' : DotMaterial
     });
 
     // Tie-Dye Material
     Material.prototype._materialFactory.addMaterial('TieDyeMaterial', {
         'id' : 'TieDyeMaterial',
-        'redefine': 'true',
         'uniforms' : {
             'lightColor' : {
                 'red' : 1.0,
@@ -857,13 +823,12 @@ define([
             },
             'frequency' : 5.0
         },
-        'sourcePath' : 'TieDyeMaterial'
+        'source' : TieDyeMaterial
     });
 
     // Facet Material
     Material.prototype._materialFactory.addMaterial('FacetMaterial', {
         'id' : 'FacetMaterial',
-        'redefine': 'true',
         'uniforms' : {
             'lightColor' : {
                 'red' : 0.25,
@@ -879,13 +844,12 @@ define([
             },
             'frequency' : 10.0
         },
-        'sourcePath' : 'FacetMaterial'
+        'source' : FacetMaterial
     });
 
     // Blob Material
     Material.prototype._materialFactory.addMaterial('BlobMaterial', {
         'id' : 'BlobMaterial',
-        'redefine': 'true',
         'uniforms' : {
             'lightColor' : {
                 'red' : 1.0,
@@ -901,7 +865,7 @@ define([
             },
             'frequency' : 10.0
         },
-        'sourcePath' : 'BlobMaterial'
+        'source' : BlobMaterial
     });
 
     return Material;

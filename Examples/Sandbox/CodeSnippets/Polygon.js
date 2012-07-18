@@ -51,21 +51,11 @@
                             'red' : 1,
                             'green' : 0,
                             'blue' : 0,
-                            'alpha' : 1
+                            'alpha' : 0.75
                         }
-                    },
-                    'sourcePath' : 'ColorMaterial'
+                    }
                 }
              });
-
-            // The color's alpha component defines the polygon's opacity.
-            // 0 - completely transparent.  1.0 - completely opaque.
-            polygon.material.color = {
-                red : 1.0,
-                green : 0.0,
-                blue : 0.0,
-                alpha : 0.75
-            };
 
             primitives.add(polygon);
         };
@@ -75,45 +65,27 @@
         this.code = function() {
             var polygon = new Cesium.Polygon(undefined);
 
-            polygon.configureExtent(new Cesium.Extent(
-                Cesium.Math.toRadians(-180.0),
-                Cesium.Math.toRadians(-90.0),
-                Cesium.Math.toRadians(180.0),
-                Cesium.Math.toRadians(90.0)));
-
-            polygon.material.color = {
-                red: 1.0,
-                green: 1.0,
-                blue: 1.0,
-                alpha: 1.0
-            };
+            polygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([
+                Cesium.Cartographic.fromDegrees(-100.0, 20.0),
+                Cesium.Cartographic.fromDegrees(-70.0, 20.0),
+                Cesium.Cartographic.fromDegrees(-70.0, 33.0),
+                Cesium.Cartographic.fromDegrees(-100.0, 33.0)
+            ]));
 
             polygon.material = new Cesium.Material({
                 'context': scene.getContext(),
                 'template': {
                     'uniforms': {
-                        'texture': '../../Images/earthspec1k.jpg',
-                        'otherTexture': 'texture',
-                        'value': 0.5,
-                        'otherValue': 'value'
-                    },
-                    'materials': {
-                        'first': {
-                            'id': 'DiffuseMapMaterial',
-                            'uniforms': {
-                                'texture': 'texture',
-                                'amount' : 'value'
-                            },
-                            'components' : {
-                                'diffuse' : 'vec3(amount, 0.0, 0.0)',
-                                'alpha' : 'amount'
-                            }
+                        'values': [0.0, 0.5, 1.0, 1.0],
+                        'moreValues': {
+                            'type': 'bvec3',
+                            'x': 0,
+                            'y': 1,
+                            'z': 0
                         }
                     },
                     'components': {
-                        'diffuse': 'first.diffuse',
-                        'specular': 'texture2D(otherTexture, materialInput.st).r / 5.0',
-                        'alpha' : 'first.alpha'
+                        'diffuse': 'vec3(values[0].y, moreValues.y, 0.0)'
                     }
                 }
             });
@@ -143,9 +115,15 @@
                 'context': scene.getContext(),
                 'template': {
                     'uniforms': {
-                        'spectexture': '../../Images/earthspec1k.jpg'
+                        'texture': '../../Images/earthspec1k.jpg'
                     },
                     'materials': {
+                        'bumpMapMaterial': {
+                            'id': 'BumpMapMaterial',
+                            'uniforms' : {
+                                'texture' : '../../Images/earthbump1k.jpg'
+                            }
+                        },
                         'grassMaterial': {
                             'id': 'GrassMaterial'
                         },
@@ -168,20 +146,27 @@
                                     }
                                 },
                                 'reflectionMaterial': {
-                                    'id': 'ReflectionMaterial'
+                                    'id': 'ReflectionMaterial',
+                                    'uniforms' : {
+                                        'cubeMap' : {
+                                            'positiveX' : '../../Images/PalmTreesCubeMap/posx.jpg',
+                                            'negativeX' : '../../Images/PalmTreesCubeMap/negx.jpg',
+                                            'positiveY' : '../../Images/PalmTreesCubeMap/negy.jpg',
+                                            'negativeY' : '../../Images/PalmTreesCubeMap/posy.jpg',
+                                            'positiveZ' : '../../Images/PalmTreesCubeMap/posz.jpg',
+                                            'negativeZ' : '../../Images/PalmTreesCubeMap/negz.jpg'
+                                        }
+                                    }
                                 }
                             },
                             'components': {
                                 'diffuse': 'blobMaterial.diffuse + reflectionMaterial.diffuse * 0.1'
                             }
-                        },
-                        'bumpMapMaterial': {
-                            'id': 'BumpMapMaterial'
                         }
                     },
                     'components': {
-                        'diffuse': 'mix(grassMaterial.diffuse, waterMaterial.diffuse, texture2D(spectexture, materialInput.st).r)',
-                        'specular': 'texture2D(spectexture, materialInput.st).r / 10.0',
+                        'diffuse': 'mix(grassMaterial.diffuse, waterMaterial.diffuse, texture2D(texture, materialInput.st).r)',
+                        'specular': 'texture2D(texture, materialInput.st).r / 10.0',
                         'normal': 'bumpMapMaterial.normal'
                     }
                 }
@@ -214,7 +199,10 @@
                 'template': {
                     'materials' : {
                         'diffuse' : {
-                            'id' : 'DiffuseMapMaterial'
+                            'id' : 'DiffuseMapMaterial',
+                            'uniforms' : {
+                                'texture' : '../../Images/Cesium_Logo_Color.jpg'
+                            }
                         }
                     },
                     'source' :
@@ -232,46 +220,6 @@
     };
 
     Sandbox.CompositeMaterial4 = function (scene, ellipsoid, primitives) {
-        this.code = function() {
-            var polygon = new Cesium.Polygon(undefined);
-
-            polygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([
-                Cesium.Cartographic.fromDegrees(-100.0, 20.0),
-                Cesium.Cartographic.fromDegrees(-70.0, 20.0),
-                Cesium.Cartographic.fromDegrees(-70.0, 33.0),
-                Cesium.Cartographic.fromDegrees(-100.0, 33.0)
-            ]));
-
-            polygon.material.color = {
-                red: 1.0,
-                green: 1.0,
-                blue: 1.0,
-                alpha: 1.0
-            };
-
-            polygon.material = new Cesium.Material({
-                'context': scene.getContext(),
-                'template': {
-                    'uniforms' : {
-                        'texture' : '../../Images/Cesium_Logo_Color.jpg'
-                    },
-                    'source' :
-                        'agi_material agi_getMaterial(agi_materialInput materialInput)\n{\n' +
-                        'agi_material material = agi_getDefaultMaterial(materialInput);\n' +
-                        'vec2 distanceFromCenter = abs(materialInput.st - vec2(0.5));\n' +
-                        'vec4 textureValue = texture2D(texture, pow(distanceFromCenter, vec2(0.5)));\n' +
-                        'material.diffuse = textureValue.rgb;\n' +
-                        'return material;\n}\n',
-                    'components' : {
-                    }
-                }
-            });
-
-            primitives.add(polygon);
-        };
-    };
-
-    Sandbox.CompositeMaterial5 = function (scene, ellipsoid, primitives) {
         this.code = function() {
             var polygon = new Cesium.Polygon(undefined);
 
@@ -338,17 +286,27 @@
             polygon.material = new Cesium.Material({
                'context' : scene.getContext(),
                'template' : {
-                   'id' : 'DiffuseMapMaterial',
-                   'uniforms' : {
-                       'repeat' : {
-                           'x' : 1,
-                           'y' : 1
+                   'id' : 'DiffuseAlphaMapMaterial',
+                   'materials' : {
+                       'diffuse' : {
+                           'uniforms' : {
+                               'texture' : '../../Images/Cesium_Logo_Color.jpg',
+                               'repeat' : {
+                                   'x' : 1,
+                                   'y' : 1
+                               }
+                           }
                        },
-                       'texture' : '../../Images/Cesium_Logo_Color.jpg',
-                       'diffuseChannels' : 'rgb',
-                       'alphaChannel' : 'a'
-                   },
-                   'sourcePath' : 'DiffuseMapMaterial'
+                       'alpha' : {
+                           'uniforms' : {
+                               'texture' : '../../Images/Cesium_Logo_Color.jpg',
+                               'repeat' : {
+                                   'x' : 1,
+                                   'y' : 1
+                               }
+                           }
+                       }
+                   }
                }
             });
 
@@ -384,8 +342,7 @@
                             'x' : 1,
                             'y' : 1
                         }
-                    },
-                    'sourcePath' : 'AlphaMapMaterial'
+                    }
                 }
             });
 
@@ -421,8 +378,7 @@
                             'x' : 1,
                             'y' : 1
                         }
-                    },
-                    'sourcePath' : 'SpecularMapMaterial'
+                    }
                 }
             });
 
@@ -458,8 +414,7 @@
                             'x' : 1,
                             'y' : 1
                         }
-                    },
-                    'sourcePath' : 'EmissionMapMaterial'
+                    }
                 }
             });
 
@@ -487,19 +442,23 @@
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
                 'template' : {
-                    'id' : 'BumpMapMaterial',
-                    'uniforms' : {
-                        'texture' : '../../Images/earthbump1k.jpg',
-                        'bumpMapChannel' : 'r',
-                        'repeat' : {
-                            'x' : 1,
-                            'y' : 1
+                    'materials' : {
+                        'bumpMap' : {
+                            'id' : 'BumpMapMaterial',
+                            'uniforms' : {
+                                'texture' : '../../Images/earthbump1k.jpg',
+                                'bumpMapChannel' : 'r',
+                                'repeat' : {
+                                    'x' : 1,
+                                    'y' : 1
+                                }
+                            }
                         }
                     },
-                    'sourcePath' : 'BumpMapMaterial',
                     'components' : {
                         'diffuse' : 'vec3(0.3, 0.3, 0.3)',
-                        'specular' : '0.01'
+                        'specular' : 0.01,
+                        'normal' : 'bumpMap.normal'
                     }
                 }
             });
@@ -528,19 +487,23 @@
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
                 'template' : {
-                    'id' : 'NormalMapMaterial',
-                    'uniforms' : {
-                        'texture' : '../../Images/earthnormalmap.jpg',
-                        'normalMapChannels' : 'rgb',
-                        'repeat' : {
-                            'x' : 1,
-                            'y' : 1
+                    'materials' : {
+                        'normalMap' : {
+                            'id' : 'NormalMapMaterial',
+                            'uniforms' : {
+                                'texture' : '../../Images/earthnormalmap.jpg',
+                                'normalMapChannels' : 'rgb',
+                                'repeat' : {
+                                    'x' : 1,
+                                    'y' : 1
+                                }
+                            }
                         }
                     },
-                    'sourcePath' : 'NormalMapMaterial',
                     'components' : {
                         'diffuse' : 'vec3(0.3, 0.3, 0.3)',
-                        'specular' : '0.01'
+                        'specular' : 0.01,
+                        'normal' : 'normalMap.normal'
                     }
                 }
             });
@@ -580,8 +543,7 @@
                             'negativeZ' : '../../Images/PalmTreesCubeMap/negz.jpg'
                         },
                         'reflectionChannels' : 'rgb'
-                    },
-                    'sourcePath' : 'ReflectionMaterial'
+                    }
                 }
             });
 
@@ -621,8 +583,7 @@
                         },
                         'refractionChannels' : 'rgb',
                         'indexOfRefractionRatio' : 0.9
-                    },
-                    'sourcePath' : 'RefractionMaterial'
+                    }
                 }
             });
 
@@ -651,27 +612,32 @@
                 'context' : scene.getContext(),
                 'template' : {
                     'id' : 'FresnelMaterial',
-                    'uniforms' : {
-                        'palmTreeCubeMap' : {
-                            'positiveX' : '../../Images/PalmTreesCubeMap/posx.jpg',
-                            'negativeX' : '../../Images/PalmTreesCubeMap/negx.jpg',
-                            'positiveY' : '../../Images/PalmTreesCubeMap/negy.jpg',
-                            'negativeY' : '../../Images/PalmTreesCubeMap/posy.jpg',
-                            'positiveZ' : '../../Images/PalmTreesCubeMap/posz.jpg',
-                            'negativeZ' : '../../Images/PalmTreesCubeMap/negz.jpg'
-                        }
-                    },
                     'materials' : {
                         'reflection' : {
-                            'id' : 'ReflectionMaterial',
-                            'cubeMap' : 'palmTreeCubeMap'
+                            'uniforms' : {
+                                'cubeMap' : {
+                                    'positiveX' : '../../Images/PalmTreesCubeMap/posx.jpg',
+                                    'negativeX' : '../../Images/PalmTreesCubeMap/negx.jpg',
+                                    'positiveY' : '../../Images/PalmTreesCubeMap/negy.jpg',
+                                    'negativeY' : '../../Images/PalmTreesCubeMap/posy.jpg',
+                                    'positiveZ' : '../../Images/PalmTreesCubeMap/posz.jpg',
+                                    'negativeZ' : '../../Images/PalmTreesCubeMap/negz.jpg'
+                                }
+                            }
                         },
                         'refraction' : {
-                            'id' : 'RefractionMaterial',
-                            'cubeMap' : 'palmTreeCubeMap'
+                            'uniforms' : {
+                                'cubeMap' : {
+                                    'positiveX' : '../../Images/PalmTreesCubeMap/posx.jpg',
+                                    'negativeX' : '../../Images/PalmTreesCubeMap/negx.jpg',
+                                    'positiveY' : '../../Images/PalmTreesCubeMap/negy.jpg',
+                                    'negativeY' : '../../Images/PalmTreesCubeMap/posy.jpg',
+                                    'positiveZ' : '../../Images/PalmTreesCubeMap/posz.jpg',
+                                    'negativeZ' : '../../Images/PalmTreesCubeMap/negz.jpg'
+                                }
+                            }
                         }
-                    },
-                    'sourcePath' : 'FresnelMaterial'
+                    }
                 }
             });
 
@@ -716,8 +682,7 @@
                         },
                         'brickRoughness' : 0.2,
                         'mortarRoughness' : 0.1
-                    },
-                    'sourcePath' : 'BrickMaterial'
+                    }
                 }
             });
 
@@ -758,8 +723,7 @@
                             'y' : 0.5
                         },
                         'grainFrequency' : 27.0
-                    },
-                    'sourcePath' : 'WoodMaterial'
+                    }
                 }
             });
 
@@ -789,8 +753,7 @@
                         },
                         'bumpSize' : 0.02,
                         'roughness' : 0.2
-                    },
-                    'sourcePath' : 'AsphaltMaterial'
+                    }
                 }
             });
 
@@ -820,8 +783,7 @@
                         },
                         'grainScale' : 0.01,
                         'roughness' : 0.3
-                    },
-                    'sourcePath' : 'CementMaterial'
+                    }
                 }
             });
 
@@ -857,8 +819,7 @@
                             'alpha' : 1.0
                         },
                         'patchiness' : 1.5
-                    },
-                    'sourcePath' : 'GrassMaterial'
+                    }
                 }
             });
 
@@ -895,8 +856,7 @@
                         },
                         'offset' : 0.0,
                         'repeat' : 5.0
-                    },
-                    'sourcePath' : 'VerticalStripeMaterial'
+                    }
                 }
             });
 
@@ -935,8 +895,7 @@
                             'x' : 5.0,
                             'y' : 5.0
                         }
-                    },
-                    'sourcePath' : 'CheckerboardMaterial'
+                    }
                 }
             });
 
@@ -976,8 +935,7 @@
                             'x' : 5.0,
                             'y' : 5.0
                         }
-                    },
-                    'sourcePath' : 'DotMaterial'
+                    }
                 }
             });
 
@@ -1013,8 +971,7 @@
                             'alpha' : 0.75
                         },
                         'frequency' : 5.0
-                    },
-                    'sourcePath' : 'TieDyeMaterial'
+                    }
                 }
             });
 
@@ -1050,8 +1007,7 @@
                             'alpha' : 0.75
                         },
                         'frequency' : 10.0
-                    },
-                    'sourcePath' : 'FacetMaterial'
+                    }
                 }
             });
 
@@ -1087,8 +1043,7 @@
                             'alpha' : 0.5
                         },
                         'frequency' : 10.0
-                    },
-                    'sourcePath' : 'BlobMaterial'
+                    }
                 }
             });
 
