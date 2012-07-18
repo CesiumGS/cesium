@@ -4,6 +4,7 @@ define([
         '../Core/RuntimeError',
         '../Core/destroyObject',
         '../Core/Math',
+        '../Core/Matrix2',
         '../Core/Matrix4',
         './UniformDatatype'
     ], function(
@@ -11,6 +12,7 @@ define([
         RuntimeError,
         destroyObject,
         CesiumMath,
+        Matrix2,
         Matrix4,
         UniformDatatype) {
     "use strict";
@@ -160,7 +162,7 @@ define([
      * </tr>
      * <tr>
      * <td><code>uniform mat2 u_mat2; </code></td>
-     * <td><code> sp.getAllUniforms().u_mat2.value = Matrix2.fromComponents(1.0, 2.0, 3.0, 4.0);</code></td>
+     * <td><code> sp.getAllUniforms().u_mat2.value = new Matrix2(1.0, 2.0, 3.0, 4.0);</code></td>
      * </tr>
      * <tr>
      * <td><code>uniform mat3 u_mat3; </code></td>
@@ -363,7 +365,7 @@ define([
                 };
             case _gl.FLOAT_MAT2:
                 return function() {
-                    _gl.uniformMatrix2fv(_location, false, this.value.values);
+                    _gl.uniformMatrix2fv(_location, false, Matrix2.toArray(this.value));
                 };
             case _gl.FLOAT_MAT3:
                 return function() {
@@ -501,7 +503,7 @@ define([
             case _gl.FLOAT_MAT2:
                 return function() {
                     for ( var i = 0; i < _locations.length; ++i) {
-                        _gl.uniformMatrix2fv(_locations[i], false, this.value[i].values);
+                        _gl.uniformMatrix2fv(_locations[i], false, Matrix2.toArray(this.value[i]));
                     }
                 };
             case _gl.FLOAT_MAT3:
