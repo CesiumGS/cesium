@@ -6,7 +6,7 @@
         this.code = function () {
             var labels = new Cesium.LabelCollection(undefined);
             labels.add({
-                position : ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic2(-75.10, 39.57)),
+                position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.10, 39.57)),
                 text     : 'Philadelphia'
             });
 
@@ -18,15 +18,15 @@
         this.code = function () {
             var labels = new Cesium.LabelCollection(undefined);
             labels.add({
-                position : ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic2(-75.10, 39.57)),
+                position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.10, 39.57)),
                 text     : 'Philadelphia'
             });
             labels.add({
-                position : ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic2(-80.50, 35.14)),
+                position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-80.50, 35.14)),
                 text     : 'Charlotte'
             });
             labels.add({
-                position : ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic2(-80.12, 25.46)),
+                position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-80.12, 25.46)),
                 text     : 'Miami'
             });
 
@@ -38,7 +38,7 @@
         this.code = function () {
             var labels = new Cesium.LabelCollection(undefined);
             labels.add({
-                position  : ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic2(-75.10, 39.57)),
+                position  : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.10, 39.57)),
                 text      : 'Philadelphia',
                 // CSS font-family
                 font      : '36px Helvetica',
@@ -55,11 +55,11 @@
         this.code = function () {
             var labels = new Cesium.LabelCollection(undefined);
             var l = labels.add({
-                position : ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic2(-75.10, 39.57)),
+                position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.10, 39.57)),
                 text     : 'Philadelphia'
             });
 
-            l.setPosition(ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic3(-75.10, 39.57, 300000.0)));
+            l.setPosition(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.10, 39.57, 300000.0)));
             l.setScale(2.0);
 
             primitives.add(labels);
@@ -68,7 +68,7 @@
 
     Sandbox.LabelReferenceFrame = function (scene, ellipsoid, primitives) {
         this.code = function () {
-            var center = ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic2(-75.59777, 40.03883));
+            var center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883));
 
             var labels = new Cesium.LabelCollection(undefined);
             labels.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);

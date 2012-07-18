@@ -3,14 +3,12 @@ define([
         './DeveloperError',
         './JulianDate',
         './ClockStep',
-        './ClockRange',
-        './TimeStandard'
+        './ClockRange'
        ], function(
          DeveloperError,
          JulianDate,
          ClockStep,
-         ClockRange,
-         TimeStandard) {
+         ClockRange) {
     "use strict";
 
     /**
@@ -93,19 +91,19 @@ define([
          * The start time of the clock.
          * @type JulianDate
          */
-        this.startTime = TimeStandard.convertUtcToTai(startTime);
+        this.startTime = startTime;
 
         /**
          * The stop time of the clock.
          * @type JulianDate
          */
-        this.stopTime = TimeStandard.convertUtcToTai(stopTime);
+        this.stopTime = stopTime;
 
         /**
          * The current time.
          * @type JulianDate
          */
-        this.currentTime = TimeStandard.convertUtcToTai(currentTime);
+        this.currentTime = currentTime;
 
         /**
          * Determines how much time advances when tick is called, negative values allow for advancing backwards.

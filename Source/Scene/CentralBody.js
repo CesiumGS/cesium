@@ -16,7 +16,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
-        '../Core/Cartographic2',
+        '../Core/Cartographic',
         '../Core/Matrix3',
         '../Core/Queue',
         '../Core/ComponentDatatype',
@@ -71,7 +71,7 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
-        Cartographic2,
+        Cartographic,
         Matrix3,
         Queue,
         ComponentDatatype,
@@ -1116,11 +1116,11 @@ define([
                         y : Math.max(Math.ceil(height / gran), 2.0)
                     },
                     onInterpolation : function(time) {
-                        var lonLat = new Cartographic2(
+                        var lonLat = new Cartographic(
                                 CesiumMath.lerp(tile.extent.west, tile.extent.east, time.x),
                                 CesiumMath.lerp(tile.extent.south, tile.extent.north, time.y));
 
-                        var p = ellipsoid.toCartesian(lonLat).subtract(rtc);
+                        var p = ellipsoid.cartographicToCartesian(lonLat).subtract(rtc);
                         vertices.push(p.x, p.y, p.z);
 
                         var u = (lonLat.longitude - tile.extent.west) * lonScalar;
@@ -1174,7 +1174,7 @@ define([
                     return rtc;
                 },
                 u_center2D : function() {
-                    return (projectedRTC) ? projectedRTC.getXY() : Cartesian2.ZERO;
+                    return (projectedRTC) ? Cartesian2.fromCartesian3(projectedRTC) : Cartesian2.ZERO;
                 },
                 u_modifiedModelView : function() {
                     return tile.modelView;
@@ -1282,8 +1282,8 @@ define([
             tileHeight = provider.tileHeight;
         }
 
-        var a = projection.project(new Cartographic2(tile.extent.west, tile.extent.north)).getXY();
-        var b = projection.project(new Cartographic2(tile.extent.east, tile.extent.south)).getXY();
+        var a = projection.project(new Cartographic(tile.extent.west, tile.extent.north));
+        var b = projection.project(new Cartographic(tile.extent.east, tile.extent.south));
         var diagonal = a.subtract(b);
         var texelSize = Math.max(diagonal.x, diagonal.y) / Math.max(tileWidth, tileHeight);
         var pixelSize = Math.max(frustum.top - frustum.bottom, frustum.right - frustum.left) / Math.max(viewportWidth, viewportHeight);
@@ -1313,13 +1313,13 @@ define([
         var center = upperLeft.add(lowerRight).multiplyWithScalar(0.5);
         var centerScreen = mvp.multiplyWithVector(new Cartesian4(center.x, center.y, center.z, 1.0));
         centerScreen = centerScreen.multiplyWithScalar(1.0 / centerScreen.w);
-        var centerClip = clip.multiplyWithVector(centerScreen).getXYZ();
+        var centerClip = clip.multiplyWithVector(centerScreen);
 
         var surfaceScreen = mvp.multiplyWithVector(new Cartesian4(upperLeft.x, upperLeft.y, upperLeft.z, 1.0));
         surfaceScreen = surfaceScreen.multiplyWithScalar(1.0 / surfaceScreen.w);
-        var surfaceClip = clip.multiplyWithVector(surfaceScreen).getXYZ();
+        var surfaceClip = clip.multiplyWithVector(surfaceScreen);
 
-        var radius = Math.ceil(surfaceClip.subtract(centerClip).magnitude());
+        var radius = Math.ceil(Cartesian3.magnitude(surfaceClip.subtract(centerClip, surfaceClip)));
         var diameter = 2.0 * radius;
 
         return {
@@ -1365,11 +1365,11 @@ define([
     };
 
     CentralBody.prototype._computePoleQuad = function(sceneState, maxLat, maxGivenLat, viewProjMatrix, viewportTransformation) {
-        var pt1 = this._ellipsoid.toCartesian(new Cartographic2(0.0, maxGivenLat));
-        var pt2 = this._ellipsoid.toCartesian(new Cartographic2(Math.PI, maxGivenLat));
+        var pt1 = this._ellipsoid.cartographicToCartesian(new Cartographic(0.0, maxGivenLat));
+        var pt2 = this._ellipsoid.cartographicToCartesian(new Cartographic(Math.PI, maxGivenLat));
         var radius = pt1.subtract(pt2).magnitude() * 0.5;
 
-        var center = this._ellipsoid.toCartesian(new Cartographic2(0.0, maxLat));
+        var center = this._ellipsoid.cartographicToCartesian(new Cartographic(0.0, maxLat));
 
         var right;
         var dir = sceneState.camera.direction;
@@ -1971,7 +1971,7 @@ define([
             }
         } else {
             // after the camera passes the minimum height, there is no ground atmosphere effect
-            var showAtmosphere = this._ellipsoid.toCartographic3(cameraPosition).height >= this._minGroundFromAtmosphereHeight;
+            var showAtmosphere = this._ellipsoid.cartesianToCartographic(cameraPosition).height >= this._minGroundFromAtmosphereHeight;
             if (this.showGroundAtmosphere && showAtmosphere) {
                 this._sp = this._spGroundFromAtmosphere;
                 this._spPoles = this._spPolesGroundFromAtmosphere;

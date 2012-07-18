@@ -8,7 +8,7 @@ define([
         '../Core/IntersectionTests',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
-        '../Core/Cartographic3',
+        '../Core/Cartographic',
         '../Core/Matrix4',
         '../Core/Ray',
         './CameraControllerCollection',
@@ -22,7 +22,7 @@ define([
         IntersectionTests,
         Cartesian3,
         Cartesian4,
-        Cartographic3,
+        Cartographic,
         Matrix4,
         Ray,
         CameraControllerCollection,
@@ -210,10 +210,10 @@ define([
             east += CesiumMath.TWO_PI;
         }
 
-        var lla = new Cartographic3(0.5 * (west + east), 0.5 * (north + south), 0.0);
-        var northVector = ellipsoid.toCartesian(new Cartographic3(lla.longitude, north, 0.0));
-        var eastVector = ellipsoid.toCartesian(new Cartographic3(east, lla.latitude, 0.0));
-        var centerVector = ellipsoid.toCartesian(lla);
+        var lla = new Cartographic(0.5 * (west + east), 0.5 * (north + south), 0.0);
+        var northVector = ellipsoid.cartographicToCartesian(new Cartographic(lla.longitude, north, 0.0));
+        var eastVector = ellipsoid.cartographicToCartesian(new Cartographic(east, lla.latitude, 0.0));
+        var centerVector = ellipsoid.cartographicToCartesian(lla);
         var invTanHalfPerspectiveAngle = 1.0 / Math.tan(0.5 * this.frustum.fovy);
         var screenViewDistanceX;
         var screenViewDistanceY;
@@ -231,7 +231,7 @@ define([
         }
         lla.height += Math.max(screenViewDistanceX, screenViewDistanceY);
 
-        this.position = ellipsoid.toCartesian(lla);
+        this.position = ellipsoid.cartographicToCartesian(lla);
         this.direction = Cartesian3.ZERO.subtract(centerVector).normalize();
         this.right = this.direction.cross(Cartesian3.UNIT_Z).normalize();
         this.up = this.right.cross(this.direction);
@@ -286,19 +286,19 @@ define([
         }
 
         if (positionChanged || transformChanged) {
-            this._positionWC = transform.multiplyWithVector(new Cartesian4(position.x, position.y, position.z, 1.0)).getXYZ();
+            this._positionWC = Cartesian3.fromCartesian4(transform.multiplyWithVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
         }
 
         if (directionChanged || transformChanged) {
-            this._directionWC = transform.multiplyWithVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)).getXYZ();
+            this._directionWC = Cartesian3.fromCartesian4(transform.multiplyWithVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
         }
 
         if (upChanged || transformChanged) {
-            this._upWC = transform.multiplyWithVector(new Cartesian4(up.x, up.y, up.z, 0.0)).getXYZ();
+            this._upWC = Cartesian3.fromCartesian4(transform.multiplyWithVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
         }
 
         if (rightChanged || transformChanged) {
-            this._rightWC = transform.multiplyWithVector(new Cartesian4(right.x, right.y, right.z, 0.0)).getXYZ();
+            this._rightWC = Cartesian3.fromCartesian4(transform.multiplyWithVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
         }
 
         if (positionChanged || directionChanged || upChanged || transformChanged) {
@@ -526,7 +526,7 @@ define([
             return undefined;
         }
 
-        return projection.getEllipsoid().toCartesian(cart);
+        return projection.getEllipsoid().cartographicToCartesian(cart);
     };
 
     /**
@@ -561,7 +561,7 @@ define([
             return undefined;
         }
 
-        position = projection.getEllipsoid().toCartesian(cart);
+        position = projection.getEllipsoid().cartographicToCartesian(cart);
         return position;
     };
 

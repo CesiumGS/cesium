@@ -5,9 +5,10 @@ define([
         '../Core/EventHandler',
         '../Core/MouseEventType',
         '../Core/Ellipsoid',
+        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
-        '../Core/Cartographic3',
+        '../Core/Cartographic',
         '../Core/Matrix4',
         '../ThirdParty/Tween',
         './OrthographicFrustum',
@@ -19,9 +20,10 @@ define([
         EventHandler,
         MouseEventType,
         Ellipsoid,
+        Cartesian2,
         Cartesian3,
         Cartesian4,
-        Cartographic3,
+        Cartographic,
         Matrix4,
         Tween,
         OrthographicFrustum,
@@ -308,9 +310,9 @@ define([
         var frame = transform.inverseTransformation().multiplyWithMatrix(camera.transform);
         camera.transform = transform.clone();
 
-        camera.position = frame.multiplyWithVector(pos).getXYZ();
-        camera.direction = frame.multiplyWithVector(dir).getXYZ();
-        camera.up = frame.multiplyWithVector(up).getXYZ();
+        camera.position = Cartesian3.fromCartesian4(frame.multiplyWithVector(pos));
+        camera.direction = Cartesian3.fromCartesian4(frame.multiplyWithVector(dir));
+        camera.up = Cartesian3.fromCartesian4(frame.multiplyWithVector(up));
         camera.right = camera.direction.cross(camera.up);
     };
 
@@ -461,7 +463,7 @@ define([
         }
 
         var partialDuration = (endTime - startTime) * duration;
-        if (partialDuration === 0 && startPos.getXY().subtract(endPos2D.getXY()).magnitude() !== 0) {
+        if (partialDuration === 0 && Cartesian2.magnitude(Cartesian2.subtract(startPos, endPos2D, startPos)) !== 0) {
             partialDuration = duration;
             startTime = 0.0;
             endTime = 1.0;
@@ -599,7 +601,7 @@ define([
         var startUp = camera.up;
 
         var maxRadii = this._ellipsoid.getMaximumRadius();
-        var endPos = this._ellipsoid.toCartesian(new Cartographic3(0.0, 0.0, 10.0));
+        var endPos = this._ellipsoid.cartographicToCartesian(new Cartographic(0.0, 0.0, 10.0));
         endPos = endPos.normalize().multiplyWithScalar(2.0 * maxRadii);
         var endDir = Cartesian3.ZERO.subtract(endPos).normalize();
         var endRight = endDir.cross(Cartesian3.UNIT_Z).normalize();
