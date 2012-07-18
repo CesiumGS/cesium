@@ -10,17 +10,19 @@ defineSuite([
 
     it('default constructor creates values array with all zeros.', function() {
         var matrix = new Matrix2();
-        expect(matrix.values[0]).toEqual(0.0);
-        expect(matrix.values[1]).toEqual(0.0);
-        expect(matrix.values[2]).toEqual(0.0);
-        expect(matrix.values[3]).toEqual(0.0);
-        expect(matrix.values.length).toEqual(4);
+        expect(matrix[0]).toEqual(0.0);
+        expect(matrix[1]).toEqual(0.0);
+        expect(matrix[2]).toEqual(0.0);
+        expect(matrix[3]).toEqual(0.0);
     });
 
     it('constructor sets properties from parameters.', function() {
         var expected = [1.0, 2.0, 3.0, 4.0];
         var matrix = new Matrix2(expected);
-        expect(matrix.values).toBe(expected);
+        expect(matrix[0]).toEqual(1.0);
+        expect(matrix[1]).toEqual(2.0);
+        expect(matrix[2]).toEqual(3.0);
+        expect(matrix[3]).toEqual(4.0);
     });
 
     it('fromComponents works without a result parameter', function() {
@@ -493,7 +495,6 @@ defineSuite([
             Matrix2.transpose(undefined);
         }).toThrow();
     });
-
 
     it('static equalsEpsilon throws with non-number parameter', function() {
         expect(function() {
