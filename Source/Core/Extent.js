@@ -22,15 +22,15 @@ define([
     "use strict";
 
     /**
-     * Two-dimensional coordinates given in latitude and longitude.
+     * A two dimensional region specified as longitude and latitude coordinates.
      *
      * @alias Extent
      * @constructor
      *
-     * @param {Number} north The northernmost latitude in the range [-Pi/2, Pi/2].
-     * @param {Number} east The easternmost longitude in the range [-Pi, Pi].
-     * @param {Number} south The southernmost latitude in the range [-Pi/2, Pi/2].
      * @param {Number} west The westernmost longitude in the range [-Pi, Pi].
+     * @param {Number} south The southernmost latitude in the range [-Pi/2, Pi/2].
+     * @param {Number} east The easternmost longitude in the range [-Pi, Pi].
+     * @param {Number} north The northernmost latitude in the range [-Pi/2, Pi/2].
      *
      * @exception {DeveloperError} One of the parameters is out of range.
      */

@@ -1,9 +1,13 @@
 /*global define*/
-define(['./DeveloperError'], function(DeveloperError) {
+define([
+        './DeveloperError'
+    ], function(
+        DeveloperError) {
     "use strict";
 
     /**
-     * DOC_TBA
+     * Combines the objects passed as arguments into a single result object containing
+     * all properties from all objects.
      *
      * @exports combine
      *
