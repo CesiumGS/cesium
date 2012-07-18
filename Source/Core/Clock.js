@@ -56,12 +56,12 @@ define([
             stopTime = currentTime.addDays(0.5);
         } else if (startTimeUndefined && currentTimeUndefined) {
             startTime = stopTime.addDays(-1.0);
-            currentTime = stopTime.addDays(0.5);
+            currentTime = stopTime.addDays(-0.5);
         } else if (currentTimeUndefined && stopTimeUndefined) {
             currentTime = startTime.addDays(0.5);
             stopTime = startTime.addDays(1.0);
         } else if (currentTimeUndefined) {
-            currentTime = startTime.addSeconds(startTime.secondsDifference(stopTime));
+            currentTime = startTime.addSeconds(startTime.getSecondsDifference(stopTime) / 2.0);
         } else if (stopTimeUndefined) {
             stopTime = currentTime.addDays(0.5);
         } else if (startTimeUndefined) {
