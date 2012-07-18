@@ -390,8 +390,8 @@ defineSuite([
         var mInverse = m.inverseTransformation();
 
         var v = new Cartesian4(1, 2, 3, 1);
-        var vPrime = m.multiplyWithVector(v);
-        var vv = mInverse.multiplyWithVector(vPrime);
+        var vPrime = m.multiplyByVector(v);
+        var vv = mInverse.multiplyByVector(vPrime);
 
         expect(v.equals(vv)).toEqual(true);
     });
@@ -406,8 +406,8 @@ defineSuite([
         var mInverse = m.inverseTransformation();
 
         var v = new Cartesian4(1, 2, 3, 1);
-        var vPrime = m.multiplyWithVector(v);
-        var vv = mInverse.multiplyWithVector(vPrime);
+        var vPrime = m.multiplyByVector(v);
+        var vv = mInverse.multiplyByVector(vPrime);
 
         expect(v.equals(vv)).toEqual(true);
     });
@@ -421,21 +421,21 @@ defineSuite([
         var m = new Matrix4(rotation, translation);
         var mInverse = m.inverseTransformation();
 
-        expect(Matrix4.IDENTITY.equals(mInverse.multiplyWithMatrix(m))).toEqual(true);
+        expect(Matrix4.IDENTITY.equals(mInverse.multiply(m))).toEqual(true);
     });
 
     it('inverse0', function() {
         var m = new Matrix4(Matrix3.IDENTITY, Cartesian3.ZERO);
         var mInverse = m.inverse();
 
-        expect(Matrix4.IDENTITY.equals(mInverse.multiplyWithMatrix(m))).toEqual(true);
+        expect(Matrix4.IDENTITY.equals(mInverse.multiply(m))).toEqual(true);
     });
 
     it('inverse1', function() {
         var m = new Matrix4(Matrix3.IDENTITY, new Cartesian3(1, 2, 3));
         var mInverse = m.inverse();
 
-        expect(Matrix4.IDENTITY.equals(mInverse.multiplyWithMatrix(m))).toEqual(true);
+        expect(Matrix4.IDENTITY.equals(mInverse.multiply(m))).toEqual(true);
     });
 
     it('inverse2', function() {
@@ -445,7 +445,7 @@ defineSuite([
                              0.00,  0.00, 0.00,  1.00);
         var mInverse = m.inverse();
 
-        expect(Matrix4.IDENTITY.equalsEpsilon(mInverse.multiplyWithMatrix(m), CesiumMath.EPSILON10)).toEqual(true);
+        expect(Matrix4.IDENTITY.equalsEpsilon(mInverse.multiply(m), CesiumMath.EPSILON10)).toEqual(true);
     });
 
     it('inverse3', function() {
@@ -479,38 +479,38 @@ defineSuite([
         expect(m.transpose().transpose().equals(m)).toEqual(true);
     });
 
-    it('multiplyWithVector0', function() {
+    it('multiplyByVector0', function() {
         var m = new Matrix4(1);
         var v = new Cartesian4(1, 2, 3, 4);
-        expect(m.multiplyWithVector(v).equals(v)).toEqual(true);
+        expect(m.multiplyByVector(v).equals(v)).toEqual(true);
     });
 
-    it('multiplyWithVector1', function() {
+    it('multiplyByVector1', function() {
         var m = new Matrix4(2);
         var v = new Cartesian4(1, 2, 3, 4);
         var u = new Cartesian4(2, 4, 6, 8);
-        expect(m.multiplyWithVector(v).equals(u)).toEqual(true);
+        expect(m.multiplyByVector(v).equals(u)).toEqual(true);
     });
 
-    it('multiplyWithMatrix0', function() {
+    it('multiply0', function() {
         var zero = new Matrix4(0);
         var m = new Matrix4( 1,  2,  3,  4,
                              5,  6,  7,  8,
                              9, 10, 11, 12,
                             13, 14, 15, 16);
-        expect(zero.multiplyWithMatrix(m).equals(zero)).toEqual(true);
+        expect(zero.multiply(m).equals(zero)).toEqual(true);
     });
 
-    it('multiplyWithMatrix1', function() {
+    it('multiply1', function() {
         var i = Matrix4.IDENTITY;
         var m = new Matrix4( 1,  2,  3,  4,
                              5,  6,  7,  8,
                              9, 10, 11, 12,
                             13, 14, 15, 16);
-        expect(i.multiplyWithMatrix(m).equals(m)).toEqual(true);
+        expect(i.multiply(m).equals(m)).toEqual(true);
     });
 
-    it('multiplyWithMatrix2', function() {
+    it('multiply2', function() {
         var m = new Matrix4(1, 1, 1, 1,
                             1, 1, 1, 1,
                             1, 1, 1, 1,
@@ -519,7 +519,7 @@ defineSuite([
                                  4, 4, 4, 4,
                                  4, 4, 4, 4,
                                  4, 4, 4, 4);
-        expect(m.multiplyWithMatrix(m).equals(result)).toEqual(true);
+        expect(m.multiply(m).equals(result)).toEqual(true);
     });
 
     it('negate', function() {

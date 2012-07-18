@@ -210,7 +210,7 @@ define([
 
             var camera = scene.getCamera(), maxRadii = ellipsoid.getRadii().getMaximumComponent();
 
-            camera.position = camera.position.multiplyWithScalar(1.5);
+            camera.position = camera.position.multiplyByScalar(1.5);
             camera.frustum.near = 0.0002 * maxRadii;
             camera.frustum.far = 50.0 * maxRadii;
 

@@ -83,10 +83,10 @@ define([
         this._spindleController.constrainedAxis = Cartesian3.UNIT_Z;
 
         var invTransform = camera.getInverseTransform();
-        camera.position = Cartesian3.fromCartesian4(invTransform.multiplyWithVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
-        camera.up = Cartesian3.fromCartesian4(invTransform.multiplyWithVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
-        camera.right = Cartesian3.fromCartesian4(invTransform.multiplyWithVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
-        camera.direction = Cartesian3.fromCartesian4(invTransform.multiplyWithVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
+        camera.position = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
+        camera.up = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
+        camera.right = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
+        camera.direction = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
 
         this._spindleController._rotate(movement);
 
@@ -98,10 +98,10 @@ define([
         this._spindleController.setReferenceFrame(oldTransform, oldEllipsoid);
         this._spindleController.constrainedAxis = oldConstrainedZ;
 
-        camera.position = Cartesian3.fromCartesian4(transform.multiplyWithVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
-        camera.up = Cartesian3.fromCartesian4(transform.multiplyWithVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
-        camera.right = Cartesian3.fromCartesian4(transform.multiplyWithVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
-        camera.direction = Cartesian3.fromCartesian4(transform.multiplyWithVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
+        camera.position = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
+        camera.up = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
+        camera.right = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
+        camera.direction = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
     };
 
     /**

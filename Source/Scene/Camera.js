@@ -71,7 +71,7 @@ define([
         this._invTransform = Matrix4.IDENTITY;
 
         var maxRadii = Ellipsoid.WGS84.getRadii().getMaximumComponent();
-        var position = new Cartesian3(0.0, -2.0, 1.0).normalize().multiplyWithScalar(2.0 * maxRadii);
+        var position = new Cartesian3(0.0, -2.0, 1.0).normalize().multiplyByScalar(2.0 * maxRadii);
 
         /**
          * The position of the camera.
@@ -247,7 +247,7 @@ define([
                                       u.x,  u.y,  u.z, -u.dot(e),
                                      -d.x, -d.y, -d.z,  d.dot(e),
                                       0.0,  0.0,  0.0,      1.0);
-        this._viewMatrix = viewMatrix.multiplyWithMatrix(this._invTransform);
+        this._viewMatrix = viewMatrix.multiply(this._invTransform);
 
         this._invViewMatrix = this._viewMatrix.inverseTransformation();
     };
@@ -286,19 +286,19 @@ define([
         }
 
         if (positionChanged || transformChanged) {
-            this._positionWC = Cartesian3.fromCartesian4(transform.multiplyWithVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
+            this._positionWC = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
         }
 
         if (directionChanged || transformChanged) {
-            this._directionWC = Cartesian3.fromCartesian4(transform.multiplyWithVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
+            this._directionWC = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
         }
 
         if (upChanged || transformChanged) {
-            this._upWC = Cartesian3.fromCartesian4(transform.multiplyWithVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
+            this._upWC = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
         }
 
         if (rightChanged || transformChanged) {
-            this._rightWC = Cartesian3.fromCartesian4(transform.multiplyWithVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
+            this._rightWC = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
         }
 
         if (positionChanged || directionChanged || upChanged || transformChanged) {
@@ -314,7 +314,7 @@ define([
 
                 var invUpMag = 1.0 / up.magnitudeSquared();
                 var scalar = up.dot(direction) * invUpMag;
-                var w0 = direction.multiplyWithScalar(scalar);
+                var w0 = direction.multiplyByScalar(scalar);
                 up = this._up = up.subtract(w0).normalize();
                 this.up = up.clone();
 
@@ -417,9 +417,9 @@ define([
         var y = (2.0 / height) * (height - windowPosition.y) - 1.0;
 
         var position = this.getPositionWC();
-        var nearCenter = position.add(this.getDirectionWC().multiplyWithScalar(near));
-        var xDir = this.getRightWC().multiplyWithScalar(x * near * tanTheta);
-        var yDir = this.getUpWC().multiplyWithScalar(y * near * tanPhi);
+        var nearCenter = position.add(this.getDirectionWC().multiplyByScalar(near));
+        var xDir = this.getRightWC().multiplyByScalar(x * near * tanTheta);
+        var yDir = this.getUpWC().multiplyByScalar(y * near * tanPhi);
         var direction = nearCenter.add(xDir).add(yDir).subtract(position).normalize();
 
         return new Ray(position.clone(), direction);

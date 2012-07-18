@@ -51,6 +51,8 @@ Beta Releases
    * `Ellipsoid.toCartographic3s` was renamed to `Ellipsoid.cartesianArrayToCartographicArray`.
    * `Ellipsoid.cartographicDegreesToCartesian` was removed.  Code that previously looked like `ellipsoid.cartographicDegreesToCartesian(new Cartographic(45, 50, 10))` should now look like `ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(45, 50, 10))`.
    * `Math.cartographic3ToRadians`, `Math.cartographic2ToRadians`, `Math.cartographic2ToDegrees`, and `Math.cartographic3ToDegrees` were removed.  These functions are no longer needed because Cartographic instances are always represented in radians. 
+   * The `multiplyWithMatrix` function on each `Matrix` type was renamed to `multiply`. 
+   * All functions starting with `multiplyWith` now start with `multiplyBy` to be consistent with functions starting with `divideBy`. 
 * All `Cartesian2` operations now have static versions that work with any objects exposing `x` and `y` properties.
 * All `Cartesian2` operations now have static versions that work with any objects exposing `x`, `y`, and `z` properties.
 * All `Cartesian3` operations now have static versions that work with any objects exposing `x`, `y`, `z` and `w` properties.
