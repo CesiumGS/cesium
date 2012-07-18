@@ -235,6 +235,15 @@ define([
         var height = image.height;
         var pixels = getImagePixels(image);
 
+        var southwest = this.tilingScheme.cartographicToWebMercator(tile.extent.west, tile.extent.south);
+        var northeast = this.tilingScheme.cartographicToWebMercator(tile.extent.east, tile.extent.north);
+        var webMercatorExtent = {
+                west : southwest.x,
+                south : southwest.y,
+                east : northeast.x,
+                north : northeast.y
+        };
+
         var verticesPromise = taskProcessor.scheduleTask({
             heightmap : pixels,
             heightScale : 1000.0,
@@ -243,9 +252,10 @@ define([
             strideBytes : 4,
             width : width,
             height : height,
-            extent : tile.extent,
+            extent : webMercatorExtent,
             relativeToCenter : tile.get3DBoundingSphere().center,
-            radiiSquared : this.tilingScheme.ellipsoid.getRadiiSquared()
+            radiiSquared : this.tilingScheme.ellipsoid.getRadiiSquared(),
+            oneOverCentralBodySemimajorAxis : this.tilingScheme.ellipsoid.getOneOverRadii().x
         });
 
         if (typeof verticesPromise === 'undefined') {

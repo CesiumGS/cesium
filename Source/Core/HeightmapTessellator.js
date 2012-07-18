@@ -77,23 +77,39 @@ define([
         var radiiSquaredY = radiiSquared.y;
         var radiiSquaredZ = radiiSquared.z;
 
+        var oneOverCentralBodySemimajorAxis = description.oneOverCentralBodySemimajorAxis;
+
         var cos = Math.cos;
         var sin = Math.sin;
         var sqrt = Math.sqrt;
+        var atan = Math.atan;
+        var exp = Math.exp;
+        var piOverTwo = Math.PI / 2.0;
+
+        var geographicWest = extent.west * oneOverCentralBodySemimajorAxis;
+        var geographicSouth = piOverTwo - (2.0 * atan(exp(-extent.south * oneOverCentralBodySemimajorAxis)));
+        var geographicEast = extent.east * oneOverCentralBodySemimajorAxis;
+        var geographicNorth = piOverTwo - (2.0 * atan(exp(-extent.north * oneOverCentralBodySemimajorAxis)));
 
         var vertexArrayIndex = 0;
         var textureCoordinatesIndex = 0;
 
         for ( var row = 0; row < height; ++row) {
-            var latitude = extent.north - granularityY * row;
+            var y = extent.north - granularityY * row;
+            var latitude = piOverTwo - (2.0 * atan(exp(-y * oneOverCentralBodySemimajorAxis)));
             var cosLatitude = cos(latitude);
             var nZ = sin(latitude);
             var kZ = radiiSquaredZ * nZ;
 
+            // texture coordinates for geographic imagery
+            //var v = (latitude - geographicSouth) / (geographicNorth - geographicSouth);
+
+            // texture coordinates for web mercator imagery
             var v = (height - row - 1) / (height - 1);
 
             for ( var col = 0; col < width; ++col) {
-                var longitude = extent.west + granularityX * col;
+                var x = extent.west + granularityX * col;
+                var longitude = x * oneOverCentralBodySemimajorAxis;
 
                 var terrainOffset = row * (width * strideBytes) + col * strideBytes;
                 var heightSample = heightmap[terrainOffset] << 16;
@@ -125,6 +141,10 @@ define([
                 vertices[vertexArrayIndex++] = rSurfaceZ + nZ * heightSample - relativeToCenter.z;
 
                 if (generateTextureCoordinates) {
+                    // texture coordinates for geographic imagery
+                    //var u = (longitude - geographicWest) / (geographicEast - geographicWest);
+
+                    // texture coordinates for web mercator imagery
                     var u = col / (width - 1);
                     if (interleaveTextureCoordinates) {
                         vertices[vertexArrayIndex++] = u;
@@ -217,6 +237,7 @@ define([
 
         var ellipsoid = defaultValue(description.ellipsoid, Ellipsoid.WGS84);
         description.radiiSquared = ellipsoid.getRadiiSquared();
+        description.oneOverCentralBodySemimajorAxis = ellipsoid.getOneOverRadii().x;
         description.relativeToCenter = defaultValue(description.relativeToCenter, Cartesian3.ZERO);
 
         var image = description.image;
