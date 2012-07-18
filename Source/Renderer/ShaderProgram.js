@@ -160,7 +160,7 @@ define([
      * </tr>
      * <tr>
      * <td><code>uniform mat2 u_mat2; </code></td>
-     * <td><code> sp.getAllUniforms().u_mat2.value = new Matrix2(1.0, 2.0, 3.0, 4.0);</code></td>
+     * <td><code> sp.getAllUniforms().u_mat2.value = Matrix2.fromComponents(1.0, 2.0, 3.0, 4.0);</code></td>
      * </tr>
      * <tr>
      * <td><code>uniform mat3 u_mat3; </code></td>
