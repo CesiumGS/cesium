@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Cartographic',
@@ -9,6 +10,7 @@ define([
         '../Core/Occluder',
         '../Core/Rectangle'
     ], function(
+        defaultValue,
         BoundingSphere,
         Cartesian3,
         Cartographic,
@@ -20,15 +22,15 @@ define([
     "use strict";
 
     /**
-     * Two-dimensional coordinates given in latitude and longitude.
+     * A two dimensional region specified as longitude and latitude coordinates.
      *
      * @alias Extent
      * @constructor
      *
-     * @param {Number} north The northernmost latitude in the range [-Pi/2, Pi/2].
-     * @param {Number} east The easternmost longitude in the range [-Pi, Pi].
-     * @param {Number} south The southernmost latitude in the range [-Pi/2, Pi/2].
      * @param {Number} west The westernmost longitude in the range [-Pi, Pi].
+     * @param {Number} south The southernmost latitude in the range [-Pi/2, Pi/2].
+     * @param {Number} east The easternmost longitude in the range [-Pi, Pi].
+     * @param {Number} north The northernmost latitude in the range [-Pi/2, Pi/2].
      *
      * @exception {DeveloperError} One of the parameters is out of range.
      */
@@ -74,7 +76,8 @@ define([
     };
 
     /**
-     * Checks that an {@link Extent}'s members are in the proper ranges, north is greater than south and east is greater than west.
+     * Checks that an {@link Extent}'s members are in the proper ranges, north is greater than
+     * south and east is greater than west.
      *
      * @param {Extent} extent The extent to be checked for validity.
      *
@@ -85,27 +88,43 @@ define([
      * @exception {DeveloperError} <code>extent.west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
      */
     Extent.validate = function(extent) {
-        if (!extent ||
-                typeof extent.north === 'undefined' ||
-                typeof extent.south === 'undefined' ||
-                typeof extent.west === 'undefined' ||
-                typeof extent.east === 'undefined') {
-            throw new DeveloperError('extent is required and must have north, south, east and west attributes.');
+        if (typeof extent === 'undefined') {
+            throw new DeveloperError('extent is required.');
         }
 
-        if (extent.north < -CesiumMath.PI_OVER_TWO || extent.north > CesiumMath.PI_OVER_TWO) {
+        var north = extent.north;
+        if (typeof north === 'undefined') {
+            throw new DeveloperError('extent.north is required.');
+        }
+
+        if (north < -CesiumMath.PI_OVER_TWO || north > CesiumMath.PI_OVER_TWO) {
             throw new DeveloperError('extent.north must be in the interval [-Pi/2, Pi/2].');
         }
 
-        if (extent.south < -CesiumMath.PI_OVER_TWO || extent.south > CesiumMath.PI_OVER_TWO) {
+        var south = extent.south;
+        if (typeof south === 'undefined') {
+            throw new DeveloperError('extent.south is required.');
+        }
+
+        if (south < -CesiumMath.PI_OVER_TWO || south > CesiumMath.PI_OVER_TWO) {
             throw new DeveloperError('extent.south must be in the interval [-Pi/2, Pi/2].');
         }
 
-        if (extent.west < -CesiumMath.PI || extent.west > CesiumMath.PI) {
+        var west = extent.west;
+        if (typeof west === 'undefined') {
+            throw new DeveloperError('extent.west is required.');
+        }
+
+        if (west < -Math.PI || west > Math.PI) {
             throw new DeveloperError('extent.west must be in the interval [-Pi, Pi].');
         }
 
-        if (extent.east < -CesiumMath.PI || extent.east > CesiumMath.PI) {
+        var east = extent.east;
+        if (typeof east === 'undefined') {
+            throw new DeveloperError('extent.east is required.');
+        }
+
+        if (east < -Math.PI || east > Math.PI) {
             throw new DeveloperError('extent.east must be in the interval [-Pi, Pi].');
         }
     };
@@ -120,14 +139,14 @@ define([
         return twod.lerp(ellipsoid.cartographicToCartesian(lla), time);
     }
 
-    Extent._computePositions = function(extent, ellipsoid, time, projection) {
+    function computePositions(extent, ellipsoid, time, projection) {
         if (typeof extent === 'undefined') {
             throw new DeveloperError('extent is required.');
         }
 
         Extent.validate(extent);
 
-        ellipsoid = ellipsoid || Ellipsoid.WGS84;
+        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         var positions = [];
 
         var lla = new Cartographic(extent.west, extent.north, 0.0);
@@ -163,7 +182,7 @@ define([
         }
 
         return positions;
-    };
+    }
 
     /**
      * DOC_TBA
@@ -176,7 +195,7 @@ define([
      * @returns {BoundingSphere} DOC_TBA
      */
     Extent.computeMorphBoundingSphere = function(extent, ellipsoid, time, projection) {
-        return new BoundingSphere(Extent._computePositions(extent, ellipsoid, time, projection));
+        return new BoundingSphere(computePositions(extent, ellipsoid, time, projection));
     };
 
     /**
@@ -187,7 +206,7 @@ define([
      * @returns {BoundingSphere} DOC_TBA
      */
     Extent.compute3DBoundingSphere = function(extent, ellipsoid) {
-        return new BoundingSphere(Extent._computePositions(extent, ellipsoid));
+        return new BoundingSphere(computePositions(extent, ellipsoid));
     };
 
     /**
@@ -199,8 +218,8 @@ define([
      * @returns {Object} DOC_TBA
      */
     Extent.computeOccludeePoint = function(extent, ellipsoid) {
-        ellipsoid = ellipsoid || Ellipsoid.WGS84;
-        var positions = Extent._computePositions(extent, ellipsoid);
+        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+        var positions = computePositions(extent, ellipsoid);
         var bs = new BoundingSphere(positions);
 
         // TODO: get correct ellipsoid center
@@ -254,6 +273,39 @@ define([
         var radius = Math.sqrt(rect.width * rect.width + rect.height * rect.height) * 0.5;
         return new BoundingSphere(center, radius);
     };
+
+    /**
+     * Gets a {@link Cartographic} containing the southwest corner of this extent.
+     */
+    Extent.prototype.getSouthwest = function() {
+        return new Cartographic(this.west, this.south);
+    };
+
+    /**
+     * Gets a {@link Cartographic} containing the northwest corner of this extent.
+     */
+    Extent.prototype.getNorthwest = function() {
+        return new Cartographic(this.west, this.north);
+    };
+
+    /**
+     * Gets a {@link Cartographic} containing the northeast corner of this extent.
+     */
+    Extent.prototype.getNortheast = function() {
+        return new Cartographic(this.east, this.north);
+    };
+
+    /**
+     * Gets a {@link Cartographic} containing the southeast corner of this extent.
+     */
+    Extent.prototype.getSoutheast = function() {
+        return new Cartographic(this.east, this.south);
+    };
+
+    /**
+     * The largest possible extent.
+     */
+    Extent.MAX_VALUE = Object.freeze(new Extent(-Math.PI, -CesiumMath.PI_OVER_TWO, Math.PI, CesiumMath.PI_OVER_TWO));
 
     return Extent;
 });

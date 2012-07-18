@@ -1,9 +1,13 @@
 /*global define*/
-define(['./DeveloperError'], function(DeveloperError) {
+define([
+        './DeveloperError'
+    ], function(
+        DeveloperError) {
     "use strict";
 
     /**
-     * DOC_TBA
+     * Combines the objects passed as arguments into a single result object containing
+     * all properties from all objects.
      *
      * @exports combine
      *
@@ -11,14 +15,14 @@ define(['./DeveloperError'], function(DeveloperError) {
      */
     function combine() {
         var composite = {};
-        var length = arguments.length;
-        for ( var i = 0; i < length; ++i) {
+
+        for ( var i = 0, length = arguments.length; i < length; ++i) {
             var object = arguments[i];
 
             // Shallow copy
             for ( var key in object) {
                 if (object.hasOwnProperty(key)) {
-                    if (composite[key]) {
+                    if (typeof composite[key] !== 'undefined') {
                         throw new DeveloperError('Duplicate member: ' + key);
                     }
 
