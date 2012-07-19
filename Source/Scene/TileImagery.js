@@ -19,16 +19,14 @@ define([
         TileState) {
     "use strict";
 
-    var TileImagery = function(imageryLayer, x, y, level) {
+    var TileImagery = function(imageryLayer, x, y, level, textureTranslation, textureScale) {
         this.imageryLayer = imageryLayer;
         this.x = x;
         this.y = y;
         this.level = level;
+        this.textureTranslation = textureTranslation;
+        this.textureScale = textureScale;
         this.extent = imageryLayer.imageryProvider.tilingScheme.tileXYToExtent(x, y, level);
-
-        //TODO: pass these in
-        this.textureTranslation = new Cartesian2(0, 0);
-        this.textureScale = new Cartesian2(1, 1);
 
         this.state = TileState.UNLOADED;
         this.image = undefined;

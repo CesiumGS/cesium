@@ -40,14 +40,20 @@ define([
     "use strict";
 
     /**
-     * @param {TerrainProvider} description.terrain
-     * @param {ImageryLayerCollection} description.imageryCollection
+     * @param {TerrainProvider} description.terrainProvider
+     * @param {ImageryLayerCollection} description.imageryLayerCollection
      * @param {Number} [description.maxScreenSpaceError=2]
      */
     var EllipsoidSurface = function(description) {
-        // TODO: make sure description has these properties.
-        this.terrain = description.terrain;
-        this.imageryCollection = description.imageryCollection;
+        if (typeof description.terrainProvider === 'undefined') {
+            throw new DeveloperError('description.terrainProvider is required.');
+        }
+        if (typeof description.imageryLayerCollection === 'undefined') {
+            throw new DeveloperError('description.imageryLayerCollection is required.');
+        }
+
+        this.terrainProvider = description.terrainProvider;
+        this.imageryLayerCollection = description.imageryLayerCollection;
         this.maxScreenSpaceError = defaultValue(description.maxScreenSpaceError, 2);
 
         this._levelZeroTiles = undefined;
@@ -58,10 +64,10 @@ define([
         this._occluder = undefined;
 
         var that = this;
-        when(this.terrain.tilingScheme, function(tilingScheme) {
+        when(this.terrainProvider.tilingScheme, function(tilingScheme) {
             that._tilingScheme = tilingScheme;
             that._levelZeroTiles = tilingScheme.createLevelZeroTiles();
-            that._occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, that.terrain.tilingScheme.ellipsoid.getMinimumRadius()), Cartesian3.ZERO);
+            that._occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, that.terrainProvider.tilingScheme.ellipsoid.getMinimumRadius()), Cartesian3.ZERO);
         });
     };
 
@@ -108,8 +114,9 @@ define([
         }
 
         var i, len;
-        for (i = 0, len = this.imageryCollection.getLength(); i < len; i++) {
-            if (!this.imageryCollection.get(i).imageryProvider.ready) {
+        for (i = 0, len = this.imageryLayerCollection.getLength(); i < len; i++) {
+            var imageryLayer = this.imageryLayerCollection.get(i);
+            if (!imageryLayer.imageryProvider.ready) {
                 return;
             }
         }
@@ -456,7 +463,7 @@ define([
             // Transition terrain states.
             if (tile.state === TileState.UNLOADED) {
                 tile.state = TileState.TRANSITIONING;
-                surface.terrain.requestTileGeometry(tile);
+                surface.terrainProvider.requestTileGeometry(tile);
 
                 // If we've made it past the UNLOADED state, add this tile to the replacement queue
                 // (replacing another tile if necessary), and create skeletons for the imagery.
@@ -467,19 +474,19 @@ define([
                     // the amount of memory available, or something else?
                     surface._tileReplacementQueue.trimTiles(100);
 
-                    for (i = 0, len = surface.imageryCollection.getLength(); i < len; ++i) {
-                        var imageryLayer = surface.imageryCollection.get(i);
-                        imageryLayer.createTileImagerySkeletons(tile, surface.terrain.tilingScheme);
+                    for (i = 0, len = surface.imageryLayerCollection.getLength(); i < len; ++i) {
+                        var imageryLayer = surface.imageryLayerCollection.get(i);
+                        imageryLayer.createTileImagerySkeletons(tile, surface.terrainProvider.tilingScheme);
                     }
                 }
             }
             if (tile.state === TileState.RECEIVED) {
                 tile.state = TileState.TRANSITIONING;
-                surface.terrain.transformGeometry(context, tile);
+                surface.terrainProvider.transformGeometry(context, tile);
             }
             if (tile.state === TileState.TRANSFORMED) {
                 tile.state = TileState.TRANSITIONING;
-                surface.terrain.createResources(context, tile);
+                surface.terrainProvider.createResources(context, tile);
             }
             // TODO: what about the FAILED and INVALID states?
 

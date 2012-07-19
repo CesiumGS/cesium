@@ -1,7 +1,7 @@
 /*global define*/
 define([
         './TileState'
-        ], function(
+    ], function(
         TileState) {
     "use strict";
 

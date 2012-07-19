@@ -5,31 +5,13 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Math',
-        '../Core/BoundingSphere',
         '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/ComponentDatatype',
         '../Core/Extent',
-        '../Core/ExtentTessellator',
-        '../Core/IndexDatatype',
-        '../Core/Intersect',
-        '../Core/JulianDate',
         '../Core/PlaneTessellator',
-        '../Core/PrimitiveType',
-        '../Core/Queue',
-        '../Core/Rectangle',
-        '../Renderer/BufferUsage',
-        '../Renderer/MipmapHint',
-        '../Renderer/PixelFormat',
-        '../Renderer/TextureMagnificationFilter',
-        '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureWrap',
         './Tile',
         './TileImagery',
         './TileState',
         './Projections',
-        './SceneMode',
         '../ThirdParty/when'
     ], function(
         combine,
@@ -37,31 +19,13 @@ define([
         destroyObject,
         DeveloperError,
         CesiumMath,
-        BoundingSphere,
         Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        ComponentDatatype,
         Extent,
-        ExtentTessellator,
-        IndexDatatype,
-        Intersect,
-        JulianDate,
         PlaneTessellator,
-        PrimitiveType,
-        Queue,
-        Rectangle,
-        BufferUsage,
-        MipmapHint,
-        PixelFormat,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap,
         Tile,
         TileImagery,
         TileState,
         Projections,
-        SceneMode,
         when) {
     "use strict";
 
@@ -137,23 +101,23 @@ define([
         // of the southeast tile, we don't actually need the southernmost or easternmost
         // tiles.
         // Similarly, if the northwest corner of the extent list very close to the south or east side
-        // of the northwest tile, we don't actually need the northernmost or westnernmod tiles.
+        // of the northwest tile, we don't actually need the northernmost or westernmost tiles.
         // TODO: The northwest corner is especially sketchy...  Should we be doing something
         // elsewhere to ensure better alignment?
-        // TODO: Is 1e-10 the right epsilon to use?
+        // TODO: Is CesiumMath.EPSILON10 the right epsilon to use?
         var northwestTileExtent = imageryTilingScheme.tileXYToExtent(northwestTileCoordinates.x, northwestTileCoordinates.y, imageryLevel);
-        if (Math.abs(northwestTileExtent.south - extent.north) < 1e-10) {
+        if (Math.abs(northwestTileExtent.south - extent.north) < CesiumMath.EPSILON10) {
             ++northwestTileCoordinates.y;
         }
-        if (Math.abs(northwestTileExtent.east - extent.west) < 1e-10) {
+        if (Math.abs(northwestTileExtent.east - extent.west) < CesiumMath.EPSILON10) {
             ++northwestTileCoordinates.x;
         }
 
         var southeastTileExtent = imageryTilingScheme.tileXYToExtent(southeastTileCoordinates.x, southeastTileCoordinates.y, imageryLevel);
-        if (Math.abs(southeastTileExtent.north - extent.south) < 1e-10) {
+        if (Math.abs(southeastTileExtent.north - extent.south) < CesiumMath.EPSILON10) {
             --southeastTileCoordinates.y;
         }
-        if (Math.abs(southeastTileExtent.west - extent.east) < 1e-10) {
+        if (Math.abs(southeastTileExtent.west - extent.east) < CesiumMath.EPSILON10) {
             --southeastTileCoordinates.x;
         }
 
@@ -163,15 +127,14 @@ define([
 
         for ( var i = northwestTileCoordinates.x; i <= southeastTileCoordinates.x; i++) {
             for ( var j = northwestTileCoordinates.y; j <= southeastTileCoordinates.y; j++) {
-                var tileImagery = new TileImagery(this, i, j, imageryLevel);
                 var imageryExtent = imageryTilingScheme.tileXYToNativeExtent(i, j, imageryLevel);
-                tileImagery.textureScale = new Cartesian2(
-                        (imageryExtent.east - imageryExtent.west) / terrainWidth,
-                        (imageryExtent.north - imageryExtent.south) / terrainHeight);
-                tileImagery.textureTranslation = new Cartesian2(
+                var textureTranslation = new Cartesian2(
                         (imageryExtent.west - terrainExtent.west) / terrainWidth,
                         (imageryExtent.south - terrainExtent.south) / terrainHeight);
-                tile.imagery.push(tileImagery);
+                var textureScale = new Cartesian2(
+                        (imageryExtent.east - imageryExtent.west) / terrainWidth,
+                        (imageryExtent.north - imageryExtent.south) / terrainHeight);
+                tile.imagery.push(new TileImagery(this, i, j, imageryLevel, textureTranslation, textureScale));
             }
         }
     };

@@ -52,10 +52,7 @@ define([
         '../Shaders/CentralBodyFSPole',
         '../Shaders/GroundAtmosphere',
         '../Shaders/SkyAtmosphereFS',
-        '../Shaders/SkyAtmosphereVS',
-        './EllipsoidTerrainProvider',
-        '../Core/DefaultProxy',
-        './ArcGisImageServerTerrainProvider'
+        '../Shaders/SkyAtmosphereVS'
     ], function(
         combine,
         defaultValue,
@@ -109,10 +106,7 @@ define([
         CentralBodyFSPole,
         GroundAtmosphere,
         SkyAtmosphereFS,
-        SkyAtmosphereVS,
-        EllipsoidTerrainProvider,
-        DefaultProxy,
-        ArcGisImageServerTerrainProvider) {
+        SkyAtmosphereVS) {
     "use strict";
 
     /**
@@ -131,11 +125,11 @@ define([
 
         this._occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), Cartesian3.ZERO);
 
-        this._imageLayers = defaultValue(imageryLayerCollection, new ImageryLayerCollection());
+        this._imageryLayerCollection = defaultValue(imageryLayerCollection, new ImageryLayerCollection());
         this._terrain = terrainProvider;
         this._surface = new EllipsoidSurface({
-            terrain : terrainProvider,
-            imageryCollection : this._imageLayers
+            terrainProvider : terrainProvider,
+            imageryLayerCollection : this._imageryLayerCollection
         });
 
         this._texturePool = new TexturePool();
@@ -311,7 +305,7 @@ define([
         this._bumpTexture = undefined;
 
         /**
-         * When <code>true</code>, textures from the <code>dayTileProvider</code> are shown on the central body.
+         * When <code>true</code>, textures from the imagery layer collection are shown on the central body.
          * <br /><br />
          * <div align='center'>
          * <img src='../images/CentralBody.showDay.jpg' width='400' height='300' />
@@ -319,7 +313,6 @@ define([
          *
          * @type {Boolean}
          *
-         * @see CentralBody#dayTileProvider
          * @see CentralBody#showNight
          *
          * @default true
@@ -507,7 +500,6 @@ define([
          *
          * @example
          * cb.showDay = true;
-         * cb.dayTileProvider = new Cesium.SingleTileProvider('day.jpg');
          * cb.showNight = true;
          * cb.nightImageSource = 'night.jpg';
          * cb.dayNightBlendDelta = 0.0;  // Sharp transition
@@ -683,7 +675,7 @@ define([
      * @returns {ImageryLayerCollection}
      */
     CentralBody.prototype.getImageLayers = function() {
-        return this._imageLayers;
+        return this._imageryLayerCollection;
     };
 
     CentralBody.prototype._isModeTransition = function(oldMode, newMode) {
@@ -783,7 +775,7 @@ define([
     };
 
     function getBaseLayer(centralBody) {
-        return centralBody._imageLayers.get(0);
+        return centralBody._imageryLayerCollection.get(0);
     }
 
     CentralBody.prototype._fillPoles = function(context, sceneState) {
@@ -792,11 +784,11 @@ define([
             return;
         }
 
-        var baseTileProvider = baseLayer.imageryProvider;
-        if (!baseTileProvider.ready) {
+        var baseImageryProvider = baseLayer.imageryProvider;
+        if (!baseImageryProvider.ready) {
             return;
         }
-        var baseTileProviderMaxExtent = baseTileProvider.extent;
+        var baseImageryProviderMaxExtent = baseImageryProvider.extent;
 
         var viewProjMatrix = context.getUniformState().getViewProjection();
         var viewportTransformation = context.getUniformState().getViewportTransformation();
@@ -814,11 +806,9 @@ define([
         var occluder = this._occluder;
 
         // handle north pole
-        if (baseTileProviderMaxExtent.north < CesiumMath.PI_OVER_TWO) {
-            extent = new Extent(-Math.PI,
-                                baseTileProviderMaxExtent.north,
-                Math.PI,
-                                CesiumMath.PI_OVER_TWO);
+        if (baseImageryProviderMaxExtent.north < CesiumMath.PI_OVER_TWO) {
+            extent = new Extent(-Math.PI, baseImageryProviderMaxExtent.north,
+                                Math.PI, CesiumMath.PI_OVER_TWO);
             boundingVolume = Extent.compute3DBoundingSphere(extent, this._ellipsoid);
             frustumCull = sceneState.camera.getVisibility(boundingVolume, BoundingSphere.planeSphereIntersect) === Intersect.OUTSIDE;
             occludeePoint = Extent.computeOccludeePoint(extent, this._ellipsoid).occludeePoint;
@@ -859,11 +849,9 @@ define([
         }
 
         // handle south pole
-        if (baseTileProviderMaxExtent.south > -CesiumMath.PI_OVER_TWO) {
-            extent = new Extent(-Math.PI,
-                -CesiumMath.PI_OVER_TWO,
-                Math.PI,
-                                baseTileProviderMaxExtent.south);
+        if (baseImageryProviderMaxExtent.south > -CesiumMath.PI_OVER_TWO) {
+            extent = new Extent(-Math.PI, -CesiumMath.PI_OVER_TWO,
+                                Math.PI, baseImageryProviderMaxExtent.south);
             boundingVolume = Extent.compute3DBoundingSphere(extent, this._ellipsoid);
             frustumCull = sceneState.camera.getVisibility(boundingVolume, BoundingSphere.planeSphereIntersect) === Intersect.OUTSIDE;
             occludeePoint = Extent.computeOccludeePoint(extent, this._ellipsoid).occludeePoint;
@@ -911,9 +899,9 @@ define([
             u_dayIntensity : function() {
                 var baseLayer = getBaseLayer(that);
                 if (typeof baseLayer !== 'undefined') {
-                    var baseTileProvider = baseLayer.imageryProvider;
-                    if (typeof baseTileProvider.getPoleIntensity === 'function') {
-                        return baseTileProvider.getPoleIntensity();
+                    var baseImageryProvider = baseLayer.imageryProvider;
+                    if (typeof baseImageryProvider.getPoleIntensity === 'function') {
+                        return baseImageryProvider.getPoleIntensity();
                     }
                 }
                 return 0.0;
@@ -1224,7 +1212,7 @@ define([
 
         var recompileShader = typeof this._sp === 'undefined' || typeof this._spPoles === 'undefined';
 
-        var defineShowDay = this.showDay && this._imageLayers.getLength() > 0;
+        var defineShowDay = this.showDay && this._imageryLayerCollection.getLength() > 0;
         if (this._defineShowDay !== defineShowDay) {
             recompileShader = true;
             this._defineShowDay = defineShowDay;
@@ -1391,7 +1379,7 @@ define([
         this._fillPoles(context, sceneState);
 
         this._surface.update(context, sceneState);
-        this._imageLayers.update(context, sceneState);
+        this._imageryLayerCollection.update(context, sceneState);
 
         this._mode = mode;
         this._projection = projection;
@@ -1468,7 +1456,7 @@ define([
                 });
             }
 
-            this._imageLayers.render(context);
+            this._imageryLayerCollection.render(context);
         }
     };
 
