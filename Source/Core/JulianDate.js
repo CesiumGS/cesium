@@ -235,6 +235,28 @@ define([
     };
 
     /**
+     * Duplicates a JulianDate instance.
+     * @memberof JulianDate
+     *
+     * @param {Cartesian3} date The JulianDate to duplicate.
+     * @param {Cartesian3} [result] The object onto which to store the JulianDate.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     *
+     * @exception {DeveloperError} date is required.
+     */
+    JulianDate.clone = function(date, result) {
+        if (typeof date === 'undefined') {
+            throw new DeveloperError('date is required.');
+        }
+        if (typeof result === 'undefined') {
+            return new JulianDate(date._julianDayNumber, date._secondsOfDay, TimeStandard.TAI);
+        }
+        result._julianDayNumber = date._julianDayNumber;
+        result._secondsOfDay = date._secondsOfDay;
+        return result;
+    };
+
+    /**
      * Creates a JulianDate instance from a JavaScript Date object.
      * While the JavaScript Date object defaults to the system's local time zone,
      * the Julian date is computed using the UTC values.
@@ -573,6 +595,17 @@ define([
             return dayDifference;
         }
         return a._secondsOfDay - b._secondsOfDay;
+    };
+
+    /**
+     * Duplicates this JulianDate.
+     * @memberof JulianDate
+     *
+     * @param {Cartesian3} [result] The object onto which to store the JulianDate.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     */
+    JulianDate.prototype.clone = function(result) {
+        return JulianDate.clone(this, result);
     };
 
     /**
