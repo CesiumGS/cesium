@@ -73,6 +73,10 @@ define([
     var cameraCenteredObjectIDPosition;
     var lastCameraCenteredObjectID;
 
+    var animReverse;
+    var animPause;
+    var animPlay;
+
     function updateSpeedIndicator() {
         if (animationController.isAnimating()) {
             speedIndicatorElement.innerHTML = clock.multiplier + 'x realtime';
@@ -82,9 +86,6 @@ define([
     }
 
     function setTimeFromBuffer() {
-        var animReverse = registry.byId('animReverse');
-        var animPause = registry.byId('animPause');
-        var animPlay = registry.byId('animPlay');
         animReverse.set('checked', false);
         animPause.set('checked', true);
         animPlay.set('checked', false);
@@ -214,17 +215,17 @@ define([
             });
 
             lastTimeLabelUpdate = clock.currentTime;
-            timeLabel = dom.byId('timeLabel_label');
+            timeLabel = dom.byId('dijit_form_Button_0_label');                  // TODO: FIX THIS
             timeLabel.innerHTML = clock.currentTime.toDate().toUTCString();
 
-            speedIndicatorElement = dom.byId('speedIndicator');
+            speedIndicatorElement = cesium.speedIndicator;
             updateSpeedIndicator();
 
-            var animReverse = registry.byId('animReverse');
-            var animPause = registry.byId('animPause');
-            var animPlay = registry.byId('animPlay');
+            animReverse = cesium.animReverse;
+            animPause = cesium.animPause;
+            animPlay = cesium.animPlay;
 
-            on(registry.byId('animReset'), 'Click', function() {
+            on(cesium.animReset, 'Click', function() {
                 animationController.reset();
                 animReverse.set('checked', false);
                 animPause.set('checked', true);
@@ -258,12 +259,12 @@ define([
                 updateSpeedIndicator();
             });
 
-            on(registry.byId('animSlow'), 'Click', function() {
+            on(cesium.animSlow, 'Click', function() {
                 animationController.slower();
                 updateSpeedIndicator();
             });
 
-            on(registry.byId('animFast'), 'Click', function() {
+            on(cesium.animFast, 'Click', function() {
                 animationController.faster();
                 updateSpeedIndicator();
             });
@@ -273,19 +274,20 @@ define([
                 onAnimPause();
             }
 
-            var timelineWidget = registry.byId('mainTimeline');
+            var timelineWidget = cesium.mainTimeline;
             timelineWidget.clock = clock;
             timelineWidget.setupCallback = function(t) {
                 timeline = t;
                 timeline.addEventListener('settime', onTimelineScrub, false);
                 timeline.zoomTo(clock.startTime, clock.stopTime);
             };
+            timelineWidget.setupTimeline();
 
-            var viewHome = registry.byId('viewHome');
-            var view2D = registry.byId('view2D');
-            var view3D = registry.byId('view3D');
-            var viewColumbus = registry.byId('viewColumbus');
-            var viewFullScreen = registry.byId('viewFullScreen');
+            var viewHomeButton = cesium.viewHomeButton;
+            var view2D = cesium.view2D;
+            var view3D = cesium.view3D;
+            var viewColumbus = cesium.viewColumbus;
+            var viewFullScreen = cesium.viewFullScreen;
 
             view2D.set('checked', false);
             view3D.set('checked', true);
@@ -299,7 +301,7 @@ define([
                 }
             });
 
-            on(viewHome, 'Click', function() {
+            on(viewHomeButton, 'Click', function() {
                 view2D.set('checked', false);
                 view3D.set('checked', true);
                 viewColumbus.set('checked', false);
@@ -336,16 +338,16 @@ define([
                 transitioner.morphToColumbusView();
             });
 
-            var cbLighting = registry.byId('cbLighting');
+            var cbLighting = cesium.cbLighting;
             on(cbLighting, 'Change', function(value) {
                 cesium.centralBody.affectedByLighting = !value;
             });
 
-            var imagery = registry.byId('imagery');
-            var imageryAerial = registry.byId('imageryAerial');
-            var imageryAerialWithLabels = registry.byId('imageryAerialWithLabels');
-            var imageryRoad = registry.byId('imageryRoad');
-            var imagerySingleTile = registry.byId('imagerySingleTile');
+            var imagery = cesium.imagery;
+            var imageryAerial = cesium.imageryAerial;
+            var imageryAerialWithLabels = cesium.imageryAerialWithLabels;
+            var imageryRoad = cesium.imageryRoad;
+            var imagerySingleTile = cesium.imagerySingleTile;
             var imageryOptions = [imageryAerial, imageryAerialWithLabels, imageryRoad, imagerySingleTile];
             var bingHtml = imagery.containerNode.innerHTML;
 
@@ -379,4 +381,5 @@ define([
     });
 
     cesium.placeAt(dom.byId('cesiumContainer'));
+    window.testing = cesium;  // TODO: Remove this
 });

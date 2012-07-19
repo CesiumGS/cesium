@@ -17,7 +17,7 @@ define(['dojo/_base/declare',
         },
 
         postCreate : function() {
-            ready(this, '_setupTimeline');
+            ready(this, 'setupTimeline');
         },
 
         resize : function(size) {
@@ -28,7 +28,7 @@ define(['dojo/_base/declare',
             this._resizeTimeline();
         },
 
-        _setupTimeline : function() {
+        setupTimeline : function() {
             if (this.clock && (!this.timeline)) {
                 this.timeline = new Timeline(this.domNode, this.clock);
                 if (this.setupCallback) {

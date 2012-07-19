@@ -1,5 +1,5 @@
 @import	url('../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css');
-@import url('../../Source/DojoWidgets/TimelineWidget.css');
+@import url('../../Source/DojoWidgets/CesiumWidget.css');
 
 html,body {
 	height: 100%;
@@ -82,7 +82,7 @@ html,body {
 	left: 6px;
 }
 
-#speedIndicator {
+.speedIndicator {
 	opacity: 0;
 	background: rgba(42, 42, 42, 0.8);
 	color: #eee;
@@ -98,7 +98,7 @@ html,body {
 	transition-duration: 0.2s;
 }
 
-.animButtons:hover #speedIndicator {
+.animButtons:hover .speedIndicator {
 	opacity: 1;
 }
 

@@ -8,6 +8,8 @@ define([
         'dojo/on',
         'dijit/_WidgetBase',
         'dijit/_TemplatedMixin',
+        'dijit/_WidgetsInTemplateMixin',
+        //'dijit/form/Button','dijit/form/ToggleButton', 'dijit/form/DropDownButton', 'dijit/TooltipDialog',
         '../Core/Ellipsoid',
         '../Core/SunPosition',
         '../Core/EventHandler',
@@ -32,6 +34,8 @@ define([
         on,
         _WidgetBase,
         _TemplatedMixin,
+        _WidgetsInTemplateMixin,
+        //Button, ToggleButton, DropDownButton, TooltipDialog,
         Ellipsoid,
         SunPosition,
         EventHandler,
@@ -49,7 +53,7 @@ define([
         template) {
     "use strict";
 
-    return declare('Cesium.CesiumWidget', [_WidgetBase, _TemplatedMixin], {
+    return declare('Cesium.CesiumWidget', [_WidgetBase, _TemplatedMixin, _WidgetsInTemplateMixin], {
         templateString : template,
         preRender : undefined,
         postSetup : undefined,
