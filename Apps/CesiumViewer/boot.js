@@ -40,12 +40,6 @@ require({
     'dojo/parser',
     'dojo/dom-class',
     'dojo/_base/window',
-    'dijit/form/Button',
-    'dijit/form/TextBox',
-    'dijit/form/ToggleButton',
-    'dijit/form/DropDownButton',
-    'dijit/TooltipDialog',
-    'DojoWidgets/TimelineWidget',
     'CesiumViewer/CesiumViewer',
     'dojo/domReady!'
 ], function(
