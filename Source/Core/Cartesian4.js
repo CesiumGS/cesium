@@ -402,12 +402,12 @@ define(['./DeveloperError'
 
     /**
      * Compares the provided Cartesians componentwise and returns
-     * <code>true/code> if they are equal, <code>false/code> otherwise.
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
      * @memberof Cartesian4
      *
      * @param {Cartesian4} [left] The first Cartesian.
      * @param {Cartesian4} [right] The second Cartesian.
-     * @return {Boolean} <code>true/code> if left and right are equal, <code>false/code> otherwise.
+     * @return {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
     Cartesian4.equals = function(left, right) {
         return (left === right) ||
@@ -421,14 +421,14 @@ define(['./DeveloperError'
 
     /**
      * Compares the provided Cartesians componentwise and returns
-     * <code>true/code> if they are within the provided epsilon,
-     * <code>false/code> otherwise.
+     * <code>true</code> if they are within the provided epsilon,
+     * <code>false</code> otherwise.
      * @memberof Cartesian4
      *
      * @param {Cartesian4} [left] The first Cartesian.
      * @param {Cartesian4} [right] The second Cartesian.
      * @param {Number} epsilon The epsilon to use for equality testing.
-     * @return {Boolean} <code>true/code> if left and right are within the provided epsilon, <code>false/code> otherwise.
+     * @return {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
      *
      * @exception {DeveloperError} epsilon is required and must be a number.
      */
@@ -677,11 +677,11 @@ define(['./DeveloperError'
 
     /**
      * Compares this Cartesian against the provided Cartesian componentwise and returns
-     * <code>true/code> if they are equal, <code>false/code> otherwise.
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
      * @memberof Cartesian4
      *
      * @param {Cartesian4} [right] The right hand side Cartesian.
-     * @return {Boolean} <code>true/code> if they are equal, <code>false/code> otherwise.
+     * @return {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
      */
     Cartesian4.prototype.equals = function(right) {
         return Cartesian4.equals(this, right);
@@ -689,13 +689,13 @@ define(['./DeveloperError'
 
     /**
      * Compares this Cartesian against the provided Cartesian componentwise and returns
-     * <code>true/code> if they are within the provided epsilon,
-     * <code>false/code> otherwise.
+     * <code>true</code> if they are within the provided epsilon,
+     * <code>false</code> otherwise.
      * @memberof Cartesian4
      *
      * @param {Cartesian4} [right] The right hand side Cartesian.
      * @param {Number} epsilon The epsilon to use for equality testing.
-     * @return {Boolean} <code>true/code> if they are within the provided epsilon, <code>false/code> otherwise.
+     * @return {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
      *
      * @exception {DeveloperError} epsilon is required and must be a number.
      */
