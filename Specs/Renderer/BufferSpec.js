@@ -40,9 +40,9 @@ defineSuite([
         var sizeInBytes = 3 * Float32Array.BYTES_PER_ELEMENT;
         var vertices = new ArrayBuffer(sizeInBytes);
         var positions = new Float32Array(vertices);
-        positions[0] = 1;
-        positions[1] = 2;
-        positions[2] = 3;
+        positions[0] = 1.0;
+        positions[1] = 2.0;
+        positions[2] = 3.0;
 
         buffer = context.createVertexBuffer(sizeInBytes, BufferUsage.STATIC_DRAW);
         buffer.copyFromArrayView(vertices);
@@ -50,9 +50,9 @@ defineSuite([
 
     it('can create a vertex buffer from a typed array', function() {
         var typedArray = new Float32Array(3 * Float32Array.BYTES_PER_ELEMENT);
-        typedArray[0] = 1;
-        typedArray[1] = 2;
-        typedArray[2] = 3;
+        typedArray[0] = 1.0;
+        typedArray[1] = 2.0;
+        typedArray[2] = 3.0;
 
         buffer = context.createVertexBuffer(typedArray, BufferUsage.STATIC_DRAW);
         expect(buffer.getSizeInBytes()).toEqual(typedArray.byteLength);
