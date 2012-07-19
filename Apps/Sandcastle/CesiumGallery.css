@@ -36,6 +36,11 @@ h1 img {
     display: block;
     border: none;
     margin: 0 auto;
+    border-radius: 10px;
+}
+
+h1 img:hover {
+    box-shadow: 0 0 25px #aaa;
 }
 
 a.linkButton, a.linkButton:visited {
