@@ -115,46 +115,29 @@ define([
         ArcGisImageServerTerrainProvider) {
     "use strict";
 
-    function TileCache(maxTextureSize) {
-        this._maxTextureSize = maxTextureSize;
-        this._tiles = [];
-        }
-
     /**
      * DOC_TBA
      *
      * @alias CentralBody
      * @constructor
      *
-     * @param {Ellipsoid} [ellipsoid=WGS84 Ellipsoid] Determines the size and shape of the central body.
-     *
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] Determines the size and shape of the central body.
+     * @param {TerrainProvider} terrainProvider DOC_TBA
+     * @param {ImageryLayerCollection} [imageryLayerCollection=new ImageryLayerCollection()] DOC_TBA
      */
-    var CentralBody = function(ellipsoid, tilingScheme, imageryLayerCollection) {
+    var CentralBody = function(ellipsoid, terrainProvider, imageryLayerCollection) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         this._ellipsoid = ellipsoid;
 
         this._occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), Cartesian3.ZERO);
 
         this._imageLayers = defaultValue(imageryLayerCollection, new ImageryLayerCollection());
-
-//        tilingScheme = defaultValue(tilingScheme, new WebMercatorTilingScheme({
-//            ellipsoid : ellipsoid,
-//            numberOfLevelZeroTilesX : 2,
-//            numberOfLevelZeroTilesY : 2
-//        }));
-//        var terrain = new EllipsoidTerrainProvider(tilingScheme);
-        var terrain = new ArcGisImageServerTerrainProvider({
-            url: 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
-            token: 'XEL-yD2_5am85MnfWLCXN16xrItLT4UjiOklf0a4uqAK82cHPXspemMM6972HiKXlDyEVx21IyZxHx1hmVg37A..',
-            proxy: new DefaultProxy('/terrain/')
-        });
-        this._terrain = terrain;
+        this._terrain = terrainProvider;
         this._surface = new EllipsoidSurface({
-           terrain : terrain,
-           imageryCollection : this._imageLayers
+            terrain : terrainProvider,
+            imageryCollection : this._imageLayers
         });
 
-        this._tileCache = new TileCache(128 * 1024 * 1024);
         this._texturePool = new TexturePool();
 
         this._spWithoutAtmosphere = undefined;
@@ -1546,7 +1529,6 @@ define([
      */
     CentralBody.prototype.destroy = function() {
         this._texturePool = this._texturePool && this._texturePool.destroy();
-        this._tileCache = this._tileCache && this._tileCache.destroy();
 
         this._fb = this._fb && this._fb.destroy();
         this._quadV = this._quadV && this._quadV.destroy();

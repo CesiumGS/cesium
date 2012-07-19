@@ -12,13 +12,25 @@ require({
     var scene = new Cesium.Scene(canvas);
     var primitives = scene.getPrimitives();
 
+//    var terrain = new Cesium.EllipsoidTerrainProvider(new Cesium.WebMercatorTilingScheme({
+//        ellipsoid : ellipsoid,
+//        numberOfLevelZeroTilesX : 2,
+//        numberOfLevelZeroTilesY : 2
+//    }));
+
+    var terrain = new Cesium.ArcGisImageServerTerrainProvider({
+        url : 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
+        token : 'XEL-yD2_5am85MnfWLCXN16xrItLT4UjiOklf0a4uqAK82cHPXspemMM6972HiKXlDyEVx21IyZxHx1hmVg37A..',
+        proxy : new Cesium.DefaultProxy('/terrain/')
+    });
+
     var imageryLayerCollection = new Cesium.ImageryLayerCollection();
     var esri = new Cesium.ImageryLayer(new Cesium.ArcGisMapServerImageryProvider({
         url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
         proxy : new Cesium.DefaultProxy('/proxy/')
     }));
     imageryLayerCollection.add(esri);
-//
+
 //    var aerial = new Cesium.ImageryLayer(new Cesium.BingMapsImageryProvider({
 //        server : 'dev.virtualearth.net',
 //        mapStyle : Cesium.BingMapsStyle.AERIAL,
@@ -28,11 +40,6 @@ require({
 //    }));
 //    imageryLayerCollection.add(aerial);
 //
-//    var color = new Cesium.ImageryLayer(new Cesium.SolidColorImageryProvider());
-//    imageryLayerCollection.add(color);
-
-    var cb = new Cesium.CentralBody(ellipsoid, undefined, imageryLayerCollection);
-
 //    var road = new Cesium.ImageryLayer(cb, new Cesium.BingMapsImageryProvider({
 //        server : 'dev.virtualearth.net',
 //        mapStyle : Cesium.BingMapsStyle.ROAD,
@@ -40,7 +47,12 @@ require({
 //        // cross-origin image loading, so we need to load Bing imagery using a proxy.
 //        proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
 //    }));
-//    cb.getImageLayers().add(road);
+//    imageryLayerCollection.add(road);
+//
+//    var color = new Cesium.ImageryLayer(new Cesium.SolidColorImageryProvider());
+//    imageryLayerCollection.add(color);
+
+    var cb = new Cesium.CentralBody(ellipsoid, terrain, imageryLayerCollection);
 
     cb.nightImageSource = '../../Images/land_ocean_ice_lights_2048.jpg';
     cb.specularMapSource = '../../Images/earthspec1k.jpg';
