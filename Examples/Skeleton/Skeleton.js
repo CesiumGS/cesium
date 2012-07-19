@@ -12,47 +12,44 @@ require({
     var scene = new Cesium.Scene(canvas);
     var primitives = scene.getPrimitives();
 
-//    var terrain = new Cesium.EllipsoidTerrainProvider(new Cesium.WebMercatorTilingScheme({
+//    var terrainProvider = new Cesium.EllipsoidTerrainProvider(new Cesium.WebMercatorTilingScheme({
 //        ellipsoid : ellipsoid,
 //        numberOfLevelZeroTilesX : 2,
 //        numberOfLevelZeroTilesY : 2
 //    }));
 
-    var terrain = new Cesium.ArcGisImageServerTerrainProvider({
+    var terrainProvider = new Cesium.ArcGisImageServerTerrainProvider({
         url : 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
         token : 'XEL-yD2_5am85MnfWLCXN16xrItLT4UjiOklf0a4uqAK82cHPXspemMM6972HiKXlDyEVx21IyZxHx1hmVg37A..',
         proxy : new Cesium.DefaultProxy('/terrain/')
     });
 
     var imageryLayerCollection = new Cesium.ImageryLayerCollection();
-    var esri = new Cesium.ImageryLayer(new Cesium.ArcGisMapServerImageryProvider({
+
+    var esriLayer = imageryLayerCollection.addImageryProvider(new Cesium.ArcGisMapServerImageryProvider({
         url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
         proxy : new Cesium.DefaultProxy('/proxy/')
     }));
-    imageryLayerCollection.add(esri);
 
-//    var aerial = new Cesium.ImageryLayer(new Cesium.BingMapsImageryProvider({
+//    var bingAerialLayer = imageryLayerCollection.addImageryProvider(new Cesium.BingMapsImageryProvider({
 //        server : 'dev.virtualearth.net',
 //        mapStyle : Cesium.BingMapsStyle.AERIAL,
 //        // Some versions of Safari support WebGL, but don't correctly implement
 //        // cross-origin image loading, so we need to load Bing imagery using a proxy.
 //        proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
 //    }));
-//    imageryLayerCollection.add(aerial);
 //
-//    var road = new Cesium.ImageryLayer(cb, new Cesium.BingMapsImageryProvider({
+//    var bingRoadLayer = imageryLayerCollection.addImageryProvider(new Cesium.BingMapsImageryProvider({
 //        server : 'dev.virtualearth.net',
 //        mapStyle : Cesium.BingMapsStyle.ROAD,
 //        // Some versions of Safari support WebGL, but don't correctly implement
 //        // cross-origin image loading, so we need to load Bing imagery using a proxy.
 //        proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
 //    }));
-//    imageryLayerCollection.add(road);
 //
-//    var color = new Cesium.ImageryLayer(new Cesium.SolidColorImageryProvider());
-//    imageryLayerCollection.add(color);
+//    var solidColorLayer = imageryLayerCollection.addImageryProvider(new Cesium.SolidColorImageryProvider());
 
-    var cb = new Cesium.CentralBody(ellipsoid, terrain, imageryLayerCollection);
+    var cb = new Cesium.CentralBody(ellipsoid, terrainProvider, imageryLayerCollection);
 
     cb.nightImageSource = '../../Images/land_ocean_ice_lights_2048.jpg';
     cb.specularMapSource = '../../Images/earthspec1k.jpg';
@@ -95,34 +92,34 @@ require({
     function keydownHandler(e) {
         switch (e.keyCode) {
         case 'Q'.charCodeAt(0):
-            cb.getImageLayers().raise(aerial);
+            imageryLayerCollection.raise(bingAerialLayer);
             break;
         case 'A'.charCodeAt(0):
-            cb.getImageLayers().lower(aerial);
+            imageryLayerCollection.lower(bingAerialLayer);
             break;
         case 'W'.charCodeAt(0):
-            cb.getImageLayers().raise(road);
+            imageryLayerCollection.raise(bingRoadLayer);
             break;
         case 'S'.charCodeAt(0):
-            cb.getImageLayers().lower(road);
+            imageryLayerCollection.lower(bingRoadLayer);
             break;
         case 'E'.charCodeAt(0):
-            cb.getImageLayers().raise(esri);
+            imageryLayerCollection.raise(esriLayer);
             break;
         case 'D'.charCodeAt(0):
-            cb.getImageLayers().lower(esri);
+            imageryLayerCollection.lower(esriLayer);
             break;
-        case "3".charCodeAt(0):  // "3" -> 3D globe
+        case "3".charCodeAt(0): // "3" -> 3D globe
             cb.showSkyAtmosphere = true;
             cb.showGroundAtmosphere = true;
             transitioner.morphTo3D();
             break;
-        case "2".charCodeAt(0):  // "2" -> Columbus View
+        case "2".charCodeAt(0): // "2" -> Columbus View
             cb.showSkyAtmosphere = false;
             cb.showGroundAtmosphere = false;
             transitioner.morphToColumbusView();
             break;
-        case "1".charCodeAt(0):  // "1" -> 2D map
+        case "1".charCodeAt(0): // "1" -> 2D map
             cb.showSkyAtmosphere = false;
             cb.showGroundAtmosphere = false;
             transitioner.morphTo2D();

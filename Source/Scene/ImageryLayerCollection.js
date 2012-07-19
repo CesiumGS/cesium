@@ -5,6 +5,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Rectangle',
         '../Renderer/PixelFormat',
+        './ImageryLayer',
         './ViewportQuad'
     ], function(
         DeveloperError,
@@ -12,6 +13,7 @@ define([
         Cartesian2,
         Rectangle,
         PixelFormat,
+        ImageryLayer,
         ViewportQuad) {
     "use strict";
 
@@ -46,7 +48,7 @@ define([
      *
      * @memberof ImageryLayerCollection
      *
-     * @param layer the layer to add.
+     * @param {ImageryLayer} layer the layer to add.
      * @param {Number} [index] the index to add the layer at.  If omitted, the layer will
      *                         added on top of all existing layers.
      *
@@ -54,7 +56,7 @@ define([
      */
     ImageryLayerCollection.prototype.add = function(layer, index) {
         if (typeof layer === 'undefined') {
-            throw new DeveloperError('layer is required.', 'layer');
+            throw new DeveloperError('layer is required.');
         }
 
         if (typeof index === 'undefined') {
@@ -65,11 +67,34 @@ define([
     };
 
     /**
+     * Creates a new layer using the given ImageryProvider and adds it to the collection.
+     *
+     * @memberof ImageryLayerCollection
+     *
+     * @param {ImageryProvider} imageryProvider the imagery provider to create a new layer for.
+     * @param {Number} [index] the index to add the layer at.  If omitted, the layer will
+     *                         added on top of all existing layers.
+     *
+     * @returns {ImageryLayer} The newly created layer.
+     *
+     * @exception {DeveloperError} layer is required.
+     */
+    ImageryLayerCollection.prototype.addImageryProvider = function(imageryProvider, index) {
+        if (typeof imageryProvider === 'undefined') {
+            throw new DeveloperError('imageryProvider is required.');
+        }
+
+        var layer = new ImageryLayer(imageryProvider);
+        this.add(layer, index);
+        return layer;
+    };
+
+    /**
      * Removes a layer from this collection, if present.
      *
      * @memberof ImageryLayerCollection
      *
-     * @param layer The layer to remove.
+     * @param {ImageryLayer} layer The layer to remove.
      * @param {Boolean} [destroy=true] whether to destroy the layers in addition to removing them.
      *
      * @returns {Boolean} true if the layer was in the collection and was removed,
@@ -117,7 +142,7 @@ define([
      *
      * @memberof ImageryLayerCollection
      *
-     * @param layer the layer to check for.
+     * @param {ImageryLayer} layer the layer to check for.
      *
      * @returns {Boolean} true if the collection contains the layer, false otherwise.
      */
@@ -156,12 +181,12 @@ define([
 
     function getLayerIndex(layers, layer) {
         if (typeof layer === 'undefined') {
-            throw new DeveloperError('layer is required.', 'layer');
+            throw new DeveloperError('layer is required.');
         }
 
         var index = layers.indexOf(layer);
         if (index === -1) {
-            throw new DeveloperError('layer is not in this collection.', 'layer');
+            throw new DeveloperError('layer is not in this collection.');
         }
 
         return index;
@@ -190,7 +215,7 @@ define([
      *
      * @memberof ImageryLayerCollection
      *
-     * @param layer the layer to move.
+     * @param {ImageryLayer} layer the layer to move.
      *
      * @exception {DeveloperError} layer is not in this collection.
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
@@ -205,7 +230,7 @@ define([
      *
      * @memberof ImageryLayerCollection
      *
-     * @param layer the layer to move.
+     * @param {ImageryLayer} layer the layer to move.
      *
      * @exception {DeveloperError} layer is not in this collection.
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
@@ -220,7 +245,7 @@ define([
      *
      * @memberof ImageryLayerCollection
      *
-     * @param layer the layer to move.
+     * @param {ImageryLayer} layer the layer to move.
      *
      * @exception {DeveloperError} layer is not in this collection.
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
@@ -235,7 +260,7 @@ define([
      *
      * @memberof ImageryLayerCollection
      *
-     * @param layer the layer to move.
+     * @param {ImageryLayer} layer the layer to move.
      *
      * @exception {DeveloperError} layer is not in this collection.
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
@@ -279,8 +304,8 @@ define([
             }
         }
 
-        var logoRectangle = new Rectangle(this.logoOffset.x, this.logoOffset.y, logoWidth, logoHeight);
         if (rebuildLogo) {
+            var logoRectangle = new Rectangle(this.logoOffset.x, this.logoOffset.y, logoWidth, logoHeight);
             if (typeof this._logoQuad === 'undefined') {
                 this._logoQuad = new ViewportQuad(logoRectangle);
                 this._logoQuad.enableBlending = true;
