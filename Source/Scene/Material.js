@@ -1,36 +1,36 @@
 /*global define*/
 define([
-        '../../Core/DeveloperError',
-        '../../Core/createGuid',
-        '../../Core/Jobs',
-        '../../Core/clone',
-        '../../Core/Matrix2',
-        '../../Core/Matrix3',
-        '../../Core/Matrix4',
-        '../../ThirdParty/Chain',
-        '../../Shaders/Materials/AlphaMapMaterial',
-        '../../Shaders/Materials/AsphaltMaterial',
-        '../../Shaders/Materials/BlobMaterial',
-        '../../Shaders/Materials/BrickMaterial',
-        '../../Shaders/Materials/BumpMapMaterial',
-        '../../Shaders/Materials/CementMaterial',
-        '../../Shaders/Materials/CheckerboardMaterial',
-        '../../Shaders/Materials/ColorMaterial',
-        '../../Shaders/Materials/DiffuseMapMaterial',
-        '../../Shaders/Materials/DistanceIntervalMaterial',
-        '../../Shaders/Materials/DotMaterial',
-        '../../Shaders/Materials/EmissionMapMaterial',
-        '../../Shaders/Materials/FacetMaterial',
-        '../../Shaders/Materials/FresnelMaterial',
-        '../../Shaders/Materials/GrassMaterial',
-        '../../Shaders/Materials/HorizontalStripeMaterial',
-        '../../Shaders/Materials/NormalMapMaterial',
-        '../../Shaders/Materials/ReflectionMaterial',
-        '../../Shaders/Materials/RefractionMaterial',
-        '../../Shaders/Materials/SpecularMapMaterial',
-        '../../Shaders/Materials/TieDyeMaterial',
-        '../../Shaders/Materials/VerticalStripeMaterial',
-        '../../Shaders/Materials/WoodMaterial'
+        '../Core/DeveloperError',
+        '../Core/createGuid',
+        '../Core/Jobs',
+        '../Core/clone',
+        '../Core/Matrix2',
+        '../Core/Matrix3',
+        '../Core/Matrix4',
+        '../ThirdParty/Chain',
+        '../Shaders/Materials/AlphaMapMaterial',
+        '../Shaders/Materials/AsphaltMaterial',
+        '../Shaders/Materials/BlobMaterial',
+        '../Shaders/Materials/BrickMaterial',
+        '../Shaders/Materials/BumpMapMaterial',
+        '../Shaders/Materials/CementMaterial',
+        '../Shaders/Materials/CheckerboardMaterial',
+        '../Shaders/Materials/ColorMaterial',
+        '../Shaders/Materials/DiffuseMapMaterial',
+        '../Shaders/Materials/DistanceIntervalMaterial',
+        '../Shaders/Materials/DotMaterial',
+        '../Shaders/Materials/EmissionMapMaterial',
+        '../Shaders/Materials/FacetMaterial',
+        '../Shaders/Materials/FresnelMaterial',
+        '../Shaders/Materials/GrassMaterial',
+        '../Shaders/Materials/HorizontalStripeMaterial',
+        '../Shaders/Materials/NormalMapMaterial',
+        '../Shaders/Materials/ReflectionMaterial',
+        '../Shaders/Materials/RefractionMaterial',
+        '../Shaders/Materials/SpecularMapMaterial',
+        '../Shaders/Materials/TieDyeMaterial',
+        '../Shaders/Materials/VerticalStripeMaterial',
+        '../Shaders/Materials/WoodMaterial'
     ], function(
         DeveloperError,
         createGuid,
@@ -77,7 +77,7 @@ define([
         if (typeof this._context === 'undefined') {
             throw new DeveloperError('context is required.');
         }
-        this._strict = (typeof this._description.strict !== 'undefined') ? this._description.strict : false;
+        this._strict = (typeof this._description.strict !== 'undefined') ? this._description.strict : true;
         this._template = this._description.template || {};
         this._materialID = this._template.id;
 
@@ -496,7 +496,8 @@ define([
         'source' : AlphaMapMaterial
     });
 
-    // Diffuse Alpha Map Material. Useful for textures with an alpha component.
+    // Diffuse Alpha Map Material.
+    // Useful for textures with an alpha component.
     Material.prototype._materialFactory.addMaterial('DiffuseAlphaMapMaterial', {
         'id' : 'DiffuseAlphaMapMaterial',
         'materials' : {
@@ -764,14 +765,14 @@ define([
             'lightColor' : {
                 'red' : 1.0,
                 'green' : 1.0,
-                'blue' : 0.0,
-                'alpha' : 0.75
+                'blue' : 1.0,
+                'alpha' : 0.5
             },
             'darkColor' : {
                 'red' : 0.0,
-                'green' : 1.0,
-                'blue' : 1.0,
-                'alpha' : 0.75
+                'green' : 0.0,
+                'blue' : 0.0,
+                'alpha' : 0.5
             },
             'repeat' : {
                 'x' : 5.0,

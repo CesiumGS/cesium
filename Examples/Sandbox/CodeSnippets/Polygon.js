@@ -1060,10 +1060,14 @@
                 Cesium.Cartographic.fromDegrees(-70.0, 40.0),
                 Cesium.Cartographic.fromDegrees(-80.0, 40.0)
             ]));
-            polygon.material = new Cesium.CheckerboardMaterial({
-                sRepeat : 5,
-                tRepeat : 5
+
+            polygon.material = new Cesium.Material({
+                'context' : scene.getContext(),
+                'template' : {
+                    'id' : 'CheckerboardMaterial'
+                }
             });
+
             primitives.add(polygon);
 
             scene.getAnimations().addProperty(polygon, 'erosion', 0.0, 1.0);
@@ -1079,10 +1083,14 @@
                 Cesium.Cartographic.fromDegrees(-70.0, 40.0),
                 Cesium.Cartographic.fromDegrees(-80.0, 40.0)
             ]));
-            polygon.material = new Cesium.CheckerboardMaterial({
-                sRepeat : 5,
-                tRepeat : 5
+
+            polygon.material = new Cesium.Material({
+                'context' : scene.getContext(),
+                'template' : {
+                    'id' : 'CheckerboardMaterial'
+                }
             });
+
             primitives.add(polygon);
 
             scene.getAnimations().addAlpha(polygon.material, 0.0, 0.7);
@@ -1098,10 +1106,14 @@
                 Cesium.Cartographic.fromDegrees(-70.0, 40.0),
                 Cesium.Cartographic.fromDegrees(-80.0, 40.0)
             ]));
-            polygon.material = new Cesium.CheckerboardMaterial({
-                sRepeat : 5,
-                tRepeat : 5
+
+            polygon.material = new Cesium.Material({
+                'context' : scene.getContext(),
+                'template' : {
+                    'id' : 'CheckerboardMaterial'
+                }
             });
+
             primitives.add(polygon);
 
             scene.getAnimations().addProperty(polygon, 'height', 2000000.0, 0.0);

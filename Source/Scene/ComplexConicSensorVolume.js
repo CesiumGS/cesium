@@ -15,8 +15,8 @@ define([
         '../Renderer/CullFace',
         '../Renderer/BlendEquation',
         '../Renderer/BlendFunction',
-        './Materials/ColorMaterial',
-        './Materials/combineMaterials',
+        './ColorMaterial',
+        './combineMaterials',
         '../Shaders/Noise',
         '../Shaders/Ray',
         '../Shaders/ConstructiveSolidGeometry',
@@ -293,38 +293,30 @@ define([
     ComplexConicSensorVolume.prototype._combineMaterials = function() {
         // On older/mobile hardware, we could do one pass per material to avoid
         // going over the maximum uniform limit
-
-        var replaceMaterialMethods = function(source, type)
-        {
-            var origName = 'agi_getMaterial';
-            var newName = 'agi_get' + type + 'Material';
-            return source.replace(new RegExp(origName, 'g'), newName);
-        };
-
-        return combineMaterials([{
+        return combineMaterials({
             material : this.outerMaterial,
             sourceTransform : function(source) {
-                return replaceMaterialMethods(source, 'Outer');
+                return source.replace(new RegExp('agi_getMaterial', 'g'), 'agi_getOuterMaterial');
             }
         },
         {
             material : this.innerMaterial,
             sourceTransform : function(source) {
-                return replaceMaterialMethods(source, 'Inner');
+                return source.replace(new RegExp('agi_getMaterial', 'g'), 'agi_getInnerMaterial');
             }
         },
         {
             material : this.capMaterial,
             sourceTransform : function(source) {
-                return replaceMaterialMethods(source, 'Cap');
+                return source.replace(new RegExp('agi_getMaterial', 'g'), 'agi_getCapMaterial');
             }
         },
         {
             material : this.silhouetteMaterial,
             sourceTransform : function(source) {
-                return replaceMaterialMethods(source, 'Silhouette');
+                return source.replace(new RegExp('agi_getMaterial', 'g'), 'agi_getSilhouetteMaterial');
             }
-        }]);
+        });
     };
 
     /**

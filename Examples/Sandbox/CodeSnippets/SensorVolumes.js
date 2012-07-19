@@ -168,57 +168,6 @@
         this.camera = camera;
     };
 
-    Sandbox.ReflectionSensorMaterial = function (scene, ellipsoid, primitives) {
-        this.code = function () {
-            //Load cube map images at once
-            var imageFolder = "../../Images/";
-            var cubeMapFolder = imageFolder + "PalmTreesCubeMap/";
-            var cubeMapFileExtension = ".jpg";
-            Cesium.Chain.run(
-                Cesium.Jobs.downloadImage(cubeMapFolder + "posx" + cubeMapFileExtension),
-                Cesium.Jobs.downloadImage(cubeMapFolder + "negx" + cubeMapFileExtension),
-                Cesium.Jobs.downloadImage(cubeMapFolder + "posy" + cubeMapFileExtension),
-                Cesium.Jobs.downloadImage(cubeMapFolder + "negy" + cubeMapFileExtension),
-                Cesium.Jobs.downloadImage(cubeMapFolder + "posz" + cubeMapFileExtension),
-                Cesium.Jobs.downloadImage(cubeMapFolder + "negz" + cubeMapFileExtension)
-            ).thenRun(
-            function() {
-                var material = new Cesium.ReflectionMaterial({
-                    cubeMap : scene.getContext().createCubeMap({
-                        source : {
-                            positiveX : this.images[cubeMapFolder + "posx" + cubeMapFileExtension],
-                            negativeX : this.images[cubeMapFolder + "negx" + cubeMapFileExtension],
-                            positiveY : this.images[cubeMapFolder + "negy" + cubeMapFileExtension],
-                            negativeY : this.images[cubeMapFolder + "posy" + cubeMapFileExtension],
-                            positiveZ : this.images[cubeMapFolder + "posz" + cubeMapFileExtension],
-                            negativeZ : this.images[cubeMapFolder + "negz" + cubeMapFileExtension]
-                        },
-                        pixelFormat : Cesium.PixelFormat.RGB
-                    }),
-                    reflectivity : 1.0
-                });
-
-                var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic2(-90.0, 0.0)));
-                modelMatrix = modelMatrix.multiplyWithMatrix(Cesium.Matrix4.createTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
-
-                var sensors = new Cesium.SensorVolumeCollection(undefined);
-                sensors.addComplexConic({
-                    modelMatrix : modelMatrix,
-                    outerHalfAngle : Cesium.Math.toRadians(30.0),
-                    innerHalfAngle : Cesium.Math.toRadians(20.0),
-                    radius : 20000000.0,
-                    outerMaterial : material,
-                    innerMaterial : material,
-                    capMaterial : material,
-                    silhouetteMaterial : material
-                });
-                primitives.add(sensors);
-            });
-        };
-
-        this.camera = camera;
-    };
-
     Sandbox.DistanceIntervalSensorMaterial = function (scene, ellipsoid, primitives) {
         this.code = function () {
             var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));

@@ -3,7 +3,7 @@ define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Scene/Polygon',
-        '../Scene/Materials/ColorMaterial'
+        '../Scene/ColorMaterial'
        ], function(
          DeveloperError,
          destroyObject,

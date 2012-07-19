@@ -7,7 +7,7 @@ define([
         '../Core/Matrix4',
         '../Core/Spherical',
         '../Scene/CustomSensorVolume',
-        '../Scene/Materials/ColorMaterial'
+        '../Scene/ColorMaterial'
        ], function(
          DeveloperError,
          destroyObject,

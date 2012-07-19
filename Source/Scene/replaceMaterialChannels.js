@@ -1,6 +1,6 @@
 /*global define*/
 define([
-        '../../Core/DeveloperError'
+        '../Core/DeveloperError'
     ], function(
         DeveloperError) {
     "use strict";

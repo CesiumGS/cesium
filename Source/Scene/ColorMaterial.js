@@ -1,7 +1,7 @@
 /*global define*/
 define([
-        '../../Core/Color',
-        '../../Shaders/Materials/ColorMaterial'
+        '../Core/Color',
+        '../Shaders/Materials/ColorMaterial'
        ], function(
          Color,
          ShadersColorMaterial) {
@@ -14,12 +14,14 @@ define([
      * @constructor
      */
     var ColorMaterial = function(template) {
+        this.uniforms = {};
+
         var color = typeof template === 'undefined' ? undefined : template.color;
 
         /**
          * Color of the material.
          */
-        this.color = typeof color !== 'undefined' ? Color.clone(color) : new Color(1.0, 0.0, 0.0, 0.5);
+        this.uniforms.color = typeof color !== 'undefined' ? Color.clone(color) : new Color(1.0, 0.0, 0.0, 0.5);
 
         /**
          * The glsl shader source
@@ -30,8 +32,8 @@ define([
 
         var that = this;
         this._uniforms = {
-            u_color : function() {
-                return that.color;
+            color : function() {
+                return that.uniforms.color;
             }
         };
     };

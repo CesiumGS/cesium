@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/Materials/DistanceIntervalMaterial',
+        'Scene/DistanceIntervalMaterial',
         '../Specs/renderMaterial',
         '../Specs/createContext',
         '../Specs/destroyContext',

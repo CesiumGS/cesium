@@ -2,7 +2,7 @@
 define([
         './DynamicProperty',
         './CzmlColor',
-        '../Scene/Materials/ColorMaterial'
+        '../Scene/ColorMaterial'
     ], function(
          DynamicProperty,
          CzmlColor,

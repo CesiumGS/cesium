@@ -3,7 +3,7 @@ define([
         './DynamicProperty',
         './CzmlString',
         './CzmlNumber',
-        '../Scene/Materials/DiffuseMapMaterial',
+        '../Scene/DiffuseMapMaterial',
         '../Renderer/PixelFormat'
     ], function(
          DynamicProperty,

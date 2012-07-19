@@ -1,8 +1,8 @@
 /*global define*/
 define([
-        '../../Core/DeveloperError',
+        '../Core/DeveloperError',
         './replaceMaterialChannels',
-        '../../Shaders/Materials/DiffuseMapMaterial'
+        '../Shaders/Materials/DiffuseMapMaterial'
     ], function(
         DeveloperError,
         replaceMaterialChannels,
@@ -44,18 +44,18 @@ define([
          * type {String}
          */
         this.channels = t.channels || 'rgb';
-        this._shaderSource = replaceMaterialChannels(ShadersDiffuseMapMaterial, 'diffuse_map_material_channels', this.channels, 3);
+        this._shaderSource = replaceMaterialChannels(ShadersDiffuseMapMaterial, 'diffuseChannels', this.channels, 3);
 
         var that = this;
         this._uniforms = {
-            u_texture : function() {
+            texture : function() {
                 if (typeof that.texture === 'undefined') {
                     throw new DeveloperError("DiffuseMapMaterial requires a texture.");
                 }
 
                 return that.texture;
             },
-            u_repeat : function() {
+            repeat : function() {
                 return {
                     x : that.sRepeat,
                     y : that.tRepeat

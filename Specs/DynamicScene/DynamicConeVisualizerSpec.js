@@ -7,7 +7,7 @@ defineSuite([
              'DynamicScene/DynamicCone',
              'DynamicScene/DynamicObjectCollection',
              'DynamicScene/DynamicObject',
-             'Scene/Materials/ColorMaterial',
+             'Scene/ColorMaterial',
              'Core/JulianDate',
              'Core/Quaternion',
              'Core/Cartesian3',

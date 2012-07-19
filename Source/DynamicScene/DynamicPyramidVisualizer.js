@@ -5,7 +5,7 @@ define([
         '../Core/Color',
         '../Core/Matrix4',
         '../Scene/CustomSensorVolume',
-        '../Scene/Materials/ColorMaterial'
+        '../Scene/ColorMaterial'
        ], function(
          DeveloperError,
          destroyObject,
