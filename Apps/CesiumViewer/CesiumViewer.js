@@ -62,28 +62,10 @@ define([
         multiplier : 1
     });
     var animationController = new AnimationController(clock);
-    var spindleController;
-    var timeline;
-    var transitioner;
-    var dynamicObjectCollection = new DynamicObjectCollection();
-    var speedIndicatorElement;
-    var timeLabel;
-    var lastTimeLabelUpdate;
-    var cameraCenteredObjectID;
-    var cameraCenteredObjectIDPosition;
-    var lastCameraCenteredObjectID;
 
     var animReverse;
     var animPause;
     var animPlay;
-
-    function updateSpeedIndicator() {
-        if (animationController.isAnimating()) {
-            speedIndicatorElement.innerHTML = clock.multiplier + 'x realtime';
-        } else {
-            speedIndicatorElement.innerHTML = clock.multiplier + 'x realtime (paused)';
-        }
-    }
 
     function setTimeFromBuffer() {
         animReverse.set('checked', false);
@@ -136,8 +118,25 @@ define([
 
     var cesium = new CesiumWidget({
         clock : clock,
+        animationController : animationController,
 
         postSetup : function(widget) {
+            //widget.enableStatistics(true);
+
+            on(cesium, 'ObjectRightClickSelected', onObjectRightClickSelected);
+
+            var dropBox = dom.byId('cesiumContainer');
+            on(dropBox, 'drop', handleDrop);
+            on(dropBox, 'dragenter', event.stop);
+            on(dropBox, 'dragover', event.stop);
+            on(dropBox, 'dragexit', event.stop);
+
+            on(window, 'resize', function() {
+                cesium.resize();
+            });
+        },
+
+/*        postSetup : function(widget) {
             var scene = widget.scene;
 
             function update() {
@@ -374,12 +373,12 @@ define([
 
             update();
         },
+        */
 
         onSetupError : function(widget, error) {
             console.log(error);
         }
     });
-
     cesium.placeAt(dom.byId('cesiumContainer'));
     window.testing = cesium;  // TODO: Remove this
 });

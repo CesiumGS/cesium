@@ -181,8 +181,16 @@ define([
             }
         },
 
+        updateSpeedIndicator : function() {
+            if (this.animationController.isAnimating()) {
+                this.speedIndicator.innerHTML = this.clock.multiplier + 'x realtime';
+            } else {
+                this.speedIndicator.innerHTML = this.clock.multiplier + 'x realtime (paused)';
+            }
+        },
+
         _setupCesium : function() {
-            var canvas = this.canvas, ellipsoid = this.ellipsoid, scene;
+            var canvas = this.canvas, ellipsoid = this.ellipsoid, scene, widget = this;
 
             try {
                 scene = this.scene = new Scene(canvas);
@@ -237,6 +245,242 @@ define([
             handler.setMouseAction(lang.hitch(this, '_handleWheel'), MouseEventType.WHEEL);
             handler.setMouseAction(lang.hitch(this, '_handleRightDown'), MouseEventType.RIGHT_DOWN);
             handler.setMouseAction(lang.hitch(this, '_handleRightUp'), MouseEventType.RIGHT_UP);
+
+            //////////////////////////////////////////////////////////////////////////////////////////////////
+
+            var animationController = this.animationController;
+
+            var spindleController;
+            var timeline;
+            var transitioner;
+            var dynamicObjectCollection = new DynamicObjectCollection();
+            var timeLabel;
+            var lastTimeLabelUpdate;
+            var cameraCenteredObjectID;
+            var cameraCenteredObjectIDPosition;
+            var lastCameraCenteredObjectID;
+
+            function update() {
+                var currentTime = animationController.update();
+
+                if (typeof timeline !== 'undefined') {
+                    timeline.updateFromClock();
+                }
+                visualizers.update(currentTime);
+
+                if (Math.abs(currentTime.getSecondsDifference(lastTimeLabelUpdate)) >= 1.0) {
+                    timeLabel.innerHTML = currentTime.toDate().toUTCString();
+                    lastTimeLabelUpdate = currentTime;
+                }
+
+                // Update the camera to stay centered on the selected object, if any.
+                if (cameraCenteredObjectID) {
+                    var dynamicObject = dynamicObjectCollection.getObject(cameraCenteredObjectID);
+                    if (dynamicObject && dynamicObject.position) {
+                        cameraCenteredObjectIDPosition = dynamicObject.position.getValueCartesian(currentTime, cameraCenteredObjectIDPosition);
+                        if (typeof cameraCenteredObjectIDPosition !== 'undefined') {
+                            // If we're centering on an object for the first time, zoom to within 2km of it.
+                            if (lastCameraCenteredObjectID !== cameraCenteredObjectID) {
+                                lastCameraCenteredObjectID = cameraCenteredObjectID;
+                                var camera = scene.getCamera();
+                                camera.position = camera.position.normalize().multiplyByScalar(5000.0);
+
+                                var controllers = camera.getControllers();
+                                controllers.removeAll();
+                                spindleController = controllers.addSpindle();
+                                spindleController.constrainedAxis = Cartesian3.UNIT_Z;
+                            }
+
+                            if (typeof spindleController !== 'undefined' && !spindleController.isDestroyed()) {
+                                var transform = Transforms.eastNorthUpToFixedFrame(cameraCenteredObjectIDPosition, ellipsoid);
+                                spindleController.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
+                            }
+                        }
+                    }
+                }
+                widget.render(currentTime);
+                requestAnimationFrame(update);
+            }
+
+            transitioner = new SceneTransitioner(scene);
+            visualizers = VisualizerCollection.createCzmlStandardCollection(scene, dynamicObjectCollection);
+
+            var queryObject = {};
+            if (window.location.search) {
+                queryObject = ioQuery.queryToObject(window.location.search.substring(1));
+            }
+
+            if (typeof queryObject.source !== 'undefined') {
+                getJson(queryObject.source).then(function(czmlData) {
+                    processCzml(czmlData, dynamicObjectCollection, queryObject.source);
+                    setTimeFromBuffer();
+                });
+            }
+
+            if (typeof queryObject.lookAt !== 'undefined') {
+                cameraCenteredObjectID = queryObject.lookAt;
+            }
+
+            lastTimeLabelUpdate = clock.currentTime;
+            timeLabel = dom.byId('dijit_form_Button_0_label');                  // TODO: FIX THIS
+            timeLabel.innerHTML = clock.currentTime.toDate().toUTCString();
+
+            this.updateSpeedIndicator();
+
+            var animReverse = this.animReverse;
+            var animPause = this.animPause;
+            var animPlay = this.animPlay;
+
+            on(this.animReset, 'Click', function() {
+                animationController.reset();
+                animReverse.set('checked', false);
+                animPause.set('checked', true);
+                animPlay.set('checked', false);
+                widget.updateSpeedIndicator();
+            });
+
+            function onAnimPause() {
+                animationController.pause();
+                animReverse.set('checked', false);
+                animPause.set('checked', true);
+                animPlay.set('checked', false);
+                widget.updateSpeedIndicator();
+            }
+
+            on(animPause, 'Click', onAnimPause);
+
+            on(animReverse, 'Click', function() {
+                animationController.playReverse();
+                animReverse.set('checked', true);
+                animPause.set('checked', false);
+                animPlay.set('checked', false);
+                widget.updateSpeedIndicator();
+            });
+
+            on(animPlay, 'Click', function() {
+                animationController.play();
+                animReverse.set('checked', false);
+                animPause.set('checked', false);
+                animPlay.set('checked', true);
+                widget.updateSpeedIndicator();
+            });
+
+            on(widget.animSlow, 'Click', function() {
+                animationController.slower();
+                widget.updateSpeedIndicator();
+            });
+
+            on(widget.animFast, 'Click', function() {
+                animationController.faster();
+                widget.updateSpeedIndicator();
+            });
+
+            function onTimelineScrub(e) {
+                widget.clock.currentTime = e.timeJulian;
+                onAnimPause();
+            }
+
+            var timelineWidget = widget.mainTimeline;
+            timelineWidget.clock = widget.clock;
+            timelineWidget.setupCallback = function(t) {
+                timeline = t;
+                timeline.addEventListener('settime', onTimelineScrub, false);
+                timeline.zoomTo(clock.startTime, clock.stopTime);
+            };
+            timelineWidget.setupTimeline();
+
+            var viewHomeButton = widget.viewHomeButton;
+            var view2D = widget.view2D;
+            var view3D = widget.view3D;
+            var viewColumbus = widget.viewColumbus;
+            var viewFullScreen = widget.viewFullScreen;
+
+            view2D.set('checked', false);
+            view3D.set('checked', true);
+            viewColumbus.set('checked', false);
+
+            on(viewFullScreen, 'Click', function() {
+                if (FullScreen.isFullscreenEnabled()) {
+                    FullScreen.exitFullscreen();
+                } else {
+                    FullScreen.requestFullScreen(document.body);
+                }
+            });
+
+            on(viewHomeButton, 'Click', function() {
+                view2D.set('checked', false);
+                view3D.set('checked', true);
+                viewColumbus.set('checked', false);
+                transitioner.morphTo3D();
+                widget.viewHome();
+                widget.showSkyAtmosphere(true);
+                widget.showGroundAtmosphere(true);
+            });
+            on(view2D, 'Click', function() {
+                cameraCenteredObjectID = undefined;
+                view2D.set('checked', true);
+                view3D.set('checked', false);
+                viewColumbus.set('checked', false);
+                widget.showSkyAtmosphere(false);
+                widget.showGroundAtmosphere(false);
+                transitioner.morphTo2D();
+            });
+            on(view3D, 'Click', function() {
+                cameraCenteredObjectID = undefined;
+                view2D.set('checked', false);
+                view3D.set('checked', true);
+                viewColumbus.set('checked', false);
+                transitioner.morphTo3D();
+                widget.showSkyAtmosphere(true);
+                widget.showGroundAtmosphere(true);
+            });
+            on(viewColumbus, 'Click', function() {
+                cameraCenteredObjectID = undefined;
+                view2D.set('checked', false);
+                view3D.set('checked', false);
+                viewColumbus.set('checked', true);
+                widget.showSkyAtmosphere(false);
+                widget.showGroundAtmosphere(false);
+                transitioner.morphToColumbusView();
+            });
+
+            var cbLighting = widget.cbLighting;
+            on(cbLighting, 'Change', function(value) {
+                widget.centralBody.affectedByLighting = !value;
+            });
+
+            var imagery = widget.imagery;
+            var imageryAerial = widget.imageryAerial;
+            var imageryAerialWithLabels = widget.imageryAerialWithLabels;
+            var imageryRoad = widget.imageryRoad;
+            var imagerySingleTile = widget.imagerySingleTile;
+            var imageryOptions = [imageryAerial, imageryAerialWithLabels, imageryRoad, imagerySingleTile];
+            var bingHtml = imagery.containerNode.innerHTML;
+
+            function createImageryClickFunction(control, style) {
+                return function() {
+                    if (style) {
+                        widget.setStreamingImageryMapStyle(style);
+                        imagery.containerNode.innerHTML = bingHtml;
+                    } else {
+                        widget.enableStreamingImagery(false);
+                        imagery.containerNode.innerHTML = 'Imagery';
+                    }
+
+                    imageryOptions.forEach(function(o) {
+                        o.set('checked', o === control);
+                    });
+                };
+            }
+
+            on(imageryAerial, 'Click', createImageryClickFunction(imageryAerial, BingMapsStyle.AERIAL));
+            on(imageryAerialWithLabels, 'Click', createImageryClickFunction(imageryAerialWithLabels, BingMapsStyle.AERIAL_WITH_LABELS));
+            on(imageryRoad, 'Click', createImageryClickFunction(imageryRoad, BingMapsStyle.ROAD));
+            on(imagerySingleTile, 'Click', createImageryClickFunction(imagerySingleTile, undefined));
+
+            update();
+
+            //////////////////////////////////////////////////////////////////////////////////////////////////
 
             if (typeof this.postSetup !== 'undefined') {
                 this.postSetup(this);
