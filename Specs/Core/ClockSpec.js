@@ -15,7 +15,7 @@ defineSuite([
     it('constructor sets default parameters', function() {
         var clock = new Clock();
         expect(clock.stopTime).toEqual(clock.startTime.addDays(1));
-        expect(clock.startTime).toEqual(clock.currentTime.addDays(-0.5));
+        expect(clock.startTime).toEqual(clock.currentTime);
         expect(clock.clockStep).toEqual(ClockStep.SYSTEM_CLOCK_DEPENDENT);
         expect(clock.clockRange).toEqual(ClockRange.UNBOUNDED);
         expect(clock.multiplier).toEqual(1.0);
@@ -47,7 +47,7 @@ defineSuite([
     it('constructor works with no currentTime parameter', function() {
         var start = JulianDate.fromTotalDays(12);
         var stop = JulianDate.fromTotalDays(112);
-        var currentTime = JulianDate.fromTotalDays(62);
+        var currentTime = JulianDate.fromTotalDays(12);
         var step = ClockStep.TICK_DEPENDENT;
         var range = ClockRange.LOOP;
         var multiplier = 1.5;
@@ -79,7 +79,7 @@ defineSuite([
             stopTime : stop,
             clockRange : range
         });
-        expect(clock.startTime).toEqual(clock.currentTime.addDays(-0.5));
+        expect(clock.startTime).toEqual(clock.currentTime);
         expect(clock.stopTime).toEqual(stop);
         expect(clock.currentTime).toEqual(currentTime);
         expect(clock.clockStep).toEqual(step);
@@ -90,7 +90,7 @@ defineSuite([
     it('constructor works with no start or stop time', function() {
         var start = JulianDate.fromTotalDays(12);
         var stop = JulianDate.fromTotalDays(13);
-        var currentTime = JulianDate.fromTotalDays(12.5);
+        var currentTime = JulianDate.fromTotalDays(12);
         var step = ClockStep.TICK_DEPENDENT;
         var range = ClockRange.LOOP;
         var multiplier = 1.5;
@@ -111,7 +111,7 @@ defineSuite([
     it('constructor works with no start or current time', function() {
         var start = JulianDate.fromTotalDays(12);
         var stop = JulianDate.fromTotalDays(13);
-        var currentTime = JulianDate.fromTotalDays(12.5);
+        var currentTime = JulianDate.fromTotalDays(12);
         var step = ClockStep.TICK_DEPENDENT;
         var range = ClockRange.LOOP;
         var multiplier = 1.5;
@@ -133,7 +133,7 @@ defineSuite([
     it('constructor works with no current or stop time', function() {
         var start = JulianDate.fromTotalDays(12);
         var stop = JulianDate.fromTotalDays(13);
-        var currentTime = JulianDate.fromTotalDays(12.5);
+        var currentTime = JulianDate.fromTotalDays(12);
         var step = ClockStep.TICK_DEPENDENT;
         var range = ClockRange.LOOP;
         var multiplier = 1.5;
@@ -154,7 +154,7 @@ defineSuite([
     it('constructor works with no stopTime parameter', function() {
         var start = JulianDate.fromTotalDays(12);
         var stop = JulianDate.fromTotalDays(13);
-        var currentTime = JulianDate.fromTotalDays(12.5);
+        var currentTime = JulianDate.fromTotalDays(12);
         var step = ClockStep.TICK_DEPENDENT;
         var range = ClockRange.LOOP;
         var multiplier = 1.5;
