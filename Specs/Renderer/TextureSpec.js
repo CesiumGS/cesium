@@ -39,22 +39,14 @@ defineSuite([
     });
 
     afterEach(function() {
-        if (sp) {
-            sp = sp.destroy();
-        }
-
-        if (va) {
-            va = va.destroy();
-        }
-
-        if (texture) {
-            texture = texture.destroy();
-        }
+        sp = sp && sp.destroy();
+        va = va && va.destroy();
+        texture = texture && texture.destroy();
 
         destroyContext(context);
     });
 
-    function renderFragment(context) {
+    function renderFragment(context, texture) {
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs =
             'uniform sampler2D u_texture;' +
@@ -131,7 +123,7 @@ defineSuite([
         }));
         expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
 
-        expect(renderFragment(context)).toEqualArray([255, 0, 0, 255]);
+        expect(renderFragment(context, texture)).toEqualArray([255, 0, 0, 255]);
     });
 
     it('copies from the framebuffer', function() {
@@ -141,7 +133,7 @@ defineSuite([
         });
 
         // Render blue
-        expect(renderFragment(context)).toEqualArray([0, 0, 255, 255]);
+        expect(renderFragment(context, texture)).toEqualArray([0, 0, 255, 255]);
 
         // Clear to red
         context.clear(context.createClearState({
@@ -168,7 +160,7 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
 
         // Render red
-        expect(renderFragment(context)).toEqualArray([255, 0, 0, 255]);
+        expect(renderFragment(context, texture)).toEqualArray([255, 0, 0, 255]);
     });
 
     it('draws a textured blue point', function() {
@@ -177,7 +169,7 @@ defineSuite([
             pixelFormat :PixelFormat.RGBA
         });
 
-        expect(renderFragment(context)).toEqualArray([0, 0, 255, 255]);
+        expect(renderFragment(context, texture)).toEqualArray([0, 0, 255, 255]);
     });
 
     it('renders with premultiplied alpha', function() {
@@ -188,7 +180,7 @@ defineSuite([
         });
         expect(texture.getPreMultiplyAlpha()).toEqual(true);
 
-        expect(renderFragment(context)).toEqualArray([0, 0, 127, 127]);
+        expect(renderFragment(context, texture)).toEqualArray([0, 0, 127, 127]);
     });
 
     it('draws textured blue and red points', function() {
@@ -230,6 +222,10 @@ defineSuite([
         expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
     });
 
+    it('renders the context default texture', function() {
+        expect(renderFragment(context, context.getDefaultTexture())).toEqualArray([255, 255, 255, 255]);
+    });
+
     it('creates from a typed array', function() {
         var bytes = new Uint8Array([0, 255, 0, 255]);
 
@@ -243,7 +239,7 @@ defineSuite([
             }
         });
 
-        expect(renderFragment(context)).toEqualArray([0, 255, 0, 255]);
+        expect(renderFragment(context, texture)).toEqualArray([0, 255, 0, 255]);
     });
 
     it('copies from a typed array', function() {
@@ -261,13 +257,13 @@ defineSuite([
             height : 1
         });
 
-        expect(renderFragment(context)).toEqualArray([255, 0, 255, 0]);
+        expect(renderFragment(context, texture)).toEqualArray([255, 0, 255, 0]);
     });
 
     it('copies over a subset of a texture', function() {
         texture = context.createTexture2D({
             source : blueOverRedImage,
-            pixelFormat :PixelFormat.RGBA
+            pixelFormat : PixelFormat.RGBA
         });
 
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
@@ -320,7 +316,7 @@ defineSuite([
     xit('generates mipmaps', function() {
         texture = context.createTexture2D({
             source : blueImage,
-            pixelFormat :PixelFormat.RGBA
+            pixelFormat : PixelFormat.RGBA
         });
 
         texture.generateMipmap();
@@ -328,13 +324,13 @@ defineSuite([
             minificationFilter : TextureMinificationFilter.NEAREST_MIPMAP_LINEAR
         }));
 
-        expect(renderFragment(context)).toEqualArray([0, 0, 255, 255]);
+        expect(renderFragment(context, texture)).toEqualArray([0, 0, 255, 255]);
     });
 
     it('gets the default sampler', function() {
         texture = context.createTexture2D({
             source : blueImage,
-            pixelFormat :PixelFormat.RGBA
+            pixelFormat : PixelFormat.RGBA
         });
 
         var sampler = texture.getSampler();
@@ -348,7 +344,7 @@ defineSuite([
     it('sets a sampler', function() {
         texture = context.createTexture2D({
             source : blueImage,
-            pixelFormat :PixelFormat.RGBA
+            pixelFormat : PixelFormat.RGBA
         });
 
         var sampler = context.createSampler({
@@ -371,7 +367,7 @@ defineSuite([
     it('gets width and height', function() {
         texture = context.createTexture2D({
             source : blueOverRedImage,
-            pixelFormat :PixelFormat.RGBA
+            pixelFormat : PixelFormat.RGBA
         });
 
         expect(texture.getWidth()).toEqual(1);
@@ -381,7 +377,7 @@ defineSuite([
     it('destroys', function() {
         var t = context.createTexture2D({
             source : blueImage,
-            pixelFormat :PixelFormat.RGBA
+            pixelFormat : PixelFormat.RGBA
         });
 
         expect(t.isDestroyed()).toEqual(false);
