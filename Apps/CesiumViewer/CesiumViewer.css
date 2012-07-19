@@ -20,7 +20,7 @@ html,body {
 	height: 100%;
 }
 
-.timelineContainer {
+.cw-timelineContainer {
 	position: absolute;
 	bottom: 0;
 	width: 100%;
@@ -28,14 +28,14 @@ html,body {
 	padding: 0 2px 2px;
 }
 
-.animationIcon {
+.cw-animationIcon {
 	background-image: url('Images/animationBar.png');
 	background-repeat: no-repeat;
 	width: 24px;
 	height: 24px;
 }
 
-.bingIcon {
+.cw-bingIcon {
     background-image: url('../../Images/Bing_Logo_51x19_White.png');
     background-repeat: no-repeat;
     background-position:center; 
@@ -43,27 +43,27 @@ html,body {
     height: 24px;
 }
 
-.animReverse {
+.cw-animReverse {
 	background-position: -24px 0;
 }
 
-.animPause {
+.cw-animPause {
 	background-position: -72px 0;
 }
 
-.animPlay {
+.cw-animPlay {
 	background-position: -120px 0;
 }
 
-.animFast {
+.cw-animFast {
 	background-position: -144px 0;
 }
 
-.animSlow {
+.cw-animSlow {
 	background-position: -168px 0;
 }
 
-.cesiumLogo {
+.cw-cesiumLogo {
 	display: block;
 	position: absolute;
 	bottom: 66px;
@@ -71,18 +71,18 @@ html,body {
 	text-decoration: none;
 }
 
-.cesiumLogo img {
+.cw-cesiumLogo img {
 	border: none;
 }
 
-.animButtons {
+.cw-animButtons {
 	display: block;
 	position: absolute;
 	bottom: 31px;
 	left: 6px;
 }
 
-.speedIndicator {
+.cw-speedIndicator {
 	opacity: 0;
 	background: rgba(42, 42, 42, 0.8);
 	color: #eee;
@@ -98,52 +98,52 @@ html,body {
 	transition-duration: 0.2s;
 }
 
-.animButtons:hover .speedIndicator {
+.cw-animButtons:hover .cw-speedIndicator {
 	opacity: 1;
 }
 
-.timeLabel {
+.cw-timeLabel {
 	display: block;
 	position: absolute;
 	bottom: 31px;
 	right: 6px;
 }
 
-.viewIcon {
+.cw-viewIcon {
 	background-image: url('Images/viewControlBar.png');
 	background-repeat: no-repeat;
 	width: 24px;
 	height: 24px;
 }
 
-.view2D {
+.cw-view2D {
 	background-position: -24px 0;
 }
 
-.view3D {
+.cw-view3D {
 	background-position: -48px 0;
 }
 
-.viewColumbus {
+.cw-viewColumbus {
 	background-position: -72px 0;
 }
 
-.toggleCbLighting {
+.cw-toggleCbLighting {
 	background-position: -96px 0;
 }
 
-.viewFullScreen {
+.cw-viewFullScreen {
 	background-position: -120px 0;
 }
 
-.viewButtons {
+.cw-viewButtons {
 	display: block;
 	position: fixed;
 	top: 5px;
 	right: 5px;
 }
 
-.imagerySelector {
+.cw-imagerySelector {
 	display: block;
 }
 
