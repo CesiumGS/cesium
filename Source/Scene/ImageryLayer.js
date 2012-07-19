@@ -88,11 +88,16 @@ define([
     }
 
     ImageryLayer.prototype.createTileImagerySkeletons = function(tile, geometryTilingScheme) {
-        var imageryTilingScheme = this.imageryProvider.tilingScheme;
+        var imageryProvider = this.imageryProvider;
+        var imageryTilingScheme = imageryProvider.tilingScheme;
 
-        var extent = tile.extent.intersectWith(this.imageryProvider.extent);
-        //TODO: calculate level correctly
-        var imageryLevel = tile.level + (geometryTilingScheme.numberOfLevelZeroTilesX === 1 ? 1 : 2);
+        var extent = tile.extent.intersectWith(imageryProvider.extent);
+
+        // TODO: this should be imagerySSE / terrainSSE.
+        var errorRatio = 0.5;
+        var targetGeometricError = errorRatio * geometryTilingScheme.getLevelMaximumGeometricError(tile.level);
+        var imageryLevel = imageryTilingScheme.getLevelWithMaximumGeometricError(targetGeometricError);
+        imageryLevel = Math.min(imageryProvider.maxLevel, imageryLevel);
 
         var northwestTileCoordinates = imageryTilingScheme.positionToTileXY(extent.getNorthwest(), imageryLevel);
         var southeastTileCoordinates = imageryTilingScheme.positionToTileXY(extent.getSoutheast(), imageryLevel);
