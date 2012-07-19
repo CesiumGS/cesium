@@ -109,6 +109,25 @@ define([
     };
 
     /**
+     * Converts tile x, y coordinates and level to an extent expressed in the native coordinates
+     * of the tiling scheme.
+     *
+     * @memberof TilingScheme
+     *
+     * @param {Number} x The integer x coordinate of the tile.
+     * @param {Number} y The integer y coordinate of the tile.
+     * @param {Number} level The tile level-of-detail.  Zero is the least detailed.
+     * @param {Object} An object whose west, south, east, and north properties will be set
+     * with the native extent on return.
+     *
+     * @returns {Extent} The specified 'outputExtent', or a new object containing the extent
+     * if 'outputExtent' is undefined.
+     */
+    TilingScheme.prototype.tileXYToNativeExtent = function(x, y, level, outputExtent) {
+        throw new DeveloperError('This type should not be instantiated directly.');
+    };
+
+    /**
      * Converts tile x, y coordinates and level to a cartographic extent.
      *
      * @memberof TilingScheme

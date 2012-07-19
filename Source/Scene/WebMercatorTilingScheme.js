@@ -141,6 +141,39 @@ define([
     };
 
     /**
+     * Converts tile x, y coordinates and level to an extent expressed in the native coordinates
+     * of the tiling scheme.
+     *
+     * @memberof WebMercatorTilingScheme
+     *
+     * @param {Number} x The integer x coordinate of the tile.
+     * @param {Number} y The integer y coordinate of the tile.
+     * @param {Number} level The tile level-of-detail.  Zero is the least detailed.
+     * @param {Object} An object whose west, south, east, and north properties will be set
+     * with the native extent on return.
+     *
+     * @returns {Object} The specified 'outputExtent', or a new object containing the extent
+     * if 'outputExtent' is undefined.
+     */
+    WebMercatorTilingScheme.prototype.tileXYToNativeExtent = function(x, y, level, outputExtent) {
+        if (typeof outputExtent === 'undefined') {
+            outputExtent = {};
+        }
+        var xTiles = this.numberOfLevelZeroTilesX << level;
+        var yTiles = this.numberOfLevelZeroTilesY << level;
+
+        var xTileWidth = (this._extentNortheastInMeters.x - this._extentSouthwestInMeters.x) / xTiles;
+        outputExtent.west = this._extentSouthwestInMeters.x + x * xTileWidth;
+        outputExtent.east = this._extentSouthwestInMeters.x + (x + 1) * xTileWidth;
+
+        var yTileHeight = (this._extentNortheastInMeters.y - this._extentSouthwestInMeters.y) / yTiles;
+        outputExtent.north = this._extentNortheastInMeters.y - y * yTileHeight;
+        outputExtent.south = this._extentNortheastInMeters.y - (y + 1) * yTileHeight;
+
+        return outputExtent;
+    };
+
+    /**
      * Converts tile x, y coordinates and level to a cartographic extent.
      *
      * @memberof WebMercatorTilingScheme
@@ -153,19 +186,11 @@ define([
      * west properties in radians.
      */
     WebMercatorTilingScheme.prototype.tileXYToExtent = function(x, y, level) {
-        var xTiles = this.numberOfLevelZeroTilesX << level;
-        var yTiles = this.numberOfLevelZeroTilesY << level;
+        var nativeExtent = {};
+        this.tileXYToNativeExtent(x, y, level, nativeExtent);
 
-        var xTileWidth = (this._extentNortheastInMeters.x - this._extentSouthwestInMeters.x) / xTiles;
-        var west = this._extentSouthwestInMeters.x + x * xTileWidth;
-        var east = this._extentSouthwestInMeters.x + (x + 1) * xTileWidth;
-
-        var yTileHeight = (this._extentNortheastInMeters.y - this._extentSouthwestInMeters.y) / yTiles;
-        var north = this._extentNortheastInMeters.y - y * yTileHeight;
-        var south = this._extentNortheastInMeters.y - (y + 1) * yTileHeight;
-
-        var southwest = this.webMercatorToCartographic(west, south);
-        var northeast = this.webMercatorToCartographic(east, north);
+        var southwest = this.webMercatorToCartographic(nativeExtent.west, nativeExtent.south);
+        var northeast = this.webMercatorToCartographic(nativeExtent.east, nativeExtent.north);
 
         return new Extent(southwest.longitude, southwest.latitude,
                           northeast.longitude, northeast.latitude);

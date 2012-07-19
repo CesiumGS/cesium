@@ -95,6 +95,40 @@ define([
     GeographicTilingScheme.prototype.createLevelZeroTiles = TilingScheme.prototype.createLevelZeroTiles;
 
     /**
+     * Converts tile x, y coordinates and level to an extent expressed in the native coordinates
+     * of the tiling scheme.
+     *
+     * @memberof GeographicTilingScheme
+     *
+     * @param {Number} x The integer x coordinate of the tile.
+     * @param {Number} y The integer y coordinate of the tile.
+     * @param {Number} level The tile level-of-detail.  Zero is the least detailed.
+     * @param {Object} An object whose west, south, east, and north properties will be set
+     * with the native extent on return.
+     *
+     * @returns {Extent} The specified 'outputExtent', or a new object containing the extent
+     * if 'outputExtent' is undefined.
+     */
+    GeographicTilingScheme.prototype.tileXYToNativeExtent = function(x, y, level, outputExtent) {
+        if (typeof outputExtent === 'undefined') {
+            outputExtent = new Extent(0.0, 0.0, 0.0, 0.0);
+        }
+
+        var xTiles = this.numberOfLevelZeroTilesX << level;
+        var yTiles = this.numberOfLevelZeroTilesY << level;
+
+        var xTileWidth = CesiumMath.TWO_PI / xTiles;
+        outputExtent.west = x * xTileWidth - Math.PI;
+        outputExtent.east = (x + 1) * xTileWidth - Math.PI;
+
+        var yTileHeight = CesiumMath.PI / yTiles;
+        outputExtent.north = CesiumMath.PI_OVER_TWO - y * yTileHeight;
+        outputExtent.south = CesiumMath.PI_OVER_TWO - (y + 1) * yTileHeight;
+
+        return outputExtent;
+    };
+
+    /**
      * Converts tile x, y coordinates and level to a cartographic extent.
      *
      * @memberof GeographicTilingScheme
@@ -107,18 +141,7 @@ define([
      * west properties in radians.
      */
     GeographicTilingScheme.prototype.tileXYToExtent = function(x, y, level) {
-        var xTiles = this.numberOfLevelZeroTilesX << level;
-        var yTiles = this.numberOfLevelZeroTilesY << level;
-
-        var xTileWidth = CesiumMath.TWO_PI / xTiles;
-        var west = x * xTileWidth - Math.PI;
-        var east = (x + 1) * xTileWidth - Math.PI;
-
-        var yTileHeight = CesiumMath.PI / yTiles;
-        var north = CesiumMath.PI_OVER_TWO - y * yTileHeight;
-        var south = CesiumMath.PI_OVER_TWO - (y + 1) * yTileHeight;
-
-        return new Extent(west, south, east, north);
+        return this.tileXYToNativeExtent(x, y, level);
     };
 
     /**

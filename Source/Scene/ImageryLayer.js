@@ -157,36 +157,20 @@ define([
             --southeastTileCoordinates.x;
         }
 
-//        if (northwestTileCoordinates.x !== southeastTileCoordinates.x ||
-//            northwestTileCoordinates.y !== southeastTileCoordinates.y) {
-//            console.log('too many tiles!');
-//        }
-
-//        var sw = new TileImagery(this, northwestTileCoordinates.x, southeastTileCoordinates.y, imageryLevel);
-//        sw.textureScale = new Cartesian2(2.0, 2.0);
-//        sw.textureTranslation = new Cartesian2(0.0, 0.0);
-//        tile.imagery.push(sw);
-//
-//        var se = new TileImagery(this, southeastTileCoordinates.x, southeastTileCoordinates.y, imageryLevel);
-//        se.textureScale = new Cartesian2(2.0, 2.0);
-//        se.textureTranslation = new Cartesian2(0.5, 0.0);
-//        tile.imagery.push(se);
-//
-//        var ne = new TileImagery(this, southeastTileCoordinates.x, northwestTileCoordinates.y, imageryLevel);
-//        ne.textureScale = new Cartesian2(2.0, 2.0);
-//        ne.textureTranslation = new Cartesian2(0.5, 0.5);
-//        tile.imagery.push(ne);
-//
-//        var nw = new TileImagery(this, northwestTileCoordinates.x, northwestTileCoordinates.y, imageryLevel);
-//        nw.textureScale = new Cartesian2(2.0, 2.0);
-//        nw.textureTranslation = new Cartesian2(0.0, 0.5);
-//        tile.imagery.push(nw);
+        var terrainExtent = geometryTilingScheme.tileXYToNativeExtent(tile.x, tile.y, tile.level);
+        var terrainWidth = terrainExtent.east - terrainExtent.west;
+        var terrainHeight = terrainExtent.north - terrainExtent.south;
 
         for ( var i = northwestTileCoordinates.x; i <= southeastTileCoordinates.x; i++) {
             for ( var j = northwestTileCoordinates.y; j <= southeastTileCoordinates.y; j++) {
                 var tileImagery = new TileImagery(this, i, j, imageryLevel);
-                tileImagery.textureScale = new Cartesian2(2.0, 2.0);
-                tileImagery.textureTranslation = new Cartesian2(0.5, 0.5);
+                var imageryExtent = imageryTilingScheme.tileXYToNativeExtent(i, j, imageryLevel);
+                tileImagery.textureScale = new Cartesian2(
+                        (imageryExtent.east - imageryExtent.west) / terrainWidth,
+                        (imageryExtent.north - imageryExtent.south) / terrainHeight);
+                tileImagery.textureTranslation = new Cartesian2(
+                        (imageryExtent.west - terrainExtent.west) / terrainWidth,
+                        (imageryExtent.south - terrainExtent.south) / terrainHeight);
                 tile.imagery.push(tileImagery);
             }
         }
