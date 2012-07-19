@@ -6,6 +6,7 @@ define([
         '../Core/Quaternion',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
+        '../Core/Matrix3',
         './CameraEventHandler',
         './CameraEventType',
         './CameraHelpers'
@@ -16,6 +17,7 @@ define([
         Quaternion,
         Cartesian2,
         Cartesian3,
+        Matrix3,
         CameraEventHandler,
         CameraEventType,
         CameraHelpers) {
@@ -198,7 +200,7 @@ define([
     };
 
     CameraFreeLookController.prototype._rotateTwoAxes = function(v0, v1, axis, angle) {
-        var rotation = Quaternion.fromAxisAngle(axis, angle).toRotationMatrix();
+        var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, angle));
         var u0 = rotation.multiplyByVector(v0);
         var u1 = rotation.multiplyByVector(v1);
         return [u0, u1];
@@ -220,7 +222,7 @@ define([
     CameraFreeLookController.prototype.rotate = function(axis, angle) {
         var a = Cartesian3.clone(axis);
         var turnAngle = angle || this._moveRate;
-        var rotation = Quaternion.fromAxisAngle(a, turnAngle).toRotationMatrix();
+        var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(a, turnAngle));
         var direction = rotation.multiplyByVector(this._camera.direction);
         var up = rotation.multiplyByVector(this._camera.up);
         var right = rotation.multiplyByVector(this._camera.right);
@@ -268,7 +270,7 @@ define([
         if (dot < 1.0) { // dot is in [0, 1]
             angle = -Math.acos(dot);
         }
-        var rotation = Quaternion.fromAxisAngle(axis, angle).toRotationMatrix();
+        var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, angle));
 
         if (1.0 - Math.abs(camera.direction.dot(axis)) > CesiumMath.EPSILON6) {
             camera.direction = rotation.multiplyByVector(camera.direction);
@@ -291,7 +293,7 @@ define([
         } else { // no rotation
             axis = Cartesian3.UNIT_X;
         }
-        rotation = Quaternion.fromAxisAngle(axis, angle).toRotationMatrix();
+        rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, angle));
 
         if (1.0 - Math.abs(camera.direction.dot(axis)) > CesiumMath.EPSILON6) {
             camera.direction = rotation.multiplyByVector(camera.direction);

@@ -446,22 +446,6 @@ define(['./DeveloperError'
     };
 
     /**
-     * Creates a string representing the provided Cartesian in the format '(x, y)'.
-     * @memberof Cartesian4
-     *
-     * @param {Cartesian4} cartesian The Cartesian to stringify.
-     * @return {String} A string representing the provided Cartesian in the format '(x, y)'.
-     *
-     * @exception {DeveloperError} cartesian is required.
-     */
-    Cartesian4.toString = function(cartesian) {
-        if (typeof cartesian === 'undefined') {
-            throw new DeveloperError('cartesian is required');
-        }
-        return '(' + cartesian.x + ', ' + cartesian.y + ', ' + cartesian.z + ', ' + cartesian.w + ')';
-    };
-
-    /**
      * An immutable Cartesian4 instance initialized to (0.0, 0.0, 0.0, 0.0).
      * @memberof Cartesian4
      */
@@ -710,7 +694,7 @@ define(['./DeveloperError'
      * @return {String} A string representing the provided Cartesian in the format '(x, y)'.
      */
     Cartesian4.prototype.toString = function() {
-        return Cartesian4.toString(this);
+        return '(' + this.x + ', ' + this.y + ', ' + this.z + ', ' + this.w + ')';
     };
 
     return Cartesian4;

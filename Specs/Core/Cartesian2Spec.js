@@ -556,10 +556,4 @@ defineSuite([
             Cartesian2.equalsEpsilon(new Cartesian2(), new Cartesian2(), undefined);
         }).toThrow();
     });
-
-    it('static toString throws with no cartesian parameter', function() {
-        expect(function() {
-            Cartesian2.toString(undefined);
-        }).toThrow();
-    });
 });

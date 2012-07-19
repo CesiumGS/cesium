@@ -5,6 +5,7 @@ define([
         './Cartesian2',
         './Cartesian3',
         './Quaternion',
+        './Matrix3',
         './EllipsoidTangentPlane'
     ], function(
         DeveloperError,
@@ -12,6 +13,7 @@ define([
         Cartesian2,
         Cartesian3,
         Quaternion,
+        Matrix3,
         EllipsoidTangentPlane) {
     "use strict";
 
@@ -53,7 +55,7 @@ define([
             temp = Math.sin(angle / 2.0);
 
             var unitQuat = (new Quaternion(rotAxis.x * temp, rotAxis.y * temp, rotAxis.z * temp, Math.cos(angle / 2.0))).normalize();
-            var rotMtx = unitQuat.toRotationMatrix();
+            var rotMtx = Matrix3.fromQuaternion(unitQuat);
 
             var tmpEllipsePts = rotMtx.multiplyByVector(unitPos);
             var unitCart = tmpEllipsePts.normalize();
