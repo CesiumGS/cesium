@@ -56,11 +56,13 @@ require({
 
             for (i = 0; i < len; ++i) {
                 var label = gallery_demos[i].name;
+                var imgSrc = 'templates/Gallery_tile.jpg';
                 if (typeof gallery_demos[i].img !== 'undefined') {
-                    label += '<br /><img src="gallery/' + window.encodeURIComponent(gallery_demos[i].img) +
-                        '" alt="" width="225" height="150" id="thumb_' + i + '" />';
+                    imgSrc = 'gallery/' + window.encodeURIComponent(gallery_demos[i].img);
                 }
-                label += '<span id="buttons_' + i + '" class="insetButtons"></span>';
+                label += '<br /><img src="' + imgSrc +
+                    '" alt="" width="225" height="150" id="thumb_' + i + '" />' +
+                    '<span id="buttons_' + i + '" class="insetButtons"></span>';
 
                 var tile = document.createElement('span');
                 tile.className = "dijit dijitReset dijitInline demoTile dijitButton";
