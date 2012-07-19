@@ -371,15 +371,15 @@ defineSuite([
         expect(matrix.toString()).toEqual('(1, 2)\n(3, 4)');
     });
 
-    it('fromRowMajorArray throws with non-array parameter', function() {
+    it('fromRowMajorArray throws with undefined parameter', function() {
         expect(function() {
-            Matrix2.fromRowMajorArray({});
+            Matrix2.fromRowMajorArray(undefined);
         }).toThrow();
     });
 
-    it('fromColumnMajorArray throws with non-array parameter', function() {
+    it('fromColumnMajorArray throws with undefined parameter', function() {
         expect(function() {
-            Matrix2.fromColumnMajorArray({});
+            Matrix2.fromColumnMajorArray(undefined);
         }).toThrow();
     });
 

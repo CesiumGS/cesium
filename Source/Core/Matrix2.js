@@ -31,20 +31,19 @@ define([
     };
 
     /**
-     * Creates a Matrix2 instance from a column-major order array.
+     * Duplicates a Matrix2 instance.
      * @memberof Matrix2
      *
-     * @param {Array} values The column-major order array.
-     * @param {Matrix2} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix2 instance if none was provided.
+     * @param {Matrix2} matrix The matrix to duplicate.
+     * @param {Matrix2} [result] The object onto which to store the result.
+     * @return {Matrix2} The modified result parameter or a new Matrix2 instance if none was provided.
      *
-     * @exception {DeveloperError} values must be an array.
+     * @exception {DeveloperError} matrix is required.
      */
-    Matrix2.fromColumnMajorArray = function(values, result) {
-        if (!Array.isArray(values)) {
-            throw new DeveloperError('values must be an array');
+    Matrix2.clone = function(values, result) {
+        if (typeof values === 'undefined') {
+            throw new DeveloperError('values is required');
         }
-
         if (typeof result === 'undefined') {
             return new Matrix2(values[0], values[1],
                                values[2], values[3]);
@@ -57,6 +56,19 @@ define([
     };
 
     /**
+     * Creates a Matrix2 instance from a column-major order array.
+     * @memberof Matrix2
+     * @function
+     *
+     * @param {Array} values The column-major order array.
+     * @param {Matrix2} [result] The object in which the result will be stored, if undefined a new instance will be created.
+     * @returns The modified result parameter, or a new Matrix2 instance if none was provided.
+     *
+     * @exception {DeveloperError} values is required.
+     */
+    Matrix2.fromColumnMajorArray = Matrix2.clone;
+
+    /**
      * Creates a Matrix2 instance from a row-major order array.
      * The resulting matrix will be in column-major order.
      * @memberof Matrix2
@@ -65,13 +77,12 @@ define([
      * @param {Matrix2} [result] The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix2 instance if none was provided.
      *
-     * @exception {DeveloperError} values must be an array.
+     * @exception {DeveloperError} values is required.
      */
     Matrix2.fromRowMajorArray = function(values, result) {
-        if (!Array.isArray(values)) {
-            throw new DeveloperError('values must be an array');
+        if (typeof values === 'undefined') {
+            throw new DeveloperError('values is required.');
         }
-
         if (typeof result === 'undefined') {
             return new Matrix2(values[0], values[2],
                                values[1], values[3]);
@@ -84,32 +95,8 @@ define([
     };
 
     /**
-     * Duplicates a Matrix2 instance.
-     * @memberof Matrix2
-     *
-     * @param {Matrix2} matrix The matrix to duplicate.
-     * @param {Matrix2} [result] The object onto which to store the result.
-     * @return {Matrix2} The modified result parameter or a new Matrix2 instance if none was provided.
-     *
-     * @exception {DeveloperError} matrix is required.
-     */
-    Matrix2.clone = function(matrix, result) {
-        if (typeof matrix === 'undefined') {
-            throw new DeveloperError('matrix is required');
-        }
-        if (typeof result === 'undefined') {
-            return new Matrix2(matrix[0], matrix[1],
-                               matrix[2], matrix[3]);
-        }
-        result[0] = matrix[0];
-        result[1] = matrix[1];
-        result[2] = matrix[2];
-        result[3] = matrix[3];
-        return result;
-    };
-
-    /**
      * Creates an Array from the provided Matrix2 instance.
+     * The array will be in column-major order.
      * @memberof Matrix2
      *
      * @param {Matrix2} matrix The matrix to use..
