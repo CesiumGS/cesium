@@ -280,7 +280,7 @@ define([
      * @exception {DeveloperError} cartesian is required.
      * @exception {DeveloperError} scalar is required and must be a number.
      */
-    Cartesian2.multiplyWithScalar = function(cartesian, scalar, result) {
+    Cartesian2.multiplyByScalar = function(cartesian, scalar, result) {
         if (typeof cartesian === 'undefined') {
             throw new DeveloperError('cartesian is required');
         }
@@ -391,8 +391,8 @@ define([
         if (typeof t !== 'number') {
             throw new DeveloperError('t is required and must be a number.');
         }
-        Cartesian2.multiplyWithScalar(end, t, lerpScratch);
-        result = Cartesian2.multiplyWithScalar(start, 1.0 - t, result);
+        Cartesian2.multiplyByScalar(end, t, lerpScratch);
+        result = Cartesian2.multiplyByScalar(start, 1.0 - t, result);
         return Cartesian2.add(lerpScratch, result, result);
     };
 
@@ -423,12 +423,12 @@ define([
 
     /**
      * Compares the provided Cartesians componentwise and returns
-     * <code>true/code> if they are equal, <code>false/code> otherwise.
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
      * @memberof Cartesian2
      *
      * @param {Cartesian2} [left] The first Cartesian.
      * @param {Cartesian2} [right] The second Cartesian.
-     * @return {Boolean} <code>true/code> if left and right are equal, <code>false/code> otherwise.
+     * @return {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
     Cartesian2.equals = function(left, right) {
         return (left === right) ||
@@ -440,14 +440,14 @@ define([
 
     /**
      * Compares the provided Cartesians componentwise and returns
-     * <code>true/code> if they are within the provided epsilon,
-     * <code>false/code> otherwise.
+     * <code>true</code> if they are within the provided epsilon,
+     * <code>false</code> otherwise.
      * @memberof Cartesian2
      *
      * @param {Cartesian2} [left] The first Cartesian.
      * @param {Cartesian2} [right] The second Cartesian.
      * @param {Number} epsilon The epsilon to use for equality testing.
-     * @return {Boolean} <code>true/code> if left and right are within the provided epsilon, <code>false/code> otherwise.
+     * @return {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
      *
      * @exception {DeveloperError} epsilon is required and must be a number.
      */
@@ -623,8 +623,8 @@ define([
      *
      * @exception {DeveloperError} scalar is required and must be a number.
      */
-    Cartesian2.prototype.multiplyWithScalar = function(scalar, result) {
-        return Cartesian2.multiplyWithScalar(this, scalar, result);
+    Cartesian2.prototype.multiplyByScalar = function(scalar, result) {
+        return Cartesian2.multiplyByScalar(this, scalar, result);
     };
 
     /**
@@ -696,11 +696,11 @@ define([
 
     /**
      * Compares this Cartesian against the provided Cartesian componentwise and returns
-     * <code>true/code> if they are equal, <code>false/code> otherwise.
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
      * @memberof Cartesian2
      *
      * @param {Cartesian2} [right] The right hand side Cartesian.
-     * @return {Boolean} <code>true/code> if they are equal, <code>false/code> otherwise.
+     * @return {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
      */
     Cartesian2.prototype.equals = function(right) {
         return Cartesian2.equals(this, right);
@@ -708,13 +708,13 @@ define([
 
     /**
      * Compares this Cartesian against the provided Cartesian componentwise and returns
-     * <code>true/code> if they are within the provided epsilon,
-     * <code>false/code> otherwise.
+     * <code>true</code> if they are within the provided epsilon,
+     * <code>false</code> otherwise.
      * @memberof Cartesian2
      *
      * @param {Cartesian2} [right] The right hand side Cartesian.
      * @param {Number} epsilon The epsilon to use for equality testing.
-     * @return {Boolean} <code>true/code> if they are within the provided epsilon, <code>false/code> otherwise.
+     * @return {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
      *
      * @exception {DeveloperError} epsilon is required and must be a number.
      */

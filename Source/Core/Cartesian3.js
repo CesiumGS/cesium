@@ -299,7 +299,7 @@ define(['./DeveloperError'
      * @exception {DeveloperError} cartesian is required.
      * @exception {DeveloperError} scalar is required and must be a number.
      */
-    Cartesian3.multiplyWithScalar = function(cartesian, scalar, result) {
+    Cartesian3.multiplyByScalar = function(cartesian, scalar, result) {
         if (typeof cartesian === 'undefined') {
             throw new DeveloperError('cartesian is required');
         }
@@ -414,8 +414,8 @@ define(['./DeveloperError'
         if (typeof t !== 'number') {
             throw new DeveloperError('t is required and must be a number.');
         }
-        Cartesian3.multiplyWithScalar(end, t, lerpScratch);
-        result = Cartesian3.multiplyWithScalar(start, 1.0 - t, result);
+        Cartesian3.multiplyByScalar(end, t, lerpScratch);
+        result = Cartesian3.multiplyByScalar(start, 1.0 - t, result);
         return Cartesian3.add(lerpScratch, result, result);
     };
 
@@ -446,12 +446,12 @@ define(['./DeveloperError'
 
     /**
      * Compares the provided Cartesians componentwise and returns
-     * <code>true/code> if they are equal, <code>false/code> otherwise.
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
      * @memberof Cartesian3
      *
      * @param {Cartesian3} [left] The first Cartesian.
      * @param {Cartesian3} [right] The second Cartesian.
-     * @return {Boolean} <code>true/code> if left and right are equal, <code>false/code> otherwise.
+     * @return {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
     Cartesian3.equals = function(left, right) {
         return (left === right) ||
@@ -464,14 +464,14 @@ define(['./DeveloperError'
 
     /**
      * Compares the provided Cartesians componentwise and returns
-     * <code>true/code> if they are within the provided epsilon,
-     * <code>false/code> otherwise.
+     * <code>true</code> if they are within the provided epsilon,
+     * <code>false</code> otherwise.
      * @memberof Cartesian3
      *
      * @param {Cartesian3} [left] The first Cartesian.
      * @param {Cartesian3} [right] The second Cartesian.
      * @param {Number} epsilon The epsilon to use for equality testing.
-     * @return {Boolean} <code>true/code> if left and right are within the provided epsilon, <code>false/code> otherwise.
+     * @return {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
      *
      * @exception {DeveloperError} epsilon is required and must be a number.
      */
@@ -693,8 +693,8 @@ define(['./DeveloperError'
      *
      * @exception {DeveloperError} scalar is required and must be a number.
      */
-    Cartesian3.prototype.multiplyWithScalar = function(scalar, result) {
-        return Cartesian3.multiplyWithScalar(this, scalar, result);
+    Cartesian3.prototype.multiplyByScalar = function(scalar, result) {
+        return Cartesian3.multiplyByScalar(this, scalar, result);
     };
 
     /**
@@ -766,11 +766,11 @@ define(['./DeveloperError'
 
     /**
      * Compares this Cartesian against the provided Cartesian componentwise and returns
-     * <code>true/code> if they are equal, <code>false/code> otherwise.
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
      * @memberof Cartesian3
      *
      * @param {Cartesian3} [right] The right hand side Cartesian.
-     * @return {Boolean} <code>true/code> if they are equal, <code>false/code> otherwise.
+     * @return {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
      */
     Cartesian3.prototype.equals = function(right) {
         return Cartesian3.equals(this, right);
@@ -778,13 +778,13 @@ define(['./DeveloperError'
 
     /**
      * Compares this Cartesian against the provided Cartesian componentwise and returns
-     * <code>true/code> if they are within the provided epsilon,
-     * <code>false/code> otherwise.
+     * <code>true</code> if they are within the provided epsilon,
+     * <code>false</code> otherwise.
      * @memberof Cartesian3
      *
      * @param {Cartesian3} [right] The right hand side Cartesian.
      * @param {Number} epsilon The epsilon to use for equality testing.
-     * @return {Boolean} <code>true/code> if they are within the provided epsilon, <code>false/code> otherwise.
+     * @return {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
      *
      * @exception {DeveloperError} epsilon is required and must be a number.
      */

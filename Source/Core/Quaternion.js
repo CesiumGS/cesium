@@ -174,7 +174,7 @@ define([
      */
     Quaternion.prototype.inverse = function(result) {
         var normSquared = this.normSquared();
-        return this.conjugate(result).multiplyWithScalar(1.0 / normSquared, result);
+        return this.conjugate(result).multiplyByScalar(1.0 / normSquared, result);
     };
 
     /**
@@ -278,7 +278,7 @@ define([
      *
      * @see Quaternion#divideByScalar
      */
-    Quaternion.prototype.multiplyWithScalar = function(scalar, result) {
+    Quaternion.prototype.multiplyByScalar = function(scalar, result) {
         if (typeof result === 'undefined') {
             result = new Quaternion();
         }
@@ -298,7 +298,7 @@ define([
      *
      * @return {Quaternion} This quaternion divided by a scalar.
      *
-     * @see Quaternion#multiplyWithScalar
+     * @see Quaternion#multiplyByScalar
      */
     Quaternion.prototype.divideByScalar = function(scalar) {
         return new Quaternion(this.x / scalar, this.y / scalar, this.z / scalar, this.w / scalar);
@@ -416,7 +416,7 @@ define([
      */
     Quaternion.prototype.lerp = function(t, q) {
         var quaternion = Quaternion.clone(q);
-        return this.multiplyWithScalar(1.0 - t).add(quaternion.multiplyWithScalar(t));
+        return this.multiplyByScalar(1.0 - t).add(quaternion.multiplyByScalar(t));
     };
 
     /**
@@ -448,10 +448,10 @@ define([
         }
 
         var theta = Math.acos(dot);
-        var scaledP = this.multiplyWithScalar(Math.sin((1 - t) * theta));
-        var scaledR = r.multiplyWithScalar(Math.sin(t * theta));
+        var scaledP = this.multiplyByScalar(Math.sin((1 - t) * theta));
+        var scaledR = r.multiplyByScalar(Math.sin(t * theta));
         var sum = scaledP.add(scaledR);
-        var result = sum.multiplyWithScalar(1.0 / Math.sin(theta));
+        var result = sum.multiplyByScalar(1.0 / Math.sin(theta));
 
         return result;
     };
@@ -483,7 +483,7 @@ define([
      * @return {Quaternion} This quaternion raised to the <code>t</code> power.
      */
     Quaternion.prototype.power = function(t) {
-        return Quaternion.exp(this.log().multiplyWithScalar(t));
+        return Quaternion.exp(this.log().multiplyByScalar(t));
     };
 
     /**
@@ -549,7 +549,7 @@ define([
      * @memberof Quaternion
      *
      * @param {Cartesian3} axis The axis of rotation.
-     * @param {Number} angle The angle in degrees to rotate around the axis.
+     * @param {Number} angle The angle in radians to rotate around the axis.
      * @param {Quaternion} [result] The object to store the result into, if undefined a new instance will be created.
      *
      * @return {Quaternion} The modified result parameter or a new instance if result was undefined.

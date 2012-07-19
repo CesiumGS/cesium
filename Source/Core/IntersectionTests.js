@@ -67,7 +67,7 @@ define([
                 return undefined;
             }
 
-            return origin.add(direction.multiplyWithScalar(t));
+            return origin.add(direction.multiplyByScalar(t));
         },
 
         /**

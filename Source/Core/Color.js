@@ -1,5 +1,8 @@
 /*global define*/
-define(function() {
+define([
+        './defaultValue'
+    ], function(
+        defaultValue) {
     "use strict";
 
     /**
@@ -17,19 +20,19 @@ define(function() {
         /**
          * The red component.
          */
-        this.red = typeof red === 'undefined' ? 1.0 : red;
+        this.red = defaultValue(red, 1.0);
         /**
          * The green component.
          */
-        this.green = typeof green === 'undefined' ? 1.0 : green;
+        this.green = defaultValue(green, 1.0);
         /**
          * The blue component.
          */
-        this.blue = typeof blue === 'undefined' ? 1.0 : blue;
+        this.blue = defaultValue(blue, 1.0);
         /**
          * The alpha component.
          */
-        this.alpha = typeof alpha === 'undefined' ? 1.0 : alpha;
+        this.alpha = defaultValue(alpha, 1.0);
     };
 
     /**
@@ -45,10 +48,10 @@ define(function() {
      * @returns {Color} A new color instance.
      */
     Color.fromBytes = function(red, green, blue, alpha) {
-        red = typeof red === 'undefined' ? 255.0 : red;
-        green = typeof green === 'undefined' ? 255.0 : green;
-        blue = typeof blue === 'undefined' ? 255.0 : blue;
-        alpha = typeof alpha === 'undefined' ? 255.0 : alpha;
+        red = defaultValue(red, 255.0);
+        green = defaultValue(green, 255.0);
+        blue = defaultValue(blue, 255.0);
+        alpha = defaultValue(alpha, 255.0);
         return new Color(red / 255.0, green / 255.0, blue / 255.0, alpha / 255.0);
     };
 
@@ -158,6 +161,7 @@ define(function() {
      * @memberof Color
      *
      * @return {String} The CSS equivalent of this color.
+     * @see <a href="http://www.w3.org/TR/css3-color/#rgba-color">CSS RGBA color values</a>
      */
     Color.prototype.toCSSColor = function() {
         var r = Color.floatToByte(this.red);

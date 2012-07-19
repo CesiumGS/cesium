@@ -142,7 +142,7 @@ define([
             // Find the center of the sphere found using the Naive method.
             var minBoxPt = new Cartesian3(xMin.x, yMin.y, zMin.z);
             var maxBoxPt = new Cartesian3(xMax.x, yMax.y, zMax.z);
-            var naiveCenter = (minBoxPt.add(maxBoxPt)).multiplyWithScalar(0.5);
+            var naiveCenter = (minBoxPt.add(maxBoxPt)).multiplyByScalar(0.5);
 
             // Begin 2nd pass to find naive radius and modify the ritter sphere.
             var naiveRadius = 0;
@@ -196,7 +196,7 @@ define([
     BoundingSphere.planeSphereIntersect = function(sphere, plane) {
         var center = sphere.center;
         var radius = sphere.radius;
-        var distanceToPlane = plane.getXYZ().dot(center) + plane.w;
+        var distanceToPlane = Cartesian3.dot(plane, center) + plane.w;
 
         if (distanceToPlane < -radius) {
             // The center point is OUTSIDE of the frustum

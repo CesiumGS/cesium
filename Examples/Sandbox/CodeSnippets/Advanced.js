@@ -101,7 +101,7 @@
                 return Cesium.destroyObject(this);
             };
 
-            primitives.add(new Sandbox.ExamplePrimitive(ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic2(-75.59777, 40.03883))));
+            primitives.add(new Sandbox.ExamplePrimitive(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883))));
         };
 
         this.clear = function () {

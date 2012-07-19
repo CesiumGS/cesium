@@ -5,7 +5,7 @@ defineSuite([
          'Core/BoundingSphere',
          'Core/Cartesian2',
          'Core/Cartesian3',
-         'Core/Cartographic2',
+         'Core/Cartographic',
          'Core/Ellipsoid',
          'Core/EquidistantCylindricalProjection',
          'Core/Intersect',
@@ -20,7 +20,7 @@ defineSuite([
          BoundingSphere,
          Cartesian2,
          Cartesian3,
-         Cartographic2,
+         Cartographic,
          Ellipsoid,
          EquidistantCylindricalProjection,
          Intersect,
@@ -116,7 +116,7 @@ defineSuite([
                                       0.0, 1.0, 0.0, -position.y,
                                       0.0, 0.0, 1.0, -position.z,
                                       0.0, 0.0, 0.0,         1.0);
-        var expected = rotation.multiplyWithMatrix(translation);
+        var expected = rotation.multiply(translation);
         expect(viewMatrix.equals(expected)).toEqual(true);
     });
 
@@ -189,7 +189,7 @@ defineSuite([
         var ellipsoid = Ellipsoid.WGS84;
         var maxRadii = ellipsoid.getMaximumRadius();
 
-        camera.position = Cartesian3.UNIT_X.multiplyWithScalar(2.0 * maxRadii);
+        camera.position = Cartesian3.UNIT_X.multiplyByScalar(2.0 * maxRadii);
         camera.direction = camera.position.negate().normalize();
         camera.up = Cartesian3.UNIT_Z;
         camera.right = camera.direction.cross(camera.up);
@@ -203,8 +203,8 @@ defineSuite([
 
         var windowCoord = new Cartesian2(canvas.clientWidth * 0.5, canvas.clientHeight * 0.5);
         var p = camera.pickEllipsoid(windowCoord, ellipsoid);
-        var c = ellipsoid.toCartographic2(p);
-        expect(c.equals(new Cartographic2(0.0, 0.0))).toEqual(true);
+        var c = ellipsoid.cartesianToCartographic(p);
+        expect(c.equals(new Cartographic(0.0, 0.0, 0.0))).toEqual(true);
 
         p = camera.pickEllipsoid(Cartesian2.ZERO, ellipsoid);
         expect(typeof p === 'undefined').toEqual(true);
@@ -242,8 +242,8 @@ defineSuite([
 
         var windowCoord = new Cartesian2(canvas.clientWidth * 0.5, canvas.clientHeight * 0.5);
         var p = camera.pickMap2D(windowCoord, projection);
-        var c = ellipsoid.toCartographic2(p);
-        expect(c.equals(new Cartographic2(0.0, 0.0))).toEqual(true);
+        var c = ellipsoid.cartesianToCartographic(p);
+        expect(c.equals(new Cartographic(0.0, 0.0, 0.0))).toEqual(true);
 
         p = camera.pickMap2D(Cartesian2.ZERO, projection);
         expect(typeof p === 'undefined').toEqual(true);
@@ -266,7 +266,7 @@ defineSuite([
         var projection = new EquidistantCylindricalProjection(ellipsoid);
         var maxRadii = ellipsoid.getMaximumRadius();
 
-        camera.position = new Cartesian3(0.0, -1.0, 1.0).normalize().multiplyWithScalar(5.0 * maxRadii);
+        camera.position = new Cartesian3(0.0, -1.0, 1.0).normalize().multiplyByScalar(5.0 * maxRadii);
         camera.direction = Cartesian3.ZERO.subtract(camera.position).normalize();
         camera.right = camera.direction.cross(Cartesian3.UNIT_Z).normalize();
         camera.up = camera.right.cross(camera.direction);
@@ -285,8 +285,8 @@ defineSuite([
 
         var windowCoord = new Cartesian2(canvas.clientWidth * 0.5, canvas.clientHeight * 0.5);
         var p = camera.pickMapColumbusView(windowCoord, projection);
-        var c = ellipsoid.toCartographic2(p);
-        expect(c.equals(new Cartographic2(0.0, 0.0))).toEqual(true);
+        var c = ellipsoid.cartesianToCartographic(p);
+        expect(c.equals(new Cartographic(0.0, 0.0, 0.0))).toEqual(true);
 
         p = camera.pickMapColumbusView(Cartesian2.ZERO, projection);
         expect(typeof p === 'undefined').toEqual(true);

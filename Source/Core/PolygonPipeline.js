@@ -404,7 +404,7 @@ define([
 
                         i = edges[edge];
                         if (!i) {
-                            subdividedPositions.push(v0.add(v1).multiplyWithScalar(0.5));
+                            subdividedPositions.push(v0.add(v1).multiplyByScalar(0.5));
                             i = subdividedPositions.length - 1;
                             edges[edge] = i;
                         }
@@ -424,7 +424,7 @@ define([
 
                         i = edges[edge];
                         if (!i) {
-                            subdividedPositions.push(v1.add(v2).multiplyWithScalar(0.5));
+                            subdividedPositions.push(v1.add(v2).multiplyByScalar(0.5));
                             i = subdividedPositions.length - 1;
                             edges[edge] = i;
                         }
@@ -444,7 +444,7 @@ define([
 
                         i = edges[edge];
                         if (!i) {
-                            subdividedPositions.push(v2.add(v0).multiplyWithScalar(0.5));
+                            subdividedPositions.push(v2.add(v0).multiplyByScalar(0.5));
                             i = subdividedPositions.length - 1;
                             edges[edge] = i;
                         }
@@ -517,7 +517,7 @@ define([
                     p = ellipsoid.scaleToGeodeticSurface(p);
 
                     var n = ellipsoid.geodeticSurfaceNormal(p);
-                    n = n.multiplyWithScalar(height);
+                    n = n.multiplyByScalar(height);
 
                     // Translate from surface to height.
                     p = p.add(n);

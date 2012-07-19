@@ -45,8 +45,7 @@ var Sandbox = Sandbox || {};
         scene.setAnimation(function() {
             var camera = scene.getCamera();
             var cameraPosition = new Cesium.Cartesian4(camera.position.x, camera.position.y, camera.position.z, 1.0);
-            var v = camera.transform.multiplyWithVector(cameraPosition).getXYZ();
-            scene.setSunPosition(v);
+            scene.setSunPosition(camera.transform.multiplyByVector(cameraPosition));
 
             //  In case of canvas resize
             canvas.width = canvas.clientWidth;
