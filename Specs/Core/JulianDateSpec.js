@@ -32,6 +32,22 @@ function(JulianDate,
         expect(julianDate.getSecondsOfDay()).toEqual(seconds);
     });
 
+    it('clone works without result parameter', function() {
+        var julianDate = new JulianDate();
+        var returnedResult = julianDate.clone();
+        expect(returnedResult).toEqual(julianDate);
+        expect(returnedResult).toNotBe(julianDate);
+    });
+
+    it('clone works with result parameter', function() {
+        var julianDate = new JulianDate(1, 2);
+        var result = new JulianDate();
+        var returnedResult = julianDate.clone(result);
+        expect(returnedResult).toBe(result);
+        expect(returnedResult).toNotBe(julianDate);
+        expect(returnedResult).toEqual(julianDate);
+    });
+
     it('Construct a date from UTC components just before a leap second', function() {
         var expected = new JulianDate(2443874, 43216, TimeStandard.TAI);
         var julianDate = new JulianDate(2443874, 43199.0, TimeStandard.UTC);
