@@ -128,7 +128,7 @@ define([
 
         var extent = tile.extent.intersectWith(this.imageryProvider.extent);
         //TODO: calculate level correctly
-        var imageryLevel = tile.level + (geometryTilingScheme.numberOfLevelZeroTilesX === 1 ? 0 : 1);
+        var imageryLevel = tile.level + (geometryTilingScheme.numberOfLevelZeroTilesX === 1 ? 1 : 2);
 
         var northwestTileCoordinates = imageryTilingScheme.positionToTileXY(extent.getNorthwest(), imageryLevel);
         var southeastTileCoordinates = imageryTilingScheme.positionToTileXY(extent.getSoutheast(), imageryLevel);
@@ -157,15 +157,37 @@ define([
             --southeastTileCoordinates.x;
         }
 
-        if (northwestTileCoordinates.x !== southeastTileCoordinates.x ||
-            northwestTileCoordinates.y !== southeastTileCoordinates.y) {
-            console.log('too many tiles!');
-        }
+//        if (northwestTileCoordinates.x !== southeastTileCoordinates.x ||
+//            northwestTileCoordinates.y !== southeastTileCoordinates.y) {
+//            console.log('too many tiles!');
+//        }
+
+//        var sw = new TileImagery(this, northwestTileCoordinates.x, southeastTileCoordinates.y, imageryLevel);
+//        sw.textureScale = new Cartesian2(2.0, 2.0);
+//        sw.textureTranslation = new Cartesian2(0.0, 0.0);
+//        tile.imagery.push(sw);
+//
+//        var se = new TileImagery(this, southeastTileCoordinates.x, southeastTileCoordinates.y, imageryLevel);
+//        se.textureScale = new Cartesian2(2.0, 2.0);
+//        se.textureTranslation = new Cartesian2(0.5, 0.0);
+//        tile.imagery.push(se);
+//
+//        var ne = new TileImagery(this, southeastTileCoordinates.x, northwestTileCoordinates.y, imageryLevel);
+//        ne.textureScale = new Cartesian2(2.0, 2.0);
+//        ne.textureTranslation = new Cartesian2(0.5, 0.5);
+//        tile.imagery.push(ne);
+//
+//        var nw = new TileImagery(this, northwestTileCoordinates.x, northwestTileCoordinates.y, imageryLevel);
+//        nw.textureScale = new Cartesian2(2.0, 2.0);
+//        nw.textureTranslation = new Cartesian2(0.0, 0.5);
+//        tile.imagery.push(nw);
 
         for ( var i = northwestTileCoordinates.x; i <= southeastTileCoordinates.x; i++) {
             for ( var j = northwestTileCoordinates.y; j <= southeastTileCoordinates.y; j++) {
-                //TODO: compute texture translation and scale
-                tile.imagery.push(new TileImagery(this, i, j, imageryLevel));
+                var tileImagery = new TileImagery(this, i, j, imageryLevel);
+                tileImagery.textureScale = new Cartesian2(2.0, 2.0);
+                tileImagery.textureTranslation = new Cartesian2(0.5, 0.5);
+                tile.imagery.push(tileImagery);
             }
         }
     };

@@ -23,7 +23,7 @@ void main()
     {
         if (i >= u_numberOfDayTextures)
             break;
-        vec2 textureCoordinates = v_textureCoordinates * u_dayTextureScale[i] + u_dayTextureTranslation[i];
+        vec2 textureCoordinates = (v_textureCoordinates - u_dayTextureTranslation[i]) * u_dayTextureScale[i];
         if (textureCoordinates.x >= 0.0 && textureCoordinates.x <= 1.0 &&
             textureCoordinates.y >= 0.0 && textureCoordinates.y <= 1.0)
         {
