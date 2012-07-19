@@ -12,6 +12,7 @@ defineSuite([
              'Core/Quaternion',
              'Core/Cartesian3',
              'Core/Color',
+             'Core/Matrix3',
              'Core/Matrix4',
              'Scene/Scene'
             ], function(
@@ -27,6 +28,7 @@ defineSuite([
               Quaternion,
               Cartesian3,
               Color,
+              Matrix3,
               Matrix4,
               Scene) {
     "use strict";
@@ -153,7 +155,7 @@ defineSuite([
         expect(c.innerMaterial).toEqual(testObject.cone.innerMaterial.getValue(time));
         expect(c.outerMaterial).toEqual(testObject.cone.outerMaterial.getValue(time));
         expect(c.silhouetteMaterial).toEqual(testObject.cone.silhouetteMaterial.getValue(time));
-        expect(c.modelMatrix).toEqual(new Matrix4(testObject.orientation.getValue(time).conjugate().toRotationMatrix(), testObject.position.getValueCartesian(time)));
+        expect(c.modelMatrix).toEqual(new Matrix4(Matrix3.fromQuaternion(testObject.orientation.getValue(time).conjugate()), testObject.position.getValueCartesian(time)));
 
         cone.show.value = false;
         visualizer.update(time);
