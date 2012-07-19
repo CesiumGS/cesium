@@ -145,7 +145,7 @@ define([
 //        var terrain = new EllipsoidTerrainProvider(tilingScheme);
         var terrain = new ArcGisImageServerTerrainProvider({
             url: 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
-            token: 'C3-H2l_L3ipk4E05UyuIssvchYCNQksx7S7_uuKXXsPVe6cyn-RdLMSDPkGXhu02a2_naWnSLC_gLDoQayt0Rw..',
+            token: 'XEL-yD2_5am85MnfWLCXN16xrItLT4UjiOklf0a4uqAK82cHPXspemMM6972HiKXlDyEVx21IyZxHx1hmVg37A..',
             proxy: new DefaultProxy('/terrain/')
         });
         this._terrain = terrain;
