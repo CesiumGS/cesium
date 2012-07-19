@@ -1,16 +1,22 @@
 /*global define*/
 define([
+        '../Core/loadImage',
         '../Core/DeveloperError',
         '../Core/Extent',
         '../Core/Math',
         './Projections',
-        './GeographicTilingScheme'
+        './WebMercatorTilingScheme',
+        './TileState',
+        './ImageryProvider'
     ], function(
+        loadImage,
         DeveloperError,
         Extent,
         CesiumMath,
         Projections,
-        GeographicTilingScheme) {
+        WebMercatorTilingScheme,
+        TileState,
+        ImageryProvider) {
     "use strict";
 
     /**
@@ -29,7 +35,7 @@ define([
      * @see OpenStreetMapTileProvider
      * @see CompositeTileProvider
      */
-    var SingleTileProvider = function(url, proxy) {
+    var SingleTileProvider = function(url, extent, proxy) {
         if (typeof url === 'undefined') {
             throw new DeveloperError('url is required.');
         }
@@ -44,7 +50,7 @@ define([
          * @constant
          * @type {Extent}
          */
-        this.extent = Extent.MAX_VALUE;
+        this.extent = extent;
 
         /**
          * The maximum level-of-detail that can be requested.
@@ -60,7 +66,7 @@ define([
          * @type {Enumeration}
          * @see Projections
          */
-        this.projection = Projections.WGS84;
+        this.projection = Projections.MERCATOR;
 
         /**
          * The tiling scheme used by this tile provider.
@@ -69,7 +75,7 @@ define([
          * @see WebMercatorTilingScheme
          * @see GeographicTilingScheme
          */
-        this.tilingScheme = new GeographicTilingScheme({
+        this.tilingScheme = new WebMercatorTilingScheme({
             numberOfLevelZeroTilesX: 1,
             numberOfLevelZeroTilesY: 1
         });
@@ -83,34 +89,66 @@ define([
     };
 
     /**
-     * Loads the top-level tile.
+     * Build a URL to retrieve the image for a tile.
      *
-     * @memberof SingleTileProvider
+     * @param {Number} x The x coordinate of the tile.
+     * @param {Number} y The y coordinate of the tile.
+     * @param {Number} level The level-of-detail of the tile.
      *
-     * @param {Tile} tile The top-level tile.
-     * @param {Function} onload A function that will be called when the image is finished loading.
-     * @param {Function} onerror A function that will be called if there is an error loading the image.
-     *
-     * @exception {DeveloperError} <code>tile.level</code> is less than zero
-     * or greater than <code>maxLevel</code>.
+     * @return {String|Promise} Either a string containing the URL, or a Promise for a string
+     *                          if the URL needs to be built asynchronously.
      */
-    SingleTileProvider.prototype.requestImage = function(tile, onload, onerror) {
-        if (tile.level < 0 || tile.level > this.maxLevel) {
-            throw new DeveloperError('tile.zoom must be in the range [0, zoomMax].');
-        }
-
-        var image = new Image();
-        image.onload = onload;
-        image.onerror = onerror;
-        image.crossOrigin = '';
-
+    SingleTileProvider.prototype.buildImageUrl = function(x, y, level) {
         var url = this._url;
+
         if (typeof this._proxy !== 'undefined') {
             url = this._proxy.getURL(url);
         }
-        image.src = url;
 
-        return image;
+        return url;
+    };
+
+    /**
+     * Request the image for a given tile.
+     *
+     * @param {String} url The tile image URL.
+     *
+     * @return A promise for the image that will resolve when the image is available.
+     *         If the image is not suitable for display, the promise can resolve to undefined.
+     */
+    SingleTileProvider.prototype.requestImage = function(url) {
+        return loadImage(url, false);
+    };
+
+    /**
+     * Transform the tile imagery from the format requested from the remote server
+     * into a format suitable for resource creation.  Once complete, the tile imagery
+     * state should be set to TRANSFORMED.  Alternatively, tile imagery state can be set to
+     * RECEIVED to indicate that the transformation should be attempted again next update, if the tile
+     * is still needed.
+     *
+     * @param {Context} context The context to use to create resources.
+     * @param {TileImagery} tileImagery The tile imagery to transform.
+     */
+    SingleTileProvider.prototype.transformImagery = function(context, tileImagery) {
+        tileImagery.transformedImage = tileImagery.image;
+        tileImagery.image = undefined;
+        tileImagery.state = TileState.TRANSFORMED;
+    };
+
+    /**
+     * Create WebGL resources for the tile imagery using whatever data the transformImagery step produced.
+     * Once complete, the tile imagery state should be set to READY.  Alternatively, tile imagery state can be set to
+     * TRANSFORMED to indicate that resource creation should be attempted again next update, if the tile
+     * is still needed.
+     *
+     * @param {Context} context The context to use to create resources.
+     * @param {TileImagery} tileImagery The tile imagery to create resources for.
+     */
+    SingleTileProvider.prototype.createResources = function(context, tileImagery) {
+        tileImagery.texture = ImageryProvider.createTextureFromTransformedImage(context, tileImagery.transformedImage);
+        tileImagery.transformedImage = undefined;
+        tileImagery.state = TileState.READY;
     };
 
     return SingleTileProvider;

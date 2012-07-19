@@ -85,6 +85,16 @@ define([
     GeographicTilingScheme.prototype.getLevelMaximumGeometricError = TilingScheme.prototype.getLevelMaximumGeometricError;
 
     /**
+     * Gets the level with the specified quantity of geometric error or less.
+     *
+     * @memberof GeographicTilingScheme
+     *
+     * @param {Number} geometricError The geometric error for which to find a corresponding level.
+     * @returns {Number} The level with the specified geometric error or less.
+     */
+    GeographicTilingScheme.prototype.getLevelWithMaximumGeometricError = TilingScheme.prototype.getLevelWithMaximumGeometricError;
+
+    /**
      * Creates the tile or tiles at level of detail zero, the coarsest, least detailed level.
      *
      * @memberof GeographicTilingScheme

@@ -31,6 +31,15 @@ require({
         proxy : new Cesium.DefaultProxy('/proxy/')
     }));
 
+    var cesiumLogo = new Cesium.SingleTileProvider(
+            '../../Images/TestLayer.png',
+            new Cesium.Extent(
+                    Cesium.Math.toRadians(-75),
+                    Cesium.Math.toRadians(45),
+                    Cesium.Math.toRadians(-74),
+                    Cesium.Math.toRadians(46)));
+    imageryLayerCollection.addImageryProvider(cesiumLogo);
+
 //    var bingAerialLayer = imageryLayerCollection.addImageryProvider(new Cesium.BingMapsImageryProvider({
 //        server : 'dev.virtualearth.net',
 //        mapStyle : Cesium.BingMapsStyle.AERIAL,
