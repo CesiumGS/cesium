@@ -5,7 +5,7 @@ define([
          '../Specs/destroyContext',
          '../Specs/sceneState',
          'Core/Cartesian3',
-         'Core/Cartographic3',
+         'Core/Cartographic',
          'Core/Ellipsoid',
          'Core/Matrix4',
          'Core/Math'
@@ -15,7 +15,7 @@ define([
          destroyContext,
          sceneState,
          Cartesian3,
-         Cartographic3,
+         Cartographic,
          Ellipsoid,
          Matrix4,
          CesiumMath) {
@@ -38,10 +38,10 @@ define([
         polygon.ellipsoid = ellipsoid;
         polygon.granularity = CesiumMath.toRadians(20.0);
         polygon.setPositions([
-                              ellipsoid.toCartesian(CesiumMath.cartographic3ToRadians(new Cartographic3(-50.0, -50.0, 0.0))),
-                              ellipsoid.toCartesian(CesiumMath.cartographic3ToRadians(new Cartographic3(50.0, -50.0, 0.0))),
-                              ellipsoid.toCartesian(CesiumMath.cartographic3ToRadians(new Cartographic3(50.0, 50.0, 0.0))),
-                              ellipsoid.toCartesian(CesiumMath.cartographic3ToRadians(new Cartographic3(-50.0, 50.0, 0.0)))
+                              ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
+                              ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, -50.0, 0.0)),
+                              ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, 50.0, 0.0)),
+                              ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0))
                              ]);
         polygon.material = material;
 
