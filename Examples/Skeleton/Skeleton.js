@@ -31,14 +31,10 @@ require({
         proxy : new Cesium.DefaultProxy('/proxy/')
     }));
 
-    var cesiumLogo = new Cesium.SingleTileImageryProvider(
-            '../../Images/TestLayer.png',
-            new Cesium.Extent(
-                    Cesium.Math.toRadians(-120),
-                    Cesium.Math.toRadians(37),
-                    Cesium.Math.toRadians(-119),
-                    Cesium.Math.toRadians(38)));
-    imageryLayerCollection.addImageryProvider(cesiumLogo);
+//    var streetsLayer = imageryLayerCollection.addImageryProvider(new Cesium.ArcGisMapServerImageryProvider({
+//        url : 'http://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer',
+//        proxy : new Cesium.DefaultProxy('/proxy/')
+//    }));
 
 //    var bingAerialLayer = imageryLayerCollection.addImageryProvider(new Cesium.BingMapsImageryProvider({
 //        server : 'dev.virtualearth.net',
@@ -47,7 +43,7 @@ require({
 //        // cross-origin image loading, so we need to load Bing imagery using a proxy.
 //        proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
 //    }));
-//
+
 //    var bingRoadLayer = imageryLayerCollection.addImageryProvider(new Cesium.BingMapsImageryProvider({
 //        server : 'dev.virtualearth.net',
 //        mapStyle : Cesium.BingMapsStyle.ROAD,
@@ -57,6 +53,15 @@ require({
 //    }));
 //
 //    var solidColorLayer = imageryLayerCollection.addImageryProvider(new Cesium.SolidColorImageryProvider());
+
+    var cesiumLogo = new Cesium.SingleTileImageryProvider(
+            '../../Images/TestLayer.png',
+            new Cesium.Extent(
+                    Cesium.Math.toRadians(-120),
+                    Cesium.Math.toRadians(37),
+                    Cesium.Math.toRadians(-119),
+                    Cesium.Math.toRadians(38)));
+    imageryLayerCollection.addImageryProvider(cesiumLogo);
 
     var cb = new Cesium.CentralBody(ellipsoid, terrainProvider, imageryLayerCollection);
 

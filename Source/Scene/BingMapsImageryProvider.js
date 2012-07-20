@@ -374,7 +374,7 @@ define([
      * @param {TileImagery} tileImagery The tile imagery to transform.
      */
     BingMapsImageryProvider.prototype.transformImagery = function(context, tileImagery) {
-        tileImagery.transformedImage = this.projection.toWgs84(tileImagery.extent, tileImagery.image);
+        tileImagery.transformedImage = tileImagery.image;
         tileImagery.image = undefined;
         tileImagery.state = TileState.TRANSFORMED;
     };
