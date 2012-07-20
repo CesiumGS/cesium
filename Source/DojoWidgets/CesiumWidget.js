@@ -346,6 +346,10 @@ define([
                 widget.cameraCenteredObjectID = widget.endUserOptions.lookAt;
             }
 
+            if (typeof widget.endUserOptions.stats !== 'undefined' && widget.endUserOptions.stats) {
+                widget.enableStatistics(true);
+            }
+
             this.lastTimeLabelUpdate = clock.currentTime;
             this.timeLabelElement = document.getElementById('dijit_form_Button_0_label');    // TODO: ** FIX THIS **
             this.timeLabelElement.innerHTML = clock.currentTime.toDate().toUTCString();
