@@ -52,9 +52,9 @@ define([
     "use strict";
     /*global console*/
 
-    var queryObject = {};
+    var endUserOptions = {};
     if (window.location.search) {
-        queryObject = ioQuery.queryToObject(window.location.search.substring(1));
+        endUserOptions = ioQuery.queryToObject(window.location.search.substring(1));
     }
 
     var currentTime = new JulianDate();
@@ -70,20 +70,10 @@ define([
     var cesium = new CesiumWidget({
         clock : clock,
         animationController : animationController,
+        endUserOptions : endUserOptions,
 
         postSetup : function(widget) {
             //widget.enableStatistics(true);
-
-            if (typeof queryObject.source !== 'undefined') {
-                getJson(queryObject.source).then(function(czmlData) {
-                    processCzml(czmlData, widget.dynamicObjectCollection, queryObject.source);
-                    widget.setTimeFromBuffer();
-                });
-            }
-
-            if (typeof queryObject.lookAt !== 'undefined') {
-                widget.cameraCenteredObjectID = queryObject.lookAt;
-            }
 
             //on(cesium, 'ObjectRightClickSelected', onObjectRightClickSelected);
 

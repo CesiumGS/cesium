@@ -13,6 +13,7 @@ define([
         'dijit/form/ToggleButton',
         'dijit/form/DropDownButton',
         'dijit/TooltipDialog',
+        './getJson',
         './TimelineWidget',
         '../Core/Clock',
         '../Core/ClockStep',
@@ -54,6 +55,7 @@ define([
         ToggleButton,
         DropDownButton,
         TooltipDialog,
+        getJson,
         TimelineWidget,
         Clock,
         ClockStep,
@@ -95,6 +97,7 @@ define([
         specularMapUrl : undefined,
         cloudsMapUrl : undefined,
         bumpMapUrl : undefined,
+        endUserOptions : {},
 
         constructor : function() {
             this.ellipsoid = Ellipsoid.WGS84;
@@ -327,6 +330,17 @@ define([
             var clock = this.clock;
             var transitioner = this.sceneTransitioner = new SceneTransitioner(scene);
             this.visualizers = VisualizerCollection.createCzmlStandardCollection(scene, dynamicObjectCollection);
+
+            if (typeof widget.endUserOptions.source !== 'undefined') {
+                getJson(widget.endUserOptions.source).then(function(czmlData) {
+                    processCzml(czmlData, widget.dynamicObjectCollection, widget.endUserOptions.source);
+                    widget.setTimeFromBuffer();
+                });
+            }
+
+            if (typeof widget.endUserOptions.lookAt !== 'undefined') {
+                widget.cameraCenteredObjectID = widget.endUserOptions.lookAt;
+            }
 
             this.lastTimeLabelUpdate = clock.currentTime;
             this.timeLabelElement = document.getElementById('dijit_form_Button_0_label');    // TODO: ** FIX THIS **
