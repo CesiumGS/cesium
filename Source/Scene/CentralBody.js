@@ -710,14 +710,11 @@ define([
     };
 
     CentralBody.prototype._computeDepthQuad = function(sceneState) {
-        // PERFORMANCE_TODO: optimize diagonal matrix multiplies.
-        var dInverse = Matrix3.createNonUniformScale(this._ellipsoid.getRadii());
-        var d = Matrix3.createNonUniformScale(this._ellipsoid.getOneOverRadii());
-
+        var radii = this._ellipsoid.getRadii();
         var p = sceneState.camera.getPositionWC();
 
         // Find the corresponding position in the scaled space of the ellipsoid.
-        var q = d.multiplyByVector(p);
+        var q = this._ellipsoid.getOneOverRadii().multiplyComponents(p);
 
         var qMagnitude = q.magnitude();
         var qUnit = q.normalize();
@@ -736,10 +733,10 @@ define([
         var northOffset = nUnit.multiplyByScalar(scalar);
 
         // A conservative measure for the longitudes would be to use the min/max longitudes of the bounding frustum.
-        var upperLeft = dInverse.multiplyByVector(center.add(northOffset).subtract(eastOffset));
-        var upperRight = dInverse.multiplyByVector(center.add(northOffset).add(eastOffset));
-        var lowerLeft = dInverse.multiplyByVector(center.subtract(northOffset).subtract(eastOffset));
-        var lowerRight = dInverse.multiplyByVector(center.subtract(northOffset).add(eastOffset));
+        var upperLeft = radii.multiplyComponents(center.add(northOffset).subtract(eastOffset));
+        var upperRight = radii.multiplyComponents(center.add(northOffset).add(eastOffset));
+        var lowerLeft = radii.multiplyComponents(center.subtract(northOffset).subtract(eastOffset));
+        var lowerRight = radii.multiplyComponents(center.subtract(northOffset).add(eastOffset));
         return [upperLeft.x, upperLeft.y, upperLeft.z, lowerLeft.x, lowerLeft.y, lowerLeft.z, upperRight.x, upperRight.y, upperRight.z, lowerRight.x, lowerRight.y, lowerRight.z];
     };
 

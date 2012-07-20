@@ -4,6 +4,7 @@ define([
         '../Core/EventHandler',
         '../Core/MouseEventType',
         '../Core/Quaternion',
+        '../Core/Matrix3',
         '../Core/Cartesian3',
         '../Core/HermiteSpline'
     ], function(
@@ -11,6 +12,7 @@ define([
         EventHandler,
         MouseEventType,
         Quaternion,
+        Matrix3,
         Cartesian3,
         HermiteSpline) {
     "use strict";
@@ -108,7 +110,7 @@ define([
             var increment = incrementPercentage * angle;
             var startCondition = (startAboveMaxAlt) ? angle - increment : angle;
             for ( var i = startCondition; i > 0.0; i = i - increment) {
-                rotation = Quaternion.fromAxisAngle(axis, i).toRotationMatrix();
+                rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, i));
                 points.push({
                     point : rotation.multiplyByVector(aboveEnd)
                 });

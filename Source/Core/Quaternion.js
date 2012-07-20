@@ -366,45 +366,6 @@ define([
     };
 
     /**
-     * Returns the 3x3 rotation matrix from this quaternion.
-     *
-     * @memberof Quaternion
-     *
-     * @return {Matrix3} The 3x3 rotation matrix from this quaternion.
-     *
-     * @see Quaternion.fromRotationMatrix
-     */
-    Quaternion.prototype.toRotationMatrix = function() {
-        var x2 = this.x * this.x;
-        var xy = this.x * this.y;
-        var xz = this.x * this.z;
-        var xw = this.x * this.w;
-        var y2 = this.y * this.y;
-        var yz = this.y * this.z;
-        var yw = this.y * this.w;
-        var z2 = this.z * this.z;
-        var zw = this.z * this.w;
-        var w2 = this.w * this.w;
-
-        var m00 = x2 - y2 - z2 + w2;
-        var m01 = 2.0 * (xy + zw);
-        var m02 = 2.0 * (xz - yw);
-
-        var m10 = 2.0 * (xy - zw);
-        var m11 = -x2 + y2 - z2 + w2;
-        var m12 = 2.0 * (yz + xw);
-
-        var m20 = 2.0 * (xz + yw);
-        var m21 = 2.0 * (yz - xw);
-        var m22 = -x2 - y2 + z2 + w2;
-
-        return new Matrix3(
-                m00, m10, m20,
-                m01, m11, m21,
-                m02, m12, m22);
-    };
-
-    /**
      * Computes the linear interpolation between <code>this</code> and another quaternion.
      *
      * @memberof Quaternion
@@ -581,7 +542,7 @@ define([
      *
      * @return {Quaternion} The quaternion representing the rotation.
      *
-     * @see Quaternion#toRotationMatrix
+     * @see Matrix3.fromQuaternion
      */
     Quaternion.fromRotationMatrix = function(matrix) {
         var x = 0;
@@ -589,9 +550,9 @@ define([
         var z = 0;
         var w = 0;
 
-        var m00 = matrix.getColumn0Row0();
-        var m11 = matrix.getColumn1Row1();
-        var m22 = matrix.getColumn2Row2();
+        var m00 = matrix[Matrix3.COLUMN0ROW0];
+        var m11 = matrix[Matrix3.COLUMN1ROW1];
+        var m22 = matrix[Matrix3.COLUMN2ROW2];
 
         var factor = m00 * m11 * m22;
 
@@ -615,48 +576,48 @@ define([
             x = 0.5 * Math.sqrt(1.0 + m00 - m11 - m22);
             factor = 1.0 / (4.0 * x);
 
-            w = factor * (matrix.getColumn2Row1() - matrix.getColumn1Row2());
+            w = factor * (matrix[Matrix3.COLUMN2ROW1] - matrix[Matrix3.COLUMN1ROW2]);
 
             if (w < 0.0) {
                 w = -w;
                 factor = -factor;
             }
 
-            y = factor * (matrix.getColumn1Row0() + matrix.getColumn0Row1());
-            z = factor * (matrix.getColumn2Row0() + matrix.getColumn0Row2());
+            y = factor * (matrix[Matrix3.COLUMN1ROW0] + matrix[Matrix3.COLUMN0ROW1]);
+            z = factor * (matrix[Matrix3.COLUMN2ROW0] + matrix[Matrix3.COLUMN0ROW2]);
         } else if (type === 2) {
             y = 0.5 * Math.sqrt(1.0 - m00 + m11 - m22);
             factor = 1.0 / (4.0 * y);
 
-            w = factor * (matrix.getColumn0Row2() - matrix.getColumn2Row0());
+            w = factor * (matrix[Matrix3.COLUMN0ROW2] - matrix[Matrix3.COLUMN2ROW0]);
 
             if (w < 0) {
                 w = -w;
                 factor = -factor;
             }
 
-            x = factor * (matrix.getColumn1Row0() + matrix.getColumn0Row1());
-            z = factor * (matrix.getColumn2Row1() + matrix.getColumn1Row2());
+            x = factor * (matrix[Matrix3.COLUMN1ROW0] + matrix[Matrix3.COLUMN0ROW1]);
+            z = factor * (matrix[Matrix3.COLUMN2ROW1] + matrix[Matrix3.COLUMN1ROW2]);
         } else if (type === 3) {
             z = 0.5 * Math.sqrt(1.0 - m00 - m11 + m22);
             factor = 1.0 / (4.0 * z);
 
-            w = factor * (matrix.getColumn1Row0() - matrix.getColumn0Row1());
+            w = factor * (matrix[Matrix3.COLUMN1ROW0] - matrix[Matrix3.COLUMN0ROW1]);
 
             if (w < 0) {
                 w = -w;
                 factor = -factor;
             }
 
-            x = factor * (matrix.getColumn2Row0() + matrix.getColumn0Row2());
-            y = factor * (matrix.getColumn2Row1() + matrix.getColumn1Row2());
+            x = factor * (matrix[Matrix3.COLUMN2ROW0] + matrix[Matrix3.COLUMN0ROW2]);
+            y = factor * (matrix[Matrix3.COLUMN2ROW1] + matrix[Matrix3.COLUMN1ROW2]);
         } else {
             w = 0.5 * Math.sqrt(1.0 + factor);
             factor = 1.0 / (4.0 * w);
 
-            x = factor * (matrix.getColumn2Row1() - matrix.getColumn1Row2());
-            y = factor * (matrix.getColumn0Row2() - matrix.getColumn2Row0());
-            z = factor * (matrix.getColumn1Row0() - matrix.getColumn0Row1());
+            x = factor * (matrix[Matrix3.COLUMN2ROW1] - matrix[Matrix3.COLUMN1ROW2]);
+            y = factor * (matrix[Matrix3.COLUMN0ROW2] - matrix[Matrix3.COLUMN2ROW0]);
+            z = factor * (matrix[Matrix3.COLUMN1ROW0] - matrix[Matrix3.COLUMN0ROW1]);
         }
 
         return new Quaternion(x, y, z, w);

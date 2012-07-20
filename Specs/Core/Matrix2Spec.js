@@ -523,10 +523,4 @@ defineSuite([
             Matrix2.equalsEpsilon(new Matrix2(), new Matrix2(), {});
         }).toThrow();
     });
-
-    it('static toString throws with matrix parameter', function() {
-        expect(function() {
-            Matrix2.toString(undefined);
-        }).toThrow();
-    });
 });
