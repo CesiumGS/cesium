@@ -14,7 +14,7 @@ define(['./DeveloperError'], function(DeveloperError) {
      *
      * @exception {DeveloperError} point, p0, p1, and p2 are required.
      */
-    function pointInsideTriangle2D(point, p0, p1, p2) {
+    var pointInsideTriangle2D = function(point, p0, p1, p2) {
         if (!point || !p0 || !p1 || !p2) {
             throw new DeveloperError('point, p0, p1, and p2 are required.');
         }
@@ -35,7 +35,7 @@ define(['./DeveloperError'], function(DeveloperError) {
         var v = (dot00 * dot12 - dot01 * dot02) * q;
 
         return (u > 0) && (v > 0) && (u + v < 1);
-    }
+    };
 
     return pointInsideTriangle2D;
 });
