@@ -95,7 +95,7 @@ define([
              *
              * @type {Cartesian3}
              */
-            this.center = (min.add(max)).multiplyWithScalar(0.5);
+            this.center = (min.add(max)).multiplyByScalar(0.5);
         } else {
             this.minimum = undefined;
             this.maximum = undefined;
@@ -113,7 +113,7 @@ define([
         var center = max.add(min).divideByScalar(2);
         var h = max.subtract(min).divideByScalar(2); //The positive half diagonal
         var e = h.x * Math.abs(plane.x) + h.y * Math.abs(plane.y) + h.z * Math.abs(plane.z);
-        var s = center.dot(plane.getXYZ()) + plane.w; //signed distance from center
+        var s = center.dot(plane) + plane.w; //signed distance from center
         if (s - e > 0) {
             return Intersect.INSIDE;
         }

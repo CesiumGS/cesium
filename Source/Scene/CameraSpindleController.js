@@ -4,6 +4,7 @@ define([
         '../Core/FAR',
         '../Core/Math',
         '../Core/Quaternion',
+        '../Core/Matrix3',
         '../Core/Ellipsoid',
         '../Core/Cartesian3',
         './CameraEventHandler',
@@ -15,6 +16,7 @@ define([
         FAR,
         CesiumMath,
         Quaternion,
+        Matrix3,
         Ellipsoid,
         Cartesian3,
         CameraEventHandler,
@@ -116,7 +118,7 @@ define([
      * // Example 1.
      * // Change the reference frame to one centered at a point on the ellipsoid's surface.
      * // Set the spindle controller's ellipsoid to a unit sphere for easy rotation around that point.
-     * var center = ellipsoid.cartographicDegreesToCartesian(new Cartographic2(-75.59777, 40.03883));
+     * var center = ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883));
      * var transform = Transforms.eastNorthUpToFixedFrame(center);
      * scene.getCamera().getControllers().get(0).setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
      *
@@ -179,12 +181,12 @@ define([
     CameraSpindleController.prototype.rotate = function(axis, angle) {
         var a = Cartesian3.clone(axis);
         var turnAngle = (typeof angle !== 'undefined') ? angle : this._moveRate;
-        var rotation = Quaternion.fromAxisAngle(a, turnAngle).toRotationMatrix();
+        var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(a, turnAngle));
 
         var camera = this._camera;
-        camera.position = rotation.multiplyWithVector(camera.position);
-        camera.direction = rotation.multiplyWithVector(camera.direction);
-        camera.up = rotation.multiplyWithVector(camera.up);
+        camera.position = rotation.multiplyByVector(camera.position);
+        camera.direction = rotation.multiplyByVector(camera.direction);
+        camera.up = rotation.multiplyByVector(camera.up);
         camera.right = camera.direction.cross(camera.up);
     };
 
@@ -415,7 +417,7 @@ define([
     };
 
     CameraSpindleController.prototype._zoom = function(movement) {
-        handleZoom(this, movement, this._ellipsoid.toCartographic3(this._camera.position).height);
+        handleZoom(this, movement, this._ellipsoid.cartesianToCartographic(this._camera.position).height);
     };
 
    /**

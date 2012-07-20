@@ -172,29 +172,29 @@ define([
         planes.length = 6;
 
         var normal, planeVec;
-        var nearCenter = pos.add(dir.multiplyWithScalar(n));
-        var farCenter = pos.add(dir.multiplyWithScalar(f));
+        var nearCenter = pos.add(dir.multiplyByScalar(n));
+        var farCenter = pos.add(dir.multiplyByScalar(f));
 
         //Left plane computation
-        planeVec = nearCenter.add(right.negate().multiplyWithScalar(r)).subtract(pos);
+        planeVec = nearCenter.add(right.negate().multiplyByScalar(r)).subtract(pos);
         planeVec = planeVec.normalize();
         normal = planeVec.cross(u);
         planes[0] = new Cartesian4(normal.x, normal.y, normal.z, -normal.dot(pos));
 
         //Right plane computation
-        planeVec = nearCenter.add(right.multiplyWithScalar(r)).subtract(pos);
+        planeVec = nearCenter.add(right.multiplyByScalar(r)).subtract(pos);
         planeVec = planeVec.normalize();
         normal = u.cross(planeVec);
         planes[1] = new Cartesian4(normal.x, normal.y, normal.z, -normal.dot(pos));
 
         //Bottom plane computation
-        planeVec = nearCenter.add(u.negate().multiplyWithScalar(t)).subtract(position);
+        planeVec = nearCenter.add(u.negate().multiplyByScalar(t)).subtract(position);
         planeVec = planeVec.normalize();
         normal = right.cross(planeVec);
         planes[2] = new Cartesian4(normal.x, normal.y, normal.z, -normal.dot(pos));
 
         //Top plane computation
-        planeVec = nearCenter.add(u.multiplyWithScalar(t)).subtract(pos);
+        planeVec = nearCenter.add(u.multiplyByScalar(t)).subtract(pos);
         planeVec = planeVec.normalize();
         normal = planeVec.cross(right);
         planes[3] = new Cartesian4(normal.x, normal.y, normal.z, -normal.dot(pos));

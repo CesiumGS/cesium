@@ -3,6 +3,7 @@ define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Color',
+        '../Core/Matrix3',
         '../Core/Matrix4',
         '../Scene/CustomSensorVolume',
         '../Scene/ColorMaterial'
@@ -10,6 +11,7 @@ define([
          DeveloperError,
          destroyObject,
          Color,
+         Matrix3,
          Matrix4,
          CustomSensorVolume,
          ColorMaterial) {
@@ -248,7 +250,7 @@ define([
             typeof orientation !== 'undefined' &&
             (!position.equals(pyramid._visualizerPosition) ||
              !orientation.equals(pyramid._visualizerOrientation))) {
-            pyramid.modelMatrix = new Matrix4(orientation.conjugate(orientation).toRotationMatrix(), position);
+            pyramid.modelMatrix = new Matrix4(Matrix3.fromQuaternion(orientation.conjugate(orientation)), position);
             position.clone(pyramid._visualizerPosition);
             orientation.clone(pyramid._visualizerOrientation);
         }

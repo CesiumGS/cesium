@@ -7,9 +7,9 @@ define([
         '../Core/TimeIntervalCollection',
         '../Core/Iso8601',
         '../Core/Cartesian3',
-        '../Core/Cartographic3',
+        '../Core/Cartographic',
         './CzmlCartesian3',
-        './CzmlCartographic3',
+        './CzmlCartographic',
         './DynamicProperty'
     ], function(
         DeveloperError,
@@ -19,14 +19,14 @@ define([
         TimeIntervalCollection,
         Iso8601,
         Cartesian3,
-        Cartographic3,
+        Cartographic,
         CzmlCartesian3,
-        CzmlCartographic3,
+        CzmlCartographic,
         DynamicProperty) {
     "use strict";
 
     var wgs84 = Ellipsoid.WGS84;
-    var potentialTypes = [CzmlCartesian3, CzmlCartographic3];
+    var potentialTypes = [CzmlCartesian3, CzmlCartographic];
 
     /**
      * A dynamic property which stores both Cartesian and Cartographic data
@@ -72,11 +72,11 @@ define([
     };
 
     /**
-     * Retrieves the value of the object at the supplied time as a Cartographic3.
+     * Retrieves the value of the object at the supplied time as a Cartographic.
      * @memberof DynamicPositionProperty
      *
      * @param {JulianDate} time The time for which to retrieve the value.
-     * @param {Cartographic3} [result] The object to store the result onto, if undefined a new instance will be created.
+     * @param {Cartographic} [result] The object to store the result onto, if undefined a new instance will be created.
      * @returns The modified result property, or a new instance if result was undefined.
      */
     DynamicPositionProperty.prototype.getValueCartographic = function(time, result) {
@@ -98,12 +98,12 @@ define([
         }
         var property = interval.data;
         var valueType = property.valueType;
-        if (valueType === CzmlCartographic3) {
+        if (valueType === CzmlCartographic) {
             return property.getValue(time, result);
         }
         result = interval.cachedValue = property.getValue(time, interval.cachedValue);
         if (typeof result !== 'undefined') {
-            result = wgs84.toCartographic3(result);
+            result = wgs84.cartesianToCartographic(result);
         }
         return result;
     };
@@ -140,7 +140,7 @@ define([
         }
         result = interval.cachedValue = property.getValue(time, interval.cachedValue);
         if (typeof result !== 'undefined') {
-            result = wgs84.toCartesian(result);
+            result = wgs84.cartographicToCartesian(result);
         }
         return result;
     };

@@ -96,7 +96,7 @@ defineSuite([
     it('unitInverseEqualsConjugate', function() {
         var s = Math.sin(CesiumMath.PI_OVER_FOUR);
         var c = Math.cos(CesiumMath.PI_OVER_FOUR);
-        var cartesian = new Cartesian3(1.0, 1.0, 1.0).normalize().multiplyWithScalar(s);
+        var cartesian = new Cartesian3(1.0, 1.0, 1.0).normalize().multiplyByScalar(s);
         var q = new Quaternion(cartesian.x, cartesian.y, cartesian.z, c);
         expect(q.norm()).toEqual(1.0);
         expect(q.inverse().equals(q.conjugate())).toEqual(true);
@@ -127,8 +127,8 @@ defineSuite([
         expect(q.equals(new Quaternion(8.0, 16.0, 24.0, 2.0))).toEqual(true);
     });
 
-    it('multiplyWithScalar', function() {
-        var q = new Quaternion(1.0, 2.0, 3.0, 4.0).multiplyWithScalar(2.0);
+    it('multiplyByScalar', function() {
+        var q = new Quaternion(1.0, 2.0, 3.0, 4.0).multiplyByScalar(2.0);
         expect(q.equals(new Quaternion(2.0, 4.0, 6.0, 8.0))).toEqual(true);
     });
 
@@ -140,7 +140,7 @@ defineSuite([
     it('rotate', function() {
         var s = Math.sin(CesiumMath.PI_OVER_FOUR);
         var c = Math.cos(CesiumMath.PI_OVER_FOUR);
-        var cartesian = new Cartesian3(0.0, 0.0, 1.0).multiplyWithScalar(s);
+        var cartesian = new Cartesian3(0.0, 0.0, 1.0).multiplyByScalar(s);
         var q = new Quaternion(cartesian.x, cartesian.y, cartesian.z, c);
         var xAxis = new Cartesian4(1.0, 0.0, 0.0, 0.0);
         var yAxis = new Cartesian4(0.0, 1.0, 0.0, 0.0);
@@ -150,7 +150,7 @@ defineSuite([
     it('getAxis', function() {
         var s = Math.sin(CesiumMath.PI_OVER_FOUR);
         var c = Math.cos(CesiumMath.PI_OVER_FOUR);
-        var cartesian = new Cartesian3(0.0, 0.0, 1.0).multiplyWithScalar(s);
+        var cartesian = new Cartesian3(0.0, 0.0, 1.0).multiplyByScalar(s);
         var q = new Quaternion(cartesian.x, cartesian.y, cartesian.z, c);
         expect(q.getAxis().equals(new Cartesian3(0.0, 0.0, 1.0))).toEqual(true);
         q = new Quaternion(4.0, 3.0, 2.0, 1.0);
@@ -160,30 +160,18 @@ defineSuite([
     it('getAngle', function() {
         var s = Math.sin(CesiumMath.PI_OVER_FOUR);
         var c = Math.cos(CesiumMath.PI_OVER_FOUR);
-        var cartesian = new Cartesian3(0.0, 0.0, 1.0).multiplyWithScalar(s);
+        var cartesian = new Cartesian3(0.0, 0.0, 1.0).multiplyByScalar(s);
         var q = new Quaternion(cartesian.x, cartesian.y, cartesian.z, c);
         expect(q.getAngle()).toEqual(CesiumMath.PI_OVER_TWO);
         q = new Quaternion(4.0, 3.0, 2.0, 1.0);
         expect(q.getAngle() === 0.0).toEqual(true);
     });
 
-    it('toRotationMatrix', function() {
-        var sPiOver4 = Math.sin(CesiumMath.PI_OVER_FOUR);
-        var cPiOver4 = Math.cos(CesiumMath.PI_OVER_FOUR);
-        var sPiOver2 = Math.sin(CesiumMath.PI_OVER_TWO);
-        var cPiOver2 = Math.cos(CesiumMath.PI_OVER_TWO);
-        var q = new Quaternion(new Cartesian3(0.0, 0.0, 1.0).multiplyWithScalar(sPiOver4), cPiOver4);
-        var rotation = new Matrix3(cPiOver2, -sPiOver2, 0.0,
-                                   sPiOver2,  cPiOver2, 0.0,
-                                        0.0,       0.0, 1.0);
-        expect(q.toRotationMatrix().equalsEpsilon(rotation, CesiumMath.EPSILON15)).toEqual(true);
-    });
-
     it('lerp', function() {
         var q = new Quaternion(1.0, 2.0, 3.0, 4.0);
         var r = new Quaternion(5.0, 6.0, 7.0, 8.0);
         var t = 0.75;
-        var s = q.multiplyWithScalar(1.0 - t).add(r.multiplyWithScalar(t));
+        var s = q.multiplyByScalar(1.0 - t).add(r.multiplyByScalar(t));
         expect(q.lerp(0.0, r).equals(q)).toEqual(true);
         expect(q.lerp(1.0, r).equals(r)).toEqual(true);
         expect(q.lerp(t, r).equals(s)).toEqual(true);
@@ -211,7 +199,7 @@ defineSuite([
     it('log', function() {
         var s = Math.sin(CesiumMath.PI_OVER_FOUR);
         var c = Math.cos(CesiumMath.PI_OVER_FOUR);
-        var cartesian = new Cartesian3(0.0, 0.0, 1.0).multiplyWithScalar(s);
+        var cartesian = new Cartesian3(0.0, 0.0, 1.0).multiplyByScalar(s);
         var q = new Quaternion(cartesian.x, cartesian.y, cartesian.z, c);
         expect(q.log().equals(new Cartesian3(0.0, 0.0, CesiumMath.PI_OVER_FOUR)));
     });
@@ -219,7 +207,7 @@ defineSuite([
     it('power', function() {
         var s = Math.sin(CesiumMath.PI_OVER_FOUR);
         var c = Math.cos(CesiumMath.PI_OVER_FOUR);
-        var cartesian = new Cartesian3(0.0, 0.0, 1.0).multiplyWithScalar(s);
+        var cartesian = new Cartesian3(0.0, 0.0, 1.0).multiplyByScalar(s);
         var t = new Quaternion(cartesian.x, cartesian.y, cartesian.z, c);
         var u = t.power(2.0);
         var v = t.multiply(t);
@@ -243,7 +231,7 @@ defineSuite([
 
         var s = Math.sin(theta / 2.0);
         var c = Math.cos(theta / 2.0);
-        var a = axis.multiplyWithScalar(s);
+        var a = axis.multiplyByScalar(s);
         var q = new Quaternion(a.x, a.y, a.z, c);
 
         var r = Quaternion.fromAxisAngle(axis, theta);
@@ -260,7 +248,7 @@ defineSuite([
         var cTheta = Math.cos(theta);
 
         var zAxis = new Cartesian3(0.0, 0.0, 1.0);
-        var z = zAxis.multiplyWithScalar(sHalfTheta);
+        var z = zAxis.multiplyByScalar(sHalfTheta);
         var q = new Quaternion(z.x, z.y, z.z, cHalfTheta);
         var zRotation = new Matrix3(cTheta, -sTheta, 0.0,
                                     sTheta,  cTheta, 0.0,
@@ -278,7 +266,7 @@ defineSuite([
         var cTheta = Math.cos(theta);
 
         var yAxis = new Cartesian3(0.0, 1.0, 0.0);
-        var y = yAxis.multiplyWithScalar(sHalfTheta);
+        var y = yAxis.multiplyByScalar(sHalfTheta);
         var q = new Quaternion(y.x, y.y, y.z, cHalfTheta);
         var yRotation = new Matrix3( cTheta, 0.0, sTheta,
                                         0.0, 1.0,    0.0,
@@ -296,7 +284,7 @@ defineSuite([
         var cTheta = Math.cos(theta);
 
         var xAxis = new Cartesian3(1.0, 0.0, 0.0);
-        var x = xAxis.multiplyWithScalar(sHalfTheta);
+        var x = xAxis.multiplyByScalar(sHalfTheta);
         var q = new Quaternion(x.x, x.y, x.z, cHalfTheta);
         var xRotation = new Matrix3(1.0,    0.0,     0.0,
                                     0.0, cTheta, -sTheta,
@@ -314,7 +302,7 @@ defineSuite([
         var cTheta = Math.cos(theta);
 
         var zAxis = new Cartesian3(0.0, 0.0, 1.0);
-        var z = zAxis.multiplyWithScalar(sHalfTheta);
+        var z = zAxis.multiplyByScalar(sHalfTheta);
         var q = new Quaternion(z.x, z.y, z.z, cHalfTheta);
         var zRotation = new Matrix3(cTheta, -sTheta, 0.0,
                                     sTheta,  cTheta, 0.0,
@@ -322,7 +310,7 @@ defineSuite([
         expect(Quaternion.fromRotationMatrix(zRotation).equalsEpsilon(q, CesiumMath.EPSILON15)).toEqual(true);
 
         var yAxis = new Cartesian3(0.0, 1.0, 0.0);
-        var y = yAxis.multiplyWithScalar(sHalfTheta);
+        var y = yAxis.multiplyByScalar(sHalfTheta);
         q = new Quaternion(y.x, y.y, y.z, cHalfTheta);
         var yRotation = new Matrix3( cTheta, 0.0, sTheta,
                                         0.0, 1.0,    0.0,
@@ -330,7 +318,7 @@ defineSuite([
         expect(Quaternion.fromRotationMatrix(yRotation).equalsEpsilon(q, CesiumMath.EPSILON15)).toEqual(true);
 
         var xAxis = new Cartesian3(1.0, 0.0, 0.0);
-        var x = xAxis.multiplyWithScalar(sHalfTheta);
+        var x = xAxis.multiplyByScalar(sHalfTheta);
         q = new Quaternion(x.x, x.y, x.z, cHalfTheta);
         var xRotation = new Matrix3(1.0,    0.0,     0.0,
                                     0.0, cTheta, -sTheta,
@@ -349,16 +337,8 @@ defineSuite([
     it('exp', function() {
         var s = Math.sin(CesiumMath.PI_OVER_FOUR);
         var c = Math.cos(CesiumMath.PI_OVER_FOUR);
-        var cartesian = new Cartesian3(0.0, 0.0, 1.0).multiplyWithScalar(s);
+        var cartesian = new Cartesian3(0.0, 0.0, 1.0).multiplyByScalar(s);
         var q = new Quaternion(cartesian.x, cartesian.y, cartesian.z, c);
         expect(Quaternion.exp(new Cartesian3(0.0, 0.0, CesiumMath.PI_OVER_FOUR)).equals(q)).toEqual(true);
-    });
-
-    it('matrixAndQuaternionfromAxisAngle', function() {
-        var axis = new Cartesian3(1.0, 2.0, 3.0);
-        var angle = 2.0 * CesiumMath.PI_OVER_THREE;
-        var m = Matrix3.fromAxisAngle(axis, angle);
-        var n = Quaternion.fromAxisAngle(axis, angle).toRotationMatrix();
-        expect(m.equalsEpsilon(n, CesiumMath.EPSILON15)).toEqual(true);
     });
 });

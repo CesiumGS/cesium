@@ -8,7 +8,7 @@ define([
         '../Core/IntersectionTests',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
-        '../Core/Cartographic3',
+        '../Core/Cartographic',
         '../Core/Matrix4',
         '../Core/Ray',
         './CameraControllerCollection',
@@ -22,7 +22,7 @@ define([
         IntersectionTests,
         Cartesian3,
         Cartesian4,
-        Cartographic3,
+        Cartographic,
         Matrix4,
         Ray,
         CameraControllerCollection,
@@ -71,7 +71,7 @@ define([
         this._invTransform = Matrix4.IDENTITY;
 
         var maxRadii = Ellipsoid.WGS84.getRadii().getMaximumComponent();
-        var position = new Cartesian3(0.0, -2.0, 1.0).normalize().multiplyWithScalar(2.0 * maxRadii);
+        var position = new Cartesian3(0.0, -2.0, 1.0).normalize().multiplyByScalar(2.0 * maxRadii);
 
         /**
          * The position of the camera.
@@ -210,10 +210,10 @@ define([
             east += CesiumMath.TWO_PI;
         }
 
-        var lla = new Cartographic3(0.5 * (west + east), 0.5 * (north + south), 0.0);
-        var northVector = ellipsoid.toCartesian(new Cartographic3(lla.longitude, north, 0.0));
-        var eastVector = ellipsoid.toCartesian(new Cartographic3(east, lla.latitude, 0.0));
-        var centerVector = ellipsoid.toCartesian(lla);
+        var lla = new Cartographic(0.5 * (west + east), 0.5 * (north + south), 0.0);
+        var northVector = ellipsoid.cartographicToCartesian(new Cartographic(lla.longitude, north, 0.0));
+        var eastVector = ellipsoid.cartographicToCartesian(new Cartographic(east, lla.latitude, 0.0));
+        var centerVector = ellipsoid.cartographicToCartesian(lla);
         var invTanHalfPerspectiveAngle = 1.0 / Math.tan(0.5 * this.frustum.fovy);
         var screenViewDistanceX;
         var screenViewDistanceY;
@@ -231,7 +231,7 @@ define([
         }
         lla.height += Math.max(screenViewDistanceX, screenViewDistanceY);
 
-        this.position = ellipsoid.toCartesian(lla);
+        this.position = ellipsoid.cartographicToCartesian(lla);
         this.direction = Cartesian3.ZERO.subtract(centerVector).normalize();
         this.right = this.direction.cross(Cartesian3.UNIT_Z).normalize();
         this.up = this.right.cross(this.direction);
@@ -247,7 +247,7 @@ define([
                                       u.x,  u.y,  u.z, -u.dot(e),
                                      -d.x, -d.y, -d.z,  d.dot(e),
                                       0.0,  0.0,  0.0,      1.0);
-        this._viewMatrix = viewMatrix.multiplyWithMatrix(this._invTransform);
+        this._viewMatrix = viewMatrix.multiply(this._invTransform);
 
         this._invViewMatrix = this._viewMatrix.inverseTransformation();
     };
@@ -286,19 +286,19 @@ define([
         }
 
         if (positionChanged || transformChanged) {
-            this._positionWC = transform.multiplyWithVector(new Cartesian4(position.x, position.y, position.z, 1.0)).getXYZ();
+            this._positionWC = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
         }
 
         if (directionChanged || transformChanged) {
-            this._directionWC = transform.multiplyWithVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)).getXYZ();
+            this._directionWC = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
         }
 
         if (upChanged || transformChanged) {
-            this._upWC = transform.multiplyWithVector(new Cartesian4(up.x, up.y, up.z, 0.0)).getXYZ();
+            this._upWC = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
         }
 
         if (rightChanged || transformChanged) {
-            this._rightWC = transform.multiplyWithVector(new Cartesian4(right.x, right.y, right.z, 0.0)).getXYZ();
+            this._rightWC = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
         }
 
         if (positionChanged || directionChanged || upChanged || transformChanged) {
@@ -314,7 +314,7 @@ define([
 
                 var invUpMag = 1.0 / up.magnitudeSquared();
                 var scalar = up.dot(direction) * invUpMag;
-                var w0 = direction.multiplyWithScalar(scalar);
+                var w0 = direction.multiplyByScalar(scalar);
                 up = this._up = up.subtract(w0).normalize();
                 this.up = up.clone();
 
@@ -417,9 +417,9 @@ define([
         var y = (2.0 / height) * (height - windowPosition.y) - 1.0;
 
         var position = this.getPositionWC();
-        var nearCenter = position.add(this.getDirectionWC().multiplyWithScalar(near));
-        var xDir = this.getRightWC().multiplyWithScalar(x * near * tanTheta);
-        var yDir = this.getUpWC().multiplyWithScalar(y * near * tanPhi);
+        var nearCenter = position.add(this.getDirectionWC().multiplyByScalar(near));
+        var xDir = this.getRightWC().multiplyByScalar(x * near * tanTheta);
+        var yDir = this.getUpWC().multiplyByScalar(y * near * tanPhi);
         var direction = nearCenter.add(xDir).add(yDir).subtract(position).normalize();
 
         return new Ray(position.clone(), direction);
@@ -526,7 +526,7 @@ define([
             return undefined;
         }
 
-        return projection.getEllipsoid().toCartesian(cart);
+        return projection.getEllipsoid().cartographicToCartesian(cart);
     };
 
     /**
@@ -561,7 +561,7 @@ define([
             return undefined;
         }
 
-        position = projection.getEllipsoid().toCartesian(cart);
+        position = projection.getEllipsoid().cartographicToCartesian(cart);
         return position;
     };
 

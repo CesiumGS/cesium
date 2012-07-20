@@ -51,7 +51,7 @@ define([
                 var delta = i / numberOfPartitions;
 
                 indices[i] = positions.length;
-                positions.push(origin.add(direction.multiplyWithScalar(delta)));
+                positions.push(origin.add(direction.multiplyByScalar(delta)));
             }
 
             return indices;
@@ -82,11 +82,11 @@ define([
                     topIndicesBuffer[numberOfPartitions] = rightBottomToTop[j];
 
                     var deltaY = j / numberOfPartitions;
-                    var offsetY = y.multiplyWithScalar(deltaY);
+                    var offsetY = y.multiplyByScalar(deltaY);
 
                     for ( var i = 1; i < numberOfPartitions; ++i) {
                         var deltaX = i / numberOfPartitions;
-                        var offsetX = x.multiplyWithScalar(deltaX);
+                        var offsetX = x.multiplyByScalar(deltaX);
 
                         topIndicesBuffer[i] = positions.length;
                         positions.push(origin.add(offsetX).add(offsetY));
@@ -162,10 +162,18 @@ define([
         addFaceTriangles(edge7to4.slice(0).reverse(), edge4to5, edge5to6, edge6to7.slice(0).reverse()); // Plane z = 1
         addFaceTriangles(edge1to2, edge0to1.slice(0).reverse(), edge3to0.slice(0).reverse(), edge2to3); // Plane z = -1
 
-        // Expand cube into ellipsoid.
+        // Expand cube into ellipsoid and flatten values
         var radii = ellipsoid.getRadii();
-        for ( var i = 0; i < positions.length; ++i) {
-            positions[i] = positions[i].normalize().multiplyComponents(radii);
+        var length = positions.length;
+        var q = 0;
+        var flattenedPositions = new Array(length * 3);
+        for ( var i = 0; i < length; ++i) {
+            var item = positions[i];
+            Cartesian3.normalize(item, item);
+            Cartesian3.multiplyComponents(item, radii, item);
+            flattenedPositions[q++] = item.x;
+            flattenedPositions[q++] = item.y;
+            flattenedPositions[q++] = item.z;
         }
 
         var mesh = {};
@@ -175,7 +183,7 @@ define([
         mesh.attributes[attributeName] = {
             componentDatatype : ComponentDatatype.FLOAT,
             componentsPerAttribute : 3,
-            values : Cartesian3.flatten(positions)
+            values : flattenedPositions
         };
 
         mesh.indexLists.push({
