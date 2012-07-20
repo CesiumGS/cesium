@@ -15,7 +15,7 @@ define([
         '../Renderer/CullFace',
         '../Renderer/BlendEquation',
         '../Renderer/BlendFunction',
-        './ColorMaterial',
+        './Material',
         './combineMaterials',
         '../Shaders/Noise',
         '../Shaders/Ray',
@@ -40,7 +40,7 @@ define([
         CullFace,
         BlendEquation,
         BlendFunction,
-        ColorMaterial,
+        Material,
         combineMaterials,
         ShadersNoise,
         ShadersRay,
@@ -174,25 +174,25 @@ define([
         /**
          * DOC_TBA
          */
-        this.outerMaterial = t.outerMaterial || new ColorMaterial();
+        this.outerMaterial = t.outerMaterial || Material.createFromID(undefined, 'ColorMaterial');
         this._outerMaterial = undefined;
 
         /**
          * DOC_TBA
          */
-        this.innerMaterial = t.innerMaterial || new ColorMaterial();
+        this.innerMaterial = t.innerMaterial || Material.createFromID(undefined, 'ColorMaterial');
         this._innerMaterial = undefined;
 
         /**
          * DOC_TBA
          */
-        this.capMaterial = t.capMaterial || new ColorMaterial();
+        this.capMaterial = t.capMaterial || Material.createFromID(undefined, 'ColorMaterial');
         this._capMaterial = undefined;
 
         /**
          * DOC_TBA
          */
-        this.silhouetteMaterial = t.silhouetteMaterial || new ColorMaterial();
+        this.silhouetteMaterial = t.silhouetteMaterial || Material.createFromID(undefined, 'ColorMaterial');
         this._silhouetteMaterial = undefined;
 
         /**
@@ -360,10 +360,10 @@ define([
                 (!this._capMaterial || (this._capMaterial !== this.capMaterial)) ||
                 (!this._silhouetteMaterial || (this._silhouetteMaterial !== this.silhouetteMaterial))) {
 
-                this._outerMaterial = this.outerMaterial || new ColorMaterial();
-                this._innerMaterial = this.innerMaterial || new ColorMaterial();
-                this._capMaterial = this.capMaterial || new ColorMaterial();
-                this._silhouetteMaterial = this.silhouetteMaterial || new ColorMaterial();
+                this._outerMaterial = this.outerMaterial || Material.createFromID(undefined, 'ColorMaterial');
+                this._innerMaterial = this.innerMaterial || Material.createFromID(undefined, 'ColorMaterial');
+                this._capMaterial = this.capMaterial || Material.createFromID(undefined, 'ColorMaterial');
+                this._silhouetteMaterial = this.silhouetteMaterial || Material.createFromID(undefined, 'ColorMaterial');
 
                 var material = this._combineMaterials();
                 this._drawUniforms = combine(this._uniforms, material._uniforms);

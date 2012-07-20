@@ -13,7 +13,7 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/BlendEquation',
         '../Renderer/BlendFunction',
-        './ColorMaterial',
+        './Material',
         '../Shaders/Noise',
         '../Shaders/SensorVolume',
         '../Shaders/CustomSensorVolumeVS',
@@ -33,7 +33,7 @@ define([
         BufferUsage,
         BlendEquation,
         BlendFunction,
-        ColorMaterial,
+        Material,
         ShadersNoise,
         ShadersSensorVolume,
         CustomSensorVolumeVS,
@@ -139,7 +139,7 @@ define([
         /**
          * DOC_TBA
          */
-        this.material = t.material || new ColorMaterial();
+        this.material = t.material || Material.createFromID(undefined, 'ColorMaterial');
         this._material = undefined;
 
         /**
@@ -328,7 +328,7 @@ define([
             // Recompile shader when material changes
             if (!this._material || (this._material !== this.material)) {
 
-                this.material = this.material || new ColorMaterial();
+                this.material = this.material || Material.createFromID(undefined, 'ColorMaterial');
                 this._material = this.material;
 
                 var fsSource =

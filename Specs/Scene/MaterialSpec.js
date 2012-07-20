@@ -132,7 +132,12 @@ defineSuite([
 
     it('throws without context', function() {
         expect(function() {
-            return new Material();
+            return new Material({
+                'context' : undefined,
+                'template' : {
+                    'id' : 'DiffuseMapMaterial'
+                }
+            });
         }).toThrow();
     });
 

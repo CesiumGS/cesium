@@ -2,11 +2,11 @@
 define([
         './DynamicProperty',
         './CzmlColor',
-        '../Scene/ColorMaterial'
+        '../Scene/Material'
     ], function(
          DynamicProperty,
          CzmlColor,
-         ColorMaterial) {
+         Material) {
     "use strict";
 
     /**
@@ -52,12 +52,12 @@ define([
      *
      * @param {JulianDate} time The desired time.
      * @param {Context} context The context in which this material exists.
-     * @param {ColorMaterial} [existingMaterial] An existing material to be modified.  If the material is undefined or not a ColorMaterial, a new instance is created.
+     * @param {Material} [existingMaterial] An existing material to be modified.  If the material is undefined or not a ColorMaterial, a new instance is created.
      * @returns The modified existingMaterial parameter or a new ColorMaterial instance if existingMaterial was undefined or not a ColorMaterial.
      */
     DynamicColorMaterial.prototype.getValue = function(time, context, existingMaterial) {
-        if (typeof existingMaterial === 'undefined' || !(existingMaterial instanceof ColorMaterial)) {
-            existingMaterial = new ColorMaterial();
+        if (typeof existingMaterial === 'undefined' || (existingMaterial.getID() !== 'ColorMaterial')) {
+            existingMaterial = Material.createFromID(context, 'ColorMaterial');
         }
         existingMaterial.color = this.color.getValue(time, existingMaterial.color);
         return existingMaterial;

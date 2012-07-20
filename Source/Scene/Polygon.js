@@ -21,7 +21,7 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/CullFace',
         '../Renderer/VertexLayout',
-        './ColorMaterial',
+        './Material',
         './SceneMode',
         '../Shaders/Noise',
         '../Shaders/PolygonVS',
@@ -50,7 +50,7 @@ define([
         BufferUsage,
         CullFace,
         VertexLayout,
-        ColorMaterial,
+        Material,
         SceneMode,
         Noise,
         PolygonVS,
@@ -229,9 +229,8 @@ define([
         /**
          * DOC_TBA
          */
-        this.material = new ColorMaterial({
-            color : new Color(1.0, 1.0, 0.0, 0.5)
-        });
+        this.material = Material.createFromID(undefined, 'ColorMaterial');
+        this.material.color = new Color(1.0, 1.0, 0.0, 0.5);
         this._material = undefined;
 
         /**
@@ -506,7 +505,7 @@ define([
             this._material !== this.material ||
             this._affectedByLighting !== this.affectedByLighting) {
 
-            this.material = this.material || new ColorMaterial();
+            this.material = this.material || Material.createFromID(undefined, 'ColorMaterial');
             this._material = this.material;
             this._affectedByLighting = this.affectedByLighting;
 

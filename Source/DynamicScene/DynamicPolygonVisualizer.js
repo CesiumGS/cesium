@@ -3,12 +3,12 @@ define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Scene/Polygon',
-        '../Scene/ColorMaterial'
+        '../Scene/Material'
        ], function(
          DeveloperError,
          destroyObject,
          Polygon,
-         ColorMaterial) {
+         Material) {
     "use strict";
 
     /**
@@ -212,7 +212,8 @@ define([
             polygon.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
-            polygon.material = new ColorMaterial();
+            polygon.material = Material.createFromID(this._scene.getContext(), 'ColorMaterial');
+
         } else {
             polygon = this._polygonCollection[polygonVisualizerIndex];
         }

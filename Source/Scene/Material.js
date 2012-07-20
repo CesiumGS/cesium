@@ -4,6 +4,7 @@ define([
         '../Core/createGuid',
         '../Core/Jobs',
         '../Core/clone',
+        '../Core/Color',
         '../Core/Matrix2',
         '../Core/Matrix3',
         '../Core/Matrix4',
@@ -37,6 +38,7 @@ define([
         createGuid,
         Jobs,
         clone,
+        Color,
         Matrix2,
         Matrix3,
         Matrix4,
@@ -76,9 +78,6 @@ define([
     function Material(description) {
         this._description = description || {};
         this._context = this._description.context;
-        if (typeof this._context === 'undefined') {
-            throw new DeveloperError('context is required.');
-        }
         this._strict = (typeof this._description.strict !== 'undefined') ? this._description.strict : true;
         this._template = this._description.template || {};
         this._materialID = this._template.id;
@@ -375,6 +374,9 @@ define([
             var that = this;
             var path;
             var texture;
+            if (typeof material._context === 'undefined') {
+                throw new DeveloperError('context is required.');
+            }
             if (textureType === 'sampler2D') {
                 path = textureInfo;
                 texture = this._pathsToTextures[path];
@@ -466,12 +468,7 @@ define([
     Material.prototype._materialFactory.addMaterial('ColorMaterial', {
         'id' : 'ColorMaterial',
         'uniforms' : {
-            'color' : {
-                'red' : 1,
-                'green' : 0,
-                'blue' : 0,
-                'alpha' : 1
-            }
+            'color' : new Color(1.0, 0.0, 0.0, 1.0)
         },
         'source' : ColorMaterial
     });

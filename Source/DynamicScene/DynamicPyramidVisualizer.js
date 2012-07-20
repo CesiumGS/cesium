@@ -5,14 +5,14 @@ define([
         '../Core/Color',
         '../Core/Matrix4',
         '../Scene/CustomSensorVolume',
-        '../Scene/ColorMaterial'
+        '../Scene/Material'
        ], function(
          DeveloperError,
          destroyObject,
          Color,
          Matrix4,
          CustomSensorVolume,
-         ColorMaterial) {
+         Material) {
     "use strict";
 
     /**
@@ -228,7 +228,7 @@ define([
             pyramid.radius = Number.POSITIVE_INFINITY;
             pyramid.showIntersection = true;
             pyramid.intersectionColor = Color.YELLOW;
-            pyramid.material = new ColorMaterial();
+            pyramid.material = Material.createFromID(this._scene.getContext(), 'ColorMaterial');
         } else {
             pyramid = this._pyramidCollection[pyramidVisualizerIndex];
         }
