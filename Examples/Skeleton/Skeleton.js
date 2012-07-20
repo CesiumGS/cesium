@@ -26,23 +26,23 @@ require({
 
     var imageryLayerCollection = new Cesium.ImageryLayerCollection();
 
-    var esriLayer = imageryLayerCollection.addImageryProvider(new Cesium.ArcGisMapServerImageryProvider({
-        url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
-        proxy : new Cesium.DefaultProxy('/proxy/')
-    }));
+//    var esriLayer = imageryLayerCollection.addImageryProvider(new Cesium.ArcGisMapServerImageryProvider({
+//        url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
+//        proxy : new Cesium.DefaultProxy('/proxy/')
+//    }));
 
 //    var streetsLayer = imageryLayerCollection.addImageryProvider(new Cesium.ArcGisMapServerImageryProvider({
 //        url : 'http://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer',
 //        proxy : new Cesium.DefaultProxy('/proxy/')
 //    }));
 
-//    var bingAerialLayer = imageryLayerCollection.addImageryProvider(new Cesium.BingMapsImageryProvider({
-//        server : 'dev.virtualearth.net',
-//        mapStyle : Cesium.BingMapsStyle.AERIAL,
-//        // Some versions of Safari support WebGL, but don't correctly implement
-//        // cross-origin image loading, so we need to load Bing imagery using a proxy.
-//        proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
-//    }));
+    var bingAerialLayer = imageryLayerCollection.addImageryProvider(new Cesium.BingMapsImageryProvider({
+        server : 'dev.virtualearth.net',
+        mapStyle : Cesium.BingMapsStyle.AERIAL,
+        // Some versions of Safari support WebGL, but don't correctly implement
+        // cross-origin image loading, so we need to load Bing imagery using a proxy.
+        proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
+    }));
 
 //    var bingRoadLayer = imageryLayerCollection.addImageryProvider(new Cesium.BingMapsImageryProvider({
 //        server : 'dev.virtualearth.net',

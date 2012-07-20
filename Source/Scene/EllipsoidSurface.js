@@ -238,15 +238,13 @@ define([
                 ++numberOfDayTextures;
             }
 
-            if (numberOfDayTextures !== 0) {
-                uniformMap.numberOfDayTextures = numberOfDayTextures;
+            uniformMap.numberOfDayTextures = numberOfDayTextures;
 
-                context.continueDraw({
-                    primitiveType : PrimitiveType.TRIANGLES,
-                    vertexArray : tile.vertexArray,
-                    uniformMap : uniformMap
-                });
-            }
+            context.continueDraw({
+                primitiveType : PrimitiveType.TRIANGLES,
+                vertexArray : tile.vertexArray,
+                uniformMap : uniformMap
+            });
         }
 
         context.endDraw();
