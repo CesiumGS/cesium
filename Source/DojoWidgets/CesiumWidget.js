@@ -363,7 +363,7 @@ define([
             }
 
             this.lastTimeLabelUpdate = clock.currentTime;
-            this.timeLabelElement = document.getElementById('dijit_form_Button_0_label');    // TODO: ** FIX THIS **
+            this.timeLabelElement = this.timeLabel.containerNode;
             this.timeLabelElement.innerHTML = clock.currentTime.toDate().toUTCString();
 
             this.updateSpeedIndicator();
