@@ -540,10 +540,4 @@ defineSuite([
             Cartesian4.equalsEpsilon(new Cartesian4(), new Cartesian4(), undefined);
         }).toThrow();
     });
-
-    it('static toString throws with no cartesian parameter', function() {
-        expect(function() {
-            Cartesian4.toString(undefined);
-        }).toThrow();
-    });
 });

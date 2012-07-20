@@ -515,8 +515,6 @@ define([
             }
 
             this.defaultCamera = camera.clone();
-
-            this.render();
         },
 
         viewHome : function() {
