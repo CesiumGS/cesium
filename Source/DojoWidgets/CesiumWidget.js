@@ -257,7 +257,7 @@ define([
                 //while there are no visual differences, removeAll cleans the cache and improves performance
                 widget.visualizers.removeAllPrimitives();
                 widget.dynamicObjectCollection.clear();
-                processCzml(JSON.parse(evt.target.result), this.dynamicObjectCollection, f.name);
+                processCzml(JSON.parse(evt.target.result), widget.dynamicObjectCollection, f.name);
                 widget.setTimeFromBuffer();
             };
             reader.readAsText(f);
@@ -325,32 +325,12 @@ define([
             var animationController = this.animationController;
             var dynamicObjectCollection = this.dynamicObjectCollection = new DynamicObjectCollection();
             var clock = this.clock;
-
-            var transitioner;
-            var lastCameraCenteredObjectID;
-
-            transitioner = new SceneTransitioner(scene);
+            var transitioner = this.sceneTransitioner = new SceneTransitioner(scene);
             this.visualizers = VisualizerCollection.createCzmlStandardCollection(scene, dynamicObjectCollection);
 
-            var queryObject = {};
-            if (window.location.search) {
-                queryObject = ioQuery.queryToObject(window.location.search.substring(1));
-            }
-
-            if (typeof queryObject.source !== 'undefined') {
-                getJson(queryObject.source).then(function(czmlData) {
-                    processCzml(czmlData, dynamicObjectCollection, queryObject.source);
-                    setTimeFromBuffer();
-                });
-            }
-
-            if (typeof queryObject.lookAt !== 'undefined') {
-                cameraCenteredObjectID = queryObject.lookAt;
-            }
-
             this.lastTimeLabelUpdate = clock.currentTime;
-            this.timeLabel = document.getElementById('dijit_form_Button_0_label');    // TODO: ** FIX THIS **
-            this.timeLabel.innerHTML = clock.currentTime.toDate().toUTCString();
+            this.timeLabelElement = document.getElementById('dijit_form_Button_0_label');    // TODO: ** FIX THIS **
+            this.timeLabelElement.innerHTML = clock.currentTime.toDate().toUTCString();
 
             this.updateSpeedIndicator();
 
@@ -444,7 +424,7 @@ define([
                 widget.showGroundAtmosphere(true);
             });
             on(view2D, 'Click', function() {
-                cameraCenteredObjectID = undefined;
+                widget.cameraCenteredObjectID = undefined;
                 view2D.set('checked', true);
                 view3D.set('checked', false);
                 viewColumbus.set('checked', false);
@@ -453,7 +433,7 @@ define([
                 transitioner.morphTo2D();
             });
             on(view3D, 'Click', function() {
-                cameraCenteredObjectID = undefined;
+                widget.cameraCenteredObjectID = undefined;
                 view2D.set('checked', false);
                 view3D.set('checked', true);
                 viewColumbus.set('checked', false);
@@ -462,7 +442,7 @@ define([
                 widget.showGroundAtmosphere(true);
             });
             on(viewColumbus, 'Click', function() {
-                cameraCenteredObjectID = undefined;
+                widget.cameraCenteredObjectID = undefined;
                 view2D.set('checked', false);
                 view3D.set('checked', false);
                 viewColumbus.set('checked', true);
@@ -590,20 +570,19 @@ define([
             this.scene.setSunPosition(SunPosition.compute(currentTime).position);
 
             if (Math.abs(currentTime.getSecondsDifference(this.lastTimeLabelUpdate)) >= 1.0) {
-                timeLabel.innerHTML = currentTime.toDate().toUTCString();
+                this.timeLabelElement.innerHTML = currentTime.toDate().toUTCString();
                 this.lastTimeLabelUpdate = currentTime;
             }
 
             // Update the camera to stay centered on the selected object, if any.
             if (cameraCenteredObjectID) {
-                var dynamicObject = dynamicObjectCollection.getObject(cameraCenteredObjectID);
+                var dynamicObject = this.dynamicObjectCollection.getObject(cameraCenteredObjectID);
                 if (dynamicObject && dynamicObject.position) {
                     cameraCenteredObjectIDPosition = dynamicObject.position.getValueCartesian(currentTime, cameraCenteredObjectIDPosition);
                     if (typeof cameraCenteredObjectIDPosition !== 'undefined') {
                         // If we're centering on an object for the first time, zoom to within 2km of it.
-                        if (lastCameraCenteredObjectID !== cameraCenteredObjectID) {
-                            lastCameraCenteredObjectID = cameraCenteredObjectID;
-                            var camera = scene.getCamera();
+                        if (this._lastCameraCenteredObjectID !== cameraCenteredObjectID) {
+                            var camera = this.scene.getCamera();
                             camera.position = camera.position.normalize().multiplyByScalar(5000.0);
 
                             var controllers = camera.getControllers();
@@ -613,12 +592,13 @@ define([
                         }
 
                         if (typeof spindleController !== 'undefined' && !this.objectSpindleController.isDestroyed()) {
-                            var transform = Transforms.eastNorthUpToFixedFrame(cameraCenteredObjectIDPosition, ellipsoid);
+                            var transform = Transforms.eastNorthUpToFixedFrame(cameraCenteredObjectIDPosition, this.ellipsoid);
                             this.objectSpindleController.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
                         }
                     }
                 }
             }
+            this._lastCameraCenteredObjectID = cameraCenteredObjectID;
             //widget.render();
             //requestAnimationFrame(update);
         },

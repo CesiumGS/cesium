@@ -52,6 +52,11 @@ define([
     "use strict";
     /*global console*/
 
+    var queryObject = {};
+    if (window.location.search) {
+        queryObject = ioQuery.queryToObject(window.location.search.substring(1));
+    }
+
     var currentTime = new JulianDate();
     var clock = new Clock({
         startTime : currentTime.addDays(-0.5),
@@ -69,10 +74,21 @@ define([
         postSetup : function(widget) {
             //widget.enableStatistics(true);
 
-            on(cesium, 'ObjectRightClickSelected', onObjectRightClickSelected);
+            if (typeof queryObject.source !== 'undefined') {
+                getJson(queryObject.source).then(function(czmlData) {
+                    processCzml(czmlData, widget.dynamicObjectCollection, queryObject.source);
+                    widget.setTimeFromBuffer();
+                });
+            }
+
+            if (typeof queryObject.lookAt !== 'undefined') {
+                widget.cameraCenteredObjectID = queryObject.lookAt;
+            }
+
+            //on(cesium, 'ObjectRightClickSelected', onObjectRightClickSelected);
 
             var dropBox = dom.byId('cesiumContainer');
-            on(dropBox, 'drop', handleDrop);
+            on(dropBox, 'drop', widget.handleDrop);
             on(dropBox, 'dragenter', event.stop);
             on(dropBox, 'dragover', event.stop);
             on(dropBox, 'dragexit', event.stop);
