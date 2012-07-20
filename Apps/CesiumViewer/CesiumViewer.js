@@ -52,7 +52,6 @@ define([
     "use strict";
     /*global console*/
 
-    var visualizers;
     var currentTime = new JulianDate();
     var clock = new Clock({
         startTime : currentTime.addDays(-0.5),
@@ -62,59 +61,6 @@ define([
         multiplier : 1
     });
     var animationController = new AnimationController(clock);
-
-    var animReverse;
-    var animPause;
-    var animPlay;
-
-    function setTimeFromBuffer() {
-        animReverse.set('checked', false);
-        animPause.set('checked', true);
-        animPlay.set('checked', false);
-
-        var availability = dynamicObjectCollection.computeAvailability();
-        if (availability.start.equals(Iso8601.MINIMUM_VALUE)) {
-            clock.startTime = new JulianDate();
-            clock.stopTime = clock.startTime.addDays(1);
-            clock.clockRange = ClockRange.UNBOUNDED;
-        } else {
-            clock.startTime = availability.start;
-            clock.stopTime = availability.stop;
-            clock.clockRange = ClockRange.LOOP;
-        }
-
-        clock.multiplier = 60;
-        clock.currentTime = clock.startTime;
-        timeline.zoomTo(clock.startTime, clock.stopTime);
-        updateSpeedIndicator();
-    }
-
-    function handleDrop(e) {
-        e.stopPropagation(); // Stops some browsers from redirecting.
-        e.preventDefault();
-
-        var files = e.dataTransfer.files;
-        var f = files[0];
-        var reader = new FileReader();
-        reader.onload = function(evt) {
-            //CZML_TODO visualizers.removeAllPrimitives(); is not really needed here, but right now visualizers
-            //cache data indefinitely and removeAll is the only way to get rid of it.
-            //while there are no visual differences, removeAll cleans the cache and improves performance
-            visualizers.removeAllPrimitives();
-            dynamicObjectCollection.clear();
-            processCzml(JSON.parse(evt.target.result), dynamicObjectCollection, f.name);
-            setTimeFromBuffer();
-        };
-        reader.readAsText(f);
-    }
-
-    function onObjectRightClickSelected(selectedObject) {
-        if (selectedObject && selectedObject.dynamicObject) {
-            cameraCenteredObjectID = selectedObject.dynamicObject.id;
-        } else {
-            cameraCenteredObjectID = undefined;
-        }
-    }
 
     var cesium = new CesiumWidget({
         clock : clock,

@@ -14,20 +14,31 @@ define([
         'dijit/form/DropDownButton',
         'dijit/TooltipDialog',
         './TimelineWidget',
+        '../Core/Clock',
+        '../Core/ClockStep',
+        '../Core/ClockRange',
         '../Core/Ellipsoid',
+        '../Core/Iso8601',
+        '../Core/FullScreen',
         '../Core/SunPosition',
         '../Core/EventHandler',
         '../Core/FeatureDetection',
         '../Core/MouseEventType',
         '../Core/Cartesian2',
+        '../Core/Cartesian3',
         '../Core/JulianDate',
         '../Core/DefaultProxy',
+        '../Core/Transforms',
         '../Scene/Scene',
         '../Scene/CentralBody',
         '../Scene/BingMapsTileProvider',
         '../Scene/BingMapsStyle',
+        '../Scene/SceneTransitioner',
         '../Scene/SingleTileProvider',
         '../Scene/PerformanceDisplay',
+        '../DynamicScene/processCzml',
+        '../DynamicScene/DynamicObjectCollection',
+        '../DynamicScene/VisualizerCollection',
         'dojo/text!./CesiumWidget.html'
     ], function (
         require,
@@ -44,20 +55,31 @@ define([
         DropDownButton,
         TooltipDialog,
         TimelineWidget,
+        Clock,
+        ClockStep,
+        ClockRange,
         Ellipsoid,
+        Iso8601,
+        FullScreen,
         SunPosition,
         EventHandler,
         FeatureDetection,
         MouseEventType,
         Cartesian2,
+        Cartesian3,
         JulianDate,
         DefaultProxy,
+        Transforms,
         Scene,
         CentralBody,
         BingMapsTileProvider,
         BingMapsStyle,
+        SceneTransitioner,
         SingleTileProvider,
         PerformanceDisplay,
+        processCzml,
+        DynamicObjectCollection,
+        VisualizerCollection,
         template) {
     "use strict";
 
@@ -102,8 +124,16 @@ define([
             this.scene.getCamera().frustum.aspectRatio = width / height;
         },
 
+        defaultOnObjectRightClickSelected : function(selectedObject) {
+            if (selectedObject && selectedObject.dynamicObject) {
+                this.cameraCenteredObjectID = selectedObject.dynamicObject.id;
+            } else {
+                this.cameraCenteredObjectID = undefined;
+            }
+        },
+
         onObjectSelected : undefined,
-        onObjectRightClickSelected : undefined,
+        onObjectRightClickSelected : this.defaultOnObjectRightClickSelected,
         onObjectMousedOver : undefined,
         onLeftMouseDown : undefined,
         onLeftMouseUp : undefined,
@@ -189,6 +219,50 @@ define([
             }
         },
 
+        setTimeFromBuffer : function() {
+            var clock = this.clock;
+
+            this.animReverse.set('checked', false);
+            this.animPause.set('checked', true);
+            this.animPlay.set('checked', false);
+
+            var availability = this.dynamicObjectCollection.computeAvailability();
+            if (availability.start.equals(Iso8601.MINIMUM_VALUE)) {
+                clock.startTime = new JulianDate();
+                clock.stopTime = clock.startTime.addDays(1);
+                clock.clockRange = ClockRange.UNBOUNDED;
+            } else {
+                clock.startTime = availability.start;
+                clock.stopTime = availability.stop;
+                clock.clockRange = ClockRange.LOOP;
+            }
+
+            clock.multiplier = 60;
+            clock.currentTime = clock.startTime;
+            this.mainTimeline.timeline.zoomTo(clock.startTime, clock.stopTime);
+            this.updateSpeedIndicator();
+        },
+
+        handleDrop : function(e) {
+            e.stopPropagation(); // Stops some browsers from redirecting.
+            e.preventDefault();
+
+            var files = e.dataTransfer.files;
+            var f = files[0];
+            var reader = new FileReader();
+            var widget = this;
+            reader.onload = function(evt) {
+                //CZML_TODO visualizers.removeAllPrimitives(); is not really needed here, but right now visualizers
+                //cache data indefinitely and removeAll is the only way to get rid of it.
+                //while there are no visual differences, removeAll cleans the cache and improves performance
+                widget.visualizers.removeAllPrimitives();
+                widget.dynamicObjectCollection.clear();
+                processCzml(JSON.parse(evt.target.result), this.dynamicObjectCollection, f.name);
+                widget.setTimeFromBuffer();
+            };
+            reader.readAsText(f);
+        },
+
         _setupCesium : function() {
             var canvas = this.canvas, ellipsoid = this.ellipsoid, scene, widget = this;
 
@@ -249,61 +323,17 @@ define([
             //////////////////////////////////////////////////////////////////////////////////////////////////
 
             var animationController = this.animationController;
+            var dynamicObjectCollection = this.dynamicObjectCollection = new DynamicObjectCollection();
+            var clock = this.clock;
 
             var spindleController;
             var timeline;
             var transitioner;
-            var dynamicObjectCollection = new DynamicObjectCollection();
-            var timeLabel;
-            var lastTimeLabelUpdate;
-            var cameraCenteredObjectID;
             var cameraCenteredObjectIDPosition;
             var lastCameraCenteredObjectID;
 
-            function update() {
-                var currentTime = animationController.update();
-
-                if (typeof timeline !== 'undefined') {
-                    timeline.updateFromClock();
-                }
-                visualizers.update(currentTime);
-
-                if (Math.abs(currentTime.getSecondsDifference(lastTimeLabelUpdate)) >= 1.0) {
-                    timeLabel.innerHTML = currentTime.toDate().toUTCString();
-                    lastTimeLabelUpdate = currentTime;
-                }
-
-                // Update the camera to stay centered on the selected object, if any.
-                if (cameraCenteredObjectID) {
-                    var dynamicObject = dynamicObjectCollection.getObject(cameraCenteredObjectID);
-                    if (dynamicObject && dynamicObject.position) {
-                        cameraCenteredObjectIDPosition = dynamicObject.position.getValueCartesian(currentTime, cameraCenteredObjectIDPosition);
-                        if (typeof cameraCenteredObjectIDPosition !== 'undefined') {
-                            // If we're centering on an object for the first time, zoom to within 2km of it.
-                            if (lastCameraCenteredObjectID !== cameraCenteredObjectID) {
-                                lastCameraCenteredObjectID = cameraCenteredObjectID;
-                                var camera = scene.getCamera();
-                                camera.position = camera.position.normalize().multiplyByScalar(5000.0);
-
-                                var controllers = camera.getControllers();
-                                controllers.removeAll();
-                                spindleController = controllers.addSpindle();
-                                spindleController.constrainedAxis = Cartesian3.UNIT_Z;
-                            }
-
-                            if (typeof spindleController !== 'undefined' && !spindleController.isDestroyed()) {
-                                var transform = Transforms.eastNorthUpToFixedFrame(cameraCenteredObjectIDPosition, ellipsoid);
-                                spindleController.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
-                            }
-                        }
-                    }
-                }
-                widget.render(currentTime);
-                requestAnimationFrame(update);
-            }
-
             transitioner = new SceneTransitioner(scene);
-            visualizers = VisualizerCollection.createCzmlStandardCollection(scene, dynamicObjectCollection);
+            this.visualizers = VisualizerCollection.createCzmlStandardCollection(scene, dynamicObjectCollection);
 
             var queryObject = {};
             if (window.location.search) {
@@ -321,9 +351,9 @@ define([
                 cameraCenteredObjectID = queryObject.lookAt;
             }
 
-            lastTimeLabelUpdate = clock.currentTime;
-            timeLabel = dom.byId('dijit_form_Button_0_label');                  // TODO: FIX THIS
-            timeLabel.innerHTML = clock.currentTime.toDate().toUTCString();
+            this.lastTimeLabelUpdate = clock.currentTime;
+            this.timeLabel = document.getElementById('dijit_form_Button_0_label');    // TODO: ** FIX THIS **
+            this.timeLabel.innerHTML = clock.currentTime.toDate().toUTCString();
 
             this.updateSpeedIndicator();
 
@@ -478,8 +508,6 @@ define([
             on(imageryRoad, 'Click', createImageryClickFunction(imageryRoad, BingMapsStyle.ROAD));
             on(imagerySingleTile, 'Click', createImageryClickFunction(imagerySingleTile, undefined));
 
-            update();
-
             //////////////////////////////////////////////////////////////////////////////////////////////////
 
             if (typeof this.postSetup !== 'undefined') {
@@ -554,10 +582,51 @@ define([
             }
         },
 
-        render : function(time) {
-            var scene = this.scene;
-            scene.setSunPosition(SunPosition.compute(time).position);
-            scene.render();
+        update : function(currentTime) {
+            //var currentTime = this.animationController.update();
+            var cameraCenteredObjectID = this.cameraCenteredObjectID;
+
+            this.mainTimeline.timeline.updateFromClock();
+            this.visualizers.update(currentTime);
+
+            this.scene.setSunPosition(SunPosition.compute(currentTime).position);
+
+            if (Math.abs(currentTime.getSecondsDifference(this.lastTimeLabelUpdate)) >= 1.0) {
+                timeLabel.innerHTML = currentTime.toDate().toUTCString();
+                this.lastTimeLabelUpdate = currentTime;
+            }
+
+            // Update the camera to stay centered on the selected object, if any.
+            if (cameraCenteredObjectID) {
+                var dynamicObject = dynamicObjectCollection.getObject(cameraCenteredObjectID);
+                if (dynamicObject && dynamicObject.position) {
+                    cameraCenteredObjectIDPosition = dynamicObject.position.getValueCartesian(currentTime, cameraCenteredObjectIDPosition);
+                    if (typeof cameraCenteredObjectIDPosition !== 'undefined') {
+                        // If we're centering on an object for the first time, zoom to within 2km of it.
+                        if (lastCameraCenteredObjectID !== cameraCenteredObjectID) {
+                            lastCameraCenteredObjectID = cameraCenteredObjectID;
+                            var camera = scene.getCamera();
+                            camera.position = camera.position.normalize().multiplyByScalar(5000.0);
+
+                            var controllers = camera.getControllers();
+                            controllers.removeAll();
+                            spindleController = controllers.addSpindle();
+                            spindleController.constrainedAxis = Cartesian3.UNIT_Z;
+                        }
+
+                        if (typeof spindleController !== 'undefined' && !spindleController.isDestroyed()) {
+                            var transform = Transforms.eastNorthUpToFixedFrame(cameraCenteredObjectIDPosition, ellipsoid);
+                            spindleController.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
+                        }
+                    }
+                }
+            }
+            //widget.render();
+            //requestAnimationFrame(update);
+        },
+
+        render : function() {
+            this.scene.render();
         },
 
         _configureCentralBodyImagery : function() {
