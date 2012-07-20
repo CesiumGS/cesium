@@ -289,6 +289,7 @@ define([
         for ( var i = 0, len = layers.length; i < len; i++) {
             var layer = layers[i];
 
+            logo = undefined;
             if (typeof layer.imageryProvider.getLogo === 'function') {
                 logo = layer.imageryProvider.getLogo();
             }
