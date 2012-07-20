@@ -1314,30 +1314,41 @@ define([
         var mvp = description.modelViewProjection;
         var vt = description.viewportTransformation;
 
-        upperLeft = Transforms.pointToWindowCoordinates(mvp, vt, upperLeft);
-        lowerLeft = Transforms.pointToWindowCoordinates(mvp, vt, lowerLeft);
-        upperRight = Transforms.pointToWindowCoordinates(mvp, vt, upperRight);
-        lowerRight = Transforms.pointToWindowCoordinates(mvp, vt, lowerRight);
-
         var diag1 = upperRight.subtract(lowerLeft);
         var diag2 = upperLeft.subtract(lowerRight);
 
-        var x = (lowerLeft.x < lowerRight.x) ? Math.min(lowerLeft.x, upperLeft.x) : Math.min(lowerRight.x, upperRight.x);
-        var y = (lowerLeft.y < upperLeft.y) ? Math.min(lowerLeft.y, lowerRight.y) : Math.min(upperLeft.y, upperRight.y);
+        var diag1Length = diag1.magnitude();
+        var diag2Length = diag2.magnitude();
 
-        var width = Math.max(Math.abs(diag1.x), Math.abs(diag2.x));
-        var height = Math.max(Math.abs(diag1.y), Math.abs(diag2.y));
+        var halfWidth = Math.max(diag1Length, diag2Length) * 0.5;
+        var halfHeight = halfWidth;
 
-        // If the sky atmosphere is visible, the scissor test will remove the sky atmosphere
-        // where the rectangle and the projected ellipse intersect.
-        // So add some extra pixels to the scissor rectangle when the sky atmosphere is turned on.
-        if (this.showSkyAtmosphere) {
-            var errorPixels = 10;
-            x -= errorPixels;
-            y -= errorPixels;
-            width += 2.0 * errorPixels;
-            height += 2.0 * errorPixels;
+        var center = lowerLeft.add(diag1.normalize().multiplyByScalar(diag1Length * 0.5));
+
+        var camera = description.sceneState.camera;
+        var nearCenter = camera.position.add(camera.direction.multiplyByScalar(camera.frustum.near));
+
+        if (camera.direction.dot(center.subtract(nearCenter)) < 0) {
+            center = center.subtract(nearCenter);
+            var centerProjN = camera.direction.multiplyByScalar(camera.direction.dot(center));
+            var centerRejN = center.subtract(centerProjN);
+            center = nearCenter.add(centerRejN);
         }
+
+        lowerLeft = center.add(camera.up.multiplyByScalar(-halfHeight)).add(camera.right.multiplyByScalar(-halfWidth));
+        lowerLeft = Transforms.pointToWindowCoordinates(mvp, vt, lowerLeft);
+        upperRight = center.add(camera.up.multiplyByScalar(halfHeight)).add(camera.right.multiplyByScalar(halfWidth));
+        upperRight = Transforms.pointToWindowCoordinates(mvp, vt, upperRight);
+
+        lowerLeft.x = Math.max(0.0, Math.min(lowerLeft.x, description.width));
+        lowerLeft.y = Math.max(0.0, Math.min(lowerLeft.y, description.height));
+        upperRight.x = Math.max(0.0, Math.min(upperRight.x, description.width));
+        upperRight.y = Math.max(0.0, Math.min(upperRight.y, description.height));
+
+        var x = lowerLeft.x;
+        var y = lowerLeft.y;
+        var width = upperRight.x - x;
+        var height = upperRight.y - y;
 
         return new Rectangle(x, y, width, height);
     };
@@ -1756,6 +1767,9 @@ define([
             var scissorTest = {
                 enabled : true,
                 rectangle : this._createScissorRectangle({
+                    sceneState : sceneState,
+                    width : width,
+                    height : height,
                     quad : depthQuad,
                     modelViewProjection : mvp,
                     viewportTransformation : uniformState.getViewportTransformation()
@@ -1766,6 +1780,12 @@ define([
             this._rsDepth.scissorTest = scissorTest;
             this._quadV.renderState.scissorTest = scissorTest;
             this._quadH.renderState.scissorTest = scissorTest;
+        } else {
+            var disabledScissorTest = { enabled : false };
+            this._rsColor.scissorTest = disabledScissorTest;
+            this._rsDepth.scissorTest = disabledScissorTest;
+            this._quadV.renderState.scissorTest = disabledScissorTest;
+            this._quadH.renderState.scissorTest = disabledScissorTest;
         }
 
         // depth plane
@@ -1992,7 +2012,6 @@ define([
 
         this._occluder.setCameraPosition(cameraPosition);
 
-        // TODO: refactor
         this._fillPoles(context, sceneState);
 
         this._throttleImages(sceneState);
