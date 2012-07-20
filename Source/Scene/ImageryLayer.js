@@ -91,13 +91,27 @@ define([
         var imageryProvider = this.imageryProvider;
         var imageryTilingScheme = imageryProvider.tilingScheme;
 
+        // Compute the extent of the imagery from this imageryProvider that overlaps
+        // the geometry tile.  The ImageryProvider and ImageryLayer both have the
+        // opportunity to constrain the extent.  The imagery TilingScheme's extent
+        // always fully contains the ImageryProvider's extent.
         var extent = tile.extent.intersectWith(imageryProvider.extent);
+        extent = extent.intersectWith(this.extent);
 
+        if (extent.east <= extent.west ||
+            extent.north <= extent.south) {
+            // There is no overlap between this terrain tile and this imagery
+            // provider, so no skeletons need to be created.
+            return;
+        }
+
+
+        // Compute the required level in the imagery tiling scheme.
         // TODO: this should be imagerySSE / terrainSSE.
         var errorRatio = 0.5;
         var targetGeometricError = errorRatio * geometryTilingScheme.getLevelMaximumGeometricError(tile.level);
         var imageryLevel = imageryTilingScheme.getLevelWithMaximumGeometricError(targetGeometricError);
-        imageryLevel = Math.min(imageryProvider.maxLevel, imageryLevel);
+        imageryLevel = Math.max(0, Math.min(imageryProvider.maxLevel, imageryLevel));
 
         var northwestTileCoordinates = imageryTilingScheme.positionToTileXY(extent.getNorthwest(), imageryLevel);
         var southeastTileCoordinates = imageryTilingScheme.positionToTileXY(extent.getSoutheast(), imageryLevel);
@@ -126,13 +140,16 @@ define([
             --southeastTileCoordinates.x;
         }
 
+        // Create TileImagery instances for each imagery tile overlapping this terrain tile.
+        // We need to do all texture coordinate computations in the terrain tile's tiling scheme.
         var terrainExtent = geometryTilingScheme.tileXYToNativeExtent(tile.x, tile.y, tile.level);
         var terrainWidth = terrainExtent.east - terrainExtent.west;
         var terrainHeight = terrainExtent.north - terrainExtent.south;
 
         for ( var i = northwestTileCoordinates.x; i <= southeastTileCoordinates.x; i++) {
             for ( var j = northwestTileCoordinates.y; j <= southeastTileCoordinates.y; j++) {
-                var imageryExtent = imageryTilingScheme.tileXYToNativeExtent(i, j, imageryLevel);
+                var imageryExtent = imageryTilingScheme.tileXYToExtent(i, j, imageryLevel);
+                imageryExtent = geometryTilingScheme.extentToNativeExtent(imageryExtent);
                 var textureTranslation = new Cartesian2(
                         (imageryExtent.west - terrainExtent.west) / terrainWidth,
                         (imageryExtent.south - terrainExtent.south) / terrainHeight);

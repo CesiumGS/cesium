@@ -34,10 +34,10 @@ require({
     var cesiumLogo = new Cesium.SingleTileProvider(
             '../../Images/TestLayer.png',
             new Cesium.Extent(
-                    Cesium.Math.toRadians(-75),
-                    Cesium.Math.toRadians(45),
-                    Cesium.Math.toRadians(-74),
-                    Cesium.Math.toRadians(46)));
+                    Cesium.Math.toRadians(-120),
+                    Cesium.Math.toRadians(37),
+                    Cesium.Math.toRadians(-119),
+                    Cesium.Math.toRadians(38)));
     imageryLayerCollection.addImageryProvider(cesiumLogo);
 
 //    var bingAerialLayer = imageryLayerCollection.addImageryProvider(new Cesium.BingMapsImageryProvider({

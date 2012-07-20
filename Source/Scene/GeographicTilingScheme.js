@@ -124,16 +124,18 @@ define([
             outputExtent = new Extent(0.0, 0.0, 0.0, 0.0);
         }
 
+        var extent = this.extent;
+
         var xTiles = this.numberOfLevelZeroTilesX << level;
         var yTiles = this.numberOfLevelZeroTilesY << level;
 
-        var xTileWidth = CesiumMath.TWO_PI / xTiles;
-        outputExtent.west = x * xTileWidth - Math.PI;
-        outputExtent.east = (x + 1) * xTileWidth - Math.PI;
+        var xTileWidth = (extent.east - extent.west) / xTiles;
+        outputExtent.west = x * xTileWidth + extent.west;
+        outputExtent.east = (x + 1) * xTileWidth + extent.west;
 
-        var yTileHeight = CesiumMath.PI / yTiles;
-        outputExtent.north = CesiumMath.PI_OVER_TWO - y * yTileHeight;
-        outputExtent.south = CesiumMath.PI_OVER_TWO - (y + 1) * yTileHeight;
+        var yTileHeight = (extent.north - extent.south) / yTiles;
+        outputExtent.north = extent.north - y * yTileHeight;
+        outputExtent.south = extent.north - (y + 1) * yTileHeight;
 
         return outputExtent;
     };
@@ -174,18 +176,20 @@ define([
             return undefined;
         }
 
+        var extent = this.extent;
+
         var xTiles = this.numberOfLevelZeroTilesX << level;
         var yTiles = this.numberOfLevelZeroTilesY << level;
 
-        var xTileWidth = CesiumMath.TWO_PI / xTiles;
-        var yTileHeight = Math.PI / yTiles;
+        var xTileWidth = (extent.east - extent.west) / xTiles;
+        var yTileHeight = (extent.north - extent.south) / yTiles;
 
-        var xTileCoordinate = (position.longitude + Math.PI) / xTileWidth | 0;
+        var xTileCoordinate = (position.longitude - extent.west) / xTileWidth | 0;
         if (xTileCoordinate >= xTiles) {
             xTileCoordinate = xTiles - 1;
         }
 
-        var yTileCoordinate = (CesiumMath.PI_OVER_TWO - position.latitude) / yTileHeight | 0;
+        var yTileCoordinate = (extent.north - position.latitude) / yTileHeight | 0;
         if (yTileCoordinate >= yTiles) {
             yTileCoordinate = yTiles - 1;
         }

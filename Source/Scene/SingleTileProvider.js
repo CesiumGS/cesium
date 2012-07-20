@@ -4,19 +4,23 @@ define([
         '../Core/DeveloperError',
         '../Core/Extent',
         '../Core/Math',
+        '../Core/Cartesian2',
         './Projections',
-        './WebMercatorTilingScheme',
+        './GeographicTilingScheme',
         './TileState',
-        './ImageryProvider'
+        './ImageryProvider',
+        '../ThirdParty/when'
     ], function(
         loadImage,
         DeveloperError,
         Extent,
         CesiumMath,
+        Cartesian2,
         Projections,
-        WebMercatorTilingScheme,
+        GeographicTilingScheme,
         TileState,
-        ImageryProvider) {
+        ImageryProvider,
+        when) {
     "use strict";
 
     /**
@@ -26,9 +30,11 @@ define([
      * @constructor
      *
      * @param {String} url The url for the tile.
+     * @param {Extent} extent The extent covered by the image.
      * @param {Object} [proxy=undefined] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
      *
      * @exception {DeveloperError} url is required.
+     * @exception {DeveloperError} extent is required.
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
@@ -38,6 +44,9 @@ define([
     var SingleTileProvider = function(url, extent, proxy) {
         if (typeof url === 'undefined') {
             throw new DeveloperError('url is required.');
+        }
+        if (typeof extent === 'undefined') {
+            throw new DeveloperError('extent is required.');
         }
 
         this._url = url;
@@ -66,7 +75,7 @@ define([
          * @type {Enumeration}
          * @see Projections
          */
-        this.projection = Projections.MERCATOR;
+        this.projection = Projections.WGS84;
 
         /**
          * The tiling scheme used by this tile provider.
@@ -75,17 +84,36 @@ define([
          * @see WebMercatorTilingScheme
          * @see GeographicTilingScheme
          */
-        this.tilingScheme = new WebMercatorTilingScheme({
-            numberOfLevelZeroTilesX: 1,
-            numberOfLevelZeroTilesY: 1
+        this.tilingScheme = new GeographicTilingScheme({
+            numberOfLevelZeroTilesX : 1,
+            numberOfLevelZeroTilesY : 1
         });
+        this.tilingScheme.extent = extent;
+
+        this._image = undefined;
+        this._texture = undefined;
 
         /**
          * True if the tile provider is ready for use; otherwise, false.
          *
          * @type {Boolean}
          */
-        this.ready = true;
+        this.ready = false;
+
+        var that = this;
+        when(this.buildImageUrl(0, 0, 0), function(url) {
+            return loadImage(url, false);
+        }).then(function(image) {
+            that._image = image;
+
+            var tilingScheme = that.tilingScheme;
+            var ellipsoid = tilingScheme.ellipsoid;
+            var extent = that.extent;
+
+            tilingScheme.levelZeroMaximumGeometricError = ellipsoid.getRadii().x * (extent.east - extent.west) / image.width;
+
+            that.ready = true;
+        });
     };
 
     /**
@@ -117,7 +145,7 @@ define([
      *         If the image is not suitable for display, the promise can resolve to undefined.
      */
     SingleTileProvider.prototype.requestImage = function(url) {
-        return loadImage(url, false);
+        return this._image;
     };
 
     /**
@@ -146,7 +174,13 @@ define([
      * @param {TileImagery} tileImagery The tile imagery to create resources for.
      */
     SingleTileProvider.prototype.createResources = function(context, tileImagery) {
-        tileImagery.texture = ImageryProvider.createTextureFromTransformedImage(context, tileImagery.transformedImage);
+        if (typeof this._texture === 'undefined') {
+            this._texture = ImageryProvider.createTextureFromTransformedImage(context, this._image);
+            this._texture.referenceCount = 1;
+        }
+
+        ++this._texture.referenceCount;
+        tileImagery.texture = this._texture;
         tileImagery.transformedImage = undefined;
         tileImagery.state = TileState.READY;
     };

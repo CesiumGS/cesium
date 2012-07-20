@@ -150,6 +150,17 @@ define([
                               Math.log(Math.tan((CesiumMath.PI_OVER_TWO + latitude) * 0.5)) * semimajorAxis);
     };
 
+    WebMercatorTilingScheme.prototype.extentToNativeExtent = function(extent) {
+        var southwest = this.cartographicToWebMercator(extent.west, extent.south);
+        var northeast = this.cartographicToWebMercator(extent.east, extent.north);
+        return {
+            west : southwest.x,
+            south : southwest.y,
+            east : northeast.x,
+            north : northeast.y
+        };
+    };
+
     /**
      * Converts tile x, y coordinates and level to an extent expressed in the native coordinates
      * of the tiling scheme.

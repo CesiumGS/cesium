@@ -80,10 +80,17 @@ define([
         }
         this.transformedImage = undefined;
 
-        if (typeof this.texture !== 'undefined' && typeof this.texture.destroy !== 'undefined') {
-            this.texture.destroy();
+        if (typeof this.texture !== 'undefined') {
+            if (typeof this.texture.referenceCount !== 'undefined') {
+                --this.texture.referenceCount;
+                if (this.texture.referenceCount === 0) {
+                    this.texture.destroy();
+                }
+            } else if (typeof this.texture.destroy !== 'undefined') {
+                this.texture.destroy();
+            }
+            this.texture = undefined;
         }
-        this.texture = undefined;
 
         return destroyObject(this);
     };
