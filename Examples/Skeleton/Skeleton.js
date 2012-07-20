@@ -12,6 +12,8 @@ require({
     var scene = new Cesium.Scene(canvas);
     var primitives = scene.getPrimitives();
 
+    Cesium.TerrainProvider.wireframe = true;
+
 //    var terrainProvider = new Cesium.EllipsoidTerrainProvider(new Cesium.WebMercatorTilingScheme({
 //        ellipsoid : ellipsoid,
 //        numberOfLevelZeroTilesX : 2,
@@ -137,6 +139,9 @@ require({
             cb.showSkyAtmosphere = false;
             cb.showGroundAtmosphere = false;
             transitioner.morphTo2D();
+            break;
+        case 'F'.charCodeAt(0):
+            cb._surface.toggleLodUpdate();
             break;
         }
     }

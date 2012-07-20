@@ -43,6 +43,8 @@ define([
         position2D : 2
     };
 
+    TerrainProvider.wireframe = false;
+
     var regularGridIndexArrays = [];
 
     TerrainProvider.getRegularGridIndices = function(width, height) {
@@ -80,6 +82,30 @@ define([
         return indices;
     };
 
+    function addTriangle(lines, linesIndex, i0, i1, i2) {
+        lines[linesIndex++] = i0;
+        lines[linesIndex++] = i1;
+
+        lines[linesIndex++] = i1;
+        lines[linesIndex++] = i2;
+
+        lines[linesIndex++] = i2;
+        lines[linesIndex++] = i0;
+
+        return linesIndex;
+    }
+
+    function trianglesToLines(triangles) {
+        var count = triangles.length;
+        var lines = new Uint16Array(2 * count);
+        var linesIndex = 0;
+        for ( var i = 0; i < count; i += 3) {
+            linesIndex = addTriangle(lines, linesIndex, triangles[i], triangles[i + 1], triangles[i + 2]);
+        }
+
+        return lines;
+    }
+
     TerrainProvider.createTileEllipsoidGeometryFromBuffers = function(context, tile, buffers) {
         var datatype = ComponentDatatype.FLOAT;
         var typedArray = buffers.vertices;
@@ -105,7 +131,11 @@ define([
         }];
         var indexBuffer = buffers.indices.indexBuffer;
         if (typeof indexBuffer === 'undefined' || indexBuffer.isDestroyed()) {
-            indexBuffer = buffers.indices.indexBuffer = context.createIndexBuffer(buffers.indices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+            var indices = buffers.indices;
+            if (TerrainProvider.wireframe) {
+                indices = trianglesToLines(buffers.indices);
+            }
+            indexBuffer = buffers.indices.indexBuffer = context.createIndexBuffer(indices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
             indexBuffer.setVertexArrayDestroyable(false);
             indexBuffer.referenceCount = 1;
         } else {

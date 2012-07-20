@@ -3,6 +3,7 @@ uniform int u_numberOfDayTextures;
 uniform sampler2D u_dayTextures[8];
 uniform vec2 u_dayTextureTranslation[8];
 uniform vec2 u_dayTextureScale[8];
+uniform bool u_cameraInsideBoundingSphere;
 
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
@@ -30,6 +31,10 @@ void main()
 	        vec4 color = texture2D(u_dayTextures[i], textureCoordinates);
 	        startDayColor = mix(startDayColor, color.rgb, color.a);
         } 
+    }
+    if (u_cameraInsideBoundingSphere)
+    {
+        startDayColor = mix(startDayColor, vec3(1.0, 0.0, 0.0), 0.2);
     }
 #ifdef SHOW_TILE_BOUNDARIES
     if (v_textureCoordinates.x < (1.0/256.0) || v_textureCoordinates.x > (255.0/256.0) ||

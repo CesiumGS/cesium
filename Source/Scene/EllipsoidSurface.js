@@ -13,6 +13,7 @@ define([
         '../Core/Occluder',
         '../Core/PrimitiveType',
         './ImageryLayerCollection',
+        './TerrainProvider',
         './TileState',
         './TileImagery',
         './TileLoadQueue',
@@ -32,6 +33,7 @@ define([
         Occluder,
         PrimitiveType,
         ImageryLayerCollection,
+        TerrainProvider,
         TileState,
         TileImagery,
         TileLoadQueue,
@@ -54,7 +56,7 @@ define([
 
         this.terrainProvider = description.terrainProvider;
         this.imageryLayerCollection = description.imageryLayerCollection;
-        this.maxScreenSpaceError = defaultValue(description.maxScreenSpaceError, 2);
+        this.maxScreenSpaceError = defaultValue(description.maxScreenSpaceError, 64);
 
         this._levelZeroTiles = undefined;
         this._renderList = [];
@@ -62,6 +64,8 @@ define([
         this._tileReplacementQueue = new TileReplacementQueue();
         this._tilingScheme = undefined;
         this._occluder = undefined;
+        this._doLodUpdate = true;
+        this._frozenLodCameraPosition = undefined;
 
         var that = this;
         when(this.terrainProvider.tilingScheme, function(tilingScheme) {
@@ -131,6 +135,12 @@ define([
         this._tileReplacementQueue.markStartOfRenderFrame();
 
         var cameraPosition = sceneState.camera.getPositionWC();
+        if (!this._doLodUpdate) {
+            cameraPosition = this._frozenLodCameraPosition;
+        } else {
+            this._frozenLodCameraPosition = cameraPosition;
+        }
+
         this._occluder.setCameraPosition(cameraPosition);
 
         var levelZeroTiles = this._levelZeroTiles;
@@ -163,6 +173,10 @@ define([
         processTileLoadQueue(this, context, sceneState);
     };
 
+    EllipsoidSurface.prototype.toggleLodUpdate = function(sceneState) {
+        this._doLodUpdate = !this._doLodUpdate;
+    };
+
     var uniformMapTemplate = {
         u_center3D : function() {
             return this.center3D;
@@ -185,6 +199,9 @@ define([
         u_dayTextureScale : function() {
             return this.dayTextureScale;
         },
+        u_cameraInsideBoundingSphere : function() {
+            return this.cameraInsideBoundingSphere;
+        },
 
         center3D : undefined,
         modifiedModelView : undefined,
@@ -192,7 +209,8 @@ define([
         numberOfDayTextures : 0,
         dayTextures : new Array(8),
         dayTextureTranslation : new Array(8),
-        dayTextureScale : new Array(8)
+        dayTextureScale : new Array(8),
+        cameraInsideBoundingSphere : false
     };
 
     EllipsoidSurface.prototype.render = function(context, centralBodyUniformMap, drawArguments) {
@@ -238,10 +256,17 @@ define([
                 ++numberOfDayTextures;
             }
 
+            if (typeof tile.parent !== 'undefined' &&
+                tile.parent.cameraInsideBoundingSphere) {
+                uniformMap.cameraInsideBoundingSphere = true;
+            } else {
+                uniformMap.cameraInsideBoundingSphere = false;
+            }
+
             uniformMap.numberOfDayTextures = numberOfDayTextures;
 
             context.continueDraw({
-                primitiveType : PrimitiveType.TRIANGLES,
+                primitiveType : TerrainProvider.wireframe ? PrimitiveType.LINES : PrimitiveType.TRIANGLES,
                 vertexArray : tile.vertexArray,
                 uniformMap : uniformMap
             });
@@ -399,6 +424,9 @@ define([
         var boundingVolume = tile.get3DBoundingSphere();
         var camera = sceneState.camera;
         var cameraPosition = camera.getPositionWC();
+        if (!surface._doLodUpdate) {
+            cameraPosition = surface._frozenLodCameraPosition;
+        }
 
         var toCenter = boundingVolume.center.subtract(cameraPosition);
         var distance = toCenter.magnitude() - boundingVolume.radius;
@@ -407,8 +435,11 @@ define([
             // The camera is inside the bounding sphere, so the screen-space error could be enormous, but
             // we don't really have any way to calculate it.  So return positive infinity, which will
             // force a refine.
+            tile.cameraInsideBoundingSphere = true;
             return 1.0/0.0;
         }
+
+        tile.cameraInsideBoundingSphere = false;
 
         var viewport = context.getViewport();
         var viewportHeight = viewport.height;
