@@ -8,6 +8,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Extent',
         '../Core/PlaneTessellator',
+        './ImageryCache',
         './Tile',
         './TileImagery',
         './TileState',
@@ -22,6 +23,7 @@ define([
         Cartesian2,
         Extent,
         PlaneTessellator,
+        ImageryCache,
         Tile,
         TileImagery,
         TileState,
@@ -46,6 +48,8 @@ define([
         this.maxScreenSpaceError = defaultValue(description.maxScreenSpaceError, 1);
 
         this.extent = extent;
+
+        this._imageryCache = new ImageryCache();
 
         this._tileFailCount = 0;
 
@@ -165,11 +169,20 @@ define([
 
     ImageryLayer.prototype.requestImagery = function(tileImagery) {
         var imageryProvider = this.imageryProvider;
+        var imageryCache = this._imageryCache;
         var hostname;
         var postpone = false;
 
-        when(imageryProvider.buildImageUrl(tileImagery.x, tileImagery.y, tileImagery.level), function(url) {
-            hostname = getHostname(url);
+        when(imageryProvider.buildImageUrl(tileImagery.x, tileImagery.y, tileImagery.level), function(imageUrl) {
+            tileImagery.imageUrl = imageUrl;
+
+            var texture = imageryCache.get(imageUrl);
+            if (texture !== 'undefined') {
+                tileImagery.texture = texture;
+                tileImagery.state = TileState.READY;
+            }
+
+            hostname = getHostname(imageUrl);
 
             if (hostname !== '') {
                 var activeRequestsForHostname = defaultValue(activeTileImageRequests[hostname], 0);
@@ -187,7 +200,7 @@ define([
                 activeTileImageRequests[hostname] = activeRequestsForHostname + 1;
             }
 
-            return imageryProvider.requestImage(url);
+            return imageryProvider.requestImage(imageUrl);
         }).then(function(image) {
             activeTileImageRequests[hostname]--;
 
@@ -214,6 +227,11 @@ define([
 
     ImageryLayer.prototype.createResources = function(context, tileImagery) {
         this.imageryProvider.createResources(context, tileImagery);
+
+        if (tileImagery.state === TileState.READY) {
+            tileImagery.texture = this._imageryCache.add(tileImagery.imageUrl, tileImagery.texture);
+            tileImagery.imageUrl = undefined;
+        }
     };
 
     var anchor;

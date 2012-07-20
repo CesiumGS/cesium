@@ -167,17 +167,7 @@ define([
      * @param {Context} context The context to use to create resources.
      * @param {TileImagery} tileImagery The tile imagery to create resources for.
      */
-    SingleTileImageryProvider.prototype.createResources = function(context, tileImagery) {
-        if (typeof this._texture === 'undefined') {
-            this._texture = ImageryProvider.createTextureFromTransformedImage(context, this._image);
-            this._texture.referenceCount = 1;
-        }
-
-        ++this._texture.referenceCount;
-        tileImagery.texture = this._texture;
-        tileImagery.transformedImage = undefined;
-        tileImagery.state = TileState.READY;
-    };
+    SingleTileImageryProvider.prototype.createResources = ImageryProvider.prototype.createResources;
 
     return SingleTileImageryProvider;
 });

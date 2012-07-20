@@ -254,11 +254,7 @@ define([
      * @param {Context} context The context to use to create resources.
      * @param {TileImagery} tileImagery The tile imagery to create resources for.
      */
-    ArcGisMapServerImageryProvider.prototype.createResources = function(context, tileImagery) {
-        tileImagery.texture = ImageryProvider.createTextureFromTransformedImage(context, tileImagery.transformedImage);
-        tileImagery.transformedImage = undefined;
-        tileImagery.state = TileState.READY;
-    };
+    ArcGisMapServerImageryProvider.prototype.createResources = ImageryProvider.prototype.createResources;
 
     /**
      * DOC_TBA

@@ -4,13 +4,15 @@ define([
         '../Renderer/MipmapHint',
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureWrap'
+        '../Renderer/TextureWrap',
+        './TileState'
     ], function(
         DeveloperError,
         MipmapHint,
         TextureMagnificationFilter,
         TextureMinificationFilter,
-        TextureWrap) {
+        TextureWrap,
+        TileState) {
     "use strict";
 
     /**
@@ -57,11 +59,17 @@ define([
      * RECEIVED to indicate that the transformation should be attempted again next update, if the tile
      * is still needed.
      *
+     * This default implementation of createResources uses a projection property to
+     * transform the image property on the tile imagery to WGS84 and stores it in
+     * the transformedImage property.
+     *
      * @param {Context} context The context to use to create resources.
      * @param {TileImagery} tileImagery The tile imagery to transform.
      */
     ImageryProvider.prototype.transformImagery = function(context, tileImagery) {
-        throw new DeveloperError('This type should not be instantiated directly.');
+        tileImagery.transformedImage = this.projection.toWgs84(tileImagery.extent, tileImagery.image);
+        tileImagery.image = undefined;
+        tileImagery.state = TileState.TRANSFORMED;
     };
 
     /**
@@ -70,11 +78,16 @@ define([
      * TRANSFORMED to indicate that resource creation should be attempted again next update, if the tile
      * is still needed.
      *
+     * This default implementation of createResources creates a texture from the transformedImage
+     * property on the tile imagery.
+     *
      * @param {Context} context The context to use to create resources.
      * @param {TileImagery} tileImagery The tile imagery to create resources for.
      */
     ImageryProvider.prototype.createResources = function(context, tileImagery) {
-        throw new DeveloperError('This type should not be instantiated directly.');
+        tileImagery.texture = ImageryProvider.createTextureFromTransformedImage(context, tileImagery.transformedImage);
+        tileImagery.transformedImage = undefined;
+        tileImagery.state = TileState.READY;
     };
 
     ImageryProvider.createTextureFromTransformedImage = function(context, transformedImage) {
