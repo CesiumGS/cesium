@@ -348,6 +348,9 @@ define([
                 getJson(widget.endUserOptions.source).then(function(czmlData) {
                     processCzml(czmlData, widget.dynamicObjectCollection, widget.endUserOptions.source);
                     widget.setTimeFromBuffer();
+                },
+                function(error) {
+                    window.alert(error);
                 });
             }
 
