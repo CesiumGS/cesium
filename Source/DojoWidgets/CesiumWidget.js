@@ -239,7 +239,7 @@ define([
 
             clock.multiplier = 60;
             clock.currentTime = clock.startTime;
-            this.mainTimeline.timeline.zoomTo(clock.startTime, clock.stopTime);
+            this.timelineControl.zoomTo(clock.startTime, clock.stopTime);
             this.updateSpeedIndicator();
         },
 
@@ -326,10 +326,7 @@ define([
             var dynamicObjectCollection = this.dynamicObjectCollection = new DynamicObjectCollection();
             var clock = this.clock;
 
-            var spindleController;
-            var timeline;
             var transitioner;
-            var cameraCenteredObjectIDPosition;
             var lastCameraCenteredObjectID;
 
             transitioner = new SceneTransitioner(scene);
@@ -410,12 +407,12 @@ define([
                 onAnimPause();
             }
 
-            var timelineWidget = widget.mainTimeline;
+            var timelineWidget = widget.timelineWidget;
             timelineWidget.clock = widget.clock;
             timelineWidget.setupCallback = function(t) {
-                timeline = t;
-                timeline.addEventListener('settime', onTimelineScrub, false);
-                timeline.zoomTo(clock.startTime, clock.stopTime);
+                this.timelineControl = t;
+                t.addEventListener('settime', onTimelineScrub, false);
+                t.zoomTo(clock.startTime, clock.stopTime);
             };
             timelineWidget.setupTimeline();
 
@@ -580,11 +577,14 @@ define([
             }
         },
 
+        _cameraCenteredObjectIDPosition : new Cartesian3(),
+
         update : function(currentTime) {
             //var currentTime = this.animationController.update();
             var cameraCenteredObjectID = this.cameraCenteredObjectID;
+            var cameraCenteredObjectIDPosition = this._cameraCenteredObjectIDPosition;
 
-            this.mainTimeline.timeline.updateFromClock();
+            this.timelineControl.updateFromClock();
             this.visualizers.update(currentTime);
 
             this.scene.setSunPosition(SunPosition.compute(currentTime).position);
@@ -608,13 +608,13 @@ define([
 
                             var controllers = camera.getControllers();
                             controllers.removeAll();
-                            spindleController = controllers.addSpindle();
-                            spindleController.constrainedAxis = Cartesian3.UNIT_Z;
+                            this.objectSpindleController = controllers.addSpindle();
+                            this.objectSpindleController.constrainedAxis = Cartesian3.UNIT_Z;
                         }
 
-                        if (typeof spindleController !== 'undefined' && !spindleController.isDestroyed()) {
+                        if (typeof spindleController !== 'undefined' && !this.objectSpindleController.isDestroyed()) {
                             var transform = Transforms.eastNorthUpToFixedFrame(cameraCenteredObjectIDPosition, ellipsoid);
-                            spindleController.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
+                            this.objectSpindleController.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
                         }
                     }
                 }
