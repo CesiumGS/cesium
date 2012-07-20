@@ -98,6 +98,7 @@ define([
         cloudsMapUrl : undefined,
         bumpMapUrl : undefined,
         endUserOptions : {},
+        enableDragDrop: false,
 
         constructor : function() {
             this.ellipsoid = Ellipsoid.WGS84;
@@ -327,6 +328,14 @@ define([
 
             if (typeof this.onObjectRightClickSelected === 'undefined') {
                 this.onObjectRightClickSelected = this.defaultOnObjectRightClickSelected;
+            }
+
+            if (this.enableDragDrop) {
+                var dropBox = this.cesiumNode;
+                on(dropBox, 'drop', lang.hitch(widget, 'handleDrop'));
+                on(dropBox, 'dragenter', event.stop);
+                on(dropBox, 'dragover', event.stop);
+                on(dropBox, 'dragexit', event.stop);
             }
 
             var animationController = this.animationController;

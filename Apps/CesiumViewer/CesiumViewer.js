@@ -9,7 +9,7 @@ define([
         'Core/ClockStep',
         'DojoWidgets/CesiumWidget',
         'Core/requestAnimationFrame',
-        './AnimationController'
+        'Core/AnimationController'
     ], function(
         dom,
         on,
@@ -43,14 +43,9 @@ define([
         clock : clock,
         animationController : animationController,
         endUserOptions : endUserOptions,
+        enableDragDrop : true,
 
         postSetup : function(widget) {
-            var dropBox = dom.byId('cesiumContainer');
-            on(dropBox, 'drop', widget.handleDrop);
-            on(dropBox, 'dragenter', event.stop);
-            on(dropBox, 'dragover', event.stop);
-            on(dropBox, 'dragexit', event.stop);
-
             on(window, 'resize', function() {
                 cesium.resize();
             });
