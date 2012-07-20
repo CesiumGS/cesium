@@ -136,7 +136,7 @@ define([
         },
 
         onObjectSelected : undefined,
-        onObjectRightClickSelected : this.defaultOnObjectRightClickSelected,
+        onObjectRightClickSelected : undefined,
         onObjectMousedOver : undefined,
         onLeftMouseDown : undefined,
         onLeftMouseUp : undefined,
@@ -325,6 +325,10 @@ define([
 
             //////////////////////////////////////////////////////////////////////////////////////////////////
 
+            if (typeof this.onObjectRightClickSelected === 'undefined') {
+                this.onObjectRightClickSelected = this.defaultOnObjectRightClickSelected;
+            }
+
             var animationController = this.animationController;
             var dynamicObjectCollection = this.dynamicObjectCollection = new DynamicObjectCollection();
             var clock = this.clock;
@@ -404,7 +408,7 @@ define([
             var timelineWidget = widget.timelineWidget;
             timelineWidget.clock = widget.clock;
             timelineWidget.setupCallback = function(t) {
-                this.timelineControl = t;
+                widget.timelineControl = t;
                 t.addEventListener('settime', onTimelineScrub, false);
                 t.zoomTo(clock.startTime, clock.stopTime);
             };
@@ -574,14 +578,12 @@ define([
         _cameraCenteredObjectIDPosition : new Cartesian3(),
 
         update : function(currentTime) {
-            //var currentTime = this.animationController.update();
             var cameraCenteredObjectID = this.cameraCenteredObjectID;
             var cameraCenteredObjectIDPosition = this._cameraCenteredObjectIDPosition;
 
             this.timelineControl.updateFromClock();
-            this.visualizers.update(currentTime);
-
             this.scene.setSunPosition(SunPosition.compute(currentTime).position);
+            this.visualizers.update(currentTime);
 
             if (Math.abs(currentTime.getSecondsDifference(this.lastTimeLabelUpdate)) >= 1.0) {
                 this.timeLabelElement.innerHTML = currentTime.toDate().toUTCString();
@@ -613,8 +615,6 @@ define([
                 }
             }
             this._lastCameraCenteredObjectID = cameraCenteredObjectID;
-            //widget.render();
-            //requestAnimationFrame(update);
         },
 
         render : function() {

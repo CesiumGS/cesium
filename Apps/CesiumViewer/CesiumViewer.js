@@ -86,6 +86,14 @@ define([
             on(window, 'resize', function() {
                 cesium.resize();
             });
+
+            function updateAndRender() {
+                var currentTime = animationController.update();
+                widget.update(currentTime);
+                widget.render();
+                requestAnimationFrame(updateAndRender);
+            }
+            updateAndRender();
         },
 
 /*        postSetup : function(widget) {
