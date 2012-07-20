@@ -21,16 +21,16 @@ define([
      * @exception {DeveloperError} A non-empty list is required.
      * @exception {DeveloperError} camera is required.
      *
-     * @see SingleTileProvider
+     * @see SingleTileImageryProvider
      * @see ArcGisMapServerImageryProvider
      * @see OpenStreetMapTileProvider
      * @see BingMapsImageryProvider
      *
      * @example
-     * // Create a CompositeTileProvider from a SingleTileProvider and BingMapsImageryProvider
+     * // Create a CompositeTileProvider from a SingleTileImageryProvider and BingMapsImageryProvider
      *
      * // Single
-     *  var single = new SingleTileProvider('Images/NE2_50M_SR_W_4096.jpg');
+     *  var single = new SingleTileImageryProvider('Images/NE2_50M_SR_W_4096.jpg');
      *  // Bing Maps
      *  var bing = new BingMapsImageryProvider({
      *      server : 'dev.virtualearth.net',

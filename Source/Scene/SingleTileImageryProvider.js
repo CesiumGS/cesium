@@ -3,8 +3,6 @@ define([
         '../Core/loadImage',
         '../Core/DeveloperError',
         '../Core/Extent',
-        '../Core/Math',
-        '../Core/Cartesian2',
         './Projections',
         './GeographicTilingScheme',
         './TileState',
@@ -14,8 +12,6 @@ define([
         loadImage,
         DeveloperError,
         Extent,
-        CesiumMath,
-        Cartesian2,
         Projections,
         GeographicTilingScheme,
         TileState,
@@ -26,7 +22,7 @@ define([
     /**
      * Provides a single, top-level tile.
      *
-     * @alias SingleTileProvider
+     * @alias SingleTileImageryProvider
      * @constructor
      *
      * @param {String} url The url for the tile.
@@ -41,7 +37,7 @@ define([
      * @see OpenStreetMapTileProvider
      * @see CompositeTileProvider
      */
-    var SingleTileProvider = function(url, extent, proxy) {
+    var SingleTileImageryProvider = function(url, extent, proxy) {
         if (typeof url === 'undefined') {
             throw new DeveloperError('url is required.');
         }
@@ -78,7 +74,7 @@ define([
         this.projection = Projections.WGS84;
 
         /**
-         * The tiling scheme used by this tile provider.
+         * The tiling scheme used by this provider.
          *
          * @type {TilingScheme}
          * @see WebMercatorTilingScheme
@@ -94,16 +90,14 @@ define([
         this._texture = undefined;
 
         /**
-         * True if the tile provider is ready for use; otherwise, false.
+         * True if the provider is ready for use; otherwise, false.
          *
          * @type {Boolean}
          */
         this.ready = false;
 
         var that = this;
-        when(this.buildImageUrl(0, 0, 0), function(url) {
-            return loadImage(url, false);
-        }).then(function(image) {
+        this._image = loadImage(this.buildImageUrl()).then(function(image) {
             that._image = image;
 
             var tilingScheme = that.tilingScheme;
@@ -126,7 +120,7 @@ define([
      * @return {String|Promise} Either a string containing the URL, or a Promise for a string
      *                          if the URL needs to be built asynchronously.
      */
-    SingleTileProvider.prototype.buildImageUrl = function(x, y, level) {
+    SingleTileImageryProvider.prototype.buildImageUrl = function(x, y, level) {
         var url = this._url;
 
         if (typeof this._proxy !== 'undefined') {
@@ -144,7 +138,7 @@ define([
      * @return A promise for the image that will resolve when the image is available.
      *         If the image is not suitable for display, the promise can resolve to undefined.
      */
-    SingleTileProvider.prototype.requestImage = function(url) {
+    SingleTileImageryProvider.prototype.requestImage = function(url) {
         return this._image;
     };
 
@@ -158,7 +152,7 @@ define([
      * @param {Context} context The context to use to create resources.
      * @param {TileImagery} tileImagery The tile imagery to transform.
      */
-    SingleTileProvider.prototype.transformImagery = function(context, tileImagery) {
+    SingleTileImageryProvider.prototype.transformImagery = function(context, tileImagery) {
         tileImagery.transformedImage = tileImagery.image;
         tileImagery.image = undefined;
         tileImagery.state = TileState.TRANSFORMED;
@@ -173,7 +167,7 @@ define([
      * @param {Context} context The context to use to create resources.
      * @param {TileImagery} tileImagery The tile imagery to create resources for.
      */
-    SingleTileProvider.prototype.createResources = function(context, tileImagery) {
+    SingleTileImageryProvider.prototype.createResources = function(context, tileImagery) {
         if (typeof this._texture === 'undefined') {
             this._texture = ImageryProvider.createTextureFromTransformedImage(context, this._image);
             this._texture.referenceCount = 1;
@@ -185,5 +179,5 @@ define([
         tileImagery.state = TileState.READY;
     };
 
-    return SingleTileProvider;
+    return SingleTileImageryProvider;
 });

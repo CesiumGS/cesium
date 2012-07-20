@@ -31,7 +31,7 @@ require({
         proxy : new Cesium.DefaultProxy('/proxy/')
     }));
 
-    var cesiumLogo = new Cesium.SingleTileProvider(
+    var cesiumLogo = new Cesium.SingleTileImageryProvider(
             '../../Images/TestLayer.png',
             new Cesium.Extent(
                     Cesium.Math.toRadians(-120),

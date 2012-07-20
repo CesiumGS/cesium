@@ -32,7 +32,7 @@ define([
      *
      * @param {Number} [maxLevel=23] The maximum level to generate tiles for.
      *
-     * @see SingleTileProvider
+     * @see SingleTileImageryProvider
      * @see BingMapsImageryProvider
      * @see OpenStreetMapTileProvider
      * @see CompositeTileProvider
@@ -80,7 +80,7 @@ define([
         this.projection = Projections.WGS84;
 
         /**
-         * The tiling scheme used by this tile provider.
+         * The tiling scheme used by this provider.
          *
          * @type {TilingScheme}
          * @see WebMercatorTilingScheme
@@ -92,7 +92,7 @@ define([
         });
 
         /**
-         * True if the tile provider is ready for use; otherwise, false.
+         * True if the provider is ready for use; otherwise, false.
          *
          * @type {Boolean}
          */

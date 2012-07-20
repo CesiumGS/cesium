@@ -26,7 +26,7 @@ define([
      * @param {Object} [description.proxy=undefined] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
      * @param {String} [description.credit='MapQuest, Open Street Map and contributors, CC-BY-SA'] A string crediting the data source, which is displayed on the canvas.
      *
-     * @see SingleTileProvider
+     * @see SingleTileImageryProvider
      * @see BingMapsImageryProvider
      * @see ArcGisMapServerImageryProvider
      * @see CompositeTileProvider

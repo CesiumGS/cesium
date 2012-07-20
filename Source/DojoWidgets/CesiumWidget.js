@@ -20,7 +20,7 @@ define([
         '../Scene/CentralBody',
         '../Scene/BingMapsImageryProvider',
         '../Scene/BingMapsStyle',
-        '../Scene/SingleTileProvider',
+        '../Scene/SingleTileImageryProvider',
         '../Scene/PerformanceDisplay',
         'dojo/text!./CesiumWidget.html'
     ], function (
@@ -44,7 +44,7 @@ define([
         CentralBody,
         BingMapsImageryProvider,
         BingMapsStyle,
-        SingleTileProvider,
+        SingleTileImageryProvider,
         PerformanceDisplay,
         template) {
     "use strict";
@@ -314,7 +314,7 @@ define([
                     proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/proxy/')
                 });
             } else {
-                centralBody.dayTileProvider = new SingleTileProvider(this.dayImageUrl);
+                centralBody.dayTileProvider = new SingleTileImageryProvider(this.dayImageUrl);
             }
 
             centralBody.nightImageSource = this.nightImageUrl;

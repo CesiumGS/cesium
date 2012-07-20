@@ -114,7 +114,7 @@ define([
      *
      * @exception {DeveloperError} <code>description.server</code> is required.
      *
-     * @see SingleTileProvider
+     * @see SingleTileImageryProvider
      * @see ArcGisMapServerImageryProvider
      * @see OpenStreetMapTileProvider
      * @see CompositeTileProvider
@@ -123,7 +123,6 @@ define([
      * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
      *
      * @example
-     * // Bing Maps tile provider
      * var bing = new BingMapsImageryProvider({
      *     server : 'dev.virtualearth.net',
      *     mapStyle : BingMapsStyle.AERIAL
@@ -203,7 +202,7 @@ define([
         this.projection = Projections.MERCATOR;
 
         /**
-         * The tiling scheme used by this tile provider.
+         * The tiling scheme used by this provider.
          *
          * @type {TilingScheme}
          * @see WebMercatorTilingScheme
@@ -215,7 +214,7 @@ define([
         });
 
         /**
-         * True if the tile provider is ready for use; otherwise, false.
+         * True if the provider is ready for use; otherwise, false.
          *
          * @type {Boolean}
          */

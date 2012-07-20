@@ -30,7 +30,7 @@ define([
     "use strict";
 
     /**
-     * An imagery layer that display tiled image data from a single tile provider
+     * An imagery layer that display tiled image data from a single imagery provider
      * on a central body.
      *
      * @name ImageryLayer

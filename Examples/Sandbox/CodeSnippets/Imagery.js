@@ -84,7 +84,7 @@
     Sandbox.Single = function (scene, ellipsoid, primitives) {
         this.code = function () {
             // Single texture
-            var single = new Cesium.SingleTileProvider('Images/NE2_50M_SR_W_4096.jpg');
+            var single = new Cesium.SingleTileImageryProvider('Images/NE2_50M_SR_W_4096.jpg');
 
             primitives.getCentralBody().dayTileProvider = single;
         };
@@ -102,7 +102,7 @@
             });
 
             // Single texture
-            var single = new Cesium.SingleTileProvider('Images/NE2_50M_SR_W_4096.jpg');
+            var single = new Cesium.SingleTileImageryProvider('Images/NE2_50M_SR_W_4096.jpg');
 
             // Composite tile provider
             var composite = new Cesium.CompositeTileProvider([{

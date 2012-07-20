@@ -44,7 +44,7 @@ define([
      *
      * @exception {DeveloperError} <code>description.url</code> is required.
      *
-     * @see SingleTileProvider
+     * @see SingleTileImageryProvider
      * @see BingMapsImageryProvider
      * @see OpenStreetMapTileProvider
      * @see CompositeTileProvider
@@ -53,7 +53,6 @@ define([
      * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
      *
      * @example
-     * // ArcGIS World Street Maps tile provider
      * var esri = new ArcGisMapServerImageryProvider({
      *     url: 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
      * });
@@ -111,7 +110,7 @@ define([
         this.projection = undefined;
 
         /**
-         * The tiling scheme used by this tile provider.
+         * The tiling scheme used by this provider.
          *
          * @type {TilingScheme}
          * @see WebMercatorTilingScheme
@@ -120,7 +119,7 @@ define([
         this.tilingScheme = undefined;
 
         /**
-         * True if the tile provider is ready for use; otherwise, false.
+         * True if the provider is ready for use; otherwise, false.
          *
          * @type {Boolean}
          */
