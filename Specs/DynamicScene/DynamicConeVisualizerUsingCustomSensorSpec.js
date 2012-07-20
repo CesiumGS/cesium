@@ -1,6 +1,7 @@
 /*global defineSuite*/
 defineSuite([
              'DynamicScene/DynamicConeVisualizerUsingCustomSensor',
+             'Core/Matrix3',
              'Core/Matrix4',
              '../Specs/createScene',
              '../Specs/destroyScene',
@@ -16,6 +17,7 @@ defineSuite([
              'Scene/Scene'
             ], function(
               DynamicConeVisualizerUsingCustomSensor,
+              Matrix3,
               Matrix4,
               createScene,
               destroyScene,
@@ -150,7 +152,7 @@ defineSuite([
         expect(c.radius).toEqual(testObject.cone.radius.getValue(time));
         expect(c.show).toEqual(testObject.cone.show.getValue(time));
         expect(c.material).toEqual(testObject.cone.outerMaterial.getValue(time));
-        expect(c.modelMatrix).toEqual(new Matrix4(testObject.orientation.getValue(time).conjugate().toRotationMatrix(), testObject.position.getValueCartesian(time)));
+        expect(c.modelMatrix).toEqual(new Matrix4(Matrix3.fromQuaternion(testObject.orientation.getValue(time).conjugate()), testObject.position.getValueCartesian(time)));
 
         cone.show.value = false;
         visualizer.update(time);

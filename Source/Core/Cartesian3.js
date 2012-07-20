@@ -488,22 +488,6 @@ define(['./DeveloperError'
     };
 
     /**
-     * Creates a string representing the provided Cartesian in the format '(x, y)'.
-     * @memberof Cartesian3
-     *
-     * @param {Cartesian3} cartesian The Cartesian to stringify.
-     * @return {String} A string representing the provided Cartesian in the format '(x, y)'.
-     *
-     * @exception {DeveloperError} cartesian is required.
-     */
-    Cartesian3.toString = function(cartesian) {
-        if (typeof cartesian === 'undefined') {
-            throw new DeveloperError('cartesian is required');
-        }
-        return '(' + cartesian.x + ', ' + cartesian.y + ', ' + cartesian.z + ')';
-    };
-
-    /**
      * Computes the cross (outer) product of two Cartesians.
      * @memberof Cartesian3
      *
@@ -799,7 +783,7 @@ define(['./DeveloperError'
      * @return {String} A string representing the provided Cartesian in the format '(x, y)'.
      */
     Cartesian3.prototype.toString = function() {
-        return Cartesian3.toString(this);
+        return '(' + this.x + ', ' + this.y + ', ' + this.z + ')';
     };
 
     /**

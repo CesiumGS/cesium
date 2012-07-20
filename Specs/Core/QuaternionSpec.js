@@ -167,18 +167,6 @@ defineSuite([
         expect(q.getAngle() === 0.0).toEqual(true);
     });
 
-    it('toRotationMatrix', function() {
-        var sPiOver4 = Math.sin(CesiumMath.PI_OVER_FOUR);
-        var cPiOver4 = Math.cos(CesiumMath.PI_OVER_FOUR);
-        var sPiOver2 = Math.sin(CesiumMath.PI_OVER_TWO);
-        var cPiOver2 = Math.cos(CesiumMath.PI_OVER_TWO);
-        var q = new Quaternion(new Cartesian3(0.0, 0.0, 1.0).multiplyByScalar(sPiOver4), cPiOver4);
-        var rotation = new Matrix3(cPiOver2, -sPiOver2, 0.0,
-                                   sPiOver2,  cPiOver2, 0.0,
-                                        0.0,       0.0, 1.0);
-        expect(q.toRotationMatrix().equalsEpsilon(rotation, CesiumMath.EPSILON15)).toEqual(true);
-    });
-
     it('lerp', function() {
         var q = new Quaternion(1.0, 2.0, 3.0, 4.0);
         var r = new Quaternion(5.0, 6.0, 7.0, 8.0);
@@ -352,13 +340,5 @@ defineSuite([
         var cartesian = new Cartesian3(0.0, 0.0, 1.0).multiplyByScalar(s);
         var q = new Quaternion(cartesian.x, cartesian.y, cartesian.z, c);
         expect(Quaternion.exp(new Cartesian3(0.0, 0.0, CesiumMath.PI_OVER_FOUR)).equals(q)).toEqual(true);
-    });
-
-    it('matrixAndQuaternionfromAxisAngle', function() {
-        var axis = new Cartesian3(1.0, 2.0, 3.0);
-        var angle = 2.0 * CesiumMath.PI_OVER_THREE;
-        var m = Matrix3.fromAxisAngle(axis, angle);
-        var n = Quaternion.fromAxisAngle(axis, angle).toRotationMatrix();
-        expect(m.equalsEpsilon(n, CesiumMath.EPSILON15)).toEqual(true);
     });
 });

@@ -463,22 +463,6 @@ define([
     };
 
     /**
-     * Creates a string representing the provided Cartesian in the format '(x, y)'.
-     * @memberof Cartesian2
-     *
-     * @param {Cartesian2} cartesian The Cartesian to stringify.
-     * @return {String} A string representing the provided Cartesian in the format '(x, y)'.
-     *
-     * @exception {DeveloperError} cartesian is required.
-     */
-    Cartesian2.toString = function(cartesian) {
-        if (typeof cartesian === 'undefined') {
-            throw new DeveloperError('cartesian is required');
-        }
-        return '(' + cartesian.x + ', ' + cartesian.y + ')';
-    };
-
-    /**
      * An immutable Cartesian2 instance initialized to (0.0, 0.0).
      * @memberof Cartesian2
      */
@@ -729,7 +713,7 @@ define([
      * @return {String} A string representing the provided Cartesian in the format '(x, y)'.
      */
     Cartesian2.prototype.toString = function() {
-        return Cartesian2.toString(this);
+        return '(' + this.x + ', ' + this.y + ')';
     };
 
     return Cartesian2;
