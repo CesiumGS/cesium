@@ -144,7 +144,12 @@ define([
         this._logoLoaded = false;
 
         var that = this;
-        jsonp(this._url, function(data) {
+        jsonp(this._url, {
+            parameters : {
+                f : 'json'
+            },
+            proxy : this._proxy
+        }).then(function(data) {
             var credit = data.copyrightText;
 
             var canvas = document.createElement('canvas');
@@ -159,11 +164,6 @@ define([
 
             that._logo = canvas;
             that._logoLoaded = true;
-        }, {
-            parameters : {
-                f : 'json'
-            },
-            proxy : this._proxy
         });
     };
 
